@@ -163,15 +163,18 @@ morkRow::InitRow(morkEnv* ev, const mdbOid* inOid, morkRowSpace* ioSpace,
 }
 
 morkRowObject*
-morkRow::GetRowObject(morkEnv* ev, morkStore* ioStore)
+morkRow::AcquireRowObject(morkEnv* ev, morkStore* ioStore)
 {
   morkRowObject* ro = mRow_Object;
-  if ( !ro ) // need new row object?
+  if ( ro ) // need new row object?
+    ro->AddStrongRef(ev);
+  else
   {
     nsIMdbHeap* heap = ioStore->mPort_Heap;
     ro = new (*heap, ev)
       morkRowObject(ev, morkUsage::kHeap, heap, this, ioStore);
-    mRow_Object = ro;
+
+    morkRowObject::SlotWeakRowObject(ro, ev, &mRow_Object);
   }
   return ro;
 }
@@ -179,10 +182,13 @@ morkRow::GetRowObject(morkEnv* ev, morkStore* ioStore)
 nsIMdbRow*
 morkRow::AcquireRowHandle(morkEnv* ev, morkStore* ioStore)
 {
-  morkRowObject* object = this->GetRowObject(ev, ioStore);
+  morkRowObject* object = this->AcquireRowObject(ev, ioStore);
   if ( object )
-    return object->AcquireRowHandle(ev);
-    
+  {
+    nsIMdbRow* rowHandle = object->AcquireRowHandle(ev);
+    object->CutStrongRef(ev);
+    return rowHandle;
+  }
   return (nsIMdbRow*) 0;
 }
 
@@ -388,11 +394,73 @@ morkRow::EmptyAllCells(morkEnv* ev)
 }
 
 void
+morkRow::CutAllColumns(morkEnv* ev)
+{
+  morkStore* store = this->GetRowSpaceStore(ev);
+  if ( store )
+  {
+    morkPool* pool = store->StorePool();
+    pool->CutRowCells(ev, this, /*newSize*/ 0);
+  }
+}
+
+void
+morkRow::SetRow(morkEnv* ev, const morkRow* inSourceRow)
+{  
+  // note inSourceRow might be in another DB, with a different store...
+  morkStore* store = this->GetRowSpaceStore(ev);
+  morkStore* srcStore = inSourceRow->GetRowSpaceStore(ev);
+  if ( store && srcStore )
+  {
+    mork_bool sameStore = ( store == srcStore ); // identical stores?
+    morkPool* pool = store->StorePool();
+    if ( pool->CutRowCells(ev, this, /*newSize*/ 0) )
+    {
+      mork_fill fill = inSourceRow->mRow_Length;
+      if ( pool->AddRowCells(ev, this, fill) )
+      {
+        morkCell* dst = mRow_Cells;
+        morkCell* dstEnd = dst + mRow_Length;
+        
+        const morkCell* src = inSourceRow->mRow_Cells;
+        const morkCell* srcEnd = src + fill;
+        --dst; --src; // prepare both for preincrement:
+        
+        while ( ++dst < dstEnd && ++src < srcEnd && ev->Good() )
+        {
+          morkAtom* atom = src->mCell_Atom;
+          mork_column col = src->GetColumn();
+          if ( sameStore ) // source and dest in same store?
+          {
+            dst->SetColumnAndChange(col, morkChange_kAdd);
+            dst->mCell_Atom = atom;
+            if ( atom ) // another ref to non-nil atom?
+              atom->AddCellUse(ev);
+          }
+          else // need to dup items from src store in a dest store
+          {
+            mork_column dstCol = store->CopyToken(ev, col, srcStore);
+            if ( dstCol )
+            {
+              dst->SetColumnAndChange(dstCol, morkChange_kAdd);
+              dst->mCell_Atom = store->CopyAtom(ev, atom);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+void
 morkRow::AddRow(morkEnv* ev, const morkRow* inSourceRow)
 {
-  ev->StubMethodOnlyError();
-  // $$$$$ need to iterate over inSourceRow cells adding them to this row.
-  // When the atoms are book atoms, we can just incr the use count.
+  if ( mRow_Length ) // any existing cells we might need to keep?
+  {
+    ev->StubMethodOnlyError();
+  }
+  else
+    this->SetRow(ev, inSourceRow); // just exactly duplicate inSourceRow
 }
 
 void
@@ -444,6 +512,41 @@ morkRow::GetRowSpaceStore(morkEnv* ev) const
   return (morkStore*) 0;
 }
 
+void morkRow::CutColumn(morkEnv* ev, mdb_column inColumn)
+{
+  mork_pos pos = -1;
+  morkCell* cell = this->GetCell(ev, inColumn, &pos);
+  if ( cell ) 
+  {
+    morkStore* store = this->GetRowSpaceStore(ev);
+    if ( store )
+    {
+      morkPool* pool = store->StorePool();
+      cell->SetAtom(ev, (morkAtom*) 0, pool);
+      
+      mork_fill fill = mRow_Length; // should not be zero
+      MORK_ASSERT(fill);
+      if ( fill ) // index < fill for last cell exists?
+      {
+        mork_fill last = fill - 1; // index of last cell in row
+        
+        if ( pos < last ) // need to move cells following cut cell?
+        {
+          morkCell* lastCell = mRow_Cells + last;
+          mork_count after = last - pos; // cell count after cut cell
+          morkCell* next = cell + 1; // next cell after cut cell
+          MORK_MEMMOVE(cell, next, after * sizeof(morkCell));
+          lastCell->SetColumnAndChange(0, 0);
+          lastCell->mCell_Atom = 0;
+        }
+        
+        if ( ev->Good() )
+          pool->CutRowCells(ev, this, fill - 1);
+      }
+    }
+  }
+}
+
 void morkRow::AddColumn(morkEnv* ev, mdb_column inColumn,
   const mdbYarn* inYarn, morkStore* ioStore)
 {
@@ -475,7 +578,7 @@ morkRow::NewRowCellCursor(morkEnv* ev, mdb_pos inPos)
     morkStore* store = this->GetRowSpaceStore(ev);
     if ( store )
     {
-      morkRowObject* rowObj = this->GetRowObject(ev, store);
+      morkRowObject* rowObj = this->AcquireRowObject(ev, store);
       if ( rowObj )
       {
         nsIMdbHeap* heap = store->mPort_Heap;
@@ -492,6 +595,7 @@ morkRow::NewRowCellCursor(morkEnv* ev, mdb_pos inPos)
           else
             cursor->CutStrongRef(ev);
         }
+        rowObj->CutStrongRef(ev); // always cut ref (cursor has its own)
       }
     }
   }

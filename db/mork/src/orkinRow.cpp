@@ -48,6 +48,10 @@
 #include "morkRowObject.h"
 #endif
 
+#ifndef _MORKCELLOBJECT_
+#include "morkCellObject.h"
+#endif
+
 #ifndef _MORKSTORE_
 #include "morkStore.h"
 #endif
@@ -66,6 +70,10 @@
 
 #ifndef _ORKINROWCELLCURSOR_
 #include "orkinRowCellCursor.h"
+#endif
+
+#ifndef _ORKINCELL_
+#include "orkinCell.h"
 #endif
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
@@ -463,7 +471,7 @@ orkinRow::CutColumn( // make sure a column is absent from the row
     &outErr, &row);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    row->CutColumn(ev, inColumn);
     outErr = ev->AsErr();
   }
   return outErr;
@@ -479,7 +487,7 @@ orkinRow::CutAllColumns( // remove all columns from the row
     &outErr, &row);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    row->CutAllColumns(ev);
     outErr = ev->AsErr();
   }
   return outErr;
@@ -539,7 +547,39 @@ orkinRow::AddCell( // copy a cell from another row to this row
     &outErr, &row);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    morkCell* cell = 0;
+    orkinCell* ocell = (orkinCell*) inCell; // must verify this cast:
+    if ( ocell->CanUseCell(mev, morkBool_kFalse, &outErr, &cell) )
+    {
+      morkCellObject* cellObj = (morkCellObject*) ocell->mHandle_Object;
+
+      morkRow* cellRow = cellObj->mCellObject_Row;
+      if ( cellRow )
+      {
+        if ( row != cellRow )
+        {
+          morkStore* store = row->GetRowSpaceStore(ev);
+          morkStore* cellStore = cellRow->GetRowSpaceStore(ev);
+          if ( store && cellStore )
+          {
+            mork_column col = cell->GetColumn();
+            morkAtom* atom = cell->mCell_Atom;
+            mdbYarn yarn;
+            atom->AliasYarn(&yarn); // works even when atom is nil
+            
+            if ( store != cellStore )
+              col = store->CopyToken(ev, col, cellStore);
+            if ( ev->Good() )
+              row->AddColumn(ev, col, &yarn, store);
+          }
+          else
+            ev->NilPointerError();
+        }
+      }
+      else
+        ev->NilPointerError();
+    }
+
     outErr = ev->AsErr();
   }
   return outErr;
@@ -627,7 +667,11 @@ orkinRow::SetRow( // make exact duplicate of another row
     &outErr, &row);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    morkRow* source = 0;
+    if ( this->CanUseRow(mev, morkBool_kFalse, &outErr, &source) )
+    {
+      row->SetRow(ev, source);
+    }
     outErr = ev->AsErr();
   }
   return outErr;

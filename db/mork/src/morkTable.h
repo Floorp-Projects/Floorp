@@ -78,6 +78,9 @@ public: // state is public because the entire Mork system is private
 
   // mTable_RowSpace->mSpace_Scope is row scope 
   morkRowSpace*   mTable_RowSpace; // weak ref to containing space
+
+  morkRow*        mTable_MetaRow; // table's actual meta row
+  mdbOid          mTable_MetaRowOid; // oid for meta row
   
   morkRowMap      mTable_RowMap;    // hash table of all members
   morkArray       mTable_RowArray;   // array of morkRow pointers
@@ -98,6 +101,7 @@ public: // morkTable construction & destruction
   morkTable(morkEnv* ev, const morkUsage& inUsage,
     nsIMdbHeap* ioNodeHeap, morkStore* ioStore,
     nsIMdbHeap* ioSlotHeap, morkRowSpace* ioRowSpace,
+    const mdbOid* inOptionalMetaRowOid, // can be nil to avoid specifying 
     mork_tid inTableId,
     mork_kind inKind, mork_bool inMustBeUnique);
   void CloseTable(morkEnv* ev); // called by CloseMorkNode();
@@ -120,6 +124,8 @@ public: // warnings
   static void CellUsesUnderflowWarning(morkEnv* ev);
 
 public: // other table methods
+
+  morkRow* GetMetaRow(morkEnv* ev, const mdbOid* inOptionalMetaRowOid);
   
   mork_u2 AddCellUse(morkEnv* ev);
   mork_u2 CutCellUse(morkEnv* ev);
@@ -134,7 +140,7 @@ public: // other table methods
 
   void GetTableOid(morkEnv* ev, mdbOid* outOid);
   mork_pos  ArrayHasOid(morkEnv* ev, const mdbOid* inOid);
-  mork_pos  MapHasOid(morkEnv* ev, const mdbOid* inOid);
+  mork_bool MapHasOid(morkEnv* ev, const mdbOid* inOid);
   mork_bool AddRow(morkEnv* ev, morkRow* ioRow); // returns ev->Good()
   mork_bool CutRow(morkEnv* ev, morkRow* ioRow); // returns ev->Good()
   

@@ -113,7 +113,7 @@ morkHandle::CloseHandle(morkEnv* ev) // called by CloseMorkNode();
       this->MarkShut();
 
       if ( objDidRefSelf )
-        this->CutWeakRef(ev);
+        this->CutWeakRef(ev); // do last, because it might self destroy
     }
     else
       this->NonNodeError(ev);

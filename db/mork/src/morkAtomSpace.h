@@ -131,6 +131,12 @@ public: // setup
 
 public: // other space methods
 
+  // void ReserveColumnAidCount(mork_count inCount)
+  // {
+  //   mAtomSpace_HighUnderId = morkAtomSpace_kMinUnderId + inCount;
+  //   mAtomSpace_HighOverId = morkAtomSpace_kMinOverId + inCount;
+  // }
+
   mork_num CutAllAtoms(morkEnv* ev, morkPool* ioPool);
   // CutAllAtoms() puts all the atoms back in the pool.
   

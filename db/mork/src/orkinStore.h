@@ -274,6 +274,15 @@ public: // type identification
     mdb_scope inRowScope,    // row scope for row ids
     mdb_kind inTableKind,    // the type of table to access
     mdb_bool inMustBeUnique, // whether store can hold only one of these
+    const mdbOid* inOptionalMetaRowOid, // can be nil to avoid specifying
+    nsIMdbTable** acqTable);     // acquire scoped collection of rows
+    
+  virtual mdb_err NewTableWithOid( // make one new table of specific type
+    nsIMdbEnv* ev, // context
+    const mdbOid* inOid,   // caller assigned oid
+    mdb_kind inTableKind,    // the type of table to access
+    mdb_bool inMustBeUnique, // whether store can hold only one of these
+    const mdbOid* inOptionalMetaRowOid, // can be nil to avoid specifying
     nsIMdbTable** acqTable);     // acquire scoped collection of rows
   // } ----- end table methods -----
 

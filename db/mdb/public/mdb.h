@@ -690,6 +690,88 @@ public:
 
 extern "C" nsIMdbFactory* MakeMdbFactory(); 
 
+/*| nsIMdbFile: abstract file interface resembling the original morkFile
+**| abstract interface (which was in turn modeled on the file interface
+**| from public domain IronDoc).  The design of this file interface is
+**| complicated by the fact that some DB's will not find this interface
+**| adequate for all runtime requirements (even though this file API is
+**| enough to implement text-based DB's like Mork).  For this reason,
+**| more methods have been added to let a DB library force the file to
+**| become closed so the DB can reopen the file in some other manner.
+**| Folks are encouraged to suggest ways to tune this interface to suit
+**| DB's that cannot manage to pull their maneuvers even given this API.
+**|
+**|| Tell: get the current i/o position in file
+**|
+**|| Seek: change the current i/o position in file
+**|
+**|| Eof: return file's total length in bytes
+**|
+**|| Read: input inSize bytes into outBuf, returning actual transfer size
+**|
+**|| Get: read starting at specific file offset (e.g. Seek(); Read();)
+**|
+**|| Write: output inSize bytes from inBuf, returning actual transfer size
+**|
+**|| Put: write starting at specific file offset (e.g. Seek(); Write();)
+**|
+**|| Flush: if written bytes are buffered, push them to final destination
+**|
+**|| Path: get file path in some string representation.  This is intended
+**| either to support the display of file name in a user presentation, or
+**| to support the closing and reopening of the file when the DB needs more
+**| exotic file access than is presented by the nsIMdbFile interface.
+**|
+**|| Steal: tell this file to close any associated i/o stream in the file
+**| system, because the file ioThief intends to reopen the file in order
+**| to provide the MDB implementation with more exotic file access than is
+**| offered by the nsIMdbFile alone.  Presumably the thief knows enough
+**| from Path() in order to know which file to reopen.  If Steal() is
+**| successful, this file should probably delegate all future calls to
+**| the nsIMdbFile interface down to the thief files, so that even after
+**| the file has been stolen, it can still be read, written, or forcibly
+**| closed (by a call to CloseMdbObject()).
+**|
+**|| Thief: acquire and return thief passed to an earlier call to Steal().
+|*/
+class nsIMdbFile : public nsIMdbObject { // minimal file interface
+public:
+
+// { ===== begin nsIMdbFile methods =====
+
+  // { ----- begin pos methods -----
+  virtual mdb_err Tell(nsIMdbEnv* ev, mdb_pos* outPos) const = 0;
+  virtual mdb_err Seek(nsIMdbEnv* ev, mdb_pos inPos) = 0;
+  virtual mdb_err Eof(nsIMdbEnv* ev, mdb_pos* outPos) const = 0;
+  // } ----- end pos methods -----
+
+  // { ----- begin read methods -----
+  virtual mdb_err Read(nsIMdbEnv* ev, void* outBuf, mdb_size inSize,
+    mdb_size* outActualSize) = 0;
+  virtual mdb_err Get(nsIMdbEnv* ev, void* outBuf, mdb_size inSize,
+    mdb_pos inPos, mdb_size* outActualSize) = 0;
+  // } ----- end read methods -----
+    
+  // { ----- begin write methods -----
+  virtual mdb_err  Write(nsIMdbEnv* ev, const void* inBuf, mdb_size inSize,
+    mdb_size* outActualSize) = 0;
+  virtual mdb_err  Put(nsIMdbEnv* ev, const void* inBuf, mdb_size inSize,
+    mdb_pos inPos, mdb_size* outActualSize) = 0;
+  virtual mdb_err  Flush(nsIMdbEnv* ev) = 0;
+  // } ----- end attribute methods -----
+    
+  // { ----- begin path methods -----
+  virtual mdb_err  Path(nsIMdbEnv* ev, mdbYarn* outFilePath) = 0;
+  // } ----- end path methods -----
+    
+  // { ----- begin replacement methods -----
+  virtual mdb_err  Steal(nsIMdbEnv* ev, nsIMdbFile* ioThief) = 0;
+  virtual mdb_err  Thief(nsIMdbEnv* ev, nsIMdbFile** acqThief) = 0;
+  // } ----- end replacement methods -----
+
+// } ===== end nsIMdbFile methods =====
+};
+
 /*| nsIMdbPort: a readonly interface to a specific database file. The mutable
 **| nsIMdbStore interface is a subclass that includes writing behavior, but
 **| most of the needed db methods appear in the readonly nsIMdbPort interface.
@@ -995,6 +1077,15 @@ public:
     mdb_scope inRowScope,    // row scope for row ids
     mdb_kind inTableKind,    // the type of table to access
     mdb_bool inMustBeUnique, // whether store can hold only one of these
+    const mdbOid* inOptionalMetaRowOid, // can be nil to avoid specifying
+    nsIMdbTable** acqTable) = 0;     // acquire scoped collection of rows
+    
+  virtual mdb_err NewTableWithOid( // make one new table of specific type
+    nsIMdbEnv* ev, // context
+    const mdbOid* inOid,   // caller assigned oid
+    mdb_kind inTableKind,    // the type of table to access
+    mdb_bool inMustBeUnique, // whether store can hold only one of these
+    const mdbOid* inOptionalMetaRowOid, // can be nil to avoid specifying 
     nsIMdbTable** acqTable) = 0;     // acquire scoped collection of rows
   // } ----- end table methods -----
 
@@ -1333,7 +1424,7 @@ public:
 **| complain not at all.  Cutting a row from a table only does something when
 **| the row was actually a member, and otherwise does nothing silently.
 **|
-**|| row ref count: one can query the number of tables (and or cells)
+**|| row ref count: one can query the number of tables (and/or cells)
 **| containing a row as a member or a child.
 **|
 **|| row content: one can access or modify the cell content in a table's row
@@ -1355,11 +1446,38 @@ public:
 
 // { ===== begin nsIMdbTable methods =====
 
-  // { ----- begin attribute methods -----
+  // { ----- begin meta attribute methods -----
   virtual mdb_err GetTableKind(nsIMdbEnv* ev, mdb_kind* outTableKind) = 0;
   virtual mdb_err GetRowScope(nsIMdbEnv* ev, mdb_scope* outRowScope) = 0;
   
-  // } ----- end attribute methods -----
+  virtual mdb_err GetMetaRow(
+    nsIMdbEnv* ev, // context
+    const mdbOid* inOptionalMetaRowOid, // can be nil to avoid specifying 
+    mdbOid* outOid, // output meta row oid, can be nil to suppress output
+    nsIMdbRow** acqRow) = 0; // acquire table's unique singleton meta row
+    // The purpose of a meta row is to support the persistent recording of
+    // meta info about a table as cells put into the distinguished meta row.
+    // Each table has exactly one meta row, which is not considered a member
+    // of the collection of rows inside the table.  The only way to tell
+    // whether a row is a meta row is by the fact that it is returned by this
+    // GetMetaRow() method from some table. Otherwise nothing distinguishes
+    // a meta row from any other row.  A meta row can be used anyplace that
+    // any other row can be used, and can even be put into other tables (or
+    // the same table) as a table member, if this is useful for some reason.
+    // The first attempt to access a table's meta row using GetMetaRow() will
+    // cause the meta row to be created if it did not already exist.  When the
+    // meta row is created, it will have the row oid that was previously
+    // requested for this table's meta row; or if no oid was ever explicitly
+    // specified for this meta row, then a unique oid will be generated in
+    // the row scope named "metaScope" (so obviously MDB clients should not
+    // manually allocate any row IDs from that special meta scope namespace).
+    // The meta row oid can be specified either when the table is created, or
+    // else the first time that GetMetaRow() is called, by passing a non-nil
+    // pointer to an oid for parameter inOptionalMetaRowOid.  The meta row's
+    // actual oid is returned in outOid (if this is a non-nil pointer), and
+    // it will be different from inOptionalMetaRowOid when the meta row was
+    // already given a different oid earlier.
+  // } ----- end meta attribute methods -----
 
   // { ----- begin cursor methods -----
   virtual mdb_err GetTableRowCursor( // make a cursor, starting iteration at inRowPos
@@ -1374,7 +1492,10 @@ public:
     mdb_pos inRowPos, // zero-based ordinal position of row in table
     mdbOid* outOid) = 0; // row oid at the specified position
     
-  // Note that HasRow() performs the inverse oid->pos mapping
+  virtual mdb_err RowToPos( // test for the table position of a row member
+    nsIMdbEnv* ev, // context
+    nsIMdbRow* ioRow, // row to find in table
+    mdb_pos* outPos) = 0; // zero-based ordinal position of row in table
   // } ----- end row position methods -----
 
   // { ----- begin oid set methods -----
@@ -1383,6 +1504,11 @@ public:
     const mdbOid* inOid) = 0; // row to ensure membership in table
 
   virtual mdb_err HasOid( // test for the table position of a row member
+    nsIMdbEnv* ev, // context
+    const mdbOid* inOid, // row to find in table
+    mdb_bool* outHasOid) = 0; // whether inOid is a member row
+
+  virtual mdb_err OidToPos( // test for the table position of a row member
     nsIMdbEnv* ev, // context
     const mdbOid* inOid, // row to find in table
     mdb_pos* outPos) = 0; // zero-based ordinal position of row in table
@@ -1395,7 +1521,7 @@ public:
   // { ----- begin row set methods -----
   virtual mdb_err NewRow( // create a new row instance in table
     nsIMdbEnv* ev, // context
-    mdbOid* ioOid, // please use zero (unbound) rowId for db-assigned IDs
+    mdbOid* ioOid, // please use minus one (unbound) rowId for db-assigned IDs
     nsIMdbRow** acqRow) = 0; // create new row
 
   virtual mdb_err AddRow( // make sure the row with inOid is a table member 
@@ -1405,7 +1531,7 @@ public:
   virtual mdb_err HasRow( // test for the table position of a row member
     nsIMdbEnv* ev, // context
     nsIMdbRow* ioRow, // row to find in table
-    mdb_pos* outPos) = 0; // zero-based ordinal position of row in table
+    mdb_bool* outHasRow) = 0; // whether row is a table member
 
   virtual mdb_err CutRow( // make sure the row with inOid is not a member 
     nsIMdbEnv* ev, // context

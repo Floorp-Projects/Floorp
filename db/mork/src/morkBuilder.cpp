@@ -123,32 +123,25 @@ morkBuilder::morkBuilder(morkEnv* ev,
   
 , mBuilder_OidAtomSpace( 0 )
 , mBuilder_ScopeAtomSpace( 0 )
-    
-, mBuilder_iso_8859_1( 0 )
-, mBuilder_r( (mork_scope) 'r' )
-, mBuilder_a( (mork_scope) 'a' )
-, mBuilder_t( (mork_scope) 't' )
-
-, mBuilder_MorkNoneToken( 0 )
   
 , mBuilder_PortForm( 0 )
 , mBuilder_PortRowScope( (mork_scope) 'r' )
-, mBuilder_PortAtomScope( (mork_scope) 'a' )
+, mBuilder_PortAtomScope( (mork_scope) 'v' )
 
 , mBuilder_TableForm( 0 )
 , mBuilder_TableRowScope( (mork_scope) 'r' )
-, mBuilder_TableAtomScope( (mork_scope) 'a' )
+, mBuilder_TableAtomScope( (mork_scope) 'v' )
 , mBuilder_TableKind( 0 )
   
 , mBuilder_RowForm( 0 )
 , mBuilder_RowRowScope( (mork_scope) 'r' )
-, mBuilder_RowAtomScope( (mork_scope) 'a' )
+, mBuilder_RowAtomScope( (mork_scope) 'v' )
 
 , mBuilder_CellForm( 0 )
-, mBuilder_CellAtomScope( (mork_scope) 'a' )
+, mBuilder_CellAtomScope( (mork_scope) 'v' )
 
 , mBuilder_DictForm( 0 )
-, mBuilder_DictAtomScope( (mork_scope) 'a' )
+, mBuilder_DictAtomScope( (mork_scope) 'v' )
 
 , mBuilder_MetaTokenSlot( 0 )
   
@@ -160,7 +153,6 @@ morkBuilder::morkBuilder(morkEnv* ev,
   {
     if ( ioStore )
     {
-      mBuilder_MorkNoneToken = ioStore->mStore_MorkNoneToken;
       morkStore::SlotWeakStore(ioStore, ev, &mBuilder_Store);
       if ( ev->Good() )
         mNode_Derived = morkDerived_kBuilder;
@@ -267,7 +259,7 @@ morkBuilder::OnNewPort(morkEnv* ev, const morkPlace& inPlace)
   // mParser_InPort = morkBool_kTrue;
   mBuilder_PortForm = 0;
   mBuilder_PortRowScope = (mork_scope) 'r';
-  mBuilder_PortAtomScope = (mork_scope) 'a';
+  mBuilder_PortAtomScope = (mork_scope) 'v';
 }
 
 /*virtual*/ void
@@ -337,7 +329,8 @@ morkBuilder::OnPortRowEnd(morkEnv* ev, const morkSpan& inSpan)
 morkBuilder::OnNewTable(morkEnv* ev, const morkPlace& inPlace,
   const morkMid& inMid, mork_change inChange)
 // mp:Table     ::= OnNewTable mp:TableItem* OnTableEnd
-// mp:TableItem ::= mp:Row | mp:Meta | OnTableGlitch
+// mp:TableItem ::= mp:Row | mp:MetaTable | OnTableGlitch
+// mp:MetaTable ::= OnNewMeta mp:MetaItem* mp:Row OnMetaEnd
 // mp:Meta      ::= OnNewMeta mp:MetaItem* OnMetaEnd
 // mp:MetaItem  ::= mp:Cell | OnMetaGlitch
 {
@@ -345,7 +338,7 @@ morkBuilder::OnNewTable(morkEnv* ev, const morkPlace& inPlace,
   mBuilder_TableForm = mBuilder_PortForm;
   mBuilder_TableRowScope = mBuilder_PortRowScope;
   mBuilder_TableAtomScope = mBuilder_PortAtomScope;
-  mBuilder_TableKind = mBuilder_MorkNoneToken;
+  mBuilder_TableKind = morkStore_kNoneToken;
 
   morkTable* table = mBuilder_Store->MidToTable(ev, inMid);
   morkTable::SlotStrongTable(table, ev, &mBuilder_Table);
@@ -372,7 +365,7 @@ morkBuilder::OnTableEnd(morkEnv* ev, const morkSpan& inSpan)
   mBuilder_Row = 0;
   mBuilder_Cell = 0;
 
-  if ( mBuilder_TableKind == mBuilder_MorkNoneToken )
+  if ( mBuilder_TableKind == morkStore_kNoneToken )
     ev->NewError("missing table kind");
 
   mBuilder_CellAtomScope = mBuilder_RowAtomScope =
@@ -407,6 +400,9 @@ morkBuilder::OnMetaEnd(morkEnv* ev, const morkSpan& inSpan)
 /*virtual*/ void
 morkBuilder::OnNewRow(morkEnv* ev, const morkPlace& inPlace, 
   const morkMid& inMid, mork_change inChange)
+// mp:Table     ::= OnNewTable mp:TableItem* OnTableEnd
+// mp:TableItem ::= mp:Row | mp:MetaTable | OnTableGlitch
+// mp:MetaTable ::= OnNewMeta mp:MetaItem* mp:Row OnMetaEnd
 // mp:Row       ::= OnNewRow mp:RowItem* OnRowEnd
 // mp:RowItem   ::= mp:Cell | mp:Meta | OnRowGlitch
 // mp:Cell      ::= OnNewCell mp:CellItem? OnCellEnd
@@ -432,8 +428,24 @@ morkBuilder::OnNewRow(morkEnv* ev, const morkPlace& inPlace,
       mBuilder_Row = store->MidToRow(ev, inMid);
     }
 
-    if ( mBuilder_Row )
-      mBuilder_Table->AddRow(ev, mBuilder_Row);
+    morkRow* row = mBuilder_Row;
+    if ( row )
+    {
+      morkTable* table = mBuilder_Table;
+      if ( mParser_InMeta )
+      {
+        if ( !table->mTable_MetaRow )
+        {
+          table->mTable_MetaRow = row;
+          table->mTable_MetaRowOid = row->mRow_Oid;
+          row->AddTableUse(ev);
+        }
+        else
+          ev->NewError("duplicate table meta row");
+      }
+      else
+        table->AddRow(ev, row);
+    }
   }
   else
     this->NilBuilderTableError(ev);
@@ -612,29 +624,29 @@ morkBuilder::OnNewCell(morkEnv* ev, const morkPlace& inPlace,
     {
       if ( mParser_InTable ) // metainfo for table?
       {
-        if ( column == store->mStore_TableKindToken )
+        if ( column == morkStore_kKindColumn )
           mBuilder_MetaTokenSlot = &mBuilder_TableKind;
-        else if ( column == store->mStore_RowScopeToken )
+        else if ( column == morkStore_kRowScopeColumn )
           mBuilder_MetaTokenSlot = &mBuilder_TableRowScope;
-        else if ( column == store->mStore_AtomScopeToken )
+        else if ( column == morkStore_kAtomScopeColumn )
           mBuilder_MetaTokenSlot = &mBuilder_TableAtomScope;
-        else if ( column == store->mStore_CharsetToken )
+        else if ( column == morkStore_kFormColumn )
           mBuilder_MetaTokenSlot = &mBuilder_TableForm;
       }
       else if ( mParser_InDict ) // metainfo for dict?
       {
-        if ( column == store->mStore_AtomScopeToken )
+        if ( column == morkStore_kAtomScopeColumn )
           mBuilder_MetaTokenSlot = &mBuilder_DictAtomScope;
-        else if ( column == store->mStore_CharsetToken )
+        else if ( column == morkStore_kFormColumn )
           mBuilder_MetaTokenSlot = &mBuilder_DictForm;
       }
       else if ( mParser_InRow ) // metainfo for row?
       {
-        if ( column == store->mStore_AtomScopeToken )
+        if ( column == morkStore_kAtomScopeColumn )
           mBuilder_MetaTokenSlot = &mBuilder_RowAtomScope;
-        else if ( column == store->mStore_RowScopeToken )
+        else if ( column == morkStore_kRowScopeColumn )
           mBuilder_MetaTokenSlot = &mBuilder_RowRowScope;
-        else if ( column == store->mStore_CharsetToken )
+        else if ( column == morkStore_kFormColumn )
           mBuilder_MetaTokenSlot = &mBuilder_RowForm;
       }
     }
@@ -856,7 +868,8 @@ morkBuilder::OnTableMid(morkEnv* ev, const morkSpan& inSpan,
        if ( atom )
        {
          cell->SetAtom(ev, atom, pool);
-         morkTable* table = store->OidToTable(ev, &tableOid);
+         morkTable* table = store->OidToTable(ev, &tableOid,
+           /*optionalMetaRowOid*/ (mdbOid*) 0);
          if ( table ) // found or created such a table?
            table->AddCellUse(ev);
        }

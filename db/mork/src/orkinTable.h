@@ -35,7 +35,7 @@
 #include "morkHandle.h"
 #endif
 
-#ifndef _MORKTable_
+#ifndef _MORKTABLE_
 #include "morkTable.h"
 #endif
 
@@ -164,11 +164,38 @@ public: // type identification
 
 // { ===== begin nsIMdbTable methods =====
 
-  // { ----- begin attribute methods -----
+  // { ----- begin meta attribute methods -----
   virtual mdb_err GetTableKind(nsIMdbEnv* ev, mdb_kind* outTableKind);
   virtual mdb_err GetRowScope(nsIMdbEnv* ev, mdb_scope* outRowScope);
   
-  // } ----- end attribute methods -----
+  virtual mdb_err GetMetaRow(
+    nsIMdbEnv* ev, // context
+    const mdbOid* inOptionalMetaRowOid, // can be nil to avoid specifying 
+    mdbOid* outOid, // output meta row oid, can be nil to suppress output
+    nsIMdbRow** acqRow); // acquire table's unique singleton meta row
+    // The purpose of a meta row is to support the persistent recording of
+    // meta info about a table as cells put into the distinguished meta row.
+    // Each table has exactly one meta row, which is not considered a member
+    // of the collection of rows inside the table.  The only way to tell
+    // whether a row is a meta row is by the fact that it is returned by this
+    // GetMetaRow() method from some table. Otherwise nothing distinguishes
+    // a meta row from any other row.  A meta row can be used anyplace that
+    // any other row can be used, and can even be put into other tables (or
+    // the same table) as a table member, if this is useful for some reason.
+    // The first attempt to access a table's meta row using GetMetaRow() will
+    // cause the meta row to be created if it did not already exist.  When the
+    // meta row is created, it will have the row oid that was previously
+    // requested for this table's meta row; or if no oid was ever explicitly
+    // specified for this meta row, then a unique oid will be generated in
+    // the row scope named "metaScope" (so obviously MDB clients should not
+    // manually allocate any row IDs from that special meta scope namespace).
+    // The meta row oid can be specified either when the table is created, or
+    // else the first time that GetMetaRow() is called, by passing a non-nil
+    // pointer to an oid for parameter inOptionalMetaRowOid.  The meta row's
+    // actual oid is returned in outOid (if this is a non-nil pointer), and
+    // it will be different from inOptionalMetaRowOid when the meta row was
+    // already given a different oid earlier.
+  // } ----- end meta attribute methods -----
 
   // { ----- begin cursor methods -----
   virtual mdb_err GetTableRowCursor( // make a cursor, starting iteration at inRowPos
@@ -183,7 +210,11 @@ public: // type identification
     mdb_pos inRowPos, // zero-based ordinal position of row in table
     mdbOid* outOid); // row oid at the specified position
     
-  // Note that HasRow() performs the inverse oid->pos mapping
+  virtual mdb_err RowToPos( // test for the table position of a row member
+    nsIMdbEnv* ev, // context
+    nsIMdbRow* ioRow, // row to find in table
+    mdb_pos* outPos); // zero-based ordinal position of row in table
+
   // } ----- end row position methods -----
 
   // { ----- begin oid set methods -----
@@ -192,6 +223,11 @@ public: // type identification
     const mdbOid* inOid); // row to ensure membership in table
 
   virtual mdb_err HasOid( // test for the table position of a row member
+    nsIMdbEnv* ev, // context
+    const mdbOid* inOid, // row to find in table
+    mdb_bool* outHasOid); // whether inOid is a member row
+
+  virtual mdb_err OidToPos( // test for the table position of a row member
     nsIMdbEnv* ev, // context
     const mdbOid* inOid, // row to find in table
     mdb_pos* outPos); // zero-based ordinal position of row in table
@@ -214,7 +250,7 @@ public: // type identification
   virtual mdb_err HasRow( // test for the table position of a row member
     nsIMdbEnv* ev, // context
     nsIMdbRow* ioRow, // row to find in table
-    mdb_pos* outPos); // zero-based ordinal position of row in table
+    mdb_bool* outHasRow); // whether row is a table member
 
   virtual mdb_err CutRow( // make sure the row with inOid is not a member 
     nsIMdbEnv* ev, // context

@@ -60,6 +60,10 @@
 #include "morkFile.h"
 #endif
 
+#ifndef _MORKWRITER_
+#include "morkWriter.h"
+#endif
+
 #ifndef _MORKSTORE_
 #include "morkStore.h"
 #endif
@@ -371,6 +375,7 @@ orkinFactory::CanOpenFilePort(
   {
     if ( inFilePath && inFirst512Bytes && outCanOpen )
     {
+      canOpenAsPort = this->CanOpenMorkTextFile(ev, inFirst512Bytes);
     }
     else
       ev->NilPointerError();
@@ -448,6 +453,21 @@ orkinFactory::ThumbToOpenPort( // redeeming a completed thumb from OpenFilePort(
 }
 // } ----- end port methods -----
 
+mork_bool
+orkinFactory::CanOpenMorkTextFile(morkEnv* ev,
+  const mdbYarn* inFirst512Bytes)
+{
+  mork_bool outBool = morkBool_kFalse;
+  mork_size headSize = MORK_STRLEN(morkWriter_kFileHeader);
+  const mdbYarn* y = inFirst512Bytes;
+  if ( y && y->mYarn_Buf && y->mYarn_Fill >= headSize )
+  {
+    mork_u1* buf = (mork_u1*) y->mYarn_Buf;
+    outBool = ( MORK_MEMCMP(morkWriter_kFileHeader, buf, headSize) == 0 );
+  }
+  return outBool;
+}
+
 // { ----- begin store methods -----
 /*virtual*/ mdb_err
 orkinFactory::CanOpenFileStore(
@@ -468,8 +488,8 @@ orkinFactory::CanOpenFileStore(
     if ( inFilePath && inFirst512Bytes && outCanOpenAsStore )
     {
       // right now always say true; later we should look for magic patterns
-      canOpenAsStore = morkBool_kTrue; // don't bother checking
-      canOpenAsPort = morkBool_kTrue;
+      canOpenAsStore = this->CanOpenMorkTextFile(ev, inFirst512Bytes);
+      canOpenAsPort = canOpenAsStore;
     }
     else
       ev->NilPointerError();
