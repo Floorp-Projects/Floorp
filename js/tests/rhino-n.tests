@@ -4,6 +4,8 @@
 # 
 # Unfixed bugs:
 #
+#bug 157652 Will not fix this in Rhino; the OOM error is reasonable
+#js1_5/Array/regress-157652.js
 #bug 152646 Will not fix this in Rhino; too much of a corner case
 js1_5/Regress/regress-152646.js
 # bug 83051
