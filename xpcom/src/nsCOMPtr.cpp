@@ -50,5 +50,5 @@ nsCOMPtr_base::begin_assignment()
     if ( mRawPtr )
       NSCAP_RELEASE(mRawPtr);
     mRawPtr = 0;
-    return NSCAP_REINTERPRET_CAST(void**, mRawPtr);
+    return NSCAP_REINTERPRET_CAST(void**, &mRawPtr);
   }
