@@ -34,7 +34,6 @@
 #include "nsTextWidget.h"
 #include "nsLabel.h"
 #include "nsFilePicker.h"
-#include "nsFileWidget.h"
 #include "nsFileSpecWithUIImpl.h"
 #include "nsScrollbar.h"
 #include "nsMenuBar.h"
@@ -70,7 +69,6 @@ static NS_DEFINE_CID(kCPopUp,         NS_POPUP_CID);
 static NS_DEFINE_CID(kCChild,         NS_CHILD_CID);
 static NS_DEFINE_CID(kCButton,        NS_BUTTON_CID);
 static NS_DEFINE_CID(kCCheckButton,   NS_CHECKBUTTON_CID);
-static NS_DEFINE_CID(kCFileOpen,      NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kCFilePicker,    NS_FILEPICKER_CID);
 static NS_DEFINE_CID(kCCombobox,      NS_COMBOBOX_CID);
 static NS_DEFINE_CID(kCListbox,       NS_LISTBOX_CID);
@@ -180,9 +178,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCButton)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsButton();
-    }
-    else if (mClassID.Equals(kCFileOpen)) {
-       inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsFileWidget();
     }
     else if (mClassID.Equals(kCFilePicker)) {
        inst = (nsISupports*)(nsBaseFilePicker*)new nsFilePicker();
