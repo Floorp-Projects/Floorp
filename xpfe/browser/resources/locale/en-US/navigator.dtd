@@ -23,6 +23,7 @@
 <!ENTITY openFileCmd.commandkey "o">
 <!ENTITY editPageCmd.label					"Edit Page">
 <!ENTITY editPageCmd.accesskey				"d">
+<!ENTITY editPageCmd.commandkey				"e">
 <!ENTITY editFrameCmd.label					"Edit Frame">
 <!ENTITY editFrameCmd.accesskey				"m">
 <!ENTITY editFrameSetCmd.label		  "Edit Frameset">
@@ -338,7 +339,7 @@
 <!ENTITY bookmarkPageCmd.accesskey    "b">
 <!ENTITY bookmarkLinkCmd.label        "Bookmark this Link">
 <!ENTITY bookmarkLinkCmd.accesskey    "b">
-<!ENTITY savePageCmd.label            "Save Page As...">
+<!ENTITY savePageCmd.label            "Save As...">
 <!ENTITY savePageCmd.accesskey        "s">
 <!ENTITY savePageCmd.commandkey       "s">
 <!ENTITY saveFrameCmd.label           "Save Frame As...">
