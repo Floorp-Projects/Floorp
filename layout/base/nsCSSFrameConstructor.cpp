@@ -4406,33 +4406,34 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
           switch (frameChange1) {
             case NS_STYLE_HINT_FRAMECHANGE:
               result = RecreateFramesForContent(aPresContext, aContent1);
+              changeList1.Clear();
+              break;
             case NS_STYLE_HINT_REFLOW:
             case NS_STYLE_HINT_VISUAL:
-              ProcessRestyledFrames(changeList1, aPresContext);
               break;
             case NS_STYLE_HINT_CONTENT:
               // let primary frame deal with it
               result = primaryFrame1->ContentChanged(aPresContext, aContent1, nsnull);
-              // then process any children that need it
-              ProcessRestyledFrames(changeList1, aPresContext);
             default:
               break;
           }
           switch (frameChange2) {
             case NS_STYLE_HINT_FRAMECHANGE:
               result = RecreateFramesForContent(aPresContext, aContent2);
+              changeList2.Clear();
+              break;
             case NS_STYLE_HINT_REFLOW:
             case NS_STYLE_HINT_VISUAL:
-              ProcessRestyledFrames(changeList2, aPresContext);
               break;
             case NS_STYLE_HINT_CONTENT:
               // let primary frame deal with it
               result = primaryFrame2->ContentChanged(aPresContext, aContent2, nsnull);
               // then process any children that need it
-              ProcessRestyledFrames(changeList2, aPresContext);
             default:
               break;
           }
+          ProcessRestyledFrames(changeList1, aPresContext);
+          ProcessRestyledFrames(changeList2, aPresContext);
         }
       }
       else if (primaryFrame2) {
@@ -4443,20 +4444,23 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
         switch (frameChange) {  // max change needed for top level frames
           case NS_STYLE_HINT_RECONSTRUCT_ALL:
             result = ReconstructDocElementHierarchy(aPresContext);
+            changeList.Clear();
+            break;
           case NS_STYLE_HINT_FRAMECHANGE:
             result = RecreateFramesForContent(aPresContext, aContent2);
+            changeList.Clear();
+            break;
           case NS_STYLE_HINT_REFLOW:
           case NS_STYLE_HINT_VISUAL:
-            ProcessRestyledFrames(changeList, aPresContext);
             break;
           case NS_STYLE_HINT_CONTENT:
             // let primary frame deal with it
             result = primaryFrame2->ContentChanged(aPresContext, aContent2, nsnull);
             // then process any children that need it
-            ProcessRestyledFrames(changeList, aPresContext);
           default:
             break;
         }
+        ProcessRestyledFrames(changeList, aPresContext);
       }
       else {  // no frames, reconstruct for content
         if (aContent1) {
@@ -4564,25 +4568,26 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
         frame->GetNextInFlow(&frame);
       } while (frame);
 
-      switch (maxHint) {
+      switch (maxHint) {  // maxHint is hint for primary only
         case NS_STYLE_HINT_RECONSTRUCT_ALL:
           result = ReconstructDocElementHierarchy(aPresContext);
+          changeList.Clear();
           break;
         case NS_STYLE_HINT_FRAMECHANGE:
           result = RecreateFramesForContent(aPresContext, aContent);
+          changeList.Clear();
           break;
         case NS_STYLE_HINT_REFLOW:
         case NS_STYLE_HINT_VISUAL:
-          ProcessRestyledFrames(changeList, aPresContext);
           break;
         case NS_STYLE_HINT_CONTENT:
           // let the frame deal with it, since we don't know how to
           result = primaryFrame->AttributeChanged(aPresContext, aContent, aAttribute, maxHint);
-          // process any child frames that need it
-          ProcessRestyledFrames(changeList, aPresContext);
         default:
           break;
       }
+      // handle any children (primary may be on list too)
+      ProcessRestyledFrames(changeList, aPresContext);
     }
     else {  // no frame now, possibly genetate one with new style data
       result = RecreateFramesForContent(aPresContext, aContent);
