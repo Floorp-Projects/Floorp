@@ -82,6 +82,8 @@ DIRS		+= \
 		layout \
 		db \
 		rdf \
+		docshell \
+#		embedding \
 		webshell \
 		editor \
 		xpinstall \
