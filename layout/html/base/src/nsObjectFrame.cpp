@@ -29,6 +29,7 @@
 #include "nsViewsCID.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
+#include "nsIDOMKeyListener.h"
 #include "nsIPluginHost.h"
 #include "nsplugin.h"
 #include "nsString.h"
@@ -56,7 +57,6 @@
 #include "nsIDOMElement.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIDOMMouseListener.h"
-#include "nsIDOMKeyListener.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDocumentEncoder.h"
@@ -70,6 +70,10 @@
 
 #include "nsObjectFrame.h"
 
+/* X headers suck */
+#ifdef KeyPress
+#undef KeyPress
+#endif
 
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIPluginTagInfo2,
