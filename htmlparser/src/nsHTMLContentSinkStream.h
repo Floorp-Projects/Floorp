@@ -198,7 +198,6 @@ protected:
     nsCOMPtr<nsIURI> mURI;
 
     PRBool    mDoFormat;
-    PRBool    mDoHeader;
     PRBool    mBodyOnly;
     PRBool    mHasOpenHtmlTag;
     PRInt32   mPreLevel;

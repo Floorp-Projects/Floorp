@@ -2892,7 +2892,7 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsAWritableString& aValue)
     PRUint32 flags = nsIDocumentEncoder::OutputLFLineBreak;;
 
     if (PR_TRUE==IsPlainTextControl()) {
-      flags |= nsIDocumentEncoder::OutputBodyOnly;   // OutputNoDoctype if head info needed
+      flags |= nsIDocumentEncoder::OutputBodyOnly;
     }
 
     nsFormControlHelper::nsHTMLTextWrap wrapProp;

@@ -54,8 +54,6 @@ static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
 static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-static char*          gHeaderComment = "<!-- This page was created by the Gecko output system. -->";
-static char*          gDocTypeHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">";
 const  int            gTabSize=2;
 
 static const nsString gMozDirty = NS_ConvertToString("_moz_dirty");
@@ -134,9 +132,6 @@ nsHTMLContentSinkStream::Initialize(nsIOutputStream* aOutStream,
 
   mBodyOnly = (aFlags & nsIDocumentEncoder::OutputBodyOnly) ? PR_TRUE
                                                             : PR_FALSE;
-  mDoHeader = (!mBodyOnly) && (mDoFormat) &&
-               ((aFlags & nsIDocumentEncoder::OutputNoDoctype) ? PR_FALSE
-                                                               : PR_TRUE);
   mMaxColumn = 72;
   mFlags = aFlags;
 
@@ -716,17 +711,6 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 
   if (IndentChildren(tag))
     mIndent++;
-
-  if (tag == eHTMLTag_head)
-  {
-    if(mDoHeader)
-    {
-      Write(gHeaderComment);
-      Write(mLineBreak);
-      Write(gDocTypeHeader);
-      Write(mLineBreak);
-    }
-  }
 }
 
 void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
