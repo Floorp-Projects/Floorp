@@ -52,6 +52,7 @@ extern int MK_SIGNON_NOTIFICATION_1;
 extern int MK_SIGNON_NAG;
 extern int MK_SIGNON_REMEMBER;
 extern int MK_SIGNON_SELECTUSER;
+extern int MK_SIGNON_CHANGE;
 
 /* locks for signon cache */
 
@@ -75,7 +76,7 @@ si_SaveSignonDataInKeychain();
  * doesn't exist when we get control from layout, namely when SI_RememberSignonData
  * is called
  *
- * Samee applies to FE_SelectDialog because context doesn't exist when
+ * Same applies to FE_SelectDialog because context doesn't exist when
  * SI_RestoreSignonData is called
  */
 #undef FE_Confirm
@@ -754,7 +755,7 @@ si_GetURLAndUserForChangeForm(MWContext *context, char* password)
     /* query user */
     if (user_count && FE_SelectDialog
             (context,
-            "Is this a change of password for one of the following?",
+            XP_GetString(MK_SIGNON_CHANGE),
             list,
             &user_count)) {
         user = users[user_count];
