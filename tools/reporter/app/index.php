@@ -130,7 +130,7 @@ include($config['app_path'].'/includes/message.inc.php');
 						<td><input id="show" name="show" value="<?php if ($_GET['show']){ print $_GET['show']; } else { ?>25<?php } ?>" onfocus="if(this.value=='YYYY-MM-DD'){this.value=''}" type="text"></td>
 					</tr>
 					<tr>
-						<td class="label"><label for="count">Get Agregate:</label></td>
+						<td class="label"><label for="count">Get Aggregate:</label></td>
 						<td><input type="checkbox" id="count" name="count" <?php if ($_GET['count']){ ?>checked="checked" <?PHP } ?>></td>
 					</tr>
 				</table>
