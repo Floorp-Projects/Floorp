@@ -83,6 +83,7 @@ ACCESSIBILITY_ATOM(ul, "ul")
   // Alphabetical list of attributes
 ACCESSIBILITY_ATOM(accesskey, "accesskey")
 ACCESSIBILITY_ATOM(control, "control")
+ACCESSIBILITY_ATOM(disabled, "disabled")
 ACCESSIBILITY_ATOM(_for, "for")
 ACCESSIBILITY_ATOM(id, "id")
 ACCESSIBILITY_ATOM(name, "name")
