@@ -1080,7 +1080,7 @@ PRInt32 nsNNTPProtocol::ReadLine(nsIInputStream * inputStream, PRUint32 length, 
 	PRUint32 numBytesLastRead = 0;  // total number of bytes read in the last cycle...
 	do
 	{
-		inputStream->Read(m_dataBuf, numBytesRead /* offset into m_dataBuf */, 1 /* read just one byte */, &numBytesLastRead);
+		inputStream->Read(m_dataBuf+numBytesRead /* offset into m_dataBuf */, 1 /* read just one byte */, &numBytesLastRead);
 		numBytesRead += numBytesLastRead;
 	} while (numBytesRead <= numBytesToRead && numBytesLastRead > 0 && m_dataBuf[numBytesRead-1] != LF);
 
@@ -1116,8 +1116,7 @@ PRInt32 nsNNTPProtocol::SendData(const char * dataBuffer)
 		nsresult rv;
         
         int len = PL_strlen(dataBuffer);
-        rv = m_outputStream->Write(dataBuffer, 0 /* offset */,
-                                   len, &writeCount);
+        rv = m_outputStream->Write(dataBuffer, len, &writeCount);
 		if (NS_SUCCEEDED(rv) && (writeCount == (PRUint32)len))
 		{
 			// notify the consumer that data has arrived
