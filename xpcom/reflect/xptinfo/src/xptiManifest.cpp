@@ -131,7 +131,6 @@ PRBool xptiManifest::Write(xptiInterfaceInfoManager* aMgr,
     PRUint32 size32;
     PRIntn interfaceCount = 0;
     nsCAutoString appDirString;
-    nsCOMPtr<nsIFile> greDirectory;
     
     nsCOMPtr<nsILocalFile> tempFile;
     if(!aMgr->GetCloneOfManifestDir(getter_AddRefs(tempFile)) || !tempFile)
@@ -178,8 +177,6 @@ PRBool xptiManifest::Write(xptiInterfaceInfoManager* aMgr,
                        (int) aWorkingSet->GetDirectoryCount()))
         goto out;
 
-    NS_GetSpecialDirectory(NS_GRE_COMPONENT_DIR, getter_AddRefs(greDirectory));
-
     for(i = 0; i < aWorkingSet->GetDirectoryCount(); i++)
     {
         nsCOMPtr<nsILocalFile> dir;        
@@ -189,19 +186,9 @@ PRBool xptiManifest::Write(xptiInterfaceInfoManager* aMgr,
         if(!dir)
             goto out;
 
-        PRBool isGREDir = PR_FALSE;
-        if (greDirectory)
-            dir->Equals(greDirectory, &isGREDir);
-
-        if (isGREDir) {
-            str = "gre";
-        }
-        else 
-        {
-            dir->GetPersistentDescriptor(str);
-            if(str.IsEmpty())
-                goto out;
-        }
+        dir->GetPersistentDescriptor(str);
+        if(str.IsEmpty())
+            goto out;
         
         if(!PR_fprintf(fd, "%d,%s\n", (int) i, str.get()))
             goto out;
@@ -504,8 +491,6 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
 
     for(i = 0; i < dirCount; ++i)
     {
-        nsCAutoString str;
-
         if(!reader.NextLine())
             goto out;
        
@@ -517,23 +502,8 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
         if(i != atoi(values[0]))
             goto out;
 
-        if (0 != PL_strcmp(values[1], "gre"))
-        {
-            nsCOMPtr<nsIFile> greDirectory;
-            NS_GetSpecialDirectory(NS_GRE_COMPONENT_DIR, getter_AddRefs(greDirectory));
-            nsCOMPtr<nsILocalFile> lFile = do_QueryInterface(greDirectory);
-            if (!lFile)
-                goto out;
-
-            lFile->GetPersistentDescriptor(str);
-        }
-        else
-        { 
-            str = values[1];
-        }            
-
         // directoryname
-        if(!aWorkingSet->DirectoryAtMatchesPersistentDescriptor(i, str.get()))
+        if(!aWorkingSet->DirectoryAtMatchesPersistentDescriptor(i, values[1]))
             goto out;    
     }
 
