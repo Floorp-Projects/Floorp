@@ -48,7 +48,7 @@ char *JNIShortMangler::mangle(const char *className,
   
   bufptr += NameMangler::mangleUTFString(className, bufptr, 
 					 bufend - bufptr, 
-					 NameMangler::mangleUTFJNI);
+					 NameMangler::mangleUTFClass);
 
   if (bufend - bufptr > 1) 
     *bufptr++ = '_';
