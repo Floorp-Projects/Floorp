@@ -2861,39 +2861,43 @@ nsHTMLDocument::GetSelection(nsAWritableString& aReturn)
 {
   aReturn.Truncate();
 
-  nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
-
-  if (!shell)
-    return NS_OK;
-
-  nsCOMPtr<nsIFrameSelection> selection;
-  shell->GetFrameSelection(getter_AddRefs(selection));  
-
-  if (!selection)
-    return NS_OK;
-
-  nsCOMPtr<nsISelection> domSelection;
-
-  selection->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                          getter_AddRefs(domSelection));
-
-  if (!domSelection)
-    return NS_OK;
-  nsCOMPtr<nsISelectionPrivate> privSel(do_QueryInterface(domSelection));
-
   nsCOMPtr<nsIConsoleService> consoleService
     (do_GetService("@mozilla.org/consoleservice;1"));
-
+ 
   if (consoleService) {
     consoleService->LogStringMessage(NS_LITERAL_STRING("Deprecated method document.getSelection() called.  Please use window.getSelection() instead.").get());
   }
-  PRUnichar *tmp;
-  nsresult rv = privSel->ToStringWithFormat("text/plain", nsIDocumentEncoder::OutputFormatted |nsIDocumentEncoder::OutputSelectionOnly, 0, &tmp);
-  if (tmp)
-  {
-    aReturn.Assign(tmp);
-    nsMemory::Free(tmp);
+
+  nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(0);
+
+  if (!shell) {
+    return NS_OK;
   }
+
+  nsCOMPtr<nsIPresContext> cx;
+
+  shell->GetPresContext(getter_AddRefs(cx));
+  NS_ENSURE_TRUE(cx, NS_OK);
+
+  nsCOMPtr<nsISupports> container;
+
+  cx->GetContainer(getter_AddRefs(container));
+  NS_ENSURE_TRUE(container, NS_OK);
+
+  nsCOMPtr<nsIDOMWindow> window(do_GetInterface(container));
+  NS_ENSURE_TRUE(window, NS_OK);
+
+  nsCOMPtr<nsISelection> selection;
+
+  nsresult rv = window->GetSelection(getter_AddRefs(selection));
+  NS_ENSURE_TRUE(selection && NS_SUCCEEDED(rv), rv);
+
+  nsXPIDLString str;
+
+  rv = selection->ToString(getter_Copies(str));
+
+  aReturn.Assign(str);
+
   return rv;
 }
 
