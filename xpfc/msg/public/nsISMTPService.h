@@ -22,6 +22,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIMessage.h"
+#include "nsISMTPObserver.h"
 
 //b64f8b50-6f77-11d2-8dbc-00805f8a7ab6
 #define NS_ISMTP_SERVICE_IID   \
@@ -35,8 +36,16 @@ public:
 
   NS_IMETHOD Init() = 0;
 
-  NS_IMETHOD SendMail(nsString& aServer, nsString& aFrom, nsString& aTo, nsString& aSubject, nsString& aBody) = 0;
-  NS_IMETHOD SendMail(nsString& aServer, nsIMessage& aMessage) = 0;
+  NS_IMETHOD SendMail(nsString& aServer, 
+                      nsString& aFrom, 
+                      nsString& aTo, 
+                      nsString& aSubject, 
+                      nsString& aBody,
+                      nsISMTPObserver * aObserver = nsnull) = 0;
+
+  NS_IMETHOD SendMail(nsString& aServer, 
+                      nsIMessage& aMessage,
+                      nsISMTPObserver * aObserver = nsnull) = 0;
 
 };
 

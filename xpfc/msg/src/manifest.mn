@@ -21,6 +21,7 @@ CPPSRCS = \
     nsSMTPService.cpp \
     nsMIMEService.cpp \
 	nsMessage.cpp \
+	nsSMTPServerCallback.cpp \
 	$(NULL)
 
 REQUIRES = xpcom raptor netlib msgsdk
