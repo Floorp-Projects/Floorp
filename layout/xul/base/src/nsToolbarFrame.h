@@ -47,6 +47,10 @@
 #include "nsBoxFrame.h"
 
 #ifdef TOOLBAR_DD
+#include "nsIStyleContext.h"
+#endif
+
+#ifdef TOOLBAR_DD
 class nsToolbarDragListener;
 class nsToolbarMouseMotionListener;
 #endif
