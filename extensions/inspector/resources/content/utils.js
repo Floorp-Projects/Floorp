@@ -147,31 +147,23 @@ function nodeTypeToText (nodeType)
   return nodeType;
 }
 
-// Functions for converting Inspector-style command constructors to nsITransaction constructors
-function ConvertCommandToTxn(constructor) {
-  constructor.prototype.doTransaction = constructor.prototype.doCommand;
-  constructor.prototype.undoTransaction = constructor.prototype.undoCommand;
-  constructor.prototype.redoTransaction = constructor.prototype.doCommand;
-  constructor.prototype.merge = ConvertCommandToTxn.txnMerge;
-  constructor.prototype.QueryInterface = ConvertCommandToTxn.txnQueryInterface;
+// ::::::: nsITransaction helper functions :::::::
 
-  if (arguments.length > 1) {
-    constructor.prototype.txnType = arguments[1];
-  } else {
-    constructor.prototype.txnType = "standard";
-  }
-  if (arguments.length > 2) {
-    constructor.prototype.isTransient = arguments[2];
-  } else {
-    constructor.prototype.isTransient = false;
-  }
-}
-ConvertCommandToTxn.txnQueryInterface = function(theUID, theResult) {
-  if (theUID == Components.interfaces.nsITransaction || theUID == Components.interfaces.nsISupports) {
+function txnQueryInterface(theUID, theResult)
+{
+  const nsITransaction = Components.interfaces.nsITransaction;
+  const nsISupports    = Components.interfaces.nsISupports;
+  if (theUID == nsITransaction || theUID == nsISupports) {
     return this;
   }
   return null;
 }
-ConvertCommandToTxn.txnMerge = function() {
+
+function txnMerge()
+{
   return false;
+}
+
+function txnRedoTransaction() {
+  this.doTransaction();
 }
