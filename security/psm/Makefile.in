@@ -80,11 +80,11 @@ ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 		cp -r $(topsrcdir)/security/psm/doc $(MOZ_BUILD_ROOT)/security/psm/; \
 	fi;
 endif
-	cd $(MOZ_BUILD_ROOT)/security/coreconf; gmake $(DEFAULT_GMAKE_FLAGS)
-	cd $(MOZ_BUILD_ROOT)/security/nss; gmake $(DEFAULT_GMAKE_FLAGS) moz_import
-	cd $(MOZ_BUILD_ROOT)/security/nss/lib; gmake $(DEFAULT_GMAKE_FLAGS)
-	cd $(MOZ_BUILD_ROOT)/security/psm/ui; gmake $(DEFAULT_GMAKE_FLAGS)
-	cd $(MOZ_BUILD_ROOT)/security/psm/server; gmake $(DEFAULT_GMAKE_FLAGS)
+	cd $(MOZ_BUILD_ROOT)/security/coreconf; $(MAKE) $(DEFAULT_GMAKE_FLAGS)
+	cd $(MOZ_BUILD_ROOT)/security/nss; $(MAKE) $(DEFAULT_GMAKE_FLAGS) moz_import
+	cd $(MOZ_BUILD_ROOT)/security/nss/lib; $(MAKE) $(DEFAULT_GMAKE_FLAGS)
+	cd $(MOZ_BUILD_ROOT)/security/psm/ui; $(MAKE) $(DEFAULT_GMAKE_FLAGS)
+	cd $(MOZ_BUILD_ROOT)/security/psm/server; $(MAKE) $(DEFAULT_GMAKE_FLAGS)
 	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psm $(DIST)/bin/
 	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata $(DIST)/bin
 	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/start-psm $(DIST)/bin
@@ -92,10 +92,10 @@ endif
 
 clean clobber clobber_all realclean distclean::
 ifeq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
-	cd $(MOZ_BUILD_ROOT)/security/coreconf; gmake $(DEFAULT_GMAKE_FLAGS) clean
-	cd $(MOZ_BUILD_ROOT)/security/nss; gmake $(DEFAULT_GMAKE_FLAGS) clean
-	cd $(MOZ_BUILD_ROOT)/security/psm/ui; gmake $(DEFAULT_GMAKE_FLAGS) clean
-	cd $(MOZ_BUILD_ROOT)/security/psm/server; gmake $(DEFAULT_GMAKE_FLAGS) clean
+	cd $(MOZ_BUILD_ROOT)/security/coreconf; $(MAKE) $(DEFAULT_GMAKE_FLAGS) clean
+	cd $(MOZ_BUILD_ROOT)/security/nss; $(MAKE) $(DEFAULT_GMAKE_FLAGS) clean
+	cd $(MOZ_BUILD_ROOT)/security/psm/ui; $(MAKE) $(DEFAULT_GMAKE_FLAGS) clean
+	cd $(MOZ_BUILD_ROOT)/security/psm/server; $(MAKE) $(DEFAULT_GMAKE_FLAGS) clean
 else
 	if test -d $(MOZ_BUILD_ROOT)/security/nss; then \
 		rm -rf $(MOZ_BUILD_ROOT)/security/nss;  \
