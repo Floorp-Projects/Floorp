@@ -148,8 +148,8 @@ PR_LOG(NNTP, out, buf) ;
 */
 /* PRIVATE XP_List * nntp_connection_list=0; */
 PRIVATE XP_Bool net_news_last_username_probably_valid=FALSE;
-PRIVATE int32 net_NewsChunkSize=-1;  /* default */
-/* PRIVATE int32 net_news_timeout = 170; */
+PRIVATE PRInt32 net_NewsChunkSize=-1;  /* default */
+/* PRIVATE PRInt32 net_news_timeout = 170; */
 /* seconds that an idle NNTP conn can live */
 
 static char * last_password = 0;
@@ -536,7 +536,7 @@ PRInt32 nsNNTPProtocol::SendListExtensionsResponse(nsIInputStream * inputStream,
 		if (status < 0)
 		{
 #ifdef UNREADY_CODE
-			ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+			ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 #endif
 			/* return TCP error */
 			return MK_TCP_READ_ERROR;
@@ -613,7 +613,7 @@ PRInt32 nsNNTPProtocol::SendListSearchesResponse(nsIInputStream * inputStream, P
 	if (status < 0)
 	{
 #ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 #endif
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
@@ -668,7 +668,7 @@ PRInt32 nsNNTPProtocol::SendListSearchHeadersResponse(nsIInputStream * inputStre
 	if (status < 0)
 	{
 #ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 #endif
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
@@ -729,7 +729,7 @@ PRInt32 nsNNTPProtocol::GetPropertiesResponse(nsIInputStream * inputStream, PRUi
 	if (status < 0)
 	{
 #ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 #endif
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
@@ -808,7 +808,7 @@ PRInt32 nsNNTPProtocol::SendListSubscriptionsResponse(nsIInputStream * inputStre
 	if (status < 0)
 	{
 #ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 #endif
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
@@ -1705,7 +1705,7 @@ PRInt32 nsNNTPProtocol::BeginNewsgroups()
 PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32 length)
 {
 	char *line, *s, *s1=NULL, *s2=NULL, *flag=NULL;
-	int32 oldest, youngest;
+	PRInt32 oldest, youngest;
 
 	PRInt32 status = ReadLine(inputStream, length, &line);
     if(status == 0)
@@ -1724,7 +1724,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
     if(status<0)
     {
 #ifdef UNREADY_CODE
-        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 #endif
         /* return TCP error
          */
@@ -1860,7 +1860,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
     if(status<0)
 	{
 #ifdef UNREADY_CODE
-        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 #endif
         /* return TCP error
          */
@@ -1916,7 +1916,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 
 PRInt32 nsNNTPProtocol::BeginReadXover()
 {
-    int32 count;     /* Response fields */
+    PRInt32 count;     /* Response fields */
 	PRInt32 status = 0; 
 
 	/* Make sure we never close and automatically reopen the connection at this
@@ -2142,7 +2142,7 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
 	{
 #ifdef UNREADY_CODE
         ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR,
-													  SOCKET_ERRNO);
+													  PR_GetOSError());
 #endif
 
         /* return TCP error
@@ -2276,7 +2276,7 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
   if(status < 0)
   {
 #ifdef UNREADY_CODE
-	  ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+	  ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 #endif
 
 	  /* return TCP error
@@ -2441,7 +2441,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
     {
 		/* send group command to server
 		 */
-		int32 percent;
+		PRInt32 percent;
 
 		char outputBuffer[OUTPUT_BUFFER_SIZE];
 
@@ -2449,7 +2449,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 		status = SendData(outputBuffer);
 
 		percent = (m_newsRCListCount) ?
-					(int32) (100.0 * ( (double)m_newsRCListIndex / (double)m_newsRCListCount )) :
+					(PRInt32) (100.0 * ( (double)m_newsRCListIndex / (double)m_newsRCListCount )) :
 					0;
 #ifdef UNREADY_CODE
 		FE_SetProgressBarPercent (ce->window_id, percent);
@@ -2520,7 +2520,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
     if(m_responseCode == MK_NNTP_RESPONSE_GROUP_SELECTED)
     {
 		char *num_arts = 0, *low = 0, *high = 0, *group = 0;
-		int32 first_art, last_art;
+		PRInt32 first_art, last_art;
 
 		/* line looks like:
 		 *     211 91 3693 3789 comp.infosystems
@@ -2868,7 +2868,7 @@ PRInt32 nsNNTPProtocol::XPATResponse(nsIInputStream * inputStream, PRUint32 leng
 			long articleNumber;
 			sscanf(line, "%ld", &articleNumber);
 #ifdef UNREADY_CODE
-			MSG_AddNewsXpatHit (ce->window_id, (uint32) articleNumber);
+			MSG_AddNewsXpatHit (ce->window_id, (PRUint32) articleNumber);
 #endif
 		}
 		else
@@ -3216,7 +3216,7 @@ PRInt32 nsNNTPProtocol::SearchResults(nsIInputStream *inputStream, PRUint32 leng
 	if (status < 0)
 	{
 #ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 #endif
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
