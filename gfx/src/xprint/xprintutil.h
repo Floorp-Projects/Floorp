@@ -84,7 +84,8 @@ typedef struct {
 
 /*
  * Struct for XpuGetResolutionList(), XpuFreeResolutionList(),
- * XpuGetResolution(), XpuSetPageResolution(), XpuSetDocResolution()
+ * XpuGetResolution(), XpuSetPageResolution(), XpuSetDocResolution(),
+ * XpuFindResolution()
  */
 typedef struct {
   long dpi;
@@ -158,6 +159,7 @@ void XpuFreeResolutionList( XpuResolutionList list );
 Bool XpuGetResolution( Display *pdpy, XPContext pcontext, long *dpi );
 Bool XpuSetPageResolution( Display *pdpy, XPContext pcontext, XpuResolutionRec * );
 Bool XpuSetDocResolution( Display *pdpy, XPContext pcontext, XpuResolutionRec * );
+XpuResolutionRec *XpuFindResolution( XpuResolutionList list, int list_count, long min_dpi, long max_dpi );
 
 /* Get/Set orientation */
 XpuOrientationList XpuGetOrientationList( Display *pdpy, XPContext pcontext, int *numEntriesPtr );

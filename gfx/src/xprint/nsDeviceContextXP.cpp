@@ -37,6 +37,10 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#define PR_LOGGING 1
+#include "prlog.h"
  
 /* PostScript/Xprint print modules do not support more than one object
  * instance because they use global vars which cannot be shared between
@@ -310,6 +314,7 @@ NS_IMETHODIMP nsDeviceContextXp::BeginDocument(PRUnichar * aTitle)
 
 void nsDeviceContextXp::DestroyXPContext()
 {
+  PR_LOG(nsDeviceContextXpLM, PR_LOG_DEBUG, ("nsDeviceContextXp::DestroyXPContext()\n"));
   if (mPrintContext != nsnull) {   
     /* gisburn: mPrintContext cannot be reused between to print 
      * tasks as the destination print server may be a different one 
@@ -345,7 +350,15 @@ NS_IMETHODIMP nsDeviceContextXp::EndDocument(void)
  */
 NS_IMETHODIMP nsDeviceContextXp::AbortDocument(void)
 {
-  return EndDocument();
+  PR_LOG(nsDeviceContextXpLM, PR_LOG_DEBUG, ("nsDeviceContextXp::AbortDocument()\n"));
+  nsresult rv = NS_OK;
+
+  if (mPrintContext != nsnull) {
+    rv = mPrintContext->AbortDocument();
+    DestroyXPContext();
+  }
+  
+  return rv;
 }
 
 /** ---------------------------------------------------

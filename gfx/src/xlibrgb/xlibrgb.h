@@ -72,6 +72,8 @@ _XFUNCPROTOBEGIN
 /* prtypes contains definitions for uint32/int32 and uint16/int16 */
 #include "prtypes.h"
 #include "prcpucfg.h"
+
+#define NS_TO_XXLIB_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 #else
 typedef unsigned int uint32;
 typedef int int32;
@@ -186,6 +188,20 @@ xxlib_draw_indexed_image (XlibRgbHandle *handle, Drawable drawable,
                           unsigned char *buf,
                           int rowstride,
                           XlibRgbCmap *cmap);
+
+void
+xxlib_draw_xprint_scaled_rgb_image( XlibRgbHandle *handle,
+                                    Drawable drawable,
+                                    long paper_resolution,
+                                    long image_resolution,
+                                    GC gc,
+                                    int x,
+                                    int y,
+                                    int width,
+                                    int height,
+                                    XlibRgbDither dith,
+                                    unsigned char *rgb_buf,
+                                    int rowstride);
 
 /* Below are some functions which are primarily useful for debugging
    and experimentation. */

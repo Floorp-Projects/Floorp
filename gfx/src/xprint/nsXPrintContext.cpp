@@ -106,6 +106,7 @@ nsXPrintContext::nsXPrintContext() :
   mDrawable(None),
   mGC(nsnull),
   mDepth(0),
+  mJobStarted(PR_FALSE),
   mIsGrayscale(PR_FALSE), /* default is color output */
   mIsAPrinter(PR_TRUE),   /* default destination is printer */
   mPrintFile(nsnull),
@@ -126,6 +127,12 @@ nsXPrintContext::~nsXPrintContext()
  
   if (mPDisplay)
   {
+    if (mJobStarted)
+    {
+      /* Clean-up if noone else did it yet... */
+      AbortDocument();
+    }
+
     if (mGC)
     {
       mGC->Release();
@@ -152,12 +159,10 @@ NS_IMPL_ISUPPORTS1(nsXPrintContext, nsIDrawingSurfaceXlib)
 static nsresult
 AlertBrokenXprt(Display *pdpy)
 {
-  nsresult rv = NS_OK;
-
   /* Check for broken Xprt
    * Xfree86 Xprt is the only known broken version of Xprt (see bug 120211
    * for a list of tested&working Xprt servers) ...
-   * FixMe: We should look at XVendorRelease(), too - but there is no feedback
+   * XXX: We should look at XVendorRelease(), too - but there is no feedback
    * from XFree86.org when this issue will be fixed... ;-(
    */
   if (!(strstr(XServerVendor(pdpy), "XFree86") /*&& XVendorRelease(pdpy) < 45000000L*/))
@@ -234,6 +239,18 @@ nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
         xargs.pseudogray      = True;
         mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);
       }
+
+      if (!mXlibRgbHandle)
+      {
+        PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("trying black/white\n"));
+
+        /* Last attempt using StaticGray 1bit (b/w printer) */
+        xargs.xtemplate.c_class = StaticGray;
+        xargs.xtemplate.depth   = 1;
+        xargs.xtemplate_mask    = VisualClassMask|VisualDepthMask;
+        xargs.pseudogray        = False;
+        mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);
+      }
     }
   }
   else
@@ -245,10 +262,12 @@ nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
     mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);
   }
   
+  /* No XlibRgb handle ? Either we do not have a matching visual or no memory... */
   if (!mXlibRgbHandle)
-    return NS_ERROR_GFX_PRINTER_INVALID_ATTRIBUTE;
+    return NS_ERROR_GFX_PRINTER_COLORSPACE_NOT_SUPPORTED;
 
   XpGetPageDimensions(mPDisplay, mPContext, &width, &height, &rect);
+
   rv = SetupWindow(rect.x, rect.y, rect.width, rect.height);
   if (NS_FAILED(rv))
     return rv;
@@ -292,8 +311,8 @@ nsXPrintContext::SetupWindow(int x, int y, int width, int height)
   mVisual     = xxlib_rgb_get_visual(mXlibRgbHandle);
   mDepth      = xxlib_rgb_get_depth(mXlibRgbHandle);
 
-  background = XWhitePixel(mPDisplay, mScreenNumber);
-  foreground = XBlackPixel(mPDisplay, mScreenNumber);  
+  background = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle, NS_TO_XXLIB_RGB(NS_RGB(0xFF, 0xFF, 0xFF))); /* white */
+  foreground = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle, NS_TO_XXLIB_RGB(NS_RGB(0x00, 0x00, 0x00))); /* black */
   parent_win = XRootWindow(mPDisplay, mScreenNumber);                                         
                                              
   xattributes.background_pixel = background;
@@ -328,7 +347,7 @@ nsresult nsXPrintContext::SetPageSize(float page_width_mm, float page_height_mm)
          (double)page_width_mm, (double)page_height_mm));
 
   mlist = XpuGetMediumSourceSizeList(mPDisplay, mPContext, &mlist_count);
-  if( !mlist || mlist_count == 0 )
+  if( !mlist )
   {
     return NS_ERROR_GFX_PRINTER_PAPER_SIZE_NOT_SUPPORTED;
   }
@@ -396,17 +415,28 @@ nsresult nsXPrintContext::SetOrientation(int landscape)
 
   /* Get list of supported orientations */
   list = XpuGetOrientationList(mPDisplay, mPContext, &list_count);
-  if( !list || list_count == 0 )
+  if( !list )
   {
     PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XpuGetOrientationList() failure.\n"));  
     return NS_ERROR_GFX_PRINTER_ORIENTATION_NOT_SUPPORTED;
   }
 
+#ifdef PR_LOGGING 
+  int i;
+  /* Print orientations for the log... */
+  for( i = 0 ; i < list_count ; i++ )
+  {
+    XpuOrientationRec *curr = &list[i];
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("got orientation='%s'\n", curr->orientation));
+  }
+#endif /* PR_LOGGING */
+
   /* Find requested orientation */
-  match = XpuFindOrientationByName(list, list_count, orientation );
+  match = XpuFindOrientationByName(list, list_count, orientation);
   if (!match)
   {
     PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XpuFindOrientationByName() failure.\n"));  
+    XpuFreeOrientationList(list);
     return NS_ERROR_GFX_PRINTER_ORIENTATION_NOT_SUPPORTED;
   }
 
@@ -414,8 +444,21 @@ nsresult nsXPrintContext::SetOrientation(int landscape)
   if (XpuSetDocOrientation(mPDisplay, mPContext, match) != 1)
   {
     PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XpuSetDocOrientation() failure.\n"));  
-    return NS_ERROR_GFX_PRINTER_ORIENTATION_NOT_SUPPORTED;
+    
+    /* We have a "match" in the list of supported orientations but we are not
+     * allowed to set it... Well - if this happens and we only have ONE entry
+     * in this list then we can safely assume that this is the only choice...
+     * (please correct me if I am wrong) 
+     */
+    if (list_count != 1)
+    {
+      /* ... otherwise we have a problem... */
+      XpuFreeOrientationList(list);
+      return NS_ERROR_GFX_PRINTER_ORIENTATION_NOT_SUPPORTED;
+    }
   }
+  
+  XpuFreeOrientationList(list);
 
   return NS_OK;
 }
@@ -473,9 +516,7 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
    */
   PR_SetEnv("XSUNTRANSPORT=xxx");
      
-  /* get printer, either by "name" (foobar) or "name@display" (foobar@gaja:5)
-   * ToDo: report error to user (dialog)
-   */
+  /* Get printer, either by "name" (foobar) or "name@display" (foobar@gaja:5) */
   if( XpuGetPrinter(printername, &mPDisplay, &mPContext) != 1 )
     return NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND;
 
@@ -498,19 +539,19 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
   
   PRInt32 page_width_in_twips,
           page_height_in_twips;
-  float   page_width_mm,
-          page_height_mm;
 
   aSpec->GetPageSizeInTwips(&page_width_in_twips, &page_height_in_twips);
-  page_width_mm  = NS_TWIPS_TO_MILLIMETERS(page_width_in_twips);
-  page_height_mm = NS_TWIPS_TO_MILLIMETERS(page_height_in_twips);
   
-  if (NS_FAILED(XPU_TRACE(rv = SetPageSize(page_width_mm, page_height_mm))))
+  if (NS_FAILED(XPU_TRACE(rv = SetPageSize(NS_TWIPS_TO_MILLIMETERS(page_width_in_twips),
+                                           NS_TWIPS_TO_MILLIMETERS(page_height_in_twips)))))
     return rv;
   
   if (NS_FAILED(XPU_TRACE(rv = SetOrientation(landscape))))
     return rv;
-    
+
+  if (NS_FAILED(XPU_TRACE(rv = SetResolution())))
+    return rv;
+   
   if (XPU_TRACE(XpuSetDocumentCopies(mPDisplay, mPContext, num_copies)) != 1)
     return NS_ERROR_GFX_PRINTER_TOO_MANY_COPIES;
         
@@ -526,10 +567,8 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
   dumpXpAttributes(mPDisplay, mPContext);
 #endif /* XPRINT_DEBUG_SOMETIMES_USEFULL */
 
-  /* get default printer resolution. May fail if Xprt is misconfigured.
-   * ToDo: Report error to user (dialog)
-   */
-  if( XpuGetResolution(mPDisplay, mPContext, &mPrintResolution) == False )
+  /* Get default printer resolution. May fail if Xprt is misconfigured.*/
+  if( XpuGetResolution(mPDisplay, mPContext, &mPrintResolution) != 1 )
     return NS_ERROR_GFX_PRINTER_DRIVER_CONFIGURATION_ERROR;
 
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("print resolution %ld\n", (long)mPrintResolution));
@@ -538,47 +577,112 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
   XpSelectInput(mPDisplay, mPContext, XPPrintMask);  
 
   return NS_OK;
-}  
-  
-/* MyConvertUCS2ToLocalEncoding:
- * Note that this function is _only_ a _hack_ until RFE 73446 
- * (http://bugzilla.mozilla.org/show_bug.cgi?id=73446 - "RFE: 
- * Need NS_ConvertUCS2ToLocalEncoding() and 
- * NS_ConvertLocalEncodingToUCS2()") gets implemented...
- * Below we need COMPOUNT_TEXT which usually is the same as the Xserver's 
- * local encoding - this hack should at least work for C/POSIX 
- * and *.UTF-8 locales...
- */
-static 
-char *MyConvertUCS2ToLocalEncoding( PRUnichar *str )
+}
+
+NS_IMETHODIMP
+nsXPrintContext::SetResolution( void )
 {
-  /* Use strdup() to avoid any silly effects... 
-   */
-  return PL_strdup(NS_ConvertUCS2toUTF8(str).get());
-}  
+  XpuResolutionList list;
+  int               list_count;
+  XpuResolutionRec *match;
+  int               i;
+  long              default_resolution;
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::SetResolution().\n"));  
 
+  list = XpuGetResolutionList(mPDisplay, mPContext, &list_count);
+  if( !list )
+    return NS_ERROR_GFX_PRINTER_DRIVER_CONFIGURATION_ERROR;
 
+#ifdef PR_LOGGING 
+  /* Print resolutions for the log... */
+  for( i = 0 ; i < list_count ; i++ )
+  {
+    XpuResolutionRec *curr = &list[i];
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("got resolution=%ld\n", (long)curr->dpi));
+  }
+#endif /* PR_LOGGING */
+
+  /* We rely on printer default resolution if we have one... */
+  if( XpuGetResolution(mPDisplay, mPContext, &default_resolution) == 1 )
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("using printers default resolution=%ld.\n", default_resolution));  
+    XpuFreeResolutionList(list);
+    return NS_OK;
+  }
+
+  /* XXX: Hardcoded resolution values... */
+  match = XpuFindResolution(list, list_count, 300, 300); 
+  if (!match)
+  {
+    /* Find a match between 300-600, lower resolution is better */
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("searching between 300-600, lower resolution is better...\n"));
+    match = XpuFindResolution(list, list_count, 300, 600); 
+
+    if (!match)
+    {
+      /* Find a match between 150-300, higher resolution is better */
+      PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("searching between 150-300, higher resolution is better...\n"));
+      match = XpuFindResolution(list, list_count, 300, 150); 
+
+      if (!match)
+      {
+        /* If there is still no match then use the first one from the matches we
+         * obtained...*/
+         match = &list[0];
+      }
+    }  
+  }
+
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("setting resolution to %ld DPI.\n", match->dpi));  
+    
+  if (XpuSetDocResolution(mPDisplay, mPContext, match) != 1)
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XpuSetDocResolution() failure.\n"));
+ 
+    /* We have a "match" in the list of supported resolutions but we are not
+     * allowed to set it... Well - if this happens and we only have ONE entry
+     * in this list then we can safely assume that this is the only choice...
+     * (please correct me if I am wrong) 
+     */
+    if (list_count != 1)
+    {
+      /* ... otherwise we have a problem... */
+      XpuFreeResolutionList(list);
+      return NS_ERROR_GFX_PRINTER_DRIVER_CONFIGURATION_ERROR;
+    }
+  }
+  
+  XpuFreeResolutionList(list);
+  
+  return NS_OK;
+}
+  
 NS_IMETHODIMP
 nsXPrintContext::BeginDocument( PRUnichar *aTitle )
 {
-  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::BeginDocument()\n"));
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::BeginDocument(aTitle='%s')\n", ((aTitle)?(NS_ConvertUCS2toUTF8(aTitle).get()):("<NULL>"))));
   
-  char *s = nsnull, 
-       *job_title;
+  nsXPIDLCString job_title;
        
-  if( aTitle != nsnull )
-    job_title = s = MyConvertUCS2ToLocalEncoding(aTitle); 
+  if (aTitle)
+  {
+    /* Note that this is _only_ a _hack_ until bug 73446 
+     * ("RFE: Need NS_ConvertUCS2ToLocalEncoding() and 
+     * NS_ConvertLocalEncodingToUCS2()") is implemented...
+     * Below we need COMPOUNT_TEXT which usually is the same as the Xserver's 
+     * local encoding - this hack should at least work for C/POSIX 
+     * and *.UTF-8 locales...
+     */
+    job_title.Assign(NS_ConvertUCS2toUTF8(aTitle));
+  }
   else
-    job_title = (char *)"Mozilla document without title";  
-
-  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::BeginDocument: document title: '%s'\n", XPU_NULLXSTR(job_title)));
-  
+  {
+    job_title.Assign(NS_LITERAL_CSTRING("Mozilla document without title"));
+  }
+ 
   /* Set the Job Attributes */
   XpuSetJobTitle(mPDisplay, mPContext, job_title);
   
-  if( s != nsnull ) 
-    PL_strfree(s);
-
   // Check the output type
   if(mIsAPrinter) 
   {
@@ -598,6 +702,7 @@ nsXPrintContext::BeginDocument( PRUnichar *aTitle )
 
   XPU_TRACE(XpuWaitForPrintNotify(mPDisplay, mXpEventBase, XPStartJobNotify));
 
+  mJobStarted = PR_TRUE;
   
   return NS_OK;
 }  
@@ -605,9 +710,8 @@ nsXPrintContext::BeginDocument( PRUnichar *aTitle )
 NS_IMETHODIMP
 nsXPrintContext::BeginPage()
 {
-  // Move the print window according to the given margin
-  // XMoveWindow(mPDisplay, mDrawable, 100, 100);
-  
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::BeginPage()\n"));
+   
   XPU_TRACE(XpStartPage(mPDisplay, mDrawable));
   XPU_TRACE(XpuWaitForPrintNotify(mPDisplay, mXpEventBase, XPStartPageNotify));
 
@@ -617,6 +721,8 @@ nsXPrintContext::BeginPage()
 NS_IMETHODIMP 
 nsXPrintContext::EndPage()
 {
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::EndPage()\n"));
+
   XPU_TRACE(XpEndPage(mPDisplay));
   XPU_TRACE(XpuWaitForPrintNotify(mPDisplay, mXpEventBase, XPEndPageNotify));
   
@@ -626,6 +732,8 @@ nsXPrintContext::EndPage()
 NS_IMETHODIMP 
 nsXPrintContext::EndDocument()
 {
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::EndDocument()\n"));
+
   XPU_TRACE(XpEndJob(mPDisplay));
   XPU_TRACE(XpuWaitForPrintNotify(mPDisplay, mXpEventBase, XPEndJobNotify));
 
@@ -638,8 +746,49 @@ nsXPrintContext::EndDocument()
     {
       PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XpuWaitForPrintFileChild returned success.\n"));
     }
-  }
+    else
+    {
+      PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XpuWaitForPrintFileChild returned failure.\n"));
+    }
     
+    mXpuPrintToFileHandle = nsnull;
+  }
+
+  mJobStarted = PR_FALSE;
+    
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsXPrintContext::AbortDocument()
+{
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::AbortDocument()\n"));
+
+  if( mJobStarted )
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("canceling...\n"));
+    XPU_TRACE(XpCancelJob(mPDisplay, True));
+  }  
+
+  /* Are we printing to a file ? */
+  if( !mIsAPrinter && mXpuPrintToFileHandle )
+  {   
+    if( XPU_TRACE(XpuWaitForPrintFileChild(mXpuPrintToFileHandle)) == XPGetDocFinished )
+    {
+      PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XpuWaitForPrintFileChild returned success.\n"));
+    }
+    else
+    {
+      PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XpuWaitForPrintFileChild returned failure.\n"));
+    }
+
+    mXpuPrintToFileHandle = nsnull;
+  }
+
+  mJobStarted = PR_FALSE;
+
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("print job aborted.\n"));
+
   return NS_OK;
 }
 
@@ -959,7 +1108,7 @@ nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
   return rv;                     
 }
 
-                          
+                         
 // Draw the bitmap, this draw just has destination coordinates
 nsresult
 nsXPrintContext::DrawImageBits(xGC *xgc,
@@ -1056,12 +1205,13 @@ nsXPrintContext::DrawImageBits(xGC *xgc,
   }
 
 
-  xxlib_draw_rgb_image(mXlibRgbHandle,
-                       mDrawable,
-                       image_gc,
-                       aX, aY, aWidth, aHeight,
-                       NS_XPRINT_RGB_DITHER,
-                       image_bits, row_bytes);
+  xxlib_draw_xprint_scaled_rgb_image(mXlibRgbHandle,
+                                     mDrawable,
+                                     mPrintResolution, XpGetImageResolution(mPDisplay, mPContext),
+                                     image_gc,
+                                     aX, aY, aWidth, aHeight,
+                                     NS_XPRINT_RGB_DITHER,
+                                     image_bits, row_bytes);
   
   if( alpha_pixmap != None ) 
   {   
