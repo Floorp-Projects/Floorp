@@ -1306,8 +1306,6 @@ NS_IMETHODIMP nsEditor::Paste()
     mJSEditorLog->Paste();
 #endif // ENABLE_JS_EDITOR_LOG
 
-  nsIImage * image = nsnull;
-
   //printf("nsEditor::Paste\n");
   nsString stuffToPaste;
 
@@ -1327,14 +1325,10 @@ NS_IMETHODIMP nsEditor::Paste()
     // Get the nsITransferable interface for getting the data from the clipboard
     if (trans)
     {
-      // Create the desired DataFlavor for the type of data we want to get out of the transferable
-      nsAutoString htmlFlavor(kHTMLMime);
+      // The only data type we support is plaintext;
+      // derived classes will support other types.
       nsAutoString textFlavor(kTextMime);
-      nsAutoString imageFlavor(kJPEGImageMime);
-
-      trans->AddDataFlavor(&htmlFlavor);
       trans->AddDataFlavor(&textFlavor);
-      trans->AddDataFlavor(&imageFlavor);
 
       // Get the Data from the clipboard
       if (NS_SUCCEEDED(clipboard->GetData(trans)))
@@ -1347,28 +1341,13 @@ NS_IMETHODIMP nsEditor::Paste()
 #ifdef DEBUG
           printf("Got flavor [%s]\n", flavor.ToNewCString());
 #endif
-          if (flavor.Equals(htmlFlavor))
+          if (flavor.Equals(textFlavor))
           {
             if (data && len > 0) // stuffToPaste is ready for insertion into the content
             {
               stuffToPaste.SetString(data, len);
               rv = InsertText(stuffToPaste);
             }
-          }
-          else if (flavor.Equals(textFlavor))
-          {
-            if (data && len > 0) // stuffToPaste is ready for insertion into the content
-            {
-              stuffToPaste.SetString(data, len);
-              rv = InsertText(stuffToPaste);
-            }
-          }
-          else if (flavor.Equals(imageFlavor))
-          {
-            image = (nsIImage *)data;
-            // Insert Image code here
-            NS_RELEASE(image);
-            rv = NS_ERROR_FAILURE; // for now give error code
           }
         }
 
@@ -1377,9 +1356,6 @@ NS_IMETHODIMP nsEditor::Paste()
   }
   nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
 
-  //printf("Trying to insert '%s'\n", stuffToPaste.ToNewCString());
-
-  // Now let InsertText handle the hard stuff:
   return rv;
 }
 
