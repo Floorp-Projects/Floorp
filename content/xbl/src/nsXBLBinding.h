@@ -152,7 +152,6 @@ protected:
                      nsIDocument* aDocument, void** aScriptObject,
                      void** aClassObject);
 
-  void GetImmediateChild(nsIAtom* aTag, nsIContent** aResult);
   PRBool AllowScripts();  // XXX make const
   
 // MEMBER VARIABLES

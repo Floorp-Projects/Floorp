@@ -278,7 +278,7 @@ nsXBLPrototypeBinding::Init(const nsACString& aID,
 void
 nsXBLPrototypeBinding::Initialize()
 {
-  nsCOMPtr<nsIContent> content = GetImmediateChild(nsXBLAtoms::content);
+  nsIContent* content = GetImmediateChild(nsXBLAtoms::content);
   if (content) {
     ConstructAttributeTable(content);
     ConstructInsertionTable(content);
@@ -454,7 +454,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
     return;
 
   // Iterate over the elements in the array.
-  nsCOMPtr<nsIContent> content = GetImmediateChild(nsXBLAtoms::content);
+  nsIContent* content = GetImmediateChild(nsXBLAtoms::content);
   while (xblAttr) {
     nsIContent* element = xblAttr->GetElement();
 
@@ -549,7 +549,7 @@ PRBool PR_CALLBACK InstantiateInsertionPoint(nsHashKey* aKey, void* aData, void*
 
   // Locate the real content.
   nsIContent *instanceRoot = binding->GetAnonymousContent();
-  nsCOMPtr<nsIContent> templRoot = proto->GetImmediateChild(nsXBLAtoms::content);
+  nsIContent *templRoot = proto->GetImmediateChild(nsXBLAtoms::content);
   nsIContent *realContent = proto->LocateInstance(nsnull, templRoot,
                                                   instanceRoot, content);
   if (!realContent)
@@ -614,8 +614,7 @@ nsXBLPrototypeBinding::GetInsertionPoint(nsIContent* aBoundElement,
   if (entry) {
     nsIContent* content = entry->GetInsertionParent();
     *aIndex = entry->GetInsertionIndex();
-    nsCOMPtr<nsIContent> templContent;
-    templContent = GetImmediateChild(nsXBLAtoms::content);
+    nsIContent* templContent = GetImmediateChild(nsXBLAtoms::content);
     realContent = LocateInstance(nsnull, templContent, aCopyRoot, content);
   }
   else {
@@ -662,8 +661,7 @@ nsXBLPrototypeBinding::GetSingleInsertionPoint(nsIContent* aBoundElement,
   *aMultipleInsertionPoints = PR_FALSE;
   *aIndex = entry->GetInsertionIndex();
 
-  nsCOMPtr<nsIContent> templContent;
-  templContent = GetImmediateChild(nsXBLAtoms::content);
+  nsIContent* templContent = GetImmediateChild(nsXBLAtoms::content);
   nsIContent* content = entry->GetInsertionParent();
   nsIContent *realContent = LocateInstance(nsnull, templContent, aCopyRoot,
                                            content);
@@ -705,16 +703,16 @@ nsXBLPrototypeBinding::ImplementsInterface(REFNSIID aIID) const
 
 // Internal helpers ///////////////////////////////////////////////////////////////////////
 
-already_AddRefed<nsIContent>
+nsIContent*
 nsXBLPrototypeBinding::GetImmediateChild(nsIAtom* aTag)
 {
   PRUint32 childCount = mBinding->GetChildCount();
 
   for (PRUint32 i = 0; i < childCount; i++) {
     nsIContent *child = mBinding->GetChildAt(i);
+    nsINodeInfo *childNodeInfo = child->GetNodeInfo();
 
-    if (aTag == child->Tag()) {
-      NS_ADDREF(child);
+    if (childNodeInfo && childNodeInfo->Equals(aTag, kNameSpaceID_XBL)) {
       return child;
     }
   }
@@ -863,8 +861,8 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
   }
 
   if (attrPresent) {
-    nsCOMPtr<nsIContent> content;
-    content = changeData->mProto->GetImmediateChild(nsXBLAtoms::content);
+    nsIContent* content =
+      changeData->mProto->GetImmediateChild(nsXBLAtoms::content);
 
     nsXBLAttributeEntry* curr = entry;
     while (curr) {

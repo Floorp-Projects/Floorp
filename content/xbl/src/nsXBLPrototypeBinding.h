@@ -178,9 +178,16 @@ public:
   static nsFixedSizeAllocator* kAttrPool;
   static nsFixedSizeAllocator* kInsPool;
 
-// Internal member functions
+// Internal member functions.
+// XXXbz GetImmediateChild needs to be public to be called by SetAttrs,
+// InstantiateInsertionPoints, etc; those should probably be a class static
+// method instead of a global (non-static!) ones.
 public:
-  already_AddRefed<nsIContent> GetImmediateChild(nsIAtom* aTag);
+  /**
+   * GetImmediateChild locates the immediate child of our binding element which
+   * has the localname given by aTag and is in the XBL namespace.
+   */
+  nsIContent* GetImmediateChild(nsIAtom* aTag);
   nsIContent* LocateInstance(nsIContent* aBoundElt,
                              nsIContent* aTemplRoot,
                              nsIContent* aCopyRoot,
