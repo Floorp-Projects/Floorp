@@ -10339,8 +10339,10 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
   nsFrameList   frameList(firstChild);
   
   // See whether it's an IMG or an INPUT element (for image buttons)
-  if (nsHTMLAtoms::img == tag.get() || nsHTMLAtoms::input == tag.get()) {
-    // It's an IMG element. Try and construct an alternate frame to use when the
+  // or if it is an applet with no displayable children
+  if (nsHTMLAtoms::img == tag.get() || nsHTMLAtoms::input == tag.get() ||
+      (nsHTMLAtoms::applet == tag.get() && !HasDisplayableChildren(aPresContext, aFrame))) {
+    // Try and construct an alternate frame to use when the
     // image can't be rendered
     nsIFrame* newFrame;
     rv = ConstructAlternateFrame(aPresShell, aPresContext, content, styleContext,
@@ -10385,7 +10387,6 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
   } else if ((nsHTMLAtoms::object == tag.get()) ||
              (nsHTMLAtoms::embed == tag.get()) ||
              (nsHTMLAtoms::applet == tag.get())) {
-
     // It's an OBJECT, EMBED, or APPLET, so we should display the contents
     // instead
     nsIFrame* absoluteContainingBlock;
@@ -10430,18 +10431,6 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
 
     nsIFrame* newFrame = frameItems.childList;
 
-    if (nsHTMLAtoms::applet == tag.get()
-        && !HasDisplayableChildren(aPresContext, newFrame)) {
-      // If it's an <applet> tag without any displayable content, then
-      // it may have "alt" text specified that we could use to render
-      // text. Nuke the frames we just created, and use
-      // ConstructAlternateFrame() to fix stuff up.
-      nsFrameList list(newFrame);
-      list.DestroyFrames(aPresContext);
-
-      rv = ConstructAlternateFrame(aPresShell, aPresContext, content, styleContext,
-                                   parentFrame, newFrame);
-    }
 
     if (NS_SUCCEEDED(rv)) {
       if (placeholderFrame) {
