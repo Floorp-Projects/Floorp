@@ -1661,7 +1661,7 @@ NS_IMETHODIMP nsDocShell::SetTitle(const PRUnichar* aTitle)
       {
       nsCOMPtr<nsIBaseWindow> treeOwnerAsWin(do_QueryInterface(mTreeOwner));
       if (treeOwnerAsWin)
-          treeOwnerAsWin->SetTitle(aTitle)
+          treeOwnerAsWin->SetTitle(aTitle);
       }
 
    if(mGlobalHistory && mCurrentURI)
