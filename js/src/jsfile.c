@@ -1957,7 +1957,7 @@ file_toURL(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     urlChars = js_InflateString(cx, url, strlen(url));
     if (urlChars == NULL) return JS_FALSE;
     *rval = STRING_TO_JSVAL(js_NewString(cx, urlChars, strlen(url), 0));
-    if (!str_escape(cx, obj, 0, rval, rval)) return JS_FALSE;
+    if (!js_str_escape(cx, obj, 0, rval, rval)) return JS_FALSE;
 
     return JS_TRUE;
 out:

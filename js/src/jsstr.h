@@ -320,7 +320,8 @@ extern char *
 js_GetStringBytes(JSString *str);
 
 JSBool
-str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+              jsval *rval);
 
 JS_END_EXTERN_C
 
