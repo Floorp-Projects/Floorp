@@ -801,15 +801,6 @@ public class IRFactory {
             // OPT: could optimize to GETPROP iff string can't be a number
             nodeType = TokenStream.GETELEM;
             break;
-/*
-          case TokenStream.AND:
-            temp = createNewTemp((Node) left);
-            return createTernary(temp, right, createUseTemp(temp));
-
-          case TokenStream.OR:
-            temp = createNewTemp((Node) left);
-            return createTernary(temp, createUseTemp(temp), right);
-*/            
         }
         return new Node(nodeType, (Node)left, (Node)right);
     }
@@ -989,9 +980,9 @@ public class IRFactory {
 *
 */
         Node tmp1, tmp2, opLeft;
-        if (hasSideEffects(expr)
-                || hasSideEffects(id)
-                || (obj.getType() != TokenStream.NAME))  {
+        if (obj.getType() != TokenStream.NAME || id.hasChildren() ||
+            hasSideEffects(expr) || hasSideEffects(id))
+        {
             tmp1 = createNewTemp(obj);
             Node useTmp1 = createUseTemp(tmp1);
 
