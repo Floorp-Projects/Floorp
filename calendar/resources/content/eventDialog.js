@@ -189,7 +189,6 @@ function loadCalendarEventDialog()
    setFieldValue( "category-field", gEvent.category );
    
    setFieldValue( "all-day-event-checkbox", gEvent.allDay, "checked" );
-   
    setFieldValue( "private-checkbox", gEvent.privateEvent, "checked" );
    
    setFieldValue( "alarm-checkbox", gEvent.alarm, "checked" );
@@ -219,8 +218,8 @@ function loadCalendarEventDialog()
    setFieldValue( "repeat-checkbox", gEvent.recur, "checked");
    setFieldValue( "repeat-length-field", gEvent.recurInterval );
    setFieldValue( "repeat-length-units", gEvent.recurUnits, "value" );  
-   setFieldValue( "repeat-forever-radio", (gEvent.recurForever != undefined && gEvent.recurForever != false), "checked" );
-   setFieldValue( "repeat-until-radio", (gEvent.recurForever == undefined || gEvent.recurForever == false), "checked" );
+   setFieldValue( "repeat-forever-radio", (gEvent.recurForever != undefined && gEvent.recurForever != false), "selected" );
+   setFieldValue( "repeat-until-radio", (gEvent.recurForever == undefined || gEvent.recurForever == false), "selected" );
    
    // update enabling and disabling
    
@@ -307,7 +306,7 @@ function onOKCommand()
    }
    gEvent.recur         = getFieldValue( "repeat-checkbox", "checked" );
    gEvent.recurUnits    = getFieldValue( "repeat-length-units", "value"  );  
-   gEvent.recurForever  = getFieldValue( "repeat-forever-radio", "checked" );
+   gEvent.recurForever  = getFieldValue( "repeat-forever-radio", "selected" );
    gEvent.recurInterval  = getFieldValue( "repeat-length-field" );
    
    if( gEvent.recurInterval == 0 )
@@ -676,7 +675,7 @@ function updateRepeatItemEnabled()
    
    // extra interface depending on units
    
-   updateRepeatUnitExtensions();
+   //updateRepeatUnitExtensions();
 }
 
 /**
@@ -764,8 +763,7 @@ function updateUntilItemEnabled()
    
    var repeatEndText = document.getElementById( "repeat-end-date-text" );
    var repeatEndPicker = document.getElementById( "repeat-end-date-button" );
-  
-   if( repeatCheckBox.checked == true && repeatUntilRadio.checked  )
+   if( repeatCheckBox.checked && repeatUntilRadio.selected )
    {
       repeatEndText.removeAttribute( "disabled"  );
       repeatEndText.setAttribute( "popup", "oe-date-picker-popup" );
@@ -1094,14 +1092,11 @@ function setFieldValue( elementId, newValue, propertyName  )
       if( propertyName )
       {
          field[ propertyName ] = newValue;
-         
-         field.setAttribute( propertyName, newValue );
+         //field.setAttribute( propertyName, newValue );
       }
       else
       {
          field.value = newValue;
-
-         field.setAttribute( propertyName, newValue );
       }
    }
 }
@@ -1123,24 +1118,14 @@ function getFieldValue( elementId, propertyName )
 {
    var field = document.getElementById( elementId );
    
-   return( field.getAttribute( propertyName ) );
-
-   /*
-   dump( "\nProperty Name-->"+propertyName );
-
    if( propertyName )
    {
-      dump( "\nfield[propertyName]-->"+field[ propertyName ] );
-
       return field[ propertyName ];
    }
    else
    {
-      dump( "\nfield.value is "+field.value );
-
       return field.value;
    }
-   */
 }
 
 /**

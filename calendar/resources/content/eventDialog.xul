@@ -225,11 +225,11 @@
 										 <spacer id="alarm-spacer" />
 										 <textbox id="alarm-length-field"  oninput="alarmLengthKeyDown( this )" value="15" />
                                
-                               <menulist id="alarm-length-units" flex="1" labelnumber="labelplural"  label="&alarm.units.minutes;" value="minutes" >
+                               <menulist id="alarm-length-units" flex="1" labelnumber="labelplural"  crop="none" label="&alarm.units.minutes;" value="minutes" >
 											  <menupopup >
-													<menuitem label="&alarm.units.minutes;" labelplural="&alarm.units.minutes;"   labelsingular="&alarm.units.minutes.singular;"  value="minutes"/>
-													<menuitem label="&alarm.units.hours;"   labelplural="&alarm.units.hours;"     labelsingular="&alarm.units.hours.singular;"    value="hours"/>
-													<menuitem label="&alarm.units.days;"    labelplural="&alarm.units.days;"      labelsingular="&alarm.units.days.singular;"     value="days"/>
+													<menuitem label="&alarm.units.minutes;" labelplural="&alarm.units.minutes;"   labelsingular="&alarm.units.minutes.singular;"  crop="none" value="minutes"/>
+													<menuitem label="&alarm.units.hours;"   labelplural="&alarm.units.hours;"     labelsingular="&alarm.units.hours.singular;"    crop="none" value="hours"/>
+													<menuitem label="&alarm.units.days;"    labelplural="&alarm.units.days;"      labelsingular="&alarm.units.days.singular;"     crop="none" value="days"/>
 											  </menupopup>
 										 </menulist>
 										 
@@ -274,7 +274,7 @@
                           </hbox>
                                
                           
-                          <hbox id="repeat-extenstions-week" diabled="true" disable-controller="repeat" collapsed="true">
+                          <hbox id="repeat-extenstions-week" disabled="true" disable-controller="repeat" collapsed="true">
                             <spacer class="repeat-left-spacer" />
                             <checkbox disable-controller="repeat" class="repeat-day-class" label="Sun" id="advanced-repeat-week-0" value="0" checked="false" />
                             <checkbox disable-controller="repeat" class="repeat-day-class" label="Mon" id="advanced-repeat-week-1" value="1" checked="false" />
@@ -290,8 +290,8 @@
                               <spacer class="repeat-left-spacer" />
                               <vbox>
                                  <radiogroup id="advanced-repeat-month" disable-controller="repeat">
-                                    <radio group="advanced-repeat-month" disable-controller="repeat" id="advanced-repeat-dayofmonth" label="On the xth day of the month" checked="true" />
-                                    <radio group="advanced-repeat-month" disable-controller="repeat" id="advanced-repeat-dayofweek"  label="Last Tuesday of the month" checked="false" />
+                                    <radio group="advanced-repeat-month" disable-controller="repeat" id="advanced-repeat-dayofmonth" label="On the xth day of the month" selected="true" />
+                                    <radio group="advanced-repeat-month" disable-controller="repeat" id="advanced-repeat-dayofweek"  label="Last Tuesday of the month" selected="false" />
                                  </radiogroup>
                               </vbox>
                           </hbox>
@@ -302,14 +302,14 @@
                             <spacer class="repeat-left-spacer" />
                             <radiogroup id="repeat-until-group" disable-controller="repeat">
                               <hbox id="repeat-end-box">
-                                  <radio group="repeat-until-group" id="repeat-until-radio" disable-controller="repeat" checked="true" label="&newevent.until.label;"   oncommand="commandUntil()"/>
+                                  <radio group="repeat-until-group" id="repeat-until-radio" disable-controller="repeat" selected="true" label="&newevent.until.label;"   oncommand="commandUntil()"/>
                                   <spacer id="until-spacer"/>
                                   <textbox id="repeat-end-date-text" readonly="true" value="" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
                                   <image class="four-state-image-button" id="repeat-end-date-button" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
                               </hbox>
                               
                               <hbox>
-                                <radio group="repeat-until-group" id="repeat-forever-radio" disable-controller="repeat" checked="false" label="&newevent.forever.label;" oncommand="commandUntil()"/>
+                                <radio group="repeat-until-group" id="repeat-forever-radio" disable-controller="repeat" selected="false" label="&newevent.forever.label;" oncommand="commandUntil()"/>
                               </hbox>    
                               
                             
