@@ -35,13 +35,10 @@ bin\plc4.dll
 bin\plds4.dll
 bin\xpcom.dll
 bin\xpistub.dll
-bin\nsreg.dll
 bin\nspr4.dll
 bin\components\xpinstal.dll
 bin\components\jar50.dll
-bin\components\ucharuti.dll
 bin\xpcom_compat.dll
-bin\components\xpcom_compat_c.dll
 
 [browser]
 ; [Base Browser Files]
@@ -53,21 +50,16 @@ bin\xpicleanup.exe
 ; [Components]
 bin\components\accessibility.xpt
 bin\components\accessibility-msaa.xpt
-bin\components\AcctIdl.xpt
 bin\components\appshell.xpt
 bin\components\autocomplete.xpt
 bin\components\bookmarks.xpt
-bin\components\crypto.dll
 bin\components\directory.xpt
-bin\components\downloadmanager.xpt
 bin\components\commandhandler.xpt
 bin\components\history.xpt
 bin\components\winhooks.xpt
 bin\components\related.xpt
 bin\components\search.xpt
-bin\components\urlbarhistory.xpt
 bin\components\urlwidgt.xpt
-bin\components\universalchardet.dll
 bin\components\caps.xpt
 bin\components\chrome.xpt
 bin\components\cookie.xpt
@@ -90,7 +82,6 @@ bin\components\dom_xul.xpt
 bin\components\editor.xpt
 bin\components\find.xpt
 bin\components\gfx.xpt
-bin\components\gfx2.xpt
 bin\components\content_base.xpt
 bin\components\content_html.xpt
 bin\components\content_htmldoc.xpt
@@ -110,10 +101,6 @@ bin\components\layout_xul.xpt
 bin\components\layout_xul_tree.xpt
 bin\components\locale.xpt
 bin\components\mozbrwsr.xpt
-bin\components\mozcomps.xpt
-bin\components\mozfind.xpt
-bin\components\mozucth.xpt
-bin\components\mozxfer.xpt
 bin\components\necko.xpt
 bin\components\mimetype.xpt
 bin\components\necko_cache.xpt
@@ -155,10 +142,7 @@ bin\components\windowwatcher.xpt
 bin\components\xpcom_base.xpt
 bin\components\xpcom_components.xpt
 bin\components\xpcom_ds.xpt
-bin\components\xpcom_eventloop_windows.xpt
-bin\components\xpcom_eventloop_xp.xpt
 bin\components\xpcom_io.xpt
-bin\components\xpcom_nativeapp.xpt
 bin\components\xpcom_thread.xpt
 bin\components\xpcom_xpti.xpt
 bin\components\xpcom_obsolete.xpt
@@ -179,7 +163,6 @@ bin\components\nsDownloadProgressListener.js
 bin\components\typeaheadfind.xpt
 bin\components\nsCloseAllWindows.js
 ; webservices
-bin\components\websrvcs.dll
 bin\components\websrvcs.xpt
 
 ; [Browser Chrome Files]
@@ -224,11 +207,8 @@ bin\res\builtin\platformHTMLBindings.xml
 ; [Personal Security Manager]
 ;
 bin\nssckbi.dll
-bin\components\pipboot.dll
 bin\components\pipboot.xpt
-bin\components\pipnss.dll
 bin\components\pipnss.xpt
-bin\components\pippki.dll
 bin\components\pippki.xpt
 bin\nss3.dll
 bin\smime3.dll
