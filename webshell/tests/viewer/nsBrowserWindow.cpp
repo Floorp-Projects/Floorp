@@ -1651,6 +1651,7 @@ nsBrowserWindow::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadT
     PRUint32 size;
     mStatus->SetText(url,size);
   }
+  mLoadStartTime = PR_Now();
   return NS_OK;
 }
 
@@ -1679,6 +1680,17 @@ nsBrowserWindow::EndLoadURL(nsIWebShell* aShell,
                             const PRUnichar* aURL,
                             PRInt32 aStatus)
 {
+  PRTime endLoadTime = PR_Now();
+  if (mShowLoadTimes) {
+    nsAutoString msg(aURL);
+    printf("Loading ");
+    fputs(msg, stdout);
+    PRTime delta;
+    LL_SUB(delta, endLoadTime, mLoadStartTime);
+    double usecs;
+    LL_L2D(usecs, delta);
+    printf(" took %g milliseconds\n", usecs / 1000.0);
+  }
   if (mThrobber) {
     mThrobber->Stop();
   }

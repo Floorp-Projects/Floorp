@@ -27,7 +27,7 @@
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsCRT.h"
-//#include "nsIPref.h"
+#include "prtime.h"
 
 #include "nsIXPBaseWindow.h"
 #include "nsPrintSetupDialog.h"
@@ -202,6 +202,10 @@ public:
 
   static void CloseAllWindows();
 
+  void SetShowLoadTimes(PRBool aOn) {
+    mShowLoadTimes = aOn;
+  }
+
   nsViewerApp* mApp;
 
   PRUint32 mChromeMask;
@@ -211,6 +215,9 @@ public:
   nsIWebShell* mWebShell;
 
   nsString mOpenFileDirectory;
+
+  PRTime mLoadStartTime;
+  PRBool mShowLoadTimes;
 
   // "Toolbar"
   nsITextWidget* mLocation;
