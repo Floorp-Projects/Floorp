@@ -67,11 +67,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsINameSpaceManager.h"
 
-// Bug 8065: Limit content frame depth to some reasonable level. This
-// does not count chrome frames when determining depth, nor does it
-// prevent chrome recursion.
-#define MAX_DEPTH_CONTENT_FRAMES 8
-
 // Bug 98158: Limit to the number of total docShells in one page.
 #define MAX_NUMBER_DOCSHELLS 100
 
@@ -335,38 +330,8 @@ nsFrameLoader::EnsureDocShell()
   GetPresContext(getter_AddRefs(presContext));
   NS_ENSURE_TRUE(presContext, NS_ERROR_UNEXPECTED);
 
-  // Bug 8065: Don't exceed some maximum depth in content frames
-  // (MAX_DEPTH_CONTENT_FRAMES)
-  PRInt32 depth = 0;
   nsCOMPtr<nsISupports> parentAsSupports;
   presContext->GetContainer(getter_AddRefs(parentAsSupports));
-
-  if (parentAsSupports) {
-    nsCOMPtr<nsIDocShellTreeItem> parentAsItem =
-      do_QueryInterface(parentAsSupports);
-
-    while (parentAsItem) {
-      ++depth;
-
-      if (depth >= MAX_DEPTH_CONTENT_FRAMES) {
-        NS_WARNING("Too many nested content frames so giving up");
-
-        return NS_ERROR_UNEXPECTED; // Too deep, give up!  (silently?)
-      }
-
-      // Only count depth on content, not chrome.
-      // If we wanted to limit total depth, skip the following check:
-      PRInt32 parentType;
-      parentAsItem->GetItemType(&parentType);
-
-      if (nsIDocShellTreeItem::typeContent == parentType) {
-        nsIDocShellTreeItem* temp = parentAsItem;
-        temp->GetParent(getter_AddRefs(parentAsItem));
-      } else {
-        break; // we have exited content, stop counting, depth is OK!
-      }
-    }
-  }
 
   // bug98158:count the children under the root docshell.
   // if the total number of children under the root docshell
