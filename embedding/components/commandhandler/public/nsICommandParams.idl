@@ -1,0 +1,109 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *      Simon Fraser <sfraser@netscape.com>
+ *
+ */
+
+#include "nsISupports.idl"
+
+/*
+ * nsICommandParams is used to pass parameters to commands executed
+ * via nsICommandManager, and to get command state.
+ *
+ */
+
+[scriptable, uuid(83f892cf-7ed3-490e-967a-62640f3158e1)]
+interface nsICommandParams : nsISupports
+{
+
+  /*
+   * List of primitive types for parameter values.
+   */
+  const short eNoType                     = 0;      /* Only used for sanity checking */
+  const short eBooleanType                = 1;
+  const short eLongType                		= 2;
+  const short eDoubleType                 = 3;
+  const short eWStringType                = 4;
+  const short eISupportsType              = 5;
+
+  /*
+   * getValueType
+   * 
+   * Get the type of a specified parameter
+   */
+  short       getValueType(in DOMString name);
+
+  /*
+   * get_Value
+   * 
+   * Get the value of a specified parameter. Will return
+   * an error if the parameter does not exist, or if the value
+   * is of the wrong type (no coercion is performed for you).
+   * 
+   * nsISupports values can contain any XPCOM interface,
+   * as documented for the command. It is permissible
+   * for it to contain nsICommandParams, but not *this*
+   * one (i.e. self-containing is not allowed).
+   */
+  boolean     getBooleanValue(in DOMString name);
+  long        getLongValue(in DOMString name);
+  double      getDoubleValue(in DOMString name);
+  DOMString   getStringValue(in DOMString name);
+  nsISupports getISupportsValue(in DOMString name);
+  
+  /*
+   * set_Value
+   * 
+   * Set the value of a specified parameter (thus creating
+   * an entry for it).
+   * 
+   * nsISupports values can contain any XPCOM interface,
+   * as documented for the command. It is permissible
+   * for it to contain nsICommandParams, but not *this*
+   * one (i.e. self-containing is not allowed).
+   */
+  void        setBooleanValue(in DOMString name, in boolean value);
+  void        setLongValue(in DOMString name, in long value);
+  void        setDoubleValue(in DOMString name, in double value);
+  void        setStringValue(in DOMString name, in DOMString value);
+  void        setISupportsValue(in DOMString name, in nsISupports value);
+  
+  /*
+   * removeValue
+   * 
+   * Remove the specified parameter from the list.
+   */
+  void        removeValue(in DOMString name);
+  
+  /*
+   * Enumeration methods
+   * 
+   * Use these to enumerate over the contents of a parameter
+   * list. For each name that getNext() returns, use 
+   * getValueType() and then getMumbleValue to get its
+   * value.
+   */
+  boolean     hasMoreElements();
+  void        first();
+  DOMString   getNext();
+
+};
+

@@ -1,0 +1,57 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *      Simon Fraser <sfraser@netscape.com>
+ *
+ */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+
+/*
+	The nsPICommandUpdater interface is used by modules that implement
+	commands, to tell the command manager that commands need updating.
+	This is a private interface; embedders should not use it.
+	
+	Command-implementing modules should get one of these by a QI
+	from an nsICommandManager.
+*/
+
+[scriptable, uuid(B135F602-0BFE-11D5-A73C-F0E420E8293C)]
+interface nsPICommandUpdater : nsISupports
+{
+
+  /*
+   * Init the command updater, passing an nsIDOMWindow which 
+   * is the window that the command updater lives on.
+   * 
+   */
+  void    init(in nsIDOMWindow aWindow);
+   
+  /*
+   * Notify the command manager that the status of a command
+   * changed. It may have changed from enabled to disabled,
+   * or vice versa, or become toggled etc.
+   */
+	void		commandStatusChanged(in DOMString aCommandName);
+	
+};
+
+
