@@ -39,6 +39,7 @@
 #include "nsSVGElement.h"
 #include "nsIDocument.h"
 #include "nsRange.h"
+#include "nsIDOMAttr.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsMutationEvent.h"

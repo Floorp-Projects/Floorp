@@ -40,6 +40,7 @@
 #include "nsSVGAtoms.h"
 #include "nsIDOMSVGStyleElement.h"
 #include "nsUnicharUtils.h"
+#include "nsIDocument.h"
 #include "nsStyleLinkElement.h"
 
 typedef nsSVGElement nsSVGStyleElementBase;

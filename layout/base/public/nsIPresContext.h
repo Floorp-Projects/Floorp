@@ -41,7 +41,6 @@
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "nsAString.h"
-#include "nsIRequest.h"
 #include "nsCompatibility.h"
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
@@ -58,7 +57,6 @@ class imgIRequest;
 
 class nsIContent;
 class nsIDocument;
-class nsIDeviceContext;
 class nsIFontMetrics;
 class nsIFrame;
 class nsFrameManager;
