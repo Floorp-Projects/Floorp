@@ -152,6 +152,22 @@ NS_IMETHODIMP nsImapUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 // Begin nsIImapUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////
 
+NS_IMETHODIMP nsImapUrl::GetRequiredImapState(nsImapState * aImapUrlState)
+{
+	if (aImapUrlState)
+	{
+		// the imap action determines the state we must be in...check the 
+		// the imap action.
+
+		if (m_imapAction & 0x1000000)
+			*aImapUrlState = nsImapSelectedState;
+		else
+			*aImapUrlState = nsImapAuthenticatedState;
+	}
+
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsImapUrl::SetServer(nsIMsgIncomingServer * aServer)
 {
 	if (aServer)
