@@ -33,7 +33,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.8 $ $Date: 2004/01/28 03:48:43 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.9 $ $Date: 2004/01/28 04:29:14 $ $Name:  $";
 #endif /* DEBUG */
 
 #include "seccomon.h"
@@ -96,6 +96,20 @@ static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.8 $ $Date: 
 
 #define BAD_UTF8 ((PRUint32)-1)
 
+/*
+ * Parse a single UTF-8 character per the spec. in section 3.9 (D36)
+ * of Unicode 4.0.0.
+ *
+ * Parameters:
+ * index - Points to the byte offset in inBuf of character to read.  On success,
+ *         updated to the offset of the following character.
+ * inBuf - Input buffer, UTF-8 encoded
+ * inbufLen - Length of input buffer, in bytes.
+ *
+ * Returns:
+ * Success - The UCS4 encoded character
+ * Failure - BAD_UTF8
+ */
 static PRUint32
 sec_port_read_utf8(unsigned int *index, unsigned char *inBuf, unsigned int inBufLen)
 {
@@ -103,6 +117,8 @@ sec_port_read_utf8(unsigned int *index, unsigned char *inBuf, unsigned int inBuf
   unsigned int i = *index;
   int bytes_left;
   PRUint32 min_value;
+
+  PORT_Assert(i < inBufLen);
 
   if ( (inBuf[i] & 0x80) == 0x00 ) {
     result = inBuf[i++];
@@ -155,7 +171,6 @@ sec_port_ucs4_utf8_conversion_function
 
   if( toUnicode ) {
     unsigned int i, len = 0;
-    PRUint32 ucs4;
 
     for( i = 0; i < inBufLen; ) {
       if( (inBuf[i] & 0x80) == 0x00 ) i += 1;
@@ -175,14 +190,14 @@ sec_port_ucs4_utf8_conversion_function
     len = 0;
 
     for( i = 0; i < inBufLen; ) {
-      ucs4 = sec_port_read_utf8(&i, inBuf, inBufLen);
+      PRUint32 ucs4 = sec_port_read_utf8(&i, inBuf, inBufLen);
 
       if (ucs4 == BAD_UTF8) return PR_FALSE;
            
       outBuf[len+L_0] = 0x00;
-      outBuf[len+L_1] = (ucs4 >> 16);
-      outBuf[len+L_2] = (ucs4 >> 8);
-      outBuf[len+L_3] = ucs4;
+      outBuf[len+L_1] = (unsigned char)(ucs4 >> 16);
+      outBuf[len+L_2] = (unsigned char)(ucs4 >> 8);
+      outBuf[len+L_3] = (unsigned char)ucs4;
 
       len += 4;
     }
@@ -282,7 +297,6 @@ sec_port_ucs2_utf8_conversion_function
 
   if( toUnicode ) {
     unsigned int i, len = 0;
-    PRUint32 ucs4;
 
     for( i = 0; i < inBufLen; ) {
       if( (inBuf[i] & 0x80) == 0x00 ) {
@@ -308,20 +322,20 @@ sec_port_ucs2_utf8_conversion_function
     len = 0;
 
     for( i = 0; i < inBufLen; ) {
-      ucs4 = sec_port_read_utf8(&i, inBuf, inBufLen);
+      PRUint32 ucs4 = sec_port_read_utf8(&i, inBuf, inBufLen);
 
       if (ucs4 == BAD_UTF8) return PR_FALSE;
 
       if( ucs4 < 0x10000) {
-        outBuf[len+H_0] = (ucs4 >> 8);
-        outBuf[len+H_1] = ucs4;
+        outBuf[len+H_0] = (unsigned char)(ucs4 >> 8);
+        outBuf[len+H_1] = (unsigned char)ucs4;
         len += 2;
       } else {
 	ucs4 -= 0x10000;
-        outBuf[len+0+H_0] = 0xD8 | ((ucs4 >> 18) & 0x3);
-        outBuf[len+0+H_1] = (ucs4 >> 10);
-        outBuf[len+2+H_0] = 0xDC | ((ucs4 >> 8) & 0x3);
-        outBuf[len+2+H_1] = ucs4;
+        outBuf[len+0+H_0] = (unsigned char)(0xD8 | ((ucs4 >> 18) & 0x3));
+        outBuf[len+0+H_1] = (unsigned char)(ucs4 >> 10);
+        outBuf[len+2+H_0] = (unsigned char)(0xDC | ((ucs4 >> 8) & 0x3));
+        outBuf[len+2+H_1] = (unsigned char)ucs4;
 	len += 4;
       }
     }
