@@ -177,7 +177,7 @@ ContainerCursorImpl::Advance(void)
 
     // initialize rv to the case where mCounter has advanced past the
     // last element
-    rv = NS_ERROR_UNEXPECTED;
+    rv = NS_ERROR_RDF_CURSOR_EMPTY;
 
     while (mCounter < last) {
         nsIRDFResource* ordinalProperty = nsnull;
