@@ -350,11 +350,6 @@ DayView.prototype.createEventBox = function dayview_createEventBox( calendarEven
    eventBox.setAttribute( "tooltip", "eventTooltip" );
    eventBox.setAttribute( "name", "day-view-event-box-"+calendarEventDisplay.event.id );
 
-   if( calendarEventDisplay.event.categories && calendarEventDisplay.event.categories != "" )
-   {
-      eventBox.setAttribute( calendarEventDisplay.event.categories, "true" );
-   }
-
    var eventHTMLElement = document.createElement( "label" );
    //eventHTMLElement.setAttribute( "class", "day-view-event-label-class" );
    eventHTMLElement.setAttribute( "value", calendarEventDisplay.event.title );

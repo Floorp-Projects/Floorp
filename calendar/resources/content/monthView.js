@@ -287,12 +287,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
         eventBox.setAttribute("class", "month-day-event-box-class " + containerName );
 
 		// end calendar color change by CofC
-		     
-         if( calendarEventDisplay.event.categories && calendarEventDisplay.event.categories != "" )
-         {
-            eventBox.setAttribute( calendarEventDisplay.event.categories, "true" );
-         }
-            
+
          eventBox.setAttribute( "eventbox", "monthview" );
          eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
          eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );

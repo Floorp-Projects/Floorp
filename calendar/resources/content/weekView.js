@@ -465,10 +465,6 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
    eventBox.setAttribute( "name", "week-view-event-box-"+calendarEventDisplay.event.id );
    eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
    eventBox.setAttribute( "tooltip", "eventTooltip" );
-   if( calendarEventDisplay.event.categories && calendarEventDisplay.event.categories != "" )
-   {
-      eventBox.setAttribute( calendarEventDisplay.event.categories, "true" );
-   }      
 
    /*
    ** The event description. This doesn't go multi line, but does crop properly.
