@@ -979,6 +979,7 @@ treecell.image > titledbutton:active {
 }
 
 .tree-icon {
+  width: 100%;
 }
 
 .tree-button {
@@ -986,10 +987,7 @@ treecell.image > titledbutton:active {
  padding: 0px;
  border: none;
  list-style-image: inherit;
-}
-
-.tree-button[flex] {
-  width: 10px;
+ width: 100%;
 }
 
 treecell {
