@@ -59,31 +59,10 @@ div#table-housing {
 }
 */
 
-tree#modulesTree {
-  background-color          : transparent ! important;
+
+#modulesTree {
   height                    : 16ex;
   width                     : 32em;
-}
-
-treecell#moduleName {
-  width                     : 50%
-}
-
-treecell#moduleSource {
-  width                     : 50%;
-}
-tree > treechildren {
-  background-color          : window ! important;
-}
-
-tree#modulesTree > treehead > treerow > treecell {
-  padding-left              : 1px;
-  padding-right             : 1px;
-  border-left               : none;
-  border-top                : none;
-  border-right              : none;
-  background-color          : transparent ! important;
-  color                     : windowtext;
 }
 
 spring#verticalSmallSpacer {

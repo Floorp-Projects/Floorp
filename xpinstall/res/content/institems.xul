@@ -20,9 +20,8 @@ Rights Reserved.
 Contributor(s): 
    Don Bragg (dbragg@netscape.com)
    Dan Veditz <dveditz@netscape.com>
-   Blake Ross <BlakeR1234@aol.com>
+   Blake Ross <blakeross@telocity.com>
 -->
-
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://communicator/skin/xpinstall/xpinstall.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
@@ -59,7 +58,7 @@ Contributor(s):
         <spring id="verticalSmallSpacer"/>
         <spring id="verticalSmallSpacer"/>            
         <box align="vertical" id="treebox">
-                <tree id="modulesTree">
+                <tree id="modulesTree" class="inset">
                     <treecolgroup>
                       <treecol flex="1"/>
                       <splitter class="tree-splitter"/>
@@ -68,8 +67,8 @@ Contributor(s):
 
                     <treehead>
                         <treerow>
-                            <treecell id="moduleName" value="&moduleName.label;" />
-                            <treecell id="moduleSource" value="&moduleSource.label;"/>
+                            <treecell id="moduleName" class="treecell-header" value="&moduleName.label;" />
+                            <treecell id="moduleSource" class="treecell-header" value="&moduleSource.label;"/>
                         </treerow>
                     </treehead>
 
