@@ -1,0 +1,213 @@
+;+#
+;+# The contents of this file are subject to the Mozilla Public
+;+# License Version 1.1 (the "License"); you may not use this file
+;+# except in compliance with the License. You may obtain a copy of
+;+# the License at http://www.mozilla.org/MPL/
+;+#
+;+# Software distributed under the License is distributed on an "AS
+;+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+;+# implied. See the License for the specific language governing
+;+# rights and limitations under the License.
+;+#
+;+# The Original Code is the Netscape security libraries.
+;+#
+;+# The Initial Developer of the Original Code is Netscape
+;+# Communications Corporation.  Portions created by Netscape are
+;+# Copyright (C) 2001 Netscape Communications Corporation.  All
+;+# Rights Reserved.
+;+#
+;+# Contributor(s):
+;+#
+;+# Alternatively, the contents of this file may be used under the
+;+# terms of the GNU General Public License Version 2 or later (the
+;+# "GPL"), in which case the provisions of the GPL are applicable
+;+# instead of those above.  If you wish to allow use of your
+;+# version of this file only under the terms of the GPL and not to
+;+# allow others to use your version of this file under the MPL,
+;+# indicate your decision by deleting the provisions above and
+;+# replace them with the notice and other provisions required by
+;+# the GPL.  If you do not delete the provisions above, a recipient
+;+# may use your version of this file under either the MPL or the
+;+# GPL.
+;+#
+;+#
+;+# OK, this file is meant to support SUN, LINUX, AIX and WINDOWS
+;+#   1. For all unix platforms, the string ";-"  means "remove this line"
+;+#   2. For all unix platforms, the string " DATA " will be removed from any 
+;+#	line on which it occurs.
+;+#   3. Lines containing ";+" will have ";+" removed on SUN and LINUX.
+;+#      On AIX, lines containing ";+" will be removed.  
+;+#   4. For all unix platforms, the string ";;" will thave the ";;" removed.
+;+#   5. For all unix platforms, after the above processing has taken place,
+;+#    all characters after the first ";" on the line will be removed.  
+;+#    And for AIX, the first ";" will also be removed.
+;+#  This file is passed directly to windows. Since ';' is a comment, all UNIX
+;+#   directives are hidden behind ";", ";+", and ";-"
+;+JSS_3.0 {       # JSS 3.0 release
+;+    global:
+LIBRARY jss3	;-
+EXPORTS		;-
+Java_org_mozilla_jss_crypto_EncryptionAlgorithm_getIVLength;
+Java_org_mozilla_jss_crypto_PQGParams_generateNative__I;
+Java_org_mozilla_jss_crypto_PQGParams_generateNative__II;
+Java_org_mozilla_jss_crypto_PQGParams_paramsAreValidNative;
+Java_org_mozilla_jss_DatabaseCloser_closeDatabases;
+Java_org_mozilla_jss_CryptoManager_FIPSEnabled;
+Java_org_mozilla_jss_CryptoManager_buildCertificateChainNative;
+Java_org_mozilla_jss_CryptoManager_enableFIPS;
+Java_org_mozilla_jss_CryptoManager_exportCertsToPKCS7;
+Java_org_mozilla_jss_CryptoManager_findCertByIssuerAndSerialNumberNative;
+Java_org_mozilla_jss_CryptoManager_findCertByNicknameNative;
+Java_org_mozilla_jss_CryptoManager_findCertsByNicknameNative;
+Java_org_mozilla_jss_CryptoManager_findPrivKeyByCertNative;
+Java_org_mozilla_jss_CryptoManager_getCACerts;
+Java_org_mozilla_jss_CryptoManager_getPermCerts;
+Java_org_mozilla_jss_CryptoManager_importCRLNative;
+Java_org_mozilla_jss_CryptoManager_importCertPackageNative;
+Java_org_mozilla_jss_CryptoManager_importCertToPermNative;
+Java_org_mozilla_jss_CryptoManager_initializeAllNative;
+Java_org_mozilla_jss_CryptoManager_initializeNative;
+Java_org_mozilla_jss_CryptoManager_putModulesInVector;
+Java_org_mozilla_jss_CryptoManager_setNativePasswordCallback;
+Java_org_mozilla_jss_NSSInit_initializeNative;
+Java_org_mozilla_jss_NSSInit_setPasswordCallback;
+Java_org_mozilla_jss_pkcs11_CertProxy_releaseNativeResources;
+Java_org_mozilla_jss_pkcs11_CipherContextProxy_releaseNativeResources;
+Java_org_mozilla_jss_pkcs11_PK11Module_getLibraryName;
+Java_org_mozilla_jss_pkcs11_PK11Module_getName;
+Java_org_mozilla_jss_pkcs11_PK11Module_putTokensInVector;
+Java_org_mozilla_jss_pkcs11_ModuleProxy_releaseNativeResources;
+Java_org_mozilla_jss_pkcs11_PK11Cert_getEncoded;
+Java_org_mozilla_jss_pkcs11_PK11Cert_getIssuerDNString;
+Java_org_mozilla_jss_pkcs11_PK11Cert_getNickname;
+Java_org_mozilla_jss_pkcs11_PK11Cert_getOwningToken;
+Java_org_mozilla_jss_pkcs11_PK11Cert_getPublicKey;
+Java_org_mozilla_jss_pkcs11_PK11Cert_getSerialNumberByteArray;
+Java_org_mozilla_jss_pkcs11_PK11Cert_getSubjectDNString;
+Java_org_mozilla_jss_pkcs11_PK11Cert_getTrust;
+Java_org_mozilla_jss_pkcs11_PK11Cert_getUniqueID;
+Java_org_mozilla_jss_pkcs11_PK11Cert_getVersion;
+Java_org_mozilla_jss_pkcs11_PK11Cert_setTrust;
+Java_org_mozilla_jss_pkcs11_PK11Cipher_finalizeContext;
+Java_org_mozilla_jss_pkcs11_PK11Cipher_initContext;
+Java_org_mozilla_jss_pkcs11_PK11Cipher_updateContext;
+Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapPrivWithSym;
+Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymWithPriv;
+Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymWithSym;
+Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeWrapPrivWithSym;
+Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeWrapSymWithPub;
+Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeWrapSymWithSym;
+Java_org_mozilla_jss_pkcs11_PK11MessageDigest_digest;
+Java_org_mozilla_jss_pkcs11_PK11MessageDigest_initDigest;
+Java_org_mozilla_jss_pkcs11_PK11MessageDigest_initHMAC;
+Java_org_mozilla_jss_pkcs11_PK11MessageDigest_update;
+Java_org_mozilla_jss_pkcs11_PK11PrivKey_getKeyType;
+Java_org_mozilla_jss_pkcs11_PK11PrivKey_getOwningToken;
+Java_org_mozilla_jss_pkcs11_PK11PrivKey_getStrength;
+Java_org_mozilla_jss_pkcs11_PK11PrivKey_getUniqueID;
+Java_org_mozilla_jss_pkcs11_PK11PrivKey_verifyKeyIsOnToken;
+Java_org_mozilla_jss_pkcs11_PK11PubKey_DSAFromRaw;
+Java_org_mozilla_jss_pkcs11_PK11PubKey_RSAFromRaw;
+Java_org_mozilla_jss_pkcs11_PK11PubKey_getEncoded;
+Java_org_mozilla_jss_pkcs11_PK11PubKey_getKeyType;
+Java_org_mozilla_jss_pkcs11_PK11PubKey_verifyKeyIsOnToken;
+Java_org_mozilla_jss_pkcs11_PK11SymKey_getKeyData;
+Java_org_mozilla_jss_pkcs11_PK11SymKey_getKeyType;
+Java_org_mozilla_jss_pkcs11_PK11SymKey_getOwningToken;
+Java_org_mozilla_jss_pkcs11_PK11SymKey_getStrength;
+Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateDSAKeyPair;
+Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateRSAKeyPair;
+Java_org_mozilla_jss_pkcs11_PK11KeyGenerator_generateNormal;
+Java_org_mozilla_jss_pkcs11_PK11KeyGenerator_generatePBE;
+Java_org_mozilla_jss_pkcs11_PK11KeyGenerator_generatePBE_1IV;
+Java_org_mozilla_jss_pkcs11_PK11KeyGenerator_nativeClone;
+Java_org_mozilla_jss_pkcs11_PrivateKeyProxy_releaseNativeResources;
+Java_org_mozilla_jss_pkcs11_PublicKeyProxy_releaseNativeResources;
+Java_org_mozilla_jss_pkcs11_SymKeyProxy_releaseNativeResources;
+Java_org_mozilla_jss_pkcs11_PK11Token_PWInitable;
+Java_org_mozilla_jss_pkcs11_PK11Token_SSOPasswordIsCorrect;
+Java_org_mozilla_jss_pkcs11_PK11Token_changePassword;
+Java_org_mozilla_jss_pkcs11_PK11Token_doesAlgorithm;
+Java_org_mozilla_jss_pkcs11_PK11Token_generatePK10;
+Java_org_mozilla_jss_pkcs11_PK11Token_getLoginMode;
+Java_org_mozilla_jss_pkcs11_PK11Token_getLoginTimeoutMinutes;
+Java_org_mozilla_jss_pkcs11_PK11Token_getName;
+Java_org_mozilla_jss_pkcs11_PK11Token_initPassword;
+Java_org_mozilla_jss_pkcs11_PK11Token_isLoggedIn;
+Java_org_mozilla_jss_pkcs11_PK11Token_isPresent;
+Java_org_mozilla_jss_pkcs11_PK11Token_isWritable;
+Java_org_mozilla_jss_pkcs11_PK11Token_logout;
+Java_org_mozilla_jss_pkcs11_PK11Token_nativeLogin;
+Java_org_mozilla_jss_pkcs11_PK11Token_passwordIsInitialized;
+Java_org_mozilla_jss_pkcs11_PK11Token_setLoginMode;
+Java_org_mozilla_jss_pkcs11_PK11Token_setLoginTimeoutMinutes;
+Java_org_mozilla_jss_pkcs11_PK11Token_userPasswordIsCorrect;
+Java_org_mozilla_jss_pkcs11_TokenProxy_releaseNativeResources;
+Java_org_mozilla_jss_pkcs11_PK11Signature_engineRawSignNative;
+Java_org_mozilla_jss_pkcs11_PK11Signature_engineRawVerifyNative;
+Java_org_mozilla_jss_pkcs11_PK11Signature_engineSignNative;
+Java_org_mozilla_jss_pkcs11_PK11Signature_engineUpdateNative;
+Java_org_mozilla_jss_pkcs11_PK11Signature_engineVerifyNative;
+Java_org_mozilla_jss_pkcs11_PK11Signature_initSigContext;
+Java_org_mozilla_jss_pkcs11_PK11Signature_initVfyContext;
+Java_org_mozilla_jss_pkcs11_PK11Store_deleteCert;
+Java_org_mozilla_jss_pkcs11_PK11Store_deletePrivateKey;
+Java_org_mozilla_jss_pkcs11_PK11Store_importEncryptedPrivateKey;
+Java_org_mozilla_jss_pkcs11_PK11Store_importPrivateKey;
+Java_org_mozilla_jss_pkcs11_PK11Store_importTemporaryEncryptedPrivateKey;
+Java_org_mozilla_jss_pkcs11_PK11Store_putCertsInVector;
+Java_org_mozilla_jss_pkcs11_PK11Store_putKeysInVector;
+Java_org_mozilla_jss_pkcs11_SigContextProxy_releaseNativeResources;
+Java_org_mozilla_jss_pkcs11_PK11RSAPublicKey_getModulusByteArray;
+Java_org_mozilla_jss_pkcs11_PK11RSAPublicKey_getPublicExponentByteArray;
+Java_org_mozilla_jss_pkcs11_PK11DSAPublicKey_getGByteArray;
+Java_org_mozilla_jss_pkcs11_PK11DSAPublicKey_getPByteArray;
+Java_org_mozilla_jss_pkcs11_PK11DSAPublicKey_getQByteArray;
+Java_org_mozilla_jss_pkcs11_PK11DSAPublicKey_getYByteArray;
+Java_org_mozilla_jss_pkcs11_PK11SecureRandom_nextBytes;
+Java_org_mozilla_jss_pkcs11_PK11SecureRandom_setSeed;
+Java_org_mozilla_jss_ssl_SSLSocket_forceHandshake;
+Java_org_mozilla_jss_ssl_SSLSocket_getKeepAlive;
+Java_org_mozilla_jss_ssl_SSLSocket_getLocalAddressNative;
+Java_org_mozilla_jss_ssl_SSLSocket_getLocalPortNative;
+Java_org_mozilla_jss_ssl_SSLSocket_getPeerAddressNative;
+Java_org_mozilla_jss_ssl_SSLSocket_getPort;
+Java_org_mozilla_jss_ssl_SSLSocket_getReceiveBufferSize;
+Java_org_mozilla_jss_ssl_SSLSocket_getSendBufferSize;
+Java_org_mozilla_jss_ssl_SSLSocket_getSoLinger;
+Java_org_mozilla_jss_ssl_SSLSocket_getStatus;
+Java_org_mozilla_jss_ssl_SSLSocket_getTcpNoDelay;
+Java_org_mozilla_jss_ssl_SSLSocket_invalidateSession;
+Java_org_mozilla_jss_ssl_SSLSocket_redoHandshake;
+Java_org_mozilla_jss_ssl_SSLSocket_resetHandshakeNative;
+Java_org_mozilla_jss_ssl_SSLSocket_setCipherPolicyNative;
+Java_org_mozilla_jss_ssl_SSLSocket_setCipherPreference;
+Java_org_mozilla_jss_ssl_SSLSocket_setClientCertNicknameNative;
+Java_org_mozilla_jss_ssl_SSLSocket_setKeepAlive;
+Java_org_mozilla_jss_ssl_SSLSocket_setNeedClientAuthNoExpiryCheck;
+Java_org_mozilla_jss_ssl_SSLSocket_setReceiveBufferSize;
+Java_org_mozilla_jss_ssl_SSLSocket_setSSLDefaultOption;
+Java_org_mozilla_jss_ssl_SSLSocket_setSSLOption;
+Java_org_mozilla_jss_ssl_SSLSocket_setSendBufferSize;
+Java_org_mozilla_jss_ssl_SSLSocket_setSoLinger;
+Java_org_mozilla_jss_ssl_SSLSocket_setTcpNoDelay;
+Java_org_mozilla_jss_ssl_SSLSocket_shutdownNative;
+Java_org_mozilla_jss_ssl_SSLSocket_socketAvailable;
+Java_org_mozilla_jss_ssl_SSLSocket_socketBind;
+Java_org_mozilla_jss_ssl_SSLSocket_socketClose;
+Java_org_mozilla_jss_ssl_SSLSocket_socketConnect;
+Java_org_mozilla_jss_ssl_SSLSocket_socketCreate;
+Java_org_mozilla_jss_ssl_SSLSocket_socketRead;
+Java_org_mozilla_jss_ssl_SSLSocket_socketWrite;
+Java_org_mozilla_jss_util_Debug_setNativeLevel;
+Java_org_mozilla_jss_util_Password_readPasswordFromConsole;
+;+#
+;+# Data objects (NONE)
+;+#
+;+#
+;+# commands (NONE)
+;+#
+;+#
+;+    local:
+;+       *;
+;+};

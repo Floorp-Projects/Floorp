@@ -33,15 +33,6 @@
 
 LIBRARY =
 
-ifeq ($(OS_ARCH),WINNT)
-
-SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
-IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
-
-DLLFLAGS += -DEF:jss.def
-#RES = $(OBJDIR)/jss.res
-#RESNAME = jss.rc
-
 SHARED_LIBRARY_LIBS=yes
 
 SHARED_LIBRARY_DIRS = \
@@ -69,8 +60,17 @@ EXTRA_LIBS += \
     $(LIBCERTDB) \
     $(LIBFREEBL) \
     $(LIBSECUTIL) \
-    $(DIST)/lib/dbm.lib \
+    $(LIBDBM) \
     $(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+
+SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
+IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
+
+DLLFLAGS += -DEF:jss.def
+#RES = $(OBJDIR)/jss.res
+#RESNAME = jss.rc
 
 EXTRA_SHARED_LIBS += \
     $(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
@@ -78,6 +78,16 @@ EXTRA_SHARED_LIBS += \
     $(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
     $(JAVA_LIBS) \
     $(DLLSYSTEM) \
+    $(NULL)
+
+else
+
+EXTRA_SHARED_LIBS += \
+    -L$(DIST)/lib \
+    -lplc4 \
+    -lplds4 \
+    -lnspr4 \
+    $(JAVA_LIBS) \
     $(NULL)
 
 endif
@@ -90,3 +100,10 @@ endif
 ifeq ($(OS_ARCH), OSF1)
 	JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR).no
 endif
+
+ifeq ($(OS_ARCH),Linux)
+MAPFILE = $(OBJDIR)/jssmap.linux
+ALL_TRASH += $(MAPFILE)
+MKSHLIB += -Wl,--version-script,$(MAPFILE)
+endif
+
