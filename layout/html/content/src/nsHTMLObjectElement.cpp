@@ -20,16 +20,9 @@
  * Contributor(s): 
  */
 #include "nsIDOMHTMLObjectElement.h"
-#include "nsIScriptObjectOwner.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
-#include "nsHTMLIIDs.h"
-#include "nsIStyleContext.h"
-#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIPresContext.h"
 #include "nsDOMError.h"
 
 
@@ -66,6 +59,14 @@ public:
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                       PRInt32& aHint) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+
+  // nsIScriptObjectOwner
+  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext,
+                             void** aScriptObject);
+
+  // nsIJSScriptObject
+  virtual PRBool GetProperty(JSContext *aContext, JSObject *aObj, 
+                             jsval aID, jsval *aVp);
 };
 
 nsresult
@@ -265,4 +266,18 @@ nsHTMLObjectElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
   *aResult = sizeof(*this) + BaseSizeOf(aSizer);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLObjectElement::GetScriptObject(nsIScriptContext* aContext,
+                                     void** aScriptObject)
+{
+  return GetPluginScriptObject(aContext, aScriptObject);
+}
+
+PRBool
+nsHTMLObjectElement::GetProperty(JSContext *aContext, JSObject *aObj,
+                                 jsval aID, jsval *aVp)
+{
+  return GetPluginProperty(aContext, aObj, aID, aVp);
 }
