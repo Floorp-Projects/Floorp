@@ -44,6 +44,7 @@ EditAggregateTxn::~EditAggregateTxn()
 
 nsresult EditAggregateTxn::Do(void)
 {
+  printf("aggregate txn %p Do\n", this);
   nsresult result=NS_OK;  // it's legal (but not very useful) to have an empty child list
   if (nsnull!=mChildren)
   {
@@ -52,6 +53,7 @@ nsresult EditAggregateTxn::Do(void)
     for (i=0; i<count; i++)
     {
       EditTxn *txn = (EditTxn*)(mChildren->ElementAt(i));
+      printf("aggregate txn %p: calling Do for txn %p, index %d\n", this, txn, i);
       result = txn->Do();
       if (NS_FAILED(result))
         break;
@@ -132,6 +134,7 @@ nsresult EditAggregateTxn::AppendChild(EditTxn *aTxn)
 {
   if ((nsnull!=mChildren) && (nsnull!=aTxn))
   {
+    printf("aggregate txn %p: appending txn %p\n", this, aTxn);
     mChildren->AppendElement(aTxn);
     return NS_OK;
   }

@@ -25,6 +25,10 @@
 #include "TransactionFactory.h"
 #include "nsISupportsArray.h"
 
+#ifdef NS_DEBUG
+#include "nsIDOMElement.h"
+#endif
+
 static NS_DEFINE_IID(kDeleteTextTxnIID,     DELETE_TEXT_TXN_IID);
 static NS_DEFINE_IID(kDeleteElementTxnIID,  DELETE_ELEMENT_TXN_IID);
 
@@ -115,10 +119,6 @@ nsresult DeleteRangeTxn::Do(void)
       {
         // delete the relevant content in the end node
         result = CreateTxnsToDeleteContent(mEndParent, mEndOffset, nsIEditor::eRTL);
-        if (NS_SUCCEEDED(result))
-        { // now we have all our child transactions, do them
-          result = EditAggregateTxn::Do();
-        }
       }
     }
   }
@@ -357,9 +357,33 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
         }
         // test if child is an ancestor of the other node.  If it is, don't process this parent anymore
         PRInt32 index;
-        index = ancestorList->IndexOf((nsISupports*)child);
+        nsISupports *childAsISupports;
+        child->QueryInterface(nsISupports::IID(), (void **)&childAsISupports);
+        index = ancestorList->IndexOf(childAsISupports);
         if (-1!=index)
           break;
+#ifdef NS_DEBUG
+        // begin debug output
+        nsCOMPtr<nsIDOMElement> childElement=child;
+        nsAutoString childElementTag="text node";
+        if (childElement)
+          childElement->GetTagName(childElementTag);
+        nsCOMPtr<nsIDOMElement> parentElement=parent;
+        nsAutoString parentElementTag="text node";
+        if (parentElement)
+          parentElement->GetTagName(parentElementTag);
+        char *c, *p;
+        c = childElementTag.ToNewCString();
+        p = parentElementTag.ToNewCString();
+        if (c&&p)
+        {
+          printf("DeleteRangeTxn (1):  building txn to delete child %s (pointer address %p) from parent %s\n", 
+                 c, childAsISupports, p); 
+          delete [] c;
+          delete [] p;
+        }
+        // end debug output
+#endif
         DeleteElementTxn *txn;
         result = TransactionFactory::GetNewTransaction(kDeleteElementTxnIID, (EditTxn **)&txn);
         if (nsnull!=txn)
@@ -387,6 +411,8 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
     result = child->GetParentNode(getter_AddRefs(parent));
     while ((NS_SUCCEEDED(result)) && parent)
     {
+      if (parent==aCommonParent)
+        break; // notice that when we go up the aLastChild parent chain, we don't touch aCommonParent
       while ((NS_SUCCEEDED(result)) && child)
       { // this loop starts with the first sibling of an ancestor of aFirstChild
         nsCOMPtr<nsIDOMNode> temp = child;
@@ -398,6 +424,27 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
           index = ancestorList->IndexOf((nsISupports*)child);
           if (-1!=index)
             break;
+#ifdef NS_DEBUG
+          // begin debug output
+          nsCOMPtr<nsIDOMElement> childElement=child;
+          nsAutoString childElementTag="text node";
+          if (childElement)
+            childElement->GetTagName(childElementTag);
+          nsCOMPtr<nsIDOMElement> parentElement=parent;
+          nsAutoString parentElementTag="text node";
+          if (parentElement)
+            parentElement->GetTagName(parentElementTag);
+          char *c, *p;
+          c = childElementTag.ToNewCString();
+          p = parentElementTag.ToNewCString();
+          if (c&&p)
+          {
+            printf("DeleteRangeTxn (2):  building txn to delete child %s from parent %s\n", c, p); 
+            delete [] c;
+            delete [] p;
+          }
+          // end debug output
+#endif
           DeleteElementTxn *txn;
           result = TransactionFactory::GetNewTransaction(kDeleteElementTxnIID, (EditTxn **)&txn);
           if (nsnull!=txn)
@@ -409,8 +456,6 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
             return NS_ERROR_NULL_POINTER;
         }
       }
-      if (parent==aCommonParent)
-        break;
       child = parent;
       nsCOMPtr<nsIDOMNode> temp=parent;
       result = temp->GetParentNode(getter_AddRefs(parent));
@@ -434,6 +479,21 @@ nsresult DeleteRangeTxn::BuildAncestorList(nsIDOMNode *aNode, nsISupportsArray *
       nsISupports * parentAsISupports;
       parent->QueryInterface(nsISupports::IID(), (void **)&parentAsISupports);
       aList->AppendElement(parentAsISupports);
+#ifdef NS_DEBUG
+        // begin debug output
+        nsCOMPtr<nsIDOMElement> parentElement=parent;
+        nsAutoString parentElementTag="text node";
+        if (parentElement)
+          parentElement->GetTagName(parentElementTag);
+        char *p;
+        p = parentElementTag.ToNewCString();
+        if (p)
+        {
+          printf("BuildAncestorList:  adding parent %s (pointer address %p)\n", p, parentAsISupports); 
+          delete [] p;
+        }
+        // end debug output
+#endif
       child = parent;
       nsCOMPtr<nsIDOMNode> temp=parent;
       result = temp->GetParentNode(getter_AddRefs(parent));
