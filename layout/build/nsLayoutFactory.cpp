@@ -15,8 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "nscore.h"
 #include "nslayout.h"
+#include "nsLayoutModule.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsLayoutCID.h"
@@ -48,16 +48,6 @@
 #include "nsIDocumentEncoder.h"
 #include "nsCOMPtr.h"
 #include "nsIFrameSelection.h"
-
-#include "nsCSSKeywords.h"  // to addref/release table
-#include "nsCSSProps.h"  // to addref/release table
-#include "nsCSSAtoms.h"  // to addref/release table
-#include "nsColorNames.h"  // to addref/release table
-
-#ifdef INCLUDE_XUL
-#include "nsXULAtoms.h"
-#endif
-#include "nsLayoutAtoms.h"
 
 class nsIDocumentLoaderFactory;
 
@@ -103,61 +93,29 @@ extern nsresult NS_NewHTMLElementFactory(nsIHTMLElementFactory** aResult);
 extern nsresult NS_NewHTMLEncoder(nsIDocumentEncoder** aResult);
 extern nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 
-////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-
-class nsLayoutFactory : public nsIFactory
-{   
-public:   
-  // nsISupports methods   
-  NS_IMETHOD QueryInterface(const nsIID &aIID,    
-                            void **aResult);   
-  NS_IMETHOD_(nsrefcnt) AddRef(void);   
-  NS_IMETHOD_(nsrefcnt) Release(void);   
-
-  // nsIFactory methods   
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-                            const nsIID &aIID,   
-                            void **aResult);   
-
-  NS_IMETHOD LockFactory(PRBool aLock);   
-
-  nsLayoutFactory(const nsCID &aClass);   
-
-protected:
-  virtual ~nsLayoutFactory();   
-
-private:   
-  nsrefcnt  mRefCnt;   
-  nsCID     mClassID;
-};   
 
 nsLayoutFactory::nsLayoutFactory(const nsCID &aClass)   
 {   
   mRefCnt = 0;
   mClassID = aClass;
-  nsCSSAtoms::AddRefAtoms();
-  nsCSSKeywords::AddRefTable();
-  nsCSSProps::AddRefTable();
-  nsColorNames::AddRefTable();
-  nsHTMLAtoms::AddRefAtoms();
-#ifdef INCLUDE_XUL
-  nsXULAtoms::AddRefAtoms();
+#ifdef DEBUG_kipp
+  char* cs = aClass.ToString();
+  printf("+++ Creating layout factory for %s\n", cs);
+  nsCRT::free(cs);
 #endif
 }   
 
 nsLayoutFactory::~nsLayoutFactory()   
 {   
   NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
-  nsColorNames::ReleaseTable();
-  nsCSSProps::ReleaseTable();
-  nsCSSKeywords::ReleaseTable();
-  nsCSSAtoms::ReleaseAtoms();
-  nsHTMLAtoms::ReleaseAtoms();
-#ifdef INCLUDE_XUL
-  nsXULAtoms::ReleaseAtoms();
+#ifdef DEBUG_kipp
+  char* cs = mClassID.ToString();
+  printf("+++ Destroying layout factory for %s\n", cs);
+  nsCRT::free(cs);
 #endif
 }   
 
@@ -441,375 +399,3 @@ nsresult nsLayoutFactory::LockFactory(PRBool aLock)
   // Not implemented in simplest case.  
   return NS_OK;
 }  
-
-////////////////////////////////////////////////////////////
-//
-////////////////////////////////////////////////////////////
-
-
-static NS_DEFINE_IID(kIScriptNameSetRegistryIID, NS_ISCRIPTNAMESETREGISTRY_IID);
-static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
-static NS_DEFINE_IID(kIScriptNameSpaceManagerIID, NS_ISCRIPTNAMESPACEMANAGER_IID);
-static NS_DEFINE_IID(kIScriptExternalNameSetIID, NS_ISCRIPTEXTERNALNAMESET_IID);
-
-class LayoutScriptNameSet : public nsIScriptExternalNameSet {
-public:
-  LayoutScriptNameSet();
-  virtual ~LayoutScriptNameSet();
-
-  NS_DECL_ISUPPORTS
-  
-  NS_IMETHOD InitializeClasses(nsIScriptContext* aScriptContext);
-  NS_IMETHOD AddNameSet(nsIScriptContext* aScriptContext);
-};
-
-LayoutScriptNameSet::LayoutScriptNameSet()
-{
-  NS_INIT_REFCNT();
-}
-
-LayoutScriptNameSet::~LayoutScriptNameSet()
-{
-}
-
-NS_IMPL_ISUPPORTS(LayoutScriptNameSet, kIScriptExternalNameSetIID);
-
-NS_IMETHODIMP 
-LayoutScriptNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LayoutScriptNameSet::AddNameSet(nsIScriptContext* aScriptContext)
-{
-  nsresult result = NS_OK;
-  nsIScriptNameSpaceManager* manager;
-
-  result = aScriptContext->GetNameSpaceManager(&manager);
-  if (NS_OK == result) {
-    result = manager->RegisterGlobalName("HTMLImageElement",
-                                         kHTMLImageElementCID,
-                                         PR_TRUE);
-    if (NS_FAILED(result)) {
-      NS_RELEASE(manager);
-      return result;
-    }
-
-    result = manager->RegisterGlobalName("HTMLOptionElement",
-                                         kHTMLOptionElementCID,
-                                         PR_TRUE);
-    if (NS_FAILED(result)) {
-      NS_RELEASE(manager);
-      return result;
-    }
-        
-    NS_RELEASE(manager);
-  }
-  
-  return result;
-}
-
-////////////////////////////////////////////////////////////
-//
-////////////////////////////////////////////////////////////
-
-static nsIScriptNameSetRegistry *gRegistry;
-
-// return the proper factory to the caller
-#if defined(XP_MAC) && defined(MAC_STATIC)
-extern "C" NS_LAYOUT nsresult 
-NSGetFactory_LAYOUT_DLL(nsISupports* serviceMgr,
-                        const nsCID &aClass,
-                        const char *aClassName,
-                        const char *aProgID,
-                        nsIFactory **aFactory)
-#else
-extern "C" NS_LAYOUT nsresult 
-NSGetFactory(nsISupports* serviceMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
-#endif
-{
-  if (nsnull == gRegistry) {
-    nsresult result = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
-                                                   kIScriptNameSetRegistryIID,
-                                                   (nsISupports **)&gRegistry);
-    if (NS_OK == result) {
-      LayoutScriptNameSet* nameSet = new LayoutScriptNameSet();
-      gRegistry->AddExternalNameSet(nameSet);
-    }
-  }
-
-  if (nsnull == aFactory) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aFactory = new nsLayoutFactory(aClass);
-
-  if (nsnull == aFactory) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
-}
-
-extern nsresult NS_RegisterDocumentFactories(nsIComponentManager* aCM,
-                                             const char* aPath);
-extern nsresult NS_UnregisterDocumentFactories(nsIComponentManager* aCM,
-                                               const char* aPath);
-
-#ifdef DEBUG
-#define LOG_REGISTER_FAILURE(_msg,_ec) \
-  printf("RegisterComponent failed for %s: error=%d(0x%x)\n", _msg, _ec, _ec)
-#else
-#define LOG_REGISTER_FAILURE(_msg,_ec)
-#endif
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
-{
-  printf("*** Registering html library\n");
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  nsIComponentManager* cm;
-  rv = servMgr->GetService(kComponentManagerCID,
-                           nsIComponentManager::GetIID(),
-                           (nsISupports**)&cm);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  do {
-    rv = NS_RegisterDocumentFactories(cm, aPath);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("document factories", rv);
-      break;
-    }
-// XXX duh: replace this with an array and a loop!
-    rv = cm->RegisterComponent(kHTMLDocumentCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kHTMLDocumentCID", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kXMLDocumentCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kXMLDocumentCID", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kImageDocumentCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kImageDocumentCID", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kNameSpaceManagerCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kNameSpaceManagerCID", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kEventListenerManagerCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kEventListenerManagerCID", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kCSSParserCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kCSSParserCID", rv);
-      break;
-    }
-#if 1
-    rv = cm->RegisterComponent(kHTMLImageElementCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kHTMLImageElementCID", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kHTMLOptionElementCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kHTMLImageElementCID", rv);
-      break;
-    }
-// XXX why the heck is this exported???? bad bad bad bad
-    rv = cm->RegisterComponent(kPresShellCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kPresShellCID", rv);
-      break;
-    }
-#endif
-    rv = cm->RegisterComponent(kHTMLStyleSheetCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kHTMLStyleSheetCID", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kHTMLCSSStyleSheetCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kHTMLCSSStyleSheetCID", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kCSSLoaderCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kCSSLoaderCID", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kTextNodeCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kTextNodeCID", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kSelectionCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kSelectionCID", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kRangeCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kRangeCID", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kFrameSelectionCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kFrameSelection", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kContentIteratorCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kContentIteratorCID", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kSubtreeIteratorCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kSubtreeIteratorCID", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kFrameUtilCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kFrameUtilCID", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kPrintPreviewContextCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kPrintPreviewContextCID", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kLayoutDebuggerCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kLayoutDebuggerCID", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kHTMLElementFactoryCID, NULL, NULL, aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE("kHTMLElementFactoryCID", rv);
-      break;
-    }
-    rv = cm->RegisterComponent(kTextEncoderCID, "HTML document encoder",
-                               NS_DOC_ENCODER_PROGID_BASE "text/html",
-                               aPath,
-                               PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE(NS_DOC_ENCODER_PROGID_BASE "text/html", rv);
-      break;
-    }
- 
-    rv = cm->RegisterComponent(kTextEncoderCID, "Plaintext document encoder",
-                               NS_DOC_ENCODER_PROGID_BASE "text/plain",
-                               aPath,
-                               PR_TRUE, PR_TRUE);
-   if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE(NS_DOC_ENCODER_PROGID_BASE "text/plain", rv);
-      break;
-    }    
-
-   rv = cm->RegisterComponent(kTextEncoderCID, "XIF document encoder",
-                               NS_DOC_ENCODER_PROGID_BASE "text/xif",
-                               aPath,
-                               PR_TRUE, PR_TRUE);
-   if (NS_FAILED(rv)) {
-      LOG_REGISTER_FAILURE(NS_DOC_ENCODER_PROGID_BASE "text/xif", rv);
-      break;
-    }    
-
-   break;
-  } while (PR_FALSE);
-
-  servMgr->ReleaseService(kComponentManagerCID, cm);
-  return rv;
-}
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
-{
-  printf("*** Unregistering html library\n");
-
-  nsresult rv;
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  nsIComponentManager* cm;
-  rv = servMgr->GetService(kComponentManagerCID,
-                           nsIComponentManager::GetIID(),
-                           (nsISupports**)&cm);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // Save return value during debugging, both otherwise discard it
-  // because there is no good reason for an unregister to fail!
-  rv = NS_UnregisterDocumentFactories(cm, aPath);
-  rv = cm->UnregisterComponent(kHTMLDocumentCID, aPath);
-  rv = cm->UnregisterComponent(kXMLDocumentCID, aPath);
-  rv = cm->UnregisterComponent(kImageDocumentCID, aPath);
-  rv = cm->UnregisterComponent(kNameSpaceManagerCID, aPath);
-  rv = cm->UnregisterComponent(kEventListenerManagerCID, aPath);
-  rv = cm->UnregisterComponent(kCSSParserCID, aPath);
-  rv = cm->UnregisterComponent(kHTMLStyleSheetCID, aPath);
-  rv = cm->UnregisterComponent(kHTMLCSSStyleSheetCID, aPath);
-  rv = cm->UnregisterComponent(kCSSLoaderCID, aPath);
-  rv = cm->UnregisterComponent(kTextNodeCID, aPath);
-  rv = cm->UnregisterComponent(kSelectionCID, aPath);
-  rv = cm->UnregisterComponent(kRangeCID, aPath);
-  rv = cm->UnregisterComponent(kFrameSelectionCID, aPath);
-  rv = cm->UnregisterComponent(kContentIteratorCID, aPath);
-  rv = cm->UnregisterComponent(kSubtreeIteratorCID, aPath);
-  rv = cm->UnregisterComponent(kFrameUtilCID, aPath);
-  rv = cm->UnregisterComponent(kLayoutDebuggerCID, aPath);
-//rv = cm->UnregisterComponent(kHTMLEncoderCID, aPath);
-  rv = cm->UnregisterComponent(kTextEncoderCID, aPath);
-
-// XXX why the heck are these exported???? bad bad bad bad
-#if 1
-  rv = cm->UnregisterComponent(kPresShellCID, aPath);
-  rv = cm->UnregisterComponent(kHTMLImageElementCID, aPath);
-  rv = cm->UnregisterComponent(kHTMLOptionElementCID, aPath);
-#endif
-
-  servMgr->ReleaseService(kComponentManagerCID, cm);
-
-  return NS_OK;
-}
