@@ -5335,6 +5335,10 @@ PresShell::ContentAppended(nsIDocument *aDocument,
                            nsIContent* aContainer,
                            PRInt32     aNewIndexInContainer)
 {
+  if (!mDidInitialReflow) {
+    return NS_OK;
+  }
+  
   WillCauseReflow();
   MOZ_TIMER_DEBUGLOG(("Start: Frame Creation: PresShell::ContentAppended(), this=%p\n", this));
   MOZ_TIMER_START(mFrameCreationWatch);
@@ -5356,6 +5360,10 @@ PresShell::ContentInserted(nsIDocument* aDocument,
                            nsIContent*  aChild,
                            PRInt32      aIndexInContainer)
 {
+  if (!mDidInitialReflow) {
+    return NS_OK;
+  }
+  
   WillCauseReflow();
   nsresult  rv = mStyleSet->ContentInserted(mPresContext, aContainer, aChild, aIndexInContainer);
   VERIFY_STYLE_TREE;

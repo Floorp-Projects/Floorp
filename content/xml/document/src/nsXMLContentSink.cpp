@@ -267,6 +267,19 @@ nsXMLContentSink::DidBuildModel()
       loader->RemoveObserver(this);
     }
 
+    // Notify document observers that all the content has been stuck
+    // into the document.
+    // XXX do we need to notify for things like PIs?  Or just the
+    // documentElement?
+    NS_ASSERTION(mDocument->IndexOf(mDocElement) != -1,
+                 "mDocElement not in doc?");
+    mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
+    mDocument->ContentInserted(nsnull, mDocElement,
+                               // XXXbz is this last arg relevant if
+                               // the container is null?
+                               mDocument->IndexOf(mDocElement));
+    mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
+    
     StartLayout();
 
 #if 0 /* Disable until this works for XML */
@@ -347,6 +360,23 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
     loader->RemoveObserver(this);
   }
 
+  // Notify document observers that all the content has been stuck
+  // into the document.  
+  // XXX do we need to notify for things like PIs?  Or just the
+  // documentElement?
+  nsCOMPtr<nsIContent> rootContent;
+  mDocument->GetRootContent(getter_AddRefs(rootContent));
+  if (rootContent) {
+    NS_ASSERTION(mDocument->IndexOf(rootContent) != -1,
+                 "rootContent not in doc?");
+    mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
+    mDocument->ContentInserted(nsnull, mDocElement,
+                               // XXXbz is this last arg relevant if
+                               // the container is null?
+                               mDocument->IndexOf(rootContent));
+    mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
+  }
+  
   // Start the layout process
   StartLayout();
 
