@@ -5924,13 +5924,17 @@ nsCSSDeclaration::ToString(nsAString& aString)
         // properties, since those are not real CSS properties in
         // any case.
         NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(PR_FALSE,
-                                                  eCSSProperty_clip_top, 0)
+                                                  eCSSProperty_clip_top,
+                                                  clipTop)
         NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(PR_FALSE,
-                                                  eCSSProperty_clip_right, 0)
+                                                  eCSSProperty_clip_right,
+                                                  clipRight)
         NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(PR_FALSE,
-                                                  eCSSProperty_clip_bottom, 0)
+                                                  eCSSProperty_clip_bottom,
+                                                  clipBottom)
         NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(PR_FALSE,
-                                                  eCSSProperty_clip_left, 0)
+                                                  eCSSProperty_clip_left,
+                                                  clipLeft)
         
         case eCSSProperty_background_x_position:
         case eCSSProperty_background_y_position:
