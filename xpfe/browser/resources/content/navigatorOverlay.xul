@@ -498,10 +498,10 @@ END of Deprecated -->
 </menubar>
 
   <statusbar id="status-bar" class="chromeclass-status">
+    <statusbarpanel id="offline-status" onclick="setOfflineStatus(true);"/>
     <progressmeter id="statusbar-icon" mode="normal" value="0"/>
     <statusbarpanel id="statusbar-display" value="&statusText.label;" crop="right" flex="1"/>
     <statusbarpanel id="statusbar-buildid" value="&buildId.label;"/>
-    <statusbarpanel id="offline-status" oncommand="setOfflineStatus(true);"/>
     <statusbarpanel id="security-button"/>
   </statusbar>
 
