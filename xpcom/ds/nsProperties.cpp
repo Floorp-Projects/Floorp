@@ -61,9 +61,19 @@ nsProperties::nsProperties()
   mTable = nsnull;
 }
 
+PR_CALLBACK PRIntn
+FreeHashEntries(PLHashEntry* he, PRIntn i, void* arg)
+{
+  delete[] (PRUnichar*)he->key;
+  delete[] (PRUnichar*)he->value;
+  return HT_ENUMERATE_REMOVE;
+}
+
 nsProperties::~nsProperties()
 {
   if (mTable) {
+    // Free the PRUnicode* pointers contained in the hash table entries
+    PL_HashTableEnumerateEntries(mTable, FreeHashEntries, 0);
     PL_HashTableDestroy(mTable);
     mTable = nsnull;
   }
@@ -170,10 +180,8 @@ nsProperties::SetProperty(const nsString& aKey, nsString& aNewValue,
   if (he && aOldValue) {
     // XXX fix me
   }
-  // XXX Why add a new nsString object as the value? That causes an extra heap
-  // allocation, and we should just add a PRUnichar* like we do for the key...
   PL_HashTableRawAdd(mTable, hep, hashValue, aKey.ToNewUnicode(),
-                     aNewValue.ToNewString());
+                     aNewValue.ToNewUnicode());
 
   return NS_OK;
 }
@@ -203,7 +211,7 @@ nsProperties::GetProperty(const nsString& aKey, nsString& aValue)
   PLHashEntry **hep = PL_HashTableRawLookup(mTable, hashValue, key);
   PLHashEntry *he = *hep;
   if (he) {
-    ((nsString *) he->value)->Copy(aValue);
+    aValue = (const PRUnichar*)he->value;
     return NS_OK;
   }
 
