@@ -31,8 +31,8 @@
 #include "nsIStringStream.h"
 #include "nsIURI.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptGlobalObjectData.h"
 #include "nsJSProtocolHandler.h"
 #include "nsIPrincipal.h"
@@ -202,18 +202,19 @@ nsJSProtocolHandler::NewChannel(const char* verb,
 
     nsresult rv;
 
-    // The event sink must be a script context owner or we fail.
-    nsCOMPtr<nsIScriptContextOwner> owner;
-    rv = notificationCallbacks->GetInterface(NS_GET_IID(nsIScriptContextOwner),
-                                             getter_AddRefs(owner));
-    if (NS_FAILED(rv))
-        return rv;
-    if (!owner)
-        return NS_ERROR_FAILURE;
+    // The event sink must be a script global Object Owner or we fail.
+    nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner;
+    notificationCallbacks->GetInterface(NS_GET_IID(nsIScriptGlobalObjectOwner),
+                                             getter_AddRefs(globalOwner));
+    NS_ENSURE_TRUE(globalOwner, NS_ERROR_FAILURE);
 
     // So far so good: get the script context from its owner.
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    globalOwner->GetScriptGlobalObject(getter_AddRefs(global));
+    NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
+
     nsCOMPtr<nsIScriptContext> scriptContext;
-    rv = owner->GetScriptContext(getter_AddRefs(scriptContext));
+    rv = global->GetContext(getter_AddRefs(scriptContext));
     if (NS_FAILED(rv))
         return rv;
 
@@ -230,7 +231,7 @@ nsJSProtocolHandler::NewChannel(const char* verb,
     if (!principal) {
         // No scripts currently executing; get principal from referrer of link
         nsCOMPtr<nsIWebShell> webShell;
-        webShell = do_QueryInterface(owner);
+        webShell = do_QueryInterface(globalOwner);
         if (!webShell)
           return NS_ERROR_FAILURE;
         const PRUnichar* url;
