@@ -1,4 +1,4 @@
-0x01000000       @executable_path/libnspr4.dylib
+0x01500000       @executable_path/libnspr4.dylib
 0x02000000       @executable_path/libplds4.dylib
 0x03000000       @executable_path/libplc4.dylib
 0x04000000       @executable_path/libmozjs.dylib
