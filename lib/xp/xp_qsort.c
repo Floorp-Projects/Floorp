@@ -43,7 +43,7 @@
 static char sccsid[] = "@(#)qsort.c	8.1 (Berkeley) 6/4/93";
 #endif
 static const char rcsid[] =
-	"$Id: xp_qsort.c,v 3.3 1998/08/19 20:38:57 cls%seawood.org Exp $";
+	"$Id: xp_qsort.c,v 3.4 1999/03/09 01:10:59 slamm%netscape.com Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <stdlib.h>
@@ -111,10 +111,10 @@ med3(a, b, c, cmp)
 }
 
 void XP_QSORT (
-	void *a,
-	unsigned n,
-    unsigned es,
-	cmp_t *cmp
+    void *a,
+    size_t n,
+    size_t es,
+    cmp_t *cmp
     )
 {
 	char *pa, *pb, *pc, *pd, *pl, *pm, *pn;
