@@ -67,8 +67,8 @@ EXTRA_DSO_LDOPTS = \
 		$(DIST)/lib/librdfutil_s.$(LIB_SUFFIX) \
 		-L$(DIST)/bin \
 		$(EXTRA_DSO_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
