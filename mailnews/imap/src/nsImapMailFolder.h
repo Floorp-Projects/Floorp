@@ -186,6 +186,7 @@ public:
   NS_IMETHOD DownloadMessagesForOffline(nsISupportsArray *messages, nsIMsgWindow *msgWindow);
 
   NS_IMETHOD DownloadAllForOffline(nsIUrlListener *listener, nsIMsgWindow *msgWindow);
+  NS_IMETHOD ShouldStoreMsgOffline(nsMsgKey msgKey, PRBool *result);
     // nsIMsgImapMailFolder methods
 	NS_DECL_NSIMSGIMAPMAILFOLDER
 
@@ -305,6 +306,8 @@ protected:
 	nsresult CreateSubFolders(nsFileSpec &path);
 	nsresult GetDatabase(nsIMsgWindow *aMsgWindow);
 	virtual const char *GetIncomingServerType() {return "imap";}
+
+  virtual nsresult GetOfflineStoreOutputStream(nsIOutputStream **outputStream);
 
   nsresult GetBodysToDownload(nsMsgKeyArray *keysOfMessagesToDownload);
   // Uber message copy service

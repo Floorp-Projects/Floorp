@@ -44,7 +44,7 @@ interface nsIMsgImapMailFolder : nsISupports {
   void replayOfflineMoveCopy(out nsMsgKey keys, in long numKeys, in boolean isMove, in nsIMsgFolder aDstFolder,
                          in nsIUrlListener aUrlListener, in nsIMsgWindow aWindow);
   void playbackOfflineFolderCreate(in wstring folderName, in nsIMsgWindow aWindow, out nsIURI url);
-
+  void liteSelect(in nsIUrlListener aUrlListener);
   attribute boolean verifiedAsOnlineFolder;
   attribute boolean explicitlyVerify;
   attribute wchar hierarchyDelimiter;

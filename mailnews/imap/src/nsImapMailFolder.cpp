@@ -351,12 +351,27 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
   if (NS_SUCCEEDED(GetServer(getter_AddRefs(server))) && server)
     imapServer = do_QueryInterface(server);
 
+  PRBool isServer;
+  rv = GetIsServer(&isServer);
+
   char *folderName;
   for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++) 
   {
     nsFileSpec currentFolderPath = dir.Spec();
     folderName = currentFolderPath.GetLeafName();
     currentFolderNameStr.AssignWithConversion(folderName);
+    if (isServer && imapServer)
+    {
+      PRBool isPFC;
+      imapServer->GetIsPFC(folderName, &isPFC);
+      if (isPFC)
+      {
+        nsCOMPtr <nsIMsgFolder> pfcFolder;
+        imapServer->GetPFC(PR_TRUE, getter_AddRefs(pfcFolder));
+        continue;
+      }
+      // should check if this is the PFC
+    }
     if (nsShouldIgnoreFile(currentFolderNameStr))
     {
       PL_strfree(folderName);
@@ -458,6 +473,7 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
 
     if(NS_FAILED(rv)) return rv;
     
+    m_initialized = PR_TRUE;      // need to set this here to avoid infinite recursion from CreateSubfolders.
     // we have to treat the root folder specially, because it's name
     // doesn't end with .sbd
 
@@ -483,7 +499,6 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
     UpdateSummaryTotals(PR_FALSE);
 
     if (NS_FAILED(rv)) return rv;
-    m_initialized = PR_TRUE;      // XXX do this on failure too?
   }
   rv = mSubFolders->Enumerate(result);
   return rv;
@@ -2846,6 +2861,15 @@ NS_IMETHODIMP nsImapMailFolder::StoreImapFlags(PRInt32 flags, PRBool addFlags, n
   return rv;
 }
 
+NS_IMETHODIMP nsImapMailFolder::LiteSelect(nsIUrlListener *aUrlListener)
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = imapService->LiteSelectFolder(m_eventQueue, this, aUrlListener, nsnull);
+  return rv;
+}
+
 nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
                                                    nsIMsgDatabase *sourceDB, 
                                                    const char *destFolderUri,
@@ -5204,6 +5228,75 @@ NS_IMETHODIMP nsImapMailFolder::SetFolderVerifiedOnline(PRBool bVal)
 {
     m_verifiedAsOnlineFolder = bVal;
     return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::ShouldStoreMsgOffline(nsMsgKey msgKey, PRBool *result)
+{
+  // check if we're storing mail we read in the inbox in a personal filing cabinet.
+  // if not, just use base class implementation.
+  if (mFlags & MSG_FOLDER_FLAG_INBOX)
+  {
+    PRBool hasMsgOffline = PR_FALSE;
+
+    HasMsgOffline(msgKey, &hasMsgOffline);
+    if (hasMsgOffline)
+    {
+      *result = PR_FALSE;
+      return NS_OK;
+    }
+    nsCOMPtr<nsIImapIncomingServer> imapServer;
+    nsresult rv = GetImapIncomingServer(getter_AddRefs(imapServer));
+    if (NS_SUCCEEDED(rv) && imapServer)
+    {
+      PRBool storeReadMailInPFC;
+      imapServer->GetStoreReadMailInPFC(&storeReadMailInPFC);
+      if (storeReadMailInPFC)
+      {
+        *result = PR_TRUE;
+        return NS_OK;
+      }
+    }
+  }
+  return nsMsgDBFolder::ShouldStoreMsgOffline(msgKey, result);
+}
+
+nsresult nsImapMailFolder::GetOfflineStoreOutputStream(nsIOutputStream **outputStream)
+{
+  // check if we're storing mail we read in the inbox in a personal filing cabinet.
+  // if not, just use base class implementation.
+  if (mFlags & MSG_FOLDER_FLAG_INBOX)
+  {
+    nsCOMPtr<nsIImapIncomingServer> imapServer;
+    nsresult rv = GetImapIncomingServer(getter_AddRefs(imapServer));
+    if (NS_SUCCEEDED(rv) && imapServer)
+    {
+      PRBool storeReadMailInPFC;
+      imapServer->GetStoreReadMailInPFC(&storeReadMailInPFC);
+      if (storeReadMailInPFC)
+      {
+        nsresult rv = NS_ERROR_NULL_POINTER;
+        nsCOMPtr <nsIMsgFolder> outputPFC;
+
+        imapServer->GetReadMailPFC(PR_TRUE, getter_AddRefs(outputPFC));
+        if (outputPFC)
+        {
+          nsCOMPtr <nsIFileSpec> outputPFCPath;
+          outputPFC->GetPath(getter_AddRefs(outputPFCPath));
+          nsCOMPtr<nsISupports>  supports;
+          nsFileSpec fileSpec;
+          outputPFCPath->GetFileSpec(&fileSpec);
+          rv = NS_NewIOFileStream(getter_AddRefs(supports), fileSpec, PR_WRONLY | PR_CREATE_FILE, 00700);
+          supports->QueryInterface(NS_GET_IID(nsIOutputStream), (void **) outputStream);
+
+          nsCOMPtr <nsIRandomAccessStore> randomStore = do_QueryInterface(supports);
+          if (randomStore)
+            randomStore->Seek(PR_SEEK_END, 0);
+        }
+        return rv;
+      }
+    }
+  }
+  return nsMsgDBFolder::GetOfflineStoreOutputStream(outputStream);
 }
 
 NS_IMETHODIMP nsImapMailFolder::PerformExpand(nsIMsgWindow *aMsgWindow)

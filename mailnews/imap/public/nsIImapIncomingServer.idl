@@ -65,6 +65,8 @@ interface nsIImapIncomingServer : nsISupports {
   attribute boolean aOLMailboxView;
   attribute boolean storeReadMailInPFC;
   attribute boolean storeSentMailInPFC;
+  boolean getIsPFC(in string folderName);
+  nsIMsgFolder getPFC(in boolean createIfMissing);
   void GetImapConnectionAndLoadUrl(in nsIEventQueue aClientEventQueue,
                                            in nsIImapUrl aImapUrl,
                                            in nsISupports aConsumer);

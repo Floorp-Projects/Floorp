@@ -76,6 +76,8 @@ protected:
 	PRBool AllDescendentsAreNoSelect(nsIFolder *parentFolder);
 
   nsresult GetStringBundle();
+  const char *GetPFCName();
+  nsresult GetPFCForStringId(PRBool createIfMissing, PRInt32 stringId, nsIMsgFolder **aFolder);
 private:
     nsresult SetDelimiterFromHierarchyDelimiter();
 	nsresult SubscribeToFolder(const PRUnichar *aName, PRBool subscribe);
@@ -93,6 +95,8 @@ private:
   nsVoidArray					m_urlConsumers;
 	PRUint32					m_capability;
 	nsCString					m_manageMailAccountUrl;
+  PRBool            m_readPFCName;
+  nsCString         m_pfcName;
 	PRBool						m_waitingForConnectionInfo;
 	PRInt32						m_redirectedLogonRetries;
 	nsCOMPtr<nsIMsgLogonRedirector> m_logonRedirector;

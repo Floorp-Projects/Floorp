@@ -68,6 +68,7 @@
 #include "nsINetDataCache.h"
 #include "nsICachedNetData.h"
 #include "nsImapUrl.h"
+#include "nsFileStream.h"
 
 #include "nsITimer.h"
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
@@ -103,6 +104,7 @@ nsImapIncomingServer::nsImapIncomingServer()
 	mDoingSubscribeDialog = PR_FALSE;
 	mDoingLsub = PR_FALSE;
 	m_canHaveFilters = PR_TRUE;
+  m_readPFCName = PR_FALSE;
 }
 
 nsImapIncomingServer::~nsImapIncomingServer()
@@ -709,6 +711,9 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
   }
   else // cannot get anyone to handle the url queue it
   {
+#ifdef DEBUG_bienvenu
+    NS_ASSERTION(PR_FALSE, "no one will handle this, I don't think");
+#endif
       // queue the url
   }
 
@@ -902,33 +907,126 @@ nsImapIncomingServer::CloseCachedConnections()
 	return rv;
 }
 
-#define PFC_NAME "Personal Filing Cabinet"
-
-NS_IMETHODIMP nsImapIncomingServer::GetReadMailPFC(PRBool createIfMissing, nsIMsgFolder **aFolder)
+const char *nsImapIncomingServer::GetPFCName()
 {
-  NS_ENSURE_ARG_POINTER(aFolder);
+  if (!m_readPFCName)
+  {
+    if(NS_SUCCEEDED(GetStringBundle()))
+    {
+		  nsXPIDLString pfcName;
+		  nsresult res = m_stringBundle->GetStringFromID(IMAP_PERSONAL_FILING_CABINET, getter_Copies(pfcName));
+      if (NS_SUCCEEDED(res))
+        m_pfcName = NS_ConvertUCS2toUTF8(pfcName).get();
+    }
+    m_readPFCName = PR_TRUE;
+  }
+  return m_pfcName.get();
+}
+
+NS_IMETHODIMP nsImapIncomingServer::GetIsPFC(const char *folderName, PRBool *result)
+{
+  NS_ENSURE_ARG(result);
+  NS_ENSURE_ARG(folderName);
+  *result = !nsCRT::strcmp(GetPFCName(), folderName);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapIncomingServer::GetPFC(PRBool createIfMissing, nsIMsgFolder **pfcFolder)
+{
   nsCOMPtr<nsIFolder> rootFolder;
   nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
   if (NS_SUCCEEDED(rv) && rootFolder)
   {
-    nsCOMPtr <nsIFolder> pfcParent;
-    rootFolder->FindSubFolder(PFC_NAME, getter_AddRefs(pfcParent));
-    if (!pfcParent && createIfMissing)
+    nsCOMPtr <nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder);
+    nsCOMPtr <nsIMsgFolder> pfcParent;
+    nsXPIDLCString serverUri;
+    rv = GetServerURI(getter_Copies(serverUri));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCAutoString folderUri(serverUri);
+    folderUri.ReplaceSubstring("imap://", "mailbox://");
+    folderUri.Append("/");
+    folderUri.Append(GetPFCName());
+
+    rootMsgFolder->GetChildWithURI(folderUri, PR_FALSE, pfcFolder);
+    if (!*pfcFolder && createIfMissing)
     {
+			// get the URI from the incoming server
+	    nsCOMPtr<nsIRDFResource> res;
+      nsCOMPtr<nsIFileSpec> pfcFileSpec;
+	    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	    rv = rdf->GetResource((const char *)folderUri, getter_AddRefs(res));
+	    NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr <nsIMsgFolder> parentToCreate = do_QueryInterface(res, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      parentToCreate->SetParent(rootFolder);
+      parentToCreate->GetPath(getter_AddRefs(pfcFileSpec));
+
+      nsFileSpec path;
+      pfcFileSpec->GetFileSpec(&path);
+     	nsOutputFileStream outputStream(path, PR_WRONLY | PR_CREATE_FILE, 00600);	
+      // can't call CreateStorageIfMissing because our parent is an imap folder
+      // and that would create an imap folder.
+      // parentToCreate->CreateStorageIfMissing(nsnull);
+      *pfcFolder = parentToCreate;
+      rootFolder->NotifyItemAdded(rootFolder, parentToCreate, "folderView");
+      nsCOMPtr <nsISupports> supports = do_QueryInterface(parentToCreate);
+      NS_ASSERTION(supports, "couldn't get isupports from imap folder");
+      if (supports)
+        rootFolder->AppendElement(supports);
+
+      NS_IF_ADDREF(*pfcFolder);
     }
   }
-
   return rv;
+}
+
+nsresult nsImapIncomingServer::GetPFCForStringId(PRBool createIfMissing, PRInt32 stringId, nsIMsgFolder **aFolder)
+{
+  NS_ENSURE_ARG_POINTER(aFolder);
+  nsCOMPtr <nsIMsgFolder> pfcParent;
+
+  nsresult rv = GetPFC(createIfMissing, getter_AddRefs(pfcParent));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsXPIDLCString pfcURI;
+  pfcParent->GetURI(getter_Copies(pfcURI));
+
+  rv = GetStringBundle();
+  NS_ENSURE_SUCCESS(rv, rv);
+	nsXPIDLString pfcName;
+	rv = m_stringBundle->GetStringFromID(stringId, getter_Copies(pfcName));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCAutoString pfcMailUri(pfcURI);
+//  pfcMailUri.Append(".sbd");
+  pfcMailUri.Append("/");
+  pfcMailUri.AppendWithConversion(pfcName.get());
+  pfcParent->GetChildWithURI(pfcMailUri, PR_FALSE, aFolder);
+  if (!*aFolder && createIfMissing)
+  {
+		// get the URI from the incoming server
+	  nsCOMPtr<nsIRDFResource> res;
+	  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	  rv = rdf->GetResource((const char *)pfcMailUri, getter_AddRefs(res));
+	  NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr <nsIMsgFolder> parentToCreate = do_QueryInterface(res, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    parentToCreate->SetParent(pfcParent);
+    parentToCreate->CreateStorageIfMissing(nsnull);
+    *aFolder = parentToCreate;
+    NS_IF_ADDREF(*aFolder);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsImapIncomingServer::GetReadMailPFC(PRBool createIfMissing, nsIMsgFolder **aFolder)
+{
+  NS_ENSURE_ARG_POINTER(aFolder);
+  return GetPFCForStringId(createIfMissing, IMAP_PFC_READ_MAIL, aFolder);
 }
 
 NS_IMETHODIMP nsImapIncomingServer::GetSentMailPFC(PRBool createIfMissing, nsIMsgFolder **aFolder)
 {
   NS_ENSURE_ARG_POINTER(aFolder);
-  nsCOMPtr<nsIFolder> rootFolder;
-  nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-
+  return GetPFCForStringId(createIfMissing, IMAP_PFC_SENT_MAIL, aFolder);
 }
 
 // nsIImapServerSink impl

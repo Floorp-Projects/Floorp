@@ -93,4 +93,8 @@ NS_END_EXTERN_C
 #define IMAP_HTML_NO_CACHED_BODY_TITLE              5059
 #define IMAP_HTML_NO_CACHED_BODY_BODY               5060
 #define IMAP_MAILBOX_ALREADY_EXISTS                 5061
+#define IMAP_PERSONAL_FILING_CABINET                5062
+#define IMAP_PFC_READ_MAIL                          5063
+#define IMAP_PFC_SENT_MAIL                          5064
+
 #endif /* _nsImapStringBundle_H__ */

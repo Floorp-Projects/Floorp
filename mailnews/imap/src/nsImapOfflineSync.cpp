@@ -575,8 +575,11 @@ nsresult nsImapOfflineSync::ProcessNextOperation()
 					{
 						// there are operations to playback so check uid validity
 						SetCurrentUIDValidity(0);	// force initial invalid state
-            // ### do a lite select here and hook ourselves up as a listener.
-  					return NS_OK;	// this is asynch, we have to return as be called again by the OfflineOpExitFunction
+            // do a lite select here and hook ourselves up as a listener.
+            nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_currentFolder, &rv);
+            if (imapFolder)
+              rv = imapFolder->LiteSelect(this);
+  					return rv;	// this is async, we have to return as be called again by the OnStopRunningUrl
 					}
 				}
 			}
