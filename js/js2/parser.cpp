@@ -572,7 +572,6 @@ bool JS::Lexer::lexIdentifier(String &s, bool allowLeadingDigit)
 // Return true if the numeric literal is followed by a unit, but don't read the unit yet.
 bool JS::Lexer::lexNumeral()
 {
-	int radix = 10;
 	int hasDecimalPoint = 0;
 	String &s = nextToken->chars;
 	uint digit;
@@ -936,6 +935,7 @@ void JS::Lexer::lexToken(bool preferRegExp)
 
 				  default:
 					syntaxError("Bad character");
+                    return;
 		    	}
 		    	break;
 
