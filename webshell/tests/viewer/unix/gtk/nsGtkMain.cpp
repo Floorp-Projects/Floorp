@@ -25,11 +25,6 @@
 #include <stdlib.h>
 #include "plevent.h"
 
-#include "nsIUnixToolkitService.h"
-#include "nsIComponentManager.h"
-
-static NS_DEFINE_CID(kCUnixToolkitServiceCID, NS_UNIX_TOOLKIT_SERVICE_CID);
-
 static nsNativeViewerApp* gTheApp;
 
 nsNativeViewerApp::nsNativeViewerApp()
@@ -91,36 +86,14 @@ int main(int argc, char **argv)
 
   gTheApp = new nsNativeViewerApp();
 
-  //////////////////////////////////////////////////////////////////////
-  //
-  // Toolkit Service setup
-  // 
-  // Note: This must happend before NS_SetupRegistry() is called so
-  //       that the toolkit specific xpcom components can be registered
-  //       as needed.
-  //
-  //////////////////////////////////////////////////////////////////////
-  nsIUnixToolkitService * unixToolkitService = nsnull;
-    
-  nsresult rv = 
-    nsComponentManager::CreateInstance(kCUnixToolkitServiceCID,
-                                       nsnull,
-                                       nsIUnixToolkitService::GetIID(),
-                                       (void **) &unixToolkitService);
-  
-  NS_ASSERTION(NS_SUCCEEDED(rv),"Cannot obtain unix toolkit service.");
+  // Damn, there's no PR_PutEnv() ???
+  //PR_PutEnv("MOZ_TOOLKIT=gtk");
 
-  if (NS_SUCCEEDED(rv) && (nsnull != unixToolkitService))
-  {
-    // Force the toolkit into "gtk" mode
-    unixToolkitService->SetToolkitName("gtk");
-    
-    NS_RELEASE(unixToolkitService);
-  }
-
-  //////////////////////////////////////////////////////////////////////
-  // End toolkit service setup
-  //////////////////////////////////////////////////////////////////////
+  // The toolkit service in mozilla will look in the environment
+  // to determine which toolkit to use.  Yes, it is a dumb hack to
+  // force it here, but we have no choice because of toolkit specific
+  // code linked into the viewer.
+  putenv("MOZ_TOOLKIT=gtk");
 
   gTheApp->Initialize(argc, argv);
   gTheApp->Run();
