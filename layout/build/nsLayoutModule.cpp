@@ -246,6 +246,10 @@ nsLayoutModule::Initialize()
 void
 nsLayoutModule::Shutdown()
 {
+  if (!mInitialized) {
+    return;
+  }
+    
   // Release all of our atoms
   nsColorNames::ReleaseTable();
   nsCSSProps::ReleaseTable();
