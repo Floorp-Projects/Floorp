@@ -101,13 +101,6 @@ static Boolean		ChildIsTaskBar			(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* TaskBar callbacks													*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-static void	TaskBarActionCB			(Widget,XtPointer,XtPointer);
-
-/*----------------------------------------------------------------------*/
-/*																		*/
 /* Floating shell event handlers and callbacks.							*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -653,12 +646,6 @@ InsertStaticChild(Widget child)
 		if (!dp->tool_bar)
 		{
 			dp->docked_task_bar = child;
-			
-#if 0
-			/* Add undock callback to docked task bar */
-			XtAddCallback(dp->docked_task_bar,XmNactionCallback,
-						  TaskBarActionCB,(XtPointer) w);
-#endif
 		}
 		/* Tool bar */
 		else
@@ -1276,20 +1263,6 @@ FloatingCloseCB(Widget child,XtPointer client_data,XtPointer call_data)
 	Widget w = (Widget) client_data;
 
 	Dock(w);
-}
-/*----------------------------------------------------------------------*/
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* TaskBar callbacks													*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-static void
-TaskBarActionCB(Widget button,XtPointer client_data,XtPointer call_data)
-{
-    Widget w = (Widget) client_data;
-
-	Undock(w);
 }
 /*----------------------------------------------------------------------*/
 
