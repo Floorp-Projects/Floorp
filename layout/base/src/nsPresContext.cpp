@@ -764,7 +764,20 @@ nsPresContext::UpdateCharSet(const char* aCharSet)
   //ahmed
   mCharset=aCharSet;
 
-  SetVisualMode(IsVisualCharset(mCharset) );
+  switch (GET_BIDI_OPTION_TEXTTYPE(mBidi)) {
+
+    case IBMBIDI_TEXTTYPE_LOGICAL:
+      SetVisualMode(PR_FALSE);
+      break;
+
+    case IBMBIDI_TEXTTYPE_VISUAL:
+      SetVisualMode(PR_TRUE);
+      break;
+
+    case IBMBIDI_TEXTTYPE_CHARSET:
+    default:
+      SetVisualMode(IsVisualCharset(mCharset));
+  }
 #endif // IBMBIDI
 }
 
