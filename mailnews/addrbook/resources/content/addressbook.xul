@@ -153,8 +153,8 @@ Contributor(s):
                 <menuitem id="menu_close"/>
                 <menuseparator/>
         <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_printSetup"/>
-        <menuitem id="printPreviewMenuItem" label="&printPreviewCardViewCmd.label;" command="cmd_printPreviewCard"/>
-        <menuitem id="printPreviewAddressBook" label="&printPreviewAddressBook.label;" command="cmd_printPreviewAddressBook"/>
+        <menuitem id="printPreviewMenuItem" label="&printPreviewCardViewCmd.label;" accesskey="&printPreviewCardViewCmd.accesskey;" command="cmd_printPreviewCard"/>
+        <menuitem id="printPreviewAddressBook" label="&printPreviewAddressBook.label;" accesskey="&printPreviewAddressBook.accesskey;" command="cmd_printPreviewAddressBook"/>
               <menuitem id="printMenuItem" label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_printCard" command="cmd_printCard"/>
               <menuitem id="printAddressBook" label="&printAddressBook.label;" accesskey="&printAddressBook.accesskey;" command="cmd_printAddressBook"/>
             </menupopup>

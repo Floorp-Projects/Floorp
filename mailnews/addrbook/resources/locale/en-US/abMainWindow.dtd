@@ -45,11 +45,13 @@ Rights Reserved.
 <!ENTITY printCardViewCmd.label                         "Print Card...">
 <!ENTITY printCardViewCmd.accesskey                     "p">
 <!ENTITY printPreviewCardViewCmd.label                  "Print Preview Card">
+<!ENTITY printPreviewCardViewCmd.accesskey              "v">
 <!-- LOCALIZATION NOTE (printCardViewCmd.key) : DONT_TRANSLATE -->  
 <!ENTITY printCardViewCmd.key                           "P">
 <!ENTITY printAddressBook.label                         "Print Address Book..."> 
 <!ENTITY printAddressBook.accesskey                     "A"> 
 <!ENTITY printPreviewAddressBook.label                  "Print Preview Address Book"> 
+<!ENTITY printPreviewAddressBook.accesskey              "B">
 <!ENTITY printSetupCmd.label                            "Page Setup...">
 <!ENTITY printSetupCmd.accesskey                        "u">
 
