@@ -790,7 +790,7 @@ nsIEProfileMigrator::GetSignonsListFromPStore(IPStore* aPStore, nsVoidArray* aSi
   hr = aPStore->EnumItems(0, &IEPStoreGUID, &IEPStoreGUID, 0, &enumItems);
   if (SUCCEEDED(hr) && enumItems != NULL) {
     LPWSTR itemName = NULL;
-    while ((enumItems->raw_Next(1, &itemName, 0) == S_OK) && itemName) {
+    while ((enumItems->Next(1, &itemName, 0) == S_OK) && itemName) {
       unsigned long count = 0;
       unsigned char* data = NULL;
 
@@ -873,7 +873,7 @@ nsIEProfileMigrator::ResolveAndMigrateSignons(IPStore* aPStore, nsVoidArray* aSi
   hr = aPStore->EnumItems(0, &IEPStoreGUID, &IEPStoreGUID, 0, &enumItems);
   if (SUCCEEDED(hr) && enumItems != NULL) {
     LPWSTR itemName = NULL;
-    while ((enumItems->raw_Next(1, &itemName, 0) == S_OK) && itemName) {
+    while ((enumItems->Next(1, &itemName, 0) == S_OK) && itemName) {
       unsigned long count = 0;
       unsigned char* data = NULL;
 
@@ -1000,7 +1000,7 @@ nsIEProfileMigrator::CopyFormData(PRBool aReplace)
   hr = PStore->EnumItems(0, &IEPStoreGUID, &IEPStoreGUID, 0, &enumItems);
   if (SUCCEEDED(hr) && enumItems != NULL) {
     LPWSTR itemName = NULL;
-    while ((enumItems->raw_Next(1, &itemName, 0) == S_OK) && itemName) {
+    while ((enumItems->Next(1, &itemName, 0) == S_OK) && itemName) {
       unsigned long count = 0;
       unsigned char* data = NULL;
 
