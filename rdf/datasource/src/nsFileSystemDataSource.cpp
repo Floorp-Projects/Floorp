@@ -45,6 +45,7 @@
 #include "nsFileSpec.h"
 #include "nsIRDFFileSystem.h"
 #include "nsFileSpec.h"
+#include "nsSpecialSystemDirectory.h"
 #include "nsEnumeratorUtils.h"
 
 
@@ -78,6 +79,10 @@ private:
 	static nsIRDFResource		*kNC_pulse;
 	static nsIRDFResource		*kRDF_InstanceOf;
 	static nsIRDFResource		*kRDF_type;
+
+#ifdef	XP_WIN
+	static char			*ieFavoritesDir;
+#endif
 
 public:
 
@@ -173,6 +178,10 @@ nsIRDFResource		*FileSystemDataSource::kNC_pulse;
 nsIRDFResource		*FileSystemDataSource::kRDF_InstanceOf;
 nsIRDFResource		*FileSystemDataSource::kRDF_type;
 
+#ifdef	XP_WIN
+char			*FileSystemDataSource::ieFavoritesDir;
+#endif
+
 static const char	kFileProtocol[] = "file://";
 
 
@@ -199,14 +208,25 @@ FileSystemDataSource::isFileURI(nsIRDFResource *r)
 
 FileSystemDataSource::FileSystemDataSource(void)
 {
-    NS_INIT_REFCNT();
+	NS_INIT_REFCNT();
 
-    if (gRefCnt++ == 0) {
-        nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                   nsIRDFService::GetIID(),
-                                                   (nsISupports**) &gRDFService);
+	if (gRefCnt++ == 0)
+	{
+		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+					   nsIRDFService::GetIID(),
+					   (nsISupports**) &gRDFService);
 
-        PR_ASSERT(NS_SUCCEEDED(rv));
+		PR_ASSERT(NS_SUCCEEDED(rv));
+
+#ifdef	XP_WIN
+		nsSpecialSystemDirectory	ieFavoritesFolder(nsSpecialSystemDirectory::Win_Favorites);
+		nsFileURL			ieFavoritesURLSpec(ieFavoritesFolder);
+		const char			*ieFavoritesURI = ieFavoritesURLSpec.GetAsString();
+		if (ieFavoritesURI)
+		{
+			ieFavoritesDir = nsCRT::strdup(ieFavoritesURI);
+		}
+#endif
 
 		gRDFService->GetResource(kURINC_FileSystemRoot,               &kNC_FileSystemRoot);
 		gRDFService->GetResource(NC_NAMESPACE_URI "child",            &kNC_Child);
@@ -218,8 +238,8 @@ FileSystemDataSource::FileSystemDataSource(void)
 		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf",      &kRDF_InstanceOf);
 		gRDFService->GetResource(RDF_NAMESPACE_URI "type",            &kRDF_type);
 
-        gFileSystemDataSource = this;
-    }
+		gFileSystemDataSource = this;
+	}
 }
 
 
@@ -233,10 +253,16 @@ FileSystemDataSource::~FileSystemDataSource (void)
         NS_RELEASE(kNC_Child);
         NS_RELEASE(kNC_Name);
         NS_RELEASE(kNC_URL);
-		NS_RELEASE(kNC_FileSystemObject);
-		NS_RELEASE(kNC_pulse);
+	NS_RELEASE(kNC_FileSystemObject);
+	NS_RELEASE(kNC_pulse);
         NS_RELEASE(kRDF_InstanceOf);
         NS_RELEASE(kRDF_type);
+
+        if (ieFavoritesDir)
+        {
+        	nsCRT::free(ieFavoritesDir);
+        	ieFavoritesDir = nsnull;
+        }
 
         gFileSystemDataSource = nsnull;
         nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
@@ -871,35 +897,7 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
 PRBool
 FileSystemDataSource::isVisible(const nsNativeFileSpec& file)
 {
-	PRBool		isVisible = PR_TRUE;
-
-	isVisible = (!file.IsHidden());
-
-#if 0
-#ifdef	XP_MAC
-	CInfoPBRec	cInfo;
-	OSErr		err;
-
-	nsFileSpec	fileSpec(file);
-	if (!(err = fileSpec.GetCatInfo(cInfo)))
-	{
-		if (cInfo.hFileInfo.ioFlFndrInfo.fdFlags & kIsInvisible)
-		{
-			isVisible = PR_FALSE;
-		}
-	}
-#else
-	char		*baseFilename = file.GetLeafName();
-	if (nsnull != baseFilename)
-	{
-		if ((!strcmp(baseFilename, ".")) || (!strcmp(baseFilename, "..")))
-		{
-			isVisible = PR_FALSE;
-		}
-		nsCRT::free(baseFilename);
-	}
-#endif
-#endif
+	PRBool isVisible = (!file.IsHidden());
 	return(isVisible);
 }
 
@@ -908,14 +906,14 @@ FileSystemDataSource::isVisible(const nsNativeFileSpec& file)
 nsresult
 FileSystemDataSource::GetFolderList(nsIRDFResource *source, nsISimpleEnumerator** aResult)
 {
-	nsresult rv;
+	nsresult	rv;
 	nsCOMPtr<nsISupportsArray> nameArray;
 	rv = NS_NewISupportsArray(getter_AddRefs(nameArray));
 	if (NS_FAILED(rv)) return rv;
 
-	nsXPIDLCString uri;
-	rv = source->GetValue( getter_Copies(uri) );
-	if (NS_FAILED(rv)) return rv;
+	const char		*uri;
+	rv = source->GetValueConst(&uri);
+	if (NS_FAILED(rv)) return(rv);
 
 	nsFileURL 		parentDir(uri);
 	nsNativeFileSpec 	nativeDir(parentDir);
@@ -948,8 +946,11 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, nsISimpleEnumerator*
 nsresult
 FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 {
-	nsXPIDLCString uri;
-	source->GetValue( getter_Copies(uri) );
+	nsresult		rv;
+	const char		*uri;
+	rv = source->GetValueConst(&uri);
+	if (NS_FAILED(rv)) return(rv);
+
 	nsFileURL		url(uri);
 	nsNativeFileSpec	native(url);
 	char			*baseFilename = native.GetLeafName();
@@ -958,6 +959,25 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 		return NS_ERROR_OUT_OF_MEMORY;
 
 	nsAutoString	name(baseFilename);
+	PRInt32		nameLen = name.Length();
+
+#ifdef	XP_WIN
+
+	// special hack for IE favorites under Windows; strip off the
+	// trailing ".url" or ".lnk" at the end of IE favorites names
+	nsAutoString		theURI(uri);
+	if ((theURI.Find(ieFavoritesDir) == 0) && (nameLen > 4))
+	{
+		nsAutoString	extension;
+		name.Right(extension, 4);
+		if (extension.EqualsIgnoreCase(".url") ||
+		    extension.EqualsIgnoreCase(".lnk"))
+		{
+			name.Truncate(nameLen - 4);
+		}
+	}
+#endif
+
 	nsIRDFLiteral *literal;
 	gRDFService->GetLiteral(name.GetUnicode(), &literal);
 	*aResult = literal;
@@ -971,12 +991,15 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 nsresult
 FileSystemDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult)
 {
-	nsXPIDLCString uri;
-	source->GetValue( getter_Copies(uri) );
-	nsAutoString	url(uri);
+	nsresult		rv;
+	const char		*uri;
+	rv = source->GetValueConst(&uri);
+	if (NS_FAILED(rv)) return(rv);
+	nsAutoString		url(uri);
 
-	nsIRDFLiteral	*literal;
+	nsIRDFLiteral		*literal;
 	gRDFService->GetLiteral(url.GetUnicode(), &literal);
 	*aResult = literal;
 	return NS_OK;
 }
+
