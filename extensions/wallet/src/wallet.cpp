@@ -180,7 +180,7 @@ InputConsumer::OnDataAvailable(nsIChannel* channel,
   nsresult rv;
   do {
     rv = aIStream->Read(buf, 1000, &amt);
-    if (rv == NS_BASE_STREAM_EOF) break;
+    if (amt == 0) break;
     if (NS_FAILED(rv)) return rv;
     buf[amt] = '\0';
     mOutFile->write(buf,amt);

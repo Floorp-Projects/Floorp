@@ -699,7 +699,7 @@ FTPDataSourceCallback::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, P
 		while (aLength > 0)
 		{
 			PRUint32	count=0, numBytes = (aLength > sizeof(buffer)-1 ? sizeof(buffer)-1 : aLength);
-			if (NS_FAILED(rv = aIStream->Read(buffer, numBytes, &count)))
+			if (NS_FAILED(rv = aIStream->Read(buffer, numBytes, &count)) || count == 0)
 			{
 				printf("FTP datasource read failure.\n");
 				break;

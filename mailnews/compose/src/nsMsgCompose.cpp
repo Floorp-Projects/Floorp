@@ -872,7 +872,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIChannel * /* aChan
 	PRUint32 numWritten = 0; 
 	rv = inStr->Read(newBuf, count, &numWritten);
 	newBuf[count] = '\0';
-	if (NS_SUCCEEDED(rv))
+	if (NS_SUCCEEDED(rv) && numWritten > 0)
 	{
 		mMsgBody += newBuf;
 	}

@@ -140,7 +140,7 @@ nsPluginInputStream::Read(char* aBuf, PRInt32 aOffset, PRInt32 aCount,
             PRUint32 segmentIndex = aOffset - element->offset;
             PRUint32 segmentAmount = element->length - segmentIndex;
             if (aCount > (PRInt32)segmentAmount) {
-                return NS_BASE_STREAM_EOF;      // XXX right error?
+                return NS_ERROR_FAILURE;
             }
             memcpy(aBuf, &element->segment[segmentIndex], aCount);
 //            mReadCursor = segmentIndex + aCount;

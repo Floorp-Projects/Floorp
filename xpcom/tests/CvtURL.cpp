@@ -87,12 +87,11 @@ int main(int argc, char** argv)
     PRUnichar buf[1000];
     PRUint32 nb;
     ec = uin->Read(buf, 0, 1000, &nb);
-    if (ec < 0) {
-      if (ec != NS_BASE_STREAM_EOF) {
-        printf("i/o error: %d\n", ec);
-      }
+    if (NS_FAILED(ec)) {
+      printf("i/o error: %d\n", ec);
       break;
     }
+    if (nb == 0) break; // EOF
     count += nb;
   }
   PRTime end = PR_Now();

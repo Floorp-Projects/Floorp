@@ -1234,7 +1234,7 @@ nsresult nsParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUin
           ((0 == sourceOffset) && (mCharsetSource<kCharsetFromAutoDetection));
   while ((theNumRead>0) && (aLength>theTotalRead) && (NS_OK==result)) {
     result = pIStream->Read(mParserContext->mTransferBuffer, aLength, &theNumRead);
-    if((result == NS_OK) && (theNumRead>0)) {
+    if(NS_SUCCEEDED(result) && (theNumRead>0)) {
       if(needCheckFirst4Bytes && (theNumRead >= 4)) {
          nsCharsetSource guessSource;
          nsAutoString guess("");

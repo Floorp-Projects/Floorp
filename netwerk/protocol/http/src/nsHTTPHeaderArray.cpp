@@ -115,7 +115,8 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader, const char* aValue)
       return NS_ERROR_OUT_OF_MEMORY;
     }
     NS_ADDREF(entry);
-    mHTTPHeaders->AppendElement(entry);
+    nsresult rv = mHTTPHeaders->AppendElement(entry) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
+    NS_ASSERTION(NS_SUCCEEDED(rv), "AppendElement failed");
   } 
   // 
   // Append the new value to the existing string

@@ -91,7 +91,7 @@ public:
     }
 
     // nsIInputStream methods:
-    NS_IMETHOD GetLength(PRUint32 *aLength) { 
+    NS_IMETHOD Available(PRUint32 *aLength) { 
         *aLength = mLength;
         return NS_OK;
     }
@@ -3100,7 +3100,7 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
 	
 	if (NS_SUCCEEDED(rv)) {
 		m_numArticlesLoaded++;
-        }
+    }
 
 	PR_FREEIF(line);
     return status; /* keep going */

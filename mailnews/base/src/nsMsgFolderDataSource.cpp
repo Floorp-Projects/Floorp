@@ -607,13 +607,13 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
           if (charInputStream)
           {
             PRUint32 length = 0;
-            rv = charInputStream->GetLength(&length);
+            rv = charInputStream->Available(&length);
             if (NS_SUCCEEDED(rv) && length > 0)
             {
               char *newName = (char*) PR_MALLOC(length+1);
               PRUint32 readCount = 0;
               rv = charInputStream->Read(newName, length, &readCount);
-              if(NS_SUCCEEDED(rv))
+              if(NS_SUCCEEDED(rv) && readCount > 0)
               {
                 newName[readCount] = 0;
                 rv = folder->Rename(newName);

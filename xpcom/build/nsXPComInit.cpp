@@ -25,7 +25,9 @@
 
 #include "nsAllocator.h"
 #include "nsArena.h"
+#if 0
 #include "nsBuffer.h"
+#endif
 #include "nsByteBuffer.h"
 #include "nsPageMgr.h"
 #include "nsSupportsArray.h"
@@ -48,7 +50,9 @@
 static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
 // ds
 static NS_DEFINE_CID(kArenaCID, NS_ARENA_CID);
+#if 0
 static NS_DEFINE_CID(kBufferCID, NS_BUFFER_CID);
+#endif
 static NS_DEFINE_CID(kByteBufferCID, NS_BYTEBUFFER_CID);
 static NS_DEFINE_CID(kPageManagerCID, NS_PAGEMANAGER_CID);
 static NS_DEFINE_CID(kPropertiesCID, NS_PROPERTIES_CID);
@@ -207,11 +211,13 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result)
                                 ArenaImpl::Create);
     if (NS_FAILED(rv)) return rv;
 
+#if 0
     rv = RegisterGenericFactory(compMgr, kBufferCID,
                                 NS_BUFFER_CLASSNAME,
                                 NS_BUFFER_PROGID,
                                 nsBuffer::Create);
     if (NS_FAILED(rv)) return rv;
+#endif
 
     rv = RegisterGenericFactory(compMgr, kByteBufferCID,
                                 NS_BYTEBUFFER_CLASSNAME,

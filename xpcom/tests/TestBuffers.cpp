@@ -347,7 +347,7 @@ main(int argc, char* argv[])
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestWriteSegments failed");
     rv = TestWriteSegments(NS_ERROR_FAILURE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestWriteSegments failed");
-    rv = TestWriteSegments(NS_BASE_STREAM_EOF);
+    rv = TestWriteSegments(NS_BASE_STREAM_CLOSED);
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestWriteSegments failed");
     rv = TestWriteSegments(NS_BASE_STREAM_WOULD_BLOCK);
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestWriteSegments failed");
@@ -356,7 +356,7 @@ main(int argc, char* argv[])
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestReadSegments failed");
     rv = TestReadSegments(NS_ERROR_FAILURE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestReadSegments failed");
-//    rv = TestReadSegments(NS_BASE_STREAM_EOF);
+//    rv = TestReadSegments(NS_BASE_STREAM_CLOSED);
 //    NS_ASSERTION(NS_SUCCEEDED(rv), "TestReadSegments failed");
     rv = TestReadSegments(NS_BASE_STREAM_WOULD_BLOCK);
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestReadSegments failed");

@@ -124,7 +124,7 @@ public:
   }
   
   // nsIInputStream interface
-  NS_IMETHOD GetLength(PRUint32 *_retval)
+  NS_IMETHOD Available(PRUint32 *_retval)
   {
     *_retval = mBufLen;
     return NS_OK;
@@ -161,13 +161,13 @@ nsresult
 FileInputStreamImpl::PumpFileStream()
 {
   if (mInFile->eof())
-    return NS_BASE_STREAM_EOF;
+    return NS_ERROR_FAILURE;
   
   mBufLen = mInFile->read(mBuf, sizeof(mBuf));
   if (mBufLen > 0)
     return NS_OK;
   else
-    return NS_BASE_STREAM_EOF;
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMPL_ISUPPORTS(FileInputStreamImpl, nsCOMTypeInfo<nsIInputStream>::GetIID());
@@ -269,7 +269,7 @@ SaveQuoteMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData
   while (NS_SUCCEEDED(fileStream->PumpFileStream()))
   {
     PRUint32    len;
-    in->GetLength(&len);
+    in->Available(&len);
     mimeParser->OnDataAvailable(nsnull, aURL, in, 0, len);
   }
 

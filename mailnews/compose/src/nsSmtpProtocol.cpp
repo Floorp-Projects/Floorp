@@ -306,7 +306,7 @@ PRInt32 nsSmtpProtocol::ReadLine(nsIInputStream * inputStream, PRUint32 length, 
 
 	PRUint32 numBytesToRead = 0;  // MAX # bytes to read from the stream
 	PRUint32 numBytesRead = 0;	  // total number bytes we have read from the stream during this call
-	inputStream->GetLength(&length); // refresh the length in case it has changed...
+	inputStream->Available(&length); // refresh the length in case it has changed...
 
 	if (length > OUTPUT_BUFFER_SIZE)
 		numBytesToRead = OUTPUT_BUFFER_SIZE;

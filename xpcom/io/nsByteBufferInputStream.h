@@ -120,7 +120,7 @@ public:
         if (amt > 0) {
             PRUint32 readAmt;
             nsresult rv = in->Read(&mBuffer[mWriteCursor], amt, &readAmt);
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv) || readAmt == 0) return rv;
             mWriteCursor += readAmt;
             *totalRef += readAmt;
         }

@@ -323,8 +323,8 @@ InputTestConsumer::OnDataAvailable(nsIChannel* channel,
 
   do {
     rv = aIStream->Read(buf, 1024, &amt);
-    if (rv == NS_BASE_STREAM_EOF) break;
     if (NS_FAILED(rv)) return rv;
+    if (amt == 0) break;
     if (gVerbose) {
       buf[amt] = '\0';
       puts(buf);

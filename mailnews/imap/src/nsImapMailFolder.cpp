@@ -2277,7 +2277,7 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsIImapProtocol* aProtocol)
                     inputStream =
                         do_QueryInterface(inputFileStream->GetIStream(), &res);
                     PRUint32 fileSize = 0;
-                    res = inputStream->GetLength(&fileSize);
+                    res = inputStream->Available(&fileSize);
                     streamListener->OnStartRequest(nsnull, aCtxt);
                     streamListener->OnDataAvailable(nsnull /* channel */, aCtxt, inputStream, 0 /* offset */, 
                                                     fileSize);

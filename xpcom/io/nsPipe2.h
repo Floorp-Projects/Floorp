@@ -46,8 +46,8 @@ public:
  * The signature for the reader function passed to WriteSegment. This 
  * specifies where the data should come from that gets written into the buffer.
  * Implementers should return the following:
- * @return NS_OK and readCount - if successfully read something
- * @return NS_BASE_STREAM_EOF - if no more to read
+ * @return NS_OK and readCount > 0 - if successfully read something
+ * @return NS_OK and readCount == 0 - if no more to read (EOF)
  * @return NS_BASE_STREAM_WOULD_BLOCK - if there is currently no data (in
  *   a non-blocking mode)
  * @return <other-error> - on failure

@@ -42,7 +42,7 @@ public:
         // nsIBaseStream methods:
         NS_IMETHOD Close(void);
         // nsIInputStream methods:
-        NS_IMETHOD GetLength(PRUint32 *result);
+        NS_IMETHOD Available(PRUint32 *result);
         NS_IMETHOD Read(char* toBuf, PRUint32 bufLen, PRUint32 *readCount);
         // nsIBufferInputStream methods:
         NS_IMETHOD GetBuffer(nsIBuffer * *aBuffer) {
@@ -317,7 +317,7 @@ nsPipe::nsPipeInputStream::Close(void)
 }
 
 NS_IMETHODIMP
-nsPipe::nsPipeInputStream::GetLength(PRUint32 *result)
+nsPipe::nsPipeInputStream::Available(PRUint32 *result)
 {
     nsPipe* pipe = GET_INPUTSTREAM_PIPE(this);
     nsAutoCMonitor mon(pipe);
@@ -371,7 +371,6 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
         while (readBufferLen > 0) {
             PRUint32 writeCount;
             rv = writer(closure, readBuffer, *readCount, readBufferLen, &writeCount);
-            NS_ASSERTION(rv != NS_BASE_STREAM_EOF, "Write should not return EOF");
             if (writeCount == 0 || rv == NS_BASE_STREAM_WOULD_BLOCK) {
                 rv = pipe->mCondition;
                 if (*readCount > 0 || NS_FAILED(rv))
@@ -408,6 +407,8 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
     if (mBlocking && rv == NS_BASE_STREAM_WOULD_BLOCK && *readCount > 0) {
         mon.Notify();   // wake up writer
     }
+    if (rv == NS_BASE_STREAM_CLOSED)    // EOF
+        rv = NS_OK;
     return *readCount == 0 ? rv : NS_OK;
 }
 
@@ -504,7 +505,7 @@ nsPipe::nsPipeInputStream::Search(const char *forString,
         rv = pipe->GetReadSegment(segmentPos, &bufSeg2, &bufSegLen2);
         if (NS_FAILED(rv) || bufSegLen2 == 0) {
             *found = PR_FALSE;
-            if (pipe->mCondition != NS_OK)    // XXX NS_FAILED?
+            if (NS_FAILED(pipe->mCondition))
                 *offsetSearchedTo = segmentPos;
             else
                 *offsetSearchedTo = segmentPos - strLen + 1;
@@ -577,7 +578,7 @@ nsPipe::nsPipeOutputStream::Close(void)
 {
     nsPipe* pipe = GET_OUTPUTSTREAM_PIPE(this);
     nsAutoCMonitor mon(pipe);
-    pipe->mCondition = NS_BASE_STREAM_EOF;
+    pipe->mCondition = NS_BASE_STREAM_CLOSED;
     nsresult rv = mon.Notify();   // wake up the writer
     if (NS_FAILED(rv))
         return rv;
@@ -596,7 +597,8 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
         nsAutoCMonitor mon(pipe);
 
         *writeCount = 0;
-        if (NS_FAILED(pipe->mCondition)) {
+        if (NS_FAILED(pipe->mCondition)
+            && pipe->mCondition != NS_BASE_STREAM_CLOSED) {
             rv = pipe->mCondition;
             goto done;
         }
@@ -625,7 +627,7 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
             while (writeBufLen > 0) {
                 PRUint32 readCount = 0;
                 rv = reader(closure, writeBuf, *writeCount, writeBufLen, &readCount);
-                if (rv == NS_BASE_STREAM_WOULD_BLOCK || readCount == 0) {
+                if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
                     // The reader didn't have anything else to put in the buffer, so
                     // call flush to notify the guy downstream, hoping that he'll somehow
                     // wake up the guy upstream to eventually produce more data for us.
@@ -638,6 +640,10 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
                 if (NS_FAILED(rv)) {
                     // save the failure condition so that we can get it again later
                     pipe->mCondition = rv;
+                    goto done;
+                }
+                if (readCount == 0) { // EOF
+                    pipe->mCondition = NS_BASE_STREAM_CLOSED;
                     goto done;
                 }
                 NS_ASSERTION(readCount <= writeBufLen, "reader returned bad readCount");

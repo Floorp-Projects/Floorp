@@ -93,6 +93,7 @@ InputTestConsumer::OnDataAvailable(nsIChannel* channel,
   while (aLength > 0) {
     PRUint32 amt;
     aIStream->Read(buf, 1024, &amt);
+    if (amt == 0) break;
     buf[amt] = '\0';
     printf(buf);
     aLength -= amt;

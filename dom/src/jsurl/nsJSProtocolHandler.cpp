@@ -77,7 +77,7 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD GetLength(PRUint32 *_retval) {
+    NS_IMETHOD Available(PRUint32 *_retval) {
         if (!mResult) {
             nsresult rv = Eval();
             if (NS_FAILED(rv))
@@ -86,7 +86,7 @@ public:
         }
         PRUint32 rest = mLength - mReadCursor;
         if (!rest)
-            return NS_BASE_STREAM_EOF;
+            return NS_ERROR_FAILURE;
         *_retval = rest;
         return NS_OK;
     }
@@ -94,7 +94,7 @@ public:
     NS_IMETHOD Read(char * buf, PRUint32 count, PRUint32 *_retval) {
         nsresult rv;
         PRUint32 rest;
-        rv = GetLength(&rest);
+        rv = Available(&rest);
         if (rv != NS_OK)
             return rv;
         PRUint32 amt = PR_MIN(count, rest);

@@ -338,7 +338,8 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     count = 0;
     mTransportList->Count(&count);
     if (count >= MAX_NUMBER_OF_OPEN_TRANSPORTS) {
-        mPendingChannelList->AppendElement(i_Channel);
+        rv = mPendingChannelList->AppendElement(i_Channel) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
+        NS_ASSERTION(NS_SUCCEEDED(rv), "AppendElement failed");
 
         PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                ("nsHTTPHandler::RequestTransport."
@@ -380,7 +381,8 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     if (NS_FAILED(rv)) return rv;
 
     // Put it in the table...
-    mTransportList->AppendElement(trans);
+    rv = mTransportList->AppendElement(trans) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
+    if (NS_FAILED(rv)) return rv;
 
     *o_pTrans = trans;
     

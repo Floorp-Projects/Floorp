@@ -48,7 +48,6 @@ CPPSRCS =			     \
 	nsFileSpecImpl.cpp           \
 	nsIFileStream.cpp            \
 	nsIStringStream.cpp          \
-	nsPipe.cpp                   \
 	nsSegmentedBuffer.cpp        \
 	nsPipe2.cpp                  \
 	nsSpecialSystemDirectory.cpp \

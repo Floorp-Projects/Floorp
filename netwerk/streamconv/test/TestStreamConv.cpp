@@ -75,7 +75,7 @@ public:
     {
         nsresult rv;
         PRUint32 read, len;
-        rv = inStr->GetLength(&len);
+        rv = inStr->Available(&len);
         if (NS_FAILED(rv)) return rv;
 
         char *buffer = (char*)nsAllocator::Alloc(len + 1);
@@ -83,10 +83,9 @@ public:
 
         rv = inStr->Read(buffer, len, &read);
         buffer[len] = '\0';
-        if (NS_FAILED(rv)) return rv;
-
-        printf("CONTEXT %x: Received %d bytes and the following data: \n %s\n\n", ctxt, read, buffer);
-
+        if (NS_SUCCEEDED(rv)) {
+            printf("CONTEXT %x: Received %d bytes and the following data: \n %s\n\n", ctxt, read, buffer);
+        }
         nsAllocator::Free(buffer);
 
         return NS_OK;

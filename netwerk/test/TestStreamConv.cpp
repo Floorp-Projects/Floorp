@@ -53,7 +53,7 @@ public:
         char buf[1024];
         PRUint32 read;
         nsresult rv = aFromStream->Read(buf, 1024, &read);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv) || read == 0) return rv;
 
         nsString2 to(aToType);
         char *toMIME = to.ToNewCString();

@@ -612,7 +612,7 @@ nsHTTPChannel::Open(void)
             PRUint32 count;
 
             // Write the request to the server...
-            rv = stream->GetLength(&count);
+            rv = stream->Available(&count);
             rv = channel->AsyncWrite(stream, 0, count, this , mRequest);
             if (NS_FAILED(rv)) return rv;
 

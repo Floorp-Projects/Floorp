@@ -73,7 +73,7 @@ nsHTTPEncodeStream::Close(void)
 // nsIInputStream methods:
 
 NS_IMETHODIMP
-nsHTTPEncodeStream::GetLength(PRUint32 *result)
+nsHTTPEncodeStream::Available(PRUint32 *result)
 {
     // XXX Ugh! This requires buffering up the translation so that you can
     // count it, because to walk it consumes the input.

@@ -146,16 +146,12 @@ nsInputStreamChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
     PRUint32 amt;
     while (PR_TRUE) {
-        rv = mInputStream->GetLength(&amt);
-        if (rv == NS_BASE_STREAM_EOF) {
-            rv = NS_OK;
-            break;
-        }
+        rv = mInputStream->Available(&amt);
         if (NS_FAILED(rv)) break;
-        if (readCount != -1)
-            amt = PR_MIN((PRUint32)readCount, amt);
         if (amt == 0) 
             break;
+        if (readCount != -1)
+            amt = PR_MIN((PRUint32)readCount, amt);
         rv = listener->OnDataAvailable(this, ctxt, mInputStream, 0, amt);
         if (NS_FAILED(rv)) break;
     }

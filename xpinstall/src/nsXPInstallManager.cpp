@@ -403,7 +403,7 @@ nsXPInstallManager::OnDataAvailable(nsIURI* aURL,
     {
         err = pIStream->Read(buffer, BUF_SIZE, &len);
         
-        if (NS_SUCCEEDED(err))
+        if (NS_SUCCEEDED(err) && len > 0)
         {
             err = mItem->mFile->Write( buffer, len, &result);
             if ( NS_SUCCEEDED(err) && result != (PRInt32)len )

@@ -32,7 +32,6 @@ EXPORTS =                          \
         nsHashtable.h              \
         nsHashtableEnumerator.h    \
         nsIArena.h                 \
-        nsIBuffer.h                \
         nsIByteBuffer.h            \
         nsIObserverList.h          \
         nsIPageManager.h           \
@@ -84,7 +83,6 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsArena.obj                   \
         .\$(OBJDIR)\nsAtomTable.obj               \
         .\$(OBJDIR)\nsAVLTree.obj                 \
-        .\$(OBJDIR)\nsBuffer.obj                  \
         .\$(OBJDIR)\nsByteBuffer.obj              \
         .\$(OBJDIR)\nsCRT.obj                     \
         .\$(OBJDIR)\nsConjoiningEnumerator.obj    \

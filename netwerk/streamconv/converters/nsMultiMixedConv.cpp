@@ -107,14 +107,14 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
         }
     }
 
-    rv = inStr->GetLength(&bufLen);
+    rv = inStr->Available(&bufLen);
     if (NS_FAILED(rv)) return rv;
 
     rootMemPtr = buffer = (char*)nsAllocator::Alloc(bufLen + 1);
     if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
 
     rv = inStr->Read(buffer, bufLen, &read);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv) || read == 0) return rv;
     buffer[bufLen] = '\0';
 
     // Break up the stream into it sub parts and send off an On*() triple combination
@@ -327,7 +327,7 @@ nsMultiMixedConv::SendData(const char *aBuffer, nsIChannel *aChannel, nsISupport
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 len;
-    rv = inStr->GetLength(&len);
+    rv = inStr->Available(&len);
     if (NS_FAILED(rv)) return rv;
 
     rv = mFinalListener->OnDataAvailable(aChannel, aCtxt, inStr, 0, len);

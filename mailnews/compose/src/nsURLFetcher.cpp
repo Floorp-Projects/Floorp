@@ -105,7 +105,8 @@ nsURLFetcher::OnDataAvailable(nsIChannel * aChannel, nsISupports * ctxt, nsIInpu
     return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 
   // read the data from the input stram...
-  aIStream->Read(buf, aLength, &readLen);
+  nsresult rv = aIStream->Read(buf, aLength, &readLen);
+  if (NS_FAILED(rv)) return rv;
 
   // write to the output file...
   wroteIt = mOutStream->write(buf, readLen);

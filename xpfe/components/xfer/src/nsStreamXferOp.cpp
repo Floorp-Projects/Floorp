@@ -244,7 +244,7 @@ nsStreamXferOp::OnDataAvailable( nsIURI         *aURL,
         PRUint32 bytesRead;
         rv = aIStream->Read( mBuffer, ( mBufLen > aLength ) ? aLength : mBufLen, &bytesRead );
     
-        if ( NS_SUCCEEDED(rv) ) {
+        if ( NS_SUCCEEDED(rv) && bytesRead > 0 ) {
             // Write the data just read to the output stream.
             if ( mOutput ) {
                 mOutput->write( mBuffer, bytesRead );

@@ -104,7 +104,7 @@ class FileImpl
         NS_IMETHOD                      Tell(PRIntn* outWhere);
 
 		// nsIInputStream interface
-        NS_IMETHOD                      GetLength(PRUint32 *aLength)
+        NS_IMETHOD                      Available(PRUint32 *aLength)
                                         {
                                             NS_PRECONDITION(aLength != nsnull, "null ptr");
                                             if (!aLength)
@@ -137,7 +137,6 @@ class FileImpl
 								            }
                                             else if (bytesRead == 0) {
                                                 mEOF = PR_TRUE;
-                                                return NS_BASE_STREAM_EOF;
                                             }
 								            *aReadCount = bytesRead;
 								            return NS_OK;

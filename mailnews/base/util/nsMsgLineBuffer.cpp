@@ -318,7 +318,7 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
 	{
 		PRUint32 numBytesInStream = 0;
 		PRUint32 numBytesCopied = 0;
-		aInputStream->GetLength(&numBytesInStream);
+		aInputStream->Available(&numBytesInStream);
 		// if the number of bytes we want to read from the stream, is greater than the number
 		// of bytes left in our buffer, then we need to shift the start pos and its contents
 		// down to the beginning of m_dataBuffer...

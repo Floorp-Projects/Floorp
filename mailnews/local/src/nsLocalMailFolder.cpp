@@ -1430,7 +1430,7 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage*
 	goto done;
   }
 
-  rv = inputStream->GetLength(&fileSize);
+  rv = inputStream->Available(&fileSize);
   if (NS_FAILED(rv)) goto done;
   rv = BeginCopy(nsnull);
   if (NS_FAILED(rv)) goto done;

@@ -20,7 +20,9 @@
 #if 0   // obsolete old implementation
 #include "nsIByteBufferInputStream.h"
 #endif
+#ifdef OLD_BUFFERS
 #include "nsIBuffer.h"
+#endif
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
 #include "nsIServiceManager.h"
@@ -51,13 +53,12 @@ public:
         PRIntervalTime start = PR_IntervalNow();
         while (PR_TRUE) {
             rv = mIn->Read(buf, 100, &count);
-            if (rv == NS_BASE_STREAM_EOF) {
-//                printf("EOF count = %d\n", mCount);
-                rv = NS_OK;
-                break;
-            }
             if (NS_FAILED(rv)) {
                 printf("read failed\n");
+                break;
+            }
+            if (count == 0) {
+//                printf("EOF count = %d\n", mCount);
                 break;
             }
 
@@ -152,12 +153,11 @@ public:
         PRUint32 total = 0;
         while (PR_TRUE) {
             rv = mIn->Read(buf, 100, &count);
-            if (rv == NS_BASE_STREAM_EOF) {
-                rv = NS_OK;
-                break;
-            }
             if (NS_FAILED(rv)) {
                 printf("read failed\n");
+                break;
+            }
+            if (count == 0) {
                 break;
             }
             buf[count] = '\0';
@@ -302,8 +302,8 @@ TestPipeObserver()
 
     // this should print OnFull message:
     rv = out->Write(buf + 20, 1, &cnt);
-    if (NS_FAILED(rv)) return rv;
-    NS_ASSERTION(cnt == 0, "Write failed");
+    if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) return rv;
+    NS_ASSERTION(cnt == 0 && rv == NS_BASE_STREAM_WOULD_BLOCK, "Write failed");
 
     char buf2[20];
     rv = in->Read(buf2, 20, &cnt);
@@ -313,8 +313,8 @@ TestPipeObserver()
 
     // this should print OnEmpty message:
     rv = in->Read(buf2, 1, &cnt);
-    if (NS_FAILED(rv)) return rv;
-    NS_ASSERTION(cnt == 0, "Read failed");
+    if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) return rv;
+    NS_ASSERTION(cnt == 0 && rv == NS_BASE_STREAM_WOULD_BLOCK, "Read failed");
 
     NS_RELEASE(obs);
     NS_RELEASE(in);
@@ -353,13 +353,12 @@ public:
         while (PR_TRUE) {
             nsAutoCMonitor mon(this);
             rv = mOut->WriteFrom(mIn, -1, &count);
-            if (rv == NS_BASE_STREAM_EOF) {
-                printf("EOF count = %d\n", mCount);
-                rv = NS_OK;
-                break;
-            }
             if (NS_FAILED(rv)) {
                 printf("Write failed\n");
+                break;
+            }
+            if (count == 0) {
+                printf("EOF count = %d\n", mCount);
                 break;
             }
 
@@ -471,7 +470,7 @@ RunTests(PRUint32 segSize, PRUint32 segCount)
     nsIBufferInputStream* in;
     nsIBufferOutputStream* out;
     PRUint32 bufSize;
-#if 1
+#ifdef OLD_BUFFERS
     bufSize = (segSize + nsIBuffer::SEGMENT_OVERHEAD) * segCount;
     printf("Testing Old Pipes: segment size %d buffer size %d\n", segSize, segSize * segCount);
 

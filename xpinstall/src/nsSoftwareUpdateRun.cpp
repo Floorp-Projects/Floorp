@@ -180,7 +180,7 @@ GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *
     PRUint32 readLength;
 
     nsInputFileStream fileStream(installJSFileSpec);
-    (fileStream.GetIStream())->GetLength(&bufferLength);
+    (fileStream.GetIStream())->Available(&bufferLength);
     buffer = new char[bufferLength + 1];
     
     if (buffer == nsnull)
@@ -188,7 +188,7 @@ GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *
 
     rv = (fileStream.GetIStream())->Read(buffer, bufferLength, &readLength);
 
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv) && readLength > 0)
     {
         *scriptBuffer = buffer;
         *scriptLength = readLength;

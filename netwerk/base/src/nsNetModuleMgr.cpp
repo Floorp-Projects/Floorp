@@ -82,9 +82,9 @@ nsNetModuleMgr::RegisterModule(const char *aTopic, nsINetNotify *aNotify)
         }
     }
 
-    mEntries->AppendElement(NS_STATIC_CAST(nsISupports*, newEntryI));
+    rv = mEntries->AppendElement(NS_STATIC_CAST(nsISupports*, newEntryI)) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
     PR_Unlock(mLock);
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -159,7 +159,7 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
             nsCRT::free(topic);
             topic = nsnull;
             // found a match, add it to the list
-            rv = topicEntries->AppendElement(NS_STATIC_CAST(nsISupports*, entry));
+            rv = topicEntries->AppendElement(NS_STATIC_CAST(nsISupports*, entry)) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
             if (NS_FAILED(rv)) {
                 NS_RELEASE(topicEntries);
                 NS_RELEASE(entry);
