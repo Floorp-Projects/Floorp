@@ -200,6 +200,7 @@ protected:
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
+  virtual ~nsMenuFrame();
 
 protected:
   nsresult SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug);
@@ -218,6 +219,15 @@ protected:
   nsIPresContext* mPresContext; // Our pres context.
   nsString mGroupName;
   nsSize mLastPref;
+  
+  //we load some display strings from platformKeys.properties only once
+  static nsrefcnt gRefCnt; 
+  static nsString *gShiftText;
+  static nsString *gControlText;
+  static nsString *gMetaText;
+  static nsString *gAltText;
+  static nsString *gModifierSeparator;
+
 public:
   static nsMenuDismissalListener* mDismissalListener; // The listener that dismisses menus.
 private:

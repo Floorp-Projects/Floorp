@@ -80,6 +80,13 @@ nsMenuDismissalListener* nsMenuFrame::mDismissalListener = nsnull;
 
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
+nsrefcnt nsMenuFrame::gRefCnt = 0;
+nsString *nsMenuFrame::gShiftText = nsnull;
+nsString *nsMenuFrame::gControlText = nsnull;
+nsString *nsMenuFrame::gMetaText = nsnull;
+nsString *nsMenuFrame::gAltText = nsnull;
+nsString *nsMenuFrame::gModifierSeparator = nsnull;
+
 //
 // NS_NewMenuFrame
 //
@@ -179,9 +186,61 @@ nsMenuFrame::Init(nsIPresContext*  aPresContext,
   UpdateMenuType(aPresContext);
 
   nsAutoString accelString;
+  
+  //load the display strings for the keyboard accelerators, but only once
+  if (gRefCnt++ == 0) {
+    
+    nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
+    nsCOMPtr<nsIStringBundle> bundle;
+    if (NS_SUCCEEDED(rv) && bundleService) {
+      rv = bundleService->CreateBundle( "chrome://global/locale/platformKeys.properties",
+                                        getter_AddRefs(bundle));
+    }    
+    
+    NS_ASSERTION(NS_SUCCEEDED(rv) && bundle, "chrome://global/locale/platformKeys.properties could not be loaded");
+    nsXPIDLString shiftModifier;
+    nsXPIDLString metaModifier;
+    nsXPIDLString altModifier;
+    nsXPIDLString controlModifier;
+    nsXPIDLString modifierSeparator;
+    if (NS_SUCCEEDED(rv) && bundle) {
+      //macs use symbols for each modifier key, so fetch each from the bundle, which also covers i18n
+      rv = bundle->GetStringFromName(NS_LITERAL_STRING("VK_SHIFT").get(), getter_Copies(shiftModifier));
+      rv = bundle->GetStringFromName(NS_LITERAL_STRING("VK_META").get(), getter_Copies(metaModifier));
+      rv = bundle->GetStringFromName(NS_LITERAL_STRING("VK_ALT").get(), getter_Copies(altModifier));
+      rv = bundle->GetStringFromName(NS_LITERAL_STRING("VK_CONTROL").get(), getter_Copies(controlModifier));
+      rv = bundle->GetStringFromName(NS_LITERAL_STRING("MODIFIER_SEPARATOR").get(), getter_Copies(modifierSeparator));
+    } else {
+      rv = NS_ERROR_NOT_AVAILABLE;
+    }
+    //if any of these don't exist, we get  an empty string
+    gShiftText = new nsString(shiftModifier);
+    gMetaText = new nsString(metaModifier);
+    gAltText = new nsString(altModifier);
+    gControlText = new nsString(controlModifier);
+    gModifierSeparator = new nsString(modifierSeparator);    
+  }
+  
   BuildAcceleratorText(accelString);
   
   return rv;
+}
+
+nsMenuFrame::~nsMenuFrame()
+{
+  // Clean up shared statics
+  if (--gRefCnt == 0) {
+    delete gShiftText;
+    gShiftText = nsnull;
+    delete gControlText;  
+    gControlText = nsnull;
+    delete gMetaText;  
+    gMetaText = nsnull;
+    delete gAltText;  
+    gAltText = nsnull;
+    delete gModifierSeparator;
+    gModifierSeparator = nsnull;
+  }
 }
 
 // The following methods are all overridden to ensure that the menupopup frame
@@ -1330,32 +1389,32 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
   while (token) {
       
     if (PL_strcmp(token, "shift") == 0)
-      aAccelString += NS_LITERAL_STRING("Shift");
+      aAccelString += *gShiftText;
     else if (PL_strcmp(token, "alt") == 0) 
-      aAccelString += NS_LITERAL_STRING("Alt"); 
+      aAccelString += *gMetaText; 
     else if (PL_strcmp(token, "meta") == 0) 
-      aAccelString += NS_LITERAL_STRING("Meta"); 
+      aAccelString += *gAltText; 
     else if (PL_strcmp(token, "control") == 0) 
-      aAccelString += NS_LITERAL_STRING("Ctrl"); 
+      aAccelString += *gControlText; 
     else if (PL_strcmp(token, "accel") == 0) {
       switch (accelKey)
       {
         case nsIDOMKeyEvent::DOM_VK_META:
-          aAccelString += NS_LITERAL_STRING("Meta");
+          aAccelString += *gMetaText;
           break;
 
         case nsIDOMKeyEvent::DOM_VK_ALT:
-          aAccelString += NS_LITERAL_STRING("Alt");
+          aAccelString += *gAltText;
           break;
 
         case nsIDOMKeyEvent::DOM_VK_CONTROL:
         default:
-          aAccelString += NS_LITERAL_STRING("Ctrl");
+          aAccelString += *gControlText;
           break;
       }
     }
     
-    aAccelString += NS_LITERAL_STRING("+");
+    aAccelString += *gModifierSeparator;
 
     token = nsCRT::strtok(newStr, ", ", &newStr);
   }
