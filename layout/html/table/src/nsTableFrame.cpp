@@ -2495,9 +2495,15 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
       SetTableWidth(aPresContext);
     }
 
-    // Constrain our reflow width to the computed table width
+    // Constrain our reflow width to the computed table width. Note: this is based
+    // on the width of the first-in-flow
     nsHTMLReflowState    reflowState(aReflowState);
-    reflowState.availableWidth = mRect.width;
+    if (mPrevInFlow) {
+      nsTableFrame* table = (nsTableFrame*)GetFirstInFlow();
+      reflowState.availableWidth = table->mRect.width;
+    } else {
+      reflowState.availableWidth = mRect.width;
+    }
     rv = ResizeReflowPass2(aPresContext, aDesiredSize, reflowState, aStatus);
     if (NS_FAILED(rv))
         return rv;
