@@ -267,6 +267,8 @@ private:
     char*       mLimit;
 };
 
+inline static PRBool is_eol(char c) {return c == '\n' || c == '\r';}
+
 PRBool
 ManifestLineReader::NextLine()
 {
@@ -278,16 +280,12 @@ ManifestLineReader::NextLine()
 
     while(mNext < mLimit)
     {
-        char c = *(mNext);
-        if(c == '\n' || c == '\r')
+        if(is_eol(*mNext))
         {
-            do
-            {
-                *(mNext++) = '\0';
-                char cc = *(mNext);
-                if(cc != '\n' && cc != '\r')
-                    return PR_TRUE;
-            } while(mNext < mLimit);
+            *mNext = '\0';
+            for(++mNext; mNext < mLimit; ++mNext)
+                if(!is_eol(*mNext))
+                    break;
             return PR_TRUE;
         }
         ++mNext;
