@@ -97,7 +97,7 @@ void abnormal_exit_handler(int signum)
            _progname, getpid(), strsignal(signum));
 
     printf("Sleeping for 5 minutes.\n");
-    printf("Type 'gdb %s %d' to attatch your debugger to this thread.\n",
+    printf("Type 'gdb %s %d' to attach your debugger to this thread.\n",
            _progname, getpid());
 
     sleep(300);
@@ -128,7 +128,7 @@ ah_crap_handler(int signum)
   DumpStackToFile(stdout);
 
   printf("Sleeping for 5 minutes.\n");
-  printf("Type 'gdb %s %d' to attatch your debugger to this thread.\n",
+  printf("Type 'gdb %s %d' to attach your debugger to this thread.\n",
          _progname,
          getpid());
 

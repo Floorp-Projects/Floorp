@@ -154,7 +154,7 @@ void abnormal_exit_handler(int signum)
 #endif
 
     printf("Sleeping for 5 minutes.\n");
-    printf("Type 'gdb viewer %d' to attatch your debugger to this thread.\n", getpid());
+    printf("Type 'gdb viewer %d' to attach your debugger to this thread.\n", getpid());
     sleep(300);
     printf("Done sleeping...\n");
   }
