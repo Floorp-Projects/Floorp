@@ -116,14 +116,7 @@
 				 </menupopup>
 			</menu>
 			-->
-			<menuitem value="&helpAtCmd.label;" oncommand="window.content.location.href='http://www.netscape.com/support/index.html?cp=hom09fhlp'"/>		
-		    <menuitem value="&whatNewCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/served/whatsnew/newtop.html'"/>
-			<menuitem value="&newTutorCmd.label;" oncommand="window.content.location.href='http://home.netscape.com/netcenter/newnet/index.html'"/>
-			<menuseparator/>
-			<menuitem value="&supportChannelCmd.label;" oncommand="window.content.location.href='http://help.netscape.com/'"/>
-			<menuitem value="&interUsersCmd.label;" oncommand="window.content.location.href='http://home.netscape.com/menu/intl/'"/>
-			<menuitem value="&releaseCommCmd.label;" oncommand="window.content.location.href='about:'"/>
-			<menuseparator/>
+			<menuitem value="&releaseCommCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/seamonkey/release-notes/m10.html'"/>
 			<menuitem value="&aboutCommCmd.label;" oncommand="window.content.location.href='about:'"/>
 		</menupopup>
 	</menu>
