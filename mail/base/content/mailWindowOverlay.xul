@@ -1616,7 +1616,7 @@ Rights Reserved.
 
   <toolbar id="mail-bar" class="toolbar-primary chromeclass-toolbar"
            toolbarname="Mail" 
-           fullscreentoolbar="true" mode="icons"
+           fullscreentoolbar="true" mode="full"
            customizable="true"
            defaultset="button-getmsg,button-newmsg,button-address,spacer,spacer,spacer,button-reply,button-replyall,button-forward,spacer,spacer,spacer,button-delete,button-junk,button-print,button-stop,spring,throbber-box">
   </toolbar>

@@ -202,7 +202,7 @@
   <!-- Menu -->
   
   <toolbar type="menubar" id="msgcompose-toolbar-menubar" class="chromeclass-menubar" customizable="false"
-     defaultset="menubar-items" mode="icons">
+     defaultset="menubar-items" mode="full">
 
      <toolbaritem id="menubar-items" align="center">
       <menubar id="mail-menubar" style="border:0px;padding:0px;margin:0px;-moz-appearance:none">

@@ -340,7 +340,7 @@ Contributor(s):
   <!-- toolbar -->
   <toolbar id="ab-bar" class="toolbar-primary chromeclass-toolbar"
            toolbarname="Mail" 
-           fullscreentoolbar="true" mode="icons"
+           fullscreentoolbar="true" mode="full"
            customizable="true"
            defaultset="button-newcard,button-newlist,space,button-editcard,button-newmessage,button-newim,button-delete,spring,throbber-box">
    </toolbar>
