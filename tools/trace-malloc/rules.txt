@@ -70,21 +70,29 @@
 
 # ===========================================================================
 # Leaf rules. We cagegorize them out first.
-# These are generally functions or classes that we know cause an
-# allocation at specified category and no other category an intervene
+# All allocations matching these rules DO belong to the category.
 # ===========================================================================
 
 <js>
 nsXULPrototypeScript::Deserialize
+
+<X>
+XSupportsLocale
+
+<X>
+/usr/X11R6/lib/libX11.so
+
+<js>
+JS_Init
+
+<atoms>
+NS_NewPermanentAtom
 
 <images>
 gfxImageFrame::Init
 
 <images>
 gif_write
-
-<necko>
-nsHttpChannel::AsyncOpen
 
 <jar>
 nsZipArchive::BuildFileList
@@ -95,18 +103,6 @@ nsZipArchive::ReadInit
 <jar>
 nsJARChannel::Open
 
-<necko>
-nsDiskCacheDevice::Init
-
-<necko>
-nsCacheEntryDescriptor::nsTransportWrapper::OpenOutputStream
-
-<necko>
-nsSocketTransport::
-
-<necko-cache>
-nsCacheService::
-
 <xpcom>
 NS_InitXPCOM2
 
@@ -116,6 +112,30 @@ xptiInterfaceInfoManager::LoadFile
 
 <xpcom>
 nsGenericModule::Initialize
+
+<intl>
+nsStringBundle
+
+<intl>
+nsLocale::
+
+<intl>
+nsCharsetConverterManager::
+
+<necko>
+nsHttpChannel::AsyncOpen
+
+<necko>
+nsDiskCacheDevice::Init
+
+<necko>
+nsCacheEntryDescriptor::nsTransportWrapper::OpenOutputStream
+
+<necko>
+nsSocketTransport::
+
+<necko>
+nsCacheService::
 
 <xul>
 nsXULElement::Create
@@ -199,12 +219,6 @@ CSSRuleProcessor::RulesMatching
 CSSStyleSheetImpl::Clone
 
 <necko>
-nsIOService::NewURI
-
-<necko>
-nsIOService::NewChannelFromURI
-
-<necko>
 nsHttpHeaderArray::
 
 <html>
@@ -219,14 +233,8 @@ NS_NewHTMLTokenizer
 <html>
 nsSlidingString::
 
-<intl>
-nsStringBundle::
-
-<intl>
-nsLocale::
-
-<intl>
-nsCharsetConverterManager::
+<html>
+CNavDTD::CNavDTD
 
 # ======================================================================
 # Rules that match higher up on the stack
@@ -319,6 +327,12 @@ nsXBLContentSink::
 
 <xbl>
 nsXBLStreamListener::OnDataAvailable
+
+<necko>
+nsIOService::NewURI
+
+<necko-uri>
+nsIOService::NewChannelFromURI
 
 # Catchalls to help categorize
 # ----------------------------------------------------------------------
