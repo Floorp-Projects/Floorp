@@ -120,6 +120,7 @@ NS_IMPL_ADDREF(nsHTTPHandler);
 
 NS_METHOD
 nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
+                          nsILoadGroup *aGroup,
                           nsIEventSinkGetter *eventSinkGetter,
                           nsIChannel **o_Instance)
 {
@@ -168,9 +169,8 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
         nsCOMPtr<nsIHTTPEventSink>  httpEventSink;
 
         if (eventSinkGetter) {
-            rv = eventSinkGetter->GetEventSink(verb, nsCOMTypeInfo<nsIHTTPEventSink>::GetIID(),
-                                              (nsISupports**)(nsIHTTPEventSink**)getter_AddRefs(httpEventSink));
-            if (NS_FAILED(rv)) return rv;
+            (void) eventSinkGetter->GetEventSink(verb, nsCOMTypeInfo<nsIHTTPEventSink>::GetIID(),
+                                                 (nsISupports**)(nsIHTTPEventSink**)getter_AddRefs(httpEventSink));
         }
         // Create one
         pChannel = new nsHTTPChannel(i_URL, 
@@ -178,7 +178,7 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
                                      this);
         if (pChannel) {
             NS_ADDREF(pChannel);
-            pChannel->Init();
+            pChannel->Init(aGroup);
             rv = pChannel->QueryInterface(nsCOMTypeInfo<nsIChannel>::GetIID(), (void**)o_Instance);
             // add this instance to the active list of connections
             // TODO!

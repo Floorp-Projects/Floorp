@@ -1569,6 +1569,17 @@ cookie_SameDomain(char * currentHost, char * inlineHost) {
 
 PUBLIC void
 COOKIE_SetCookieStringFromHttp(char * curURL, char * setCookieHeader, char * server_date) {
+
+  /* allow for multiple cookies separated by newlines */
+   char *newline = PL_strchr(setCookieHeader, '\n');
+   if(newline) {
+     *newline = '\0';
+     COOKIE_SetCookieStringFromHttp(curURL, setCookieHeader, server_date);
+     *newline = '\n';
+     COOKIE_SetCookieStringFromHttp(curURL, newline+1, server_date);
+     return;
+   }
+
   /* If the outputFormat is not PRESENT (the url is not going to the screen), and not
    *  SAVE AS (shift-click) then 
    *  the cookie being set is defined as inline so we need to do what the user wants us

@@ -154,7 +154,9 @@ nsStreamXferOp::Start( void ) {
 #else
                 rv = NS_NewURI( &url, mSource.GetBuffer() );
                 if ( NS_SUCCEEDED( rv ) && url ) {
-                    nsresult rv = NS_OpenURI( this, nsnull, url );
+                    // XXX: Should there be a LoadGroup?
+                    nsresult rv = NS_OpenURI( this, nsnull, url, nsnull
+                     );
                     NS_RELEASE(url);
                 
                     if ( NS_FAILED( rv ) ) {

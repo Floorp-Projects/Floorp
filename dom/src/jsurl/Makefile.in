@@ -20,10 +20,11 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-include $(DEPTH)/config/autoconf.mk
-
-MODULE		= jsurl
+MODULE		= dom
 LIBRARY_NAME	= jsurl
+IS_COMPONENT	= 1
+
+include $(DEPTH)/config/autoconf.mk
 
 ifdef NECKO
 CPPSRCS = \
@@ -42,8 +43,7 @@ CPPSRCS = \
 	$(NULL)
 endif
 
-REQUIRES = network dbm util pref js java fileurl \
-	   security layer img httpurl lay parse style dom raptor netlib xpcom
+REQUIRES = netwerk xpcom
 
 include $(topsrcdir)/config/rules.mk
 

@@ -120,7 +120,7 @@ interface nsIChannel : nsIRequest
     /**
      * Returns the load group in which the channel is a currently a member.
      */
-    attribute nsILoadGroup LoadGroup;
+    readonly attribute nsILoadGroup LoadGroup;
 
 };
 

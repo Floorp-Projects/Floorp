@@ -15,17 +15,17 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-LIBRARY_NAME=jsurl 
-MODULE=jsurl
 DEPTH=..\..\..
+MODULE=dom
 include <$(DEPTH)/config/config.mak>
 
-IGNORE_MANIFEST=1
-#
+IS_COMPONENT=1
+DLLNAME=jsurl
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 #------------------------------------------------------------------------
 #
-# Makefile to build the Network file protocol LIB
+# Makefile to build the javascript: URL handler
 #
 #------------------------------------------------------------------------
 
@@ -41,7 +41,10 @@ LCFLAGS		= $(LCFLAGS) -DDEBUG_GC
 !endif
 
 LLIBS=  \
+	$(LIBNSPR) \
+	$(DIST)\lib\xpcom.lib \
 	$(NULL)
+
 OBJS=   \
 !ifdef NECKO
 	.\$(OBJDIR)\nsJSProtocolHandler.obj	\
@@ -59,36 +62,10 @@ CPPSRCS = \
 	$(NULL)
 
 
-LOCAL_INCLUDES=-I. -I$(PUBLIC)/zlib  -I$(PUBLIC)/parse
-INCLUDES = $(LOCAL_INCLUDES)
-
-
-EXTRA_LIBS=
-
-REQUIRES= network 
-EXPORTS= jsurl.h
-
-# use LINCS on win32 for now since REQUIRES seems to be broken
-#!if "$(MOZ_BITS)" != "16"
-LINCS= \
-    -I$(PUBLIC)\nspr2 		\
-    -I$(PUBLIC)\util	\
-    -I$(PUBLIC)\java	\
-    -I$(PUBLIC)\pref	\
-    -I$(PUBLIC)\js	\
-    -I$(PUBLIC)\security	\
-    -I$(PUBLIC)\dom	\
-    -I$(PUBLIC)\raptor	\
-    -I$(PUBLIC)\netlib	\
-    -I$(PUBLIC)\xpcom	\
-    -I$(PUBLIC)\network 
-#!endif
+REQUIRES=netwerk 
+EXPORTS=jsurl.h
 
 include <$(DEPTH)\config\rules.mak> 
 
-libs:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-
-symbols::
-	@echo "LIBRARY_NAME     is $(LIBRARY_NAME)"
-	@echo "LIBRARY          is $(LIBRARY)"
+install:: $(DLL)
+	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components

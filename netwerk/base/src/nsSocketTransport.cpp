@@ -301,6 +301,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
            ("Operation failed via PR_POLL_EXCEPT. [this=%x].\n", this));
     // An error has occurred, so cancel the read and/or write operation...
     mCurrentState = eSocketState_Error;
+    rv = NS_BINDING_FAILED;
   }
 
   while (!done)
@@ -1723,9 +1724,3 @@ nsSocketTransport::GetLoadGroup(nsILoadGroup * *aLoadGroup)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsSocketTransport::SetLoadGroup(nsILoadGroup * aLoadGroup)
-{
-  NS_ASSERTION(0, "transports shouldn't end up in groups");
-  return NS_ERROR_FAILURE;
-}

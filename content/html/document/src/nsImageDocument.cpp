@@ -145,7 +145,6 @@ ImageListener::OnStartRequest(nsIURI* aURL, const char *aContentType)
   
   mDocument->StartImageLoad(uri, mNextStream);
   NS_RELEASE(uri);
-  NS_RELEASE(channel);
 #else
   mDocument->StartImageLoad(aURL, mNextStream);
 #endif

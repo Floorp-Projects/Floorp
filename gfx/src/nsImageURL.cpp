@@ -62,6 +62,7 @@ public:
 
   virtual time_t GetExpires();
 
+  virtual PRBool GetBackgroundLoad();
   virtual void SetBackgroundLoad(PRBool aBgload);
 
   virtual int GetOwnerId();
@@ -75,12 +76,14 @@ private:
   nsIURI *mURL;
 #endif
   ilINetReader *mReader;
+  PRBool mBackgroundLoad;
 };
 
 ImageURLImpl::ImageURLImpl(void)
     : mURL(nsnull), mReader(nsnull)
 {
     NS_INIT_REFCNT();
+    mBackgroundLoad = PR_FALSE;
 }
 
 nsresult 
@@ -206,11 +209,17 @@ ImageURLImpl::GetExpires()
     return 0x7FFFFFFF;
 }
 
+PRBool ImageURLImpl::GetBackgroundLoad()
+{
+  return mBackgroundLoad;
+}
+
 void 
 ImageURLImpl::SetBackgroundLoad(PRBool aBgload)
 {
 #ifdef NECKO
   // XXX help!
+  mBackgroundLoad = aBgload;
 #else
   nsILoadAttribs* loadAttributes;
 

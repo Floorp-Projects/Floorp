@@ -1191,7 +1191,8 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 			if (method.EqualsIgnoreCase("post"))
 			{
 				nsCOMPtr<nsIChannel>	channel;
-				if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), url)))
+                // XXX: Null LoadGroup ?
+				if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), url, nsnull)))
 				{
 					nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
 					if (httpChannel)
@@ -1226,7 +1227,8 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 			}
 			else if (method.EqualsIgnoreCase("get"))
 			{
-				rv = NS_OpenURI(NS_STATIC_CAST(nsIStreamListener *, callback), nsnull, url);
+                // XXX: Null LoadGroup?
+				rv = NS_OpenURI(NS_STATIC_CAST(nsIStreamListener *, callback), nsnull, url, nsnull);
 			}
 		}
 	}

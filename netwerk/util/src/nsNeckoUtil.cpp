@@ -52,14 +52,15 @@ NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI)
 }
 
 NECKO_EXPORT(nsresult)
-NS_OpenURI(nsIChannel* *result, nsIURI* uri)
+NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup *aGroup,
+           nsIEventSinkGetter *eventSinkGetter)
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsIChannel* channel;
-    rv = serv->NewChannelFromURI("load", uri, nsnull, &channel);
+    rv = serv->NewChannelFromURI("load", uri, aGroup, eventSinkGetter, &channel);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;
@@ -72,7 +73,7 @@ NS_OpenURI(nsIInputStream* *result, nsIURI* uri)
     nsresult rv;
     nsIChannel* channel;
 
-    rv = NS_OpenURI(&channel, uri);
+    rv = NS_OpenURI(&channel, uri, nsnull);
     if (NS_FAILED(rv)) return rv;
 
     nsIInputStream* inStr;
@@ -85,12 +86,13 @@ NS_OpenURI(nsIInputStream* *result, nsIURI* uri)
 }
 
 NECKO_EXPORT(nsresult)
-NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context, nsIURI* uri)
+NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context, nsIURI* uri, 
+           nsILoadGroup *aGroup)
 {
     nsresult rv;
     nsIChannel* channel;
 
-    rv = NS_OpenURI(&channel, uri);
+    rv = NS_OpenURI(&channel, uri, aGroup);
     if (NS_FAILED(rv)) return rv;
 
     rv = channel->AsyncRead(0, -1, context, aConsumer);

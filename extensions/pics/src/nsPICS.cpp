@@ -1563,7 +1563,10 @@ nsPICS::GetRootURL(nsIURI* aURL)
             return rv;
         mParser->Parse(aURL);
 #ifdef NECKO
-        rv = NS_OpenURI(lsnr, nsnull, aURL);
+        rv = NS_OpenURI(lsnr, 
+                        nsnull,     // null context 
+                        aURL,       // nsIURI
+                        nsnull);    // null load group
 #else
         rv = NS_OpenURL(aURL, lsnr);
 #endif

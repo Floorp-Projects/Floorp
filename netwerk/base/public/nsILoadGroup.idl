@@ -24,6 +24,14 @@ interface nsIStreamObserver;
 interface nsIStreamListener;
 interface nsIInputStream;
 
+
+[scriptable, uuid(60fdf550-5392-11d3-9a97-0080c7cb1080)]
+interface nsILoadGroupListenerFactory : nsISupports
+{
+	nsIStreamListener CreateLoadGroupListener(in nsIStreamListener alistener);
+};
+
+
 /**
  * A load group maintains a collection of active URL requests. 
  */
@@ -39,6 +47,13 @@ interface nsILoadGroup : nsIRequest
      * to be applied to each new channel inserted into the group.
      */
     attribute unsigned long DefaultLoadAttributes;
+
+	/**
+	 * Accesses the default load channel for the group.  Each time a number
+	 * of channels are added to a group, the DefaultLoadChannel may be set
+	 * to indicate that all of the channels are related to a particular URL.
+	 */
+	attribute nsIChannel DefaultLoadChannel;
 
     /**
      * Adds a new channel to the group. This will cause the default load
@@ -80,6 +95,8 @@ interface nsILoadGroup : nsIRequest
      * Enumerator element type: nsILoadGroup.
      */
     readonly attribute nsISimpleEnumerator SubGroups;
+
+	attribute nsILoadGroupListenerFactory GroupListenerFactory;
 };
 
 %{C++

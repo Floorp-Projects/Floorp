@@ -35,6 +35,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIBuffer.h"
 #include "nsILoadGroup.h"
+#include "nsIStreamListener.h"
 #include "nsCOMPtr.h"
 
 #ifdef STREAM_CONVERTER_HACK
@@ -52,7 +53,8 @@ class nsIBufferOutputStream;
 
 class nsFileChannel : public nsIFileChannel, 
                       public nsIRunnable,
-                      public nsIBufferObserver
+                      public nsIBufferObserver,
+                      public nsIStreamListener
 {
 public:
 
@@ -85,6 +87,21 @@ public:
     NS_IMETHOD OnEmpty(nsIBuffer* buffer);
 
     ////////////////////////////////////////////////////////////////////////////
+    // nsIStreamListener:
+
+    NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports* context,
+                               nsIInputStream *aIStream, 
+                               PRUint32 aSourceOffset,
+                               PRUint32 aLength);
+
+
+    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
+
+    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
+                            nsresult aStatus,
+                            const PRUnichar* aMsg);
+
+    ////////////////////////////////////////////////////////////////////////////
     // nsFileChannel:
 
     nsFileChannel();
@@ -96,7 +113,8 @@ public:
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
     nsresult Init(nsFileProtocolHandler* handler,
-                  const char* verb, nsIURI* uri, nsIEventSinkGetter* getter);
+                  const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
+                  nsIEventSinkGetter* getter);
 
     void Process(void);
 
@@ -108,6 +126,9 @@ public:
         WRITING,
         ENDING
     };
+
+protected:
+    nsresult CreateFileChannelFromFileSpec(nsFileSpec& spec, nsIFileChannel** result);
 
 protected:
     nsIURI*                     mURI;
@@ -135,7 +156,7 @@ protected:
     PRUint32                    mLoadAttributes;
     nsILoadGroup*               mLoadGroup;
 
-    nsresult CreateFileChannelFromFileSpec(nsFileSpec& spec, nsIFileChannel** result);
+    nsCOMPtr<nsIStreamListener> mRealListener;
 
 #ifdef STREAM_CONVERTER_HACK
 	nsCOMPtr<nsIStreamConverter2> mStreamConverter;

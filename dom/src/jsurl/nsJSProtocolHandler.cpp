@@ -15,12 +15,13 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
- 
+
 #ifdef NECKO
 
-#include "nsJSProtocolHandler.h"
+#include "prmem.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
+#include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
 #include "nsIInputStream.h"
@@ -28,14 +29,19 @@
 #include "nsIEventSinkGetter.h"
 #include "nsIEventQueue.h"
 #include "nsIScriptContext.h"
-#include "prmem.h"
+#include "nsIScriptContextOwner.h"
+#include "nsJSProtocolHandler.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 
+// XXXbe why isn't there a static GetCID on nsIComponentManager?
+static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kJSProtocolHandlerCID, NS_JSPROTOCOLHANDLER_CID);
+
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsJSInputStream : public nsIInputStream 
+class nsJSInputStream : public nsIInputStream
 {
 public:
     NS_DECL_ISUPPORTS
@@ -47,20 +53,23 @@ public:
     }
 
     virtual ~nsJSInputStream() {
-        if (mVerb) nsCRT::free(mVerb);
+        if (mVerb)
+            nsCRT::free(mVerb);
         NS_IF_RELEASE(mURI);
         NS_IF_RELEASE(mEventSinkGetter);
-        if (mResult) nsCRT::free(mResult);
+        if (mResult)
+            nsCRT::free(mResult);
     }
 
     nsresult Init(const char* verb, nsIURI* uri,
                   nsIEventSinkGetter* eventSinkGetter) {
         mVerb = nsCRT::strdup(verb);    // XXX do we need this?
-        if (mVerb == nsnull) return NS_ERROR_OUT_OF_MEMORY;
+        if (!mVerb)
+            return NS_ERROR_OUT_OF_MEMORY;
         mURI = uri;
         NS_ADDREF(mURI);
         mEventSinkGetter = eventSinkGetter;
-        NS_ADDREF(mEventSinkGetter);
+        NS_IF_ADDREF(mEventSinkGetter);
         return NS_OK;
     }
 
@@ -69,40 +78,61 @@ public:
     }
 
     NS_IMETHOD GetLength(PRUint32 *_retval) {
-        return mResult ? nsCRT::strlen(mResult) : 0;
-    }
-
-    NS_IMETHOD Read(char * buf, PRUint32 count, PRUint32 *_retval) {
-        if (mResult == nsnull) {
+        if (!mResult) {
             Eval();
             NS_ASSERTION(mResult, "Eval didn't set mResult");
         }
-
-        // stream out the result:
         PRUint32 rest = mLength - mReadCursor;
-        if (rest == 0)
+        if (!rest)
             return NS_BASE_STREAM_EOF;
+        *_retval = rest;
+        return NS_OK;
+    }
+
+    NS_IMETHOD Read(char * buf, PRUint32 count, PRUint32 *_retval) {
+        nsresult rv;
+        PRUint32 rest;
+        rv = GetLength(&rest);
+        if (rv != NS_OK)
+            return rv;
         PRUint32 amt = PR_MIN(count, rest);
         nsCRT::memcpy(buf, &mResult[mReadCursor], amt);
         mReadCursor += amt;
+        *_retval = amt;
         return NS_OK;
     }
 
     nsresult Eval() {
         nsresult rv;
 
-        //TODO Change this to GetSpec and then skip past the javascript: 
+        if (!mEventSinkGetter)
+            return NS_ERROR_FAILURE;
+
+        //TODO Change this to GetSpec and then skip past the javascript:
         // Get the expression:
         char* jsExpr;
         rv = mURI->GetPath(&jsExpr);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv))
+            return rv;
 
-        // Get the script context:
+        // The event sink must be a script context owner or we fail.
+        nsIScriptContextOwner* owner;
+        rv = mEventSinkGetter->GetEventSink(mVerb,
+                                            nsCOMTypeInfo<nsIScriptContextOwner>::GetIID(),
+                                            (nsISupports**)&owner);
+        if (NS_FAILED(rv))
+            return rv;
+        if (!owner)
+            return NS_ERROR_FAILURE;
+
+        // So far so good: get the script context from its owner.
         nsIScriptContext* scriptContext;
-        rv = mEventSinkGetter->GetEventSink(mVerb, nsIScriptContext::GetIID(),
-                                            (nsISupports**)&scriptContext);
-        if (NS_FAILED(rv)) return rv;
+        rv = owner->GetScriptContext(&scriptContext);
+        NS_RELEASE(owner);
+        if (NS_FAILED(rv))
+            return rv;
 
+        // Finally, we have everything needed to evaluate the expression.
         nsAutoString ret;
         PRBool isUndefined;
         nsresult ok;
@@ -112,17 +142,18 @@ public:
         if (NS_SUCCEEDED(ok)) {
 //            JSContext* cx = (JSContext*)scriptContext->GetNativeContext();
             // Find out if it can be converted into a string
-            if (!isUndefined) {
-                mLength = ret.Length();
-                mResult = (char *)PR_Malloc(mLength + 1);
-                ret.ToCString(mResult, mLength);
-            }
-            else {
+            if (isUndefined) {
                 mResult = nsCRT::strdup("");
+            } else {
+#if 0	// plaintext is apparently busted
+                if (ret[0] != PRUnichar('<'))
+                    ret.Insert("<plaintext>\n", 0);
+#endif
+                mLength = ret.Length();
+                PRUint32 resultSize = mLength + 1;
+                mResult = (char *)PR_Malloc(resultSize);
+                ret.ToCString(mResult, resultSize);
             }
-        }
-        else {
-            rv = NS_ERROR_MALFORMED_URI;
         }
         NS_RELEASE(scriptContext);
         return rv;
@@ -137,7 +168,7 @@ protected:
     PRUint32            mReadCursor;
 };
 
-NS_IMPL_ISUPPORTS(nsJSInputStream, nsIInputStream::GetIID());
+NS_IMPL_ISUPPORTS(nsJSInputStream, nsCOMTypeInfo<nsIInputStream>::GetIID());
 
 nsresult
 NS_NewJSInputStream(const char* verb, nsIURI* uri,
@@ -145,7 +176,7 @@ NS_NewJSInputStream(const char* verb, nsIURI* uri,
                     nsIInputStream* *result)
 {
     nsJSInputStream* js = new nsJSInputStream();
-    if (js == nsnull)
+    if (!js)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(js);
 
@@ -184,7 +215,7 @@ nsJSProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
         return NS_ERROR_NO_AGGREGATION;
 
     nsJSProtocolHandler* ph = new nsJSProtocolHandler();
-    if (ph == nsnull)
+    if (!ph)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(ph);
     nsresult rv = ph->Init();
@@ -202,7 +233,7 @@ NS_IMETHODIMP
 nsJSProtocolHandler::GetScheme(char* *result)
 {
     *result = nsCRT::strdup("javascript");
-    if (*result == nsnull)
+    if (!*result)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
@@ -222,7 +253,7 @@ nsJSProtocolHandler::MakeAbsolute(const char* aSpec,
     // presumably, there's no such thing as a relative javascript: URI,
     // so just copy the input spec
     char* dup = nsCRT::strdup(aSpec);
-    if (dup == nsnull)
+    if (!dup)
         return NS_ERROR_OUT_OF_MEMORY;
     *result = dup;
     return NS_OK;
@@ -234,19 +265,20 @@ nsJSProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 {
     nsresult rv;
 
-    // javascript: URLs (currently) have no additional structure beyond that provided by standard
-    // URLs, so there is no "outer" given to CreateInstance 
+    // javascript: URLs (currently) have no additional structure beyond that
+    // provided by standard URLs, so there is no "outer" object given to
+    // CreateInstance.
 
     nsIURI* url;
     if (aBaseURI) {
         rv = aBaseURI->Clone(&url);
-    }
-    else {
+    } else {
         rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
                                                 nsCOMTypeInfo<nsIURI>::GetIID(),
                                                 (void**)&url);
     }
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     rv = url->SetSpec((char*)aSpec);
     if (NS_FAILED(rv)) {
@@ -260,26 +292,83 @@ nsJSProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 
 NS_IMETHODIMP
 nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
+                                nsILoadGroup *aGroup,
                                 nsIEventSinkGetter* eventSinkGetter,
                                 nsIChannel* *result)
 {
-    // Strategy: Let's use an "input stream channel" here with a special 
+    // Strategy: Let's use an "input stream channel" here with a special
     // implementation of nsIInputStream that evaluates the JS expression.
     // That seems simpler than implementing a new channel class.
     nsresult rv;
     nsIChannel* channel;
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     nsIInputStream* in;
     rv = NS_NewJSInputStream(verb, uri, eventSinkGetter, &in);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     rv = serv->NewInputStreamChannel(uri, "text/html", in, &channel);
     NS_RELEASE(in);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     *result = channel;
+    return rv;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Factory methods
+extern "C" PR_IMPLEMENT(nsresult)
+NSGetFactory(nsISupports* aServMgr,
+             const nsCID& aClass,
+             const char* aClassName,
+             const char *aProgID,
+             nsIFactory* *aFactory)
+{
+    if (!aFactory)
+        return NS_ERROR_NULL_POINTER;
+
+    if (!aClass.Equals(kJSProtocolHandlerCID))
+        return NS_ERROR_FAILURE;
+
+    nsIGenericFactory* fact;
+    nsresult rv;
+    rv = NS_NewGenericFactory(&fact, nsJSProtocolHandler::Create);
+    if (NS_SUCCEEDED(rv))
+        *aFactory = fact;
+    return rv;
+}
+
+extern "C" PR_IMPLEMENT(nsresult)
+NSRegisterSelf(nsISupports* aServMgr, const char* aPath)
+{
+    nsresult rv;
+
+    NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = compMgr->RegisterComponent(kJSProtocolHandlerCID,
+                                    "JavaScript Protocol Handler",
+                                    NS_NETWORK_PROTOCOL_PROGID_PREFIX "javascript",
+                                    aPath, PR_TRUE, PR_TRUE);
+    return rv;
+}
+
+extern "C" PR_IMPLEMENT(nsresult)
+NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
+{
+    nsresult rv;
+
+    NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = compMgr->UnregisterComponent(kJSProtocolHandlerCID, aPath);
     return rv;
 }
 

@@ -84,7 +84,11 @@ nsresult nsMsgProtocol::OpenFileSocket(nsIURI * aURL, const nsFileSpec * aFileSp
 		aURL->GetPath(getter_Copies(filePath));
 		char * urlSpec = PR_smprintf("file://%s", (const char *) filePath);
 
-		rv = netService->NewChannel("Load", urlSpec, nsnull, nsnull, getter_AddRefs(m_channel));
+		rv = netService->NewChannel("Load", urlSpec, 
+                                    nsnull,     // null base URI
+                                    nsnull,     // null load group
+                                    nsnull,     // null eventsink getter
+                                    getter_AddRefs(m_channel));
 		PR_FREEIF(urlSpec);
 
 		if (NS_SUCCEEDED(rv) && m_channel)

@@ -121,8 +121,19 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader, const char* aValue)
   // Append the new value to the existing string
   //
   else if (IsHeaderMultiple(aHeader)) {
-    entry->mValue.Append(", ");
-    entry->mValue.Append(aValue);
+    if (nsHTTPAtoms::Set_Cookie == aHeader) {
+        // special case the set-cookie header and use a newline
+        // delimiter to delimit the cookies from one another
+        // we can't use the standard comma because there
+        // set-cookie headers that include commas in the cookie value
+        // contrary to the specs not allowing it.
+        entry->mValue.Append('\n');
+        entry->mValue.Append(aValue);
+    } else {
+        // delimit each value from the others using a comma (HTTP spec delimiter)
+        entry->mValue.Append(", ");
+        entry->mValue.Append(aValue);
+    }
   }
   //
   // Replace the existing string with the new value

@@ -210,6 +210,7 @@ nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI,
 
 NS_IMETHODIMP
 nsIOService::NewChannelFromURI(const char* verb, nsIURI *aURI,
+                               nsILoadGroup *aGroup,
                                nsIEventSinkGetter *eventSinkGetter,
                                nsIChannel **result)
 {
@@ -224,7 +225,7 @@ nsIOService::NewChannelFromURI(const char* verb, nsIURI *aURI,
     if (NS_FAILED(rv)) return rv;
 
     nsIChannel* channel;
-    rv = handler->NewChannel(verb, aURI, eventSinkGetter, &channel);
+    rv = handler->NewChannel(verb, aURI, aGroup, eventSinkGetter, &channel);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;
@@ -234,6 +235,7 @@ nsIOService::NewChannelFromURI(const char* verb, nsIURI *aURI,
 NS_IMETHODIMP
 nsIOService::NewChannel(const char* verb, const char *aSpec,
                         nsIURI *aBaseURI,
+                        nsILoadGroup *aGroup,
                         nsIEventSinkGetter *eventSinkGetter,
                         nsIChannel **result)
 {
@@ -241,7 +243,7 @@ nsIOService::NewChannel(const char* verb, const char *aSpec,
     nsIURI* uri;
     rv = NewURI(aSpec, aBaseURI, &uri);
     if (NS_FAILED(rv)) return rv;
-    rv = NewChannelFromURI(verb, uri, eventSinkGetter, result);
+    rv = NewChannelFromURI(verb, uri, aGroup, eventSinkGetter, result);
     NS_RELEASE(uri);
     return rv;
 }

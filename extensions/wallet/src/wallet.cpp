@@ -242,7 +242,7 @@ NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
     nsCOMPtr<nsIChannel> pChannel;
 
     // Async reading thru the calls of the event sink interface
-    rv = serv->NewChannelFromURI("load", pURL, nsnull, 
+    rv = serv->NewChannelFromURI("load", pURL, nsnull, nsnull, 
                                  getter_AddRefs(pChannel));
     if (NS_FAILED(rv)) {
         printf("ERROR: NewChannelFromURI failed for %s\n", in);
