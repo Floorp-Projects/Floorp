@@ -1384,6 +1384,10 @@ NS_IMETHODIMP nsImapUrl::IsUrlType(PRUint32 type, PRBool *isType)
 				(m_imapAction == nsIImapUrl::nsImapOnlineToOfflineMove) ||
 				(m_imapAction == nsIImapUrl::nsImapOfflineToOnlineMove));
 			break;
+    case nsIMsgMailNewsUrl::eDisplay:
+      *isType = (m_imapAction == nsIImapUrl::nsImapMsgFetch || 
+        m_imapAction == nsIImapUrl::nsImapMsgFetchPeek);
+      break;
 		default:
 			*isType = PR_FALSE;
 	};				

@@ -53,6 +53,9 @@
 #include "nsIChannel.h"
 #include "prinrval.h"
 #include "nsITimelineService.h"
+#include "nsIMsgMailNewsUrl.h"
+#include "nsIMimeMiscStatus.h"
+#include "nsIMsgWindow.h"
 
 #define MSGFEEDBACK_TIMER_INTERVAL 500
 
@@ -138,6 +141,37 @@ nsMsgStatusFeedback::OnStateChange(nsIWebProgress* aWebProgress,
       NS_TIMELINE_LEAVE("Start Msg Loading is finished");
       NS_TIMELINE_MARK_TIMER("Start Msg Loading");
       NS_TIMELINE_RESET_TIMER("Start Msg Loading");
+
+      // if we are loading message for display purposes, this STATE_STOP notification is 
+      // the only notification we get when layout is actually done rendering the message. We need
+      // to fire the appropriate msgHdrSink notification in this particular case.
+      nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+      if (channel) 
+      {
+        nsCOMPtr<nsIURI> uri; 
+        channel->GetURI(getter_AddRefs(uri));
+        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl (do_QueryInterface(uri));
+        if (mailnewsUrl)
+        {
+          // get the url type
+          PRBool messageDisplayUrl;
+          mailnewsUrl->IsUrlType(nsIMsgMailNewsUrl::eDisplay, &messageDisplayUrl);
+
+          if (messageDisplayUrl)
+          {              
+            // get the header sink
+            nsCOMPtr<nsIMsgWindow> msgWindow;
+            mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+            if (msgWindow)
+            {
+              nsCOMPtr<nsIMsgHeaderSink> hdrSink;
+              msgWindow->GetMsgHeaderSink(getter_AddRefs(hdrSink));
+              if (hdrSink)
+                hdrSink->OnEndMsgDownload(mailnewsUrl);
+            }
+          }
+        }
+      }
       StopMeteors();
       nsXPIDLString documentDone;
       rv = mBundle->GetStringFromName(NS_LITERAL_STRING("documentDone").get(),

@@ -558,7 +558,7 @@ nsMimeHtmlDisplayEmitter::EndBody()
   nsresult rv = GetHeaderSink(getter_AddRefs(headerSink));
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl (do_QueryInterface(mURL, &rv));
   if (headerSink)
-    headerSink->OnEndMsgDownload(mailnewsUrl);
+    headerSink->OnEndMsgHeaders(mailnewsUrl);
 
   return NS_OK;
 }

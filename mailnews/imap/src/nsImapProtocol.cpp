@@ -7668,7 +7668,13 @@ NS_IMETHODIMP nsImapMockChannel::Close()
       }
     }
   }
-  m_url = nsnull;
+
+  // don't release m_url here. Web progress listeners to the current load 
+  // may not have had a chance to process the stop notification yet and they can 
+  // ask the channel for the url. The circular reference between the mock channel and the 
+  // imap url is broken by nsImapProtocol's call to RemoveChannelFromUrl which is called
+  // from nsImapProtocol::ReleaseUrlState.
+  // m_url = nsnull;
 
   mChannelClosed = PR_TRUE;
   return NS_OK;
