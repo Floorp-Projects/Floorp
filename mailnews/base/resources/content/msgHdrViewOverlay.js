@@ -800,19 +800,6 @@ function ProcessHeaderValue(containingBox, containerNode, header, boxPartOfPopup
 // The following are just small helper functions..
 ///////////////////////////////////////////////////////////////
 
-function hdrViewSetNodeWithButton(boxNode, buttonNode, text)
-{
-  if (text)
-  {
-    buttonNode.setAttribute("value", text);
-    hdrViewSetVisible(boxNode, true);
-  }
-	else
-	{
-		hdrViewSetVisible(boxNode, false);
-		return false;
-	}
-} 
 
 function hdrViewSetNodeWithBox(boxNode, textNode, text)
 {
