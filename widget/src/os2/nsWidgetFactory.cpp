@@ -30,6 +30,7 @@
  * 03/23/2000       IBM Corp.      Added support for directory picker dialog.
  * 03/24/2000       IBM Corp.      Updated based on nsWinWidgetFactory.cpp.
  * 05/31/2000       IBM Corp.      Enabled timer stuff
+ * 06/30/2000       sobotka@axess.com      Added nsFilePicker
  */
 
 #include "nsIFactory.h"
@@ -39,6 +40,7 @@
 
 #include "nsWidgetDefs.h"              // OS/2 only
 
+#include "nsFilePicker.h"
 // OS2TODO #include "nsFileWidget.h"
 #include "nsFileSpecWithUIImpl.h"
 #include "nsLookAndFeel.h"
@@ -47,7 +49,7 @@
 #include "nsWindow.h"
 #include "nsAppShell.h"
 #include "nsIServiceManager.h"
-// OS2TODO #include "nsFontRetrieverService.h"
+#include "nsFontRetrieverService.h"
 #include "nsSound.h"
 
 #include "nsWindowsTimer.h"
@@ -65,6 +67,7 @@
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
 static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
+static NS_DEFINE_IID(kCFilePicker,    NS_FILEPICKER_CID);
 static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
@@ -189,6 +192,9 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
         inst = (nsISupports*)new nsFileWidget();
 #endif
     }
+    else if (mClassID.Equals(kCFilePicker)) {
+        inst = (nsISupports*)(nsBaseFilePicker*)new nsFilePicker();
+    }
     else if (mClassID.Equals(kCHorzScrollbar)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsScrollbar(PR_FALSE);
     }
@@ -233,6 +239,9 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     else if (mClassID.Equals(kCTimerManager)) {
         inst = (nsISupports*)(nsITimerQueue*) new nsTimerManager();
     }
+    else if (mClassID.Equals(kCFontRetrieverService)) {
+        inst = (nsISupports*)(nsIFontRetrieverService *)new nsFontRetrieverService();
+    }
 
 #if 0 // OS2TODO
     else if (mClassID.Equals(kCClipboard)) {
@@ -240,9 +249,6 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     }
     else if (mClassID.Equals(kCDragService)) {
         inst = (nsISupports*)(nsIDragService *)new nsDragService();
-    }
-    else if (mClassID.Equals(kCFontRetrieverService)) {
-        inst = (nsISupports*)(nsIFontRetrieverService *)new nsFontRetrieverService();
     }
 #endif
     if (inst == NULL) {  

@@ -30,6 +30,7 @@
 #define INCL_PM
 #define INCL_NLS
 #define INCL_DOS
+#define INCL_WINSTDFILE
 #include <os2.h>
 #include <uconv.h>  // Rather not have to include these two, but need types...
 #include <unikbd.h> // 

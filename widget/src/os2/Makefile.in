@@ -27,6 +27,7 @@ LIBRARY_NAME	= wdgtos2
 
 EXTRA_DSO_LIBS	= nggfx
 
+REQUIRES	= util img xpcom raptor netlib
 
 DIRS		= res
 
@@ -38,38 +39,46 @@ CSRCS		= tabctrl.c
 
 CPPSRCS		= \
 		nsAppShell.cpp \
-		nsBaseList.cpp \
 		nsCanvas.cpp \
-		nsCheckbutton.cpp \
-		nsCombobox.cpp \
 		nsDirPicker.cpp \
-		nsEntryField.cpp \
 		nsFSTree.cpp \
 		nsFileDialog.cpp \
-		nsFontServices.cpp \
+		nsFilePicker.cpp \
+		nsFontRetrieverService.cpp \
+		nsFontSizeIterator.cpp \
 		nsFrameWindow.cpp \
-		nsLabel.cpp \
-		nsListbox.cpp \
 		nsLookAndFeel.cpp \
 		nsModule.cpp \
-		nsPushbutton.cpp \
-		nsRadiobutton.cpp \
 		nsScrollbar.cpp \
 		nsSound.cpp \
-		nsTextArea.cpp \
 		nsToolkit.cpp \
-		nsTooltipManager.cpp \
 		nsWidgetFactory.cpp \
 		nsWindow.cpp \
 		$(NULL)
 
 # XXX FILES temporarily removed
-#              nsClipboard.cpp \
-#              nsDragService.cpp \
+#        	nsClipboard.cpp \
+#              	nsDragService.cpp \
 
-# nsITabWidget and nsITooltipWidget appear to have been scrapped
-#              nsTabWidget.cpp \
-#              nsTooltipWidget.cpp \
+# XXX OS2TODO
+#		nsNativeDragTarget.cpp      \
+#		nsNativeDragSource.cpp      \
+#		nsDataObj.cpp      \
+#		nsDataObjCollection.cpp      \
+
+# OBSOLETE FILES
+#	nsBaseList.cpp \
+#	nsCheckbutton.cpp \
+#	nsCombobox.cpp \
+#	nsEntryField.cpp \
+#	nsLabel.cpp \
+#	nsListbox.cpp \
+#	nsPushbutton.cpp \
+#	nsRadiobutton.cpp \
+#	nsTextArea.cpp \
+# 	nsTooltipManager.cpp \
+#       nsTabWidget.cpp \
+#       nsTooltipWidget.cpp \
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.$(LIB_SUFFIX)
 

@@ -49,7 +49,7 @@
 #include "nsGfxCIID.h"
 #include "prtime.h"
 #include "nsFont.h"
-#include "nsTooltipManager.h"
+// #include "nsTooltipManager.h"
 #include "nsISupportsArray.h"
 #include "nsITimer.h"
 #include "nsIMenuBar.h"
@@ -352,6 +352,7 @@ void nsWindow::RealDoCreate( HWND              hwndP,
 
    // Record passed in things
    mAppShell = aAppShell;
+
 //   NS_IF_ADDREF( mAppShell);
    GetAppShell();  // Let the base widget class update the refcount for us....
    mEventCallback = aHandleEventFunction;
@@ -1207,7 +1208,7 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
 
    if( unirc != ULS_SUCCESS)
    {
-      printf( "UniTranslate[Dead]Key returned %d\n", unirc);
+      printf( "UniTranslate[Dead]Key returned %u\n", unirc);
       event.charCode = CHAR2FROMMP(mp2);
    }
 
@@ -2172,6 +2173,8 @@ void nsWindow::GetStyle( ULONG &out)
       out = WinQueryWindowULong( mWnd, QWL_STYLE);
 }
 
+
+#if 0 // Handled by XP code now
 // --------------------------------------------------------------------------
 // Tooltips -----------------------------------------------------------------
 
@@ -2192,6 +2195,8 @@ nsresult nsWindow::RemoveTooltips()
    nsTooltipManager::GetManager()->RemoveTooltips( this);
    return NS_OK;
 }
+
+#endif
 
 // --------------------------------------------------------------------------
 // Drag'n'drop --------------------------------------------------------------
@@ -2420,6 +2425,7 @@ PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2)
    if( !(flags & (KC_VIRTUALKEY | KC_DEADKEY)))
    {
       rc = SHORT1FROMMP(mp2);
+
       if( rc < 0xFF)
       {
          // Need nls-correct way of doing this...
