@@ -142,6 +142,17 @@ EmbedProgress::OnStatusChange(nsIWebProgress  *aWebProgress,
 			      nsresult         aStatus,
 			      const PRUnichar *aMessage)
 {
+  // need to make a copy so we can safely cast to a void *
+  PRUnichar *tmpString = nsCRT::strdup(aMessage);
+
+  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
+		  moz_embed_signals[STATUS_CHANGE],
+		  NS_STATIC_CAST(void *, aRequest),
+		  NS_STATIC_CAST(int, aStatus),
+		  NS_STATIC_CAST(void *, tmpString));
+
+  nsMemory::Free(tmpString);
+
   return NS_OK;
 }
 
@@ -150,7 +161,11 @@ EmbedProgress::OnSecurityChange(nsIWebProgress *aWebProgress,
 				nsIRequest     *aRequest,
 				PRInt32         aState)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
+		  moz_embed_signals[SECURITY_CHANGE],
+		  NS_STATIC_CAST(void *, aRequest),
+		  aState);
+  return NS_OK;
 }
 
 /* static */

@@ -76,6 +76,10 @@ struct _GtkMozEmbedClass
   gint (* dom_mouse_dbl_click) (GtkMozEmbed *embed, gpointer dom_event);
   gint (* dom_mouse_over)      (GtkMozEmbed *embed, gpointer dom_event);
   gint (* dom_mouse_out)       (GtkMozEmbed *embed, gpointer dom_event);
+  void (* security_change)     (GtkMozEmbed *embed, gpointer request,
+				guint state);
+  void (* status_change)       (GtkMozEmbed *embed, gpointer request,
+				gint status, gpointer message);
 };
 
 GtkType      gtk_moz_embed_get_type         (void);
