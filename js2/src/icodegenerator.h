@@ -99,6 +99,16 @@ namespace JavaScript {
             Operand3& o3() { return itsOperand3; }
         };
 
+    typedef Instruction_3<StringAtom*, Register, Register> GetProp;
+    typedef Instruction_3<StringAtom*, Register, Register> SetProp;
+    typedef Instruction_2<StringAtom*, Register> LoadName, SaveName;
+    typedef Instruction_2<float64, Register> LoadImmediate;
+    typedef Instruction_2<int32, Register> LoadVar, SaveVar;
+    typedef Instruction_1<int32> Branch;
+    typedef Instruction_2<int32, Register> BranchCond;
+    typedef Instruction_3<Register, Register, Register> Arithmetic;
+    typedef Instruction_2<Register, Register> Move;
+
     typedef std::vector<Instruction *> InstructionStream;
     typedef InstructionStream::iterator InstructionIterator;
 
