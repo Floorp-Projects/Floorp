@@ -69,6 +69,8 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIAutoCompleteResult.h"
+#include "nsIPK11TokenDB.h"
+#include "nsIPK11Token.h"
 
 static const char kPMPropertiesURL[] = "chrome://passwordmgr/locale/passwordmgr.properties";
 static PRBool sRememberPasswords = PR_FALSE;
@@ -1519,8 +1521,25 @@ nsPasswordManager::EncryptDataUCS2(const nsAString& aPlaintext,
 /* static */ void
 nsPasswordManager::EnsureDecoderRing()
 {
-  if (!sDecoderRing)
+  if (!sDecoderRing) {
     CallGetService("@mozilla.org/security/sdr;1", &sDecoderRing);
+
+    // Ensure that the master password (internal key) has been initialized.
+    // If not, set a default empty master password.
+
+    nsCOMPtr<nsIPK11TokenDB> tokenDB = do_GetService(NS_PK11TOKENDB_CONTRACTID);
+    if (!tokenDB)
+      return;
+
+    nsCOMPtr<nsIPK11Token> token;
+    tokenDB->GetInternalKeyToken(getter_AddRefs(token));
+
+    PRBool needUserInit = PR_FALSE;
+    token->GetNeedsUserInit(&needUserInit);
+
+    if (needUserInit)
+      token->InitPassword(NS_LITERAL_STRING("").get());
+  }
 }
 
 nsresult

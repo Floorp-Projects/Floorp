@@ -59,6 +59,7 @@ REQUIRES = 	\
 		content \
 		widget \
 		autocomplete \
+		pipnss \
 		$(NULL)
 
 XPIDLSRCS	= nsIPassword.idl
