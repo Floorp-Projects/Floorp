@@ -86,7 +86,13 @@ endif
 endif
 
 include $(topsrcdir)/config/config.mk
-ifdef BUILD_STATIC_LIBS
+ifndef BUILD_STATIC_LIBS
+
+ifdef NS_TRACE_MALLOC
+EXTRA_DSO_LIBS += tracemalloc
+endif
+
+else
 include $(topsrcdir)/config/static-config.mk
 
 EXTRA_DEPS	+= \
