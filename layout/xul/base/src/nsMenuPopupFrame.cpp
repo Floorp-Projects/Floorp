@@ -1955,8 +1955,13 @@ nsMenuPopupFrame::DismissChain()
       nsIPopupSetFrame* popupSetFrame = GetPopupSetFrame(mPresContext);
       if (popupSetFrame) {
         // make sure the menu is not highlighted
-        if (mCurrentMenu)
+        if (mCurrentMenu) {
+          PRBool wasOpen;
+          mCurrentMenu->MenuIsOpen(wasOpen);
+          if (wasOpen)
+            mCurrentMenu->OpenMenu(PR_FALSE);
           mCurrentMenu->SelectMenu(PR_FALSE);
+        }
         // Destroy the popup.
         popupSetFrame->DestroyPopup(this, PR_TRUE);
       }
