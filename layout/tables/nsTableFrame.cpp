@@ -3077,9 +3077,8 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext*        aPresContext
   nsVoidArray rowGroups;
   PRUint32 numRowGroups;
   OrderRowGroups(rowGroups, numRowGroups, &aReflowState.firstBodySection);
-  PRUint32 numChildren = rowGroups.Count();
 
-  for (PRUint32 childX = 0; childX < numChildren; childX++) {
+  for (PRUint32 childX = 0; ((PRInt32)childX) < rowGroups.Count(); childX++) {
     nsIFrame* kidFrame = (nsIFrame*)rowGroups.ElementAt(childX);
     nsSize              kidAvailSize(aReflowState.availSize);
     nsHTMLReflowMetrics desiredSize(pKidMaxElementSize);
@@ -3124,6 +3123,11 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext*        aPresContext
         }
       }
 
+      // record the next in flow in case it gets destroyed and the row group array
+      // needs to be recomputed.
+      nsIFrame* kidNextInFlow;
+      kidFrame->GetNextInFlow(&kidNextInFlow);
+
       rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState,
                        x, y, 0, aStatus);
       // Did the child fit?
@@ -3150,9 +3154,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext*        aPresContext
       prevKidFrame = kidFrame;
 
       // Special handling for incomplete children
-      if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-        nsIFrame* kidNextInFlow;
-         
+      if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {         
         kidFrame->GetNextInFlow(&kidNextInFlow);
         if (nsnull == kidNextInFlow) {
           // The child doesn't have a next-in-flow so create a continuing
@@ -3183,6 +3185,12 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext*        aPresContext
           PushChildren(aPresContext, nextSibling, kidFrame);
         }
         break;
+      }
+      else if (kidNextInFlow) {
+        // during printing, the unfortunate situation arises where a next in flow can be a
+        // next sibling and the next sibling can get destroyed during the reflow. By reordering
+        // the row groups, the rowGroups array can be kept in sync.
+        OrderRowGroups(rowGroups, numRowGroups, nsnull);
       }
     }
     else {// it's an unknown frame type, give it a generic reflow and ignore the results
