@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.16 $ $Date: 2002/09/05 22:28:30 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.17 $ $Date: 2002/09/10 05:10:53 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -1088,6 +1088,8 @@ find_objects_in_array
 			                 ot[i].ulValueLen, NULL))
 		    {
 			match = PR_TRUE;
+		    } else {
+			match = PR_FALSE;
 		    }
 		    break;
 		}
