@@ -3724,10 +3724,11 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
   if (e && e != ID_NOT_IN_DOCUMENT && e->IsContentOfType(nsIContent::eHTML)) {
     nsIAtom *tag = e->Tag();
 
-    if (tag == nsHTMLAtoms::embed  ||
-        tag == nsHTMLAtoms::img    ||
-        tag == nsHTMLAtoms::object ||
-        tag == nsHTMLAtoms::applet) {
+    if ((tag == nsHTMLAtoms::embed  ||
+         tag == nsHTMLAtoms::img    ||
+         tag == nsHTMLAtoms::object ||
+         tag == nsHTMLAtoms::applet) &&
+        (!aForm || nsContentUtils::BelongsInForm(aForm, e))) {
       NS_ADDREF(*aResult = e);
     }
   }
