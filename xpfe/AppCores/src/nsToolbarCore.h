@@ -27,6 +27,8 @@
 
 #include "nsIDOMToolbarCore.h"
 #include "nsBaseAppCore.h"
+#include "nsINetSupport.h"
+#include "nsIStreamObserver.h"
 
 class nsIBrowserWindow;
 class nsIWebShell;
@@ -34,13 +36,16 @@ class nsIScriptContext;
 class nsIDOMWindow;
 class nsIDOMDocument;
 class nsIDOMCharacterData;
+class nsIWebShellWindow;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsToolbarCore:
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsToolbarCore : public nsBaseAppCore, 
-                      public nsIDOMToolbarCore
+                      public nsIDOMToolbarCore,
+                      public nsINetSupport,
+                      public nsIStreamObserver
 {
   public:
   
@@ -54,11 +59,36 @@ class nsToolbarCore : public nsBaseAppCore,
     NS_IMETHOD    GetId(nsString& aId) { return nsBaseAppCore::GetId(aId); } 
 
     NS_IMETHOD    SetWindow(nsIDOMWindow* aWin);
+    NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin);
     NS_IMETHOD    SetStatus(const nsString& aMsg);
 
+    // nsIStreamObserver
+    NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
+    NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+    NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
+    NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+
+    // nsINetSupport
+    NS_IMETHOD_(void) Alert(const nsString &aText);
+  
+    NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
+
+    NS_IMETHOD_(PRBool) Prompt(const nsString &aText,
+                               const nsString &aDefault,
+                               nsString &aResult);
+
+    NS_IMETHOD_(PRBool) PromptUserAndPassword(const nsString &aText,
+                                              nsString &aUser,
+                                              nsString &aPassword);
+
+    NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
+                                       nsString &aPassword);  
+
   private:
+    NS_IMETHOD DoDialog();
 
     nsIDOMWindow        *mWindow;
+    nsIWebShellWindow   *mWebShellWin;
     nsIDOMCharacterData *mStatusText;
 };
 
