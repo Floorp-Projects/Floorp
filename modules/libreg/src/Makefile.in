@@ -55,8 +55,8 @@ include $(topsrcdir)/config/rules.mk
 
 R_%.o: %.c
 ifeq ($(OS_ARCH), OS2)
-	$(CC) -Fo$@ -c $(CFLAGS) -DSTANDALONE_REGISTRY $<
+	$(CC) -Fo$@ -c $(COMPILE_CFLAGS) -DSTANDALONE_REGISTRY $<
 else
-	$(CC) -o $@ -c $(CFLAGS) -DSTANDALONE_REGISTRY $<
+	$(CC) -o $@ -c $(COMPILE_CFLAGS) -DSTANDALONE_REGISTRY $<
 endif
 
