@@ -104,7 +104,6 @@ protected:
 
     char*               mAcceptLanguages;
     nsAuthEngine        mAuthEngine;
-    PRBool              mCheckForProxy;
     PRBool              mDoKeepAlive;
     nsCOMPtr<nsIPref>   mPrefs;
     nsCOMPtr<nsIProtocolProxyService>       mProxySvc;
