@@ -110,11 +110,10 @@ Rights Reserved.
 	<key id="key_copy"/>
 	<key id="key_paste"/>
 	<key id="key_delete"/>
-	<key id="key_backspace"/>
 	<key id="key_selectAll"/>
 	<key id="key_preferences"/>
   
-	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;" charcode="&nextUnreadMsgCmd.key;" observes="cmd_NextUnreadMsg"/>
+	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;" observes="cmd_NextUnreadMsg"/>
 </keyset>
 
 <popupset>

@@ -32,11 +32,18 @@ var FolderPaneController =
 	{
 		switch ( command )
 		{
-			case "cmd_selectAll":
 			case "cmd_delete":
 			case "button_delete":
 				return true;
 			
+			case "cmd_selectAll":
+			case "cmd_undo":
+			case "cmd_redo":
+			case "cmd_cut":
+			case "cmd_copy":
+			case "cmd_paste":
+				return true;
+				
 			default:
 				return false;
 		}
@@ -48,16 +55,22 @@ var FolderPaneController =
 		switch ( command )
 		{
 			case "cmd_selectAll":
-				return true;
-			
+			case "cmd_undo":
+			case "cmd_redo":
+			case "cmd_cut":
+			case "cmd_copy":
+			case "cmd_paste":
+				return false;
+				
 			case "cmd_delete":
 			case "button_delete":
+			/* add this back when folder delete has warning
 				if ( command == "cmd_delete" )
 					goSetMenuValue(command, 'valueFolder');
 				var folderTree = GetFolderTree();
 				if ( folderTree && folderTree.selectedItems )
 					return true;
-				else
+				else*/
 					return false;
 			
 			default:
@@ -69,15 +82,6 @@ var FolderPaneController =
 	{
 		switch ( command )
 		{
-			case "cmd_selectAll":
-				var folderTree = GetFolderTree();
-				if ( folderTree )
-				{
-					dump("select all now!!!!!!" + "\n");
-					folderTree.selectAll();
-				}
-				break;
-			
 			case "cmd_delete":
 			case "button_delete":
 				// add this back in when folder delete has warning
@@ -106,6 +110,16 @@ var ThreadPaneController =
 	{
 		switch ( command )
 		{
+			case "cmd_undo":
+			case "cmd_redo":
+			case "cmd_selectAll":
+				return true;
+
+			case "cmd_cut":
+			case "cmd_copy":
+			case "cmd_paste":
+				return true;
+				
 			default:
 				return false;
 		}
@@ -115,6 +129,18 @@ var ThreadPaneController =
 	{
 		switch ( command )
 		{
+			case "cmd_selectAll":
+				return true;
+			
+			case "cmd_cut":
+			case "cmd_copy":
+			case "cmd_paste":
+				return false;
+				
+			case "cmd_undo":
+			case "cmd_redo":
+               return SetupUndoRedoCommand(command);
+
 			default:
 				return false;
 		}
@@ -124,14 +150,121 @@ var ThreadPaneController =
 	{
 		switch ( command )
 		{
+			case "cmd_selectAll":
+				var threadTree = GetThreadTree();
+				if ( threadTree )
+				{
+					threadTree.selectAll();
+					if ( threadTree.selectedItems && threadTree.selectedItems.length != 1 )
+						ClearMessagePane();
+				}
+				break;
+			
+			case "cmd_undo":
+				messenger.Undo(msgWindow);
+				break;
+			
+			case "cmd_redo":
+				messenger.Redo(msgWindow);
+				break;
 		}
 	},
 	
 	onEvent: function(event)
 	{
 		// on blur events set the menu item texts back to the normal values
+		if ( event == 'blur' )
+        {
+			goSetMenuValue('cmd_undo', 'valueDefault');
+			goSetMenuValue('cmd_redo', 'valueDefault');
+		}
 	}
 };
+
+// DefaultController object (handles commands when one of the trees does not have focus)
+var DefaultController =
+{
+   supportsCommand: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_delete":
+			case "button_delete":
+				return true;
+            
+			default:
+				return false;
+		}
+	},
+
+	isCommandEnabled: function(command)
+	{
+        //		dump("ThreadPaneController.isCommandEnabled(" + command + ")\n");
+		switch ( command )
+		{
+			case "cmd_delete":
+			case "button_delete":
+				var threadTree = GetThreadTree();
+				var numSelected = 0;
+				if ( threadTree && threadTree.selectedItems )
+					numSelected = threadTree.selectedItems.length;
+				if ( command == "cmd_delete" )
+				{
+					if ( numSelected < 2 )
+						goSetMenuValue(command, 'valueMessage');
+					else
+						goSetMenuValue(command, 'valueMessages');
+				}
+				return ( numSelected > 0 );
+			
+			default:
+				return false;
+		}
+	},
+
+	doCommand: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_delete":
+				MsgDeleteMessage(false);
+				break;
+			
+			case "button_delete":
+				MsgDeleteMessage(true);
+				break;
+		}
+	},
+	
+	onEvent: function(event)
+	{
+		// on blur events set the menu item texts back to the normal values
+		if ( event == 'blur' )
+        {
+			goSetMenuValue('cmd_delete', 'valueDefault');
+        }
+	}
+};
+
+
+function CommandUpdate_Mail()
+{
+	/*var messagePane = top.document.getElementById('messagePane');
+	var drawFocusBorder = messagePane.getAttribute('draw-focus-border');
+	
+	if ( MessagePaneHasFocus() )
+	{
+		if ( !drawFocusBorder )
+			messagePane.setAttribute('draw-focus-border', 'true');
+	}
+	else
+	{
+		if ( drawFocusBorder )
+			messagePane.removeAttribute('draw-focus-border');
+	}*/
+		
+	goUpdateCommand('button_delete');
+}
 
 function SetupUndoRedoCommand(command)
 {
@@ -181,140 +314,6 @@ function CommandUpdate_UndoRedo()
     EnableMenuItem("menu_redo", SetupUndoRedoCommand("cmd_redo"));
 }
 
-// DefaultController object (handles commands when one of the trees does not have focus)
-var DefaultController =
-{
-   supportsCommand: function(command)
-	{
-		switch ( command )
-		{
-			case "cmd_selectAll":
-			case "cmd_delete":
-			case "button_delete":
-			case "cmd_undo":
-			case "cmd_redo":
-				return true;
-            
-			default:
-				return false;
-		}
-	},
-
-	isCommandEnabled: function(command)
-	{
-        //		dump("ThreadPaneController.isCommandEnabled(" + command + ")\n");
-		switch ( command )
-		{
-			case "cmd_selectAll":
-				return true;
-			
-			case "cmd_delete":
-			case "button_delete":
-				var threadTree = GetThreadTree();
-				var numSelected = 0;
-				if ( threadTree && threadTree.selectedItems )
-					numSelected = threadTree.selectedItems.length;
-				if ( command == "cmd_delete" )
-				{
-					if ( numSelected < 2 )
-						goSetMenuValue(command, 'valueMessage');
-					else
-						goSetMenuValue(command, 'valueMessages');
-				}
-				return ( numSelected > 0 );
-			
-			case "cmd_undo":
-			case "cmd_redo":
-               return SetupUndoRedoCommand(command);
-
-/*			case "cmd_delete":
-			case "button_delete":
-				if ( !MessagePaneHasFocus() )
-					return false;
-
-				var threadTree = GetThreadTree();
-				dump("threadTree = " + threadTree + "\n");
-				var numSelected = 0;
-				if ( threadTree && threadTree.selectedItems )
-					numSelected = threadTree.selectedItems.length;
-				if ( command == "cmd_delete" )
-				{
-					if ( numSelected < 2 )
-						goSetMenuValue(command, 'valueMessage');
-					else
-						goSetMenuValue(command, 'valueMessages');
-				}
-				return ( numSelected > 0 );*/
-		
-			default:
-				return false;
-		}
-	},
-
-	doCommand: function(command)
-	{
-		switch ( command )
-		{
-			case "cmd_selectAll":
-				var threadTree = GetThreadTree();
-				if ( threadTree )
-				{
-					dump("select all now!!!!!!" + "\n");
-					threadTree.selectAll();
-				}
-				break;
-			
-			case "cmd_delete":
-				MsgDeleteMessage(false);
-				break;
-			
-			case "button_delete":
-				MsgDeleteMessage(true);
-				break;
-			
-			case "cmd_undo":
-				messenger.Undo(msgWindow);
-				break;
-			
-			case "cmd_redo":
-				messenger.Redo(msgWindow);
-				break;
-		}
-	},
-	
-	onEvent: function(event)
-	{
-		// on blur events set the menu item texts back to the normal values
-		if ( event == 'blur' )
-        {
-            dump("blur - setup menu value\n");
-			goSetMenuValue('cmd_delete', 'valueDefault');
-			goSetMenuValue('cmd_undo', 'valueDefault');
-			goSetMenuValue('cmd_redo', 'valueDefault');
-        }
-	}
-};
-
-
-function CommandUpdate_Mail()
-{
-	/*var messagePane = top.document.getElementById('messagePane');
-	var drawFocusBorder = messagePane.getAttribute('draw-focus-border');
-	
-	if ( MessagePaneHasFocus() )
-	{
-		if ( !drawFocusBorder )
-			messagePane.setAttribute('draw-focus-border', 'true');
-	}
-	else
-	{
-		if ( drawFocusBorder )
-			messagePane.removeAttribute('draw-focus-border');
-	}*/
-		
-	goUpdateCommand('button_delete');
-}
-
 /*function MessagePaneHasFocus()
 {
 	var focusedWindow = top.document.commandDispatcher.focusedWindow;
@@ -361,8 +360,7 @@ function SetupCommandUpdateHandlers()
 	if ( widget )
 		widget.controllers.appendController(ThreadPaneController);
 		
-	top.controllers.appendController(DefaultController);
-
+	top.controllers.insertControllerAt(0, DefaultController);
 }
 
 
