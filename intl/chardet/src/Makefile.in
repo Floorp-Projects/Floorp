@@ -29,7 +29,7 @@ IS_COMPONENT	= 1
 REQUIRES	= libxpcom
 
 CPPSRCS		= \
-		nsCharDetDll.cpp \
+		nsCharDetModule.cpp \
 		nsObserverBase.cpp \
 		nsXMLEncodingObserver.cpp \
 		nsMetaCharsetObserver.cpp \
