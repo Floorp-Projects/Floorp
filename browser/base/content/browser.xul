@@ -143,7 +143,7 @@
     </toolbar>
 
     <toolbarpalette id="BrowserToolbarPalette">
-      <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
+      <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&backCmd.label;"
                      oncommand="BrowserBack(event)"
                      onclick="checkForMiddleClick(this, event);"
@@ -156,7 +156,7 @@
                    onclick="checkForMiddleClick(this, event);"/>
       </toolbarbutton>
     
-      <toolbarbutton id="forward-button" type="menu-button" class="toolbarbutton-1"
+      <toolbarbutton id="forward-button" type="menu-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&forwardCmd.label;"
                      oncommand="BrowserForward(event)"
                      onclick="checkForMiddleClick(this, event);"
@@ -169,22 +169,22 @@
                    onclick="checkForMiddleClick(this, event);"/>
       </toolbarbutton>
     
-      <toolbarbutton id="reload-button" class="toolbarbutton-1"
-                      label="&reloadCmd.label;"
-                      oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload();"  
-                      tooltiptext="&reloadButton.tooltip;"/>
+      <toolbarbutton id="reload-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&reloadCmd.label;"
+                     oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload();"  
+                     tooltiptext="&reloadButton.tooltip;"/>
                     
-      <toolbarbutton id="stop-button" class="toolbarbutton-1"
-                      label="&stopCmd.label;"
-                      command="Browser:Stop"
-                      tooltiptext="&stopButton.tooltip;"/>
+      <toolbarbutton id="stop-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&stopCmd.label;"
+                     command="Browser:Stop"
+                     tooltiptext="&stopButton.tooltip;"/>
 
-      <toolbarbutton id="home-button" class="toolbarbutton-1"
-                      label="&homeButton.label;"
-                      ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
-                      ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
-                      ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
-                      onclick="BrowserHomeClick(event);"/>
+      <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&homeButton.label;"
+                     ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
+                     ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
+                     ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
+                     onclick="BrowserHomeClick(event);"/>
 
       <toolbaritem id="urlbar-container" align="center" flex="1000"
                    title="&locationItem.title;" class="chromeclass-location">
@@ -220,7 +220,7 @@
       </toolbaritem>
 
       <toolbaritem id="search-container" align="center"
-                   title="&searchItem.title;" class="chromeclass-location">
+                   title="&searchItem.title;" class="chromeclass-additional">
         <textbox id="search-bar" type="autocomplete" flex="1"
                  autocompletepopup="PopupAutoComplete"
                  autocompletesearch="form-history"
@@ -234,7 +234,7 @@
         </textbox>
       </toolbaritem>
       
-      <toolbaritem id="go-container" align="center" class="chromeclass-location">
+      <toolbaritem id="go-container" align="center" class="chromeclass-additional">
         <button id="go-button" class="button-toolbar"
                 label="&goButton.label;"
                 oncommand="handleURLBarCommand(event);"
@@ -244,7 +244,7 @@
                 tooltiptext="&goButton.tooltip;"/> 
       </toolbaritem>
 
-      <toolbarbutton id="print-button" class="toolbarbutton-1"
+      <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&printButton.label;" command="cmd_print"
                      tooltiptext="&printButton.tooltip;"/>
 
@@ -255,7 +255,8 @@
                 tooltiptext="&throbber.tooltip;"/>
       </toolbaritem>
       
-      <toolbaritem id="personal-bookmarks" title="&bookmarksItem.title;" flex="1">
+      <toolbaritem id="personal-bookmarks" title="&bookmarksItem.title;" flex="1"
+                   class="chromeclass-directories">
         <stack id="bookmarks-stack" flex="1" style="min-width:0px; width:0px;"
                onpopupshowing="BookmarksToolbar.setOpenedMenu(event);"
                onpopuphidden="BookmarksToolbar.unsetOpenedMenu(event);">
@@ -301,7 +302,7 @@
           </stack>
         </toolbaritem>
 
-        <toolbarbutton id="downloads-button" class="toolbarbutton-1"
+        <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        observes="Tools:Downloads"
                        ondragdrop="nsDragAndDrop.drop(event, DownloadsButtonDNDObserver); event.preventBubble()"
                        ondragover="nsDragAndDrop.dragOver(event, DownloadsButtonDNDObserver); event.preventBubble()"
@@ -310,12 +311,12 @@
                        label="&downloads.label;"
                        tooltiptext="&downloads.tooltip;"/>
 
-        <toolbarbutton id="history-button" class="toolbarbutton-1"
+        <toolbarbutton id="history-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        observes="viewHistorySidebar"
                        tooltiptext="&historyButton.tooltip;"/>
 
 #ifdef HAVE_SHELL_SERVICE
-        <toolbarbutton id="mail-button" type="menu" class="toolbarbutton-1"
+        <toolbarbutton id="mail-button" type="menu" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&mailButton.label;" orient="vertical"
                        onmouseover="MailIntegration.updateUnreadCount();"
                        tooltiptext="&mailButton.tooltip;">
@@ -338,34 +339,34 @@
         </toolbarbutton>                       
 #endif
 
-        <toolbarbutton id="bookmarks-button" class="toolbarbutton-1"
+        <toolbarbutton id="bookmarks-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        observes="viewBookmarksSidebar"
                        tooltiptext="&bookmarksButton.tooltip;"
                        ondragover="nsDragAndDrop.dragOver(event, bookmarksButtonObserver);"
                        ondragdrop="nsDragAndDrop.drop(event, bookmarksButtonObserver);"
                        ondragexit="nsDragAndDrop.dragExit(event, bookmarksButtonObserver);"/>
 
-        <toolbarbutton id="new-tab-button" class="toolbarbutton-1"
+        <toolbarbutton id="new-tab-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&tabCmd.label;"
                        command="cmd_newNavigatorTab"
                        tooltiptext="&newTabButton.tooltip;"/>
 
-        <toolbarbutton id="new-window-button" class="toolbarbutton-1"
+        <toolbarbutton id="new-window-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&newNavigatorCmd.label;"
                        command="key_newNavigator"
                        tooltiptext="&newWindowButton.tooltip;"/>
 
-        <toolbarbutton id="cut-button" class="toolbarbutton-1"
+        <toolbarbutton id="cut-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&cutCmd.label;"
                        command="cmd_cut"
                        tooltiptext="&cutButton.tooltip;"/>
 
-        <toolbarbutton id="copy-button" class="toolbarbutton-1"
+        <toolbarbutton id="copy-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&copyCmd.label;"
                        command="cmd_copy"
                        tooltiptext="&copyButton.tooltip;"/>
 
-        <toolbarbutton id="paste-button" class="toolbarbutton-1"
+        <toolbarbutton id="paste-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&pasteCmd.label;"
                        command="cmd_paste"
                        tooltiptext="&pasteButton.tooltip;"/>
