@@ -48,6 +48,9 @@ js_InitDateClass(JSContext *cx, JSObject *obj);
  *  These functions provide a C interface to the date/time object
  */
 extern JS_FRIEND_API(JSObject*)
+js_NewDateObjectMsec(JSContext* cx, jsdouble msec_time);
+
+extern JS_FRIEND_API(JSObject*)
 js_NewDateObject(JSContext* cx, int year, int mon, int mday,
 				int hour, int min, int sec);
 
