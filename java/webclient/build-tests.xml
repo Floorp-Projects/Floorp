@@ -165,6 +165,7 @@
             <test name="org.mozilla.webclient.KeyListenerTest"/>
             <test name="org.mozilla.webclient.DocumentLoadListenerTest"/>
 <!-- non running
+            <test name="org.mozilla.webclient.WindowCreatorTest"/>
             <test name="org.mozilla.webclient.wrapper_native.gtk.TestGtkBrowserControlCanvas"/>
 -->
 

@@ -83,6 +83,8 @@ public class EventRegistrationImpl extends ImplObjectNative implements EventRegi
 
     private List keyListeners;
 
+    private List newWindowListeners;
+
     private BrowserToJavaEventPump eventPump = null;
 
     private static int instanceCount = 0;
@@ -107,6 +109,7 @@ public EventRegistrationImpl(WrapperFactory yourFactory,
     documentLoadListeners = null;
     mouseListeners = null;
     keyListeners = null;
+    newWindowListeners = null;
     eventPump = new BrowserToJavaEventPump(instanceCount++);
     eventPump.start();
 }
@@ -125,6 +128,10 @@ public void delete()
 	keyListeners.clear();
     }
     keyListeners = null;
+    if (null != newWindowListeners) {
+	newWindowListeners.clear();
+    }
+    newWindowListeners = null;
     super.delete();
     eventPump.stopRunning();
 }
@@ -238,18 +245,13 @@ public void addNewWindowListener(NewWindowListener listener)
 {
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeBrowserControl());
-    ParameterCheck.nonNull(listener);
 
-    WCEventListenerWrapper listenerWrapper =
-        new WCEventListenerWrapper(listener,
-                                   NewWindowListener.class.getName());
-    if (null == listenerWrapper) {
-        throw new NullPointerException("Can't instantiate WCEventListenerWrapper, out of memory.");
+    if (null == newWindowListeners) {
+	newWindowListeners = new ArrayList();
     }
-
-    synchronized(getBrowserControl()) {
-        // PENDING nativeEventThread.addListener(listenerWrapper);
+    
+    synchronized(newWindowListeners) {
+	newWindowListeners.add(listener);
     }
 }
 
@@ -257,20 +259,12 @@ public void removeNewWindowListener(NewWindowListener listener)
 {
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeBrowserControl());
-    ParameterCheck.nonNull(listener);
-
-    WCEventListenerWrapper listenerWrapper =
-        new WCEventListenerWrapper(listener,
-                                   NewWindowListener.class.getName());
-    if (null == listenerWrapper) {
-        throw new NullPointerException("Can't instantiate WCEventListenerWrapper, out of memory.");
-    }
-
-    synchronized(getBrowserControl()) {
-        // PENDING nativeEventThread.removeListener(listenerWrapper);
+    
+    synchronized(newWindowListeners) {
+	newWindowListeners.remove(listener);
     }
 }
+
 
 /**
 

@@ -21,6 +21,8 @@
  */
 
 #include "nsIWebBrowserChrome.h"
+#include "nsIBaseWindow.h"
+#include "nsIWebBrowser.h"
 #include "WindowCreator.h"
 
 NativeBrowserControl* gNewWindowNativeBCPtr;
@@ -85,5 +87,38 @@ WindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *parent,
                                    nsIURI *uri, PRBool *cancel, 
                                    nsIWebBrowserChrome **_retval)
 {
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    
+    parent->GetWebBrowser(getter_AddRefs(webBrowser));
+    nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(webBrowser));
+
+    if (nsnull != baseWindow) {
+        /*
+          Block this thread.
+
+          Call back into java and ask the user to create a top level
+          window and hand it, or an added child of it, to us.  Call this
+          thing the userWindow.
+
+          Create a new BrowserControl, get its BrowserControlCanvas and
+          make it be a child of the userWindow.  
+
+          Set the userWindow and the BrowserControlCanvas to visible ==
+          true.  This is necessary to get the cause the underlying
+          mozilla window to be created.
+
+          java returns the C++ nativeBrowserControl to us.  Cast it to a
+          native NativeBrowserControl C++ object instance.  If the
+          nsIURI is non-null, cause the new window to navigate to that
+          URI.  Return the NativeBrowserControl's EmbedWindow instance,
+          which is an impl of nsIWebBrowserChrome.  
+
+          I'm not sure if it's safe to do all this on the same thread on
+          which mozilla calls us.  I hope so.
+        */
+        
+        printf("debug: edburns: can QI to baseWindow\n\n");
+    }
+    
     return NS_OK;
 }
