@@ -1277,17 +1277,6 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-  PRBool needsVerticalScrollbar = PR_FALSE;
-  if (visibleHeight < scrolledAreaHeight) {
-    needsVerticalScrollbar = PR_TRUE; 
-  }
-
-  if (needsVerticalScrollbar) {
-    mIsScrollbarVisible = PR_TRUE; // XXX temp code
-  } else {
-    mIsScrollbarVisible = PR_FALSE; // XXX temp code
-  }
-
   // The visible height is zero, this could be a select with no options
   // or a select with a single option that has no content or no label
   //

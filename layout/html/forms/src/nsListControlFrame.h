@@ -297,9 +297,6 @@ protected:
 
   nsRefPtr<nsListEventListener> mEventListener;
 
-  // XXX temprary only until full system mouse capture works
-  PRPackedBool mIsScrollbarVisible;
-
   PRInt16 mPassId;
   nscoord mCachedDesiredMEW;
 
