@@ -38,8 +38,6 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 #ifdef USE_XIM
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-nsIMEPolicy nsIMEGtkIC::gInputPolicy = (nsIMEPolicy)0;
-GdkIMStyle nsIMEGtkIC::gInputStyle = (GdkIMStyle)0;
 nsIMEStatus *nsIMEGtkIC::gStatus = 0;
 #endif // USE_XIM 
 
@@ -973,13 +971,13 @@ nsIMEGtkIC::SetFocusWindow(nsWindow * aFocusWindow)
 
   gdk_im_begin((GdkIC *) mIC, gdkWindow);
 
-  if (gInputStyle & GDK_IM_PREEDIT_POSITION) {
+  if (mInputStyle & GDK_IM_PREEDIT_POSITION) {
     SetPreeditArea(0, 0,
 		   (int)((GdkWindowPrivate*)gdkWindow)->width,
 		   (int)((GdkWindowPrivate*)gdkWindow)->height);
   }
 
-  if (gInputStyle & GDK_IM_STATUS_CALLBACKS) {
+  if (mInputStyle & GDK_IM_STATUS_CALLBACKS) {
     if (gStatus) {
       gStatus->setParentWindow(gdkWindow);
     }
@@ -1034,18 +1032,6 @@ nsIMEGtkIC::~nsIMEGtkIC()
   mPreedit = 0;
   mFocusWindow = 0;
 }
-
-// xim.input_policy:
-//
-// InputPolicy can be specified as "xim.input_policy", either
-// "per-shell" or "per-widget".
-// "per-widget" is default input policy, which means an IC will be
-// created per shell widget. The input state (conversion mode on/off)
-// can be shared among the shell widget.
-
-#define PREF_XIM_INPUTPOLICY		"xim.input_policy"
-#define	VAL_INPUTPOLICY_PERSHELL	"per-shell"	// default for on-the-spot
-#define	VAL_INPUTPOLICY_PERWIDGET	"per-widget" // default for over-the-spot
 
 // xim.input_style:
 //
@@ -1114,50 +1100,15 @@ XIMErrorHandler(Display *dpy, XErrorEvent *event) {
 }
 #endif
 
-nsIMEPolicy
-nsIMEGtkIC::GetInputPolicy() {
-  if (gInputPolicy) return gInputPolicy;
-  if (!gdk_im_ready()) {
-    gInputPolicy = NSIME_UNKNOWN;
-    return gInputPolicy;
-  }
-  nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-  if (!NS_FAILED(rv) && (prefs)) {
-    char *input_policy;
-    rv = prefs->CopyCharPref(PREF_XIM_INPUTPOLICY, &input_policy);
-    if (NS_SUCCEEDED(rv) && input_policy[0]) {
-      if (!nsCRT::strcmp(input_policy, VAL_INPUTPOLICY_PERSHELL)) {
-        gInputPolicy = NSIME_IC_PER_SHELL;
-      } else if (!nsCRT::strcmp(input_policy, VAL_INPUTPOLICY_PERWIDGET)) {
-        gInputPolicy = NSIME_IC_PER_WIDGET;
-      }
-      nsCRT::free(input_policy);
-    }
-  }
-  if (!gInputPolicy) {
-    // default
-    gInputPolicy = NSIME_IC_PER_SHELL;
-  }
-  return gInputPolicy;
-}
-
 GdkIMStyle
 nsIMEGtkIC::GetInputStyle() {
-  if (gdk_im_ready() && gInputStyle) return gInputStyle;
-
 #ifdef sun
   // set error handler only once
   if (gdk_error_handler == (XErrorHandler)NULL)
     gdk_error_handler = XSetErrorHandler(XIMErrorHandler);
 #endif
-
-  if (!gdk_im_ready()) {
-    gInputStyle = (GdkIMStyle)0;
-    return gInputStyle;
-  }
-
   GdkIMStyle style;
+  GdkIMStyle ret_style = (GdkIMStyle)0;
 
   PRInt32 ivalue = 0;
   nsresult rv;
@@ -1170,16 +1121,16 @@ nsIMEGtkIC::GetInputStyle() {
   prefered_status_style = (GdkIMStyle) GDK_IM_STATUS_NOTHING;
   style = gdk_im_decide_style((GdkIMStyle)(prefered_preedit_style | prefered_status_style));
   if (style) {
-    gInputStyle = style;
+    ret_style = style;
   } else {
     style = gdk_im_decide_style((GdkIMStyle) (SUPPORTED_PREEDIT | SUPPORTED_STATUS));
     if (style) {
-      gInputStyle = style;
+      ret_style = style;
     } else {
-      gInputStyle = (GdkIMStyle)(GDK_IM_PREEDIT_NONE|GDK_IM_STATUS_NONE);
+      ret_style = (GdkIMStyle)(GDK_IM_PREEDIT_NONE|GDK_IM_STATUS_NONE);
     }
   }
-  return gInputStyle;
+  return ret_style;
 #endif
 
   NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
@@ -1243,16 +1194,16 @@ nsIMEGtkIC::GetInputStyle() {
   }
   style = gdk_im_decide_style((GdkIMStyle)(prefered_preedit_style | prefered_status_style));
   if (style) {
-    gInputStyle = style;
+    ret_style = style;
   } else {
     style = gdk_im_decide_style((GdkIMStyle) (SUPPORTED_PREEDIT | SUPPORTED_STATUS));
     if (style) {
-      gInputStyle = style;
+      ret_style = style;
     } else {
-      gInputStyle = (GdkIMStyle)(GDK_IM_PREEDIT_NONE|GDK_IM_STATUS_NONE);
+      ret_style = (GdkIMStyle)(GDK_IM_PREEDIT_NONE|GDK_IM_STATUS_NONE);
     }
   }
-  return gInputStyle;
+  return ret_style;
 }
 
 PRInt32
@@ -1313,7 +1264,7 @@ nsIMEGtkIC::ResetIC(PRUnichar **aUnichar, PRInt32 *aUnisize)
 PRBool
 nsIMEGtkIC::IsPreeditComposing()
 {
-  if (gInputStyle & GDK_IM_PREEDIT_CALLBACKS) {
+  if (mInputStyle & GDK_IM_PREEDIT_CALLBACKS) {
     if (mPreedit && mPreedit->GetPreeditLength()) {
       return PR_TRUE;
     } else {
@@ -1350,7 +1301,7 @@ nsIMEGtkIC::SetPreeditFont(GdkFont *aFontset) {
 
 void
 nsIMEGtkIC::SetStatusFont(GdkFont *aFontset) {
-  if (gInputStyle & GDK_IM_STATUS_CALLBACKS) {
+  if (mInputStyle & GDK_IM_STATUS_CALLBACKS) {
     if (!gStatus) {
       gStatus = new nsIMEStatus(aFontset);
     } else {
@@ -1412,17 +1363,22 @@ nsIMEGtkIC::nsIMEGtkIC(nsWindow *aFocusWindow, GdkFont *aFontSet,
   }
   if (!gdk_im_ready()) return;  // nothing to do
 
+  mInputStyle = GetInputStyle();
+  if (!mInputStyle) {
+    return;
+  }
+
   GdkICAttr *attr = gdk_ic_attr_new();
   GdkICAttributesType attrmask = GDK_IC_ALL_REQ;
 
-  attr->style = GetInputStyle();
+  attr->style = mInputStyle;
   attr->client_window = gdkWindow;
 
   attrmask = (GdkICAttributesType)(attrmask | GDK_IC_PREEDIT_COLORMAP);
   attr->preedit_colormap = ((GdkWindowPrivate*)gdkWindow)->colormap;
   attrmask = (GdkICAttributesType) (attrmask | GDK_IC_PREEDIT_POSITION_REQ);
 
-  if (!(gInputStyle & GDK_IM_PREEDIT_CALLBACKS)) {
+  if (!(mInputStyle & GDK_IM_PREEDIT_CALLBACKS)) {
     attr->preedit_area.width = ((GdkWindowPrivate*)gdkWindow)->width;
     attr->preedit_area.height = ((GdkWindowPrivate*)gdkWindow)->height;
     attr->preedit_area.x = 0;
@@ -1435,7 +1391,7 @@ nsIMEGtkIC::nsIMEGtkIC(nsWindow *aFocusWindow, GdkFont *aFontSet,
   }
 
   if (aStatusFontSet) {
-    if (gInputStyle & GDK_IM_STATUS_CALLBACKS) {
+    if (mInputStyle & GDK_IM_STATUS_CALLBACKS) {
       if (!gStatus) {
         gStatus = new nsIMEStatus(aStatusFontSet);
       }
@@ -1454,8 +1410,8 @@ nsIMEGtkIC::nsIMEGtkIC(nsWindow *aFocusWindow, GdkFont *aFontSet,
   // never becomes conversion ON, and is only used to be destroyed after
   // the real active XIC is destroyed in ~nsIMEGtkIC.
 
-  if (gInputStyle & GDK_IM_PREEDIT_CALLBACKS ||
-      gInputStyle & GDK_IM_STATUS_CALLBACKS) {
+  if (mInputStyle & GDK_IM_PREEDIT_CALLBACKS ||
+      mInputStyle & GDK_IM_STATUS_CALLBACKS) {
     // don't need to set actuall callbacks for this xic
     mIC_backup = (GdkICPrivate *)gdk_ic_new(attr, attrmask);
   }
@@ -1470,7 +1426,7 @@ nsIMEGtkIC::nsIMEGtkIC(nsWindow *aFocusWindow, GdkFont *aFontSet,
   XIC xic = ((GdkICPrivate *) IC)->xic;
 
   /* set callbacks here */
-  if (gInputStyle & GDK_IM_PREEDIT_CALLBACKS) {
+  if (mInputStyle & GDK_IM_PREEDIT_CALLBACKS) {
     XVaNestedList preedit_attr;
 
     XIMCallback1 preedit_start_cb;
@@ -1500,7 +1456,7 @@ nsIMEGtkIC::nsIMEGtkIC(nsWindow *aFocusWindow, GdkFont *aFontSet,
     XFree(preedit_attr);
   }
 
-  if (gInputStyle & GDK_IM_STATUS_CALLBACKS) {
+  if (mInputStyle & GDK_IM_STATUS_CALLBACKS) {
     XIMCallback1 status_start_cb;
     XIMCallback1 status_draw_cb;
     XIMCallback1 status_done_cb;
@@ -1525,7 +1481,7 @@ nsIMEGtkIC::nsIMEGtkIC(nsWindow *aFocusWindow, GdkFont *aFontSet,
                  0);
     XFree(status_attr);
 
-    if (gInputStyle & GDK_IM_STATUS_CALLBACKS) {
+    if (mInputStyle & GDK_IM_STATUS_CALLBACKS) {
       if (!gStatus) {
         gStatus = new nsIMEStatus();
       }
