@@ -997,11 +997,11 @@ void nsFrame::AdjustPointsInNewContent(nsIPresContext& aPresContext,
                                        nsIRenderingContext * aRendContext,
                                        nsGUIEvent * aEvent,
                                        nsIFrame  * aNewFrame) {
+#if 0
   PRUint32 actualOffset = 0;
 
   // Get new Cursor Poition in the new content
   PRInt32 newPos;
-#if 0
 //DEBUG MJUDGE
 
   GetPosition(aPresContext, aRendContext, aEvent, aNewFrame, actualOffset, newPos);
