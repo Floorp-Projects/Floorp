@@ -934,6 +934,26 @@ nsImapMailFolder::MarkAllMessagesRead(void)
 	return rv;
 }
 
+NS_IMETHODIMP
+nsImapMailFolder::MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged)
+{
+	nsresult rv;
+
+	// tell the folder to do it, which will mark them read in the db.
+	rv = nsMsgFolder::MarkMessagesFlagged(messages, markFlagged);
+	if (NS_SUCCEEDED(rv))
+	{
+		nsCString messageIds;
+        nsMsgKeyArray keysToMarkFlagged;
+		rv = BuildIdsAndKeyArray(messages, messageIds, keysToMarkFlagged);
+		if (NS_FAILED(rv)) return rv;
+
+		rv = StoreImapFlags(kImapMsgFlaggedFlag, markFlagged,  keysToMarkFlagged);
+		mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+	}
+	return rv;
+}
+
 
 NS_IMETHODIMP nsImapMailFolder::Adopt(nsIMsgFolder *srcFolder, 
                                       PRUint32 *outPos)

@@ -137,6 +137,7 @@ public:
 
 	NS_IMETHOD MarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
 	NS_IMETHOD MarkAllMessagesRead(void);
+	NS_IMETHOD MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged);
 
     NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders);
     
