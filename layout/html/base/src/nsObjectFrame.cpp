@@ -1617,7 +1617,6 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
     // now we need to setup the correct location for printing
     nsresult rv;
     nsPluginWindow    window;
-    nsIView          *parentWithView;
     nsPoint           origin;
     float             t2p;
     nsMargin          margin(0,0,0,0);
