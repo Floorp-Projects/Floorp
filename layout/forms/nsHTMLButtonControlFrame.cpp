@@ -319,6 +319,7 @@ nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
 }
 
 // XXX temporary hack code until new style rules are added
+static
 void ReflowTemp(nsIPresContext& aPresContext, nsHTMLButtonControlFrame* aFrame, nsRect& aRect)
 {  
   nsHTMLReflowMetrics metrics(nsnull);
