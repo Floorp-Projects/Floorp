@@ -18,4 +18,3 @@
 
 #define MOZ_MEDIUM
 
-#define NO_SECURITY
