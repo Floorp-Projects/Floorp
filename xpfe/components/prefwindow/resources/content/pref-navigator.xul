@@ -39,7 +39,7 @@
   </script>
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["startupPage", "browserStartupHomepage", "bookmarksButton", "goButton",
+    _elementIDs = ["startupPage", "browserStartupHomepage", "alwaysCheckWhenDropOnHome", "bookmarksButton", "goButton",
                    "homeButton", "printButton", "searchButton" ];
   ]]>
   </script>
