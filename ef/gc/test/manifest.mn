@@ -1,0 +1,10 @@
+MODULE = sm
+
+DEPTH = ../..
+
+CSRCS =      \
+	maltest.c \
+	$(NULL)
+
+REQUIRES = sm nspr20
+

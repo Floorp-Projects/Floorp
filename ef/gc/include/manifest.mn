@@ -1,0 +1,16 @@
+MODULE = sm
+
+DEPTH = ../..
+
+EXPORTS	=	   \
+        sm.h	   \
+        smobj.h	   \
+        smgen.h	   \
+        smheap.h   \
+        smmalloc.h \
+        smpage.h   \
+        smpool.h   \
+        smpriv.h   \
+        smstack.h  \
+        smtrav.h   \
+        smhash.h
