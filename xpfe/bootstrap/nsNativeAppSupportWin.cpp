@@ -1594,6 +1594,18 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
       return;
     }
 
+    // try for the "-profilemanager" argument, in which case we want the
+    // profile manager to appear, but only if there are no windows open
+
+    rv = args->GetCmdLineValue( "-profilemanager", getter_Copies(arg));
+    if ( NS_SUCCEEDED(rv) && (const char*)arg ) { // -profilemanager on command line
+      nsCOMPtr<nsIDOMWindowInternal> window;
+      GetMostRecentWindow(0, getter_AddRefs(window));
+      if (!window) { // there are no open windows
+        mForceProfileStartup = PR_TRUE;
+      }
+    }
+
     // try for the "-kill" argument, to shut down the server
     rv = args->GetCmdLineValue( "-kill", getter_Copies(arg));
     if ( NS_SUCCEEDED(rv) && (const char*)arg ) {
