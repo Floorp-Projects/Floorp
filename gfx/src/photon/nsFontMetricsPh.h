@@ -57,6 +57,7 @@ public:
   NS_IMETHOD  GetUnderline(nscoord& aOffset, nscoord& aSize);
 
   NS_IMETHOD  GetHeight(nscoord &aHeight);
+  NS_IMETHOD  GetNormalLineHeight(nscoord &aHeight);
   NS_IMETHOD  GetLeading(nscoord &aLeading);
   NS_IMETHOD  GetEmHeight(nscoord &aHeight);
   NS_IMETHOD  GetEmAscent(nscoord &aAscent);
