@@ -2319,7 +2319,6 @@ public class Interpreter
             cx.instructionCount = instructionCount;
             instructionCount = -1;
         }
-        cx.instructionCount = instructionCount;
         int count = getIndex(iCode, pc + 3);
         stackTop -= count;
         int calleeArgShft = stackTop + 1;
