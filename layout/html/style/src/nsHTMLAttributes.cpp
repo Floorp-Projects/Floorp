@@ -50,7 +50,7 @@ struct HTMLAttribute {
     MOZ_COUNT_CTOR(HTMLAttribute);
   }
 
-  HTMLAttribute(nsIAtom* aAttribute, const nsString& aValue)
+  HTMLAttribute(nsIAtom* aAttribute, const nsAReadableString& aValue)
     : mAttribute(aAttribute),
       mValue(aValue),
       mNext(nsnull)
@@ -288,7 +288,7 @@ public:
   NS_IMETHOD Reset(void);
   NS_IMETHOD SetMappingFunctions(nsMapAttributesFunc aFontMapFunc, nsMapAttributesFunc aMapFunc);
 
-  NS_IMETHOD SetAttribute(nsIAtom* aAttrName, const nsString& aValue);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttrName, const nsAReadableString& aValue);
   NS_IMETHOD SetAttribute(nsIAtom* aAttrName, const nsHTMLValue& aValue);
   NS_IMETHOD UnsetAttribute(nsIAtom* aAttrName, PRInt32& aAttrCount);
 
@@ -441,7 +441,7 @@ nsHTMLMappedAttributes::SetMappingFunctions(nsMapAttributesFunc aFontMapFunc,
 }
 
 NS_IMETHODIMP
-nsHTMLMappedAttributes::SetAttribute(nsIAtom* aAttrName, const nsString& aValue)
+nsHTMLMappedAttributes::SetAttribute(nsIAtom* aAttrName, const nsAReadableString& aValue)
 {
   if (! aAttrName) {
     return NS_ERROR_NULL_POINTER;
