@@ -58,13 +58,13 @@ const nsIUpdateItem     = Components.interfaces.nsIUpdateItem;
 const UPDATED_EXTENSIONS  = 0x01;
 const UPDATED_APP         = 0x02;
 
-function nsBackgroundUpdateService()
+function nsUpdateService()
 {
   this._pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
 }
 
-nsBackgroundUpdateService.prototype = {
+nsUpdateService.prototype = {
   _timer: null,
   _pref: null,
   _updateObserver: null,
@@ -290,7 +290,7 @@ nsBackgroundUpdateService.prototype = {
   },
 
   /////////////////////////////////////////////////////////////////////////////
-  // nsBackgroundUpdateService
+  // nsUpdateService
   _makeTimer: function (aDelay)
   {
     if (this._timer) 
@@ -512,9 +512,6 @@ nsVersionChecker.prototype = {
   }
 };
 
-var gUpdateService  = null;
-var gVersionChecker = null;
-
 var gModule = {
   _firstTime: true,
   
@@ -556,10 +553,7 @@ var gModule = {
                             if (aOuter != null)
                               throw Components.results.NS_ERROR_NO_AGGREGATION;
                             
-                            if (!gUpdateService)
-                              gUpdateService = new nsBackgroundUpdateService();
-                              
-                            return gUpdateService.QueryInterface(aIID);
+                            return (new nsUpdateService()).QueryInterface(aIID);
                           }
                         }
              },
@@ -572,10 +566,7 @@ var gModule = {
                             if (aOuter != null)
                               throw Components.results.NS_ERROR_NO_AGGREGATION;
                             
-                            if (!gVersionChecker)
-                              gVersionChecker = new nsVersionChecker();
-                              
-                            return gVersionChecker.QueryInterface(aIID);
+                            return (new nsVersionChecker()).QueryInterface(aIID);
                           }
                         }
              },

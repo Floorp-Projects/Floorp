@@ -223,7 +223,8 @@ var gUpdatePage = {
     case "Update:Extension:Item-Started":
       break;
     case "Update:Extension:Item-Ended":
-      gUpdateWizard.itemsToUpdate.push(aSubject);
+      var item = aSubject.QueryInterface(Components.interfaces.nsIUpdateItem);
+      gUpdateWizard.itemsToUpdate.push(item);
       
       ++this._completeCount;
       

@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gExtensionManager = null;
-
 const nsIExtensionManager       = Components.interfaces.nsIExtensionManager;
 const nsIUpdateService          = Components.interfaces.nsIUpdateService;
 
@@ -63,7 +61,6 @@ const FILE_EXTENSION_MANIFEST = "extension.rdf";
 //
 // Utility Functions
 //
-
 function EM_NS(aProperty)
 {
   return "http://www.mozilla.org/2004/em-rdf#" + aProperty;
@@ -1074,7 +1071,7 @@ nsExtensionItemUpdater.prototype = {
   
   onError: function (aStatus, aMessage)
   {
-    this._os.notifyObservers(aResult, "Update:Extension:Item-Error", aMessage);
+    this._os.notifyObservers(null, "Update:Extension:Item-Error", aMessage);
   },
   
   onDatasourceLoaded: function (aDatasource, aExtension)
@@ -1104,7 +1101,7 @@ nsExtensionItemUpdater.prototype = {
     if (versionChecker.compare(aExtension.version, version) < 0) {
       // Construct an update item and pass it to observers. 
       var item = Components.classes["@mozilla.org/updates/item;1"]
-                            .createInstance(Components.interfaces.nsIUpdateItem);
+                           .createInstance(Components.interfaces.nsIUpdateItem);
       item.init(aExtension.id, version, aExtension.name, -1, updateLink, "", "", 
                 Components.interfaces.TYPE_EXTENSION); // XXXben
       this._os.notifyObservers(item, "Update:Extension:Item-Ended", "");
@@ -1122,13 +1119,17 @@ nsExtensionItemUpdater.prototype = {
   
   getNewestExtensionCallback: function (aResult)
   {
-    var item = aResult;
     try {
-      item.name.toString(); // XXXben This is a lame hack to cause an exception to be
-                            // thrown for null values when there is no newer extension
-                            // or something else bad happens on the server that we 
-                            // don't recognize.
-      this._os.notifyObservers(aResult, "Update:Extension:Item-Ended", "");
+      aResult.name.toString(); // XXXben This is a lame hack to cause an exception to be
+                               // thrown for null values when there is no newer extension
+                               // or something else bad happens on the server that we 
+                               // don't recognize.
+      var item = Components.classes["@mozilla.org/updates/item;1"]
+                           .createInstance(Components.interfaces.nsIUpdateItem);
+      item.init(aResult.id, aResult.version, aResult.name, -1, 
+                aResult.updateURL, aResult.iconURL, "", 
+                aResult.type); 
+      this._os.notifyObservers(item, "Update:Extension:Item-Ended", "");
       ++this._updateCount;
     }
     catch (e) {
@@ -1765,10 +1766,7 @@ var gModule = {
                                 if (aOuter != null)
                                   throw Components.results.NS_ERROR_NO_AGGREGATION;
                                 
-                                if (!gExtensionManager)
-                                  gExtensionManager = new nsExtensionManager();
-                                  
-                                return gExtensionManager.QueryInterface(aIID);
+                                return (new nsExtensionManager()).QueryInterface(aIID);
                               }
                             }
              }
