@@ -100,10 +100,6 @@ nsFingerChannel::Init(nsIURI* uri)
       mHost = cString;
     }
 
-#ifdef DEBUG_bryner
-    printf("Status:mUser = %s, mHost = %s\n", (const char*)mUser,
-           (const char*)mHost);
-#endif
     if (!*(const char *)mHost) return NS_ERROR_NOT_INITIALIZED;
 
     return NS_OK;
@@ -367,11 +363,6 @@ NS_IMETHODIMP
 nsFingerChannel::OnStopRequest(nsIRequest *aRequest, nsISupports* aContext,
                                nsresult aStatus, const PRUnichar* aStatusArg)
 {
-#ifdef DEBUG_bryner
-    printf("nsFingerChannel::OnStopRequest, mActAsObserver=%d\n",
-            mActAsObserver);
-    printf("  aChannel = %p\n", aChannel);
-#endif
     nsresult rv = NS_OK;
 
     if (NS_FAILED(aStatus) || !mActAsObserver) {
@@ -450,9 +441,6 @@ nsFingerChannel::SendRequest(nsITransport* aTransport) {
   charstream = do_QueryInterface(result, &rv);
   if (NS_FAILED(rv)) return rv;
 
-#ifdef DEBUG_bryner
-  printf("Sending: %s\n", requestBuffer.GetBuffer());
-#endif
   rv = NS_AsyncWriteFromStream(getter_AddRefs(mTransportRequest),
                                aTransport, charstream,
                                0, requestBuffer.Length(), 0,
