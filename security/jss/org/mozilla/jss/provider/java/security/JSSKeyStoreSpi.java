@@ -53,6 +53,7 @@ import org.mozilla.jss.pkcs11.PK11Token;
 import org.mozilla.jss.pkcs11.TokenProxy;
 import org.mozilla.jss.crypto.CryptoToken;
 import org.mozilla.jss.crypto.TokenSupplierManager;
+import org.mozilla.jss.crypto.SecretKeyFacade;
 
 /**
  * The JSS implementation of the JCA KeyStore SPI.
@@ -248,9 +249,16 @@ public class JSSKeyStoreSpi extends java.security.KeyStoreSpi {
     public void engineSetKeyEntry(String alias, Key key, char[] password,
         Certificate[] chain) throws KeyStoreException
     {
-        throw new KeyStoreException("Storing plaintext keys is not supported."+
-            "Store the key as a handle instead.");
+        if( key instanceof SecretKeyFacade ) {
+            SecretKeyFacade skf = (SecretKeyFacade)key;
+            engineSetKeyEntryNative(alias, skf.key, password, chain);
+        } else {
+            engineSetKeyEntryNative(alias, key, password, chain);
+        }
     }
+
+    private native void engineSetKeyEntryNative(String alias, Object key,
+        char[] password, Certificate[] chain) throws KeyStoreException;
 
     public int engineSize() {
         return getRawAliases().size();

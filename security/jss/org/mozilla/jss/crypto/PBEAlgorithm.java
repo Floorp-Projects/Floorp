@@ -48,7 +48,8 @@ public class PBEAlgorithm extends KeyGenAlgorithm {
     protected PBEAlgorithm(int oidTag, String name, int validStrength,
             OBJECT_IDENTIFIER oid, EncryptionAlgorithm encAlg, int saltLength)
     {
-        super(oidTag, name, validStrength, oid, PBEKeyGenParams.class);
+        super(oidTag, name, new FixedKeyStrengthValidator(validStrength),
+            oid, PBEKeyGenParams.class);
         this.encAlg = encAlg;
         this.saltLength = saltLength;
     }

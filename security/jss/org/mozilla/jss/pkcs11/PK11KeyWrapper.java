@@ -468,6 +468,23 @@ final class PK11KeyWrapper implements KeyWrapper {
         throws TokenException, IllegalStateException,
             InvalidAlgorithmParameterException
     {
+        return unwrapSymmetric(wrapped, type, usage.getVal(), keyLen);
+    }
+
+    public SymmetricKey
+    unwrapSymmetric(byte[] wrapped, SymmetricKey.Type type, int keyLen)
+        throws TokenException, IllegalStateException,
+            InvalidAlgorithmParameterException
+    {
+        return unwrapSymmetric(wrapped, type, -1, keyLen);
+    }
+
+    private SymmetricKey
+    unwrapSymmetric(byte[] wrapped, SymmetricKey.Type type,
+        int usageEnum, int keyLen)
+        throws TokenException, IllegalStateException,
+            InvalidAlgorithmParameterException
+    {
         if( state != UNWRAP ) {
             throw new IllegalStateException();
         }
@@ -485,16 +502,16 @@ final class PK11KeyWrapper implements KeyWrapper {
 
         if( algorithm == KeyWrapAlgorithm.PLAINTEXT ) {
             return nativeUnwrapSymPlaintext(token, wrapped, algFromType(type),
-                usage.getVal() );
+                usageEnum );
         } else {
             if( symKey != null ) {
                 Assert.assert(pubKey==null && privKey==null);
                 return nativeUnwrapSymWithSym(token, symKey, wrapped, algorithm,
-                        algFromType(type), keyLen, IV, usage.getVal() );
+                        algFromType(type), keyLen, IV, usageEnum);
             } else {
                 Assert.assert(privKey!=null && pubKey==null && symKey==null);
                 return nativeUnwrapSymWithPriv(token, privKey, wrapped,
-                    algorithm, algFromType(type), keyLen, IV, usage.getVal() );
+                    algorithm, algFromType(type), keyLen, IV, usageEnum );
             }
         }
     }

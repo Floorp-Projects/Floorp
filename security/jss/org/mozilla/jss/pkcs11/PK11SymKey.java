@@ -78,6 +78,21 @@ public final class PK11SymKey implements SymmetricKey {
         throws SymmetricKey.NotExtractableException;
 
     public native KeyType getKeyType();
+
+    public String getAlgorithm() {
+        // XXX !!!
+        return "";
+    }
+
+    public byte[] getEncoded() {
+        // XXX !!!
+        return new byte[0];
+    }
+
+    public String getFormat() {
+        // XXX !!!
+        return "";
+    }
 }
 
 class SymKeyProxy extends KeyProxy {

@@ -153,4 +153,10 @@ public class Algorithm {
         SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC=29;
     protected static final short SEC_OID_RC2_CBC=30;
     protected static final short CKM_PBA_SHA1_WITH_SHA1_HMAC=31;
+
+    // AES
+    protected static final short CKM_AES_KEY_GEN=32;
+    protected static final short CKM_AES_ECB=33;
+    protected static final short CKM_AES_CBC=34;
+    protected static final short CKM_AES_CBC_PAD=35;
 }

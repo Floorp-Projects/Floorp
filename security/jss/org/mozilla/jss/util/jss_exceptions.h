@@ -78,6 +78,8 @@ PR_BEGIN_EXTERN_C
 
 #define KEY_EXISTS_EXCEPTION "org/mozilla/jss/crypto/KeyAlreadyImportedException"
 
+#define KEYSTORE_EXCEPTION "java/security/KeyStoreException"
+
 #define NICKNAME_CONFLICT_EXCEPTION "org/mozilla/jss/CryptoManager$NicknameConflictException"
 
 #define NO_SUCH_ALG_EXCEPTION "java/security/NoSuchAlgorithmException"

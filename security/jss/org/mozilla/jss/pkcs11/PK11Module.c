@@ -133,13 +133,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_jss_pkcs11_PK11Module_putTokensInVector
      **************************/
     for(i=0; i < module->slotCount; i++) {
 
-        char *slotname, *tokenname;
-        slotname = PK11_GetSlotName(module->slots[i]);
+        char *tokenname;
         tokenname = PK11_GetTokenName(module->slots[i]);
 
-        /* ignore if the slot or token has no name */
-        if( slotname!=NULL && slotname[0]!='\0' &&
-	        tokenname!=NULL && tokenname[0]!='\0' ) {
+        /* ignore if the token has no name */
+        if( tokenname!=NULL && tokenname[0]!='\0' ) {
 
             /* turn the slot into a PK11Token */
             slot = PK11_ReferenceSlot(module->slots[i]);

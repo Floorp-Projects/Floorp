@@ -43,8 +43,6 @@ PACKAGE =       org/mozilla/jss/pkcs11
 
 # These are meant to be used within Ninja only.
 PRIVATE_EXPORTS =   pk11util.h       \
-					secmodi.h        \
-					secmodti.h       \
                     $(NULL)
 
 CSRCS =                             \

@@ -35,6 +35,6 @@ CORE_DEPTH = ../../../../../..
  
 MODULE = jss
  
-NS_USE_JDK = 1
-
-DIRS = security $(NULL)
+DIRS =  security \
+        $(NULL)
+ 

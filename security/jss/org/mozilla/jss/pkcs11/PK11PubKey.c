@@ -586,6 +586,12 @@ finish:
     return encodedBA;
 }
 
+/***********************************************************************
+ *
+ * PK11PubKey.fromSPKI
+ *
+ * Generates a PK11PubKey from a DER-encoded SubjectPublicKeyInfo. 
+ */
 JNIEXPORT jobject JNICALL
 Java_org_mozilla_jss_pkcs11_PK11PubKey_fromSPKI
     (JNIEnv *env, jobject this, jbyteArray spkiBA)

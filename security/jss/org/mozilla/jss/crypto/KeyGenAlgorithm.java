@@ -42,11 +42,30 @@ import java.security.NoSuchAlgorithmException;
  */
 public class KeyGenAlgorithm extends Algorithm {
 
-    protected KeyGenAlgorithm(int oidTag, String name, int validStrength,
+    protected static interface KeyStrengthValidator {
+        public boolean isValidKeyStrength(int strength);
+    }
+
+    protected static class FixedKeyStrengthValidator
+            implements KeyStrengthValidator
+    {
+        private int strength;
+
+        public FixedKeyStrengthValidator(int strength) {
+            this.strength = strength;
+        }
+
+        public boolean isValidKeyStrength(int strength) {
+            return this.strength == strength;
+        }
+    }
+
+    protected KeyGenAlgorithm(int oidTag, String name,
+            KeyStrengthValidator keyStrengthValidator,
             OBJECT_IDENTIFIER oid, Class paramClass)
     {
         super(oidTag, name, oid, paramClass);
-        this.validStrength = validStrength;
+        this.keyStrengthValidator = keyStrengthValidator;
         if(oid!=null) {
             oidMap.put(oid, this);
         }
@@ -75,9 +94,7 @@ public class KeyGenAlgorithm extends Algorithm {
         }
     }
 
-    // The valid strength (key size in bits) for keys of this algorithm.
-    // A value of -1 means all strengths are valid (such as for RC4).
-    private int validStrength;
+    private KeyStrengthValidator keyStrengthValidator;
 
     /**
      * Returns <code>true</code> if the given strength is valid for this
@@ -86,28 +103,41 @@ public class KeyGenAlgorithm extends Algorithm {
      * of the caller to verify this.
      */
     public boolean isValidStrength(int strength) {
-        if( validStrength == -1 ) {
-            return true;
-        } else {
-            return strength == validStrength;
-        }
+        return keyStrengthValidator.isValidKeyStrength(strength);
     }
 
     //////////////////////////////////////////////////////////////
     public static final KeyGenAlgorithm
-    DES = new KeyGenAlgorithm(CKM_DES_KEY_GEN, "DES", 56, null, null);
+    DES = new KeyGenAlgorithm(CKM_DES_KEY_GEN, "DES",
+            new FixedKeyStrengthValidator(56), null, null);
 
     //////////////////////////////////////////////////////////////
     public static final KeyGenAlgorithm
-    DES3 = new KeyGenAlgorithm(CKM_DES3_KEY_GEN, "DES3", 168, null, null);
+    DES3 = new KeyGenAlgorithm(CKM_DES3_KEY_GEN, "DESede",
+            new FixedKeyStrengthValidator(168), null, null);
 
     //////////////////////////////////////////////////////////////
     public static final KeyGenAlgorithm
-    RC4 = new KeyGenAlgorithm(CKM_RC4_KEY_GEN, "RC4", -1, null, null);
+    RC4 = new KeyGenAlgorithm(CKM_RC4_KEY_GEN, "RC4",
+            new KeyStrengthValidator() {
+                public boolean isValidKeyStrength(int strength) {
+                    return true;
+                }
+            }, null, null);
 
     //////////////////////////////////////////////////////////////
     public static final KeyGenAlgorithm
     PBA_SHA1_HMAC = new KeyGenAlgorithm(
         CKM_PBA_SHA1_WITH_SHA1_HMAC,
-            "PBA/SHA1/HMAC", 160, null, PBEKeyGenParams.class );
+            "PBA/SHA1/HMAC", new FixedKeyStrengthValidator(160),
+            null, PBEKeyGenParams.class );
+
+    //////////////////////////////////////////////////////////////
+    public static final KeyGenAlgorithm
+    AES = new KeyGenAlgorithm(CKM_AES_KEY_GEN, "AES", 
+            new KeyStrengthValidator() {
+                public boolean isValidKeyStrength(int strength) {
+                    return strength==128 || strength==192 || strength==256;
+                }
+            }, null, null);
 }

@@ -36,7 +36,7 @@ package org.mozilla.jss.pkcs11;
 import org.mozilla.jss.util.NativeProxy;
 import org.mozilla.jss.util.Debug;
 
-final class TokenProxy extends NativeProxy {
+public final class TokenProxy extends NativeProxy {
         public TokenProxy(byte[] pointer) {
             super(pointer);
         }

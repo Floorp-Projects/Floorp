@@ -235,6 +235,50 @@ Java_org_mozilla_jss_CryptoManager_initializeAllNative
 		jstring ocspResponderURL,
 		jstring ocspResponderCertNickname )
 {
+    Java_org_mozilla_jss_CryptoManager_initializeAllNative2(
+        env,
+        clazz,
+        configDir,
+        certPrefix,
+        keyPrefix,
+        secmodName,
+        readOnly,
+        manuString,
+        libraryString,
+        tokString,
+        keyTokString,
+        slotString,
+        keySlotString,
+        fipsString,
+        fipsKeyString,
+		ocspCheckingEnabled,
+		ocspResponderURL,
+		ocspResponderCertNickname,
+        JNI_FALSE /*initializeJavaOnly*/ );
+}
+        
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_CryptoManager_initializeAllNative2
+    (JNIEnv *env, jclass clazz,
+        jstring configDir,
+        jstring certPrefix,
+        jstring keyPrefix,
+        jstring secmodName,
+        jboolean readOnly,
+        jstring manuString,
+        jstring libraryString,
+        jstring tokString,
+        jstring keyTokString,
+        jstring slotString,
+        jstring keySlotString,
+        jstring fipsString,
+        jstring fipsKeyString,
+		jboolean ocspCheckingEnabled,
+		jstring ocspResponderURL,
+		jstring ocspResponderCertNickname,
+        jboolean initializeJavaOnly )
+{
     SECStatus rv = SECFailure;
     JavaVM *VMs[5];
     jint numVMs;
@@ -274,6 +318,27 @@ Java_org_mozilla_jss_CryptoManager_initializeAllNative
         JSS_throw(env, ALREADY_INITIALIZED_EXCEPTION);
         goto finish;
     }
+
+    /*
+     * Save the JavaVM pointer so we can retrieve the JNI environment
+     * later. This only works if there is only one Java VM.
+	 */
+    if( (*env)->GetJavaVM(env, &JSS_javaVM) != 0 ) {
+        JSS_trace(env, JSS_TRACE_ERROR,
+                    "Unable to to access Java virtual machine");
+        PR_ASSERT(PR_FALSE);
+        goto finish;
+    }
+
+    /*
+     * The rest of the initialization (the NSS stuff) is skipped if
+     * the initializeJavaOnly flag is set.
+     */
+    if( initializeJavaOnly) {
+        initialized = PR_TRUE;
+        goto finish;
+    }
+
 
     /*
      * Set the PKCS #11 strings
@@ -361,25 +426,6 @@ Java_org_mozilla_jss_CryptoManager_initializeAllNative
 	if (rv != SECSuccess) {
 		goto finish;
 	}
-
-    /*
-     * Save the JavaVM pointer so we can retrieve the JNI environment
-     * later. This only works if there is only one Java VM.
-	 */
-    if( JNI_GetCreatedJavaVMs(VMs, 5, &numVMs) != 0) {
-        JSS_trace(env, JSS_TRACE_ERROR,
-                    "Unable to to access Java virtual machine");
-        PR_ASSERT(PR_FALSE);
-        goto finish;
-    }
-    if(numVMs != 1) {
-        char *str;
-        PR_smprintf(str, "Invalid number of Java VMs: %d", numVMs);
-        JSS_trace(env, JSS_TRACE_ERROR, str);
-        PR_smprintf_free(str);
-        PR_ASSERT(PR_FALSE);
-    }
-    JSS_javaVM = VMs[0];
 
     /*
      * Set up policy. We're always domestic now. Thanks to the US Government!

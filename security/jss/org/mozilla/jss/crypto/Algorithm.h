@@ -53,7 +53,7 @@ typedef struct JSS_AlgInfoStr {
     JSS_AlgType type;
 } JSS_AlgInfo;
 
-#define NUM_ALGS 32
+#define NUM_ALGS 36
 
 extern JSS_AlgInfo JSS_AlgTable[];
 extern CK_ULONG JSS_symkeyUsage[];

@@ -11,20 +11,17 @@ provider\.new/
 org/mozilla/jss/pkcs11/PK11DSAPrivateKey\.java
 org/mozilla/jss/provider/java/security/KeyFactorySpi1_4\.java
 org/mozilla/jss/pkix/cert/X509Certificate\.java
-org/mozilla/jss/tools/
+org/mozilla/jss/provider/java/security/.*Cipher.*
 samples/
 );
 
 @javah_classes = qw(
-org.mozilla.jss.pkcs11.PK11Token
-org.mozilla.jss.ssl.SSLSocket 
-org.mozilla.jss.ssl.SSLServerSocket 
-org.mozilla.jss.ssl.SocketBase 
+org.mozilla.jss.DatabaseCloser        
+org.mozilla.jss.CryptoManager          
 org.mozilla.jss.crypto.Algorithm        
 org.mozilla.jss.crypto.EncryptionAlgorithm      
 org.mozilla.jss.crypto.PQGParams     
-org.mozilla.jss.DatabaseCloser        
-org.mozilla.jss.CryptoManager          
+org.mozilla.jss.crypto.SecretDecoderRing
 org.mozilla.jss.pkcs11.CertProxy        
 org.mozilla.jss.pkcs11.CipherContextProxy 
 org.mozilla.jss.pkcs11.PK11Module 
@@ -38,6 +35,7 @@ org.mozilla.jss.pkcs11.PK11PubKey
 org.mozilla.jss.pkcs11.PK11SymKey      
 org.mozilla.jss.pkcs11.PK11KeyPairGenerator 
 org.mozilla.jss.pkcs11.PK11KeyGenerator
+org.mozilla.jss.pkcs11.PK11Token
 org.mozilla.jss.pkcs11.PrivateKeyProxy  
 org.mozilla.jss.pkcs11.PublicKeyProxy    
 org.mozilla.jss.pkcs11.SymKeyProxy
@@ -51,9 +49,12 @@ org.mozilla.jss.pkcs11.SigContextProxy
 org.mozilla.jss.pkcs11.PK11RSAPublicKey
 org.mozilla.jss.pkcs11.PK11DSAPublicKey
 org.mozilla.jss.pkcs11.PK11SecureRandom 
+org.mozilla.jss.provider.java.security.JSSKeyStoreSpi
+org.mozilla.jss.ssl.SSLSocket 
+org.mozilla.jss.ssl.SSLServerSocket 
+org.mozilla.jss.ssl.SocketBase 
 org.mozilla.jss.util.Debug
 org.mozilla.jss.util.Password       
-org.mozilla.jss.crypto.SecretDecoderRing
 );
 
 # setup variables
@@ -96,6 +97,7 @@ sub setup_vars {
     $javah = "$ENV{JAVA_HOME}/bin/javah";
 
     $dist_dir = $cmdline_vars{SOURCE_PREFIX};
+    $jce_jar = $ENV{JCE_JAR};
 
     $class_release_dir = $cmdline_vars{SOURCE_RELEASE_PREFIX};
     if( $ENV{BUILD_OPT} ) {
@@ -110,6 +112,8 @@ sub setup_vars {
         $debug_source_file = "org/mozilla/jss/util/Debug_debug.java";
     }
     $jni_header_dir = "$dist_dir/private/jss/_jni";
+
+    $classpath = "$jce_jar";
 }
 
 sub clean {
@@ -161,7 +165,7 @@ sub build {
     #
     ensure_dir_exists($class_dir);
     print_do("$javac $javac_opt_flag -sourcepath . -d $class_dir " .
-        join(" ",@source_list));
+        "-classpath $classpath " . join(" ",@source_list));
 
     #
     # create the JNI header files

@@ -38,9 +38,10 @@ package org.mozilla.jss.provider.java.security;
 
 import java.security.DigestException;
 import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.CryptoManager;
+import java.security.MessageDigestSpi;
 
-
-abstract class GenericMessageDigestSpi {
+abstract class GenericMessageDigestSpi extends MessageDigestSpi {
 
     private JSSMessageDigest digest;
 
@@ -51,6 +52,12 @@ abstract class GenericMessageDigestSpi {
         CryptoToken token =
             TokenSupplierManager.getTokenSupplier().getThreadToken();
         try {
+            CryptoManager cm = CryptoManager.getInstance();
+            CryptoToken ikst = cm.getInternalKeyStorageToken();
+            if( token.equals(ikst) ) {
+                // InternalKeyStorageToken doesn't support message digesting
+                token = cm.getInternalCryptoToken();
+            }
             try {
               digest = token.getDigestContext(alg);
             } catch(java.security.NoSuchAlgorithmException e) {
@@ -62,6 +69,8 @@ abstract class GenericMessageDigestSpi {
             throw new TokenRuntimeException(e.getMessage());
         } catch(DigestException e1) {
             throw new TokenRuntimeException(e1.getMessage());
+        } catch(CryptoManager.NotInitializedException e2) {
+            throw new TokenRuntimeException(e2.getMessage());
         }
     }
 

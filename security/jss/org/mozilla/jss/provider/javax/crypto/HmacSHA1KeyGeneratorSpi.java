@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,55 +36,10 @@
 
 package org.mozilla.jss.provider.java.security;
 
-import org.mozilla.jss.crypto.*;
-import java.security.KeyPair;
-import java.security.SecureRandom;
-import java.security.spec.AlgorithmParameterSpec;
-import java.security.InvalidAlgorithmParameterException;
+import org.mozilla.jss.crypto.KeyGenAlgorithm;
 
-
-abstract class GenericKeyPairGeneratorSpi
-    extends java.security.KeyPairGeneratorSpi
-{
-
-    private KeyPairGenerator kpg;
-
-    private GenericKeyPairGeneratorSpi() { super(); }
-
-    public GenericKeyPairGeneratorSpi(KeyPairAlgorithm alg) {
-        super();
-        CryptoToken token =
-            TokenSupplierManager.getTokenSupplier().getThreadToken();
-        try {
-          try {
-            kpg = token.getKeyPairGenerator(alg);
-          } catch(java.security.NoSuchAlgorithmException e) {
-            throw new UnsupportedOperationException(
-                "Token '" + token.getName() + "' does not support algorithm " +
-                alg.toString());
-          }
-        } catch(TokenException e) {
-            throw new TokenRuntimeException(e.getMessage());
-        }
+class HmacSHA1KeyGeneratorSpi extends GenericKeyGeneratorSpi {
+    public HmacSHA1KeyGeneratorSpi() {
+        super(KeyGenAlgorithm.PBA_SHA1_HMAC);
     }
-
-    public void initialize(AlgorithmParameterSpec params,
-        SecureRandom random) throws InvalidAlgorithmParameterException
-    {
-        kpg.initialize(params, random);
-    }
-
-    public void initialize(int keysize, SecureRandom random) {
-        kpg.initialize(keysize, random);
-    }
-        
-    public KeyPair generateKeyPair() {
-        kpg.temporaryPairs(true);
-      try {
-        return kpg.genKeyPair();
-      } catch(TokenException e) { 
-        throw new TokenRuntimeException(e.getMessage());
-      }
-    }
-
 }

@@ -41,6 +41,7 @@ SHARED_LIBRARY_DIRS = \
     ../org/mozilla/jss/pkcs11 \
     ../org/mozilla/jss/ssl \
     ../org/mozilla/jss/util \
+    ../org/mozilla/jss/provider/java/security \
     $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

@@ -41,7 +41,7 @@ import org.mozilla.jss.util.*;
  *
  * @see org.mozilla.jss.util.Debug
  * @see org.mozilla.jss.util.AssertionException
- * @version $Revision: 1.2 $ $Date: 2000/12/19 06:18:56 $
+ * @version $Revision: 1.3 $ $Date: 2002/04/19 22:42:05 $
  */
 public class Assert {
     /**
@@ -49,6 +49,8 @@ public class Assert {
      * throwing an AssertionException.
      *
      * @param cond The condition that is being tested.
+     * @deprecated "assert" is a keyword under JDK 1.4. Use "_assert"
+     *      instead.
      */
     public static void assert(boolean cond) {
         if(Debug.DEBUG && !cond) {
@@ -63,8 +65,36 @@ public class Assert {
      *
      * @param cond The condition that is being tested.
      * @param msg A message describing what is wrong if the condition is false.
+     * @deprecated "assert" is a keyword under JDK 1.4. Use "_assert"
+     *      instead.
      */
 	public static void assert(boolean cond, String msg) {
+		if(Debug.DEBUG && !cond) {
+			throw new org.mozilla.jss.util.AssertionException(msg);
+		}
+	}
+
+    /**
+     * Assert that a condition is true.  If it is not true, abort by
+     * throwing an AssertionException.
+     *
+     * @param cond The condition that is being tested.
+     */
+    public static void _assert(boolean cond) {
+        if(Debug.DEBUG && !cond) {
+            throw new org.mozilla.jss.util.AssertionException(
+                "assertion failure!");
+        }
+    }
+
+    /**
+     * Assert that a condition is true. If it is not true, abort by throwing
+     * an AssertionException.
+     *
+     * @param cond The condition that is being tested.
+     * @param msg A message describing what is wrong if the condition is false.
+     */
+	public static void _assert(boolean cond, String msg) {
 		if(Debug.DEBUG && !cond) {
 			throw new org.mozilla.jss.util.AssertionException(msg);
 		}
@@ -78,6 +108,15 @@ public class Assert {
     public static void notReached(String msg) {
         if(Debug.DEBUG) {
             throw new AssertionException("should not be reached: " + msg);
+        }
+    }
+
+    /**
+     * Throw an AssertionException if this statement is reached.
+     */
+    public static void notReached() {
+        if(Debug.DEBUG) {
+            throw new AssertionException();
         }
     }
 

@@ -44,6 +44,7 @@
 #include <cert.h>
 #include <certdb.h>
 #include <pk11util.h>
+#include "java_ids.h"
 
 static PRStatus
 getTokenSlotPtr(JNIEnv *env, jobject keyStoreObj, PK11SlotInfo **ptr)
@@ -172,6 +173,11 @@ traverseTokenObjects
                 ! PUBKEY_LIST_END(node, pubkList);
                 node = PUBKEY_LIST_NEXT(node) )
             {
+                if( node->key == NULL ) {
+                    /* workaround NSS bug 130699: PK11_ListPublicKeysInSlot
+                     * returns NULL if slot contains token symmetric key */
+                    continue;
+                }
                 travstat = cb(env, slot, PUBKEY, (void*) node->key, data);
                 if( travstat.status != PR_SUCCESS ) {
                     goto finish;
@@ -607,11 +613,9 @@ findKeyCallback
         switch( type ) {
           case PRIVKEY:
             cbinfo->privk = (SECKEYPrivateKey*)obj;
-            printf("Found private key with label '%s'\n", objNick);
             break;
           case SYMKEY:
             cbinfo->symk = (PK11SymKey*)obj;
-            printf("Found summetric key with label '%s'\n", objNick);
             break;
           default:
             PR_ASSERT(PR_FALSE);
@@ -796,4 +800,91 @@ finish:
         CERT_DestroyCertificate(cbinfo.cert);
     }
     return retVal;
+}
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineSetKeyEntryNative
+    (JNIEnv *env, jobject this, jstring alias, jobject keyObj,
+        jcharArray password, jobjectArray certChain)
+{
+    jclass privkClass, symkClass;
+    const char *nickname = NULL;
+    SECKEYPrivateKey *tokenPrivk=NULL;
+    PK11SymKey *tokenSymk=NULL;
+
+    if( keyObj==NULL || alias==NULL) {
+        JSS_throw(env, NULL_POINTER_EXCEPTION);
+        goto finish;
+    }
+
+    nickname = (*env)->GetStringUTFChars(env, alias, NULL);
+    if( nickname == NULL ) {
+        ASSERT_OUTOFMEM(env);
+        goto finish;
+    }
+
+    privkClass = (*env)->FindClass(env, PK11PRIVKEY_CLASS_NAME);
+    symkClass = (*env)->FindClass(env, PK11SYMKEY_CLASS_NAME);
+    if( privkClass==NULL || symkClass==NULL) {
+        ASSERT_OUTOFMEM(env);
+        goto finish;
+    }
+
+    if( (*env)->IsInstanceOf(env, keyObj, privkClass) ) {
+        SECKEYPrivateKey *privk;
+
+        if( JSS_PK11_getPrivKeyPtr(env, keyObj, &privk) != PR_SUCCESS ) {
+            JSS_throwMsg(env, KEYSTORE_EXCEPTION,
+                "Failed to extract NSS key from private key object");
+            goto finish;
+        }
+
+        tokenPrivk = PK11_ConvertSessionPrivKeyToTokenPrivKey(privk);
+        if( tokenPrivk == NULL ) {
+            JSS_throwMsg(env, KEYSTORE_EXCEPTION,
+                "Failed to copy private key to permanent token object");
+            goto finish;
+        }
+        if( PK11_SetPrivateKeyNickname(tokenPrivk, nickname) != SECSuccess ) {
+            JSS_throwMsg(env, KEYSTORE_EXCEPTION,
+                "Failed to set alias of copied private key");
+            goto finish;
+        }
+    } else if( (*env)->IsInstanceOf(env, keyObj, symkClass) ) {
+        PK11SymKey *symk;
+
+        if( JSS_PK11_getSymKeyPtr(env, keyObj, &symk) != PR_SUCCESS ) {
+            JSS_throwMsg(env, KEYSTORE_EXCEPTION,
+                "Failed to extract NSS key from symmetric key object");
+            goto finish;
+        }
+
+        if( PK11_SetSymKeyNickname(symk, nickname) != SECSuccess ) {
+            JSS_throwMsg(env, KEYSTORE_EXCEPTION,
+                "Failed to set alias of symmetric key");
+            goto finish;
+        }
+        tokenSymk = PK11_ConvertSessionSymKeyToTokenSymKey(symk);
+        if( tokenSymk == NULL ) {
+            JSS_throwMsg(env, KEYSTORE_EXCEPTION,
+                "Failed to copy symmetric key to permanent token object");
+            goto finish;
+        }
+    } else {
+        JSS_throwMsg(env, KEYSTORE_EXCEPTION,
+            "Unrecognized key type: must be JSS private key (PK11PrivKey) or"
+            " JSS symmetric key (PK11SymKey)");
+        goto finish;
+    }
+
+finish:
+    if( nickname != NULL ) {
+        (*env)->ReleaseStringUTFChars(env, alias, nickname);
+    }
+    if( tokenPrivk != NULL ) {
+        SECKEY_DestroyPrivateKey(tokenPrivk);
+    }
+    if( tokenSymk != NULL ) {
+        PK11_FreeSymKey(tokenSymk);
+    }
 }

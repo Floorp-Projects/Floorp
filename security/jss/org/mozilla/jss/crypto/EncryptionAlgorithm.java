@@ -50,20 +50,35 @@ public class EncryptionAlgorithm extends Algorithm {
         if(oid!=null) {
             oidMap.put(oid, this);
         }
+        if( name != null ) {
+            oidMap.put(name.toLowerCase(), this);
+        }
     }
 
     private int blockSize;
     private boolean padded;
 
     ///////////////////////////////////////////////////////////////////////
-    // OID mapping
+    // mapping
     ///////////////////////////////////////////////////////////////////////
     private static Hashtable oidMap = new Hashtable();
+    private static Hashtable nameMap = new Hashtable();
 
     public static EncryptionAlgorithm fromOID(OBJECT_IDENTIFIER oid)
         throws NoSuchAlgorithmException
     {
         Object alg = oidMap.get(oid);
+        if( alg == null ) {
+            throw new NoSuchAlgorithmException();
+        } else {
+            return (EncryptionAlgorithm) alg;
+        }
+    }
+
+    public static EncryptionAlgorithm fromString(String name)
+        throws NoSuchAlgorithmException
+    {
+        Object alg = nameMap.get(name.toLowerCase());
         if( alg == null ) {
             throw new NoSuchAlgorithmException();
         } else {
@@ -100,33 +115,73 @@ public class EncryptionAlgorithm extends Algorithm {
             OBJECT_IDENTIFIER.RSA_CIPHER.subBranch(4) );
 
     public static final EncryptionAlgorithm
-    DES_ECB = new EncryptionAlgorithm(SEC_OID_DES_ECB, "DES/ECB", null,
-                    8, false, OBJECT_IDENTIFIER.ALGORITHM.subBranch(6) );
+    DES_ECB = new EncryptionAlgorithm(SEC_OID_DES_ECB, "DES/ECB/NoPadding",
+        null, 8, false, OBJECT_IDENTIFIER.ALGORITHM.subBranch(6) );
 
     public static final EncryptionAlgorithm
-    DES_CBC = new EncryptionAlgorithm(SEC_OID_DES_CBC, "DES/CBC",
+    DES_CBC = new EncryptionAlgorithm(SEC_OID_DES_CBC, "DES/CBC/NoPadding",
         IVParameterSpec.class, 8, false,
         OBJECT_IDENTIFIER.ALGORITHM.subBranch(7) );
 
     public static final EncryptionAlgorithm
-    DES_CBC_PAD = new EncryptionAlgorithm(CKM_DES_CBC_PAD, "DES/CBC/Pad",
-        IVParameterSpec.class, 8, true, null); // no oid
+    DES_CBC_PAD = new EncryptionAlgorithm(CKM_DES_CBC_PAD,
+        "DES/CBC/PKCS5Padding", IVParameterSpec.class, 8, true, null); // no oid
 
     public static final EncryptionAlgorithm
-    DES3_ECB = new EncryptionAlgorithm(CKM_DES3_ECB, "DES3/ECB", null, 8,
-                    false, null); // no oid
+    DES3_ECB = new EncryptionAlgorithm(CKM_DES3_ECB, "DESede/ECB/NoPadding",
+        null, 8, false, null); // no oid
 
     public static final EncryptionAlgorithm
-    DES3_CBC = new EncryptionAlgorithm(SEC_OID_DES_EDE3_CBC, "DES3/CBC",
-        IVParameterSpec.class, 8, false,
+    DES3_CBC = new EncryptionAlgorithm(SEC_OID_DES_EDE3_CBC,
+        "DESede/CBC/NoPadding", IVParameterSpec.class, 8, false,
         OBJECT_IDENTIFIER.RSA_CIPHER.subBranch(7) );
 
     public static final EncryptionAlgorithm
-    DES3_CBC_PAD = new EncryptionAlgorithm(CKM_DES3_CBC_PAD, "DES3/CBC/Pad",
-        IVParameterSpec.class, 8, true, null); // no oid
+    DES3_CBC_PAD = new EncryptionAlgorithm(CKM_DES3_CBC_PAD,
+        "DESede/CBC/PKCS5Padding", IVParameterSpec.class, 8, true,
+        null); //no oid
 
     public static final EncryptionAlgorithm
-    RC2_CBC = new EncryptionAlgorithm(SEC_OID_RC2_CBC, "RC2/CBC",
+    RC2_CBC = new EncryptionAlgorithm(SEC_OID_RC2_CBC, "RC2/CBC/NoPadding",
         IVParameterSpec.class, 8, false,
         OBJECT_IDENTIFIER.RSA_CIPHER.subBranch(2) );
+
+    public static final OBJECT_IDENTIFIER AES_ROOT_OID = 
+        new OBJECT_IDENTIFIER( new long[] 
+            { 2, 16, 840, 1, 101, 3, 4, 1 } );
+
+    public static final EncryptionAlgorithm
+    AES_128_ECB = new EncryptionAlgorithm(CKM_AES_ECB,
+        "AES/ECB/NoPadding", null, 16, false,
+        AES_ROOT_OID.subBranch(1) );
+
+    public static final EncryptionAlgorithm
+    AES_128_CBC = new EncryptionAlgorithm(CKM_AES_CBC,
+        "AES/CBC/NoPadding", IVParameterSpec.class, 16, false,
+        AES_ROOT_OID.subBranch(2) );
+
+    public static final EncryptionAlgorithm
+    AES_192_ECB = new EncryptionAlgorithm(CKM_AES_ECB,
+        "AES/ECB/NoPadding", null, 16, false,
+        AES_ROOT_OID.subBranch(21) );
+
+    public static final EncryptionAlgorithm
+    AES_192_CBC = new EncryptionAlgorithm(CKM_AES_CBC,
+        "AES/CBC/NoPadding", IVParameterSpec.class, 16, false,
+        AES_ROOT_OID.subBranch(22) );
+
+    public static final EncryptionAlgorithm
+    AES_256_ECB = new EncryptionAlgorithm(CKM_AES_ECB,
+        "AES/ECB/NoPadding", null, 16, false,
+        AES_ROOT_OID.subBranch(41) );
+
+    public static final EncryptionAlgorithm
+    AES_256_CBC = new EncryptionAlgorithm(CKM_AES_CBC,
+        "AES/CBC/NoPadding", IVParameterSpec.class, 16, false,
+        AES_ROOT_OID.subBranch(42) );
+
+    public static final EncryptionAlgorithm
+    AES_CBC_PAD = new EncryptionAlgorithm(CKM_AES_CBC_PAD,
+        "AES/CBC/PKCS5Padding", IVParameterSpec.class, 16, true,
+        null); // no oid
 }

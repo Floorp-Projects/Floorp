@@ -131,6 +131,7 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateRSAKeyPair
     SECKEYPrivateKey *privk=NULL;
     SECKEYPublicKey *pubk=NULL;
     jobject keyPair=NULL;
+    PRBool sensitive = !temporary;
 
     PR_ASSERT(env!=NULL && this!=NULL && token!=NULL);
 
@@ -167,7 +168,7 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateRSAKeyPair
                                     (void*) &params, /* params is not a ptr */
                                     &pubk,
                                     !temporary, /* token (permanent) object */
-                                    PR_TRUE, /* sensitive */
+                                    sensitive,
                                     NULL /* default PW callback */ );
     if( privk == NULL ) {
         int errLength;
@@ -230,6 +231,7 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateDSAKeyPair
     SECItem p, q, g;
     PQGParams *params=NULL;
     jobject keyPair=NULL;
+    PRBool sensitive = !temporary; /* workaround bug 129563 */
 
     PR_ASSERT(env!=NULL && this!=NULL && token!=NULL && P!=NULL && Q!=NULL
                 && G!=NULL);
@@ -238,6 +240,7 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateDSAKeyPair
     ZERO_SECITEM(p);
     ZERO_SECITEM(q);
     ZERO_SECITEM(g);
+
 
     /**************************************************
      * Get the slot pointer
@@ -281,7 +284,7 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateDSAKeyPair
                                     (void*) params, /*params is a ptr*/
                                     &pubk,
                                     !temporary, /* token (permanent) object */
-                                    PR_TRUE, /* sensitive */
+                                    sensitive,
                                     NULL /* default password callback */);
     if( privk == NULL ) {
         JSS_throwMsg(env, TOKEN_EXCEPTION,

@@ -44,6 +44,7 @@ DIRS =	\
 	crypto	\
 	pkcs11	\
     ssl     \
+    provider \
 	$(NULL)
 
 PACKAGE =       org/mozilla/jss

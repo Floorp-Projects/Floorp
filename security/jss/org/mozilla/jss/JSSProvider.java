@@ -35,7 +35,7 @@ package org.mozilla.jss;
 public class JSSProvider extends java.security.Provider {
 
     public JSSProvider() {
-        super("Mozilla-JSS", 3.1,
+        super("Mozilla-JSS", 3.2,
                 "Provides Signature, Message Digesting, and RNG");
 
         /////////////////////////////////////////////////////////////
@@ -89,5 +89,49 @@ public class JSSProvider extends java.security.Provider {
             "org.mozilla.jss.provider.java.security.RSAKeyPairGeneratorSpi");
         put("KeyPairGenerator.DSA",
             "org.mozilla.jss.provider.java.security.DSAKeyPairGeneratorSpi");
+
+        /////////////////////////////////////////////////////////////
+        // KeyFactory
+        /////////////////////////////////////////////////////////////
+        put("KeyFactory.RSA",
+            "org.mozilla.jss.provider.java.security.KeyFactorySpi1_2");
+        put("KeyFactory.DSA",
+            "org.mozilla.jss.provider.java.security.KeyFactorySpi1_2");
+
+        /////////////////////////////////////////////////////////////
+        // KeyStore
+        /////////////////////////////////////////////////////////////
+        put("KeyStore.Mozilla-JSS",
+            "org.mozilla.jss.provider.java.security.JSSKeyStoreSpi");
+
+        /////////////////////////////////////////////////////////////
+        // AlgorithmParameters
+        /////////////////////////////////////////////////////////////
+        put("AlgorithmParameters.IvAlgorithmParameters",
+            "org.mozilla.jss.provider.java.security.IvAlgorithmParameters");
+
+        /////////////////////////////////////////////////////////////
+        // Cipher
+        /////////////////////////////////////////////////////////////
+        put("Cipher.DES",
+            "org.mozilla.jss.provider.javax.crypto.DESCipherSpi");
+        put("Cipher.DESede",
+            "org.mozilla.jss.provider.javax.crypto.DESedeCipherSpi");
+        put("Cipher.AES",
+            "org.mozilla.jss.provider.javax.crypto.AESCipherSpi");
+
+        /////////////////////////////////////////////////////////////
+        // KeyGenerator
+        /////////////////////////////////////////////////////////////
+        put("KeyGenerator.DES",
+            "org.mozilla.jss.provider.javax.crypto.DESKeyGeneratorSpi");
+        put("KeyGenerator.DESede",
+            "org.mozilla.jss.provider.javax.crypto.DESedeKeyGeneratorSpi");
+        put("KeyGenerator.AES",
+            "org.mozilla.jss.provider.javax.crypto.AESKeyGeneratorSpi");
+        put("KeyGenerator.RC4",
+            "org.mozilla.jss.provider.javax.crypto.RC4KeyGeneratorSpi");
+        put("KeyGenerator.HmacSHA1",
+            "org.mozilla.jss.provider.javax.crypto.HmacSHA1KeyGeneratorSpi");
     }
 }

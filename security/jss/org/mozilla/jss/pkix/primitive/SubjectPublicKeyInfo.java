@@ -79,12 +79,12 @@ public class SubjectPublicKeyInfo extends java.security.spec.X509EncodedKeySpec
         return subjectPublicKey;
     }
 
-    private SubjectPublicKeyInfo() { super(null);}
+    private SubjectPublicKeyInfo() { super(new byte[] {0});}
 
     public SubjectPublicKeyInfo(AlgorithmIdentifier algorithm,
         BIT_STRING subjectPublicKey)
     {
-        super( null );
+        super( new byte[] {0} ); // super constructor can't handle null
         this.algorithm = algorithm;
         this.subjectPublicKey = subjectPublicKey;
     }
@@ -92,7 +92,7 @@ public class SubjectPublicKeyInfo extends java.security.spec.X509EncodedKeySpec
     public SubjectPublicKeyInfo(PublicKey pubk)
             throws InvalidBERException, IOException
     {
-        super( null );
+        super( new byte[] {0});
         SubjectPublicKeyInfo spki = (SubjectPublicKeyInfo)
             ASN1Util.decode( getTemplate(), pubk.getEncoded() );
         algorithm = spki.algorithm;

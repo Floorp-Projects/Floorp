@@ -1,4 +1,5 @@
 #! gmake
+# 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -46,8 +47,8 @@ include $(CORE_DEPTH)/coreconf/config.mk
 #######################################################################
 # (3) Include "component" configuration information. (OPTIONAL)       #
 #######################################################################
+
 include $(CORE_DEPTH)/$(MODULE)/config/config.mk
- 
 
 #######################################################################
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
@@ -66,7 +67,10 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 #######################################################################
 
 
+
 #######################################################################
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
+
+
 

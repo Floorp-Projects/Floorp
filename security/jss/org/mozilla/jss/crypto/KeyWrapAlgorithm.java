@@ -33,19 +33,40 @@
 
 package org.mozilla.jss.crypto;
 
+import java.util.Hashtable;
+import java.security.NoSuchAlgorithmException;
+
 /**
  *
  */
 public class KeyWrapAlgorithm extends Algorithm {
     protected KeyWrapAlgorithm(int oidTag, String name, Class paramClass,
-        boolean padded) {
+        boolean padded, int blockSize) {
         super(oidTag, name);
         parameterClass = paramClass;
         this.padded = padded;
+        this.blockSize = blockSize;
+        if( name != null ) {
+            nameMap.put(name.toLowerCase(), this);
+        }
     }
 
     private Class parameterClass;
     private boolean padded;
+    private int blockSize;
+
+    private static Hashtable nameMap = new Hashtable();
+
+    public static KeyWrapAlgorithm fromString(String name)
+            throws NoSuchAlgorithmException
+    {
+        Object alg = nameMap.get( name.toLowerCase() );
+        if( alg == null ) {
+            throw new NoSuchAlgorithmException();
+        } else {
+            return (KeyWrapAlgorithm) alg;
+        }
+    }
 
     /**
      * The type of parameter that this algorithm expects.  Returns
@@ -59,33 +80,49 @@ public class KeyWrapAlgorithm extends Algorithm {
         return padded;
     }
 
+    public int getBlockSize() {
+        return blockSize;
+    }
+
     public static final KeyWrapAlgorithm
-    DES_ECB = new KeyWrapAlgorithm(SEC_OID_DES_ECB, "DES/ECB", null, false);
+    DES_ECB = new KeyWrapAlgorithm(SEC_OID_DES_ECB, "DES/ECB", null, false, 8);
 
     public static final KeyWrapAlgorithm
     DES_CBC = new KeyWrapAlgorithm(SEC_OID_DES_CBC, "DES/CBC",
-                        IVParameterSpec.class, false);
+                        IVParameterSpec.class, false, 8);
 
     public static final KeyWrapAlgorithm
     DES_CBC_PAD = new KeyWrapAlgorithm(CKM_DES_CBC_PAD, "DES/CBC/Pad",
-                        IVParameterSpec.class, true);
+                        IVParameterSpec.class, true, 8);
 
     public static final KeyWrapAlgorithm
-    DES3_ECB = new KeyWrapAlgorithm(CKM_DES3_ECB, "DES3/ECB", null, false);
+    DES3_ECB = new KeyWrapAlgorithm(CKM_DES3_ECB, "DES3/ECB", null, false, 8);
 
     public static final KeyWrapAlgorithm
     DES3_CBC = new KeyWrapAlgorithm(SEC_OID_DES_EDE3_CBC, "DES3/CBC",
-                        IVParameterSpec.class, false);
+                        IVParameterSpec.class, false, 8);
 
     public static final KeyWrapAlgorithm
     DES3_CBC_PAD = new KeyWrapAlgorithm(CKM_DES3_CBC_PAD, "DES3/CBC/Pad",
-                        IVParameterSpec.class, true);
+                        IVParameterSpec.class, true, 8);
 
     public static final KeyWrapAlgorithm
     RSA = new KeyWrapAlgorithm(SEC_OID_PKCS1_RSA_ENCRYPTION, "RSA", null,
-            false);
+            false, 0);
 
     public static final KeyWrapAlgorithm
     PLAINTEXT = new KeyWrapAlgorithm(0, "Plaintext", null,
-            false);
+            false, 0);
+
+    public static final KeyWrapAlgorithm
+    AES_ECB = new KeyWrapAlgorithm(CKM_AES_ECB, "AES/ECB/NoPadding", null,
+                    false, 16);
+
+    public static final KeyWrapAlgorithm
+    AES_CBC = new KeyWrapAlgorithm(CKM_AES_CBC, "AES/CBC/NoPadding",
+                        IVParameterSpec.class, false, 16);
+
+    public static final KeyWrapAlgorithm
+    AES_CBC_PAD = new KeyWrapAlgorithm(CKM_AES_CBC_PAD, "AES/CBC/PKCS5Padding",
+                        IVParameterSpec.class, true, 16);
 }

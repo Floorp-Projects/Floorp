@@ -435,6 +435,8 @@ finish:
     return privkObj;
 }
 
+#define ALL_SYMKEY_OPS  (CKF_ENCRYPT | CKF_DECRYPT | CKF_WRAP | CKF_UNWRAP)
+
 /***********************************************************************
  *
  * PK11KeyWrapper.nativeUnwrapSymWithSym
@@ -449,6 +451,8 @@ Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymWithSym
     CK_MECHANISM_TYPE wrappingMech, keyTypeMech;
     SECItem *wrappedKey=NULL, *iv=NULL, *param=NULL;
     jobject keyObj = NULL;
+    CK_ULONG operation;
+    CK_FLAGS flags;
 
     /* get key type */
     keyTypeMech = JSS_getPK11MechFromAlg(env, typeAlgObj);
@@ -493,8 +497,16 @@ Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymWithSym
         goto finish;
     }
 
-    symKey = PK11_UnwrapSymKey(wrappingKey, wrappingMech, param,
-        wrappedKey, keyTypeMech, JSS_symkeyUsage[usageEnum], keyLen);
+    if( usageEnum == -1 ) {
+        operation = CKA_ENCRYPT; /* doesn't matter, flags will override */
+        flags = ALL_SYMKEY_OPS;
+    } else {
+        operation = JSS_symkeyUsage[usageEnum];
+        flags = 0;
+    }
+
+    symKey = PK11_UnwrapSymKeyWithFlags(wrappingKey, wrappingMech, param,
+        wrappedKey, keyTypeMech, operation, keyLen, flags);
     if( symKey == NULL ) {
         JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to unwrap key");
         goto finish;
@@ -534,6 +546,7 @@ Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymWithPriv
     SECItem *wrappedKey=NULL, *iv=NULL, *param=NULL;
     jobject keyObj=NULL;
     SECKEYPrivateKey *wrappingKey=NULL;
+    CK_ULONG operation;
 
     /* get key type */
     keyTypeMech = JSS_getPK11MechFromAlg(env, typeAlgObj);
@@ -571,9 +584,19 @@ Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymWithPriv
         goto finish;
     }
 
+    if( usageEnum == -1 ) {
+        /*
+            !!!XXX If they didn't specify a usage, we'll assume decrypt
+            because that's the most common case, and we can't specify more
+            than one.  See bug 135255.
+         */
+        operation = CKA_DECRYPT;
+    } else {
+        operation = JSS_symkeyUsage[usageEnum];
+    }
 
     symKey = PK11_PubUnwrapSymKey(wrappingKey, wrappedKey, keyTypeMech,
-        JSS_symkeyUsage[usageEnum], keyLen);
+        operation, keyLen);
     if( symKey == NULL ) {
         JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to unwrap key");
         goto finish;
@@ -612,6 +635,8 @@ Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymPlaintext
     SECItem *wrappedKey=NULL;
     jobject keyObj = NULL;
     PK11SlotInfo *slot = NULL;
+    CK_ULONG operation;
+    CK_FLAGS flags;
 
     /* get key type */
     keyTypeMech = JSS_getPK11MechFromAlg(env, typeAlgObj);
@@ -633,9 +658,17 @@ Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymPlaintext
         goto finish;
     }
 
+    if( usageEnum == -1 ) {
+        operation = CKA_ENCRYPT;
+        flags = ALL_SYMKEY_OPS;
+    } else {
+        operation = JSS_symkeyUsage[usageEnum];
+        flags = 0;
+    }
+
     /* pull in the key */
-    symKey = PK11_ImportSymKey(slot, keyTypeMech, PK11_OriginUnwrap,
-        JSS_symkeyUsage[usageEnum], wrappedKey, NULL);
+    symKey = PK11_ImportSymKeyWithFlags(slot, keyTypeMech, PK11_OriginUnwrap,
+        operation, wrappedKey, flags, PR_FALSE /*isPerm*/, NULL);
     if( symKey == NULL ) {
         JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to unwrap key");
         goto finish;

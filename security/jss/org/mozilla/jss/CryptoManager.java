@@ -51,7 +51,7 @@ import org.mozilla.jss.CRLImportException;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.1 $ $Date: 2002/01/30 20:50:13 $ 
+ * @version $Revision: 1.2 $ $Date: 2002/04/19 22:41:24 $ 
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -423,6 +423,30 @@ public final class CryptoManager implements TokenSupplier
          * Remove the Sun crypto provider. Default is false.
          */
         public boolean removeSunProvider = false;
+
+        /**
+         * If <tt>true</tt>, none of the underlying NSS components will
+         * be initialized. Only the Java portions of JSS will be
+         * initialized. This should only be used if NSS has been initialized
+         * elsewhere.
+         * 
+         * <p>Specifically, the following components will <b>not</b> be
+         *  configured by <tt>CryptoManager.initialize</tt> if this flag is set:
+         * <ul>
+         * <li>The NSS databases.
+         * <li>OCSP checking.
+         * <li>The NSS password callback.
+         * <li>The internal PKCS #11 software token's identifier labels:
+         *      slot, token, module, and manufacturer.
+         * <li>The minimum PIN length for the software token.
+         * <li>The frequency with which the user must login to the software
+         *      token.
+         * <li>The cipher strength policy (export/domestic).
+         * </ul>
+         *
+         * <p>The default is <tt>false</tt>.
+         */
+        public boolean initializeJavaOnly = false;
     }
 
     ////////////////////////////////////////////////////
@@ -761,7 +785,7 @@ public final class CryptoManager implements TokenSupplier
 					"Must set ocspResponderCertNickname");
 			}
 		}
-        initializeAllNative(values.configDir,
+        initializeAllNative2(values.configDir,
                             values.certPrefix,
                             values.keyPrefix,
                             values.secmodName,
@@ -776,7 +800,8 @@ public final class CryptoManager implements TokenSupplier
                             values.getFIPSKeyStorageSlotDescription(),
 							values.ocspCheckingEnabled,
 							values.ocspResponderURL,
-							values.ocspResponderCertNickname
+							values.ocspResponderCertNickname,
+                            values.initializeJavaOnly
 							);
 
         instance = new CryptoManager();
@@ -803,7 +828,7 @@ public final class CryptoManager implements TokenSupplier
     }
 
     private static native void
-    initializeAllNative(String configDir,
+    initializeAllNative2(String configDir,
                         String certPrefix,
                         String keyPrefix,
                         String secmodName,
@@ -818,7 +843,8 @@ public final class CryptoManager implements TokenSupplier
                         String fipsKeyStorageSlotDescription,
 						boolean ocspCheckingEnabled,
 						String ocspResponderURL,
-						String ocspResponderCertNickname
+						String ocspResponderCertNickname,
+                        boolean initializeJavaOnly
 )
         throws KeyDatabaseException,
         CertDatabaseException,

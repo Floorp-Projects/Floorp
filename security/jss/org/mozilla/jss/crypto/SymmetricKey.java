@@ -32,7 +32,10 @@
  */
 package org.mozilla.jss.crypto;
 
-public interface SymmetricKey  {
+import java.util.Hashtable;
+import java.security.NoSuchAlgorithmException;
+
+public interface SymmetricKey {
 
     public static final Type DES = Type.DES;
     public static final Type DES3 = Type.DES3;
@@ -49,20 +52,42 @@ public interface SymmetricKey  {
 
     public static class NotExtractableException extends Exception { }
 
+    String getAlgorithm();
+
+    byte[] getEncoded();
+
+    String getFormat();
+
     public final static class Type {
         private String name;
         private Type() { }
         private Type(String name) {
             this.name = name;
+            nameMap.put(name.toLowerCase(), this);
         }
         public static final Type DES = new Type("DES");
-        public static final Type DES3 = new Type("DES3");
+        public static final Type DES3 = new Type("DESede");
         public static final Type RC4 = new Type("RC4");
         public static final Type RC2 = new Type("RC2");
         public static final Type SHA1_HMAC = new Type("SHA1_HMAC");
+        public static final Type AES = new Type("AES");
 
         public String toString() {
             return name;
+        }
+
+        // all names converted to lowercase for case insensitivity
+        private static Hashtable nameMap = new Hashtable();
+
+        public static Type fromName(String name)
+                throws NoSuchAlgorithmException
+        {
+            Object type = nameMap.get(name.toLowerCase());
+            if( type == null ) {
+                throw new NoSuchAlgorithmException();
+            } else {
+                return (Type) type;
+            }
         }
     }
 
