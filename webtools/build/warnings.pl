@@ -16,10 +16,12 @@ for $br (last_successful_builds($tree)) {
   next unless $br->{errorparser} eq 'unix';
   next unless $br->{buildname} =~ /\b(Clobber|Clbr)\b/;
 
-  print "log is $tree/$br->{logfile}\n";
+  my $log_file = "$br->{logfile}";
 
-  $fh = new FileHandle "gunzip -c ../tinderbox/$tree/$br->{logfile} |";
-  &gcc_parser($fh, $cvsroot, $tree, \%file_names);
+  warn "Parsing build log, $log_file\n";
+
+  $fh = new FileHandle "gunzip -c ../tinderbox/$tree/$log_file |";
+  &gcc_parser($fh, $cvsroot, $tree, $log_file, \%file_names);
 
   last;
 }
@@ -88,7 +90,7 @@ sub last_successful_builds {
 }
 
 sub gcc_parser {
-  my ($fh, $cvsroot, $tree, $file_hash_ref) = @_;
+  my ($fh, $cvsroot, $tree, $log_file, $file_hash_ref) = @_;
   my $dir = '';
 
   while (<$fh>) {
@@ -124,6 +126,7 @@ sub gcc_parser {
 
       $warnings{"$file:$line"} = {
          first_seen_line => $.,
+         log_file        => $log_file,
          count           => 0,
          warning_text    => $warning_text,
       };
@@ -211,7 +214,7 @@ sub print_warnings_as_html {
         # Build log link
         my $log_line = $warn_rec->{first_seen_line};
         print " (<a href='"
-          .build_url($tree, $log_line)
+          .build_url($tree, $warn_rec->{log_file}, $log_line)
             ."' target='_other'>See build log</a>)";
         print "<br>";
         
@@ -243,10 +246,10 @@ sub print_warnings_as_html {
 }
 
 sub build_url {
-  my ($tree, $linenum) = @_;
+  my ($tree, $log_file, $linenum) = @_;
 
   return "http://tinderbox.mozilla.org/showlog.cgi?tree=$tree"
-        ."&logfile="
+        ."&logfile=$log_file"
         ."&line=$linenum"
         ."&numlines=50";
 }
