@@ -22,6 +22,9 @@
 #include "nsISupportsArray.h"
 #include "nsIComponentManager.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsNeckoUtil.h"
+#endif // NECKO
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsXPComFactory.h"    /* template implementation of a XPCOM factory */
@@ -285,8 +288,7 @@ void nsAppShellService::CreateHiddenWindow()
 #ifndef NECKO
   rv = NS_NewURL(&url, "chrome://navigator/content/hiddenWindow.xul");
 #else
-  // rv = NS_NewURI(&url, "chrome://navigator/content/hiddenWindow.xul");
-  return; // temporary stopgap fix
+  rv = NS_NewURI(&url, "chrome://navigator/content/hiddenWindow.xul");
 #endif
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIWebShellWindow> newWindow;
