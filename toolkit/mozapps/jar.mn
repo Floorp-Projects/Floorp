@@ -1,0 +1,24 @@
+toolkit.jar:
+* content/mozapps/downloads/helperApps.js                   (downloads/content/helperApps.js)
+* content/mozapps/downloads/unknownContentType.xul          (downloads/content/unknownContentType.xul)
+* content/mozapps/downloads/pref-downloads.xul              (downloads/content/pref-downloads.xul)
+* content/mozapps/downloads/pref-downloads.js               (downloads/content/pref-downloads.js)
+* content/mozapps/downloads/overrideHandler.js              (downloads/content/overrideHandler.js)
+* content/mozapps/downloads/editAction.xul                  (downloads/content/editAction.xul)
+* content/mozapps/downloads/editAction.js                   (downloads/content/editAction.js)
+  content/mozapps/contents.rdf                              (contents-content.rdf)
+
+classic.jar:
+  skin/classic/mozapps/downloads/unknownContentType.css     (downloads/skin/unknownContentType.css)
+  skin/classic/mozapps/pref/pref.css                        (pref/skin/pref.css)
+  skin/classic/mozapps/pref/dot.gif                         (pref/skin/dot.gif)
+  skin/classic/mozapps/pref/check.gif                       (pref/skin/check.gif)
+  skin/classic/mozapps/contents.rdf                         (contents-skin.rdf)
+
+en-US.jar:
+* locale/en-US/mozapps/downloads/unknownContentType.properties (downloads/locale/unknownContentType.properties)
+* locale/en-US/mozapps/downloads/unknownContentType.dtd     (downloads/locale/unknownContentType.dtd)
+  locale/en-US/mozapps/downloads/pref-downloads.dtd         (downloads/locale/pref-downloads.dtd)
+  locale/en-US/mozapps/downloads/editAction.dtd             (downloads/locale/editAction.dtd)
+  locale/en-US/mozapps/contents.rdf                         (contents-locale.rdf)
+
