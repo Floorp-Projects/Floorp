@@ -111,9 +111,13 @@ void nsSpecialFileSpec::operator = (Type aType)
 	#else
         case App_PrefsDirectory30:
         case App_PrefsDirectory40:
-        case App_PrefsDirectory50:
             NS_NOTYETIMPLEMENTED("Write me!");
             break;    
+        case App_PrefsDirectory50:
+	        {
+	            *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+	            break;
+	        }
 	#endif
         
         case App_UserProfileDirectory30:
