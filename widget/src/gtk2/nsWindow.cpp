@@ -2108,6 +2108,17 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 
         // and the drawing area
         mDrawingarea = moz_drawingarea_new(nsnull, mContainer);
+
+        if (mWindowType == eWindowType_popup) {
+            // gdk does not automatically set the cursor for "temporary"
+            // windows, which are what gtk uses for popups.
+
+            mCursor = eCursor_wait; // force SetCursor to actually set the
+                                    // cursor, even though our internal state
+                                    // indicates that we already have the
+                                    // standard cursor.
+            SetCursor(eCursor_standard);
+        }
     }
         break;
     case eWindowType_child: {
