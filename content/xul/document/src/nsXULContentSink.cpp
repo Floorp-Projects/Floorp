@@ -105,6 +105,8 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentUtils.h"
 #include "nsAttrName.h"
+#include "nsXMLContentSink.h"
+#include "nsLayoutAtoms.h"
 
 static const char kNameSpaceSeparator = ':';
 
@@ -695,31 +697,18 @@ XULContentSinkImpl::NormalizeAttributeString(const nsAFlatString& aText,
 {
     PRInt32 nameSpaceID = kNameSpaceID_None;
 
-    nsAFlatString::const_iterator start, end;
-    aText.BeginReading(start);
-    aText.EndReading(end);
+    nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
 
-    nsAFlatString::const_iterator colon(start);
+    nsXMLContentSink::SplitXMLName(aText,
+                                   getter_AddRefs(nameSpacePrefix),
+                                   getter_AddRefs(nameAtom));
 
-    nsCOMPtr<nsIAtom> prefix;
-
-    if (!FindCharInReadable(kNameSpaceSeparator, colon, end)) {
-        nsCOMPtr<nsIAtom> atom = do_GetAtom(aText);
-        NS_ENSURE_TRUE(atom, NS_ERROR_OUT_OF_MEMORY);
-
-        aName.SetTo(atom);
-
-        return NS_OK;
-    }
-
-    if (start != colon) {
-        prefix = do_GetAtom(Substring(start, colon));
-
+    if (nameSpacePrefix) {
         nsCOMPtr<nsINameSpace> ns;
         GetTopNameSpace(address_of(ns));
 
         if (ns) {
-            ns->FindNameSpaceID(prefix, &nameSpaceID);
+            ns->FindNameSpaceID(nameSpacePrefix, &nameSpaceID);
 
             if (nameSpaceID == kNameSpaceID_Unknown) {
                 NS_WARNING("Undeclared prefix used in attribute name.");
@@ -729,12 +718,13 @@ XULContentSinkImpl::NormalizeAttributeString(const nsAFlatString& aText,
         } else {
             NS_WARNING("Undeclared prefix used in attribute name.");
         }
-
-        ++colon; // Skip over the ':'
+    } else if (nameAtom == nsLayoutAtoms::xmlnsNameSpace) {
+        nameSpaceID = kNameSpaceID_XMLNS;
     }
-
+    // else use kNameSpaceID_None
+        
     nsCOMPtr<nsINodeInfo> ni;
-    nsresult rv = mNodeInfoManager->GetNodeInfo(Substring(colon, end), prefix,
+    nsresult rv = mNodeInfoManager->GetNodeInfo(nameAtom, nameSpacePrefix,
                                                 nameSpaceID,
                                                 getter_AddRefs(ni));
     NS_ENSURE_SUCCESS(rv, rv);

@@ -91,6 +91,8 @@ public:
   // nsITransformObserver
   NS_IMETHOD OnDocumentCreated(nsIDOMDocument *aResultDocument);
   NS_IMETHOD OnTransformDone(nsresult aResult, nsIDOMDocument *aResultDocument);
+  static void SplitXMLName(const nsAFlatString& aString, nsIAtom **aPrefix,
+                           nsIAtom **aTagName);
 
 protected:
   void StartLayout();
@@ -116,8 +118,6 @@ protected:
 
   nsresult AddContentAsLeaf(nsIContent *aContent);
 
-  static void SplitXMLName(const nsAFlatString& aString, nsIAtom **aPrefix,
-                           nsIAtom **aTagName);
   PRInt32 GetNameSpaceId(nsIAtom* aPrefix);
   already_AddRefed<nsINameSpace> PopNameSpaces();
 
