@@ -9,6 +9,7 @@
  */
 
 #include <typeinfo>
+#include <ctype.h>
 #include <Processes.h>
 
 extern "C" const char* getTypeName(void* ptr);
@@ -49,7 +50,10 @@ const char* getTypeName(void* ptr)
 	void** vt = *(void***)ptr;
 	if (space.contains(vt) && space.contains(*vt)) {
 		IUnknown* u = static_cast<IUnknown*>(ptr);
-		return typeid(*u).name();
+		const char* type = typeid(*u).name();
+        // make sure it looks like a C++ identifier.
+		if (type && (isalnum(type[0]) || type[0] == '_'))
+		    return type;
 	}
 	return "void*";
 }
