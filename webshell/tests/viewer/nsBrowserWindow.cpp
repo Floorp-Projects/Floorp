@@ -33,7 +33,6 @@
 #include "nsIButton.h"
 #include "nsIImageGroup.h"
 #include "nsITimer.h"
-#include "nsIThrobber.h"
 #include "nsIDOMDocument.h"
 #include "nsIURL.h"
 #include "nsIFileWidget.h"
@@ -57,6 +56,7 @@
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
 #include "nsILayoutDebugger.h"
+#include "nsThrobber.h"
 
 #include "nsXIFDTD.h"
 #include "nsIParser.h"
@@ -147,7 +147,6 @@ static NS_DEFINE_CID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
 static NS_DEFINE_CID(kButtonCID, NS_BUTTON_CID);
 static NS_DEFINE_CID(kFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kTextFieldCID, NS_TEXTFIELD_CID);
-static NS_DEFINE_CID(kThrobberCID, NS_THROBBER_CID);
 static NS_DEFINE_CID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_CID(kWindowCID, NS_WINDOW_CID);
 static NS_DEFINE_CID(kDialogCID, NS_DIALOG_CID);
@@ -165,7 +164,6 @@ static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
-static NS_DEFINE_IID(kIThrobberIID, NS_ITHROBBER_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
@@ -1367,11 +1365,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   // Create and place throbber
   r.SetRect(aWidth - THROBBER_WIDTH, 0,
 	    THROBBER_WIDTH, THROBBER_HEIGHT);
-  rv = nsComponentManager::CreateInstance(kThrobberCID, nsnull, kIThrobberIID,
-				    (void**)&mThrobber);
-  if (NS_OK != rv) {
-    return rv;
-  }
+  mThrobber = nsThrobber::NewThrobber();
   nsString throbberURL(THROBBER_AT);
   mThrobber->Init(mWindow, r, throbberURL, THROB_NUM);
   mThrobber->Show();

@@ -47,7 +47,7 @@ class nsICheckButton;
 class nsIRadioButton;
 class nsITextWidget;
 class nsIButton;
-class nsIThrobber;
+class nsThrobber;
 class nsViewerApp;
 class nsIDocumentViewer;
 class nsIPresContext;
@@ -243,7 +243,7 @@ public:
   nsITextWidget* mLocation;
   nsIButton* mBack;
   nsIButton* mForward;
-  nsIThrobber* mThrobber;
+  nsThrobber* mThrobber;
   
   // "Status bar"
   nsITextWidget* mStatus;
