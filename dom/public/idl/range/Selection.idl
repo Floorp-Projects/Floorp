@@ -35,4 +35,6 @@
 		void		removeSelectionListener(in SelectionListener listenerToRemove);
 		
 		noscript xpidl nsIEnumerator    getEnumerator();
+
+                DOMString       toString();
 };
