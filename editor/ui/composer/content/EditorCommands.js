@@ -1407,7 +1407,7 @@ function initFontStyleMenu(menuPopup)
 //--------------------------------------------------------------------
 function onButtonUpdate(button, commmandID)
 {
-dump(" === onButtonUpdate called\n");
+// dump(" === onButtonUpdate called\n");
   var commandNode = document.getElementById(commmandID);
   var state = commandNode.getAttribute("state");
 
