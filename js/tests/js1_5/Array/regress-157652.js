@@ -50,21 +50,25 @@ printStatus(summary);
  * As of 2002-08-13, the JS shell runs out of memory
  * when trying to sort such large arrays.
  *
- * We only want to test that we don't CRASH on the sorts.
- * We'll be happy if we get the JS "out of memory" error,
- * which in SpiderMonkey terminates the test with exit code 3.
+ * We only want to test that we don't CRASH on the sort.
+ * We'll be happy if we get the JS "out of memory" error.
+ * Note this terminates the test with exit code 1 in Rhino
+ * and exit code 3 in SpiderMonkey.
  *
- * Therefore we include |expectExitCode(3)| below.
+ * Therefore we include |expectExitCode(n = 1,3)| below.
  *
  * The only problem will arise when the JS shell ever DOES
- * have enough memory to to the sorts. Then this test will
+ * have enough memory to do the sort. Then this test will
  * terminate with the normal exit code 0 and fail.
  *
  * Right now, I can't see any other way to do this, because
  * "out of memory" is not a catchable error, i.e. it cannot
  * be caught with try...catch.
  */
-expectExitCode(3);
+if (inRhino())
+  expectExitCode(1);
+else
+  expectExitCode(3);
 
 
 /*
