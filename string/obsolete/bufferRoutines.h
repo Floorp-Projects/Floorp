@@ -60,15 +60,6 @@
 
 #include "nsCRT.h"
 
-#ifndef XPCOM_STANDALONE
-#if !defined(RICKG_TESTBED) && !defined(STANDALONE_STRING_TESTS)
-#include "nsUnicharUtilCIID.h"
-#include "nsIServiceManager.h"
-#include "nsICaseConversion.h"
-#include "nsIObserver.h"
-#include "nsIObserverService.h"
-#endif
-#endif /* XPCOM_STANDALONE */
 
 #define KSHIFTLEFT  (0)
 #define KSHIFTRIGHT (1)
@@ -154,85 +145,6 @@ static CTraceFile gTrace;
 #endif //XP_UNIX
 
 #endif
-
-#ifndef XPCOM_STANDALONE
-
-// XXX bug: this doesn't map 0x80 to 0x9f properly
-static const PRUnichar kIsoLatin1ToUCS2_2[256] = {
-    0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
-   16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-   32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
-   48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
-   64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
-   80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
-   96, 97, 98, 99,100,101,102,103,104,105,106,107,108,109,110,111,
-  112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,
-  128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,
-  144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,
-  160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,
-  176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,
-  192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,
-  208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,
-  224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,
-  240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255
-};
-
-#if !defined(RICKG_TESTBED) && !defined(STANDALONE_STRING_TESTS)
-class HandleCaseConversionShutdown : public nsIObserver {
-public :
-   HandleCaseConversionShutdown(void) { NS_INIT_REFCNT(); }
-   virtual ~HandleCaseConversionShutdown(void) {}
-   NS_DECL_ISUPPORTS
-   NS_DECL_NSIOBSERVER
-};
-
-static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
-static nsICaseConversion * gCaseConv = 0; 
-
-NS_IMPL_ISUPPORTS1(HandleCaseConversionShutdown, nsIObserver);
-
-NS_IMETHODIMP
-HandleCaseConversionShutdown::Observe(nsISupports *aSubject,
-                                      const char* aTopic,
-                                      const PRUnichar *aData)
-{
-    NS_IF_RELEASE(gCaseConv);
-    return NS_OK;
-}
-
-static nsresult
-NS_InitCaseConversion()
-{
-  if (gCaseConv) return NS_OK;
-  
-  nsresult rv;
-    
-  rv = nsServiceManager::GetService(kUnicharUtilCID,
-                                    NS_GET_IID(nsICaseConversion),
-                                    (nsISupports**) &gCaseConv);
-
-  // try to release it on shutdown
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIObserverService> obs =
-      do_GetService("@mozilla.org/observer-service;1", &rv);
-    if (NS_SUCCEEDED(rv)) {
-
-      HandleCaseConversionShutdown* observer =
-        new HandleCaseConversionShutdown();
-
-      if (observer)
-        obs->AddObserver(observer, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
-    }
-  }
-  return NS_OK;
-}
-
-#endif
-#endif /* XPCOM_STANDALONE */
-
-inline PRUnichar GetUnicharAt(const char* aString,PRUint32 anIndex) {
-  return ((PRUnichar*)aString)[anIndex];
-}
 
 inline PRUnichar GetCharAt(const char* aString,PRUint32 anIndex) {
   return (PRUnichar)aString[anIndex];
@@ -710,26 +622,33 @@ PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCoun
  */
 static PRInt32 Compare2To1(const PRUnichar* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
 PRInt32 Compare2To1(const PRUnichar* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
-#ifndef XPCOM_STANDALONE
   const PRUnichar* s1 = aStr1;
   const char *s2 = aStr2;
-  
-  if (aIgnoreCase && NS_FAILED(NS_InitCaseConversion()))
-      aIgnoreCase=PR_FALSE;
   
   if (aStr1 && aStr2) {
     if (aCount != 0) {
       do {
+
         PRUnichar c1 = *s1++;
-        PRUnichar c2 = kIsoLatin1ToUCS2_2[*(const unsigned char*)s2++];
+        PRUnichar c2 = PRUnichar((unsigned char)*s2++);
         
         if (c1 != c2) {
-          if (aIgnoreCase) {
+#ifdef NS_DEBUG
+          // we won't warn on c1>=128 (the 2-byte value) because often
+          // it is just fine to compare an constant, ascii value (i.e. "body")
+          // against some non-ascii value (i.e. a unicode string that
+          // was downloaded from a web page)
+          if (aIgnoreCase && c2>=128)
+            NS_WARNING("got a non-ASCII string, but we can't do an accurate case conversion!");
+#endif
+
+          // can't do case conversion on characters out of our range
+          if (aIgnoreCase && c1<128 && c2<128) {
+
+              c1 = nsCRT::ToLower(char(c1));
+              c2 = nsCRT::ToLower(char(c2));
             
-            // case insensitive comparison
-            gCaseConv->ToLower(c1, &c1);
-            gCaseConv->ToLower(c2, &c2);
-            if (c1 == c2) continue;
+              if (c1 == c2) continue;
           }
 
           if (c1 < c2) return -1;
@@ -738,9 +657,6 @@ PRInt32 Compare2To1(const PRUnichar* aStr1,const char* aStr2,PRUint32 aCount,PRB
       } while (--aCount);
     }
   }
-#else
-  NS_ERROR("call not supported in XPCOM_STANDALONE");
-#endif
   return 0;
 }
 
