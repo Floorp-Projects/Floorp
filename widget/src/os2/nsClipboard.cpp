@@ -406,7 +406,7 @@ ULONG nsClipboard::GetFormatID(const char *aMimeStr)
 // nsIObserver
 NS_IMETHODIMP
 nsClipboard::Observe(nsISupports *aSubject, const char *aTopic,
-                     PRUnichar *aData)
+                     const PRUnichar *aData)
 {
   // This will be called on shutdown.
 
