@@ -492,7 +492,9 @@ EncodeSimpleValue(nsISOAPEncoding * aEncoding,
     rc = aSchemaType->GetTargetNamespace(typeNS);
     if (NS_FAILED(rc))
       return rc;
-    needType = !(typeName.Equals(kAnyTypeSchemaType) && typeNS.Equals(nsSOAPUtils::kXSURI));
+    needType = (!typeName.IsEmpty()                   &&
+                !(typeName.Equals(kAnyTypeSchemaType) && 
+                typeNS.Equals(nsSOAPUtils::kXSURI)));
   }
   nsAutoString name;      //  First choose the appropriate name and namespace for the element.
   nsAutoString ns;

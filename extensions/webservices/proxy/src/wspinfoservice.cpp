@@ -443,15 +443,27 @@ FindOrConstructInterface(nsIInterfaceInfoSuperManager* iism,
   nsAutoString ns;
   nsCOMPtr<nsIGenericInterfaceInfo> newInfo;
   nsID tempID;
+  PRBool haveUniqueID = PR_FALSE;
   
   rv = aComplexType->GetName(name);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = aComplexType->GetTargetNamespace(ns);
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (name.IsEmpty()) {
+    // Fabricate a unique name for anonymous type.
+    // Bug 199555
+    ::NewUniqueID(&tempID);
+    nsXPIDLCString idStr;
+    idStr += tempID.ToString();
+    name.AssignWithConversion(idStr);
+    haveUniqueID = PR_TRUE;
+  }
+  else {
+   rv = aComplexType->GetTargetNamespace(ns);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   BuildInterfaceName(qualifier, name, ns, qualifiedName);
@@ -465,7 +477,8 @@ FindOrConstructInterface(nsIInterfaceInfoSuperManager* iism,
 
   // Need to create the interface.
 
-  ::NewUniqueID(&tempID);
+  if (!haveUniqueID)
+    ::NewUniqueID(&tempID);
   rv = aSet->CreateAndAppendInterface(qualifiedName.get(), tempID,
                                       iidx.Get(IIDX::IDX_nsISupports),
                                       XPT_ID_SCRIPTABLE,
