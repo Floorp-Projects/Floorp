@@ -835,20 +835,22 @@ private:
 
     NS_IMETHOD
     OnDataAvailable(nsIChannel *aChannel, nsISupports *aContext,
-                    nsIInputStream *aStream, PRUint32 aSourceOffset, PRUint32 aCount) {
-        return mListener->OnDataAvailable(aChannel, aContext, aStream, aSourceOffset, aCount);
+                    nsIInputStream *aStream, PRUint32 aSourceOffset, 
+                    PRUint32 aCount) 
+    {
+        return mListener->OnDataAvailable(mChannel, aContext, 
+                                          aStream, aSourceOffset, aCount);
     }
 
     NS_IMETHOD
     OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
-        return mListener->OnStartRequest(aChannel, aContext);
+        return mListener->OnStartRequest(mChannel, aContext);
     }
 
     NS_IMETHOD
     OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
                   nsresult aStatus, const PRUnichar *aErrorMsg) {
-        mChannel->ResponseCompleted(0, aStatus, aErrorMsg);
-        return mListener->OnStopRequest(aChannel, aContext, aStatus, aErrorMsg);
+        return mChannel->ResponseCompleted(nsnull, mListener, aStatus, aErrorMsg);
     }
 
 protected:
@@ -918,7 +920,7 @@ nsHTTPChannel::ReadFromCache(PRUint32 aStartPosition, PRInt32 aReadCount)
                                  mResponseContext, listener);
     NS_RELEASE(listener);
     if (NS_FAILED(rv)) {
-        ResponseCompleted(0, rv, 0);
+        ResponseCompleted(0, nsnull, rv, 0);
     }
     return rv;
 }
@@ -1097,7 +1099,7 @@ nsHTTPChannel::Open(void)
     }
     if (NS_FAILED(rv)) {
       // Unable to create a transport...  End the request...
-      (void) ResponseCompleted(nsnull, rv, nsnull);
+      (void) ResponseCompleted(nsnull, mResponseDataListener, rv, nsnull);
       return rv;
     }
 
@@ -1105,7 +1107,7 @@ nsHTTPChannel::Open(void)
     rv = transport->SetNotificationCallbacks(this);
     if (NS_FAILED(rv)) {
       // Unable to create a transport...  End the request...
-      (void) ResponseCompleted(nsnull, rv, nsnull);
+      (void) ResponseCompleted(nsnull, mResponseDataListener, rv, nsnull);
       return rv;
     }
 
@@ -1242,10 +1244,46 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
 
 
 nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport, 
+                                          nsIStreamListener *aListener,
                                           nsresult aStatus,
                                           const PRUnichar* aMsg)
 {
   nsresult rv = NS_OK;
+
+  //
+  // First:
+  //
+  // Call the consumer OnStopRequest(...) to end the request...
+  if (aListener) {
+    rv = aListener->OnStopRequest(this, mResponseContext, aStatus, aMsg);
+
+    if (NS_FAILED(rv)) {
+      PR_LOG(gHTTPLog, PR_LOG_ERROR, 
+             ("nsHTTPChannel::OnStopRequest(...) [this=%x]."
+              "\tOnStopRequest to consumer failed! Status:%x\n",
+              this, rv));
+    }
+  }
+
+  // Release the transport...
+  if (aTransport) {
+    (void)mHandler->ReleaseTransport(aTransport);
+  }
+
+  //
+  // After the consumer has been notified, remove the channel from its 
+  // load group...  This will trigger an OnStopRequest from the load group.
+  //
+  if (mLoadGroup) {
+    (void)mLoadGroup->RemoveChannel(this, nsnull, aStatus, nsnull);
+  }
+
+  //
+  // Finally, notify the OpenObserver that the request has completed.
+  //
+  if (mOpenObserver) {
+      (void) mOpenObserver->OnStopRequest(this, mOpenContext, aStatus, aMsg);
+  }
 
   // Null out pointers that are no longer needed...
 
@@ -1255,21 +1293,6 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport,
 
   mResponseDataListener = 0;
   NS_IF_RELEASE(mCachedResponse);
-
-  // Release the transport...
-  if (aTransport) {
-    (void)mHandler->ReleaseTransport(aTransport);
-  }
-
-  // Remove the channel from its load group...
-  if (mLoadGroup) {
-    (void)mLoadGroup->RemoveChannel(this, nsnull, aStatus, nsnull);
-  }
-
-  if (mOpenObserver) {
-      rv = mOpenObserver->OnStopRequest(this, mOpenContext, aStatus, aMsg);
-      if (NS_FAILED(rv)) return rv;
-  }
 
   return rv;
 }
@@ -1293,6 +1316,28 @@ nsresult nsHTTPChannel::GetResponseContext(nsISupports** aContext)
 
   return NS_ERROR_NULL_POINTER;
 }
+
+
+nsresult nsHTTPChannel::Abort()
+{
+  // Disconnect the consumer from this response listener...  
+  // This allows the entity that follows to be discarded 
+  // without notifying the consumer...
+  if (mRawResponseListener) {
+    mRawResponseListener->Abort();
+  }
+
+  // Null out pointers that are no longer needed...
+  //
+  // This will prevent the OnStopRequest(...) notification from being fired
+  // for the original URL...
+  //
+  mResponseDataListener = 0;
+  mOpenObserver = 0;
+
+  return NS_OK;
+}
+
 
 nsresult nsHTTPChannel::OnHeadersAvailable()
 {
@@ -1582,8 +1627,9 @@ nsHTTPChannel::ProcessStatusCode(void)
         if ((statusCode == 200) || (statusCode == 203)) {
             nsCOMPtr<nsIStreamListener> listener2;
             CacheReceivedResponse(listener, getter_AddRefs(listener2));
-            if (listener2)
+            if (listener2) {
                 listener = listener2;
+            }
         }
 
         break;
@@ -1607,8 +1653,9 @@ nsHTTPChannel::ProcessStatusCode(void)
         else if ((statusCode == 300) || (statusCode == 301)) {
             nsCOMPtr<nsIStreamListener> listener2;
             CacheReceivedResponse(listener, getter_AddRefs(listener2));
-            if (listener2)
+            if (listener2) {
                 listener = listener2;
+            }
         }
 
         rv = ProcessRedirection(statusCode);
@@ -1645,9 +1692,12 @@ nsHTTPChannel::ProcessStatusCode(void)
         break;
     }
 
-    if (mRawResponseListener)
+    // If mResponseDataListener is null this means that the response has been
+    // aborted...  So, do not update the response listener because this
+    // is being discarded...
+    if (mResponseDataListener && mRawResponseListener) {
         mRawResponseListener->SetResponseDataListener(listener);
-
+    }
     return rv;
 }
 
@@ -1656,8 +1706,11 @@ nsHTTPChannel::ProcessNotModifiedResponse(nsIStreamListener *aListener)
 {
     nsresult rv;
     NS_ASSERTION(!mCachedContentIsValid, "We should never have cached a 304 response");
-    
-    mRawResponseListener->Abort();
+
+    // Abort the current response...  This will disconnect the consumer from
+    // the response listener...  Thus allowing the entity that follows to
+    // be discarded without notifying the consumer...
+    Abort();
 
     // Fake it so that HTTP headers come from cached versions
     SetResponse(mCachedResponse);
@@ -1684,13 +1737,12 @@ nsHTTPChannel::ProcessRedirection(PRInt32 aStatusCode)
       nsCOMPtr<nsIChannel> channel;
 
       rv = Redirect(location, getter_AddRefs(channel));
+      if (NS_FAILED(rv)) return rv;
       
-      // Disconnect the consumer from this response listener...  
-      // This allows the entity that follows to be discarded 
-      // without notifying the consumer...
-      if (NS_SUCCEEDED(rv) && mRawResponseListener) {
-          mRawResponseListener->Abort();
-      }
+      // Abort the current response...  This will disconnect the consumer from
+      // the response listener...  Thus allowing the entity that follows to
+      // be discarded without notifying the consumer...
+      Abort();
   }
   return rv;
 }
@@ -1719,19 +1771,10 @@ nsHTTPChannel::ProcessAuthentication(PRInt32 aStatusCode)
     if (NS_FAILED(rv = Authenticate(challenge, getter_AddRefs(channel))))
         return rv;
 
-    // Disconnect the consumer from this response listener...  
-    // This allows the entity that follows to be discarded 
-    // without notifying the consumer...
-    if (mRawResponseListener)
-        mRawResponseListener->Abort();
-
-    // Null out pointers that are no longer needed...
-    //
-    // This will prevent the OnStopRequest(...) notification from being fired
-    // for the original URL...
-    //
-    mResponseDataListener = 0;
-    mOpenObserver = 0;
+    // Abort the current response...  This will disconnect the consumer from
+    // the response listener...  Thus allowing the entity that follows to
+    // be discarded without notifying the consumer...
+    Abort();
 
     return rv;
 }

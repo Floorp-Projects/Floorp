@@ -63,7 +63,7 @@ public:
     NS_DECL_NSISTREAMLISTENER
 
     nsresult FireSingleOnData(nsIStreamListener *aListener, nsISupports *aContext);
-    void     Abort() { mAborted = PR_TRUE; }
+    nsresult Abort();
     void     SetResponseDataListener(nsIStreamListener *aListener) {
       mResponseDataListener = aListener;
     }
@@ -86,7 +86,6 @@ protected:
     nsHTTPResponse*             mResponse;
     PRBool              	      mFirstLineParsed;
     PRBool              	      mHeadersDone;
-    PRBool                      mAborted;
 
     nsCOMPtr<nsIInputStream>    mDataStream;
     PRUint32                    mBytesReceived; 
