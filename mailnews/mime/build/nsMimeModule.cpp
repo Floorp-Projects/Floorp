@@ -106,6 +106,14 @@ void nsMimeModule::Shutdown()
     mMimeHeadersFactory = null_nsCOMPtr();
 }
 
+// Destructor for stream converter
+extern "C" void comi18n_destructor();
+static NS_IMETHODIMP streamConverterDestructor()
+{
+  comi18n_destructor();
+  return NS_OK;
+}
+
 // Create a factory object for creating instances of aClass.
 NS_IMETHODIMP nsMimeModule::GetClassObject(nsIComponentManager *aCompMgr,
                                const nsCID& aClass,
@@ -149,6 +157,7 @@ NS_IMETHODIMP nsMimeModule::GetClassObject(nsIComponentManager *aCompMgr,
         if (!mStreamConverterFactory)
             rv = NS_NewGenericFactory(getter_AddRefs(mStreamConverterFactory), &nsStreamConverterConstructor);
         fact = mStreamConverterFactory;
+        fact->SetDestructor(streamConverterDestructor);
     }
     else if (aClass.Equals(kCMsgHeaderParserCID)) 
     {
