@@ -228,7 +228,7 @@ private:
     // local methods
     nsresult    RealizeFont      (void);
     nsresult    CacheFontMetrics (void);
-    nsFontXft  *FindFont         (PRUnichar);
+    nsFontXft  *FindFont         (PRUint32);
     void        SetupFCPattern   (void);
     void        DoMatch          (PRBool aMatchAll);
 
