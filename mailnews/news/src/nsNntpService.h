@@ -23,6 +23,7 @@
 #include "nsIMsgMessageService.h"
 #include "nsINntpIncomingServer.h"
 #include "nsIFileSpec.h"
+#include "MailNewsTypes.h"
 
 class nsIURL;
 class nsIUrlListener;
@@ -35,7 +36,7 @@ public:
   ////////////////////////////////////////////////////////////////////////////////////////
   NS_IMETHOD PostMessage(nsFilePath &pathToFile, const char *subject, const char *newsgroup, nsIUrlListener * aUrlListener, nsIURL **_retval);
 
-  NS_IMETHOD RunNewsUrl (nsString& urlString, nsISupports * aConsumer, nsIUrlListener * aUrlListener, nsIURL **_retval);
+  NS_IMETHOD RunNewsUrl (nsString& urlString, nsString& newsgroupName, nsMsgKey aKey, nsISupports * aConsumer, nsIUrlListener * aUrlListener, nsIURL **_retval);
 
   NS_IMETHOD GetNewNews(nsINntpIncomingServer *nntpServer, const char *uri, nsIUrlListener * aUrlListener, nsIURL **_retval);
 
@@ -56,8 +57,11 @@ public:
   // nsNntpService
   nsNntpService();
   virtual ~nsNntpService();
-  nsresult ConvertNewsMessageURI2NewsURI(const char *messageURI, nsString &newsURI);
-  
+  nsresult ConvertNewsMessageURI2NewsURI(const char *messageURI,
+                                         nsString &newsURI,
+                                         nsString &newsgroupName,
+                                         nsMsgKey *aKey);
+
   NS_DECL_ISUPPORTS  
 
 };

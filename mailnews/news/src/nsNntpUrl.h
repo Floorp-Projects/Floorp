@@ -81,7 +81,12 @@ public:
     NS_IMETHOD GetMessageToPost(nsINNTPNewsgroupPost **post);
     
     NS_IMETHOD GetFilePath(const nsFileSpec ** aFilePath);
-
+    
+    NS_IMETHOD GetMessageHeader(nsIMsgDBHdr ** aMsgHdr);
+    
+    NS_IMETHOD SetMessageKey(nsMsgKey aKey);
+    NS_IMETHOD SetNewsgroupName(char *aNewsgroupName);
+     
 	// from nsIMsgMailNewsUrl:
 	NS_IMETHOD SetUrlState(PRBool aRunningUrl, nsresult aExitCode);
 	NS_IMETHOD GetUrlState(PRBool * aRunningUrl);
@@ -135,7 +140,9 @@ protected:
 	nsINNTPNewsgroup		* m_newsgroup;
 	nsIMsgOfflineNewsState	* m_offlineNews;
 	nsINNTPNewsgroupList	* m_newsgroupList;
-
+    nsMsgKey	              m_messageKey;
+    char *                    m_newsgroupName;
+    
 	void ReconstructSpec(void);
 };
 

@@ -32,12 +32,15 @@ interface nsISupportsArray;
 #include "nsString.h"
 %}
 
+/* sspitzer:  TODO use MailNewsTypes.idl or MailNewsTypes.h */
+typedef unsigned long nsMsgKey; 
+
 [scriptable, uuid(4C9F90E0-E19B-11d2-806E-006008128C4E)]
 interface nsINntpService : nsISupports {
 
   nsIURL PostMessage (in nsFilePath pathToFile, in string subject, in string newsgroup, in nsIUrlListener aUrlListener);
 
-  nsIURL RunNewsUrl (in nsString urlString, in nsISupports aConsumer, in nsIUrlListener aUrlListener);
+  nsIURL RunNewsUrl (in nsString urlString, in nsString newsgroupNane, in nsMsgKey aKey, in nsISupports aConsumer, in nsIUrlListener aUrlListener); 
 
   nsIURL GetNewNews (in nsINntpIncomingServer nntpServer, in string uri, in nsIUrlListener aUrlListener);
 

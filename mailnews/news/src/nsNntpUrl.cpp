@@ -36,12 +36,17 @@
 
 #include "nntpCore.h"
 
+#include "nsCOMPtr.h"
+#include "nsIMsgDatabase.h"
+#include "nsMsgDBCID.h"
+
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
-
+static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
+    
 nsNntpUrl::nsNntpUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 {
     NS_INIT_REFCNT();
@@ -54,6 +59,8 @@ nsNntpUrl::nsNntpUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 	m_newsgroupList = nsnull;
 	m_errorMessage = nsnull;
     m_newsgroupPost = nsnull;
+    m_newsgroupName = nsnull;
+    m_messageKey = nsMsgKey_None;
     
 	// nsINetLibUrl specific state
     m_URL_s = nsnull;
@@ -87,7 +94,8 @@ nsNntpUrl::~nsNntpUrl()
 	NS_IF_RELEASE(m_newsgroupList);
     PR_FREEIF(m_newsgroupPost);
 	PR_FREEIF(m_errorMessage);
-
+    PR_FREEIF(m_newsgroupName);
+    
     if (m_filePath) {
         delete m_filePath;
         m_filePath = nsnull;
@@ -952,14 +960,6 @@ nsresult nsNntpUrl::GetContentLength(PRInt32 *len)
     return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////////
-// End of nsIURL support
-////////////////////////////////////////////////////////////////////////////////////
- 
-////////////////////////////////////////////////////////////////////////////////////
-// The following set of functions should become obsolete once we take them out of
-// nsIURL.....
-////////////////////////////////////////////////////////////////////////////////////
 nsresult nsNntpUrl::GetLoadAttribs(nsILoadAttribs* *result) const
 {
     NS_LOCK_INSTANCE();
@@ -1034,6 +1034,68 @@ nsresult nsNntpUrl::GetMessageToPost(nsINNTPNewsgroupPost **aPost)
     return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////////
-// End of functions which should be made obsolete after modifying nsIURL
-////////////////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP nsNntpUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
+{
+    nsresult rv = NS_OK;
+    nsNativeFileSpec pathResult;
+    
+    if (!aMsgHdr) return NS_ERROR_NULL_POINTER;
+
+    if (!m_newsgroupName) return NS_ERROR_FAILURE;
+
+    if (!m_host) return NS_ERROR_FAILURE;
+
+    nsString2 newsgroupURI(kNewsMessageRootURI, eOneByte);
+    newsgroupURI.Append("/");
+    newsgroupURI.Append(m_host);
+    newsgroupURI.Append("/");
+    newsgroupURI.Append(m_newsgroupName);
+    
+    rv = nsNewsURI2Path(kNewsMessageRootURI, newsgroupURI.GetBuffer(), pathResult);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+    
+    nsCOMPtr<nsIMsgDatabase> newsDBFactory;
+    nsCOMPtr<nsIMsgDatabase> newsDB;
+    
+    rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
+    if (NS_FAILED(rv) || (!newsDBFactory)) {
+        return rv;
+    }
+    
+    rv = newsDBFactory->Open(pathResult, PR_TRUE, getter_AddRefs(newsDB), PR_FALSE);
+    
+    if (NS_FAILED(rv) || (!newsDB)) {
+        return rv;
+    }
+    
+    rv = newsDB->GetMsgHdrForKey(m_messageKey, aMsgHdr);
+    if (NS_FAILED(rv) || (!aMsgHdr)) {
+        return rv;
+    }
+  
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsNntpUrl::SetNewsgroupName(char * aNewsgroupName)
+{
+    if (!aNewsgroupName) return NS_ERROR_NULL_POINTER;
+
+    PR_FREEIF(m_newsgroupName);
+    m_newsgroupName = nsnull;
+    
+    m_newsgroupName = PL_strdup(aNewsgroupName);
+    if (!m_newsgroupName) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    else {
+        return NS_OK;
+    }    
+}
+
+NS_IMETHODIMP nsNntpUrl::SetMessageKey(nsMsgKey aKey)
+{
+    m_messageKey = aKey;
+    return NS_OK;
+}

@@ -34,8 +34,9 @@
 #include "nsINNTPNewsgroupPost.h"
 #include "nsIMsgOfflineNewsState.h"
 
-/* BDD12930-A682-11d2-804C-006008128C4E */
+class nsIMsgDBHdr;
 
+/* BDD12930-A682-11d2-804C-006008128C4E */
 #define NS_INNTPURL_IID									\
 { 0xbdd12930, 0xa682, 0x11d2,							\
     { 0x80, 0x4c, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
@@ -74,6 +75,12 @@ public:
 
     NS_IMETHOD SetMessageToPost (nsINNTPNewsgroupPost *post) = 0;
     NS_IMETHOD GetMessageToPost (nsINNTPNewsgroupPost **post) = 0;
+
+    // return a message db header for that message.
+	NS_IMETHOD GetMessageHeader(nsIMsgDBHdr ** aMsgHdr) = 0;
+
+    NS_IMETHOD SetMessageKey(nsMsgKey aKey) = 0;
+    NS_IMETHOD SetNewsgroupName(char *aNewsgroupName) = 0;
 };
 
 #endif /* nsIHttpURL_h___ */

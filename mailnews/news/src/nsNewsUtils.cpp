@@ -222,7 +222,7 @@ nsNewsURI2Name(const char* rootURI, const char* uriStr, nsString& name)
 
 /* parses NewsMessageURI */
 nsresult 
-nsParseNewsMessageURI(const char* uri, nsString& folderURI, PRUint32 *key)
+nsParseNewsMessageURI(const char* uri, nsString& messageUriWithoutKey, PRUint32 *key)
 {
 	if(!key)
 		return NS_ERROR_NULL_POINTER;
@@ -231,8 +231,7 @@ nsParseNewsMessageURI(const char* uri, nsString& folderURI, PRUint32 *key)
 	PRInt32 keySeparator = uriStr.Find('#');
 	if(keySeparator != -1)
 	{
-		nsAutoString folderPath;
-		uriStr.Left(folderURI, keySeparator);
+		uriStr.Left(messageUriWithoutKey, keySeparator);
 
 		nsAutoString keyStr;
 		uriStr.Right(keyStr, uriStr.Length() - (keySeparator + 1));

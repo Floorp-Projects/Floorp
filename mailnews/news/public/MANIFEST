@@ -17,5 +17,4 @@
 #
 
 nsINNTPNewsgroupPost.h
-nsINNTPProtocol.h
 nsINntpUrl.h

@@ -158,7 +158,7 @@ public:
 	NS_IMETHOD Initialize(nsIURL * aURL);
 
 	// aConsumer is typically a display stream you may want the results to be displayed into...
-	virtual nsresult LoadUrl(nsIURL * aURL, nsISupports * aConsumer = nsnull);
+	NS_IMETHOD LoadUrl(nsIURL * aURL, nsISupports * aConsumer = nsnull);
 
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 	NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);

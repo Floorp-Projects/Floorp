@@ -69,6 +69,10 @@
 
 #define DEFAULT_NEWS_CHUNK_SIZE -1
 
+#ifdef DEBUG_sspitzer_
+#define DEBUG_NEWS 1
+#endif
+
 /* #define UNREADY_CODE	*/  /* mscott: generic flag for hiding access to url struct and active entry which are now gone */
 
 /*#define CACHE_NEWSGRP_PASSWORD*/
@@ -1961,6 +1965,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 			m_nextState = NEWS_START_CANCEL;
 		else
 			m_nextState = NEWS_DONE;
+
 		// and close the article file if it was open....
 		if (m_tempArticleStream)
 			m_tempArticleStream->Close();
@@ -1978,6 +1983,16 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 			m_displayConsumer->LoadURL(nsAutoString(article_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReload, 0);
 			
 			PR_FREEIF(article_path_url);
+		}
+
+		// now mark the message as read
+		nsCOMPtr<nsIMsgDBHdr> msgHdr;
+		nsresult rv = NS_OK;
+
+		rv = m_runningURL->GetMessageHeader(getter_AddRefs(msgHdr));
+
+		if (NS_SUCCEEDED(rv)) {
+			msgHdr->MarkRead(PR_TRUE);
 		}
 
 		ClearFlag(NNTP_PAUSE_FOR_READ);
@@ -4172,7 +4187,7 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURL * url, nsIInputStream * inp
 	{
 
 #if DEBUG_NEWS
-        printf("Next state: %s",stateLabels[m_nextState]); 
+        printf("Next state: %s\n",stateLabels[m_nextState]); 
 #endif
 		// examine our current state and call an appropriate handler for that state.....
         switch(m_nextState)

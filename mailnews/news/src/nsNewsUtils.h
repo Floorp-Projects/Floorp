@@ -63,7 +63,7 @@ extern nsresult
 nsNewsURI2Name(const char* rootURI, const char* uriStr, nsString& name);
 
 extern nsresult
-nsParseNewsMessageURI(const char* uri, nsString& folderURI, PRUint32 *key);
+nsParseNewsMessageURI(const char* uri, nsString& messageUriWithoutKey, PRUint32 *key);
 
 extern nsresult 
 nsBuildNewsMessageURI(const char *baseURI, PRUint32 key, char** uri);
