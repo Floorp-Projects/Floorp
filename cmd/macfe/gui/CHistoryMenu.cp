@@ -68,6 +68,8 @@ void CHistoryMenu::Update(void)
 		UMenuUtils::PurgeMenuItems(GetMacMenuH(), GetLastNonDynamicItem());
 }
 
+#define Min(a,b)		(((a) < (b)) ? (a) : (b))
+
 // Rebuild history menu
 void CHistoryMenu::SyncMenuToHistory(CNSContext* inNSContext)
 {
@@ -80,7 +82,7 @@ void CHistoryMenu::SyncMenuToHistory(CNSContext* inNSContext)
 	
 	// this is total number of history menu items we want in menu
 	// add one because we loop from 1 -> num instead of from 0 -> (num - 1)
-	numHistoryMenuEntries = MIN(historyLength, cMaxHistoryMenuItems) + 1;
+	numHistoryMenuEntries = Min(historyLength, cMaxHistoryMenuItems) + 1;
 
 	Int16	count = 1,
 			// since we want most recent history entries, grab entries from end
