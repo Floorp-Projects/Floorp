@@ -43,7 +43,7 @@ public:
     
     /**
      * Get the check state.
-     * @return PRBool PR_TRUE if checked. PR_FALSE if unchecked.
+     * @return PR_TRUE if checked. PR_FALSE if unchecked.
      */
 
     virtual PRBool GetState() = 0;

@@ -28,9 +28,8 @@
 class nsIRadioGroup;
 
 /**
- * RadioButton widget. 
- * Can show itself in a checked or unchecked state. 
- * The RadioButton widget does automatically show itself checked or unchecked when clicked on.
+ * RadioButton widget. Can show itself in a checked or unchecked state. 
+ * The RadioButton widget automatically shows itself checked or unchecked when clicked on.
  */
 
 class nsIRadioButton : public nsIButton {
@@ -61,7 +60,7 @@ class nsIRadioButton : public nsIButton {
     virtual PRBool GetState() = 0;
 
     /**
-     * Gets the RadioGroup associated with this button
+     * Gets the RadioGroup associated with this radio button
      *
      * @return The Radio Group
      *
@@ -69,7 +68,7 @@ class nsIRadioButton : public nsIButton {
     virtual nsIRadioGroup* GetRadioGroup() = 0;
 
     /**
-     * Sets the RadioGroup associated with this button
+     * Sets the RadioGroup associated with this radio button
      *
      * @param aGroup the new RadioGroup
      *
