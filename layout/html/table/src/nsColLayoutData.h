@@ -21,12 +21,12 @@
 #include "nscore.h"
 #include "nsSize.h"
 #include "nsIFrame.h"
-#include "nsTableCol.h"
+#include "nsVoidArray.h"
 
-class nsVoidArray;
 class nsCellLayoutData;
 class nsTableFrame;
 class nsTableColFrame;
+class nsIContent;
 
 
 /** Simple data class that represents in-process reflow information about a column.
@@ -34,14 +34,10 @@ class nsTableColFrame;
 class nsColLayoutData
 {
 public:
-  nsColLayoutData(nsTableCol *aCol);
+  nsColLayoutData();
 
   // NOT VIRTUAL BECAUSE THIS CLASS SHOULD **NEVER** BE SUBCLASSED  
   ~nsColLayoutData();
-
-  nsTableCol * GetCol();
-
-  void SetCol(nsTableCol * aCol);
 
   nsTableColFrame *GetColFrame();
 
@@ -54,7 +50,7 @@ public:
   nsCellLayoutData* ElementAt(PRInt32 aIndex) const;
 
   PRInt32 IndexOf(nsCellLayoutData* aCellLayoutData) const;
-  PRInt32 IndexOf(nsTableCell* aTableCell) const;
+  PRInt32 IndexOf(nsIContent* aTableCell) const;
   
   nsCellLayoutData* GetNext(nsCellLayoutData* aCellLayoutData) const;
   
@@ -71,29 +67,12 @@ public:
   
 private:
 
-  nsTableCol        *mCol;
   nsTableColFrame   *mColFrame;
   nsVoidArray       *mCells;
 
 };
 
 /* ---------- inlines ---------- */
-
-inline nsTableCol * nsColLayoutData::GetCol()
-{
-  NS_IF_ADDREF(mCol);
-  return mCol; 
-};
-
-inline void nsColLayoutData::SetCol(nsTableCol * aCol)
-{
-  if (aCol != mCol)
-  {
-    NS_IF_ADDREF(aCol);
-    NS_IF_RELEASE(mCol);
-    mCol = aCol; 
-  }
-}
 
 inline nsTableColFrame * nsColLayoutData::GetColFrame()
 {  return mColFrame;}

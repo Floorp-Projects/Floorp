@@ -229,8 +229,6 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
     NS_ASSERTION(nsnull != colData, "bad column data");
     nsTableColFrame *colFrame = colData->GetColFrame();
     NS_ASSERTION(nsnull!=colFrame, "bad col frame");
-    nsTableColPtr col = colData->GetCol();    // col: ADDREF++
-    NS_ASSERTION(col.IsNotNull(), "bad col");
 
     // need to track min/max column width for setting min/max table widths
     PRInt32 minColWidth = 0;
@@ -448,7 +446,6 @@ PRBool BasicTableLayoutStrategy::SetColumnsToMinWidth(nsIPresContext* aPresConte
   for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
   { 
     nsColLayoutData * colData = (nsColLayoutData *)(columnLayoutData->ElementAt(colIndex));
-    nsTableColPtr col = colData->GetCol();  // col: ADDREF++
     nsVoidArray *cells = colData->GetCells();
     PRInt32 minColWidth = 0;
     PRInt32 maxColWidth = 0;
@@ -520,7 +517,6 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
     PRInt32 maxColWidth = 0;
     // Get column information
     nsColLayoutData * colData = (nsColLayoutData *)(columnLayoutData->ElementAt(colIndex));
-    nsTableColPtr col = colData->GetCol();  // col: ADDREF++
     nsVoidArray *cells = colData->GetCells();
     PRInt32 numCells = cells->Count();
 
@@ -863,7 +859,6 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPre
     PRInt32 maxColWidth = 0;
     // Get column information
     nsColLayoutData * colData = (nsColLayoutData *)(columnLayoutData->ElementAt(colIndex));
-    nsTableColPtr col = colData->GetCol();  // col: ADDREF++
     nsVoidArray *cells = colData->GetCells();
     PRInt32 numCells = cells->Count();
 
