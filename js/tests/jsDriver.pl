@@ -510,9 +510,48 @@ sub get_xpc_engine_command {
 sub get_sm_engine_command {
     local $retval;
     
-    if ($os_type eq "WIN") {
-        # spidermonkey on windows
+    # Look for Makefile.ref style make first.
+    # (On Windows, spidermonkey can be made by two makefiles, each putting the
+    # executable in a diferent directory, under a different name.)
+    if ($opt_shell_path) {
+        $retval = $opt_shell_path;
+        if (!($retval =~ /[\/\\]$/)) {
+            $retval .= "/";
+        }
+    } else {
+        $retval = $opt_suite_path . "../src/";
+        opendir (SRC_DIR_FILES, $retval);
+        local @src_dir_files = readdir(SRC_DIR_FILES);
+        closedir (SRC_DIR_FILES);
         
+        local $dir, $object_dir;
+        local $pattern = ($opt_engine_type eq "smdebug") ?
+          'DBG.OBJ' : 'OPT.OBJ';
+        
+        # scan for the first directory matching
+        # the pattern expected to hold this type (debug or opt) of engine
+        foreach $dir (@src_dir_files) {
+            if ($dir =~ $pattern) {
+                $object_dir = $dir;
+                break;
+            }
+        }
+        
+        if (!$object_dir) {
+            die ("Could not locate an object directory in $retval " .
+                 "matching the pattern *$pattern.  Have you built the " .
+                 "engine?\n");
+        }
+        
+        $retval .= $object_dir . "/";
+
+    }
+        
+    if (!(-x $retval . "js") && ($os_type eq "WIN")) {
+        # On windows, you can build with js.mak as well as Makefile.ref
+        # (Can you say WTF boys and girls?  I knew you could.)
+        # So, if the exe the would have been built by Makefile.ref isn't 
+        # here, check for the js.mak version before dying.
         if ($opt_shell_path) {
             $retval = $opt_shell_path;
             if (!($retval =~ /[\/\\]$/)) {
@@ -525,48 +564,13 @@ sub get_sm_engine_command {
                 $retval = "../src/Debug/";
             }
         }
+
         $retval .= "jsshell.exe";
         
     } else {
-        # spidermonkey on un*x
-        
-        if ($opt_shell_path) {
-            $retval = $opt_shell_path;
-            if (!($retval =~ /[\/\\]$/)) {
-                $retval .= "/";
-            }
-        } else {
-            $retval = $opt_suite_path . "../src/";
-            opendir (SRC_DIR_FILES, $retval);
-            local @src_dir_files = readdir(SRC_DIR_FILES);
-            closedir (SRC_DIR_FILES);
-            
-            local $dir, $object_dir;
-            local $pattern = ($opt_engine_type eq "smdebug") ?
-              'DBG.OBJ' : 'OPT.OBJ';
+        $retval . "js";
+    }
 
-            # scan for the first directory matching
-            # the pattern expected to hold this type (debug or opt) of engine
-            foreach $dir (@src_dir_files) {
-                if ($dir =~ $pattern) {
-                    $object_dir = $dir;
-                    break;
-                }
-            }
-            
-            if (!$object_dir) {
-                die ("Could not locate an object directory in $retval " .
-                     "matching the pattern *$pattern.  Have you built the " .
-                     "engine?\n");
-            }
-            
-            $retval .= $object_dir . "/";
-        }
-        
-        $retval .= "js";
-        
-    } 
-    
     if (!(-x $retval)) {
         die ("$retval is not a valid executable on this system.\n");
     }
