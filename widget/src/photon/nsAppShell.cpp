@@ -354,6 +354,19 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::PopThreadEventQueue\n"));
 }
 
 
+int done_damn_it = 0;
+void MyMainLoop( void ) 
+{
+//	printf ("kedl: start main loop!\n"); fflush(stdout);
+	done_damn_it = 0;
+	while (! done_damn_it)
+	{
+//		printf ("kedl: process event\n"); fflush(stdout);
+		PtProcessEvent();
+//		printf ("kedl: processed event\n"); fflush(stdout);
+	}
+}
+
 //-------------------------------------------------------------------------
 //
 // Run
@@ -396,7 +409,6 @@ NS_IMETHODIMP nsAppShell::Run()
     return rv;
   }    
 
-
 done:
 
 #ifdef DEBUG
@@ -410,8 +422,18 @@ done:
 		printf("nsAppShell::Run Error calling PtAppAddFd\n");
 		exit(1);
 	}
-    PtMainLoop();
+	MyMainLoop();
 
+#ifdef DEBUG
+  printf("Calling PtAppRemoveFd with event queue\n");
+#endif /* DEBUG */
+
+  err=PtAppRemoveFd(NULL,EQueue->GetEventQueueSelectFD());
+  if (err==-1)
+  {
+	printf ("nsAppShell:: Run Error calling PtAppRemoveFd\n");
+  }
+  
   NS_IF_RELEASE(EQueue);
   Release();
   return NS_OK;
@@ -425,14 +447,9 @@ done:
 
 NS_METHOD nsAppShell::Exit()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Exit - Not Implemented.\n"));
-
-  // REVISIT - How do we do this under Photon??? 
-  // PtSendEventToWidget( m_window, quit_event );
-
-  /* kirk: Hack until we figure out what to do here */
-  /* No way to exit the Graphical portion without a raw EXIT */
-  exit ( EXIT_SUCCESS );
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Exit.\n"));
+//  printf ("kedl: TRY to exit main loop!\n"); fflush (stdout);
+  done_damn_it = 1;
 
   return NS_OK;
 }
