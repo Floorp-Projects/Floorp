@@ -2678,7 +2678,7 @@ nsBookmarksService::CreateFolderWithDetails(const PRUnichar* aName,
 
   // Add to container. 
   if (aIndex >= 0) 
-    rv = container->InsertElementAt(folderResource, !aIndex ? 1 : aIndex + 1, PR_TRUE);
+    rv = container->InsertElementAt(folderResource, !aIndex ? 1 : aIndex, PR_TRUE);
   else
     rv = container->AppendElement(folderResource);
 
@@ -2802,7 +2802,7 @@ nsBookmarksService::CreateBookmarkWithDetails(const PRUnichar* aName, const char
 
   // Add to container. 
   if (aIndex >= 0) 
-    rv = container->InsertElementAt(bookmarkResource, !aIndex ? 1 : aIndex + 1, PR_TRUE);
+    rv = container->InsertElementAt(bookmarkResource, !aIndex ? 1 : aIndex, PR_TRUE);
   else
     rv = container->AppendElement(bookmarkResource);
 
@@ -4234,7 +4234,7 @@ nsBookmarksService::insertBookmarkItem(nsIRDFResource *aRelativeNode,
   if (NS_FAILED(rv)) return rv;
 
   // Add to container. 
-  rv = container->InsertElementAt(newResource, !relNodeIdx ? 1 : relNodeIdx + 1, PR_TRUE);
+  rv = container->InsertElementAt(newResource, !relNodeIdx ? 1 : relNodeIdx, PR_TRUE);
   
   return rv;
 }
