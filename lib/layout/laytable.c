@@ -1230,6 +1230,7 @@ lo_BeginCellSubDoc(MWContext *context,
 					subdoc->backdrop.tile_mode = LO_TILE_VERT;
 				else 
 					subdoc->backdrop.tile_mode = LO_TILE_BOTH;
+				XP_FREE(property);
 			}
 		}
 	}	
@@ -7598,7 +7599,7 @@ fprintf(stderr, "lo_EndTable called\n");
 
 		if (relayout == FALSE)
 		{
-		    lo_AppendFloatInLineList(state, (LO_Element *)table->table_ele, save_line_list );
+		    lo_AppendFloatInLineList(context, state, (LO_Element *)table->table_ele, save_line_list );
 		}
 		else
 		{
