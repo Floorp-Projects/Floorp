@@ -236,9 +236,9 @@ const MozillaLdapPropertyRelation* MozillaLdapPropertyRelator::findMozillaProper
     Initialize();
     // ensure that we always do a case insensitive comparison
     // against the incoming ldap attributes.
-    nsCAutoString lowercasedProp (ldapProperty) ;
-    ToLowerCase(nsDependentCString(ldapProperty),lowercasedProp);
-    nsCStringKey key (lowercasedProp) ;
+    nsCAutoString lowercasedProp(ldapProperty);
+    ToLowerCase(nsDependentCString(ldapProperty), lowercasedProp);
+    nsCStringKey key(lowercasedProp);
 
     return NS_REINTERPRET_CAST(const MozillaLdapPropertyRelation *, mLdapToMozilla.Get(&key)) ;
 

@@ -354,7 +354,6 @@ protected:
 	nsresult AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *cardRow);
 	nsresult AddListCardColumnsToRow(nsIAbCard *pCard, nsIMdbRow *pListRow, PRUint32 pos, nsIAbCard** pNewCard, PRBool aInMailingList);
 	nsresult AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIMdbRow *listRow);
-	nsresult FindAttributeRow(nsIMdbTable* pTable, mdb_token columnToken, nsIMdbRow** row);
 	nsresult CreateCard(nsIMdbRow* cardRow, mdb_id listRowID, nsIAbCard **result);
 	nsresult CreateCardFromDeletedCardsTable(nsIMdbRow* cardRow, mdb_id listRowID, nsIAbCard **result);
 	nsresult SetListAddressTotal(nsIMdbRow* listRow, PRUint32 total);
@@ -374,9 +373,9 @@ protected:
 	nsresult			InitNewDB();
 	nsresult			InitMDBInfo();
 	nsresult			InitPabTable();
-    	nsresult            		InitDeletedCardsTable(PRBool bCreate=PR_FALSE);
-	nsresult			AddRowToDeletedCardsTable(nsIAbCard *card, nsIMdbRow **pCardRow);
-       nsresult			DeleteRowFromDeletedCardsTable(nsIMdbRow *pCardRow);
+  nsresult      InitDeletedCardsTable(PRBool aCreate);
+  nsresult			AddRowToDeletedCardsTable(nsIAbCard *card, nsIMdbRow **pCardRow);
+  nsresult			DeleteRowFromDeletedCardsTable(nsIMdbRow *pCardRow);
 
 	nsresult			InitLastRecorKey();
 	nsresult			GetDataRow(nsIMdbRow **pDataRow);
@@ -385,8 +384,8 @@ protected:
 	nsresult			CheckAndUpdateRecordKey();
 	nsresult			UpdateLowercaseEmailListName();
 	nsresult			ConvertAndAddLowercaseColumn(nsIMdbRow * row, mdb_token fromCol, mdb_token toCol);
-	nsresult			AddUnicodeToColumn(nsIMdbRow * row, mdb_token colToken, const PRUnichar* pUnicodeStr);
-	nsresult			GetRowForCharColumn(const char *lowerUTF8String, mdb_column findColumn, 
+	nsresult			AddUnicodeToColumn(nsIMdbRow * row, mdb_token colToken, mdb_token lowerCaseColToken, const PRUnichar* pUnicodeStr);
+	nsresult			GetRowForCharColumn(const char *aUTF8String, mdb_column findColumn, 
 											PRBool bIsCard, nsIMdbRow **findRow);
 	nsresult			GetRowForCharColumn(const PRUnichar *unicodeStr, mdb_column findColumn, 
 											PRBool bIsCard, nsIMdbRow **findRow);

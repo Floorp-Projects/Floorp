@@ -83,10 +83,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectUnicodeAddress(const PRUnichar * aAdd
 NS_IMETHODIMP nsAbAddressCollecter::GetCardFromAttribute(const char *aName, const char *aValue, nsIAbCard **aCard)
 {
   NS_ENSURE_ARG_POINTER(aCard);
-
-  nsresult rv = m_database->GetCardFromAttribute(m_directory, aName, aValue, PR_FALSE /* retain case */, aCard);
-  NS_ENSURE_SUCCESS(rv,rv);
-  return rv;
+  return m_database->GetCardFromAttribute(m_directory, aName, aValue, PR_FALSE /* retain case */, aCard);
 }
 
 NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address, PRBool aCreateCard)

@@ -1022,9 +1022,21 @@ NS_IMETHODIMP nsAbMDBDirectory::HasCardForEmailAddress(const char * aEmailAddres
     rv = GetAbDatabase();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIAbCard> cardExists; 
-  mDatabase->GetCardFromAttribute(this, kLowerPriEmailColumn, aEmailAddress, PR_TRUE /* caseInsensitive, see bug #191798 */, getter_AddRefs(cardExists));
-  if (cardExists)
+  nsCOMPtr<nsIAbCard> card; 
+  mDatabase->GetCardFromAttribute(this, kLowerPriEmailColumn /* see #196777 */, aEmailAddress, PR_TRUE /* caseInsensitive, see bug #191798 */, getter_AddRefs(card));
+  if (card)
     *aCardExists = PR_TRUE;
+  else 
+  {
+    // fix for bug #187239
+    // didn't find it as the primary email?  try again, with k2ndEmailColumn ("Additional Email")
+    // 
+    // TODO bug #198731
+    // unlike the kPriEmailColumn, we don't have kLower2ndEmailColumn
+    // so we will still suffer from bug #196777 for "additional emails"
+    mDatabase->GetCardFromAttribute(this, k2ndEmailColumn, aEmailAddress, PR_TRUE /* caseInsensitive, see bug #191798 */, getter_AddRefs(card));
+    if (card)
+      *aCardExists = PR_TRUE;
+  }
   return NS_OK;
 }
