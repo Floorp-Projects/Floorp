@@ -52,7 +52,7 @@
     <tabpanel align="horizontal" style="width: 460px;">
       <!-- saved signons -->
       <box class="tabpanel" id="savedsignons" flex="100%" align="vertical">
-        <box><html:div>&spiel.signonsstored.label;</html:div></box>
+        <text class="label" value="&spiel.signonsstored.label;"/>
         <spring style="height: 10px;"/>
           <tree id="signonstree" class="inset" style="height: 280px; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
@@ -69,9 +69,9 @@
           </tree>
         <spring style="height: 5px;"/>
         <box align="horizontal">
-          <titledbutton id="removeSignon" disabled="true" class="dialog push"
+          <button id="removeSignon" disabled="true" class="dialog push"
                         value="&remove.label;" onclick="DeleteSignon();"/>
-          <titledbutton id="removeAllSignons" class="dialog push"
+          <button id="removeAllSignons" class="dialog push"
                         value="&removeall.label;"
                         onclick="DeleteAllSignons();"/>
         </box>
@@ -79,7 +79,7 @@
       </box>
       <!-- ignored signon sites -->
       <box class="tabpanel" id="ignoredsites" flex="100%" align="vertical">
-        <html:div>&spiel.signonsnotstored.label;</html:div>
+        <text class="label" value="&spiel.signonsnotstored.label;"/>
         <spring style="height: 10px;"/>
           <tree id="ignoretree" class="inset" style="height: 280px; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
@@ -94,9 +94,9 @@
           </tree>
         <spring style="height: 5px;"/>
         <box align="horizontal">
-          <titledbutton id="removeIgnoredSite" disabled="true" class="dialog push"
+          <button id="removeIgnoredSite" disabled="true" class="dialog push"
                         value="&remove.label;" onclick="DeleteIgnoredSite();"/>
-          <titledbutton id="removeAllSites" class="dialog push"
+          <button id="removeAllSites" class="dialog push"
                         value="&removeall.label;"
                         onclick="DeleteAllSites();"/>
         </box>
@@ -104,7 +104,7 @@
       </box>
       <!-- do not preview panel -->
       <box class="tabpanel" id="nopreviewforms" flex="100%" align="vertical">
-        <html:div>&spiel.nopreview.label;</html:div>
+        <text class="label" value="&spiel.nopreview.label;"/>
         <spring style="height: 10px;"/>
           <tree id="nopreviewtree" class="inset" style="height: 280px; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
@@ -119,9 +119,9 @@
           </tree>
         <spring style="height: 5px;"/>
         <box align="horizontal">
-          <titledbutton id="removeNoPreview" disabled="true" class="dialog push"
+          <button id="removeNoPreview" disabled="true" class="dialog push"
                         value="&remove.label;" onclick="DeleteNoPreviewForm();"/>
-          <titledbutton id="removeAllNopreviews" class="dialog push"
+          <button id="removeAllNopreviews" class="dialog push"
                         value="&removeall.label;"
                         onclick="DeleteAllNopreviews();"/>
         </box>
@@ -129,7 +129,7 @@
       </box>
       <!-- do not capture panel -->
       <box class="tabpanel" id="nocaptureforms" flex="100%" align="vertical">
-        <html:div>&spiel.nocapture.label;</html:div>
+        <text class="label" value="&spiel.nocapture.label;"/>
         <spring style="height: 10px;"/>
           <tree id="nocapturetree" class="inset" style="height: 280px; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
@@ -144,9 +144,9 @@
           </tree>
         <spring style="height: 5px;"/>
         <box align="horizontal">
-          <titledbutton id="removeNoCapture" disabled="true" class="dialog push"
+          <button id="removeNoCapture" disabled="true" class="dialog push"
                         value="&remove.label;" onclick="DeleteNoCaptureForm();"/>
-          <titledbutton id="removeAllNocaptures" class="dialog push"
+          <button id="removeAllNocaptures" class="dialog push"
                         value="&removeall.label;"
                         onclick="DeleteAllNocaptures();"/>
         </box>
