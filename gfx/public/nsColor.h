@@ -47,6 +47,24 @@ typedef PRUint32 nscolor;
 #define NS_GET_B(_rgba) ((PRUint8) (((_rgba) >> 16) & 0xff))
 #define NS_GET_A(_rgba) ((PRUint8) (((_rgba) >> 24) & 0xff))
 
+// Fast approximate division by 255. It has the property that
+// for all 0 <= n <= 255*255, FAST_DIVIDE_BY_255(n) == n/255.
+// But it only uses two adds and two shifts instead of an 
+// integer division (which is expensive on many processors).
+//
+// equivalent to target=v/255
+#define FAST_DIVIDE_BY_255(target,v)               \
+  PR_BEGIN_MACRO                                   \
+    unsigned tmp_ = v;                             \
+    target = ((tmp_ << 8) + tmp_ + 255) >> 16;     \
+  PR_END_MACRO
+
+// Blending macro
+//
+// equivalent to target=(bg*(255-alpha)+fg*alpha)/255
+#define MOZ_BLEND(target, bg, fg, alpha) \
+        FAST_DIVIDE_BY_255(target, (bg)*(255-(alpha)) + (fg)*(alpha))
+
 // Translate a hex string to a color. Return true if it parses ok,
 // otherwise return false.
 // This accepts only 3, 6 or 9 digits

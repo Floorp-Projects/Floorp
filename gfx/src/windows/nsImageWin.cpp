@@ -362,9 +362,12 @@ void nsImageWin::CreateImageWithAlphaBits(HDC TheHDC)
 
       for (int x = 0; x < mBHead->biWidth;
           x++, imageWithAlphaRow += 4, imageRow++, alphaRow++) {
-        imageWithAlphaRow[0] = (mColorMap->Index[3 * (*imageRow)] * *alphaRow) >> 8;
-        imageWithAlphaRow[1] = (mColorMap->Index[3 * (*imageRow) + 1] * *alphaRow) >> 8;
-        imageWithAlphaRow[2] = (mColorMap->Index[3 * (*imageRow) + 2] * *alphaRow) >> 8;
+        FAST_DIVIDE_BY_255(imageWithAlphaRow[0],
+                           mColorMap->Index[3 * (*imageRow)] * *alphaRow);
+        FAST_DIVIDE_BY_255(imageWithAlphaRow[1],
+                           mColorMap->Index[3 * (*imageRow) + 1] * *alphaRow);
+        FAST_DIVIDE_BY_255(imageWithAlphaRow[2],
+                           mColorMap->Index[3 * (*imageRow) + 2] * *alphaRow);
         imageWithAlphaRow[3] = *alphaRow;
       }
     }
@@ -376,9 +379,9 @@ void nsImageWin::CreateImageWithAlphaBits(HDC TheHDC)
 
       for (int x = 0; x < mBHead->biWidth;
           x++, imageWithAlphaRow += 4, imageRow += 3, alphaRow++) {
-        imageWithAlphaRow[0] = (imageRow[0] * *alphaRow) >> 8;
-        imageWithAlphaRow[1] = (imageRow[1] * *alphaRow) >> 8;
-        imageWithAlphaRow[2] = (imageRow[2] * *alphaRow) >> 8;
+        FAST_DIVIDE_BY_255(imageWithAlphaRow[0], imageRow[0] * *alphaRow);
+        FAST_DIVIDE_BY_255(imageWithAlphaRow[1], imageRow[1] * *alphaRow);
+        FAST_DIVIDE_BY_255(imageWithAlphaRow[2], imageRow[2] * *alphaRow);
         imageWithAlphaRow[3] = *alphaRow;
       }
     }
@@ -557,12 +560,10 @@ void nsImageWin::DrawComposited24(unsigned char *aBits, int aX, int aY, int aWid
 
     for (int x = 0; x < aWidth;
         x++, targetRow += 3, imageRow += 3, alphaRow++) {
-      targetRow[0] =
-        (targetRow[0] * (255 - *alphaRow) + imageRow[0] * *alphaRow) >> 8;
-      targetRow[1] =
-        (targetRow[1] * (255 - *alphaRow) + imageRow[1] * *alphaRow) >> 8;
-      targetRow[2] =
-        (targetRow[2] * (255 - *alphaRow) + imageRow[2] * *alphaRow) >> 8;
+      unsigned alpha = *alphaRow;
+      MOZ_BLEND(targetRow[0], targetRow[0], imageRow[0], alpha);
+      MOZ_BLEND(targetRow[1], targetRow[1], imageRow[1], alpha);
+      MOZ_BLEND(targetRow[2], targetRow[2], imageRow[2], alpha);
     }
   }
 }
