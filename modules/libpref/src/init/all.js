@@ -1193,6 +1193,12 @@ pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 // This indicates whether it should use the native dialog or the XP Dialog
 pref("print.use_native_print_dialog", true);
 
+// Disable IPv6 name lookups by default.
+// This is because OS X (including 10.3) always performs IPv6 name lookups
+// even if IPv6 is turned off at the OS level. This causes long delays even
+// for people who use IPv4 only. See bugs 231607 and 68796.
+pref("network.dns.disableIPv6", true);
+
 # XP_MACOSX
 #endif
 
