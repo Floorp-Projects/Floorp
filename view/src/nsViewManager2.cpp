@@ -46,24 +46,14 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 #define PUSH_CLIP			0x00000002
 #define POP_CLIP			0x00000004
 #define VIEW_TRANSPARENT	0x00000008
-#define VIEW_TRANSLUSCENT	0x00000010
+#define VIEW_TRANSLUCENT	0x00000010
 
 // display list elements
-struct DisplayListElement {
+struct DisplayListElement2 {
 	nsIView*			mView;
 	nsRect				mClip;
+	nsRect				mDirty;
 	PRUint32			mFlags;
-};
-
-/**
- * FrontToBackElements represent bundles of views that are traversed from
- * front to back, but are individually rendered back to front. At worst
- * there will be a single, opaque view in each bundle.
- */
-struct FrontToBackElements {
-	DisplayListElement* mFirstElement;
-	PRInt32				mCount;
-	nsRect				mClip;
 };
 
 static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
@@ -174,7 +164,7 @@ nsViewManager2::~nsViewManager2()
   {
 	PRInt32 count = mDisplayList->Count();
 	for (PRInt32 index = 0; index < count; index++) {
-		DisplayListElement* element = (DisplayListElement*) mDisplayList->ElementAt(index);
+		DisplayListElement2* element = (DisplayListElement2*) mDisplayList->ElementAt(index);
 		if (element != nsnull)
 			delete element;
 	}
@@ -260,6 +250,8 @@ NS_IMETHODIMP nsViewManager2::Init(nsIDeviceContext* aContext)
 		return NS_ERROR_ALREADY_INITIALIZED;
 	}
 	mContext = aContext;
+	mContext->GetAppUnitsToDevUnits(mTwipsToPixels);
+	mContext->GetDevUnitsToAppUnits(mPixelsToTwips);
 
 	mDSBounds.Empty();
 	mTimer = nsnull;
@@ -636,8 +628,14 @@ void nsViewManager2::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, c
 				return;
 			}
 		}
+		
+		// initialize various counters.
 		mDisplayListCount = 0;
 		mOpaqueViewCount = 0;
+		mTranslucentViewCount = 0;
+		mTranslucentBounds.x = mTranslucentBounds.y = 0;
+		mTranslucentBounds.width = mTranslucentBounds.width = 0;
+		
 		CreateDisplayList(mRootView, &mDisplayListCount, origin.x, origin.y, aRootView, &aRect);
 		
 		// now, partition this display list into "front-to-back" bundles, and then draw each bundle
@@ -647,10 +645,11 @@ void nsViewManager2::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, c
 		
 		// draw all views in the display list, from back to front.
 		for (PRInt32 i = mDisplayListCount - 1; i>= 0; --i) {
-			DisplayListElement* element = NS_STATIC_CAST(DisplayListElement*, mDisplayList->ElementAt(i));
+			DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, mDisplayList->ElementAt(i));
 			if (element->mFlags & VIEW_RENDERED) {
 				// typical case, just rendering a view.
-				RenderView(element->mView, aRC, aRect, element->mClip, aResult);
+				// RenderView(element->mView, aRC, aRect, element->mClip, aResult);
+				RenderDisplayListElement(element, aRC);
 			} else {
 				// special case, pushing or popping clipping.
 				if (element->mFlags & PUSH_CLIP) {
@@ -671,7 +670,7 @@ void nsViewManager2::RenderView(nsIView *aView, nsIRenderingContext &aRC, const 
 {
 	nsRect  drect;
 
-	NS_ASSERTION(!(nsnull == aView), "no view");
+	NS_ASSERTION((nsnull != aView), "no view");
 
 	aRC.PushState();
 
@@ -687,6 +686,172 @@ void nsViewManager2::RenderView(nsIView *aView, nsIRenderingContext &aRC, const 
 	aView->Paint(aRC, drect, NS_VIEW_FLAG_JUST_PAINT, aResult);
 
 	aRC.PopState(aResult);
+}
+
+void nsViewManager2::RenderDisplayListElement(DisplayListElement2* element, nsIRenderingContext &aRC)
+{
+	PRBool isTranslucent = (element->mFlags & VIEW_TRANSLUCENT) != 0;
+	if (!isTranslucent) {
+		aRC.PushState();
+
+		nscoord x = element->mClip.x, y = element->mClip.y;
+		aRC.Translate(x, y);
+
+		nsRect drect(element->mDirty.x - x, element->mDirty.y - y,
+		             element->mDirty.width, element->mDirty.height);
+		PRBool unused;
+		element->mView->Paint(aRC, drect, NS_VIEW_FLAG_JUST_PAINT, unused);
+		
+		aRC.PopState(unused);
+	}
+	
+	if (mTranslucentViewCount > 0 && (isTranslucent || mTranslucentBounds.Intersects(element->mDirty))) {
+		// transluscency case. if this view is transluscent, have to use the nsIBlender, otherwise, just
+		// render in the offscreen. when we reach the last transluscent view, then we flush the bits
+		// to the onscreen rendering context.
+		if (mTranslucentBounds.width > gBlendWidth || mTranslucentBounds.height > gBlendHeight) {
+			nsresult rv = CreateBlendingBuffers(aRC);
+			NS_ASSERTION((rv == NS_OK), "not enough memory to blend");
+			if (NS_FAILED(rv)) {
+				// fall back by just rendering with transparency.
+				mTranslucentViewCount = 0;
+				RenderDisplayListElement(element, aRC);
+				return;
+			}
+		}
+		
+		// compute the origin of the view, relative to the blending buffer, which has the
+		// same dimensions as mTranslucentBounds. 
+		nscoord viewX = element->mClip.x - mTranslucentBounds.x, viewY = element->mClip.y - mTranslucentBounds.y;
+
+		nsRect damageRect(element->mDirty);
+		damageRect.IntersectRect(damageRect, mTranslucentBounds);
+		damageRect.x -= element->mClip.x, damageRect.y -= element->mClip.y;
+		
+		if (element->mFlags & VIEW_TRANSLUCENT) {
+			nsRect blendRect(element->mDirty.x - mTranslucentBounds.x, element->mDirty.y - mTranslucentBounds.y, 
+							 element->mDirty.width, element->mDirty.height);
+			
+			// paint the view twice, first in the red buffer, then the blue, the
+			// the blender will pick up the touched pixels only.
+			mRedCX->SetColor(NS_RGB(255, 0, 0));
+			mRedCX->FillRect(blendRect);
+			PaintView(element->mView, *mRedCX, viewX, viewY, damageRect);
+			
+			mBlueCX->SetColor(NS_RGB(0, 0, 255));
+			mBlueCX->FillRect(blendRect);
+			PaintView(element->mView, *mBlueCX, viewX, viewY, damageRect);
+			
+			float opacity;
+			element->mView->GetOpacity(opacity);
+			
+			// perform the blend itself.
+			blendRect *= mTwipsToPixels;
+            mBlender->Blend(blendRect.x, blendRect.y,
+                            blendRect.width, blendRect.height,
+                            mRedCX, mOffScreenCX,
+                            blendRect.x, blendRect.y,
+                            opacity, mBlueCX,
+                            NS_RGB(255, 0, 0), NS_RGB(0, 0, 255));
+			
+			--mTranslucentViewCount;
+		} else {
+			PaintView(element->mView, *mOffScreenCX, viewX, viewY, damageRect);
+		}
+		
+		// flush the bits back to screen.
+		if (mTranslucentViewCount == 0) {
+            aRC.CopyOffScreenBits(gOffScreen, 0, 0, mTranslucentBounds,
+            					  NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
+		}
+	}
+}
+
+void nsViewManager2::PaintView(nsIView *aView, nsIRenderingContext &aRC, nscoord x, nscoord y,
+							  const nsRect &aDamageRect)
+{
+	aRC.PushState();
+	aRC.Translate(x, y);
+	PRBool unused;
+	aView->Paint(aRC, aDamageRect, NS_VIEW_FLAG_JUST_PAINT, unused);
+	aRC.PopState(unused);
+}
+
+inline PRInt32 nextPowerOf2(PRInt32 value)
+{
+	PRInt32 result = 1;
+	while (value > result)
+		result <<= 1;
+	return result;
+}
+
+nsresult nsViewManager2::CreateBlendingBuffers(nsIRenderingContext &aRC)
+{
+	nsresult rv;
+	
+	// compute the new bounds of the blending buffers. should probably round the
+	// resulting
+	nsRect blenderBounds(0, 0, mTranslucentBounds.width, mTranslucentBounds.height);
+	blenderBounds.ScaleRoundOut(mTwipsToPixels);
+	
+	blenderBounds.width = nextPowerOf2(blenderBounds.width);
+	blenderBounds.height = nextPowerOf2(blenderBounds.height);
+	
+	NS_IF_RELEASE(mOffScreenCX);
+	NS_IF_RELEASE(mRedCX);
+	NS_IF_RELEASE(mBlueCX);
+
+	if (nsnull != gOffScreen) {
+		aRC.DestroyDrawingSurface(gOffScreen);
+		gOffScreen = nsnull;
+	}
+	rv = aRC.CreateDrawingSurface(&blenderBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gOffScreen);
+	if (NS_FAILED(rv))
+		return rv;
+
+	if (nsnull != gRed) {
+		aRC.DestroyDrawingSurface(gRed);
+		gRed = nsnull;
+	}
+	aRC.CreateDrawingSurface(&blenderBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gRed);
+	if (NS_FAILED(rv))
+		return rv;
+
+	if (nsnull != gBlue) {
+		aRC.DestroyDrawingSurface(gBlue);
+		gBlue = nsnull;
+	}
+	aRC.CreateDrawingSurface(&blenderBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gBlue);
+	if (NS_FAILED(rv))
+		return rv;
+
+	// now create the blending offscreen rendering contexts.
+	rv = nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, NS_GET_IID(nsIRenderingContext), (void **)&mOffScreenCX);
+	if (NS_FAILED(rv))
+		return rv;
+	mOffScreenCX->Init(mContext, gOffScreen);
+
+	rv = nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, NS_GET_IID(nsIRenderingContext), (void **)&mRedCX);
+	if (NS_FAILED(rv))
+		return rv;
+	mRedCX->Init(mContext, gRed);
+
+    rv = nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, NS_GET_IID(nsIRenderingContext), (void **)&mBlueCX);
+	if (NS_FAILED(rv))
+		return rv;
+	mBlueCX->Init(mContext, gBlue);
+
+	if (nsnull == mBlender) {
+		rv = nsComponentManager::CreateInstance(kBlenderCID, nsnull, NS_GET_IID(nsIBlender), (void **)&mBlender);
+		if (NS_FAILED(rv))
+			return rv;
+		mBlender->Init(mContext);
+	}
+
+	gBlendWidth = mTranslucentBounds.width * mPixelsToTwips;
+	gBlendHeight = mTranslucentBounds.height * mPixelsToTwips;
+
+	return NS_OK;
 }
 
 void nsViewManager2::UpdateDirtyViews(nsIView *aView, nsRect *aParentRect) const
@@ -1892,7 +2057,7 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 			lrect.x -= aOriginX;
 			lrect.y -= aOriginY;
 
-			retval = AddToDisplayList(aIndex, aView, lrect, POP_CLIP);
+			retval = AddToDisplayList(aIndex, aView, lrect, lrect, POP_CLIP);
 
 			if (retval)
 				return retval;
@@ -1924,7 +2089,7 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 	//  if (clipper)
 	if (isClipView && (!hasWidget || (hasWidget && isParentView))) {
 		if (childCount > 0)
-			retval = AddToDisplayList(aIndex, aView, lrect, PUSH_CLIP);
+			retval = AddToDisplayList(aIndex, aView, lrect, lrect, PUSH_CLIP);
 	} else if (!retval)	{
 		nsViewVisibility  visibility;
 		float             opacity;
@@ -1946,8 +2111,8 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 			if (transparent)
 				flags |= VIEW_TRANSPARENT;
 			if (opacity < 1.0f)
-				flags |= VIEW_TRANSLUSCENT;
-			retval = AddToDisplayList(aIndex, aView, lrect, flags);
+				flags |= VIEW_TRANSLUCENT;
+			retval = AddToDisplayList(aIndex, aView, lrect, irect, flags);
 
 			if (retval || !transparent && (opacity == 1.0f) && (irect == *aDamageRect))
 				retval = PR_TRUE;
@@ -1968,12 +2133,12 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 	return retval;
 }
 
-PRBool nsViewManager2::AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect &aRect, PRUint32 aFlags)
+PRBool nsViewManager2::AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect &aClipRect, nsRect& aDirtyRect, PRUint32 aFlags)
 {
 	PRInt32 index = (*aIndex)++;
-	DisplayListElement* element = (DisplayListElement*) mDisplayList->ElementAt(index);
+	DisplayListElement2* element = (DisplayListElement2*) mDisplayList->ElementAt(index);
 	if (element == nsnull) {
-		element = new DisplayListElement;
+		element = new DisplayListElement2;
 		if (element == nsnull) {
 			*aIndex = index;
 			return PR_TRUE;
@@ -1982,12 +2147,26 @@ PRBool nsViewManager2::AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect 
 	}
 
 	element->mView = aView;
-	element->mClip = aRect;
+	element->mClip = aClipRect;
+	element->mDirty = aDirtyRect;
 	element->mFlags = aFlags;
 	
+	// count number of opaque views.
 	if (aFlags == VIEW_RENDERED)
 		++mOpaqueViewCount;
 
+	// count number of transluscent views, and
+	// accumulate a rectangle of all transluscent
+	// views. this will be used to determine which
+	// views need to be rendered into the blending
+	// buffers.
+	if (aFlags & VIEW_TRANSLUCENT) {
+		if (mTranslucentViewCount++ == 0)
+			mTranslucentBounds = aDirtyRect;
+		else
+			mTranslucentBounds.UnionRect(mTranslucentBounds, aDirtyRect);
+	}
+	
 	return PR_FALSE;
 }
 
@@ -1997,17 +2176,17 @@ nsresult nsViewManager2::OptimizeDisplayList(const nsRect& aDamageRect)
 	PRInt32 count = mDisplayListCount;
 	PRInt32 opaqueCount = mOpaqueViewCount;
 	for (PRInt32 i = 0; i < count; ++i) {
-		DisplayListElement* element = NS_STATIC_CAST(DisplayListElement*, mDisplayList->ElementAt(i));
+		DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, mDisplayList->ElementAt(i));
 		if (element->mFlags & VIEW_RENDERED) {
 			// a view is opaque if it is neither transparent nor transluscent
-			if (!(element->mFlags & (VIEW_TRANSPARENT | VIEW_TRANSLUSCENT))) {
+			if (!(element->mFlags & (VIEW_TRANSPARENT | VIEW_TRANSLUCENT))) {
 				nsRect opaqueRect;
 				opaqueRect.IntersectRect(element->mClip, aDamageRect);
 				nscoord top = opaqueRect.y, left = opaqueRect.x;
 				nscoord bottom = top + opaqueRect.height, right = left + opaqueRect.width;
 				// search for views behind this one, that are completely obscured by it.
 				for (PRInt32 j = i + 1; j < count; ++j) {
-					DisplayListElement* lowerElement = NS_STATIC_CAST(DisplayListElement*, mDisplayList->ElementAt(j));
+					DisplayListElement2* lowerElement = NS_STATIC_CAST(DisplayListElement2*, mDisplayList->ElementAt(j));
 					if (lowerElement->mFlags & VIEW_RENDERED) {
 						nsRect lowerRect;
 						lowerRect.IntersectRect(lowerElement->mClip, aDamageRect);
@@ -2048,7 +2227,7 @@ void nsViewManager2::ShowDisplayList(PRInt32 flatlen)
     PRUint32  flags;
     PRInt32   zindex;
 
-    DisplayListElement* element = (DisplayListElement*) mDisplayList->ElementAt(cnt);
+    DisplayListElement2* element = (DisplayListElement2*) mDisplayList->ElementAt(cnt);
     view = element->mView;
     rect = element->mClip;
     flags = element->mFlags;
