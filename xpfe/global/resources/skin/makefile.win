@@ -39,7 +39,6 @@ install::
 	$(MAKE_INSTALL) formatting.css $(DISTBROWSER)
 	$(MAKE_INSTALL) box.css $(DISTBROWSER)
 	$(MAKE_INSTALL) checkbox.css $(DISTBROWSER)
-	$(MAKE_INSTALL) radop.css $(DISTBROWSER)
 	$(MAKE_INSTALL) menubutton.css $(DISTBROWSER)
 	$(MAKE_INSTALL) menulist.css $(DISTBROWSER)
 	$(MAKE_INSTALL) radio.css $(DISTBROWSER)
