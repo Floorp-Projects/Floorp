@@ -46,8 +46,6 @@ private:
   PRBool keygenReady;
   PRBool statusDialogClosed;
   
-  static void run(void *args);
-  
   PRThread *threadHandle;
   
   GenerateKeypairParameters *params;
@@ -65,6 +63,8 @@ public:
   void SetParams(GenerateKeypairParameters *p);
   
   void Join(void);
+
+  void Run(void);
 };
 
 #endif //_NSKEYGENTHREAD_H_
