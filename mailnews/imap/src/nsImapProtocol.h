@@ -208,6 +208,8 @@ public:
 	char * CreateUtf7ConvertedString(const char * aSourceString, PRBool
                                      aConvertToUtf7Imap);
 
+	PRUnichar * CreatePRUnicharStringFromUTF7(const char * aSourceString);
+
 	void Copy(nsString2 &messageList, const char *destinationMailbox, 
                                     PRBool idsAreUid);
 	void Search(nsString2 &searchCriteria,  PRBool useUID, 

@@ -3713,18 +3713,6 @@ nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString,
 	nsresult res;
 	char *dstPtr = nsnull;
 	PRInt32 dstLength = 0;
-	// this seems to work, but we'll leave this for a little while in in case we
-	// need to disable it
-	static PRBool tryCharsetConversion = PR_TRUE;
-    // ***** temporary **** Fix me ****
-	if (!tryCharsetConversion)
-	{
-		if (aSourceString)
-			return PL_strdup(aSourceString);
-		else
-			return nsnull;
-	}
-	// we haven't turned this code on yet - we're working on it.
 	char *convertedString = NULL;
 	
 	NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
@@ -3798,6 +3786,48 @@ nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString,
     
     return convertedString;
 }
+
+PRUnichar * nsImapProtocol::CreatePRUnicharStringFromUTF7(const char * aSourceString)
+{
+	PRUnichar *convertedString = NULL;
+	nsresult res;
+	
+	NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+
+	if(NS_SUCCEEDED(res) && (nsnull != ccm))
+	{
+		nsString aCharset("x-imap4-modified-utf7");
+		PRUnichar *unichars = nsnull;
+		PRInt32 unicharLength;
+
+		// convert utf7 to unicode
+		nsIUnicodeDecoder* decoder = nsnull;
+
+		res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
+		if(NS_SUCCEEDED(res) && (nsnull != decoder)) 
+		{
+			PRInt32 srcLen = PL_strlen(aSourceString);
+			res = decoder->Length(aSourceString, 0, srcLen, &unicharLength);
+			// temporary buffer to hold unicode string
+			unichars = new PRUnichar[unicharLength + 1];
+			if (unichars == nsnull) 
+			{
+				res = NS_ERROR_OUT_OF_MEMORY;
+			}
+			else 
+			{
+				res = decoder->Convert(unichars, 0, &unicharLength, aSourceString, 0, &srcLen);
+				unichars[unicharLength] = 0;
+			}
+			NS_IF_RELEASE(decoder);
+			// convert the unicode to 8 bit ascii.
+			nsString2 unicodeStr(unichars);
+			convertedString = unicodeStr.ToNewUnicode();
+		}
+    }
+    return convertedString;
+}
+
 
 	// imap commands issued by the parser
 void

@@ -860,7 +860,9 @@ NS_IMETHODIMP nsImapUrl::AllocateServerPath(const char * canonicalPath, char onl
 	return retVal;
 }
 
-
+// Converts the real online name on the server to canonical format:
+// result is hierarchy is indicated by '/' and all real slashes ('/') are escaped.
+// The caller has already converted m-utf-7 to 8 bit ascii, which is a problem.
 NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) 
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
@@ -885,11 +887,8 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
 
 	NS_ASSERTION (serverPath, "Oops... null serverPath");
 
-	if (!serverPath)
+	if (!serverPath || NS_FAILED(rv))
 		goto done;
-
-    if (NS_FAILED(rv))
-        goto done;
 
     GetHost(&hostName);
     m_server->GetUsername(&userName);

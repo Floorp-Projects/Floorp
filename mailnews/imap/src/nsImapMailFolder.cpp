@@ -263,8 +263,11 @@ nsresult nsImapMailFolder::AddSubfolder(nsAutoString name,
 		folder->SetFlag(MSG_FOLDER_FLAG_INBOX);
 	else if(name == "Trash")
 		folder->SetFlag(MSG_FOLDER_FLAG_TRASH);
-  
-	mSubFolders->AppendElement(folder);
+
+	nsCOMPtr <nsISupports> supports = do_QueryInterface(folder);
+	NS_ASSERTION(supports, "couldn't get isupports from imap folder");
+	if (supports)
+		mSubFolders->AppendElement(supports);
     folder->SetParent(this);
     folder->SetDepth(mDepth+1);
 	*child = folder;
@@ -794,6 +797,11 @@ NS_IMETHODIMP nsImapMailFolder::GetHostname(char** hostName)
         return NS_ERROR_FAILURE;
     while (aName[0] == '/')
         aName.Cut(0, 1);
+	// cut out user name ### alec, when you clean up url parsing, please get this too!
+	PRInt32 userNameEnd = aName.Find('@');
+	if (userNameEnd > 0)
+		aName.Cut(0, userNameEnd + 1);
+
     PRInt32 hostEnd = aName.Find('/');
     if (hostEnd > 0) // must have at least one valid charater
         aName.SetLength(hostEnd);
@@ -1008,7 +1016,15 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages()
     nsresult rv = NS_ERROR_FAILURE;
     NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
     if (NS_FAILED(rv)) return rv;
-    rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull);
+	nsCOMPtr<nsIMsgFolder> inbox;
+	nsCOMPtr<nsIMsgFolder> rootFolder;
+	rv = GetRootFolder(getter_AddRefs(rootFolder));
+	if(NS_SUCCEEDED(rv) && rootFolder)
+	{
+		PRUint32 numFolders;
+		rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, getter_AddRefs(inbox), 1, &numFolders);
+	}
+    rv = imapService->SelectFolder(m_eventQueue, inbox, this, nsnull);
     return rv;
 }
 
@@ -1330,13 +1346,31 @@ NS_IMETHODIMP nsImapMailFolder::SetupHeaderParseStream(
 #ifdef DOING_FILTERS
 	if (mFlags & MSG_FOLDER_FLAG_INBOX && !m_filterList)
 	{
-	NS_WITH_SERVICE(nsIMsgFilterService, filterService, kMsgFilterServiceCID, &rv);
-	if (NS_FAILED(rv)) 
-		return rv;
+		NS_WITH_SERVICE(nsIMsgFilterService, filterService, kMsgFilterServiceCID, &rv);
+		if (NS_SUCCEEDED(rv))
+		{
 
-	// need a file spec for filters...
-	nsFileSpec filterFile("rules.dat");
-	nsresult res = filterService->OpenFilterList(&filterFile, getter_AddRefs(m_filterList));
+			nsCOMPtr <nsIMsgFolder> rootFolder;
+			rv = GetRootFolder(getter_AddRefs(rootFolder));
+
+			if (NS_SUCCEEDED(rv))
+			{
+
+				nsCOMPtr <nsIFileSpec> rootDir;
+
+				rv = rootFolder->GetPath(getter_AddRefs(rootDir));
+
+				if (NS_SUCCEEDED(rv))
+				{
+					nsFileSpec		filterFile;
+
+					rootDir->GetFileSpec(&filterFile);
+					// need a file spec for filters...
+					filterFile += "rules.dat";
+					nsresult res = filterService->OpenFilterList(&filterFile, getter_AddRefs(m_filterList));
+				}
+			}
+		}
 
 	}
 #endif
@@ -1416,7 +1450,7 @@ NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
 			if (NS_SUCCEEDED(rv) && headers)
 			{
 #ifdef DOING_FILTERS
-				m_filterList->ApplyFiltersToHdr(nsMsgFilterInboxRule, newMsgHdr, this, mDatabase, 
+				m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule, newMsgHdr, this, mDatabase, 
 						headers, headersSize, this);
 #endif
 			}
@@ -1528,7 +1562,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 			PRBool isRead = (msgFlags & MSG_FLAG_READ);
 			switch (actionType)
 			{
-			case nsMsgFilterActionDelete:
+			case nsMsgFilterAction::Delete:
 			{
 				PRBool deleteToTrash = DeleteIsMoveToTrash();
 				PRBool showDeletedMessages = ShowDeletedMessages();
@@ -1541,7 +1575,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 					{
 						// this sucks - but we need value to live past this scope
 						// so we use an nsString from above.
-						char *folderName = nsnull;
+						PRUnichar *folderName = nsnull;
 						rv = mailTrash->GetName(&folderName);
 						trashNameVal = folderName;
 						PR_FREEIF(folderName);
@@ -1563,13 +1597,13 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 				}
 			}
 			// note that delete falls through to move.
-			case nsMsgFilterActionMoveToFolder:
+			case nsMsgFilterAction::MoveToFolder:
 			{
 				// if moving to a different file, do it.
-				char *folderName = nsnull;
+				PRUnichar *folderName = nsnull;
 				rv = GetName(&folderName);
 
-				if (value && PL_strcasecmp(folderName, (char *) value))
+				if (value && nsCRT::strcasecmp(folderName, (char *) value))
 				{
 					PRUint32 msgFlags;
 					msgHdr->GetFlags(&msgFlags);
@@ -1624,7 +1658,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 				delete [] folderName;
 			}
 				break;
-			case nsMsgFilterActionMarkRead:
+			case nsMsgFilterAction::MarkRead:
 				{
 					nsMsgKeyArray	keysToFlag;
 
@@ -1633,17 +1667,17 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 				}
 //				MarkFilteredMessageRead(msgHdr);
 				break;
-			case nsMsgFilterActionKillThread:
+			case nsMsgFilterAction::KillThread:
 				// for ignore and watch, we will need the db
 				// to check for the flags in msgHdr's that
 				// get added, because only then will we know
 				// the thread they're getting added to.
 				msgHdr->OrFlags(MSG_FLAG_IGNORED, &newFlags);
 				break;
-			case nsMsgFilterActionWatchThread:
+			case nsMsgFilterAction::WatchThread:
 				msgHdr->OrFlags(MSG_FLAG_WATCHED, &newFlags);
 				break;
-			case nsMsgFilterActionChangePriority:
+			case nsMsgFilterAction::ChangePriority:
 				msgHdr->SetPriority(*(nsMsgPriority *) &value);
 				break;
 			default:

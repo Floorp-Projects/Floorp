@@ -152,6 +152,7 @@ struct mailbox_spec {
 	PRUint32			box_flags;
 	
 	char          *allocatedPathName;
+	PRUnichar		*unicharPathName;
 	char			hierarchySeparator;
 	const char		*hostName;
 	

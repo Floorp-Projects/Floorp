@@ -32,7 +32,7 @@
 #include "nsITransactionManager.h"
 #include "nsMsgTxn.h"
 #ifdef DEBUG_bienvenu
-//#define DOING_FILTERS
+#define DOING_FILTERS
 #endif
 #ifdef DOING_FILTERS
 #include "nsIMsgFilterHitNotify.h"
