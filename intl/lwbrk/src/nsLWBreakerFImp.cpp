@@ -126,31 +126,31 @@ nsLWBreakerFImp::GetBreaker(const nsAString& aParam, nsILineBreaker** oResult)
   }
   if( aParam.Equals(NS_LITERAL_STRING("ja")) ) 
   {
-     *oResult = new nsJISx4501LineBreaker (
+     *oResult = new nsJISx4051LineBreaker (
            gJaNoBegin, sizeof(gJaNoBegin)/sizeof(PRUnichar), 
            gJaNoEnd, sizeof(gJaNoEnd)/sizeof(PRUnichar));
   } 
   else if(aParam.Equals(NS_LITERAL_STRING("ko"))) 
   {
-     *oResult = new nsJISx4501LineBreaker (
+     *oResult = new nsJISx4051LineBreaker (
            gKoNoBegin, sizeof(gKoNoBegin)/sizeof(PRUnichar), 
            gKoNoEnd, sizeof(gKoNoEnd)/sizeof(PRUnichar));
   } 
   else if(aParam.Equals(NS_LITERAL_STRING("tw"))) 
   {
-     *oResult = new nsJISx4501LineBreaker (
+     *oResult = new nsJISx4051LineBreaker (
            gTwNoBegin, sizeof(gTwNoBegin)/sizeof(PRUnichar), 
            gTwNoEnd, sizeof(gTwNoEnd)/sizeof(PRUnichar));
   } 
   else if(aParam.Equals(NS_LITERAL_STRING("cn"))) 
   {
-     *oResult = new nsJISx4501LineBreaker (
+     *oResult = new nsJISx4051LineBreaker (
            gCnNoBegin, sizeof(gCnNoBegin)/sizeof(PRUnichar), 
            gCnNoEnd, sizeof(gCnNoEnd)/sizeof(PRUnichar));
   } 
   else 
   {
-     *oResult = new nsJISx4501LineBreaker (nsnull, 0, nsnull, 0);
+     *oResult = new nsJISx4051LineBreaker (nsnull, 0, nsnull, 0);
   }
 
   if (*oResult == NULL) return NS_ERROR_OUT_OF_MEMORY;
