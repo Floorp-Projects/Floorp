@@ -410,7 +410,7 @@ nsFrame::GetStyleContext(nsIStyleContext** aStyleContext) const
 
 NS_IMETHODIMP nsFrame::SetStyleContext(nsIPresContext* aPresContext,nsIStyleContext* aContext)
 {
-  NS_PRECONDITION(0 == (mState & NS_FRAME_IN_REFLOW), "Shouldn't set style context during reflow");
+//  NS_PRECONDITION(0 == (mState & NS_FRAME_IN_REFLOW), "Shouldn't set style context during reflow");
   NS_PRECONDITION(nsnull != aContext, "null ptr");
   if (aContext != mStyleContext) {
     NS_IF_RELEASE(mStyleContext);
@@ -644,6 +644,37 @@ nsFrame::DisplaySelection(nsIPresContext& aPresContext, PRBool isOkToTurnOn)
   }
 
   return result;
+}
+
+void
+nsFrame::SetClipRect(nsIRenderingContext& aRenderingContext)
+{
+  PRBool clipState;
+  const nsStyleDisplay* display;
+  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+
+  // Start with the auto version of the clip rect. Then overlay on top
+  // of it specific offsets.
+  nscoord top = 0;
+  nscoord right = mRect.width;
+  nscoord bottom = mRect.height;
+  nscoord left = 0;
+  if (0 == (NS_STYLE_CLIP_TOP_AUTO & display->mClipFlags)) {
+    top += display->mClip.top;
+  }
+  if (0 == (NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags)) {
+    right += display->mClip.right;
+  }
+  if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags)) {
+    bottom += display->mClip.bottom;
+  }
+  if (0 == (NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags)) {
+    left += display->mClip.left;
+  }
+
+  // Set updated clip-rect into the rendering context
+  nsRect clipRect(top, left, right - left, bottom - top);
+  aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
 }
 
 NS_IMETHODIMP
