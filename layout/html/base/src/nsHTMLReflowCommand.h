@@ -60,10 +60,11 @@ public:
   NS_IMETHOD GetChildListName(nsIAtom*& aListName) const;
   NS_IMETHOD SetChildListName(nsIAtom* aListName);
   NS_IMETHOD GetPrevSiblingFrame(nsIFrame*& aSiblingFrame) const;
+  NS_IMETHOD List(FILE* out) const;
 
 protected:
   void      BuildPath();
-  nsIFrame* GetContainingBlock(nsIFrame* aFloater);
+  nsIFrame* GetContainingBlock(nsIFrame* aFloater) const;
 
 private:
   ReflowType      mType;

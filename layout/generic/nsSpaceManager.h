@@ -54,6 +54,7 @@ public:
   NS_IMETHOD RemoveRegion(nsIFrame* aFrame);
 
   NS_IMETHOD ClearRegions();
+  NS_IMETHOD List(FILE* out);
 
 protected:
   // Structure that maintains information about the region associated
