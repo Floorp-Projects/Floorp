@@ -235,11 +235,14 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
     PRBool isMenuBar = PR_FALSE;
     if (mMenuParent) {
       mMenuParent->IsMenuBar(isMenuBar);
+      PRBool cancel = PR_TRUE;
       if (isMenuBar) {
         mMenuParent->GetIsActive(isActive);
-        if (!isActive)
-          mMenuParent->SetCurrentMenuItem(nsnull);
+        if (isActive) cancel = PR_FALSE;
       }
+      
+      if (cancel)
+        mMenuParent->SetCurrentMenuItem(nsnull);
     }
   }
   else if (aEvent->message == NS_MOUSE_MOVE && mMenuParent) {
