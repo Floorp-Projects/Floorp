@@ -161,7 +161,7 @@ sub print_page_head {
   # Get the message of the day only on the first pageful
   do "$tree/mod.pl" if $nowdate eq $maxdate;
 
-  use POSIX;
+  use POSIX qw(strftime);
   # Print time in format, "HH:MM timezone"
   my $now = strftime("%H:%M %Z", localtime);
 
@@ -342,32 +342,26 @@ sub print_table_header {
     my $bn = $build_name_names->[$ii];
     $bn =~ s/Clobber/Clbr/g;
     $bn =~ s/Depend/Dep/g;
-
-    if( $form{narrow} ){
-      $bn =~ s/([^:])/$1<br>/g;
-      $bn = "<tt>$bn</tt>";
-    }
-    else {
-      $bn = "<font face='Arial,Helvetica' size=-2>$bn</font>";
-    }
+#    $bn = "<font face='Helvetica,Arial' size=-1>$bn</font>";
+    $bn = "<tt>$bn</tt>";
 
     my $last_status = &last_status($ii);
     if ($last_status eq 'busted') {
       if ($form{nocrap}) {
-        print "<th rowspan=2 bgcolor=$colormap{busted}>$bn</th>";
+        print "<td rowspan=2 bgcolor=$colormap{busted}>$bn</td>";
       } else {
         print "<td rowspan=2 bgcolor=000000 background='$images{flames}'>";
         print "<font color=white>$bn</font></td>";
       }
     }
     else {
-      print "<th rowspan=2 bgcolor=$colormap{$last_status}>$bn</th>";
+      print "<td rowspan=2 bgcolor=$colormap{$last_status}>$bn</td>";
     }
   }
   print "</tr><tr>\n";
-  print "<b><TH>Build Time</th>\n";
+  print "<TH>Build Time</TH>\n";
   print "<TH>Guilty</th>\n";
-  print "</b></tr>\n";
+  print "</tr>\n";
 }
 
 sub print_table_footer {
