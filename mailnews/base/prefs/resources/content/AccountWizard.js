@@ -455,24 +455,6 @@ function finishAccount(account, accountData) {
         destIdentity.valid=true;
     }
 
-    /**
-     * If signature file need to be set, get the path to the signature file.
-     * Signature files, if exist, are placed under default location. Get
-     * default files location for messenger using directory service. Signature 
-     * file name should be extracted from the account data to build the complete
-     * path for signature file. Once the path is built, set the identity's signature pref. 
-     */
-    if (destIdentity.attachSignature)
-    {
-        var sigFileName = accountData.signatureFileName;
-        var dirServ = Components.classes['@mozilla.org/file/directory_service;1'].createInstance();
-        dirServ = dirServ.QueryInterface(Components.interfaces.nsIProperties);
-        
-        var sigFile = dirServ.get("AMessenger", Components.interfaces.nsIFile);
-        sigFile.appendUnicode(sigFileName);
-        destIdentity.signature = sigFile;
-    }
-
     // don't try to create an smtp server if we already have one.
     if (!destIdentity.smtpServerKey)
     {
