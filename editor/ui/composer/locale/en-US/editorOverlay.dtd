@@ -115,7 +115,7 @@
 <!ENTITY viewcharsetmenu1.accesskey "">
 <!ENTITY dcharMenu2.label "Character Set  Cyrillic">
 <!ENTITY viewcharsetmenu2.accesskey "">
-<!ENTITY dcharMenu3.label "Character Set  SE Asian/Armenian/Semitic">
+<!ENTITY dcharMenu3.label "Character Set  SE Asian/Armenian">
 <!ENTITY viewcharsetmenu3.accesskey "">
 <!ENTITY dcharMenu4.label "Character Set  Macintosh">
 <!ENTITY viewcharsetmenu4.accesskey "">
