@@ -250,6 +250,12 @@ nsMemoryCacheDevice::OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize)
 {
     if (entry->IsStreamData()) {
         // we have the right to refuse or pre-evict
+        PRUint32  newSize = entry->DataSize() + deltaSize;
+        if (newSize > mSoftLimit) {
+            nsresult rv = nsCacheService::GlobalInstance()->DoomEntry_Locked(entry);
+            NS_ASSERTION(NS_SUCCEEDED(rv),"DoomEntry_Locked() failed.");
+            return NS_ERROR_ABORT;
+        }
     }
 
     // adjust our totals
