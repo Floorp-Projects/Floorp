@@ -1390,7 +1390,7 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
     NS_ENSURE_SUCCESS(res, res);
   }
   // adjust normal ws in afterRun if needed
-  if (afterRun && (afterRun->mType == eNormalWS))
+  if (afterRun && (afterRun->mType == eNormalWS) && !aEndObject->mPRE)
   {
     if ( (beforeRun && (beforeRun->mType == eLeadingWS)) ||
          (!beforeRun && ((mStartReason & eBlock) || (mStartReason == eBreak))) )
@@ -1411,7 +1411,7 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
     res = DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset, mNode, mOffset);
     NS_ENSURE_SUCCESS(res, res);
   }
-  else if (beforeRun && (beforeRun->mType == eNormalWS))
+  else if (beforeRun && (beforeRun->mType == eNormalWS) && mPRE)
   {
     if ( (afterRun && (afterRun->mType == eTrailingWS)) ||
          (afterRun && (afterRun->mType == eNormalWS))   ||
