@@ -1646,7 +1646,7 @@ NS_IMETHODIMP nsMsgDBView::CycleCell(PRInt32 row, nsITreeColumn* col)
   case 't': // threaded cell or total cell
     if (colID[1] == 'h') 
     {
-      ExpandAndSelectThreadByIndex(row);
+      ExpandAndSelectThreadByIndex(row, PR_FALSE);
     }
     break;
   case 'f': // flagged column
@@ -3873,12 +3873,12 @@ nsresult nsMsgDBView::ExpandAndSelectThread()
     rv = mTreeSelection->GetCurrentIndex(&index);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = ExpandAndSelectThreadByIndex(index);
+    rv = ExpandAndSelectThreadByIndex(index, PR_FALSE);
     NS_ENSURE_SUCCESS(rv,rv);
     return NS_OK;
 }
 
-nsresult nsMsgDBView::ExpandAndSelectThreadByIndex(nsMsgViewIndex index)
+nsresult nsMsgDBView::ExpandAndSelectThreadByIndex(nsMsgViewIndex index, PRBool augment)
 {
   nsresult rv;
 
@@ -3921,26 +3921,9 @@ nsresult nsMsgDBView::ExpandAndSelectThreadByIndex(nsMsgViewIndex index)
   NS_ASSERTION(mTreeSelection, "no tree selection");
   if (!mTreeSelection) return NS_ERROR_UNEXPECTED;
 
-  // clear the existing selection.
-  mTreeSelection->ClearSelection(); 
-
-  // is this correct when we are selecting multiple items?
-  mTreeSelection->SetCurrentIndex(threadIndex); 
-
   // the count should be 1 or greater. if there was only one message in the thread, we just select it.
   // if more, we select all of them.
-  mTreeSelection->RangedSelect(threadIndex, threadIndex + count - 1, PR_TRUE /* augment */);
-
-  if (count == 1) {
-    // if we ended up selecting on message, this will cause us to load it.
-    SelectionChanged();
-  }
-  else {
-    //XXX todo, should multiple selection clear the thread pane?  see bug #xxxxx
-    //do we want to do something like this to clear the message pane
-    //when the user selects a thread?
-    //NoteChange(?, ?, nsMsgViewNotificationCode::clearMessagePane);
-  }
+  mTreeSelection->RangedSelect(threadIndex + count - 1, threadIndex, augment);
   return NS_OK;
 }
 

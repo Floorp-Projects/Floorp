@@ -200,7 +200,6 @@ protected:
   nsresult CollapseByIndex(nsMsgViewIndex index, PRUint32 *pNumCollapsed);
   nsresult ExpandAll();
   nsresult CollapseAll();
-  nsresult ExpandAndSelectThreadByIndex(nsMsgViewIndex index);
   nsresult ExpandAndSelectThread();
 
   // helper routines for thread expanding and collapsing.

@@ -319,6 +319,7 @@ interface nsIMsgDBView : nsISupports
     readonly attribute boolean removeRowOnMoveOrDelete; 
 
 	nsMsgViewIndex findIndexFromKey(in nsMsgKey aMsgKey, in boolean aExpand);
+    void ExpandAndSelectThreadByIndex(in nsMsgViewIndex aIndex, in boolean aAugment);
 };
 
 /* this interface is rapidly morphing from a command updater interface into a more generic
