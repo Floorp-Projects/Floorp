@@ -38,8 +38,6 @@
 
 #include "EditAggregateTxn.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMNode.h"
-#include "nsVoidArray.h"
 
 EditAggregateTxn::EditAggregateTxn()
   : EditTxn()
@@ -116,7 +114,7 @@ NS_IMETHODIMP EditAggregateTxn::RedoTransaction(void)
 
 NS_IMETHODIMP EditAggregateTxn::GetIsTransient(PRBool *aIsTransient)
 {
-  if (nsnull!=aIsTransient)
+  if (aIsTransient)
     *aIsTransient = PR_FALSE;
   return NS_OK;
 }
@@ -124,8 +122,8 @@ NS_IMETHODIMP EditAggregateTxn::GetIsTransient(PRBool *aIsTransient)
 NS_IMETHODIMP EditAggregateTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   nsresult result=NS_OK;  // it's legal (but not very useful) to have an empty child list
-  if (nsnull!=aDidMerge)
-    *aDidMerge=PR_FALSE;
+  if (aDidMerge)
+    *aDidMerge = PR_FALSE;
   if (mChildren)
   {
     PRInt32 i=0;
@@ -140,7 +138,6 @@ NS_IMETHODIMP EditAggregateTxn::Merge(nsITransaction *aTransaction, PRBool *aDid
     }
   }
   return result;
-
 }
 
 NS_IMETHODIMP EditAggregateTxn::GetTxnDescription(nsAString& aString)
@@ -218,14 +215,11 @@ NS_IMETHODIMP EditAggregateTxn::SetName(nsIAtom *aName)
 
 NS_IMETHODIMP EditAggregateTxn::GetName(nsIAtom **aName)
 {
-  if (aName)
+  if (aName && mName)
   {
-    if (mName)
-    {
-      *aName = mName;
-      NS_ADDREF(*aName);
-      return NS_OK;
-    }
+    *aName = mName;
+    NS_ADDREF(*aName);
+    return NS_OK;
   }
   return NS_ERROR_NULL_POINTER;
 }
@@ -248,15 +242,9 @@ NS_IMETHODIMP EditAggregateTxn::QueryInterface(REFNSIID aIID, void** aInstancePt
  
   if (aIID.Equals(EditAggregateTxn::GetCID())) {
     *aInstancePtr = NS_STATIC_CAST(EditAggregateTxn*, this);
-//    *aInstancePtr = (nsISupports*)(EditAggregateTxn*)(this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
   return EditTxn::QueryInterface(aIID, aInstancePtr);
 }
-
-
-
-
-
 
