@@ -590,7 +590,7 @@ public:
   NS_IMETHOD HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset , 
                        PRBool aContinueSelection, PRBool aMultipleSelection, PRBool aHint); 
   NS_IMETHOD HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint);
-  NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt16 aTarget, nsMouseEvent *aMouseEvent);
+  NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt32 aTarget, nsMouseEvent *aMouseEvent);
   NS_IMETHOD StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay);
   NS_IMETHOD StopAutoScrollTimer();
   NS_IMETHOD EnableFrameNotification(PRBool aEnable);
@@ -901,7 +901,7 @@ nsTextInputSelectionImpl::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFr
 
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt16 aTarget, nsMouseEvent *aMouseEvent)
+nsTextInputSelectionImpl::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt32 aTarget, nsMouseEvent *aMouseEvent)
 {
   // We should never have a table inside a text control frame!
   NS_ASSERTION(PR_TRUE, "Calling HandleTableSelection inside nsGfxTextControlFrame!");

@@ -59,17 +59,17 @@ interface nsISelectionPrivate : nsISupports
        items in nsIFrameSelection  to a 
        new nsITableSelection interface
     */
-    const short TABLESELECTION_NONE     = 0; 
-    const short TABLESELECTION_CELL     = 1; 
-    const short TABLESELECTION_ROW      = 2; 
-    const short TABLESELECTION_COLUMN   = 3; 
-    const short TABLESELECTION_TABLE    = 4; 
-    const short TABLESELECTION_ALLCELLS = 5;
+    const long TABLESELECTION_NONE     = 0; 
+    const long TABLESELECTION_CELL     = 1; 
+    const long TABLESELECTION_ROW      = 2; 
+    const long TABLESELECTION_COLUMN   = 3; 
+    const long TABLESELECTION_TABLE    = 4; 
+    const long TABLESELECTION_ALLCELLS = 5;
 
     /** Test if supplied range points to a single table element:
       *    Result is one of above constants. "None" means
       *    a table element isn't selected.
       */
-    short getTableSelectionType(in nsIDOMRange range);
+    long getTableSelectionType(in nsIDOMRange range);
 };
 

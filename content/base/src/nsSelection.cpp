@@ -156,7 +156,7 @@ public:
   NS_IMETHOD    GetRangeCount(PRInt32* aRangeCount);
   NS_IMETHOD    GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn);
   NS_IMETHOD    RemoveAllRanges();
-  NS_IMETHOD    GetTableSelectionType(nsIDOMRange* aRange, PRInt16* aTableSelectionType);
+  NS_IMETHOD    GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSelectionType);
   NS_IMETHOD    Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset);
   NS_IMETHOD    CollapseToStart();
   NS_IMETHOD    CollapseToEnd();
@@ -250,7 +250,7 @@ private:
   void         setAnchorFocusRange(PRInt32 aIndex); //pass in index into FrameSelection
   NS_IMETHOD   selectFrames(nsIPresContext* aPresContext, nsIContentIterator *aInnerIter, nsIContent *aContent, nsIDOMRange *aRange, nsIPresShell *aPresShell, PRBool aFlags);
   NS_IMETHOD   selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange, PRBool aSelect);
-  nsresult     getTableCellLocationFromRange(nsIDOMRange *aRange, PRInt16 *aSelectionType, PRInt32 *aRow, PRInt32 *aCol);
+  nsresult     getTableCellLocationFromRange(nsIDOMRange *aRange, PRInt32 *aSelectionType, PRInt32 *aRow, PRInt32 *aCol);
   nsresult     addTableCellRange(nsIDOMRange *aRange, PRBool *aDidAddRange);
   
 #if OLD_SELECTION
@@ -305,7 +305,7 @@ public:
   NS_IMETHOD HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset, 
                        PRBool aContinueSelection, PRBool aMultipleSelection,PRBool aHint);
   NS_IMETHOD HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint);
-  NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt16 aTarget, nsMouseEvent *aMouseEvent);
+  NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt32 aTarget, nsMouseEvent *aMouseEvent);
   NS_IMETHOD StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay);
   NS_IMETHOD StopAutoScrollTimer();
   NS_IMETHOD EnableFrameNotification(PRBool aEnable){mNotifyFrames = aEnable; return NS_OK;}
@@ -414,7 +414,7 @@ private:
   nsCOMPtr<nsIContent> mAppendStartSelectedCell;
   nsCOMPtr<nsIContent> mUnselectCellOnMouseUp;
   PRBool   mSelectingTableCells;
-  PRInt16  mSelectingTableCellMode;
+  PRInt32  mSelectingTableCellMode;
   PRInt32  mSelectedCellIndex;
 
   //batching
@@ -2231,7 +2231,7 @@ nsSelection::ClearNormalSelection()
 // Table selection support.
 // TODO: Separate table methods into a separate nsITableSelection interface
 nsresult
-nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt16 aTarget, nsMouseEvent *aMouseEvent)
+nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt32 aTarget, nsMouseEvent *aMouseEvent)
 {
   if (!aParentContent) return NS_ERROR_NULL_POINTER;
   if (mSelectingTableCells && (aTarget & nsISelectionPrivate::TABLESELECTION_TABLE))
@@ -2985,7 +2985,7 @@ nsSelection::SelectCellElement(nsIDOMElement *aCellElement)
 }
 
 nsresult
-nsTypedSelection::getTableCellLocationFromRange(nsIDOMRange *aRange, PRInt16 *aSelectionType, PRInt32 *aRow, PRInt32 *aCol)
+nsTypedSelection::getTableCellLocationFromRange(nsIDOMRange *aRange, PRInt32 *aSelectionType, PRInt32 *aRow, PRInt32 *aCol)
 {
   if (!aRange || !aSelectionType || !aRow || !aCol)
     return NS_ERROR_NULL_POINTER;
@@ -3071,7 +3071,7 @@ nsTypedSelection::addTableCellRange(nsIDOMRange *aRange, PRBool *aDidAddRange)
 	    nsCOMPtr<nsIDOMRange> range = do_QueryInterface(element);
       if (!range) return NS_ERROR_FAILURE;
 
-      PRInt16 selectionMode;
+      PRInt32 selectionMode;
       result = getTableCellLocationFromRange(range, &selectionMode, &row, &col);
       if (NS_FAILED(result)) return result;
 
@@ -3099,7 +3099,7 @@ nsTypedSelection::addTableCellRange(nsIDOMRange *aRange, PRBool *aDidAddRange)
 
 //TODO: Figure out TABLESELECTION_COLUMN and TABLESELECTION_ALLCELLS
 NS_IMETHODIMP
-nsTypedSelection::GetTableSelectionType(nsIDOMRange* aRange, PRInt16* aTableSelectionType)
+nsTypedSelection::GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSelectionType)
 {
   if (!aRange || !aTableSelectionType)
     return NS_ERROR_NULL_POINTER;
