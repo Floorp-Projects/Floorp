@@ -109,9 +109,9 @@
 #include "nsBrowserStatusFilter.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 
-// if DEBUG, NS_BUILD_REFCNT_LOGGING, or MOZ_PERF_METRICS is defined,
-// enable the PageCycler
-#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING) || defined(MOZ_PERF_METRICS)
+// If DEBUG, NS_BUILD_REFCNT_LOGGING, MOZ_PERF_METRICS, or MOZ_JPROF is
+// defined, enable the PageCycler.
+#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING) || defined(MOZ_PERF_METRICS) || defined(MOZ_JPROF)
 #define ENABLE_PAGE_CYCLER
 #endif
 
@@ -367,22 +367,18 @@ protected:
   PRIntervalTime        mIntervalTime;
 };
 
-NS_IMPL_ADDREF(PageCycler)
-NS_IMPL_RELEASE(PageCycler)
+NS_IMPL_ISUPPORTS1(PageCycler, nsIObserver)
 
-NS_INTERFACE_MAP_BEGIN(PageCycler)
-  NS_INTERFACE_MAP_ENTRY(nsIObserver)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
-NS_INTERFACE_MAP_END
-
-// TimesUp: callback for the PageCycler timer: called when we have waited too long
-// for the page to finish loading.
+// TimesUp: callback for the PageCycler timer: called when we have
+// waited too long for the page to finish loading.
 // 
-// The aClosure argument is actually the PageCycler, 
-// so use it to stop the timer and call the Observe fcn to move on to the next URL
-// Note that we pass the PageCycler instance as the aSubject argument to the Observe
-// function. This is our indication that the Observe method is being called after a
-// timeout, allowing the PageCycler to do any necessary processing before moving on.
+// The aClosure argument is actually the PageCycler, so use it to stop
+// the timer and call the Observe fcn to move on to the next URL.  Note
+// that we pass the PageCycler instance as the aSubject argument to the
+// Observe function. This is our indication that the Observe method is
+// being called after a timeout, allowing the PageCycler to do any
+// necessary processing before moving on.
+
 void TimesUp(nsITimer *aTimer, void *aClosure)
 {
   if(aClosure){
