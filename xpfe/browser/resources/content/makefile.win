@@ -29,6 +29,7 @@ install::
 	$(MAKE_INSTALL) viewSource.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) contentframe.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) navigator.xul $(DISTBROWSWER)
+	$(MAKE_INSTALL) navigatorOverlay.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) navigator.js $(DISTBROWSWER)
 	$(MAKE_INSTALL) NetSupportConfirmYN.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) NetSupportConfirmCheckYN.xul $(DISTBROWSWER)
@@ -43,6 +44,7 @@ clobber::
   rm -f $(DISTBROWSER)\viewSource.xul
   rm -f $(DISTBROWSER)\contentframe.xul
   rm -f $(DISTBROWSER)\navigator.xul
+   rm -f $(DISTBROWSER)\navigatorOverlay.xul
   rm -f $(DISTBROWSER)\navigator.js
   rm -f $(DISTBROWSER)\NetSupportConfirmYN.xul
   rm -f $(DISTBROWSER)\NetSupportConfirmCheckYN.xul

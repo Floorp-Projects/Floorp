@@ -29,6 +29,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/viewsource.js \
 		$(srcdir)/contentframe.xul \
 		$(srcdir)/navigator.xul \
+		$(srcdir)/navigatorOverlay.xul \
 		$(srcdir)/navigator.js \
 		$(srcdir)/openLocation.xul \
 		$(srcdir)/viewSource.xul \
