@@ -66,6 +66,7 @@ typedef struct _wallet_Sublist {
 } wallet_Sublist;
 
 PRIVATE XP_List * wallet_URLFieldToSchema_list=0;
+PRIVATE XP_List * wallet_specificURLFieldToSchema_list=0;
 PRIVATE XP_List * wallet_FieldToSchema_list=0;
 PRIVATE XP_List * wallet_SchemaToValue_list=0;
 PRIVATE XP_List * wallet_SchemaConcat_list=0;
@@ -558,6 +559,82 @@ wallet_ReadFromFile(char* filename, XP_List*& list, PlacementType placement = DU
   }
 }
 
+/*
+ * Read contents of designated URLFieldToSchema file into designated list
+ */
+void
+wallet_ReadFromURLFieldToSchemaFile
+    (char* filename, XP_List*& list, PlacementType placement = DUP_AFTER) {
+
+  FILE* fp = fopen(filename, "r");
+  if (nsnull==fp) {
+    return;
+  }
+
+  /* make sure the list exists */
+  if(!list) {
+    list = XP_ListNew();
+    if(!list) {
+      fclose(fp);
+      return;
+    }
+  }
+
+  for (;;) {
+
+    nsAutoString * aItem;
+    if (wallet_GetLine(fp, aItem) == -1) {
+      /* end of file reached */
+      fclose(fp);
+      return;
+    }
+
+    XP_List * itemList = XP_ListNew();
+    nsAutoString * dummy = new nsAutoString("");
+    wallet_WriteToList(*aItem, *dummy, itemList, list, placement);
+
+    for (;;) {
+      nsAutoString * aItem1;
+      if (wallet_GetLine(fp, aItem1) == -1) {
+        /* end of file reached */
+        fclose(fp);
+        return;
+      }
+
+      if (aItem1->Length()==0) {
+        /* end of url reached */
+        break;
+      }
+
+      nsAutoString * aItem2;
+      if (wallet_GetLine(fp, aItem2) == -1) {
+        /* unexpected end of file reached */
+        delete aItem1;
+        fclose(fp);
+        return;
+      }
+
+      XP_List* dummy = NULL;
+      wallet_WriteToList(*aItem1, *aItem2, dummy, itemList, placement);
+
+      nsAutoString * aItem3;
+      if (wallet_GetLine(fp, aItem3) == -1) {
+        /* end of file reached */
+        fclose(fp);
+        return;
+      }
+
+      if (aItem3->Length()!=0) {
+        /* invalid file format */
+        fclose(fp);
+        delete aItem3;
+        return;
+      }
+      delete aItem3;
+    }
+  }
+}
+
 /***************************************************************/
 /* The following routines are for fetching data from NetCenter */
 /***************************************************************/
@@ -567,83 +644,7 @@ wallet_ReadFromFile(char* filename, XP_List*& list, PlacementType placement = DU
  * at URLFieldSchema.tbl
  */
 void
-wallet_FetchURLFieldSchemaFromNetCenter(nsAutoString urlName) {
-  FILE* fp_in = fopen("RawURLFieldSchema.tbl", "r");
-  FILE* fp_out = fopen("URLFieldSchema.tbl", "w");
-  PRUint32 count;
-
-  if (nsnull==fp_in) {
-    return;
-  }
-
-  nsAutoString * line;
-
-  for (;;) {
-
-    /* get next line */
-    if (wallet_GetLine(fp_in, line) == -1) {
-      fflush(fp_out);
-      fclose(fp_out);
-      fclose(fp_in);
-      return;
-    }
-
-    /* see if this is the url we want */
-    urlName.ToLowerCase();
-    line->ToLowerCase();
-    if (line->Compare(urlName)==0) {
-      /* it is our url so write this group of lines to output file */
-      delete line;
-      count = 0;
-      for (;;) {
-        /* get next line */
-        if (wallet_GetLine(fp_in, line) == -1) {
-          fflush(fp_out);
-          fclose(fp_out);
-          fclose(fp_in);
-          return;
-        }
-        if (line->Length()==0) {
-          count++;
-          if (count==2) {
-            delete line;
-            fflush(fp_out);
-            fclose(fp_out);
-            fclose(fp_in);
-            return;
-          }
-        } else {
-          count = 0;
-        }
-        char * temp;
-        temp = line->ToNewCString();
-        fprintf(fp_out, "%s\n", temp);
-        delete line;
-        delete temp;
-      }
-    }
-  
-    /* wrong URL, skip ahead to two blank lines */
-    delete line;
-    count = 0;
-    for (;;) {
-      if (wallet_GetLine(fp_in, line) == -1) {
-        fflush(fp_out);
-        fclose(fp_out);
-        fclose(fp_in);
-        return;
-      }
-      if (line->Length()==0) {
-        count++; 
-      } else {
-        count = 0;
-      }
-      delete line;
-      if (count==2) {
-        break;
-      }
-    }    
-  }
+wallet_FetchURLFieldSchemaFromNetCenter() {
 }
 
 /*
@@ -678,7 +679,7 @@ PRInt32 FieldToValue(
 {
   /* fetch schema name from field/schema tables */
   XP_List* FieldToSchema_list = wallet_FieldToSchema_list;
-  XP_List* URLFieldToSchema_list = wallet_URLFieldToSchema_list;
+  XP_List* URLFieldToSchema_list = wallet_specificURLFieldToSchema_list;
   XP_List* SchemaToValue_list;
   XP_List* dummy;
   if (nsnull == resume) {
@@ -861,34 +862,35 @@ wallet_Initialize() {
   static PRBool wallet_initialized = FALSE;
   if (!wallet_initialized) {
 
-#ifdef experiment
-    wallet_Pause();
-    nsINetService *inet = nsnull;
-    nsIURL * url;
-    if (!NS_FAILED(NS_NewURL(&url, FIELD_SCHEMA_URL))) {
-      nsresult rv = nsServiceManager::GetService(kNetServiceCID,
-                                                 kINetServiceIID,
-                                                 (nsISupports **)&inet);
-      if (rv != NS_OK) {
-        nsIInputStream* *aNewStream;
-        rv = inet->OpenBlockingStream(url, nsnull, aNewStream);
-        rv++;
-      }
-      nsServiceManager::ReleaseService(kNetServiceCID, inet);
-    }
-#endif
-
     wallet_FetchFieldSchemaFromNetCenter();
+    wallet_FetchURLFieldSchemaFromNetCenter();
+    wallet_FetchSchemaConcatFromNetCenter();
     wallet_ReadFromFile("FieldSchema.tbl", wallet_FieldToSchema_list);
     wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list);
     wallet_ReadFromFile("SchemaConcat.tbl", wallet_SchemaConcat_list);
+    wallet_ReadFromURLFieldToSchemaFile("URLFieldSchema.tbl", wallet_URLFieldToSchema_list);
+
 #if DEBUG
 //    fprintf(stdout,"Field to Schema table \n");
 //    wallet_Dump(wallet_FieldToSchema_list);
+
 //    fprintf(stdout,"Schema to Value table \n");
 //    wallet_Dump(wallet_SchemaToValue_list);
+
 //    fprintf(stdout,"SchemaConcat table \n");
 //    wallet_Dump(wallet_SchemaConcat_list);
+
+//    fprintf(stdout,"URL Field to Schema table \n");
+//    XP_List * list_ptr;
+//    char item1[100];
+//    wallet_MapElement * ptr;
+//    list_ptr = wallet_URLFieldToSchema_list;
+//    while((ptr = (wallet_MapElement *) XP_ListNextObject(list_ptr))!=0) {
+//      ptr->item1->ToCString(item1, 100);
+//      fprintf(stdout, item1);
+//      fprintf(stdout,"\n");
+//      wallet_Dump(ptr->itemList);
+//    }
 #endif
     wallet_initialized = TRUE;
   }
@@ -923,11 +925,20 @@ wallet_InitializeCurrentURL(nsIDocument * doc) {
   urlName = urlName + file;
   NS_RELEASE(url);
 
-  /* read in field/schema mapping specific to current url */
-  wallet_Clear(&wallet_URLFieldToSchema_list);
-  wallet_FetchURLFieldSchemaFromNetCenter(urlName);
-  wallet_ReadFromFile("URLFieldSchema.tbl", wallet_URLFieldToSchema_list);
-//  wallet_Dump(wallet_URLFieldToSchema_list);
+  /* get field/schema mapping specific to current url */
+  XP_List * list_ptr;
+  wallet_MapElement * ptr;
+  list_ptr = wallet_URLFieldToSchema_list;
+  while((ptr = (wallet_MapElement *) XP_ListNextObject(list_ptr))!=0) {
+    if (*(ptr->item1) == urlName) {
+      wallet_specificURLFieldToSchema_list = ptr->itemList;
+      break;
+    }
+  }
+#ifdef DEBUG
+//  wallet_Dump(wallet_specificURLFieldToSchema_list);
+//  fprintf(stdout,"specific URL Field to Schema table \n");
+#endif
 }
 
 #define SEPARATOR "#*%&"
@@ -1426,6 +1437,7 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
   if (nsnull != shell) {
     nsIDocument* doc = nsnull;
     if (shell->GetDocument(&doc) == NS_OK) {
+      wallet_Initialize();
       wallet_InitializeCurrentURL(doc);
       nsIDOMHTMLDocument* htmldoc = nsnull;
       nsresult result = doc->QueryInterface(kIDOMHTMLDocumentIID, (void**)&htmldoc);
@@ -1446,7 +1458,6 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
                 result = formElement->GetElements(&elements);
                 if ((NS_OK == result) && (nsnull != elements)) {
                   /* got to the form elements at long last */
-                  wallet_Initialize();
                   PRUint32 numElements;
                   elements->GetLength(&numElements);
                   for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
@@ -1542,9 +1553,9 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
 #ifdef DEBUG
 wallet_DumpStopwatch();
 wallet_ClearStopwatch();
-#endif
 //wallet_DumpTiming();
 //wallet_ClearTiming();
+#endif
 }
 
 /*
@@ -1593,7 +1604,7 @@ WLLT_Capture(nsIDocument* doc, nsString field, nsString value) {
   /* is there a mapping from this field name to a schema name */
   nsAutoString schema;
   XP_List* FieldToSchema_list = wallet_FieldToSchema_list;
-  XP_List* URLFieldToSchema_list = wallet_URLFieldToSchema_list;
+  XP_List* URLFieldToSchema_list = wallet_specificURLFieldToSchema_list;
   XP_List* SchemaToValue_list = wallet_SchemaToValue_list;
   XP_List* dummy;
 
