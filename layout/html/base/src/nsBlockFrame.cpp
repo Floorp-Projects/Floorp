@@ -1591,22 +1591,6 @@ nsBlockFrame::RetargetInlineIncrementalReflow(nsReflowPath::iterator &aTarget,
   }
 }
 
-PRBool
-nsBlockFrame::IsLineEmpty(nsIPresContext* aPresContext,
-                          const nsLineBox* aLine) const
-{
-  const nsStyleText* styleText = GetStyleText();
-  PRBool isPre = NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace ||
-                 NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace;
-
-  nsCompatibility compat;
-  aPresContext->GetCompatibilityMode(&compat);
-
-  PRBool empty = PR_FALSE;
-  aLine->IsEmpty(compat, isPre, &empty);
-  return empty;
-}
-
 nsresult
 nsBlockFrame::MarkLineDirty(line_iterator aLine)
 {
@@ -2828,27 +2812,22 @@ IsMarginZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
             (aUnit == eStyleUnit_Percent && aCoord.GetPercentValue() == 0.0));
 }
 
-NS_IMETHODIMP
-nsBlockFrame::IsEmpty(nsCompatibility aCompatMode, PRBool aIsPre,
-                      PRBool *aResult)
+/* virtual */ PRBool
+nsBlockFrame::IsEmpty()
 {
-  // Start with a bunch of early returns for things that mean we're not
-  // empty.
-  *aResult = PR_FALSE;
-
   const nsStylePosition* position = GetStylePosition();
 
   switch (position->mMinHeight.GetUnit()) {
     case eStyleUnit_Coord:
       if (position->mMinHeight.GetCoordValue() != 0)
-        return NS_OK;
+        return PR_FALSE;
       break;
     case eStyleUnit_Percent:
       if (position->mMinHeight.GetPercentValue() != 0.0f)
-        return NS_OK;
+        return PR_FALSE;
       break;
     default:
-      return NS_OK;
+      return PR_FALSE;
   }
 
   switch (position->mHeight.GetUnit()) {
@@ -2856,14 +2835,14 @@ nsBlockFrame::IsEmpty(nsCompatibility aCompatMode, PRBool aIsPre,
       break;
     case eStyleUnit_Coord:
       if (position->mHeight.GetCoordValue() != 0)
-        return NS_OK;
+        return PR_FALSE;
       break;
     case eStyleUnit_Percent:
       if (position->mHeight.GetPercentValue() != 0.0f)
-        return NS_OK;
+        return PR_FALSE;
       break;
     default:
-      return NS_OK;
+      return PR_FALSE;
   }
 
   const nsStyleBorder* border = GetStyleBorder();
@@ -2879,25 +2858,17 @@ nsBlockFrame::IsEmpty(nsCompatibility aCompatMode, PRBool aIsPre,
                     padding->mPadding.GetTop(coord)) ||
       !IsPaddingZero(padding->mPadding.GetBottomUnit(),
                     padding->mPadding.GetBottom(coord))) {
-    return NS_OK;
+    return PR_FALSE;
   }
 
-  const nsStyleText* styleText = GetStyleText();
-  PRBool isPre = NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace ||
-                 NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace;
-  // Now the only thing that could make us non-empty is one of the lines
-  // being non-empty.  So now assume that we are empty until told
-  // otherwise.
-  *aResult = PR_TRUE;
   for (line_iterator line = begin_lines(), line_end = end_lines();
        line != line_end;
        ++line)
   {
-    line->IsEmpty(aCompatMode, isPre, aResult);
-    if (! *aResult)
-      break;
+    if (!line->IsEmpty())
+      return PR_FALSE;
   }
-  return NS_OK;
+  return PR_TRUE;
 }
 
 PRBool
@@ -2918,18 +2889,9 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
   }
 
   // Determine if this line is "essentially" the first line
-  //
-  const nsStyleText* styleText = GetStyleText();
-  PRBool isPre = NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace ||
-                 NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace;
-
-  nsCompatibility compat;
-  aState.mPresContext->GetCompatibilityMode(&compat);
-
   for (line_iterator line = begin_lines(); line != aLine; ++line) {
     PRBool empty;
-    line->IsEmpty(compat, isPre, &empty);
-    if (!empty) {
+    if (!line->IsEmpty()) {
       // A line which preceeds aLine is non-empty, so therefore the
       // top margin applies.
       aState.SetFlag(BRS_APPLYTOPMARGIN, PR_TRUE);
@@ -2955,7 +2917,7 @@ nsBlockFrame::GetTopBlockChild(nsIPresContext* aPresContext)
   if (firstLine->IsBlock())
     return firstLine->mFirstChild;
 
-  if (!IsLineEmpty(aPresContext, firstLine))
+  if (!firstLine->IsEmpty())
     return nsnull;
 
   line_iterator secondLine = begin_lines();
@@ -4118,7 +4080,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   // collapsed with a block that follows.
   nscoord newY;
 
-  if (!IsLineEmpty(aState.mPresContext, aLine)) {
+  if (!aLine->IsEmpty()) {
     // This line has some height. Therefore the application of the
     // previous-bottom-margin should stick.
     aState.mPrevBottomMargin.Zero();

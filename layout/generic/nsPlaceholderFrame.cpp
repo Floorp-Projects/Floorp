@@ -92,13 +92,10 @@ nsPlaceholderFrame::GetType() const
   return nsLayoutAtoms::placeholderFrame; 
 }
 
-NS_IMETHODIMP
-nsPlaceholderFrame::IsEmpty(nsCompatibility aCompatMode,
-                            PRBool aIsPre,
-                            PRBool *aResult)
+/* virtual */ PRBool
+nsPlaceholderFrame::IsEmpty()
 {
-  *aResult = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
 
 #ifdef DEBUG

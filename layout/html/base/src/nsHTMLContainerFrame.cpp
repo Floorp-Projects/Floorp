@@ -239,15 +239,7 @@ HasTextFrameDescendant(nsIPresContext* aPresContext, nsIFrame* aParent)
       // This is only a candidate. We need to determine if this text
       // frame is empty, as in containing only (non-pre) whitespace.
       // See bug 20163.
-      nsCompatibility mode;
-      aPresContext->GetCompatibilityMode(&mode);
-      const nsStyleText* styleText = kid->GetStyleText();
-      // XXXldb This is the wrong way to set |isPre|.
-      PRBool isPre = NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace ||
-            NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace;
-      PRBool isEmpty;
-      kid->IsEmpty(mode, isPre, &isEmpty);
-      if (!isEmpty) {
+      if (!kid->IsEmpty()) {
         return PR_TRUE;
       }
     }

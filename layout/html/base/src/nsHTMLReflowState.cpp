@@ -852,17 +852,11 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
       // XXXbz why the special-casing if we are the last line box?
       if (lineBox != blockFrame->end_lines()) {
         nsIFrame * firstFrame = lineBox->mFirstChild;
-        nsCompatibility mode;
-        aPresContext->GetCompatibilityMode(&mode);
         while (firstFrame != aPlaceholderFrame) {
           NS_ASSERTION(firstFrame, "Must reach our placeholder before end of list!");
           if (!firstFrame)   // This can be removed when we split out-of-flow
             break;           // frames correctly,  see bug 223064
-          PRBool isEmpty;
-          firstFrame->IsEmpty(mode,
-                              firstFrame->GetStyleText()->WhiteSpaceIsSignificant(),
-                              &isEmpty);
-          if (!isEmpty) {
+          if (!firstFrame->IsEmpty()) {
             break;
           }
             

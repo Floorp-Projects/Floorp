@@ -399,8 +399,7 @@ public:
   }
 
   // whether the line box is "logically" empty (just like nsIFrame::IsEmpty)
-  nsresult IsEmpty(nsCompatibility aCompatMode, PRBool aParentIsPre,
-                   PRBool *aResult) const;
+  PRBool IsEmpty() const;
 
 #ifdef DEBUG
   static PRInt32 GetCtorCount();

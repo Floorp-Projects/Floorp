@@ -106,18 +106,10 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
     nsBlockFrame* bf;
     if (NS_SUCCEEDED(aRS.frame->QueryInterface(kBlockFrameCID,
                                        NS_REINTERPRET_CAST(void**, &bf)))) {
-      nsCompatibility compat;
-      aPresContext->GetCompatibilityMode(&compat);
-
-      const nsStyleText* text = bf->GetStyleText();
-      PRBool isPre = NS_STYLE_WHITESPACE_PRE == text->mWhiteSpace ||
-                     NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == text->mWhiteSpace;
-
       for (nsBlockFrame::line_iterator line = bf->begin_lines(),
                                    line_end = bf->end_lines();
            line != line_end; ++line) {
-        PRBool isEmpty;
-        line->IsEmpty(compat, isPre, &isEmpty);
+        PRBool isEmpty = line->IsEmpty();
         if (line->IsBlock()) {
           // Here is where we recur. Now that we have determined that a
           // generational collapse is required we need to compute the

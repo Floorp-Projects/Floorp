@@ -436,13 +436,6 @@ nsBlockReflowState::ReconstructMarginAbove(nsLineList::iterator aLine)
   mPrevBottomMargin.Zero();
   nsBlockFrame *block = mBlock;
 
-  const nsStyleText* styleText = block->GetStyleText();
-  PRBool isPre = NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace ||
-                 NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace;
-
-  nsCompatibility mode;
-  mPresContext->GetCompatibilityMode(&mode);
-
   nsLineList::iterator firstLine = block->begin_lines();
   for (;;) {
     --aLine;
@@ -450,9 +443,7 @@ nsBlockReflowState::ReconstructMarginAbove(nsLineList::iterator aLine)
       mPrevBottomMargin = aLine->GetCarriedOutBottomMargin();
       break;
     }
-    PRBool isEmpty;
-    aLine->IsEmpty(mode, isPre, &isEmpty);
-    if (! isEmpty) {
+    if (!aLine->IsEmpty()) {
       break;
     }
     if (aLine == firstLine) {

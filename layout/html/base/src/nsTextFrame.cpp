@@ -483,9 +483,7 @@ public:
                                   PRBool               aCheckVis,
                                   PRBool*              aIsVisible);
 
-  NS_IMETHOD IsEmpty(nsCompatibility aCompatMode,
-                     PRBool aIsPre,
-                     PRBool* aResult);
+  virtual PRBool IsEmpty();
 
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
@@ -5890,24 +5888,22 @@ nsTextFrame::GetType() const
   return nsLayoutAtoms::textFrame;
 }
 
-NS_IMETHODIMP
-nsTextFrame::IsEmpty(nsCompatibility aCompatMode,
-                     PRBool aIsPre,
-                     PRBool* aResult)
+/* virtual */ PRBool
+nsTextFrame::IsEmpty()
 {
-    // XXXldb Should this check aCompatMode as well???
-  if (aIsPre) {
-    *aResult = PR_FALSE;
-    return NS_OK;
+    // XXXldb Should this check compatibility mode as well???
+  if (GetStyleText()->WhiteSpaceIsSignificant()) {
+    return PR_FALSE;
   }
 
   nsCOMPtr<nsITextContent> textContent( do_QueryInterface(mContent) );
   if (! textContent) {
     NS_NOTREACHED("text frame has no text content");
-    *aResult = PR_TRUE;
-    return NS_ERROR_UNEXPECTED;
+    return PR_TRUE;
   }
-  return textContent->IsOnlyWhitespace(aResult);
+  PRBool isOnlyWS;
+  textContent->IsOnlyWhitespace(&isOnlyWS);
+  return isOnlyWS;
 }
 
 #ifdef DEBUG
