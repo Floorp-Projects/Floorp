@@ -752,14 +752,10 @@ ServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool replace)
 
     nsIRDFResource* prevRes =
         NS_STATIC_CAST(nsIRDFResource*, PL_HashTableLookup(mResources, uri));
-    if (prevRes != nsnull) {
-        if (replace) {
-            NS_RELEASE(prevRes);
-        }
-        else {
-            NS_WARNING("resource already registered, and replace not specified");
-            return NS_ERROR_FAILURE;    // already registered
-        }
+
+    if (prevRes && !replace) {
+        NS_WARNING("resource already registered, and replace not specified");
+        return NS_ERROR_FAILURE;    // already registered
     }
 
     // This is a little trick to make storage more efficient. For
@@ -788,6 +784,10 @@ ServiceImpl::UnregisterResource(nsIRDFResource* resource)
         return rv;
 
     PL_HashTableRemove(mResources, uri);
+
+    // N.B. that we _don't_ release the resource: we only held a weak
+    // reference to it in the hashtable.
+
     return NS_OK;
 }
 
