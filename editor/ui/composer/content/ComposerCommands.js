@@ -1696,8 +1696,8 @@ function SetSaveAndPublishUI(urlstring)
     command = "cmd_save";
 
     // Hide "Publish". Show "Save" toolbar and menu items
-    SetElementHidden(publishButton, true);
-    SetElementHidden(saveButton, false);
+    if (publishButton) publishButton.setAttribute("hidden", "true");
+    if (saveButton) saveButton.removeAttribute("hidden");
   }
   else
   {
@@ -1707,13 +1707,13 @@ function SetSaveAndPublishUI(urlstring)
     command = "cmd_publish";
 
     // Hide "Save", show "Publish" toolbar and menuitems
-    SetElementHidden(saveButton, true);
-    SetElementHidden(publishButton, false);
+    if (saveButton) saveButton.setAttribute("hidden", "true");
+    if (publishButton) publishButton.removeAttribute("hidden");
   }
 
 //  Use this to hide "Save" menuitem if editing remote, Hide "Publish" if editing local
-//  SetElementHidden(menuItem1, true);
-//  SetElementHidden(menuItem2, false);
+//  menuItem1.setAttribute("hidden", "true");
+//  menuItem2.removeAttribute("hidden");
 
   var key = document.getElementById("savekb");
   if (key && command)
