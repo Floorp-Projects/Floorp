@@ -86,7 +86,7 @@ function onLoad() {
 
     for (var i = 0; i < numFilters; i++) {
       var menuItem = document.createElement("menuitem");
-      menuItem.setAttribute("value", filterTitles[i] + " (" + filterTypes[i] + ")");
+      menuItem.setAttribute("label", filterTitles[i] + " (" + filterTypes[i] + ")");
       menuItem.setAttribute("filters", filterTypes[i]);
       filterPopup.appendChild(menuItem);
     }
@@ -117,7 +117,7 @@ function onLoad() {
     }
 
     if (buttonLabel) {
-      okButton.setAttribute("value", buttonLabel);
+      okButton.setAttribute("label", buttonLabel);
     }
   } catch (exception) {
     // keep it set to "OK"
@@ -383,7 +383,7 @@ function onSelect(e) {
 
 function onDirectoryChanged(target)
 {
-  var path = target.getAttribute("value");
+  var path = target.getAttribute("label");
 
   var file = Components.classes[nsILocalFile_CONTRACTID].createInstance(nsILocalFile);
   file.initWithUnicodePath(path);
@@ -420,7 +420,7 @@ function addToHistory(directoryName) {
 
   for (i=0; i < dirHistory.length; i++) {
     var menuItem = document.createElement("menuitem");
-    menuItem.setAttribute("value", dirHistory[i]);
+    menuItem.setAttribute("label", dirHistory[i]);
     menu.appendChild(menuItem);
   }
 
