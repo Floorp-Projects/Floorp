@@ -80,8 +80,6 @@ private:
 
   nsCOMPtr <nsIRDFService>       mRDFService;
 
-  nsCOMPtr <nsISubscribeDumpListener> mDumpListener;
-
   SubscribeTreeNode *mTreeRoot;
   nsresult FreeSubtree(SubscribeTreeNode *node);
   nsresult CreateNode(SubscribeTreeNode *parent, const char *name, SubscribeTreeNode **result);
@@ -91,10 +89,8 @@ private:
   nsresult NotifyChange(SubscribeTreeNode *subjectNode, nsIRDFResource *property, PRBool value);
   nsresult Notify(nsIRDFResource *subject, nsIRDFResource *property, nsIRDFNode *object, PRBool isAssert, PRBool isChange);
   void BuildURIFromNode(SubscribeTreeNode *node, nsCAutoString &uri);
-  void BuildPathFromNode(SubscribeTreeNode *node, nsCAutoString &uri);
   nsresult EnsureSubscribeDS();
   nsresult EnsureRDFService();
-  nsresult DumpSubtree(SubscribeTreeNode *node);
 };
 
 #endif // nsSubscribableServer_h__

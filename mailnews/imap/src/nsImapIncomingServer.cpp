@@ -2751,22 +2751,6 @@ nsImapIncomingServer::CommitSubscribeChanges()
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::DumpTree()
-{
-    nsresult rv = EnsureInner();
-    NS_ENSURE_SUCCESS(rv,rv);
-    return mInner->DumpTree();
-}
-
-NS_IMETHODIMP
-nsImapIncomingServer::SetDumpListener(nsISubscribeDumpListener *dumpListener)
-{
-    nsresult rv = EnsureInner();
-    NS_ENSURE_SUCCESS(rv,rv);
-    return mInner->SetDumpListener(dumpListener);
-}
-
-NS_IMETHODIMP
 nsImapIncomingServer::GetCanBeDefaultServer(PRBool *canBeDefaultServer)
 {
     *canBeDefaultServer = PR_TRUE;

@@ -70,7 +70,6 @@ NS_INTERFACE_MAP_BEGIN(nsNntpIncomingServer)
     NS_INTERFACE_MAP_ENTRY(nsINntpIncomingServer)
     NS_INTERFACE_MAP_ENTRY(nsIUrlListener)
     NS_INTERFACE_MAP_ENTRY(nsISubscribableServer)
-    NS_INTERFACE_MAP_ENTRY(nsISubscribeDumpListener)
 NS_INTERFACE_MAP_END_INHERITING(nsMsgIncomingServer)
 
 nsNntpIncomingServer::nsNntpIncomingServer() : nsMsgLineBuffer(nsnull, PR_FALSE)
@@ -702,27 +701,27 @@ nsNntpIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
 	return NS_OK;
 }
 
+
+PRBool
+checkIfSubscribedFunction(nsCString &aElement, void *aData)
+{
+	if (nsCRT::strcmp((const char *)aData, (const char *)aElement) == 0) {
+		return PR_FALSE;
+	}
+	else {
+		return PR_TRUE;
+	}
+}
+
+
 NS_IMETHODIMP
 nsNntpIncomingServer::ContainsNewsgroup(const char *name, PRBool *containsGroup)
 {
-	nsresult rv;
-
 	NS_ASSERTION(name && PL_strlen(name),"no name");
 	if (!name || !containsGroup) return NS_ERROR_NULL_POINTER;
 	if (!nsCRT::strlen(name)) return NS_ERROR_FAILURE;
 
-	nsCOMPtr<nsIFolder> folder;
-	rv = GetRootFolder(getter_AddRefs(folder));
-	if (NS_FAILED(rv)) return rv;
-	if (!folder) return NS_ERROR_FAILURE;
-	
-	nsCOMPtr<nsIMsgFolder> msgfolder = do_QueryInterface(folder, &rv);
-	if (NS_FAILED(rv)) return rv;
-	if (!msgfolder) return NS_ERROR_FAILURE;
-
-	rv = msgfolder->ContainsChildNamed(name, containsGroup);
-	if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
+	*containsGroup = !(mSubscribedNewsgroups.EnumerateForwards((nsCStringArrayEnumFunc)checkIfSubscribedFunction, (void *)name));
 	return NS_OK;
 }
 
@@ -751,46 +750,30 @@ nsNntpIncomingServer::SubscribeToNewsgroup(const char *name)
 	return NS_OK;
 }
 
+PRBool
+writeGroupToHostInfoFile(nsCString &aElement, void *aData)
+{
+    nsIOFileStream *stream;
+    stream = (nsIOFileStream *)aData;
+    NS_ASSERTION(stream, "no stream");
+    if (!stream) {
+        // stop, something is bad.
+        return PR_FALSE;
+    }
+
+	// XXX todo ",,1,0,0" is a temporary hack, fix it
+	*stream << aElement.get() << ",,1,0,0" << MSG_LINEBREAK;
+	return PR_TRUE;
+}
+
 nsresult
 nsNntpIncomingServer::WriteHostInfoFile()
 {
     nsresult rv = NS_OK;
 
-#ifdef DEBUG_NEWS
-	printf("WriteHostInfoFile()\n");
-#endif
-
     if (!mHostInfoHasChanged) {
-#ifdef DEBUG_NEWS
-        printf("don't write out the hostinfo file\n");
-#endif
-        return NS_OK;
-    }
-#ifdef DEBUG_NEWS
-    else {
-        printf("write out the hostinfo file\n");
-    }
-#endif
-
-    rv = EnsureInner();
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = mInner->SetDumpListener(this);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = mInner->DumpTree();
-    NS_ENSURE_SUCCESS(rv,rv);
-
     return NS_OK;
 }
-
-NS_IMETHODIMP 
-nsNntpIncomingServer::StartDumping()
-{
-	nsresult rv;
-#ifdef DEBUG_NEWS
-    printf("start dumping\n");
-#endif
 
 	PRInt32 firstnewdate;
 
@@ -826,39 +809,15 @@ nsNntpIncomingServer::StartDumping()
 	*mHostInfoStream << "" << MSG_LINEBREAK;
 	*mHostInfoStream << "begingroups" << MSG_LINEBREAK;
 
-    return NS_OK;
-}
+	// XXX todo, sort groups first?
 
-NS_IMETHODIMP 
-nsNntpIncomingServer::DumpItem(const char *name)
-{
-    NS_ASSERTION(mHostInfoStream, "no stream!");
-    // todo ",,1,0,0" is a temporary hack, fix it
-    *mHostInfoStream << name << ",,1,0,0" << MSG_LINEBREAK;
-    return NS_OK;
-}
+	mGroupsOnServer.EnumerateForwards((nsCStringArrayEnumFunc)writeGroupToHostInfoFile, (void *)mHostInfoStream);
 
-NS_IMETHODIMP 
-nsNntpIncomingServer::DoneDumping()
-{
-    nsresult rv;
-
-#ifdef DEBUG_NEWS
-    printf("done dumping\n");
-#endif
-
-    NS_ASSERTION(mHostInfoStream, "no stream!");
     mHostInfoStream->close();
     delete mHostInfoStream;
     mHostInfoStream = nsnull;
 
 	mHostInfoHasChanged = PR_FALSE;
-
-    rv = EnsureInner();
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = mInner->SetDumpListener(nsnull);
-    NS_ENSURE_SUCCESS(rv,rv);
-
 	return NS_OK;
 }
 
@@ -916,9 +875,6 @@ nsNntpIncomingServer::LoadHostInfoFile()
 	rv = UpdateSubscribed();
 	if (NS_FAILED(rv)) return rv;
 
-	rv = StopPopulating(mMsgWindow);
-	if (NS_FAILED(rv)) return rv;
-
 	return NS_OK;
 }
 
@@ -960,6 +916,7 @@ nsNntpIncomingServer::StartPopulating(nsIMsgWindow *aMsgWindow, PRBool aForceToS
 
   rv = EnsureInner();
   NS_ENSURE_SUCCESS(rv,rv);
+
   rv = mInner->StartPopulating(aMsgWindow, aForceToServer);
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -969,11 +926,12 @@ nsNntpIncomingServer::StartPopulating(nsIMsgWindow *aMsgWindow, PRBool aForceToS
   rv = SetShowFullName(PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 
-	nsCOMPtr<nsINntpService> nntpService = do_GetService(NS_NNTPSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsINntpService> nntpService = do_GetService(NS_NNTPSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
   mHostInfoLoaded = PR_FALSE;
   mVersion = INVALID_VERSION;
+  mGroupsOnServer.Clear();
 
   if (!aForceToServer) {
 	rv = LoadHostInfoFile();	
@@ -982,14 +940,18 @@ nsNntpIncomingServer::StartPopulating(nsIMsgWindow *aMsgWindow, PRBool aForceToS
 
   // mHostInfoLoaded can be false if we failed to load anything
   if (!mHostInfoLoaded || (mVersion != VALID_VERSION)) {
-    // set these to true, so when we call WriteHostInfoFile() 
-    // we write it out to disk
+    // set these to true, so when we are done and we call WriteHostInfoFile() 
+    // we'll write out to hostinfo.dat
 	mHostInfoHasChanged = PR_TRUE;
 	mVersion = VALID_VERSION;
 
-    // todo, make sure inner has been freed before we start?
+	mGroupsOnServer.Clear();
 
 	rv = nntpService->GetListOfGroupsOnServer(this, aMsgWindow);
+	if (NS_FAILED(rv)) return rv;
+  }
+  else {
+	rv = StopPopulating(aMsgWindow);
 	if (NS_FAILED(rv)) return rv;
   }
 
@@ -1111,7 +1073,13 @@ nsNntpIncomingServer::AddTo(const char *aName, PRBool addAsSubscribed, PRBool ch
 {
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
-	return mInner->AddTo(aName,addAsSubscribed,changeIfExists);
+
+	rv = AddGroupOnServer(aName);
+	NS_ENSURE_SUCCESS(rv,rv);
+ 
+    rv = mInner->AddTo(aName,addAsSubscribed,changeIfExists);
+	NS_ENSURE_SUCCESS(rv,rv);
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -1214,9 +1182,11 @@ nsNntpIncomingServer::HandleLine(char* line, PRUint32 line_size)
 		if (commaPos) *commaPos = 0;
 
 		nsresult rv = AddTo(line, PR_FALSE, PR_TRUE);
-	    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to add the group");
-        // since we've seen one group, we can claim we've loaded the hostinfo file
-        mHostInfoLoaded = PR_TRUE;
+		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to add line");
+		if (NS_SUCCEEDED(rv)) {
+          // since we've seen one group, we can claim we've loaded the hostinfo file
+          mHostInfoLoaded = PR_TRUE;
+		}
 	}
 	else {
 		if (nsCRT::strncmp(line,"begingroups", 11) == 0) {
@@ -1243,6 +1213,12 @@ nsNntpIncomingServer::HandleLine(char* line, PRUint32 line_size)
 	return 0;
 }
 
+nsresult
+nsNntpIncomingServer::AddGroupOnServer(const char *name)
+{
+	mGroupsOnServer.AppendCString(nsCAutoString(name));
+	return NS_OK;
+}
 
 NS_IMETHODIMP
 nsNntpIncomingServer::AddNewsgroup(const char *name)
@@ -1318,22 +1294,6 @@ nsNntpIncomingServer::CommitSubscribeChanges()
     rv = SetNewsrcHasChanged(PR_TRUE);
     NS_ENSURE_SUCCESS(rv,rv);
     return WriteNewsrcFile();
-}
-
-NS_IMETHODIMP
-nsNntpIncomingServer::DumpTree()
-{
-    nsresult rv = EnsureInner();
-    NS_ENSURE_SUCCESS(rv,rv);
-    return mInner->DumpTree();
-}
-
-NS_IMETHODIMP
-nsNntpIncomingServer::SetDumpListener(nsISubscribeDumpListener *dumpListener)
-{
-    nsresult rv = EnsureInner();
-    NS_ENSURE_SUCCESS(rv,rv);
-    return mInner->SetDumpListener(dumpListener);
 }
 
 NS_IMETHODIMP

@@ -198,22 +198,6 @@ nsSubscribableServer::SetState(const char *path, PRBool state, PRBool *stateChan
 }
 
 void
-nsSubscribableServer::BuildPathFromNode(SubscribeTreeNode *node, nsCAutoString &path)
-{
-    if (node == mTreeRoot) return;
-
-    if (node->parent) {
-        BuildPathFromNode(node->parent, path);
-        if (node->parent != mTreeRoot) {
-            path += mDelimiter;
-        }
-    }
-
-    path += node->name;
-    return;
-}
-
-void
 nsSubscribableServer::BuildURIFromNode(SubscribeTreeNode *node, nsCAutoString &uri)
 {
     if (node->parent) {
@@ -437,44 +421,7 @@ nsSubscribableServer::SetShowFullName(PRBool showFullName)
 	mShowFullName = showFullName;
 	return NS_OK;
 }
-
-nsresult
-nsSubscribableServer::DumpSubtree(SubscribeTreeNode *node)
-{
-    nsresult rv = NS_OK;
-
-    if (node) {
-        NS_ASSERTION(mDumpListener, "calling DumpTree(), no listener");
-        if (mDumpListener) {
-            if (node->isSubscribable) {
-                nsCAutoString path;
-                BuildPathFromNode(node, path);
-                rv = mDumpListener->DumpItem((const char *)path);
-                NS_ENSURE_SUCCESS(rv,rv);
-            }
-#ifdef DEBUG_seth
-            else {
-                printf("skipping %s, it is not subscribable\n",node->name);
-            }
-#endif
-        }
-
-        // recursively dump the children
-        if (node->lastChild) {
-            rv = DumpSubtree(node->lastChild);
-            NS_ENSURE_SUCCESS(rv,rv);
-        }
-
-        // recursively dump the siblings
-        if (node->prevSibling) {
-            rv = DumpSubtree(node->prevSibling);
-            NS_ENSURE_SUCCESS(rv,rv);
-        }
-    }
-
-    return NS_OK;
-}
-
+     
 nsresult 
 nsSubscribableServer::FreeSubtree(SubscribeTreeNode *node)
 {
@@ -812,7 +759,7 @@ nsSubscribableServer::GetChildren(const char *path, nsISupportsArray *array)
         uriPrefix += mDelimiter;
     }
 
-    // we inserted them in z to a order.
+    // we inserted them in reverse alphabetical order.
     // so pull them out in reverse to get the right order
     // in the subscribe dialog
     SubscribeTreeNode *current = node->lastChild;
@@ -845,26 +792,4 @@ nsSubscribableServer::CommitSubscribeChanges()
 {
 	NS_ASSERTION(PR_FALSE,"override this.");
 	return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsSubscribableServer::DumpTree()
-{
-    nsresult rv;
-
-    NS_ASSERTION(mDumpListener, "calling DumpTree(), no listener");
-    if (mDumpListener) {
-        mDumpListener->StartDumping();
-        rv = DumpSubtree(mTreeRoot);
-        NS_ENSURE_SUCCESS(rv,rv);
-        mDumpListener->DoneDumping();
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSubscribableServer::SetDumpListener(nsISubscribeDumpListener *dumpListener)
-{
-    mDumpListener = dumpListener;
-    return NS_OK;
 }

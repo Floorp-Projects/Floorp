@@ -49,7 +49,6 @@ class nsNntpIncomingServer : public nsMsgIncomingServer,
                              public nsINntpIncomingServer,
 			     public nsIUrlListener,
 			     public nsISubscribableServer,
-                 public nsISubscribeDumpListener,
 				 public nsMsgLineBuffer
 							 
 {
@@ -58,7 +57,6 @@ public:
     NS_DECL_NSINNTPINCOMINGSERVER
     NS_DECL_NSIURLLISTENER
     NS_DECL_NSISUBSCRIBABLESERVER
-    NS_DECL_NSISUBSCRIBEDUMPLISTENER
 
     nsNntpIncomingServer();
     virtual ~nsNntpIncomingServer();
@@ -88,11 +86,13 @@ protected:
 
 private:
 	nsCStringArray mSubscribedNewsgroups;
+	nsCStringArray mGroupsOnServer;
 
 	PRBool   mHasSeenBeginGroups;
 	nsresult WriteHostInfoFile();
 	nsresult LoadHostInfoFile();
-	
+    nsresult AddGroupOnServer(const char *name);
+
     PRBool mNewsrcHasChanged;
 	nsAdapterEnumerator *mGroupsEnumerator;
 	PRBool mHostInfoLoaded;

@@ -484,6 +484,7 @@ nsSubscribeDataSource::HasAssertion(nsIRDFResource *source,
 
 	if (!tv) return NS_OK;
 
+	if (property == kNC_Child.get()) {
     nsCOMPtr<nsISubscribableServer> server;
     nsXPIDLCString relativePath;
 
@@ -493,7 +494,6 @@ nsSubscribeDataSource::HasAssertion(nsIRDFResource *source,
         return NS_OK;
     }
 
-	if (property == kNC_Child.get()) {
         // not everything has children
         rv = server->HasChildren((const char *)relativePath, hasAssertion);
         NS_ENSURE_SUCCESS(rv,rv);
@@ -536,13 +536,13 @@ nsSubscribeDataSource::HasArcOut(nsIRDFResource *source, nsIRDFResource *aArc, P
     nsCOMPtr<nsISubscribableServer> server;
     nsXPIDLCString relativePath;
 
+    if (aArc == kNC_Child.get()) {
     rv = GetServerAndRelativePathFromResource(source, getter_AddRefs(server), getter_Copies(relativePath));
     if (NS_FAILED(rv) || !server) {
 	    *result = PR_FALSE;
         return NS_OK;
     }
 
-    if (aArc == kNC_Child.get()) {
         PRBool hasChildren = PR_FALSE;
         rv = server->HasChildren((const char *)relativePath, &hasChildren);
         NS_ENSURE_SUCCESS(rv,rv);
