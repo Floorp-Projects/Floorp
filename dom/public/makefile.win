@@ -22,6 +22,7 @@ DIRS=base coreDom coreEvents range events html css
 DEFINES=-D_IMPL_NS_DOM 
 EXPORTS=nsIScriptContext.h 		\
 	nsIJSScriptObject.h 		\
+	nsIJSNativeInitializer.h	\
 	nsIScriptObjectOwner.h 		\
         nsIScriptGlobalObject.h 	\
 	nsIScriptContextOwner.h 	\

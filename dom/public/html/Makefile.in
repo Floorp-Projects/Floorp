@@ -85,6 +85,7 @@ EXPORTS =               \
 	nsIDOMImage.h \
 	nsIDOMNSHTMLButtonElement.h \
 	nsIDOMNSHTMLDocument.h \
+	nsIDOMOption.h \
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
