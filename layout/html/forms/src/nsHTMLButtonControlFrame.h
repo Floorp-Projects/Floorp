@@ -186,13 +186,9 @@ protected:
                                                    const nsHTMLReflowState& aSuggestedReflowState);
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
-  void GetTranslatedRect(nsIPresContext* aPresContext, nsRect& aRect);
 
   PRIntn GetSkipSides() const;
   PRBool mInline;
-  nsCursor mPreviousCursor;
-  nsRect mTranslatedRect;
-  PRBool mDidInit;
   nsButtonFrameRenderer mRenderer;
 
   //Resize Reflow OpitmizationSize;
