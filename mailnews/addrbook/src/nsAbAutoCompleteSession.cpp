@@ -23,7 +23,6 @@
 #include "msgCore.h"
 #include "nsAbAutoCompleteSession.h"
 #include "nsString.h"
-#include "nsIMsgHeaderParser.h"
 #include "nsRDFCID.h"
 #include "nsIRDFService.h"
 #include "nsIAbDirectory.h"
@@ -31,6 +30,7 @@
 #include "nsXPIDLString.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgAccountManager.h"
+#include "nsMsgI18N.h"
 
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -89,6 +89,7 @@ nsresult nsAbAutoCompleteSession::PopulateTableWithAB(nsIEnumerator * aABCards)
     {
         m_searchNameCompletionEntryTable[m_numEntries].userName = nsnull;
         m_searchNameCompletionEntryTable[m_numEntries].emailAddress = nsnull;
+        m_searchNameCompletionEntryTable[m_numEntries].nickName = nsnull;
     
         nsCOMPtr<nsISupports> i;
         rv = aABCards->CurrentItem(getter_AddRefs(i));
@@ -111,6 +112,12 @@ nsresult nsAbAutoCompleteSession::PopulateTableWithAB(nsIEnumerator * aABCards)
 
 	    unicharLength = nsCRT::strlen(pUnicodeStr);
 	    INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&m_searchNameCompletionEntryTable[m_numEntries].emailAddress);
+    
+        rv=card->GetNickName(getter_Copies(pUnicodeStr));
+        if (NS_FAILED(rv)) break;
+
+		unicharLength = nsCRT::strlen(pUnicodeStr);
+	    INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&m_searchNameCompletionEntryTable[m_numEntries].nickName);
     
         rv = aABCards->Next();
         m_numEntries++;
@@ -172,6 +179,8 @@ nsAbAutoCompleteSession::~nsAbAutoCompleteSession()
       m_searchNameCompletionEntryTable[i].userName = nsnull;
       PR_FREEIF(m_searchNameCompletionEntryTable[i].emailAddress);
       m_searchNameCompletionEntryTable[i].emailAddress = nsnull;
+      PR_FREEIF(m_searchNameCompletionEntryTable[i].nickName);
+      m_searchNameCompletionEntryTable[i].nickName = nsnull;
 	}
 }
 
@@ -191,53 +200,111 @@ NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(nsISupports *aParam, const P
 
 	if (aResultListener)
 	{
+		// get a mime header parser to generate a valid address
+		nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);
+
 		PRUint32 searchStringLen = nsCRT::strlen(aSearchString);
-		PRBool matchFound = PR_FALSE;
 		PRInt32 nIndex;
-		for (nIndex = 0; nIndex < m_numEntries && !matchFound; nIndex++)
+		PRUnichar* matchResult = nsnull;
+
+		for (nIndex = 0; nIndex < m_numEntries; nIndex++)
 		{
-			if (nsCRT::strncasecmp(aSearchString, m_searchNameCompletionEntryTable[nIndex].userName, searchStringLen) == 0
-				|| nsCRT::strncasecmp(aSearchString, m_searchNameCompletionEntryTable[nIndex].emailAddress,searchStringLen) == 0)
+			/* First look for a Nickname exact match... */
+			if (nsCRT::strcasecmp(aSearchString, m_searchNameCompletionEntryTable[nIndex].nickName) == 0)
 			{
-				// get a mime header parser to generate a valid address
-				nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);
-
-				char * fullAddress = nsnull;
-				if (parser)
-					parser->MakeFullAddress(nsnull, m_searchNameCompletionEntryTable[nIndex].userName, 
-											m_searchNameCompletionEntryTable[nIndex].emailAddress, &fullAddress);
-
-				if (! fullAddress || ! *fullAddress)
-					continue;	/* something goes wrong with this entry, maybe the email address is missing. Just skip it... */
-				
-				/* We need to convert back the result from UTF-8 to Unicode */
-				PRUnichar* searchResult;
-				PRInt32 searchResultLen;
-				INTL_ConvertToUnicode(fullAddress, nsCRT::strlen(fullAddress), (void**)&searchResult, &searchResultLen);
-
-				// iterate over the table looking for a match
-				rv = aResultListener->OnAutoCompleteResult(aParam, aSearchString, searchResult);
-				PR_Free(searchResult);
-
-				matchFound = PR_TRUE; // so we kick out of the loop
-				break;
+				PRUnichar* searchResult = BuildSearchResult(nIndex, parser);
+				if (searchResult)
+				{
+					rv = aResultListener->OnAutoCompleteResult(aParam, aSearchString, searchResult);
+					nsCRT::free(searchResult);
+					return rv;
+				}
 			}
+			/* ... look for a username or email address match */
+			if (!matchResult)
+				if (nsCRT::strncasecmp(aSearchString, m_searchNameCompletionEntryTable[nIndex].userName, searchStringLen) == 0
+					|| nsCRT::strncasecmp(aSearchString, m_searchNameCompletionEntryTable[nIndex].emailAddress,searchStringLen) == 0)
+				{
+					matchResult = BuildSearchResult(nIndex, parser);
+				}
 		}
 		
-		if (!matchFound)
+		/* no exact nickname match, maybe we got another match? */
+		if (matchResult)
 		{
-			//Does the search string has a domain name?
-			nsString searchResult(aSearchString);
-			PRInt32 atSignIndex = searchResult.FindChar('@');
-			if (atSignIndex < 0)
-			{
-				searchResult += m_domain;				
-				rv = aResultListener->OnAutoCompleteResult(aParam, aSearchString, searchResult.GetUnicode());
-			}
+			rv = aResultListener->OnAutoCompleteResult(aParam, aSearchString, matchResult);
+			nsCRT::free(matchResult);
+			return rv;
 		}
+
+		/*no match at all,  do we have several names? */
+		nsAutoString searchResult(aSearchString);
+		char * cSearchString = searchResult.ToNewUTF8String();
+		nsresult res;
+		PRUint32 numAddresses;
+		char	*names;
+		char	*addresses;
+
+		if (parser)
+		{
+			res = parser->ParseHeaderAddresses (nsnull, cSearchString, &names, &addresses, &numAddresses);
+			if (NS_SUCCEEDED(res))
+			{
+				searchResult = "";
+				PRUint32 i;
+				char* pName = names;
+				char* pAddr = addresses;
+				nsAutoString fullAddress;
+				for (i = 0; i < numAddresses; i ++)
+				{
+					if (! searchResult.IsEmpty())
+						searchResult += ',';
+
+					char * strFullAddr = nsnull;
+					PRUnichar* uStr;
+					PRInt32 uStrLen;
+					parser->MakeFullAddress(nsnull, pName, pAddr, &strFullAddr);
+					INTL_ConvertToUnicode(strFullAddr, nsCRT::strlen(strFullAddr), (void**)&uStr, &uStrLen);
+
+					fullAddress = uStr;
+					if (fullAddress.FindChar('@') < 0) /* no domain? */
+						fullAddress += m_domain;		/* then add the default domain */
+						
+					searchResult += fullAddress;
+
+					nsCRT::free(strFullAddr);
+					nsCRT::free(uStr);
+
+					pName += nsCRT::strlen(pName) + 1;
+					pAddr += nsCRT::strlen(pAddr) + 1;
+				}
+			}
+			PR_FREEIF(cSearchString);
+		}
+
+		return aResultListener->OnAutoCompleteResult(aParam, aSearchString, searchResult.GetUnicode());
 	}
 	else
-		rv = NS_ERROR_NULL_POINTER;
+		return NS_ERROR_NULL_POINTER;
 
-	return rv;
+}
+
+
+PRUnichar* nsAbAutoCompleteSession::BuildSearchResult(PRUint32 nIndex, nsIMsgHeaderParser* parser)
+{
+	char * fullAddress = nsnull;
+	if (parser)
+		parser->MakeFullAddress(nsnull, m_searchNameCompletionEntryTable[nIndex].userName, 
+								m_searchNameCompletionEntryTable[nIndex].emailAddress, &fullAddress);
+
+	if (! fullAddress || ! *fullAddress)
+		return nsnull;	/* something goes wrong with this entry, maybe the email address is missing.*/
+	
+	/* We need to convert back the result from UTF-8 to Unicode */
+	PRUnichar* searchResult;
+	PRInt32 searchResultLen;
+	INTL_ConvertToUnicode(fullAddress, nsCRT::strlen(fullAddress), (void**)&searchResult, &searchResultLen);
+	PR_Free(fullAddress);
+
+	return searchResult;
 }

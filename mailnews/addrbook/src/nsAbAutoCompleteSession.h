@@ -25,6 +25,7 @@
 
 #include "nsIAutoCompleteSession.h"
 #include "nsIAutoCompleteListener.h"
+#include "nsIMsgHeaderParser.h"
 #include "nsCOMPtr.h"
 #include "msgCore.h"
 
@@ -33,6 +34,7 @@ typedef struct
 {
 	char * userName;
 	char * emailAddress;
+	char * nickName;
 } nsAbStubEntry;
 
 #define MAX_ENTRIES 100
@@ -48,6 +50,7 @@ public:
 protected:
   nsresult InitializeTable();
   nsresult PopulateTableWithAB(nsIEnumerator * aABCards); // enumerates through the cards and adds them to the table
+  PRUnichar* BuildSearchResult(PRUint32 nIndex, nsIMsgHeaderParser* parser);
   
   nsCOMPtr<nsIAutoCompleteListener> m_resultListener;
   PRBool	m_tableInitialized;
