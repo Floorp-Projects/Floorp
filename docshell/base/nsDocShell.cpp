@@ -3100,10 +3100,11 @@ nsDocShell::SetTitle(const PRUnichar * aTitle)
         nsCOMPtr<nsIHistoryEntry> hEntry;
         mSessionHistory->GetEntryAtIndex(index, PR_FALSE,
                                          getter_AddRefs(hEntry));
-        NS_ENSURE_TRUE(hEntry, NS_ERROR_FAILURE);
-        nsCOMPtr<nsISHEntry> shEntry(do_QueryInterface(hEntry));
-        if (shEntry)
+        if (hEntry) {
+          nsCOMPtr<nsISHEntry> shEntry(do_QueryInterface(hEntry));
+          if (shEntry)
             shEntry->SetTitle(mTitle.get());
+        }
     }
 
 
