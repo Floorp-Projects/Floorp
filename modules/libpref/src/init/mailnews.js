@@ -268,7 +268,7 @@ pref("mail.server.default.canDelete", false);
 pref("mail.server.default.login_at_startup", false);
 
 pref("mail.smtpserver.default.auth_method", 1); // auth any
-pref("mail.smtpserver.default.try_ssl", 1);
+pref("mail.smtpserver.default.try_ssl", 0);
 
 pref("mail.display_glyph", true);   // see <http://www.bucksch.org/1/projects/mozilla/16507>
 pref("mail.display_struct", true);  // ditto
