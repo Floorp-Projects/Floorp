@@ -127,6 +127,10 @@ class COtherDTD : public CNavDTD {
      */
     NS_IMETHOD StringTagToIntTag(nsString &aTag, PRInt32* aIntTag)const;
 
+    NS_IMETHOD IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const;
+
+    NS_IMETHOD ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const;
+
     /**
      * This method gets called when a start token has been consumed and needs 
      * to be handled (possibly added to content model via sink).

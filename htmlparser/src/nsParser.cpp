@@ -1543,3 +1543,20 @@ nsresult nsParser::CreateTagStack(nsITagStack** aTagStack){
     return NS_OK;
   return NS_ERROR_OUT_OF_MEMORY;
 }
+
+/** 
+ * Get the DTD associated with this parser
+ * @update vidur 9/29/99
+ * @param aDTD out param that will contain the result
+ * @return NS_OK if successful, NS_ERROR_FAILURE for runtime error
+ */
+NS_IMETHODIMP 
+nsParser::GetDTD(nsIDTD** aDTD)
+{
+  if (mParserContext) {
+    *aDTD = mParserContext->mDTD;
+    NS_IF_ADDREF(mParserContext->mDTD);
+  }
+  
+  return NS_OK;
+}

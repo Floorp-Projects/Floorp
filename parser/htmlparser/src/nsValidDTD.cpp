@@ -305,6 +305,15 @@ NS_IMETHODIMP CValidDTD::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) con
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP CValidDTD::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP CValidDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
  *  This method gets called to determine whether a given 

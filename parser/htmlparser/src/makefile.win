@@ -28,6 +28,7 @@ DEFINES = $(DEFINES) -DRAPTOR_PERF_METRICS
 
 MODULE=raptor 
 REQUIRES=xpcom raptor netlib 
+IS_COMPONENT = 1
 
 CPPSRCS=					\
 	nsDTDUtils.cpp				\
@@ -46,7 +47,6 @@ CPPSRCS=					\
 	nsLoggingSink.cpp			\
 	nsParser.cpp				\
 	CParserContext.cpp			\
-	nsParserFactory.cpp			\
 	nsParserNode.cpp			\
 	nsScanner.cpp				\
 	nsToken.cpp				\
@@ -59,6 +59,7 @@ CPPSRCS=					\
 	nsXIFDTD.cpp				\
 	nsExpatDTD.cpp			\
 	prstrm.cpp				\
+	nsParserModule.cpp			\
 	$(NULL)
 
 CPP_OBJS=					\
@@ -78,7 +79,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsLoggingSink.obj		\
 	.\$(OBJDIR)\nsParser.obj		\
 	.\$(OBJDIR)\CParserContext.obj		\
-	.\$(OBJDIR)\nsParserFactory.obj		\
 	.\$(OBJDIR)\nsParserNode.obj		\
 	.\$(OBJDIR)\nsScanner.obj		\
 	.\$(OBJDIR)\nsToken.obj			\
@@ -91,6 +91,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsXIFDTD.obj		\
 	.\$(OBJDIR)\nsExpatDTD.obj		\
 	.\$(OBJDIR)\prstrm.obj			\
+	.\$(OBJDIR)\nsParserModule.obj		\
 	$(NULL)
 
 EXPORTS=					\
@@ -125,6 +126,7 @@ EXPORTS=					\
 	nsParserCIID.h 				\
 	nsParserError.h 			\
 	nsIElementObserver.h			\
+	nsIParserService.h			\
 	$(NULL)
 
 
@@ -170,7 +172,7 @@ include <$(DEPTH)\config\rules.mak>
 #	$(MAKE_INSTALL) $(XPDIST)\include
 
 libs:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
 clobber::

@@ -43,9 +43,10 @@
 #include "nsIHTMLContentSink.h"
 #include "nshtmlpars.h"
 #include "nsHTMLTokens.h"
+#include "nsParserCIID.h"
+#include "nsCOMPtr.h"
 
-
-#define NS_HTMLCONTENTSINK_STREAM_IID  \
+#define NS_IHTMLCONTENTSINKSTREAM_IID  \
   {0xa39c6bff, 0x15f0, 0x11d2, \
   {0x80, 0x41, 0x0, 0x10, 0x4b, 0x98, 0x3f, 0xd4}}
 
@@ -56,7 +57,19 @@ class ostream;
 class nsIUnicodeEncoder;
 class nsIOutputStream;
 
-class nsHTMLContentSinkStream : public nsIHTMLContentSink {
+class nsIHTMLContentSinkStream : public nsIHTMLContentSink {
+  public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTMLCONTENTSINKSTREAM_IID)
+  NS_DEFINE_STATIC_CID_ACCESSOR(NS_HTMLCONTENTSINKSTREAM_CID)
+
+  NS_IMETHOD Initialize(nsIOutputStream* aOutStream,
+                        nsString* aOutString,
+                        const nsString* aCharsetOverride,
+                        PRUint32 aFlags) = 0;
+};
+
+class nsHTMLContentSinkStream : public nsIHTMLContentSinkStream 
+{
   public:
 
 
@@ -67,10 +80,7 @@ class nsHTMLContentSinkStream : public nsIHTMLContentSink {
    * @param		aOutStream -- stream where you want output sent
    * @param		aOutStream -- ref to string where you want output sent
    */
-  nsHTMLContentSinkStream(nsIOutputStream* aOutStream, 
-                          nsString* aOutString,
-                          const nsString* aCharsetOverride,
-                          PRUint32 aFlags);
+  nsHTMLContentSinkStream();
 
   /**
    * virtual destructor
@@ -80,6 +90,13 @@ class nsHTMLContentSinkStream : public nsIHTMLContentSink {
 
   // nsISupports
   NS_DECL_ISUPPORTS
+
+  // nsIHTMLContentSinkStream
+  NS_IMETHOD Initialize(nsIOutputStream* aOutStream,
+                        nsString* aOutString,
+                        const nsString* aCharsetOverride,
+                        PRUint32 aFlags);
+
  
   /*******************************************************************
    * The following methods are inherited from nsIContentSink.
@@ -170,15 +187,59 @@ protected:
 };
 
 
-extern NS_HTMLPARS nsresult
+inline nsresult
 NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
                               nsIOutputStream* aOutStream,
                               const nsString* aCharsetOverride,
-                              PRUint32 aFlags);
+                              PRUint32 aFlags)
+{
+  nsCOMPtr<nsIHTMLContentSinkStream> it;
+  nsresult rv;
 
-extern NS_HTMLPARS nsresult
+  rv = nsComponentManager::CreateInstance(nsIHTMLContentSinkStream::GetCID(),
+                                          nsnull,
+                                          nsIHTMLContentSinkStream::GetIID(),
+                                          getter_AddRefs(it));
+  if (NS_SUCCEEDED(rv)) {
+    rv = it->Initialize(aOutStream,
+                        nsnull,
+                        aCharsetOverride,
+                        aFlags);
+
+    if (NS_SUCCEEDED(rv)) {
+      rv = it->QueryInterface(nsIHTMLContentSink::GetIID(),
+                              (void**)aInstancePtrResult);
+    }
+  }
+  
+  return rv;
+}
+
+inline nsresult
 NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
-                              nsString* aOutString, PRUint32 aFlags);
+                              nsString* aOutString, PRUint32 aFlags)
+{
+  nsCOMPtr<nsIHTMLContentSinkStream> it;
+  nsresult rv;
+
+  rv = nsComponentManager::CreateInstance(nsIHTMLContentSinkStream::GetCID(),
+                                          nsnull,
+                                          nsIHTMLContentSinkStream::GetIID(),
+                                          getter_AddRefs(it));
+  if (NS_SUCCEEDED(rv)) {
+    rv = it->Initialize(nsnull,
+                        aOutString,
+                        nsnull,
+                        aFlags);
+
+    if (NS_SUCCEEDED(rv)) {
+      rv = it->QueryInterface(nsIHTMLContentSink::GetIID(),
+                              (void**)aInstancePtrResult);
+    }
+  }
+  
+  return rv;
+}
 
 #endif
 

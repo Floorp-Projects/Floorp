@@ -377,6 +377,16 @@ NS_IMETHODIMP CRtfDTD::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP CRtfDTD::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP CRtfDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /**
  *  
  *  @update  gess 3/25/98

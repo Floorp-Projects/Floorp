@@ -215,25 +215,6 @@ nsresult nsXIFDTD::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return NS_OK;                                                        
 }
 
-/**
- *  This method is defined in nsIParser. It is used to 
- *  cause the COM-like construction of an nsHTMLParser.
- *  
- *  @update  gpk 06/18/98
- *  @param   nsIParser** ptr to newly instantiated parser
- *  @return  NS_xxx error result
- */
-NS_HTMLPARS nsresult NS_NewXIFDTD(nsIDTD** aInstancePtrResult)
-{
-  nsXIFDTD* it = new nsXIFDTD();
-
-  if (it == 0) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return it->QueryInterface(kClassIID, (void **) aInstancePtrResult);
-}
-
 
 NS_IMPL_ADDREF(nsXIFDTD)
 NS_IMPL_RELEASE(nsXIFDTD)
@@ -944,6 +925,16 @@ PRBool nsXIFDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
  * become useful.
  */
 NS_IMETHODIMP nsXIFDTD::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXIFDTD::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXIFDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

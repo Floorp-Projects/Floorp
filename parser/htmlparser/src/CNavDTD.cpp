@@ -37,6 +37,7 @@
 #include "nsIElementObserver.h"
 #include "nsViewSourceHTML.h"
 #include "nsParserNode.h"
+#include "nsHTMLEntities.h"
 
 #ifdef XP_PC
 #include <direct.h> //this is here for debug reasons...
@@ -205,26 +206,6 @@ nsresult CNavDTD::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
   NS_ADDREF_THIS();
   return NS_OK;                                                        
-}
-
-
-/**
- *  This method is defined in nsIParser. It is used to 
- *  cause the COM-like construction of an nsParser.
- *  
- *  @update  gess 4/8/98
- *  @param   nsIParser** ptr to newly instantiated parser
- *  @return  NS_xxx error result
- */
-NS_HTMLPARS nsresult NS_NewNavHTMLDTD(nsIDTD** aInstancePtrResult)
-{
-  CNavDTD* it = new CNavDTD();
-
-  if (it == 0) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return it->QueryInterface(kClassIID, (void **) aInstancePtrResult);
 }
 
 
@@ -1824,6 +1805,18 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 NS_IMETHODIMP CNavDTD::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
 {
   *aIntTag = nsHTMLTags::LookupTag(aTag);
+  return NS_OK;
+}
+
+NS_IMETHODIMP CNavDTD::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const
+{
+  aTag = nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag);
+  return NS_OK;
+}
+
+NS_IMETHODIMP CNavDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const
+{
+  *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
   return NS_OK;
 }
 

@@ -315,6 +315,16 @@ NS_IMETHODIMP COtherDTD::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) con
   return CNavDTD::StringTagToIntTag(aTag, aIntTag);
 }
 
+NS_IMETHODIMP COtherDTD::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const
+{
+  return CNavDTD::IntTagToStringTag(aIntTag, aTag);
+}
+
+NS_IMETHODIMP COtherDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const
+{
+  return CNavDTD::ConvertEntityToUnicode(aEntity, aUnicode);
+}
+
 /**
  *  This method gets called to determine whether a given 
  *  tag can contain newlines. Most do not.

@@ -35,6 +35,7 @@
 #include "nsIContentSink.h"
 #include "nsIHTMLContentSink.h"
 #include "nsExpatTokenizer.h"
+#include "nsHTMLEntities.h"
 
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
@@ -403,6 +404,18 @@ PRBool nsExpatDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const{
 NS_IMETHODIMP nsExpatDTD::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsExpatDTD::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsExpatDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const
+{
+  // XXX Needed since the XML content sink reduces entities as well
+  *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
+  return NS_OK;
 }
 
 /**

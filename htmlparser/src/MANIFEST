@@ -29,3 +29,4 @@ nsExpatDTD.h
 nsIExpatTokenizer.h
 nsParserError.h
 nsIElementObserver.h
+nsIParserService.h

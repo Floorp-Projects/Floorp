@@ -35,11 +35,7 @@
 #include "nsIContentSink.h"
 #include "nsHTMLTokens.h"
 #include "nsVoidArray.h"
-
-
-#define NS_XIF_DTD_CID      \
-  {0xc2edf770, 0x06d5,  0x11d2,  \
-  {0xbc, 0x4a, 0x00,    0xaa, 0x00, 0x53, 0x3d, 0x6d}}
+#include "nsParserCIID.h"
 
 
 class nsParser;
@@ -272,6 +268,10 @@ class nsXIFDTD : public nsIDTD {
      * become useful.
      */
     NS_IMETHOD StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const;
+
+    NS_IMETHOD IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const;
+
+    NS_IMETHOD ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const;
 
     /**
      * Set this to TRUE if you want the DTD to verify its
@@ -581,8 +581,14 @@ protected:
 };
 
 
-extern NS_HTMLPARS nsresult NS_NewXIFDTD(nsIDTD** aInstancePtrResult);
-
+inline nsresult NS_NewXIFDTD(nsIDTD** aInstancePtrResult)
+{
+  NS_DEFINE_CID(kXIFDTDCID, NS_XIF_DTD_CID);
+  return nsComponentManager::CreateInstance(kXIFDTDCID,
+                                            nsnull,
+                                            NS_GET_IID(nsIDTD),
+                                            (void**)aInstancePtrResult);
+}
 
 #endif 
 

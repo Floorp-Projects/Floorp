@@ -231,6 +231,10 @@ class nsExpatDTD : public nsIDTD {
      */
     NS_IMETHOD StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const;
 
+    NS_IMETHOD IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const;
+
+    NS_IMETHOD ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const;
+
     /**
      * Retrieve a ptr to the global token recycler...
      * @update	gess8/4/98

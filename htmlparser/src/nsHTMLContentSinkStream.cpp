@@ -48,6 +48,7 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIContentSinkIID, NS_ICONTENT_SINK_IID);
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
+static NS_DEFINE_IID(kIHTMLContentSinkStreamIID, NS_IHTMLCONTENTSINKSTREAM_IID);
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
@@ -228,6 +229,9 @@ nsHTMLContentSinkStream::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   else if(aIID.Equals(kIHTMLContentSinkIID)) {
     *aInstancePtr = (nsIHTMLContentSink*)(this);
   }
+  else if(aIID.Equals(kIHTMLContentSinkStreamIID)) {
+    *aInstancePtr = (nsIHTMLContentSinkStream*)(this);
+  }
   else {
     *aInstancePtr=0;
     return NS_NOINTERFACE;
@@ -239,55 +243,6 @@ nsHTMLContentSinkStream::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 NS_IMPL_ADDREF(nsHTMLContentSinkStream)
 NS_IMPL_RELEASE(nsHTMLContentSinkStream)
-
-
-/**
- *  Create an new sink
- *  
- *  @update  gpk 05/01/99
- *  @return  NS_xxx error result
- */
-NS_HTMLPARS nsresult
-NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
-                              nsIOutputStream* aOutStream,
-                              const nsString* aCharsetOverride,
-                              PRUint32 aFlags)
-{
-  nsHTMLContentSinkStream* it = new nsHTMLContentSinkStream(aOutStream,
-                                                            nsnull,
-                                                            aCharsetOverride,
-                                                            aFlags);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return it->QueryInterface(kIHTMLContentSinkIID, (void **)aInstancePtrResult);
-}
-
-
-/**
- *  Create an new sink
- *  
- *  @update  gpk 05/01/99
- *  @return  NS_xxx error result
- */
-NS_HTMLPARS nsresult
-NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
-                              nsString* aOutString, 
-                              PRUint32 aFlags)
-{
-  nsHTMLContentSinkStream* it = new nsHTMLContentSinkStream(nsnull,
-                                                            aOutString,
-                                                            nsnull,
-                                                            aFlags);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return it->QueryInterface(kIHTMLContentSinkIID, (void **)aInstancePtrResult);
-}
-
-
 
 
 /**
@@ -346,10 +301,7 @@ nsresult nsHTMLContentSinkStream::InitEncoder(const nsString& aCharset)
  * @param 
  * @return
  */
-nsHTMLContentSinkStream::nsHTMLContentSinkStream(nsIOutputStream* aOutStream, 
-                                                 nsString* aOutString,
-                                                 const nsString* aCharsetOverride,
-                                                 PRUint32 aFlags)
+nsHTMLContentSinkStream::nsHTMLContentSinkStream()
 {
   NS_INIT_REFCNT();
   mLowerCaseTags = PR_TRUE;  
@@ -357,6 +309,18 @@ nsHTMLContentSinkStream::nsHTMLContentSinkStream(nsIOutputStream* aOutStream,
   mHTMLStackPos = 0;
   mColPos = 0;
   mIndent = 0;
+  mBuffer = nsnull;
+  mBufferSize = 0;
+  mUnicodeEncoder = nsnull;
+  mInBody = PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsHTMLContentSinkStream::Initialize(nsIOutputStream* aOutStream, 
+                                    nsString* aOutString,
+                                    const nsString* aCharsetOverride,
+                                    PRUint32 aFlags)
+{
   mDoFormat = (aFlags & nsIDocumentEncoder::OutputFormatted) ? PR_TRUE
                                                              : PR_FALSE;
   mBodyOnly = (aFlags & nsIDocumentEncoder::OutputBodyOnly) ? PR_TRUE
@@ -364,16 +328,13 @@ nsHTMLContentSinkStream::nsHTMLContentSinkStream(nsIOutputStream* aOutStream,
   mDoHeader = (!mBodyOnly) && (mDoFormat) &&
                ((aFlags & nsIDocumentEncoder::OutputNoDoctype) ? PR_FALSE
                                                                : PR_TRUE);
-  mBuffer = nsnull;
-  mBufferSize = 0;
-  mUnicodeEncoder = nsnull;
   mStream = aOutStream;
   mString = aOutString;
-  mInBody = PR_FALSE;
   if (aCharsetOverride != nsnull)
-    mCharsetOverride = *aCharsetOverride;
-}
+    mCharsetOverride = *aCharsetOverride;  
 
+  return NS_OK;
+}
 
 /**
  * This method tells the sink whether or not it is 
