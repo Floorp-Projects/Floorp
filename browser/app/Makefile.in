@@ -149,6 +149,10 @@ LIBS	+= -framework QuickTime -framework IOKit
 endif
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
+LIBS += -lphexlib
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 #
 # Control the default heap size.
