@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/accounttree.css" type="text/css"?>
 
@@ -19,14 +18,20 @@
 
 	<html:script language="JavaScript" src="AccountManager.js"/>
 	
-	<tree rdf:datasources="rdf:msgaccountmanager" onclick="showPage(event)" id="accounttree">
+	<tree rdf:datasources="rdf:msgaccountmanager"
+          onclick="showPage(event)" id="accounttree"
+          style="height: 100%">
 
 	  <template>
 	  	<rule>
                         <treechildren>
 			<treeitem uri="...">
 		  		<treerow >
+                    <treecell treeallowevents="true">
+                      <titledbutton class="twisty" onclick="return ToggleTwisty(event.target.parentNode.parentNode.parentNode)"/>
+                    </treecell>
 					<treecell>
+                        <treeindentation/>
 						<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
 					</treecell>
 		  		</treerow>
@@ -35,9 +40,11 @@
 		</rule>
 	  </template>
 
+      <treecol style="width:20px"/>
 	  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
 	  <treehead>
 		<treerow>
+          <treecell/>
 	      <treecell>&nameCol.label;</treecell>
 		</treerow>
 	  </treehead>
