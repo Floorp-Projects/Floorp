@@ -53,7 +53,7 @@ bdo[dir] {
 
 /* blocks */
 
-html, div, map, dt, isindex {
+html, div, map, dt, isindex, form {
   display: block;
 }
 
