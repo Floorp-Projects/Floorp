@@ -254,6 +254,11 @@ public final class Context {
     public static final int VERSION_1_4 =      140;
 
     /**
+     * JavaScript 1.5
+     */
+    public static final int VERSION_1_5 =      150;
+
+    /**
      * Get the current language version.
      * <p>
      * The language version number affects JavaScript semantics as detailed

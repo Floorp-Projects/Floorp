@@ -1073,7 +1073,8 @@ public class NativeRegExp extends ScriptableObject implements Function {
                         Yuk. Keeping the old style \n interpretation for 1.2
                         compatibility.
                     */
-                if (state.cx.getLanguageVersion() == Context.VERSION_1_2) {
+                if ((state.cx.getLanguageVersion() != Context.VERSION_DEFAULT)
+                        && (state.cx.getLanguageVersion() <= Context.VERSION_1_4)) {
                     switch (c) {                    
                       case '0':
                         state.index = index;
@@ -1202,7 +1203,10 @@ public class NativeRegExp extends ScriptableObject implements Function {
                         num <<= 4;
                         num += unHex(c);
                     } else {
-                        if (state.cx.getLanguageVersion() == Context.VERSION_1_2)
+                        if ((state.cx.getLanguageVersion()
+                                                != Context.VERSION_DEFAULT)
+                                && (state.cx.getLanguageVersion() 
+                                                <= Context.VERSION_1_4)) 
                             index--; /* back up so index points to last hex char */
                         else { /* ecma 2 requires pairs of hex digits. */
                             index = ocp;
