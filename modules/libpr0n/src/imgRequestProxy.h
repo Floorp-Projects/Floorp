@@ -87,7 +87,8 @@ private:
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   nsLoadFlags mLoadFlags;
-  PRBool mCanceled;
+  PRPackedBool mCanceled;
+  PRPackedBool mIsInLoadGroup;
 
   PRLock *mLock;
 };

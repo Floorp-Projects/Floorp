@@ -106,6 +106,7 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
         !(imageStatus & imgIRequest::STATUS_ERROR)) {
       aLoadGroup->AddRequest(this, cx);
       mLoadGroup = aLoadGroup;
+      mIsInLoadGroup = PR_TRUE;
     }
   }
 
@@ -361,6 +362,12 @@ void imgRequestProxy::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   GetName(getter_Copies(name));
   LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnStartRequest", "name", NS_ConvertUCS2toUTF8(name).get());
 #endif
+
+  if (!mIsInLoadGroup && mLoadGroup) {
+    mLoadGroup->AddRequest(this, mContext);
+    mIsInLoadGroup = PR_TRUE;
+  }
+
 }
 
 void imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode)
@@ -383,6 +390,6 @@ void imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsre
   nsCOMPtr<imgIRequest> kungFuDeathGrip(this);
 
   mLoadGroup->RemoveRequest(this, mContext, statusCode);
-  mLoadGroup = nsnull;
+  mIsInLoadGroup = PR_FALSE;
 }
 

@@ -36,6 +36,7 @@
 #include "nsICachingChannel.h"
 #include "nsILoadGroup.h"
 #include "nsIInputStream.h"
+#include "nsIMultiPartChannel.h"
 
 #include "nsIComponentManager.h"
 #include "nsIProxyObjectManager.h"
@@ -539,7 +540,11 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
      open forever.
    */
   if (!mChannel) {
-    mChannel = do_QueryInterface(aRequest);
+    nsCOMPtr<nsIMultiPartChannel> mpchan(do_QueryInterface(aRequest));
+    if (mpchan)
+      mpchan->GetBaseChannel(getter_AddRefs(mChannel));
+    else
+      mChannel = do_QueryInterface(aRequest);
   }
 
   nsXPIDLCString mContentType;
@@ -586,6 +591,12 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
         }
       }
     }
+  }
+
+
+  // Shouldn't we be dead already if this gets hit?  Probably multipart/x-mixed-replace...
+  if (mObservers.Count() == 0) {
+    this->Cancel(NS_IMAGELIB_ERROR_FAILURE);
   }
 
   return NS_OK;
