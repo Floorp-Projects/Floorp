@@ -1,7 +1,6 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/pref/preftree.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref.dtd" >
@@ -10,15 +9,18 @@
 <!-- This dialog has a fixed size and is not resizable. 
      You MAY NOT increase the size of this dialog. 
      Questions, Comments -> ben@netscape.com -->
-<window id="prefDialog" 
+<dialog id="prefDialog" 
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&prefWindow.title;" 
-        orient="vertical" class="dialog"
         style="&prefWindow.size;"
         windowtype="mozilla:preferences"
+        buttons="accept,cancel,help"
         onload="Startup();"
+        ondialogaccept="return hPrefWindow.onOK(event);"
+        ondialogcancel="return hPrefWindow.onCancel(event);"
+        ondialoghelp="return doHelpButton(event)"
         persist="screenX screenY"> 
 
   <script>
@@ -52,8 +54,6 @@
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-help.js"/>
   <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
-  <keyset id="dialogKeys"/>
-
   <hbox flex="1">
     <vbox flex="19">
       <text class="label" value="&categoryHeader;"/>
@@ -64,10 +64,6 @@
     <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="81"/>
 
   </hbox>
-
-  <separator/>
-
-  <hbox id="okCancelHelpButtonsRight" />
 
    <script type="application/x-javascript">
     <![CDATA[
@@ -82,4 +78,4 @@
     ]]>
     </script>
    
-</window>
+</dialog>

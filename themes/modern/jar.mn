@@ -301,6 +301,7 @@ modern.jar:
   skin/modern/global/colorpicker.css                               (global/colorpicker.css)
   skin/modern/global/console.css                                   (global/console.css)
   skin/modern/global/contents.rdf                                  (global/contents.rdf)
+  skin/modern/global/dialog.css                                    (global/dialog.css)
   skin/modern/global/filepicker.css                                (global/filepicker.css)
   skin/modern/global/formatting.css                                (global/formatting.css)
   skin/modern/global/global.css                                    (global/global.css)

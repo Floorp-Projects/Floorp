@@ -110,20 +110,22 @@ button[type="menu-button"] {
 /**  
  * XUL <window> element
  **/
-  window 
+  window,
+  page,
+  dialog,
+  wizard
     { 
       background-color    : -moz-Dialog;
       color               : -moz-DialogText;
-      padding             : 0px;
       font                : message-box;
-      -moz-user-focus     : ignore;
     }
   
-  window[wait-cursor] 
+  [wait-cursor] 
     { 
       cursor              : wait !important; 
     }
   
+  /* deprecated */
   window.dialog 
     { 
       background-color    : -moz-Dialog;

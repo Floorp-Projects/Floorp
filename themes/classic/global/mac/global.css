@@ -100,37 +100,27 @@ button.plain {
 /**  
  * XUL <window> element
  **/
-  window 
+  window,
+  page,
+  dialog,
+  window
     { 
       background-color    : #DDDDDD;
-      padding             : 0px;
       font				  : message-box;
     }
   
-  window[wait-cursor] 
+  [wait-cursor] 
     { 
       cursor              : wait !important; 
     }
   
+  /* deprecated */
   window.dialog 
     { 
       background-color    : #DDDDDD;
       padding             : 7px 5px 5px 5px;
     }
 
-  window.non-resizable-dialog
-    {
-      border-left         : 1px solid #FFFFFF;
-      border-top          : 1px solid #FFFFFF;
-      border-right        : 1px solid #DDDDDD;
-      border-bottom       : 1px solid #DDDDDD;    
-    }
-
-  window.non-resizable-dialog.modal
-    {
-      border              : none;
-    }
-  
 /**
  * XUL <box> debugging
  **/

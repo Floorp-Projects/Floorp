@@ -112,19 +112,22 @@ splitter {
   color: white;
 }
 
-/* ::::: window ::::: */
+/* ::::: root elements ::::: */
 
-window { 
-  padding: 0px;
+window, 
+page,
+dialog,
+wizard { 
   background-color: #C7D0D9;
   color: #000000;
   font: message-box;
 }
   
-window[wait-cursor] { 
+[wait-cursor] { 
   cursor: wait !important; 
 }
-  
+
+/* deprecated */  
 window.dialog { 
   padding: 7px 5px 5px 5px;
 }

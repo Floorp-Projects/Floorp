@@ -5,9 +5,9 @@ classic.jar:
     skin/classic/global/browser.css
     skin/classic/global/button.css
     skin/classic/global/checkbox.css
-    skin/classic/global/commonDialog.css
     skin/classic/global/console.css
     skin/classic/global/colorpicker.css
+    skin/classic/global/dialog.css
     skin/classic/global/filepicker.css
     skin/classic/global/formatting.css
     skin/classic/global/global.css
@@ -38,7 +38,6 @@ classic.jar:
     skin/classic/global/message-icon.gif
     skin/classic/global/question-icon.gif
     skin/classic/global/alert-icon.gif
-    skin/classic/global/dialogOverlay.css
     skin/classic/global/linkTree.css
     skin/classic/global/twisty-open.gif
     skin/classic/global/twisty-closed.gif

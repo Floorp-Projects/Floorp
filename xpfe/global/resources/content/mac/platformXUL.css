@@ -1,6 +1,11 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); 
 
+dialog {
+  -moz-binding: url("chrome://global/content/platformDialog.xml#dialog") !important;
+}
+
 statusbar {
   padding-right: 14px;
 }
+

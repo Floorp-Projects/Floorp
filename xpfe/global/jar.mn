@@ -46,6 +46,7 @@ toolkit.jar:
         content/global/bindings/button.xml          (resources/content/bindings/button.xml)
         content/global/bindings/checkbox.xml        (resources/content/bindings/checkbox.xml)
         content/global/bindings/colorpicker.xml     (resources/content/bindings/colorpicker.xml)
+        content/global/bindings/dialog.xml          (resources/content/bindings/dialog.xml)
         content/global/bindings/general.xml         (resources/content/bindings/general.xml)
         content/global/bindings/groupbox.xml        (resources/content/bindings/groupbox.xml)
         content/global/bindings/menu.xml            (resources/content/bindings/menu.xml)
@@ -94,6 +95,7 @@ en-US.jar:
     locale/en-US/global/commonDialogs.properties    (resources/locale/en-US/commonDialogs.properties) 
     locale/en-US/global/plugins.properties          (resources/locale/en-US/plugins.properties) 
     locale/en-US/global/nsOutlinerSorting.properties (resources/locale/en-US/nsOutlinerSorting.properties)
+    locale/en-US/global/dialog.properties           (resources/locale/en-US/dialog.properties)
 
 US.jar:
     locale/US/global-region/contents.rdf            (resources/locale/en-US/contents-region.rdf) 

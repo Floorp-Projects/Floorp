@@ -37,7 +37,7 @@ function initDialogObject()
   dialog.caseSensitive   = document.getElementById("dialog.caseSensitive");
   dialog.wrap            = document.getElementById("dialog.wrap");
   dialog.searchBackwards = document.getElementById("dialog.searchBackwards");
-  dialog.find            = document.getElementById("ok");
+  dialog.find            = document.getElementById("findDialog").getButton("accept");
   dialog.bundle          = null;
 
   // Move dialog to center, if it not been shown before
@@ -83,9 +83,6 @@ function onLoad()
   // Change "OK" to "Find".
   dialog.find.label = document.getElementById("fBLT").getAttribute("label");
 
-  // Setup the dialogOverlay.xul button handlers.
-  doSetOKCancel(onOK, onCancel);
-
   // get the find instance
   var finder = window.arguments[0];
   // If the dialog was opened from window.find(), findInst will be an
@@ -105,7 +102,7 @@ function onUnload()
     window.opener.findDialog = 0;
 }
 
-function onOK()
+function onAccept()
 {
   // Transfer dialog contents to the find service.
   saveFindData();
@@ -127,12 +124,6 @@ function onOK()
     dialog.findKey.select();
     dialog.findKey.focus();
   }
-}
-
-function onCancel()
-{
-  // Close the window.
-  return true;
 }
 
 function doEnabling()

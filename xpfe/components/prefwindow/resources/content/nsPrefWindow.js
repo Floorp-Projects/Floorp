@@ -60,7 +60,6 @@ nsPrefWindow.prototype =
     onload:
       function ()
         {
-          doSetOKCancel( this.onOK, this.onCancel );
           try 
             {
               this.pref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
@@ -99,7 +98,6 @@ nsPrefWindow.prototype =
               }
             hPrefWindow.wsm.savePageData( tag );
             hPrefWindow.savePrefs();
-            close();
           },
         
       onCancel:
@@ -109,7 +107,6 @@ nsPrefWindow.prototype =
               {
                 hPrefWindow.cancelHandlers[i]();
               }
-            close();
           },
 
       registerOKCallbackFunc:
