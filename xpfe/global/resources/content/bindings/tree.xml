@@ -125,9 +125,12 @@
               col = col.boxObject.nextSibling;
             }
             var i;
+            // if there is no ordinal, come up with a big number, so that
+            // the column shows up on the far right
+            // see bug #178604
             for (i = 0; i < cols.length; ++i)
-              cols[i].setAttribute("ordinal", (i*2)+1);
-              
+              cols[i].setAttribute("ordinal", cols[i].getAttribute('ordinal') ? ((i*2)+1) : (((cols.length + i + 1) * 2) + 1));
+
             // update the ordinal positions of splitters to even numbers, so that 
             // they are in between columns
             var splitters = this.getElementsByTagName("splitter");
