@@ -105,58 +105,6 @@ NS_IMPL_ISUPPORTS1(nsAddbookUrl, nsIURI)
 NS_IMETHODIMP 
 nsAddbookUrl::CrackAddURL(char *searchPart)
 {
-  nsCString       emailAddr = "";
-  nsCString       folderName = "";
-
-	char *rest = searchPart;
-
-  // okay, first, free up all of our old search part state.....
-	CleanupAddbookState();
-
-  // Start past the '?'...
-	if (rest && *rest == '?')
-		rest++;
-
-	if (rest)
-	{
-    char *token = nsCRT::strtok(rest, "&", &rest);
-		while (token && *token)
-		{
-			char *value = 0;
-      char *eq = PL_strchr(token, '=');
-			if (eq)
-			{
-				value = eq+1;
-				*eq = 0;
-			}
-			
-			switch (nsCRT::ToUpper(*token))
-			{
-				case 'E':
-          if (!nsCRT::strcasecmp (token, "email"))
-					  emailAddr = value;
-				  break;
-				case 'F':
-            if (!nsCRT::strcasecmp (token, "folder"))
-					    folderName = value;
-					break;
-      } // end of switch statement...
-			
-			if (eq)
-				  *eq = '='; // put it back
-				token = nsCRT::strtok(rest, "&", &rest);
-		} // while we still have part of the url to parse...
-  } // if rest && *rest
-
-  nsUnescape(emailAddr);
-  mAbCardProperty->SetCardValue(kPriEmailColumn, nsString(emailAddr).GetUnicode());
-
-  if (!folderName.IsEmpty())
-  {
-    nsUnescape(folderName);
-    mAbCardProperty->SetCardValue(kWorkAddressBook, nsString(folderName).GetUnicode());
-  }
-  
   return NS_OK;
 }
 
