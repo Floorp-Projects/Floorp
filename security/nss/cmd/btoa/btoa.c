@@ -94,7 +94,17 @@ encode_file(FILE *outFile, FILE *inFile)
 	if (status != SECSuccess) goto loser;
     }
 
-    return NSSBase64Encoder_Destroy(cx, PR_FALSE);
+    status = NSSBase64Encoder_Destroy(cx, PR_FALSE);
+    if (status != SECSuccess)
+	return status;
+
+    /*
+     * Add a trailing CRLF.  Note this must be done *after* the call
+     * to Destroy above (because only then are we sure all data has
+     * been written out).
+     */
+    fwrite("\r\n", 1, 2, outFile);
+    return SECSuccess;
 
   loser:
     (void) NSSBase64Encoder_Destroy(cx, PR_TRUE);
