@@ -138,7 +138,7 @@ public class UnifiedMessageDisplayManager extends MessageDisplayManager {
 }
 
 class UnifiedMessageFrame extends GeneralFrame {
-  private final boolean DEBUG = true;
+  private final boolean DEBUG = false;
   MasterPanel   fFolders = null;
   FolderPanel   fThreads = null;
   MessagePanel  fMessage = null;

@@ -54,7 +54,7 @@ import grendel.ui.UIAction;
 import grendel.widgets.GrendelToolBar;
 
 public class Util {
-  static final boolean DEBUG = true;
+  static final boolean DEBUG = false;
   public static final int LEFT = 0;
   public static final int CENTER = 0;
   public static final int RIGHT = 0;

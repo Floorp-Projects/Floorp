@@ -55,7 +55,7 @@ public abstract class MessageDisplayManager {
   static volatile MessageDisplayManager fManager;
 
   static {
-    System.out.println("MessageDisplayManager.<clinit>");
+   // System.out.println("MessageDisplayManager.<clinit>");
   }
 
   /**
@@ -65,7 +65,7 @@ public abstract class MessageDisplayManager {
   public static synchronized void SetDefaultManager(MessageDisplayManager
                                                     aManager) {
     fManager = aManager;
-    System.out.println("Setting manager: " + aManager);
+//    System.out.println("Setting manager: " + aManager);
   }
 
   /**
@@ -73,7 +73,7 @@ public abstract class MessageDisplayManager {
    */
 
   public static synchronized MessageDisplayManager GetDefaultManager() {
-    System.out.println("Getting manager: " + fManager);
+//    System.out.println("Getting manager: " + fManager);
     return fManager;
   }
 

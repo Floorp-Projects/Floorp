@@ -51,7 +51,7 @@ import javax.swing.JPanel;
 import javax.swing.JButton;
 
 public class GeneralPanel extends JPanel {
-  private final boolean DEBUG = true;
+  private final boolean DEBUG = false;
   static ResourceBundle fLabels = ResourceBundle.getBundle("grendel.ui.Labels",
                                                          Locale.getDefault());
 

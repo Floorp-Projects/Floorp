@@ -39,7 +39,7 @@ import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
-import java.io.StringBufferInputStream;
+import java.io.StringReader;
 import java.net.URL;
 import java.net.MalformedURLException;
 import java.util.Locale;
@@ -137,8 +137,14 @@ public class MessagePanel extends GeneralPanel {
   public void dispose() {
     synchronized (fPanel) {
       if (fMessageLoadThread != null) {
-        System.out.println("Killing msg thread");
-        fMessageLoadThread.stop();
+     //   System.out.println("Killing msg thread");
+        fMessageLoadThread.interrupt();
+				try {
+					fMessageLoadThread.join();
+				}
+				catch ( InterruptedException ie ) {
+					// ignore
+				}
         fMessageLoadThread = null;
       }
     }
@@ -159,8 +165,14 @@ public class MessagePanel extends GeneralPanel {
 
   public synchronized void setMessage(Message aMessage) {
     if (fMessageLoadThread != null) {
-      System.out.println("Killing msg thread");
-      fMessageLoadThread.stop();
+  //    System.out.println("Killing msg thread");
+      fMessageLoadThread.interrupt();
+			try {
+				fMessageLoadThread.join();
+			}
+			catch ( InterruptedException ie ) {
+				// ignore
+			}
       notifyStatus(fLabels.getString("messageLoadedStatus"));
     }
     fMessageLoadThread =
@@ -296,8 +308,7 @@ public class MessagePanel extends GeneralPanel {
               throw new Error("Can't get the input stream???  " + e);
             }
           } else {
-            // Love them deprecated classes.  Oh, well, this is just a temp hack.
-            in = new StringBufferInputStream("This space intentionally left blank");
+            fTextArea.setText("This space intentionally left blank");
           }
 
           // synchronized (fViewer) {
