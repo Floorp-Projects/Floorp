@@ -79,7 +79,7 @@ protected:
             aPool.Free(aItem, sizeof(*aItem)); }
 
     protected:
-        static void* operator new(size_t aSize, void* aPtr) {
+        static void* operator new(size_t aSize, void* aPtr) CPP_THROW_NEW {
             return aPtr; }
 
         static void operator delete(void* aPtr, size_t aSize) {

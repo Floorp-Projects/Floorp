@@ -118,10 +118,10 @@ public: // typing
   void NonPoolTypeError(morkEnv* ev);
 
 public: // morkNode memory management operators
-  void* operator new(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev)
+  void* operator new(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev) CPP_THROW_NEW
   { return morkNode::MakeNew(inSize, ioHeap, ev); }
   
-  void* operator new(size_t inSize)
+  void* operator new(size_t inSize) CPP_THROW_NEW
   { return ::operator new(inSize); }
   
 

@@ -122,7 +122,7 @@ class CToken {
      * @param   aSize    - 
      * @param   aArena   - Allocate memory from this pool.
      */
-    static void * operator new (size_t aSize,nsFixedSizeAllocator& anArena)
+    static void * operator new (size_t aSize,nsFixedSizeAllocator& anArena) CPP_THROW_NEW
     {
       return anArena.Alloc(aSize);
     }

@@ -50,11 +50,7 @@ struct TreeNode {
   u_long bytesLeaked;
   u_long descendantBytesLeaked;
 
-  void* operator new(size_t size)
-#if (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
-        throw()
-#endif
-  ;
+  void* operator new(size_t size) CPP_THROW_NEW ;
   void operator delete(void* ptr);
 
   static TreeNode* freeList;

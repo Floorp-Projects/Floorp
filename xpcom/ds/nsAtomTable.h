@@ -84,7 +84,7 @@ public:
 
   virtual PRBool IsPermanent();
 
-  void* operator new(size_t size, const nsAString& aString) {
+  void* operator new(size_t size, const nsAString& aString) CPP_THROW_NEW {
     return AtomImpl::operator new(size, aString);
   }
   void* operator new(size_t size, AtomImpl* aAtom);

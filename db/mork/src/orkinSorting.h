@@ -89,13 +89,13 @@ private: // copying is not allowed
 // } ===== end morkNode methods =====
 
 protected: // morkHandle memory management operators
-  void* operator new(size_t inSize, morkPool& ioPool, morkZone& ioZone, morkEnv* ev)
+  void* operator new(size_t inSize, morkPool& ioPool, morkZone& ioZone, morkEnv* ev) CPP_THROW_NEW
   { return ioPool.NewHandle(ev, inSize, &ioZone); }
   
-  void* operator new(size_t inSize, morkPool& ioPool, morkEnv* ev)
+  void* operator new(size_t inSize, morkPool& ioPool, morkEnv* ev) CPP_THROW_NEW
   { return ioPool.NewHandle(ev, inSize, (morkZone*) 0); }
   
-  void* operator new(size_t inSize, morkHandleFace* ioFace)
+  void* operator new(size_t inSize, morkHandleFace* ioFace) CPP_THROW_NEW
   { MORK_USED_1(inSize); return ioFace; }
   
   

@@ -147,11 +147,7 @@ public:
 
 private:
   // The normal operator new is disallowed on nsFrames.
-#if (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
-  void* operator new(size_t sz) throw () { return nsnull; };
-#else
-  void* operator new(size_t sz) { return nsnull; };
-#endif
+  void* operator new(size_t sz) CPP_THROW_NEW { return nsnull; };
 
 public:
 

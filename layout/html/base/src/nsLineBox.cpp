@@ -94,7 +94,7 @@ NS_NewLineBox(nsIPresShell* aPresShell, nsIFrame* aFrame,
 // Overloaded new operator. Uses an arena (which comes from the presShell)
 // to perform the allocation.
 void* 
-nsLineBox::operator new(size_t sz, nsIPresShell* aPresShell)
+nsLineBox::operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW
 {
   void* result = nsnull;
   aPresShell->AllocateFrame(sz, &result);

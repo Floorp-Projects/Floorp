@@ -74,7 +74,7 @@ public:
       mNext->Destroy(mNext->mRuleNode->mPresContext);
   }
 
-  void* operator new(size_t sz, nsIPresContext* aContext) {
+  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
     void* result = nsnull;
     aContext->AllocateFromShell(sz, &result);
     return result;
@@ -374,7 +374,7 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
 // Overloaded new operator. Initializes the memory to 0 and relies on an arena
 // (which comes from the presShell) to perform the allocation.
 void* 
-nsRuleNode::operator new(size_t sz, nsIPresContext* aPresContext)
+nsRuleNode::operator new(size_t sz, nsIPresContext* aPresContext) CPP_THROW_NEW
 {
   // Check the recycle list first.
   void* result = nsnull;

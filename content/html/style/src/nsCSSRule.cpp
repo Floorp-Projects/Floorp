@@ -40,7 +40,7 @@
 #include "nsIArena.h"
 #include "nsICSSStyleSheet.h"
 
-void* nsCSSRule::operator new(size_t size)
+void* nsCSSRule::operator new(size_t size) CPP_THROW_NEW
 {
   nsCSSRule* rv = (nsCSSRule*) ::operator new(size);
 #ifdef NS_DEBUG
@@ -52,7 +52,7 @@ void* nsCSSRule::operator new(size_t size)
   return (void*) rv;
 }
 
-void* nsCSSRule::operator new(size_t size, nsIArena* aArena)
+void* nsCSSRule::operator new(size_t size, nsIArena* aArena) CPP_THROW_NEW
 {
   nsCSSRule* rv = (nsCSSRule*) aArena->Alloc(PRInt32(size));
 #ifdef NS_DEBUG

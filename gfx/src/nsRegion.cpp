@@ -142,7 +142,7 @@ void RgnRectMemoryAllocator::Free (nsRegion::RgnRect* aRect)
 static RgnRectMemoryAllocator gRectPool (INIT_MEM_CHUNK_ENTRIES);
 
 
-inline void* nsRegion::RgnRect::operator new (size_t) 
+inline void* nsRegion::RgnRect::operator new (size_t) CPP_THROW_NEW
 { 
   return gRectPool.Alloc ();
 }

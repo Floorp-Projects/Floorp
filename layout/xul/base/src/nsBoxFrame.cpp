@@ -2226,7 +2226,7 @@ nsBoxFrame::GetContentOf(nsIContent** aContent)
 
 
 void* 
-nsBoxFrameInner::operator new(size_t sz, nsIPresShell* aPresShell)
+nsBoxFrameInner::operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW
 {
     return nsBoxLayoutState::Allocate(sz,aPresShell);
 }

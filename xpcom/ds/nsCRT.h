@@ -64,7 +64,7 @@ extern const PRUnichar kIsoLatin1ToUCS2[256];
 // This macro can be used in a class declaration for classes that want
 // to ensure that their instance memory is zeroed.
 #define NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW \
-  void* operator new(size_t sz) {             \
+  void* operator new(size_t sz) CPP_THROW_NEW { \
     void* rv = ::operator new(sz);            \
     if (rv) {                                 \
       memset(rv, 0, sz);                      \
@@ -82,7 +82,7 @@ extern const PRUnichar kIsoLatin1ToUCS2[256];
   void operator delete(void* ptr);
 
 #define NS_IMPL_ZEROING_OPERATOR_NEW(_class) \
-  void* _class::operator new(size_t sz) {    \
+  void* _class::operator new(size_t sz) CPP_THROW_NEW { \
     void* rv = ::operator new(sz);           \
     if (rv) {                                \
       memset(rv, 0, sz);                     \

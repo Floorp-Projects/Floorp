@@ -234,7 +234,7 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
 }
 
 void* 
-nsStyleFont::operator new(size_t sz, nsIPresContext* aContext) {
+nsStyleFont::operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
   void* result = nsnull;
   aContext->AllocateFromShell(sz, &result);
   if (result)
@@ -315,7 +315,7 @@ nsStyleMargin::nsStyleMargin(const nsStyleMargin& aSrc) {
 }
 
 void* 
-nsStyleMargin::operator new(size_t sz, nsIPresContext* aContext) {
+nsStyleMargin::operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
   void* result = nsnull;
   aContext->AllocateFromShell(sz, &result);
   if (result)
@@ -374,7 +374,7 @@ nsStylePadding::nsStylePadding(const nsStylePadding& aSrc) {
 }
 
 void* 
-nsStylePadding::operator new(size_t sz, nsIPresContext* aContext) {
+nsStylePadding::operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
   void* result = nsnull;
   aContext->AllocateFromShell(sz, &result);
   if (result)
@@ -474,7 +474,7 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
 }
 
 void* 
-nsStyleBorder::operator new(size_t sz, nsIPresContext* aContext) {
+nsStyleBorder::operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
   void* result = nsnull;
   aContext->AllocateFromShell(sz, &result);
   if (result)

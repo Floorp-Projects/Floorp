@@ -55,7 +55,7 @@ public: // link memory management methods
   void ZapOldNext(morkEnv* ev, nsIMdbHeap* ioHeap);
 
 public: // link memory management operators
-  void* operator new(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev)
+  void* operator new(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev) CPP_THROW_NEW
   { return morkNext::MakeNewNext(inSize, ioHeap, ev); }
   
   void operator delete(void* ioAddress) // DO NOT CALL THIS, hope to crash:
@@ -151,7 +151,7 @@ public: // link memory management methods
   void ZapOldLink(morkEnv* ev, nsIMdbHeap* ioHeap);
 
 public: // link memory management operators
-  void* operator new(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev)
+  void* operator new(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev) CPP_THROW_NEW
   { return morkLink::MakeNewLink(inSize, ioHeap, ev); }
   
 };

@@ -68,7 +68,7 @@ struct nsInheritedStyleData
   nsStyleSVG* mSVGData;
 #endif
 
-  void* operator new(size_t sz, nsIPresContext* aContext) {
+  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
     void* result = nsnull;
     aContext->AllocateFromShell(sz, &result);
     return result;
@@ -142,7 +142,7 @@ struct nsResetStyleData
 #endif
   };
 
-  void* operator new(size_t sz, nsIPresContext* aContext) {
+  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
     void* result = nsnull;
     aContext->AllocateFromShell(sz, &result);
     return result;

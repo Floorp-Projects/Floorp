@@ -286,7 +286,7 @@ protected:
 };
 
 
-void* HTMLCSSStyleSheetImpl::operator new(size_t size)
+void* HTMLCSSStyleSheetImpl::operator new(size_t size) CPP_THROW_NEW
 {
   HTMLCSSStyleSheetImpl* rv = (HTMLCSSStyleSheetImpl*) ::operator new(size);
 #ifdef NS_DEBUG
@@ -298,7 +298,7 @@ void* HTMLCSSStyleSheetImpl::operator new(size_t size)
   return (void*) rv;
 }
 
-void* HTMLCSSStyleSheetImpl::operator new(size_t size, nsIArena* aArena)
+void* HTMLCSSStyleSheetImpl::operator new(size_t size, nsIArena* aArena) CPP_THROW_NEW
 {
   HTMLCSSStyleSheetImpl* rv = (HTMLCSSStyleSheetImpl*) aArena->Alloc(PRInt32(size));
 #ifdef NS_DEBUG

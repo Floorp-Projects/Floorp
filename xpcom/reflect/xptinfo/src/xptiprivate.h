@@ -173,7 +173,7 @@ private:
     xptiTypelibGuts(); // not implemented
     xptiTypelibGuts(XPTHeader* aHeader);
     ~xptiTypelibGuts() {}
-    void* operator new(size_t, void* p) {return p;}
+    void* operator new(size_t, void* p) CPP_THROW_NEW {return p;}
 
 private:
     XPTHeader*           mHeader;        // hold pointer into arena
@@ -467,7 +467,7 @@ public:
     }
 
 private:
-    void* operator new(size_t, void* p) {return p;}
+    void* operator new(size_t, void* p) CPP_THROW_NEW {return p;}
     xptiInterfaceGuts(XPTInterfaceDescriptor* aDescriptor,
                       const xptiTypelib&      aTypelib,
                       xptiWorkingSet*         aWorkingSet)
@@ -639,7 +639,7 @@ private:
                        const xptiTypelib& typelib);
     ~xptiInterfaceEntry();
 
-    void* operator new(size_t, void* p) {return p;}
+    void* operator new(size_t, void* p) CPP_THROW_NEW {return p;}
 
     void SetResolvedState(int state) 
         {mFlags.SetState(uint8(state));}

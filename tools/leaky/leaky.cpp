@@ -708,10 +708,7 @@ void leaky::dumpLeakTree(TreeNode* aNode, int aIndent)
 
 TreeNode* TreeNode::freeList;
 
-void* TreeNode::operator new(size_t size)
-#if (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
-	throw()
-#endif
+void* TreeNode::operator new(size_t size) CPP_THROW_NEW
 {
   if (!freeList) {
     TreeNode* newNodes = (TreeNode*) new char[sizeof(TreeNode) * 5000];

@@ -81,7 +81,7 @@ nsDirectionalFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 void*
-nsDirectionalFrame::operator new(size_t aSize)
+nsDirectionalFrame::operator new(size_t aSize) CPP_THROW_NEW
 {
   void* frame = ::operator new(aSize);
   if (frame) {
