@@ -9,6 +9,7 @@
 <!ENTITY bySite.label "By Site">
 <!ENTITY bySite.accesskey "S">
 <!ENTITY view.label "View">
+<!ENTITY view.accesskey "w">
 <!ENTITY byMostVisited.label "By Most Visited">
 <!ENTITY byMostVisited.accesskey "V">
 <!ENTITY byLastVisited.label "By Last Visited">

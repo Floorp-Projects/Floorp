@@ -60,7 +60,7 @@
 
   <commandset id="editMenuCommands"/>
   <keyset id="editMenuKeys"/>
-  
+
   <popup id="historyContextMenu" onpopupshowing="buildContextMenu(event);">
     <menuitem id="miExpand" label="&expand.label;" accesskey="&expand.accesskey;"
               default="true" oncommand="collapseExpand();"/>
@@ -83,7 +83,9 @@
     <label value="&find.label;" accesskey="&find.accesskey;" control="search-box"/>
     <textbox id="search-box" flex="1" type="timed" timeout="500"
              oncommand="searchHistory(gSearchBox.value);"/>
-    <button id="viewButton" style="min-width:0px !important;" type="menu" label="&view.label;" accesskey="w" selectedsort="day" persist="selectedsort">
+    <button id="viewButton" style="min-width:0px !important;" type="menu"
+            label="&view.label;" accesskey="&view.accesskey;" selectedsort="day"
+            persist="selectedsort">
       <menupopup>
         <menuitem id="bydayandsite" label="&byDayAndSite.label;" accesskey="&byDayAndSite.accesskey;" type="radio"
                   oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'dayandsite'); GroupBy('dayandsite');"/>
