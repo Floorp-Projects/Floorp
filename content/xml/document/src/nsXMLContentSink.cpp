@@ -1143,8 +1143,16 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
 
     nsCOMPtr<nsIURI> url;
     rv = NS_NewURI(getter_AddRefs(url), aHref, mDocumentBaseURL);
-    if (NS_SUCCEEDED(rv))
-      rv = LoadXSLStyleSheet(url);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = secMan->CheckLoadURI(mDocumentURL, url,
+                              nsIScriptSecurityManager::ALLOW_CHROME);
+    if (NS_FAILED(rv))
+      return NS_OK;
+    rv = LoadXSLStyleSheet(url);
   }
   return rv;
 }
