@@ -130,7 +130,7 @@
               return;
  
             this.appendError(aConsoleMessage);
-          } else {
+          } else if (aConsoleMessage.message) {
             this.appendMessage(aConsoleMessage.message);
           }
         ]]></body>
