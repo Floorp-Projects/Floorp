@@ -101,11 +101,11 @@ nsStandardURL::GetSpec(char* *result)
             }
         }
         string.Append(mPath);
-        if (nsnull != mRef) {
+        if (nsnull != mRef && mRef[0] != '\0') {
             string.Append('#');
             string.Append(mRef);
         }
-        if (nsnull != mQuery) {
+        if (nsnull != mQuery && mQuery[0] != '\0') {
             string.Append('?');
             string.Append(mQuery);
         }
