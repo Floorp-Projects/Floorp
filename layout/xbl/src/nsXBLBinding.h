@@ -53,12 +53,15 @@ class nsXBLBinding: public nsIXBLBinding
   NS_IMETHOD SetBoundElement(nsIContent* aElement);
 
   NS_IMETHOD GenerateAnonymousContent(nsIContent* aBoundElement);
-  NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement);
+  NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aBinding);
   NS_IMETHOD InstallProperties(nsIContent* aBoundElement);
 
   NS_IMETHOD GetBaseTag(PRInt32* aNameSpaceID, nsIAtom** aResult);
 
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag);
+
+  NS_IMETHOD ExecuteAttachedHandler();
+  NS_IMETHOD ExecuteDetachedHandler();
 
   NS_IMETHOD UnhookEventHandlers();
   NS_IMETHOD ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument);
@@ -111,6 +114,7 @@ public:
   static nsIAtom* kReadOnlyAtom;
   static nsIAtom* kURIAtom;
   static nsIAtom* kAttachToAtom;
+  static nsIAtom* kBindingAttachedAtom;
 
   // Used to easily obtain the correct IID for an event.
   struct EventHandlerMapEntry {

@@ -59,6 +59,8 @@ nsIAtom* nsXBLEventHandler::kValueAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kCommandAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kClickCountAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kButtonAtom = nsnull;
+nsIAtom* nsXBLEventHandler::kBindingAttachedAtom = nsnull;
+nsIAtom* nsXBLEventHandler::kBindingDetachedAtom = nsnull;
 
 nsXBLEventHandler::nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHandlerElement,
                                      const nsString& aEventName)
@@ -82,6 +84,8 @@ nsXBLEventHandler::nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHan
     kCommandAtom = NS_NewAtom("command");
     kClickCountAtom = NS_NewAtom("clickcount");
     kButtonAtom = NS_NewAtom("button");
+    kBindingAttachedAtom = NS_NewAtom("bindingattached");
+    kBindingDetachedAtom = NS_NewAtom("bindingdetached");
   }
 }
 
@@ -101,10 +105,65 @@ nsXBLEventHandler::~nsXBLEventHandler()
     NS_RELEASE(kCommandAtom);
     NS_RELEASE(kButtonAtom);
     NS_RELEASE(kClickCountAtom);
+    NS_RELEASE(kBindingAttachedAtom);
+    NS_RELEASE(kBindingDetachedAtom);
   }
 }
 
 NS_IMPL_ISUPPORTS5(nsXBLEventHandler, nsIDOMKeyListener, nsIDOMMouseListener, nsIDOMMenuListener, nsIDOMFocusListener, nsIDOMScrollListener)
+
+NS_IMETHODIMP
+nsXBLEventHandler::BindingAttached()
+{
+  nsresult ret;
+  if (mEventName.EqualsWithConversion("bindingattached")) {
+    nsMouseEvent event;
+    event.eventStructType = NS_EVENT;
+    event.message = NS_MENU_ACTION;
+    event.isShift = PR_FALSE;
+    event.isControl = PR_FALSE;
+    event.isAlt = PR_FALSE;
+    event.isMeta = PR_FALSE;
+    event.clickCount = 0;
+    event.widget = nsnull;
+
+    nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(mBoundElement));
+
+    nsCOMPtr<nsIEventListenerManager> listenerManager;
+    if (NS_FAILED(ret = rec->GetListenerManager(getter_AddRefs(listenerManager)))) {
+      NS_ERROR("Unable to instantiate a listener manager on this event.");
+      return ret;
+    }
+    nsAutoString empty;
+
+    nsCOMPtr<nsIDOMEvent> domEvent;
+    if (NS_FAILED(ret = listenerManager->CreateEvent(nsnull, &event, empty, getter_AddRefs(domEvent)))) {
+      NS_ERROR("The binding attach handler will fail without the ability to create the event early.");
+      return ret;
+    }
+  
+    // We need to explicitly set the target here, because the
+    // DOM implementation will try to compute the target from
+    // the frame. If we don't have a frame then that breaks.
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(domEvent);
+    if (privateEvent) {
+      privateEvent->SetTarget(rec);
+    }
+
+    ExecuteHandler(mEventName, domEvent);
+  }
+
+  if (mNextHandler)
+    return mNextHandler->BindingAttached();
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLEventHandler::BindingDetached()
+{
+  return NS_OK;
+}
 
 nsresult nsXBLEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 {
@@ -672,6 +731,13 @@ nsXBLEventHandler::RemoveEventHandlers()
     if (mNextHandler)
       mNextHandler->RemoveEventHandlers();
 
+    if (mEventName.EqualsWithConversion("bindingattached") ||
+        mEventName.EqualsWithConversion("bindingdetached")) {
+      // Release and drop.
+      NS_RELEASE_THIS();
+      return;
+    }
+
     // Figure out if we're using capturing or not.
     PRBool useCapture = PR_FALSE;
     nsAutoString capturer;
@@ -687,7 +753,7 @@ nsXBLEventHandler::RemoveEventHandlers()
     PRBool mouse = nsXBLBinding::IsMouseHandler(type);
     PRBool key = nsXBLBinding::IsKeyHandler(type);
     PRBool focus = nsXBLBinding::IsFocusHandler(type);
-    // XXX not used: PRBool xul = nsXBLBinding::IsXULHandler(type);
+    PRBool xul = nsXBLBinding::IsXULHandler(type);
     PRBool scroll = nsXBLBinding::IsScrollHandler(type);
 
     // Remove the event listener.
@@ -699,8 +765,10 @@ nsXBLEventHandler::RemoveEventHandlers()
       receiver->RemoveEventListener(type, (nsIDOMFocusListener*)this, useCapture);
     else if(scroll)
       receiver->RemoveEventListener(type, (nsIDOMScrollListener*)this, useCapture);
-    else
+    else if (xul)
       receiver->RemoveEventListener(type, (nsIDOMMenuListener*)this, useCapture);
+
+
   }
 }
 
