@@ -71,4 +71,7 @@ void CreateRshell (void)
 	CString txtdest = configPath + "\\Output\\install.txt";
 	CopyFile(fvalue2,bmpdest,FALSE);
 	CopyFile(fvalue4,txtdest,FALSE);
+	// Deleting the part1.ini and part2.ini files. 
+	DeleteFile(rshellPath + "part1.ini");
+	DeleteFile(rshellPath + "part2.ini");
 }

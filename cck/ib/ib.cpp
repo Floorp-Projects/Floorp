@@ -598,47 +598,7 @@ CString GetBrowser(void)
 
 	return retflag;
 }
-/*BOOL Progress() 
-{
 
-	CProgressCtrl progressDlg(this);
-	progressDlg.Create(IDD_NEW_DIALOG);
-	CProgressCtrl *pProgressDlg = &progressDlg;
-				
-	//CRuntimeClass *pProgDlgThread = RUNTIME_CLASS(CProgDlgThread);	//This is the multi-threading stuff for the progress dialog
-	//AfxBeginThread(pProgDlgThread);
-
-	pProgressDlg->m_ProgressText.SetWindowText("Creating a CD Layout...");
-	pProgressDlg->m_ProgressBar.SetPos(0);
-	pProgressDlg->m_ProgressBar.SetRange(0,4);
-	pProgressDlg->m_ProgressBar.SetStep(1);
-				
-		pProgressDlg->m_ProgressText.SetWindowText("Loading Globals...");
-//		LoadGlobals();
-		pProgressDlg->m_ProgressBar.StepIt();
-		pProgressDlg->UpdateWindow();
-
-		pProgressDlg->m_ProgressText.SetWindowText("Reading files...");
-//		ReadIniFile();
-		pProgressDlg->m_ProgressBar.StepIt();
-		pProgressDlg->UpdateWindow();
-
-		pProgressDlg->m_ProgressText.SetWindowText("Merging files...");
-//		MergeFiles();
-		pProgressDlg->m_ProgressBar.StepIt();
-		pProgressDlg->UpdateWindow();
-
-		pProgressDlg->m_ProgressText.SetWindowText("Creating CD Layout...");
-//		CreateMedia();
-		pProgressDlg->m_ProgressBar.StepIt();
-		pProgressDlg->UpdateWindow();
-
-		AfxMessageBox("CD Directory created", MB_OK);
-	}
-
-	return TRUE;
-}
-*/
 extern "C" __declspec(dllexport)
 int StartIB(CString parms, WIDGET *curWidget)
 {
