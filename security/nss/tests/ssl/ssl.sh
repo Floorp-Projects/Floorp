@@ -114,8 +114,12 @@ is_selfserv_alive()
       fi
   fi
   PID=`cat ${SERVERPID}`
-  $PS -e | grep $PID >/dev/null || \
-      Exit 10 "Fatal - selfserv process not detectable"
+  #if  [ "${OS_ARCH}" = "Linux" ]; then
+      kill -0 $PID >/dev/null 2>/dev/null || Exit 10 "Fatal - selfserv process not detectable"
+  #else
+      #$PS -e | grep $PID >/dev/null || \
+          #Exit 10 "Fatal - selfserv process not detectable"
+  #fi
 }
 
 ########################### wait_for_selfserv ##########################
