@@ -227,7 +227,7 @@ class nsRenderingContextXlib : public nsRenderingContextImpl
 private: 
 #ifdef _IMPL_NS_XPRINT
   nsXPrintContext         *mPrintContext;
-  nsCOMPtr<nsIDeviceContextXp> mContext;
+  nsCOMPtr<nsIDeviceContext> mContext;
 #else
   nsDrawingSurfaceXlib    *mOffscreenSurface;
   nsDrawingSurfaceXlib    *mRenderingSurface;

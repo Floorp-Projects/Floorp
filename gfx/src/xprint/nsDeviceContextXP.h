@@ -35,7 +35,8 @@
 #include "nsXPrintContext.h"
 #include "nsISupportsArray.h"
 
-class nsDeviceContextXp : public nsIDeviceContextXp
+class nsDeviceContextXp : public DeviceContextImpl,
+                          public nsIDeviceContextXp
 {
 public:
   nsDeviceContextXp();
@@ -85,12 +86,13 @@ public:
 
 protected:
   virtual         ~nsDeviceContextXp();
+  void             DestroyXPContext();
 
   nsXPrintContext      *mPrintContext;  
   Display              *mDisplay;
   Screen               *mScreen;
   nsCOMPtr<nsIDeviceContextSpec> mSpec;
-  nsIDeviceContext     *mParentDeviceContext;
+  nsCOMPtr<nsIDeviceContext>     mParentDeviceContext;
 };
 
 #endif /* !nsDeviceContextXp_h___ */

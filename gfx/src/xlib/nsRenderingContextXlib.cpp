@@ -158,10 +158,12 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext)
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::Init(nsIDeviceContext *)\n"));
 
   mContext = do_QueryInterface(aContext);
-  if (mContext) {
-     mContext->GetPrintContext(mPrintContext);
-  }
   NS_ASSERTION(nsnull != mContext, "Device context is null.");
+  if (mContext) {
+     nsIDeviceContext *dc = mContext;     
+     NS_STATIC_CAST(nsDeviceContextXp *,dc)->GetPrintContext(mPrintContext);
+  }
+  NS_ASSERTION(nsnull != mPrintContext, "mPrintContext is null.");
 
   mXlibRgbHandle = mPrintContext->GetXlibRgbHandle();
   mDisplay = mPrintContext->GetDisplay();

@@ -32,7 +32,6 @@
 #include "xp_file.h"
 #include "nsColor.h"
 #include "nsCoord.h"
-#include "nsString.h"
 #include "nsIImage.h"
 #include "nsGCCache.h"
 #include "nsIDeviceContextSpecXPrint.h"
@@ -61,7 +60,7 @@ public:
   int        GetWidth() { return mWidth; }
   
   Display *  GetDisplay() { return mPDisplay; }
-  NS_IMETHOD GetPrintResolution(int &aPrintResolution) const;
+  NS_IMETHOD GetPrintResolution(int &aPrintResolution);
 
   NS_IMETHOD DrawImage(xGC *gc, nsIImage *aImage,
                 PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
@@ -76,7 +75,8 @@ private:
                 PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                 PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
                 
-  nsresult DrawImageBits(xGC *gc, PRUint8 *alphaBits, PRInt32  alphaRowBytes,
+  nsresult DrawImageBits(xGC *gc, 
+                         PRUint8 *alphaBits, PRInt32  alphaRowBytes, PRUint8 alphaDepth,
                          PRUint8 *image_bits, PRInt32  row_bytes,
                          PRInt32 aX, PRInt32 aY,
                          PRInt32 aWidth, PRInt32 aHeight); 
@@ -85,7 +85,6 @@ private:
   Display      *mPDisplay;
   Screen       *mScreen;
   Visual       *mVisual;
-  GC            mGC;
   Drawable      mDrawable; /* window */
   int           mDepth;
   int           mScreenNumber;
@@ -99,8 +98,8 @@ private:
   long          mPrintResolution;
   nsDeviceContextXp *mContext; /* DeviceContext which created this object */
 
-  NS_IMETHOD SetupWindow(int x, int y, int width, int height);
-  NS_IMETHOD SetupPrintContext(nsIDeviceContextSpecXp *aSpec);
+  nsresult SetupWindow(int x, int y, int width, int height);
+  nsresult SetupPrintContext(nsIDeviceContextSpecXp *aSpec);
 };
 
 

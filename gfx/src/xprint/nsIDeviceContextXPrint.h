@@ -22,7 +22,6 @@
  */
 
 #include "nsISupports.h"
-#include "nsIDeviceContext.h"
 
 #ifndef __nsIDeviceContextXp_h
 #define __nsIDeviceContextXp_h
@@ -34,7 +33,7 @@
 
 class nsXPrintContext;
 
-class nsIDeviceContextXp : public DeviceContextImpl
+class nsIDeviceContextXp : public nsISupports
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDEVICECONTEXTXP_IID);
@@ -48,4 +47,4 @@ public:
 };
 
 
-#endif
+#endif /* !__nsIDeviceContextXp_h */
