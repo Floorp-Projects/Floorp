@@ -17,6 +17,12 @@
  */
 
 #include "nsMessageViewDataSource.h"
+#include "nsRDFCursorUtils.h"
+#include "nsRDFCID.h"
+#include "nsIServiceManager.h"
+#include "nsXPIDLString.h"
+
+
 #include "plstr.h"
 
 #define VIEW_SHOW_ALL 0x1
@@ -25,6 +31,26 @@
 #define VIEW_SHOW_WATCHED 0x8
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
+
+
+nsIRDFResource* nsMessageViewDataSource::kNC_MessageChild;
+
+#define NC_NAMESPACE_URI "http://home.netscape.com/NC-rdf#"
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, MessageChild);
+
+//This really needs to be some place else so that all datasources can use it.
+static PRBool
+peq(nsIRDFResource* r1, nsIRDFResource* r2)
+{
+  PRBool result;
+  if (NS_SUCCEEDED(r1->EqualsResource(r2, &result)) && result) {
+    return PR_TRUE;
+  } else {
+    return PR_FALSE;
+  }
+}
 
 NS_IMPL_ADDREF(nsMessageViewDataSource)
 NS_IMPL_RELEASE(nsMessageViewDataSource)
@@ -59,11 +85,19 @@ nsMessageViewDataSource::nsMessageViewDataSource(void)
 	mDataSource = nsnull;
 	mURI = nsnull;
 	mObservers = nsnull;
-	mShowStatus = 0;
+	mShowStatus = VIEW_SHOW_ALL;
+	mInitialized = PR_FALSE;
+
+	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+											nsIRDFService::GetIID(),
+                                            (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
+
 }
 
 nsMessageViewDataSource::~nsMessageViewDataSource (void)
 {
+	mRDFService->UnregisterDataSource(this);
+
 	RemoveDataSource(mDataSource);
 	if(mURI)
 		PL_strfree(mURI);
@@ -74,20 +108,38 @@ nsMessageViewDataSource::~nsMessageViewDataSource (void)
 	  }
 	  delete mObservers;
 	}
+	nsrefcnt refcnt;
+	NS_RELEASE2(kNC_MessageChild, refcnt);
+	nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); // XXX probably need shutdown listener here
+	mRDFService = nsnull;
 
 }
 
 
 NS_IMETHODIMP nsMessageViewDataSource::Init(const char* uri)
 {
-	mURI = PL_strdup(uri);
+	if (mInitialized)
+		return NS_ERROR_ALREADY_INITIALIZED;
+
+	if ((mURI = PL_strdup(uri)) == nsnull)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	mRDFService->RegisterDataSource(this, PR_FALSE);
+
+	if (! kNC_MessageChild) {
+		mRDFService->GetResource(kURINC_MessageChild,   &kNC_MessageChild);
+	}
+	mInitialized = PR_TRUE;
+
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsMessageViewDataSource::GetURI(char* *uri)
 {
-	*uri = mURI;
-	return NS_OK;
+	if ((*uri = nsXPIDLCString::Copy(mURI)) == nsnull)
+		return NS_ERROR_OUT_OF_MEMORY;
+	else
+		return NS_OK;
 }
 
 NS_IMETHODIMP nsMessageViewDataSource::GetSource(nsIRDFResource* property,
@@ -128,10 +180,38 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 						PRBool tv,
 						nsIRDFAssertionCursor** targets)
 {
+	nsresult rv = NS_ERROR_FAILURE;
+
+	nsIMsgFolder* folder;
+	if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
+	{
+		if (peq(kNC_MessageChild, property))
+		{
+			nsIEnumerator *messages;
+
+			rv = folder->GetMessages(&messages);
+			if (NS_FAILED(rv)) return rv;
+			nsMessageViewMessageEnumerator * messageEnumerator = 
+				new nsMessageViewMessageEnumerator(messages, mShowStatus);
+			if(!messageEnumerator)
+				return NS_ERROR_OUT_OF_MEMORY;
+			nsRDFEnumeratorAssertionCursor* cursor =
+				new nsRDFEnumeratorAssertionCursor(this, source, kNC_MessageChild, messageEnumerator);
+			NS_IF_RELEASE(messages);
+			if (cursor == nsnull)
+				return NS_ERROR_OUT_OF_MEMORY;
+			NS_ADDREF(cursor);
+			*targets = cursor;
+			rv = NS_OK;
+		}
+		NS_IF_RELEASE(folder);
+		if(NS_SUCCEEDED(rv))
+			return rv;
+	}
 	if(mDataSource)
 		return mDataSource->GetTargets(source, property, tv, targets);
 	else
-		return NS_OK;
+		return rv;
 }
 
 NS_IMETHODIMP nsMessageViewDataSource::Assert(nsIRDFResource* source,
@@ -300,39 +380,159 @@ NS_IMETHODIMP nsMessageViewDataSource::OnUnassert(nsIRDFResource* subject,
 }
 
 
-NS_IMETHODIMP nsMessageViewDataSource::SetShowAll(PRBool showAll)
+NS_IMETHODIMP nsMessageViewDataSource::SetShowAll()
 {
-	if(showAll)
-		mShowStatus |= VIEW_SHOW_ALL;
-	else if(mShowStatus & VIEW_SHOW_ALL)
-		mShowStatus &= ~VIEW_SHOW_ALL;
-
+	mShowStatus = VIEW_SHOW_ALL;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMessageViewDataSource::SetShowUnread(PRBool showUnread)
+NS_IMETHODIMP nsMessageViewDataSource::SetShowUnread()
 {
-	if(showUnread)
-		mShowStatus |= VIEW_SHOW_UNREAD;
-	else if(mShowStatus & VIEW_SHOW_UNREAD)
-		mShowStatus &= ~VIEW_SHOW_UNREAD;
+	mShowStatus = VIEW_SHOW_UNREAD;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMessageViewDataSource::SetShowRead(PRBool showRead)
+NS_IMETHODIMP nsMessageViewDataSource::SetShowRead()
 {
-	if(showRead)
-		mShowStatus |= VIEW_SHOW_READ;
-	else if(mShowStatus & VIEW_SHOW_READ)
-		mShowStatus &= ~VIEW_SHOW_READ;
+	mShowStatus = VIEW_SHOW_READ;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMessageViewDataSource::SetShowWatched(PRBool showWatched)
+NS_IMETHODIMP nsMessageViewDataSource::SetShowWatched()
 {
-	if(showWatched)
-		mShowStatus |= VIEW_SHOW_WATCHED;
-	else if(mShowStatus & VIEW_SHOW_WATCHED)
-		mShowStatus &= ~VIEW_SHOW_WATCHED;
+	mShowStatus = VIEW_SHOW_WATCHED;
+	return NS_OK;
+}
+
+//////////////////////////   nsMessageViewMessageEnumerator //////////////////
+
+
+NS_IMPL_ISUPPORTS(nsMessageViewMessageEnumerator, nsIEnumerator::GetIID())
+
+nsMessageViewMessageEnumerator::nsMessageViewMessageEnumerator(nsIEnumerator *srcEnumerator,
+															   PRUint32 showStatus)
+{
+	NS_INIT_REFCNT();	
+	mSrcEnumerator = srcEnumerator;
+	NS_ADDREF(mSrcEnumerator);
+
+	mShowStatus = showStatus;
+}
+nsMessageViewMessageEnumerator::~nsMessageViewMessageEnumerator()
+{
+	NS_IF_RELEASE(mSrcEnumerator);
+}
+
+/** First will reset the list. will return NS_FAILED if no items
+*/
+NS_IMETHODIMP nsMessageViewMessageEnumerator::First(void)
+{
+	nsresult rv = mSrcEnumerator->First();
+	if(NS_SUCCEEDED(rv))
+	{
+		//See if the first item meets the criteria.  If not, find next item.
+		nsISupports *currentItem;
+		nsIMessage *message;
+		rv = CurrentItem(&currentItem);
+		if(NS_SUCCEEDED(rv))
+		{
+			if(NS_SUCCEEDED(rv = currentItem->QueryInterface(nsIMessage::GetIID(), (void**)&message)))
+			{
+				PRBool meetsCriteria;
+				rv = MeetsCriteria(message, &meetsCriteria);
+				if(NS_SUCCEEDED(rv) && !meetsCriteria)
+					rv = Next();
+				NS_IF_RELEASE(message);
+			}
+			NS_IF_RELEASE(currentItem);
+		}
+
+	}
+	return rv;
+}
+
+/** Next will advance the list. will return failed if already at end
+*/
+NS_IMETHODIMP nsMessageViewMessageEnumerator::Next(void)
+{
+	nsresult rv = SetAtNextItem();
+	return rv;
+}
+
+/** CurrentItem will return the CurrentItem item it will fail if the list is empty
+*  @param aItem return value
+*/
+NS_IMETHODIMP nsMessageViewMessageEnumerator::CurrentItem(nsISupports **aItem)
+{
+	nsresult rv = mSrcEnumerator->CurrentItem(aItem);
+	return rv;
+}
+
+/** return if the collection is at the end.  that is the beginning following a call to Prev
+*  and it is the end of the list following a call to next
+*  @param aItem return value
+*/
+NS_IMETHODIMP nsMessageViewMessageEnumerator::IsDone()
+{
+	nsresult rv = mSrcEnumerator->IsDone();
+	return rv;
+}
+
+//This function sets mSrcEnumerator at the next item that fits
+//the criteria for this enumerator.  If there are no more items
+//returns NS_ERROR_FAILURE
+nsresult nsMessageViewMessageEnumerator::SetAtNextItem()
+{
+	nsresult rv;
+
+	while(mSrcEnumerator->IsDone() != NS_OK)
+	{
+		mSrcEnumerator->Next();
+		nsISupports *currentItem;
+		nsIMessage *message;
+		PRBool successful = PR_FALSE;
+		rv = mSrcEnumerator->CurrentItem(&currentItem);
+		if(NS_FAILED(rv))
+			break;
+
+		if(NS_SUCCEEDED(currentItem->QueryInterface(nsIMessage::GetIID(), (void**)&message)))
+		{
+			PRBool meetsCriteria;
+			rv = MeetsCriteria(message, &meetsCriteria);
+			if(NS_SUCCEEDED(rv) & meetsCriteria)
+				successful = PR_TRUE;
+			NS_IF_RELEASE(message);
+		}
+		NS_IF_RELEASE(currentItem);
+		if(successful) return NS_OK;
+
+	}
+	return NS_ERROR_FAILURE;
+}
+
+nsresult nsMessageViewMessageEnumerator::MeetsCriteria(nsIMessage *message, PRBool *meetsCriteria)
+{
+
+	if(!meetsCriteria)
+		return NS_ERROR_NULL_POINTER;
+
+	*meetsCriteria = PR_FALSE;
+
+	if(mShowStatus == VIEW_SHOW_ALL)
+	{
+		*meetsCriteria = PR_TRUE;
+	}
+	else
+	{
+		PRUint32 flags;
+		message->GetFlags(&flags);
+
+		if(mShowStatus == VIEW_SHOW_READ)
+			*meetsCriteria = flags & MSG_FLAG_READ;
+		else if(mShowStatus == VIEW_SHOW_UNREAD)
+			*meetsCriteria = !(flags & MSG_FLAG_READ);
+		else if(mShowStatus == VIEW_SHOW_WATCHED)
+			*meetsCriteria = flags & MSG_FLAG_WATCHED;
+	}
 	return NS_OK;
 }

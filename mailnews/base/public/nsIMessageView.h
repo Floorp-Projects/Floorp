@@ -26,17 +26,17 @@ class nsIMessageView : public nsISupports {
     return iid;
   }
 
-  /* void SetShowAll (in boolean showAll); */
-  NS_IMETHOD SetShowAll(PRBool showAll) = 0;
+  /* void SetShowAll (); */
+  NS_IMETHOD SetShowAll() = 0;
 
-  /* void SetShowUnread (in boolean showunRead); */
-  NS_IMETHOD SetShowUnread(PRBool showunRead) = 0;
+  /* void SetShowUnread (); */
+  NS_IMETHOD SetShowUnread() = 0;
 
-  /* void SetShowRead (in boolean showRead); */
-  NS_IMETHOD SetShowRead(PRBool showRead) = 0;
+  /* void SetShowRead (); */
+  NS_IMETHOD SetShowRead() = 0;
 
-  /* void SetShowWatched (in boolean showWatched); */
-  NS_IMETHOD SetShowWatched(PRBool showWatched) = 0;
+  /* void SetShowWatched (); */
+  NS_IMETHOD SetShowWatched() = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

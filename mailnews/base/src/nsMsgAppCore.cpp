@@ -187,7 +187,10 @@ static nsresult AddView(nsIRDFCompositeDataSource *database, nsIMessageView **me
 		return rv;
 
 	database->RemoveDataSource(datasource);
-
+	//This is a hack until I have the ability to save off my current view some place.
+	//In case it's already been added, remove it.  We'll need to do the same for the
+	//thread view.
+	database->RemoveDataSource(view);
 	database->AddDataSource(view); 
 
 			//add the datasource
@@ -757,7 +760,7 @@ nsMsgAppCore::ViewAllMessages(nsIRDFCompositeDataSource *database)
 	nsIMessageView *messageView;
 	if(NS_SUCCEEDED(AddView(database, &messageView)))
 	{
-		messageView->SetShowAll(PR_TRUE);
+		messageView->SetShowAll();
 		NS_IF_RELEASE(messageView);
 	}
 
@@ -771,7 +774,7 @@ nsMsgAppCore::ViewUnreadMessages(nsIRDFCompositeDataSource *database)
 	nsIMessageView *messageView;
 	if(NS_SUCCEEDED(AddView(database, &messageView)))
 	{
-		messageView->SetShowUnread(PR_TRUE);
+		messageView->SetShowUnread();
 		NS_IF_RELEASE(messageView);
 	}
 

@@ -24,8 +24,8 @@
 
 interface nsIMessageView :  nsISupports
 {
-	void SetShowAll(in boolean showAll);
-	void SetShowUnread(in boolean showunRead);
-	void SetShowRead(in boolean showRead);
-	void SetShowWatched(in boolean showWatched);
+	void SetShowAll();
+	void SetShowUnread();
+	void SetShowRead();
+	void SetShowWatched();
 };

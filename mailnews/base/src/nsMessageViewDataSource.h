@@ -16,11 +16,17 @@
  * Reserved.
  */
 
+#ifndef NSMESSAGEVIEWDATASOURCE_H
+#define NSMESSAGEVIEWDATASOURCE_H
+
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIMessageView.h"
 #include "nsIMsgFolder.h"
 #include "nsIRDFNode.h"
+#include "nsIRDFService.h"
 #include "nsVoidArray.h"
+#include "nsIEnumerator.h"
+#include "nsIMessage.h"
 
 /**
  * The mail data source.
@@ -32,6 +38,7 @@ private:
 	char*			mURI;
 	nsVoidArray*	mObservers;
 	PRBool			mInitialized;
+	nsIRDFService * mRDFService;
 
 public:
   
@@ -123,10 +130,10 @@ public:
                           nsIRDFNode* object);
 
 	//nsIMessageView
-	NS_IMETHOD SetShowAll(PRBool showAll);
-	NS_IMETHOD SetShowUnread(PRBool showUnread);
-	NS_IMETHOD SetShowRead(PRBool showRead);
-	NS_IMETHOD SetShowWatched(PRBool showWatched);
+	NS_IMETHOD SetShowAll();
+	NS_IMETHOD SetShowUnread();
+	NS_IMETHOD SetShowRead();
+	NS_IMETHOD SetShowWatched();
 
  
 	// caching frequently used resources
@@ -136,8 +143,48 @@ protected:
 	PRUint32 mShowStatus;
 
 	static nsIRDFResource* kNC_MessageChild;
-	static nsIRDFResource* kNC_Status;
-	static nsIRDFResource* kNC_Delete;
 
 };
 
+class nsMessageViewMessageEnumerator: public nsIEnumerator
+{
+
+public:
+
+	NS_DECL_ISUPPORTS
+
+	nsMessageViewMessageEnumerator(nsIEnumerator *srcEnumerator, PRUint32 showStatus);
+	~nsMessageViewMessageEnumerator();
+
+	//nsIEnumerator interface	
+	/** First will reset the list. will return NS_FAILED if no items
+	*/
+	NS_IMETHOD First(void);
+
+	/** Next will advance the list. will return failed if already at end
+	*/
+	NS_IMETHOD Next(void);
+
+	/** CurrentItem will return the CurrentItem item it will fail if the list is empty
+	*  @param aItem return value
+	*/
+	NS_IMETHOD CurrentItem(nsISupports **aItem);
+
+	/** return if the collection is at the end.  that is the beginning following a call to Prev
+	*  and it is the end of the list following a call to next
+	*  @param aItem return value
+	*/
+	NS_IMETHOD IsDone(void);
+
+protected:
+	nsresult SetAtNextItem();
+	nsresult MeetsCriteria(nsIMessage *message, PRBool *meetsCriteria);
+
+protected:
+
+	nsIEnumerator *mSrcEnumerator;
+	PRUint32 mShowStatus;
+
+};
+
+#endif
