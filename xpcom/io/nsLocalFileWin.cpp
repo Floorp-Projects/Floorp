@@ -417,9 +417,10 @@ NS_IMPL_ISUPPORTS1(nsDirEnumerator, nsISimpleEnumerator)
 //-----------------------------------------------------------------------------
 
 nsLocalFile::nsLocalFile()
+ :  mFollowSymlinks(PR_FALSE)
 {
-    mFollowSymlinks = PR_FALSE;
     MakeDirty();
+    memset(&mFileInfo64,0,sizeof mFileInfo64);
 }
 
 NS_METHOD
