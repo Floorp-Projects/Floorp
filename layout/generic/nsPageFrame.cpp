@@ -51,6 +51,7 @@
 #include "nsIPrintPreviewContext.h"
 
 #include "nsIView.h" // view flags for clipping
+#include "nsCSSRendering.h"
 
 #include "nsHTMLContainerFrame.h" // view creation
 
@@ -585,6 +586,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
   }
 
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+
     nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
     if (ppContext) {
       aRenderingContext.SetColor(NS_RGB(255,255,255));
@@ -612,6 +614,8 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
       }
     }
   }
+
+  DrawBackground(aPresContext,aRenderingContext,aDirtyRect) ;
 
   nsresult rv = nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
@@ -700,4 +704,27 @@ nsPageFrame::SetPageNumInfo(PRInt32 aPageNumber, PRInt32 aTotalPages)
   mTotNumPages = aTotalPages;
 }
 
+
+//------------------------------------------------------------------------------
+void
+nsPageFrame::DrawBackground(nsIPresContext*      aPresContext,
+                            nsIRenderingContext& aRenderingContext,
+                            const nsRect&        aDirtyRect) 
+{
+  nsSimplePageSequenceFrame* seqFrame = NS_STATIC_CAST(nsSimplePageSequenceFrame*, mParent);
+  if (seqFrame != nsnull) {
+    nsStyleBackground *theBackground;
+    theBackground = mPD->mBackground;
+
+    nsRect rect = mPD->mReflowRect;
+    rect.Deflate(mPD->mReflowMargin);
+    rect.Deflate(mPD->mExtraMargin);
+
+    const nsStyleBorder* border = (const nsStyleBorder*)
+                        mStyleContext->GetStyleData(eStyleStruct_Border);
+
+    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                          aDirtyRect, rect, *theBackground, *border, 0, 0);      
+  }
+}
 

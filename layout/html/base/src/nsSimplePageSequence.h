@@ -62,6 +62,9 @@ public:
   nsMargin    mExtraMargin;      // Extra Margin between the printable area and the edge of the page
   nscoord     mHeadFooterGap;    // In twips, gap between H/F from edge of page
 
+
+  nsStyleBackground* mBackground; //weak reference...
+
   nsCOMPtr<nsIPrintOptions> mPrintOptions;
 };
 
@@ -120,6 +123,7 @@ public:
   FILE * mDebugFD;
 #endif
 
+
 protected:
   nsSimplePageSequenceFrame();
   virtual ~nsSimplePageSequenceFrame();
@@ -137,6 +141,7 @@ protected:
 
   NS_IMETHOD_(nsrefcnt) AddRef(void) {return nsContainerFrame::AddRef();}
   NS_IMETHOD_(nsrefcnt) Release(void) {return nsContainerFrame::Release();}
+
 
   nscoord  mStartOffset;
   nscoord  mEndOffset;
@@ -168,6 +173,8 @@ protected:
   nscoord      mSelectionHeight;
   nscoord      mYSelOffset;
 
+private:
+  void CacheBackground(nsIPresContext* aPresContext);
 
 };
 
