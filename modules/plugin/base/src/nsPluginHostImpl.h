@@ -54,6 +54,7 @@
 #include "nsWeakPtr.h"
 #include "nsIPrompt.h"
 #include "nsIGenericFactory.h"
+#include "nsISupportsArray.h"
 
 class ns4xPlugin;
 class nsFileSpec;
@@ -62,7 +63,6 @@ class nsIFile;
 class nsIChannel;
 class nsIRegistry;
 class nsPluginHostImpl;
-class nsISupportsArray;
 
 /**
  * A linked-list of plugin information that is used for
@@ -123,7 +123,8 @@ struct nsActivePlugin
   PRTime                 mllStopTime;
   PRBool                 mDefaultPlugin;
   PRBool                 mXPConnected;
-  nsVoidArray*           mStreams;
+  //Array holding all opened stream listeners for this entry
+  nsCOMPtr <nsISupportsArray>  mStreams; 
 
   nsActivePlugin(nsPluginTag* aPluginTag,
                  nsIPluginInstance* aInstance, 

@@ -276,6 +276,7 @@ static const char *hashValue = "value";
  */ 
 #define NS_MIME_TYPES_HASH_NUM (20)
 
+static nsActivePluginList *gActivePluginList;
 
 ////////////////////////////////////////////////////////////////////////
 void DisplayNoDefaultPluginDialog(const char *mimeType, nsIPrompt *prompt)
@@ -485,7 +486,6 @@ nsActivePlugin::nsActivePlugin(nsPluginTag* aPluginTag,
   mDefaultPlugin = aDefaultPlugin;
   mStopped = PR_FALSE;
   mllStopTime = LL_ZERO;
-  mStreams = new nsVoidArray();   // create a new stream array
 }
 
 
@@ -493,14 +493,6 @@ nsActivePlugin::nsActivePlugin(nsPluginTag* aPluginTag,
 nsActivePlugin::~nsActivePlugin()
 {
   mPluginTag = nsnull;
-
-  // free our streams array
-  if (mStreams)
-  {
-    delete mStreams;
-    mStreams = nsnull;
-  }
-
   if(mInstance != nsnull)
   {
     if(mPeer)
@@ -533,24 +525,9 @@ void nsActivePlugin::setStopped(PRBool stopped)
 {
   mStopped = stopped;
   if(mStopped) // plugin instance is told to stop
-  {
     mllStopTime = PR_Now();
-
-    // Since we are "stopped", we should clear our our streams array
-    if (mStreams)
-      while (mStreams->Count() > 0 )  // simple loop, always removing the first element
-      {
-        nsIStreamListener * s = (nsIStreamListener *) mStreams->ElementAt(0);  // XXX nasty cast!
-        if (s)
-        {
-          NS_RELEASE(s);    // should cause stream destructions (and prevent leaks!)
-          mStreams->RemoveElementAt(0);
-        }
-      }
-  }
   else
     mllStopTime = LL_ZERO;
-
 }
 
 
@@ -1287,30 +1264,18 @@ public:
   void
   MakeByteRangeString(nsByteRange* aRangeList, nsACString &string, PRInt32 *numRequests);
 
-  void
-  SetLocalCachedFile(nsIFile *file);
-
-  void
-  GetLocalCachedFile(nsIFile** file);
-
-  void
-  SetLocalCachedFileStream(nsIOutputStream *stream);
-
-  void
-  GetLocalCachedFileStream(nsIOutputStream **stream);
+  PRBool
+  nsPluginStreamInfo::UseExistingPluginCacheFile(nsPluginStreamInfo* psi, nsIFile* file);
 
 private:
 
   char* mContentType;
   char* mURL;
-  nsCOMPtr<nsIFile> mCachedFile;
   PRBool mSeekable;
   PRUint32 mLength;
   PRUint32 mModified;
   nsIPluginInstance * mPluginInstance;
   nsPluginStreamListenerPeer * mPluginStreamListenerPeer;
-  nsCOMPtr<nsIOutputStream> mFileCacheOutputStream;
-  PRBool mLocallyCached;
   PRInt32 mStreamOffset;
 };
 
@@ -1349,8 +1314,6 @@ public:
 
   nsILoadGroup* GetLoadGroup();
 
-  nsresult SetLocalFile(nsIFile* aFile);
-
   nsresult ServeStreamAsFile(nsIRequest *request, nsISupports *ctxt);
 
 private:
@@ -1359,8 +1322,6 @@ private:
   nsresult SetupPluginCacheFile(nsIChannel* channel);
 
   nsIURI                  *mURL;
-
-  
   nsIPluginInstanceOwner  *mOwner;
   nsIPluginInstance       *mInstance;
   nsIPluginStreamListener *mPStreamListener;
@@ -1384,8 +1345,10 @@ private:
   nsPluginStreamType      mStreamType;
   nsIPluginHost           *mHost;
 
-  // local file which was used to post data and which should be deleted after that
-  nsCOMPtr<nsIFile>        mLocalFile;
+  // local cached file, we save the content into local cache if browser cache is not available,
+  // or plugin asks stream as file and it expects file extension until bug 90558 got fixed
+  nsIFile                 *mLocalCachedFile;
+  nsCOMPtr<nsIOutputStream> mFileCacheOutputStream;
   nsHashtable             *mDataForwardToRequest;
 
 public:
@@ -1429,7 +1392,6 @@ nsPluginStreamInfo::nsPluginStreamInfo()
   mSeekable = PR_FALSE;
   mLength = 0;
   mModified = 0;
-  mLocallyCached = PR_FALSE;
   mStreamOffset = 0;
 }
 
@@ -1441,17 +1403,6 @@ nsPluginStreamInfo::~nsPluginStreamInfo()
   PL_strfree(mContentType);
   if(mURL != nsnull)
     PL_strfree(mURL);
-
-  // close FD of mFileCacheOutputStream if it's still open
-  // or we won't be able to remove the cache file
-  if (mFileCacheOutputStream)
-    mFileCacheOutputStream->Close();
-
-  // ONLY delete our cached file if we created it
-  if(mLocallyCached && mCachedFile)
-  {
-     mCachedFile->Remove(PR_FALSE);
-  }
 
   NS_IF_RELEASE(mPluginInstance);
 }
@@ -1705,42 +1656,6 @@ nsPluginStreamInfo::SetURL(const char* url)
   mURL = PL_strdup(url);
 }
 
-
-////////////////////////////////////////////////////////////////////////
-void
-nsPluginStreamInfo::SetLocalCachedFile(nsIFile* file)
-{ 
-  file->Clone(getter_AddRefs(mCachedFile));
-}
-
-
-////////////////////////////////////////////////////////////////////////
-void
-nsPluginStreamInfo::GetLocalCachedFile(nsIFile** file)
-{ 
-  *file = mCachedFile;
-  NS_IF_ADDREF(*file);
-}
-
-
-////////////////////////////////////////////////////////////////////////
-void
-nsPluginStreamInfo::SetLocalCachedFileStream(nsIOutputStream *stream) 
-{
-     mFileCacheOutputStream = stream;
-     mLocallyCached = PR_TRUE;
-}
-
-
-////////////////////////////////////////////////////////////////////////
-void
-nsPluginStreamInfo::GetLocalCachedFileStream(nsIOutputStream **stream) 
-{
-    if (!stream) return;
-    NS_IF_ADDREF(*stream = mFileCacheOutputStream);
-}
-
-
 ////////////////////////////////////////////////////////////////////////
 void
 nsPluginStreamInfo::SetPluginInstance(nsIPluginInstance * aPluginInstance)
@@ -1858,6 +1773,7 @@ nsPluginStreamListenerPeer::nsPluginStreamListenerPeer()
   mPendingRequests = 0;
   mHaveFiredOnStartRequest = PR_FALSE;
   mDataForwardToRequest = nsnull;
+  mLocalCachedFile = nsnull;
 }
 
 
@@ -1868,13 +1784,8 @@ nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
   nsCAutoString urlSpec;
   if(mURL != nsnull) (void)mURL->GetSpec(urlSpec);
 
-  nsCAutoString filePath;
-  if(mLocalFile != nsnull) (void)mLocalFile->GetNativePath(filePath);
-
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-        ("nsPluginStreamListenerPeer::dtor this=%p, url=%s, POST_file=%s\n",this, urlSpec.get(), filePath.get()));
-
-  PR_LogFlush();
+    ("nsPluginStreamListenerPeer::dtor this=%p, url=%s%c",this, urlSpec.get(), mLocalCachedFile?',':'\n'));
 #endif
 
   NS_IF_RELEASE(mURL);
@@ -1884,10 +1795,30 @@ nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
   NS_IF_RELEASE(mHost);
   NS_IF_RELEASE(mPluginStreamInfo);
 
-  // if we have mLocalFile (temp file used to post data) it should be
-  // safe to delete it now, and hopefully the owner doesn't hold it.
-  if(mLocalFile)
-    mLocalFile->Remove(PR_FALSE);
+  // close FD of mFileCacheOutputStream if it's still open
+  // or we won't be able to remove the cache file
+  if (mFileCacheOutputStream)
+    mFileCacheOutputStream = nsnull;
+
+  // if we have mLocalCachedFile lets release it
+  // and it'll be fiscally remove if refcnt == 1 
+  if (mLocalCachedFile) {
+    nsrefcnt refcnt;
+    NS_RELEASE2(mLocalCachedFile, refcnt);
+
+#ifdef PLUGIN_LOGGING
+    nsCAutoString filePath;
+    mLocalCachedFile->GetNativePath(filePath);
+
+    PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
+      ("LocalyCachedFile=%s has %d refcnt and will %s be deleted now\n",filePath.get(),refcnt,refcnt==1?"":"NOT"));
+#endif
+
+    if (refcnt == 1) {
+      mLocalCachedFile->Remove(PR_FALSE);
+      NS_RELEASE(mLocalCachedFile);
+    }
+  }
 
   delete mDataForwardToRequest;
 }
@@ -2037,10 +1968,40 @@ nsresult nsPluginStreamListenerPeer::InitializeFullPage(nsIPluginInstance *aInst
 nsresult
 nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
 {
-    nsresult rv;
-    
-    // Is this the best place to put this temp file?
+  nsresult rv = NS_OK;
+  // lets try to reused a file if we already have in the local plugin cache 
+  // we loop through all of active plugins
+  // and call |nsPluginStreamInfo::UseExistingPluginCacheFile()| on opened stream 
+  // will return RP_TRUE if file exisrs 
+  // and some conditions are matched, in this case that file will be use 
+  // in |::OnFileAvailable()| calls w/o rewriting the file again.
+  // The file will be deleted in |nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer|
+  PRBool useExistingCacheFile = PR_FALSE;
+  nsActivePlugin *pActivePlugins = gActivePluginList->mFirst;
+  while (pActivePlugins && pActivePlugins->mStreams && !useExistingCacheFile) {
+    // most recent streams are at the end of list
+    PRInt32 cnt;
+    pActivePlugins->mStreams->Count((PRUint32*)&cnt);
+    while (--cnt >= 0 && !useExistingCacheFile) {
+      nsPluginStreamListenerPeer *lp =
+        NS_REINTERPRET_CAST(nsPluginStreamListenerPeer *, pActivePlugins->mStreams->ElementAt(cnt));
+      if (lp) {
+        if (lp->mLocalCachedFile &&
+            lp->mPluginStreamInfo &&
+            (useExistingCacheFile = 
+             lp->mPluginStreamInfo->UseExistingPluginCacheFile(mPluginStreamInfo,lp->mLocalCachedFile)))
+        {
+            NS_ADDREF(mLocalCachedFile = lp->mLocalCachedFile);
+        }
+        NS_RELEASE(lp);
+      }
+    }
+    pActivePlugins = pActivePlugins->mNext;
+  }
+  
+  if (!useExistingCacheFile) {
     nsCOMPtr<nsIFile> pluginTmp;
+    // Is this the best place to put this temp file?
     rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(pluginTmp));
     if (NS_FAILED(rv)) return rv;
     
@@ -2048,7 +2009,7 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
     if (NS_FAILED(rv)) return rv;
     
     (void) pluginTmp->Create(nsIFile::DIRECTORY_TYPE,0777);
-
+    
     // Get the filename from the channel
     nsCOMPtr<nsIURI> uri;
     rv = channel->GetURI(getter_AddRefs(uri));
@@ -2057,29 +2018,50 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
     nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
     if(!url)
       return NS_ERROR_FAILURE;
-
+    
     nsCAutoString filename;
     url->GetFileName(filename);
-    if (NS_FAILED(rv)) return rv;
-
+    if (NS_FAILED(rv))
+      return rv;
+    
     // Create a file to save our stream into. Should we scramble the name?
     rv = pluginTmp->AppendNative(filename);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+      return rv;
     
     // Yes, make it unique.
-    rv = pluginTmp->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0777); 
-    if (NS_FAILED(rv)) return rv;
+    rv = pluginTmp->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600); 
+    if (NS_FAILED(rv))
+      return rv;
 
-    // save the file.
-    mPluginStreamInfo->SetLocalCachedFile(pluginTmp);
-    
     // create a file output stream to write to...
     nsCOMPtr<nsIOutputStream> outstream;
-    rv = NS_NewLocalFileOutputStream(getter_AddRefs(outstream), pluginTmp, -1, 00600);
-    if (NS_FAILED(rv)) return rv;
+    rv = NS_NewLocalFileOutputStream(getter_AddRefs(mFileCacheOutputStream), pluginTmp, -1, 00600);
+    if (NS_FAILED(rv))
+      return rv;
     
-    mPluginStreamInfo->SetLocalCachedFileStream(outstream);
-    return NS_OK;
+    // save the file.
+    CallQueryInterface(pluginTmp, &mLocalCachedFile); // no need to check return value, just addref
+    // add one extra refcnt, we can use NS_RELEASE2(mLocalCachedFile...) in dtor
+    // to remove this file when refcnt == 1 
+    NS_ADDREF(mLocalCachedFile);
+  }
+  
+  // add this listenerPeer to list of stream peers for this instance
+  // it'll delay release of listenerPeer until nsActivePlugin::~nsActivePlugin
+  // and the temp file is going to stay alive until then
+  pActivePlugins = gActivePluginList->find(mInstance);
+  if (pActivePlugins) {
+    if (!pActivePlugins->mStreams &&
+       (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(pActivePlugins->mStreams))))) {
+      return rv;
+    }
+
+    nsISupports* supports = NS_STATIC_CAST(nsISupports*, (NS_STATIC_CAST(nsIStreamListener*, this)));
+    pActivePlugins->mStreams->AppendElement(supports);
+  }
+  
+  return rv;
 }
 
 
@@ -2111,10 +2093,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
   
   // deal with 404 (Not Found) HTTP response,
   // just return, this causes the request to be ignored.
-  // Also deal with content-encoding
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-  PRBool useCacheAsFile = PR_TRUE;
-
   if (httpChannel) {
     PRUint32 responseCode = 0;
     rv = httpChannel->GetResponseStatus(&responseCode);
@@ -2125,17 +2104,6 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
       // ...and we also need to tell the plugin that
       mRequestFailed = PR_TRUE;
       return NS_ERROR_FAILURE;
-    }
-
-    // Now we look for a content-encoding header.  If we find one,
-    // we can't use the cache as a file
-    nsCAutoString contentEncoding;
-    rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Encoding"),
-                                        contentEncoding);
-    if (NS_SUCCEEDED(rv) &&
-        !contentEncoding.Equals("identity",
-                                nsCaseInsensitiveCStringComparator())) {
-      useCacheAsFile = PR_FALSE;
     }
 
     // Get the notification callbacks from the channel and save it as week ref
@@ -2150,24 +2118,6 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
     channel->GetLoadGroup(getter_AddRefs(loadGroup));
     if (loadGroup)
       mWeakPtrChannelLoadGroup = getter_AddRefs(NS_GetWeakReference(loadGroup));
-  }
-
-  if (useCacheAsFile) {
-    nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(channel, &rv);
-    if (cacheChannel)
-      rv = cacheChannel->SetCacheAsFile(PR_TRUE);
-    else {
-      // do not cache if this is a file channel,
-      // just overwrite rv here
-      nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(channel, &rv);
-    }
-  }
-
-  if (!useCacheAsFile || NS_FAILED(rv)) {
-    // The channel doesn't want to do our bidding, lets cache it to disk ourselves
-    rv = SetupPluginCacheFile(channel);
-    if (NS_FAILED(rv))
-      NS_WARNING("No Cache Aval.  Some plugins wont work OR we don't have a URL");
   }
 
   nsCAutoString aContentType;
@@ -2311,6 +2261,9 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
                                                           PRUint32 sourceOffset, 
                                                           PRUint32 aLength)
 {
+  if (mRequestFailed)
+    return NS_ERROR_FAILURE;
+
   if(mAbort)
   {
       PRUint32 magicNumber = 0;  // set it to something that is not the magic number.
@@ -2368,10 +2321,8 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
     // the data as the plugin read from the stream.  We do this by the magic
     // of an input stream tee.
 
-    nsCOMPtr<nsIOutputStream> outStream;
-    mPluginStreamInfo->GetLocalCachedFileStream(getter_AddRefs(outStream));
-    if (outStream) {
-        rv = NS_NewInputStreamTee(getter_AddRefs(stream), aIStream, outStream);
+    if (mFileCacheOutputStream) {
+        rv = NS_NewInputStreamTee(getter_AddRefs(stream), aIStream, mFileCacheOutputStream);
         if (NS_FAILED(rv)) 
             return rv;
     }
@@ -2393,10 +2344,11 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
     rv = aIStream->Read(buffer, aLength, &amountRead);
     
     // if we are caching this to disk ourselves, lets write the bytes out.
-    nsCOMPtr<nsIOutputStream> outStream;
-    mPluginStreamInfo->GetLocalCachedFileStream(getter_AddRefs(outStream));
-    while (outStream && amountWrote < amountRead && NS_SUCCEEDED(rv))
-      rv = outStream->Write(buffer, amountRead, &amountWrote);
+    if (mFileCacheOutputStream) {
+      while (amountWrote < amountRead && NS_SUCCEEDED(rv)) {
+        rv = mFileCacheOutputStream->Write(buffer, amountRead, &amountWrote);
+      }
+    }
     delete [] buffer;
   }
   return rv;
@@ -2431,13 +2383,9 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
     absoluteOffset));
   } else {
     // if this is not byte range request and
-    // if we are writting the stream to disk ourselves, lets close it
-    nsCOMPtr<nsIOutputStream> outStream;
-    mPluginStreamInfo->GetLocalCachedFileStream(getter_AddRefs(outStream));
-    if (outStream) {
-       outStream->Close();
-      mPluginStreamInfo->SetLocalCachedFileStream(nsnull);
-    }
+    // if we are writting the stream to disk ourselves,
+    // close & tear it down here
+    mFileCacheOutputStream = nsnull;
   }
 
   // if we still have pending stuff to do, lets not close the plugin socket.
@@ -2481,24 +2429,25 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIFile> localFile;
-  mPluginStreamInfo->GetLocalCachedFile(getter_AddRefs(localFile));
-
-  if (!localFile) {
-    nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(request);
-    if (cacheChannel) {
-      cacheChannel->GetCacheFile(getter_AddRefs(localFile));
-    } else {
-      // see if it is a file channel.
-      nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(request);
-      if (fileChannel) {
-        fileChannel->GetFile(getter_AddRefs(localFile));
+  // call OnFileAvailable if plugin requests stream type StreamType_AsFile or StreamType_AsFileOnly
+  if (mStreamType >= nsPluginStreamType_AsFile) {
+    nsCOMPtr<nsIFile> localFile = do_QueryInterface(mLocalCachedFile);
+    if (!localFile) {
+      nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(request);
+      if (cacheChannel) {
+        cacheChannel->GetCacheFile(getter_AddRefs(localFile));
+      } else {
+        // see if it is a file channel.
+        nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(request);
+        if (fileChannel) {
+          fileChannel->GetFile(getter_AddRefs(localFile));
+        }
       }
     }
-  }
-  
-  if (localFile) {
-    OnFileAvailable(localFile);
+    
+    if (localFile) {
+      OnFileAvailable(localFile);
+    }
   }
 
   if (mStartBinding)
@@ -2600,26 +2549,44 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
 
   mStartBinding = PR_TRUE;
 
-  if (NS_SUCCEEDED(rv)) {
-    mPStreamListener->GetStreamType(&mStreamType);
-    // if plugin requests stream type StreamType_AsFile or StreamType_AsFileOnly
-    // most likely it'll try to check file extension,
-    // but our cache does nor support it yet.
-    // temp fix is to copy the file+ext into temp location
-    // all this code should be deleted when bug 90558 got fixed
-#if !defined(CACHE_SUPPOPTS_FILE_EXTENSION)
-    if (mStreamType	>= nsPluginStreamType_AsFile && httpChannel) {
-      // check out if we already set output stream for this channel
-      nsCOMPtr<nsIOutputStream> outStream;
-      mPluginStreamInfo->GetLocalCachedFileStream(getter_AddRefs(outStream));
-      if (!outStream) {
-        SetupPluginCacheFile(httpChannel);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  mPStreamListener->GetStreamType(&mStreamType);
+  
+  // now lets figure out if we have to save the file into plugin local cache
+  PRBool useLocalCache = PR_FALSE;
+  if (httpChannel) {
+    // Now we look for a content-encoding header. If we find one,
+    // we have to use the local cache, it'll have decoded copy of file
+    nsCAutoString contentEncoding;
+    rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Encoding"),
+      contentEncoding);
+    if (NS_SUCCEEDED(rv) &&
+      !contentEncoding.Equals("identity",nsCaseInsensitiveCStringComparator())) {
+      useLocalCache = PR_TRUE;
+    } else if (mStreamType >= nsPluginStreamType_AsFile) {
+      // if plugin requests stream type StreamType_AsFile or StreamType_AsFileOnly
+      // check out if browser's cache is avalable
+      nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(httpChannel);
+      if (cacheChannel && NS_FAILED(cacheChannel->SetCacheAsFile(PR_TRUE))) {
+        useLocalCache = PR_TRUE; // we'll use local cache
       }
+#if !defined(CACHE_SUPPOPTS_FILE_EXTENSION)
+      // until bug 90558 got fixed
+      // and necko cache starts to support file extension
+      // we'll force to copy the file+ext into local plugin cache
+      // becase several plugins (e.g. acrobat, quick time) do not work w/o file extension
+      useLocalCache = PR_TRUE;
+#endif 
     }
-#endif
+    
+    if (useLocalCache) {
+      SetupPluginCacheFile(httpChannel);
+    }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 
@@ -2672,22 +2639,6 @@ nsPluginStreamListenerPeer::VisitHeader(const nsACString &header, const nsACStri
                                      PromiseFlatCString(value).get());
 }
 
-
-////////////////////////////////////////////////////////////////////////
-nsresult nsPluginStreamListenerPeer::SetLocalFile(nsIFile* aFile)
-{
-  NS_ENSURE_ARG_POINTER(aFile);
-
-  if(mLocalFile)
-  {
-    NS_ASSERTION(!mLocalFile, "nsPluginStreamListenerPeer::SetLocalFile -- path already set, cleaning...");
-    mLocalFile = nsnull;
-  }
-
-  // clone file to prevent it from being changed out from under us
-  return aFile->Clone(getter_AddRefs(mLocalFile));
-}
-
 /////////////////////////////////////////////////////////////////////////
 
 nsPluginHostImpl::nsPluginHostImpl()
@@ -2700,6 +2651,8 @@ nsPluginHostImpl::nsPluginHostImpl()
   mAllowAlienStarHandler = PR_FALSE;
   mUnusedLibraries.Clear();
   
+  gActivePluginList = &mActivePluginList;
+
   // check to see if pref is set at startup to let plugins take over in 
   // full page mode for certain image mime types that we handle internally
   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
@@ -5644,20 +5597,6 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
 
     if (NS_SUCCEEDED(rv)) 
     {
-      // it is possible one plugin instance can request several different 
-      // streams, if we are serving those streams as files from 
-      // temp location (e.g. browser cache is not available)
-      // we do not have to delete the files until instance is active,
-      // usually temp files are getting deleted when listener peer is released by OnStopRequest(),
-      // lets add this listener peer to the to list of stream peers for this instance,
-      // it'll delay the release until nsActivePlugin::setStopped() call.
-      nsActivePlugin * p = mActivePluginList.find(aInstance);
-      if (p && p->mStreams)
-      {
-        p->mStreams->AppendElement((void *)listenerPeer);
-        NS_ADDREF(listenerPeer);
-      }
-
       nsCOMPtr<nsIInterfaceRequestor> callbacks;
 
       if (doc) 
@@ -5917,10 +5856,10 @@ nsresult nsPluginHostImpl::NewFullPagePluginStream(nsIStreamListener *&aStreamLi
 
       // add peer to list of stream peers for this instance
     nsActivePlugin * p = mActivePluginList.find(aInstance);
-    if (p && p->mStreams)
-    {
-      p->mStreams->AppendElement((void *)aStreamListener);
-      NS_ADDREF(listener);
+    if (p) {
+      if (!p->mStreams && (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(p->mStreams)))))
+        return rv;
+      p->mStreams->AppendElement(aStreamListener);
     }
 
   return rv;
@@ -6381,7 +6320,7 @@ nsPluginHostImpl::CreateTmpFileToPost(const char *postDataURL, char **pTmpFileNa
     PRBool dirExists;
     tempFile->Exists(&dirExists);
     if (!dirExists)
-      (void) tempFile->Create(nsIFile::DIRECTORY_TYPE, 0600);
+      (void) tempFile->Create(nsIFile::DIRECTORY_TYPE, 0777);
     
     nsCAutoString inFileName;
     inFile->GetNativeLeafName(inFileName);
@@ -6554,15 +6493,11 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
   mPluginStreamInfo->SetSeekable(0);
   mPStreamListener->OnStartBinding((nsIPluginStreamInfo*)mPluginStreamInfo);
   mPluginStreamInfo->SetStreamOffset(0);
+  mStreamType = nsPluginStreamType_AsFile;
 
 #if !defined(CACHE_SUPPOPTS_FILE_EXTENSION)
-  // check out if we already saving the stream into plugins cache
-  nsCOMPtr<nsIOutputStream> outStream;
-  mPluginStreamInfo->GetLocalCachedFileStream(getter_AddRefs(outStream));
-  if (outStream) {
-    outStream->Close();
-    mPluginStreamInfo->SetLocalCachedFileStream(nsnull);
-  }
+  // close & tear down existing cached stream
+  mFileCacheOutputStream = nsnull;
   
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
@@ -6682,3 +6617,29 @@ nsPluginByteRangeStreamListener::OnDataAvailable(nsIRequest *request, nsISupport
       
   return mStreamConverter->OnDataAvailable(request, ctxt, inStr, sourceOffset, count);
 }
+
+PRBool
+nsPluginStreamInfo::UseExistingPluginCacheFile(nsPluginStreamInfo* psi, nsIFile* file) 
+{
+  
+  NS_ENSURE_ARG_POINTER(psi);
+
+ if ( psi->mLength == mLength &&
+      psi->mModified == mModified &&
+      !PL_strcmp(psi->mURL, mURL))
+  {
+    if (psi->mLength != (PRUint32) mStreamOffset) { //lets check a file size
+      PRInt64 size;
+      if (NS_FAILED(file->GetFileSize(&size)))
+        return PR_FALSE;
+      
+      PRUint32 fs = nsInt64(size);
+      if (psi->mLength != fs) {
+        return PR_FALSE;
+      }
+    }
+    return PR_TRUE;
+  } 
+  return PR_FALSE;
+}
+
