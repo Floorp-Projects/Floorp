@@ -97,6 +97,10 @@ vbox {
   -moz-box-orient: vertical;
 }
 
+bbox {
+  -moz-box-align: baseline;
+}
+
 /********** button **********/
 
 button {
