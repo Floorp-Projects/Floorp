@@ -55,8 +55,7 @@
   <description>&displayText.label;</description>
     <hbox class="indent" align="center">
       <label value="&style.label;" accesskey="&style.accesskey;" control="mailQuotedStyle"/>
-      <menulist id="mailQuotedStyle" prefstring="mail.quoted_style"
-                flex="1">
+      <menulist id="mailQuotedStyle" prefstring="mail.quoted_style">
         <menupopup>
           <menuitem value="0" label="&regular.label;"/>
           <menuitem value="1" label="&bold.label;"/>
@@ -66,8 +65,7 @@
       </menulist>
 
       <label value="&size.label;" accesskey="&size.accesskey;" control="mailQuotedSize"/>
-      <menulist id="mailQuotedSize" prefstring="mail.quoted_size"
-                flex="1" style="width: 0px;">
+      <menulist id="mailQuotedSize" prefstring="mail.quoted_size">
         <menupopup>
           <menuitem value="0" label="&regular.label;"/>
           <menuitem value="1" label="&bigger.label;"/>
