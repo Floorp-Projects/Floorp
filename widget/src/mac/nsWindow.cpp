@@ -955,7 +955,7 @@ void nsWindow::EndDraw()
 //-------------------------------------------------------------------------
 PRBool nsWindow::OnPaint(nsPaintEvent &event)
 {
-#ifdef NS_DEBUG
+#ifdef NOTNOW
     if (debug_WantPaintFlashing() && event.rect ) {
        Rect flashRect;
        ::SetRect ( &flashRect, event.rect->x, event.rect->y, event.rect->x + event.rect->width,
@@ -975,6 +975,31 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
   return PR_TRUE;
 }
 
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+void
+nsWindow::Flash(nsPaintEvent	&aEvent)
+{
+Rect flashRect;
+
+
+#ifdef NS_DEBUG
+	if (debug_WantPaintFlashing() && aEvent.rect ) {
+		::SetRect ( &flashRect, aEvent.rect->x, aEvent.rect->y, aEvent.rect->x + aEvent.rect->width,
+	          aEvent.rect->y + aEvent.rect->height );
+		::InvertRect ( &flashRect );
+		for (int x = 0; x < 1000000; x++) ;
+		::InvertRect ( &flashRect );
+		for (int x = 0; x < 1000000; x++) ;    
+		::InvertRect ( &flashRect );
+		for (int x = 0; x < 1000000; x++) ;    
+		::InvertRect ( &flashRect );
+		for (int x = 0; x < 1000000; x++) ;    
+	}
+#endif
+}
 
 //-------------------------------------------------------------------------
 //	Update
@@ -1158,8 +1183,13 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 
 	// draw the widget
 	StartDraw(aContext);
-	if (OnPaint(paintEvent))
-		DispatchWindowEvent(paintEvent);
+	if (OnPaint(paintEvent)){				// DC flashing support Support
+		nsEventStatus	eventStatus;
+		DispatchWindowEvent(paintEvent,eventStatus);
+		if(eventStatus != nsEventStatus_eIgnore){
+			Flash(paintEvent);
+		}
+	}
 	EndDraw();
 
 	// beard:  Since we clip so aggressively, drawing from front to back should work,
@@ -1461,6 +1491,13 @@ PRBool nsWindow::DispatchWindowEvent(nsGUIEvent &event)
   nsEventStatus status;
   DispatchEvent(&event, status);
   return ConvertStatus(status);
+}
+
+//-------------------------------------------------------------------------
+PRBool nsWindow::DispatchWindowEvent(nsGUIEvent &event,nsEventStatus &aStatus)
+{
+  DispatchEvent(&event, aStatus);
+  return ConvertStatus(aStatus);
 }
 
 //-------------------------------------------------------------------------
