@@ -92,8 +92,23 @@ EmbedContentListener::IsPreferred(const char        *aContentType,
 				  char             **aDesiredContentType,
 				  PRBool            *aCanHandleContent)
 {
-  printf("XXX IsPreferred\n");
-  *aCanHandleContent = PR_TRUE;
+  if (aContentType) {
+    if (nsCRT::strcasecmp(aContentType,  "text/html") == 0
+        || nsCRT::strcasecmp(aContentType, "text/plain") == 0
+        || nsCRT::strcasecmp(aContentType, "text/xul") == 0
+        || nsCRT::strcasecmp(aContentType, "text/rdf") == 0 
+        || nsCRT::strcasecmp(aContentType, "text/xml") == 0
+        || nsCRT::strcasecmp(aContentType, "text/css") == 0
+        || nsCRT::strcasecmp(aContentType, "image/gif") == 0
+        || nsCRT::strcasecmp(aContentType, "image/jpeg") == 0
+        || nsCRT::strcasecmp(aContentType, "image/png") == 0
+        || nsCRT::strcasecmp(aContentType, "image/tiff") == 0
+        || nsCRT::strcasecmp(aContentType, "application/http-index-format") == 0)
+      *aCanHandleContent = PR_TRUE;
+  }
+  else {
+    *aCanHandleContent = PR_FALSE;
+  }
   return NS_OK;
 }
 
