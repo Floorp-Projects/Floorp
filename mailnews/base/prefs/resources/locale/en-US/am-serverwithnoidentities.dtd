@@ -4,3 +4,6 @@
 <!ENTITY accountName.accesskey "N">
 <!ENTITY localPath.label "Local directory:">
 <!ENTITY localPath.accesskey "L">
+<!ENTITY localFolderPicker.label "Location of Local Folders:">
+<!ENTITY browseFolder.label "Browse...">
+<!ENTITY browseFolder.accesskey "B">

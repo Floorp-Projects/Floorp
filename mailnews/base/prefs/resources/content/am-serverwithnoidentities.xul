@@ -26,11 +26,17 @@
       </row>
     </rows>
   </grid>
-  <spacer flex="1"/>
+  <separator/>
   <vbox>
     <label value="&localPath.label;" control="server.localPath"
            accesskey="&localPath.accesskey;"/>
-    <textbox wsm_persist="true" size="60" id="server.localPath" datatype="nsIFileSpec"
-             prefstring="mail.server.%serverkey%.directory" class="uri-element"/>
+    <separator class="thin"/>
+    <hbox align="center">
+      <textbox readonly="true" wsm_persist="true" size="60" id="server.localPath" datatype="nsIFileSpec"
+               prefstring="mail.server.%serverkey%.directory" class="uri-element"/>
+
+       <button id="browseForLocalFolder" label="&browseFolder.label;" filepickertitle="&localFolderPicker.label;"
+               accesskey="&browseFolder.accesskey;" oncommand="BrowseForLocalFolders()"/>
+    </hbox>
   </vbox>
 </page>
