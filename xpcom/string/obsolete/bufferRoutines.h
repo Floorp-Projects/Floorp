@@ -153,6 +153,73 @@ static CTraceFile gTrace;
 
 #endif
 
+#ifndef XPCOM_STANDALONE
+
+// XXX bug: this doesn't map 0x80 to 0x9f properly
+static const PRUnichar kIsoLatin1ToUCS2_2[256] = {
+    0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
+   16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+   32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+   48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+   64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+   80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
+   96, 97, 98, 99,100,101,102,103,104,105,106,107,108,109,110,111,
+  112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,
+  128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,
+  144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,
+  160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,
+  176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,
+  192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,
+  208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,
+  224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,
+  240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255
+};
+
+#if !defined(RICKG_TESTBED) && !defined(STANDALONE_STRING_TESTS)
+class HandleCaseConversionShutdown3 : public nsIShutdownListener {
+public :
+   NS_IMETHOD OnShutdown(const nsCID& cid, nsISupports* service);
+   HandleCaseConversionShutdown3(void) { NS_INIT_REFCNT(); }
+   virtual ~HandleCaseConversionShutdown3(void) {}
+   NS_DECL_ISUPPORTS
+};
+
+static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
+static nsICaseConversion * gCaseConv = 0; 
+
+NS_IMPL_ISUPPORTS1(HandleCaseConversionShutdown3, nsIShutdownListener);
+
+nsresult HandleCaseConversionShutdown3::OnShutdown(const nsCID& cid, nsISupports* service) {
+    if (cid.Equals(kUnicharUtilCID)) {
+        NS_ASSERTION(service == gCaseConv, "wrong service!");
+        if(gCaseConv){
+          gCaseConv->Release();
+          gCaseConv = 0;
+        }
+    }
+    return NS_OK;
+}
+
+static nsresult
+NS_InitCaseConversion()
+{
+  if (! gCaseConv) {
+    HandleCaseConversionShutdown3* listener = new HandleCaseConversionShutdown3();
+    if (!listener) return NS_ERROR_FAILURE;
+    
+    nsresult rv = nsServiceManager::GetService(kUnicharUtilCID, NS_GET_IID(nsICaseConversion), (nsISupports**) &gCaseConv, listener);
+    if (NS_FAILED(rv)) {
+      delete listener;
+      return rv;
+    }
+  }
+  
+  return NS_OK;
+}
+
+#endif
+#endif /* XPCOM_STANDALONE */
+
 inline PRUnichar GetUnicharAt(const char* aString,PRUint32 anIndex) {
   return ((PRUnichar*)aString)[anIndex];
 }
@@ -421,8 +488,8 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset
       const char* end = (last<max) ? last : max;
 
       if(aIgnoreCase) {
-    
-        char theChar=(char)nsCRT::ToUpper(aChar);
+        // safe because aChar < 256
+        char theChar=nsCRT::ToUpper(char(aChar));
         while(left<end){
           if(nsCRT::ToUpper(*left)==theChar)
             return left-aDest;
@@ -477,10 +544,16 @@ inline PRInt32 FindChar2(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset
       const PRUnichar* max  = root+aDestLength;
       const PRUnichar* end  = (last<max) ? last : max;
 
-      if(aIgnoreCase) {
-        PRUnichar theChar=nsCRT::ToUpper(aChar);
+      if (aIgnoreCase && NS_FAILED(NS_InitCaseConversion()))
+        aIgnoreCase = PR_FALSE;
+
+      if (aIgnoreCase) {
+        PRUnichar theChar;
+        gCaseConv->ToUpper(aChar, &theChar);
         while(left<end){
-          if(nsCRT::ToUpper(*left)==theChar)
+          PRUnichar leftChar;
+          gCaseConv->ToUpper(*left, &leftChar);
+          if (leftChar == theChar)
             return left-root;
           ++left;
         }
@@ -532,8 +605,8 @@ inline PRInt32 RFindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffse
       const char* leftmost  = (min<aDest) ? aDest: min;
 
       if(aIgnoreCase) {
-    
-        char theChar=(char)nsCRT::ToUpper(aChar);
+        // safe because aChar < 256
+        char theChar=nsCRT::ToUpper(char(aChar));
         while(leftmost<rightmost){
           if(nsCRT::ToUpper(*rightmost)==theChar)
             return rightmost-aDest;
@@ -584,12 +657,17 @@ inline PRInt32 RFindChar2(const char* aDest,PRUint32 aDestLength,PRInt32 anOffse
       const PRUnichar* rightmost = root+anOffset;  
       const PRUnichar* min       = rightmost-aCount+1;
       const PRUnichar* leftmost  = (min<root) ? root: min;
+      
+      if (aIgnoreCase && NS_FAILED(NS_InitCaseConversion()))
+        aIgnoreCase = PR_FALSE;
 
       if(aIgnoreCase) {
-    
-        PRUnichar theChar=nsCRT::ToUpper(aChar);
+        PRUnichar theChar;
+        gCaseConv->ToUpper(aChar, &theChar);
         while(leftmost<rightmost){
-          if(nsCRT::ToUpper(*rightmost)==theChar)
+          PRUnichar rightChar;
+          gCaseConv->ToUpper(*rightmost, &rightChar);
+          if(rightChar==theChar)
             return rightmost-root;
           --rightmost;
         }
@@ -649,10 +727,10 @@ PRInt32 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool a
  * @return  -1,0,1 depending on <,==,>
  */
 PRInt32 Compare2To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
-PRInt32 Compare2To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){ 
+PRInt32 Compare2To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
   PRInt32 result=0;
-  if(aIgnoreCase)
-    result=nsCRT::strncasecmp((PRUnichar*)aStr1,(PRUnichar*)aStr2,aCount);
+  if(aIgnoreCase && NS_SUCCEEDED(NS_InitCaseConversion()))
+    gCaseConv->CaseInsensitiveCompare((PRUnichar*)aStr1, (PRUnichar*)aStr2, aCount, &result);
   else result=nsCRT::strncmp((PRUnichar*)aStr1,(PRUnichar*)aStr2,aCount);
   return result;
 }
@@ -668,12 +746,35 @@ PRInt32 Compare2To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool a
  * @return  -1,0,1 depending on <,==,>
  */
 PRInt32 Compare2To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
-PRInt32 Compare2To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){ 
-  PRInt32 result;
-  if(aIgnoreCase)
-    result=nsCRT::strncasecmp((PRUnichar*)aStr1,aStr2,aCount);
-  else result=nsCRT::strncmp((PRUnichar*)aStr1,aStr2,aCount);
-  return result;
+PRInt32 Compare2To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
+  PRUnichar* s1 = (PRUnichar*)aStr1;
+  const char *s2 = aStr2;
+  
+  if (aIgnoreCase && NS_FAILED(NS_InitCaseConversion()))
+      aIgnoreCase=PR_FALSE;
+  
+  if (aStr1 && aStr2) {
+    if (aCount != 0) {
+      do {
+        PRUnichar c1 = *s1++;
+        PRUnichar c2 = kIsoLatin1ToUCS2_2[*(const unsigned char*)s2++];
+        
+        if (c1 != c2) {
+          if (aIgnoreCase) {
+            
+            // case insensitive comparison
+            gCaseConv->ToLower(c1, &c1);
+            gCaseConv->ToLower(c2, &c2);
+            if (c1 == c2) continue;
+          }
+
+          if (c1 < c2) return -1;
+          return 1;
+        }
+      } while (--aCount);
+    }
+  }
+  return 0;
 }
 
 
@@ -687,12 +788,8 @@ PRInt32 Compare2To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool a
  * @return  -1,0,1 depending on <,==,>
  */
 PRInt32 Compare1To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
-PRInt32 Compare1To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){ 
-  PRInt32 result;
-  if(aIgnoreCase)
-    result=nsCRT::strncasecmp((PRUnichar*)aStr2,aStr1,aCount)*-1;
-  else result=nsCRT::strncmp((PRUnichar*)aStr2,aStr1,aCount)*-1;
-  return result;
+PRInt32 Compare1To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
+  return Compare2To1(aStr2, aStr1, aCount, aIgnoreCase) * -1;
 }
 
 
@@ -743,36 +840,6 @@ PRInt32 ConvertCase1(char* aString,PRUint32 aCount,PRBool aToUpper){
 
 //----------------------------------------------------------------------------------------
 
-#ifndef XPCOM_STANDALONE
-#if !defined(RICKG_TESTBED) && !defined(STANDALONE_STRING_TESTS)
-class HandleCaseConversionShutdown3 : public nsIShutdownListener {
-public :
-   NS_IMETHOD OnShutdown(const nsCID& cid, nsISupports* service);
-   HandleCaseConversionShutdown3(void) { NS_INIT_REFCNT(); }
-   virtual ~HandleCaseConversionShutdown3(void) {}
-   NS_DECL_ISUPPORTS
-};
-
-static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
-static nsICaseConversion * gCaseConv = 0; 
-
-NS_IMPL_ISUPPORTS1(HandleCaseConversionShutdown3, nsIShutdownListener);
-
-nsresult HandleCaseConversionShutdown3::OnShutdown(const nsCID& cid, nsISupports* service) {
-    if (cid.Equals(kUnicharUtilCID)) {
-        NS_ASSERTION(service == gCaseConv, "wrong service!");
-        if(gCaseConv){
-          gCaseConv->Release();
-          gCaseConv = 0;
-        }
-    }
-    return NS_OK;
-}
-
-#endif
-#endif /* XPCOM_STANDALONE */
-
-//----------------------------------------------------------------------------------------
 
 /**
  * This method performs a case conversion the data in the given buffer 
@@ -795,14 +862,9 @@ PRInt32 ConvertCase2(char* aString,PRUint32 aCount,PRBool aToUpper){
     if (ch & 0xFF80) {
       // If we detect a non-ASCII character, fault through to the I18n
       // case conversion routines.
-      if (! gCaseConv) {
-        HandleCaseConversionShutdown3* listener = new HandleCaseConversionShutdown3();
-        if (listener)
-          nsServiceManager::GetService(kUnicharUtilCID, NS_GET_IID(nsICaseConversion), (nsISupports**) &gCaseConv, listener);
-      }
-
-      if (! gCaseConv)
-        return NS_ERROR_FAILURE;
+      nsresult rv = NS_InitCaseConversion();
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get case conv 4");
+      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
       result = PRInt32(aToUpper
                        ? gCaseConv->ToUpper(cp, cp, end - cp)
