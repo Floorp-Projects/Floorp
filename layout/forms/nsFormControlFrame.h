@@ -38,7 +38,6 @@ class nsIView;
 class nsIPresContext;
 class nsStyleCoord;
 class nsFormFrame;
-class nsIFocusableContent;
 
 #define CSS_NOTSET -1
 #define ATTR_NOTSET -1

@@ -168,7 +168,15 @@ public:
   }                                                                        
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {
     return mInner.GetRangeList(aResult); 
-  }                                                                        
+  }          
+  
+  NS_IMETHOD SetFocus(nsIPresContext* aPresContext) {
+    return mInner.SetFocus(aPresContext);
+  }
+  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext) {
+    return mInner.RemoveFocus(aPresContext);
+  }
+
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
     if (!aResult) {
       return NS_ERROR_NULL_POINTER;

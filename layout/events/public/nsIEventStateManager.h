@@ -73,9 +73,6 @@ public:
   NS_IMETHOD GetFocusedContent(nsIContent **aContent) = 0;
   NS_IMETHOD SetFocusedContent(nsIContent* aContent) = 0;
 
-  // Cross ESM methods, doesn't matter what instance you call it from
-  NS_IMETHOD GetFocusedEventTarget(nsIFrame **aFrame) = 0;
-
   // This is an experiement and may be temporary
   NS_IMETHOD ConsumeFocusEvents(PRBool aDoConsume) = 0;
 

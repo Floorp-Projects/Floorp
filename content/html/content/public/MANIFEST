@@ -1,4 +1,3 @@
-nsIFocusableContent.h
 nsIForm.h
 nsIFormControl.h
 nsISelectElement.h

@@ -90,9 +90,6 @@ public:
   NS_IMETHOD GetFocusedContent(nsIContent **aContent);
   NS_IMETHOD SetFocusedContent(nsIContent* aContent);
 
-  // Cross ESM methods
-  NS_IMETHOD GetFocusedEventTarget(nsIFrame **aFrame);
-
   // This is an experiement and may be temporary
   NS_IMETHOD ConsumeFocusEvents(PRBool aDoConsume) { mConsumeFocusEvents = aDoConsume; return NS_OK; }
 
@@ -108,7 +105,7 @@ protected:
   NS_IMETHOD CheckForAndDispatchClick(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);  
   PRBool ChangeFocus(nsIContent* aFocus, nsIFrame* aFocusFrame, PRBool aSetFocus);
   void ShiftFocus(PRBool foward);
-  nsIContent* GetNextTabbableContent(nsIContent* aParent, nsIContent* aChild, nsIContent* aTop, PRBool foward);
+  NS_IMETHOD GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame, PRBool foward, nsIContent** aResult);
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
   NS_IMETHOD SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent);
   PRBool CheckDisabled(nsIContent* aContent);

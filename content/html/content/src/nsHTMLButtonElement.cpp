@@ -35,7 +35,6 @@
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 #include "nsIURL.h"
-#include "nsIFocusableContent.h"
 
 #include "nsIFormControlFrame.h"
 #include "nsIEventStateManager.h"
@@ -43,13 +42,11 @@
 #include "nsISizeOfHandler.h"
 
 static NS_DEFINE_IID(kIDOMHTMLButtonElementIID, NS_IDOMHTMLBUTTONELEMENT_IID);
-static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 
 class nsHTMLButtonElement : public nsIDOMHTMLButtonElement,
                             public nsIJSScriptObject,
                             public nsIHTMLContent,
-                            public nsIFormControl,
-                            public nsIFocusableContent
+                            public nsIFormControl
 {
 public:
   nsHTMLButtonElement(nsIAtom* aTag);
@@ -89,8 +86,8 @@ public:
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
-  NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_USING_GENERIC(mInner)
-
+  NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_NO_FOCUS_USING_GENERIC(mInner)
+  
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
@@ -98,10 +95,6 @@ public:
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD Init() { return NS_OK; }
-
-  // nsIFocusableContent
-  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
-  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
 protected:
   nsGenericHTMLContainerElement mInner;
@@ -162,11 +155,6 @@ nsHTMLButtonElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   else if (aIID.Equals(kIFormControlIID)) {
     *aInstancePtr = (void*)(nsIFormControl*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(kIFocusableContentIID)) {
-    *aInstancePtr = (void*)(nsIFocusableContent*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }

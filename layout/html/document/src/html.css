@@ -49,6 +49,11 @@ iframe {
   background-color: white;
 }
 
+/* focusable content */
+a, area, button, input, select, textarea {
+  user-focus: normal;
+}
+
 /* blocks */
 
 p {
@@ -980,6 +985,7 @@ select[disabled] {
 
 /* combobox button */
 select > input[type="button"] {
+  user-focus: none;
   position: static !important;
   white-space:nowrap;
   border: outset 2px rgb(204, 204, 204);

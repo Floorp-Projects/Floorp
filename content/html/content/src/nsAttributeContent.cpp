@@ -122,6 +122,9 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD SetFocus(nsIPresContext* aPresContext) { return NS_OK; }
+  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext) { return NS_OK; }
+
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsString& aValue,
                           PRBool aNotify) {  return NS_OK; }
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify) { return NS_OK; }
@@ -168,7 +171,7 @@ public:
   NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify) { return NS_OK;  }
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {  return NS_OK;  }
   NS_IMETHOD SplitText(PRUint32 aOffset, nsIDOMText** aReturn){  return NS_OK;  }
-
+ 
   ///////////////////
   // Implementation for nsITextContent
   NS_IMETHOD GetText(const nsTextFragment** aFragmentsResult);

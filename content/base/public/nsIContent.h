@@ -262,6 +262,13 @@ public:
   NS_IMETHOD GetContentID(PRUint32* aID) = 0;
   NS_IMETHOD SetContentID(PRUint32 aID) = 0;
 
+  /**
+   * All content elements are potentially focusable (according to CSS3).
+   * These methods are used to set and remove the focus on the content
+   * element.
+   */
+  NS_IMETHOD SetFocus(nsIPresContext* aPresContext) = 0;
+  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext) = 0;
 };
 
 // nsresult codes for GetAttribute
