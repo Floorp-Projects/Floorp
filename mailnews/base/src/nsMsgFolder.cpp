@@ -1293,34 +1293,3 @@ NS_IMETHODIMP nsMsgFolder::GetHostName(char **hostName)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-#if 0
-#include "nsMsgLocalMailFolder.h"
-
-const char* kMsgRootFolderName = "Mail and News";  // XXX i18n
-
-nsresult
-nsMsgFolder::GetRoot(nsIMsgFolder* *result)
-{
-  nsresult rv;
-  nsMsgFolder* root = new nsMsgFolder("mailbox://");
-  if (root == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(root);
-  root->SetName(kMsgRootFolderName);
-
-  nsIMsgFolder* localMail;
-  rv = nsMsgLocalMailFolder::GetRoot(&localMail);
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(root);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  root->AppendElement(localMail);
-
-  // Add news root, etc.
-
-  *result = root;
-  return rv;
-}
-#endif
-////////////////////////////////////////////////////////////////////////////////

@@ -892,52 +892,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsNativeFileSpec& aPathName)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if 0
-
-static nsMsgFolder* gRoot = nsnull;
-
-nsresult
-nsMsgLocalMailFolder::GetRoot(nsIMsgFolder* *result)
-{
-  if (gRoot) {
-    *result = gRoot;
-    return NS_OK;
-  }
-
-  nsresult rv = NS_OK;
-#if 0
-  nsIPref* prefs;
-  rv = nsServiceManager::GetService(kPrefCID, kIPrefIID,
-                                    (nsISupports**)&prefs);
-  if (NS_FAILED(rv)) return rv; 
-
-  #define ROOT_PATH_LENGTH 128 
-  char rootPath[ROOT_PATH_LENGTH];
-  int rootLen = ROOT_PATH_LENGTH;
-  rv = prefs->GetCharPref(kMsgRootFolderPref, rootPath, &rootLen);
-  nsServiceManager::ReleaseService(kPrefCID, prefs);
-  if (NS_FAILED(rv))
-    return rv; 
-
-  nsNativeFileSpec startPath(rootPath, PR_FALSE);
-#else
-  nsNativeFileSpec startPath("h:\\user\\warren\\Mail", PR_FALSE);
-#endif
-
-  nsMsgLocalMailFolder* root =
-    new nsMsgLocalMailFolder(nsnull, &startPath);        // XXX fix uri
-  if (root == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY; 
-  NS_ADDREF(root);
-  root->SetDepth(0);
-  *result = root;
-  gRoot = root;
-  return rv;
-}
-
-#endif
-////////////////////////////////////////////////////////////////////////////////
-
 /**
  * This class creates resources for message folder URIs. It should be
  * registered for the "mailnewsfolder:" prefix.
