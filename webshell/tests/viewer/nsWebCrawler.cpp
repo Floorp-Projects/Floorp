@@ -388,7 +388,8 @@ nsWebCrawler::RecordLoadedURL(const nsString& aURL)
 void
 nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
 {
-  nsIAtom* atom = aNode->GetTag();
+  nsIAtom* atom;
+  aNode->GetTag(atom);
   if ((atom == mLinkTag) || (atom == mFrameTag) || (atom == mIFrameTag)) {
     // Get absolute url that tag targets
     nsAutoString base, src, absURLSpec;
@@ -428,10 +429,14 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
     NS_RELEASE(docURL);
   }
   NS_IF_RELEASE(atom);
-  if (aNode->CanContainChildren()) {
-    PRInt32 i, n = aNode->ChildCount();
+  PRBool canHaveKids;
+  aNode->CanContainChildren(canHaveKids);
+  if (canHaveKids) {
+    PRInt32 i, n;
+    aNode->ChildCount(n);
     for (i = 0; i < n; i++) {
-      nsIContent* kid = aNode->ChildAt(i);
+      nsIContent* kid;
+      aNode->ChildAt(i, kid);
       if (nsnull != kid) {
         FindURLsIn(aDocument, kid);
         NS_RELEASE(kid);
