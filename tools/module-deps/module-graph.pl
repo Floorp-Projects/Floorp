@@ -43,7 +43,7 @@ END_USAGE
 my %clustered;        # strongly connected components.
 my %deps;
 my %toplevel_modules; # visited components.
-
+my %all_modules;
 my $debug = 0;
 
 my $makecommand = "make";
@@ -135,6 +135,7 @@ MFILE:
 	  }
 	
 	  $toplevel_modules{$current_module}++;
+	  $all_modules{$current_module}++;
 	}
 	
 	next if !$current_dirs;
@@ -172,7 +173,15 @@ sub build_deps_matrix_from_file {
 
 	  # Add the module to the list of modules.
 	  $toplevel_modules{$line[0]}++;
-	}
+      } elsif (/style=filled/) {
+	  chomp;
+	  s/^\s+//;  # Strip off leading spaces.
+	  s/\;//;    # Strip off ';'
+
+	  # Pick off module
+	  @line = split(' \[', $_);
+	  $all_modules{$line[0]}++;
+      }
   }
   close DEPS_FILE;
 
@@ -436,6 +445,21 @@ sub walk_module_digraph {
 
 
 sub print_module_deps {
+
+    # The "ALL" module requires special handling.
+    # Just print out the toplevel module names
+    if ($opt_start_module eq "ALL") {
+	my $key;
+	my @outlist;
+	foreach $key (keys %all_modules) {
+	    push @outlist, $key;
+	}
+	if ($opt_list_only) {
+	    print "@outlist\n";
+	    return;
+	}
+    }
+
   # Recursively hunt down dependencies for $opt_start_module
   walk_module_digraph($opt_start_module, 1);
 
