@@ -31,6 +31,7 @@
 class nsIRenderingContextWin : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRENDERING_CONTEXT_WIN_IID)
   /**
    * Create a new drawing surface to represent an HDC.
    * @param aDC Windows HDC.
