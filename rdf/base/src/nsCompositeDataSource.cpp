@@ -1225,15 +1225,12 @@ CompositeDataSourceImpl::GetAllCmds(nsIRDFResource* source,
 			PRBool	hasMore = PR_FALSE;
 			while(NS_SUCCEEDED(rv = dsCmds->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE))
 			{
-				// strip out command duplicates
 				nsCOMPtr<nsISupports>	item;
 				if (NS_SUCCEEDED(rv = dsCmds->GetNext(getter_AddRefs(item))))
 				{
-					PRInt32	cmdIndex = cmdArray->IndexOf(item);
-					if (cmdIndex < 0)
-					{
-						cmdArray->AppendElement(item);
-					}
+					// rjc: do NOT strip out duplicate commands here
+					// (due to items such as separators, it is done at a higher level)
+					cmdArray->AppendElement(item);
 				}
 			}
 			if (NS_FAILED(rv))	return(rv);
