@@ -51,6 +51,7 @@
 #include "nsVoidArray.h"
 #include "nsGfxCIID.h"
 #include "nsIRegion.h"
+#include "nsIInterfaceRequestor.h"
 
 
 //mmptemp
@@ -69,11 +70,12 @@ static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 /**
  * nsISupports-derived helper class that allows to store and get a view
  */
-class ViewWrapper : public nsISupports
+class ViewWrapper : public nsIInterfaceRequestor
 {
   public:
     NS_DEFINE_STATIC_IID_ACCESSOR(VIEW_WRAPPER_IID)
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIINTERFACEREQUESTOR
 
     ViewWrapper(nsView* aView) : mView(aView) {}
 
@@ -85,7 +87,7 @@ class ViewWrapper : public nsISupports
 NS_IMPL_ADDREF(ViewWrapper)
 NS_IMPL_RELEASE(ViewWrapper)
 #ifndef DEBUG
-NS_IMPL_QUERY_INTERFACE1(ViewWrapper, ViewWrapper)
+NS_IMPL_QUERY_INTERFACE2(ViewWrapper, ViewWrapper, nsIInterfaceRequestor)
 
 #else
 NS_IMETHODIMP ViewWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -101,9 +103,13 @@ NS_IMETHODIMP ViewWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = NS_STATIC_CAST(nsISupports*, this);
   }
-  if (aIID.Equals(NS_GET_IID(ViewWrapper))) {
+  else if (aIID.Equals(NS_GET_IID(ViewWrapper))) {
     *aInstancePtr = this;
   }
+  else if (aIID.Equals(NS_GET_IID(nsIInterfaceRequestor))) {
+    *aInstancePtr = this;
+  }
+
 
   if (*aInstancePtr) {
     AddRef();
@@ -114,6 +120,10 @@ NS_IMETHODIMP ViewWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 #endif
 
+NS_IMETHODIMP ViewWrapper::GetInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  return mView->QueryInterface(aIID, aInstancePtr);
+}
 
 /**
  * Given a widget, returns the stored ViewWrapper on it, or NULL if no
