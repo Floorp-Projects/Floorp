@@ -51,6 +51,7 @@
     #include <fabdef.h>
 #endif
 
+#include "nsDirectoryServiceDefs.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
@@ -260,7 +261,19 @@ nsLocalFile::Clone(nsIFile **file)
 NS_IMETHODIMP
 nsLocalFile::InitWithNativePath(const nsACString &filePath)
 {
-    mPath = filePath;
+    if (Substring(filePath, 0, 2) == NS_LITERAL_CSTRING("~/")) {
+        nsCOMPtr<nsIFile> homeDir;
+        nsCAutoString homePath;
+        if (NS_FAILED(NS_GetSpecialDirectory(NS_OS_HOME_DIR,
+                                             getter_AddRefs(homeDir))) ||
+            NS_FAILED(homeDir->GetNativePath(homePath))) {
+            return NS_ERROR_FAILURE;
+        }
+        
+        mPath = homePath + Substring(filePath, 1, filePath.Length() - 1);
+    } else {
+        mPath = filePath;
+    }
 
     // trim off trailing slashes
     ssize_t len = mPath.Length();
