@@ -47,9 +47,8 @@ TagList  gInTR={1,{eHTMLTag_tr}};
 TagList  gInDL={2,{eHTMLTag_dl,eHTMLTag_body}};
 TagList  gInFrameset={1,{eHTMLTag_frameset}};
 TagList  gInNoframes={1,{eHTMLTag_noframes}};
-// P used to contain TABLE [Ref: Bug# 11229], and ADDRESS.
-// Removed TABLE to solve Bug# 24673. Removed ADDRESS to solve 24885
-TagList  gInP={2,{eHTMLTag_span,eHTMLTag_form}}; 
+//Removed ADDRESS to solve 24885
+TagList  gInP={3,{eHTMLTag_span,eHTMLTag_form,eHTMLTag_table}}; // added table for bug 43678
 TagList  gOptgroupParents={2,{eHTMLTag_select,eHTMLTag_optgroup}};
 TagList  gBodyParents={2,{eHTMLTag_html,eHTMLTag_noframes}};
 TagList  gColParents={2,{eHTMLTag_table,eHTMLTag_colgroup}};
@@ -95,7 +94,7 @@ TagList  gTableKids={9,{eHTMLTag_caption,eHTMLTag_col,eHTMLTag_colgroup,eHTMLTag
                      eHTMLTag_map,eHTMLTag_script}};// Removed INPUT - Ref. Bug 20087, 25382
   
 TagList  gTableElemKids={7,{eHTMLTag_form,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_td,eHTMLTag_th,eHTMLTag_tr}};
-TagList  gTRKids={5,{eHTMLTag_td,eHTMLTag_th,eHTMLTag_map,eHTMLTag_form,eHTMLTag_script}};// Removed INPUT - Ref. Bug 20087, 25382
+TagList  gTRKids={4,{eHTMLTag_td,eHTMLTag_th,eHTMLTag_form,eHTMLTag_script}};// Removed INPUT - Ref. Bug 20087, 25382 |  Removed MAP to fix 58942
 TagList  gTBodyKids={2,{eHTMLTag_tr,eHTMLTag_form}}; // Removed INPUT - Ref. Bug 20087, 25382
 TagList  gULKids={2,{eHTMLTag_li,eHTMLTag_p}};
 
@@ -576,7 +575,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,0,
       /*parent,incl,exclgroups*/          kHeading, kFlowEntity, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kVerifyHierarchy,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -585,7 +584,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,0,
       /*parent,incl,exclgroups*/          kHeading, kFlowEntity, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kVerifyHierarchy,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -594,7 +593,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,0,
       /*parent,incl,exclgroups*/          kHeading, kFlowEntity, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kVerifyHierarchy,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -603,7 +602,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,0,
       /*parent,incl,exclgroups*/          kHeading, kFlowEntity, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kVerifyHierarchy,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -612,7 +611,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,0,
       /*parent,incl,exclgroups*/          kHeading, kFlowEntity, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kVerifyHierarchy,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -621,7 +620,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,0,
       /*parent,incl,exclgroups*/          kHeading, kFlowEntity, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kVerifyHierarchy,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -948,7 +947,7 @@ void InitializeElementTable(void) {
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kExtensions, kFlowEntity, kNone,	
       /*special props, prop-range*/       kNone,kDefaultPropRange,
-      /*special parents,kids,skip*/       0,0,eHTMLTag_html);
+      /*special parents,kids,skip*/       0,0,eHTMLTag_plaintext); // Bug  56914
 
     Initialize( 
       /*tag*/                             eHTMLTag_pre,
@@ -1877,7 +1876,7 @@ PRBool nsHTMLElement::SectionContains(eHTMLTags aChild,PRBool allowDepthSearch) 
  * @return
  */
 
-PRBool nsHTMLElement::ShouldVerifyHierarchy(eHTMLTags aChildTag) {
+PRBool nsHTMLElement::ShouldVerifyHierarchy() {
   PRBool result=PR_FALSE;
   
   // If the tag cannot contain itself then we need to make sure that
@@ -1885,11 +1884,8 @@ PRBool nsHTMLElement::ShouldVerifyHierarchy(eHTMLTags aChildTag) {
   // Ex: <H1><LI><H1><LI>. Inner LI has the potential of getting nested
   // inside outer LI.If the tag can contain self, Ex: <A><B><A>,
   // ( B can contain self )then ask the child (<A>) if it requires a containment check.
-  if(aChildTag!=eHTMLTag_userdefined) {
-    if(CanContainSelf()) {
-      result=gHTMLElements[aChildTag].HasSpecialProperty(kVerifyHierarchy);
-    }
-    else result=PR_TRUE;
+  if(mTagID!=eHTMLTag_userdefined) {
+    result=HasSpecialProperty(kVerifyHierarchy);
   }
   return result;
 }

@@ -255,7 +255,7 @@ nsParserModule::GetClassObject(nsIComponentManager *aCompMgr,
                                const nsIID& aIID,
                                void** r_classObj)
 {
-  nsresult rv;
+  nsresult rv=NS_OK;
 
   if (!mInitialized) {
     rv = Initialize();

@@ -202,7 +202,7 @@ struct nsHTMLElement {
   PRBool          IsSpecialParent(eHTMLTags aTag) const;
   PRBool          IsExcludableParent(eHTMLTags aParent) const;
   PRBool          SectionContains(eHTMLTags aTag,PRBool allowDepthSearch);
-  PRBool          ShouldVerifyHierarchy(eHTMLTags achildTag);
+  PRBool          ShouldVerifyHierarchy();
 
   PRBool          CanBeContained(eHTMLTags aParentTag,nsDTDContext &aContext); //default version
 

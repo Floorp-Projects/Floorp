@@ -757,13 +757,17 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
   nsresult result=NS_OK;
   
   if(aToken) {
-    eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
-    if((theTag==eHTMLTag_textarea || theTag==eHTMLTag_xmp) && mRecordTrailingContent) {
-      mRecordTrailingContent=PR_FALSE;
-    }
     PRBool isHTML=((eHTML3Text==mDocType) || (eHTML4Text==mDocType));
     result= aToken->Consume(aChar,aScanner,isHTML);  //tell new token to finish consuming text...    
     AddToken(aToken,result,&mTokenDeque,theAllocator);
+    
+    eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
+    if(((theTag==eHTMLTag_textarea)   || 
+        (theTag==eHTMLTag_xmp)        || 
+        (theTag==eHTMLTag_plaintext)  || 
+        (theTag==eHTMLTag_noscript))  && mRecordTrailingContent) {
+      mRecordTrailingContent=PR_FALSE;
+    }
   } //if
   return result;
 }
