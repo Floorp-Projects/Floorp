@@ -37,7 +37,9 @@ nsPop3Sink::nsPop3Sink()
     m_outputBuffer = nsnull;
     m_outputBufferSize = 0;
     m_mailDirectory = 0;
+#ifdef DEBUG
     m_fileCounter = 0;
+#endif
 }
 
 nsPop3Sink::~nsPop3Sink()
