@@ -44,6 +44,7 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
+#include "nsComponentManagerUtils.h"
 // objbase.h must be declared before initguid.h to use the |DEFINE_GUID|'s in aimm.h
 #include <objbase.h>
 #include <initguid.h>
@@ -961,7 +962,6 @@ void MouseTrailer::SetMouseTrailerWindow(nsWindow * aNSWin) {
 //-------------------------------------------------------------------------
 MouseTrailer::MouseTrailer()
 {
-  mTimerId         = 0;
   mHoldMouse       = NULL;
 }
 
@@ -983,13 +983,18 @@ MouseTrailer::~MouseTrailer()
 //
 //
 //-------------------------------------------------------------------------
-UINT MouseTrailer::CreateTimer()
+nsresult MouseTrailer::CreateTimer()
 {
-  if (!mTimerId) {
-    mTimerId = ::SetTimer(NULL, 0, 200, (TIMERPROC)MouseTrailer::TimerProc);
+  if (mTimer) {
+    return NS_OK;
   } 
 
-  return mTimerId;
+  nsresult rv;
+  mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return mTimer->InitWithFuncCallback(MouseTrailer::TimerProc, nsnull, 200,
+                                      nsITimer::TYPE_REPEATING_SLACK);
 }
 
 
@@ -999,11 +1004,10 @@ UINT MouseTrailer::CreateTimer()
 //-------------------------------------------------------------------------
 void MouseTrailer::DestroyTimer()
 {
-  if (mTimerId) {
-    ::KillTimer(NULL, mTimerId);
-    mTimerId = 0;
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nsnull;
   }
-
 }
 //-------------------------------------------------------------------------
 //
@@ -1022,7 +1026,7 @@ void MouseTrailer::SetCaptureWindow(nsWindow * aNSWin)
 //
 //
 //-------------------------------------------------------------------------
-void CALLBACK MouseTrailer::TimerProc(HWND hWnd, UINT msg, UINT event, DWORD time)
+void MouseTrailer::TimerProc(nsITimer* aTimer, void* aClosure)
 {
   // Check to see if we are in mouse capture mode,
   // Once capture ends we could still get back one more timer event 
