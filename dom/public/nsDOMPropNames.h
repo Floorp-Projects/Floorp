@@ -810,7 +810,6 @@
     "window.confirm", \
     "window.content", \
     "window.controllers", \
-    "window.createpopup", \
     "window.defaultstatus", \
     "window.directories", \
     "window.disableexternalcapture", \

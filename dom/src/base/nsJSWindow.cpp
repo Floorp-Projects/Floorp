@@ -35,7 +35,6 @@
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
 #include "nsIDOMNavigator.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMBarProp.h"
 #include "nsIDOMAbstractView.h"
@@ -53,7 +52,6 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINavigatorIID, NS_IDOMNAVIGATOR_IID);
-static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIBarPropIID, NS_IDOMBARPROP_IID);
 static NS_DEFINE_IID(kIAbstractViewIID, NS_IDOMABSTRACTVIEW_IID);
@@ -2450,85 +2448,6 @@ WindowDisableExternalCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
 
 //
-// Native method CreatePopup
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowCreatePopup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  nsIDOMWindow* nativeRet;
-  nsCOMPtr<nsIDOMElement> b0;
-  nsCOMPtr<nsIDOMElement> b1;
-  PRInt32 b2;
-  PRInt32 b3;
-  nsAutoString b4;
-  nsAutoString b5;
-  nsAutoString b6;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-
-  *rval = JSVAL_NULL;
-
-  {
-    PRBool ok;
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
-    secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CREATEPOPUP, PR_FALSE, &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
-    }
-  }
-
-    if (argc < 7) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
-    }
-
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
-                                           kIElementIID,
-                                           "Element",
-                                           cx,
-                                           argv[0])) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
-    }
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b1),
-                                           kIElementIID,
-                                           "Element",
-                                           cx,
-                                           argv[1])) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
-    }
-    if (!JS_ValueToInt32(cx, argv[2], (int32 *)&b2)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-    }
-    if (!JS_ValueToInt32(cx, argv[3], (int32 *)&b3)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-    }
-    nsJSUtils::nsConvertJSValToString(b4, cx, argv[4]);
-    nsJSUtils::nsConvertJSValToString(b5, cx, argv[5]);
-    nsJSUtils::nsConvertJSValToString(b6, cx, argv[6]);
-
-    result = nativeThis->CreatePopup(b0, b1, b2, b3, b4, b5, b6, &nativeRet);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
-  }
-
-  return JS_TRUE;
-}
-
-
-//
 // Native method Open
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -2990,7 +2909,6 @@ static JSFunctionSpec WindowMethods[] =
   {"routeEvent",          WindowRouteEvent,     1},
   {"enableExternalCapture",          WindowEnableExternalCapture,     0},
   {"disableExternalCapture",          WindowDisableExternalCapture,     0},
-  {"createPopup",          WindowCreatePopup,     7},
   {"open",          WindowOpen,     0},
   {"openDialog",          WindowOpenDialog,     0},
   {"close",          WindowClose,     0},

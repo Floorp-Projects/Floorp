@@ -30,7 +30,6 @@
 #include "jsapi.h"
 
 class nsIDOMNavigator;
-class nsIDOMElement;
 class nsIDOMDocument;
 class nsIDOMBarProp;
 class nsIDOMScreen;
@@ -184,8 +183,6 @@ public:
 
   NS_IMETHOD    DisableExternalCapture()=0;
 
-  NS_IMETHOD    CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, PRInt32 aXPos, PRInt32 aYPos, const nsString& aPopupType, const nsString& aAnchorAlignment, const nsString& aPopupAlignment, nsIDOMWindow** aReturn)=0;
-
   NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn)=0;
 
   NS_IMETHOD    OpenDialog(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn)=0;
@@ -275,7 +272,6 @@ public:
   NS_IMETHOD    RouteEvent(nsIDOMEvent* aEvt);  \
   NS_IMETHOD    EnableExternalCapture();  \
   NS_IMETHOD    DisableExternalCapture();  \
-  NS_IMETHOD    CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, PRInt32 aXPos, PRInt32 aYPos, const nsString& aPopupType, const nsString& aAnchorAlignment, const nsString& aPopupAlignment, nsIDOMWindow** aReturn);  \
   NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn);  \
   NS_IMETHOD    OpenDialog(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn);  \
   NS_IMETHOD    Close();  \
@@ -360,7 +356,6 @@ public:
   NS_IMETHOD    RouteEvent(nsIDOMEvent* aEvt) { return _to RouteEvent(aEvt); }  \
   NS_IMETHOD    EnableExternalCapture() { return _to EnableExternalCapture(); }  \
   NS_IMETHOD    DisableExternalCapture() { return _to DisableExternalCapture(); }  \
-  NS_IMETHOD    CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, PRInt32 aXPos, PRInt32 aYPos, const nsString& aPopupType, const nsString& aAnchorAlignment, const nsString& aPopupAlignment, nsIDOMWindow** aReturn) { return _to CreatePopup(aElement, aPopupContent, aXPos, aYPos, aPopupType, aAnchorAlignment, aPopupAlignment, aReturn); }  \
   NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn) { return _to Open(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    OpenDialog(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn) { return _to OpenDialog(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    Close() { return _to Close(); }  \
