@@ -56,6 +56,11 @@ interface nsIDocShellTreeOwner : nsISupports
 		in boolean aPrimary, in wstring aID);
 
 	/*
+	Returns the Primary Content Shell
+	*/
+	readonly attribute nsIDocShellTreeItem primaryContentShell;
+
+	/*
 		Tells the implementer of this interface to create a new webBrowserChrome
 		object for it.  Typically this means the implemetor will create a new 
 		top level window that is represented by nsIWebBrowserChrome.  This
