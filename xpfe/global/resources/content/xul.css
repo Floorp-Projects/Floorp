@@ -132,6 +132,20 @@ arrowscrollbox {
 
 /******** Box *******/
 
+vbox {
+  -moz-box-orient: vertical;
+}
+
+/******** Grid **********/
+
+rows {
+  -moz-box-orient: vertical;
+}
+
+column {
+  -moz-box-orient: vertical;
+}
+
 /******** TitledBox *******/
 
 box.titledbox-title {
@@ -232,16 +246,10 @@ menuitem.menuitem-non-iconic
     -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-item");
   }
 
-  
-menupopup 
-  {
-    -moz-binding: url("chrome://global/content/xulBindings.xml#popups");
-    display               : none;
-  }
-
-popup {
+popup, menupopup {
   -moz-binding: url("chrome://global/content/xulBindings.xml#popups");
   display: none;
+  -moz-box-orient: vertical;
 }
 
 popup.tooltip, .popup-infopopup {
@@ -299,6 +307,11 @@ tree {
 treecol {
   min-width: 16px;
   width: 16px;
+  -moz-box-orient: vertical;
+}
+
+treehead, treerows, treeitem, treechildren {
+  -moz-box-orient: vertical;
 }
 
 tree > treechildren {
