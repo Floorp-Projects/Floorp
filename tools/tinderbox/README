@@ -12,10 +12,10 @@ Table of Contents
 * README 
    This file.
 
-* build-moz-smoke.pl
+* build-seamonkey.pl
    A perl script to drive the client side of tinderbox (unix variants).
    usage:
-      perl build-moz-smoke.pl [--clobber | --depend] -t TreeName
+      perl build-seamonkey.pl [--clobber | --depend] -t TreeName
 
 * bloatdiff.pl
     Script used to process leak data in the logs.
@@ -23,14 +23,8 @@ Table of Contents
 * build-grendel.pl
     Old?  Not used?
 
-* build-moz-ports.pl
-    Old classic way of building.
-
 * build-seamonkey-util.pl
     Meat of the unix tinderbox stuff.
-
-* build-seamonkey.pl
-    Wrapper for build-seamonkey-util.pl
 
 * build-embed-util.pl
     Meat of the unix embed tinderbox stuff.
