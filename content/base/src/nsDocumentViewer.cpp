@@ -5524,24 +5524,10 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
 #endif
 
 #ifdef NS_PRINT_PREVIEW
-
-  // Use the "else" case when the UI is checked in
-  // and remove "if-then" part
-#if 1
-  // if we are printing another URL, then exit
-  // the reason we check here is because this method can be called while 
-  // another is still in here (the printing dialog is a good example).
-  // the only time we can print more than one job at a time is the regression tests
-  if (mIsDoingPrintPreview) {
-    ReturnToGalleyPresentation();
-    return NS_OK;
-  }
-#else
   if (mIsDoingPrintPreview) {
     mOldPrtPreview = mPrtPreview;
     mPrtPreview = nsnull;
   }
-#endif
 
   mPrt = new PrintData();
   if (mPrt == nsnull) {
@@ -5575,8 +5561,6 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
   // Let's print ...
   mIsCreatingPrintPreview = PR_TRUE;
   mIsDoingPrintPreview    = PR_TRUE;
-
-  mIsDoingPrintPreview = PR_TRUE;
 
   // Very important! Turn Off scripting
   TurnScriptingOn(PR_FALSE);
@@ -5685,7 +5669,7 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
           if (!mPrt->mShrinkToFit) {
             double scaling;
             mPrt->mPrintSettings->GetScaling(&scaling);
-            if (scaling < 1.0) {
+            if (scaling <= 1.0) {
               mDeviceContext->SetCanonicalPixelScale(float(scaling));
             }
           }
