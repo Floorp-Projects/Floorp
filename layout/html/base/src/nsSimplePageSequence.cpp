@@ -53,6 +53,7 @@
 #include "nsIPrintContext.h"
 #include "nsStyleConsts.h"
 #include "nsIRegion.h"
+#include "nsLayoutAtoms.h"
 
 #include "nsIPref.h" // for header/footer gap & ExtraMargin for Print Preview
 
@@ -1086,6 +1087,14 @@ NS_IMETHODIMP nsSimplePageSequenceFrame::SizeTo(nsIPresContext* aPresContext, ns
   return nsFrame::SizeTo(aPresContext, aWidth, aHeight);
 }
 
+NS_IMETHODIMP
+nsSimplePageSequenceFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::sequenceFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
 
 //------------------------------------------------------------------------------
 void
@@ -1129,3 +1138,4 @@ nsSimplePageSequenceFrame::SetPageSizes(const nsRect& aRect, const nsMargin& aMa
   mPageData->mReflowRect   = aRect;
   mPageData->mReflowMargin = aMarginRect;
 }
+
