@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS	= nsinstall
 
-ifeq ($(OS_TARGET),WINNT)
+ifeq ($(OS),Windows_NT)
 DIRS	+= nsztool
 endif
 
