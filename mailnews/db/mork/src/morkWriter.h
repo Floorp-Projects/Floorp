@@ -51,6 +51,10 @@
 #include "morkRowSpace.h"
 #endif
 
+#ifndef _MORKSTREAM_
+#include "morkStream.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 
@@ -79,7 +83,22 @@
 
 #define morkWriter_kCountNumberOfPhases      13 /* part of mWrite_TotalCount */
 
-#define morkWriter_kMaxColumnNameSize        256 /* longest writable col name */
+#define morkWriter_kMaxColumnNameSize        128 /* longest writable col name */
+
+#define morkWriter_kMaxIndent 48 /* default value for mWriter_MaxIndent */
+
+#define morkWriter_kTableMetaCellDepth 4 /* */
+#define morkWriter_kTableMetaCellValueDepth 6 /* */
+
+#define morkWriter_kDictMetaCellDepth 4 /* */
+#define morkWriter_kDictMetaCellValueDepth 6 /* */
+
+#define morkWriter_kDictAliasDepth 2 /* */
+#define morkWriter_kDictAliasValueDepth 4 /* */
+
+#define morkWriter_kRowDepth 2 /* */
+#define morkWriter_kRowCellDepth 4 /* */
+#define morkWriter_kRowCellValueDepth 6 /* */
 
 class morkWriter : public morkNode { // row iterator
 
@@ -105,6 +124,9 @@ public: // state is public because the entire Mork system is private
   mork_count   mWriter_TotalCount;  // count of all things to be written
   mork_count   mWriter_DoneCount;   // count of things already written
   
+  mork_size    mWriter_LineSize;  // length of current line being written
+  mork_size    mWriter_MaxIndent; // line size forcing a line break
+  
   mork_cscode  mWriter_TableCharset;     // current charset metainfo
   mork_scope   mWriter_TableAtomScope;   // current atom scope
   mork_scope   mWriter_TableRowScope;    // current row scope
@@ -125,12 +147,18 @@ public: // state is public because the entire Mork system is private
   mork_bool    mWriter_DidEndDict;    // true when a dict has been ended
 
   mork_pos     mWriter_TableRowArrayPos;  // index into mTable_RowArray
-  
+   
+  char         mWriter_SafeNameBuf[ (morkWriter_kMaxColumnNameSize * 2) + 4 ];
+  // Note: extra four bytes in ColNameBuf means we can always append to yarn
+
   char         mWriter_ColNameBuf[ morkWriter_kMaxColumnNameSize + 4 ];
   // Note: extra four bytes in ColNameBuf means we can always append to yarn
   
   mdbYarn      mWriter_ColYarn; // a yarn to describe space in ColNameBuf:
   // mYarn_Buf == mWriter_ColNameBuf, mYarn_Size == morkWriter_kMaxColumnNameSize
+  
+  mdbYarn      mWriter_SafeYarn; // a yarn to describe space in ColNameBuf:
+  // mYarn_Buf == mWriter_SafeNameBuf, mYarn_Size == (kMaxColumnNameSize * 2)
 
   morkAtomSpaceMapIter  mWriter_StoreAtomSpacesIter;   // for mStore_AtomSpaces
   morkAtomAidMapIter  mWriter_AtomSpaceAtomAidsIter; // for AtomSpace_AtomAids
@@ -169,6 +197,15 @@ public: // typing & errors
 public: // inlines
   mork_bool DidStartDict() const { return mWriter_DidStartDict; }
   mork_bool DidEndDict() const { return mWriter_DidEndDict; }
+  
+  mork_bool NeedLineBreak() const
+  { return ( mWriter_LineSize > mWriter_MaxIndent ); }
+  
+  void IndentAsNeeded(morkEnv* ev, mork_size inDepth)
+  { 
+    if ( mWriter_LineSize > mWriter_MaxIndent )
+      mWriter_LineSize = mWriter_Stream->PutIndent(ev, inDepth);
+  }
 
 public: // iterative/asynchronouse writing
   
@@ -220,8 +257,17 @@ public: // writing node content second pass
 
 public: // other writer methods
 
+  mork_size WriteYarn(morkEnv* ev, const mdbYarn* inYarn);
+  // return number of atom bytes written on the current line (which
+  // implies that escaped line breaks will make the size value smaller
+  // than the entire yarn's size, since only part goes on a last line).
+
+  mork_size WriteAtom(morkEnv* ev, const morkAtom* inAtom);
+  // return number of atom bytes written on the current line (which
+  // implies that escaped line breaks will make the size value smaller
+  // than the entire atom's size, since only part goes on a last line).
+
   void WriteAllStoreTables(morkEnv* ev);
-  void WriteAtom(morkEnv* ev, const morkAtom* inAtom);
   void WriteAtomSpaceAsDict(morkEnv* ev, morkAtomSpace* ioSpace);
   
   void WriteTokenToTokenMetaCell(morkEnv* ev, mork_token inCol,
@@ -233,7 +279,7 @@ public: // other writer methods
    void StartDict(morkEnv* ev);
   void EndDict(morkEnv* ev);
 
-   void StartTable(morkEnv* ev, mork_tid inTid);
+   void StartTable(morkEnv* ev, morkTable* ioTable);
   void EndTable(morkEnv* ev);
 
 public: // typesafe refcounting inlines calling inherited morkNode methods

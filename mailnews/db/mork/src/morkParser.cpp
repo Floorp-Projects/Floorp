@@ -44,6 +44,14 @@
 #include "morkStream.h"
 #endif
 
+#ifndef _MORKBLOB_
+#include "morkBlob.h"
+#endif
+
+#ifndef _MORKSINK_
+#include "morkSink.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 // ````` ````` ````` ````` ````` 
@@ -131,6 +139,10 @@ morkParser::CloseParser(morkEnv* ev) /*i*/ // called by CloseMorkNode();
     {
       if ( !this->IsShutNode() )
       {
+        mParser_ScopeSpool.CloseSpool(ev);
+        mParser_ValueSpool.CloseSpool(ev);
+        mParser_ColumnSpool.CloseSpool(ev);
+        mParser_StringSpool.CloseSpool(ev);
         nsIMdbHeap_SlotStrongHeap((nsIMdbHeap*) 0, ev, &mParser_Heap);
         morkStream::SlotStrongStream((morkStream*) 0, ev, &mParser_Stream);
         this->MarkShut();

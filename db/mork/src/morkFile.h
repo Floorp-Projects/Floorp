@@ -159,7 +159,8 @@ public: // non-poly morkFile methods
    void NewFileErrnoError(morkEnv* ev) const;
        // call NewFileErrnoError() to convert std C errno into AB fault
 
-  void WriteNewlines(morkEnv* ev, mork_count inNewlines);
+  mork_size WriteNewlines(morkEnv* ev, mork_count inNewlines);
+  // WriteNewlines() returns the number of bytes written.
          
 public: // typesafe refcounting inlines calling inherited morkNode methods
   static void SlotWeakFile(morkFile* me,

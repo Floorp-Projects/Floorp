@@ -48,12 +48,15 @@
 #endif
 // } %%%%% end platform defs peculiar to Mork %%%%%
 
-#if defined (MORK_WIN) || defined(MORK_UNIX)
+#if defined (MORK_WIN) || defined(MORK_UNIX) 
 #include "stdio.h" 
+#include "ctype.h" 
 #include "errno.h" 
 #include "string.h" 
 #include "memory.h" 
 #include "nsDebug.h" 
+
+#define MORK_ISPRINT(c) isprint(c) 
 
 #define MORK_FILETELL(file) ftell(file) 
 #define MORK_FILESEEK(file, where, how) fseek(file, where, how) 
@@ -64,6 +67,9 @@
 
 #ifdef MORK_MAC 
 #include "xp_file.h" 
+#include "ctype.h" 
+
+#define MORK_ISPRINT(c) isprint(c) 
 
 #define MORK_FILETELL(file) XP_FileTell(file) 
 #define MORK_FILESEEK(file, where, how) XP_FileSeek(file, where, how) 

@@ -63,7 +63,7 @@
 **| else branch of the statement calls a function that raises an appropriate
 **| error to complain about either reading a sink or writing a source.
 **|
-**|| morkStream is a direct clone of mork_Stream from Communicator 4.5's
+**|| morkStream is a direct clone of ab_Stream from Communicator 4.5's
 **| address book code, which in turn was based on the stream class in the
 **| public domain Mithril programming language.
 |*/
@@ -164,11 +164,33 @@ public: // public non-poly morkStream methods
   morkFile*  GetStreamContentFile() const { return mStream_ContentFile; }
   mork_size   GetStreamBufferSize() const { return mStream_BufSize; }
   
-  void    PutString(morkEnv* ev, const char* inString);
-  void    PutStringThenNewline(morkEnv* ev, const char* inString);
-  void    PutStringThenNewlineThenSpace(morkEnv* ev, const char* inString);
-  void    PutByteThenNewline(morkEnv* ev, int inByte);
-  void    PutByteThenNewlineThenSpace(morkEnv* ev, int inByte);
+  mork_size  PutIndent(morkEnv* ev, mork_count inDepth);
+  // PutIndent() puts a linebreak, and then
+  // "indents" by inDepth, and returns the line length after indentation.
+  
+  mork_size  PutByteThenIndent(morkEnv* ev, int inByte, mork_count inDepth);
+  // PutByteThenIndent() puts the byte, then a linebreak, and then
+  // "indents" by inDepth, and returns the line length after indentation.
+  
+  mork_size  PutStringThenIndent(morkEnv* ev,
+    const char* inString, mork_count inDepth);
+  // PutStringThenIndent() puts the string, then a linebreak, and then
+  // "indents" by inDepth, and returns the line length after indentation.
+  
+  mork_size  PutString(morkEnv* ev, const char* inString);
+  // PutString() returns the length of the string written.
+  
+  mork_size  PutStringThenNewline(morkEnv* ev, const char* inString);
+  // PutStringThenNewline() returns total number of bytes written.
+
+  mork_size  PutStringThenNewlineThenSpace(morkEnv* ev, const char* inString);
+  // PutStringThenNewlineThenSpace() returns total number of bytes written.
+
+  mork_size  PutByteThenNewline(morkEnv* ev, int inByte);
+  // PutByteThenNewline() returns total number of bytes written.
+
+  mork_size  PutByteThenNewlineThenSpace(morkEnv* ev, int inByte);
+  // PutByteThenNewlineThenSpace() returns total number of bytes written.
   
   // ````` ````` stdio type methods ````` ````` 
   void    Printf(morkEnv* ev, const char* inFormat, ...);
@@ -201,6 +223,8 @@ public: // public non-poly morkStream methods
     else
       spill_putc(ev, c);
   }
+
+  mork_size PutLineBreak(morkEnv* ev);
   
 public: // typesafe refcounting inlines calling inherited morkNode methods
   static void SlotWeakStream(morkStream* me,
