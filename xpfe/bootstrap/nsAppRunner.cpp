@@ -584,6 +584,36 @@ static nsresult DoCommandLines( nsICmdLineService* cmdLine, PRBool heedGeneralSt
 	return rv;
 }
 
+static nsresult DoOnShutdown()
+{
+  nsresult rv;
+  {
+    // Scoping this in a block to force the pref service to be           
+    // released. 
+    //
+  	// save the prefs, in case they weren't saved
+  	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+  	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get prefs, so unable to save them");
+  	if (NS_SUCCEEDED(rv)) {
+  		prefs->SavePrefFile();
+  	}  
+  }
+
+  // at this point, all that is on the clipboard is a proxy object, but that object
+  // won't be valid once the app goes away. As a result, we need to force the data
+  // out of that proxy and properly onto the clipboard. This can't be done in the
+  // clipboard service's shutdown routine because it requires the parser/etc which
+  // has already been shutdown by the time the clipboard is shut down.
+  {
+    // scoping this in a block to force release
+    NS_WITH_SERVICE(nsIClipboard, clipService, "component://netscape/widget/clipboard", &rv);
+    if ( clipService )
+      clipService->ForceDataToClipboard(nsIClipboard::kGlobalClipboard);
+  }
+  return rv;
+}
+
+
 static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
 {
     nsresult rv;
@@ -606,30 +636,27 @@ static void	InitCachePrefs()
 	const char * const CACHE_DIR_PREF   = "browser.cache.directory";
 	nsresult rv;
 	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
-	if ( NS_FAILED (rv ) )
-		return; 
+	if (NS_FAILED(rv)) return;
 		
 	// If the pref is already set don't do anything
 	nsCOMPtr<nsIFileSpec> cacheSubDir;
-	rv = prefs->GetFilePref(CACHE_DIR_PREF, getter_AddRefs( cacheSubDir )  );
-	if ( NS_SUCCEEDED( rv ) && cacheSubDir.get() )
-		return;	
+	rv = prefs->GetFilePref(CACHE_DIR_PREF, getter_AddRefs(cacheSubDir));
+	if (NS_SUCCEEDED(rv) && cacheSubDir.get()) return;	
 
 // Set up the new pref
 	rv = NS_NewFileSpec(getter_AddRefs(cacheSubDir));
-	if(NS_FAILED(rv))
-	      return;
-	nsCOMPtr<nsIFileSpec> spec( dont_AddRef(  NS_LocateFileOrDirectory(nsSpecialFileSpec::App_UserProfileDirectory50) ));
-	    
+	if(NS_FAILED(rv)) return;
+
+	nsCOMPtr<nsIFileSpec> spec(dont_AddRef(NS_LocateFileOrDirectory(nsSpecialFileSpec::App_UserProfileDirectory50)));	    
 	rv = cacheSubDir->FromFileSpec(spec);
-	if(NS_FAILED(rv))      return  ;
+	if(NS_FAILED(rv)) return;
 		
-		rv = cacheSubDir->AppendRelativeUnixPath("Cache") ;
-		if(NS_FAILED(rv))
-	      return;
-	prefs->SetFilePref( CACHE_DIR_PREF ,cacheSubDir, PR_FALSE );
-	return;
+	rv = cacheSubDir->AppendRelativeUnixPath("Cache") ;
+	if(NS_FAILED(rv))	return;
+	
+	prefs->SetFilePref(CACHE_DIR_PREF, cacheSubDir, PR_FALSE);
 }
+
 
 static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
 {
@@ -738,12 +765,12 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   }
 //  nsServiceManager::UnregisterService(kSoftUpdateCID);
    
- #if XP_MAC 
-    stTSMCloser  tsmCloser;
+#if XP_MAC 
+  stTSMCloser  tsmCloser;
   
   rv = InitializeMacCommandLine( argc, argv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Initializing AppleEvents failed");
- #endif
+#endif
 
   // XXX: This call will be replaced by a registry initialization...
   NS_SetupRegistry_1( needAutoreg );
@@ -796,19 +823,12 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to initialize appshell");
   if ( NS_FAILED(rv) ) return rv; 
 
-#ifdef DEBUG
-  printf("initialized appshell\n");
-#endif
-
-
   NS_WITH_SERVICE(nsIProfile, profileMgr, kProfileCID, &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get profile manager");
   if ( NS_FAILED(rv) ) return rv; 
 
   rv = profileMgr->StartupWithArgs(cmdLineArgs);
-  if (NS_FAILED(rv)) {
-	return rv;
-  }
+  if (NS_FAILED(rv)) return rv;
 
   // if we get here, and we don't have a current profile, return a failure so we will exit
   // this can happen, if the user hits Cancel or Exit in the profile manager dialogs
@@ -845,13 +865,17 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to Ensure1Window");
   if (NS_FAILED(rv)) return rv;
 
-  // Fire up the walletService
+  // Fire up the walletService. Why the heck is this here?
   NS_WITH_SERVICE(nsIWalletService, walletService, kWalletServiceCID, &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "wallet failed");
-  if ( NS_SUCCEEDED(rv) )
-      walletService->WALLET_FetchFromNetCenter();
+  if (NS_SUCCEEDED(rv))
+  {
+    // this is a no-op. What is going on?
+    walletService->WALLET_FetchFromNetCenter();
+  }
 
 	InitCachePrefs();
+	
   // Start main event loop
   rv = appShell->Run();
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to run appshell");
@@ -867,13 +891,14 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
    */
   (void) appShell->Shutdown();
 
-  return rv ;
+  return rv;
 }
 
 
 // English text needs to go into a dtd file.
-static
-void DumpHelp(char *appname)
+// But when this is called we have no components etc. These strings must either be
+// here, or in a native resource file.
+static void DumpHelp(char *appname)
 {
   printf("Usage: %s [ options ... ] [URL]\n", appname);
   printf("       where options include:\n");
@@ -901,22 +926,16 @@ void DumpHelp(char *appname)
   DumpArbitraryHelp();
 }
 
-static
-void DumpVersion(char *appname)
+static void DumpVersion(char *appname)
 {
 	printf("%s: version info\n", appname);
 }
 
-int main(int argc, char* argv[])
+
+static PRBool HandleDumpArguments(int argc, char* argv[])
 {
-#if defined(XP_UNIX)
-  InstallUnixSignalHandlers(argv[0]);
-#endif
+  int i = 0;
 
-  nsresult rv;
-  int i=0;
-
-  /* Handle -help and -version command line arguments. They should return quick, so we deal with them here */
   for (i=1; i<argc; i++) {
     if ((PL_strcasecmp(argv[i], "-h") == 0)
         || (PL_strcasecmp(argv[i], "-help") == 0) 
@@ -930,7 +949,7 @@ int main(int argc, char* argv[])
 #endif /* XP_PC */
       ) {
       DumpHelp(argv[0]);
-      return 0;
+      return PR_TRUE;
     }
     if ((PL_strcasecmp(argv[i], "-v") == 0)
         || (PL_strcasecmp(argv[i], "-version") == 0) 
@@ -943,17 +962,58 @@ int main(int argc, char* argv[])
 #endif /* XP_PC */
       ) {
       DumpVersion(argv[0]);
-      return 0;
+      return PR_TRUE;
     }
   }
 
+  return PR_FALSE;
+}
+
+
+static PRBool GetWantSplashScreen(int argc, char* argv[])
+{
+  int i;
+  PRBool dosplash;
+  // We can't use the command line service here because it isn't running yet
+#if defined(XP_UNIX) && !defined(NTO)
+  dosplash = PR_FALSE;
+  for (i=1; i<argc; i++)
+    if ((PL_strcasecmp(argv[i], "-splash") == 0)
+        || (PL_strcasecmp(argv[i], "--splash") == 0))
+      dosplash = PR_TRUE;
+#else
+  dosplash = PR_TRUE;
+  for (i=1; i<argc; i++)
+    if ((PL_strcasecmp(argv[i], "-nosplash") == 0)
+#ifdef XP_BEOS
+		|| (PL_strcasecmp(argv[i], "--nosplash") == 0)
+#endif /* XP_BEOS */
+#ifdef XP_PC
+        || (PL_strcasecmp(argv[i], "/nosplash") == 0)
+#endif /* XP_PC */
+	) {
+      dosplash = PR_FALSE;
+	}
+#endif
+  
+  return dosplash;
+}
+
+
+static
+void SetupMallocTracing(int argc, char* argv[])
+{
 #ifdef NS_TRACE_MALLOC
+
+  int i;
+
   /*
    * Look for the --trace-malloc <logfile> option early, to avoid missing
    * early mallocs (we miss static constructors whose output overflows the
    * log file's static 16K output buffer; see xpcom/base/nsTraceMalloc.c).
    */
-  for (i = 1; i < argc; i++) {
+  for (i = 1; i < argc; i++)
+  {
     if (PL_strcasecmp(argv[i], "--trace-malloc") == 0 && i < argc-1) {
       char *logfile;
       int logfd, sitefd, pipefds[2];
@@ -1042,6 +1102,20 @@ int main(int argc, char* argv[])
     }
   }
 #endif /* NS_TRACE_MALLOC */
+}
+
+int main(int argc, char* argv[])
+{
+#if defined(XP_UNIX)
+  InstallUnixSignalHandlers(argv[0]);
+#endif
+
+  // Handle -help and -version command line arguments.
+  // They should return quick, so we deal with them here.
+  if (HandleDumpArguments(argc, argv))
+    return 0;
+  
+  SetupMallocTracing(argc, argv);
     
   // Call the code to install our handler
 #ifdef MOZ_JPROF
@@ -1052,87 +1126,46 @@ int main(int argc, char* argv[])
   // Note: this object is not released here.  It is passed to main1 which
   //       has responsibility to release it.
   nsINativeAppSupport *nativeApp = 0;
-  rv = NS_CreateNativeAppSupport( &nativeApp );
+  nsresult rv = NS_CreateNativeAppSupport( &nativeApp );
 
   // See if we can run.
-  if ( nativeApp ) {
+  if (nativeApp)
+  {
     PRBool canRun = PR_FALSE;
     rv = nativeApp->Start( &canRun );
-    if ( !canRun ) {
+    if (!canRun) {
         return 1;
     }
   } else {
     // If platform doesn't implement nsINativeAppSupport, fall
     // back to old method.
-    if( !NS_CanRun() )
+    if (!NS_CanRun())
       return 1; 
   }
   // Note: this object is not released here.  It is passed to main1 which
   //       has responsibility to release it.
   nsISplashScreen *splash = 0;
-  // We can't use the command line service here because it isn't running yet
-#if defined(XP_UNIX) && !defined(NTO)
-  PRBool dosplash = PR_FALSE;
-  for (i=1; i<argc; i++)
-    if ((PL_strcasecmp(argv[i], "-splash") == 0)
-        || (PL_strcasecmp(argv[i], "--splash") == 0))
-      dosplash = PR_TRUE;
-#else        
-  PRBool dosplash = PR_TRUE;
-  for (i=1; i<argc; i++)
-    if ((PL_strcasecmp(argv[i], "-nosplash") == 0)
-#ifdef XP_BEOS
-		|| (PL_strcasecmp(argv[i], "--nosplash") == 0)
-#endif /* XP_BEOS */
-#ifdef XP_PC
-        || (PL_strcasecmp(argv[i], "/nosplash") == 0)
-#endif /* XP_PC */
-	) {
-      dosplash = PR_FALSE;
-	}
-#endif
+  PRBool dosplash = GetWantSplashScreen(argc, argv);
+  
   if (dosplash && !nativeApp) {
       // If showing splash screen and platform doesn't implement
       // nsINativeAppSupport, then use older nsISplashScreen interface.
-      rv = NS_CreateSplashScreen( &splash );
+      rv = NS_CreateSplashScreen(&splash);
       NS_ASSERTION( NS_SUCCEEDED(rv), "NS_CreateSplashScreen failed" );
   }
   // If the platform has a splash screen, show it ASAP.
-  if ( dosplash && nativeApp ) {
+  if (dosplash && nativeApp) {
       nativeApp->ShowSplashScreen();
-  } else if ( splash ) {
+  } else if (splash) {
       splash->Show();
   }
   rv = NS_InitXPCOM(NULL, NULL);
   NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
 
+  nsresult mainResult = main1(argc, argv, nativeApp ? (nsISupports*)nativeApp : (nsISupports*)splash);
 
-  nsresult result = main1( argc, argv, nativeApp ? (nsISupports*)nativeApp : (nsISupports*)splash );
-
-
-  {
-        // Scoping this in a block to force the pref service to be           
-        // released. 
-        //
-	// save the prefs, in case they weren't saved
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get prefs, so unable to save them");
-	if (NS_SUCCEEDED(rv)) {
-		prefs->SavePrefFile();
-	}  
-  }
-
-  // at this point, all that is on the clipboard is a proxy object, but that object
-  // won't be valid once the app goes away. As a result, we need to force the data
-  // out of that proxy and properly onto the clipboard. This can't be done in the
-  // clipboard service's shutdown routine because it requires the parser/etc which
-  // has already been shutdown by the time the clipboard is shut down.
-  {
-  // scoping this in a block to force release
-  NS_WITH_SERVICE(nsIClipboard, clipService, "component://netscape/widget/clipboard", &rv);
-  if ( clipService )
-    clipService->ForceDataToClipboard(nsIClipboard::kGlobalClipboard);
-  }
+  rv = DoOnShutdown();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "DoOnShutdown failed");
 
   rv = NS_ShutdownXPCOM( NULL );
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
@@ -1145,13 +1178,14 @@ int main(int argc, char* argv[])
   }
 #endif
 
-  return TranslateReturnValue( result );
+  return TranslateReturnValue(mainResult);
 }
 
 #if defined( XP_PC ) && defined( WIN32 )
 // We need WinMain in order to not be a console app.  This function is
 // unused if we are a console application.
-int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int ) {
+int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int )
+{
     // Do the real work.
     return main( __argc, __argv );
 }
