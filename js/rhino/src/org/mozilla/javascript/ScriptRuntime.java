@@ -1216,23 +1216,8 @@ public class ScriptRuntime {
                         return NativeWith.newWithSpecial(cx, args, f, !isCall);
                     }
                 }
-                else if (name.equals("exec")) {
-                    if (f.master.getClass() == NativeScriptClass) {
-                        return ((NativeScript)jsThis).
-                            exec(cx, ScriptableObject.getTopLevelScope(scope));
-                    }
-                    else {
-                        RegExpProxy proxy = cx.getRegExpProxy();
-                        if (proxy != null && proxy.isRegExp(jsThis)) {
-                            return call(cx, fun, jsThis, args, scope);
-                        }
-                    }
-                }
             }
         }
-        else    // could've been <java>.XXX.exec() that was re-directed here
-            if (fun instanceof NativeJavaMethod)
-                return call(cx, fun, jsThis, args, scope);
 
         if (isCall)
             return call(cx, fun, jsThis, args, scope);
