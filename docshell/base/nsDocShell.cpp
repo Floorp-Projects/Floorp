@@ -6379,7 +6379,6 @@ nsDocShell::ShouldAddToGlobalHistory(nsIURI * aURI, PRBool * aShouldAdd)
     PRBool isMailbox = PR_FALSE;
     PRBool isViewSource = PR_FALSE;
     PRBool isChrome = PR_FALSE;
-    PRBool isJavascript = PR_FALSE;
     PRBool isData = PR_FALSE;
 
     NS_ENSURE_SUCCESS(aURI->SchemeIs("about", &isAbout), NS_ERROR_FAILURE);
@@ -6389,11 +6388,9 @@ nsDocShell::ShouldAddToGlobalHistory(nsIURI * aURI, PRBool * aShouldAdd)
     NS_ENSURE_SUCCESS(aURI->SchemeIs("view-source", &isViewSource),
                       NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(aURI->SchemeIs("chrome", &isChrome), NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(aURI->SchemeIs("javascript", &isJavascript), NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(aURI->SchemeIs("data", &isData), NS_ERROR_FAILURE);
 
-    if (isAbout || isImap || isNews || isMailbox || isViewSource || isChrome
-        || isJavascript || isData)
+    if (isAbout || isImap || isNews || isMailbox || isViewSource || isChrome || isData)
         return NS_OK;
 
     *aShouldAdd = PR_TRUE;
@@ -6471,16 +6468,29 @@ nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aHidden)
     nsCAutoString spec;
     NS_ENSURE_SUCCESS(aURI->GetSpec(spec), NS_ERROR_FAILURE);
 
+    PRBool isJavascript;
+    NS_ENSURE_SUCCESS(aURI->SchemeIs("javascript", &isJavascript), NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIBrowserHistory> browserHistory;
+    if (isJavascript || aHidden) {
+        browserHistory = do_QueryInterface(mGlobalHistory);
+    }
+
+    // If this is a JS url, hide it in global history so that
+    // it doesn't show up in the autocomplete dropdown.  AddPage()
+    // contains logic to unhide urls if they are typed, so this call
+    // to HidePage() needs to be before the AddPage() call.
+    // See bug 197127 and bug 161531 for more details.
+    if (isJavascript && browserHistory) {
+        browserHistory->HidePage(spec.get());
+    }
+
     NS_ENSURE_SUCCESS(mGlobalHistory->AddPage(spec.get()), NS_ERROR_FAILURE);
 
-    // this is a redirect, so hide the page from
+    // this is a redirect, hide the page from
     // being enumerated in history
-    if (aHidden) {
-        nsCOMPtr<nsIBrowserHistory> browserHistory =
-            do_QueryInterface(mGlobalHistory);
-        if (browserHistory) {
-            browserHistory->HidePage(spec.get());
-        }
+    if (aHidden && browserHistory) {                
+        browserHistory->HidePage(spec.get());
     }
     return NS_OK;
 }
