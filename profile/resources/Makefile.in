@@ -51,6 +51,7 @@ FILES=\
 		navFinishPreg.xul				\
 		preg.html						\
 		pmDelete.xul					\
+		pmMigrateAll.xul				\
         $(NULL)
 
 
