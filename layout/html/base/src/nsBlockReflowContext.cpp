@@ -796,10 +796,12 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
 
         // Do not allow auto margins to impact the max-element size
         // since they are springy and don't really count!
-        if (eStyleUnit_Auto != mStyleMargin->mMargin.GetLeftUnit()) {
+        if ((eStyleUnit_Auto != mStyleMargin->mMargin.GetLeftUnit()) && 
+            (eStyleUnit_Null != mStyleMargin->mMargin.GetLeftUnit())) {
           m->width += maxElemMargin.left;
         }
-        if (eStyleUnit_Auto != mStyleMargin->mMargin.GetRightUnit()) {
+        if ((eStyleUnit_Auto != mStyleMargin->mMargin.GetRightUnit()) &&
+            (eStyleUnit_Null != mStyleMargin->mMargin.GetRightUnit())) {
           m->width += maxElemMargin.right;
         }
 

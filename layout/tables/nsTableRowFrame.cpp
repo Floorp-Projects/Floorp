@@ -771,24 +771,31 @@ CalcAvailWidth(nsTableFrame&     aTableFrame,
                nscoord&          aCellAvailWidth)
 {
   aColAvailWidth = aCellAvailWidth = 0;
-  PRInt32 colIndex;
-  aCellFrame.GetColIndex(colIndex);
-  PRInt32 colspan = aTableFrame.GetEffectiveColSpan(aCellFrame);
-  nscoord cellSpacing = 0;
+  // If the table will intialize the strategy, leave the avail width at 
+  // 0 (at this point) in case the cell contains a % width frame. A constrained avail 
+  // width forces a computed width, and % width frames inside the cell base their sizes on it. 
+  // This can happen during an incremental reflow when multiple commands get coalesced
+  // at the row.
+  if (!aTableFrame.NeedStrategyInit()) {
+    PRInt32 colIndex;
+    aCellFrame.GetColIndex(colIndex);
+    PRInt32 colspan = aTableFrame.GetEffectiveColSpan(aCellFrame);
+    nscoord cellSpacing = 0;
 
-  for (PRInt32 spanX = 0; spanX < colspan; spanX++) {
-    nscoord colWidth = aTableFrame.GetColumnWidth(colIndex + spanX);
-    if (colWidth > 0) {
-      aColAvailWidth += colWidth;
+    for (PRInt32 spanX = 0; spanX < colspan; spanX++) {
+      nscoord colWidth = aTableFrame.GetColumnWidth(colIndex + spanX);
+      if (colWidth > 0) {
+        aColAvailWidth += colWidth;
+      }
+      if ((spanX > 0) && (aTableFrame.GetNumCellsOriginatingInCol(colIndex + spanX) > 0)) {
+        cellSpacing += aCellSpacingX;
+      }
     }
-    if ((spanX > 0) && (aTableFrame.GetNumCellsOriginatingInCol(colIndex + spanX) > 0)) {
-      cellSpacing += aCellSpacingX;
-    }
+    if (aColAvailWidth > 0) {
+      aColAvailWidth += cellSpacing;
+    } 
+    aCellAvailWidth = aColAvailWidth;
   }
-  if (aColAvailWidth > 0) {
-    aColAvailWidth += cellSpacing;
-  } 
-  aCellAvailWidth = aColAvailWidth;
 
   nsFrameState  frameState;
   aCellFrame.GetFrameState(&frameState);
