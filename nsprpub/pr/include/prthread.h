@@ -185,19 +185,19 @@ PR_EXTERN(PRStatus) PR_NewThreadPrivateIndex(
 
 /*
 ** Define some per-thread-private data.
-**     "index" is an index into the per-thread private data table
+**     "tpdIndex" is an index into the per-thread private data table
 **     "priv" is the per-thread-private data 
 **
 ** If the per-thread private data table has a previously registered
 ** destructor function and a non-NULL per-thread-private data value,
 ** the destructor function is invoked.
 **
-** This can return PR_FAILURE if index is invalid.
+** This can return PR_FAILURE if the index is invalid.
 */
-PR_EXTERN(PRStatus) PR_SetThreadPrivate(PRUintn index, void *priv);
+PR_EXTERN(PRStatus) PR_SetThreadPrivate(PRUintn tpdIndex, void *priv);
 
 /*
-** Recover the per-thread-private data for the current thread. "index" is
+** Recover the per-thread-private data for the current thread. "tpdIndex" is
 ** the index into the per-thread private data table. 
 **
 ** The returned value may be NULL which is indistinguishable from an error 
@@ -205,7 +205,7 @@ PR_EXTERN(PRStatus) PR_SetThreadPrivate(PRUintn index, void *priv);
 **
 ** A thread can only get access to its own thread-specific-data.
 */
-PR_EXTERN(void*) PR_GetThreadPrivate(PRUintn index);
+PR_EXTERN(void*) PR_GetThreadPrivate(PRUintn tpdIndex);
 
 /*
 ** This routine sets the interrupt request for a target thread. The interrupt
