@@ -632,7 +632,6 @@ nsresult PyG_Base::InvokeNativeSetViaPolicy(
 {
 	if ( m_pPyObject == NULL || szPropertyName == NULL )
 		return NS_ERROR_NULL_POINTER;
-	PyObject *ob_ret = NULL;
 	nsresult ret = NS_OK;
 	PyObject *real_ob = NULL;
 	char buf[256];
