@@ -237,8 +237,10 @@ void nsSelectionMgr::SelectionRequestor( GtkWidget        *widget,
   guchar* str = (guchar*)(mCopyStream->str());
 
   // Currently we only offer the data in XA_STRING format.
-  gtk_selection_data_set(selection_data, XA_STRING,
-                         8, str, strlen((char*)str));
+  if(str) {
+    gtk_selection_data_set(selection_data, XA_STRING,
+                           8, str, strlen((char*)str));
+  }
   // the format arg, "8", indicates string data with no endianness
 }
 
