@@ -166,7 +166,7 @@ nsDownloadManager::DownloadEnded(const char* aPersistentDescriptor, const PRUnic
 }
 
 nsresult
-nsDownloadManager::GetProfileDownloadsFileURL(char** aDownloadsFileURL)
+nsDownloadManager::GetProfileDownloadsFileURL(nsCString& aDownloadsFileURL)
 {
   nsCOMPtr<nsIFile> downloadsFile;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_DOWNLOADS_50_FILE, getter_AddRefs(downloadsFile));
