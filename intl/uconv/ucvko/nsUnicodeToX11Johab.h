@@ -55,7 +55,7 @@ public:
    * Class constructor.
    */
   nsUnicodeToX11Johab();
-  ~nsUnicodeToX11Johab();
+  virtual ~nsUnicodeToX11Johab();
 
   NS_IMETHOD Convert(
       const PRUnichar * aSrc, PRInt32 * aSrcLength,

@@ -87,6 +87,7 @@ private:
   nsresult GetRegistryEnumeration2(const char * aRegistryKey, PRBool aDecoder,
     nsISupportsArray ** aArray);
 
+  nsresult GetList(PRBool encoder, nsISupportsArray** aResult);
 public:
   static nsresult RegisterConverterManagerData();
 
