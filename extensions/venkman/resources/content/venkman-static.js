@@ -58,7 +58,7 @@ function display(message, msgtype)
     if (typeof message == "undefined")
         throw BadMojo(ERR_REQUIRED_PARAM, "message");
 
-    if (typeof message != "string" && typeof message != "object")
+    if (typeof message != "string" && !(message instanceof HTMLElement))
         throw BadMojo(ERR_INVALID_PARAM, ["message", String(message)]);
 
     if (typeof msgtype == "undefined")
@@ -125,11 +125,7 @@ function evalInDebuggerScope (script)
 {
     try
     {
-        display (script, MT_EVAL_IN);
-        var rv = String(console.doEval (script));
-        if (typeof rv != "undefined")
-            display (rv, MT_EVAL_OUT);
-        return rv;
+        return console.doEval (script);
     }
     catch (ex)
     {
@@ -151,13 +147,9 @@ function evalInTargetScope (script)
 
     try
     {
-        display (script, MT_FEVAL_IN);
-        var l = $.length;
-        $[l] = 
-            console.frames[console.currentFrameIndex].eval (script,
-                                                            MSG_VAL_CONSOLE, 1);
-        display ("$[" + l + "] = " + formatValue ($[l]), MT_FEVAL_OUT);
-        return $[l]
+        return console.frames[console.currentFrameIndex].eval (script,
+                                                               MSG_VAL_CONSOLE,
+                                                               1);
     }
     catch (ex)
     {
@@ -290,6 +282,12 @@ function load(url, obj)
     
 }
 
+function refreshResultsArray()
+{
+    for (var i = 0; i < $.length; ++i)
+        $[i].refresh();
+}
+
 /* exceptions */
 
 /* keep this list in sync with exceptionMsgNames in venkman-msg.js */
@@ -297,6 +295,7 @@ const ERR_NOT_IMPLEMENTED = 0;
 const ERR_REQUIRED_PARAM  = 1;
 const ERR_INVALID_PARAM   = 2;
 const ERR_SUBSCRIPT_LOAD  = 3;
+const ERR_NO_DEBUGGER     = 4;
 
 /* venkman exception factory, can be used with or without |new|.
  * throw BadMojo (ERR_REQUIRED_PARAM, MSG_VAL_OBJECT);
