@@ -531,8 +531,7 @@ sub print_javascript {
 
       var version = parseInt(navigator.appVersion);
       if (version < 4 || version >= 5) {
-        document.location = d.target.href;
-        return false;
+        return true;
       }
 
       var l = document.layers['popup'];
