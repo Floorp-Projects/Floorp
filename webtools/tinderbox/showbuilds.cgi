@@ -256,9 +256,10 @@ sub print_table_row {
   #
   print '<td align=center>';
   for $who (sort keys %{$who_list->[$tt]} ){
+    $who =~ tr/%/@/;
     $qr = &who_menu($td1, $build_time_times->[$tt],
                     $build_time_times->[$tt-1],$who);
-    $who =~ s/%.*$//;
+    $who =~ s/@.*$//;
     print "  ${qr}$who</a>\n";
   }
   print '</td>';
