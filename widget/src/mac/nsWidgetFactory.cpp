@@ -79,6 +79,9 @@ static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
 
 
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
 class nsWidgetFactory : public nsIFactory
 {   
 public:   
@@ -99,18 +102,25 @@ private:
 
 };   
 
-
-
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
 nsWidgetFactory::nsWidgetFactory(const nsCID &aClass)   
 {
  NS_INIT_REFCNT();
  mClassID = aClass;
 }   
 
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
 nsWidgetFactory::~nsWidgetFactory()   
 {   
 }   
 
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
 nsresult nsWidgetFactory::QueryInterface(const nsIID &aIID,   
                                          void **aInstancePtr)   
 {   
@@ -136,6 +146,15 @@ nsresult nsWidgetFactory::QueryInterface(const nsIID &aIID,
 NS_IMPL_ADDREF(nsWidgetFactory)
 NS_IMPL_RELEASE(nsWidgetFactory)
 
+//-------------------------------------------------------------------------
+//
+// ***IMPORTANT***
+// On all platforms, we are assuming in places that the implementation of |nsIWidget|
+// is really |nsWindow| and then calling methods specific to nsWindow to finish the job.
+// This is by design and the assumption is safe because an nsIWidget can only be created through
+// our Widget factory where all our widgets, including the XP widgets, inherit from nsWindow.
+// A similar warning is in nsWindow.cpp.
+//-------------------------------------------------------------------------
 nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,  
                                           const nsIID &aIID,  
                                           void **aResult)  
@@ -246,12 +265,18 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     return res;  
 }  
 
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
 nsresult nsWidgetFactory::LockFactory(PRBool aLock)  
 {  
     // Not implemented in simplest case.  
     return NS_OK;
 }  
 
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
 // return the proper factory to the caller
 #if defined(XP_MAC) && defined(MAC_STATIC)
 extern "C" NS_WIDGET nsresult NSGetFactory_WIDGET_DLL(const nsCID &aClass, nsISupports* servMgr, nsIFactory **aFactory)
