@@ -235,7 +235,7 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext*      aPresContext,
     aRenderingContext.PushState();
     SetOverflowClipRect(aRenderingContext);
   }
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
   if (disp && (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow)) {
     PRBool clipState;
     aRenderingContext.PopState(clipState);
@@ -284,7 +284,7 @@ void nsTableRowGroupFrame::PaintChildren(nsIPresContext*      aPresContext,
                            damageArea.width, damageArea.height);
       aRenderingContext.PushState();
       aRenderingContext.Translate(kidRect.x, kidRect.y);
-      kid->Paint(aPresContext, aRenderingContext, kidDamageArea, aWhichLayer);
+      kid->Paint(aPresContext, aRenderingContext, kidDamageArea, aWhichLayer, aFlags);
 #ifdef DEBUG
       if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) &&
           GetShowFrameBorders()) {

@@ -400,6 +400,9 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_FALSE, &isVisible)) && !isVisible) {
     return NS_OK;
   }
+  nsTableFrame* tableFrame = nsnull;  
+  nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame); if (!tableFrame) ABORT1(rv);
+
   const nsStyleDisplay* disp =
     (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
   const nsStyleVisibility* vis = 
@@ -407,7 +410,6 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
  
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     if (vis->IsVisibleOrCollapsed()) {
-
       const nsStyleBackground* myColor = (const nsStyleBackground*)mStyleContext->GetStyleData(eStyleStruct_Background);
 #ifdef OLD_TABLE_SELECTION
       myColor = GetColorStyleFromSelection(myColor);
@@ -423,27 +425,24 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
       GetStyleData(eStyleStruct_TableBorder, ((const nsStyleStruct *&)cellTableStyle)); 
       nsRect  rect(0, 0, mRect.width, mRect.height);
 
-      // draw the background except when the cell is empty and 'empty-cells: hide' is set
-      if (!GetContentEmpty() || 
-          NS_STYLE_TABLE_EMPTY_CELLS_SHOW            == cellTableStyle->mEmptyCells || 
-          NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND == cellTableStyle->mEmptyCells) {
+      // Draw the background for collapsed borders only during pass1. Draw the backgrounds 
+      // when the cell is not empty or when showing empty cells or backgrounds
+      if ((!tableFrame->IsBorderCollapse() || 
+          !(aFlags & BORDER_COLLAPSE_BACKGROUNDS)) && // unset bit indicates pass1
+          (!GetContentEmpty()                                             ||
+           NS_STYLE_TABLE_EMPTY_CELLS_SHOW == cellTableStyle->mEmptyCells || 
+           NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND == cellTableStyle->mEmptyCells)) {
+
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                         aDirtyRect, rect, *myBorder, 0, 0, PR_TRUE);
       }
-      // draw the border except when the cell is empty and 'empty-cells: hide || -moz-show-background' is set
-      if (!GetContentEmpty() || 
-          NS_STYLE_TABLE_EMPTY_CELLS_SHOW == cellTableStyle->mEmptyCells) {
+      // draw the border only for separate borders and only when there is content or showing empty cells
+      if (!tableFrame->IsBorderCollapse() &&       
+          (!GetContentEmpty() || 
+           NS_STYLE_TABLE_EMPTY_CELLS_SHOW == cellTableStyle->mEmptyCells)) {
         PRIntn skipSides = GetSkipSides();
-        nsTableFrame* tableFrame = nsnull;  // I should be checking my own style context, but border-collapse isn't inheriting correctly
-        nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
-        if ((NS_SUCCEEDED(rv)) && tableFrame) {
-          const nsStyleTableBorder* tableStyle;
-          tableFrame->GetStyleData(eStyleStruct_TableBorder, ((const nsStyleStruct *&)tableStyle)); 
-          if (!tableFrame->IsBorderCollapse()) {
-            nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *myBorder, mStyleContext, skipSides);
-          }
-        }
+        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                    aDirtyRect, rect, *myBorder, mStyleContext, skipSides);
       }
 #ifndef OLD_TABLE_SELECTION
       DecorateForSelection(aPresContext, aRenderingContext,myColor); //ignore return value
@@ -459,31 +458,38 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
   }
 #endif
 
-  // if the cell originates in a row and/or col that is collapsed, the
-  // bottom and/or right portion of the cell is painted by translating
-  // the rendering context.
-  PRBool clipState;
-  nsPoint offset;
-  GetCollapseOffset(aPresContext, offset);
-  if ((0 != offset.x) || (0 != offset.y)) {
-    aRenderingContext.PushState();
-    aRenderingContext.Translate(offset.x, offset.y);
-    aRenderingContext.SetClipRect(nsRect(-offset.x, -offset.y, mRect.width, mRect.height),
-                                nsClipCombine_kIntersect, clipState);
-  }
-  else{
-    if ((NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) || HasPctOverHeight()) {
+  // paint the children unless its the background layer, there are collapsed border, and it's pass1
+  if ( !((NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) && 
+         tableFrame->IsBorderCollapse()                   &&
+         !(aFlags & BORDER_COLLAPSE_BACKGROUNDS)) ) {
+    // if the cell originates in a row and/or col that is collapsed, the
+    // bottom and/or right portion of the cell is painted by translating
+    // the rendering context.
+    PRBool clipState;
+    nsPoint offset;
+    GetCollapseOffset(aPresContext, offset);
+    if ((0 != offset.x) || (0 != offset.y)) {
       aRenderingContext.PushState();
-      SetOverflowClipRect(aRenderingContext);
-    }    
-  }
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-  if ((0 != offset.x) || (0 != offset.y)) {
-    aRenderingContext.PopState(clipState);
-  }
-  else { 
-    if ((NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) || HasPctOverHeight()) {
-      aRenderingContext.PopState(clipState);         
+      aRenderingContext.Translate(offset.x, offset.y);
+      aRenderingContext.SetClipRect(nsRect(-offset.x, -offset.y, mRect.width, mRect.height),
+                                    nsClipCombine_kIntersect, clipState);
+    }
+    else {
+      if ((NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) || HasPctOverHeight()) {
+        aRenderingContext.PushState();
+        SetOverflowClipRect(aRenderingContext);
+      }    
+    }
+
+    PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
+
+    if ((0 != offset.x) || (0 != offset.y)) {
+      aRenderingContext.PopState(clipState);
+    }
+    else { 
+      if ((NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) || HasPctOverHeight()) {
+        aRenderingContext.PopState(clipState);         
+      }
     }
   } 
   
