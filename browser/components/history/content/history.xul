@@ -115,11 +115,16 @@
   </menu>
   <menu id="menu_Help"/>
 </menubar>
+<toolbar>
+  <hbox align="center" pack="center">
+    <label value="&find.label;" accesskey="&find.accesskey;"/>
+  </hbox>
+  <textbox oninput="searchHistory(this.value);" flex="1"/>
+</toolbar>
 </toolbox>
-
-  <tree id="historyTree"/>
-  <statusbar id="status-bar" class="chromeclass-status">
-    <statusbarpanel id="statusbar-display" flex="1"/>
-  </statusbar>
+<tree id="historyTree"/>
+<statusbar id="status-bar" class="chromeclass-status">
+  <statusbarpanel id="statusbar-display" flex="1"/>
+</statusbar>
 
 </window>
