@@ -767,7 +767,7 @@ nsDownload::nsDownload():mStartTime(0),
                          mMaxBytes(0),
                          mDownloadState(NOTSTARTED),
                          mLastUpdate(-500),
-                         mOpeningWith(nsnull)
+                         mOpeningWith(NS_LITERAL_STRING(""))
 {
   NS_INIT_ISUPPORTS();
 }

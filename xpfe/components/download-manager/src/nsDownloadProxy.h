@@ -42,7 +42,8 @@
 #include "nsIDownload.h"
 #include "nsIDownloadManager.h"
 
-class nsDownloadProxy : nsIDownload
+class nsDownloadProxy : public nsIDownload,
+                        public nsIWebProgressListener
 {
 public:
 
@@ -66,6 +67,7 @@ public:
     aTarget->GetPersistentDescriptor(&persistentDescriptor);
     return dm->OpenProgressDialogFor(persistentDescriptor, nsnull);
   }
+
  
   NS_IMETHODIMP GetDisplayName(PRUnichar** aDisplayName)
   {
@@ -136,11 +138,64 @@ public:
   {
     return mInner->GetPersist(aPersist);
   }
+
+  NS_IMETHODIMP OnStateChange(nsIWebProgress* aWebProgress,
+                              nsIRequest* aRequest, PRInt32 aStateFlags,
+                              PRUint32 aStatus)
+  {
+    nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(mInner);
+    if (listener)
+      return listener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
+    return NS_ERROR_FAILURE;
+  }
+  
+  NS_IMETHODIMP OnStatusChange(nsIWebProgress *aWebProgress,
+                               nsIRequest *aRequest, nsresult aStatus,
+                               const PRUnichar *aMessage)
+  {
+    nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(mInner);
+    if (listener)
+      return listener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_IMETHODIMP OnLocationChange(nsIWebProgress *aWebProgress,
+                                 nsIRequest *aRequest, nsIURI *aLocation)
+  {
+    nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(mInner);
+    if (listener)
+      return listener->OnLocationChange(aWebProgress, aRequest, aLocation);
+    return NS_ERROR_FAILURE;
+  }
+  
+  NS_IMETHODIMP OnProgressChange(nsIWebProgress *aWebProgress,
+                                 nsIRequest *aRequest,
+                                 PRInt32 aCurSelfProgress,
+                                 PRInt32 aMaxSelfProgress,
+                                 PRInt32 aCurTotalProgress,
+                                 PRInt32 aMaxTotalProgress)
+  {
+    nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(mInner);
+    if (listener)
+      return listener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress,
+                                        aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_IMETHODIMP OnSecurityChange(nsIWebProgress *aWebProgress,
+                                 nsIRequest *aRequest, PRInt32 aState)
+  {
+    nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(mInner);
+    if (listener)
+      return listener->OnSecurityChange(aWebProgress, aRequest, aState);
+    return NS_ERROR_FAILURE;
+  }
+
 private:
   nsCOMPtr<nsIDownload> mInner;
 };
 
-NS_IMPL_ISUPPORTS1(nsDownloadProxy, nsIDownload)  
+NS_IMPL_ISUPPORTS2(nsDownloadProxy, nsIDownload, nsIWebProgressListener)  
 
 #endif
   

@@ -47,10 +47,28 @@ interface nsIWebProgressListener;
 [scriptable, uuid(06cb92f2-1dd2-11b2-95f2-96dfdfb804a1)]
 interface nsIDownload : nsISupports {
     
+    /**
+     * Initializes the download with certain properties.
+     *
+     * @param aSource The source (nsIURI) of the download.
+     *
+     * @param aTarget The local file to which the download is being saved.
+     *
+     * @param aDisplayName The user-readable description of the download.
+     *
+     * @param aPersist The "persist" used to transfer the download.  If set,
+     *                 the manager will set its listener to the download item
+     *                 and use it for cancellation.  If not set, the client
+     *                 is expected to set the download item as the listener on
+     *                 whatever transfer component is being used, and to
+     *                 set an observer on the download item that listens for
+     *                 the "oncancel" topic and cancels the download.
+     */
     void init(in nsIURI aSource,
               in nsILocalFile aTarget,
               in wstring aDisplayName,
               in nsIWebBrowserPersist aPersist);
+
     /**
      * The source of the download.
      */
