@@ -26,8 +26,9 @@
 <!ENTITY pagerank.column.label       "Page Ranking">
 <!ENTITY price.column.label          "Price">
 <!ENTITY availability.column.label   "Availability">
+<!ENTITY date.column.label           "Date">
 <!ENTITY site.column.label           "Internet Site">
 <!ENTITY results.header.label        "Search Results">
 <!ENTITY engine.column.label         "Search Engine">
-<!ENTITY viewbyprovider.label        "View by provider:">
+<!ENTITY viewbyprovider.label        "View by search engine:">
 <!ENTITY allresults.title.label      "All results combined">
