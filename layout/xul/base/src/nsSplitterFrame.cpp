@@ -770,6 +770,14 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   if (button != 1)
      return NS_OK;
 
+  nsCOMPtr<nsIContent> content;  
+  mOuter->GetContent(getter_AddRefs(content));
+
+  nsAutoString disabled;
+  content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
+  if (disabled.Equals(NS_LITERAL_STRING("true")))
+    return NS_OK;
+
   nsBoxLayoutState state(mOuter->mPresContext);
   mCurrentPos = 0;
   mPressed = PR_TRUE;
@@ -808,6 +816,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   nsIBox* childBox = nsnull;
   mParentBox->GetChildBox(&childBox); 
 
+  PRBool skip = PR_FALSE;
   while (nsnull != childBox) 
   { 
     nsIFrame* childFrame = nsnull;
@@ -849,24 +858,31 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
         childBox->GetBounds(r);
         r.Inflate(margin);
 
+        nsAutoString fixed;
+        content->GetAttribute(kNameSpaceID_None, nsXULAtoms::fixed, fixed);
+
         if (count < childIndex) {
-            mChildInfosBefore[mChildInfosBeforeCount].child   = childBox;
-            mChildInfosBefore[mChildInfosBeforeCount].min     = isHorizontal ? minSize.width : minSize.height;
-            mChildInfosBefore[mChildInfosBeforeCount].max     = isHorizontal ? maxSize.width : maxSize.height;
-            mChildInfosBefore[mChildInfosBeforeCount].current = isHorizontal ? r.width : r.height;
-            mChildInfosBefore[mChildInfosBeforeCount].flex    = flex;
-            mChildInfosBefore[mChildInfosBeforeCount].index   = count;
-            mChildInfosBefore[mChildInfosBeforeCount].changed = mChildInfosBefore[mChildInfosBeforeCount].current;
-            mChildInfosBeforeCount++;
+            if (!fixed.Equals(NS_LITERAL_STRING("true"))) {              
+                mChildInfosBefore[mChildInfosBeforeCount].child   = childBox;
+                mChildInfosBefore[mChildInfosBeforeCount].min     = isHorizontal ? minSize.width : minSize.height;
+                mChildInfosBefore[mChildInfosBeforeCount].max     = isHorizontal ? maxSize.width : maxSize.height;
+                mChildInfosBefore[mChildInfosBeforeCount].current = isHorizontal ? r.width : r.height;
+                mChildInfosBefore[mChildInfosBeforeCount].flex    = flex;
+                mChildInfosBefore[mChildInfosBeforeCount].index   = count;
+                mChildInfosBefore[mChildInfosBeforeCount].changed = mChildInfosBefore[mChildInfosBeforeCount].current;
+                mChildInfosBeforeCount++;
+            }
         } else if (count > childIndex) {
-            mChildInfosAfter[mChildInfosAfterCount].child   = childBox;
-            mChildInfosAfter[mChildInfosAfterCount].min     = isHorizontal ? minSize.width : minSize.height;
-            mChildInfosAfter[mChildInfosAfterCount].max     = isHorizontal ? maxSize.width : maxSize.height;
-            mChildInfosAfter[mChildInfosAfterCount].current = isHorizontal ? r.width : r.height;
-            mChildInfosAfter[mChildInfosAfterCount].flex    = flex;
-            mChildInfosAfter[mChildInfosAfterCount].index   = count;
-            mChildInfosAfter[mChildInfosAfterCount].changed   = mChildInfosAfter[mChildInfosAfterCount].current;
-            mChildInfosAfterCount++;
+            if (!fixed.Equals(NS_LITERAL_STRING("true"))) {   
+                mChildInfosAfter[mChildInfosAfterCount].child   = childBox;
+                mChildInfosAfter[mChildInfosAfterCount].min     = isHorizontal ? minSize.width : minSize.height;
+                mChildInfosAfter[mChildInfosAfterCount].max     = isHorizontal ? maxSize.width : maxSize.height;
+                mChildInfosAfter[mChildInfosAfterCount].current = isHorizontal ? r.width : r.height;
+                mChildInfosAfter[mChildInfosAfterCount].flex    = flex;
+                mChildInfosAfter[mChildInfosAfterCount].index   = count;
+                mChildInfosAfter[mChildInfosAfterCount].changed   = mChildInfosAfter[mChildInfosAfterCount].current;
+                mChildInfosAfterCount++;
+            }
         } 
     }
     
@@ -1191,7 +1207,7 @@ nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIBox* aChildB
   if (oldValue.EqualsWithConversion(ch))
      return;
 
-  content->SetAttribute(kNameSpaceID_None, attribute, NS_ConvertASCIItoUCS2(ch), PR_FALSE);
+  content->SetAttribute(kNameSpaceID_None, attribute, NS_ConvertASCIItoUCS2(ch), PR_TRUE);
 #ifndef REAL_TIME_DRAG
   aChildBox->MarkDirty(aState);
 #else
