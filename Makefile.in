@@ -154,6 +154,10 @@ ifdef ENABLE_TESTS
 DIRS		+= xpcom/tests
 endif
 
+ifdef NS_TRACE_MALLOC
+DIRS		+= tools/trace-malloc
+endif
+
 DIRS	+= l10n
 
 ifneq (,$(MOZ_STATIC_COMPONENTS)$(MOZ_META_COMPONENTS))

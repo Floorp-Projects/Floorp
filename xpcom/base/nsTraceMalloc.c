@@ -56,6 +56,7 @@
 #include "prlog.h"
 #include "prmon.h"
 #include "prprf.h"
+#include "prenv.h"
 #include "nsTraceMalloc.h"
 
 #ifdef XP_WIN32
@@ -68,7 +69,7 @@
 
 #define WRITE_FLAGS "w"
 
-#endif //WIN32
+#endif /* WIN32 */
 
 
 #ifdef XP_UNIX
@@ -268,6 +269,7 @@ static logfile   *logfile_list = NULL;
 static logfile   **logfile_tail = &logfile_list;
 static logfile   *logfp = &default_logfile;
 static PRMonitor *tmmon = NULL;
+static char      *sdlogname = NULL; /* filename for shutdown leak log */
 
 /* We don't want more than 32 logfiles open at once, ok? */
 typedef uint32          lfd_set;
@@ -318,7 +320,7 @@ retry:
 static void flush_logfile(logfile *fp)
 {
     int len, cnt;
-	int fd;
+    int fd;
     char *bp;
 
     len = fp->pos;
@@ -570,15 +572,17 @@ static callsite *calltree(int skip)
     if (! ok)
       return 0;
 
-    // Get the context information for this thread. That way we will
-    // know where our sp, fp, pc, etc. are and can fill in the
-    // STACKFRAME with the initial values.
+    /*
+     * Get the context information for this thread. That way we will
+     * know where our sp, fp, pc, etc. are and can fill in the
+     * STACKFRAME with the initial values.
+     */
     context.ContextFlags = CONTEXT_FULL;
     ok = GetThreadContext(myThread, &context);
     if (! ok)
       return 0;
 
-    // Setup initial stack frame to walk from
+    /* Setup initial stack frame to walk from */
     memset(&(frame[0]), 0, sizeof(frame[0]));
     frame[0].AddrPC.Offset    = context.Eip;
     frame[0].AddrPC.Mode      = AddrModeFlat;
@@ -598,10 +602,11 @@ static callsite *calltree(int skip)
                      myThread,
                      &(frame[framenum]),
                      &context,
-                     0,                        // read process memory routine
-                     _SymFunctionTableAccess,  // function table access routine
-                     _SymGetModuleBase,        // module base routine
-                     0);                       // translate address routine
+                     0,                       /* read process memory routine */
+                     _SymFunctionTableAccess, /* function table access
+                                                 routine */
+                     _SymGetModuleBase,       /* module base routine */
+                     0);                      /* translate address routine */
 
       if (!ok) {
         break;
@@ -676,7 +681,7 @@ static callsite *calltree(int skip)
         {
             DWORD error = GetLastError();
             PR_ASSERT(error);
-            library = "unknown";//ew
+            library = "unknown";/* ew */
         }
         else
         {
@@ -707,7 +712,7 @@ static callsite *calltree(int skip)
             hash = PL_HashString(library);
             hep = PL_HashTableRawLookup(libraries, hash, library);
             he = *hep;
-            library = strdup(library); //strdup it always?
+            library = strdup(library); /* strdup it always? */
             if (he) {
                 library_serial = (uint32) he->value;
                 le = (lfdset_entry *) he;
@@ -716,7 +721,7 @@ static callsite *calltree(int skip)
                     le = NULL;
                 }
             } else {
-//                library = strdup(library);
+/*                library = strdup(library); */
                 if (library) {
                     library_serial = ++library_serial_generator;
                     he = PL_HashTableRawAdd(libraries, hep, hash, library,
@@ -1430,97 +1435,131 @@ PR_IMPLEMENT(void) NS_TraceMallocStartup(int logfd)
 }
 
 
+/*
+ * Options for log files, with the log file name either as the next option
+ * or separated by '=' (e.g. "./mozilla --trace-malloc * malloc.log" or
+ * "./mozilla --trace-malloc=malloc.log").
+ */
+static const char TMLOG_OPTION[] = "--trace-malloc";
+static const char SDLOG_OPTION[] = "--shutdown-leaks";
+
+#define SHOULD_PARSE_ARG(name_, log_, arg_) \
+    (0 == strncmp(arg_, name_, sizeof(name_) - 1))
+
+#define PARSE_ARG(name_, log_, argv_, i_, consumed_)                          \
+    PR_BEGIN_MACRO                                                            \
+        char _nextchar = argv_[i_][sizeof(name_) - 1];                        \
+        if (_nextchar == '=') {                                               \
+            log_ = argv_[i_] + sizeof(name_);                                 \
+            consumed_ = 1;                                                    \
+        } else if (_nextchar == '\0') {                                       \
+            log_ = argv_[i_+1];                                               \
+            consumed_ = 2;                                                    \
+        }                                                                     \
+    PR_END_MACRO
 
 PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
 {
-    int i, logfd = -1;
+    int i, logfd = -1, consumed;
+    char *tmlogname = NULL; /* note global |sdlogname| */
 
     /*
      * Look for the --trace-malloc <logfile> option early, to avoid missing
      * early mallocs (we miss static constructors whose output overflows the
      * log file's static 16K output buffer).
      */
-    for (i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--trace-malloc") == 0 && i < argc-1) {
-            char *logfilename;
-            int pipefds[2];
+    for (i = 1; i < argc; i += consumed) {
+        consumed = 0;
+        if (SHOULD_PARSE_ARG(TMLOG_OPTION, tmlogname, argv[i]))
+            PARSE_ARG(TMLOG_OPTION, tmlogname, argv, i, consumed);
+        else if (SHOULD_PARSE_ARG(SDLOG_OPTION, sdlogname, argv[i]))
+            PARSE_ARG(SDLOG_OPTION, sdlogname, argv, i, consumed);
 
-            logfilename = argv[i+1];
-			switch (*logfilename) {
-		#if XP_UNIX
-			case '|':
-				if (pipe(pipefds) == 0) {
-					pid_t pid = fork();
-					if (pid == 0) {
-						/* In child: set up stdin, parse args, and exec. */
-						int maxargc, nargc;
-						char **nargv, *token;
-
-						if (pipefds[0] != 0) {
-							dup2(pipefds[0], 0);
-							close(pipefds[0]);
-						}
-						close(pipefds[1]);
-
-						logfilename = strtok(logfilename + 1, " \t");
-						maxargc = 3;
-						nargv = (char **) malloc((maxargc+1) * sizeof(char *));
-						if (!nargv) exit(1);
-						nargc = 0;
-						nargv[nargc++] = logfilename;
-						while ((token = strtok(NULL, " \t")) != NULL) {
-							if (nargc == maxargc) {
-								maxargc *= 2;
-								nargv = (char**)
-									realloc(nargv, (maxargc+1) * sizeof(char*));
-								if (!nargv) exit(1);
-							}
-							nargv[nargc++] = token;
-						}
-						nargv[nargc] = NULL;
-
-						(void) setsid();
-						execvp(logfilename, nargv);
-						exit(127);
-					}
-
-					if (pid > 0) {
-						/* In parent: set logfd to the pipe's write side. */
-						close(pipefds[0]);
-						logfd = pipefds[1];
-					}
-				}
-				if (logfd < 0) {
-					fprintf(stderr,
-						"%s: can't pipe to trace-malloc child process %s: %s\n",
-						argv[0], logfilename, strerror(errno));
-					exit(1);
-				}
-				break;
-		#endif /*XP_UNIX*/
-			  case '-':
-				/* Don't log from startup, but do prepare to log later. */
-				/* XXX traditional meaning of '-' as option argument is "stdin" or "stdout" */
-				if (logfilename[1] == '\0')
-					break;
-				/* FALL THROUGH */
-
-			  default:
-				logfd = open(logfilename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
-				if (logfd < 0) {
-					fprintf(stderr,
-						"%s: can't create trace-malloc logfilename %s: %s\n",
-						argv[0], logfilename, strerror(errno));
-					exit(1);
-				}
-				break;
-			}
-#ifndef XP_WIN32
+        if (consumed) {
+#ifndef XP_WIN32 /* If we don't comment this out, it will crash Windows. */
+            int j;
             /* Now remove --trace-malloc and its argument from argv. */
-            for (argc -= 2; i < argc; i++)
-                argv[i] = argv[i+2];
+            argc -= consumed;
+            for (j = i; j < argc; ++j)
+                argv[j] = argv[j+consumed];
             argv[argc] = NULL;
-#endif//if you dont comment this out it will crash windows
+            consumed = 0; /* don't advance next iteration */
+#endif
+        } else {
+            consumed = 1;
+        }
+    }
+
+    if (tmlogname) {
+        int pipefds[2];
+
+        switch (*tmlogname) {
+    #if XP_UNIX
+        case '|':
+            if (pipe(pipefds) == 0) {
+                pid_t pid = fork();
+                if (pid == 0) {
+                    /* In child: set up stdin, parse args, and exec. */
+                    int maxargc, nargc;
+                    char **nargv, *token;
+
+                    if (pipefds[0] != 0) {
+                        dup2(pipefds[0], 0);
+                        close(pipefds[0]);
+                    }
+                    close(pipefds[1]);
+
+                    tmlogname = strtok(tmlogname + 1, " \t");
+                    maxargc = 3;
+                    nargv = (char **) malloc((maxargc+1) * sizeof(char *));
+                    if (!nargv) exit(1);
+                    nargc = 0;
+                    nargv[nargc++] = tmlogname;
+                    while ((token = strtok(NULL, " \t")) != NULL) {
+                        if (nargc == maxargc) {
+                            maxargc *= 2;
+                            nargv = (char**)
+                                realloc(nargv, (maxargc+1) * sizeof(char*));
+                            if (!nargv) exit(1);
+                        }
+                        nargv[nargc++] = token;
+                    }
+                    nargv[nargc] = NULL;
+
+                    (void) setsid();
+                    execvp(tmlogname, nargv);
+                    exit(127);
+                }
+
+                if (pid > 0) {
+                    /* In parent: set logfd to the pipe's write side. */
+                    close(pipefds[0]);
+                    logfd = pipefds[1];
+                }
+            }
+            if (logfd < 0) {
+                fprintf(stderr,
+                    "%s: can't pipe to trace-malloc child process %s: %s\n",
+                    argv[0], tmlogname, strerror(errno));
+                exit(1);
+            }
+            break;
+    #endif /*XP_UNIX*/
+          case '-':
+            /* Don't log from startup, but do prepare to log later. */
+            /* XXX traditional meaning of '-' as option argument is "stdin" or "stdout" */
+            if (tmlogname[1] == '\0')
+                break;
+            /* FALL THROUGH */
+
+          default:
+            logfd = open(tmlogname, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+            if (logfd < 0) {
+                fprintf(stderr,
+                    "%s: can't create trace-malloc log named %s: %s\n",
+                    argv[0], tmlogname, strerror(errno));
+                exit(1);
+            }
             break;
         }
     }
@@ -1532,6 +1571,9 @@ PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
 PR_IMPLEMENT(void) NS_TraceMallocShutdown()
 {
     logfile *fp;
+
+    if (sdlogname)
+        NS_TraceMallocDumpAllocations(sdlogname);
 
     if (tmstats.backtrace_failures) {
         fprintf(stderr,
@@ -1683,7 +1725,7 @@ NS_TraceMallocLogTimestamp(const char *caption)
 #endif
 #if defined(XP_WIN32)
     struct _timeb tb;
-#endif	
+#endif
 
 
     if (tmmon)
