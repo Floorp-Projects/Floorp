@@ -95,23 +95,23 @@ typedef enum {
 
 struct XPTState {
     XPTMode          mode;
-    PRUint32           data_offset;
-    PRUint32           next_cursor[2];
+    PRUint32         data_offset;
+    PRUint32         next_cursor[2];
     XPTDatapool      *pool;
 };
 
 struct XPTDatapool {
     PLHashTable      *offset_map;
     char             *data;
-    PRUint32           count;
-    PRUint32           allocated;
+    PRUint32         count;
+    PRUint32         allocated;
 };
 
 struct XPTCursor {
     XPTState    *state;
     XPTPool     pool;
-    PRUint32      offset;
-    PRUint8       bits;
+    PRUint32    offset;
+    PRUint8     bits;
 };
 
 extern XPT_PUBLIC_API(XPTState *)
