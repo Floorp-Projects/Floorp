@@ -407,8 +407,7 @@ function onLoad() {
           filesFolder = Components .classes[lfContractID].createInstance(lfIID);
           filesFolder.initWithPath(persistArgs.target.path);
           
-          var nameWithoutExtension = filesFolder.leafName;
-          nameWithoutExtension = nameWithoutExtension.substring(0, nameWithoutExtension.lastIndexOf("."));
+          var nameWithoutExtension = filesFolder.leafName.replace(/\.[^.]*$/, "");
           var filesFolderLeafName = getString("filesFolder");
           filesFolderLeafName = filesFolderLeafName.replace(/\^BASE\^/, nameWithoutExtension);
 
