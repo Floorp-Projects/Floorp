@@ -1,4 +1,3 @@
-
 <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
@@ -61,6 +60,8 @@
 <!ENTITY pref.defalarm4todos.label "Default alarm setting for tasks:">
 <!ENTITY pref.alarm.on "On">
 <!ENTITY pref.alarm.off "Off">
+<!ENTITY pref.defalarmlen4events.label "Default time an alarm goes off before an event:">
+<!ENTITY pref.defalarmlen4todos.label "Default time an alarm goes off before a task:">
 
 <!ENTITY pref.dateformat.label      "日付形式:" >
 <!ENTITY pref.dateformat.long       "ロング形式" >

@@ -375,7 +375,6 @@
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Kalender veröffentlichen">
 <!ENTITY calendar.publish.url.label                 "URL veröffentlichen">
-<!ENTITY calendar.publish.remotefilename.label      "Entfernet Dateiname">
 <!ENTITY calendar.publish.username.label            "Benutzer">
 <!ENTITY calendar.publish.password.label            "Passwort">
 <!ENTITY calendar.publish.username.description      "(Optional) The username to upload to this server.">
@@ -409,6 +408,3 @@
 <!ENTITY calendar.print.listselected.label "List Selected Events">
 <!ENTITY calendar.print.onlyitemsstatus.label "Print only items with this status:">
 <!ENTITY calendar.print.onlyitemscategory.label "Print only items with this category:">
-
-
-
