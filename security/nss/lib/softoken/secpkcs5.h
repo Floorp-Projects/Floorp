@@ -60,7 +60,7 @@ typedef struct _PBEBitGenContext {
 
     /* hash algorithm information */
     pbeBitGenParameters pbeParams;
-    SECHashObject *hashObject;
+    const SECHashObject *hashObject;
     void *hash;
 
     /* buffers used in generation of bits */

@@ -34,7 +34,7 @@
 /*
  * CMS miscellaneous utility functions.
  *
- * $Id: cmsutil.c,v 1.3 2000/09/29 16:38:11 mcgreer%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.4 2001/01/05 01:38:19 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -46,6 +46,7 @@
 #include "secoid.h"
 #include "pk11func.h"
 #include "secerr.h"
+#include "sechash.h"
 
 /*
  * NSS_CMSArray_SortByDER - sort array of objects by objects' DER encoding
@@ -195,11 +196,11 @@ NSS_CMSAlgArray_GetIndexByAlgTag(SECAlgorithmID **algorithmArray, SECOidTag algt
     return i;
 }
 
-SECHashObject *
+const SECHashObject *
 NSS_CMSUtil_GetHashObjByAlgID(SECAlgorithmID *algid)
 {
     SECOidData *oiddata;
-    SECHashObject *digobj;
+    const SECHashObject *digobj;
 
     /* here are the algorithms we know */
     oiddata = SECOID_FindOID(&(algid->algorithm));
@@ -208,13 +209,13 @@ NSS_CMSUtil_GetHashObjByAlgID(SECAlgorithmID *algid)
     } else {
 	switch (oiddata->offset) {
 	case SEC_OID_MD2:
-	    digobj = &SECHashObjects[HASH_AlgMD2];
+	    digobj = HASH_GetHashObject(HASH_AlgMD2);
 	    break;
 	case SEC_OID_MD5:
-	    digobj = &SECHashObjects[HASH_AlgMD5];
+	    digobj = HASH_GetHashObject(HASH_AlgMD5);
 	    break;
 	case SEC_OID_SHA1:
-	    digobj = &SECHashObjects[HASH_AlgSHA1];
+	    digobj = HASH_GetHashObject(HASH_AlgSHA1);
 	    break;
 	default:
 	    digobj = NULL;

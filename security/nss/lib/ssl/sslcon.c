@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslcon.c,v 1.4 2000/09/12 20:15:42 jgmyers%netscape.com Exp $
+ * $Id: sslcon.c,v 1.5 2001/01/05 01:38:26 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -466,7 +466,7 @@ ssl2_CreateMAC(sslSecurityInfo *sec, SECItem *readKey, SECItem *writeKey,
       case SSL_CK_RC4_128_WITH_MD5:
       case SSL_CK_DES_64_CBC_WITH_MD5:
       case SSL_CK_DES_192_EDE3_CBC_WITH_MD5:
-	sec->hash = &SECHashObjects[HASH_AlgMD5];
+	sec->hash = HASH_GetHashObject(HASH_AlgMD5);
 	SECITEM_CopyItem(0, &sec->sendSecret, writeKey);
 	SECITEM_CopyItem(0, &sec->rcvSecret, readKey);
 	break;

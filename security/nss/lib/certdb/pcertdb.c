@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.6 2001/01/03 19:49:10 larryh%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.7 2001/01/05 01:38:02 nelsonb%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -5648,10 +5648,10 @@ InitDBspkDigestInfo(CERTCertDBHandle *handle)
     return(SECSuccess);
 }
 
-static SECHashObject *
+static const SECHashObject *
 OidTagToRawDigestObject(SECOidTag digestAlg)
 {
-    SECHashObject *rawDigestObject;
+    const SECHashObject *rawDigestObject;
 
     switch (digestAlg) {
       case SEC_OID_MD2:
@@ -5682,7 +5682,7 @@ SECItem *
 CERT_SPKDigestValueForCert(PRArenaPool *arena, CERTCertificate *cert,
 			   SECOidTag digestAlg, SECItem *fill)
 {
-    SECHashObject *digestObject;
+    const SECHashObject *digestObject;
     void *digestContext;
     SECItem *result = NULL;
     void *mark = NULL;

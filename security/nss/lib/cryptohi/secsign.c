@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: secsign.c,v 1.1 2000/03/31 19:46:09 relyea%netscape.com Exp $
+ * $Id: secsign.c,v 1.2 2001/01/05 01:38:09 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -49,7 +49,7 @@ struct SGNContextStr {
     SECOidTag signalg;
     SECOidTag hashalg;
     void *hashcx;
-    SECHashObject *hashobj;
+    const SECHashObject *hashobj;
     SECKEYPrivateKey *key;
 };
 

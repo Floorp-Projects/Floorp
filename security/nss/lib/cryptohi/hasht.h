@@ -32,7 +32,7 @@
  *
  * hasht.h - public data structures for the hashing library
  *
- * $Id: hasht.h,v 1.1 2000/03/31 19:45:11 relyea%netscape.com Exp $
+ * $Id: hasht.h,v 1.2 2001/01/05 01:38:09 nelsonb%netscape.com Exp $
  */
 
 #ifndef _HASHT_H_
@@ -75,13 +75,19 @@ struct SECHashObjectStr {
 };
 
 struct HASHContextStr {
-    struct SECHashObjectStr *hashobj;
+    const struct SECHashObjectStr *hashobj;
     void *hash_context;
 };
 
-extern SECHashObject SECHashObjects[];
+/* This symbol is NOT exported from the NSS DLL.  Code that needs a 
+ * pointer to one of the SECHashObjects should call HASH_GetHashObject()
+ * instead. See "sechash.h".
+ */
+extern const SECHashObject SECHashObjects[];
 
-/*only those functions below the PKCS #11 line should use SECRawHashObjects*/
-extern SECHashObject SECRawHashObjects[];
+/* Only those functions below the PKCS #11 line should use SECRawHashObjects.
+ * This symbol is not exported from the NSS DLL.
+ */
+extern const SECHashObject SECRawHashObjects[];
 
 #endif /* _HASHT_H_ */

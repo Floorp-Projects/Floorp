@@ -35,6 +35,7 @@
 #include "zip.h" 
 #include "prmem.h"
 #include "blapi.h"
+#include "sechash.h"	/* for HASH_GetHashObject() */
 
 static int create_pk7 (char *dir, char *keyName, int *keyType);
 static int jar_find_key_type (CERTCertificate *cert);
@@ -581,7 +582,7 @@ SignFile (FILE *outFile, FILE *inFile, CERTCertificate *cert)
 {
   int nb;
   char ibuf[4096], digestdata[32];
-  SECHashObject *hashObj;
+  const SECHashObject *hashObj;
   void *hashcx;
   unsigned int len;
 
@@ -593,7 +594,7 @@ SignFile (FILE *outFile, FILE *inFile, CERTCertificate *cert)
     return -1;
 
   /* XXX probably want to extend interface to allow other hash algorithms */
-  hashObj = &SECHashObjects[HASH_AlgSHA1];
+  hashObj = HASH_GetHashObject(HASH_AlgSHA1);
 
   hashcx = (* hashObj->create)();
   if (hashcx == NULL)

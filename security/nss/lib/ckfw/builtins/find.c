@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: find.c,v $ $Revision: 1.2 $ $Date: 2000/04/20 03:14:47 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: find.c,v $ $Revision: 1.3 $ $Date: 2001/01/05 01:38:06 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BUILTINS_H
@@ -107,7 +107,7 @@ static CK_BBOOL
 builtins_attrmatch
 (
   CK_ATTRIBUTE_PTR a,
-  NSSItem *b
+  const NSSItem *b
 )
 {
   PRBool prb;

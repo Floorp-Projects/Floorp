@@ -35,7 +35,7 @@
 #define NSSCKMDT_H
 
 #ifdef DEBUG
-static const char NSSCKMDT_CVS_ID[] = "@(#) $RCSfile: nssckmdt.h,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:30 $ $Name:  $";
+static const char NSSCKMDT_CVS_ID[] = "@(#) $RCSfile: nssckmdt.h,v $ $Revision: 1.2 $ $Date: 2001/01/05 01:38:04 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -1949,7 +1949,7 @@ struct NSSCKMDObjectStr {
    * (which is likely the Framework's token or session arena).
    * It may return NULL on error.
    */
-  NSSItem *(PR_CALLBACK *GetAttribute)(
+  const NSSItem *(PR_CALLBACK *GetAttribute)(
     NSSCKMDObject *mdObject,
     NSSCKFWObject *fwObject,
     NSSCKMDSession *mdSession,

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl.h,v 1.2 2000/05/24 03:31:44 nelsonb%netscape.com Exp $
+ * $Id: ssl.h,v 1.3 2001/01/05 01:38:25 nelsonb%netscape.com Exp $
  */
 
 #ifndef __ssl_h_
@@ -45,14 +45,37 @@
 #include "cert.h"
 #include "keyt.h"
 
+#if defined(_WINDOWS) && !defined(IN_LIBSSL) && !defined(NSS_USE_STATIC_LIBS)
+#define SSL_IMPORT extern __declspec(dllimport)
+#else
+#define SSL_IMPORT extern
+#endif
+
 /* constant table enumerating all implemented SSL 2 and 3 cipher suites. */
-extern const PRUint16 SSL_ImplementedCiphers[];
+SSL_IMPORT const PRUint16 SSL_ImplementedCiphers[];
 
 /* number of entries in the above table. */
-extern const PRUint16 SSL_NumImplementedCiphers;
+SSL_IMPORT const PRUint16 SSL_NumImplementedCiphers;
 
 /* Macro to tell which ciphers in table are SSL2 vs SSL3/TLS. */
 #define SSL_IS_SSL2_CIPHER(which) (((which) & 0xfff0) == 0xff00)
+
+typedef struct SSL3StatisticsStr {
+    /* statistics from ssl3_SendClientHello (sch) */
+    long sch_sid_cache_hits;
+    long sch_sid_cache_misses;
+    long sch_sid_cache_not_ok;
+
+    /* statistics from ssl3_HandleServerHello (hsh) */
+    long hsh_sid_cache_hits;
+    long hsh_sid_cache_misses;
+    long hsh_sid_cache_not_ok;
+
+    /* statistics from ssl3_HandleClientHello (hch) */
+    long hch_sid_cache_hits;
+    long hch_sid_cache_misses;
+    long hch_sid_cache_not_ok;
+} SSL3Statistics;
 
 SEC_BEGIN_PROTOS
 
@@ -61,7 +84,7 @@ SEC_BEGIN_PROTOS
 ** Imports fd into SSL, returning a new socket.  Copies SSL configuration
 ** from model.
 */
-extern PRFileDesc *SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
+SSL_IMPORT PRFileDesc *SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
 
 /*
 ** Enable/disable an ssl mode
@@ -92,15 +115,15 @@ extern PRFileDesc *SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
 #define SSL_ROLLBACK_DETECTION         14 /* for compatibility, default: on */
 
 /* Old deprecated function names */
-extern SECStatus SSL_Enable(PRFileDesc *fd, int option, PRBool on);
-extern SECStatus SSL_EnableDefault(int option, PRBool on);
+SSL_IMPORT SECStatus SSL_Enable(PRFileDesc *fd, int option, PRBool on);
+SSL_IMPORT SECStatus SSL_EnableDefault(int option, PRBool on);
 
 /* New function names */
-extern SECStatus SSL_OptionSet(PRFileDesc *fd, PRInt32 option, PRBool on);
-extern SECStatus SSL_OptionGet(PRFileDesc *fd, PRInt32 option, PRBool *on);
-extern SECStatus SSL_OptionSetDefault(PRInt32 option, PRBool on);
-extern SECStatus SSL_OptionGetDefault(PRInt32 option, PRBool *on);
-extern SECStatus SSL_CertDBHandleSet(PRFileDesc *fd, CERTCertDBHandle *dbHandle);
+SSL_IMPORT SECStatus SSL_OptionSet(PRFileDesc *fd, PRInt32 option, PRBool on);
+SSL_IMPORT SECStatus SSL_OptionGet(PRFileDesc *fd, PRInt32 option, PRBool *on);
+SSL_IMPORT SECStatus SSL_OptionSetDefault(PRInt32 option, PRBool on);
+SSL_IMPORT SECStatus SSL_OptionGetDefault(PRInt32 option, PRBool *on);
+SSL_IMPORT SECStatus SSL_CertDBHandleSet(PRFileDesc *fd, CERTCertDBHandle *dbHandle);
 
 /*
 ** Control ciphers that SSL uses. If on is non-zero then the named cipher
@@ -110,16 +133,16 @@ extern SECStatus SSL_CertDBHandleSet(PRFileDesc *fd, CERTCertDBHandle *dbHandle)
 ** SetPolicy sets the policy according to the policy module.
 */
 /* Old deprecated function names */
-extern SECStatus SSL_EnableCipher(long which, PRBool enabled);
-extern SECStatus SSL_SetPolicy(long which, int policy);
+SSL_IMPORT SECStatus SSL_EnableCipher(long which, PRBool enabled);
+SSL_IMPORT SECStatus SSL_SetPolicy(long which, int policy);
 
 /* New function names */
-extern SECStatus SSL_CipherPrefSet(PRFileDesc *fd, PRInt32 cipher, PRBool enabled);
-extern SECStatus SSL_CipherPrefGet(PRFileDesc *fd, PRInt32 cipher, PRBool *enabled);
-extern SECStatus SSL_CipherPrefSetDefault(PRInt32 cipher, PRBool enabled);
-extern SECStatus SSL_CipherPrefGetDefault(PRInt32 cipher, PRBool *enabled);
-extern SECStatus SSL_CipherPolicySet(PRInt32 cipher, PRInt32 policy);
-extern SECStatus SSL_CipherPolicyGet(PRInt32 cipher, PRInt32 *policy);
+SSL_IMPORT SECStatus SSL_CipherPrefSet(PRFileDesc *fd, PRInt32 cipher, PRBool enabled);
+SSL_IMPORT SECStatus SSL_CipherPrefGet(PRFileDesc *fd, PRInt32 cipher, PRBool *enabled);
+SSL_IMPORT SECStatus SSL_CipherPrefSetDefault(PRInt32 cipher, PRBool enabled);
+SSL_IMPORT SECStatus SSL_CipherPrefGetDefault(PRInt32 cipher, PRBool *enabled);
+SSL_IMPORT SECStatus SSL_CipherPolicySet(PRInt32 cipher, PRInt32 policy);
+SSL_IMPORT SECStatus SSL_CipherPolicyGet(PRInt32 cipher, PRInt32 *policy);
 
 /* Values for "policy" argument to SSL_PolicySet */
 /* Values returned by SSL_CipherPolicyGet. */
@@ -132,13 +155,13 @@ extern SECStatus SSL_CipherPolicyGet(PRInt32 cipher, PRInt32 *policy);
 ** handshake protocol execute from the ground up on the next i/o
 ** operation.
 */
-extern SECStatus SSL_ResetHandshake(PRFileDesc *fd, PRBool asServer);
+SSL_IMPORT SECStatus SSL_ResetHandshake(PRFileDesc *fd, PRBool asServer);
 
 /*
 ** Force the handshake for fd to complete immediately.  This blocks until
 ** the complete SSL handshake protocol is finished.
 */
-extern int SSL_ForceHandshake(PRFileDesc *fd);
+SSL_IMPORT int SSL_ForceHandshake(PRFileDesc *fd);
 
 /*
 ** Query security status of socket. *on is set to one if security is
@@ -151,7 +174,7 @@ extern int SSL_ForceHandshake(PRFileDesc *fd);
 ** data is not needed.  All strings returned by this function are owned
 ** by SSL, and will be freed when the socket is closed.
 */
-extern int SSL_SecurityStatus(PRFileDesc *fd, int *on, char **cipher,
+SSL_IMPORT int SSL_SecurityStatus(PRFileDesc *fd, int *on, char **cipher,
 			      int *keySize, int *secretKeySize,
 			      char **issuer, char **subject);
 
@@ -169,7 +192,7 @@ extern int SSL_SecurityStatus(PRFileDesc *fd, int *on, char **cipher,
 ** if the client had no certificate when asked.
 **	"fd" the socket "file" descriptor
 */
-extern CERTCertificate *SSL_PeerCertificate(PRFileDesc *fd);
+SSL_IMPORT CERTCertificate *SSL_PeerCertificate(PRFileDesc *fd);
 
 /*
 ** Authenticate certificate hook. Called when a certificate comes in
@@ -178,11 +201,11 @@ extern CERTCertificate *SSL_PeerCertificate(PRFileDesc *fd);
 */
 typedef int (*SSLAuthCertificate)(void *arg, PRFileDesc *fd, PRBool checkSig,
 				  PRBool isServer);
-extern int SSL_AuthCertificateHook(PRFileDesc *fd, SSLAuthCertificate f,
+SSL_IMPORT int SSL_AuthCertificateHook(PRFileDesc *fd, SSLAuthCertificate f,
 				   void *arg);
 
 /* An implementation of the certificate authentication hook */
-extern int SSL_AuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
+SSL_IMPORT int SSL_AuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
 			       PRBool isServer);
 
 /*
@@ -204,7 +227,7 @@ typedef int (*SSLGetClientAuthData)(void *arg, PRFileDesc *fd,
  *	f - the application's callback that delivers the key and cert
  *	a - application specific data
  */
-extern int SSL_GetClientAuthDataHook(PRFileDesc *fd, SSLGetClientAuthData f,
+SSL_IMPORT int SSL_GetClientAuthDataHook(PRFileDesc *fd, SSLGetClientAuthData f,
 				     void *a);
 
 
@@ -213,7 +236,7 @@ extern int SSL_GetClientAuthDataHook(PRFileDesc *fd, SSLGetClientAuthData f,
  *	fd - the file descriptor for the connection in question
  *	a - pkcs11 application specific data
  */
-extern int SSL_SetPKCS11PinArg(PRFileDesc *fd, void *a);
+SSL_IMPORT int SSL_SetPKCS11PinArg(PRFileDesc *fd, void *a);
 
 /*
 ** This is a callback for dealing with server certs that are not authenticated
@@ -221,7 +244,7 @@ extern int SSL_SetPKCS11PinArg(PRFileDesc *fd, void *a);
 ** cert by some external means and restart the connection.
 */
 typedef int (*SSLBadCertHandler)(void *arg, PRFileDesc *fd);
-extern int SSL_BadCertHook(PRFileDesc *fd, SSLBadCertHandler f, void *arg);
+SSL_IMPORT int SSL_BadCertHook(PRFileDesc *fd, SSLBadCertHandler f, void *arg);
 
 /*
 ** Configure ssl for running a secure server. Needs the
@@ -237,7 +260,7 @@ typedef enum {
     kt_kea_size
 } SSLKEAType;
 
-extern SECStatus SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
+SSL_IMPORT SECStatus SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
 				SECKEYPrivateKey *key, SSLKEAType kea);
 
 /*
@@ -248,7 +271,7 @@ extern SECStatus SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
 ** This version of the function is for use in applications that have only one 
 ** process that uses the cache (even if that process has multiple threads).
 */
-extern int SSL_ConfigServerSessionIDCache(int      maxCacheEntries,
+SSL_IMPORT int SSL_ConfigServerSessionIDCache(int      maxCacheEntries,
 					  PRUint32 timeout,
 					  PRUint32 ssl3_timeout,
 				    const char *   directory);
@@ -261,7 +284,7 @@ extern int SSL_ConfigServerSessionIDCache(int      maxCacheEntries,
 ** This function sets up a Server Session ID (SID) cache that is safe for
 ** access by multiple processes on the same system.
 */
-extern int SSL_ConfigMPServerSIDCache(int      maxCacheEntries, 
+SSL_IMPORT int SSL_ConfigMPServerSIDCache(int      maxCacheEntries, 
 				      PRUint32 timeout,
 			       	      PRUint32 ssl3_timeout, 
 		                const char *   directory);
@@ -276,14 +299,14 @@ extern int SSL_ConfigMPServerSIDCache(int      maxCacheEntries,
  * variable "SSL_INHERITANCE", otherwise the string value passed in will be 
  * used.
  */
-extern SECStatus SSL_InheritMPServerSIDCache(const char * envString);
+SSL_IMPORT SECStatus SSL_InheritMPServerSIDCache(const char * envString);
 
 /*
 ** Set the callback on a particular socket that gets called when we finish
 ** performing a handshake.
 */
 typedef void (*SSLHandshakeCallback)(PRFileDesc *fd, void *client_data);
-extern int SSL_HandshakeCallback(PRFileDesc *fd, SSLHandshakeCallback cb,
+SSL_IMPORT int SSL_HandshakeCallback(PRFileDesc *fd, SSLHandshakeCallback cb,
 				 void *client_data);
 
 /*
@@ -294,7 +317,7 @@ extern int SSL_HandshakeCallback(PRFileDesc *fd, SSLHandshakeCallback cb,
 ** do the much faster session restart handshake.  This will change the 
 ** session keys without doing another private key operation.
 */
-extern int SSL_ReHandshake(PRFileDesc *fd, PRBool flushCache);
+SSL_IMPORT int SSL_ReHandshake(PRFileDesc *fd, PRBool flushCache);
 
 /*
 ** For the server, request a new handshake.  For the client, begin a new
@@ -302,68 +325,68 @@ extern int SSL_ReHandshake(PRFileDesc *fd, PRBool flushCache);
 ** full handshake will be done.  
 ** This call is equivalent to SSL_ReHandshake(fd, PR_TRUE)
 */
-extern int SSL_RedoHandshake(PRFileDesc *fd);
+SSL_IMPORT int SSL_RedoHandshake(PRFileDesc *fd);
 
 /*
 ** Return 1 if the socket is direct, 0 if not, -1 on error
 */
-extern int SSL_CheckDirectSock(PRFileDesc *s);
+SSL_IMPORT int SSL_CheckDirectSock(PRFileDesc *s);
 
 /*
 ** A cousin to SSL_Bind, this takes an extra arg: dsthost, so we can
 ** set up sockd connection. This should be used with socks enabled.
 */
-extern int SSL_BindForSockd(PRFileDesc *s, PRNetAddr *sa, long dsthost);
+SSL_IMPORT int SSL_BindForSockd(PRFileDesc *s, PRNetAddr *sa, long dsthost);
 
 /*
 ** Configure ssl for using socks.
 */
-extern SECStatus SSL_ConfigSockd(PRFileDesc *fd, PRUint32 host, PRUint16 port);
+SSL_IMPORT SECStatus SSL_ConfigSockd(PRFileDesc *fd, PRUint32 host, PRUint16 port);
 
 /*
  * Allow the application to pass a URL or hostname into the SSL library
  */
-extern int SSL_SetURL(PRFileDesc *fd, const char *url);
+SSL_IMPORT int SSL_SetURL(PRFileDesc *fd, const char *url);
 
 /*
 ** Return the number of bytes that SSL has waiting in internal buffers.
 ** Return 0 if security is not enabled.
 */
-extern int SSL_DataPending(PRFileDesc *fd);
+SSL_IMPORT int SSL_DataPending(PRFileDesc *fd);
 
 /*
 ** Invalidate the SSL session associated with fd.
 */
-extern int SSL_InvalidateSession(PRFileDesc *fd);
+SSL_IMPORT int SSL_InvalidateSession(PRFileDesc *fd);
 
 /*
 ** Return a SECItem containing the SSL session ID associated with the fd.
 */
-extern SECItem *SSL_GetSessionID(PRFileDesc *fd);
+SSL_IMPORT SECItem *SSL_GetSessionID(PRFileDesc *fd);
 
 /*
 ** Clear out the SSL session cache.
 */
-extern void SSL_ClearSessionCache(void);
+SSL_IMPORT void SSL_ClearSessionCache(void);
 
 /*
 ** Set peer information so we can correctly look up SSL session later.
 ** You only have to do this if you're tunneling through a proxy.
 */
-extern int SSL_SetSockPeerID(PRFileDesc *fd, char *peerID);
+SSL_IMPORT int SSL_SetSockPeerID(PRFileDesc *fd, char *peerID);
 
 /*
 ** Read the socks config file.  You must do this before doing anything with
 ** socks.
 */
-extern int SSL_ReadSocksConfFile(PRFileDesc *fp);
+SSL_IMPORT int SSL_ReadSocksConfFile(PRFileDesc *fp);
 
 /*
 ** Reveal the security information for the peer. 
 */
-extern CERTCertificate * SSL_RevealCert(PRFileDesc * socket);
-extern void * SSL_RevealPinArg(PRFileDesc * socket);
-extern char * SSL_RevealURL(PRFileDesc * socket);
+SSL_IMPORT CERTCertificate * SSL_RevealCert(PRFileDesc * socket);
+SSL_IMPORT void * SSL_RevealPinArg(PRFileDesc * socket);
+SSL_IMPORT char * SSL_RevealURL(PRFileDesc * socket);
 
 
 /* This callback may be passed to the SSL library via a call to
@@ -375,7 +398,7 @@ extern char * SSL_RevealURL(PRFileDesc * socket);
  * If arg is NULL, this function will search the cert and key databases for 
  * a suitable match and send it if one is found.
  */
-extern SECStatus
+SSL_IMPORT SECStatus
 NSS_GetClientAuthData(void *                       arg,
                       PRFileDesc *                 socket,
                       struct CERTDistNamesStr *    caNames,
@@ -388,18 +411,18 @@ NSS_GetClientAuthData(void *                       arg,
  * Returns SECSuccess if so, SECFailure if not.
  * Used by NSS_GetClientAuthData.  May be used by other callback functions.
  */
-extern SECStatus NSS_CmpCertChainWCANames(CERTCertificate *cert, 
+SSL_IMPORT SECStatus NSS_CmpCertChainWCANames(CERTCertificate *cert, 
                                           CERTDistNames *caNames);
 
 /* 
  * Returns key exchange type of the keys in an SSL server certificate.
  */
-extern SSLKEAType NSS_FindCertKEAType(CERTCertificate * cert);
+SSL_IMPORT SSLKEAType NSS_FindCertKEAType(CERTCertificate * cert);
 
 /* Set cipher policies to a predefined Domestic (U.S.A.) policy.
  * This essentially enables all supported ciphers.
  */
-extern SECStatus NSS_SetDomesticPolicy(void);
+SSL_IMPORT SECStatus NSS_SetDomesticPolicy(void);
 
 /* Set cipher policies to a predefined Policy that is exportable from the USA
  *   according to present U.S. policies as we understand them.
@@ -409,14 +432,16 @@ extern SECStatus NSS_SetDomesticPolicy(void);
  *   by this function.  In that case, you should use SSL_SetPolicy()
  *   to explicitly allow those ciphers you may legally export.
  */
-extern SECStatus NSS_SetExportPolicy(void);
+SSL_IMPORT SECStatus NSS_SetExportPolicy(void);
 
 /* Set cipher policies to a predefined Policy that is exportable from the USA
  *   according to present U.S. policies as we understand them, and that the 
  *   nation of France will permit to be imported into their country.
  * See documentation for the list.
  */
-extern SECStatus NSS_SetFrancePolicy(void);
+SSL_IMPORT SECStatus NSS_SetFrancePolicy(void);
+
+SSL_IMPORT SSL3Statistics * SSL_GetStatistics(void);
 
 SEC_END_PROTOS
 

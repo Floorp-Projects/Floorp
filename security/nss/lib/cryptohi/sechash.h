@@ -34,7 +34,7 @@
  *
  * hash.h - public data structures and prototypes for the hashing library
  *
- * $Id: sechash.h,v 1.1 2000/03/31 19:46:05 relyea%netscape.com Exp $
+ * $Id: sechash.h,v 1.2 2001/01/05 01:38:09 nelsonb%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -71,6 +71,8 @@ extern void          HASH_End(HASHContext *context,
 			     unsigned char *result,
 			     unsigned int *result_len,
 			     unsigned int max_result_len);
+
+extern const SECHashObject * HASH_GetHashObject(HASH_HashType type);
 
 SEC_END_PROTOS
 

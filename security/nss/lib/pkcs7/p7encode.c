@@ -34,7 +34,7 @@
 /*
  * PKCS7 encoding.
  *
- * $Id: p7encode.c,v 1.1 2000/03/31 19:16:06 relyea%netscape.com Exp $
+ * $Id: p7encode.c,v 1.2 2001/01/05 01:38:17 nelsonb%netscape.com Exp $
  */
 
 #include "p7local.h"
@@ -47,6 +47,7 @@
 #include "secitem.h"
 #include "pk11func.h"
 #include "secerr.h"
+#include "sechash.h"	/* for HASH_GetHashObject() */
 
 struct sec_pkcs7_encoder_output {
     SEC_PKCS7EncoderOutputCallback outputfn;
@@ -58,7 +59,7 @@ struct SEC_PKCS7EncoderContextStr {
     SEC_PKCS7ContentInfo *cinfo;
     struct sec_pkcs7_encoder_output output;
     sec_PKCS7CipherObject *encryptobj;
-    SECHashObject *digestobj;
+    const SECHashObject *digestobj;
     void *digestcx;
 };
 
@@ -591,13 +592,13 @@ sec_pkcs7_encoder_start_contexts (SEC_PKCS7ContentInfo *cinfo,
 	if (oiddata != NULL) {
 	    switch (oiddata->offset) {
 	      case SEC_OID_MD2:
-		p7ecx->digestobj = &SECHashObjects[HASH_AlgMD2];
+		p7ecx->digestobj = HASH_GetHashObject(HASH_AlgMD2);
 		break;
 	      case SEC_OID_MD5:
-		p7ecx->digestobj = &SECHashObjects[HASH_AlgMD5];
+		p7ecx->digestobj = HASH_GetHashObject(HASH_AlgMD5);
 		break;
 	      case SEC_OID_SHA1:
-		p7ecx->digestobj = &SECHashObjects[HASH_AlgSHA1];
+		p7ecx->digestobj = HASH_GetHashObject(HASH_AlgSHA1);
 		break;
 	      default:
 		/* XXX right error? */

@@ -44,6 +44,7 @@
 #include "prmem.h"
 /* Portable layer header files */
 #include "plstr.h"
+#include "sechash.h"	/* for HASH_GetHashObject() */
 
 static int debugInfo = 0;
 
@@ -118,10 +119,10 @@ DigestData (unsigned char *digest, unsigned char *data,
 			unsigned int *len, unsigned int maxLen,
 			HASH_HashType hashType)
 {
-	SECHashObject *hashObj;
+	const SECHashObject *hashObj;
 	void *hashcx;
 
-	hashObj = &SECHashObjects[hashType];
+	hashObj = HASH_GetHashObject(hashType);
 	hashcx = (* hashObj->create)();
 	if (hashcx == NULL)
 	return -1;

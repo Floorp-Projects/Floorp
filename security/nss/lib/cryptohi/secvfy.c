@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: secvfy.c,v 1.3 2000/06/13 21:56:22 chrisk%netscape.com Exp $
+ * $Id: secvfy.c,v 1.4 2001/01/05 01:38:09 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -116,7 +116,7 @@ struct VFYContextStr {
     unsigned char digest[DSA_SIGNATURE_LEN];
     void * wincx;
     void *hashcx;
-    SECHashObject *hashobj;
+    const SECHashObject *hashobj;
 };
 
 VFYContext *

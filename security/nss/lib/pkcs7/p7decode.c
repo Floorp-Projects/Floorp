@@ -34,7 +34,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.1 2000/03/31 19:16:05 relyea%netscape.com Exp $
+ * $Id: p7decode.c,v 1.2 2001/01/05 01:38:16 nelsonb%netscape.com Exp $
  */
 
 #include "p7local.h"
@@ -54,13 +54,13 @@
 #include "pk11func.h"
 #include "prtime.h"
 #include "secerr.h"
-
+#include "sechash.h"	/* for HASH_GetHashObject() */
 
 struct sec_pkcs7_decoder_worker {
     int depth;
     int digcnt;
     void **digcxs;
-    SECHashObject **digobjs;
+    const SECHashObject **digobjs;
     sec_PKCS7CipherObject *decryptobj;
     PRBool saw_contents;
 };
@@ -261,7 +261,7 @@ sec_pkcs7_decoder_start_digests (SEC_PKCS7DecoderContext *p7dcx, int depth,
 {
     SECAlgorithmID *algid;
     SECOidData *oiddata;
-    SECHashObject *digobj;
+    const SECHashObject *digobj;
     void *digcx;
     int i, digcnt;
 
@@ -287,7 +287,7 @@ sec_pkcs7_decoder_start_digests (SEC_PKCS7DecoderContext *p7dcx, int depth,
 
     p7dcx->worker.digcxs = (void**)PORT_ArenaAlloc (p7dcx->tmp_poolp,
 					    digcnt * sizeof (void *));
-    p7dcx->worker.digobjs = (SECHashObject**)PORT_ArenaAlloc (p7dcx->tmp_poolp,
+    p7dcx->worker.digobjs = (const SECHashObject**)PORT_ArenaAlloc (p7dcx->tmp_poolp,
 					     digcnt * sizeof (SECHashObject *));
     if (p7dcx->worker.digcxs == NULL || p7dcx->worker.digobjs == NULL) {
 	p7dcx->error = SEC_ERROR_NO_MEMORY;
@@ -308,13 +308,13 @@ sec_pkcs7_decoder_start_digests (SEC_PKCS7DecoderContext *p7dcx, int depth,
 	} else {
 	    switch (oiddata->offset) {
 	      case SEC_OID_MD2:
-		digobj = &SECHashObjects[HASH_AlgMD2];
+		digobj = HASH_GetHashObject(HASH_AlgMD2);
 		break;
 	      case SEC_OID_MD5:
-		digobj = &SECHashObjects[HASH_AlgMD5];
+		digobj = HASH_GetHashObject(HASH_AlgMD5);
 		break;
 	      case SEC_OID_SHA1:
-		digobj = &SECHashObjects[HASH_AlgSHA1];
+		digobj = HASH_GetHashObject(HASH_AlgSHA1);
 		break;
 	      default:
 		digobj = NULL;
@@ -362,7 +362,7 @@ sec_pkcs7_decoder_finish_digests (SEC_PKCS7DecoderContext *p7dcx,
 				  SECItem ***digestsp)
 {
     struct sec_pkcs7_decoder_worker *worker;
-    SECHashObject *digobj;
+    const SECHashObject *digobj;
     void *digcx;
     SECItem **digests, *digest;
     int i;
