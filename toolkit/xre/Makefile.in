@@ -124,6 +124,9 @@ GARBAGE += $(SHAREDSRCS) $(wildcard *.$(OBJ_SUFFIX))
 ifeq ($(OS_ARCH),WINNT)
 GARBAGE	+= $(addprefix $(srcdir)/,$(SHAREDSRCS))
 endif
+ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+GARBAGE += $(STACKWALK_SRC_LCSRCS)
+endif
 
 include $(topsrcdir)/config/rules.mk
 
@@ -134,7 +137,7 @@ ifdef BUILD_STATIC_LIBS
 DEFINES += -D_BUILD_STATIC_BIN
 endif
 
-export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDSRCS))
+export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDSRCS)) $(STACKWALK_CPPSRCS)
 ifeq ($(OS_ARCH),WINNT)
 	$(INSTALL) $^ $(srcdir)
 else
