@@ -573,11 +573,10 @@ nsSVGInnerSVGFrame::GetOuterSVGFrame()
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGInnerSVGFrame::GetCanvasTM()
 {
-  // parentTM * move(x,y) * viewboxToViewportTM
-
+  // parentTM * Translate(x,y) * viewboxToViewportTM
 
   if (!mCanvasTM) {
-    // get our parent's tm and append local transforms (if any):
+    // get the transform from our parent's coordinate system to ours:
     NS_ASSERTION(mParent, "null parent");
     nsISVGContainerFrame *containerFrame;
     mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
@@ -588,21 +587,19 @@ nsSVGInnerSVGFrame::GetCanvasTM()
     nsCOMPtr<nsIDOMSVGMatrix> parentTM = containerFrame->GetCanvasTM();
     NS_ASSERTION(parentTM, "null TM");
 
-    // viewbox to viewport:
+    // append the transform due to the 'x' and 'y' attributes:
+    float x, y;
+    mX->GetValue(&x);
+    mY->GetValue(&y);
+    nsCOMPtr<nsIDOMSVGMatrix> xyTM;
+    parentTM->Translate(x, y, getter_AddRefs(xyTM));
+
+    // append the viewbox to viewport transform:
     nsCOMPtr<nsIDOMSVGMatrix> viewBoxToViewportTM;
     nsCOMPtr<nsIDOMSVGSVGElement> svgElement = do_QueryInterface(mContent);
     NS_ASSERTION(svgElement, "wrong content element");
     svgElement->GetViewboxToViewportTransform(getter_AddRefs(viewBoxToViewportTM));
-
-    parentTM->Multiply(viewBoxToViewportTM, getter_AddRefs(mCanvasTM));
-
-    // x and y:
-    float x, y;
-    mX->GetValue(&x);
-    mY->GetValue(&y);
-    nsCOMPtr<nsIDOMSVGMatrix> fini;
-    mCanvasTM->Translate(x, y, getter_AddRefs(fini));
-    mCanvasTM = fini;
+    xyTM->Multiply(viewBoxToViewportTM, getter_AddRefs(mCanvasTM));
   }    
 
   nsIDOMSVGMatrix* retval = mCanvasTM.get();
