@@ -55,7 +55,7 @@ public:
   /**
    * Class destructor.
    */
-  ~nsLatin1ToUnicode();
+  virtual ~nsLatin1ToUnicode();
 
   /**
    * Static class constructor.
