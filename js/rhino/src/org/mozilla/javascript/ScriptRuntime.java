@@ -624,6 +624,69 @@ public class ScriptRuntime {
         throw Kit.badTypeJS(value);
     }
 
+    static String defaultObjectToSource(Context cx, Scriptable scope,
+                                        Scriptable thisObj, Object[] args)
+    {
+        boolean toplevel, iterating;
+        if (cx.iterating == null) {
+            toplevel = true;
+            iterating = false;
+            cx.iterating = new ObjToIntMap(31);
+        } else {
+            toplevel = false;
+            iterating = cx.iterating.has(thisObj);
+        }
+
+        StringBuffer result = new StringBuffer(128);
+        if (toplevel) {
+            result.append("(");
+        }
+        result.append('{');
+
+        // Make sure cx.iterating is set to null when done
+        // so we don't leak memory
+        try {
+            if (!iterating) {
+                cx.iterating.intern(thisObj); // stop recursion.
+                Object[] ids = thisObj.getIds();
+                for(int i=0; i < ids.length; i++) {
+                    if (i > 0)
+                        result.append(", ");
+                    Object id = ids[i];
+                    Object value;
+                    if (id instanceof Integer) {
+                        int intId = ((Integer)id).intValue();
+                        value = thisObj.get(intId, thisObj);
+                        result.append(intId);
+                    } else {
+                        String strId = (String)id;
+                        value = thisObj.get(strId, thisObj);
+                        if (ScriptRuntime.isValidIdentifierName(strId)) {
+                            result.append(strId);
+                        } else {
+                            result.append('\'');
+                            result.append(
+                                ScriptRuntime.escapeString(strId, '\''));
+                            result.append('\'');
+                        }
+                    }
+                    result.append(':');
+                    result.append(ScriptRuntime.uneval(cx, scope, value));
+                }
+            }
+        } finally {
+            if (toplevel) {
+                cx.iterating = null;
+            }
+        }
+
+        result.append('}');
+        if (toplevel) {
+            result.append(')');
+        }
+        return result.toString();
+    }
+
     public static Scriptable toObject(Scriptable scope, Object val)
     {
         if (val instanceof Scriptable && val != Undefined.instance) {
