@@ -119,6 +119,8 @@ function rememberSearchText(target)
 		target = target.replace(/+/i, " ");
 
 		textNode.value = unescape(target);
+
+        doEnabling();
 	}
 	// show the results tab
 	switchTab(0);
@@ -310,37 +312,33 @@ function haveSearchResults()
 
 function getNumEngines()
 {
- 	var treeNode = document.getElementById("searchengines");
-	var numChildren = treeNode.childNodes.length;
-	var treeChildrenNode = null;
-
-	for (var x = 0; x<numChildren; x++)
- 	{
-		if (treeNode.childNodes[x].tagName == "treechildren")
-		{
-			treeChildrenNode = treeNode.childNodes[x];
- 			break;
-		}
-	}
-	if( !treeChildrenNode )	return(-1);
-	return(treeChildrenNode.childNodes.length);
+ 	var treeChildrenNode = document.getElementById("engineKids");
+	var numChildren = treeChildrenNode.childNodes.length;
+    debug("getNumEngines:  numChildren = " + numChildren + "\n");
+	return(numChildren);
 }
+
+
 
 function chooseCategory( aNode )
 {
   var category = !aNode.id ? "NC:SearchEngineRoot" : 
-                  "NC:SearchCategory?category=" + aNode.id;
+                  "NC:SearchCategory?category=" + aNode.getAttribute("id");
 
   if (pref)	
     pref.SetUnicharPref("browser.search.last_search_category", category);
 
   var treeNode = document.getElementById("searchengines");
   if (treeNode)
+  {
+    debug("chooseCategory:  ref='" + category + "'\n");
     treeNode.setAttribute("ref", category);
-
+  }
   loadEngines(category);
   return(true);
 }
+
+
 
 // check an engine representation in the engine list
 function doCheck(aNode)
@@ -364,29 +362,42 @@ function saveEngines()
 		category = "NC:SearchEngineRoot";
 	}
 
+    debug("Category: " + category + "\n");
+
     var rdf = Components.classes[RDFSERVICE_PROGID].getService(nsIRDFService);
 	if (rdf)
 	{
 		var localStore = rdf.GetDataSource("rdf:local-store");
 		if( !localStore )	return(false);
 
-   	var engineBox = document.getElementById("searchengines");
+   	var engineBox = document.getElementById("engineKids");
     if( !engineBox )
       return false;
     var checkedProperty = rdf.GetResource( "http://home.netscape.com/NC-rdf#checked", true );
     var categorySRC = rdf.GetResource( category, true );
+
+    debug("# of engines: " + engineBox.childNodes.length + "\n");
+
     for (var x = 0; x < engineBox.childNodes.length; x++)
     {
-      var checkbox = engineBox.childNodes[x];
-      if( !checkbox )
-      	continue;
-      var engineURI = checkbox.getAttribute("id");
+      var treeitemNode = engineBox.childNodes[x];
+      var engineURI = treeitemNode.getAttribute("id");
       var engineSRC = rdf.GetResource(engineURI, true);
 
-      if( checkbox.checked == true || checkbox.checked == "true")
+      var checkboxNode = treeitemNode.firstChild.firstChild.firstChild;
+      if( !checkboxNode )
+      	continue;
+
+      if( checkboxNode.checked == true || checkboxNode.checked == "true")
+      {
+        debug("  Check engine #" + x + "    " + engineURI + "\n");
         localStore.Assert( categorySRC, checkedProperty, engineSRC, true );
+      }
       else
+      {
+        debug("UnCheck engine #" + x + "    " + engineURI + "\n");
         localStore.Unassert( categorySRC, checkedProperty, engineSRC, true );
+      }
     }
 
 	// save changes; flush out the localstore
@@ -394,6 +405,7 @@ function saveEngines()
 	{
         var flushableStore = localStore.QueryInterface(nsIRDFRemoteDataSource);
 		if (flushableStore)	flushableStore.Flush();
+        debug("Flushed changes\n\n");
 	}
 	catch(ex)
 	{
@@ -412,7 +424,7 @@ function loadEngines( aCategory )
         var localStore = rdf.GetDataSource("rdf:local-store");
         if (localStore)
         {
-            var engineBox = document.getElementById("engineKids");;
+            var engineBox = document.getElementById("engineKids");
             if( engineBox )
             {
                 var numEngines = engineBox.childNodes.length;
@@ -420,12 +432,18 @@ function loadEngines( aCategory )
                 var categorySRC = rdf.GetResource( aCategory, true );
                 for (var x = 0; x<numEngines; x++)
                 {
-                  var checkbox = engineBox.childNodes[x].firstChild.firstChild.firstChild;
-                  if (!checkbox) continue;
-                  var engineSRC = rdf.GetResource( checkbox.id, true );
-                  var hasAssertion = localStore.HasAssertion( categorySRC, checkedProperty, engineSRC, true );
-                  if (hasAssertion)
-                    checkbox.checked = true;
+                    var treeitemNode = engineBox.childNodes[x];
+                    var engineURI = treeitemNode.getAttribute("id");
+                    var engineSRC = rdf.GetResource( engineURI, true );
+
+                    var checkboxNode = treeitemNode.firstChild.firstChild.firstChild;
+                    if (!checkboxNode) continue;
+
+                    var hasAssertion = localStore.HasAssertion( categorySRC, checkedProperty, engineSRC, true );
+                    if (hasAssertion)
+                    {
+                        checkboxNode.checked = true;
+                    }
                 }
             }
         }
@@ -629,12 +647,15 @@ function doSearch()
 
   	for (var x = 0; x<engineBox.childNodes.length; x++)
   	{
-      var checkbox = engineBox.childNodes[x].firstChild.firstChild.firstChild;
-      if (!checkbox) continue;
+  	  var treeitemNode = engineBox.childNodes[x];
+      if (!treeitemNode) continue;
+  
+      var checkboxNode = treeitemNode.firstChild.firstChild.firstChild;
+      if (!checkboxNode) continue;
       
-      if ( checkbox.checked == true || checkbox.checked == "true") 
+      if ( checkboxNode.checked == true || checkboxNode.checked == "true") 
       {
-        var engineURI = checkbox.parentNode.parentNode.parentNode.id;
+        var engineURI = treeitemNode.getAttribute("id");
         if (!engineURI)	continue;
         engineURIs[engineURIs.length] = engineURI;
         foundEngine = true;
@@ -644,17 +665,25 @@ function doSearch()
     {
       if( getNumEngines() == 1 ) {
         // only one engine in this category, check it
-        var checkbox = engineBox.firstChild.firstChild.firstChild.firstChild;
-        engineURIs[engineURIs.length] = checkbox.id;
+        var treeitemNode = engineBox.firstChild;
+        engineURIs[engineURIs.length] = treeitemNode.getAttribute("id");
       }
       else {
         for( var i = 0; i < engineBox.childNodes.length; i++ )
         {
-          var checkbox = engineBox.childNodes[i];
-          if( checkbox.id.indexOf("NetscapeSearch.src") != -1 ) {
-            engineURIs[engineURIs.length] = checkbox.getAttribute("id");
+          var treeitemNode = engineBox.childNodes[i];
+          var theID = treeitemNode.getAttribute("id");
+          if( theID.indexOf("NetscapeSearch.src") != -1 )
+          {
+            engineURIs[engineURIs.length] = theID;
+            foundEngine = true;
             break;
           }
+        }
+        if (foundEngine == false)
+        {
+            alert(bundle.GetStringFromName("enterstringandlocation") );
+            return(false);
         }
       }
   	}
@@ -804,8 +833,9 @@ function OpenSearch( aSearchStr, engineURIs )
         if (pref)
         {
 	  	    autoOpenSearchPanel = pref.GetBoolPref("browser.search.opensidebarsearchpanel");
-  		    defaultSearchURL = pref.getLocalizedUnicharPref("browser.search.defaulturl");
 	        searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
+            debug("From prefs, searchEngineURI = '" + searchEngineURI + "'\n");
+  		    defaultSearchURL = pref.getLocalizedUnicharPref("browser.search.defaulturl");
         }
 	}
 	catch(ex)
@@ -832,12 +862,17 @@ function OpenSearch( aSearchStr, engineURIs )
   		{
             if( !engineURIs || ( engineURIs && engineURIs.length <= 1 ) )
             {
-
+                debug("searchEngineURI = '" + searchEngineURI + "'\n");
                 // not called from sidebar or only one engine selected
                 if (engineURIs && engineURIs.length == 1)
                 {
+                    debug("Got one engine: " + engineURIs[0] + "\n");
                     searchEngineURI = engineURIs[0];
                     gURL = "internetsearch:engine=" + searchEngineURI + "&text=" + escapedSearchStr;
+                }
+                else
+                {
+                    debug("No engines, default to '" + searchEngineURI + "'\n");
                 }
 
                 // look up the correct search URL format for the given engine
@@ -1097,4 +1132,3 @@ function doEnabling()
         }
     }
 }
-
