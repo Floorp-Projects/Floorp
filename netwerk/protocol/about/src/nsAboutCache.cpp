@@ -261,15 +261,23 @@ nsAboutCache::VisitEntry(const char *deviceID,
     PRUint32 bytesWritten;
     nsXPIDLCString str;
 
+    entryInfo->GetKey(getter_Copies(str));
+
+    // Generate a about:cache-entry URL for this entry...
+    nsCAutoString url;
+    url += NS_LITERAL_CSTRING("about:cache-entry?client=");
+    url += clientID;
+    url += NS_LITERAL_CSTRING("&key=");
+    url += str; // key
+
     // Entry start...
     mBuffer.Assign("<p>\n");
 
     // URI
     mBuffer.Append("<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-                     "&nbsp;&nbsp;&nbsp;&nbsp;URL: </tt>");
-    entryInfo->GetKey(getter_Copies(str));
+                     "&nbsp;&nbsp;&nbsp;&nbsp;Key: </tt>");
     mBuffer.Append("<a href=\"");
-    mBuffer.Append(str);
+    mBuffer.Append(url);
     mBuffer.Append("\">");
     mBuffer.Append(str);
     mBuffer.Append("</a><br>\n");
