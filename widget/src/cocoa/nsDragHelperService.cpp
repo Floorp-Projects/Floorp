@@ -142,7 +142,6 @@ nsDragHelperService::Tracking ( DragReference inDragRef, nsIEventSink *inSink, P
   // check if gecko has since allowed the drop and return it
   if ( session )
     session->GetCanDrop(outDropAllowed);
-
   return NS_OK;
 }
 

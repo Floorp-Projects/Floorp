@@ -50,6 +50,10 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  $(NULL)
 
+EXPORTS = \
+		mozView.h \
+		$(NULL)
+
 GFX_LCPPSRCS = \
 		nsRegionMac.cpp \
 		nsWatchTask.cpp \
