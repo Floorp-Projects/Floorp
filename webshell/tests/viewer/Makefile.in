@@ -125,9 +125,9 @@ endif
 
 XP_DIST_LIBS		+= \
 			$(EXTRA_DSO_LIBS) \
-			$(XPCOM_LIBS) \
 			$(MOZ_JS_LIBS) \
 			$(MOZ_UNICHARUTIL_LIBS) \
+			$(XPCOM_LIBS) \
 			$(NULL)
 
 XP_LIBS			= \
