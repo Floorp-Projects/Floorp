@@ -1,3 +1,26 @@
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *    Gervase Markham <gerv@gerv.net>
+ */
+
 try
   {
     var fontList = Components.classes["@mozilla.org/gfx/fontlist;1"].createInstance();
@@ -8,10 +31,10 @@ try
   }
 catch(e)
   {
-    dump("failed to get font list or pref object: "+e+", "+fileName+" "+lineNum+"\n");
+    dump("failed to get font list or pref object: "+e+" in pref-fonts.js\n");
   }
 
-var fontTypes   = ["serif","sans-serif", /*"cursive", "fantasy",*/"monospace"];
+var fontTypes   = ["serif", "sans-serif", "cursive", "fantasy", "monospace"];
 var variableSize, fixedSize, languageList;
 var languageData = [];
 var currentLanguage;
@@ -23,7 +46,7 @@ function GetFields()
     var dataObject = [];
 
     // store data for language independent widgets
-    var lists = ["selectLangs", "defaultFont"];
+    var lists = ["selectLangs", "proportionalFont"];
     for( var i = 0; i < lists.length; i++ )
       {
         if( !dataObject.dataEls )
@@ -32,9 +55,9 @@ function GetFields()
         dataObject.dataEls[ lists[i] ].value = document.getElementById( lists[i] ).value;
       }
 
-    dataObject.defaultFont = document.getElementById( "defaultFont" ).value;
-    dataObject.fontDPI = document.getElementById( "browserScreenResolution" ).value;
-    dataObject.useDocFonts = document.getElementById( "browserUseDocumentFonts" ).checked ? 0 : 1;
+   dataObject.defaultFont = document.getElementById( "proportionalFont" ).value;
+   dataObject.fontDPI = document.getElementById( "screenResolution" ).value;
+   dataObject.useDocFonts = document.getElementById( "browserUseDocumentFonts" ).checked ? 1 : 0;
 
     // save current state for language dependent fields and store
     saveState();
@@ -49,7 +72,9 @@ function SetFields( aDataObject )
     languageData = aDataObject.languageData ? aDataObject.languageData : languageData ;
     currentLanguage = aDataObject.currentLanguage ? aDataObject.currentLanguage : null ;
 
-    var lists = ["selectLangs", "defaultFont"];
+    var lists = ["selectLangs", "proportionalFont"];
+    var prefvalue;
+    
     for( var i = 0; i < lists.length; i++ )
       {
         var element = document.getElementById( lists[i] );
@@ -71,23 +96,47 @@ function SetFields( aDataObject )
           }
       }
 
-    var resolutionField = document.getElementById( "browserScreenResolution" );
-    if( aDataObject.fontDPI != undefined )
-      resolutionField.value = aDataObject.fontDPI;
+    var screenResolution = document.getElementById( "screenResolution" );
+    var resolution;
+    
+    if( aDataObject.fontDPI )
+      {
+        resolution = aDataObject.fontDPI;
+      }
     else
       {
-        var prefvalue = parent.hPrefWindow.getPref( resolutionField.getAttribute("preftype"), resolutionField.getAttribute("prefstring") );
+        prefvalue = parent.hPrefWindow.getPref( "int", "browser.display.screen_resolution" );
         if( prefvalue != "!/!ERROR_UNDEFINED_PREF!/!" )
-          resolutionField.value = prefvalue;
+            resolution = prefvalue;
+        else
+            resolution = 96; // If it all goes horribly wrong, fall back on 96.
       }
+    
+    var userResolution = document.getElementById("userResolution");
+
+    // If it's one of the hard-coded values, this will work...  
+    try
+      {
+        screenResolution.selectedItem = screenResolution.getElementsByAttribute( "value", resolution )[0];
+        userResolution.setAttribute("hidden", "true");
+      }
+    catch (e)
+      {
+        // Otherwise we need to set up the userResolution field
+        userResolution.setAttribute("value", resolution);
+        userResolution.setAttribute("label", resolution);
+        userResolution.removeAttribute("hidden");
+        screenResolution.selectedItem = userResolution;   
+      }
+    
     var useDocFontsCheckbox = document.getElementById( "browserUseDocumentFonts" );
     if( aDataObject.useDocFonts != undefined )
-      useDocFontsCheckbox.checked = aDataObject.useDocFonts ? false : true;
+      useDocFontsCheckbox.checked = aDataObject.useDocFonts ? true : false;
     else
       {
-        var prefvalue = parent.hPrefWindow.getPref( useDocFontsCheckbox.getAttribute("preftype"), useDocFontsCheckbox.getAttribute("prefstring") );
+        prefvalue = parent.hPrefWindow.getPref( "int", "browser.display.use_document_fonts" );
         if( prefvalue != "!/!ERROR_UNDEFINED_PREF!/!" )
-          useDocFontsCheckbox.checked = prefvalue ? false : true ;
+          useDocFontsCheckbox.checked = prefvalue ? true : false ;
       }
   }
 
@@ -354,3 +403,85 @@ function selectLanguage()
     currentLanguage = languageList.value;
   }
 
+function changeScreenResolution()
+  {
+    var screenResolution = document.getElementById("screenResolution");
+    var userResolution = document.getElementById("userResolution");
+  
+    if (screenResolution.value == "other")
+      {
+        // If the user selects "Other..." we bring up the calibrate screen dialog
+        var rv = { newdpi : 0 };
+        calscreen = window.openDialog("chrome://communicator/content/pref/pref-calibrate-screen.xul", 
+                                      "", 
+                                      "modal=yes,chrome,resizeable=no,centerscreen",
+                                      rv);
+        if (rv.newdpi != -1) 
+          {
+            // They have entered values, and we have a DPI value back
+            userResolution.setAttribute("value", rv.newdpi);
+            userResolution.setAttribute("label", rv.newdpi + " dpi");
+            userResolution.removeAttribute("hidden");
+            screenResolution.selectedItem = userResolution;
+          }
+        else
+          {
+            // They've cancelled. We can't leave "Other..." selected, so...
+            var defaultResolution = document.getElementById("defaultResolution");
+            screenResolution.selectedItem = defaultResolution;
+            userResolution.setAttribute("hidden", "true");
+          }
+      }
+    else if (!(screenResolution.value == userResolution.value))
+      {
+        // User has selected one of the hard-coded resolutions
+        userResolution.setAttribute("hidden", "true");
+      }
+  }
+
+// "Calibrate screen" dialog code
+
+function Init()
+  {
+      sizeToContent();
+      doSetOKCancel(onOK, onCancel);
+      document.getElementById("horizSize").focus();
+  }
+  
+function onOK()
+  {
+    // Get value from the dialog to work out dpi
+    var horizSize = parseFloat(document.getElementById("horizSize").value);
+    var units = document.getElementById("units").value;
+  
+    if (!horizSize || horizSize < 0)
+      {
+        // We can't calculate anything without a proper value
+        window.arguments[0].newdpi = -1;
+        return true;
+      }
+      
+    // Convert centimetres to inches.
+    // The magic number is allowed because it's a fundamental constant :-)
+    if (units === "centimetres")
+      {
+        horizSize /= 2.54;
+      }
+  
+    // These shouldn't change, but you can't be too careful.
+    var horizBarLengthPx = document.getElementById("horizRuler").boxObject.width;
+  
+    var horizDPI = parseInt(horizBarLengthPx) / horizSize;
+  
+    // Average the two <shrug>.
+    window.arguments[0].newdpi = Math.round(horizDPI);
+  
+    return true;
+  }
+
+function onCancel()
+  {
+      // We return zero to show that no value has been given.
+      window.arguments[0].newdpi = -1;
+      return true;
+  }

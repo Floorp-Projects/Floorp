@@ -32,6 +32,7 @@ comm.jar:
     content/communicator/pref/pref-download.xul                 (prefwindow/resources/content/pref-download.xul)
     content/communicator/pref/pref-fonts.js                     (prefwindow/resources/content/pref-fonts.js)
     content/communicator/pref/pref-fonts.xul                    (prefwindow/resources/content/pref-fonts.xul)
+    content/communicator/pref/pref-calibrate-screen.xul         (prefwindow/resources/content/pref-calibrate-screen.xul)
     content/communicator/pref/pref-history.xul                  (prefwindow/resources/content/pref-history.xul)
     content/communicator/pref/pref-languages.xul                (prefwindow/resources/content/pref-languages.xul)
     content/communicator/pref/pref-languages-add.xul            (prefwindow/resources/content/pref-languages-add.xul)
