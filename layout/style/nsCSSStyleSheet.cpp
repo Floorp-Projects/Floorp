@@ -3061,14 +3061,14 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
       }
       else if (IsEventPseudo(pseudoClass->mAtom)) {
         // check if the element is event-sensitive
-
-        // Quirk Mode: check to see if the element is event-sensitive
-        //  - see if the selector applies to event pseudo classes
         // NOTE: we distinguish between global and subjected selectors so
         //       pass that information on to the determining routine
+        // ALSO NOTE: we used to do this only in Quirks mode, but because of
+        //            performance problems we do it all the time now (bug 68821)
+        //            When style resolution due to state changes is optimized this
+        //            should go back to QuirksMode only behavour (see also bug 75559)
         PRBool isSelectorGlobal = aSelector->mTag==nsnull ? PR_TRUE : PR_FALSE;
-        if ((data.mIsQuirkMode) &&
-            (!IsEventSensitive(pseudoClass->mAtom, data.mContentTag, isSelectorGlobal))){
+        if ((!IsEventSensitive(pseudoClass->mAtom, data.mContentTag, isSelectorGlobal))){
           result = localFalse;
         } else if (aTestState) {
           if (nsCSSAtoms::activePseudo == pseudoClass->mAtom) {
