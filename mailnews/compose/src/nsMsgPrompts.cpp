@@ -43,7 +43,9 @@ nsMsgDisplayMessageByID(PRInt32 msgID)
 #ifdef BUG_7770_IS_FIXED
     rv = dialog->Alert(alertText);
 #else
-    printf("%s",msg);
+    // will only work for single byte languages for now
+    nsString alertStr(msg, eOneByte);
+    printf("Alert: %s", alertStr.GetBuffer());
 #endif
   }
 
@@ -69,7 +71,9 @@ nsMsgDisplayMessageByString(char *msg)
 #ifdef BUG_7770_IS_FIXED
     rv = dialog->Alert(alertText);
 #else
-    printf("%s",msg);
+    // will only work for single byte languages for now
+    nsString alertStr(msg, eOneByte);
+    printf("Alert: %s", alertStr.GetBuffer());
 #endif    
   }
 
