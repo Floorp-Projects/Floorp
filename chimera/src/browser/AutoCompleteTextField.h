@@ -41,8 +41,12 @@
   nsIAutoCompleteResults *mResults;
   nsIAutoCompleteListener *mListener;
 
-  NSString* mSearchString;
+  NSString *mSearchString;
+  
+  // used to remember if backspace was pressed in complete: so we can check this in controlTextDidChange
   BOOL mBackspaced;
+  // determines if the search currently pending should complete the default result when it is ready
+  BOOL mCompleteResult;
   
   NSTimer *mOpenTimer;
 }
@@ -53,15 +57,17 @@
 - (NSTableView *) tableView;
 - (int) visibleRows;
 
-- (void) startSearch:(NSString*)aString;
+- (void) startSearch:(NSString*)aString complete:(BOOL)aComplete;
 - (void) performSearch;
 - (void) dataReady:(nsIAutoCompleteResults*)aResults status:(AutoCompleteStatus)aStatus;
 - (void) searchTimer:(NSTimer *)aTimer;
+- (void) clearResults;
 
 - (void) completeDefaultResult;
 - (void) completeSelectedResult;
 - (void) completeResult:(int)aRow;
 - (void) enterResult:(int)aRow;
+- (void) revertText;
 
 - (void) selectRowAt:(int)aRow;
 - (void) selectRowBy:(int)aRows;
