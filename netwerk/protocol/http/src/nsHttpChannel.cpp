@@ -3618,20 +3618,29 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         if (mCacheEntry)
             isPartial = !mTransaction->ResponseIsComplete();
 
-        // grab reference to connection in case we need to retry an 
-        // authentication request over it.
+        // determine if we should call DoAuthRetry
+        PRBool authRetry = mAuthRetryPending && NS_SUCCEEDED(status);
+
+        //
+        // grab reference to connection in case we need to retry an
+        // authentication request over it.  this applies to connection based
+        // authentication schemes only.  for request based schemes, conn is not
+        // needed, so it may be null.
+        // 
+        // this code relies on the code in nsHttpTransaction::Close, which
+        // tests for NS_HTTP_STICKY_CONNECTION to determine whether or not to
+        // keep the connection around after the transaction is finished.
+        //
         nsRefPtr<nsAHttpConnection> conn;
-        if (mCaps & NS_HTTP_STICKY_CONNECTION)
+        if (authRetry && (mCaps & NS_HTTP_STICKY_CONNECTION))
             conn = mTransaction->Connection();
 
         // at this point, we're done with the transaction
         NS_RELEASE(mTransaction);
-        mTransaction = nsnull;
         mTransactionPump = 0;
 
         // handle auth retry...
-        if (mAuthRetryPending && NS_SUCCEEDED(status)) {
-            NS_ASSERTION(conn, "we should have a connection");
+        if (authRetry) {
             mAuthRetryPending = PR_FALSE;
             status = DoAuthRetry(conn);
             if (NS_SUCCEEDED(status))
