@@ -27,7 +27,7 @@
 // Used by setup.rc
 //
 
-#include "winnt.rh"
+#include "winresrc.h"
 
 #define IDS_ERROR_DLL_LOAD              1
 #define IDS_ERROR_STRING_LOAD           2
