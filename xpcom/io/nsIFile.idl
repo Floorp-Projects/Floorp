@@ -281,8 +281,8 @@ interface nsIFile : nsISupports
     attribute unsigned long lastModificationDate;
     attribute unsigned long lastModificationDateOfLink;
         
-    readonly attribute unsigned long permissions;
-    readonly attribute unsigned long permissionsOfLink;
+    attribute unsigned long permissions;
+    attribute unsigned long permissionsOfLink;
 
     readonly attribute unsigned long fileSize;
     readonly attribute unsigned long fileSizeOfLink;
