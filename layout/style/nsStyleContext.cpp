@@ -59,12 +59,12 @@ void StyleFontImpl::ResetFrom(const nsStyleFont* aParent, nsIPresContext* aPresC
   if (nsnull != aParent) {
     mFont = aParent->mFont;
     mFixedFont = aParent->mFixedFont;
-    mThreeD = aParent->mThreeD;
+    mFlags = aParent->mFlags;
   }
   else {
     mFont = aPresContext->GetDefaultFont();
     mFixedFont = aPresContext->GetDefaultFixedFont();
-    mThreeD = PR_FALSE;
+    mFlags = NS_STYLE_FONT_DEFAULT;
   }
 }
 
