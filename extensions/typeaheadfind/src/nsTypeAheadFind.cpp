@@ -394,6 +394,7 @@ nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
       AttachWindowListeners(topLevelWindow);
     }
 
+#ifdef TYPEAHEADCONTROLLER
     // Attach nsTypeAheadController to window
     // so it can handle / and ' shortcuts to start text and link search
     nsCOMPtr<nsIDOMWindowInternal> winInternal = 
@@ -416,6 +417,7 @@ nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
 
       controllers->AppendController(controller);
     }
+#endif
  
     return NS_OK;
   }
