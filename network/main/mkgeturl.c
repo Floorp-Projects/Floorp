@@ -3206,400 +3206,334 @@ redo_load_switch:   /* come here on file/ftp retry */
  * causes connections to be read and processed.  Multiple
  * connections can be processed simultaneously.
  */
-PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type)
-{
+PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type) {
     ActiveEntry * tmpEntry;
     XP_List * list_item;
     int rv= -1;
-	Bool load_background;
+    Bool load_background;
 
 #ifdef XP_OS2_FIX
-   /* assume no local files in net_EntryList.
-      see "Thrash Optomization", below */
-   int localfiles = 0;
+    /* assume no local files in net_EntryList.
+     * see "Thrash Optomization", below */
+    int localfiles = 0;
 #endif
 
-	TRACEMSG(("Entering ProcessNet!  ready_fd: %d", ready_fd));
-	LIBNET_LOCK();
+    TRACEMSG(("Entering ProcessNet!  ready_fd: %d", ready_fd));
+    LIBNET_LOCK();
 
-	if(XP_ListIsEmpty(net_EntryList))
-	  {
-		TRACEMSG(("Invalid call to NET_ProcessNet with fd: %d - No active entries\n", ready_fd));
+    if(XP_ListIsEmpty(net_EntryList)) {
+        TRACEMSG(("Invalid call to NET_ProcessNet with fd: %d - No active entries\n", ready_fd));
 
 #ifdef MOZILLA_CLIENT
-		if (fd_type == NET_EVERYTIME_TYPE)
-		  {
-			MWContext *c = XP_FindContextOfType(0, MWContextBrowser);
-			if (!c) c = XP_FindContextOfType(0, MWContextMail);
-			if (!c) c = XP_FindContextOfType(0, MWContextNews);
-			if (!c) c = XP_FindContextOfType(0, MWContextMessageComposition);
-			if (!c) c = XP_FindContextOfType(0, MWContextMailMsg);
-			if (!c) c = XP_FindContextOfType(0, MWContextPane);
+        if (fd_type == NET_EVERYTIME_TYPE) {
+            MWContext *c = XP_FindContextOfType(0, MWContextBrowser);
+            if (!c) c = XP_FindContextOfType(0, MWContextMail);
+            if (!c) c = XP_FindContextOfType(0, MWContextNews);
+            if (!c) c = XP_FindContextOfType(0, MWContextMessageComposition);
+            if (!c) c = XP_FindContextOfType(0, MWContextMailMsg);
+            if (!c) c = XP_FindContextOfType(0, MWContextPane);
 
-			if (c)
-			{
-			  if(NET_IsCallNetlibAllTheTimeSet(c, NULL))
-			  {	
-				NET_ClearCallNetlibAllTheTime(c, "mkgeturl");
-			  }
-			  NET_SetNetlibSlowKickTimer(FALSE);
-			}
-		  }
+            if (c) {
+                if(NET_IsCallNetlibAllTheTimeSet(c, NULL)) {	
+                    NET_ClearCallNetlibAllTheTime(c, "mkgeturl");
+                }
+                NET_SetNetlibSlowKickTimer(FALSE);
+            }
+        }
 #endif /* MOZILLA_CLIENT */
 
-	LIBNET_UNLOCK_AND_RETURN(0); /* no entries to process */
-	  }
+        LIBNET_UNLOCK_AND_RETURN(0); /* no entries to process */
+    } /* XP_ListIsEmpty(net_EntryList) */
 
-	if(NET_InGetHostByName)
-	  {
-		TRACEMSG(("call to processnet while doing gethostbyname call"));
-		PR_ASSERT(0);
-		LIBNET_UNLOCK_AND_RETURN(1);
-	  }
+    if(NET_InGetHostByName) {
+        TRACEMSG(("call to processnet while doing gethostbyname call"));
+        PR_ASSERT(0);
+        LIBNET_UNLOCK_AND_RETURN(1);
+    }
 
-    /*
-     * if -1 is passed into ProcessNet use select to
-     * figure out if a socket is ready
-     */
-    if(ready_fd == NULL)
-	  {
-		/* try and find a socket ready for reading
-		 */
+    /* if NULL is passed into ProcessNet use select to
+     * figure out if a socket is ready */
+    if(ready_fd == NULL) {
+        /* try and find a socket ready for reading */
 #define MAX_SIMULTANIOUS_SOCKETS 100
-		/* should never have more than MAX sockets */
-		PRPollDesc poll_desc_array[MAX_SIMULTANIOUS_SOCKETS];
-		unsigned int fd_set_size=0;
+        /* should never have more than MAX sockets */
+        PRPollDesc poll_desc_array[MAX_SIMULTANIOUS_SOCKETS];
+        unsigned int fd_set_size=0;
 
-		/* reorder the list so that we get a round robin effect */
-		XP_ListMoveTopToBottom(net_EntryList);
+        /* reorder the list so that we get a round robin effect */
+        XP_ListMoveTopToBottom(net_EntryList);
 
-		fd_type = NET_SOCKET_FD;
+        fd_type = NET_SOCKET_FD;
 
-		/* process one socket ready for reading */
-		list_item = net_EntryList;
-		while((tmpEntry = (ActiveEntry *) XP_ListNextObject(list_item)) != 0)
-		  {
+        /* process one socket ready for reading */
+        list_item = net_EntryList;
+        while((tmpEntry = (ActiveEntry *) XP_ListNextObject(list_item)) != 0)
+        {
+            if(tmpEntry->busy)
+                continue;
 
-			if(tmpEntry->busy)
-				continue;
+            if(!tmpEntry->local_file && !tmpEntry->memory_file)
+            {
+                if (tmpEntry->socket != NULL) {
+                    if(tmpEntry->con_sock) {
+                        poll_desc_array[fd_set_size].fd = tmpEntry->con_sock;
+                        poll_desc_array[fd_set_size].in_flags = PR_POLL_READ | PR_POLL_EXCEPT | PR_POLL_WRITE; 
+                    } else {
+                        poll_desc_array[fd_set_size].fd = tmpEntry->socket;
+                        poll_desc_array[fd_set_size].in_flags = PR_POLL_READ | PR_POLL_EXCEPT; 
+                    }
 
-			if(!tmpEntry->local_file && !tmpEntry->memory_file)
-			  {
-				if (tmpEntry->socket != NULL)
-				  {
+                    fd_set_size++;
+                    PR_ASSERT(fd_set_size < MAX_SIMULTANIOUS_SOCKETS);
+                }
+            } else if(tmpEntry == 
+                        (ActiveEntry *) XP_ListGetObjectNum(net_EntryList, 1))
+            {
+                /* if this is the very first object in the list
+                 * and it's a local file or a memory cache copy
+                 * then use this one entry and skip the select call
+                 * we won't deadlock because we reorder the list
+                 * with every call to net process net. */
+                fd_type = NET_LOCAL_FILE_FD;
+                ready_fd = tmpEntry->socket;  /* it's actually going to be NULL in this case */
 
-					if(tmpEntry->con_sock)
-					{
-						poll_desc_array[fd_set_size].fd = tmpEntry->con_sock;
-						poll_desc_array[fd_set_size].in_flags = PR_POLL_READ | PR_POLL_EXCEPT | PR_POLL_WRITE; 
-					}
-					else
-					{
-						poll_desc_array[fd_set_size].fd = tmpEntry->socket;
-						poll_desc_array[fd_set_size].in_flags = PR_POLL_READ | PR_POLL_EXCEPT; 
-					}
+                /* call yeild to let other thread do something */
+                PR_Sleep(PR_INTERVAL_NO_WAIT);
 
-					fd_set_size++;
-					PR_ASSERT(fd_set_size < MAX_SIMULTANIOUS_SOCKETS);
-				  }
-			  }
-			else if(tmpEntry == 
-					(ActiveEntry *) XP_ListGetObjectNum(net_EntryList, 1))
-			  {
-				/* if this is the very first object in the list
-				 * and it's a local file or a memory cache copy
-				 * then use this one entry and skip the select call
-				 * we won't deadlock because we reorder the list
-				 * with every call to net process net.
-				 */
-				fd_type = NET_LOCAL_FILE_FD;
-				ready_fd = tmpEntry->socket;  /* it's actually going to be NULL in this case */
+                break;  /* exit while() */
+            }
+        } /* end while() */
 
-				/* call yeild to let other thread do something */
-				PR_Sleep(PR_INTERVAL_NO_WAIT);
+        /* in case we set it for the local file type above */
+        if(fd_type == NET_SOCKET_FD) {
+            int count=0;
 
-				break;  /* exit while */
-			  }
-		  }
+            PR_Sleep(PR_INTERVAL_NO_WAIT); /* thread yeild */
 
-		if(fd_type == NET_SOCKET_FD) /* in case we set it for the local file type above */
-		  {
-			int count=0;
-			int ret;
-			
-			PR_Sleep(PR_INTERVAL_NO_WAIT); /* thread yeild */
+            if( PR_Poll(poll_desc_array, fd_set_size, 0) < 1 ) {
+                TRACEMSG(("Select returned no active sockets! WASTED CALL TO PROCESS NET"));
+                LIBNET_UNLOCK_AND_RETURN(XP_ListIsEmpty(net_EntryList) ? 0 : 1);
+            }
 
-			ret = PR_Poll(poll_desc_array,
-							 fd_set_size,
-							 0);
+            /* process one socket ready for reading,
+             * find the first one ready */
+            list_item = net_EntryList;
+            while((tmpEntry=(ActiveEntry *) XP_ListNextObject(list_item)) != 0)
+            {
+                if(tmpEntry->busy)
+                    continue;
 
-		    if(ret < 1)
-			  {
+                if(!tmpEntry->local_file && !tmpEntry->memory_file) {
+                    /* count should line up to the appropriate socket since
+                     * it was added in the same order */
+                    PR_ASSERT(poll_desc_array[count].fd == tmpEntry->socket
+                                || poll_desc_array[count].fd == tmpEntry->con_sock);
+                    if(poll_desc_array[count].out_flags & (PR_POLL_READ | PR_POLL_WRITE | PR_POLL_EXCEPT))
+                    {
+                        ready_fd = tmpEntry->socket;
+                        break;
+                    }
+                    count++;
+                }
+            } /* end while() */
 
-				TRACEMSG(("Select returned no active sockets! "
-						  "WASTED CALL TO PROCESS NET"));
-				LIBNET_UNLOCK_AND_RETURN(XP_ListIsEmpty(net_EntryList) ? 0 : 1);
-			  }
-
-			/* process one socket ready for reading,
-			 * find the first one ready
-			 */
-			list_item = net_EntryList;
-			while((tmpEntry=(ActiveEntry *) XP_ListNextObject(list_item)) != 0)
-			  {
-
-				if(tmpEntry->busy)
-					continue;
-
-				if(!tmpEntry->local_file && !tmpEntry->memory_file)
-				  {
-					/* count should line up to the appropriate socket since
-					 * it was added in the same order
-					 */
-					PR_ASSERT(poll_desc_array[count].fd == tmpEntry->socket
-							  || poll_desc_array[count].fd == tmpEntry->con_sock);
-					if(poll_desc_array[count].out_flags & (PR_POLL_READ | PR_POLL_WRITE | PR_POLL_EXCEPT))
-					  {
-						ready_fd = tmpEntry->socket;
-						break;
-					  }
-					count++;
-				  }
-			  }
-
-			if(!ready_fd)
-			{
-				/* couldn't find the active socket.  Shouldn't ever happen */
-				PR_ASSERT(0);
-				LIBNET_UNLOCK_AND_RETURN(XP_ListIsEmpty(net_EntryList) ? 0 : 1);
-			}
-
-		  }
-      }
+			if(!ready_fd) {
+                /* couldn't find the active socket.  Shouldn't ever happen */
+                PR_ASSERT(0);
+                LIBNET_UNLOCK_AND_RETURN(XP_ListIsEmpty(net_EntryList) ? 0 : 1);
+            }
+        } /* end if(fd_type == NET_SOCKET_FD) */
+    } /* end if(ready_fd == NULL)*/
 
     list_item = net_EntryList;
 
     /* process one socket ready for reading
-     *
-	 * find the ready socket in the active entry list
-     */
+     * find the ready socket in the active entry list */
     while((tmpEntry = (ActiveEntry *) XP_ListNextObject(list_item)) != 0)
-      {
-		TRACEMSG(("Found item in Active Entry List. sock #%d  con_sock #%d",
-			    tmpEntry->socket, tmpEntry->con_sock));
+    {
+        TRACEMSG(("Found item in Active Entry List. sock #%d  con_sock #%d",
+                    tmpEntry->socket, tmpEntry->con_sock));
 
-		if(tmpEntry->busy)
-		{
-			/* I guess this is alright since one of the streams
-			 * (Play audio for instance) may put up a modal dialog
-			 * box which causes the main event loop to get called
-			 * from within the stream
-			 *
-			 * FE_Alert(tmpEntry->window_id, "reentrant call to Process Net");
-			 */
-		}
-			/* this will activate local and memory files as well since the ready_fd
-			 * will be zero and will match the NULL socket ID.
-			 *
-			 * We won't have starvation because the list is reordered every time
-			 */
-		else if(ready_fd == tmpEntry->socket
-				|| ready_fd == tmpEntry->con_sock)
-	    {
+        /* this will activate local and memory files as well since the ready_fd
+         * will be zero and will match the NULL socket ID.
+         *
+         * We won't have starvation because the list is reordered every time
+         */
+        if(!tmpEntry->busy 
+            &&
+            (ready_fd == tmpEntry->socket
+            || ready_fd == tmpEntry->con_sock) ) {
 
-			tmpEntry->busy = TRUE;
+            tmpEntry->busy = TRUE;
 
-		 	TRACEMSG(("Item has data ready for read"));
+            TRACEMSG(("Item has data ready for read"));
 
-			rv = (*tmpEntry->proto_impl->process)(tmpEntry);
+            rv = (*tmpEntry->proto_impl->process)(tmpEntry);
 
-			tmpEntry->busy = FALSE;
-		
-	    	/* check for done status on transfer and call
-	     	* exit routine if done.
-	     	*/
-	    	if(rv < 0)
-	      	{
+            tmpEntry->busy = FALSE;
 
-				XP_ListRemoveObject(net_EntryList, tmpEntry);
+            /* check for done status on transfer and call
+             * exit routine if done. */
+            if (rv < 0) {
 
-				if(tmpEntry->status == MK_USE_COPY_FROM_CACHE)
-		  		{
-		    		TRACEMSG(("304 Not modified recieved using cached entry\n"));
-	#ifdef MOZILLA_CLIENT
-		    		NET_RefreshCacheFileExpiration(tmpEntry->URL_s);
-	#endif /* MOZILLA_CLIENT */
+                XP_ListRemoveObject(net_EntryList, tmpEntry);
 
-					/* turn off force reload by telling it to use local copy
-					 */
-					tmpEntry->URL_s->use_local_copy = TRUE;
+                if(tmpEntry->status == MK_USE_COPY_FROM_CACHE) {
+                    TRACEMSG(("304 Not modified recieved using cached entry\n"));
+#ifdef MOZILLA_CLIENT
+                    NET_RefreshCacheFileExpiration(tmpEntry->URL_s);
+#endif /* MOZILLA_CLIENT */
 
-		    		/* restart the transfer
-		     		*/
-		    		NET_GetURL(tmpEntry->URL_s,
-								   tmpEntry->format_out,
-								   tmpEntry->window_id,
-								   tmpEntry->exit_routine);
+                    /* turn off force reload by telling it to use local copy */
+                    tmpEntry->URL_s->use_local_copy = TRUE;
 
-					net_CheckForWaitingURL(tmpEntry->window_id,
-											   tmpEntry->protocol,
-											   tmpEntry->URL_s->load_background);
+                    /* restart the transfer */
+                    NET_GetURL(tmpEntry->URL_s,
+                        tmpEntry->format_out,
+                        tmpEntry->window_id,
+                        tmpEntry->exit_routine);
 
-		  		}
-				else if(tmpEntry->status == MK_DO_REDIRECT)
-		  		{
-		    		TRACEMSG(("Doing redirect part in ProcessNet"));
+                    net_CheckForWaitingURL(tmpEntry->window_id,
+                                            tmpEntry->protocol,
+                                            tmpEntry->URL_s->load_background);
+                } else if(tmpEntry->status == MK_DO_REDIRECT) {
+                    TRACEMSG(("Doing redirect part in ProcessNet"));
 
-		    		/* restart the whole transfer */
-		    		NET_GetURL(tmpEntry->URL_s,
-				   		tmpEntry->format_out,
-				   		tmpEntry->window_id,
-				   		tmpEntry->exit_routine);
+                    /* restart the whole transfer */
+                    NET_GetURL(tmpEntry->URL_s,
+                        tmpEntry->format_out,
+                        tmpEntry->window_id,
+                        tmpEntry->exit_routine);
 
-					net_CheckForWaitingURL(tmpEntry->window_id,
-											   tmpEntry->protocol,
-											   tmpEntry->URL_s->load_background);                  
-				}
-				else if(tmpEntry->status == MK_TOO_MANY_OPEN_FILES)
-				{
-					/* Queue this URL so it gets tried again
-					 */
-					LIBNET_UNLOCK_AND_RETURN(net_push_url_on_wait_queue(
-						NET_URL_Type(tmpEntry->URL_s->address),
-						tmpEntry->URL_s,
-						tmpEntry->format_out,
-						tmpEntry->window_id,
-						tmpEntry->exit_routine));
-				}
+                    net_CheckForWaitingURL(tmpEntry->window_id,
+                                            tmpEntry->protocol,
+                                            tmpEntry->URL_s->load_background);                  
+                } else if(tmpEntry->status == MK_TOO_MANY_OPEN_FILES) {
+					/* Queue this URL so it gets tried again */
+                    LIBNET_UNLOCK_AND_RETURN(net_push_url_on_wait_queue(
+                        NET_URL_Type(tmpEntry->URL_s->address),
+                        tmpEntry->URL_s,
+                        tmpEntry->format_out,
+                        tmpEntry->window_id,
+                        tmpEntry->exit_routine));
+                }
 #ifdef NU_CACHE
                 else if(tmpEntry->status < 0
-							&& !tmpEntry->URL_s->use_local_copy
-							HG42469
-						&& (tmpEntry->status == MK_CONNECTION_REFUSED
-			    			|| tmpEntry->status == MK_CONNECTION_TIMED_OUT
-			    			|| tmpEntry->status == MK_UNABLE_TO_CREATE_SOCKET
-			    			|| tmpEntry->status == MK_UNABLE_TO_LOCATE_HOST
-			    			|| tmpEntry->status == MK_UNABLE_TO_CONNECT)
-							&& NET_IsURLInCache(tmpEntry->URL_s))
+                            && !tmpEntry->URL_s->use_local_copy
+                            HG42469
+                        && (tmpEntry->status == MK_CONNECTION_REFUSED
+                            || tmpEntry->status == MK_CONNECTION_TIMED_OUT
+                            || tmpEntry->status == MK_UNABLE_TO_CREATE_SOCKET
+                            || tmpEntry->status == MK_UNABLE_TO_LOCATE_HOST
+                            || tmpEntry->status == MK_UNABLE_TO_CONNECT)
+                            && NET_IsURLInCache(tmpEntry->URL_s))
 #else
                 else if(tmpEntry->status < 0
-							&& !tmpEntry->URL_s->use_local_copy
-							HG42469
-						&& (tmpEntry->status == MK_CONNECTION_REFUSED
-			    			|| tmpEntry->status == MK_CONNECTION_TIMED_OUT
-			    			|| tmpEntry->status == MK_UNABLE_TO_CREATE_SOCKET
-			    			|| tmpEntry->status == MK_UNABLE_TO_LOCATE_HOST
-			    			|| tmpEntry->status == MK_UNABLE_TO_CONNECT)
-						&& (NET_IsURLInDiskCache(tmpEntry->URL_s)
-							|| NET_IsURLInMemCache(tmpEntry->URL_s)))
+                            && !tmpEntry->URL_s->use_local_copy
+                            HG42469
+                        && (tmpEntry->status == MK_CONNECTION_REFUSED
+                            || tmpEntry->status == MK_CONNECTION_TIMED_OUT
+                            || tmpEntry->status == MK_UNABLE_TO_CREATE_SOCKET
+                            || tmpEntry->status == MK_UNABLE_TO_LOCATE_HOST
+                            || tmpEntry->status == MK_UNABLE_TO_CONNECT)
+                        && (NET_IsURLInDiskCache(tmpEntry->URL_s)
+                            || NET_IsURLInMemCache(tmpEntry->URL_s)))
 #endif
                 {
-					/* if the status is negative something went wrong
-					 * with the load.  If last_modified is set
-					 * then we probably have a cache file,
-					 * but it might be a broken image so
-					 * make sure "use_local_copy" is not
-					 * set.
-					 *
-					 * Only do this when we can't connect to the
-					 * server.
-					 */
+                    /* if the status is negative something went wrong
+                     * with the load.  If last_modified is set
+                     * then we probably have a cache file,
+                     * but it might be a broken image so
+                     * make sure "use_local_copy" is not
+                     * set.
+                     *
+                     * Only do this when we can't connect to the
+                     * server. */
 
-					/* if we had a cache file and got a load
-		     		 * error, go ahead and use it anyways
-		     		 */
+                    /* if we had a cache file and got a load
+                     * error, go ahead and use it anyways */
 
-		    		/* turn off force reload by telling it to use local copy
-		     		 */
-		    		tmpEntry->URL_s->use_local_copy = TRUE;
+                    /* turn off force reload by telling it to use local copy */
+                    tmpEntry->URL_s->use_local_copy = TRUE;
 
-					if(CLEAR_CACHE_BIT(tmpEntry->format_out) == FO_PRESENT)
-					  {
-						StrAllocCat(tmpEntry->URL_s->error_msg,
-						XP_GetString( XP_USING_PREVIOUSLY_CACHED_COPY_INSTEAD ) );
+                    if(CLEAR_CACHE_BIT(tmpEntry->format_out) == FO_PRESENT)
+                    {
+                        StrAllocCat(tmpEntry->URL_s->error_msg,
+                        XP_GetString( XP_USING_PREVIOUSLY_CACHED_COPY_INSTEAD ) );
 
-						FE_Alert(tmpEntry->window_id,
-								 tmpEntry->URL_s->error_msg);
-					  }
+                        FE_Alert(tmpEntry->window_id,
+                                tmpEntry->URL_s->error_msg);
+                    }
 
-					FREE_AND_CLEAR(tmpEntry->URL_s->error_msg);
+                    FREE_AND_CLEAR(tmpEntry->URL_s->error_msg);
 
-		    		/* restart the transfer
-		     		 */
-		    		NET_GetURL(tmpEntry->URL_s,
-			       			tmpEntry->format_out,
-			       			tmpEntry->window_id,
-			       			tmpEntry->exit_routine);
+                    /* restart the transfer */
+                    NET_GetURL(tmpEntry->URL_s,
+                                tmpEntry->format_out,
+                                tmpEntry->window_id,
+                                tmpEntry->exit_routine);
 
-		    		net_CheckForWaitingURL(tmpEntry->window_id,
-					   						tmpEntry->protocol,
-											tmpEntry->URL_s->load_background);
-				}
-				else
-				{
-					/* XP_OS2_FIX IBM-MAS: limit size of URL string to 100 to keep from blowing trace message buffer! */
-					TRACEMSG(("End of transfer, entry (soc=%d, con=%d) being removed from list with %d status: %-.1900s",
-							tmpEntry->socket, tmpEntry->con_sock, tmpEntry->status,
-							(tmpEntry->URL_s->address ? tmpEntry->URL_s->address : "")));
+                    net_CheckForWaitingURL(tmpEntry->window_id,
+                                            tmpEntry->protocol,
+                                            tmpEntry->URL_s->load_background);
+                } else {
+                    /* XP_OS2_FIX IBM-MAS: limit size of URL string to 100 to keep from blowing trace message buffer! */
+                    TRACEMSG(("End of transfer, entry (soc=%d, con=%d) being removed from list with %d status: %-.1900s",
+                            tmpEntry->socket, tmpEntry->con_sock, tmpEntry->status,
+                            (tmpEntry->URL_s->address ? tmpEntry->URL_s->address : "")));
 
-					/* catch out of memory errors at the lowest
-					 * level since we don't do it at all the out
-					 * of memory condition spots
-					 */
-		    		if(tmpEntry->status == MK_OUT_OF_MEMORY
-							&& !tmpEntry->URL_s->error_msg)
-		      		{
-						tmpEntry->URL_s->error_msg =
-							NET_ExplainErrorDetails(MK_OUT_OF_MEMORY);
-		      		}
+                    /* catch out of memory errors at the lowest
+                     * level since we don't do it at all the out
+                     * of memory condition spots */
+                    if(tmpEntry->status == MK_OUT_OF_MEMORY
+                            && !tmpEntry->URL_s->error_msg) {
+                        tmpEntry->URL_s->error_msg =
+                            NET_ExplainErrorDetails(MK_OUT_OF_MEMORY);
+                    }
 
-					load_background = tmpEntry->URL_s->load_background;
-					/* run the exit routine
-					 */
-		    		net_CallExitRoutineProxy(tmpEntry->exit_routine,
-											tmpEntry->URL_s,
-											tmpEntry->status,
-											tmpEntry->format_out,
-											tmpEntry->window_id);
+                    load_background = tmpEntry->URL_s->load_background;
+                    /* run the exit routine */
+                    net_CallExitRoutineProxy(tmpEntry->exit_routine,
+                                            tmpEntry->URL_s,
+                                            tmpEntry->status,
+                                            tmpEntry->format_out,
+                                            tmpEntry->window_id);
 
-					net_CheckForWaitingURL(tmpEntry->window_id,
-										   tmpEntry->protocol,
-										   load_background);
+                    net_CheckForWaitingURL(tmpEntry->window_id,
+                                            tmpEntry->protocol,
+                                            load_background);
 
-	#ifdef MILAN
-					/* if the error was caused by a NETWORK DOWN
-					 * then interrupt the window.  This
-					 * could still be a problem since another
-					 * window may be active, but it should get
-					 * the same error
-					 */
-					if(PR_GetOSError() == XP_ERRNO_ENETDOWN)
-					{
-						NET_SilentInterruptWindow(tmpEntry->window_id);
-					}
-	#endif /* MILAN */
+#ifdef MILAN
+                    /* if the error was caused by a NETWORK DOWN
+                     * then interrupt the window.  This
+                     * could still be a problem since another
+                     * window may be active, but it should get
+                     * the same error */
+                    if(PR_GetOSError() == XP_ERRNO_ENETDOWN) {
+                        NET_SilentInterruptWindow(tmpEntry->window_id);
+                    }
+#endif /* MILAN */
+
 #if defined(MODULAR_NETLIB)
-	                net_ReleaseContext(tmpEntry->window_id);
+                    net_ReleaseContext(tmpEntry->window_id);
 #endif
-		  		}
+                } /* end status variable if statements */
 
-				PR_Free(tmpEntry);  /* free the now non active entry */
+                PR_Free(tmpEntry);  /* free the now non active entry */
 
-			} /* end if  rv < 0 */
+            } /* end if  rv < 0 */
 
-			TRACEMSG(("Leaving process net with %d items in list",
-						  XP_ListCount(net_EntryList)));
+            TRACEMSG(("Leaving process net with %d items in list",
+                        XP_ListCount(net_EntryList)));
 
-			LIBNET_UNLOCK_AND_RETURN(XP_ListIsEmpty(net_EntryList) ? 0 : 1); /* all done */
+            LIBNET_UNLOCK_AND_RETURN(XP_ListIsEmpty(net_EntryList) ? 0 : 1); /* all done */
 
-		  } /* end if */
+        } /* end if !tmpEntry->busy */
 
-      } /* end while */
+    } /* end while */
 
-
-	/* the active socket wasn't found in the list :(
-     */
-	TRACEMSG(("Invalid call to NET_ProcessNet: Active item with passed in fd: %d not found\n", ready_fd));
+    /* the active socket wasn't found in the list :( */
+    TRACEMSG(("Invalid call to NET_ProcessNet: Active item with passed in fd: %d not found\n", ready_fd));
 
     LIBNET_UNLOCK_AND_RETURN(XP_ListIsEmpty(net_EntryList) ? 0 : 1);
 }
