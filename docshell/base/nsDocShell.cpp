@@ -5106,11 +5106,24 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     //
     // First:
     // Check to see if the new URI is an anchor in the existing document.
+    // Skip this check if we're doing some sort of abnormal load, if
+    // the new load is a non-history load and has postdata, or if
+    // we're doing a history load and there are postdata differences
+    // between what we plan to load and what we have loaded currently.
     //
+    PRBool samePostData = PR_TRUE;
+    if (!aSHEntry) {
+        samePostData = (aPostData == nsnull);
+    } else if (mOSHE) {
+        nsCOMPtr<nsIInputStream> currentPostData;
+        mOSHE->GetPostData(getter_AddRefs(currentPostData));
+        samePostData = (currentPostData == aPostData);
+    }
+    
     if ((aLoadType == LOAD_NORMAL ||
          aLoadType == LOAD_NORMAL_REPLACE ||
          aLoadType == LOAD_HISTORY ||
-         aLoadType == LOAD_LINK) && (aPostData == nsnull)) {
+         aLoadType == LOAD_LINK) && samePostData) {
         PRBool wasAnchor = PR_FALSE;
         nscoord cx, cy;
         NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor, aLoadType, &cx, &cy), NS_ERROR_FAILURE);
