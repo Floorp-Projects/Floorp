@@ -574,8 +574,11 @@ NET_ParseDate(char *date_string)
         LL_I2L(u, PR_USEC_PER_SEC);
         LL_DIV(r, prdate, u);
         LL_L2I(date, r);
-		TRACEMSG(("Parsed date as GMT: %s\n", asctime(gmtime(&date))));
-		TRACEMSG(("Parsed date as local: %s\n", ctime(&date)));
+        if (date < 0) {
+            date = 0;
+        }
+        TRACEMSG(("Parsed date as GMT: %s\n", asctime(gmtime(&date))));
+        TRACEMSG(("Parsed date as local: %s\n", ctime(&date)));
 	  }
 	else
 	  {
