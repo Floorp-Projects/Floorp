@@ -104,7 +104,8 @@ private:
     nsresult CreateChannelFromURI(nsIURI *aURI, nsIChannel **aChannel);
     nsresult StartUpload(nsIStorageStream *aOutStream, nsIURI *aDestinationURI,
         const char *aContentType);
-    nsresult CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChannel);
+    nsresult CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChannel,
+        nsIURI *aOriginalURIWithExtension);
     nsresult MakeFilenameFromURI(
         nsIURI *aURI, nsString &aFilename);
     nsresult StoreURIAttribute(
