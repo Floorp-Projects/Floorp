@@ -208,6 +208,20 @@ CREATE TABLE `feedback` (
 ) TYPE=InnoDB PACK_KEYS=0;
 
 -- --------------------------------------------------------
+-- 
+-- Table structure for table `feedback_ipbans`
+-- 
+
+CREATE TABLE `feedback_ipbans` (
+  `bID` int(11) NOT NULL auto_increment,
+  `beginip` varchar(15) NOT NULL default '',
+  `endip` varchar(15) NOT NULL default '',
+  `DateAdded` datetime default '0000-00-00 00:00:00',
+  `comments` text NOT NULL,
+  PRIMARY KEY  (`bID`)
+) TYPE=InnoDB;
+
+-- --------------------------------------------------------
 
 -- 
 -- Table structure for table `main`

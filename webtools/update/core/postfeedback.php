@@ -102,36 +102,46 @@ $sql = "SELECT `CommentID` FROM  `feedback` WHERE `formkey` = '$formkey' AND `Co
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
 if (mysql_num_rows($sql_result)=="0") {
 
-//FormKey doesn't exist, go ahead and add their comment.
-    $sql = "INSERT INTO `feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`, `email`, `formkey`, `VersionTagline`) VALUES ('$id', '$name', '$rating', '$title', '$comments', NOW(NULL), '$remote_addr', '$email', '$formkey', '$versiontagline');";
-    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    //FormKey check passed, now let's see if this IP is banned...
+    $sql = "SELECT `bID` from `feedback_ipbans` WHERE `beginip` <= '$remote_addr' AND `endip` >='$remote_addr' LIMIT 1";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
+    if (mysql_num_rows($sql_result)=="0") {
+    //No Bans Returned, Proceed...
+    
+
+        //FormKey doesn't exist, go ahead and add their comment.
+        $sql = "INSERT INTO `feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`, `email`, `formkey`, `VersionTagline`) VALUES ('$id', '$name', '$rating', '$title', '$comments', NOW(NULL), '$remote_addr', '$email', '$formkey', '$versiontagline');";
+        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
 
-    //Get Rating Data and Create $ratingarray
-    $date = date("Y-m-d H:i:s", mktime(0, 0, 0, date("m"), date("d")-30, date("Y")));
-    $sql = "SELECT ID, CommentVote FROM  `feedback` WHERE `ID` = '$id' AND `CommentDate`>='$date' AND `CommentVote` IS NOT NULL";
-    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-    while ($row = mysql_fetch_array($sql_result)) {
-        $ratingarray[$row[ID]][] = $row["CommentVote"];
-    }
+        //Get Rating Data and Create $ratingarray
+        $date = date("Y-m-d H:i:s", mktime(0, 0, 0, date("m"), date("d")-30, date("Y")));
+        $sql = "SELECT ID, CommentVote FROM  `feedback` WHERE `ID` = '$id' AND `CommentDate`>='$date' AND `CommentVote` IS NOT NULL";
+        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+        while ($row = mysql_fetch_array($sql_result)) {
+            $ratingarray[$row[ID]][] = $row["CommentVote"];
+        }
 
-    //Compile Rating Average
-    if (!$ratingarray[$id]) {
-        $ratingarray[$id] = array();
-    }
-    $numratings = count($ratingarray[$id]);
-    $sumratings = array_sum($ratingarray[$id]);
+        //Compile Rating Average
+        if (!$ratingarray[$id]) {
+            $ratingarray[$id] = array();
+        }
+        $numratings = count($ratingarray[$id]);
+        $sumratings = array_sum($ratingarray[$id]);
 
-    if ($numratings>0) {
-        $rating = round($sumratings/$numratings, 1);
+        if ($numratings>0) {
+            $rating = round($sumratings/$numratings, 1);
+        } else {
+            $rating="2.5"; //Default Rating
+        }
+
+
+        $sql = "UPDATE `main` SET `Rating`='$rating' WHERE `ID`='$id' LIMIT 1";
+        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     } else {
-        $rating="2.5"; //Default Rating
+        //User is Banned, Add Param to URI to throw an error about this...
+        $action="ipbanned";
     }
-
-
-    $sql = "UPDATE `main` SET `Rating`='$rating' WHERE `ID`='$id' LIMIT 1";
-    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-
 }
 
 
@@ -141,7 +151,11 @@ if ($_POST["type"]=="E") {
     $type="themes";
 }
 
-$return_path="$type/moreinfo.php?id=$id&vid=$vid&page=comments&action=postsuccessfull";
+if (!$action) {
+    $action="successful";
+}
+
+$return_path="$type/moreinfo.php?id=$id&vid=$vid&page=comments&action=$action";
 header("Location: http://$sitehostname/$return_path");
 exit;
 ?>
