@@ -2195,7 +2195,8 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 	nsAutoString	resultListStartStr(""), resultListEndStr("");
 	nsAutoString	resultItemStartStr(""), resultItemEndStr("");
 	nsAutoString	relevanceStartStr(""), relevanceEndStr("");
-	nsAutoString	bannerStartStr(""), bannerEndStr("");
+	nsAutoString	bannerStartStr(""), bannerEndStr(""), skiplocalStr("");
+	PRBool		skipLocalFlag = PR_FALSE;
 
 	InternetSearchDataSource::GetData(data, "interpret", "resultListStart", resultListStartStr);
 	InternetSearchDataSource::GetData(data, "interpret", "resultListEnd", resultListEndStr);
@@ -2205,6 +2206,11 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 	InternetSearchDataSource::GetData(data, "interpret", "relevanceEnd", relevanceEndStr);
 	InternetSearchDataSource::GetData(data, "interpret", "bannerStart", bannerStartStr);
 	InternetSearchDataSource::GetData(data, "interpret", "bannerEnd", bannerEndStr);
+	InternetSearchDataSource::GetData(data, "interpret", "skiplocal", skiplocalStr);
+	if (skiplocalStr.EqualsIgnoreCase("true"))
+	{
+		skipLocalFlag = PR_TRUE;
+	}
 
 #ifdef	DEBUG_SEARCH_OUTPUT
 	char *cStr;
@@ -2288,14 +2294,23 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 	}
 	if (resultListEndStr.Length() > 0)
 	{
-		PRInt32	resultListEnd = htmlResults.Find(resultListEndStr, PR_TRUE);
+		// rjc note: use RFind to find the LAST occurrence of resultListEndStr
+		PRInt32	resultListEnd = htmlResults.RFind(resultListEndStr, PR_TRUE);
 		if (resultListEnd >= 0)
 		{
 			htmlResults.Truncate(resultListEnd);
 		}
 	}
 
-	PRBool	trimItemEnd = PR_FALSE;		// rjc note: testing shows we should NEVER trim???
+	PRBool	trimItemStart = PR_TRUE;
+	PRBool	trimItemEnd = PR_FALSE;		// rjc note: testing shows we should NEVER trim end???
+
+	// if resultItemStartStr is not specified, try making it just be "HREF="
+	if (resultItemStartStr.Length() < 1)
+	{
+		resultItemStartStr = "HREF=";
+		trimItemStart = PR_FALSE;
+	}
 
 	// if resultItemEndStr is not specified, try making it the same as resultItemStartStr
 	if (resultItemEndStr.Length() < 1)
@@ -2310,9 +2325,18 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 		resultItemStart = htmlResults.Find(resultItemStartStr, PR_TRUE);
 		if (resultItemStart < 0)	break;
 
-		htmlResults.Cut(0, resultItemStart + resultItemStartStr.Length());
+		PRInt32	resultItemEnd;
+		if (trimItemStart == PR_TRUE)
+		{
+			htmlResults.Cut(0, resultItemStart + resultItemStartStr.Length());
+			resultItemEnd = htmlResults.Find(resultItemEndStr, PR_TRUE );
+		}
+		else
+		{
+			htmlResults.Cut(0, resultItemStart);
+			resultItemEnd = htmlResults.Find(resultItemEndStr, PR_TRUE, resultItemStartStr.Length() );
+		}
 
-		PRInt32	resultItemEnd = htmlResults.Find(resultItemEndStr, PR_TRUE );
 		if (resultItemEnd < 0)
 		{
 			resultItemEnd = htmlResults.Length()-1;
@@ -2381,6 +2405,8 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 		// check to see if this needs to be an absolute URL
 		if (hrefStr[0] == PRUnichar('/'))
 		{
+			if (skipLocalFlag == PR_TRUE)	continue;
+
 			char *host = nsnull, *protocol = nsnull;
 			aURL->GetHost(&host);
 			aURL->GetScheme(&protocol);
