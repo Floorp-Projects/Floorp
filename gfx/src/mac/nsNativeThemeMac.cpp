@@ -316,8 +316,8 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
   ConvertGeckoToNativeRect(transClipRect, clipRect);
   ::ClipRect(&clipRect);
 #endif
-  
-  PRInt32 eventState = GetContentState(aFrame);
+
+  PRInt32 eventState = GetContentState(aFrame, aWidgetType);
 
   switch ( aWidgetType ) {
   
