@@ -89,8 +89,8 @@ nsUrlWidget::SetURLToHiddenControl( char const *aURL, nsIDOMWindow *parent )
     ppDocShell->QueryInterface(NS_GET_IID(nsIBaseWindow), (void **)&ppBaseWindow);
     if (ppBaseWindow != NULL)
     {
-        nsIWidget*	ppWidget;
-        ppBaseWindow->GetMainWidget(&ppWidget);
+        nsCOMPtr<nsIWidget> ppWidget;
+        ppBaseWindow->GetMainWidget(getter_AddRefs(ppWidget));
         hMainFrame = (HWND)ppWidget->GetNativeData(NS_NATIVE_WIDGET);
     }
 
