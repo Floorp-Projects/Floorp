@@ -118,7 +118,7 @@ extern PRSharedMemory * _MD_OpenSharedMemory(
             PR_DELETE( shm );
             return( NULL );
         } 
-        if ( close(osfd == -1 )) {
+        if ( close(osfd) == -1 ) {
             _PR_MD_MAP_CLOSE_ERROR( errno );
             PR_FREEIF( shm->ipcname );
             PR_DELETE( shm );
@@ -243,7 +243,7 @@ extern PRStatus _MD_DeleteSharedMemory( const char *name )
             _PR_MD_MAP_OPEN_ERROR( errno );
             return( PR_FAILURE );
         } 
-        if ( close(osfd == -1 )) {
+        if ( close(osfd) == -1 ) {
             _PR_MD_MAP_CLOSE_ERROR( errno );
             return( PR_FAILURE );
         }
