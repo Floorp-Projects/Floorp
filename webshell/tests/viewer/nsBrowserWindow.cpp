@@ -48,6 +48,7 @@
 #include "nsParserCIID.h"
 #include "nsIEnumerator.h"
 #include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
 
 #include "nsIDocument.h"
