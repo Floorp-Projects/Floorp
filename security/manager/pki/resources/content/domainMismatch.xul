@@ -40,17 +40,17 @@
   <html id="message2" />
 
   <box>
-  <button id="examineCert-button" class="dialog" value="&examineCert.label;"
+  <button id="examineCert-button" class="dialog" label="&examineCert.label;"
      onclick="viewCert();"/> 
   </box>
   <separator/>
   
   <box>
-  <button id="ok-button" class="dialog" value="&ok.label;"
+  <button id="ok-button" class="dialog" label="&ok.label;"
      style="width: 8ex" onclick="doOK();" disabled="false"/> 
-  <button id="cancel-button" class="dialog" value="&cancel.label;"
+  <button id="cancel-button" class="dialog" label="&cancel.label;"
      style="width: 8ex" onclick="doCancel();" /> 
-  <button id="help-button" class="dialog" value="&help.label;"
+  <button id="help-button" class="dialog" label="&help.label;"
     style="width: 8ex" onclick="alert('Will bring up help one day');" /> 
   </box>
 </box>

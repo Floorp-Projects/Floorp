@@ -52,9 +52,9 @@
       <row flex="1">
         <tabcontrol flex="0" orient="vertical">
           <tabbox orient="horizontal">
-            <tab id="mine_tab" value="&certmgr.tab.mine;" />
-            <tab id="others_tab" value="&certmgr.tab.others;" />
-            <tab id="websites_tab" value="&certmgr.tab.websites;" />
+            <tab id="mine_tab" label="&certmgr.tab.mine;" />
+            <tab id="others_tab" label="&certmgr.tab.others;" />
+            <tab id="websites_tab" label="&certmgr.tab.websites;" />
             <tab id="ca_tab" value="&certmgr.tab.ca;" selected="true"/>
           </tabbox>
           <tabpanel flex="1">
@@ -68,10 +68,10 @@
       <row>
         <box orient="horizontal" flex="1">
           <button id="HelpButton" class="normal" 
-                  value="&certmgr.help.label;" 
+                  label="&certmgr.help.label;" 
                   orient="horizontal" accesskey="h" />
           <button id="closeButton" class="normal" 
-                  value="&certmgr.close.label;" 
+                  label="&certmgr.close.label;" 
                   orient="horizontal" accesskey="c"
                   onclick="window.close();"
                   onkeypress="window.close();"/>

@@ -44,8 +44,8 @@ function getSelectedCerts()
   if (items.length > 0) {
     selected_certs = [];
     for (var t=0; t<items.length; t++) {
-      var tokenName = items[t].firstChild.lastChild.getAttribute('value');
-      var certName  = items[t].firstChild.firstChild.getAttribute('value');
+      var tokenName = items[t].firstChild.lastChild.getAttribute('label');
+      var certName  = items[t].firstChild.firstChild.getAttribute('label');
       selected_certs[selected_certs.length] = [tokenName, certName];
     }
   }
@@ -59,7 +59,7 @@ function AddItem(children, cells, prefix, idfier)
   for (var i=0; i<cells.length; i++) {
     var cell = document.createElement("treecell");
     cell.setAttribute("class", "propertylist");
-    cell.setAttribute("value", cells[i]);
+    cell.setAttribute("label", cells[i]);
     row.appendChild(cell);
   }
   item.appendChild(row);
@@ -75,7 +75,7 @@ function AddNameWithToken(children, cells, prefix, idfier)
   for (var i=0; i<2; i++) {
     var cell = document.createElement("treecell");
     cell.setAttribute("class", "propertylist");
-    cell.setAttribute("value", cells[i]);
+    cell.setAttribute("label", cells[i]);
     if (i==1) {
       cell.setAttribute("collapsed", "true");
     }
@@ -206,12 +206,12 @@ function backupCerts()
   }
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
-  fp.init(window, 
+  fp.init(window,
           bundle.GetStringFromName("chooseP12BackupFileDialog"),
           nsIFilePicker.modeSave);
   fp.appendFilter("PKCS12 Files (*.p12)", "*.p12");
   fp.appendFilters(nsIFilePicker.filterAll);
-  if (fp.show() == nsIFilePicker.returnOK || 
+  if (fp.show() == nsIFilePicker.returnOK ||
       fp.show() == nsIFilePicker.returnReplace) {
     var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
     certdb.exportPKCS12File(null, fp.file, numcerts, certs);
@@ -243,7 +243,7 @@ function editCerts()
     } else {
       windowName = selected_certs[t][1];
     }
-    window.open('chrome://pippki/content/editcerts.xul', windowName, 
+    window.open('chrome://pippki/content/editcerts.xul', windowName,
                 'chrome,width=500,height=400,resizable=1');
   }
 }
@@ -252,7 +252,7 @@ function restoreCerts()
 {
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
-  fp.init(window, 
+  fp.init(window,
           bundle.GetStringFromName("chooseP12RestoreFileDialog"),
           nsIFilePicker.modeOpen);
   fp.appendFilter("PKCS12 Files (*.p12)", "*.p12");
@@ -277,7 +277,7 @@ function deleteCerts()
     }
     alert("You want to delete \"" + windowName + "\"");
 /*
-    window.open('chrome://pippki/content/deleteCert.xul', windowName, 
+    window.open('chrome://pippki/content/deleteCert.xul', windowName,
                 'chrome,width=500,height=400,resizable=1');
 */
   }
@@ -293,7 +293,7 @@ function viewCerts()
     } else {
       windowName = selected_certs[t][1];
     }
-    window.open('chrome://pippki/content/viewCertDetails.xul', windowName, 
+    window.open('chrome://pippki/content/viewCertDetails.xul', windowName,
                 'chrome,width=500,height=400,resizable=1');
   }
 }

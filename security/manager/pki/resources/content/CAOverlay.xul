@@ -45,7 +45,7 @@
           <treehead>
 -->
             <treerow>
-              <treecell value="&certmgr.ca.builtins;" flex="1"/>
+              <treecell label="&certmgr.ca.builtins;" flex="1"/>
               <treecell collapsed="true" flex="1"/>
             </treerow>
 <!--
@@ -58,7 +58,7 @@
           <treehead>
 -->
             <treerow>
-              <treecell value="&certmgr.ca.mycas;" flex="1"/>
+              <treecell label="&certmgr.ca.mycas;" flex="1"/>
               <treecell collapsed="true" flex="1"/>
             </treerow>
 <!--
@@ -70,18 +70,18 @@
     </tree>
     <box>
       <button id="ca_viewButton" class="normal" 
-              value="&certmgr.view.label;" orient="horizontal" 
+              label="&certmgr.view.label;" orient="horizontal" 
               disabled="true" onclick="viewCerts();"/>
       <button id="ca_editButton" class="normal" 
-              value="&certmgr.edit.label;" orient="horizontal" 
+              label="&certmgr.edit.label;" orient="horizontal" 
               disabled="true" onclick="editCerts();"/>
 <!-- future - import a DER cert?
       <button id="ca_addButton" class="normal" 
-              value="&certmgr.add.label;" orient="horizontal" 
+              label="&certmgr.add.label;" orient="horizontal" 
               onclick="addCerts();"/>
 -->
       <button id="ca_deleteButton" class="normal" 
-              value="&certmgr.delete.label;" orient="horizontal" 
+              label="&certmgr.delete.label;" orient="horizontal" 
               disabled="true" onclick="deleteCerts();"/>
     </box>
   </box>

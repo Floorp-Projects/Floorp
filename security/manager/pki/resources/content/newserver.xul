@@ -51,30 +51,30 @@
 
   <radiogroup id="trustSiteCert" pref="false" orient="vertical">
     <radio group="trustSiteCert" 
-           value="&newserver.acceptperm;"
+           label="&newserver.acceptperm;"
            id="acceptRadio"
-            data="0"/>
+           value="0"/>
     <radio group="trustSiteCert" 
-           value="&newserver.accepttemp;"
+           label="&newserver.accepttemp;"
            id="tmpAcceptRadio"  
-           data="1" checked="true"/>
+           value="1" checked="true"/>
     <radio group="trustSiteCert" 
            id="rejectRadio"
-           value="&newserver.reject;" data="2"/>
+           label="&newserver.reject;" value="2"/>
   </radiogroup>
 
   <box>
-  <button id="examineCert-button" class="dialog" value="&examineCert.label;"
+  <button id="examineCert-button" class="dialog" label="&examineCert.label;"
      onclick="viewCert();"/> 
   </box>
   <separator/>
   
   <box>
-  <button id="ok-button" class="dialog" value="&ok.label;"
+  <button id="ok-button" class="dialog" label="&ok.label;"
      style="width: 10ex" onclick="doOK();" disabled="false"/> 
-  <button id="cancel-button" class="dialog" value="&cancel.label;"
+  <button id="cancel-button" class="dialog" label="&cancel.label;"
      style="width: 10ex" onclick="doCancel();" /> 
-  <button id="help-button" class="dialog" value="&help.label;"
+  <button id="help-button" class="dialog" label="&help.label;"
     style="width: 10ex" onclick="alert('Will bring up help one day');" /> 
   </box>
 </box>

@@ -106,7 +106,7 @@
   <box>
     <button id="closeButton"
             class="normal"
-            value="&certmgr.close.label;"
+            label="&certmgr.close.label;"
             orient="horizontal"
             onclick="window.close();" /> 
   </box>

@@ -39,7 +39,7 @@ function AddCertChain(node, chain)
   var rows = [document.createElement("treerow")];
   var cell = document.createElement("treecell");
   cell.setAttribute("class", "treecell-indent");
-  cell.setAttribute("value", chain[0]);
+  cell.setAttribute("label", chain[0]);
   var cells = [cell];
   for (var i=1; i<chain.length; i++) {
     child[i] = items[i-1];
@@ -50,7 +50,7 @@ function AddCertChain(node, chain)
     rows[i] = document.createElement("treerow");
     cell = document.createElement("treecell");
     cell.setAttribute("class", "treecell-indent");
-    cell.setAttribute("value", chain[i]);
+    cell.setAttribute("label", chain[i]);
     cells[i] = cell;
   }
   for (i=chain.length-1; i>=0; i--) {

@@ -46,23 +46,23 @@
   <box class="box-smallheader" title="SSL" description="Settings for SSL"/>
 
   <titledbox orient="horizontal">
-    <title><text value="&SSLProtocolVersions;"/></title>
+    <label value="&SSLProtocolVersions;"/>
 
     <!-- Prefs -->
     <box orient="vertical" flex="1" autostretch="never" >
-      <checkbox id="enableSSL2" value="Enable SSL version 2"
+      <checkbox id="enableSSL2" label="Enable SSL version 2"
                 pref="true" preftype="bool" prefstring="security.enable_ssl2"
                 prefattribute="checked"/>
-      <checkbox id="enableSSL3" value="Enable SSL version 3"
+      <checkbox id="enableSSL3" label="Enable SSL version 3"
                 pref="true" preftype="bool" prefstring="security.enable_ssl3"
                 prefattribute="checked"/>
-      <checkbox id="enableTLS" value="Enable TLS"
+      <checkbox id="enableTLS" label="Enable TLS"
                 pref="true" preftype="bool" prefstring="security.enable_tls"
                 prefattribute="checked"/>
     </box>
 
     <box orient="vertical" halign="right">
-      <button class="dialog" value="Edit SSL Ciphers..." disabled="true"
+      <button class="dialog" label="Edit SSL Ciphers..." disabled="true"
         oncommand="window.openDialog('chrome://pippki/content/cipherViewer.xul', '',
                        'modal=yes,resizable,chrome');" />
     </box>
@@ -70,7 +70,7 @@
   </titledbox>
 
   <titledbox orient="vertical" autostretch="never" >
-    <title><text value="&SSLWarnings;"/></title>
+    <label value="&SSLWarnings;"/>
     <html>
 Netscape can alert you to the security status of the web page you are viewing.
 Set Netscape to show a warning and ask permission before:
@@ -78,38 +78,38 @@ Set Netscape to show a warning and ask permission before:
 
     <!-- Prefs -->
     <checkbox id="warnEnteringSecure" 
-		  value="Entering a site that supports encryption"
+      label="Entering a site that supports encryption"
               pref="true" preftype="bool" prefstring="security.warn_entering_secure"
               prefattribute="checked"/>
     <checkbox id="warnInsecurePost"
-		  value="Sending form data from an insecure page to an insecure page"
+      label="Sending form data from an insecure page to an insecure page"
               pref="true" preftype="bool" prefstring="security.warn_submit_insecure"
               prefattribute="checked"/>
     <checkbox id="warnInsecurePostFromSecure"
-		  value="Sending form data from a secure page to an insecure page"
+      label="Sending form data from a secure page to an insecure page"
               pref="true" preftype="bool" prefstring="pip.security.warn_insecure_post_from_secure"
               prefattribute="checked" checked="true"  disabled="true"/>
-    <checkbox id="warnSecureRedirect" value="Redirection from one secure site to another"
+    <checkbox id="warnSecureRedirect" label="Redirection from one secure site to another"
               pref="true" preftype="bool" prefstring="pip.security.warn_secure_redirect"
               prefattribute="checked"/>
     <checkbox id="warnSecureRedirectToInsecure" 
-              value="Redirection from a secure site to an insecure site"
+              label="Redirection from a secure site to an insecure site"
               pref="true" preftype="bool" prefstring="pip.security.warn_secure_redirect_to_insecure"
               prefattribute="checked"/>
-    <checkbox id="warnViewMixed" value="Viewing a page with an encrypted/unencrypted mix"
+    <checkbox id="warnViewMixed" label="Viewing a page with an encrypted/unencrypted mix"
               pref="true" preftype="bool" prefstring="security.warn_viewing_mixed"
               prefattribute="checked" checked="true"/>
   </titledbox>
 
   <titledbox orient="vertical" autostretch="never" >
-    <title><text value="&SSLClientAuthMethod;"/></title>
+    <label value="&SSLClientAuthMethod;"/>
     <html>Decide how Netscape selects a security certificate to 
 	present to web sites that require one:</html>
     <!-- Prefs -->
     <radiogroup id="certSelection" pref="true" preftype="int" 
-	prefstring="pip.security.default_personal_cert" prefattribute="data">
-    <radio group="certSelection" value="Select Automatically" data="0"/>
-    <radio group="certSelection" value="Select Manually" data="1"/>
+	prefstring="pip.security.default_personal_cert" prefattribute="value">
+    <radio group="certSelection" label="Select Automatically" value="0"/>
+    <radio group="certSelection" label="Select Manually" value="1"/>
     </radiogroup>
   </titledbox>
 

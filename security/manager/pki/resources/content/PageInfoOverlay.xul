@@ -34,7 +34,7 @@
   ]]>
   </script>
   <tabbox id="tabbox">
-    <tab id="securityTab" value="&pageInfo.securityTab;" />
+    <tab id="securityTab" label="&pageInfo.securityTab;" />
   </tabbox>
   <tabpanel id="tabpanel">
     <box id="securityPanel" flex="1">
