@@ -94,8 +94,10 @@
   <!-- Menu -->
   <menubar id="main-menubar" class="chromeclass-menubar">
     <menu id="menu_File">
-      <menupopup id="menu_FilePopup">
-        <menuitem id="calendar-new-event-menu" label="New Event" oncommand="newEventCommand()"/>
+      <menupopup id="menu_FilePopup">            
+         <menuitem id="calendar-new-event-menu"                           label="New Event" oncommand="newEventCommand()"/>
+         <menuitem id="unifinder-modify-menu"   observes="modify_command" label="Edit Event"      oncommand="unifinderModifyCommand()" />
+         <menuitem id="unifinder-remove-menu"   observes="delete_command" label="Delete Event"      oncommand="unifinderRemoveCommand()" />
       </menupopup>
     </menu>
 
