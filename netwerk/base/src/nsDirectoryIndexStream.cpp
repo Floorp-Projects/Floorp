@@ -42,7 +42,7 @@
   The converts a filesystem directory into an "HTTP index" stream per
   Lou Montulli's original spec:
 
-    http://www.area.com/~roeber/file_format.html
+  http://www.mozilla.org/projects/netlib/dirindexformat.html
 
  */
 

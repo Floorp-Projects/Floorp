@@ -223,7 +223,7 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
     // Okay, we're gonna monkey with the nsStr. Bold!
     name.SetLength(nsUnescapeCount(name.BeginWriting()));
 
-    // All tokens are case-insensitive - http://www.area.com/~roeber/file_format.html
+    // All tokens are case-insensitive - http://www.mozilla.org/projects/netlib/dirindexformat.html
     if (name.EqualsIgnoreCase("description"))
       mHasDescription = PR_TRUE;
     
