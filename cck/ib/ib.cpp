@@ -1437,6 +1437,19 @@ int interpret(char *cmd)
 		char *filename = strtok(NULL, ",)");
 		char *versiontxt = strtok(NULL, ",)");
 
+    // make a substitution if the text is a variable
+		if (versiontxt[0] == '%')
+		{
+			versiontxt++;
+			char *t = strchr(versiontxt, '%');
+			if (t)
+      {
+  			*t = '\0';
+			  versiontxt = (char *)(LPCTSTR) GetGlobal(versiontxt);
+      }
+		}
+
+
 		// pull the cfg file out of the XPI
     //
     ExtractXPIFile(xpiname, filename);
