@@ -752,7 +752,7 @@ nsXULDocument::EndLoad()
     // Now walk the prototype to build content.
     rv = PrepareToWalk();
     if (NS_FAILED(rv)) return;
-    
+
     ResumeWalk();
 }
 
@@ -1491,7 +1491,7 @@ nsXULDocument::GetElementsByAttribute(const nsAString& aAttribute,
     nsRDFDOMNodeList* elements = new nsRDFDOMNodeList();
     NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
     NS_ADDREF(elements);
-    
+
     nsCOMPtr<nsIDOMNode> domRoot = do_QueryInterface(mRootContent);
     NS_ASSERTION(domRoot, "no doc root");
 
@@ -1697,7 +1697,7 @@ nsXULDocument::GetPixelDimensions(nsIPresShell* aShell, PRInt32* aWidth,
         if (NS_SUCCEEDED(result)) {
             float scale;
             context->GetTwipsToPixels(&scale);
-            
+
             *aWidth = NSTwipsToIntPixels(size.width, scale);
             *aHeight = NSTwipsToIntPixels(size.height, scale);
         }
@@ -2818,7 +2818,7 @@ nsXULDocument::AddChromeOverlays()
         }
 
         mUnloadedOverlays->AppendElement(uri);
-    }          
+    }
 
     return NS_OK;
 }
