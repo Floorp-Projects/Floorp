@@ -181,8 +181,8 @@ public:
 	CShelf& AdSpaceShelf() { return *mAdSpace; } ;
 	const CShelf& AdSpaceShelf() const { return *mAdSpace; } ;
 		
-		// create the pane with |inNode| as the root of the view
-	virtual void	BuildHTPane ( HT_Resource inNode ) ;
+		// create the pane with |inNode| as the root of the view an can be fed info from |inContext|
+	virtual void	BuildHTPane ( HT_Resource inNode, MWContext* inContext  ) ;
 	
 protected:
 
@@ -198,7 +198,6 @@ private:
 	CShelf*			mAdSpace;
 	
 	CBrowserView*	mAdSpaceView;
-	CBrowserView*	mMainHTMLView;		// the main html area of the window, for sitemaps
 	
 }; // CDockedRDFCoordinator
 
@@ -279,7 +278,8 @@ public:
 					CPopdownRDFCoordinator(LStream* inStream);
 	virtual			~CPopdownRDFCoordinator();
 
-	virtual void	BuildHTPane ( HT_Resource inNode ) ;
+		// create the pane with |inNode| as the root of the view an can be fed info from |inContext|
+	virtual void	BuildHTPane ( HT_Resource inNode, MWContext* inContext ) ;
 
 protected:
 

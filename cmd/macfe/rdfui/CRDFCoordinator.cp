@@ -588,8 +588,7 @@ CRDFCoordinator :: SetTargetFrame ( const char* inFrame )
 #pragma mark -
 
 CDockedRDFCoordinator :: CDockedRDFCoordinator(LStream* inStream)
-	: CRDFCoordinator(inStream), mNavCenter(NULL), mAdSpace(NULL), mAdSpaceView(NULL),
-		mMainHTMLView(NULL)
+	: CRDFCoordinator(inStream), mNavCenter(NULL), mAdSpace(NULL), mAdSpaceView(NULL)
 {
 	// don't create the HT_pane until we actually need it (someone opens a node
 	// and they want it to be docked).
@@ -646,10 +645,6 @@ CDockedRDFCoordinator :: FinishCreateSelf ( )
 		mAdSpaceView->SetContext ( theContext );
 	}
 
-	// stash a pointer to the main HTML context for sitemaps
-	mMainHTMLView = dynamic_cast<CBrowserView*>(FindPaneByID(mainHTMLPane_ID));
-	Assert_(mMainHTMLView != NULL);
-			
 } // FinishCreateSelf
 
 
@@ -768,7 +763,7 @@ CDockedRDFCoordinator :: HandleNotification ( HT_Notification notifyStruct, HT_R
 // Create a new pane with |inNode| as the root. Delete the old pane if it exists
 // 
 void
-CDockedRDFCoordinator :: BuildHTPane ( HT_Resource inNode )
+CDockedRDFCoordinator :: BuildHTPane ( HT_Resource inNode, MWContext* inContext )
 {
 	// are we already displaying this one? If so, bail.
 	HT_View currView = mTreePane->GetHTView();
@@ -784,6 +779,9 @@ CDockedRDFCoordinator :: BuildHTPane ( HT_Resource inNode )
 	// in with the new
 	mHTPane = CreateHTPane ( inNode );
 	if ( mHTPane ) {
+		// tell HT we're a docked view
+		HT_SetWindowType ( mHTPane, HT_DOCKED_WINDOW );
+		
 		ShowOrHideColumnHeaders();
 		
 		// we don't get a view selected event like other trees, so setup the tree 
@@ -793,8 +791,7 @@ CDockedRDFCoordinator :: BuildHTPane ( HT_Resource inNode )
 		SelectView ( currView );
 		
 		// register us for sitemaps and the html area notifications
-		if ( mMainHTMLView->GetContext() )
-			RegisterNavCenter ( *(mMainHTMLView->GetContext()) );
+		RegisterNavCenter ( inContext );
 		if ( mAdSpaceView )
 			XP_RegisterViewHTMLPane ( currView, *(mAdSpaceView->GetContext()) ); 
 	}
@@ -826,6 +823,9 @@ CShackRDFCoordinator :: BuildHTPane ( const char* inURL, unsigned int inCount,
 	mHTPane = CreateHTPane ( inURL, inCount, inParamNames, inParamValues );
 	
 	if ( mHTPane ) {
+		// tell HT we're a shack view
+		HT_SetWindowType ( mHTPane, HT_EMBEDDED_WINDOW );
+
 		ShowOrHideColumnHeaders();
 		
 		// we don't get a view selected event like other trees, so setup the tree 
@@ -864,6 +864,9 @@ CWindowRDFCoordinator :: BuildHTPane ( HT_Resource inNode )
 {
 	mHTPane = CreateHTPane ( inNode );
 	if ( mHTPane ) {
+		// tell HT we're a standalone window
+		HT_SetWindowType ( mHTPane, HT_STANDALONE_WINDOW );
+
 		ShowOrHideColumnHeaders();
 		
 		// we don't get a view selected event like other trees, so setup the tree 
@@ -879,6 +882,9 @@ CWindowRDFCoordinator :: BuildHTPane ( RDF_Resource inNode )
 {
 	mHTPane = CreateHTPane ( inNode );
 	if ( mHTPane ) {
+		// tell HT we're a standalone window
+		HT_SetWindowType ( mHTPane, HT_STANDALONE_WINDOW );
+
 		ShowOrHideColumnHeaders();
 		
 		// we don't get a view selected event like other trees, so setup the tree 
@@ -911,21 +917,29 @@ CPopdownRDFCoordinator :: ~CPopdownRDFCoordinator ( )
 // clean up after itself before making the new pane.
 //
 void
-CPopdownRDFCoordinator :: BuildHTPane ( HT_Resource inNode )
+CPopdownRDFCoordinator :: BuildHTPane ( HT_Resource inNode, MWContext* inContext )
 {
 	// out with the old, but only if it is not the pane originating d&d. 
-	if ( mHTPane != CPopdownFlexTable::HTPaneOriginatingDragAndDrop() )
+	if ( mHTPane != CPopdownFlexTable::HTPaneOriginatingDragAndDrop() ) {
+		UnregisterNavCenter();
 		HT_DeletePane ( mHTPane );
+	}
 	
 	// in with the new
 	mHTPane = CreateHTPane ( inNode );
 	if ( mHTPane ) {
+		// tell HT we're a standalone window
+		HT_SetWindowType ( mHTPane, HT_POPUP_WINDOW );
+
 		ShowOrHideColumnHeaders();
 		
 		// we don't get a view selected event like other trees, so setup the tree 
 		// view to point to the already selected view in HT and broadcast to tell 
 		// the title bar to update the title.
 		SelectView ( HT_GetSelectedView(mHTPane) );
+
+		// register so things like What's Related will work.
+		RegisterNavCenter ( inContext );
 	}
 
 } // BuildHTPane
