@@ -734,6 +734,12 @@ nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
     if ( dragSession ) {
       PRBool flavorSupported = PR_FALSE;
       dragSession->IsDataFlavorSupported(kUnicodeMime, &flavorSupported);
+      if ( !flavorSupported ) 
+        dragSession->IsDataFlavorSupported(kHTMLMime, &flavorSupported);
+      if ( !flavorSupported ) 
+        dragSession->IsDataFlavorSupported(kFileMime, &flavorSupported);
+      if ( !flavorSupported ) 
+        dragSession->IsDataFlavorSupported(kJPEGImageMime, &flavorSupported);
       if ( flavorSupported ) 
         dragSession->SetCanDrop(PR_TRUE);
     }
@@ -753,7 +759,13 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
     if ( dragSession ) {
       PRBool flavorSupported = PR_FALSE;
       dragSession->IsDataFlavorSupported(kUnicodeMime, &flavorSupported);
-      if ( flavorSupported )
+      if ( !flavorSupported ) 
+        dragSession->IsDataFlavorSupported(kHTMLMime, &flavorSupported);
+      if ( !flavorSupported ) 
+        dragSession->IsDataFlavorSupported(kFileMime, &flavorSupported);
+      if ( !flavorSupported ) 
+        dragSession->IsDataFlavorSupported(kJPEGImageMime, &flavorSupported);
+      if ( flavorSupported ) 
         dragSession->SetCanDrop(PR_TRUE);
     } 
   }
