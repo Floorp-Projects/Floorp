@@ -38,6 +38,7 @@ particular environments. */
 #if PR_BYTES_PER_INT != 4
 #define int int32
 #endif
+#define abort() /* as nothing */
 
 /* Enable Unicode string processing in expat. */
 #ifndef XML_UNICODE
