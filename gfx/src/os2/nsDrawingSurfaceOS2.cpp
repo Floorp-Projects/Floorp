@@ -36,7 +36,7 @@ NS_IMPL_ISUPPORTS1(nsDrawingSurfaceOS2, nsIDrawingSurface)
 // do testing with, and 0 is, of course, LCID_DEFAULT.
 
 nsDrawingSurfaceOS2::nsDrawingSurfaceOS2()
-                    : mNextID(2), mTopID(1), mPS(0),
+                    : mNextID(2), mTopID(1), mPS(0), mOwnPS(PR_FALSE),
                       mWidth (0), mHeight (0)
 {
    mHTFonts = new nsHashtable;
@@ -189,6 +189,8 @@ nsresult nsOffscreenSurface::Init( HPS     aCompatiblePS,
 
       if( GPI_ERROR != mPS)
       {
+         mOwnPS = PR_TRUE;
+
          nsPaletteOS2::SelectGlobalPalette(mPS);
 
          // now create a bitmap of the right size
@@ -222,14 +224,19 @@ nsresult nsOffscreenSurface::Init( HPS     aCompatiblePS,
 
 nsOffscreenSurface::~nsOffscreenSurface()
 {
-   if( mPS)
-   {
-      DisposeFonts();
+   DisposeFonts();
+   
+   if (mBitmap) {
       GFX (::GpiSetBitmap (mPS, 0), HBM_ERROR);
       GFX (::GpiDeleteBitmap (mBitmap), FALSE);
-      GFX (::GpiDestroyPS (mPS), FALSE);
-      ::DevCloseDC( mDC);
    }
+   if (mOwnPS) {
+      GFX (::GpiDestroyPS (mPS), FALSE);
+   }
+   if (mDC) {
+      ::DevCloseDC(mDC);
+   }
+
    if( mInfoHeader)
       free( mInfoHeader);
    delete [] mBits;
@@ -517,9 +524,11 @@ nsWindowSurface::~nsWindowSurface()
 
    // need to do this now because hps is invalid after subsequent free
    DisposeFonts();
-   // release hps
-   mWidget->FreeNativeData( (void*) mPS, NS_NATIVE_GRAPHIC);
-   mPS = 0; // just for safety
+   
+   // release hps if we had instantiated it
+   if (mOwnPS) {
+     mWidget->FreeNativeData( (void*) mPS, NS_NATIVE_GRAPHIC);
+   }
 }
 
 NS_IMETHODIMP nsWindowSurface::Init(HPS aPS, nsIWidget *aWidget)
@@ -534,6 +543,7 @@ nsresult nsWindowSurface::Init( nsIWidget *aOwner)
 {
    mWidget = aOwner;
    mPS = (HPS) mWidget->GetNativeData( NS_NATIVE_GRAPHIC);
+   mOwnPS = PR_TRUE;
 
    return NS_OK;
 }

@@ -58,6 +58,7 @@ class nsDrawingSurfaceOS2 : public nsIDrawingSurface
 
  protected:
    HPS            mPS;      // presentation space for this surface
+   PRBool         mOwnPS;   // did we instantiate PS or was it passed in?
    PRInt32        mWidth;   // dimensions of drawing surface
    PRInt32        mHeight;
 
