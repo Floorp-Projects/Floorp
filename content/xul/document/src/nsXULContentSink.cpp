@@ -1437,6 +1437,22 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
               delete script;
               return rv;
           }
+
+          // Attempt to deserialize an out-of-line script from the FastLoad
+          // file right away.  Otherwise we'll end up reloading the script and
+          // corrupting the FastLoad file trying to serialize it, in the case
+          // where it's already there.
+          nsCOMPtr<nsIDocument> doc(do_QueryReferent(mDocument));
+          if (doc) {
+              nsCOMPtr<nsIScriptGlobalObject> globalObject;
+              doc->GetScriptGlobalObject(getter_AddRefs(globalObject));
+              if (globalObject) {
+                  nsCOMPtr<nsIScriptContext> scriptContext;
+                  globalObject->GetContext(getter_AddRefs(scriptContext));
+                  if (scriptContext)
+                      script->DeserializeOutOfLineScript(nsnull, scriptContext);
+              }
+          }
       }
 
       nsVoidArray* children;
