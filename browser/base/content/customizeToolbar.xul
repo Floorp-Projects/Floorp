@@ -65,7 +65,7 @@
   </menupopup>
 </menulist>
 <checkbox label="&useSmallIcons.label;"/>
-<button label="&restoreDefaultSet.label;"/>
+<button label="&restoreDefaultSet.label;" oncommand="resetToDefault()"/>
 <spacer flex="1"/>
 <image id="trash-can"
         ondragover="nsDragAndDrop.dragOver(event, trashObserver);"
