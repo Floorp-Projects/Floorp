@@ -91,6 +91,8 @@ NS_IMPL_QUERY_INTERFACE(nsDeviceContextUnix, kDeviceContextIID)
 NS_IMPL_ADDREF(nsDeviceContextUnix)
 NS_IMPL_RELEASE(nsDeviceContextUnix)
 
+nsNativeDeviceContext gNativeDeviceContext = nsnull;
+
 nsresult nsDeviceContextUnix :: Init(nsNativeDeviceContext aNativeDeviceContext)
 {
   for (PRInt32 cnt = 0; cnt < 256; cnt++)
@@ -101,7 +103,14 @@ nsresult nsDeviceContextUnix :: Init(nsNativeDeviceContext aNativeDeviceContext)
   //     not from the environment, which is the one we use here.
   if (aNativeDeviceContext == nsnull)
     mNativeDisplay = ::XOpenDisplay(nsnull);
+  if (gNativeDeviceContext == nsnull) {
+    gNativeDeviceContext = mNativeDisplay;
+  }
 
+  if (mNativeDisplay == nsnull) {
+    mNativeDisplay = gNativeDeviceContext;
+  }
+fprintf(stderr, "mNativeDisplay 0x%x\n", mNativeDisplay);
 
   mTwipsToPixels = (((float)::XDisplayWidth((Display *)mNativeDisplay, DefaultScreen((Display *)mNativeDisplay))) /
 		    ((float)::XDisplayWidthMM((Display *)mNativeDisplay,DefaultScreen((Display *)mNativeDisplay) )) * 25.4) / 
