@@ -38,6 +38,9 @@ sub init {
     my($app) = @_;
     $self->SUPER::init(@_);
     require Data::Dumper; import Data::Dumper; # DEPENDENCY
+    # This next line isn't recursive thinking. The configuration
+    # details for all the various databases, including this one, come
+    # from the dataSource.configuration data source.
     $self->{'_FILENAME'} = $app->getService('dataSource.configuration')->configurationFilename;
 }
 
@@ -143,6 +146,7 @@ sub doRead {
     my $self = shift;
     my($filename) = @_;
     if (-e $filename) {
+        $self->assert($self->doPermissionsCheck($filename), 1, "Configuration file '$filename' has the wrong permissions: it has to be only accessible by this user since it can contain passwords. Running without configuration file");
         local *FILE; # ugh
         $self->assert(open(FILE, "<$filename"), 1, "Could not open configuration file '$filename' for reading: $!");
         local $/ = undef; # slurp entire file (no record delimiter)
@@ -159,7 +163,18 @@ sub doWrite {
     my $self = shift;
     my($filename, $contents) = @_;
     local *FILE; # ugh
+    my $umask = umask(0077); # XXX this might be UNIX-specific # XXX THIS IS PLATFORM SPECIFIC CODE XXX
     $self->assert(open(FILE, ">$filename"), 1, "Could not open configuration file '$filename' for writing: $!");
     $self->assert(FILE->print($contents), 1, "Could not dump settings to configuration file '$filename': $!");
     $self->assert(close(FILE), 1, "Could not close configuration file '$filename': $!");
+    umask($umask); # XXX this might be UNIX-specific # XXX THIS IS PLATFORM SPECIFIC CODE XXX
+}
+
+sub doPermissionsCheck {
+    my $self = shift;
+    my($filename) = @_;
+    # XXX this might be UNIX-specific # XXX THIS IS PLATFORM SPECIFIC CODE XXX
+    my($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat($filename);
+    return (($mode & 07077) == 0 and # checks that the permissions are at most -xrw------
+            $uid == $>); # checks that the file's owner is the same as the user running the script
 }
