@@ -397,15 +397,17 @@ MimeMessage_close_headers (MimeObject *obj)
 		PR_FREEIF(mv);  /* done with this now. */
 	  }
 
-#ifdef ENABLE_SMIME
     /* If this message has a body which is encrypted and we're going to
        decrypt it (whithout converting it to HTML, since decrypt_p and
        write_html_p are never true at the same time)
     */
     if (obj->output_p &&
         obj->options &&
-        obj->options->decrypt_p &&
-        !mime_crypto_object_p (msg->hdrs, PR_FALSE))
+        obj->options->decrypt_p
+#ifdef ENABLE_SMIME
+        && !mime_crypto_object_p (msg->hdrs, PR_FALSE)
+#endif /* ENABLE_SMIME */
+        )
     {
       /* The body of this message is not an encrypted object, so we need
          to turn off the decrypt_p flag (to prevent us from s#$%ing the
@@ -414,7 +416,6 @@ MimeMessage_close_headers (MimeObject *obj)
       */
       obj->options->decrypt_p = PR_FALSE;
     }
-#endif /* ENABLE_SMIME */
 
 	  /* Emit the HTML for this message's headers.  Do this before
 		 creating the object representing the body.
