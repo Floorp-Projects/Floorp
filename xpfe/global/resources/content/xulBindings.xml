@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+
 <!DOCTYPE window [
 <!ENTITY % textcontextDTD SYSTEM "chrome://global/locale/textcontext.dtd" >
 %textcontextDTD;
@@ -44,25 +45,28 @@
 
 
   <binding id="menu-menubar">
-    <content includes="menupopup">
+    <content>
       <xul:text class="menubar-text" inherits="value,accesskey,crop" crop="right"/>
+      <children includes="menupopup,template"/>
     </content>
   </binding>
 
   <binding id="menu-menubar-iconic">
-    <content includes="menupopup">
+    <content>
       <xul:image class="menubar-left"/>
       <xul:text class="menubar-text" inherits="value,accesskey,crop" crop="right"/>
+      <children includes="menupopup,template"/>
     </content>
   </binding>
 
   <binding id="menu">
-    <content autostretch="never" includes="menupopup">
+    <content autostretch="never">
       <xul:text class="menu-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
       <xul:text class="menu-accel" inherits="acceltext:value"/>
       <xul:box autostretch="never" class="menu-right" inherits="menuactive,disabled">
         <xul:image/>
       </xul:box>
+      <children includes="menupopup,template"/>
     </content>
     <implementation>
       <property name="data" onset="this.setAttribute('data',val); return val;"
@@ -84,7 +88,7 @@
   <binding id="menuitem-iconic">
     <content includes="menupopup">
       <xul:box class="menu-iconic-left" orient="vertical" autostretch="never" inherits="selected,menuactive,disabled,checked">
-        <xul:image/>
+        <xul:image inherits="src"/>
       </xul:box>
       <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
       <xul:text class="menu-iconic-accel" inherits="value=acceltext"/>
@@ -96,15 +100,16 @@
   </binding>
 
   <binding id="menu-iconic">
-    <content autostretch="never" includes="menupopup">
+    <content autostretch="never">
       <xul:box class="menu-iconic-left" orient="vertical" autostretch="never">
-        <xul:image/>
+        <xul:image inherits="src"/>
       </xul:box>
       <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
       <xul:text class="menu-iconic-accel" inherits="value=acceltext"/>
       <xul:box orient="vertical" autostretch="never" class="menu-right" inherits="menuactive,disabled">
         <xul:image/>
       </xul:box>
+      <children includes="menupopup,template"/>
     </content>
     <implementation>
       <property name="data" onset="this.setAttribute('data',val); return val;"

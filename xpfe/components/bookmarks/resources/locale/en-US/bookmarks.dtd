@@ -23,19 +23,27 @@
 
 <!-- extracted from ./bookmarks.xul -->
 
-<!ENTITY menuitem.newBookmark.label     "New Bookmark">
-<!ENTITY menuitem.newBookmark.accesskey "n">
-<!ENTITY menuitem.newFolder.label       "New Folder">
-<!ENTITY menuitem.newSeparator.label    "New Separator">
-<!ENTITY menuitem.import.label          "Import Bookmarks...">
-<!ENTITY menuitem.export.label          "Export Bookmarks...">
-<!ENTITY menuitem.find.label            "Find in Bookmarks...">
-<!ENTITY menuitem.find.accesskey        "f">
-<!ENTITY edit.find.keybinding           "f">
-<!ENTITY menuitem.properties.label      "Properties...">
-<!ENTITY menuitem.properties.accesskey  "i">
-<!ENTITY edit.properties.keybinding     "i">
+<!ENTITY command.newBookmark.label     "New Bookmark">
+<!ENTITY command.newBookmark.accesskey "n">
+<!ENTITY command.newFolder.label       "New Folder">
+<!ENTITY command.newFolder.accesskey   "f">
+<!ENTITY command.newSeparator.label    "New Separator">
+<!ENTITY command.newSeparator.accesskey "s">
+<!ENTITY menuitem.import.label         "Import Bookmarks...">
+<!ENTITY menuitem.export.label         "Export Bookmarks...">
+<!ENTITY menuitem.find.label           "Find in Bookmarks...">
+<!ENTITY menuitem.find.accesskey       "f">
+<!ENTITY edit.find.keybinding          "f">
+<!ENTITY command.properties.label      "Properties">
+<!ENTITY command.properties.accesskey  "i">
+<!ENTITY edit.properties.keybinding    "i">
+<!ENTITY command.rename.label          "Rename...">
+<!ENTITY command.delete.label          "Delete">
+<!ENTITY command.fileBookmark.label    "File Bookmark">
+<!ENTITY command.fileBookmark.accesskey "l">
 
+<!ENTITY menuitem.view.command.toolbar.label        "Toolbar">
+<!ENTITY menuitem.view.command.toolbar.accesskey    "t">
 <!ENTITY menuitem.view.unsorted.label               "Unsorted">
 <!ENTITY menuitem.view.unsorted.accesskey           "u">
 <!ENTITY menuitem.view.ascending.label              "A > Z Sort Order">
@@ -52,11 +60,15 @@
 <!ENTITY menuitem.personaltoolbarfolder.accesskey   "p">
 
 <!ENTITY tree.header.name.label         "Name">
-<!-- LOCALIZATION NOTE (tree.header.url.label) : DONT_TRANSLATE -->
-<!ENTITY tree.header.url.label          "URL">
-<!ENTITY tree.header.shortcut.label     "Custom Keyword">
+<!ENTITY tree.header.url.label          "Location">
+<!ENTITY tree.header.shortcut.label     "Keyword">
 <!ENTITY tree.header.addedon.label      "Added On">
 <!ENTITY tree.header.lastmod.label      "Last Modified">
 <!ENTITY tree.header.lastvisit.label    "Last Visit">
 <!ENTITY tree.header.description.label  "Description">
-<!ENTITY bookmarksWindowTitle.label	"Manage Bookmarks">
+<!ENTITY bookmarksWindowTitle.label	    "Bookmarks">
+
+
+<!ENTITY search.name.label              "name">
+<!ENTITY search.contains.label          "contains">
+

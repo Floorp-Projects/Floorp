@@ -23,155 +23,212 @@
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks-tree.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/bookmarks/bm-props.dtd" >
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % bmpropsDTD SYSTEM "chrome://communicator/locale/bookmarks/bm-props.dtd">
+%bmpropsDTD;
+]>
 
-<window	xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="&bookmarks.windowtitle.label;"
-        onload="Init();" style="width: 36em;"
-        class="dialog" orient="vertical">
+<window id="bmPropsWindow" xmlns:html="http://www.w3.org/1999/xhtml"
+	      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	      title="&bookmarks.windowtitle.label;"
+	      onload="Init()" style="width: 30em;"
+	      class="dialog" orient="vertical">
  
 	<script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
 	<script type="text/javascript" src="chrome://global/content/strres.js"/>
 	<script type="text/javascript" src="chrome://communicator/content/bookmarks/bm-props.js"/>
 
-<keyset id="keyset"/>  
+  <keyset id="keyset"/>  
   
 <tabcontrol orient="vertical">
   <tabbox>
     <tab value="&generalInfo.label;" accesskey="&generalInfo.accesskey;"/>
     <tab id="ScheduleTab" value="&schedule.label;" accesskey="&schedule.accesskey;"/>
+    <tab id="NotifyTab" value="&notification.label;" accesskey="&notification.accesskey;"/>
   </tabbox>
   <tabpanel>
   	<box orient="vertical">
-  		<box id="nameBox" orient="vertical">
-  			<text class="label" value="&bookmarks.name.label;" />
-  			<textfield id="name" />
-  		</box>
-  
-  		<box id="locationBox" orient="vertical">
-  			<text class="label" value="&bookmarks.location.label;" />
-  			<textfield id="url" />
-  		</box>
-  
-  		<box id="shortcutBox" orient="vertical">
-  			<text class="label" value="&bookmarks.shortcut.label;" />
-  			<textfield id="shortcut" />
-  		</box>
-  
-  		<box id="descriptionBox" orient="vertical" flex="1">
-  			<text class="label" value="&bookmarks.description.label;" />
-  			<textfield multiline="true" id="description" flex="1"/>
-  		</box>
-  	</box>
-
-	<titledbox orient="vertical">
-		<title><text value="&checkforupdates.legend.label;" /></title>
-
-		<box autostretch="never">
-			<text class="label" value="&when.label;" />
-			<menulist id="dayRange">
-				<menupopup>
-					<menuitem data="" value="&checknever.label;"/>
-					<menuseparator />
-					<menuitem data="0123456" value="&checkeveryday.label;"/>
-					<menuitem data="12345" value="&checkweekdays.label;"/>
-					<menuitem data="06" value="&checkweekends.label;"/>
-					<menuitem data="1" value="&checkmondays.label;"/>
-					<menuitem data="2" value="&checktuesdays.label;"/>
-					<menuitem data="3" value="&checkwednesdays.label;"/>
-					<menuitem data="4" value="&checkthursdays.label;"/>
-					<menuitem data="5" value="&checkfridays.label;"/>
-					<menuitem data="6" value="&checksaturdays.label;"/>
-					<menuitem data="0" value="&checksundays.label;"/>
-				</menupopup>
-			</menulist>
-			<spring align="horizontal" flex="1" />
-			<text class="label" value="&from.label;" />
-			<menulist id="startHourRange" oncommand="setEndHourRange()">
-				<menupopup>
-					<menuitem data="0" value="&midnight.label;"/>
-					<menuitem data="1" value="&AMone.label;"/>
-					<menuitem data="2" value="&AMtwo.label;"/>
-					<menuitem data="3" value="&AMthree.label;"/>
-					<menuitem data="4" value="&AMfour.label;"/>
-					<menuitem data="5" value="&AMfive.label;"/>
-					<menuitem data="6" value="&AMsix.label;"/>
-					<menuitem data="7" value="&AMseven.label;"/>
-					<menuitem data="8" value="&AMeight.label;"/>
-					<menuitem data="9" value="&AMnine.label;"/>
-					<menuitem data="10" value="&AMten.label;"/>
-					<menuitem data="11" value="&AMeleven.label;"/>
-					<menuitem data="12" value="&noon.label;"/>
-					<menuitem data="13" value="&PMone.label;"/>
-					<menuitem data="14" value="&PMtwo.label;"/>
-					<menuitem data="15" value="&PMthree.label;"/>
-					<menuitem data="16" value="&PMfour.label;"/>
-					<menuitem data="17" value="&PMfive.label;"/>
-					<menuitem data="18" value="&PMsix.label;"/>
-					<menuitem data="19" value="&PMseven.label;"/>
-					<menuitem data="20" value="&PMeight.label;"/>
-					<menuitem data="21" value="&PMnine.label;"/>
-					<menuitem data="22" value="&PMten.label;"/>
-					<menuitem data="23" value="&PMeleven.label;"/>
-				</menupopup>
-			</menulist>
-		</box>
-		<box align="horizontal">
-			<spring align="horizontal" flex="1" />
-			<text value="&to.label;" />
-			<menulist id="endHourRange">
-				<menupopup oncreate="setEndHourRange()">
-					<menuitem data="1" value="&AMone.label;"/>
-					<menuitem data="2" value="&AMtwo.label;"/>
-					<menuitem data="3" value="&AMthree.label;"/>
-					<menuitem data="4" value="&AMfour.label;"/>
-					<menuitem data="5" value="&AMfive.label;"/>
-					<menuitem data="6" value="&AMsix.label;"/>
-					<menuitem data="7" value="&AMseven.label;"/>
-					<menuitem data="8" value="&AMeight.label;"/>
-					<menuitem data="9" value="&AMnine.label;"/>
-					<menuitem data="10" value="&AMten.label;"/>
-					<menuitem data="11" value="&AMeleven.label;"/>
-					<menuitem data="12" value="&noon.label;"/>
-					<menuitem data="13" value="&PMone.label;"/>
-					<menuitem data="14" value="&PMtwo.label;"/>
-					<menuitem data="15" value="&PMthree.label;"/>
-					<menuitem data="16" value="&PMfour.label;"/>
-					<menuitem data="17" value="&PMfive.label;"/>
-					<menuitem data="18" value="&PMsix.label;"/>
-					<menuitem data="19" value="&PMseven.label;"/>
-					<menuitem data="20" value="&PMeight.label;"/>
-					<menuitem data="21" value="&PMnine.label;"/>
-					<menuitem data="22" value="&PMten.label;"/>
-					<menuitem data="23" value="&PMeleven.label;"/>
-					<menuitem data="24" value="&midnight.label;"/>
-				</menupopup>
-			</menulist>
-		</box>
-		<box autostretch="never">
-			<spring align="horizontal" flex="1" />
-			<text class="label" value="&every.label;" />
-			<textfield id="duration" style="width:4em;" value="60" />
-			<text class="label" value="&minutes.label;" />
-		</box>
-
-		<titledbox orient="vertical">
-			<title><text value="&notifications.legend.label;" /></title>
-                        <vbox autostretch="never"> 
-                          <checkbox id="bookmarkIcon" value="&notification.icon.label;"/>
-                          <checkbox id="showAlert" value="&notification.alert.label;"/>
-                          <checkbox id="openWindow" value="&notification.window.label;"/>
-                          <checkbox id="playSound" value="&notification.sound.label;"/>
-                        </vbox>
-		</titledbox>
-	</titledbox>
+      <separator class="thin"/>
+      <box autostretch="never" valign="top">
+        <image class="message-icon"/>
+        <separator class="thin" orient="vertical"/>
+        <html flex="1">&generaldesc.label;</html>
+      </box>
+ 
+      <separator class="thin"/>
+      
+      <box class="box-padded" orient="vertical">    
+        <grid>
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <row>
+              <text class="label" value="&bookmarks.name.label;" for="name"/>
+              <textfield id="name"/>
+            </row>
+            <row id="locationrow">
+              <text class="label" value="&bookmarks.location.label;" for="url"/>
+        			<textfield id="url" />
+            </row>
+            <row id="shortcutrow">
+              <text class="label" value="&bookmarks.shortcut.label;" for="shortcut"/>
+  		      	<textfield id="shortcut" />
+            </row>
+            <row>
+              <text class="label" value="&bookmarks.description.label;" for="description"/>
+        			<textfield multiline="true" wrap="virtual" id="description" flex="1"/>
+            </row>
+          </rows>
+        </grid>
+        <separator/>
+    	</box>
+    </box>
+    
+    <box orient="vertical">
+      <separator class="thin"/>
+      <box autostretch="never" valign="top">
+        <image id="schedule-icon"/>
+        <separator class="thin" orient="vertical"/>
+        <html flex="1">&schedule.description;</html>
+      </box>
+      <separator class="thin"/>
+      <box class="box-padded">
+        <spring flex="1"/>
+    		<titledbox orient="vertical">
+          <title class="label" value="&checkforupdates.legend.label;"/>
+          <grid flex="1">
+            <columns>
+              <column/>
+              <column flex="1"/>
+            </columns>
+            <rows>
+              <row autostretch="never">
+                <text class="label" value="&when.label;" for="dayRange"/>
+        		  	<menulist id="dayRange">
+          				<menupopup>
+          					<menuitem data="" value="&checknever.label;"/>
+          					<menuseparator />
+          					<menuitem data="0123456" value="&checkeveryday.label;"/>
+          					<menuitem data="12345" value="&checkweekdays.label;"/>
+          					<menuitem data="06" value="&checkweekends.label;"/>
+          					<menuitem data="1" value="&checkmondays.label;"/>
+          					<menuitem data="2" value="&checktuesdays.label;"/>
+          					<menuitem data="3" value="&checkwednesdays.label;"/>
+          					<menuitem data="4" value="&checkthursdays.label;"/>
+          					<menuitem data="5" value="&checkfridays.label;"/>
+          					<menuitem data="6" value="&checksaturdays.label;"/>
+          					<menuitem data="0" value="&checksundays.label;"/>
+          				</menupopup>
+          			</menulist>
+              </row>
+              <row autostretch="never">
+          			<text class="label" value="&from.label;" for="startHourRange"/>
+                <box autostretch="never">
+            			<menulist id="startHourRange" oncommand="setEndHourRange()">
+            				<menupopup>
+            					<menuitem data="0" value="&midnight.label;"/>
+            					<menuitem data="1" value="&AMone.label;"/>
+            					<menuitem data="2" value="&AMtwo.label;"/>
+            					<menuitem data="3" value="&AMthree.label;"/>
+            					<menuitem data="4" value="&AMfour.label;"/>
+            					<menuitem data="5" value="&AMfive.label;"/>
+            					<menuitem data="6" value="&AMsix.label;"/>
+            					<menuitem data="7" value="&AMseven.label;"/>
+            					<menuitem data="8" value="&AMeight.label;"/>
+            					<menuitem data="9" value="&AMnine.label;"/>
+            					<menuitem data="10" value="&AMten.label;"/>
+            					<menuitem data="11" value="&AMeleven.label;"/>
+            					<menuitem data="12" value="&noon.label;"/>
+            					<menuitem data="13" value="&PMone.label;"/>
+            					<menuitem data="14" value="&PMtwo.label;"/>
+            					<menuitem data="15" value="&PMthree.label;"/>
+            					<menuitem data="16" value="&PMfour.label;"/>
+            					<menuitem data="17" value="&PMfive.label;"/>
+            					<menuitem data="18" value="&PMsix.label;"/>
+            					<menuitem data="19" value="&PMseven.label;"/>
+            					<menuitem data="20" value="&PMeight.label;"/>
+            					<menuitem data="21" value="&PMnine.label;"/>
+            					<menuitem data="22" value="&PMten.label;"/>
+            					<menuitem data="23" value="&PMeleven.label;"/>
+            				</menupopup>
+            			</menulist>
+            			<text class="label" value="&to.label;" for="endHourRange"/>
+            			<menulist id="endHourRange">
+            				<menupopup oncreate="setEndHourRange()">
+            					<menuitem data="1" value="&AMone.label;"/>
+            					<menuitem data="2" value="&AMtwo.label;"/>
+            					<menuitem data="3" value="&AMthree.label;"/>
+            					<menuitem data="4" value="&AMfour.label;"/>
+            					<menuitem data="5" value="&AMfive.label;"/>
+            					<menuitem data="6" value="&AMsix.label;"/>
+            					<menuitem data="7" value="&AMseven.label;"/>
+            					<menuitem data="8" value="&AMeight.label;"/>
+            					<menuitem data="9" value="&AMnine.label;"/>
+            					<menuitem data="10" value="&AMten.label;"/>
+            					<menuitem data="11" value="&AMeleven.label;"/>
+            					<menuitem data="12" value="&noon.label;"/>
+            					<menuitem data="13" value="&PMone.label;"/>
+            					<menuitem data="14" value="&PMtwo.label;"/>
+            					<menuitem data="15" value="&PMthree.label;"/>
+            					<menuitem data="16" value="&PMfour.label;"/>
+            					<menuitem data="17" value="&PMfive.label;"/>
+            					<menuitem data="18" value="&PMsix.label;"/>
+            					<menuitem data="19" value="&PMseven.label;"/>
+            					<menuitem data="20" value="&PMeight.label;"/>
+            					<menuitem data="21" value="&PMnine.label;"/>
+            					<menuitem data="22" value="&PMten.label;"/>
+            					<menuitem data="23" value="&PMeleven.label;"/>
+            					<menuitem data="24" value="&midnight.label;"/>
+            				</menupopup>
+            			</menulist>
+                </box>
+              </row>
+              <row autostretch="never">
+          			<text class="label" value="&every.label;" for="duration"/>
+                <box autostretch="never">
+            			<textfield id="duration" size="4" value="60" />
+    		        	<text class="label" value="&minutes.label;" />
+    		        </box>
+              </row>
+            </rows>
+          </grid>
+        </titledbox>
+        <spring flex="1"/>
+      </box>
+    </box>
+        
+    <box orient="vertical">
+      <separator class="thin"/>
+      <box autostretch="never" valign="top">
+        <image id="notification-icon"/>
+        <separator class="thin" orient="vertical"/>
+        <html flex="1">&notification.description;</html>
+      </box>
+      <separator class="thin"/>
+      <box class="box-padded">
+        <spring flex="1"/>
+        <titledbox orient="vertical" autostretch="never">
+          <title value="&notifications.legend.label;" />
+    			<checkbox id="bookmarkIcon" value="&notification.icon.label;" />
+    			<checkbox id="showAlert" value="&notification.alert.label;" />
+    			<checkbox id="openWindow" value="&notification.window.label;" />
+    			<checkbox id="playSound" value="&notification.sound.label;" />
+        </titledbox>
+        <spring flex="1"/>
+      </box>
+    </box>
   </tabpanel>
 </tabcontrol>
+
+<separator/>
   
 <box id="okCancelButtonsRight"/>
 

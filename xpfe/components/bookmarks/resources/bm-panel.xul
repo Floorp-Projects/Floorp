@@ -29,7 +29,7 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks-tree.css" type="text/css"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/bookmarks/bookmarks.dtd">
@@ -42,8 +42,8 @@
   align="vertical">
 
   <script type="text/javascript" src="chrome://communicator/content/bookmarks/bm-panel.js" />
-  <script type="text/javascript" src="chrome://communicator/content/bookmarks/bookmarks.js" />
-  <script type="text/javascript" src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
+  <script type="text/javascript" src="chrome://communicator/content/bookmarks/bookmarks-temp.js" />
+  <script type="text/javascript" src="chrome://communicator/content/bookmarks/bookmarksDD-temp.js"/>
   <script type="text/javascript" src="chrome://global/content/nsTreeUtils.js"/>
   <script type="text/javascript" src="chrome://global/content/strres.js"/>
   <script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"/>

@@ -132,22 +132,19 @@ function okToPrefill2(formsArray) {
   return false;
 }
 
-function goPreferences(id, paneURL, paneID)
+function goPreferences(containerID, paneURL, itemID)
 {
   var prefWindowModalityPref;
   try {
-    var pref = Components.classes["@mozilla.org/preferences;1"].getService();
-    if( pref ) 
-      pref = pref.QueryInterface( Components.interfaces.nsIPref );
-    if( pref )
-      prefWindowModalityPref = pref.GetBoolPref( "browser.prefWindowModal");
+    var pref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
+    prefWindowModalityPref = pref.GetBoolPref( "browser.prefWindowModal");
   }
   catch(e) {
     prefWindowModalityPref = true;
   }
   var modality = prefWindowModalityPref ? "yes" : "no";
   
-  var prefWindow = window.openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", "chrome,titlebar,modal=" + modality+ ",resizable=yes", paneURL, paneID);
+  var prefWindow = openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", "chrome,titlebar,modal=" + modality+ ",resizable=yes", paneURL, containerID, itemID);
 }
 
 function okToCapture() {
@@ -385,7 +382,7 @@ function goUpdatePasteMenuItems()
 }
 
 // This used to be BrowserNewEditorWindow in navigator.js
-function NewEditorWindow()
+function NewEditorWindow(aPageURL)
 {
   // Open editor window with blank page
   // Kludge to leverage openDialog non-modal!

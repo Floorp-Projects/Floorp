@@ -26,13 +26,14 @@ const _DEBUG = false;
  *  This is a general page switcher and pref loader.
  *  =>> CHANGES MUST BE REVIEWED BY ben@netscape.com!! <<=
  **/ 
- 
+
+var queuedTag; 
 function initPanel ( aPrefTag )
   {
     if( hPrefWindow )
-      hPrefWindow.onpageload( aPrefTag );
+      hPrefWindow.onpageload( aPrefTag )
     else
-      window.queuedTag = aPrefTag;
+      queuedTag = aPrefTag;
   } 
  
 window.doneLoading = false; 
@@ -62,11 +63,7 @@ nsPrefWindow.prototype =
           doSetOKCancel( this.onOK, this.onCancel );
           try 
             {
-              this.pref = Components.classes["@mozilla.org/preferences;1"].getService();
-              if( this.pref )
-                {
-                  this.pref = this.pref.QueryInterface( Components.interfaces.nsIPref );
-                }
+              this.pref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
             }
           catch(e) 
             {
@@ -84,7 +81,7 @@ nsPrefWindow.prototype =
               }
   
             if( window.arguments[1] )
-              this.closeBranches( window.arguments[1] );
+              this.closeBranches( window.arguments[1], window.arguments[2] );
           },
                   
       onOK:
@@ -318,7 +315,7 @@ nsPrefWindow.prototype =
           },
 
     closeBranches:
-      function ( aComponentName )
+      function ( aComponentName, aSelectItem )
         {
           var panelChildren = document.getElementById( "panelChildren" );
           var panelTree = document.getElementById( "prefsTree" );
@@ -328,7 +325,7 @@ nsPrefWindow.prototype =
               if( currentItem.id != aComponentName && currentItem.id != "appearance" )
                 currentItem.removeAttribute( "open" );
             }
-          var openItem = document.getElementById( aComponentName );
+          var openItem = document.getElementById( aSelectItem );
           panelTree.selectItem( openItem );
         }
 

@@ -2550,13 +2550,69 @@ NS_IMPL_QUERY_INTERFACE8(nsBookmarksService,
 ////////////////////////////////////////////////////////////////////////
 // nsIBookmarksService
 
+NS_IMETHODIMP
+nsBookmarksService::CreateFolder(const PRUnichar* aTitle, 
+                                 nsIRDFResource* aRelativeItem, 
+                                 nsIRDFResource* aParentFolder,
+                                 nsIRDFResource** aNewFolder)
+{
+  nsresult rv;
+  *aNewFolder = nsnull;
 
+  // Init parent container
+  nsCOMPtr<nsIRDFContainer> container (do_CreateInstance("@mozilla.org/rdf/container;1", &rv));
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = container->Init(this, aParentFolder);
+  if (NS_FAILED(rv)) return rv;
+
+  // Create Item
+  nsCOMPtr<nsIRDFResource> folder;
+  rv = BookmarkParser::CreateAnonymousResource(address_of(folder));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = gRDFC->MakeSeq(mInner, folder, nsnull);
+  if (NS_FAILED(rv)) return rv;
+
+  // Item Name
+  nsCOMPtr<nsIRDFLiteral> nameLiteral;
+  rv = gRDF->GetLiteral(aTitle, getter_AddRefs(nameLiteral));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = mInner->Assert(folder, kNC_Name, nameLiteral, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
+  // Item Type
+  rv = mInner->Assert(folder, kRDF_type, kNC_Folder, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
+  // Add Date
+  nsCOMPtr<nsIRDFDate> dateLiteral;
+  rv = gRDF->GetDateLiteral(PR_Now(), getter_AddRefs(dateLiteral));
+  if (NS_FAILED(rv)) return rv;
+  rv = mInner->Assert(folder, kNC_BookmarkAddDate, dateLiteral, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+  
+  // Look up the index of aRelativeItem, if it exists we want to insert after 
+  // it, otherwise we want to add this item as the first child of the container.
+  PRInt32 idx;
+  rv = container->IndexOf(aRelativeItem, &idx);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = container->InsertElementAt(folder, idx > 0 ? idx : 1, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
+  *aNewFolder = folder;
+  NS_ADDREF(*aNewFolder);
+
+  return rv;
+}
 
 NS_IMETHODIMP
-nsBookmarksService::AddBookmark(const char *aURI,
-                                const PRUnichar *aOptionalTitle, 
-                                PRInt32 bmType,
-                                const PRUnichar *aCharset)
+nsBookmarksService::AddBookmarkToFolder(const char *aURI,
+                                        nsIRDFResource *aFolder,
+                                        const PRUnichar* aTitle,
+                                        const PRUnichar *aCharset)
 {
 	// XXX Constructing a parser object to do this is bad.
 	// We need to factor AddBookmark() into its own little
@@ -2575,24 +2631,8 @@ nsBookmarksService::AddBookmark(const char *aURI,
 						getter_AddRefs(container));
 	if (NS_FAILED(rv)) return rv;
 
-	// figure out where to add the new bookmark
-	nsCOMPtr<nsIRDFResource>	bookmarkType = kNC_NewBookmarkFolder;
-
-	switch(bmType)
-	{
-		case	BOOKMARK_SEARCH_TYPE:
-		case	BOOKMARK_FIND_TYPE:
-		bookmarkType = kNC_NewSearchFolder;
-		break;
-	}
-
-	nsCOMPtr<nsIRDFResource>	newBookmarkFolder;
-	if (NS_FAILED(rv = getFolderViaHint(bookmarkType, PR_TRUE,
-			getter_AddRefs(newBookmarkFolder))))
-		return(rv);
-
-	rv = container->Init(this, newBookmarkFolder);
-	if (NS_FAILED(rv)) return(rv);
+	rv = container->Init(this, aFolder);
+	if (NS_FAILED(rv)) return rv;
 
 	// convert the current date/time from microseconds (PRTime) to seconds
 	PRTime		now64 = PR_Now(), million;
@@ -2601,16 +2641,42 @@ nsBookmarksService::AddBookmark(const char *aURI,
 	PRInt32		now32;
 	LL_L2I(now32, now64);
 
-	rv = parser.AddBookmark(container, aURI, aOptionalTitle, now32,
+	rv = parser.AddBookmark(container, aURI, aTitle, now32,
 				0L, 0L, nsnull, kNC_Bookmark, nsnull, aCharset);
 
-	if (NS_FAILED(rv)) return(rv);
+	if (NS_FAILED(rv)) return rv;
 
 	mDirty = PR_TRUE;
 	Flush();
 
-  return(NS_OK);
+  return NS_OK;
+}
 
+
+NS_IMETHODIMP
+nsBookmarksService::AddBookmark(const char *aURI,
+                                const PRUnichar *aTitle, 
+                                PRInt32 aBookmarkType,
+                                const PRUnichar *aCharset)
+{
+  nsresult rv;
+
+  // figure out where to add the new bookmark
+	nsCOMPtr<nsIRDFResource>	bookmarkFolder = kNC_NewBookmarkFolder;
+
+	switch(aBookmarkType)
+	{
+		case	BOOKMARK_SEARCH_TYPE:
+		case	BOOKMARK_FIND_TYPE:
+		bookmarkFolder = kNC_NewSearchFolder;
+		break;
+	}
+
+  nsCOMPtr<nsIRDFResource> destinationFolder;
+  rv = getFolderViaHint(bookmarkFolder, PR_TRUE, getter_AddRefs(destinationFolder));
+  if (NS_FAILED(rv)) return rv;
+
+  return AddBookmarkToFolder(aURI, destinationFolder, aTitle, aCharset);
 }
 
 
@@ -3508,7 +3574,12 @@ nsBookmarksService::insertBookmarkItem(nsIRDFResource *src, nsISupportsArray *aA
 	{
 		if (NS_FAILED(rv = container->IndexOf(src, &srcIndex)))
 			return(rv);
-	}
+    // If not in the container, add at the end
+    if (srcIndex == -1) {
+      if (NS_FAILED(rv = container->GetCount(&srcIndex)))
+        return(rv);
+    }
+  }
 
 	nsAutoString			newName;
 
@@ -3586,7 +3657,7 @@ nsBookmarksService::insertBookmarkItem(nsIRDFResource *src, nsISupportsArray *aA
 	if (NS_FAILED(rv = mInner->Assert(newElement, kNC_BookmarkAddDate, dateLiteral, PR_TRUE)))
 		return(rv);
 
-	if (NS_FAILED(rv = container->InsertElementAt(newElement, ((srcIndex == 0) ? 1 : srcIndex), PR_TRUE)))
+	if (NS_FAILED(rv = container->InsertElementAt(newElement, ((srcIndex == 0) ? 1 : srcIndex+1), PR_TRUE)))
 		return(rv);
 	return(rv);
 }

@@ -18,22 +18,30 @@
    - 
    - Contributor(s): Stephen Lamm          <slamm@netscape.com>
    -                 Robert John Churchill <rjc@netscape.com>
+   -                 Ben Goodger           <ben@netscape.com>
   --> 
 
-<!ENTITY bookmarks.windowtitle.label  "Properties">
+<!ENTITY bookmarks.windowtitle.label  "Properties for &quot;**bm_title**&quot;">
 
-<!ENTITY generalInfo.label            "General Information">
-<!ENTITY generalInfo.accesskey        "g">
+<!ENTITY generalInfo.label            "Info">
+<!ENTITY generalInfo.accesskey        "i">
+<!ENTITY generaldesc.label            "&brandShortName; can remember the locations of sites on the Internet for you. Enter the site's name and location in the fields below, then select the site from the Bookmarks menu or your Bookmarks My Sidebar tab to visit the site.">
+
 <!ENTITY schedule.label               "Schedule">
 <!ENTITY schedule.accesskey           "s">
+<!ENTITY schedule.description         "&brandShortName; can check this site for updates and notify you when one occurs. Use these settings to customize the schedule for this Bookmark.">
+<!ENTITY notification.label           "Notify">
+<!ENTITY notification.accesskey       "n">
+<!-- ICK. fix me -->
+<!ENTITY notification.description     "&brandShortName; will notify you when this site changes. Use these settings to customize notification.">
 
 <!ENTITY bookmarks.information.label  "Information:">
 <!ENTITY bookmarks.name.label         "Name:">
 <!ENTITY bookmarks.location.label     "Location:">
-<!ENTITY bookmarks.shortcut.label     "Custom Keyword:">
-<!ENTITY bookmarks.description.label  "Description:">
+<!ENTITY bookmarks.shortcut.label     "Keyword:">
+<!ENTITY bookmarks.description.label  "Comments:">
 
-<!ENTITY checkforupdates.legend.label "Check URL for updates:">
+<!ENTITY checkforupdates.legend.label "Check this location for updates:">
 <!ENTITY when.label                   "When:">
 <!ENTITY from.label                   "from:">
 <!ENTITY to.label                     "to: ">

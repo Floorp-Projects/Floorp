@@ -185,21 +185,23 @@
   BINDING : menubutton-single
   XUL REPRESENTATION : <menubutton>
   -->
-  <binding id="menubutton-single-right">
-    <content includes="menupopup">
+  <binding id="menubutton-single-right" extends="xul:menu">
+    <content>
       <xul:box class="menubutton-internal-box" autostretch="never">
         <xul:text class="menubutton-single-text" inherits="value,crop,accesskey"/>
         <xul:image class="menubutton-single-icon"/>
       </xul:box>
+      <children includes="menupopup,template"/>
     </content>
   </binding>
 
   <binding id="menubutton-single-left">
-    <content includes="menupopup">
+    <content>
       <xul:box class="menubutton-internal-box" autostretch="never">
         <xul:image class="menubutton-single-icon"/>
         <xul:text class="menubutton-single-text" inherits="value,crop,accesskey"/>
       </xul:box>
+      <children includes="menupopup,template"/>
     </content>
   </binding>
   

@@ -9,6 +9,7 @@
 <!--LOCALIZATION NOTE (navigator.label): DONT_TRANSLATE -->
 <!ENTITY navigator.label "Navigator">
 <!ENTITY history.label "History">
+<!ENTITY bookmarks.label "Bookmarks">
 <!ENTITY languages.label "Languages">
 <!ENTITY applications.label "Helper Applications">
 <!--LOCALIZATION NOTE (smartBrowse.label): DONT_TRANSLATE -->

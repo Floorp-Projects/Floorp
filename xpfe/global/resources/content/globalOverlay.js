@@ -65,10 +65,8 @@ function goUpdateCommand(command)
 
 function goDoCommand(command)
 {
-
   try {
   	var controller = top.document.commandDispatcher.getControllerForCommand(command);
-
 	  if ( controller && controller.isCommandEnabled(command))
 		  controller.doCommand(command);
   }
@@ -128,17 +126,16 @@ function setTooltipText(aID, aTooltipText)
 function FillInTooltip ( tipElement )
 {
   var retVal = false;
-  var textNode = document.getElementById("TOOLTIP_tooltipText");
-  if ( textNode ) {
-    try {  
-      var tipText = tipElement.getAttribute("tooltiptext");
-      if ( tipText != "" ) {
-        textNode.setAttribute('value', tipText);
-        retVal = true;
-      }
+  var textNode = document.getElementById("TOOLTIP-tooltipText");
+  while (textNode.hasChildNodes())  
+    textNode.removeChild(textNode.firstChild);
+  if (textNode) {
+    var tipText = tipElement.getAttribute("tooltiptext");
+    if (tipText) {
+      var node = document.createTextNode(tipText);
+      textNode.appendChild(node);
+      retVal = true;
     }
-    catch (e) { }
   }
-  
   return retVal;
 }

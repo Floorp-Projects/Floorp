@@ -36,3 +36,9 @@
 <!ENTITY alwayscreateinfolder.label "Don't show this dialog again">
 <!ENTITY alwayscreateinfolder.accesskey "a">
 <!ENTITY dontshowmessage.tooltip    "When this option is selected, new Bookmarks will be added using the title provided by the page.">
+<!ENTITY button.defaultfolder.label "Use Default">
+<!ENTITY button.defaultfolder.accesskey "d">
+<!ENTITY selectFolder.label         "Choose Folder">
+
+
+

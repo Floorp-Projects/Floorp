@@ -47,12 +47,152 @@
   <binding id="treecell-indented-folder">
     <content autostretch="never">
       <xul:treeindentation/>
-      <xul:image class="tree-cell-twisty" twisty="true" allowevents="true"/>
+      <xul:image class="tree-cell-twisty" twisty="true" inherits="hidden=notwisty" allowevents="true"/>
       <xul:image class="tree-cell-primary-icon" inherits="src"/>
       <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
     </content>
   </binding>
+
+  <!-- Inline Editable Treecell -->
+  <!-- 
+    This same base-binding will probably become the foundation of inline-editable
+    buttons, but at the moment it's kinda specific to the anonymous treecell
+    content in the bindings that derive from it. In the next milestone this binding
+    will become more generic to support any anonymous content. 
+    -->
+  <binding id="treecell-indented-folder-inline-edit-base">
+    <implementation>
+      <property name="_mode">0</property>
+      <method name="setMode">
+        <parameter name="val"/>
+        <body>
+        <![CDATA[
+          var row = this.parentNode;
+          if (val == "edit") {
+            var nodes = document.getAnonymousNodes(this);
+            var box = nodes[nodes.length-1];
+            if (box.firstChild.getAttribute("hidden") != "true") {
+              row.setAttribute("mode", "inline-edit");
+              box.setAttribute("mode", "edit");
+              box.firstChild.setAttribute("hidden", "true");
+              const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+              var field = document.createElementNS(kXULNS, "textfield");
+              field.className = "textfield-inline-edit";
+              field.setAttribute("flex", "1");
+              field.setAttribute("value", box.firstChild.getAttribute("value"));
+              box.appendChild(field);
+              field.addEventListener("keydown", this.fieldKeyDown, false);
+              field.addEventListener("change", this.fieldChange, false);
+              field.select();
+            }
+          }
+          else {
+            nodes = document.getAnonymousNodes(this);
+            box = nodes[nodes.length-1];
+            if (box.firstChild.getAttribute("hidden") == "true") {
+              row.removeAttribute("mode");
+              box.removeAttribute("mode");
+              box.lastChild.blur();
+              box.removeChild(box.lastChild);
+              box.firstChild.removeAttribute("hidden");
+            }
+          }
+        ]]>
+        </body>
+      </method>
+      <property name="_observers">
+      <![CDATA[
+        ({
+          reject: [], 
+          accept: []
+        })
+      ]]>
+      </property>
+      <method name="addObserver">
+        <parameter name="aObserver"/>
+        <parameter name="aTopic"/>
+        <parameter name="aParams"/>
+        <body>
+          this._observers[aTopic].push({ callback: aObserver, params: aParams });
+        </body>
+      </method>
+      <method name="fieldKeyDown">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          var cell = aEvent.target.parentNode.parentNode;
+          var nodes = document.getAnonymousNodes(cell);
+          var box = nodes[nodes.length-1];
+          if (aEvent.keyCode == 13) {
+            cell.valueIsAccepted = true;
+            for (var i = 0; i < cell._observers["accept"].length; ++i) 
+              cell._observers["accept"][i].callback(cell._observers["accept"][i].params.concat(box.lastChild.value), "accept");
+          }
+          else if (aEvent.keyCode == 27) {
+            for (i = 0; i < cell._observers["reject"].length; ++i) 
+              cell._observers["reject"][i].callback(cell._observers["reject"][i].params.concat(box.lastChild.value), "reject");
+            if ("setMode" in cell) 
+              cell.setMode("normal");
+          }
+          aEvent.preventBubble();
+        ]]>
+        </body>
+      </method>
+      <property name="valueIsAccepted">false</property>
+      <method name="fieldChange">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          var cell = aEvent.target.parentNode.parentNode;
+          var nodes = document.getAnonymousNodes(cell);
+          var box = nodes[nodes.length-1];
+          var newValue = box.lastChild.value;
+          var topic = "reject"; // cell.valueIsAccepted ? "accept" : "reject";
+          for (var i = 0; i < cell._observers[topic].length; ++i) 
+            cell._observers[topic][i].callback(cell._observers[topic][i].params.concat(box.lastChild.value), topic);
+          if ("setMode" in cell) 
+            cell.setMode("normal");
+        ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="treecell-indented-folder-inline-edit" 
+           extends="chrome://global/content/treeBindings.xml#treecell-indented-folder-inline-edit-base">
+    <content autostretch="never">
+      <xul:treeindentation/>
+      <xul:image class="tree-cell-twisty" twisty="true" inherits="hidden=notwisty" allowevents="true"/>
+      <xul:image class="tree-cell-primary-icon-inline-edit-folder" inherits="src"/>
+      <xul:box class="inline-edit-cell-box" flex="1">
+        <xul:text class="inline-edit-cell-text" 
+                  inherits="crop,value,align,mode" flex="1" crop="right"/>
+      </xul:box>
+    </content>
+  </binding>
   
+  <binding id="treecell-indented-leaf-inline-edit"
+           extends="chrome://global/content/treeBindings.xml#treecell-indented-folder-inline-edit-base">
+    <content autostretch="never">
+      <xul:treeindentation/>
+      <xul:image class="tree-cell-primary-icon-inline-edit-leaf" inherits="src"/>
+      <xul:box class="inline-edit-cell-box" flex="1">
+        <xul:text class="inline-edit-cell-text" 
+                  inherits="crop,value,align,mode" flex="1" crop="right"/>
+      </xul:box>
+    </content>
+  </binding>
+  
+  <binding id="treecell-inline-edit"
+           extends="chrome://global/content/treeBindings.xml#treecell-indented-folder-inline-edit-base">
+    <content autostretch="never">
+      <xul:box class="inline-edit-cell-box" flex="1">
+        <xul:text class="inline-edit-cell-text" 
+                  inherits="crop,value,align,mode" flex="1" crop="right"/>
+      </xul:box>
+    </content>
+  </binding>
+
   <binding id="treecell-indented-leaf">
     <content autostretch="never">
       <xul:treeindentation/>
@@ -95,7 +235,7 @@
     <content>
       <xul:box class="treecell-header-box" flex="1" autostretch="never">
         <xul:image class="tree-header-image" inherits="src"/>
-        <xul:text class="tree-header-text" inherits="crop,value" flex="1" crop="right"/>
+        <xul:text class="tree-header-text" inherits="crop,value,disabled" flex="1" crop="right"/>
         <xul:image class="tree-header-sortdirection"/>
       </xul:box>
     </content>
@@ -214,7 +354,7 @@
            if ( el && (el.tagName != "tree") ) this.selectItem(el);
          }
          else {
-           var el = this.selectedItems[0];
+           el = this.selectedItems[0];
            el.close();
          }
         ]]>
@@ -398,6 +538,7 @@
            except this item. -->
       <handler event="click">
       <![CDATA[
+         if (event.button != 1) return;
          var t = event.originalTarget;
          if (t.localName == 'treecell') {
            if (event.ctrlKey || event.metaKey) {

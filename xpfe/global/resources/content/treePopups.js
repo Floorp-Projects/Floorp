@@ -28,8 +28,9 @@ function BuildTreePopup( treeColGroup, treeHeadRow, popup, skipCell )
 
   var currTreeCol = treeHeadRow.firstChild;
   var currColNode = treeColGroup.firstChild;
+  var count = 0;
   while (currTreeCol) {
-    if (currColNode.tagName == "splitter")
+    if (currColNode.localName == "splitter")
       currColNode = currColNode.nextSibling;
 
     if (skipCell != currTreeCol) {
@@ -40,6 +41,7 @@ function BuildTreePopup( treeColGroup, treeHeadRow, popup, skipCell )
           popupChild = document.createElement("menuitem");
           popupChild.setAttribute("type", "checkbox");
           popupChild.setAttribute("value", columnName);
+          if (!count++) popupChild.setAttribute("disabled", "true");
           if (columnName == "") {
             var display = currTreeCol.getAttribute("display");
             popupChild.setAttribute("value", display);
@@ -87,7 +89,6 @@ function ToggleColumnState(popupElement, doc)
   var colid = popupElement.getAttribute("colid");
   var colNode = doc.getElementById(colid);
   if (colNode) {
-    dump(colNode.id + "\n");
     var checkedState = popupElement.getAttribute("checked");
     if (checkedState == "true")
       colNode.removeAttribute("hidden");
