@@ -3044,7 +3044,7 @@ VR_INTERFACE(REGERR) NR_RegGetEntry( HREG hReg, RKEY key, char *name,
                         if (tmpbuf == NULL) 
                         {
                             buffer = NULL;
-                            err = REGERR_NOFIND;
+                            err = REGERR_NOFILE; /* must match nr_GetPathname() in VerReg.c */
                         }
                         else 
                         {
