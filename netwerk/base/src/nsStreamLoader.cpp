@@ -25,6 +25,9 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
+#include "nsProxiedService.h"
+
+static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 NS_IMETHODIMP
 nsStreamLoader::Init(nsIURI* aURL,
@@ -43,11 +46,21 @@ nsStreamLoader::Init(nsIURI* aURL,
   rv = NS_OpenURI(this, nsnull, aURL, nsnull, aGroup, notificationCallbacks,
                   loadAttributes, bufferSegmentSize, bufferMaxSize);
   if (NS_FAILED(rv) && mObserver) {
-    nsresult rv2 = mObserver->OnStreamComplete(this, mContext, rv,
-                                               mData.Length(), 
-                                               mData.GetBuffer());
-    if (NS_FAILED(rv2))
-      rv = rv2; // take the user's error instead
+    // don't callback synchronously as it puts the caller
+    // in a recursive situation and breaks the asynchronous
+    // semantics of nsIStreamLoader
+    nsresult rv2 = NS_OK;
+    NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
+                    kProxyObjectManagerCID, &rv);
+    if (NS_FAILED(rv2)) return rv2;
+
+    nsCOMPtr<nsIStreamLoaderObserver> pObserver;
+    rv2 = pIProxyObjectManager->GetProxyObject(NS_CURRENT_EVENTQ, 
+              NS_GET_IID(nsIStreamLoaderObserver), observer, 
+              PROXY_ASYNC, getter_AddRefs(pObserver));
+    if (NS_FAILED(rv2)) return rv2;
+
+    rv = pObserver->OnStreamComplete(this, mContext, rv, 0, nsnull);
   }
 
   return rv;
