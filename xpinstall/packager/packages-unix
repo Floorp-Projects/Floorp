@@ -57,6 +57,7 @@ bin/run-mozilla.sh
 bin/regExport
 bin/regxpcom
 bin/regchrome
+bin/mozilla-xremote-client
 bin/splash.xpm
 bin/xpicleanup
 bin/res/cmessage.txt
