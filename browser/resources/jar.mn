@@ -1,7 +1,0 @@
-browser.jar:
-  content/browser/contents.rdf          (content/contents.rdf)
-  content/browser/browser.xul           (content/browser.xul)
-  content/browser/browser.js            (content/browser.js)
-  locale/browser/contents.rdf           (locale/contents.rdf)
-  locale/browser/browser.ent            (locale/browser.ent)
-
