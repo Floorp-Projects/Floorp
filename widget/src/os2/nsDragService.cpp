@@ -155,7 +155,7 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode, nsISupports
     dragimage.fl = DRG_ICON;
     
     mDoingDrag = PR_TRUE;
-    HWND hwndDest = DrgDrag(mDragWnd, pDragInfo, &dragimage, 1, VK_BUTTON1,
+    HWND hwndDest = DrgDrag(mDragWnd, pDragInfo, &dragimage, 1, VK_BUTTON2,
                  (void*)0x80000000L); // Don't lock the desktop PS
     mDoingDrag = PR_FALSE;
 #ifdef DEBUG
