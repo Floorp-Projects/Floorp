@@ -551,7 +551,7 @@ nsWebShell::GetEventQueue(nsIEventQueue **aQueue)
   NS_ENSURE_ARG_POINTER(aQueue);
   *aQueue = 0;
 
-  nsCOMPtr<nsIEventQueueService> eventService(do_GetService(kEventQueueServiceCID));
+  nsCOMPtr<nsIEventQueueService> eventService(do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID));
   if (eventService)
     eventService->GetThreadEventQueue(mThread, aQueue);
   return *aQueue ? NS_OK : NS_ERROR_FAILURE;
