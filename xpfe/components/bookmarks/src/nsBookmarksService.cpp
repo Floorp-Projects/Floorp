@@ -326,7 +326,7 @@ BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 	rv = container->Init(mDataSource, aContainer);
 	if (NS_FAILED(rv)) return rv;
 
-	nsCOMPtr<nsIRDFResource>	bookmarkNode;
+	nsCOMPtr<nsIRDFResource>	bookmarkNode = aContainer;
 	nsAutoString			line, description;
 	PRBool				inDescription = PR_FALSE;
 
@@ -381,10 +381,13 @@ BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 				description.Insert(PRUnichar('>'), offset);
 			}
 
-			nsCOMPtr<nsIRDFLiteral>	descLiteral;
-			if (NS_SUCCEEDED(rv = gRDF->GetLiteral(description.GetUnicode(), getter_AddRefs(descLiteral))))
+			if (bookmarkNode)
 			{
-				rv = mDataSource->Assert(bookmarkNode, kNC_Description, descLiteral, PR_TRUE);
+				nsCOMPtr<nsIRDFLiteral>	descLiteral;
+				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(description.GetUnicode(), getter_AddRefs(descLiteral))))
+				{
+					rv = mDataSource->Assert(bookmarkNode, kNC_Description, descLiteral, PR_TRUE);
+				}
 			}
 
 			inDescription = PR_FALSE;
@@ -1749,6 +1752,10 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 					// output title
 					if (name)	strm << name;
 					strm << "</H3>\n";
+
+					// output description (if one exists)
+					WriteBookmarkProperties(ds, strm, child, kNC_Description, kOpenDD, PR_TRUE);
+
 					rv = WriteBookmarksContainer(ds, strm, child, level+1);
 				}
 				else
