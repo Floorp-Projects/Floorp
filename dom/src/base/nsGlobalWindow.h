@@ -237,7 +237,8 @@ protected:
   nsTimeoutImpl*                mRunningTimeout;
   PRUint32                      mTimeoutPublicIdCounter;
   PRUint32                      mTimeoutFiringDepth;
-  PRBool                        mFirstDocumentLoad;
+  PRPackedBool                  mFirstDocumentLoad;
+  PRPackedBool                  mIsScopeClear;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
   nsString                      mTitle;
