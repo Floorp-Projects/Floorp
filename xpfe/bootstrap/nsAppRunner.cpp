@@ -61,6 +61,8 @@
 #include "nsDirectoryServiceDefs.h" 
 #include "nsIHTTPProtocolHandler.h"
 #include "nsBuildID.h"
+#include "nsWindowCreator.h"
+#include "nsIWindowWatcher.h"
 
 // Interfaces Needed
 #include "nsIXULWindow.h"
@@ -137,6 +139,8 @@ public:
 /* Define Class IDs */
 static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
+static char *sWatcherServiceContractID = "@mozilla.org/embedcomp/window-watcher;1";
+
 
 #include "nsNativeAppSupport.h"
 
@@ -793,6 +797,24 @@ static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs)
     return rv;
 }
 
+static nsresult InitializeWindowCreator()
+{
+  // create an nsWindowCreator and give it to the WindowWatcher service
+  nsWindowCreator *creatorCallback = new nsWindowCreator();
+  if (!creatorCallback)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsCOMPtr<nsIWindowCreator> windowCreator(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback));
+  if (windowCreator) {
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(sWatcherServiceContractID));
+    if (wwatch) {
+      wwatch->SetWindowCreator(windowCreator);
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
 #ifdef DEBUG_warren
 #ifdef XP_PC
 #define _CRTDBG_MAP_ALLOC
@@ -939,6 +961,10 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to initialize appshell");
   if (NS_FAILED(rv)) return rv;
 
+  rv = InitializeWindowCreator();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to initialize window creator");
+  if (NS_FAILED(rv)) return rv;
+
   // Initialize Profile Service here.
   rv = InitializeProfileService(cmdLineArgs);
   if (NS_FAILED(rv)) return rv;
@@ -986,7 +1012,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 
   return rv;
 }
-
 
 // English text needs to go into a dtd file.
 // But when this is called we have no components etc. These strings must either be
