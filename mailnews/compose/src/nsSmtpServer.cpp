@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -513,28 +514,58 @@ NS_IMETHODIMP
 nsSmtpServer::GetRedirectorType(char **aResult)
 {
     nsresult rv;
-    nsCAutoString pref;
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-        return rv;
-    getPrefString("redirector_type", pref);
-    rv = prefs->CopyCharPref(pref.get(), aResult);
-    if (NS_FAILED(rv)) *aResult=nsnull;
+    nsCOMPtr <nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    nsCOMPtr<nsIPrefBranch> prefBranch; 
+    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch)); 
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCAutoString prefName;
+    getPrefString("redirector_type", prefName);
+
+    rv = prefBranch->GetCharPref(prefName.get(), aResult);
+    if (NS_FAILED(rv)) 
+      *aResult = nsnull;
 
     // Check if we need to change 'aol' to 'netscape' per #4696
-    if (*aResult && !nsCRT::strcasecmp(*aResult, "aol"))
-    {
-      nsXPIDLCString hostName;
-      rv = GetHostname(getter_Copies(hostName));
-      if (NS_SUCCEEDED(rv) && (hostName.get()) && !nsCRT::strcmp(hostName, "smtp.netscape.net"))
+    if (*aResult)
+    { 
+      if (!nsCRT::strcasecmp(*aResult, "aol"))
       {
-        PL_strfree(*aResult);
-        pref = "netscape";
-        rv = SetRedirectorType(pref.get());
-        *aResult = ToNewCString(pref);
+        nsXPIDLCString hostName;
+        rv = GetHostname(getter_Copies(hostName));
+        if (NS_SUCCEEDED(rv) && (hostName.get()) && !nsCRT::strcmp(hostName, "smtp.netscape.net"))
+        {
+          PL_strfree(*aResult);
+          rv = SetRedirectorType("netscape");
+          NS_ENSURE_SUCCESS(rv,rv);
+          *aResult = nsCRT::strdup("netscape");
+        }
       }
     }
+    else {
+      // for people who have migrated from 4.x or outlook, or mistakenly
+      // created redirected accounts as regular imap accounts, 
+      // they won't have redirector type set properly
+      // this fixes the redirector type for them automatically
+      nsXPIDLCString hostName;
+      rv = GetHostname(getter_Copies(hostName));
+      NS_ENSURE_SUCCESS(rv,rv);
 
+      prefName.Assign("default_redirector_type.smtp.");
+      prefName.Append(hostName);
+
+      nsXPIDLCString defaultRedirectorType;
+      rv = prefBranch->GetCharPref(prefName.get(), getter_Copies(defaultRedirectorType));
+      if (NS_SUCCEEDED(rv) && !defaultRedirectorType.IsEmpty()) 
+      {
+        // only set redirectory type in memory
+        // if we call SetRedirectorType() that sets it in prefs
+        // which makes this automatic redirector type repair permanent
+        *aResult = ToNewCString(defaultRedirectorType);
+      }
+    }
     return NS_OK;
 }
 
