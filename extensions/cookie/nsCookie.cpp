@@ -2732,7 +2732,7 @@ cookie_FixQuoted(char* s) {
   char *quote = s;
   unsigned int i, j;
   while ((quote = PL_strchr(quote, '"'))) {
-    count = count++;
+    count++;
     quote++;
   }
   result = (char*)PR_Malloc(count + 1);
