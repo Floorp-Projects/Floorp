@@ -378,7 +378,7 @@ Rights Reserved.
 			<menuseparator/>
 			<menuitem observes="cmd_pageSetup"/>
 			<menuitem value="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" disabled="true" oncommand="PrintPreview();"/>
-			<menuitem value="&printCmd.label;" accesskey="&printCmd.accesskey;" oncommand="PrintEnginePrint();"/>
+			<menuitem id="printMenuItem" value="&printCmd.label;" accesskey="&printCmd.accesskey;" oncommand="PrintEnginePrint();"/>
 			<menuseparator/>
 		</menupopup>
 	</menu>
