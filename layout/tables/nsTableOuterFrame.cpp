@@ -1241,6 +1241,16 @@ nsTableOuterFrame::OuterReflowChild(nsPresContext*            aPresContext,
   // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
   nscoord availHeight = aOuterRS.availableHeight;
   if (NS_UNCONSTRAINEDSIZE != availHeight) {
+    nsMargin margin, marginNoAuto, padding;
+    GetMarginPadding(aPresContext, aOuterRS, aChildFrame, aOuterRS.availableWidth, margin, 
+                     marginNoAuto, padding);
+    
+    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != margin.top, "No unconstrainedsize arithmetic, please");
+    availHeight -= margin.top;
+    
+    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != margin.bottom, "No unconstrainedsize arithmetic, please");
+    availHeight -= margin.bottom;
+    
     availHeight = nsTableFrame::RoundToPixel(availHeight,
                                            aPresContext->ScaledPixelsToTwips(),
                                              eAlwaysRoundDown);
