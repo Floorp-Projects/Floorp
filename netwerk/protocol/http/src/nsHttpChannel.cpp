@@ -2569,7 +2569,7 @@ nsHttpChannel::GetContentType(nsACString &value)
 NS_IMETHODIMP
 nsHttpChannel::SetContentType(const nsACString &value)
 {
-    if (mIsPending) {
+    if (mListener) {
         if (!mResponseHead)
             return NS_ERROR_NOT_AVAILABLE;
 
@@ -2603,7 +2603,7 @@ nsHttpChannel::GetContentCharset(nsACString &value)
 NS_IMETHODIMP
 nsHttpChannel::SetContentCharset(const nsACString &value)
 {
-    if (mIsPending) {
+    if (mListener) {
         if (!mResponseHead)
             return NS_ERROR_NOT_AVAILABLE;
 
