@@ -347,7 +347,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
     
     if (count == 0)
     {
-        *aReturn = SaveError( nsInstall::FILE_DOES_NOT_EXIST );
+        *aReturn = SaveError( nsInstall::DESTINATION_DOES_NOT_EXIST );
         return NS_OK;
     }
 
@@ -669,7 +669,7 @@ nsInstall::DeleteFile(const nsString& aFolder, const nsString& aRelativeFileName
         result = ScheduleForInstall( id );
     }
         
-    if (result == nsInstall::FILE_DOES_NOT_EXIST) 
+    if (result == nsInstall::DESTINATION_DOES_NOT_EXIST) 
     {
         result = nsInstall::SUCCESS;
     }
