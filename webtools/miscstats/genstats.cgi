@@ -21,7 +21,7 @@
 # 
 
 #
-# $Id: genstats.cgi,v 1.9 1999/09/09 17:41:19 dmose%mozilla.org Exp $ 
+# $Id: genstats.cgi,v 1.10 1999/10/14 20:10:30 dmose%mozilla.org Exp $ 
 #
 # generate statistics related to non-Netscape participation in mozilla.org
 #
@@ -39,7 +39,7 @@ use Date::Format;
 	["Active checkers-in (source only)",
 						# statistic title
 	 "bonsai",				# database
-	 "checkins.when",			# timestamp field
+	 "checkins.ci_when",			# timestamp field
 	 "people.who",				# email addr field
 	 "select distinct people.id from checkins,people where " . 
 		"people.id=checkins.whoid"
@@ -78,7 +78,7 @@ use Date::Format;
 	["Useful patches (as attributed in CVS logs)",
 					 	# statistic title
 	 "bonsai",				# database
-	 "checkins.when",			# timestamp field
+	 "checkins.ci_when",			# timestamp field
 	 "descs.description",			# email addr field
 	 'select distinct description from checkins,descs where ' .
 		'checkins.descid=descs.id and description regexp ' . 
@@ -100,7 +100,7 @@ use Date::Format;
 
 	["Checkins",			# title
 	 "bonsai",				# database 
-         "when",				# timestamp field
+         "ci_when",				# timestamp field
 	 "people.who",				# email addr field
 	 "select distinct descs.description from people,checkins,descs " .
 		"where checkins.descid=descs.id and people.id=checkins.whoid"
@@ -108,7 +108,7 @@ use Date::Format;
 
 	["Files checked in",		# title
 	 "bonsai",				# database 
-         "when",				# timestamp field
+         "ci_when",				# timestamp field
 	 "people.who",				# email addr field
 	 "select fileid from people,checkins where people.id=checkins.whoid"
 	]		 
