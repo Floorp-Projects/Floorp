@@ -315,7 +315,7 @@ function generateControls()
 		}
 		else if ( formName == "intro1.htm" )
 		{
-			showSetupShortcut = true;
+			showSetupShortcut = false;
 		}
 		else if ( formName == "settings.htm" )
 		{
