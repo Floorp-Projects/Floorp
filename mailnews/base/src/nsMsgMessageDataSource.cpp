@@ -1190,6 +1190,12 @@ nsMsgMessageDataSource::createMessageNameNode(nsIMessage *message,
       rv = message->GetMime2DecodedSubject(getter_Copies(subject));
 			if(NS_FAILED(rv))
 				return rv;
+
+      // strip out tabs from subject
+      nsAutoString tempStr(subject);
+      tempStr.StripChar((PRUnichar)'\t');
+      *((PRUnichar **)getter_Copies(subject)) = nsXPIDLString::Copy(tempStr.GetUnicode());
+
       PRUint32 flags;
       rv = message->GetFlags(&flags);
       if(NS_SUCCEEDED(rv) && (flags & MSG_FLAG_HAS_RE))
