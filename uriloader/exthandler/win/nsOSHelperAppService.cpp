@@ -29,6 +29,7 @@
 #include "nsMimeTypes.h"
 #include "nsILocalFile.h"
 #include "nsIProcess.h"
+#include "plstr.h"
 
 // we need windows.h to read out registry information...
 #include <windows.h>
@@ -374,6 +375,17 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char *aMIMEType, nsIMI
   nsresult rv = nsExternalHelperAppService::GetFromMIMEType(aMIMEType, _retval);
   if (NS_SUCCEEDED(rv) && *_retval) return NS_OK; // okay we got an entry so we are done.
 
+  if (PL_strcasecmp(aMIMEType, APPLICATION_OCTET_STREAM) == 0) {
+    /* XXX Gross hack to wallpaper over the most common Win32
+     * extension issues caused by the fix for bug 116938.  See bug
+     * 120327, comment 271 for why this is needed.  Not even sure we
+     * want to remove this once we have fixed all this stuff to work
+     * right; any info we get from the OS on this type is pretty much
+     * useless....
+     */
+    return NS_ERROR_FAILURE;
+  }
+  
   // (1) try to use the windows mime database to see if there is a mapping to a file extension
   // (2) try to see if we have some left over 4.x registry info we can peek at...
   nsCAutoString fileExtension;
