@@ -56,6 +56,8 @@ pref("general.startup.addressbook",         false);
 pref("general.open_location.last_url",      "");
 pref("general.open_location.last_window_choice", 0);
 
+pref("general.config.obscure_value", 13); // for MCD .cfg files
+
 pref("backups.number_of_prefs_copies", 1);
 
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last
