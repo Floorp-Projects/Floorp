@@ -60,6 +60,9 @@ static nsresult openPrefFileSpec(nsIFileSpec* aFilespec, PRBool aIsErrorFatal, P
 static nsresult savePrefFile(nsIFile* aFile);
 
 
+  // needed so we can still get the JS Runtime Service during XPCOM shutdown
+static nsIJSRuntimeService* gJSRuntimeService = nsnull; // owning reference
+
 
 /*
  * Constructor/Destructor
@@ -81,6 +84,7 @@ nsPrefService::~nsPrefService()
 {
   PREF_Cleanup();
   NS_IF_RELEASE(mCurrentFile);
+  NS_IF_RELEASE(gJSRuntimeService);
 }
 
 
@@ -714,16 +718,20 @@ extern "C" JSRuntime* PREF_GetJSRuntime()
 {
   nsresult rv;
 
-  nsCOMPtr<nsIJSRuntimeService> rtsvc = 
-           do_GetService("@mozilla.org/js/xpc/RuntimeService;1", &rv);
-  if (NS_SUCCEEDED(rv)) {
-    JSRuntime* rt;
-    rv = rtsvc->GetRuntime(&rt);
-    if (NS_SUCCEEDED(rv)) {
-      return rt;
+  if (!gJSRuntimeService) {
+    rv = CallGetService("@mozilla.org/js/xpc/RuntimeService;1",
+                        &gJSRuntimeService);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("nsJSRuntimeService is missing");
+      gJSRuntimeService = nsnull;
+      return nsnull;
     }
   }
-  NS_WARNING("nsJSRuntimeService is missing");
+
+  JSRuntime* rt;
+  rv = gJSRuntimeService->GetRuntime(&rt);
+  if (NS_SUCCEEDED(rv))
+    return rt;
   return nsnull;
 }
 
