@@ -2731,6 +2731,7 @@ nsCSSFrameConstructor::GetPseudoColGroupFrame(nsTableCreator&          aTableCre
       created = PR_TRUE;
     }
     if (created || IS_TABLE_CELL(parentFrameType) || // cell parent
+        (nsLayoutAtoms::tableCaptionFrame == parentFrameType)  || // caption parent
         !IsTableRelated(parentFrameType, PR_TRUE)) { // block parent
       rv = CreatePseudoTableFrame(aTableCreator, aState, &aParentFrameIn);
     }
@@ -2771,6 +2772,7 @@ nsCSSFrameConstructor::GetPseudoRowGroupFrame(nsTableCreator&          aTableCre
       created = PR_TRUE;
     }
     if (created || IS_TABLE_CELL(parentFrameType) || // cell parent
+        (nsLayoutAtoms::tableCaptionFrame == parentFrameType)  || // caption parent
         !IsTableRelated(parentFrameType, PR_TRUE)) { // block parent
       rv = CreatePseudoTableFrame(aTableCreator, aState, &aParentFrameIn);
     }
@@ -2804,6 +2806,7 @@ nsCSSFrameConstructor::GetPseudoRowFrame(nsTableCreator&          aTableCreator,
   if (!pseudoFrames.mLowestType) {
     PRBool created = PR_FALSE;
     if (IS_TABLE_CELL(parentFrameType) || // cell parent
+       (nsLayoutAtoms::tableCaptionFrame == parentFrameType)  || // caption parent
         !IsTableRelated(parentFrameType, PR_TRUE)) { // block parent
       rv = CreatePseudoTableFrame(aTableCreator, aState, &aParentFrameIn);
       created = PR_TRUE;
@@ -2981,7 +2984,6 @@ IsSpecialHTMLContent(nsIContent* aContent)
     tag == nsHTMLAtoms::legend ||
     tag == nsHTMLAtoms::frameset ||
     tag == nsHTMLAtoms::iframe ||
-    tag == nsHTMLAtoms::noframes ||
     tag == nsHTMLAtoms::spacer ||
     tag == nsHTMLAtoms::button ||
     tag == nsHTMLAtoms::isindex;    
@@ -3603,7 +3605,8 @@ nsCSSFrameConstructor::ConstructTableForeignFrame(nsFrameConstructorState& aStat
   nsFrameItems& childItems =
     hasPseudoParent ? prevPseudoFrames.mCellInner.mChildList : aChildItems;
 
-  rv = ConstructFrame(aState, aContent, parentFrame, childItems);
+  ConstructFrame(aState, aContent, parentFrame, childItems);
+  // dont care about return value as ConstructFrame will not append a child if it fails.
 
   // restore the pseudo frame state
   aState.mPseudoFrames = prevPseudoFrames;
@@ -5200,16 +5203,8 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
-    
-    PRBool allowSubframes = PR_TRUE;
-    nsCOMPtr<nsISupports> container = aState.mPresContext->GetContainer();
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-    if (docShell) {
-      docShell->GetAllowSubframes(&allowSubframes);
-    }
-    if (allowSubframes) {
-      rv = NS_NewHTMLFramesetFrame(mPresShell, &newFrame);
-    }
+   
+    rv = NS_NewHTMLFramesetFrame(mPresShell, &newFrame);
   }
   else if (nsHTMLAtoms::iframe == aTag) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
@@ -5217,51 +5212,15 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     }
     
     isReplaced = PR_TRUE;
-    PRBool allowSubframes = PR_TRUE;
-    nsCOMPtr<nsISupports> container = aState.mPresContext->GetContainer();
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-    if (docShell) {
-      docShell->GetAllowSubframes(&allowSubframes);
-    }
-    if (allowSubframes) {
-      rv = NS_NewSubDocumentFrame(mPresShell, &newFrame);
-      if (newFrame) {
-        // the nsSubDocumentFrame needs to know about its content parent during ::Init.
-        // there is no reasonable way to get the value there.
-        // so we store it as a frame property.
-        nsCOMPtr<nsIAtom> contentParentAtom = do_GetAtom("contentParent");
-        aState.mPresContext->PropertyTable()->
-          SetProperty(newFrame, contentParentAtom,
-                      aParentFrame, nsnull, nsnull);
-      }
-    }
-  }
-  else if (nsHTMLAtoms::noframes == aTag) {
-    if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
-      ProcessPseudoFrames(aState, aFrameItems); 
-    }
-    isReplaced = PR_TRUE;
-
-    PRBool allowSubframes = PR_TRUE;
-    nsCOMPtr<nsISupports> container = aState.mPresContext->GetContainer();
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-    if (docShell) {
-      docShell->GetAllowSubframes(&allowSubframes);
-    }
-    if (allowSubframes) {
-      // make <noframes> be display:none if frames are enabled
-      nsStyleDisplay* mutdisplay = (nsStyleDisplay*)aStyleContext->GetUniqueStyleData(eStyleStruct_Display);
-      mutdisplay->mDisplay = NS_STYLE_DISPLAY_NONE;
-      aState.mFrameManager->SetUndisplayedContent(aContent, aStyleContext);
-    } 
-    else {
-      // XXXbz Use ConstructBlock, perhaps?  Or simply bail out of here and
-      // allow it to be constructed by display?  Would need to fix its display
-      // value accordingly...  Really, we just need to fix bug 240129 and
-      // remove this code.
-      processChildren = PR_TRUE;
-      isFloatContainer = PR_TRUE;
-      rv = NS_NewBlockFrame(mPresShell, &newFrame);
+    rv = NS_NewSubDocumentFrame(mPresShell, &newFrame);
+    if (newFrame) {
+      // the nsSubDocumentFrame needs to know about its content parent during ::Init.
+      // there is no reasonable way to get the value there.
+      // so we store it as a frame property.
+      nsCOMPtr<nsIAtom> contentParentAtom = do_GetAtom("contentParent");
+      aState.mPresContext->PropertyTable()->
+        SetProperty(newFrame, contentParentAtom,
+                    aParentFrame, nsnull, nsnull);
     }
   }
   else if (nsHTMLAtoms::spacer == aTag) {
@@ -5746,17 +5705,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       else if (aTag == nsXULAtoms::iframe || aTag == nsXULAtoms::editor ||
                aTag == nsXULAtoms::browser) {
         isReplaced = PR_TRUE;
-
-        // XXX should turning off frames allow XUL iframes?
-        PRBool allowSubframes = PR_TRUE;
-        nsCOMPtr<nsISupports> container = aState.mPresContext->GetContainer();
-        nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-        if (docShell) {
-          docShell->GetAllowSubframes(&allowSubframes);
-        }
-        if (allowSubframes) {
-           rv = NS_NewSubDocumentFrame(mPresShell, &newFrame);
-        }
+        
+        rv = NS_NewSubDocumentFrame(mPresShell, &newFrame);
       }
       // PROGRESS METER CONSTRUCTION
       else if (aTag == nsXULAtoms::progressmeter) {
