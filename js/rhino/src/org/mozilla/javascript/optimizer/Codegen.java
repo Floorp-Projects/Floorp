@@ -587,15 +587,12 @@ public class Codegen extends Interpreter {
     private void generateInit(Context cx, String superClassName)
     {
         trivialInit = true;
-        boolean inCtor;
         String methodName;
 
         if (!inFunction) {
             methodName = "initScript";
-            inCtor = false;
         } else {
             methodName = "<init>";
-            inCtor = true;
             setNonTrivialInit(methodName);
             addByteCode(ByteCode.ALOAD_0);
             addSpecialInvoke(superClassName, "<init>", "()", "V");
@@ -667,7 +664,41 @@ public class Codegen extends Interpreter {
         int regexpCount = scriptOrFn.getRegexpCount();
         if (regexpCount != 0) {
             setNonTrivialInit(methodName);
-            generateRegExpLiterals(inCtor);
+            for (int i = 0; i != regexpCount; ++i) {
+                String fieldName = getRegexpFieldName(i);
+                short flags = ClassFileWriter.ACC_PRIVATE;
+                if (inFunction) { flags |= ClassFileWriter.ACC_FINAL; }
+                classFile.addField(
+                    fieldName,
+                    "Lorg/mozilla/javascript/regexp/NativeRegExp;",
+                    flags);
+                addByteCode(ByteCode.ALOAD_0);    // load 'this'
+
+                addByteCode(ByteCode.NEW,
+                            "org/mozilla/javascript/regexp/NativeRegExp");
+                addByteCode(ByteCode.DUP);
+
+                aload(contextLocal);    // load 'context'
+                aload(variableObjectLocal);    // load 'scope'
+                push(scriptOrFn.getRegexpString(i));
+                String regexpFlags = scriptOrFn.getRegexpFlags(i);
+                if (regexpFlags == null) {
+                    addByteCode(ByteCode.ACONST_NULL);
+                } else {
+                    push(regexpFlags);
+                }
+                push(0);
+
+                addSpecialInvoke("org/mozilla/javascript/regexp/NativeRegExp",
+                                 "<init>",
+                                 "(Lorg/mozilla/javascript/Context;"
+                                 +"Lorg/mozilla/javascript/Scriptable;"
+                                 +"Ljava/lang/String;Ljava/lang/String;Z)",
+                                 "V");
+                classFile.add(ByteCode.PUTFIELD, generatedClassName,
+                              fieldName,
+                              "Lorg/mozilla/javascript/regexp/NativeRegExp;");
+            }
         }
 
         if (inFunction) {
@@ -742,46 +773,6 @@ public class Codegen extends Interpreter {
                 addByteCode(ByteCode.ARETURN);
                 classFile.stopMethod((short)0, null);
             }
-        }
-    }
-
-    private void generateRegExpLiterals(boolean inCtor) {
-        int regexpCount = scriptOrFn.getRegexpCount();
-        for (int i=0; i < regexpCount; i++) {
-            String fieldName = getRegexpFieldName(i);
-            short flags = ClassFileWriter.ACC_PRIVATE;
-            if (inCtor)
-                flags |= ClassFileWriter.ACC_FINAL;
-            classFile.addField(fieldName,
-                               "Lorg/mozilla/javascript/regexp/NativeRegExp;",
-                               flags);
-            addByteCode(ByteCode.ALOAD_0);    // load 'this'
-
-            addByteCode(ByteCode.NEW,
-                        "org/mozilla/javascript/regexp/NativeRegExp");
-            addByteCode(ByteCode.DUP);
-
-            aload(contextLocal);    // load 'context'
-            aload(variableObjectLocal);    // load 'scope'
-            push(scriptOrFn.getRegexpString(i));
-            String regexpFlags = scriptOrFn.getRegexpFlags(i);
-            if (regexpFlags == null) {
-                addByteCode(ByteCode.ACONST_NULL);
-            } else {
-                push(regexpFlags);
-            }
-            push(0);
-
-            addSpecialInvoke("org/mozilla/javascript/regexp/NativeRegExp",
-                             "<init>",
-                             "(Lorg/mozilla/javascript/Context;"
-                             +"Lorg/mozilla/javascript/Scriptable;"
-                             +"Ljava/lang/String;Ljava/lang/String;Z)",
-                             "V");
-            classFile.add(ByteCode.PUTFIELD,
-                          classFile.fullyQualifiedForm(generatedClassName),
-                          fieldName,
-                          "Lorg/mozilla/javascript/regexp/NativeRegExp;");
         }
     }
 
