@@ -247,6 +247,28 @@ CHTMLToken::CHTMLToken(const nsString& aName) : CToken(aName) {
   mTagType=eHTMLTag_unknown;
 }
 
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+eHTMLTags CHTMLToken::GetHTMLTag() {
+  return mTagType;
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+void CHTMLToken::SetHTMLTag(eHTMLTags aTagType) {
+  mTagType=aTagType; 
+  return;
+}
 
 /**-------------------------------------------------------
  *  default constructor
@@ -270,6 +292,50 @@ eHTMLTags CStartToken::GetHTMLTag(){
   if(eHTMLTag_unknown==mTagType)
     mTagType=DetermineHTMLTagType(mTextValue);
   return mTagType;
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+const char*	CStartToken::GetClassName(void) {
+  return "start";
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+PRInt32 CStartToken::GetTokenType(void) {
+  return eToken_start;
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+void CStartToken::SetAttributed(PRBool aValue) {
+  mAttributed=aValue;
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+PRBool CStartToken::IsAttributed(void) {
+  return mAttributed;
 }
 
 /**-------------------------------------------------------
@@ -376,6 +442,27 @@ eHTMLTags CEndToken::GetHTMLTag(){
   return mTagType;
 }
 
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+const char*	CEndToken::GetClassName(void) {
+  return "/end";
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+PRInt32 CEndToken::GetTokenType(void) {
+  return eToken_end;
+}
 
 /**-------------------------------------------------------
  *  Dump contents of this token to givne output stream
@@ -400,6 +487,28 @@ void CEndToken::DebugDumpSource(ostream& out) {
  *------------------------------------------------------*/
 CTextToken::CTextToken(const nsString& aName) : CHTMLToken(aName) {
   mOrdinalValue=eToken_text;
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+const char*	CTextToken::GetClassName(void) {
+  return "text";
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+PRInt32 CTextToken::GetTokenType(void) {
+  return eToken_text;
 }
 
 /**-------------------------------------------------------
@@ -483,9 +592,26 @@ PRInt32 CCommentToken::Consume(PRUnichar aChar, CScanner* aScanner) {
   return result;
 };
 
-const char* CCommentToken::GetClassName(void)
-{
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+const char* CCommentToken::GetClassName(void){
   return "/**/";
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+PRInt32 CCommentToken::GetTokenType(void) {
+  return eToken_comment;
 }
 
 #ifdef TOKENIZE_CRLF
@@ -498,6 +624,28 @@ const char* CCommentToken::GetClassName(void)
  *------------------------------------------------------*/
 CNewlineToken::CNewlineToken(const nsString& aName) : CHTMLToken(aName) {
   mOrdinalValue=eToken_newline;
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+const char*	CNewlineToken::GetClassName(void) {
+  return "crlf";
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+PRInt32 CNewlineToken::GetTokenType(void) {
+  return eToken_newline;
 }
 
 /**-------------------------------------------------------
@@ -533,6 +681,28 @@ CAttributeToken::CAttributeToken(const nsString& aName) : CHTMLToken(aName),
   mTextKey() {
   mLastAttribute=PR_FALSE;
   mOrdinalValue=eToken_attribute;
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+const char*	CAttributeToken::GetClassName(void) {
+  return "attr";
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+PRInt32 CAttributeToken::GetTokenType(void) {
+  return eToken_attribute;
 }
 
 /**-------------------------------------------------------
@@ -699,6 +869,28 @@ CWhitespaceToken::CWhitespaceToken(const nsString& aName) : CHTMLToken(aName) {
 }
 
 /**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+const char*	CWhitespaceToken::GetClassName(void) {
+  return "ws";
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+PRInt32 CWhitespaceToken::GetTokenType(void) {
+  return eToken_whitespace;
+}
+
+/**-------------------------------------------------------
  *  This general purpose method is used when you want to
  *  consume an aribrary sequence of whitespace. 
  *  
@@ -753,6 +945,28 @@ PRInt32 CEntityToken::Consume(PRUnichar aChar, CScanner* aScanner) {
   }
   return result;
 };
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+const char*	CEntityToken::GetClassName(void) {
+  return "&entity";
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+PRInt32 CEntityToken::GetTokenType(void) {
+  return eToken_entity;
+}
 
 /**-------------------------------------------------------
  *  This general purpose method is used when you want to
@@ -919,6 +1133,50 @@ void CEntityToken::DebugDumpSource(ostream& out) {
   delete cp;
 }
 
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+const char*	CScriptToken::GetClassName(void) {
+  return "script";
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+PRInt32 CScriptToken::GetTokenType(void) {
+  return eToken_script;
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+const char*	CStyleToken::GetClassName(void) {
+  return "style";
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+PRInt32 CStyleToken::GetTokenType(void) {
+  return eToken_style;
+}
+
 
 /**-------------------------------------------------------
  *  default constructor
@@ -930,6 +1188,28 @@ void CEntityToken::DebugDumpSource(ostream& out) {
 CSkippedContentToken::CSkippedContentToken(const nsString& aName) : CAttributeToken(aName) {
   mTextKey = "$skipped-content";/* XXX need a better answer! */
   mOrdinalValue=eToken_skippedcontent;
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+const char*	CSkippedContentToken::GetClassName(void) {
+  return "skipped";
+}
+
+/**-------------------------------------------------------
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ *------------------------------------------------------*/
+PRInt32 CSkippedContentToken::GetTokenType(void) {
+  return eToken_skippedcontent;
 }
 
 /**-------------------------------------------------------

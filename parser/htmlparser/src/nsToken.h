@@ -41,21 +41,30 @@
 
 class CScanner;
 
+/**-------------------------------------------------------
+ *  Token objects represent sequences of characters as they
+ *  are consumed from the input stream (URL). While they're
+ *  pretty general in nature, we use subclasses (found in
+ *  nsHTMLTokens.h) to define <start>, </end>, <text>,
+ *  <comment>, <&entity>, <newline>, and <whitespace> tokens.
+ *  
+ *  @update  gess 3/25/98
+ *------------------------------------------------------*/
 class CToken {
 	public:
 									        CToken(const nsString& aName);
             					    ~CToken();
 		
-    virtual	nsString&     GetStringValue(void) {return mTextValue;}
-    virtual	nsString&     GetText(void) {return mTextValue;}
+    virtual	nsString&     GetStringValue(void);
+    virtual	nsString&     GetText(void);
 		virtual	void			    SetStringValue(const char* name);
-    virtual	void			    SetOrdinal(PRInt32 value) {mOrdinalValue=value;}
-  	virtual	PRInt32			  GetOrdinal(void) {return mOrdinalValue;}
+    virtual	void			    SetOrdinal(PRInt32 value);
+  	virtual	PRInt32			  GetOrdinal(void);
   	virtual	PRInt32       Consume(PRUnichar aChar,CScanner* aScanner);
   	virtual	void			    DebugDumpToken(ostream& out);
   	virtual	void			    DebugDumpSource(ostream& out);
-		virtual	PRInt32			  GetTokenType(void) {return -1;}
-    virtual const char*	  GetClassName(void) {return "token";}
+		virtual	PRInt32			  GetTokenType(void);
+    virtual const char*	  GetClassName(void);
     static void           SelfTest();
 
 protected:
