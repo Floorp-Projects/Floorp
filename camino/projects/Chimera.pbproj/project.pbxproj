@@ -3620,6 +3620,30 @@
 			isa = PBXTargetDependency;
 			target = F57F205C029997C901000106;
 		};
+		F56F836002E3606C01EF35C9 = {
+			isa = PBXTargetDependency;
+			target = F5A8CE4702DFF039013CA8EC;
+		};
+		F56F837202E47CCD01EF35C9 = {
+			isa = PBXFileReference;
+			name = RegionNames.strings;
+			path = English.lproj/RegionNames.strings;
+			refType = 4;
+		};
+		F56F837402E47DB401EF35C9 = {
+			children = (
+				F56F837202E47CCD01EF35C9,
+			);
+			isa = PBXVariantGroup;
+			name = RegionNames.strings;
+			refType = 4;
+		};
+		F56F837502E47DB501EF35C9 = {
+			fileRef = F56F837402E47DB401EF35C9;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F57074B5026BA85F01A80166 = {
 			isa = PBXFileReference;
 			path = CHBookmarksToolbar.h;
@@ -4550,7 +4574,7 @@
 	<key>NSMainNibFile</key>
 	<string>Appearance</string>
 	<key>NSPrincipalClass</key>
-	<string>OrgMozillaNavigatorPreferenceAppearance</string>
+	<string>OrgMozillaChimeraPreferenceAppearance</string>
 </dict>
 </plist>
 ";
@@ -4570,6 +4594,8 @@
 			files = (
 				F5A8CE5402DFF167013CA8EC,
 				F5A8CE5502DFF167013CA8EC,
+				F5F9FBDD02E1414C012B5DB7,
+				F56F837502E47DB501EF35C9,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -4607,6 +4633,8 @@
 				F5A8CE4F02DFF167013CA8EC,
 				F5A8CE5002DFF167013CA8EC,
 				F5A8CE5102DFF167013CA8EC,
+				F5F9FBD902E13767012B5DB7,
+				F56F837402E47DB401EF35C9,
 			);
 			isa = PBXGroup;
 			path = Appearance;
@@ -4776,6 +4804,7 @@
 				WRAPPER_EXTENSION = app;
 			};
 			dependencies = (
+				F56F836002E3606C01EF35C9,
 				F56F249F02AC72EF01A967F3,
 				F56F24A002AC72EF01A967F3,
 				F56F24A102AC72EF01A967F3,
@@ -7168,6 +7197,17 @@
 		};
 		F5F9FBD802E09210012B5DB7 = {
 			fileRef = F5A8CE4602DFF039013CA8EC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F9FBD902E13767012B5DB7 = {
+			isa = PBXFileReference;
+			path = RegionMapping.plist;
+			refType = 4;
+		};
+		F5F9FBDD02E1414C012B5DB7 = {
+			fileRef = F5F9FBD902E13767012B5DB7;
 			isa = PBXBuildFile;
 			settings = {
 			};
