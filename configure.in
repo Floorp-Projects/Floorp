@@ -159,7 +159,7 @@ if test "$GNU_CC"; then
     #             be a little bit stricter
     # -pipe     - speeds up the build a little by using pipes rather than
     #             temp files
-    _WARNINGS_CFLAGS="${_WARNINGS_CXXFLAGS} -Wall -pipe"
+    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -pipe"
 
     _DEFINES_CFLAGS='-include $(DEPTH)/config-defs.h'
     _USE_CPP_INCLUDE_FLAG=1
@@ -253,6 +253,7 @@ case "$target" in
        NS_USE_NATIVE=1
     else
        MKSHLIB='$(CC) $(DSO_LDOPTS)'
+       _WARNINGS_CFLAGS=''
        AS='$(CC)'
        ASFLAGS='$(CFLAGS)'
     fi
