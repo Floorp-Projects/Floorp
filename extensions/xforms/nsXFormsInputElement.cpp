@@ -264,7 +264,7 @@ nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
 nsresult
 nsXFormsInputElement::UpdateInstanceData()
 {
-  if (!mControl && !mBoundNode && !mModel)
+  if (!mControl || !mBoundNode || !mModel)
     return NS_OK;
 
   nsAutoString value;
