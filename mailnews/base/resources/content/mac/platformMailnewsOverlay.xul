@@ -6,6 +6,6 @@
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 	<!-- Delete Key -->
-	<key id="cmd_shiftDelete" keycode="VK_BACK" shift="true" xulkey="false"/>
+	<key id="cmd_shiftDelete" keycode="VK_BACK"  xulkey="false" modifiers="shift"/>
 
 </overlay>	

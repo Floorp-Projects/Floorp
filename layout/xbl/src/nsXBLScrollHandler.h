@@ -40,7 +40,7 @@ class nsXBLScrollHandler : public nsIDOMScrollListener,
                            public nsXBLEventHandler
 {
 public:
-  nsXBLScrollHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler, nsIAtom* aEventName);
+  nsXBLScrollHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
   virtual ~nsXBLScrollHandler();
   
   // nsIDOMetc.
@@ -64,8 +64,7 @@ protected:
 
 extern nsresult
 NS_NewXBLScrollHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
-                      nsIAtom* aEventName,
-                      nsXBLScrollHandler** aResult);
+                       nsXBLScrollHandler** aResult);
 
 
 #endif

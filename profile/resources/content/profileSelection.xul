@@ -55,7 +55,7 @@
   <script language="javascript" src="chrome://communicator/content/profile/profileManager.js"></script>
   
   <keyset id="keyset">
-    <key id="fooKey" key="s" xulkey="true" shift="true" onkeydown="foo()"/>
+    <key id="fooKey" key="s"   event="keydown" oncommand="foo()" modifiers="accel, shift"/>
   </keyset>
 
   <box class="box-header" id="header" title="&profilemanager.label;" description="&windowtitle.label;"/>

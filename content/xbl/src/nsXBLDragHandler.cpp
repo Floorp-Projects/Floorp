@@ -57,9 +57,8 @@ nsIAtom* nsXBLDragHandler::kDragExitAtom = nsnull;
 nsIAtom* nsXBLDragHandler::kDragDropAtom = nsnull;
 nsIAtom* nsXBLDragHandler::kDragGestureAtom = nsnull;
 
-nsXBLDragHandler::nsXBLDragHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler,
-                                   nsIAtom* aEventName)
-:nsXBLEventHandler(aReceiver,aHandler,aEventName)
+nsXBLDragHandler::nsXBLDragHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
+:nsXBLEventHandler(aReceiver,aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -85,94 +84,54 @@ nsXBLDragHandler::~nsXBLDragHandler()
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXBLDragHandler, nsXBLEventHandler, nsIDOMDragListener)
 
-nsresult nsXBLDragHandler::DragEnter(nsIDOMEvent* aMouseEvent)
+static inline nsresult DoMouse(nsIAtom* aEventType, nsIXBLPrototypeHandler* aHandler, nsIDOMEvent* aMouseEvent,
+                               nsIDOMEventReceiver* aReceiver)
 {
-  if (mEventName.get() != kDragEnterAtom)
+  if (!aHandler)
     return NS_OK;
 
   PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(mouse, &matched);
-  }
+  nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
+  aHandler->MouseEventMatched(aEventType, mouse, &matched);
 
   if (matched)
-    ExecuteHandler(mEventName, aMouseEvent);
+    aHandler->ExecuteHandler(aReceiver, aMouseEvent);
+  
   return NS_OK;
+}
+
+nsresult nsXBLDragHandler::DragEnter(nsIDOMEvent* aMouseEvent)
+{
+  return DoMouse(kDragEnterAtom, mProtoHandler, aMouseEvent, mEventReceiver);
 }
 
 nsresult nsXBLDragHandler::DragOver(nsIDOMEvent* aMouseEvent)
 {
-  if (mEventName.get() != kDragOverAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(mouse, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aMouseEvent);
-  return NS_OK;
+  return DoMouse(kDragOverAtom, mProtoHandler, aMouseEvent, mEventReceiver);
 }
 
 nsresult nsXBLDragHandler::DragDrop(nsIDOMEvent* aMouseEvent)
 {
-  if (mEventName.get() != kDragDropAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(mouse, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aMouseEvent);
-  return NS_OK;
+  return DoMouse(kDragDropAtom, mProtoHandler, aMouseEvent, mEventReceiver);
 }
 
 nsresult nsXBLDragHandler::DragExit(nsIDOMEvent* aMouseEvent)
 {
-  if (mEventName.get() != kDragExitAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(mouse, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aMouseEvent);
-  return NS_OK;
+  return DoMouse(kDragExitAtom, mProtoHandler, aMouseEvent, mEventReceiver);
 }
 
 nsresult nsXBLDragHandler::DragGesture(nsIDOMEvent* aMouseEvent)
 {
-  if (mEventName.get() != kDragGestureAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(mouse, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aMouseEvent);
-  return NS_OK;
+  return DoMouse(kDragGestureAtom, mProtoHandler, aMouseEvent, mEventReceiver);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
 NS_NewXBLDragHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
-                    nsIAtom* aEventName,
-                    nsXBLDragHandler** aResult)
+                     nsXBLDragHandler** aResult)
 {
-  *aResult = new nsXBLDragHandler(aRec, aHandler, aEventName);
+  *aResult = new nsXBLDragHandler(aRec, aHandler);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);

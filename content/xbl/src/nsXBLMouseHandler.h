@@ -41,7 +41,7 @@ class nsXBLMouseHandler : public nsIDOMMouseListener,
                           public nsXBLEventHandler
 {
 public:
-  nsXBLMouseHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler, nsIAtom* aEventName);
+  nsXBLMouseHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
   virtual ~nsXBLMouseHandler();
   
   // nsIDOMetc.
@@ -71,7 +71,6 @@ protected:
 
 extern nsresult
 NS_NewXBLMouseHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
-                      nsIAtom* aEventName,
                       nsXBLMouseHandler** aResult);
 
 

@@ -19,9 +19,9 @@
 
 
 <keyset id="keyset">
-  <key id="key_navigator"   xulkey="true" key="&navigatorCmd.commandkey;"   observes="Tasks:Navigator"/>
-  <key id="key_editor"      xulkey="true" key="&editorCmd.commandkey;"      observes="Tasks:Editor"/>
-  <key id="key_addressbook" xulkey="true" key="&addressBookCmd.commandkey;" observes="Tasks:AddressBook"/>
+  <key id="key_navigator"    key="&navigatorCmd.commandkey;"   observes="Tasks:Navigator" modifiers="accel"/>
+  <key id="key_editor"       key="&editorCmd.commandkey;"      observes="Tasks:Editor" modifiers="accel"/>
+  <key id="key_addressbook"  key="&addressBookCmd.commandkey;" observes="Tasks:AddressBook" modifiers="accel"/>
 </keyset>
 
 <broadcasterset id="broadcasterset">

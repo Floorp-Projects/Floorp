@@ -70,7 +70,6 @@
 #include "nsIXULContentSink.h"
 #include "nsIXULContentUtils.h"
 #include "nsIXULDocument.h"
-#include "nsIXULKeyListener.h"
 #include "nsIXULPrototypeDocument.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsLayoutCID.h"

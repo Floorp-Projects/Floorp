@@ -40,7 +40,7 @@ class nsXBLFocusHandler : public nsIDOMFocusListener,
                           public nsXBLEventHandler
 {
 public:
-  nsXBLFocusHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler, nsIAtom* aEventName);
+  nsXBLFocusHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
   virtual ~nsXBLFocusHandler();
   
   // nsIDOMetc.
@@ -62,7 +62,6 @@ protected:
 
 extern nsresult
 NS_NewXBLFocusHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
-                      nsIAtom* aEventName,
                       nsXBLFocusHandler** aResult);
 
 

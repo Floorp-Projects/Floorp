@@ -40,7 +40,7 @@ class nsXBLXULHandler : public nsIDOMMenuListener,
                         public nsXBLEventHandler
 {
 public:
-  nsXBLXULHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler, nsIAtom* aEventName);
+  nsXBLXULHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
   virtual ~nsXBLXULHandler();
   
   // nsIDOMetc.
@@ -69,8 +69,7 @@ protected:
 
 extern nsresult
 NS_NewXBLXULHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
-                      nsIAtom* aEventName,
-                      nsXBLXULHandler** aResult);
+                    nsXBLXULHandler** aResult);
 
 
 #endif

@@ -9,20 +9,20 @@
 
     <!-- close -->
     <menuitem id="menu_close" value="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" observes="cmd_close"/>
-    <key id="key_close" xulkey="true" key="&closeCmd.key;" observes="cmd_close"/>
+    <key id="key_close"  key="&closeCmd.key;" observes="cmd_close" modifiers="accel"/>
 
     <!-- quit -->
     <menupopup id="menu_FilePopup">
     <menuitem value="&quitApplicationCmd.label;" key="key_quit" accesskey="&quitApplicationCmd.accesskey;" observes="cmd_quit"/>
     </menupopup>
-    <key id="key_quit" xulkey="true" key="&quitApplicationCmd.key;" observes="cmd_quit"/>
+    <key id="key_quit"  key="&quitApplicationCmd.key;" observes="cmd_quit" modifiers="accel"/>
     <broadcaster id="cmd_quit" oncommand="goQuitApplication()"/>
 	
     <!-- Edit Menu -->
     <menuitem id="menu_redo" value="&redoCmd.label;" key="key_redo" accesskey="&redoCmd.accesskey;" observes="cmd_redo"/>
-    <key id="key_redo" xulkey="true" shift="true" key="&redoCmd.key;" observes="cmd_redo"/>
+    <key id="key_redo"   key="&redoCmd.key;" observes="cmd_redo" modifiers="accel, shift"/>
 	
 	<!-- Delete Key -->
-	<key id="key_delete" keycode="VK_DELETE" shift="false" alt="false" meta="false" control="false" observes="cmd_delete"/>
+	<key id="key_delete" keycode="VK_DELETE"     observes="cmd_delete"/>
 
 </overlay>		

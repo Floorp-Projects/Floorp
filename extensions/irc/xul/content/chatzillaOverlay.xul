@@ -11,7 +11,7 @@
 <html:script language="JavaScript" src="chrome://chatzilla/content/chatzillaOverlay.js"/>
 
 <keyset id="keyset">
-  <key id="key_irc" xulkey="true" key="&ircCmd.commandkey;" observes="Tasks:IRC"/>
+  <key id="key_irc"  key="&ircCmd.commandkey;" observes="Tasks:IRC" modifiers="accel"/>
 </keyset>
 
 <broadcasterset id="broadcasterset">

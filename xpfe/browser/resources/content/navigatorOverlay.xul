@@ -44,10 +44,10 @@
 	<!-- File Menu -->
 	<key id="key_newNavigator"/>
 	<key id="key_newBlankPage"/>
-	<key id="openBrowserKb"     xulkey="true" key="&openCmd.commandkey;" observes="Browser:Open" />
-	<key id="openFileKb"        xulkey="true" key="&openFileCmd.commandkey;" observes="Browser:OpenFile" />
-	<key id="key_savePage"      xulkey="true"  key="&savePageCmd.commandkey;" observes="Browser:SavePage"/>
-	<key id="printKb"           xulkey="true" key="&printCmd.commandkey;" observes="Browser:Print" />
+	<key id="openBrowserKb"      key="&openCmd.commandkey;" observes="Browser:Open"  modifiers="accel"/>
+	<key id="openFileKb"         key="&openFileCmd.commandkey;" observes="Browser:OpenFile"  modifiers="accel"/>
+	<key id="key_savePage"        key="&savePageCmd.commandkey;" observes="Browser:SavePage" modifiers="accel"/>
+	<key id="printKb"            key="&printCmd.commandkey;" observes="Browser:Print"  modifiers="accel"/>
 	<key id="key_close"/>
 	<key id="key_quit"/>
 
@@ -59,36 +59,32 @@
 	<key id="key_paste"/>
 	<key id="key_delete"/>
 	<key id="key_selectAll"/>
-	<key id="key_capture"/>
-	<key id="key_prefill"/>
-	<key id="key_preferences"/>
-
-
+	
     <!-- View Menu -->
-	<key id="key_reload" xulkey="true" key="&reloadCmd.commandkey;" observes="canReload"/>
-	<key id="key_viewsource"  xulkey="true"  key="&pageSourceCmd.commandkey;" observes="View:PageSource"/>
+	<key id="key_reload"  key="&reloadCmd.commandkey;" observes="canReload" modifiers="accel"/>
+	<key id="key_viewsource"    key="&pageSourceCmd.commandkey;" observes="View:PageSource" modifiers="accel"/>
 
-	<key id="key_textZoomReduce"  xulkey="true" key="&textZoomReduceCmd.commandkey;"  observes="cmd_viewTextZoomReduce" />
-	<key id="key_textZoomEnlarge" xulkey="true" key="&textZoomEnlargeCmd.commandkey;" observes="cmd_viewTextZoomEnlarge"/>
+	<key id="key_textZoomReduce"   key="&textZoomReduceCmd.commandkey;"  observes="cmd_viewTextZoomReduce"  modifiers="accel"/>
+	<key id="key_textZoomEnlarge"  key="&textZoomEnlargeCmd.commandkey;" observes="cmd_viewTextZoomEnlarge" modifiers="accel"/>
 
 	<!-- Search Menu -->	
-	<key id="key_find"            xulkey="true"  key="&findOnCmd.commandkey;" observes="Browser:Find"/>
-	<key id="key_findAgain"       xulkey="true"  key="&findAgainCmd.commandkey;" observes="Browser:FindAgain"/>
+	<key id="key_find"              key="&findOnCmd.commandkey;" observes="Browser:Find" modifiers="accel"/>
+	<key id="key_findAgain"         key="&findAgainCmd.commandkey;" observes="Browser:FindAgain" modifiers="accel"/>
 
 	<!-- Go Menu -->		
-	<key id="goHomeKb"            alt="true" keycode="VK_HOME" observes="Browser:Home" />
+	<key id="goHomeKb"             keycode="VK_HOME" observes="Browser:Home"  modifiers="alt"/>
 
     <!-- Tools Menu -->
-	<key id="key_gotoHistory"     xulkey="true" shift="false" key="&history.commandKey;" onkeypress="toHistory();"/>
+	<key id="key_gotoHistory"       key="&history.commandKey;" oncommand="toHistory();" modifiers="accel"/>
 
 	<!-- Bookmarks Menu -->
-	<key id="addBookmarkKb"       xulkey="true" key="&addCurPageCmd.commandkey;" observes="Browser:AddBookmark" />
-	<key id="manBookmarkKb"       xulkey="true" key="&manBookmarksCmd.commandkey;" observes="Browser:ManageBookmark" />
+	<key id="addBookmarkKb"        key="&addCurPageCmd.commandkey;" observes="Browser:AddBookmark"  modifiers="accel"/>
+	<key id="manBookmarkKb"        key="&manBookmarksCmd.commandkey;" observes="Browser:ManageBookmark"  modifiers="accel"/>
 
 	<!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
 
 	<!-- Misc -->
-	<key id="stop" keycode="VK_ESCAPE" onkeypress="BrowserStop();"/>
+	<key id="stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
 	
 </keyset>
 

@@ -53,9 +53,8 @@
 PRUint32 nsXBLMouseMotionHandler::gRefCnt = 0;
 nsIAtom* nsXBLMouseMotionHandler::kMouseMoveAtom = nsnull;
 
-nsXBLMouseMotionHandler::nsXBLMouseMotionHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler,
-                                     nsIAtom* aEventName)
-:nsXBLEventHandler(aReceiver,aHandler,aEventName)
+nsXBLMouseMotionHandler::nsXBLMouseMotionHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
+:nsXBLEventHandler(aReceiver,aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -73,20 +72,25 @@ nsXBLMouseMotionHandler::~nsXBLMouseMotionHandler()
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXBLMouseMotionHandler, nsXBLEventHandler, nsIDOMMouseMotionListener)
 
-nsresult nsXBLMouseMotionHandler::MouseMove(nsIDOMEvent* aMouseEvent)
+static inline nsresult DoMouse(nsIAtom* aEventType, nsIXBLPrototypeHandler* aHandler, nsIDOMEvent* aMouseEvent,
+                               nsIDOMEventReceiver* aReceiver)
 {
-  if (mEventName.get() != kMouseMoveAtom)
+  if (!aHandler)
     return NS_OK;
 
   PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(mouse, &matched);
-  }
+  nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
+  aHandler->MouseEventMatched(aEventType, mouse, &matched);
 
   if (matched)
-    ExecuteHandler(mEventName, aMouseEvent);
+    aHandler->ExecuteHandler(aReceiver, aMouseEvent);
+  
   return NS_OK;
+}
+
+nsresult nsXBLMouseMotionHandler::MouseMove(nsIDOMEvent* aMouseEvent)
+{
+  return DoMouse(kMouseMoveAtom, mProtoHandler, aMouseEvent, mEventReceiver);
 }
 
 
@@ -94,10 +98,9 @@ nsresult nsXBLMouseMotionHandler::MouseMove(nsIDOMEvent* aMouseEvent)
 
 nsresult
 NS_NewXBLMouseMotionHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
-                    nsIAtom* aEventName,
-                    nsXBLMouseMotionHandler** aResult)
+                            nsXBLMouseMotionHandler** aResult)
 {
-  *aResult = new nsXBLMouseMotionHandler(aRec, aHandler, aEventName);
+  *aResult = new nsXBLMouseMotionHandler(aRec, aHandler);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);

@@ -55,9 +55,7 @@ public:
   NS_IMETHOD Activate() = 0;
   NS_IMETHOD Deactivate() = 0;
 
-  NS_IMETHOD GetRootCommandDispatcher (
-    nsIDocument * aDoc,
-    nsIDOMXULCommandDispatcher ** aDispatcher)=0;
+  NS_IMETHOD GetRootCommandDispatcher(nsIDOMXULCommandDispatcher ** aDispatcher)=0;
 
   /* from nsIBaseWindow */
   /* void setPositionAndSize (in long x, in long y, in long cx, in long cy, in boolean fRepaint); */

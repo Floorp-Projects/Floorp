@@ -126,28 +126,27 @@ Rights Reserved.
 	<key id="key_delete" shift="false"/>
 	<key id="cmd_shiftDelete" oncommand="goDoCommand('cmd_shiftDelete')"/>
 	<key id="key_selectAll"/>
-	<key id="key_preferences"/>
-  
-	<key id="key_toggleRead" key="&markAsReadCmd.key;" xulkey="false" alt="false" control="false" shift="false" observes="cmd_markAsRead"/>
-	<key id="key_markAllRead" key="&markAllReadCmd.key;" xulkey="false" alt="false" control="false" shift="false" observes="cmd_markAllRead"/>
-	<key id="key_nextMsg" key="&nextMsgCmd.key;" xulkey="false" alt="false" control="false" shift="false" observes="cmd_nextMsg"/>
-	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;" xulkey="false" alt="false" control="false" shift="false" observes="cmd_nextUnreadMsg"/>
-	<key id="key_nextUnreadThread" key="&nextUnreadThreadCmd.key;" xulkey="false" control="false" shift="false" alt="false" observes="cmd_nextUnreadThread"/>
-	<key id="key_previousMsg" key="&previousMsgCmd.key;" xulkey="false" alt="false" control="false" shift="false" observes="cmd_previousMsg"/>
-	<key id="key_previousUnreadMsg" key="&previousUnreadMsgCmd.key;" xulkey="false" control="false" shift="false" observes="cmd_previousUnreadMsg"/>
-	<key id="key_reply" key="&replyMsgCmd.key;" xulkey="true" shift="false" observes="cmd_reply"/>
-	<key id="key_replyall" key="&replyToAllMsgCmd.key;" xulkey="true" shift="true" observes="cmd_replyall"/>
-	<key id="key_forward" key="&forwardMsgCmd.key;" xulkey="true" shift="false" observes="cmd_forward"/>
-	<key id="key_openMessage" key="&openMessageWindowCmd.key;" xulkey="true" shift="false" observes="cmd_openMessage"/>
-	<key id="key_print" key="&printCmd.key;" xulkey="true" shift="false" observes="cmd_print"/>
-	<key id="key_saveAsFile" key="&saveAsFileCmd.key;" xulkey="true" shift="false" observes="cmd_saveAsFile"/>
-	<key id="key_viewPageSource" key="&pageSourceCmd.key;" xulkey="true" shift="false" observes="cmd_viewPageSource"/>
-	<key id="key_getNewMessages" key="&getNewMsgCmd.key;" xulkey="true" shift="false" observes="cmd_getNewMessages"/>
-	<key id="key_find" key="&findCmd.key;" xulkey="true" shift="false" observes="cmd_find"/>
-	<key id="key_findAgain" key="&findAgainCmd.key;" xulkey="true" shift="false" observes="cmd_findAgain"/>
+	
+	<key id="key_toggleRead" key="&markAsReadCmd.key;"     observes="cmd_markAsRead"/>
+	<key id="key_markAllRead" key="&markAllReadCmd.key;"     observes="cmd_markAllRead"/>
+	<key id="key_nextMsg" key="&nextMsgCmd.key;"     observes="cmd_nextMsg"/>
+	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;"     observes="cmd_nextUnreadMsg"/>
+	<key id="key_nextUnreadThread" key="&nextUnreadThreadCmd.key;"     observes="cmd_nextUnreadThread"/>
+	<key id="key_previousMsg" key="&previousMsgCmd.key;"     observes="cmd_previousMsg"/>
+	<key id="key_previousUnreadMsg" key="&previousUnreadMsgCmd.key;"    observes="cmd_previousUnreadMsg"/>
+	<key id="key_reply" key="&replyMsgCmd.key;"   observes="cmd_reply" modifiers="accel"/>
+	<key id="key_replyall" key="&replyToAllMsgCmd.key;"   observes="cmd_replyall" modifiers="accel, shift"/>
+	<key id="key_forward" key="&forwardMsgCmd.key;"   observes="cmd_forward" modifiers="accel"/>
+	<key id="key_openMessage" key="&openMessageWindowCmd.key;"   observes="cmd_openMessage" modifiers="accel"/>
+	<key id="key_print" key="&printCmd.key;"   observes="cmd_print" modifiers="accel"/>
+	<key id="key_saveAsFile" key="&saveAsFileCmd.key;"   observes="cmd_saveAsFile" modifiers="accel"/>
+	<key id="key_viewPageSource" key="&pageSourceCmd.key;"   observes="cmd_viewPageSource" modifiers="accel"/>
+	<key id="key_getNewMessages" key="&getNewMsgCmd.key;"   observes="cmd_getNewMessages" modifiers="accel"/>
+	<key id="key_find" key="&findCmd.key;"   observes="cmd_find" modifiers="accel"/>
+	<key id="key_findAgain" key="&findAgainCmd.key;"   observes="cmd_findAgain" modifiers="accel"/>
 
 	<!-- Tab Keys -->
-	<key id="tabpane" keycode="VK_TAB" onkeypress="SwitchPaneFocus(event)" />
+	<key id="tabpane" keycode="VK_TAB" oncommand="SwitchPaneFocus(event)" />
 
 </keyset>
 

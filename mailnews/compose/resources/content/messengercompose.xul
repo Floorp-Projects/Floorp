@@ -190,7 +190,7 @@
 	<!-- File Menu -->
 	<key id="key_newNavigator"/>
 	<key id="key_close"/>
-	<key id="key_save" xulkey="true" key="&saveCmd.key;" observes="cmd_saveDefault"/>
+	<key id="key_save"  key="&saveCmd.key;" observes="cmd_saveDefault" modifiers="accel"/>
 	<!-- key id="key_sendNow" xulkey="true" keycode="&sendNowCmd.keycode;" observes="cmd_sendNow"/ -->
 	<!-- key id="key_sendLater" xulkey="true" keycode="&sendLaterCmd.keycode;" shift="true" observes="cmd_sendLater"/ -->
 	<key id="key_quit"/>
@@ -204,10 +204,9 @@
   <key id="pastequotationkb"/>
   <key id="key_delete"/>
   <key id="key_selectAll"/>
-	<key id="key_find" xulkey="true" key="&findCmd.key;"  observes="cmd_find"/>
-	<key id="key_findNext" xulkey="true" key="&findAgainCmd.key;" observes="cmd_findNext"/>
-  <key id="key_preferences"/>
-
+	<key id="key_find"  key="&findCmd.key;"  observes="cmd_find" modifiers="accel"/>
+	<key id="key_findNext"  key="&findAgainCmd.key;" observes="cmd_findNext" modifiers="accel"/>
+  
 	<!-- Format Menu -->
   <key id="boldkb"/>
   <key id="italickb"/>
@@ -223,7 +222,7 @@
 
 	<!-- Options Menu -->
 	<!-- key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" observes="cmd_selectAddress"/ -->
-  <key id="key_checkspelling" xulkey="true" key="&checkSpellingCmd.key;" observes="cmd_spelling" />
+  <key id="key_checkspelling"  key="&checkSpellingCmd.key;" observes="cmd_spelling"  modifiers="accel"/>
 	
 </keyset>
 

@@ -53,9 +53,8 @@ PRUint32 nsXBLFocusHandler::gRefCnt = 0;
 nsIAtom* nsXBLFocusHandler::kFocusAtom = nsnull;
 nsIAtom* nsXBLFocusHandler::kBlurAtom = nsnull;
 
-nsXBLFocusHandler::nsXBLFocusHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler,
-                                     nsIAtom* aEventName)
-:nsXBLEventHandler(aReceiver,aHandler,aEventName)
+nsXBLFocusHandler::nsXBLFocusHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
+:nsXBLEventHandler(aReceiver,aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -77,20 +76,32 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXBLFocusHandler, nsXBLEventHandler, nsIDOMFocusLi
 
 nsresult nsXBLFocusHandler::Focus(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kFocusAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kFocusAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
 
 nsresult nsXBLFocusHandler::Blur(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kBlurAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kBlurAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
@@ -98,10 +109,9 @@ nsresult nsXBLFocusHandler::Blur(nsIDOMEvent* aEvent)
 
 nsresult
 NS_NewXBLFocusHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
-                    nsIAtom* aEventName,
-                    nsXBLFocusHandler** aResult)
+                      nsXBLFocusHandler** aResult)
 {
-  *aResult = new nsXBLFocusHandler(aRec, aHandler, aEventName);
+  *aResult = new nsXBLFocusHandler(aRec, aHandler);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);

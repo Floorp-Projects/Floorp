@@ -42,7 +42,7 @@ class nsIXBLPrototypeHandler;
 class nsXBLEventHandler : public nsISupports
 {
 public:
-  nsXBLEventHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler, nsIAtom* aEventName);
+  nsXBLEventHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
   virtual ~nsXBLEventHandler();
   
   NS_IMETHOD BindingAttached();
@@ -61,10 +61,9 @@ public:
     if (mNextHandler) mNextHandler->MarkForDeath(); mProtoHandler = nsnull; mEventReceiver = nsnull;
   }
 
-protected:
-  NS_IMETHOD GetController(nsIController** aResult);
-  NS_IMETHOD ExecuteHandler(nsIAtom* aEventName, nsIDOMEvent* aEvent);
+  static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
 
+protected:
   static PRUint32 gRefCnt;
   static nsIAtom* kKeyAtom;
   static nsIAtom* kKeyCodeAtom;
@@ -77,19 +76,14 @@ protected:
   static nsIAtom* kBindingDetachedAtom;
   static nsIAtom* kModifiersAtom;
 
-  static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
-
 protected:
   nsIDOMEventReceiver* mEventReceiver; // Both of these refs are weak.
   nsCOMPtr<nsIXBLPrototypeHandler> mProtoHandler;
 
-  nsCOMPtr<nsIAtom> mEventName;
- 
   nsXBLEventHandler* mNextHandler; // Handlers are chained for easy unloading later.
 };
 
 extern nsresult
 NS_NewXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
-                      nsIAtom* aEventName,
                       nsXBLEventHandler** aResult);
 #endif

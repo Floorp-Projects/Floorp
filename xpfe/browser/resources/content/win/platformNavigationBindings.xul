@@ -6,13 +6,13 @@
   <keyset id="keyset">
     <!-- back and forward accelerators on Windows, strangely enough, are
          Alt+Left arrow and Alt+Right arrow. -->
-    <key id="goBackKb" alt="true" keycode="VK_LEFT" observes="Browser:Back"/>
-    <key id="goForwardKb" alt="true" keycode="VK_RIGHT" observes="Browser:Forward"/>
+    <key id="goBackKb"  keycode="VK_LEFT" observes="Browser:Back" modifiers="alt"/>
+    <key id="goForwardKb"  keycode="VK_RIGHT" observes="Browser:Forward" modifiers="alt"/>
 
     <!-- Supporting IE forward and back accelerators out of courtesy
          to transitioning IE users -->
-    <key id="goBackKbIE" shift="false" keycode="VK_BACK" observes="Browser:Back"/>
-    <key id="goForwardKbIE" shift="true" keycode="VK_BACK" observes="Browser:Forward"/>
+    <key id="goBackKbIE"  keycode="VK_BACK" observes="Browser:Back"/>
+    <key id="goForwardKbIE"  keycode="VK_BACK" observes="Browser:Forward" modifiers="shift"/>
 
     <!-- Supporting IE 'refresh' shortcut key -->
     <key id="reloadIE" keycode="VK_F5" observes="canReload"/>

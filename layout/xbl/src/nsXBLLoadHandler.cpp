@@ -48,9 +48,8 @@ nsIAtom* nsXBLLoadHandler::kUnloadAtom = nsnull;
 nsIAtom* nsXBLLoadHandler::kAbortAtom = nsnull;
 nsIAtom* nsXBLLoadHandler::kErrorAtom = nsnull;
 
-nsXBLLoadHandler::nsXBLLoadHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler,
-                                     nsIAtom* aEventName)
-:nsXBLEventHandler(aReceiver,aHandler,aEventName)
+nsXBLLoadHandler::nsXBLLoadHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
+:nsXBLEventHandler(aReceiver,aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -76,37 +75,61 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXBLLoadHandler, nsXBLEventHandler, nsIDOMLoadList
 
 nsresult nsXBLLoadHandler::Load(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kLoadAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kLoadAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLLoadHandler::Unload(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kUnloadAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kUnloadAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLLoadHandler::Error(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kErrorAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kErrorAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLLoadHandler::Abort(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kAbortAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kAbortAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
@@ -114,10 +137,9 @@ nsresult nsXBLLoadHandler::Abort(nsIDOMEvent* aEvent)
 
 nsresult
 NS_NewXBLLoadHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
-                    nsIAtom* aEventName,
-                    nsXBLLoadHandler** aResult)
+                     nsXBLLoadHandler** aResult)
 {
-  *aResult = new nsXBLLoadHandler(aRec, aHandler, aEventName);
+  *aResult = new nsXBLLoadHandler(aRec, aHandler);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);

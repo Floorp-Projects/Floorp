@@ -49,7 +49,7 @@
   </script>         
 
   <keyset id="keyset">
-    <key id="key_mail" xulkey="true" key="&messengerCmd.commandkey;" observes="Tasks:Mail"/>
+    <key id="key_mail"  key="&messengerCmd.commandkey;" observes="Tasks:Mail" modifiers="accel"/>
   </keyset>
 
 

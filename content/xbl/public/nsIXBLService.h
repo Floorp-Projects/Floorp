@@ -36,6 +36,7 @@
 
 class nsIContent;
 class nsIDocument;
+class nsIDOMEventReceiver;
 class nsISupportsArray;
 class nsIXBLBinding;
 class nsIXBLDocumentInfo;
@@ -78,6 +79,7 @@ public:
                                      const nsCString& aURI, const nsCString& aRef,
                                      PRBool aForceSyncLoad, nsIXBLDocumentInfo** aResult) = 0;
 
+  NS_IMETHOD AttachGlobalKeyHandler(nsIDOMEventReceiver* aElement)=0;
 };
 
 #endif // nsIXBLService_h__

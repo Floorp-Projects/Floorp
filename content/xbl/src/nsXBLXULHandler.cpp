@@ -22,10 +22,10 @@
  */
 
 #include "nsCOMPtr.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsIAtom.h"
+#include "nsXBLPrototypeHandler.h"
 #include "nsXBLXULHandler.h"
 #include "nsIContent.h"
-#include "nsIAtom.h"
 #include "nsINameSpaceManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptObjectOwner.h"
@@ -56,9 +56,8 @@ nsIAtom* nsXBLXULHandler::kCommandUpdateAtom = nsnull;
 nsIAtom* nsXBLXULHandler::kBroadcastAtom = nsnull;
 nsIAtom* nsXBLXULHandler::kDestroyAtom = nsnull;
 
-nsXBLXULHandler::nsXBLXULHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler,
-                                     nsIAtom* aEventName)
-:nsXBLEventHandler(aReceiver,aHandler,aEventName)
+nsXBLXULHandler::nsXBLXULHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
+:nsXBLEventHandler(aReceiver,aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -86,55 +85,91 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXBLXULHandler, nsXBLEventHandler, nsIDOMMenuListe
 
 nsresult nsXBLXULHandler::Action(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != nsXBLEventHandler::kCommandAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != nsXBLPrototypeHandler::kCommandAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLXULHandler::Create(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kCreateAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kCreateAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLXULHandler::Close(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kCloseAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kCloseAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLXULHandler::Broadcast(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kBroadcastAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kBroadcastAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLXULHandler::CommandUpdate(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kCommandUpdateAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kCommandUpdateAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLXULHandler::Destroy(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kDestroyAtom)
+ if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kDestroyAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
@@ -142,10 +177,9 @@ nsresult nsXBLXULHandler::Destroy(nsIDOMEvent* aEvent)
 
 nsresult
 NS_NewXBLXULHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
-                    nsIAtom* aEventName,
                     nsXBLXULHandler** aResult)
 {
-  *aResult = new nsXBLXULHandler(aRec, aHandler, aEventName);
+  *aResult = new nsXBLXULHandler(aRec, aHandler);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);

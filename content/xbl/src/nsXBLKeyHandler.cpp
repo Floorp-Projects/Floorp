@@ -56,9 +56,8 @@ nsIAtom* nsXBLKeyHandler::kKeyDownAtom = nsnull;
 nsIAtom* nsXBLKeyHandler::kKeyUpAtom = nsnull;
 nsIAtom* nsXBLKeyHandler::kKeyPressAtom = nsnull;
 
-nsXBLKeyHandler::nsXBLKeyHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler,
-                                 nsIAtom* aEventName)
-:nsXBLEventHandler(aReceiver,aHandler,aEventName)
+nsXBLKeyHandler::nsXBLKeyHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
+:nsXBLEventHandler(aReceiver,aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -80,62 +79,42 @@ nsXBLKeyHandler::~nsXBLKeyHandler()
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXBLKeyHandler, nsXBLEventHandler, nsIDOMKeyListener)
 
-nsresult nsXBLKeyHandler::KeyUp(nsIDOMEvent* aKeyEvent)
+static inline nsresult DoKey(nsIAtom* aEventType, nsIXBLPrototypeHandler* aHandler, nsIDOMEvent* aKeyEvent,
+                             nsIDOMEventReceiver* aReceiver)
 {
-  if (mEventName.get() != kKeyUpAtom)
+  if (!aHandler)
     return NS_OK;
 
   PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aKeyEvent));
-    mProtoHandler->KeyEventMatched(key, &matched);
-  }
-
+  nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aKeyEvent));
+  aHandler->KeyEventMatched(aEventType, key, &matched);
   if (matched)
-    ExecuteHandler(mEventName, aKeyEvent);
+    aHandler->ExecuteHandler(aReceiver, aKeyEvent);
   return NS_OK;
+}
+
+nsresult nsXBLKeyHandler::KeyUp(nsIDOMEvent* aKeyEvent)
+{
+  return DoKey(kKeyUpAtom, mProtoHandler, aKeyEvent, mEventReceiver);
 }
 
 nsresult nsXBLKeyHandler::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-  if (mEventName.get() != kKeyDownAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aKeyEvent));
-    mProtoHandler->KeyEventMatched(key, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aKeyEvent);
-  return NS_OK;
+  return DoKey(kKeyDownAtom, mProtoHandler, aKeyEvent, mEventReceiver);
 }
 
 nsresult nsXBLKeyHandler::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-  if (mEventName.get() != kKeyPressAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aKeyEvent));
-    mProtoHandler->KeyEventMatched(key, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aKeyEvent);
-  return NS_OK;
+  return DoKey(kKeyPressAtom, mProtoHandler, aKeyEvent, mEventReceiver);
 }
  
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
 NS_NewXBLKeyHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
-                    nsIAtom* aEventName,
                     nsXBLKeyHandler** aResult)
 {
-  *aResult = new nsXBLKeyHandler(aRec, aHandler, aEventName);
+  *aResult = new nsXBLKeyHandler(aRec, aHandler);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);

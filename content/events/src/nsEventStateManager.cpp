@@ -346,7 +346,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
             nsCOMPtr<nsIDOMWindowInternal> rootWindow;
             nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
             if(ourWindow) {
-              ourWindow->GetRootCommandDispatcher(gLastFocusedDocument, getter_AddRefs(commandDispatcher));
+              ourWindow->GetRootCommandDispatcher(getter_AddRefs(commandDispatcher));
               if (commandDispatcher)
                 commandDispatcher->SetSuppressFocus(PR_TRUE);
             }
@@ -2666,9 +2666,9 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
             nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(newGlobal);
             nsCOMPtr<nsPIDOMWindow> oldWindow = do_QueryInterface(oldGlobal);
             if(newWindow)
-              newWindow->GetRootCommandDispatcher(mDocument, getter_AddRefs(newCommandDispatcher));
+              newWindow->GetRootCommandDispatcher(getter_AddRefs(newCommandDispatcher));
             if(oldWindow)
-			  oldWindow->GetRootCommandDispatcher(gLastFocusedDocument, getter_AddRefs(oldCommandDispatcher));
+			  oldWindow->GetRootCommandDispatcher(getter_AddRefs(oldCommandDispatcher));
             if(oldCommandDispatcher && oldCommandDispatcher != newCommandDispatcher)
               oldCommandDispatcher->SetSuppressFocus(PR_TRUE);
           }
@@ -2716,8 +2716,8 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
             nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(newGlobal);
 		    nsCOMPtr<nsPIDOMWindow> oldWindow = do_QueryInterface(oldGlobal);
 
-		    newWindow->GetRootCommandDispatcher(mDocument, getter_AddRefs(newCommandDispatcher));
-		    oldWindow->GetRootCommandDispatcher(gLastFocusedDocument, getter_AddRefs(oldCommandDispatcher));
+		    newWindow->GetRootCommandDispatcher(getter_AddRefs(newCommandDispatcher));
+		    oldWindow->GetRootCommandDispatcher(getter_AddRefs(oldCommandDispatcher));
             if(oldCommandDispatcher && oldCommandDispatcher != newCommandDispatcher)
 			  oldCommandDispatcher->SetSuppressFocus(PR_TRUE);
 		  }

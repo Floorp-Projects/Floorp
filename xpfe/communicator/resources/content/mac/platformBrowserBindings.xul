@@ -9,12 +9,12 @@
 <keyset id="editorKeySet" xulkey="meta">
 
 <!-- Mac bindings for home and end -->
-<key id="macHomekb" keycode="VK_HOME" shift="false" alt="false" control="false"
-   onkeypress="
+<key id="macHomekb" keycode="VK_HOME"   
+   oncommand="
      var controller = document.commandDispatcher.getControllerForCommand('cmd_scrollTop');
      controller.doCommand('cmd_scrollTop');"/>
-<key id="macEndkb" keycode="VK_END" shift="false" control="false" alt="false"
-   onkeypress="
+<key id="macEndkb" keycode="VK_END"   
+   oncommand="
      var controller = document.commandDispatcher.getControllerForCommand('cmd_scrollBottom');
      controller.doCommand('cmd_scrollBottom');"/>
 

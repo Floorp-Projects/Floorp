@@ -1,8 +1,6 @@
 toolkit.jar:
 	content/global/platformGlobalOverlay.xul
 	content/global/platformDialogOverlay.xul
-	content/global/platformInputBindings.xul
-	content/global/platformTextAreaBindings.xul
 	content/global/platformHTMLBindings.xml
 	content/global/printdialog.js
 	content/global/printdialog.xul

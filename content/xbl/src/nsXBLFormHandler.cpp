@@ -49,9 +49,8 @@ nsIAtom* nsXBLFormHandler::kInputAtom = nsnull;
 nsIAtom* nsXBLFormHandler::kSelectAtom = nsnull;
 nsIAtom* nsXBLFormHandler::kChangeAtom = nsnull;
 
-nsXBLFormHandler::nsXBLFormHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler,
-                                     nsIAtom* aEventName)
-:nsXBLEventHandler(aReceiver,aHandler,aEventName)
+nsXBLFormHandler::nsXBLFormHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
+:nsXBLEventHandler(aReceiver,aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -79,46 +78,76 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXBLFormHandler, nsXBLEventHandler, nsIDOMFormList
 
 nsresult nsXBLFormHandler::Submit(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kSubmitAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kSubmitAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLFormHandler::Reset(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kResetAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kResetAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLFormHandler::Select(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kSelectAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kSelectAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLFormHandler::Change(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kChangeAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kChangeAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLFormHandler::Input(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kInputAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kInputAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
@@ -126,10 +155,9 @@ nsresult nsXBLFormHandler::Input(nsIDOMEvent* aEvent)
 
 nsresult
 NS_NewXBLFormHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
-                    nsIAtom* aEventName,
-                    nsXBLFormHandler** aResult)
+                     nsXBLFormHandler** aResult)
 {
-  *aResult = new nsXBLFormHandler(aRec, aHandler, aEventName);
+  *aResult = new nsXBLFormHandler(aRec, aHandler);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);

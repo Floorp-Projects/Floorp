@@ -5,11 +5,11 @@
 
   <keyset id="keyset">
     <!-- proper arrow key navigation, 4.xP -->
-    <key id="goBackKb" xulkey="true" keycode="VK_LEFT" observes="Browser:Back"/>
-    <key id="goForwardKb" xulkey="true" keycode="VK_RIGHT" observes="Browser:Forward"/>
-    <key id="goBackKbMac" xulkey="true" key="[" observes="Browser:Back"/>
-    <key id="goForwardKbMac" xulkey="true" key="]" observes="Browser:Forward"/>
-    <key id="stopMac" xulkey="true" key="." onkeypres="BrowserStop();"/>
+    <key id="goBackKb"  keycode="VK_LEFT" observes="Browser:Back" modifiers="accel"/>
+    <key id="goForwardKb"  keycode="VK_RIGHT" observes="Browser:Forward" modifiers="accel"/>
+    <key id="goBackKbMac"  key="[" observes="Browser:Back" modifiers="accel"/>
+    <key id="goForwardKbMac"  key="]" observes="Browser:Forward" modifiers="accel"/>
+    <key id="stopMac"  key="." oncommand="BrowserStop();" modifiers="accel"/>
   </keyset>  
 
 </overlay>

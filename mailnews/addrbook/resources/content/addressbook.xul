@@ -82,13 +82,12 @@ Rights Reserved.
 <keyset id="keyset">
 	<!-- File Menu -->
 	<key id="key_newNavigator"/>
-	<key id="key_PrintCard" xulkey="true" key="&printCardViewCmd.key;" observes="cmd_PrintCard" />
+	<key id="key_PrintCard"  key="&printCardViewCmd.key;" observes="cmd_PrintCard"  modifiers="accel"/>
 	<key id="key_close"/>
 	<key id="key_quit"/>
 	<!-- Edit Menu -->
 	<key id="key_delete"/>
 	<key id="key_selectAll"/>
-	<key id="key_preferences"/>
 </keyset>
 
 <popupset id="aTooltipSet"/>
