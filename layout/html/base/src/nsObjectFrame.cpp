@@ -3428,7 +3428,7 @@ nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
         guiEvent->message == NS_KEY_PRESS &&
         ev &&
         ev->what == keyDown)
-      return NS_OK;
+      return NS_ERROR_FAILURE;
   }
 
   // Nasty hack to avoid recursive event dispatching with Java. Java can
