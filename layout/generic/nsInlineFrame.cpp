@@ -28,6 +28,7 @@
 #include "nsReflowCommand.h"
 #include "nsHTMLAtoms.h"
 #include "nsAbsoluteFrame.h"
+#include "nsLeafFrame.h"
 
 // XXX To Do:
 // 2. horizontal child margins
@@ -53,6 +54,8 @@ class nsInlineState
 public:
   nsStyleFont*      font;           // style font
   nsStyleSpacing*   spacing;        // style spacing
+  nsSize            mStyleSize;
+  PRIntn            mStyleSizeFlags;
   nsSize            availSize;      // available space in which to reflow (starts as max size minus insets)
   nsSize*           maxElementSize; // maximum element size (may be null)
   nscoord           x;              // running x-offset (starts at left inner edge)
@@ -683,6 +686,20 @@ done:;
   return result;
 }
 
+void
+nsInlineFrame::InitializeState(nsIPresContext* aPresContext,
+                               nsInlineState& aState)
+{
+  PRIntn ss = aState.mStyleSizeFlags =
+    nsCSSLayout::GetStyleSize(aPresContext, this, aState.mStyleSize);
+  if (0 != (ss & NS_SIZE_HAS_WIDTH)) {
+    // When we are given a width, change the reflow behavior to
+    // unconstrained.
+    aState.unconstrainedWidth = PR_TRUE;
+    aState.availSize.width = NS_UNCONSTRAINEDSIZE;
+  }
+}
+
 NS_METHOD nsInlineFrame::ResizeReflow(nsIPresContext*  aPresContext,
                                       nsReflowMetrics& aDesiredSize,
                                       const nsSize&    aMaxSize,
@@ -699,10 +716,10 @@ NS_METHOD nsInlineFrame::ResizeReflow(nsIPresContext*  aPresContext,
   aStatus = frComplete;  // initialize out parameter
 
   // Get the style molecule
-  nsStyleFont* styleFont =
-    (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
-  nsStyleSpacing* styleSpacing =
-    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+  nsStyleFont* styleFont = (nsStyleFont*)
+    mStyleContext->GetData(kStyleFontSID);
+  nsStyleSpacing* styleSpacing = (nsStyleSpacing*)
+    mStyleContext->GetData(kStyleSpacingSID);
 
   // Check for an overflow list
   MoveOverflowToChildList();
@@ -710,6 +727,7 @@ NS_METHOD nsInlineFrame::ResizeReflow(nsIPresContext*  aPresContext,
   // Initialize our reflow state. We must wait until after we've processed
   // the overflow list, because our first content offset might change
   nsInlineState state(styleFont, styleSpacing, aMaxSize, aMaxElementSize);
+  InitializeState(aPresContext, state);
   state.SetNumAscents(mContent->ChildCount() - mFirstContentOffset);
 
   // Reflow any existing frames
@@ -743,26 +761,50 @@ NS_METHOD nsInlineFrame::ResizeReflow(nsIPresContext*  aPresContext,
     }
   }
 
-  const nsMargin&  insets = styleSpacing->mBorderPadding;
-
   // Vertically align the children
   nscoord lineHeight =
     nsCSSLayout::VerticallyAlignChildren(aPresContext, this, styleFont,
-                                         insets.top, mFirstChild, mChildCount,
+                                         styleSpacing->mBorderPadding.top,
+                                         mFirstChild, mChildCount,
                                          state.ascents, state.maxAscent);
 
+  ComputeFinalSize(aPresContext, state, aDesiredSize);
+
+#if 0
   // XXX I don't think our return size properly accounts for the lineHeight
   // (which may not == state.maxAscent + state.maxDescent)
   // Return our size and our status
-  aDesiredSize.width = state.x + insets.right;
-  aDesiredSize.ascent = insets.top + state.maxAscent;
-  aDesiredSize.descent = state.maxDescent + insets.bottom;
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+#endif
 
 #ifdef NS_DEBUG
   PostReflowCheck(aStatus);
 #endif
   return NS_OK;
+}
+
+void
+nsInlineFrame::ComputeFinalSize(nsIPresContext* aPresContext,
+                                nsInlineState& aState,
+                                nsReflowMetrics& aDesiredSize)
+{
+  nsStyleSpacing* s = aState.spacing;
+
+  // Compute default size
+  aDesiredSize.width = aState.x + s->mBorderPadding.right;
+  aDesiredSize.ascent = s->mBorderPadding.top + aState.maxAscent;
+  aDesiredSize.descent = aState.maxDescent + s->mBorderPadding.bottom;
+  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+
+  // Apply width/height style properties
+  PRIntn ss = aState.mStyleSizeFlags;
+  if (0 != (ss & NS_SIZE_HAS_WIDTH)) {
+    aDesiredSize.width = s->mBorderPadding.left + aState.mStyleSize.width +
+      s->mBorderPadding.right;
+  }
+  if (0 != (ss & NS_SIZE_HAS_HEIGHT)) {
+    aDesiredSize.height = s->mBorderPadding.top + aState.mStyleSize.height +
+      s->mBorderPadding.bottom;
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -856,10 +898,11 @@ NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
     (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
   nsStyleSpacing* styleSpacing =
     (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
-  const nsMargin&  insets = styleSpacing->mBorderPadding;
+
   nscoord lineHeight;
 
   nsInlineState state(styleFont, styleSpacing, aMaxSize, nsnull);
+  InitializeState(aPresContext, state);
   state.SetNumAscents(mContent->ChildCount() - mFirstContentOffset);
 
   if (aReflowCommand.GetTarget() == this) {
@@ -870,16 +913,13 @@ NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
       aStatus = ReflowUnmappedChildren(aPresContext, state);
 
       // Vertically align the children
-      lineHeight = nsCSSLayout::VerticallyAlignChildren(aPresContext, this, styleFont,
-                     insets.top, mFirstChild, mChildCount, state.ascents, state.maxAscent);
+      lineHeight =
+        nsCSSLayout::VerticallyAlignChildren(aPresContext, this, styleFont,
+                                             styleSpacing->mBorderPadding.top,
+                                             mFirstChild, mChildCount,
+                                             state.ascents, state.maxAscent);
     
-      // XXX I don't think our return size properly accounts for the lineHeight
-      // (which may not == state.maxAscent + state.maxDescent)
-      // Return our size and our status
-      aDesiredSize.width = state.x + insets.right;
-      aDesiredSize.ascent = insets.top + state.maxAscent;
-      aDesiredSize.descent = state.maxDescent + insets.bottom;
-      aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+      ComputeFinalSize(aPresContext, state, aDesiredSize);
       break;
     
     default:
@@ -890,138 +930,6 @@ NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   } else {
     NS_NOTYETIMPLEMENTED("unexpected reflow command");
   }
-
-#if 0
-  if (aReflowCommand.GetTarget() == this) {
-    // NOTE: target frame is first in flow even when reflow commands
-    // applies to some piece of content in any of the next-in-flows
-    nsInlineFrame* flow = this;
-
-    switch (aReflowCommand.GetType()) {
-    case nsReflowCommand::rcContentAppended:
-      // Get to last-in-flow where the append is occuring
-      while (nsnull != flow->mNextInFlow) {
-        flow = flow->mNextInFlow;
-      }
-      aStatus = flow->ReflowUnmappedChildren(...);
-      break;
-
-    case nsReflowCommand::rcContentInserted:
-      // XXX where did the insertion point go?
-
-      // Get to correct next-in-flow
-      // XXX this is more complicated when dealing with pseudo children
-      PRInt32 contentIndex = 0;
-      while (nsnull != flow->mNextInFlow) {
-        // XXX the last child we have may be continued into our
-        // next-in-flow which means that endIndex is wrong???
-        PRInt32 endIndex = contentIndex + mChildCount;
-        if ((contentIndex <= aIndexInParent) && (aIndexInParent < endIndex)) {
-          break;
-        }
-        flow = flow->mNextInFlow;
-        contentIndex = endIndex;
-      }
-
-      // Create frame and insert it into the sibling list at the right
-      // spot. Reflow it. Adjust position of siblings including
-      // pushing frames that don't fit.
-      flow->ReflowUnmappedChild(..., index information);
-      break;
-
-    case nsReflowCommand::rcContentDeleted:
-      // XXX what about will-delete, did-delete?
-
-      // Find the affected flow blocks and remove the child and any
-      // continuations it has from the flow. Every flow block except
-      // the first one will recieve a reflow command to cleanup after
-      // the first flow block does it's clean up. Except for the
-      // post-processing (impacting sibling frames) the code is
-      // generic across container types.
-      break;
-
-    case nsReflowCommand::rcContentChanged:
-      // XXX The piece of content affected may change stylistically
-      // from inline to block. If it does and it's not our first kid
-      // then we just push it and let our next-in-flow reflow it.
-
-      // Either: a) delete the old frame, create a new frame, reflow -or-
-      // b) ResizeReflow the affected child
-
-      // If the reflow status is incomplete then the remaining
-      // children on the line get pushed; else only push children that
-      // don't fit.  If no pushing occurs then maybe we can pullup a
-      // child; if we do then generate reflow commands for our
-      // next-in-flows to deal with a pull event.
-      break;
-    }
-
-  } else {
-    // XXX Tuneup? if we save the child's continuation status and its
-    // current bounding rect and then pass the command down and it
-    // comes back with the same bounds in aDesiredSize and with the
-    // same continuation status then we are done, right?
-
-    // Get the next frame that the reflow command is targeted at.
-    // This will be one of my children.
-    nsIFrame* nextInChain = aReflowCommand.GetNext();
-    NS_ASSERTION(this == nextInChain->GetGeometricParent(), "bad reflow cmd");
-
-    // Recover the reflow state as if we had reflowed our children up
-    // to but not including the child that is next in the reflow chain
-    nsInlineState state(aMaxSize, nsnull);
-    state.SetNumAscents(mChildCount);
-    PRIntn nextIndex = RecoverState(aPresContext, state, nextInChain);
-
-    // Save away the current location and size of the child which the
-    // reflow command is targeted towards. This isn't strictly
-    // necessary, but our child might tamper with it's x/y
-    // XXX bother?
-    nsRect oldBounds;
-    nextInChain->GetRect(oldBounds);
-
-    // Now pass reflow command down to our child to handle
-    nsReflowMetrics kidMetrics;
-    aStatus = aReflowCommand.Next(kidMetrics, aMaxSize, kid);
-    // XXX what do we do when the nextInChain's completion status changes?
-    // XXX if kid == LastChild() then mLastContentIsComplete needs updating
-
-    // Update placement information for the impacted child frame and
-    // any other frames following the child frame.
-    if ((oldBounds.width == kidMetrics.width) &&
-        (oldBounds.height == kidMetrics.height)) {
-      // The child didn't change as far as we can tell. Nobody needs
-      // to be moved.
-
-      // XXX what about a child who's shape is the same but who's
-      // reflow status is frNotComplete?
-
-      // Note: a child that used to be continued and is no longer
-      // continued and whose size is unchanged: we don't care because
-      // as far as we are concerned nothing happened to us. However,
-      // our next-in-flow might get torched (our parent will deal with
-      // that).
-
-      // XXX figure out the right status to return
-    } else {
-      // Factor in ascent information from the updated child
-      state.ascents[nextIndex] = kidMetrics.ascent;
-      if (kidMetrics.ascent > state.maxAscent) {
-        state.maxAscent = kidMetrics.ascent;
-      }
-      if (kidMetrics.descent > state.maxDescent) {
-        state.maxDescent = kidMetrics.descent;
-      }
-
-      // Update other children that are impacted by the change in
-      // nextInChain. In addition, re-apply vertical alignment and
-      // relative positioning to the children on the line.
-      aStatus = AdjustChildren(aPresContext, aDesiredSize, aState, kid,
-                               kidMetrics, aStatus);
-    }
-  }
-#endif
-
   return NS_OK;
 }
 

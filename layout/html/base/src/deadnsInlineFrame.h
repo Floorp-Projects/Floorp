@@ -52,6 +52,13 @@ protected:
 
   virtual PRIntn GetSkipSides() const;
 
+  void InitializeState(nsIPresContext* aPresContext,
+                       nsInlineState& aState);
+
+  void ComputeFinalSize(nsIPresContext* aPresContext,
+                        nsInlineState&   aState,
+                        nsReflowMetrics& aSize);
+
   PRBool ReflowMappedChildren(nsIPresContext* aPresContext,
                               nsInlineState&  aState);
 
