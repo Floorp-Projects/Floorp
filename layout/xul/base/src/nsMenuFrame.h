@@ -27,13 +27,13 @@
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
 
-#include "nsBlockFrame.h"
+#include "nsBoxFrame.h"
 #include "nsFrameList.h"
 
 nsresult NS_NewMenuFrame(nsIFrame** aResult) ;
 
 
-class nsMenuFrame : public nsBlockFrame
+class nsMenuFrame : public nsBoxFrame
 {
 public:
   nsMenuFrame();
