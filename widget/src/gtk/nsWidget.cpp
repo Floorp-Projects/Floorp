@@ -46,6 +46,7 @@ nsWidget::nsWidget()
   if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
     lookAndFeel->GetColor(nsILookAndFeel::eColor_WindowBackground, mBackground);
   }
+  NS_RELEASE(lookAndFeel);
   mWidget = nsnull;
   mParent = nsnull;
   mPreferredWidth  = 0;
