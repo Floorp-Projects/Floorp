@@ -54,9 +54,7 @@ static char sccsid[] = "@(#)mktemp.c	8.1 (Berkeley) 6/4/93";
 #endif
 
 #ifdef XP_OS2_VACPP
-#define ENOTDIR EBADPOS
 #include <process.h>
-#include <dirent.h>
 #endif
 
 #ifdef _WINDOWS
