@@ -34,7 +34,11 @@ else
 include $(CORE_DEPTH)/coreconf/$(OS_CONFIG).mk
 endif
 include $(CORE_DEPTH)/coreconf/prefix.mk
+ifeq ($(OS_ARCH),OS2)
+CPU_TAG = _$(CC)
+else
 CPU_TAG = _$(CPU_ARCH)
+endif
 LOADABLE_ROOT_MODULE = $(DLL_PREFIX)nssckbi$(DLL_SUFFIX)
 CORECONF_OBJDIR=$(OBJDIR_NAME)
 
@@ -85,9 +89,28 @@ endif
 	cd $(MOZ_BUILD_ROOT)/security/nss/lib; $(MAKE) $(DEFAULT_GMAKE_FLAGS)
 	cd $(MOZ_BUILD_ROOT)/security/psm/ui; $(MAKE) $(DEFAULT_GMAKE_FLAGS)
 	cd $(MOZ_BUILD_ROOT)/security/psm/server; $(MAKE) $(DEFAULT_GMAKE_FLAGS)
-	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psm $(DIST)/bin/
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psm$(PROG_SUFFIX) $(DIST)/bin
+ifeq ($(OS_ARCH),OS2)
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata/doc/04digsgn.gif $(DIST)/bin/psmdata/doc
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata/doc/06pcrypt.gif $(DIST)/bin/psmdata/doc
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata/doc/bannerrn.gif $(DIST)/bin/psmdata/doc
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata/doc/cartbanner.gif $(DIST)/bin/psmdata/doc
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata/doc/cmcjavascriptapi.html $(DIST)/bin/psmdata/doc
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata/doc/contents.htm $(DIST)/bin/psmdata/doc
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata/doc/glossary.htm $(DIST)/bin/psmdata/doc
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata/doc/help.htm $(DIST)/bin/psmdata/doc
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata/doc/next.gif $(DIST)/bin/psmdata/doc
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata/doc/prev.gif $(DIST)/bin/psmdata/doc
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata/doc/psmtest.html $(DIST)/bin/psmdata/doc
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata/doc/release_notes.html $(DIST)/bin/psmdata/doc
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata/ui/psm_bin.properties $(DIST)/bin/psmdata/ui
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata/ui/psm_doc.properties $(DIST)/bin/psmdata/ui
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata/ui/psm_text.properties $(DIST)/bin/psmdata/ui
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata/ui/psm_ui.properties $(DIST)/bin/psmdata/ui
+else
 	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/psmdata $(DIST)/bin
 	$(INSTALL) -m 755 $(CORECONF_INSTALL)/bin/start-psm $(DIST)/bin
+endif
 	$(INSTALL) -m 755 $(CORECONF_INSTALL)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
 
 clean clobber clobber_all realclean distclean::

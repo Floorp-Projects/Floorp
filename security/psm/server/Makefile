@@ -172,24 +172,35 @@ MKSHLIB = $(CCC) $(DSO_LDOPTS)
 MKPROG = $(CCC)
 endif
 
+ifeq ($(OS_ARCH),OS2)
+NSPR_LINK_LIBS = \
+	$(DIST)/lib/plc4.lib \
+	$(DIST)/lib/plds4.lib \
+	$(DIST)lib/nspr4.lib
+
+XPCOM_LINK_LIBS = $(DIST)/lib/xpcom.lib
+CPLUSPLUSRUNTIME = so32dll.lib tcp32.lib
+PROTOCOL_LIBS = $(DIST)/lib/libprotocol.lib
+endif
+
 EXTRA_LIBS += \
-        $(DIST)/lib/libssl.a \
-        $(DIST)/lib/libnss.a \
-        $(DIST)/lib/libssl.a \
-        $(DIST)/lib/libcrmf.a \
-        $(DIST)/lib/libpkcs12.a \
-        $(DIST)/lib/libpkcs7.a \
-        $(DIST)/lib/libcerthi.a \
-        $(DIST)/lib/libpk11wrap.a \
-        $(DIST)/lib/libcryptohi.a \
-        $(DIST)/lib/libcerthi.a \
-        $(DIST)/lib/libpk11wrap.a \
-        $(DIST)/lib/libsoftoken.a \
-        $(DIST)/lib/libcertdb.a \
-        $(DIST)/lib/libfreebl.a \
-        $(DIST)/lib/libsecutil.a \
-        $(DIST)/lib/libdbm.a \
-	$(DIST)/lib/libnlslayer.a \
+        $(DIST)/lib/libssl.$(LIB_SUFFIX)\
+        $(DIST)/lib/libnss.$(LIB_SUFFIX)\
+        $(DIST)/lib/libssl.$(LIB_SUFFIX)\
+        $(DIST)/lib/libcrmf.$(LIB_SUFFIX)\
+        $(DIST)/lib/libpkcs12.$(LIB_SUFFIX)\
+        $(DIST)/lib/libpkcs7.$(LIB_SUFFIX)\
+        $(DIST)/lib/libcerthi.$(LIB_SUFFIX)\
+        $(DIST)/lib/libpk11wrap.$(LIB_SUFFIX)\
+        $(DIST)/lib/libcryptohi.$(LIB_SUFFIX)\
+        $(DIST)/lib/libcerthi.$(LIB_SUFFIX)\
+        $(DIST)/lib/libpk11wrap.$(LIB_SUFFIX)\
+        $(DIST)/lib/libsoftoken.$(LIB_SUFFIX)\
+        $(DIST)/lib/libcertdb.$(LIB_SUFFIX)\
+        $(DIST)/lib/libfreebl.$(LIB_SUFFIX)\
+        $(DIST)/lib/libsecutil.$(LIB_SUFFIX)\
+        $(DIST)/lib/libdbm.$(LIB_SUFFIX)\
+	$(DIST)/lib/libnlslayer.$(LIB_SUFFIX)\
 	$(NSPR_LINK_LIBS) \
 	$(XPCOM_LINK_LIBS) \
 	$(CPLUSPLUSRUNTIME) \
@@ -212,10 +223,29 @@ UI_DIST = ../ui/$(PLATFORM)
 endif
 
 install::
+ifeq ($(OS_ARCH),OS2)
+	$(NSINSTALL) -m 644 ../ui/$(PLATFORM)/psm_bin.properties $(DIST)/bin/psmdata/ui
+	$(NSINSTALL) -m 644 ../ui/$(PLATFORM)/psm_doc.properties $(DIST)/bin/psmdata/ui
+	$(NSINSTALL) -m 644 ../ui/$(PLATFORM)/psm_text.properties $(DIST)/bin/psmdata/ui
+	$(NSINSTALL) -m 644 ../ui/$(PLATFORM)/psm_ui.properties $(DIST)/bin/psmdata/ui
+	$(NSINSTALL) -m 644 ../doc/04digsgn.gif $(DIST)/bin/psmdata/doc
+	$(NSINSTALL) -m 644 ../doc/06pcrypt.gif $(DIST)/bin/psmdata/doc
+	$(NSINSTALL) -m 644 ../doc/bannerrn.gif $(DIST)/bin/psmdata/doc
+	$(NSINSTALL) -m 644 ../doc/cartbanner.gif $(DIST)/bin/psmdata/doc
+	$(NSINSTALL) -m 644 ../doc/next.gif $(DIST)/bin/psmdata/doc
+	$(NSINSTALL) -m 644 ../doc/prev.gif $(DIST)/bin/psmdata/doc
+	$(NSINSTALL) -m 644 ../doc/cmcjavascriptapi.html $(DIST)/bin/psmdata/doc
+	$(NSINSTALL) -m 644 ../doc/psmtest.html $(DIST)/bin/psmdata/doc
+	$(NSINSTALL) -m 644 ../doc/release_notes.html $(DIST)/bin/psmdata/doc
+	$(NSINSTALL) -m 644 ../doc/contents.htm $(DIST)/bin/psmdata/doc
+	$(NSINSTALL) -m 644 ../doc/glossary.htm $(DIST)/bin/psmdata/doc
+	$(NSINSTALL) -m 644 ../doc/help.htm $(DIST)/bin/psmdata/doc
+else
 	$(NSINSTALL) -m 644 $(UI_DIST)/psm*.properties $(DIST)/bin/psmdata/ui
 	$(NSINSTALL) -m 644 ../doc/*.gif ../doc/*.html ../doc/*.htm $(DIST)/bin/psmdata/doc
+endif #os2
 	$(NSINSTALL) -m 755 $(DIST)/lib/$(DLL_PREFIX)nssckbi.$(DLL_SUFFIX) $(DIST)/bin
-ifneq ($(OS_ARCH), WINNT)
+ifneq (,$(filter-out OS2 WINNT, $(OS_ARCH)))
 	$(NSINSTALL) -m 775 start-psm $(DIST)/bin
 endif
 

@@ -51,6 +51,10 @@
 #endif
 #endif
 
+#ifdef XP_OS2_VACPP
+#include <libc/direct.h>
+#endif
+
 #include "messages.h"
 #include "cmtcmn.h"
 #include "cmtutils.h"
@@ -86,7 +90,7 @@ getCurrWorkDir(char *buf, int maxLen)
 {
 #if defined WIN32
     return _getcwd(buf, maxLen);
-#elif defined(XP_UNIX) || defined(XP_BEOS)
+#elif defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2)
     return getcwd(buf, maxLen);
 #else
     return NULL;
@@ -98,7 +102,7 @@ setWorkingDir(char *path)
 {
 #if defined WIN32
     _chdir(path);
-#elif defined(XP_UNIX) || defined(XP_BEOS)
+#elif defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2)
     chdir(path);
 #else
     return;
@@ -153,6 +157,25 @@ launch_psm(char *executable)
     return CMTSuccess;
  loser:
     return CMTFailure;
+#elif defined(XP_OS2)
+    STARTDATA sd;
+    ULONG sid;
+    PID pid;
+    APIRET rc;
+
+    memset(&sd, 0, 50);
+    sd.Length = 50;
+    sd.InheritOpt = SSF_INHERTOPT_PARENT;
+    sd.SessionType = SSF_TYPE_PM;
+    sd.PgmName = executable;
+
+    rc = DosStartSession( &sd, &sid, &pid );
+    if( rc != NO_ERROR && rc != ERROR_SMG_START_IN_BACKGROUND ) {
+      printf( "DosStartSession error: return code = %u\n", rc );
+      return CMTFailure;
+    }
+    else
+      return CMTSuccess;
 #else
     return CMTFailure;
 #endif
@@ -171,6 +194,7 @@ PCMT_CONTROL CMT_EstablishControlConnection(char            *inPath,
 #endif    
     int i;
     char *path = NULL;
+    int rc;
 
     /*	On the Mac, we do special magic in the Seamonkey PSM component, so
     	if PSM isn't launched by the time we reach this point, we're not doing well. */
@@ -216,10 +240,13 @@ PCMT_CONTROL CMT_EstablishControlConnection(char            *inPath,
         goto loser;
     }
     setWorkingDir(newWorkingDir);
-    if (launch_psm(executable) != CMTSuccess) {
+    rc = launch_psm(executable);
+    
+    setWorkingDir(oldWorkingDir);
+
+    if (rc != CMTSuccess) {
         goto loser;
     }
-    setWorkingDir(oldWorkingDir);
 #endif
 
     /*
@@ -229,6 +256,14 @@ PCMT_CONTROL CMT_EstablishControlConnection(char            *inPath,
 #ifdef WIN32
     for (i=0; i<30; i++) {
         Sleep(1000);
+        control = CMT_ControlConnect(mutex, sockFuncs);
+        if (control != NULL) {
+            break;
+        }
+    }
+#elif defined(XP_OS2)
+    for (i=0; i<30; i++) {
+        DosSleep(1000);
         control = CMT_ControlConnect(mutex, sockFuncs);
         if (control != NULL) {
             break;
