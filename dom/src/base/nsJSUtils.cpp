@@ -53,7 +53,8 @@ static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
 
-struct ResultMap {nsresult rv; const char* name; const char* format;} map[] = {
+static struct ResultMap 
+{nsresult rv; const char* name; const char* format;} map[] = {
 #define DOM_MSG_DEF(val, format) \
     {(val), #val, format},
 #include "domerr.msg"
