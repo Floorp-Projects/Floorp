@@ -442,6 +442,12 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext&      aPresContext,
         // Place and size the child
         nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
         mFirstChild->SetRect(rect);
+
+        // If this is the initial reflow of the child then repaint the entire
+        // visible area
+        if (eReflowReason_Initial == reflowReason) {
+          Invalidate(nsRect(0, 0, aReflowState.maxSize.width, aReflowState.maxSize.height));
+        }
       }
     }
     else {
