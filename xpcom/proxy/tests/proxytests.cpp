@@ -283,8 +283,6 @@ void TestCase_TwoClassesOneInterface(void *arg)
         //printf("Deleting Proxy Object 2 (%ld)\n", threadNumber );
         NS_RELEASE(proxyObject2);
     }    
-
-    free((void*) arg);
 }
 
 
@@ -322,8 +320,6 @@ void TestCase_2(void *arg)
         NS_RELEASE(proxyObject);
     
     }
-    
-    free((void*) arg);
 }
 
 
@@ -339,6 +335,7 @@ static void PR_CALLBACK ProxyTest( void *arg )
     TestCase_TwoClassesOneInterface(arg);
     TestCase_2(arg);
 
+    free((void*) arg);
 }
 
 
