@@ -48,6 +48,8 @@
 #include "plevent.h"
 #include "prthread.h"
 #include "nsMacTSMMessagePump.h"
+#include "nsIRollupListener.h"
+#include "nsIWidget.h"
 
 #include <MacWindows.h>
 #include <ToolUtils.h>
@@ -76,6 +78,11 @@ const short	kMinWindowWidth = 125;
 const short kMinWindowHeight = 150;
 
 NS_WIDGET nsMacMessagePump::nsWindowlessMenuEventHandler nsMacMessagePump::gWindowlessMenuEventHandler = nsnull;
+
+
+extern nsIRollupListener * gRollupListener;
+extern nsIWidget         * gRollupWidget;
+
 
 //======================================================================================
 //									PROFILE
@@ -377,6 +384,8 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 	switch (partCode)
 	{
 			case inSysWindow:
+			  if ( gRollupListener && gRollupWidget )
+				  gRollupListener->Rollup();
 				break;
 
 			case inMenuBar:
@@ -387,6 +396,8 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 				    menuResult = ConvertOSMenuResultToPPMenuResult(menuResult);
 			      DoMenu(anEvent, menuResult);
 			  }
+			  if ( gRollupListener && gRollupWidget )
+				  gRollupListener->Rollup();
 				break;
 			}
 
