@@ -132,7 +132,7 @@ static PRStatus CreateThread(StartFn start, void *arg)
             start_object->start = start;
             start_object->arg = arg;
 
-            rv = PTHREAD_ATTR_INIT(&tattr);
+            rv = _PT_PTHREAD_ATTR_INIT(&tattr);
             PR_ASSERT(0 == rv);
 
             rv = pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
@@ -143,8 +143,8 @@ static PRStatus CreateThread(StartFn start, void *arg)
             PR_ASSERT(0 == rv);
 #endif
 
-            rv = PTHREAD_CREATE(&id, tattr, pthread_start, start_object);
-            (void)PTHREAD_ATTR_DESTROY(&tattr);
+            rv = _PT_PTHREAD_CREATE(&id, tattr, pthread_start, start_object);
+            (void)_PT_PTHREAD_ATTR_DESTROY(&tattr);
             return (0 == rv) ? PR_SUCCESS : PR_FAILURE;
         }
 #else

@@ -213,7 +213,7 @@ int main(int argc, char **argv)
 
 #ifdef _PR_PTHREADS
 
-    rv = PTHREAD_ATTR_INIT(&attr);
+    rv = _PT_PTHREAD_ATTR_INIT(&attr);
     if (debug_mode) PR_ASSERT(0 == rv);
 	else if (0 != rv) {
 		failed_already=1;
@@ -228,7 +228,7 @@ int main(int argc, char **argv)
 		goto exit_now;
 	}
 #endif  /* !_PR_DCETHREADS */
-    rv = PTHREAD_CREATE(&threadID, attr, threadStartFunc, NULL);
+    rv = _PT_PTHREAD_CREATE(&threadID, attr, threadStartFunc, NULL);
     if (rv != 0) {
 			fprintf(stderr, "thread creation failed: error code %d\n", rv);
 			failed_already=1;
@@ -239,7 +239,7 @@ int main(int argc, char **argv)
 			printf ("thread creation succeeded \n");
 
 	}
-    rv = PTHREAD_ATTR_DESTROY(&attr);
+    rv = _PT_PTHREAD_ATTR_DESTROY(&attr);
     if (debug_mode) PR_ASSERT(0 == rv);
 	else if (0 != rv) {
 		failed_already=1;

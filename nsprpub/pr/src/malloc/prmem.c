@@ -168,11 +168,11 @@ PR_IMPLEMENT(PRStatus) _PR_MallocInit(void)
 	int status;
 	pthread_mutexattr_t mattr;
 
-	status = PTHREAD_MUTEXATTR_INIT(&mattr);
+	status = _PT_PTHREAD_MUTEXATTR_INIT(&mattr);
 	PR_ASSERT(0 == status);
-	status = PTHREAD_MUTEX_INIT(_PR_MD_malloc_crustylock, mattr);
+	status = _PT_PTHREAD_MUTEX_INIT(_PR_MD_malloc_crustylock, mattr);
 	PR_ASSERT(0 == status);
-	status = PTHREAD_MUTEXATTR_DESTROY(&mattr);
+	status = _PT_PTHREAD_MUTEXATTR_DESTROY(&mattr);
 	PR_ASSERT(0 == status);
     }
 #else /* _PR_PTHREADS */
