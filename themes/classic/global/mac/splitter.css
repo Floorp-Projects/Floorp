@@ -56,13 +56,11 @@ splitter:hover:active
     }
   
 /* horizontal splitters */  
-  /* XXX we should comment out the 'align' support to force people to migrate 
+  /* XXX 'align' support removed to force people to migrate 
          to 'orient' */
   rows > splitter,
   window[orient="vertical"] > splitter,
   box[orient="vertical"] > splitter,
-  window[align="vertical"] > splitter,
-  box[align="vertical"] > splitter,
   vbox > splitter
     {
       cursor              : n-resize;

@@ -59,8 +59,6 @@
     
   window[orient="vertical"] > splitter,
   box[orient="vertical"] > splitter,
-  window[align="vertical"] > splitter,
-  box[align="vertical"] > splitter,
   vbox > splitter
     {
       cursor              : n-resize;
