@@ -93,9 +93,6 @@ nsIRDFResource* nsMsgIdentityDataSource::kNC_Child;
 nsIRDFResource* nsMsgIdentityDataSource::kNC_Identity;
 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
-#if 0 /* not used */
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Server);
-#endif 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Identity);
 
 nsMsgIdentityDataSource::nsMsgIdentityDataSource()
