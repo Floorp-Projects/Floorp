@@ -89,7 +89,7 @@ function onTextInput()
 function enterKeyPressed()
 {
    // if the add button is currently the default action then add the text
-  if (gHeaderInputElement.value != "" && !gAddButton.disable)
+  if (gHeaderInputElement.value != "" && !gAddButton.disabled)
   {
     onAddHeader();
   } 

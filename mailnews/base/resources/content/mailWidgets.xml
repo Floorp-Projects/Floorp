@@ -1205,7 +1205,7 @@
             this.refreshList();
             if (val == Components.interfaces.nsMsgSearchAttrib.OtherHeader)
             {
-              window.openDialog('chrome://messenger/content/CustomHeaders.xul', "", 'modal,titlebar,chrome', null);
+              window.openDialog('chrome://messenger/content/CustomHeaders.xul', "", 'modal,centerscreen,resizable,titlebar,chrome', null);
               UpdateAfterCustomHeaderChange();
             }
             return val;

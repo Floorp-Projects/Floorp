@@ -1,4 +1,7 @@
 <!ENTITY window.title "Customize Headers">
 <!ENTITY addButton.label "Add">
+<!ENTITY addButton.accesskey "A">
 <!ENTITY removeButton.label "Remove">
+<!ENTITY removeButton.accesskey "R">
 <!ENTITY newMsgHeader.label "New message header:">
+<!ENTITY newMsgHeader.accesskey "N">

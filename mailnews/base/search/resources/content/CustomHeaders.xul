@@ -29,8 +29,7 @@ Original Contributor(s): Navin Gupta <naving@netscape.com>
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   windowtype="mailnews:customheaders"
   onload="onLoad();"
-  width="300"
-  height="250"
+  style="width: 30em; height: 25em;"
   persist="width height screenX screenY"
   title="&window.title;">
 
@@ -40,7 +39,6 @@ Original Contributor(s): Navin Gupta <naving@netscape.com>
   </stringbundleset>
 
   <script type="application/x-javascript" src="chrome://messenger/content/CustomHeaders.js"/>
-  <script src="chrome://messenger/content/searchTermOverlay.js"/>
 
   <!-- we need to override the dialogs default key behavior so we can re-route enter/return
        to the add button if the add button is suddenly the default action
@@ -58,7 +56,7 @@ Original Contributor(s): Navin Gupta <naving@netscape.com>
     </columns>
     <rows>
       <row>
-        <description>&newMsgHeader.label;</description>
+        <label accesskey="&newMsgHeader.accesskey;" control="headerInput" value="&newMsgHeader.label;"/>
       </row>
       <row>
         <textbox id="headerInput" onfocus="this.select();" oninput="onTextInput();"/>
@@ -70,8 +68,8 @@ Original Contributor(s): Navin Gupta <naving@netscape.com>
         </vbox>
 
         <vbox>
-          <button id="addButton" label="&addButton.label;" oncommand="onAddHeader();"/>
-          <button id="removeButton" label="&removeButton.label;" oncommand="onRemoveHeader();"/>
+          <button id="addButton" label="&addButton.label;" accesskey="&addButton.accesskey;" oncommand="onAddHeader();"/>
+          <button id="removeButton" label="&removeButton.label;" accesskey="&removeButton.accesskey;" oncommand="onRemoveHeader();"/>
         </vbox>
       </row>
     </rows>
