@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+<!ENTITY % regionDTD SYSTEM "chrome://global-region/locale/region.dtd" >
+%brandDTD;
+%regionDTD;
+]>
 
 <!--
    - The contents of this file are subject to the Netscape Public
@@ -62,13 +67,13 @@ h1 {
 <tr>
 
 <td>
-<a href="http://www.mozilla.org/">
-<img src="chrome://global/content/logo.gif" alt="Mozilla" width="200" height="200" /></a>
+<a href="&vendorURL;">
+<img src="chrome://global/content/logo.gif" alt="&brandShortName;" width="200" height="200" /></a>
 </td>
 
 <td id="mozver">
 <h1>
-<a id="mozlink" href="http://www.mozilla.org/releases/">Mozilla </a>
+<a id="mozlink" href="&releaseURL;">&brandShortName; </a>
 </h1>
 <script type="application/x-javascript">
   // using try..catch to handle empty useragents and other cases where the regex fails to apply
