@@ -95,6 +95,7 @@ private:
   nsresult GetSelectedCards(nsISupportsArray **cards);
   nsresult ReselectCards(nsISupportsArray *cards, nsIAbCard *indexCard);
   nsresult GetCardValue(nsIAbCard *card, const PRUnichar *colID, PRUnichar **_retval);
+  nsresult RefreshTree();
 
   nsCString mURI;
   nsCOMPtr <nsIAbDirectory> mDirectory;

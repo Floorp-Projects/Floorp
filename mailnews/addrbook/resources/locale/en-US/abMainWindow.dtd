@@ -56,6 +56,8 @@ Rights Reserved.
 <!ENTITY deleteAbCmd.label                              "Delete Address Book">  
 <!ENTITY deleteCardCmd.label                            "Delete Card">  
 <!ENTITY deleteCardsCmd.label                           "Delete Selected Cards">  
+<!ENTITY swapFirstNameLastNameCmd.label                 "Swap First/Last Name">
+<!ENTITY swapFirstNameLastNameCmd.accesskey             "w">  
 <!ENTITY propertiesCmd.label                            "Properties...">
 <!-- LOCALIZATION NOTE (propertiesCmd.accesskey) : DONT_TRANSLATE -->  
 <!ENTITY propertiesCmd.accesskey                        "i">  
@@ -105,3 +107,7 @@ Rights Reserved.
 
 <!-- Status Bar -->  
 <!ENTITY  statusText.label "">
+
+<!-- LOCALIZATION NOTE (hideSwapFnLnUI) : DONT_TRANSLATE -->
+<!-- Swap FN/LN UI  Set to "false" to show swap fn/ln UI -->
+<!ENTITY  hideSwapFnLnUI "true">

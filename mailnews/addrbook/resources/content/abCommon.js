@@ -993,3 +993,9 @@ function onAbClearSearch()
     gSearchInput.value ="";  //on input does not get fired for some reason
   onAbSearchInput(true);
 }
+
+function AbSwapFirstNameLastName()
+{
+  if (gAbView)
+    gAbView.swapFirstNameLastName();
+}

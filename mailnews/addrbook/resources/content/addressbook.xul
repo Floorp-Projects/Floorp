@@ -92,6 +92,7 @@ Contributor(s):
     <command id="cmd_paste"/>
     <command id="cmd_cut"/>
     <command id="cmd_selectAll"/>
+    <command id="cmd_swapFirstNameLastName" oncommand="AbSwapFirstNameLastName()"/>
     <commandset id="tasksCommands"/>
 </commandset>
 
@@ -172,6 +173,11 @@ Contributor(s):
             <menuseparator/>
             <menuitem id="menu_selectAll"/>
             <menuseparator/>
+            <!-- LOCALIZATION NOTE: set "hideSwapFnLnUI" to false in .dtd to enable the UI -->
+            <menuitem label="&swapFirstNameLastNameCmd.label;"
+                      accesskey="&swapFirstNameLastNameCmd.accesskey;"
+                      hidden="&hideSwapFnLnUI;"
+                      command="cmd_swapFirstNameLastName"/>
             <menuitem label="&propertiesCmd.label;"
                       accesskey="&propertiesCmd.accesskey;"
                       key="key_properties"
