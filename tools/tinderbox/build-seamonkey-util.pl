@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.28 $ ';
+$::UtilsVersion = '$Revision: 1.29 $ ';
 
 package TinderUtils;
 
@@ -521,9 +521,15 @@ sub BuildIt {
     chdir $Settings::DirName or die "Couldn't enter $Settings::DirName";
     
     my $build_dir = Cwd::getcwd();
+
     my $binary_basename = "$Settings::BinaryName";
     my $binary_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/dist/bin";
     my $full_binary_name = "$binary_dir/$binary_basename";
+
+	my $embed_binary_basename = "$Settings::EmbedBinaryName";
+	my $embed_binary_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/${Settings::EmbedDistDir}";
+    my $full_embed_binary_name = "$embed_binary_dir/$embed_binary_basename";
+
     my $exit_early = 0;
     my $start_time = 0;
 
@@ -581,6 +587,10 @@ sub BuildIt {
         unless ($Settings::TestOnly) { # Do not build if testing smoke tests.
             DeleteBinary($full_binary_name);
 
+			if($Settings::EmbedTest or $Settings::BuildEmbed) {
+			  DeleteBinary($full_embed_binary_name);
+			}
+
             my $make = "$Settings::Make -f client.mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs'";
             my $targets = $TreeSpecific::checkout_target;
             $targets = $TreeSpecific::checkout_clobber_target unless $Settings::BuildDepend;
@@ -592,13 +602,39 @@ sub BuildIt {
             } elsif (not BinaryExists($full_binary_name)) {
               print_log "Error: binary not found: $binary_basename\n";
               $build_status = 'busted';
-            }
-        }
+            } else {
+			  $build_status = 'success';
+			}
         
+			# Build the embedded app.
+			# Currently this is a post-build-seamonkey hack.
+			if (($Settings::EmbedTest or $Settings::BuildEmbed) and $build_status eq 'success') {
+			  print_log "$binary_basename binary exists, building $embed_binary_basename now.\n";
+			  
+			  my $tmpEmbedConfigDir = "$build_dir/$Settings::Topsrcdir/embedding/config";
+			  chdir $tmpEmbedConfigDir or die "chdir $Settings::Topsrcdir: $!\n";
+			  
+			  my $make = "$Settings::Make";
+			  
+			  my $statusEmbed = run_shell_command "$make";
+			  if ($statusEmbed != 0) {
+				$build_status = 'busted';
+			  } elsif (not BinaryExists($full_embed_binary_name)) {
+				print_log "Error: binary not found: gtkEmbed\n";
+				$build_status = 'busted';
+			  }	else {
+				$build_status = 'success';
+			  }
+			  
+			}
+        }
+
         if ($build_status ne 'busted' and BinaryExists($full_binary_name)) {
             print_log "$binary_basename binary exists, build successful.\n";
             if ($Settings::RunTest) {
-                $build_status = run_tests($full_binary_name, $build_dir);
+                $build_status = run_tests($full_binary_name, 
+										  $full_embed_binary_name,
+										  $build_dir);
             } else {
                 print_log "Skipping tests.\n";
                 $build_status = 'success';
@@ -616,10 +652,18 @@ sub BuildIt {
     }
 }
 
+
+#
+# Run tests.  Had to pass in both binary and embed_binary.
+#
 sub run_tests {
-    my ($binary, $build_dir) = @_;
-    my $binary_basename = File::Basename::basename($binary);
-    my $binary_dir =  File::Basename::dirname($binary);
+    my ($binary, $embed_binary, $build_dir) = @_;
+
+    my $binary_basename       = File::Basename::basename($binary);
+    my $binary_dir            = File::Basename::dirname($binary);
+    my $embed_binary_basename = File::Basename::basename($embed_binary);
+    my $embed_binary_dir      = File::Basename::dirname($embed_binary);
+
     my $test_result = 'success';
 
     # The prefs file is used to check for a profile.
@@ -649,7 +693,14 @@ sub run_tests {
         print_log "Running ViewerTest ...\n";
         $test_result = AliveTest($build_dir, "$binary_dir/viewer", 45);
     }
-    
+
+	# Embed test.  Test the embedded app.
+    if ($Settings::EmbedTest and $test_result eq 'success') {
+	  print_log "Running  EmbedTest ...\n";
+      $test_result = AliveTest($build_dir, "$embed_binary_dir/$embed_binary_basename", 45);
+    }
+
+
     # Bloat test
     if ($Settings::BloatStats or $Settings::BloatTest
         and $test_result eq 'success') {
@@ -685,7 +736,7 @@ sub run_tests {
                                      1);  # Timeout is Ok.
     }
     
-    # Editor test
+    # DomToTextConversion test
     if (($Settings::EditorTest or $Settings::DomToTextConversionTest)
        and $test_result eq 'success') {
         print_log "Running  DomToTextConversionTest ...\n";
@@ -695,6 +746,7 @@ sub run_tests {
                         "FAILED", 0,
                         0);  # Timeout means failure.
     }
+
     return $test_result;
 }
 

@@ -14,16 +14,19 @@ $UseTimeStamp      = 1;      # Use the CVS 'pull-by-timestamp' option, or not
 $BuildOnce         = 0;      # Build once, don't send results to server
 $RunTest           = 1;      # Run the smoke tests on successful build, or not
 $TestOnly          = 0;      # Only run tests, don't pull/build
+$BuildEmbed        = 0;      # After building seamonkey, go build embed app.
+
 # Tests
-$AliveTest = 1;
-$ViewerTest = 0;
-$BloatTest = 0;
+$AliveTest         = 1;
+$ViewerTest        = 0;
+$BloatTest         = 0;
 $DomToTextConversionTest = 0;
-$MailNewsTest = 0;
+$MailNewsTest      = 0;
+$EmbedTest         = 0;      # Assumes you wanted $BuildEmbed=1
 $MozConfigFileName = 'mozconfig';
 $MozProfileName = 'default';
-$BloatTestTimeout	= 120;
-$DomTestTimeout		= 45;
+$BloatTestTimeout  = 120;    # seconds
+$DomTestTimeout	   = 45;     # seconds
 
 #- Set these to what makes sense for your system
 $Make          = 'gmake';       # Must be GNU make
@@ -53,7 +56,15 @@ $BuildName = '';
 $BuildTag = '';
 $BuildConfigDir = 'mozilla/config';
 $Topsrcdir = 'mozilla';
+
 $BinaryName = 'mozilla-bin';
+
+#
+# For embedding app, use:
+$EmbedBinaryName = 'gtkEmbed';
+$EmbedDistDir    = 'dist/Embed'
+
+
 $ShellOverride = ''; # Only used if the default shell is too stupid
 $ConfigureArgs = '';
 $ConfigureEnvArgs = '';
