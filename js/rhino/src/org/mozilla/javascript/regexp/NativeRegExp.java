@@ -1358,13 +1358,22 @@ public class NativeRegExp extends IdScriptable implements Function {
          */
 
         num = grState.state.parenCount;
+        boolean oldBroke = grState.state.goForBroke;
+        grState.state.goForBroke = false;
         kidMatch = matchRENodes(grState.state, grState.kid, grState.next, index);
+        grState.state.complete = -1;
+        grState.state.goForBroke = oldBroke;
+        
         if (kidMatch == -1) {
+            grState.state.parenCount = num;
+            if (previousKid != -1)
+                matchRENodes(grState.state, grState.kid, grState.next, previousKid);
             match = matchRENodes(grState.state, grState.next, grState.stop, index);
             if (match != -1) {
-                grState.state.parenCount = num;
-                if (previousKid != -1)
-                    matchRENodes(grState.state, grState.kid, grState.next, previousKid);
+                if (grState.stop == null) {
+                    grState.state.complete = match;
+                    return index;
+                }
                 return index;
             }
             else
@@ -1382,8 +1391,14 @@ public class NativeRegExp extends IdScriptable implements Function {
                 if (grState.maxKid != 0) --grState.kidCount;
             }
             grState.state.parenCount = num;
+            matchRENodes(grState.state, grState.kid, grState.next, index);
+            
             match = matchRENodes(grState.state, grState.next, grState.stop, kidMatch);
             if (match != -1) {
+                if (grState.stop == null) {
+                    grState.state.complete = match;
+                    return kidMatch;
+                }
                 matchRENodes(grState.state, grState.kid, grState.next, index);
                 return kidMatch;
             }
@@ -1419,13 +1434,27 @@ public class NativeRegExp extends IdScriptable implements Function {
         int match;
 
         match = matchRENodes(state, ren.next, null, index);
-        if (match != -1) return index;
+        if (state.goForBroke && (state.complete != -1))
+            return state.complete;
+        if (match != -1) {
+            state.complete = match;
+            return index;
+        }
+        if (match != -1) 
+            return index;
+
         kidMatch = matchRENodes(state, (RENode)ren.kid, ren.next, index);
         if (kidMatch == -1) return -1;
+        if (state.goForBroke && (state.complete != -1))
+             return state.complete;
         if (kidMatch == index) return kidMatch;    /* no point pursuing an empty match forever */
         return matchNonGreedyKid(state, ren, kidCount, maxKid, kidMatch);
     }
-
+    
+    boolean isLineTerminator(char c) {
+        return TokenStream.isJSLineTerminator(c);
+    }
+    
     int matchRENodes(MatchState state, RENode ren, RENode stop, int index) {
         int num;
         char[] input = state.input;
@@ -1442,6 +1471,8 @@ public class NativeRegExp extends IdScriptable implements Function {
                         num = state.parenCount;
                         int kidMatch = matchRENodes(state, (RENode)ren.kid,
                                                     stop, index);
+                        if (state.goForBroke && (state.complete != -1))
+                            return state.complete;
                         if (kidMatch != -1) return kidMatch;
                         for (int i = num; i < state.parenCount; i++)
                             state.parens[i] = null;
@@ -1456,10 +1487,10 @@ public class NativeRegExp extends IdScriptable implements Function {
                                                     ren.next, index);
                         if (kidMatch == -1)
                             return -1;
-                        else {
-                            lastKid = index;
-                            index = kidMatch;
-                        }
+                        if (state.goForBroke && (state.complete != -1))
+                            return state.complete;
+                        lastKid = index;
+                        index = kidMatch;
                     }
                     if (num == ren.max)
                         // Have matched the exact count required, 
@@ -1468,17 +1499,28 @@ public class NativeRegExp extends IdScriptable implements Function {
                     if ((ren.flags & RENode.MINIMAL) == 0) {
                         int kidMatch = matchGreedyKid(state, ren, stop, num,
                                                       index, lastKid);
-                        if (kidMatch == -1)
-                            index = matchRENodes(state, (RENode)ren.kid,
-                                                 ren.next, index);
-                        else 
+                        if (kidMatch == -1) {
+                            if (lastKid != -1) {
+                                index = matchRENodes(state, (RENode)ren.kid, 
+                                                     ren.next, lastKid);
+                                if (state.goForBroke && (state.complete != -1))
+                                    return state.complete;
+                            }
+                        }
+                        else {
+                            if (state.goForBroke && (state.complete != -1))
+                                return state.complete;
                             index = kidMatch;
+                        }
                     }        
                     else {
                         index = matchNonGreedyKid(state, ren, num,
                                                   ren.max, index);
+                        if (index == -1)
+                            return -1;
+                        if (state.goForBroke && (state.complete != -1))
+                            return state.complete;
                     }				
-                    if (index == -1) return -1;
                 }
                     break;
                 case REOP_PLUS: {
@@ -1489,26 +1531,40 @@ public class NativeRegExp extends IdScriptable implements Function {
                     if ((ren.flags & RENode.MINIMAL) == 0) {
                         kidMatch = matchGreedyKid(state, ren, stop, 1, 
                                                   kidMatch, index);
-                        if (kidMatch == -1)
+                        if (kidMatch == -1) {
                             index = matchRENodes(state,(RENode)ren.kid,
                                                  ren.next, index);
-                        else
+                            if (state.goForBroke && (state.complete != -1))
+                                return state.complete;
+                        }
+                        else {
+                            if (state.goForBroke && (state.complete != -1))
+                                return state.complete;
                             index = kidMatch;
+                        }
                     }
-                    else
+                    else {
                         index = matchNonGreedyKid(state, ren, 1, 0, kidMatch);
+                        if (state.goForBroke && (state.complete != -1))
+                            return state.complete;
+                    }
                     if (index == -1) return -1;
                 }
                     break;
                 case REOP_STAR:					
                     if ((ren.flags & RENode.MINIMAL) == 0) {
                         int kidMatch = matchGreedyKid(state, ren, stop, 0, index, -1);
-                        if (kidMatch != -1)
+                        if (kidMatch != -1) {
+                            if (state.goForBroke && (state.complete != -1))
+                                return state.complete;
                             index = kidMatch;
+                        }
                     }
                     else {
                         index = matchNonGreedyKid(state, ren, 0, 0, index);
                         if (index == -1) return -1;
+                        if (state.goForBroke && (state.complete != -1))
+                            return state.complete;
                     }
                     break;
                 case REOP_OPT: {
@@ -1516,19 +1572,29 @@ public class NativeRegExp extends IdScriptable implements Function {
                     if (((ren.flags & RENode.MINIMAL) != 0)) {
                         int restMatch = matchRENodes(state, ren.next,
                                                      stop, index);
+                        if (state.goForBroke && (state.complete != -1))
+                            return state.complete;
                         if (restMatch != -1) return restMatch;
                     }
                     int kidMatch = matchRENodes(state, (RENode)ren.kid,
                                                 ren.next, index);
+                    if (state.goForBroke && (state.complete != -1))
+                        return state.complete;
                     if (kidMatch == -1) {
+                        for (int i = saveNum; i < state.parenCount; i++)
+                            state.parens[i] = null;
                         state.parenCount = saveNum;
                         break;
                     }
                     else {
                         int restMatch = matchRENodes(state, ren.next,
                                                      stop, kidMatch);
+                        if (state.goForBroke && (state.complete != -1))
+                            return state.complete;
                         if (restMatch == -1) {
                             // need to undo the result of running the kid
+                            for (int i = saveNum; i < state.parenCount; i++)
+                                state.parens[i] = null;
                             state.parenCount = saveNum;
                             break;
                         }
@@ -1566,12 +1632,16 @@ public class NativeRegExp extends IdScriptable implements Function {
                 case REOP_ASSERT: {
                     int kidMatch = matchRENodes(state, (RENode)ren.kid,
                                                 ren.next, index);
+                    if (state.goForBroke && (state.complete != -1))
+                        return state.complete;
                     if (kidMatch == -1) return -1;
                     break;
                 }
                 case REOP_ASSERT_NOT: {
                     int kidMatch = matchRENodes(state, (RENode)ren.kid,
                                                 ren.next, index);
+                    if (state.goForBroke && (state.complete != -1))
+                        return state.complete;
                     if (kidMatch != -1) return -1;
                     break;
                 }
@@ -1627,7 +1697,7 @@ public class NativeRegExp extends IdScriptable implements Function {
                     if (index >= input.length) {
                         return state.noMoreInput();
                     }
-                    if (input[index] != '\n')
+                    if (!isLineTerminator(input[index]))
                         index++;
                     else
                         return -1;
@@ -1637,7 +1707,7 @@ public class NativeRegExp extends IdScriptable implements Function {
                     for (cp2 = index; cp2 < input.length; cp2++) {
                         int cp3 = matchRENodes(state, ren.next, stop, cp2);
                         if (cp3 != -1) return cp3;
-                        if (input[cp2] == '\n')
+                        if (isLineTerminator(input[cp2]))
                             return -1;
                     }
                     return state.noMoreInput();
@@ -1645,7 +1715,7 @@ public class NativeRegExp extends IdScriptable implements Function {
                 case REOP_DOTSTAR: {
                     int cp2;
                     for (cp2 = index; cp2 < input.length; cp2++)
-                        if (input[cp2] == '\n')
+                        if (isLineTerminator(input[cp2]))
                             break;
                     while (cp2 >= index) {
                         int cp3 = matchRENodes(state, ren.next, stop, cp2);
@@ -1690,7 +1760,7 @@ public class NativeRegExp extends IdScriptable implements Function {
                         RegExpImpl reImpl = getImpl(cx);
                         if ((reImpl.multiline)
                             || ((state.flags & MULTILINE) != 0))
-                            if (input[index] == '\n')
+                            if (isLineTerminator(input[index]))
                                 ;// leave index
                             else
                                 return -1;
@@ -1708,7 +1778,7 @@ public class NativeRegExp extends IdScriptable implements Function {
                             if (index >= input.length) {
                                 return state.noMoreInput();
                             }
-                            if (input[index - 1] == '\n') {
+                            if (isLineTerminator(input[index - 1])) {
                                 break;
                             }
                         }
@@ -1838,6 +1908,8 @@ public class NativeRegExp extends IdScriptable implements Function {
         state.start = start;
         state.skipped = 0;
         state.input = charArray;
+        state.complete = -1;
+        state.goForBroke = true;
 
         state.parenCount = 0;
         state.maybeParens = new SubString[re.parenCount];
@@ -2183,7 +2255,7 @@ class RENode {
     }
     
     private void calcBMSize(char[] s, int index, int cp2, boolean fold) {
-        char maxc = 0;
+        int maxc = 0;
         while (index < cp2) {
             char c = s[index++];
             if (c == '\\') {
@@ -2200,13 +2272,24 @@ class RENode {
                         c = (char) x;
                         index += 5;
                     } else {
-                        /*
-                         * Octal and hex escapes can't be > 255.  Skip this
-                         * backslash and let the loop pass over the remaining
-                         * escape sequence as if it were text to match.
+                        /* 
+                         * For the not whitespace, not word or not digit cases
+                         * we widen the range to the complete unicode range.
                          */
-                        if (maxc < 255) maxc = 255;
-                        continue;
+                        if ((s[index] == 'S') 
+                                || (s[index] == 'W') || (s[index] == 'D')) {
+                            maxc = 65535;
+                            break;  /* leave now, it can't get worse */
+                        }
+                        else {
+                            /*
+                             * Octal and hex escapes can't be > 255.  Skip this
+                             * backslash and let the loop pass over the remaining
+                             * escape sequence as if it were text to match.
+                             */
+                            if (maxc < 255) maxc = 255;
+                            continue;
+                        }
                     }
             }
             if (fold) {
@@ -2228,7 +2311,7 @@ class RENode {
                          / NativeRegExp.JS_BITS_PER_BYTE);
     }
     
-    private void matchBit(char c, int fill) {
+    private void matchBit(int c, int fill) {
         int i = (c) >> 3;
         byte b = (byte) (c & 7);
         b = (byte) (1 << b);
@@ -2238,7 +2321,7 @@ class RENode {
             bitmap[i] |= b;
     }
 
-    private void checkRange(char lastc, int fill) {
+    private void checkRange(int lastc, int fill) {
         matchBit(lastc, fill);
         matchBit('-', fill);
     }
@@ -2266,11 +2349,11 @@ class RENode {
             bitmap[0] = (byte)0xfe;
         }
         int nchars = bmsize * NativeRegExp.JS_BITS_PER_BYTE;
-        char lastc = (char)nchars;
+        int lastc = nchars;
         boolean inrange = false;
         
         while (index < end) {
-            char c = s[index++];
+            int c = s[index++];
             if (c == '\\') {
                 c = s[index++];
                 switch (c) {
@@ -2280,13 +2363,13 @@ class RENode {
                 case 'r':
                 case 't':
                 case 'v':
-                    c = NativeRegExp.getEscape(c);
+                    c = NativeRegExp.getEscape((char)c);
                     break;
 
                 case 'd':
                     if (inrange)
                         checkRange(lastc, fill);
-                    lastc = (char) nchars;
+                    lastc = nchars;
                     for (c = '0'; c <= '9'; c++)
                         matchBit(c, fill);
                     continue;
@@ -2294,7 +2377,7 @@ class RENode {
                 case 'D':
                     if (inrange)
                         checkRange(lastc, fill);
-                    lastc = (char) nchars;
+                    lastc = nchars;
                     for (c = 0; c < '0'; c++)
                         matchBit(c, fill);
                     for (c = '9' + 1; c < nchars; c++)
@@ -2304,36 +2387,36 @@ class RENode {
                 case 'w':
                     if (inrange)
                         checkRange(lastc, fill);
-                    lastc = (char) nchars;
+                    lastc = nchars;
                     for (c = 0; c < nchars; c++)
-                        if (NativeRegExp.isWord(c))
+                        if (NativeRegExp.isWord((char)c))
                             matchBit(c, fill);
                     continue;
 
                 case 'W':
                     if (inrange)
                         checkRange(lastc, fill);
-                    lastc = (char) nchars;
+                    lastc = nchars;
                     for (c = 0; c < nchars; c++)
-                        if (!NativeRegExp.isWord(c))
+                        if (!NativeRegExp.isWord((char)c))
                             matchBit(c, fill);
                     continue;
 
                 case 's':
                     if (inrange)
                         checkRange(lastc, fill);
-                    lastc = (char) nchars;
+                    lastc = nchars;
                     for (c = 0; c < nchars; c++)
-                        if (Character.isWhitespace(c))
+                        if (Character.isWhitespace((char)c))
                             matchBit(c, fill);
                     continue;
 
                 case 'S':
                     if (inrange)
                         checkRange(lastc, fill);
-                    lastc = (char) nchars;
+                    lastc = nchars;
                     for (c = 0; c < nchars; c++)
-                        if (!Character.isWhitespace(c))
+                        if (!Character.isWhitespace((char)c))
                             matchBit(c, fill);
                     continue;
 
@@ -2345,43 +2428,43 @@ class RENode {
                 case '5':
                 case '6':
                 case '7':
-                    n = NativeRegExp.unDigit(c);
+                    n = NativeRegExp.unDigit((char)c);
                     ocp = index - 2;
                     c = s[index];
                     if ('0' <= c && c <= '7') {
                         index++;
-                        n = 8 * n + NativeRegExp.unDigit(c);
+                        n = 8 * n + NativeRegExp.unDigit((char)c);
 
                         c = s[index];
                         if ('0' <= c && c <= '7') {
                             index++;
-                            i = 8 * n + NativeRegExp.unDigit(c);
+                            i = 8 * n + NativeRegExp.unDigit((char)c);
                             if (i <= 0377)
                                 n = i;
                             else
                                 index--;
                         }
                     }
-                    c = (char) n;
+                    c = n;
                     break;
 
                 case 'x':
                     ocp = index;
                     if (index < s.length &&
-                        NativeRegExp.isHex(c = s[index++]))
+                        NativeRegExp.isHex((char)(c = s[index++])))
                         {
-                            n = NativeRegExp.unHex(c);
+                            n = NativeRegExp.unHex((char)c);
                             if (index < s.length &&
-                                NativeRegExp.isHex(c = s[index++]))
+                                NativeRegExp.isHex((char)(c = s[index++])))
                                 {
                                     n <<= 4;
-                                    n += NativeRegExp.unHex(c);
+                                    n += NativeRegExp.unHex((char)c);
                                 }
                         } else {
                             index = ocp;	/* \xZZ is xZZ (Perl does \0ZZ!) */
                             n = 'x';
                         }
-                    c = (char) n;
+                    c = n;
                     break;
 
                 case 'u':
@@ -2394,15 +2477,15 @@ class RENode {
                                 NativeRegExp.unHex(s[index+1])) << 4) +
                               NativeRegExp.unHex(s[index+2])) << 4) +
                             NativeRegExp.unHex(s[index+3]);
-                        c = (char) n;
+                        c = n;
                         index += 4;
                     }
                     break;
 
                 case 'c':
                     c = s[index++];
-                    c = Character.toUpperCase(c);
-                    c = (char) (c ^ 64); // JS_TOCTRL
+                    c = Character.toUpperCase((char)c);
+                    c = (c ^ 64); // JS_TOCTRL
                     break;
                 }
             }
@@ -2410,10 +2493,10 @@ class RENode {
             if (inrange) {
                 if (lastc > c) {
                     throw NativeGlobal.constructError(
-                                                      Context.getCurrentContext(), "RangeError",
-                                                      ScriptRuntime.getMessage(
-                                                                               "msg.bad.range", null),
-                                                      state.scope);
+                                Context.getCurrentContext(), "RangeError",
+                                ScriptRuntime.getMessage(
+                                "msg.bad.range", null),
+                                state.scope);
                 }
                 inrange = false;
             } else {
@@ -2438,9 +2521,9 @@ class RENode {
                      * Must do both upper and lower for Turkish dotless i,
                      * Georgian, etc.
                      */
-                    char foldc = Character.toUpperCase(lastc);
+                    int foldc = Character.toUpperCase((char)lastc);
                     matchBit(foldc, fill);
-                    foldc = Character.toLowerCase(foldc);
+                    foldc = Character.toLowerCase((char)foldc);
                     matchBit(foldc, fill);
                 }
             }
@@ -2476,6 +2559,8 @@ class MatchState {
     SubString[] parens;                 /* certain paren substring matches */
     Scriptable  scope;
     char[]		input;
+    boolean     goForBroke;             /* pursue any match to the end of the re */
+    int         complete;               /* match acheived by attempted early completion */
 
     public int noMoreInput() {
         inputExhausted = true;
