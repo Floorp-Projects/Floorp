@@ -995,7 +995,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
                            aTextStyle, dx, dy, width, text, details,0,(PRUint32)textLength);
       sdptr = details;
       if (details){
-        while(sdptr = details->mNext){
+        while ((sdptr = details->mNext) != nsnull) {
           delete details;
           details = sdptr;
         }
@@ -1448,7 +1448,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
                     PRUint32(textLength), dx, dy, width, details);
       sdptr = details;
       if (details){
-        while(sdptr = details->mNext){
+        while ((sdptr = details->mNext) != nsnull) {
           delete details;
           details = sdptr;
         }
@@ -1564,7 +1564,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
                            aTextStyle, dx, dy, width, rawPaintBuf, details,0,textLength);
       sdptr = details;
       if (details){
-        while(sdptr = details->mNext){
+        while ((sdptr = details->mNext) != nsnull) {
           delete details;
           details = sdptr;
         }
@@ -1826,11 +1826,9 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
       if ((mContentOffset + mContentLength) >= startOffset){
         found = PR_TRUE;
         if (thisNode == endNode){ //special case
-  /*#ifndef SHOW_SELECTION_CURSOR
-          if (aSelected && (endOffset == startOffset)) //no need to redraw since drawing takes place with cursor
+          if (endOffset == startOffset) //no need to redraw since drawing takes place with cursor
             found = PR_FALSE;
-  #endif
-  */
+
           if (mContentOffset > endOffset)
             found = PR_FALSE;
         }
