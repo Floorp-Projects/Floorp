@@ -149,7 +149,7 @@ HRESULT SmartUpdateJars()
   ShowMessage(szMsgSmartUpdateStart, TRUE);
   if(InitializeXPIStub() == WIZ_OK)
   {
-    hrResult = pfnXpiInit(sgProduct.szPath, cbXPIStart, cbXPIProgress, cbXPIFinal);
+    hrResult = pfnXpiInit(sgProduct.szPath, cbXPIProgress);
 
     ShowMessage(szMsgSmartUpdateStart, FALSE);
     InitProgressDlg();
