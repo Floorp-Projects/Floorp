@@ -50,6 +50,8 @@ pref("general.useragent.misc", "rv:1.4a");
 pref("general.useragent.vendor", "Phoenix");
 pref("general.useragent.vendorSub", "0.5+");
 
+pref("general.smoothScroll", true);
+
 pref("backups.number_of_prefs_copies", 1);
 
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last
