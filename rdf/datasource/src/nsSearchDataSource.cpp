@@ -1079,7 +1079,7 @@ SearchDataSource::GetSearchEngineList()
 	// XXX we should get this from prefs?
 	searchSitesDir += "res";
 	searchSitesDir += "rdf";
-	searchSitesDir += "search";
+	searchSitesDir += "datasets";
 	nsFileSpec 			nativeDir(searchSitesDir);
 #endif
 	for (nsDirectoryIterator i(nativeDir, PR_FALSE); i.Exists(); i++)
