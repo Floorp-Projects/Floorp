@@ -75,6 +75,7 @@ protected:
   nsresult CopyPasswords(PRBool aReplace);
   nsresult CopyMailFolders(nsVoidArray* aMailServers, nsIPrefService* aPrefBranch);
   nsresult CopyAddressBookDirectories(nsVoidArray* aLdapServers, nsIPrefService* aPrefService);
+  nsresult CopySignatureFiles(nsVoidArray* aIdentities, nsIPrefService* aPrefBranch);
 
   void ReadBranch(const char * branchName,  nsIPrefService* aPrefService, nsVoidArray* aPrefs);
   void WriteBranch(const char * branchName, nsIPrefService* aPrefService, nsVoidArray* aPrefs);
