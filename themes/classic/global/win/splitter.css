@@ -9,7 +9,7 @@
   splitter 
     {
       cursor                : e-resize;
-      background-color      : ThreeDFace;
+      background-color      : -moz-Dialog;
       vertical-align        : middle;
       text-align	    	: center;
     }
@@ -49,7 +49,7 @@
   splitter[state="dragging"],
   splitter:hover:active
     {
-      background-color      : ThreeDFace;
+      background-color      : -moz-Dialog;
       background-image      : url("chrome://global/skin/splitter-drag-bg.gif");
     }
   

@@ -12,8 +12,8 @@ tree
     border-right          : 1px solid ThreeDHighlight;                          
     border-bottom         : 1px solid ThreeDHighlight;                          
     border-left           : 1px solid ThreeDShadow; 
-    background-color      : -moz-field;
-    color                 : WindowText;    
+    background-color      : -moz-Field;
+    color                 : -moz-FieldText;    
   }
 
 .tree-container-treerows[dragover="true"][dragdroptree="true"]
@@ -42,8 +42,8 @@ tree.inset
 
 treeitem[selected="true"] > treerow
   {
-    color                 : ButtonText;
-    background-color      : ThreeDFace;
+    color                 : -moz-DialogText;
+    background-color      : -moz-Dialog;
   }
 
 treeitem 
@@ -97,8 +97,8 @@ tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow
     border-right          : 1px solid ThreeDDarkShadow !important;
     border-bottom         : 1px solid ThreeDDarkShadow !important;
     padding               : 0px;
-    background-color      : ThreeDFace;
-    color                 : ButtonText;
+    background-color      : -moz-Dialog;
+    color                 : -moz-DialogText;
   }
 
 .treecell-header-box,

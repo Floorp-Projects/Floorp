@@ -9,7 +9,7 @@ treeitem[selected="true"] > treerow
   {
     background            : transparent !important;
     border                : none !important;
-    color                 : WindowText !important;
+    color                 : -moz-FieldText !important;
   }
   
 treecell:hover

@@ -100,9 +100,9 @@ Rights Reserved.
     <!-- Box with buttons on right edge of window -->
     <box id="rightColumnButtonBox" align="vertical">
       <box align="vertical" flex="50%">
-        <spring class="3rd-column-spring"/>
+        <spring class="third-column-spring"/>
         <button id="new" label="&newButton.label;" class="dialog" tooltip="aTooltip" tooltiptext="&addressPickerNewButton.tooltip;" oncommand="AbNewCard()"/> 
-        <spring class="3rd-column-spring"/>
+        <spring class="third-column-spring"/>
         <button id="edit" label="&editButton.label;" class="dialog" tooltip="aTooltip" tooltiptext="&addressPickerEditButton.tooltip;" oncommand="AbEditCard()"/> 
         <spring flex="100%"/>
       </box>

@@ -68,7 +68,7 @@
   .bookmark-item.button-toolbar[dragover-left="true"]
     {
       margin-left         : 0px;
-      border-left         : 2px solid ThreeDDarksShadow;
+      border-left         : 2px solid ThreeDDarkShadow;
     }
 
   .bookmark-item.button-toolbar[dragover-right="true"]

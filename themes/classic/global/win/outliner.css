@@ -7,8 +7,8 @@
  **/
 
 outliner {
-  background-color: -moz-field;
-  color: WindowText;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
 }
 
 outliner.inset {
@@ -28,7 +28,7 @@ outlinerbody:-moz-outliner-row {
 }
 
 outlinerbody:-moz-outliner-row(selected) {
-  background-color: ThreeDFace;
+  background-color: -moz-Dialog;
 }
 
 outliner:focus > outlinerbody:-moz-outliner-row(selected, focus) {
@@ -50,7 +50,7 @@ outlinerbody:-moz-outliner-cell-text {
 }
 
 outlinerbody:-moz-outliner-cell-text(selected) {
-  color: ButtonText;
+  color: -moz-DialogText;
 }
 
 outlinerbody:-moz-outliner-cell-text(selected, focus) {
@@ -70,8 +70,8 @@ outlinercol {
   border-top: 1px solid ThreeDHighlight;
   border-right: 1px solid ThreeDDarkShadow;
   border-bottom : 1px solid ThreeDDarkShadow;
-  background-color: ThreeDFace;
-  color: ButtonText;
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
 }
 
 .outlinercol-box,

@@ -10,6 +10,7 @@
       margin              : 0px;
       border              : 1px solid transparent;
       background-color    : transparent;
+      color               : -moz-DialogText;
       -moz-user-focus     : ignore;
     }
 
@@ -26,6 +27,8 @@
       vertical-align      : middle;
       text-align          : center;
       border              : 1px solid transparent;
+      color               : inherit;
+      background-color    : -moz-Dialog;
     }    
     
   .button-toolbar-1[disabled="true"],
@@ -93,7 +96,8 @@
       border              : 1px solid transparent;
       min-width           : 0px;
       max-width           : 14em;
-      color               : WindowText;
+      color               : -moz-DialogText;
+      background-color    : -moz-Dialog;
       -moz-user-focus     : ignore;
     }
 
@@ -119,7 +123,7 @@
       border-top          : 1px solid ThreeDShadow;
       border-right        : 1px solid ThreeDHighlight;
       border-bottom       : 1px solid ThreeDHighlight;
-      background-color	  : ThreeDFace;
+      background-color	  : -moz-Dialog;
       background-image    : none;
     }
     
@@ -175,16 +179,18 @@
   .button-toolbar-4    
     {
       background-color    : transparent;
+      color               : -moz-DialogText;
       -moz-binding        : url("chrome://global/content/xulBindings.xml#buttonleft");
       min-width           : 0px;
       margin              : 0px;
       border              : 1px solid transparent;
-      color               : WindowText;
       -moz-user-focus     : ignore;
     }
     
   .button-toolbar-4 > .button-internal-box
     {
+      background-color    : -moz-Dialog;
+      color               : inherit;
       padding             : 0px;
       border              : 1px solid transparent;
       vertical-align      : middle;
@@ -249,13 +255,14 @@
       margin                : 0px 0px 1px 3px !important;
       min-width             : 0px;
       background-color      : transparent;
-      color                 : WindowText;
+      color                 : -moz-DialogText;
       -moz-user-focus       : ignore;
     }  
     
   .button-toolbar-3 > .button-internal-box
     {
-      background-color      : ThreeDFace;
+      background-color      : -moz-Dialog;
+      color                 : inherit;
     }
     
   .button-toolbar-3, 

@@ -23,8 +23,8 @@
 
 .console-box 
   {
-    background-color    : -moz-field;
-    color               : WindowText;
+    background-color    : -moz-Field;
+    color               : -moz-FieldText;
   }
  
 /* :::::::::: console rows :::::::::: */
@@ -39,7 +39,7 @@
   {
     border-right        : 1px outset ThreeDFace;
     padding             : 5px;
-    background-color    : ThreeDFace;
+    background-color    : -moz-Dialog;
     vertical-align      : top !important;
   }
 

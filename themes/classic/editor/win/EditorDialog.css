@@ -28,7 +28,7 @@
 
 /* The defaults are WAY to big! */
 titledbox {
-  margin:         2px 5px; 4px; 5px;
+  margin:         2px 5px /* 4px 5px */;
   padding-top:    2px;
   padding-bottom: 4px;
 }
@@ -50,7 +50,7 @@ titledbox {
 }
 
 .middle {
-  vertical-align: middle:
+  vertical-align: middle;
 }
 
 .bold {
@@ -90,7 +90,7 @@ titledbox {
   width: 20px;
   height: 12px; 
   border: 1px inset #CCCCCC;
-  margin: 4px; 10px 4px 10px;
+  margin: 4px /* 10px 4px 10px */;
 }
 
 .color-well[default="true"] {
@@ -312,7 +312,7 @@ treeitem.ae-selection[selected="true"] > treerow {
   background-color: #FFFFFF;
   font-weight: normal;
   border: none;
-  outline: none;
+  -moz-outline: none;
   margin: 0px;
   width: 100%;
 }

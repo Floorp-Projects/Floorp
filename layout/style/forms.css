@@ -60,9 +60,9 @@ fieldset {
 
 /* default inputs, text inputs, and selects */
 input {
-  background-color: -moz-field;
+  background-color: -moz-Field;
   border: 2px inset ThreeDFace;
-  color: WindowText;
+  color: -moz-FieldText;
   cursor: text;
   font: field;
   text-align: start;
@@ -74,9 +74,9 @@ input {
 }
 
 textarea {
-  background-color: -moz-field;
+  background-color: -moz-Field;
   border: 2px inset ThreeDFace;
-  color: WindowText;
+  color: -moz-FieldText;
   cursor: text;
   font: field;
   margin: 1px 0 1px 0;
@@ -96,11 +96,11 @@ textarea {
 
 select {
   font: list;
-  background-color: -moz-field;
+  background-color: -moz-Field;
   border: 2px inset ThreeDFace;
   margin: 0;
   vertical-align: bottom;
-  color: WindowText;
+  color: -moz-FieldText;
   white-space: nowrap;
   text-align: start; 
   cursor: default;
@@ -227,7 +227,7 @@ input[type="image"][disabled] {
 }
 
 input[type="image"]:focus {
-  -moz-outline: 1px dotted WindowText;
+  -moz-outline: 1px dotted -moz-FieldText;
 }
 
 /* file selector */
@@ -253,8 +253,8 @@ input[type="file"] > input[type="button"]:-moz-focus-inner
 /* radio buttons */
 input[type="radio"] {
   border: 2px inset ThreeDFace;
-  background-color: -moz-field;
-  color: WindowText;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
   width: 12px;
   height: 12px;
   cursor: default;
@@ -267,8 +267,8 @@ input[type="radio"] {
 /* check boxes */
 input[type="checkbox"] {
   border: 2px inset ThreeDFace;
-  background-color: -moz-field;
-  color: WindowText;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
   width: 13px;
   height: 13px;
   cursor: default;
@@ -304,7 +304,7 @@ input[type="radio"]:hover:active {
 }
 
 :-moz-radio {
-  background-color: WindowText;
+  background-color: -moz-FieldText;
   width: 4px;
   height: 4px;
   left: 6px;

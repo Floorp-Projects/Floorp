@@ -22,7 +22,7 @@
 #ubhist 
   {
     margin                : 0px;
-    background-color      : ThreeDFace;
+    background-color      : -moz-Dialog;
     list-style-image      : url("chrome://global/skin/scroll-down.gif");
   }
 

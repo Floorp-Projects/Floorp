@@ -40,8 +40,8 @@
  **/
   window 
     { 
-      background-color    : ThreeDFace;
-      color               : WindowText;
+      background-color    : -moz-Dialog;
+      color               : -moz-DialogText;
       padding             : 0px;
       font                : message-box;
       -moz-user-focus     : ignore;
@@ -54,7 +54,7 @@
   
   window.dialog 
     { 
-      background-color    : ThreeDFace;
+      background-color    : -moz-Dialog;
       padding             : 8px 10px 10px 8px;
     }
 
@@ -107,7 +107,7 @@
  */
   statusbar
     {
-      background-color    : ThreeDFace;
+      background-color    : -moz-Dialog;
       overflow            : hidden;
       border-left         : 1px solid ThreeDShadow;
       border-right        : 1px solid ThreeDHighlight;
@@ -171,7 +171,7 @@
       border-top          : 1px solid ThreeDShadow;
       border-right        : 1px solid ThreeDHighlight;
       border-bottom       : 1px solid ThreeDHighlight;
-      background-color    : ThreeDFace;
+      background-color    : -moz-Dialog;
     }
 
   .progressmeter-statusbar 
@@ -189,7 +189,7 @@
 
   .progressmeter-internal-box
     {
-      border              : 1px solid ThreeDFace;
+      border              : 1px solid -moz-Dialog;
       padding             : 1px;
     }
   

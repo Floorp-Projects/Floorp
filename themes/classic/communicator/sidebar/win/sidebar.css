@@ -50,7 +50,7 @@
   { 
     /* This image still has to be added to the tree (8/8/00).  I'll do it after german's approval */
     list-style-image	    : url("chrome://global/skin/grippy-short-vert-after.gif");
-  	background-color	    : ThreeDFace;
+  	background-color	    : -moz-Dialog;
   	max-width			        : 32px;
   	height				        : 4px;
   }

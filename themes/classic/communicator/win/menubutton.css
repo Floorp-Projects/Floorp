@@ -22,6 +22,8 @@
     margin                : 0px;
     padding               : 2px 7px 2px 6px;
     -moz-user-focus       : ignore !important;
+    background-color      : -moz-Dialog;
+    color                 : -moz-DialogText;
   }  
 
 .menubutton-dual-ex-button.left
@@ -34,6 +36,8 @@
     margin                : 0px;
     padding               : 2px 7px 2px 6px;
     -moz-user-focus       : none !important;
+    background-color      : -moz-Dialog;
+    color                 : -moz-DialogText;
   }  
 
 /* dropmarker */

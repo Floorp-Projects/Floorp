@@ -27,7 +27,7 @@
 @import url(chrome://global/skin/global.css);
 
 window.dialog {
-  padding: none;
+  padding: 0;
 }
 
 .dimmed-highcontrast {

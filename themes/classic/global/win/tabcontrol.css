@@ -85,7 +85,7 @@ tabcontrol[orient="horizontal"] > tabpanel + tabbox > .tabbox-spring {
    
 tab {
   border: none;
-  color: ButtonText;
+  color: -moz-DialogText;
   -moz-user-focus: normal;
 }
 
@@ -95,7 +95,7 @@ tab > .tab-box > .tab-text {
 }
 
 tab:focus > .tab-box > .tab-text {
-  border: 1px dotted ButtonText;
+  border: 1px dotted -moz-DialogText;
 }
 
 .tab-box {

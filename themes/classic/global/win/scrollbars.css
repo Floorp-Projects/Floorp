@@ -16,7 +16,7 @@ thumb
     border-top            : 1px solid ThreeDLightShadow;
     border-right          : 1px solid ThreeDDarkShadow;
     border-bottom         : 1px solid ThreeDDarkShadow;
-    background-color      : ThreeDFace;
+    background-color      : -moz-Dialog;
   }
 
 .thumb-box
@@ -44,7 +44,7 @@ scrollbarbutton
     border-top            : 1px solid ThreeDLightShadow;
     border-right          : 1px solid ThreeDDarkShadow;
     border-bottom         : 1px solid ThreeDDarkShadow;
-    background-color      : ThreeDFace;
+    background-color      : -moz-Dialog;
   }
 
 .scrollbarbutton-box

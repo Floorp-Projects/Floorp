@@ -2,14 +2,14 @@
 
 .color-dialog
   {
-    background-color      : ThreeDFace;
-    color                 : windowtext;
+    background-color      : -moz-Dialog;
+    color                 : -moz-DialogText;
   }
   
 .color-window
   {
-    background-color      : window;
-    color                 : windowtext;
+    background-color      : Window;
+    color                 : WindowText;
   }
 
 /* inset areas */

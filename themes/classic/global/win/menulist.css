@@ -6,14 +6,14 @@
       border-top          : 1px solid ThreeDShadow;
       border-right        : 1px solid ThreeDHighlight;
       border-bottom       : 1px solid ThreeDHighlight;
-      background-color    : -moz-field;
-      color               : WindowText;
+      background-color    : -moz-Field;
+      color               : -moz-FieldText;
       margin              : 1px 5px 2px 5px;
     }
     
   menulist[disabled="true"]
     {
-      background-color    : ThreeDFace;
+      background-color    : -moz-Dialog;
       color               : GrayText;
     }
     
@@ -32,8 +32,8 @@
     {
       border              : 1px solid transparent;
       margin              : 1px;
-      background-color    : -moz-field;
-      color               : WindowText;
+      background-color    : -moz-Field;
+      color               : -moz-FieldText;
     }     
     
   menulist:focus > .menulist-internal-box > .menulist-display-box
@@ -57,7 +57,7 @@
       border-right        : 1px solid ThreeDDarkShadow;
       border-bottom       : 1px solid ThreeDDarkShadow;
       border-left         : 1px solid ThreeDFace;
-      background-color    : ThreeDFace;
+      background-color    : -moz-Dialog;
     }
   
   .menulist-dropmarker-box-2
@@ -96,9 +96,9 @@
   .menulist-menupopup
     {
       -moz-binding        : url("chrome://global/skin/menulistBindings.xml#menulistpopup");
-      border              : 1px solid WindowText;
+      border              : 1px solid -moz-FieldText;
       min-width           : 0px;
-      background-color    : -moz-field;
+      background-color    : -moz-Field;
     }
 
   menulist > menupopup > menuitem,
@@ -109,7 +109,7 @@
       min-width           : 0px;  /* should be in content*/
       max-width           : none; /* should be in content*/
       font                : message-box;
-      color               : WindowText;
+      color               : -moz-FieldText;
     }
 
   menulist > menupopup > menuitem > .menu-iconic-accel,
@@ -156,7 +156,7 @@
       border-right        : 1px solid ThreeDDarkShadow;
       border-bottom       : 1px solid ThreeDDarkShadow;
       border-left         : 1px solid ThreeDHighlight;
-      background-color    : ThreeDFace;
+      background-color    : -moz-Dialog;
       -moz-user-focus     : normal;  
     }    
     

@@ -13,14 +13,14 @@
       border-bottom       : 1px solid ThreeDHighlight;
       border-left         : 1px solid ThreeDShadow;
       padding             : 0px;
-      background-color    : -moz-field;
-      color               : WindowText;
+      background-color    : -moz-Field;
+      color               : -moz-FieldText;
       cursor              : text;
     }
     
   textbox[readonly="true"]
     {
-      background-color    : ThreeDFace;
+      background-color    : -moz-Dialog;
     }
   
 /* internal frame */
@@ -48,7 +48,7 @@
   textbox[disabled="true"] 
     {
       cursor              : default !important;
-      background-color    : ThreeDFace;
+      background-color    : -moz-Dialog;
       color               : GrayText;
     } 
     
