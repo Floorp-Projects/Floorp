@@ -83,6 +83,17 @@ sub getArguments {
     $self->notImplemented();
 }
 
+# normalise the command when it is set
+sub command {
+    my $self = shift;
+    if (@_) {
+        my($command) = @_;
+        $command =~ s/[^a-zA-Z0-9]/_/gos;
+        $self->{'command'} = $command;
+    }
+    return $self->{'command'};
+}
+
 # escape semicolons as #s and hashes as #h, etc.
 sub escapeString {
     my $self = shift;
