@@ -23,7 +23,6 @@
  */
 #include "xp.h"
 #include "prlog.h"
-#include "mcom_db.h"
 #include "pwcacapi.h"
 
 #ifdef XP_MAC
