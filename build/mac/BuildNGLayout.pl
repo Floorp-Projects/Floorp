@@ -65,6 +65,7 @@ $build{plugins}         = 0;
 $build{mailnews}        = 0;
 $build{apprunner}       = 0;
 $build{resources}       = 0;
+$build{jars}    		= 0;
 
 $options{transformiix}	= 0;
 $options{mathml}		= 0;
