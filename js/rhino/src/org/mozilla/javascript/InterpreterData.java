@@ -40,7 +40,8 @@ import java.io.Serializable;
 
 import org.mozilla.javascript.debug.DebuggableScript;
 
-final class InterpreterData implements Serializable, DebuggableScript {
+final class InterpreterData implements Serializable, DebuggableScript
+{
 
     static final long serialVersionUID = 4815333329084415557L;
 
@@ -48,7 +49,8 @@ final class InterpreterData implements Serializable, DebuggableScript {
     static final int INITIAL_STRINGTABLE_SIZE = 64;
     static final int INITIAL_NUMBERTABLE_SIZE = 64;
 
-    InterpreterData(Object securityDomain, int languageVersion) {
+    InterpreterData(Object securityDomain, int languageVersion)
+    {
         itsICodeTop = INITIAL_MAX_ICODE_LENGTH;
         itsICode = new byte[itsICodeTop];
 
@@ -96,24 +98,45 @@ final class InterpreterData implements Serializable, DebuggableScript {
 
     boolean useDynamicScope;
 
-    public boolean isFunction() {
+    boolean topLevel;
+
+    public boolean isTopLevel()
+    {
+        return topLevel;
+    }
+
+    public boolean isFunction()
+    {
         return itsFunctionType != 0;
     }
 
-    public String getFunctionName() {
+    public String getFunctionName()
+    {
         return itsName;
     }
 
-    public String getSourceName() {
+    public String getSourceName()
+    {
         return itsSourceFile;
     }
 
-    public boolean isGeneratedScript() {
+    public boolean isGeneratedScript()
+    {
         return ScriptRuntime.isGeneratedScript(itsSourceFile);
     }
 
-    public int[] getLineNumbers() {
+    public int[] getLineNumbers()
+    {
         return Interpreter.getLineNumbers(this);
     }
 
+    public int getFunctionCount()
+    {
+        return (itsNestedFunctions == null) ? 0 : itsNestedFunctions.length;
+    }
+
+    public DebuggableScript getFunction(int index)
+    {
+        return itsNestedFunctions[index];
+    }
 }

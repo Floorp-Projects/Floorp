@@ -122,6 +122,7 @@ public class Interpreter
         itsData = new InterpreterData(securityDomain, cx.getLanguageVersion());
         itsData.itsSourceFile = scriptOrFn.getSourceName();
         itsData.encodedSource = encodedSource;
+        itsData.topLevel = true;
         if (tree instanceof FunctionNode) {
             generateFunctionICode(cx);
             return createFunction(cx, scope, itsData, false);
@@ -147,13 +148,12 @@ public class Interpreter
     private static void notifyDebugger_r(Context cx, InterpreterData idata,
                                          String debugSource)
     {
+        cx.debugger.handleCompilationDone(cx, idata, debugSource);
         if (idata.itsNestedFunctions != null) {
             for (int i = 0; i != idata.itsNestedFunctions.length; ++i) {
                 notifyDebugger_r(cx, idata.itsNestedFunctions[i], debugSource);
             }
         }
-        cx.debugger.handleCompilationDone(cx, idata, debugSource);
-
     }
 
     private void generateFunctionICode(Context cx)
@@ -1703,8 +1703,8 @@ public class Interpreter
             }
 
         } else {
-            scope = ScriptRuntime.initScript(cx, scope, fnOrScript, thisObj,
-                                             idata.itsFromEvalCode);
+            ScriptRuntime.initScript(cx, scope, fnOrScript, thisObj,
+                                     idata.itsFromEvalCode);
         }
 
         if (idata.itsNestedFunctions != null) {

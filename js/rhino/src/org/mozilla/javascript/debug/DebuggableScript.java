@@ -45,7 +45,9 @@ import java.util.Enumeration;
  * This interface exposes debugging information from executable
  * code (either functions or top-level scripts).
  */
-public interface DebuggableScript {
+public interface DebuggableScript
+{
+    public boolean isTopLevel();
 
     /**
      * Returns true if this is a function, false if it is a script.
@@ -76,5 +78,9 @@ public interface DebuggableScript {
      * Note that line order in the resulting array is arbitrary
      */
     public int[] getLineNumbers();
+
+    public int getFunctionCount();
+
+    public DebuggableScript getFunction(int index);
 
 }
