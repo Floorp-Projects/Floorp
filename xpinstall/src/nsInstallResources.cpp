@@ -62,7 +62,7 @@ static nsXPIResourceTableItem XPIResTable[] =
     { "WindowsShortcut",       "Windows Shortcut: %s" },
     { "MacAlias",              "Mac Alias: %s" },
     { "WindowsRegisterServer", "Windows Register Server: %s" },
-    { "UnknownFileOpCommand",  "Unkown file operation command!" },
+    { "UnknownFileOpCommand",  "Unknown file operation command!" },
 
     // XXX FileOp*() action strings
     // XXX WinReg and WinProfile action strings
