@@ -27,6 +27,7 @@ LIBRARY_NAME=mozfind
 IS_COMPONENT=1
 CPPSRCS= \
 		nsFindComponent.cpp \
+		nsFindDialog.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
