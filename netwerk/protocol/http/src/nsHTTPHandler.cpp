@@ -405,10 +405,13 @@ nsHTTPHandler::GetHttpVersion (unsigned int * o_HttpVersion)
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetKeepAliveTimeout (unsigned int i_keepAliveTimeout) 
+nsHTTPHandler::GetCapabilities (PRUint32 * o_Capabilities)
 {
-	mKeepAliveTimeout = i_keepAliveTimeout;
-    return NS_OK;
+    if (!o_Capabilities)
+        return NS_ERROR_NULL_POINTER;
+
+    *o_Capabilities = mCapabilities;
+	return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -418,23 +421,6 @@ nsHTTPHandler::GetKeepAliveTimeout (unsigned int * o_keepAliveTimeout)
         return NS_ERROR_NULL_POINTER;
 
     *o_keepAliveTimeout = mKeepAliveTimeout;
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTTPHandler::SetDoKeepAlive (PRBool i_doKeepAlive) 
-{
-	mDoKeepAlive = i_doKeepAlive;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTTPHandler::GetDoKeepAlive (PRBool * o_doKeepAlive)
-{
-    if (!o_doKeepAlive)
-        return NS_ERROR_NULL_POINTER;
-
-    *o_doKeepAlive = mDoKeepAlive;
 	return NS_OK;
 }
 
@@ -607,15 +593,16 @@ nsHTTPHandler::SetMisc(const PRUnichar* aMisc)
 }
 
 nsHTTPHandler::nsHTTPHandler():
-    mAcceptLanguages (nsnull),
-    mAcceptEncodings (nsnull),
-	mHttpVersion (HTTP_ONE_ZERO),
-    mDoKeepAlive (PR_FALSE),
+    mAcceptLanguages  (nsnull),
+    mAcceptEncodings  (nsnull),
+	mHttpVersion      (HTTP_ONE_ONE),
+    mCapabilities     (DEFAULT_ALLOWED_CAPABILITIES ),
     mKeepAliveTimeout (DEFAULT_KEEP_ALIVE_TIMEOUT),
     mMaxConnections   (MAX_NUMBER_OF_OPEN_TRANSPORTS),
     mReferrerLevel(0)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_REFCNT ();
+    SetAcceptEncodings (DEFAULT_ACCEPT_ENCODINGS);
 }
 
 #define UA_PREF_PREFIX "general.useragent."
@@ -810,11 +797,12 @@ nsHTTPHandler::~nsHTTPHandler()
     CRTFREEIF (mAcceptEncodings);
 }
 
-nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri, 
+nsresult nsHTTPHandler::RequestTransport (nsIURI* i_Uri,
                                          nsHTTPChannel* i_Channel,
                                          PRUint32 bufferSegmentSize,
                                          PRUint32 bufferMaxSize,
                                          nsIChannel** o_pTrans,
+                                         PRUint32 * o_Capabilities,
                                          PRUint32 flags)
 {
     nsresult rv;
@@ -838,6 +826,9 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
         
         rv = i_Channel -> GetProxyPort (&proxyPort);
         if (NS_FAILED (rv)) return rv;
+
+        if (o_Capabilities != NULL)
+            *o_Capabilities = getCapabilities (proxy, proxyPort, DEFAULT_PROXY_CAPABILITIES);
     }
     else
     {
@@ -849,13 +840,16 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
         
         if (port == -1)
             GetDefaultPort (&port);
+
+        if (o_Capabilities != NULL)
+            *o_Capabilities = getCapabilities (host, port, DEFAULT_SERVER_CAPABILITIES);
     }
 
     nsIChannel* trans = nsnull;
     // Check in the idle transports for a host/port match
     count = 0;
     PRInt32 index = 0;
-    if (mDoKeepAlive && (flags & TRANSPORT_REUSE_ALIVE))
+    if ((mCapabilities & ALLOW_KEEPALIVE) && (flags & TRANSPORT_REUSE_ALIVE))
     {
         mIdleTransports -> Count (&count);
 
@@ -979,16 +973,21 @@ nsresult nsHTTPHandler::CreateTransport(const char* host,
                                 o_pTrans);
 }
 
-nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans, PRBool keepAlive)
+nsresult nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans, PRUint32 aCapabilities)
 {
     nsresult rv;
-    PRUint32 count=0, transportsInUseCount = 0;
+    PRUint32 count = 0, transportsInUseCount = 0;
+    PRUint32 capabilities = (mCapabilities & aCapabilities);
 
-    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+    PR_LOG (gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPHandler::ReleaseTransport."
             "\tReleasing socket transport %x.\n",
             i_pTrans));
-    if (mDoKeepAlive && keepAlive)
+
+    // ruslan: now update capabilities for this specific host
+    setCapabilities (i_pTrans, aCapabilities);
+
+    if (capabilities & (ALLOW_KEEPALIVE|ALLOW_PROXY_KEEPALIVE))
     {
         nsresult rv;
         nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (i_pTrans, &rv);
@@ -1150,10 +1149,6 @@ nsHTTPHandler::PrefsChanged(const char* pref)
 
     nsresult rv = NS_OK;
 
-    PRInt32 doKeepAlive = 0;
-    mPrefs -> GetIntPref ("network.http.keep-alive", &doKeepAlive);
-    mDoKeepAlive = (doKeepAlive != 0);
-
     mPrefs -> GetIntPref ("network.http.keep-alive.timeout", &mKeepAliveTimeout);
     mPrefs -> GetIntPref ("network.http.max-connections"   ,   &mMaxConnections);
 
@@ -1166,21 +1161,63 @@ nsHTTPHandler::PrefsChanged(const char* pref)
     }
 
 	nsXPIDLCString httpVersion;
-    rv = mPrefs -> CopyCharPref("network.http.version", 
-            getter_Copies(httpVersion));
-	if (NS_SUCCEEDED (rv) && httpVersion)
+    rv = mPrefs -> CopyCharPref("network.http.version", getter_Copies (httpVersion));
+	
+    if (NS_SUCCEEDED (rv) && httpVersion)
 	{
 		if (!PL_strcmp (httpVersion, "1.1"))
 			mHttpVersion = HTTP_ONE_ONE;
 		else
 		if (!PL_strcmp (httpVersion, "0.9"))
 			mHttpVersion = HTTP_ZERO_NINE;
+    	else
+	    	mHttpVersion = HTTP_ONE_ZERO;
 	}
-	else
-		mHttpVersion = HTTP_ONE_ZERO;
 
 	if (mHttpVersion == HTTP_ONE_ONE)
-		mDoKeepAlive = PR_TRUE;
+        mCapabilities = ALLOW_KEEPALIVE|ALLOW_PROXY_KEEPALIVE;
+    else
+        mCapabilities = 0;
+
+    PRInt32 cVar = 0;
+    rv = mPrefs -> GetIntPref ("network.http.keep-alive", &cVar);
+    if (NS_SUCCEEDED (rv))
+    {
+        if (cVar)
+            mCapabilities |=  ALLOW_KEEPALIVE;
+        else
+            mCapabilities &= ~ALLOW_KEEPALIVE;
+    }
+
+    cVar = 0;
+    rv = mPrefs -> GetIntPref ("network.http.proxy.keep-alive", &cVar);
+    if (NS_SUCCEEDED (rv))
+    {
+        if (cVar)
+            mCapabilities |=  ALLOW_PROXY_KEEPALIVE;
+        else
+            mCapabilities &= ~ALLOW_PROXY_KEEPALIVE;
+    }
+
+    cVar = 0;
+    rv = mPrefs -> GetIntPref ("network.http.pipelining", &cVar);
+    if (NS_SUCCEEDED (rv))
+    {
+        if (cVar)
+            mCapabilities |=  ALLOW_PIPELINING;
+        else
+            mCapabilities &= ~ALLOW_PIPELINING;
+    }
+
+    cVar = 0;
+    rv = mPrefs -> GetIntPref ("network.http.proxy.pipelining", &cVar);
+    if (NS_SUCCEEDED (rv))
+    {
+        if (cVar)
+            mCapabilities |=  ALLOW_PROXY_PIPELINING;
+        else
+            mCapabilities &= ~ALLOW_PROXY_PIPELINING;
+    }
 
     // Things read only during initialization...
     if (bChangedAll) // intl.accept_languages
@@ -1206,4 +1243,49 @@ PRInt32 PR_CALLBACK HTTPPrefsCallback(const char* pref, void* instance)
     if (nsnull != pHandler)
         pHandler->PrefsChanged(pref);
     return 0;
+}
+
+void
+nsHTTPHandler::setCapabilities (nsIChannel* i_pTrans, PRUint32 aCapabilities)
+{
+    nsCOMPtr<nsIURI> uri;
+    nsXPIDLCString  host;
+    PRInt32         port = -1;
+    nsresult rv = i_pTrans -> GetURI (getter_AddRefs (uri));
+
+    if (NS_SUCCEEDED (rv))
+    {
+        rv = uri -> GetHost (getter_Copies (host));
+        if (NS_SUCCEEDED (rv) && host)
+        {
+            uri -> GetPort (&port);
+            if (port == -1)
+                GetDefaultPort (&port);
+
+            nsCString hStr (host);
+            hStr.Append ( ':');
+            hStr.Append (port);
+
+            nsStringKey key (hStr);
+            mCapTable.Put (&key, (void *) aCapabilities);
+        }
+    }
+}
+
+PRUint32
+nsHTTPHandler::getCapabilities (const char *host, PRInt32 port, PRUint32 defCap)
+{
+    PRUint32 capabilities = (mCapabilities & defCap);
+
+    nsCString hStr (host);
+    hStr.Append ( ':');
+    hStr.Append (port);
+
+    nsStringKey key (hStr);
+    void * p = mCapTable.Get (&key);
+
+    if (p != NULL)
+        capabilities = mCapabilities & ((PRUint32) p);
+
+    return capabilities;
 }

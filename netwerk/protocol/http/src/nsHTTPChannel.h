@@ -169,6 +169,8 @@ protected:
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
     nsresult                            mStatus;
+
+    nsCOMPtr<nsIChannel>                mCacheTransport;
 };
 
 #endif /* _nsHTTPChannel_h_ */

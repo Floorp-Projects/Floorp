@@ -107,7 +107,6 @@ public:
 
     nsresult            SetTransport (nsIChannel * aTransport);
     nsresult            GetTransport (nsIChannel **aTransport);
-//    nsresult            ReleaseTransport(nsIChannel *aTransport);
 
     // Build the actual request string based on the settings. 
     nsresult            WriteRequest();
@@ -147,7 +146,7 @@ protected:
     PRUint32                    mVersion;
     PRUint32                    mKeepAliveTimeout;
     PRUint32                    mAttempts;
-    PRBool                      mDoKeepAlive;
+    PRUint32                    mCapabilities;
     nsCOMPtr<nsIChannel>        mTransport;
     nsHTTPChannel*              mConnection;
 

@@ -39,6 +39,7 @@
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
+#include "nsHashtable.h"
 #include "nsCRT.h"
 #include "nsAuthEngine.h"
 #include "nsIPref.h"
@@ -52,8 +53,13 @@ class nsHTTPChannel;
 #define TRANSPORT_REUSE_ALIVE   1
 #define TRANSPORT_OPEN_ALWAYS   2
 
-#define DEFAULT_KEEP_ALIVE_TIMEOUT  (2 * 60)
-#define MAX_NUMBER_OF_OPEN_TRANSPORTS 8
+#define DEFAULT_KEEP_ALIVE_TIMEOUT      (5 * 60)
+#define MAX_NUMBER_OF_OPEN_TRANSPORTS   8
+#define DEFAULT_ACCEPT_ENCODINGS        "gzip,deflate,compress,identity"
+#define DEFAULT_SERVER_CAPABILITIES     (nsIHTTPProtocolHandler::ALLOW_KEEPALIVE)
+#define DEFAULT_PROXY_CAPABILITIES      (nsIHTTPProtocolHandler::ALLOW_PROXY_KEEPALIVE)
+// because of HTTP/1.1 is default now
+#define DEFAULT_ALLOWED_CAPABILITIES    (DEFAULT_PROXY_CAPABILITIES|DEFAULT_SERVER_CAPABILITIES)
 
 class nsHTTPHandler : public nsIHTTPProtocolHandler
 {
@@ -73,7 +79,7 @@ public:
                                       nsHTTPChannel* i_Channel, 
                                       PRUint32 bufferSegmentSize,
                                       PRUint32 bufferMaxSize,
-                                      nsIChannel** o_pTrans, PRUint32 flags = TRANSPORT_REUSE_ALIVE);
+                                      nsIChannel** o_pTrans, PRUint32 *capabilities, PRUint32 flags = TRANSPORT_REUSE_ALIVE);
     
     /**
     *    Called to create a transport from RequestTransport to accually
@@ -87,7 +93,7 @@ public:
                                      nsIChannel** o_pTrans);
     
     /* Remove this transport from the list. */
-    virtual nsresult ReleaseTransport(nsIChannel* i_pTrans, PRBool keepAlive = PR_FALSE);
+    virtual nsresult ReleaseTransport(nsIChannel* i_pTrans, PRUint32 capabilies = 0);
     virtual nsresult CancelPendingChannel(nsHTTPChannel* aChannel);
     PRTime GetSessionStartTime() { return mSessionStartTime; }
 
@@ -113,7 +119,7 @@ protected:
     char*               mAcceptEncodings;
     PRUint32			mHttpVersion;
     nsAuthEngine        mAuthEngine;
-    PRBool              mDoKeepAlive;
+    PRUint32            mCapabilities;
     PRInt32             mKeepAliveTimeout;
     PRInt32             mMaxConnections;
     nsCOMPtr<nsIPref>   mPrefs;
@@ -136,6 +142,12 @@ protected:
     nsCString mProduct;
     nsCString mProductSub;
     nsCString mProductComment;
+private:
+
+    nsHashtable mCapTable;
+    PRUint32 getCapabilities (const char *host, PRInt32 port, PRUint32 cap);
+    void     setCapabilities (nsIChannel* i_pTrans, PRUint32 aCapabilities);
+
 };
 
 #endif /* _nsHTTPHandler_h_ */

@@ -489,7 +489,7 @@ nsHTTPServerListener::OnStopRequest(nsIChannel* channel,
         PRUint32 status = 0;
 
         if (mResponse)
-            mResponse->GetStatus(&status);
+            mResponse -> GetStatus(&status);
 
         if (!mChannel -> mCachedResponse)
         {
@@ -497,7 +497,7 @@ nsHTTPServerListener::OnStopRequest(nsIChannel* channel,
             mChannel -> mHTTPServerListener = 0;
         }
 
-        PRBool keepAlive = PR_FALSE;
+        PRUint32 capabilities = 0;
 
         if (mResponse)
         {
@@ -520,20 +520,20 @@ nsHTTPServerListener::OnStopRequest(nsIChannel* channel,
                 {
                     // ruslan: some older incorrect 1.1 servers may do this
                     if (NS_SUCCEEDED (rv) && connectionHeader && !PL_strcmp (connectionHeader,    "close"  ))
-                        keepAlive = PR_FALSE;
+                        capabilities = 0;
                     else
-                        keepAlive =  PR_TRUE;
+                        capabilities = (usingProxy ? nsIHTTPProtocolHandler::ALLOW_PROXY_KEEPALIVE|nsIHTTPProtocolHandler::ALLOW_PROXY_PIPELINING : nsIHTTPProtocolHandler::ALLOW_KEEPALIVE|nsIHTTPProtocolHandler::ALLOW_PIPELINING);
                 }
                 else
                 if (ver == HTTP_ONE_ZERO)
                 {
                     if (NS_SUCCEEDED (rv) && connectionHeader && !PL_strcmp (connectionHeader, "keep-alive"))
-                        keepAlive = PR_TRUE;
+                        capabilities = (usingProxy ? nsIHTTPProtocolHandler::ALLOW_PROXY_KEEPALIVE : nsIHTTPProtocolHandler::ALLOW_KEEPALIVE);
                 }
             }
         }
 
-        mHandler -> ReleaseTransport (channel, keepAlive);
+        mHandler -> ReleaseTransport (channel, capabilities);
     }
 
     NS_IF_RELEASE(mChannel);
