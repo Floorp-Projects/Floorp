@@ -99,7 +99,7 @@ interface nsILocalFile : nsIFile
 
     [noscript] PRLibraryStar  load();
     
-    readonly attribute PRInt64 diskSpaceAvailable;  // maybe we should put this somewhere else.
+    readonly attribute PRInt64 diskSpaceAvailable;
 
     /**
      *  appendRelative[Native]Path
