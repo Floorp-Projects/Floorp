@@ -34,6 +34,7 @@
 #include "nsIComponentManager.h"
 #include "nsString.h"
 #include "nsIPref.h"
+#include "nsIFileLocator.h"
 #include "nsIPop3Service.h"
 #include "nsIMsgMailNewsUrl.h"
 
@@ -53,6 +54,7 @@
 #define NETLIB_DLL "netlib.dll"
 #define XPCOM_DLL  "xpcom32.dll"
 #define PREF_DLL   "xppref32.dll"
+#define APPSHELL_DLL "nsappshell.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
@@ -60,6 +62,7 @@
 #define NETLIB_DLL "libnetlib.so"
 #define XPCOM_DLL  "libxpcom.so"
 #define PREF_DLL   "libpref.so"  
+#define APPCORES_DLL  "libappcores.so"
 #endif
 #endif
 
@@ -71,6 +74,7 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define default values to be used to drive the test
@@ -463,18 +467,10 @@ int main()
 	nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
+	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
 	// make sure prefs get initialized and loaded..
-	// mscott - this is just a bad bad bad hack right now until prefs
-	// has the ability to take nsnull as a parameter. Once that happens,
-	// prefs will do the work of figuring out which prefs file to load...
-	// jrm - You don't even need to call this now. Just using the service
-	// should do the trick.
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &result); 
-//	if (NS_SUCCEEDED(result) && prefs)
-//	{
-//		prefs->StartUp();
-//	}
 
 	// Create the Event Queue for this thread...
     nsIEventQueueService* pEventQService;
