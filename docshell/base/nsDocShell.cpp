@@ -421,22 +421,13 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
              || aIID.Equals(NS_GET_IID(nsIHttpEventSink))
              || aIID.Equals(NS_GET_IID(nsIWebProgress))
              || aIID.Equals(NS_GET_IID(nsISecurityEventSink))) {
-        nsCOMPtr<nsIURILoader>
-            uriLoader(do_GetService(NS_URI_LOADER_CONTRACTID));
-        NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
-        nsCOMPtr<nsIDocumentLoader> docLoader;
-        NS_ENSURE_SUCCESS(uriLoader->
-                          GetDocumentLoaderForContext(this,
-                                                      getter_AddRefs
-                                                      (docLoader)),
-                          NS_ERROR_FAILURE);
-        if (docLoader) {
-            nsCOMPtr<nsIInterfaceRequestor>
-                requestor(do_QueryInterface(docLoader));
-            return requestor->GetInterface(aIID, aSink);
-        }
-        else
-            return NS_ERROR_FAILURE;
+        // mLoadCookie is our nsIDocumentLoader
+        nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(mLoadCookie));
+        nsresult rv = NS_ERROR_FAILURE;
+        if (requestor)
+          rv = requestor->GetInterface(aIID, aSink);
+
+        return rv;
     }
     else if (aIID.Equals(NS_GET_IID(nsISHistory))) {
         nsCOMPtr<nsISHistory> shistory;
@@ -871,7 +862,6 @@ nsDocShell::FireUnloadNotification()
             }
         }
     }
-
     return NS_OK;
 }
 
@@ -3136,10 +3126,6 @@ nsDocShell::Destroy()
 
     // Stop any URLs that are currently being loaded...
     Stop(nsIWebNavigation::STOP_ALL);
-    if (mDocLoader) {
-        mDocLoader->Destroy();
-        mDocLoader->SetContainer(nsnull);
-    }
 
     delete mEditorData;
     mEditorData = 0;
@@ -3165,7 +3151,6 @@ nsDocShell::Destroy()
 
     DestroyChildren();
 
-    mDocLoader = nsnull;
     mParentWidget = nsnull;
     mPrefs = nsnull;
     mCurrentURI = nsnull;
@@ -5467,12 +5452,6 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     uriLoader = do_GetService(NS_URI_LOADER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    // we need to get the load group from our load cookie so we can pass it into open uri...
-    nsCOMPtr<nsILoadGroup> loadGroup;
-    rv = uriLoader->GetLoadGroupForContext(this,
-                                           getter_AddRefs(loadGroup));
-    if (NS_FAILED(rv)) return rv;
-
     nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
     if (firstParty) {
         // tag first party URL loads
@@ -5485,7 +5464,7 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     rv = NS_NewChannel(getter_AddRefs(channel),
                        aURI,
                        nsnull,
-                       loadGroup,
+                       nsnull,
                        NS_STATIC_CAST(nsIInterfaceRequestor *, this),
                        loadFlags);
     if (NS_FAILED(rv)) {

@@ -833,6 +833,10 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel,
   nsCOMPtr<nsIInterfaceRequestor> loadCookie;
   SetupLoadCookie(aWindowContext, getter_AddRefs(loadCookie));
 
+  // Set the correct loadgroup on the channel
+  nsCOMPtr<nsILoadGroup> loadGroup(do_GetInterface(loadCookie));
+  channel->SetLoadGroup(loadGroup);
+
   // now instruct the loader to go ahead and open the url
   return loader->Open(channel);
 }
@@ -848,25 +852,6 @@ NS_IMETHODIMP nsURILoader::Stop(nsISupports* aLoadCookie)
   if (docLoader) {
     rv = docLoader->Stop();
   }
-  return rv;
-}
-
-NS_IMETHODIMP
-nsURILoader::GetLoadGroupForContext(nsIInterfaceRequestor* aWindowContext,
-                                    nsILoadGroup ** aLoadGroup)
-{
-  nsresult rv;
-  nsCOMPtr<nsIInterfaceRequestor> loadCookieForWindow;
-
-  // Initialize the [out] parameter...
-  *aLoadGroup = nsnull;
-
-  NS_ENSURE_ARG(aWindowContext);
-
-  rv = SetupLoadCookie(aWindowContext, getter_AddRefs(loadCookieForWindow));
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = CallGetInterface(loadCookieForWindow.get(), aLoadGroup);
   return rv;
 }
 

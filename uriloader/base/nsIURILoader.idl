@@ -68,7 +68,7 @@ interface nsIInterfaceRequestor;
  * or helper app. Or it may hand the url off to an OS registered 
  * application. 
  */
-[scriptable, uuid(59432929-288b-4fa9-83c9-a5bc8d7ca3bd)]
+[scriptable, uuid(b90c6e12-48a0-4954-8eb3-b6e0075d4e4f)]
 interface nsIURILoader : nsISupports
 {
   /**
@@ -90,6 +90,8 @@ interface nsIURILoader : nsISupports
    * OpenURI requires the following parameters.....
    * @param aChannel
    *        The channel that should be opened. This must not be asyncOpen'd yet!
+   *        If a loadgroup is set on the channel, it will get replaced with a
+   *        different one.
    * @param aIsContentPreferred
    *        Should the content be displayed in a container that prefers the
    *        content-type, or will any container do.
@@ -112,10 +114,8 @@ interface nsIURILoader : nsISupports
   void stop(in nsISupports aLoadCookie);
   
   /**
-   * dirty little back door for sneaking the load group out in case you need 
-   * it to create the channel before calling openURI
+   * XXXbiesi is this really needed?
    */
-  nsILoadGroup getLoadGroupForContext(in nsIInterfaceRequestor aWindowContext);
   nsIDocumentLoader getDocumentLoaderForContext (in nsIInterfaceRequestor aWindowContext);
 };
 

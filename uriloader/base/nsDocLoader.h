@@ -107,6 +107,8 @@ protected:
     nsresult RemoveChildGroup(nsDocLoaderImpl *aLoader);
     void DocLoaderIsEmpty();
 
+    PRBool IsBusy();
+
     void FireOnProgressChange(nsDocLoaderImpl* aLoadInitiator,
                               nsIRequest *request,
                               PRInt32 aProgress,
@@ -119,6 +121,11 @@ protected:
                            nsIRequest* request,
                            PRInt32 aStateFlags,
                            nsresult aStatus);
+
+    void FireOnStatusChange(nsIWebProgress *aWebProgress,
+                            nsIRequest *aRequest,
+                            nsresult aStatus,
+                            const PRUnichar* aMessage);
 
     void doStartDocumentLoad();
     void doStartURLLoad(nsIRequest *request);
@@ -170,12 +177,12 @@ protected:
 private:
     nsListenerInfo *GetListenerInfo(nsIWeakReference* aListener);
 
-    nsresult GetMaxTotalProgress(PRInt32* aMaxTotalProgress);
+    PRInt32 GetMaxTotalProgress();
 
     nsresult AddRequestInfo(nsIRequest* aRequest);
     nsRequestInfo *GetRequestInfo(nsIRequest* aRequest);
-    void ClearRequestInfoHash(void);
-    void CalculateMaxProgress(PRInt32 *aMax);
+    void ClearRequestInfoHash();
+    PRInt32 CalculateMaxProgress();
 ///    void DumpChannelInfo(void);
 
     // used to clear our internal progress state between loads...

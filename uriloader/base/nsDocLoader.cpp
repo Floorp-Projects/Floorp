@@ -53,9 +53,6 @@
 
 #include "nsIDOMWindow.h"
 
-// XXX ick ick ick
-#include "nsIContentViewerContainer.h"
-#include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIStringBundle.h"
@@ -91,11 +88,6 @@ void GetURIStringFromRequest(nsIRequest* request, nsACString &name)
         name.AssignLiteral("???");
 }
 #endif /* DEBUG */
-
-/* Define IIDs... */
-static NS_DEFINE_IID(kIDocumentIID,                NS_IDOCUMENT_IID);
-static NS_DEFINE_IID(kIContentViewerContainerIID,  NS_ICONTENTVIEWERCONTAINER_IID);
-
 
 struct nsRequestInfo : public PLDHashEntryHdr
 {
@@ -197,12 +189,6 @@ nsDocLoaderImpl::Init()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocLoaderImpl::ClearParentDocLoader()
-{
-  SetDocLoaderParent(nsnull);
-  return NS_OK;
-}
-
 nsDocLoaderImpl::~nsDocLoaderImpl()
 {
 		/*
@@ -229,10 +215,13 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
   {
     for (PRInt32 i=0; i < count; i++)
     {
-      nsCOMPtr<nsIDocumentLoader> loader = mChildList.ObjectAt(i);
+      nsIDocumentLoader* loader = mChildList.ObjectAt(i);
 
-      if (loader)
-        loader->ClearParentDocLoader();
+      if (loader) {
+        // This is a safe cast, as we only put nsDocLoaderImpl objects into the
+        // array
+        NS_STATIC_CAST(nsDocLoaderImpl*, loader)->SetDocLoaderParent(nsnull);
+      }
     }
     mChildList.Clear();
   }
@@ -305,7 +294,7 @@ nsDocLoaderImpl::CreateDocumentLoader(nsIDocumentLoader** anInstance)
   }
   
   if (NS_SUCCEEDED(rv)) {
-    rv = mChildList.AppendObject((nsIDocumentLoader*)newLoader) 
+    rv = mChildList.AppendObject(newLoader) 
        ? NS_OK : NS_ERROR_FAILURE;
   }
   
@@ -344,8 +333,8 @@ nsDocLoaderImpl::Stop(void)
 }       
 
 
-NS_IMETHODIMP
-nsDocLoaderImpl::IsBusy(PRBool * aResult)
+PRBool
+nsDocLoaderImpl::IsBusy()
 {
   nsresult rv;
 
@@ -355,33 +344,32 @@ nsDocLoaderImpl::IsBusy(PRBool * aResult)
   //   1. It is currently loading a document (ie. one or more URIs)
   //   2. One of it's child document loaders is busy...
   //
-  *aResult = PR_FALSE;
 
   /* Is this document loader busy? */
   if (mIsLoadingDocument) {
-    rv = mLoadGroup->IsPending(aResult);
-    if (NS_FAILED(rv)) return rv;
+    PRBool busy;
+    rv = mLoadGroup->IsPending(&busy);
+    if (NS_FAILED(rv))
+      return PR_FALSE;
+    if (busy)
+      return PR_TRUE;
   }
 
   /* Otherwise, check its child document loaders... */
-  if (!*aResult) {
-    PRInt32 count, i;
+  PRInt32 count, i;
 
-    count = mChildList.Count();
+  count = mChildList.Count();
 
-    nsCOMPtr<nsIDocumentLoader> loader;
-    for (i=0; i < count; i++) {
-      loader = mChildList.ObjectAt(i);
+  for (i=0; i < count; i++) {
+    nsIDocumentLoader* loader = mChildList.ObjectAt(i);
 
-      if (loader) {
-        (void) loader->IsBusy(aResult);
-
-        if (*aResult) break;
-      }
-    }
+    // This is a safe cast, because we only put nsDocLoaderImpl objects into the
+    // array
+    if (loader && NS_STATIC_CAST(nsDocLoaderImpl*, loader)->IsBusy())
+        return PR_TRUE;
   }
 
-  return NS_OK;
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP
@@ -416,28 +404,6 @@ nsDocLoaderImpl::GetLoadGroup(nsILoadGroup** aResult)
     NS_IF_ADDREF(*aResult);
   }
   return rv;
-}
-
-NS_IMETHODIMP
-nsDocLoaderImpl::GetContentViewerContainer(nsISupports* aDocumentID,
-                                           nsIContentViewerContainer** aResult)
-{
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocumentID));
-
-  if (doc) {
-    nsIPresShell *pres = doc->GetShellAt(0);
-    if (pres) {
-      nsPresContext *presContext = pres->GetPresContext();
-      if (presContext) {
-        nsCOMPtr<nsISupports> supp = presContext->GetContainer();
-        if (supp) {
-          return CallQueryInterface(supp, aResult);          
-        }
-      }
-    }
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -610,7 +576,7 @@ nsDocLoaderImpl::OnStopRequest(nsIRequest *aRequest,
       // mMaxSelfProgress...
       //
       if ((oldMax < 0) && (mMaxSelfProgress < 0)) {
-        CalculateMaxProgress(&mMaxSelfProgress);
+        mMaxSelfProgress = CalculateMaxProgress();
       }
 
       //
@@ -724,15 +690,13 @@ NS_IMETHODIMP nsDocLoaderImpl::GetDocumentChannel(nsIChannel ** aChannel)
 void nsDocLoaderImpl::DocLoaderIsEmpty()
 {
   if (mIsLoadingDocument) {
-    PRBool busy = PR_FALSE;
     /* In the unimagineably rude circumstance that onload event handlers
        triggered by this function actually kill the window ... ok, it's
        not unimagineable; it's happened ... this deathgrip keeps this object
        alive long enough to survive this function call. */
     nsCOMPtr<nsIDocumentLoader> kungFuDeathGrip(this);
 
-    IsBusy(&busy);
-    if (!busy) {
+    if (!IsBusy()) {
       PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
              ("DocLoader:%p: Is now idle...\n", this));
 
@@ -957,10 +921,10 @@ nsDocLoaderImpl::GetIsLoadingDocument(PRBool *aIsLoadingDocument)
   return NS_OK;
 }
 
-nsresult nsDocLoaderImpl::GetMaxTotalProgress(PRInt32 *aMaxTotalProgress)
+PRInt32 nsDocLoaderImpl::GetMaxTotalProgress()
 {
   PRInt32 count = 0;
-  PRInt32 invididualProgress, newMaxTotal;
+  PRInt32 individualProgress, newMaxTotal;
 
   newMaxTotal = 0;
 
@@ -969,28 +933,28 @@ nsresult nsDocLoaderImpl::GetMaxTotalProgress(PRInt32 *aMaxTotalProgress)
   nsCOMPtr<nsIDocumentLoader> docloader;
   for (PRInt32 i=0; i < count; i++) 
   {
-    invididualProgress = 0;
+    individualProgress = 0;
     docloader = mChildList.ObjectAt(i);
     if (docloader)
     {
       // Cast is safe since all children are nsDocLoaderImpl too
-      ((nsDocLoaderImpl *) docloader.get())->GetMaxTotalProgress(&invididualProgress);
+      individualProgress = ((nsDocLoaderImpl *) docloader.get())->GetMaxTotalProgress();
     }
-    if (invididualProgress < 0) // if one of the elements doesn't know it's size
+    if (individualProgress < 0) // if one of the elements doesn't know it's size
                                 // then none of them do
     {
        newMaxTotal = -1;
        break;
     }
     else
-     newMaxTotal += invididualProgress;
+     newMaxTotal += individualProgress;
   }
-  if (mMaxSelfProgress >= 0 && newMaxTotal >= 0) {
-    *aMaxTotalProgress = newMaxTotal + mMaxSelfProgress;
-  } else {
-    *aMaxTotalProgress = -1;
-  }
-  return NS_OK;
+
+  PRInt32 progress = -1;
+  if (mMaxSelfProgress >= 0 && newMaxTotal >= 0)
+    progress = newMaxTotal + mMaxSelfProgress;
+  
+  return progress;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -1148,7 +1112,7 @@ void nsDocLoaderImpl::FireOnProgressChange(nsDocLoaderImpl *aLoadInitiator,
 {
   if (mIsLoadingDocument) {
     mCurrentTotalProgress += aProgressDelta;
-    GetMaxTotalProgress(&mMaxTotalProgress);
+    mMaxTotalProgress = GetMaxTotalProgress();
 
     aTotalProgress    = mCurrentTotalProgress;
     aMaxTotalProgress = mMaxTotalProgress;
@@ -1315,7 +1279,7 @@ nsDocLoaderImpl::FireOnLocationChange(nsIWebProgress* aWebProgress,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsDocLoaderImpl::FireOnStatusChange(nsIWebProgress* aWebProgress,
                                     nsIRequest* aRequest,
                                     nsresult aStatus,
@@ -1354,8 +1318,6 @@ nsDocLoaderImpl::FireOnStatusChange(nsIWebProgress* aWebProgress,
   if (mParent) {
     mParent->FireOnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
   }
-
-  return NS_OK;
 }
 
 nsListenerInfo * 
@@ -1442,11 +1404,11 @@ CalcMaxProgressCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
   return PL_DHASH_NEXT;
 }
 
-void nsDocLoaderImpl::CalculateMaxProgress(PRInt32 *aMax)
+PRInt32 nsDocLoaderImpl::CalculateMaxProgress()
 {
-  *aMax = 0;
-
-  PL_DHashTableEnumerate(&mRequestInfoHash, CalcMaxProgressCallback, aMax);
+  PRInt32 max = 0;
+  PL_DHashTableEnumerate(&mRequestInfoHash, CalcMaxProgressCallback, &max);
+  return max;
 }
 
 NS_IMETHODIMP nsDocLoaderImpl::OnRedirect(nsIHttpChannel *aOldChannel, nsIChannel *aNewChannel)
