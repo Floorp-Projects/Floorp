@@ -62,8 +62,8 @@ use File::Find;
 ##
 # RecursiveStrip
 #
-# Strips all libs by recursing into all directories and calling
-# the strip utility on all *.so files.
+# Strips all strippable files by recursing into all directories and calling
+# the strip utility on all files.
 #
 # @param   targetDir  the directory to traverse recursively
 #
@@ -78,7 +78,7 @@ sub RecursiveStrip
     find({ wanted => \&find_libraries, no_chdir => 1 }, $targetDir);
     @dirEntries = <$targetDir/*>;
 
-    # strip all .so files
+    # strip all strippable files
     system("strip @libraryList") if (defined(@libraryList));
 }
 
@@ -95,7 +95,7 @@ sub MakeJsFile
 
 sub find_libraries
 {
-    /\.so$/ && push @libraryList, $File::Find::name;
+    push @libraryList, $File::Find::name;
 }
 
 # Make sure there are at least three arguments
