@@ -55,7 +55,7 @@
 #include "nsIPrintOptions.h"
 #include "nsIServiceManager.h"
 #include "nsGfxCIID.h"
-const char* kPrintOptionsCID = "@mozilla.org/gfx/printsettings-service;1";
+static const char* kPrintOptionsCID = "@mozilla.org/gfx/printsettings-service;1";
 
 static const char *kPrintDialogURL         = "chrome://global/content/printdialog.xul";
 static const char *kPrintProgressDialogURL = "chrome://global/content/printProgress.xul";

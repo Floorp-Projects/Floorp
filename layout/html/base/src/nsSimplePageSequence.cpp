@@ -80,7 +80,8 @@ static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 #include "nsIPrintOptions.h"
 #include "nsGfxCIID.h"
 #include "nsIServiceManager.h"
-const char* kPrintOptionsCID = "@mozilla.org/gfx/printsettings-service;1";
+
+static const char* kPrintOptionsCID = "@mozilla.org/gfx/printsettings-service;1";
 
 //
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);

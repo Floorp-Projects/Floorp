@@ -133,8 +133,8 @@
 static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 
 // PrintOptions is now implemented by PrintSettingsService
-const char* kPrintSettingsServiceCID = "@mozilla.org/gfx/printsettings-service;1";
-const char* kPrintOptionsCID         = "@mozilla.org/gfx/printsettings-service;1";
+static const char* kPrintSettingsServiceCID = "@mozilla.org/gfx/printsettings-service;1";
+static const char* kPrintOptionsCID         = "@mozilla.org/gfx/printsettings-service;1";
 
 // Printing Events
 #include "nsIEventQueue.h"
@@ -8236,7 +8236,6 @@ DocumentViewerImpl::GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSetti
   NS_ENSURE_ARG_POINTER(aGlobalPrintSettings);
 
   nsresult rv = NS_ERROR_FAILURE;
-  //nsCOMPtr<nsIPrintOptions> printSettingsService = do_GetService(kPrintOptionsCID, &rv);
   nsCOMPtr<nsIPrintSettingsService> printSettingsService = do_GetService(kPrintSettingsServiceCID, &rv);
   if (NS_SUCCEEDED(rv)) {
     rv = printSettingsService->GetGlobalPrintSettings(aGlobalPrintSettings);
