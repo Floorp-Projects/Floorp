@@ -149,7 +149,8 @@ protected:
 
   virtual PRIntn GetSkipSides() const;
 
-  virtual void ComputeFinalSize(nsBlockReflowState&  aState,
+  virtual void ComputeFinalSize(const nsHTMLReflowState& aReflowState,
+                                nsBlockReflowState&  aState,
                                 nsHTMLReflowMetrics& aMetrics);
 
   void MarkEmptyLines(nsIPresContext& aPresContext);
@@ -285,6 +286,8 @@ protected:
   void BuildFloaterList();
 
   void RenumberLists();
+
+  void UpdateBulletPosition();
 
   void ReflowBullet(nsBlockReflowState& aState,
                     nsHTMLReflowMetrics& aMetrics);
