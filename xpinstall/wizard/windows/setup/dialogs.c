@@ -2805,7 +2805,9 @@ void CommitInstall(void)
   HRESULT hrErr;
   char    szDestPath[MAX_BUF];
   char    szInstallLogFile[MAX_BUF];
+  long    RetrieveResults;
 
+        LogISShared();
         LogISDestinationPath();
         LogISSetupType();
         LogISComponentsSelected();
@@ -2849,87 +2851,104 @@ void CommitInstall(void)
         DeleteFile(szInstallLogFile);
 
         /* PRE_DOWNLOAD process file manipulation functions */
-        ProcessFileOpsForAll(T_PRE_DOWNLOAD);
-
-        if(RetrieveArchives() == WIZ_OK)
+        RetrieveResults = WIZ_OK;
+        if(sgProduct.bInstallFiles)
         {
-          /* Check to see if Turbo is required.  If so, set the
-           * appropriate Windows registry keys */
-          SetTurboArgs();
+          ProcessFileOpsForAll(T_PRE_DOWNLOAD);
+          RetrieveResults = RetrieveArchives();
+        }
 
-          if(gbDownloadTriggered || gbPreviousUnfinishedDownload)
-            SetSetupState(SETUP_STATE_UNPACK_XPCOM);
-
-          /* POST_DOWNLOAD process file manipulation functions */
-          ProcessFileOpsForAll(T_POST_DOWNLOAD);
-          /* PRE_XPCOM process file manipulation functions */
-          ProcessFileOpsForAll(T_PRE_XPCOM);
-
-          if(ProcessXpcomFile() != FO_SUCCESS)
+        if(RetrieveResults == WIZ_OK)
+        {
+          if(sgProduct.bInstallFiles)
           {
-            bSDUserCanceled = TRUE;
-            CleanupXpcomFile();
-            PostQuitMessage(0);
+            /* Check to see if Turbo is required.  If so, set the
+             * appropriate Windows registry keys */
+            SetTurboArgs();
 
-            return;
+            if(gbDownloadTriggered || gbPreviousUnfinishedDownload)
+              SetSetupState(SETUP_STATE_UNPACK_XPCOM);
+
+            /* POST_DOWNLOAD process file manipulation functions */
+            ProcessFileOpsForAll(T_POST_DOWNLOAD);
+            /* PRE_XPCOM process file manipulation functions */
+            ProcessFileOpsForAll(T_PRE_XPCOM);
+
+            if(ProcessXpcomFile() != FO_SUCCESS)
+            {
+              bSDUserCanceled = TRUE;
+              CleanupXpcomFile();
+              PostQuitMessage(0);
+
+              return;
+            }
+
+            if(gbDownloadTriggered || gbPreviousUnfinishedDownload)
+              SetSetupState(SETUP_STATE_INSTALL_XPI); // clears and sets new setup state
+
+            /* POST_XPCOM process file manipulation functions */
+            ProcessFileOpsForAll(T_POST_XPCOM);
+            /* PRE_SMARTUPDATE process file manipulation functions */
+            ProcessFileOpsForAll(T_PRE_SMARTUPDATE);
+
+            /* save the installer files in the local machine */
+            if(diAdditionalOptions.bSaveInstaller)
+              SaveInstallerFiles();
+
+            if(CheckInstances())
+            {
+              bSDUserCanceled = TRUE;
+              CleanupXpcomFile();
+              PostQuitMessage(0);
+
+              return;
+            }
+
+            lstrcat(szDestPath, "uninstall\\");
+            CreateDirectoriesAll(szDestPath, TRUE);
+
+            /* save the installer files in the local machine */
+            if(diAdditionalOptions.bSaveInstaller)
+              SaveInstallerFiles();
+
+            hrErr = SmartUpdateJars();
           }
+          else
+            hrErr = WIZ_OK;
 
-          if(gbDownloadTriggered || gbPreviousUnfinishedDownload)
-            SetSetupState(SETUP_STATE_INSTALL_XPI); // clears and sets new setup state
-
-          /* POST_XPCOM process file manipulation functions */
-          ProcessFileOpsForAll(T_POST_XPCOM);
-          /* PRE_SMARTUPDATE process file manipulation functions */
-          ProcessFileOpsForAll(T_PRE_SMARTUPDATE);
-
-          /* save the installer files in the local machine */
-          if(diAdditionalOptions.bSaveInstaller)
-            SaveInstallerFiles();
-
-          if(CheckInstances())
-          {
-            bSDUserCanceled = TRUE;
-            CleanupXpcomFile();
-            PostQuitMessage(0);
-
-            return;
-          }
-
-          lstrcat(szDestPath, "uninstall\\");
-          CreateDirectoriesAll(szDestPath, TRUE);
-
-          /* save the installer files in the local machine */
-          if(diAdditionalOptions.bSaveInstaller)
-            SaveInstallerFiles();
-
-          hrErr = SmartUpdateJars();
           if((hrErr == WIZ_OK) || (hrErr == 999))
           {
-            UpdateJSProxyInfo();
+            if(sgProduct.bInstallFiles)
+              UpdateJSProxyInfo();
 
             /* POST_SMARTUPDATE process file manipulation functions */
             ProcessFileOpsForAll(T_POST_SMARTUPDATE);
-            /* PRE_LAUNCHAPP process file manipulation functions */
-            ProcessFileOpsForAll(T_PRE_LAUNCHAPP);
+  
+            if(sgProduct.bInstallFiles)
+            {
+              /* PRE_LAUNCHAPP process file manipulation functions */
+              ProcessFileOpsForAll(T_PRE_LAUNCHAPP);
 
-            LaunchApps();
+              LaunchApps();
 
-            /* POST_LAUNCHAPP process file manipulation functions */
-            ProcessFileOpsForAll(T_POST_LAUNCHAPP);
-            /* DEPEND_REBOOT process file manipulation functions */
-            ProcessFileOpsForAll(T_DEPEND_REBOOT);
+              /* POST_LAUNCHAPP process file manipulation functions */
+              ProcessFileOpsForAll(T_POST_LAUNCHAPP);
+              /* DEPEND_REBOOT process file manipulation functions */
+              ProcessFileOpsForAll(T_DEPEND_REBOOT);
 
-            // Refresh system icons if necessary
-            if(gSystemInfo.bRefreshIcons)
-              RefreshIcons();
+              // Refresh system icons if necessary
+              if(gSystemInfo.bRefreshIcons)
+                RefreshIcons();
 
-            UnsetSetupState(); // clear setup state
-            ClearWinRegUninstallFileDeletion();
-            if(!gbIgnoreProgramFolderX)
-              ProcessProgramFolderShowCmd();
+              UnsetSetupState(); // clear setup state
+              ClearWinRegUninstallFileDeletion();
+              if(!gbIgnoreProgramFolderX)
+                ProcessProgramFolderShowCmd();
 
-            CleanupArgsRegistry();
-            CleanupPreviousVersionRegKeys();
+              CleanupArgsRegistry();
+              CleanupPreviousVersionRegKeys();
+            }
+
             if(NeedReboot())
             {
               CleanupXpcomFile();

@@ -294,7 +294,7 @@ HRESULT SmartUpdateJars()
         SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS0, szBuf);
         LogISXPInstallComponent(siCObject->szDescriptionShort);
 
-        hrResult = pfnXpiInstall(szArchive, "", 0xFFFF);
+        hrResult = pfnXpiInstall(szArchive, sgProduct.szRegPath, 0xFFFF);
         if(hrResult == E_REBOOT)
           bReboot = TRUE;
         else if((hrResult != WIZ_OK) &&

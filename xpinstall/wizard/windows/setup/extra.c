@@ -275,6 +275,17 @@ BOOL VerifyRestrictedAccess(void)
   return(bRv);
 }
 
+void SetInstallFilesVar(LPSTR szProdDir)
+{
+  // MCP - Eventually we should make this check for a representative file 
+  //       instead of settling for the existence of the folder.  That is why
+  //       I left this as a function even though it is essentially a one-liner
+  //       at the moment.
+
+  if(FileExists(szProdDir))
+    sgProduct.bInstallFiles = FALSE;
+}
+
 void UnsetSetupState(void)
 {
   char szKey[MAX_BUF_TINY];
@@ -2501,6 +2512,8 @@ HRESULT InitSetupGeneral()
 
   gSystemInfo.bRefreshIcons      = FALSE; 
   sgProduct.dwMode               = NORMAL;
+  sgProduct.bSharedInst          = FALSE;
+  sgProduct.bInstallFiles        = TRUE;
   sgProduct.dwCustomType         = ST_RADIO0;
   sgProduct.dwNumberOfComponents = 0;
   sgProduct.bLockPath            = FALSE;
@@ -2536,9 +2549,15 @@ HRESULT InitSetupGeneral()
 
   if((szSiteSelectorDescription               = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-
   if(GetPrivateProfileString("Messages", "CB_DEFAULT", "", szBuf, sizeof(szBuf), szFileIniInstall))
     lstrcpy(szSiteSelectorDescription, szBuf);
+
+  if((sgProduct.szAppID                       = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((sgProduct.szAppPath                     = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((sgProduct.szRegPath                     = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
 
   return(0);
 }
@@ -2558,6 +2577,9 @@ void DeInitSetupGeneral()
   FreeMemory(&(sgProduct.szProgramFolderPath));
   FreeMemory(&(sgProduct.szAlternateArchiveSearchPath));
   FreeMemory(&(sgProduct.szParentProcessFilename));
+  FreeMemory(&(sgProduct.szAppID));
+  FreeMemory(&(sgProduct.szAppPath));
+  FreeMemory(&(sgProduct.szRegPath));
   FreeMemory(&(szTempSetupPath));
   FreeMemory(&(szSiteSelectorDescription));
 }
@@ -5013,6 +5035,34 @@ DWORD ParseCommandLine(LPSTR lpszCmdLine)
     else if(!lstrcmpi(szArgVBuf, "-ispf") || !lstrcmpi(szArgVBuf, "/ispf"))
       /* ignore [Program FolderX] sections */
       gbIgnoreProgramFolderX = TRUE;
+    else if(!lstrcmpi(szArgVBuf, "-dd") || !lstrcmpi(szArgVBuf, "/dd"))
+    {
+      ++i;
+      GetArgV(lpszCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
+      lstrcpy(sgProduct.szPath, szArgVBuf);
+    }
+    // identifies the app which is installing for shared installs
+    else if(!lstrcmpi(szArgVBuf, "-app") || !lstrcmpi(szArgVBuf, "/app"))
+    {
+      ++i;
+      GetArgV(lpszCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
+      lstrcpy(sgProduct.szAppID, szArgVBuf);
+    }
+    // points to a file belonging to the app which can be searched to determine
+    //    if the app is installed
+    else if(!lstrcmpi(szArgVBuf, "-app_path") || !lstrcmpi(szArgVBuf, "/app_path"))
+    {
+      ++i;
+      GetArgV(lpszCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
+      lstrcpy(sgProduct.szAppPath, szArgVBuf);
+    }
+    // alternative path in Windows registry, for private sharable installations
+    else if(!lstrcmpi(szArgVBuf, "-reg_path") || !lstrcmpi(szArgVBuf, "/reg_path"))
+    {
+      ++i;
+      GetArgV(lpszCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
+      lstrcpy(sgProduct.szRegPath, szArgVBuf);
+    }
 
 #ifdef XXX_DEBUG
     itoa(i, szBuf, 10);
@@ -5743,6 +5793,17 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   if(ParseCommandLine(lpszCmdLine))
     return(1);
 
+  /* find out if we are doing a shared install */
+  GetPrivateProfileString("General", "Shared Install", "", szBuf, sizeof(szBuf), szFileIniConfig);
+  if(lstrcmpi(szBuf, "TRUE") == 0)
+  {
+    sgProduct.bSharedInst = TRUE;
+  }
+
+  /* this is a default value so don't change it if it has already been set */
+  if(*sgProduct.szAppID == '\0')
+    GetPrivateProfileString("General", "Default AppID",   "", sgProduct.szAppID, MAX_BUF, szFileIniConfig);
+
   if(GetPrivateProfileString("Messages", "MSG_INIT_SETUP", "", szMsgInitSetup, sizeof(szMsgInitSetup), szFileIniInstall))
     ShowMessage(szMsgInitSetup, TRUE);
 
@@ -5752,6 +5813,11 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("General", "Product Name Internal", "", sgProduct.szProductNameInternal, MAX_BUF, szFileIniConfig);
   if (sgProduct.szProductNameInternal[0] == 0)
     lstrcpy(sgProduct.szProductNameInternal, sgProduct.szProductName);
+ 
+  /* this is a default value so don't change it if it has already been set */
+  if (sgProduct.szRegPath[0] == 0)
+    wsprintf(sgProduct.szRegPath, "Software\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductNameInternal);
+
   GetPrivateProfileString("General", "Product Name Previous", "", sgProduct.szProductNamePrevious, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "Uninstall Filename", "", sgProduct.szUninstallFilename, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "User Agent",   "", sgProduct.szUserAgent,   MAX_BUF, szFileIniConfig);
@@ -5807,13 +5873,17 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   /* get main install path */
   if(LocatePreviousPath("Locate Previous Product Path", szPreviousPath, sizeof(szPreviousPath)) == FALSE)
   {
-    GetPrivateProfileString("General", "Path", "", szBuf, sizeof(szBuf), szFileIniConfig);
-    DecryptString(sgProduct.szPath, szBuf);
+    // If the path was set on the command-line than we don't want to use the default here.
+    if(*sgProduct.szPath == '\0')
+    {
+      GetPrivateProfileString("General", "Path", "", szBuf, sizeof(szBuf), szFileIniConfig);
+      DecryptString(sgProduct.szPath, szBuf);
+    }
   }
   else
   {
-    /* If the previous path is located in the regsitry, then we need to check to see if the path from
-     * the regsitry plus the Sub Path contains the Program Name file.  If it does, then we have the
+    /* If the previous path is located in the registry, then we need to check to see if the path from
+     * the registry plus the Sub Path contains the Program Name file.  If it does, then we have the
      * correct path, so just use it.
      *
      * If it does not contain the Program Name file, then check the parent path (from the registry) +
@@ -5869,6 +5939,11 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     {
       lstrcpy(sgProduct.szPath, szPreviousPath);
     }
+
+    // Since we found the path in the registry, lets check to see if files need to be
+    //    installed for share installations while we're here
+    if(sgProduct.bSharedInst == TRUE)
+      SetInstallFilesVar(szPreviousPath);
   }
   RemoveBackSlash(sgProduct.szPath);
 
@@ -6958,6 +7033,18 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
       return(FALSE);
 
     wsprintf(szVariable, "Software\\%s\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductNamePrevious, szBuf);
+  }
+  else if(lstrcmpi(szVariable, "APP_ID") == 0)
+  {
+    lstrcpy(szVariable, sgProduct.szAppID);
+  }
+  else if(lstrcmpi(szVariable, "PATH_TO_APP") == 0)
+  {
+    lstrcpy(szVariable, sgProduct.szAppPath);
+  }
+  else if(lstrcmpi(szVariable, "REGPATH") == 0)
+  {
+    lstrcpy(szVariable, sgProduct.szRegPath);
   }
   else if(szVariable[0] == '$')
   {

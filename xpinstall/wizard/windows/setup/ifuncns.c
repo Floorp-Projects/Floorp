@@ -287,19 +287,28 @@ void CleanupPreviousVersionRegKeys(void)
 
 void ProcessFileOps(DWORD dwTiming, char *szSectionPrefix)
 {
-  ProcessUncompressFile(dwTiming, szSectionPrefix);
-  ProcessCreateDirectory(dwTiming, szSectionPrefix);
-  ProcessMoveFile(dwTiming, szSectionPrefix);
-  ProcessCopyFile(dwTiming, szSectionPrefix);
-  ProcessCopyFileSequential(dwTiming, szSectionPrefix);
-  ProcessSelfRegisterFile(dwTiming, szSectionPrefix);
-  ProcessDeleteFile(dwTiming, szSectionPrefix);
-  ProcessRemoveDirectory(dwTiming, szSectionPrefix);
-  if(!gbIgnoreRunAppX)
-    ProcessRunApp(dwTiming, szSectionPrefix);
+  if(sgProduct.bInstallFiles)
+  {
+    ProcessUncompressFile(dwTiming, szSectionPrefix);
+    ProcessCreateDirectory(dwTiming, szSectionPrefix);
+    ProcessMoveFile(dwTiming, szSectionPrefix);
+    ProcessCopyFile(dwTiming, szSectionPrefix);
+    ProcessCopyFileSequential(dwTiming, szSectionPrefix);
+    ProcessSelfRegisterFile(dwTiming, szSectionPrefix);
+    ProcessDeleteFile(dwTiming, szSectionPrefix);
+    ProcessRemoveDirectory(dwTiming, szSectionPrefix);
+    if(!gbIgnoreRunAppX)
+      ProcessRunApp(dwTiming, szSectionPrefix);
+  }
+
+  // This is the only operation we do if we are not installing files
   ProcessWinReg(dwTiming, szSectionPrefix);
-  ProcessProgramFolder(dwTiming, szSectionPrefix);
-  ProcessSetVersionRegistry(dwTiming, szSectionPrefix);
+
+  if(sgProduct.bInstallFiles)
+  {
+    ProcessProgramFolder(dwTiming, szSectionPrefix);
+    ProcessSetVersionRegistry(dwTiming, szSectionPrefix);
+  }
 }
 
 void ProcessFileOpsForSelectedComponents(DWORD dwTiming)
@@ -323,8 +332,11 @@ void ProcessFileOpsForSelectedComponents(DWORD dwTiming)
 void ProcessFileOpsForAll(DWORD dwTiming)
 {
   ProcessFileOps(dwTiming, NULL);
-  ProcessFileOpsForSelectedComponents(dwTiming);
-  ProcessCreateCustomFiles(dwTiming);
+  if(sgProduct.bInstallFiles)
+  {
+    ProcessFileOpsForSelectedComponents(dwTiming);
+    ProcessCreateCustomFiles(dwTiming);
+  }
 }
 
 int VerifyArchive(LPSTR szArchive)

@@ -214,6 +214,7 @@ DWORD             ParseOSType(char *szOSType);
 BOOL              ShowAdditionalOptionsDialog(void);
 DWORD             GetPreviousUnfinishedState(void);
 void              RefreshIcons();
+void              NeedToInstallFiles(LPSTR szProdDir);
 
 #endif /* _EXTRA_H_ */
 

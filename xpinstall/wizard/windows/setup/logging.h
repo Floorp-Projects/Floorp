@@ -41,6 +41,7 @@ void              LogISLaunchAppsComponent(char *szComponentName);
 void              LogISLaunchAppsComponentUncompress(char *szComponentName,
                                                      DWORD dwErr);
 void              LogISProcessXpcomFile(int iStatus, int iResult);
+void              LogISShared(void);
 void              LogISDiskSpace(dsN *dsnComponentDSRequirement);
 void              LogISTurboMode(BOOL bTurboMode);
 void              LogMSProductInfo(void);
