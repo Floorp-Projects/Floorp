@@ -69,6 +69,11 @@ const MessageT	cmd_Preferences		= 27;	// nil
 
 enum
 {
+};
+
+
+enum
+{
 	menu_First = 128,
 	menu_Apple = menu_First,
 	menu_File,
@@ -76,7 +81,8 @@ enum
 	menu_Sample,
 	menu_Debug,
 	menu_Tools,
-	menu_Last = menu_Tools,
+	menu_URLS,
+	menu_Last = menu_URLS,
 
 	submenu_Print = 16,
 	submenu_CompatibilityMode = 32,
@@ -107,6 +113,8 @@ enum
 	cmd_ShowContentQuality,
 	cmd_GFXWidgetMode,
 	cmd_NativeWidgetMode,
+	cmd_GFXScrollBars,
+	cmd_NativeScrollBars,
 	cmd_DumpLeaks,
 
 	item_GFXWidgetMode = 24,
@@ -119,7 +127,13 @@ enum
 	cmd_EditorMode,
 	cmd_Top100,
 	cmd_TableInspector,
-	cmd_ImageInspector
+	cmd_ImageInspector,
+	
+	cmd_SaveURL1 = 6000,
+	cmd_SaveURL2,
+	cmd_LoadURL1,
+	cmd_LoadURL2
+
 };
 
 static nsNativeViewerApp* gTheApp;
@@ -348,6 +362,8 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 #endif
 					}
 					break;
+				case cmd_GFXScrollBars:		xpID =VIEWER_GFX_SCROLLBARS_ON;	break;
+				case cmd_NativeScrollBars: xpID =VIEWER_GFX_SCROLLBARS_OFF; break;
 			}
 			break;
 			
@@ -361,6 +377,16 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 				case cmd_ImageInspector:		xpID = VIEWER_IMAGE_INSPECTOR;		break;
 			}
 			break;
+			
+    case menu_URLS:
+			switch (menuItem)
+			{
+				case cmd_SaveURL1:					xpID = VIEWER_SAVE_TEST_URL1;								break;
+				case cmd_SaveURL2:					xpID = VIEWER_SAVE_TEST_URL2;								break;
+				case cmd_LoadURL1:					xpID = VIEWER_GOTO_TEST_URL1;								break;
+				case cmd_LoadURL2:					xpID = VIEWER_GOTO_TEST_URL2;								break;  
+			}  	
+      break;	
 			
 		case submenu_Print:
 			xpID = VIEWER_ONE_COLUMN + menuItem - cmd_PrintOneColumn;
