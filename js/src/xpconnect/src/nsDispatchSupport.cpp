@@ -45,17 +45,18 @@
 
 #include "nsIActiveXSecurityPolicy.h"
 
-static nsresult
+static PRBool
 ClassIsListed(HKEY hkeyRoot, const TCHAR *szKey, const CLSID &clsid, PRBool &listIsEmpty)
 {
     // Test if the specified CLSID is found in the specified registry key
 
-    listIsEmpty = PR_FALSE;
+    listIsEmpty = PR_TRUE;
 
     CRegKey keyList;
     if(keyList.Open(hkeyRoot, szKey, KEY_READ) != ERROR_SUCCESS)
     {
-        return NS_ERROR_FAILURE;
+        // Class is not listed, because there is no key to read!
+        return PR_FALSE;
     }
 
     // Enumerate CLSIDs looking for this one
@@ -68,20 +69,22 @@ ClassIsListed(HKEY hkeyRoot, const TCHAR *szKey, const CLSID &clsid, PRBool &lis
         {
             // An empty list
             if(i == 0)
-                listIsEmpty = PR_TRUE;
-            break;
+                break;
         }
         ++i;
+        listIsEmpty = PR_FALSE;
         szCLSID[kBufLength - 1] = TCHAR('\0');
         CLSID clsidToCompare = GUID_NULL;
         if(SUCCEEDED(::CLSIDFromString(T2OLE(szCLSID), &clsidToCompare)) &&
             ::IsEqualCLSID(clsid, clsidToCompare))
         {
-            return NS_OK;
+            // Class is listed
+            return PR_TRUE;
         }
     } while (1);
 
-    return NS_ERROR_FAILURE;
+    // Class not found
+    return PR_FALSE;
 }
 
 static PRBool
@@ -236,17 +239,17 @@ NS_IMETHODIMP nsDispatchSupport::IsClassSafeToHost(const nsCID & cid, PRBool *cl
     // Check if the CLSID belongs to a list that the Gecko does not support
     
     PRBool listIsEmpty = PR_FALSE;
-    if(NS_SUCCEEDED(ClassIsListed(HKEY_LOCAL_MACHINE, kControlsToDenyKey, clsid, listIsEmpty)))
+    if(ClassIsListed(HKEY_LOCAL_MACHINE, kControlsToDenyKey, clsid, listIsEmpty))
     {
         *_retval = PR_FALSE;
         return NS_OK;
     }
 
-    // Check if the CLSID is in the whitelist. This test only cares when the whitelist is
-    // non-empty, to indicates that it is being used.
+    // Check if the CLSID is in the whitelist. This test only cares that the
+    // CLSID is not present when the whitelist is non-empty, to indicates that it is being used.
 
     listIsEmpty = PR_FALSE;
-    if(NS_FAILED(ClassIsListed(HKEY_LOCAL_MACHINE, kControlsToAllowKey, clsid, listIsEmpty)) &&
+    if(!ClassIsListed(HKEY_LOCAL_MACHINE, kControlsToAllowKey, clsid, listIsEmpty) &&
         !listIsEmpty)
     {
         *_retval = PR_FALSE;
