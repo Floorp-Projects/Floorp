@@ -17,16 +17,33 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#   Joe Hewitt <hewitt@netscape.com> (Original Author)
 #
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public src
+MODULE = browsercomp
+LIBRARY_NAME  = history_s
+FORCE_STATIC_LIB = 1
+
+REQUIRES = xpcom \
+           string \
+           rdf \
+           mork \
+           pref \
+           necko \
+           intl \
+           unicharutil \
+           toolkitcomps \
+           $(NULL)
+
+CPPSRCS = nsGlobalHistory.cpp  \
+          $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -17,16 +17,22 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#   Joe Hewitt <hewitt@netscape.com> (Original Author)
 #
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public src
+MODULE = browsercomps
+XPIDL_MODULE = history
+
+XPIDLSRCS  = \
+  nsIGlobalHistory.idl  \
+  nsIBrowserHistory.idl \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
