@@ -1,4 +1,4 @@
-n/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
 * Version: NPL 1.1/GPL 2.0/LGPL 2.1
 *
@@ -413,8 +413,7 @@ n/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
       NSString*	urlString = [data objectForKey:@"url"];
       return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:urlString];
     }
-  }
-  // check for NSFilenamesPboardType first so we always handle multiple filenames when we should
+  } // check for NSFilenamesPboardType first so we always handle multiple filenames when we should
   else if ([pasteBoardTypes containsObject: NSFilenamesPboardType]) {
     NSArray *files = [[sender draggingPasteboard] propertyListForType:NSFilenamesPboardType];
     for (int i = 0; i < [files count]; i ++) {
