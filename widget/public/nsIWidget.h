@@ -549,6 +549,17 @@ class nsIWidget : public nsISupports {
 
     NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect) = 0;
 
+    /**
+     * Scroll an area of this widget.
+     *
+     * @param aRect source rectangle to scroll in the widget
+     * @param aDx x offset from the source
+     * @param aDy y offset from the source
+     *
+     */
+
+    NS_IMETHOD ScrollRect(nsRect &aSrcRect, PRInt32 aDx, PRInt32 aDy) = 0;
+
     /** 
      * Internal methods
      */
