@@ -67,7 +67,7 @@
 #include "JoinElementTxn.h"
 #include "nsIStringStream.h"
 
-#define HACK_FORCE_REDRAW 1
+// #define HACK_FORCE_REDRAW 1
 
 
 #ifdef HACK_FORCE_REDRAW
@@ -422,6 +422,11 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   return NS_OK;
 }
 
+// #define DEBUG_WITH_JS_EDITOR_LOG
+#ifdef DEBUG_WITH_JS_EDITOR_LOG
+#include "nsJSEditorLog.h"
+#endif
+
 NS_IMETHODIMP
 nsEditor::EnableUndo(PRBool aEnable)
 {
@@ -440,6 +445,16 @@ nsEditor::EnableUndo(PRBool aEnable)
         return NS_ERROR_NOT_AVAILABLE;
       }
       mTxnMgr = do_QueryInterface(txnMgr); // CreateInstance refCounted the instance for us, remember it in an nsCOMPtr
+
+#ifdef DEBUG_WITH_JS_EDITOR_LOG
+      nsJSEditorLog *log = new nsJSEditorLog();
+      if (log)
+      {
+        NS_ADDREF(log);
+        result = mTxnMgr->AddListener(log);
+        NS_RELEASE(log);
+      }
+#endif
     }
   }
   else
@@ -759,7 +774,13 @@ nsEditor::BeginTransaction()
   if (nsnull!=mViewManager)
   {
     if (0==mUpdateCount)
+    {
+#ifdef HACK_FORCE_REDRAW
       mViewManager->DisableRefresh();
+#else
+      mViewManager->BeginUpdateViewBatch();
+#endif
+    }
     mUpdateCount++;
   }
 
@@ -786,8 +807,12 @@ nsEditor::EndTransaction()
     mUpdateCount--;
     if (0==mUpdateCount)
     {
+#ifdef HACK_FORCE_REDRAW
       mViewManager->EnableRefresh();
       HACKForceRedraw();
+#else
+      mViewManager->EndUpdateViewBatch();
+#endif
     }
   }  
 
