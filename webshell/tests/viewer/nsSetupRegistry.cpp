@@ -54,6 +54,7 @@
 #include "nsSpecialSystemDirectory.h"
 
 #include "nsISound.h"
+#include "nsIFileSpecWithUI.h"
 
 #include "prprf.h"
 #include "prmem.h"
@@ -141,6 +142,7 @@ static NS_DEFINE_IID(kCMenuItemCID,               NS_MENUITEM_CID);
 static NS_DEFINE_IID(kCContextMenuCID,            NS_CONTEXTMENU_CID);
 //static NS_DEFINE_IID(kCXULCommandCID,             NS_XULCOMMAND_CID);
 static NS_DEFINE_IID(kSoundCID,            NS_SOUND_CID);
+static NS_DEFINE_CID(kFileSpecWithUICID, NS_FILESPECWITHUI_CID);
 
 // GFXWIN
 static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
@@ -223,6 +225,7 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCMenuItemCID,      NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCContextMenuCID,   NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kSoundCID,   "Sound Services", "component://netscape/sound", WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kFileSpecWithUICID,   NS_FILESPECWITHUI_CLASSNAME, NS_FILESPECWITHUI_PROGID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
   // GFXWIN
   nsComponentManager::RegisterComponentLib(kCRenderingContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
