@@ -30,8 +30,12 @@
 #include <nsGUIEvent.h>
 #include "nsIWidget.h"
 #include "nsIWebShell.h"
+#include "nsISessionHistory.h"
+#include "nsAppShellCIDs.h"
 #include "nsWidgetsCID.h"
+#include "nsIGlobalHistory.h"
 #include "nsIComponentManager.h"
+#include "nsIThread.h"
 #include "nsString.h"
 #include "nsRepository.h"
 #ifdef NECKO
@@ -65,10 +69,36 @@ nsMacMessageSink gMessageSink;
 #include "DocumentObserver.h"
 #include "nsIDocumentLoader.h"
 
+#ifdef XP_PC
+
+#define APPSHELL_DLL "appshell.dll"
+#define BROWSER_DLL  "nsbrowser.dll"
+#define EDITOR_DLL "ender.dll"
+
+#else
+
+#ifdef XP_MAC
+
+#define APPSHELL_DLL "APPSHELL_DLL"
+#define EDITOR_DLL  "ENDER_DLL"
+
+#else
+
+// XP_UNIX || XP_BEOS
+#define APPSHELL_DLL  "libnsappshell"MOZ_DLL_SUFFIX
+#define APPCORES_DLL  "libappcores"MOZ_DLL_SUFFIX
+#define EDITOR_DLL  "libender"MOZ_DLL_SUFFIX
+
+#endif // XP_MAC
+
+#endif // XP_PC
+
 #define DEBUG_RAPTOR_CANVAS 1
 
-static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
+static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID); // PENDING(edburns): should this be NS_DEFINE_CID?
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+static NS_DEFINE_IID(kISessionHistoryIID, NS_ISESSIONHISTORY_IID);
+static NS_DEFINE_CID(kSessionHistoryCID, NS_SESSIONHISTORY_CID);
 
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
@@ -80,8 +110,9 @@ static NS_DEFINE_CID(kPrefCID,             NS_PREF_CID);
 extern "C" void NS_SetupRegistry();
 extern nsresult NS_AutoregisterComponents();
 
-static nsFileSpec registryFile;  
-static nsFileSpec componentDir; 
+static nsFileSpec gRegistryFile;  
+static nsFileSpec gComponentDir; 
+static nsISessionHistory *gHistory;
 
 struct WebShellInitContext {
 #ifdef XP_UNIX
@@ -144,7 +175,8 @@ enum {
 	kEventQueueError = 1,
 	kCreateWebShellError,
 	kInitWebShellError,
-	kShowWebShellError
+	kShowWebShellError,
+    kHistoryWebShellError
 };
 
 
@@ -240,6 +272,8 @@ EmbeddedEventHandler (void * arg) {
     // Create the event queue.
     rv = aEventQService->CreateThreadEventQueue();
 
+    NS_VERIFY(NS_SUCCEEDED(nsIThread::SetMainThread()), "couldn't set main thread");
+
 #ifndef NECKO    
     NS_InitINetService();
 #endif
@@ -311,6 +345,15 @@ EmbeddedEventHandler (void * arg) {
         initContext->webShell->SetPrefs(prefs);
         nsServiceManager::ReleaseService(kPrefCID, prefs);
     }
+
+    rv = nsComponentManager::CreateInstance(kSessionHistoryCID, nsnull, kISessionHistoryIID, 
+                                            (void**)&gHistory);
+	if (NS_FAILED(rv)) {
+        initContext->initFailCode = kHistoryWebShellError;
+        return;
+    }
+    
+    initContext->webShell->SetSessionHistory(gHistory);
     
     
 #if DEBUG_RAPTOR_CANVAS
@@ -626,15 +669,18 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize(
 	static PRBool	gFirstTime = PR_TRUE;
 	if (gFirstTime)
 	{
-        // set the registryFile and componentDir correctly
+        // set the gRegistryFile and gComponentDir correctly
         const char *nativePath = (const char *) env->GetStringUTFChars(verifiedBinDirAbsolutePath, 0);
-        registryFile = nativePath;
-        registryFile += "component.reg";
-        componentDir = nativePath;
-        componentDir += "components";
+        gRegistryFile = nativePath;
+        gRegistryFile += "component.reg";
+        gComponentDir = nativePath;
+        gComponentDir += "components";
         
-        NS_InitXPCOM(NULL, &registryFile, &componentDir);
+        NS_InitXPCOM(NULL, &gRegistryFile, &gComponentDir);
 		NS_SetupRegistry();
+        nsComponentManager::RegisterComponentLib(kSessionHistoryCID, NULL, 
+                                                 NULL, APPSHELL_DLL, 
+                                                 PR_FALSE, PR_FALSE);
         NS_AutoregisterComponents();
 		gFirstTime = PR_FALSE;
 	}
