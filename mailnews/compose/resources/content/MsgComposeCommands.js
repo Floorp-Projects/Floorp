@@ -579,6 +579,7 @@ function updateComposeItems() {
 }
 
 function updateEditItems() {
+  goUpdateCommand("cmd_pasteNoFormatting");
   goUpdateCommand("cmd_pasteQuote");
   goUpdateCommand("cmd_delete");
   goUpdateCommand("cmd_selectAll");
