@@ -1,26 +1,4 @@
-/* 
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
- *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Mountain View Compiler
- * Company.  Portions created by Mountain View Compiler Company are
- * Copyright (C) 1998-2000 Mountain View Compiler Company. All
- * Rights Reserved.
- *
- * Contributor(s):
- * Jeff Dyer <jeff@compilercompany.com>
- */
-
-package com.compilercompany.ecmascript;
+package com.compilercompany.es3c.v1;
 import java.util.*;
 import java.io.StringReader;
 
@@ -554,13 +532,11 @@ public class ConstantEvaluator extends Evaluator implements Tokens, Attributes {
         base  = node.base.evaluate(context,this).getValue(context);
         value = node.name.evaluate(context,this);
 
-        if( !UndefinedType.type.includes(base) &&
-            value instanceof ReferenceValue ) {
-            ((ReferenceValue)value).scope = base;
+        if( value instanceof ReferenceValue ) {
             node.ref       = value;
+            ((ReferenceValue)node.ref).scope = base;
         } else {
-            value = UndefinedValue.undefinedValue;
-            //error(context,0,"Expecting reference expression after dot operator.",node.name.pos());
+            error(context,0,"Expecting reference expression after dot operator.",node.name.pos());
         }
 
         return value;
@@ -674,6 +650,9 @@ public class ConstantEvaluator extends Evaluator implements Tokens, Attributes {
             value = ((TypeValue)typeValue).coerce(context,expr);
         }
 
+        // Save the typename for code generation.
+        //node.typename = ((ReferenceValue)ref).getName();
+
         return expr;
     }
 
@@ -762,14 +741,10 @@ public class ConstantEvaluator extends Evaluator implements Tokens, Attributes {
 
 		value = node.lhs.evaluate(context,this);
         if( value instanceof ReferenceValue ) {
-            node.lhs      = null;
-            node.lhs_ref  = value;
             node.lhs_slot = ((ReferenceValue)value).getSlot(context);
         }
 		value = node.rhs.evaluate(context,this);
         if( value instanceof ReferenceValue ) {
-            node.rhs      = null;
-            node.rhs_ref  = value;
             node.rhs_slot = ((ReferenceValue)value).getSlot(context);
         }
 
@@ -1868,7 +1843,6 @@ public class ConstantEvaluator extends Evaluator implements Tokens, Attributes {
 
         node.slot       = local.add(namespace_parameters,name);
 		node.slot.store = new Store(local,local_offset++);
-        node.name = name; // for code generation.
 
         return ref;
     }

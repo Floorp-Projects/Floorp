@@ -24,7 +24,7 @@
  * Unicode character classes.
  */
 
-package com.compilercompany.ecmascript;
+package com.compilercompany.es3c.v1;
 
 interface CharacterClasses {
 

@@ -1,5 +1,5 @@
 /*
- * The break Statement
+ * The return Statement
  */
 
 function title() {
@@ -7,8 +7,7 @@ function title() {
 }
 
 function run() {
-    return
-    return e1,e2,e3
+    return e1,e2,e3;
 }
 
 /*

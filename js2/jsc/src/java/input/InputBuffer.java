@@ -24,7 +24,7 @@
  * Filters and buffers characters from a input reader.
  */
 
-package com.compilercompany.ecmascript;
+package com.compilercompany.es3c.v1;
 import java.io.*;
 
 public class InputBuffer implements CharacterClasses {

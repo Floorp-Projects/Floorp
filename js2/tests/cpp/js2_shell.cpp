@@ -27,6 +27,16 @@
  #pragma warning(disable: 4786)
 #endif
 
+#ifdef JSC
+#include "Nodes.h"
+#include "../jsc/src/cpp/parser/NodeFactory.h"
+#include "ReferenceValue.h"
+#include "ConstantEvaluator.h"
+#include "Builder.h"
+#include "GlobalObjectBuilder.h"
+#include "JSILGenerator.h"
+#endif
+
 #if 1
 #define DEBUGGER_FOO
 #define INTERPRET_INPUT
@@ -353,6 +363,43 @@ char * tests[] = {
 
 static void testCompile()
 {
+#ifdef JSC
+
+    {
+        esc::v1::NodeFactory::init();
+
+        esc::v1::Context cx;
+
+	    esc::v1::Builder*     globalObjectBuilder = new esc::v1::GlobalObjectBuilder();
+	    esc::v1::ObjectValue* globalPrototype     = new esc::v1::ObjectValue(*globalObjectBuilder);
+	    esc::v1::ObjectValue  global              = esc::v1::ObjectValue(globalPrototype);
+
+	    cx.pushScope(&global); // first scope is always considered the global scope.
+	    cx.used_namespaces.push_back(esc::v1::ObjectValue::publicNamespace);
+
+	    // print('hello, world')
+
+	    esc::v1::Node* node = esc::v1::NodeFactory::Program(
+		    esc::v1::NodeFactory::CallExpression(
+			    esc::v1::NodeFactory::MemberExpression(0,esc::v1::NodeFactory::Identifier("print")),
+			    esc::v1::NodeFactory::List(0,esc::v1::NodeFactory::LiteralString("hello, world"))));
+
+	    esc::v1::Evaluator* analyzer = new esc::v1::ConstantEvaluator();
+        esc::v1::JSILGenerator* generator = new esc::v1::JSILGenerator("TestHelloWorld");
+
+	    node->evaluate(cx,analyzer); 	// Analyze it
+	    //node->evaluate(cx,generator);   // Generate it
+
+        JavaScript::ICG::ICodeModule* icm = generator->emit();			// Emit it
+
+	    delete generator;  // Get rid of the generator after one use.
+	    delete analyzer;
+
+	    // Write the bytes to a disk file.
+
+        esc::v1::NodeFactory::clear();
+    }
+#else            
     JSScope glob;
     Context cx(world, &glob);
 
@@ -376,6 +423,7 @@ static void testCompile()
         JSValue result = cx.interpret(icg.complete(), JSValues());
         stdOut << "result = " << result << "\n";
     }
+#endif
 }
 
 

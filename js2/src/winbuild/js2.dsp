@@ -64,7 +64,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GR /GX /ZI /Od /I "../../../../../../gc/boehm/" /D "_LIB" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "DEBUG" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GR /GX /ZI /Od /I "../../../../../../gc/boehm/" /I "../../jsc/src/cpp/lexer" /I "../../jsc/src/cpp/parser" /I "../../jsc/src/cpp/semantics/" /I "../../jsc/src/cpp/generator/" /I "../../jsc/src/cpp/runtime" /D "_LIB" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "DEBUG" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -85,6 +85,10 @@ LIB32=link.exe -lib
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=..\..\jsc\src\cpp\semantics\ConstantEvaluator.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\debugger.cpp
 # End Source File
 # Begin Source File
@@ -94,6 +98,10 @@ SOURCE=..\exception.cpp
 # Begin Source File
 
 SOURCE=..\formatter.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\jsc\src\cpp\runtime\GlobalObjectBuilder.cpp
 # End Source File
 # Begin Source File
 
@@ -110,6 +118,10 @@ SOURCE=..\icodegenerator.cpp
 # Begin Source File
 
 SOURCE=..\interpreter.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\JSILGenerator.cpp
 # End Source File
 # Begin Source File
 
@@ -139,7 +151,15 @@ SOURCE=..\mem.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\jsc\src\cpp\parser\NodeFactory.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\numerics.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\jsc\src\cpp\parser\ObjectValue.cpp
 # End Source File
 # Begin Source File
 
@@ -151,6 +171,10 @@ SOURCE=..\reader.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\jsc\src\cpp\semantics\ReferenceValue.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\strings.cpp
 # End Source File
 # Begin Source File
@@ -159,7 +183,15 @@ SOURCE=..\token.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\jsc\src\cpp\semantics\TypeValue.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\utilities.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\jsc\src\cpp\parser\Value.cpp
 # End Source File
 # Begin Source File
 
@@ -228,6 +260,10 @@ SOURCE=..\interpreter.h
 # Begin Source File
 
 SOURCE=..\jsclasses.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\JSILGenerator.h
 # End Source File
 # Begin Source File
 
