@@ -41,13 +41,18 @@
 #include "nsAutoLock.h"
 #include "nsFtpConnectionThread.h"
 #include "netCore.h"
+#include "nsIProgressEventSink.h"
 
-class nsFTPChannel : public nsPIFTPChannel {
+class nsFTPChannel : public nsPIFTPChannel,
+                     public nsIInterfaceRequestor,
+                     public nsIProgressEventSink {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
     NS_DECL_NSPIFTPCHANNEL
+    NS_DECL_NSIINTERFACEREQUESTOR
+    NS_DECL_NSIPROGRESSEVENTSINK
 
     // nsFTPChannel methods:
     nsFTPChannel();

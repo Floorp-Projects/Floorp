@@ -27,7 +27,6 @@
 #include "nsIRunnable.h"
 #include "nsIRequest.h"
 #include "nsISocketTransportService.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
@@ -132,8 +131,7 @@ public:
 
     nsresult Init(nsIProtocolHandler    *aHandler,
                   nsIChannel            *aChannel,
-                  nsISupports           *aContext,
-                  nsIInterfaceRequestor* notificationCallbacks);
+                  nsISupports           *aContext);
 
     nsresult Process();
 
@@ -261,8 +259,7 @@ private:
 
     nsString2                       mContentType;       // the content type of the data we're dealing w/.
     nsXPIDLCString                  mURLSpec;
-    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
-    nsCOMPtr<nsPIFTPChannel>         mFTPChannel;
+    nsCOMPtr<nsPIFTPChannel>        mFTPChannel;
 
     nsCOMPtr<nsIBufferInputStream>  mBufInStream;
     nsCOMPtr<nsIBufferOutputStream> mBufOutStream;

@@ -34,6 +34,7 @@
 #include "nsProxiedService.h"
 #include "nsAutoLock.h"
 #include "nsCRT.h"
+#include "nsIInterfaceRequestor.h"
 
 #include "nsAppShellCIDs.h" // TODO remove later
 #include "nsIAppShellService.h" // TODO remove later
@@ -1395,6 +1396,7 @@ nsFtpConnectionThread::R_list() {
             if (!listBuf) return FTP_ERROR;
 
             rv = mDInStream->Read(listBuf, NS_FTP_BUFFER_READ_SIZE, &read);
+
             if (NS_FAILED(rv)) {
                 PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x R_list() data pipe read failed w/ rv = %d\n", mURL.get(), rv));
                 nsAllocator::Free(listBuf);
@@ -1563,6 +1565,12 @@ nsFtpConnectionThread::R_pasv() {
     // now we know where to connect our data channel
     rv = mSTS->CreateTransport(host.GetBuffer(), port, nsnull, getter_AddRefs(mDPipe)); // the data channel
     if (NS_FAILED(rv)) return FTP_ERROR;
+
+    // hook ourself up as a proxy for progress notifications
+    nsCOMPtr<nsIInterfaceRequestor> progressProxy(do_QueryInterface(mChannel));
+    rv = mDPipe->SetNotificationCallbacks(progressProxy);
+    if (NS_FAILED(rv)) return FTP_ERROR;
+
 
     if (mAction == GET) {
         // Setup the data channel for file reception
@@ -1745,9 +1753,6 @@ nsFtpConnectionThread::Run() {
         rv = mSTS->CreateTransport(host, mPort, host, getter_AddRefs(mCPipe)); // the command channel
         if (NS_FAILED(rv)) return rv;
 
-        rv = mCPipe->SetNotificationCallbacks(mCallbacks);
-        if (NS_FAILED(rv)) return rv;
-
         // get the output stream so we can write to the server
         rv = mCPipe->OpenOutputStream(0, getter_AddRefs(mCOutStream));
         if (NS_FAILED(rv))  return rv;
@@ -1920,14 +1925,11 @@ nsFtpConnectionThread::Resume(void)
 nsresult
 nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
                             nsIChannel* aChannel,
-                            nsISupports* aContext,
-                            nsIInterfaceRequestor* notificationCallbacks) {
+                            nsISupports* aContext) {
     nsresult rv;
 
     // parameter validation
     NS_ASSERTION(aChannel, "FTP: thread needs a channel");
-
-    mCallbacks = notificationCallbacks;
 
     // setup internal member variables
     mChannel = aChannel; // a straight com ptr to the channel
@@ -2013,17 +2015,6 @@ nsFtpConnectionThread::StopProcessing() {
     // kill the event loop
     mKeepRunning = PR_FALSE;
 
-    NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
-    if(NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsPIFTPChannel> ftpChannel;
-    rv = pIProxyObjectManager->GetProxyObject(nsnull, 
-                                              NS_GET_IID(nsPIFTPChannel), 
-                                              mChannel,
-                                              PROXY_SYNC | PROXY_ALWAYS,
-                                              getter_AddRefs(ftpChannel));
-    if (NS_FAILED(rv)) return rv;
-
     // setup any internal error message to propegate
     if (NS_FAILED(mInternalError)) {
         // generate a FTP specific error msg.
@@ -2032,7 +2023,7 @@ nsFtpConnectionThread::StopProcessing() {
     }
 
 
-    rv = ftpChannel->Stopped(mInternalError, errorMsg);
+    rv = mFTPChannel->Stopped(mInternalError, errorMsg);
     if (NS_FAILED(rv)) return rv;
 
     // if we have a listener, end the transaction.
