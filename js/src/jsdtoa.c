@@ -126,7 +126,7 @@
  * #define Sudden_Underflow for IEEE-format machines without gradual
  *  underflow (i.e., that flush to zero on underflow).
  * #define No_leftright to omit left-right logic in fast floating-point
- *  computation of JS_dtoa.
+ *  computation of js_dtoa.
  * #define Check_FLT_ROUNDS if FLT_ROUNDS can assume the values 2 or 3.
  * #define RND_PRODQUOT to use rnd_prod and rnd_quot (assembly routines
  *  that use extended-precision instructions to compute rounded
@@ -160,8 +160,8 @@
  *  (On HP Series 700/800 machines, -DNAN_WORD0=0x7ff40000 works.)
  * #define MULTIPLE_THREADS if the system offers preemptively scheduled
  *  multiple threads.  In this case, you must provide (or suitably
- *  #define) two locks, acquired by ACQUIRE_DTOA_LOCK(n) and freed
- *  by FREE_DTOA_LOCK(n) for n = 0 or 1.  (The second lock, accessed
+ *  #define) two locks, acquired by ACQUIRE_DTOA_LOCK() and released
+ *  by RELEASE_DTOA_LOCK().  (The second lock, accessed
  *  in pow5mult, ensures lazy evaluation of only one copy of high
  *  powers of 5; omitting this lock would introduce a small
  *  probability of wasting memory, but would otherwise be harmless.)
@@ -308,12 +308,12 @@ extern double rnd_prod(double, double), rnd_quot(double, double);
 #ifdef JS_THREADSAFE
 #define MULTIPLE_THREADS
 static PRLock *freelist_lock;
-#define ACQUIRE_DTOA_LOCK(n) PR_Lock(freelist_lock)
-#define FREE_DTOA_LOCK(n) PR_Unlock(freelist_lock)
+#define ACQUIRE_DTOA_LOCK() PR_Lock(freelist_lock)
+#define RELEASE_DTOA_LOCK() PR_Unlock(freelist_lock)
 #else
 #undef MULTIPLE_THREADS
-#define ACQUIRE_DTOA_LOCK(n)    /*nothing*/
-#define FREE_DTOA_LOCK(n)   /*nothing*/
+#define ACQUIRE_DTOA_LOCK()   /*nothing*/
+#define RELEASE_DTOA_LOCK()   /*nothing*/
 #endif
 
 #define Kmax 15
@@ -331,7 +331,10 @@ typedef struct Bigint Bigint;
 
 static Bigint *freelist[Kmax+1];
 
-/* Allocate a Bigint with 2^k words. */
+/*
+ * Allocate a Bigint with 2^k words.
+ * This is not threadsafe. The caller must use thread locks
+ */
 static Bigint *Balloc(int32 k)
 {
     int32 x;
@@ -340,10 +343,8 @@ static Bigint *Balloc(int32 k)
     uint32 len;
 #endif
 
-    ACQUIRE_DTOA_LOCK(0);
     if ((rv = freelist[k]) != NULL)
         freelist[k] = rv->next;
-    FREE_DTOA_LOCK(0);
     if (rv == NULL) {
         x = 1 << k;
 #ifdef Omit_Private_Memory
@@ -368,10 +369,8 @@ static Bigint *Balloc(int32 k)
 static void Bfree(Bigint *v)
 {
     if (v) {
-        ACQUIRE_DTOA_LOCK(0);
         v->next = freelist[v->k];
         freelist[v->k] = v;
-        FREE_DTOA_LOCK(0);
     }
 }
 
@@ -1093,7 +1092,6 @@ JS_strtod(CONST char *s00, char **se, int *err)
 #ifdef JS_THREADSAFE
     if (!initialized) InitDtoa();
 #endif
-
     *err = 0;
 
 	bb = bd = bs = delta = NULL;
@@ -1121,6 +1119,9 @@ JS_strtod(CONST char *s00, char **se, int *err)
         goto break2;
     }
 break2:
+    /* Locking for Balloc's shared buffers that will be used in this block */
+    ACQUIRE_DTOA_LOCK();
+
     if (*s == '0') {
         nz0 = 1;
         while(*++s == '0') ;
@@ -1677,6 +1678,7 @@ retfree:
     Bfree(bd0);
     Bfree(delta);
 ret:
+    RELEASE_DTOA_LOCK();
     if (se)
         *se = (char *)s;
     return sign ? -rv : rv;
@@ -1849,7 +1851,7 @@ static int32 quorem(Bigint *b, Bigint *S)
 /* bufsize should be at least 20 for modes 0 and 1.  For the other modes,
  * bufsize should be two greater than the maximum number of output characters expected. */
 static JSBool
-JS_dtoa(double d, int mode, JSBool biasUp, int ndigits,
+js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
     int *decpt, int *sign, char **rve, char *buf, size_t bufsize)
 {
     /*  Arguments ndigits, decpt, sign are similar to those
@@ -2486,7 +2488,7 @@ JS_dtoa(double d, int mode, JSBool biasUp, int ndigits,
 }
 
 
-/* Mapping of JSDToStrMode -> JS_dtoa mode */
+/* Mapping of JSDToStrMode -> js_dtoa mode */
 static const int dtoaModes[] = {
     0,   /* DTOSTR_STANDARD */
     0,   /* DTOSTR_STANDARD_EXPONENTIAL, */
@@ -2497,12 +2499,13 @@ static const int dtoaModes[] = {
 JS_FRIEND_API(char *)
 JS_dtostr(char *buffer, size_t bufferSize, JSDToStrMode mode, int precision, double d)
 {
-    int decPt;                  /* Position of decimal point relative to first digit returned by JS_dtoa */
+    int decPt;                  /* Position of decimal point relative to first digit returned by js_dtoa */
     int sign;                   /* Nonzero if the sign bit was set in d */
-    int nDigits;                /* Number of significand digits returned by JS_dtoa */
-    char *numBegin = buffer+2;  /* Pointer to the digits returned by JS_dtoa; the +2 leaves space for */
+    int nDigits;                /* Number of significand digits returned by js_dtoa */
+    char *numBegin = buffer+2;  /* Pointer to the digits returned by js_dtoa; the +2 leaves space for */
                                 /* the sign and/or decimal point */
-    char *numEnd;               /* Pointer past the digits returned by JS_dtoa */
+    char *numEnd;               /* Pointer past the digits returned by js_dtoa */
+    JSBool dtoaRet;
 
     JS_ASSERT(bufferSize >= (size_t)(mode <= DTOSTR_STANDARD_EXPONENTIAL ? DTOSTR_STANDARD_BUFFER_SIZE :
             DTOSTR_VARIABLE_BUFFER_SIZE(precision)));
@@ -2510,7 +2513,11 @@ JS_dtostr(char *buffer, size_t bufferSize, JSDToStrMode mode, int precision, dou
     if (mode == DTOSTR_FIXED && (d >= 1e21 || d <= -1e21))
         mode = DTOSTR_STANDARD; /* Change mode here rather than below because the buffer may not be large enough to hold a large integer. */
 
-    if (!JS_dtoa(d, dtoaModes[mode], mode >= DTOSTR_FIXED, precision, &decPt, &sign, &numEnd, numBegin, bufferSize-2))
+    /* Locking for Balloc's shared buffers */
+    ACQUIRE_DTOA_LOCK();
+    dtoaRet = js_dtoa(d, dtoaModes[mode], mode >= DTOSTR_FIXED, precision, &decPt, &sign, &numEnd, numBegin, bufferSize-2);
+    RELEASE_DTOA_LOCK();
+    if (!dtoaRet)
         return 0;
 
     nDigits = numEnd - numBegin;
@@ -2685,6 +2692,9 @@ JS_dtobasestr(int base, double d)
             return buffer;
         }
 
+        /* Locking for Balloc's shared buffers */
+        ACQUIRE_DTOA_LOCK();
+        
         /* Output the integer part of d with the digits in reverse order. */
         pInt = p;
         di = fd_floor(d);
@@ -2820,6 +2830,7 @@ JS_dtobasestr(int base, double d)
         }
         JS_ASSERT(p < buffer + DTOBASESTR_BUFFER_SIZE);
         *p = '\0';
+        RELEASE_DTOA_LOCK();
     }
     return buffer;
 }
