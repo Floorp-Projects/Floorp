@@ -189,8 +189,8 @@ protected:
   PRBool           mStartedOutput; // we've produced at least a character
 
   nsString         mURL;
-  PRInt32          mStructs;           // Output structs (pref)
-  PRBool           mHeaderStrategy;    /* Header strategy (pref)
+  PRBool           mStructs;           // Output structs (pref)
+  PRInt32          mHeaderStrategy;    /* Header strategy (pref)
                                           0 = no indention
                                           1 = indention, increased with
                                               header level (default)
