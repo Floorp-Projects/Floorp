@@ -36,6 +36,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsJSNodeObserver.obj          \
         .\$(OBJDIR)\nsJSXULDocument.obj           \
         .\$(OBJDIR)\nsJSXULElement.obj            \
+        .\$(OBJDIR)\nsJSXULTreeElement.obj        \
         .\$(OBJDIR)\nsRDFContentUtils.obj         \
         .\$(OBJDIR)\nsRDFDOMNodeList.obj          \
         .\$(OBJDIR)\nsRDFElement.obj              \
@@ -44,6 +45,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsXULDocumentInfo.obj	  \
         .\$(OBJDIR)\nsXULKeyListener.obj          \
         .\$(OBJDIR)\nsXULSortService.obj          \
+        .\$(OBJDIR)\nsXULTreeElement.obj          \
 	$(NULL)
 
 # XXX we are including layout\html\base\src to get HTML elements

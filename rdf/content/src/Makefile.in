@@ -31,7 +31,8 @@ CPPSRCS =				\
 	nsJSNodeObserver.cpp		\
 	nsJSXULDocument.cpp		\
 	nsJSXULElement.cpp		\
-	nsJSXULFocusTracker.cpp \
+	nsJSXULFocusTracker.cpp		\
+	nsJSXULTreeElement.cpp		\
 	nsRDFContentUtils.cpp           \
 	nsRDFDOMNodeList.cpp		\
 	nsRDFElement.cpp		\
