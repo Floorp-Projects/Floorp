@@ -140,6 +140,7 @@ NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsISupports *aListener, const 
     nsresult rv = NS_ERROR_INVALID_ARG;
     NS_ENSURE_ARG_POINTER(aListener);
 
+#if 0
     // register this listener for the specified interface id
     if (aIID.Equals(NS_GET_IID(nsIWebProgressListener))) {
         if (mDocShell) {
@@ -152,6 +153,9 @@ NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsISupports *aListener, const 
     }
 
     return rv;
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsISupports *aListener, const nsIID& aIID)
@@ -159,6 +163,7 @@ NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsISupports *aListener, con
     nsresult rv = NS_ERROR_INVALID_ARG;
     NS_ENSURE_ARG_POINTER(aListener);
 
+#if 0
     // un-register this listener for the specified interface id
     if (aIID.Equals(NS_GET_IID(nsIWebProgressListener))) {
         if (mDocShell) {
@@ -169,6 +174,9 @@ NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsISupports *aListener, con
             rv = progress->RemoveProgressListener(listener);
         }
     }
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
     
     return rv;
 }
