@@ -122,26 +122,26 @@ interface nsIMemory : nsISupports
  * This is the topic that a memory pressure observer
  * should use with the observer service.
  */
-#define NS_MEMORY_PRESSURE_TOPIC (NS_LITERAL_STRING("memory-pressure").get())
+#define NS_MEMORY_PRESSURE_TOPIC "memory-pressure"
 
 /**
  * This will be passed as the extra data when the flusher
  * is being asked to flush for low-memory conditions.
  */
-#define NS_MEMORY_PRESSURE_LOW_MEMORY (NS_LITERAL_STRING("low-memory").get())
+#define NS_MEMORY_PRESSURE_LOW_MEMORY "low-memory"
 
 /**
  * This will be passed as the extra data when the flusher
  * is being asked to flush because of a heap minimize call.
  */
-#define NS_MEMORY_PRESSURE_HEAP_MINIMIZE (NS_LITERAL_STRING("heap-minimize").get())
+#define NS_MEMORY_PRESSURE_HEAP_MINIMIZE "heap-minimize"
 
 /**
  * This will be passed as the extra data when the flusher
  * has been asked to flush because a malloc() or realloc()
  * has failed.
  */
-#define NS_MEMORY_PRESSURE_ALLOC_FAILURE (NS_LITERAL_STRING("alloc-failure").get())
+#define NS_MEMORY_PRESSURE_ALLOC_FAILURE "alloc-failure"
 %}
 
 %{C++

@@ -734,18 +734,17 @@ nsPresContext::UpdateCharSet(const PRUnichar* aCharSet)
 }
 
 NS_IMETHODIMP
-nsPresContext::Observe(nsISupports* aSubject, const PRUnichar* aTopic,
+nsPresContext::Observe(nsISupports* aSubject, 
+                       const char* aTopic,
                        const PRUnichar* aData)
 {
-  if (nsAutoString(aTopic).EqualsWithConversion("charset")) {
+  if (!nsCRT::strcmp(aTopic, "charset")) {
     UpdateCharSet(aData);
-  }
-  else {
-    NS_WARNING("unrecognized topic in nsPresContext::Observe");
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
 
-  return NS_OK;
+  NS_WARNING("unrecognized topic in nsPresContext::Observe");
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

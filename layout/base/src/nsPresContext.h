@@ -166,7 +166,8 @@ public:
 #endif
 
   // nsIObserver method
-  NS_IMETHOD Observe(nsISupports* aSubject, const PRUnichar* aTopic,
+  NS_IMETHOD Observe(nsISupports* aSubject, 
+                     const char* aTopic,
                      const PRUnichar* aData);
 
 #ifdef IBMBIDI

@@ -48,8 +48,8 @@
           var panels = this.panels;
           for (var i = 0; i < panels.length; ++i) {
             panels[i].initialize();
-            panels[i].addObserver("viewerChange", this);        
-            panels[i].addObserver("subjectChange", this);        
+            panels[i].addObserver("viewerChange", this, false);        
+            panels[i].addObserver("subjectChange", this, false);        
           }
       
           this.setAllViewerCmdAttributes("disabled", "true");
@@ -229,7 +229,7 @@
           this.mLinkedPanel = val;
 
           if (val)
-            val.addObserver("viewerChange", this);
+            val.addObserver("viewerChange", this, false);
         </setter>
       </property>
 
@@ -273,7 +273,7 @@
             old.removeObserver("subjectChange", this);
           
           if (aViewer)
-            aViewer.addObserver("subjectChange", this);
+            aViewer.addObserver("subjectChange", this, false);
 
           this.mObsMan.dispatchEvent("viewerChange", 
             { viewerPane: this, oldViewer: old, newViewer: aViewer });
@@ -506,7 +506,7 @@
             this.mLinkedViewer.removeObserver("selectionChange", this);
             
           this.mLinkedViewer = this.mLinkedPanel.viewer;
-          this.mLinkedViewer.addObserver("selectionChange", this);
+          this.mLinkedViewer.addObserver("selectionChange", this, false);
         ]]></body>
       </method>
       
@@ -577,7 +577,7 @@
         <parameter name="aEvent"/>
         <parameter name="aObserver"/>
         <body><![CDATA[
-          this.mObsMan.addObserver(aEvent, aObserver);
+          this.mObsMan.addObserver(aEvent, aObserver, false);
         ]]></body>
       </method>
       

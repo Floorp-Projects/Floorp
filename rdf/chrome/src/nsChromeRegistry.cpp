@@ -102,6 +102,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIPref.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIDOMElement.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIContent.h"
@@ -355,8 +356,8 @@ nsChromeRegistry::Init()
   nsCOMPtr<nsIObserverService> observerService =
            do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (observerService) {
-    observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
-    observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
+    observerService->AddObserver(this, "profile-before-change", PR_TRUE);
+    observerService->AddObserver(this, "profile-do-change", PR_TRUE);
   }
 
   CheckForNewChrome();
@@ -3235,25 +3236,25 @@ nsChromeRegistry::GetProviderCount(const nsCString& aProviderType, nsIRDFDataSou
 }
 
 
-NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
   nsresult rv = NS_OK;
 
-  if (!nsCRT::strcmp(NS_LITERAL_STRING("profile-before-change").get(), aTopic)) {
+  if (!nsCRT::strcmp("profile-before-change", aTopic)) {
 
     mChromeDataSource = nsnull;
     mScrollbarSheet = mFormSheet = nsnull;
     mInstallInitialized = mProfileInitialized = PR_FALSE;
     (void)FlushCaches();
 
-    if (!nsCRT::strcmp(NS_LITERAL_STRING("shutdown-cleanse").get(), someData)) {
+    if (!nsCRT::strcmp("shutdown-cleanse", NS_ConvertUCS2toUTF8(someData).get())) {
       nsCOMPtr<nsIFile> userChromeDir;
       rv = NS_GetSpecialDirectory(NS_APP_USER_CHROME_DIR, getter_AddRefs(userChromeDir));
       if (NS_SUCCEEDED(rv) && userChromeDir)
         rv = userChromeDir->Remove(PR_TRUE);
     }
   }
-  else if (!nsCRT::strcmp(NS_LITERAL_STRING("profile-do-change").get(), aTopic)) {
+  else if (!nsCRT::strcmp("profile-do-change", aTopic)) {
     if (!mProfileInitialized)
       rv = LoadProfileDataSource();
   }

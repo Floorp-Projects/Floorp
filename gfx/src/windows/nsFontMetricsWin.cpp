@@ -47,6 +47,7 @@
 #include "nsISaveAsCharset.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsFontMetricsWin.h"
 #include "nsQuickSort.h"
 #include "nsTextFormatter.h"
@@ -235,10 +236,9 @@ public:
 
 NS_IMPL_ISUPPORTS1(nsFontCleanupObserver, nsIObserver);
 
-NS_IMETHODIMP nsFontCleanupObserver::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsFontCleanupObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
-  nsDependentString aTopicString(aTopic);
-  if (aTopicString.Equals(NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID))) {
+  if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     FreeGlobals();
   }
   return NS_OK;
@@ -332,7 +332,7 @@ InitGlobals(void)
     nsresult rv;
     nsCOMPtr<nsIObserverService> observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv)) {
-      rv = observerService->AddObserver(gFontCleanupObserver, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+      rv = observerService->AddObserver(gFontCleanupObserver, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
     }    
   }
   

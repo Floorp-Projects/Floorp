@@ -42,6 +42,8 @@
 #include "nsIElementObserver.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
+#include "nsObserverService.h"
 #include "nsISupports.h"
 #include "nsCRT.h"
 #include "nsIParser.h"
@@ -198,7 +200,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::Notify(
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsXMLEncodingObserver::Observe(nsISupports*, const PRUnichar*, const PRUnichar*) 
+NS_IMETHODIMP nsXMLEncodingObserver::Observe(nsISupports*, const char*, const PRUnichar*) 
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -210,13 +212,12 @@ NS_IMETHODIMP nsXMLEncodingObserver::Start()
     if (bXMLEncodingObserverStarted == PR_TRUE) 
       return res;
 
-    nsAutoString xmlTopic; xmlTopic.AssignWithConversion("xmlparser");
-
     nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
+
     if(NS_FAILED(res)) 
         goto done;
      
-    res = anObserverService->AddObserver(this, xmlTopic.get());
+    res = anObserverService->AddObserver(this, "xmlparser", PR_TRUE);
 
     bXMLEncodingObserverStarted = PR_TRUE;
 done:
@@ -230,12 +231,12 @@ NS_IMETHODIMP nsXMLEncodingObserver::End()
     if (bXMLEncodingObserverStarted == PR_FALSE) 
       return res;
 
-    nsAutoString xmlTopic; xmlTopic.AssignWithConversion("xmlparser");
+    nsCAutoString xmlTopic; xmlTopic.Assign("xmlparser");
     nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
     if(NS_FAILED(res)) 
         goto done;
      
-    res = anObserverService->RemoveObserver(this, xmlTopic.get());
+    res = anObserverService->RemoveObserver(this, xmlTopic);
 
     bXMLEncodingObserverStarted = PR_FALSE;
 done:

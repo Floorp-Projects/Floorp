@@ -46,6 +46,7 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIPrompt.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsPermission.h"
 #include "nsNetCID.h"
 
@@ -126,8 +127,8 @@ nsresult nsPermissionManager::Init()
   nsCOMPtr<nsIObserverService> observerService = 
            do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (observerService) {
-    observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
-    observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
+    observerService->AddObserver(this, "profile-before-change", PR_FALSE);
+    observerService->AddObserver(this, "profile-do-change", PR_FALSE);
   }
   mIOService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
   return rv;
@@ -161,11 +162,11 @@ NS_IMETHODIMP nsPermissionManager::Remove(const char* host, PRInt32 type) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
   nsresult rv = NS_OK;
 
-  if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get())) {
+  if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     // The profile is about to change.
     
     // Dump current permission.  This will be done by calling 
@@ -180,7 +181,7 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const PRUnicha
     if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get()))
       PERMISSION_DeletePersistentUserData();
   }  
-  else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-do-change").get())) {
+  else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
     // The profile has aleady changed.    
     // Now just read them from the new profile location.
     PERMISSION_Read();

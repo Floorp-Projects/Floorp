@@ -65,6 +65,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIPref.h"
 #include "nsRepeater.h"
 #include "nsILocalFile.h"
@@ -252,9 +253,9 @@ CBrowserApp::StartUp()
     nsCOMPtr<nsIObserverService> observerService = 
              do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     ThrowIfNil_(observerService);
-    observerService->AddObserver(this, NS_LITERAL_STRING("profile-approve-change").get());
-    observerService->AddObserver(this, NS_LITERAL_STRING("profile-change-teardown").get());
-    observerService->AddObserver(this, NS_LITERAL_STRING("profile-after-change").get());
+    observerService->AddObserver(this, "profile-approve-change", PR_FALSE);
+    observerService->AddObserver(this, "profile-change-teardown", PR_FALSE);
+    observerService->AddObserver(this, "profile-after-change", PR_FALSE);
 
     CProfileManager *profileMgr = new CProfileManager;
     profileMgr->StartUp();

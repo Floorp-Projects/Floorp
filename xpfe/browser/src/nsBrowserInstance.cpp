@@ -109,6 +109,7 @@
 
 #include "nsIDocumentLoader.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 
 #include "nsIFileSpec.h"
 
@@ -237,7 +238,7 @@ public:
     nsCOMPtr<nsIObserverService> obsServ = 
              do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
-    rv = obsServ->AddObserver(this, NS_LITERAL_STRING("EndDocumentLoad").get());
+    rv = obsServ->AddObserver(this, "EndDocumentLoad", PR_TRUE );
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add self to observer service");
     return rv; 
   }
@@ -279,7 +280,7 @@ public:
   }
 
   NS_IMETHOD Observe(nsISupports* aSubject, 
-                     const PRUnichar* aTopic,
+                     const char* aTopic,
                      const PRUnichar* someData) {
     nsresult rv = NS_OK;
     nsString data(someData);

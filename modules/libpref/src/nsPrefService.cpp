@@ -41,6 +41,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsPrefBranch.h"
 #include "nsXPIDLString.h"
 #include "nsIAutoConfig.h"
@@ -139,21 +140,21 @@ nsresult nsPrefService::Init()
   if (observerService) {
     // Our refcnt must be > 0 when we call this, or we'll get deleted!
     ++mRefCnt;
-    rv = observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
+    rv = observerService->AddObserver(this, "profile-before-change", PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
-      rv = observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
+      rv = observerService->AddObserver(this, "profile-do-change", PR_TRUE);
     }
     --mRefCnt;
   }
   return(rv);
 }
 
-NS_IMETHODIMP nsPrefService::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsPrefService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
   nsresult rv = NS_OK;
 
-  if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get())) {
-    if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
+  if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
+    if (!nsCRT::strcmp(someData, "shutdown-cleanse")) {
       if (mCurrentFile) {
         mCurrentFile->Remove(PR_FALSE);
         NS_RELEASE(mCurrentFile);
@@ -161,7 +162,7 @@ NS_IMETHODIMP nsPrefService::Observe(nsISupports *aSubject, const PRUnichar *aTo
     } else {
       rv = SavePrefFile(nsnull);
     }
-  } else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-do-change").get())) {
+  } else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
     ResetUserPrefs();
     rv = ReadUserPrefs(nsnull);
   }

@@ -22,13 +22,13 @@ var observer2 =  {
 }
 
 const topic = "xpctest_observer_topic";
-observerService.AddObserver(observer1, topic);
-observerService.AddObserver(observer2, topic);
+observerService.addObserver(observer1, topic, false);
+observerService.addObserver(observer2, topic, false);
 
-observerService.Notify(null, topic, "notification 1");
+observerService.notifyObservers(null, topic, "notification 1");
 gc();
 observer1 = null;
 observer2 = null;
-observerService.Notify(null, topic, "notification 2");
+observerService.notifyObservers(null, topic, "notification 2");
 gc();
-observerService.Notify(null, topic, "notification 3");
+observerService.notifyObservers(null, topic, "notification 3");

@@ -47,6 +47,7 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIPrompt.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIDocumentLoader.h"
 #include "nsIWebProgress.h"
 #include "nsCURILoader.h"
@@ -85,8 +86,8 @@ nsresult nsCookieService::Init()
   nsCOMPtr<nsIObserverService> observerService = 
            do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (observerService) {
-    observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
-    observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
+    observerService->AddObserver(this, "profile-before-change", PR_TRUE);
+    observerService->AddObserver(this, "profile-do-change", PR_TRUE);
   }
 
   // Register as an observer for the document loader  
@@ -211,11 +212,11 @@ nsCookieService::SetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, nsIPro
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCookieService::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsCookieService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
   nsresult rv = NS_OK;
 
-  if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get())) {
+  if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     // The profile is about to change.
     
     // Dump current cookies.  This will be done by calling 
@@ -230,7 +231,7 @@ NS_IMETHODIMP nsCookieService::Observe(nsISupports *aSubject, const PRUnichar *a
     if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get()))
       COOKIE_DeletePersistentUserData();
   }  
-  else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-do-change").get())) {
+  else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
     // The profile has aleady changed.    
     // Now just read them from the new profile location.
     COOKIE_Read();

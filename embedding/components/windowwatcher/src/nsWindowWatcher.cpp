@@ -64,6 +64,7 @@
 #include "nsIGenericFactory.h"
 #include "nsIJSContextStack.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISupportsArray.h"
@@ -91,8 +92,7 @@
 #include "nsIWeakReference.h"
 #endif
 
-#define NOTIFICATION_OPENED NS_LITERAL_STRING("domwindowopened")
-#define NOTIFICATION_CLOSED NS_LITERAL_STRING("domwindowclosed")
+#define NOTIFICATION_CLOSED NS_LITERAL_CSTRING("domwindowclosed")
 
 #ifdef HAVE_LAME_APPSHELL
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
@@ -732,9 +732,9 @@ nsWindowWatcher::RegisterNotification(nsIObserver *aObserver)
   
   nsCOMPtr<nsIObserverService> os(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
   if (os) {
-    rv = os->AddObserver(aObserver, NOTIFICATION_OPENED.get());
+    rv = os->AddObserver(aObserver, "domwindowopened", PR_FALSE);
     if (NS_SUCCEEDED(rv))
-      rv = os->AddObserver(aObserver, NOTIFICATION_CLOSED.get());
+      rv = os->AddObserver(aObserver, "domwindowclosed", PR_FALSE);
   }
   return rv;
 }
@@ -750,8 +750,8 @@ nsWindowWatcher::UnregisterNotification(nsIObserver *aObserver)
   
   nsCOMPtr<nsIObserverService> os(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
   if (os) {
-    os->RemoveObserver(aObserver, NOTIFICATION_OPENED.get());
-    os->RemoveObserver(aObserver, NOTIFICATION_CLOSED.get());
+    os->RemoveObserver(aObserver, "domwindowopened");
+    os->RemoveObserver(aObserver, "domwindowclosed");
   }
   return rv;
 }
@@ -841,7 +841,7 @@ nsWindowWatcher::AddWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome *aChrome)
   nsCOMPtr<nsIObserverService> os(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
   if (os) {
     nsCOMPtr<nsISupports> domwin(do_QueryInterface(aWindow));
-    rv = os->Notify(domwin, NOTIFICATION_OPENED.get(), 0);
+    rv = os->NotifyObservers(domwin, "domwindowopened", 0);
   }
 
   return rv;
@@ -932,11 +932,11 @@ nsresult nsWindowWatcher::RemoveWindow(nsWatcherWindowEntry *inInfo)
 #ifdef USEWEAKREFS
     nsCOMPtr<nsISupports> domwin(do_QueryReferent(inInfo->mWindow));
     if (domwin)
-      rv = os->Notify(domwin, NOTIFICATION_CLOSED.get(), 0);
+      rv = os->NotifyObservers(domwin, "domwindowclosed", 0);
     // else bummer. since the window is gone, there's nothing to notify with.
 #else
     nsCOMPtr<nsISupports> domwin(do_QueryInterface(inInfo->mWindow));
-    rv = os->Notify(domwin, NOTIFICATION_CLOSED.get(), 0);
+    rv = os->NotifyObservers(domwin, "domwindowclosed", 0);
 #endif
   }
 

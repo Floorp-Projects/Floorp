@@ -143,7 +143,7 @@ nsStreamXferOp::OnError( int operation, nsresult errorCode ) {
         char buf[64];
         PR_snprintf( buf, sizeof( buf ), "%d %X %u", operation, (int)errorCode, reason );
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
-                                 NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_CONTRACTID ";onError" ).get(),
+                                 NS_ISTREAMTRANSFER_CONTRACTID ";onError",
                                  NS_ConvertASCIItoUCS2( buf ).get() );
         if ( NS_FAILED( rv ) ) {
             DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
@@ -405,7 +405,7 @@ nsStreamXferOp::OnProgress(nsIRequest *request, nsISupports* aContext,
         char buf[32];
         PR_snprintf( buf, sizeof buf, "%lu %ld", (unsigned long)aProgress, (long)mContentLength );
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
-                                  NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_CONTRACTID ";onProgress" ).get(),
+                                  NS_ISTREAMTRANSFER_CONTRACTID ";onProgress",
                                   NS_ConvertASCIItoUCS2( buf ).get() );
         if ( NS_FAILED( rv ) ) {
             DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
@@ -434,7 +434,7 @@ nsStreamXferOp::OnStatus( nsIRequest      *request,
         if (NS_FAILED(rv)) return rv;
         nsAutoString msg(NS_STATIC_CAST(const PRUnichar*, str));
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
-                                  NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_CONTRACTID ";onStatus" ).get(),
+                                  NS_ISTREAMTRANSFER_CONTRACTID ";onStatus",
                                   msg.get() );
         if ( NS_FAILED( rv ) ) {
             DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
@@ -544,8 +544,8 @@ nsStreamXferOp::OnStopRequest( nsIRequest      *request,
     if ( !mError && mObserver ) {
         nsCOMPtr<nsIObserver> kungFuDeathGrip(mObserver);
         rv = kungFuDeathGrip->Observe( (nsIStreamTransferOperation*)this,
-                                  NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_CONTRACTID ";onCompletion" ).get(),
-                                  nsnull );
+                                       NS_ISTREAMTRANSFER_CONTRACTID ";onCompletion",
+                                       nsnull );
         if ( NS_FAILED( rv ) ) {
             DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
                           (char*)__FILE__, (int)__LINE__, (int)rv );

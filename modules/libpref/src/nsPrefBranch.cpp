@@ -659,7 +659,7 @@ static int PR_CALLBACK NotifyObserver(const char *newpref, void *data)
 
   nsCOMPtr<nsIObserver> observer = NS_STATIC_CAST(nsIObserver *, pData->pObserver);
   observer->Observe(pData->pBranch,
-                    NS_LITERAL_STRING(NS_PREFBRANCH_PREFCHANGE_OBSERVER_ID).get(),
+                    NS_PREFBRANCH_PREFCHANGE_OBSERVER_ID,
                     NS_ConvertASCIItoUCS2(newpref).get());
 
     return 0;

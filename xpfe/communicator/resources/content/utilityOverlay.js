@@ -413,11 +413,11 @@ function utilityOnLoad(aEvent)
 
   // crude way to prevent registering twice.
   try {
-    observerService.RemoveObserver(offlineObserver, "network:offline-status-changed");
+    observerService.removeObserver(offlineObserver, "network:offline-status-changed");
   }
   catch (ex) {
   }
-  observerService.AddObserver(offlineObserver, "network:offline-status-changed");
+  observerService.addObserver(offlineObserver, "network:offline-status-changed", false);
   // make sure we remove this observer later
   addEventListener("unload",utilityOnUnload,false);
 
@@ -431,7 +431,7 @@ function utilityOnUnload(aEvent)
 {
   var observerService = Components.classes[kObserverServiceProgID]
 			  .getService(Components.interfaces.nsIObserverService);
-  observerService.RemoveObserver(offlineObserver, "network:offline-status-changed");
+  observerService.removeObserver(offlineObserver, "network:offline-status-changed");
 }
 
 addEventListener("load",utilityOnLoad,true);

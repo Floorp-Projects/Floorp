@@ -45,6 +45,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsGlobalWindow.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIJSContextStack.h"
 
 
@@ -92,9 +93,7 @@ nsDOMSOFactory::nsDOMSOFactory()
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
 
   if (observerService) {
-    nsAutoString topic;
-    topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    observerService->AddObserver(this, topic.get());
+    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
   }
 }
 
@@ -142,12 +141,11 @@ nsDOMSOFactory::GetClassInfoInstance(nsDOMClassInfoID aID)
 }
 
 NS_IMETHODIMP
-nsDOMSOFactory::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
+nsDOMSOFactory::Observe(nsISupports *aSubject, 
+                        const char *aTopic,
                         const PRUnichar *someData)
 {
-  nsAutoString topic;
-  topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-  if (topic.EqualsWithConversion(aTopic)) {
+  if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     nsCOMPtr<nsIThreadJSContextStack> stack =
       do_GetService("@mozilla.org/js/xpc/ContextStack;1");
 

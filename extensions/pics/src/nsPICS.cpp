@@ -53,6 +53,7 @@
 #include "nsParserCIID.h"
 #include "nsIHTMLContentSink.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsPICSElementObserver.h"
 #include "nsFileSpec.h"
 #include "nsIDocumentViewer.h"
@@ -428,7 +429,6 @@ nsPICS::Init()
 	nsresult rv;
     nsresult res;
     nsIPref* aPrefs;
-    nsString  aTopic("htmlparser");
     nsIObserverService *anObserverService = nsnull;
  //   nsFileSpec mySpec("C:\\Program Files\\Netscape\\Users\\neeti\\prefs.js");
 
@@ -482,7 +482,7 @@ nsPICS::Init()
                                 (nsISupports **)&anObserverService);
 
         if(rv == NS_OK) {
-          rv = anObserverService->AddObserver(mPICSElementObserver, aTopic.get());
+          rv = anObserverService->AddObserver(mPICSElementObserver, "htmlparser", PR_FALSE);
           nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_CONTRACTID, anObserverService );
           if (NS_FAILED(rv))
               return rv;

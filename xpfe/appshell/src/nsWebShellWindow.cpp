@@ -110,6 +110,7 @@
 #include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "prprf.h"
 //#include "nsIDOMHTMLInputElement.h"
 //#include "nsIDOMHTMLImageElement.h"
@@ -1667,10 +1668,10 @@ nsWebShellWindow::NotifyObservers( const nsString &aTopic, const nsString &someD
                                        (nsISupports**)&svc );
     if ( NS_SUCCEEDED( rv ) && svc ) {
         // Notify observers as instructed; the subject is "this" web shell window.
-        nsAutoString topic; topic.AssignWithConversion(prefix);
-        topic.AppendWithConversion(";");
-        topic += aTopic;
-        rv = svc->Notify( (nsIWebShellWindow*)this, topic.get(), someData.get() );
+        nsCAutoString topic; topic.Assign(prefix);
+        topic.Append(";");
+        topic.AppendWithConversion(aTopic);
+        rv = svc->NotifyObservers( (nsIWebShellWindow*)this, topic.get(), someData.get() );
         // Release the service.
         nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_CONTRACTID, svc );
     } else {

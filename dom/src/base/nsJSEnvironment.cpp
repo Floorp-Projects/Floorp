@@ -70,6 +70,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrompt.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsGUIEvent.h"
 #include "nsScriptNameSpaceManager.h"
 #include "nsIThread.h"
@@ -1548,9 +1549,7 @@ nsJSEnvironment::nsJSEnvironment()
   NS_ASSERTION(NS_SUCCEEDED(rv), "going to leak a nsJSEnvironment");
   if (NS_SUCCEEDED(rv))
   {
-    nsAutoString topic;
-    topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    observerService->AddObserver(this,topic.get());
+    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
   }
 
   mRuntimeService = nsnull;
@@ -1621,13 +1620,12 @@ nsJSEnvironment::~nsJSEnvironment()
 NS_IMPL_ISUPPORTS1(nsJSEnvironment,nsIObserver);
 
 NS_IMETHODIMP nsJSEnvironment::Observe(nsISupports *aSubject,
-                                       const PRUnichar *aTopic,
+                                       const char *aTopic,
                                        const PRUnichar *someData)
 {
 #ifdef DEBUG
-  nsAutoString topic;
-  topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-  NS_ASSERTION(topic.EqualsWithConversion(aTopic), "not shutdown");
+  if (nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
+    NS_ASSERTION(0,"not shutdown");
 #endif
   NS_RELEASE_THIS(); // release ref from |GetScriptingEnvironment|
   return NS_OK;

@@ -63,6 +63,7 @@
 #include "ProfileMgr.h"
 #include "BrowserImpl.h"
 #include "nsIWindowWatcher.h"
+#include "nsObserverService.h"
 #include "plstr.h"
 #include "Preferences.h"
 #include <io.h>
@@ -482,9 +483,9 @@ BOOL CMfcEmbedApp::InitializeProfiles()
 	  nsresult rv;
     nsCOMPtr<nsIObserverService> observerService = 
              do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-    observerService->AddObserver(this, NS_LITERAL_STRING("profile-approve-change").get());
-    observerService->AddObserver(this, NS_LITERAL_STRING("profile-change-teardown").get());
-    observerService->AddObserver(this, NS_LITERAL_STRING("profile-after-change").get());
+    observerService->AddObserver(this, "profile-approve-change", PR_FALSE);
+    observerService->AddObserver(this, "profile-change-teardown", PR_FALSE);
+    observerService->AddObserver(this, "profile-after-change", PR_FALSE);
 
     m_ProfileMgr->StartUp();
 
@@ -587,11 +588,11 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(CMfcEmbedApp, nsIObserver, nsIWindowCreator, nsISu
 
 // Mainly needed to support "on the fly" profile switching
 
-NS_IMETHODIMP CMfcEmbedApp::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP CMfcEmbedApp::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
     nsresult rv = NS_OK;
     
-    if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-approve-change").get()) == 0)
+    if (nsCRT::strcmp(aTopic, "profile-approve-change") == 0)
     {
         // Ask the user if they want to
         int result = MessageBox(NULL, "Do you want to close all windows in order to switch the profile?", "Confirm", MB_YESNO | MB_ICONQUESTION);
@@ -602,7 +603,7 @@ NS_IMETHODIMP CMfcEmbedApp::Observe(nsISupports *aSubject, const PRUnichar *aTop
             status->VetoChange();
         }
     }
-    else if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-change-teardown").get()) == 0)
+    else if (nsCRT::strcmp(aTopic, "profile-change-teardown") == 0)
     {
         // Close all open windows. Alternatively, we could just call CBrowserWindow::Stop()
         // on each. Either way, we have to stop all network activity on this phase.
@@ -623,7 +624,7 @@ NS_IMETHODIMP CMfcEmbedApp::Observe(nsISupports *aSubject, const PRUnichar *aTop
 		    }
 	    }
     }
-    else if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-after-change").get()) == 0)
+    else if (nsCRT::strcmp(aTopic, "profile-after-change") == 0)
     {
         InitializePrefs(); // In case we have just switched to a newly created profile.
         

@@ -40,7 +40,9 @@
 #include "nsISupports.h"
 #include "nsIComponentManager.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIObserver.h"
+#include "nsIEnumerator.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "prprf.h"
@@ -82,9 +84,9 @@ NS_IMPL_ISUPPORTS2( TestObserver, nsIObserver, nsISupportsWeakReference );
 
 NS_IMETHODIMP
 TestObserver::Observe( nsISupports     *aSubject,
-                       const PRUnichar *aTopic,
+                       const char *aTopic,
                        const PRUnichar *someData ) {
-    nsString topic( aTopic );
+    nsCString topic( aTopic );
     nsString data( someData );
     	/*
     		The annoying double-cast below is to work around an annoying bug in
@@ -99,8 +101,8 @@ TestObserver::Observe( nsISupports     *aSubject,
 
 int main(int argc, char *argv[])
 {
-    nsString topicA; topicA.AssignWithConversion( "topic-A" );
-    nsString topicB; topicB.AssignWithConversion( "topic-B" );
+    nsCString topicA; topicA.Assign( "topic-A" );
+    nsCString topicB; topicB.Assign( "topic-B" );
     nsresult rv;
 
     nsresult res = nsComponentManager::CreateInstance(NS_OBSERVERSERVICE_CONTRACTID,
@@ -110,55 +112,55 @@ int main(int argc, char *argv[])
 	
     if (res == NS_OK) {
 
-        nsIObserver *anObserver;
         nsIObserver *aObserver = new TestObserver(NS_ConvertASCIItoUCS2("Observer-A"));
         aObserver->AddRef();
         nsIObserver *bObserver = new TestObserver(NS_ConvertASCIItoUCS2("Observer-B"));
         bObserver->AddRef();
             
         cout << "Adding Observer-A as observer of topic-A..." << endl;
-        rv = anObserverService->AddObserver(aObserver, topicA.get());
+        rv = anObserverService->AddObserver(aObserver, topicA.get(), PR_FALSE);
         testResult(rv);
  
         cout << "Adding Observer-B as observer of topic-A..." << endl;
-        rv = anObserverService->AddObserver(bObserver, topicA.get());
+        rv = anObserverService->AddObserver(bObserver, topicA.get(), PR_FALSE);
         testResult(rv);
  
         cout << "Adding Observer-B as observer of topic-B..." << endl;
-        rv = anObserverService->AddObserver(bObserver, topicB.get());
+        rv = anObserverService->AddObserver(bObserver, topicB.get(), PR_FALSE);
         testResult(rv);
 
         cout << "Testing Notify(observer-A, topic-A)..." << endl;
-        rv = anObserverService->Notify( aObserver,
+        rv = anObserverService->NotifyObservers( aObserver,
                                    topicA.get(),
                                    NS_ConvertASCIItoUCS2("Testing Notify(observer-A, topic-A)").get() );
         testResult(rv);
 
         cout << "Testing Notify(observer-B, topic-B)..." << endl;
-        rv = anObserverService->Notify( bObserver,
+        rv = anObserverService->NotifyObservers( bObserver,
                                    topicB.get(),
                                    NS_ConvertASCIItoUCS2("Testing Notify(observer-B, topic-B)").get() );
         testResult(rv);
  
         cout << "Testing EnumerateObserverList (for topic-A)..." << endl;
-        nsIEnumerator* e;
-        rv = anObserverService->EnumerateObserverList(topicA.get(), &e);
+        nsCOMPtr<nsISimpleEnumerator> e;
+        rv = anObserverService->EnumerateObservers(topicA.get(), getter_AddRefs(e));
+
         testResult(rv);
 
         cout << "Enumerating observers of topic-A..." << endl;
-        if ( NS_SUCCEEDED( rv ) ) {
-            nsISupports *inst;
-    
-            for (e->First(); e->IsDone() != NS_OK; e->Next()) {
-                rv = e->CurrentItem(&inst);
-                if (NS_SUCCEEDED(rv)) {
-                  rv = inst->QueryInterface(NS_GET_IID(nsIObserver),(void**)&anObserver);
-                  cout << "Calling observe on enumerated observer "
-                        << NS_REINTERPRET_CAST(TestObserver*, NS_REINTERPRET_CAST(void*, inst))->mName << "..." << endl;
-                  rv = anObserver->Observe( inst, topicA.get(), NS_ConvertASCIItoUCS2("during enumeration").get() );
-                  testResult(rv);
-                }
-            }
+        if ( e ) {
+          nsCOMPtr<nsIObserver> observer;
+          PRBool loop = PR_TRUE;
+          while( NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop) 
+          {
+              e->GetNext(getter_AddRefs(observer));
+              cout << "Calling observe on enumerated observer "
+                   << NS_REINTERPRET_CAST(TestObserver*, NS_REINTERPRET_CAST(void*, observer.get()))->mName << "..." << endl;
+              rv = observer->Observe( observer, 
+                                      topicA.get(), 
+                                      NS_ConvertASCIItoUCS2("during enumeration").get() );
+              testResult(rv);
+          }
         }
         cout << "...done enumerating observers of topic-A" << endl;
 

@@ -33,7 +33,7 @@ function selectLocale(event)
       var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIChromeRegistry);
       chromeRegistry.selectLocale(langcode, true);
       var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-      observerService.Notify(null, "locale-selected", null);
+      observerService.notifyObservers(null, "locale-selected", null);
       var prefUtilBundle = srGetStrBundle("chrome://communicator/locale/pref/prefutilities.properties");
       var brandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
       var alertText = prefUtilBundle.GetStringFromName("languageAlert");

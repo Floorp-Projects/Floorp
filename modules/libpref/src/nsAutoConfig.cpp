@@ -46,6 +46,7 @@
 #include "prefapi.h"
 #include "nsIProfile.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIEventQueueService.h"
 #include "nsLiteralString.h"
 #include "nsReadableUtils.h"
@@ -72,7 +73,7 @@ nsresult nsAutoConfig::Init()
     if (NS_FAILED(rv)) 
         return rv;
 
-    rv = observerService->AddObserver(this,NS_LITERAL_STRING("profile-after-change").get());
+    rv = observerService->AddObserver(this,"profile-after-change", PR_FALSE);
     
     return rv;
 }
@@ -189,12 +190,11 @@ NS_IMETHODIMP_(void) nsAutoConfig::Notify(nsITimer *timer)
 */
 
 NS_IMETHODIMP nsAutoConfig::Observe(nsISupports *aSubject, 
-                                    const PRUnichar *aTopic, 
+                                    const char *aTopic, 
                                     const PRUnichar *someData)
 {
     nsresult rv=NS_OK;
-    if (!nsCRT::strcmp(aTopic, 
-                       NS_LITERAL_STRING("profile-after-change").get())) {
+    if (!nsCRT::strcmp(aTopic, "profile-after-change")) {
 
         // Getting the current profile name since we already have the 
         // pointer to the object.

@@ -70,6 +70,7 @@
 #include "nsITextContent.h"
 #include "nsIMemory.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIDOMNodeList.h"
 
 #include "nsIXBLBinding.h"
@@ -903,7 +904,7 @@ nsXBLService::AttachGlobalDragHandler(nsIDOMEventReceiver* aReceiver)
 
 
 NS_IMETHODIMP
-nsXBLService::Observe(nsISupports* aSubject, const PRUnichar* aTopic, const PRUnichar* aSomeData)
+nsXBLService::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aSomeData)
 {
   if (nsCRT::strcmp(aTopic, NS_MEMORY_PRESSURE_TOPIC) == 0)
     FlushMemory();
@@ -1502,7 +1503,7 @@ NS_NewXBLService(nsIXBLService** aResult)
   // so it can flush the LRU list in low-memory situations.
   nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
   if (os)
-    os->AddObserver(result, NS_MEMORY_PRESSURE_TOPIC);
+    os->AddObserver(result, NS_MEMORY_PRESSURE_TOPIC, PR_TRUE);
 
   return NS_OK;
 }

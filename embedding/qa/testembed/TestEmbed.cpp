@@ -64,6 +64,7 @@
 #include "BrowserImpl.h"
 #include "BrowserView.h"
 #include "nsIWindowWatcher.h"
+#include "nsObserverService.h"
 #include "plstr.h"
 #include "Preferences.h"
 #include <io.h>
@@ -493,9 +494,9 @@ BOOL CTestEmbedApp::InitializeProfiles()
     nsCOMPtr<nsIObserverService>observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID,&rv));
 	if (NS_SUCCEEDED(rv)) 
 	{	  
-		observerService->AddObserver(this, NS_LITERAL_STRING("profile-approve-change").get());
-		observerService->AddObserver(this, NS_LITERAL_STRING("profile-change-teardown").get());
-		observerService->AddObserver(this, NS_LITERAL_STRING("profile-after-change").get());
+		observerService->AddObserver(this, "profile-approve-change", PR_FALSE);
+		observerService->AddObserver(this, "profile-change-teardown", PR_FALSE);
+		observerService->AddObserver(this, "profile-after-change", PR_FALSE);
 	}
 
     m_ProfileMgr->StartUp();

@@ -549,10 +549,10 @@ NS_IMETHODIMP WebBrowserChrome::GetSiteWindow(void * *aSiteWindow)
 // WebBrowserChrome::nsIObserver
 //*****************************************************************************   
 
-NS_IMETHODIMP WebBrowserChrome::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP WebBrowserChrome::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
     nsresult rv = NS_OK;
-    if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-change-teardown").get()) == 0)
+    if (nsCRT::strcmp(aTopic, "profile-change-teardown") == 0)
     {
         // A profile change means death for this window
         WebBrowserChromeUI::Destroy(this);

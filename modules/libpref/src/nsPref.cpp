@@ -366,7 +366,7 @@ NS_IMETHODIMP nsPref::RemoveObserver(const char *aDomain, nsIObserver *aObserver
   return rv;
 }
 
-NS_IMETHODIMP nsPref::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsPref::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
   nsresult rv;
 

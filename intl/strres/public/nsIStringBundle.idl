@@ -52,7 +52,7 @@
 /** 
  * observer needs to check if the bundle handle matches
  */
-#define NS_STRBUNDLE_LOADED_TOPIC (NS_LITERAL_STRING("strbundle-loaded").get())
+#define NS_STRBUNDLE_LOADED_TOPIC "strbundle-loaded"
 
 %}
 

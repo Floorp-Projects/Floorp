@@ -10,6 +10,7 @@
 #include "nsIIOService.h"
 
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsString.h"
 #include "prmem.h"
 #include "plstr.h"

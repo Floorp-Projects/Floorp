@@ -355,7 +355,7 @@ public:
   
   // Methods from nsIObserver
   NS_IMETHOD
-  Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData);
+  Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData);
 
   // Methods from nsPIPluginHost
   NS_IMETHOD

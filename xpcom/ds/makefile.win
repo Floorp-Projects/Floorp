@@ -41,11 +41,11 @@ EXPORTS =                          \
 	nsHashtableEnumerator.h    \
 	nsIArena.h                 \
 	nsIByteBuffer.h            \
-	nsIObserverList.h          \
 	nsISimpleEnumerator.h      \
 	nsISizeOfHandler.h         \
 	nsIUnicharBuffer.h         \
 	nsInt64.h                  \
+	nsObserverService.h        \
 	nsQuickSort.h              \
 	nsStaticNameTable.h        \
 	nsStatistics.h             \

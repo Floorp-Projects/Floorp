@@ -378,7 +378,7 @@ InspectorSidebar.prototype =
   installNavObserver: function()
   {
 		var observerService = XPCU.getService(kObserverServiceIID, "nsIObserverService");
-    observerService.AddObserver(NavLoadObserver, "EndDocumentLoad");
+    observerService.addObserver(NavLoadObserver, "EndDocumentLoad", false);
   }
 };
 

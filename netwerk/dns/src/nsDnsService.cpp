@@ -1193,28 +1193,29 @@ nsDNSService::RemovePrefObserver()
 
 NS_IMETHODIMP
 nsDNSService::Observe(nsISupports *      subject,
-                      const PRUnichar *  topic,
+                      const char *  topic,
                       const PRUnichar *  data)
 {
     nsresult rv = NS_OK;
     
-    if (!NS_LITERAL_STRING("nsPref:changed").Equals(topic))  return NS_OK;
+    if (nsCRT::strcmp("nsPref:changed", topic))  
+        return NS_OK;
     
     nsCOMPtr<nsIPrefBranch> prefs = do_QueryInterface(subject, &rv);
     if (NS_FAILED(rv))  return rv;
     
     // which preference changed?
-    if (NS_LITERAL_STRING(NETWORK_DNS_CACHE_ENTRIES).Equals(data)) {
+    if (!nsCRT::strcmp(NETWORK_DNS_CACHE_ENTRIES, NS_ConvertUCS2toUTF8(data).get())) {
         rv = prefs->GetIntPref(NETWORK_DNS_CACHE_ENTRIES, &mMaxCachedLookups);
         if (mMaxCachedLookups < 0)
             mMaxCachedLookups = 0;
 
-    } else if (NS_LITERAL_STRING(NETWORK_DNS_CACHE_EXPIRATION).Equals(data)) {
+    } else if (!nsCRT::strcmp(NETWORK_DNS_CACHE_EXPIRATION, NS_ConvertUCS2toUTF8(data).get())) {
         rv = prefs->GetIntPref(NETWORK_DNS_CACHE_EXPIRATION, &mExpirationInterval);
         if (mExpirationInterval < 0)
             mExpirationInterval = 0;
     }
-    else if (NS_LITERAL_STRING(NETWORK_ENABLEIDN).Equals(data)) {
+    else if (!nsCRT::strcmp(NETWORK_ENABLEIDN, NS_ConvertUCS2toUTF8(data).get())) {
         PRBool enableIDN = PR_FALSE;
         rv = prefs->GetBoolPref(NETWORK_ENABLEIDN, &enableIDN);
 

@@ -79,6 +79,7 @@
 
 #include "nsIPref.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 
 PRInt32 nsGlobalHistory::gRefCnt;
 nsIRDFService* nsGlobalHistory::gRDFService;
@@ -2116,8 +2117,8 @@ nsGlobalHistory::Init()
            do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   NS_ASSERTION(observerService, "failed to get observer service");
   if (observerService) {
-    observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
-    observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
+    observerService->AddObserver(this, "profile-before-change", PR_TRUE);
+    observerService->AddObserver(this, "profile-do-change", PR_TRUE);
   }
   
   return NS_OK;
@@ -3157,26 +3158,24 @@ nsGlobalHistory::GetFindUriName(const char *aURL, nsIRDFNode **aResult)
 }
 
 NS_IMETHODIMP
-nsGlobalHistory::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
+nsGlobalHistory::Observe(nsISupports *aSubject, 
+                         const char *aTopic,
                          const PRUnichar *aSomeData)
 {
   nsresult rv;
 
-  nsDependentString aTopicString(aTopic);
-
   // pref changing - update member vars
-  if (aTopicString.Equals(NS_LITERAL_STRING("nsPref:changed"))) {
+  if (!nsCRT::strcmp(aTopic, "nsPref:changed")) {
 
     // expiration date
-    nsCAutoString pref; pref.AssignWithConversion(aSomeData);
-    if (pref.Equals(PREF_BROWSER_HISTORY_EXPIRE_DAYS)) {
+    if (!nsCRT::strcmp(aSomeData, NS_LITERAL_STRING(PREF_BROWSER_HISTORY_EXPIRE_DAYS).get())) {
       nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
       if (NS_SUCCEEDED(rv))
         prefs->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
     }
 
   }
-  else if (aTopicString.Equals(NS_LITERAL_STRING("profile-before-change"))) {
+  else if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     rv = CloseDB();    
     if (!nsCRT::strcmp(aSomeData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
       nsCOMPtr <nsIFile> historyFile;
@@ -3185,7 +3184,7 @@ nsGlobalHistory::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
         rv = historyFile->Remove(PR_FALSE);
     }
   }
-  else if (aTopicString.Equals(NS_LITERAL_STRING("profile-do-change")))
+  else if (!nsCRT::strcmp(aTopic, "profile-do-change"))
     rv = OpenDB();
 
   return NS_OK;

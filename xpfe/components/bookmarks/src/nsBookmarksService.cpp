@@ -51,6 +51,7 @@
 #include "nsIComponentManager.h"
 #include "nsIDOMWindow.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
 #include "nsIRDFService.h"
@@ -1699,8 +1700,8 @@ nsBookmarksService::Init()
              do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     NS_ASSERTION(observerService, "Could not get observer service.");
     if (observerService) {
-        observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
-        observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
+        observerService->AddObserver(this, "profile-before-change", PR_TRUE);
+        observerService->AddObserver(this, "profile-do-change", PR_TRUE);
     }
 
 	// read in bookmarks AFTER trying to get string bundle
@@ -2433,11 +2434,11 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 
 // nsIObserver methods
 
-NS_IMETHODIMP nsBookmarksService::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsBookmarksService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
   nsresult rv = NS_OK;
 
-  if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get()))
+  if (!nsCRT::strcmp(aTopic, "profile-before-change"))
   {
     // The profile has not changed yet.
     rv = Flush();
@@ -2449,7 +2450,7 @@ NS_IMETHODIMP nsBookmarksService::Observe(nsISupports *aSubject, const PRUnichar
         bookmarksFile.Delete(PR_FALSE);
     }
   }    
-  else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-do-change").get()))
+  else if (!nsCRT::strcmp(aTopic, "profile-do-change"))
   {
     // The profile has aleady changed.
     rv = ReadBookmarks();

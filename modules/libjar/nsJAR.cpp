@@ -31,6 +31,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
+#include "nsObserverService.h"
 #include "plbase64.h"
 #include "nsIConsoleService.h"
 #include "nscore.h"
@@ -1146,7 +1147,7 @@ nsZipReaderCache::Init(PRUint32 cacheSize)
            do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))   
   {
-    rv = os->AddObserver(this, NS_MEMORY_PRESSURE_TOPIC);
+    rv = os->AddObserver(this, NS_MEMORY_PRESSURE_TOPIC, PR_TRUE);
   }
 // ignore failure of the observer registration.
 
@@ -1356,7 +1357,7 @@ FindFlushableZip(nsHashKey *aKey, void *aData, void* closure)
 
 NS_IMETHODIMP
 nsZipReaderCache::Observe(nsISupports *aSubject,
-                          const PRUnichar *aTopic, 
+                          const char *aTopic, 
                           const PRUnichar *aSomeData)
 {
   if (nsCRT::strcmp(aTopic, NS_MEMORY_PRESSURE_TOPIC) == 0) {

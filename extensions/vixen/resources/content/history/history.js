@@ -32,7 +32,7 @@ var vxHistory =
     // document is at front
     var rootShell = vxUtils.getRootShell();
     if (rootShell && "observerService" in rootShell)
-      rootShell.observerService.AddObserver(vfdFocusObserver, "vfd-focus");
+      rootShell.observerService.addObserver(vfdFocusObserver, "vfd-focus", false);
    
     this.mBundle = document.getElementById("historyBundle");
   }

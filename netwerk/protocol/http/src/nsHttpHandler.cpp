@@ -40,6 +40,7 @@
 #include "nsICacheService.h"
 #include "nsICategoryManager.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsINetModRegEntry.h"
 #include "nsICacheService.h"
@@ -244,14 +245,14 @@ nsHttpHandler::Init()
     // Bring alive the objects in the http-protocol-startup category
     NS_CreateServicesFromCategory(NS_HTTP_STARTUP_CATEGORY,
                                   NS_STATIC_CAST(nsISupports*,NS_STATIC_CAST(void*,this)),
-                                  NS_HTTP_STARTUP_TOPIC);
+                                  NS_HTTP_STARTUP_TOPIC);    
     
     nsCOMPtr<nsIObserverService> observerSvc =
         do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (observerSvc) {
-        observerSvc->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
-        observerSvc->AddObserver(this, NS_LITERAL_STRING("session-logout").get());
-        observerSvc->AddObserver(this, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+        observerSvc->AddObserver(this, "profile-before-change", PR_TRUE);
+        observerSvc->AddObserver(this, "session-logout", PR_TRUE);
+        observerSvc->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
     }
     return NS_OK;
 }
@@ -1807,16 +1808,16 @@ nsHttpHandler::SetMisc(const char *aMisc)
 
 NS_IMETHODIMP
 nsHttpHandler::Observe(nsISupports *subject,
-                       const PRUnichar *topic,
+                       const char *topic,
                        const PRUnichar *data)
 {
-    if (!nsCRT::strcmp(topic, NS_LITERAL_STRING("nsPref:changed").get())) {
+    if (!nsCRT::strcmp(topic, "nsPref:changed")) {
         nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
         if (prefBranch)
             PrefsChanged(prefBranch, NS_ConvertUCS2toUTF8(data).get());
     }
-    else if (!nsCRT::strcmp(topic, NS_LITERAL_STRING("profile-before-change").get()) ||
-             !nsCRT::strcmp(topic, NS_LITERAL_STRING("session-logout").get())) {
+    else if (!nsCRT::strcmp(topic, "profile-before-change") ||
+             !nsCRT::strcmp(topic, "session-logout")) {
         // clear cache of all authentication credentials.
         if (mAuthCache)
             mAuthCache->ClearAll();
@@ -1825,7 +1826,7 @@ nsHttpHandler::Observe(nsISupports *subject,
         // depend on this value.
         mSessionStartTime = NowInSeconds();
     }
-    else if (!nsCRT::strcmp(topic, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get())) {
+    else if (!nsCRT::strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
         nsCOMPtr<nsIPrefBranch> prefBranch;
         GetPrefBranch(getter_AddRefs(prefBranch));
         if (prefBranch) {

@@ -94,7 +94,6 @@ interface nsISimpleEnumerator : nsISupports {
  */
 [scriptable, uuid(ad385286-cbc4-11d2-8cca-0060b0fc14a3)]
 interface nsIEnumerator : nsISupports {
-
   /** First will reset the list. will return NS_FAILED if no items
    */
   void first();

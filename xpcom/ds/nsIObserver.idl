@@ -38,33 +38,32 @@
 #include "nsISupports.idl"
 
 /**
- * This interface is implemented by an object that needs
- * to observe an event corresponding to a change in a 
- * topic for a subject.
+ * This interface is implemented by an object that wants
+ * to observe an event corresponding to a topic.
+ *
+ * @status FROZEN
  */
 
 [scriptable, uuid(DB242E01-E4D9-11d2-9DDE-000064657374)]
 interface nsIObserver : nsISupports {
 
    /**
-    * Called if the topic changes for the subject. If you expect 
-    * multiple topics/subjects, the impl is responsible for filtering.
+    * Observe will be called when there is a notification for the
+    * topic |aTopic|.  This assumes that the object implementing
+    * this interface has been registered with an observer service
+    * such as the nsIObserverService. 
     *
-    * @param aSubject - the event specific data that has changed.
-    * @param aTopic   - indicates the event that has changed.
-    * @param aData    - out of band data specific to the topic/
-    *                   subject event.
+    * If you expect multiple topics/subjects, the impl is 
+    * responsible for filtering.
+    *
+    * @param aSubject : Notification specific interface pointer.
+    * @param aTopic   : The notification topic or subject.
+    * @param aData    : Notification specific wide string.
+    *                    subject event.
     */
-    void Observe( in nsISupports aSubject,
-				  in wstring     aTopic,
+    void observe( in nsISupports aSubject,
+				  in string      aTopic,
 				  in wstring     aData );
 
 };
 
-%{C++
-
-#define NS_OBSERVER_CONTRACTID "@mozilla.org/xpcom/observer;1"
-
-#define NS_OBSERVER_CLASSNAME "Observer"
-
-%}

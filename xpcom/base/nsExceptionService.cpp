@@ -42,7 +42,7 @@
 #include "nsCOMPtr.h"
 #include "prthread.h"
 #include "prlock.h"
-
+#include "nsObserverService.h"
 static const PRUintn BAD_TLS_INDEX = (PRUintn) -1;
 
 #define CHECK_SERVICE_USE_OK() if (!lock) return NS_ERROR_NOT_INITIALIZED
@@ -182,7 +182,7 @@ nsExceptionService::nsExceptionService()
   nsCOMPtr<nsIObserverService> observerService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
   NS_WARN_IF_FALSE(observerService, "Could not get observer service!");
   if (observerService)
-    observerService->AddObserver(this, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
 }
 
 nsExceptionService::~nsExceptionService()
@@ -291,7 +291,7 @@ NS_IMETHODIMP nsExceptionService::UnregisterExceptionProvider(nsIExceptionProvid
 }
 
 // nsIObserver
-NS_IMETHODIMP nsExceptionService::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsExceptionService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
      Shutdown();
      return NS_OK;

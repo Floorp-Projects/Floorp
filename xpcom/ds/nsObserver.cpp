@@ -103,7 +103,7 @@ nsObserver::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsObserver::Observe( nsISupports *, const PRUnichar *, const PRUnichar * ) {
+nsObserver::Observe( nsISupports *, const char *, const PRUnichar * ) {
     nsresult rv = NS_OK;
     return rv;
 }
