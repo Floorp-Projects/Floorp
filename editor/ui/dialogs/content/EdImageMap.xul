@@ -168,7 +168,12 @@
   </toolbar>
 
   <!-- Content Area -->
-  <iframe id="content" src="EdImageMapPage.html" flex="1"/>
+  <iframe id="content" src="EdImageMapPage.html" flex="1"
+    onmousedown="top.downMouse(event)"
+    onmouseup="top.upMouse(event)" 
+    onmousemove="top.moveMouse(event)"
+    onclick="top.clickMouse(event)" 
+  />
 
 </box>
 
