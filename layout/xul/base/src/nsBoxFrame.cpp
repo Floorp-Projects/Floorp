@@ -295,9 +295,9 @@ void nsBoxFrame::UpdateMouseThrough()
   if (mContent) {
     nsAutoString value;
     if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::mousethrough, value)) {
-        if (value.Equals(NS_LITERAL_STRING("never")))
+        if (value.EqualsLiteral("never"))
           mMouseThrough = never;
-        else if (value.Equals(NS_LITERAL_STRING("always")))
+        else if (value.EqualsLiteral("always"))
           mMouseThrough = always;
       
     }
@@ -374,10 +374,10 @@ nsBoxFrame::GetInitialDebug(PRBool& aDebug)
 
 
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::debug, value)) {
-      if (value.Equals(NS_LITERAL_STRING("true"))) {
+      if (value.EqualsLiteral("true")) {
           aDebug = PR_TRUE;
           return PR_TRUE;
-      } else if (value.Equals(NS_LITERAL_STRING("false"))) {
+      } else if (value.EqualsLiteral("false")) {
           aDebug = PR_FALSE;
           return PR_TRUE;
       }
@@ -398,10 +398,10 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
 
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
     // XXXdwh Everything inside this if statement is deprecated code.
-    if (value.Equals(NS_LITERAL_STRING("left"))) {
+    if (value.EqualsLiteral("left")) {
         aHalign = nsBoxFrame::hAlign_Left;
         return PR_TRUE;
-    } else if (value.Equals(NS_LITERAL_STRING("right"))) {
+    } else if (value.EqualsLiteral("right")) {
         aHalign = nsBoxFrame::hAlign_Right;
         return PR_TRUE;
     }
@@ -415,13 +415,13 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
     res = content->GetAttr(kNameSpaceID_None, nsXULAtoms::pack, value);
   else res = content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value);
   if (res == NS_CONTENT_ATTR_HAS_VALUE) {
-    if (value.Equals(NS_LITERAL_STRING("start"))) {
+    if (value.EqualsLiteral("start")) {
         aHalign = nsBoxFrame::hAlign_Left;
         return PR_TRUE;
-    } else if (value.Equals(NS_LITERAL_STRING("center"))) {
+    } else if (value.EqualsLiteral("center")) {
         aHalign = nsBoxFrame::hAlign_Center;
         return PR_TRUE;
-    } else if (value.Equals(NS_LITERAL_STRING("end"))) {
+    } else if (value.EqualsLiteral("end")) {
         aHalign = nsBoxFrame::hAlign_Right;
         return PR_TRUE;
     }
@@ -480,16 +480,16 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
     return PR_FALSE;
 
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::valign, value)) {
-    if (value.Equals(NS_LITERAL_STRING("top"))) {
+    if (value.EqualsLiteral("top")) {
         aValign = nsBoxFrame::vAlign_Top;
         return PR_TRUE;
-    } else if (value.Equals(NS_LITERAL_STRING("baseline"))) {
+    } else if (value.EqualsLiteral("baseline")) {
         aValign = nsBoxFrame::vAlign_BaseLine;
         return PR_TRUE;
-    } else if (value.Equals(NS_LITERAL_STRING("middle"))) {
+    } else if (value.EqualsLiteral("middle")) {
         aValign = nsBoxFrame::vAlign_Middle;
         return PR_TRUE;
-    } else if (value.Equals(NS_LITERAL_STRING("bottom"))) {
+    } else if (value.EqualsLiteral("bottom")) {
         aValign = nsBoxFrame::vAlign_Bottom;
         return PR_TRUE;
     }
@@ -503,16 +503,16 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
     res = content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value);
   else res = content->GetAttr(kNameSpaceID_None, nsXULAtoms::pack, value);
   if (res == NS_CONTENT_ATTR_HAS_VALUE) {
-    if (value.Equals(NS_LITERAL_STRING("start"))) {
+    if (value.EqualsLiteral("start")) {
         aValign = nsBoxFrame::vAlign_Top;
         return PR_TRUE;
-    } else if (value.Equals(NS_LITERAL_STRING("center"))) {
+    } else if (value.EqualsLiteral("center")) {
         aValign = nsBoxFrame::vAlign_Middle;
         return PR_TRUE;
-    } else if (value.Equals(NS_LITERAL_STRING("baseline"))) {
+    } else if (value.EqualsLiteral("baseline")) {
         aValign = nsBoxFrame::vAlign_BaseLine;
         return PR_TRUE;
-    } else if (value.Equals(NS_LITERAL_STRING("end"))) {
+    } else if (value.EqualsLiteral("end")) {
         aValign = nsBoxFrame::vAlign_Bottom;
         return PR_TRUE;
     }
@@ -585,9 +585,9 @@ nsBoxFrame::GetInitialOrientation(PRBool& aIsHorizontal)
   // Now see if we have an attribute.  The attribute overrides
   // the style system value.
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::orient, value)) {
-    if (value.Equals(NS_LITERAL_STRING("vertical")))
+    if (value.EqualsLiteral("vertical"))
       aIsHorizontal = PR_FALSE;
-    else if (value.Equals(NS_LITERAL_STRING("horizontal")))
+    else if (value.EqualsLiteral("horizontal"))
      aIsHorizontal = PR_TRUE;
   }
 }
@@ -618,11 +618,11 @@ nsBoxFrame::GetInitialDirection(PRBool& aIsNormal)
   // Now see if we have an attribute.  The attribute overrides
   // the style system value.
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::dir, value)) {
-    if (value.Equals(NS_LITERAL_STRING("reverse")))
+    if (value.EqualsLiteral("reverse"))
       aIsNormal = !aIsNormal; // Invert our direction.
-    else if (value.Equals(NS_LITERAL_STRING("ltr")))
+    else if (value.EqualsLiteral("ltr"))
       aIsNormal = PR_TRUE;
-    else if (value.Equals(NS_LITERAL_STRING("rtl")))
+    else if (value.EqualsLiteral("rtl"))
       aIsNormal = PR_FALSE;
   }
 }
@@ -643,7 +643,7 @@ nsBoxFrame::GetInitialEqualSize(PRBool& aEqualSize)
 
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::equalsize, value))
   {
-      if (value.Equals(NS_LITERAL_STRING("always"))) {
+      if (value.EqualsLiteral("always")) {
          aEqualSize = PR_TRUE;
          return PR_TRUE;
       }
@@ -667,7 +667,7 @@ nsBoxFrame::GetInitialAutoStretch(PRBool& aStretch)
   
   // Check the align attribute.
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
-    aStretch = value.Equals(NS_LITERAL_STRING("stretch"));
+    aStretch = value.EqualsLiteral("stretch");
     return PR_TRUE;
   }
 

@@ -104,7 +104,7 @@ nsMathMLmfracFrame::IsBevelled()
   if (NS_CONTENT_ATTR_HAS_VALUE == 
       GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::bevelled_, value)) {
-    if (value.Equals(NS_LITERAL_STRING("true"))) {
+    if (value.EqualsLiteral("true")) {
       return PR_TRUE;
     }
   }
@@ -178,21 +178,21 @@ nsMathMLmfracFrame::CalcLineThickness(nsIPresContext*  aPresContext,
   nscoord minimumThickness = onePixel;
 
   if (!aThicknessAttribute.IsEmpty()) {
-    if (aThicknessAttribute.Equals(NS_LITERAL_STRING("thin"))) {
+    if (aThicknessAttribute.EqualsLiteral("thin")) {
       lineThickness = NSToCoordFloor(defaultThickness * THIN_FRACTION_LINE);
       minimumThickness = onePixel * THIN_FRACTION_LINE_MINIMUM_PIXELS;
       // should visually decrease by at least one pixel, if default is not a pixel
       if (defaultThickness > onePixel && lineThickness > defaultThickness - onePixel)
         lineThickness = defaultThickness - onePixel;
     }
-    else if (aThicknessAttribute.Equals(NS_LITERAL_STRING("medium"))) {
+    else if (aThicknessAttribute.EqualsLiteral("medium")) {
       lineThickness = NSToCoordRound(defaultThickness * MEDIUM_FRACTION_LINE);
       minimumThickness = onePixel * MEDIUM_FRACTION_LINE_MINIMUM_PIXELS;
       // should visually increase by at least one pixel
       if (lineThickness < defaultThickness + onePixel)
         lineThickness = defaultThickness + onePixel;
     }
-    else if (aThicknessAttribute.Equals(NS_LITERAL_STRING("thick"))) {
+    else if (aThicknessAttribute.EqualsLiteral("thick")) {
       lineThickness = NSToCoordCeil(defaultThickness * THICK_FRACTION_LINE);
       minimumThickness = onePixel * THICK_FRACTION_LINE_MINIMUM_PIXELS;
       // should visually increase by at least two pixels
@@ -402,17 +402,17 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
   // see if the numalign attribute is there 
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle, 
                    nsMathMLAtoms::numalign_, value)) {
-    if (value.Equals(NS_LITERAL_STRING("left")))
+    if (value.EqualsLiteral("left"))
       dxNum = leftSpace;
-    else if (value.Equals(NS_LITERAL_STRING("right")))
+    else if (value.EqualsLiteral("right"))
       dxNum = width - rightSpace - sizeNum.width;
   }
   // see if the denomalign attribute is there 
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle, 
                    nsMathMLAtoms::denomalign_, value)) {
-    if (value.Equals(NS_LITERAL_STRING("left")))
+    if (value.EqualsLiteral("left"))
       dxDen = leftSpace;
-    else if (value.Equals(NS_LITERAL_STRING("right")))
+    else if (value.EqualsLiteral("right"))
       dxDen = width - rightSpace - sizeDen.width;
   }
 

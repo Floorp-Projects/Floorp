@@ -393,7 +393,7 @@ nsPopupSetFrame::ShowPopup(nsIContent* aElementContent, nsIContent* aPopupConten
   nsIMenuParent* childPopup = nsnull;
   if (activeChild)
     CallQueryInterface(activeChild, &childPopup);
-  if ( childPopup && aPopupType == NS_LITERAL_STRING("context") )
+  if ( childPopup && aPopupType.EqualsLiteral("context") )
     childPopup->SetIsContextMenu(PR_TRUE);
 
   // Now open the popup.
@@ -418,7 +418,7 @@ nsPopupSetFrame::HidePopup(nsIFrame* aPopup)
   if (entry->mCreateHandlerSucceeded)
     ActivatePopup(entry, PR_FALSE);
 
-  if (entry->mElementContent && entry->mPopupType == NS_LITERAL_STRING("context")) {
+  if (entry->mElementContent && entry->mPopupType.EqualsLiteral("context")) {
     // If we are a context menu, and if we are attached to a
     // menupopup, then hiding us should also hide the parent menu
     // popup.
@@ -449,7 +449,7 @@ nsPopupSetFrame::DestroyPopup(nsIFrame* aPopup, PRBool aDestroyEntireChain)
     OpenPopup(entry, PR_FALSE);
     entry->mPopupType.SetLength(0);
   
-    if (aDestroyEntireChain && entry->mElementContent && entry->mPopupType == NS_LITERAL_STRING("context")) {
+    if (aDestroyEntireChain && entry->mElementContent && entry->mPopupType.EqualsLiteral("context")) {
       // If we are a context menu, and if we are attached to a
       // menupopup, then destroying us should also dismiss the parent
       // menu popup.
@@ -487,7 +487,7 @@ nsPopupSetFrame::MarkAsGenerated(nsIContent* aPopupContent)
   nsAutoString value;
   aPopupContent->GetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, 
                          value);
-  if (value != NS_LITERAL_STRING("true")) {
+  if (!value.EqualsLiteral("true")) {
     // Generate this element.
     aPopupContent->SetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, NS_LITERAL_STRING("true"),
                            PR_TRUE);
@@ -505,16 +505,16 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
     nsIMenuParent* childPopup = nsnull;
     if (activeChild)
       CallQueryInterface(activeChild, &childPopup);
-    if (aEntry->mPopupType != NS_LITERAL_STRING("tooltip"))
+    if (!aEntry->mPopupType.EqualsLiteral("tooltip"))
       UpdateDismissalListener(childPopup);
     
     // First check and make sure this popup wants keyboard navigation
     nsAutoString property;    
     // Tooltips don't get keyboard navigation
     aEntry->mPopupContent->GetAttr(kNameSpaceID_None, nsXULAtoms::ignorekeys, property);
-    if (property != NS_LITERAL_STRING("true") && 
+    if (!property.EqualsLiteral("true") && 
         childPopup &&
-        aEntry->mPopupType != NS_LITERAL_STRING("tooltip"))
+        !aEntry->mPopupType.EqualsLiteral("tooltip"))
       childPopup->InstallKeyboardNavigator();
   }
   else {
@@ -522,7 +522,7 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
       return;
 
     // Unregister, but not if we're a tooltip
-    if (aEntry->mPopupType != NS_LITERAL_STRING("tooltip") ) {
+    if (!aEntry->mPopupType.EqualsLiteral("tooltip") ) {
       if (nsMenuFrame::sDismissalListener)
         nsMenuFrame::sDismissalListener->Unregister();
     }

@@ -381,9 +381,9 @@ nsImageBoxFrame::UpdateLoadFlags()
 {
   nsAutoString loadPolicy;
   mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::validate, loadPolicy);
-  if (loadPolicy.Equals(NS_LITERAL_STRING("always")))
+  if (loadPolicy.EqualsLiteral("always"))
     mLoadFlags = nsIRequest::VALIDATE_ALWAYS;
-  else if (loadPolicy.Equals(NS_LITERAL_STRING("never")))
+  else if (loadPolicy.EqualsLiteral("never"))
     mLoadFlags = nsIRequest::VALIDATE_NEVER|nsIRequest::LOAD_FROM_CACHE; 
   else
     mLoadFlags = nsIRequest::LOAD_NORMAL;

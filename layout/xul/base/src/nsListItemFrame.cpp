@@ -87,7 +87,7 @@ nsListItemFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 {
   nsAutoString value;
   mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::allowevents, value);
-  if (value.Equals(NS_LITERAL_STRING("true"))) {
+  if (value.EqualsLiteral("true")) {
     return nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
   }
   else if (mRect.Contains(aPoint)) {

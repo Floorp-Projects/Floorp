@@ -124,19 +124,19 @@ void testStrings(nsIDocument* aDoc) {
 
   PRBool val;
   // regular Equals
-  val = (NS_ConvertASCIItoUCS2("mrString")).Equals(NS_LITERAL_STRING("mrString")); // XXXjag
+  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsLiteral("mrString"); // XXXjag
   if (PR_TRUE != val) {
     printf("test 0 failed\n");
   }
-  val = (NS_ConvertASCIItoUCS2("mrString")).Equals(NS_LITERAL_STRING("MRString")); // XXXjag
+  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsLiteral("MRString"); // XXXjag
   if (PR_FALSE != val) {
     printf("test 1 failed\n");
   }
-  val = (NS_ConvertASCIItoUCS2("mrString")).Equals(NS_LITERAL_STRING("mrStri")); // XXXjag
+  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsLiteral("mrStri"); // XXXjag
   if (PR_FALSE != val) {
     printf("test 2 failed\n");
   }
-  val = (NS_ConvertASCIItoUCS2("mrStri")).Equals(NS_LITERAL_STRING("mrString")); // XXXjag
+  val = (NS_ConvertASCIItoUCS2("mrStri")).EqualsLiteral("mrString"); // XXXjag
   if (PR_FALSE != val) {
     printf("test 3 failed\n");
   }

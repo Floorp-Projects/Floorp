@@ -219,13 +219,13 @@ nsTextBoxFrame::UpdateAttributes(nsIPresContext*  aPresContext,
         mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::crop, value);
         CroppingStyle cropType;
 
-        if (value.Equals(NS_LITERAL_STRING(CROP_LEFT)) ||
-            value.Equals(NS_LITERAL_STRING(CROP_START)))
+        if (value.EqualsASCII(CROP_LEFT) ||
+            value.EqualsASCII(CROP_START))
             cropType = CropLeft;
-        else if (value.Equals(NS_LITERAL_STRING(CROP_CENTER)))
+        else if (value.EqualsASCII(CROP_CENTER))
             cropType = CropCenter;
-        else if (value.Equals(NS_LITERAL_STRING(CROP_RIGHT)) ||
-                 value.Equals(NS_LITERAL_STRING(CROP_END)))
+        else if (value.EqualsASCII(CROP_RIGHT) ||
+                 value.EqualsASCII(CROP_END))
             cropType = CropRight;
         else
             cropType = CropNone;

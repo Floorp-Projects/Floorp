@@ -215,7 +215,7 @@ nsTreeColumn::CacheAttributes()
   mIsPrimary = PR_FALSE;
   nsAutoString primary;
   content->GetAttr(kNameSpaceID_None, nsXULAtoms::primary, primary);
-  if (primary.Equals(NS_LITERAL_STRING("true")))
+  if (primary.EqualsLiteral("true"))
     mIsPrimary = PR_TRUE;
 
   // Figure out if we're a cycling column (one that doesn't cause a selection
@@ -223,32 +223,32 @@ nsTreeColumn::CacheAttributes()
   mIsCycler = PR_FALSE;
   nsAutoString cycler;
   content->GetAttr(kNameSpaceID_None, nsXULAtoms::cycler, cycler);
-  if (cycler.Equals(NS_LITERAL_STRING("true")))
+  if (cycler.EqualsLiteral("true"))
     mIsCycler = PR_TRUE;
 
   mIsEditable = PR_FALSE;
   nsAutoString editable;
   content->GetAttr(kNameSpaceID_None, nsXULAtoms::editable, editable);
-  if (editable.Equals(NS_LITERAL_STRING("true")))
+  if (editable.EqualsLiteral("true"))
     mIsEditable = PR_TRUE;
 
   // Figure out our column type. Default type is text.
   mType = nsITreeColumn::TYPE_TEXT;
   nsAutoString type;
   content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
-  if (type.Equals(NS_LITERAL_STRING("checkbox")))
+  if (type.EqualsLiteral("checkbox"))
     mType = nsITreeColumn::TYPE_CHECKBOX;
-  else if (type.Equals(NS_LITERAL_STRING("progressmeter")))
+  else if (type.EqualsLiteral("progressmeter"))
     mType = nsITreeColumn::TYPE_PROGRESSMETER;
 
   // Fetch the crop style.
   mCropStyle = 0;
   nsAutoString crop;
   content->GetAttr(kNameSpaceID_None, nsXULAtoms::crop, crop);
-  if (crop.Equals(NS_LITERAL_STRING("center")))
+  if (crop.EqualsLiteral("center"))
     mCropStyle = 1;
-  else if (crop.Equals(NS_LITERAL_STRING("left")) ||
-           crop.Equals(NS_LITERAL_STRING("start")))
+  else if (crop.EqualsLiteral("left") ||
+           crop.EqualsLiteral("start"))
     mCropStyle = 2;
 }
 
@@ -360,7 +360,7 @@ nsTreeColumns::GetKeyColumn(nsITreeColumn** _retval)
     // Skip hidden columns.
     nsAutoString attr;
     content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, attr);
-    if (attr.Equals(NS_LITERAL_STRING("true")))
+    if (attr.EqualsLiteral("true"))
       continue;
 
     // Skip non-text column

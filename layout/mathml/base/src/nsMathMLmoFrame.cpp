@@ -344,17 +344,17 @@ nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
     // see if the accent attribute is there
     if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                      nsMathMLAtoms::accent_, value)) {
-      if (value.Equals(NS_LITERAL_STRING("true")))
+      if (value.EqualsLiteral("true"))
         mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
-      else if (value.Equals(NS_LITERAL_STRING("false")))
+      else if (value.EqualsLiteral("false"))
         mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENT;
     }
     // see if the movablelimits attribute is there
     if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                      nsMathMLAtoms::movablelimits_, value)) {
-      if (value.Equals(NS_LITERAL_STRING("true")))
+      if (value.EqualsLiteral("true"))
         mEmbellishData.flags |= NS_MATHML_EMBELLISH_MOVABLELIMITS;
-      else if (value.Equals(NS_LITERAL_STRING("false")))
+      else if (value.EqualsLiteral("false"))
         mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_MOVABLELIMITS;
     }
 
@@ -406,9 +406,9 @@ nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
     form = NS_MATHML_OPERATOR_FORM_INFIX;
     if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                      nsMathMLAtoms::form_, value)) {
-      if (value.Equals(NS_LITERAL_STRING("prefix")))
+      if (value.EqualsLiteral("prefix"))
         form = NS_MATHML_OPERATOR_FORM_PREFIX;
-      else if (value.Equals(NS_LITERAL_STRING("postfix")))
+      else if (value.EqualsLiteral("postfix"))
         form = NS_MATHML_OPERATOR_FORM_POSTFIX;
     }
     else {

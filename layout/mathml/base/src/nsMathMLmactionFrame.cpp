@@ -126,7 +126,7 @@ nsMathMLmactionFrame::Init(nsIPresContext*  aPresContext,
   mActionType = NS_MATHML_ACTION_TYPE_NONE;
   if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_None, 
                    nsMathMLAtoms::actiontype_, value)) {
-    if (value.Equals(NS_LITERAL_STRING("toggle")))
+    if (value.EqualsLiteral("toggle"))
       mActionType = NS_MATHML_ACTION_TYPE_TOGGLE;
 
     // XXX use goto to jump out of these if?

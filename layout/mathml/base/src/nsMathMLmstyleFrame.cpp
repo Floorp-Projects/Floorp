@@ -92,11 +92,11 @@ nsMathMLmstyleFrame::InheritAutomaticData(nsIPresContext* aPresContext,
   nsAutoString value;
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 
                    nsMathMLAtoms::displaystyle_, value)) {
-    if (value.Equals(NS_LITERAL_STRING("true"))) {
+    if (value.EqualsLiteral("true")) {
       mPresentationData.flags |= NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE;
       mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
     }
-    else if (value.Equals(NS_LITERAL_STRING("false"))) {
+    else if (value.EqualsLiteral("false")) {
       mPresentationData.flags |= NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE;
       mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
     }

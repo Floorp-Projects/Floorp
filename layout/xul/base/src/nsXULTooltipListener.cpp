@@ -232,7 +232,7 @@ nsXULTooltipListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsAutoString type;
   aEvent->GetType(type);
-  if (type.Equals(NS_LITERAL_STRING("DOMMouseScroll")))
+  if (type.EqualsLiteral("DOMMouseScroll"))
     HideTooltip();
   return NS_OK;
 }
@@ -333,7 +333,7 @@ nsXULTooltipListener::CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent)
     // determine if we are going to need a titletip
     // XXX check the disabletitletips attribute on the tree content
     mNeedTitletip = PR_FALSE;
-    if (row >= 0 && obj.Equals(NS_LITERAL_CSTRING("text"))) {
+    if (row >= 0 && obj.EqualsLiteral("text")) {
       nsCOMPtr<nsITreeView> view;
       obx->GetView(getter_AddRefs(view));
       PRBool isCropped;
@@ -385,7 +385,7 @@ nsXULTooltipListener::ShowTooltip()
         return NS_ERROR_FAILURE;
       nsAutoString noAutoHide;
       tooltipEl->GetAttribute(NS_LITERAL_STRING("noautohide"), noAutoHide);
-      if (noAutoHide != NS_LITERAL_STRING("true"))
+      if (!noAutoHide.EqualsLiteral("true"))
         CreateAutoHideTimer();
 
       // listen for popuphidden on the tooltip node, so that we can
@@ -562,7 +562,7 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
           targetEl->GetAttribute(NS_LITERAL_STRING("tooltip"), tooltipId);
 
           // if tooltip == _child, look for first <tooltip> child
-          if (tooltipId.Equals(NS_LITERAL_STRING("_child"))) {
+          if (tooltipId.EqualsLiteral("_child")) {
             GetImmediateChild(aTarget, nsXULAtoms::tooltip, aTooltip);
             return NS_OK;
           } else {

@@ -1582,7 +1582,7 @@ nsTreeBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, nsTreeColumn* aCol)
       if (aRowIndex != -1) {
         nsAutoString value;
         mView->GetCellValue(aRowIndex, aCol, value);
-        if (value.Equals(NS_LITERAL_STRING("true")))
+        if (value.EqualsLiteral("true"))
           mScratchArray->AppendElement(nsXULAtoms::checked);
       }
     }
@@ -1602,11 +1602,11 @@ nsTreeBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, nsTreeColumn* aCol)
     // Read special properties from attributes on the column content node
     nsAutoString attr;
     aCol->GetContent()->GetAttr(kNameSpaceID_None, nsXULAtoms::insertbefore, attr);
-    if (attr.Equals(NS_LITERAL_STRING("true")))
+    if (attr.EqualsLiteral("true"))
       mScratchArray->AppendElement(nsXULAtoms::insertbefore);
     attr.Truncate();
     aCol->GetContent()->GetAttr(kNameSpaceID_None, nsXULAtoms::insertafter, attr);
-    if (attr.Equals(NS_LITERAL_STRING("true")))
+    if (attr.EqualsLiteral("true"))
       mScratchArray->AppendElement(nsXULAtoms::insertafter);
   }
 }

@@ -163,7 +163,7 @@ nsTreeColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
       // This allows selective overriding for subcontent.
       nsAutoString value;
       content->GetAttr(kNameSpaceID_None, nsXULAtoms::allowevents, value);
-      if (value.Equals(NS_LITERAL_STRING("true")))
+      if (value.EqualsLiteral("true"))
         return result;
     }
   }

@@ -448,9 +448,9 @@ nsTreeContentView::GetProgressMode(PRInt32 aRow, nsITreeColumn* aCol, PRInt32* _
     if (cell) {
       nsAutoString state;
       cell->GetAttr(kNameSpaceID_None, nsXULAtoms::mode, state);
-      if (state.Equals(NS_LITERAL_STRING("normal")))
+      if (state.EqualsLiteral("normal"))
         *_retval = nsITreeView::PROGRESS_NORMAL;
-      else if (state.Equals(NS_LITERAL_STRING("undetermined")))
+      else if (state.EqualsLiteral("undetermined"))
         *_retval = nsITreeView::PROGRESS_UNDETERMINED;
     }
   }
@@ -621,7 +621,7 @@ nsTreeContentView::IsEditable(PRInt32 aRow, nsITreeColumn* aCol, PRBool* _retval
     if (cell) {
       nsAutoString editable;
       cell->GetAttr(kNameSpaceID_None, nsXULAtoms::editable, editable);
-      if (editable.Equals(NS_LITERAL_STRING("false")))
+      if (editable.EqualsLiteral("false"))
         *_retval = PR_FALSE;
     }
   }
@@ -771,7 +771,7 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
      (tag == nsXULAtoms::treeitem || tag == nsXULAtoms::treeseparator)) {
     nsAutoString hiddenString;
     aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hiddenString);
-    PRBool hidden = hiddenString.Equals(NS_LITERAL_STRING("true"));
+    PRBool hidden = hiddenString.EqualsLiteral("true");
  
     PRInt32 index = FindContent(aContent);
     if (hidden && index >= 0) {
@@ -812,7 +812,7 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
       if (aAttribute == nsXULAtoms::container) {
         nsAutoString container;
         aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::container, container);
-        PRBool isContainer = container.Equals(NS_LITERAL_STRING("true"));
+        PRBool isContainer = container.EqualsLiteral("true");
         row->SetContainer(isContainer);
         if (mBoxObject)
           mBoxObject->InvalidateRow(index);
@@ -820,7 +820,7 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
       else if (aAttribute == nsXULAtoms::open) {
         nsAutoString open;
         aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::open, open);
-        PRBool isOpen = open.Equals(NS_LITERAL_STRING("true"));
+        PRBool isOpen = open.EqualsLiteral("true");
         PRBool wasOpen = row->IsOpen();
         if (! isOpen && wasOpen)
           CloseContainer(index);
@@ -830,7 +830,7 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
       else if (aAttribute == nsXULAtoms::empty) {
         nsAutoString empty;
         aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::empty, empty);
-        PRBool isEmpty = empty.Equals(NS_LITERAL_STRING("true"));
+        PRBool isEmpty = empty.EqualsLiteral("true");
         row->SetEmpty(isEmpty);
         if (mBoxObject)
           mBoxObject->InvalidateRow(index);
@@ -1103,7 +1103,7 @@ nsTreeContentView::SerializeItem(nsIContent* aContent, PRInt32 aParentIndex, PRI
 {
   nsAutoString hidden;
   aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
-  if (hidden.Equals(NS_LITERAL_STRING("true")))
+  if (hidden.EqualsLiteral("true"))
     return;
 
   Row* row = Row::Create(mAllocator, aContent, aParentIndex);
@@ -1111,11 +1111,11 @@ nsTreeContentView::SerializeItem(nsIContent* aContent, PRInt32 aParentIndex, PRI
 
   nsAutoString container;
   aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::container, container);
-  if (container.Equals(NS_LITERAL_STRING("true"))) {
+  if (container.EqualsLiteral("true")) {
     row->SetContainer(PR_TRUE);
     nsAutoString open;
     aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::open, open);
-    if (open.Equals(NS_LITERAL_STRING("true"))) {
+    if (open.EqualsLiteral("true")) {
       row->SetOpen(PR_TRUE);
       nsCOMPtr<nsIContent> child;
       nsTreeUtils::GetImmediateChild(aContent, nsXULAtoms::treechildren, getter_AddRefs(child));
@@ -1131,7 +1131,7 @@ nsTreeContentView::SerializeItem(nsIContent* aContent, PRInt32 aParentIndex, PRI
     } else {
       nsAutoString empty;
       aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::empty, empty);
-      if (empty.Equals(NS_LITERAL_STRING("true")))
+      if (empty.EqualsLiteral("true"))
         row->SetEmpty(PR_TRUE);
     }
   } 
@@ -1142,7 +1142,7 @@ nsTreeContentView::SerializeSeparator(nsIContent* aContent, PRInt32 aParentIndex
 {
   nsAutoString hidden;
   aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
-  if (hidden.Equals(NS_LITERAL_STRING("true")))
+  if (hidden.EqualsLiteral("true"))
     return;
 
   Row* row = Row::Create(mAllocator, aContent, aParentIndex);
@@ -1206,14 +1206,14 @@ nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer,
       if (tag == nsXULAtoms::treeitem) {
         nsAutoString hidden;
         content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
-        if (! hidden.Equals(NS_LITERAL_STRING("true"))) {
+        if (! hidden.EqualsLiteral("true")) {
           (*aIndex)++;
           nsAutoString container;
           content->GetAttr(kNameSpaceID_None, nsXULAtoms::container, container);
-          if (container.Equals(NS_LITERAL_STRING("true"))) {
+          if (container.EqualsLiteral("true")) {
             nsAutoString open;
             content->GetAttr(kNameSpaceID_None, nsXULAtoms::open, open);
-            if (open.Equals(NS_LITERAL_STRING("true"))) {
+            if (open.EqualsLiteral("true")) {
               nsCOMPtr<nsIContent> child;
               nsTreeUtils::GetImmediateChild(content, nsXULAtoms::treechildren, getter_AddRefs(child));
               if (child)
@@ -1225,7 +1225,7 @@ nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer,
       else if (tag == nsXULAtoms::treeseparator) {
         nsAutoString hidden;
         content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
-        if (! hidden.Equals(NS_LITERAL_STRING("true")))
+        if (! hidden.EqualsLiteral("true"))
           (*aIndex)++;
       }
     }
