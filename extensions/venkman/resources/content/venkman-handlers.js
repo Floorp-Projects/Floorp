@@ -85,6 +85,23 @@ function con_icommand (e)
 console.onInputBreak =
 function cli_ibreak(e)
 {
+    if (!e.inputData)
+    {  /* if no input data, just list the breakpoints */
+        if (console._breakpoints.length == 0)
+        {
+            display (MSG_NO_BREAKPOINTS_SET);
+            return true;
+        }
+
+        display (getMsg(MSN_BP_HEADER, console._breakpoints.length));
+        for (var b in console._breakpoints)
+        {
+            var bp = console._breakpoints[b];
+            display (getMsg(MSN_BP_LINE, [b, bp.fileName, bp.line, bp.length]));
+        }
+        return true;
+    }
+        
     var ary = e.inputData.match(/([^\s\:]+)\:?\s*(\d+)\s*$/);
     if (!ary)
     {
@@ -92,36 +109,88 @@ function cli_ibreak(e)
         return false;
     }
 
-    dd ("onInputBreak(): " + ary[1] + ", " + ary[2]);
-    
-    var scriptMatched;
-    
-    for (var scriptName in console._scripts)
-    {
-        if (scriptName.indexOf(ary[1]) != -1)
-        {
-            scriptMatched = true;
-
-            var bpList = setBreakpoint (scriptName, ary[2]);
-            if (bpList.length)
-                display (getMsg(MSN_BP_CREATED,
-                                [scriptName, ary[2], bpList.length]));
-            else
-                display (getMsg(MSN_ERR_BP_NOLINE, [scriptName, ary[2]]),
-                         MT_ERROR);
-        }
-    }
-    
-    if (!scriptMatched)
+    var matchingFiles = matchFileName (ary[1]);
+    if (matchingFiles.length == 0)
     {
         display (getMsg(MSN_ERR_BP_NOSCRIPT, ary[1]), MT_ERROR);
         return false;
     }
     
+    for (var i in matchingFiles)
+    {
+        var fileName = matchingFiles[i];
+        if (getBreakpoint (fileName, ary[2]))
+            display(MSN_BP_EXISTS, [fileName, ary[2]], MT_INFO);
+        else
+        {
+            var bpList = setBreakpoint (fileName, ary[2]);
+            if (bpList.length)
+                display (getMsg(MSN_BP_CREATED,
+                                [fileName, ary[2], bpList.length]));
+            else
+                display (getMsg(MSN_ERR_BP_NOLINE, [fileName, ary[2]]),
+                         MT_ERROR);
+        }
+    }
+    
     return true;
     
-}            
-            
+}
+
+console.onInputClear =
+function cli_iclear (e)
+{
+    var ary = e.inputData.match(/(\d+)|([^\s\:]+)\:?\s*(\d+)\s*$/);
+    if (!ary)
+    {
+        console.displayUsageError(e.commandEntry);
+        return false;
+    }
+
+    var bp;
+    var matches;
+    var fileName;
+    
+    if (ary[1])
+    {
+        /* disable by breakpoint number */
+        var idx = Number(ary[1]);
+        if (!console._breakpoints[idx])
+        {
+            display (getMsg(MSN_ERR_BP_NOINDEX, idx, MT_ERROR));
+            return false;
+        }
+
+        fileName = console._breakpoints[idx].fileName;
+        var line = console._breakpoints[idx].line;
+        
+        matches = clearBreakpointByNumber (idx);        
+
+        display (getMsg(MSN_BP_DISABLED, [fileName, line, matches]));
+        return true;
+    }
+
+    /* else disable breakpoint by filename pattern and line number */
+    var matchingFiles = matchFileName (ary[2]);
+    if (matchingFiles.length == 0)
+    {
+        display (getMsg(MSN_ERR_BP_NOSCRIPT, ary[2]), MT_ERROR);
+        return false;
+    }
+
+    for (var i in matchingFiles)
+    {
+        fileName = matchingFiles[i];
+        matches = clearBreakpoint (fileName, ary[3]);
+        if (matches == 0)
+            display (getMsg(MSN_ERR_BP_NODICE, [fileName, ary[3]]), MT_ERROR);
+        else
+            display (getMsg(MSN_BP_DISABLED, [fileName, ary[3], matches]));
+    }
+    
+    return true;
+}
+
 console.onInputCommands =
 function cli_icommands (e)
 {
@@ -215,10 +284,11 @@ function con_iframe (e)
     if (idx >= 0)
     {
         console.currentFrameIndex = idx;
-        displayFrame (console.frames[idx], idx);
+        displayFrame (console.frames[idx], idx, true);
     }
     else
-        displayFrame (console.frames[console.currentFrameIndex]);
+        displayFrame (console.frames[console.currentFrameIndex], 
+                      console.currentFrameIndex, true);
     
     return true;
 }
