@@ -26,6 +26,12 @@
 
 class nsIMenuParent;
 
+enum nsMenuType {
+  eMenuType_Normal = 0,
+  eMenuType_Checkbox = 1,
+  eMenuType_Radio = 2
+};
+
 class nsIMenuFrame : public nsISupports {
 
 public:
@@ -37,6 +43,7 @@ public:
 
   NS_IMETHOD MenuIsOpen(PRBool& aResult) = 0;
   NS_IMETHOD MenuIsContainer(PRBool& aResult) = 0;
+  NS_IMETHOD MenuIsChecked(PRBool& aResult) = 0;
 
   NS_IMETHOD SelectFirstItem() = 0;
 
@@ -46,6 +53,8 @@ public:
   NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag) = 0;
 
   NS_IMETHOD GetMenuParent(nsIMenuParent** aMenuParent) = 0;
+  NS_IMETHOD GetRadioGroupName(nsString &aName) = 0;
+  NS_IMETHOD GetMenuType(nsMenuType &aType) = 0;
 
   NS_IMETHOD MarkAsGenerated() = 0;
 };

@@ -113,10 +113,11 @@ nsMenuFrame::nsMenuFrame()
   : mIsMenu(PR_FALSE),
     mMenuOpen(PR_FALSE),
     mHasAnonymousContent(PR_FALSE),
-    mIsCheckbox(PR_FALSE),
     mChecked(PR_FALSE),
+    mType(eMenuType_Normal),
     mMenuParent(nsnull),
-    mPresContext(nsnull)
+    mPresContext(nsnull),
+    mGroupName("")
 {
 
 } // cntr
@@ -256,8 +257,10 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
   }
   else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP && !IsMenu() &&
            mMenuParent) {
-    // First, flip "checked" state if we're a checkbox menu
-    if (mIsCheckbox) {
+    // First, flip "checked" state if we're a checkbox menu, or
+    // an un-checked radio menu
+    if (mType == eMenuType_Checkbox ||
+        (mType == eMenuType_Radio && !mChecked)) {
       nsAutoString checked;
 
       if (mChecked)
@@ -266,6 +269,7 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
         checked = "true";
       mContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked, checked,
                              PR_TRUE);
+      /* the AttributeChanged code will update all the internal state */
     }
 
     // Execute the execute event handler.
@@ -419,8 +423,9 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
       OpenMenuInternal(PR_TRUE);
     else
       OpenMenuInternal(PR_FALSE);
-  } else if (mIsCheckbox && aAttribute == nsHTMLAtoms::checked) {
-    UpdateMenuChecked();
+  } else if (aAttribute == nsHTMLAtoms::checked) {
+    if (mType != eMenuType_Normal)
+        UpdateMenuSpecialState();
   } else if (aAttribute == nsHTMLAtoms::type) {
     UpdateMenuType();
   }
@@ -803,26 +808,114 @@ nsMenuFrame::UpdateMenuType()
 {
   nsAutoString value;
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value);
-  if (value != "checkbox") {
-    if (mIsCheckbox)
+  if (value == "checkbox") {
+    mType = eMenuType_Checkbox;
+  } else if (value == "radio") {
+    mType = eMenuType_Radio;
+  } else {
+    if (mType != eMenuType_Normal)
       mContent->UnsetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked,
                                PR_TRUE);
-    mIsCheckbox = PR_FALSE;
-  } else {
-    mIsCheckbox = PR_TRUE;
-    UpdateMenuChecked();
+    mType = eMenuType_Normal;
   }
+  UpdateMenuSpecialState();
 }
 
+/* update checked-ness for type="checkbox" and type="radio" */
 void
-nsMenuFrame::UpdateMenuChecked() {
+nsMenuFrame::UpdateMenuSpecialState() {
   nsAutoString value;
+  PRBool newChecked;
+
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked,
                          value);
-  if (value == "true")
-    mChecked = PR_TRUE;
-  else
-    mChecked = PR_FALSE;
+  newChecked = (value == "true");
+
+  if (newChecked == mChecked) {
+    /* checked state didn't change */
+
+    if (mType != eMenuType_Radio)
+      return; // only Radio possibly cares about other kinds of change
+
+    mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, value);
+    if (value == mGroupName)
+      return;                   // no interesting change
+
+    mGroupName = value;
+  } else { 
+    mChecked = newChecked;
+    if (mType != eMenuType_Radio || !mChecked)
+      /*
+       * Unchecking something requires no further changes, and only
+       * menuRadio has to do additional work when checked.
+       */
+      return;
+  }
+
+  /*
+   * If we get this far, we're type=radio, and:
+   * - our name= changed, or
+   * - we went from checked="false" to checked="true"
+   */
+
+  if (!mChecked)
+    /*
+     * If we're not checked, then it must have been a name change, and a name
+     * change on an unchecked item doesn't require any magic.
+     */
+    return;
+  
+  /*
+   * Behavioural note:
+   * If we're checked and renamed _into_ an existing radio group, we are
+   * made the new checked item, and we unselect the previous one.
+   *
+   * The only other reasonable behaviour would be to check for another selected
+   * item in that group.  If found, unselect ourselves, otherwise we're the
+   * selected item.  That, however, would be a lot more work, and I don't think
+   * it's better at all.
+   */
+
+  /* walk siblings, looking for the other checked item with the same name */
+  nsIFrame *parent, *sib;
+  nsIMenuFrame *sibMenu;
+  nsMenuType sibType;
+  nsAutoString sibGroup;
+  PRBool sibChecked;
+  
+  nsresult rv = GetParent(&parent);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't get parent of radio menu frame\n");
+  if (NS_FAILED(rv)) return;
+  
+  rv = parent->FirstChild(NULL, &sib);
+  NS_ASSERTION((NS_SUCCEEDED(rv) && sib), 
+               "couldn't get first sib of radio menu frame\n");
+  if (NS_FAILED(rv) || !sib) return;
+
+  do {
+    if (NS_FAILED(sib->QueryInterface(NS_GET_IID(nsIMenuFrame),
+                                      (void **)&sibMenu)))
+        continue;
+        
+    if (sibMenu != (nsIMenuFrame *)this &&        // correct way to check?
+        (sibMenu->GetMenuType(sibType), sibType == eMenuType_Radio) &&
+        (sibMenu->MenuIsChecked(sibChecked), sibChecked) &&
+        (sibMenu->GetRadioGroupName(sibGroup), sibGroup == mGroupName)) {
+      
+      nsCOMPtr<nsIContent> content;
+      if (NS_FAILED(sib->GetContent(getter_AddRefs(content))))
+        continue;             // break?
+      
+      /* uncheck the old item */
+      content->UnsetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked,
+                              PR_TRUE);
+
+      /* XXX in DEBUG, check to make sure that there aren't two checked items */
+      return;
+    }
+
+  } while(NS_SUCCEEDED(sib->GetNextSibling(&sib)) && sib);
+
 }
 
 NS_IMETHODIMP
@@ -877,11 +970,6 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
                         onMenuBar ? "menubar-left" : "menu-left" , PR_FALSE);
   aAnonymousChildren.AppendElement(content);
   
-  nsAutoString beforeString;
-  nsAutoString accessString;
-  nsAutoString afterString;
-  SplitOnShortcut(beforeString, accessString, afterString);
-
   /*
    * Create the .menu-text titledbutton, and propagate crop, accesskey and
    * value attributes.  If we're a menubar, make the class menubar-text

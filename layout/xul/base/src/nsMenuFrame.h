@@ -115,39 +115,42 @@ public:
                           nsIFrame*       aOldFrame);
 
   // nsIMenuFrame Interface
-  NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
-  NS_IMETHOD ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
-  NS_IMETHOD Escape(PRBool& aHandledFlag);
-  NS_IMETHOD Enter();
 
-  NS_IMETHOD ToggleMenuState();
-  NS_IMETHOD SelectMenu(PRBool aActivateFlag);
-  
-  NS_IMETHOD OpenMenu(PRBool aActivateFlag);
-  
   NS_IMETHOD ActivateMenu(PRBool aActivateFlag);
+  NS_IMETHOD SelectMenu(PRBool aActivateFlag);
+  NS_IMETHOD OpenMenu(PRBool aActivateFlag);
 
+  NS_IMETHOD MenuIsOpen(PRBool& aResult) { aResult = IsOpen(); return NS_OK; };
   NS_IMETHOD MenuIsContainer(PRBool& aResult) { aResult = IsMenu(); return NS_OK; };
-  PRBool IsMenu();
+  NS_IMETHOD MenuIsChecked(PRBool& aResult) { aResult = mChecked; return NS_OK; };
   
   NS_IMETHOD SelectFirstItem();
 
-  NS_IMETHOD MenuIsOpen(PRBool& aResult) { aResult = IsOpen(); return NS_OK; };
-  PRBool IsOpen() { return mMenuOpen; };
-  
+  NS_IMETHOD Escape(PRBool& aHandledFlag);
+  NS_IMETHOD Enter();
+  NS_IMETHOD ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
+  NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
+
   NS_IMETHOD GetMenuParent(nsIMenuParent** aResult) { NS_IF_ADDREF(mMenuParent); *aResult = mMenuParent; return NS_OK; };
- 
-  PRBool IsDisabled();
+  NS_IMETHOD GetRadioGroupName(nsString &aName) { aName = mGroupName; return NS_OK; };
+  NS_IMETHOD GetMenuType(nsMenuType &aType) { aType = mType; return NS_OK; };
 
   NS_IMETHOD MarkAsGenerated();
+
+  // nsMenuFrame methods 
+
+  PRBool IsOpen() { return mMenuOpen; };
+  PRBool IsMenu();
+  PRBool IsDisabled();
   PRBool IsGenerated();
-  
+  NS_IMETHOD ToggleMenuState();
+
   void SetIsMenu(PRBool aIsMenu) { mIsMenu = aIsMenu; };
 
 protected:
   static void UpdateDismissalListener(nsIMenuParent* aMenuParent);
   void UpdateMenuType();
-  void UpdateMenuChecked();
+  void UpdateMenuSpecialState();
 
   void OpenMenuInternal(PRBool aActivateFlag);
   void GetMenuChildrenElement(nsIContent** aResult);
@@ -178,13 +181,15 @@ protected:
   PRPackedBool mIsMenu; // Whether or not we can even have children or not.
   PRPackedBool mMenuOpen;
   PRPackedBool mHasAnonymousContent;  // Do we have anonymous content frames?
-  PRPackedBool mIsCheckbox;           // Are we a checkbox?
   PRPackedBool mChecked;              // if so, are we checked?
+  nsMenuType mType;
+
   nsCOMPtr<nsIContent> mMenuText;
   nsCOMPtr<nsIContent> mAccelText;
   nsIMenuParent* mMenuParent; // Our parent menu.
   nsCOMPtr<nsITimer> mOpenTimer;
   nsIPresContext* mPresContext; // Our pres context.
+  nsString mGroupName;
 
 public:
   static nsMenuDismissalListener* mDismissalListener; // The listener that dismisses menus.
