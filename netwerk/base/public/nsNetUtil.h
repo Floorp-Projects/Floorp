@@ -227,11 +227,16 @@ NS_NewPostDataStream(nsIInputStream **result,
 
     if (isFile) {
         nsCOMPtr<nsILocalFile> file;
+        nsCOMPtr<nsIInputStream> fileStream;
 
         rv = NS_NewLocalFile(data, PR_FALSE, getter_AddRefs(file));
         if (NS_FAILED(rv)) return rv;
 
-        return NS_NewLocalFileInputStream(result, file);
+        rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream), file);
+        if (NS_FAILED(rv)) return rv;
+
+        // wrap the file stream with a buffered input stream
+        return NS_NewBufferedInputStream(result, fileStream, 8192);
     }
 
     // otherwise, create a string stream for the data
