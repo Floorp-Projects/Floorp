@@ -966,13 +966,17 @@ void invisible()
 				WritePrivateProfileString(Components[i].compname, "Attributes",
 				"UNSELECTED|ADDITIONAL|FORCE_UPGRADE", iniDstPath);
 			else if (!(Components[i].disabled) && !(Components[i].additional) &&
-				!(Components[i].invisible))
+				Components[i].forceupgrade && !(Components[i].invisible))
 				WritePrivateProfileString(Components[i].compname, "Attributes",
 				"SELECTED|FORCE_UPGRADE", iniDstPath);
 			else if (Components[i].additional && Components[i].launchapp && 
 				Components[i].uncompress && !(Components[i].invisible))
 				WritePrivateProfileString(Components[i].compname, "Attributes",
 				"SELECTED|UNCOMPRESS|LAUNCHAPP|ADDITIONAL", iniDstPath);
+			 else if (!(Components[i].additional) && 
+				 !(Components[i].forceupgrade) && !(Components[i].invisible))
+				 WritePrivateProfileString(Components[i].compname, "Attributes",
+				 "SELECTED|INVISIBLE", iniDstPath);
 			componentOrder++;
 		}
 		else

@@ -60,6 +60,9 @@ int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,
 		GetPrivateProfileString(component, "Attributes", "", 
 			attr, MAX_SIZE, iniSrcPath);
 
+		if (strcmp(component, "Component AOD") == 0)
+			strcpy(attr, "SELECTED");
+
 		comps[*compNum].archive  = CString(archive);
 		comps[*compNum].compname = component;
 		comps[*compNum].name 	 = CString(name);
