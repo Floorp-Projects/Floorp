@@ -204,12 +204,14 @@ sub queries {
     my $dbh = Bugzilla->dbh;
     my $sth = $dbh->prepare(q{ SELECT
                              DISTINCT name, query, linkinfooter,
-                                      IF(whine_queries.id IS NOT NULL, 1, 0)
+                                      CASE WHEN whine_queries.id 
+                                      IS NOT NULL THEN 1 ELSE 0 END,
+                                      UPPER(name) AS uppername 
                                  FROM namedqueries
                             LEFT JOIN whine_queries
                                    ON whine_queries.query_name = name
                                 WHERE userid=?
-                             ORDER BY UPPER(name)});
+                             ORDER BY uppername});
     $sth->execute($self->{id});
 
     my @queries;
@@ -494,8 +496,8 @@ sub derive_groups {
             $group_sth ||= $dbh->prepare(q{SELECT grantor_id
                                              FROM group_group_map
                                             WHERE member_id=?
-                                              AND grant_type=' . 
-                                                  GROUP_MEMBERSHIP . '});
+                                              AND grant_type = } .
+                                                  GROUP_MEMBERSHIP);
             $group_sth->execute($group);
             while (my ($groupid) = $group_sth->fetchrow_array) {
                 if (!defined($groupidschecked{"$groupid"})) {
