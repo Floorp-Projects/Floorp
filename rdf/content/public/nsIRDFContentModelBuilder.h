@@ -68,6 +68,23 @@ public:
     NS_IMETHOD CreateContents(nsIContent* aElement) = 0;
 
     /** 
+     * 'Open' a container element that was closed before. This gives
+     * the container a chance to populate its contents.
+     */
+    NS_IMETHOD OpenContainer(nsIContent* aContainer) = 0;
+
+    /**
+     * 'Close' an open container. This gives the container a chance to
+     * release unused content nodes.
+     */
+    NS_IMETHOD CloseContainer(nsIContent* aContainer) = 0;
+
+    /**
+     * Rebuild the contents of a container.
+     */
+    NS_IMETHOD RebuildContainer(nsIContent* aContainer) = 0;
+
+    /** 
      * Construct an element. This is exposed as a public method,
      * because the document implementation may need to call it to
      * support the DOM's document.createElement() method.
@@ -76,6 +93,7 @@ public:
                              nsIAtom* aTag,
                              nsIRDFResource* aResource,
                              nsIContent** aResult) = 0;
+
 };
 
 extern nsresult NS_NewXULTemplateBuilder(nsIRDFContentModelBuilder** aResult);

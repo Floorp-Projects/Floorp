@@ -802,7 +802,7 @@ public:
 
     nsresult OpenWidgetItem(nsIContent* aElement);
     nsresult CloseWidgetItem(nsIContent* aElement);
-    nsresult RemoveAndRebuildGeneratedChildren(nsIContent* aElement);
+    nsresult RebuildWidgetItem(nsIContent* aElement);
 
     nsresult
     AddElementToMap(nsIContent* aElement, PRBool aDeep);
@@ -2101,14 +2101,14 @@ XULDocumentImpl::ContentStatesChanged(nsIContent* aContent1, nsIContent* aConten
 }
 
 NS_IMETHODIMP 
-XULDocumentImpl::AttributeChanged(nsIContent* aChild,
+XULDocumentImpl::AttributeChanged(nsIContent* aElement,
                                   nsIAtom* aAttribute,
                                   PRInt32 aHint)
 {
     nsresult rv;
 
     PRInt32 nameSpaceID;
-    rv = aChild->GetNameSpaceID(nameSpaceID);
+    rv = aElement->GetNameSpaceID(nameSpaceID);
     if (NS_FAILED(rv)) return rv;
 
     // First see if we need to update our element map.
@@ -2120,27 +2120,7 @@ XULDocumentImpl::AttributeChanged(nsIContent* aChild,
 
             // That'll have removed _both_ the 'ref' and 'id' entries from
             // the map. So add 'em back now.
-            rv = AddElementToMap(aChild, PR_FALSE);
-            if (NS_FAILED(rv)) return rv;
-        }
-    }
-
-    // Handle "special" cases.
-    if (nameSpaceID == kNameSpaceID_XUL) {
-        if (aAttribute == kOpenAtom) {
-            nsAutoString open;
-            rv = aChild->GetAttribute(kNameSpaceID_None, kOpenAtom, open);
-            if (NS_FAILED(rv)) return rv;
-
-            if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (open.Equals("true"))) {
-                OpenWidgetItem(aChild);
-            }
-            else {
-                CloseWidgetItem(aChild);
-            }
-        }
-        else if (aAttribute == kRefAtom) {
-            rv = RemoveAndRebuildGeneratedChildren(aChild);
+            rv = AddElementToMap(aElement, PR_FALSE);
             if (NS_FAILED(rv)) return rv;
         }
     }
@@ -2148,11 +2128,34 @@ XULDocumentImpl::AttributeChanged(nsIContent* aChild,
     // Now notify external observers
     for (PRInt32 i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-        observer->AttributeChanged(this, aChild, aAttribute, aHint);
+        observer->AttributeChanged(this, aElement, aAttribute, aHint);
         if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
           i--;
         }
     }
+
+    // Handle "special" cases. We do this handling _after_ we've
+    // notified the observer to ensure that any frames that are
+    // caching information (e.g., the tree widget and the 'open'
+    // attribute) will notice things properly.
+    if (nameSpaceID == kNameSpaceID_XUL) {
+        if (aAttribute == kOpenAtom) {
+            nsAutoString open;
+            rv = aElement->GetAttribute(kNameSpaceID_None, kOpenAtom, open);
+            if (NS_FAILED(rv)) return rv;
+
+            if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (open.Equals("true"))) {
+                OpenWidgetItem(aElement);
+            }
+            else {
+                CloseWidgetItem(aElement);
+            }
+        }
+        else if (aAttribute == kRefAtom) {
+            RebuildWidgetItem(aElement);
+        }
+    }
+
     return NS_OK;
 }
 
@@ -4483,10 +4486,17 @@ XULDocumentImpl::ReleaseEvent(const nsString& aType)
 nsresult
 XULDocumentImpl::OpenWidgetItem(nsIContent* aElement)
 {
+    NS_PRECONDITION(aElement != nsnull, "null ptr");
+    if (! aElement)
+        return NS_ERROR_NULL_POINTER;
+
+    if (! mBuilders)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    nsresult rv;
+
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
-        nsresult rv;
-
         nsCOMPtr<nsIAtom> tag;
         rv = aElement->GetTag(*getter_AddRefs(tag));
         if (NS_FAILED(rv)) return rv;
@@ -4499,12 +4509,39 @@ XULDocumentImpl::OpenWidgetItem(nsIContent* aElement)
                 (const char*) nsCAutoString(tagStr)));
     }
 #endif
-    return CreateContents(aElement);
+
+    PRUint32 cnt = 0;
+    rv = mBuilders->Count(&cnt);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    for (PRUint32 i = 0; i < cnt; ++i) {
+        // XXX we should QueryInterface() here
+        nsIRDFContentModelBuilder* builder
+            = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
+
+        NS_ASSERTION(builder != nsnull, "null ptr");
+        if (! builder)
+            continue;
+
+        rv = builder->OpenContainer(aElement);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "error opening container");
+        // XXX ignore error code?
+
+        NS_RELEASE(builder);
+    }
+
+    return NS_OK;
 }
 
 nsresult
 XULDocumentImpl::CloseWidgetItem(nsIContent* aElement)
 {
+    NS_PRECONDITION(aElement != nsnull, "null ptr");
+    if (! aElement)
+        return NS_ERROR_NULL_POINTER;
+
+    if (! mBuilders)
+        return NS_ERROR_NOT_INITIALIZED;
+
     nsresult rv;
 
 #ifdef PR_LOGGING
@@ -4522,163 +4559,78 @@ XULDocumentImpl::CloseWidgetItem(nsIContent* aElement)
     }
 #endif
 
-    // Find the tag that contains the children so that we can remove
-    // all of the children.
-    //
-    // XXX We make a bit of a leap here and assume that the same
-    // template that was used to generate _us_ was used to generate
-    // our _kids_. I'm sure this'll break when we do toolbars or
-    // something.
-    nsAutoString tmplID;
-    rv = aElement->GetAttribute(kNameSpaceID_None, kTemplateAtom, tmplID);
-    if (NS_FAILED(rv)) return rv;
+    PRUint32 cnt = 0;
+    rv = mBuilders->Count(&cnt);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    for (PRUint32 i = 0; i < cnt; ++i) {
+        // XXX we should QueryInterface() here
+        nsIRDFContentModelBuilder* builder
+            = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-        return NS_OK;
+        NS_ASSERTION(builder != nsnull, "null ptr");
+        if (! builder)
+            continue;
 
-    nsCOMPtr<nsIDOMElement> tmplDOMEle;
-    rv = GetElementById(tmplID, getter_AddRefs(tmplDOMEle));
-    if (NS_FAILED(rv)) return rv;
+        rv = builder->CloseContainer(aElement);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "error closing container");
+        // XXX ignore error code?
 
-    nsCOMPtr<nsIContent> tmpl = do_QueryInterface(tmplDOMEle);
-    if (! tmpl)
-        return NS_ERROR_UNEXPECTED;
-
-    nsCOMPtr<nsIContent> tmplParent;
-    rv = tmpl->GetParent(*getter_AddRefs(tmplParent));
-    if (NS_FAILED(rv)) return rv;
-
-    NS_ASSERTION(tmplParent != nsnull, "template node has no parent");
-    if (! tmplParent)
-        return NS_ERROR_UNEXPECTED;
-
-    nsCOMPtr<nsIAtom> tmplParentTag;
-    rv = tmplParent->GetTag(*getter_AddRefs(tmplParentTag));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIContent> childcontainer;
-    if ((tmplParentTag.get() == kRuleAtom) || (tmplParentTag.get() == kTemplateAtom)) {
-        childcontainer = dont_QueryInterface(aElement);
+        NS_RELEASE(builder);
     }
-    else {
-        rv = nsRDFContentUtils::FindChildByTag(aElement,
-                                               kNameSpaceID_XUL,
-                                               tmplParentTag,
-                                               getter_AddRefs(childcontainer));
-
-        if (NS_FAILED(rv)) return rv;
-
-        if (rv == NS_RDF_NO_VALUE) {
-            // No tag; must've already been closed
-            return NS_OK;
-        }
-    }
-
-    PRInt32 count;
-    rv = childcontainer->ChildCount(count);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get count of the parent's children");
-    if (NS_FAILED(rv)) return rv;
-
-    while (--count >= 0) {
-        nsCOMPtr<nsIContent> child;
-        rv = childcontainer->ChildAt(count, *getter_AddRefs(child));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = childcontainer->RemoveChildAt(count, PR_TRUE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "error removing child");
-
-        do {
-            // If it's _not_ a XUL element, then we want to blow it and
-            // all of its kids out of the XUL document's
-            // resource-to-element map.
-            nsCOMPtr<nsIRDFResource> resource;
-            rv = nsRDFContentUtils::GetElementResource(child, getter_AddRefs(resource));
-            if (NS_FAILED(rv)) break;
-
-            PRBool isXULElement;
-            rv = mDocumentDataSource->HasAssertion(resource, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
-            if (NS_FAILED(rv)) break;
-
-            if (! isXULElement)
-                break;
-            
-            rv = child->SetDocument(nsnull, PR_TRUE);
-            if (NS_FAILED(rv)) return rv;
-        } while (0);
-    }
-
-    // Clear the container-contents-generated attribute so that the next time we
-    // come back, we'll regenerate the kids we just killed.
-    rv = aElement->UnsetAttribute(kNameSpaceID_None,
-                                  kContainerContentsGeneratedAtom,
-                                  PR_FALSE);
-	if (NS_FAILED(rv)) return rv;
-
-	// This is a _total_ hack to make sure that any XUL we blow away
-	// gets rebuilt.
-	rv = childcontainer->UnsetAttribute(kNameSpaceID_None,
-                                        kXULContentsGeneratedAtom,
-                                        PR_FALSE);
-	if (NS_FAILED(rv)) return rv;
-
-	rv = childcontainer->SetAttribute(kNameSpaceID_None,
-                                      kLazyContentAtom,
-                                      "true",
-                                      PR_FALSE);
-	if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
 }
 
 
 nsresult
-XULDocumentImpl::RemoveAndRebuildGeneratedChildren(nsIContent* aElement)
+XULDocumentImpl::RebuildWidgetItem(nsIContent* aElement)
 {
+    NS_PRECONDITION(aElement != nsnull, "null ptr");
+    if (! aElement)
+        return NS_ERROR_NULL_POINTER;
+
+    if (! mBuilders)
+        return NS_ERROR_NOT_INITIALIZED;
+
     nsresult rv;
 
-    PRInt32 count;
-    rv = aElement->ChildCount(count);
-    if (NS_FAILED(rv)) return rv;
-
-    while (--count >= 0) {
-        nsCOMPtr<nsIContent> child;
-        rv = aElement->ChildAt(count, *getter_AddRefs(child));
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
+        nsCOMPtr<nsIAtom> tag;
+        rv = aElement->GetTag(*getter_AddRefs(tag));
         if (NS_FAILED(rv)) return rv;
 
-        nsAutoString tmplID;
-        rv = child->GetAttribute(kNameSpaceID_None, kTemplateAtom, tmplID);
-        if (NS_FAILED(rv)) return rv;
+        nsAutoString tagStr;
+        tag->ToString(tagStr);
 
-        if (rv != NS_CONTENT_ATTR_HAS_VALUE)
+        PR_LOG(gXULLog, PR_LOG_DEBUG,
+               ("xuldoc close-widget-item %s",
+                (const char*) nsCAutoString(tagStr)));
+    }
+#endif
+
+    PRUint32 cnt = 0;
+    rv = mBuilders->Count(&cnt);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    for (PRUint32 i = 0; i < cnt; ++i) {
+        // XXX we should QueryInterface() here
+        nsIRDFContentModelBuilder* builder
+            = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
+
+        NS_ASSERTION(builder != nsnull, "null ptr");
+        if (! builder)
             continue;
 
-        // It's a generated element. Remove it, and set its document
-        // to null so that it'll get knocked out of the XUL doc's
-        // resource-to-element map.
-        rv = aElement->RemoveChildAt(count, PR_TRUE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "error removing child");
+        rv = builder->RebuildContainer(aElement);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "error rebuilding container");
+        // XXX ignore error code?
 
-        rv = child->SetDocument(nsnull, PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
+        NS_RELEASE(builder);
     }
-
-    // Clear the contents-generated attribute so that the next time we
-    // come back, we'll regenerate the kids we just killed.
-    rv = aElement->UnsetAttribute(kNameSpaceID_None,
-                                  kTemplateContentsGeneratedAtom,
-                                  PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = aElement->UnsetAttribute(kNameSpaceID_None,
-                                  kContainerContentsGeneratedAtom,
-                                  PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = CreateContents(aElement);
-    if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
 }
+
 
 
 
