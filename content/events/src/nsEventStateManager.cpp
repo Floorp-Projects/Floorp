@@ -759,7 +759,7 @@ nsEventStateManager::ShiftFocus(PRBool forward)
   if (nsnull == next) {
     PRBool focusTaken = PR_FALSE;
 
-    NS_IF_RELEASE(mCurrentFocus);
+    SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
 
     //Pass focus up to nsIWebShellContainer FocusAvailable
     nsISupports* container;
@@ -803,7 +803,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
     index += forward ? 1 : -1;
   }
   else {
-    index = forward ? 0 : count;
+    index = forward ? 0 : count-1;
   }
 
   for (;index < count && index >= 0;index += forward ? 1 : -1) {
@@ -907,7 +907,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
     //Reached end of document
     else {
       //If already at lowest priority tab (0), end
-      if (0 == mCurrentTabIndex) {
+      if (((forward) && (0 == mCurrentTabIndex)) ||
+          ((!forward) && (1 == mCurrentTabIndex))) {
         return nsnull;
       }
       //else continue looking for next highest priority tab
@@ -923,29 +924,51 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
 PRInt32
 nsEventStateManager::GetNextTabIndex(nsIContent* aParent, PRBool forward)
 {
-
-  PRInt32 count, tabIndex = 0;
+  PRInt32 count, tabIndex, childTabIndex;
+  nsIContent* child;
+  
   aParent->ChildCount(count);
-
-  for (PRInt32 index = 0; index < count; index++) {
-    nsIContent* child;
-    PRInt32 childTabIndex;
-
-    aParent->ChildAt(index, child);
-    childTabIndex = GetNextTabIndex(child, forward);
-    if (childTabIndex > mCurrentTabIndex && childTabIndex != tabIndex) {
-      tabIndex = (tabIndex == 0 || childTabIndex < tabIndex) ? childTabIndex : tabIndex; 
+ 
+  if (forward) {
+    tabIndex = 0;
+    for (PRInt32 index = 0; index < count; index++) {
+      aParent->ChildAt(index, child);
+      childTabIndex = GetNextTabIndex(child, forward);
+      if (childTabIndex > mCurrentTabIndex && childTabIndex != tabIndex) {
+        tabIndex = (tabIndex == 0 || childTabIndex < tabIndex) ? childTabIndex : tabIndex; 
+      }
+      
+      nsAutoString tabIndexStr;
+      child->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
+      PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
+      if (NS_OK == ec && val > mCurrentTabIndex && val != tabIndex) {
+        tabIndex = (tabIndex == 0 || val < tabIndex) ? val : tabIndex; 
+      }
+      NS_RELEASE(child);
     }
-
-    nsAutoString tabIndexStr;
-    child->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
-    PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
-    if (NS_OK == ec && val > mCurrentTabIndex && val != tabIndex) {
-      tabIndex = (tabIndex == 0 || val < tabIndex) ? val : tabIndex; 
+  } 
+  else { /* !forward */
+    tabIndex = 1;
+    for (PRInt32 index = 0; index < count; index++) {
+      aParent->ChildAt(index, child);
+      childTabIndex = GetNextTabIndex(child, forward);
+      if ((mCurrentTabIndex==0 && childTabIndex > tabIndex) ||
+          (childTabIndex < mCurrentTabIndex && childTabIndex > tabIndex)) {
+        tabIndex = childTabIndex;
+      }
+      
+      nsAutoString tabIndexStr;
+      child->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
+      PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
+      if (NS_OK == ec) {
+        if ((mCurrentTabIndex==0 && val > tabIndex) ||
+            (val < mCurrentTabIndex && val > tabIndex) ) {
+          tabIndex = val;
+        }
+      }
+      NS_RELEASE(child);
     }
-    NS_RELEASE(child);
   }
-
   return tabIndex;
 }
 
