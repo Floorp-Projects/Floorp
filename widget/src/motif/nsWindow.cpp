@@ -416,6 +416,10 @@ void nsWindow::RemoveChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 void nsWindow::Show(PRBool bState)
 {
+  if (bState)
+    XtManageChild(mWidget);
+  else
+    XtUnmanageChild(mWidget);
 }
 
 //-------------------------------------------------------------------------
@@ -436,6 +440,7 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
 //-------------------------------------------------------------------------
 void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
+  XtVaSetValues(mWidget, XmNwidth, aWidth, XmNheight, aHeight, nsnull);
 }
 
     
