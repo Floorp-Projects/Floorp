@@ -1,0 +1,394 @@
+# Makefile.in generated automatically by automake 1.4a from Makefile.am
+
+# Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+
+SHELL = @SHELL@
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+
+DESTDIR =
+
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+
+top_builddir = ..
+
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+INSTALL_STRIP_FLAG =
+transform = @program_transform_name@
+
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+host_alias = @host_alias@
+host_triplet = @host@
+AS = @AS@
+CC = @CC@
+CXX = @CXX@
+DEBUG_FLAGS = @DEBUG_FLAGS@
+DLLTOOL = @DLLTOOL@
+GTK_CFLAGS = @GTK_CFLAGS@
+GTK_CONFIG = @GTK_CONFIG@
+GTK_LIBS = @GTK_LIBS@
+LD = @LD@
+LIBTOOL = @LIBTOOL@
+LN_S = @LN_S@
+MAINT = @MAINT@
+MAKEINFO = @MAKEINFO@
+MOZILLA_DIR = @MOZILLA_DIR@
+NM = @NM@
+PACKAGE = @PACKAGE@
+RANLIB = @RANLIB@
+USE_SYMBOL_UNDERSCORE = @USE_SYMBOL_UNDERSCORE@
+VERSION = @VERSION@
+
+lib_LTLIBRARIES = libgtkmozilla.la
+include_HEADERS = gtkmozilla.h
+libgtkmozilla_la_SOURCES =  			gtkmozilla.cpp 			gtkmozilla.h 			GtkMozillaContainer.h 			GtkMozillaContainer.cpp 			nsSetupRegistry.cpp
+
+
+MOZILLA_INCLUDES = -I@MOZILLA_DIR@/dist/include
+
+# Mozilla libs:
+NULL = 
+NSPR_LIBS = -lplds3 -lplc3 -lnspr3 -lpthread
+
+MOZ_LIB_JS_PREFIX = moz
+MOZ_LIB_UTIL_PREFIX = moz
+
+ZLIB_LIBS = -lz
+
+BASE_LIBS =          -lraptorbase         -lpref               $(ZLIB_LIBS)         -lreg                -l$(MOZ_LIB_JS_PREFIX)js                     -lxpcom              -lsecfree            -l$(MOZ_LIB_UTIL_PREFIX)util            $(NULL)
+
+
+TOOLKIT_WIDGET_LIB = -lwidgetgtk
+TOOLKIT_GFX_LIB = -lgfxgtk
+TOOLKIT_BASE_LIB = -lgmbasegtk
+
+GECKO_LIBS =          -lraptorwebwidget             $(TOOLKIT_WIDGET_LIB)         -lraptorgfx                   $(TOOLKIT_GFX_LIB)            -lgfxps          $(TOOLKIT_BASE_LIB)           -lraptorhtmlpars              -lexpat         -lxmltok         -ljsdom                       $(NULL)
+
+
+JPEG_LIBS = -ljpeg
+PNG_LIBS = -lpng
+
+IMGLIB_LIBS =          -limg                $(JPEG_LIBS)         $(PNG_LIBS)          $(NULL)
+
+MOZ_LIB_DBM_PREFIX = moz
+
+NETLIB_LIBS =          -labouturl            -lfileurl             -lftpurl              -lgophurl             -lhttpurl             -lremoturl            -lsockstuburl         -lmimetype            -lnetcache            -lnetcnvts            -lnetlib              -lnetwork             -lxp                  -ljsurl               -l$(MOZ_LIB_DBM_PREFIX)dbm              -lpwcac               $(NULL)
+
+
+JSJ_LIB = 
+TK_LIBS = 
+
+ALL_MOZ_LIBS =          $(GECKO_LIBS)          $(NETLIB_LIBS)         $(IMGLIB_LIBS)         $(BASE_LIBS)           $(JSJ_LIB)             $(NSPR_LIBS)           $(TK_LIBS)             $(NULL)
+
+
+MOZILLA_LIBS = -L$(MOZILLA_DIR)/dist/lib          $(ALL_MOZ_LIBS)
+
+
+INCLUDES = $(MOZILLA_INCLUDES) @GTK_CFLAGS@ @DEBUG_FLAGS@
+
+CPPFLAGS = -DXP_UNIX
+
+libgtkmozilla_la_LIBADD = $(MOZILLA_LIBS) @GTK_LIBS@
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = ../config.h
+CONFIG_CLEAN_FILES = 
+LTLIBRARIES =  $(lib_LTLIBRARIES)
+
+
+DEFS = @DEFS@ -I. -I$(srcdir) -I..
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+libgtkmozilla_la_LDFLAGS = 
+libgtkmozilla_la_DEPENDENCIES = 
+libgtkmozilla_la_OBJECTS =  gtkmozilla.lo GtkMozillaContainer.lo \
+nsSetupRegistry.lo
+CXXFLAGS = @CXXFLAGS@
+CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+CXXLD = $(CXX)
+CXXLINK = $(LIBTOOL) --mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
+CFLAGS = @CFLAGS@
+COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
+HEADERS =  $(include_HEADERS)
+
+DIST_COMMON =  Makefile.am Makefile.in
+
+
+DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
+
+TAR = gtar
+GZIP_ENV = --best
+SOURCES = $(libgtkmozilla_la_SOURCES)
+OBJECTS = $(libgtkmozilla_la_OBJECTS)
+
+all: all-redirect
+.SUFFIXES:
+.SUFFIXES: .S .c .cpp .lo .o .s
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps lib/Makefile
+
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+
+mostlyclean-libLTLIBRARIES:
+
+clean-libLTLIBRARIES:
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+
+distclean-libLTLIBRARIES:
+
+maintainer-clean-libLTLIBRARIES:
+
+install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libdir)
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    echo "$(LIBTOOL)  --mode=install $(INSTALL) $$p $(DESTDIR)$(libdir)/$$p"; \
+	    $(LIBTOOL)  --mode=install $(INSTALL) $$p $(DESTDIR)$(libdir)/$$p; \
+	  else :; fi; \
+	done
+
+uninstall-libLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  $(LIBTOOL)  --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p; \
+	done
+
+.c.o:
+	$(COMPILE) -c $<
+
+.s.o:
+	$(COMPILE) -c $<
+
+.S.o:
+	$(COMPILE) -c $<
+
+mostlyclean-compile:
+	-rm -f *.o core *.core
+
+clean-compile:
+
+distclean-compile:
+	-rm -f *.tab.c
+
+maintainer-clean-compile:
+
+.c.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+.s.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+.S.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+mostlyclean-libtool:
+	-rm -f *.lo
+
+clean-libtool:
+	-rm -rf .libs _libs
+
+distclean-libtool:
+
+maintainer-clean-libtool:
+
+libgtkmozilla.la: $(libgtkmozilla_la_OBJECTS) $(libgtkmozilla_la_DEPENDENCIES)
+	$(CXXLINK) -rpath $(libdir) $(libgtkmozilla_la_LDFLAGS) $(libgtkmozilla_la_OBJECTS) $(libgtkmozilla_la_LIBADD) $(LIBS)
+.cpp.o:
+	$(CXXCOMPILE) -c $<
+.cpp.lo:
+	$(LTCXXCOMPILE) -c $<
+
+install-includeHEADERS: $(include_HEADERS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(includedir)
+	@list='$(include_HEADERS)'; for p in $$list; do \
+	  if test -f "$$p"; then d= ; else d="$(srcdir)/"; fi; \
+	  echo " $(INSTALL_DATA) $$d$$p $(DESTDIR)$(includedir)/$$p"; \
+	  $(INSTALL_DATA) $$d$$p $(DESTDIR)$(includedir)/$$p; \
+	done
+
+uninstall-includeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	list='$(include_HEADERS)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(includedir)/$$p; \
+	done
+
+tags: TAGS
+
+ID: $(HEADERS) $(SOURCES) $(LISP)
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	here=`pwd` && cd $(srcdir) \
+	  && mkid -f$$here/ID $$unique $(LISP)
+
+TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
+	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
+
+mostlyclean-tags:
+
+clean-tags:
+
+distclean-tags:
+	-rm -f TAGS ID
+
+maintainer-clean-tags:
+
+distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
+
+subdir = lib
+
+distdir: $(DISTFILES)
+	@for file in $(DISTFILES); do \
+	  d=$(srcdir); \
+	  if test -d $$d/$$file; then \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
+	    || cp -p $$d/$$file $(distdir)/$$file || :; \
+	  fi; \
+	done
+GtkMozillaContainer.lo GtkMozillaContainer.o : GtkMozillaContainer.cpp \
+	GtkMozillaContainer.h gtkmozilla.h
+gtkmozilla.lo gtkmozilla.o : gtkmozilla.cpp gtkmozilla.h \
+	GtkMozillaContainer.h
+nsSetupRegistry.lo nsSetupRegistry.o : nsSetupRegistry.cpp
+
+info-am:
+info: info-am
+dvi-am:
+dvi: dvi-am
+check-am: all-am
+check: check-am
+installcheck-am:
+installcheck: installcheck-am
+install-exec-am: install-libLTLIBRARIES
+install-exec: install-exec-am
+
+install-data-am: install-includeHEADERS
+install-data: install-data-am
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+install: install-am
+uninstall-am: uninstall-libLTLIBRARIES uninstall-includeHEADERS
+uninstall: uninstall-am
+all-am: Makefile $(LTLIBRARIES) $(HEADERS)
+all-redirect: all-am
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_STRIP_FLAG=-s install
+installdirs:
+	$(mkinstalldirs)  $(DESTDIR)$(libdir) $(DESTDIR)$(includedir)
+
+
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES)
+	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+mostlyclean-am:  mostlyclean-libLTLIBRARIES mostlyclean-compile \
+		mostlyclean-libtool mostlyclean-tags \
+		mostlyclean-generic
+
+mostlyclean: mostlyclean-am
+
+clean-am:  clean-libLTLIBRARIES clean-compile clean-libtool clean-tags \
+		clean-generic mostlyclean-am
+
+clean: clean-am
+
+distclean-am:  distclean-libLTLIBRARIES distclean-compile \
+		distclean-libtool distclean-tags distclean-generic \
+		clean-am
+	-rm -f libtool
+
+distclean: distclean-am
+
+maintainer-clean-am:  maintainer-clean-libLTLIBRARIES \
+		maintainer-clean-compile maintainer-clean-libtool \
+		maintainer-clean-tags maintainer-clean-generic \
+		distclean-am
+	@echo "This command is intended for maintainers to use;"
+	@echo "it deletes files that may require special tools to rebuild."
+
+maintainer-clean: maintainer-clean-am
+
+.PHONY: mostlyclean-libLTLIBRARIES distclean-libLTLIBRARIES \
+clean-libLTLIBRARIES maintainer-clean-libLTLIBRARIES \
+uninstall-libLTLIBRARIES install-libLTLIBRARIES mostlyclean-compile \
+distclean-compile clean-compile maintainer-clean-compile \
+mostlyclean-libtool distclean-libtool clean-libtool \
+maintainer-clean-libtool uninstall-includeHEADERS \
+install-includeHEADERS tags mostlyclean-tags distclean-tags clean-tags \
+maintainer-clean-tags distdir info-am info dvi-am dvi check check-am \
+installcheck-am installcheck install-exec-am install-exec \
+install-data-am install-data install-am install uninstall-am uninstall \
+all-redirect all-am all installdirs mostlyclean-generic \
+distclean-generic clean-generic maintainer-clean-generic clean \
+mostlyclean distclean maintainer-clean
+
+
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:
