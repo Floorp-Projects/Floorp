@@ -162,14 +162,13 @@ tree.list {
 
 /* ::::: color picker button ::::: */
 
-button.color-button {
+.color-button {
+  /* override larger default values */
+  min-width: 0px;
   margin: 2px;
-  width: 32px;
-  min-width: 32px;
 }
-
+ 
 .color-well {
-  margin: 4px 10px 4px 10px;
   border: 1px inset #B4C3D4;
   width: 20px;
   height: 12px;

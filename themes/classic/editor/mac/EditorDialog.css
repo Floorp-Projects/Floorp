@@ -86,7 +86,6 @@ groupbox {
   width: 20px;
   height: 12px; 
   border: 1px inset #CCCCCC;
-  margin: 2px;
 }
 
 .color-well[default="true"] {
@@ -95,10 +94,8 @@ groupbox {
 }
 
 button.color-button {
-  /* need to override large default min-width */
-  min-width : 30px;
-  width : 30px;
-  height: 16px;
+  /* override large default min-width */
+  min-width : 0px;
   margin: 2px;
 }
 
