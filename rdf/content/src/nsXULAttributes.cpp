@@ -693,16 +693,19 @@ nsXULAttributes::GetNamedItem(const nsAReadableString& aName,
     nsresult rv;
     *aReturn = nsnull;
 
-    PRInt32 nameSpaceID;
+    // XXX nameSpaceID only used in dead code (that was giving us a warning).
+    // XXX I'd remove it completely, but maybe it is a useful reminder???
+    // PRInt32 nameSpaceID;
     nsIAtom* name;
     nsCOMPtr<nsINodeInfo> inpNodeInfo;
 
     if (NS_FAILED(rv = mContent->NormalizeAttributeString(aName, *getter_AddRefs(inpNodeInfo))))
         return rv;
 
-    if (kNameSpaceID_Unknown == nameSpaceID) {
-      nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
-    }
+    // if (kNameSpaceID_Unknown == nameSpaceID) {
+    //   nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+    // }
+
     // XXX doing this instead of calling mContent->GetAttribute() will
     // make it a lot harder to lazily instantiate properties from the
     // graph. The problem is, how else do we get the named item?
