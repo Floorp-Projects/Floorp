@@ -1931,6 +1931,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       return PR_TRUE;
     }//if
   }//if
+  if(aChild == eHTMLTag_script)
+    return PR_TRUE;
   return gHTMLElements[aParent].CanContain((eHTMLTags)aChild);
 } 
 
@@ -2007,7 +2009,7 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
   }
 
     //Now the obvious test: if the parent can contain the child, don't omit.
-  if((gHTMLElements[aParent].CanContain(aChild)) || (aChild==aParent)){
+  if(CanContain(aParent,aChild) || (aChild==aParent)){
     return PR_FALSE;
   }
 
