@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla,v 1.2 1999/12/06 23:20:26 mcafee%netscape.com Exp $
+## $Id: mozilla,v 1.3 1999/12/15 06:23:49 sspitzer%netscape.com Exp $
 ## 
 ## Usage:
 ##
@@ -49,10 +49,15 @@ fi
 script_args=""
 moreargs=""
 debugging=0
+MOZILLA_BIN="./mozilla-bin"
 
 while [ $# -gt 0 ]
 do
   case $1 in
+    -p | -pure)
+      MOZILLA_BIN="./mozilla-bin.pure"
+      shift
+      ;;
     -h | --help )
       script_args="$script_args -h"
       shift
@@ -101,5 +106,5 @@ then
 	exit 1
 fi
 
-echo $dist_bin/run-mozilla.sh $script_args ./mozilla-bin $moreargs ${1+"$@"}	
-$dist_bin/run-mozilla.sh $script_args ./mozilla-bin $moreargs ${1+"$@"}
+echo $dist_bin/run-mozilla.sh $script_args $MOZILLA_BIN $moreargs ${1+"$@"}	
+$dist_bin/run-mozilla.sh $script_args $MOZILLA_BIN $moreargs ${1+"$@"}
