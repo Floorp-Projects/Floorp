@@ -160,6 +160,30 @@ nsSVGTextElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
+  // DOM property: nsIDOMSVGTextPositioningElement::dx, #IMPLIED attrib: dx
+  {
+    nsCOMPtr<nsISVGLengthList> lengthList;
+    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mdX),
+                                     lengthList);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsSVGAtoms::dx, mdX);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  
+  // DOM property: nsIDOMSVGTextPositioningElement::dy, #IMPLIED attrib: dy
+  {
+    nsCOMPtr<nsISVGLengthList> lengthList;
+    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mdY),
+                                     lengthList);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsSVGAtoms::dy, mdY);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
   return rv;
 }
 
@@ -197,15 +221,17 @@ NS_IMETHODIMP nsSVGTextElement::GetY(nsIDOMSVGAnimatedLengthList * *aY)
 /* readonly attribute nsIDOMSVGAnimatedLengthList dx; */
 NS_IMETHODIMP nsSVGTextElement::GetDx(nsIDOMSVGAnimatedLengthList * *aDx)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  *aDx = mdX;
+  NS_IF_ADDREF(*aDx);
+  return NS_OK;
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLengthList dy; */
 NS_IMETHODIMP nsSVGTextElement::GetDy(nsIDOMSVGAnimatedLengthList * *aDy)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  *aDy = mdY;
+  NS_IF_ADDREF(*aDy);
+  return NS_OK;
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumberList rotate; */
@@ -353,6 +379,26 @@ void nsSVGTextElement::ParentChainChanged()
   {
     nsCOMPtr<nsIDOMSVGLengthList> dom_lengthlist;
     mY->GetAnimVal(getter_AddRefs(dom_lengthlist));
+    nsCOMPtr<nsISVGLengthList> lengthlist = do_QueryInterface(dom_lengthlist);
+    NS_ASSERTION(lengthlist, "svg lengthlist missing interface");
+    
+    lengthlist->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextY()));
+  }
+
+  // dx:
+  {
+    nsCOMPtr<nsIDOMSVGLengthList> dom_lengthlist;
+    mdX->GetAnimVal(getter_AddRefs(dom_lengthlist));
+    nsCOMPtr<nsISVGLengthList> lengthlist = do_QueryInterface(dom_lengthlist);
+    NS_ASSERTION(lengthlist, "svg lengthlist missing interface");
+    
+    lengthlist->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextX()));
+  }
+
+  // dy:
+  {
+    nsCOMPtr<nsIDOMSVGLengthList> dom_lengthlist;
+    mdY->GetAnimVal(getter_AddRefs(dom_lengthlist));
     nsCOMPtr<nsISVGLengthList> lengthlist = do_QueryInterface(dom_lengthlist);
     NS_ASSERTION(lengthlist, "svg lengthlist missing interface");
     

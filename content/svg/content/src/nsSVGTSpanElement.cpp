@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGElement.h"
+#include "nsSVGStylableElement.h"
 #include "nsSVGAtoms.h"
 #include "nsIDOMSVGTSpanElement.h"
 #include "nsCOMPtr.h"
@@ -45,7 +45,7 @@
 #include "nsISVGSVGElement.h"
 #include "nsSVGCoordCtxProvider.h"
 
-typedef nsSVGElement nsSVGTSpanElementBase;
+typedef nsSVGStylableElement nsSVGTSpanElementBase;
 
 class nsSVGTSpanElement : public nsSVGTSpanElementBase,
                           public nsIDOMSVGTSpanElement // : nsIDOMSVGTextPositioningElement
@@ -125,7 +125,8 @@ nsSVGTSpanElement::~nsSVGTSpanElement()
 nsresult
 nsSVGTSpanElement::Init()
 {
-  nsresult rv;
+  nsresult rv = nsSVGTSpanElementBase::Init();
+  NS_ENSURE_SUCCESS(rv,rv);
 
   // Create mapped properties:
 
@@ -150,6 +151,30 @@ nsSVGTSpanElement::Init()
                                      lengthList);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = AddMappedSVGValue(nsSVGAtoms::y, mY);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  // DOM property: nsIDOMSVGTextPositioningElement::dx, #IMPLIED attrib: dx
+  {
+    nsCOMPtr<nsISVGLengthList> lengthList;
+    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mdX),
+                                     lengthList);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsSVGAtoms::dx, mdX);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  
+  // DOM property: nsIDOMSVGTextPositioningElement::dy, #IMPLIED attrib: dy
+  {
+    nsCOMPtr<nsISVGLengthList> lengthList;
+    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mdY),
+                                     lengthList);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsSVGAtoms::dy, mdY);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -190,15 +215,17 @@ NS_IMETHODIMP nsSVGTSpanElement::GetY(nsIDOMSVGAnimatedLengthList * *aY)
 /* readonly attribute nsIDOMSVGAnimatedLengthList dx; */
 NS_IMETHODIMP nsSVGTSpanElement::GetDx(nsIDOMSVGAnimatedLengthList * *aDx)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  *aDx = mdX;
+  NS_IF_ADDREF(*aDx);
+  return NS_OK;
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLengthList dy; */
 NS_IMETHODIMP nsSVGTSpanElement::GetDy(nsIDOMSVGAnimatedLengthList * *aDy)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  *aDy = mdY;
+  NS_IF_ADDREF(*aDy);
+  return NS_OK;
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumberList rotate; */
@@ -338,6 +365,26 @@ void nsSVGTSpanElement::ParentChainChanged()
   {
     nsCOMPtr<nsIDOMSVGLengthList> dom_lengthlist;
     mY->GetAnimVal(getter_AddRefs(dom_lengthlist));
+    nsCOMPtr<nsISVGLengthList> lengthlist = do_QueryInterface(dom_lengthlist);
+    NS_ASSERTION(lengthlist, "svg lengthlist missing interface");
+    
+    lengthlist->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextY()));
+  }
+
+  // dx:
+  {
+    nsCOMPtr<nsIDOMSVGLengthList> dom_lengthlist;
+    mdX->GetAnimVal(getter_AddRefs(dom_lengthlist));
+    nsCOMPtr<nsISVGLengthList> lengthlist = do_QueryInterface(dom_lengthlist);
+    NS_ASSERTION(lengthlist, "svg lengthlist missing interface");
+    
+    lengthlist->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextX()));
+  }
+
+  // dy:
+  {
+    nsCOMPtr<nsIDOMSVGLengthList> dom_lengthlist;
+    mdY->GetAnimVal(getter_AddRefs(dom_lengthlist));
     nsCOMPtr<nsISVGLengthList> lengthlist = do_QueryInterface(dom_lengthlist);
     NS_ASSERTION(lengthlist, "svg lengthlist missing interface");
     

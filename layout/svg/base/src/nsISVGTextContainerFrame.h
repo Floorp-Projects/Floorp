@@ -40,11 +40,11 @@
 #define __NS_ISVGTEXTCONTAINERFRAME_H__
 
 #include "nsISupports.h"
+#include "nsIDOMSVGLengthList.h"
 class nsISVGTextFrame;
 
-// {1044E336-41E2-414D-9542-FCDBA11C15A8}
 #define NS_ISVGTEXTCONTAINERFRAME_IID \
-{ 0x1044e336, 0x41e2, 0x414d, { 0x95, 0x42, 0xfc, 0xdb, 0xa1, 0x1c, 0x15, 0xa8 } }
+{ 0x3d3a12c4, 0x06bb, 0x4662, { 0xa3, 0xe3, 0x55, 0xaf, 0x5a, 0x48, 0x22, 0x78 } }
 
 class nsISVGTextContainerFrame : public nsISupports
 {
@@ -57,6 +57,11 @@ public:
   NS_IMETHOD_(PRBool) GetAbsolutePositionAdjustmentY(float &y, PRUint32 charNum)=0;
   NS_IMETHOD_(PRBool) GetRelativePositionAdjustmentX(float &dx, PRUint32 charNum)=0;
   NS_IMETHOD_(PRBool) GetRelativePositionAdjustmentY(float &dy, PRUint32 charNum)=0;
+
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetX()=0;
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetY()=0;
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDx()=0;
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDy()=0;
 };
 
 #endif // __NS_ISVGTEXTCONTAINERFRAME_H__

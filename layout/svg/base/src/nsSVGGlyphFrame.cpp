@@ -60,6 +60,8 @@
 #include "nsSVGPoint.h"
 #include "nsSVGAtoms.h"
 #include "nsIViewManager.h"
+#include "nsINameSpaceManager.h"
+#include "nsContainerFrame.h"
 
 typedef nsFrame nsSVGGlyphFrameBase;
 
@@ -131,6 +133,13 @@ public:
   NS_IMETHOD_(void) GetAdjustedPosition(/* inout */ float &x, /* inout */ float &y);
   NS_IMETHOD_(PRUint32) GetNumberOfChars();
   NS_IMETHOD_(PRUint32) GetCharNumberOffset();
+
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetX();
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetY();
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDx();
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDy();
+  NS_IMETHOD_(PRUint16) GetTextAnchor();
+  NS_IMETHOD_(PRBool) IsAbsolutelyPositioned();
 
   // nsISVGGlyphFragmentNode interface:
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment();
@@ -987,6 +996,72 @@ nsSVGGlyphFrame::GetCharNumberOffset()
 {
   return mCharOffset;
 }
+
+NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
+nsSVGGlyphFrame::GetX()
+{
+  nsISVGTextContainerFrame *containerFrame;
+  mParent->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame),
+                          (void**)&containerFrame);
+  if (containerFrame)
+    return containerFrame->GetX();
+  return nsnull;
+}
+
+NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
+nsSVGGlyphFrame::GetY()
+{
+  nsISVGTextContainerFrame *containerFrame;
+  mParent->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame),
+                          (void**)&containerFrame);
+  if (containerFrame)
+    return containerFrame->GetY();
+  return nsnull;
+}
+
+NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
+nsSVGGlyphFrame::GetDx()
+{
+  nsISVGTextContainerFrame *containerFrame;
+  mParent->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame),
+                          (void**)&containerFrame);
+  if (containerFrame)
+    return containerFrame->GetDx();
+  return nsnull;
+}
+
+NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
+nsSVGGlyphFrame::GetDy()
+{
+  nsISVGTextContainerFrame *containerFrame;
+  mParent->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame),
+                          (void**)&containerFrame);
+  if (containerFrame)
+    return containerFrame->GetDy();
+  return nsnull;
+}
+
+NS_IMETHODIMP_(PRUint16)
+nsSVGGlyphFrame::GetTextAnchor()
+{
+  return GetStyleSVG()->mTextAnchor;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsSVGGlyphFrame::IsAbsolutelyPositioned()
+{
+  nsISVGTextContainerFrame *textFrame;
+  mParent->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame),
+                          (void**)&textFrame);
+  if (textFrame) {
+    if (mParent->GetFirstChild(nsnull) == this &&
+        (mParent->GetContent()->HasAttr(kNameSpaceID_None, nsSVGAtoms::x) ||
+         mParent->GetContent()->HasAttr(kNameSpaceID_None, nsSVGAtoms::y)))
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 
 //----------------------------------------------------------------------
 // nsISVGGlyphFragmentNode interface:

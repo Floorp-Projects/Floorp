@@ -40,12 +40,12 @@
 #define __NS_ISVGGLYPHFRAGMENTLEAF_H__
 
 #include "nsISVGGlyphFragmentNode.h"
+#include "nsIDOMSVGLengthList.h"
 
 class nsISVGRendererGlyphMetrics;
 
-// {3D47D8F2-BFE9-44FC-847C-8FEFD0AC2624}
 #define NS_ISVGGLYPHFRAGMENTLEAF_IID \
-{ 0x3d47d8f2, 0xbfe9, 0x44fc, { 0x84, 0x7c, 0x8f, 0xef, 0xd0, 0xac, 0x26, 0x24 } }
+{ 0x7e8500f1, 0xb3a5, 0x4e8a, { 0x90, 0x78, 0x03, 0x34, 0xc7, 0xcb, 0x30, 0x16 } }
 
 class nsISVGGlyphFragmentLeaf : public nsISVGGlyphFragmentNode
 {
@@ -61,6 +61,13 @@ public:
   NS_IMETHOD_(void) GetAdjustedPosition(/* inout */ float &x, /* inout */ float &y)=0;
   NS_IMETHOD_(PRUint32) GetNumberOfChars()=0;
   NS_IMETHOD_(PRUint32) GetCharNumberOffset()=0;
+
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetX()=0;
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetY()=0;
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDx()=0;
+  NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDy()=0;
+  NS_IMETHOD_(PRUint16) GetTextAnchor()=0;
+  NS_IMETHOD_(PRBool) IsAbsolutelyPositioned()=0;
 };
 
 #endif // __NS_ISVGGLYPHFRAGMENTLEAF_H__
