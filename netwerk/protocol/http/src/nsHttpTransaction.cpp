@@ -354,6 +354,24 @@ nsHttpTransaction::ReadSegments(nsAHttpSegmentReader *reader,
     nsresult rv = mRequestStream->ReadSegments(ReadRequestSegment, this, count, countRead);
 
     mReader = nsnull;
+
+    // if read would block then we need to AsyncWait on the request stream.
+    // have callback occur on socket thread so we stay synchronized.
+    if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+        nsCOMPtr<nsIAsyncInputStream> asyncIn =
+                do_QueryInterface(mRequestStream);
+        if (asyncIn) {
+            nsCOMPtr<nsIEventTarget> target;
+            gHttpHandler->GetSocketThreadEventTarget(getter_AddRefs(target));
+            if (target)
+                asyncIn->AsyncWait(this, 0, 0, target);
+            else {
+                NS_ERROR("no socket thread event target");
+                rv = NS_ERROR_UNEXPECTED;
+            }
+        }
+    }
+
     return rv;
 }
 
@@ -942,7 +960,25 @@ nsHttpTransaction::Release()
     return count;
 }
 
-NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsHttpTransaction, nsIOutputStreamCallback)
+NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsHttpTransaction,
+                                    nsIInputStreamCallback,
+                                    nsIOutputStreamCallback)
+
+//-----------------------------------------------------------------------------
+// nsHttpTransaction::nsIInputStreamCallback
+//-----------------------------------------------------------------------------
+
+// called on the socket thread
+NS_IMETHODIMP
+nsHttpTransaction::OnInputStreamReady(nsIAsyncInputStream *out)
+{
+    if (mConnection) {
+        nsresult rv = mConnection->ResumeSend();
+        if (NS_FAILED(rv))
+            NS_ERROR("ResumeSend failed");
+    }
+    return NS_OK;
+}
 
 //-----------------------------------------------------------------------------
 // nsHttpTransaction::nsIOutputStreamCallback
@@ -954,7 +990,8 @@ nsHttpTransaction::OnOutputStreamReady(nsIAsyncOutputStream *out)
 {
     if (mConnection) {
         nsresult rv = mConnection->ResumeRecv();
-        NS_ASSERTION(NS_SUCCEEDED(rv), "ResumeSend failed");
+        if (NS_FAILED(rv))
+            NS_ERROR("ResumeRecv failed");
     }
     return NS_OK;
 }

@@ -51,11 +51,13 @@ class nsHttpChunkedDecoder;
 //-----------------------------------------------------------------------------
 
 class nsHttpTransaction : public nsAHttpTransaction
+                        , public nsIInputStreamCallback
                         , public nsIOutputStreamCallback
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSAHTTPTRANSACTION
+    NS_DECL_NSIINPUTSTREAMCALLBACK
     NS_DECL_NSIOUTPUTSTREAMCALLBACK
 
     nsHttpTransaction();
