@@ -65,16 +65,18 @@
 
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/findUtils.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/viewSource.js"/>
 
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
   <stringbundle id="viewSourceBundle" src="chrome://global/locale/viewSource.properties"/>
 
-  <commandset id="editMenuCommands"/>
-  <command id="cmd_goToLine" oncommand="ViewSourceGoToLine();" disabled="true"/>
-  <command id="cmd_print" disabled="true"/>
+  <command id="cmd_print" oncommand="PrintUtils.print();"/>
+  <command id="cmd_pagesetup" oncommand="PrintUtils.showPageSetup();"/>
   <command id="cmd_savePage" disabled="true" oncommand="ViewSourceSavePage();"/>
   <command id="cmd_close" oncommand="window.close();"/>
+  <commandset id="editMenuCommands"/>
+  <command id="cmd_goToLine" oncommand="ViewSourceGoToLine();" disabled="true"/>
   <command id="cmd_highlightSyntax" oncommand="highlightSyntax();"/>
   <command id="cmd_wrapLongLines" oncommand="wrapLongLines()"/>
 
@@ -103,6 +105,8 @@
         <menupopup id="filemenu-popup">
           <menuitem key="key_savePage" command="cmd_savePage"
                     label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;"/>
+          <menuitem command="cmd_pagesetup"
+                    label="&pageSetupCmd.label;" accesskey="&pageSetupCmd.accesskey;"/>
           <menuitem key="key_print" command="cmd_print"
                     label="&printCmd.label;" accesskey="&printCmd.accesskey;"/>
           <menuseparator/>
