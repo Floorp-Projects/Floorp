@@ -198,6 +198,7 @@ bin\components\nsProgressDialog.js
 bin\components\progressDlg.xpt
 bin\components\nsDownloadProgressListener.js
 bin\components\typeaheadfind.xpt
+bin\components\nsCloseAllWindows.js
 
 
 ; chrome stuff

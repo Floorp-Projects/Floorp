@@ -154,6 +154,7 @@ bin\components\nsSetDefaultBrowser.js
 bin\components\typeaheadfind.xpt
 bin\components\typeaheadfind.dll
 bin\components\nsAxSecurityPolicy.js
+bin\components\nsCloseAllWindows.js
 
 ; LDAP components need to be in the browser for AutoConfig
 bin\components\mozldap.dll
