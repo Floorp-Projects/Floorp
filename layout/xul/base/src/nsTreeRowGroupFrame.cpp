@@ -1471,8 +1471,6 @@ void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
                                            nsIFrame* aChildFrame,
                                            PRInt32 aIndex)
 {
-
-  nsIFrame* oldTopFrame = mTopFrame;
   // if we're removing the top row, the new top row is the next row
   if (mTopFrame && mTopFrame == aChildFrame)
     mTopFrame->GetNextSibling(&mTopFrame);
