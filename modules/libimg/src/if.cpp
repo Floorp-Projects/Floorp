@@ -1464,11 +1464,11 @@ il_image_complete(il_container *ic)
                  * LOSRC or previous images in the multipart message.
                  * XXX - fur - Shouldn't do this for COLORMAP case.
                  */
-                PRBool ret=il_reset_palette(ic); 
+                /* PRBool ret= */ il_reset_palette(ic); 
 
                 FREE_IF_NOT_NULL(src_header->color_space->cmap.map);
                 FREE_IF_NOT_NULL(src_header->transparent_pixel);
-                      il_destroy_image_transparent_pixel(ic);
+                il_destroy_image_transparent_pixel(ic);
                 FREE_IF_NOT_NULL(ic->comment);
                 ic->comment_length = 0;
 

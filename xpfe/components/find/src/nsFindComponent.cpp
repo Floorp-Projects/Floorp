@@ -905,12 +905,8 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
 NS_IMETHODIMP
 nsFindComponent::Replace( nsISupports *aContext )
 {
-    nsresult rv = NS_OK;
-
-		if (!aContext)
-			return NS_ERROR_NULL_POINTER;
-			
-		Context *context = (Context*)aContext;
+	if (!aContext)
+  	return NS_ERROR_NULL_POINTER;
 
 	return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -229,9 +229,6 @@ nsInterfaceState::UpdateListState(const char* observerName)
     nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
     editor->GetSelection(getter_AddRefs(domSelection));
   }
-
-  PRBool inOL = PR_FALSE;
-  PRBool inUL = PR_FALSE;
   
   nsCOMPtr<nsIDOMNode>       domNode;
   if (domSelection)
