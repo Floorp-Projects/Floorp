@@ -283,7 +283,9 @@ function updateSearchFolderPicker(folderURI) {
 
 function onChooseFolder(event) {
     var folderURI = event.id;
-    updateSearchFolderPicker(folderURI);
+    if (folderURI) {
+        updateSearchFolderPicker(folderURI);
+    }
 }
 
 function onSearch(event)
