@@ -791,6 +791,9 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
   }
   else {
     aData += '?';
+    if (spec) {
+      nsCRT::free(spec);
+    }
   }
 
   aData += buf;
