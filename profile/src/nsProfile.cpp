@@ -827,7 +827,12 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                 mCurrentProfileAvailable = PR_TRUE;
                 gProfileDataAccess->SetCurrentProfile(currProfileName.get());
 
-                // Need to load new profile prefs.
+                // Load new profile prefs for the sake of tinderbox scripts
+                // which assume prefs.js exists after -CreateProfile.
+                nsCOMPtr<nsIFile> newProfileDir;
+                GetProfileDir(currProfileName.get(), getter_AddRefs(newProfileDir));
+                if (newProfileDir) 
+                  gDirServiceProvider->SetProfileDir(newProfileDir);
                 rv = LoadNewProfilePrefs();
                 gProfileDataAccess->mProfileDataChanged = PR_TRUE;
                 gProfileDataAccess->UpdateRegistry(nsnull);
@@ -1931,11 +1936,11 @@ char * nsProfile::GetOldRegLocation()
     nsCOMPtr<nsIFile> oldRegFile;
     nsCAutoString oldRegFilePath;
     nsresult rv;
-        
-#if defined(XP_PC)
-    NS_GetSpecialDirectory(NS_WIN_WINDOWS_DIR, getter_AddRefs(oldRegFile));
-#elif defined(XP_OS2)
+
+#if defined(XP_OS2)
     NS_GetSpecialDirectory(NS_OS2_DIR, getter_AddRefs(oldRegFile));
+#elif defined(XP_PC)
+    NS_GetSpecialDirectory(NS_WIN_WINDOWS_DIR, getter_AddRefs(oldRegFile));
 #elif defined(XP_MAC)
     NS_GetSpecialDirectory(NS_MAC_CLASSICPREFS_DIR, getter_AddRefs(oldRegFile));
 #endif
