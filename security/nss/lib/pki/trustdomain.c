@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.23 $ $Date: 2002/01/03 20:09:25 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.24 $ $Date: 2002/01/08 15:37:40 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -114,6 +114,7 @@ NSSTrustDomain_Destroy
     if (--td->refCount == 0) {
 	/* Destroy each token in the list of tokens */
 	if (td->tokens) {
+	    nssListIterator_Destroy(td->tokens);
 	    nssList_Clear(td->tokenList, token_destructor);
 	    nssList_Destroy(td->tokenList);
 	}

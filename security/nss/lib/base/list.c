@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.10 $ $Date: 2001/12/12 00:07:22 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.11 $ $Date: 2002/01/08 15:37:33 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -360,6 +360,7 @@ nssListIterator_Destroy(nssListIterator *iter)
     if (iter->lock) {
 	(void)PZ_DestroyLock(iter->lock);
     }
+    nssList_Destroy(iter->list);
     nss_ZFreeIf(iter);
 }
 

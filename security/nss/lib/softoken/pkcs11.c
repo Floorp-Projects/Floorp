@@ -2083,13 +2083,13 @@ pk11_DestroySlotData(PK11Slot *slot)
     for(i=0; i < TOKEN_OBJECT_HASH_SIZE; i++) {
 	PK11Object *object = slot->tokObjects[i];
 	slot->tokObjects[i] = NULL;
-	pk11_FreeObject(object);
+	if (object) pk11_FreeObject(object);
     }
 
     for(i=0; i < SESSION_HASH_SIZE; i++) {
 	PK11Session *session = slot->head[i];
 	slot->head[i] = NULL;
-	pk11_FreeSession(session);
+	if (session) pk11_FreeSession(session);
     }
     pk11_DBShutdown(slot->certDB,slot->keyDB);
 
@@ -2106,20 +2106,25 @@ NSC_ModuleDBFunc(unsigned long function,char *parameters, char *args)
     char *secmod;
     PRBool rw;
     static char *success="Success";
+    char **rvstr = NULL;
 
     secmod = secmod_getSecmodName(parameters,&rw);
 
     switch (function) {
     case SECMOD_MODULE_DB_FUNCTION_FIND:
-	return secmod_ReadPermDB(secmod,parameters,rw);
+	rvstr = secmod_ReadPermDB(secmod,parameters,rw);
+	break;
     case SECMOD_MODULE_DB_FUNCTION_ADD:
-	return (secmod_AddPermDB(secmod,args,rw) == SECSuccess) 
+	rvstr = (secmod_AddPermDB(secmod,args,rw) == SECSuccess) 
 							? &success: NULL;
+	break;
     case SECMOD_MODULE_DB_FUNCTION_DEL:
-	return (secmod_DeletePermDB(secmod,args,rw) == SECSuccess) 
+	rvstr = (secmod_DeletePermDB(secmod,args,rw) == SECSuccess) 
 							? &success: NULL;
+	break;
     }
-    return NULL;
+    if (secmod) PR_smprintf_free(secmod);
+    return rvstr;
 }
 
 
@@ -3956,6 +3961,7 @@ CK_RV NSC_FindObjects(CK_SESSION_HANDLE hSession,
 	pk11_FreeSearch(search);
     }
     *pulObjectCount = transfer;
+    pk11_FreeSession(session);
     return CKR_OK;
 }
 
@@ -3969,11 +3975,10 @@ CK_RV NSC_FindObjectsFinal(CK_SESSION_HANDLE hSession)
     if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
     search = session->search;
     session->search = NULL;
-    if (search == NULL) {
-	pk11_FreeSession(session);
-	return CKR_OK;
+    pk11_FreeSession(session);
+    if (search != NULL) {
+	pk11_FreeSearch(search);
     }
-    pk11_FreeSearch(search);
     return CKR_OK;
 }
 
