@@ -22,7 +22,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.16 1999/12/03 00:53:11 pnunn%netscape.com Exp $
+ * $Id: if.h,v 3.17 1999/12/03 01:07:49 pnunn%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -72,9 +72,10 @@ typedef struct il_container_struct il_container;
    group observer notification. */
 /* #define DEBUG_GROUP_OBSERVER */
 
-extern int il_debug;
+
 
 #ifdef DEBUG
+extern int il_debug;
 extern PRLogModuleInfo *il_log_module;
 #define ILTRACE(l,t) { if(il_debug>l) {PR_LOG(il_log_module, 1, t);} }
 #else
