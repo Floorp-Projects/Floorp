@@ -40,7 +40,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  chardet \
 		  necko \
-		  rdf \
 		  pref \
 		  $(NULL)
 
@@ -58,7 +57,6 @@ CPPSRCS		= \
 		nsCharsetAliasImp.cpp \
 		nsURLProperties.cpp \
 		nsMappingCache.cpp \
-		nsCharsetMenu.cpp \
 		nsUConvModule.cpp \
 		nsISO88591ToUnicode.cpp \
 		nsCP1252ToUnicode.cpp \
@@ -69,7 +67,7 @@ CPPSRCS		= \
 		nsUnicodeToMacRoman.cpp \
 		nsUnicodeToUTF8.cpp \
 		nsUCvMinSupport.cpp \
- 		nsScriptableUConv.cpp \
+		nsScriptableUConv.cpp \
 		$(NULL)
 
 EXPORT_RESOURCE	= \

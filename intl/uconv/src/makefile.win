@@ -27,7 +27,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  chardet \
 		  necko \
-		  rdf \
 		  pref \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
@@ -47,7 +46,6 @@ CPPSRCS =				\
 	nsUConvModule.cpp		\
 	nsMappingCache.cpp		\
 	nsURLProperties.cpp		\
-	nsCharsetMenu.cpp		\
 	nsISO88591ToUnicode.cpp     \
 	nsCP1252ToUnicode.cpp     \
 	nsMacRomanToUnicode.cpp     \

@@ -33,9 +33,6 @@ REQUIRES	= xpcom \
 		  uconv \
 		  unicharutil \
 		  necko \
-		  dom \
-		  windowwatcher \
-		  uriloader \
 		  intl \
 		  $(NULL)
 
@@ -53,7 +50,6 @@ CPPSRCS		= \
 		nsLocale.cpp \
 		nsLocaleService.cpp \
 		nsFontPackageService.cpp \
-		nsFontPackageHandler.cpp \
 		$(NULL)
 
 EXPORTS		= \

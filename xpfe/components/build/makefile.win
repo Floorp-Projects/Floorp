@@ -30,6 +30,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  timer \
 		  intl \
+		  locale \
 		  mork \
 		  widget \
 		  dom \
@@ -61,6 +62,7 @@ SUB_LIBRARIES=                           \
         $(DIST)\lib\bookmarks_s.lib      \
         $(DIST)\lib\directory_s.lib      \
         $(DIST)\lib\history_s.lib        \
+        $(DIST)\lib\appcompintl_s.lib    \
         $(DIST)\lib\related_s.lib        \
         $(DIST)\lib\search_s.lib         \
         $(DIST)\lib\timebomb_s.lib       \

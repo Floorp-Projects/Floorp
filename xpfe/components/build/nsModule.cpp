@@ -40,12 +40,15 @@
 #include "nsBookmarksService.h"
 #include "nsDirectoryViewer.h"
 #include "nsGlobalHistory.h"
+#include "rdf.h"
 #include "nsLocalSearchService.h"
 #include "nsInternetSearchService.h"
 #include "nsRelatedLinksHandlerImpl.h"
 #include "nsTimeBomb.h"
 #include "nsUrlbarHistory.h"
 #include "nsXPIDLString.h"
+#include "nsCharsetMenu.h"
+#include "nsFontPackageHandler.h"
 #if defined(XP_WIN)
 #include "nsUrlWidget.h"
 #include "nsWindowsHooks.h"
@@ -66,6 +69,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(InternetSearchDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(RelatedLinksHandlerImpl, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimeBomb)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlbarHistory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageHandler)
 #if defined(XP_WIN)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
@@ -149,6 +153,12 @@ static nsModuleComponentInfo components[] = {
       NS_URLBARHISTORY_CONTRACTID, nsUrlbarHistoryConstructor },
     { "nsUrlbarHistory", NS_URLBARHISTORY_CID,
       NS_URLBARAUTOCOMPLETE_CONTRACTID, nsUrlbarHistoryConstructor },
+    { "nsCharsetMenu", NS_CHARSETMENU_CID,
+      NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID,
+      NS_NewCharsetMenu },
+    { "nsFontPackageHandler", NS_FONTPACKAGEHANDLER_CID,
+      "@mozilla.org/locale/default-font-package-handler;1",
+      nsFontPackageHandlerConstructor },
 #if defined(XP_WIN)
     { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID, NS_IURLWIDGET_CONTRACTID, 
       nsUrlWidgetConstructor }, 

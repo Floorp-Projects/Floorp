@@ -67,10 +67,6 @@ NS_NewCharsetAlias(nsISupports* aOuter, const nsIID& aIID,
                    void** aResult);
 
 NS_IMETHODIMP
-NS_NewCharsetMenu(nsISupports* aOuter, const nsIID& aIID,
-                  void** aResult);
-
-NS_IMETHODIMP
 NS_NewTextToSubURI(nsISupports* aOuter, const nsIID& aIID,
                    void** aResult);
 

@@ -32,9 +32,6 @@ REQUIRES	= xpcom \
 		  uconv \
 		  unicharutil \
 		  necko \
-		  dom \
-		  windowwatcher \
-		  uriloader \
 		  intl \
 		  $(NULL)
 LIBRARY_NAME	= nslocale_s
@@ -44,7 +41,6 @@ DIRS		= windows
 CPP_OBJS	= .\$(OBJDIR)\nsLocale.obj			\
 		  .\$(OBJDIR)\nsLocaleService.obj		\
 		  .\$(OBJDIR)\nsFontPackageService.obj		\
-		  .\$(OBJDIR)\nsFontPackageHandler.obj		\
 		  .\$(OBJDIR)\nsLanguageAtomService.obj		\
 		  .\$(OBJDIR)\nsScriptableDateFormat.obj	\
 		  .\$(OBJDIR)\nsCollation.obj			\
@@ -55,8 +51,8 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) langGroups.properties $(DIST)\bin\res
 	$(MAKE_INSTALL) language.properties $(DIST)\bin\res
-  
+
 clobber::
 	rm -f $(DIST)\bin\res\langGroups.properties
 	rm -f $(DIST)\bin\res\language.properties
-	
+
