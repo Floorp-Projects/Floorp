@@ -138,6 +138,7 @@ static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
 static NS_DEFINE_IID(kINetSupportIID,         NS_INETSUPPORT_IID);
+static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
 
 static const char* gsAOLFormat = "AOLMAIL";
@@ -149,6 +150,31 @@ static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 static void* GetItemsNativeData(nsISupports* aObject);
 
 //----------------------------------------------------------------------
+
+nsIPresShell*
+GetPresShellFor(nsIWebShell* aWebShell)
+{
+  nsIPresShell* shell = nsnull;
+  if (nsnull != aWebShell) {
+    nsIContentViewer* cv = nsnull;
+    aWebShell->GetContentViewer(cv);
+    if (nsnull != cv) {
+      nsIDocumentViewer* docv = nsnull;
+      cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+      if (nsnull != docv) {
+        nsIPresContext* cx;
+        docv->GetPresContext(cx);
+	      if (nsnull != cx) {
+	        shell = cx->GetShell();
+	        NS_RELEASE(cx);
+	      }
+        NS_RELEASE(docv);
+      }
+      NS_RELEASE(cv);
+    }
+  }
+  return shell;
+}
 
 nsVoidArray nsBrowserWindow::gBrowsers;
 
@@ -1683,31 +1709,10 @@ nsBrowserWindow::DestroyThrobberImages()
 {
 }
 
-static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
-
 nsIPresShell*
 nsBrowserWindow::GetPresShell()
 {
-  nsIPresShell* shell = nsnull;
-  if (nsnull != mWebShell) {
-    nsIContentViewer* cv = nsnull;
-    mWebShell->GetContentViewer(cv);
-    if (nsnull != cv) {
-      nsIDocumentViewer* docv = nsnull;
-      cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
-      if (nsnull != docv) {
-	nsIPresContext* cx;
-	docv->GetPresContext(cx);
-	if (nsnull != cx) {
-	  shell = cx->GetShell();
-	  NS_RELEASE(cx);
-	}
-	NS_RELEASE(docv);
-      }
-      NS_RELEASE(cv);
-    }
-  }
-  return shell;
+  return GetPresShellFor(mWebShell);
 }
 
 #ifdef WIN32
@@ -1959,83 +1964,6 @@ nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
 #include "nsIStyleSet.h"
 
 
-void
-nsBrowserWindow::DumpContent(FILE* out)
-{
-  nsIPresShell* shell = GetPresShell();
-  if (nsnull != shell) {
-    nsIDocument* doc = shell->GetDocument();
-    if (nsnull != doc) {
-      nsIContent* root = doc->GetRootContent();
-      if (nsnull != root) {
-	root->List(out);
-	NS_RELEASE(root);
-      }
-      NS_RELEASE(doc);
-    }
-    NS_RELEASE(shell);
-  }
-  else {
-    fputs("null pres shell\n", out);
-  }
-}
-
-void
-nsBrowserWindow::DumpFrames(FILE* out, nsString *aFilterName)
-{
-  nsIPresShell* shell = GetPresShell();
-  if (nsnull != shell) {
-    nsIFrame* root = shell->GetRootFrame();
-    if (nsnull != root) {
-      nsIListFilter *filter = nsIFrame::GetFilter(aFilterName);
-      root->List(out, 0, filter);
-    }
-    NS_RELEASE(shell);
-  }
-  else {
-    fputs("null pres shell\n", out);
-  }
-}
-
-void
-DumpViewsRecurse(nsBrowserWindow* aBrowser, nsIWebShell* aWebShell, FILE* out)
-{
-  if (nsnull != aWebShell) {
-    nsIPresShell* shell = aBrowser->GetPresShell();
-    if (nsnull != shell) {
-      nsIViewManager* vm = shell->GetViewManager();
-      if (nsnull != vm) {
-	nsIView* root;
-	vm->GetRootView(root);
-	if (nsnull != root) {
-	  root->List(out);
-	}
-	NS_RELEASE(vm);
-      }
-      NS_RELEASE(shell);
-    }
-    else {
-      fputs("null pres shell\n", out);
-    }
-    // dump the views of the sub documents
-    PRInt32 i, n;
-    aWebShell->GetChildCount(n);
-    for (i = 0; i < n; i++) {
-      nsIWebShell* child;
-      aWebShell->ChildAt(i, child);
-      if (nsnull != child) {
-	DumpViewsRecurse(aBrowser, child, out);
-      }
-    }
-  }
-}
-
-void
-nsBrowserWindow::DumpViews(FILE* out)
-{
-  DumpViewsRecurse(this, mWebShell, out);
-}
-
 static void DumpAWebShell(nsIWebShell* aShell, FILE* out, PRInt32 aIndent)
 {
   PRUnichar *name;
@@ -2071,6 +1999,138 @@ void
 nsBrowserWindow::DumpWebShells(FILE* out)
 {
   DumpAWebShell(mWebShell, out, 0);
+}
+
+void 
+DumpMultipleWebShells(nsBrowserWindow& aBrowserWindow, nsIWebShell* aWebShell, FILE* aOut)
+{ 
+  PRInt32 count;
+  if (aWebShell) {
+    aWebShell->GetChildCount(count);
+    if (count > 0) {
+      fprintf(aOut, "webshells= \n");
+      aBrowserWindow.DumpWebShells(aOut);
+    }
+  }
+}
+
+void
+DumpContentRecurse(nsIWebShell* aWebShell, FILE* out)
+{
+  if (nsnull != aWebShell) {
+    fprintf(out, "webshell=%p \n", aWebShell);
+    nsIPresShell* shell = GetPresShellFor(aWebShell);
+    if (nsnull != shell) {
+      nsIDocument* doc = shell->GetDocument();
+      if (nsnull != doc) {
+        nsIContent* root = doc->GetRootContent();
+        if (nsnull != root) {
+	        root->List(out);
+	        NS_RELEASE(root);
+        }
+        NS_RELEASE(doc);
+      }
+      NS_RELEASE(shell);
+    }
+    else {
+      fputs("null pres shell\n", out);
+    }
+    // dump the frames of the sub documents
+    PRInt32 i, n;
+    aWebShell->GetChildCount(n);
+    for (i = 0; i < n; i++) {
+      nsIWebShell* child;
+      aWebShell->ChildAt(i, child);
+      if (nsnull != child) {
+	      DumpContentRecurse(child, out);
+      }
+    }
+  }
+}
+
+void
+nsBrowserWindow::DumpContent(FILE* out)
+{
+  DumpContentRecurse(mWebShell, out);
+  DumpMultipleWebShells(*this, mWebShell, out);
+}
+
+void
+DumpFramesRecurse(nsIWebShell* aWebShell, FILE* out, nsString *aFilterName)
+{
+  if (nsnull != aWebShell) {
+    fprintf(out, "webshell=%p \n", aWebShell);
+    nsIPresShell* shell = GetPresShellFor(aWebShell);
+    if (nsnull != shell) {
+      nsIFrame* root = shell->GetRootFrame();
+      if (nsnull != root) {
+        nsIListFilter *filter = nsIFrame::GetFilter(aFilterName);
+        root->List(out, 0, filter);
+      }
+      NS_RELEASE(shell);
+    }
+    else {
+      fputs("null pres shell\n", out);
+    }
+    // dump the frames of the sub documents
+    PRInt32 i, n;
+    aWebShell->GetChildCount(n);
+    for (i = 0; i < n; i++) {
+      nsIWebShell* child;
+      aWebShell->ChildAt(i, child);
+      if (nsnull != child) {
+	      DumpFramesRecurse(child, out, aFilterName);
+      }
+    }
+  }
+}
+
+void
+nsBrowserWindow::DumpFrames(FILE* out, nsString *aFilterName)
+{
+  DumpFramesRecurse(mWebShell, out, aFilterName);
+  DumpMultipleWebShells(*this, mWebShell, out);
+}
+
+void
+DumpViewsRecurse(nsIWebShell* aWebShell, FILE* out)
+{
+  if (nsnull != aWebShell) {
+    fprintf(out, "webshell=%p \n", aWebShell);
+    nsIPresShell* shell = GetPresShellFor(aWebShell);
+    if (nsnull != shell) {
+      nsIViewManager* vm = shell->GetViewManager();
+      if (nsnull != vm) {
+	      nsIView* root;
+	      vm->GetRootView(root);
+	      if (nsnull != root) {
+	        root->List(out);
+	      }
+	      NS_RELEASE(vm);
+      }
+      NS_RELEASE(shell);
+    }
+    else {
+      fputs("null pres shell\n", out);
+    }
+    // dump the views of the sub documents
+    PRInt32 i, n;
+    aWebShell->GetChildCount(n);
+    for (i = 0; i < n; i++) {
+      nsIWebShell* child;
+      aWebShell->ChildAt(i, child);
+      if (nsnull != child) {
+	      DumpViewsRecurse(child, out);
+      }
+    }
+  }
+}
+
+void
+nsBrowserWindow::DumpViews(FILE* out)
+{
+  DumpViewsRecurse(mWebShell, out);
+  DumpMultipleWebShells(*this, mWebShell, out);
 }
 
 void
@@ -2373,7 +2433,6 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
 
   case VIEWER_DUMP_CONTENT:
     DumpContent();
-    DumpWebShells();
     result = nsEventStatus_eConsumeNoDefault;
     break;
 
