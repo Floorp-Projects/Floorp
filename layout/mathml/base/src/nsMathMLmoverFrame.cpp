@@ -291,6 +291,10 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
   GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
   GetReflowAndBoundingMetricsFor(overFrame, overSize, bmOver);
 
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
   ////////////////////
   // Place Children
 
@@ -310,11 +314,12 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
   // whether we want an accented overscript or not
 
   nscoord correction = 0;
+  GetItalicCorrection (bmBase, correction);
+
   nscoord delta1 = 0; // gap between base and overscript
   nscoord delta2 = 0; // extra space above overscript
   if (!NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)) {    
     // Rule 13a, App. G, TeXbook
-    GetItalicCorrection (bmBase, correction);
     nscoord bigOpSpacing1, bigOpSpacing3, bigOpSpacing5, dummy; 
     GetBigOpSpacings (fm, 
                       bigOpSpacing1, dummy, 
@@ -331,7 +336,6 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
   }
   else {
     // Rule 12, App. G, TeXbook
-    GetSkewCorrectionFromChild (aPresContext, baseFrame, correction);
     // We are going to modify this rule to make it more general.
     // The idea behind Rule 12 in the TeXBook is to keep the accent
     // as close to the base as possible, while ensuring that the
@@ -360,9 +364,9 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
     // we try to keep the *bottom* of the accent char atleast x-height 
     // from the baseline of the base char. we also slap on an extra
     // padding between the accent and base chars.
-    delta1 = ruleThickness; // we have atleast the padding
+    delta1 = ruleThickness + onePixel/2; // we have at least the padding
     if (bmBase.ascent < xHeight) { 
-      // also ensure atleast x-height above the baseline of the base
+      // also ensure at least x-height above the baseline of the base
       delta1 += xHeight - bmBase.ascent;
     }
     delta2 = ruleThickness;
@@ -370,13 +374,7 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
   // empty over?
   if (!(bmOver.ascent + bmOver.descent)) delta1 = 0;
 
-  mBoundingMetrics.ascent = 
-    bmOver.ascent + bmOver.descent + delta1 + bmBase.ascent;
-
-  mBoundingMetrics.descent = bmBase.descent;
-
   nscoord dxBase, dxOver = 0;
-  nscoord dyBase, dyOver;
 
   // Ad-hoc - This is to override fonts which have ready-made _accent_
   // glyphs with negative lbearing and rbearing. We want to position
@@ -388,13 +386,22 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
   }
 
   if (NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)) {
-    mBoundingMetrics.width = PR_MAX(bmBase.width, overWidth); 
+    mBoundingMetrics.width = bmBase.width; 
+    dxOver += correction + (mBoundingMetrics.width - overWidth)/2;
   }
   else {
-    mBoundingMetrics.width = 
-      PR_MAX(bmBase.width/2,(overWidth + correction/2)/2) +
-      PR_MAX(bmBase.width/2,(overWidth - correction/2)/2);
+    mBoundingMetrics.width = PR_MAX(bmBase.width, overWidth);
+    dxOver += correction/2 + (mBoundingMetrics.width - overWidth)/2;
   }
+  dxBase = (mBoundingMetrics.width - bmBase.width) / 2;
+
+  mBoundingMetrics.ascent = 
+    bmOver.ascent + bmOver.descent + delta1 + bmBase.ascent;
+  mBoundingMetrics.descent = bmBase.descent;
+  mBoundingMetrics.leftBearing = 
+    PR_MIN(dxBase + bmBase.leftBearing, dxOver + bmOver.leftBearing);
+  mBoundingMetrics.rightBearing = 
+    PR_MAX(dxBase + bmBase.rightBearing, dxOver + bmOver.rightBearing);
 
   aDesiredSize.descent = baseSize.descent;
   aDesiredSize.ascent = 
@@ -402,34 +409,19 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
            overSize.ascent + bmOver.descent + delta1 + bmBase.ascent);
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
   aDesiredSize.width = mBoundingMetrics.width;
-  
-  dxBase = (mBoundingMetrics.width - bmBase.width) / 2;
-  dyBase = aDesiredSize.ascent - baseSize.ascent;
-
-  if (NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)) {
-    dxOver += correction + (mBoundingMetrics.width - overWidth)/2;
-  }
-  else {
-    dxOver += correction/2 + (mBoundingMetrics.width - overWidth)/2;
-  }
-
-  dyOver = aDesiredSize.ascent - 
-    mBoundingMetrics.ascent + bmOver.ascent - overSize.ascent;
+  aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
   mReference.x = 0;
   mReference.y = aDesiredSize.ascent;
 
-  mBoundingMetrics.leftBearing = 
-    PR_MIN(dxBase + bmBase.leftBearing, dxOver + bmOver.leftBearing);
-  mBoundingMetrics.rightBearing = 
-    PR_MAX(dxBase + bmBase.rightBearing, dxOver + bmOver.rightBearing);
-  aDesiredSize.mBoundingMetrics = mBoundingMetrics;
-
   if (aPlaceOrigin) {
     // place base
-    FinishReflowChild (baseFrame, aPresContext, nsnull, baseSize, dxBase, dyBase, 0);
+    nscoord dy = aDesiredSize.ascent - baseSize.ascent;
+    FinishReflowChild (baseFrame, aPresContext, nsnull, baseSize, dxBase, dy, 0);
     // place overscript
-    FinishReflowChild (overFrame, aPresContext, nsnull, overSize, dxOver, dyOver, 0);
+    dy = aDesiredSize.ascent - 
+      mBoundingMetrics.ascent + bmOver.ascent - overSize.ascent;
+    FinishReflowChild (overFrame, aPresContext, nsnull, overSize, dxOver, dy, 0);
   }
   return NS_OK;
 }
