@@ -560,7 +560,7 @@ public:
 
 template<class Binding> class BindingEntry {
 public:
-    BindingEntry(const String s) : name(s) { }
+    BindingEntry(const String &s) : name(s) { }
 
     BindingEntry *clone();
     void clear();
@@ -1102,7 +1102,7 @@ public:
     virtual void instantiate(Environment *env);
     void assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount, uint32 length);
     virtual void markChildren();
-    virtual ~ParameterFrame()           { }
+    virtual ~ParameterFrame();
 };
 
 class BlockFrame : public NonWithFrame {

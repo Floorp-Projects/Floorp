@@ -141,11 +141,13 @@ static int readEvalPrint(FILE *in)
                     stdOut << '\n';
                 }
                 if (parsedStatements) {
-                    MetaData::CompilationData *oldData = metadata->startCompilationUnit(NULL, buffer, ConsoleName);            
+                    MetaData::CompilationData *oldData = metadata->startCompilationUnit(NULL, buffer, ConsoleName);    
+                    MetaData::BytecodeContainer *bCon = metadata->bCon;
                     metadata->ValidateStmtList(parsedStatements);
                     js2val rval = metadata->ExecuteStmtList(RunPhase, parsedStatements);
                     if (!JS2VAL_IS_VOID(rval))
                         stdOut << *metadata->toString(rval) << '\n';
+                    delete bCon;
                     metadata->restoreCompilationUnit(oldData);
                 }
             }

@@ -4342,11 +4342,12 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         DEFINE_ROOTKEEPER(rk2, argsObj);
 
         // Add the 'arguments' property
-        String *name = &meta->world.identifiers["arguments"];
-        ASSERT(localBindings[*name] == NULL);
-        LocalBindingEntry *lbe = new LocalBindingEntry(*name);
+        String name(widenCString("arguments"));
+        ASSERT(localBindings[name] == NULL);
+        LocalBindingEntry *lbe = new LocalBindingEntry(name);
         LocalBinding *sb = new LocalBinding(ReadAccess, new Variable(meta->arrayClass, OBJECT_TO_JS2VAL(argsObj), true), false);
         lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(meta->publicNamespace, sb));
+        localBindings.insert(name, lbe);
 
         uint32 i;
         for (i = 0; (i < argCount); i++) {
@@ -4377,6 +4378,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         GCMARKVALUE(thisObject);
     }
 
+    ParameterFrame::~ParameterFrame()
+    {
+    }
 
  /************************************************************************************
  *

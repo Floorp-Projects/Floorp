@@ -92,7 +92,7 @@ public:
 #endif
                             { }
     
-    BytecodeContainer::~BytecodeContainer()          { String t; mSource = t; mSourceLocation = t; }
+    BytecodeContainer::~BytecodeContainer()          { }
 
 
     void mark();
