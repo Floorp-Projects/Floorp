@@ -25,9 +25,15 @@
 #include "CPMozillaControl.h"
 
 // Commands sent via WM_COMMAND
-#define ID_PRINT     1
-#define ID_PAGESETUP 2
-#define ID_VIEWSOURCE 3
+#define ID_PRINT		1
+#define ID_PAGESETUP	2
+#define ID_VIEWSOURCE	3
+#define ID_SAVEAS		4
+#define ID_PROPERTIES	5
+#define ID_CUT			6
+#define ID_COPY			7
+#define ID_PASTE		8
+#define ID_SELECTALL	9
 
 // Command group and IDs exposed through IOleCommandTarget
 extern const GUID CGID_IWebBrowser;
@@ -80,31 +86,48 @@ DECLARE_REGISTRY_RESOURCEID(IDR_MOZILLABROWSER)
 
 BEGIN_COM_MAP(CMozillaBrowser)
 	// IE web browser interface
-	COM_INTERFACE_ENTRY(IWebBrowser2)
-	COM_INTERFACE_ENTRY_IID(IID_IDispatch, IWebBrowser2)
-	COM_INTERFACE_ENTRY_IID(IID_IWebBrowser, IWebBrowser2)
-	COM_INTERFACE_ENTRY_IID(IID_IWebBrowserApp, IWebBrowser2)
-	COM_INTERFACE_ENTRY_IMPL(IViewObjectEx)
-	COM_INTERFACE_ENTRY_IMPL_IID(IID_IViewObject2, IViewObjectEx)
+	COM_INTERFACE_ENTRY(IWebBrowser2)								//CMozillaBrowser Derives from IWebBrowser2
+	COM_INTERFACE_ENTRY_IID(IID_IDispatch, IWebBrowser2)			//Requests to IWebBrowser will actually get the vtable of IWebBrowser2
+	COM_INTERFACE_ENTRY_IID(IID_IWebBrowser, IWebBrowser2)			//ditto
+	COM_INTERFACE_ENTRY_IID(IID_IWebBrowserApp, IWebBrowser2)		//ditto
+	
+	COM_INTERFACE_ENTRY_IMPL(IViewObjectEx)							//CMozillaBrowser derives from IViewObjectEx
+	COM_INTERFACE_ENTRY_IMPL_IID(IID_IViewObject2, IViewObjectEx)	//Request to IViewObject2 will actually get the vtable of IViewObjectEx
 	COM_INTERFACE_ENTRY_IMPL_IID(IID_IViewObject, IViewObjectEx)
+	
 	COM_INTERFACE_ENTRY_IMPL(IOleInPlaceObjectWindowless)
 	COM_INTERFACE_ENTRY_IMPL_IID(IID_IOleInPlaceObject, IOleInPlaceObjectWindowless)
 	COM_INTERFACE_ENTRY_IMPL_IID(IID_IOleWindow, IOleInPlaceObjectWindowless)
+	
 	COM_INTERFACE_ENTRY_IMPL(IOleInPlaceActiveObject)
+	
 	COM_INTERFACE_ENTRY_IMPL(IOleControl)
+	
 	COM_INTERFACE_ENTRY_IMPL(IOleObject)
+
 //	COM_INTERFACE_ENTRY_IMPL(IQuickActivate) // This causes size assertion in ATL
+	
 	COM_INTERFACE_ENTRY_IMPL(IPersistStorage)
+	
 	COM_INTERFACE_ENTRY_IMPL(IPersistStreamInit)
+	
 	COM_INTERFACE_ENTRY_IMPL(ISpecifyPropertyPages)
+	
 	COM_INTERFACE_ENTRY_IMPL(IDataObject)
+	
 	COM_INTERFACE_ENTRY(IOleCommandTarget)
+	
 	COM_INTERFACE_ENTRY(IProvideClassInfo)
+	
 	COM_INTERFACE_ENTRY(IProvideClassInfo2)
+	
 	COM_INTERFACE_ENTRY(ISupportErrorInfo)
+	
 	COM_INTERFACE_ENTRY_IMPL(IConnectionPointContainer)
-	COM_INTERFACE_ENTRY_IID(DIID_DWebBrowserEvents,  CDWebBrowserEvents1)
-	COM_INTERFACE_ENTRY_IID(DIID_DWebBrowserEvents2, CDWebBrowserEvents2)
+	
+	COM_INTERFACE_ENTRY_IID(DIID_DWebBrowserEvents,  CDWebBrowserEvents1)	//Requests to DWebBrowserEvents will get the vtable of CDWebBrowserEvents1
+	
+	COM_INTERFACE_ENTRY_IID(DIID_DWebBrowserEvents2, CDWebBrowserEvents2)	//Requests to DWebBrowserEvents2 will get the vtable of CDWebBrowserEvents2
 END_COM_MAP()
 
 BEGIN_PROPERTY_MAP(CMozillaBrowser)
@@ -116,7 +139,7 @@ END_PROPERTY_MAP()
 
 BEGIN_CONNECTION_POINT_MAP(CMozillaBrowser)
 	// Fires IE events
-	CONNECTION_POINT_ENTRY(DIID_DWebBrowserEvents2)
+	CONNECTION_POINT_ENTRY(DIID_DWebBrowserEvents2)	//Connection points for the client's event sinks
 	CONNECTION_POINT_ENTRY(DIID_DWebBrowserEvents)
 END_CONNECTION_POINT_MAP()
 
@@ -130,6 +153,12 @@ BEGIN_MSG_MAP(CMozillaBrowser)
 	MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
 	COMMAND_ID_HANDLER(ID_PRINT, OnPrint)
 	COMMAND_ID_HANDLER(ID_PAGESETUP, OnPageSetup)
+	COMMAND_ID_HANDLER(ID_SAVEAS, OnSaveAs)
+	COMMAND_ID_HANDLER(ID_PROPERTIES, OnProperties)
+	COMMAND_ID_HANDLER(ID_CUT, OnCut)
+	COMMAND_ID_HANDLER(ID_COPY, OnCopy)
+	COMMAND_ID_HANDLER(ID_PASTE, OnPaste)
+	COMMAND_ID_HANDLER(ID_SELECTALL, OnSelectAll)\
 END_MSG_MAP()
 
 	static HRESULT _stdcall EditModeHandler(CMozillaBrowser *pThis, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
@@ -138,18 +167,19 @@ END_MSG_MAP()
 BEGIN_OLECOMMAND_TABLE()
 	// Standard "common" commands
 	OLECOMMAND_MESSAGE(OLECMDID_PRINT, NULL, ID_PRINT, L"Print", L"Print the page")
-	OLECOMMAND_MESSAGE(OLECMDID_SAVEAS, NULL, 0, L"SaveAs", L"Save the page")
 	OLECOMMAND_MESSAGE(OLECMDID_PAGESETUP, NULL, ID_PAGESETUP, L"Page Setup", L"Page Setup")
-	OLECOMMAND_MESSAGE(OLECMDID_PROPERTIES, NULL, 0, L"Properties", L"Show page properties")
-	OLECOMMAND_MESSAGE(OLECMDID_CUT, NULL, 0, L"Cut", L"Cut selection")
-	OLECOMMAND_MESSAGE(OLECMDID_COPY, NULL, 0, L"Copy", L"Copy selection")
-	OLECOMMAND_MESSAGE(OLECMDID_PASTE, NULL, 0, L"Paste", L"Paste as selection")
 	OLECOMMAND_MESSAGE(OLECMDID_UNDO, NULL, 0, L"Undo", L"Undo")
 	OLECOMMAND_MESSAGE(OLECMDID_REDO, NULL, 0, L"Redo", L"Redo")
-	OLECOMMAND_MESSAGE(OLECMDID_SELECTALL, NULL, 0, L"SelectAll", L"Select all")
 	OLECOMMAND_MESSAGE(OLECMDID_REFRESH, NULL, 0, L"Refresh", L"Refresh")
 	OLECOMMAND_MESSAGE(OLECMDID_STOP, NULL, 0, L"Stop", L"Stop")
 	OLECOMMAND_MESSAGE(OLECMDID_ONUNLOAD, NULL, 0, L"OnUnload", L"OnUnload")
+	OLECOMMAND_MESSAGE(OLECMDID_SAVEAS, NULL, ID_SAVEAS, L"SaveAs", L"Save the page")
+	OLECOMMAND_MESSAGE(OLECMDID_CUT, NULL, ID_CUT, L"Cut", L"Cut selection")
+	OLECOMMAND_MESSAGE(OLECMDID_COPY, NULL, ID_COPY, L"Copy", L"Copy selection")
+	OLECOMMAND_MESSAGE(OLECMDID_PASTE, NULL, ID_PASTE, L"Paste", L"Paste as selection")
+	OLECOMMAND_MESSAGE(OLECMDID_SELECTALL, NULL, ID_SELECTALL, L"SelectAll", L"Select all")
+	OLECOMMAND_MESSAGE(OLECMDID_PROPERTIES, NULL, ID_PROPERTIES, L"Properties", L"Show page properties")
+
 	// Unsupported IE 4.x command group
 	OLECOMMAND_MESSAGE(HTMLID_FIND, &CGID_IWebBrowser, 0, L"Find", L"Find")
 	OLECOMMAND_MESSAGE(HTMLID_VIEWSOURCE, &CGID_IWebBrowser, 0, L"ViewSource", L"View Source")
@@ -258,6 +288,13 @@ END_OLECOMMAND_TABLE()
 	LRESULT OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnPageSetup(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+
+	LRESULT OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnProperties(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnCut(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnCopy(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnPaste(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnSelectAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 // ISupportsErrorInfo
 	STDMETHOD(InterfaceSupportsErrorInfo)(REFIID riid);

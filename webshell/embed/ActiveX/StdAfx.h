@@ -96,6 +96,9 @@ typedef long int32;
 #include "nsIWebShell.h"
 #include "nsIBrowserWindow.h"
 #include "nsIContentViewer.h"
+#include "nsIPresShell.h"
+#include "nsCOMPtr.h"
+#include "nsIDOMSelection.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 
@@ -115,6 +118,7 @@ typedef long int32;
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMDocumentType.h"
 #include "nsIDOMElement.h"
 #endif
 

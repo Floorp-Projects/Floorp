@@ -195,6 +195,11 @@ NS_IMETHODIMP
 CWebShellContainer::SetStatus(const PRUnichar* aStatus)
 {
 	NG_TRACE_METHOD(CWebShellContainer::SetStatus);
+	
+	BSTR bstrStatus = SysAllocString(W2OLE((PRUnichar *) aStatus));
+	m_pEvents1->Fire_StatusTextChange(bstrStatus);
+	m_pEvents2->Fire_StatusTextChange(bstrStatus);
+
 	return NS_OK;
 }
 
@@ -276,8 +281,8 @@ CWebShellContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 	NG_TRACE(_T("CWebShellContainer::BeginLoadURL(..., \"%s\")\n"), W2T(aURL));
 
 	// Fire a DownloadBegin
-//	m_pEvents1->Fire_DownloadBegin();
-	//m_pEvents2->Fire_DownloadBegin();
+	m_pEvents1->Fire_DownloadBegin();
+	m_pEvents2->Fire_DownloadBegin();
 
 	// Fire a BeforeNavigate event
 	OLECHAR *pszURL = W2OLE((WCHAR *)aURL);
@@ -366,20 +371,22 @@ CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsres
 	CComVariant vURL(bstrURL);
 	m_pEvents2->Fire_NavigateComplete2(m_pOwner, &vURL);
 
-	// Fire the new NavigateForward state
+		// Fire the new NavigateForward state
 	VARIANT_BOOL bEnableForward = VARIANT_FALSE;
-	if (m_pOwner->m_pIWebShell->CanForward() == NS_OK)
+	if ( m_pOwner->m_pIWebShell->CanForward() == NS_OK )
 	{
 		bEnableForward = VARIANT_TRUE;
 	}
+	
 	m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEFORWARD, bEnableForward);
 
 	// Fire the new NavigateBack state
 	VARIANT_BOOL bEnableBack = VARIANT_FALSE;
-	if (m_pOwner->m_pIWebShell->CanBack() == NS_OK)
+	if ( m_pOwner->m_pIWebShell->CanBack() == NS_OK )
 	{
 		bEnableBack = VARIANT_TRUE;
 	}
+	
 	m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEBACK, bEnableBack);
 
 	m_pOwner->m_bBusy = FALSE;
@@ -458,6 +465,7 @@ CWebShellContainer::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebShellContainer::OnStartRequest(...)\n"));
+	
 	return NS_OK;
 }
 
@@ -523,7 +531,10 @@ CWebShellContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* aChann
 NS_IMETHODIMP
 CWebShellContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel, PRUint32 aProgress, PRUint32 aProgressMax)
 { 
-	return NS_OK; 
+	USES_CONVERSION;
+	NG_TRACE(_T("CWebShellContainer::OnProgress(..., \"%d\", \"%d\")\n"), (int) aProgress, (int) aProgressMax);
+
+	return NS_OK;
 } 
 
 // we don't care about these. 
@@ -554,15 +565,16 @@ CWebShellContainer::OnStartRequest(nsIURI* aURL, const char *aContentType)
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebShellContainer::OnStartRequest(..., \"%s\")\n"), A2CT(aContentType));
+	
 	return NS_OK;
 }
-
 
 NS_IMETHODIMP
 CWebShellContainer::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebShellContainer::OnProgress(..., \"%d\", \"%d\")\n"), (int) aProgress, (int) aProgressMax);
+
 	return NS_OK;
 }
 
@@ -640,7 +652,10 @@ CWebShellContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, cons
 NS_IMETHODIMP
 CWebShellContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 { 
-	return NS_OK; 
+	USES_CONVERSION;
+	NG_TRACE(_T("CWebShellContainer::OnProgress(..., \"%d\", \"%d\")\n"), (int) aProgress, (int) aProgressMax);
+
+	return NS_OK;
 } 
 
 // we don't care about these. 

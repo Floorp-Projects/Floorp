@@ -309,20 +309,84 @@ LRESULT CMozillaBrowser::OnPageSetup(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 // Handle ID_PRINT command
 LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
+	nsresult res;
+
 	// Print the contents
 	if (m_pIWebShell)
 	{
 		nsIContentViewer *pContentViewer = nsnull;
-		m_pIWebShell->GetContentViewer(&pContentViewer);
-		if (nsnull != pContentViewer)
+		res = m_pIWebShell->GetContentViewer(&pContentViewer);
+		if ( NS_SUCCEEDED(res) )
 		{
 			pContentViewer->Print();
 			NS_RELEASE(pContentViewer);
 		}
 	}
+	
+	return res;
+}
+
+LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	MessageBox(_T("No Save As Yet!"), _T("Control Message"), MB_OK);
+	// TODO show the save as dialog
 	return 0;
 }
 
+LRESULT CMozillaBrowser::OnProperties(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	MessageBox(_T("No Properties Yet!"), _T("Control Message"), MB_OK);
+	// TODO show the properties dialog
+	return 0;
+}
+
+LRESULT CMozillaBrowser::OnCut(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	nsresult res;
+	
+	nsIPresShell* presShell = nsnull;
+	res=GetPresShell(&presShell);		//Get the presentation shell for the document
+	if ( NS_FAILED(res) ) return NS_ERROR_NOT_INITIALIZED;
+
+	nsCOMPtr<nsIDOMSelection> selection;						//Get a pointer to the DOM selection
+	res = presShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+	if ( NS_FAILED(res) ) return res;
+	
+	res = presShell->DoCopy();									//Copy the selection to the clipboard
+	if ( NS_SUCCEEDED(res) )
+	{
+		res = selection->DeleteFromDocument();					//Delete the selection from the document
+	}			
+
+	return res;
+}
+
+LRESULT CMozillaBrowser::OnCopy(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	nsresult res;
+	
+	nsIPresShell* presShell = nsnull;
+	res=GetPresShell(&presShell);		//Get the presentation shell for the document
+	if ( NS_FAILED(res) ) return NS_ERROR_NOT_INITIALIZED;
+
+	res = presShell->DoCopy();
+	
+	return res;
+}
+
+LRESULT CMozillaBrowser::OnPaste(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	MessageBox(_T("No Paste Yet!"), _T("Control Message"), MB_OK);
+	// TODO enable pasting
+	return 0;
+}
+
+LRESULT CMozillaBrowser::OnSelectAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	MessageBox(_T("No Select All Yet!"), _T("Control Message"), MB_OK);
+	// TODO enable Select All
+	return 0;
+}
 
 // Handle ID_VIEWSOURCE command
 LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
@@ -424,7 +488,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	rv = nsServiceManager::GetService(kPrefCID, 
 									nsIPref::GetIID(), 
 									(nsISupports **)&m_pIPref);
-	if (NS_OK != rv)
+	if (NS_FAILED(rv))
 	{
 		NG_ASSERT(0);
 		m_sErrorMessage = _T("Error - could not create preference object");
@@ -435,7 +499,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
 									kIWebShellIID,
 									(void**)&m_pIWebShell);
-	if (NS_OK != rv)
+	if (NS_FAILED(rv))
 	{
 		NG_ASSERT(0);
 		m_sErrorMessage = _T("Error - could not create web shell, check PATH settings");
@@ -459,7 +523,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 					nsScrollPreference_kAuto,
 					aAllowPlugins,
 					aIsSunkenBorder);
-	NG_ASSERT(rv == NS_OK);
+	NG_ASSERT(NS_SUCCEEDED(rv));
 
 	// Create the container object
 	m_pWebShellContainer = new CWebShellContainer(this);
@@ -605,6 +669,9 @@ HRESULT CMozillaBrowser::OnEditorCommand(DWORD nCmdID)
 // Returns the presentation shell
 HRESULT CMozillaBrowser::GetPresShell(nsIPresShell **pPresShell)
 {
+	NG_TRACE_METHOD(CMozillaBrowser::GetPresShell);
+	nsresult res;
+	
 	// Test for stupid args
 	if (pPresShell == NULL)
 	{
@@ -621,17 +688,18 @@ HRESULT CMozillaBrowser::GetPresShell(nsIPresShell **pPresShell)
 	}
 	
 	nsIContentViewer* pIContentViewer = nsnull;
-	m_pIWebShell->GetContentViewer(&pIContentViewer);
-	if (pIContentViewer != nsnull)
+	res = m_pIWebShell->GetContentViewer(&pIContentViewer);
+	if ( NS_SUCCEEDED(res) )
 	{
 		nsIDocumentViewer* pIDocViewer = nsnull;
-		if (pIContentViewer->QueryInterface(kIDocumentViewerIID, (void**) &pIDocViewer) == NS_OK)
+		res = pIContentViewer->QueryInterface(kIDocumentViewerIID, (void**) &pIDocViewer);
+		if ( NS_SUCCEEDED(res) )
 		{
 			nsIPresContext * pIPresContent = nsnull;
-			pIDocViewer->GetPresContext(pIPresContent);
-			if (pIPresContent != nsnull)
+			res = pIDocViewer->GetPresContext(pIPresContent);
+			if ( NS_SUCCEEDED(res) )
 			{
-				pIPresContent->GetShell(pPresShell);
+				res = pIPresContent->GetShell(pPresShell);
 				NS_RELEASE(pIPresContent);
 			}
 			NS_RELEASE(pIDocViewer);
@@ -639,13 +707,16 @@ HRESULT CMozillaBrowser::GetPresShell(nsIPresShell **pPresShell)
 		NS_RELEASE(pIContentViewer);
 	}
 
-	return S_OK;
+	return res;
 }
 
 
 // Return the root DOM document
 HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 {
+	NG_TRACE_METHOD(CMozillaBrowser::GetDOMDocument);
+	nsresult res;
+
 	// Test for stupid args
 	if (pDocument == NULL)
 	{
@@ -662,20 +733,18 @@ HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 	}
 	
 	nsIContentViewer * pCViewer = nsnull;
-	
-	m_pIWebShell->GetContentViewer(&pCViewer);
-	if (nsnull != pCViewer)
+	res = m_pIWebShell->GetContentViewer(&pCViewer);
+	if ( NS_SUCCEEDED(res) )
 	{
 		nsIDocumentViewer * pDViewer = nsnull;
-		if (pCViewer->QueryInterface(kIDocumentViewerIID, (void**) &pDViewer) == NS_OK)
+		res = pCViewer->QueryInterface(kIDocumentViewerIID, (void**) &pDViewer);
+		if ( NS_SUCCEEDED(res) )
 		{
 			nsIDocument * pDoc = nsnull;
-			pDViewer->GetDocument(pDoc);
-			if (pDoc != nsnull)
+			res = pDViewer->GetDocument(pDoc);
+			if ( NS_SUCCEEDED(res) )
 			{
-				if (pDoc->QueryInterface(kIDOMDocumentIID, (void**) pDocument) == NS_OK)
-				{
-				}
+				res = pDoc->QueryInterface(kIDOMDocumentIID, (void**) pDocument);
 				NS_RELEASE(pDoc);
 			}
 			NS_RELEASE(pDViewer);
@@ -683,7 +752,7 @@ HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 		NS_RELEASE(pCViewer);
 	}
 
-	return S_OK;
+	return res;
 }
 
 
@@ -1050,6 +1119,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 {
 	NG_TRACE_METHOD(CMozillaBrowser::Navigate);
 
+	//Make sure m_pIWebShell is valid
     if (!IsValid())
 	{
 		NG_ASSERT(0);
@@ -1071,6 +1141,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	}
 
 	// Check for a view-source op - this is a bit kludgy
+	// TODO
 	if (sUrl.Compare(L"view-source:", PR_TRUE, 12) == 0)
  	{
  		sUrl.Left(sCommand, 11);
@@ -1160,7 +1231,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 
 	// Load the URL	
 	char *tmpCommand = sCommand.ToNewCString();
-	m_pIWebShell->LoadURL(sUrl.GetUnicode()); 
+	nsresult res = m_pIWebShell->LoadURL(sUrl.GetUnicode()); 
 	
 /*	, tmpCommand, pIPostData, bModifyHistory);
 	  NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
@@ -1173,7 +1244,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 #endif
                      const PRUint32 aLocalIP=0) = 0;
 */
-  return S_OK;
+	return res;
 }
 
 
@@ -1181,11 +1252,14 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh(void)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::Refresh);
 
-    if (!IsValid())
+//Uneccessary since this gets called again in Refresh2
+#if 0
+	if (!IsValid())
 	{
 		NG_ASSERT(0);
 		RETURN_E_UNEXPECTED();
 	}
+#endif
 
 	// Reload the page
 	CComVariant vRefreshType(REFRESH_NORMAL);
@@ -1338,6 +1412,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Container(IDispatch __RPC_FAR *__
 		RETURN_E_INVALIDARG();
 	}
 
+	//TODO: Implement get_Container: Retrieve a pointer to the IDispatch interface of the container.
 	*ppDisp = NULL;
 	RETURN_E_UNEXPECTED();
 }
@@ -1407,7 +1482,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_TopLevelContainer(VARIANT_BOOL __
 		RETURN_E_INVALIDARG();
 	}
 
-	*pBool = VARIANT_TRUE;
+	//TODO:  Implement get_TopLevelContainer
+	*pBool = VARIANT_FALSE;
 	return S_OK;
 }
 
@@ -1422,6 +1498,24 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Type(BSTR __RPC_FAR *Type)
 		RETURN_E_UNEXPECTED();
 	}
 
+	//NOTE:	This code should work in theory, but can't be verified because GetDoctype
+	//		has not been implemented yet.
+#if 0
+	nsIDOMDocument *pIDOMDocument = nsnull;
+	if ( SUCCEEDED(GetDOMDocument(&pIDOMDocument)) )
+	{
+		nsIDOMDocumentType *pIDOMDocumentType = nsnull;
+		if ( SUCCEEDED(pIDOMDocument->GetDoctype(&pIDOMDocumentType)) )
+		{
+			nsString docName;
+			pIDOMDocumentType->GetName(docName);
+			//NG_TRACE("pIDOMDocumentType returns: %s", docName);
+			//Still need to manipulate docName so that it goes into *Type param of this function.
+		}
+	}
+#endif
+
+	//TODO: Implement get_Type
 	RETURN_ERROR(_T("get_Type: failed"), E_FAIL);
 }
 
@@ -1441,6 +1535,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Left(long __RPC_FAR *pl)
 		NG_ASSERT(0);
 		RETURN_E_INVALIDARG();
 	}
+
+	//TODO: Implement get_Left - Should return the left position of this control.
 	*pl = 0;
 	return S_OK;
 }
@@ -1474,6 +1570,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Top(long __RPC_FAR *pl)
 		NG_ASSERT(0);
 		RETURN_E_INVALIDARG();
 	}
+
+	//TODO: Implement get_Top - Should return the top position of this control.
 	*pl = 0;
 	return S_OK;
 }
@@ -1488,6 +1586,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Top(long Top)
 		NG_ASSERT(0);
 		RETURN_E_UNEXPECTED();
 	}
+
+	//TODO: Implement set_Top - Should set the top position of this control.
 	return S_OK;
 }
 
@@ -1507,6 +1607,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Width(long __RPC_FAR *pl)
 		NG_ASSERT(0);
 		RETURN_E_INVALIDARG();
 	}
+
+	//TODO: Implement get_Width- Should return the width of this control.
 	*pl = 0;
 	return S_OK;
 }
@@ -1521,6 +1623,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Width(long Width)
 		NG_ASSERT(0);
 		RETURN_E_UNEXPECTED();
 	}
+
+	//TODO: Implement put_Width - Should set the width of this control.
 	return S_OK;
 }
 
@@ -1538,6 +1642,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Height(long __RPC_FAR *pl)
 	{
 		RETURN_E_INVALIDARG();
 	}
+
+	//TODO: Implement get_Height - Should return the hieght of this control.
 	*pl = 0;
 	return S_OK;
 }
@@ -1552,6 +1658,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Height(long Height)
 		NG_ASSERT(0);
 		RETURN_E_UNEXPECTED();
 	}
+
+	//TODO: Implement put_Height - Should set the height of this control.
 	return S_OK;
 }
 
@@ -1658,6 +1766,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Quit(void)
 		RETURN_E_UNEXPECTED();
 	}
 
+	//This generates an exception in the IE control.
 	// TODO fire quit event
 	return S_OK;
 }
@@ -1673,6 +1782,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::ClientToWindow(int __RPC_FAR *pcx, in
 		RETURN_E_UNEXPECTED();
 	}
 
+	//This generates an exception in the IE control.
 	// TODO convert points to be relative to browser
 	return S_OK;
 }
@@ -1762,7 +1872,9 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Name(BSTR __RPC_FAR *Name)
 	{
 		RETURN_E_INVALIDARG();
 	}
-	*Name = SysAllocString(L""); // TODO get Mozilla's executable name
+
+	// TODO: Implement get_Name (get Mozilla's executable name)
+	*Name = SysAllocString(L"Mozilla Web Browser Control");
 	return S_OK;
 }
 
@@ -1783,6 +1895,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_HWND(long __RPC_FAR *pHWND)
 		RETURN_E_INVALIDARG();
 	}
 
+	//This generates an exception in the IE control.
 	*pHWND = NULL;
 	return S_OK;
 }
@@ -1803,6 +1916,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_FullName(BSTR __RPC_FAR *FullName
 	{
 		RETURN_E_INVALIDARG();
 	}
+
+	// TODO: Implement get_FullName (Return the full path of the executable containing this control)
 	*FullName = SysAllocString(L""); // TODO get Mozilla's executable name
 	return S_OK;
 }
@@ -1823,7 +1938,9 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Path(BSTR __RPC_FAR *Path)
 	{
 		RETURN_E_INVALIDARG();
 	}
-	*Path = SysAllocString(L""); // TODO get Mozilla's path
+
+	// TODO: Implement get_Path (get Mozilla's path)
+	*Path = SysAllocString(L"");
 	return S_OK;
 }
 
@@ -1843,6 +1960,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Visible(VARIANT_BOOL __RPC_FAR *p
 	{
 		RETURN_E_INVALIDARG();
 	}
+
+	//TODO: Implement get_Visible
 	*pBool = VARIANT_FALSE;
 	return S_OK;
 }
@@ -1858,6 +1977,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Visible(VARIANT_BOOL Value)
 		RETURN_E_UNEXPECTED();
 	}
 
+	//TODO: Implement put_Visible
 	return S_OK;
 }
 
@@ -1877,6 +1997,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_StatusBar(VARIANT_BOOL __RPC_FAR 
 	{
 		RETURN_E_INVALIDARG();
 	}
+
+	//There is no StatusBar in this control.
 	*pBool = VARIANT_FALSE;
 	return S_OK;
 }
@@ -1892,6 +2014,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_StatusBar(VARIANT_BOOL Value)
 		RETURN_E_UNEXPECTED();
 	}
 
+	//There is no StatusBar in this control.
 	return S_OK;
 }
 
@@ -1911,7 +2034,9 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_StatusText(BSTR __RPC_FAR *Status
 	{
 		RETURN_E_INVALIDARG();
 	}
-	*StatusText = SysAllocString(L""); // TODO
+
+	//TODO: Implement get_StatusText
+	*StatusText = SysAllocString(L"");
 	return S_OK;
 }
 
@@ -1926,6 +2051,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_StatusText(BSTR StatusText)
 		RETURN_E_UNEXPECTED();
 	}
 
+	//TODO: Implement put_StatusText
 	return S_OK;
 }
 
@@ -1945,6 +2071,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_ToolBar(int __RPC_FAR *Value)
 	{
 		RETURN_E_INVALIDARG();
 	}
+
+	//There is no ToolBar in this control.
 	*Value = FALSE;
 	return S_OK;
 }
@@ -1960,7 +2088,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_ToolBar(int Value)
 		RETURN_E_UNEXPECTED();
 	}
 
-	// No toolbar in control!
+	//There is no ToolBar in this control.
 	return S_OK;
 }
 
@@ -1980,6 +2108,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_MenuBar(VARIANT_BOOL __RPC_FAR *V
 	{
 		RETURN_E_INVALIDARG();
 	}
+
+	//There is no MenuBar in this control.
 	*Value = VARIANT_FALSE;
 	return S_OK;
 }
@@ -1995,7 +2125,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_MenuBar(VARIANT_BOOL Value)
 		RETURN_E_UNEXPECTED();
 	}
 
-	// No menu in control!
+	//There is no MenuBar in this control.
 	return S_OK;
 }
 
@@ -2015,6 +2145,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_FullScreen(VARIANT_BOOL __RPC_FAR
 	{
 		RETURN_E_INVALIDARG();
 	}
+
+	//FullScreen mode doesn't really apply to this control.
 	*pbFullScreen = VARIANT_FALSE;
 	return S_OK;
 }
@@ -2030,7 +2162,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_FullScreen(VARIANT_BOOL bFullScre
 		RETURN_E_UNEXPECTED();
 	}
 
-	// No fullscreen mode in control!
+	//FullScreen mode doesn't really apply to this control.
 	return S_OK;
 }
 
@@ -2043,6 +2175,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate2(VARIANT __RPC_FAR *URL, VAR
 {
 	NG_TRACE_METHOD(CMozillaBrowser::Navigate2);
 
+//Redundant code... taken care of in CMozillaBrowser::Navigate
+#if 0
     if (!IsValid())
 	{
 		NG_ASSERT(0);
@@ -2054,6 +2188,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate2(VARIANT __RPC_FAR *URL, VAR
 		NG_ASSERT(0);
 		RETURN_E_INVALIDARG();
 	}
+
+#endif
 
 	CComVariant vURLAsString;
 	if (vURLAsString.ChangeType(VT_BSTR, URL) != S_OK)
@@ -2159,6 +2295,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Offline(VARIANT_BOOL __RPC_FAR *p
 		RETURN_E_INVALIDARG();
 	}
 
+	//TODO: Implement get_Offline
 	*pbOffline = VARIANT_FALSE;
 	return S_OK;
 }
@@ -2174,6 +2311,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Offline(VARIANT_BOOL bOffline)
 		RETURN_E_UNEXPECTED();
 	}
 
+	//TODO: Implement get_Offline
 	return S_OK;
 }
 
@@ -2193,6 +2331,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Silent(VARIANT_BOOL __RPC_FAR *pb
 		RETURN_E_INVALIDARG();
 	}
 
+	//Only really applies to the IE app, not a control
 	*pbSilent = VARIANT_FALSE;
 	return S_OK;
 }
@@ -2208,7 +2347,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Silent(VARIANT_BOOL bSilent)
 		RETURN_E_UNEXPECTED();
 	}
 
-	// IGNORE
+	//Only really applies to the IE app, not a control
 	return S_OK;
 }
 
@@ -2229,6 +2368,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_RegisterAsBrowser(VARIANT_BOOL __
 		RETURN_E_INVALIDARG();
 	}
 
+	//TODO: Implement get_RegisterAsBrowser
 	*pbRegister = VARIANT_FALSE;
 	return S_OK;
 }
@@ -2244,6 +2384,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsBrowser(VARIANT_BOOL bR
 		RETURN_E_UNEXPECTED();
 	}
 
+	//TODO: Implement put_RegisterAsBrowser
 	return S_OK;
 }
 
@@ -2352,7 +2493,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_TheaterMode(VARIANT_BOOL __RPC_FA
 		RETURN_E_INVALIDARG();
 	}
 
-	// No theatermode!
+	//TheaterMode doesn't apply to this control.
 	*pbRegister = VARIANT_FALSE;
 
 	return S_OK;
@@ -2369,6 +2510,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_TheaterMode(VARIANT_BOOL bRegiste
 		RETURN_E_UNEXPECTED();
 	}
 
+	//TheaterMode doesn't apply to this control.
 	return S_OK;
 }
 
@@ -2388,6 +2530,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_AddressBar(VARIANT_BOOL __RPC_FAR
 		RETURN_E_INVALIDARG();
 	}
 
+	//There is no AddressBar in this control.
 	*Value = VARIANT_FALSE;
 	return S_OK;
 }
@@ -2403,6 +2546,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_AddressBar(VARIANT_BOOL Value)
 		RETURN_E_UNEXPECTED();
 	}
 
+	//There is no AddressBar in this control.
 	return S_OK;
 }
 
@@ -2423,6 +2567,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Resizable(VARIANT_BOOL __RPC_FAR 
 		RETURN_E_INVALIDARG();
 	}
 
+	//TODO:  Not sure if this should actually be implemented or not.
 	*Value = VARIANT_FALSE;
 	return S_OK;
 }
@@ -2438,6 +2583,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Resizable(VARIANT_BOOL Value)
 		RETURN_E_UNEXPECTED();
 	}
 
+	//TODO:  Not sure if this should actually be implemented or not.
 	return S_OK;
 }
 

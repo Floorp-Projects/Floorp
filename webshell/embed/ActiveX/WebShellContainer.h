@@ -115,7 +115,7 @@ public:
 	NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aContentType, nsIContentViewer* aViewer);
 	NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
 	NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, nsString& aMsg);
-	NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRInt32 aStatus);
+	NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, nsresult aStatus);
 	NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, nsIURI *aURL,const char *aContentType,const char *aCommand );		
 #endif
 };
