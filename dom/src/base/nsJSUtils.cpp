@@ -296,11 +296,12 @@ nsresult
 nsJSUtils::GetDynamicScriptContext(JSContext *aContext,
                                    nsIScriptContext** aScriptContext)
 {
-  // XXX We rely on the rule that if any JSContext in our JSRuntime has a 
-  // private set then that private *must* be a pointer to an nsISupports.
-  nsISupports *supports = (nsIScriptContext*)::JS_GetContextPrivate(aContext);
+  nsISupports *supports =
+    (::JS_GetOptions(aContext) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
+    ? NS_STATIC_CAST(nsIScriptContext*, ::JS_GetContextPrivate(aContext))
+    : nsnull;
   if (!supports)
-      return nsnull;
+    return nsnull;
   return supports->QueryInterface(NS_GET_IID(nsIScriptContext),
                                   (void**)aScriptContext);
 }

@@ -227,7 +227,7 @@ JSBool JS_DLL_CALLBACK
 nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
 {
   // Get the native context
-  nsJSContext *ctx = (nsJSContext *)::JS_GetContextPrivate(cx);
+  nsJSContext *ctx = NS_STATIC_CAST(nsJSContext *, ::JS_GetContextPrivate(cx));
   NS_ENSURE_TRUE(ctx, JS_TRUE);
 
   // Filter out most of the calls to this callback
@@ -325,11 +325,11 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
 {
   NS_INIT_REFCNT();
 
+  mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS
 #ifdef DEBUG
-  mDefaultJSOptions = JSOPTION_STRICT; // lint catching for development
-#else
-  mDefaultJSOptions = 0;
+    | JSOPTION_STRICT   // lint catching for development
 #endif
+    ;
 
   // Let xpconnect resync its JSContext tracker. We do this before creating
   // a new JSContext just in case the heap manager recycles the JSContext
@@ -1172,16 +1172,20 @@ SetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   if (JSVAL_IS_INT(id)) {
     uint32 optbit = (uint32) JSVAL_TO_INT(id);
+
+    // Don't let options other than strict and werror be set -- it would be
+    // bad if web page script could clear JSOPTION_PRIVATE_IS_NSISUPPORTS!
     if ((optbit & (optbit - 1)) == 0 && optbit <= JSOPTION_WERROR) {
       JSBool optval;
-      if (!JS_ValueToBoolean(cx, *vp, &optval))
+      if (! ::JS_ValueToBoolean(cx, *vp, &optval))
         return JS_FALSE;
-      uint32 optset = JS_GetOptions(cx);
+
+      uint32 optset = ::JS_GetOptions(cx);
       if (optval)
         optset |= optbit;
       else
         optset &= ~optbit;
-      JS_SetOptions(cx, optset);
+      ::JS_SetOptions(cx, optset);
     }
   }
   return JS_TRUE;

@@ -422,6 +422,9 @@ JS_StringToVersion(const char *string);
                                                    the last object on its 'obj'
                                                    param's scope chain as the
                                                    ECMA 'variables object' */
+#define JSOPTION_PRIVATE_IS_NSISUPPORTS \
+                                JS_BIT(3)       /* context private data points
+                                                   to an nsISupports subclass */
 
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);
