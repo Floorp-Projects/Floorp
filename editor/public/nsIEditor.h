@@ -72,7 +72,7 @@ public:
    *                        linked to a single pres shell.
    * @param aFlags          A bitmask of flags for specifying the behavior of the editor.
    */
-  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell, PRUint32 aFlags)=0;
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell, nsISelectionController *aSelCon, PRUint32 aFlags)=0;
 
   /**
    * PostCreate should be called after Init, and is the time that the editor tells

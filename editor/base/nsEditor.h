@@ -70,6 +70,8 @@ class IMETextTxn;
 class AddStyleSheetTxn;
 class RemoveStyleSheetTxn;
 class nsFileSpec;
+class nsISelectionController;
+
 
 /***************************************************************************
  * class for recording selection info.  stores selection as collection of
@@ -187,7 +189,7 @@ public:
   NS_DECL_ISUPPORTS
 
   /* ------------ nsIEditor methods -------------- */
-  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell, PRUint32 aFlags);
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell, nsISelectionController *aSelCon, PRUint32 aFlags);
   NS_IMETHOD PostCreate();
   NS_IMETHOD GetFlags(PRUint32 *aFlags) = 0;
   NS_IMETHOD SetFlags(PRUint32 aFlags) = 0;
@@ -725,6 +727,7 @@ protected:
   PRUint32        mFlags;		// behavior flags. See nsIHTMLEditor.h for the flags we use.
   
   nsWeakPtr       mPresShellWeak;   // weak reference to the nsIPresShell
+  nsWeakPtr       mSelConWeak;   // weak reference to the nsISelectionController
   nsIViewManager *mViewManager;
   PRInt32         mUpdateCount;
   nsCOMPtr<nsITransactionManager> mTxnMgr;

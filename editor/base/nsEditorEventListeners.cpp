@@ -477,12 +477,6 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
   if (!editor) { return NS_OK; }
 
   
-   // get the document
-   nsCOMPtr<nsIDOMDocument>domDoc;
-  editor->GetDocument(getter_AddRefs(domDoc));
-   if (!domDoc) { return NS_OK; }
-   nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
-   if (!doc) { return NS_OK; }
 
   PRUint16 button = 0;
   mouseEvent->GetButton(&button);
@@ -1083,16 +1077,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
             selCon->SetCaretEnabled(PR_TRUE);
           }
 
-          nsCOMPtr<nsIDOMDocument>domDoc;
-          editor->GetDocument(getter_AddRefs(domDoc));
-          if (domDoc)
-          {
-            nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
-            if (doc)
-            {
-              doc->SetDisplaySelection(nsIDocument::SELECTION_ON);
-            }
-          }
+          selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
 #ifdef USE_HACK_REPAINT
   // begin hack repaint
           nsCOMPtr<nsIViewManager> viewmgr;
@@ -1131,17 +1116,7 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
       if (selCon)
       {
         selCon->SetCaretEnabled(PR_FALSE);
-
-        nsCOMPtr<nsIDOMDocument>domDoc;
-        editor->GetDocument(getter_AddRefs(domDoc));
-        if (domDoc)
-        {
-          nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
-          if (doc)
-          {
-            doc->SetDisplaySelection(nsIDocument::SELECTION_DISABLED);
-          }
-        }
+        selCon->SetDisplaySelection(nsISelectionController::SELECTION_DISABLED);
 #ifdef USE_HACK_REPAINT
 // begin hack repaint
         nsCOMPtr<nsIViewManager> viewmgr;

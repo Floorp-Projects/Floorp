@@ -825,8 +825,9 @@ NS_IMPL_QUERY_INTERFACE3(nsEditor, nsIEditor, nsIEditorIMESupport, nsISupportsWe
 #pragma mark -
 #endif
 
+
 NS_IMETHODIMP
-nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, PRUint32 aFlags)
+nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsISelectionController *aSelCon, PRUint32 aFlags)
 {
   NS_PRECONDITION(nsnull!=aDoc && nsnull!=aPresShell, "bad arg");
   if ((nsnull==aDoc) || (nsnull==aPresShell))
@@ -835,6 +836,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, PRUint32 aFlags)
   mFlags = aFlags;
   mDocWeak = getter_AddRefs( NS_GetWeakReference(aDoc) );  // weak reference to doc
   mPresShellWeak = getter_AddRefs( NS_GetWeakReference(aPresShell) );   // weak reference to pres shell
+  mSelConWeak = getter_AddRefs( NS_GetWeakReference(aSelCon) );   // weak reference to selectioncontroller
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
   
@@ -914,7 +916,8 @@ nsEditor::GetDocument(nsIDOMDocument **aDoc)
   if (!mDocWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
-  return doc->QueryInterface(NS_GET_IID(nsIDOMDocument), (void **)aDoc);
+  NS_ADDREF(*aDoc = doc);
+  return NS_OK;
 }
 
 
@@ -939,9 +942,9 @@ nsEditor::GetSelectionController(nsISelectionController **aSel)
   if (!aSel)
     return NS_ERROR_NULL_POINTER;
   *aSel = nsnull; // init out param
-  NS_PRECONDITION(mPresShellWeak, "bad state, null mPresShellWeak");
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShellWeak);
+  NS_PRECONDITION(mSelConWeak, "bad state, null mSelConWeak");
+  if (!mSelConWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
   if (!selCon) return NS_ERROR_NOT_INITIALIZED;
   NS_ADDREF(*aSel = selCon);
   return NS_OK;
@@ -955,8 +958,8 @@ nsEditor::GetSelection(nsIDOMSelection **aSelection)
   if (!aSelection)
     return NS_ERROR_NULL_POINTER;
   *aSelection = nsnull;
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsISelectionController> selcon = do_QueryReferent(mPresShellWeak);
+  if (!mSelConWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsISelectionController> selcon = do_QueryReferent(mSelConWeak);
   if (!selcon) return NS_ERROR_NOT_INITIALIZED;
   nsresult result = selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, aSelection);  // does an addref
   return result;
@@ -4928,7 +4931,7 @@ nsresult nsEditor::EndUpdateViewBatch()
       mViewManager->EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
 #endif
       nsCOMPtr<nsIPresShell>    presShell;
-      nsresult  rv = GetPresShell(getter_AddRefs(presShell));
+      rv = GetPresShell(getter_AddRefs(presShell));
       if (NS_SUCCEEDED(rv) && presShell)
         presShell->EndReflowBatching(PR_TRUE);
     }
@@ -5197,7 +5200,7 @@ nsEditor::CreateTxnForIMEText(const nsString & aStringToInsert,
 
   result = TransactionFactory::GetNewTransaction(IMETextTxn::GetCID(), (EditTxn **)aTxn);
   if (nsnull!=*aTxn) {
-    result = (*aTxn)->Init(mIMETextNode,mIMETextOffset,mIMEBufferLength,mIMETextRangeList,aStringToInsert,mPresShellWeak);
+    result = (*aTxn)->Init(mIMETextNode,mIMETextOffset,mIMEBufferLength,mIMETextRangeList,aStringToInsert,mSelConWeak);
   }
   else {
     result = NS_ERROR_OUT_OF_MEMORY;

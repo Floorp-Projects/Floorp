@@ -67,7 +67,7 @@ NS_IMETHODIMP IMETextTxn::Init(nsIDOMCharacterData     *aElement,
                                PRUint32                 aReplaceLength,
                                nsIPrivateTextRangeList *aTextRangeList,
                                const nsString          &aStringToInsert,
-                               nsWeakPtr                aPresShellWeak)
+                               nsWeakPtr                aSelConWeak)
 {
   NS_ASSERTION(aElement, "illegal value- null ptr- aElement");
   NS_ASSERTION(aTextRangeList, "illegal value- null ptr - aTextRangeList");
@@ -77,7 +77,7 @@ NS_IMETHODIMP IMETextTxn::Init(nsIDOMCharacterData     *aElement,
   mOffset = aOffset;
   mReplaceLength = aReplaceLength;
   mStringToInsert = aStringToInsert;
-  mPresShellWeak = aPresShellWeak;
+  mSelConWeak = aSelConWeak;
   mRangeList = do_QueryInterface(aTextRangeList);
   mFixed = PR_FALSE;
   return NS_OK;
@@ -90,8 +90,8 @@ NS_IMETHODIMP IMETextTxn::Do(void)
   printf("Do IME Text element = %p replace = %d len = %d\n", mElement.get(), mReplaceLength, mStringToInsert.Length());
 #endif
 
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
+  if (!selCon) return NS_ERROR_NOT_INITIALIZED;
 
   // advance caret: This requires the presentation shell to get the selection.
   nsresult result = NS_OK;
@@ -113,7 +113,7 @@ NS_IMETHODIMP IMETextTxn::Undo(void)
   printf("Undo IME Text element = %p\n", mElement.get());
 #endif
 
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShellWeak);
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
   if (!selCon) return NS_ERROR_NOT_INITIALIZED;
 
   nsresult result;
@@ -309,7 +309,7 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
     //
     // run through the text range list, if any
     //
-    nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShellWeak);
+    nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
     if (!selCon) return NS_ERROR_NOT_INITIALIZED;
 
     result = mRangeList->GetLength(&textRangeListLength);

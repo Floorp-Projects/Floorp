@@ -24,7 +24,6 @@
 #include "nsEditor.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMSelection.h"
-#include "nsIPresShell.h"
 #include "EditAggregateTxn.h"
 
 static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
