@@ -118,7 +118,8 @@ NS_IMETHODIMP nsDeviceContextGTK::GetScrollBarDimensions(float &aWidth, float &a
 /* 11 + 2 + 2   (11 is the default scrollbar size, 2 is the y offset from the
 		 style code.  we should get this directly */
   aWidth = 15.0 * mPixelsToTwips;
-  aHeight = 24.0 * mPixelsToTwips;
+  aHeight = 15.0 * mPixelsToTwips;
+//  aHeight = 24.0 * mPixelsToTwips;
 //  aWidth = 11.0 * mTwipsToPixels;
 //  aHeight = 24.0 * mTwipsToPixels;
   return NS_OK;
