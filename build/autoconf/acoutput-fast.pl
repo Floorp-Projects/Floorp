@@ -110,12 +110,12 @@ foreach $ac_file (@makefiles) {
 
 #  mkdir $subdir, 0777 if not -d $subdir;
 
-  open (INFILE, "<$ac_file_in")
-    or die "Unable to open $ac_file_in\n";
-  open (OUTFILE, ">$ac_file")
-    or die "Unable to create $ac_file\n";
-
   print STDERR "creating $ac_file\n";
+
+  open (INFILE, "<$ac_file_in")
+    or ( warn "can't read $ac_file_in: No such file or directory\n" and next);
+  open (OUTFILE, ">$ac_file")
+    or ( warn "Unable to create $ac_file\n" and next);
 
   while (<INFILE>) {
     if (/\@[_a-zA-Z]*\@.*\@[_a-zA-Z]*\@/) {
