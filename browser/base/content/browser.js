@@ -397,7 +397,7 @@ function delayedStartup()
   
   gBrowser.addEventListener("load", function(evt) { setTimeout(loadEventHandlers, 0, evt); }, true);
 
-  window.addEventListener("keypress", ctrlNumberTabSelection, true);
+  window.addEventListener("keypress", ctrlNumberTabSelection, false);
 
   if (gMustLoadSidebar) {
     var sidebar = document.getElementById("sidebar");
