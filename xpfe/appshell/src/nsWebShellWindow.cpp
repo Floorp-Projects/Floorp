@@ -68,7 +68,10 @@ nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl)
 {
   nsresult rv;
 
-  nsString urlString(aUrl->GetSpec());
+  nsString urlString;
+  const char *tmpStr = NULL;
+  aUrl->GetSpec(&tmpStr);
+  urlString = tmpStr;
 
   // XXX: need to get the default window size from prefs...
   nsRect r(0, 0, 600, 400);
