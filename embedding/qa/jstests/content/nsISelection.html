@@ -1,0 +1,344 @@
+<html>
+<!--
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Ashish Bhatt <ashishbhatt@netscape.com>
+ *
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+  -->
+
+<head>
+
+<title>nsISelection Tets case</title>
+
+<script type="text/javascript" src="../jslib/bridge.js"></script>
+
+
+</head>
+
+<body >
+<script type="text/javascript">
+
+var gObject ;
+var buffer ;
+var funcarray;
+
+var row0 = new Array("anchorNode", "GetAnchorNode();", "Returns the node representing one end of the selection.");
+var row1 = new Array("anchorOffset", "GetAnchorOffset();", "Returns the offset within the (text) node where the selection begins.");
+var row2 = new Array("focusNode", "GetFocusNode();", "Returns the node with keyboard focus.");
+var row3 = new Array("focusOffset", "GetFocusOffset();", "Returns the offset within the (text) node where focus starts.");
+var row4 = new Array("isCollapsed", "GetIsCollapsed();", "Indicates if the selection is collapsed or not.");
+var row5 = new Array("rangeCount", "GetRangeCount();", "Returns the number of ranges in the selection.");
+var row6 = new Array("getRangeAt()", "GetRangeAt();", "Returns the range at the specified index");
+var row7 = new Array("collapse()", "Collapse();", "Collapses the selection to a single point, at the specified offset");
+var row8 = new Array("extend()", "Extend();", "Extends the selection by moving the focus to the specified node and offset,preserving the anchor postion. The new selection end result will always be from the anchor to the new focus, regardless of direction");
+var row9 = new Array("collapseToStart()", "CollapseToStart();", "Collapses the whole selection to a single point at the start");
+var row10 = new Array("collapseToEnd()", "CollapseToEnd();", "Collapses the whole selection to a single point at the end");
+var row11 = new Array("containsNode()", "ContainsNode();", "Returns if the selection contains the node.");
+var row12 = new Array("selectAllChildren()", "SelectAllChildren();", "Adds all children of the specified node to the selection.");
+var row13 = new Array("addRange()", "AddRange();", "Adds a range to the current selection.");
+var row14 = new Array("removeRange()", "RemoveRange();", "Removes a range from the current selection.");
+var row15 = new Array("removeAllRanges()", "RemoveAllRanges();", "Removes all ranges from the current selection.");
+var row16 = new Array("deleteFromDocument()", "DeleteFromDocument();", "Deletes this selection from document the nodes belong to");
+var row17 = new Array("selectionLanguageChange()", "SelectionLanguageChange();", "Modifies the cursor Bidi level after a change in keyboard direction");
+var row18 = new Array("toString()", "ToString();", "Returns the whole selection into a plain text string");
+
+funcarray = new Array(row0, row1, row2, row3, row4, row5, row6, row7, row8, row9, row10, row11, row12, row13, row14, row15, row16, row17);
+
+
+WriteHTMLOnPage();
+
+function getSelectionObject(thewindow)
+{
+
+	 //if(gObject)
+	 //	return gObject;
+	 try
+	 {
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserAccess");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+		var ifaceReq = thewindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+		if (!ifaceReq)
+		{
+			if (isRunningStandalone())
+				alert("Exception: " + e);
+			else
+				WriteResults("Unable to get the interface requester");
+		}
+
+		 gObject = ifaceReq.getInterface(Components.interfaces.nsIDOMWindow);
+		 return gObject.getSelection();
+	 }
+	 catch(e){
+		if (isRunningStandalone())
+			alert("Exception: " + e);
+		else
+			WriteResults(buffer + "Exception: " + e);
+	  }
+}
+
+function WritePassFail(aValue,e)
+{
+
+  if( aValue ==  "Pass")
+  {
+	  buffer += "<td>"+" " +"</td>" ;
+	  buffer += "<td>Pass</td>"
+  }
+  else
+  {
+	  buffer += "<td>" +"Exception: " + e + "</td>" ;
+	  buffer += "<td bgcolor='#FF0000'>Fail</td>"
+  }
+
+  buffer += "</tr>"
+
+}
+
+function ShowResults()
+{
+	var checkbox ;
+  	var arr ;
+
+	buffer = "<b>Results for <a href='http://lxr.mozilla.org/seamonkey/source/content/base/public/nsISelection.idl'>nsISelection :</a></b><br><br>"
+	buffer += "<table border cols=4 width='70%'>"
+	buffer += "<tr>"
+	buffer += "<td><b>Property/Method</b></td>"
+	buffer += "<td><b>Params</b></td>"
+	buffer += "<td><b>Output/Bug/Error</b></td>"
+	buffer += "<td><b>Result</b></td>"
+	buffer += "</tr>"
+
+   for(var i=0; i<funcarray.length; i++)
+   {
+	  arr = funcarray[i];
+      checkbox = document.getElementById("pass" + i);
+	  buffer += "<tr>"
+	  buffer += "<td>" + arr[0] + "</td>"
+	  buffer += "<td></td>"
+
+	  if (checkbox.checked)
+	  	WritePassFail("Pass","");
+      else
+      	WritePassFail("Fail","");
+   }
+
+	buffer += "</table>"
+	if (isRunningStandalone())
+	{
+	   document.clear()
+	   document.write(buffer);
+	}
+	else
+		WriteResults(buffer);
+
+
+}
+function WriteHTMLOnPage()
+{
+
+  var arr ;
+  var count=0;
+  document.clear();
+  document.writeln("<h2> Test cases for <a href='http://lxr.mozilla.org/seamonkey/source/content/base/public/nsISelection.idl'>nsISelection</a></h2>");
+  document.writeln("<table width='70%'><tr><td>");
+  document.writeln("<b>Note:</b> Some or all the methods and attributes will only work is some text is selected on the page.");
+  document.writeln("After testing all the methods click on showresults to see the results");
+  document.writeln("</td><td>");
+
+  if (isRunningStandalone())
+	  document.writeln('<button value="results" onclick="ShowResults();"> Show Results </button>');
+  else
+	  document.writeln('<button value="results" onclick="ShowResults();"> Go To Next </button>');
+
+  document.writeln("</td></tr><tr><td>");
+  document.writeln("<input type=text> ");
+  document.writeln("</td></tr></table>");
+  document.writeln("<br>");
+
+  document.writeln("<table border=1 width='70%'>");
+  for(var i=0; i<funcarray.length; i++)
+  {
+
+  	arr = funcarray[i];
+
+	if(count==0)
+		document.writeln("<tr>");
+
+	if(count==4)
+	{
+		document.writeln("</tr>");
+		document.writeln("<tr>");
+		count = 0;
+	}
+
+    document.writeln("<td  width='25%'>");
+	document.writeln(arr[2]);
+	document.writeln("<br>");
+	document.writeln("<b> <font color='#800000'>" + arr[0] + "</font></b>");
+	document.writeln("<br>");
+	document.writeln("<button value='Test' onclick=" + arr[1] + ";> Test "+ arr[0] + "</button>");
+	document.writeln("<form>");
+	document.writeln("<input id=" + "'"+ "pass"+i + "'"+" type=radio> Pass </input>");
+	document.writeln("<input id=" + "'"+ "fail"+i + "'"+" type=radio> Fail </input>");
+	document.writeln("</form>");
+    document.writeln("</td>");
+
+	count +=1;
+   }
+
+	document.writeln("</tr>");
+	document.writeln("</table>");
+
+   for(var i=0; i<funcarray.length; i++)
+   {
+	  checkbox = document.getElementById("fail" + i);
+	  checkbox.checked = true;
+
+   }
+
+}
+function GetAnchorNode()
+{
+   sel = getSelectionObject(window);
+   alert(sel.anchorNode);
+}
+function GetAnchorOffset()
+{
+   sel = getSelectionObject(window);
+   alert(sel.anchorOffset);
+}
+function GetFocusNode()
+{
+   sel = getSelectionObject(window);
+   alert(sel.focusNode);
+}
+function GetFocusOffset()
+{
+   sel = getSelectionObject(window);
+   alert(sel.focusOffset);
+}
+function GetIsCollapsed()
+{
+   sel = getSelectionObject(window);
+   alert(sel.isCollapsed);
+}
+function GetRangeCount()
+{
+   sel = getSelectionObject(window);
+   alert(sel.rangeCount);
+}
+function GetRangeAt()
+{
+   sel = getSelectionObject(window);
+   alert(sel.getRangeAt(0));
+
+}
+function Collapse()
+{
+   sel = getSelectionObject(window);
+   sel.collapse(sel.anchorNode,80);
+
+}
+function Extend()
+{
+   sel = getSelectionObject(window);
+   sel.extend(sel.anchorNode,100);
+
+}
+function CollapseToStart()
+{
+   sel = getSelectionObject(window);
+   sel.collapseToStart();
+}
+function CollapseToEnd()
+{
+   sel = getSelectionObject(window);
+   sel.collapseToEnd();
+}
+function ContainsNode()
+{
+   sel = getSelectionObject(window);
+   alert(sel.containsNode(sel.focusNode, true));
+}
+function SelectAllChildren()
+{
+   sel = getSelectionObject(window);
+   sel.selectAllChildren(sel.focusNode);
+}
+function AddRange()
+{
+   sel = getSelectionObject(window);
+   range = sel.getRangeAt(0);
+   sel.addRange(range);
+
+}
+function RemoveRange()
+{
+   sel = getSelectionObject(window);
+   range = sel.getRangeAt(0);
+   sel.removeRange(range);
+
+}
+function RemoveAllRanges()
+{
+   sel = getSelectionObject(window);
+   sel.removeAllRanges();
+}
+function DeleteFromDocument()
+{
+   sel = getSelectionObject(window);
+   okcancel= confirm("This will delete the selected content from the page, Proceed ?")
+   if(okcancel == true)
+     sel.deleteFromDocument();
+
+}
+function SelectionLanguageChange()
+{
+   sel = getSelectionObject(window);
+   sel.selectionLanguageChange(false);
+}
+function ToString()
+{
+   sel = getSelectionObject(window);
+   alert(sel.toString());
+}
+
+</script>
+</body>
+
+</html>
+
+
