@@ -54,6 +54,10 @@ else
 PROGRAM = phoenix-bin$(BIN_SUFFIX)
 endif
 
+ifeq ($(OS_ARCH),OS2)
+RESFILE=splashos2.res
+endif
+
 REQUIRES = \
 	appshell \
 	string \
