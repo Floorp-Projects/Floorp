@@ -219,12 +219,32 @@ private:
  *    they fail harmlessly.  Refinements on this point will be made as
  *    details emerge (and time permits).
  */
+
+/* Update 2001 March
+ *
+ * A significant DDE bug in Windows is causing Mozilla to get wedged at
+ * startup.  This is detailed in Bugzill bug 53952
+ * (http://bugzilla.mozilla.org/show_bug.cgi?id=53952).
+ *
+ * To resolve this, we are using a new strategy:
+ *   o Use a "message window" to detect that Mozilla is already running and
+ *     to pass requests from a second instance back to the first;
+ *   o Run only as a "DDE server" (not as DDE client); this avoids the
+ *     problematic call to DDEConnect().
+ *
+ * We still use the mutex semaphore to protect the code that detects
+ * whether Mozilla is already running.
+ */
+
 class nsNativeAppSupportWin : public nsNativeAppSupportBase {
 public:
     // Overrides of base implementation.
     NS_IMETHOD Start( PRBool *aResult );
     NS_IMETHOD Stop( PRBool *aResult );
     NS_IMETHOD Quit();
+
+    // The "old" Start method (renamed).
+    NS_IMETHOD StartDDE();
 
     // Utility function to handle a Win32-specific command line
     // option: "-console", which dynamically creates a Windows
@@ -246,6 +266,8 @@ private:
     static int   mConversations;
     static HSZ   mApplication, mTopic;
     static DWORD mInstance;
+    static char *mAppName;
+    friend struct MessageWindow;
 }; // nsNativeAppSupportWin
 
 nsSplashScreenWin::nsSplashScreenWin()
@@ -525,7 +547,7 @@ NS_CreateSplashScreen( nsISplashScreen **aResult ) {
 // Constants
 #define MOZ_DDE_APPLICATION   "Mozilla"
 #define MOZ_DDE_TOPIC         "WWW_OpenURL"
-#define MOZ_DDE_MUTEX_NAME    "MozillaDDEMutex"
+#define MOZ_STARTUP_MUTEX_NAME "StartupMutex"
 #define MOZ_DDE_START_TIMEOUT 30000
 #define MOZ_DDE_STOP_TIMEOUT  15000
 #define MOZ_DDE_EXEC_TIMEOUT  15000
@@ -536,9 +558,107 @@ HSZ   nsNativeAppSupportWin::mApplication   = 0;
 HSZ   nsNativeAppSupportWin::mTopic         = 0;
 DWORD nsNativeAppSupportWin::mInstance      = 0;
 
-// Try to initiate DDE conversation.  If that succeeds, pass
-// request to server process.  Otherwise, register application
-// and topic (i.e., become server process).
+// Message window encapsulation.
+struct MessageWindow {
+    // ctor/dtor are simplistic
+    MessageWindow() {
+        // Try to find window.
+        mHandle = ::FindWindow( className(), 0 ); 
+    }
+
+    // Act like an HWND.
+    operator HWND() {
+        return mHandle;
+    }
+
+    // Class name: appName + "MessageWindow"
+    static const char *className() {
+        static char classNameBuffer[128];
+        static char *mClassName = 0;
+        if ( !mClassName ) { 
+            ::_snprintf( classNameBuffer,
+                         sizeof classNameBuffer,
+                         "%s%s",
+                         nsNativeAppSupportWin::mAppName,
+                         "MessageWindow" );
+            mClassName = classNameBuffer;
+        }
+        return mClassName;
+    }
+
+    // Create: Register class and create window.
+    NS_IMETHOD Create() {
+        WNDCLASS classStruct = { 0,                          // style
+                                 &MessageWindow::WindowProc, // lpfnWndProc
+                                 0,                          // cbClsExtra
+                                 0,                          // cbWndExtra
+                                 0,                          // hInstance
+                                 0,                          // hIcon
+                                 0,                          // hCursor
+                                 0,                          // hbrBackground
+                                 0,                          // lpszMenuName
+                                 className() };              // lpszClassName
+
+        // Register the window class.
+        NS_ENSURE_TRUE( ::RegisterClass( &classStruct ), NS_ERROR_FAILURE );
+
+        // Create the window.
+        NS_ENSURE_TRUE( ( mHandle = ::CreateWindow( className(),
+                                                    0,          // title
+                                                    WS_CAPTION, // style
+                                                    0,0,0,0,    // x, y, cx, cy
+                                                    0,          // parent
+                                                    0,          // menu
+                                                    0,          // instance
+                                                    0 ) ),      // create struct
+                        NS_ERROR_FAILURE );
+
+        #ifdef MOZ_DEBUG_DDE
+        printf( "Message window = 0x%08X\n", (int)mHandle );
+        #endif
+
+        return NS_OK;
+    }
+
+    // SendRequest: Pass string via WM_COPYDATA to message window.
+    NS_IMETHOD SendRequest( const char *cmd ) {
+        COPYDATASTRUCT cds = { 0, ::strlen( cmd ) + 1, (void*)cmd };
+        ::SendMessage( mHandle, WM_COPYDATA, 0, (LPARAM)&cds );
+        return NS_OK;
+    }
+
+    // Window proc.
+    static long CALLBACK WindowProc( HWND msgWindow, UINT msg, WPARAM wp, LPARAM lp ) {
+        if ( msg == WM_COPYDATA ) {
+            // This is an incoming request.
+            COPYDATASTRUCT *cds = (COPYDATASTRUCT*)lp;
+            #ifdef MOZ_DEBUG_DDE
+            printf( "Incoming request: %s\n", (const char*)cds->lpData );
+            #endif
+            (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)cds->lpData );
+        }
+        return TRUE;
+    }
+
+private:
+    HWND mHandle;
+}; // struct MessageWindow
+
+static char nameBuffer[128] = { 0 };
+char *nsNativeAppSupportWin::mAppName = nameBuffer;
+
+/* Start: Tries to find the "message window" to determine if it
+ *        exists.  If so, then Mozilla is already running.  In that
+ *        case, we use the handle to the "message" window and send
+ *        a request corresponding to this process's command line
+ *        options.
+ *        
+ *        If not, then this is the first instance of Mozilla.  In
+ *        that case, we create and set up the message window.
+ *
+ *        The checking for existance of the message window must
+ *        be protected by use of a mutex semaphore.
+ */
 NS_IMETHODIMP
 nsNativeAppSupportWin::Start( PRBool *aResult ) {
     NS_ENSURE_ARG( aResult );
@@ -547,104 +667,79 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
     nsresult rv = NS_ERROR_FAILURE;
     *aResult = PR_FALSE;
 
-    // Grab mutex before doing DdeInitialize!  This is
-    // important (see comment above).
-	int retval;
-	UINT id = ID_DDE_APPLICATION_NAME;
-	char nameBuf[ 128 ];
-	retval = LoadString( (HINSTANCE) NULL, id, (LPTSTR) nameBuf, sizeof(nameBuf) );
-	if ( retval != 0 ) {   
-		Mutex ddeLock = Mutex( MOZ_DDE_MUTEX_NAME );
-		if ( ddeLock.Lock( MOZ_DDE_START_TIMEOUT ) ) {
-			// Initialize DDE.
-			UINT rc = DdeInitialize( &mInstance,
-                                 nsNativeAppSupportWin::HandleDDENotification,
-                                 APPCLASS_STANDARD,
-                                 0 );
-			if ( rc == DMLERR_NO_ERROR ) {
-				mApplication = DdeCreateStringHandle( mInstance,
-                                                  nameBuf,
-                                                  CP_WINANSI );
-				mTopic       = DdeCreateStringHandle( mInstance,
-                                                  MOZ_DDE_TOPIC,
-                                                  CP_WINANSI );
-				if ( mApplication && mTopic ) {
-					// Everything OK so far, try to connect to previusly
-					// started Mozilla.
-					HCONV hconv = DdeConnect( mInstance, mApplication, mTopic, 0 );
-                
-					if ( hconv ) {
-						// We're the client...
-						// Get command line to pass to server.
-						LPTSTR cmd = GetCommandLine();
-						#if MOZ_DEBUG_DDE
-						printf( "Acting as DDE client, cmd=%s\n", cmd );
-						#endif
-						rc = (UINT)DdeClientTransaction( (LPBYTE)cmd,
-                                                     strlen( cmd ) + 1,
-                                                     hconv,
-                                                     0,
-                                                     0,
-                                                     XTYP_EXECUTE,
-                                                     MOZ_DDE_EXEC_TIMEOUT,
-                                                     0 );
-						if ( rc ) {
-							// Inform caller that request was issued.
-							rv = NS_OK;
-						} else {
-							// Something went wrong.  Not much we can do, though...
-							#if MOZ_DEBUG_DDE
-							printf( "DdeClientTransaction failed, error = 0x%08X\n",
-                                (int)DdeGetLastError( mInstance ) );
-							#endif
-						}
-					} else {
-						// We're going to be the server...
-						#if MOZ_DEBUG_DDE
-						printf( "Setting up DDE server...\n" );
-						#endif
-
-						// Next step is to register a DDE service.
-						rc = (UINT)DdeNameService( mInstance, mApplication, 0, DNS_REGISTER );
-
-						if ( rc ) {
-							#if MOZ_DEBUG_DDE
-							printf( "...DDE server started\n" );
-							#endif
-							// Tell app to do its thing.
-							*aResult = PR_TRUE;
-							rv = NS_OK;
-						} else {
-							#if MOZ_DEBUG_DDE
-							printf( "DdeNameService failed, error = 0x%08X\n",
-                                (int)DdeGetLastError( mInstance ) );
-							#endif
-						}
-					}
-				} else {
-					#if MOZ_DEBUG_DDE
-					printf( "DdeCreateStringHandle failed, error = 0x%08X\n",
-                        (int)DdeGetLastError( mInstance ) );
-					#endif
-				}
-			} else {
-				#if MOZ_DEBUG_DDE
-				printf( "DdeInitialize failed, error = 0x%08X\n", (int)rc );
-				#endif
-			}
-
-			// Release mutex.
-			ddeLock.Unlock();
-		}
-	}
-
-    // Clean up.  The only case in which we need to preserve DDE stuff
-    // is if we're going to be acting as server.
-    if ( !*aResult ) {
-        Quit();
+    // Grab mutex first.
+    int retval;
+    UINT id = ID_DDE_APPLICATION_NAME;
+    retval = LoadString( (HINSTANCE) NULL, id, (LPTSTR) nameBuffer, sizeof(nameBuffer) );
+    if ( retval == 0 ) {
+        // No app name; just keep running.
+        *aResult = PR_TRUE;
+        return NS_OK;
     }
 
+    // Build mutex name from app name.
+    char mutexName[128];
+    ::_snprintf( mutexName, sizeof mutexName, "%s%s", nameBuffer, MOZ_STARTUP_MUTEX_NAME );
+    Mutex startupLock = Mutex( mutexName );
+
+    NS_ENSURE_TRUE( startupLock.Lock( MOZ_DDE_START_TIMEOUT ), NS_ERROR_FAILURE );
+
+    // Search for existing message window.
+    MessageWindow msgWindow;
+    if ( (HWND)msgWindow ) {
+        // We are a client process.  Pass request to message window.
+        LPTSTR cmd = ::GetCommandLine();
+        rv = msgWindow.SendRequest( cmd );
+    } else {
+        // We will be server.
+        rv = msgWindow.Create();
+        if ( NS_SUCCEEDED( rv ) ) {
+            // Start up DDE server.
+            this->StartDDE();
+            // Tell caller to spin message loop.
+            *aResult = PR_TRUE;
+        }
+    }
+
+    startupLock.Unlock();
+
     return rv;
+}
+
+// Start DDE server.
+//
+// This used to be the Start() method when we were using DDE as the
+// primary IPC mechanism between secondary Mozilla processes and the
+// initial "server" process.
+//
+// Now, it simply initializes the DDE server.  The caller must check
+// that this process is to be the server, and, must acquire the DDE
+// startup mutex semaphore prior to calling this routine.  See ::Start(),
+// above.
+NS_IMETHODIMP
+nsNativeAppSupportWin::StartDDE() {
+    NS_ENSURE_TRUE( mInstance == 0, NS_ERROR_NOT_INITIALIZED );
+
+    // Initialize DDE.
+    NS_ENSURE_TRUE( DMLERR_NO_ERROR == DdeInitialize( &mInstance,
+                                                      nsNativeAppSupportWin::HandleDDENotification,
+                                                      APPCLASS_STANDARD,
+                                                      0 ),
+                    NS_ERROR_FAILURE );     
+    
+    // Allocate DDE strings.
+    NS_ENSURE_TRUE( ( mApplication = DdeCreateStringHandle( mInstance, mAppName, CP_WINANSI ) ) &&
+                    ( mTopic       = DdeCreateStringHandle( mInstance, MOZ_DDE_TOPIC, CP_WINANSI ) ),
+                    NS_ERROR_FAILURE );
+
+    // Next step is to register a DDE service.
+    NS_ENSURE_TRUE( DdeNameService( mInstance, mApplication, 0, DNS_REGISTER ), NS_ERROR_FAILURE );
+
+    #if MOZ_DEBUG_DDE
+    printf( "DDE server started\n" );
+    #endif
+
+    return NS_OK;
 }
 
 // If no DDE conversations are pending, terminate DDE.
@@ -656,7 +751,7 @@ nsNativeAppSupportWin::Stop( PRBool *aResult ) {
     nsresult rv = NS_OK;
     *aResult = PR_TRUE;
 
-    Mutex ddeLock( MOZ_DDE_MUTEX_NAME );
+    Mutex ddeLock( MOZ_STARTUP_MUTEX_NAME );
 
     if ( ddeLock.Lock( MOZ_DDE_STOP_TIMEOUT ) ) {
         if ( mConversations == 0 ) {
@@ -675,6 +770,8 @@ nsNativeAppSupportWin::Stop( PRBool *aResult ) {
 NS_IMETHODIMP
 nsNativeAppSupportWin::Quit() {
     if ( mInstance ) {
+        // Unregister application name.
+        DdeNameService( mInstance, mApplication, 0, DNS_UNREGISTER );
         // Clean up strings.
         if ( mApplication ) {
             DdeFreeStringHandle( mInstance, mApplication );
@@ -1012,7 +1109,7 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
                                              (void**)aResult );
     if ( NS_FAILED( rv ) || NS_FAILED( ( rv = (*aResult)->Initialize( argc, argv ) ) ) ) {
         #if MOZ_DEBUG_DDE
-        printf( "Error creating command line service = 0x%08X\n", (int)rv );
+        printf( "Error creating command line service = 0x%08X (argc=%d, argv=0x%08X)\n", (int)rv, (int)argc, (void*)argv );
         #endif
     }
 
