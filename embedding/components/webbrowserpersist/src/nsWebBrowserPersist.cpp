@@ -49,6 +49,8 @@
 #include "nsIFileURL.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMDocumentTraversal.h"
+#include "nsIDOMTreeWalker.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
@@ -57,6 +59,7 @@
 #include "nsIAuthPrompt.h"
 #include "nsIPrompt.h"
 
+#include "nsIDOMNodeFilter.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLTableElement.h"
 #include "nsIDOMHTMLTableRowElement.h"
@@ -203,7 +206,6 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowserPersist)
     NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
     NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
     NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
-    NS_INTERFACE_MAP_ENTRY(nsIDOMWalkerCallback)
 NS_INTERFACE_MAP_END
 
 
@@ -1371,10 +1373,21 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         mDocList.AppendElement(docData);
 
         // Walk the DOM gathering a list of externally referenced URIs in the uri map
-        nsCOMPtr<nsIDOMWalker> walker =
-            do_CreateInstance(NS_DOMWALKER_CONTRACTID, &rv);
+        nsCOMPtr<nsIDOMDocumentTraversal> trav = do_QueryInterface(docData->mDocument, &rv);
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-        walker->WalkDOM(docAsNode, this);
+        nsCOMPtr<nsIDOMTreeWalker> walker;
+        rv = trav->CreateTreeWalker(docAsNode, 
+            nsIDOMNodeFilter::SHOW_ELEMENT | nsIDOMNodeFilter::SHOW_DOCUMENT,
+            nsnull, PR_TRUE, getter_AddRefs(walker));
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+        nsCOMPtr<nsIDOMNode> currentNode;
+        walker->GetCurrentNode(getter_AddRefs(currentNode));
+        while (currentNode)
+        {
+            OnWalkDOMNode(currentNode);
+            walker->NextNode(getter_AddRefs(currentNode));
+        }
 
         // If there are things to persist, create a directory to hold them
         if (mCurrentThingsToPersist > 0)
@@ -2154,8 +2167,7 @@ nsWebBrowserPersist::EnumCleanupUploadList(nsHashKey *aKey, void *aData, void* c
 }
 
 
-nsresult
-nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode, PRBool *aAbort)
+nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
 {
     // Test the node to see if it's an image, frame, iframe, css, js
     nsCOMPtr<nsIDOMHTMLImageElement> nodeAsImage = do_QueryInterface(aNode);

@@ -39,7 +39,6 @@ LIBRARY_NAME=webbrowserpersist_s
 
 CPP_OBJS= \
 	.\$(OBJDIR)\nsWebBrowserPersist.obj \
-	.\$(OBJDIR)\nsDOMWalker.obj \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

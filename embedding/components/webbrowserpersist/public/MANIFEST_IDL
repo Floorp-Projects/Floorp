@@ -1,4 +1,2 @@
 nsCWebBrowserPersist.idl
 nsIWebBrowserPersist.idl
-nsCDOMWalker.idl
-nsIDOMWalker.idl

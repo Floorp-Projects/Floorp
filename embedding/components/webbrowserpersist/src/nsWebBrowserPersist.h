@@ -43,7 +43,6 @@
 #include "nsVoidArray.h"
 
 #include "nsCWebBrowserPersist.h"
-#include "nsDOMWalker.h"
 
 class nsEncoderNodeFixup;
 class nsIStorageStream;
@@ -53,7 +52,6 @@ struct URIData;
 class nsWebBrowserPersist : public nsIInterfaceRequestor,
                             public nsIWebBrowserPersist,
                             public nsIStreamListener,
-                            public nsIDOMWalkerCallback,
                             public nsIProgressEventSink,
                             public nsSupportsWeakReference
 {
@@ -69,7 +67,6 @@ public:
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIPROGRESSEVENTSINK
-    NS_DECL_NSIDOMWALKERCALLBACK
 
 // Protected members
 protected:    
@@ -127,6 +124,7 @@ private:
     nsresult SetDocumentBase(nsIDOMDocument *aDocument, nsIURI *aBaseURI);
     nsresult SendErrorStatusChange(
         PRBool aIsReadError, nsresult aResult, nsIRequest *aRequest, nsIURI *aURI);
+    nsresult OnWalkDOMNode(nsIDOMNode *aNode);
 
     nsresult FixRedirectedChannelEntry(nsIChannel *aNewChannel);
 
