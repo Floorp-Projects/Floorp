@@ -105,12 +105,10 @@ public:
   void  ToString(nsString& aBuffer) const;
 
 protected:
-  struct {
-    PRUint32  mLeftUnit: 8; // use bit fields to ensure packing...
-    PRUint32  mTopUnit: 8;
-    PRUint32  mRightUnit: 8;
-    PRUint32  mBottomUnit: 8;
-  };
+  PRUint8       mLeftUnit;
+  PRUint8       mTopUnit;
+  PRUint8       mRightUnit;
+  PRUint8       mBottomUnit;
   nsStyleUnion  mLeftValue;
   nsStyleUnion  mTopValue;
   nsStyleUnion  mRightValue;
