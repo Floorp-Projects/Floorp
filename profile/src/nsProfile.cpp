@@ -921,7 +921,6 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, const nsFileSpec
 							printf("NULL value received for directory name.\n" );
 						#endif
 					}
-					nsCRT::free(profileDirString);
 				}
 				else
 				{
