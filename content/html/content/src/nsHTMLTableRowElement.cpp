@@ -555,7 +555,10 @@ nsHTMLTableRowElement::SetCells(nsIDOMHTMLCollection* aValue)
     DeleteCell(i);
   }
 
-  aValue->GetLength(&numCells);
+  numCells = 0;
+  if (aValue) {
+    aValue->GetLength(&numCells);
+  }
 
   for (i = 0; i < numCells; i++) {
     nsCOMPtr<nsIDOMNode> node;
