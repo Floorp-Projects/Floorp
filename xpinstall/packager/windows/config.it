@@ -14,7 +14,9 @@ Product Name=$ProductName$
 ;   WINDISK
 ;   WINDIR
 ;   WINSYSDIR
-Path=[PROGRAMFILESDIR]\$CompanyName$\Seamonkey
+Path=[PROGRAMFILESDIR]\$CompanyName$
+Sub Path=Seamonkey
+Program Name=$MainExeFile$
 
 ; Program Folder Path values:
 ;   COMMON_STARTUP
@@ -93,9 +95,9 @@ Verify Existance=
 ; indicated by the Version= key, then display the string in the Message= key.
 [Legacy Check0]
 Filename=[SETUP PATH]\$MainExeFile$
-Version=6.0.0.0
+Version=5.0.0.0
 Message0=Setup has detected an old version of Mozilla in the chosen destination directory that may pose compatibility issues.  It is recommended that Setup delete the destination directory (including its files), or a different destination directory be used.
-Message1=If you choose to allow Setup to delete the destination directory, you will need to save and then restore any files that you have placed in the destination directory.  Click Delete to delete the destination directory, Ignore to install to the destination directory without deleting it first, or Back to go back and choose a different destination directory.
+Message1=If you choose to allow Setup to delete the destination directory, you will need to save and then restore any files that you have placed in the destination directory.  Click Delete to delete the destination directory, or Back to go back and choose a different destination directory.
 
 [Dialog Welcome]
 Show Dialog=TRUE
@@ -210,6 +212,9 @@ Show Dialog=FALSE
 Title=Advanced Settings
 Message0=Select the region you wish to download from, or leave it on Default for Setup to automatically determine the best place to download from relative to where you are.
 Message1=Check the option below if you wish to save the downloaded installer files locally for future use.  They will be saved into ...\$ProductName$\Install
+Proxy Server=
+Proxy Port=
+Save Installer=
 
 [Dialog Start Install]
 Show Dialog=TRUE
@@ -364,7 +369,7 @@ Cleanup=TRUE
 Message=Preparing Install, please wait...
 
 [Redirect]
-Status=Enabled
+Status=Disabled
 url0=$RedirIniUrl$
 Description=
 Message=
