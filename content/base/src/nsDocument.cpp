@@ -870,8 +870,8 @@ nsIPrincipal* nsDocument::GetDocumentPrincipal()
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
     if (NS_FAILED(rv)) 
         return nsnull;
-    if (NS_FAILED(securityManager->CreateCodebasePrincipal(mDocumentURL, 
-                                                           &mPrincipal)))
+    if (NS_FAILED(securityManager->GetCodebasePrincipal(mDocumentURL, 
+                                                        &mPrincipal)))
         return nsnull;
   }
   NS_ADDREF(mPrincipal);

@@ -566,7 +566,7 @@ nsXULDocument::GetDocumentPrincipal()
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
     if (NS_FAILED(rv)) 
         return nsnull;
-    if (NS_FAILED(securityManager->CreateCodebasePrincipal(mDocumentURL, 
+    if (NS_FAILED(securityManager->GetCodebasePrincipal(mDocumentURL, 
                     getter_AddRefs(mDocumentPrincipal))))
     {
         return nsnull;

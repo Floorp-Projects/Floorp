@@ -142,13 +142,13 @@ LocationImpl::CheckURL(nsIURI* aURL)
   // Get security manager.
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
-  if (NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))))
+  if (!scriptCX || NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))))
     return NS_ERROR_FAILURE;
 
   // Check to see if URI is allowed.
   PRBool ok = PR_FALSE;
-  if (NS_FAILED(secMan->CheckURI(scriptCX, aURL, &ok)) || !ok) 
-    return NS_ERROR_FAILURE;
+  if (NS_FAILED(result = secMan->CheckLoadURIFromScript(scriptCX, aURL))) 
+    return result;
 
   return NS_OK;
 }

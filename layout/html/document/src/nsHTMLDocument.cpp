@@ -1387,13 +1387,13 @@ nsHTMLDocument::SetDomain(const nsString& aDomain)
   if (NS_FAILED(NS_NewURI(&newURI, newURIString)))
     return NS_ERROR_FAILURE;
 
-  // Create new codebase principal
+  // Get codebase principal
   nsresult rv;
   NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
   if (NS_FAILED(rv)) 
     return NS_ERROR_FAILURE;
-  return securityManager->CreateCodebasePrincipal(newURI, &mPrincipal);
+  return securityManager->GetCodebasePrincipal(newURI, &mPrincipal);
 }
 
 NS_IMETHODIMP    

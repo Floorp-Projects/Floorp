@@ -125,6 +125,21 @@ nsCodebasePrincipal::GetURI(nsIURI **uri)
 }
 
 NS_IMETHODIMP
+nsCodebasePrincipal::GetOrigin(char **origin) 
+{
+    nsXPIDLCString s;
+    if (NS_FAILED(mURI->GetScheme(getter_Copies(s))))
+        return NS_ERROR_FAILURE;
+    nsAutoString t = (const char *) s;
+    t += "://";
+    if (NS_FAILED(mURI->GetHost(getter_Copies(s))))
+        return NS_ERROR_FAILURE;
+    t += s;
+    *origin = t.ToNewCString();
+    return *origin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
 nsCodebasePrincipal::SameOrigin(nsIPrincipal *other, PRBool *result)
 {
     *result = PR_FALSE;

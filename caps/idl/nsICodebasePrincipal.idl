@@ -33,6 +33,8 @@ interface nsICodebasePrincipal : nsISupports {
 
 	readonly attribute nsIURI URI;
 
+	readonly attribute string origin;
+
 	boolean SameOrigin(in nsIPrincipal other);
 };
 
