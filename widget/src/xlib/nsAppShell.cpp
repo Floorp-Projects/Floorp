@@ -25,31 +25,6 @@
 #include "nsIServiceManager.h"
 #include "nsITimer.h"
 
-Display         *gDisplay;
-Screen          *gScreen;
-int              gScreenNum;
-int              gDepth;
-Visual          *gVisual;
-XVisualInfo     *gVisualInfo;
-
-PRUint32  gRedZeroMask;     //red color mask in zero position
-PRUint32  gGreenZeroMask;   //green color mask in zero position
-PRUint32  gBlueZeroMask;    //blue color mask in zero position
-PRUint32  gAlphaZeroMask;   //alpha data mask in zero position
-PRUint32  gRedMask;         //red color mask
-PRUint32  gGreenMask;       //green color mask
-PRUint32  gBlueMask;        //blue color mask
-PRUint32  gAlphaMask;       //alpha data mask
-PRUint8   gRedCount;        //number of red color bits
-PRUint8   gGreenCount;      //number of green color bits
-PRUint8   gBlueCount;       //number of blue color bits
-PRUint8   gAlphaCount;      //number of alpha data bits
-PRUint8   gRedShift;        //number to shift value into red position
-PRUint8   gGreenShift;      //number to shift value into green position
-PRUint8   gBlueShift;       //number to shift value into blue position
-PRUint8   gAlphaShift;      //number to shift value into alpha position
-
-
 static PRUint8 convertMaskToCount(unsigned long val);
 static PRUint8 getShiftForMask(unsigned long val);
 
