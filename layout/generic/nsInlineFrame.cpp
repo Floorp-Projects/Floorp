@@ -45,6 +45,7 @@
 #include "nsIFontMetrics.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsLayoutAtoms.h"
+#include "nsReflowPath.h"
 
 #ifdef DEBUG
 #undef NOISY_PUSHING
@@ -1204,8 +1205,12 @@ nsPositionedInlineFrame::Reflow(nsIPresContext*          aPresContext,
 {
   nsresult  rv = NS_OK;
 
-  // See if it's an incremental reflow command
-  if (eReflowReason_Incremental == aReflowState.reason) {
+  nsRect oldRect(mRect);
+
+  // See if it's an incremental reflow command and we're not the target
+  if (mAbsoluteContainer.HasAbsoluteFrames() &&
+      eReflowReason_Incremental == aReflowState.reason &&
+      !aReflowState.path->mReflowCommand) {
     // Give the absolute positioning code a chance to handle it
     PRBool  handled;
     nsRect  childBounds;
@@ -1252,7 +1257,18 @@ nsPositionedInlineFrame::Reflow(nsIPresContext*          aPresContext,
 
   // Let the absolutely positioned container reflow any absolutely positioned
   // child frames that need to be reflowed
-  if (NS_SUCCEEDED(rv)) {
+  // We want to do this under either of two conditions:
+  //  1. If we didn't do the incremental reflow above.
+  //  2. If our size changed.
+  // Even though it's the padding edge that's the containing block, we
+  // can use our rect (the border edge) since if the border style
+  // changed, the reflow would have been targeted at us so we'd satisfy
+  // condition 1.
+  if (NS_SUCCEEDED(rv) &&
+      mAbsoluteContainer.HasAbsoluteFrames() &&
+      (eReflowReason_Incremental != aReflowState.reason ||
+       aReflowState.path->mReflowCommand ||
+       mRect != oldRect)) {
     nscoord containingBlockWidth = -1;
     nscoord containingBlockHeight = -1;
     nsRect  childBounds;
