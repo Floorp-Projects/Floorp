@@ -445,7 +445,7 @@ BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 			NS_ASSERTION (! in.failed(), "error reading file");
 			if (in.failed()) return NS_ERROR_FAILURE;
 
-			PRInt32			aLength;
+			PRUint32		aLength;
 			if (untruncated)	aLength = strlen(buf);
 			else			aLength = sizeof(buf);
 
