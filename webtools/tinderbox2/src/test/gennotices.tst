@@ -5,8 +5,8 @@
 # current time.
 
 
-# $Revision: 1.7 $ 
-# $Date: 2000/11/09 19:14:00 $ 
+# $Revision: 1.8 $ 
+# $Date: 2000/11/28 17:53:39 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/gennotices.tst,v $ 
 # $Name:  $ 
@@ -47,6 +47,7 @@ use lib '#tinder_libdir#';
 use TinderConfig;
 use Utils;
 use HTMLPopUp;
+use Persistence;
 
 # since this is a test we do not want to use TinderConfig.pm to get
 # information about our configuration.  Our test needs to be self
@@ -148,17 +149,13 @@ foreach $tree (@TREES) {
 			       "\t\t</p>\n"
 			      );
 
-$out = <<EOF;
-
-\$r = {
-		'tree' => '$tree',
-		'mailaddr' => '$mailaddr',
-		'rendered_notice' => '$rendered_notice', 
-		'time' => '$timenow',
-		'localtime' => '$localtimenow',
-           };
-EOF
-  ;
+      my (%data) = (
+		    'tree' => $tree,
+		    'mailaddr' => $mailaddr,
+		    'rendered_notice' => $rendered_notice, 
+		    'time' => $timenow,
+		    'localtime' => $localtimenow,
+		   );
 
       my ($update_file) = ("$TINDERBOX_DATA_DIR/$tree/db/".
 			   "Notice.Update.$timenow.$mailaddr");
@@ -169,12 +166,11 @@ EOF
       $update_file =~ s/\@/\./g;
       $update_file = main::extract_filename_chars($update_file);
 
-      open(FILE, ">$update_file");
-      
-      print FILE $out;
-      
-      close(FILE);
-      
+      Persistence::save_structure( 
+				  \%data,
+				  $update_file,
+				 );
+
     } # foreach $j
   } # foreach $i
 } # foreach $tree

@@ -5,8 +5,8 @@
 # current time.
 
 
-# $Revision: 1.3 $ 
-# $Date: 2000/11/09 19:14:31 $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/11/28 17:53:06 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbugs.tst,v $ 
 # $Name:  $ 
@@ -47,6 +47,7 @@ use lib '#tinder_libdir#';
 use TinderConfig;
 use Utils;
 use HTMLPopUp;
+use Persistence;
 
 # since this is a test we do not want to use TinderConfig.pm to get
 # information about our configuration.  Our test needs to be self
@@ -143,35 +144,41 @@ foreach $tree (@TREES) {
 
       my ($pretty_time) = HTMLPopUp::timeHTML($timenow);
 
-$out = <<EOF;
-\$r = {
-           'ReportedBy' => 'kestes\@staff.mail.com',
-           'Bug#' => $bug_id,
-           'Product' => '$tree',
-           'Priority' => 'low',
-           'Status' => '$status',
-           'Platform' => 'All',
-           'Version' => '1.0',
-           'Summary' => '$summary',
-           'Component' => 'rhcn',
-           'Severity' => 'low',
-           'QAContact' => 'matty\@box.net.au',
-
-           'tinderbox_timenow' => $timenow,
-           'tinderbox_status' => '$status',
-           'tinderbox_bug_id' => $bug_id,
-           'tinderbox_bug_url' => 'http://bugzilla.mozilla.org/show_bug.cgi?id=$bug_id',
-           'tinderbox_tree' => '$tree',
-       }
-
-EOF
-  ;
+      my (%data) = (
+		    'ReportedBy' => "kestes\@staff.mail.com",
+		    'Bug#' => $bug_id,
+		    'Product' => "$tree",
+		    'Priority' => "low",
+		    'Status' => '$status',
+		    'Platform' => "All",
+		    'Version' => "1.0",
+		    'Summary' => '$summary',
+		    'Component' => "rhcn",
+		    'Severity' => "low",
+		    'QAContact' => "matty\@box.net.au",
+		    
+		    'tinderbox_timenow' => $timenow,
+		    'tinderbox_status' => '$status',
+		    'tinderbox_bug_id' => $bug_id,
+		    'tinderbox_bug_url' => "http://bugzilla.mozilla.org/show_bug.cgi?id=$bug_id",
+		    'tinderbox_tree' => "$tree",
+		   );
  
-      open(FILE, ">$TINDERBOX_DATA_DIR/$tree/db/BT.Update.$timenow.$bug_id");
+      my ($update_file) = ("$TINDERBOX_DATA_DIR/$tree/db/".
+			   "BT.Update.$timenow.$bug_id");
       
-      print FILE $out;
+      # first we try and make the file name leagal, then we check by using
+      # the definiative legal filename checker.
+
+      $update_file =~ s/\@/\./g;
+      $update_file = main::extract_filename_chars($update_file);
+
       
-      close(FILE);
+      Persistence::save_structure( 
+				  \%data,
+				  $update_file,
+				 );
+
       
     } # foreach $j
   } # foreach $i

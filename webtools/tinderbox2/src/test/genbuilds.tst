@@ -6,8 +6,8 @@
 # URL.
 
 
-# $Revision: 1.10 $ 
-# $Date: 2000/11/28 00:23:16 $ 
+# $Revision: 1.11 $ 
+# $Date: 2000/11/28 17:53:24 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbuilds.tst,v $ 
 # $Name:  $ 
@@ -46,6 +46,7 @@ use lib '#tinder_libdir#';
 use TinderConfig;
 use Utils;
 use HTMLPopUp;
+use Persistence;
 
 
 # since this is a test we do not want to use TinderConfig.pm to get
@@ -215,26 +216,23 @@ sub write_update_record {
       my ($local_starttime) = localtime($begin);
       my ($local_endtime) = localtime($end);
       
-      my ($data) = <<EOF;
-
-\$r = {
-              'tree' => '$tree',
-              'buildname' => '$build',
-              'buildfamily' => 'unix',
-              'status' => '$status',
-              'starttime' => '$begin',
+  my (%data) = (
+	   
+              'tree' => $tree,
+              'buildname' => $build,
+              'status' => $status,
+              'starttime' => $begin,
 #  starttime: '$local_starttime', endtime: '$local_endtime', buildname: '$build',
-              'timenow' => '$end',
+              'timenow' => $end,
 
 # this link does not point to real log files, it is only to help give
 # an idea of what the real link will look like and acts as a comment to make debugging easier.
 
-	      'brieflog' => 'http://www.mozilla.org/tree=$tree/buildname=$build/starttime=$starttime/status=$status',
-              'errorparser' => 'unix'
-           };
-EOF
-  ;
+	      'brieflog' => "http://www.mozilla.org/tree=$tree/buildname=$build/starttime=$starttime/status=$status",
+              'errorparser' => "unix",
+	  );
 
+    
     
   my ($update_file) = ("$TINDERBOX_DATA_DIR/$tree/db/".
 		       "Build.Update.$tree.$build.$begin");
@@ -246,14 +244,10 @@ EOF
   mkdir_R("$TINDERBOX_DATA_DIR/$tree/db", 0777);
   mkdir_R("$TINDERBOX_DATA_DIR/$tree/h", 0777);
 
-  open(FILE, ">$update_file") || 
-    die("Could not open file: $update_file : $! \n");
-
-  print FILE $data;
-
-  close(FILE) || 
-    die("Could not close file: $update_file : $! \n");
-
+  Persistence::save_structure( 
+                              \%data,
+                              $update_file,
+                             );
   return 1;
 }
 
