@@ -1248,7 +1248,24 @@ function GetParentTableCell(element)
 
 function EditorDblClick(event)
 {
-  goDoCommand("cmd_objectProperties");  
+  if (event.target)
+  {
+    // Only bring up properties if clicked on an element or selected link
+    var element;
+    try {
+      element = event.target.QueryInterface(Components.interfaces.nsIDOMElement);
+    } catch (e) {}
+
+     //  We use "href" instead of "a" to not be fooled by named anchor
+    if (!element)
+      element = editorShell.GetSelectedElement("href");
+
+    if (element)
+    {
+      goDoCommand("cmd_objectProperties");  
+      event.preventDefault();
+    }
+  }
 }
 
 function EditorClick(event)
