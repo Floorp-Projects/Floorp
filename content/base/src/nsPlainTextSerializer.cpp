@@ -226,7 +226,8 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
                                   PRInt32 aEndOffset, 
                                   nsAWritableString& aStr)
 {
-  if ((mTagStack[mTagStackIndex-1] == eHTMLTag_noscript) &&
+  if (mTagStackIndex > 0 &&
+      mTagStack[mTagStackIndex-1] == eHTMLTag_noscript &&
       !(mFlags & nsIDocumentEncoder::OutputNoScriptContent)) {
     return NS_OK;
   }
@@ -393,7 +394,8 @@ nsPlainTextSerializer::CloseContainer(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 nsPlainTextSerializer::AddLeaf(const nsIParserNode& aNode)
 {
-  if ((mTagStack[mTagStackIndex-1] == eHTMLTag_noscript) &&
+  if (mTagStackIndex > 0 &&
+      mTagStack[mTagStackIndex-1] == eHTMLTag_noscript &&
       !(mFlags & nsIDocumentEncoder::OutputNoScriptContent)) {
     return NS_OK;
   }
@@ -504,7 +506,8 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
 {
   eHTMLTags type = (eHTMLTags)aTag;
 
-  if ((mTagStack[mTagStackIndex-1] == eHTMLTag_noscript)  &&
+  if (mTagStackIndex > 0 &&
+      mTagStack[mTagStackIndex-1] == eHTMLTag_noscript &&
       !(mFlags & nsIDocumentEncoder::OutputNoScriptContent)) {
     return NS_OK;
   }
@@ -737,9 +740,10 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
 {
   eHTMLTags type = (eHTMLTags)aTag;
 
-  if ((mTagStack[mTagStackIndex-1] == eHTMLTag_noscript) &&
+  if (mTagStackIndex > 0 &&
+      mTagStack[mTagStackIndex-1] == eHTMLTag_noscript &&
       !(mFlags & nsIDocumentEncoder::OutputNoScriptContent) &&
-      (type != eHTMLTag_noscript)) {
+      type != eHTMLTag_noscript) {
     return NS_OK;
   }
 
