@@ -896,7 +896,7 @@ void nsStyleContext::List(FILE* out, PRInt32 aIndent)
   // Indent
   PRInt32 ix;
   for (ix = aIndent; --ix >= 0; ) fputs("  ", out);
-  fprintf(out, "%p(%d) ", (void*)this, mRefCnt);
+  fprintf(out, "%p(%d) parent=%p ", (void*)this, mRefCnt, (void *)mParent);
   if (mPseudoTag) {
     nsAutoString  buffer;
     mPseudoTag->ToString(buffer);
