@@ -92,8 +92,6 @@ jmethodID bcJavaMarshalToolkit::getClassMID = NULL;
 #define double_map double
 #define char_map PRInt16
 
-static NS_DEFINE_CID(kJavaStubsAndProxies,BC_JAVASTUBSANDPROXIES_CID);
-
 bcJavaMarshalToolkit::bcJavaMarshalToolkit(PRUint16 _methodIndex,
 				       nsIInterfaceInfo *_interfaceInfo, jobjectArray _args, JNIEnv *_env, int  isOnServer, bcIORB *_orb) {
     env = _env;
@@ -373,7 +371,7 @@ bcJavaMarshalToolkit::MarshalElement(bcIMarshaler *m, jobject value,  PRBool isO
                     EXCEPTION_CHECKING(env);
                 }
                 if (data != NULL) {
-                    NS_WITH_SERVICE(bcJavaStubsAndProxies, javaStubsAndProxies, kJavaStubsAndProxies, &r);
+                    nsCOMPtr<bcIJavaStubsAndProxies> javaStubsAndProxies = do_GetService(BC_JAVASTUBSANDPROXIES_ContractID,&r);
                     if (NS_FAILED(r)) {
                         return NS_ERROR_FAILURE;
                     }
@@ -607,7 +605,7 @@ bcJavaMarshalToolkit::UnMarshalElement(jobject *value, uint8 ind, bcIUnMarshaler
                     um->ReadSimple(&oid,type);
                     um->ReadSimple(&iid,bc_T_IID);
                     PR_LOG(log,PR_LOG_DEBUG,("%d oid\n",(int) oid));
-                    NS_WITH_SERVICE(bcJavaStubsAndProxies, javaStubsAndProxies, kJavaStubsAndProxies, &r);
+                    nsCOMPtr<bcIJavaStubsAndProxies> javaStubsAndProxies = do_GetService(BC_JAVASTUBSANDPROXIES_ContractID,&r);
                     if (NS_FAILED(r)) {
                         return NS_ERROR_FAILURE;
                     }

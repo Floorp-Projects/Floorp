@@ -41,8 +41,6 @@ jmethodID bcJavaStubsAndProxies::getInvocationHandlerID = 0;
 jclass bcJavaStubsAndProxies::org_mozilla_xpcom_ProxyHandler = 0;
 jmethodID bcJavaStubsAndProxies::getOIDID = 0;
 
-NS_DEFINE_CID(kORBComponent,BC_ORBCOMPONENT_CID);
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(bcJavaStubsAndProxies);
 
 static  nsModuleComponentInfo components[] =
@@ -201,7 +199,7 @@ NS_IMETHODIMP bcJavaStubsAndProxies::GetOID(char *location, bcOID *oid) {
     strcpy(location + strlen(location)-4,"info");
     jobject object = env->CallStaticObjectMethod(componentLoader, loadComponentID, jstr);
     bcIStub *stub = new bcJavaStub(object);
-    NS_WITH_SERVICE(bcIORBComponent,_orb,kORBComponent,&result);
+    nsCOMPtr<bcIORBComponent> _orb = do_GetService(BC_ORBCOMPONENT_ContractID,&result);
     if (NS_FAILED(result)) {
         PR_LOG(log,PR_LOG_DEBUG,("--bcJavaStubsAndProxies::GetOID failed\n"));
         if (detachRequired) {

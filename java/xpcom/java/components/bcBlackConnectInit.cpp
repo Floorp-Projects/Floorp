@@ -27,8 +27,6 @@
 #include "bcXPCOMWrappersCID.h"
 
 
-NS_DEFINE_CID(kXPCOMWrappers,BC_XPCOMWRAPPERS_CID);
-
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *compMgr,
                                           nsIFile *location,
                                           nsIModule** result)  //I am using it for initialization only
@@ -49,14 +47,14 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *compMgr,
 	    if (NS_SUCCEEDED(r)) {
 	        blackConnectInit->InitComponentManager(cm);
 	    }
-	    NS_WITH_SERVICE(bcIXPCOMWrappers,xpcomWrappers,kXPCOMWrappers,&r);
+        nsCOMPtr<bcIXPCOMWrappers> xpcomWrappers = do_GetService(BC_XPCOMWRAPPERS_CONTRACTID, &r);
 	    nsIID * wrapperIID;
 	    if (NS_SUCCEEDED(r)) {
 	        r = xpcomWrappers->GetWrapper((nsISupports*)NULL,NS_GET_IID(nsIServiceManager),&wrapperIID, (nsISupports**)&sm);
-		if (NS_SUCCEEDED(r)) {
-		    printf("--[c++]about to call blackConnectInit->InitServiceManager(sm)\n");
-		    blackConnectInit->InitServiceManager(sm);
-		}
+            if (NS_SUCCEEDED(r)) {
+                printf("--[c++]about to call blackConnectInit->InitServiceManager(sm)\n");
+                blackConnectInit->InitServiceManager(sm);
+            }
 	    }
 	}
     }

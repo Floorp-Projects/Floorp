@@ -27,7 +27,6 @@
 #include "nsCRT.h"
 #include "bcXPCOMLog.h"
 
-static NS_DEFINE_CID(kXPCOMStubsAndProxies,BC_XPCOMSTUBSANDPROXIES_CID);
 static nsID nullID =   {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}};
 
 bcXPCOMMarshalToolkit::bcXPCOMMarshalToolkit(PRUint16 _methodIndex, nsIInterfaceInfo *_interfaceInfo, 
@@ -292,7 +291,7 @@ nsresult bcXPCOMMarshalToolkit::MarshalElement(bcIMarshaler *m, void *data, nsXP
                 PR_LOG(log, PR_LOG_DEBUG, ("--[c++]XPCOMMarshallToolkit INTERFACE iid=%s\n",iid->ToString()));
                 bcOID oid = 0;
                 if (*(char**)data != NULL) {
-                    NS_WITH_SERVICE(bcXPCOMStubsAndProxies, xpcomStubsAndProxies, kXPCOMStubsAndProxies, &r);
+                    nsCOMPtr<bcIXPCOMStubsAndProxies> xpcomStubsAndProxies = do_GetService(BC_XPCOMSTUBSANDPROXIES_ContractID,&r);
                     if (NS_FAILED(r)) {
                         return r;
                     }
@@ -397,8 +396,7 @@ bcXPCOMMarshalToolkit::UnMarshalElement(void *data, bcIUnMarshaler *um, nsXPTPar
                     um->ReadSimple(&iid,bc_T_IID);
                     nsISupports *proxy = NULL;
                     if (oid != 0) {
-                        NS_WITH_SERVICE(bcXPCOMStubsAndProxies, xpcomStubsAndProxies,
-                                        kXPCOMStubsAndProxies, &r);
+                        nsCOMPtr<bcIXPCOMStubsAndProxies> xpcomStubsAndProxies = do_GetService(BC_XPCOMSTUBSANDPROXIES_ContractID, &r);
                         if (NS_FAILED(r)) {
                             return r;
                         }

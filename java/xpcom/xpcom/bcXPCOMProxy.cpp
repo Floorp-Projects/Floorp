@@ -39,7 +39,6 @@
 
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kStubsAndProxies,BC_XPCOMSTUBSANDPROXIES_CID);
 
 bcXPCOMProxy::bcXPCOMProxy(bcOID _oid, const nsIID &_iid, bcIORB *_orb) {
     PRLogModuleInfo *log = bcXPCOMLog::GetLog();
@@ -106,7 +105,7 @@ NS_IMETHODIMP bcXPCOMProxy::CallMethod(PRUint16 methodIndex,
     mt->Marshal(marshaler);
     nsIEventQueue * eventQ;
     nsCOMPtr<bcIXPCOMStubsAndProxies> stubsAndProxiesService;
-    stubsAndProxiesService = do_GetService(kStubsAndProxies);
+    stubsAndProxiesService = do_GetService(BC_XPCOMSTUBSANDPROXIES_ContractID);
     stubsAndProxiesService->GetEventQueue(&eventQ);
     if (eventQ == NULL) {
         orb->SendReceive(call);

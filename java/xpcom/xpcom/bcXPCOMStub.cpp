@@ -35,7 +35,6 @@
 
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kStubsAndProxies,BC_XPCOMSTUBSANDPROXIES_CID);
 
 
 static void* PR_CALLBACK EventHandler(PLEvent *self);
@@ -111,7 +110,7 @@ void bcXPCOMStub::DispatchAndSaveThread(bcICall *call, nsIEventQueue *eventQueue
     }
     //push caller eventQ
     nsCOMPtr<bcIXPCOMStubsAndProxies> stubsAndProxiesService;
-    stubsAndProxiesService = do_GetService(kStubsAndProxies);
+    stubsAndProxiesService = do_GetService(BC_XPCOMSTUBSANDPROXIES_ContractID);
     stubsAndProxiesService->PushEventQueue(eventQueue);
     if (mid == 2) { //Release
         if (refCounter <= 0) { 

@@ -29,12 +29,7 @@
 #include "bcIORBComponent.h"
 #include "bcORBComponentCID.h"
 
-static NS_DEFINE_CID(kJavaStubsAndProxies,BC_JAVASTUBSANDPROXIES_CID);
-static NS_DEFINE_CID(kXPCOMStubsAndProxies,BC_XPCOMSTUBSANDPROXIES_CID);
-static NS_DEFINE_CID(kORBComponent,BC_ORBCOMPONENT_CID);
-
 NS_IMPL_THREADSAFE_ISUPPORTS1(bcJavaComponentFactory, nsIFactory)
-
 
 bcJavaComponentFactory::bcJavaComponentFactory(const char *_location) {
     NS_INIT_ISUPPORTS();
@@ -50,17 +45,17 @@ bcJavaComponentFactory::~bcJavaComponentFactory() {
 NS_IMETHODIMP bcJavaComponentFactory::CreateInstance(nsISupports *aOuter, const nsIID & iid, void * *result) {
     printf("--bcJavaComponentFactory::CreateInstance\n");
     nsresult r;
-    NS_WITH_SERVICE(bcIJavaStubsAndProxies, javaStubsAndProxies, kJavaStubsAndProxies, &r);
+    nsCOMPtr<bcIJavaStubsAndProxies> javaStubsAndProxies = do_GetService(BC_JAVASTUBSANDPROXIES_ContractID, &r);
     if (NS_FAILED(r)) {
         printf("--bcJavaComponentFactory::CreateInstance javaStubsAndProxies failed \n");
         return r;
     }
-    NS_WITH_SERVICE(bcIXPCOMStubsAndProxies, xpcomStubsAndProxies, kXPCOMStubsAndProxies, &r);
+    nsCOMPtr<bcIXPCOMStubsAndProxies> xpcomStubsAndProxies = do_GetService(BC_XPCOMSTUBSANDPROXIES_ContractID, &r);
     if (NS_FAILED(r)) {
         printf("--bcJavaComponentFactory::CreateInstance xpcomStubsAndProxies failed \n");
         return r;
     }
-    NS_WITH_SERVICE(bcIORBComponent, _orb, kORBComponent, &r);
+    nsCOMPtr<bcIORBComponent> _orb = do_GetService(BC_ORBCOMPONENT_ContractID, &r);
     if (NS_FAILED(r)) {
         printf("--bcJavaComponentFactory::CreateInstance bcORB failed \n");
         return r;
