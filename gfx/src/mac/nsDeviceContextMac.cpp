@@ -67,12 +67,6 @@ nsDeviceContextMac :: ~nsDeviceContextMac()
 {
 }
 
-//------------------------------------------------------------------------
-
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextMac, kDeviceContextIID);
-NS_IMPL_ADDREF(nsDeviceContextMac);
-NS_IMPL_RELEASE(nsDeviceContextMac);
-
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  *	@update 12/9/98 dwc
