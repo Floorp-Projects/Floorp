@@ -84,28 +84,39 @@ int main(int argc, char *argv[])
     // Open the initial browser window
     OpenWebPage(szFirstURL);
 
+	MSG msg;
+
 	// Main message loop:
-    MSG msg;
+	HANDLE hFakeEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     while (1)
     {
-        if (!::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
-        {
-            NS_DoIdleEmbeddingStuff();
-            continue;
-        }
-        if (!::GetMessage(&msg, NULL, 0, 0))
-        {
-            break;
-        }
-        PRBool wasHandled = PR_FALSE;
-        NS_HandleEmbeddingEvent(msg, wasHandled);
-        if (wasHandled)
-        {
-            continue;
-        }
-	    TranslateMessage(&msg);
-		DispatchMessage(&msg);
+		// Process pending messages
+		while (::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
+		{
+			if (!::GetMessage(&msg, NULL, 0, 0))
+			{
+				// WM_QUIT
+				goto end_msg_loop;
+			}
+
+			PRBool wasHandled = PR_FALSE;
+			NS_HandleEmbeddingEvent(msg, wasHandled);
+			if (wasHandled)
+			{
+				continue;
+			}
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+
+		// Do idle stuff
+		NS_DoIdleEmbeddingStuff();
+
+		MsgWaitForMultipleObjects(1, &hFakeEvent, FALSE, 100, QS_ALLEVENTS);
     }
+	CloseHandle(hFakeEvent);
+
+end_msg_loop:
 
     // Close down Embedding APIs
     NS_TermEmbedding();
