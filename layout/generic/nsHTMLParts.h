@@ -351,7 +351,7 @@ extern nsresult NS_NewGfxRadioControlFrame(nsIPresShell* aPresShell, nsIFrame** 
 extern nsresult NS_NewNativeRadioControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult NS_NewNativeSelectControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult NS_NewListControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
-extern nsresult NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+extern nsresult NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult, PRUint32 aFlags);
 
 // Table frame factories
 extern nsresult NS_NewTableOuterFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
