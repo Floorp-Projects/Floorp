@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   IBM Corp.
  */
 #include "nsCOMPtr.h"
 #include "nsIPref.h"
@@ -64,7 +65,7 @@
 #include "nsXPIDLString.h"
 
 
-#if defined(WIN32)
+#if defined(WIN32) || defined(XP_OS2_VACPP)
 #include <strstrea.h>
 #else
 #include <strstream.h>

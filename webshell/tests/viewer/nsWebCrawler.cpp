@@ -19,6 +19,12 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 #include "nsCOMPtr.h"
 #include "nsWebCrawler.h"
@@ -92,7 +98,7 @@ AtomHashTable::AtomHashTable()
                            nsnull, nsnull);
 }
 
-static PR_CALLBACK PRIntn
+static PRIntn PR_CALLBACK
 DestroyEntry(PLHashEntry *he, PRIntn i, void *arg)
 {
   ((nsIAtom*)he->key)->Release();
@@ -971,8 +977,8 @@ struct ExitEvent : public PLEvent {
 
   nsWebCrawler* crawler;
 
-  static PR_CALLBACK void HandleMe(ExitEvent* e);
-  static PR_CALLBACK void DeleteMe(ExitEvent* e);
+  static void PR_CALLBACK HandleMe(ExitEvent* e);
+  static void PR_CALLBACK DeleteMe(ExitEvent* e);
 };
 
 ExitEvent::ExitEvent(nsWebCrawler* aCrawler)
@@ -1026,8 +1032,8 @@ struct LoadEvent : public PLEvent {
   nsString url;
   nsWebCrawler* crawler;
 
-  static PR_CALLBACK void HandleMe(LoadEvent* e);
-  static PR_CALLBACK void DeleteMe(LoadEvent* e);
+  static void PR_CALLBACK HandleMe(LoadEvent* e);
+  static void PR_CALLBACK DeleteMe(LoadEvent* e);
 };
 
 LoadEvent::LoadEvent(nsWebCrawler* aCrawler, const nsString& aURL)
