@@ -1238,12 +1238,12 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
 
     // ensure it is not even partially offscreen.
     if ( (screenViewLocX + mRect.width) > screenRightTwips ) {
-      // as a result of moving the popup, it might end up under the mouse. This
-      // would be bad as the subsequent mouse_up would trigger whatever
-      // unsuspecting item happens to be at that position. To get around this, make
-      // move it so the right edge is where the mouse is, as we're guaranteed
-      // that the mouse is on the screen!
-      xpos -= mRect.width;      
+      if (tag == nsXULAtoms::tooltip) {
+        //the tooltip is off the screen to the right - shift it to the left as much as needed
+        xpos -= (screenViewLocX + mRect.width) - screenRightTwips;
+      }
+      else        
+        xpos -= mRect.width;      
     }
     if ( (screenViewLocY + mRect.height) > screenBottomTwips )
       ypos -= (mRect.height + margin.top + margin.bottom);
