@@ -61,6 +61,7 @@ nsCacheObject::nsCacheObject(const nsCacheObject& another):
 	m_LastAccessed = another.m_LastAccessed;
 	m_LastModified = another.m_LastModified;
 	m_Size = another.m_Size;
+    m_Module = another.m_Module;
 }
 
 nsCacheObject::nsCacheObject(const char* i_url):
