@@ -35,6 +35,7 @@
 # change set applies to this tree.  If not we ignore the change set.
 
 
+
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -122,7 +123,12 @@ use Time::Local;
 
 # Load Tinderbox libraries
 
-use lib '#tinder_libdir#';
+use lib '/tmp/tinderbox2/bin/local_conf',
+   '/tmp/tinderbox2/bin/default_conf',
+   '/tmp/tinderbox2/bin/lib',
+   '/tmp/t/tinderbox2/./build/local_conf',
+   '/tmp/t/tinderbox2/./build/default_conf',
+   '/tmp/t/tinderbox2/./build/lib';
 
 
 use TinderDB::BasicTxtDB;
@@ -132,7 +138,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.3 $ )[1];
+$VERSION = ( qw $Revision: 1.4 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -297,7 +303,7 @@ sub status_table_row {
   # find all the authors who changed code at any point in this cell
   # find the tree state for this cell.
 
-  my (%affected_files, %jobs_fixed) = ();
+  my ($affected_files, $jobs_fixed);
   
   while (1) {
    my ($time) = $DB_TIMES[$NEXT_DB];
@@ -322,10 +328,10 @@ sub status_table_row {
         my($affected_files_ref, $jobs_fixed_ref, $change_num) = 
             @{ $DATABASE{$tree}{$time}{'author'}{$author} };
 
-        $affected_files{$author}{$time}{$change_num} = 
+        $affected_files->{$author}{$time}{$change_num} = 
             $affected_files_ref;
 
-        $jobs_fixed{$author}{$time}{$change_num} = 
+        $jobs_fixed->{$author}{$time}{$change_num} = 
             $jobs_fixed_ref;
 
     }
@@ -351,7 +357,7 @@ sub status_table_row {
   my $query_links = '';
   $query_links.=  "\t\t".$text_browser_color_string."\n";
 
-  if ( scalar(%affected_files) || scalar(%jobs_fixed) ) {
+  if ( scalar(%{$affected_files}) || scalar(%{$jobs_fixed}) ) {
     
     # find the times which bound the cell so that we can set up a
     # VC query.
@@ -380,8 +386,8 @@ sub status_table_row {
     # were fixed for each author
 
     my (@authors) = main::uniq ( 
-                                 (keys %affected_files), 
-                                 (keys %jobs_fixed)
+                                 (keys %{$affected_files}), 
+                                 (keys %{$jobs_fixed})
                                  );
 
     foreach $author (@authors) {
@@ -389,44 +395,39 @@ sub status_table_row {
       my ($num_rows) = 0;
       my ($max_length) = 0;
       
-      $table .= (
-                 "Checkins by <b>$author</b> <br> for $vc_info \n".
-                 "<table border cellspacing=2>\n".
-                 "");
-      
-      my ($header) = qw(Time, ChangeNumber, Filename, 
-                        Revision, Action, Comment);
-      $table .= list2table_header($header);
+      $table .= "Work by <b>$author</b> <br> for $vc_info \n";
 
-      foreach $time (sort {$b <=> $a} keys %{ $affected_files{$author} }) {
-      foreach $row (@{ $affected_files{$author}{$time} }) {
-          
-          $num_rows++;
-          $table .= list2table_row($time,$changenum,$row);
+      # create two tables showing what has happened in this time period, the
+      # first shows checkins the second shows jobs.
+
+      my (@affected_header) = get_affected_files_header();
+   
+      ($affected_table, $affected_num_rows, $affected_max_length) = 
+          struct2table(\@affected_header, $author, $affected_files);
+
+      if ($affected_num_rows > 0) {
+          $table .= $affected_table;
+          $num_rows += $affected_num_rows;
           $max_length = main::max(
                                   $max_length, 
-                                  length("$row"),
+                                  $affected_max_length,
                                   );
       }
-      }
 
-      my ($header) = qw(Time, ChangeNumber, JobName, 
-                        Author, Status, Comment);
-      $table .= list2table_header($header);
+      my (@jobs_header) =  get_jobs_fixed_header();
 
-      foreach $time (sort {$b <=> $a} keys %{ $jobs_fixed{$author} }) {
-      foreach $row (@{ $jobs_fixed{$author}{$time} }) {
-          
-          $num_rows++;
-          $table .= list2table_row($time,$changenum,$row);
+      ($jobs_table, $jobs_num_rows, $jobs_max_length) = 
+          struct2table(\@jobs_header, $author, $jobs_fixed);
+
+      if ($jobs_num_rows > 0) {
+          $table .= $jobs_table; 
+          $num_rows += $jobs_num_rows;
           $max_length = main::max(
                                   $max_length, 
-                                  length("$row"),
+                                  $jobs_max_length,
                                   );
-        }
-        }
+      }
 
-      $table .= "</table>";
 
       # we display the list of names in 'teletype font' so that the
       # names do not bunch together. It seems to make a difference if
@@ -597,8 +598,6 @@ sub apply_db_updates {
       ($METADATA{$tree}{'next_change_num'} = 1);
 
   while (1) {
-      # p4 changes @date1,@date2 
-      # p4 changes @date1,@now 
 
         my $change_num = $METADATA{$tree}{'next_change_num'};
         $ENV{'PATH'}=$ENV{'PATH'}.':/usr/src/perforce';
@@ -606,8 +605,7 @@ sub apply_db_updates {
 
         store_cmd_output(@cmd);        
 
-        (does_cmd_nextline_match("^Change ")) ||
-            last;
+        if (does_cmd_nextline_match("^Change ")) {
 
       # Ignore directories which are not in our module.  Since we are not
       # CVS we can only guess what these might be based on patterns.
@@ -631,11 +629,6 @@ sub apply_db_updates {
 #            next;
 #      }
 
-        # We can not ignore changes which are not on our branch without
-        # using bonsai CVS does not really support any analysis of
-        # branches.  This is what bonsai was designed for.
-
-      
             $METADATA{$tree}{'next_change_num'}++;
             $num_updates++;
 
@@ -648,6 +641,10 @@ sub apply_db_updates {
 
             $DATABASE{$tree}{$time}{'author'}{$author} = 
             [\@affected_files, \@jobs_fixed, $change_num];
+
+        } else {
+            last;
+        }
 
     }
 
@@ -876,6 +873,13 @@ sub parse_update_jobs_fixed {
     return @jobs_fixed;
 } # parse_update_jobs_fixed
         
+sub get_jobs_fixed_header {
+    # this is the header to use when parsing the jobs_fixed datastructure.
+    my (@header) = qw(JobName Author Status Comment);
+    return @header;
+}
+
+
 
 
 sub parse_update_affected_files {
@@ -932,6 +936,54 @@ sub parse_update_affected_files {
 } # parse_update_affected_files
 
 
+sub get_affected_files_header {
+    # this is the header to use when parsing the affect_files datastructure.
+    my (@header) = qw(Filename Revision Action Comment);
+    return @header;
+}
+
+
+# The two temporary data structures: $affected_files, $jobs_fixed
+# in status_table_row() have a similar structure.
+# We use this function to turn their data into a html table.
+
+sub struct2table {
+    my ($header, $author, $struct,) = @_;
+    my (@header) = @{$header};
+    
+    my $table = '';
+    my $num_rows = 0;
+    my $max_length = 0;
+
+    $table .= "<br>\n";
+    $table .= "<table border cellspacing=2>\n";
+    $table .= list2table_header("Time", "Change", @header);
+    
+    my (@times) = keys %{$struct->{$author}};
+    foreach $time (@times) {
+        my (@change_num) = keys %{ $struct->{$author}{$time} };
+        foreach $change_num (@change_num) {
+            # the list of all changes with this change number
+            my @rows = @{ $struct->{$author}{$time}{$change_num} };
+            foreach $row (@rows) {
+                
+                my ($format_time) = HTMLPopUp::timeHTML($time);
+                # one change
+                my (@row) = @{$row};
+                $table .= list2table_row($format_time,$change_num,@row);
+                $num_rows++;
+                $max_length = main::max(
+                                        $max_length, 
+                                        length("@row"),
+                                        );
+            }
+        }
+    }
+    
+    $table .= "</table>\n";
+    
+    return ($table, $num_rows, $max_length);
+}
 
 sub list2table_header {
     my (@list) = @_;
