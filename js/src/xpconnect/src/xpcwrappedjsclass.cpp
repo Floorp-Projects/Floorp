@@ -124,29 +124,6 @@ nsXPCWrappedJSClass::~nsXPCWrappedJSClass()
     NS_RELEASE(mInfo);
 }
 
-/***************************************************************************/
-// XXX for now IIDs are represented in JS as string objects containing strings
-// of the form: {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} (just like the nsID
-// Parse and ToString methods use.
-
-// XXX lots of room for optimization here!
-
-// JSObject*
-// nsXPCWrappedJSClass::CreateIIDJSObject(REFNSIID aIID)
-// {
-//     JSObject* obj = NULL;
-//     char* str = aIID.ToString();
-//     if(str)
-//     {
-//         JSContext* cx = GetJSContext();
-//         JSString* jsstr = JS_InternString(cx, str);
-//         delete [] str;
-//         if(jsstr)
-//             JS_ValueToObject(cx, STRING_TO_JSVAL(jsstr), &obj);
-//     }
-//     return obj;
-// }
-
 JSObject*
 nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID)
 {
@@ -159,7 +136,6 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID
     if(!cx)
         return NULL;
 
-//    id = CreateIIDJSObject(aIID);
     id = xpc_NewIIDObject(cx, aIID);
 
     if(id)
