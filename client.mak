@@ -227,7 +227,7 @@ pull_clientmak:
 # nmake has to be hardcoded, or we have to depend on mozilla/config
 # being pulled already to figure out what $(NMAKE) should be.
 
-nsprpub\config.status: nsprpub\configure nsprpub\configure.in
+$(MOZ_SRC)\$(MOZ_TOP)\nsprpub\config.status: $(MOZ_SRC)\$(MOZ_TOP)\nsprpub\configure $(MOZ_SRC)\$(MOZ_TOP)\nsprpub\configure.in
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 	sh $(NSPR_CONFIGURE)
 
@@ -235,14 +235,14 @@ clobber_all: clobber_nspr clobber_psm clobber_seamonkey
 
 build_all: build_nspr build_seamonkey
 
-distclean: nsprpub\config.status
+distclean: $(MOZ_SRC)\$(MOZ_TOP)\nsprpub\config.status
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 	gmake distclean
 	@cd $(MOZ_SRC)\$(MOZ_TOP)
 	nmake /f client.mak clobber_psm
 	nmake /f client.mak clobber_seamonkey
 		
-clobber_nspr: nsprpub\config.status
+clobber_nspr: $(MOZ_SRC)\$(MOZ_TOP)\nsprpub\config.status
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 	gmake clobber
 
