@@ -1351,11 +1351,12 @@ static JSBool
 BackPatch(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t last,
           jsbytecode *target, jsbytecode op)
 {
-    jsbytecode *pc;
+    jsbytecode *pc, *stop;
     ptrdiff_t delta, span;
 
     pc = CG_CODE(cg, last);
-    while (pc != CG_CODE(cg, -1)) {
+    stop = CG_CODE(cg, -1);
+    while (pc != stop) {
         delta = GetJumpOffset(cg, pc);
         span = PTRDIFF(target, pc, jsbytecode);
         CHECK_AND_SET_JUMP_OFFSET(cx, cg, pc, span);
