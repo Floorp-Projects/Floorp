@@ -232,7 +232,11 @@ class basic_nsAReadableString
     */
   {
     public:
-      typedef nsReadingIterator<CharT> ConstIterator;
+      typedef PRUint32                  size_type;
+      typedef PRUint32                  index_type;
+
+      typedef nsReadingIterator<CharT>  const_iterator;
+
 
 
       virtual ~basic_nsAReadableString() { }
@@ -615,7 +619,10 @@ class basic_nsLiteralString
           : mStart(aLiteral),
             mEnd(mStart + aLength)
         {
-          // nothing else to do here
+            // This is an annoying hack.  Callers should be fixed to use the other
+            //  constructor if they don't really know the length.
+          if ( aLength == PRUint32(-1) )
+            mEnd = mStart + nsCharTraits<CharT>::length(mStart);
         }
 
       virtual PRUint32 Length() const;
@@ -652,6 +659,59 @@ PRUint32
 basic_nsLiteralString<CharT>::Length() const
   {
     return PRUint32(mEnd - mStart);
+  }
+
+
+
+
+
+  //
+  // nsLiteralChar, nsLiteralPRUnichar
+  //
+
+template <class CharT>
+class basic_nsLiteralChar
+      : public basic_nsAReadableString<CharT>
+  {
+    protected:
+      virtual const CharT* GetReadableFragment( nsReadableFragment<CharT>&, nsFragmentRequest, PRUint32 ) const;
+
+    public:
+
+      basic_nsLiteralChar( CharT aChar )
+          : mChar(aChar)
+        {
+          // nothing else to do here
+        }
+
+      virtual
+      PRUint32
+      Length() const
+        {
+          return 1;
+        }
+
+    private:
+      CharT  mChar;
+  };
+
+template <class CharT>
+const CharT*
+basic_nsLiteralChar<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
+  {
+    switch ( aRequest )
+      {
+        case kFirstFragment:
+        case kLastFragment:
+        case kFragmentAt:
+          aFragment.mEnd = (aFragment.mStart = &mChar) + 1;
+          return aFragment.mStart + aOffset;
+        
+        case kPrevFragment:
+        case kNextFragment:
+        default:
+          return 0;
+      }
   }
 
 
@@ -1106,6 +1166,9 @@ typedef basic_nsLiteralString<char>         nsLiteralCString;
 
 #define NS_LITERAL_STRING(s)  nsLiteralString(s, sizeof(s)/sizeof(wchar_t))
 #define NS_LITERAL_CSTRING(s) nsLiteralCString(s, sizeof(s))
+
+typedef basic_nsLiteralChar<char>       nsLiteralChar;
+typedef basic_nsLiteralChar<PRUnichar>  nsLiteralPRUnichar;
 
 
 #endif // !defined(_nsAReadableString_h__)
