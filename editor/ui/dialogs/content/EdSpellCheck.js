@@ -1,3 +1,4 @@
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 /*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -34,7 +35,7 @@ function Startup()
     return;
 
   // Get the spellChecker shell
-  gSpellChecker = editorShell.QueryInterface(Components.interfaces.nsIEditorSpellCheck);
+  gSpellChecker = Components.classes['@mozilla.org/editor/editorspellchecker;1'].createInstance(Components.interfaces.nsIEditorSpellCheck);
   if (!gSpellChecker) {
     dump("SpellChecker not found!!!\n");
     window.close();
@@ -43,7 +44,7 @@ function Startup()
 
   // Start the spell checker module.
   try {
-   gSpellChecker.InitSpellChecker();
+   gSpellChecker.InitSpellChecker(GetCurrentEditor());
 
    // XXX: We need to read in a pref here so we can set the
    //      default language for the spellchecker!
@@ -402,7 +403,7 @@ function Recheck()
     var curLang = gSpellChecker.GetCurrentDictionary();
 
     gSpellChecker.UninitSpellChecker();
-    gSpellChecker.InitSpellChecker();
+    gSpellChecker.InitSpellChecker(GetCurrentEditor());
     gSpellChecker.SetCurrentDictionary(curLang);
     gMisspelledWord = gSpellChecker.GetNextMisspelledWord();
     SetWidgetsForMisspelledWord();
@@ -489,7 +490,8 @@ function doDefault()
 
 function CancelSpellCheck()
 {
-  gSpellChecker.UninitSpellChecker();
+  if (gSpellChecker)
+    gSpellChecker.UninitSpellChecker();
 
   // Signal to calling window that we canceled
   window.opener.cancelSendMessage = true;
@@ -498,7 +500,8 @@ function CancelSpellCheck()
 
 function onClose()
 {
-  gSpellChecker.UninitSpellChecker();
+  if (gSpellChecker)
+    gSpellChecker.UninitSpellChecker();
   window.opener.cancelSendMessage = false;
   window.close();
 }

@@ -38,9 +38,10 @@
 
 #include "nsIGenericFactory.h"
 
-#include "nsEditorShell.h"		      // for the CID
+#include "nsEditorShell.h"          // for the CID
 #include "nsEditingSession.h"       // for the CID
-#include "nsComposerController.h"		// for the CID
+#include "nsComposerController.h"   // for the CID
+#include "nsEditorSpellCheck.h"     // for the CID
 #include "nsEditorService.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -53,6 +54,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditingSession)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsComposerController)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorSpellCheck)
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
@@ -71,6 +73,9 @@ static const nsModuleComponentInfo components[] = {
       "@mozilla.org/editor/editingsession;1", nsEditingSessionConstructor, },
     { "Editor Service", NS_EDITORSERVICE_CID,
       "@mozilla.org/editor/editorservice;1", nsEditorServiceConstructor,},
+    { "Editor Spell Checker", NS_EDITORSPELLCHECK_CID,
+      "@mozilla.org/editor/editorspellchecker;1",
+      nsEditorSpellCheckConstructor,},
     { "Editor Startup Handler", NS_EDITORSERVICE_CID,
       "@mozilla.org/commandlinehandler/general-startup;1?type=editor",
       nsEditorServiceConstructor,

@@ -67,9 +67,10 @@ CPPSRCS  = \
            nsComposerController.cpp       \
            nsComposerCommands.cpp         \
            nsComposerRegistration.cpp     \
-           nsEditingSession.cpp		\
-           nsComposerCommandsUpdater.cpp	\
-	   nsEditorService.cpp		  \
+           nsEditingSession.cpp	          \
+           nsComposerCommandsUpdater.cpp  \
+           nsEditorService.cpp            \
+           nsEditorSpellCheck.cpp         \
            $(NULL)
 
 include $(topsrcdir)/config/rules.mk

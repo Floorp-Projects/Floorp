@@ -61,7 +61,6 @@
 #include "nsNetUtil.h"
 
 #include "nsIWebNavigation.h"
-#include "nsCOMPtr.h"
 
 #include "nsIURL.h"
 #include "nsXPIDLString.h"
@@ -90,7 +89,10 @@
 #include "nsIRefreshURI.h"
 #include "nsIPref.h"
 #include "nsILookAndFeel.h"
-#include "nsIChromeRegistry.h"
+
+#include "nsHTMLTags.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIWebBrowserPrint.h"
 
 ///////////////////////////////////////
 // Editor Includes
@@ -108,17 +110,11 @@
 
 #include "nsEditorCID.h"
 
-#include "nsTextServicesCID.h"
-#include "nsITextServicesDocument.h"
-#include "nsISpellChecker.h"
 #include "nsInterfaceState.h"
 
 #include "nsIStringBundle.h"
 
-#include "nsHTMLTags.h"
 #include "nsEditorParserObserver.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIWebBrowserPrint.h"
 
 ///////////////////////////////////////
 
@@ -129,7 +125,6 @@
 
 /* Define Class IDs */
 static NS_DEFINE_CID(kHTMLEditorCID,            NS_HTMLEDITOR_CID);
-static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID,           NS_PREF_CID);
 
@@ -252,8 +247,6 @@ nsEditorShell::nsEditorShell()
 ,  mContentMIMEType("text/html")
 ,  mContentTypeKnown(PR_FALSE)
 ,  mWrapColumn(0)
-,  mSuggestedWordIndex(0)
-,  mDictionaryIndex(0)
 {
   //TODO:Save last-used display mode in prefs so new window inherits?
   NS_INIT_ISUPPORTS();
@@ -268,11 +261,10 @@ nsEditorShell::~nsEditorShell()
   // care of themselves.
 }
 
-NS_IMPL_ISUPPORTS5(nsEditorShell, 
-                   nsIEditorShell, 
-                   nsIWebProgressListener, 
-                   nsIURIContentListener, 
-                   nsIEditorSpellCheck, 
+NS_IMPL_ISUPPORTS4(nsEditorShell,
+                   nsIEditorShell,
+                   nsIWebProgressListener,
+                   nsIURIContentListener,
                    nsISupportsWeakReference);
 
 NS_IMETHODIMP    
@@ -286,10 +278,6 @@ nsEditorShell::Shutdown()
     editor->PreDestroy();
   }
 
-  // Make sure we blow the spellchecker away, just in
-  // case it hasn't been destroyed already.
-  mSpellChecker = nsnull;
-  
   if (mDocShell)
     mDocShell->SetParentURIContentListener(nsnull);
 
@@ -2616,374 +2604,6 @@ nsEditorShell::GetEmbeddedObjects(nsISupportsArray **aObjectArray)
   }
 
   return NS_NOINTERFACE;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::InitSpellChecker()
-{
-  nsresult  result = NS_NOINTERFACE;
-
-   // We can spell check with any editor type
-  if (mEditor)
-  {
-    nsCOMPtr<nsITextServicesDocument>tsDoc;
-
-    result = nsComponentManager::CreateInstance(
-                                 kCTextServicesDocumentCID,
-                                 nsnull,
-                                 NS_GET_IID(nsITextServicesDocument),
-                                 (void **)getter_AddRefs(tsDoc));
-
-    if (NS_FAILED(result))
-      return result;
-
-    if (!tsDoc)
-      return NS_ERROR_NULL_POINTER;
-
-    // Pass the editor to the text services document
-    nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
-    if (!editor)
-      return NS_NOINTERFACE;
-
-    result = tsDoc->InitWithEditor(editor);
-
-    if (NS_FAILED(result))
-      return result;
-
-    result = nsComponentManager::CreateInstance(NS_SPELLCHECKER_CONTRACTID,
-                                                nsnull,
-                                                NS_GET_IID(nsISpellChecker),
-                                                (void **)getter_AddRefs(mSpellChecker));
-
-    if (NS_FAILED(result))
-      return result;
-
-    if (!mSpellChecker)
-      return NS_ERROR_NULL_POINTER;
-
-    result = mSpellChecker->SetDocument(tsDoc, PR_TRUE);
-
-    if (NS_FAILED(result))
-      return result;
-
-    // Tell the spellchecker what dictionary to use:
-
-    nsXPIDLString dictName;
-
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &result));
-
-    if (NS_SUCCEEDED(result) && prefs)
-      result = prefs->CopyUnicharPref("spellchecker.dictionary",
-                                      getter_Copies(dictName));
-
-    if (NS_FAILED(result) || dictName.IsEmpty())
-    {
-      // Prefs didn't give us a dictionary name, so just get the current
-      // locale and use that as the default dictionary name!
-
-      nsCOMPtr<nsIXULChromeRegistry> packageRegistry =
-        do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &result);
-
-      if (NS_SUCCEEDED(result) && packageRegistry) {
-        nsCAutoString utf8DictName;
-        result = packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("navigator"), utf8DictName);
-        dictName = NS_ConvertUTF8toUCS2(utf8DictName);
-      }
-    }
-
-    if (NS_SUCCEEDED(result) && !dictName.IsEmpty())
-      result = SetCurrentDictionary(dictName.get());
-
-    // If an error was thrown while checking the dictionary pref, just
-    // fail silently so that the spellchecker dialog is allowed to come
-    // up. The user can manually reset the language to their choice on
-    // the dialog if it is wrong.
-
-    result = NS_OK;
-
-    DeleteSuggestedWordList();
-  }
-
-  return result;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::GetNextMisspelledWord(PRUnichar **aNextMisspelledWord)
-{
-  nsresult  result = NS_NOINTERFACE;
-  nsAutoString nextMisspelledWord;
-  
-   // We can spell check with any editor type
-  if (mEditor && mSpellChecker)
-  {
-    DeleteSuggestedWordList();
-    result = mSpellChecker->NextMisspelledWord(&nextMisspelledWord, &mSuggestedWordList);
-  }
-  *aNextMisspelledWord = ToNewUnicode(nextMisspelledWord);
-  return result;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::GetSuggestedWord(PRUnichar **aSuggestedWord)
-{
-  nsresult  result = NS_NOINTERFACE;
-  nsAutoString word;
-   // We can spell check with any editor type
-  if (mEditor)
-  {
-    if ( mSuggestedWordIndex < mSuggestedWordList.Count())
-    {
-      mSuggestedWordList.StringAt(mSuggestedWordIndex, word);
-      mSuggestedWordIndex++;
-    } else {
-      // A blank string signals that there are no more strings
-      word.SetLength(0);
-    }
-    result = NS_OK;
-  }
-  *aSuggestedWord = ToNewUnicode(word);
-  return result;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::CheckCurrentWord(const PRUnichar *aSuggestedWord, PRBool *aIsMisspelled)
-{
-  nsresult  result = NS_NOINTERFACE;
-  nsAutoString suggestedWord(aSuggestedWord);
-   // We can spell check with any editor type
-  if (mEditor && mSpellChecker)
-  {
-    DeleteSuggestedWordList();
-    result = mSpellChecker->CheckWord(&suggestedWord, aIsMisspelled, &mSuggestedWordList);
-  }
-  return result;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::ReplaceWord(const PRUnichar *aMisspelledWord, const PRUnichar *aReplaceWord, PRBool allOccurrences)
-{
-  nsresult  result = NS_NOINTERFACE;
-  nsAutoString misspelledWord(aMisspelledWord);
-  nsAutoString replaceWord(aReplaceWord);
-  if (mEditor && mSpellChecker)
-  {
-    result = mSpellChecker->Replace(&misspelledWord, &replaceWord, allOccurrences);
-  }
-  return result;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::IgnoreWordAllOccurrences(const PRUnichar *aWord)
-{
-  nsresult  result = NS_NOINTERFACE;
-  nsAutoString word(aWord);
-  if (mEditor && mSpellChecker)
-  {
-    result = mSpellChecker->IgnoreAll(&word);
-  }
-  return result;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::GetPersonalDictionary()
-{
-  nsresult  result = NS_NOINTERFACE;
-   // We can spell check with any editor type
-  if (mEditor && mSpellChecker)
-  {
-    mDictionaryList.Clear();
-    mDictionaryIndex = 0;
-    result = mSpellChecker->GetPersonalDictionary(&mDictionaryList);
-  }
-  return result;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::GetPersonalDictionaryWord(PRUnichar **aDictionaryWord)
-{
-  nsresult  result = NS_NOINTERFACE;
-  nsAutoString word;
-  if (mEditor)
-  {
-    if ( mDictionaryIndex < mDictionaryList.Count())
-    {
-      mDictionaryList.StringAt(mDictionaryIndex, word);
-      mDictionaryIndex++;
-    } else {
-      // A blank string signals that there are no more strings
-      word.SetLength(0);
-    }
-    result = NS_OK;
-  }
-  *aDictionaryWord = ToNewUnicode(word);
-  return result;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::AddWordToDictionary(const PRUnichar *aWord)
-{
-  nsresult  result = NS_NOINTERFACE;
-  nsAutoString word(aWord);
-  if (mEditor && mSpellChecker)
-  {
-    result = mSpellChecker->AddWordToPersonalDictionary(&word);
-  }
-  return result;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::RemoveWordFromDictionary(const PRUnichar *aWord)
-{
-  nsresult  result = NS_NOINTERFACE;
-  nsAutoString word(aWord);
-  if (mEditor && mSpellChecker)
-  {
-    result = mSpellChecker->RemoveWordFromPersonalDictionary(&word);
-  }
-  return result;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::GetDictionaryList(PRUnichar ***aDictionaryList, PRUint32 *aCount)
-{
-  nsresult  result = NS_ERROR_NOT_IMPLEMENTED;
-
-  if (!aDictionaryList || !aCount)
-    return NS_ERROR_NULL_POINTER;
-
-  *aDictionaryList = 0;
-  *aCount          = 0;
-
-  if (mEditor && mSpellChecker)
-  {
-    nsStringArray dictList;
-
-    result = mSpellChecker->GetDictionaryList(&dictList);
-
-    if (NS_FAILED(result))
-      return result;
-
-    PRUnichar **tmpPtr = 0;
-
-    if (dictList.Count() < 1)
-    {
-      // If there are no dictionaries, return an array containing
-      // one element and a count of one.
-
-      tmpPtr = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *));
-
-      if (!tmpPtr)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-      *tmpPtr          = 0;
-      *aDictionaryList = tmpPtr;
-      *aCount          = 0;
-
-      return NS_OK;
-    }
-
-    tmpPtr = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * dictList.Count());
-
-    if (!tmpPtr)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    *aDictionaryList = tmpPtr;
-    *aCount          = dictList.Count();
-
-    nsAutoString dictStr;
-
-    PRUint32 i;
-
-    for (i = 0; i < *aCount; i++)
-    {
-      dictList.StringAt(i, dictStr);
-      tmpPtr[i] = ToNewUnicode(dictStr);
-    }
-  }
-
-  return result;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::GetCurrentDictionary(PRUnichar **aDictionary)
-{
-  nsresult  result = NS_ERROR_NOT_INITIALIZED;
-
-  if (!aDictionary)
-    return NS_ERROR_NULL_POINTER;
-
-  *aDictionary = 0;
-
-  if (mEditor && mSpellChecker)
-  {
-    nsAutoString dictStr;
-    result = mSpellChecker->GetCurrentDictionary(&dictStr);
-
-    if (NS_FAILED(result))
-      return result;
-
-    *aDictionary = ToNewUnicode(dictStr);
-  }
-
-  return result;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::SetCurrentDictionary(const PRUnichar *aDictionary)
-{
-  nsresult  result = NS_ERROR_NOT_INITIALIZED;
-
-  if (!aDictionary)
-    return NS_ERROR_NULL_POINTER;
-
-  if (mEditor && mSpellChecker)
-  {
-    nsAutoString dictStr(aDictionary);
-    result = mSpellChecker->SetCurrentDictionary(&dictStr);
-  }
-
-  return result;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::UninitSpellChecker()
-{
-  nsresult  result = NS_NOINTERFACE;
-   // We can spell check with any editor type
-  if (mEditor)
-  {
-    // Save the last used dictionary to the user's preferences.
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &result));
-
-    if (NS_SUCCEEDED(result) && prefs)
-    {
-      PRUnichar *dictName = nsnull;
-
-      result = GetCurrentDictionary(&dictName);
-
-      if (NS_SUCCEEDED(result) && dictName && *dictName)
-        result = prefs->SetUnicharPref("spellchecker.dictionary", dictName);
-
-      if (dictName)
-        nsMemory::Free(dictName);
-    }
-
-    // Cleanup - kill the spell checker
-    DeleteSuggestedWordList();
-    mDictionaryList.Clear();
-    mDictionaryIndex = 0;
-    mSpellChecker = 0;
-    result = NS_OK;
-  }
-  return result;
-}
-
-nsresult    
-nsEditorShell::DeleteSuggestedWordList()
-{
-  mSuggestedWordList.Clear();
-  mSuggestedWordIndex = 0;
-  return NS_OK;
 }
 
 #ifdef XP_MAC

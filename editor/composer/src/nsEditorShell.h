@@ -50,7 +50,6 @@
 #include "nsIWebProgressListener.h"
 #include "nsIDOMEventListener.h"
 #include "nsIURIContentListener.h"
-#include "nsVoidArray.h"
 #include "nsIEditorSpellCheck.h"
 #include "nsISpellChecker.h"
 #include "nsIHTMLEditor.h"
@@ -83,7 +82,6 @@ class nsInterfaceState;
 class nsIHTMLEditor;
 class nsICSSStyleSheet;
 class nsEditorParserObserver;
-class nsStringArray;
 
 #define NS_EDITORSHELL_CID                            \
 { /* {} */                                            \
@@ -96,7 +94,6 @@ class nsStringArray;
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsEditorShell :   public nsIEditorShell,
-                        public nsIEditorSpellCheck,
                         public nsIWebProgressListener,
                         public nsIURIContentListener,
                         public nsSupportsWeakReference
@@ -114,9 +111,6 @@ class nsEditorShell :   public nsIEditorShell,
 
     /* Declare all methods in the nsIEditorShell interface */
     NS_DECL_NSIEDITORSHELL
-
-    /* Declare all methods in the nsIEditorSpellCheck interface */
-    NS_DECL_NSIEDITORSPELLCHECK
 
     // nsIWebProgressListener
     NS_DECL_NSIWEBPROGRESSLISTENER
@@ -168,8 +162,6 @@ class nsEditorShell :   public nsIEditorShell,
     
     // Get the text of the <title> tag
     nsresult        GetDocumentTitleString(nsString& title);
-
-    nsresult        DeleteSuggestedWordList();
 
     nsresult        GetDocumentURI(nsIDOMDocument *aDoc, nsIURI **aDocumentURI);
 
@@ -237,12 +229,6 @@ class nsEditorShell :   public nsIEditorShell,
     PRBool              mContentTypeKnown;
     
     PRInt32             mWrapColumn;            // can't actually set this 'til the editor is created, so we may have to hold on to it for a while
-
-    nsStringArray       mSuggestedWordList;
-    PRInt32             mSuggestedWordIndex;
-
-    nsStringArray       mDictionaryList;
-    PRInt32             mDictionaryIndex;
 
     nsCOMPtr<nsIPrintSettings> mPrintSettings;
 };
