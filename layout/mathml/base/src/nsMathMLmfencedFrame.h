@@ -41,17 +41,56 @@ public:
        nsIStyleContext* aContext,
        nsIFrame*        aPrevInFlow);
 
-/*
-  NS_IMETHOD Paint(nsIPresContext&      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect,
-                   nsFramePaintLayer    aWhichLayer);
-*/
+  NS_IMETHOD
+  SetInitialChildList(nsIPresContext& aPresContext,
+                      nsIAtom*        aListName,
+                      nsIFrame*       aChildList);
+
+  NS_IMETHOD
+  Reflow(nsIPresContext&          aPresContext,
+         nsHTMLReflowMetrics&     aDesiredSize,
+         const nsHTMLReflowState& aReflowState,
+         nsReflowStatus&          aStatus);
+
+  NS_IMETHOD 
+  Paint(nsIPresContext&      aPresContext,
+        nsIRenderingContext& aRenderingContext,
+        const nsRect&        aDirtyRect,
+        nsFramePaintLayer    aWhichLayer);
+
 protected:
   nsMathMLmfencedFrame();
   virtual ~nsMathMLmfencedFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }
+
+  nsMathMLChar* mOpenChar;
+  nsMathMLChar* mCloseChar;
+  nsMathMLChar* mSeparatorsChar;
+  PRInt32       mSeparatorsCount;
+
+  // helper routine to format the MathMLChars involved here
+  static nsresult
+  ReflowChar(nsIPresContext&      aPresContext,
+             nsIRenderingContext& aRenderingContext,
+             nsIStyleContext*     aStyleContext,
+             nsMathMLChar*        aMathMLChar,
+             nsOperatorFlags      aForm,
+             PRInt32              aScriptLevel,
+             nscoord              fontAscent,
+             nscoord              fontDescent,
+             nscoord              em,
+             nsCharMetrics&       aContainerSize,
+             nsHTMLReflowMetrics& aDesiredSize,
+             nscoord&             aX);
+
+  // clean up
+  void
+  RemoveFencesAndSeparators();
+
+  // add fences and separators when all child frames are known
+  nsresult
+  ReCreateFencesAndSeparators();
 };
 
 #endif /* nsMathMLmfencedFrame_h___ */
