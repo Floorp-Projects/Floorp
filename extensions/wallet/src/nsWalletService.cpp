@@ -52,7 +52,6 @@
 #include "nsIDocumentLoader.h"
 #include "nsCURILoader.h"
 #include "nsIWebShell.h"
-#include "nsIDocumentViewer.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIFormControl.h"
 #include "nsIDocShell.h"
