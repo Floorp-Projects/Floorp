@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: session.c,v $ $Revision: 1.4 $ $Date: 2000/05/16 01:54:46 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: session.c,v $ $Revision: 1.5 $ $Date: 2000/09/13 21:15:07 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -607,7 +607,7 @@ nssCKFWSession_GetHandle
 {
 #ifdef NSSDEBUG
   if( CKR_OK != nssCKFWSession_verifyPointer(fwSession) ) {
-    return (NSSCKMDSession *)NULL;
+    return NULL;
   }
 #endif /* NSSDEBUG */
 
