@@ -3525,6 +3525,7 @@ nsDocShell::CreateContentViewer(const char *aContentType,
 
     nsCOMPtr<nsILoadGroup> loadGroup(do_GetInterface(mLoadCookie));
     NS_ENSURE_TRUE(loadGroup, NS_ERROR_FAILURE);
+    loadGroup->SetNotificationCallbacks(NS_STATIC_CAST(nsIInterfaceRequestor *, this));
 
     // Instantiate the content viewer object
     nsCOMPtr<nsIContentViewer> viewer;
