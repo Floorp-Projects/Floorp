@@ -1748,7 +1748,7 @@ NS_IMETHODIMP nsMsgDBView::Close()
   ClearHdrCache();
   if (m_db)
   {
-  	m_db->RemoveListener(this);
+    m_db->RemoveListener(this);
     m_db = nsnull;
   }
   return NS_OK;
@@ -3926,57 +3926,57 @@ nsresult nsMsgDBView::ExpandAndSelectThreadByIndex(nsMsgViewIndex index)
 
 nsresult nsMsgDBView::ExpandAll()
 {
-	for (PRInt32 i = GetSize() - 1; i >= 0; i--) 
-	{
-		PRUint32 numExpanded;
-		PRUint32 flags = m_flags[i];
-		if (flags & MSG_FLAG_ELIDED)
-			ExpandByIndex(i, &numExpanded);
-	}
-	return NS_OK;
+  for (PRInt32 i = GetSize() - 1; i >= 0; i--) 
+  {
+    PRUint32 numExpanded;
+    PRUint32 flags = m_flags[i];
+    if (flags & MSG_FLAG_ELIDED)
+      ExpandByIndex(i, &numExpanded);
+  }
+  return NS_OK;
 }
 
 nsresult nsMsgDBView::ExpandByIndex(nsMsgViewIndex index, PRUint32 *pNumExpanded)
 {
-	PRUint32			flags = m_flags[index];
-	nsMsgKey		firstIdInThread;
-    //nsMsgKey        startMsg = nsMsgKey_None;
-	nsresult		rv = NS_OK;
-	PRUint32			numExpanded = 0;
-
-	NS_ASSERTION(flags & MSG_FLAG_ELIDED, "can't expand an already expanded thread");
-	flags &= ~MSG_FLAG_ELIDED;
-
-	if ((PRUint32) index > m_keys.GetSize())
-		return NS_MSG_MESSAGE_NOT_FOUND;
-
-	firstIdInThread = m_keys[index];
-	nsCOMPtr <nsIMsgDBHdr> msgHdr;
+  PRUint32			flags = m_flags[index];
+  nsMsgKey		firstIdInThread;
+  //nsMsgKey        startMsg = nsMsgKey_None;
+  nsresult		rv = NS_OK;
+  PRUint32			numExpanded = 0;
+  
+  NS_ASSERTION(flags & MSG_FLAG_ELIDED, "can't expand an already expanded thread");
+  flags &= ~MSG_FLAG_ELIDED;
+  
+  if ((PRUint32) index > m_keys.GetSize())
+    return NS_MSG_MESSAGE_NOT_FOUND;
+  
+  firstIdInThread = m_keys[index];
+  nsCOMPtr <nsIMsgDBHdr> msgHdr;
   nsCOMPtr <nsIMsgThread> pThread;
-    m_db->GetMsgHdrForKey(firstIdInThread, getter_AddRefs(msgHdr));
-	if (msgHdr == nsnull)
-	{
-		NS_ASSERTION(PR_FALSE, "couldn't find message to expand");
-		return NS_MSG_MESSAGE_NOT_FOUND;
-	}
+  m_db->GetMsgHdrForKey(firstIdInThread, getter_AddRefs(msgHdr));
+  if (msgHdr == nsnull)
+  {
+    NS_ASSERTION(PR_FALSE, "couldn't find message to expand");
+    return NS_MSG_MESSAGE_NOT_FOUND;
+  }
   rv = m_db->GetThreadContainingMsgHdr(msgHdr, getter_AddRefs(pThread));
-	m_flags[index] = flags;
+  m_flags[index] = flags;
   NoteChange(index, 1, nsMsgViewNotificationCode::changed);
-	if (m_viewFlags & nsMsgViewFlagsType::kUnreadOnly)
-	{
-		if (flags & MSG_FLAG_READ)
-			m_levels.Add(0);	// keep top level hdr in thread, even though read.
-		rv = ListUnreadIdsInThread(pThread,  index, &numExpanded);
-	}
-	else
-		rv = ListIdsInThread(pThread,  index, &numExpanded);
-
-	NoteStartChange(index + 1, numExpanded, nsMsgViewNotificationCode::insertOrDelete);
-
+  if (m_viewFlags & nsMsgViewFlagsType::kUnreadOnly)
+  {
+    if (flags & MSG_FLAG_READ)
+      m_levels.Add(0);	// keep top level hdr in thread, even though read.
+    rv = ListUnreadIdsInThread(pThread,  index, &numExpanded);
+  }
+  else
+    rv = ListIdsInThread(pThread,  index, &numExpanded);
+  
+  NoteStartChange(index + 1, numExpanded, nsMsgViewNotificationCode::insertOrDelete);
+  
   NoteEndChange(index + 1, numExpanded, nsMsgViewNotificationCode::insertOrDelete);
-	if (pNumExpanded != nsnull)
-		*pNumExpanded = numExpanded;
-	return rv;
+  if (pNumExpanded != nsnull)
+    *pNumExpanded = numExpanded;
+  return rv;
 }
 
 nsresult nsMsgDBView::CollapseAll()
@@ -4602,6 +4602,7 @@ NS_IMETHODIMP nsMsgDBView::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *instigator
     m_db = nsnull;
   }
 
+  PRInt32 saveSize = GetSize();
   ClearHdrCache();
 
   // this is important, because the tree will ask us for our
@@ -4611,15 +4612,9 @@ NS_IMETHODIMP nsMsgDBView::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *instigator
   m_flags.RemoveAll();
   m_levels.RemoveAll();
 
-  // clear the existing selection.
-  if (mTreeSelection) {
-    mTreeSelection->ClearSelection(); 
-  }
-
-  // this will force the tree to ask for the cell values
-  // since we don't have a db and we don't have any keys, 
-  // the thread pane goes blank
-  if (mTree) mTree->Invalidate();
+  // tell the tree all the rows have gone away
+  if (mTree) 
+    mTree->RowCountChanged(0, -saveSize);
 
   return NS_OK;
 }
@@ -5587,15 +5582,20 @@ nsMsgDBView::OnDeleteCompleted(PRBool aSucceeded)
       PRUint32 numIndices = mIndicesToNoteChange.GetSize();
       if (numIndices) 
       {
-        if (numIndices > 1)
-          mIndicesToNoteChange.QuickSort(CompareViewIndices);
+        if (mTree)
+        {
+          if (numIndices > 1)
+            mIndicesToNoteChange.QuickSort(CompareViewIndices);
 
-        // the call to NoteChange() has to happen after we are done removing the keys
-        // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
-        mTree->BeginUpdateBatch();
-        for (PRUint32 i=0;i<numIndices;i++)
-          NoteChange(mIndicesToNoteChange[i], -1, nsMsgViewNotificationCode::insertOrDelete);
-        mTree->EndUpdateBatch(); 
+          // the call to NoteChange() has to happen after we are done removing the keys
+          // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
+          if (numIndices > 1)
+            mTree->BeginUpdateBatch();
+          for (PRUint32 i=0;i<numIndices;i++)
+            NoteChange(mIndicesToNoteChange[i], -1, nsMsgViewNotificationCode::insertOrDelete);
+          if (numIndices > 1)
+            mTree->EndUpdateBatch(); 
+        }
         mIndicesToNoteChange.RemoveAll();
       }
     }
