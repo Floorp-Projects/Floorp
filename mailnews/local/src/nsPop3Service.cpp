@@ -280,12 +280,14 @@ nsPop3Service::SetDefaultLocalPath(nsIFileSpec *aPath)
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    // there is no nsNoService, so in the MsgLocalFactory, we 
-    // registered the nsPop3Service with both 
-    // "component://netscape/messenger/protocol/info;type=none"
-    // "component://netscape/messenger/protocol/info;type=pop3"
-    // on disk, both roots should bpoint to <profile>/Mail
-    // so we set both here to the save place
+	/*
+	there is no nsNoService, so in the MsgLocalFactory, we
+	registered the nsPop3Service with both
+	"component://netscape/messenger/protocol/info;type=none"
+	"component://netscape/messenger/protocol/info;type=pop3"
+	on disk, both roots (mail.root.none and mail.root.pop3)                         should point to <profile>/Mail or "mail.directory"
+	so we set both here to the same value 
+	*/
     rv = prefs->SetFilePref(PREF_MAIL_ROOT_POP3, aPath, PR_FALSE /* set default */);
     if (NS_FAILED(rv)) return rv;
     
