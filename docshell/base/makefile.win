@@ -24,6 +24,7 @@ MODULE=docshell_base
 
 XPIDLSRCS=						\
 		.\nsIDocShell.idl			\
+		.\nsIDocShellContainer.idl			\
 		.\nsIDocShellFile.idl	\
 		.\nsIDocShellEdit.idl	\
 		.\nsIGenericWindow.idl	\
