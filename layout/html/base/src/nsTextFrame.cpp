@@ -590,7 +590,6 @@ public:
       if (eStyleUnit_Coord == unit) {
         mLetterSpacing = mText->mLetterSpacing.GetCoordValue();
       }
-      mWordSpacing += mLetterSpacing; // bug 1046
 
       mNumSpacesToRender = 0;
       mNumSpacesToMeasure = 0;
@@ -2595,7 +2594,7 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
     else if (ch == ' ') {
       nextFont = aTextStyle.mNormalFont;
       nextY = aY;
-      glyphWidth = aTextStyle.mSpaceWidth + aTextStyle.mWordSpacing
+      glyphWidth = aTextStyle.mSpaceWidth + aTextStyle.mWordSpacing + aTextStyle.mLetterSpacing
         + aTextStyle.mExtraSpacePerSpace;
       if ((PRUint32)--aTextStyle.mNumSpacesToRender <
             (PRUint32)aTextStyle.mNumSpacesReceivingExtraJot) {
@@ -2719,7 +2718,7 @@ nsTextFrame::GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
         glyphDimensions.width += glyphDimensions.width;
     }
     else if (ch == ' ') {
-      glyphDimensions.width = aStyle.mSpaceWidth
+      glyphDimensions.width = aStyle.mSpaceWidth + aStyle.mLetterSpacing
         + aStyle.mWordSpacing + aStyle.mExtraSpacePerSpace;
       if ((PRUint32)--aStyle.mNumSpacesToMeasure
             < (PRUint32)aStyle.mNumSpacesReceivingExtraJot) {
@@ -3711,8 +3710,8 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
       // to the total width, so the caret appears
       // in the proper place!
       //
-      // NOTE: the trailing whitespace includes the word spacing!!
-      width += ts.mSpaceWidth + ts.mWordSpacing;
+      // NOTE: the trailing whitespace includes the word and letter spacing!!
+      width += ts.mSpaceWidth + ts.mWordSpacing + ts.mLetterSpacing;
     }
   }
 #ifdef IBMBIDI
@@ -4508,7 +4507,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
         // Expand tabs to the proper width
         wordLen = 8 - (7 & column);
         // Apply word spacing to every space derived from a tab
-        dimensions.width = (aTs.mSpaceWidth + aTs.mWordSpacing)*wordLen;
+        dimensions.width = (aTs.mSpaceWidth + aTs.mWordSpacing + aTs.mLetterSpacing)*wordLen;
 
         // Because we have to expand the tab when rendering consider that
         // a transformation of the text
@@ -4521,7 +4520,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
       }
       else {
         // Apply word spacing to every space, if there's more than one
-        dimensions.width = wordLen*(aTs.mWordSpacing + aTs.mSpaceWidth);// XXX simplistic
+        dimensions.width = wordLen*(aTs.mWordSpacing + aTs.mLetterSpacing + aTs.mSpaceWidth);// XXX simplistic
       }
 
       //Even if there is not enough space for this "space", we still put it 
@@ -4771,8 +4770,8 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
     aTextData.mX = mRect.width;
     if (mState & TEXT_TRIMMED_WS) {
       // Add back in the width of a space since it was trimmed away last time
-      // NOTE: Trailing whitespace includes word spacing!
-      aTextData.mX += aTs.mSpaceWidth + aTs.mWordSpacing;
+      // NOTE: Trailing whitespace includes word and letter spacing!
+      aTextData.mX += aTs.mSpaceWidth + aTs.mWordSpacing + aTs.mLetterSpacing;
     }
   }
   
@@ -5085,8 +5084,8 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
 
     nscoord realWidth = mRect.width;
     if (mState & TEXT_TRIMMED_WS) {
-      // NOTE: Trailing whitespace includes word spacing!
-      realWidth += ts.mSpaceWidth + ts.mWordSpacing;    
+      // NOTE: Trailing whitespace includes word and letter spacing!
+      realWidth += ts.mSpaceWidth + ts.mWordSpacing + ts.mLetterSpacing;
     }
     if (!mNextInFlow &&
         (mState & TEXT_OPTIMIZE_RESIZE) &&
@@ -5295,10 +5294,15 @@ nsTextFrame::TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
             mStyleContext->GetStyleData(eStyleStruct_Font);
           aRC.SetFont(fontStyle->mFont);
           aRC.GetWidth(' ', dw);
-          // NOTE: Trailing whitespace includes word spacing!
-          PRIntn unit = textStyle->mWordSpacing.GetUnit();
+          // NOTE: Trailing whitespace includes word and letter spacing!
+          nsStyleUnit unit;
+          unit = textStyle->mWordSpacing.GetUnit();
           if (eStyleUnit_Coord == unit) {
             dw += textStyle->mWordSpacing.GetCoordValue();
+          }
+          unit = textStyle->mLetterSpacing.GetUnit();
+          if (eStyleUnit_Coord == unit) {
+            dw += textStyle->mLetterSpacing.GetCoordValue();
           }
         }
       }
