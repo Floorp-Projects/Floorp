@@ -3432,7 +3432,13 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
    * Properties commented out with // are not yet implemented            *
    * Properties commented out with //// are shorthands and not queryable *
   \* ******************************************************************* */
-  static const ComputedStyleMapEntry map[] = {
+  static
+#ifndef XP_MACOSX
+    // XXX If this actually fixes the bustage, replace this with an
+    // autoconf test.
+  const
+#endif
+  ComputedStyleMapEntry map[] = {
     /* ****************************** *\
      * Implementations of CSS2 styles *
     \* ****************************** */
