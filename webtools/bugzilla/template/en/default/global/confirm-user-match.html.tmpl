@@ -51,18 +51,18 @@
   >
 
   <p>
-    One or more of the names/email addresses you entered into fields on the
-    previous page produced results which require confirmation.  Please
-    carefully examine the matches below, selecting users from the lists if
-    necessary, or go back to the previous page to revise the names you
-    entered.
+    Bugzilla cannot make a conclusive match for one or more of the
+    names and/or email addresses you entered on the previous page.<br>
+    Please examine the lists of potential matches below and select the
+    one you want, or go back to the previous page to revise the names
+    you entered.
   </p>
 [% ELSE %]
   [% PROCESS global/header.html.tmpl title="Match Failed" %]
   <p>
-    One or more of the names/email addresses you entered into fields on the
-    previous page were unable to make a valid match.  Go back to the previous
-    page and try other names/email addresses.
+    Bugzilla was unable to make any match at all for one or more of
+    the names and/or email addresses you entered on the previous page.<br>
+    Please go back and try other names or email addresses.
   </p>
 [% END %]
 
