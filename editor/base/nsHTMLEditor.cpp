@@ -58,7 +58,7 @@ static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kIContentIteratorIID, NS_ICONTENTITERTOR_IID);
 
 #ifdef NS_DEBUG
-static PRBool gNoisy = PR_TRUE;
+static PRBool gNoisy = PR_FALSE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
@@ -771,7 +771,7 @@ nsHTMLEditor::ReParentBlockContent(nsIDOMNode  *aNode,
     {
       // if the prior node is a <BR> and we did something to change vertical whitespacing, delete the <BR>
       nsCOMPtr<nsIDOMNode> brNode;
-      result = GetPriorNode(leftNode, getter_AddRefs(brNode));
+      result = GetPriorNode(leftNode, PR_TRUE, getter_AddRefs(brNode));
       if (NS_SUCCEEDED(result) && brNode)
       {
         nsCOMPtr<nsIContent> brContent = do_QueryInterface(brNode);
@@ -788,7 +788,7 @@ nsHTMLEditor::ReParentBlockContent(nsIDOMNode  *aNode,
       // if the next node is a <BR> and we did something to change vertical whitespacing, delete the <BR>
       if (NS_SUCCEEDED(result))
       {
-        result = GetNextNode(rightNode, getter_AddRefs(brNode));
+        result = GetNextNode(rightNode, PR_TRUE, getter_AddRefs(brNode));
         if (NS_SUCCEEDED(result) && brNode)
         {
           nsCOMPtr<nsIContent> brContent = do_QueryInterface(brNode);

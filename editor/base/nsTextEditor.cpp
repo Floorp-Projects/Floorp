@@ -95,7 +95,7 @@ static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 
 #ifdef NS_DEBUG
-static PRBool gNoisy = PR_TRUE;
+static PRBool gNoisy = PR_FALSE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
@@ -1910,7 +1910,7 @@ nsTextEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStar
     // compute the start node
     nsCOMPtr<nsIDOMNode>startNode = do_QueryInterface(aStartNode);
     if (PR_TRUE==skippedStartNode) {
-      nsEditor::GetNextNode(aStartNode, getter_AddRefs(startNode));
+      nsEditor::GetNextNode(aStartNode, PR_TRUE, getter_AddRefs(startNode));
     }
     range->SetStart(startNode, rangeStartOffset);
     range->SetEnd(aEndNode, rangeEndOffset);

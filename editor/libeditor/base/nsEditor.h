@@ -384,20 +384,36 @@ public:
     */
   static nsresult GetLengthOfDOMNode(nsIDOMNode *aNode, PRUint32 &aCount);
 
-  /**
-   */
-  static nsresult GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+  /** get the node immediately prior to aCurrentNode
+    * @param aCurrentNode   the node from which we start the search
+    * @param aEditableNode  if PR_TRUE, only return an editable node
+    * @param aResultNode    [OUT] the node that occurs before aCurrentNode in the tree,
+    *                       skipping non-editable nodes if aEditableNode is PR_TRUE.
+    *                       If there is no prior node, aResultNode will be nsnull.
+    */
+  static nsresult GetPriorNode(nsIDOMNode  *aCurrentNode, 
+                               PRBool       aEditableNode,
+                               nsIDOMNode **aResultNode);
 
-  /**
-   */
-  static nsresult GetNextNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+  /** get the node immediately after to aCurrentNode
+    * @param aCurrentNode   the node from which we start the search
+    * @param aEditableNode  if PR_TRUE, only return an editable node
+    * @param aResultNode    [OUT] the node that occurs after aCurrentNode in the tree,
+    *                       skipping non-editable nodes if aEditableNode is PR_TRUE.
+    *                       If there is no prior node, aResultNode will be nsnull.
+    */
+  static nsresult GetNextNode(nsIDOMNode  *aCurrentNode, 
+                              PRBool       aEditableNode,
+                              nsIDOMNode **aResultNode);
 
-  /**
-   */
+  /** Get the rightmost child of aCurrentNode, and return it in aResultNode
+    * aResultNode is set to nsnull if aCurrentNode has no children.
+    */
   static nsresult GetRightmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
 
-  /**
-   */
+  /** Get the leftmost child of aCurrentNode, and return it in aResultNode
+    * aResultNode is set to nsnull if aCurrentNode has no children.
+    */
   static nsresult GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
 
   /** GetFirstTextNode ADDREFFS and will get the next available text node from the passed
