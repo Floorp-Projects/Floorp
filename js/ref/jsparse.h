@@ -108,7 +108,7 @@ PR_BEGIN_EXTERN_C
  * TOK_DEC                  pn_num: arg or local var slot if non-negative
  * TOK_NEW      list        pn_head: list of ctor, arg1, arg2, ... argN
  *                          pn_count: 1 + N (where N is number of args)
- *                          ctor is a restricted MEMBER expr (XXX not ECMA)
+ *                          ctor is a MEMBER expr
  * TOK_DELETE   unary       pn_kid: MEMBER expr
  * TOK_DOT      name        pn_expr: MEMBER expr to left of .
  *                          pn_atom: name to right of .
