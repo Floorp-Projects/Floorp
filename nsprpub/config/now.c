@@ -19,9 +19,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_OS2_EMX)
 #include <sys/time.h>
-#elif defined(WIN32)
+#elif defined(WIN32) || defined(XP_OS2_VACPP)
 #include <sys/timeb.h>
 #else
 #error "Architecture not supported"
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
      * of this program and omit the library build time
      * in PRVersionDescription.
      */
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_OS2_EMX)
     long long now;
     struct timeval tv;
 #ifdef HAVE_SVID_GETTOD
@@ -58,12 +58,40 @@ int main(int argc, char **argv)
 
 #elif defined(WIN32)
     __int64 now;
+    long long now;
     struct timeb b;
     ftime(&b);
     now = b.time;
     now *= 1000000;
     now += (1000 * b.millitm);
     fprintf(stdout, "%I64d", now);
+
+#elif defined(XP_OS2_VACPP)
+/* no long long or i64 so we use a string */
+#include <string.h>
+  char buf[24];
+  char tbuf[7];
+  time_t now;
+  long mtime;
+  int i;
+
+  struct timeb b;
+  ftime(&b);
+  now = b.time;
+  _ltoa(now, buf, 10);
+
+  mtime = b.millitm * 1000;
+  if (mtime == 0){
+    ++now;
+    strcat(buf, "000000");
+  } else {
+     _ltoa(mtime, tbuf, 10);
+     for (i = strlen(tbuf); i < 6; ++i)
+       strcat(buf, "0");
+     strcat(buf, tbuf);
+  }
+  fprintf(stdout, "%s", buf);
+
 #else
 #error "Architecture not supported"
 #endif

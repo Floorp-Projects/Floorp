@@ -54,7 +54,11 @@ RELEASE_LIBS = $(TARGETS)
 
 ifeq ($(OS_ARCH),WINNT)
 ifeq (,$(filter-out WIN16 OS2,$(OS_TARGET)))
+ifdef XP_OS2_EMX
+EXTRA_LIBS = -L$(DIST)/lib -lnspr$(MOD_VERSION)
+else
 EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).lib
+endif
 else
 DLLBASE=/BASE:0x30000000
 RES=$(OBJDIR)/plc.res
@@ -101,16 +105,26 @@ include $(MOD_DEPTH)/config/rules.mk
 #
 ECHO = echo
 TINC = $(OBJDIR)/_pl_bld.h
-PROD = libplc$(MOD_VERSION).$(DLL_SUFFIX)
+ifeq ($(OS_TARGET),OS2)
+PROD = nspr$(MOD_VERSION).$(DLL_SUFFIX)
+else
+PROD = plc$(MOD_VERSION).$(DLL_SUFFIX)
+endif
 NOW = $(MOD_DEPTH)/config/$(OBJDIR)/now
 SH_DATE = $(shell date)
 SH_NOW = $(shell $(NOW))
 
 ifeq ($(OS_ARCH), WINNT)
+ifeq ($(OS_TARGET),OS2)
+        SUF =
+else
 	SUF = i64
+endif
 else
 	SUF = LL
 endif
+
+GARBAGE += $(TINC)
 
 $(TINC):
 	@$(MAKE_OBJDIR)
@@ -147,4 +161,3 @@ ifeq ($(MOZ_BITS),16)
 endif
 
 install:: export
-

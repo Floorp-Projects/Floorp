@@ -23,7 +23,15 @@
  */
 
 #include "primpl.h"
+#include "prio.h"
+#include <ctype.h>
+#ifdef XP_OS2_VACPP
 #include <direct.h>
+#else
+#include <dirent.h>
+#include <fcntl.h>
+#include <io.h>
+#endif
 
 struct _MDLock               _pr_ioq_lock;
 
@@ -104,6 +112,7 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, int mode)
 
     ULONG CurMaxFH = 0;
     LONG ReqCount = 1;
+    ULONG fattr;
  
     if (osflags & PR_RDONLY)
         access |= OPEN_ACCESS_READONLY;
@@ -117,7 +126,11 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, int mode)
         flags &= ~OPEN_ACTION_OPEN_IF_EXISTS;
         flags |= OPEN_ACTION_REPLACE_IF_EXISTS;
     }
-        
+
+    if (isxdigit(mode) == 0) /* file attribs are hex, UNIX modes octal */
+      fattr = ((ULONG)mode == FILE_HIDDEN) ? FILE_HIDDEN : FILE_NORMAL;
+    else fattr = FILE_NORMAL;
+
     /* OS/2 sets the Max file handles per process to 20 by default */
     DosSetRelMaxFH(&ReqCount, &CurMaxFH);
 
@@ -125,7 +138,7 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, int mode)
                  &file,            /* file handle if successful */
                  &actionTaken,     /* reason for failure        */
                  0,                /* initial size of new file  */
-                 FILE_NORMAL,      /* file system attributes    */
+                 fattr,            /* file system attributes    */
                  flags,            /* Open flags                */
                  access,           /* Open mode and rights      */
                  0);               /* OS/2 Extended Attributes  */
@@ -190,7 +203,7 @@ _PR_MD_WRITE(PRFileDesc *fd, const void *buf, PRInt32 len)
 } /* --- end _PR_MD_WRITE() --- */
 
 PRInt32
-_PR_MD_LSEEK(PRFileDesc *fd, PRInt32 offset, int whence)
+_PR_MD_LSEEK(PRFileDesc *fd, PRInt32 offset, PRSeekWhence whence)
 {
     PRInt32 rv;
     PRUword newLocation;
@@ -205,7 +218,7 @@ _PR_MD_LSEEK(PRFileDesc *fd, PRInt32 offset, int whence)
 }
 
 PRInt64
-_PR_MD_LSEEK64(PRFileDesc *fd, PRInt64 offset, int whence)
+_PR_MD_LSEEK64(PRFileDesc *fd, PRInt64 offset, PRSeekWhence whence)
 {
     PRInt64 result;
     PRInt32 rv, low = offset.lo, hi = offset.hi;
@@ -219,8 +232,8 @@ _PR_MD_LSEEK64(PRFileDesc *fd, PRInt64 offset, int whence)
 		hi = newLocation = -1;
    }
 
-    result.lo = hi;
-    result.hi = newLocation;
+    result.lo = newLocation;
+    result.hi = hi;
 	return result;
 }
 
@@ -252,6 +265,7 @@ _MD_CloseFile(PRInt32 osfd)
 
 /* --- DIR IO ------------------------------------------------------------ */
 #define GetFileFromDIR(d)       (d)->d_entry.achName
+#define GetFileAttr(d)          (d)->d_entry.attrFile
 
 void FlipSlashes(char *cp, int len)
 {
@@ -296,13 +310,21 @@ _PR_MD_OPEN_DIR(_MDDir *d, const char *name)
     char filename[ CCHMAXPATH ];
     PRUword numEntries, rc;
 
+    numEntries = 1;
+
     PR_snprintf(filename, CCHMAXPATH, "%s%s%s",
                 name, PR_DIRECTORY_SEPARATOR_STR, "*.*");
     FlipSlashes( filename, strlen(filename) );
 
     d->d_hdl = HDIR_CREATE;
 
-    rc = DosFindFirst( filename, &d->d_hdl, FILE_DIRECTORY, &(d->d_entry), sizeof(d->d_entry), &numEntries, FIL_STANDARD); 
+    rc = DosFindFirst( filename,
+                       &d->d_hdl,
+                       FILE_DIRECTORY | FILE_HIDDEN,
+                       &(d->d_entry),
+                       sizeof(d->d_entry),
+                       &numEntries,
+                       FIL_STANDARD);
     if ( rc != NO_ERROR ) {
 		_PR_MD_MAP_OPENDIR_ERROR(rc);
         return PR_FAILURE;
@@ -318,6 +340,7 @@ _PR_MD_READ_DIR(_MDDir *d, PRIntn flags)
     PRUword numFiles = 1;
     BOOL rv;
     char *fileName;
+    USHORT fileAttr;
 
     if ( d ) {
        while (1) {
@@ -325,12 +348,16 @@ _PR_MD_READ_DIR(_MDDir *d, PRIntn flags)
                d->firstEntry = PR_FALSE;
                rv = NO_ERROR;
            } else {
-               rv = DosFindNext(d->d_hdl, &(d->d_entry), sizeof(d->d_entry), &numFiles);
+               rv = DosFindNext(d->d_hdl,
+                                &(d->d_entry),
+                                sizeof(d->d_entry),
+                                &numFiles);
            }
            if (rv != NO_ERROR) {
                break;
            }
            fileName = GetFileFromDIR(d);
+           fileAttr = GetFileAttr(d);
            if ( (flags & PR_SKIP_DOT) &&
                 (fileName[0] == '.') && (fileName[1] == '\0'))
                 continue;
@@ -342,7 +369,9 @@ _PR_MD_READ_DIR(_MDDir *d, PRIntn flags)
 			 * XXX
 			 * Is this the correct definition of a hidden file on OS/2?
 			 */
-           if ( (flags & PR_SKIP_HIDDEN) && (fileName[0] == '.'))
+           if ((flags & PR_SKIP_NONE) && (fileAttr & FILE_HIDDEN))
+                return fileName;
+           else if ((flags & PR_SKIP_HIDDEN) && (fileAttr & FILE_HIDDEN))
                 continue;
            return fileName;
         }
@@ -370,8 +399,12 @@ PRInt32
 _PR_MD_STAT(const char *fn, struct stat *info)
 {
     PRInt32 rv;
+    char filename[CCHMAXPATH];
 
-    rv = _stat((char*)fn, info);
+    PR_snprintf(filename, CCHMAXPATH, "%s", fn);
+    FlipSlashes(filename, strlen(filename));
+
+    rv = _stat((char*)filename, info);
     if (-1 == rv) {
         /*
          * Check for MSVC runtime library _stat() bug.
@@ -509,9 +542,9 @@ _PR_MD_RENAME(const char *from, const char *to)
 }
 
 PRInt32
-_PR_MD_ACCESS(const char *name, PRIntn how)
+_PR_MD_ACCESS(const char *name, PRAccessHow how)
 {
-PRInt32 rv;
+  PRInt32 rv;
     switch (how) {
       case PR_ACCESS_WRITE_OK:
         rv = access(name, 02);
@@ -536,7 +569,7 @@ _PR_MD_MKDIR(const char *name, PRIntn mode)
 {
    PRInt32 rc;
     /* XXXMB - how to translate the "mode"??? */
-    if ((rc = DosCreateDir((char *)name, NULL)) == NO_ERROR) {
+    if ((rc = DosCreateDir((char *)name, NULL))== NO_ERROR) {
         return 0;
     } else {
 		_PR_MD_MAP_MKDIR_ERROR(rc);

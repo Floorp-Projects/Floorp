@@ -15,6 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#if defined(XP_OS2)
+#define INCL_DOSEXCEPTIONS
+#define INCL_WIN
+#include <os2.h>
+#define PostMessage   WinPostMsg
+#define DefWindowProc WinDefWindowProc
+typedef MPARAM WPARAM,LPARAM;
+#endif
 #include "plevent.h"
 #include "prmem.h"
 #include "prcmon.h"
@@ -22,7 +30,7 @@
 #if !defined(WIN32)
 #include <errno.h>
 #include <stddef.h>
-#if !defined(OS2)
+#if !defined(XP_OS2)
 #include <unistd.h>
 #endif
 #endif
@@ -63,11 +71,16 @@ static PRStatus    _pl_NativeNotify(PLEventQueue* self);
 static PRStatus    _pl_AcknowledgeNativeNotify(PLEventQueue* self);
 
 
-#if defined(_WIN32) || defined(WIN16)
+#if defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
 PLEventQueue * _pr_main_event_queue;
-UINT _pr_PostEventMsgId;
 HWND _pr_eventReceiverWindow;
+#if defined(OS2)
+BOOL rc;
+ULONG _pr_PostEventMsgId;
+#else
+UINT _pr_PostEventMsgId;
 static char *_pr_eventWindowClass = "NSPR:EventWindow";
+#endif
 #endif
 
 /*******************************************************************************
@@ -537,23 +550,32 @@ _pl_NativeNotify(PLEventQueue* self)
 	self->notifyCount++;
     return (count == 1) ? PR_SUCCESS : PR_FAILURE;
 
-#elif defined(XP_PC) && ( defined(WINNT) || defined(WIN95) || defined(WIN16))
+#elif defined(XP_PC)
     /*
     ** Post a message to the NSPR window on the main thread requesting 
     ** it to process the pending events. This is only necessary for the
     ** main event queue, since the main thread is waiting for OS events.
     */
+#ifndef XP_OS2
     if (self == _pr_main_event_queue) {
        PostMessage( _pr_eventReceiverWindow, _pr_PostEventMsgId,
                       (WPARAM)0, (LPARAM)self);
     }
     return PR_SUCCESS;
-
-#elif defined(XP_MAC)
+#else
+    if (self == _pr_main_event_queue) {
+       rc = WinPostMsg(_pr_eventReceiverWindow, _pr_PostEventMsgId,
+                       0, MPFROMP(self));
+    }
+    return (rc == TRUE) ? PR_SUCCESS : PR_FAILURE;
+#endif
+#else
+#if defined(XP_MAC)
 
 #pragma unused (self)
     return PR_SUCCESS;    /* XXX can fail? */
 
+#endif
 #endif
 }
 
@@ -650,7 +672,7 @@ BOOL WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 #endif
 
 
-#if defined(WIN16) || defined(_WIN32)
+#if defined(WIN16) || defined(_WIN32) || defined(XP_OS2)
 PR_IMPLEMENT(PLEventQueue *)
 PL_GetMainEventQueue()
 {
@@ -658,12 +680,16 @@ PL_GetMainEventQueue()
 
    return _pr_main_event_queue;
 }
-
+#ifdef XP_OS2
+MRESULT EXPENTRY
+_md_EventReceiverProc(HWND hwnd, ULONG uMsg, MPARAM wParam, MPARAM lParam)
+#else
 LRESULT CALLBACK 
 #if defined(WIN16)
 __loadds
 #endif
 _md_EventReceiverProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+#endif
 {
     if (_pr_PostEventMsgId == uMsg )
     {
@@ -673,15 +699,46 @@ _md_EventReceiverProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         if (queue == PL_GetMainEventQueue()) 
         {
             PR_ProcessPendingEvents(queue);
+#ifdef XP_OS2
+            return MRFROMLONG(TRUE);
+#else
             return TRUE;
+#endif
         }
     } 
+#ifdef XP_OS2
+    return WinDefWindowProc(hwnd, uMsg, wParam, lParam);
+#else
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
+#endif
 }
 
 PR_IMPLEMENT(void)
 PL_InitializeEventsLib(char *name)
 {
+#ifdef XP_OS2
+    PSZ _pr_eventWindowClass;
+
+    _pr_main_event_queue = PL_CreateEventQueue(name, PR_GetCurrentThread());
+
+    WinRegisterClass( WinQueryAnchorBlock( HWND_DESKTOP),
+                      _pr_eventWindowClass,
+                      _md_EventReceiverProc,
+                      0, 0);
+
+    _pr_eventReceiverWindow = WinCreateWindow( HWND_DESKTOP,
+                                               _pr_eventWindowClass,
+                                               "", 0,
+                                               0, 0, 0, 0,
+                                               HWND_DESKTOP,
+                                               HWND_TOP,
+                                               0,
+                                               NULL,
+                                               NULL);
+
+    _pr_PostEventMsgId = WinAddAtom(WinQuerySystemAtomTable(),
+                                    "NSPR_PostEvent");
+#else
     WNDCLASS wc;
 
     _pr_main_event_queue = PL_CreateEventQueue(name, PR_GetCurrentThread());
@@ -711,19 +768,20 @@ PL_InitializeEventsLib(char *name)
                                             NULL, NULL, _pr_hInstance,
                                             NULL);
     PR_ASSERT(_pr_eventReceiverWindow);
+#endif
 }
 #endif
 
-#if defined(_WIN32) || defined(WIN16)
+#if defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
 PR_IMPLEMENT(HWND)
 PR_GetEventReceiverWindow()
 {
-    if(_pr_eventReceiverWindow != NULL)
+    if(_pr_eventReceiverWindow != 0)
     {
 	return _pr_eventReceiverWindow;
     }
 
-    return NULL;
+    return 0;
 
 }
 #endif

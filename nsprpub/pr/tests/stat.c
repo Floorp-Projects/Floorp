@@ -18,7 +18,7 @@
 
 /*
  * Program to test different ways to get file info; right now it 
- * only works for solaris.
+ * only works for solaris and OS/2.
  *
  */
 #include "nspr.h"
@@ -29,8 +29,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef XP_OS2
+#include <io.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif
+
 #define DEFAULT_COUNT 100000
 PRInt32 count;
+
+#ifndef XP_PC
+char *filename = "/etc/passwd";
+#else
+char *filename = "..\\stat.c";
+#endif
 
 static void statPRStat(void)
 {
@@ -38,7 +50,7 @@ static void statPRStat(void)
     PRInt32 index = count;
  
     for (;index--;) {
-         PR_GetFileInfo("/etc/passwd", &finfo);
+         PR_GetFileInfo(filename, &finfo);
     }
 }
 
@@ -48,7 +60,7 @@ static void statStat(void)
     PRInt32 index = count;
  
     for (;index--;) {
-        stat("/etc/passwd", &finfo);
+        stat(filename, &finfo);
     }
 }
 

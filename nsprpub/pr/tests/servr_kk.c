@@ -67,7 +67,6 @@ int       ServerState;
 PRLock    *ServerStateCVLock;
 PRCondVar *ServerStateCV;
 
-#undef DEBUGPRINTS
 #ifdef DEBUGPRINTS
 #define DPRINTF printf
 #else

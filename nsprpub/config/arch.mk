@@ -101,6 +101,15 @@ ifeq ($(OS_ARCH)$(OS_RELEASE),OSF1V4.0)
 	endif
 endif
 
+#
+# Handle uname variants for OS/2.
+#
+
+ifeq ($(OS_ARCH),OS_2)
+	OS_ARCH		:= OS2
+	OS_RELEASE	:= 4.0
+endif
+
 #######################################################################
 # Master "Core Components" macros for getting the OS target           #
 #######################################################################
@@ -135,7 +144,7 @@ ifeq ($(OS_ARCH),Windows_95)
 	OS_ARCH   := Windows_NT
 	OS_TARGET := WIN95
 endif
-ifeq ($(OS_ARCH), OS2)
+ifeq ($(OS_ARCH),OS2)
 	OS_ARCH   := WINNT
 	OS_TARGET := OS2
 endif
@@ -145,7 +154,11 @@ endif
 #
 
 ifeq ($(OS_ARCH), WINNT)
-	CPU_ARCH := $(shell uname -p)
+	ifneq ($(subst /,_,$(shell uname -s)),OS_2)
+		CPU_ARCH := $(shell uname -p)
+	else
+		CPU_ARCH := $(shell uname -m)
+	endif
 	ifeq ($(CPU_ARCH),I386)
 		CPU_ARCH = x86
 	endif

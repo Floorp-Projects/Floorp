@@ -199,7 +199,7 @@ _server_thread(void *arg_id)
 			goto done;
 		}
 #ifdef DEBUG
-	fprintf(stdout, "server thread %d got connection\n", *id, newsock);
+	fprintf(stdout, "server thread %d got connection %d\n", *id, newsock);
 #endif
 
 
@@ -432,12 +432,12 @@ static void Measure(void (*func)(void), const char *msg)
 
 main(int argc, char **argv)
 {
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_OS2_EMX)
 	int opt;
 	extern char *optarg;
 #endif
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_OS2_EMX)
 	while ( (opt = getopt(argc, argv, "c:s:i:t:v")) != EOF) {
 		switch(opt) {
 			case 'i':
