@@ -1793,7 +1793,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetValue(nsPluginManagerVariable aVariable, void
 
   NS_ENSURE_ARG_POINTER(aValue);
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(MACOSX)
   if (nsPluginManagerVariable_XDisplay == aVariable) {
     Display** value = NS_REINTERPRET_CAST(Display**, aValue);
 #if defined(MOZ_WIDGET_GTK)
