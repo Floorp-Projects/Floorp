@@ -43,6 +43,9 @@ LD_LIBS += \
 	network \
 	netlib \
 	xpfc10 \
+        $(NATIVE_MSG_COMM_LIB) \
+        $(NATIVE_SMTP_LIB) \
+        $(NATIVE_MIME_LIB) \
 	$(NATIVE_RAPTOR_WIDGET) \
 	calui10 \
 	calparser10 \
