@@ -18,13 +18,11 @@
 #ifndef nsIAnchoredItems_h___
 #define nsIAnchoredItems_h___
 
-#include <stdio.h>
-#include "nsISupports.h"
+#include "nsIFrame.h"
 
-// IID for the nsIAnchoredItems interface {7327A0A0-BC8D-11d1-8539-00A02468FAB6}
-#define NS_IANCHOREDITEMS_IID         \
-{ 0x7327a0a0, 0xbc8d, 0x11d1, \
-  {0x85, 0x39, 0x0, 0xa0, 0x24, 0x68, 0xfa, 0xb6}}
+// 7327a0a0-bc8d-11d1-8539-00a02468fab6
+#define NS_IANCHORED_ITEMS_IID \
+ { 0x7327a0a0, 0xbc8d, 0x11d1, {0x85, 0x39, 0x0, 0xa0, 0x24, 0x68, 0xfa, 0xb6}}
 
 /**
  * An interface for managing anchored items. Note that this interface is not
@@ -36,8 +34,9 @@ public:
   enum AnchoringPosition {anHTMLFloater};
 
   /**
-   * Request to add an anchored item to this geometric parent. This is for handling
-   * anchored items that are not displayed inline (at the current point).
+   * Request to add an anchored item to this geometric parent. This
+   * is for handling anchored items that are not displayed inline (at
+   * the current point).
    */
   virtual void  AddAnchoredItem(nsIFrame*         aAnchoredItem,
                                 AnchoringPosition aPosition,
@@ -46,7 +45,7 @@ public:
  /**
   * Called to remove an anchored item, most likely because the associated
   * piece of content has been removed.
-  **/
+  */
   virtual void RemoveAnchoredItem(nsIFrame* aAnchoredItem) = 0;
 };
 
