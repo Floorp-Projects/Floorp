@@ -176,7 +176,7 @@ nsOutlinerColumn::nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame)
     const nsStyleVisibility* vis = 
       (const nsStyleVisibility*)styleContext->GetStyleData(eStyleStruct_Visibility);
     if (vis->mDirection == NS_STYLE_DIRECTION_RTL)
-      mCropStyle = mCropStyle - 2; // Right becomes left, left becomes right.
+      mCropStyle = 2 - mCropStyle; // Right becomes left, left becomes right.
   }
 
   // Cache our text alignment policy.
