@@ -43,7 +43,7 @@ CPPSRCS		= \
 		nsCP936ToUnicode.cpp \
 		nsUnicodeToCP936.cpp \
 		nsUCvCnSupport.cpp \
-		nsUCvCnDll.cpp \
+		nsUCvCnModule.cpp \
 		$(NULL)
 
 EXPORTS		= nsUCvCnCID.h
