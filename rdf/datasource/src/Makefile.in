@@ -30,6 +30,7 @@ CPPSRCS =				\
 	nsBookmarkDataSource.cpp	\
 	nsFileSystemDataSource.cpp	\
 	nsFindDataSource.cpp		\
+	nsFTPDataSource.cpp		\
 	nsHistoryDataSource.cpp		\
 	nsXULContentSink.cpp		\
 	nsXULDataSource.cpp		\

@@ -24,6 +24,7 @@ EXPORTS	= \
         nsIHistoryDataSource.h  \
         nsIRDFFileSystem.h      \
         nsIRDFFind.h		\
+        nsIRDFFTP.h		\
         nsIXULContentSink.h     \
 	$(NULL)
 
