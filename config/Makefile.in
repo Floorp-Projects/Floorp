@@ -42,6 +42,10 @@ TARGETS		= $(HOST_PROGRAM) $(PROGRAM) $(PLSRCS:.pl=)
 # Generate the build number on the fly.
 TARGETS		+= build_number nsBuildID.h
 
+ifdef USE_ELF_DYNSTR_GC
+TARGETS		+= elf-dynstr-gc
+endif
+
 # IMPORTANT: Disable NSBUILDROOT for this directory only, otherwise we have
 # a recursive rule for finding nsinstall and the Perl scripts.
 ifdef NSBUILDROOT
@@ -90,9 +94,11 @@ nsBuildID.h: nsBuildID.h.in build_number
 	$(RM) $@
 	$(PERL) -I$(srcdir) $(srcdir)/aboutime.pl $@ build_number $<
 
-# clear record of installed chrome on complete rebuild
-#install::
-#	$(RM) $(DIST)/bin/chrome/installed-chrome.txt
+elf-dynstr-gc: elf-dynstr-gc.c Makefile Makefile.in
+	$(CC) $(COMPILE_CFLAGS) $(GLIB_CFLAGS) $(GLIB_LIBS) $(LDFLAGS) -o $@ $<
+
+install:: elf-dynstr-gc
+	$(INSTALL) -m 555 elf-dynstr-gc $(DIST)/bin
 
 FORCE:
 
