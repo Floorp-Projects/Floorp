@@ -219,6 +219,8 @@ extern "C"
 static PRBool mime_use_quoted_printable_p = TRUE;
 static PRBool mime_headers_use_quoted_printable_p = FALSE;
 
+static const char* pSmtpServer = NULL;
+
 #ifdef XP_MAC
 
 XP_BEGIN_PROTOS
@@ -339,10 +341,12 @@ nsMsgSendMimeDeliveryState::~nsMsgSendMimeDeliveryState()
 /* the following macro actually implement addref, release and query interface for our component. */
 NS_IMPL_ISUPPORTS(nsMsgSendMimeDeliveryState, nsIMsgSend::IID());
 
-nsresult nsMsgSendMimeDeliveryState::SendMessage(nsIMsgCompFields *fields)
+nsresult nsMsgSendMimeDeliveryState::SendMessage(const nsIMsgCompFields *fields, const char *smtp)
 {
 	const char* pBody;
 	PRInt32 nBodyLength;
+
+	pSmtpServer = smtp;
 
 	if (fields) {
 		pBody = ((nsMsgCompFields *)fields)->GetBody();
@@ -355,8 +359,8 @@ nsresult nsMsgSendMimeDeliveryState::SendMessage(nsIMsgCompFields *fields)
 		printf("subject: %s\n", ((nsMsgCompFields *)fields)->GetSubject());
 		printf("\n%s", pBody);
 
-		msg_StartMessageDeliveryWithAttachments (NULL, NULL, (nsMsgCompFields *)fields,
-			PR_FALSE, PR_FALSE, MSG_DeliverNow, TEXT_PLAIN, pBody, nBodyLength, NULL, NULL, NULL);
+		msg_StartMessageDeliveryWithAttachments (NULL, NULL, (nsMsgCompFields *)fields, PR_FALSE,
+			PR_FALSE, MSG_DeliverNow, TEXT_PLAIN, pBody, nBodyLength, NULL, NULL, NULL, smtp);
 	}
 	return NS_OK;
 }
@@ -4604,8 +4608,8 @@ msg_StartMessageDeliveryWithAttachments (MSG_Pane *pane,
 										      (MWContext *context,
 											   void *fe_data,
 											   int status,
-											   const char *error_message)
-											   )
+											   const char *error_message),
+										  const char *smtp)
 {
   nsMsgSendMimeDeliveryState::StartMessageDelivery(pane, fe_data, fields,
 							  digest_p, dont_deliver_p, mode,
@@ -4878,80 +4882,50 @@ static void mime_deliver_as_mail_exit (URL_Struct *, int status, MWContext *);
 static void mime_deliver_as_news_exit (URL_Struct *url, int status,
 									   MWContext *);
 
-void
-nsMsgSendMimeDeliveryState::DeliverFileAsMail ()
+void nsMsgSendMimeDeliveryState::DeliverFileAsMail ()
 {
-  char *buf, *buf2;
-  URL_Struct *url;
+	char *buf, *buf2;
+	URL_Struct *url;
 
-  FE_Progress (GetContext(), XP_GetString(MK_MSG_DELIV_MAIL));
+	FE_Progress (GetContext(), XP_GetString(MK_MSG_DELIV_MAIL));
 
-  buf = (char *) PR_MALLOC ((m_fields->GetTo() ? PL_strlen (m_fields->GetTo())  + 10 : 0) +
+	buf = (char *) PR_MALLOC ((m_fields->GetTo() ? PL_strlen (m_fields->GetTo())  + 10 : 0) +
 						   (m_fields->GetCc() ? PL_strlen (m_fields->GetCc())  + 10 : 0) +
 						   (m_fields->GetBcc() ? PL_strlen (m_fields->GetBcc()) + 10 : 0) +
 						   10);
-  if (! buf)
-	{
-	  Fail (MK_OUT_OF_MEMORY, 0);
-	  return;
-	}
-  PL_strcpy (buf, "");
-  buf2 = buf + PL_strlen (buf);
-  if (m_fields->GetTo())
-	{
-	  PL_strcat (buf2, m_fields->GetTo());
-	}
-  if (m_fields->GetCc())
-	{
-	  if (*buf2) PL_strcat (buf2, ",");
-	  PL_strcat (buf2, m_fields->GetCc());
-	}
-  if (m_fields->GetBcc())
-	{
-	  if (*buf2) PL_strcat (buf2, ",");
-	  PL_strcat (buf2, m_fields->GetBcc());
+	if (! buf) {
+		Fail (MK_OUT_OF_MEMORY, 0);
+		return;
 	}
 
-  nsISmtpService * smtpService = nsnull;
-  nsresult rv = nsServiceManager::GetService(kSmtpServiceCID, nsISmtpService::IID(), (nsISupports **)&smtpService);
-
-  nsFilePath filePath (m_msg_file_name ? m_msg_file_name : "");
-
-  if (NS_SUCCEEDED(rv) && smtpService)
-  {	
-	  // mscott --> eventually we want to pass buf (minus the mailto: part) into here....
-	  rv = smtpService->SendMailMessage(filePath, "", m_fields->GetFrom(), buf, nsnull);
-	  nsServiceManager::ReleaseService(kSmtpServiceCID, smtpService);
-  }
-
-  PR_FREEIF(buf); // free the buf because we are done with it....
-
-#if 0 //JFD
-  url = NET_CreateURLStruct (buf, NET_DONT_RELOAD);
-  PR_Free (buf);
-  if (! url)
-	{
-	  Fail (MK_OUT_OF_MEMORY, 0);
-	  return;
+	PL_strcpy (buf, "");
+	buf2 = buf + PL_strlen (buf);
+	if (m_fields->GetTo())
+		PL_strcat (buf2, m_fields->GetTo());
+	if (m_fields->GetCc()) {
+		if (*buf2) PL_strcat (buf2, ",");
+			PL_strcat (buf2, m_fields->GetCc());
+	}
+	if (m_fields->GetBcc()) {
+		if (*buf2) PL_strcat (buf2, ",");
+			PL_strcat (buf2, m_fields->GetBcc());
 	}
 
-  /* put the filename of the message into the post data field and set a flag
-	 in the URL struct to specify that it is a file
-   */
-  url->post_data = PL_strdup(m_msg_file_name);
-  url->post_data_size = PL_strlen(url->post_data);
-  url->post_data_is_file = TRUE;
-  url->method = URL_POST_METHOD;
-  url->fe_data = this;
-  url->internal_url = TRUE;
+	nsISmtpService * smtpService = nsnull;
+	nsFilePath filePath (m_msg_file_name ? m_msg_file_name : "");
 
-  url->msg_pane = m_pane;
+	nsresult rv = nsServiceManager::GetService(kSmtpServiceCID, nsISmtpService::IID(), (nsISupports **)&smtpService);
+	if (NS_SUCCEEDED(rv) && smtpService)
+	{	
+		// mscott --> eventually we want to pass buf (minus the mailto: part) into here....
+		if (pSmtpServer)
+			rv = smtpService->SendMailMessage(filePath, pSmtpServer, m_fields->GetFrom(), buf, nsnull);
+		else
+			rv = smtpService->SendMailMessage(filePath, "", m_fields->GetFrom(), buf, nsnull);
+		nsServiceManager::ReleaseService(kSmtpServiceCID, smtpService);
+	}
 
-  /* We can ignore the return value of NET_GetURL() because we have
-	 handled the error in mime_deliver_as_mail_exit(). */
-  
-  MSG_UrlQueue::AddUrlToPane(url, mime_deliver_as_mail_exit, m_pane, TRUE);
-#endif //JFD
+	PR_FREEIF(buf); // free the buf because we are done with it....
 }
 
 
