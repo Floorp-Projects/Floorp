@@ -1,0 +1,17 @@
+TransforMiiX (TM) 
+(C) Copyright 1999 The MITRE Corporation, Keith Visco. All rights reserved.
+
+The current target working draft is the 19990813 XSLT Working Draft, which
+can be found at http://www.w3.org/1999/08/WD-xslt-19990813. XPath 
+implementation is also 19990813 version.
+
+What's Remaining?
+
+-- I18N support for sorting and numbering
+-- Sorting for xsl:for-each and xsl:apply-templates
+-- Stylesheet inclusion using xsl:import (xsl:include now works)
+-- finish XPath function implementations
+-- XSLT additional functions
+-- convert result-ns, and indent-result to new xsl:output
+-- Extensions
+-- clean up Namespace handling
