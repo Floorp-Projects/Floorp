@@ -102,4 +102,4 @@ include $(topsrcdir)/config/rules.mk
 export:: $(STRING_CSRCS) $(EMBED_STRING_CSRCS)
 	$(INSTALL) $^ .
 
-DEFINES		+= -DXPCOM_GLUE
+DEFINES		+= -DXPCOM_GLUE -DEMBEDSTRING_STANDALONE
