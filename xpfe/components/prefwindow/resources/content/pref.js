@@ -17,6 +17,7 @@
  *
  * Contributor(s):
  *   Ben "Count XULula" Goodger <rgoodger@ihug.co.nz>
+ *   Syd Logan <syd@netscape.com>
  */
 
 window.doneLoading = false; 
@@ -41,8 +42,14 @@ function PrefWindow( frame_id )
     
   // member functions
   this.onload         = PREF_onload;
-  this.onok           = PREF_onok;
-  this.oncancel       = PREF_oncancel;
+  this.onok = PREF_onok;
+  this.AddOnOK = PREF_AddOnOK;
+  this.AddOnCancel = PREF_AddOnCancel;
+  this.onokUser           = new Array;
+  this.okCount = 0;
+  this.oncancel = PREF_oncancel;
+  this.oncancelUser       = new Array;
+  this.cancelCount = 0;
   this.SwitchPage     = PREF_SwitchPage;
   this.onpageload     = PREF_onpageload;
   this.DoSavePrefs    = PREF_DoSavePrefs;
@@ -77,12 +84,26 @@ function PREF_onload()
   
 }
 
+function PREF_onok()
+{
+	for ( var i = 0; i < window.handle.okCount; i++ )
+		window.handle.onokUser[i]();
+	PREF_onokprivate();
+}
+
+function PREF_oncancel()
+{
+	for ( var i = 0; i < window.handle.cancelCount; i++ )
+		window.handle.oncancelUser[i]();
+	PREF_oncancelprivate();
+}
+
 /** void onok();
  *  - purpose: save all pref panel data and quit pref dialog
  *  - in:      nothing;
  *  - out:     nothing;
  **/
-function PREF_onok()
+function PREF_onokprivate()
 {
   var url = document.getElementById( window.handle.contentFrame ).getAttribute("src");
   var tag = window.handle.wsm.GetTagFromURL( url, window.handle.folder.content, ".xul" );
@@ -93,10 +114,22 @@ function PREF_onok()
   window.close();
 }
 
-function PREF_oncancel()
+function PREF_oncancelprivate()
 {
   window.opener.prefWindow = 0;
   window.close();
+}
+
+function PREF_AddOnOK( func )
+{
+  this.onokUser[this.okCount] = func;
+  this.okCount += 1;
+}
+
+function PREF_AddOnCancel( func )
+{
+  this.oncancelUser[this.cancelCount] = func;
+  this.cancelCount += 1;
 }
 
 function PREF_DoSavePrefs()
