@@ -144,6 +144,14 @@ nsFontMetricsPango::nsFontMetricsPango()
     mRTLPangoContext = nsnull;
     mPangoAttrList = nsnull;
     mIsRTL = PR_FALSE;
+
+    static PRBool initialized = PR_FALSE;
+    if (initialized)
+        return;
+
+    // Initialized the custom decoders
+    if (!mozilla_decoders_init())
+        initialized = PR_TRUE;
 }
 
 nsFontMetricsPango::~nsFontMetricsPango()
@@ -925,7 +933,7 @@ nsFontMetricsPango::FamilyExists(nsIDeviceContext *aDevice,
     pango_context_list_families(context, &familyList, &n);
 
     for (int i=0; i < n; i++) {
-        const char *tmpname = pango_font_family_get_name(familyList[n]);
+        const char *tmpname = pango_font_family_get_name(familyList[i]);
         if (!Compare(nsDependentCString(tmpname), name,
                      nsCaseInsensitiveCStringComparator())) {
             rv = NS_OK;

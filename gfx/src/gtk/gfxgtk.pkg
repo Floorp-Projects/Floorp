@@ -7,3 +7,7 @@ dist/bin/components/@SHARED_LIBRARY@
 #if MOZ_ENABLE_XFT
 dist/bin/res/fonts/fontEncoding.properties
 #endif
+#if MOZ_ENABLE_PANGO
+dist/bin/res/fonts/pangoFontEncoding.properties
+#endif
+

@@ -182,10 +182,10 @@ EXTRA_DSO_LDOPTS += \
 endif
 
 ifdef MOZ_ENABLE_XFT
-libs:: fontEncoding.properties
+libs:: fontEncoding.properties pangoFontEncoding.properties
 	$(INSTALL) $^ $(DIST)/bin/res/fonts
  
-install:: fontEncoding.properties
+install:: fontEncoding.properties pangoFontEncoding.properties
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res/fonts
 endif
 
