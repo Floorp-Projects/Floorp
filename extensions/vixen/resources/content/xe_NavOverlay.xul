@@ -7,7 +7,7 @@
 <![CDATA[
 function loadXULEdit()
 {
-  openDialog("chrome://vixen/content/xuledit.xul", "", "chrome,resizable,dialog=no");
+  openDialog("chrome://vixen/content/vixen.xul", "", "chrome,resizable,dialog=no");
 }
 ]]>
 </script>
