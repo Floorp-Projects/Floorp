@@ -23,6 +23,7 @@
 #include "ctxtfunc.h"
 #include "xp_list.h"
 
+#include "nsString.h"
 #include "nsIStreamListener.h"
 #include "nsNetStream.h"
 
@@ -57,7 +58,9 @@ PRIVATE void stub_GraphProgressInit(MWContext  *context,
          */
         pConn = (nsConnectionInfo *)URL_s->fe_data;
         if ((NULL != pConn) && (NULL != pConn->pConsumer)) {
-            pConn->pConsumer->OnProgress(0, content_length, NULL);
+            nsAutoString status;
+
+            pConn->pConsumer->OnProgress(0, content_length, status);
         }
     }
 }
@@ -78,7 +81,9 @@ PRIVATE void stub_GraphProgress(MWContext  *context,
          */
         pConn = (nsConnectionInfo *)URL_s->fe_data;
         if ((NULL != pConn) && (NULL != pConn->pConsumer)) {
-            pConn->pConsumer->OnProgress(bytes_received, content_length, NULL);
+            nsAutoString status;
+
+            pConn->pConsumer->OnProgress(bytes_received, content_length, status);
         }
     }
 }
@@ -103,7 +108,9 @@ PRIVATE void stub_GraphProgressDestroy(MWContext  *context,
          */
         pConn = (nsConnectionInfo *)URL_s->fe_data;
         if ((NULL != pConn) && (NULL != pConn->pConsumer)) {
-            pConn->pConsumer->OnProgress(total_bytes_read, content_length, NULL);
+            nsAutoString status;
+
+            pConn->pConsumer->OnProgress(total_bytes_read, content_length, status);
         }
     }
 }
@@ -312,7 +319,9 @@ void stub_complete(NET_StreamClass *stream)
 
     /* Notify the Data Consumer that the Binding has completed... */
     if (pConn->pConsumer) {
-        pConn->pConsumer->OnStopBinding(NS_BINDING_SUCCEEDED, nsnull);
+        nsAutoString status;
+
+        pConn->pConsumer->OnStopBinding(NS_BINDING_SUCCEEDED, status);
         pConn->pConsumer->Release();
         pConn->pConsumer = NULL;
     }
@@ -340,7 +349,9 @@ void stub_abort(NET_StreamClass *stream, int status)
      * abort...
      */
     if (pConn->pConsumer) {
-        pConn->pConsumer->OnStopBinding(NS_BINDING_ABORTED, nsnull);
+        nsAutoString status;
+
+        pConn->pConsumer->OnStopBinding(NS_BINDING_ABORTED, status);
         pConn->pConsumer->Release();
         pConn->pConsumer = NULL;
     }
@@ -471,7 +482,7 @@ NET_StreamBuilder  (FO_Present_Types format_out,
             printf("+++ Created a stream for %s\n", URL_s->address);
 #endif
             if (pConn->pConsumer) {
-                pConn->pConsumer->OnStartBinding();
+                pConn->pConsumer->OnStartBinding(URL_s->content_type);
             }
         }
     }

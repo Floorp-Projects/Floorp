@@ -55,10 +55,10 @@ public:
     TestConsumer();
 
     NS_IMETHOD GetBindInfo(void);
-    NS_IMETHOD OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const char *msg);
-    NS_IMETHOD OnStartBinding(void);
+    NS_IMETHOD OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const nsString& aMsg);
+    NS_IMETHOD OnStartBinding(const char *aContentType);
     NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream, PRInt32 length);
-    NS_IMETHOD OnStopBinding(PRInt32 status, const char *msg);
+    NS_IMETHOD OnStopBinding(PRInt32 status, const nsString& aMsg);
 
 protected:
     ~TestConsumer();
@@ -92,11 +92,14 @@ NS_IMETHODIMP TestConsumer::GetBindInfo(void)
     return 0;
 }
 
-NS_IMETHODIMP TestConsumer::OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const char *msg)
+NS_IMETHODIMP TestConsumer::OnProgress(PRInt32 Progress, PRInt32 ProgressMax, 
+                                       const nsString& aMsg)
 {
     if (bTraceEnabled) {
-        if (msg) {
-            printf("\n+++ TestConsumer::OnProgress: status %s\n", msg);
+        if (aMsg.Length()) {
+            printf("\n+++ TestConsumer::OnProgress: status ");
+            fputs(aMsg, stdout);
+            fputs("\n", stdout);
         } else {
             printf("\n+++ TestConsumer::OnProgress: %d of total %d\n", Progress, ProgressMax);
         }
@@ -105,10 +108,10 @@ NS_IMETHODIMP TestConsumer::OnProgress(PRInt32 Progress, PRInt32 ProgressMax, co
     return 0;
 }
 
-NS_IMETHODIMP TestConsumer::OnStartBinding(void)
+NS_IMETHODIMP TestConsumer::OnStartBinding(const char *aContentType)
 {
     if (bTraceEnabled) {
-        printf("\n+++ TestConsumer::OnStartBinding\n");
+        printf("\n+++ TestConsumer::OnStartBinding: Content type: %s\n", aContentType);
     }
 
     return 0;
@@ -138,7 +141,7 @@ NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIInputStream *pIStream, PRInt32 le
 }
 
 
-NS_IMETHODIMP TestConsumer::OnStopBinding(PRInt32 status, const char *msg)
+NS_IMETHODIMP TestConsumer::OnStopBinding(PRInt32 status, const nsString& aMsg)
 {
     if (bTraceEnabled) {
         printf("\n+++ TestConsumer::OnStopBinding... status: %d\n", status);

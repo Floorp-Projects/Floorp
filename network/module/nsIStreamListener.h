@@ -24,7 +24,7 @@
 
 /* forward declaration */
 class nsIInputStream;
-
+class nsString;
 
 /* 45d234d0-c6c9-11d1-bea2-00805f8a66dc */
 #define NS_ISTREAMNOTIFICATION_IID   \
@@ -54,7 +54,8 @@ public:
     /**
      * Notify the client that progress as occurred for the URL load.<BR>
      */
-    NS_IMETHOD OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const char *msg) = 0;
+    NS_IMETHOD OnProgress(PRInt32 aProgress, PRInt32 aProgressMax, 
+                          const nsString &aMsg) = 0;
 
     /**
      * Notify the client that the URL has started to load.  This method is
@@ -63,7 +64,7 @@ public:
      * @return The return value is currently ignored.  In the future it may be
      * used to cancel the URL load..
      */
-    NS_IMETHOD OnStartBinding(void) = 0;
+    NS_IMETHOD OnStartBinding(const char *aContentType) = 0;
 
     /**
      * Notify the client that data is available in the input stream.  This
@@ -75,7 +76,8 @@ public:
      * @param length    The amount of data that was just pushed into the stream.
      * @return The return value is currently ignored.
      */
-    NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream, PRInt32 length)   = 0;
+    NS_IMETHOD OnDataAvailable(nsIInputStream *aIStream, 
+                               PRInt32 aLength)   = 0;
 
     /**
      * Notify the client that the URL has finished loading.  This method is 
@@ -88,7 +90,7 @@ public:
      * @param msg   A text string describing the error.
      * @return The return value is currently ignored.
      */
-    NS_IMETHOD OnStopBinding(PRInt32 status, const char *msg) = 0;
+    NS_IMETHOD OnStopBinding(PRInt32 aStatus, const nsString &aMsg) = 0;
 };
 
 /* Generic status codes for OnStopBinding */

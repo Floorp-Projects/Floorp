@@ -249,10 +249,10 @@ friend class CTokenHandler;
       // net lib to let us know about our inputstream.
       //*********************************************
     NS_IMETHOD GetBindInfo(void);
-    NS_IMETHOD OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const char *msg);
-    NS_IMETHOD OnStartBinding(void);
+    NS_IMETHOD OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const nsString& aMmsg);
+    NS_IMETHOD OnStartBinding(const char *aContentType);
     NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream, PRInt32 length);
-    NS_IMETHOD OnStopBinding(PRInt32 status, const char *msg);
+    NS_IMETHOD OnStopBinding(PRInt32 status, const nsString& aMsg);
 
 protected:
 

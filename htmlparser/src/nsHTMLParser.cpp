@@ -1629,7 +1629,7 @@ nsresult nsHTMLParser::GetBindInfo(void){
  */
 nsresult
 nsHTMLParser::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
-                         const char *aMsg)
+                         const nsString& aMsg)
 {
   nsresult result=0;
   if (nsnull != mListener) {
@@ -1645,9 +1645,9 @@ nsHTMLParser::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
  *  @param   
  *  @return  
  */
-nsresult nsHTMLParser::OnStartBinding(void){
+nsresult nsHTMLParser::OnStartBinding(const char *aContentType){
   if (nsnull != mListener) {
-    mListener->OnStartBinding();
+    mListener->OnStartBinding(aContentType);
   }
   nsresult result=WillBuildModel();
   if(!mTransferBuffer) {
@@ -1710,10 +1710,10 @@ nsresult nsHTMLParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length)
  *  @param   
  *  @return  
  */
-nsresult nsHTMLParser::OnStopBinding(PRInt32 status, const char *msg){
+nsresult nsHTMLParser::OnStopBinding(PRInt32 status, const nsString& aMsg){
   nsresult result=DidBuildModel(status);
   if (nsnull != mListener) {
-    mListener->OnStopBinding(status, msg);
+    mListener->OnStopBinding(status, aMsg);
   }
   return result;
 }
