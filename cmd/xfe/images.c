@@ -41,6 +41,8 @@
    know the image library won't support at all. */
 Boolean fe_ImagesCantWork = False;
 
+
+
 /*
  * Layout has moved this image to a new location, and it may get
  * moved again before it is next displayed, so set valid to
@@ -201,15 +203,6 @@ _IMGCB_NewPixmap(IMGCB* img_cb, jint op, void *dpy_cx, jint width, jint height,
     pixmap_depth = fe_VisualPixmapDepth (dpy, visual);
 
 
-    /* Let the FE Context know, what type of pixmap we are creating */
-    if (fec->NewPixmap)
-    {
-        if (image)
-           fec->NewPixmap(context, image, False);
-        else if (mask)
-          fec->NewPixmap(context, image, True);
-    }
-
     /* Override the image and mask dimensions with the requested target
        dimensions.  This instructs the image library to do any necessary
        scaling. */
@@ -270,6 +263,16 @@ _IMGCB_NewPixmap(IMGCB* img_cb, jint op, void *dpy_cx, jint width, jint height,
         mask_client_data->dpy = dpy;
         mask->client_data = (void *)mask_client_data;
     }
+
+    /* Let the FE Context know, what type of pixmap we are creating */
+    if (fec->NewPixmap)
+    {
+        if (image)
+           fec->NewPixmap(context, image, False);
+        else if (mask)
+          fec->NewPixmap(context, mask, True);
+    }
+
 }
 
 
@@ -472,7 +475,7 @@ fe_FillTiledPixmapRectFunc(void *closure, XP_Rect *clip_rect)
 
 /* Generate a tiled mask for the case where the fe_Drawable has a clip
    region.  Offset arguments are wrt the origin of the tiled mask. */
-Pixmap
+static Pixmap
 fe_TiledMaskWithClipRegion(Display *dpy, Drawable drawable,
                            Pixmap mask_x_pixmap,
                            unsigned int width, unsigned int height,
@@ -602,7 +605,7 @@ fe_FillPixmapRectFunc(void *closure, XP_Rect *clip_rect)
 /* Draw the masked image for each rectangle in the compositor's clip region.
    x_offset and y_offset are wrt the image origin, while rect_x_offset and
    rect_y_offset are wrt the drawable origin. */
-void
+static void
 fe_DrawMaskedImageWithClipRegion(Display *dpy, Drawable drawable,
                                  Pixmap img_x_pixmap, Pixmap mask_x_pixmap,
                                  unsigned int width, unsigned int height,
@@ -651,13 +654,162 @@ _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
                      jint y_offset, jint width, jint height, jint req_w, jint req_h)
 {
 
-     MWContext *pContext = (MWContext *)dpy_cx;
-     fe_ContextData  *fec = (pContext)->fe.data;
-                            /* (fe_ContextData *) pContext->fe.data; */
+    int32 img_x_offset, img_y_offset;   /* Offset of image in drawable. */
+    int32 rect_x_offset, rect_y_offset; /* Offset of update rect in
+                                           drawable. */
+    NI_PixmapHeader *img_header = &image->header;
+    uint32 img_width = img_header->width;     /* Image width. */
+    uint32 img_height = img_header->height;   /* Image height. */
+    MWContext *context = (MWContext *)dpy_cx; /* XXX This should be the FE's
+                                                 display context. */
+    Widget widget = CONTEXT_WIDGET(context);
+    fe_Drawable *fe_drawable = CONTEXT_DATA(context)->drawable;
+    Drawable drawable = fe_drawable->xdrawable;
+    Display *dpy = XtDisplay(widget);
+    Pixmap img_x_pixmap, mask_x_pixmap;
+    fe_PixmapClientData *img_client_data, *mask_client_data;
+    GC gc;
+    XGCValues gcv;
+    unsigned long flags;
+    XP_Bool tiling_required = FALSE;
+    fe_ContextData * fec =  CONTEXT_DATA(context);
+    
+    /* Check for zero display area. */
+    if (width == 0 || height == 0)
+        return;
 
-     /* Call the context specific displayPixmap function */
-     if (fec->DisplayPixmap)
-       fec->DisplayPixmap( pContext, image, mask, x, y, x_offset, y_offset, req_w, req_h);
+    /* Retrieve the server pixmaps. */
+    img_client_data = (fe_PixmapClientData *)image->client_data;
+    if (!img_client_data)
+        return;
+    img_x_pixmap = img_client_data->pixmap;
+    if (!img_x_pixmap)
+        return;
+    if (mask) {
+        mask_client_data = (fe_PixmapClientData *)mask->client_data;
+        mask_x_pixmap = mask_client_data->pixmap;
+    }
+
+
+    if (context->type == MWContextIcon) {
+      if (fec->DisplayPixmap)
+        fec->DisplayPixmap( context, image, mask, (PRInt32)width, (PRInt32)height);
+      return;
+    }
+
+    /* Determine whether tiling is required. */
+    if ((x_offset + width > img_width) || (y_offset + height > img_height))
+        tiling_required = TRUE;
+
+    /* Compute the offset into the drawable of the image origin. */
+    img_x_offset = x - CONTEXT_DATA(context)->document_x +
+        fe_drawable->x_origin;
+    img_y_offset = y - CONTEXT_DATA(context)->document_y +
+        fe_drawable->y_origin;
+
+    /* Compute the offset into the drawable for the area to be drawn. */
+    rect_x_offset = img_x_offset + x_offset;
+    rect_y_offset = img_y_offset + y_offset;
+
+    /* Do the actual drawing.  There are several cases to be dealt with:
+       transparent vs non-transparent, tiled vs non-tiled and clipped by
+       compositor's clip region vs not clipped. */
+    memset(&gcv, ~0, sizeof (XGCValues));
+    if (mask) {                 /* Image is transparent. */
+        if (tiling_required) {
+            /* Offsets are measured wrt the origin of the tiled mask to
+               be generated. */
+            int x_tile_offset = img_x_offset - rect_x_offset;
+            int y_tile_offset = img_y_offset - rect_y_offset;
+            Pixmap tmp_pixmap = 0;
+
+            /* Create the mask by tiling the mask_x_pixmap and computing
+               the intersection with the compositor's clip region. */
+            tmp_pixmap =
+                fe_TiledMaskWithClipRegion(dpy, drawable, mask_x_pixmap,
+                                           width, height, x_tile_offset,
+                                           y_tile_offset, -rect_x_offset,
+                                           -rect_y_offset,
+                                           fe_drawable->clip_region);
+            
+            /* Create the GC.  Don't attempt to get a GC from the GC cache
+               because we are using a temporary mask pixmap. */
+            gcv.fill_style = FillTiled;
+            gcv.tile = img_x_pixmap;
+            gcv.ts_x_origin = img_x_offset;
+            gcv.ts_y_origin = img_y_offset;
+            gcv.clip_mask = tmp_pixmap;
+            gcv.clip_x_origin = rect_x_offset;
+            gcv.clip_y_origin = rect_y_offset;
+            flags = GCFillStyle | GCTile | GCTileStipXOrigin |
+                GCTileStipYOrigin | GCClipMask | GCClipXOrigin | GCClipYOrigin;
+            gc = XCreateGC(dpy, drawable, flags, &gcv);
+
+            /* Draw the image (transparent and tiled.) */
+            XFillRectangle (dpy, drawable, gc, rect_x_offset, rect_y_offset,
+                            width, height);
+
+            /* Clean up. */
+            XFreeGC(dpy, gc);
+            XFreePixmap(dpy, tmp_pixmap);
+        }
+        else {                  /* Tiling not required. */
+            if (fe_drawable->clip_region) {
+                
+                /* Draw the image (transparent, non-tiled and with
+                   clip_region.)  x_offset and y_offset are wrt the image
+                   origin, while rect_x_offset and rect_y_offset are wrt the
+                   drawable origin. */
+                fe_DrawMaskedImageWithClipRegion(dpy, drawable, img_x_pixmap,
+                                                 mask_x_pixmap, width, height,
+                                                 img_x_offset, img_y_offset,
+                                                 x_offset, y_offset,
+                                                 fe_drawable->clip_region);
+            }
+            else {              /* No clip region. */
+                /* XXX transparent, non-tiled and no clip_region. */
+            }
+        }
+    }
+    else {                      /* Image is not transparent. */
+        if (tiling_required) {
+            /* Get the GC from the GC cache.  If the compositor has given us
+               a clip region, then the GC must have a matching clip mask. */
+            gcv.fill_style = FillTiled;
+            gcv.tile = img_x_pixmap;
+            gcv.ts_x_origin = img_x_offset;
+            gcv.ts_y_origin = img_y_offset;
+            flags = GCFillStyle | GCTile | GCTileStipXOrigin |
+                GCTileStipYOrigin;
+            if (fe_drawable->clip_region)
+                gc = fe_GetGCfromDW(dpy, drawable, flags, &gcv,
+                                    fe_drawable->clip_region);
+            else
+                gc = fe_GetGCfromDW(dpy, drawable, flags, &gcv, NULL);
+
+            /* Draw the image (opaque and tiled.) */
+            XFillRectangle (dpy, drawable, gc, rect_x_offset, rect_y_offset,
+                            width, height);  
+        }
+        else {                  /* Tiling not required. */
+            /* Get the GC from the GC cache.  If the compositor has given us
+               a clip region, then the GC must have a matching clip mask. */
+            gcv.function = GXcopy;
+            if (fe_drawable->clip_region)
+                gc = fe_GetGCfromDW(dpy, drawable, GCFunction,
+                                    &gcv, fe_drawable->clip_region);
+            else
+                gc = fe_GetGCfromDW(dpy, drawable, GCFunction, &gcv, NULL);
+ 
+            /* Draw the image (opaque and non-tiled.) */
+            XCopyArea (dpy, img_x_pixmap, drawable, gc, x_offset,
+                       y_offset, width, height, rect_x_offset, rect_y_offset);
+        }
+    }
+
+
+
+
 
 }
 

@@ -1643,7 +1643,7 @@ FE_MakeGridWindow (MWContext *old_context, void *history, int32 x, int32 y,
   CONTEXT_DATA (context)->grid_scrolling = scrolling;
 
   /* Set the image library callbacks */
-  CONTEXT_DATA(context)->DisplayPixmap = fe_DisplayPixmap;
+  CONTEXT_DATA(context)->DisplayPixmap = (DisplayPixmapPtr)NULL/* fe_DisplayPixmap */;
   CONTEXT_DATA(context)->NewPixmap = (NewPixmapPtr)NULL;
 
   /* FRAMES_HAVE_THEIR_OWN_COLORMAP was an unfinished

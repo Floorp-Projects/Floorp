@@ -113,8 +113,6 @@ typedef struct fe_Drawable
     FE_Region clip_region;
 } fe_Drawable;
 
-
-/* Client data for Imagelib callbacks */
 typedef struct fe_PixmapClientData {
     Pixmap pixmap;
     Display *dpy;
@@ -356,24 +354,6 @@ extern Pixmap fe_ToolbarPixmap (MWContext *context, int i, Boolean disabled_p,
 				Boolean urls_p);
 #endif
 
-/* Image rendering methods.  */
-extern Pixmap
-fe_TiledMaskWithClipRegion(Display *dpy, Drawable drawable,
-                           Pixmap mask_x_pixmap,
-                           unsigned int width, unsigned int height,
-                           int x_tile_offset, int y_tile_offset,
-                           int x_clip_offset, int y_clip_offset,
-                           Region clip_region);
-
-extern void
-fe_DrawMaskedImageWithClipRegion(Display *dpy, Drawable drawable,
-                                 Pixmap img_x_pixmap, Pixmap mask_x_pixmap,
-                                 unsigned int width, unsigned int height,
-                                 int img_x_offset, int img_y_offset,
-                                 int x_offset, int y_offset,
-                                 Region clip_region);
-
-
 
 #ifndef NO_SECURITY
 extern Pixmap fe_SecurityPixmap (MWContext *context,
@@ -503,7 +483,7 @@ XP_END_PROTOS
 
 #include "xp_str.h"
 
-  typedef void (* DisplayPixmapPtr)(MWContext * context, IL_Pixmap * image, IL_Pixmap * mask, PRInt32  x, PRInt32  y, PRInt32  x_offset,  PRInt32 y_offset, PRInt32  width, PRInt32 height);
+  typedef void (* DisplayPixmapPtr)(MWContext * context, IL_Pixmap * image, IL_Pixmap *  mask, PRInt32, PRInt32);
 
   typedef void ( * NewPixmapPtr)(MWContext *, IL_Pixmap * pixmap, Boolean Mask);
    typedef void ( * ImageCompletePtr)(MWContext *, IL_Pixmap * pixmap);
@@ -669,7 +649,7 @@ XtPointer fe_WidgetTreeWalkChildren(Widget widget,
 				    XtPointer data);
 Widget    fe_FindWidget(Widget top, char* name); /* find widget by name */
 
-extern void fe_DisplayPixmap(MWContext * context, IL_Pixmap * image, IL_Pixmap * mask, PRInt32  x, PRInt32  y, PRInt32  x_offset,  PRInt32 y_offset, PRInt32  width, PRInt32 height);
+extern void fe_DisplayPixmap(MWContext * context, IL_Pixmap *  image, IL_Pixmap * mask, PRInt32 width, PRInt32 height);
 extern void fe_NewPixmap(MWContext *, IL_Pixmap * image, Boolean mask);
 extern void fe_ImageComplete(MWContext *, IL_Pixmap * image);
 extern void fe_load_default_font(MWContext *);
