@@ -4316,13 +4316,13 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
   // Post process event
   //
   candForm.dwIndex = 0;
-  candForm.dwStyle = CFS_CANDIDATEPOS;
-  candForm.ptCurrentPos.x = event.theReply.mCursorPosition.x + IME_X_OFFSET;
-  candForm.ptCurrentPos.y = event.theReply.mCursorPosition.y + IME_Y_OFFSET
-                          + event.theReply.mCursorPosition.height ;
-
-  printf("Candidate window position: x=%d, y=%d\n",candForm.ptCurrentPos.x,candForm.ptCurrentPos.y);
-
+  candForm.dwStyle = CFS_EXCLUDE;
+  candForm.ptCurrentPos.x = event.theReply.mCursorPosition.x;
+  candForm.ptCurrentPos.y = event.theReply.mCursorPosition.y;
+  candForm.rcArea.right = candForm.rcArea.left = candForm.ptCurrentPos.x;
+  candForm.rcArea.top = candForm.ptCurrentPos.y;
+  candForm.rcArea.bottom = candForm.ptCurrentPos.y+event.theReply.mCursorPosition.height;
+ 
   NS_IMM_SETCANDIDATEWINDOW(hIMEContext,&candForm);
 
 }
