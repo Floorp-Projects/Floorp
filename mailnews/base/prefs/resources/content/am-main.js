@@ -21,6 +21,8 @@
  * Alec Flett <alecf@netscape.com>
  */
 
+const nsIFilePicker = Components.interfaces.nsIFilePicker;
+
 function onAdvanced()
 {
     dump("onAdvanced..\n");
@@ -38,5 +40,22 @@ function onAdvanced()
             serverKeyElement.setAttribute("value", arg.smtpServerKey);
         else
             serverKeyElement.removeAttribute("value");
+    }
+}
+
+function selectFile()
+{
+    var fp = Components.classes["@mozilla.org/filepicker;1"]
+                       .createInstance(nsIFilePicker);
+  
+    var prefutilitiesBundle = document.getElementById("bundle_prefutilities");
+    var title = prefutilitiesBundle.getString("choosefile");
+    fp.init(window, title, nsIFilePicker.modeOpen);
+    fp.appendFilters(nsIFilePicker.filterAll);
+  
+    var ret = fp.show();
+    if (ret == nsIFilePicker.returnOK) {
+        var folderField = document.getElementById("identity.signature");
+        folderField.value = fp.file.unicodePath;
     }
 }

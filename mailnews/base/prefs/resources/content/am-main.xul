@@ -11,10 +11,8 @@
      onload="parent.onPanelLoaded('am-main.xul');"
      orient="vertical">
 
-    <!-- XXX: Replace strres.js when prefutilities is converted -->
-    <script src="chrome://global/content/strres.js"/>
-    <script src="chrome://communicator/content/pref/prefutilities.js"/>
-    <script src="chrome://messenger/content/am-main.js"/>
+    <stringbundle id="bundle_prefutilities" src="chrome://communicator/locale/pref/prefutilities.properties"/>
+    <script type="application/x-javascript" src="chrome://messenger/content/am-main.js"/>
 
     <box class="box-smallheader" title="&accountTitle.label;"/>
     
@@ -61,7 +59,7 @@
       <box autostretch="never" class="indent">
         <textbox wsm_persist="true" id="identity.signature" datatype="nsILocalFile" flex="1" name="identity.signature"/>
         <button class="dialog push" name="browse" type="button" label="&choose.label;"  
-                oncommand="prefNavSelectFile('identity.signature', 'choosefile', true)"/>
+                oncommand="selectFile()"/>
       </box>
 
       <separator class="thin"/>

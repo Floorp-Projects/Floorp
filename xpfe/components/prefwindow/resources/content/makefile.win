@@ -69,7 +69,6 @@ CHROME_CONTENT = \
 	.\pref-mousewheel.xul \
 	.\pref-winhooks.xul \
 	.\pref-winhooks.js \
-	.\prefutilities.js \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

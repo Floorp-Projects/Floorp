@@ -41,9 +41,7 @@
 
   <script type="application/x-javascript" src="chrome://editor/content/pref-composer.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
-        
+
   <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox orient="vertical">

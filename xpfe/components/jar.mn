@@ -50,7 +50,6 @@ comm.jar:
     content/communicator/pref/pref-mousewheel.xul               (prefwindow/resources/content/pref-mousewheel.xul)
     content/communicator/pref/pref-winhooks.xul                 (prefwindow/resources/content/pref-winhooks.xul)
     content/communicator/pref/pref-winhooks.js                  (prefwindow/resources/content/pref-winhooks.js)
-    content/communicator/pref/prefutilities.js                  (prefwindow/resources/content/prefutilities.js)
     content/communicator/regviewer/regviewer.js                 (regviewer/regviewer.js)
     content/communicator/regviewer/regviewer.xul                (regviewer/regviewer.xul)
     content/communicator/related/related-panel.xul              (related/resources/related-panel.xul)
