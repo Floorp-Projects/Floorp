@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: mutex.c,v $ $Revision: 1.4 $ $Date: 2004/07/29 22:51:00 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: mutex.c,v $ $Revision: 1.5 $ $Date: 2004/08/03 23:24:37 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -149,6 +149,7 @@ nssCKFWMutex_Create
   {
       default:
       case SingleThreaded:
+          *pError = CKR_OK;
           mutex->Destroy = (CK_DESTROYMUTEX)mutex_noop;
           mutex->Lock    = (CK_LOCKMUTEX   )mutex_noop;
           mutex->Unlock  = (CK_UNLOCKMUTEX )mutex_noop;
