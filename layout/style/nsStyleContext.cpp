@@ -861,7 +861,9 @@ PRInt32 StyleSpacingImpl::CalcDifference(const StyleSpacingImpl& aOther) const
           (mBorderColor[ix] != aOther.mBorderColor[ix])) {
         if ((mBorderStyle[ix] != aOther.mBorderStyle[ix]) &&
             ((NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[ix]) ||
-             (NS_STYLE_BORDER_STYLE_NONE == aOther.mBorderStyle[ix]))) {
+             (NS_STYLE_BORDER_STYLE_NONE == aOther.mBorderStyle[ix]) ||
+             (NS_STYLE_BORDER_STYLE_HIDDEN == mBorderStyle[ix]) ||          // bug 45754
+             (NS_STYLE_BORDER_STYLE_HIDDEN == aOther.mBorderStyle[ix]))) {
           return NS_STYLE_HINT_REFLOW;  // border on or off
         }
         return NS_STYLE_HINT_VISUAL;
