@@ -605,8 +605,9 @@ cookie_IsIPAddress(const char* name) {
 }
 
 PRBool
-cookie_IsInDomain(char* domain, char* host, int hostLength) {
+cookie_IsInDomain(char* domain, char* host) {
   int domainLength = PL_strlen(domain);
+  int hostLength = PL_strlen(host);
 
   /* special case for domainName being identical to hostName
    *   This probably buys some efficiency.
@@ -666,8 +667,6 @@ COOKIE_GetCookie(nsIURI * address) {
   PRBool isSecure = PR_TRUE;
   time_t cur_time = get_current_time();
 
-  int host_length;
-
   /* return string to build */
   char * rv=0;
 
@@ -691,7 +690,7 @@ COOKIE_GetCookie(nsIURI * address) {
   }
   nsCAutoString host, path;
   // Get host and path
-  nsresult result = address->GetHostPort(host);
+  nsresult result = address->GetHost(host);
   if (NS_FAILED(result)) {
     return nsnull;
   }
@@ -710,16 +709,7 @@ COOKIE_GetCookie(nsIURI * address) {
 
     /* check the host or domain first */
     if(cookie_s->isDomain) {
-      const char *cp;
-
-      /* calculate the host length by looking at all characters up to a
-       * colon or '\0'.  That way we won't include port numbers in domains
-       */
-      for(cp=host.get(); *cp != '\0' && *cp != ':'; cp++) {
-        ; /* null body */ 
-      }
-      host_length = cp - host.get();
-      if(!cookie_IsInDomain(cookie_s->host, (char*)host.get(), host_length)) {
+      if(!cookie_IsInDomain(cookie_s->host, (char*)host.get())) {
         continue;
       }
     } else if(PL_strcasecmp(host.get(), cookie_s->host)) {
@@ -857,39 +847,19 @@ cookie_isForeign (nsIURI * curURL, nsIURI * firstURL) {
   nsCAutoString curHost, firstHost;
 
   // Get hosts
-  rv = curURL->GetHostPort(curHost);
+  rv = curURL->GetHost(curHost);
   if (NS_FAILED(rv)) {
     return PR_FALSE;
   }
 
-  rv = firstURL->GetHostPort(firstHost);
+  rv = firstURL->GetHost(firstHost);
   if (NS_FAILED(rv)) {
     return PR_FALSE;
-  }
-
-  char * curHostColon = 0;
-  char * firstHostColon = 0;
-
-  /* strip ports */
-  curHostColon = (char *)strchr(curHost.get(), ':');
-  if(curHostColon) {
-    *curHostColon = '\0';
-  }
-  firstHostColon = (char *)strchr(firstHost.get(), ':');
-  if(firstHostColon) {
-    *firstHostColon = '\0';
   }
 
   /* determine if it's foreign */
   PRBool retval = (!cookie_SameDomain((char*)curHost.get(), (char*)firstHost.get()));
 
-  /* clean up our garbage and return */
-  if(curHostColon) {
-    *curHostColon = ':';
-  }
-  if(firstHostColon) {
-    *firstHostColon = ':';
-  }
   return retval;
 }
 
@@ -1019,20 +989,8 @@ cookie_IsFromHost(cookie_CookieStruct *cookie_s, char *host) {
     return PR_FALSE;
   }
   if (cookie_s->isDomain) {
-    char *cp;
-    int host_length;
-
-    /* calculate the host length by looking at all characters up to
-     * a colon or '\0'.  That way we won't include port numbers
-     * in domains
-     */
-    for(cp=host; *cp != '\0' && *cp != ':'; cp++) {
-      ; /* null body */
-    }
-    host_length = cp - host;
-
     /* compare the tail end of host to cook_s->host */
-    return cookie_IsInDomain(cookie_s->host, host, host_length);
+    return cookie_IsInDomain(cookie_s->host, host);
   } else {
     return PL_strcasecmp(host, cookie_s->host) == 0;
   }
@@ -1065,7 +1023,7 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
   char *name_from_header=nsnull, *cookie_from_header=nsnull;
   nsCAutoString cur_host, cur_path;
   nsresult rv;
-  rv = curURL->GetHostPort(cur_host);
+  rv = curURL->GetHost(cur_host);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1163,7 +1121,7 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
     if(ptr) {
       ptr += 7; // get past the "domain="
       char *domain_from_header=nsnull;
-      char *dot, *colon;
+      char *dot;
       int domain_length, cur_host_length;
 
       /* remove leading spaces, else the dot-forcing below will put a dot before the space */
@@ -1211,16 +1169,11 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
         return;
       }
 
-      /* strip port numbers from the current host for the domain test */
-      colon = (char *)strchr(cur_host.get(), ':');
-      if(colon) {
-        *colon = '\0';
-      }
       domain_length   = PL_strlen(domain_from_header);
       cur_host_length = PL_strlen(cur_host.get());
 
       /* check to see if the host is in the domain */
-      if (!cookie_IsInDomain(domain_from_header, (char*)cur_host.get(), cur_host_length)) {
+      if (!cookie_IsInDomain(domain_from_header, (char*)cur_host.get())) {
           // TRACEMSG(("DOMAIN failed host within domain test."
 //        " Domain: %s, Host: %s", domain_from_header, cur_host));
         PR_FREEIF(path_from_header);
@@ -1811,6 +1764,13 @@ COOKIE_Read() {
       continue;
     }
 
+    /* check for bad legacy cookies (domain containing a port) */
+    if (strchr(new_cookie->host, ':')) {
+      /* bad cookie, discard it */
+      deleteCookie((void*)new_cookie, nsnull);
+      continue;
+    }
+  
     /* start new cookie list if one does not already exist */
     if (!cookie_list) {
       cookie_list = new nsVoidArray();
@@ -1843,43 +1803,6 @@ COOKIE_Read() {
   strm.close();
   cookie_changed = PR_FALSE;
   return NS_OK;
-}
-
-PRIVATE PRBool
-CookieCompare (cookie_CookieStruct * cookie1, cookie_CookieStruct * cookie2) {
-  char * host1 = cookie1->host;
-  char * host2 = cookie2->host;
-
-  /* get rid of leading period on host name, if any */
-  if (*host1 == '.') {
-    host1++;
-  }
-  if (*host2 == '.') {
-    host2++;
-  }
-
-  /* make decision based on host name if they are unequal */
-  if (PL_strcmp (host1, host2) < 0) {
-    return -1;
-  }
-  if (PL_strcmp (host1, host2) > 0) {
-    return 1;
-  }
-
-  /* if host names are equal, make decision based on cookie name if they are unequal */
-  if (PL_strcmp (cookie1->name, cookie2->name) < 0) {
-    return -1;
-  }
-  if (PL_strcmp (cookie1->name, cookie2->name) > 0) {
-    return 1;
-  }
-  
-  /* if host and cookie names are equal, make decision based on path */
-  /*    It may seem like this should never happen but it does.
-   *    Go to groups.aol.com and you will get two cookies with
-   *    identical host and cookie names but different paths
-   */
-  return (PL_strcmp (cookie1->path, cookie2->path));
 }
 
 /*
