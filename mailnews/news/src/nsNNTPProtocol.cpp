@@ -1136,7 +1136,6 @@ PRInt32 nsNNTPProtocol::SendListExtensionsResponse(nsIInputStream * inputStream,
 	if (MK_NNTP_RESPONSE_TYPE(m_responseCode) == MK_NNTP_RESPONSE_TYPE_OK)
 	{
 		char *line = NULL;
-        nsINNTPHost *news_host = m_newsHost;
 
 		status = ReadLine(inputStream, length, &line);
 
@@ -1158,7 +1157,7 @@ PRInt32 nsNNTPProtocol::SendListExtensionsResponse(nsIInputStream * inputStream,
 		}
 
 		if ('.' != line[0])
-            news_host->AddExtension(line);
+            m_newsHost->AddExtension(line);
 		else
 		{
 			/* tell libmsg that it's ok to ask this news host for extensions */		
@@ -1259,8 +1258,6 @@ PRInt32 nsNNTPProtocol::SendListSearchHeaders()
 
 PRInt32 nsNNTPProtocol::SendListSearchHeadersResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-    nsINNTPHost* news_host = m_newsHost;
-
 	char *line = NULL;
 	PRInt32 status = 0; 
 	status = ReadLine(inputStream, length, &line);
@@ -1283,7 +1280,7 @@ PRInt32 nsNNTPProtocol::SendListSearchHeadersResponse(nsIInputStream * inputStre
 	}
 
 	if ('.' != line[0])
-        news_host->AddSearchableHeader(line);
+        m_newsHost->AddSearchableHeader(line);
 	else
 	{
 		m_nextState = NNTP_GET_PROPERTIES;
@@ -3178,9 +3175,9 @@ PRInt32 nsNNTPProtocol::Cancel()
 	char *id, *subject, *newsgroups, *distribution, *other_random_headers, *body;
 	char *from, *old_from, *news_url;
 	int L;
-	#ifdef USE_LIBMSG
+#ifdef USE_LIBMSG
 	MSG_CompositionFields *fields = NULL;
-	#endif 
+#endif 
 
   /* #### Should we do a more real check than this?  If the POST command
 	 didn't respond with "MK_NNTP_RESPONSE_POST_SEND_NOW Ok", then it's not ready for us to throw a
