@@ -17,9 +17,6 @@
 DEPTH=..\..\..\..
 IGNORE_MANIFEST=1
 
-DEFINES=-DWIN32_LEAN_AND_MEAN
-MODULE=vcard
-
 include <$(DEPTH)\config\rules.mak>
 
 install:: 

@@ -17,15 +17,13 @@
 
 DEPTH=..\..\..\..
 
-MODULE=msgdb
+MODULE=msgmdb
 
-IDLSRCS =							\
+XPIDLSRCS =							\
 			$(NULL)
 
 EXPORTS =	 						\
 			mdb.h    \
 			$(NULL)
-
-
 
 include <$(DEPTH)\config\rules.mak>

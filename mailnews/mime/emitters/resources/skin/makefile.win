@@ -15,7 +15,8 @@
 #
 
 DEPTH=..\..\..\..\..
-MODULE=xmlemitter
+
+DEFINES=-DWIN32_LEAN_AND_MEAN
 
 include <$(DEPTH)\config\rules.mak>
 

@@ -17,9 +17,6 @@
 
 DEPTH=..\..\..\..\..
 
-DEFINES=-DWIN32_LEAN_AND_MEAN
-MODULE=msgbase
-
 include <$(DEPTH)\config\rules.mak>
 
 install:: 

@@ -21,10 +21,9 @@ IGNORE_MANIFEST=1
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=msgsearch
-MODULE= mailnews
+MODULE=msgsearch
 
-
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+DEFINES=-D_IMPL_NS_HTML
 
 CPPSRCS=    nsMsgFilterService.cpp\
 			nsMsgFilterList.cpp\

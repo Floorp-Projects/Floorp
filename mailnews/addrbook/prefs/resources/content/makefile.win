@@ -17,8 +17,6 @@
 
 DEPTH=..\..\..\..\..
 
-MODULE=mailnews
-
 include <$(DEPTH)\config\rules.mak>
 
 install:: 

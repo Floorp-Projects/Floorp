@@ -17,7 +17,7 @@
 
 DEPTH=..\..\..\..
 
-IDLSRCS =							\
+XPIDLSRCS =							\
 			$(NULL)
 
 EXPORTS =	 						\
@@ -31,7 +31,7 @@ EXPORTS =	 						\
 			nsMsgSearchCore.h \
 			$(NULL)
 
-MODULE=mailnews
+MODULE=msgsearch
 
 
 include <$(DEPTH)\config\rules.mak>

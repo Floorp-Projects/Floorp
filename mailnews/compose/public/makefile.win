@@ -18,8 +18,8 @@
 DEPTH=..\..\..
 MODULE=msgcompose
 
-IDLSRCS =							\
-			nsIMsgCompose.idl		\
+# nsIMsgCompose.idl nsIMsgSend.idl soon
+XPIDLSRCS =							\
 			$(NULL)
 
 ################################################################################

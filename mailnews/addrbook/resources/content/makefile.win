@@ -17,8 +17,6 @@
 
 DEPTH=..\..\..\..
 
-MODULE=addrbook
-
 include <$(DEPTH)\config\rules.mak>
 
 install:: 

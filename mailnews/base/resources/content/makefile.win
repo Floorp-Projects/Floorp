@@ -17,8 +17,6 @@
 
 DEPTH=..\..\..\..
 
-MODULE=msgbase
-
 include <$(DEPTH)\config\rules.mak>
 
 install:: 

@@ -18,7 +18,8 @@
 # New build system where zip dll is build indepenant of java stubs.
 #//
 #//------------------------------------------------------------------------
-MODULE =testmsgfactory
+MODULE =msgbasetest
+
 #EXPORTS =               \
 #        $(NULL)
 

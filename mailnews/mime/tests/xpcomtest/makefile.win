@@ -20,7 +20,8 @@ IGNORE_MANIFEST = 1
 # New build system where zip dll is build indepenant of java stubs.
 #//
 #//------------------------------------------------------------------------
-MODULE =testmsgfactory
+MODULE = mimetest
+
 #EXPORTS =               \
 #        $(NULL)
 

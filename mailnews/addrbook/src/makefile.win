@@ -16,7 +16,7 @@
 # Reserved.
 
 DEPTH=..\..\..
-MODULE= addressbook
+MODULE= addrbook
 
 include <$(DEPTH)\config\config.mak>
 

@@ -16,7 +16,7 @@
 # Reserved.
 
 DEPTH=..\..\..\..
-MODULE=mime
+MODULE=mimeemitter
 
 include <$(DEPTH)\config\config.mak>
 

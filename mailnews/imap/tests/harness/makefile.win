@@ -18,7 +18,7 @@
 # New build system where zip dll is build indepenant of java stubs.
 #//
 #//------------------------------------------------------------------------
-MODULE =testimap
+MODULE =msgimaptest
 #EXPORTS =               \
 #        $(NULL)
 

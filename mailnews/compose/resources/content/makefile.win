@@ -17,8 +17,6 @@
 
 DEPTH=..\..\..\..
 
-MODULE=msgcompose
-
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
