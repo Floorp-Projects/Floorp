@@ -295,7 +295,7 @@ nsStringBundle::OpenInputStream(nsString2& aURLStr, nsIInputStream*& in)
   }
   //
   ret = pNetService->OpenBlockingStream(url, nsnull, &in);
-  delete url;
+  NS_RELEASE(url);
 #ifdef NS_DEBUG
   if (NS_FAILED(ret) || !in) {
     char *s = aURLStr.ToNewCString();
