@@ -104,7 +104,7 @@ nsresult nsTimerPeriodical::RemoveTimer(nsTimerImpl * aTimer)
 void nsTimerPeriodical::RepeatAction(const EventRecord &inMacEvent)
 //----------------------------------------------------------------------------------------
 {
-  ProcessTimers(inMacEvent.when);
+  ProcessTimers(::TickCount());
   
   if (!mTimers)
     StopRepeating();
