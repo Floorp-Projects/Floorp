@@ -73,30 +73,24 @@ public:
 
   /** call every time any table thing changes that might effect the width of any column
     * in the table (content, structure, or style) 
-    * @param aPresContext - the presentation context
 	   * @param aReflowState - the reflow state for mTableFrame
     */
-  virtual PRBool Initialize(nsIPresContext*          aPresContext,
-                            const nsHTMLReflowState& aReflowState);
+  virtual PRBool Initialize(const nsHTMLReflowState& aReflowState);
 
   /** Called during resize reflow to determine the new column widths
-    * @param aPresContext - the presentation context
 	   * @param aReflowState - the reflow state for mTableFrame
 	   */
-  virtual PRBool BalanceColumnWidths(nsIPresContext*          aPresContext,
-                                     const nsHTMLReflowState& aReflowState);
+  virtual PRBool BalanceColumnWidths(const nsHTMLReflowState& aReflowState);
  
   /**
     * Calculate the basis for percent width calculations of the table elements
     * @param aReflowState   - the reflow state of the table
     * @param aAvailWidth    - the available width for the table
-    * @param aPixelToTwips  - the number of twips in a pixel.
     * @return               - the basis for percent calculations
     */
-  virtual nscoord CalcPctAdjTableWidth(nsIPresContext&          aPresContext,
-                                       const nsHTMLReflowState& aReflowState,
-                                       nscoord                  aAvailWidth,
-                                       float                    aPixelToTwips);
+  virtual nscoord CalcPctAdjTableWidth(const nsHTMLReflowState& aReflowState,
+                                       nscoord                  aAvailWidth);
+
   void Dump(PRInt32 aIndent);
 
 protected:
@@ -112,10 +106,8 @@ protected:
     *  UNCONSTRAINED_SIZE if an auto width table
     * @return PR_TRUE has  a pct cell or col, PR_FALSE otherwise
     */
-  virtual PRBool AssignNonPctColumnWidths(nsIPresContext*          aPresContext,
-                                          nscoord                  aComputedWidth,
-                                          const nsHTMLReflowState& aReflowState,
-                                          float                    aPixelToTwips);
+  virtual PRBool AssignNonPctColumnWidths(nscoord                  aComputedWidth,
+                                          const nsHTMLReflowState& aReflowState);
 
   /** 
     * Calculate the adjusted widths (min, desired, fixed, or pct) for a cell
@@ -160,8 +152,7 @@ protected:
     * @param aPixelToTwips     - the number of twips in a pixel.
     * @return                  - the adjusted basis including table border, padding and cell spacing
     */
-  nscoord AssignPctColumnWidths(nsIPresContext&          aPresContext,
-                                const nsHTMLReflowState& aReflowState,
+  nscoord AssignPctColumnWidths(const nsHTMLReflowState& aReflowState,
                                 nscoord                  aBasis,
                                 PRBool                   aTableIsAutoWidth,
                                 float                    aPixelToTwips);

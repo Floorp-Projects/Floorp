@@ -272,12 +272,10 @@ public:
                          nsIFrame*       aOldFrame);
 
   // Get the offset from the border box to the area where the row groups fit
-  nsMargin GetChildAreaOffset(nsIPresContext*          aPresContext,
-                              const nsHTMLReflowState* aReflowState) const;
+  nsMargin GetChildAreaOffset(const nsHTMLReflowState* aReflowState) const;
 
   // Get the offset from the border box to the area where the content fits
-  nsMargin GetContentAreaOffset(nsIPresContext*          aPresContext,
-                                const nsHTMLReflowState* aReflowState) const;
+  nsMargin GetContentAreaOffset(const nsHTMLReflowState* aReflowState) const;
 
   /** helper method to find the table parent of any table frame object */
   // TODO: today, this depends on display types.  This should be changed to rely
@@ -331,7 +329,7 @@ public:
                              nsFramePaintLayer    aWhichLayer,
                              PRUint32             aFlags = 0);
 
-  nsMargin GetBCBorder(nsIPresContext* aPresContext) const;
+  nsMargin GetBCBorder() const;
 
   // get the area that the border leak out from the inner table frame into
   // the surrounding margin space
@@ -662,8 +660,7 @@ protected:
                                        nsIFrame*           aKidFrame,
                                        nscoord             aDeltaY);
   
-  nsresult RecoverState(nsIPresContext&     aPresContext,
-                        nsTableReflowState& aReflowState,
+  nsresult RecoverState(nsTableReflowState& aReflowState,
                         nsIFrame*           aKidFrame);
 
   NS_METHOD CollapseRowGroupIfNecessary(nsIPresContext* aPresContext,
@@ -685,35 +682,29 @@ public:
 
   // calculate the computed width of aFrame including its border and padding given 
   // its reflow state.
-  nscoord CalcBorderBoxWidth(nsIPresContext*          aPresContex,
-                             const nsHTMLReflowState& aReflowState);
+  nscoord CalcBorderBoxWidth(const nsHTMLReflowState& aReflowState);
 
   // calculate the computed height of aFrame including its border and padding given 
   // its reflow state.
-  nscoord CalcBorderBoxHeight(nsIPresContext*          aPresContext,
-                              const nsHTMLReflowState& aReflowState);
+  nscoord CalcBorderBoxHeight(const nsHTMLReflowState& aReflowState);
   // calculate the minimum width to layout aFrame and its desired width 
   // including border and padding given its reflow state and column width information 
-  void CalcMinAndPreferredWidths(nsIPresContext*          aPresContext,
-                                 const nsHTMLReflowState& aReflowState,
+  void CalcMinAndPreferredWidths(const nsHTMLReflowState& aReflowState,
                                  PRBool                   aCalcPrefWidthIfAutoWithPctCol,
                                  nscoord&                 aMinWidth,
                                  nscoord&                 aPreferredWidth);
 protected:
 
   // calcs the width of the table according to the computed widths of each column.
-  virtual PRInt32 CalcDesiredWidth(nsIPresContext&          aPresContext,
-                                   const nsHTMLReflowState& aReflowState);
+  virtual PRInt32 CalcDesiredWidth(const nsHTMLReflowState& aReflowState);
 
   // return the desired height of this table accounting for the current
   // reflow state, and for the table attributes and parent 
-  nscoord CalcDesiredHeight(nsIPresContext*          aPresContext,
-                            const nsHTMLReflowState& aReflowState);
+  nscoord CalcDesiredHeight(const nsHTMLReflowState& aReflowState);
 
   // The following is a helper for CalcDesiredHeight 
  
-  void DistributeHeightToRows(nsIPresContext*          aPresContext,
-                              const nsHTMLReflowState& aReflowState,
+  void DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
                               nscoord                  aAmount);
 
   void PlaceChild(nsIPresContext*      aPresContext,
@@ -912,8 +903,7 @@ public: /* ----- Cell Map public methods ----- */
 public:
   static nsIAtom* gColGroupAtom;
 #ifdef DEBUG
-  void Dump(nsIPresContext* aPresContext,
-            PRBool          aDumpRows,
+  void Dump(PRBool          aDumpRows,
             PRBool          aDumpCols, 
             PRBool          aDumpCellMap);
 #endif

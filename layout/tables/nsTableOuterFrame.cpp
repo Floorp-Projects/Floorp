@@ -466,7 +466,7 @@ nsTableOuterFrame::InitChildReflowState(nsIPresContext&    aPresContext,
     if (mInnerTableFrame->NeedToCalcBCBorders()) {
       mInnerTableFrame->CalcBCBorders(aPresContext);
     }
-    collapseBorder  = mInnerTableFrame->GetBCBorder(&aPresContext);
+    collapseBorder  = mInnerTableFrame->GetBCBorder();
     pCollapseBorder = &collapseBorder;
     pCollapsePadding = &collapsePadding;
   }
