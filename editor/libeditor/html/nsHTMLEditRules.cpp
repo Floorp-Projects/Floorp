@@ -440,8 +440,25 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ECo
     
     // deleting across blocks
     // are the blocks of same type?
-    nsCOMPtr<nsIDOMNode> leftParent = mEditor->GetBlockNodeParent(node);
-    nsCOMPtr<nsIDOMNode> rightParent = mEditor->GetBlockNodeParent(endNode);
+    nsCOMPtr<nsIDOMNode> leftParent;
+    nsCOMPtr<nsIDOMNode> rightParent;
+
+    // XXX: Fix for bug #10815: Crash deleting selected text and table.
+    //      Make sure leftParent and rightParent are never NULL. This
+    //      can happen if we call GetBlockNodeParent() and the node we
+    //      pass in is a body node.
+    //
+    //      Should we be calling IsBlockNode() instead of IsBody() here?
+
+    if (IsBody(node))
+      leftParent = node;
+    else
+      leftParent = mEditor->GetBlockNodeParent(node);
+
+    if (IsBody(endNode))
+      rightParent = endNode;
+    else
+      rightParent = mEditor->GetBlockNodeParent(endNode);
     
     // are the blocks siblings?
     nsCOMPtr<nsIDOMNode> leftBlockParent;
@@ -1265,7 +1282,11 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
     {
       node = nsEditor::GetChildAt(parent,offset);
     }
-    offset++;  // since this is going to be used for a range _endpoint_, we want to be after the node
+
+    if (node)
+      offset++;  // since this is going to be used for a range _endpoint_, we want to be after the node
+    else
+      node = parent;
     
     // finding the real end for this point.  look up the tree for as long as we are the 
     // last node in the container, and as long as we haven't hit the body node.

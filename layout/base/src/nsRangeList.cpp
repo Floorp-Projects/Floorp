@@ -1505,6 +1505,8 @@ nsDOMSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame)
   if (!aReturnFrame)
     return NS_ERROR_NULL_POINTER;
   
+  *aReturnFrame = 0;
+  
   nsresult	result = NS_OK;
   
   nsCOMPtr<nsIDOMNode> node = dont_QueryInterface(FetchFocusNode());
@@ -1525,8 +1527,10 @@ nsDOMSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame)
     {
       nsCOMPtr<nsIContent> child;
       result = content->ChildAt(offset, *getter_AddRefs(child));
-      if (NS_FAILED(result) || !child) //out of bounds?
+      if (NS_FAILED(result))
         return result;
+      if (!child) //out of bounds?
+        return NS_ERROR_FAILURE;
       content = child;//releases the focusnode
     }
   }
