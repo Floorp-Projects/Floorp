@@ -102,7 +102,7 @@ xpidl_strdup(const char *s)
     return ns;
 }
 
-#ifdef XP_MAC
+#if defined(XP_MAC) && defined(XPIDL_PLUGIN)
 #define main xpidl_main
 int xpidl_main(int argc, char *argv[]);
 #endif

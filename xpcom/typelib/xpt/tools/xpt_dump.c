@@ -132,8 +132,10 @@ static int get_args(char*** argv)
 	return 1;
 }
 
+#ifdef XPIDL_PLUGIN
 #define main xptdump_main
 int xptdump_main(int argc, char *argv[]);
+#endif
 
 #endif
 

@@ -74,7 +74,7 @@ struct fixElement {
 int trueNumberOfInterfaces = 0;
 int totalNumberOfInterfaces = 0;
 
-#ifdef XP_MAC
+#if defined(XP_MAC) && defined(XPIDL_PLUGIN)
 #define main xptlink_main
 int xptlink_main(int argc, char *argv[]);
 #endif
