@@ -54,6 +54,7 @@ nsDOMAttribute::~nsDOMAttribute()
 // XPConnect interface list for nsDOMAttribute
 NS_CLASSINFO_MAP_BEGIN(Attr)
   NS_CLASSINFO_MAP_ENTRY(nsIDOMAttr)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
 NS_CLASSINFO_MAP_END
 
 
