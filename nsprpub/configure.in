@@ -954,6 +954,13 @@ case "$target" in
         ;;
     esac
     if test "$GNU_CC"; then
+        dnl
+        dnl If we are using gcc with native binutils, we need to
+        dnl suppress the
+        dnl #lineno "filename" num num
+        dnl lines, which confuse IRIX native as.  Add -Wp,-P to the
+        dnl gcc command line, which passes -P to the preprocessor.
+        dnl
 	    AS='$(CC) -Wp,-P -x assembler-with-cpp -D_ASM -mips2 $(INCLUDES)'
 	    CFLAGS="$CFLAGS -Wall -Wno-format"
 	    _OPTIMIZE_FLAGS="-O6"
