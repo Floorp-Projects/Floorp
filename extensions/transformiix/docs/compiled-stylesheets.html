@@ -120,17 +120,19 @@ void cancel(nsresult aError);
       </p>
 
       <p>
-        The <code>txHandlerTable</code> contains a list of these
-        stylesheet-compile-handlers keyed element-name. It also contains a
-        handler for text and a handler for LRE-elements.
+        To find which handler to call the compiler uses
+        <code>txHandlerTable</code>-objects. The <code>txHandlerTable</code>
+        contains a list of these stylesheet-compile-handlers keyed on
+        element-name. It also contains a handler for text and a handler for
+        LRE-elements.
       </p>
 
       <p>
         There are different <code>txHandlerTable</code>-objects for different
-        "modes" of the compiler. There is one for handling top-level
-        elements, one for handling template-parameters, one for handling the
-        contents of a xsl:attribte-set element, one for handling the contents
-        of unsupported extension-elements etc. The
+        "modes" of the compiler. There is one for handling top-level elements,
+        one for handling template-parameters, one for handling the contents of
+        a xsl:attribte-set element, one for handling the contents of
+        unsupported extension-elements etc. The
         <code>txStylesheetCompiler</code> always has a current
         <code>txHandlerTable</code> which is used to find the handler to call.
       </p>
