@@ -92,6 +92,7 @@ nsNNTPNewsgroupList::nsNNTPNewsgroupList()
 	m_username = nsnull;
 	m_hostname = nsnull;
 	m_uri = nsnull;
+	m_groupName = nsnull;
 }
 
 
