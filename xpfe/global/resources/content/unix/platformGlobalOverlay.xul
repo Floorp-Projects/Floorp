@@ -8,7 +8,7 @@
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
     <!-- change the xul key for Unix -->
-    <keyset id="defaultKeySet" xulkey="alt"/>
+    <keyset id="defaultKeySet" xulkey="alt">
 
     <!-- emacs delete keys -->
     <key id="emacsbackspacekb" key="h" control="true" onkeypress="EditorDeleteCharBackward()" />
