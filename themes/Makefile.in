@@ -34,3 +34,9 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+# select classic as the default skin
+libs::
+	echo skin,install,select,classic/1.0 >> $(DIST)/bin/chrome/installed-chrome.txt
+
+install::
+	echo skin,install,select,classic/1.0 >> $(DESTDIR)$(mozappdir)/chrome/installed-chrome.txt
