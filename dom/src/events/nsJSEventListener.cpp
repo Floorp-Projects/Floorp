@@ -23,6 +23,7 @@
  */
 nsJSEventListener::nsJSEventListener(JSContext *aContext, JSObject *aObj) 
 {
+  NS_INIT_REFCNT();
   mContext = aContext;
   mJSObj = aObj;
 }
