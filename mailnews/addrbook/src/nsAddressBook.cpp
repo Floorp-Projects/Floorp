@@ -1910,7 +1910,7 @@ static void convertNameValue(VObject *vObj, nsIAbCard *aCard)
       return;
 
   char *cardColValue = getCString(vObj);
-  aCard->SetCardValue(cardColName, NS_ConvertASCIItoUCS2(cardColValue).get());
+  aCard->SetCardValue(cardColName, NS_ConvertUTF8toUCS2(cardColValue).get());
   PR_FREEIF(cardColValue);
   return;
 }

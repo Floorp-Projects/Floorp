@@ -1078,7 +1078,7 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity
       if (NS_SUCCEEDED(identity->GetEscapedVCard(getter_Copies(escapedVCard))) && !escapedVCard.IsEmpty()) 
       {
           nsCString vCardUrl;
-          vCardUrl = "data:text/x-vcard;base64,";
+          vCardUrl = "data:text/x-vcard;charset=utf8;base64,";
           char *unescapedData = PL_strdup(escapedVCard);
           if (!unescapedData)
               return NS_ERROR_OUT_OF_MEMORY;
