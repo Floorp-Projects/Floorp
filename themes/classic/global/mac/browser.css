@@ -1,0 +1,12 @@
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+tab[busy] {
+  list-style-image: url("chrome://global/skin/loading.gif");
+}
+
+.tabbrowser-closebox {
+  list-style-image: url("chrome://global/skin/closebox.gif");
+  margin-bottom: 3px;
+  margin-right: 2px;
+}
