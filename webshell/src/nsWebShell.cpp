@@ -290,6 +290,7 @@ public:
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
   NS_IMETHOD GetHistoryState(nsISupports** aLayoutHistoryState);
+  NS_IMETHOD SetHistoryState(nsISupports* aLayoutHistoryState);
 
   // nsIWebShellServices
   NS_IMETHOD LoadDocument(const char* aURL, 
@@ -512,6 +513,7 @@ protected:
 
 	nsWebShellType mWebShellType;
   nsIWebShell* mChromeShell; // Weak reference.
+  nsISupports* mHistoryState; // Weak reference.  Session history owns this.
 
   void ReleaseChildren();
   void DestroyChildren();
@@ -697,6 +699,7 @@ nsWebShell::nsWebShell()
 #else
   mNetSupport = nsnull;
 #endif
+  mHistoryState = nsnull;
 }
 
 nsWebShell::~nsWebShell()
@@ -974,6 +977,21 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
                               mPrefs,
                               bounds,
                               mScrollPref);
+
+    // If the history state has been set by session history,
+    // set it on the pres shell now that we have a content
+    // viewer.
+    if (mContentViewer && mHistoryState) {
+      nsCOMPtr<nsIDocumentViewer> docv = do_QueryInterface(mContentViewer);
+      if (nsnull != docv) {
+        nsCOMPtr<nsIPresShell> shell;
+        rv = docv->GetPresShell(*getter_AddRefs(shell));
+        if (NS_SUCCEEDED(rv)) {
+          rv = shell->SetHistoryState((nsILayoutHistoryState*) mHistoryState);
+        }
+      }
+    }  
+
     if (NS_SUCCEEDED(rv)) {
       mContentViewer->Show();
     }
@@ -2843,6 +2861,13 @@ nsWebShell::GetHistoryState(nsISupports** aLayoutHistoryState)
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsWebShell::SetHistoryState(nsISupports* aLayoutHistoryState)
+{
+  mHistoryState = aLayoutHistoryState;
+  return NS_OK;  
 }
 
 //----------------------------------------------------------------------
