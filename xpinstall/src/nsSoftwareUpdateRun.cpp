@@ -83,7 +83,7 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
 
     /* Use the console service to register the error. */
     nsCOMPtr<nsIConsoleService> consoleService
-        (do_GetService("mozilla.consoleservice.1"));
+        (do_GetService("@mozilla.org/consoleservice;1"));
 
     /*
      * Make an nsIScriptError, populate it with information from this

@@ -63,7 +63,7 @@ NS_METHOD nsCookieHTTPNotify::RegisterProc(nsIComponentManager *aCompMgr,
 {
     // Register ourselves into the NS_CATEGORY_HTTP_STARTUP
     nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv);
+    nsCOMPtr<nsICategoryManager> catman = do_GetService("@mozilla.org/categorymanager;1", &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString prevEntry;
@@ -79,7 +79,7 @@ NS_METHOD nsCookieHTTPNotify::UnregisterProc(nsIComponentManager *aCompMgr,
                                              const char *registryLocation)
 {
     nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv);
+    nsCOMPtr<nsICategoryManager> catman = do_GetService("@mozilla.org/categorymanager;1", &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString prevEntry;

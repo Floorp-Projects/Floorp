@@ -60,7 +60,7 @@
     <implementation>
       <property readonly="true" name="validityManager">
         <![CDATA[
-           Components.classes['mozilla.mail.search.validityManager.1'].getService(Components.interfaces.nsIMsgSearchValidityManager);
+           Components.classes['@mozilla.org/mail/search/validityManager;1'].getService(Components.interfaces.nsIMsgSearchValidityManager);
         ]]>
       </property>
       <property name="searchScope" onget="return this.internalScope;">

@@ -277,7 +277,7 @@ function (compMgr, fileSpec, location, type)
                                       CLINE_SERVICE_CONTRACTID, fileSpec,
                                       location, true, true, type);
     
-	catman = Components.classes["mozilla.categorymanager.1"]
+	catman = Components.classes["@mozilla.org/categorymanager;1"]
         .getService(nsICategoryManager);
 	catman.addCategoryEntry("command-line-argument-handlers",
                             "chatzilla command line handler",
@@ -301,7 +301,7 @@ ChatzillaModule.unregisterSelf =
 function(compMgr, fileSpec, location)
 {
     compMgr.unregisterComponentSpec(CLINE_SERVICE_CID, fileSpec);
-	catman = Components.classes["mozilla.categorymanager.1"]
+	catman = Components.classes["@mozilla.org/categorymanager;1"]
         .getService(nsICategoryManager);
 	catman.deleteCategoryEntry("command-line-argument-handlers",
                                CLINE_SERVICE_CONTRACTID, true);

@@ -2245,7 +2245,7 @@ NS_IMETHODIMP nsDocShell::ReportScriptError(nsIScriptError *errorObject)
 
    // Get the console service, where we're going to register the error.
    nsCOMPtr<nsIConsoleService> consoleService
-      (do_GetService("mozilla.consoleservice.1"));
+      (do_GetService("@mozilla.org/consoleservice;1"));
 
    if (consoleService != nsnull)
       {

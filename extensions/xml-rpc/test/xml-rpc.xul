@@ -8,7 +8,7 @@
 
 <script language="javascript"><![CDATA[
 function getClient() {
-    return Components.classes['mozilla.xml-rpc.client.1']
+    return Components.classes['@mozilla.org/xml-rpc/client;1']
         .createInstance(Components.interfaces.nsIXmlRpcClient);
 }
 

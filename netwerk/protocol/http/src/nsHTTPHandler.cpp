@@ -125,7 +125,7 @@ CategoryCreateService( const char *category )
 
     int nFailed = 0; 
     nsCOMPtr<nsICategoryManager> categoryManager = 
-        do_GetService("mozilla.categorymanager.1", &rv);
+        do_GetService("@mozilla.org/categorymanager;1", &rv);
     if (!categoryManager) return rv;
 
     nsCOMPtr<nsISimpleEnumerator> enumerator;

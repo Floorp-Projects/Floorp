@@ -25,7 +25,7 @@ var defaultAction = msgCompSendFormat.PlainText;
 var recommended_as_default = true;
 var display_recommendation = true;
 
-var prefs = Components.classes["component://netscape/preferences"].getService();
+var prefs = Components.classes["@mozilla.org/preferences;1"].getService();
 if (prefs) {
   prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
   if (prefs) {

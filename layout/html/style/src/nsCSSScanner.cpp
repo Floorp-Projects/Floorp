@@ -223,9 +223,9 @@ void nsCSSScanner::ReportError(const nsAReadableString& aError)
 
   // Log it to the JavaScript console
   nsCOMPtr<nsIConsoleService> consoleService
-    (do_GetService("mozilla.consoleservice.1"));
+    (do_GetService("@mozilla.org/consoleservice;1"));
   nsCOMPtr<nsIScriptError> errorObject
-    (do_CreateInstance("mozilla.scripterror.1"));
+    (do_CreateInstance("@mozilla.org/scripterror;1"));
 
   if (consoleService && errorObject) {
     nsresult rv;

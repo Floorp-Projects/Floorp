@@ -73,11 +73,11 @@ echo "<blockquote><pre>"
 grep 'RegisterComponentCommon({' $logfile
 echo "</pre></blockquote>"
 
-# Number of succeeded calls to ProgIDToClassID() with histogram
-n=`grep -i 'progidtoclassid.*}' $logfile | wc -l`
-echo "<H3>Count of succeeded ProgIDToClassID() : $n</H3>"
+# Number of succeeded calls to ContractIDToClassID() with histogram
+n=`grep -i 'contractidtoclassid.*}' $logfile | wc -l`
+echo "<H3>Count of succeeded ContractIDToClassID() : $n</H3>"
 echo "<blockquote><pre>"
-grep -i 'progidtoclassid.*}' $logfile | sort | uniq -c | sort -nr
+grep -i 'contractidtoclassid.*}' $logfile | sort | uniq -c | sort -nr
 echo "</pre></blockquote>"
 
 
@@ -93,11 +93,11 @@ echo "<blockquote><pre>"
 grep 'CreateInstance.*FAILED' $logfile
 echo "</pre></blockquote>"
 
-# ProgIDToClassID() FAILED with a histogram
-n=`grep 'ProgIDToClassID.*FAILED' $logfile | wc -l`
-echo "<H3>Failed ProgIDToClassID() : $n</H3>"
+# ContractIDToClassID() FAILED with a histogram
+n=`grep 'ContractIDToClassID.*FAILED' $logfile | wc -l`
+echo "<H3>Failed ContractIDToClassID() : $n</H3>"
 echo "<blockquote><pre>"
-grep 'ProgIDToClassID.*FAILED' $logfile | sort | uniq -c | sort -nr
+grep 'ContractIDToClassID.*FAILED' $logfile | sort | uniq -c | sort -nr
 echo "</pre></blockquote>"
 
 #

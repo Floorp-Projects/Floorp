@@ -276,7 +276,7 @@ static nsresult OpenChromeURL( const char * urlstr, PRInt32 height = NS_SIZETOCO
 static void DumpArbitraryHelp()
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsICategoryManager, catman, "mozilla.categorymanager.1", &rv);
+  NS_WITH_SERVICE(nsICategoryManager, catman, "@mozilla.org/categorymanager;1", &rv);
   if(NS_SUCCEEDED(rv) && catman) {
     nsCOMPtr<nsISimpleEnumerator> e;
     rv = catman->EnumerateCategory(COMMAND_LINE_ARGUMENT_HANDLERS, getter_AddRefs(e));

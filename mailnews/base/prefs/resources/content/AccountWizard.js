@@ -729,7 +729,7 @@ function getInterfaceForType(type) {
 
 // flush the XUL cache - just for debugging purposes - not called
 function onFlush() {
-        var prefs = Components.classes["component://netscape/preferences"].getService(Components.interfaces.nsIPref);
+        var prefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
         prefs.SetBoolPref("nglayout.debug.disable_xul_cache", true);
         prefs.SetBoolPref("nglayout.debug.disable_xul_cache", false);
 

@@ -421,7 +421,7 @@ function SetSortColumn(column_name)
 
 function sort_column(column, direction)
 {
-    var isupports_uri = "component://netscape/rdf/xul-sort-service";
+    var isupports_uri = "@mozilla.org/rdf/xul-sort-service;1";
     var isupports = Components.classes[isupports_uri].getService();
     if (!isupports) return false;
     var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);

@@ -47,7 +47,7 @@ var num_errors=0;
 function onLoadJSConsole() 
 {
     try {
-        var cs_class = Components.classes['mozilla.consoleservice.1'];
+        var cs_class = Components.classes['@mozilla.org/consoleservice;1'];
         var cs_iface = Components.interfaces.nsIConsoleService;
         var cs_isupports = cs_class.getService();
         var cs = cs_isupports.QueryInterface(cs_iface);
@@ -58,7 +58,7 @@ function onLoadJSConsole()
         appendMessage({ message:
                         "Unable to display errors - " +
                         "couldn't get Console Service component. " +
-                        "(Missing mozilla.consoleservice.1)" });
+                        "(Missing @mozilla.org/consoleservice;1)" });
         return;
     }
 
@@ -101,7 +101,7 @@ function onUnloadJSConsole()
     // keep a global ref. to it instead???
 
     try {
-        var cs_class = Components.classes['mozilla.consoleservice.1'];
+        var cs_class = Components.classes['@mozilla.org/consoleservice;1'];
         var cs_iface = Components.interfaces.nsIConsoleService;
         var cs_isupports = cs_class.getService();
         var cs = cs_isupports.QueryInterface(cs_iface);
@@ -244,7 +244,7 @@ function clear ()
 {
 
     try {
-        var cs_class = Components.classes['mozilla.consoleservice.1'];
+        var cs_class = Components.classes['@mozilla.org/consoleservice;1'];
         var cs_iface = Components.interfaces.nsIConsoleService;
         var cs_isupports = cs_class.getService();
         var cs = cs_isupports.QueryInterface(cs_iface);

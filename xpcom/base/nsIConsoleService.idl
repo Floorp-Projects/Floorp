@@ -65,6 +65,6 @@ interface nsIConsoleService : nsISupports
 #define NS_CONSOLESERVICE_CID \
 { 0x7e3ff85c, 0x1dd2, 0x11b2, { 0x8d, 0x4b, 0xeb, 0x45, 0x2c, 0xb0, 0xff, 0x40 }}
 
-#define NS_CONSOLESERVICE_CONTRACTID "mozilla.consoleservice.1"
+#define NS_CONSOLESERVICE_CONTRACTID "@mozilla.org/consoleservice;1"
 %}
 
