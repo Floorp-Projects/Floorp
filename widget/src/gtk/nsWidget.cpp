@@ -1223,13 +1223,29 @@ nsWidget::DebugPrintMouseEvent(nsMouseEvent & aEvent,
     eventName = "NS_MOUSE_RIGHT_CLICK"; 
     break;
 
+  case NS_DRAGDROP_ENTER:
+    eventName = "NS_DRAGDROP_ENTER";
+    break;
+
+  case NS_DRAGDROP_OVER:
+    eventName = "NS_DRAGDROP_OVER";
+    break;
+
+  case NS_DRAGDROP_EXIT:
+    eventName = "NS_DRAGDROP_EXIT";
+    break;
+
+  case NS_DRAGDROP_DROP:
+    eventName = "NS_DRAGDROP_DROP";
+    break;
+
   default: 
     eventName = "UNKNOWN"; break;
   }
 
   static int sPrintCount=0;
 
-  printf("%4d %s(this=%p,name=%s,event=%s,x=%d,y=%d)\n",
+  printf("%4d %7s(this=%10p, name=%10s, event=%16s, (%3d, %3d)\n",
          sPrintCount++,
          sMessage,
          this,
