@@ -52,6 +52,10 @@
 
     var gOldMIME          = null;
     
+    var gOldDesc          = null;
+    
+    var gOldExtensions   = null;
+    
     function Startup()
     {
       doSetOKCancel(onOK);
@@ -71,6 +75,8 @@
       gExtensionLabel.setAttribute("value", handlerInfo.extensions);
       gMIMEField.value = handlerInfo.mimeType;
       gOldMIME = handlerInfo.mimeType;
+      gOldDesc = handlerInfo.description;
+      gOldExtensions = handlerInfo.extensions;
       
       // figure out how this type is handled
       var data = 0;
@@ -167,6 +173,15 @@
       handlerInfo.mUpdateMode = mimeHandlerExists(gMIMEField.value);
       handlerInfo.mimeType = gMIMEField.value;
     
+      // set description, editable, and extensions
+      handlerInfo.description = gOldDesc
+      handlerInfo.isEditable = true;
+      var extensions = gOldExtensions.split(" ");
+      for (var i = 0; i < extensions.length; i++) {
+        var currExtension = extensions[i];
+        handlerInfo.addExtension(currExtension);
+      }
+    
       // other info we need to set (not reflected in UI)
       if (gHandlerGroup.data == "2") {
         handlerInfo.appPath = gAppPath.value;
@@ -196,6 +211,10 @@
           handlerInfo.appDisplayName = gAppPath.value;    
         }
       }
+      // delete old handler
+      if (gOldMIME)
+        removeOverride(gOldMIME);
+
       // do the rest of the work (ugly yes, but it works)
       handlerInfo.buildLinks();
       
