@@ -666,7 +666,7 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, co
                         aCharset.EqualsIgnoreCase("ISO-8859-1") ?
                           nsISaveAsCharset::attr_htmlTextDefault :
                           nsISaveAsCharset::attr_EntityAfterCharsetConv + nsISaveAsCharset::attr_FallbackDecimalNCR, 
-                        nsIEntityConverter::html40);
+                        nsIEntityConverter::html32);
     }
     else {
       // fallback for text/plain: first try transliterate then '?'
