@@ -16,7 +16,7 @@
 	<!ENTITY saveCmd.key "S">
   <!ENTITY saveCmd.accesskey "s">
 <!ENTITY saveAsCmd.label "Save As">
-	<!ENTITY saveAsCmd.accesskey "a">
+	<!ENTITY saveAsCmd.accesskey "A">
 <!ENTITY saveAsFileCmd.label "File...">
 	<!ENTITY saveAsFileCmd.accesskey "F">
 <!ENTITY saveAsDraftCmd.label "Draft">
@@ -102,7 +102,7 @@
 <!ENTITY quoteOrigCmd.label ".Quote Original Message">
 	<!ENTITY quoteOrigCmd.accesskey "Q">
 <!ENTITY editRewrapCmd.label "Rewrap">
-<!ENTITY editRewrapCmd.accesskey  "r">
+<!ENTITY editRewrapCmd.accesskey  "R">
 <!ENTITY selectAddressCmd.label "Select Addresses...">
 	<!ENTITY selectAddressCmd.key "">
 	<!ENTITY selectAddressCmd.accesskey "c">
@@ -122,7 +122,7 @@
 <!ENTITY highPriorityCmd.label "High">
 <!ENTITY highPriorityCmd.accesskey "i">
 <!ENTITY highestPriorityCmd.label "Highest">
-<!ENTITY highestPriorityCmd.accesskey "h">
+<!ENTITY highestPriorityCmd.accesskey "H">
 
 <!ENTITY outputFormatMenu.label "Format">
 <!ENTITY outputFormatMenu.accesskey  "f">
