@@ -49,6 +49,10 @@ CPPSRCS = CurrentFunctionCall.cpp      \
           txFormatNumberFunctionCall.cpp \
           txKeyFunctionCall.cpp
 
+ifdef BUILD_SHARED_LIBS
+FORCE_USE_PIC=1
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir)/../../base -I$(srcdir)/../../xpath \
