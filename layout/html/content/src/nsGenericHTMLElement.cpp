@@ -517,7 +517,7 @@ DOMAttributeMap::RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn)
     nsAutoString upper;
     aName.ToUpperCase(upper);
     nsIAtom* attr = NS_NewAtom(upper);
-    mContent->UnsetAttribute(attr);
+    mContent->UnsetAttribute(attr, PR_TRUE);
   }
 
   return res;
@@ -793,7 +793,7 @@ nsGenericHTMLElement::RemoveAttribute(const nsString& aName)
   nsAutoString upper;
   aName.ToUpperCase(upper);
   nsIAtom* attr = NS_NewAtom(upper);
-  UnsetAttribute(attr);
+  UnsetAttribute(attr, PR_TRUE);
   NS_RELEASE(attr);
   return NS_OK;
 }
@@ -843,7 +843,7 @@ nsGenericHTMLElement::RemoveAttributeNode(nsIDOMAttribute* aAttribute)
       nsAutoString upper;
       name.ToUpperCase(upper);
       nsIAtom* attr = NS_NewAtom(upper);
-      UnsetAttribute(attr);
+      UnsetAttribute(attr, PR_TRUE);
     }
   }
 
@@ -873,7 +873,7 @@ nsGenericHTMLElement::GetId(nsString& aId)
 nsresult
 nsGenericHTMLElement::SetId(const nsString& aId)
 {
-  SetAttr(nsHTMLAtoms::id, aId, eSetAttrNotify_Restart);
+  SetAttribute(nsHTMLAtoms::id, aId, PR_TRUE);
   return NS_OK;
 }
 
@@ -887,7 +887,7 @@ nsGenericHTMLElement::GetTitle(nsString& aTitle)
 nsresult
 nsGenericHTMLElement::SetTitle(const nsString& aTitle)
 {
-  SetAttr(nsHTMLAtoms::title, aTitle, eSetAttrNotify_None);
+  SetAttribute(nsHTMLAtoms::title, aTitle, PR_TRUE);
   return NS_OK;
 }
 
@@ -901,7 +901,7 @@ nsGenericHTMLElement::GetLang(nsString& aLang)
 nsresult
 nsGenericHTMLElement::SetLang(const nsString& aLang)
 {
-  SetAttr(nsHTMLAtoms::lang, aLang, eSetAttrNotify_Reflow);
+  SetAttribute(nsHTMLAtoms::lang, aLang, PR_TRUE);
   return NS_OK;
 }
 
@@ -915,7 +915,7 @@ nsGenericHTMLElement::GetDir(nsString& aDir)
 nsresult
 nsGenericHTMLElement::SetDir(const nsString& aDir)
 {
-  SetAttr(nsHTMLAtoms::dir, aDir, eSetAttrNotify_Reflow);
+  SetAttribute(nsHTMLAtoms::dir, aDir, PR_TRUE);
   return NS_OK;
 }
 
@@ -929,7 +929,7 @@ nsGenericHTMLElement::GetClassName(nsString& aClassName)
 nsresult
 nsGenericHTMLElement::SetClassName(const nsString& aClassName)
 {
-  SetAttr(nsHTMLAtoms::kClass, aClassName, eSetAttrNotify_Restart);
+  SetAttribute(nsHTMLAtoms::kClass, aClassName, PR_TRUE);
   return NS_OK;
 }
 
@@ -1184,6 +1184,10 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
         }
       }
     }
+
+    if (aNotify && (nsnull != mDocument)) {
+      mDocument->AttributeChanged(mContent, aAttribute);
+    }
   }
   return result;
 }
@@ -1197,8 +1201,12 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
   if (nsnull != mDocument) {  // set attr via style sheet
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
     if (nsnull != sheet) {
-      result = sheet->SetAttributeFor(aAttribute, aValue, mContent, mAttributes);
+      result = sheet->SetAttributeFor(aAttribute, aValue, mContent,
+                                      mAttributes);
       NS_RELEASE(sheet);
+    }
+    if (aNotify) {
+      mDocument->AttributeChanged(mContent, aAttribute);
     }
   }
   else {  // manage this ourselves and re-sync when we connect to doc
@@ -1234,7 +1242,7 @@ nsGenericHTMLElement::MapCommonAttributesInto(nsIHTMLAttributes* aAttributes,
 }
 
 nsresult
-nsGenericHTMLElement::UnsetAttribute(nsIAtom* aAttribute)
+nsGenericHTMLElement::UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify)
 {
   nsresult result = NS_OK;
   if (nsnull != mDocument) {  // set attr via style sheet
@@ -1242,6 +1250,9 @@ nsGenericHTMLElement::UnsetAttribute(nsIAtom* aAttribute)
     if (nsnull != sheet) {
       result = sheet->UnsetAttributeFor(aAttribute, mContent, mAttributes);
       NS_RELEASE(sheet);
+    }
+    if (aNotify) {
+      mDocument->AttributeChanged(mContent, aAttribute);
     }
   }
   else {  // manage this ourselves and re-sync when we connect to doc
@@ -1592,77 +1603,6 @@ nsGenericHTMLElement::ToHTMLString(nsString& aBuf) const
 }
 
 //----------------------------------------------------------------------
-
-nsresult
-nsGenericHTMLElement::SetAttr(nsIAtom* aAttribute,
-                              const nsString& aValue,
-                              nsSetAttrNotify aNotify)
-{
-  nsresult rv = SetAttribute(aAttribute, aValue, PR_FALSE);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  switch (aNotify) {
-  case eSetAttrNotify_None:
-    break;
-  case eSetAttrNotify_Reflow:
-    if (nsnull != mDocument) {
-      mDocument->ContentChanged(mContent, nsnull);
-    }
-    break;
-  case eSetAttrNotify_Render:
-    RenderFrame();
-    break;
-  case eSetAttrNotify_Restart:
-    break;
-  }
-  return rv;
-}
-
-nsresult
-nsGenericHTMLElement::SetAttr(nsIAtom* aAttribute,
-                              const nsHTMLValue& aValue,
-                              nsSetAttrNotify aNotify)
-{
-  nsresult rv = SetAttribute(aAttribute, aValue, PR_FALSE);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  switch (aNotify) {
-  case eSetAttrNotify_None:
-    break;
-  case eSetAttrNotify_Reflow:
-    break;
-  case eSetAttrNotify_Render:
-    RenderFrame();
-    break;
-  case eSetAttrNotify_Restart:
-    break;
-  }
-  return rv;
-}
-
-nsresult
-nsGenericHTMLElement::UnsetAttr(nsIAtom* aAttribute,
-                                nsSetAttrNotify aNotify)
-{
-  nsresult rv = UnsetAttribute(aAttribute);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  switch (aNotify) {
-  case eSetAttrNotify_None:
-    break;
-  case eSetAttrNotify_Reflow:
-    break;
-  case eSetAttrNotify_Render:
-    RenderFrame();
-    break;
-  case eSetAttrNotify_Restart:
-    break;
-  }
-  return rv;
-}
 
 nsresult
 nsGenericHTMLElement::RenderFrame()
@@ -3264,15 +3204,10 @@ nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
   nsIContent* oldKid = mChildren->ElementAt(aIndex);
   if (nsnull != oldKid ) {
     nsIDocument* doc = mDocument;
-    if (aNotify) {
-      if (nsnull != doc) {
-        doc->ContentWillBeRemoved(mContent, oldKid, aIndex);
-      }
-    }
     PRBool rv = mChildren->RemoveElementAt(aIndex);
     if (aNotify) {
       if (nsnull != doc) {
-        doc->ContentHasBeenRemoved(mContent, oldKid, aIndex);
+        doc->ContentRemoved(mContent, oldKid, aIndex);
       }
     }
     oldKid->SetDocument(nsnull);
