@@ -87,14 +87,9 @@ ifdef BUILD_OPT
 OPTIMIZER		+= -Olimit 4000
 endif
 
-ifeq ($(USE_KERNEL_THREADS),1)
-ifdef NSPR20
+ifeq ($(USE_PTHREADS),1)
 PLATFORM_FLAGS		+= -pthread
 OS_LIBS			+= -lpthread
-else
-PLATFORM_FLAGS		+= -threads
-PORT_FLAGS		+= -DHW_THREADS
-endif
 else
 PORT_FLAGS		+= -DSW_THREADS
 endif
