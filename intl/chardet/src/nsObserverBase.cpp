@@ -51,8 +51,7 @@ NS_IMETHODIMP nsObserverBase::NotifyWebShell(
                                                  (nsISupports**)&docLoader)))
      goto done;
    
-   // temp change to (PRUint32) cast untill we change the GetContentViewerContainer interface
-   if(NS_FAILED(rv =docLoader->GetContentViewerContainer((PRUint32)aDocumentID, &cvc)))
+   if(NS_FAILED(rv =docLoader->GetContentViewerContainer(aDocumentID, &cvc)))
      goto done;
 
    /* sspitzer:  this was necessary to get printing of mail to work (sort of)
