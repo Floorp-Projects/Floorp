@@ -34,9 +34,10 @@
 
 [scriptable, uuid(BDD872B6-D02C-11d3-8B2E-0060B0FC04D2)]
 interface nsIMsgViewNavigationService : nsISupports {
-%{C++
-	enum {  eNavigateAny =0, eNavigateUnread=1, eNavigateFlagged =2 , eNavigateNew =3};
-%}
+  const long eNavigateAny = 0;
+  const long eNavigateUnread = 1;
+  const long eNavigateFlagged = 2;
+  const long eNavigateNew = 3;
 
 	nsIDOMXULElement FindNextMessage(in long type, in nsIDOMXULTreeElement tree, in nsIDOMXULElement originalMessage, 
 						 in nsIRDFService rdfService, in nsIDOMXULDocument document,

@@ -39,10 +39,10 @@ interface nsITransactionManager;
 [scriptable, uuid(4f7966d0-c14f-11d2-b7f2-00805f05ffa5)]
 interface nsIMessenger : nsISupports {
 
-%{C++
-    enum { eUnknown=0, eDeleteMsg=1,
-           eMoveMsg=2, eCopyMsg=3 };
-%}
+    const long eUnknown = 0;
+    const long eDeleteMsg = 1;
+    const long eMoveMsg = 2;
+    const long eCopyMsg = 3;
 
     readonly attribute nsITransactionManager transactionManager;
 
