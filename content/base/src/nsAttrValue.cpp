@@ -741,6 +741,8 @@ nsAttrValue::ParseEnumValue(const nsAString& aValue,
                             const nsHTMLValue::EnumTable* aTable,
                             PRBool aCaseSensitive)
 {
+  ResetIfSet();
+
   nsAutoString val(aValue);
   while (aTable->tag) {
     if (aCaseSensitive ? val.EqualsWithConversion(aTable->tag) :
@@ -760,6 +762,8 @@ nsAttrValue::ParseSpecialIntValue(const nsAString& aString,
                                   PRBool aCanBePercent,
                                   PRBool aCanBeProportional)
 {
+  ResetIfSet();
+
   PRInt32 ec;
   nsAutoString tmp(aString);
   PRInt32 val = tmp.ToInteger(&ec);
@@ -812,6 +816,8 @@ nsAttrValue::ParseIntWithBounds(const nsAString& aString,
                   aMin >= NS_ATTRVALUE_INTEGERTYPE_MINVALUE &&
                   aMax <= NS_ATTRVALUE_INTEGERTYPE_MAXVALUE, "bad boundaries");
 
+  ResetIfSet();
+
   PRInt32 ec;
   PRInt32 val = PromiseFlatString(aString).ToInteger(&ec);
   if (NS_FAILED(ec)) {
@@ -831,6 +837,7 @@ nsAttrValue::ParseColor(const nsAString& aString, nsIDocument* aDocument)
   nsAutoString colorStr(aString);
   colorStr.CompressWhitespace(PR_TRUE, PR_TRUE);
   if (colorStr.IsEmpty()) {
+    Reset();
     return PR_FALSE;
   }
 
@@ -850,10 +857,12 @@ nsAttrValue::ParseColor(const nsAString& aString, nsIDocument* aDocument)
   }
   else {
     if (colorStr.First() != '#') {
+      Reset();
       return PR_FALSE;
     }
     colorStr.Cut(0, 1);
     if (!NS_HexToRGB(colorStr, &color)) {
+      Reset();
       return PR_FALSE;
     }
   }
