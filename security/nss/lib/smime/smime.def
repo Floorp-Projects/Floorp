@@ -47,7 +47,6 @@
 ;+    global:
 LIBRARY smime3 ;-
 EXPORTS	;-
-NSS_CMSArray_Count;
 NSS_CMSContentInfo_GetBulkKey;
 NSS_CMSContentInfo_GetBulkKeySize;
 NSS_CMSContentInfo_GetContent;
