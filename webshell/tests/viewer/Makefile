@@ -17,6 +17,11 @@
 
 DEPTH=../../..
 
+MOTIFLIBDIR = /usr/X11R6/lib
+
+MOTIFLIBS = $(MOTIFLIBDIR)/libXm.a $(MOTIFLIBDIR)/libXt.a $(MOTIFLIBDIR)/libX11.a
+
+
 include $(DEPTH)/config/config.mk
 
 CPPSRCS = \
@@ -102,53 +107,6 @@ EX_LIBS = \
 	$(NULL)
 
 
-#EX_LIBS = \
-#	$(DIST)/bin/libraptorbase.so	\
-#	$(DIST)/bin/libxpcom.so	\
-#	$(DIST)/bin/libreg.so	\
-#	$(DIST)/bin/libplc21.so	\
-#	$(DIST)/bin/libplds21.so	\
-#	$(DIST)/bin/libnspr21.so	\
-#	$(DIST)/bin/libnetlib.so \
-#	$(DIST)/bin/libnetcache.so \
-#	$(DIST)/bin/libnetwork.so \
-#	$(DIST)/bin/libxp.so \
-#	$(DIST)/bin/libhttpurl.so \
-#	$(DIST)/bin/libjs.so \
-#	$(DIST)/bin/libmimetype.so \
-#	$(DIST)/bin/libpref.so \
-#	$(DIST)/bin/libsecfree.so \
-#	$(DIST)/bin/libftpurl.so \
-#	$(DIST)/bin/libremoturl.so \
-#	$(DIST)/bin/libgophurl.so \
-#	$(DIST)/bin/libabouturl.so \
-#	$(DIST)/bin/libfileurl.so \
-#	$(DIST)/bin/libraptorhtml.so \
-#	$(DIST)/bin/libraptorhtmlbase_s.so \
-#	$(DIST)/bin/libraptorhtmltable_s.so \
-#	$(DIST)/bin/libjsdom.so \
-#	$(DIST)/bin/libraptorlayout_s.so \
-#	$(DIST)/bin/libjsj.so \
-#	$(DIST)/bin/libmsgc21.so \
-#	$(DIST)/bin/libnetcnvts.so \
-#	$(DIST)/bin/libpng.so \
-#	$(DIST)/bin/libraptorgfx.so \
-#	$(DIST)/bin/libraptorhtmldoc_s.so \
-#	$(DIST)/bin/libraptorhtmlforms_s.so \
-#	$(DIST)/bin/libraptorhtmlpars.so \
-#	$(DIST)/bin/libraptorhtmlstyle_s.so \
-#	$(DIST)/bin/libraptorview.so \
-#	$(DIST)/bin/libstubnj.so \
-#	$(DIST)/bin/libstubsj.so \
-#	$(DIST)/bin/libtestdynamic.so \
-#	$(DIST)/bin/libutil.so \
-#	$(DIST)/bin/libzlib.so \
-#	$(DIST)/bin/libimg.so \
-#	$(DIST)/bin/libjpeg.so \
-#	$(NULL)
-
-
-
 PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
 
 TARGETS = $(PROGS)
@@ -169,7 +127,7 @@ $(OBJDIR)/%.o: %.cpp
 
 $(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o nsViewer.o nsDocLoader.o 
 	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $@.o nsViewer.o nsDocLoader.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) /usr/X11R6/lib/libXm.a  /usr/X11R6/lib/libXt.a /usr/X11R6/lib/libX11.a
+	$(CCC) -o $@ $@.o nsViewer.o nsDocLoader.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) $(MOTIFLIBS)
 
 
 export::
