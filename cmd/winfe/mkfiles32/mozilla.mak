@@ -1369,6 +1369,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 !endif
 	$(DEPTH)\cmd\winfe\netsvw.cpp 
 	$(DEPTH)\cmd\winfe\nsshell.cpp
+	$(DEPTH)\cmd\winfe\nsidefaultbrowser.cpp
 !ifndef MOZ_NGLAYOUT
 	$(DEPTH)\cmd\winfe\odctrl.cpp
 !endif
