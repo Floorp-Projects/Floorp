@@ -81,6 +81,9 @@ LLIBS=                          \
 !ifdef DETECT_WEBSHELL_LEAKS
  $(DIST)\lib\gkweb.lib       \
 !endif
+!ifdef GC_LEAK_DETECTOR
+ $(DIST)\lib\boehm.lib
+!endif
 !ifdef NECKO
  $(DIST)\lib\neckoutil_s.lib    \
 !else
