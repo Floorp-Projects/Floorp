@@ -159,11 +159,13 @@ RgnHandle			currgn;
 void 
 nsMacMessagePump::DoPaintEvent(EventRecord *aTheEvent)
 {
+GrafPtr				curport;
 WindowPtr			whichwindow;
-nsPaintEvent 	pevent;
 nsWindow			*thewindow;
 nsRect 				rect;
+RgnHandle			updateregion;
  
+ 	::GetPort(&curport);
 	whichwindow = (WindowPtr)aTheEvent->message;
 	
 	if (IsUserWindow(whichwindow)) 
@@ -174,23 +176,13 @@ nsRect 				rect;
 		thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
 		if(thewindow != nsnull)
 			{
-			thewindow = thewindow->FindWidgetHit(aTheEvent->where);
-
-			if (thewindow != nsnull)
-				{
-				// generate a paint event
-				pevent.message = NS_PAINT;
-				pevent.widget = thewindow;
-				pevent.eventStructType = NS_PAINT_EVENT;
-				pevent.point.x = aTheEvent->where.h;
-		    pevent.point.y = aTheEvent->where.v;
-		    pevent.rect = &rect;
-		    pevent.time = 0; 
-		    thewindow->OnPaint(pevent);
-		    }
+			updateregion = whichwindow->visRgn;
+			thewindow->DoPaintWidgets(updateregion);
 	    }
 		EndUpdate(whichwindow);
 		}
+	
+	::SetPort(curport);
 
 }
 
