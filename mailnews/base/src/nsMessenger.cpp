@@ -355,7 +355,15 @@ nsMessenger::SetWindow(nsIDOMWindow* aWin)
   }
 
   NS_RELEASE(webShell);
-	return NS_OK;
+
+  // libmime always converts to UTF-8 (both HTML and XML)
+  if (nsnull != mWebShell) 
+  {
+	  nsAutoString aForceCharacterSet("UTF-8");
+	  mWebShell->SetForceCharacterSet(aForceCharacterSet.GetUnicode());
+  }
+
+  return NS_OK;
 }
 
 
@@ -765,7 +773,3 @@ nsMessenger::AccountManager(nsIDOMWindow *parent)
   
   return rv;
 }
-
-//  to load the webshell!
-//  mWebShell->LoadURL(nsAutoString("http://www.netscape.com"), 
-//                      nsnull, PR_TRUE, nsURLReload, 0);
