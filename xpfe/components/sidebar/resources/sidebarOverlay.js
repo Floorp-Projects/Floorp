@@ -1001,15 +1001,6 @@ function PersistHeight() {
 }
 
 function persist_width() {
-  // XXX Partial workaround for bug #19488.
-  var sidebar_box = document.getElementById('sidebar-box');
-
-  var width = sidebar_box.getAttribute('width');
-  if (width && (width > 410 || width < 100)) {
-    sidebar_box.setAttribute('width',168);
-    debug("Forcing sidebar width to 168. It was too narror or too wide)");
-  }
-
   // XXX Mini hack. Persist isn't working too well. Force the persist,
   // but wait until the width change has commited.
   setTimeout("document.persist('sidebar-box', 'width');",100);
