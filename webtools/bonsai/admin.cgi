@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl
+#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
@@ -19,14 +19,23 @@
 
 require 'CGI.pl';
 
+use diagnostics;
+use strict;
+
+sub StupidFuncToShutUpWarningsByUsingVarsAgain {
+    my $z;
+    $z = $::TreeOpen;
+    $z = $::CloseTimeStamp;
+}
+
 Lock();
 LoadCheckins();
 LoadMOTD();
 LoadTreeConfig();
 Unlock();
 
-$BIP = BatchIdPart('?');
-$BIP_nohook = BatchIdPart();
+my $BIP = BatchIdPart('?');
+my $BIP_nohook = BatchIdPart();
 
 print "Content-type: text/html\n\n";
 PutsHeader("Bonsai Administration  [`$::TreeID' Tree]",
