@@ -14,14 +14,27 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 #
-
 #
 # Even though we use AUTOCONF, there are just too many things that need
 # fixing up to do it any other way than via an architecture specific file.
 #
+# If we're not using NSBUILDROOT, then make sure we use multiple object
+# directories. We want this name to be relatively short, and to be different
+# from what NSPR uses (so that we can wipe out Mozilla objects without
+# wiping NSPR objects.
+ifndef NSBUILDROOT
+#OBJDIR_NAME	= $(OS_CONFIG)$(CPU_ARCH_TAG)$(OBJDIR_TAG).OBJ  # NSPR
+OBJDIR_NAME	= $(subst _,,$(CPU_ARCH_TAG)$(OBJDIR_TAG))
+endif
+
+ifdef BUILD_OPT
+OBJDIR_TAG	= _OPT
+else
+OBJDIR_TAG	= _DBG
+endif
 
 # We don't want -KPIC as it forces the compiler to generate a .i file.
-DSO_CFLAGS	=
+DSO_PIC_CFLAGS	=
 
 # We don't want the standard set of UNIX libraries.
 OS_LIBS		=
@@ -39,14 +52,16 @@ OS_CXXFLAGS	= $(ACDEFINES) -O -Wc,names=short
 OS_LDFLAGS	=
 endif
 
-# NSPR stuff
-# This is not needed if we have configure accept with-nspr correctly
-ifdef VMS_NEVER_EVER
-ifndef VMS_NSPR_ROOT
-VMS_NSPR_ROOT		= /mozilla/mozilla/dist
+# This is where our Sharable Image trickery goes.
+ifdef BUILD_OPT
+VMS_DEBUG	= -O
+else
+VMS_DEBUG	= -g
 endif
-NSPR_INCLUDE_DIR	= $(VMS_NSPR_ROOT)/include
-NSPR_CFLAGS		= -I$(NSPR_INCLUDE_DIR)
-NSPR_LIBS		= -L$(VMS_NSPR_ROOT)/lib -lplds3 -lplc3 -lnspr3
-MOZ_NATIVE_NSPR		= 1 # unfortunately defined too late
-endif
+AS		= vmsas $(VMS_DEBUG)
+LD		= vmsld MODULE=$(LIBRARY_NAME) DIST=$(DIST) \
+		  DISTNSPR=$(subst -L/,/,$(NSPR_LIBS:-l%=)) $(VMS_DEBUG)
+DSO_LDOPTS	=
+EXTRA_DSO_LDOPTS += $(EXTRA_LIBS)
+MKSHLIB		= $(LD)
+
