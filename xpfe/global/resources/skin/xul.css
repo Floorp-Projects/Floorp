@@ -30,7 +30,7 @@ menupopup, splitter {
   user-focus: ignore;
 }
 
-treechildren, treehead, treefoot {
+treechildren, treehead, treerows {
   user-focus: none;
 }
 
@@ -188,6 +188,10 @@ tree {
  height: 200px;
  min-width: 0px;
  min-height: 0px;
+}
+
+treerows {
+ behavior: url("resource:/chrome/xulBindings.xml#treerows");
 }
 
 treeitem { 
