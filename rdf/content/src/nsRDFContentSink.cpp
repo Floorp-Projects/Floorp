@@ -326,8 +326,6 @@ nsRDFContentSink::~nsRDFContentSink()
 }
 
 ////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////
 // nsISupports interface
 
 NS_IMPL_ADDREF(nsRDFContentSink);
@@ -393,6 +391,10 @@ nsRDFContentSink::OpenContainer(const nsIParserNode& aNode)
     // we're in the epilog, there should be no new elements
     NS_PRECONDITION(mState != eRDFContentSinkState_InEpilog, "tag in RDF doc epilog");
 
+#ifdef DEBUG
+    const nsString& text = aNode.GetText();
+#endif
+
     FlushText();
 
     // We must register namespace declarations found in the attribute
@@ -403,7 +405,6 @@ nsRDFContentSink::OpenContainer(const nsIParserNode& aNode)
 
     nsresult rv;
 
-    RDFContentSinkState lastState = mState;
     switch (mState) {
     case eRDFContentSinkState_InProlog:
         rv = OpenRDF(aNode);
@@ -441,6 +442,10 @@ nsRDFContentSink::OpenContainer(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 nsRDFContentSink::CloseContainer(const nsIParserNode& aNode)
 {
+#ifdef DEBUG
+    const nsString& text = aNode.GetText();
+#endif
+
     FlushText();
 
     nsIRDFResource* resource;
@@ -678,7 +683,7 @@ nsRDFContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
                 if (NS_SUCCEEDED(rv = mRDFService->GetLiteral(value, &literal))) {
                     rv = rdf_ContainerAddElement(mRDFService,
                                                  mDataSource,
-                                                 GetContextElement(0),
+                                                 GetContextElement(1),
                                                  literal);
                     NS_RELEASE(literal);
                 }
@@ -743,8 +748,8 @@ nsRDFContentSink::GetIdAboutAttribute(const nsIParserNode& aNode,
         const nsString& key = aNode.GetKeyAt(i);
         SplitQualifiedName(key, nameSpaceID, attr);
 
-       // if (nameSpaceID != mRDFNameSpaceID)
-         //   continue;
+        if (nameSpaceID != mRDFNameSpaceID)
+            continue;
 
         // XXX you can't specify both, but we'll just pick up the
         // first thing that was specified and ignore the other.
@@ -799,8 +804,8 @@ nsRDFContentSink::GetResourceAttribute(const nsIParserNode& aNode,
         const nsString& key = aNode.GetKeyAt(i);
         SplitQualifiedName(key, nameSpaceID, attr);
 
-      //  if (nameSpaceID != mRDFNameSpaceID)
-        //    continue;
+        if (nameSpaceID != mRDFNameSpaceID)
+            continue;
 
         // XXX you can't specify both, but we'll just pick up the
         // first thing that was specified and ignore the other.
@@ -808,7 +813,12 @@ nsRDFContentSink::GetResourceAttribute(const nsIParserNode& aNode,
         if (attr.Equals(kTagRDF_resource)) {
             rResource = aNode.GetValueAt(i);
             rdf_StripAndConvert(rResource);
+
+            // XXX Take the URI and make it fully qualified by
+            // sticking it into the document's URL. This may not be
+            // appropriate...
             rdf_FullyQualifyURI(mDocumentURL, rResource);
+
             return NS_OK;
         }
     }
@@ -833,7 +843,7 @@ nsRDFContentSink::AddProperties(const nsIParserNode& aNode,
         // skip rdf:about, rdf:ID, and rdf:resource attributes; these
         // are all "special" and should've been dealt with by the
         // caller.
-        if ( //(nameSpaceID == mRDFNameSpaceID) &&
+        if ((nameSpaceID == mRDFNameSpaceID) &&
             (attr.Equals(kTagRDF_about) ||
              attr.Equals(kTagRDF_ID) ||
              attr.Equals(kTagRDF_resource)))
@@ -866,8 +876,8 @@ nsRDFContentSink::OpenRDF(const nsIParserNode& aNode)
     
     SplitQualifiedName(aNode.GetText(), nameSpaceID, tag);
 
-  //  if (nameSpaceID != mRDFNameSpaceID)
-    //    return NS_ERROR_UNEXPECTED;
+    if (nameSpaceID != mRDFNameSpaceID)
+        return NS_ERROR_UNEXPECTED;
 
     if (! tag.Equals(kTagRDF_RDF))
         return NS_ERROR_UNEXPECTED;
@@ -908,7 +918,7 @@ nsRDFContentSink::OpenObject(const nsIParserNode& aNode)
     // member/property.
     switch (mState) {
     case eRDFContentSinkState_InMemberElement: {
-        rdf_ContainerAddElement(mRDFService, mDataSource, GetContextElement(0), rdfResource);
+        rdf_ContainerAddElement(mRDFService, mDataSource, GetContextElement(1), rdfResource);
     } break;
 
     case eRDFContentSinkState_InPropertyElement: {
@@ -927,7 +937,7 @@ nsRDFContentSink::OpenObject(const nsIParserNode& aNode)
     // description or a container.
     PRBool isaTypedNode = PR_TRUE;
 
-    if (1 || (nameSpaceID == mRDFNameSpaceID)) {
+    if (nameSpaceID == mRDFNameSpaceID) {
         isaTypedNode = PR_FALSE;
 
         if (tag.Equals(kTagRDF_Description)) {
@@ -1011,8 +1021,8 @@ nsRDFContentSink::OpenProperty(const nsIParserNode& aNode)
                 rv = rdf_Assert(mRDFService,
                                 mDataSource,
                                 GetContextElement(0),
-                                ns,
-                                resourceURI);
+                                rdfProperty,
+                                rdfResource);
             }
         }
 
@@ -1045,8 +1055,8 @@ nsRDFContentSink::OpenMember(const nsIParserNode& aNode)
 
     SplitQualifiedName(aNode.GetText(), nameSpaceID, tag);
 
-    //if (nameSpaceID != mRDFNameSpaceID)
-      //  return NS_ERROR_UNEXPECTED;
+    if (nameSpaceID != mRDFNameSpaceID)
+        return NS_ERROR_UNEXPECTED;
 
     if (! tag.Equals(kTagRDF_li))
         return NS_ERROR_UNEXPECTED;
@@ -1073,9 +1083,14 @@ nsRDFContentSink::OpenMember(const nsIParserNode& aNode)
         // Right Thing so long as the RDF is well-formed.
     }
 
-    // Change state.
+    // Change state. Pushing a null context element is a bit weird,
+    // but the idea is that there really is _no_ context "property".
+    // The contained element will use rdf_ContainerAddElement() to add
+    // the element to the container, which requires only the container
+    // and the element to be added.
+    PushContext(nsnull, mState);
     mState = eRDFContentSinkState_InMemberElement;
-    return rv;
+    return NS_OK;
 }
 
 
