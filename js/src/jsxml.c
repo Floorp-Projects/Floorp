@@ -7620,6 +7620,7 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, uint32 len,
     script.code = script.main = pc;
     script.length = len;
     frame.script = &script;
+    js_CallNewScriptHook(cx, &script, fp->fun);
 
     for (i = 0, n = list->xml_kids.length; i < n; i++) {
         kid = XMLARRAY_MEMBER(&list->xml_kids, i, JSXML);
@@ -7643,6 +7644,8 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, uint32 len,
     *vp = OBJECT_TO_JSVAL(resobj);
 
 out:
+    if (frame.script == &script)
+        js_CallDestroyScriptHook(cx, &script);
     if (inLRS)
         JS_LeaveLocalRootScope(cx);
     cx->fp = fp;
