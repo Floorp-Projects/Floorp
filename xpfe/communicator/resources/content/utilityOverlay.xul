@@ -172,6 +172,11 @@
             key="key_findTypeLinks"
             accesskey="&findTypeLinksCmd.accesskey;"
             command="cmd_findTypeLinks"/>
+  <menuitem id="textfieldDirection-swap" 
+            label="&bidiSwitchTextDirectionItem.label;"
+            key="key_switchTextDirection"
+            accesskey="&bidiSwitchTextDirectionItem.accesskey;"
+            command="cmd_switchTextDirection"/>
 
   <!-- These key nodes are here only for show. The real bindings come from
        XBL, in platformHTMLBindings.xml. See bugs 57078 and 71779. -->
@@ -191,6 +196,10 @@
   <key id="key_paste"
        key="&pasteCmd.key;"
        modifiers="accel"/>
+  <key id="key_switchTextDirection"
+       command="cmd_switchTextDirection"
+       key="&bidiSwitchTextDirectionItem.commandkey;"
+       modifiers="accel,shift"/>
 
   <commandset id="globalEditMenuItems"
               commandupdater="true"
@@ -244,6 +253,9 @@
            disabled="true"/>
   <command id="cmd_selectAll"
            oncommand="goDoCommand('cmd_selectAll')"
+           disabled="true"/>
+  <command id="cmd_switchTextDirection"
+           oncommand="goDoCommand('cmd_switchTextDirection');"
            disabled="true"/>
   <command id="cmd_findTypeText" 
            oncommand="goDoCommand('cmd_findTypeText')"/>

@@ -57,6 +57,7 @@ const kProxyManual = ["network.proxy.ftp",
                       "network.proxy.http",
                       "network.proxy.socks",
                       "network.proxy.ssl"];
+var gShowBiDi = false;
 
 function toggleOfflineStatus()
 {
@@ -385,14 +386,8 @@ function goUpdateGlobalEditMenuItems()
   goUpdateCommand('cmd_paste');
   goUpdateCommand('cmd_selectAll');
   goUpdateCommand('cmd_delete');
-  try {
-    // XXX: implement controller for cmd_SwitchTextDirection
-    var changer = document.getElementById('cmd_SwitchTextDirection');
-    if (changer)
-      changer.setAttribute('disabled',
-                           !document.commandDispatcher.focusedElement);
-  }
-  catch (e) {}
+  if (gShowBiDi)
+    goUpdateCommand('cmd_switchTextDirection');
 }
 
 // update menu items that rely on the current selection

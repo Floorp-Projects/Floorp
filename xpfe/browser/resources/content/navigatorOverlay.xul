@@ -86,10 +86,7 @@
     <key id="key_paste"/>
     <key id="key_delete"/>
     <key id="key_selectAll"/>
-    <key id="key_SwitchTextDirection"
-            key="&bidiSwitchTextDirectionItem.commandkey;"
-            command="cmd_SwitchTextDirection"
-            modifiers="accel,shift" />
+    <key id="key_switchTextDirection"/>
 
           <!-- View Menu -->
     <key id="key_reload"  key="&reloadCmd.commandkey;" oncommand="BrowserReload();" modifiers="accel"/>
@@ -157,7 +154,7 @@
     <command id="cmd_paste"/>
     <command id="cmd_delete"/>
     <command id="cmd_selectAll" observes="isImage"/>
-    <command id="cmd_SwitchTextDirection" oncommand="SwitchFocusedTextEntryDirection();" disabled="true" />
+    <command id="cmd_switchTextDirection"/>
 
     <!-- Content area context menu -->
     <command id="cmd_copyLink"/>
@@ -381,12 +378,8 @@
         <menuitem id="menu_findTypeLinks"/>
         <menuitem id="menu_findTypeText"/>
 
-        <menuseparator hidden="true" id="textfieldDirection-separator"/>
-        <menuitem hidden="true" id="textfieldDirection-swap" 
-                label="&bidiSwitchTextDirectionItem.label;"
-                key="key_SwitchTextDirection"
-                accesskey="&bidiSwitchTextDirectionItem.accesskey;"
-                command="cmd_SwitchTextDirection"/>
+        <menuseparator id="textfieldDirection-separator" hidden="true"/>
+        <menuitem id="textfieldDirection-swap" hidden="true"/>
 
         <menuseparator id="menu_PrefsSeparator"/> 
         <menuitem id="menu_preferences" oncommand="goPreferences('navigator', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>

@@ -436,6 +436,45 @@ nsPasteCommand::GetCommandStateParams(const char *aCommandName,
   return aParams->SetBooleanValue(STATE_ENABLED,canUndo);
 }
 
+NS_IMETHODIMP
+nsSwitchTextDirectionCommand::IsCommandEnabled(const char *aCommandName,
+                                 nsISupports *aCommandRefCon,
+                                 PRBool *outCmdEnabled)
+{
+  NS_ENSURE_ARG_POINTER(outCmdEnabled);
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
+  *outCmdEnabled = (editor != nsnull);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSwitchTextDirectionCommand::DoCommand(const char *aCommandName, nsISupports *aCommandRefCon)
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
+  if (!editor)
+    return NS_ERROR_FAILURE;
+
+  return editor->SwitchTextDirection();
+}
+
+NS_IMETHODIMP 
+nsSwitchTextDirectionCommand::DoCommandParams(const char *aCommandName,
+                                nsICommandParams *aParams,
+                                nsISupports *aCommandRefCon)
+{
+  return DoCommand(aCommandName, aCommandRefCon);
+}
+
+NS_IMETHODIMP 
+nsSwitchTextDirectionCommand::GetCommandStateParams(const char *aCommandName,
+                                      nsICommandParams *aParams,
+                                      nsISupports *aCommandRefCon)
+{
+  PRBool canSwitchTextDirection = PR_TRUE;
+  IsCommandEnabled(aCommandName, aCommandRefCon, &canSwitchTextDirection);
+  return aParams->SetBooleanValue(STATE_ENABLED, canSwitchTextDirection);
+}
 
 NS_IMETHODIMP
 nsDeleteCommand::IsCommandEnabled(const char * aCommandName,
