@@ -1419,8 +1419,9 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       case eHTMLTag_table:
         {
           static eHTMLTags okTags[]={ 
-            eHTMLTag_caption, eHTMLTag_col, eHTMLTag_colgroup,eHTMLTag_tbody,   
-            eHTMLTag_tfoot,  /* eHTMLTag_tr,*/  eHTMLTag_thead,   eHTMLTag_map};
+            eHTMLTag_caption, eHTMLTag_col, eHTMLTag_colgroup,  eHTMLTag_form,
+            eHTMLTag_tbody,   eHTMLTag_tfoot,  /* eHTMLTag_tr,*/  
+            eHTMLTag_thead,   eHTMLTag_map};
           result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
         }
         break;
