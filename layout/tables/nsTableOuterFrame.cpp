@@ -94,7 +94,6 @@ struct OuterTableReflowState {
 
 /* ----------- nsTableOuterFrame ---------- */
 
-
 /**
   */
 nsTableOuterFrame::nsTableOuterFrame(nsIContent* aContent, nsIFrame* aParentFrame)
@@ -104,6 +103,25 @@ nsTableOuterFrame::nsTableOuterFrame(nsIContent* aContent, nsIFrame* aParentFram
   mMinCaptionWidth(0),
   mDesiredSize(nsnull)
 {
+}
+
+NS_IMETHODIMP nsTableOuterFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+{
+  mFirstChild = aChildList;
+  mChildCount = LengthOf(mFirstChild);
+
+  // Set our internal member data
+  if (1 == mChildCount) {
+    mInnerTableFrame = (nsTableFrame*)mFirstChild;
+  } else {
+    mCaptionFrame = mFirstChild;
+
+    nsIFrame* f;
+    mFirstChild->GetNextSibling(f);
+    mInnerTableFrame = (nsTableFrame*)f;
+  }
+
+  return NS_OK;
 }
 
 NS_METHOD nsTableOuterFrame::Paint(nsIPresContext& aPresContext,
@@ -403,12 +421,15 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
       // Set up our kids.  They're already present, on an overflow list, 
       // or there are none so we'll create them now
       MoveOverflowToChildList();
+      // XXX CONSTRUCTION
+#if 0
       if (nsnull == mFirstChild) {
         nsresult  result = CreateChildFrames(&aPresContext);
         if (NS_OK != result) {
           return result;
         }
       }
+#endif
 
       // Lay out the caption and get its maximum element size
       if (nsnull != mCaptionFrame) {

@@ -267,16 +267,14 @@ protected:
                               PRInt32 aAttrCount,
                               nsIHTMLAttributes*& aAttributes);
 
-  NS_IMETHOD ConstructFrame(nsIPresContext*  aPresContext,
-                            nsIContent*      aContent,
-                            nsIFrame*        aParentFrame,
-                            nsIAtom*         aTag,
-                            nsIStyleContext* aStyleContext,
-                            nsIFrame*&       aFrameSubTree);
-
   nsIFrame* ConstructRootFrame(nsIPresContext*  aPresContext,
-                               nsIContent*      aContent,
-                               nsIStyleContext* aStyleContext);
+                               nsIContent*      aContent);
+
+  nsIFrame* ConstructTableFrame(nsIPresContext*  aPresContext,
+                                nsIContent*      aContent,
+                                nsIFrame*        aParentFrame,
+                                nsIStyleContext* aStyleContext,
+                                nsIFrame*&       aChildList);
 
   nsresult ProcessChildren(nsIPresContext* aPresContext,
                            nsIFrame*       aFrame,
@@ -538,11 +536,15 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
           nsTableColFrame* colFrame;
           nsIFrame* colGroupFrame;
 
+        // XXX CONSTRUCTION.
+        // Unfortunately the table's children haven't been added yet...
+#if 0
           ((nsTableFrame*)tableFrame)->GetColumnFrame(colIndex, colFrame);
           colFrame->GetContentParent(colGroupFrame);
 
           matchCount += AppendRulesFrom(colGroupFrame, aPresContext, backstopInsertPoint, aResults);
           matchCount += AppendRulesFrom(colFrame, aPresContext, backstopInsertPoint, aResults);
+#endif
           NS_RELEASE(cell);                             // cell: REFCNT--
         }
         matchCount += AppendRulesFrom(rowGroupFrame, aPresContext, backstopInsertPoint, aResults);
@@ -964,16 +966,123 @@ HTMLStyleSheetImpl::CreateInputFrame(nsIContent* aContent,
 }
 
 nsIFrame*
-HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext*  aPresContext,
-                                       nsIContent*      aContent,
-                                       nsIStyleContext* aStyleContext)
+HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
+                                        nsIContent*      aContent,
+                                        nsIFrame*        aParentFrame,
+                                        nsIStyleContext* aStyleContext,
+                                        nsIFrame*&       aChildList)
+{
+  nsIFrame* outerFrame;
+  nsIFrame* innerFrame;
+  nsIFrame* innerChildList = nsnull;
+  nsIFrame* captionFrame = nsnull;
+
+  // Create an anonymous table outer frame which holds the caption and the
+  // table frame
+  NS_NewTableOuterFrame(aContent, aParentFrame, outerFrame);
+
+  // Create the inner table frame
+  NS_NewTableFrame(aContent, outerFrame, innerFrame);
+  aChildList = innerFrame;
+
+  // Have the inner table frame use the same style context as the outer table frame
+  innerFrame->SetStyleContext(aPresContext, aStyleContext);
+
+  // Iterate the child content
+  nsIFrame* lastChildFrame = nsnull;
+  PRInt32   count;
+  aContent->ChildCount(count);
+  for (PRInt32 i = 0; i < count; i++) {
+    nsIContent* childContent;
+    aContent->ChildAt(i, childContent);
+
+    if (nsnull != childContent) {
+      nsIFrame*         frame = nsnull;
+      nsIStyleContext*  childStyleContext;
+
+      // Resolve the style context
+      childStyleContext = aPresContext->ResolveStyleContextFor(childContent, outerFrame);
+
+      // See how it should be displayed
+      const nsStyleDisplay* styleDisplay = (const nsStyleDisplay*)
+        childStyleContext->GetStyleData(eStyleStruct_Display);
+
+      switch (styleDisplay->mDisplay) {
+      case NS_STYLE_DISPLAY_TABLE_CAPTION:
+        // Have we already created a caption? If so, ignore this caption
+        if (nsnull == captionFrame) {
+          NS_NewBodyFrame(childContent, outerFrame, captionFrame);
+          captionFrame->SetStyleContext(aPresContext, childStyleContext);
+
+          // Process the caption's child content and initialize it
+          nsIFrame* captionChildList;
+          ProcessChildren(aPresContext, captionFrame, childContent, captionChildList);
+          captionFrame->Init(*aPresContext, captionChildList);
+
+          // Prepend the caption frame to the outer frame's child list
+          captionFrame->SetNextSibling(innerFrame);
+          aChildList = captionFrame;
+        }
+        break;
+
+      case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
+      case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
+      case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
+        NS_NewTableRowGroupFrame(childContent, innerFrame, frame);
+        break;
+
+      case NS_STYLE_DISPLAY_TABLE_COLUMN:
+        NS_NewTableColFrame(childContent, innerFrame, frame);
+        break;
+
+      case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
+        NS_NewTableColGroupFrame(childContent, innerFrame, frame);
+        break;
+
+      default:
+        // XXX For the time being ignore everything else. We should deal with
+        // things like table cells and create anonymous frames...
+        break;
+      }
+
+      // If it's not a caption frame then set the style context, and link the
+      // frame into the inner frame's child list
+      if (nsnull != frame) {
+        frame->SetStyleContext(aPresContext, childStyleContext);
+
+        // Process the children and initialize the frame
+        nsIFrame* childChildList;
+        ProcessChildren(aPresContext, frame, childContent, childChildList);
+        frame->Init(*aPresContext, childChildList);
+  
+        // Link the frame into the child list
+        if (nsnull == lastChildFrame) {
+          innerChildList = frame;
+        } else {
+          lastChildFrame->SetNextSibling(frame);
+        }
+        lastChildFrame = frame;
+      }
+
+      NS_RELEASE(childStyleContext);
+      NS_RELEASE(childContent);
+    }
+  }
+
+  // Initialize the inner table with its child list
+  innerFrame->Init(*aPresContext, innerChildList);
+
+  return outerFrame;
+}
+
+nsIFrame*
+HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext* aPresContext,
+                                       nsIContent*     aContent)
 {
   nsIFrame* rootFrame;
-  nsIFrame* childList;
 
-  // Create the root frame and set its style context
+  // Create the root frame
   NS_NewHTMLFrame(aContent, nsnull, rootFrame);
-  rootFrame->SetStyleContext(aPresContext, aStyleContext);
 
   // Bind root frame to root view (and root window)
   nsIPresShell*   presShell = aPresContext->GetShell();
@@ -985,23 +1094,33 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext*  aPresContext,
   rootFrame->SetView(rootView);
   NS_RELEASE(viewManager);
 
-  // Process the children and initialize the frame
-  ProcessChildren(aPresContext, rootFrame, aContent, childList);
-  rootFrame->Init(*aPresContext, childList);
-
   return rootFrame;
 }
 
 NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
                                                  nsIContent*      aContent,
                                                  nsIFrame*        aParentFrame,
-                                                 nsIAtom*         aTag,
-                                                 nsIStyleContext* aStyleContext,
                                                  nsIFrame*&       aFrameSubTree)
 {
+  // Get the tag
+  nsIAtom*  tag;
+  aContent->GetTag(tag);
+
+  // Resolve the style context.
+  // XXX Cheesy hack for text
+  nsIStyleContext* styleContext;
+  if (nsnull == tag) {
+    styleContext = aPresContext->ResolvePseudoStyleContextFor(nsHTMLAtoms::text, aParentFrame);
+  } else {
+    styleContext = aPresContext->ResolveStyleContextFor(aContent, aParentFrame);
+  }
+
+  // Initialize OUT parameter
   aFrameSubTree = nsnull;
 
   // Create a frame.
+  nsIFrame* frame = nsnull;
+  nsIFrame* childList = nsnull;
   if (nsnull == aParentFrame) {
     // This should only be the case for the root content object.
 #ifdef NS_DEBUG
@@ -1017,90 +1136,67 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
 #endif
 
     // Construct the root frame object
-    aFrameSubTree = ConstructRootFrame(aPresContext, aContent, aStyleContext);
+    frame = ConstructRootFrame(aPresContext, aContent);
+
+    // Process the child content
+    ProcessChildren(aPresContext, frame, aContent, childList);
 
   } else {
-    nsIFrame* frame = nsnull;
-    nsIFrame* childList = nsnull;
     nsresult  rv = NS_OK;
 
     // Handle specific frame types
-    if (nsnull == aTag) {
+    if (nsnull == tag) {
       rv = NS_NewTextFrame(aContent, aParentFrame, frame);
     }
-    else if (nsHTMLAtoms::applet == aTag) {
+    else if (nsHTMLAtoms::img == tag) {
+      rv = NS_NewImageFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::hr == tag) {
+      rv = NS_NewHRFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::br == tag) {
+      rv = NS_NewBRFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::wbr == tag) {
+      rv = NS_NewWBRFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::input == tag) {
+      rv = CreateInputFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::textarea == tag) {
+      rv = NS_NewInputTextFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::select == tag) {
+      rv = NS_NewHTMLSelectFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::applet == tag) {
       rv = NS_NewObjectFrame(aContent, aParentFrame, frame);
     }
-    else if (nsHTMLAtoms::body == aTag) {
+    else if (nsHTMLAtoms::embed == tag) {
+      rv = NS_NewObjectFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::object == tag) {
+      rv = NS_NewObjectFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::body == tag) {
       rv = NS_NewBodyFrame(aContent, aParentFrame, frame);
 
       // Process the child content
       rv = ProcessChildren(aPresContext, frame, aContent, childList);
     }
-    else if (nsHTMLAtoms::frameset == aTag) {
+    else if (nsHTMLAtoms::frameset == tag) {
       rv = NS_NewHTMLFramesetFrame(aContent, aParentFrame, frame);
     }
-    else if (nsHTMLAtoms::br == aTag) {
-      rv = NS_NewBRFrame(aContent, aParentFrame, frame);
-    }
-    else if (nsHTMLAtoms::embed == aTag) {
-      rv = NS_NewObjectFrame(aContent, aParentFrame, frame);
-    }
-    else if (nsHTMLAtoms::hr == aTag) {
-      rv = NS_NewHRFrame(aContent, aParentFrame, frame);
-    }
-    else if (nsHTMLAtoms::img == aTag) {
-      rv = NS_NewImageFrame(aContent, aParentFrame, frame);
-    }
-    else if (nsHTMLAtoms::object == aTag) {
-      rv = NS_NewObjectFrame(aContent, aParentFrame, frame);
-    }
-    else if (nsHTMLAtoms::spacer == aTag) {
-      rv = NS_NewSpacerFrame(aContent, aParentFrame, frame);
-    }
-    else if (nsHTMLAtoms::wbr == aTag) {
-      rv = NS_NewWBRFrame(aContent, aParentFrame, frame);
-    }
-    else if (nsHTMLAtoms::input == aTag) {
-      rv = CreateInputFrame(aContent, aParentFrame, frame);
-    }
-    else if (nsHTMLAtoms::textarea == aTag) {
-      rv = NS_NewInputTextFrame(aContent, aParentFrame, frame);
-    }
-    else if (nsHTMLAtoms::select == aTag) {
-      rv = NS_NewHTMLSelectFrame(aContent, aParentFrame, frame);
-    }
-    else if (nsHTMLAtoms::iframe == aTag) {
+    else if (nsHTMLAtoms::iframe == tag) {
       rv = NS_NewHTMLFrameOuterFrame(aContent, aParentFrame, frame);
     }
-
-    // the table content frames...
-    else if (nsHTMLAtoms::caption == aTag) {
-      rv = NS_NewBodyFrame(aContent, aParentFrame, frame);
-    }
-    else if (nsHTMLAtoms::table == aTag) {
-      rv = NS_NewTableOuterFrame(aContent, aParentFrame, frame);
-    }
-    else if ((nsHTMLAtoms::tbody == aTag) ||
-             (nsHTMLAtoms::thead == aTag) ||
-             (nsHTMLAtoms::tfoot == aTag))  {
-      rv = NS_NewTableRowGroupFrame(aContent, aParentFrame, frame);
-    }
-    else if (nsHTMLAtoms::tr == aTag) {
-      rv = NS_NewTableRowFrame(aContent, aParentFrame, frame);
-    }
-    else if (nsHTMLAtoms::colgroup == aTag) {
-      rv = NS_NewTableColGroupFrame(aContent, aParentFrame, frame);
-    }
-    else if (nsHTMLAtoms::col == aTag) {
-      rv = NS_NewTableColFrame(aContent, aParentFrame, frame);
-    }
-    else if ((nsHTMLAtoms::td == aTag) ||
-             (nsHTMLAtoms::th == aTag))   {
-      rv = NS_NewTableCellFrame(aContent, aParentFrame, frame);
+    else if (nsHTMLAtoms::spacer == tag) {
+      rv = NS_NewSpacerFrame(aContent, aParentFrame, frame);
     }
 
     if (NS_OK != rv) {
+      NS_RELEASE(styleContext);
+      NS_IF_RELEASE(tag);
       return rv;
     }
   
@@ -1111,10 +1207,9 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
       // When there is no explicit frame to create, assume it's a
       // container and let style dictate the rest.
       const nsStyleDisplay* styleDisplay = (const nsStyleDisplay*)
-        aStyleContext->GetStyleData(eStyleStruct_Display);
+        styleContext->GetStyleData(eStyleStruct_Display);
   
       // Use style to choose what kind of frame to create
-      nsresult rv;
       switch (styleDisplay->mDisplay) {
       case NS_STYLE_DISPLAY_BLOCK:
       case NS_STYLE_DISPLAY_LIST_ITEM:
@@ -1131,53 +1226,78 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
         ProcessChildren(aPresContext, frame, aContent, childList);
         break;
   
+      case NS_STYLE_DISPLAY_TABLE:
+        frame = ConstructTableFrame(aPresContext, aContent, aParentFrame,
+                                    styleContext, childList);
+        break;
+
+      case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
+      case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
+      case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
+        // XXX We should check for being inside of a table. If there's a missing
+        // table then create an anonynmous table frame
+        rv = NS_NewTableRowGroupFrame(aContent, aParentFrame, frame);
+
+        // Process the child content
+        ProcessChildren(aPresContext, frame, aContent, childList);
+        break;
+  
+      case NS_STYLE_DISPLAY_TABLE_COLUMN:
+        // XXX We should check for being inside of a table column group...
+        rv = NS_NewTableColFrame(aContent, aParentFrame, frame);
+
+        // Process the child content
+        ProcessChildren(aPresContext, frame, aContent, childList);
+        break;
+
+      case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
+        // XXX We should check for being inside of a table...
+        rv = NS_NewTableColGroupFrame(aContent, aParentFrame, frame);
+
+        // Process the child content
+        ProcessChildren(aPresContext, frame, aContent, childList);
+        break;
+
+      case NS_STYLE_DISPLAY_TABLE_ROW:
+        // XXX We should check for being inside of a table row group...
+        rv = NS_NewTableRowFrame(aContent, aParentFrame, frame);
+
+        // Process the child content
+        ProcessChildren(aPresContext, frame, aContent, childList);
+        break;
+
+      case NS_STYLE_DISPLAY_TABLE_CELL:
+        // XXX We should check for being inside of a table row frame...
+        rv = NS_NewTableCellFrame(aContent, aParentFrame, frame);
+
+        // Process the child content
+        ProcessChildren(aPresContext, frame, aContent, childList);
+        break;
+
       default:
         // Don't create any frame for content that's not displayed...
         break;
       }
 
       if (NS_OK != rv) {
+        NS_RELEASE(styleContext);
+        NS_IF_RELEASE(tag);
         return rv;
       }
     }
+  }
   
-    if (nsnull != frame) {
-      // Set the style context
-      frame->SetStyleContext(aPresContext, aStyleContext);
-
-      // Initialize the frame giving it its child list
-      frame->Init(*aPresContext, childList);
-    }
-    aFrameSubTree = frame;
+  // If we created a frame then set its style context and initialize it
+  // passing it the child list
+  if (nsnull != frame) {
+    frame->SetStyleContext(aPresContext, styleContext);
+    frame->Init(*aPresContext, childList);
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext* aPresContext,
-                                                 nsIContent*     aContent,
-                                                 nsIFrame*       aParentFrame,
-                                                 nsIFrame*&      aFrameSubTree)
-{
-  // Get the tag
-  nsIAtom*  tag;
-  aContent->GetTag(tag);
-
-  // Resolve the style context.
-  // XXX Cheesy hack for text
-  nsIStyleContext* styleContext;
-  if (nsnull == tag) {
-    styleContext = aPresContext->ResolvePseudoStyleContextFor(nsHTMLAtoms::text, aParentFrame);
-  } else {
-    styleContext = aPresContext->ResolveStyleContextFor(aContent, aParentFrame);
-  }
-
-  nsresult  result = ConstructFrame(aPresContext, aContent, aParentFrame,
-                                    tag, styleContext, aFrameSubTree);
+  aFrameSubTree = frame;
 
   NS_RELEASE(styleContext);
   NS_IF_RELEASE(tag);
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,

@@ -43,6 +43,8 @@ public:
                            nsIFrame*   aParentFrame,
                            nsIFrame*&  aResult);
 
+  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
@@ -83,6 +85,7 @@ protected:
   NS_METHOD SetStyleContextForFirstPass(nsIPresContext* aPresContext,
                                         PRInt32         aColIndex);
 
+  nsresult AppendNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList);
   
   PRInt32 mColCount;
 

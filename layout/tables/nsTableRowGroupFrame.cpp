@@ -127,6 +127,22 @@ NS_METHOD nsTableRowGroupFrame::GetRowCount(PRInt32 &aCount)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsTableRowGroupFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+{
+  mFirstChild = aChildList;
+  mChildCount = LengthOf(mFirstChild);
+
+  // XXX TEMP CODE UNTIL nsContainerFrame GOES AWAY...
+  nsIFrame* lastChild;
+  LastChild(lastChild);
+  if (nsnull != lastChild) {
+    lastChild->GetContentIndex(mLastContentOffset);
+  }
+
+  return NS_OK;
+}
+
 NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext& aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       const nsRect&        aDirtyRect)
@@ -321,8 +337,8 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
     }
 
     // Reflow the child into the available space
-    nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
-                                 eReflowReason_Resize);
+    nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize);
+    // XXX CONSTRUCTION          eReflowReason_Resize);
     kidFrame->WillReflow(*aPresContext);
     kidFrame->MoveTo(kidMargin.left, aState.y + topMargin);
     if (gsDebug) printf("%p RG reflowing child %d (frame=%p) with avail width = %d\n",
@@ -1155,10 +1171,13 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&      aPresContext,
       } else if (NextChildOffset() < numKids) {
         // Try and pull-up some children from a next-in-flow
         if (PullUpChildren(&aPresContext, state, aDesiredSize.maxElementSize)) {
+          // XXX CONSTRUCTION. WE SHOULD NEVER HAVE UNMAPPED CHILDREN...
+#if 0
           // If we still have unmapped children then create some new frames
           if (NextChildOffset() < numKids) {
             aStatus = ReflowUnmappedChildren(&aPresContext, state, aDesiredSize.maxElementSize);
           }
+#endif
         } else {
           // We were unable to pull-up all the existing frames from the
           // next in flow

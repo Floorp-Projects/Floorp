@@ -258,7 +258,6 @@ void ColumnInfoCache::GetColumnsByType(const nsStyleUnit aType,
 
 /* --------------------- nsTableFrame -------------------- */
 
-
 nsTableFrame::nsTableFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsContainerFrame(aContent, aParentFrame),
     mCellMap(nsnull),
@@ -285,6 +284,14 @@ nsTableFrame::~nsTableFrame()
 
   if (nsnull!=mColCache)
     delete mColCache;
+}
+
+NS_IMETHODIMP
+nsTableFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+{
+  mFirstChild = aChildList;
+  mChildCount = LengthOf(mFirstChild);
+  return NS_OK;
 }
 
 /* ****** CellMap methods ******* */
@@ -708,9 +715,13 @@ void nsTableFrame::EnsureColumnFrameAt(PRInt32              aColIndex,
       lastColGroupFrame->GetContent((nsIContent *&)lastColGroup);  // ADDREF b: lastColGroup++
     }
 
+    // XXX It would be better to do this in the style code while constructing
+    // the table's frames
     nsAutoString colTag;
     nsHTMLAtoms::col->ToString(colTag);
     PRInt32 excessColumns = aColIndex - actualColumns;
+    nsIFrame* firstNewColFrame = nsnull;
+    nsIFrame* lastNewColFrame = nsnull;
     for ( ; excessColumns >= 0; excessColumns--)
     {
       nsIHTMLContent *col=nsnull;
@@ -718,10 +729,49 @@ void nsTableFrame::EnsureColumnFrameAt(PRInt32              aColIndex,
       rv = NS_CreateHTMLElement(&col, colTag);  // ADDREF: col++
       //XXX mark the col implicit
       lastColGroup->AppendChildTo((nsIContent*)col, PR_FALSE);
+
+      // Create a new col frame
+      nsIFrame* colFrame;
+      NS_NewTableColFrame(col, lastColGroupFrame, colFrame);
+
+      // Set its style context
+      nsIStyleContextPtr colStyleContext =
+        aPresContext->ResolveStyleContextFor(col, lastColGroupFrame, PR_TRUE);
+      colFrame->SetStyleContext(aPresContext, colStyleContext);
+
+      // XXX Don't release this style context (or we'll end up with a double-free).\
+      // This code is doing what nsTableColGroupFrame::Reflow() does...
+      //NS_RELEASE(colStyleContext);
+
+      // Add it to our list
+      if (nsnull == lastNewColFrame) {
+        firstNewColFrame = colFrame;
+      } else {
+        lastNewColFrame->SetNextSibling(colFrame);
+      }
+      lastNewColFrame = colFrame;
       NS_RELEASE(col);                          // ADDREF: col--
     }
     NS_RELEASE(lastColGroup);                       // ADDREF: lastColGroup--
-    lastColGroupFrame->Reflow(*aPresContext, aDesiredSize, aReflowState, aStatus);
+
+    // New reflow the new column frames
+    nsIFrame* firstChild;
+    lastColGroupFrame->FirstChild(firstChild);
+    if (nsnull == firstChild) {
+      lastColGroupFrame->Init(*aPresContext, firstNewColFrame);
+      lastColGroupFrame->Reflow(*aPresContext, aDesiredSize, aReflowState, aStatus);
+    } else {
+      // Generate an appended reflow command.
+      // XXX This is really yucky...
+      nsIReflowCommand* reflowCmd;
+
+      NS_NewHTMLReflowCommand(&reflowCmd, lastColGroupFrame, nsIReflowCommand::FrameAppended,
+                              firstNewColFrame);
+      nsReflowState incrReflowState(lastColGroupFrame, aReflowState, aReflowState.maxSize);
+      incrReflowState.reflowCommand = reflowCmd;
+      incrReflowState.reason = eReflowReason_Incremental;
+      lastColGroupFrame->Reflow(*aPresContext, aDesiredSize, incrReflowState, aStatus);
+    }
   }
 }
 
@@ -1513,6 +1563,8 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
   nsReflowReason  reflowReason = aReflowState.reason;
   nsIContent * prevKid; // do NOT hold a reference for this temp pointer!
 
+  // XXX CONSTRUCTION
+#if 0
   /* assumes that Table's children are in the following order:
    *  Captions
    *  ColGroups, in order
@@ -1620,6 +1672,49 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
       break;
     }
   }
+#else
+  for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
+    nsSize maxKidElementSize(0,0);
+    nsReflowState kidReflowState(kidFrame, aReflowState, availSize);
+
+    PRInt32 yCoord = y;
+    if (NS_UNCONSTRAINEDSIZE!=yCoord)
+      yCoord+= topInset;
+    kidFrame->WillReflow(*aPresContext);
+    kidFrame->MoveTo(leftInset, yCoord);
+    result = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
+
+    // Place the child since some of its content fit in us.
+    if (PR_TRUE==gsDebugNT) {
+      printf ("%p: reflow of row group returned desired=%d,%d, max-element=%d,%d\n",
+              this, kidSize.width, kidSize.height, kidMaxSize.width, kidMaxSize.height);
+    }
+    kidFrame->SetRect(nsRect(leftInset, yCoord,
+                             kidSize.width, kidSize.height));
+    if (NS_UNCONSTRAINEDSIZE==kidSize.height)
+      y = NS_UNCONSTRAINEDSIZE;
+    else
+      y += kidSize.height;
+    if (kidMaxSize.width > maxSize.width) {
+      maxSize.width = kidMaxSize.width;
+    }
+    if (kidMaxSize.height > maxSize.height) {
+      maxSize.height = kidMaxSize.height;
+    }
+
+    if (NS_FRAME_IS_NOT_COMPLETE(result)) {
+      // If the child didn't finish layout then it means that it used
+      // up all of our available space (or needs us to split).
+      mLastContentIsComplete = PR_FALSE;
+      break;
+    }
+  }
+  if (NS_FRAME_IS_NOT_COMPLETE(result)) {
+    // If the child didn't finish layout then it means that it used
+    // up all of our available space (or needs us to split).
+    mLastContentIsComplete = PR_FALSE;
+  }
+#endif
 
   BuildColumnCache(aPresContext, aDesiredSize, aReflowState, aStatus);
   // Recalculate Layout Dependencies
@@ -1703,11 +1798,14 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
     } else if (NextChildOffset() < numKids) {
       // Try and pull-up some children from a next-in-flow
       if (PullUpChildren(aPresContext, state, aDesiredSize.maxElementSize)) {
+        // XXX CONSTRUCTION. WE SHOULD NEVER HAVE UNMAPPED CHILDREN...
+#if 0
         // If we still have unmapped children then create some new frames
         mContent->ChildCount(numKids);
         if (NextChildOffset() < numKids) {
           status = ReflowUnmappedChildren(aPresContext, state, aDesiredSize.maxElementSize);
         }
+#endif
       } else {
         // We were unable to pull-up all the existing frames from the
         // next in flow

@@ -35,7 +35,6 @@ static NS_DEFINE_IID(kIHTMLTableColElementIID, NS_IHTMLTABLECOLELEMENT_IID);
 
 static PRBool gsDebug = PR_FALSE;
 
-
 nsTableColGroupFrame::nsTableColGroupFrame(nsIContent* aContent,
                      nsIFrame*   aParentFrame)
   : nsContainerFrame(aContent, aParentFrame)
@@ -45,6 +44,57 @@ nsTableColGroupFrame::nsTableColGroupFrame(nsIContent* aContent,
 
 nsTableColGroupFrame::~nsTableColGroupFrame()
 {
+}
+
+nsresult
+nsTableColGroupFrame::AppendNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList)
+{
+  nsIFrame* lastChild;
+  LastChild(lastChild);
+
+  // Append the new frames to the child list
+  if (nsnull == lastChild) {
+    mFirstChild = aChildList;
+  } else {
+    lastChild->SetNextSibling(aChildList);
+  }
+  mChildCount += LengthOf(aChildList);
+
+  // Process the newly added column frames
+  for (nsIFrame* kidFrame = aChildList; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
+    // Set the preliminary values for the column frame
+    nsIContent* kid;
+    kidFrame->GetContent(kid);
+    PRInt32 repeat=1;
+    nsIHTMLTableColElement* colContent = nsnull;
+    nsresult  rv = kid->QueryInterface(kIHTMLTableColElementIID, 
+                     (void**) &colContent); // colContent: ADDREF++
+    NS_RELEASE(kid);
+    if (rv==NS_OK)
+    {
+      colContent->GetSpanValue(&repeat);
+      NS_RELEASE(colContent);
+    }
+    PRInt32 colIndex = mStartColIndex + mColCount;
+    ((nsTableColFrame *)(kidFrame))->InitColFrame (colIndex, repeat);
+    mColCount+= repeat;
+
+    // Set nsColFrame-specific information
+    ((nsTableColFrame *)kidFrame)->SetColumnIndex(colIndex);
+    nsIFrame* tableFrame=nsnull;
+    GetGeometricParent(tableFrame);
+    ((nsTableFrame *)tableFrame)->AddColumnFrame((nsTableColFrame *)kidFrame);
+
+    SetStyleContextForFirstPass(&aPresContext, colIndex);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTableColGroupFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+{
+  return AppendNewFrames(aPresContext, aChildList);
 }
 
 NS_METHOD nsTableColGroupFrame::Paint(nsIPresContext& aPresContext,
@@ -72,6 +122,8 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&      aPresContext,
   nsIFrame* kidFrame = nsnull;
   nsIFrame* prevKidFrame;
  
+  // XXX CONSTRUCTION
+#if 0
   LastChild(prevKidFrame);  // XXX remember this...
   PRInt32 kidIndex = 0;     // index of the content child we are currently working on
   PRInt32 colIndex = 0;     // number of content children that are columns, normally same as kidIndex
@@ -155,6 +207,38 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&      aPresContext,
     colIndex++; // if this wasn't a column, we would not have gotten this far
     kidIndex++;
   }
+#else
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    NS_ASSERTION(nsnull != aReflowState.reflowCommand, "null reflow command");
+
+    // Get the type of reflow command
+    nsIReflowCommand::ReflowType reflowCmdType;
+    aReflowState.reflowCommand->GetType(reflowCmdType);
+
+    // Currently we only expect appended reflow commands
+    NS_ASSERTION(nsIReflowCommand::FrameAppended == reflowCmdType,
+                 "unexpected reflow command");
+
+    // Get the new column frames
+    nsIFrame* childList;
+    aReflowState.reflowCommand->GetChildFrame(childList);
+
+    // Append them to the child list
+    AppendNewFrames(aPresContext, childList);
+  }
+
+  for (kidFrame = mFirstChild; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
+    // Give the child frame a chance to reflow, even though we know it'll have 0 size
+    nsReflowMetrics kidSize(nsnull);
+    // XXX Use a valid reason...
+    nsReflowState   kidReflowState(kidFrame, aReflowState, nsSize(0,0), eReflowReason_Initial);
+    kidFrame->WillReflow(aPresContext);
+    nsReflowStatus status = ReflowChild(kidFrame,&aPresContext, kidSize,
+                                        kidReflowState);
+    // note that DidReflow is called as the result of some ancestor firing off a DidReflow above me
+    kidFrame->SetRect(nsRect(0,0,0,0));
+  }
+#endif
   aDesiredSize.width=0;
   aDesiredSize.height=0;
   if (nsnull!=aDesiredSize.maxElementSize)

@@ -73,6 +73,29 @@ nsTableCellFrame::~nsTableCellFrame()
 {
 }
 
+NS_IMETHODIMP
+nsTableCellFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+{
+  // Create body pseudo frame
+  NS_NewBodyFrame(mContent, this, mFirstChild);
+  mChildCount = 1;
+
+  // Resolve style and set the style context
+  nsIStyleContext* styleContext =
+    aPresContext.ResolveStyleContextFor(mContent, this);              // styleContext: ADDREF++
+  mFirstChild->SetStyleContext(&aPresContext, styleContext);
+  NS_RELEASE(styleContext);                                           // styleContext: ADDREF--
+
+  // Set the geometric and content parent for each of the child frames
+  for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(frame)) {
+    frame->SetGeometricParent(mFirstChild);
+    frame->SetContentParent(mFirstChild);
+  }
+
+  // Queue up the frames for the block frame
+  return mFirstChild->Init(aPresContext, aChildList);
+}
+
 NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
                                   nsIRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect)

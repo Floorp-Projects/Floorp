@@ -86,6 +86,8 @@ public:
                                  const nsReflowState& aReflowState,
                                  nscoord& aSpecifiedTableWidth);
 
+  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+
   /** @see nsIFrame::Paint */
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
