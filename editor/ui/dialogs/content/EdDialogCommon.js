@@ -220,6 +220,7 @@ function SetTextboxFocus(textbox)
   {
     // Select entire contents
     if (textbox.value.length > 0)
+      // This doesn't work for editable menulists yet
       textbox.select();
     else
       textbox.focus();
@@ -888,11 +889,13 @@ function onCancel()
   return true;
 }
 
-function SetRelativeCheckbox()
+function SetRelativeCheckbox(checkbox)
 {
-  var checkbox = document.getElementById("MakeRelativeCheckbox");
-  if (!checkbox)
-    return;
+  if (!checkbox) {
+    checkbox = document.getElementById("MakeRelativeCheckbox");
+    if (!checkbox)
+      return;
+  }
 
   // Mail never allows relative URLs, so hide the checkbox
   if (editorShell.editorType == "htmlmail")
@@ -947,16 +950,12 @@ function SetRelativeCheckbox()
     }
   }
 
-  SetElementEnabledById("MakeRelativeCheckbox", enable);
+  SetElementEnabled(checkbox, enable);
 }
 
 // oncommand handler for the Relativize checkbox in EditorOverlay.xul
-function MakeInputValueRelativeOrAbsolute()
+function MakeInputValueRelativeOrAbsolute(checkbox)
 {
-  var checkbox = document.getElementById("MakeRelativeCheckbox");
-  if (!checkbox)
-    return;
-
   var input =  document.getElementById(checkbox.getAttribute("for"));
   if (!input)
     return;
@@ -979,7 +978,7 @@ function MakeInputValueRelativeOrAbsolute()
       input.value = MakeAbsoluteUrl(input.value);
 
     // Reset checkbox to reflect url state
-    SetRelativeCheckbox(checkbox, input.value);
+    SetRelativeCheckbox(checkbox);
   }
 }
 
@@ -1201,5 +1200,76 @@ function RemoveElementKeepingChildren(element)
   catch (ex) {}
 
   editorShell.EndBatchChanges();
+}
+
+function FillLinkMenulist(linkMenulist, headingsArray)
+{
+  var NamedAnchorNodeList = editorShell.editorDocument.anchors;
+  var NamedAnchorCount = NamedAnchorNodeList.length;
+  if (NamedAnchorCount > 0)
+  {
+    for (var i = 0; i < NamedAnchorCount; i++)
+      linkMenulist.appendItem("#" + NamedAnchorNodeList.item(i).name);
+  } 
+  for (var j = 1; j <= 6; j++)
+  {
+    var headingList = editorShell.editorDocument.getElementsByTagName("h" + j);
+    for (var k = 0; k < headingList.length; k++)
+    {
+      var heading = headingList.item(k);
+
+      // Skip headings that already have a named anchor as their first child
+      //  (this may miss nearby anchors, but at least we don't insert another
+      //   under the same heading)
+      var child = heading.firstChild;
+      if (child && child.nodeName == "A" && child.name && (child.name.length>0))
+        continue;
+
+      var range = editorShell.editorDocument.createRange();
+      range.setStart(heading,0);
+      var lastChildIndex = heading.childNodes.length;
+      range.setEnd(heading,lastChildIndex);
+      var text = range.toString();
+      if (text)
+      {
+        // Use just first 40 characters, don't add "...",
+        //  and replace whitespace with "_" and strip non-word characters
+        text = "#" + ConvertToCDATAString(TruncateStringAtWordEnd(text, 40, false));
+        // Append "_" to any name already in the list
+        while (linkMenulist.getElementsByAttribute("label", text).length)
+          text += "_";
+        linkMenulist.appendItem(text);
+
+        // Save nodes in an array so we can create anchor node under it later
+        headingsArray[NamedAnchorCount++] = heading;
+      }
+    }
+  }
+  if (!linkMenulist.firstChild.hasChildNodes()) 
+  {
+    var item = linkMenulist.appendItem(GetString("NoNamedAnchorsOrHeadings"));
+    item.setAttribute("disabled", "true");
+  }
+}
+
+// Shared by Image and Link dialogs for the "Choose" button for links
+function chooseLinkFile()
+{
+  // Get a local file, converted into URL format
+  var fileName = GetLocalFileURL("html, img");
+  if (fileName) 
+  {
+    // Always try to relativize local file URLs
+    if (gHaveDocumentUrl)
+      fileName = MakeRelativeUrl(fileName);
+
+    gDialog.hrefInput.value = fileName;
+
+    // Do stuff specific to a particular dialog
+    // (This is defined separately in Image and Link dialogs)
+    ChangeLinkLocation();
+  }
+  // Put focus into the input field
+  SetTextboxFocus(gDialog.hrefInput);
 }
 

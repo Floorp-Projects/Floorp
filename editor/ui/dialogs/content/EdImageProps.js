@@ -23,41 +23,41 @@
  *   Ben Goodger
  */
 
-var gPreviewImageHeight = 50;
-var StartupCalled = false;
+var gAnchorElement = null;
+var gOriginalHref = "";
+var gHNodeArray = [];
 
 // dialog initialization code
 
 function Startup()
 {
-  //XXX Very weird! When calling this with an existing image,
-  //    we get called twice. That causes dialog layout
-  //    to explode to fullscreen!
-  if (StartupCalled)
-  {
-    dump("*** CALLING IMAGE DIALOG Startup() AGAIN! ***\n");
-    return;
-  }
-  StartupCalled = true;
-
   if (!InitEditorShell())
     return;
 
   ImageStartup();
+  gDialog.hrefInput        = document.getElementById("hrefInput");
+  gDialog.makeRelativeLink = document.getElementById("MakeRelativeLink");
+  gDialog.showLinkBorder   = document.getElementById("showLinkBorder");
 
   // Get a single selected image element
   var tagName = "img";
   if ("arguments" in window && window.arguments[0])
   {
     imageElement = window.arguments[0];
+    // We've been called from form field propertes, so we can't insert a link
+    var imageLinkTab = document.getElementById('imageLinkTab');
+    imageLinkTab.parentNode.removeChild(imageLinkTab);
   }
   else
   {
     // First check for <input type="image">
     imageElement = editorShell.GetSelectedElement("input");
-    if (!imageElement || imageElement.getAttribute("type") != "image")
+    if (!imageElement || imageElement.getAttribute("type") != "image") {
       // Get a single selected image element
       imageElement = editorShell.GetSelectedElement(tagName);
+      if (imageElement)
+        gAnchorElement = editorShell.GetElementOrParentByTagName("href", imageElement);
+    }
   }
 
   if (imageElement)
@@ -66,8 +66,8 @@ function Startup()
     if (imageElement.hasAttribute("src"))
     {
       gInsertNewImage = false;
-      actualWidth  = imageElement.naturalWidth;
-      actualHeight = imageElement.naturalHeight;
+      gActualWidth  = imageElement.naturalWidth;
+      gActualHeight = imageElement.naturalHeight;
     }
   }
   else
@@ -84,6 +84,7 @@ function Startup()
       window.close();
       return;
     }
+    gAnchorElement = editorShell.GetSelectedElement(tagName);
   }
 
   // Make a copy to use for AdvancedEdit
@@ -93,6 +94,12 @@ function Startup()
   gHaveDocumentUrl = GetDocumentBaseUrl();
 
   InitDialog();
+  if (gAnchorElement)
+    gOriginalHref = gAnchorElement.getAttribute("href");
+  gDialog.hrefInput.value = gOriginalHref;
+
+  FillLinkMenulist(gDialog.hrefInput, gHNodeArray);
+  ChangeLinkLocation();
 
   // Save initial source URL
   gOriginalSrc = gDialog.srcInput.value;
@@ -113,6 +120,26 @@ function Startup()
 function InitDialog()
 {
   InitImage();
+  gDialog.showLinkBorder.checked = gDialog.border.value != "0";
+}
+
+function ChangeLinkLocation()
+{
+  SetRelativeCheckbox(gDialog.makeRelativeLink);
+  gDialog.showLinkBorder.disabled = !TrimString(gDialog.hrefInput.value);
+}
+
+function ToggleShowLinkBorder()
+{
+  if (gDialog.showLinkBorder.checked)
+  {
+    if (TrimString(gDialog.border.value) == "0")
+      gDialog.border.value = "";
+  }
+  else
+  {
+    gDialog.border.value = "0";
+  }
 }
 
 // Get data from widgets, validate, and set for the global element
@@ -126,4 +153,114 @@ function doHelpButton()
 {
   openHelp("chrome://help/content/help.xul?image_properties");
   return true;
+}
+
+function onAccept()
+{
+  // Use this now (default = false) so Advanced Edit button dialog doesn't trigger error message
+  gDoAltTextError = true;
+
+  if (ValidateData())
+  {
+    if ("arguments" in window && window.arguments[0])
+    {
+      SaveWindowLocation();
+      return true;
+    }
+
+    editorShell.BeginBatchChanges();
+
+    if (gRemoveImageMap)
+    {
+      globalElement.removeAttribute("usemap");
+      if (gImageMap)
+      {
+        editorShell.DeleteElement(gImageMap);
+        gInsertNewIMap = true;
+        gImageMap = null;
+      }
+    }
+    else if (gImageMap)
+    {
+      // Assign to map if there is one
+      var mapName = gImageMap.getAttribute("name");
+      if (mapName != "")
+      {
+        globalElement.setAttribute("usemap", ("#"+mapName));
+        if (globalElement.getAttribute("border") == "")
+          globalElement.setAttribute("border", 0);
+      }
+
+      if (gInsertNewIMap)
+      {
+        try
+        {
+          editorShell.editorDocument.body.appendChild(gImageMap);
+        //editorShell.InsertElementAtSelection(gImageMap, false);
+        }
+        catch (e)
+        {
+          dump("Exception occured in InsertElementAtSelection\n");
+        }
+      }
+    }
+
+    // Create or remove the link as appropriate
+    var href = gDialog.hrefInput.value;
+    if (href != gOriginalHref) {
+      if (href)
+        editorShell.SetTextProperty("a", "href", href);
+      else
+        editorShell.RemoveTextProperty("href", "");
+    }
+
+    // All values are valid - copy to actual element in doc or
+    //   element created to insert
+    editorShell.CloneAttributes(imageElement, globalElement);
+    if (gInsertNewImage)
+    {
+      try {
+        // 'true' means delete the selection before inserting
+        editorShell.InsertElementAtSelection(imageElement, true);
+        // Also move the insertion point out of the link
+        if (href)
+          setTimeout(editorShell.RemoveTextProperty, 0, "href", "");
+      } catch (e) {
+        dump(e);
+      }
+    }
+
+    // Check to see if the link was to a heading
+    // Do this last because it moves the caret (BAD!)
+    var index = gDialog.hrefInput.selectedIndex;
+    if (index in gHNodeArray && gHNodeArray[index])
+    {
+      var anchorNode = editorShell.editorDocument.createElement("a");
+      if (anchorNode)
+      {
+        anchorNode.name = href.substr(1);
+        // Remember to use editorShell method so it is undoable!
+        editorShell.InsertElement(anchorNode, gHNodeArray[index], 0, false);
+      }
+    }
+
+    // un-comment to see that inserting image maps does not work!
+    /*test = editorShell.CreateElementWithDefaults("map");
+    test.setAttribute("name", "testing");
+    testArea = editorShell.CreateElementWithDefaults("area");
+    testArea.setAttribute("shape", "circle");
+    testArea.setAttribute("coords", "86,102,52");
+    testArea.setAttribute("href", "test");
+    test.appendChild(testArea);
+    editorShell.InsertElementAtSelection(test, false);*/
+
+    editorShell.EndBatchChanges();
+
+    SaveWindowLocation();
+    return true;
+  }
+
+  gDoAltTextError = false;
+
+  return false;
 }

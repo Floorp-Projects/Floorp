@@ -137,9 +137,8 @@ function onAccept()
   // Show alt text error only once
   // (we don't initialize doAltTextError=true
   //  so Advanced edit button dialog doesn't trigger that error message)
-  doAltTextError = firstTimeOkUsed;
-  firstTimeOkUsed = false;
-
+  // Use this now (default = false) so Advanced Edit button dialog doesn't trigger error message
+  gDoAltTextError = true;
 
   if (ValidateData())
   {

@@ -46,9 +46,9 @@ var gImageMap = 0;
 var gCanRemoveImageMap = false;
 var gRemoveImageMap = false;
 var gImageMapDisabled = false;
-var actualWidth = "";
+var gActualWidth = "";
+var gActualHeight = "";
 var gOriginalSrc = "";
-var actualHeight = "";
 var gHaveDocumentUrl = false;
 var gTimerID;
 var gValidateTab;
@@ -127,17 +127,11 @@ function InitImage()
                     gInsertNewImage ? null : imageElement,
                     "height", "heightUnitsMenulist", gPixel);
 
-  var rg = gDialog.actualSizeRadio.radioGroup;
   // Set actual radio button if both set values are the same as actual
-  if (actualWidth && actualHeight) {
-    if ((width == actualWidth && height == actualHeight) || !(width || height))
-      rg.selectedItem = gDialog.actualSizeRadio;
-  }
-  if (!gDialog.actualSizeRadio.selected)
-    rg.selectedItem = gDialog.customSizeRadio;
+  SetSizeWidgets(width, height);
 
-  gDialog.widthInput.value  = gConstrainWidth = width ? width : (actualWidth ? actualWidth : "");
-  gDialog.heightInput.value = gConstrainHeight = height ? height : (actualHeight ? actualHeight : "");
+  gDialog.widthInput.value  = gConstrainWidth = width ? width : (gActualWidth ? gActualWidth : "");
+  gDialog.heightInput.value = gConstrainHeight = height ? height : (gActualHeight ? gActualHeight : "");
 
   // set spacing editfields
   gDialog.imagelrInput.value = globalElement.getAttribute("hspace");
@@ -190,6 +184,26 @@ function InitImage()
 
   doOverallEnabling();
   doDimensionEnabling();
+}
+
+function  SetSizeWidgets(width, height)
+{
+  if (!(width || height) || (gActualWidth && gActualHeight && width == gActualWidth && height == gActualHeight))
+    gDialog.actualSizeRadio.radioGroup.selectedItem = gDialog.actualSizeRadio;
+
+  if (!gDialog.actualSizeRadio.selected)
+  {
+    gDialog.actualSizeRadio.radioGroup.selectedItem = gDialog.customSizeRadio;
+
+    // Decide if user's sizes are in the same ratio as actual sizes
+    if (gActualWidth && gActualHeight)
+    {
+      if (gActualWidth > gActualHeight)
+        gDialog.constrainCheckbox.checked = (Math.round(gActualHeight * width / gActualWidth) == height);
+      else
+        gDialog.constrainCheckbox.checked = (Math.round(gActualWidth * height / gActualHeight) == width);
+    }
+  }
 }
 
 // Disable alt text input when "Don't use alt" radio is checked
@@ -249,34 +263,34 @@ function PreviewImageLoaded()
   if (gDialog.PreviewImage)
   {
     // Image loading has completed -- we can get actual width
-    actualWidth  = gDialog.PreviewImage.naturalWidth;
-    actualHeight = gDialog.PreviewImage.naturalHeight;
+    gActualWidth  = gDialog.PreviewImage.naturalWidth;
+    gActualHeight = gDialog.PreviewImage.naturalHeight;
 
-    if (actualWidth && actualHeight)
+    if (gActualWidth && gActualHeight)
     {
       // Use actual size or scale to fit preview if either dimension is too large
-      var width = actualWidth;
-      var height = actualHeight;
-      if (actualWidth > gPreviewImageWidth)
+      var width = gActualWidth;
+      var height = gActualHeight;
+      if (gActualWidth > gPreviewImageWidth)
       {
           width = gPreviewImageWidth;
-          height = actualHeight * (gPreviewImageWidth / actualWidth);
+          height = gActualHeight * (gPreviewImageWidth / gActualWidth);
       }
       if (height > gPreviewImageHeight)
       {
         height = gPreviewImageHeight;
-        width = actualWidth * (gPreviewImageHeight / actualHeight);
+        width = gActualWidth * (gPreviewImageHeight / gActualHeight);
       }
       gDialog.PreviewImage.width = width;
       gDialog.PreviewImage.height = height;
 
-      gDialog.PreviewWidth.setAttribute("value", actualWidth);
-      gDialog.PreviewHeight.setAttribute("value", actualHeight);
+      gDialog.PreviewWidth.setAttribute("value", gActualWidth);
+      gDialog.PreviewHeight.setAttribute("value", gActualHeight);
 
       gDialog.PreviewSize.setAttribute("collapsed", "false");
       gDialog.ImageHolder.setAttribute("collapsed", "false");
 
-      // Use values as start for constrain proportions
+      SetSizeWidgets(gDialog.widthInput.value, gDialog.heightInput.value);
     }
 
     if (gDialog.actualSizeRadio.selected)
@@ -335,9 +349,9 @@ function LoadPreviewImage()
 
 function SetActualSize()
 {
-  gDialog.widthInput.value = actualWidth ? actualWidth : "";
+  gDialog.widthInput.value = gActualWidth ? gActualWidth : "";
   gDialog.widthUnitsMenulist.selectedIndex = 0;
-  gDialog.heightInput.value = actualHeight ? actualHeight : "";
+  gDialog.heightInput.value = gActualHeight ? gActualHeight : "";
   gDialog.heightUnitsMenulist.selectedIndex = 0;
   doDimensionEnabling();
 }
@@ -415,7 +429,7 @@ function constrainProportions( srcID, destID )
   // always force an integer (whether we are constraining or not)
   forceInteger(srcID);
 
-  if (!actualWidth || !actualHeight ||
+  if (!gActualWidth || !gActualHeight ||
       !(gDialog.constrainCheckbox.checked && !gDialog.constrainCheckbox.disabled))
     return;
 
@@ -429,9 +443,9 @@ function constrainProportions( srcID, destID )
   // and then turn constrain on and change a number
   // I prefer the old strategy (below) but I can see some merit to this solution
   if (srcID == "widthInput")
-    destElement.value = Math.round( srcElement.value * actualHeight / actualWidth );
+    destElement.value = Math.round( srcElement.value * gActualHeight / gActualWidth );
   else
-    destElement.value = Math.round( srcElement.value * actualWidth / actualHeight );
+    destElement.value = Math.round( srcElement.value * gActualWidth / gActualHeight );
 
 /*
   // With this strategy, the width and height ratio
@@ -521,9 +535,9 @@ function ValidateImage()
   // We always set the width and height attributes, even if same as actual.
   //  This speeds up layout of pages since sizes are known before image is loaded
   if (!width)
-    width = actualWidth;
+    width = gActualWidth;
   if (!height)
-    height = actualHeight;
+    height = gActualHeight;
 
   // Remove existing width and height only if source changed
   //  and we couldn't obtain actual dimensions
@@ -573,88 +587,4 @@ function ValidateImage()
   }
 
   return true;
-}
-
-function onAccept()
-{
-  // Use this now (default = false) so Advanced Edit button dialog doesn't trigger error message
-  gDoAltTextError = true;
-
-  if (ValidateData())
-  {
-    if ("arguments" in window && window.arguments[0])
-    {
-      SaveWindowLocation();
-      return true;
-    }
-
-    editorShell.BeginBatchChanges();
-
-    if (gRemoveImageMap)
-    {
-      globalElement.removeAttribute("usemap");
-      if (gImageMap)
-      {
-        editorShell.DeleteElement(gImageMap);
-        gInsertNewIMap = true;
-        gImageMap = null;
-      }
-    }
-    else if (gImageMap)
-    {
-      // Assign to map if there is one
-      var mapName = gImageMap.getAttribute("name");
-      if (mapName != "")
-      {
-        globalElement.setAttribute("usemap", ("#"+mapName));
-        if (globalElement.getAttribute("border") == "")
-          globalElement.setAttribute("border", 0);
-      }
-
-      if (gInsertNewIMap)
-      {
-        try
-        {
-          editorShell.editorDocument.body.appendChild(gImageMap);
-        //editorShell.InsertElementAtSelection(gImageMap, false);
-        }
-        catch (e)
-        {
-          dump("Exception occured in InsertElementAtSelection\n");
-        }
-      }
-    }
-
-    // All values are valid - copy to actual element in doc or
-    //   element created to insert
-    editorShell.CloneAttributes(imageElement, globalElement);
-    if (gInsertNewImage)
-    {
-      try {
-        // 'true' means delete the selection before inserting
-        editorShell.InsertElementAtSelection(imageElement, true);
-      } catch (e) {
-        dump(e);
-      }
-    }
-
-    // un-comment to see that inserting image maps does not work!
-    /*test = editorShell.CreateElementWithDefaults("map");
-    test.setAttribute("name", "testing");
-    testArea = editorShell.CreateElementWithDefaults("area");
-    testArea.setAttribute("shape", "circle");
-    testArea.setAttribute("coords", "86,102,52");
-    testArea.setAttribute("href", "test");
-    test.appendChild(testArea);
-    editorShell.InsertElementAtSelection(test, false);*/
-
-    editorShell.EndBatchChanges();
-
-    SaveWindowLocation();
-    return true;
-  }
-
-  gDoAltTextError = false;
-
-  return false;
 }

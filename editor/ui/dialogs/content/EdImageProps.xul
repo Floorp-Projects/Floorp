@@ -58,13 +58,19 @@
       <tab id="imageLocationTab"/>
       <tab id="imageDimensionsTab"/>
       <tab id="imageAppearanceTab"/>
+      <tab id="imageLinkTab"/>
     </tabs>
     <tabpanels>
       <!-- panels overlayed from EdImageOverlay.xul -->
       <vbox id="imageLocation"/>
       <vbox id="imageDimensions"/>
       <hbox id="imageAppearance"/>
-
+      <vbox>
+        <spacer class="spacer"/>
+        <vbox id="LinkLocationBox"/>
+        <spacer class="spacer"/>
+        <checkbox id="showLinkBorder" label="&showImageLinkBorder.label;" oncommand="ToggleShowLinkBorder();"/>
+      </vbox>
     </tabpanels>
   </tabbox>
 

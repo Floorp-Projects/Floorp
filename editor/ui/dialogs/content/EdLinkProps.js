@@ -28,7 +28,7 @@ var insertLinkAtCaret;
 var needLinkText = false;
 var href;
 var newLinkText;
-var HNodeArray;
+var gHNodeArray = [];
 var gHaveNamedAnchors = false;
 var gHaveHeadings = false;
 var gCanChangeHeadingSelected = true;
@@ -50,10 +50,7 @@ function Startup()
   gDialog.linkTextMessage     = document.getElementById("linkTextMessage");
   gDialog.linkTextInput       = document.getElementById("linkTextInput");
   gDialog.hrefInput           = document.getElementById("hrefInput");
-  gDialog.NamedAnchorList     = document.getElementById("NamedAnchorList");
-  gDialog.HeadingsList        = document.getElementById("HeadingsList");
-  gDialog.MoreSection         = document.getElementById("MoreSection");
-  gDialog.MoreFewerButton     = document.getElementById("MoreFewerButton");
+  gDialog.makeRelativeLink    = document.getElementById("MakeRelativeLink");
   gDialog.AdvancedEditSection = document.getElementById("AdvancedEdit");
 
   var selection = editorShell.editorSelection;
@@ -124,7 +121,7 @@ function Startup()
     anchorElement = editorShell.CreateElementWithDefaults(tagName);
     insertNew = true;
     // Hide message about removing existing link
-    document.getElementById("RemoveLinkMsg").setAttribute("hidden","true");
+    //document.getElementById("RemoveLinkMsg").setAttribute("hidden","true");
   }
   if(!anchorElement)
   {
@@ -193,7 +190,7 @@ function Startup()
   globalElement = anchorElement.cloneNode(false);
 
   // Get the list of existing named anchors and headings
-  FillListboxes();
+  FillLinkMenulist(gDialog.hrefInput, gHNodeArray);
 
   // We only need to test for this once per dialog load
   gHaveDocumentUrl = GetDocumentBaseUrl();
@@ -218,8 +215,6 @@ function Startup()
     gDialog.linkTextInput.setAttribute("hidden", "true");
     gDialog.linkTextInput = null;
   }
-
-  InitMoreFewer();
     
   // This sets enable state on OK button
   doEnabling();
@@ -237,92 +232,7 @@ function InitDialog()
   gDialog.hrefInput.value = globalElement.getAttribute("href");
 
   // Set "Relativize" checkbox according to current URL state
-  SetRelativeCheckbox();
-}
-
-function chooseFile()
-{
-  // Get a local file, converted into URL format
-  var fileName = GetLocalFileURL("html, img");
-  if (fileName) 
-  {
-    // Always try to relativize local file URLs
-    if (gHaveDocumentUrl)
-      fileName = MakeRelativeUrl(fileName);
-
-    gDialog.hrefInput.value = fileName;
-
-    SetRelativeCheckbox();
-    doEnabling();
-  }
-  // Put focus into the input field
-  SetTextboxFocus(gDialog.hrefInput);
-}
-
-function FillListboxes()
-{
-  var NamedAnchorNodeList = editorShell.editorDocument.anchors;
-  var NamedAnchorCount = NamedAnchorNodeList.length;
-  var item;
-  if (NamedAnchorCount > 0)
-  {
-    for (var i = 0; i < NamedAnchorCount; i++)
-      AppendStringToTreelist(gDialog.NamedAnchorList, NamedAnchorNodeList.item(i).name);
-
-    gHaveNamedAnchors = true;
-  } 
-  else 
-  {
-    // Message to tell user there are none
-    item = AppendStringToTreelistById(gDialog.NamedAnchorList, "NoNamedAnchors");
-    if (item) item.setAttribute("disabled", "true");
-  }
-  var firstHeading = true;
-  for (var j = 1; j <= 6; j++)
-  {
-    var headingList = editorShell.editorDocument.getElementsByTagName("h"+String(j));
-    for (var k = 0; k < headingList.length; k++)
-    {
-      var heading = headingList.item(k);
-
-      // Skip headings that already have a named anchor as their first child
-      //  (this may miss nearby anchors, but at least we don't insert another
-      //   under the same heading)
-      var child = heading.firstChild;
-      if (child && child.nodeName == "A" && child.name && (child.name.length>0))
-        continue;
-
-      var range = editorShell.editorDocument.createRange();
-      range.setStart(heading,0);
-      var lastChildIndex = heading.childNodes.length;
-      range.setEnd(heading,lastChildIndex);
-      var text = range.toString();
-      if (text)
-      {
-        // Use just first 40 characters, don't add "...",
-        //  and replace whitespace with "_" and strip non-word characters
-        text = ConvertToCDATAString(TruncateStringAtWordEnd(text, 40, false));
-        // Append "_" to any name already in the list
-        if (GetExistingHeadingIndex(text) > -1)
-          text += "_";
-        AppendStringToTreelist(gDialog.HeadingsList, text);
-
-        // Save nodes in an array so we can create anchor node under it later
-        if (!HNodeArray)
-          HNodeArray = new Array(heading)
-        else
-          HNodeArray[HNodeArray.length] = heading;
-      }
-    }
-  }
-  if (HNodeArray)
-  {
-    gHaveHeadings = true;
-  } else {
-    // Message to tell user there are none
-    item = AppendStringToTreelistById(gDialog.HeadingsList, "NoHeadings");
-    if (item) item.setAttribute("disabled", "true");
-  }
+  SetRelativeCheckbox(gDialog.makeRelativeLink);
 }
 
 function doEnabling()
@@ -337,91 +247,12 @@ function doEnabling()
   SetElementEnabledById( "AdvancedEditButton1", enable);
 }
 
-var gClearListSelections = true;
-
-function ChangeLocation()
+function ChangeLinkLocation()
 {
-  if (gClearListSelections)
-  {
-    // Unselect the treelists
-    UnselectNamedAnchor();
-    UnselectHeadings();
-  }  
-
   SetRelativeCheckbox();
 
   // Set OK button enable state
   doEnabling();
-}
-
-function GetExistingHeadingIndex(text)
-{
-  var len = gDialog.HeadingsList.getAttribute("length");
-  for (var i=0; i < len; i++)
-  {
-    if (GetTreelistValueAt(gDialog.HeadingsList, i) == text)
-      return i;
-  }
-  return -1;
-}
-
-function SelectNamedAnchor()
-{
-  if (gCanChangeAnchorSelected)
-  {
-    if (gHaveNamedAnchors)
-    {
-      // Prevent ChangeLocation() from unselecting the list
-      gClearListSelections = false;
-      gDialog.hrefInput.value = "#"+GetSelectedTreelistValue(gDialog.NamedAnchorList);
-      gClearListSelections = true;
-
-      SetRelativeCheckbox();
-
-      // ChangeLocation isn't always called, so be sure Ok is enabled
-      doEnabling();
-    }
-    else
-      UnselectNamedAnchor();
-  
-    UnselectHeadings();
-  }
-}
-
-function SelectHeading()
-{
-  if (gCanChangeHeadingSelected)
-  {
-    if (gHaveHeadings)
-    {
-      gClearListSelections = false;
-      gDialog.hrefInput.value = "#"+GetSelectedTreelistValue(gDialog.HeadingsList);
-      gClearListSelections = true;
-
-      SetRelativeCheckbox();
-      doEnabling();
-    }
-    else
-      UnselectHeadings();
-
-    UnselectNamedAnchor();
-  }
-}
-
-function UnselectNamedAnchor()
-{
-  // Prevent recursive calling of SelectNamedAnchor()
-  gCanChangeAnchorSelected = false;
-  gDialog.NamedAnchorList.selectedIndex = -1;  
-  gCanChangeAnchorSelected = true;
-}
-
-function UnselectHeadings()
-{
-  // Prevent recursive calling of SelectHeading()
-  gCanChangeHeadingSelected = false;
-  gDialog.HeadingsList.selectedIndex = -1;  
-  gCanChangeHeadingSelected = true;
 }
 
 // Get and validate data from widgets.
@@ -509,20 +340,16 @@ function onAccept()
       // Check if the link was to a heading 
       if (href[0] == "#")
       {
-        var name = href.substr(1);
-        var index = GetExistingHeadingIndex(name);
-        if (index >= 0) {
-          // We need to create a named anchor 
-          //  and insert it as the first child of the heading element
-          var headNode = HNodeArray[index];
+        var index = gDialog.hrefInput.selectedIndex;
+        if (index in gHNodeArray && gHNodeArray[index])
+        {
           var anchorNode = editorShell.editorDocument.createElement("a");
-          if (anchorNode) {
-            anchorNode.name = name;
+          if (anchorNode)
+          {
+            anchorNode.name = href.substr(1);
             // Remember to use editorShell method so it is undoable!
-            editorShell.InsertElement(anchorNode, headNode, 0, false);
+            editorShell.InsertElement(anchorNode, gHNodeArray[index], 0, false);
           }
-        } else {
-          dump("HREF is a heading but is not in the list!\n");
         }
       }
       editorShell.EndBatchChanges();
