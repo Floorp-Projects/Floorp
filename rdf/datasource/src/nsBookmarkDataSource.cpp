@@ -189,9 +189,16 @@ public:
 
     nsresult Init(nsInputFileStream *aStream, nsIRDFDataSource *aDataSource);
     nsresult Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType);
-    nsresult AddBookmark(nsIRDFResource * aContainer, const char *url, const PRUnichar *aOptionalTitle,
-			PRInt32 addDate, PRInt32 lastVisitDate, PRInt32 lastModifiedDate,
-			const char *shortcutURL, nsIRDFResource *nodeType);
+
+    nsresult AddBookmark(nsIRDFResource*  aContainer,
+                         const char*      aURL,
+                         const PRUnichar* aOptionalTitle,
+                         PRInt32          aAddDate,
+                         PRInt32          aLastVisitDate,
+                         PRInt32          aLastModifiedDate,
+                         const char*      aShortcutURL,
+                         nsIRDFResource*  aNodeType);
+
     nsresult SetIEFavoritesRoot(const char *IEFavoritesRootURL)
     {
     	mIEFavoritesRoot = IEFavoritesRootURL;
@@ -247,6 +254,7 @@ static const char kAddDateEquals[]      = "ADD_DATE=\"";
 static const char kLastVisitEquals[]    = "LAST_VISIT=\"";
 static const char kLastModifiedEquals[] = "LAST_MODIFIED=\"";
 static const char kShortcutURLEquals[]  = "SHORTCUTURL=\"";
+static const char kIDEquals[]           = "ID=\"";
 
 
 nsresult
@@ -421,8 +429,9 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsIRDFResource* aContainer,
 
     // 7. Parse the shortcut URL
 
-    nsAutoString	shortcut("");
+    nsAutoString	shortcut;
     ParseAttribute(aLine, kShortcutURLEquals, sizeof(kShortcutURLEquals) -1, shortcut);
+
 
     // Dunno. 4.5 did it, so will we.
     if (!lastModifiedDate)
@@ -435,8 +444,18 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsIRDFResource* aContainer,
 	if (cURL)
 	{
 		char *cShortcutURL = shortcut.ToNewCString();
-		nsresult rv = AddBookmark(aContainer, cURL, name.GetUnicode(), addDate,
-			lastVisitDate, lastModifiedDate, cShortcutURL, nodeType);
+        if (! cShortcutURL)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+		nsresult rv = AddBookmark(aContainer,
+                                  cURL,
+                                  name.GetUnicode(),
+                                  addDate,
+                                  lastVisitDate,
+                                  lastModifiedDate,
+                                  cShortcutURL,
+                                  nodeType);
+
 		delete [] cURL;
 		if (cShortcutURL)	delete [] cShortcutURL;
 	}
@@ -447,14 +466,19 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsIRDFResource* aContainer,
 
     // Now create the bookmark
 nsresult
-BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const PRUnichar *aOptionalTitle,
-		PRInt32 addDate, PRInt32 lastVisitDate, PRInt32 lastModifiedDate, const char *shortcutURL,
-		nsIRDFResource *nodeType)
+BookmarkParser::AddBookmark(nsIRDFResource*  aContainer,
+                            const char*      aURL,
+                            const PRUnichar* aOptionalTitle,
+                            PRInt32          aAddDate, 
+                            PRInt32          aLastVisitDate,
+                            PRInt32          aLastModifiedDate, 
+                            const char*      aShortcutURL,
+                            nsIRDFResource*  aNodeType)
 {
 	nsresult rv;
 	nsCOMPtr<nsIRDFResource> bookmark;
 
-	if (NS_FAILED(rv = gRDFService->GetResource(url, getter_AddRefs(bookmark) )))
+	if (NS_FAILED(rv = gRDFService->GetResource(aURL, getter_AddRefs(bookmark) )))
 	{
 		NS_ERROR("unable to get bookmark resource");
 		return rv;
@@ -463,7 +487,7 @@ BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const 
 	PRBool		result = PR_FALSE;
 	if (nsnull != mIEFavoritesRoot)
 	{
-		if (!PL_strcmp(url, mIEFavoritesRoot))
+		if (!PL_strcmp(aURL, mIEFavoritesRoot))
 		{
 			mFoundIEFavoritesRoot = PR_TRUE;
 		}
@@ -477,7 +501,7 @@ BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const 
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add bookmark to container");
     if (NS_FAILED(rv)) return rv;
 
-	rv = mDataSource->Assert(bookmark, kRDF_type, nodeType, PR_TRUE);
+	rv = mDataSource->Assert(bookmark, kRDF_type, aNodeType, PR_TRUE);
     if (rv != NS_RDF_ASSERTION_ACCEPTED)
     {
 		NS_ERROR("unable to add bookmark to data source");
@@ -501,14 +525,14 @@ BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const 
 		}
 	}
 
-	AssertTime(bookmark, kNC_BookmarkAddDate, addDate);
-	AssertTime(bookmark, kWEB_LastVisitDate, lastVisitDate);
-	AssertTime(bookmark, kWEB_LastModifiedDate, lastModifiedDate);
+	AssertTime(bookmark, kNC_BookmarkAddDate, aAddDate);
+	AssertTime(bookmark, kWEB_LastVisitDate, aLastVisitDate);
+	AssertTime(bookmark, kWEB_LastModifiedDate, aLastModifiedDate);
 
-	if ((nsnull != shortcutURL) && (*shortcutURL != '\0'))
+	if ((nsnull != aShortcutURL) && (*aShortcutURL != '\0'))
 	{
 		nsCOMPtr<nsIRDFLiteral> shortcutLiteral;
-		if (NS_FAILED(rv = gRDFService->GetLiteral(nsAutoString(shortcutURL).GetUnicode(),
+		if (NS_FAILED(rv = gRDFService->GetLiteral(nsAutoString(aShortcutURL).GetUnicode(),
 			getter_AddRefs(shortcutLiteral))))
 		{
 			NS_ERROR("unable to get literal for bookmark shortcut URL");
@@ -571,24 +595,32 @@ BookmarkParser::ParseBookmarkHeader(const nsString& aLine, nsIRDFResource* aCont
         addDate = s.ToInteger(&err); // ignored
     }
 
+    nsAutoString id;
+    ParseAttribute(aLine, kIDEquals, sizeof(kIDEquals) - 1, id);
+
     // Make the necessary assertions
     nsresult rv;
     nsCOMPtr<nsIRDFResource> folder;
-    if (name.Equals(kPersonalToolbarFolder)) {
-        folder = do_QueryInterface( kNC_PersonalToolbarFolder );
+    if (id.Length() > 0) {
+        // Use the ID attribute, if one is set.
+        rv = gRDFService->GetUnicodeResource(id.GetUnicode(), getter_AddRefs(folder));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create resource for folder");
+        if (NS_FAILED(rv)) return rv;
+    }
+    else if (name.Equals(kPersonalToolbarFolder)) { // XXX I18n!!!
+        folder = dont_QueryInterface( kNC_PersonalToolbarFolder );
     }
     else {
-        if (NS_FAILED(rv = rdf_CreateAnonymousResource(kURINC_BookmarksRoot, getter_AddRefs(folder)))) {
-            NS_ERROR("unable to create anonymous resource for folder");
-            return rv;
-        }
+        // We've never seen this folder before. Assign it an anonymous ID
+        rv = rdf_CreateAnonymousResource(kURINC_BookmarksRoot, getter_AddRefs(folder));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create anonymous resource for folder");
+        if (NS_FAILED(rv)) return rv;
     }
 
     nsCOMPtr<nsIRDFLiteral> literal;
-    if (NS_FAILED(rv = gRDFService->GetLiteral(name.GetUnicode(), getter_AddRefs(literal)))) {
-        NS_ERROR("unable to create literal for folder name");
-        return rv;
-    }
+    rv = gRDFService->GetLiteral(name.GetUnicode(), getter_AddRefs(literal));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create literal for folder name");
+    if (NS_FAILED(rv)) return rv;
 
     rv = mDataSource->Assert(folder, kNC_Name, literal, PR_TRUE);
     if (rv != NS_RDF_ASSERTION_ACCEPTED) {
@@ -1258,6 +1290,16 @@ BookmarkDataSourceImpl::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFi
 						strm << "<DT><H3";
 						// output ADD_DATE
 						WriteBookmarkProperties(ds, strm, child, kNC_BookmarkAddDate, kAddDateEquals, PR_FALSE);
+
+                        // output ID
+                        strm << " " << kIDEquals;
+                        nsXPIDLCString id;
+                        rv = child->GetValue(getter_Copies(id));
+                        if (NS_SUCCEEDED(rv) && (id)) {
+                            strm << (const char*) id;
+                        }
+                        strm << "\"";
+
 						strm << ">";
 
 						// output title
