@@ -239,6 +239,7 @@ network/protocol/sockstub/Makefile
 network/util/Makefile
 rdf/Makefile
 rdf/base/Makefile
+rdf/base/idl/Makefile
 rdf/base/public/Makefile
 rdf/base/src/Makefile
 rdf/util/Makefile
