@@ -56,7 +56,7 @@ class nsIURI;
 enum eParserCommands {
   eViewNormal,
   eViewSource,
-  eViewErrors,
+  eViewErrors
 };
 
 enum eCRCQuality {

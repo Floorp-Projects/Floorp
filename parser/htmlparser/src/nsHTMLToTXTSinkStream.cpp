@@ -401,14 +401,6 @@ PRBool nsHTMLToTXTSinkStream::DoOutput()
   return mDoFragment || inBody;
 }
 
-nsAutoString
-Spaces(PRInt32 count)
-{
-  nsAutoString result;
-  while (result.Length() < count)
-    result += ' ';
-  return result;
-}
     
 /**
   * This method is used to a general container. 
@@ -818,7 +810,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
 
     // Make a line of dashes as wide as the wrap width
     nsAutoString line;
-    int width = (mWrapColumn > 0 ? mWrapColumn : 25);
+    PRUint32 width = (mWrapColumn > 0 ? mWrapColumn : 25);
     while (line.Length() < width)
       line += '-';
     Write(line);

@@ -1010,7 +1010,9 @@ PRBool nsHTMLContentSinkStream::HasLongLines(const nsString& text)
 {
   const PRInt32 longLineLen = 128;
   nsString str = text;
-  for (PRInt32 start = 0; start < text.Length(); )
+  PRUint32 start=0;
+  PRUint32 theLen=text.Length();
+  for (start = 0; start < theLen; )
   {
     PRInt32 eol = text.FindChar('\n', PR_FALSE, start);
     if (eol < 0) eol = text.Length();

@@ -1039,7 +1039,6 @@ CObserverService::~CObserverService() {
 }
 
 nsObserverTopic* CObserverService::GetTopic(const nsString& aTopic) {
-  PRInt32 theSize=mTopics.GetSize();
   PRInt32 theIndex=0;
   nsObserverTopic *theTopic=(nsObserverTopic*)mTopics.ObjectAt(theIndex++);
 

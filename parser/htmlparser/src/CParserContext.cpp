@@ -93,7 +93,6 @@ CParserContext::CParserContext(const CParserContext &aContext) : mMimeType() {
   mStreamListenerState=aContext.mStreamListenerState;
   mMultipart=aContext.mMultipart;
   mContextType=aContext.mContextType;
-  mCopyUnused;
   mChannel=aContext.mChannel;
   mParserCommand=aContext.mParserCommand;
   SetMimeType(aContext.mMimeType);
