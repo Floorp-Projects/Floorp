@@ -78,12 +78,12 @@
 
 // define storage for all atoms
 #define WSDL_ATOM(_name, _value) nsIAtom* nsWSDLAtoms::_name;
-#include "nsWSDLAtomlist.h"
+#include "nsWSDLAtomList.h"
 #undef WSDL_ATOM
 
 static const nsStaticAtom atomInfo[] = {
 #define WSDL_ATOM(_name, _value) { _value, &nsWSDLAtoms::_name },
-#include "nsWSDLAtomlist.h"
+#include "nsWSDLAtomList.h"
 #undef WSDL_ATOM
 };
 
