@@ -53,7 +53,7 @@ const int netCharType[256] =
 #define HEX_ESCAPE '%'
 
 //----------------------------------------------------------------------------------------
-char* nsEscape(const char * str, nsEscapeMask mask)
+NS_BASE char* nsEscape(const char * str, nsEscapeMask mask)
 //----------------------------------------------------------------------------------------
 {
     if(!str)
@@ -62,7 +62,7 @@ char* nsEscape(const char * str, nsEscapeMask mask)
 }
 
 //----------------------------------------------------------------------------------------
-char* nsEscapeCount(const char * str, PRInt32 len, nsEscapeMask mask, PRInt32 * out_len)
+NS_BASE char* nsEscapeCount(const char * str, PRInt32 len, nsEscapeMask mask, PRInt32 * out_len)
 //----------------------------------------------------------------------------------------
 {
     int32       i, extra = 0;
@@ -109,7 +109,7 @@ char* nsEscapeCount(const char * str, PRInt32 len, nsEscapeMask mask, PRInt32 * 
 }
 
 //----------------------------------------------------------------------------------------
-char* nsUnescape(char * str)
+NS_BASE char* nsUnescape(char * str)
 //----------------------------------------------------------------------------------------
 {
 	nsUnescapeCount(str);
@@ -117,7 +117,7 @@ char* nsUnescape(char * str)
 }
 
 //----------------------------------------------------------------------------------------
-PRInt32 nsUnescapeCount(char * str)
+NS_BASE PRInt32 nsUnescapeCount(char * str)
 //----------------------------------------------------------------------------------------
 {
     register char *src = str;
