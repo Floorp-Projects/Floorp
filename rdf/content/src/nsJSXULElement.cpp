@@ -27,6 +27,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
+#include "nsIController.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIRDFResource.h"
@@ -36,11 +37,13 @@
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIControllerIID, NS_ICONTROLLER_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIXULElementIID, NS_IDOMXULELEMENT_IID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
+NS_DEF_PTR(nsIController);
 NS_DEF_PTR(nsIDOMElement);
 NS_DEF_PTR(nsIDOMXULElement);
 NS_DEF_PTR(nsIRDFResource);
@@ -50,7 +53,8 @@ NS_DEF_PTR(nsIDOMNodeList);
 // XULElement property ids
 //
 enum XULElement_slots {
-  XULELEMENT_RESOURCE = -1
+  XULELEMENT_RESOURCE = -1,
+  XULELEMENT_CONTROLLER = -2
 };
 
 /***********************************************************************/
@@ -92,6 +96,23 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case XULELEMENT_CONTROLLER:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.controller", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsIController* prop;
+        if (NS_OK == a->GetController(&prop)) {
+          // get the js object; n.b., this will do a release on 'prop'
+          nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIController::GetIID(), cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
@@ -126,7 +147,23 @@ SetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
-      case 0:
+      case XULELEMENT_CONTROLLER:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.controller", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsIController* prop;
+        if (PR_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports **) &prop,
+                                                kIControllerIID, cx, *vp)) {
+          return JS_FALSE;
+        }
+      
+        a->SetController(prop);
+        NS_IF_RELEASE(prop);
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
@@ -417,6 +454,7 @@ JSClass XULElementClass = {
 static JSPropertySpec XULElementProperties[] =
 {
   {"resource",    XULELEMENT_RESOURCE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"controller",    XULELEMENT_CONTROLLER,    JSPROP_ENUMERATE},
   {0}
 };
 

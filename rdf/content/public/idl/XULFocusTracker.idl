@@ -8,5 +8,8 @@ interface XULFocusTracker {
 	void addFocusListener(in Element listener);
 	void removeFocusListener(in Element listener);
 
-	void stateChanged();
+	void focusChanged();
+
+	xpidl nsIController getController(in Element element);
+	void setController(in Element element, in xpidl nsIController controller);
 };

@@ -38,6 +38,9 @@
 #include "nsIContent.h"
 #include "nsIDOMUIEvent.h"
 
+#include "nsIDOMXULElement.h"
+#include "nsIController.h"
+
 ////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
@@ -142,7 +145,7 @@ NS_IMETHODIMP
 XULFocusTrackerImpl::SetCurrent(nsIDOMElement* aElement)
 {
   mCurrentElement = aElement;
-  StateChanged();
+  FocusChanged();
   return NS_OK;
 }
 
@@ -167,7 +170,7 @@ XULFocusTrackerImpl::RemoveFocusListener(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP
-XULFocusTrackerImpl::StateChanged()
+XULFocusTrackerImpl::FocusChanged()
 {
   if (mFocusListeners) {
     PRInt32 count = mFocusListeners->Count();
@@ -175,6 +178,27 @@ XULFocusTrackerImpl::StateChanged()
       printf("Notifying an element of a focus change!\n");
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+XULFocusTrackerImpl::GetController(nsIDOMElement* anElement, nsIController** aResult)
+{
+  nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(anElement);
+  if (xulElement)
+    return xulElement->GetController(aResult);
+
+  *aResult = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+XULFocusTrackerImpl::SetController(nsIDOMElement* anElement, nsIController* aController)
+{
+  nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(anElement);
+  if (xulElement)
+    return xulElement->SetController(aController);
+
   return NS_OK;
 }
 
@@ -191,7 +215,7 @@ XULFocusTrackerImpl::Focus(nsIDOMEvent* aEvent)
   
   if (target) {
     SetCurrent(target);
-    StateChanged();
+    FocusChanged();
   }
 
   return NS_OK;
@@ -206,7 +230,7 @@ XULFocusTrackerImpl::Blur(nsIDOMEvent* aEvent)
   
   if (target.get() == mCurrentElement) {
     SetCurrent(nsnull);
-    StateChanged();
+    FocusChanged();
   }
 
   return NS_OK;
