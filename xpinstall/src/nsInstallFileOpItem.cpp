@@ -206,6 +206,10 @@ nsInstallFileOpItem::~nsInstallFileOpItem()
     delete mIcon;
 }
 
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
 PRInt32 nsInstallFileOpItem::Complete()
 {
   PRInt32 ret = nsInstall::SUCCESS;
@@ -240,7 +244,7 @@ PRInt32 nsInstallFileOpItem::Complete()
       ret = NativeFileOpWindowsShortcutComplete();
       break;
     case NS_FOP_MAC_ALIAS:
-      ret = NativeFileOpMacAlias();
+      ret = NativeFileOpMacAliasComplete();
       break;
     case NS_FOP_UNIX_LINK:
       ret = NativeFileOpUnixLink();
@@ -407,6 +411,7 @@ void nsInstallFileOpItem::Abort()
       NativeFileOpWindowsShortcutAbort();
       break;
     case NS_FOP_MAC_ALIAS:
+      NativeFileOpMacAliasAbort();
       break;
     case NS_FOP_UNIX_LINK:
       break;
@@ -905,14 +910,12 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutComplete()
     delete(cParams);
 #endif
 
-  return nsInstall::SUCCESS;
+  return ret;
 }
 
 PRInt32
 nsInstallFileOpItem::NativeFileOpWindowsShortcutAbort()
 {
-  PRInt32 ret = nsInstall::SUCCESS;
-
 #ifdef _WINDOWS
   nsString   shortcutDescription;
   nsFileSpec shortcutTarget;
@@ -922,20 +925,20 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutAbort()
   shortcutTarget  = *mShortcutPath;
   shortcutTarget += shortcutDescription;
 
-  ret = NativeFileOpFileDeleteComplete(mSrc);
+  NativeFileOpFileDeleteComplete(shortcutTarget);
 #endif
 
-  return ret;
+  return nsInstall::SUCCESS;
 }
 
 PRInt32
-nsInstallFileOpItem::NativeFileOpMacAlias()
+nsInstallFileOpItem::NativeFileOpMacAliasComplete()
 {
 
 #ifdef XP_MAC
   // XXX gestalt to see if alias manager is around
   
-  FSSpec		    *fsPtrAlias = mTarget->GetFSSpecPtr();
+  FSSpec        *fsPtrAlias = mTarget->GetFSSpecPtr();
   AliasHandle   aliasH;
   FInfo         info;
   OSErr         err = noErr;
@@ -956,14 +959,24 @@ nsInstallFileOpItem::NativeFileOpMacAlias()
     UpdateResFile(refNum);
     CloseResFile(refNum);
   }
-  else 
-    return nsInstall::UNEXPECTED_ERROR;
+  else
+    return nsInstall::SUCCESS;
   
   // mark newly created file as an alias file
   FSpGetFInfo(fsPtrAlias, &info);
   info.fdFlags |= kIsAlias;
   FSpSetFInfo(fsPtrAlias, &info);
 #endif
+
+  return nsInstall::SUCCESS;
+}
+
+PRInt32
+nsInstallFileOpItem::NativeFileOpMacAliasAbort()
+{  
+#ifdef XP_MAC
+  NativeFileOpFileDeleteComplete(mTarget);
+#endif 
 
   return nsInstall::SUCCESS;
 }
