@@ -90,6 +90,7 @@ JS_BEGIN_EXTERN_C
                                  : JS_TRUE)
 
 /* Domain limits for the jsval int type. */
+#define JSVAL_INT_BITS          31
 #define JSVAL_INT_POW2(n)       ((jsval)1 << (n))
 #define JSVAL_INT_MIN           ((jsval)1 - JSVAL_INT_POW2(30))
 #define JSVAL_INT_MAX           (JSVAL_INT_POW2(30) - 1)

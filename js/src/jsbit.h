@@ -41,14 +41,15 @@ JS_BEGIN_EXTERN_C
 /*
 ** A jsbitmap_t is a long integer that can be used for bitmaps
 */
-typedef unsigned long jsbitmap_t;
+typedef JSUword     jsbitmap_t;     /* NSPR name, a la Unix system types */
+typedef jsbitmap_t  jsbitmap;       /* JS-style scalar typedef name */
 
 #define JS_TEST_BIT(_map,_bit) \
-    ((_map)[(_bit)>>JS_BITS_PER_LONG_LOG2] & (1L << ((_bit) & (JS_BITS_PER_LONG-1))))
+    ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] & (1L << ((_bit) & (JS_BITS_PER_WORD-1))))
 #define JS_SET_BIT(_map,_bit) \
-    ((_map)[(_bit)>>JS_BITS_PER_LONG_LOG2] |= (1L << ((_bit) & (JS_BITS_PER_LONG-1))))
+    ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] |= (1L << ((_bit) & (JS_BITS_PER_WORD-1))))
 #define JS_CLEAR_BIT(_map,_bit) \
-    ((_map)[(_bit)>>JS_BITS_PER_LONG_LOG2] &= ~(1L << ((_bit) & (JS_BITS_PER_LONG-1))))
+    ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] &= ~(1L << ((_bit) & (JS_BITS_PER_WORD-1))))
 
 /*
 ** Compute the log of the least power of 2 greater than or equal to n
