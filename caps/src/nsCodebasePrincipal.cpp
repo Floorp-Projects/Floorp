@@ -37,6 +37,10 @@ NS_IMPL_QUERY_INTERFACE3_CI(nsCodebasePrincipal,
                             nsICodebasePrincipal,
                             nsIPrincipal,
                             nsISerializable)
+NS_IMPL_CI_INTERFACE_GETTER3(nsCodebasePrincipal,
+                             nsICodebasePrincipal,
+                             nsIPrincipal,
+                             nsISerializable)
 
 NSBASEPRINCIPALS_ADDREF(nsCodebasePrincipal);
 NSBASEPRINCIPALS_RELEASE(nsCodebasePrincipal);

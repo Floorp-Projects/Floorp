@@ -299,18 +299,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAggregatePrincipal)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCertificatePrincipal)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCodebasePrincipal)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecurityNameSet)
-
-static nsSystemPrincipal *GetSystemPrincipal()
-{
-    nsIPrincipal *sysprin = nsnull;
-    nsCOMPtr<nsIScriptSecurityManager>
-        secmgr(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-    if (secmgr)
-        secmgr->GetSystemPrincipal(&sysprin);
-    return NS_STATIC_CAST(nsSystemPrincipal*, sysprin);
-}
-
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSystemPrincipal, GetSystemPrincipal)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSystemPrincipal,
+    nsScriptSecurityManager::SystemPrincipalSingletonConstructor)
 
 
 NS_DECL_CLASSINFO(nsAggregatePrincipal)
@@ -361,47 +351,89 @@ RegisterSecurityNameSet(nsIComponentManager *aCompMgr,
     return rv;
 }
 
+
 static nsModuleComponentInfo components[] =
 {
     { NS_SCRIPTSECURITYMANAGER_CLASSNAME, 
       NS_SCRIPTSECURITYMANAGER_CID, 
       NS_SCRIPTSECURITYMANAGER_CONTRACTID,
       Construct_nsIScriptSecurityManager,
-      RegisterSecurityNameSet
+      RegisterSecurityNameSet,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsIClassInfo::MAIN_THREAD_ONLY
     },
 
     { NS_AGGREGATEPRINCIPAL_CLASSNAME, 
       NS_AGGREGATEPRINCIPAL_CID, 
       NS_AGGREGATEPRINCIPAL_CONTRACTID,
-      nsAggregatePrincipalConstructor
+      nsAggregatePrincipalConstructor,
+      nsnull,
+      nsnull,
+      nsnull,
+      NS_CI_INTERFACE_GETTER_NAME(nsAggregatePrincipal),
+      nsnull,
+      &NS_CLASSINFO_NAME(nsAggregatePrincipal),
+      nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::EAGER_CLASSINFO
     },
 
     { NS_CERTIFICATEPRINCIPAL_CLASSNAME, 
       NS_CERTIFICATEPRINCIPAL_CID, 
       NS_CERTIFICATEPRINCIPAL_CONTRACTID,
-      nsCertificatePrincipalConstructor
+      nsCertificatePrincipalConstructor,
+      nsnull,
+      nsnull,
+      nsnull,
+      NS_CI_INTERFACE_GETTER_NAME(nsCertificatePrincipal),
+      nsnull,
+      &NS_CLASSINFO_NAME(nsCertificatePrincipal),
+      nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::EAGER_CLASSINFO
     },
 
     { NS_CODEBASEPRINCIPAL_CLASSNAME, 
       NS_CODEBASEPRINCIPAL_CID, 
       NS_CODEBASEPRINCIPAL_CONTRACTID,
-      nsCodebasePrincipalConstructor
+      nsCodebasePrincipalConstructor,
+      nsnull,
+      nsnull,
+      nsnull,
+      NS_CI_INTERFACE_GETTER_NAME(nsCodebasePrincipal),
+      nsnull,
+      &NS_CLASSINFO_NAME(nsCodebasePrincipal),
+      nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::EAGER_CLASSINFO
     },
 
     { NS_SYSTEMPRINCIPAL_CLASSNAME, 
       NS_SYSTEMPRINCIPAL_CID, 
       NS_SYSTEMPRINCIPAL_CONTRACTID,
-      nsSystemPrincipalConstructor
+      nsSystemPrincipalConstructor,
+      nsnull,
+      nsnull,
+      nsnull,
+      NS_CI_INTERFACE_GETTER_NAME(nsSystemPrincipal),
+      nsnull,
+      &NS_CLASSINFO_NAME(nsSystemPrincipal),
+      nsIClassInfo::SINGLETON | nsIClassInfo::MAIN_THREAD_ONLY |
+      nsIClassInfo::EAGER_CLASSINFO
     },
 
     { "Security Script Name Set",
       NS_SECURITYNAMESET_CID,
       NS_SECURITYNAMESET_CONTRACTID,
-      nsSecurityNameSetConstructor
+      nsSecurityNameSetConstructor,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsIClassInfo::MAIN_THREAD_ONLY
     }
 };
 
 
 NS_IMPL_NSGETMODULE(nsSecurityManagerModule, components);
-
 

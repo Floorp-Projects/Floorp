@@ -31,6 +31,9 @@ static NS_DEFINE_IID(kIAggregatePrincipalIID, NS_IAGGREGATEPRINCIPAL_IID);
 NS_IMPL_QUERY_INTERFACE5_CI(nsAggregatePrincipal, nsIAggregatePrincipal, 
                             nsICertificatePrincipal, nsICodebasePrincipal,
                             nsIPrincipal, nsISerializable)
+NS_IMPL_CI_INTERFACE_GETTER5(nsAggregatePrincipal, nsIAggregatePrincipal, 
+                             nsICertificatePrincipal, nsICodebasePrincipal,
+                             nsIPrincipal, nsISerializable)
 
 NSBASEPRINCIPALS_ADDREF(nsAggregatePrincipal);
 NSBASEPRINCIPALS_RELEASE(nsAggregatePrincipal);

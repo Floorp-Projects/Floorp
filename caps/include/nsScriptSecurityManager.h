@@ -42,6 +42,7 @@
 class nsIDocShell;
 class nsString;
 class nsIClassInfo;
+class nsSystemPrincipal;
 
 /////////////////////
 // nsIPrincipalKey //
@@ -97,6 +98,9 @@ public:
 
     static nsScriptSecurityManager*
     GetScriptSecurityManager();
+
+    static nsSystemPrincipal*
+    SystemPrincipalSingletonConstructor();
 
     JSContext* GetCurrentContextQuick();
 

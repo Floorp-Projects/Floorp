@@ -282,6 +282,9 @@ nsFastLoadFileReader::SetChecksum(PRUint32 aChecksum)
 NS_IMETHODIMP
 nsFastLoadFileReader::ComputeChecksum(PRUint32 *aResult)
 {
+    *aResult = mHeader.mChecksum;
+    return NS_OK;
+#if 0
     PRUint32 saveChecksum = mHeader.mChecksum;
     mHeader.mChecksum = 0;
     NS_AccumulateFastLoadChecksum(&mHeader.mChecksum,
@@ -330,6 +333,7 @@ nsFastLoadFileReader::ComputeChecksum(PRUint32 *aResult)
     *aResult = mHeader.mChecksum;
     mHeader.mChecksum = saveChecksum;
     return rv;
+#endif
 }
 
 NS_IMETHODIMP
@@ -1812,7 +1816,7 @@ nsFastLoadFileWriter::WriteObjectCommon(nsISupports* aObject,
             return NS_ERROR_FAILURE;
 
         nsCID slowCID;
-        rv = classInfo->GetClassID(&slowCID);
+        rv = classInfo->GetClassIDNoAlloc(&slowCID);
         if (NS_FAILED(rv)) return rv;
 
         NSFastLoadID fastCID;

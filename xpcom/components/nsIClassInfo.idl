@@ -77,10 +77,18 @@ interface nsIClassInfo : nsISupports
 
     /**
      * A class ID through which an instance of this class can be created
-     * (or accessed as a service, if |flags & SINGLETON|).  If the class does
-     * not have a CID, it should return NS_ERROR_NOT_AVAILABLE.
+     * (or accessed as a service, if |flags & SINGLETON|), or null.
      */
-    readonly attribute nsCID classID;
+    readonly attribute nsCIDPtr classID;
+
+    /**
+     * Also a class ID through which an instance of this class can be created
+     * (or accessed as a service, if |flags & SINGLETON|).  If the class does
+     * not have a CID, it should return NS_ERROR_NOT_AVAILABLE.  This attribute
+     * exists so C++ callers can avoid allocating and freeing a CID, as would
+     * happen if they used classID.
+     */
+    [notxpcom] readonly attribute nsCID classIDNoAlloc;
 
     /**
      * Return language type from list in nsIProgrammingLanguage
@@ -96,6 +104,7 @@ interface nsIClassInfo : nsISupports
     const PRUint32 MAIN_THREAD_ONLY     = 1 << 2;
     const PRUint32 DOM_OBJECT           = 1 << 3;
     const PRUint32 PLUGIN_OBJECT        = 1 << 4;
+    const PRUint32 EAGER_CLASSINFO      = 1 << 5;
     
     // XXX what else might we want to add?
 
