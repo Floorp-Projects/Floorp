@@ -19,12 +19,6 @@ Rights Reserved.
 
 Contributor(s): ______________________________________. -->
 
-<!-- I copy the following lines from  navigatorOverlay.xul I have no idea  
-     what next line mean
--->
-     
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/charsetDetectorsOverlay.dtd" >
 
