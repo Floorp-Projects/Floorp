@@ -442,22 +442,64 @@ interface jsdIScriptHook : nsISupports
 [scriptable, uuid(f102caf6-1dd1-11b2-bd43-c1dbacb95a98)]
 interface jsdICallHook : nsISupports
 {
+    /**
+     * TYPE_* values must be kept in sync with the JSD_HOOK_* #defines
+     * in jsdebug.h.
+     */
+
+    /**
+     * Toplevel script is starting.
+     */
     const unsigned long TYPE_TOPLEVEL_START  = 0;
+    /**
+     * Toplevel script has completed.
+     */
     const unsigned long TYPE_TOPLEVEL_END    = 1;
+    /**
+     * Function is being called.
+     */
     const unsigned long TYPE_FUNCTION_CALL   = 2;
+    /**
+     * Function is returning.
+     */
     const unsigned long TYPE_FUNCTION_RETURN = 3;
     
+    /**
+     * Called before the JavaScript engine executes a top level script or calls
+     * a function.
+     */
     void onCall (in jsdIStackFrame frame, in unsigned long type);
 };
 
 [scriptable, uuid(b7dd3c1c-1dd1-11b2-83eb-8a857d199e0f)]
 interface jsdIErrorHook : nsISupports
 {
+    /**
+     * REPORT_* values must be kept in sync with JSREPORT_* #defines in
+     * jsapi.h
+     */
+    
+    /**
+     * Report is an error.
+     */
     const unsigned long REPORT_ERROR     = 0x00;
+    /**
+     * Report is only a warning.
+     */
     const unsigned long REPORT_WARNING   = 0x01;
+    /**
+     * Report represents an uncaught exception.
+     */
     const unsigned long REPORT_EXCEPTION = 0x02;
+    /**
+     * Report is due to strict mode.
+     */
     const unsigned long REPORT_STRICT    = 0x04;
 
+    /**
+     * Called when the JavaScript engine encounters an error.  Return |true|
+     * to pass the error along, |false| to invoke the debugHook.
+     */
     boolean onError (in string message, in string fileName,
                      in unsigned long line, in unsigned long pos,
                      in unsigned long flags, in unsigned long errnum,
@@ -472,6 +514,10 @@ interface jsdIErrorHook : nsISupports
 [scriptable, uuid(9a7b6ad0-1dd1-11b2-a789-fcfae96356a2)]
 interface jsdIExecutionHook : nsISupports
 {
+    /**
+     * TYPE_* values must be kept in sync with JSD_HOOK_* #defines in jsdebug.h.
+     */
+
     /**
      * Execution stopped because we're in single step mode.
      */
@@ -492,6 +538,11 @@ interface jsdIExecutionHook : nsISupports
      * Exception was thrown.
      */
     const unsigned long TYPE_THROW            = 4;
+
+    /**
+     * RETURN_* values must be kept in sync with JSD_HOOK_RETURN_* #defines in
+     * jsdebug.h.
+     */
 
     /**
      * Indicates unrecoverable error processing the hook.  This will cause
@@ -570,6 +621,11 @@ interface jsdIContext : jsdIEphemeral
     [noscript] readonly attribute JSContext   JSContext;
 
     /**
+     * VERSION_* values must be kept in sync with the JSVersion enumeration in
+     * jspubtd.h.
+     */
+
+    /**
      * Possible values for |version|.
      */
     const long VERSION_1_0     = 100;
@@ -588,10 +644,42 @@ interface jsdIContext : jsdIEphemeral
     attribute long                   version;
 
     /**
+     * OPT_* values must be kept in sync with JSOPTION_* #defines in jsapi.h.
+     */
+
+    /**
+     * Strict mode is on.
+     */
+    const long OPT_STRICT      = 0x01;
+    /**
+     * Warnings reported as errors.
+     */
+    const long OPT_WERR        = 0x02;
+    /**
+     * Makes eval() use the last object on its 'obj' param's scope chain as the
+     * ECMA 'variables object'.
+     */
+    const long OPT_VAROBJFIX   = 0x04;
+    /**
+     * Private data for this object is an nsISupports object.  Attempting to
+     * alter this bit will result in an NS_ERROR_ILLEGAL_VALUE.
+     */
+    const long OPT_ISUPPORTS   = 0x08;
+    /**
+     * OPT_* values above, OR'd together.
+     */
+    attribute unsigned long          options;
+    
+    /**
      * Unique tag among all valid jsdIContext objects, useful as a hash key.
      */
-    readonly attribute unsigned long tag;    
+    readonly attribute unsigned long tag;
 
+    /**
+     * Private data for this context, if it is an nsISupports, |null| otherwise.
+     */
+    readonly attribute nsISupports   privateData;
+    
     /**
      * Retrieve the underlying context wrapped by this jsdIContext.
      */
@@ -965,6 +1053,10 @@ interface jsdIProperty : jsdIEphemeral
     [noscript] readonly attribute JSDContext  JSDContext;
     /** Internal use only. */
     [noscript] readonly attribute JSDProperty JSDProperty;
+
+    /**
+     * FLAG_* values must be kept in sync with JSDPD_* #defines in jsdebug.h.
+     */
 
     /** visible to for/in loop */
     const unsigned long FLAG_ENUMERATE = 0x01;
