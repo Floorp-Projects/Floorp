@@ -15,13 +15,16 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH = ..\..\..
+#------------------------------------------------------------------------
+#
+# Makefile to build the pluggable HTTP 
+#
+#------------------------------------------------------------------------
 
-MODULE = netwerk
-
-DIRS=          \
-        public \
-        src    \
+DEPTH=..\..\..
+DIRS= 	\
+	public		\
+	src			\
 	$(NULL)
 
-include <$(DEPTH)\config\rules.mak>
+include <$(DEPTH)\config\rules.mak> 

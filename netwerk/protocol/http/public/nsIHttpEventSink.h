@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -16,47 +16,57 @@
  * Reserved.
  */
 
-#ifndef nsIHttpEventSink_h___
-#define nsIHttpEventSink_h___
+#ifndef _nsIHTTPEventSink_h_
+#define _nsIHTTPEventSink_h_
 
-#include "nsIStreamListener.h"
-#include "nscore.h"
+#include "nsISupports.h"
+class nsIString;
+/* 
+    The nsIHTTPEventSink class is the interface thru which the
+    HTTP handler reports specific http events back to a client. 
 
-class nsIUrl;
+    TODO- Check if this should derive from nsIStreamListener?
 
-#define NS_IHTTPEVENTSINK_IID                        \
-{ /* b297b0a0-ea35-11d2-931b-00104ba0fd40 */         \
-    0xb297b0a0,                                      \
-    0xea35,                                          \
-    0x11d2,                                          \
-    {0x93, 0x1b, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
-}
-
-/**
- * An instance of nsIHttpEventSink should be passed as the eventSink
- * argument of nsINetService::NewConnection for http URLs. It defines
- * the callbacks to the application program (the html parser).
- */
-class nsIHttpEventSink : public nsIStreamListener
+    -Gagan Saksena 02/25/99
+*/
+class nsIHTTPEventSink : public nsISupports
 {
+
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTTPEVENTSINK_IID);
+    
+    /*
+        OnAwaitingInput gets called when the handler is waiting on some info from the 
+        app. Ex. username password dialogs, etc. You must at the very least call resume
+        on the connection for this to continue.
+    */
+    NS_IMETHOD      OnAwaitingInput(nsISupports* i_Context) = 0;
 
-    /**
-     * Notify the EventSink that progress as occurred for the URL load.<BR>
-     */
-    NS_IMETHOD OnProgress(nsISupports* context, PRUint32 aProgress, PRUint32 aProgressMax) = 0;
+    NS_IMETHOD      OnDataAvailable(nsISupports* i_Context, 
+                            nsIInputStream *i_IStream,
+                            PRUint32 i_SourceOffset,
+                            PRUint32 i_Length) = 0;
 
-    /**
-     * Notify the EventSink with a status message for the URL load.<BR>
-     */
-    NS_IMETHOD OnStatus(nsISupports* context, const PRUnichar* aMsg) = 0;
+    NS_IMETHOD      OnHeadersAvailable(nsISupports* i_Context) = 0;
+    
+    NS_IMETHOD      OnProgress(nsISupports* i_Context, 
+                            PRUint32 i_Progress, 
+                            PRUint32 i_ProgressMax) = 0;
+    
+    // OnRedirect gets fired only if you have set FollowRedirects on the handler!
+    NS_IMETHOD      OnRedirect(nsISupports* i_Context, 
+                            nsIUrl* i_NewLocation) =0;
 
-    /**
-     * Called after the headers have been received signaling that they now may be accessed.
-     */
-    NS_IMETHOD OnHeadersAvailable(nsISupports* context) = 0;
+    NS_IMETHOD      OnStopBinding(nsISupports* i_Context, 
+                            nsresult i_Status, 
+                            const nsIString* i_pMsg) = 0;
+    
+    static const nsIID& GetIID() { 
+        // {E4F981C0-098F-11d3-B01A-006097BFC036}
+        static const nsIID NS_IHTTPEventSink_IID = 
+            { 0xe4f981c0, 0x98f, 0x11d3, { 0xb0, 0x1a, 0x0, 0x60, 0x97, 0xbf, 0xc0, 0x36 } };
+		return NS_IHTTPEventSink_IID; 
+	};
 
 };
 
-#endif /* nsIIHttpEventSink_h___ */
+#endif /* _nsIHTTPEventSink_h_ */

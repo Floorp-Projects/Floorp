@@ -15,13 +15,14 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-MODULE = netwerk
+MODULE = plughttp
 
 DEPTH = ..\..\..\..
 
 EXPORTS =                           \
-        nsIHttpEventSink.h          \
-        nsIHttpProtocolConnection.h \
+        nsIHTTPEventSink.h          \
+        nsIHTTPConnection.h 		\
+        nsIHTTPHandler.h 			\
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
