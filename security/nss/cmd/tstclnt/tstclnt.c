@@ -506,14 +506,12 @@ int main(int argc, char **argv)
 	return -1;
     }
 
-#if 0
     /* disable ssl2 and ssl2-compatible client hellos. */
-    rv = SSL_Enable(s, SSL_V2_COMPATIBLE_HELLO, 0);
+    rv = SSL_Enable(s, SSL_V2_COMPATIBLE_HELLO, !disableSSL2);
     if (rv != SECSuccess) {
 	SECU_PrintError(progName, "error disabling v2 compatibility");
 	return -1;
     }
-#endif
 
     if (useCommandLinePassword) {
 	SSL_SetPKCS11PinArg(s, password);
