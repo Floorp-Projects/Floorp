@@ -55,11 +55,13 @@
 #include "nsICookieStorage.h"
 #include "nsPluginsDir.h"
 #include "nsVoidArray.h"  // array for holding "active" streams
-#include "nsIDirectoryService.h"
+#include "nsPluginDirServiceProvider.h"
+#include "nsAutoPtr.h"
 #include "nsWeakPtr.h"
 #include "nsIPrompt.h"
 #include "nsISupportsArray.h"
 #include "nsPluginNativeWindow.h"
+#include "nsIPrefBranch.h"
 
 class ns4xPlugin;
 class nsIComponentManager;
@@ -495,8 +497,10 @@ private:
   nsActivePluginList mActivePluginList;
   nsVoidArray mUnusedLibraries;
 
-  nsCOMPtr<nsIFile> mPluginsDir;
-  nsCOMPtr<nsIDirectoryServiceProvider> mPrivateDirServiceProvider;  
+  nsCOMPtr<nsIFile>                    mPluginRegFile;
+  nsCOMPtr<nsIPrefBranch>              mPrefService;
+  nsRefPtr<nsPluginDirServiceProvider> mPrivateDirServiceProvider;
+  
   nsWeakPtr mCurrentDocument; // weak reference, we use it to id document only
 };
 

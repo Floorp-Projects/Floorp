@@ -66,7 +66,6 @@
 #include "nsIURL.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsIPref.h"
 #include "nsIProtocolProxyService.h"
 #include "nsIStreamConverterService.h"
 #include "nsIFile.h"
@@ -199,7 +198,6 @@ static NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID);
 static NS_DEFINE_IID(kIPluginStreamInfoIID, NS_IPLUGINSTREAMINFO_IID);
 static NS_DEFINE_CID(kPluginCID, NS_PLUGIN_CID);
 static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID); 
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
 static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -2555,10 +2553,10 @@ nsPluginHostImpl::nsPluginHostImpl()
 
   // check to see if pref is set at startup to let plugins take over in 
   // full page mode for certain image mime types that we handle internally
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-  if (prefs) {
-    prefs->GetBoolPref("plugin.override_internal_types", &mOverrideInternalTypes);
-    prefs->GetBoolPref("plugin.allow_alien_star_handler", &mAllowAlienStarHandler);
+  mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (mPrefService) {
+    mPrefService->GetBoolPref("plugin.override_internal_types", &mOverrideInternalTypes);
+    mPrefService->GetBoolPref("plugin.allow_alien_star_handler", &mAllowAlienStarHandler);
   }
 
   nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1");
@@ -3281,6 +3279,8 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
     mPrivateDirServiceProvider = nsnull;
   }
   
+  mPrefService = nsnull; // release prefs service to avoid leaks!
+
   return NS_OK;
 }
 
@@ -3340,10 +3340,9 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
       PL_strncasecmp(aMimeType, "application/x-java-applet", 25) == 0) {
 #ifdef OJI
     isJava = PR_TRUE;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
     // see if java is enabled
-    if (prefs) {
-      rv = prefs->GetBoolPref("security.enable_java", &isJavaEnabled);
+    if (mPrefService) {
+      rv = mPrefService->GetBoolPref("security.enable_java", &isJavaEnabled);
       if (NS_SUCCEEDED(rv)) {
         // if not, don't show this plugin
         if (!isJavaEnabled) {
@@ -4237,7 +4236,7 @@ public:
   NS_METHOD GetFilename(nsAString& aFilename)
   {
     PRBool bShowPath;
-    nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID);
+    nsCOMPtr<nsIPrefBranch> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefService &&
         NS_SUCCEEDED(prefService->GetBoolPref("plugin.expose_full_path",&bShowPath)) &&
         bShowPath)
@@ -5094,14 +5093,39 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
                             // the rest is optional
     
 #if defined (XP_WIN)
+  
+  PRBool bScanPLIDs = PR_FALSE;
+  
+  if (mPrefService)
+    mPrefService->GetBoolPref("plugin.scan.plid.all", &bScanPLIDs);
+
+    // Now lets scan any PLID directories
+  if (bScanPLIDs && mPrivateDirServiceProvider) {
+    rv = mPrivateDirServiceProvider->GetPLIDDirectories(getter_AddRefs(dirList));
+    if (NS_SUCCEEDED(rv)) {
+      ScanPluginsDirectoryList(dirList, compManager, aCreatePluginList, &pluginschanged);
+
+      if (pluginschanged)
+        *aPluginsChanged = PR_TRUE;
+
+      // if we are just looking for possible changes,
+      // no need to proceed if changes are detected
+      if (!aCreatePluginList && *aPluginsChanged) {
+        ClearCachedPluginInfoList();
+        return NS_OK;
+      }
+    }
+  }
+
+  
   // Scan the installation paths of our popular plugins if the prefs are enabled
     
   // This table controls the order of scanning
-  const char *prefs[] = {NS_WIN_JRE_SCAN_KEY,         nsnull,
-                         NS_WIN_ACROBAT_SCAN_KEY,     nsnull,
-                         NS_WIN_QUICKTIME_SCAN_KEY,   nsnull,
-                         NS_WIN_WMP_SCAN_KEY,         nsnull,
-                         NS_WIN_4DOTX_SCAN_KEY,       "1"  /*  second column is flag for 4.x folder */ };
+  const char* const prefs[] = {NS_WIN_JRE_SCAN_KEY,         nsnull,
+                               NS_WIN_ACROBAT_SCAN_KEY,     nsnull,
+                               NS_WIN_QUICKTIME_SCAN_KEY,   nsnull,
+                               NS_WIN_WMP_SCAN_KEY,         nsnull,
+                               NS_WIN_4DOTX_SCAN_KEY,       "1"  /*  second column is flag for 4.x folder */ };
 
   PRUint32 size = sizeof(prefs) / sizeof(prefs[0]);
 
@@ -5121,9 +5145,8 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
       if (prefs[i+1]) {
         PRBool bScanEverything;
         bFilterUnwanted = PR_TRUE;  // default to filter 4.x folder
-        nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID);
-        if (prefService &&
-            NS_SUCCEEDED(prefService->GetBoolPref(prefs[i], &bScanEverything)) &&
+        if (mPrefService &&
+            NS_SUCCEEDED(mPrefService->GetBoolPref(prefs[i], &bScanEverything)) &&
             bScanEverything)
           bFilterUnwanted = PR_FALSE;
 
@@ -5141,6 +5164,7 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
       }
     }
   }
+
 #endif
    
   // if get to this point and did not detect changes in plugins
@@ -5237,16 +5261,16 @@ nsPluginHostImpl::WritePluginInfo()
     return rv;
 
   directoryService->Get(NS_APP_APPLICATION_REGISTRY_DIR, NS_GET_IID(nsIFile), 
-                        getter_AddRefs(mPluginsDir));
+                        getter_AddRefs(mPluginRegFile));
 
-  if (!mPluginsDir)
+  if (!mPluginRegFile)
     return NS_ERROR_FAILURE;
 
   PRFileDesc* fd = nsnull;
  
   nsCOMPtr<nsIFile> pluginReg;
 
-  rv = mPluginsDir->Clone(getter_AddRefs(pluginReg));       
+  rv = mPluginRegFile->Clone(getter_AddRefs(pluginReg));
   if (NS_FAILED(rv))
     return rv;
  
@@ -5341,16 +5365,16 @@ nsPluginHostImpl::ReadPluginInfo()
     return rv;
 
   directoryService->Get(NS_APP_APPLICATION_REGISTRY_DIR, NS_GET_IID(nsIFile),
-                        getter_AddRefs(mPluginsDir));
+                        getter_AddRefs(mPluginRegFile));
    
-  if (!mPluginsDir)
+  if (!mPluginRegFile)
     return NS_ERROR_FAILURE;  
 
   PRFileDesc* fd = nsnull;
  
   nsCOMPtr<nsIFile> pluginReg;
  
-  rv = mPluginsDir->Clone(getter_AddRefs(pluginReg));
+  rv = mPluginRegFile->Clone(getter_AddRefs(pluginReg));
   if (NS_FAILED(rv))
     return rv;
 
@@ -5542,16 +5566,15 @@ nsPluginHostImpl::EnsurePrivateDirServiceProvider()
   if (!mPrivateDirServiceProvider)
   {
     nsresult rv;
-    nsCOMPtr<nsIDirectoryServiceProvider> provider = new nsPluginDirServiceProvider;
-    if (!provider)
+    mPrivateDirServiceProvider = new nsPluginDirServiceProvider();
+    if (!mPrivateDirServiceProvider)
       return NS_ERROR_OUT_OF_MEMORY;
     nsCOMPtr<nsIDirectoryService> dirService(do_GetService(kDirectoryServiceContractID, &rv));
     if (NS_FAILED(rv))
       return rv;
-    rv = dirService->RegisterProvider(provider);
+    rv = dirService->RegisterProvider(mPrivateDirServiceProvider);
     if (NS_FAILED(rv))
       return rv;
-    mPrivateDirServiceProvider = provider;
   }
   return NS_OK;
 }
@@ -5834,9 +5857,10 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
 
       // try to get the max cached plugins from a pref or use default
       PRUint32 max_num;
-      nsresult rv;
-      nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-      if (prefs) rv = prefs->GetIntPref(NS_PREF_MAX_NUM_CACHED_PLUGINS,(int *)&max_num);
+      nsresult rv = NS_ERROR_FAILURE;
+      if (mPrefService) {
+        rv = mPrefService->GetIntPref(NS_PREF_MAX_NUM_CACHED_PLUGINS, (int*)&max_num);
+      }
       if (NS_FAILED(rv)) max_num = DEFAULT_NUMBER_OF_STOPPED_PLUGINS;
 
       if(mActivePluginList.getStoppedCount() >= max_num) {
@@ -6495,10 +6519,9 @@ nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManag
     return rv;
   
   // Next, maybe the pref wants to override
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
   PRBool bSkipRealPlayerHack = PR_FALSE;
-  if (!prefs ||
-     (NS_SUCCEEDED(prefs->GetBoolPref("plugin.skip_real_player_hack", &bSkipRealPlayerHack)) &&
+  if (!mPrefService ||
+     (NS_SUCCEEDED(mPrefService->GetBoolPref("plugin.skip_real_player_hack", &bSkipRealPlayerHack)) &&
      bSkipRealPlayerHack))
   return rv;
     
