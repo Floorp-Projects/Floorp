@@ -431,7 +431,8 @@ nsFolderCompactState::FinishCompact()
   // and set the summary valid again.
   if(dbFolderInfo)
     dbFolderInfo->SetExpungedBytes(0);
-  m_db->Close(PR_TRUE);
+  if (m_db)
+    m_db->Close(PR_TRUE);
   m_db = nsnull;
 
   m_folder->NotifyCompactCompleted();
