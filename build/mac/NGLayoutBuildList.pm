@@ -10,6 +10,7 @@ use vars qw( @ISA @EXPORT );
 # perl includes
 use Mac::StandardFile;
 use Mac::Processes;
+use Mac::Events;
 use Cwd;
 use File::Path;
 
@@ -19,7 +20,7 @@ use MacCVS;
 use MANIFESTO;
 
 @ISA			= qw(Exporter);
-@EXPORT			= qw(Checkout BuildDist BuildProjects BuildCommonProjects BuildLayoutProjects);
+@EXPORT		= qw(Checkout BuildDist BuildProjects BuildCommonProjects BuildLayoutProjects);
 
 # NGLayoutBuildList builds the nglayout project
 # it is configured by setting the following variables in the caller:
@@ -60,13 +61,11 @@ sub _pickWithMemoryFile($)
 	}
 	unless (defined ($cvsfile))
 	{
-		print "Choose a CVS session file in file dialog box:\n";	# no way to display a prompt?
-# make sure that MacPerl is a front process
-  while (GetFrontProcess	() !=  GetCurrentProcess())
-  {
-	   SetFrontProcess( GetCurrentProcess() );
-  }
-	# prompt user for the file name, and store it
+		# make sure that MacPerl is a front process
+		ActivateApplication('McPL');
+		MacPerl::Answer("Could not find your MacCVS session file. Please choose one", "OK");
+		
+		# prompt user for the file name, and store it
 		my $macFile = StandardGetFile( 0, "McvD");	
 		if ( $macFile->sfGood() )
 		{
@@ -108,10 +107,18 @@ sub _getDistDirectory()
 
 sub Checkout()
 {
+	# give application activation a chance to happen
+	WaitNextEvent();
+	WaitNextEvent();
+	WaitNextEvent();
+	
 	_assertRightDirectory();
 	my($cvsfile) = _pickWithMemoryFile("::nglayout.cvsloc");
 	my($session) = MacCVS->new( $cvsfile );
 	unless (defined($session)) { die "Checkout aborted. Cannot create session file: $session" }
+
+	# activate MacCVS
+	ActivateApplication('Mcvs');
 
 	#//
 	#//	Checkout commands
@@ -136,6 +143,9 @@ sub BuildDist()
 	unless ( $main::build{dist} ) { return;}
 	_assertRightDirectory();
 	
+	# activate MacPerl
+	ActivateApplication('McPL');
+
 	# we really do not need all these paths, but many client projects include them
 	mkpath([ ":mozilla:dist:", ":mozilla:dist:client:", ":mozilla:dist:client_debug:", ":mozilla:dist:client_stubs:" ]);
 	mkpath([ ":mozilla:dist:viewer:", ":mozilla:dist:viewer_debug:" ]);
@@ -738,6 +748,9 @@ sub BuildXPAppProjects()
 
 sub BuildProjects()
 {
+	# activate CodeWarrior
+	ActivateApplication('CWIE');
+
 	BuildStubs();
 	BuildCommonProjects();
 	BuildLayoutProjects();

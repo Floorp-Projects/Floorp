@@ -25,11 +25,12 @@ Replaces the AppleScript library I<CodeWarriorLib>.
 =cut
 
 use strict;
-use Mac::AppleEvents::Simple;
+use Mac::Types;
 use Mac::AppleEvents;
+use Mac::AppleEvents::Simple;
 use Mac::Processes;
 use Mac::MoreFiles;
-use Mac::Types;
+use Mac::StandardFile;
 use File::Basename;
 
 use vars qw($VERSION);
@@ -176,38 +177,54 @@ sub activate () {
 		close(F);
 	}
 
-	if (!$appath || ! -x $appath) {
-		if (eval {require Mac::Navigation}) {
-			my($options, $nav);
-			Mac::Navigation->import();
-			$options = NavGetDefaultDialogOptions();
-			$options->message('Where is CodeWarrior IDE?');
-			$options->windowTitle('Find CodeWarrior IDE');
-			$nav = NavChooseObject($Application{$app}, $options);
-			die "CodeWarrior IDE not found.\n" if (!$nav || !$nav->file(1));
-			$appath = $nav->file(1);
-		} else {
-			local(*D);
-			my $cwd = `pwd`;
-			$appath = _get_folder(
-                               'Where is the CW IDE folder?',
-				dirname($Application{$app})
-			);
-			die "CodeWarrior IDE not found.\n" if !$appath;
-			opendir(D, $appath) or die $!;
-			chdir($appath);
-			foreach my $file (sort readdir (D)) {
-				my(@app) = MacPerl::GetFileInfo($file);
-				if ($app[0] && $app[1] &&
-					$app[1] eq 'APPL' && $app[0] eq $app
-				) {
-					$appath .= $file;
-					last;
-				}
-			}
-			chomp($cwd);
-			chdir($cwd);
+	if (!$appath || ! -x $appath)
+	{
+		# make sure that MacPerl is a front process
+		#ActivateApplication('McPL');
+		MacPerl::Answer("Please locate the CodeWarrior application.", "OK");
+		
+		# prompt user for the file name, and store it
+		my $macFile = StandardGetFile( 0, "APPL");
+		if ( $macFile->sfGood() )
+		{
+			$appath = $macFile->sfFile();
 		}
+		else
+		{
+			die "Operation canceled\n";
+		}
+	
+#		if (eval {require Mac::Navigation}) {
+#			my($options, $nav);
+#			Mac::Navigation->import();
+#			$options = NavGetDefaultDialogOptions();
+#			$options->message('Where is CodeWarrior IDE?');
+#			$options->windowTitle('Find CodeWarrior IDE');
+#			$nav = NavChooseObject($Application{$app}, $options);
+#			die "CodeWarrior IDE not found.\n" if (!$nav || !$nav->file(1));
+#			$appath = $nav->file(1);
+#		} else {
+#			local(*D);
+#			my $cwd = `pwd`;
+#			$appath = _get_folder(
+#                               'Where is the CW IDE folder?',
+#				dirname($Application{$app})
+#			);
+#			die "CodeWarrior IDE not found.\n" if !$appath;
+#			opendir(D, $appath) or die $!;
+#			chdir($appath);
+#			foreach my $file (sort readdir (D)) {
+#				my(@app) = MacPerl::GetFileInfo($file);
+#				if ($app[0] && $app[1] &&
+#					$app[1] eq 'APPL' && $app[0] eq $app
+#				) {
+#					$appath .= $file;
+#					last;
+#				}
+#			}
+#			chomp($cwd);
+#			chdir($cwd);
+#		}
 		_save_appath($filepath, $appath);
 	}
 

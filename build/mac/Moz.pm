@@ -30,10 +30,13 @@ B<Moz> comprises the routines needed to slap CodeWarrior around, force it to bui
 
 package			Moz;
 require			Exporter;
+
+use Mac::Types;
 use Mac::Events;
+use Mac::Processes;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw(BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest SetBuildNumber SetAgentString SetTimeBomb Delay);
+@EXPORT			= qw(BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest SetBuildNumber SetAgentString SetTimeBomb Delay ActivateApplication);
 @EXPORT_OK	= qw(CloseErrorLog UseCodeWarriorLib QUIET);
 
 	use Cwd;
@@ -204,7 +207,7 @@ sub log_recent_errors($)
 
 				while( <RECENT_ERRORS> )
 					{
-						if ( /^Error/ || /^CouldnÕt find project file/ )
+						if ( /^Error/ || /^CouldnÕt find project file/ || /^Link Error/ )
 							{
 #								if (!$found_errors)
 #									print $_;
@@ -437,6 +440,38 @@ sub Delay($)
 	
 }
 
+
+sub ActivateApplication($)
+{
+	my ($appSignature) = @_;
+	my ($psi, $found);
+	my ($appPSN);
+	
+	$found = 0;
+	
+	foreach $psi (values(%Process))
+	{
+		if ($psi->processSignature() eq $appSignature)
+		{
+			$appPSN = $psi->processNumber();
+			$found = 1;
+      last;
+		}
+	}
+
+	if ($found == 0)
+	{
+		return;
+	}
+		
+	SetFrontProcess($appPSN);
+
+	while (GetFrontProcess() != $appPSN)
+	{
+		WaitNextEvent();
+	}
+
+}
 
 1;
 
