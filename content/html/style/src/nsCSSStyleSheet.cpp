@@ -3113,8 +3113,7 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
 
             // Now 'href' will contain a canonical URI that we can
             // look up in global history.
-
-            if (aTestState) {
+            if ((PR_FALSE != result) && (aTestState)) {
               if (! linkHandler) {
                 aPresContext->GetLinkHandler(&linkHandler);
                 if (linkHandler) {
