@@ -48,6 +48,20 @@ function OnLoadMessenger()
 	messenger.SetWindow(window);
 	dump("start message pane with: " + startpage + "\n");
 	window.frames["messagepane"].location = startpage;
+
+	//Load StartFolder
+	if(pref)
+	{
+		try
+		{
+			var startFolder = pref.CopyCharPref("mailnews.start_folder");
+			ChangeFolderByURI(startFolder);
+		//	var folder = OpenFolderTreeToFolder(startFolder);
+		}
+		catch(ex)
+		{
+		}
+	}
 }
 
 function OnUnloadMessenger()

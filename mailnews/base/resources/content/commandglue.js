@@ -434,3 +434,44 @@ function GetNextUnreadMessage(currentMessage)
 
 }
 
+function OpenFolderTreeToFolder(folderURI)
+{
+	var tree = GetFolderTree();
+	return OpenToFolder(tree, folderURI);
+
+}
+
+function OpenToFolder(item, folderURI)
+{
+
+	if(item.nodeType != Node.ELEMENT_NODE)
+		return null;
+
+	var uri = item.getAttribute('id');
+	dump(uri);
+	dump('\n');
+	if(uri == folderURI)
+	{
+		dump('found folder: ' + uri);
+		dump('\n');
+		return item;
+	}
+
+	var children = item.childNodes;
+	var length = children.length;
+	var i;
+	dump('folder ' + uri);
+	dump('has ' + length);
+	dump('children\n');
+	for(i = 0; i < length; i++)
+	{
+		var child = children[i];
+		var folder = OpenToFolder(child, folderURI);
+		if(folder)
+		{
+			child.setAttribute('open', 'true');
+			return folder;
+		}
+	}
+	return null;
+}
