@@ -552,8 +552,8 @@ morkTable::RowToPos( // test for the table position of a row member
   morkEnv* ev = morkEnv::FromMdbEnv(mev);
   if ( ev )
   {
-    morkRow* row = (morkRow*) ioRow;
-    pos = ArrayHasOid(ev, &row->mRow_Oid);
+    morkRowObject* row = (morkRowObject*) ioRow;
+    pos = ArrayHasOid(ev, &row->mRowObject_Row->mRow_Oid);
     outErr = ev->AsErr();
   }
   if ( outPos )
