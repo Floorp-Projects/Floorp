@@ -553,8 +553,10 @@ PluginViewerImpl::MakeWindow(nsNativeWidget aParent,
     return rv;
   }
   
- 
-  mWindow->Create(aParent, aBounds,HandlePluginEvent, aDeviceContext);
+  // Bug 179822: Create widget and allow non-unicode SubClass
+  nsWidgetInitData initData;
+  initData.mUnicode = PR_FALSE;
+  mWindow->Create(aParent, aBounds,HandlePluginEvent, aDeviceContext, nsnull, nsnull, &initData);
   mWindow->SetClientData(this);
   Show();
   return rv;

@@ -809,9 +809,10 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
     viewMan->InsertChild(parView, view, nsnull, PR_TRUE);
 
     if(aViewOnly != PR_TRUE) {
-
-      result = view->CreateWidget(kWidgetCID);
-
+      // Bug 179822: Create widget and allow non-unicode SubClass
+      nsWidgetInitData initData;
+      initData.mUnicode = PR_FALSE;
+      result = view->CreateWidget(kWidgetCID, &initData);
       if (NS_OK != result) {
         result = NS_OK;       //XXX why OK? MMP
         goto exit;            //XXX sue me. MMP
