@@ -2162,12 +2162,23 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
           m_nextState = NEWS_ERROR;
         else
           m_nextState = NNTP_ERROR;
+        // if we have no channel listener, then we're likely downloading
+        // the message for offline use (or at least not displaying it)
+        PRBool savingArticleOffline = (m_channelListener == nsnull);
 
-        PRBool savingArticleOffline = PR_FALSE;
-        if (m_newsFolder)
-          m_newsFolder->GetSaveArticleOffline(&savingArticleOffline);
+        nsCOMPtr <nsICacheEntryDescriptor> memCacheEntry;
+        if (m_runningURL)
+        {
+          nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+          if (mailnewsurl)
+            mailnewsurl->GetMemCacheEntry(getter_AddRefs(memCacheEntry));
+          // invalidate mem cache entry.
+          if (memCacheEntry)
+            memCacheEntry->Doom();
+        }
 
         if (NS_SUCCEEDED(rv) && group_name && !savingArticleOffline) {
+            MarkCurrentMsgRead();
             nsXPIDLString titleStr;
 			rv = GetNewsStringByName("htmlNewsErrorTitle", getter_Copies(titleStr));
             NS_ENSURE_SUCCESS(rv,rv);
