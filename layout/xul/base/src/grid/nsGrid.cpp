@@ -363,7 +363,6 @@ nsGrid::BuildRows(nsIBox* aBox, PRBool aRowCount, nsGridRow** aRows, PRBool aIsH
   }
 
   // create the array
-  PRInt32 count = 0;
   nsGridRow* row;
   
   // only create new rows if we have to. Reuse old rows.

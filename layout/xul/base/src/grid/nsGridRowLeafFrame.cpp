@@ -78,7 +78,6 @@ NS_IMETHODIMP
 nsGridRowLeafFrame::GetBorderAndPadding(nsMargin& aBorderAndPadding)
 {
   // if our columns have made our padding larger add it in.
-  nsMargin borderPadding(0,0,0,0);
   nsresult rv = nsBoxFrame::GetBorderAndPadding(aBorderAndPadding);
 
   nsCOMPtr<nsIBoxLayout> layout;

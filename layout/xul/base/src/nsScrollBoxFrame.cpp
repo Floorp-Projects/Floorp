@@ -628,8 +628,7 @@ nsScrollBoxFrame::Paint(nsIPresContext*      aPresContext,
   }
 
   // Paint our children
-  nsresult rv = nsBoxFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                                 aWhichLayer);
+  nsBoxFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
   // Call nsFrame::Paint to draw selection border when appropriate
   return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);

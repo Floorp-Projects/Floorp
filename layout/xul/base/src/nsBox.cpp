@@ -99,7 +99,7 @@ nsBox::ListBox(nsAutoString& aResult)
     GetBoxName(name);
 
     char addr[100];
-    sprintf(addr, "[@%p] ", frame);
+    sprintf(addr, "[@%p] ", NS_STATIC_CAST(void*, frame));
 
     aResult.AppendWithConversion(addr);
     aResult.Append(name);
@@ -664,7 +664,6 @@ nsBox::GetBorder(nsMargin& aMargin)
                       (const nsStyleStruct*&) disp);
   if (disp->mAppearance && gTheme) {
     // Go to the theme for the border.
-    nsSize size;
     nsCOMPtr<nsIContent> content;
     frame->GetContent(getter_AddRefs(content));
     if (content) {
