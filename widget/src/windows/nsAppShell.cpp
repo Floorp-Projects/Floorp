@@ -86,8 +86,10 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
   static MSG msg;
 
   BOOL isOK = GetMessage(&msg, NULL, 0, 0);
+#ifdef DEBUG_danm
   if (msg.message != WM_TIMER)
     printf("-> %d", msg.message);
+#endif
 
   if (isOK) {
     TranslateMessage(&msg);
@@ -128,7 +130,9 @@ nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
        }
        */
        if (win == eWin) {
+#ifdef DEBUG_danm
          printf(" Short circut");
+#endif
          isInWindow = PR_TRUE;
        } else {
          RECT r;
