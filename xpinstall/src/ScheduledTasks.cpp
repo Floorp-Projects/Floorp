@@ -183,7 +183,6 @@ PRInt32 DoWindowsReplaceExistingFileStuff(const char* currentName, const char* f
 
 
 
-
 REGERR DeleteFileNowOrSchedule(const nsFileSpec& filename)
 {
 

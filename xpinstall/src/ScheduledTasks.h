@@ -23,7 +23,6 @@
  *     Douglas Turner <dougt@netscape.com>
  */
 
-
 #ifndef __SCHEDULEDTASKS_H__
 #define __SCHEDULEDTASKS_H__
 
