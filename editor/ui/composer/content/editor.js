@@ -219,6 +219,49 @@ var DocumentReloadListener =
   }
 };
 
+function addEditorClickEventListener()
+{
+  try {
+    var bodyelement = GetBodyElement();
+    if (bodyelement)
+      bodyelement.addEventListener("click", EditorClick, false);
+  } catch (e) {}
+}
+
+function removeEditorClickEventListener()
+{
+  try {
+    var bodyelement = GetBodyElement();
+    if (bodyelement)
+      bodyelement.removeEventListener("click", EditorClick, false);
+  } catch (e) {}
+}
+
+var MessageComposeDocumentStateListener =
+{
+  NotifyDocumentCreated: function()
+  {
+    addEditorClickEventListener();
+  },
+
+  NotifyDocumentWillBeDestroyed: function()
+  {
+  },
+
+  NotifyDocumentStateChanged:function()
+  {
+  }
+};
+
+function isPlaintextEditor()
+{
+  var editorflags;
+  try {
+    editorflags = window.editorShell.editor.flags;
+  } catch(e) {}
+
+  return (editorflags & Components.interfaces.nsIPlaintextEditor.eEditorPlaintextMask);
+}
 
 // This is called when the real editor document is created,
 // before it's loaded.
@@ -245,9 +288,14 @@ var DocumentStateListener =
     // We must wait until document is created to get proper Url
     // (Windows may load with local file paths)
     SetSaveAndPublishUI(GetDocumentUrl());
+
+    // Add mouse click watcher if right type of editor
+    if (!isPlaintextEditor())
+      addEditorClickEventListener();
   },
 
   NotifyDocumentWillBeDestroyed: function() {},
+
   NotifyDocumentStateChanged:function( isNowDirty )
   {
     /* Notify our dirty detector so this window won't be closed if
@@ -293,9 +341,6 @@ function EditorStartup(editorType, editorElement)
   editorShell.webShellWindow = window;
   editorShell.contentWindow = window._content;
 
-  // add a listener to be called when document is really done loading
-  editorShell.RegisterDocumentStateListener( DocumentStateListener );
-
   // set up our global prefs object
   GetPrefsService();
 
@@ -331,12 +376,23 @@ function EditorSharedStartup()
       case "htmlmail":
         SetupHTMLEditorCommands();
         editorShell.contentsMIMEType = "text/html";
+        if (editorShell.editorType == "htmlmail")
+          editorShell.RegisterDocumentStateListener( MessageComposeDocumentStateListener );
+        else
+          // add a listener to be called when document is really done loading
+          editorShell.RegisterDocumentStateListener( DocumentStateListener );
         break;
+
       case "text":
+        // add listener when document is done loading (for toolbar setup)
+        editorShell.RegisterDocumentStateListener( DocumentStateListener );
+        // continue below
+
       case "textmail":
         SetupTextEditorCommands();
         editorShell.contentsMIMEType = "text/plain";
         break;
+
       default:
         dump("INVALID EDITOR TYPE: "+editorShell.editorType+"\n");
         SetupTextEditorCommands();
@@ -1265,10 +1321,19 @@ function EditorDblClick(event)
 
 function EditorClick(event)
 {
+  if (!event)
+    return;
+
+  if (event.detail == 2)
+  {
+    EditorDblClick(event);
+    return;
+  }
+
   // In Show All Tags Mode,
   // single click selects entire element,
   //  except for body and table elements
-  if (event && event.target && gEditorDisplayMode == DisplayModeAllTags)
+  if (event.target && gEditorDisplayMode == DisplayModeAllTags)
   {
     try {
       var element = event.target.QueryInterface( Components.interfaces.nsIDOMElement);

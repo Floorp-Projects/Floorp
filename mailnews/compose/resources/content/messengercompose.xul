@@ -476,8 +476,7 @@
   <!-- The mail message body frame -->
   <vbox id="appcontent" flex="1">
     <editor type="content-primary" id="content-frame" src="about:blank" name="browser.message.body" flex="1"
-            onkeypress="editorKeyPress(event);" context="msgComposeContext"
-            ondblclick="EditorDblClick(event);"/>
+            onkeypress="editorKeyPress(event);" context="msgComposeContext"/>
   </vbox>
 
   <statusbar id="status-bar" class="chromeclass-status">
