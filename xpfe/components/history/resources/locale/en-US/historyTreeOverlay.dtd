@@ -1,0 +1,6 @@
+<!ENTITY tree.header.name.label     "Title">
+<!ENTITY tree.header.url.label      "URL">
+<!ENTITY tree.header.date.label     "Last Visited">
+<!ENTITY tree.header.firstvisitdate.label     "First Visited">
+<!ENTITY tree.header.referrer.label "Referrer">
+<!ENTITY tree.header.visitcount.label "Visit Count">

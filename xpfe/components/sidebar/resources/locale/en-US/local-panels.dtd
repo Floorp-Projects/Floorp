@@ -26,3 +26,4 @@
 <!-- LOCALIZATION NOTE sidebar.tinderbox.label: DONT_TRANSLATE -->
 <!ENTITY sidebar.tinderbox.label      "Tinderbox">
 <!ENTITY sidebar.bookmarks.label      "Bookmarks">
+<!ENTITY sidebar.history.label        "History">
