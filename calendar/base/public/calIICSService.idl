@@ -139,6 +139,15 @@ interface calIIcalComponent : nsISupports
      */
     void addTimezoneReference(in calIIcalComponent aTimezone);
 
+    /**
+     * Returns an array of VCALENDAR components, each with a single
+     * VTIMEZONE.  These are the timezones that are in use by this
+     * component and its children.  Child timezones are only added
+     * at addSubcomponent time.
+     */
+    void getReferencedTimezones(out PRUint32 aCount,
+                                [array,size_is(aCount),retval] out calIIcalComponent aTimezones);
+
     [noscript,notxpcom] icalcomponentptr getIcalComponent();
 };
 

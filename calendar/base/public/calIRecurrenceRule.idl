@@ -76,7 +76,7 @@ interface calIRecurrenceRule : calIRecurrenceItem
   // the components defining the recurrence
   // "BYSECOND", "BYMINUTE", "BYHOUR", "BYDAY",
   // "BYMONTHDAY", "BYYEARDAY", "BYWEEKNO", "BYMONTH",
-  // "BYSETPOST"
+  // "BYSETPOS"
   void getComponent (in AUTF8String aComponentType,
                      out unsigned long aCount, [array,size_is(aCount),retval] out short aValues);
   void setComponent (in AUTF8String aComponentType,

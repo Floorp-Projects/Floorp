@@ -1652,3 +1652,18 @@ function CalendarToolboxCustomizeDone(aToolboxChanged)
   // XXX Shouldn't have to do this, but I do
   window.focus();
 }
+
+//
+// timezone pref bits
+//
+
+// returns the TZID of the timezone pref
+gDefaultTimezone = null;
+function calendarDefaultTimezone() {
+    if (gDefaultTimezone == null) {
+        var prefobj = prefService.getBranch("calendar.");
+        gDefaultTimezone = getCharPref(prefobj, "local-time-zone", "/softwarestudio.org/Olson_20010626_2/America/Los_Angeles");
+    }
+
+    return gDefaultTimezone;
+}

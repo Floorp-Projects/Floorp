@@ -90,6 +90,14 @@ calendarPrefObserver.prototype =
                 }
                 break;
 
+            case "calendar.local-time-zone":
+                gDefaultTimezone = subject.getCharPref( prefName );
+
+                this.CalendarPreferences.calendarWindow.currentView.refresh();
+                refreshEventTree( getAndSetEventTable() );
+                toDoUnifinderRefresh();
+                break;
+
             default :
                 break;
         }

@@ -42,11 +42,17 @@
 #include "calAttributeHelpers.h"
 #include "calBaseCID.h"
 
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
+#include "calIICSService.h"
+
 #include "jsdate.h"
 
 extern "C" {
     #include "ical.h"
 }
+
+static NS_DEFINE_CID(kCalICSService, CAL_ICSSERVICE_CID);
 
 NS_IMPL_ISUPPORTS2(calDateTime, calIDateTime, nsIXPCScriptable)
 
@@ -108,7 +114,9 @@ calDateTime::Clone(calIDateTime **aResult)
 
     // copies are always mutable
     cdt->mImmutable = PR_FALSE;
-    
+
+    cdt->mTimezone.Assign(mTimezone);
+
     NS_ADDREF(*aResult = cdt);
     return NS_OK;
 }
@@ -214,12 +222,17 @@ calDateTime::SetTimeInTimezone(PRTime aTime, const char *aTimezone)
     struct icaltimetype icalt;
     time_t tt;
 
-    icaltimezone *zone = nsnull;
+    icaltimezone *zone = icaltimezone_get_utc_timezone();
 
     if (aTimezone) {
-        icaltimezone *zone = icaltimezone_get_builtin_timezone_from_tzid(aTimezone);
-        if (!zone)
+        nsCOMPtr<calIICSService> ics = do_GetService(kCalICSService);
+        nsCOMPtr<calIIcalComponent> tz;
+        ics->GetTimezone(nsDependentCString(aTimezone), getter_AddRefs(tz));
+        if (!tz)
             return NS_ERROR_FAILURE;
+
+        icalcomponent *zonecomp = tz->GetIcalComponent();
+        zone = icalcomponent_get_timezone(zonecomp, aTimezone);
     }
 
     PRInt64 temp, million;
@@ -337,26 +350,35 @@ calDateTime::ToIcalTime(icaltimetype *icalt)
     icalt->is_date = mIsDate ? 1 : 0;
     icalt->is_daylight = 0;
 
-    icalt->zone = NULL;
+    if (icalt->is_utc) {
+        icalt->zone = icaltimezone_get_utc_timezone();
+    } else if (mTimezone.IsEmpty()) {
+        icalt->zone = NULL;
+    } else {
+        NS_WARNING("Non-UTC and Non-Floating DateTime; this seems bad.");
+    }
 }
 
 void
 calDateTime::FromIcalTime(icaltimetype *icalt)
 {
-     if (icalt->zone) {
-         NS_ASSERTION(icalt->zone == icaltimezone_get_utc_timezone(),
-                      "Got icaltimetype with a non-null and non-utc zone!");
-     }
+    icaltimetype t = *icalt;
 
-    mYear = icalt->year;
-    mMonth = icalt->month - 1;
-    mDay = icalt->day;
-    mHour = icalt->hour;
-    mMinute = icalt->minute;
-    mSecond = icalt->second;
+    // if we get a time in a specific timezone,
+    // convert it to UTC.
+    if (!t.is_utc && t.zone) {
+        t = icaltime_convert_to_zone(*icalt, icaltimezone_get_utc_timezone());
+    }
 
-    mIsUtc = icalt->is_utc ? PR_TRUE : PR_FALSE;
-    mIsDate = icalt->is_date ? PR_TRUE : PR_FALSE;
+    mYear = t.year;
+    mMonth = t.month - 1;
+    mDay = t.day;
+    mHour = t.hour;
+    mMinute = t.minute;
+    mSecond = t.second;
+
+    mIsUtc = t.is_utc ? PR_TRUE : PR_FALSE;
+    mIsDate = t.is_date ? PR_TRUE : PR_FALSE;
 
     // reconstruct nativetime
     time_t tt = icaltime_as_timet(*icalt);

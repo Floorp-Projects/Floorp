@@ -500,6 +500,8 @@ function onOKCommand()
 
     var componentType;
 
+    var tzid = calendarDefaultTimezone();
+
     // calIEvent properties
     if (isEvent(event)) {
         componentType = "event";
@@ -507,7 +509,9 @@ function onOKCommand()
             event = originalEvent.clone().QueryInterface(Components.interfaces.calIEvent);
 
         event.startDate.jsDate = gStartDate;
+        event.startDate.timezone = tzid;
         event.endDate.jsDate   = gEndDate;
+        event.endDate.timezone = tzid;
         event.isAllDay = getFieldValue("all-day-event-checkbox", "checked");
         event.status   = getFieldValue("event-status-field");
     } else if (isToDo(event)) {
@@ -517,13 +521,15 @@ function onOKCommand()
 
         dump ("this todo is: " + event + "\n");
         if (gStartDate) {
-            event.entryDate = gStartDate;
+            event.entryDate.jsDate = gStartDate;
+            event.entryDate.timezone = tzid;
         } else {
             event.entryDate.reset();
         }
 
         if (gDueDate) {
-            event.dueDate = gDueDate;
+            event.dueDate.jsDate = gDueDate;
+            event.dueDate.timezone = tzid;
         } else {
             event.dueDate.reset();
         }
