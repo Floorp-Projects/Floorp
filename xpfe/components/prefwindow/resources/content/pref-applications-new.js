@@ -38,6 +38,8 @@ function Startup()
   } else {
       gDescriptionField.focus();
   }
+  sizeToContent();
+  moveToAlertPosition();
 }
 
 function chooseApp()

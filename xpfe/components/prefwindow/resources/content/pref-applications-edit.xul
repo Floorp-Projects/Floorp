@@ -37,6 +37,7 @@
     <stringbundle id="bundle_prefApplications"
                   src="chrome://communicator/locale/pref/pref-applications.properties"/>
 
+<script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/pref/overrideHandler.js"/>
   <script type="application/x-javascript">
   <![CDATA[
@@ -127,6 +128,9 @@
       document.getElementById("contentTypeImage").setAttribute("src", imageString);
       
       gMIMEField.focus();
+
+      sizeToContent();
+      moveToAlertPosition();
     }
     
     function doEnabling()
