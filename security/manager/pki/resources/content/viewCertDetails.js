@@ -19,6 +19,7 @@
  * Contributor(s):
  *  Bob Lord <lord@netscape.com>
  *  Ian McGreer <mcgreer@netscape.com>
+ *  Javier Delgadillo <javi@netscape.com>
  */
 
 const nsIX509Cert = Components.interfaces.nsIX509Cert;
@@ -138,29 +139,16 @@ function addTreeItemToTreeChild(treeChild,label,value,addTwistie)
   return treeElem1;
 }
 
-function removeChildrenInTree(tree)
-{
-  while (tree.firstChild)
-    tree.removeChild(tree.firstChild);
-}
-
 function displaySelected() {
   var asn1Outliner = document.getElementById('prettyDumpOutliner').
                      outlinerBoxObject.view.QueryInterface(nsIASN1Outliner);
   var items = asn1Outliner.selection;
+  var certDumpVal = document.getElementById('certDumpVal');
   if (items.currentIndex != -1) {
-    var certDumpVal = document.getElementById('certDumpVal');
-    removeChildrenInTree(certDumpVal);
-    // Since the tree widget doesn't do the right thing for new lines,
-    // I'll interpret them here.
     var value = asn1Outliner.getDisplayData(items.currentIndex);
-    var strings = value.split("\n");
-    var i;
-    var children = document.createElement("treechildren");
-    certDumpVal.appendChild(children);
-    for (i=0;strings[i]!=null;i++) {
-      addTreeItemToTreeChild(children,strings[i],null,false);
-    }
+    certDumpVal.setAttribute("value", value); 
+  } else {
+    certDumpVal.setAttribute("value","");
   }
 }
 
@@ -270,7 +258,6 @@ function updateCertDump()
     var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
     var cert = certdb.getCertByDBKey(dbKey,null);
     asn1Outliner.loadASN1Structure(cert.ASN1Structure);
-    var certDumpVal = document.getElementById('certDumpVal');
-    removeChildrenInTree(certDumpVal);
   }
+  displaySelected();
 }

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.38 2001/07/04 18:33:53 ddrinan%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.39 2001/07/25 00:16:42 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -1447,7 +1447,7 @@ ProcessRawBytes(SECItem *data, nsString &text)
   for (i=0; i<data->len; i++) {
     PR_snprintf(buffer, 5, "%02x ", data->data[i]);
     text.Append(NS_ConvertASCIItoUCS2(buffer).get());
-    if ((i+1)%24 == 0) {
+    if ((i+1)%16 == 0) {
       text.Append(NS_LITERAL_STRING(SEPARATOR).get());
     }
   }
