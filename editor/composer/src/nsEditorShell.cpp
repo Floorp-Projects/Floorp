@@ -892,80 +892,6 @@ nsEditorShell::DoEditorMode(nsIDocShell *aDocShell)
   return InstantiateEditor(domDoc, presShell);
 }
 
-// Deletion routines
-nsresult
-nsEditorShell::ScrollSelectionIntoView()
-{
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  if (!editor) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsISelectionController> selCon;
-  editor->GetSelectionController(getter_AddRefs(selCon));
-  if (!selCon)
-    return NS_ERROR_UNEXPECTED;
-  return selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
-                                            nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
-}
-
-NS_IMETHODIMP
-nsEditorShell::DeleteCharForward()
-{
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  if (!editor) return NS_ERROR_NOT_INITIALIZED;
-  nsresult rv = editor->DeleteSelection(nsIEditor::eNext);
-  ScrollSelectionIntoView();
-  return rv;
-}
-
-NS_IMETHODIMP
-nsEditorShell::DeleteCharBackward()
-{
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  if (!editor) return NS_ERROR_NOT_INITIALIZED;
-  nsresult rv = editor->DeleteSelection(nsIEditor::ePrevious);
-  ScrollSelectionIntoView();
-  return rv;
-}
-
-NS_IMETHODIMP
-nsEditorShell::DeleteWordForward()
-{
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  if (!editor) return NS_ERROR_NOT_INITIALIZED;
-  nsresult rv = editor->DeleteSelection(nsIEditor::eNextWord);
-  ScrollSelectionIntoView();
-  return rv;
-}
-
-NS_IMETHODIMP
-nsEditorShell::DeleteWordBackward()
-{
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  if (!editor) return NS_ERROR_NOT_INITIALIZED;
-  nsresult rv = editor->DeleteSelection(nsIEditor::ePreviousWord);
-  ScrollSelectionIntoView();
-  return rv;
-}
-
-NS_IMETHODIMP
-nsEditorShell::DeleteToEndOfLine()
-{
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  if (!editor) return NS_ERROR_NOT_INITIALIZED;
-  nsresult rv = editor->DeleteSelection(nsIEditor::eToEndOfLine);
-  ScrollSelectionIntoView();
-  return rv;
-}
-
-NS_IMETHODIMP
-nsEditorShell::DeleteToBeginningOfLine()
-{
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  if (!editor) return NS_ERROR_NOT_INITIALIZED;
-  nsresult rv = editor->DeleteSelection(nsIEditor::eToBeginningOfLine);
-  ScrollSelectionIntoView();
-  return rv;
-}
-
 // Generic attribute setting and removal
 NS_IMETHODIMP    
 nsEditorShell::SetAttribute(nsIDOMElement *element, const PRUnichar *attr, const PRUnichar *value)
@@ -977,21 +903,6 @@ nsEditorShell::SetAttribute(nsIDOMElement *element, const PRUnichar *attr, const
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (editor) {
     result = editor->SetAttribute(element, nsDependentString(attr), nsDependentString(value)); 
-  }
-
-  return result;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::RemoveAttribute(nsIDOMElement *element, const PRUnichar *attr)
-{
-  if (!element || !attr)
-    return NS_ERROR_NULL_POINTER;
-
-  nsresult  result = NS_NOINTERFACE;
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  if (editor) {
-    result = editor->RemoveAttribute(element, nsDependentString(attr));
   }
 
   return result;
@@ -1106,184 +1017,6 @@ nsEditorShell::GetTextProperty(const PRUnichar *prop, const PRUnichar *attr, con
   return err;
 }
 
-NS_IMETHODIMP
-nsEditorShell::IncreaseFontSize()
-{
-  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-  if (htmlEditor)
-    return htmlEditor->IncreaseFontSize();
-
-  return NS_NOINTERFACE;
-}
-
-NS_IMETHODIMP
-nsEditorShell::DecreaseFontSize()
-{
-  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-  if (htmlEditor)
-    return htmlEditor->DecreaseFontSize();
-
-  return NS_NOINTERFACE;
-}
-
-
-NS_IMETHODIMP 
-nsEditorShell::SetBackgroundColor(const PRUnichar *color)
-{
-  nsresult result = NS_NOINTERFACE;
-  
-  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
-  
-  nsAutoString aColor(color);
-  result = mEditor->SetBackgroundColor(aColor);
-
-  return result;
-}
-
-NS_IMETHODIMP 
-nsEditorShell::GetParagraphState(PRBool *aMixed, PRUnichar **_retval)
-{
-  if (!aMixed || !_retval) return NS_ERROR_NULL_POINTER;
-  *_retval = nsnull;
-  *aMixed = PR_FALSE;
-
-  nsresult  err = NS_NOINTERFACE;
-  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-
-  if (htmlEditor)
-  {
-    PRBool bMixed;
-    nsAutoString state;
-    err = htmlEditor->GetParagraphState(&bMixed, state);
-    if (!bMixed)
-      *_retval = ToNewUnicode(state);
-  }
-  return err;
-}
-
-NS_IMETHODIMP 
-nsEditorShell::GetListState(PRBool *aMixed, PRUnichar **_retval)
-{
-  if (!aMixed || !_retval) return NS_ERROR_NULL_POINTER;
-  *_retval = nsnull;
-  *aMixed = PR_FALSE;
-
-  nsresult  err = NS_NOINTERFACE;
-  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-  if (htmlEditor)
-  {
-    PRBool bOL, bUL, bDL;
-    err = htmlEditor->GetListState(aMixed, &bOL, &bUL, &bDL);
-    if (NS_SUCCEEDED(err))
-    {
-      if (!*aMixed)
-      {
-        nsAutoString tagStr;
-        if (bOL) tagStr.Assign(NS_LITERAL_STRING("ol"));
-        else if (bUL) tagStr.Assign(NS_LITERAL_STRING("ul"));
-        else if (bDL) tagStr.Assign(NS_LITERAL_STRING("dl"));
-        *_retval = ToNewUnicode(tagStr);
-      }
-    }  
-  }
-  return err;
-}
-
-NS_IMETHODIMP 
-nsEditorShell::GetListItemState(PRBool *aMixed, PRUnichar **_retval)
-{
-  if (!aMixed || !_retval) return NS_ERROR_NULL_POINTER;
-  *_retval = nsnull;
-  *aMixed = PR_FALSE;
-
-  nsresult  err = NS_NOINTERFACE;
-  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-  if (htmlEditor)
-  {
-    PRBool bLI,bDT,bDD;
-    err = htmlEditor->GetListItemState(aMixed, &bLI, &bDT, &bDD);
-    if (NS_SUCCEEDED(err))
-    {
-      if (!*aMixed)
-      {
-        nsAutoString tagStr;
-        if (bLI) tagStr.Assign(NS_LITERAL_STRING("li"));
-        else if (bDT) tagStr.Assign(NS_LITERAL_STRING("dt"));
-        else if (bDD) tagStr.Assign(NS_LITERAL_STRING("dd"));
-        *_retval = ToNewUnicode(tagStr);
-      }
-    }  
-  }
-  return err;
-}
-
-NS_IMETHODIMP 
-nsEditorShell::GetAlignment(PRBool *aMixed, PRUnichar **_retval)
-{
-  if (!aMixed || !_retval) return NS_ERROR_NULL_POINTER;
-  *_retval = nsnull;
-  *aMixed = PR_FALSE;
-
-  nsresult  err = NS_NOINTERFACE;
-  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-  if (htmlEditor)
-  {
-    nsIHTMLEditor::EAlignment firstAlign;
-    err = htmlEditor->GetAlignment(aMixed, &firstAlign);
-    if (NS_SUCCEEDED(err))
-    {
-      nsAutoString tagStr;
-      if (firstAlign == nsIHTMLEditor::eLeft)        
-        tagStr.Assign(NS_LITERAL_STRING("left"));
-      else if (firstAlign == nsIHTMLEditor::eCenter) 
-        tagStr.Assign(NS_LITERAL_STRING("center"));
-      else if (firstAlign == nsIHTMLEditor::eRight)  
-        tagStr.Assign(NS_LITERAL_STRING("right"));
-      else if (firstAlign == nsIHTMLEditor::eJustify)
-        tagStr.Assign(NS_LITERAL_STRING("justify"));
-      *_retval = ToNewUnicode(tagStr);
-    }  
-  }
-  return err;
-}
-
-NS_IMETHODIMP 
-nsEditorShell::ApplyStyleSheet(const PRUnichar *url)
-{
-  nsresult result = NS_NOINTERFACE;
-  
-  nsAutoString  aURL(url);
-
-  nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
-  if (styleSheets)
-    result = styleSheets->ReplaceStyleSheet(aURL);
-
-  return result;
-}
-
-  
-NS_IMETHODIMP 
-nsEditorShell::SetBodyAttribute(const PRUnichar *attr, const PRUnichar *value)
-{
-  nsresult result = NS_NOINTERFACE;
-  
-  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
-
-  nsAutoString  aAttr(attr);
-  nsAutoString  aValue(value);
-  
-  switch (mEditorType)
-  {
-    case eHTMLTextEditorType:
-    {
-      result = mEditor->SetBodyAttribute(aAttr, aValue);
-      break;
-    }
-    default:
-      result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return result;
-}
 
 NS_IMETHODIMP    
 nsEditorShell::LoadUrl(const PRUnichar *url)
@@ -1612,203 +1345,6 @@ nsEditorShell::CloneAttributes(nsIDOMNode *destNode, nsIDOMNode *sourceNode)
   return rv;
 }
 
-NS_IMETHODIMP
-nsEditorShell::NodeIsBlock(nsIDOMNode *node, PRBool *_retval)
-{
-  if (!node || !_retval) { return NS_ERROR_NULL_POINTER; }
-  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
-
-  nsresult  rv = NS_NOINTERFACE;
-  
-  switch (mEditorType)
-  {
-    case ePlainTextEditorType:
-    case eHTMLTextEditorType:
-      {
-        rv = mEditor->NodeIsBlock(node, _retval);
-      }
-      break;
-
-    default:
-      rv = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::GetTransactionManager(nsITransactionManager **aTxnMgr)
-{ 
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-
-  if (!editor)
-    return NS_ERROR_FAILURE;
-
-  return editor->GetTransactionManager(aTxnMgr);
-}
-
-NS_IMETHODIMP    
-nsEditorShell::Undo()
-{ 
-  nsresult  err = NS_NOINTERFACE;
-  
-  switch (mEditorType)
-  {
-    case ePlainTextEditorType:
-    case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
-        if (editor)
-          err = editor->Undo(1);
-      }
-      break;
-
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return err;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::Redo()
-{  
-  nsresult  err = NS_NOINTERFACE;
-  
-  switch (mEditorType)
-  {
-    case ePlainTextEditorType:
-    case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
-        if (editor)
-          err = editor->Redo(1);
-      }
-      break;
-
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return err;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::Cut()
-{  
-  nsresult  err = NS_NOINTERFACE;
-  
-  switch (mEditorType)
-  {
-    case ePlainTextEditorType:
-    case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
-        if (editor)
-          err = editor->Cut();
-      }
-      break;
-
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return err;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::Copy()
-{  
-  nsresult  err = NS_NOINTERFACE;
-  
-  switch (mEditorType)
-  {
-    case ePlainTextEditorType:
-    case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
-        if (editor)
-          err = editor->Copy();
-      }
-      break;
-
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return err;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::Paste(PRInt32 aSelectionType)
-{  
-  nsresult  err = NS_NOINTERFACE;
-  
-  switch (mEditorType)
-  {
-    case ePlainTextEditorType:
-    case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
-        if (editor)
-          err = editor->Paste(aSelectionType);
-      }
-      break;
-
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return err;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::PasteAsQuotation(PRInt32 aSelectionType)
-{  
-  nsresult  err = NS_NOINTERFACE;
-  
-  switch (mEditorType)
-  {
-    case ePlainTextEditorType:
-    case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsIEditorMailSupport>  mailEditor = do_QueryInterface(mEditor);
-        if (mailEditor)
-          err = mailEditor->PasteAsQuotation(aSelectionType);
-      }
-      break;
-
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return err;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::PasteAsCitedQuotation(const PRUnichar *cite, PRInt32 aSelectionType)
-{  
-  nsresult  err = NS_NOINTERFACE;
-  
-  nsAutoString aCiteString(cite);
-
-  switch (mEditorType)
-  {
-    case ePlainTextEditorType:
-    case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsIEditorMailSupport>  mailEditor = do_QueryInterface(mEditor);
-        if (mailEditor)
-          err = mailEditor->PasteAsCitedQuotation(aCiteString, aSelectionType);
-      }
-      break;
-
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return err;
-}
 
 NS_IMETHODIMP    
 nsEditorShell::InsertAsQuotation(const PRUnichar *aQuotedText,
@@ -1934,6 +1470,7 @@ nsEditorShell::DeleteSelection(PRInt32 action)
   return err;
 }
 
+
 NS_IMETHODIMP
 nsEditorShell::InsertText(const PRUnichar *textToInsert)
 {
@@ -1978,65 +1515,6 @@ nsEditorShell::InsertSource(const PRUnichar *aSourceToInsert)
   }
 
   return err;
-}
-
-NS_IMETHODIMP
-nsEditorShell::InsertSourceWithCharset(const PRUnichar *aSourceToInsert,
-                                       const PRUnichar *aCharset)
-{
-  nsresult  err = NS_NOINTERFACE;
-  
-  switch (mEditorType)
-  {
-    case ePlainTextEditorType:
-    case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-        if (htmlEditor)
-          err = htmlEditor->InsertHTMLWithCharset(nsDependentString(aSourceToInsert), nsDependentString(aCharset));
-      }
-      break;
-
-    default:
-      err = NS_NOINTERFACE;
-  }
-
-  return err;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::RebuildDocumentFromSource(const PRUnichar *aSource)
-{
-  nsresult  err = NS_NOINTERFACE;
-  
-  nsAutoString source(aSource);
-  
-  switch (mEditorType)
-  {
-    case ePlainTextEditorType:
-    case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-        if (htmlEditor)
-          err = htmlEditor->RebuildDocumentFromSource(source);
-      }
-      break;
-
-    default:
-      err = NS_NOINTERFACE;
-  }
-
-  return err;
-}
-
-NS_IMETHODIMP
-nsEditorShell::InsertBreak()
-{
-  nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(mEditor));
-  if (!textEditor)
-    return NS_NOINTERFACE;
-
-  return textEditor->InsertLineBreak();
 }
 
 /* Get localized strings for UI from the Editor's string bundle */
@@ -2156,22 +1634,6 @@ nsEditorShell::GetContentsAs(const PRUnichar *format, PRUint32 flags,
 }
 
 NS_IMETHODIMP
-nsEditorShell::GetHeadContentsAsHTML(PRUnichar **aHeadContents)
-{
-  nsresult  err = NS_NOINTERFACE;
-
-  nsAutoString headContents;
-
-  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(mEditor);
-  if (editor)
-    err = editor->GetHeadContentsAsHTML(headContents);
-
-  *aHeadContents = ToNewUnicode(headContents);
-  
-  return err;
-}
-
-NS_IMETHODIMP
 nsEditorShell::ReplaceHeadContentsWithHTML(const PRUnichar *aSourceToInsert)
 {
   nsresult  err = NS_NOINTERFACE;
@@ -2194,15 +1656,6 @@ nsEditorShell::ReplaceHeadContentsWithHTML(const PRUnichar *aSourceToInsert)
   }
 
   return err;
-}
-
-NS_IMETHODIMP
-nsEditorShell::DumpContentTree()
-{
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  if (!editor)
-    return NS_ERROR_NOT_INITIALIZED;
-  return editor->DumpContentTree();
 }
 
 NS_IMETHODIMP
@@ -2269,28 +1722,6 @@ nsEditorShell::SetWrapColumn(PRInt32 aWrapColumn)
 }
 
 NS_IMETHODIMP
-nsEditorShell::SetParagraphFormat(const PRUnichar * paragraphFormat)
-{
-  nsresult  err = NS_NOINTERFACE;
-  
-  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
-
-  nsAutoString aParagraphFormat(paragraphFormat);
-  
-  switch (mEditorType)
-  {
-    case eHTMLTextEditorType:
-      err = mEditor->SetParagraphFormat(aParagraphFormat);
-      break;
-
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return err;
-}
-
-NS_IMETHODIMP
 nsEditorShell::GetEditorDocument(nsIDOMDocument** aEditorDocument)
 {
   if (mEditor)
@@ -2323,35 +1754,6 @@ nsEditorShell::GetEditorSelection(nsISelection** aEditorSelection)
   if (editor)
       return editor->GetSelection(aEditorSelection);
   
-  return NS_NOINTERFACE;
-}
-
-NS_IMETHODIMP
-nsEditorShell::GetSelectionController(nsISelectionController** aSelectionController)
-{
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  if (!editor)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  nsCOMPtr<nsISelectionController> selCont;
-  nsresult rv = editor->GetSelectionController(getter_AddRefs(selCont));
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (!selCont)
-    return NS_ERROR_NO_INTERFACE;
-  *aSelectionController = selCont;
-  NS_IF_ADDREF(*aSelectionController);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsEditorShell::GetDocumentModified(PRBool *aDocumentModified)
-{
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  if (editor)
-    return editor->GetDocumentModified(aDocumentModified);
-
   return NS_NOINTERFACE;
 }
 
@@ -2420,68 +1822,6 @@ nsEditorShell::DoAfterSave(PRBool aShouldUpdateURL, const PRUnichar *aURLString)
   return UpdateWindowTitleAndRecentMenu(PR_TRUE);
 }
 
-NS_IMETHODIMP
-nsEditorShell::MakeOrChangeList(const PRUnichar *listType, PRBool entireList,
-                                const PRUnichar *bulletType)
-{
-  nsresult err = NS_NOINTERFACE;
-
-  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
-
-  nsAutoString aListType(listType);
-  nsAutoString aBulletType;
-  if (bulletType) {
-    aBulletType.Assign(bulletType);
-  }
-
-  switch (mEditorType)
-  {
-    case eHTMLTextEditorType:
-      if (aListType.IsEmpty())
-      {
-        err = mEditor->RemoveList(NS_LITERAL_STRING("ol"));
-        if(NS_SUCCEEDED(err))
-        {
-          err = mEditor->RemoveList(NS_LITERAL_STRING("ul"));
-          if(NS_SUCCEEDED(err))
-            err = mEditor->RemoveList(NS_LITERAL_STRING("dl"));
-        }
-      }
-      else
-        err = mEditor->MakeOrChangeList(aListType, entireList, aBulletType);
-      break;
-
-    case ePlainTextEditorType:
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return err;
-}
-
-
-NS_IMETHODIMP
-nsEditorShell::RemoveList(const PRUnichar *listType)
-{
-  nsresult err = NS_NOINTERFACE;
-
-  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
-  
-  switch (mEditorType)
-  {
-    case eHTMLTextEditorType:
-    {
-      nsAutoString aListType(listType);
-      err = mEditor->RemoveList(aListType);
-      break;
-    }
-
-    case ePlainTextEditorType:
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return err;
-}
 
 NS_IMETHODIMP
 nsEditorShell::Indent(const PRUnichar *indent)
@@ -2549,95 +1889,6 @@ nsEditorShell::GetSelectedElement(const PRUnichar *aInTagName, nsIDOMElement **a
       if(NS_SUCCEEDED(result)) return NS_OK;
       break;
 
-    case ePlainTextEditorType:
-    default:
-      result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return result;
-}
-
-NS_IMETHODIMP
-nsEditorShell::GetFirstSelectedCell(nsIDOMElement **aOutElement)
-{
-  if (!aOutElement)
-    return NS_ERROR_NULL_POINTER;
-
-  nsresult  result = NS_NOINTERFACE;
-  
-  switch (mEditorType)
-  {
-    case eHTMLTextEditorType:
-    {
-      nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
-      if (tableEditor)
-      {
-        result = tableEditor->GetFirstSelectedCell(nsnull, aOutElement);
-        // Don't return NS_EDITOR_ELEMENT_NOT_FOUND (passes NS_SUCCEEDED macro)
-        //  to JavaScript
-        if(NS_SUCCEEDED(result)) return NS_OK;
-      }
-      
-      break;
-    }
-
-    case ePlainTextEditorType:
-    default:
-      result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return result;
-}
-
-NS_IMETHODIMP 
-nsEditorShell::GetFirstSelectedCellInTable(PRInt32 *aRowIndex, PRInt32 *aColIndex, nsIDOMElement **aOutElement)
-{
-  if (!aOutElement || !aRowIndex || !aColIndex)
-    return NS_ERROR_NULL_POINTER;
-
-  nsresult  result = NS_NOINTERFACE;
-  
-  switch (mEditorType)
-  {
-    case eHTMLTextEditorType:
-    {
-      nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
-      if (tableEditor)
-      {
-        result = tableEditor->GetFirstSelectedCellInTable(aRowIndex, aColIndex, aOutElement);
-        // Don't return NS_EDITOR_ELEMENT_NOT_FOUND (passes NS_SUCCEEDED macro)
-        //  to JavaScript
-        if(NS_SUCCEEDED(result)) return NS_OK;
-      }
-      
-      break;
-    }
-
-    case ePlainTextEditorType:
-    default:
-      result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return result;
-}
-
-NS_IMETHODIMP
-nsEditorShell::GetNextSelectedCell(nsIDOMElement **aOutElement)
-{
-  if (!aOutElement)
-    return NS_ERROR_NULL_POINTER;
-
-  nsresult  result = NS_NOINTERFACE;
-  
-  switch (mEditorType)
-  {
-    case eHTMLTextEditorType:
-    {
-      nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
-      if (tableEditor)
-        result = tableEditor->GetNextSelectedCell(nsnull, aOutElement);
-      break;
-    }
     case ePlainTextEditorType:
     default:
       result = NS_ERROR_NOT_IMPLEMENTED;
@@ -4024,52 +3275,6 @@ nsEditorShell::RunUnitTests()
 #endif
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsEditorShell::StartLogging(nsIFile *logFile)
-{
-  nsresult  err = NS_OK;
-
-  switch (mEditorType)
-  {
-    case ePlainTextEditorType:
-    case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsIEditorLogging>  logger = do_QueryInterface(mEditor);
-        if (logger)
-          err = logger->StartLogging(logFile);
-      }
-      break;
-
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return err;
-}
-
-NS_IMETHODIMP
-nsEditorShell::StopLogging()
-{
-  nsresult  err = NS_OK;
-
-  switch (mEditorType)
-  {
-    case ePlainTextEditorType:
-    case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsIEditorLogging>  logger = do_QueryInterface(mEditor);
-        if (logger)
-          err = logger->StopLogging();
-      }
-      break;
-
-    default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return err;
 }
 
 #ifdef XP_MAC
