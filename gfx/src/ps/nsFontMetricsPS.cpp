@@ -39,6 +39,7 @@
 
 #include "nsFontMetricsPS.h"
 #include "nsDeviceContextPS.h"
+#include "nsRenderingContextPS.h"
 
 /** ---------------------------------------------------
  *  See documentation in nsFontMetricsPS.h
@@ -58,11 +59,6 @@ nsFontMetricsPS :: ~nsFontMetricsPS()
   if (nsnull != mFont){
     delete mFont;
     mFont = nsnull;
-  }
-
-  if(nsnull != mAFMInfo){
-    delete mAFMInfo;
-    mAFMInfo = nsnull;
   }
 
   if (mDeviceContext) {
@@ -88,22 +84,8 @@ nsFontMetricsPS :: Init(const nsFont& aFont, nsIAtom* aLangGroup,
   //don't addref this to avoid circular refs
   mDeviceContext = (nsDeviceContextPS *)aContext;
 
-  // get the AFM information
-  mAFMInfo = new nsAFMObject();
-  mAFMInfo->Init(mFont->size/20);
-
-  // first see if the primary font is available
-  mFontIndex = mAFMInfo->CheckBasicFonts(aFont,PR_TRUE);
-  if( mFontIndex < 0){
-    // look in an AFM file for the primary font
-    if (PR_FALSE == mAFMInfo->AFM_ReadFile(aFont) ) {
-      // look for secondary fonts
-      mFontIndex = mAFMInfo->CheckBasicFonts(aFont,PR_FALSE);
-      if( mFontIndex < 0){
-        mFontIndex = mAFMInfo->CreateSubstituteFont(aFont);
-      }
-    }
-  }
+  mFontPS = nsFontPS::FindFont(aFont, NS_STATIC_CAST(nsIFontMetrics*, this));
+  NS_ENSURE_TRUE(mFontPS, NS_ERROR_FAILURE);
 
   RealizeFont();
   return NS_OK;
@@ -123,53 +105,12 @@ nsFontMetricsPS :: Destroy()
  */
 void
 nsFontMetricsPS::RealizeFont()
-{  
-float fontsize;
-float dev2app;
-float offset;
-
-  mDeviceContext->GetDevUnitsToAppUnits(dev2app);
-  nscoord onePixel = NSToCoordRound(1 * dev2app);
-
-  // convert the font size which is in twips to points
-  fontsize = mFont->size/20.0f;
-
-  offset=NSFloatPointsToTwips(fontsize*mAFMInfo->mPSFontInfo->mXHeight)/1000.0f;
-  mXHeight = NSToCoordRound(offset);
-  //mXHeight = NSToCoordRound((float)((fontsize*mAFMInfo->mPSFontInfo->mXHeight)/1000.0)*dev2app);
-
-  mSuperscriptOffset = mXHeight;
-  mSubscriptOffset = mXHeight;
-
-  mStrikeoutSize = onePixel;
-  mStrikeoutOffset = (nscoord)(mXHeight / 2.0f);
-  mUnderlineSize = onePixel;
-
-
-  offset=NSFloatPointsToTwips(fontsize*mAFMInfo->mPSFontInfo->mUnderlinePosition)/1000.0f;
-  mUnderlineOffset = NSToCoordRound(offset);
-
-  mHeight = NSToCoordRound(fontsize * dev2app);
-
-
-  offset=NSFloatPointsToTwips(fontsize*mAFMInfo->mPSFontInfo->mAscender)/1000.0f;
-  mAscent = NSToCoordRound(offset);
-
-  offset=NSFloatPointsToTwips(fontsize*mAFMInfo->mPSFontInfo->mDescender)/1000.0f;
-  mDescent = -(NSToCoordRound(offset));
-
-  mLeading = 0;
-  mEmHeight = mHeight;
-  mEmAscent = mAscent;
-  mEmDescent = mDescent;
-  mMaxHeight = mHeight;
-  mMaxAscent = mAscent;
-  mMaxDescent = mDescent;
-  mMaxAdvance = mHeight;
-
-  GetStringWidth(" ", mSpaceWidth, 1); 
-  GetStringWidth("x", mAveCharWidth, 1); 
-
+{
+  if (mFont && mDeviceContext) {
+    float dev2app;
+    mDeviceContext->GetDevUnitsToAppUnits(dev2app);
+    mFontPS->RealizeFont(this, dev2app);
+  }
 }
 
 /** ---------------------------------------------------
@@ -394,11 +335,8 @@ nsFontMetricsPS::GetFontHandle(nsFontHandle &aHandle)
 NS_IMETHODIMP
 nsFontMetricsPS :: GetStringWidth(const char *aString,nscoord& aWidth,nscoord aLength)
 {
-
-  if(mAFMInfo){
-      mAFMInfo->GetStringWidth(aString,aWidth,aLength);
-    }
-
+  NS_ENSURE_TRUE(mFontPS, NS_ERROR_NULL_POINTER);
+  aWidth = mFontPS->GetWidth(aString, aLength);
   return NS_OK;
 
 }
@@ -411,10 +349,202 @@ nsFontMetricsPS :: GetStringWidth(const char *aString,nscoord& aWidth,nscoord aL
 NS_IMETHODIMP
 nsFontMetricsPS :: GetStringWidth(const PRUnichar *aString,nscoord& aWidth,nscoord aLength)
 {
+  NS_ENSURE_TRUE(mFontPS, NS_ERROR_NULL_POINTER);
+  aWidth = mFontPS->GetWidth(aString, aLength);
+  return NS_OK;
+}
 
-  if(mAFMInfo){
-      mAFMInfo->GetStringWidth(aString,aWidth,aLength);
+// nsFontPS
+nsFontPS*
+nsFontPS::FindFont(const nsFont& aFont, nsIFontMetrics* aFontMetrics)
+{
+  /* Currently, we only select font from afm file.
+   * In the future, this function is responsible for font selection
+   * from different type of fonts.
+   */
+  nsFontPSAFM* fontAFM = new nsFontPSAFM(aFont, aFontMetrics);
+  if (!fontAFM) return nsnull;
+  
+  if (fontAFM->mFontIndex < 0) {
+    delete fontAFM;
+    return nsnull;
+  }
+
+  return fontAFM;
+}
+
+nsFontPS::nsFontPS(const nsFont& aFont, nsIFontMetrics* aFontMetrics) :
+mFontIndex(-1)
+{
+  mFont = new nsFont(aFont);
+  if (!mFont) return;
+  mFontMetrics = aFontMetrics;
+}
+
+nsFontPS::~nsFontPS()
+{
+  if (mFont) {
+    delete mFont;
+    mFont = nsnull;
+  }
+
+  if (mCCMap) {
+    FreeCCMap(mCCMap);
+  }
+
+  mFontMetrics = nsnull;
+}
+
+// nsFontPSAFM
+nsFontPSAFM::nsFontPSAFM(const nsFont& aFont, nsIFontMetrics* aFontMetrics) :
+nsFontPS(aFont, aFontMetrics)
+{
+  if (!mFont) return;
+
+  // get the AFM information
+  mAFMInfo = new nsAFMObject();
+  if (!mAFMInfo) return;
+
+  mAFMInfo->Init(mFont->size / TWIPS_PER_POINT_FLOAT);
+
+  // first see if the primary font is available
+  mFontIndex = mAFMInfo->CheckBasicFonts(aFont, PR_TRUE);
+  if (mFontIndex < 0) {
+    // look in an AFM file for the primary font
+    if (PR_FALSE == mAFMInfo->AFM_ReadFile(aFont)) {
+      // look for secondary fonts
+      mFontIndex = mAFMInfo->CheckBasicFonts(aFont, PR_FALSE);
+      if (mFontIndex < 0) {
+        mFontIndex = mAFMInfo->CreateSubstituteFont(aFont);
+      }
     }
+  }
+
+  mFamilyName.AssignWithConversion((char*)mAFMInfo->mPSFontInfo->mFamilyName);
+}
+
+nsFontPSAFM::~nsFontPSAFM()
+{
+  if (mAFMInfo) {
+    delete mAFMInfo;
+    mAFMInfo = nsnull;
+  }
+}
+
+nscoord
+nsFontPSAFM::GetWidth(const char* aString, PRUint32 aLength)
+{
+  nscoord width;
+  if (mAFMInfo) {
+    mAFMInfo->GetStringWidth(aString, width, aLength);
+  }
+  return width;
+}
+
+nscoord
+nsFontPSAFM::GetWidth(const PRUnichar* aString, PRUint32 aLength)
+{
+  nscoord width;
+  if (mAFMInfo) {
+    mAFMInfo->GetStringWidth(aString, width, aLength);
+  }
+  return width;
+}
+
+nscoord
+nsFontPSAFM::DrawString(nsRenderingContextPS* aContext,
+                        nscoord aX, nscoord aY,
+                        const char* aString, PRUint32 aLength)
+{
+  NS_ENSURE_TRUE(aContext, 0);
+  nsPostScriptObj* psObj = aContext->GetPostScriptObj();
+  NS_ENSURE_TRUE(psObj, 0);
+
+  psObj->moveto(aX, aY);
+  psObj->show(aString, aLength, "");
+  return GetWidth(aString, aLength);
+}
+
+nscoord
+nsFontPSAFM::DrawString(nsRenderingContextPS* aContext,
+                        nscoord aX, nscoord aY,
+                        const PRUnichar* aString, PRUint32 aLength)
+{
+  NS_ENSURE_TRUE(aContext, 0);
+  nsPostScriptObj* psObj = aContext->GetPostScriptObj();
+  NS_ENSURE_TRUE(psObj, 0);
+
+  psObj->moveto(aX, aY);
+  psObj->show(aString, aLength, "");
+  return GetWidth(aString, aLength);
+}
+
+nsresult
+nsFontPSAFM::RealizeFont(nsFontMetricsPS* aFontMetrics, float dev2app)
+{
+  NS_ENSURE_ARG_POINTER(aFontMetrics);
+
+  float fontSize;
+  float offset;
+
+  nscoord onePixel = NSToCoordRound(1 * dev2app);
+
+  // convert the font size which is in twips to points
+  fontSize = mFont->size / TWIPS_PER_POINT_FLOAT;
+
+  offset = NSFloatPointsToTwips(fontSize * mAFMInfo->mPSFontInfo->mXHeight) / 1000.0f;
+  nscoord xHeight = NSToCoordRound(offset);
+  aFontMetrics->SetXHeight(xHeight);
+  aFontMetrics->SetSuperscriptOffset(xHeight);
+  aFontMetrics->SetSubscriptOffset(xHeight);
+  aFontMetrics->SetStrikeout((nscoord)(xHeight / TWIPS_PER_POINT_FLOAT), onePixel);
+
+  offset = NSFloatPointsToTwips(fontSize * mAFMInfo->mPSFontInfo->mUnderlinePosition) / 1000.0f;
+  aFontMetrics->SetUnderline(NSToCoordRound(offset), onePixel);
+
+  nscoord size = NSToCoordRound(fontSize * dev2app);
+  aFontMetrics->SetHeight(size);
+  aFontMetrics->SetEmHeight(size);
+  aFontMetrics->SetMaxAdvance(size);
+  aFontMetrics->SetMaxHeight(size);
+
+  offset = NSFloatPointsToTwips(fontSize * mAFMInfo->mPSFontInfo->mAscender) / 1000.0f;
+  nscoord ascent = NSToCoordRound(offset);
+  aFontMetrics->SetAscent(ascent);
+  aFontMetrics->SetEmAscent(ascent);
+  aFontMetrics->SetMaxAscent(ascent);
+
+  offset = NSFloatPointsToTwips(fontSize * mAFMInfo->mPSFontInfo->mDescender) / 1000.0f;
+  nscoord descent = -(NSToCoordRound(offset));
+  aFontMetrics->SetDescent(descent);
+  aFontMetrics->SetEmDescent(descent);
+  aFontMetrics->SetMaxDescent(descent);
+
+  aFontMetrics->SetLeading(0);
+
+  nscoord spaceWidth = GetWidth(" ", 1);
+  aFontMetrics->SetSpaceWidth(spaceWidth);
+
+  nscoord aveCharWidth = GetWidth("x", 1);
+  aFontMetrics->SetAveCharWidth(aveCharWidth);
 
   return NS_OK;
 }
+
+#ifdef MOZ_MATHML
+nsresult
+nsFontPSAFM::GetBoundingMetrics(const char*        aString,
+                                PRUint32           aLength,
+                                nsBoundingMetrics& aBoundingMetrics)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsFontPSAFM::GetBoundingMetrics(const PRUnichar*   aString,
+                                PRUint32           aLength,
+                                nsBoundingMetrics& aBoundingMetrics)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+#endif

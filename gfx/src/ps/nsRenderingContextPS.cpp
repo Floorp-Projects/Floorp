@@ -1092,51 +1092,43 @@ nsRenderingContextPS :: GetTextDimensions(const PRUnichar* aString, PRUint32 aLe
  *  See documentation in nsIRenderingContext.h
  *	@update 12/21/98 dwc
  */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsRenderingContextPS :: DrawString(const char *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
                         const nscoord* aSpacing)
 {
-PRInt32	      x = aX;
-PRInt32       y = aY;
+  NS_ENSURE_TRUE(mTranMatrix && mPSObj && mFontMetrics, NS_ERROR_NULL_POINTER);
+
+  nsFontMetricsPS *metrics = NS_REINTERPRET_CAST(nsFontMetricsPS *, mFontMetrics.get());
+  NS_ENSURE_TRUE(metrics, NS_ERROR_FAILURE);
+
+  nsFontPS* fontPS = metrics->GetFontPS();
+  NS_ENSURE_TRUE(fontPS, NS_ERROR_FAILURE);
+
+  PRInt32 x = aX;
+  PRInt32 y = aY;
 
   mPSObj->setlanggroup(nsnull);
 
   SetupFontAndColor();
+
   PRInt32 dxMem[500];
   PRInt32* dx0 = 0;
-  if (nsnull != aSpacing) {
+  if (aSpacing) {
     dx0 = dxMem;
     if (aLength > 500) {
       dx0 = new PRInt32[aLength];
+      NS_ENSURE_TRUE(dx0, NS_ERROR_OUT_OF_MEMORY);
     }
     mTranMatrix->ScaleXCoords(aSpacing, aLength, dx0);
   }
 
-	mTranMatrix->TransformCoord(&x, &y);
-  PostscriptTextOut(aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aLength, (const nscoord*) (aSpacing ? dx0 : nsnull), PR_FALSE);
+  mTranMatrix->TransformCoord(&x, &y);
+  fontPS->DrawString(this, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aString, aLength);
 
-  if ((nsnull != aSpacing) && (dx0 != dxMem)) {
+  if ((aSpacing) && (dx0 != dxMem)) {
     delete [] dx0;
   }
-
-#if 0
-  //this doesn't need to happen here anymore, but a
-  //new api will come along that will need this stuff. MMP
-  if (mFontMetrics) {
-    nsFont *font;
-    mFontMetrics->GetFont(font);
-    PRUint8 decorations = font->decorations;
-
-    if (decorations & NS_FONT_DECORATION_OVERLINE){
-      nscoord offset;
-      nscoord size;
-      mFontMetrics->GetUnderline(offset, size);
-      FillRect(aX, aY, aWidth, size);
-    }
-  }
-
-#endif
 
   return NS_OK;
 }
@@ -1150,9 +1142,16 @@ nsRenderingContextPS :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY, PRInt32 aFontID,
                                     const nscoord* aSpacing)
 {
-PRInt32         x = aX;
-PRInt32         y = aY;
-nsIFontMetrics  *fMetrics;
+  NS_ENSURE_TRUE(mTranMatrix && mPSObj && mFontMetrics, NS_ERROR_NULL_POINTER);
+  
+  nsFontMetricsPS *metrics = NS_REINTERPRET_CAST(nsFontMetricsPS *, mFontMetrics.get());
+  NS_ENSURE_TRUE(metrics, NS_ERROR_FAILURE);
+
+  nsFontPS* fontPS = metrics->GetFontPS();
+  NS_ENSURE_TRUE(fontPS, NS_ERROR_FAILURE);
+
+  PRInt32 x = aX;
+  PRInt32 y = aY;
 
   nsCOMPtr<nsIAtom> langGroup = nsnull;
   mFontMetrics->GetLangGroup(getter_AddRefs(langGroup));
@@ -1163,36 +1162,22 @@ nsIFontMetrics  *fMetrics;
 
   SetupFontAndColor();
 
-  if (nsnull != aSpacing){
+  if (aSpacing) {
     // Slow, but accurate rendering
     const PRUnichar* end = aString + aLength;
     while (aString < end){
       x = aX;
       y = aY;
       mTranMatrix->TransformCoord(&x, &y);
-	    PostscriptTextOut((PRUnichar *)aString, 1, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aFontID, aSpacing, PR_TRUE);
+      fontPS->DrawString(this, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aString, 1);
       aX += *aSpacing++;
       aString++;
     }
   } else {
     mTranMatrix->TransformCoord(&x, &y);
-	  PostscriptTextOut(aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aFontID, aSpacing, PR_TRUE);
+    fontPS->DrawString(this, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aString, aLength);
   }
 
-  fMetrics = mFontMetrics;
-
-  if (fMetrics) {
-    const nsFont *font;
-    fMetrics->GetFont(font);
-    PRUint8 decorations = font->decorations;
-
-    if (decorations & NS_FONT_DECORATION_OVERLINE){
-      nscoord offset;
-      nscoord size;
-      fMetrics->GetUnderline(offset, size);
-      //FillRect(aX, aY, aWidth, size);
-    }
-  }
   return NS_OK;
 }
 
@@ -1426,26 +1411,29 @@ NS_IMETHODIMP nsRenderingContextPS::RetrieveCurrentNativeGraphicData(PRUint32 * 
 void 
 nsRenderingContextPS :: SetupFontAndColor(void)
 {
-nscoord         fontHeight = 0;
-PRInt16         fontIndex;
-const nsFont    *font;
-nsFontHandle    fontHandle; 
-nsAutoString    fontFamily;
+  if (!mPSObj) return;
+
+  nscoord         fontHeight = 0;
+  PRInt16         fontIndex = -1;
+  const nsFont    *font;
 
   mFontMetrics->GetHeight(fontHeight);
   mFontMetrics->GetFont(font);
-  mFontMetrics->GetFontHandle(fontHandle);
 
-  //mStates->mFont = mCurrFont = tfont;
   mStates->mFontMetrics = mFontMetrics;
 
   nsFontMetricsPS *metrics = NS_REINTERPRET_CAST(nsFontMetricsPS *, mFontMetrics.get());
 
-  // get the fontfamily we are using, not what we want, but what we are using
-  fontFamily.AssignWithConversion(metrics->mAFMInfo->mPSFontInfo->mFamilyName);
-  fontIndex = metrics->GetFontIndex();
+  if (!metrics) return;
 
-  mPSObj->setscriptfont(fontIndex,fontFamily,fontHeight,font->style,font->variant,font->weight,font->decorations);
+  nsFontPS* fontPS = metrics->GetFontPS();
+  if (!fontPS) return;
+
+  fontIndex = fontPS->GetFontIndex();
+
+  mPSObj->setscriptfont(fontPS->GetFontIndex(), fontPS->GetFamilyName(),
+                        fontHeight, font->style, font->variant,
+                        font->weight, font->decorations);
 }
 
 /** ---------------------------------------------------
