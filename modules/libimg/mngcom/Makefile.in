@@ -29,6 +29,11 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= nsmng
 IS_COMPONENT	= 1
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+EXTRA_DSO_LIBS  = libmng
+else
+EXTRA_DSO_LIBS  = mng
+endif
 
 CPPSRCS		= \
 		nsMNGDecoder.cpp \
@@ -37,7 +42,7 @@ CPPSRCS		= \
 
 LOCAL_INCLUDES	= -I$(srcdir)
 
-EXTRA_DSO_LDOPTS = -L$(DIST)/lib -lmng $(JPEG_LIBS) $(ZLIB_LIBS) \
+EXTRA_DSO_LDOPTS = -L$(DIST)/lib $(EXTRA_DSO_LIBS) $(JPEG_LIBS) $(ZLIB_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
