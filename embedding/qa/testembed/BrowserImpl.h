@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Chak Nanga <chak@netscape.com> 
+ *   David Epstein <depstein@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of

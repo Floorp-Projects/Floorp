@@ -80,17 +80,6 @@ public:
 
 	// local test methods
 
-	// local test variables
-	//nsresult rv;
-	CString strMsg;
-	char theUrl[300];
-	char *uriSpec;
-	PRBool exists;
-	PRInt32 numEntries;
-	PRInt32 theIndex;
-	nsCOMPtr<nsIURI> theUri;
-	UINT nCommandID ;
-
 	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CTests)
@@ -101,7 +90,10 @@ public:
 private:
 	// Individual interface Objects
 
-	// Generated message map functions
+	// local test variables
+	PRBool exists;
+	nsCOMPtr<nsIURI> theUri;
+	UINT nCommandID;
 protected:
 	//{{AFX_MSG(CTests)
 	afx_msg void OnUpdateNavBack(CCmdUI* pCmdUI);

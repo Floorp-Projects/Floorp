@@ -51,7 +51,7 @@
 
 NS_IMETHODIMP CBrowserImpl::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode)
 {
-	QAOutput("nsIContextMenuListener::OnShowContextMenu()", 2);
+	QAOutput("nsIContextMenuListener::OnShowContextMenu()", 1);
 	if(m_pBrowserFrameGlue)
 		m_pBrowserFrameGlue->ShowContextMenu(aContextFlags, aNode);
 

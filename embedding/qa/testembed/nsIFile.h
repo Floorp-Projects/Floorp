@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   David Epstein <depstein@netscape.com>
  *   Ashish Bhatt <ashishbhatt@netscape.com> 
  *
  *
@@ -37,15 +38,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+
 // File Overview....
 // 
 // Header file for nsIClipBoardCommand interface test cases
 
+
 class CNsIFile
 {	
 public:
-
 	CNsIFile();
+
 
 public:
 	~CNsIFile();
