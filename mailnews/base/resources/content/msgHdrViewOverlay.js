@@ -746,10 +746,10 @@ function attachmentTreeClick(event)
     // we only care about button 0 (left click) events
     if (event.button != 0) return;
 
-    if(event.detail == 2) // double click
+    if (event.detail == 2) // double click
     {
-    var target = event.originalTarget;
-		item = target.parentNode.parentNode;
+        var target = event.originalTarget;
+        var item = target.parentNode.parentNode;
 		if (item.localName == "treeitem")
     {
 			var commandStringSuffix = item.getAttribute("commandSuffix");
