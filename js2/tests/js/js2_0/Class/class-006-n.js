@@ -20,8 +20,9 @@
 * Date: 2001-06-25
 *
 * SUMMARY: Negative test: a class method may not change the value of this.
+* In this test, we don't even instantiate the class...
 */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 var bug = '(none)';
 var summary = 'Negative test: a class method may not change the value of this';
 var self = this; // capture a reference to the global object
@@ -35,55 +36,12 @@ class A
   }
 }
 
-class AA extends A
-{
-  var m1:Function = changeThis;
-
-  function m2()
-  {
-    return typeof changeThis;
-  }
-
-  function m3()
-  {
-    return typeof m1;
-  }
-}
 
 
-var objA = new A;
-var objAA = new AA;
-
-
-status = inSection(1);
-actual = typeof objAA.m1;
-expect = TYPE_FUNCTION;
-addThis();
-
-status = inSection(2);
-actual = objAA.m2();
-expect = TYPE_FUNCTION;
-addThis();
-
-status = inSection(3);
-actual = objAA.m3();
-expect = TYPE_FUNCTION;
-addThis();
-
-
-
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 test();
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
-
-function addThis()
-{
-  statusitems[UBound] = status;
-  actualvalues[UBound] = actual;
-  expectedvalues[UBound] = expect;
-  UBound++;
-}
 
 
 function test()
