@@ -1467,7 +1467,7 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
         pn2 = pn->pn_head;
         xml = ParseNodeToXML(cx, pn2, inScopeNSes, flags);
         if (!xml)
-            return NULL;
+            goto fail;
         flags &= ~XSF_PRECOMPILED_ROOT;
 
         n = pn->pn_count;
@@ -1526,7 +1526,7 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
       case TOK_XMLLIST:
         xml = js_NewXML(cx, JSXML_CLASS_LIST);
         if (!xml)
-            return NULL;
+            goto fail;
 
         n = pn->pn_count;
         if (!XMLArraySetCapacity(cx, &xml->xml_kids, n))
@@ -1596,7 +1596,7 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
                                                 JSMSG_DUPLICATE_XML_ATTR,
                                                 js_ValueToPrintableString(cx,
                                                     ATOM_KEY(pn2->pn_atom)));
-                    return NULL;
+                    goto fail;
                 }
             }
 
@@ -1735,7 +1735,7 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
                                             JSMSG_RESERVED_ID,
                                             js_ValueToPrintableString(cx,
                                                 STRING_TO_JSVAL(str)));
-                return NULL;
+                goto fail;
             }
 
             if (flags & XSF_IGNORE_PROCESSING_INSTRUCTIONS)

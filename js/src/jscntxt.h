@@ -346,7 +346,7 @@ typedef struct JSLocalRootStack {
     JSLocalRootChunk    firstChunk;
 } JSLocalRootStack;
 
-#define JSLRS_NULL_MARK ((uint16) -1)
+#define JSLRS_NULL_MARK ((uint32) -1)
 
 struct JSContext {
     JSCList             links;
