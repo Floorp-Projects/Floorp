@@ -5713,10 +5713,29 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
 
             // If the XUL cache is enabled, save the script object there in
             // case different XUL documents source the same script.
+            // 
+            // But don't save the script in the cache unless the master XUL
+            // document URL is a chrome: URL.  It is valid for a URL such as
+            // about:config to translate into a master document URL, whose
+            // prototype document nodes -- including prototype scripts that
+            // hold GC roots protecting their mJSObject pointers -- are not
+            // cached in the XUL prototype cache.  See StartDocumentLoad,
+            // the fillXULCache logic.
+            //
+            // A document such as about:config is free to load a script via
+            // a URL such as chrome://global/content/config.js, and we must
+            // not cache that script object without a prototype cache entry
+            // containing a companion nsXULPrototypeScript node that owns a
+            // GC root protecting the script object.  Otherwise, the script
+            // cache entry will dangle once uncached prototype document is
+            // released when its owning nsXULDocument is unloaded.
+            //
+            // (See http://bugzilla.mozilla.org/show_bug.cgi?id=98207 for
+            // the true crime story.)
             PRBool useXULCache;
             gXULCache->GetEnabled(&useXULCache);
 
-            if (useXULCache && IsChromeURI(scriptProto->mSrcURI)) {
+            if (useXULCache && IsChromeURI(mDocumentURL)) {
                 gXULCache->PutScript(scriptProto->mSrcURI,
                                      NS_REINTERPRET_CAST(void*, scriptProto->mJSObject));
             }
