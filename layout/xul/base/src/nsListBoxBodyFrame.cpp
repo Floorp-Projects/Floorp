@@ -203,13 +203,13 @@ nsListBoxBodyFrame::~nsListBoxBodyFrame()
 NS_IMETHODIMP_(nsrefcnt) 
 nsListBoxBodyFrame::AddRef(void)
 {
-  return NS_OK;
+  return 2;
 }
 
 NS_IMETHODIMP_(nsrefcnt)
 nsListBoxBodyFrame::Release(void)
 {
-  return NS_OK;
+  return 1;
 }
 
 //

@@ -153,6 +153,14 @@ nsBoxObject::SetDocument(nsIDocument* aDocument)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBoxObject::InvalidatePresentationStuff()
+{
+  // Nothing to do here, subclasses might care though...
+
+  return NS_OK;
+}
+
 nsIFrame*
 nsBoxObject::GetFrame()
 {
@@ -451,7 +459,7 @@ nsBoxObject::GetPropertyAsSupports(const PRUnichar* aPropertyName, nsISupports**
     return NS_OK;
   }
 
-  nsAutoString propertyName(aPropertyName);
+  nsDependentString propertyName(aPropertyName);
   return mPresState->GetStatePropertyAsSupports(propertyName, aResult); // Addref here.
 }
 
@@ -461,7 +469,7 @@ nsBoxObject::SetPropertyAsSupports(const PRUnichar* aPropertyName, nsISupports* 
   if (!mPresState)
     NS_NewPresState(getter_AddRefs(mPresState));
 
-  nsAutoString propertyName(aPropertyName);
+  nsDependentString propertyName(aPropertyName);
   return mPresState->SetStatePropertyAsSupports(propertyName, aValue);
 }
 
@@ -473,7 +481,7 @@ nsBoxObject::GetProperty(const PRUnichar* aPropertyName, PRUnichar** aResult)
     return NS_OK;
   }
 
-  nsAutoString propertyName(aPropertyName);
+  nsDependentString propertyName(aPropertyName);
   nsAutoString result;
   nsresult rv = mPresState->GetStateProperty(propertyName, result);
   if (NS_FAILED(rv))
@@ -488,8 +496,8 @@ nsBoxObject::SetProperty(const PRUnichar* aPropertyName, const PRUnichar* aPrope
   if (!mPresState)
     NS_NewPresState(getter_AddRefs(mPresState));
 
-  nsAutoString propertyName(aPropertyName);
-  nsAutoString propertyValue(aPropertyValue);
+  nsDependentString propertyName(aPropertyName);
+  nsDependentString propertyValue(aPropertyValue);
   return mPresState->SetStateProperty(propertyName, propertyValue);
 }
 
@@ -499,7 +507,7 @@ nsBoxObject::RemoveProperty(const PRUnichar* aPropertyName)
   if (!mPresState)
     return NS_OK;
 
-  nsAutoString propertyName(aPropertyName);
+  nsDependentString propertyName(aPropertyName);
   return mPresState->RemoveStateProperty(propertyName);
 }
 

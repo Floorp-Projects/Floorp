@@ -513,6 +513,8 @@ nsGenericDOMDataNode::AppendData(const nsAString& aData)
     old_data.Append(aData);
     rv = SetText(old_data, PR_FALSE);
   } else {
+    // We know aData and the current data is ASCII, so use a
+    // nsC*String, no need for any fancy unicode stuff here.
     nsCAutoString old_data;
     mText.AppendTo(old_data);
     length = old_data.Length();
