@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -48,6 +49,7 @@
 #include "nsROCSSPrimitiveValue.h"
 
 #include "nsCSSProps.h"
+#include "nsCSSKeywords.h"
 
 #include "nsCOMPtr.h"
 #include "nsDOMError.h"
@@ -1457,10 +1459,51 @@ nsComputedDOMStyle::GetTextDecoration(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_TextReset,(const nsStyleStruct*&)text,aFrame);
 
   if(text) {
-    const nsAFlatCString& decoration=
-      nsCSSProps::SearchKeywordTable(text->mTextDecoration,
-	                                 nsCSSProps::kTextDecorationKTable);
-    val->SetString(decoration.get());
+    if (NS_STYLE_TEXT_DECORATION_NONE == text->mTextDecoration) {
+      const nsAFlatCString& decoration=
+        nsCSSKeywords::GetStringValue(eCSSKeyword_none);
+      val->SetString(decoration.get());
+    }
+    else {
+      nsAutoString decorationString;
+      PRBool multipleValues = PR_FALSE;
+      if (text->mTextDecoration & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
+        const nsAFlatCString& decoration=
+          nsCSSProps::SearchKeywordTable(NS_STYLE_TEXT_DECORATION_UNDERLINE,
+                                         nsCSSProps::kTextDecorationKTable);
+        decorationString.AppendWithConversion(decoration.get());
+      }
+      if (text->mTextDecoration & NS_STYLE_TEXT_DECORATION_OVERLINE) {
+        if (!decorationString.IsEmpty()) {
+          decorationString.Append(PRUnichar(' '));
+        }
+        multipleValues = PR_TRUE;
+        const nsAFlatCString& decoration=
+          nsCSSProps::SearchKeywordTable(NS_STYLE_TEXT_DECORATION_OVERLINE,
+                                         nsCSSProps::kTextDecorationKTable);
+        decorationString.AppendWithConversion(decoration.get());
+      }
+      if (text->mTextDecoration & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
+        if (!decorationString.IsEmpty()) {
+          decorationString.Append(PRUnichar(' '));
+        }
+        multipleValues = PR_TRUE;
+        const nsAFlatCString& decoration=
+          nsCSSProps::SearchKeywordTable(NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
+                                         nsCSSProps::kTextDecorationKTable);
+        decorationString.AppendWithConversion(decoration.get());
+      }
+      if (text->mTextDecoration & NS_STYLE_TEXT_DECORATION_BLINK) {
+        if (!decorationString.IsEmpty()) {
+          decorationString.Append(PRUnichar(' '));
+        }
+        const nsAFlatCString& decoration=
+          nsCSSProps::SearchKeywordTable(NS_STYLE_TEXT_DECORATION_BLINK,
+                                         nsCSSProps::kTextDecorationKTable);
+        decorationString.AppendWithConversion(decoration.get());
+      }
+      val->SetString(decorationString);
+    }
   }
   else {
     val->SetString("");
