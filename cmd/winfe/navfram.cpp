@@ -512,7 +512,9 @@ void CNSNavFrame::CalcClientArea(RECT* lpRectClient, CNSGenFrame * pParentFrame)
 //------------------------------------------------------------------------------
 void CNSNavFrame::ForceFloat(BOOL show)
 {
-
+	// Find out what our parent frame is before we go futzing around with styles.
+	CFrameWnd *pLayout = GetParentFrame();
+	
 	// Notify HT of our new state. Reset to the popup state.
 	HT_SetTreeStateForButton(HT_TopNode(HT_GetSelectedView(GetHTPane())), HT_POPUP_WINDOW);
 	HT_SetWindowType(GetHTPane(), HT_STANDALONE_WINDOW);
@@ -527,7 +529,6 @@ void CNSNavFrame::ForceFloat(BOOL show)
 	else SetWindowPos(&wndNoTopMost, 0, 0, 0, 0, SWP_FRAMECHANGED
 						| SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOSIZE | SWP_HIDEWINDOW);
 
-	CFrameWnd *pLayout = GetParentFrame();
 	SetParent(NULL);
 
 	if (m_DragWnd)
