@@ -32,10 +32,10 @@ LD_LIBRARY_PATH=${DIST}/${OBJDIR}/lib
 SHLIB_PATH=${DIST}/${OBJDIR}/lib
 LIBPATH=${DIST}/${OBJDIR}/lib
 export LD_LIBRARY_PATH SHLIB_PATH LIBPATH
-echo "LD_LIBRARY_PATH SHLIB_PATH LIBPATH=$LD_LIBRARY_PATH"
+#echo "LD_LIBRARY_PATH SHLIB_PATH LIBPATH=$LD_LIBRARY_PATH"
 
-echo "Creating ${TESTDIR}"
 if [ ! -d ${TESTDIR} ]; then
+	echo "Creating ${TESTDIR}"
    mkdir -p ${TESTDIR}
 fi
 
@@ -43,14 +43,31 @@ if [ -z "${HOST}" ]; then
   echo "HOST environment variable is not defined."; exit 1
 fi
 if [ -z "${DOMSUF}" ]; then 
-  echo "DOMSUF environment variable is not defined."; exit 1
+	DOMSUF=`domainname`
+	export DOMSUF
+	if  [ -z "${DOMSUF}" ]; then
+  		echo "DOMSUF environment variable is not defined."; exit 1
+	fi
 fi
 
-if [ ! -s "${HOSTDIR}" ]; then
-    version=1
+#if [ ! -s "${HOSTDIR}" ]; then -s means different things to different tests...
+if [ ! -d "${HOSTDIR}" ]; then
+	echo "No hostdir"
     if [ -f ${TESTDIR}/${HOST} ]; then
 		version=`cat ${TESTDIR}/${HOST}`
+	else
+    	version=1
     fi
+	if [ -z "${version}" ]; then 	# for some starnge reason this file 
+									# gets truncated at times...
+		for w in `ls -d ${TESTDIR}/${HOST}.[0-9]* 2>/dev/null | 
+			sort -t '.' -n | sed -e "s/.*${HOST}.//"` ; do  
+			version=`expr $w + 1`
+		done
+		if [ -z "${version}" ]; then
+			version=1
+		fi
+	fi
     expr $version + 1 > ${TESTDIR}/${HOST}
 
     HOSTDIR=${TESTDIR}/${HOST}'.'$version
