@@ -36,9 +36,6 @@ include $(srcdir)/objs.mk
 
 MODULE = icalss
 LIBRARY_NAME=mozicalss
-ifneq ($(OS_ARCH),WINNT)
-SHORT_LIBNAME=mozicals
-endif
 
 ifeq ($(OS_ARCH),WINNT)
 MAPFILE	= $(LIBRARY_NAME).map
