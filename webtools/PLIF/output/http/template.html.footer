@@ -1,41 +1,20 @@
-COSES
+TemplateToolkit
 1
 
-<text xml:space="default" xmlns="http://bugzilla.mozilla.org/coses">
-
- <!-- - - - - - - -+
- | FOOTER TEMPLATE |
- + - - - - - - - -->
-
-<!-- End of HTML Document -->
-
-
-<!-- debug:
-<text><![CDATA[
-  <hr>
-  <pre>
-]]><text escape="html"><include href="debug.dumpVars"/></text><![CDATA[
-  </pre>
-  <hr>
-]]></text>
--->
-
-<text><br/><![CDATA[
   <div class="footer">
    <p>
-    <a href="?">Index</a> - 
-]]><br/><if lvalue="(session)" condition="is" rvalue="hash"><![CDATA[
-    <a href="?command=loginLogout">Log Out</a> - 
+    <a href="?">Index</a> -
+[%- IF session.ref %]
+    <a href="?command=userPrefs">Preferences</a> -
+  [%- IF session.right.cosesEditor %]
     <a href="?command=cosesEditor">Edit Strings</a> -
-    <a href="?command=userPrefs">Preferences</a>
-]]></if><else><![CDATA[
+  [%- END %]
+    <a href="?command=loginLogout">Log Out</a>
+[%- ELSE %]
     <a href="?command=login">Log In</a> -
     <a href="?command=loginRequestAccount">Create Account</a>
-]]></else><br/><![CDATA[
+[%- END %]
    </p>
   </div>
  </body>
 </html>
-]]></text>
-
-</text>
