@@ -1810,10 +1810,11 @@ nsresult nsExternalHelperAppService::AddMimeInfoToCache(nsIMIMEInfo * aMIMEInfo)
   }
 
   // now we need to add entries for each file extension 
-  char** extensions;
-  PRUint32 count;
+  char** extensions = nsnull;
+  PRUint32 count = 0;
   rv = aMIMEInfo->GetFileExtensions(&count, &extensions );
-  if (NS_FAILED(rv)) return NS_OK; 
+  if (NS_FAILED(rv) || !extensions)
+    return NS_OK; 
 
   for ( PRUint32 i = 0; i < count; i++ )
   {

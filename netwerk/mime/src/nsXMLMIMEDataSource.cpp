@@ -186,10 +186,10 @@ nsXMLMIMEDataSource::Add( nsIMIMEInfo* aMapper )
     if (NS_FAILED(rv)) return rv;
 
     // Finally add an extension mapping.
-    char** extensions;
-    PRUint32 count;
+    char** extensions = nsnull;
+    PRUint32 count = 0;
     rv = aMapper->GetFileExtensions(& count, &extensions );
-    if ( NS_FAILED ( rv ) )
+    if ( NS_FAILED ( rv ) || !extensions)
         return rv;
     for ( PRUint32 i = 0; i<count; i++ )
     {
@@ -361,10 +361,10 @@ nsXMLMIMEDataSource::Serialize() {
 		buffer+=cdata;
 		buffer+="\" ";
 		
-		char** extensions;
-		PRUint32 count;
+		char** extensions = nsnull;
+		PRUint32 count = 0;
 		rv = info->GetFileExtensions(& count, &extensions );
-		if ( NS_FAILED ( rv ) )
+		if ( NS_FAILED ( rv ) || !extensions)
 			return rv;
 		buffer+=kExtensions;
 		buffer+="=\"";

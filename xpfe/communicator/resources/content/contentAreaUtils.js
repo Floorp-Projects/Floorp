@@ -380,7 +380,11 @@ function appendFiltersForContentType(aFilePicker, aContentType, aSaveMode)
         extString += "*." + extList.value[i];
       }
       
-      aFilePicker.appendFilter(mimeInfo.Description, extString);
+      if (extCount.value > 0) {
+        aFilePicker.appendFilter(mimeInfo.Description, extString);
+      } else {
+        aFilePicker.appendFilter(bundle.GetStringFromName("AllFilesFilter"), "*.*");
+      }        
     }
     else
       aFilePicker.appendFilter(bundle.GetStringFromName("AllFilesFilter"), "*.*");
