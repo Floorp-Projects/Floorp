@@ -1122,15 +1122,15 @@ treeitem > treerow > treecell > titledbutton.twisty {
  visibility: visible;
 }
 
-treeitem [empty="true"]> treerow > treecell > titledbutton.twisty {
+treeitem[empty="true"]> treerow > treecell > titledbutton.twisty {
  visibility: hidden;
 }
 
-treeitem [empty="true"][open="true"]> treerow > treecell > titledbutton.twisty {
+treeitem[empty="true"][open="true"]> treerow > treecell > titledbutton.twisty {
  visibility: hidden;
 }
 
-treeitem [open="true"]> treerow > treecell > titledbutton.twisty {
+treeitem[open="true"]> treerow > treecell > titledbutton.twisty {
  vertical-align: bottom;
  height: 16px;
  width: 16px;
