@@ -46,6 +46,19 @@ public:
   NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
   NS_IMETHOD LoadUrl(nsIURI * aURL);
 
+  // GetFileTokenForPath must be implemented by each platform. 
+  // platformAppPath --> a platform specific path to an application that we got out of the 
+  //                     rdf data source. This can be a mac file spec, a unix path or a windows path depending on the platform
+  // aFile --> an nsIFile representation of that platform application path.
+  virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile);
+  
+  // CreateStreamListenerWithApp --> must be implemented by each platform.
+  // aApplicationToUse --> the application the user wishes to launch with the incoming data
+  // aFileExtensionForData --> the extension we are going to use for the temp file in the external app handler
+  // aStreamListener --> the stream listener (really a external app handler) we're going to use for retrieving the data
+  virtual nsresult CreateStreamListenerWithApp(nsIFile * aApplicationToUse, const char * aFileExtensionForData, nsIStreamListener ** aStreamListener);
+
+
 
 protected:
   // add any mac specific service state here

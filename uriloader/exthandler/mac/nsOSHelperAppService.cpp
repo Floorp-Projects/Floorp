@@ -177,3 +177,41 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
   
   return rv;
 }
+
+nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile)
+{
+  // FIX ME....the incoming path is a mac specific path...create an nsIFile that represents this mac file spec and
+  // return it.
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult nsOSHelperAppService::CreateStreamListenerWithApp(nsIFile * aApplicationToUse, const char * aFileExtension, nsIStreamListener ** aStreamListener)
+{
+  nsresult rv = NS_OK;
+  // FIX ME.....create an nsExternalApplication instance given aApplicationToUse as the application the user
+  // has told us he wants to use for this content type.
+  // return that external application 
+  
+  // create an application that represents this app name...
+
+  // here's the windows code to be used as an example
+#if 0
+  nsExternalApplication * application = nsnull;
+  NS_NEWXPCOM(application, nsExternalApplication);
+  NS_IF_ADDREF(application);
+
+  if (application)
+  {
+    application->SetLocalFile(aApplicationToUse);
+    nsCOMPtr<nsISupports> appSupports = do_QueryInterface(application);    
+    // this code is incomplete and just here to get things started..
+    nsExternalAppHandler * handler = CreateNewExternalHandler(appSupports, aFileExtension);
+    handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
+  }
+
+  NS_IF_RELEASE(application);
+#endif
+  
+  return rv;
+}
