@@ -1102,7 +1102,8 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
         res = factory->CreateInstance(aDelegate, aIID, aResult);
         NS_RELEASE(factory);
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-               ("\t\tCreateInstance() succeeded."));		
+               ("\t\tFactory CreateInstance() %s.",
+                NS_SUCCEEDED(res) ? "succeeded" : "FAILED"));
         return res;
     }
 
