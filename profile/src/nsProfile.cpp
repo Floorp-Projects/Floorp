@@ -82,7 +82,7 @@
 
 #define PROFILE_SELECTION_URL "chrome://profile/content/profileSelection.xul"
 #define PROFILE_SELECTION_CMD_LINE_ARG "-SelectProfile"
-#define PROFILE_MANAGER_URL "chrome://profile/content/profileManager.xul"
+#define PROFILE_MANAGER_URL "chrome://profile/content/profileSelection.xul?manage=true"
 #define PROFILE_MANAGER_CMD_LINE_ARG "-ProfileManager"
 #define PROFILE_WIZARD_URL "chrome://profile/content/createProfileWizard.xul"
 #define CONFIRM_AUTOMIGRATE_URL "chrome://profile/content/confirmMigration.xul"

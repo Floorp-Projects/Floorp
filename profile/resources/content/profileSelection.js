@@ -35,7 +35,7 @@ function StartUp()
 {
   SetUpOKCancelButtons();
   centerWindowOnScreen();
-  if( window.location.search == "?manage=true" )
+  if(window.location && window.location.search && window.location.search == "?manage=true" )
     SwitchProfileManagerMode();
   // bundle = srGetStrBundle("chrome://profile/locale/profileSelection.properties");
   loadElements();
