@@ -37,6 +37,7 @@ IDLSRCS =  \
 	HTMLDivElement.idl \
 	HTMLDocument.idl \
 	HTMLElement.idl \
+	HTMLEmbedElement.idl \
 	HTMLFieldsetElement.idl \
 	HTMLFontElement.idl \
 	HTMLFormElement.idl \
