@@ -31,9 +31,13 @@ endif
 
 
 ifndef MOZ_NATIVE_NSPR
+ifdef USE_NSPR_AUTOCONF
+DIRS		+= nsprpub
+else
 DIRS		+= $(topsrcdir)/nsprpub
 # NSPR does not use Makefile.in
 STATIC_MAKEFILES := $(topsrcdir)/nsprpub
+endif
 endif
 
 DIRS		+= dbm modules/libreg xpcom
