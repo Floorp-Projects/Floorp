@@ -141,6 +141,11 @@ sub show_graphs {
   print "Multiqueries: (<a href=\"http://tegu.mozilla.org/graph/multiquery.cgi?&testname=startup&tboxes=comet,luna,sleestack,mecca,facedown,openwound,rheeeet\">startup</a>, <a href=\"http://tegu.mozilla.org/graph/multiquery.cgi?&testname=xulwinopen&tboxes=comet,luna,sleestack,mecca,facedown,openwound,rheeeet\">xulwinopen</a>, <a href=\"http://tegu.mozilla.org/graph/multiquery.cgi?&testname=pageload&tboxes=btek,64.236.138.128,64.236.138.100,64.236.139.180,64.236.139.71\">pageload</a>, <a href=\"http://tegu.mozilla.org/graph/multiquery.cgi\">build your own multiquery</a>)";
   print "</li>\n";
 
+  print "<li>\n";
+  print "Pageload hack: 64.236.138.128=luna, 64.236.138.100=sleestack, 64.236.139.180=mecca, 64.236.139.71=mocha";
+  print "</li>\n";
+
+
   print "</body>\n";
 }
 
