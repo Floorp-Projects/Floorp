@@ -1001,8 +1001,11 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
          aStatus == NS_ERROR_NET_TIMEOUT)
          {
          PRBool keywordsEnabled = PR_FALSE;
-         NS_ENSURE_SUCCESS(mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled),
-            NS_ERROR_FAILURE);
+         if(mPrefs)
+         {
+           NS_ENSURE_SUCCESS(mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled),
+           NS_ERROR_FAILURE);
+         }
          
          // we should only perform a keyword search under the following conditions:
 		 // (0) Pref keyword.enabled is true
