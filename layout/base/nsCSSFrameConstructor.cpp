@@ -5647,7 +5647,7 @@ static PRBool NeedFirstLetterContinuation(nsIContent* aContent)
     if (NS_SUCCEEDED(rv)) {
       nsTextFragment* frags = nsnull;
       PRInt32 numFrags = 0;
-      tc->GetText(frags, numFrags);
+      tc->GetText((const nsTextFragment*&)frags, numFrags);
       PRInt32 flc = FirstLetterCount(frags, numFrags);
       PRInt32 tl = TotalLength(frags, numFrags);
       if (flc < tl) {
