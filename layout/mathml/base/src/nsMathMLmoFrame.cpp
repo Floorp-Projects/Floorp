@@ -614,13 +614,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
 
   // Operators that exist in the dictionary are handled by the MathMLChar
 
-  if (!NS_MATHML_OPERATOR_GET_FORM(mFlags)) {
-    // Place our children
-    Place(aPresContext, aRenderingContext, PR_TRUE, aDesiredStretchSize);
-  }
-  else {
-    // The rendering will be handled by our MathML char
-
+  if (NS_MATHML_OPERATOR_GET_FORM(mFlags)) {
     nsBoundingMetrics charSize;
     nsBoundingMetrics initialSize = aDesiredStretchSize.mBoundingMetrics;
     nsBoundingMetrics container = initialSize;
@@ -726,51 +720,64 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
 
     // let the MathMLChar stretch itself...
     charSize.Clear(); // this will tell stretch that we don't know the default size
-    mMathMLChar.Stretch(aPresContext, aRenderingContext,
-                        aStretchDirection, container, charSize, stretchHint);
-     // update our bounding metrics... it becomes that of our MathML char
-    mMathMLChar.GetBoundingMetrics(mBoundingMetrics);
-
-    if (isVertical)
-    {
-      // the desired size returned by mMathMLChar maybe different
-      // from the size of the container.
-      // the mMathMLChar.mRect.y calculation is subtle, watch out!!!
-
-      height = mBoundingMetrics.ascent + mBoundingMetrics.descent;
-      if (NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags)) {
-        // For symmetric and vertical operators,
-        // we want to center about the axis of the container
-        mBoundingMetrics.descent = height/2 - axisHeight;
-      }
-      else {
-        // Otherwise, align the char with the bottom of the container
-        mBoundingMetrics.descent = container.descent;
-      }
-      mBoundingMetrics.ascent = height - mBoundingMetrics.descent;
+    nsresult res = mMathMLChar.Stretch(aPresContext, aRenderingContext,
+                                       aStretchDirection, container, charSize, stretchHint);
+    if (NS_FAILED(res)) {
+    	// gracefully handle cases where stretching the char failed (i.e., GetBoundingMetrics failed)
+      // clear our 'form' to behave as if the operator wasn't in the dictionary
+      mFlags &= ~0x3;
     }
-
-    // Prepare the metrics to return
-    aDesiredStretchSize.ascent = PR_MAX(fontAscent, mBoundingMetrics.ascent); /*  + delta1*/
-    aDesiredStretchSize.descent = PR_MAX(fontDescent, mBoundingMetrics.descent); /* + delta2*/
-    aDesiredStretchSize.width = mBoundingMetrics.width;
-    aDesiredStretchSize.height = aDesiredStretchSize.ascent + aDesiredStretchSize.descent;
-    aDesiredStretchSize.mBoundingMetrics = mBoundingMetrics;
-
-    nscoord dy = aDesiredStretchSize.ascent - mBoundingMetrics.ascent;
-    if (mMathMLChar.GetEnum() == eMathMLChar_DONT_STRETCH)
-    {
-      // reset
-      dy = aDesiredStretchSize.ascent - charSize.ascent;
-      aDesiredStretchSize.mBoundingMetrics = mBoundingMetrics = charSize;
+    else {
+      // update our bounding metrics... it becomes that of our MathML char
+      mMathMLChar.GetBoundingMetrics(mBoundingMetrics);
+      
+      if (isVertical)
+      {
+        // the desired size returned by mMathMLChar maybe different
+        // from the size of the container.
+        // the mMathMLChar.mRect.y calculation is subtle, watch out!!!
+      
+        height = mBoundingMetrics.ascent + mBoundingMetrics.descent;
+        if (NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags)) {
+          // For symmetric and vertical operators,
+          // we want to center about the axis of the container
+          mBoundingMetrics.descent = height/2 - axisHeight;
+        }
+        else {
+          // Otherwise, align the char with the bottom of the container
+          mBoundingMetrics.descent = container.descent;
+        }
+        mBoundingMetrics.ascent = height - mBoundingMetrics.descent;
+      }
+      
+      // Prepare the metrics to return
+      aDesiredStretchSize.ascent = PR_MAX(fontAscent, mBoundingMetrics.ascent); /*  + delta1*/
+      aDesiredStretchSize.descent = PR_MAX(fontDescent, mBoundingMetrics.descent); /* + delta2*/
+      aDesiredStretchSize.width = mBoundingMetrics.width;
+      aDesiredStretchSize.height = aDesiredStretchSize.ascent + aDesiredStretchSize.descent;
+      aDesiredStretchSize.mBoundingMetrics = mBoundingMetrics;
+      
+      nscoord dy = aDesiredStretchSize.ascent - mBoundingMetrics.ascent;
+      if (mMathMLChar.GetEnum() == eMathMLChar_DONT_STRETCH)
+      {
+        // reset
+        dy = aDesiredStretchSize.ascent - charSize.ascent;
+        aDesiredStretchSize.mBoundingMetrics = mBoundingMetrics = charSize;
+      }
+      
+      mMathMLChar.SetRect(
+         nsRect(0, dy, charSize.width,
+                charSize.ascent + charSize.descent));
+      
+      mReference.x = 0;
+      mReference.y = aDesiredStretchSize.ascent;
     }
+  }
 
-    mMathMLChar.SetRect(
-       nsRect(0, dy, charSize.width,
-              charSize.ascent + charSize.descent));
 
-    mReference.x = 0;
-    mReference.y = aDesiredStretchSize.ascent;
+  if (!NS_MATHML_OPERATOR_GET_FORM(mFlags)) {
+    // Place our children using the default method
+    Place(aPresContext, aRenderingContext, PR_TRUE, aDesiredStretchSize);
   }
 
   // Before we leave... there is a last item in the check-list:
