@@ -57,5 +57,5 @@ class nsInstallTrigger: public nsIScriptObjectOwner,
         NS_IMETHOD    InitRegistry(void);
 };
 
-#define NS_INSTALLTRIGGERCOMPONENT_CONTRACTID NS_IAPPSHELLCOMPONENT_CONTRACTID "/xpinstall/installtrigger;1"
+#define NS_INSTALLTRIGGERCOMPONENT_CONTRACTID "@mozilla.org/xpinstall/installtrigger;1"
 #endif

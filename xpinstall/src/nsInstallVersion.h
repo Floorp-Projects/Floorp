@@ -56,5 +56,5 @@ class nsInstallVersion: public nsIScriptObjectOwner, public nsIDOMInstallVersion
 };
 
 
-#define NS_INSTALLVERSIONCOMPONENT_CONTRACTID NS_IAPPSHELLCOMPONENT_CONTRACTID "/xpinstall/installversion;1"
+#define NS_INSTALLVERSIONCOMPONENT_CONTRACTID  "@mozilla.org/xpinstall/installversion;1"
 #endif

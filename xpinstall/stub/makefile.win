@@ -26,6 +26,7 @@ DEPTH=..\..
 REQUIRES	= xpcom \
 		  string \
 		  dom \
+		  appshell \
 		  appcomps \
 		  xpinstall \
 		  $(NULL)
