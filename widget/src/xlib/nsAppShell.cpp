@@ -501,25 +501,20 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
   keyEvent.isShift = event->xkey.state & ShiftMask;
   keyEvent.isControl = event->xkey.state & ControlMask;
   keyEvent.isAlt = event->xkey.state & Mod1Mask;
-  keyEvent.point.x = event->xkey.x;
-  keyEvent.point.y = event->xkey.y;
+  //  keyEvent.point.x = event->xkey.x;
+  //  keyEvent.point.y = event->xkey.y;
+  keyEvent.point.x = 0;
+  keyEvent.point.y = 0;
   keyEvent.message = NS_KEY_DOWN;
   keyEvent.widget = aWidget;
   keyEvent.eventStructType = NS_KEY_EVENT;
 
-  printf("keysym = %d, keycode = %d, char = %c\n",
+  printf("keysym = %x, keycode = %x, vk = %x\n",
          keysym,
          event->xkey.keycode,
          keyEvent.keyCode);
 
-//  NS_ADDREF(aWidget);
-
   aWidget->DispatchKeyEvent(keyEvent);
-
-//  NS_RELEASE(aWidget);
-
-#if 1
-
 
   keyEvent.keyCode = nsKeyCode::ConvertKeySymToVirtualKey(keysym);
   keyEvent.charCode = 0;
@@ -527,27 +522,23 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
   keyEvent.isShift = event->xkey.state & ShiftMask;
   keyEvent.isControl = event->xkey.state & ControlMask;
   keyEvent.isAlt = event->xkey.state & Mod1Mask;
-  keyEvent.point.x = event->xkey.x;
-  keyEvent.point.y = event->xkey.y;
+  //  keyEvent.point.x = event->xkey.x;
+  //  keyEvent.point.y = event->xkey.y;
+  keyEvent.point.x = 0;
+  keyEvent.point.y = 0;
   keyEvent.message = NS_KEY_PRESS;
   keyEvent.widget = aWidget;
   keyEvent.eventStructType = NS_KEY_EVENT;
 
-#if 1
   char buf[2];
 
   buf[0] = keyEvent.keyCode;
   buf[1] = nsnull;
 
   keyEvent.charCode = keyEvent.keyCode;
-#endif
-
-  NS_ADDREF(aWidget);
 
   aWidget->DispatchKeyEvent(keyEvent);
 
-  NS_RELEASE(aWidget);
-#endif
 }
 
 void
