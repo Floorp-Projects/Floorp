@@ -74,5 +74,6 @@ interface nsIMessenger : nsISupports {
 	void SendUnsentMessages();
 	void LoadFirstDraft();
 	void SetDocumentCharset(in wstring characterSet);
+    void saveAs(in string url, in boolean asFile);
 };
 
