@@ -72,7 +72,7 @@
     var value = getValue();
     var newvalue = value.toString();
 
-    var expectedName          = " Click here ";
+    var expectedName          = "Click here";
     var expectedRole          = "42";
     var expectedState         = "64";
     var expectedValue         = "NS_ERROR_NOT_IMPLEMENTED";
