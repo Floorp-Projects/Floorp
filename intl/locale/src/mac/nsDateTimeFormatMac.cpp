@@ -24,6 +24,7 @@
 #include <IntlResources.h>
 #include <DateTimeUtils.h>
 #include <Script.h>
+#include <TextUtils.h>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -209,21 +210,17 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
                                            const struct tm*  tmTime, 
                                            nsString& stringOut)
 {
-  // Temporary implementation, real implementation to be done by FE.
-  //
-  char *aBuffer = asctime(tmTime);
-
   DateTimeRec macDateTime;
   Str255 timeString, dateString;
   int32 dateTime;	
 
+  // return, nothing to format
   if (dateFormatSelector == kDateFormatNone && timeFormatSelector == kTimeFormatNone) {
     stringOut.SetString("");
     return NS_OK;
   }
   
   // convert struct tm to input format of mac toolbox call
-
   NS_ASSERTION(tmTime->tm_year >= 0, "tm is not set correctly");
   NS_ASSERTION(tmTime->tm_mon >= 0, "tm is not set correctly");
   NS_ASSERTION(tmTime->tm_mday >= 0, "tm is not set correctly");
@@ -250,15 +247,28 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
 
   ::DateToSeconds( &macDateTime, (unsigned long *) &dateTime);
   
-  long scriptcode = 0;
+  long scriptcode = 0;	//TODO: need to get this from locale
   Handle itl1Handle = (Handle) GetItl1Resource(scriptcode);
   Handle itl0Handle = (Handle) GetItl0Resource(scriptcode);
+  NS_ASSERTION(itl1Handle && itl0Handle, "failed to get itl handle");
 
   // get time string
   if (timeFormatSelector != kTimeFormatNone) {
-    ::TimeString(dateTime, (timeFormatSelector == kTimeFormatSeconds), timeString, itl0Handle);
+    // modify itl0 to force 24 hour time cycle !
+    if (timeFormatSelector == kTimeFormatSecondsForce24Hour || 
+        timeFormatSelector == kTimeFormatNoSecondsForce24Hour) {
+      Intl0Hndl itl0HandleToModify = (Intl0Hndl) itl0Handle;
+      UInt8 timeCycle = (**itl0HandleToModify).timeCycle;
+      (**itl0HandleToModify).timeCycle = timeCycle24;
+      ::TimeString(dateTime, (timeFormatSelector == kTimeFormatSeconds), timeString, itl0Handle);
+      (**itl0HandleToModify).timeCycle = timeCycle;
+    }
+    else {
+      ::TimeString(dateTime, (timeFormatSelector == kTimeFormatSeconds), timeString, itl0Handle);
+    }
   }
   
+  // get date string
   switch (dateFormatSelector) {
     case kDateFormatLong:
       ::DateString(dateTime, abbrevDate, dateString, itl1Handle);
@@ -278,17 +288,24 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
       break;
   }
   
+  // construct a C string
+  char *aBuffer;
   if (dateFormatSelector != kDateFormatNone && timeFormatSelector != kTimeFormatNone) {
+    aBuffer = p2cstr(dateString);
+    strcat(aBuffer, " ");
+    strcat(aBuffer, p2cstr(timeString));
   }
   else if (dateFormatSelector != kDateFormatNone) {
+    aBuffer = p2cstr(dateString);
   }
   else if (timeFormatSelector != kTimeFormatNone) {
+    aBuffer = p2cstr(timeString);
   }
 
 
   // convert result to unicode
   nsresult res;
-  nsString aCharset("ISO-8859-1");
+  nsString aCharset("ISO-8859-1");	//TODO: need to get this from locale
   nsICharsetConverterManager * ccm = nsnull;
 
   res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
@@ -300,14 +317,14 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
     if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
       PRInt32 unicharLength = 0;
       PRInt32 srcLength = (PRInt32) strlen(aBuffer);
-      decoder->Length(aBuffer, 0, srcLength, &unicharLength);
+      res = decoder->Length(aBuffer, 0, srcLength, &unicharLength);
       PRUnichar *unichars = new PRUnichar [ unicharLength ];
   
       if (nsnull != unichars) {
         res = decoder->Convert(unichars, 0, &unicharLength,
                                aBuffer, 0, &srcLength);
         if (NS_SUCCEEDED(res)) {
-          stringOut.SetString(unichars);
+          stringOut.SetString(unichars, unicharLength);
         }
       }
       delete [] unichars;
@@ -317,8 +334,4 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   }
   
   return res;
-//  stringOut.SetString(aBuffer);
-
-
-  return NS_OK;
 }
