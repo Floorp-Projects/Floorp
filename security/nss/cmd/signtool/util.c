@@ -509,39 +509,6 @@ pk11_password_hardcode(PK11SlotInfo *slot, PRBool retry, void *arg)
 }
 
 
-/************************************************************************
- *
- * c e r t D B N a m e C a l l b a c k
- */
-static char	*
-certDBNameCallback(void *arg, int dbVersion)
-{
-    char	*fnarg;
-    char	*dir;
-    char	*filename;
-
-    dir = SECU_ConfigDirectory (NULL);
-
-    switch ( dbVersion ) {
-    case 7:
-	fnarg = "7";
-	break;
-    case 6:
-	fnarg = "6";
-	break;
-    case 5:
-	fnarg = "5";
-	break;
-    case 4:
-    default:
-	fnarg = "";
-	break;
-    }
-    filename = PR_smprintf("%s/cert%s.db", dir, fnarg);
-    return(filename);
-}
-
-
 /***************************************************************
  *
  * s e c E r r o r S t r i n g
