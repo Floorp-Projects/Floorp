@@ -4775,7 +4775,8 @@ fe_primary_sel_cb(Widget widget, XtPointer cdata, Atom *sel, Atom *type,
 					"fe_primary_sel_cb::[ PasteHTML ][ %d ]\n",
 					pData->data_len);
 #endif
-			EDT_PasteHTML(pData->context, pData->data, 0);
+			EDT_PasteHTML(pData->context, pData->data,
+                                      ED_PASTE_NORMAL);
 		}
 		else {
 			if (pData->html_len > 0) {
@@ -4845,7 +4846,7 @@ fe_EditorPastePrimarySel(MWContext* context, Time timestamp)
 #ifdef DEBUG_rhess
 			fprintf(stderr, "fe_EditorPastePrimarySel::[ DATA ]\n");
 #endif
-			EDT_PasteHTML(context, data, 0);
+			EDT_PasteHTML(context, data, ED_PASTE_NORMAL);
 		}
 		else {
 			if (html_len > 0) {
@@ -4994,7 +4995,8 @@ fe_EditorPaste(MWContext* context, Time timestamp)
 #ifdef DEBUG_rhess
 		fprintf (stderr, "fe_EditorPaste::[ XFE_CCP_DATA ]\n");
 #endif
-		rv = (EDT_PasteHTML(context, clip_data, 0) == EDT_COP_OK);
+		rv = (EDT_PasteHTML(context, clip_data, ED_PASTE_NORMAL)
+                      == EDT_COP_OK);
 		XP_FREE(clip_data);
     } else if (clip_name == XFE_CCP_HTML) {
 #ifdef DEBUG_rhess
