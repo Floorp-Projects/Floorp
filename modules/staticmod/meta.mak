@@ -64,14 +64,16 @@ LLIBS           = $(LLIBS)                      \
                   $(DIST)\lib\expat.lib         \
                   $(DIST)\lib\nsldap32v40.lib
 
-WIN_LIBS        = $(WIN_LIBS)
+WIN_LIBS        = $(WIN_LIBS)   \
                   comctl32.lib  \
                   comdlg32.lib  \
                   uuid.lib      \
                   ole32.lib     \
                   shell32.lib   \
                   oleaut32.lib  \
-                  version.lib
+                  version.lib   \
+                  winspool.lib
+
 !endif
 
 include <$(DEPTH)/config/rules.mak>
