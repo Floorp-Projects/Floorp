@@ -332,6 +332,23 @@ nsMouseEvent	mouseevent;
 
 	partcode = FindWindow(aTheEvent->where,&whichwindow);
 
+	if(FALSE && gGrabWindow)
+		{
+		mouseevent.message = NS_MOUSE_LEFT_BUTTON_UP;
+		mouseevent.widget  = (nsWindow *) gGrabWindow;
+		windowcoord = aTheEvent->where;
+		GlobalToLocal(&windowcoord);
+		mouseevent.point.x = windowcoord.h;
+		mouseevent.point.y = windowcoord.v;					
+		mouseevent.time = 0;
+		mouseevent.isShift = FALSE;
+		mouseevent.isControl = FALSE;
+		mouseevent.isAlt = FALSE;
+		mouseevent.clickCount = 1;
+		mouseevent.eventStructType = NS_MOUSE_EVENT;
+		gGrabWindow->DispatchMouseEvent(mouseevent);
+		}
+
 	if(whichwindow!=0)
 		{
 		SelectWindow(whichwindow);
@@ -392,32 +409,77 @@ nsMouseEvent	mouseevent;
 	lastwindow = this->GetCurrentWindow();
 	mMousePoint = aTheEvent->where;
 
+	partcode = FindWindow(aTheEvent->where,&whichwindow);
+	thewindow = nsnull;
+	
+	if(whichwindow!=nsnull)
+		{
+		SetPort(whichwindow);
+		thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
+		}
+	if( (thewindow != nsnull))
+		thewindow = thewindow->FindWidgetHit(aTheEvent->where);
+
 
 	if(gGrabWindow)
 		{
-		mouseevent.message = NS_MOUSE_MOVE;
-		mouseevent.widget  = (nsWindow *) gGrabWindow;
-		windowcoord = aTheEvent->where;
-		GlobalToLocal(&windowcoord);
-		mouseevent.point.x = windowcoord.h;
-		mouseevent.point.y = windowcoord.v;				
-		gGrabWindow->DispatchMouseEvent(mouseevent);	
+		if( /*(gGrabWindow==thewindow) ||*/ thewindow==lastwindow)
+			{
+			// JUST A MOUSE MOVE
+			mouseevent.message = NS_MOUSE_MOVE;
+			mouseevent.widget  = (nsWindow *) gGrabWindow;
+			windowcoord = aTheEvent->where;
+			GlobalToLocal(&windowcoord);
+			mouseevent.point.x = windowcoord.h;
+			mouseevent.point.y = windowcoord.v;				
+			gGrabWindow->DispatchMouseEvent(mouseevent);
+			this->SetCurrentWindow(thewindow);
+			}
+		else
+			{
+			// EXIT or ENTER?
+			if(lastwindow == nsnull || thewindow != lastwindow)
+				{
+				if(lastwindow == gGrabWindow)
+					{
+					mouseevent.message = NS_MOUSE_EXIT;
+					mouseevent.widget  = (nsWindow *) gGrabWindow;
+					windowcoord = aTheEvent->where;
+					GlobalToLocal(&windowcoord);
+					mouseevent.point.x = windowcoord.h;
+					mouseevent.point.y = windowcoord.v;					
+					gGrabWindow->DispatchMouseEvent(mouseevent);	
+					this->SetCurrentWindow(thewindow);				
+					}
+				else
+					{
+					mouseevent.message = NS_MOUSE_ENTER;
+					mouseevent.widget  = (nsWindow *) gGrabWindow;
+					windowcoord = aTheEvent->where;
+					GlobalToLocal(&windowcoord);
+					mouseevent.point.x = windowcoord.h;
+					mouseevent.point.y = windowcoord.v;					
+					gGrabWindow->DispatchMouseEvent(mouseevent);
+					this->SetCurrentWindow(thewindow);				
+					}
+				}
+			}
 		return;
 		}
 
 
-	partcode = FindWindow(aTheEvent->where,&whichwindow);
+	//partcode = FindWindow(aTheEvent->where,&whichwindow);
 	switch(partcode)
 		{
 		case inContent:
-			thewindow = nsnull;
-			if(whichwindow!=nsnull)
-				{
-				SetPort(whichwindow);
-				thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
-				}
-			if( (thewindow != nsnull))
-				thewindow = thewindow->FindWidgetHit(aTheEvent->where);
+			//thewindow = nsnull;
+			//if(whichwindow!=nsnull)
+				//{
+				//SetPort(whichwindow);
+				//thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
+				//}
+			//if( (thewindow != nsnull))
+				//thewindow = thewindow->FindWidgetHit(aTheEvent->where);
 				
 			if(thewindow)
 				{
