@@ -221,8 +221,8 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccState(PRUint32 *_retval)
   nsCOMPtr<nsIPresContext> context;
   shell->GetPresContext(getter_AddRefs(context));
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  nsIFrame *frame;
-  if (content && NS_SUCCEEDED(shell->GetPrimaryFrameFor(content, &frame))) {
+  nsIFrame *frame = nsnull;
+  if (content && NS_SUCCEEDED(shell->GetPrimaryFrameFor(content, &frame)) && frame) {
     nsCOMPtr<nsISelectionController> selCon;
     frame->GetSelectionController(context,getter_AddRefs(selCon));
     if (selCon) {
@@ -238,7 +238,7 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccState(PRUint32 *_retval)
     }
   }
 
-  if (mIsALinkCached) {
+  if (IsALink()) {
     // Make sure we also include all the states of the parent link, such as focusable, focused, etc.
     PRUint32 role;
     GetAccRole(&role);
@@ -251,9 +251,8 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccState(PRUint32 *_retval)
         *_retval |= orState;
       }
     }
-
   }
-  // Focused? Do we implement that here or up the chain?
+
   return NS_OK;
 }
 

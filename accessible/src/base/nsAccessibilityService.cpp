@@ -709,6 +709,24 @@ nsAccessibilityService::CreateXULComboboxAccessible(nsIDOMNode *aNode, nsIAccess
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsAccessibilityService::CreateXULDropmarkerAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+#ifdef MOZ_XUL
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULDropmarkerAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif // MOZ_XUL
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsAccessibilityService::CreateXULGroupboxAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
 {
@@ -938,6 +956,24 @@ nsAccessibilityService::CreateXULSelectOptionAccessible(nsIDOMNode *aNode, nsIAc
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsAccessibilityService::CreateXULStatusBarAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+#ifdef MOZ_XUL
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULStatusBarAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif // MOZ_XUL
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsAccessibilityService::CreateXULTextAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
 {
@@ -1049,8 +1085,13 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
     // Please leave this in for now, it's a convenient debugging method
     nsAutoString name;
     aNode->GetLocalName(name);
-    if (name.Equals(NS_LITERAL_STRING("menulist"))) 
-      printf("## aaronl debugging\n");
+    if (name.Equals(NS_LITERAL_STRING("dropmarker"))) 
+      printf("## aaronl debugging tag name\n");
+
+    nsAutoString className;
+    xulElement->GetAttribute(NS_LITERAL_STRING("class"), className);
+    if (className.Equals(NS_LITERAL_STRING("toolbarbutton-menubutton-dropmarker")))
+      printf("## aaronl debugging attribute\n");
 #endif
     nsCOMPtr<nsIAccessibleProvider> accProv(do_QueryInterface(aNode));
     if (accProv) {

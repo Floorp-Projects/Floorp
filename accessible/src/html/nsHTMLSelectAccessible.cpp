@@ -236,15 +236,13 @@ nsresult nsHTMLSelectOptionAccessible::GetFocusedOptionNode(nsIWeakReference *aP
   nsCOMPtr<nsIContent> content(do_QueryInterface(aListNode));
   shell->GetPrimaryFrameFor(content, &frame);
 
-  nsresult rv;
-  nsCOMPtr<nsIListControlFrame> listFrame(do_QueryInterface(frame, &rv));
-  if (NS_FAILED(rv))
-    return rv;  // How can list content not have a list frame?
-  NS_ASSERTION(listFrame, "We don't have a list frame, but rv returned a success code.");
+  nsCOMPtr<nsIListControlFrame> listFrame(do_QueryInterface(frame));
+  if (!listFrame)
+    return NS_ERROR_FAILURE;  
 
   // Get what's focused by asking frame for "selected item". 
   PRInt32 focusedOptionIndex = 0;
-  rv = listFrame->GetSelectedIndex(&focusedOptionIndex);  
+  nsresult rv = listFrame->GetSelectedIndex(&focusedOptionIndex);  
 
   nsCOMPtr<nsIDOMHTMLCollection> options;
 

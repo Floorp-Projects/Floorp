@@ -535,9 +535,9 @@ NS_IMETHODIMP nsComboboxButtonAccessible::GetAccActionName(PRUint8 index, nsAWri
     return NS_ERROR_FAILURE;
   comboFrame->IsDroppedDown(&isOpen);
   if (isOpen)
-    _retval = NS_LITERAL_STRING("Close");
+    _retval = NS_LITERAL_STRING("close");
   else
-    _retval = NS_LITERAL_STRING("Open");
+    _retval = NS_LITERAL_STRING("open");
 
   return NS_OK;
 }
@@ -663,6 +663,10 @@ void nsComboboxWindowAccessible::GetBounds(nsRect& aBounds, nsIFrame** aBounding
   nsIFrame* frame = nsnull;
   nsCOMPtr<nsIContent> content(do_QueryInterface(child));
   shell->GetPrimaryFrameFor(content, &frame);
+  if (!frame) {
+    *aBoundingFrame = nsnull;
+    return;
+  }
 #ifdef DEBUG
   if (! nsAccessible::IsCorrectFrameType(frame, nsLayoutAtoms::blockFrame))
     return;

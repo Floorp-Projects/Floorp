@@ -41,9 +41,9 @@
 #define _nsXULColorPickerAccessible_H_
 
 // NOTE: alphabetically ordered
-#include "nsXULFormControlAccessible.h"
+#include "nsFormControlAccessible.h"
 
-class nsXULColorPickerTileAccessible : public nsXULButtonAccessible
+class nsXULColorPickerTileAccessible : public nsFormControlAccessible
 {
 public:
   nsXULColorPickerTileAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);

@@ -701,7 +701,7 @@ NS_IMETHODIMP nsAccessible::GetAccState(PRUint32 *aAccState)
 
   // Check if STATE_OFFSCREEN bitflag should be turned on for this object
   if (!IsEntirelyVisible())
-    *aAccState |= STATE_OFFSCREEN;
+    *aAccState |= STATE_OFFSCREEN | STATE_INVISIBLE;
 
   return rv;
 }
