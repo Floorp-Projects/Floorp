@@ -32,7 +32,6 @@
 #include "nsHTMLIIDs.h"
 #include "nsIPresContext.h"
 #include "nsIWidget.h"
-#include "nsXULAtoms.h"
 #include "nsINameSpaceManager.h"
 
 #if 0
@@ -84,7 +83,9 @@ NS_NewToolboxFrame ( nsIFrame*& aNewFrame )
 // Init, if necessary
 //
 nsToolboxFrame :: nsToolboxFrame ( )
-  : mSumOfToolbarHeights(0), mNumToolbars(0), mGrippyHilighted(kNoGrippyHilighted)
+  : mSumOfToolbarHeights(0), mNumToolbars(0), mGrippyHilighted(kNoGrippyHilighted),
+      kCollapsedAtom(dont_AddRef( NS_NewAtom("collapsed"))), 
+      kHiddenAtom(dont_AddRef( NS_NewAtom("hidden")))
 {
 	//*** anything?
 }
@@ -323,7 +324,16 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
       //
       // they are the same, so find the width/height desired by the toolbar frame.
       //
-      
+
+#ifdef NS_DEBUG
+  //*** Highlights bug 3505. The frame still exists even though the display:none attribute is set on
+  //*** the content node.
+  nsAutoString value;
+  childContent->GetAttribute ( kNameSpaceID_None, kCollapsedAtom, value );
+  if ( value == "true" )
+    printf("BUG 3505:: Found a collapsed toolbar (display:none) but the frame still exists!!!!\n");
+#endif
+
       nsSize maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
 		
       nsHTMLReflowState reflowState(aPresContext, aReflowState, childFrame, maxSize);
@@ -351,14 +361,36 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
       // they are not the same (or we're out of frames), so we probably have a
       // collapsed or hidden toolbar.
       //
+      PRBool collapsed = PR_TRUE;
       
-      printf("Found a collapsed toolbar\n");
+      // Check if this toolbar is collapsed or hidden. If it's not hidden, we
+      // assume it is collapsed.
+      nsAutoString value;
+      childContent->GetAttribute ( kNameSpaceID_None, kHiddenAtom, value );
+      if ( value == "true" ) {
+        collapsed = PR_FALSE;
+        #ifdef NS_DEBUG
+          printf("nsToolboxFrame::Reflow -- found a hidden toolbar\n");
+        #endif
+      }
       
-      //*** check for collapsed or hidden tag. What do we do if neither? ignore it i guess.
+      #ifdef NS_DEBUG
+      // double-check we're really dealing with a collapsed toolbar
+      if ( collapsed ) {
+        nsAutoString value;
+        childContent->GetAttribute ( kNameSpaceID_None, kCollapsedAtom, value );
+        if ( value == "true" )
+          printf("nsToolboxFrame::Reflow -- Found a collapsed toolbar, attribute verified\n");
+        else
+          printf("nsToolboxFrame::Reflow -- Problem! Toolbar neither collapsed nor hidden!!!\n");      
+      }
+      #endif
       
-      // set the grippy
-      nsRect grippyRect(0, 0, kCollapsedGrippyWidthInPixels * onePixel, kCollapsedGrippyHeightInPixels * onePixel);
-      mGrippies[grippyIndex].SetProperties ( grippyRect, childContent, PR_TRUE );
+      // set the grippy if collapsed
+      if ( collapsed ) {
+        nsRect grippyRect(0, 0, kCollapsedGrippyWidthInPixels * onePixel, kCollapsedGrippyHeightInPixels * onePixel);
+        mGrippies[grippyIndex].SetProperties ( grippyRect, childContent, PR_TRUE );
+      }
       
       anyCollapsedToolbars = PR_TRUE;
       canAdvanceFrame = PR_FALSE;
@@ -455,26 +487,47 @@ nsToolboxFrame :: HandleEvent ( nsIPresContext& aPresContext,
 
 
 //
+// ConvertToLocalPoint
+//
+// Given a point in the coordinate system of the parent view, convert to a point in the
+// frame's local coordinate system.
+// 
+void
+nsToolboxFrame :: ConvertToLocalPoint ( nsPoint & ioPoint )
+{
+  nsIView* view = nsnull;             // note: |view| not AddRef'd
+  nsPoint offset; 
+  if ( GetOffsetFromView(offset, &view) == NS_OK )
+    ioPoint -= offset;
+
+} // ConvertToLocalPoint
+
+
+//
 // OnMouseMove
 //
-// Handle mouse move events for hilighting and unhilighting the grippies
+// Handle mouse move events for hilighting and unhilighting the grippies. |aMouseLoc|
+// is not in local frame coordinates.
 //
 void
 nsToolboxFrame :: OnMouseMove ( nsPoint & aMouseLoc )
 {
-	for ( int i = 0; i < mNumToolbars; ++i ) {
-		if ( mGrippies[i].mBoundingRect.Contains(aMouseLoc) ) {
-			if ( i != mGrippyHilighted ) {
-				// unhilight the old one
-				if ( mGrippyHilighted != kNoGrippyHilighted )
-					Invalidate ( mGrippies[mGrippyHilighted].mBoundingRect, PR_FALSE );
+  nsPoint localMouseLoc = aMouseLoc;
+  ConvertToLocalPoint ( localMouseLoc );
+    
+  for ( int i = 0; i < mNumToolbars; ++i ) {
+    if ( mGrippies[i].mBoundingRect.Contains(localMouseLoc) ) {
+      if ( i != mGrippyHilighted ) {
+        // unhilight the old one
+        if ( mGrippyHilighted != kNoGrippyHilighted )
+          Invalidate ( mGrippies[mGrippyHilighted].mBoundingRect, PR_FALSE );
 					
-				// hilight the new one and remember it
-				mGrippyHilighted = i;
-				Invalidate ( mGrippies[i].mBoundingRect, PR_FALSE );
-			} // if in a new tab
-		}
-	} // for each toolbar
+          // hilight the new one and remember it
+          mGrippyHilighted = i;
+          Invalidate ( mGrippies[i].mBoundingRect, PR_FALSE );
+      } // if in a new tab
+    }
+  } // for each toolbar
 
 } // OnMouseMove
 
@@ -482,25 +535,29 @@ nsToolboxFrame :: OnMouseMove ( nsPoint & aMouseLoc )
 //
 // OnMouseLeftClick
 //
-// Check if a click is in a grippy and expand/collapse appropriately.
+// Check if a click is in a grippy and expand/collapse appropriately. |aMouseLoc|
+// is not in local frame coordinates.
 //
 void
 nsToolboxFrame :: OnMouseLeftClick ( nsPoint & aMouseLoc )
 {
-	for ( int i = 0; i < mNumToolbars; ++i ) {
-		if ( mGrippies[i].mBoundingRect.Contains(aMouseLoc) ) {
-			TabInfo & clickedTab = mGrippies[i];			
-			if ( clickedTab.mCollapsed )
-				ExpandToolbar ( clickedTab );
-			else
-				CollapseToolbar ( clickedTab );
+  nsPoint localMouseLoc = aMouseLoc;
+  ConvertToLocalPoint ( localMouseLoc );
+  
+  for ( int i = 0; i < mNumToolbars; ++i ) {
+    if ( mGrippies[i].mBoundingRect.Contains(localMouseLoc) ) {
+      TabInfo & clickedTab = mGrippies[i];			
+      if ( clickedTab.mCollapsed )
+        ExpandToolbar ( clickedTab );
+      else
+        CollapseToolbar ( clickedTab );
 			
-			// don't keep repeating this process since toolbars have now be
-			// relaid out and a new toolbar may be under the current mouse
-			// location!
-			break;
-		}
-	}
+      // don't keep repeating this process since toolbars have now be
+      // relaid out and a new toolbar may be under the current mouse
+      // location!
+      break;
+    }
+  }
 	
 } // OnMouseLeftClick
 
@@ -532,11 +589,9 @@ nsToolboxFrame :: OnMouseExit ( )
 void
 nsToolboxFrame :: CollapseToolbar ( TabInfo & inTab ) 
 {
-  const nsCOMPtr<nsIAtom> kSelectedAtom ( dont_AddRef( NS_NewAtom("collapsed")) );
-   
   if ( inTab.mToolbar ) {
     printf("CollapseToolbar:: collapsing\n");
-    inTab.mToolbar->SetAttribute ( kNameSpaceID_None, kSelectedAtom, "true", PR_TRUE );
+    inTab.mToolbar->SetAttribute ( kNameSpaceID_None, kCollapsedAtom, "true", PR_TRUE );
   }
    
 } // CollapseToolbar
@@ -551,8 +606,6 @@ nsToolboxFrame :: CollapseToolbar ( TabInfo & inTab )
 void
 nsToolboxFrame :: ExpandToolbar ( TabInfo & inTab ) 
 {
-  const nsCOMPtr<nsIAtom> kSelectedAtom ( dont_AddRef( NS_NewAtom("collapsed")) );
-    
-  mContent->UnsetAttribute ( kNameSpaceID_None, kSelectedAtom, PR_TRUE );
+  mContent->UnsetAttribute ( kNameSpaceID_None, kCollapsedAtom, PR_TRUE );
 
 } // ExpandToolbar
