@@ -47,6 +47,7 @@
 #include "nsSVGValue.h"
 #include "nsIWeakReference.h"
 #include "nsReadableUtils.h"
+#include "nsTextFormatter.h"
 #include <math.h>
 
 ////////////////////////////////////////////////////////////////////////
@@ -280,9 +281,9 @@ nsSVGLength::GetValueAsString(nsAWritableString & aValueAsString)
 {
   aValueAsString.Truncate();
 
-  char buf[80];
-  sprintf(buf, "%g", (double)mValueInSpecifiedUnits);
-  aValueAsString.Append(NS_ConvertASCIItoUCS2(buf));
+  PRUnichar buf[24];
+  nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("%g").get(), (double)mValueInSpecifiedUnits);
+  aValueAsString.Append(buf);
   
   nsAutoString unitString;
   GetUnitString(unitString);

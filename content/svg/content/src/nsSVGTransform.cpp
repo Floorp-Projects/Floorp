@@ -43,6 +43,7 @@
 #include "nsSVGValue.h"
 #include "nsIWeakReference.h"
 #include "nsSVGMatrix.h"
+#include "nsTextFormatter.h"
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -138,7 +139,7 @@ NS_IMETHODIMP
 nsSVGTransform::GetValueString(nsAWritableString& aValue)
 {
   aValue.Truncate();
-  char buf[256];
+  PRUnichar buf[256];
   
   switch (mType) {
     case nsIDOMSVGTransform::SVG_TRANSFORM_TRANSLATE:
@@ -147,17 +148,17 @@ nsSVGTransform::GetValueString(nsAWritableString& aValue)
         mMatrix->GetE(&dx);
         mMatrix->GetF(&dy);
         if (dy != 0.0f)
-          sprintf(buf, "translate(%g, %g)", dx, dy);
+          nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("translate(%g, %g)").get(), dx, dy);
         else
-          sprintf(buf, "translate(%g)", dx);
+          nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("translate(%g)").get(), dx);
       }
       break;
     case nsIDOMSVGTransform::SVG_TRANSFORM_ROTATE:
       {
         if (mOriginX != 0.0f || mOriginY != 0.0f)
-          sprintf(buf, "rotate(%g, %g, %g)", mAngle, mOriginX, mOriginY);
+          nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("rotate(%g, %g, %g)").get(), mAngle, mOriginX, mOriginY);
         else
-          sprintf(buf, "rotate(%g)", mAngle);
+          nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("rotate(%g)").get(), mAngle);
       }
       break;        
     case nsIDOMSVGTransform::SVG_TRANSFORM_SCALE:
@@ -166,23 +167,23 @@ nsSVGTransform::GetValueString(nsAWritableString& aValue)
         mMatrix->GetA(&sx);
         mMatrix->GetD(&sy);
         if (sy != 0.0f)
-          sprintf(buf, "scale(%g, %g)", sx, sy);
+          nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("scale(%g, %g)").get(), sx, sy);
         else
-          sprintf(buf, "scale(%g)", sx);
+          nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("scale(%g)").get(), sx);
       }
       break;
     case nsIDOMSVGTransform::SVG_TRANSFORM_SKEWX:
       {
         float sx;
         mMatrix->GetC(&sx);
-        sprintf(buf, "skewX(%g)", sx);
+        nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("skewX(%g)").get(), sx);
       }
       break;
     case nsIDOMSVGTransform::SVG_TRANSFORM_SKEWY:
       {
         float sy;
         mMatrix->GetB(&sy);
-        sprintf(buf, "skewY(%g)", sy);
+        nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("skewY(%g)").get(), sy);
       }
       break;
     default:
@@ -191,7 +192,7 @@ nsSVGTransform::GetValueString(nsAWritableString& aValue)
       break;
   }
 
-  aValue.Append(NS_ConvertASCIItoUCS2(buf));
+  aValue.Append(buf);
   
   return NS_OK;
 }
