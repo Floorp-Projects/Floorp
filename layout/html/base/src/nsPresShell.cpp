@@ -773,7 +773,7 @@ public:
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle);
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList);
-  NS_IMETHOD SetPreferenceStyleRules(PRBool aForceRefrlow);
+  NS_IMETHOD SetPreferenceStyleRules(PRBool aForceReflow);
   NS_IMETHOD EnablePrefStyleRules(PRBool aEnable, PRUint8 aPrefType=0xFF);
   NS_IMETHOD ArePrefStyleRulesEnabled(PRBool& aEnabled);
 
