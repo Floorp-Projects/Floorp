@@ -19,24 +19,17 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH   = ../../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= bookmarks directory download-manager filepicker find history search sidebar related regviewer xfer prefwindow shistory timebomb console autocomplete updates urlbarhistory intl resetPref
+MODULE    = appcomps
+XPIDL_MODULE=alerts
 
-ifdef MOZ_ENABLE_XREMOTE
-DIRS		+= xremote
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-DIRS		+= winhooks urlwidget alerts
-endif
-
-DIRS		+= build
+XPIDLSRCS = nsIAlertsService.idl \
 
 include $(topsrcdir)/config/rules.mk
 
