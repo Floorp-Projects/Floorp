@@ -27,11 +27,37 @@
 
 [% PROCESS global/header.html.tmpl 
   title = "Search for bugs"
-  onload = "selectProduct(document.forms['queryform']);"
+  onload = "selectProduct(document.forms['queryform']);initHelp();"
 %]
 
 [% button_name = "Search" %]
 
+[%# The decent help requires Javascript %]
+[% IF NOT help %]
+  <p>
+  [% IF user_agent.search("Mozilla/5") %]
+    <script> <!--
+      document.write("<a href='query.cgi?help=1'>Give me some help</a> (reloads page.)");
+      // -->
+    </script>
+    <noscript>
+      <a href="queryhelp.cgi">Give me help</a> with this form.
+    </noscript>
+  [% ELSE %]
+      <a href="queryhelp.cgi">Give me help</a> with this form.
+  [% END %]
+  </p>
+[% ELSE %]
+  <p>
+      For help, mouse over the page elements.
+      <font color="red">
+      [% IF user_agent.match("Mozilla/5") %]
+        Note that if the help popups are hidden by form element scroll bars,
+        this is a bug in your browser, not in Bugzilla.
+      [% END %]
+    </font>    
+  </p>
+[% END %]     
 <form method="get" action="buglist.cgi" name="queryform">
   
 [% PROCESS search/form.html.tmpl %]
@@ -47,5 +73,7 @@
 </p>
 
 </form>
+
+[% PROCESS "search/search-help.html.tmpl" IF help %]
 
 [% PROCESS global/footer.html.tmpl %]
