@@ -26,7 +26,7 @@ CSRCS		= \
 
 EXPORTS= cnetinit.h
 
-REQUIRES	= network img layer fileurl httpurl ftpurl abouturl \
+REQUIRES	= netcache network img layer fileurl httpurl ftpurl abouturl \
 	gophurl jsurl remoturl dataurl util
 
 include $(DEPTH)/config/rules.mk
