@@ -18,17 +18,11 @@
 
 
 #include "nsCOMPtr.h"
-#include "nsISupports.h"
-#include "nsIFactory.h"
 #include "nsIWalletService.h"
-#include "nsIServiceManager.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 //#if defined(HAS_C_PLUS_PLUS_CASTS)
 //#define NS_STATIC_CAST(__type, __ptr)	   static_cast<__type>(__ptr)
