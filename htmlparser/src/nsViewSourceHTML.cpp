@@ -479,22 +479,22 @@ NS_IMETHODIMP CViewSourceHTML::ConsumeAttributes(PRUnichar aChar,CScanner& aScan
  *  @return new token or null 
  */
 NS_IMETHODIMP CViewSourceHTML::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
-   PRUnichar  ch;
-   nsresult result=aScanner.GetChar(ch);
+   PRUnichar  theChar;
+   nsresult result=aScanner.GetChar(theChar);
 
    if(NS_OK==result) {
-     if(nsString::IsAlpha(ch)) { //handle common enity references &xxx; or &#000.
+     if(nsString::IsAlpha(theChar)) { //handle common enity references &xxx; or &#000.
        aToken = gTokenRecycler.CreateTokenOfType(eToken_entity,eHTMLTag_entity,gEmpty);
-       result = aToken->Consume(ch,aScanner);  //tell new token to finish consuming text...    
+       result = aToken->Consume(theChar,aScanner);  //tell new token to finish consuming text...    
      }
-     else if(kHashsign==ch) {
+     else if(kHashsign==theChar) {
        aToken = gTokenRecycler.CreateTokenOfType(eToken_entity,eHTMLTag_entity,gEmpty);
        result=aToken->Consume(0,aScanner);
      }
      else {
        //oops, we're actually looking at plain text...
        nsAutoString temp("&");
-       temp.Append(ch);
+       aScanner.PutBack(theChar);
        result=ConsumeText(temp,aScanner,aToken);
      }
    }//if
@@ -952,7 +952,14 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken) {
       break;
 
     case eToken_entity:
-      result=mSink->AddLeaf(theNode); 
+      {
+        SetColor("maroon",PR_TRUE,*mSink);
+        nsAutoString theStr("&");
+        theStr.Append(aToken->GetStringValueXXX());
+        theStr.Append(";");
+        WriteText(theStr,*mSink,PR_FALSE);
+        SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
+      }
       break;
 
     case eToken_comment:
