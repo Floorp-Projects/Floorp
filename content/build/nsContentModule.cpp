@@ -345,7 +345,7 @@ MAKE_CTOR(CreateImageDocument,            nsIDocument,                 NS_NewIma
 MAKE_CTOR(CreateCSSParser,                nsICSSParser,                NS_NewCSSParser)
 MAKE_CTOR(CreateCSSLoader,                nsICSSLoader,                NS_NewCSSLoader)
 MAKE_CTOR(CreateHTMLElementFactory,       nsIElementFactory,           NS_NewHTMLElementFactory)
-MAKE_CTOR(CreateTextNode,                 nsIContent,                  NS_NewTextNode)
+MAKE_CTOR(CreateTextNode,                 nsITextContent,              NS_NewTextNode)
 //MAKE_CTOR(CreateAnonymousElement,         nsIContent,                  NS_NewAnonymousElement)
 MAKE_CTOR(CreateAttributeContent,         nsIContent,                  NS_NewAttributeContent)
 MAKE_CTOR(CreateXMLElementFactory,        nsIElementFactory,           NS_NewXMLElementFactory)
