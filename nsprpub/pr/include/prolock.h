@@ -39,8 +39,6 @@
 
 PR_BEGIN_EXTERN_C
 
-#if defined(DEBUG) || defined(FORCE_NSPR_ORDERED_LOCKS)
-
 /*
 ** A locking mechanism, built on the existing PRLock definiion,
 ** is provided that will permit applications to define a Lock
@@ -80,7 +78,18 @@ PR_BEGIN_EXTERN_C
 **
 */
 
+#if defined(DEBUG) || defined(FORCE_NSPR_ORDERED_LOCKS)
 typedef void * PROrderedLock;
+#else
+/*
+** Map PROrderedLock and methods onto PRLock when ordered locking
+** is not compiled in.
+**  
+*/
+#include <prlock.h>
+
+typedef PRLock PROrderedLock;
+#endif
 
 /* -----------------------------------------------------------------------
 ** FUNCTION: PR_CreateOrderedLock() -- Create an Ordered Lock
@@ -98,8 +107,12 @@ typedef void * PROrderedLock;
 ** RESTRICTIONS:
 ** 
 */
+#if defined(DEBUG) || defined(FORCE_NSPR_ORDERED_LOCKS)
 #define PR_CREATE_ORDERED_LOCK(order,name)\
     PR_CreateOrderedLock((order),(name))
+#else
+#define PR_CREATE_ORDERED_LOCK(order) PR_NewLock()
+#endif
 
 NSPR_API(PROrderedLock *) 
     PR_CreateOrderedLock( 
@@ -122,7 +135,11 @@ NSPR_API(PROrderedLock *)
 ** RESTRICTIONS:
 ** 
 */
+#if defined(DEBUG) || defined(FORCE_NSPR_ORDERED_LOCKS)
 #define PR_DESTROY_ORDERED_LOCK(lock) PR_DestroyOrderedLock((lock))
+#else
+#define PR_DESTROY_ORDERED_LOCK(lock) PR_DestroyLock((lock))
+#endif
 
 NSPR_API(void) 
     PR_DestroyOrderedLock( 
@@ -146,7 +163,11 @@ NSPR_API(void)
 ** RESTRICTIONS:
 ** 
 */
+#if defined(DEBUG) || defined(FORCE_NSPR_ORDERED_LOCKS)
 #define PR_LOCK_ORDERED_LOCK(lock) PR_LockOrderedLock((lock))
+#else
+#define PR_LOCK_ORDERED_LOCK(lock) PR_Lock((lock))
+#endif
 
 NSPR_API(void) 
     PR_LockOrderedLock( 
@@ -170,43 +191,17 @@ NSPR_API(void)
 ** RESTRICTIONS:
 ** 
 */
+#if defined(DEBUG) || defined(FORCE_NSPR_ORDERED_LOCKS)
 #define PR_UNLOCK_ORDERED_LOCK(lock) PR_UnlockOrderedLock((lock))
+#else
+#define PR_UNLOCK_ORDERED_LOCK(lock) PR_Unlock((lock))
+#endif
 
 NSPR_API(PRStatus) 
     PR_UnlockOrderedLock( 
         PROrderedLock *lock 
 );
 
-#else /* !(defined(DEBUG) || defined(FORCE_NSPR_ORDERED_LOCKS)) */
-/*
-** Map PROrderedLock and methods onto PRLock when ordered locking
-** is not compiled in.
-**  
-*/
-#include <prlock.h>
-
-typedef PRLock PROrderedLock;
-
-#define PR_CREATE_ORDERED_LOCK(order) PR_NewLock()
-#define PR_DESTROY_ORDERED_LOCK(lock) PR_DestroyLock((lock))
-#define PR_LOCK_ORDERED_LOCK(lock) PR_Lock((lock))
-#define PR_UNLOCK_ORDERED_LOCK(lock) PR_Unlock((lock))
-
-#endif /* !(defined(DEBUG) || defined(FORCE_NSPR_ORDERED_LOCKS)) */
-
 PR_END_EXTERN_C
 
 #endif /* prolock_h___ */
-
-
-
-
-
-
-
-
-
-
-
-
-

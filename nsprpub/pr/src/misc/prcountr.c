@@ -68,7 +68,6 @@
 **
 */
 
-#if defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)
 #include "prcountr.h"
 #include "prclist.h"
 #include "prlock.h"
@@ -502,14 +501,3 @@ PR_IMPLEMENT(PRCounterHandle)
 
     return((PRCounterHandle)rnp);
 } /*  end PR_FindNextCounterRname() */
-
-
-#else  /* !(defined(DEBUG) || defined(FORCE_NSPR_COUNTERS)) */
-/*
-** NSPR Counters are not defined in this case
-**
-**
-*/
-/* Some compilers don't like an empty compilation unit. */
-static int dummy = 0;
-#endif /* defined(DEBUG) || defined(FORCE_NSPR_COUNTERS) */
