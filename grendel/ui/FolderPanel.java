@@ -517,8 +517,8 @@ public class FolderPanel extends GeneralPanel {
         if (temp == null) {
           try {
             if ((aFolder.getFolder().getType() & goodMask) == goodMask) {
-              JMenuItem copyItem = new JMenuItem(folder.getName());
-              JMenuItem moveItem = new JMenuItem(folder.getName());
+              JMenuItem copyItem = new JMenuItem(aFolder.getName());
+              JMenuItem moveItem = new JMenuItem(aFolder.getName());
 
               copyItem.addActionListener(new CopyMessageAction(folder));
               moveItem.addActionListener(new MoveMessageAction(folder));
@@ -528,8 +528,8 @@ public class FolderPanel extends GeneralPanel {
             }
           } catch (MessagingException e) {}
         }  else {
-          JMenu copyMenu = new JMenu(folder.getName());
-          JMenu moveMenu = new JMenu(folder.getName());
+          JMenu copyMenu = new JMenu(aFolder.getName());
+          JMenu moveMenu = new JMenu(aFolder.getName());
 
           while (temp != null) {
             buildMenus(temp, copyMenu, moveMenu);

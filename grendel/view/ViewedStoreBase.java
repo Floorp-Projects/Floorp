@@ -139,6 +139,14 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
   }
 
   /**
+   * Returns the name for this store. This is the same as the description.
+   */
+
+  public String getName() {
+    return getDescription();
+  }
+
+  /**
    * Returns the protocol used by this store.
    */
 

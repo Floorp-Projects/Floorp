@@ -17,6 +17,8 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>,  2 Dec 1997.
+ *
+ * Contributors: Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel.view;
@@ -31,6 +33,12 @@ public interface ViewedFolder {
    */
 
   public Folder getFolder();
+
+  /**
+   * Returns the name of the associated folder
+   */
+
+  public String getName();
 
   /**
    * Returns the ViewedFolder associated with the given folder.

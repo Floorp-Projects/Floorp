@@ -19,6 +19,7 @@
  * Created: Will Scullin <scullin@netscape.com>,  2 Dec 1997.
  *
  * Contributors: Jeff Galyan <talisman@anamorphic.com>
+ *               Edwin Woudt <edwin@woudt,nl>
  */
 
 package grendel.view;
@@ -96,6 +97,14 @@ class ViewedFolderBase implements ViewedFolder {
     return fFolder;
   }
 
+  /**
+   * Returns the name of the associated folder
+   */
+
+  public String getName() {
+    return getFolder().getName();
+  }
+  
   /**
    * Returns whether we think the folder is opened
    */
