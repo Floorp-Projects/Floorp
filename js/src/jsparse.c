@@ -2439,7 +2439,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif
       case TOK_RESERVED:
         badWord = js_DeflateString(cx, ts->token.ptr, 
-                    ts->token.pos.end.index - ts->token.pos.begin.index);
+              (size_t) ts->token.pos.end.index - ts->token.pos.begin.index);
 	js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR, 
                                         JSMSG_RESERVED_ID, badWord);
         JS_free(cx, badWord);
