@@ -263,12 +263,16 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 		      keyElement->GetAttribute(nsAutoString("disabled"),        disabled);
 		      if (disabled == "false") {
 	            PRUint32 theChar;
-	         // #ifdef XP_PC
-		     //   theEvent->GetCharCode(&theChar);
-		     // #else
-		        theEvent->GetKeyCode(&theChar);
-		     // #endif
-		        //printf("event key [%c] \n", theChar); // this leaks
+
+				      switch(aEventType) {
+				        case eKeyPress:
+		              theEvent->GetCharCode(&theChar);
+				        break;
+				        case eKeyUp:
+				        case eKeyDown:
+		              theEvent->GetKeyCode(&theChar);
+				        break;
+				      }
 		        
 		        char tempChar[2];
 		        tempChar[0] = theChar;
