@@ -25,7 +25,7 @@
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
-extern void nsTimerExpired(gpointer aCallData);
+extern "C" gint nsTimerExpired(gpointer aCallData);
 
 /*
  * Implementation of timers using Gtk timer facility 
@@ -79,7 +79,7 @@ void TimerImpl::FireTimeout()
 // Always repeating here
 
 // if (mRepeat)
-//  mTimerId = gtk_timeout_add(aDelay, (GtkFunction)nsTimerExpired, this);
+//  mTimerId = gtk_timeout_add(aDelay, nsTimerExpired, this);
 }
 
 
@@ -108,7 +108,7 @@ TimerImpl::Init(nsTimerCallbackFunc aFunc,
     mClosure = aClosure;
     // mRepeat = aRepeat;
 
-    mTimerId = gtk_timeout_add(aDelay, (GtkFunction)nsTimerExpired, this);
+    mTimerId = gtk_timeout_add(aDelay, nsTimerExpired, this);
 
     return Init(aDelay);
 }
@@ -121,7 +121,7 @@ TimerImpl::Init(nsITimerCallback *aCallback,
     mCallback = aCallback;
     // mRepeat = aRepeat;
 
-    mTimerId = gtk_timeout_add(aDelay, (GtkFunction)nsTimerExpired, this);
+    mTimerId = gtk_timeout_add(aDelay, nsTimerExpired, this);
 
     return Init(aDelay);
 }
@@ -159,9 +159,9 @@ NS_BASE nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
     return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
 }
 
-
-void nsTimerExpired(gpointer aCallData)
+gint nsTimerExpired(gpointer aCallData)
 {
   TimerImpl* timer = (TimerImpl *)aCallData;
   timer->FireTimeout();
+  return 0;
 }
