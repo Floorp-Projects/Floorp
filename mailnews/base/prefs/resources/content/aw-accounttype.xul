@@ -37,6 +37,8 @@ Rights Reserved.
   </box>
 
   <html:div class="desc">&accountTypeDesc.label;</html:div>
+  <spring class="spacer"/>
+  <html:div class="desc">&accountTypeDirections.label;</html:div>
 <box align="vertical">
   <html:div>
     <html:input type="radio" name="acctyperadio" id="mailaccount" value="mail" checked="1"/>
