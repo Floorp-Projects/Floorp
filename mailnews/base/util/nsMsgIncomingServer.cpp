@@ -36,14 +36,6 @@
 #include "nsIMsgProtocolInfo.h"
 #include "nsRDFCID.h"
 
-#ifdef DEBUG_seth
-#define DO_HASHING_OF_HOSTNAME 1
-#endif
-
-#ifdef DO_HASHING_OF_HOSTNAME
-#include "nsMsgUtils.h"
-#endif /* DO_HASHING_OF_HOSTNAME */
-
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
