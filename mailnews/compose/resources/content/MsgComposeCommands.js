@@ -1160,7 +1160,7 @@ function fillIdentityListPopup(popup)
 		if(serverSupports.GetElementAt(0))
 			var	result = serverSupports.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
 		//dump ("The account name is = "+result.prettyName+ "\n");
-		var accountName = " - < "+result.prettyName+">";
+		var accountName = " - "+result.prettyName;
 
         var item=document.createElement('menuitem');
         item.setAttribute('value', identity.identityName);
