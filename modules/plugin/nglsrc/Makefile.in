@@ -46,7 +46,7 @@ CPPSRCS =                              \
     nsMalloc.cpp  \
     $(NULL)
 
-REQUIRES = raptor plugin java xpcom netlib libplc21
+REQUIRES = raptor plugin java xpcom netlib libplc21 oji
 
 LCFLAGS =-D_IMPL_NS_PLUGIN
 
