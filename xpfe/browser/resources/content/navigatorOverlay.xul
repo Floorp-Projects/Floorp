@@ -51,7 +51,7 @@
   <keyset id="navKeys">
     <!-- File Menu -->
     <key id="key_newNavigator"/>
-    <key id="key_newNavigatorTab" key="&tabCmd.commandkey;" modifiers="control" command="cmd_newNavigatorTab"/>
+    <key id="key_newNavigatorTab" key="&tabCmd.commandkey;" modifiers="accel" command="cmd_newNavigatorTab"/>
     <key id="key_newBlankPage"/>
     <key id="focusURLBar"      key="&openCmd.commandkey;" oncommand="ShowAndSelectContentsOfURLBar();"
          modifiers="accel"/>
