@@ -858,20 +858,6 @@ sub email_prefs {
     my @reasons = qw(Removeme Comments Attachments Status Resolved Keywords 
                      CC Other Unconfirmed);
 
-    # If the prefs are empty, this user hasn't visited the email pane
-    # of userprefs.cgi since before the change to use the "emailflags" 
-    # column, so initialize that field with the default prefs.
-    if (!$flags) {
-        # Create a default prefs string that causes the user to get all email.
-        $flags = "ExcludeSelf~on~FlagRequestee~on~FlagRequester~on~";
-        foreach my $role (@roles) {
-            foreach my $reason (@reasons) {
-                $flags .= "email$role$reason~on~";
-            }
-        }
-        chop $flags;
-    }
-
     # Convert the prefs from the flags string from the database into
     # a Perl record.  The 255 param is here because split will trim 
     # any trailing null fields without a third param, which causes Perl 

@@ -435,13 +435,15 @@ sub InsertNewUser {
     my $cryptpassword = Crypt($password);
 
 
+    my $defaultflagstring = SqlQuote(Bugzilla::Constants::DEFAULT_EMAIL_SETTINGS); 
+
     # Insert the new user record into the database.            
     $username = SqlQuote($username);
     $realname = SqlQuote($realname);
     $cryptpassword = SqlQuote($cryptpassword);
     PushGlobalSQLState();
-    SendSQL("INSERT INTO profiles (login_name, realname, cryptpassword) 
-             VALUES ($username, $realname, $cryptpassword)");
+    SendSQL("INSERT INTO profiles (login_name, realname, cryptpassword, emailflags) 
+             VALUES ($username, $realname, $cryptpassword, $defaultflagstring)");
     PopGlobalSQLState();
 
     # Return the password to the calling code so it can be included 

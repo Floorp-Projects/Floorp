@@ -26,6 +26,7 @@
 #                 Jacob Steenhagen <jake@bugzilla.org>
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Tobias Burnus <burnus@net-b.de>
+#                 Shane H. W. Travis <travis@sedsystems.ca>
 #                 Gervase Markham <gerv@gerv.net>
 #                 Erik Stambaugh <erik@dasbistro.com>
 #
@@ -4457,8 +4458,11 @@ if ($sth->rows == 0) {
     $realname = $dbh->quote($realname);
     $cryptedpassword = $dbh->quote($cryptedpassword);
 
-    $dbh->do("INSERT INTO profiles (login_name, realname, cryptpassword)" .
-            " VALUES ($login, $realname, $cryptedpassword)");
+    # Set default email flags for the Admin, same as for users
+    my $defaultflagstring = $dbh->quote(Bugzilla::Constants::DEFAULT_EMAIL_SETTINGS);
+
+    $dbh->do("INSERT INTO profiles (login_name, realname, cryptpassword, emailflags) " .
+             "VALUES ($login, $realname, $cryptedpassword, $defaultflagstring)");
   }
     # Put the admin in each group if not already    
     my $query = "select userid from profiles where login_name = $login";    
@@ -4566,6 +4570,47 @@ if (GetFieldDef('bugs', 'short_desc')->[2]) { # if it allows nulls
 # 2004-04-12 - Keep regexp-based group permissions up-to-date - Bug 240325
 # Make sure groups get rederived
 $dbh->do("UPDATE groups SET last_changed = NOW() WHERE name = 'admin'");
+
+# 2004-12-29 - Flag email code is broke somewhere, and doesn't treat a lack
+# of FlagRequestee/er emailflags as 'on' like it's supposed to. Easiest way
+# to fix this is to make sure that everyone has these set. (bug 275599).
+# While we're at it, let's make sure everyone has some emailprefs set,
+# whether or not they've ever visited userprefs.cgi (bug 108870). In fact,
+# do this first so that the second check gets fewer hits.
+# 
+my $emailflags_count = 0;
+$sth = $dbh->prepare("SELECT userid FROM profiles " .
+                     "WHERE emailflags LIKE '' " .
+                     "OR emailflags IS NULL");
+$sth->execute();
+while (my ($userid) = $sth->fetchrow_array()) {
+    $dbh->do("UPDATE profiles SET emailflags = " .
+             $dbh->quote(Bugzilla::Constants::DEFAULT_EMAIL_SETTINGS) .
+             "WHERE userid = $userid");
+    $emailflags_count++;
+}
+
+if ($emailflags_count) {
+  print "Added default email prefs to $emailflags_count users who had none.\n" unless $silent;
+  $emailflags_count = 0;
+}
+
+
+$sth = $dbh->prepare("SELECT userid, emailflags FROM profiles " .
+                     "WHERE emailflags NOT LIKE '%Flagrequeste%' ");
+$sth->execute();
+while (my ($userid, $emailflags) = $sth->fetchrow_array()) {
+    $emailflags .= Bugzilla::Constants::DEFAULT_FLAG_EMAIL_SETTINGS;
+    $emailflags = $dbh->quote($emailflags);
+    $dbh->do("UPDATE profiles SET emailflags = $emailflags " .
+             "WHERE userid = $userid");
+    $emailflags_count++;
+}
+
+if ($emailflags_count) {
+  print "Added default Flagrequester/ee email prefs to $emailflags_count users who had none.\n" unless $silent;
+  $emailflags_count = 0;
+}
 
 
 # 2003-10-24 - alt@sonic.net, bug 224208

@@ -36,21 +36,9 @@ use Bugzilla::RelationSet;
 # Use global template variables.
 use vars qw($template $vars $userid);
 
-# The default email flags leave all email on.
-my $defaultflagstring = "ExcludeSelf~on~";
-
 my @roles = ("Owner", "Reporter", "QAcontact", "CClist", "Voter");
 my @reasons = ("Removeme", "Comments", "Attachments", "Status", "Resolved", 
                "Keywords", "CC", "Other", "Unconfirmed");
-
-foreach my $role (@roles) {
-    foreach my $reason (@reasons) {
-        $defaultflagstring .= "email$role$reason~on~";
-    }
-}
-
-# Remove final "~".
-chop $defaultflagstring;
 
 ###############################################################################
 # Each panel has two functions - panel Foo has a DoFoo, to get the data 
@@ -160,16 +148,6 @@ sub DoEmail {
     SendSQL("SELECT emailflags FROM profiles WHERE userid = $userid");
 
     my ($flagstring) = FetchSQLData();
-
-    # If the emailflags haven't been set before, that means that this user 
-    # hasn't been to the email pane of userprefs.cgi since the change to 
-    # use emailflags. Create a default flagset for them, based on
-    # static defaults. 
-    if (!$flagstring) {
-        $flagstring = $defaultflagstring;
-        SendSQL("UPDATE profiles SET emailflags = " .
-                SqlQuote($flagstring) . " WHERE userid = $userid");
-    }
 
     # The 255 param is here, because without a third param, split will
     # trim any trailing null fields, which causes Perl to eject lots of

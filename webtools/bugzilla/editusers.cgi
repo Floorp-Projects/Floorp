@@ -460,11 +460,12 @@ if ($action eq 'new') {
     # Add the new user
     SendSQL("INSERT INTO profiles ( " .
             "login_name, cryptpassword, realname,  " .
-            "disabledtext" .
+            "emailflags, disabledtext" .
             " ) VALUES ( " .
             SqlQuote($user) . "," .
             SqlQuote(Crypt($password)) . "," .
             SqlQuote($realname) . "," .
+            SqlQuote(Bugzilla::Constants::DEFAULT_EMAIL_SETTINGS) . "," .
             SqlQuote($disabledtext) . ")" );
 
     #+++ send e-mail away

@@ -25,7 +25,7 @@
 #                 J. Paul Reed <preed@sigkill.com>
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Christopher Aillon <christopher@aillon.com>
-
+#                 Shane H. W. Travis <travis@sedsystems.ca>
 
 package Bugzilla::Constants;
 use strict;
@@ -50,6 +50,9 @@ use base qw(Exporter);
     LOGOUT_ALL
     LOGOUT_CURRENT
     LOGOUT_KEEP_CURRENT
+
+    DEFAULT_FLAG_EMAIL_SETTINGS
+    DEFAULT_EMAIL_SETTINGS
 
     GRANT_DIRECT
     GRANT_DERIVED
@@ -121,6 +124,72 @@ use constant contenttypes =>
    "png" => "image/png" ,
    "ics" => "text/calendar" ,
   };
+
+use constant DEFAULT_FLAG_EMAIL_SETTINGS =>
+      "~FlagRequestee~on" .
+      "~FlagRequester~on";
+
+# By default, almost all bugmail is turned on, with the exception
+# of CC list additions for anyone except the Assignee/Owner.
+# If you want to customize the default settings for new users at
+# your own site, ensure that each of the lines ends with either
+# "~on" or just "~" (for off).
+
+use constant DEFAULT_EMAIL_SETTINGS => 
+      "ExcludeSelf~on" .
+
+      "~FlagRequestee~on" .
+      "~FlagRequester~on" .
+
+      "~emailOwnerRemoveme~on" .
+      "~emailOwnerComments~on" .
+      "~emailOwnerAttachments~on" .
+      "~emailOwnerStatus~on" .
+      "~emailOwnerResolved~on" .
+      "~emailOwnerKeywords~on" .
+      "~emailOwnerCC~on" .
+      "~emailOwnerOther~on" .
+      "~emailOwnerUnconfirmed~on" .
+  
+      "~emailReporterRemoveme~on" .
+      "~emailReporterComments~on" .
+      "~emailReporterAttachments~on" .
+      "~emailReporterStatus~on" .
+      "~emailReporterResolved~on" .
+      "~emailReporterKeywords~on" .
+      "~emailReporterCC~" .
+      "~emailReporterOther~on" .
+      "~emailReporterUnconfirmed~on" .
+  
+      "~emailQAcontactRemoveme~on" .
+      "~emailQAcontactComments~on" .
+      "~emailQAcontactAttachments~on" .
+      "~emailQAcontactStatus~on" .
+      "~emailQAcontactResolved~on" .
+      "~emailQAcontactKeywords~on" .
+      "~emailQAcontactCC~" .
+      "~emailQAcontactOther~on" .
+      "~emailQAcontactUnconfirmed~on" .
+  
+      "~emailCClistRemoveme~on" .
+      "~emailCClistComments~on" .
+      "~emailCClistAttachments~on" .
+      "~emailCClistStatus~on" .
+      "~emailCClistResolved~on" .
+      "~emailCClistKeywords~on" .
+      "~emailCClistCC~" .
+      "~emailCClistOther~on" .
+      "~emailCClistUnconfirmed~on" .
+  
+      "~emailVoterRemoveme~on" .
+      "~emailVoterComments~on" .
+      "~emailVoterAttachments~on" .
+      "~emailVoterStatus~on" .
+      "~emailVoterResolved~on" .
+      "~emailVoterKeywords~on" .
+      "~emailVoterCC~" .
+      "~emailVoterOther~on" .
+      "~emailVoterUnconfirmed~on";
 
 use constant GRANT_DIRECT => 0;
 use constant GRANT_DERIVED => 1;

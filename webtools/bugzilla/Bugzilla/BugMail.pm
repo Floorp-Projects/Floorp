@@ -615,15 +615,6 @@ sub filterEmailGroup ($$$) {
         SendSQL("SELECT emailflags FROM profiles WHERE userid = $userid");
         my $prefs = FetchOneColumn();
         
-        # If the user's preferences are empty, it means the user has not set
-        # their mail preferences after the installation upgraded from a
-        # version of Bugzilla without email preferences to one with them. In
-        # this case, assume they want to receive all mail.
-        if (!defined($prefs) || $prefs !~ /email/) {
-            push(@recipients, $user);
-            next;
-        }
-        
         # Write the user's preferences into a Perl record indexed by 
         # preference name.  We pass the value "255" to the split function 
         # because otherwise split will trim trailing null fields, causing 
@@ -665,10 +656,7 @@ sub filterEmailGroup ($$$) {
         }
         
         # If the user prefers to be included in mail about this change,
-        # or they haven't specified a preference for it (because they
-        # haven't visited the email preferences page since the preference
-        # was added, in which case we include them by default), add them
-        # to the list of recipients.
+        # add them to the list of recipients.
         foreach my $reason (@$reasons) {
             my $pref = "email$role$reason";
             if (!exists($prefs{$pref}) || $prefs{$pref} eq 'on') {
