@@ -473,9 +473,9 @@ found_match:
     if (NS_FAILED(rv) || !KeygenRunnable) {
         rv = NS_OK;
         privateKey = PK11_GenerateKeyPair(slot, keyGenMechanism, params,
-                                          &publicKey, PR_TRUE, PR_TRUE, nsnull);
+                                          &publicKey, PR_TRUE, PR_TRUE, m_ctx);
     } else {
-        KeygenRunnable->SetParams( slot, keyGenMechanism, params, PR_TRUE, PR_TRUE, nsnull );
+        KeygenRunnable->SetParams( slot, keyGenMechanism, params, PR_TRUE, PR_TRUE, m_ctx );
 
         runnable = do_QueryInterface(KeygenRunnable);
         
