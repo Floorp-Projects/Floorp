@@ -26,7 +26,7 @@
 <!ENTITY findCmd.accesskey         "F">
 <!ENTITY findAgainCmd.label        "Find Again">
 <!ENTITY findAgainCmd.key          "G">
+<!ENTITY findAgainCmd.key2         "VK_F3">
 <!ENTITY findAgainCmd.accesskey    "g">
 <!ENTITY findPreviousCmd.label     "Find Previous">
-<!ENTITY findPreviousCmd.key       "G">
 <!ENTITY findPreviousCmd.accesskey "v">

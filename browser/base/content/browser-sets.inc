@@ -81,8 +81,9 @@
     <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(_content.document);"/>
     <command id="View:PageInfo" oncommand="BrowserPageInfo();"/>
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
-    <command id="Browser:Find" oncommand="BrowserFind();"/>
-    <command id="Browser:FindAgain" oncommand="BrowserFindAgain(false);"/>
+    <command id="cmd_find" oncommand="getBrowser().find();"/>
+    <command id="cmd_findAgain" oncommand="getBrowser().findAgain();"/>
+    <command id="cmd_findPrevious" oncommand="getBrowser().findPrevious();"/>
     <command id="Browser:AddBookmarkAs" oncommand="addBookmarkAs(document.getElementById('content'));"/>
     <command id="Browser:Home"    oncommand="BrowserHome();"/>
     <command id="Browser:Back"    oncommand="BrowserBack();" disabled="true"/>
@@ -151,8 +152,6 @@
          key="&pasteCmd.key;"
          modifiers="accel"/>
     <key id="key_delete" keycode="VK_DELETE" command="cmd_delete"/>
-    <key keycode="&findAgainCmd.commandkey2;" command="Browser:FindAgain"/>
-    <key keycode="&findPrevCmd.commandkey2;"  oncommand="BrowserFindAgain(true);" modifiers="shift"/>
 
 #ifdef XP_WIN
     <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
@@ -191,8 +190,12 @@
 #else
     <key id="key_viewInfo"   key="&pageInfoCmd.commandkey;"   command="View:PageInfo"   modifiers="accel"/>
 #endif
-    <key id="key_find"              key="&findOnCmd.commandkey;" command="Browser:Find" modifiers="accel"/>
-    <key id="key_findAgain"         key="&findAgainCmd.commandkey;" command="Browser:FindAgain" modifiers="accel"/>
+    <key id="key_find" key="&findOnCmd.commandkey;" command="cmd_find" modifiers="accel"/>
+    <key id="key_findAgain" key="&findAgainCmd.commandkey;" command="cmd_findAgain" modifiers="accel"/>
+    <key id="key_findPrevious" key="&findAgainCmd.commandkey;" command="cmd_findPrevious" modifiers="accel,shift"/>
+    <key keycode="&findAgainCmd.commandkey2;" command="cmd_findAgain"/>
+    <key keycode="&findAgainCmd.commandkey2;"  command="cmd_findPrevious" modifiers="shift"/>
+
     <key id="addBookmarkAsKb" key="&addCurPageAsCmd.commandkey;" command="Browser:AddBookmarkAs" modifiers="accel"/>
     <key id="viewBookmarksSidebarKb" key="&manBookmarksCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
 

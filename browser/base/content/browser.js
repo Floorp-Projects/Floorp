@@ -1469,29 +1469,6 @@ function onExitPrintPreview()
   toggleAffectedChrome(false);
 }
 
-function BrowserFind()
-{
-  var focusedWindow = document.commandDispatcher.focusedWindow;
-  if (!focusedWindow || focusedWindow == window)
-    focusedWindow = window._content;
-
-  findInPage(gBrowser, window._content, focusedWindow)
-}
-
-function BrowserFindAgain(reverse)
-{
-    var focusedWindow = document.commandDispatcher.focusedWindow;
-    if (!focusedWindow || focusedWindow == window)
-      focusedWindow = window._content;
-
-  findAgainInPage(gBrowser, window._content, focusedWindow, reverse)
-}
-
-function BrowserCanFindAgain()
-{
-  return canFindAgainInPage();
-}
-
 function getMarkupDocumentViewer()
 {
   return gBrowser.markupDocumentViewer;
