@@ -20,6 +20,10 @@
 ;;;
 
 
+(defvar *rtf-author* "Waldemar Horwat")
+(defvar *rtf-company* "Netscape")
+
+
 ;;; 1440 twips/inch
 ;;;   20 twips/pt
 
@@ -87,13 +91,16 @@
     (:spc " ")
     (:tab2 tab)
     (:tab3 tab)
+    (:nbhy _)             ;Non-breaking hyphen
     (:8-pt fs 16)
     (:9-pt fs 18)
     (:10-pt fs 20)
     (:12-pt fs 24)
     (:no-language lang 1024)
-    (:english lang 1033)
+    (:english-us lang 1033)
     (:english-uk lang 2057)
+    
+    (:english :english-us)
     
     (:reset-section sectd)
     (:new-section sect)
@@ -119,6 +126,7 @@
     ((:function-arrow-10 2) (field (* fldinst "SYMBOL 174 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
     ((:cartesian-product-10 2) (field (* fldinst "SYMBOL 180 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
     ((:identical-10 2) (field (* fldinst "SYMBOL 186 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
+    ((:circle-plus-10 2) (field (* fldinst "SYMBOL 197 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
     ((:member-10 2) (field (* fldinst "SYMBOL 206 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
     ((:derives-10 2) (field (* fldinst "SYMBOL 222 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
     ((:left-triangle-bracket-10 1) (field (* fldinst "SYMBOL 225 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
@@ -157,18 +165,26 @@
     
     (:normal-num 0)
     (:normal s :normal-num)
-    ((+ :styles) (widctlpar :10-pt :english-uk snext :normal-num "Normal;"))
+    ((+ :styles) (widctlpar :10-pt :english snext :normal-num "Normal;"))
     
     (:body-text-num 1)
-    (:body-text s :body-text-num qj sa 120 widctlpar :10-pt :english-uk)
+    (:body-text s :body-text-num qj sa 120 widctlpar :10-pt :english)
     ((+ :styles) (:body-text sbasedon :normal-num snext :body-text-num "Body Text;"))
     
-    (:section-heading-num 2)
-    (:section-heading s :section-heading-num sa 60 keep keepn nowidctlpar hyphpar 0 level 3 b :12-pt :english-uk)
+    (:header-num 2)
+    (:header s :header-num nowidctlpar tqr tx 8640 :10-pt :english)
+    ((+ :styles) (:header sbasedon :normal-num snext :header-num "header;"))
+    
+    (:footer-num 3)
+    (:footer s :footer-num nowidctlpar tqc tx 4320 :10-pt :english)
+    ((+ :styles) (:footer sbasedon :normal-num snext :footer-num "footer;"))
+    
+    (:section-heading-num 4)
+    (:section-heading s :section-heading-num sa 60 keep keepn nowidctlpar hyphpar 0 level 3 b :12-pt :english)
     ((+ :styles) (:section-heading sbasedon :subsection-heading-num snext :body-text-num "heading 3;"))
     
-    (:subsection-heading-num 3)
-    (:subsection-heading s :subsection-heading-num sa 30 keep keepn nowidctlpar hyphpar 0 level 4 b :10-pt :english-uk)
+    (:subsection-heading-num 5)
+    (:subsection-heading s :subsection-heading-num sa 30 keep keepn nowidctlpar hyphpar 0 level 4 b :10-pt :english)
     ((+ :styles) (:subsection-heading sbasedon :normal-num snext :body-text-num "heading 4;"))
     
     (:grammar-num 10)
@@ -176,7 +192,7 @@
     ((+ :styles) (:grammar sbasedon :normal-num snext :grammar-num "Grammar;"))
     
     (:grammar-header-num 11)
-    (:grammar-header s :grammar-header-num sb 60 keep keepn nowidctlpar hyphpar 0 b :10-pt :english-uk)
+    (:grammar-header s :grammar-header-num sb 60 keep keepn nowidctlpar hyphpar 0 b :10-pt :english)
     ((+ :styles) (:grammar-header sbasedon :normal-num snext :grammar-lhs-num "Grammar Header;"))
     
     (:grammar-lhs-num 12)
@@ -211,31 +227,35 @@
     (:default-paragraph-font cs :default-paragraph-font-num)
     ((+ :styles) (* :default-paragraph-font additive "Default Paragraph Font;"))
     
-    (:character-literal-num 31)
+    (:page-number-num 31)
+    (:page-number cs :page-number-num)
+    ((+ :styles) (* :page-number additive sbasedon :default-paragraph-font-num "page number;"))
+    
+    (:character-literal-num 32)
     (:character-literal cs :character-literal-num b :courier :blue :no-language)
     ((+ :styles) (* :character-literal additive sbasedon :default-paragraph-font-num "Character Literal;"))
     
-    (:character-literal-control-num 32)
+    (:character-literal-control-num 33)
     (:character-literal-control cs :character-literal-control-num b 0 :times :dark-blue)
     ((+ :styles) (* :character-literal-control additive sbasedon :default-paragraph-font-num "Character Literal Control;"))
     
-    (:terminal-num 33)
+    (:terminal-num 34)
     (:terminal cs :terminal-num b :palatino :teal :no-language)
     ((+ :styles) (* :terminal additive sbasedon :default-paragraph-font-num "Terminal;"))
     
-    (:terminal-keyword-num 34)
+    (:terminal-keyword-num 35)
     (:terminal-keyword cs :terminal-keyword-num b :courier :blue :no-language)
     ((+ :styles) (* :terminal-keyword additive sbasedon :terminal-num "Terminal Keyword;"))
     
-    (:nonterminal-num 35)
+    (:nonterminal-num 36)
     (:nonterminal cs :nonterminal-num i :palatino :dark-red :no-language)
     ((+ :styles) (* :nonterminal additive sbasedon :default-paragraph-font-num "Nonterminal;"))
     
-    (:nonterminal-attribute-num 36)
+    (:nonterminal-attribute-num 37)
     (:nonterminal-attribute cs :nonterminal-attribute-num i 0)
     ((+ :styles) (* :nonterminal-attribute additive sbasedon :default-paragraph-font-num "Nonterminal Attribute;"))
     
-    (:nonterminal-argument-num 37)
+    (:nonterminal-argument-num 38)
     (:nonterminal-argument cs :nonterminal-argument-num)
     ((+ :styles) (* :nonterminal-argument additive sbasedon :default-paragraph-font-num "Nonterminal Argument;"))
     
@@ -268,8 +288,12 @@
     ((+ :styles) (* :action-name additive sbasedon :default-paragraph-font-num "Action Name;"))
     
     
+    ;Headers and Footers
+    (:header-group header :reset-paragraph :header)
+    (:footer-group (footer :reset-paragraph :footer tab (field (* fldinst (:page-number " PAGE ")) (fldrslt (:page-number :no-language "1")))))
+    
+    
     ;Document Formatting
-    ((+ :rtf-intro) :docfmt)
     (:docfmt widowctrl
              ftnbj          ;footnotes at bottom of page
              aenddoc        ;endnotes at end of document
@@ -285,6 +309,7 @@
     
     
     ;Specials
+    (:text :english)
     (:invisible v)
     ((:but-not 6) (b "except"))
     (:subscript sub)
@@ -295,7 +320,7 @@
     ((:vector-begin 1) (b "["))
     ((:vector-end 1) (b "]"))
     ((:empty-vector 2) (b "[]"))
-    ((:vector-append 2) :big-plus-10)
+    ((:vector-append 2) :circle-plus-10)
     ((:tuple-begin 1) (b :left-triangle-bracket-10))
     ((:tuple-end 1) (b :right-triangle-bracket-10))
     ((:unit 4) (:global-variable "unit"))
@@ -610,7 +635,7 @@
 ; for its markup-env.
 (defun make-top-level-rtf-stream (rtf-definitions)
   (let ((head (list nil))
-        (markup-env (make-markup-env)))
+        (markup-env (make-markup-env nil)))
     (markup-env-define-alist markup-env rtf-definitions)
     (allocate-rtf-stream markup-env head head *markup-stream-top-level* nil)))
 
@@ -633,14 +658,53 @@
     (markup-width rtf-stream item)))
 
 
+; Return the information group or nil if none is needed.
+; Any of the inputs can be nil, in which case the corresponding info entry is omitted.
+(defun generate-document-info (title author company time)
+  (and (or title author company time)
+       (cons 'info
+             (nconc
+              (and title (list (list 'title (assert-type title string))))
+              (and author (list (list 'author (assert-type author string))
+                                (list 'operator author)))
+              (and time (multiple-value-bind (second minute hour day month year) (decode-universal-time time)
+                          (let ((rtf-time (list 'yr year 'mo month 'dy day 'hr hour 'min minute 'sec second)))
+                            (list (cons 'creatim rtf-time)
+                                  (cons 'revtim rtf-time)
+                                  (list 'edmins 0)))))
+              (and company (list (list '* 'company (assert-type company string))))))))
+
+
+(defun time-to-string (time)
+  (multiple-value-bind (second minute hour day month year weekday) (decode-universal-time time)
+    (declare (ignore second minute hour))
+    (format nil "~A, ~A ~D, ~D"
+            (nth weekday '("Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday" "Sunday"))
+            (nth (1- month) '("January" "February" "March" "April" "May" "June" "July" "August" "September" "October" "November" "December"))
+            day
+            year)))
+
+
+; Return the header group.
+(defun generate-header-group (title time)
+  (list :header-group (assert-type title string) 'tab (time-to-string time)))
+
+
 ; Create a top-level rtf-stream and call emitter to emit its contents.
 ; emitter takes one argument -- an rtf-stream to which it should emit paragraphs.
 ; Return the top-level rtf-stream.
-(defun depict-rtf-top-level (emitter)
+(defun depict-rtf-top-level (title emitter)
   (let* ((top-rtf-stream (make-top-level-rtf-stream *rtf-definitions*))
-         (rtf-stream (make-rtf-stream (markup-stream-env top-rtf-stream) *markup-stream-paragraph-level*)))
+         (rtf-stream (make-rtf-stream (markup-stream-env top-rtf-stream) *markup-stream-paragraph-level*))
+         (time (get-universal-time)))
     (markup-stream-append1 rtf-stream ':rtf-intro)
+    (let ((info (generate-document-info title *rtf-author* *rtf-company* time)))
+      (when info
+        (markup-stream-append1 rtf-stream info)))
+    (markup-stream-append1 rtf-stream ':docfmt)
     (markup-stream-append1 rtf-stream ':reset-section)
+    (markup-stream-append1 rtf-stream (generate-header-group title time))
+    (markup-stream-append1 rtf-stream ':footer-group)
     (funcall emitter rtf-stream)
     (markup-stream-append1 top-rtf-stream (markup-stream-unexpanded-output rtf-stream))
     top-rtf-stream))
@@ -650,9 +714,10 @@
 ; emitter takes one argument -- an rtf-stream to which it should emit paragraphs.
 ; Write the resulting RTF to the text file with the given name (relative to the
 ; local directory).
-(defun depict-rtf-to-local-file (filename emitter)
-  (let ((top-rtf-stream (depict-rtf-top-level emitter)))
-    (write-rtf-to-local-file filename (markup-stream-output top-rtf-stream))))
+(defun depict-rtf-to-local-file (filename title emitter)
+  (let ((top-rtf-stream (depict-rtf-top-level title emitter)))
+    (write-rtf-to-local-file filename (markup-stream-output top-rtf-stream)))
+  filename)
 
 
 ; Return the markup accumulated in the markup-stream after expanding all of its macros.
@@ -692,6 +757,17 @@
     (prog1
       (funcall emitter inner-rtf-stream)
       (rtf-stream-append-or-inline-block rtf-stream (markup-stream-unexpanded-output inner-rtf-stream)))))
+
+
+(defmethod depict-anchor ((rtf-stream rtf-stream) link-prefix link-name duplicate)
+  (declare (ignore link-prefix link-name duplicate))
+  (assert-true (= (markup-stream-level rtf-stream) *markup-stream-content-level*)))
+
+
+(defmethod depict-link-reference-f ((rtf-stream rtf-stream) link-prefix link-name external emitter)
+  (declare (ignore link-prefix link-name external))
+  (assert-true (= (markup-stream-level rtf-stream) *markup-stream-content-level*))
+  (funcall emitter rtf-stream))
 
 
 #|
