@@ -2983,13 +2983,30 @@ NS_IMETHODIMP nsDocShell::GetCurrentDocumentOwner(nsISupports** aOwner)
 {
     nsresult rv;
     *aOwner = nsnull;
-    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(mContentViewer));
-    if (!docv) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsIDocument> doc;
-    rv = docv->GetDocument(*getter_AddRefs(doc));
-    if (NS_FAILED(rv) || !doc) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDocument> document;
+    //-- Get the current document
+    if (mContentViewer)
+    {
+        nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(mContentViewer));
+        if (!docViewer) return NS_ERROR_FAILURE;
+        rv = docViewer->GetDocument(*getter_AddRefs(document));
+    }
+    else //-- If there's no document loaded yet, look at the parent (frameset)
+    {
+        nsCOMPtr<nsIDocShellTreeItem> parentItem;
+        rv = GetSameTypeParent(getter_AddRefs(parentItem));
+        if (NS_FAILED(rv) || !parentItem) return rv;
+        nsCOMPtr<nsIDOMWindow> parentWindow(do_GetInterface(parentItem));
+        if (!parentWindow) return NS_OK;
+        nsCOMPtr<nsIDOMDocument> parentDomDoc;
+        rv = parentWindow->GetDocument(getter_AddRefs(parentDomDoc));
+        if (!parentDomDoc) return NS_OK;
+        document = do_QueryInterface(parentDomDoc);
+    }
+
+    //-- Get the document's principal
     nsCOMPtr<nsIPrincipal> principal;
-    rv = doc->GetPrincipal(getter_AddRefs(principal));
+    rv = document->GetPrincipal(getter_AddRefs(principal));
     if (NS_FAILED(rv) || !principal) return NS_ERROR_FAILURE;
     rv = principal->QueryInterface(NS_GET_IID(nsISupports),(void**)aOwner);
     return rv;

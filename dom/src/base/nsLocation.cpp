@@ -104,7 +104,7 @@ NS_IMETHODIMP_(void) LocationImpl::SetDocShell(nsIDocShell *aDocShell)
 }
 
 nsresult 
-LocationImpl::CheckURL(nsIURI* aURL, nsIURI** aReferrer)
+LocationImpl::CheckURL(nsIURI* aURL, nsIDocShellLoadInfo** aLoadInfo)
 {
   nsresult result;
   // Get JSContext from stack.
@@ -126,16 +126,29 @@ LocationImpl::CheckURL(nsIURI* aURL, nsIURI** aReferrer)
   if (NS_FAILED(result = secMan->CheckLoadURIFromScript(cx, aURL))) 
     return result;
 
-  // Now get the referrer to use when loading the URI
-  nsCOMPtr<nsIPrincipal> principal;
-  if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
-    return NS_ERROR_FAILURE;
-  nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
-  if (codebase) {
-    if (NS_FAILED(result = codebase->GetURI(aReferrer)))
-      return result;
-  }
+  // Create load info
+  nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+  mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+  NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
+    
 
+  // Now get the principal and referrer to use when loading the URI
+  nsCOMPtr<nsIPrincipal> principal;
+  if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))) ||
+      !principal)
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
+  loadInfo->SetOwner(owner);
+
+  nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+  if (!codebase) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIURI> referrer;
+  if (NS_FAILED(result = codebase->GetURI(getter_AddRefs(referrer))))
+    return result;
+  loadInfo->SetReferrer(referrer);
+
+  *aLoadInfo = loadInfo.get();
+  NS_ADDREF(*aLoadInfo);
   return NS_OK;
 }
 
@@ -146,14 +159,8 @@ LocationImpl::SetURL(nsIURI* aURL)
   if (mDocShell) {
     
     nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-    mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
-    NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIURI> referrer;
-    if(NS_FAILED(CheckURL(aURL, getter_AddRefs(referrer))))
+    if(NS_FAILED(CheckURL(aURL, getter_AddRefs(loadInfo))))
       return NS_ERROR_FAILURE;
-
-    loadInfo->SetReferrer(referrer);
 
     return mDocShell->LoadURI(aURL, loadInfo);
   }
@@ -371,14 +378,9 @@ LocationImpl::SetHrefWithBase(const nsString& aHref,
   if ((NS_OK == result) && (mDocShell)) {
 
     nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-    mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
-    NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIURI> referrer;
-    if(NS_FAILED(CheckURL(newUrl, getter_AddRefs(referrer))))
+    if(NS_FAILED(CheckURL(newUrl, getter_AddRefs(loadInfo))))
       return NS_ERROR_FAILURE;
 
-    loadInfo->SetReferrer(referrer);
     if (aReplace)
       loadInfo->SetLoadType(nsIDocShellLoadInfo::loadNormalReplace);
 
