@@ -31,6 +31,7 @@
 #include "nsIModule.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsILocalFile.h"
+#include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "stdlib.h"
@@ -81,17 +82,17 @@ void AddStandardPaths()
 		LogError("The Python XPCOM loader could not locate the 'bin' directory\n");
 		return;
 	}
-	nsCAutoString python(NS_LITERAL_CSTRING("python"));
-	aFile->Append(python);
-	nsCAutoString path_string;
-	aFile->GetPath(path_string);
+	aFile->Append(NS_LITERAL_STRING("python"));
+	nsAutoString pathBuf;
+	aFile->GetPath(pathBuf);
 	PyObject *obPath = PySys_GetObject("path");
 	if (!obPath) {
 		LogError("The Python XPCOM loader could not get the Python sys.path variable\n");
 		return;
 	}
-	LogDebug("The Python XPCOM loader is adding '%s' to sys.path\n", (const char *)path_string.get());
-	PyObject *newStr = PyString_FromString(path_string.get());
+	NS_LossyConvertUCS2toASCII pathCBuf(pathBuf);
+	LogDebug("The Python XPCOM loader is adding '%s' to sys.path\n", pathCBuf.get());
+	PyObject *newStr = PyString_FromString(pathCBuf.get());
 	PyList_Insert(obPath, 0, newStr);
 	Py_XDECREF(newStr);
 }
