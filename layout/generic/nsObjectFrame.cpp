@@ -44,6 +44,9 @@
 #include "nsIWebShell.h"
 #include "nsIBrowserWindow.h"
 #include "nsINameSpaceManager.h"
+#include "nsIEventListener.h"
+#include "nsITimer.h"
+#include "nsITimerCallback.h"
 
 // XXX For temporary paint code
 #include "nsIStyleContext.h"
@@ -55,7 +58,9 @@ class nsObjectFrame;
 
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIPluginTagInfo2,
-                              public nsIJVMPluginTagInfo
+                              public nsIJVMPluginTagInfo,
+                              public nsIEventListener,
+                              public nsITimerCallback
 {
 public:
   nsPluginInstanceOwner();
@@ -123,10 +128,20 @@ public:
   NS_IMETHOD GetName(const char* *result);
 
   NS_IMETHOD GetMayScript(PRBool *result);
+  
+  //nsIEventListener interface
+  nsEventStatus ProcessEvent(const nsGUIEvent & anEvent);
+  
+  void Paint(const nsRect& aDirtyRect);
 
+  // nsITimerCallback interface
+  virtual void Notify(nsITimer *timer);
+  
   //locals
 
   NS_IMETHOD Init(nsIPresContext *aPresContext, nsObjectFrame *aFrame);
+  
+  nsPluginPort* GetPluginPort();
 
 private:
   nsPluginWindow    mPluginWindow;
@@ -140,6 +155,7 @@ private:
   char              **mParamVals;
   nsIWidget         *mWidget;
   nsIPresContext    *mContext;
+  nsITimer			*mPluginTimer;
 };
 
 #define nsObjectFrameSuper nsHTMLContainerFrame
@@ -166,6 +182,11 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
+
+  NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext,
+                          nsGUIEvent*     aEvent,
+                          nsEventStatus&  aEventStatus);
+
   NS_IMETHOD Scrolled(nsIView *aView);
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
@@ -839,8 +860,6 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
         offx = offy = 0;
 #endif
 
-//        window->x = NSTwipsToIntPixels(origin.x, t2p);
-//        window->y = NSTwipsToIntPixels(origin.y, t2p);
         window->x = 0;
         window->y = 0;
 
@@ -852,6 +871,9 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
 //        window->clipRect.left = NSTwipsToIntPixels(origin.x + offx, t2p);
         window->clipRect.bottom = window->clipRect.top + window->height;
         window->clipRect.right = window->clipRect.left + window->width;
+        
+        // refresh the plugin port as well
+        window->window = mInstanceOwner->GetPluginPort();
 
         if (NS_OK == mInstanceOwner->GetInstance(inst)) {
           inst->SetWindow(window);
@@ -876,6 +898,7 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
                      const nsRect& aDirtyRect,
                      nsFramePaintLayer aWhichLayer)
 {
+#if !defined(XP_MAC)
   //~~~
   nsIFrame * child = mFrames.FirstChild();
   if(child != NULL) //This is an image
@@ -905,7 +928,38 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
       aRenderingContext.DrawString(tmp, px3, px3);
     }
   }
+#else
+  // delegate all painting to the plugin instance.
+  if (eFramePaintLayer_Content == aWhichLayer) {
+    mInstanceOwner->Paint(aDirtyRect);
+  }
+#endif /* !XP_MAC */
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsObjectFrame::HandleEvent(nsIPresContext& aPresContext,
+                          nsGUIEvent*     anEvent,
+                          nsEventStatus&  anEventStatus)
+{
+	nsresult rv = NS_OK;
+	
+	switch (anEvent->message) {
+	case NS_GOTFOCUS:
+	case NS_LOSTFOCUS:
+	case NS_PAINT:
+	case NS_KEY_UP:
+	case NS_KEY_DOWN:
+	case NS_MOUSE_LEFT_BUTTON_DOWN:
+		anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
+		break;
+		
+	default:
+		// instead of using an event listener, we can dispatch events to plugins directly.
+		rv = nsObjectFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
+	}
+	
+	return rv;
 }
 
 nsresult
@@ -923,7 +977,7 @@ nsObjectFrame::SetFullURL(nsIURL* aURL)
   return NS_OK;
 }
 
-nsresult nsObjectFrame :: GetFullURL(nsIURL*& aFullURL)
+nsresult nsObjectFrame::GetFullURL(nsIURL*& aFullURL)
 {
   aFullURL = mFullURL;
   NS_IF_ADDREF(aFullURL);
@@ -943,7 +997,7 @@ NS_NewObjectFrame(nsIFrame*& aFrameResult)
 
 //plugin instance owner
 
-nsPluginInstanceOwner :: nsPluginInstanceOwner()
+nsPluginInstanceOwner::nsPluginInstanceOwner()
 {
   NS_INIT_REFCNT();
 
@@ -958,11 +1012,18 @@ nsPluginInstanceOwner :: nsPluginInstanceOwner()
   mNumParams = 0;
   mParamNames = nsnull;
   mParamVals = nsnull;
+  mPluginTimer = nsnull;
 }
 
-nsPluginInstanceOwner :: ~nsPluginInstanceOwner()
+nsPluginInstanceOwner::~nsPluginInstanceOwner()
 {
   PRInt32 cnt;
+
+  // shut off the timer.
+  if (mPluginTimer != nsnull) {
+    mPluginTimer->Cancel();
+    NS_RELEASE(mPluginTimer);
+  }
 
   if (nsnull != mInstance)
   {
@@ -1031,18 +1092,12 @@ nsPluginInstanceOwner :: ~nsPluginInstanceOwner()
   mContext = nsnull;
 }
 
-static NS_DEFINE_IID(kIPluginInstanceOwnerIID, NS_IPLUGININSTANCEOWNER_IID); 
-static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID); 
-static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID); 
-static NS_DEFINE_IID(kIJVMPluginTagInfoIID, NS_IPLUGINTAGINFO2_IID); 
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID); 
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID); 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 NS_IMPL_ADDREF(nsPluginInstanceOwner);
 NS_IMPL_RELEASE(nsPluginInstanceOwner);
 
-nsresult nsPluginInstanceOwner :: QueryInterface(const nsIID& aIID,
+nsresult nsPluginInstanceOwner::QueryInterface(const nsIID& aIID,
                                                  void** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
@@ -1050,35 +1105,42 @@ nsresult nsPluginInstanceOwner :: QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtrResult)
     return NS_ERROR_NULL_POINTER;
 
-  if (aIID.Equals(kIPluginInstanceOwnerIID))
+  if (aIID.Equals(nsIPluginInstanceOwner::GetIID()))
   {
     *aInstancePtrResult = (void *)((nsIPluginInstanceOwner *)this);
     AddRef();
     return NS_OK;
   }
 
-  if (aIID.Equals(kIPluginTagInfoIID))
-  {
-    *aInstancePtrResult = (void *)((nsIPluginTagInfo *)this);
-    AddRef();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(kIPluginTagInfo2IID))
+  if (aIID.Equals(nsIPluginTagInfo::GetIID()) || aIID.Equals(nsIPluginTagInfo2::GetIID()))
   {
     *aInstancePtrResult = (void *)((nsIPluginTagInfo2 *)this);
     AddRef();
     return NS_OK;
   }
 
-  if (aIID.Equals(kIJVMPluginTagInfoIID))
+  if (aIID.Equals(nsIJVMPluginTagInfo::GetIID()))
   {
     *aInstancePtrResult = (void *)((nsIJVMPluginTagInfo *)this);
     AddRef();
     return NS_OK;
   }
 
-  if (aIID.Equals(kISupportsIID))
+  if (aIID.Equals(nsIEventListener::GetIID()))
+  {
+    *aInstancePtrResult = (void *)((nsIEventListener *)this);
+    AddRef();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(nsITimerCallback::GetIID()))
+  {
+    *aInstancePtrResult = (void *)((nsITimerCallback *)this);
+    AddRef();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(nsISupports::GetIID()))
   {
     *aInstancePtrResult = (void *)((nsISupports *)((nsIPluginTagInfo *)this));
     AddRef();
@@ -1088,7 +1150,7 @@ nsresult nsPluginInstanceOwner :: QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: SetInstance(nsIPluginInstance *aInstance)
+NS_IMETHODIMP nsPluginInstanceOwner::SetInstance(nsIPluginInstance *aInstance)
 {
   NS_IF_RELEASE(mInstance);
   mInstance = aInstance;
@@ -1097,19 +1159,19 @@ NS_IMETHODIMP nsPluginInstanceOwner :: SetInstance(nsIPluginInstance *aInstance)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetWindow(nsPluginWindow *&aWindow)
+NS_IMETHODIMP nsPluginInstanceOwner::GetWindow(nsPluginWindow *&aWindow)
 {
   aWindow = &mPluginWindow;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetMode(nsPluginMode *aMode)
+NS_IMETHODIMP nsPluginInstanceOwner::GetMode(nsPluginMode *aMode)
 {
   *aMode = nsPluginMode_Embedded;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetAttributes(PRUint16& n,
+NS_IMETHODIMP nsPluginInstanceOwner::GetAttributes(PRUint16& n,
                                                      const char*const*& names,
                                                      const char*const*& values)
 {
@@ -1192,7 +1254,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetAttributes(PRUint16& n,
   return rv;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetAttribute(const char* name, const char* *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetAttribute(const char* name, const char* *result)
 {
   PRInt32 count;
 
@@ -1219,7 +1281,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetAttribute(const char* name, const char
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetInstance(nsIPluginInstance *&aInstance)
+NS_IMETHODIMP nsPluginInstanceOwner::GetInstance(nsIPluginInstance *&aInstance)
 {
   if (nsnull != mInstance)
   {
@@ -1232,7 +1294,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetInstance(nsIPluginInstance *&aInstance
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetURL(const char *aURL, const char *aTarget, void *aPostData)
+NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarget, void *aPostData)
 {
   nsISupports     *container;
   nsILinkHandler  *lh;
@@ -1285,7 +1347,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetURL(const char *aURL, const char *aTar
   return rv;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: ShowStatus(const char *aStatusMsg)
+NS_IMETHODIMP nsPluginInstanceOwner::ShowStatus(const char *aStatusMsg)
 {
   nsresult  rv = NS_ERROR_FAILURE;
 
@@ -1299,7 +1361,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: ShowStatus(const char *aStatusMsg)
     {
       nsIWebShell *ws;
 
-      rv = cont->QueryInterface(kIWebShellIID, (void **)&ws);
+      rv = cont->QueryInterface(nsIWebShell::GetIID(), (void **)&ws);
 
       if (NS_OK == rv)
       {
@@ -1341,7 +1403,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: ShowStatus(const char *aStatusMsg)
   return rv;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetTagType(nsPluginTagType *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -1379,14 +1441,14 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetTagType(nsPluginTagType *result)
   return rv;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetTagText(const char* *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetTagText(const char* *result)
 {
 printf("instance owner gettagtext called\n");
   *result = "";
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetParameters(PRUint16& n, const char*const*& names, const char*const*& values)
+NS_IMETHODIMP nsPluginInstanceOwner::GetParameters(PRUint16& n, const char*const*& names, const char*const*& values)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -1517,7 +1579,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetParameters(PRUint16& n, const char*con
   return rv;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetParameter(const char* name, const char* *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetParameter(const char* name, const char* *result)
 {
   PRInt32 count;
 
@@ -1544,7 +1606,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetParameter(const char* name, const char
   return NS_OK;
 }
   
-NS_IMETHODIMP nsPluginInstanceOwner :: GetDocumentBase(const char* *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
 {
   if (nsnull != mContext)
   {
@@ -1567,18 +1629,18 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetDocumentBase(const char* *result)
   }
 }
   
-NS_IMETHODIMP nsPluginInstanceOwner :: GetDocumentEncoding(const char* *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentEncoding(const char* *result)
 {
 printf("instance owner getdocumentencoding called\n");
   return NS_ERROR_FAILURE;
 }
   
-NS_IMETHODIMP nsPluginInstanceOwner :: GetAlignment(const char* *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetAlignment(const char* *result)
 {
   return GetAttribute("ALIGN", result);
 }
   
-NS_IMETHODIMP nsPluginInstanceOwner :: GetWidth(PRUint32 *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetWidth(PRUint32 *result)
 {
   nsresult    rv;
   const char  *width;
@@ -1598,7 +1660,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetWidth(PRUint32 *result)
   return rv;
 }
   
-NS_IMETHODIMP nsPluginInstanceOwner :: GetHeight(PRUint32 *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetHeight(PRUint32 *result)
 {
   nsresult    rv;
   const char  *height;
@@ -1618,7 +1680,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetHeight(PRUint32 *result)
   return rv;
 }
   
-NS_IMETHODIMP nsPluginInstanceOwner :: GetBorderVertSpace(PRUint32 *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetBorderVertSpace(PRUint32 *result)
 {
   nsresult    rv;
   const char  *vspace;
@@ -1638,7 +1700,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetBorderVertSpace(PRUint32 *result)
   return rv;
 }
   
-NS_IMETHODIMP nsPluginInstanceOwner :: GetBorderHorizSpace(PRUint32 *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetBorderHorizSpace(PRUint32 *result)
 {
   nsresult    rv;
   const char  *hspace;
@@ -1658,42 +1720,100 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetBorderHorizSpace(PRUint32 *result)
   return rv;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetUniqueID(PRUint32 *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetUniqueID(PRUint32 *result)
 {
   *result = (PRUint32)mContext;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetCode(const char* *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetCode(const char* *result)
 {
   return GetAttribute("CODE", result);
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetCodeBase(const char* *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetCodeBase(const char* *result)
 {
   return GetAttribute("CODEBASE", result);
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetArchive(const char* *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetArchive(const char* *result)
 {
 printf("instance owner getarchive called\n");
   *result = "";
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetName(const char* *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetName(const char* *result)
 {
   return GetAttribute("NAME", result);
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetMayScript(PRBool *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetMayScript(PRBool *result)
 {
 printf("instance owner getmayscript called\n");
   *result = PR_FALSE;
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: Init(nsIPresContext* aPresContext, nsObjectFrame *aFrame)
+// Here's where we forward events to plugins.
+
+nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent & anEvent)
+{
+	nsEventStatus rv = nsEventStatus_eIgnore;
+#ifdef XP_MAC
+	EventRecord* event = (EventRecord*) anEvent.nativeMsg;
+	nsPluginPort* port = (nsPluginPort*)mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
+	nsPluginEvent pluginEvent = { event, nsPluginPlatformWindowRef(port->port) };
+	PRBool eventHandled = PR_FALSE;
+	mInstance->HandleEvent(&pluginEvent, &eventHandled);
+	if (eventHandled)
+		rv = nsEventStatus_eConsumeNoDefault;
+#endif
+	return rv;
+}
+
+// Paints are handled differently, so we just simulate an update event.
+
+void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect)
+{
+#ifdef XP_MAC
+	nsPluginPort* pluginPort = GetPluginPort();
+
+	EventRecord updateEvent;
+	::OSEventAvail(0, &updateEvent);
+	updateEvent.what = updateEvt;
+	updateEvent.message = UInt32(pluginPort->port);
+	
+	nsPluginEvent pluginEvent = { &updateEvent, nsPluginPlatformWindowRef(pluginPort->port) };
+	PRBool eventHandled = PR_FALSE;
+	mInstance->HandleEvent(&pluginEvent, &eventHandled);
+#endif
+}
+
+// Here's how we give idle time to plugins.
+
+void nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
+{
+#ifdef XP_MAC
+	EventRecord idleEvent;
+	::OSEventAvail(0, &idleEvent);
+	idleEvent.what = nullEvent;
+	
+	nsPluginPort* pluginPort = GetPluginPort();
+	nsPluginEvent pluginEvent = { &idleEvent, nsPluginPlatformWindowRef(pluginPort->port) };
+	
+	PRBool eventHandled = PR_FALSE;
+	mInstance->HandleEvent(&pluginEvent, &eventHandled);
+#endif
+
+  // reprime the timer? currently have to create a new timer for each call, which is
+  // kind of wasteful. need to get periodic timers working on all platforms.
+  NS_IF_RELEASE(mPluginTimer);
+  if (NS_NewTimer(&mPluginTimer) == NS_OK)
+    mPluginTimer->Init(this, 1000 / 60);
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObjectFrame *aFrame)
 {
   //do not addref to avoid circular refs. MMP
   mContext = aPresContext;
@@ -1701,7 +1821,17 @@ NS_IMETHODIMP nsPluginInstanceOwner :: Init(nsIPresContext* aPresContext, nsObje
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: CreateWidget(void)
+nsPluginPort* nsPluginInstanceOwner::GetPluginPort()
+{
+    // TODO: fix Windows widget code to support NS_NATIVE_PLUGIN_PORT selector.
+	nsPluginPort* result = NULL;
+	if (mWidget != NULL) {
+		result = (nsPluginPort*) mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
+	}
+	return result;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 {
   nsIView   *view;
   nsresult  rv = NS_ERROR_FAILURE;
@@ -1735,8 +1865,16 @@ NS_IMETHODIMP nsPluginInstanceOwner :: CreateWidget(void)
         }
         else
         {
-          mPluginWindow.window = (nsPluginPort *)mWidget->GetNativeData(NS_NATIVE_WINDOW);
+          // mPluginWindow.window = (nsPluginPort *)mWidget->GetNativeData(NS_NATIVE_WINDOW);
+          mPluginWindow.window = GetPluginPort();
           mPluginWindow.type = nsPluginWindowType_Window;
+
+#if defined(XP_MAC)
+          // start a periodic timer to provide null events to the plugin instance.
+          rv = NS_NewTimer(&mPluginTimer);
+          if (rv == NS_OK)
+	        rv = mPluginTimer->Init(this, 1000 / 60);
+#endif
         }
       }
     }
