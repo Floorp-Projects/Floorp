@@ -2059,6 +2059,12 @@ public class ScriptRuntime {
             // fall through...
         } catch (InvocationTargetException e) {
             // fall through...
+        } catch (ClassNotFoundException e) {
+            // Rather than just letting the exception propagate
+            // we'll try Class.forName as well. The results could be
+            // different if this class was loaded on a different
+            // thread than the current thread.
+            // So fall through...
         }
         return Class.forName(className);                
     }
