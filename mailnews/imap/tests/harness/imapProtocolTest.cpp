@@ -410,7 +410,7 @@ nsresult nsIMAP4TestDriver::OnIdentityCheck()
 			printf("Imap Server: %s\n", value ? value : "");
 			server->GetUsername(&value);
 			printf("User Name: %s\n", value ? value : "");
-			server->GetPassword(&value);
+			server->GetPassword(PR_FALSE, &value);
 			printf("Imap Password: %s\n", value ? value : "");
 
 		}
