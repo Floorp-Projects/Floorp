@@ -40,7 +40,6 @@
 #include "nsINetService.h"
 #include "nsIOutputStream.h"
 #include "nsIPostToServer.h"
-#include "nsIRDFDataBase.h"
 #include "nsIRDFXMLDataSource.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
