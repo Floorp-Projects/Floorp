@@ -601,7 +601,7 @@ PRBool nsHTTPResponse::IsStale(PRBool aUseHeuristicExpiration)
         if (expiresHeaderIsPresent) {
             // Otherwise, if Expires is present in the response, 
             // the calculation is: 
-            if (currentAge < expires - date)
+           if ( ( now > date ? now : date ) < expires )
                 return PR_FALSE;
         }
     }
