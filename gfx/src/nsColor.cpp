@@ -457,7 +457,12 @@ extern "C" NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor)
 
 /* Gamma correction stuff */
 
-PR_IMPLEMENT_DATA(PRUint8) nsGammaRamp[256], nsInverseGammaRamp[256];
+#ifndef NS_WIN32
+PR_IMPLEMENT_DATA(PRUint8)
+#else
+PRUint8
+#endif
+nsGammaRamp[256], nsInverseGammaRamp[256];
 static double  gammaValue = 2.2;
 
 extern "C" NS_GFX_(double) NS_DisplayGammaValue(void)
