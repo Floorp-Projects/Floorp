@@ -4752,12 +4752,12 @@ GlobalWindowImpl::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
     // This timeout is *not* set from another timeout and it's set
     // while popups are enabled. Propagate the state to the timeout if
     // its delay (interval) is equal to or less than what
-    // "dom.disable_open_click_delay" is set to.
+    // "dom.disable_open_click_delay" is set to (in ms).
 
     PRInt32 delay =
       nsContentUtils::GetIntPref("dom.disable_open_click_delay");
 
-    if (interval <= (delay * PR_MSEC_PER_SEC)) {
+    if (interval <= delay) {
       timeout->mPopupState = gPopupControlState;
     }
   }
