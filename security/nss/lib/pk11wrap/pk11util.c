@@ -514,8 +514,8 @@ SECStatus SECMOD_UpdateModule(SECMODModule *module)
     result = SECMOD_DeletePermDB(module);
                 
     if (result == SECSuccess) {          
-    }
 	result = SECMOD_AddPermDB(module);
+    }
     return result;
 }
 
