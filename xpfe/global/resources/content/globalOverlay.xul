@@ -35,7 +35,7 @@
 	<key id="key_newMessage"    xulkey="true" key="&newMessageCmd.key;" observes="cmd_newMessage"/>
 
 	<!-- Page Setup menu item -->
-	<menuitem id="menu_pageSetup" value="&pageSetupCmd.label;" oncommand="goPageSetup()"/>
+	<menuitem id="menu_pageSetup" value="&pageSetupCmd.label;" disabled="true" oncommand="goPageSetup()"/>
 	
 	<!-- Edit Menu -->
 	<menu id="menu_Edit" value="&editMenu.label;" accesskey="&editMenu.accesskey;"/>
