@@ -51,7 +51,7 @@
 #include "nr_bufio.h"
 
 
-#define BUFIO_BUFSIZE_DEFAULT   0x10000
+#define BUFIO_BUFSIZE_DEFAULT   0x2000
 
 #define STARTS_IN_BUF(f) ((f->fpos >= f->datastart) && \
                          (f->fpos < (f->datastart+f->datasize)))
