@@ -37,6 +37,7 @@ EXPORTS=                \
 	nsMsgUtils.h \
 	nsMessage.h \
 	nsMsgProtocol.h \
+	nsMsgMailNewsUrl.h \
 	nsMsgTxn.h \
 	$(NULL)
 
@@ -67,6 +68,7 @@ CPP_OBJS=                               \
 	.\$(OBJDIR)\nsMsgUtils.obj			\
 	.\$(OBJDIR)\nsMessage.obj			\
 	.\$(OBJDIR)\nsMsgProtocol.obj		\
+	.\$(OBJDIR)\nsMsgMailNewsUrl.obj	\
 	.\$(OBJDIR)\nsMsgTxn.obj			\
 	$(NULL)
 
