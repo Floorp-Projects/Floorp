@@ -143,17 +143,8 @@ public class File extends ScriptableObject {
         v.copyInto(lines);
 
         Scriptable scope = ScriptableObject.getTopLevelScope(this);
-        Scriptable result;
-        try {
-            Context cx = Context.getCurrentContext();
-            result = cx.newObject(scope, "Array", lines);
-        } catch (PropertyException e) {
-            throw Context.reportRuntimeError(e.getMessage());
-        } catch (NotAFunctionException e) {
-            throw Context.reportRuntimeError(e.getMessage());
-        }
-
-        return result;
+        Context cx = Context.getCurrentContext();
+        return cx.newObject(scope, "Array", lines);
     }
 
     /**

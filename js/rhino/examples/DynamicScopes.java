@@ -79,7 +79,7 @@ public class DynamicScopes {
         // Initialize the standard objects (Object, Function, etc.)
         // This must be done before scripts can be executed. The call
         // returns a new scope that we will share.
-        Scriptable scope = cx.initStandardObjects(null);
+        Scriptable scope = cx.initStandardObjects();
 
         // Now we can evaluate a script and functions will be compiled to
         // use dynamic scope if the Context is so initialized.
@@ -157,9 +157,6 @@ public class DynamicScopes {
                 cx.evaluateString(threadScope, script, "threadScript", 1, null);
             }
             catch (NotAFunctionException jse) {
-                // ignore
-            }
-            catch (PropertyException jse) {
                 // ignore
             }
             catch (JavaScriptException jse) {

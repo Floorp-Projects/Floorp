@@ -53,7 +53,7 @@ public class CounterTest {
     {
         Context cx = Context.enter();
         try {
-            Scriptable scope = cx.initStandardObjects(null);
+            Scriptable scope = cx.initStandardObjects();
             ScriptableObject.defineClass(scope, Counter.class);
 
             Scriptable testCounter = cx.newObject(scope, "Counter");

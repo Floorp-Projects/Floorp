@@ -46,7 +46,7 @@ public class RunScript4 {
     {
         Context cx = Context.enter();
         try {
-            Scriptable scope = cx.initStandardObjects(null);
+            Scriptable scope = cx.initStandardObjects();
 
             // Use the Counter class to define a Counter constructor
             // and prototype in JavaScript.

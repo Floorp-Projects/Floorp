@@ -48,7 +48,7 @@ public class RunScript3 {
     {
         Context cx = Context.enter();
         try {
-            Scriptable scope = cx.initStandardObjects(null);
+            Scriptable scope = cx.initStandardObjects();
 
             // Collect the arguments into a single string.
             String s = "";

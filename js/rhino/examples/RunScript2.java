@@ -45,7 +45,7 @@ public class RunScript2 {
     {
         Context cx = Context.enter();
         try {
-            Scriptable scope = cx.initStandardObjects(null);
+            Scriptable scope = cx.initStandardObjects();
 
             // Add a global variable "out" that is a JavaScript reflection
             // of System.out

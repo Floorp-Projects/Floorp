@@ -53,7 +53,7 @@ public class RunScript {
             // Initialize the standard objects (Object, Function, etc.)
             // This must be done before scripts can be executed. Returns
             // a scope object that we use in later calls.
-            Scriptable scope = cx.initStandardObjects(null);
+            Scriptable scope = cx.initStandardObjects();
 
             // Collect the arguments into a single string.
             String s = "";

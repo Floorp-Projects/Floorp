@@ -59,7 +59,7 @@ public class Control {
 
         // Initialize the standard objects (Object, Function, etc.)
         // This must be done before scripts can be executed.
-        Scriptable scope = cx.initStandardObjects(null);
+        Scriptable scope = cx.initStandardObjects();
 
         // Now we can evaluate a script. Let's create a new object
         // using the object literal notation.
