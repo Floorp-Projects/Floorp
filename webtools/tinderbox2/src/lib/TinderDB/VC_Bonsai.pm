@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.65 $ 
-# $Date: 2002/05/10 23:21:23 $ 
+# $Revision: 1.66 $ 
+# $Date: 2003/04/20 20:33:16 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -65,6 +65,11 @@ package TinderDB::VC_Bonsai;
 #   particular time as follows:
 
 #   $DATABASE{$tree}{$time}{'author'}{$author}{$file} = $log;
+
+#  If the log message contains something which looks like a bug
+#  number, then we store that string in a separate data structure.
+
+#   $DATABASE{$tree}{$time}{'bugs'}{$bug_number} = 1;
 
 # additionally information about changes in the tree state are stored
 # in the variable:
@@ -102,12 +107,12 @@ use VCDisplay;
 use TinderDB::Notice;
 
 
-$VERSION = ( qw $Revision: 1.65 $ )[1];
+$VERSION = ( qw $Revision: 1.66 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
 # name of the version control system
-$VC_NAME = $TinderConfig::VC_NAME || "CVS";
+$VC_NAME = $TinderConfig::VC_NAME || "Bonsai";
 
 # how we recoginise bug number in the checkin comments.
 $VC_BUGNUM_REGEXP = $TinderConfig::VC_BUGNUM_REGEXP ||
@@ -116,39 +121,128 @@ $VC_BUGNUM_REGEXP = $TinderConfig::VC_BUGNUM_REGEXP ||
 # We 'have a' notice so that we can put stars in our column.
 
 $NOTICE= TinderDB::Notice->new();
+$DEBUG = 1;
 
-# Print out the Database in a visually useful form so that I can
-# debug timing problems.  This is not called by any code. I use this
-# in the debugger.
+# Print out the Database in a visually useful form.
 
-sub debug_database {
+sub get_all_bonsai_data {
   my ($self, $tree) = (@_);
+
+  my $treestate = TinderHeader::gettree_header('TreeState', $tree);
 
   # sort numerically descending
   my (@times) = sort {$b <=> $a} keys %{ $DATABASE{$tree} };
 
+  my $out;
+  $out .= "<HTML>\n";
+  $out .= "<HEAD>\n";
+  $out .= "\t<TITLE>Bonasi Checkin Data as gathered by Tinderbox</TITLE>\n";
+  $out .= "</HEAD>\n";
+  $out .= "<BODY>\n";
+  $out .= "<H3>Bonasi Checkin Data as gathered by Tinderbox</H3>\n";
+  $out .= "\n\n";
+  $out .= "<TABLE BORDER=1 BGCOLOR='#FFFFFF' CELLSPACING=1 CELLPADDING=1>\n";
+  $out .= "\t<TR>\n";
+  $out .= "\t\t<TH>Time</TH>\n";
+  $out .= "\t\t<TH>Tree State</TH>\n";
+  $out .= "\t\t<TH>Author</TH>\n";
+  $out .= "\t\t<TH>File</TH>\n";
+  $out .= "\t\t<TH>Log</TH>\n";
+  $out .= "\t</TR>\n";
 
-  my $last_treestate = '';
+  # we want to be able to make links into this page either with the
+  # times of checkins or of times which are round numbers.
+
+  my $rounded_increment = $main::SECONDS_PER_MINUTE * 5;
+  my $rounded_time = main::round_time($times[0]);
+
+  # Why are the names so confusing in this code?
+  # Netscape does not scroll to the middle of a large table if we
+  # put names between the rows, however it will scroll if we name
+  # the contents of a cell.
+  
   foreach $time (@times) {
 
-      if (defined($DATABASE{$tree}{$time}{'treestate'})) {
-          $localtime = localtime($time);
-          $tree_state = $DATABASE{$tree}{$time}{'treestate'};
+      # Allow us to create links which point to times which may not
+      # appear in the data.  These links should correspond to the cell
+      # spacing in the status table.
 
-#          ($tree_state eq $last_treestate) && next;
-          print "$localtime:\t $tree_state \n";
-          $last_treestate = $tree_state;
+      my $names = '';
+      while ($rounded_time > $time) { 
+          my $comment = "<!-- ".localtime($rounded_time)." -->";
+          $names .= (
+                     "\t\t\t".
+                     HTMLPopUp::Link(
+                                     "name" => $rounded_time,
+                                     "linktxt" => $comment,
+                                     ).
+                     "\n");
+          $rounded_time -= $rounded_increment;
+      }
+
+      # Allow us to create links which point to any row.
+
+      my $localtime = localtime($time);
+      my $cell_time =
+          HTMLPopUp::Link(
+                          "name" => $time,
+                          "linktxt" => $localtime,
+                          ) ;
+      
+      ($names) &&
+          ($cell_time .= "\n".$names."\t\t");
+
+
+      if (defined($DATABASE{$tree}{$time}{'treestate'})) {
+          $treestate = $DATABASE{$tree}{$time}{'treestate'};
+
+          $out .= "\t<TR>\n";
+          $out .= "\t\t<TD>$cell_time</TD>\n";
+          $out .= "\t\t<TD ALIGN=center >$treestate</TD>\n";
+          $out .= "\t\t<TD>$HTMLPopUp::EMPTY_TABLE_CELL</TD>\n";
+          $out .= "\t\t<TD>$HTMLPopUp::EMPTY_TABLE_CELL</TD>\n";
+          $out .= "\t\t<TD>$HTMLPopUp::EMPTY_TABLE_CELL</TD>\n";
+          $out .= "\t</TR>\n";
       }
 
       if ( defined($DATABASE{$tree}{$time}{'author'}) ) {
-          $localtime = localtime($time);
-          @authors = sort (keys %{ $DATABASE{$tree}{$time}{'author'} });
-          print "$localtime:\t\t @authors \n";
+          my ($recs) = $DATABASE{$tree}{$time}{'author'};
+          my (@authors) = sort (keys %{ $recs });
+
+          foreach $author (@authors) {
+              my @files =  sort (keys %{ $recs->{$author} });
+              my $rowspan = scalar (@files);
+              my $cell_options = "ALIGN=center ROWSPAN=$rowspan";
+              $out .= "\t<TR>\n";
+              $out .= "\t\t<TD $cell_options>$cell_time</TD>\n";
+              $out .= "\t\t<TD $cell_options>$treestate</TD>\n";
+              $out .= "\t\t<TD $cell_options>$author</TD>\n";
+              my $num;
+              foreach $file (@files) {
+                  ($num) &&
+                      ($out .= "\t<TR>\n");
+                  $num ++;
+                  my ($log) = $recs->{$author}{$file};
+                  $out .= "\t\t<TD>$file</TD>\n";
+                  $out .= "\t\t<TD>$log</TD>\n";
+                  $out .= "\t</TR>\n";
+              } # $file
+          } # $author
       }
 
-  }
+  } # $time
 
-  return ;
+  $out .= "</TABLE>\n";
+
+  $out .= "\n\n";
+  $out .= "This page was generated at: ";
+  $out .= localtime($main::TIME);
+  $out .= "\n\n";
+
+  $out .= "</BODY>\n";
+  $out .= "</HTML>\n";
+
+  return $out;
 }
 
 
@@ -203,6 +297,8 @@ sub apply_db_updates {
   my ($self, $tree,) = @_;
 
   my ($new_tree_state) = TinderHeader::gettree_header('TreeState', $tree);
+  $DATABASE{$tree}{$main::TIME}{'treestate'} = $new_tree_state;
+
   my ($last_tree_data, $second2last_tree_data, $last_cvs_data) = 
     find_last_data($tree);
 
@@ -243,10 +339,7 @@ sub apply_db_updates {
     (scalar(%{ $DATABASE{$tree}{$last_tree_data} }) == 0) &&
       delete $DATABASE{$tree}{$last_tree_data};
   }
-
  
-  $DATABASE{$tree}{$main::TIME}{'treestate'} = $new_tree_state;
-
   ($last_cvs_data) ||
    ($last_cvs_data = $main::TIME - $TinderDB::TRIM_SECONDS );
   
@@ -281,6 +374,11 @@ sub apply_db_updates {
           $log;
       $num_updates ++;
       
+      if ($log =~ m/$VC_BUGNUM_REGEXP/) {
+          my $bug_number = $1;
+          $DATABASE{$tree}{$time}{'bugs'}{$bug_number} = 1;
+      }
+      
   } # foreach update
 
   $METADATA{$tree}{'updates_since_trim'} += $num_updates;
@@ -294,6 +392,19 @@ sub apply_db_updates {
 
   $self->savetree_db($tree);
 
+  # VCDisplay needs to know the filename that we write to, so that the
+  # None.pm can reference this file.  However VCDisplay is called by
+  # Build, Time as well as this VC column and we would rather not have
+  # VCDisplay depend on anything in the VC_* code.  So all the VC
+  # implementations must store their data into a file with the same
+  # name. It is highly unlikely that one user will run VC_CVS.pm and
+  # BC_Bonsai.pm module together.
+
+  my $all_vc_data = $self->get_all_bonsai_data($tree);
+  my ($outfile) = (FileStructure::get_filename($tree, 'tree_HTML').
+                   "/all_vc.html");
+  main::overwrite_file($outfile, $all_vc_data);
+
   return $num_updates;
 }
 
@@ -301,7 +412,7 @@ sub apply_db_updates {
 sub status_table_legend {
   my ($out)='';
 
-# print all the possible tree states in a cell with the color
+  # print all the possible tree states in a cell with the color
   $out .= "\t<td align=right valign=top>\n";
   $out .= "\t<table $TinderDB::LEGEND_BORDER>\n";
   
@@ -359,6 +470,7 @@ sub cell_data {
     my ($tree, $db_index, $last_time) = @_;
 
     my (%authors) = ();
+    my (%bugs) = ();
     my $last_treestate;
 
     while (1) {
@@ -386,9 +498,15 @@ sub cell_data {
                 $authors{$author}{$time}{$file} = $log;
             }
         }
+
+        $recs = $DATABASE{$tree}{$time}{'bugs'};
+        foreach $bug (keys %{ $recs }) {
+            $bugs{$bug} =1;
+        }
+
     } # while (1)
 
-    return ($db_index, $last_treestate, \%authors);
+    return ($db_index, $last_treestate, \%authors, \%bugs,);
 }
 
 
@@ -404,7 +522,7 @@ sub render_authors {
     my ($cell_color) = TreeData::TreeState2color($last_treestate);
     my ($char) = TreeData::TreeState2char($last_treestate);
     
-    my $cell_options;
+    my $cell_options = '';
     my $text_browser_color_string;
     
     if ( ($last_treestate) && ($cell_color) ) {
@@ -454,7 +572,7 @@ sub render_authors {
             $display_author =~ s/\%.*//;
             
             my $mailto_author=$author;
-            $mailto_author =~ s/\%/\@/;
+            $mailto_author = TreeData::VCName2MailAddress($author);
             
             $table .= (
                        "Checkins by <b>$author</b> <br> for $vc_info \n".
@@ -469,10 +587,12 @@ sub render_authors {
                        "<th>Log</th>".
                        "</tr>\n".
                        "");
-            
+
+            my (@times) = sort {$b <=> $a} keys %{ $authors{$author} };   
+            my $checkin_page_reference = $times[0];
             my @bug_numbers;
             # sort numerically descending
-            foreach $time ( sort {$b <=> $a} keys %{ $authors{$author} }) {
+            foreach $time (@times) {
                 foreach $file (keys %{ $authors{$author}{$time}}) {
                     $num_rows++;
                     my ($log) = $authors{$author}{$time}{$file};
@@ -493,13 +613,12 @@ sub render_authors {
                 }
             }
             $table .= "</table>";
+            @bug_numbers = main::uniq(@bug_numbers);
 
             # The Link Choices inside the popup.
 
-            my $link_choices; 
-            
-            $link_choices .= "<tt>$author</tt>";
-            $link_choices .= "<br>";
+            my $link_choices = "Checkins by <b>$author</b><br>";
+            $link_choices .= " for $vc_info \n<br>";
             $link_choices .= 
               VCDisplay::query(
                                'tree' => $tree,
@@ -535,12 +654,33 @@ sub render_authors {
             $link_choices .= "<br>";
             $link_choices .= 
               HTMLPopUp::Link(
-                              "href" => "mailto: $mailto_author",
-                              "linktxt" => "Send Mail",
+                              "href" => "mailto:$mailto_author",
+                              "linktxt" => "Send Mail to $author",
                               );
 
             $link_choices .= "<br>";
 
+            my ($href) = (FileStructure::get_filename($tree, 'tree_URL').
+                          "/all_vc.html#$checkin_page_reference");
+
+            $link_choices .= 
+              HTMLPopUp::Link(
+                              "href" => $href,
+                              "linktxt" => "Tinderbox Checkin Data",
+                              );
+
+            $link_choices .= "<br>";
+
+
+            foreach $bug_number (@bug_numbers) {
+                my $href = BTData::bug_id2bug_url($bug_number);
+                $link_choices .= 
+                    HTMLPopUp::Link(
+                                    "href" => $href,
+                                    "linktxt" => "\t\tBug: $bug_number",
+                                    );
+                $link_choices .= "<br>";
+            }
 
             # we display the list of names in 'teletype font' so that the
             # names do not bunch together. It seems to make a difference if
@@ -549,14 +689,10 @@ sub render_authors {
             # the group of links.
             
             my (%popup_args) = (
-                                
-                                "windowtxt" => $table.$link_choices,
+                                "windowtxt" => $link_choices,
                                 "windowtitle" => ("$VC_NAME Info ".
                                                   "Author: $author ".
                                                   "$time_interval_str "),
-                                
-                                "windowheight" => ($num_rows * 50) + 100,
-                                "windowwidth" => ($max_length * 10) + 100,
                                 );
             
             # If you have a VCDisplay implementation you should make the
@@ -565,21 +701,7 @@ sub render_authors {
             
             my ($query_link) = "";
             
-            if ( 
-                 ($TinderConfig::VCDisplayImpl) && 
-                 ($TinderConfig::VCDisplayImpl =~ 'None') 
-                 ) {
-                
-                $query_link .= 
-                  HTMLPopUp::Link(
-                                  "href" => "mailto: $mailto_author",
-                                  "linktxt" => "\t\t<tt>$display_author</tt>",
-                                  
-                                  %popup_args,
-                                  );
-            } else {
-                
-                $query_link .= 
+            $query_link .= 
                   VCDisplay::query(
                                    'tree' => $tree,
                                    'mindate' => $mindate,
@@ -589,34 +711,36 @@ sub render_authors {
                                    "linktxt" => "\t\t<tt>$display_author</tt>",
                                    %popup_args,
                                    );
-            }
-            
-            @bug_numbers = main::uniq(@bug_numbers);
+
+            my $bug_links;
             foreach $bug_number (@bug_numbers) {
                 my $href = BTData::bug_id2bug_url($bug_number);
-                $query_link .= 
-                  HTMLPopUp::Link(
-                                  "href" => $href,
-                                  "linktxt" => "\t\t<tt>$bug_number</tt>",
-                                  
-                                  %popup_args,
-                                  );
+                $bug_links .= 
+                    HTMLPopUp::Link(
+                                    "href" => $href,
+                                    "linktxt" => "\t\t<tt>$bug_number</tt>",
+                                    
+                                    %popup_args,
+                                    );
             }
-            
+            $query_link .= $bug_links;
+
             # put each link on its own line and add good comments so we
             # can debug the HTML.
             
             my ($date_str) = localtime($mindate)."-".localtime($maxdate);
             
-            $query_links .= (
-                             "\t\t<!-- VC_Bonsai: ".
-                             ("Author: $author, ".
-                              "Bug_Numbers: '@bug_numbers', ".
-                              "Time: '$date_str', ".
-                              "Tree: $tree, ".
-                              "").
-                             "  -->\n".
-                             "");
+            if ($DEBUG) {
+                $query_links .= (
+                                 "\t\t<!-- VC_Bonsai: ".
+                                 ("Author: $author, ".
+                                  "Bug_Numbers: '@bug_numbers', ".
+                                  "Time: '$date_str', ".
+                                  "Tree: $tree, ".
+                                  "").
+                                 "  -->\n".
+                                 "");
+            }
 
             $query_links .= "\t\t".$query_link."\n";
             
@@ -657,7 +781,7 @@ sub render_empty_cell {
     my ($cell_color) = TreeData::TreeState2color($last_treestate);
     my ($char) = TreeData::TreeState2char($last_treestate);
     
-    my $cell_options;
+    my $cell_options = '';
     my $text_browser_color_string;
     
     if ( ($last_treestate) && ($cell_color) ) {
@@ -666,6 +790,7 @@ sub render_empty_cell {
         $text_browser_color_string = 
           HTMLPopUp::text_browser_color_string($cell_color, $char) ;
     }
+
     my $notice = $NOTICE->Notice_Link(
                                       $till_time,
                                       $tree,
@@ -686,13 +811,19 @@ sub render_empty_cell {
         $cell_contents = "\n\t\t".$HTMLPopUp::EMPTY_TABLE_CELL."\n";
     }
 
-    return ("\t<!-- VC_Bonsai: empty data. ".
-            "tree: $tree, ".
-            "filling till: $local_till_time, ".
-            "-->\n".
+    my @outrow =();
+    if ($DEBUG) {
+        push @outrow, ("\t<!-- VC_Bonsai: empty data. ".
+                       "tree: $tree, ".
+                       "filling till: $local_till_time, ".
+                       "-->\n");
+    }
             
-            "\t\t<td align=center rowspan=$rowspan $cell_options>".
-            "$cell_contents</td>\n");
+    push @outrow, (
+                   "\t\t<td align=center rowspan=$rowspan $cell_options>".
+                   "$cell_contents</td>\n");
+
+    return @outrow;
 }
 
 
@@ -748,12 +879,13 @@ sub status_table_row {
   # cell?
 
   if ( $NEXT_ROW{$tree} != $row_index ) {
-      
-      push @outrow, ("\t<!-- VC_Bonsai: skipping. ".
-                     "tree: $tree, ".
-                     "additional_skips: ".
-                     ($NEXT_ROW{$tree} -  $row_index).", ".
-                     " -->\n");
+      if ($DEBUG) {
+          push @outrow, ("\t<!-- VC_Bonsai: skipping. ".
+                         "tree: $tree, ".
+                         "additional_skips: ".
+                         ($NEXT_ROW{$tree} -  $row_index).", ".
+                         " -->\n");
+      }
       return @outrow;
   }
 
@@ -761,12 +893,15 @@ sub status_table_row {
   # find all the authors who changed code at any point in this cell
   # find the tree state for this cell.
 
-  my ($db_index, $last_treestate, $authors) =
+  my ($db_index, $last_treestate, $authors, $bugs,) =
       cell_data($tree, $NEXT_DB{$tree}, $row_times->[$row_index]);
   
   $LAST_TREESTATE{$tree} = $last_treestate || $LAST_TREESTATE{$tree};
   $last_treestate = $LAST_TREESTATE{$tree};
   
+#  $last_treestate ||
+#      die ("no last tree state");
+
   if (scalar(%{$authors})) {
 
       $NEXT_DB{$tree} = $db_index;
@@ -782,9 +917,9 @@ sub status_table_row {
 
       my @html = render_authors(
                                 $tree,
-                                $LAST_TREESTATE{$tree}, 
-                                $authors, 
-                                $mindate, 
+                                $LAST_TREESTATE{$tree},
+                                $authors,
+                                $mindate,
                                 $maxdate,
                                 );
       return @html;
@@ -797,11 +932,11 @@ sub status_table_row {
   my $rowspan = 0;
   my ($next_db_index, $next_treestate, $next_authors);
   $next_db_index = $db_index;
-  
+    
   while (
-         ($row_index+$rowspan <=  $#{ $row_times }) &&
+         ($row_index+$rowspan < $#{ $row_times }) &&
 
-         (!(scalar(%{$next_authors}))) &&
+         ( (!($next_authors)) || (!(scalar(%{$next_authors}))) ) &&
 
          (
           !defined($next_treestate) ||
@@ -812,7 +947,7 @@ sub status_table_row {
       $db_index = $next_db_index;
       $rowspan++ ;
       
-      ($next_db_index, $next_treestate, $next_authors) =
+      ($next_db_index, $next_treestate, $next_authors, $next_bugs) =
           cell_data($tree, $db_index, 
                     $row_times->[$row_index+$rowspan]);
       
