@@ -2848,24 +2848,23 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 	nsPluginTag* pluginTag;
 	if((rv = FindPluginEnabledForType(aMimeType, pluginTag)) == NS_OK)
 	{
+		#ifdef NS_DEBUG
+			printf("For %s found plugin %s\n", aMimeType, pluginTag->mFileName);
+		#endif
 
-#ifdef XP_WIN // actually load a dll on Windows
+		if (nsnull == pluginTag->mLibrary)		// if we haven't done this yet
+		{
+			nsFileSpec file(pluginTag->mFileName);
 
-#ifdef NS_DEBUG
-  printf("For %s found plugin %s\n", aMimeType, pluginTag->mFileName);
-#endif
+			nsPluginFile pluginFile(file);
+			PRLibrary* pluginLibrary = NULL;
 
-    nsFileSpec file(pluginTag->mFileName);
+			if (pluginFile.LoadPlugin(pluginLibrary) != NS_OK || pluginLibrary == NULL)
+				return NS_ERROR_FAILURE;
 
-    nsPluginFile pluginFile(file);
-    PRLibrary* pluginLibrary = NULL;
+			pluginTag->mLibrary = pluginLibrary;
 
-    if (pluginFile.LoadPlugin(pluginLibrary) != NS_OK || pluginLibrary == NULL)
-      return NS_ERROR_FAILURE;
-
-    pluginTag->mLibrary = pluginLibrary;
-
-#endif
+		}
 
 		nsIPlugin* plugin = pluginTag->mEntryPoint;
 		if(plugin == NULL)
