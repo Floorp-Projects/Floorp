@@ -45,6 +45,10 @@ public:
     return count;
   }
 
+  const nsBandTrapezoid* GetTrapezoid(PRInt32 aIndex) const {
+    return &mData[aIndex];
+  }
+
   // Get the number of floaters that are impacting the current
   // band. Note that this value is relative to the current translation
   // in the space manager which means that some floaters may be hidden
