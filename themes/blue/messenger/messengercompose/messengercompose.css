@@ -155,3 +155,8 @@ tree#attachmentBucket {
 #convertNo {
 	list-style-image:url("chrome://messenger/skin/messengercompose/sendConvNo.gif");
 }
+
+#convertDefault {
+	border: 1px solid black;
+	list-style-image:url("chrome://messenger/skin/messengercompose/sendConvYes.gif");
+} /* Workaround for bug 50217. Please remove this rule, when this bug is fixed. */
