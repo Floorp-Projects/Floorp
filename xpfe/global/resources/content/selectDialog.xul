@@ -1,0 +1,29 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<!DOCTYPE window SYSTEM "chrome://global/locale/commonDialog.dtd">
+ 
+<window
+	xmlns:html="http://www.w3.org/TR/REC-html40"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+	align="vertical"
+	onload="selectDialogOnLoad()"
+	class="dialog"> 
+    <html:script language="JavaScript" src="chrome://global/content/selectDialog.js" />
+     
+    <box align="vertical" style="width: 24em;margin: 5px;">
+				<html:div id="info.txt" style="margin-left:2em; margin-right:2em; margin-top:5px;" flex="100%">
+					&message.label;
+				</html:div>
+	
+	
+
+		<html:select  size="10" id ="list" style=" margin-top:5px;margin-left:2em; margin-right:2em;" >
+		 	
+		 </html:select>
+	</box>
+	
+	
+	<box id="okCancelButtons"/>
+
+</window>
