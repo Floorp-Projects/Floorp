@@ -669,13 +669,6 @@ nsFileChannel::Process(void)
 		  if (mReadFixedAmount)
 			  mAmount -= amt;   // subtract off the amount we just read from mAmount.
           if (NS_FAILED(mStatus)) goto error;
-          if (mStatus == NS_BASE_STREAM_WOULD_BLOCK || amt == 0) {
-              // Our nsIPipeObserver will have been called from WriteFrom
-              // which in turn calls Suspend, so we should end up suspending
-              // this file channel.
-              Suspend();
-              return;
-          }
 
           // and feed the buffer to the application via the buffer stream:
           if (mListener) {

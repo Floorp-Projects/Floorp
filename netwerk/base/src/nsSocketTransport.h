@@ -34,6 +34,9 @@
 #include "nsIPipe.h"
 #define NSPIPE2
 
+#define NS_SOCKET_TRANSPORT_SEGMENT_SIZE        (4*1024)
+#define NS_SOCKET_TRANSPORT_BUFFER_SIZE         (64*1024)
+
 //
 // This is the size of the global buffer used by all nsSocketTransport 
 // instances when reading from or writing to the network.
