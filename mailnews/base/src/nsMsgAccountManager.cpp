@@ -102,7 +102,6 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
 static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 // use this to search for all servers with the given hostname/iid and
 // put them in "servers"
@@ -1487,13 +1486,15 @@ nsMsgAccountManager::getAccountList(nsISupports *element, void *aData)
 // that the special folders for each identity have the
 // correct special folder flags set, e.g, the Sent folder has
 // the sent flag set.
+//
+// it also goes through all the spam settings for each account
+// and makes sure the folder flags are set there, too
 NS_IMETHODIMP
-nsMsgAccountManager::SetSpecialFoldersForIdentities()
+nsMsgAccountManager::SetSpecialFolders()
 {
-  nsresult rv = NS_OK;
-	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
-  
-	if(NS_FAILED(rv)) return rv;
+  nsresult rv;
+	nsCOMPtr<nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv,rv); 
 
   nsCOMPtr<nsISupportsArray> identities;
   GetAllIdentities(getter_AddRefs(identities));
@@ -1503,12 +1504,9 @@ nsMsgAccountManager::SetSpecialFoldersForIdentities()
 
   PRUint32 id;
   nsXPIDLCString identityKey;
-
   
   for (id=0; id<idCount; id++) 
   {
-
-    // convert supports->Identity
     nsCOMPtr<nsISupports> thisSupports;
     rv = identities->GetElementAt(id, getter_AddRefs(thisSupports));
     if (NS_FAILED(rv)) continue;
@@ -1554,6 +1552,11 @@ nsMsgAccountManager::SetSpecialFoldersForIdentities()
       }
     }
   }
+
+  // XXX todo
+  // get all servers
+  // get all spam settings for each server
+  // set the JUNK folder flag on the spam folders, right?
   return NS_OK;
 }
 

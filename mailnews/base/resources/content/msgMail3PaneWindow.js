@@ -618,7 +618,7 @@ function OnLoadMessenger()
   InitializeDataSources();
   InitPanes();
 
-  accountManager.SetSpecialFoldersForIdentities();
+  accountManager.setSpecialFolders();
   accountManager.addIncomingServerListener(gThreePaneIncomingServerListener);
 
   AddToSession();
