@@ -256,15 +256,14 @@
       var state =
         getStateFromFormsArray(formsArray, captureOrPrefill, threshhold);
       if (state == enable) {
+        bestState = enable;
         if (elementCount > threshhold) {
-          bestState = enable;
           return true;
         }
-        bestState = enable;
       } else if (state == disable && bestState == hide) {
         bestState = disable;
-        return false;
       }
+      return false;
     }
 
     // Walk through the DOM to determine how capture or prefill item is to appear.
