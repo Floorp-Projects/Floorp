@@ -44,6 +44,7 @@ interface nsIChromeEventHandler;
 interface nsIDocumentLoaderObserver;
 interface nsIDocShellLoadInfo;
 interface nsIDocumentCharsetInfo;
+interface nsIWebNavigation;
 
 [scriptable, uuid(69E5DE00-7B8B-11d3-AF61-00A024FFC08C)]
 interface nsIDocShell : nsISupports
@@ -55,13 +56,15 @@ interface nsIDocShell : nsISupports
 	loading.
 
 	@param uri - The URI to load.
-	@param loadInfo - This is the extended load info for this load.  This most
-		most often will be null, but if you need to do additional setup for this
-		load you can get a loadInfo object by calling createLoadInfo.  Once you have
-		this object you can set the needed properties on it and then pass it to 
-		loadURI.
+	@param loadInfo - This is the extended load info for this load.  This
+	    most often will be null, but if you need to do additional setup for
+		this load you can get a loadInfo object by calling createLoadInfo.
+		Once you have this object you can set the needed properties on it and
+		then pass it to loadURI.
+	@param aLoadFlags - Flags to modify load behaviour. Flags are defined
+	    in nsIWebNavigation.
 	*/
-	[noscript]void loadURI(in nsIURI uri, in nsIDocShellLoadInfo loadInfo);
+	[noscript]void loadURI(in nsIURI uri, in nsIDocShellLoadInfo loadInfo, in unsigned long aLoadFlags);
 
 	/*
 	Loads a given stream. This will give priority to loading the requested stream

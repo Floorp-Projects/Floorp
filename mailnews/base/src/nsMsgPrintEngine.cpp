@@ -307,7 +307,7 @@ nsMsgPrintEngine::FireThatLoadOperation(nsString *uri)
   {
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
     if (webNav)
-      rv = webNav->LoadURI(uri->GetUnicode());
+      rv = webNav->LoadURI(uri->GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
   }
 
   PR_FREEIF(tString);

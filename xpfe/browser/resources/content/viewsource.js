@@ -48,8 +48,8 @@ function onLoadViewSource()
         dump("*** Failed to SetDocumentCharset...\n");
     }
 
-    webNav.loadURI(window.arguments[0]);
-
+    var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
+    webNav.loadURI(window.arguments[0], loadFlags);
 }
 
 

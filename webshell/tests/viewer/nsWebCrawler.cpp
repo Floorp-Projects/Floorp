@@ -829,7 +829,7 @@ nsWebCrawler::LoadNextURL(PRBool aQueueLoad)
             mCurrentURL = *url;
             mStartLoad = PR_Now();
             nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(webShell));
-            webNav->LoadURI(url->GetUnicode());
+            webNav->LoadURI(url->GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
           }
           NS_RELEASE(webShell);
 
@@ -1068,7 +1068,7 @@ nsWebCrawler::GoToQueuedURL(const nsString& aURL)
   if (webNav) {
     mCurrentURL = aURL;
     mStartLoad = PR_Now();
-    webNav->LoadURI(aURL.GetUnicode());
+    webNav->LoadURI(aURL.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
     NS_RELEASE(webShell);
   }
   mQueuedLoadURLs--;

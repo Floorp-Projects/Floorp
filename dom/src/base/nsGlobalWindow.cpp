@@ -1627,7 +1627,7 @@ NS_IMETHODIMP GlobalWindowImpl::Home()
     homeURL = url;
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
-  NS_ENSURE_SUCCESS(webNav->LoadURI(homeURL.GetUnicode()), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(webNav->LoadURI(homeURL.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE), NS_ERROR_FAILURE);
   return NS_OK;
 }
 
@@ -3043,7 +3043,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext *cx,
       NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
       loadInfo->SetOwner(owner);
     }
-    newDocShell->LoadURI(uriToLoad, loadInfo);
+    newDocShell->LoadURI(uriToLoad, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
   }
 
   if (windowIsNew)

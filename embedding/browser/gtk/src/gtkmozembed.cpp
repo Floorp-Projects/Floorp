@@ -390,7 +390,7 @@ GtkMozEmbedPrivate::LoadChrome(void)
   NS_ENSURE_TRUE(subShell, NS_ERROR_FAILURE);
 
   mChromeLocation.AssignWithConversion("chrome://embedding/browser/content/simple-shell.xul");
-  mChromeNav->LoadURI(mChromeLocation.GetUnicode());
+  mChromeNav->LoadURI(mChromeLocation.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
   
   subShell->Create(0, nsnull);
   subShell->Spinup();
@@ -536,7 +536,7 @@ GtkMozEmbedPrivate::OnChromeStateChange(nsIWebProgress *aWebProgress,
       {
 	nsString tmpString;
 	tmpString.AssignWithConversion(mCurrentURI);
-	mContentNav->LoadURI(tmpString.GetUnicode());
+	mContentNav->LoadURI(tmpString.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
       }
     }
   }
@@ -1095,7 +1095,7 @@ gtk_moz_embed_load_url(GtkMozEmbed *embed, const char *url)
   nsString uriString;
   uriString.AssignWithConversion(newURI);
   if (embed_private->mContentNav)
-    embed_private->mContentNav->LoadURI(uriString.GetUnicode());
+    embed_private->mContentNav->LoadURI(uriString.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
 }
 
 void

@@ -36,6 +36,7 @@
 #include "nsIPref.h"
 #include "nsIAllocator.h"
 #include "nsXPIDLString.h"
+#include "nsIWebNavigation.h"
 
 #ifdef MOZ_MAIL_NEWS
 
@@ -585,7 +586,7 @@ nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow, PRBoo
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
     // go, baby, go!
-    rv = docShell->LoadURI(uri, nsnull);
+    rv = docShell->LoadURI(uri, nsnull, nsIWebNavigation::LOAD_FLAGS_NONE);
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
     // raise the window, if requested

@@ -463,7 +463,7 @@ nsMessenger::OpenURL(const char * url)
         nsAutoString urlStr; urlStr.AssignWithConversion(unescapedUrl);
         nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
         if(webNav)
-          webNav->LoadURI(urlStr.GetUnicode());
+          webNav->LoadURI(urlStr.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
       }
       PL_strfree(unescapedUrl);
     }

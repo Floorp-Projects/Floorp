@@ -56,6 +56,7 @@
 #include "nsIMessengerWindowService.h"
 #include "nsIMsgSearchSession.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsIWebNavigation.h"
 
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
@@ -198,7 +199,7 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
     // run the news url like we would any other news url. 
 	  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
     if (NS_SUCCEEDED(rv) && docShell)
-	    rv = docShell->LoadURI(myuri, nsnull);
+	    rv = docShell->LoadURI(myuri, nsnull, nsIWebNavigation::LOAD_FLAGS_NONE);
     else
       rv = RunNewsUrl(myuri, aMsgWindow, aDisplayConsumer);
   }

@@ -54,6 +54,7 @@
 #include "nsIMessage.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsIWebNavigation.h"
 
 #define PREF_MAIL_ROOT_IMAP "mail.root.imap"
 
@@ -607,7 +608,7 @@ nsresult nsImapService::FetchMimePart(nsIImapUrl * aImapUrl,
           loadInfo->SetLoadType(nsIDocShellLoadInfo::loadLink);
         }
         
-        rv = docShell->LoadURI(url, loadInfo);
+        rv = docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
       }
       else
       {
@@ -932,7 +933,7 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
       if (NS_SUCCEEDED(rv) && docShell)
       {      
-        rv = docShell->LoadURI(url, nsnull);
+        rv = docShell->LoadURI(url, nsnull, nsIWebNavigation::LOAD_FLAGS_NONE);
       }
       else
       {

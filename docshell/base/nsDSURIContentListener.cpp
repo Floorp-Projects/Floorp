@@ -96,9 +96,9 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType,
       mDocShell->StopLoad();
       // ack...we don't want to reuse the previous documents load type,
       // try to reset it to loadNormal...
-      nsDocShellInfoLoadType loadType = nsIDocShellLoadInfo::loadNormal;
+      LoadType loadType = LOAD_NORMAL;
       if (aCommand == nsIURILoader::viewUserClick)
-        loadType = nsIDocShellLoadInfo::loadLink;      
+        loadType = LOAD_LINK;      
       mDocShell->SetLoadType(loadType);
    }
 

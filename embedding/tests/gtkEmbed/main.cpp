@@ -60,7 +60,7 @@ url_activate_cb( GtkEditable *widget, nsIWebBrowserChrome *browser)
       browser->GetWebBrowser(getter_AddRefs(webBrowser));
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(webBrowser));
       if (webNav)
-	  webNav->LoadURI(NS_ConvertASCIItoUCS2(text).GetUnicode());
+	  webNav->LoadURI(NS_ConvertASCIItoUCS2(text).GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
 
   }       
   g_free(text);
@@ -108,7 +108,7 @@ nsresult OpenWebPage(char* url)
     if (!webNav)
 	  return NS_ERROR_FAILURE;
 
-    return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).GetUnicode());
+    return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
 }   
 
 

@@ -1503,7 +1503,7 @@ nsEditorShell::LoadUrl(const PRUnichar *url)
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mContentAreaDocShell));
-  NS_ENSURE_SUCCESS(webNav->LoadURI(url), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(webNav->LoadURI(url, nsIWebNavigation::LOAD_FLAGS_NONE), NS_ERROR_FAILURE);
 
   return NS_OK;
 }

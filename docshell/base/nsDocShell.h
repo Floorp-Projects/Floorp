@@ -71,6 +71,29 @@
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellHistory.h"
 
+#define MAKE_LOAD_TYPE(type, flags) ((type) | ((flags) << 16))
+
+/* load commands */
+enum LoadCmd {
+  LOAD_CMD_NORMAL  = 0x1, // Normal load
+  LOAD_CMD_RELOAD  = 0x2, // Reload
+  LOAD_CMD_HISTORY = 0x4  // Load from history
+};
+
+/* load types are legal combinations of load commands and flags*/
+enum LoadType {
+  LOAD_NORMAL = MAKE_LOAD_TYPE(LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_NONE),
+  LOAD_NORMAL_REPLACE = MAKE_LOAD_TYPE(LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY),
+  LOAD_HISTORY = MAKE_LOAD_TYPE(LOAD_CMD_HISTORY, nsIWebNavigation::LOAD_FLAGS_NONE),
+  LOAD_RELOAD_NORMAL = MAKE_LOAD_TYPE(LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_NONE),
+  LOAD_RELOAD_BYPASS_CACHE = MAKE_LOAD_TYPE(LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE),
+  LOAD_RELOAD_BYPASS_PROXY = MAKE_LOAD_TYPE(LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY),
+  LOAD_RELOAD_BYPASS_PROXY_AND_CACHE = MAKE_LOAD_TYPE(LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY),
+  LOAD_LINK = MAKE_LOAD_TYPE(LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_IS_LINK),
+  LOAD_REFRESH = MAKE_LOAD_TYPE(LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_IS_REFRESH)
+};
+
+
 //*****************************************************************************
 //***    nsRefreshTimer
 //*****************************************************************************
@@ -153,7 +176,7 @@ public:
   nsresult GetLoadCookie(nsISupports **aResult);
   // used when the docshell gets content that's being redirected (so we don't go through
   // our own InternalLoad method) to reset the load type...
-  nsresult SetLoadType(nsDocShellInfoLoadType aLoadType);
+  nsresult SetLoadType(PRUint32 aLoadType);
 
 protected:
    // Object Management
@@ -175,12 +198,12 @@ protected:
    NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrerURI, 
       nsISupports* owner, PRBool inheritOwnerFromDocument, PRBool stopActiveDoc,
       const char* aWindowTarget=nsnull, 
-      nsIInputStream* aPostData=nsnull, nsIInputStream* aHeadersData=nsnull, nsDocShellInfoLoadType aLoadType=nsIDocShellLoadInfo::loadNormal, nsISHEntry * aSHEntry = nsnull);
+      nsIInputStream* aPostData=nsnull, nsIInputStream* aHeadersData=nsnull, PRUint32 aLoadType=LOAD_NORMAL, nsISHEntry * aSHEntry = nsnull);
 #else
    NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrerURI, 
       nsISupports* owner, PRBool inheritOwnerFromDocument, PRBool stopActiveDoc,
       const char* aWindowTarget=nsnull, 
-      nsIInputStream* aPostData=nsnull, nsIInputStream* aHeadersData=nsnull, nsDocShellInfoLoadType aLoadType=nsIDocShellLoadInfo::loadNormal);
+      nsIInputStream* aPostData=nsnull, nsIInputStream* aHeadersData=nsnull, PRUint32 aLoadType=LOAD_NORMAL);
 #endif
 
    NS_IMETHOD CreateFixupURI(const PRUnichar* aStringURI, nsIURI** aURI);
@@ -200,7 +223,7 @@ protected:
    NS_IMETHOD ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor);
    NS_IMETHOD OnLoadingSite(nsIChannel* aChannel);
 
-   NS_IMETHOD OnNewURI(nsIURI *aURI, nsIChannel* aChannel, nsDocShellInfoLoadType aLoadType);
+   NS_IMETHOD OnNewURI(nsIURI *aURI, nsIChannel* aChannel, PRUint32 aLoadType);
 
    virtual void SetCurrentURI(nsIURI* aURI);
    virtual void SetReferrerURI(nsIURI* aURI);
@@ -212,7 +235,7 @@ protected:
 
    NS_IMETHOD UpdateCurrentSessionHistory();
 #ifdef SH_IN_FRAMES
-   NS_IMETHOD LoadHistoryEntry(nsISHEntry* aEntry, nsDocShellInfoLoadType aLoadType);
+   NS_IMETHOD LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadType);
 #else
    NS_IMETHOD LoadHistoryEntry(nsISHEntry* aEntry);
 #endif 
@@ -263,7 +286,7 @@ protected:
    PRInt32                    mItemType;
    nsPoint                    mCurrentScrollbarPref; // this document only
    nsPoint                    mDefaultScrollbarPref; // persistent across doc loads
-   nsDocShellInfoLoadType     mLoadType;
+   PRUint32                   mLoadType;
    PRBool                     mInitialPageLoad;
    PRBool                     mAllowPlugins;
    PRInt32                    mViewMode;
