@@ -21,7 +21,6 @@
 
 #include "nsIFormatConverter.h"
 #include "nsITransferable.h"
-#include "nsIGenericTransferable.h"
 #include "nsCOMPtr.h"
 
 
