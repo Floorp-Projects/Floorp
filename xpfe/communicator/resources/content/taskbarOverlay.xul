@@ -10,7 +10,7 @@
 <overlay id="taskbarOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <box id="taskbarMenuBox" flex="10" datasources="chrome://communicator/locale/taskbar.rdf"
+  <box id="taskbarMenuBox" datasources="chrome://communicator/locale/taskbar.rdf"
        ref="chrome://communicator/locale/taskbar.rdf#root" 
        rdf:containment="http://home.netscape.com/NC-rdf#entry http://home.netscape.com/NC-rdf#child">
        

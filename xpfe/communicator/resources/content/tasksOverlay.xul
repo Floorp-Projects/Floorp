@@ -138,8 +138,10 @@
       <button class="button-toolbar-4 taskbutton" id="mini-addr" onclick="toAddressBook()"
               tooltip="aTooltip" tooltiptext="&taskAddressBook.tooltip;"/>
     </box>
+    <spring id="taskbar-middle-spacer" flex="10"/>
     <box id="taskbarMenuBox"/>
     <box id="taskbarGotoMenuBox" align="right"/>
+    <spring id="taskbar-right-spacer" flex="7"/>
   </box>
     
 </overlay>
