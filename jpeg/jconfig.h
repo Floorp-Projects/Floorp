@@ -74,13 +74,6 @@
  */
 #undef RIGHT_SHIFT_IS_UNSIGNED
 
-#ifdef XP_WIN                   /* MS Windows */
-
-/* In case we are using a compiler that only has 16-bit size_t: */
-#define MAX_ALLOC_CHUNK 65520L	/* Maximum request to malloc() */
-
-#endif /* XP_WIN */
-
 #ifdef XP_MAC                   /* Macintosh */
 
 #define ALIGN_TYPE long         /* for sane memory alignment */
