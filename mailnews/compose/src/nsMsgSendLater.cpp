@@ -118,12 +118,9 @@ nsMsgSendLater::nsMsgSendLater()
 
 nsMsgSendLater::~nsMsgSendLater()
 {
-  if (mEnumerator)
-    NS_RELEASE(mEnumerator);
-  if (mTempIFileSpec)
-    NS_RELEASE(mTempIFileSpec);
-  if (mSaveListener)
-    NS_RELEASE(mSaveListener);
+  NS_IF_RELEASE(mEnumerator);
+  NS_IF_RELEASE(mTempIFileSpec);
+  NS_IF_RELEASE(mSaveListener);
   PR_FREEIF(m_to);
   PR_FREEIF(m_fcc);
   PR_FREEIF(m_bcc);
@@ -289,7 +286,12 @@ SaveMessageCompleteCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
 
       // If the send operation failed..try the next one...
       if (NS_FAILED(rv))
+      {
         rv = ptr->StartNextMailFileSend();
+        if (NS_FAILED(rv))
+          ptr->NotifyListenersOnStopSending(rv, nsnull, ptr->mTotalSendCount, 
+                                            ptr->mTotalSentSuccessfully);
+      }
 
       NS_RELEASE(ptr);
     }
@@ -300,6 +302,9 @@ SaveMessageCompleteCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
 
       // Save failed, but we will still keep trying to send the rest...
       rv = ptr->StartNextMailFileSend();
+      if (NS_FAILED(rv))
+        ptr->NotifyListenersOnStopSending(rv, nsnull, ptr->mTotalSendCount, 
+                                          ptr->mTotalSentSuccessfully);
       NS_RELEASE(ptr);
     }
   }
@@ -382,7 +387,22 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
     		prefs->GetBoolPref("mail.really_delete_unsent_messages", &deleteMsgs);
 
       if (deleteMsgs)
+      {
         mSendLater->DeleteCurrentMessage();
+        //
+        // Since we are deleting entries from the enumeration set, we need to
+        // refresh the enumerator
+        //
+        NS_IF_RELEASE(mSendLater->mEnumerator);
+        mSendLater->mEnumerator = nsnull;
+
+        nsresult ret = mSendLater->mMessageFolder->GetMessages(&(mSendLater->mEnumerator));
+	      if (NS_FAILED(ret) || (!(mSendLater->mEnumerator)))
+          mSendLater->mEnumerator = nsnull;   // just to be sure!
+
+        // Do the first call next time through!
+        mSendLater->mFirstTime = PR_TRUE;
+      }
 
       ++(mSendLater->mTotalSentSuccessfully);
     }
@@ -394,6 +414,9 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
 
     // Regardless, we will still keep trying to send the rest...
     rv = mSendLater->StartNextMailFileSend();
+    if (NS_FAILED(rv))
+      mSendLater->NotifyListenersOnStopSending(rv, nsnull, mSendLater->mTotalSendCount, 
+                                               mSendLater->mTotalSentSuccessfully);
     NS_RELEASE(mSendLater);
   }
 
@@ -519,18 +542,22 @@ nsMsgSendLater::StartNextMailFileSend()
   char          *aMessageURI = nsnull;
 
   //
-  // First, go to the next entry and check where we are in the 
+  // Now, go to the next entry and check where we are in the 
   // enumerator!
   //
   if (mFirstTime)
   {
     mFirstTime = PR_FALSE;
-    mEnumerator->First();
+    if (mEnumerator)
+      mEnumerator->First();
   }
   else
-    mEnumerator->Next();
+  {
+    if (mEnumerator)
+      mEnumerator->Next();
+  }
 
-  if (mEnumerator->IsDone() == NS_OK)
+  if ( (!mEnumerator) || (mEnumerator->IsDone() == NS_OK) )
   {
     // Call any listeners on this operation and then exit cleanly
 #ifdef NS_DEBUG

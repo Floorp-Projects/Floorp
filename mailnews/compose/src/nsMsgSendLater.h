@@ -102,10 +102,6 @@ public:
   //
   nsresult                  DriveFakeStream(nsIOutputStream *stream);
 
-  // counters
-  PRUint32                  mTotalSentSuccessfully;
-  PRUint32                  mTotalSendCount;
-
   // methods for listener array processing...
   NS_IMETHOD  SetListenerArray(nsIMsgSendLaterListener **aListener);
   NS_IMETHOD  AddListener(nsIMsgSendLaterListener *aListener);
@@ -117,6 +113,14 @@ public:
   NS_IMETHOD  NotifyListenersOnStopSending(nsresult aStatus, const PRUnichar *aMsg, 
                                            PRUint32 aTotalTried, PRUint32 aSuccessful);
 
+  // counters and things for enumeration 
+  PRUint32                  mTotalSentSuccessfully;
+  PRUint32                  mTotalSendCount;
+  nsIEnumerator             *mEnumerator;
+  nsIMsgIdentity            *mIdentity;
+  nsCOMPtr<nsIMsgFolder>    mMessageFolder;
+  PRBool                    mFirstTime;
+ 
   // Private Information
 private:
   nsIMsgSendLaterListener   **mListenerArray;
@@ -125,8 +129,6 @@ private:
   nsMsgSendUnsentMessagesCallback  mCompleteCallback;
   SendOperationListener     *mSendListener;
 
-  nsIMsgIdentity            *mIdentity;
-  nsCOMPtr<nsIMsgFolder>    mMessageFolder;
   nsCOMPtr<nsIMessage>      mMessage;
 
   // RICHIE 
@@ -142,9 +144,6 @@ private:
   nsIFileSpec               *mTempIFileSpec;
   nsOutputFileStream        *mOutFile;
 
-  nsIEnumerator             *mEnumerator;
-  PRBool                    mFirstTime;
- 
   void                      *mTagData;
 
   nsMsgDeliveryListener     *mSaveListener;
