@@ -78,7 +78,7 @@ dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
 MOZPNG=10009
-MOZMNG="((1<<16)|(0<<8)|(1))"
+MOZMNG="((1<<16)|(0<<8)|(3))"
 NSPR_VERSION=4
 
 dnl Set the minimum version of toolkit libs used by mozilla
