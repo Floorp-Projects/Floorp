@@ -1018,7 +1018,7 @@ NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
   if (!mSuperWin)
     return NS_OK;
   
-  mUpdateArea->SetTo(mBounds.x, mBounds.y, mBounds.width, mBounds.height);
+  mUpdateArea->SetTo(0, 0, mBounds.width, mBounds.height);
   
   if (aIsSynchronous)
     Update();
