@@ -123,7 +123,8 @@ while (<JARFILE>)
   if (!$1 || $1 eq "")
   {
     $chromefile = $_;
-    $cvsfile = File::Basename->basename($_);
+    $_ =~ /.*\/(.*?)$/;
+    $cvsfile = $1;
   }
 
   # Convert to platform-specific separator for the chrome version.
