@@ -218,201 +218,44 @@ SOURCE=..\..\..\..\Packages\java\util\nativesrc\ResourceBundle.cpp
 # End Source File
 # End Group
 # End Group
-# Begin Group "GeneratedFiles"
-
-# PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_File.h
-# End Source File
-# Begin Source File
-
-SOURCE=\
-..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_FileDescriptor.h
-# End Source File
-# Begin Source File
-
-SOURCE=\
-..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_FileInputStream.h
-# End Source File
-# Begin Source File
-
-SOURCE=\
-..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_FileOutputStream.h
-# End Source File
-# Begin Source File
-
-SOURCE=\
-..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_FilterOutputStream.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_InputStream.h
-# End Source File
-# Begin Source File
-
-SOURCE=\
-..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_ObjectInputStream.h
-# End Source File
-# Begin Source File
-
-SOURCE=\
-..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_ObjectStreamClass.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_OutputStream.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_PrintStream.h
-# End Source File
-# Begin Source File
-
-SOURCE=\
-..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_RandomAccessFile.h
-# End Source File
-# Begin Source File
-
-SOURCE=\
-..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_ArithmeticException.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Class.h
-# End Source File
-# Begin Source File
-
-SOURCE=\
-..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_ClassLoader.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Compiler.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Double.h
-# End Source File
-# Begin Source File
-
-SOURCE=\
-..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Exception.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Float.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Math.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Number.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Object.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Runtime.h
-# End Source File
-# Begin Source File
-
-SOURCE=\
-..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_RuntimeException.h
-# End Source File
-# Begin Source File
-
-SOURCE=\
-..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_SecurityManager.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_String.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_System.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Thread.h
-# End Source File
-# Begin Source File
-
-SOURCE=\
-..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Throwable.h
-# End Source File
-# Begin Source File
-
-SOURCE=\
-..\..\..\..\Packages\java\security\nativesrc\geninclude\java_security_AccessController.h
-# End Source File
-# Begin Source File
-
-SOURCE=\
-..\..\..\..\Packages\java\security\nativesrc\geninclude\java_security_ProtectionDomain.h
-# End Source File
-# Begin Source File
-
-SOURCE=\
-..\..\..\..\Packages\java\util\nativesrc\geninclude\java_util_ResourceBundle.h
-# End Source File
-# End Group
-# Begin Source File
-
-SOURCE=..\..\..\..\..\dist\classes\java\security\AccessController.class
+SOURCE=..\..\..\..\Packages\rt.jar
 
 !IF  "$(CFG)" == "Package - Win32 Release"
-
-# Begin Custom Build
-InputPath=..\..\..\..\..\dist\classes\java\security\AccessController.class
-
-"..\..\..\..\Packages\java\lsecurity\nativesrc\geninclude\ProtectionDomain.h" :\
- $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	..\release\javah -classpath ../../../../../dist/classes -d\
-                          ../../../../Packages/java/security/nativesrc/geninclude\
-                        java/security/AccessController java/security/ProtectionDomain
-
-# End Custom Build
 
 !ELSEIF  "$(CFG)" == "Package - Win32 Debug"
 
-# Begin Custom Build
-InputPath=..\..\..\..\..\dist\classes\java\security\AccessController.class
-
-"..\..\..\..\Packages\java\lsecurity\nativesrc\geninclude\ProtectionDomain.h" :\
- $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	..\electric\javah -classpath ../../../../../dist/classes -d\
-                          ../../../../Packages/java/security/nativesrc/geninclude\
-                        java/security/AccessController java/security/ProtectionDomain
-
-# End Custom Build
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\..\dist\classes\java\lang\Class.class
-
-!IF  "$(CFG)" == "Package - Win32 Release"
-
-# Begin Custom Build - Generating Header files for java/lang
-InputPath=..\..\..\..\..\dist\classes\java\lang\Class.class
+# Begin Custom Build - Generating C header files from Java sources
+InputPath=..\..\..\..\Packages\rt.jar
 
 BuildCmds= \
-	..\release\javah -classpath ../../../../../dist/classes -d\
-                          ../../../../Packages/java/lang/nativesrc/geninclude\
-                          java/lang/ArithmeticException java/lang/Character java/lang/Class\
-                    java/lang/ClassLoader       java/lang/Compiler java/lang/Double java/lang/Float\
-                    java/lang/Math       java/lang/Runtime java/lang/SecurityManager\
-                    java/lang/System java/lang/String       java/lang/Thread\
-                  java/lang/reflect/Field java/lang/reflect/Method java/lang/reflect/Constructor\
-                java/lang/reflect/Array java/util/Properties
+	..\electric\javah -classpath ../../../../Packages/rt.jar -d\
+          ../../../../Packages/java/security/nativesrc/geninclude\
+             java/security/AccessController java/security/ProtectionDomain \
+	..\electric\javah -classpath ../../../../Packages/rt.jar -d\
+                                     ../../../../Packages/java/lang/nativesrc/geninclude\
+                                     java/lang/ArithmeticException java/lang/Character java/lang/Class\
+                               java/lang/ClassLoader       java/lang/Compiler java/lang/Double java/lang/Float\
+                               java/lang/Math       java/lang/Runtime java/lang/SecurityManager\
+                               java/lang/System java/lang/String       java/lang/Thread\
+                             java/lang/reflect/Field java/lang/reflect/Method java/lang/reflect/Constructor\
+                           java/lang/reflect/Array java/util/Properties \
+	..\electric\javah -classpath ../../../../Packages/rt.jar -d\
+                                     ../../../../Packages/java/io/nativesrc/geninclude java/io/File\
+                                   java/io/FileDescriptor java/io/FileInputStream java/io/FileOutputStream\
+                                   java/io/PrintStream java/io/RandomAccessFile \
+	..\electric\javah -classpath ../../../../Packages/rt.jar -d\
+                                     ../../../../Packages/java/util/nativesrc/geninclude java/util/ResourceBundle \
+	
+
+"..\..\..\..\Packages\java\security\nativesrc\geninclude\ProtectionDomain.h" : \
+$(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\..\..\Packages\java\security\nativesrc\geninclude\java_lang_Object.h" : \
+$(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
 
 "..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Class.h" : \
 $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -435,6 +278,10 @@ $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
 
 "..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Math.h" : \
+$(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Object.h" : \
 $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
 
@@ -469,97 +316,6 @@ $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 "..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_util_properties.h" : \
 $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
-# End Custom Build
-
-!ELSEIF  "$(CFG)" == "Package - Win32 Debug"
-
-# Begin Custom Build - Generating Header files for java/lang
-InputPath=..\..\..\..\..\dist\classes\java\lang\Class.class
-
-BuildCmds= \
-	..\electric\javah -classpath ../../../../../dist/classes -d\
-                          ../../../../Packages/java/lang/nativesrc/geninclude\
-                          java/lang/ArithmeticException java/lang/Character java/lang/Class\
-                    java/lang/ClassLoader       java/lang/Compiler java/lang/Double java/lang/Float\
-                    java/lang/Math       java/lang/Runtime java/lang/SecurityManager\
-                    java/lang/System java/lang/String       java/lang/Thread\
-                  java/lang/reflect/Field java/lang/reflect/Method java/lang/reflect/Constructor\
-                java/lang/reflect/Array java/util/Properties
-
-"..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Class.h" : \
-$(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-
-"..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_ClassLoader.h" :\
- $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-
-"..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Compiler.h" : \
-$(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-
-"..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Double.h" : \
-$(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-
-"..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Float.h" : \
-$(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-
-"..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Math.h" : \
-$(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-
-"..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Runtime.h" : \
-$(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-
-"..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_System.h" : \
-$(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-
-"..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_String.h" : \
-$(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-
-"..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Thread.h" : \
-$(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-
-"..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Number.h" : \
-$(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-
-"..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Ref.h" : \
-$(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-
-"..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Exception.h" : \
-$(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-
-"..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_util_properties.h" : \
-$(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-# End Custom Build
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\..\dist\classes\java\io\File.class
-
-!IF  "$(CFG)" == "Package - Win32 Release"
-
-# Begin Custom Build - Generating Header files for java/io
-InputPath=..\..\..\..\..\dist\classes\java\io\File.class
-
-BuildCmds= \
-	..\release\javah -classpath ../../../../../dist/classes -d\
-                          ../../../../Packages/java/io/nativesrc/geninclude java/io/File\
-                        java/io/FileDescriptor java/io/FileInputStream java/io/FileOutputStream\
-                        java/io/PrintStream java/io/RandomAccessFile
 
 "..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_File.h" : $(SOURCE)\
  "$(INTDIR)" "$(OUTDIR)"
@@ -569,27 +325,7 @@ BuildCmds= \
 $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
 
-"..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_FileInputStream.h" :\
- $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-# End Custom Build
-
-!ELSEIF  "$(CFG)" == "Package - Win32 Debug"
-
-# Begin Custom Build - Generating Header files for java/io
-InputPath=..\..\..\..\..\dist\classes\java\io\File.class
-
-BuildCmds= \
-	..\electric\javah -classpath ../../../../../dist/classes -d\
-                          ../../../../Packages/java/io/nativesrc/geninclude java/io/File\
-                        java/io/FileDescriptor java/io/FileInputStream java/io/FileOutputStream\
-                        java/io/PrintStream java/io/RandomAccessFile
-
-"..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_File.h" : $(SOURCE)\
- "$(INTDIR)" "$(OUTDIR)"
-   $(BuildCmds)
-
-"..\..\..\..\Packages\java\io\nativesrc\geninclude\java_io_FileDescriptor.h" : \
+"..\..\..\..\Packages\java\io\nativesrc\geninclude\java_lang_Object.h" : \
 $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
 
@@ -600,10 +336,6 @@ $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 
 !ENDIF 
 
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\..\dist\classes\java\util\ResourceBundle.class
 # End Source File
 # End Target
 # End Project

@@ -48,13 +48,6 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name electricalfire
-    End Project Dependency
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
     Project_Dep_Name javah
     End Project Dependency
 }}}
@@ -72,10 +65,6 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name Burg
     End Project Dependency
-}}}
-
-Package=<4>
-{{{
     Begin Project Dependency
     Project_Dep_Name DebuggerChannel
     End Project Dependency
