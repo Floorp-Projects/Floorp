@@ -162,13 +162,14 @@ sub diagnoseTemperature($$$) {
               $celsius == 0 ? 'freezing point of water' :
                 $celsius < 18 ? 'cold' :
                   $celsius == 20 ? 'standard room temperature' :
-                    $celsius < 35 ? 'warm' :
-                      $celsius < 36 ? 'body temperature' :
-                        $celsius < 65 ? 'hot' :
-                          $celsius < 95 ? 'very hot' :
-                            $celsius == 100 ? 'boiling point of water' :
-                              $celsius < 105 ? 'boiling hot' :
-                                'ridiculously hot';
+                    $celsius < 25 ? 'warm' :
+                      $celsius < 35 ? 'hot' :
+                        $celsius <= 37 ? 'body temperature' :
+                          $celsius < 65 ? 'very hot' :
+                            $celsius < 95 ? 'scorching hot' :
+                              $celsius == 100 ? 'boiling point of water' :
+                                $celsius < 105 ? 'boiling hot' :
+                                  'ridiculously hot';
 }
 
 
