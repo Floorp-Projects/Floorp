@@ -5819,22 +5819,17 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
     newSpec.EndReading(refEnd);
     
     PRInt32 hashNew = newSpec.FindChar(kHash);
-    if (hashNew == 0) {
-        return NS_OK;           // Strange URI
+    if (hashNew <= 0) {
+        return NS_OK;           // Strange URI or no new anchor
     }
-    else if (hashNew > 0) {
-        // found it
-        urlEnd = urlStart;
-        urlEnd.advance(hashNew);
+
+    // found it
+    urlEnd = urlStart;
+    urlEnd.advance(hashNew);
         
-        refStart = urlEnd;
-        ++refStart;             // advanced past '#'
+    refStart = urlEnd;
+    ++refStart;             // advanced past '#'
         
-    }
-    else {
-        // no hash at all
-        urlEnd = refStart = refEnd;
-    }
     const nsACString& sNewLeft = Substring(urlStart, urlEnd);
     const nsACString& sNewRef =  Substring(refStart, refEnd);
                                           
@@ -5846,17 +5841,13 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
     if (hashCurrent == 0) {
         return NS_OK;           // Strange URI 
     }
-    else if (hashCurrent > 0) {
+
+    if (hashCurrent > 0) {
         currentLeftEnd = currentLeftStart;
         currentLeftEnd.advance(hashCurrent);
     }
     else {
         currentSpec.EndReading(currentLeftEnd);
-    }
-
-    // Exit when there are no anchors
-    if (hashNew <= 0 && hashCurrent <= 0) {
-        return NS_OK;
     }
 
     // Compare the URIs.
