@@ -75,7 +75,7 @@ NS_IMPL_ISUPPORTS(MyService, kIMyServiceIID);
 
 MyService::MyService(nsISupports* outer)
 {
-    NS_INIT_REFCNT(outer);
+    NS_INIT_REFCNT();
     // incrementing this will keep our factory from getting unloaded
     gFact->mOutstandingInstances++;
     printf("  creating my service\n");
