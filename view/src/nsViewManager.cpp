@@ -685,15 +685,18 @@ void nsViewManager :: MoveViewTo(nsIView *aView, nscoord aX, nscoord aY)
 
   // only do damage control if the view is visible
 
-  if (nsViewVisibility_kHide != aView->GetVisibility())
+  if ((aX != oldX) || (aY != oldY))
   {
-    nsRect  bounds;
-    aView->GetBounds(bounds);
-  	nsRect oldArea(oldX, oldY, bounds.width, bounds.height);
-  	nsIView* parent = aView->GetParent();  // no addref
-	  UpdateView(parent, oldArea, 0);
-	  nsRect newArea(aX, aY, bounds.width, bounds.height); 
-	  UpdateView(parent, newArea, 0);
+    if (nsViewVisibility_kHide != aView->GetVisibility())
+    {
+      nsRect  bounds;
+      aView->GetBounds(bounds);
+    	nsRect oldArea(oldX, oldY, bounds.width, bounds.height);
+    	nsIView* parent = aView->GetParent();  // no addref
+  	  UpdateView(parent, oldArea, 0);
+  	  nsRect newArea(aX, aY, bounds.width, bounds.height); 
+  	  UpdateView(parent, newArea, 0);
+    }
   }
 }
 
