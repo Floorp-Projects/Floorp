@@ -19,7 +19,7 @@
 <!-- LOCALIZATION NOTE (someProvColors): This is the start of a sentence and will be followed by the following radio buttons. -->
 <!ENTITY  someProvColors "When a webpage provides its own colors and background:">
 <!-- LOCALIZATION NOTE (alwaysUseDocColors.label): This is option one, and it appends to 'someProvColors' above. -->
-<!ENTITY  alwaysUseDocColors.label "use the colors and background supplied by the webpage">
+<!ENTITY  alwaysUseDocColors.label "always use the colors and background supplied by the webpage">
 <!ENTITY  alwaysUseDocColors.accesskey "a">
 <!-- LOCALIZATION NOTE (ignoreDocColors.label): This is option two, and it appends to 'someProvColors' above.  -->
 <!ENTITY  ignoreDocColors.label "use my chosen colors, ignoring the colors provided">
