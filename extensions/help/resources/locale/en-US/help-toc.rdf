@@ -279,14 +279,6 @@
     </nc:subheadings>
   </rdf:Description>
 
-  <rdf:Description about="#nav-doc-printsave">
-    <nc:subheadings>
-      <rdf:Seq>
-        <rdf:li> <rdf:Description ID="nav-doc-printplus" nc:name="Using Print Plus" nc:link="chrome://help/locale/nav_help.html#nav_printplus"/> </rdf:li>
-      </rdf:Seq>
-    </nc:subheadings>
-  </rdf:Description>
-
 
   <rdf:Description about="#nav">
     <nc:subheadings>
@@ -449,14 +441,6 @@
     </nc:subheadings>
   </rdf:Description>
 
-  <rdf:Description about="#nav-page-info">
-    <nc:subheadings>
-      <rdf:Seq>
-        <rdf:li> <rdf:Description ID="pageinfo_privacy" nc:name="Privacy Tab" nc:link="chrome://help/locale/page_info_help.html#pageinfo_privacy"/> </rdf:li>
-      </rdf:Seq>
-    </nc:subheadings>
-  </rdf:Description>
-
 
 <!-- MAIL HELP SECTION -->
 
@@ -485,27 +469,11 @@
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#mail-doc-setup">
-    <nc:subheadings>
-      <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-setup-ISP" nc:name="Setting up Mail Accounts with an ISP or Email Provider"  nc:link="chrome://help/locale/mail_help.html#ISP_Provider"/> </rdf:li>
-      </rdf:Seq>
-    </nc:subheadings>
-  </rdf:Description>
-
 
   <rdf:Description about="#mail-doc">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="mail-doc-add" nc:name="Setting Up Additional Accounts"  nc:link="chrome://help/locale/mail_help.html#account_settings"/> </rdf:li>
-      </rdf:Seq>
-    </nc:subheadings>
-  </rdf:Description>
-
-  <rdf:Description about="#mail-doc">
-    <nc:subheadings>
-      <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-id-chx" nc:name="Changing Account Settings"  nc:link="chrome://help/locale/mail_help.html#account_settings_change"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -844,14 +812,6 @@ nc:link="chrome://help/locale/mail_help.html#delete_POP_IMAP" /> </rdf:li>
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="mail-doc-add-listedit" nc:name="Editing a Mailing List" nc:link="chrome://help/locale/mail_help.html#EDIT_LIST_MAILING_LIST" /> </rdf:li>
-      </rdf:Seq>
-    </nc:subheadings>
-  </rdf:Description>
-
-  <rdf:Description about="#mail-doc-address">
-    <nc:subheadings>
-      <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-add-import" nc:name="Importing Address Books" nc:link="chrome://help/locale/mail_help.html#import_address_book" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
