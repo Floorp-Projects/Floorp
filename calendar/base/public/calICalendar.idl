@@ -318,6 +318,7 @@ interface calIOperationListener : nsISupports
   /**
    * For add, modify, and delete.
    *
+   * @param aCalendar       the calICalendar on which the operation took place
    * @param aStatus         status code summarizing what happened
    * @param aOperationType  type of operation that was completed
    * @param aId             UUID of element that was changed
@@ -325,7 +326,8 @@ interface calIOperationListener : nsISupports
    *                        result, this will probably be an extended error
    *                        string (eg one returned by a server).
    */
-  void onOperationComplete(in nsresult aStatus,
+  void onOperationComplete(in calICalendar aCalendar,
+                           in nsresult aStatus,
                            in unsigned long aOperationType,
                            in string aId,
                            in nsIVariant aDetail);
@@ -348,8 +350,11 @@ interface calIOperationListener : nsISupports
    *
    * Multiple onGetResults might be called 
    */
-  void onGetResult (in nsresult aStatus, in nsIIDRef aItemType, 
-                    in nsIVariant aDetail, in PRUint32 aCount, 
+  void onGetResult (in calICalendar aCalendar,
+                    in nsresult aStatus,
+                    in nsIIDRef aItemType, 
+                    in nsIVariant aDetail,
+                    in PRUint32 aCount, 
                     [array, size_is(aCount), iid_is(aItemType)] 
                     in nsQIResult aItems ); 
 };

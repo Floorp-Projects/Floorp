@@ -69,8 +69,9 @@ calMemoryCalendar.prototype = {
     //
 
     // attribute nsIURI uri;
-    get uri() { return ""; },
-    set uri(aURI) { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
+    mUri: null,
+    get uri() { return this.mUri; },
+    set uri(aURI) { this.mUri = aURI; },
 
     // attribute boolean suppressAlarms;
     get suppressAlarms() { return false; },
@@ -107,7 +108,8 @@ calMemoryCalendar.prototype = {
         if (this.mItems[aItem.id] != null) {
             // is this an error?
             if (aListener)
-                aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+                aListener.onOperationComplete (this,
+                                               Components.results.NS_ERROR_FAILURE,
                                                aListener.ADD,
                                                aItem.id,
                                                "ID already eists for addItem");
@@ -121,7 +123,8 @@ calMemoryCalendar.prototype = {
 
         // notify the listener
         if (aListener)
-            aListener.onOperationComplete (Components.results.NS_OK,
+            aListener.onOperationComplete (this,
+                                           Components.results.NS_OK,
                                            aListener.ADD,
                                            aItem.id,
                                            aItem);
@@ -134,7 +137,8 @@ calMemoryCalendar.prototype = {
         {
             // this is definitely an error
             if (aListener)
-                aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+                aListener.onOperationComplete (this,
+                                               Components.results.NS_ERROR_FAILURE,
                                                aListener.MODIFY,
                                                aItem.id,
                                                "ID for modifyItem doesn't exist or is null");
@@ -149,7 +153,8 @@ calMemoryCalendar.prototype = {
         this.observeModifyItem(modifiedItem, aItem);
 
         if (aListener)
-            aListener.onOperationComplete (Components.results.NS_OK,
+            aListener.onOperationComplete (this,
+                                           Components.results.NS_OK,
                                            aListener.MODIFY,
                                            aItem.id,
                                            aItem);
@@ -161,7 +166,8 @@ calMemoryCalendar.prototype = {
             this.mItems[aId] == null)
         {
             if (aListener)
-                aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+                aListener.onOperationComplete (this,
+                                               Components.results.NS_ERROR_FAILURE,
                                                aListener.DELETE,
                                                aId,
                                                "ID doesn't exist for deleteItem");
@@ -175,7 +181,8 @@ calMemoryCalendar.prototype = {
         observeDeleteItem(deletedItem);
 
         if (aListener)
-            aListener.onOperationComplete (Components.results.NS_OK,
+            aListener.onOperationComplete (this,
+                                           Components.results.NS_OK,
                                            aListener.DELETE,
                                            aId,
                                            null);
@@ -190,7 +197,8 @@ calMemoryCalendar.prototype = {
         if (aId == null ||
             this.mItems[aId] == null)
         {
-            aListener.onOperationComplete(Components.results.NS_ERROR_FAILURE,
+            aListener.onOperationComplete(this,
+                                          Components.results.NS_ERROR_FAILURE,
                                           aListener.GET,
                                           null,
                                           "IID doesn't exist for getItem");
@@ -205,18 +213,21 @@ calMemoryCalendar.prototype = {
         } else if (item.QueryInterface(Components.interfaces.calITodo)) {
             iid = Components.interfaces.calITodo;
         } else {
-            aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+            aListener.onOperationComplete (this,
+                                           Components.results.NS_ERROR_FAILURE,
                                            aListener.GET,
                                            aId,
                                            "Can't deduce item type based on QI");
             return;
         }
 
-        aListener.onGetResult (Components.results.NS_OK,
+        aListener.onGetResult (this,
+                               Components.results.NS_OK,
                                iid,
                                null, 1, [item]);
 
-        aListener.onOperationComplete (Components.results.NS_OK,
+        aListener.onOperationComplete (this,
+                                       Components.results.NS_OK,
                                        aListener.GET,
                                        aId,
                                        null);
@@ -336,13 +347,15 @@ calMemoryCalendar.prototype = {
                 break;
         }
 
-        aListener.onGetResult (Components.results.NS_OK,
+        aListener.onGetResult (this,
+                               Components.results.NS_OK,
                                itemReturnOccurrences ? calIItemOccurrence : itemTypeFilter,
                                null,
                                itemsFound.length,
                                itemsFound);
 
-        aListener.onOperationComplete (Components.results.NS_OK,
+        aListener.onOperationComplete (this,
+                                       Components.results.NS_OK,
                                        aListener.GET,
                                        null,
                                        null);
@@ -382,7 +395,7 @@ calMemoryCalendar.prototype = {
 
 var calMemoryCalendarModule = {
     mCID: Components.ID("{bda0dd7f-0a2f-4fcf-ba08-5517e6fbf133}"),
-    mContractID: "@mozilla.org/calendar/calendar;1&type=memory",
+    mContractID: "@mozilla.org/calendar/calendar;1?type=memory",
     
     registerSelf: function (compMgr, fileSpec, location, type) {
         compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);

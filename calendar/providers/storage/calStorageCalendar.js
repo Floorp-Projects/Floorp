@@ -43,10 +43,10 @@
 const kStorageServiceContractID = "@mozilla.org/storage/service;1";
 const kStorageServiceIID = Components.interfaces.mozIStorageService;
 
-const kCalEventContractID = "@mozilla.org/calendar/item;1&type=event";
+const kCalEventContractID = "@mozilla.org/calendar/event;1";
 const kCalEventIID = Components.interfaces.calIEvent;
 
-const kCalTodoContractID = "@mozilla.org/calendar/item;1&type=todo";
+const kCalTodoContractID = "@mozilla.org/calendar/todo;1";
 const kCalTodoIID = Components.interfaces.calITodo;
 
 const kCalDateTimeContractID = "@mozilla.org/calendar/datetime;1";
@@ -196,7 +196,8 @@ calStorageCalendar.prototype = {
         if (this.mItems[aItem.id] != null) {
             // is this an error?
             if (aListener)
-                aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+                aListener.onOperationComplete (this,
+                                               Components.results.NS_ERROR_FAILURE,
                                                aListener.ADD,
                                                aItem.id,
                                                "ID already eists for addItem");
@@ -208,7 +209,8 @@ calStorageCalendar.prototype = {
         if (event) {
             flushEvent (event);
         } else {
-            aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+            aListener.onOperationComplete (this,
+                                           Components.results.NS_ERROR_FAILURE,
                                            aListener.ADD,
                                            aItem.id,
                                            "Don't know how to add items of the given type");
@@ -220,7 +222,8 @@ calStorageCalendar.prototype = {
 
         // notify the listener
         if (aListener)
-            aListener.onOperationComplete (Components.results.NS_OK,
+            aListener.onOperationComplete (this,
+                                           Components.results.NS_OK,
                                            aListener.ADD,
                                            aItem.id,
                                            aItem);
@@ -232,7 +235,8 @@ calStorageCalendar.prototype = {
         {
             // this is definitely an error
             if (aListener)
-                aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+                aListener.onOperationComplete (this,
+                                               Components.results.NS_ERROR_FAILURE,
                                                aListener.MODIFY,
                                                aItem.id,
                                                "ID for modifyItem item is null");
@@ -244,7 +248,8 @@ calStorageCalendar.prototype = {
         if (event) {
             flushEvent (event);
         } else {
-            aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+            aListener.onOperationComplete (this,
+                                           Components.results.NS_ERROR_FAILURE,
                                            aListener.MODIFY,
                                            aItem.id,
                                            "Don't know how to modify items of the given type");
@@ -255,7 +260,8 @@ calStorageCalendar.prototype = {
         observeModifyItem(modifiedItem, aItem);
 
         if (aListener)
-            aListener.onOperationComplete (Components.results.NS_OK,
+            aListener.onOperationComplete (this,
+                                           Components.results.NS_OK,
                                            aListener.MODIFY,
                                            aItem.id,
                                            aItem);
@@ -266,7 +272,8 @@ calStorageCalendar.prototype = {
         if (aId == null)
         {
             if (aListener)
-                aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+                aListener.onOperationComplete (this,
+                                               Components.results.NS_ERROR_FAILURE,
                                                aListener.DELETE,
                                                aId,
                                                "ID is null for deleteItem");
@@ -279,7 +286,8 @@ calStorageCalendar.prototype = {
         if (event) {
             deleteEvent (aId);
         } else {
-            aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+            aListener.onOperationComplete (this,
+                                           Components.results.NS_ERROR_FAILURE,
                                            aListener.DELETE,
                                            aItem.id,
                                            "Don't know how to delete items of the given type");
@@ -290,7 +298,8 @@ calStorageCalendar.prototype = {
         observeDeleteItem(item);
 
         if (aListener)
-            aListener.onOperationComplete (Components.results.NS_OK,
+            aListener.onOperationComplete (this,
+                                           Components.results.NS_OK,
                                            aListener.DELETE,
                                            aId,
                                            null);
@@ -312,7 +321,8 @@ calStorageCalendar.prototype = {
         } else if (item.QueryInterface (kCalTodoIID)) {
             item_iid = kCalTodoIID;
         } else {
-            aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+            aListener.onOperationComplete (this,
+                                           Components.results.NS_ERROR_FAILURE,
                                            aListener.GET,
                                            aId,
                                            "Can't deduce item type based on QI");
@@ -323,7 +333,8 @@ calStorageCalendar.prototype = {
                                iid,
                                null, 1, [item]);
 
-        aListener.onOperationComplete (Components.results.NS_OK,
+        aListener.onOperationComplete (this,
+                                       Components.results.NS_OK,
                                        aListener.GET,
                                        aId,
                                        null);
@@ -355,7 +366,8 @@ calStorageCalendar.prototype = {
 
         // only events for now
         if (!(aItemFilter & calICalendar.ITEM_FILTER_TYPE_EVENT)) {
-            aListener.onOperationComplete(Components.results.NS_ERROR_FAILURE,
+            aListener.onOperationComplete(this,
+                                          Components.results.NS_ERROR_FAILURE,
                                           aListener.GET,
                                           null,
                                           "Don't know how to getItems for anything other than events");
@@ -369,7 +381,8 @@ calStorageCalendar.prototype = {
         var events = getEventsByRange(startTime, endTime, aCount, asOccurrences);
 
         if (aListener)
-            aListener.onGetComplete (Components.results.NS_OK,
+            aListener.onGetComplete (this,
+                                     Components.results.NS_OK,
                                      aItemType,
                                      null,
                                      itemsFound.length,
@@ -622,7 +635,7 @@ calStorageCalendar.prototype = {
 
 var calStorageCalendarModule = {
     mCID: Components.ID("{b3eaa1c4-5dfe-4c0a-b62a-b3a514218461}"),
-    mContractID: "@mozilla.org/calendar/calendar;1&type=storage",
+    mContractID: "@mozilla.org/calendar/calendar;1?type=storage",
     
     registerSelf: function (compMgr, fileSpec, location, type) {
         compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
