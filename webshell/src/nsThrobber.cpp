@@ -42,6 +42,7 @@ static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIThrobberIID, NS_ITHROBBER_IID);
 
+
 #define THROB_NUM 14
 #define THROBBER_AT "resource:/res/throbber/anims%02d.gif"
 
@@ -50,7 +51,8 @@ static nsVoidArray gThrobbers;
 #define INNER_OUTER \
   ((nsThrobber*)((char*)this - offsetof(nsThrobber, mInner)))
 
-class nsThrobber : public nsIThrobber {
+class nsThrobber : public nsIThrobber,
+                   public nsIImageRequestObserver {
 public:
   nsThrobber(nsISupports* aOuter);
 
@@ -71,6 +73,16 @@ public:
   NS_IMETHOD Start();
   NS_IMETHOD Stop();
 
+  // nsIImageRequestObserver
+  virtual void Notify(nsIImageRequest *aImageRequest,
+                      nsIImage *aImage,
+                      nsImageNotification aNotificationType,
+                      PRInt32 aParam1, PRInt32 aParam2,
+                      void *aParam3);
+
+  virtual void NotifyError(nsIImageRequest *aImageRequest,
+                           nsImageError aErrorType);
+
   void Tick();
   
   virtual ~nsThrobber();
@@ -88,6 +100,7 @@ public:
   nsIImageGroup* mImageGroup;
   nsITimer* mTimer;
   PRBool mRunning;
+  PRUint32 mCompletedImages ;
 
   nsISupports *mOuter;
 
@@ -113,8 +126,13 @@ public:
       AddRef();
       return NS_OK;
     }
+    if (aIID.Equals(kIImageObserverIID)) {
+      *aInstancePtr = (void*)(nsIImageRequestObserver*)this;
+      AddRef();
+      return NS_OK;
+    }
     if (aIID.Equals(kISupportsIID)) {
-      *aInstancePtr = (void*)(nsISupports*)this;
+      *aInstancePtr = (void*)(nsISupports*)(nsIThrobber*)this;
       AddRef();
       return NS_OK;
     }
@@ -141,23 +159,6 @@ public:
       return INNER_OUTER->ReleaseObject();
     }
   } mInner;
-};
-
-class ThrobObserver : public nsIImageRequestObserver {
-public:
-  ThrobObserver();
-  ~ThrobObserver();
- 
-  NS_DECL_ISUPPORTS
-
-  virtual void Notify(nsIImageRequest *aImageRequest,
-                      nsIImage *aImage,
-                      nsImageNotification aNotificationType,
-                      PRInt32 aParam1, PRInt32 aParam2,
-                      void *aParam3);
-
-  virtual void NotifyError(nsIImageRequest *aImageRequest,
-                           nsImageError aErrorType);
 };
 
 //----------------------------------------------------------------------
@@ -279,6 +280,8 @@ nsThrobber::nsThrobber(nsISupports* aOuter)
   else 
     mOuter = &mInner;
 
+  mCompletedImages = 0;
+
   AddThrobber(this);
 }
 
@@ -315,7 +318,7 @@ nsThrobber::Init(nsIWidget* aParent, const nsRect& aBounds)
 
   // Create widget
   nsresult rv = NSRepository::CreateInstance(kChildCID,
-                                             this,
+                                             (nsIThrobber *)this,
                                              kISupportsIID,
                                              (void**)&mInnerWidget);
   if (NS_OK != rv) {
@@ -372,30 +375,20 @@ nsThrobber::Stop()
   return NS_OK;
 }
 
-//----------------------------------------
-
-ThrobObserver::ThrobObserver()
-{
-  NS_INIT_REFCNT();
-}
-
-ThrobObserver::~ThrobObserver()
-{
-}
-
-NS_IMPL_ISUPPORTS(ThrobObserver, kIImageObserverIID)
-
 void  
-ThrobObserver::Notify(nsIImageRequest *aImageRequest,
+nsThrobber::Notify(nsIImageRequest *aImageRequest,
                       nsIImage *aImage,
                       nsImageNotification aNotificationType,
                       PRInt32 aParam1, PRInt32 aParam2,
                       void *aParam3)
 {
+  if (aNotificationType == nsImageNotification_kImageComplete)
+   mCompletedImages++;
+
 }
 
 void 
-ThrobObserver::NotifyError(nsIImageRequest *aImageRequest,
+nsThrobber::NotifyError(nsIImageRequest *aImageRequest,
                         nsImageError aErrorType)
 {
 }
@@ -415,6 +408,10 @@ nsThrobber::Tick()
     if (mIndex >= THROB_NUM)
       mIndex = 0;
     mWidget->Invalidate(PR_TRUE);
+  } else if (mCompletedImages == THROB_NUM)
+  {
+    mWidget->Invalidate(PR_TRUE);
+    mCompletedImages = 0;
   }
 
   NS_RELEASE(mTimer);
@@ -452,10 +449,9 @@ nsThrobber::LoadThrobberImages()
   
   for (PRInt32 cnt = 0; cnt < THROB_NUM; cnt++) {
     PR_snprintf(url, sizeof(url), THROBBER_AT, cnt);
-    ThrobObserver* observer = new ThrobObserver();
     nscolor bgcolor = NS_RGB(0, 0, 0);
     mImages->InsertElementAt(mImageGroup->GetImage(url,
-                                                   observer,
+                                                   (nsIImageRequestObserver *)this,
                                                    &bgcolor,
                                                    mWidth - 2,
                                                    mHeight - 2, 0),
