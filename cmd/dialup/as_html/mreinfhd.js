@@ -17,23 +17,34 @@
  */
 <!--  to hide script contents from old browsers
 
+var globals = parent.parent.parent.globals;
+var plugin = globals.document.setupPlugin;
+var controls = parent.parent.controls;
+
 function loadData()
 {
-	var		fileToLoad = "isp/en/" + parent.parent.parent.globals.selectedISP +
-				"/client_data/html/sales.html";
+	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
+
+	globals.debug( "generating more info page" );
 	
-	parent.moreinfo.location.replace( fileToLoad );
+	result = plugin.GenerateMoreInfoPage( globals.selectedISP );
+
+	if ( result == true )
+		parent.moreinfo.location.replace( "ispplans.htm" );
+
+	//globals.debug( "opening support window" );
 	
-	if ( parent.parent.controls.generateControls )
-		parent.parent.controls.generateControls();
+	//top.open( "about:blank", "supportNumber", "alwaysRaised,dependent=yes,innerHeight=20,innerWidth=100");
+	//top.document.writeln( "1-800-WAAAAAH!" );
+	if ( controls.generateControls )
+		controls.generateControls();
 }
 
 function generateHeader()
 {
 //	parent.parent.parent.globals.debug( "ispDisplayName" + ispDisplayName );
 
-	document.writeln( "More Information about " + 
-		parent.parent.parent.globals.getSelectedISPName() );
+	document.writeln( "More Information about " + globals.getSelectedISPName() );
 }
 
 // end hiding contents from old browers -->
