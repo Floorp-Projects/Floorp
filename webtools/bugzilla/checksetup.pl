@@ -277,8 +277,8 @@ Please fix the error in your 'localconfig' file.
 Alternately rename your 'localconfig' file, rerun 
 checksetup.pl, and re-enter your answers.
 
-  $ mv -f localconfig localconfig.old
-  $ ./checksetup.pl
+  \$ mv -f localconfig localconfig.old
+  \$ ./checksetup.pl
 
 
 EOT
