@@ -542,7 +542,7 @@ void nsHTMLContentSinkStream::UnicodeToHTMLString(const nsString& aSrc)
     PRInt32 bufferLength = mBufferSize;
     
     mUnicodeEncoder->Reset();
-    nsresult result = mUnicodeEncoder->Convert(data, &length, mBuffer, &bufferLength);
+    nsresult result = mUnicodeEncoder->Convert(data.GetUnicode(), &length, mBuffer, &bufferLength);
     mBuffer[bufferLength] = 0;
     PRInt32 temp = bufferLength;
     if (NS_SUCCEEDED(result))
