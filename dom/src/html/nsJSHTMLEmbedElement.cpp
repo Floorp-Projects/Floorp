@@ -352,7 +352,8 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLEmbedElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsresult result;
-  nsIID classID;
+  nsIID interfaceID, classID;
+  PRBool isConstructor;
   nsIDOMHTMLEmbedElement *nativeThis;
   nsIScriptObjectOwner *owner = nsnull;
   nsIJSNativeInitializer* initializer = nsnull;
@@ -372,7 +373,7 @@ HTMLEmbedElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     return JS_FALSE;
   }
 
-  result = manager->LookupName(NS_ConvertASCIItoUCS2("HTMLEmbedElement"), PR_TRUE, classID);
+  result = manager->LookupName(NS_ConvertASCIItoUCS2("HTMLEmbedElement"), isConstructor, interfaceID, classID);
   if (NS_OK != result) {
     return JS_FALSE;
   }

@@ -45,6 +45,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsDOMCID.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptObjectOwner.h"
 #include "nsINameSpaceManager.h"
 #include "nsIScriptNameSetRegistry.h"
 #include "nsIScriptNameSpaceManager.h"
@@ -141,10 +142,12 @@ LayoutScriptNameSet::AddNameSet(nsIScriptContext* aScriptContext)
   nsIScriptNameSpaceManager* manager;
   static NS_DEFINE_IID(kHTMLImageElementCID, NS_HTMLIMAGEELEMENT_CID);
   static NS_DEFINE_IID(kHTMLOptionElementCID, NS_HTMLOPTIONELEMENT_CID);
+  static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
   result = aScriptContext->GetNameSpaceManager(&manager);
   if (NS_OK == result) {
     result = manager->RegisterGlobalName(NS_ConvertToString("HTMLImageElement"),
+                                         kIScriptObjectOwnerIID,
                                          kHTMLImageElementCID,
                                          PR_TRUE);
     if (NS_FAILED(result)) {
@@ -153,6 +156,7 @@ LayoutScriptNameSet::AddNameSet(nsIScriptContext* aScriptContext)
     }
 
     result = manager->RegisterGlobalName(NS_ConvertToString("HTMLOptionElement"),
+                                         kIScriptObjectOwnerIID,
                                          kHTMLOptionElementCID,
                                          PR_TRUE);
     if (NS_FAILED(result)) {

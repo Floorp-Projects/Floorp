@@ -392,7 +392,8 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLOptionElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsresult result;
-  nsIID classID;
+  nsIID interfaceID, classID;
+  PRBool isConstructor;
   nsIDOMHTMLOptionElement *nativeThis;
   nsIScriptObjectOwner *owner = nsnull;
   nsIJSNativeInitializer* initializer = nsnull;
@@ -412,7 +413,7 @@ HTMLOptionElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     return JS_FALSE;
   }
 
-  result = manager->LookupName(NS_ConvertASCIItoUCS2("HTMLOptionElement"), PR_TRUE, classID);
+  result = manager->LookupName(NS_ConvertASCIItoUCS2("HTMLOptionElement"), isConstructor, interfaceID, classID);
   if (NS_OK != result) {
     return JS_FALSE;
   }

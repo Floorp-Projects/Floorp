@@ -1274,19 +1274,19 @@ nsIHTMLEditRules = { /* a6cf9121-15b3-11d2-932e-00805f8add32 */
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9122-15b3-11d2-932e-00805f8add32 */
+nsIDOMNSDOMImplementation = { /* a6cf9122-15b3-11d2-932e-00805f8add32 */
     0xa6cf9122,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9123-15b3-11d2-932e-00805f8add32 */
+nsIDOMSerializer = { /* a6cf9123-15b3-11d2-932e-00805f8add32 */
     0xa6cf9123,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9124-15b3-11d2-932e-00805f8add32 */
+nsIDOMSerializer_CID = { /* a6cf9124-15b3-11d2-932e-00805f8add32 */
     0xa6cf9124,
     0x15b3,
     0x11d2,

@@ -48,12 +48,14 @@ public:
    * XXX How do we indicate clashes in registered names?
    * 
    * @param aName the name to reflect in the global namespace
+   * @param aIID IID used to create a script wrapper 
    * @param aCID the class ID used to obtain a factory
    * @param aIsConstructor set to PR_TRUE if the name represents
    *        a constructor. PR_FALSE if it is a global object.
    * @result NS_OK if successful
    */
   NS_IMETHOD RegisterGlobalName(const nsString& aName, 
+                                const nsIID& aIID,
                                 const nsIID& aCID,
                                 PRBool aIsConstructor) = 0;
 
@@ -71,16 +73,19 @@ public:
    * a factory.
    * 
    * @param aName the name to use as a key for the lookup
-   * @param aIsConstructor PR_TRUE if we're looking for
-   *        a constructor. PR_FALSE if we're looking for 
-   *        a global symbol.
+   * @param aIsConstructor out parameter to indicate whether
+   *                       the name refers to an instance or a constructor
+   * @param aIID out parameter that returns the ID of the
+   *             interface to use to create a script wrapper 
+   *             for the newly created instance.
    * @param aCID out parameter that returns the class ID
    *        that corresponds to the name
    * @result NS_OK if the lookup succeeded. NS_ERROR_INVALID_ARG
    *         if the lookup failed.
    */
   NS_IMETHOD LookupName(const nsString& aName, 
-                        PRBool aIsConstructor,
+                        PRBool& aIsConstructor,
+                        nsIID& aIID,
                         nsIID& aCID) = 0;
 };
 

@@ -24,6 +24,7 @@
 #include "prmem.h"
 
 typedef struct {
+  nsIID mIID;
   nsIID mCID;
   PRBool mIsConstructor;
 } nsGlobalNameStruct;
@@ -61,6 +62,7 @@ NS_IMPL_ISUPPORTS(nsScriptNameSpaceManager, kIScriptNameSpaceManagerIID);
 
 NS_IMETHODIMP 
 nsScriptNameSpaceManager::RegisterGlobalName(const nsString& aName, 
+                                             const nsIID& aIID,
                                              const nsIID& aCID,
                                              PRBool aIsConstructor)
 {
@@ -74,6 +76,7 @@ nsScriptNameSpaceManager::RegisterGlobalName(const nsString& aName,
   if (nsnull == gn) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  gn->mIID = aIID;
   gn->mCID = aCID;
   gn->mIsConstructor = aIsConstructor;
 
@@ -110,7 +113,8 @@ nsScriptNameSpaceManager::UnregisterGlobalName(const nsString& aName)
 
 NS_IMETHODIMP 
 nsScriptNameSpaceManager::LookupName(const nsString& aName, 
-                                     PRBool aIsConstructor,
+                                     PRBool& aIsConstructor,
+                                     nsIID& aIID,
                                      nsIID& aCID)
 {
   if (nsnull != mGlobalNames) {
@@ -118,12 +122,15 @@ nsScriptNameSpaceManager::LookupName(const nsString& aName,
     nsGlobalNameStruct* gn = (nsGlobalNameStruct*)PL_HashTableLookup(mGlobalNames, name);
     nsCRT::free(name);
 
-    if ((nsnull != gn) && (gn->mIsConstructor == aIsConstructor)) {
+    if (nsnull != gn) {
+      aIID = gn->mIID;
       aCID = gn->mCID;
+      aIsConstructor = gn->mIsConstructor;
       return NS_OK;
     }
   }
 
+  // XXX Shouldn't return error code to indicate lookup failure
   return NS_ERROR_INVALID_ARG;
 }
 
