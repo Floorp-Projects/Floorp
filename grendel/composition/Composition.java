@@ -33,9 +33,6 @@ import java.util.Vector;
 import javax.swing.*;
 import javax.swing.event.*;
 
-//import netscape.orion.toolbars.*;
-//import netscape.orion.menus.NsMenuManager;
-
 import grendel.storage.MessageExtra;
 import grendel.storage.MessageExtraFactory;
 import grendel.widgets.Animation;
@@ -55,18 +52,20 @@ import javax.mail.Session;
  * @author  Lester Schueler
  */
 public class Composition extends GeneralFrame {
-    CompositionPanel mCompositionPanel;
-    AddressBar mAddressBar;
+  CompositionPanel mCompositionPanel;
+  AddressBar mAddressBar;
 
-    public static void main(String[] args) {
-      //check arguments
+  public static void main(String[] args) {
+    //check arguments
 //       if (2 != args.length) {
 //         System.out.println ("Usage: composition mail_server_name user_name");
 //         System.exit(0);
 //       }
 
-      Composition compFrame = new Composition ();
-      compFrame.show();
+    Composition compFrame = new Composition ();
+    compFrame.validate();
+    compFrame.pack();
+    compFrame.setVisible(true);
     }
 
     /**
@@ -123,112 +122,110 @@ public class Composition extends GeneralFrame {
         fStatusBar = buildStatusBar();
         fPanel.add(BorderLayout.SOUTH, fStatusBar);
         
-        //mCompositionPanel.add(BorderLayout.NORTH, mAddressBar);
-        fPanel.add(mCompositionPanel);
-
-        restoreBounds();	
+    fPanel.add(mCompositionPanel);
+    
+    restoreBounds();	
         
-        mCompositionPanel.AddSignature();
-    }
+    mCompositionPanel.AddSignature();
+  }
 
-    public void dispose() {
-        saveBounds();
-        super.dispose(); // call last
-    }
+  public void dispose() {
+    saveBounds();
+    super.dispose(); // call last
+  }
 
-    protected void startAnimation() {
-        super.startAnimation();
-    }
+  protected void startAnimation() {
+    super.startAnimation();
+  }
 
-    protected void stopAnimation() {
-        super.stopAnimation();
-    }
+  protected void stopAnimation() {
+    super.stopAnimation();
+  }
 
-    /** Initialize the headers and body of this composition as being a reply to
+  /** Initialize the headers and body of this composition as being a reply to
       the given message. */
-    public void initializeAsReply(Message msg, boolean replyall) {
-        mCompositionPanel.setReferredMessage(msg);
-        MessageExtra mextra = MessageExtraFactory.Get(msg);
-        int i;
-        Vector dests = new Vector();
-        Address from[] = null;
-        try {
-            from = msg.getReplyTo();
-        } catch (MessagingException e) {
-        }
-        if (from == null || from.length == 0) {
-            try {
-                from = msg.getFrom();
-            } catch (MessagingException e) {
-            }
-        }
-
-        if (from != null) {
-            for (i=0 ; i<from.length ; i++) {
-                dests.addElement(new Addressee(from[i], Addressee.TO));
-            }
-        }
-        if (replyall) {
-            for (int w=0 ; w<2 ; w++) {
-                Address list[] = null;
-                try {
-                    list = msg.getRecipients(w == 0 ? Message.RecipientType.TO : Message.RecipientType.CC);
-                } catch (MessagingException e) {
-                }
-                if (list != null) {
-                    for (i=0 ; i<list.length ; i++) {
-                        dests.addElement(new Addressee(list[i], Addressee.CC));
-                    }
-                }
-            }
-        }
-        Addressee destarray[] = new Addressee[dests.size()];
-        dests.copyInto(destarray);
-        mAddressBar.getAddressList().setAddresses(destarray);
-
-        try {
-            mCompositionPanel.setSubject("Re: " + mextra.simplifiedSubject());
-        } catch (MessagingException e) {
-        }
-
-        // Quote the original text
-        mCompositionPanel.QuoteOriginalMessage();
-
+  public void initializeAsReply(Message msg, boolean replyall) {
+    mCompositionPanel.setReferredMessage(msg);
+    MessageExtra mextra = MessageExtraFactory.Get(msg);
+    int i;
+    Vector dests = new Vector();
+    Address from[] = null;
+    try {
+      from = msg.getReplyTo();
+    } catch (MessagingException e) {
+    }
+    if (from == null || from.length == 0) {
+      try {
+        from = msg.getFrom();
+      } catch (MessagingException e) {
+      }
     }
 
-    /** Initialize the headers and body of this composition 
-        as being a message that is forwarded 'quoted'. */
-    public void initializeAsForward(Message msg, int aScope) {
-        mCompositionPanel.setReferredMessage(msg);
-        MessageExtra mextra = MessageExtraFactory.Get(msg);
-
+    if (from != null) {
+      for (i=0 ; i<from.length ; i++) {
+        dests.addElement(new Addressee(from[i], Addressee.TO));
+      }
+    }
+    if (replyall) {
+      for (int w=0 ; w<2 ; w++) {
+        Address list[] = null;
         try {
-            mCompositionPanel.setSubject("[Fwd: " + mextra.simplifiedSubject() + "]");
+          list = msg.getRecipients(w == 0 ? Message.RecipientType.TO : Message.RecipientType.CC);
         } catch (MessagingException e) {
         }
-
-        // Quote the original text
-        if (aScope == FolderPanel.kQuoted) {
-          mCompositionPanel.QuoteOriginalMessage();
+        if (list != null) {
+          for (i=0 ; i<list.length ; i++) {
+            dests.addElement(new Addressee(list[i], Addressee.CC));
+          }
         }
+      }
+    }
+    Addressee destarray[] = new Addressee[dests.size()];
+    dests.copyInto(destarray);
+    mAddressBar.getAddressList().setAddresses(destarray);
 
-        if (aScope == FolderPanel.kInline) {
-          mCompositionPanel.InlineOriginalMessage();
-        }
-
+    try {
+      mCompositionPanel.setSubject("Re: " + mextra.simplifiedSubject());
+    } catch (MessagingException e) {
     }
 
-    class PanelListener implements CompositionPanelListener {
-        public void sendingMail(ChangeEvent aEvent) {
-            startAnimation();
-        }
-        public void doneSendingMail(ChangeEvent aEvent) {
-            stopAnimation();
-            dispose();
-        }
-        public void sendFailed(ChangeEvent aEvent) {
-            stopAnimation();
-        }
+    // Quote the original text
+    mCompositionPanel.QuoteOriginalMessage();
+  }
+
+  /** Initialize the headers and body of this composition 
+      as being a message that is forwarded 'quoted'. */
+  public void initializeAsForward(Message msg, int aScope) {
+    mCompositionPanel.setReferredMessage(msg);
+    MessageExtra mextra = MessageExtraFactory.Get(msg);
+
+    try {
+      mCompositionPanel.setSubject("[Fwd: " + mextra.simplifiedSubject() + "]");
+    } catch (MessagingException e) {
     }
+
+    // Quote the original text
+    if (aScope == FolderPanel.kQuoted) {
+      mCompositionPanel.QuoteOriginalMessage();
+    }
+
+    if (aScope == FolderPanel.kInline) {
+      mCompositionPanel.InlineOriginalMessage();
+    }
+    
+  }
+
+  class PanelListener implements CompositionPanelListener {
+    public void sendingMail(ChangeEvent aEvent) {
+      startAnimation();
+    }
+    public void doneSendingMail(ChangeEvent aEvent) {
+      stopAnimation();
+      dispose();
+    }
+    public void sendFailed(ChangeEvent aEvent) {
+      stopAnimation();
+    }
+  }
 }
 
