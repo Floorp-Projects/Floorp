@@ -70,7 +70,7 @@ public:
 
   NS_IMETHOD Hide() = 0;
 
-  NS_IMETHOD OpenWindow(const nsString& aURL, PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow) = 0;
+  NS_IMETHOD OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow) = 0;
 
   NS_IMETHOD ChangeChrome(PRUint32 aNewChromeMask) = 0;
 

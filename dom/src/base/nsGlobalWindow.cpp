@@ -843,6 +843,8 @@ GlobalWindowImpl::Open(JSContext *cx,
                        PRInt32* aReturn)
 {
   PRUint32 mChrome = 0;
+  PRInt32 mWidth, mHeight;
+  PRInt32 mLeft, mTop;
   nsString mURL, mName;
   JSString* str;
   *aReturn = JSVAL_NULL;
@@ -888,18 +890,15 @@ GlobalWindowImpl::Open(JSContext *cx,
     mChrome |= WinHasOption(options, "scrollbars") ? NS_CHROME_SCROLLBARS_ON : 0;
     mChrome |= WinHasOption(options, "resizable") ? NS_CHROME_WINDOW_RESIZE_ON : 0;
     mChrome |= NS_CHROME_WINDOW_CLOSE_ON;
-    /* width, height
-    mChrome->w_hint                 =
-        WinHasOption(options, "innerWidth") | WinHasOption(options, "width");
-    mChrome->h_hint                 =
-        WinHasOption(options, "innerHeight") | WinHasOption(options, "height");
-    mChrome->outw_hint              = WinHasOption(options, "outerWidth");
-    mChrome->outh_hint              = WinHasOption(options, "outerHeight");
-    mChrome->l_hint                 =
-        WinHasOption(options, "left") | WinHasOption(options, "screenX");
-    mChrome->t_hint                 =
-        WinHasOption(options, "top") | WinHasOption(options, "screenY");
-    */
+
+    mWidth = WinHasOption(options, "innerWidth") | WinHasOption(options, "width");
+    mHeight = WinHasOption(options, "innerHeight") | WinHasOption(options, "height");
+
+    /*mWidth = WinHasOption(options, "outerWidth");
+    mHeight = WinHasOption(options, "outerHeight");*/
+
+    mLeft = WinHasOption(options, "left") | WinHasOption(options, "screenX");
+    mTop = WinHasOption(options, "top") | WinHasOption(options, "screenY");
     /*z-ordering, history, dependent
     mChrome->topmost         = WinHasOption(options, "alwaysRaised");
     mChrome->bottommost              = WinHasOption(options, "alwaysLowered");
@@ -938,7 +937,13 @@ GlobalWindowImpl::Open(JSContext *cx,
    * update chrome */
   
   if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
-    mBrowser->OpenWindow(mURL, mChrome, mNewWindow);
+    mBrowser->OpenWindow(mChrome, mNewWindow);
+    mNewWindow->LoadURL(mURL);
+    //How should we do default size/pos
+    mNewWindow->SizeTo(mWidth ? mWidth : 620, mHeight ? mHeight : 400);
+    mNewWindow->MoveTo(mLeft, mTop);
+    mNewWindow->Show();
+
     NS_RELEASE(mBrowser);
 
     /*XXX Get win obj */
@@ -1013,11 +1018,11 @@ GlobalWindowImpl::CheckWindowName(JSContext *cx, nsString& aName)
   return NS_OK;
 }
 
-int32 
+PRInt32 
 GlobalWindowImpl::WinHasOption(char *options, char *name)
 {
   char *comma, *equal;
-  int32 found = 0;
+  PRInt32 found = 0;
 
   for (;;) {
     comma = strchr(options, ',');
@@ -1148,7 +1153,6 @@ GlobalWindowImpl::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
 PRBool    
 GlobalWindowImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
-  
   if (JSVAL_IS_STRING(aID) && 
       PL_strcmp("location", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
     nsIDOMLocation *location;

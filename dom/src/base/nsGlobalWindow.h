@@ -131,7 +131,7 @@ protected:
   void          HoldTimeout(nsTimeoutImpl *aTimeout);
   nsresult      GetBrowserWindowInterface(nsIBrowserWindow*& aBrowser);
   nsresult      CheckWindowName(JSContext *cx, nsString& aName);
-  int32         WinHasOption(char *options, char *name);
+  PRInt32       WinHasOption(char *options, char *name);
   PRBool        CheckForEventListener(JSContext *aContext, nsString& aPropName);
 
   nsIScriptContext *mContext;

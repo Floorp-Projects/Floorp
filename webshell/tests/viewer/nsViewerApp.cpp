@@ -390,7 +390,7 @@ nsViewerApp::OpenWindow()
 }
 
 NS_IMETHODIMP
-nsViewerApp::OpenWindow(const nsString& aURL, PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow)
+nsViewerApp::OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow)
 {
   // Create browser window
   nsBrowserWindow* bw = nsnull;
@@ -399,8 +399,6 @@ nsViewerApp::OpenWindow(const nsString& aURL, PRUint32 aNewChromeMask, nsIBrowse
                                              (void**) &bw);
   bw->SetApp(this);
   bw->Init(mAppShell, mPrefs, nsRect(0, 0, 620, 400), aNewChromeMask, mAllowPlugins);
-  bw->Show();
-  bw->LoadURL(aURL);
 
   aNewWindow = bw;
   NS_ADDREF(bw);
