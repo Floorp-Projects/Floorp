@@ -25,7 +25,7 @@ PURIFY        = purify $(PURIFYOPTIONS)
 LINK_DLL      = $(LINK) $(OS_DLLFLAGS) $(DLLFLAGS)
 LINK_EXE      = $(LINK) $(OS_LFLAGS) $(LFLAGS)
 NFSPWD        = $(NSINSTALL_DIR)/nfspwd
-CFLAGS       += $(OPTIMIZER) $(OS_CFLAGS) $(XP_DEFINE) $(DEFINES) $(INCLUDES) \
+CFLAGS       += -I$(SOURCE_XP_DIR)/include $(OPTIMIZER) $(OS_CFLAGS) $(XP_DEFINE) $(DEFINES) $(INCLUDES) \
 		$(XCFLAGS)
 RANLIB        = echo
 JAR           = /bin/jar
