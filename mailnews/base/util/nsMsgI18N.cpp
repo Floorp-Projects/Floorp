@@ -714,10 +714,28 @@ nsresult nsMsgI18NFormatNNTPXPATInNonRFC1522Format(const nsCString& aCharset,
   return NS_OK;
 }
 
-// RICHIE - not sure about this one?? need to see what it did in the old
-// world.
 char *
 nsMsgI18NGetAcceptLanguage(void)
 {
-  return "en";
+  static char   lang[32];
+  nsresult      res;
+
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
+  if (nsnull != prefs && NS_SUCCEEDED(res))
+  {
+    nsXPIDLCString prefValue;
+
+    nsCRT::memset(lang, 0, sizeof(lang));
+    res = prefs->CopyCharPref("intl.accept_languages", getter_Copies(prefValue));
+	  if (NS_SUCCEEDED(res) && prefValue) 
+      PL_strncpy(lang, (const char *) prefValue, sizeof(lang));
+	  else 
+		  PL_strcpy(lang, "en");
+  }
+  else
+    PL_strcpy(lang, "en");
+
+  return (char *)lang;
 }
+
+
