@@ -17,6 +17,27 @@
  */
 
 #include "nsISupports.idl"
+
+/* just stub the interfaces for now */
+
+interface nsIMsgHdr : nsISupports
+{
+};
+
+interface nsIMsgDBHdr : nsIMsgHdr
+{
+};
+
+/******************************************************************************
+
+this is commented out because it doesn't match nsIMessage.h, and I don't
+want anyone to try to use it yet.
+
+the problem is nsIMessage.h has interfaces that pass references to nsStrings.
+
+but, you can't do that in idl.
+
+#include "nsISupports.idl"
 #include "MailNewsTypes.idl"
 
 [ptr] native nsString(nsString);
@@ -81,3 +102,5 @@ interface nsIMsgDBHdr : nsIMsgHdr
 {
 
 };
+*******************************************************************************/
+

@@ -48,6 +48,7 @@ XPIDLSRCS =				  \
 EXPORTS =				\
 		msgCore.h		\
 		nsIMsgMailNewsUrl.h	\
+		nsIMsgHdr.h		\
 		nsIUrlListenerManager.h \
 		nsMsgFolderFlags.h	\
 		nsMsgHeaderMasks.h	\

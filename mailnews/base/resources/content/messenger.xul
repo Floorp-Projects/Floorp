@@ -78,7 +78,7 @@ Rights Reserved.
 <!ENTITY searchCmd.label ".Search Messages">  
 <!ENTITY filtersCmd.label ".Message Filters...">  
 <!ENTITY folderPropsCmd.label ".Folder Properties">  
-<!ENTITY prefsCmd.label ".Preferences">
+<!ENTITY prefsCmd.label "Preferences">
 <!ENTITY accountManagerCmd.label "Account Manager">
 <!ENTITY viewMenu.label "View"> 
 <!ENTITY showMenu.label ".Show"> 

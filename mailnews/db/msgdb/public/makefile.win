@@ -34,7 +34,6 @@ EXPORTS =	 						\
 			nsMsgHdr.h				\
 			nsIDBChangeListener.h	\
 			nsIDBFolderInfo.h		\
-			nsIMsgHdr.h				\
 			nsMsgThread.h			\
 			$(NULL)
 

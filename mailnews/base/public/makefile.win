@@ -53,6 +53,7 @@ EXPORTS =                           \
 			nsMsgLocalFolderHdrs.h  \
 			nsMsgMessageFlags.h     \
 			nsMsgMD5.h	\
+			nsIMsgHdr.h	\
 			$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
