@@ -152,6 +152,9 @@ sub expand {
                     }
                     if ($attributes->{'value'}) {
                         $result .= $self->escape($app, $self->evaluateExpression($attributes->{'value'}, $scope), $scope);
+                        if ($attributes->{'escape'}) {
+                            $scope = $superscope;
+                        }
                         next node; # skip contents if attribute 'value' is present
                     }
                 } elsif ($node eq '{http://bugzilla.mozilla.org/coses}br') {
@@ -194,26 +197,26 @@ sub expand {
                     if (defined($scope->{$variable})) {
                         next node; # skip this block if the variable IS there
                     }
-                } elsif ($node eq '{http://bugzilla.mozilla.org/coses}shrink') {
+                } elsif ($node eq '{http://bugzilla.mozilla.org/coses}flatten') {
                     my $source = $self->evaluateExpression($attributes->{'source'}, $scope);
                     my $target = $self->evaluateExpression($attributes->{'target'}, $scope);
                     $self->assert($target !~ /[\(\.\)]/o, 1,
                                   "variable '$target' contains one of '(', ')' or '.' and is therefore not valid to use as a variable name.");
                     my @result;
                     if (defined($source)) {
-                        $self->assert(ref($source) eq 'HASH', 1, "source variable is not a hash of arrays and thus cannot be shrunk.");
+                        $self->assert(ref($source) eq 'HASH', 1, "source variable is not a hash of arrays and thus cannot be flattened.");
                         # shrink it
                         local $" = ',';
                         foreach my $key (keys(%{$source})) {
-                            $self->assert(ref($source->{$key}) eq 'ARRAY', 1, "source variable is not a hash of arrays and cannot be shrunk.");
+                            $self->assert(ref($source->{$key}) eq 'ARRAY', 1, "source variable is not a hash of arrays and cannot be flattened.");
                             my @value = @{$source->{$key}};
                             if (scalar(@value)) {
                                 # escape all "\", "|" and "," characters in key and values
                                 foreach my $piece ($key, @value) {
                                     if (defined($piece) and ($piece ne '')) {
                                         $piece =~ s/\\/\\s/go;
-                                        $piece =~ s/\|/\\b/go;
                                         $piece =~ s/\,/\\c/go;
+                                        $piece =~ s/\|/\\b/go;
                                     } else {
                                         $piece = '\0';
                                     }
@@ -224,13 +227,14 @@ sub expand {
                     }
                     local $" = '|';
                     $scope->{$target} = "@result";
-                } elsif ($node eq '{http://bugzilla.mozilla.org/coses}expand') {
+                } elsif ($node eq '{http://bugzilla.mozilla.org/coses}rounden') {
+                    # the opposite of 'flat' is going to be 'round', ok...
                     my $source = $self->evaluateExpression($attributes->{'source'}, $scope);
                     my $target = $self->evaluateExpression($attributes->{'target'}, $scope);
                     $self->assert($target !~ /[\(\.\)]/o, 1,
                                   "variable '$target' contains one of '(', ')' or '.' and is therefore not valid to use as a variable name.");
                     if (defined($source)) {
-                        $self->assert((not ref($source)), 1, "source variable is not a string and cannot be expanded.");
+                        $self->assert((not ref($source)), 1, "source variable is not a string and cannot be rounded."); # XXX I *really* need a better name for this
                         # expand it
                         my @hash = split(/\|/o, $source);
                         my $isValue = 0;
@@ -240,11 +244,10 @@ sub expand {
                                 $piece = [split(/\,/o, $piece)];
                             }
                             foreach my $smallPiece (ref($piece) eq 'ARRAY' ? @$piece : $piece) {
-                                $smallPiece =~ s/\\b/\|/go;
-                                $smallPiece =~ s/\\s/\\/go;
-                                $smallPiece =~ s/\\c/\,/go;
                                 $smallPiece =~ s/\\0//go;
-                                $smallPiece =~ s/\\(.)/$1/go;
+                                $smallPiece =~ s/\\b/\|/go;
+                                $smallPiece =~ s/\\c/\,/go;
+                                $smallPiece =~ s/\\s/\\/go;
                             }
                             $isValue = not $isValue;
                         }
@@ -265,8 +268,11 @@ sub expand {
                 push(@scope, $superscope);
             } elsif ($scope->{'coses: white space'}) {
                 # raw text node which may or may not be included
+                # xml:space="default" so only include text nodes with non-whitespace
+                # and trim leading and closing newlines
                 if ($contents =~ /\S/o) {
-                    # if xml:space="default" then only include text nodes with non-whitespace.
+                    $contents =~ s/^\n//os;
+                    $contents =~ s/\n$//os;
                     $result .= $self->escape($app, $contents, $scope);
                 }
             } else {
@@ -488,11 +494,16 @@ sub sanitiseScope {
                 if ($key =~ /[\(\.\)]/) {
                     my $backup = $value->{$key};
                     delete($value->{$key});
+                    my $oldKey = $key;
                     $key =~ tr/(.)/[:]/;
                     while (exists($value->{$key})) {
                         $key .= '_';
                     }
                     $value->{$key} = $backup;
+                    if (not exists($value->{'coses: original keys'})) {
+                        $value->{'coses: original keys'} = {};
+                    }
+                    $value->{'coses: original keys'}->{$key} = $oldKey;
                 }
             }
         } elsif (ref($value) eq 'ARRAY') {
@@ -506,11 +517,11 @@ sub escape {
     my $self = shift;
     my($app, $string, $scope) = @_;
     foreach my $escape (@{$scope->{'coses: escapes'}}) {
-        if ($escape eq 'HTML') {
+        if ($escape eq 'html') {
             $string = encode_entities($string);
-        } elsif ($escape eq 'XML') {
+        } elsif ($escape eq 'xml') {
             $string = $app->getService('service.xml')->escape($string);
-        } elsif ($escape eq 'URI') {
+        } elsif ($escape eq 'uri') {
             $string =~ s/([^-A-Za-z0-9_.!~*'()])/sprintf("%%%02X", ord($1))/geos; # ' (unlock font-lock)
         } else {
             $self->error(1, "Unknown escape type '$escape'");
