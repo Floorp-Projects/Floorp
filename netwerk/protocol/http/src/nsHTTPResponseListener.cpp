@@ -49,8 +49,7 @@ extern PRLogModuleInfo* gHTTPLog;
 static const int kMAX_HEADER_SIZE = 60000;
 
 
-nsHTTPResponseListener::nsHTTPResponseListener(): 
-    m_pConnection(nsnull),
+nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel* aConnection): 
     m_bFirstLineParsed(PR_FALSE),
     m_pResponse(nsnull),
     m_pConsumer(nsnull),
@@ -61,6 +60,10 @@ nsHTTPResponseListener::nsHTTPResponseListener():
     m_Channel(nsnull)
 {
     NS_INIT_REFCNT();
+
+    NS_ASSERTION(m_pConnection, "HTTPChannel is null.");
+    m_pConnection = aConnection;
+    NS_IF_ADDREF(m_pConnection);
 
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("Creating nsHTTPResponseListener [this=%x].\n", this));
@@ -109,9 +112,7 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
             return NS_ERROR_OUT_OF_MEMORY;
         }
         NS_ADDREF(m_pResponse);
-        // XXX:  This is *evil*.  Fix it!
-        nsHTTPChannel* pTestCon = NS_STATIC_CAST(nsHTTPChannel*, m_pConnection);
-        pTestCon->SetResponse(m_pResponse);
+        m_pConnection->SetResponse(m_pResponse);
     }
     //
     // Parse the status line and the response headers from the server
@@ -179,21 +180,10 @@ nsHTTPResponseListener::OnStartRequest(nsIChannel* channel, nsISupports* i_pCont
     m_bHeadersDone     = PR_FALSE;
     m_bFirstLineParsed = PR_FALSE;
 
-    // Cache the nsIHTTPChannel...
-    if (i_pContext) {
-        rv = i_pContext->QueryInterface(nsCOMTypeInfo<nsIHTTPChannel>::GetIID(), 
-                                        (void**)&m_pConnection);
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-
     // Cache the nsIStreamListener and ISupports context of the consumer...
+    rv = m_pConnection->GetResponseDataListener(&m_pConsumer);
     if (NS_SUCCEEDED(rv)) {
-        rv = m_pConnection->GetResponseDataListener(&m_pConsumer);
-
-        // XXX:  This is *evil*.  Fix it!
-        nsHTTPChannel* pHTTPChannel = NS_STATIC_CAST(nsHTTPChannel*, m_pConnection);
-        pHTTPChannel->GetResponseContext(getter_AddRefs(m_ResponseContext));
+        rv = m_pConnection->GetResponseContext(getter_AddRefs(m_ResponseContext));
     }
 
     return rv;
@@ -231,7 +221,10 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
     }
 
     // Notify the HTTPChannel that the response has completed...
-    m_pConnection->ResponseCompleted(channel);
+    NS_ASSERTION(m_pConnection, "HTTPChannel is null.");
+    if (m_pConnection) {
+        m_pConnection->ResponseCompleted(channel);
+    }
 
     // The Consumer is no longer needed...
     NS_IF_RELEASE(m_pConsumer);
