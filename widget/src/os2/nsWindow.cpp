@@ -1272,6 +1272,15 @@ NS_METHOD nsWindow::Enable(PRBool bState)
 }
 
 
+NS_METHOD nsWindow::IsEnabled(PRBool *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+  *aState = PR_TRUE;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+
 //-------------------------------------------------------------------------
 //
 // Give the focus to this component

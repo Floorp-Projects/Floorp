@@ -662,9 +662,17 @@ NS_IMETHODIMP nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 // Enable/disable this component
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::Enable(PRBool bState)
+NS_IMETHODIMP nsWindow::Enable(PRBool aState)
 {
-	mEnabled = bState;
+	mEnabled = aState;
+	return NS_OK;
+}
+
+    
+NS_IMETHODIMP nsWindow::IsEnabled(PRBool *aState)
+{
+	NS_ENSURE_ARG_POINTER(aState);
+	*aState = mEnabled;
 	return NS_OK;
 }
 

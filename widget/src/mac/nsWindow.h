@@ -134,7 +134,8 @@ public:
     NS_IMETHOD            	Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD            	Resize(PRInt32 aX, PRInt32 aY,PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
 
-    NS_IMETHOD            	Enable(PRBool bState);
+    NS_IMETHOD            	Enable(PRBool aState);
+    NS_IMETHOD            	IsEnabled(PRBool *aState);
     NS_IMETHOD            	SetFocus(PRBool aRaise);
     NS_IMETHOD              SetBounds(const nsRect &aRect);
     NS_IMETHOD            	GetBounds(nsRect &aRect);

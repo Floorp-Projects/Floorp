@@ -499,16 +499,23 @@ PRBool nsWidget::OnMove( PRInt32 aX, PRInt32 aY ) {
 // Enable/disable this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWidget::Enable( PRBool bState ) {
+NS_METHOD nsWidget::Enable( PRBool aState ) {
 	if( mWidget ) {
 	  PtArg_t arg;
-	  if( bState ) 
+	  if( aState ) 
 		   PtSetArg( &arg, Pt_ARG_FLAGS, 0, Pt_BLOCKED );
 	  else 
 		   PtSetArg( &arg, Pt_ARG_FLAGS, Pt_BLOCKED, Pt_BLOCKED );
 		PtSetResources( mWidget, 1, &arg );
 	}
 	return NS_OK;
+}
+
+
+NS_METHOD nsWidget::IsEnabled( PRBool *aState ) {
+  NS_ENSURE_ARG_POINTER(aState);
+  *aState = PR_TRUE;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 

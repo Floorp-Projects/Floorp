@@ -517,9 +517,16 @@ NS_IMETHODIMP nsWidget::Resize(PRInt32 aX,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWidget::Enable(PRBool bState)
+NS_IMETHODIMP nsWidget::Enable(PRBool aState)
 {
   return NS_OK;
+}
+
+NS_IMETHODIMP nsWidget::IsEnabled(PRBool *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+  *aState = PR_TRUE;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsWidget::SetFocus(PRBool aRaise)

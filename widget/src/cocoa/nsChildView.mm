@@ -556,13 +556,20 @@ NS_IMETHODIMP nsChildView::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 // Enable/disable this component
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsChildView::Enable(PRBool bState)
+NS_IMETHODIMP nsChildView::Enable(PRBool aState)
 {
   // unimplemented.
   return NS_OK;
 }
 
-    
+
+NS_IMETHODIMP nsChildView::IsEnabled(PRBool *aState)
+{
+  // unimplemented.
+  return NS_OK;
+}
+
+
 static Boolean we_are_front_process()
 {
   ProcessSerialNumber thisPSN;

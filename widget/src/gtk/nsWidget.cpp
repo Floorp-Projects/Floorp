@@ -562,15 +562,22 @@ PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
 // Enable/disable this component
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsWidget::Enable(PRBool bState)
+NS_IMETHODIMP nsWidget::Enable(PRBool aState)
 {
   if (mWidget)
   {
-    if (GTK_WIDGET_SENSITIVE(mWidget) == bState)
+    if (GTK_WIDGET_SENSITIVE(mWidget) == aState)
       return NS_OK;
-    gtk_widget_set_sensitive(mWidget, bState);
+    gtk_widget_set_sensitive(mWidget, aState);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWidget::IsEnabled(PRBool *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+  *aState = mWidget && GTK_WIDGET_SENSITIVE(mWidget) ? PR_TRUE : PR_FALSE;
   return NS_OK;
 }
 

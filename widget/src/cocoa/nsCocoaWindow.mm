@@ -913,6 +913,20 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
 }
 
 
+NS_IMETHODIMP nsCocoaWindow::Enable(PRBool aState)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsCocoaWindow::IsEnabled(PRBool *aState)
+{
+  if (aState)
+    *aState = PR_TRUE;
+  return NS_OK;
+}
+
+
 /*
 NS_METHOD nsWindow::Minimize(void)
 {
