@@ -785,12 +785,7 @@ function BrowserFlushBookmarksAndHistory()
 function Shutdown()
 {
   // remove remote support
-  if (XREMOTESERVICE_CONTRACTID in Components.classes) {
-    var remoteService;
-    remoteService = Components.classes[XREMOTESERVICE_CONTRACTID]
-                              .getService(Components.interfaces.nsIXRemoteService);
-    remoteService.removeBrowserInstance(window);
-
+  if (REMOTESERVICE_CONTRACTID in Components.classes) {
     var observerService = Components.classes["@mozilla.org/observer-service;1"]
       .getService(Components.interfaces.nsIObserverService);
     observerService.removeObserver(gTabOpenObserver, "open-new-tab-request", false);
