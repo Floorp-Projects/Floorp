@@ -25,6 +25,7 @@ EXPORTS = \
 	nsIMailboxUrl.h				\
 	nsIMailboxService.h			\
 	nsIPop3Service.h			\
+	nsIPop3IncomingServer.h		\
 	$(NULL)
 
 MODULE=mailnews

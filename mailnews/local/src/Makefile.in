@@ -35,6 +35,7 @@ CPPSRCS = \
 	nsLocalMailFolder.cpp \
 	nsMailboxService.cpp \
 	nsPop3Service.cpp   \
+	nsPop3IncomingServer.cpp	\
 	$(NULL)
 
 EXPORTS= \
@@ -48,6 +49,7 @@ EXPORTS= \
 	nsPop3Service.h \
 	nsMSGFolderDataSource.h	\
 	nsLocalMailFolder.h	\
+	nsPop3IncomingServer.h	\
 	$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

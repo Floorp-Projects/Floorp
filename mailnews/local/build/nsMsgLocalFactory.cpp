@@ -31,16 +31,18 @@
 #include "nsLocalMailFolder.h"
 #include "nsParseMailbox.h"
 #include "nsPop3Service.h"
+#include "nsPop3IncomingServer.h"
 #include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
-static NS_DEFINE_CID(kCMailboxParser, NS_MAILBOXPARSER_CID);
-static NS_DEFINE_CID(kCMailboxService, NS_MAILBOXSERVICE_CID);
+static NS_DEFINE_CID(kMailboxUrlCID, NS_MAILBOXURL_CID);
+static NS_DEFINE_CID(kMailboxParserCID, NS_MAILBOXPARSER_CID);
+static NS_DEFINE_CID(kMailboxServiceCID, NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kMailNewsDatasourceCID, NS_MAILNEWSDATASOURCE_CID);
 static NS_DEFINE_CID(kMailNewsResourceCID, NS_MAILNEWSRESOURCE_CID);
 static NS_DEFINE_CID(kPop3ServiceCID, NS_POP3SERVICE_CID);
-static NS_DEFINE_CID(kCPop3Url, NS_POP3URL_CID);
+static NS_DEFINE_CID(kPop3UrlCID, NS_POP3URL_CID);
+static NS_DEFINE_CID(kPop3IncomingServerCID, NS_POP3INCOMINGSERVER_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -83,11 +85,11 @@ nsMsgLocalFactory::~nsMsgLocalFactory()
 
 nsresult nsMsgLocalFactory::QueryInterface(const nsIID &aIID, void **aResult)   
 {   
-  if (aResult == NULL)  
+  if (aResult == nsnull)  
     return NS_ERROR_NULL_POINTER;  
 
   // Always NULL result, in case of failure   
-  *aResult = NULL;   
+  *aResult = nsnull;   
 
   // we support two interfaces....nsISupports and nsFactory.....
   if (aIID.Equals(::nsISupports::GetIID()))    
@@ -95,7 +97,7 @@ nsresult nsMsgLocalFactory::QueryInterface(const nsIID &aIID, void **aResult)
   else if (aIID.Equals(nsIFactory::GetIID()))   
     *aResult = (void *)(nsIFactory*)this;   
 
-  if (*aResult == NULL)
+  if (*aResult == nsnull)
     return NS_NOINTERFACE;
 
   AddRef(); // Increase reference count for caller   
@@ -109,16 +111,16 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports *aOuter, const nsIID &aII
 {  
 	nsresult rv = NS_OK;
 
-	if (aResult == NULL)  
+	if (aResult == nsnull)  
 		return NS_ERROR_NULL_POINTER;  
 
-	*aResult = NULL;  
+	*aResult = nsnull;  
   
 	// ClassID check happens here
 	// Whenever you add a new class that supports an interface, plug it in here!!!
 	
 	// do they want a local datasource ?
-	if (mClassID.Equals(kCMailboxUrl)) 
+	if (mClassID.Equals(kMailboxUrlCID)) 
 	{
 		nsMailboxUrl * url = new nsMailboxUrl(nsnull, nsnull);
 		if (url)
@@ -129,7 +131,7 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports *aOuter, const nsIID &aII
 		if (NS_FAILED(rv) && url)
 			delete url;
 	}
-	else if (mClassID.Equals(kCPop3Url))
+	else if (mClassID.Equals(kPop3UrlCID))
 	{
 		nsPop3URL * popUrl = new nsPop3URL(nsnull, nsnull);
 		if (popUrl)
@@ -140,7 +142,7 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports *aOuter, const nsIID &aII
 		if (NS_FAILED(rv) && popUrl)
 			delete popUrl;
 	}
-	else if (mClassID.Equals(kCMailboxParser)) 
+	else if (mClassID.Equals(kMailboxParserCID)) 
 	{
 		nsMsgMailboxParser * parser = new nsMsgMailboxParser();
 		if (parser)
@@ -151,7 +153,7 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports *aOuter, const nsIID &aII
 		if (NS_FAILED(rv) && parser)
 			delete parser;
 	}
-	else if (mClassID.Equals(kCMailboxService)) 
+	else if (mClassID.Equals(kMailboxServiceCID)) 
 	{
 		nsMailboxService * mboxService = new nsMailboxService();
 		if (mboxService)
@@ -194,7 +196,9 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports *aOuter, const nsIID &aII
 
 		if (NS_FAILED(rv) && localDataSource)
 			delete localDataSource;
-	}
+  }
+  else if (mClassID.Equals(kPop3IncomingServerCID))
+    rv = NS_NewPop3IncomingServer(nsISupports::GetIID(), aResult);
 	else
 		rv = NS_NOINTERFACE;
   
@@ -251,19 +255,19 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->RegisterComponent(kCMailboxUrl, nsnull, nsnull,
+  rv = compMgr->RegisterComponent(kMailboxUrlCID, nsnull, nsnull,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->RegisterComponent(kCMailboxService, nsnull, nsnull, 
+  rv = compMgr->RegisterComponent(kMailboxServiceCID, nsnull, nsnull, 
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->RegisterComponent(kCMailboxParser, nsnull, nsnull,
+  rv = compMgr->RegisterComponent(kMailboxParserCID, nsnull, nsnull,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->RegisterComponent(kCPop3Url, nsnull, nsnull,
+  rv = compMgr->RegisterComponent(kPop3UrlCID, nsnull, nsnull,
 								  path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
@@ -285,6 +289,13 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
+  rv = compMgr->RegisterComponent(kPop3IncomingServerCID,
+                                  "Pop3 Incoming Server",
+                                  "component://netscape/messenger/server&type=pop3",
+                                  path, PR_TRUE, PR_TRUE);
+                                  
+  
+  if (NS_FAILED(rv)) goto done;
    done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
@@ -304,19 +315,19 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->UnregisterFactory(kCMailboxUrl, path);
+  rv = compMgr->UnregisterFactory(kMailboxUrlCID, path);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterFactory(kCMailboxService, path);
+  rv = compMgr->UnregisterFactory(kMailboxServiceCID, path);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterFactory(kCPop3Url, path);
+  rv = compMgr->UnregisterFactory(kPop3UrlCID, path);
   if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterFactory(kPop3ServiceCID, path);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterFactory(kCMailboxParser, path);
+  rv = compMgr->UnregisterFactory(kMailboxParserCID, path);
   if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterComponent(kMailNewsDatasourceCID, path);
@@ -325,6 +336,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   rv = compMgr->UnregisterComponent(kMailNewsResourceCID, path);
   if (NS_FAILED(rv)) goto done;
 
+  rv = compMgr->UnregisterComponent(kPop3IncomingServerCID, path);
+  if (NS_FAILED(rv)) goto done;
+  
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
