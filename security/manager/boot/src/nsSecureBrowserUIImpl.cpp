@@ -88,12 +88,52 @@
 PRLogModuleInfo* gSecureDocLog = nsnull;
 #endif /* PR_LOGGING */
 
+struct RequestHashEntry : PLDHashEntryHdr {
+    void *r;
+};
+
+PR_STATIC_CALLBACK(const void *)
+RequestMapGetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
+{
+  RequestHashEntry *entry = NS_STATIC_CAST(RequestHashEntry*, hdr);
+  return entry->r;
+}
+
+PR_STATIC_CALLBACK(PRBool)
+RequestMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
+                         const void *key)
+{
+  const RequestHashEntry *entry = NS_STATIC_CAST(const RequestHashEntry*, hdr);
+  return entry->r == key;
+}
+
+PR_STATIC_CALLBACK(void)
+RequestMapInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                     const void *key)
+{
+  RequestHashEntry *entry = NS_STATIC_CAST(RequestHashEntry*, hdr);
+  entry->r = (void*)key;
+}
+
+static PLDHashTableOps gMapOps = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
+  RequestMapGetKey,
+  PL_DHashVoidPtrKeyStub,
+  RequestMapMatchEntry,
+  PL_DHashMoveEntryStub,
+  PL_DHashClearEntryStub,
+  PL_DHashFinalizeStub,
+  RequestMapInitEntry
+};
+
 
 nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
   : mIsViewSource(PR_FALSE),
     mPreviousSecurityState(lis_no_security)
 {
   NS_INIT_ISUPPORTS();
+  mTransferringRequests.ops = nsnull;
   ResetStateTracking();
   
 #if defined(PR_LOGGING)
@@ -326,10 +366,17 @@ void nsSecureBrowserUIImpl::ResetStateTracking()
   mNewToplevelSecurityState = STATE_IS_INSECURE;
   mInfoTooltip.Truncate();
   mDocumentRequestsInProgress = 0;
+  mMultipleTopLevelRequestsSeen = PR_FALSE;
   mSubRequestsHighSecurity = 0;
   mSubRequestsLowSecurity = 0;
   mSubRequestsBrokenSecurity = 0;
   mSubRequestsNoSecurity = 0;
+  if (mTransferringRequests.ops) {
+    PL_DHashTableFinish(&mTransferringRequests);
+    mTransferringRequests.ops = nsnull;
+  }
+  PL_DHashTableInit(&mTransferringRequests, &gMapOps, nsnull,
+                    sizeof(RequestHashEntry), 16);
 }
 
 NS_IMETHODIMP
@@ -471,7 +518,8 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   nsXPIDLCString reqname;
   aRequest->GetName(reqname);
   PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-         ("SecureUI:%p: OnStateChange %x %s\n", this, aProgressStateFlags, reqname.get()));
+         ("SecureUI:%p: %p %p OnStateChange %x %s\n", this, aWebProgress, aRequest,
+            aProgressStateFlags, reqname.get()));
 #endif
 
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
@@ -660,6 +708,33 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   }
 #endif
 
+  if (aProgressStateFlags & STATE_TRANSFERRING
+      &&
+      aProgressStateFlags & STATE_IS_REQUEST)
+  {
+    // The listing of a request in mTransferringRequests
+    // means, there has already been data transfered.
+
+    PL_DHashTableOperate(&mTransferringRequests, aRequest, PL_DHASH_ADD);
+    
+    return NS_OK;
+  }
+
+  PRBool requestHasTransferedData = PR_FALSE;
+
+  if (aProgressStateFlags & STATE_STOP
+      &&
+      aProgressStateFlags & STATE_IS_REQUEST)
+  {
+    PLDHashEntryHdr *entry = PL_DHashTableOperate(&mTransferringRequests, aRequest, PL_DHASH_LOOKUP);
+    if (PL_DHASH_ENTRY_IS_BUSY(entry))
+    {
+      PL_DHashTableOperate(&mTransferringRequests, aRequest, PL_DHASH_REMOVE);
+
+      requestHasTransferedData = PR_TRUE;
+    }
+  }
+
   if (aProgressStateFlags & STATE_START
       &&
       aProgressStateFlags & STATE_IS_REQUEST
@@ -675,6 +750,18 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
               ));
 
       ResetStateTracking();
+    }
+    else
+    {
+      // If there is starting another LOAD_DOCUMENT_URI while the previous
+      // one did not yet finish, we are seeing some kind of redirection.
+      // One consequence of that is: There has actually been data transfered
+      // for the new document.
+      // In that case, we must NOT rely on the "has transfered" flag of
+      // the latest executed toplevel request object to decide whether
+      // we can ignore the security state.
+
+      mMultipleTopLevelRequestsSeen = PR_TRUE;
     }
 
     // By using a counter, this code also works when the toplevel
@@ -718,35 +805,46 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     {
       // we are arriving at zero, all STOPs for toplevel documents
       // have been received
-      
-      if (channel) {
-        mNewToplevelSecurityState = GetSecurityStateFromChannel(channel);
 
-        PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-               ("SecureUI:%p: OnStateChange: remember mNewToplevelSecurityState => %x\n", this,
-                mNewToplevelSecurityState));
+      PRBool MustEvaluate = PR_TRUE;
 
-        // Get SSL Status information if possible
-        nsCOMPtr<nsISupports> info;
-        channel->GetSecurityInfo(getter_AddRefs(info));
-        nsCOMPtr<nsISSLStatusProvider> sp = do_QueryInterface(info);
-        if (sp) {
-          // Ignore result
-          sp->GetSSLStatus(getter_AddRefs(mSSLStatus));
-        }
+      if (!mMultipleTopLevelRequestsSeen && !requestHasTransferedData)
+      {
+        // No data has been transfered for the single toplevel request.
+        MustEvaluate = PR_FALSE;
+      }
 
-        if (info) {
-          nsCOMPtr<nsITransportSecurityInfo> secInfo(do_QueryInterface(info));
-          if (secInfo) {
-              secInfo->GetShortSecurityDescription(getter_Copies(mInfoTooltip));
+      if (MustEvaluate)
+      {
+        if (channel) {
+          mNewToplevelSecurityState = GetSecurityStateFromChannel(channel);
+
+          PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+                 ("SecureUI:%p: OnStateChange: remember mNewToplevelSecurityState => %x\n", this,
+                  mNewToplevelSecurityState));
+
+          // Get SSL Status information if possible
+          nsCOMPtr<nsISupports> info;
+          channel->GetSecurityInfo(getter_AddRefs(info));
+          nsCOMPtr<nsISSLStatusProvider> sp = do_QueryInterface(info);
+          if (sp) {
+            // Ignore result
+            sp->GetSSLStatus(getter_AddRefs(mSSLStatus));
+          }
+
+          if (info) {
+            nsCOMPtr<nsITransportSecurityInfo> secInfo(do_QueryInterface(info));
+            if (secInfo) {
+                secInfo->GetShortSecurityDescription(getter_Copies(mInfoTooltip));
+            }
           }
         }
-      }
-      else {
-        mNewToplevelSecurityState = nsIWebProgressListener::STATE_IS_INSECURE;
-      }
+        else {
+          mNewToplevelSecurityState = nsIWebProgressListener::STATE_IS_INSECURE;
+        }
 
-      return UpdateSecurityState(aRequest);
+        return UpdateSecurityState(aRequest);
+      }
     }
     
     return NS_OK;
@@ -761,41 +859,48 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     
     // if we arrive here, LOAD_DOCUMENT_URI is not set
     
-    PRUint32 reqState = nsIWebProgressListener::STATE_IS_INSECURE;
-    
-    if (channel) {
-      reqState = GetSecurityStateFromChannel(channel);
-    }
-    
-    if (reqState & STATE_IS_SECURE)
-    {
-      if (reqState & STATE_SECURE_LOW || reqState & STATE_SECURE_MED)
+    // We only care for the security state of sub requests which have actually transfered data.
+
+    if (requestHasTransferedData)
+    {  
+      PRUint32 reqState = nsIWebProgressListener::STATE_IS_INSECURE;
+
+      if (channel) {
+        reqState = GetSecurityStateFromChannel(channel);
+      }
+
+      if (reqState & STATE_IS_SECURE)
+      {
+        if (reqState & STATE_SECURE_LOW || reqState & STATE_SECURE_MED)
+        {
+          PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+           ("SecureUI:%p: OnStateChange: subreq LOW\n", this));
+          ++mSubRequestsLowSecurity;
+        }
+        else
+        {
+          PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+           ("SecureUI:%p: OnStateChange: subreq HIGH\n", this));
+          ++mSubRequestsHighSecurity;
+        }
+      }
+      else if (reqState & STATE_IS_BROKEN)
       {
         PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-         ("SecureUI:%p: OnStateChange: subreq LOW\n", this));
-        ++mSubRequestsLowSecurity;
+         ("SecureUI:%p: OnStateChange: subreq BROKEN\n", this));
+        ++ mSubRequestsBrokenSecurity;
       }
       else
       {
         PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-         ("SecureUI:%p: OnStateChange: subreq HIGH\n", this));
-        ++mSubRequestsHighSecurity;
+         ("SecureUI:%p: OnStateChange: subreq INSECURE\n", this));
+        ++mSubRequestsNoSecurity;
       }
+
+      return UpdateSecurityState(aRequest);
     }
-    else if (reqState & STATE_IS_BROKEN)
-    {
-      PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-       ("SecureUI:%p: OnStateChange: subreq BROKEN\n", this));
-      ++ mSubRequestsBrokenSecurity;
-    }
-    else
-    {
-      PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-       ("SecureUI:%p: OnStateChange: subreq INSECURE\n", this));
-      ++mSubRequestsNoSecurity;
-    }
-    
-    return UpdateSecurityState(aRequest);
+
+    return NS_OK;
   }
 
   return NS_OK;

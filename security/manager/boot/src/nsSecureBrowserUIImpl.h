@@ -45,6 +45,7 @@
 #include "nsISecurityEventSink.h"
 #include "nsWeakReference.h"
 #include "nsISSLStatusProvider.h"
+#include "pldhash.h"
 
 class nsITransportSecurityInfo;
 class nsISecurityWarningDialogs;
@@ -100,6 +101,7 @@ protected:
   PRUint32 mNewToplevelSecurityState;
   nsXPIDLString mInfoTooltip;
   PRInt32 mDocumentRequestsInProgress;
+  PRBool mMultipleTopLevelRequestsSeen;
   PRInt32 mSubRequestsInProgress;
   PRInt32 mSubRequestsHighSecurity;
   PRInt32 mSubRequestsLowSecurity;
@@ -127,6 +129,7 @@ protected:
   // Support functions
   nsresult GetNSSDialogs(nsISecurityWarningDialogs **);
 
+  PLDHashTable mTransferringRequests;
 };
 
 
