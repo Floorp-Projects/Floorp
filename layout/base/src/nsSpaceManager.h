@@ -65,6 +65,7 @@ protected:
     FrameInfo(nsIFrame* aFrame, const nsRect& aRect);
   };
 
+public:
   // Doubly linked list of band rects
   struct BandRect : PRCListStr {
     nscoord   left, top;
@@ -128,6 +129,7 @@ protected:
     void      Clear();
   };
 
+protected:
   nsIFrame* const mFrame;     // frame associated with the space manager
   nscoord         mX, mY;     // translation from local to global coordinate space
   BandList        mBandList;  // header for circular linked list of band rects
