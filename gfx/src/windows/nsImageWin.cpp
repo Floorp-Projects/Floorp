@@ -416,6 +416,7 @@ DWORD   rop;
 	          ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,aSX, aSY, aSWidth, aSHeight, mAlphaBits,
 			                                    (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
 	           rop = SRCPAINT;
+             //rop = SRCCOPY;
           }
           else if( 8==mAlphaDepth){              
               ALPHA8BITMAPINFO bmi(mAlphaWidth, mAlphaHeight);
@@ -429,14 +430,14 @@ DWORD   rop;
         // if this is for a printer.. we have to convert it back to a DIB
         if(canRaster == DT_RASPRINTER){
           if(!(GetDeviceCaps(TheHDC,RASTERCAPS) &(RC_BITBLT | RC_STRETCHBLT))) {
-              // we have an error with the printer not supporting a raster device
+            // we have an error with the printer not supporting a raster device
           } else {
             // if we did not convert to a DDB already
             if (nsnull == mHBitmap) {
               oldBits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
               ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, srcy,aSWidth, srcHeight, rop);
             }else{
-              PrintDDB(aSurface,aDX,aDY,aDWidth,aDHeight);
+              PrintDDB(aSurface,aDX,aDY,aDWidth,aDHeight,rop);
             }
           }
         } else {
@@ -559,7 +560,7 @@ DWORD   rop;
               ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, srcy,
 		           mBHead->biWidth, srcHeight, rop);
             }else{
-              PrintDDB(aSurface,aX,aY,aWidth,aHeight);
+              PrintDDB(aSurface,aX,aY,aWidth,aHeight,rop);
             }
           }
         } else {
@@ -591,31 +592,64 @@ nsImageWin::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 {
 nsRect              destRect,srcRect,tvrect;
 HDC                 TheHDC,offDC,maskDC;
-PRInt32             x,y,width,height;
-HBITMAP             maskBits,tileBits,oldBits,oldMaskBits,theBits; 
+PRInt32             x,y,width,height,canRaster;
+HBITMAP             maskBits,tileBits,oldBits,oldMaskBits; 
 
+  // find out if the surface is a printer, if it is use the draw(does things with DIBS, only good way 
+  // for a printer
+  tvrect.SetRect(0,0,aX1-aX0,aY1-aY0);
+  ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
+  if(canRaster == DT_RASPRINTER){ 
+    for(y=aY0;y<aY1;y+=aHeight){
+      for(x=aX0;x<aX1;x+=aWidth){
+        this->Draw(aContext,aSurface,x,y,aWidth,aHeight);
+      }
+    } 
+    return(PR_TRUE);
+  }
+  
   // create a larger tile from the smaller one
   ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
   if (NULL == TheHDC){
     return (PR_FALSE);
   }
 
-
   // can not create a compatible bitmap with an offscreen DC (it will be black and white)
   // so we will create a screen compatible bitmap and then install this into the offscreen DC
   tvrect.SetRect(0,0,aX1-aX0,aY1-aY0);
   offDC = ::CreateCompatibleDC(TheHDC);
+  if(NULL ==offDC){
+    return (PR_FALSE);
+  }
   tileBits = ::CreateCompatibleBitmap(TheHDC, tvrect.width, tvrect.height);
+  if(NULL ==tileBits){
+    ::DeleteObject(offDC);
+    return (PR_FALSE);
+  }
   oldBits =(HBITMAP) ::SelectObject(offDC,tileBits);
 
 
   if ( 1==mAlphaDepth ) {
     // larger tile for mask
     maskDC = ::CreateCompatibleDC(TheHDC);
+    if(NULL ==maskDC){
+      ::SelectObject(offDC,oldBits);
+      ::DeleteObject(tileBits);
+      ::DeleteObject(offDC);
+      return (PR_FALSE);
+    }
     maskBits = ::CreateCompatibleBitmap(TheHDC, tvrect.width, tvrect.height);
+    if(NULL ==maskBits){
+      ::SelectObject(offDC,oldBits);
+      ::DeleteObject(tileBits);
+      ::DeleteObject(offDC);
+      ::DeleteObject(maskDC);
+      return (PR_FALSE);
+    }
+
     oldMaskBits = (HBITMAP)::SelectObject(maskDC,maskBits);
 
-    // get the bits into our new tiled mask
+    // get the mask into our new tiled mask
     MONOBITMAPINFO  bmi(mAlphaWidth,mAlphaHeight);
 	  ::StretchDIBits(maskDC, 0, 0, aWidth, aHeight,0, 0, 
                     mAlphaWidth, mAlphaHeight, mAlphaBits,(LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCCOPY);
@@ -660,7 +694,6 @@ HBITMAP             maskBits,tileBits,oldBits,oldMaskBits,theBits;
       }
     } 
     ::SelectObject(maskDC,oldMaskBits);
-    ::DeleteObject(theBits);
     ::DeleteObject(maskBits);
     ::DeleteObject(maskDC);
   }
@@ -669,7 +702,7 @@ HBITMAP             maskBits,tileBits,oldBits,oldMaskBits,theBits;
   ::DeleteObject(tileBits);
   ::DeleteObject(offDC);
 
-  return (PR_FALSE);
+  return (PR_TRUE);
 }
 
 /** ---------------------------------------------------
@@ -828,7 +861,7 @@ nsImageWin :: CleanUpDDB()
  * @return the result of the operation, if NS_OK, then the pixelmap is unoptimized
  */
 nsresult 
-nsImageWin::PrintDDB(nsDrawingSurface aSurface,PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+nsImageWin::PrintDDB(nsDrawingSurface aSurface,PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,PRUint32 aROP)
 {
 HDC theHDC;
 
@@ -837,9 +870,7 @@ HDC theHDC;
       ConvertDDBtoDIB(aWidth,aHeight);
       ((nsDrawingSurfaceWin *)aSurface)->GetDC(&theHDC);
       ::StretchDIBits(theHDC, aX, aY, aWidth, aHeight,
-		      0, 0, mBHead->biWidth, mBHead->biHeight, mImageBits,
-		      (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS :
-		      DIB_RGB_COLORS, SRCCOPY);
+		      0, 0, mBHead->biWidth, mBHead->biHeight, mImageBits,(LPBITMAPINFO)mBHead,DIB_RGB_COLORS, aROP);
 
       // we are finished with this, so delete it           
       if (mImageBits != nsnull) {
@@ -862,13 +893,14 @@ nsImageWin::ConvertDDBtoDIB(PRInt32 aWidth, PRInt32 aHeight)
 {
 PRInt32             numbytes;
 BITMAP              srcinfo;
+HBITMAP             oldbits;
 HDC                 memPrDC;
 
   if (mIsOptimized == PR_TRUE){
 
 	  if (mHBitmap != nsnull){
       memPrDC = ::CreateDC("DISPLAY",NULL,NULL,NULL);
-      ::SelectObject(memPrDC,mHBitmap);
+      oldbits = (HBITMAP)::SelectObject(memPrDC,mHBitmap);
 
       numbytes = ::GetObject(mHBitmap,sizeof(BITMAP),&srcinfo);
 
@@ -880,6 +912,7 @@ HDC                 memPrDC;
       // Allocate the image bits
       mImageBits = new unsigned char[mSizeImage];
       numbytes = ::GetDIBits(memPrDC,mHBitmap,0,srcinfo.bmHeight,mImageBits,(LPBITMAPINFO)mBHead,DIB_RGB_COLORS);
+      ::SelectObject(memPrDC,oldbits);
       DeleteDC(memPrDC);
     }
   }
@@ -996,7 +1029,6 @@ void
 nsImageWin::BuildTile(HDC TheHDC,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight,PRInt32  aCopyMode)
 {
 nsRect  destRect;
-int     error;
   
   if( aSrcRect.width < aWidth) {
     // width is less than double so double our source bitmap width

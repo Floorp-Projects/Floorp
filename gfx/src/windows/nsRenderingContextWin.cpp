@@ -2775,7 +2775,7 @@ PRBool didtile = FALSE;
   mTMatrix->TransformCoord(&aX0,&aY0,&aWidth,&aHeight);
   mTMatrix->TransformCoord(&aX1,&aY1);
 
-  if ((PR_FALSE) && (PR_TRUE==CanTile(aWidth,aHeight)) ) {    
+  if ( PR_TRUE==CanTile(aWidth,aHeight) ) {    
     didtile = ((nsImageWin*)aImage)->PatBltTile(*this,mSurface,aX0,aY0,aX1,aY1,aWidth,aHeight);
   }
       
