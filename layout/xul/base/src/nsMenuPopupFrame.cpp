@@ -1250,7 +1250,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
 
     // ensure it is not even partially offscreen.
     if ( (screenViewLocX + mRect.width) > screenRightTwips )
-        xpos -= (screenViewLocX + mRect.width) - screenRightTwips;
+      xpos -= (screenViewLocX + mRect.width) - screenRightTwips;
     if ( (screenViewLocY + mRect.height) > screenBottomTwips )
       ypos -= (mRect.height + margin.top + margin.bottom);
       
