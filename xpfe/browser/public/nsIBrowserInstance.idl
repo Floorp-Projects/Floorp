@@ -76,4 +76,5 @@ interface nsIBrowserInstance : nsISupports {
 
 %{C++
 #define NS_IBROWSERINSTANCE_PROGID "component://netscape/appshell/component/browser/instance"
+#define NS_IBROWSERCMDLINEHANDLER_PROGID "component://netscape/appshell/component/browser/cmdhandler"
 %}

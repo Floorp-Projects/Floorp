@@ -45,7 +45,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
-#include "nsIBrowserWindow.h"
+#include "nsIWebBrowserChrome.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 
@@ -156,7 +156,7 @@ static nsresult setAttribute( nsIWebShell *shell,
 // nsBrowserAppCore
 /////////////////////////////////////////////////////////////////////////
 
-nsBrowserAppCore::nsBrowserAppCore()
+nsBrowserAppCore::nsBrowserAppCore() : mIsClosed(PR_FALSE)
 {
   mContentWindow        = nsnull;
   mContentScriptContext = nsnull;
@@ -172,7 +172,7 @@ nsBrowserAppCore::nsBrowserAppCore()
 
 nsBrowserAppCore::~nsBrowserAppCore()
 {
-   Close();
+  Close();
   NS_IF_RELEASE(mSHistory);
 }
 
@@ -184,7 +184,6 @@ NS_INTERFACE_MAP_BEGIN(nsBrowserInstance)
    NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
    NS_INTERFACE_MAP_ENTRY(nsIObserver)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
-   NS_INTERFACE_MAP_ENTRY(nsICmdLineHandler)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIContentListener)
 NS_INTERFACE_MAP_END
@@ -831,10 +830,10 @@ nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
     DOMWindowToWebShellWindow(aWin, &parent);
     window = nsnull;
     appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, PR_TRUE,
-                              NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
+                              nsIWebBrowserChrome::allChrome | nsIWebBrowserChrome::openAsDialog,
                               cb, 504, 436, &window);
     if (window != nsnull) {
-      appShell->RunModalDialog(&window, parent, nsnull, NS_CHROME_ALL_CHROME,
+      appShell->RunModalDialog(&window, parent, nsnull, nsIWebBrowserChrome::allChrome,
                                cb, 504, 436);
       NS_RELEASE(window);
     }
@@ -919,7 +918,7 @@ nsBrowserAppCore::WalletRequestToCapture(nsIDOMWindow* aWin)
 }
 
 NS_IMETHODIMP    
-nsBrowserAppCore::LoadUrl(const PRUnichar *aUrl)
+nsBrowserAppCore::LoadUrl(const PRUnichar * urlToLoad)
 {
   nsresult rv = NS_OK;
 
@@ -929,10 +928,10 @@ nsBrowserAppCore::LoadUrl(const PRUnichar *aUrl)
   /* Ask nsWebShell to load the URl */
   if ( mIsViewSource ) {
     // Viewing source, load with "view-source" command.
-    rv = mContentAreaWebShell->LoadURL( aUrl, "view-source", nsnull, PR_FALSE );
+    rv = mContentAreaWebShell->LoadURL( urlToLoad, "view-source", nsnull, PR_FALSE );
   } else {
     // Normal browser.
-    rv = mContentAreaWebShell->LoadURL( aUrl );
+    rv = mContentAreaWebShell->LoadURL( urlToLoad );
   }
 
   return rv;
@@ -1130,7 +1129,7 @@ nsBrowserAppCore::LoadInitialPage(void)
     if (urlstr != nsnull) {
       // A url was provided. Load it
       if (APP_DEBUG) printf("Got Command line URL to load %s\n", urlstr);
-      nsString url( urlstr ); // Convert to unicode.
+      nsString url ( urlstr );
       rv = LoadUrl( url.GetUnicode() );
       cmdLineURLUsed = PR_TRUE;
       return rv;
@@ -1154,7 +1153,7 @@ nsBrowserAppCore::LoadInitialPage(void)
   if (!argsElement) {
     // Couldn't get the "args" element from the xul file. Load a blank page
     if (APP_DEBUG) printf("Couldn't find args element\n");
-    nsString url("about:blank"); 
+    nsAutoString url ("about:blank");
     rv = LoadUrl( url.GetUnicode() );
     return rv;
   }
@@ -1976,6 +1975,12 @@ nsBrowserAppCore::Print()
 NS_IMETHODIMP    
 nsBrowserAppCore::Close()
 { 
+  // if we have already been closed....then just return
+  if (mIsClosed) 
+    return NS_OK;
+  else
+    mIsClosed = PR_TRUE;
+
   EndObserving();
 
   // Undo other stuff we did in SetContentWindow.
@@ -2376,20 +2381,120 @@ nsBrowserInstance::SetLoadCookie(nsISupports * aLoadCookie)
   return NS_OK;
 }
 
+////////////////////////////////////////////////////////////////////////
+// browserCntHandler is a content handler component that registers
+// the browse as the preferred content handler for various content
+// types like text/html, image/jpeg, etc. When the uri loader
+// has a content type that no currently open window wants to handle, 
+// it will ask the registry for a registered content handler for this
+// type. If the browser is registered to handle that type, we'll end
+// up in here where we create a new browser window for the url.
+//
+// I had intially written this as a JS component and would like to do
+// so again. However, JS components can't access xpconnect objects that
+// return DOM objects. And we need a dom window to bootstrap the browser
+/////////////////////////////////////////////////////////////////////////
+
+class nsBrowserContentHandler : public nsIContentHandler, nsICmdLineHandler
+{
+public:
+  NS_DECL_NSICONTENTHANDLER
+  NS_DECL_NSICMDLINEHANDLER
+  NS_DECL_ISUPPORTS
+  CMDLINEHANDLER_REGISTERPROC_DECLS
+
+  nsBrowserContentHandler();
+  virtual ~nsBrowserContentHandler();
+
+protected:
+
+};
+
+NS_IMPL_ADDREF(nsBrowserContentHandler);
+NS_IMPL_RELEASE(nsBrowserContentHandler);
+
+NS_INTERFACE_MAP_BEGIN(nsBrowserContentHandler)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentHandler)
+   NS_INTERFACE_MAP_ENTRY(nsIContentHandler)
+   NS_INTERFACE_MAP_ENTRY(nsICmdLineHandler)
+NS_INTERFACE_MAP_END
+
+nsBrowserContentHandler::nsBrowserContentHandler()
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsBrowserContentHandler::~nsBrowserContentHandler()
+{}
+
+CMDLINEHANDLER_IMPL(nsBrowserContentHandler,"-chrome","general.startup.browser","chrome://navigator/content/","Start with browser",NS_IBROWSERCMDLINEHANDLER_PROGID,"Browser Cmd Line Handler", PR_TRUE, "", PR_FALSE)
+
+NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
+                                                     const char * aCommand,
+                                                     const char * aWindowTarget,
+                                                     nsIChannel * aChannel)
+{
+  // we need a dom window to create the new browser window...in order
+  // to do this, we need to get the window mediator service and ask it for a dom window
+  NS_ENSURE_ARG(aChannel);
+
+  nsCOMPtr<nsIAppShellService> windowService (do_GetService(kAppShellServiceCID));
+  nsCOMPtr<nsIDOMWindow> globalWindow;
+  JSContext* jsContext = nsnull;
+
+  NS_ENSURE_SUCCESS(windowService->GetHiddenWindowAndJSContext(getter_AddRefs(globalWindow), &jsContext),
+                    NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIURI> uri;
+  aChannel->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+  nsXPIDLCString spec;
+  uri->GetSpec(getter_Copies(spec));
+
+	void* mark;
+	jsval* argv;
+
+  nsAutoString value = "";
+  value += spec;
+
+	argv = JS_PushArguments(jsContext, &mark, "sssW", "chrome://navigator/content/", aWindowTarget ? aWindowTarget : "" , 
+									"chrome,dialog=no,all", value.GetUnicode());
+  NS_ENSURE_TRUE(argv, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMWindow> newWindow;
+	globalWindow->OpenDialog(jsContext, argv, 4, getter_AddRefs(newWindow));
+	JS_PopArguments(jsContext, mark);
+
+  // now abort the current channel load...
+  aChannel->Cancel();
+
+  return NS_OK;
+}
+
 NS_DEFINE_MODULE_INSTANCE_COUNTER()
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBrowserInstance, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserContentHandler)
 
 static nsModuleComponentInfo components[] = {
   { "nsBrowserInstance",
     NS_BROWSERINSTANCE_CID,
     NS_IBROWSERINSTANCE_PROGID, 
-    nsBrowserInstanceConstructor,
-    nsBrowserInstance::RegisterProc,
-    nsBrowserInstance::UnregisterProc,
+    nsBrowserInstanceConstructor
+  },
+  { "Browser Content Handler",
+    NS_BROWSERCONTENTHANDLER_CID,
+    NS_CONTENT_HANDLER_PROGID_PREFIX"text/html", 
+    nsBrowserContentHandlerConstructor 
+  },
+  { "Browser Cmd Line Handler",
+    NS_BROWSERCONTENTHANDLER_CID,
+    NS_IBROWSERCMDLINEHANDLER_PROGID, 
+    nsBrowserContentHandlerConstructor,
+    nsBrowserContentHandler::RegisterProc,
+    nsBrowserContentHandler::UnregisterProc,
     }
 };
 
 NS_IMPL_NSGETMODULE("nsBrowserModule", components)
 
-CMDLINEHANDLER_IMPL(nsBrowserInstance,"-chrome","general.startup.browser","chrome://navigator/content/","Start with browser",NS_IBROWSERINSTANCE_PROGID,"Browser Cmd Line Handler", PR_TRUE, "", PR_FALSE)
