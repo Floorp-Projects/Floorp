@@ -407,7 +407,7 @@ nsProtocolProxyService::ExtractProxyInfo(const char *start, PRBool permitHttp, n
     const char *type = nsnull;
     switch (len) {
     case 5:
-        if (PL_strncasecmp(start, kProxyType_PROXY, 5) == 0)
+        if (permitHttp && PL_strncasecmp(start, kProxyType_PROXY, 5) == 0)
             type = kProxyType_HTTP;
         else if (PL_strncasecmp(start, kProxyType_SOCKS, 5) == 0)
             type = kProxyType_SOCKS4; // assume v4 for 4x compat
