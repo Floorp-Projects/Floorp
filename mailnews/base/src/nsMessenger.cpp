@@ -321,8 +321,8 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
             m_docLoaderObserver = do_QueryInterface(aStatusFeedback);
             if (aStatusFeedback)
                 aStatusFeedback->SetWebShell(mWebShell, mWindow);
-            nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-            docShell->SetDocLoaderObserver(m_docLoaderObserver);
+            nsCOMPtr<nsIDocShell> childDocShell(do_QueryInterface(mWebShell));
+            childDocShell->SetDocLoaderObserver(m_docLoaderObserver);
             NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
             if(NS_SUCCEEDED(rv))
                 mailSession->SetTemporaryMsgWindow(aMsgWindow);
