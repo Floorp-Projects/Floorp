@@ -123,6 +123,10 @@ struct WindowData {
   WindowData() {
     ww = nsnull;
   }
+
+  void ShowContentSize();
+  void ShowFrameSize();
+  void ShowStyleSize();
 };
 
 class nsViewer : public nsDispatchListener {
