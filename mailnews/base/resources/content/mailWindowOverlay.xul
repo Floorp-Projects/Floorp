@@ -639,7 +639,7 @@ Rights Reserved.
 			 accesskey="&showMessageCmd.accesskey;"
 			 oncommand="MsgToggleMessagePane();"/>
 			<menuseparator/>
-			<menu id="viewSortMenu"  value="&sortMenu.label;">
+			<menu id="viewSortMenu" accesskey="&sortMenu.accesskey;" value="&sortMenu.label;">
 				<menupopup>
 					<menuitem id="sortByDateMenuitem" type="checkbox" value="&sortByDateCmd.label;" accesskey="&sortByDateCmd.accesskey;" oncommand="MsgSortByDate()"/>
 					<menuitem id="sortByFlagMenuitem" type="checkbox" value="&sortByFlagCmd.label;" accesskey="&sortByFlagCmd.accesskey;" oncommand="MsgSortByFlagged()"/>
@@ -700,7 +700,7 @@ Rights Reserved.
 			<menuseparator/>
 			<menuitem value="&searchMailCmd.label;" accesskey="&searchMailCmd.accesskey;" oncommand="MsgSearchMessages();"/>
 			<menuseparator/>
-			<menuitem value="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin('http://search.netscape.com/')"/>
+			<menuitem value="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin('http://home.netscape.com/bookmark/6_0/ssearch.html')"/>
 			<menuitem value="&searchBookmarksCmd.label;" accesskey="&searchBookmarksCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'centerscreen,dialog=no,close,chrome,resizable');"/>
 		</menupopup>
 	</menu>
@@ -881,11 +881,11 @@ Rights Reserved.
 		<box id="toolbar_button_box">
 			<button class="button-toolbar-2 top" id="button-getmsg" value="&getMsgButton.label;" tooltip="aTooltip" tooltiptext="&getMsgButton.tooltip;" observes="cmd_getNewMessages"/>
 			<button class="button-toolbar-2 top" id="button-newmsg" value="&newMsgButton.label;" tooltip="aTooltip" tooltiptext="&newMsgButton.tooltip;" onclick="MsgNewMessage(event)"/>
-			<toolbarseparator/>
+			<toolbarseparator class="toolbarseparator-primary"/>
 			<button class="button-toolbar-2 top" id="button-reply" value="&replyButton.label;" tooltip="aTooltip" tooltiptext="&replyButton.tooltip;" observes="button_reply" onclick="MsgReplyMessage(event)"/>
 			<button class="button-toolbar-2 top" id="button-replyall" value="&replyAllButton.label;" tooltip="aTooltip" tooltiptext="&replyAllButton.tooltip;" observes="button_replyall" onclick="MsgReplyToAllMessage(event)"/>
 			<button class="button-toolbar-2 top" id="button-forward" value="&forwardButton.label;" tooltip="aTooltip"  tooltiptext="&forwardButton.tooltip;" observes="button_forward" onclick="MsgForwardMessage(event)"/>
-			<toolbarseparator/>
+			<toolbarseparator class="toolbarseparator-primary"/>
 			<menu id="FileButtonMenu" observes="cmd_file" datasources="rdf:null" ignore="http://home.netscape.com/NC-rdf#MessageChild">
 				<button class="button-toolbar-2 top" observes="cmd_file" id="button-file" value="&fileButton.label;"  tooltip="aTooltip" tooltiptext="&fileButton.tooltip;"/>
 				<template> 
