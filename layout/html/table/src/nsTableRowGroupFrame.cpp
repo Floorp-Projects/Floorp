@@ -155,7 +155,9 @@ NS_METHOD nsTableRowGroupFrame::GetMaxColumns(PRInt32 &aMaxColumns) const
 
 
 NS_IMETHODIMP
-nsTableRowGroupFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsTableRowGroupFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                          nsIAtom*        aListName,
+                                          nsIFrame*       aChildList)
 {
   mFirstChild = aChildList;
   return NS_OK;

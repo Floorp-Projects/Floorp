@@ -259,7 +259,9 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrame
-  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
   NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext,
                                    nsIStyleContext* aParentContext);
   NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const;
@@ -1618,7 +1620,9 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsBlockFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                  nsIAtom*        aListName,
+                                  nsIFrame*       aChildList)
 {
   nsresult rv = AppendNewFrames(aPresContext, aChildList);
   if (NS_OK != rv) {

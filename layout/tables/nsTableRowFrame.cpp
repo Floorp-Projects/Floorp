@@ -98,7 +98,9 @@ nsTableRowFrame::~nsTableRowFrame()
 }
 
 NS_IMETHODIMP
-nsTableRowFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsTableRowFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                     nsIAtom*        aListName,
+                                     nsIFrame*       aChildList)
 {
   mFirstChild = aChildList;
   return NS_OK;

@@ -48,7 +48,9 @@ class nsScrollFrame : public nsHTMLContainerFrame {
 public:
   nsScrollFrame(nsIContent* aContent, nsIFrame* aParent);
 
-  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
 
   NS_IMETHOD DidReflow(nsIPresContext&   aPresContext,
                        nsDidReflowStatus aStatus);
@@ -77,7 +79,9 @@ nsScrollFrame::nsScrollFrame(nsIContent* aContent, nsIFrame* aParent)
 }
 
 NS_IMETHODIMP
-nsScrollFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsScrollFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                   nsIAtom*        aListName,
+                                   nsIFrame*       aChildList)
 {
   NS_PRECONDITION(nsnull != aChildList, "no child frame");
   NS_PRECONDITION(LengthOf(aChildList) == 1, "wrong number child frames");

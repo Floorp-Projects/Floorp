@@ -294,14 +294,19 @@ nsrefcnt nsFrame::Release(void)
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
 
-NS_IMETHODIMP nsFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+NS_IMETHODIMP nsFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                           nsIAtom*        aListName,
+                                           nsIFrame*       aChildList)
 {
-  if (nsnull != aChildList) {
-    NS_ERROR("not a container");
-    return NS_ERROR_UNEXPECTED;
-  }
-
+  // XXX This shouldn't be getting called at all, but currently is for backwards
+  // compatility reasons...
+#if 0
+  NS_ERROR("not a container");
+  return NS_ERROR_UNEXPECTED;
+#else
+  NS_ASSERTION(nsnull == aChildList, "not a container");
   return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP nsFrame::DeleteFrame(nsIPresContext& aPresContext)

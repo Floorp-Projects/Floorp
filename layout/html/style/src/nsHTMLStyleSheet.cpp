@@ -976,10 +976,10 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
           NS_NewBodyFrame(childContent, aNewFrame, captionFrame,
                           NS_BODY_NO_AUTO_MARGINS);
           captionFrame->SetStyleContext(aPresContext, childStyleContext);
-          // Process the caption's child content and initialize it
+          // Process the caption's child content and set the initial child list
           nsIFrame* captionChildList;
           ProcessChildren(aPresContext, captionFrame, childContent, captionChildList);
-          captionFrame->Init(*aPresContext, captionChildList);
+          captionFrame->SetInitialChildList(*aPresContext, nsnull, captionChildList);
 
           // Prepend the caption frame to the outer frame's child list
           innerFrame->SetNextSibling(captionFrame);
@@ -1011,10 +1011,10 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
       if (nsnull != frame) {
         frame->SetStyleContext(aPresContext, childStyleContext);
 
-        // Process the children, and initialize the frame
+        // Process the children, and set the frame's initial child list
         nsIFrame* childChildList;
         ProcessChildren(aPresContext, frame, childContent, childChildList);
-        frame->Init(*aPresContext, childChildList);
+        frame->SetInitialChildList(*aPresContext, nsnull, childChildList);
   
         // Link the frame into the child list
         if (nsnull == lastChildFrame) {
@@ -1030,11 +1030,11 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
     }
   }
 
-  // Initialize the inner table with its child list
-  innerFrame->Init(*aPresContext, innerChildList);
+  // Set the inner table frame's list of initial child frames
+  innerFrame->SetInitialChildList(*aPresContext, nsnull, innerChildList);
 
-  // Initialize the anonymous table outer frame
-  aNewFrame->Init(*aPresContext, childList);
+  // Set the anonymous table outer frame's initial child list
+  aNewFrame->SetInitialChildList(*aPresContext, nsnull, childList);
   return NS_OK;
 }
 
@@ -1098,22 +1098,23 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext*  aPresContext,
         pageSequenceFrame->SetStyleContext(aPresContext, pseudoStyle);
         NS_RELEASE(pseudoStyle);
 
-        // Process the child content, and initialize the page sequence frame
+        // Process the child content, and set the page sequence frame's initial
+        // child list
         rv = ProcessChildren(aPresContext, pageSequenceFrame, aContent, childList);
         if (NS_SUCCEEDED(rv)) {
-          pageSequenceFrame->Init(*aPresContext, childList);
+          pageSequenceFrame->SetInitialChildList(*aPresContext, nsnull, childList);
   
           // Set the root frame's initial child list
-          aNewFrame->Init(*aPresContext, pageSequenceFrame);
+          aNewFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
         }
       }
     } else {
       nsIFrame* childList;
 
-      // Process the child content, and initialize the frame
+      // Process the child content, and set the frame's initial child list
       rv = ProcessChildren(aPresContext, aNewFrame, aContent, childList);
       if (NS_SUCCEEDED(rv)) {
-        aNewFrame->Init(*aPresContext, childList);
+        aNewFrame->SetInitialChildList(*aPresContext, nsnull, childList);
       }
     }
   }
@@ -1214,8 +1215,8 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
       rv = ProcessChildren(aPresContext, aNewFrame, aContent, childList);
     }
 
-    // Initialize the frame
-    aNewFrame->Init(*aPresContext, childList);
+    // Set the frame's initial child list
+    aNewFrame->SetInitialChildList(*aPresContext, nsnull, childList);
   }
 
   return rv;
@@ -1253,7 +1254,7 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*  aPresContext,
     rv = ConstructTableFrame(aPresContext, aContent, aParentFrame,
                              aStyleContext, aNewFrame);
     // Note: table construction function takes care of setting the style context,
-    // processing children, and calling Init()
+    // processing children, and setting the initial child list
     return rv;
 
   case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
@@ -1325,8 +1326,8 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*  aPresContext,
       rv = ProcessChildren(aPresContext, aNewFrame, aContent, childList);
     }
 
-    // Initialize the frame
-    aNewFrame->Init(*aPresContext, childList);
+    // Set the frame's initial child list
+    aNewFrame->SetInitialChildList(*aPresContext, nsnull, childList);
   }
 
   return rv;
@@ -1513,7 +1514,7 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
         // Set the scroll frame's initial child list and return the scroll frame
         // as the frame sub-tree
         if (nsnull != scrollFrame) {
-          scrollFrame->Init(*aPresContext, aFrameSubTree);
+          scrollFrame->SetInitialChildList(*aPresContext, nsnull, aFrameSubTree);
           aFrameSubTree = scrollFrame;
         }
       }

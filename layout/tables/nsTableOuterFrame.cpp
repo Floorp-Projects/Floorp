@@ -105,7 +105,9 @@ nsTableOuterFrame::nsTableOuterFrame(nsIContent* aContent, nsIFrame* aParentFram
 {
 }
 
-NS_IMETHODIMP nsTableOuterFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+NS_IMETHODIMP nsTableOuterFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                                     nsIAtom*        aListName,
+                                                     nsIFrame*       aChildList)
 {
   mFirstChild = aChildList;
 

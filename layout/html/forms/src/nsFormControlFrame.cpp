@@ -207,7 +207,9 @@ nsFormControlFrame::DidReflow(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsFormControlFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsFormControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                        nsIAtom*        aListName,
+                                        nsIFrame*       aChildList)
 {
   // add ourself as an nsIFormControlFrame
   nsFormFrame::AddFormControlFrame(aPresContext, *this);

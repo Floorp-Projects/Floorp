@@ -231,7 +231,7 @@ nsHTMLContainerFrame::CreateWrapperFrame(nsIPresContext& aPresContext,
     NS_RELEASE(pseudoStyle);
 
     // Init the body frame
-    aWrapperFrame->Init(aPresContext, aFrame);
+    aWrapperFrame->SetInitialChildList(aPresContext, nsnull, aFrame);
   }
 
   NS_RELEASE(content);

@@ -108,7 +108,7 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
         nsIStyleContextPtr colStyleContext =
           aPresContext.ResolveStyleContextFor(col, mStyleContext, PR_TRUE);
         colFrame->SetStyleContext(&aPresContext, colStyleContext);
-        colFrame->Init(aPresContext, nsnull);
+        colFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
 
         // Set nsColFrame-specific information
         PRInt32 absColIndex = mStartColIndex + colIndex;
@@ -159,7 +159,9 @@ nsTableColGroupFrame::AppendNewFrames(nsIPresContext& aPresContext, nsIFrame* aC
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsTableColGroupFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                          nsIAtom*        aListName,
+                                          nsIFrame*       aChildList)
 {
   nsresult result = AppendNewFrames(aPresContext, aChildList);
   if (NS_OK==result)

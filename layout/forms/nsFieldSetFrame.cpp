@@ -59,7 +59,9 @@ public:
 
   nsFieldSetFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
-  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
 
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
@@ -115,7 +117,9 @@ nsFieldSetFrame::~nsFieldSetFrame()
 }
 
 NS_IMETHODIMP
-nsFieldSetFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                     nsIAtom*        aListName,
+                                     nsIFrame*       aChildList)
 {
   // cache our display type
   const nsStyleDisplay* styleDisplay;
@@ -163,7 +167,7 @@ nsFieldSetFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
   }
 
   // Queue up the frames for the content frame
-  return mFirstChild->Init(aPresContext, newChildList);
+  return mFirstChild->SetInitialChildList(aPresContext, nsnull, newChildList);
 }
 
 // this is identical to nsHTMLContainerFrame::Paint except for the background and border. 

@@ -54,12 +54,23 @@ nsContainerFrame::SizeOf(nsISizeOfHandler* aHandler) const
 }
 
 NS_IMETHODIMP
-nsContainerFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsContainerFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                      nsIAtom*        aListName,
+                                      nsIFrame*       aChildList)
 {
   NS_PRECONDITION(nsnull == mFirstChild, "already initialized");
+  nsresult  result;
 
-  mFirstChild = aChildList;
-  return NS_OK;
+  if (nsnull != mFirstChild) {
+    result = NS_ERROR_UNEXPECTED;
+  } else if (nsnull != aListName) {
+    result = NS_ERROR_INVALID_ARG;
+  } else {
+    mFirstChild = aChildList;
+    result = NS_OK;
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP

@@ -300,7 +300,9 @@ nsTableFrame::~nsTableFrame()
 }
 
 NS_IMETHODIMP
-nsTableFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsTableFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                  nsIAtom*        aListName,
+                                  nsIFrame*       aChildList)
 {
   nsresult rv=NS_OK;
   mFirstChild = aChildList;
@@ -740,7 +742,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
       nsIStyleContextPtr colStyleContext =
         aPresContext.ResolveStyleContextFor(col, lastColGroupStyle, PR_TRUE);
       colFrame->SetStyleContext(&aPresContext, colStyleContext);
-      colFrame->Init(aPresContext, nsnull);
+      colFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
 
       // XXX Don't release this style context (or we'll end up with a double-free).\
       // This code is doing what nsTableColGroupFrame::Reflow() does...
@@ -755,7 +757,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
       lastNewColFrame = colFrame;
       NS_RELEASE(col);                          // ADDREF: col--
     }
-    lastColGroupFrame->Init(aPresContext, firstNewColFrame);
+    lastColGroupFrame->SetInitialChildList(aPresContext, nsnull, firstNewColFrame);
     NS_RELEASE(lastColGroup);                       // ADDREF: lastColGroup--
   }
 }

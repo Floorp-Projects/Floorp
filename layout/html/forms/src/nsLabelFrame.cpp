@@ -73,7 +73,9 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
-  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
 
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -394,7 +396,9 @@ nsLabelFrame::FindFirstControl(nsIFrame* aParentFrame, nsIFormControlFrame*& aRe
 
 
 NS_IMETHODIMP
-nsLabelFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsLabelFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                  nsIAtom*        aListName,
+                                  nsIFrame*       aChildList)
 {
   // create our view, we need a view to grab the mouse 
   nsIView* view;
@@ -439,7 +443,7 @@ nsLabelFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
   }
 
   // Queue up the frames for the body frame
-  return mFirstChild->Init(aPresContext, aChildList);
+  return mFirstChild->SetInitialChildList(aPresContext, nsnull, aChildList);
 }
 
 NS_IMETHODIMP

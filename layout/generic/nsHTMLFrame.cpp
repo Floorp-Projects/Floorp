@@ -45,7 +45,9 @@ class RootFrame : public nsHTMLContainerFrame {
 public:
   RootFrame(nsIContent* aContent);
 
-  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -82,30 +84,12 @@ RootFrame::RootFrame(nsIContent* aContent)
 }
 
 NS_IMETHODIMP
-RootFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+RootFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                               nsIAtom*        aListName,
+                               nsIFrame*       aChildList)
 {
-#if 0
-  // Construct the root content frame and set its style context
-  mFirstChild = new RootContentFrame(mContent, this);
-  nsIStyleContext* pseudoStyleContext =
-    aPresContext.ResolvePseudoStyleContextFor(mContent, 
-                                              nsHTMLAtoms::rootContentPseudo, 
-                                              mStyleContext);
-  mFirstChild->SetStyleContext(&aPresContext, pseudoStyleContext);
-  NS_RELEASE(pseudoStyleContext);
-
-  // Set the geometric and content parent for each of the child frames
-  for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(frame)) {
-    frame->SetGeometricParent(mFirstChild);
-    frame->SetContentParent(mFirstChild);
-  }
-
-  // Queue up the frames for the root content frame
-  return mFirstChild->Init(aPresContext, aChildList);
-#else
   mFirstChild = aChildList;
   return NS_OK;
-#endif
 }
 
 NS_IMETHODIMP
