@@ -117,7 +117,7 @@ namespace JSTypes {
         JSFunction*& operator=(JSFunction* function)    { return (tag = function_tag, this->function = function); }
         JSString*& operator=(JSString* string)          { return (tag = string_tag, this->string = string); }
         bool& operator=(bool boolean)                   { return (tag = boolean_tag, this->boolean = boolean); }
-        const JSType*& operator=(JSType* type)          { return (tag = type_tag, this->type = type); }
+        JSType*& operator=(JSType* type)                { return (tag = type_tag, this->type = type); }
         
         bool isFunction() const                         { return (tag == function_tag); }
         bool isObject() const                           { return ((tag == object_tag) || (tag == function_tag) || (tag == array_tag) || (tag == type_tag)); }
@@ -449,8 +449,6 @@ namespace JSTypes {
         enum { NoRelation = 0x7FFFFFFF };
 
         const String& getName() const { return mName; }
-
-        virtual bool isClassType() const { return false; }
 
         int32 distance(const JSType *other) const;
     };
