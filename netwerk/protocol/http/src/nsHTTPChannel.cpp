@@ -55,6 +55,8 @@
 #include "nsMimeTypes.h"
 #include "nsIPrompt.h"
 #include "nsIThread.h"
+#include "nsIEventQueueService.h"
+#include "nsIProxyObjectManager.h"
 
 // FIXME - Temporary include.  Delete this when cache is enabled on all 
 // platforms
@@ -97,7 +99,8 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
     mStatus(NS_OK),
     mPipeliningAllowed (PR_TRUE),
     mPipelinedRequest (nsnull),
-    mApplyConversion(PR_TRUE)
+    mApplyConversion(PR_TRUE),
+    mNotificationProxiesBuilt (PR_FALSE)
 {
     NS_INIT_REFCNT();
 			NS_NewISupportsArray ( getter_AddRefs (mStreamAsFileObserverArray ) );
@@ -537,6 +540,10 @@ nsHTTPChannel::GetNotificationCallbacks(
     return NS_OK;
 }
 
+
+static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+static NS_DEFINE_IID(kEventQueueServiceCID ,  NS_EVENTQUEUESERVICE_CID);
+
 NS_IMETHODIMP
 nsHTTPChannel::SetNotificationCallbacks(nsIInterfaceRequestor* 
         aNotificationCallbacks)
@@ -545,17 +552,80 @@ nsHTTPChannel::SetNotificationCallbacks(nsIInterfaceRequestor*
     mCallbacks = aNotificationCallbacks;
 
     // Verify that the event sink is http
-    if (mCallbacks) {
-        // we don't care if this fails -- we don't need an nsIHTTPEventSink
-        // to proceed
-        (void)mCallbacks->GetInterface(NS_GET_IID(nsIHTTPEventSink),
-                                       getter_AddRefs(mEventSink));
+    if (mCallbacks)
+    {
+        mCallbacks -> GetInterface (NS_GET_IID(nsIHTTPEventSink),
+                                    getter_AddRefs(mRealEventSink));
 
-        (void)mCallbacks->GetInterface(NS_GET_IID(nsIPrompt),
-                                       getter_AddRefs(mPrompter));
+        mCallbacks -> GetInterface(NS_GET_IID(nsIPrompt),
+                                    getter_AddRefs(mRealPrompter));
 
-        (void)mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink),
-                                       getter_AddRefs(mProgressEventSink));
+        mCallbacks -> GetInterface (NS_GET_IID(nsIProgressEventSink),
+                                    getter_AddRefs(mRealProgressEventSink));
+        
+        rv = BuildNotificationProxies ();
+    
+    }
+    return rv;
+}
+
+nsresult
+nsHTTPChannel::BuildNotificationProxies ()
+{
+    nsresult rv = NS_OK;
+
+    if (mNotificationProxiesBuilt)
+        return rv;
+
+    mNotificationProxiesBuilt = PR_TRUE;
+
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv); 
+    
+    if (NS_FAILED(rv))
+        return rv;
+    
+    nsCOMPtr<nsIEventQueue> eventQ;
+
+    rv = eventQService -> GetThreadEventQueue (NS_CURRENT_THREAD, getter_AddRefs (eventQ));
+    if (NS_FAILED (rv))
+        return rv;
+    
+    NS_WITH_SERVICE ( nsIProxyObjectManager, proxyManager, kProxyObjectManagerCID, &rv);
+    
+    if (NS_FAILED(rv)) 
+        return rv;
+
+    if (mRealEventSink)
+    {
+        rv = proxyManager -> GetProxyForObject (eventQ,
+                                NS_GET_IID(nsIHTTPEventSink),
+                                mRealEventSink,
+                                PROXY_SYNC | PROXY_ALWAYS,
+                                getter_AddRefs(mEventSink) );
+        if (NS_FAILED (rv))
+            return rv;
+    }
+
+    if (mRealPrompter)
+    {
+        rv = proxyManager -> GetProxyForObject (eventQ,
+                                NS_GET_IID(nsIPrompt),
+                                mRealPrompter,
+                                PROXY_SYNC | PROXY_ALWAYS,
+                                getter_AddRefs(mPrompter)   );
+        if (NS_FAILED (rv))
+            return rv;
+    }
+
+    if (mRealProgressEventSink)
+    {
+        rv = proxyManager -> GetProxyForObject (eventQ,
+                                NS_GET_IID(nsIProgressEventSink),
+                                mRealProgressEventSink,
+                                PROXY_SYNC | PROXY_ALWAYS,
+                                getter_AddRefs(mProgressEventSink));
+        if (NS_FAILED (rv))
+            return rv;
     }
     return rv;
 }
