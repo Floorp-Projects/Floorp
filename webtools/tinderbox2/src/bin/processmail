@@ -11,8 +11,8 @@
 # logs in compressed form for future reference.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/11 00:24:04 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/08/24 14:56:30 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/Attic/processmail,v $ 
 # $Name:  $ 
@@ -129,7 +129,9 @@ The required tinderbox variable:
 
 	tinderbox: administrator : {the mailing address of the maintainer
 	                             of this build machine}
-	tinderbox: builddate : {the time the build was started in time()
+	tinderbox: builddate : deprecated {the time the build was started in time()
+	                          format, this is effectively the build number}
+	tinderbox: starttime : {the time the build was started in time()
 	                          format, this is effectively the build number}
 	tinderbox: buildname : {the official name of the build}
 	tinderbox: errorparser : {the error parser to use when 
@@ -226,14 +228,13 @@ EOF
 sub fatal_mailprocessing_error {
 # all fatal errors come through this function
 
-  foreach $error (@_) {
-    foreach (split /\n+/, $error) {
-      s/\t/   /g; 
-      syslog('err', $_);
-      warn "$PROGRAM: $_\n";
-    }
+  my  @error = @_;
+  foreach $_ (@error) {
+    print LOG "[$LOCALTIME] $_";
   }
-  closelog();
+  print LOG "\n";
+
+  close(LOG);
   exit 9; 
 }
 
@@ -300,12 +301,11 @@ sub set_filenames{
 
   $TINDERBOX{'brieflog'} = 
     ("$FileStructure::URLS{'gunzip'}?".
-     "tree=$tree&brief-log=$main::UID"),
-      
-      $TINDERBOX{'fulllog'} = 
-        ("$FileStructure::URLS{'gunzip'}?".
-         "tree=$tree&full-log=$main::UID"),
-          
+     "tree=$tree&brief-log=$main::UID");
+  
+  $TINDERBOX{'fulllog'} = 
+    ("$FileStructure::URLS{'gunzip'}?".
+     "tree=$tree&full-log=$main::UID");
 
   return 1;
 }
@@ -391,6 +391,22 @@ sub parse_tinderbox_vars {
 }
 
 
+# this function is used to change the tinderbox variables from the old
+# format into the new format. It will help ease transitions to the new
+# tinderbox code.  I believe the new format will be more maintainable
+# going forward.
+
+sub backward_compatibility {
+
+  if ($TINDERBOX{'status'} eq 'busted') {
+    $TINDERBOX{'status'} = 'build_failed';
+  }
+
+  $TINDERBOX{'starttime'} = $TINDERBOX{'builddate'};
+
+  return 1;
+}
+
 
 # create a string which shows the contents of the tinderbox variables.
 # this output is appended to the log file, to show what values were
@@ -462,7 +478,7 @@ sub check_required_vars {
     close (STAMP) ||
       die("Could not close file: $stamp_file, $!\n");
     
-    ($build_start > $TINDERBOX{'builddate'} ) ||
+    ($build_start > $TINDERBOX{'starttime'} ) ||
       die("New build started before the previous one.  ".
           "Something is very wrong with the clock on the build machine, ".
           "time is going backwards.\n");
@@ -477,9 +493,9 @@ sub check_required_vars {
            " seconds apart.  Build not accepted.\n");
   }      
   
-  if ($build_start != $TINDERBOX{'builddate'} ) {
+  if ($build_start != $TINDERBOX{'starttime'} ) {
     overwrite_file( $stamp_file, 
-                    "$TINDERBOX{'builddate'}\n");
+                    "$TINDERBOX{'starttime'}\n");
   }
   
   if( $TINDERBOX{'tree'} eq ''){
@@ -536,20 +552,20 @@ sub check_required_vars {
   #
   # Or a GMT unix date
   #
-  if( $TINDERBOX{'builddate'} eq ''){
-    $err_string .= "Variable: 'tinderbox:builddate' not set.\n";
+  if( $TINDERBOX{'starttime'} eq ''){
+    $err_string .= "Variable: 'tinderbox:starttime' not set.\n";
   } else {
-    if( $TINDERBOX{'builddate'} =~ 
+    if( $TINDERBOX{'starttime'} =~ 
         /([0-9]*)\/([0-9]*)\/([0-9]*)[ \t]*([0-9]*)\:([0-9]*)\:([0-9]*)/ ){
       
-      $builddate = timelocal($6,$5,$4,$2,$1-1,$3);
+      $starttime = timelocal($6,$5,$4,$2,$1-1,$3);
       
     }
-    elsif( abs($TINDERBOX{'builddate'} - $TIME) < 60*60 ){
-      $builddate = $TINDERBOX{'builddate'};
+    elsif( abs($TINDERBOX{'starttime'} - $TIME) < 60*60 ){
+      $starttime = $TINDERBOX{'starttime'};
     }
     else {
-      $err_string .= ("Variable: 'tinderbox:builddate',".
+      $err_string .= ("Variable: 'tinderbox:starttime',".
                       " is not of the form ".
                       "MM/DD/YY HH:MM:SS, or unix date, ".
                       "or your clock is set incorrectly, ".
@@ -648,7 +664,7 @@ sub log_header {
                           "linktxt"=>"Show <b>$notlogtype</b> Log\n", 
                           "href"=> ("$FileStructure::URLS{'gunzip'}?".
                                     "tree=$tree&".
-                                    "$notlogtype-log=$main::UID.html"),
+                                    "$notlogtype-log=$main::UID"),
                          );
   $out .= "<dt>";
   $out .= HTMLPopUp::Link(
@@ -1086,8 +1102,7 @@ sub write_update_file {
                            "/Tmp.Build.Update.$uid");
 
   Persistence::save_structure( 
-                              [\%TINDERBOX],
-                              ['record'],
+                              \%TINDERBOX,
                               $tmp_update_file,
                              );
                                
@@ -1122,6 +1137,7 @@ sub write_update_file {
 
   parse_mail_header();
   parse_tinderbox_vars();
+  backward_compatibility();
   set_filenames();
 
 #  check_required_vars();
