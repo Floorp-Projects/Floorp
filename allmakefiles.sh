@@ -25,31 +25,25 @@
 #   There is no need to rerun autoconf after adding makefiles.
 #   You only need to run configure.
 #
-#   Unused makefiles may be commented out with '#'.
-#   ('#' must be the first character on the line).
+#   Please keep the modules in this file in sync with those in
+#   mozilla/build/unix/modules.mk
+#
 
 MAKEFILES=""
 
 # add_makefiles - Shell function to add makefiles to MAKEFILES
 add_makefiles() {
-  while read line; do
-    case $line in
-      \#*|dnl*) ;;
-      *) MAKEFILES="$MAKEFILES $line" ;;
-    esac
-  done
+    MAKEFILES="$MAKEFILES $*"
 }
 
-if [ -z "${srcdir}" ]; then
+if [ "$srcdir" = "" ]; then
     srcdir=.
 fi
 
-# xpcom standalone mode
-if [ `echo "$BUILD_MODULES" | grep -c xpcom` != 0 ]; then
-  add_makefiles <<END_XPCOM_STANDALONE_MAKEFILES
 #
-# General
+# Common makefiles used by everyone
 #
+add_makefiles "
 Makefile
 build/Makefile
 build/unix/Makefile
@@ -60,127 +54,26 @@ config/Makefile
 config/autoconf.mk
 config/mkdepend/Makefile
 config/mkdetect/Makefile
-#
-# modules/libreg
-#
-modules/libreg/Makefile
-modules/libreg/include/Makefile
-modules/libreg/src/Makefile
-#
-# New xpcom hiearchy
-#
-xpcom/Makefile
-xpcom/base/Makefile
-xpcom/build/Makefile
-xpcom/components/Makefile
-xpcom/ds/Makefile
-xpcom/io/Makefile
-xpcom/typelib/Makefile
-xpcom/reflect/Makefile
-xpcom/typelib/xpt/Makefile
-xpcom/typelib/xpt/public/Makefile
-xpcom/typelib/xpt/src/Makefile
-xpcom/typelib/xpt/tests/Makefile
-xpcom/typelib/xpt/tools/Makefile
-xpcom/typelib/xpidl/Makefile
-xpcom/reflect/xptcall/Makefile
-xpcom/reflect/xptcall/public/Makefile
-xpcom/reflect/xptcall/src/Makefile
-xpcom/reflect/xptcall/src/md/Makefile
-xpcom/reflect/xptcall/src/md/test/Makefile
-xpcom/reflect/xptcall/src/md/unix/Makefile
-xpcom/reflect/xptcall/tests/Makefile
-xpcom/reflect/xptinfo/Makefile
-xpcom/reflect/xptinfo/public/Makefile
-xpcom/reflect/xptinfo/src/Makefile
-xpcom/reflect/xptinfo/tests/Makefile
-xpcom/proxy/Makefile
-xpcom/proxy/public/Makefile
-xpcom/proxy/src/Makefile
-xpcom/proxy/tests/Makefile
-xpcom/sample/Makefile
-xpcom/tests/Makefile
-xpcom/tests/dynamic/Makefile
-xpcom/tests/services/Makefile
-xpcom/threads/Makefile
-xpcom/tools/Makefile
-xpcom/tools/registry/Makefile
-#
-# End of xpcom Makefiles
-#
-END_XPCOM_STANDALONE_MAKEFILES
-return 0
-fi
+include/Makefile
+"
 
-# transformiix standalone mode
-if [ `echo "$BUILD_MODULES" | grep -c transformiix` != 0 ]; then
-  add_makefiles <<END_TRANSFORMIIX_STANDALONE_MAKEFILES
-#
-# General
-#
-Makefile
-build/Makefile
-build/unix/Makefile
-build/unix/mozilla-config
-build/unix/nspr_my_config.mk
-build/unix/nspr_my_overrides.mk
-config/Makefile
-config/autoconf.mk
-config/mkdepend/Makefile
-config/mkdetect/Makefile
-#
-# extensions/transformiix
-#
-# extensions/transformiix/build/Makefile
-extensions/transformiix/source/base/Makefile
-# extensions/transformiix/source/examples/mozilla/Transformiix/content/Makefile
-# extensions/transformiix/source/examples/mozilla/Transformiix/skin/Makefile
-# extensions/transformiix/source/examples/mozilla/Makefile
-# extensions/transformiix/source/examples/Makefile
-extensions/transformiix/source/main/Makefile
-extensions/transformiix/source/net/Makefile
-extensions/transformiix/source/xml/dom/standalone/Makefile
-extensions/transformiix/source/xml/dom/Makefile
-extensions/transformiix/source/xml/dom/mozImpl/Makefile
-extensions/transformiix/source/xml/parser/Makefile
-extensions/transformiix/source/xml/printer/Makefile
-extensions/transformiix/source/xml/util/Makefile
-extensions/transformiix/source/xml/Makefile
-extensions/transformiix/source/xpath/Makefile
-extensions/transformiix/source/xslt/functions/Makefile
-extensions/transformiix/source/xslt/util/Makefile
-extensions/transformiix/source/xslt/Makefile
-extensions/transformiix/source/Makefile
-extensions/transformiix/Makefile
-#
-# End of transformiix Makefiles
-#
-END_TRANSFORMIIX_STANDALONE_MAKEFILES
-return 0
-fi
-
-
-add_makefiles <<END_NGMAKEFILES
-Makefile
-build/Makefile
-build/unix/Makefile
-build/unix/mozilla-config
-build/unix/nspr_my_config.mk
-build/unix/nspr_my_overrides.mk
-config/Makefile
-config/autoconf.mk
-config/mkdepend/Makefile
-config/mkdetect/Makefile
+MAKEFILES_db="
 db/Makefile
 db/mdb/Makefile
 db/mdb/public/Makefile
 db/mork/Makefile
 db/mork/build/Makefile
 db/mork/src/Makefile
+"
+
+MAKEFILES_dbm="
 dbm/Makefile
 dbm/include/Makefile
 dbm/src/Makefile
 dbm/tests/Makefile
+"
+
+MAKEFILES_dom="
 dom/Makefile
 dom/public/Makefile
 dom/public/base/Makefile
@@ -207,6 +100,9 @@ dom/src/range/Makefile
 dom/src/html/Makefile
 dom/src/jsurl/Makefile
 dom/tools/Makefile
+"
+
+MAKEFILES_editor="
 editor/Makefile
 editor/base/Makefile
 editor/public/Makefile
@@ -229,10 +125,19 @@ editor/ui/dialogs/Makefile
 editor/ui/dialogs/content/Makefile
 editor/ui/dialogs/locale/Makefile
 editor/ui/dialogs/locale/en-US/Makefile
+"
+
+MAKEFILES_expat="
 expat/Makefile
 expat/xmlparse/Makefile
 expat/xmltok/Makefile
+"
+
+MAKEFILES_extensions="
 extensions/Makefile
+"
+
+MAKEFILES_gfx="
 gfx/Makefile
 gfx/idl/Makefile
 gfx/public/Makefile
@@ -248,6 +153,9 @@ gfx/src/qt/Makefile
 gfx/src/xlib/Makefile
 gfx/src/xlibrgb/Makefile
 gfx/tests/Makefile
+"
+
+MAKEFILES_htmlparser="
 htmlparser/Makefile
 htmlparser/robot/Makefile
 htmlparser/robot/test/Makefile
@@ -256,7 +164,9 @@ htmlparser/tests/Makefile
 htmlparser/tests/grabpage/Makefile
 htmlparser/tests/logparse/Makefile
 htmlparser/tests/outsinks/Makefile
-include/Makefile
+"
+
+MAKEFILES_intl="
 intl/Makefile
 intl/chardet/Makefile
 intl/chardet/public/Makefile
@@ -294,15 +204,20 @@ intl/strres/Makefile
 intl/strres/public/Makefile
 intl/strres/src/Makefile
 intl/strres/tests/Makefile
-jpeg/Makefile
+"
+
+MAKEFILES_js="
 js/Makefile
-#js/jsd/Makefile
-#js/jsd/classes/Makefile
 js/src/Makefile
 js/src/fdlibm/Makefile
+"
+
+MAKEFILES_liveconnect="
 js/src/liveconnect/Makefile
 js/src/liveconnect/classes/Makefile
-# js/src/xpcom/Makefile
+"
+
+MAKEFILES_xpconnect="
 js/src/xpconnect/Makefile
 js/src/xpconnect/public/Makefile
 js/src/xpconnect/idl/Makefile
@@ -313,9 +228,9 @@ js/src/xpconnect/tests/Makefile
 js/src/xpconnect/tests/components/Makefile
 js/src/xpconnect/tests/idl/Makefile
 js/src/xpconnect/shell/Makefile
-# js/src/xpconnect/md/Makefile
-# js/src/xpconnect/md/unix/Makefile
-# js/src/xpconnect/test/Makefile
+"
+
+MAKEFILES_layout="
 layout/Makefile
 layout/base/Makefile
 layout/base/public/Makefile
@@ -361,48 +276,57 @@ layout/xul/content/src/Makefile
 layout/xbl/Makefile
 layout/xbl/public/Makefile
 layout/xbl/src/Makefile
-# lib/liblayer/Makefile
-# lib/liblayer/include/Makefile
-# lib/liblayer/src/Makefile
+"
+
+MAKEFILES_libimg="
 modules/libimg/Makefile
-# modules/libimg/classes/Makefile
-# modules/libimg/classes/netscape/Makefile
-# modules/libimg/classes/netscape/libimg/Makefile
-modules/libimg/png/Makefile
 modules/libimg/public/Makefile
 modules/libimg/public_com/Makefile
 modules/libimg/src/Makefile
 modules/libimg/gifcom/Makefile
 modules/libimg/jpgcom/Makefile
 modules/libimg/pngcom/Makefile  
+"
+
+MAKEFILES_libjar="
 modules/libjar/Makefile
+"
+
+MAKEFILES_libreg="
+modules/libreg/Makefile
+modules/libreg/include/Makefile
+modules/libreg/src/Makefile
+"
+
+MAKEFILES_libpref="
 modules/libpref/Makefile
 modules/libpref/admin/Makefile
 modules/libpref/l10n/Makefile
 modules/libpref/public/Makefile
 modules/libpref/src/Makefile
-modules/libreg/Makefile
-modules/libreg/include/Makefile
-modules/libreg/src/Makefile
+"
+
+MAKEFILES_libutil="
 modules/libutil/Makefile
 modules/libutil/public/Makefile
 modules/libutil/src/Makefile
+"
+
+MAKEFILES_oji="
 modules/oji/Makefile
 modules/oji/public/Makefile
 modules/oji/src/Makefile
+"
+
+MAKEFILES_plugin="
 modules/plugin/Makefile
 modules/plugin/nglsrc/Makefile
 modules/plugin/public/Makefile
 modules/plugin/src/Makefile
 modules/plugin/test/Makefile
-#modules/security/freenav/Makefile
-modules/zlib/Makefile
-modules/zlib/src/Makefile
-#nav-java/Makefile
-#nav-java/stubs/Makefile
-#nav-java/stubs/include/Makefile
-#nav-java/stubs/jri/Makefile
-#nav-java/stubs/src/Makefile
+"
+
+MAKEFILES_netwerk="
 netwerk/Makefile
 netwerk/base/Makefile
 netwerk/base/public/Makefile
@@ -457,12 +381,18 @@ netwerk/streamconv/src/Makefile
 netwerk/streamconv/test/Makefile
 netwerk/test/Makefile
 netwerk/testserver/Makefile
+"
+
+MAKEFILES_uriloader="
 uriloader/Makefile
 uriloader/base/Makefile
 uriloader/build/Makefile
 uriloader/extprotocol/Makefile
 uriloader/extprotocol/base/Makefile
 uriloader/extprotocol/unix/Makefile
+"
+
+MAKEFILES_profile="
 profile/Makefile
 profile/src/Makefile
 profile/public/Makefile
@@ -478,6 +408,9 @@ profile/pref-migrator/resources/content/Makefile
 profile/pref-migrator/resources/locale/Makefile
 profile/pref-migrator/resources/locale/en-US/Makefile
 profile/defaults/Makefile
+"
+
+MAKEFILES_rdf="
 rdf/Makefile
 rdf/base/Makefile
 rdf/base/idl/Makefile
@@ -505,22 +438,36 @@ rdf/tests/localfile/Makefile
 rdf/tests/rdfsink/Makefile
 rdf/tests/rdfcat/Makefile
 rdf/tests/rdfpoll/Makefile
+"
+
+MAKEFILES_sun_java="
 sun-java/Makefile
 sun-java/stubs/Makefile
 sun-java/stubs/include/Makefile
 sun-java/stubs/jri/Makefile
 sun-java/stubs/src/Makefile
+"
+
+MAKEFILES_caps="
 caps/Makefile
 caps/idl/Makefile
 caps/include/Makefile
-# caps/public/Makefile
 caps/src/Makefile
+"
+
+MAKEFILES_view="
 view/Makefile
 view/public/Makefile
 view/src/Makefile
+"
+
+MAKEFILES_docshell="
 docshell/Makefile
 docshell/base/Makefile
 docshell/build/Makefile
+"
+
+MAKEFILES_webshell="
 webshell/Makefile
 webshell/public/Makefile
 webshell/src/Makefile
@@ -533,6 +480,9 @@ webshell/tests/viewer/unix/motif/Makefile
 webshell/tests/viewer/unix/qt/Makefile
 webshell/tests/viewer/unix/xlib/Makefile
 webshell/embed/Makefile
+"
+
+MAKEFILES_widget="
 widget/Makefile
 widget/public/Makefile
 widget/src/Makefile
@@ -565,15 +515,14 @@ widget/timer/src/unix/motif/Makefile
 widget/timer/src/unix/photon/Makefile
 widget/timer/src/unix/xlib/Makefile
 widget/timer/src/unix/qt/Makefile
-#
-# New xpcom hiearchy
-#
+"
+
+MAKEFILES_xpcom="
 xpcom/Makefile
 xpcom/base/Makefile
 xpcom/build/Makefile
 xpcom/components/Makefile
 xpcom/ds/Makefile
-# xpcom/idl/Makefile
 xpcom/io/Makefile
 xpcom/typelib/Makefile
 xpcom/reflect/Makefile
@@ -598,18 +547,16 @@ xpcom/proxy/Makefile
 xpcom/proxy/public/Makefile
 xpcom/proxy/src/Makefile
 xpcom/proxy/tests/Makefile
-# xpcom/public/Makefile
 xpcom/sample/Makefile
-# xpcom/src/Makefile
 xpcom/tests/Makefile
 xpcom/tests/dynamic/Makefile
 xpcom/tests/services/Makefile
 xpcom/threads/Makefile
 xpcom/tools/Makefile
 xpcom/tools/registry/Makefile
-#
-# End of xpcom Makefiles
-#
+"
+
+MAKEFILES_xpinstall="
 xpinstall/Makefile
 xpinstall/notifier/Makefile
 xpinstall/packager/Makefile
@@ -621,6 +568,9 @@ xpinstall/res/locale/en-US/Makefile
 xpinstall/src/Makefile
 xpinstall/stub/Makefile
 xpinstall/wizard/unix/src2/Makefile
+"
+
+MAKEFILES_xpfe="
 xpfe/Makefile
 xpfe/browser/Makefile
 xpfe/browser/public/Makefile
@@ -725,10 +675,9 @@ xpfe/communicator/resources/Makefile
 xpfe/communicator/resources/locale/Makefile
 xpfe/communicator/resources/locale/en-US/Makefile
 xpfe/communicator/resources/content/Makefile
+"
 
-#
-# End of XPFE Makefiles
-#
+MAKEFILES_embedding="
 embedding/Makefile
 embedding/browser/Makefile
 embedding/browser/build/Makefile
@@ -737,49 +686,73 @@ embedding/browser/setup/Makefile
 embedding/browser/gtk/Makefile
 embedding/browser/gtk/src/Makefile
 embedding/browser/gtk/tests/Makefile
+"
 
-# Security Makefiles
+MAKEFILES_security="
 security/Makefile
 security/psm/Makefile
 security/psm/lib/Makefile
 security/psm/lib/client/Makefile
 security/psm/lib/protocol/Makefile
+"
 
-# xpfe/browser/public/Makefile
+MAKEFILES_transformiix="
+extensions/transformiix/source/base/Makefile
+extensions/transformiix/source/main/Makefile
+extensions/transformiix/source/net/Makefile
+extensions/transformiix/source/xml/dom/standalone/Makefile
+extensions/transformiix/source/xml/dom/Makefile
+extensions/transformiix/source/xml/dom/mozImpl/Makefile
+extensions/transformiix/source/xml/parser/Makefile
+extensions/transformiix/source/xml/printer/Makefile
+extensions/transformiix/source/xml/util/Makefile
+extensions/transformiix/source/xml/Makefile
+extensions/transformiix/source/xpath/Makefile
+extensions/transformiix/source/xslt/functions/Makefile
+extensions/transformiix/source/xslt/util/Makefile
+extensions/transformiix/source/xslt/Makefile
+extensions/transformiix/source/Makefile
+extensions/transformiix/Makefile
+"
 
-END_NGMAKEFILES
+MAKEFILES_themes=`cat ${srcdir}/themes/makefiles`
 
-#
-# themes/
-#
-add_makefiles < ${srcdir}/themes/makefiles
+if [ "$MOZ_MAIL_NEWS" ]; then
+    MAKEFILES_mailnews=`cat ${srcdir}/mailnews/makefiles`
+fi
 
-#if [ "$MOZ_MAIL_NEWS" ]; then
-  add_makefiles < ${srcdir}/mailnews/makefiles
-#fi
+if [ ! "$SYSTEM_JPEG" ]; then
+    MAKEFILES_jpeg="jpeg/Makefile"
+fi
+
+if [ ! "$SYSTEM_ZLIB" ]; then
+    MAKEFILES_zlib="
+	modules/zlib/Makefile
+	modules/zlib/src/Makefile
+"
+fi
+
+if [ ! "$SYSTEM_PNG" ]; then
+    MAKEFILES_libimg="$MAKEFILES_libimg modules/libimg/png/Makefile"
+fi
+
 
 #
 #  java/
 #
 if [ "$MOZ_JAVA_SUPPLEMENT" ]; then
-  add_makefiles < ${srcdir}/java/makefiles
+    MAKEFILES_java_supplement=`cat ${srcdir}/java/makefiles`
 fi
 
 #
 # l10n/
 #
 if [ "$MOZ_L10N" ]; then
-	add_makefiles <<END_L10N_MAKEFILES
-	#
-	l10n/Makefile
-	#
-END_L10N_MAKEFILES
-	#
-	if [ "$MOZ_L10N_LANG" ]; then
-		add_makefiles <<END_L10N_LANG_MAKEFILES
-		#
+    MAKEFILES_l10n="l10n/Makefile"
+
+    if [ "$MOZ_L10N_LANG" ]; then
+	MAKEFILES_l10n_lang="
 		l10n/lang/Makefile
-		#
 		l10n/lang/addressbook/Makefile
 		l10n/lang/bookmarks/Makefile
 		l10n/lang/directory/Makefile
@@ -792,8 +765,6 @@ END_L10N_MAKEFILES
 		l10n/lang/pref/Makefile
 		l10n/lang/related/Makefile
 		l10n/lang/sidebar/Makefile
-		#
-		#
 		l10n/lang/addressbook/locale/Makefile
 		l10n/lang/bookmarks/locale/Makefile
 		l10n/lang/directory/locale/Makefile
@@ -806,127 +777,178 @@ END_L10N_MAKEFILES
 		l10n/lang/pref/locale/Makefile
 		l10n/lang/related/locale/Makefile
 		l10n/lang/sidebar/locale/Makefile
-		#
-END_L10N_LANG_MAKEFILES
-		#
+"
 	fi
 fi
-#
 
 # tools/jprof
 if [ "$MOZ_JPROF" ]; then
-  add_makefiles <<END_JPROF_MAKEFILES
-  tools/jprof/Makefile
-END_JPROF_MAKEFILES
+    MAKEFILES_jprof="tools/jprof/Makefile"
 fi
 
 # tools/leaky
 if [ "$MOZ_LEAKY" ]; then
-  add_makefiles <<END_LEAKY_MAKEFILES
-  tools/leaky/Makefile
-END_LEAKY_MAKEFILES
+    MAKEFILES_leaky="tools/leaky/Makefile"
 fi
 
 # layout/mathml
 if [ "$MOZ_MATHML" ]; then
-  add_makefiles <<END_MATHML_MAKEFILES
-  layout/mathml/Makefile
-  layout/mathml/base/Makefile
-  layout/mathml/base/src/Makefile
-  layout/mathml/content/Makefile
-  layout/mathml/content/src/Makefile
-END_MATHML_MAKEFILES
+    MAKEFILES_layout="$MAKEFILES_layout
+	layout/mathml/Makefile
+	layout/mathml/base/Makefile
+	layout/mathml/base/src/Makefile
+	layout/mathml/content/Makefile
+	layout/mathml/content/src/Makefile
+"
 fi
 
 # layout/svg
 if [ "$MOZ_SVG" ]; then
-  add_makefiles <<END_SVG_MAKEFILES
-  layout/svg/Makefile
-  layout/svg/base/Makefile
-  layout/svg/base/public/Makefile
-  layout/svg/base/src/Makefile
-  layout/svg/content/Makefile
-  layout/svg/content/src/Makefile
-END_SVG_MAKEFILES
+    MAKEFILES_layout="$MAKEFILES_layout
+	layout/svg/Makefile
+	layout/svg/base/Makefile
+	layout/svg/base/public/Makefile
+	layout/svg/base/src/Makefile
+	layout/svg/content/Makefile
+	layout/svg/content/src/Makefile
+"
 fi
 
 # directory/xpcom
 if [ "$MOZ_LDAP_XPCOM" ]; then
-  add_makefiles <<END_LDAP_XPCOM_MAKEFILES
-  directory/xpcom/Makefile
-  directory/xpcom/base/Makefile
-  directory/xpcom/base/public/Makefile
-  directory/xpcom/base/src/Makefile
-END_LDAP_XPCOM_MAKEFILES
+    MAKEFILES_ldap="
+	directory/xpcom/Makefile
+	directory/xpcom/base/Makefile
+	directory/xpcom/base/public/Makefile
+	directory/xpcom/base/src/Makefile
+"
 fi
 
-if [ `echo "$MOZ_EXTENSIONS" | grep -c cookie` != 0 ]; then
-  add_makefiles <<END_EXTENSIONS_COOKIE_MAKEFILES
-  extensions/cookie/Makefile
-  extensions/cookie/tests/Makefile
-END_EXTENSIONS_COOKIE_MAKEFILES
-fi
 
-if [ `echo "$MOZ_EXTENSIONS" | grep -c psm-glue` != 0 ]; then
-  add_makefiles <<END_EXTENTIONS_PSM_GLUE_MAKEFILES
-  extensions/psm-glue/public/Makefile
-  extensions/psm-glue/Makefile
-  extensions/psm-glue/res/content/Makefile
-  extensions/psm-glue/res/Makefile
-  extensions/psm-glue/res/locale/Makefile
-  extensions/psm-glue/res/locale/en-US/Makefile
-  extensions/psm-glue/src/Makefile
-END_EXTENTIONS_PSM_GLUE_MAKEFILES
-fi
+for extension in "$MOZ_EXTENSIONS"; do
+    case "$extension" in
+        cookie ) MAKEFILES_extensions="$MAKEFILES_extensions
+	    extensions/cookie/Makefile
+	    extensions/cookie/tests/Makefile
+            " ;;
+        psm-glue ) MAKEFILES_extensions="$MAKEFILES_extensions
+	    extensions/psm-glue/public/Makefile
+	    extensions/psm-glue/Makefile
+	    extensions/psm-glue/res/content/Makefile
+	    extensions/psm-glue/res/Makefile
+	    extensions/psm-glue/res/locale/Makefile
+	    extensions/psm-glue/res/locale/en-US/Makefile
+	    extensions/psm-glue/src/Makefile
+            " ;;
+        irc ) MAKEFILES_extensions="$MAKEFILES_extensions
+	    extensions/irc/Makefile
+	    extensions/irc/xul/Makefile
+	    extensions/irc/xul/content/Makefile
+	    extensions/irc/xul/locale/Makefile
+	    extensions/irc/xul/locale/en-US/Makefile
+            " ;;
+	transformiix) MAKEFILES_extensions="$MAKEFILES_transformiix"
+	    ;;
+        wallet ) MAKEFILES_extensions="$MAKEFILE_extensions
+	    extensions/wallet/Makefile
+	    extensions/wallet/public/Makefile
+	    extensions/wallet/src/Makefile
+	    extensions/wallet/editor/Makefile
+	    extensions/wallet/cookieviewer/Makefile
+	    extensions/wallet/signonviewer/Makefile
+	    extensions/wallet/walletpreview/Makefile
+	    extensions/wallet/build/Makefile
+            " ;;
+        xmlterm ) MAKEFILES_extensions="$MAKEFILES_extensions
+	    extensions/xmlterm/Makefile
+	    extensions/xmlterm/base/Makefile
+	    extensions/xmlterm/geckoterm/Makefile
+	    extensions/xmlterm/linetest/Makefile
+	    extensions/xmlterm/scripts/Makefile
+	    extensions/xmlterm/tests/Makefile
+	    extensions/xmlterm/ui/Makefile
+            " ;;
+        xml-rpc ) MAKEFILES_extensions="$MAKEFILES_extensions
+	    extensions/xml-rpc/Makefile
+	    extensions/xml-rpc/idl/Makefile
+	    extensions/xml-rpc/src/Makefile
+            " ;;
+    esac
+done
 
-if [ `echo "$MOZ_EXTENSIONS" | grep -c irc` != 0 ]; then
-  add_makefiles <<END_EXTENSIONS_IRC_MAKEFILES
-  extensions/irc/Makefile
-  extensions/irc/xul/Makefile
-  extensions/irc/xul/content/Makefile
-  extensions/irc/xul/locale/Makefile
-  extensions/irc/xul/locale/en-US/Makefile
-END_EXTENSIONS_IRC_MAKEFILES
-fi
 
-if [ `echo "$MOZ_EXTENSIONS" | grep -c wallet` != 0 ]; then
-  add_makefiles <<END_EXTENSIONS_WALLET_MAKEFILES
-  extensions/wallet/Makefile
-  extensions/wallet/public/Makefile
-  extensions/wallet/src/Makefile
-  extensions/wallet/editor/Makefile
-  extensions/wallet/cookieviewer/Makefile
-  extensions/wallet/signonviewer/Makefile
-  extensions/wallet/walletpreview/Makefile
-  extensions/wallet/build/Makefile
-END_EXTENSIONS_WALLET_MAKEFILES
-fi
+#
+# Translate from BUILD_MODULES into the proper makefiles list
+#
+if [ "$BUILD_MODULES" = "all" ]; then
+add_makefiles "
+$MAKEFILES_caps
+$MAKEFILES_db
+$MAKEFILES_dbm
+$MAKEFILES_docshell
+$MAKEFILES_dom
+$MAKEFILES_editor
+$MAKEFILES_embedding
+$MAKEFILES_expat
+$MAKEFILES_extensions
+$MAKEFILES_gfx
+$MAKEFILES_htmlparser
+$MAKEFILES_intl
+$MAKEFILES_java_supplement
+$MAKEFILES_ldap
+$MAKEFILES_leaky
+$MAKEFILES_jpeg
+$MAKEFILES_jprof
+$MAKEFILES_js
+$MAKEFILES_l10n
+$MAKEFILES_l10n_lang
+$MAKEFILES_layout
+$MAKEFILES_libreg
+$MAKEFILES_libimg
+$MAKEFILES_libjar
+$MAKEFILES_libpref
+$MAKEFILES_libutil
+$MAKEFILES_liveconnect
+$MAKEFILES_mailnews
+$MAKEFILES_oji
+$MAKEFILES_plugin
+$MAKEFILES_netwerk
+$MAKEFILES_profile
+$MAKEFILES_rdf
+$MAKEFILES_security
+$MAKEFILES_sun_java
+$MAKEFILES_themes
+$MAKEFILES_uriloader
+$MAKEFILES_view
+$MAKEFILES_webshell
+$MAKEFILES_widget
+$MAKEFILES_xpcom
+$MAKEFILES_xpconnect
+$MAKEFILES_xpinstall
+$MAKEFILES_xpfe
+$MAKEFILES_zlib
+"
 
-if [ `echo "$MOZ_EXTENSIONS" | grep -c pics` != 0 ]; then
-  add_makefiles <<END_EXTENSIONS_PICS_MAKEFILES
-  extensions/pics/Makefile
-  extensions/pics/public/Makefile
-  extensions/pics/src/Makefile
-  extensions/pics/tests/Makefile
-END_EXTENSIONS_PICS_MAKEFILES
-fi
+else
 
-if [ `echo "$MOZ_EXTENSIONS" | grep -c xmlterm` != 0 ]; then
-  add_makefiles <<END_EXTENSIONS_XMLTERM_MAKEFILES
-  extensions/xmlterm/Makefile
-  extensions/xmlterm/base/Makefile
-  extensions/xmlterm/geckoterm/Makefile
-  extensions/xmlterm/linetest/Makefile
-  extensions/xmlterm/scripts/Makefile
-  extensions/xmlterm/tests/Makefile
-  extensions/xmlterm/ui/Makefile
-END_EXTENSIONS_XMLTERM_MAKEFILES
-fi
-
-if [ `echo "$MOZ_EXTENSIONS" | grep -c xml-rpc` != 0 ]; then
-  add_makefiles <<END_EXTENSIONS_XML_RPC_MAKEFILES
-  extensions/xml-rpc/Makefile
-  extensions/xml-rpc/idl/Makefile
-  extensions/xml-rpc/src/Makefile
-END_EXTENSIONS_XML_RPC_MAKEFILES
+# Standalone modules go here
+    for mod in $BUILD_MODULES; do
+	case $mod in
+	    dbm) add_makefiles "$MAKEFILES_dbm"
+		;;
+	    js) add_makefiles "$MAKEFILES_js"
+		;;
+	    necko) add_makefiles "
+                 $MAKEFILES_netwerk $MAKEFILES_xpcom $MAKEFILES_libreg"
+		;;
+	    transformiix) add_makefiles "$MAKEFILES_transformiix"
+		;;
+	    xpcom) add_makefiles "$MAKEFILES_xpcom $MAKEFILES_libreg"
+		;;
+	    xpconnect) add_makefiles "
+		$MAKEFILES_xpconnect $MAKEFILES_js $MAKEFILES_xpcom
+		$MAKEFILES_libreg"
+		;;
+        esac
+    done
 fi

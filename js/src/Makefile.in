@@ -41,7 +41,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= js
 LIBRARY_NAME	= mozjs
 
-DIRS		= $(OJIDIR) fdlibm xpconnect
+DIRS		= fdlibm
 
 CSRCS		= \
 		jsapi.c \
@@ -126,10 +126,6 @@ EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 FDLIBM_LIBRARY	= fdlibm/libfdm.$(LIB_SUFFIX)
 JSMATH_PRELINK	= jsmathtemp.o
 JS_SAFE_ARENA	= 1
-
-ifdef MOZ_OJI
-OJIDIR		= liveconnect
-endif
 
 DASH_R		= -r
 
