@@ -56,6 +56,30 @@ function OpenURL(event, node)
 
     var url = node.getAttribute('id');
 
+	try
+	{
+		// first try asking RDF's graph for the URL
+		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+		if (rdf)
+		{
+			var Bookmarks = rdf.GetDataSource("rdf:bookmarks");
+			if (Bookmarks)
+			{
+				var src = rdf.GetResource(url, true);
+				var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
+				var target = Bookmarks.GetTarget(src, prop, true);
+				if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+				if (target)	target = target.Value;
+				if (target)	url = target;
+				
+			}
+		}
+	}
+	catch(ex)
+	{
+	}
+
     // Ignore "NC:" urls.
     if (url.substring(0, 3) == "NC:")
     {
