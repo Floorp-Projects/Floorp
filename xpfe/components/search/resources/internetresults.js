@@ -72,7 +72,7 @@ function doEngineClick(node)
 	}
 	else
 	{
-		window.frames[0].document.location = "default.htm";
+		window.frames[0].document.location = "chrome://search/content/default.htm";
 	}
 
 }
