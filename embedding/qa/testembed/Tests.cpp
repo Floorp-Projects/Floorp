@@ -36,6 +36,11 @@
 #include "ProfileMgr.h"
 #include "ProfilesDlg.h"
 #include "Tests.h"
+#include "nsirequest.h"
+#include "nsidirserv.h"
+#include "domwindow.h"
+#include "selection.h"
+#include "nsProfile.h"
 #include "QaUtils.h"
 #include <stdio.h>
 
@@ -44,6 +49,8 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
+
+nsresult rv;
 
 // Register message for FindDialog communication
 static UINT WM_FINDMSG = ::RegisterWindowMessage(FINDMSGSTRING);
@@ -57,9 +64,6 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_TESTS_ADDWEBPROGLISTENER, OnTestsAddWebProgListener)
 	ON_COMMAND(ID_TESTS_ADDHISTORYLISTENER, OnTestsAddHistoryListener)
 	ON_COMMAND(ID_INTERFACES_NSIFILE, OnInterfacesNsifile)
-	ON_COMMAND(ID_INTERFACES_NSISHISTORY, OnInterfacesNsishistory)
-	ON_COMMAND(ID_INTERFACES_NSIWEBNAV, OnInterfacesNsiwebnav)
-	ON_COMMAND(ID_INTERFACES_NSIREQUEST, OnInterfacesNsirequest)
 	ON_COMMAND(ID_TOOLS_REMOVEGHPAGE, OnToolsRemoveGHPage)
 	ON_COMMAND(ID_TOOLS_REMOVEALLGH, OnToolsRemoveAllGH)
 	ON_COMMAND(ID_TOOLS_TESTYOURMETHOD, OnToolsTestYourMethod)
@@ -74,8 +78,60 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
     ON_COMMAND(ID_CLIPBOARDCMD_CANCOPYSELECTION, canCopySelectionTest)
     ON_COMMAND(ID_CLIPBOARDCMD_CANCUTSELECTION, canCutSelectionTest)
     ON_COMMAND(ID_CLIPBOARDCMD_CANPASTE, canPasteTest)
+	ON_COMMAND(ID_INTERFACES_NSIREQUEST, OnInterfacesNsirequest)
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_RUNALLTESTS, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_INIT, OnInterfacesNsidirectoryservice)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_RUNALLTESTS, OnInterfacesNsiselection)
+	ON_COMMAND(ID_VERIFYBUGS_90195, OnVerifybugs90195)
+	ON_COMMAND(ID_INTERFACES_NSIPROFILE_RUNALLTESTS, OnInterfacesNsiprofile)
+	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_REGISTERPROVIDER, OnInterfacesNsidirectoryservice)
+	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_RUNALLTESTS, OnInterfacesNsidirectoryservice)
+	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_UNREGISTERPROVIDER, OnInterfacesNsidirectoryservice)
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETDOMDOCUMENT, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETFRAMES, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETNAME, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETPARENT, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETSCROLLBARS, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETSCROLLY, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETSCSOLLX, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETSELECTION, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SCROLLBY, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SCROLLBYLINES, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SCROLLBYPAGES, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SCROLLTO, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SIZETOCONTENT, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETANCHORNODE, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_ADDRANGE, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_COLLAPSE, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_COLLAPSETOEND, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_COLLAPSETOSTART, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_CONTAINSNODE, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_DELETEFROMDOCUMENT, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_EXTEND, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETANCHOROFFSET, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETFOCUSNODE, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETFOCUSOFFSET, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETISCOLLAPSED, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETRANGEAT, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETRANGECOUNT, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_REMOVEALLRANGES, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_REMOVERANGE, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_SELECTALLCHILDREN, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_SELECTIONLANGUAGECHANGE, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_TOSTRING, OnInterfacesNsiselection)
+	ON_COMMAND(ID_INTERFACES_NSIPROFILE_CLONEPROFILE, OnInterfacesNsiprofile)
+	ON_COMMAND(ID_INTERFACES_NSIPROFILE_CREATENEWPROFILE, OnInterfacesNsiprofile)
+	ON_COMMAND(ID_INTERFACES_NSIPROFILE_DELETEPROFILE, OnInterfacesNsiprofile)
+	ON_COMMAND(ID_INTERFACES_NSIPROFILE_GETCURRENTPROFILE, OnInterfacesNsiprofile)
+	ON_COMMAND(ID_INTERFACES_NSIPROFILE_GETPROFILECOUNT, OnInterfacesNsiprofile)
+	ON_COMMAND(ID_INTERFACES_NSIPROFILE_GETPROFILELIST, OnInterfacesNsiprofile)
+	ON_COMMAND(ID_INTERFACES_NSIPROFILE_PROFILEEXISTS, OnInterfacesNsiprofile)
+	ON_COMMAND(ID_INTERFACES_NSIPROFILE_RENAMEPROFILE, OnInterfacesNsiprofile)
+	ON_COMMAND(ID_INTERFACES_NSIPROFILE_SETCURRENTPROFILE, OnInterfacesNsiprofile)
+	ON_COMMAND(ID_INTERFACES_NSIPROFILE_SHUTDOWNCURRENTPROFILE, OnInterfacesNsiprofile)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
+
 
 CTests::CTests(nsIWebBrowser* mWebBrowser,
 			   nsIBaseWindow* mBaseWindow,
@@ -87,7 +143,13 @@ CTests::CTests(nsIWebBrowser* mWebBrowser,
 	qaWebNav = mWebNav;
 
 	qaBrowserImpl = mpBrowserImpl;
-}
+
+	// Create Individual Interface Objects
+//	nsirequest = new CNsIRequest(mWebBrowser, mpBrowserImpl);
+	nsihistory = new CNsIHistory(this);
+	nsiwebnav  = new  CNsIWebNav(this);
+
+}	
 
 CTests::~CTests()
 {
@@ -102,24 +164,30 @@ void CTests::OnTestsChangeUrl()
 {
 	char *theUrl = "http://www.aol.com/";
 	CUrlDialog myDialog;
-	nsresult rv;
+	//nsresult rv;  
+
 
 	if (!qaWebNav)
 	{
-		CQaUtils::QAOutput("Web navigation object not found. Change URL test not performed.", 2);
+		QAOutput("Web navigation object not found. Change URL test not performed.", 2);
 		return;
 	}
 
 	if (myDialog.DoModal() == IDOK)
 	{
-		CQaUtils::QAOutput("Begin Change URL test.", 1);
+		QAOutput("Begin Change URL test.", 1);
 		strcpy(theUrl, myDialog.m_urlfield);
 		rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
 						nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY);
+<<<<<<< Tests.cpp
+	    RvTestResult(rv, "rv LoadURI() test", 1);
+		FormatAndPrintOutput("The url = ", theUrl, 2); 
+=======
 		// LOAD_FLAGS_NONE
 		// LOAD_FLAGS_BYPASS_HISTORY
 	    CQaUtils::RvTestResult(rv, "rv LoadURI() test", 1);
 		CQaUtils::FormatAndPrintOutput("The url = ", theUrl, 2); 
+>>>>>>> 1.16
 
 /*
 		char *uriSpec;
@@ -138,17 +206,17 @@ void CTests::OnTestsChangeUrl()
 		AfxMessageBox("Start URL validation test().");
 		if (strcmp(uriSpec, theUrl) == 0)
 		{
-			CQaUtils::QAOutput("Url loaded successfully. Test Passed.", 2);	
+			QAOutput("Url loaded successfully. Test Passed.", 2);	
 		}
 		else
 		{
-			CQaUtils::QAOutput("Url didn't load successfully. Test Failed.", 2);
+			QAOutput("Url didn't load successfully. Test Failed.", 2);
 		}
 */
-		CQaUtils::QAOutput("End Change URL test.", 1);
+		QAOutput("End Change URL test.", 1);
 	}
 	else
-		CQaUtils::QAOutput("Change URL test not executed.", 1);
+		QAOutput("Change URL test not executed.", 1);
 
 }
 
@@ -163,34 +231,36 @@ void CTests::OnTestsGlobalHistory()
 	CUrlDialog myDialog;
 
 	PRBool theRetVal = PR_FALSE;
-	nsresult rv;
+    
+	//nsresult rv; 
+
 
 	nsCOMPtr<nsIGlobalHistory> myHistory(do_GetService(NS_GLOBALHISTORY_CONTRACTID));
 
 	if (!myHistory)
 	{
-		CQaUtils::QAOutput("Couldn't find history object. No GH tests performed.", 2);
+		QAOutput("Couldn't find history object. No GH tests performed.", 2);
 		return;
 	}
 
 	if (myDialog.DoModal() == IDOK)
 	{
-		CQaUtils::QAOutput("Begin IsVisited() and AddPage() tests.", 2);
+		QAOutput("Begin IsVisited() and AddPage() tests.", 2);
 
 		strcpy(theUrl, myDialog.m_urlfield);
 
-		CQaUtils::FormatAndPrintOutput("The history url = ", theUrl, 1);
+		FormatAndPrintOutput("The history url = ", theUrl, 1);
 
 		// see if url is already in the GH file (pre-AddPage() test)
 		rv = myHistory->IsVisited(theUrl, &theRetVal);
-	    CQaUtils::RvTestResult(rv, "rv IsVisited() test", 1);
-		CQaUtils::FormatAndPrintOutput("The IsVisited() boolean return value = ", theRetVal, 1); 
+	    RvTestResult(rv, "rv IsVisited() test", 1);
+		FormatAndPrintOutput("The IsVisited() boolean return value = ", theRetVal, 1); 
 
 		if (theRetVal)
-			CQaUtils::QAOutput("URL has been visited. Won't execute AddPage().", 2);
+			QAOutput("URL has been visited. Won't execute AddPage().", 2);
 		else
 		{
-			CQaUtils::QAOutput("URL hasn't been visited. Will execute AddPage().", 2);
+			QAOutput("URL hasn't been visited. Will execute AddPage().", 2);
 
 			// adds a url to the global history file
 			rv = myHistory->AddPage(theUrl);
@@ -198,24 +268,24 @@ void CTests::OnTestsGlobalHistory()
 			// prints addPage() results to output file
 			if (NS_FAILED(rv))
 			{
-				CQaUtils::QAOutput("Invalid results for AddPage(). Url not added. Test failed.", 1);
+				QAOutput("Invalid results for AddPage(). Url not added. Test failed.", 1);
 				return;
 			}
 			else
-				CQaUtils::QAOutput("Valid results for AddPage(). Url added. Test passed.", 1);
+				QAOutput("Valid results for AddPage(). Url added. Test passed.", 1);
 
 			// checks if url was visited (post-AddPage() test)
  			myHistory->IsVisited(theUrl, &theRetVal);
 
 			if (theRetVal)
-				CQaUtils::QAOutput("URL is visited; post-AddPage() test. IsVisited() test passed.", 1);
+				QAOutput("URL is visited; post-AddPage() test. IsVisited() test passed.", 1);
 			else
-				CQaUtils::QAOutput("URL isn't visited; post-AddPage() test. IsVisited() test failed.", 1);
+				QAOutput("URL isn't visited; post-AddPage() test. IsVisited() test failed.", 1);
 		}
-		CQaUtils::QAOutput("End IsVisited() and AddPage() tests.", 2);
+		QAOutput("End IsVisited() and AddPage() tests.", 2);
 	}
 	else
-		CQaUtils::QAOutput("IsVisited() and AddPage() tests not executed.", 1);
+		QAOutput("IsVisited() and AddPage() tests not executed.", 1);
 }
 
 
@@ -223,25 +293,25 @@ void CTests::OnTestsGlobalHistory()
 
 void CTests::OnTestsCreateFile() 
 {
-   nsresult rv;
-   PRBool exists;
-   nsCOMPtr<nsILocalFile> theTestFile(do_GetService(NS_LOCAL_FILE_CONTRACTID));
+   	//nsresult rv;  
+	PRBool exists;
+    nsCOMPtr<nsILocalFile> theTestFile(do_GetService(NS_LOCAL_FILE_CONTRACTID));
 
     if (!theTestFile)
 	{
-		CQaUtils::QAOutput("File object doesn't exist. No File tests performed.", 2);
+		QAOutput("File object doesn't exist. No File tests performed.", 2);
 		return;
 	}
 
 
-	CQaUtils::QAOutput("Start Create File test.", 2);
+	QAOutput("Start Create File test.", 2);
 
 	rv = theTestFile->InitWithPath("c:\\temp\\theFile.txt");
 	rv = theTestFile->Exists(&exists);
 
-	CQaUtils::QAOutput("File (theFile.txt) doesn't exist. We'll create it.\r\n", 1);
+	QAOutput("File (theFile.txt) doesn't exist. We'll create it.\r\n", 1);
 	rv = theTestFile->Create(nsIFile::NORMAL_FILE_TYPE, 0777);
-	CQaUtils::RvTestResult(rv, "File Create() test", 2);
+	RvTestResult(rv, "File Create() test", 2);
 }
 
 // *********************************************************
@@ -253,25 +323,31 @@ void CTests::OnTestsCreateprofile()
 
 	if (myDialog.DoModal() == IDOK)
     {       
+<<<<<<< Tests.cpp
+//      NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+		nsCOMPtr<nsIProfile> theProfServ(do_GetService(NS_PROFILE_CONTRACTID,&rv));
+		if (NS_FAILED(rv))
+=======
 //      nsCOMPtr<nsIProfile> profileService = 
 //               do_GetService(NS_PROFILE_CONTRACTID, &rv);
 		nsCOMPtr<nsIProfile> theProfServ(do_GetService(NS_PROFILE_CONTRACTID));
 		if (!theProfServ)
+>>>>>>> 1.16
 		{
-		   CQaUtils::QAOutput("Didn't get profile service. No profile tests performed.", 2);
+		   QAOutput("Didn't get profile service. No profile tests performed.", 2);
 		   return;
 		}
 
-	   CQaUtils::QAOutput("Start Profile switch test.", 2);
+	   QAOutput("Start Profile switch test.", 2);
 
-	   CQaUtils::QAOutput("Retrieved profile service.", 2);
+	   QAOutput("Retrieved profile service.", 2);
        rv = theProfServ->SetCurrentProfile(myDialog.m_SelectedProfile.get());
-	   CQaUtils::RvTestResult(rv, "SetCurrentProfile() (profile switching) test", 2);
+	   RvTestResult(rv, "SetCurrentProfile() (profile switching) test", 2);
 
-	   CQaUtils::QAOutput("End Profile switch test.", 2);
+	   QAOutput("End Profile switch test.", 2);
     }
 	else
-	   CQaUtils::QAOutput("Profile switch test not executed.", 2);
+	   QAOutput("Profile switch test not executed.", 2);
 	
 }
 
@@ -283,7 +359,7 @@ void CTests::OnTestsAddWebProgListener()
         dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl))));
     rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
 	
-	CQaUtils::RvTestResult(rv, "AddWebBrowserListener(). Add Web Prog Lstnr test", 2);
+	RvTestResult(rv, "AddWebBrowserListener(). Add Web Prog Lstnr test", 2);
 }
 
 // *********************************************************
@@ -294,7 +370,7 @@ void CTests::OnTestsAddHistoryListener()
 	nsWeakPtr weakling(
         dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsISHistoryListener*, qaBrowserImpl))));
 	rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsISHistoryListener));
-	CQaUtils::RvTestResult(rv, "AddWebBrowserListener(). Add History Lstnr test", 2);
+	RvTestResult(rv, "AddWebBrowserListener(). Add History Lstnr test", 2);
 }
 
 // *********************************************************
@@ -307,16 +383,16 @@ void CTests::OnToolsRemoveGHPage()
 	char *theUrl = "http://www.bogussite.com/";
 	CUrlDialog myDialog;
 	PRBool theRetVal = PR_FALSE;
-	nsresult rv;
+	//nsresult rv;
 	nsCOMPtr<nsIGlobalHistory> myGHistory(do_GetService(NS_GLOBALHISTORY_CONTRACTID));
 	if (!myGHistory)
 	{
-		CQaUtils::QAOutput("Could not get the global history object.", 2);
+		QAOutput("Could not get the global history object.", 2);
 		return;
 	}
 	nsCOMPtr<nsIBrowserHistory> myHistory = do_QueryInterface(myGHistory, &rv);
 	if(!NS_SUCCEEDED(rv)) {
-		CQaUtils::QAOutput("Could not get the history object.", 2);
+		QAOutput("Could not get the history object.", 2);
 		return;
 	}
 //	nsCOMPtr<nsIBrowserHistory> myHistory(do_GetInterface(myGHistory));
@@ -324,47 +400,48 @@ void CTests::OnToolsRemoveGHPage()
 
 	if (myDialog.DoModal() == IDOK)
 	{
-		CQaUtils::QAOutput("Begin URL removal from the GH file.", 2);
+		QAOutput("Begin URL removal from the GH file.", 2);
 		strcpy(theUrl, myDialog.m_urlfield);
 
 		myGHistory->IsVisited(theUrl, &theRetVal);
 		if (theRetVal)
 		{
 			rv = myHistory->RemovePage(theUrl);
-			CQaUtils::RvTestResult(rv, "RemovePage() test (url removal from GH file)", 2);
+			RvTestResult(rv, "RemovePage() test (url removal from GH file)", 2);
 		}
 		else
 		{
-			CQaUtils::QAOutput("The URL wasn't in the GH file.\r\n", 1);
+			QAOutput("The URL wasn't in the GH file.\r\n", 1);
 		}
-		CQaUtils::QAOutput("End URL removal from the GH file.", 2);
+		QAOutput("End URL removal from the GH file.", 2);
 	}
 	else
-		CQaUtils::QAOutput("URL removal from the GH file not executed.", 2);
+		QAOutput("URL removal from the GH file not executed.", 2);
 }
 
 void CTests::OnToolsRemoveAllGH()
 {
 
-	nsresult rv;
+	//nsresult rv; 
+
 	nsCOMPtr<nsIGlobalHistory> myGHistory(do_GetService(NS_GLOBALHISTORY_CONTRACTID));
 	if (!myGHistory)
 	{
-		CQaUtils::QAOutput("Could not get the global history object.", 2);
+		QAOutput("Could not get the global history object.", 2);
 		return;
 	}
 	nsCOMPtr<nsIBrowserHistory> myHistory = do_QueryInterface(myGHistory, &rv);
 	if(!NS_SUCCEEDED(rv)) {
-		CQaUtils::QAOutput("Could not get the history object.", 2);
+		QAOutput("Could not get the history object.", 2);
 		return;
 	}
 
-	CQaUtils::QAOutput("Begin removal of all pages from the GH file.", 2);
+	QAOutput("Begin removal of all pages from the GH file.", 2);
 
 	rv = myHistory->RemoveAllPages();
-	CQaUtils::RvTestResult(rv, "removeAllPages(). Test .", 2);
+	RvTestResult(rv, "removeAllPages(). Test .", 2);
 	
-	CQaUtils::QAOutput("End removal of all pages from the GH file.", 2);
+	QAOutput("End removal of all pages from the GH file.", 2);
 
 	// removeAllPages()
 
@@ -397,16 +474,16 @@ void CTests::OnInterfacesNsifile()
 
     if (!theTestFile)
  	{
-		CQaUtils::QAOutput("File object doesn't exist. No File tests performed.", 2);
+		QAOutput("File object doesn't exist. No File tests performed.", 2);
 		return;
 	}
 	if (!theFileOpDir)
  	{
-		CQaUtils::QAOutput("File object doesn't exist. No File tests performed.", 2);
+		QAOutput("File object doesn't exist. No File tests performed.", 2);
 		return;
 	}
 
-	CQaUtils::QAOutput("Begin nsIFile tests.", 2);
+	QAOutput("Begin nsIFile tests.", 2);
 
 	InitWithPathTest(theTestFile);
 	AppendRelativePathTest(theTestFile);
@@ -421,7 +498,7 @@ void CTests::OnInterfacesNsifile()
 
 	FileMoveTest(theTestFile, theFileOpDir);	
 
-	CQaUtils::QAOutput("End nsIFile tests.", 2);	
+	QAOutput("End nsIFile tests.", 2);	
 }
 
 // ***********************************************************************
@@ -430,13 +507,13 @@ void CTests::OnInterfacesNsifile()
 void CTests::InitWithPathTest(nsILocalFile *theTestFile)
 {
 	rv = theTestFile->InitWithPath("c:\\temp\\");
-	CQaUtils::RvTestResult(rv, "InitWithPath() test (initializing file path)", 2);
+	RvTestResult(rv, "InitWithPath() test (initializing file path)", 2);
 }
 
 void CTests::AppendRelativePathTest(nsILocalFile *theTestFile)
 {
 	rv = theTestFile->AppendRelativePath("myFile.txt");
-	CQaUtils::RvTestResult(rv, "AppendRelativePath() test (append file to the path)", 2);
+	RvTestResult(rv, "AppendRelativePath() test (append file to the path)", 2);
 }
 
 void CTests::FileCreateTest(nsILocalFile *theTestFile)
@@ -444,69 +521,72 @@ void CTests::FileCreateTest(nsILocalFile *theTestFile)
 	rv = theTestFile->Exists(&exists);
 	if (!exists)
 	{
-		CQaUtils::QAOutput("File doesn't exist. We'll try creating it.", 2);
+		QAOutput("File doesn't exist. We'll try creating it.", 2);
 		rv = theTestFile->Create(nsIFile::NORMAL_FILE_TYPE, 0777);
-		CQaUtils::RvTestResult(rv, " File Create() test ('myFile.txt')", 2);
+		RvTestResult(rv, " File Create() test ('myFile.txt')", 2);
 	}
 	else
-		CQaUtils::QAOutput("File already exists (myFile.txt). We won't create it.", 2);
+		QAOutput("File already exists (myFile.txt). We won't create it.", 2);
 }
 
 void CTests::FileExistsTest(nsILocalFile *theTestFile)
 {
 	rv = theTestFile->Exists(&exists);
 	if (!exists)
-		CQaUtils::QAOutput("Exists() test Failed. File (myFile.txt) doesn't exist.", 2);
+		QAOutput("Exists() test Failed. File (myFile.txt) doesn't exist.", 2);
 	else
-		CQaUtils::QAOutput("Exists() test Passed. File (myFile.txt) exists.", 2);
+		QAOutput("Exists() test Passed. File (myFile.txt) exists.", 2);
 
 }
 
 void CTests::FileCopyTest(nsILocalFile *theTestFile, nsILocalFile *theFileOpDir)
 {
-	CQaUtils::QAOutput("Start File Copy test.", 2);
+	QAOutput("Start File Copy test.", 2);
 
 	rv = theFileOpDir->InitWithPath("c:\\temp\\");
 	if (NS_FAILED(rv))
-		CQaUtils::QAOutput("The target dir wasn't found.", 2);
+		QAOutput("The target dir wasn't found.", 2);
 	else
-		CQaUtils::QAOutput("The target dir was found.", 2);
+		QAOutput("The target dir was found.", 2);
 
 	rv = theTestFile->InitWithPath("c:\\temp\\myFile.txt");
 	if (NS_FAILED(rv))
-		CQaUtils::QAOutput("The path wasn't found.", 2);
+		QAOutput("The path wasn't found.", 2);
 	else
-		CQaUtils::QAOutput("The path was found.", 2);
+		QAOutput("The path was found.", 2);
 
 	rv = theTestFile->CopyTo(theFileOpDir, "myFile2.txt");
-	CQaUtils::RvTestResult(rv, "rv CopyTo() test", 2);
+	RvTestResult(rv, "rv CopyTo() test", 2);
 
 	rv = theTestFile->InitWithPath("c:\\temp\\myFile2.txt");
 	rv = theTestFile->Exists(&exists);
 	if (!exists)
-		CQaUtils::QAOutput("File didn't copy. CopyTo() test Failed.", 2);
+		QAOutput("File didn't copy. CopyTo() test Failed.", 2);
 	else
-		CQaUtils::QAOutput("File copied. CopyTo() test Passed.", 2);
+		QAOutput("File copied. CopyTo() test Passed.", 2);
 }
 
 void CTests::FileMoveTest(nsILocalFile *theTestFile, nsILocalFile *theFileOpDir)
 {
-	CQaUtils::QAOutput("Start File Move test.", 2);
+	QAOutput("Start File Move test.", 2);
 
 	rv = theFileOpDir->InitWithPath("c:\\Program Files\\");
 	if (NS_FAILED(rv))
-		CQaUtils::QAOutput("The target dir wasn't found.", 2);
+		QAOutput("The target dir wasn't found.", 2);
 
 	rv = theTestFile->InitWithPath("c:\\temp\\myFile2.txt");
 	if (NS_FAILED(rv))
-		CQaUtils::QAOutput("The path wasn't found.", 2);
+		QAOutput("The path wasn't found.", 2);
 
 	rv = theTestFile->MoveTo(theFileOpDir, "myFile2.txt");
-	CQaUtils::RvTestResult(rv, "MoveTo() test", 2);
+	RvTestResult(rv, "MoveTo() test", 2);
 
 	rv = theTestFile->InitWithPath("c:\\Program Files\\myFile2.txt");
 	rv = theTestFile->Exists(&exists);
 	if (!exists)
+<<<<<<< Tests.cpp
+		QAOutput("File wasn't moved. MoveTo() test Failed.", 2);
+=======
 		CQaUtils::QAOutput("File wasn't moved. MoveTo() test Failed.", 2);
 	else
 		CQaUtils::QAOutput("File was moved. MoveTo() test Passed.", 2);
@@ -659,17 +739,13 @@ void CTests::GetURIHistTest(nsIHistoryEntry* theHistoryEntry)
 	rv = theHistoryEntry->GetURI(getter_AddRefs(theUri));
 	if (!theUri)
 		CQaUtils::QAOutput("theUri for GetURI() invalid. Test failed.", 1);
+>>>>>>> 1.16
 	else
-	{
-		CQaUtils::RvTestResult(rv, "GetURI() (URI attribute) test", 1);
-		rv = theUri->GetSpec(&uriSpec);
-		if (NS_FAILED(rv))
-			CQaUtils::QAOutput("We didn't get the uriSpec.", 1);
-		else
-			CQaUtils::FormatAndPrintOutput("The SH Url = ", uriSpec, 2);
-	}
+		QAOutput("File was moved. MoveTo() test Passed.", 2);
 }
 
+<<<<<<< Tests.cpp
+=======
 void CTests::GetTitleHistTest(nsIHistoryEntry* theHistoryEntry)
 {
    nsXPIDLString theTitle;
@@ -738,7 +814,10 @@ void CTests::PurgeHistoryTest(nsISHistory* theSessionHistory, PRInt32 numEntries
    CQaUtils::FormatAndPrintOutput("Number of entries removed = ", numEntries, 2);
 }
 
+>>>>>>> 1.16
 // ***********************************************************************
+<<<<<<< Tests.cpp
+=======
 // ***********************************************************************
 // nsIWebNavigation iface
 
@@ -1193,90 +1272,91 @@ void CTests::GetLoadGroupTest(nsIRequest *request)
 
 
 // ***********************************************************************
+>>>>>>> 1.16
 //DHARMA	- nsIClipboardCommands
 // Checking the paste() method.
 void CTests::OnPasteTest()
 {
-    CQaUtils::QAOutput("testing paste command", 1);
+    QAOutput("testing paste command", 1);
     nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
     if (clipCmds)
 	{
         rv = clipCmds->Paste();
-		CQaUtils::RvTestResult(rv, "nsIClipboardCommands::Paste()' rv test", 1);
+		RvTestResult(rv, "nsIClipboardCommands::Paste()' rv test", 1);
 
 	}
 	else
-		CQaUtils::QAOutput("We didn't get the clipboard object.", 1);
+		QAOutput("We didn't get the clipboard object.", 1);
 }
 
 // Checking the copySelection() method.
 void CTests::OnCopyTest()
 {
-    CQaUtils::QAOutput("testing copyselection command");
+    QAOutput("testing copyselection command");
     nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
     if (clipCmds)
 	{
         rv = clipCmds->CopySelection();
-		CQaUtils::RvTestResult(rv, "nsIClipboardCommands::CopySelection()' rv test", 1);
+		RvTestResult(rv, "nsIClipboardCommands::CopySelection()' rv test", 1);
 	}
 	else
-		CQaUtils::QAOutput("We didn't get the clipboard object.", 1);
+		QAOutput("We didn't get the clipboard object.", 1);
 }
 
 // Checking the selectAll() method.
 void CTests::OnSelectAllTest()
 {
-    CQaUtils::QAOutput("testing selectall method");
+    QAOutput("testing selectall method");
     nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
     if (clipCmds)
 	{
         rv = clipCmds->SelectAll();
-		CQaUtils::RvTestResult(rv, "nsIClipboardCommands::SelectAll()' rv test", 1);
+		RvTestResult(rv, "nsIClipboardCommands::SelectAll()' rv test", 1);
 	}
 	else
-		CQaUtils::QAOutput("We didn't get the clipboard object.", 1);
+		QAOutput("We didn't get the clipboard object.", 1);
 }
 
 // Checking the selectNone() method.
 void CTests::OnSelectNoneTest()
 {
-    CQaUtils::QAOutput("testing selectnone method");
+    QAOutput("testing selectnone method");
     nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
     if (clipCmds)
 	{
         rv = clipCmds->SelectNone();
-		CQaUtils::RvTestResult(rv, "nsIClipboardCommands::SelectNone()' rv test", 1);
+		RvTestResult(rv, "nsIClipboardCommands::SelectNone()' rv test", 1);
 	}
 	else
-		CQaUtils::QAOutput("We didn't get the clipboard object.", 1);
+		QAOutput("We didn't get the clipboard object.", 1);
 }
 
 // Checking the cutSelection() method.
 void CTests::OnCutSelectionTest()
 {
-    CQaUtils::QAOutput("testing cutselection method");
+    QAOutput("testing cutselection method");
     nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
     if (clipCmds)
 	{
         rv = clipCmds->CutSelection();
-		CQaUtils::RvTestResult(rv, "nsIClipboardCommands::CutSelection()' rv test", 1);
+		RvTestResult(rv, "nsIClipboardCommands::CutSelection()' rv test", 1);
 	}
 	else
-		CQaUtils::QAOutput("We didn't get the clipboard object.", 1);
+		QAOutput("We didn't get the clipboard object.", 1);
 }
 
 // Checking the copyLinkLocation() method.
 void CTests::copyLinkLocationTest()
 {
-    CQaUtils::QAOutput("testing CopyLinkLocation method", 2);
+    QAOutput("testing CopyLinkLocation method", 2);
     nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
     if (clipCmds)
 	{
         rv = clipCmds->CopyLinkLocation();
-		CQaUtils::RvTestResult(rv, "nsIClipboardCommands::CopyLinkLocation()' rv test", 1);
+		RvTestResult(rv, "nsIClipboardCommands::CopyLinkLocation()' rv test", 1);
 	}
 	else
-		CQaUtils::QAOutput("We didn't get the clipboard object.", 1);
+		QAOutput("We didn't get the clipboard object.", 1);
 }
 
 // Checking the canCopySelection() method.
@@ -1287,15 +1367,15 @@ void CTests::canCopySelectionTest()
     if (clipCmds)
 	{
        rv = clipCmds->CanCopySelection(&canCopySelection);
-	   CQaUtils::RvTestResult(rv, "nsIClipboardCommands::CanCopySelection()' rv test", 1);
+	   RvTestResult(rv, "nsIClipboardCommands::CanCopySelection()' rv test", 1);
 
        if(canCopySelection)
-          CQaUtils::QAOutput("The selection you made Can be copied", 2);
+          QAOutput("The selection you made Can be copied", 2);
        else
-          CQaUtils::QAOutput("Either you did not make a selection or The selection you made Cannot be copied", 2);
+          QAOutput("Either you did not make a selection or The selection you made Cannot be copied", 2);
 	}
 	else
-		CQaUtils::QAOutput("We didn't get the clipboard object.", 1);
+		QAOutput("We didn't get the clipboard object.", 1);
 }
 
 // Checking the canCutSelection() method.
@@ -1306,15 +1386,15 @@ void CTests::canCutSelectionTest()
     if (clipCmds)
 	{
        rv = clipCmds->CanCutSelection(&canCutSelection);
-	   CQaUtils::RvTestResult(rv, "nsIClipboardCommands::CanCutSelection()' rv test", 1);
+	   RvTestResult(rv, "nsIClipboardCommands::CanCutSelection()' rv test", 1);
 
 	   if(canCutSelection)
-          CQaUtils::QAOutput("The selection you made Can be cut", 2);
+          QAOutput("The selection you made Can be cut", 2);
        else
-          CQaUtils::QAOutput("Either you did not make a selection or The selection you made Cannot be cut", 2);
+          QAOutput("Either you did not make a selection or The selection you made Cannot be cut", 2);
 	}
 	else
-		CQaUtils::QAOutput("We didn't get the clipboard object.", 1);
+		QAOutput("We didn't get the clipboard object.", 1);
 }
 
 // Checking the canPaste() method.
@@ -1325,15 +1405,15 @@ void CTests::canPasteTest()
     if (clipCmds)
 	{
         rv = clipCmds->CanPaste(&canPaste);
-	    CQaUtils::RvTestResult(rv, "nsIClipboardCommands::CanPaste()' rv test", 1);
+	    RvTestResult(rv, "nsIClipboardCommands::CanPaste()' rv test", 1);
 
 		if(canPaste)
-			CQaUtils::QAOutput("The clipboard contents can be pasted here", 2);
+			QAOutput("The clipboard contents can be pasted here", 2);
 		else
-			CQaUtils::QAOutput("The clipboard contents cannot be pasted here", 2);
+			QAOutput("The clipboard contents cannot be pasted here", 2);
 	}
 	else
-		CQaUtils::QAOutput("We didn't get the clipboard object.", 1);
+		QAOutput("We didn't get the clipboard object.", 1);
 }
 
 //DHARMA
@@ -1348,9 +1428,9 @@ void CTests::OnVerifybugs70228()
 	nsCOMPtr<nsIHelperAppLauncherDialog> 
 			myHALD(do_CreateInstance(NS_IHELPERAPPLAUNCHERDLG_CONTRACTID));
 	if (!myHALD)
-		CQaUtils::QAOutput("Object not created. It should be. It's a component!", 2);
+		QAOutput("Object not created. It should be. It's a component!", 2);
 	else
-		CQaUtils::QAOutput("Object is created. It's a component!", 2);	
+		QAOutput("Object is created. It's a component!", 2);	
 
 /*
 nsCOMPtr<nsIHelperAppLauncher> 
@@ -1360,4 +1440,60 @@ nsCOMPtr<nsIHelperAppLauncher>
 */	
 }
 
+BOOL CTests::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo) 
+{
+   // To handle Menu handlers add here. Don't have to do if not handling 
+   // menu handlers
+	nCommandID = nID ;
 
+   if ((nsihistory != NULL) && nsihistory->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))
+      return TRUE;
+   if ((nsiwebnav != NULL) && nsiwebnav->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))
+      return TRUE;
+
+	return CWnd::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
+}
+
+void CTests::OnInterfacesNsirequest() 
+{
+	CNsIRequest oNsIRequest(qaWebBrowser,/*qaBaseWindow,qaWebNav,*/ qaBrowserImpl);
+	oNsIRequest.OnInterfacesNsirequest();
+}
+
+void CTests::OnInterfacesNsidirectoryservice() 
+{
+	CNsIDirectoryService oNsIDirectoryService;
+	oNsIDirectoryService.StartTests(nCommandID);
+}
+
+void CTests::OnInterfacesNsidomwindow() 
+{
+	CDomWindow oDomWindow(qaWebBrowser) ;
+	oDomWindow.OnStartTests(nCommandID);		
+}
+
+void CTests::OnInterfacesNsiselection() 
+{
+	CSelection oSelection(qaWebBrowser);
+	oSelection.OnStartTests(nCommandID);
+}
+
+void CTests::OnVerifybugs90195() 
+{
+    nsWeakPtr weakling(
+        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsITooltipListener*, qaBrowserImpl))));
+    rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsITooltipListener));
+	
+	RvTestResult(rv, "AddWebBrowserListener(). Add Tool Tip Lstnr test", 2);
+
+/*	nsCOMPtr<nsITooltipTextProvider> oTooltipTextProvider = do_GetService(NS_TOOLTIPTEXTPROVIDER_CONTRACTID) ;
+	if (!oTooltipTextProvider)
+		AfxMEssageBox("Asdfadf");
+*/
+}
+
+void CTests::OnInterfacesNsiprofile() 
+{
+	CProfile oProfile(qaWebBrowser);
+	oProfile.OnStartTests(nCommandID);	
+}

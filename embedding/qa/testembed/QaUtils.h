@@ -21,7 +21,7 @@
  *   David Epstein <depstein@netscape.com> 
  */
 
-// QAUtils.h : utilities for CQAUtils class. Includes writing to output log.
+// QAUtils.h : Global function declarations
 //
 /////////////////////////////////////////////////////////////////////////////
 
@@ -33,17 +33,52 @@
 #endif
 
 #include "BrowserView.h"
+#include "resource.h"
 #include "stdafx.h"
 
-/////////////////////////////////////////////////////////////////////////////
-// CQaUtils window
+extern void RvTestResultDlg(nsresult rv, CString pLine,BOOL bClearList = false);
+extern void RvTestResult(nsresult, const char *, int displayMethod=1);
+extern void WriteToOutputFile(const char *);
+extern void QAOutput(const char *pLine, int displayMethod=1);
+extern void FormatAndPrintOutput(const char *, const char *, int);
+extern void FormatAndPrintOutput(const char *, int, int);
+extern void RequestName(nsIRequest *, nsCString &, int displayMethod=1);
+extern void WebProgDOMWindowTest(nsIWebProgress *, const char *,int displayMethod=1);
+extern void GetTheUri(nsIURI *theUri, int displayMethod);
+extern nsresult rv;
 
-class CQaUtils : public CWnd
+#endif //_QAUTILS_H/////////////////////////////////////////////////////////////////////////////
+
+
+
+// CShowTestResults dialog
+class CShowTestResults : public CDialog
 {
+// Construction
 public:
-	CQaUtils();
-    virtual ~CQaUtils();
+	CShowTestResults(CWnd* pParent = NULL);   // standard constructor
+	void AddItemToList(LPCTSTR szTestCaseName, BOOL bResult);
 
+<<<<<<< QaUtils.h
+// Dialog Data
+	//{{AFX_DATA(CShowTestResults)
+	enum { IDD = IDD_RUNTESTSDLG };
+	CListCtrl	m_ListResults;
+	//}}AFX_DATA
+
+
+// Overrides
+	// ClassWizard generated virtual function overrides
+	//{{AFX_VIRTUAL(CShowTestResults)
+	protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	//}}AFX_VIRTUAL
+
+// Implementation
+private:
+	LPCTSTR m_TitleString ;
+protected:
+=======
 	void static RvTestResult(nsresult, const char *, int displayMethod=1);
 	void static WriteToOutputFile(const char *);
 	void static QAOutput(const char *pLine, int displayMethod=1);
@@ -53,15 +88,13 @@ public:
 	void static WebProgDOMWindowTest(nsIWebProgress *, const char *, 
 									 int displayMethod=1);
 	void static GetTheUri(nsIURI *, int displayMethod=1);
-
-	nsresult rv;
-
-	// Some helper methods
+>>>>>>> 1.8
 
 	// Generated message map functions
-protected:
-	//{{AFX_MSG(CQaUtils)
+	//{{AFX_MSG(CShowTestResults)
+	virtual BOOL OnInitDialog();
+	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
 
-#endif //_QAUTILS_H
+

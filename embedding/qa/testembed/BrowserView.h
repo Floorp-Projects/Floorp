@@ -43,7 +43,7 @@ class CFindDialog;
 class CPrintProgressDialog;
 
 class CTests;
-
+//class CNsIRequest;
 class CBrowserView : public CWnd
 {
 public:
@@ -80,13 +80,16 @@ public:
 	//
 	CBrowserImpl* mpBrowserImpl;
 
-    CTests *qaTests;
+    CTests *qaTests ;
+	//CNsIRequest *nsiRequest;
 
 	// Mozilla interfaces
 	//
 	nsCOMPtr<nsIWebBrowser> mWebBrowser;
 	nsCOMPtr<nsIBaseWindow> mBaseWindow;
 	nsCOMPtr<nsIWebNavigation> mWebNav;	
+
+	typedef void* nsNativeWidget;
 
 	//nsCOMPtr<nsISHistory> mSessionHistory; // de: added in 5/11/01
 

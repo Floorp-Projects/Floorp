@@ -34,33 +34,34 @@
 #include "BrowserFrm.h"
 #include "QAUtils.h"
 
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
 
-BEGIN_MESSAGE_MAP(CQaUtils, CWnd)
-	//{{AFX_MSG_MAP(CQaUtils)
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
-
-
-CQaUtils::CQaUtils()
+void RvTestResultDlg(nsresult rv, CString pLine,BOOL bClearList)
 {
+	static CShowTestResults dlgResult ;
+	if (!dlgResult)
+		dlgResult.Create(IDD_RUNTESTSDLG);
+
+	
+	if (bClearList)
+	{
+		dlgResult.m_ListResults.DeleteAllItems();
+		dlgResult.ShowWindow(true);
+	}
+
+	if (NS_FAILED(rv))
+	   dlgResult.AddItemToList(pLine,false);
+	else
+	   dlgResult.AddItemToList(pLine,true);
 
 }
 
-CQaUtils::~CQaUtils()
-{
-}
-
-// ***********************************************************************
-// ********************* Local QA Methods *********************
-// ***********************************************************************
-
-
-void CQaUtils::RvTestResult(nsresult rv, const char *pLine, int displayMethod)
+void RvTestResult(nsresult rv, const char *pLine, int displayMethod)
 {
 	// note: default displayMethod = 1 in .h file
 
@@ -76,7 +77,7 @@ void CQaUtils::RvTestResult(nsresult rv, const char *pLine, int displayMethod)
 	QAOutput(theOutputLine, displayMethod);
 }
 
-void CQaUtils::WriteToOutputFile(const char *pLine) 
+void WriteToOutputFile(const char *pLine) 
 { 
     CStdioFile myFile; 
     CFileException e; 
@@ -101,7 +102,7 @@ void CQaUtils::WriteToOutputFile(const char *pLine)
     } 
 } 
 
-void CQaUtils::QAOutput(const char *pLine, int displayMethod)
+void QAOutput(const char *pLine, int displayMethod)
 {
 	// note: default displayMethod = 1 in .h file
 //#if 0
@@ -119,7 +120,7 @@ void CQaUtils::QAOutput(const char *pLine, int displayMethod)
 //#endif
 }
 
-void CQaUtils::FormatAndPrintOutput(const char *theInput, const char *theVar, int outputMode)
+void FormatAndPrintOutput(const char *theInput, const char *theVar, int outputMode)
 {
 	nsCString outStr;
 	CString strMsg;
@@ -144,7 +145,7 @@ void CQaUtils::FormatAndPrintOutput(const char *theInput, const char *theVar, in
 	}
 }
 
-void CQaUtils::FormatAndPrintOutput(const char *theInput, int theVar, int outputMode) 
+void FormatAndPrintOutput(const char *theInput, int theVar, int outputMode) 
 {
 	nsCString outStr;
 	CString strMsg;
@@ -170,7 +171,7 @@ void CQaUtils::FormatAndPrintOutput(const char *theInput, int theVar, int output
 }
 
 // stringMsg is returned in case embeddor wishes to use it in the calling method.
-void CQaUtils::RequestName(nsIRequest *request, nsCString &stringMsg,
+void RequestName(nsIRequest *request, nsCString &stringMsg,
 						   int displayMethod)
 {
     nsXPIDLString theReqName;
@@ -187,7 +188,7 @@ void CQaUtils::RequestName(nsIRequest *request, nsCString &stringMsg,
 
 }
 
-void CQaUtils::WebProgDOMWindowTest(nsIWebProgress *progress, const char *inString,
+void WebProgDOMWindowTest(nsIWebProgress *progress, const char *inString,
 								  int displayMethod)
 {
 	nsresult rv;
@@ -206,6 +207,84 @@ void CQaUtils::WebProgDOMWindowTest(nsIWebProgress *progress, const char *inStri
 	else
 		RvTestResult(rv, totalStr2, displayMethod);
 }
+<<<<<<< QaUtils.cpp
+
+void GetTheUri(nsIURI *theUri, int displayMethod)
+{
+	nsresult rv;
+    char *uriSpec;
+
+	rv = theUri->GetSpec(&uriSpec);
+    RvTestResult(rv, "nsIURI::GetSpec() test", displayMethod);
+    FormatAndPrintOutput("the uri = ", uriSpec, displayMethod);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CShowTestResults dialog
+
+
+CShowTestResults::CShowTestResults(CWnd* pParent /*=NULL*/)
+	: CDialog(CShowTestResults::IDD, pParent)
+{
+
+	//{{AFX_DATA_INIT(CShowTestResults)
+		// NOTE: the ClassWizard will add member initialization here
+	//}}AFX_DATA_INIT
+
+}
+
+
+void CShowTestResults::DoDataExchange(CDataExchange* pDX)
+{
+	CDialog::DoDataExchange(pDX);
+	//{{AFX_DATA_MAP(CShowTestResults)
+	DDX_Control(pDX, IDC_LIST1, m_ListResults);
+	//}}AFX_DATA_MAP
+}
+
+
+BEGIN_MESSAGE_MAP(CShowTestResults, CDialog)
+	//{{AFX_MSG_MAP(CShowTestResults)
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
+
+/////////////////////////////////////////////////////////////////////////////
+// CShowTestResults message handlers
+
+BOOL CShowTestResults::OnInitDialog() 
+{
+	
+	CDialog::OnInitDialog();
+	
+	m_ListResults.InsertColumn(0,"Test Case",LVCFMT_LEFT,360);
+	m_ListResults.InsertColumn(1,"Result",LVCFMT_LEFT,100);
+	
+	return TRUE;  // return TRUE unless you set the focus to a control
+	              // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+
+void CShowTestResults::AddItemToList(LPCTSTR szTestCaseName, BOOL bResult) 
+{
+	LV_ITEM lvitem ;
+		
+	lvitem.mask = LVIF_TEXT;
+	lvitem.iItem = m_ListResults.GetItemCount();
+	lvitem.iSubItem = 0;
+	lvitem.pszText = (LPTSTR)szTestCaseName ;
+	//Insert the main item
+	m_ListResults.InsertItem(&lvitem);
+
+	if (bResult)
+	m_ListResults.SetItemText(m_ListResults.GetItemCount()-1,1,"Passed");
+	else
+	m_ListResults.SetItemText(m_ListResults.GetItemCount()-1,1,"Failed");
+
+	//Insert the sub item
+	//m_ListResults.InsertItem(&lvitem);
+
+}
+=======
 
 void CQaUtils::GetTheUri(nsIURI *theUri, int displayMethod)
 {
@@ -216,3 +295,4 @@ void CQaUtils::GetTheUri(nsIURI *theUri, int displayMethod)
     RvTestResult(rv, "nsIURI::GetSpec() test", displayMethod);
     FormatAndPrintOutput("the uri = ", uriSpec, displayMethod);
 }
+>>>>>>> 1.7

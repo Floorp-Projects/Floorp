@@ -55,6 +55,7 @@
 #include "ProfilesDlg.h"
 #include "UrlDialog.h"
 #include "Tests.h"
+//#include "nsiRequest.h"
 #include "QaUtils.h"
 
 // Print Includes
@@ -253,7 +254,7 @@ HRESULT CBrowserView::CreateBrowser()
 	mBaseWindow->SetVisibility(PR_TRUE);
 
 	qaTests = new CTests(mWebBrowser, mBaseWindow, mWebNav, mpBrowserImpl);
-
+	//nsiRequest = new CNsIRequest(mWebBrowser,mpBrowserImpl);
 	return S_OK;
 }
 
@@ -277,11 +278,11 @@ HRESULT CBrowserView::DestroyBrowser()
     rv = mWebBrowser->RemoveWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
 	if (NS_FAILED(rv))
 	{
-		CQaUtils::QAOutput("Web Progress Listener not removed.");
+		QAOutput("Web Progress Listener not removed.");
 	}
 	else
 	{
-		CQaUtils::QAOutput("Web Progress Listener removed.");
+		QAOutput("Web Progress Listener removed.");
 	}
 */
 	return NS_OK;
@@ -1031,6 +1032,8 @@ BOOL CBrowserView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINF
 
    if ((qaTests != NULL) && qaTests->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))
       return TRUE;
+   //if ((nsiRequest != NULL) && nsiRequest->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))
+   //   return TRUE;
 
    return CWnd::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
 }

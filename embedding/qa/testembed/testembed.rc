@@ -160,6 +160,139 @@ BEGIN
         MENUITEM "nsI&SHistory",                ID_INTERFACES_NSISHISTORY
         MENUITEM "nsI&WebNav",                  ID_INTERFACES_NSIWEBNAV
         MENUITEM "nsI&Request",                 ID_INTERFACES_NSIREQUEST
+        POPUP "nsIDirectoryService"
+        BEGIN
+            MENUITEM "Run All Tests",               ID_INTERFACES_NSIDIRECTORYSERVICE_RUNALLTESTS
+
+            MENUITEM SEPARATOR
+            MENUITEM "Init",                        ID_INTERFACES_NSIDIRECTORYSERVICE_INIT
+
+            MENUITEM "Register Provider",           ID_INTERFACES_NSIDIRECTORYSERVICE_REGISTERPROVIDER
+
+            MENUITEM "UnRegisterProvider",          ID_INTERFACES_NSIDIRECTORYSERVICE_UNREGISTERPROVIDER
+
+        END
+        POPUP "nsIDomWindow"
+        BEGIN
+            MENUITEM "Run All Tests",               ID_INTERFACES_NSIDOMWINDOW_RUNALLTESTS
+
+            MENUITEM SEPARATOR
+            MENUITEM "GetDomDocument",              ID_INTERFACES_NSIDOMWINDOW_GETDOMDOCUMENT
+
+            MENUITEM "GetSelection",                ID_INTERFACES_NSIDOMWINDOW_GETSELECTION
+
+            MENUITEM "GetParent",                   ID_INTERFACES_NSIDOMWINDOW_GETPARENT
+
+            MENUITEM SEPARATOR
+            MENUITEM "GetScrollBars",               ID_INTERFACES_NSIDOMWINDOW_GETSCROLLBARS
+
+            MENUITEM "GetFrames",                   ID_INTERFACES_NSIDOMWINDOW_GETFRAMES
+
+            MENUITEM "GetName",                     ID_INTERFACES_NSIDOMWINDOW_GETNAME
+
+            MENUITEM SEPARATOR
+            MENUITEM "GetScsollX",                  ID_INTERFACES_NSIDOMWINDOW_GETSCSOLLX
+
+            MENUITEM "GetScrollY",                  ID_INTERFACES_NSIDOMWINDOW_GETSCROLLY
+
+            MENUITEM SEPARATOR
+            MENUITEM "ScrollTo",                    ID_INTERFACES_NSIDOMWINDOW_SCROLLTO
+
+            MENUITEM "ScrollBy",                    ID_INTERFACES_NSIDOMWINDOW_SCROLLBY
+
+            MENUITEM "ScrollByLines",               ID_INTERFACES_NSIDOMWINDOW_SCROLLBYLINES
+
+            MENUITEM "ScrollByPages",               ID_INTERFACES_NSIDOMWINDOW_SCROLLBYPAGES
+
+            MENUITEM SEPARATOR
+            MENUITEM "SizeToContent",               ID_INTERFACES_NSIDOMWINDOW_SIZETOCONTENT
+
+        END
+        POPUP "nsISelection"
+        BEGIN
+            MENUITEM "Run All Tests",               ID_INTERFACES_NSISELECTION_RUNALLTESTS
+
+            MENUITEM SEPARATOR
+            MENUITEM "GetAnchorNode",               ID_INTERFACES_NSISELECTION_GETANCHORNODE
+
+            MENUITEM "GetAnchorOffset",             ID_INTERFACES_NSISELECTION_GETANCHOROFFSET
+
+            MENUITEM "GetFocusNode",                ID_INTERFACES_NSISELECTION_GETFOCUSNODE
+
+            MENUITEM "GetFocusOffset",              ID_INTERFACES_NSISELECTION_GETFOCUSOFFSET
+
+            MENUITEM "GetIsCollapsed",              ID_INTERFACES_NSISELECTION_GETISCOLLAPSED
+
+            MENUITEM "GetRangeCount",               ID_INTERFACES_NSISELECTION_GETRANGECOUNT
+
+            MENUITEM SEPARATOR
+            MENUITEM "GetRangeAt",                  ID_INTERFACES_NSISELECTION_GETRANGEAT
+
+            MENUITEM "Collapse",                    ID_INTERFACES_NSISELECTION_COLLAPSE
+
+            MENUITEM "Extend",                      ID_INTERFACES_NSISELECTION_EXTEND
+
+            MENUITEM "CollapseToStart",             ID_INTERFACES_NSISELECTION_COLLAPSETOSTART
+
+            MENUITEM "CollapseToEnd",               ID_INTERFACES_NSISELECTION_COLLAPSETOEND
+
+            MENUITEM SEPARATOR
+            MENUITEM "ContainsNode",                ID_INTERFACES_NSISELECTION_CONTAINSNODE
+
+            MENUITEM "SelectAllChildren",           ID_INTERFACES_NSISELECTION_SELECTALLCHILDREN
+
+            MENUITEM SEPARATOR
+            MENUITEM "AddRange",                    ID_INTERFACES_NSISELECTION_ADDRANGE
+
+            MENUITEM "RemoveRange",                 ID_INTERFACES_NSISELECTION_REMOVERANGE
+
+            MENUITEM "RemoveAllRanges",             ID_INTERFACES_NSISELECTION_REMOVEALLRANGES
+
+            MENUITEM SEPARATOR
+            MENUITEM "DeleteFromDocument",          ID_INTERFACES_NSISELECTION_DELETEFROMDOCUMENT
+
+            MENUITEM "SelectionLanguageChange",     ID_INTERFACES_NSISELECTION_SELECTIONLANGUAGECHANGE
+
+            MENUITEM "ToString",                    ID_INTERFACES_NSISELECTION_TOSTRING
+
+        END
+        POPUP "nsIProfile"
+        BEGIN
+            MENUITEM "Run All Tests",               ID_INTERFACES_NSIPROFILE_RUNALLTESTS
+
+            MENUITEM SEPARATOR
+            MENUITEM "GetProfileCount",             ID_INTERFACES_NSIPROFILE_GETPROFILECOUNT
+
+            MENUITEM "GetCurrentProfile",           ID_INTERFACES_NSIPROFILE_GETCURRENTPROFILE
+
+            MENUITEM "SetCurrentProfile",           ID_INTERFACES_NSIPROFILE_SETCURRENTPROFILE
+
+            MENUITEM SEPARATOR
+            MENUITEM "GetProfileList",              ID_INTERFACES_NSIPROFILE_GETPROFILELIST
+
+            MENUITEM "ProfileExists",               ID_INTERFACES_NSIPROFILE_PROFILEEXISTS
+
+            MENUITEM SEPARATOR
+            MENUITEM "CreateNewProfile",            ID_INTERFACES_NSIPROFILE_CREATENEWPROFILE
+
+            MENUITEM "RenameProfile",               ID_INTERFACES_NSIPROFILE_RENAMEPROFILE
+
+            MENUITEM "DeleteProfile",               ID_INTERFACES_NSIPROFILE_DELETEPROFILE
+
+            MENUITEM "CloneProfile",                ID_INTERFACES_NSIPROFILE_CLONEPROFILE
+
+            MENUITEM "ShutDownCurrentProfile",      ID_INTERFACES_NSIPROFILE_SHUTDOWNCURRENTPROFILE
+
+        END
+        POPUP "CallBacks"
+        BEGIN
+            MENUITEM "nsIStreamListener",           ID_INTERFACES_CALLBACKS_NSISTREAMLISTENER
+
+            MENUITEM "nsIRequestObserver",          ID_INTERFACES_CALLBACKS_NSIREQUESTOBSERVER
+
+            MENUITEM "nsIStreamObserver",           ID_INTERFACES_CALLBACKS_NSISTREAMOBSERVER
+
+        END
     END
     POPUP "T&ools"
     BEGIN
@@ -171,6 +304,7 @@ BEGIN
     POPUP "Ve&rify Bugs"
     BEGIN
         MENUITEM "&70228",                      ID_VERIFYBUGS_70228
+        MENUITEM "90195",                       ID_VERIFYBUGS_90195
     END
     POPUP "Clip&BoardTest"
     BEGIN
@@ -444,13 +578,14 @@ BEGIN
     EDITTEXT        IDC_URLFIELD,30,66,132,14,ES_AUTOHSCROLL
 END
 
-IDD_DIALOG1 DIALOG DISCARDABLE  0, 0, 186, 95
+IDD_RUNTESTSDLG DIALOG DISCARDABLE  0, 0, 331, 186
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dialog"
+CAPTION "Test Results"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,129,24,50,14
+    DEFPUSHBUTTON   "Close",IDOK,274,165,50,14
+    CONTROL         "List1",IDC_LIST1,"SysListView32",LVS_REPORT | 
+                    LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,7,317,154
 END
 
 
@@ -553,12 +688,12 @@ BEGIN
         BOTTOMMARGIN, 88
     END
 
-    IDD_DIALOG1, DIALOG
+    IDD_RUNTESTSDLG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 179
+        RIGHTMARGIN, 324
         TOPMARGIN, 7
-        BOTTOMMARGIN, 88
+        BOTTOMMARGIN, 179
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -637,7 +772,13 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
+    ID_NAV_RELOAD           "Tool Tip\nTool Tip"
     ID_EDIT_SELECT_NONE     "Select nothing in the document\nSelect None"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_INTERFACES_TEMP      "Temporary"
 END
 
 #endif    // English (U.S.) resources
