@@ -1,0 +1,138 @@
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+#
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= mail
+LIBRARY_NAME = mail
+
+ifeq ($(OS_ARCH),WINNT)
+RESFILE		= mail.res
+endif
+
+META_COMPONENT = mail
+
+EXPORT_LIBRARY = 1
+
+IS_COMPONENT	= 1
+
+MODULE_NAME	= nsMsgMailModule
+
+REQUIRES	= xpcom \
+		  xpcom_obsolete \
+		  xpobsolete \
+          addrbook \
+		  appcomps \
+		  appshell \
+          bayesflt \
+		  content \
+		  dom \
+		  docshell \
+		  editor \
+		  gfx \
+		  intl \
+    	  locale \
+		  layout \
+          lwbrk \
+		  mailnews \
+          mailview \
+          msglocal \
+		  msgcompose \
+		  msgbaseutil \
+          msgbase  \
+		  msgnews \
+		  msgimap \
+		  msgdb \
+          msgmdn \
+		  mime \
+          mimeemitter \
+		  mork \
+		  necko \
+          nkcache \
+		  pref \
+		  rdf \
+          rdfutil \
+		  string \
+		  txmgr \
+		  widget \
+		  webbrwsr \
+          uconv \
+		  uriloader \
+		  $(NULL)
+
+ifdef MOZ_LDAP_XPCOM
+REQUIRES	+= mozldap \
+               $(NULL)
+
+DEFINES		+= -DMOZ_LDAP_XPCOM
+endif
+
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS = msgbsutl
+else
+EXTRA_DSO_LIBS = msgbaseutil
+endif
+
+EXTRA_DSO_LIBS += rdfutil_s
+
+CPPSRCS		= nsMailModule.cpp
+
+SHARED_LIBRARY_LIBS = \
+		$(DIST)/lib/$(LIB_PREFIX)msgbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)msgsearch_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/$(LIB_PREFIX)msglocal_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/$(LIB_PREFIX)msgcompose_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/$(LIB_PREFIX)msgdb_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/$(LIB_PREFIX)msgimap_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/$(LIB_PREFIX)addrbook_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/$(LIB_PREFIX)msgnews_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/$(LIB_PREFIX)mime_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/$(LIB_PREFIX)emitterutil_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/$(LIB_PREFIX)bayesflt_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/$(LIB_PREFIX)mailview_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/$(LIB_PREFIX)msgmdn_s.$(LIB_SUFFIX) \
+		$(NULL)
+
+EXTRA_DSO_LDOPTS = \
+		$(LIBS_DIR)	\
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_XPCOM_OBSOLETE_LIBS) \
+		$(NULL)
+
+LOCAL_INCLUDES = -I$(srcdir) \
+                 -I$(srcdir)/../base/src \
+                 -I$(srcdir)/../local/src \
+                 $(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+ifeq ($(OS_ARCH),WINNT)
+OS_LIBS	+= $(call EXPAND_LIBNAME,shell32)
+endif
+
