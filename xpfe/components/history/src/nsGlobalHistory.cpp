@@ -1375,8 +1375,6 @@ nsGlobalHistory::ArcLabelsIn(nsIRDFNode* aNode,
 
   nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(aNode);
   if (resource && IsURLInHistory(resource)) {
-    // If it's a resource, be optimistic and assume that it's actually
-    // in the history.
     return NS_NewSingletonEnumerator(aLabels, kNC_child);
   }
   else {
@@ -1388,6 +1386,10 @@ NS_IMETHODIMP
 nsGlobalHistory::ArcLabelsOut(nsIRDFResource* aSource,
                               nsISimpleEnumerator** aLabels)
 {
+  NS_PRECONDITION(aSource != nsnull, "null ptr");
+  if (! aSource)
+    return NS_ERROR_NULL_POINTER;
+
   nsresult rv;
 
   if ((aSource == kNC_HistoryRoot) ||
@@ -1396,8 +1398,8 @@ nsGlobalHistory::ArcLabelsOut(nsIRDFResource* aSource,
     return NS_NewSingletonEnumerator(aLabels, kNC_child);
   }
   else if (IsURLInHistory(aSource)) {
-    // We'll be optimistic and _assume_ that this is in the history,
-    // in which case it'll have all the history attributes.
+    // If the URL is in the history, then it'll have all the
+    // appropriate attributes.
     nsCOMPtr<nsISupportsArray> array;
     rv = NS_NewISupportsArray(getter_AddRefs(array));
     if (NS_FAILED(rv)) return rv;
