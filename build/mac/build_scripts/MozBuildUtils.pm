@@ -4,11 +4,13 @@ package MozBuildUtils;
 require 5.004;
 require Exporter;
 
-# Package that attempts to read a file from the Preferences folder,
-# and get build settings out of it
+# Package that contains build util functions specific to the Mozilla build
+# process.
 
 use strict;
 use Exporter;
+
+use Cwd;
 
 use Mac::Events;
 use Mac::StandardFile;
@@ -25,7 +27,9 @@ use vars qw(@ISA @EXPORT);
                AskAndPersistFile
                DelayFor
                EmptyTree
-               SetupBuildLog);
+               SetupBuildLog
+               SetBuildNumber
+               SetTimeBomb);
 
 
 #--------------------------------------------------------------------------------------------------
@@ -253,27 +257,66 @@ sub EmptyTree($)
 #-----------------------------------------------
 sub SetupBuildLog($)
 {
-  my($timestamped_log) = @_;
+    my($timestamped_log) = @_;
+    
+    if ($timestamped_log)
+    {
+        #Use time-stamped names so that you don't clobber your previous log file!
+        my $now = localtime();
+        while ($now =~ s@:@.@) {} # replace all colons by periods
+        my $logdir = ":Build Logs:";
+        if (!stat($logdir))
+        {
+            print "Creating directory $logdir\n";
+            mkdir $logdir, 0777 || die "Couldn't create directory $logdir";
+        }
+        OpenErrorLog("$logdir$now");
+    }
+    else
+    {
+        OpenErrorLog("NGLayoutBuildLog");       # Release build
+        #OpenErrorLog("Mozilla.BuildLog");      # Tinderbox requires that name
+    }
+}
+
+#-----------------------------------------------
+# SetBuildNumber
+#-----------------------------------------------
+sub SetBuildNumber($$)
+{
+    my($build_num_file, $files_to_touch) = @_;
+
+    # Make sure we add the config dir to search, to pick up mozBDate.pm
+    # Need to do this dynamically, because this module can be used before
+    # mozilla/config has been checked out.
+    
+    my ($inc_path) = $0;        # $0 is the path to the parent script
+    $inc_path =~ s/:build:mac:build_scripts:.+$/:config/;
+    push(@INC, $inc_path);
+
+    require mozBDate;
+    
+    mozBDate::UpdateBuildNumber($build_num_file, $main::MOZILLA_OFFICIAL);
+   
+    my($file);
+    foreach $file (@$files_to_touch)
+    {
+        print "Writing build number to $file from ${file}.in\n";
+        mozBDate::SubstituteBuildNumber($file, $build_num_file, "${file}.in");
+    }
+}
+
+#-----------------------------------------------
+# SetBuildNumber
+#-----------------------------------------------
+sub SetTimeBomb($$)		
+{
+  my ($warn_days, $bomb_days) = @_;
   
-  if ($timestamped_log)
-  {
-  	#Use time-stamped names so that you don't clobber your previous log file!
-  	my $now = localtime();
-  	while ($now =~ s@:@.@) {} # replace all colons by periods
-  	my $logdir = ":Build Logs:";
-  	if (!stat($logdir))
-  	{
-  	        print "Creating directory $logdir\n";
-  	        mkdir $logdir, 0777 || die "Couldn't create directory $logdir";
-  	}
-  	OpenErrorLog("$logdir$now");
-  }
-  else
-  {
-  	OpenErrorLog("NGLayoutBuildLog");		# Release build
-  	#OpenErrorLog("Mozilla.BuildLog");		# Tinderbox requires that name
-  }
+  system("perl :mozilla:config:mac-set-timebomb.pl $warn_days $bomb_days");
 }
 
 
+
 1;
+
