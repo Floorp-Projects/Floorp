@@ -87,6 +87,7 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
     int fileSize = 0;
     int currCompNum = 1, markedCompNum = 0;
     int numToDL = 0; // num xpis to download
+    int passCount;
     CONN myConn;
     
     err = GetDLMarkedComp(aComps, aCustom, &markedComp, &markedCompNum);
@@ -121,6 +122,7 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
     currCompSave = currComp;
     bDone = 0;
     while ( bDone == 0 && crcPass < MAXCRC ) {
+      passCount = 0;
       while (currComp)
       {
         if ( (aCustom == TRUE && currComp->IsSelected()) || (aCustom == FALSE) )
@@ -252,7 +254,6 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
                     // closes the old connection if any
 
                     isNewConn = CheckConn( currHost, TYPE_FTP, &myConn, PR_FALSE ); 
-
                     err = nsFTPConn::OK;
 
                     nsFTPConn *conn;
@@ -277,7 +278,7 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
                             currComp->GetArchive());
                         err = conn->Get(srvPath, localPath, nsFTPConn::BINARY, 
                             resPos, 1, nsInstallDlg::DownloadCB);
-//                        conn->Close();
+                        passCount++;
                     }
 
                     XI_IF_FREE(currHost);
@@ -339,7 +340,8 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
    
       CheckConn( "", TYPE_UNDEF, &myConn, true );
  
-      bDone = CRCCheckDownloadedArchives(XPI_DIR, strlen(XPI_DIR), currCompSave, currCompNum);
+      bDone = CRCCheckDownloadedArchives(XPI_DIR, strlen(XPI_DIR), 
+                currCompSave, passCount, aCustom);
       crcPass++;
       if ( bDone == 0 && crcPass < MAXCRC ) {
         // reset ourselves
@@ -993,7 +995,7 @@ nsXIEngine::TotalToDownload(int aCustom, nsComponentList *aComps)
 
 PRBool 
 nsXIEngine::CRCCheckDownloadedArchives(char *dlPath, short dlPathlen, 
-  nsComponent *currComp, int count)
+  nsComponent *currComp, int count, int aCustom)
 {
   int i;
   PRBool isClean;
@@ -1001,13 +1003,15 @@ nsXIEngine::CRCCheckDownloadedArchives(char *dlPath, short dlPathlen,
 
   isClean = PR_TRUE;
 
-	for(i = 0; currComp != (nsComponent *) NULL && i < MAX_COMPONENTS; i++) {
+  for(i = 0; currComp != (nsComponent *) NULL && i < MAX_COMPONENTS; i++) {
     strncpy( buf, (const char *) dlPath, dlPathlen );
     buf[ dlPathlen ] = '\0';
     strcat( buf, "/" );
     strcat( buf, currComp->GetArchive() );
     nsInstallDlg::MajorProgressCB(buf, i, count, nsInstallDlg::ACT_INSTALL);
-    if (IsArchiveFile(buf) == PR_TRUE && VerifyArchive( buf ) != ZIP_OK) {
+    if (((aCustom == TRUE && currComp->IsSelected()) || 
+        (aCustom == FALSE)) && IsArchiveFile(buf) == PR_TRUE && 
+        VerifyArchive( buf ) != ZIP_OK) {
       currComp->SetDownloaded(FALSE); // VerifyArchive has unlinked it
       isClean = false;
     }
