@@ -5,9 +5,6 @@
   <RDF:Description about="chrome://messenger/content/messenger.xul#flaggedCol">
     <hidden>true</hidden>
   </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/messenger.xul#labelCol">
-    <hidden>true</hidden>
-  </RDF:Description>
   <RDF:Description about="chrome://messenger/content/messenger.xul#unreadCol">
     <hidden>true</hidden>
   </RDF:Description>
@@ -36,7 +33,6 @@
     <NC:persist resource="chrome://messenger/content/messenger.xul#totalCol"/>
     <NC:persist resource="chrome://messenger/content/messenger.xul#OrderReceivedColumn"/>
     <NC:persist resource="chrome://messenger/content/messenger.xul#flaggedCol"/>
-    <NC:persist resource="chrome://messenger/content/messenger.xul#labelCol"/>
     <NC:persist resource="chrome://messenger/content/messenger.xul#folderUnreadCol"/>
     <NC:persist resource="chrome://messenger/content/messenger.xul#folderTotalCol"/>
     <NC:persist resource="chrome://messenger/content/messenger.xul#messengerWindow"/>
@@ -86,9 +82,6 @@
   <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#flaggedCol">
     <hidden>true</hidden>
   </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#labelCol">
-    <hidden>true</hidden>
-  </RDF:Description>
   <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#unreadCol">
     <hidden>true</hidden>
   </RDF:Description>
@@ -117,7 +110,6 @@
     <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#totalCol"/>
     <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#OrderReceivedColumn"/>
     <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#flaggedCol"/>
-    <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#labelCol"/>
     <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#folderUnreadCol"/>
     <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#folderTotalCol"/>
   </RDF:Description>
