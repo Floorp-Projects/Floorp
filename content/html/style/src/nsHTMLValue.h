@@ -146,10 +146,8 @@ inline nscolor nsHTMLValue::GetColorValue(void) const
     return mValue.mColor;
   }
   if ((mUnit == eHTMLUnit_ColorName) && (mValue.mString)) {
-    char cbuf[40];
-    mValue.mString->ToCString(cbuf, sizeof(cbuf));
     nscolor color;
-    if (NS_ColorNameToRGB(cbuf, &color)) {
+    if (NS_ColorNameToRGB(*(mValue.mString), &color)) {
       return color;
     }
   }
