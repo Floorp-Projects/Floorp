@@ -48,7 +48,7 @@
 #include "nsPrefMigrationCIDs.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
-#include "nsIPrompt.h"
+#include "nsIPromptService.h"
 #include "nsIStreamListener.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
@@ -120,6 +120,9 @@ const char* kWindowWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1"
 const char* kDialogParamBlockContractID = "@mozilla.org/embedcomp/dialogparam;1";
 
 const char* kDefaultOpenWindowParams = "centerscreen,chrome,modal,titlebar";
+
+const char* kBrandBundleURL = "chrome://global/locale/brand.properties";
+const char* kMigrationBundleURL = "chrome://communicator/locale/profile/migration.properties";
 
 // we want everyone to have the debugging info to the console for now
 // to help track down profile manager problems
@@ -525,30 +528,6 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
         if (NS_FAILED(rv)) return rv;
     }
 
-    PRBool confirmAutomigration = PR_FALSE;
-    if (NS_SUCCEEDED(rv) && prefs) {
-        rv = prefs->GetBoolPref(PREF_CONFIRM_AUTOMIGRATION, &confirmAutomigration);
-        if (NS_FAILED(rv)) confirmAutomigration = PR_FALSE;
-    }
-    
-    if (confirmAutomigration) {
-        if (profileURLStr.Equals(CONFIRM_AUTOMIGRATE_URL)) {
-            PRBool automigrate = PR_FALSE;
-            rv = GetAutomigrate(&automigrate);
-            if (NS_SUCCEEDED(rv) && automigrate) {
-                AutoMigrate();
-            }
-            else {
-                // the user hit cancel.
-                // so they don't want to automatically migrate
-                // so call this again with the profile manager ui
-                nsCString profileManagerUrl(PROFILE_MANAGER_URL);
-                rv = LoadDefaultProfileDir(profileManagerUrl, canInteract);
-                return rv;
-            }
-        }
-    }
-
     // if we get here, and we don't have a current profile, 
     // return a failure so we will exit
     // this can happen, if the user hits Exit in the profile manager dialog
@@ -603,6 +582,64 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
         rv = pPrefConverter->ConvertPrefsToUTF8();
     }
     
+    return NS_OK;
+}
+
+nsresult
+nsProfile::ConfirmAutoMigration(PRBool *confirmed)
+{
+    NS_ENSURE_ARG_POINTER(confirmed);
+    *confirmed = PR_FALSE;
+    nsresult rv;
+    
+    // First check PREF_CONFIRM_AUTOMIGRATION.
+    // If FALSE, we go ahead and migrate without asking.
+    PRBool confirmAutomigration = PR_TRUE;
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
+    if (NS_SUCCEEDED(rv))
+        (void)prefs->GetBoolPref(PREF_CONFIRM_AUTOMIGRATION, &confirmAutomigration);
+    if (!confirmAutomigration) {
+        *confirmed = PR_TRUE;
+        return NS_OK;
+    }
+    
+    // Put up a confirm dialog and ask the user
+    nsCOMPtr<nsIStringBundleService> stringBundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIStringBundle> migrationBundle, brandBundle;
+    rv = stringBundleService->CreateBundle(kMigrationBundleURL, getter_AddRefs(migrationBundle));
+    if (NS_FAILED(rv)) return rv;
+    rv = stringBundleService->CreateBundle(kBrandBundleURL, getter_AddRefs(brandBundle));
+    if (NS_FAILED(rv)) return rv;
+    
+    nsXPIDLString brandName;
+    rv = brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(), getter_Copies(brandName));
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLString msgString, dialogTitle, button0Title, button1Title;
+    const PRUnichar *formatStrings[] = { brandName.get(), brandName.get() };
+    rv = migrationBundle->FormatStringFromName(NS_LITERAL_STRING("confirmMigration").get(),
+                                                 formatStrings, 2, getter_Copies(msgString));
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = migrationBundle->GetStringFromName(NS_LITERAL_STRING("dialogTitle").get(), getter_Copies(dialogTitle));
+    if (NS_FAILED(rv)) return rv;
+    rv = migrationBundle->GetStringFromName(NS_LITERAL_STRING("migrate").get(), getter_Copies(button0Title));
+    if (NS_FAILED(rv)) return rv;
+    rv = migrationBundle->GetStringFromName(NS_LITERAL_STRING("manage").get(), getter_Copies(button1Title));
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsIPromptService> promptService(do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv));
+    if (NS_FAILED(rv)) return rv;
+    PRInt32 buttonPressed;
+    rv = promptService->ConfirmEx(nsnull, dialogTitle.get(), msgString.get(),
+                                  (nsIPromptService::BUTTON_POS_0 * nsIPromptService::BUTTON_TITLE_IS_STRING) +
+                                  (nsIPromptService::BUTTON_POS_1 * nsIPromptService::BUTTON_TITLE_IS_STRING),
+                                  button0Title, button1Title, nsnull,
+                                  nsnull, nsnull, &buttonPressed);
+    if (NS_FAILED(rv)) return rv;
+    *confirmed = (buttonPressed == 0);
     return NS_OK;
 }
 
@@ -830,19 +867,11 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                 profileURLStr = "";
             }
             else if (num4xProfiles == 1 && numProfiles == 0) {
-                PRBool confirmAutomigration = PR_FALSE;
-                nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
-                if (NS_SUCCEEDED(rv) && prefs) {
-                    rv = prefs->GetBoolPref(PREF_CONFIRM_AUTOMIGRATION, 
-                                            &confirmAutomigration);
-                    if (NS_FAILED(rv)) confirmAutomigration = PR_FALSE;
-                }
-                if (confirmAutomigration) {
-                    profileURLStr = CONFIRM_AUTOMIGRATE_URL;
-                }
-                else {
+                PRBool confirmed = PR_FALSE;
+                if (NS_SUCCEEDED(ConfirmAutoMigration(&confirmed)) && confirmed)
                     AutoMigrate();
-                }
+                else
+                    profileURLStr = PROFILE_MANAGER_URL;
             }
             else if (numProfiles > 1)
             {
