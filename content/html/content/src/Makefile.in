@@ -71,6 +71,7 @@ REQUIRES	= xpcom \
 		  exthandler \
 		  uconv \
 		  intl \
+		  plugin \
 		  $(NULL)
 
 EXPORTS		= \

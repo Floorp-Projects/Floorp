@@ -45,7 +45,10 @@
 #include "nsIPresShell.h"
 #include "nsIDOMDocument.h"
 #include "nsIWebNavigation.h"
-#include "nsIFormControl.h"
+#include "nsIFormSubmission.h"
+#include "nsIObjectFrame.h"
+#include "nsIPluginInstance.h"
+#include "nsIPluginInstanceInternal.h"
 
 class nsHTMLObjectElement : public nsGenericHTMLFormElement,
                             public nsImageLoadingContent,
@@ -170,7 +173,47 @@ NS_IMETHODIMP
 nsHTMLObjectElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                        nsIContent* aSubmitElement)
 {
-  return NS_OK;
+  nsAutoString name;
+  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+    // No name, don't submit.
+
+    return NS_OK;
+  }
+
+  nsIFrame* frame = GetPrimaryFrame(PR_FALSE);
+
+  nsIObjectFrame *objFrame = nsnull;
+  if (frame) {
+    CallQueryInterface(frame, &objFrame);
+  }
+
+  if (!objFrame) {
+    // No frame, nothing to submit.
+
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIPluginInstance> pi;
+  objFrame->GetPluginInstance(*getter_AddRefs(pi));
+
+  nsCOMPtr<nsIPluginInstanceInternal> pi_internal(do_QueryInterface(pi));
+
+  if (!pi_internal) {
+    // No plugin, nothing to submit.
+
+    return NS_OK;
+  }
+
+  nsAutoString value;
+  rv = pi_internal->GetFormValue(value);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return aFormSubmission->AddNameValuePair(this, name, value);
 }
 
 NS_IMETHODIMP

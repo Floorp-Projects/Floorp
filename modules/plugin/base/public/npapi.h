@@ -37,7 +37,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.37 $
+ *  npapi.h $Revision: 3.38 $
  *  Netscape client plug-in API spec
  */
 
@@ -125,7 +125,7 @@
 /*----------------------------------------------------------------------*/
 
 #define NP_VERSION_MAJOR 0
-#define NP_VERSION_MINOR 14
+#define NP_VERSION_MINOR 15
 
 
 /* The OS/2 version of Netscape uses RC_DATA to define the
@@ -390,7 +390,13 @@ typedef enum {
   NPPVpluginNeedsXEmbed         = 14,
 
   /* Get the NPObject for scripting the plugin. */
-  NPPVpluginScriptableNPObject  = 15
+  NPPVpluginScriptableNPObject  = 15,
+
+  /* Get the plugin value (as \0-terminated UTF-8 string data) for
+   * form submission if the plugin is part of a form. Use
+   * NPN_MemAlloc() to allocate memory for the string data.
+  */
+  NPPVformValue = 16
 } NPPVariable;
 
 /*
