@@ -46,6 +46,13 @@ CPPSRCS		= \
 		nsFtpControlConnection.cpp \
 		$(NULL)
 
+# Use -g for Irix mipspro builds as workaround for bug 92099
+ifneq (,$(filter IRIX IRIX64,$(OS_ARCH)))
+ifndef GNU_CC
+MODULE_OPTIMIZE_FLAGS=-O -g
+endif
+endif
+
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
 FORCE_STATIC_LIB = 1
