@@ -22,7 +22,7 @@
 #include "nsISupports.h"
 #include "prnetdb.h"
 
-class nsITransport;
+class nsIChannel;
 
 typedef struct nsHostEnt
 {

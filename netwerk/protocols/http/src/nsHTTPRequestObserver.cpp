@@ -19,9 +19,9 @@
 #include "nsIString.h"
 #include "nsHTTPRequestObserver.h"
 #include "nsHTTPResponseListener.h"
-#include "nsITransport.h"
+#include "nsIChannel.h"
 
-nsHTTPRequestObserver::nsHTTPRequestObserver(nsITransport* i_pTransport) :
+nsHTTPRequestObserver::nsHTTPRequestObserver(nsIChannel* i_pTransport) :
     m_pTransport(i_pTransport)
 {
     NS_INIT_REFCNT();

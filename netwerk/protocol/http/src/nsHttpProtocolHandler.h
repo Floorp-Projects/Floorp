@@ -21,7 +21,7 @@
 
 #include "nsIProtocolHandler.h"
 
-class nsITransport;
+class nsIChannel;
 class nsHashtable;
 
 // XXX regenerate:
@@ -58,9 +58,9 @@ public:
 
     nsresult Init(void);
     nsresult GetTransport(const char* host, PRInt32 port,
-                          nsITransport* *result);
+                          nsIChannel* *result);
     nsresult ReleaseTransport(const char* host, PRInt32 port,
-                              nsITransport* trans);
+                              nsIChannel* trans);
 
 protected:
     nsHashtable*        mConnectionPool;
