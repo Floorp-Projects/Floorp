@@ -14,7 +14,7 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998-2000
  * the Initial Developer. All Rights Reserved.
@@ -80,6 +80,7 @@
 #include "nsIConsoleService.h"
 #include "nsISecurityCheckedComponent.h"
 #include "nsIPrefBranchInternal.h"
+#include "nsIJSRuntimeService.h"
 
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -102,7 +103,7 @@ enum {
 #define  CLASS_HAS_DEFAULT_POLICY 1 << 0
 #define  CLASS_HAS_SITE_POLICY    1 << 1
 #define  CLASS_HAS_ACCESSTYPE     1 << 2
-         
+
 
 // Result of this function should not be freed.
 static const PRUnichar *
@@ -150,6 +151,41 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsScriptSecurityManager,
 ///////////////////////////////////////////////////
 
 ///////////////// Security Checks /////////////////
+static JSBool JS_DLL_CALLBACK
+CheckJSFunctionCallerAccess(JSContext *cx, JSObject *obj, jsval id,
+                            JSAccessMode mode, jsval *vp)
+{
+    // Currently, this function will be called only when function.caller
+    // is accessed. If that changes, we will need to change this function.
+    NS_ASSERTION(nsCRT::strcmp(JS_GetStringChars(JSVAL_TO_STRING(id)),
+                               NS_LITERAL_STRING("caller").get()) == 0,
+                 "CheckJSFunctionCallerAccess called for a property other than \'caller\'");
+
+    // Get the security manager
+    //XXX: Any way to avoid this service lookup?
+    nsresult rv;
+    nsCOMPtr<nsIScriptSecurityManager> ssm =
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+    {
+        NS_ERROR("Failed to get security manager service");
+        return JS_FALSE;
+    }
+
+    // Get the caller function object
+    NS_ASSERTION(JSVAL_IS_OBJECT(*vp), "*vp is not an object");
+    JSObject* target = JSVAL_TO_OBJECT(*vp);
+
+    // Do the same-origin check - this sets a JS exception if the check fails
+    rv = ssm->CheckPropertyAccess(cx, target, "Function", "caller",
+                                  nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
+
+    if (NS_FAILED(rv))
+        return JS_FALSE; // Security check failed
+
+    return JS_TRUE;
+}
+
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckPropertyAccess(JSContext* aJSContext,
                                              JSObject* aJSObject,
@@ -276,7 +312,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
     case SCRIPT_SECURITY_SAME_ORIGIN_ACCESS:
         {
 #ifdef DEBUG_mstoltz
-		    printf("Level: SameOrigin ");
+            printf("Level: SameOrigin ");
 #endif
             nsCOMPtr<nsIPrincipal> objectPrincipal;
             if(aJSObject)
@@ -304,7 +340,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
     case SCRIPT_SECURITY_CAPABILITY_ONLY:
         {
 #ifdef DEBUG_mstoltz
-		    printf("Level: Capability ");
+            printf("Level: Capability ");
 #endif
             PRBool capabilityEnabled = PR_FALSE;
             rv = IsCapabilityEnabled(capability.get(), &capabilityEnabled);
@@ -485,7 +521,7 @@ nsScriptSecurityManager::IsDOMClass(nsIClassInfo* aClassInfo)
     return NS_SUCCEEDED(rv) && (classFlags & nsIClassInfo::DOM_OBJECT);
 }
 
-PRInt32 
+PRInt32
 nsScriptSecurityManager::GetSecurityLevel(nsIPrincipal *principal,
                                           PRBool aIsDOM,
                                           const char* aClassName,
@@ -522,7 +558,7 @@ nsScriptSecurityManager::GetSecurityLevel(nsIPrincipal *principal,
                                wcPolicy, aAction, getter_Copies(propertyPolicy));
             }
         }
-    }   
+    }
     if (NS_SUCCEEDED(rv) && propertyPolicy)
     {
         if (PL_strcmp(propertyPolicy, "sameOrigin") == 0)
@@ -604,11 +640,11 @@ nsScriptSecurityManager::TryToGetPref(nsISecurityPref* aSecurityPref,
     //-- If appropriate, try adding .get or .set and looking up again
     if (aClassPolicy & CLASS_HAS_ACCESSTYPE)
     {
-        aPrefName += 
+        aPrefName +=
             (aAction == nsIXPCSecurityManager::ACCESS_SET_PROPERTY ? ".set" : ".get");
         return aSecurityPref->SecurityGetCharPref(aPrefName.get(), result);
     }
-    
+
     //-- Couldn't find a pref
     return NS_ERROR_FAILURE;
 }
@@ -634,7 +670,7 @@ nsScriptSecurityManager::GetPolicy(nsIPrincipal* principal,
         nsXPIDLCString origin;
         if (NS_FAILED(rv = codebase->GetOrigin(getter_Copies(origin))))
             return rv;
-        
+
         const char *s = origin;
         const char *nextToLastDot = nsnull;
         const char *lastDot = nsnull;
@@ -750,7 +786,7 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
     nsXPIDLCString spec;
     if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
         return NS_ERROR_FAILURE;
-	JS_ReportError(cx, "illegal URL method '%s'", (const char *)spec);
+    JS_ReportError(cx, "illegal URL method '%s'", (const char *)spec);
     return NS_ERROR_DOM_BAD_URI;
 }
 
@@ -851,7 +887,7 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
     //-- If the schemes don't match, the policy is specified in this table.
     enum Action { AllowProtocol, DenyProtocol, PrefControlled, ChromeProtocol };
     static const struct
-    { 
+    {
         const char *name;
         Action action;
     } protocolList[] =
@@ -1071,9 +1107,29 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
         return NS_OK;
     }
 
+    //-- Always allow chrome pages to run scripts
+    //   This is for about: URLs, which are chrome but don't
+    //   have the system principal
+    nsresult rv;
+    if (!mIsJavaScriptEnabled)
+    {
+        nsCOMPtr<nsICodebasePrincipal> codebase(do_QueryInterface(principal));
+        if (codebase)
+        {
+            nsXPIDLCString origin;
+            rv = codebase->GetOrigin(getter_Copies(origin));
+            static const char chromePrefix[] = "chrome:";
+            if (NS_SUCCEEDED(rv) &&
+                (PL_strncmp(origin, chromePrefix, sizeof(chromePrefix)-1) == 0))
+            {
+                *result = PR_TRUE;
+                return NS_OK;
+            }
+        }
+    }
+
     //-- See if the current window allows JS execution
     nsCOMPtr<nsIDocShell> docshell;
-    nsresult rv;
     rv = GetRootDocShell(cx, getter_AddRefs(docshell));
     if (NS_SUCCEEDED(rv))
     {
@@ -1190,7 +1246,7 @@ nsScriptSecurityManager::GetCertificatePrincipal(const char* aCertID,
 nsresult
 nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal **result)
 {
-	nsresult rv = NS_OK;
+    nsresult rv = NS_OK;
     nsCodebasePrincipal *codebase = new nsCodebasePrincipal();
     if (!codebase)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1209,10 +1265,10 @@ NS_IMETHODIMP
 nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
                                               nsIPrincipal **result)
 {
-	nsresult rv;
-	nsCOMPtr<nsIPrincipal> principal;
-	rv = CreateCodebasePrincipal(aURI, getter_AddRefs(principal));
-	if (NS_FAILED(rv)) return rv;
+    nsresult rv;
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = CreateCodebasePrincipal(aURI, getter_AddRefs(principal));
+    if (NS_FAILED(rv)) return rv;
 
     if (mPrincipals)
     {
@@ -1221,23 +1277,23 @@ nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
         nsCOMPtr<nsIPrincipal> fromTable = (nsIPrincipal *) mPrincipals->Get(&key);
         if (fromTable)
             principal = fromTable;
-		else //-- Check to see if we have a more general principal
-		{
-			nsCOMPtr<nsICodebasePrincipal> codebasePrin(do_QueryInterface(principal));
-			nsXPIDLCString originUrl;
-			rv = codebasePrin->GetOrigin(getter_Copies(originUrl));
-			if (NS_FAILED(rv)) return rv;
-			nsCOMPtr<nsIURI> newURI;
-			rv = NS_NewURI(getter_AddRefs(newURI), originUrl, nsnull);
-			if (NS_FAILED(rv)) return rv;
-			nsCOMPtr<nsIPrincipal> principal2;
-			rv = CreateCodebasePrincipal(newURI, getter_AddRefs(principal2));
-			if (NS_FAILED(rv)) return rv;
-			 nsIPrincipalKey key2(principal2);
-				fromTable = (nsIPrincipal *) mPrincipals->Get(&key2);
-			if (fromTable)
-				principal = fromTable;
-		}		
+        else //-- Check to see if we have a more general principal
+        {
+            nsCOMPtr<nsICodebasePrincipal> codebasePrin(do_QueryInterface(principal));
+            nsXPIDLCString originUrl;
+            rv = codebasePrin->GetOrigin(getter_Copies(originUrl));
+            if (NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsIURI> newURI;
+            rv = NS_NewURI(getter_AddRefs(newURI), originUrl, nsnull);
+            if (NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsIPrincipal> principal2;
+            rv = CreateCodebasePrincipal(newURI, getter_AddRefs(principal2));
+            if (NS_FAILED(rv)) return rv;
+             nsIPrincipalKey key2(principal2);
+                fromTable = (nsIPrincipal *) mPrincipals->Get(&key2);
+            if (fromTable)
+                principal = fromTable;
+        }		
     }
 
     //-- Bundle this codebase principal into an aggregate principal
@@ -1515,7 +1571,7 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
         rv = principal->CanEnableCapability(capability, &canEnable);
         if (NS_FAILED(rv)) return rv;
         if (canEnable != nsIPrincipal::ENABLE_GRANTED &&
-            canEnable != nsIPrincipal::ENABLE_WITH_USER_PERMISSION) 
+            canEnable != nsIPrincipal::ENABLE_WITH_USER_PERMISSION)
             return NS_OK;
 
         // Now see if the capability is enabled.
@@ -1640,7 +1696,7 @@ CheckConfirmDialog(JSContext* cx, const PRUnichar *szMessage, const PRUnichar *s
     nsAutoString dialogTitle;
     if (NS_FAILED(res = Localize("Titleline", dialogTitle)))
         return PR_FALSE;
-    
+
     res = prompter->ConfirmEx(dialogTitle.get(), szMessage,
                               (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
                               (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
@@ -1701,8 +1757,8 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
     //-- Error checks for capability string length (200)
     if(PL_strlen(capability)>200)
     {
-		static const char msg[] = "Capability name too long";
-		JS_SetPendingException(cx, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, msg)));
+        static const char msg[] = "Capability name too long";
+        JS_SetPendingException(cx, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, msg)));
         return NS_ERROR_FAILURE;
     }
 
@@ -1723,8 +1779,8 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
 
     if (canEnable != nsIPrincipal::ENABLE_GRANTED)
     {
-		static const char msg[] = "enablePrivilege not granted";
-		JS_SetPendingException(cx, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, msg)));
+        static const char msg[] = "enablePrivilege not granted";
+        JS_SetPendingException(cx, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, msg)));
         return NS_ERROR_FAILURE; // XXX better error code?
     }
     if (NS_FAILED(principal->EnableCapability(capability, &annotation)))
@@ -1776,7 +1832,7 @@ nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
     if (!mSystemCertificate)
     {
         nsCOMPtr<nsIFile> systemCertFile;
-        nsCOMPtr<nsIProperties> directoryService = 
+        nsCOMPtr<nsIProperties> directoryService =
                  do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
         if (!directoryService) return NS_ERROR_FAILURE;
         rv = directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile),
@@ -1817,7 +1873,7 @@ nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
     {
         JSContext* cx = GetCurrentContextQuick();
         if (!cx) return NS_ERROR_FAILURE;
-		static const char msg1[] = "Only code signed by the system certificate may call SetCanEnableCapability or Invalidate";
+        static const char msg1[] = "Only code signed by the system certificate may call SetCanEnableCapability or Invalidate";
         static const char msg2[] = "Attempt to call SetCanEnableCapability or Invalidate when no system certificate has been established";
             JS_SetPendingException(cx, STRING_TO_JSVAL(JS_NewStringCopyZ(cx,
                                    mSystemCertificate ? msg1 : msg2)));
@@ -2059,6 +2115,25 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
     NS_INIT_REFCNT();
     InitPrefs();
     mThreadJSContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+    //-- Register security check callback in the JS engine
+    //   Currently this is used to control access to function.caller
+    nsresult rv;
+    nsCOMPtr<nsIJSRuntimeService> runtimeService =
+        do_GetService("@mozilla.org/js/xpc/RuntimeService;1", &rv);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get runtime service");
+
+    JSRuntime *rt;
+    rv = runtimeService->GetRuntime(&rt);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get current JS runtime");
+
+#ifdef DEBUG
+    JSCheckAccessOp oldCallback =
+        JS_SetCheckObjectAccessCallback(rt, CheckJSFunctionCallerAccess);
+
+    // For now, assert that no callback was set previously
+    NS_ASSERTION(!oldCallback, "Someone already set a JS CheckObjectAccess callback");
+#endif
 }
 
 nsScriptSecurityManager::~nsScriptSecurityManager(void)
@@ -2085,7 +2160,7 @@ nsScriptSecurityManager::GetScriptSecurityManager()
         if (NS_FAILED(rv))
             NS_WARNING("can't initialize JS engine security protocol glue!");
 
-        nsCOMPtr<nsIXPConnect> xpc = 
+        nsCOMPtr<nsIXPConnect> xpc =
                  do_GetService(nsIXPConnect::GetCID(), &rv);
         if (NS_SUCCEEDED(rv) && xpc)
         {
@@ -2321,7 +2396,7 @@ nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefN
             continue;
 
         nsXPIDLCString id;
-        if (NS_FAILED(aSecurityPref->SecurityGetCharPref(aPrefNames[c], getter_Copies(id)))) 
+        if (NS_FAILED(aSecurityPref->SecurityGetCharPref(aPrefNames[c], getter_Copies(id))))
             return NS_ERROR_FAILURE;
 
         nsXPIDLCString grantedPrefName;
@@ -2404,13 +2479,13 @@ nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefN
 inline void
 nsScriptSecurityManager::JSEnabledPrefChanged(nsISecurityPref* aSecurityPref)
 {
-    if (NS_FAILED(aSecurityPref->SecurityGetBoolPref(sJSEnabledPrefName, 
+    if (NS_FAILED(aSecurityPref->SecurityGetBoolPref(sJSEnabledPrefName,
                                                      &mIsJavaScriptEnabled)))
         // Default to enabled.
         mIsJavaScriptEnabled = PR_TRUE;
 
-    if (NS_FAILED(aSecurityPref->SecurityGetBoolPref(sJSMailEnabledPrefName, 
-                                                     &mIsMailJavaScriptEnabled))) 
+    if (NS_FAILED(aSecurityPref->SecurityGetBoolPref(sJSMailEnabledPrefName,
+                                                     &mIsMailJavaScriptEnabled)))
         // Default to enabled.
         mIsMailJavaScriptEnabled = PR_TRUE;
 }
