@@ -46,6 +46,8 @@ class nsSoftwareUpdate: public nsISoftwareUpdate,
          */
         static char*    GetLogName() { return mLogName; }
 
+        static void     NeedCleanup() { mNeedCleanup = PR_TRUE; }
+
         NS_DECL_ISUPPORTS
         NS_DECL_NSPIXPISTUBHOOK
         NS_DECL_NSIOBSERVER
@@ -74,12 +76,11 @@ class nsSoftwareUpdate: public nsISoftwareUpdate,
         nsSoftwareUpdate();
         virtual ~nsSoftwareUpdate();
 
-        static   PRBool             mNeedCleanup;
-
     private:
         static   nsSoftwareUpdate*  mInstance;
         static   nsCOMPtr<nsIFile>  mProgramDir;
         static   char*              mLogName;
+        static   PRBool             mNeedCleanup;
 
         nsresult RunNextInstall();
         nsresult RegisterNameset();
