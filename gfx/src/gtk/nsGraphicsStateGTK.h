@@ -27,14 +27,45 @@
 class nsGraphicsState
 {
 public:
-  nsGraphicsState();
-  virtual ~nsGraphicsState();
 
   nsTransform2D  *mMatrix;
   nsRegionGTK    *mClipRegion;
   nscolor         mColor;
   nsLineStyle     mLineStyle;
   nsIFontMetrics *mFontMetrics;
+
+  nsGraphicsState *mNext; // link into free list of graphics states.
+
+  friend class nsGraphicsStatePool;
+
+#ifndef USE_GS_POOL
+  friend class nsRenderingContextGTK;
+#endif
+
+private:
+  nsGraphicsState();
+  ~nsGraphicsState();
+};
+
+class nsGraphicsStatePool
+{
+public:
+
+  static nsGraphicsState * GetNewGS();
+  static void              ReleaseGS(nsGraphicsState* aGS);
+  
+private:
+  
+  nsGraphicsStatePool();
+  ~nsGraphicsStatePool();
+  
+  nsGraphicsState*	mFreeList;
+  
+  static nsGraphicsStatePool * PrivateGetPool();
+  nsGraphicsState *            PrivateGetNewGS();
+  void                         PrivateReleaseGS(nsGraphicsState* aGS);
+  
+  static nsGraphicsStatePool * gsThePool;
 };
 
 #endif /* nsGraphicsStateGTK_h___ */
