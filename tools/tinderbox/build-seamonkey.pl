@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::Version = '$Revision: 1.88 $ ';
+$::Version = '$Revision: 1.89 $ ';
 
 # "use strict" complains if we do not define these.
 # They are not initialized here. The default values are after "__END__".
@@ -118,6 +118,7 @@ sub ParseArgs {
         elsif ($arg eq '--version' or $arg eq '-v') {
             die "$0: version" . substr($::Version,9,6) . "\n";
         } else {
+            warn "Error: Unknown option: $arg\n";
             PrintUsage();
         }
     }
@@ -331,26 +332,24 @@ sub run_tests {
     my $binary_dir = dirname($binary);
     my $test_result = 'success';
 
-	# Setup for tests.
-	my $pref_file = $build_dir . "/.mozilla/$Settings::MozProfileName/prefs.js";
-	$ENV{HOME} = $build_dir;
+    # The prefs file is used to check for a profile.
+    # The mailnews test also adds a couple preferences to it.
+    my $pref_file = "$build_dir/.mozilla/$Settings::MozProfileName/prefs.js";
 
-	# Check for profile, create it if necessary.
-	unless (stat($pref_file)) {
-	  print_log "$pref_file not found, creating profile...\n";
-	  CreateProfile($build_dir, $binary, 45);
-	} else {
-	  print_log "prefs.js found\n";
-	}
+    unless (-f $pref_file) {
+      print_log "Prefs file not found: $pref_file\n";
+      print_log "Creating profile...\n";
+      $test_result = CreateProfile($build_dir, $binary, $pref_file, 45);
+    }
 
     # Mozilla alive test
-	#
-	# Note: Bloat & MailNews tests depend this on working.
-	# Only disable this test if you know it passes and are
-	# debugging another part of the test sequence.  -mcafee
-	#
+    #
+    # Note: Bloat & MailNews tests depend this on working.
+    # Only disable this test if you know it passes and are
+    # debugging another part of the test sequence.  -mcafee
+    #
     if ($Settings::AliveTest and $test_result eq 'success') {
-	    print_log "Running AliveTest ...\n";
+        print_log "Running AliveTest ...\n";
         $test_result = AliveTest($build_dir, $binary, 45);
     }
 
@@ -371,27 +370,27 @@ sub run_tests {
     #   user_pref("signed.applets.codebase_principal_support",true);
     # First run gives two dialogs; they set this preference:
     #   user_pref("security.principal.X0","[Codebase http://www.mozilla.org/quality/mailnews/popTest.html] UniversalBrowserRead=1 UniversalXPConnect=1");
-	#
-	# Only do pop3 test now.
-	#
+    #
+    # Only do pop3 test now.
+    #
     if ($Settings::MailNewsTest and $test_result eq 'success') {
         print_log "Running MailNewsTest ...\n";
 
         my $cmd = "$binary_basename "
                   ."http://www.mozilla.org/quality/mailnews/popTest.html";
 
-		# Stuff prefs in here.
-		if (system("grep -s signed.applets.codebase_principal_support $pref_file > /dev/null")) {
-		  open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
-		  print PREFS "user_pref(\"signed.applets.codebase_principal_support\", true);\n";
-		  print PREFS "user_pref(\"security.principal.X0\", \"[Codebase http://www.mozilla.org/quality/mailnews/popTest.html] UniversalBrowserRead=1 UniversalXPConnect=1\");";
-		  close PREFS;
-		}
+        # Stuff prefs in here.
+        if (system("grep -s signed.applets.codebase_principal_support $pref_file > /dev/null")) {
+          open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
+          print PREFS "user_pref(\"signed.applets.codebase_principal_support\", true);\n";
+          print PREFS "user_pref(\"security.principal.X0\", \"[Codebase http://www.mozilla.org/quality/mailnews/popTest.html] UniversalBrowserRead=1 UniversalXPConnect=1\");";
+          close PREFS;
+        }
 
         $test_result = FileBasedTest("MailNewsTest", $build_dir, $binary_dir, 
-									 $cmd,  90, 
-									 "POP MAILNEWS TEST: Passed", 1, 
-									 1);  # Timeout is Ok.
+                                     $cmd,  90, 
+                                     "POP MAILNEWS TEST: Passed", 1, 
+                                     1);  # Timeout is Ok.
     }
     
     # Editor test
@@ -401,8 +400,8 @@ sub run_tests {
         $test_result =
           FileBasedTest("DomToTextConversionTest", $build_dir, $binary_dir,
                         "TestOutSinks", 45,
-						"FAILED", 0,
-						0);  # Timeout means failure.
+                        "FAILED", 0,
+                        0);  # Timeout means failure.
     }
     return $test_result;
 }
@@ -623,6 +622,36 @@ sub print_logfile {
 }
 
 
+sub CreateProfile {
+    my ($build_dir, $binary, $pref_file, $timeout_secs) = @_;
+    my $binary_dir = dirname($binary);
+    my $binary_log = "$build_dir/profile.log";
+    local $_;
+
+    my $cmd = "$binary -CreateProfile $Settings::MozProfileName";
+    my $result = run_test($build_dir, $binary_dir, $cmd,
+                          $binary_log, $timeout_secs);
+
+    print_logfile($binary_log, "Create Profile");
+    
+    if ($result->{timed_out}) {
+        print_log "Error: timed out creating profile after"
+          ." $timeout_secs seconds.\n";
+        return 'testfailed';
+    } elsif ($result->{exit_value} != 0) {
+      my $binary_basename = basename($binary);
+        print_test_errors($result, $binary_basename);
+        return 'testfailed';
+    } else {
+        if (-f $pref_file) {
+            return 'success';
+        } else {
+            return "Error: no prefs after creating profile: $pref_file\n";
+            return 'testfailed'
+        }
+    }
+}
+
 # Start up Mozilla, test passes if Mozilla is still alive
 # after $timeout_secs (seconds).
 #
@@ -644,25 +673,10 @@ sub AliveTest {
         return 'success';
     } else {
         print_test_errors($result, $binary_basename);
-        print_log "Turn the tree orange now.\n";
         return 'testfailed';
     }
 }
 
-# Create a profile, timeout if needed.
-#
-sub CreateProfile {
-    my ($build_dir, $binary, $timeout_secs) = @_;
-    my $binary_dir = dirname($binary);
-    my $binary_log = "$build_dir/profile.log";
-    local $_;
-
-	my $cmd = $binary . " -CreateProfile" . " " . $Settings::MozProfileName;
-
-	print_log "cmd = $cmd\n";
-    my $result = run_test($build_dir, $binary_dir, $cmd,
-                          $binary_log, $timeout_secs);
-}
 
 
 # Run a generic test that writes output to stdout, save that output to a
@@ -718,7 +732,7 @@ sub FileBasedTest {
         (not $status_token_means_pass and not $found_token)) {
         return 'success';
     } else {
-        print_log "Error: $test_name has failed. Turn the tree orange now.\n";
+        print_log "Error: $test_name has failed.\n";
         return 'testfailed';
     }
 } # FileBasedTest
@@ -747,14 +761,14 @@ sub BloatTest {
 
     print_logfile($binary_log, "bloat test");
     
-	if ($result->{timed_out}) {
-	  print_log "Error: bloat test timed out after"
-		." $timeout_secs seconds.\n";
-	  return 'testfailed';
-	} elsif ($result->{exit_value}) {
-	  print_test_errors($result, $binary_basename);
-	  return 'testfailed';
-	}
+    if ($result->{timed_out}) {
+      print_log "Error: bloat test timed out after"
+        ." $timeout_secs seconds.\n";
+      return 'testfailed';
+    } elsif ($result->{exit_value}) {
+      print_test_errors($result, $binary_basename);
+      return 'testfailed';
+    }
 
     print_log "<a href=#bloat>\n######################## BLOAT STATISTICS\n";
     open DIFF, "$build_dir/../bloatdiff.pl $build_dir/bloat-prev.log $binary_log|"
