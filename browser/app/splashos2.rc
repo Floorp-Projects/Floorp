@@ -59,7 +59,7 @@ END
 #ifdef MOZ_STATIC_BUILD
 #include "wdgtos2rc.h"
 
-POINTER IDC_SELECTANCHOR   "..\\..\\widget\\src\\os2\\res\\\select.ptr"
+POINTER IDC_SELECTANCHOR   "..\\..\\widget\\src\\os2\\res\\select.ptr"
 POINTER IDC_GRAB           "..\\..\\widget\\src\\os2\\res\\grab.ptr"
 POINTER IDC_GRABBING       "..\\..\\widget\\src\\os2\\res\\grabbing.ptr"
 POINTER IDC_CELL           "..\\..\\widget\\src\\os2\\res\\cell.ptr"
