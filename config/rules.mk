@@ -634,6 +634,9 @@ INCLUDES += -I.
 DEPENDENT_LIBS_H = dependentLibs.h
 GARBAGE += $(DEPENDENT_LIBS_H)
 
+# Create a dependency on static libraries listed in EXTRA_DSO_LDOPTS
+DSO_LDOPTS_DEPS = $(filter %.$(LIB_SUFFIX), $(EXTRA_DSO_LDOPTS))
+
 export:: $(DEPENDENT_LIBS_H)
 
 $(DEPENDENT_LIBS_H): Makefile Makefile.in
@@ -994,7 +997,7 @@ ifdef NO_LD_ARCHIVE_FLAGS
 SUB_SHLOBJS = $(SUB_LOBJS)
 endif
 
-$(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(DEF_FILE) $(RESFILE) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) Makefile Makefile.in
+$(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(DEF_FILE) $(RESFILE) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) $(DSO_LDOPTS_DEPS) Makefile Makefile.in
 ifndef INCREMENTAL_LINKER
 	rm -f $@
 endif
