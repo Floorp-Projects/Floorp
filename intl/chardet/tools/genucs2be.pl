@@ -37,7 +37,7 @@ package genverifier;
 );
 
 
-$ucs2be_ver = genverifier::GenVerifier("UCSBE", "ISO-10646-UCS-2-BE", \@ucs2be_cls, 8,     \@ucs2be_st);
+$ucs2be_ver = genverifier::GenVerifier("UCS2BE", "ISO-10646-UCS-2", \@ucs2be_cls, 8,     \@ucs2be_st);
 print $ucs2be_ver;
 
 

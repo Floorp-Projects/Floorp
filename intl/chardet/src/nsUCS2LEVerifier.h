@@ -23,7 +23,7 @@
  * if you have any question. Thanks
  */
 #include "nsVerifier.h"
-static PRUint32 UCSLE_cls [ 256 / 8 ] = {
+static PRUint32 UCS2LE_cls [ 256 / 8 ] = {
 PCK4BITS(1,7,7,7,7,7,7,7),  // 00 - 07 
 PCK4BITS(7,7,4,7,7,3,7,7),  // 08 - 0f 
 PCK4BITS(7,7,7,7,7,7,7,7),  // 10 - 17 
@@ -59,7 +59,7 @@ PCK4BITS(7,7,7,7,7,7,5,6)   // f8 - ff
 };
 
 
-static PRUint32 UCSLE_st [ 9] = {
+static PRUint32 UCS2LE_st [ 9] = {
 PCK4BITS(     3,     3,     5,     6,     3,     8,     7,     3),//00-07 
 PCK4BITS(eError,eError,eError,eError,eError,eError,eError,eError),//08-0f 
 PCK4BITS(eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe),//10-17 
@@ -72,14 +72,14 @@ PCK4BITS(eError,     4,     4,     4,     4,     4,eError,     4) //40-47
 };
 
 
-static nsVerifier nsUCSLEVerifier = {
+static nsVerifier nsUCS2LEVerifier = {
      "ISO-10646-UCS-2-LE",
     {
        eIdxSft4bits, 
        eSftMsk4bits, 
        eBitSft4bits, 
        eUnitMsk4bits, 
-       UCSLE_cls 
+       UCS2LE_cls 
     },
     8,
     {
@@ -87,6 +87,6 @@ static nsVerifier nsUCSLEVerifier = {
        eSftMsk4bits, 
        eBitSft4bits, 
        eUnitMsk4bits, 
-       UCSLE_st 
+       UCS2LE_st 
     }
 };
