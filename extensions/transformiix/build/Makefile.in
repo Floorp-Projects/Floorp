@@ -35,16 +35,20 @@ endif
 REQUIRES	= xpcom \
 		  string \
 		  dom \
+		  layout \
 		  content \
 		  content_xsl \
 		  widget \
 		  necko \
 		  js \
+		  appshell \
 		  xpconnect \
+		  caps \
 		  locale \
-		  htmlparser \
-		  docshell \
 		  unicharutil \
+		  htmlparser \
+		  webshell \
+		  docshell \
 		  $(NULL)
 IS_COMPONENT	= 1
 MODULE_NAME	= TransformiixModule
