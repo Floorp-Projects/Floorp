@@ -52,6 +52,7 @@ struct nsCSSStruct {
 // aren't CSS properties.  Thus we use typedefs and inheritance
 // (forwards, when the rule data needs extra data) to make the rule data
 // structs from the declaration structs.
+// NOTE:  For compilation speed, this typedef also appears in nsRuleNode.h
 typedef nsCSSStruct nsRuleDataStruct;
 
 

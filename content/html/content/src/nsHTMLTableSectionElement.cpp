@@ -44,7 +44,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsContentList.h"
-#include "nsRuleNode.h"
+#include "nsRuleData.h"
 #include "nsDOMError.h"
 #include "nsIDocument.h"
 

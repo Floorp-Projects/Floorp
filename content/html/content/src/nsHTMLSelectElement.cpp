@@ -79,7 +79,7 @@
 #include "nsIFrame.h"
 
 #include "nsDOMError.h"
-#include "nsRuleNode.h"
+#include "nsRuleData.h"
 
 
 class nsHTMLSelectElement;

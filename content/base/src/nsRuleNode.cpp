@@ -38,9 +38,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsRuleNode.h"
 #include "nscore.h"
 #include "nsIServiceManager.h"
-#include "nsRuleNode.h"
 #include "nsIDeviceContext.h"
 #include "nsILookAndFeel.h"
 #include "nsIPresShell.h"
@@ -55,6 +55,9 @@
 #include "nsStyleSet.h"
 #include "nsSize.h"
 #include "imgIRequest.h"
+#include "nsRuleData.h"
+#include "nsILanguageAtomService.h"
+#include "nsIStyleRule.h"
 
 /*
  * For storage of an |nsRuleNode|'s children in a linked list.
@@ -399,6 +402,7 @@ nsRuleNode::nsRuleNode(nsIPresContext* aContext, nsIStyleRule* aRule, nsRuleNode
     mNoneBits(0)
 {
   MOZ_COUNT_CTOR(nsRuleNode);
+  NS_IF_ADDREF(mRule);
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)
@@ -421,6 +425,7 @@ nsRuleNode::~nsRuleNode()
     PL_DHashTableDestroy(children);
   } else if (HaveChildren())
     ChildrenList()->Destroy(mPresContext);
+  NS_IF_RELEASE(mRule);
 }
 
 nsresult 

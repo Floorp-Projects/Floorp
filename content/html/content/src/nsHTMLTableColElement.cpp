@@ -42,7 +42,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-#include "nsRuleNode.h"
+#include "nsRuleData.h"
 
 // use the same protection as ancient code did 
 // http://lxr.mozilla.org/classic/source/lib/layout/laytable.c#46

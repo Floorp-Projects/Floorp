@@ -42,7 +42,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIAtom.h"
-#include "nsRuleNode.h"
+#include "nsRuleData.h"
 
 class nsHTMLSpanElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLElement

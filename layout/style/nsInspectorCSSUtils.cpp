@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsInspectorCSSUtils.h"
+#include "nsIStyleRule.h"
 #include "nsRuleNode.h"
 #include "nsString.h"
 #include "nsLayoutAtoms.h"

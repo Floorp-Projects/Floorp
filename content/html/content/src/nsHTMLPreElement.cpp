@@ -42,7 +42,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsMappedAttributes.h"
-#include "nsRuleNode.h"
+#include "nsRuleData.h"
 #include "nsCSSStruct.h"
 
 // XXX wrap, variable, cols, tabstop

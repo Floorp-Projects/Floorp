@@ -43,7 +43,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsMappedAttributes.h"
-#include "nsRuleNode.h"
+#include "nsRuleData.h"
 
 class nsHTMLHRElement : public nsGenericHTMLElement,
                         public nsIDOMHTMLHRElement,
