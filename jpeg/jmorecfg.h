@@ -208,17 +208,15 @@ typedef unsigned int JDIMENSION;
 #include "prtypes.h"
 
 /* a function called through method pointers: */
-#define METHODDEF(type)		static type
+#define METHODDEF(type)		static type PR_CALLBACK
 /* a function used only in its module: */
 #define LOCAL(type)		static type
 /* a function referenced thru EXTERNs: */
-#define GLOBAL(type)		PR_PUBLIC_API(type)
+#define GLOBAL(type)		PR_IMPLEMENT(type)
 /* a reference to a GLOBAL function: */
-#ifdef __cplusplus
-#define EXTERN(type)		extern "C" PR_PUBLIC_API(type)
-#else
-#define EXTERN(type)		extern PR_PUBLIC_API(type)
-#endif
+PR_BEGIN_EXTERN_C
+#define EXTERN(type)		PR_EXTERN(type)
+PR_END_EXTERN_C
 
 
 /* This macro is used to declare a "method", that is, a function pointer.

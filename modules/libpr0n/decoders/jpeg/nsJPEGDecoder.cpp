@@ -44,11 +44,11 @@ PRLogModuleInfo *gJPEGlog = PR_NewLogModule("JPEGDecoder");
 #endif
 
 
-static void PR_CALLBACK init_source (j_decompress_ptr jd);
-static boolean PR_CALLBACK fill_input_buffer (j_decompress_ptr jd);
-static void PR_CALLBACK skip_input_data (j_decompress_ptr jd, long num_bytes);
-static void PR_CALLBACK term_source (j_decompress_ptr jd);
-void PR_CALLBACK my_error_exit (j_common_ptr cinfo);
+METHODDEF(void) init_source (j_decompress_ptr jd);
+METHODDEF(boolean) fill_input_buffer (j_decompress_ptr jd);
+METHODDEF(void) skip_input_data (j_decompress_ptr jd, long num_bytes);
+METHODDEF(void) term_source (j_decompress_ptr jd);
+METHODDEF(void) my_error_exit (j_common_ptr cinfo);
 
 /* Normal JFIF markers can't have more bytes than this. */
 #define MAX_JPEG_MARKER_LENGTH  (((PRUint32)1 << 16) - 1)
@@ -557,7 +557,7 @@ nsJPEGDecoder::OutputScanlines()
 
 
 /* Override the standard error method in the IJG JPEG decoder code. */
-void PR_CALLBACK
+METHODDEF(void)
 my_error_exit (j_common_ptr cinfo)
 {
   nsresult error_code;
@@ -626,7 +626,7 @@ my_error_exit (j_common_ptr cinfo)
         bytes_in_buffer set to 0 (in which case a fill_input_buffer() call
         will occur immediately).
 */
-void PR_CALLBACK
+METHODDEF(void)
 init_source (j_decompress_ptr jd)
 {
 }
@@ -642,7 +642,7 @@ init_source (j_decompress_ptr jd)
         skips are uncommon.  bytes_in_buffer may be zero on return.
         A zero or negative skip count should be treated as a no-op.
 */
-void PR_CALLBACK
+METHODDEF(void)
 skip_input_data (j_decompress_ptr jd, long num_bytes)
 {
   decoder_source_mgr *src = (decoder_source_mgr *)jd->src;
@@ -678,7 +678,7 @@ skip_input_data (j_decompress_ptr jd, long num_bytes)
         if TRUE is returned.  A FALSE return should only be used when I/O
         suspension is desired.
 */
-boolean PR_CALLBACK
+METHODDEF(boolean)
 fill_input_buffer (j_decompress_ptr jd)
 {
   decoder_source_mgr *src = (decoder_source_mgr *)jd->src;
@@ -788,7 +788,7 @@ fill_input_buffer (j_decompress_ptr jd)
  * data has been read to clean up JPEG source manager. NOT called by 
  * jpeg_abort() or jpeg_destroy().
  */
-void PR_CALLBACK
+METHODDEF(void)
 term_source (j_decompress_ptr jd)
 {
   decoder_source_mgr *src = (decoder_source_mgr *)jd->src;
