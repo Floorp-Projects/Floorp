@@ -232,10 +232,16 @@ sub GenerateVersionTable {
         $carray{$c} = 1;
     }
 
-    SendSQL("select product, description from products");
+    my $dotargetmilestone = Param("usetargetmilestone");
+
+    my $mpart = $dotargetmilestone ? ", milestoneurl" : "";
+    SendSQL("select product, description$mpart from products");
     while (@line = FetchSQLData()) {
-        my ($p, $d) = (@line);
+        my ($p, $d, $u) = (@line);
         $::proddesc{$p} = $d;
+        if ($dotargetmilestone) {
+            $::milestoneurl{$p} = $u;
+        }
     }
             
 
@@ -287,13 +293,14 @@ sub GenerateVersionTable {
     }
     print FID GenerateCode('%::proddesc');
 
-    if (Param("usetargetmilestone")) {
+    if ($dotargetmilestone) {
         my $last = Param("nummilestones");
         my $i;
         for ($i=1 ; $i<=$last ; $i++) {
             push(@::legal_target_milestone, "M$i");
         }
         print FID GenerateCode('@::legal_target_milestone');
+        print FID GenerateCode('%::milestoneurl');
     }
     print FID "1;\n";
     close FID;

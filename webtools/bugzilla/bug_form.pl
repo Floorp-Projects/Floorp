@@ -146,11 +146,18 @@ print "
       <TD>$bug{'assigned_to'}</TD>";
 
 if (Param("usetargetmilestone")) {
+    my $url = "";
+    if (defined $::milestoneurl{$bug{'product'}}) {
+        $url = $::milestoneurl{$bug{'product'}};
+    }
+    if ($url eq "") {
+        $url = "notargetmilestone.html";
+    }
     if ($bug{'target_milestone'} eq "") {
         $bug{'target_milestone'} = " ";
     }
     print "
-<TD ALIGN=RIGHT><B>Target Milestone:</B></TD>
+<TD ALIGN=RIGHT><A href=\"$url\"><B>Target Milestone:</B></A></TD>
 <TD><SELECT NAME=target_milestone>" .
     make_options(\@::legal_target_milestone,
                  $bug{'target_milestone'}) .

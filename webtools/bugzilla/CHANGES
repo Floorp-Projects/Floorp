@@ -10,6 +10,14 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+2/2/99 Added a new column "milestoneurl" to the products table that gives a URL
+which is to describe the currently defined milestones for a product.  If you
+don't use target milestone, you might be able to get away without adding this
+column, but you might as well be safe and add it anyway:
+
+	alter table products add column milestoneurl tinytext not null;
+
+
 1/29/99 Whoops; had a mispelled op_sys.  It was "Mac System 7.1.6"; it should
 be "Mac System 7.6.1".  It turns out I had no bugs with this value set, so I
 could just do the below simple command.  If you have bugs with this value, you
