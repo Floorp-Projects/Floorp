@@ -25,16 +25,7 @@
 #include "nsWidgetsCID.h"
 #include "nsIFontMetrics.h"
 #include "nsFormControlFrame.h"
-#include "nsIServiceManager.h"
-#include "nsIIOService.h"
-#include "nsIURI.h"
-#include "nsIStringBundle.h"
-#include "nsITextContent.h"
 #include "nsISupportsArray.h"
-#include "nsXPIDLString.h"
-
-static NS_DEFINE_CID(kIOServiceCID,            NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 
 const nscoord kSuggestedNotSet = -1;
 
@@ -429,62 +420,17 @@ nsGfxButtonControlFrame::GetDefaultLabel(nsString& aString)
   PRInt32 type;
   GetType(&type);
   if (IsReset(type)) {
-    rv = ButtonLocalize("Reset", aString);
+    rv = nsFormControlHelper::GetLocalizedString("Reset", aString);
   } 
   else if (IsSubmit(type)) {
-    rv = ButtonLocalize("Submit", aString);
+    rv = nsFormControlHelper::GetLocalizedString("Submit", aString);
   } 
   else if (IsBrowse(type)) {
-    rv = ButtonLocalize("Browse", aString);
+    rv = nsFormControlHelper::GetLocalizedString("Browse", aString);
   }
   else {
     aString.AssignWithConversion("  ");
     rv = NS_OK;
-  }
-  return rv;
-}
-
-#define form_properties "chrome://communicator/locale/layout/HtmlForm.properties"
-
-// Return localised string for resource string (e.g. "Submit" -> "Submit Query")
-// This code is derived from nsBookmarksService::Init() and cookie_Localize()
-NS_IMETHODIMP
-nsGfxButtonControlFrame::ButtonLocalize(char* aKey, nsString& oVal)
-{
-  nsresult rv;
-  nsCOMPtr<nsIStringBundle> bundle;
-  
-  // Create a URL for the string resource file
-  // Create a bundle for the localization
-  NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &rv);
-  if (NS_SUCCEEDED(rv) && pNetService) {
-    nsCOMPtr<nsIURI> uri;
-    rv = pNetService->NewURI(form_properties, nsnull, getter_AddRefs(uri));
-    if (NS_SUCCEEDED(rv) && uri) {
-
-      // Create bundle
-      NS_WITH_SERVICE(nsIStringBundleService, stringService, kStringBundleServiceCID, &rv);
-      if (NS_SUCCEEDED(rv) && stringService) {
-        nsXPIDLCString spec;
-        rv = uri->GetSpec(getter_Copies(spec));
-        if (NS_SUCCEEDED(rv) && spec) {
-          nsCOMPtr<nsILocale> locale = nsnull;
-          rv = stringService->CreateBundle(spec, locale, getter_AddRefs(bundle));
-        }
-      }
-    }
-  }
-
-  // Determine default label from string bundle
-  if (NS_SUCCEEDED(rv) && bundle && aKey) {
-    nsXPIDLString valUni;
-    nsAutoString key; key.AssignWithConversion(aKey);
-    rv = bundle->GetStringFromName(key.GetUnicode(), getter_Copies(valUni));
-    if (NS_SUCCEEDED(rv) && valUni) {
-      oVal.Assign(valUni);
-    } else {
-      oVal.Truncate();
-    }
   }
   return rv;
 }

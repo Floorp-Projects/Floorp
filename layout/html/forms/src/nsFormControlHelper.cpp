@@ -55,6 +55,20 @@
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLInputElement.h"
 
+// Needed for Localization
+#include "nsIServiceManager.h"
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIStringBundle.h"
+#include "nsITextContent.h"
+#include "nsISupportsArray.h"
+#include "nsXPIDLString.h"
+
+static NS_DEFINE_CID(kIOServiceCID,            NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
+// done I10N
+
+
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
@@ -1339,4 +1353,49 @@ nsFormControlHelper::GetInputElementValue(nsIContent* aContent, nsString* aText,
   return result;
 }
 
+//----------------------------------------------------------------------------------
+#define form_properties "chrome://communicator/locale/layout/HtmlForm.properties"
+
+// Return localised string for resource string (e.g. "Submit" -> "Submit Query")
+// This code is derived from nsBookmarksService::Init() and cookie_Localize()
+nsresult
+nsFormControlHelper::GetLocalizedString(char* aKey, nsString& oVal)
+{
+  nsresult rv;
+  nsCOMPtr<nsIStringBundle> bundle;
+  
+  // Create a URL for the string resource file
+  // Create a bundle for the localization
+  NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &rv);
+  if (NS_SUCCEEDED(rv) && pNetService) {
+    nsCOMPtr<nsIURI> uri;
+    rv = pNetService->NewURI(form_properties, nsnull, getter_AddRefs(uri));
+    if (NS_SUCCEEDED(rv) && uri) {
+
+      // Create bundle
+      NS_WITH_SERVICE(nsIStringBundleService, stringService, kStringBundleServiceCID, &rv);
+      if (NS_SUCCEEDED(rv) && stringService) {
+        nsXPIDLCString spec;
+        rv = uri->GetSpec(getter_Copies(spec));
+        if (NS_SUCCEEDED(rv) && spec) {
+          nsCOMPtr<nsILocale> locale = nsnull;
+          rv = stringService->CreateBundle(spec, locale, getter_AddRefs(bundle));
+        }
+      }
+    }
+  }
+
+  // Determine default label from string bundle
+  if (NS_SUCCEEDED(rv) && bundle && aKey) {
+    nsXPIDLString valUni;
+    nsAutoString key; key.AssignWithConversion(aKey);
+    rv = bundle->GetStringFromName(key.GetUnicode(), getter_Copies(valUni));
+    if (NS_SUCCEEDED(rv) && valUni) {
+      oVal.Assign(valUni);
+    } else {
+      oVal.Truncate();
+    }
+  }
+  return rv;
+}
 
