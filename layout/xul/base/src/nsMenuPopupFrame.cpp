@@ -213,7 +213,8 @@ nsMenuPopupFrame::GetNearestEnclosingView(nsIPresContext* aPresContext, nsIFrame
 
 nsresult 
 nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
-                                    PRBool aOnMenuBar, 
+                                    const nsString& aPopupAnchor,
+                                    const nsString& aPopupAlign,
                                     nsIFrame* aFrame, 
                                     PRInt32 aXPos, PRInt32 aYPos)
 {
@@ -266,13 +267,41 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
     ypos = NSIntPixelsToTwips(aYPos, p2t);
     xpos += offset.x;
     ypos += offset.y;
-  } else if (aOnMenuBar) {
+  } 
+  else {
     xpos = parentPos.x + offset.x;
-    ypos = parentPos.y + parentRect.height + offset.y;
-  } else {
-    xpos = parentPos.x + parentRect.width + offset.x;
     ypos = parentPos.y + offset.y;
+
+    if (aPopupAnchor == "topright" && aPopupAlign == "topleft") {
+      xpos += parentRect.width;
+    }
+    else if (aPopupAnchor == "topright" && aPopupAlign == "bottomright") {
+      xpos -= (mRect.width - parentRect.width);
+      ypos -= mRect.height;
+    }
+    else if (aPopupAnchor == "bottomright" && aPopupAlign == "bottomleft") {
+      xpos += parentRect.width;
+      ypos -= (mRect.height - parentRect.height);
+    }
+    else if (aPopupAnchor == "bottomright" && aPopupAlign == "topright") {
+      xpos -= (mRect.width - parentRect.width);
+      ypos += parentRect.height;
+    }
+    else if (aPopupAnchor == "topleft" && aPopupAlign == "topright") {
+      xpos -= mRect.width;
+    }
+    else if (aPopupAnchor == "topleft" && aPopupAlign == "bottomleft") {
+      ypos -= mRect.height;
+    }
+    else if (aPopupAnchor == "bottomleft" && aPopupAlign == "bottomright") {
+      xpos -= mRect.width;
+      ypos -= (mRect.height - parentRect.height);
+    }
+    else if (aPopupAnchor == "bottomleft" && aPopupAlign == "topleft") {
+      ypos += parentRect.height;
+    }
   }
+  
   viewManager->MoveViewTo(view, xpos, ypos);
 
   // Check if we fit on the screen, if not, resize and/or move so we do

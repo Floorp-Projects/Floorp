@@ -248,7 +248,20 @@ nsPopupSetFrame::DidReflow(nsIPresContext* aPresContext,
   // Sync up the view.
   nsIFrame* activeChild = GetActiveChild();
   if (activeChild) {
-    ((nsMenuPopupFrame*)activeChild)->SyncViewWithFrame(aPresContext, PR_TRUE, mElementFrame, mXPos, mYPos);
+
+    nsCOMPtr<nsIContent> menuPopupContent;
+    activeChild->GetContent(getter_AddRefs(menuPopupContent));
+    nsAutoString popupAnchor, popupAlign;
+      
+    menuPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popupanchor, popupAnchor);
+    menuPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popupalign, popupAlign);
+
+    if (popupAnchor == "")
+      popupAnchor = "bottomleft";
+    if (popupAlign == "")
+      popupAlign = "topleft";
+   
+    ((nsMenuPopupFrame*)activeChild)->SyncViewWithFrame(aPresContext, popupAnchor, popupAlign, mElementFrame, mXPos, mYPos);
   }
 
   return nsBoxFrame::DidReflow(aPresContext, aStatus);
