@@ -82,6 +82,10 @@
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
     controller.doCommand('cmd_cut');"/>
+<key id="winAlternateCopy2Key" keycode="VK_DELETE" shift="false" control="true" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
+    controller.doCommand('cmd_copy');"/>
 <key id="winAlternateCopyKey" keycode="VK_INSERT" control="true" shift="false" alt="false"
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
