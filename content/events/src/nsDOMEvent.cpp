@@ -63,16 +63,20 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
 	  //  will hold a ref, the widget representation isn't persistent
 	  //
 	  nsIDOMTextRange** tempTextRangeList = new nsIDOMTextRange*[((nsTextEvent*)aEvent)->rangeCount];
-	  for(PRUint16 i=0;i<((nsTextEvent*)aEvent)->rangeCount;i++) {
-		  nsDOMTextRange* tempDOMTextRange = new nsDOMTextRange((((nsTextEvent*)aEvent)->rangeArray[i]).mStartOffset,
-													(((nsTextEvent*)aEvent)->rangeArray[i]).mEndOffset,
-													(((nsTextEvent*)aEvent)->rangeArray[i]).mRangeType);
-		  tempDOMTextRange->AddRef();
-		  tempTextRangeList[i] = (nsIDOMTextRange*)tempDOMTextRange;
-	  }
+	  if (tempTextRangeList!=nsnull) {
+		for(PRUint16 i=0;i<((nsTextEvent*)aEvent)->rangeCount;i++) {
+			nsDOMTextRange* tempDOMTextRange = new nsDOMTextRange((((nsTextEvent*)aEvent)->rangeArray[i]).mStartOffset,
+														(((nsTextEvent*)aEvent)->rangeArray[i]).mEndOffset,
+														(((nsTextEvent*)aEvent)->rangeArray[i]).mRangeType);
+			if (tempDOMTextRange!=nsnull) {
+				tempDOMTextRange->AddRef();
+				tempTextRangeList[i] = (nsIDOMTextRange*)tempDOMTextRange;
+			}
+		}
 		
-	  mTextRange = (nsIDOMTextRangeList*) new nsDOMTextRangeList(((nsTextEvent*)aEvent)->rangeCount,tempTextRangeList);
-	  mTextRange->AddRef();
+		mTextRange = (nsIDOMTextRangeList*) new nsDOMTextRangeList(((nsTextEvent*)aEvent)->rangeCount,tempTextRangeList);
+		if (mTextRange!=nsnull)  mTextRange->AddRef();
+	  }
   }
 
   NS_INIT_REFCNT();
