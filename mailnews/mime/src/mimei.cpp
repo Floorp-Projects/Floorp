@@ -531,19 +531,25 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
 	  char *name = MimeHeaders_get_name(hdrs);
 	  if (name)
 		{
-		  override_content_type = opts->file_type_fn (name,
-													  opts->stream_closure);
+		  override_content_type = opts->file_type_fn (name, opts->stream_closure);
 		  PR_FREEIF(name);
 
-		  if (override_content_type &&
-			  !nsCRT::strcasecmp(override_content_type, UNKNOWN_CONTENT_TYPE))
-			PR_FREEIF(override_content_type);
-
-		  if (override_content_type)
-			content_type = override_content_type;
+      // Of, if we got here and it is not the unknown content type from the 
+      // file name, lets do some better checking not to inline something bad
+      //                      
+      if (override_content_type && (nsCRT::strcasecmp(override_content_type, UNKNOWN_CONTENT_TYPE)))
+      {
+        // Only inline this if it makes sense to do so!
+        if ( (!content_type) ||
+             (content_type && (!nsCRT::strcasecmp(content_type, UNKNOWN_CONTENT_TYPE))) )
+        {
+  	  		content_type = override_content_type;
+        }
+        else
+          PR_FREEIF(override_content_type);
+      }
 		}
 	}
-
 
   clazz = mime_find_class(content_type, hdrs, opts, PR_FALSE);
 
