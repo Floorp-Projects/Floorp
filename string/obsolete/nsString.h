@@ -121,6 +121,7 @@ class NS_BASE nsString {
             PRInt32       Mid(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount);
             PRInt32       Right(nsString& aCopy,PRInt32 aCount);
             PRInt32       Insert(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount=-1);
+            PRInt32       Insert(PRUnichar aChar,PRInt32 anOffset);
 
             nsString&     Cut(PRInt32 anOffset,PRInt32 aCount);
             nsString&     StripChars(const char* aSet);

@@ -965,6 +965,47 @@ PRInt32 nsString::Insert(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount) {
   return aCount;
 }
 
+
+/**
+ * Insert a single unicode char into this string at
+ * a specified offset.
+ *
+ * @update	gess4/22/98
+ * @param   aChar char to be inserted into this string
+ * @param   anOffset is insert pos in str 
+ * @return  the number of chars inserted into this string
+ */
+PRInt32 nsString::Insert(PRUnichar aChar,PRInt32 anOffset){
+
+  //1st optimization: If you're inserting at end, then simply append!
+  if(anOffset<mLength){
+
+    if(mLength+1> mCapacity) {
+      EnsureCapacityFor(mLength+1);
+    }
+
+    PRUnichar* last = mStr + mLength;
+    PRUnichar* first = mStr + anOffset-1;
+    PRUnichar* next = mStr + mLength + 1;
+
+    //Copy rightmost chars, up to offset+aCount...
+    while(first<last) {
+      char ch1=char(*last);
+      char ch2=char(*next);
+      *next=*last;  
+      next--;
+      last--;
+    }
+
+    //now insert new chars, starting at offset
+    mStr[anOffset]=aChar;
+    mLength+=1;
+  }
+  else Append(aChar);
+
+  return 1;
+}
+
 /**-------------------------------------------------------
  *  This method is used to cut characters in this string
  *  starting at anOffset, continuing for aCount chars.
