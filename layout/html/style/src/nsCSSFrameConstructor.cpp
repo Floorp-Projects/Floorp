@@ -6003,7 +6003,7 @@ nsCSSFrameConstructor::ProcessBlockChildren(nsIPresContext*          aPresContex
       }
 
       // Process first-letter frame that is the immediate child of the parent
-      if ((i == 0) &&
+      if ((i == 0) && aFrameItems.childList &&
           ShouldCreateFirstLetterFrame(aPresContext, childContent,
                                        aFrameItems.childList)) {
         rv = WrapTextFrame(aPresContext, aFrameItems.childList, aContent,
