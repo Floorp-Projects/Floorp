@@ -54,11 +54,12 @@ struct mozRegistry : public mozIRegistry {
     NS_IMETHOD EnumerateSubtrees( Key baseKey, nsIEnumerator **result );
     NS_IMETHOD EnumerateAllSubtrees( Key baseKey, nsIEnumerator **result );
 
-    NS_IMETHOD GetValueInfo( Key baseKey, const char *path, ValueInfo *result );
+    NS_IMETHOD GetValueType( Key baseKey, const char *path, uint32 *result );
+    NS_IMETHOD GetValueLength( Key baseKey, const char *path, uint32 *result );
 
     NS_IMETHOD EnumerateValues( Key baseKey, nsIEnumerator **result );
 
-    NS_IMETHOD GetCurrentUserName( const char **result );
+    NS_IMETHOD GetCurrentUserName( char **result );
     NS_IMETHOD SetCurrentUserName( const char *name );
 
     NS_IMETHOD Pack();
@@ -128,9 +129,6 @@ protected:
 | functions used rather than the subtree oriented ones.                        |
 ------------------------------------------------------------------------------*/
 struct mozRegValueEnumerator : public mozRegSubtreeEnumerator {
-    // This class implements the nsISupports interface functions.
-    NS_DECL_ISUPPORTS
-
     // Override CurrentItem to allocate mozRegistryValue objects.
     nsresult CurrentItem( nsISupports **result );
 
@@ -150,7 +148,7 @@ struct mozRegistryNode : public mozIRegistryNode {
     NS_DECL_ISUPPORTS
 
     // This class implements the mozIRegistryNode interface functions.
-    NS_IMETHOD GetName( const char **result );
+    NS_IMETHOD GetName( char **result );
 
     // ctor
     mozRegistryNode( HREG hReg, RKEY key, REGENUM slot );
@@ -173,13 +171,15 @@ struct mozRegistryValue : public mozIRegistryValue {
     NS_DECL_ISUPPORTS
 
     // This class implements the mozIRegistryValue interface functions.
-    NS_IMETHOD GetName( const char **result );
-    NS_IMETHOD GetValueInfo( mozIRegistry::ValueInfo *result );
+    NS_IMETHOD GetName( char **result );
+    NS_IMETHOD GetValueType( uint32 *result );
+    NS_IMETHOD GetValueLength( uint32 *result );
 
     // ctor
     mozRegistryValue( HREG hReg, RKEY key, REGENUM slot );
 
 protected:
+    nsresult getInfo(); // Get registry info.
     HREG    mReg;  // Handle to registry this node is part of.
     RKEY    mKey;  // Key this node is under.
     REGENUM mEnum; // Copy of corresponding content of parent enumerator.
@@ -250,32 +250,58 @@ static nsresult regerr2nsresult( REGERR err ) {
     return rv;
 }
 
-/*---------------------------- reginfo2ValueInfo -------------------------------
-| This utility converts the information in a REGINFO structure to the          |
-| equivalent in a mozIRegistry::ValueInfo structure.                           |
+/*----------------------------- reginfo2DataType -------------------------------
+| This utility function converts the type field in the REGINFO structure to    |
+| the corresponding mozIRegistry::DataType value.                              |
 ------------------------------------------------------------------------------*/
-static void reginfo2ValueInfo( const REGINFO &in, mozIRegistry::ValueInfo &out ) {
+static void reginfo2DataType( const REGINFO &in, uint32 &out ) {
     // Transfer information, based on entry type.
     switch( in.entryType ) {
         case REGTYPE_ENTRY_STRING_UTF:
-            out.type = mozIRegistry::String;
-            out.length = in.entryLength;
+            out = mozIRegistry::String;
+            //out.length = in.entryLength;
             break;
 
         case REGTYPE_ENTRY_INT32_ARRAY:
-            out.type = mozIRegistry::Int32;
+            out = mozIRegistry::Int32;
             // Convert length in bytes to array dimension.
-            out.length = in.entryLength / sizeof(int32);
+            //out.length = in.entryLength / sizeof(int32);
             break;
 
         case REGTYPE_ENTRY_BYTES:
-            out.type = mozIRegistry::Bytes;
-            out.length = in.entryLength;
+            out = mozIRegistry::Bytes;
+            //out.length = in.entryLength;
             break;
 
         case REGTYPE_ENTRY_FILE:
-            out.type = mozIRegistry::File;
-            out.length = in.entryLength;
+            out = mozIRegistry::File;
+            //out.length = in.entryLength;
+            break;
+    }
+}
+
+/*----------------------------- reginfo2DataType -------------------------------
+| This utility function converts the length field in the REGINFO structure to  |
+| the proper units (if type==Int32 array, we divide by sizeof(int32)).         |
+------------------------------------------------------------------------------*/
+static void reginfo2Length( const REGINFO &in, uint32 &out ) {
+    // Transfer information, based on entry type.
+    switch( in.entryType ) {
+        case REGTYPE_ENTRY_STRING_UTF:
+            out = in.entryLength;
+            break;
+
+        case REGTYPE_ENTRY_INT32_ARRAY:
+            // Convert length in bytes to array dimension.
+            out = in.entryLength / sizeof(int32);
+            break;
+
+        case REGTYPE_ENTRY_BYTES:
+            out = in.entryLength;
+            break;
+
+        case REGTYPE_ENTRY_FILE:
+            out = in.entryLength;
             break;
     }
 }
@@ -299,7 +325,6 @@ static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 ------------------------------------------------------------------------------*/
 NS_IMPL_ISUPPORTS( mozRegistry,             kIRegistryIID      );
 NS_IMPL_ISUPPORTS( mozRegSubtreeEnumerator, kIEnumeratorIID    );
-NS_IMPL_ISUPPORTS( mozRegValueEnumerator,   kIEnumeratorIID    );
 NS_IMPL_ISUPPORTS( mozRegistryNode,         kIRegistryNodeIID  );
 NS_IMPL_ISUPPORTS( mozRegistryValue,        kIRegistryValueIID );
 
@@ -385,17 +410,20 @@ NS_IMETHODIMP mozRegistry::GetString( Key baseKey, const char *path, char **resu
         *result = 0; // Clear result.
 
         // Get info about the requested entry.
-        ValueInfo info;
-        rv = GetValueInfo( baseKey, path, &info );
+        uint32 type, length;
+        rv = GetValueType( baseKey, path, &type );
+        if ( rv == NS_OK ) {
+            rv = GetValueLength( baseKey, path, &length );
+        }
         // See if that worked.
         if( rv == NS_OK ) {
             // Make sure the entry is a string.
-            if( info.type == String ) {
+            if( type == String ) {
                 // Allocate space for result.
-                *result =(char*)PR_Malloc( info.length + 1 );
+                *result =(char*)PR_Malloc( length + 1 );
                 if( *result ) {
                     // Get string from registry into result buffer.
-                    mErr = NR_RegGetEntryString( mReg,(RKEY)baseKey,(char*)path, *result, info.length+1 );
+                    mErr = NR_RegGetEntryString( mReg,(RKEY)baseKey,(char*)path, *result, length+1 );
                     // Convert status.
                     rv = regerr2nsresult( mErr );
                     // Test result.
@@ -442,12 +470,12 @@ NS_IMETHODIMP mozRegistry::GetInt( Key baseKey, const char *path, int32 *result 
     // Make sure caller gave us place for result.
     if( result ) {
         // Get info about the requested entry.
-        ValueInfo info;
-        rv = GetValueInfo( baseKey, path, &info );
+        uint32 type;
+        rv = GetValueType( baseKey, path, &type );
         // See if that worked.
         if( rv == NS_OK ) {
             // Make sure the entry is an int32 array.
-            if( info.type == Int32 ) {
+            if( type == Int32 ) {
                 uint32 len = sizeof *result;
                 // Get int from registry into result field.
                 mErr = NR_RegGetEntry( mReg,(RKEY)baseKey,(char*)path, result, &len );
@@ -490,12 +518,12 @@ NS_IMETHODIMP mozRegistry::GetBytes( Key baseKey, const char *path, void **resul
     // Make sure caller gave us place for result.
     if( result && len ) {
         // Get info about the requested entry.
-        ValueInfo info;
-        rv = GetValueInfo( baseKey, path, &info );
+        uint32 type;
+        rv = GetValueType( baseKey, path, &type );
         // See if that worked.
         if( rv == NS_OK ) {
             // Make sure the entry is bytes.
-            if( info.type == Bytes ) {
+            if( type == Bytes ) {
                 // Get bytes from registry into result field.
                 mErr = NR_RegGetEntry( mReg,(RKEY)baseKey,(char*)path, result, len );
                 // Convert status.
@@ -535,14 +563,17 @@ NS_IMETHODIMP mozRegistry::GetIntArray( Key baseKey, const char *path, int32 **r
     // Make sure caller gave us place for result.
     if( result && len ) {
         // Get info about the requested entry.
-        ValueInfo info;
-        rv = GetValueInfo( baseKey, path, &info );
+        uint32 type, length;
+        rv = GetValueType( baseKey, path, &type );
+        if ( rv == NS_OK ) {
+            rv = GetValueLength( baseKey, path, &length );
+        } 
         // See if that worked.
         if( rv == NS_OK ) {
             // Make sure the entry is bytes.
-            if( info.type == Int32 ) {
+            if( type == Int32 ) {
                 // Allocate space for result.
-                *len = info.length * sizeof(int32);
+                *len = length * sizeof(int32);
                 *result =(int32*)PR_Malloc( *len );
                 // Make sure that worked.
                 if( *result ) {
@@ -680,12 +711,12 @@ NS_IMETHODIMP mozRegistry::EnumerateAllSubtrees( Key baseKey, nsIEnumerator **re
     return rv;
 }
 
-/*------------------------ mozRegistry::GetValueInfo ---------------------------
-| Gets the info from the registry using the NR_GetEntryInfo libreg API.        |
-| The result is transferred to the mozIRegistry::ValueInfo structure passed    |
-| in.                                                                          |
+/*------------------------ mozRegistry::GetValueType ---------------------------
+| Gets the type from the registry using the NR_GetEntryInfo libreg API.        |
+| The result is transferred to the uint32 value passed in (with conversion     |
+| to the appropriate mozIRegistry::DataType value).                            |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP mozRegistry::GetValueInfo( Key baseKey, const char *path, ValueInfo *result ) {
+NS_IMETHODIMP mozRegistry::GetValueType( Key baseKey, const char *path, uint32 *result ) {
     nsresult rv = NS_OK;
     // Make sure we have a place to put the result.
     if( result ) {
@@ -693,8 +724,31 @@ NS_IMETHODIMP mozRegistry::GetValueInfo( Key baseKey, const char *path, ValueInf
         REGINFO info = { sizeof info, 0, 0 };
         mErr = NR_RegGetEntryInfo( mReg,(RKEY)baseKey,(char*)path, &info );
         if( mErr == REGERR_OK ) {
-            // Copy info to user's structure.
-            reginfo2ValueInfo( info, *result );
+            // Copy info to user's result value.
+            reginfo2DataType( info, *result );
+        } else {
+            rv = regerr2nsresult( mErr );
+        }
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
+}
+
+/*----------------------- mozRegistry::GetValueLength --------------------------
+| Gets the registry value info via NR_RegGetEntryInfo.  The length is          |
+| converted to the proper "units" via reginfo2Length.                          |
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP mozRegistry::GetValueLength( Key baseKey, const char *path, uint32 *result ) {
+    nsresult rv = NS_OK;
+    // Make sure we have a place to put the result.
+    if( result ) {
+        // Get registry info into local structure.
+        REGINFO info = { sizeof info, 0, 0 };
+        mErr = NR_RegGetEntryInfo( mReg,(RKEY)baseKey,(char*)path, &info );
+        if( mErr == REGERR_OK ) {
+            // Copy info to user's result value.
+            reginfo2Length( info, *result );
         } else {
             rv = regerr2nsresult( mErr );
         }
@@ -731,12 +785,12 @@ NS_IMETHODIMP mozRegistry::EnumerateValues( Key baseKey, nsIEnumerator **result 
 /*--------------------- mozRegistry::GetCurrentUserName ------------------------
 | Simple wrapper for NR_RegGetUsername.                                        |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP mozRegistry::GetCurrentUserName( const char **result ) {
+NS_IMETHODIMP mozRegistry::GetCurrentUserName( char **result ) {
     nsresult rv = NS_OK;
     // Make sure we have a place to put the result.
     if( result ) {
         // Get the user name.
-        mErr = NR_RegGetUsername((char**)result );
+        mErr = NR_RegGetUsername( result );
         // Convert the result.
         rv = regerr2nsresult( mErr );
     } else {
@@ -902,7 +956,7 @@ nsresult mozRegValueEnumerator::CurrentItem( nsISupports **result ) {
     if( result ) {
         *result = new mozRegistryValue( mReg, mKey, mEnum );
         if( *result ) {
- (*result)->AddRef();
+            (*result)->AddRef();
         } else {
             rv = NS_ERROR_OUT_OF_MEMORY;
         }
@@ -943,24 +997,46 @@ mozRegistryNode::mozRegistryNode( HREG hReg, RKEY key, REGENUM slot )
     return;
 }
 
+
+/*-------------------------------- PR_strdup -----------------------------------
+| Utility function that does PR_Malloc and copies argument string.  Caller     |
+| must do PR_Free.                                                             |
+------------------------------------------------------------------------------*/
+static char *PR_strdup( const char *in ) {
+    char *result = (char*)PR_Malloc( strlen( in ) + 1 );
+    if ( result ) {
+        strcpy( result, in );
+    }
+    return result;
+}
+
 /*------------------------- mozRegistryNode::GetName ---------------------------
 | If we haven't fetched it yet, get the name of the corresponding subkey now,  |
 | using NR_RegEnumSubkeys.                                                     |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP mozRegistryNode::GetName( const char **result ) {
+NS_IMETHODIMP mozRegistryNode::GetName( char **result ) {
     nsresult rv = NS_OK;
-    // Test whether we haven't tried to get it yet.
-    if( mErr == -1 ) {
-        REGENUM temp = mEnum;
-        // Get name.
-        mErr = NR_RegEnumSubkeys( mReg, mKey, &temp, mName, sizeof mName, PR_FALSE );
-    }
-    // Convert result from prior libreg call.
-    rv = regerr2nsresult( mErr );            
-    if( rv == NS_OK || rv == NS_ERROR_REG_NO_MORE ) {
-        // worked, return actual result.
-        *result = mName;
-        rv = NS_OK;
+    // Make sure there is a place to put the result.
+    if( result ) {
+        // Test whether we haven't tried to get it yet.
+        if( mErr == -1 ) {
+            REGENUM temp = mEnum;
+            // Get name.
+            mErr = NR_RegEnumSubkeys( mReg, mKey, &temp, mName, sizeof mName, PR_FALSE );
+        }
+        // Convert result from prior libreg call.
+        rv = regerr2nsresult( mErr );            
+        if( rv == NS_OK || rv == NS_ERROR_REG_NO_MORE ) {
+            // worked, return actual result.
+            *result = PR_strdup( mName );
+            if ( *result ) {
+                rv = NS_OK;
+            } else {
+                rv = NS_ERROR_OUT_OF_MEMORY;
+            }
+        }
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
     }
     return rv;
 }
@@ -979,22 +1055,20 @@ mozRegistryValue::mozRegistryValue( HREG hReg, RKEY key, REGENUM slot )
 /*------------------------ mozRegistryValue::GetName ---------------------------
 | See mozRegistryNode::GetName; we use NR_RegEnumEntries in this case.         |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP mozRegistryValue::GetName( const char **result ) {
+NS_IMETHODIMP mozRegistryValue::GetName( char **result ) {
     nsresult rv = NS_OK;
     // Make sure we have a place to put the result.
     if( result ) {
-        // Test whether we haven't tried to get it yet.
-        if( mErr == -1 ) {
-            REGENUM temp = mEnum;
-            // Get name and info.
-            mErr = NR_RegEnumEntries( mReg, mKey, &temp, mName, sizeof mName, &mInfo );
-        }
-        // Convert result from prior libreg call.
-        rv = regerr2nsresult( mErr );            
+        // Ensure we've got the info we need.
+        rv = getInfo();            
         if( rv == NS_OK || rv == NS_ERROR_REG_NO_MORE ) {
             // worked, return actual result.
-            *result = mName;
-            rv = NS_OK;
+            *result = PR_strdup( mName );
+            if ( *result ) {
+                rv = NS_OK;
+            } else {
+                rv = NS_ERROR_OUT_OF_MEMORY;
+            }
         }
     } else {
         rv = NS_ERROR_NULL_POINTER;
@@ -1002,25 +1076,62 @@ NS_IMETHODIMP mozRegistryValue::GetName( const char **result ) {
     return rv;
 }
 
-/*---------------------- mozRegistryValue::GetValueInfo ------------------------
-| We test if we've got the info already.  If not, we get it by calling         |
-| GetName.  That will also populate the mInfo member.  We convert that to      |
-| a mozIRegistry::ValueInfo structure.                                         |
+/*---------------------- mozRegistryValue::GetValueType ------------------------
+| We test if we've got the info already.  If not, we git it by calling         |
+| getInfo.  We calculate the result by converting the REGINFO type field to    |
+| a mozIRegistry::DataType value (using reginfo2DataType).                     |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP mozRegistryValue::GetValueInfo( mozIRegistry::ValueInfo *result ) {
+NS_IMETHODIMP mozRegistryValue::GetValueType( uint32 *result ) {
     nsresult rv = NS_OK;
     // Make sure we have room for th result.
     if( result ) {
         // Make sure we've got the info we need.
-        const char *temp;
-        rv = GetName( &temp );
+        rv = getInfo();
         // Check if it worked.
         if( rv == NS_OK ) {
             // Convert result from REGINFO to mozIRegistry::ValueInfo.
-            reginfo2ValueInfo( mInfo, *result );
+            reginfo2DataType( mInfo, *result );
         }
     } else {
         rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
+}
+
+/*--------------------- mozRegistryValue::GetValueLength -----------------------
+| We test if we've got the info already.  If not, we git it by calling         |
+| getInfo.  We calculate the result by converting the REGINFO type field to    |
+| a mozIRegistry::DataType value (using reginfo2Length).                       |
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP mozRegistryValue::GetValueLength( uint32 *result ) {
+    nsresult rv = NS_OK;
+    // Make sure we have room for th result.
+    if( result ) {
+        // Make sure we've got the info we need.
+        rv = getInfo();
+        // Check if it worked.
+        if( rv == NS_OK ) {
+            // Convert result from REGINFO to length.
+            reginfo2Length( mInfo, *result );
+        }
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
+}
+
+/*------------------------ mozRegistryValue::getInfo ---------------------------
+| Call NR_RegEnumEntries to set the mInfo/mName data members.                  |
+------------------------------------------------------------------------------*/
+nsresult mozRegistryValue::getInfo() {
+    nsresult rv = NS_OK;
+    // Test whether we haven't tried to get it yet.
+    if( mErr == -1 ) {
+        REGENUM temp = mEnum;
+        // Get name and info.
+        mErr = NR_RegEnumEntries( mReg, mKey, &temp, mName, sizeof mName, &mInfo );
+        // Convert result.
+        rv = regerr2nsresult( mErr );            
     }
     return rv;
 }

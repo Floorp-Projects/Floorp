@@ -101,7 +101,7 @@ void display( mozIRegistry *reg, mozIRegistry::Key root, const char *rootName ) 
                 // Test that result.
                 if ( rv == NS_OK ) {
                     // Get node name.
-                    const char *name;
+                    char *name;
                     rv = node->GetName( &name );
                     // Test result.
                     if ( rv == NS_OK ) {
@@ -170,18 +170,18 @@ static void displayValues( mozIRegistry *reg, mozIRegistry::Key root ) {
                 // Test that result.
                 if ( rv == NS_OK ) {
                     // Get node name.
-                    const char *name;
+                    char *name;
                     rv = value->GetName( &name );
                     // Test result.
                     if ( rv == NS_OK ) {
                         // Print name:
                         printf( "\t\t%s", name );
                         // Get info about this value.
-                        mozIRegistry::ValueInfo info;
-                        rv = reg->GetValueInfo( root, name, &info );
+                        uint32 type;
+                        rv = reg->GetValueType( root, name, &type );
                         if ( rv == NS_OK ) {
                             // Print value contents.
-                            switch ( info.type ) {
+                            switch ( type ) {
                                 case mozIRegistry::String: {
                                         char *value;
                                         rv = reg->GetString( root, name, &value );
@@ -207,7 +207,7 @@ static void displayValues( mozIRegistry *reg, mozIRegistry::Key root ) {
                                     break;
 
                                 default:
-                                    printf( "\t= ? (unknown type=0x%02X)", (int)info.type );
+                                    printf( "\t= ? (unknown type=0x%02X)", (int)type );
                                     break;
                             }
                         } else {
