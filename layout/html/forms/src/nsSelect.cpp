@@ -227,7 +227,8 @@ nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
   aDesiredWidgetSize.height = 
-    (isCombo && !heightExplicit) ? rowHeight + 100 : aDesiredLayoutSize.height;
+    (isCombo && !heightExplicit) ? aDesiredLayoutSize.height + (rowHeight * numChildren) + 100 
+                                 : aDesiredLayoutSize.height;
 
 
   NS_RELEASE(select);
@@ -269,13 +270,12 @@ nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
     if (PR_TRUE != option->GetText(text)) {
       text = " ";
     }
-    if (isCombo) {
-      printf("\n ** text = %s", text.ToNewCString());
-      list->AddItemAt(text, 1);
-    }
-    else {
-      list->AddItemAt(text, i);
-    }
+//    if (isCombo) {
+//      printf("\n ** text = %s", text.ToNewCString());
+//      list->AddItemAt(text, 1);
+//    }
+  printf("\n item=%s\n", text.ToNewCString());
+    list->AddItemAt(text, i);
   }
 
   NS_RELEASE(view);
@@ -598,13 +598,16 @@ void HACK(nsSelect* aSel, PRInt32 aIndex)
   if (aIndex == 1) {
     nsString size("2");
     aSel->SetAttribute(sizeAttr, size);
-  } else {
+  } else if (aIndex == 2) {
     nsString size("4");
     aSel->SetAttribute(sizeAttr, size);
     nsIAtom* multAttr = NS_NewAtom("MULTIPLE");
     nsString mult("1");
     aSel->SetAttribute(multAttr, mult);
     numOpt = 8;
+  } else {
+    nsString size("1");
+    aSel->SetAttribute(sizeAttr, size);
   }
 
   for (int i = 0; i < numOpt; i++) {

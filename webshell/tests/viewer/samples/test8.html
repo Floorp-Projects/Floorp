@@ -2,36 +2,33 @@
 <title>Example 8</title>
 <body>
 
-<H1>Example 8: Form Controls</H1>
-
-<form action=foo method=get>
+<H1>Example 8: Forms</H1>
 
 <BR>
-a text field
+<FORM METHOD="GET" ACTION="http://search.yahoo.com/bin/search" NAME="searchform">
+<P> hey yahoo </P>
+   <INPUT TYPE="TEXT" NAME="p" SIZE=15 MAXLENGTH=80>
+   <INPUT TYPE="submit" VALUE="Search">
+   <INPUT TYPE="HIDDEN" NAME="a" VALUE="n">
+   &nbsp;&nbsp;password:&nbsp;&nbsp;<INPUT TYPE="PASSWORD">
+</FORM>
+
 <BR>
-<input type=text name=text value="some text">
-<BR>
-a text area
-<BR>
-<textarea name=textarea rows=5 cols=20 value="text area"></textarea>
-<BR>
-a checkbox: <input type=checkbox name=check1 checked><BR>
-<BR>
-<P> radio buttons</P>
-<BR>
+<FORM METHOD="GET" ACTION="http://www.mcp.com/cgi-bin/post-query" NAME="echo">
+<textarea name=a textarea rows=4 cols=20 value="a text area in need of some clearing"></textarea>
+&nbsp;&nbsp; a checkbox: <input type=checkbox name=check1 checked>
+&nbsp;&nbsp; radio buttons:
 <input type=radio name=group1 checked>  radio1
 <input type=radio name=group1>  radio2
 <BR>
-select/option hack1
-<input type=select1>
+<P>select/option hacks; why don't these line up</P>
+<input type=select1>&nbsp;&nbsp;
+<input type=select2>&nbsp;&nbsp;
+<input type=select3>
 <BR>
-select/option hack2
-<input type=select2>
-<BR><BR>
 <input type=reset name=reset value="RESET"> 
 <input type=submit name=submit value="SUBMIT">
 
 </form>
 </body>
 </html>
-

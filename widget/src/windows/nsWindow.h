@@ -171,6 +171,7 @@ protected:
     PRBool      mIsShiftDown;
     PRBool      mIsControlDown;
     PRBool      mIsAltDown;
+    PRBool      mIsDestroying;
 
     // keep the list of children
     class Enumerator : public nsIEnumerator {

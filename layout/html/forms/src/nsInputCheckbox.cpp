@@ -44,6 +44,8 @@ public:
   virtual const nsIID& GetIID();
 
   virtual void MouseClicked(nsIPresContext* aPresContext);
+  virtual PRInt32 GetPadding() const;
+  NS_IMETHOD  SetRect(const nsRect& aRect);
 
 protected:
   virtual ~nsInputCheckboxFrame();
@@ -66,6 +68,13 @@ nsInputCheckboxFrame::~nsInputCheckboxFrame()
   mCacheState = PR_FALSE;
 }
 
+NS_METHOD nsInputCheckboxFrame::SetRect(const nsRect& aRect)
+{
+  PRInt32 padding = GetPadding();
+  MoveTo(aRect.x + padding, aRect.y);
+  SizeTo(aRect.width - (2 * padding), aRect.height);
+  return NS_OK;
+}
 
 const nsIID&
 nsInputCheckboxFrame::GetIID()
@@ -79,6 +88,11 @@ nsInputCheckboxFrame::GetCID()
 {
   static NS_DEFINE_IID(kCheckboxCID, NS_CHECKBUTTON_CID);
   return kCheckboxCID;
+}
+
+PRInt32 nsInputCheckboxFrame::GetPadding() const
+{
+  return GetDefaultPadding();
 }
 
 void
@@ -97,10 +111,11 @@ nsInputCheckboxFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
 
   float p2t = aPresContext->GetPixelsToTwips();
-  aDesiredLayoutSize.width  = (int)(13 * p2t);
-  aDesiredLayoutSize.height = (int)(13 * p2t);
-  aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
-  aDesiredWidgetSize.height = aDesiredLayoutSize.height;
+  aDesiredWidgetSize.width  = (int)(12 * p2t);
+  aDesiredWidgetSize.height = (int)(12 * p2t);
+  PRInt32 padding = GetPadding();
+  aDesiredLayoutSize.width  = aDesiredWidgetSize.width  + (2 * padding);
+  aDesiredLayoutSize.height = aDesiredWidgetSize.height;
 }
 
 void 
