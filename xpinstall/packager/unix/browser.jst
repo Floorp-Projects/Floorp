@@ -24,10 +24,10 @@ if (verifyDiskSpace(communicatorFolder, srDest))
 
     var ctype = (CONTENT | DELAYED_CHROME);
     var cf = getFolder("Chrome");
-    registerChrome(ctype, getFolder(cf,"packages/core"));
-    registerChrome(ctype, getFolder(cf,"packages/widget-toolkit"));
-    registerChrome(SKIN|DELAYED_CHROME, getFolder(cf,"skins/classic"));
-    registerChrome(SKIN|DELAYED_CHROME, getFolder(cf,"skins/modern"));
+    registerChrome(ctype, getFolder(cf,"packages/core.jar"));
+    registerChrome(ctype, getFolder(cf,"packages/widget-toolkit.jar"));
+    registerChrome(SKIN|DELAYED_CHROME, getFolder(cf,"skins/classic.jar"));
+    registerChrome(SKIN|DELAYED_CHROME, getFolder(cf,"skins/modern.jar"));
 
     if (err==SUCCESS)
     {
