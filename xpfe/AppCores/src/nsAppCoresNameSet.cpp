@@ -29,6 +29,7 @@
 #include "nsIDOMToolkitCore.h"
 #include "nsIDOMPrefsCore.h"
 #include "nsIDOMSignonCore.h"
+#include "nsIDOMCookieCore.h"
 #include "nsIDOMWalletCore.h"
 #include "nsIDOMProfileCore.h" 
 #include "nsIDOMRDFCore.h"
@@ -44,6 +45,7 @@ static NS_DEFINE_IID(kToolkitCoreCID,        NS_TOOLKITCORE_CID);
 static NS_DEFINE_IID(kDOMPropsCoreCID,       NS_DOMPROPSCORE_CID);
 static NS_DEFINE_IID(kPrefsCoreCID,          NS_PREFSCORE_CID);
 static NS_DEFINE_IID(kSignonCoreCID,         NS_SIGNONCORE_CID);
+static NS_DEFINE_IID(kCookieCoreCID,         NS_COOKIECORE_CID);
 static NS_DEFINE_IID(kWalletCoreCID,         NS_WALLETCORE_CID);
 static NS_DEFINE_IID(kProfileCoreCID,        NS_PROFILECORE_CID); 
 static NS_DEFINE_IID(kRDFCoreCID,            NS_RDFCORE_CID);
@@ -76,6 +78,7 @@ nsAppCoresNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
     result = NS_InitDOMPropsCoreClass(aScriptContext, nsnull);
     result = NS_InitPrefsCoreClass(aScriptContext, nsnull);
     result = NS_InitSignonCoreClass(aScriptContext, nsnull);
+    result = NS_InitCookieCoreClass(aScriptContext, nsnull);
     result = NS_InitWalletCoreClass(aScriptContext, nsnull);
       result = NS_InitProfileCoreClass(aScriptContext, nsnull); 
     result = NS_InitToolbarCoreClass(aScriptContext, nsnull);
@@ -115,6 +118,14 @@ nsAppCoresNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 
         result = manager->RegisterGlobalName("SignonCore", 
                                              kSignonCoreCID, 
+                                             PR_TRUE);
+
+        if (NS_OK != result) return result;
+
+
+
+        result = manager->RegisterGlobalName("CookieCore", 
+                                             kCookieCoreCID, 
                                              PR_TRUE);
 
         if (NS_OK != result) return result;

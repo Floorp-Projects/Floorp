@@ -72,6 +72,7 @@ OBJS = \
     .\$(OBJDIR)\nsDOMPropsCoreFactory.obj       \
     .\$(OBJDIR)\nsPrefsCore.obj       \
     .\$(OBJDIR)\nsSignonCore.obj       \
+    .\$(OBJDIR)\nsCookieCore.obj       \
     .\$(OBJDIR)\nsWalletCore.obj       \
     .\$(OBJDIR)\nsProfileCore.obj       \
     .\$(OBJDIR)\nsRDFCore.obj       \
@@ -84,6 +85,7 @@ OBJS = \
     .\$(OBJDIR)\nsBrowserAppCore.obj       \
     .\$(OBJDIR)\nsPrefsCoreFactory.obj       \
     .\$(OBJDIR)\nsSignonCoreFactory.obj       \
+    .\$(OBJDIR)\nsCookieCoreFactory.obj       \
     .\$(OBJDIR)\nsWalletCoreFactory.obj       \
     .\$(OBJDIR)\nsProfileCoreFactory.obj       \
     .\$(OBJDIR)\nsBrowserAppCoreFactory.obj       \
@@ -94,6 +96,7 @@ OBJS = \
     .\$(OBJDIR)\nsJSDOMPropsCore.obj   \
     .\$(OBJDIR)\nsJSPrefsCore.obj   \
     .\$(OBJDIR)\nsJSSignonCore.obj   \
+    .\$(OBJDIR)\nsJSCookieCore.obj   \
     .\$(OBJDIR)\nsJSWalletCore.obj   \
     .\$(OBJDIR)\nsJSProfileCore.obj   \
     .\$(OBJDIR)\nsJSRDFCore.obj   \
@@ -132,6 +135,7 @@ install:: $(DLL)
 	$(MAKE_INSTALL) ..\xul\PrefsWindow.html   $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ..\xul\PrefsWindow.js   $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ..\xul\SignonWindow.js   $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ..\xul\CookieWindow.js   $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ..\xul\WalletWindow.js   $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ..\xul\preftree.css   $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ..\xul\preftree.xul   $(DIST)\bin\res\samples
