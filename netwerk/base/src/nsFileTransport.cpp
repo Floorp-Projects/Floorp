@@ -81,7 +81,15 @@ public:
         // GetInputStream/GetOutputStream methods
         nsresult rv = NS_OK;
 
+        // We'll try to use the file's length, if it has one. If not,
+        // assume the file to be special, and set the content length
+        // to -1, which means "read the stream until
+        // exhausted". (Conveniently, a filespec will return "0" for a
+        // directory's length, so our directory HTTP index stream will
+        // just do the right thing.)
         *contentLength = mSpec.GetFileSize();
+        if (! *contentLength)
+            *contentLength = -1;
 
         if (mSpec.IsDirectory()) {
             *contentType = nsCRT::strdup("application/http-index-format");
@@ -779,13 +787,9 @@ nsFileTransport::Process(void)
       }
 
       case READING: {
-          NS_ASSERTION(mTransferAmount >= 0, "bad mTransferAmount in READING");
           PRUint32 writeAmt;
-          // Feed the buffer to the application via the buffer
-          // stream. Note that mTransferAmount can be zero, in which
-          // case, we'll just take as much data as the buffer can give
-          // us.
-          mStatus = mBufferOutputStream->WriteFrom(mSource, mTransferAmount ? mTransferAmount : -1, &writeAmt);
+          // and feed the buffer to the application via the buffer stream:
+          mStatus = mBufferOutputStream->WriteFrom(mSource, mTransferAmount, &writeAmt);
           PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                  ("nsFileTransport: READING [this=%x %s] amt=%d status=%x",
                   this, (const char*)mSpec, writeAmt, mStatus));
@@ -797,7 +801,7 @@ nsFileTransport::Process(void)
               mState = END_READ;
               return;
           }
-          if (mTransferAmount) {
+          if (mTransferAmount > 0) {
               mTransferAmount -= writeAmt;
           }
           PRUint32 offset = mOffset;
@@ -812,11 +816,16 @@ nsFileTransport::Process(void)
               }
           }
 
-          if (mProgress) {
+          if (mProgress && mTransferAmount >= 0) {
               nsresult rv = mProgress->OnProgress(this, mContext, 
                                       mTotalAmount - mTransferAmount,
                                       mTotalAmount);
               NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected OnProgress failure");
+          }
+
+          if (mTransferAmount == 0) {
+              mState = END_READ;
+              return;
           }
 
           // stay in the READING state
@@ -828,7 +837,7 @@ nsFileTransport::Process(void)
                  ("nsFileTransport: END_READ [this=%x %s] status=%x",
                   this, (const char*)mSpec, mStatus));
 
-          NS_ASSERTION(mTransferAmount == 0 || NS_FAILED(mStatus), "didn't transfer all the data");
+          NS_ASSERTION(mTransferAmount <= 0 || NS_FAILED(mStatus), "didn't transfer all the data");
 
           mBufferOutputStream->Flush();
           mBufferOutputStream = null_nsCOMPtr();
