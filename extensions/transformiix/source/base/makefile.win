@@ -27,6 +27,7 @@ REQUIRES	= string \
 		  dom \
 		  content \
 		  widget \
+		  necko \
 		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
