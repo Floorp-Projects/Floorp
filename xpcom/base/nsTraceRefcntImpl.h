@@ -22,126 +22,167 @@
 #include "nsCom.h"
 #include <stdio.h>
 
-class nsVoidArray;
+// Normaly, the implementation of NS_LOG_ADDREF and NS_LOG_RELEASE
+// will use a stack crawl to determine who called Addref/Release on an
+// xpcom object.  If your platform can't implement a stack crawling
+// function, then define this to symbol. When the symbol is defined
+// then the NS_LOG_ADDREF_CALL and NS_LOG_RELEASE_CALL will expand
+// differently.
+#undef NS_LOSING_ARCHITECTURE
 
-#ifdef DEBUG
-struct mozCtorDtorCounter {
-  PRInt32 ctors;
-  PRInt32 dtors;
-};
+// By default refcnt logging is not part of the build.
+#undef NS_BUILD_REFCNT_LOGGING
+
+#if (defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING))
+// Make refcnt logging part of the build. This doesn't mean that
+// actual logging will occur (that requires a seperate enable; see
+// nsTraceRefcnt.h for more information).
+#define NS_BUILD_REFCNT_LOGGING 1
 #endif
 
+// If NO_BUILD_REFCNT_LOGGING is defined then disable refcnt logging
+// in the build. This overrides FORCE_BUILD_REFCNT_LOGGING.
+#if defined(NO_BUILD_REFCNT_LOGGING)
+#undef NS_BUILD_REFCNT_LOGGING
+#endif
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+
+#define NS_LOG_ADDREF(_p, _rc, _type, _size) \
+  nsTraceRefcnt::LogAddRef((_p), (_rc), (_type), (PRUint32) (_size))
+
+#define NS_LOG_RELEASE(_p, _rc, _type) \
+  nsTraceRefcnt::LogRelease((_p), (_rc), (_type))
+
+#define NS_LOG_NEW_XPCOM(_p,_type,_size,_file,_line) \
+  nsTraceRefcnt::LogNewXPCOM((_p),(_type),(PRUint32)(_size),(_file),(_line))
+
+#define NS_LOG_DELETE_XPCOM(_p,_file,_line) \
+  nsTraceRefcnt::LogDeleteXPCOM((_p),(_file),(_line))
+
+#ifdef NS_LOSING_ARCHITECTURE
+
+#define NS_LOG_ADDREF_CALL(_p,_rc,_file,_line) \
+  nsTraceRefcnt::LogAddRefCall((_p), (_rc), (_file), (_line))
+
+#define NS_LOG_RELEASE_CALL(_p,_rc,_file,_line) \
+  nsTraceRefcnt::LogReleaseCall((_p), (_rc), (_file), (_line))
+
+#else
+
+#define NS_LOG_ADDREF_CALL(_p,_rc,_file,_line) _rc
+#define NS_LOG_RELEASE_CALL(_p,_rc,_file,_line) _rc
+
+#endif
+
+#define MOZ_DECL_CTOR_COUNTER(_type)
+
+#define MOZ_COUNT_CTOR(_type)                                 \
+PR_BEGIN_MACRO                                                \
+  nsTraceRefcnt::LogCtor((void*)this, #_type, sizeof(*this)); \
+PR_END_MACRO
+
+#define MOZ_COUNT_DTOR(_type)                                 \
+PR_BEGIN_MACRO                                                \
+  nsTraceRefcnt::LogDtor((void*)this, #_type, sizeof(*this)); \
+PR_END_MACRO
+
+#else /* !NS_BUILD_REFCNT_LOGGING */
+
+#define NS_LOG_ADDREF(_p, _rc, _type, _size)
+#define NS_LOG_RELEASE(_p, _rc, _type)
+#define NS_LOG_NEW_XPCOM(_p,_type,_size,_file,_line)
+#define NS_LOG_DELETE_XPCOM(_p,_file,_line)
+#define NS_LOG_ADDREF_CALL(_p,_rc,_file,_line) _rc
+#define NS_LOG_RELEASE_CALL(_p,_rc,_file,_line) _rc
+#define MOZ_DECL_CTOR_COUNTER(_type)
+#define MOZ_COUNT_CTOR(_type)
+#define MOZ_COUNT_DTOR(_type)
+
+#endif /* NS_BUILD_REFCNT_LOGGING */
+
+//----------------------------------------------------------------------
+
+struct nsTraceRefcntStats {
+  nsrefcnt mAddRefs;
+  nsrefcnt mReleases;
+  nsrefcnt mCreates;
+  nsrefcnt mDestroys;
+};
+
+// Function type used by GatherStatistics. For each type that data has
+// been gathered for, this function is called with the counts of the
+// various operations that have been logged. The function can return
+// PR_FALSE if the gathering should stop.
+//
+// aCurrentStats is the current value of the counters. aPrevStats is
+// the previous value of the counters which is established by the
+// nsTraceRefcnt::SnapshotStatistics call.
+typedef PRBool (PR_CALLBACK *nsTraceRefcntStatFunc)
+  (const char* aTypeName,
+   PRUint32 aInstanceSize,
+   nsTraceRefcntStats* aCurrentStats,
+   nsTraceRefcntStats* aPrevStats,
+   void *aClosure);
+
 /**
- * This class is used to support tracing (and logging using nspr) of
- * addref and release calls. Note that only calls that use the
- * NS_ADDREF and related macros in nsISupports can be traced.
- *
- * The name of the nspr log module is "xpcomrefcnt" (case matters).
- *
- * This code only performs tracing built with debugging AND when
- * built with -DMOZ_TRACE_XPCOM_REFCNT (because it's expensive!).
+ * Note: The implementations for these methods are no-ops in a build
+ * where NS_BUILD_REFCNT_LOGGING is disabled.
  */
 class nsTraceRefcnt {
 public:
-  static NS_COM unsigned long AddRef(void* aPtr,
-                                     unsigned long aNewRefcnt,
-                                     const char* aFile,
-                                     int aLine);
+  static NS_COM void LogAddRef(void* aPtr,
+                               nsrefcnt aNewRefCnt,
+                               const char* aTypeName,
+                               PRUint32 aInstanceSize);
 
-  static NS_COM unsigned long Release(void* aPtr,
-                                      unsigned long aNewRefcnt,
-                                      const char* aFile,
-                                      int aLine);
+  static NS_COM void LogRelease(void* aPtr,
+                                nsrefcnt aNewRefCnt,
+                                const char* aTypeName);
 
-  static NS_COM void Create(void* aPtr,
-                            const char* aType,
-                            const char* aFile,
-                            int aLine);
+  static NS_COM void LogNewXPCOM(void* aPtr,
+                                 const char* aTypeName,
+                                 PRUint32 aInstanceSize,
+                                 const char* aFile,
+                                 int aLine);
 
-  static NS_COM void Destroy(void* aPtr,
-                             const char* aFile,
-                             int aLine);
+  static NS_COM void LogDeleteXPCOM(void* aPtr,
+                                    const char* aFile,
+                                    int aLine);
+
+  static NS_COM nsrefcnt LogAddRefCall(void* aPtr,
+                                       nsrefcnt aNewRefcnt,
+                                       const char* aFile,
+                                       int aLine);
+
+  static NS_COM nsrefcnt LogReleaseCall(void* aPtr,
+                                        nsrefcnt aNewRefcnt,
+                                        const char* aFile,
+                                        int aLine);
+
+  static NS_COM void LogCtor(void* aPtr, const char* aTypeName,
+                             PRUint32 aInstanceSize);
+
+  static NS_COM void LogDtor(void* aPtr, const char* aTypeName,
+                             PRUint32 aInstanceSize);
+
+  static NS_COM void DumpStatistics(void);
+
+  static NS_COM void ResetStatistics(void);
+
+  static NS_COM void SnapshotStatistics(void);
+
+  static NS_COM void GatherStatistics(nsTraceRefcntStatFunc aFunc,
+                                      void* aClosure);
 
   static NS_COM void LoadLibrarySymbols(const char* aLibraryName,
                                         void* aLibrayHandle);
-
-  static NS_COM void WalkTheStack(char* aBuffer, int aBufLen);
 
   static NS_COM void DemangleSymbol(const char * aSymbol, 
                                     char * aBuffer,
                                     int aBufLen);
 
-  static NS_COM void LogAddRef(void* aPtr,
-                               nsrefcnt aRefCnt,
-                               const char* aClass,
-                               PRUint32 classSize);
-
-  static NS_COM void LogRelease(void* aPtr,
-                                nsrefcnt aRefCnt,
-                                const char* aClass,
-                                PRUint32 classSize);
-
-#ifdef DEBUG
-  /**
-   * Register a constructor with the xpcom library. This records the
-   * type name and the address of the counter so that later on when
-   * DumpLeaks is called, we can print out those objects ctors whose
-   * counter is not zero (the ones that have live object references
-   * still out there)
-   */
-  static NS_COM void RegisterCtor(const char* aType,
-                                  mozCtorDtorCounter* aCounterAddr);
-
-  static NS_COM void UnregisterCtor(const char* aType);
-
-  /**
-   * Dump the leaking constructors out.
-   */
-  static NS_COM void DumpLeaks(FILE* out);
-
-  /**
-   * Erase the ctor registration data.
-   */
-  static NS_COM void FlushCtorRegistry(void);
-#endif
-
-protected:
-#ifdef DEBUG
-  static nsVoidArray* mCtors;
-#endif
+  static NS_COM void WalkTheStack(char* aBuffer, int aBufLen);
 };
-
-//----------------------------------------------------------------------
-
-#ifdef DEBUG
-
-#define MOZ_DECL_CTOR_COUNTER(_type) \
-  static mozCtorDtorCounter gCounter_##_type
-
-#define MOZ_COUNT_CTOR(_type)                               \
-PR_BEGIN_MACRO                                              \
-  if (0 == gCounter_##_type . ctors) {                      \
-    nsTraceRefcnt::RegisterCtor(#_type, &gCounter_##_type); \
-  }                                                         \
-  gCounter_##_type . ctors++;                               \
-PR_END_MACRO
-
-#define MOZ_COUNT_DTOR(_type)  \
-PR_BEGIN_MACRO                 \
-  gCounter_##_type . dtors ++; \
-PR_END_MACRO
-
-#else
-
-#define MOZ_DECL_CTOR_COUNTER(_type)
-#define MOZ_COUNT_CTOR(_type)
-#define MOZ_COUNT_DTOR(_type)
-
-#endif /* DEBUG */
-
-#ifdef BLOATY
-extern "C" void
-NS_DumpBloatStatistics(void);
-#endif
 
 #endif /* nsTraceRefcnt_h___ */
