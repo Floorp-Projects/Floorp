@@ -372,13 +372,21 @@ private:
     static nsIAtom*             kClassAtom;
     static nsIAtom*             kStyleAtom;
     static nsIAtom*             kLazyContentAtom;
+    
     static nsIAtom*             kTreeAtom;
+    static nsIAtom*             kTreeItemAtom;
+    static nsIAtom*             kTreeRowAtom;
+    static nsIAtom*             kTreeCellAtom;
 
+    static nsIAtom*             kSelectedAtom;
+    
     static nsIAtom*             kPopupAtom;
     static nsIAtom*             kTooltipAtom;
     static nsIAtom*             kContextAtom;
     static nsIAtom*             kObservesAtom;
     static nsIAtom*             kXULContentsGeneratedAtom;
+
+
     
     nsIDocument*           mDocument;           // [WEAK]
     void*                  mScriptObject;       // [OWNER]
@@ -411,6 +419,10 @@ nsIAtom*             RDFElementImpl::kClassAtom;
 nsIAtom*             RDFElementImpl::kStyleAtom;
 nsIAtom*             RDFElementImpl::kLazyContentAtom;
 nsIAtom*             RDFElementImpl::kTreeAtom;
+nsIAtom*             RDFElementImpl::kTreeItemAtom;
+nsIAtom*             RDFElementImpl::kTreeRowAtom;
+nsIAtom*             RDFElementImpl::kTreeCellAtom;
+nsIAtom*             RDFElementImpl::kSelectedAtom;
 nsIAtom*             RDFElementImpl::kPopupAtom;
 nsIAtom*             RDFElementImpl::kTooltipAtom;
 nsIAtom*             RDFElementImpl::kContextAtom;
@@ -500,6 +512,10 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
         kStyleAtom       = NS_NewAtom("style");
         kLazyContentAtom = NS_NewAtom("lazycontent");
         kTreeAtom        = NS_NewAtom("tree");
+        kTreeItemAtom    = NS_NewAtom("treeitem");
+        kTreeRowAtom     = NS_NewAtom("treerow");
+        kTreeCellAtom    = NS_NewAtom("treecell");
+        kSelectedAtom    = NS_NewAtom("selected");
         kPopupAtom       = NS_NewAtom("popup");
         kTooltipAtom     = NS_NewAtom("tooltip");
         kContextAtom     = NS_NewAtom("context");
@@ -577,6 +593,10 @@ RDFElementImpl::~RDFElementImpl()
         NS_IF_RELEASE(kStyleAtom);
         NS_IF_RELEASE(kLazyContentAtom);
         NS_IF_RELEASE(kTreeAtom);
+        NS_IF_RELEASE(kTreeItemAtom);
+        NS_IF_RELEASE(kTreeRowAtom);
+        NS_IF_RELEASE(kTreeCellAtom);
+        NS_IF_RELEASE(kSelectedAtom);
         NS_IF_RELEASE(kPopupAtom);
         NS_IF_RELEASE(kContextAtom);
         NS_IF_RELEASE(kTooltipAtom);
@@ -2011,6 +2031,30 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
       }
     }
 
+    // Need to check for the SELECTED, SELECTEDROW, and SELECTEDCELL attributes
+    // being set.  If we're a <treeitem>, <treerow>, or <treecell>, the act of
+    // setting these attributes forces us to update our selected arrays.
+    nsCOMPtr<nsIAtom> tag;
+    GetTag(*getter_AddRefs(tag));
+    if (mDocument && (aNameSpaceID == kNameSpaceID_None)) {
+      // See if we're a treeitem atom.
+      nsRDFDOMNodeList* nodeList = nsnull;
+      if (tag && (tag.get() == kTreeItemAtom) && (aName == kSelectedAtom)) {
+
+      }
+      else if (tag && (tag.get() == kTreeRowAtom) && (aName == kSelectedAtom)) {
+
+      }
+      else if (tag && (tag.get() == kTreeCellAtom) && (aName == kSelectedAtom)) {
+
+      }
+      if (nodeList) {
+        // Append this node to the list.
+        nodeList->AppendNode(this);
+      }
+    }
+
+   
     // Check to see if the POPUP attribute is being set.  If so, we need to attach
     // a new instance of our popup handler to the node.
     if (mDocument && (aNameSpaceID == kNameSpaceID_None) && 
@@ -2268,6 +2312,29 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
 
         mAttributes->UpdateStyleRule(docURL, "");
         // XXX Some kind of special document update might need to happen here.
+    }
+
+    // Need to check for the SELECTED, SELECTEDROW, and SELECTEDCELL attributes
+    // being unset.  If we're a <treeitem>, <treerow>, or <treecell>, the act of
+    // unsetting these attributes forces us to update our selected arrays.
+    nsCOMPtr<nsIAtom> tag;
+    GetTag(*getter_AddRefs(tag));
+    if (mDocument && (aNameSpaceID == kNameSpaceID_None)) {
+      // See if we're a treeitem atom.
+      nsRDFDOMNodeList* nodeList = nsnull;
+      if (tag && (tag.get() == kTreeItemAtom) && (aName == kSelectedAtom)) {
+
+      }
+      else if (tag && (tag.get() == kTreeRowAtom) && (aName == kSelectedAtom)) {
+
+      }
+      else if (tag && (tag.get() == kTreeCellAtom) && (aName == kSelectedAtom)) {
+
+      }
+      if (nodeList) {
+        // Remove this node from the list.
+        nodeList->RemoveNode(this);
+      }
     }
 
     // XXX Know how to remove POPUP event listeners when an attribute is unset?

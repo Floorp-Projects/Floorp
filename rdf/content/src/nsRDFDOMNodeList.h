@@ -52,6 +52,7 @@ public:
 
     // Implementation methods
     nsresult AppendNode(nsIDOMNode* aNode);
+    nsresult RemoveNode(nsIDOMNode* aNode);
 };
 
 #endif // nsRDFDOMNodeList_h__
