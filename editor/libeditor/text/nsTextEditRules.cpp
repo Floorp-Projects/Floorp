@@ -758,27 +758,37 @@ nsTextEditRules:: DidUndo(nsIDOMSelection *aSelection, nsresult aResult)
     }
     else
     {
-      nsCOMPtr<nsIDOMNode>node;
-      PRInt32 offset;
-		  res = aSelection->GetAnchorNode(getter_AddRefs(node));
+      nsCOMPtr<nsIDOMElement> theBody;
+      res = mEditor->GetBodyElement(getter_AddRefs(theBody));
       if (NS_FAILED(res)) return res;
-      if (!node) return NS_ERROR_NULL_POINTER;
-      res = aSelection->GetAnchorOffset(&offset);
+      if (!theBody) return NS_ERROR_FAILURE;
+      
+      nsAutoString tagName("div");
+      nsCOMPtr<nsIDOMNodeList> nodeList;
+      res = theBody->GetElementsByTagName(tagName, getter_AddRefs(nodeList));
       if (NS_FAILED(res)) return res;
-      nsCOMPtr<nsIDOMElement>element;
-      element = do_QueryInterface(node);
-      if (element)
+      if (nodeList)
       {
-        nsAutoString att(nsEditor::kMOZEditorBogusNodeAttr);
-        nsAutoString val;
-        (void)element->GetAttribute(att, val);
-        if (val.Equals(nsEditor::kMOZEditorBogusNodeValue)) {
-          mBogusNode = do_QueryInterface(element);
+        PRUint32 len, j;
+        nodeList->GetLength(&len);
+        
+        if (len != 1) return NS_OK;  // only in the case of one div could there be the bogus node
+        nsCOMPtr<nsIDOMNode>node;
+        nsCOMPtr<nsIDOMElement>element;
+        nodeList->Item(0, getter_AddRefs(node));
+        if (!node) return NS_ERROR_NULL_POINTER;
+        element = do_QueryInterface(node);
+        if (element)
+        {
+          nsAutoString att(nsEditor::kMOZEditorBogusNodeAttr);
+          nsAutoString val;
+          (void)element->GetAttribute(att, val);
+          if (val.Equals(nsEditor::kMOZEditorBogusNodeValue)) 
+          {
+            mBogusNode = do_QueryInterface(element);
+          }
         }
       }
-      nsCOMPtr<nsIDOMNode> temp;
-      res = node->GetParentNode(getter_AddRefs(temp));
-      node = do_QueryInterface(temp);
     }
   }
   return res;
@@ -806,27 +816,37 @@ nsTextEditRules::DidRedo(nsIDOMSelection *aSelection, nsresult aResult)
     }
     else
     {
-      nsCOMPtr<nsIDOMNode>node;
-      PRInt32 offset;
-		  res = aSelection->GetAnchorNode(getter_AddRefs(node));
+      nsCOMPtr<nsIDOMElement> theBody;
+      res = mEditor->GetBodyElement(getter_AddRefs(theBody));
       if (NS_FAILED(res)) return res;
-      if (!node) return NS_ERROR_NULL_POINTER;
-		  res = aSelection->GetAnchorOffset(&offset);
+      if (!theBody) return NS_ERROR_FAILURE;
+      
+      nsAutoString tagName("div");
+      nsCOMPtr<nsIDOMNodeList> nodeList;
+      res = theBody->GetElementsByTagName(tagName, getter_AddRefs(nodeList));
       if (NS_FAILED(res)) return res;
-      nsCOMPtr<nsIDOMElement>element;
-      element = do_QueryInterface(node);
-      if (element)
+      if (nodeList)
       {
-        nsAutoString att(nsEditor::kMOZEditorBogusNodeAttr);
-        nsAutoString val;
-        (void)element->GetAttribute(att, val);
-        if (val.Equals(nsEditor::kMOZEditorBogusNodeValue)) {
-          mBogusNode = do_QueryInterface(element);
+        PRUint32 len, j;
+        nodeList->GetLength(&len);
+        
+        if (len != 1) return NS_OK;  // only in the case of one div could there be the bogus node
+        nsCOMPtr<nsIDOMNode>node;
+        nsCOMPtr<nsIDOMElement>element;
+        nodeList->Item(0, getter_AddRefs(node));
+        if (!node) return NS_ERROR_NULL_POINTER;
+        element = do_QueryInterface(node);
+        if (element)
+        {
+          nsAutoString att(nsEditor::kMOZEditorBogusNodeAttr);
+          nsAutoString val;
+          (void)element->GetAttribute(att, val);
+          if (val.Equals(nsEditor::kMOZEditorBogusNodeValue)) 
+          {
+            mBogusNode = do_QueryInterface(element);
+          }
         }
       }
-      nsCOMPtr<nsIDOMNode> temp;
-      res = node->GetParentNode(getter_AddRefs(temp));
-      node = do_QueryInterface(temp);
     }
   }
   return res;
@@ -872,7 +892,8 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
 {
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
   if (!mEditor) { return NS_ERROR_NULL_POINTER; }
-
+  if (mBogusNode) return NS_OK;  // let's not create more than one, ok?
+  
 	nsCOMPtr<nsIDOMElement> bodyElement;
 	nsresult res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));  
 	if (NS_FAILED(res)) return res;

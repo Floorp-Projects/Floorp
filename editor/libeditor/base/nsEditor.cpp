@@ -1481,7 +1481,6 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert)
   }
   else if (NS_ERROR_EDITOR_NO_TEXTNODE==result) 
   {
-    BeginTransaction();
     result = Do(aggTxn);
     if (NS_SUCCEEDED(result))
     {
@@ -1516,7 +1515,6 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert)
         }
       }            
     }
-    EndTransaction();
   }
   return result;
 }

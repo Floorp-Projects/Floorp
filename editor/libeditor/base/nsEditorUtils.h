@@ -36,6 +36,19 @@ class nsAutoEditBatch
     ~nsAutoEditBatch() { if (mEd) mEd->EndTransaction(); }
 };
 
+class nsAutoEditMayBatch
+{
+  private:
+    nsCOMPtr<nsIEditor> mEd;
+    PRBool mDidBatch;
+  public:
+    nsAutoEditMayBatch( nsIEditor *aEd) : mEd(do_QueryInterface(aEd)), mDidBatch(PR_FALSE) {}
+    nsAutoEditMayBatch() { if (mEd && mDidBatch) mEd->EndTransaction(); }
+    
+    void batch()  { if (mEd && !mDidBatch) {mEd->BeginTransaction(); mDidBatch=PR_TRUE;} }
+};
+
+
 class nsAutoSelectionReset
 {
   private:
