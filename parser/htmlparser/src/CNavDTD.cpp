@@ -1085,9 +1085,10 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
         theValues[index] = intValue.GetUnicode();
 	  	  index++;
       }
+      nsAutoString theTagStr(NS_EnumToTag(aTag));
       CParserContext* pc=mParser->PeekContext(); 
       void* theDocID=(pc) ? pc-> mKey : 0; 
-      nsObserverNotifier theNotifier((PRUnichar*)NS_EnumToTag(aTag),(PRUint32)theDocID,index,theKeys,theValues);
+      nsObserverNotifier theNotifier(theTagStr.GetUnicode(),(PRUint32)theDocID,index,theKeys,theValues);
       theDeque->FirstThat(theNotifier); 
       result=theNotifier.mResult; 
      }//if 
