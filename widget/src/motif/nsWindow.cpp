@@ -213,6 +213,69 @@ nsWindow::~nsWindow()
   }
 }
 
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
+void nsWindow::InitToolkit(nsIToolkit *aToolkit,
+                           nsIWidget  *aWidgetParent) 
+{
+  if (nsnull == mToolkit) { 
+    if (nsnull != aToolkit) {
+      mToolkit = (nsToolkit*)aToolkit;
+      mToolkit->AddRef();
+    }
+    else {
+      if (nsnull != aWidgetParent) {
+        mToolkit = (nsToolkit*)(aWidgetParent->GetToolkit()); // the call AddRef's, we don't have to
+      }
+      // it's some top level window with no toolkit passed in.
+      // Create a default toolkit with the current thread
+      else {
+        mToolkit = new nsToolkit();
+        mToolkit->AddRef();
+        mToolkit->Init(PR_GetCurrentThread());
+
+        // Create a shared GC for all widgets
+        ((nsToolkit *)mToolkit)->SetSharedGC((GC)GetNativeData(NS_NATIVE_GRAPHIC));
+      }
+    }
+  }
+
+}
+
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
+void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,
+                                 Widget aParentWidget) 
+{
+
+  // keep a reference to the toolkit object
+  if (aContext) {
+    mContext = aContext;
+    mContext->AddRef();
+  }
+  else {
+    nsresult  res;
+
+    static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
+    static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+
+    //res = !NS_OK;
+    res = NSRepository::CreateInstance(kDeviceContextCID,
+                                       nsnull, 
+                                       kDeviceContextIID, 
+                                       (void **)&mContext);
+    if (NS_OK == res) {
+      mContext->Init(aParentWidget);
+    }
+  }
+
+}
 
 //-------------------------------------------------------------------------
 //
@@ -236,28 +299,7 @@ void nsWindow::CreateWindow(nsNativeWidget aNativeParent,
   Widget parentWidget = 0;
   mBounds = aRect;
 
-  if (nsnull == mToolkit) {
-    if (nsnull != aToolkit) {
-      mToolkit = (nsToolkit*)aToolkit;
-      mToolkit->AddRef();
-    }
-    else {
-      if (nsnull != aWidgetParent) {
-	mToolkit = (nsToolkit*)(aWidgetParent->GetToolkit()); // the call AddRef's, we don't have to
-      }
-      // it's some top level window with no toolkit passed in.
-      // Create a default toolkit with the current thread
-      else {
-	mToolkit = new nsToolkit();
-	mToolkit->AddRef();
-	mToolkit->Init(PR_GetCurrentThread());
-
-	// Create a shared GC for all widgets
-	((nsToolkit *)mToolkit)->SetSharedGC((GC)GetNativeData(NS_NATIVE_GRAPHIC));
-      }
-    }
-    
-  }
+  InitToolkit(aToolkit, aWidgetParent);
   
   // save the event callback function
   mEventCallback = aHandleEventFunction;
@@ -267,28 +309,9 @@ void nsWindow::CreateWindow(nsNativeWidget aNativeParent,
   }
   else
     parentWidget = (Widget)aNativeParent;
-  
-  // keep a reference to the toolkit object
-  if (aContext) {
-    mContext = aContext;
-    mContext->AddRef();
-  }
-  else {
-    nsresult  res;
-    
-    static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-    static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-    
-    //res = !NS_OK;
-    res = NSRepository::CreateInstance(kDeviceContextCID, 
-				       nsnull, 
-				       kDeviceContextIID, 
-				       (void **)&mContext);
-    if (NS_OK == res) {
-      mContext->Init(parentWidget);
-    }
-  }
-  
+ 
+  InitDeviceContext(aContext, parentWidget);
+
   Widget frameParent = 0;
   if (!aNativeParent) {
 
@@ -729,19 +752,28 @@ nsIFontMetrics* nsWindow::GetFont(void)
 //-------------------------------------------------------------------------
 void nsWindow::SetFont(const nsFont &aFont)
 {
-#if 0
     if (mContext == nsnull) {
       return;
     }
-
     nsIFontCache* fontCache = mContext->GetFontCache();
     if (fontCache != nsnull) {
       nsIFontMetrics* metrics = fontCache->GetMetricsFor(aFont);
       if (metrics != nsnull) {
-        //HFONT hfont = metrics->GetFontHandle();
 
-        // Draw in the new font
-        //XtVaSetValues(mWidget, XmNfont, metrics->GetFontHandle(), NULL);
+        XmFontList      fontList = NULL;
+        XmFontListEntry entry    = NULL;
+        XFontStruct * fontStruct = XQueryFont(XtDisplay(mWidget), 
+                                              metrics->GetFontHandle());
+        if (fontStruct != NULL) {
+          entry = XmFontListEntryCreate(XmFONTLIST_DEFAULT_TAG, 
+                                        XmFONT_IS_FONT, fontStruct);
+          fontList = XmFontListAppendEntry(NULL, entry);
+
+          XtVaSetValues(mWidget, XmNfontList, fontList, NULL);
+
+          XmFontListEntryFree(&entry);
+          XmFontListFree(fontList);
+        }
 
         NS_RELEASE(metrics);
       } else {
@@ -751,7 +783,6 @@ void nsWindow::SetFont(const nsFont &aFont)
     } else {
       printf("****** Error: FontCache is NULL!\n");
     }
-#endif
 }
 
     
