@@ -140,38 +140,39 @@ nsresult nsMsgCompFields::CleanUpTempFiles()
   {
     url = token;
     url.StripWhitespace();
+
     // Only deal with temp files (ie, starting with "file://")
 	if (!url.IsEmpty() && url.CompareWithConversion(kFileURLPrefix, PR_TRUE, 7) == 0)
 	{
+	    PRBool isFile = PR_FALSE;
+
       nsCOMPtr<nsILocalFile> urlFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
-      if (NS_FAILED(rv))
+      if (NS_SUCCEEDED(rv))
 	  {
-		  NS_ASSERTION(0, "Can't creat nsIFileURL interface");
-		  continue;
-	  }
-
       rv = urlFile->SetURL(url);
-      if (NS_FAILED(rv))
+        if (NS_SUCCEEDED(rv))
 	  {
-		  NS_ASSERTION(0, "Can't set file spec in nsILocalFile interface");
-		  continue;
-	  }
-   
-	  PRBool isDir;
-	  rv = urlFile->IsDirectory(&isDir);
+          PRBool bExists = PR_FALSE;
+ 	        rv = urlFile->Exists(&bExists);
 	  if (NS_FAILED(rv)) 
+            {NS_ASSERTION(0, "bExists() call failed!");}
+          else
+            if (bExists)
       {
-	    NS_ASSERTION(0, "IsDirectory() call failed!");
-        continue;
+ 	            rv = urlFile->IsFile(&isFile);
+	            if (NS_FAILED(rv)) 
+                {NS_ASSERTION(0, "IsFile() call failed!");}
       }
-
-	  if (isDir) 
-      {
-	    NS_ASSERTION(0, "The temporary file is not supposed to be a directory!");
-		continue;
       }
+        else
+          {NS_ASSERTION(0, "Can't set file spec in nsILocalFile interface");}
+      }
+      else
+		    {NS_ASSERTION(0, "Can't creat nsIFileURL interface");}
 
-      // remove it if not a dir
+
+      // remove it if it's a valid file
+      if (isFile)
 	  urlFile->Remove(PR_FALSE); 
 	}
 
