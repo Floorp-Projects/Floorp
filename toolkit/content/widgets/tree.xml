@@ -22,8 +22,9 @@
     <implementation implements="nsIAccessibleProvider">
       <constructor>
         this.addEventListener("DOMMouseScroll", this._handleMouseScroll, true);
-        if (navigator.platform.indexOf("Mac") != -1)
-          this.pageUpOrDownMovesSelection = false;
+#ifdef XP_MAC
+        this.pageUpOrDownMovesSelection = false;
+#endif
       </constructor>
 
       <!-- ///////////////// nsIAccessibleProvider ///////////////// -->

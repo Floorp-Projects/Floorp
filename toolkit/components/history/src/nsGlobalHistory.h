@@ -155,7 +155,7 @@ public:
   // these must be public so that the callbacks can call them
   PRBool MatchExpiration(nsIMdbRow *row, PRInt64* expirationDate);
   PRBool MatchHost(nsIMdbRow *row, matchHost_t *hostInfo);
-  PRBool RowMatches(nsIMdbRow* aRow, searchQuery *aQuery);
+  PRBool RowMatches(nsIMdbRow* aRow, searchQuery *aQuery, PRBool caseSensitive);
 
 protected:
 

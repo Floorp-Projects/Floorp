@@ -395,7 +395,7 @@ static PRBool
 matchQueryCallback(nsIMdbRow *row, void *aClosure)
 {
   matchQuery_t *query = (matchQuery_t*)aClosure;
-  return query->history->RowMatches(row, query->query);
+  return query->history->RowMatches(row, query->query, PR_TRUE);
 }
 //----------------------------------------------------------------------
 
@@ -1968,7 +1968,7 @@ nsGlobalHistory::HasAssertion(nsIRDFResource* aSource,
       return NS_OK;
     }
     
-    *aHasAssertion = RowMatches(row, &query);
+    *aHasAssertion = RowMatches(row, &query, PR_TRUE);
     FreeSearchQuery(query);
     return NS_OK;
   }
@@ -3695,7 +3695,7 @@ nsGlobalHistory::SearchEnumerator::IsResult(nsIMdbRow *aRow)
   }
 
   // now do the actual match
-  if (!mHistory->RowMatches(aRow, mQuery))
+  if (!mHistory->RowMatches(aRow, mQuery, PR_FALSE))
     return PR_FALSE;
 
   if (mQuery->groupBy != 0) {
@@ -3718,7 +3718,8 @@ nsGlobalHistory::SearchEnumerator::IsResult(nsIMdbRow *aRow)
 //
 PRBool
 nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
-                            searchQuery *aQuery)
+                            searchQuery *aQuery,
+                            PRBool caseSensitive)
 {
   PRUint32 length = aQuery->terms.Count();
   PRUint32 i;
@@ -3781,43 +3782,78 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
       rowVal.EndReading(end);
   
       NS_ConvertUCS2toUTF8 utf8Value(term->text);
-      
       if (term->method.Equals("is")) {
-        if (!utf8Value.Equals(rowVal, nsCaseInsensitiveCStringComparator()))
-          return PR_FALSE;
+        if (caseSensitive) {
+          if (!utf8Value.Equals(rowVal, nsDefaultCStringComparator()))
+            return PR_FALSE;
+        }
+        else {
+          if (!utf8Value.Equals(rowVal, nsCaseInsensitiveCStringComparator()))
+            return PR_FALSE;
+        }
       }
 
-      else if (term->method.Equals("isnot")) {
-        if (utf8Value == rowVal)
-          return PR_FALSE;
+      else if (term->method.Equals("isnot")) {        
+        if (caseSensitive) {
+          if (utf8Value.Equals(rowVal, nsDefaultCStringComparator()))
+            return PR_FALSE;
+        }
+        else {
+          if (utf8Value.Equals(rowVal, nsCaseInsensitiveCStringComparator()))
+            return PR_FALSE;
+        }
       }
 
       else if (term->method.Equals("contains")) {
-        if (!FindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()))
-          return PR_FALSE;
+        if (caseSensitive) {
+          if (!FindInReadable(utf8Value, start, end, nsDefaultCStringComparator()))
+            return PR_FALSE;
+        }
+        else {
+          if (!FindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()))
+            return PR_FALSE;
+        }
       }
 
       else if (term->method.Equals("doesntcontain")) {
-        if (FindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()))
-          return PR_FALSE;
+        if (caseSensitive) {
+          if (FindInReadable(utf8Value, start, end, nsDefaultCStringComparator()))
+            return PR_FALSE;
+        }
+        else {
+          if (FindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()))
+            return PR_FALSE;
+        }
       }
 
       else if (term->method.Equals("startswith")) {
         // need to make sure that the found string is 
         // at the beginning of the string
         nsACString::const_iterator real_start = start;
-        if (!(FindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()) &&
-              real_start == start))
-          return PR_FALSE;
+        if (caseSensitive) {
+          if (!(FindInReadable(utf8Value, start, end, nsDefaultCStringComparator()) && real_start == start))
+            return PR_FALSE;
+        }
+        else {
+          if (!(FindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()) &&
+                real_start == start))
+            return PR_FALSE;
+        }
       }
 
       else if (term->method.Equals("endswith")) {
         // need to make sure that the found string ends
         // at the end of the string
         nsACString::const_iterator real_end = end;
-        if (!(RFindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()) &&
-              real_end == end))
+        if (caseSensitive) {
+          if (!(RFindInReadable(utf8Value, start, end, nsDefaultCStringComparator()) && real_end == end))
+            return PR_FALSE;
+        }
+        else {
+          if (!(RFindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()) &&
+                real_end == end))
           return PR_FALSE;
+        }
       }
 
       else {
