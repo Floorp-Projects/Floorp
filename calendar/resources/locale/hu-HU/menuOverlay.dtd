@@ -43,23 +43,23 @@
 <!ENTITY event.menu.title                       "Esemény">
 <!ENTITY eventMenuCmd.accesskey                 "s">
 
-<!ENTITY event.new.event                        "Új esemény…">
+<!ENTITY event.new.event                        "Új esemény...">
 <!ENTITY event.new.event.key                    "N">
 <!ENTITY event.new.event.accesskey              "e">
 
-<!ENTITY event.new.todo                         "Új feladat…">
+<!ENTITY event.new.todo                         "Új feladat...">
 <!ENTITY event.new.todo.key                     "T">
 <!ENTITY event.new.todo.accesskey               "f">
 
-<!ENTITY calendar.new.server.label              "Új naptárfájl…">
+<!ENTITY calendar.new.server.label              "Új naptárfájl...">
 <!ENTITY calendar.new.server.key                "L">
 <!ENTITY calendar.new.server.accesskey          "n">
 
-<!ENTITY calendar.open.file.label               "Naptárfájl megnyitása…">
+<!ENTITY calendar.open.file.label               "Naptárfájl megnyitása...">
 <!ENTITY calendar.open.file.key                 "O">
 <!ENTITY calendar.open.file.accesskey           "m">
 
-<!ENTITY event.edit.event                       "Szerkesztés…">
+<!ENTITY event.edit.event                       "Szerkesztés...">
 <!ENTITY event.edit.event.key                   "E">
 <!ENTITY event.edit.event.accesskey             "z">
 
@@ -69,7 +69,7 @@
 <!ENTITY event.delete.tasks                     "Kijelölt feladatok törlése">
 <!ENTITY event.delete.tasks.accesskey           "e">
 
-<!ENTITY event.mail.event                       "Kijelölt események elküldése…">
+<!ENTITY event.mail.event                       "Kijelölt események küldése levélben...">
 <!ENTITY event.mail.event.key                   "M">
 <!ENTITY event.mail.event.accesskey             "k">
 
@@ -83,24 +83,24 @@
 <!ENTITY calendar.pagesetup.label               "Oldalbeállítás...">
 <!ENTITY calendar.pagesetup.accesskey           "O">
 
-<!ENTITY calendar.import.label                  "Importálás fájlból...">
+<!ENTITY calendar.import.label                  "Importálás...">
 <!ENTITY calendar.import.key                    "I">
 <!ENTITY calendar.import.accesskey              "I">
 
-<!ENTITY calendar.wizard.label                  "Varázsló indítása">
+<!ENTITY calendar.wizard.label                  "Varázsló indítása...">
 <!ENTITY calendar.wizard.accesskey              "V">
 
-<!ENTITY calendar.export.label                  "Kiválasztott események exportálása...">
+<!ENTITY calendar.export.label                  "Kijelölt események exportálása...">
 <!ENTITY calendar.export.accesskey              "x">
 
 <!ENTITY calendar.subscribe.label               "Feliratkozás távoli naptárra...">
 <!ENTITY calendar.subscribe.accesskey           "F">
 
-<!ENTITY calendar.reloadserver.label            "Reload Remote Calendars">
+<!ENTITY calendar.reloadserver.label            "Távoli naptárak frissítése">
 <!ENTITY calendar.reloadserver.key              "R">
-<!ENTITY calendar.reloadserver.accesskey        "R">
+<!ENTITY calendar.reloadserver.accesskey        "T">
 
-<!ENTITY calendar.publish.label                 "Kiválasztott események közzététele...">
+<!ENTITY calendar.publish.label                 "Kijelölt események közzététele...">
 <!ENTITY calendar.publish.accesskey             "K">
 
 <!ENTITY calendar.about.label                   "A Naptár névjegye">

@@ -23,6 +23,7 @@
    -                 Chris Charabaruk <coldacid@meldstar.com>
    -                 ArentJan Banck <ajbanck@planet.nl>
    -                 Eric Belhaire <belhaire@ief.u-psud.fr>
+   -                 Matthew Willis <mattwillis@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -155,9 +156,9 @@
 <!ENTITY newtodo.duedate.warning    "A kezdés napja a határidő utánra esik.">
 <!ENTITY newtodo.repeatstart.warning "Az ismétlődéshez meg kell adni a kezdődátumot.">
 
-<!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
-<!ENTITY calendar.confirm.deleteevent "Biztos, hogy törölni kívánja ezt az eseményt? " >
-<!ENTITY calendar.confirm.deleteuntitledevent "Biztos, hogy törölni kívánja ezt a név nélküli eseményt?" >
+<!ENTITY calendar.confirm.deleteallevents  "Biztos benne, hogy törölni akarja a kijelölt eseményeket?" >
+<!ENTITY calendar.confirm.deleteevent "Biztos benne, hogy törölni akarja ezt az eseményt? " >
+<!ENTITY calendar.confirm.deleteuntitledevent "Biztos benne, hogy törölni akarja ezt a név nélküli eseményt?" >
 
 <!ENTITY event.alarm.checkbox.label "Emlékeztessen ismét ennyi idő múlva " >
 
@@ -283,10 +284,10 @@
 <!ENTITY calendar.subscribe.button.label           "Feliratkozás" >
 <!ENTITY calendar.publish.button.label             "Közzététel" >
 
-<!ENTITY calendar.localreload.button.label   "Local Reload" >
-<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
-<!ENTITY calendar.remotereload.button.label   "Reload" >
-<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
+<!ENTITY calendar.localreload.button.label   "Helyi frissítés" >
+<!ENTITY calendar.localreload.button.tooltip  "Az összes helyi naptár újra betöltése" >
+<!ENTITY calendar.remotereload.button.label   "Frissítés" >
+<!ENTITY calendar.remotereload.button.tooltip   "Az összes távoli naptár újra betöltése" >
 
 <!ENTITY calendar.dayview.button.label          "Napi nézet" >
 <!ENTITY calendar.weekview.button.label         "Heti nézet" >
@@ -333,21 +334,21 @@
 <!ENTITY window.title            "Mozilla Naptár">
 
 <!-- customizable toolbars -->
-<!ENTITY calendar.context.customize.label             "Testreszabás">
+<!ENTITY calendar.context.customize.label             "Testreszabás...">
 <!ENTITY calendar.context.customize.accesskey         "T">
-<!ENTITY calendar.menu.customize.label                "Eszköztárak testreszabása">
+<!ENTITY calendar.menu.customize.label                "Eszköztár testreszabása">
 <!ENTITY calendar.menu.customize.accesskey            "E">
 <!ENTITY calendar.maintoolbar.name                    "Fő eszköztár">
 <!ENTITY calendar.maintoolbar.accesskey               "F">
 
 <!-- Context Menu -->
-<!ENTITY calendar.context.newevent.label              "Új esemény">
+<!ENTITY calendar.context.newevent.label              "Új esemény...">
 <!ENTITY calendar.context.newevent.accesskey          "e">
-<!ENTITY calendar.context.newtodo.label               "Új feladat">
+<!ENTITY calendar.context.newtodo.label               "Új feladat...">
 <!ENTITY calendar.context.newtodo.accesskey           "f">
-<!ENTITY calendar.context.modifyevent.label           "Kiválasztott esemény szerkesztése">
+<!ENTITY calendar.context.modifyevent.label           "Kijelölt esemény szerkesztése...">
 <!ENTITY calendar.context.modifyevent.accesskey       "e">
-<!ENTITY calendar.context.modifytask.label            "Feladat szerkesztése">
+<!ENTITY calendar.context.modifytask.label            "Feladat szerkesztése...">
 <!ENTITY calendar.context.modifytask.accesskey        "s">
 <!ENTITY calendar.context.deleteevent.label           "Kiválasztott esemény törlése">
 <!ENTITY calendar.context.deleteevent.accesskey       "l">
@@ -373,9 +374,9 @@
 <!ENTITY calendar.context.multiweekview.accesskey     "z">
 <!ENTITY calendar.context.reload.label                "Frissítés">
 <!ENTITY calendar.context.reload.accesskey            "s">
-<!ENTITY calendar.context.emailevent.label            "Kiválasztott események küldése levélben">
+<!ENTITY calendar.context.emailevent.label            "Kijelölt események küldése levélben...">
 <!ENTITY calendar.context.emailevent.accesskey        "e">
-<!ENTITY calendar.context.emailtask.label             "Feladat küldése levélben">
+<!ENTITY calendar.context.emailtask.label             "Feladat küldése levélben...">
 <!ENTITY calendar.context.emailtask.accesskey         "t">
 
 <!-- Task Context Menu -->
@@ -429,17 +430,17 @@
 <!ENTITY calendar.server.dialog.title.new           "Új naptárfájl">
 <!ENTITY calendar.server.dialog.title.open          "Naptárfájl megnyitása">
 <!ENTITY calendar.server.dialog.title.edit          "Naptár szerkesztése">
-<!ENTITY calendar.server.dialog.name.label          "Név">
-<!ENTITY calendar.server.dialog.publish.label       "A változások automatikus közzététele. Ebben az esetben távoli naptárakat előbb letölti, mielőtt hozzáadhat, szerkeszthet, vagy törölhet egy eseményt. Ezek után végrehajtja a változtatásait, majd feltölti az új fájlt a kiszolgálóra.">
-<!ENTITY calendar.server.dialog.location.label      "Hely">
-<!ENTITY calendar.server.dialog.local.location.label "Helyi fájl helye">
+<!ENTITY calendar.server.dialog.name.label          "Naptár neve:">
+<!ENTITY calendar.server.dialog.publish.label       "A változások automatikus közzététele a távoli naptárba. Ebben az esetben távoli naptár legfrissebb verziója előbb letöltődik, csak utána módosíthatja. A változások alkalmazása után a naptár visszatöltődik a távoli kiszolgálóra.">
+<!ENTITY calendar.server.dialog.location.label      "Távoli kiszolgáló URL:">
+<!ENTITY calendar.server.dialog.local.location.label "Helyi fájl helye:">
 <!ENTITY calendar.server.dialog.browse.label        "Tallózás...">
 <!ENTITY calendar.server.dialog.help.label          "Megadhatja egy helyi fájl elérését, vagy egy távoli fájlelérési-útvonalat, például: http://www.mozilla.org/projects/calendar/caldata/HungarianHolidays.ics">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Opcionálisan megadhat egy fájlelérési-helyet, ahol a naptár létrejön.">
-<!ENTITY calendar.local.calendar.dialog.optional.label "A következő mezők opcionálisak és a naptár távoli kiszolgálón való közzétételére használhatók.">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Itt adhatja meg azt a helyet a számítógépen, ahol a naptárfájl tárolódik. Nem kötelező megadni.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "A következő mezők opcionálisak, és a naptár távoli kiszolgálón való közzétételére használhatók.">
 
 <!-- Calendar Coloring -->
-<!ENTITY calendar.server.dialog.color.label "Szín">
+<!ENTITY calendar.server.dialog.color.label "Szín:">
 
 
 <!-- Calendar Publish Dialog -->
@@ -496,3 +497,9 @@
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
 <!ENTITY mainWindow.titlemodifiermenuseparator " - ">
 
+<!-- Temporary, until brand.dtd works again. bug 272643 -->
+<!ENTITY  lang.version          "1.7a">
+<!ENTITY  brandShortName        "Sunbird">
+<!ENTITY  brandFullName         "Mozilla Sunbird">
+<!ENTITY  vendorShortName       "Mozilla">
+<!ENTITY  releaseURL            "http://www.mozilla.org/projects/calendar">
