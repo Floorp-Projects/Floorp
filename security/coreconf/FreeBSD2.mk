@@ -40,7 +40,7 @@ CC			= gcc
 CCC			= g++
 RANLIB			= ranlib
 
-OS_REL_CFLAGS		= -mno-486 -Di386
+OS_REL_CFLAGS		= -Di386
 CPU_ARCH		= x86
 
 OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe -DFREEBSD -DHAVE_STRERROR -DHAVE_BSD_FLOCK
