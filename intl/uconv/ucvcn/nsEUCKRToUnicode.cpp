@@ -22,22 +22,66 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
+static PRUint16 g_ASCIIMappingTable[] = {
+  0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
+};
+
+static PRInt16 g_ASCIIShiftTable[] =  {
+  0, u1ByteCharset,
+  ShiftCell(0,0,0,0,0,0,0,0)
+};
+
+#ifdef MS_EUCKR
+static PRUint16 g_EUCKRMappingTable[] = {
+#include "u20ksc.ut"
+};
+
+static PRInt16 g_EUCKRShiftTable[] =  {
+  0, u2BytesCharset,  
+  ShiftCell(0,  0, 0, 0, 0, 0, 0, 0)
+};
+
+static uRange g_EUCKRRanges[] = {
+  { 0x00, 0x7E },
+  { 0x81, 0xFE }
+};
+#else
+
 static PRUint16 g_EUCKRMappingTable[] = {
 #include "u20kscgl.ut"
 };
 
 static PRInt16 g_EUCKRShiftTable[] =  {
-  2, uMultibytesCharset,  
-  ShiftCell(u1ByteChar,   1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F),
-  ShiftCell(u2BytesChar,  2, 0xA1, 0xFE, 0xA1, 0x40, 0xFE, 0xFE)
+  0, u2BytesGRCharset,  
+  ShiftCell(0,  0, 0, 0, 0, 0, 0, 0)
 };
+
+static uRange g_EUCKRRanges[] = {
+  { 0x00, 0x7E },
+  { 0xA1, 0xFE }
+};
+#endif
+
+
+static PRInt16 *g_EUCKRShiftTableSet [] = {
+  g_ASCIIShiftTable,
+  g_EUCKRShiftTable
+};
+
+static PRUint16 *g_EUCKRMappingTableSet [] ={
+  g_ASCIIMappingTable,
+  g_EUCKRMappingTable
+};
+
 
 //----------------------------------------------------------------------
 // Class nsEUCKRToUnicode [implementation]
 
 nsEUCKRToUnicode::nsEUCKRToUnicode() 
-: nsTableDecoderSupport((uShiftTable*) &g_EUCKRShiftTable, 
-                        (uMappingTable*) &g_EUCKRMappingTable)
+: nsTablesDecoderSupport(2,
+                        (uRange*) &g_EUCKRRanges,
+                        (uShiftTable**) &g_EUCKRShiftTableSet, 
+                        (uMappingTable**) &g_EUCKRMappingTableSet)
 {
 }
 
@@ -48,7 +92,7 @@ nsresult nsEUCKRToUnicode::CreateInstance(nsISupports ** aResult)
 }
 
 //----------------------------------------------------------------------
-// Subclassing of nsTableDecoderSupport class [implementation]
+// Subclassing of nsTablesDecoderSupport class [implementation]
 
 NS_IMETHODIMP nsEUCKRToUnicode::GetMaxLength(const char * aSrc, 
                                               PRInt32 aSrcLength, 

@@ -22,22 +22,62 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_EUCTWMappingTable[] = {
+static PRUint16 g_ASCIIMappingTable[] = {
+  0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
+};
+
+static PRUint16 g_CNS1MappingTable[] = {
 #include "cns_1.ut"
 };
 
-static PRInt16 g_EUCTWShiftTable[] =  {
-  2, uMultibytesCharset,  
-  ShiftCell(u1ByteChar,   1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F),
-  ShiftCell(u2BytesChar,  2, 0xA1, 0xFE, 0xA1, 0x40, 0xFE, 0xFE)
+static PRUint16 g_CNS2MappingTable[] = {
+#include "cns_2.ut"
 };
+
+static PRInt16 g_ASCIIShiftTable[] =  {
+  0, u1ByteCharset,
+  ShiftCell(0,0,0,0,0,0,0,0)
+};
+
+static PRInt16 g_CNS1ShiftTable[] =  {
+  0, u2BytesGRCharset,  
+  ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
+};
+
+
+static PRInt16 g_CNS2ShiftTable[] =  {
+  0, u2BytesGRPrefix8EA2Charset,  
+  ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
+};
+
+
+static PRInt16 *g_EUCTWShiftTableSet [] = {
+  g_ASCIIShiftTable,
+  g_CNS1ShiftTable,
+  g_CNS2ShiftTable
+};
+
+static PRUint16 *g_EUCTWMappingTableSet [] ={
+  g_ASCIIMappingTable,
+  g_CNS1MappingTable,
+  g_CNS2MappingTable
+};
+
+static uRange g_EUCTWRanges[] = {
+  { 0x00, 0x7E },
+  { 0xA1, 0xFE },
+  { 0x8E, 0x8E }
+};
+
 
 //----------------------------------------------------------------------
 // Class nsEUCTWToUnicode [implementation]
 
 nsEUCTWToUnicode::nsEUCTWToUnicode() 
-: nsTableDecoderSupport((uShiftTable*) &g_EUCTWShiftTable, 
-                        (uMappingTable*) &g_EUCTWMappingTable)
+: nsTablesDecoderSupport(3, 
+                        (uRange*) &g_EUCTWRanges, 
+                        (uShiftTable**) &g_EUCTWShiftTableSet, 
+                        (uMappingTable**) &g_EUCTWMappingTableSet)
 {
 }
 
@@ -48,7 +88,7 @@ nsresult nsEUCTWToUnicode::CreateInstance(nsISupports ** aResult)
 }
 
 //----------------------------------------------------------------------
-// Subclassing of nsTableDecoderSupport class [implementation]
+// Subclassing of nsTablesDecoderSupport class [implementation]
 
 NS_IMETHODIMP nsEUCTWToUnicode::GetMaxLength(const char * aSrc, 
                                               PRInt32 aSrcLength, 

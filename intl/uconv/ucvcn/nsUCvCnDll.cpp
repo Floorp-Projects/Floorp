@@ -75,7 +75,7 @@ FactoryData g_FactoryData[] =
   {
     &kEUCTWToUnicodeCID,
     nsEUCTWToUnicode::CreateInstance,
-    "EUCTW",
+    "X-EUC-TW",
     "Unicode"
   },
   {
@@ -87,7 +87,7 @@ FactoryData g_FactoryData[] =
   {
     &kEUCKRToUnicodeCID,
     nsEUCKRToUnicode::CreateInstance,
-    "EUCKR",
+    "EUC-KR",
     "Unicode"
   },
   {
@@ -100,7 +100,7 @@ FactoryData g_FactoryData[] =
     &kUnicodeToEUCTWCID,
     nsUnicodeToEUCTW::CreateInstance,
     "Unicode",
-    "EUCTW"
+    "X-EUC-TW"
   },
   {
     &kUnicodeToGB2312CID,
@@ -112,7 +112,7 @@ FactoryData g_FactoryData[] =
     &kUnicodeToEUCKRCID,
     nsUnicodeToEUCKR::CreateInstance,
     "Unicode",
-    "EUCKR"
+    "EUC-KR"
   }
 };
 

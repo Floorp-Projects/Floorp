@@ -31,7 +31,7 @@
  * @created         06/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsBIG5ToUnicode : public nsTableDecoderSupport
+class nsBIG5ToUnicode : public nsTablesDecoderSupport
 {
 public:
 
