@@ -433,11 +433,9 @@ public class Interpreter
 
             case Token.LOCAL_LOAD : {
                 stackDelta = 1;
-                iCodeTop = addToken(Token.LOCAL_LOAD, iCodeTop);
-                iCodeTop = addLocalBlockRef(node, iCodeTop);
-                itsStackDepth++;
-                if (itsStackDepth > itsData.itsMaxStack)
-                    itsData.itsMaxStack = itsStackDepth;
+                int localIndex = getLocalBlockRef(node);
+                iCodeTop = addIndexOp(Token.LOCAL_LOAD, localIndex, iCodeTop);
+                stackChange(1);
                 break;
             }
 
@@ -590,16 +588,14 @@ public class Interpreter
                     itsData.itsMaxStack = itsStackDepth;
 
                 int finallyRegister = getLocalBlockRef(node);
-                iCodeTop = addToken(Token.LOCAL_SAVE, iCodeTop);
-                iCodeTop = addByte(finallyRegister, iCodeTop);
+                iCodeTop = addIndexOp(Token.LOCAL_SAVE, finallyRegister, iCodeTop);
                 itsStackDepth--;
                 while (child != null) {
                     iCodeTop = generateICode(child, iCodeTop);
                     if (itsStackDepth != 0) Kit.codeBug();
                     child = child.getNext();
                 }
-                iCodeTop = addIcode(Icode_RETSUB, iCodeTop);
-                iCodeTop = addByte(finallyRegister, iCodeTop);
+                iCodeTop = addIndexOp(Icode_RETSUB, finallyRegister, iCodeTop);
                 break;
             }
 
@@ -1066,21 +1062,16 @@ public class Interpreter
             case Token.ENUM_INIT :
                 stackShouldBeZero = true;
                 iCodeTop = generateICode(child, iCodeTop);
-                iCodeTop = addToken(Token.ENUM_INIT, iCodeTop);
-                iCodeTop = addLocalBlockRef(node, iCodeTop);
-                itsStackDepth--;
+                iCodeTop = addIndexOp(Token.ENUM_INIT, getLocalBlockRef(node), iCodeTop);
+                stackChange(-1);
                 break;
 
             case Token.ENUM_NEXT :
-            case Token.ENUM_ID : {
+            case Token.ENUM_ID :
                 stackDelta = 1;
-                iCodeTop = addToken(type, iCodeTop);
-                iCodeTop = addLocalBlockRef(node, iCodeTop);
-                itsStackDepth++;
-                if (itsStackDepth > itsData.itsMaxStack)
-                    itsData.itsMaxStack = itsStackDepth;
+                iCodeTop = addIndexOp(type, getLocalBlockRef(node), iCodeTop);
+                stackChange(1);
                 break;
-            }
 
             case Token.REGEXP : {
                 stackDelta = 1;
@@ -1129,7 +1120,7 @@ public class Interpreter
                                    && (itsInFunctionFlag
                                        || !itsData.itsFromEvalCode));
             int op = skipGetThis ? Icode_NAME_FAST_THIS : Icode_NAME_SLOW_THIS;
-			iCodeTop = addStringOp(op, name, iCodeTop);
+            iCodeTop = addStringOp(op, name, iCodeTop);
             stackChange(2);
             break;
           }
@@ -1239,13 +1230,6 @@ public class Interpreter
     {
         Node localBlock = (Node)node.getProp(Node.LOCAL_BLOCK_PROP);
         return localBlock.getExistingIntProp(Node.LOCAL_PROP);
-    }
-
-    private int addLocalBlockRef(Node node, int iCodeTop)
-    {
-        int localSlot = getLocalBlockRef(node);
-        iCodeTop = addByte(localSlot, iCodeTop);
-        return iCodeTop;
     }
 
     private int getTargetLabel(Node.Target target)
@@ -1650,16 +1634,10 @@ public class Interpreter
                         pc += 2;
                         break;
                     }
-                    case Icode_RETSUB :
-                    case Token.ENUM_INIT :
-                    case Token.ENUM_NEXT :
-                    case Token.ENUM_ID :
                     case Icode_VARINC :
                     case Icode_VARDEC :
                     case Token.GETVAR :
-                    case Token.SETVAR :
-                    case Token.LOCAL_SAVE :
-                    case Token.LOCAL_LOAD : {
+                    case Token.SETVAR : {
                         int slot = (iCode[pc] & 0xFF);
                         out.println(tname + " " + slot);
                         pc++;
@@ -1863,6 +1841,12 @@ public class Interpreter
             case Token.ARRAYLIT:
             case Icode_NAME_FAST_THIS :
             case Icode_NAME_SLOW_THIS :
+            case Token.LOCAL_SAVE :
+            case Icode_RETSUB :
+            case Token.LOCAL_LOAD :
+            case Token.ENUM_INIT :
+            case Token.ENUM_NEXT :
+            case Token.ENUM_ID :
                 return 1;
 
             case Token.THROW :
@@ -1877,16 +1861,10 @@ public class Interpreter
                 // target pc offset
                 return 1 + 2;
 
-            case Icode_RETSUB :
-            case Token.ENUM_INIT :
-            case Token.ENUM_NEXT :
-            case Token.ENUM_ID :
             case Icode_VARINC :
             case Icode_VARDEC :
             case Token.GETVAR :
             case Token.SETVAR :
-            case Token.LOCAL_SAVE :
-            case Token.LOCAL_LOAD :
                 // slot index
                 return 1 + 1;
 
@@ -2396,8 +2374,8 @@ public class Interpreter
         pcJump = getTarget(iCode, pc);
         break;
     case Icode_RETSUB : {
-        int slot = (iCode[pc] & 0xFF);
-        Object value = stack[LOCAL_SHFT + slot];
+        // indexReg: local to store return address
+        Object value = stack[LOCAL_SHFT + indexReg];
         if (value != DBL_MRK) {
             // Invocation from exception handler, restore object to rethrow
             javaException = (Throwable)value;
@@ -2405,7 +2383,7 @@ public class Interpreter
             pcJump = getJavaCatchPC(iCode);
         } else {
             // Normal return from GOSUB
-            pcJump = (int)sDbl[LOCAL_SHFT + slot];
+            pcJump = (int)sDbl[LOCAL_SHFT + indexReg];
         }
         break;
     }
@@ -2647,22 +2625,16 @@ public class Interpreter
         stack[stackTop] = ScriptRuntime.postIncrDecrElem(lhs, rhs, scope, op == Icode_ELEMINC);
         continue Loop;
     }
-    case Token.LOCAL_SAVE : {
-        int slot = (iCode[pc] & 0xFF);
-        stack[LOCAL_SHFT + slot] = stack[stackTop];
-        sDbl[LOCAL_SHFT + slot] = sDbl[stackTop];
+    case Token.LOCAL_SAVE :
+        stack[LOCAL_SHFT + indexReg] = stack[stackTop];
+        sDbl[LOCAL_SHFT + indexReg] = sDbl[stackTop];
         --stackTop;
-        ++pc;
         continue Loop;
-    }
-    case Token.LOCAL_LOAD : {
-        int slot = (iCode[pc] & 0xFF);
+    case Token.LOCAL_LOAD :
         ++stackTop;
-        stack[stackTop] = stack[LOCAL_SHFT + slot];
-        sDbl[stackTop] = sDbl[LOCAL_SHFT + slot];
-        ++pc;
+        stack[stackTop] = stack[LOCAL_SHFT + indexReg];
+        sDbl[stackTop] = sDbl[LOCAL_SHFT + indexReg];
         continue Loop;
-    }
     case Icode_CALLSPECIAL : {
         if (instructionThreshold != 0) {
             instructionCount += INVOCATION_COST;
@@ -2798,7 +2770,7 @@ public class Interpreter
     case Icode_TYPEOFNAME :
         stack[++stackTop] = ScriptRuntime.typeofName(scope, stringReg);
         continue Loop;
-    case Icode_NAME_FAST_THIS : 
+    case Icode_NAME_FAST_THIS :
     case Icode_NAME_SLOW_THIS :
         stackTop = do_nameAndThis(stack, stackTop, scope, stringReg, op);
         continue Loop;
@@ -2924,23 +2896,19 @@ public class Interpreter
         stack[stackTop] = ScriptRuntime.newCatchScope(stringReg, stack[stackTop]);
         continue Loop;
     case Token.ENUM_INIT : {
-        int slot = (iCode[pc] & 0xFF);
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
-        stack[LOCAL_SHFT + slot] = ScriptRuntime.enumInit(lhs, scope);
-        ++pc;
+        stack[LOCAL_SHFT + indexReg] = ScriptRuntime.enumInit(lhs, scope);
         continue Loop;
     }
     case Token.ENUM_NEXT :
     case Token.ENUM_ID : {
-        int slot = (iCode[pc] & 0xFF);
-        Object val = stack[LOCAL_SHFT + slot];
+        Object val = stack[LOCAL_SHFT + indexReg];
         ++stackTop;
         stack[stackTop] = (op == Token.ENUM_NEXT)
                           ? (Object)ScriptRuntime.enumNext(val)
                           : (Object)ScriptRuntime.enumId(val);
-        ++pc;
         continue Loop;
     }
     case Icode_PUSH_PARENT : {
@@ -3358,8 +3326,8 @@ public class Interpreter
             throw ScriptRuntime.notFoundError(scope, name);
         }
 
-        Scriptable thisArg = (op == Icode_NAME_FAST_THIS) 
-		                     ? obj : ScriptRuntime.getThis(obj);
+        Scriptable thisArg = (op == Icode_NAME_FAST_THIS)
+                             ? obj : ScriptRuntime.getThis(obj);
         stack[++stackTop] = prop;
         stack[++stackTop] = thisArg;
 
