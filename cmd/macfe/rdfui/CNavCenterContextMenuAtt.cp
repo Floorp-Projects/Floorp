@@ -97,9 +97,15 @@ CNavCenterContextMenuAttachment :: NewHTContextMenuCursor ( )
 		if ( table->GetNextSelectedRow(selectedRow) )
 			clickInBackground = PR_FALSE;
 		
+#if 0
+// This will cause a crash if we return NULL because the context menu code assumes a menu will
+// be created. Not sure what the right fix is right now, but leaving context menus on is not
+// that bad (pinkerton)
 		// only allow context menu if the "useSelection" flag is true for the current view
-		if ( URDFUtilities::PropertyValueBool(HT_TopNode(table->GetHTView()), gNavCenter->useSelection) )
+		if ( URDFUtilities::PropertyValueBool(HT_TopNode(table->GetHTView()), gNavCenter->useSelection, true) == false)
 			return NULL;
+#endif
+
 	}
 	
 	return HT_NewContextualMenuCursor ( table->GetHTView(), PR_FALSE, clickInBackground );
