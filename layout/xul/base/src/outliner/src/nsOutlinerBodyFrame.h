@@ -110,6 +110,27 @@ protected:
   PRUint32 mNextState;
 };
 
+// This class is our column info.  We use it to iterate our columns and to obtain
+// information about each column.
+class nsOutlinerColumn {
+  nsOutlinerColumn* mNext;
+
+  nsString mID;
+  PRUint32 mCropStyle;
+  PRUint32 mTextAlignment;
+  
+  nsIFrame* mColFrame;
+
+public:
+  nsOutlinerColumn(nsIContent* aColElement);
+  virtual ~nsOutlinerColumn();
+
+  void SetNext(nsOutlinerColumn* aNext) { mNext = aNext; };
+
+  PRUint32 GetColumnWidth();
+};
+
+// The actual frame that paints the cells and rows.
 class nsOutlinerBodyFrame : public nsLeafBoxFrame, public nsIOutlinerBoxObject
 {
 public:
@@ -149,8 +170,8 @@ protected:
   // Returns the height of rows in the tree.
   PRInt32 GetRowHeight(nsIPresContext* aPresContext);
 
-  // Returns our height once border and padding have been removed.
-  PRInt32 GetTotalHeight();
+  // Returns our width/height once border and padding have been removed.
+  nsRect GetInnerBox();
 
   // Looks up a style context in the style cache.  On a cache miss we resolve
   // the pseudo-styles passed in and place them into the cache.
@@ -173,8 +194,8 @@ protected: // Data Members
   PRInt32 mTopRowIndex;
   PRInt32 mPageCount;
 
-  // Cached heights.
-  PRInt32 mTotalHeight;
+  // Cached heights.and info.
+  nsRect mInnerBox;
   PRInt32 mRowHeight;
 
   // A scratch array used when looking up cached style contexts.

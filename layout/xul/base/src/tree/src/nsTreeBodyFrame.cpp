@@ -232,7 +232,7 @@ PRInt32 nsOutlinerBodyFrame::GetRowHeight(nsIPresContext* aPresContext)
   return 16;
 }
 
-PRInt32 nsOutlinerBodyFrame::GetTotalHeight()
+nsRect nsOutlinerBodyFrame::GetInnerBox()
 {
   nsRect r(0,0,mRect.width, mRect.height);
   nsMargin m(0,0,0,0);
@@ -240,7 +240,7 @@ PRInt32 nsOutlinerBodyFrame::GetTotalHeight()
         mStyleContext->GetStyleData(eStyleStruct_Spacing);
   mySpacing->GetBorderPadding(m);
   r.Deflate(m);
-  return r.height;
+  return r;
 }
 
 // Painting routines
@@ -260,15 +260,18 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
 
   // Update our page count, our available height and our row height.
   mRowHeight = GetRowHeight(aPresContext);
-  mTotalHeight = GetTotalHeight();
-  mPageCount = mTotalHeight/mRowHeight;
+  mInnerBox = GetInnerBox();
+  mPageCount = mInnerBox.height/mRowHeight;
   PRInt32 rowCount = 0;
   if (mView)
     mView->GetRowCount(&rowCount);
   
   // Loop through each line.
   for (PRInt32 i = mTopRowIndex; i < rowCount && i < mTopRowIndex+mPageCount+1; i++) {
-    nsRect rowRect;
+    nsRect rowRect(0, mRowHeight*(i-mTopRowIndex), mInnerBox.width, mRowHeight);
+    nsRect dirtyRect;
+    if (dirtyRect.IntersectRect(aDirtyRect, rowRect))
+      PaintRow(i, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   }
 
   return NS_OK;
