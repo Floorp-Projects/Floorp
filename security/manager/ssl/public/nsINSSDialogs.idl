@@ -124,6 +124,8 @@ interface nsICertificateDialogs : nsISupports
                              out wstring password,
                              out boolean canceled);
 
+  void viewCert(in nsIX509Cert cert);
+
 };
 
 /**

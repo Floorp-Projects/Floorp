@@ -25,15 +25,6 @@ const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 
 var params;
 
-function setText(id, value) {
-  var element = document.getElementById(id);
-  if (!element) return;
-     if (element.hasChildNodes())  
-       element.removeChild(element.firstChild);
-  var textNode = document.createTextNode(value);
-  element.appendChild(textNode);
-}
-
 function onLoad()
 {
   params = window.arguments[0].QueryInterface(nsIDialogParamBlock);

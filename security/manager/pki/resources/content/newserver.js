@@ -69,6 +69,5 @@ function doCancel()
 
 function viewCert()
 {
-  window.open('chrome://pippki/content/certViewer.xul', cert.dbKey,
-              'chrome');
+  cert.view();
 }

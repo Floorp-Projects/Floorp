@@ -52,8 +52,7 @@ function onLoad()
 
 function viewCert()
 {
-  window.openDialog('chrome://pippki/content/certViewer.xul', cert.dbKey,
-                    'chrome');  
+  cert.view();
 }
 
 function doOK()
