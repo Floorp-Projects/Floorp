@@ -5,7 +5,7 @@
 
   <script src="SignonViewer.js"/>
 
-  <frameset rows = "30,10,125,50" border="0" framespacing="0" onload="loadFrames();">
+  <frameset rows = "15,10,125,50" border="0" framespacing="0" onload="loadFrames();">
     <frame src="about:blank"
            id="index_frame" 
            scrolling="no" 

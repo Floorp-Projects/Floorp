@@ -138,19 +138,19 @@
                   "<font size='2'>Logons not saved</font>" +
                 "</a>" +
               "</td>" +
-            "</tr>" +
-            "<tr>" +
+//          "</tr>" +
+//          "<tr>" +
               "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
                 "<a onclick='top.loadNopreviews();' href=''>" +
                   "<font size='2'>Forms not previewed</font>" +
                 "</a>" +
               "</td>" +
-              "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
-                "<a onclick='top.loadNocaptures();' href=''>" +
-                  "<font size='2'>Forms not saved</font>" +
-                "</a>" +
-              "</td>" +
-              "<td>&nbsp;&nbsp;&nbsp;</td>" +
+//            "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
+//              "<a onclick='top.loadNocaptures();' href=''>" +
+//                "<font size='2'>Forms not saved</font>" +
+//              "</a>" +
+//            "</td>" +
+            "<td>&nbsp;&nbsp;&nbsp;</td>" +
             "</tr>" +
           "</table>" +
         "</body>"
@@ -214,18 +214,18 @@
                 "</font>" +
               "</td>" +
               "<td>&nbsp;&nbsp;&nbsp;</td>" +
-            "</tr>" +
-            "<tr>" +
+//          "</tr>" +
+//          "<tr>" +
               "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
                 "<a onclick='top.loadNopreviews();' href=''>" +
                   "<font size='2'>Forms not previewed</font>" +
                 "</a>" +
               "</td>" +
-              "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
-                "<a onclick='top.loadNocaptures();' href=''>" +
-                  "<font size='2'>Forms not saved</font>" +
-                "</a>" +
-              "</td>" +
+//            "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
+//              "<a onclick='top.loadNocaptures();' href=''>" +
+//                "<font size='2'>Forms not saved</font>" +
+//              "</a>" +
+//            "</td>" +
               "<td>&nbsp;&nbsp;&nbsp;</td>" +
             "</tr>" +
           "</table>" +
@@ -288,18 +288,18 @@
                   "<font size='2'>Logons not saved</font>" +
                 "</a>" +
               "</td>" +
-            "</tr>" +
-            "<tr>" +
+//          "</tr>" +
+//          "<tr>" +
               "<td align='center' valign='middle' bgcolor='#ffffff'>" +
                 "<font size='2' color='#666666'>" +
                   "<b>Forms not previewed</b>" +
                 "</font>" +
               "</td>" +
-              "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
-                "<a onclick='top.loadNocaptures();' href=''>" +
-                  "<font size='2'>Forms not saved</font>" +
-                "</a>" +
-              "</td>" +
+//            "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
+//              "<a onclick='top.loadNocaptures();' href=''>" +
+//                "<font size='2'>Forms not saved</font>" +
+//              "</a>" +
+//            "</td>" +
               "<td>&nbsp;&nbsp;&nbsp;</td>" +
             "</tr>" +
           "</table>" +
