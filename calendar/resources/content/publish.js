@@ -298,8 +298,7 @@ var gPublishingListener =
       promptService.alert(null, calendarStringBundle.GetStringFromName('errorTitle'),
                           calendarStringBundle.formatStringFromName('httpPutError',[ch.responseStatus, ch.responseStatusText],2));
     }
-
-    else if (ch && !Components.isSuccessCode(request.status)) {
+    else if (!ch && !Components.isSuccessCode(request.status)) {
       // XXX this should be made human-readable.
       promptService.alert(null, calendarStringBundle.GetStringFromName('errorTitle'),
                           calendarStringBundle.formatStringFromName('otherPutError',[request.status.toString(16)],1));
