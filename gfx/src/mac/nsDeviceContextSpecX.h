@@ -67,7 +67,7 @@ public:
      *        printer).
      * @return error status
      */
-    NS_IMETHOD Init(PRBool aQuiet);
+    NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool aQuiet);
 
     /**
      * This will tell if the printmanager is currently open
