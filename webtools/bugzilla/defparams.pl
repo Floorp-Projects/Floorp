@@ -36,7 +36,11 @@ sub WriteParams {
     chmod 0777, "data";
     my $tmpname = "data/params.$$";
     open(FID, ">$tmpname") || die "Can't create $tmpname";
+    my $v = $::param{'version'};
+    undef $::param{'version'};  # Don't write the version number out to
+                                # the params file.
     print FID GenerateCode('%::param');
+    $::param{'version'} = $v;
     print FID "1;\n";
     close FID;
     rename $tmpname, "data/params" || die "Can't rename $tmpname to data/params";
