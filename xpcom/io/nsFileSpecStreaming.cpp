@@ -59,6 +59,8 @@ nsInputStream& operator >> (nsInputStream& s, nsPersistentFileDescriptor& d)
         // Now we know how many bytes to read, do it.
         bytesRead = s.read(bigBuffer, bytesRead);
     }
+    // Make sure we are null terminated
+    bigBuffer[bytesRead]='\0';
     d.SetData(bigBuffer, bytesRead);
     return s;
 }

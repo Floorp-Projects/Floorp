@@ -1086,6 +1086,13 @@ void nsPersistentFileDescriptor::SetData(const nsSimpleCharString& inData, PRInt
     mDescriptorString.CopyFrom((const char*)inData, inSize);
 }
 
+//----------------------------------------------------------------------------------------
+void nsPersistentFileDescriptor::SetData(const char* inData, PRInt32 inSize)
+//----------------------------------------------------------------------------------------
+{
+    mDescriptorString.CopyFrom(inData, inSize);
+}
+
 //========================================================================================
 //    class nsAutoCString
 //========================================================================================
