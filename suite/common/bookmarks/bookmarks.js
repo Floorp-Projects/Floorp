@@ -22,49 +22,17 @@
 
 */
 
-function BookmarksNewWindow()
-{
-  // XXX This needs to be "window.open()", I think...
-  var toolkitCore = XPAppCoresManager.Find("toolkitCore");
-  if (!toolkitCore) {
-    toolkitCore = new ToolkitCore();
-    if (toolkitCore) {
-      toolkitCore.Init("toolkitCore");
-    }
-  }
-  if (toolkitCore) {
-    toolkitCore.ShowWindow("resource://res/samples/bookmarks.xul",window);
-  }
-}
-
 function BookmarkProperties()
 {
   var tree = document.getElementById('bookmarksTree');
   var select_list = tree.getElementsByAttribute("selected", "true");
 
   if (select_list.length >= 1) {
-    dump("Bookmark Properties: Have selection\n");
-    var propsCore = XPAppCoresManager.Find(select_list[0].id);
-    if (!propsCore) {
-      dump("Bookmark Properties: no existing appcore\n");
-      var propsCore = new DOMPropsCore();
-      if (propsCore) {
-        dump("Bookmark Properties: initing new appcore\n");
-	propsCore.Init(select_list[0].id);
-      } else {
-        dump("Bookmark Properties: failed to create new appcore\n");
-      }
-    }
-    if (propsCore) {
-      dump("Bookmark Properties: opening new window\n");
-      propsCore.showProperties("resource://res/samples/bm-props.xul",
-			       window, select_list[0]);
-      return true;
-    }
+    var props = window.open("resource://res/samples/bm-props.xul", "BookmarkProperties", "chrome");
+    props.BookmarkURL = select_list[0].getAttribute("id");
   } else {
     dump("nothing selected!\n"); 
   }
-  return false;
 }
 
 function OpenURL(event,node)
@@ -79,18 +47,7 @@ function OpenURL(event,node)
     return false;
   }
 
-  /*window.open(url,'bookmarks');*/
-  var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-  if (!toolkitCore) {
-    toolkitCore = new ToolkitCore();
-    if (toolkitCore) {
-      toolkitCore.Init("ToolkitCore");
-    }
-  }
-  if (toolkitCore) {
-    toolkitCore.ShowWindow(url,window);
-  }
-
+  window.open(url,'bookmarks');
   dump("OpenURL(" + url + ")\n");
 
   return true;

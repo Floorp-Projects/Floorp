@@ -22,48 +22,114 @@
 
 */
 
-var node;
-var form_ids;
-var bm_attrs;
+var NC_NAMESPACE_URI = "http://home.netscape.com/NC-rdf#";
 
-function onLoad() {
-  node = new Object;
-  node = document.getElementById("properties_node");
+// This is the set of fields that are visible in the window.
+var Fields     = ["name", "url", "shortcut", "description"];
 
-  form_ids = new Array("name", "url", "shortcut",    "description");
-  bm_attrs = new Array("Name", "url", "ShortcutURL", "Description");
+// ...and this is a parallel array that contains the RDF properties
+// that they are associated with.
+var Properties = [NC_NAMESPACE_URI + "Name",
+                  NC_NAMESPACE_URI + "URL",
+                  NC_NAMESPACE_URI + "ShortcutURL",
+                  NC_NAMESPACE_URI + "Description"];
 
-  var element;
-  var value;
-  for (var ii=0; ii != form_ids.length; ii++) {
-    element = document.getElementById(form_ids[ii]);
-    value = node.getAttribute(bm_attrs[ii]);
-    element.setAttribute("value", value);
+var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
+RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+
+var RDFC = Components.classes["component://netscape/rdf/container-utils"].getService();
+RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainerUtils);
+
+var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
+
+
+function Init()
+{
+  // Initialize the properties panel by copying the values from the
+  // RDF graph into the fields on screen.
+
+  for (var i = 0; i < Fields.length; ++i) {
+    var field = document.getElementById(Fields[i]);
+
+    var value = Bookmarks.GetTarget(RDF.GetResource(BookmarkURL),
+                                    RDF.GetResource(Properties[i]),
+                                    true);
+
+    if (value) value = value.QueryInterface(Components.interfaces.nsIRDFLiteral);
+    if (value) value = value.Value;
+
+    dump("field '" + Fields[i] + "' <== '" + value + "'\n");
+
+    if (value) field.value = value;
+  }
+
+  if (RDFC.IsContainer(Bookmarks, RDF.GetResource(BookmarkURL))) {
+    // If it's a folder, it has no URL.
+    dump("disabling url field for folder\n");
+    document.getElementById("url").disabled = true;
   }
 }
-function commit() {
-  var element;
-  var value;
-  for (var ii=0; ii != form_ids.length; ii++) {
-    element = document.getElementById(form_ids[ii]);
-    node.setAttribute(bm_attrs[ii], element.value);
-  }
-  closeDialog();
-}
 
-function cancel() {
-  closeDialog();
-}
-function closeDialog() {
-  // XXX This needs to be replaced with window.close()!
-  var toolkitCore = XPAppCoresManager.Find("toolkitCore");
-  if (!toolkitCore) {
-    toolkitCore = new ToolkitCore();
-    if (toolkitCore) {
-      toolkitCore.Init("toolkitCore");
+
+function Commit() {
+  // Grovel through the fields to see if any of the values have
+  // changed. If so, update the RDF graph and force them to be saved
+  // to disk.
+  var changed = false;
+
+  for (var i = 0; i < Fields.length; ++i) {
+    var field = document.getElementById(Fields[i]);
+
+    // Get the new value as a literal, using 'null' if the value is
+    // empty.
+    var newvalue = field.value;
+    dump("field value = " + newvalue + "\n");
+
+    newvalue = (newvalue != '') ? RDF.GetLiteral(newvalue) : null;
+
+    var oldvalue = Bookmarks.GetTarget(RDF.GetResource(BookmarkURL),
+                                       RDF.GetResource(Properties[i]),
+                                       true);
+
+    if (oldvalue) oldvalue = oldvalue.QueryInterface(Components.interfaces.nsIRDFLiteral);
+
+    if (oldvalue != newvalue) {
+      dump("replacing value for " + Fields[i] + "\n");
+      dump("  oldvalue = " + oldvalue + "\n");
+      dump("  newvalue = " + newvalue + "\n");
+
+      if (oldvalue && !newvalue) {
+        Bookmarks.Unassert(RDF.GetResource(BookmarkURL),
+                           RDF.GetResource(Properties[i]),
+                           oldvalue);
+      }
+      else if (!oldvalue && newvalue) {
+        Bookmarks.Assert(RDF.GetResource(BookmarkURL),
+                         RDF.GetResource(Properties[i]),
+                         newvalue,
+                         true);
+      }
+      else if (oldvalue && newvalue) {
+        Bookmarks.Change(RDF.GetResource(BookmarkURL),
+                         RDF.GetResource(Properties[i]),
+                         oldvalue,
+                         newvalue);
+      }
+
+      changed = true;
     }
   }
-  if (toolkitCore) {
-    toolkitCore.CloseWindow(window);
+
+  if (changed) {
+    dump("re-writing bookmarks.html\n");
+    var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+    remote.Flush();
   }
+
+  window.close();
+}
+
+function Cancel() {
+  // Ignore any changes.
+  window.close();
 }
