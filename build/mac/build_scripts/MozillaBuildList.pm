@@ -2060,7 +2060,6 @@ sub BuildEditorProjects()
     StartBuildModule("editor");
 
     BuildOneProject(":mozilla:editor:txmgr:macbuild:txmgr.xml",                 "EditorTxmgr$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:editor:txtsvc:macbuild:txtsvc.xml",               "TextServices$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
 
     # note: only build one of the following targets
     BuildOneProject(":mozilla:editor:macbuild:editor.xml",                      "htmleditor$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
