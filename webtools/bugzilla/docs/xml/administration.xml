@@ -640,93 +640,9 @@
 
     <para>
     If the makeproductgroups param is on, a new group will be automatically
-    created for every new product.
+    created for every new product. It is primarily available for backward
+    compatibility with older sites. 
     </para>
-    
-    <para>
-    On the product edit page, there is a page to edit the 
-    <quote>Group Controls</quote> 
-    for a product and determine which groups are applicable, default, 
-    and mandatory for each product as well as controlling entry 
-    for each product and being able to set bugs in a product to be 
-    totally read-only unless some group restrictions are met. 
-    </para>
-    
-    <para>
-    For each group, it is possible to specify if membership in that
-    group is...
-    </para>
-    <orderedlist>
-      <listitem>
-        <para>
-        required for bug entry, 
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-        Not applicable to this product(NA),
-        a possible restriction for a member of the 
-        group to place on a bug in this product(Shown),
-        a default restriction for a member of the 
-        group to place on a bug in this product(Default),
-        or a mandatory restriction to be placed on bugs 
-        in this product(Mandatory).
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-        Not applicable by non-members to this product(NA),
-        a possible restriction for a non-member of the 
-        group to place on a bug in this product(Shown),
-        a default restriction for a non-member of the 
-        group to place on a bug in this product(Default),
-        or a mandatory restriction to be placed on bugs 
-        in this product when entered by a non-member(Mandatory).
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-        required in order to make <emphasis>any</emphasis> change
-        to bugs in this product <emphasis>including comments.</emphasis>
-        </para>
-      </listitem>
-    </orderedlist>
-    
-    <para>To create Groups:</para>
-
-    <orderedlist>
-      <listitem>
-        <para>Select the <quote>groups</quote>
-        link in the footer.</para>
-      </listitem>
-
-      <listitem>
-        <para>Take a moment to understand the instructions on the <quote>Edit
-        Groups</quote> screen, then select the <quote>Add Group</quote> link.</para>
-      </listitem>
-
-      <listitem>
-        <para>Fill out the <quote>Group</quote>, <quote>Description</quote>, 
-         and <quote>User RegExp</quote> fields. 
-         <quote>User RegExp</quote> allows you to automatically
-         place all users who fulfill the Regular Expression into the new group. 
-         When you have finished, click <quote>Add</quote>.</para>
-         <warning>
-           <para>If specifying a domain in the regexp, make sure you end
-           the regexp with a $. Otherwise, when granting access to 
-           "@mycompany\.com", you will allow access to 
-           'badperson@mycompany.com.cracker.net'. You need to use 
-           '@mycompany\.com$' as the regexp.</para>
-         </warning>
-      </listitem>
-      <listitem>
-        <para>After you add your new group, edit the new group.  On the
-        edit page, you can specify other groups that should be included
-        in this group and which groups should be permitted to add and delete
-        users from this group.</para>
-      </listitem>
-    </orderedlist>
-
     <para>
       Note that group permissions are such that you need to be a member
       of <emphasis>all</emphasis> the groups a bug is in, for whatever
@@ -737,6 +653,211 @@
       in order to make <emphasis>any</emphasis> change to bugs in that
       product.
     </para>    
+    <section>
+      <title>Creating Groups</title>
+      <para>To create Groups:</para>
+  
+      <orderedlist>
+        <listitem>
+          <para>Select the <quote>groups</quote>
+          link in the footer.</para>
+        </listitem>
+  
+        <listitem>
+          <para>Take a moment to understand the instructions on the <quote>Edit
+          Groups</quote> screen, then select the <quote>Add Group</quote> link.</para>
+        </listitem>
+  
+        <listitem>
+          <para>Fill out the <quote>Group</quote>, <quote>Description</quote>, 
+           and <quote>User RegExp</quote> fields. 
+           <quote>User RegExp</quote> allows you to automatically
+           place all users who fulfill the Regular Expression into the new group. 
+           When you have finished, click <quote>Add</quote>.</para>
+           <para>Users whose email addresses match the regular expression
+           will automatically be members of the group as long as their 
+           email addresses continue to match the regular expression.</para>
+           <note>
+             <para>This is a change from 2.16 where the regular expression
+             resulted in a user acquiring permanent membership in a group.
+             To remove a user from a group the user was in due to a regular
+             expression in version 2.16 or earlier, the user must be explicitly
+             removed from the group.</para>
+           </note>
+           <warning>
+             <para>If specifying a domain in the regexp, make sure you end
+             the regexp with a $. Otherwise, when granting access to 
+             "@mycompany\.com", you will allow access to 
+             'badperson@mycompany.com.cracker.net'. You need to use 
+             '@mycompany\.com$' as the regexp.</para>
+           </warning>
+        </listitem>
+        <listitem>
+          <para>If you plan to use this group to directly control
+          access to bugs, check the "use for bugs" box. Groups
+          not used for bugs are still useful because other groups
+          can include the group as a whole.</para>
+        </listitem>
+        <listitem>
+          <para>After you add your new group, edit the new group.  On the
+          edit page, you can specify other groups that should be included
+          in this group and which groups should be permitted to add and delete
+          users from this group.</para>
+        </listitem>
+      </orderedlist>
+  
+    </section>
+    <section>
+      <title>Assigning Users to Groups</title>
+      <para>Users can become a member of a group in several ways.</para>
+      <orderedlist>
+        <listitem>
+          <para>The user can be explicitly placed in the group by editing
+          the user's own profile</para>
+        </listitem>
+        <listitem>
+          <para>The group can include another group of which the user is
+          a member.</para>
+        </listitem>
+        <listitem>
+          <para>The user's email address can match a regular expression
+          that the group specifies to automatically grant membership to
+          the group.</para>
+        </listitem>
+      </orderedlist>
+    </section>
+    
+    <section>
+      <title>Assigning Group Controls to Products</title>
+      <para>
+      On the product edit page, there is a page to edit the 
+      <quote>Group Controls</quote> 
+      for a product. This  allows you to 
+      configure how a group relates to the product. 
+      Groups may be applicable, default, 
+      and mandatory as well as used to control entry 
+      or used to make bugs in the product
+      totally read-only unless the group restrictions are met. 
+      </para>
+      
+      <para>
+      For each group, it is possible to specify if membership in that
+      group is...
+      </para>
+      <orderedlist>
+        <listitem>
+          <para>
+          required for bug entry, 
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+          Not applicable to this product(NA),
+          a possible restriction for a member of the 
+          group to place on a bug in this product(Shown),
+          a default restriction for a member of the 
+          group to place on a bug in this product(Default),
+          or a mandatory restriction to be placed on bugs 
+          in this product(Mandatory).
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+          Not applicable by non-members to this product(NA),
+          a possible restriction for a non-member of the 
+          group to place on a bug in this product(Shown),
+          a default restriction for a non-member of the 
+          group to place on a bug in this product(Default),
+          or a mandatory restriction to be placed on bugs 
+          in this product when entered by a non-member(Mandatory).
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+          required in order to make <emphasis>any</emphasis> change
+          to bugs in this product <emphasis>including comments.</emphasis>
+          </para>
+        </listitem>
+      </orderedlist>
+      <para>These controls are often described in this order, so a 
+      product that requires a user to be a member of group "foo" 
+      to enter a bug and then requires that the bug stay resticted
+      to group "foo" at all times and that only members of group "foo"
+      can edit the bug even if they otherwise could see the bug would 
+      have its controls summarized by...</para>
+      <programlisting> 
+foo: ENTRY, MANDATORY/MANDATORY, CANEDIT
+      </programlisting>
+      
+    </section>
+    <section>
+    <title>Common Applications of Group Controls</title>
+      <section>
+      <title>General User Access With Security Group</title>
+      <para>To permit any user to file bugs in each product (A, B, C...) 
+      and to permit any user to submit those bugs into a security
+      group....</para>
+      <programlisting> 
+Product A...
+security: SHOWN/SHOWN
+Product B...
+security: SHOWN/SHOWN
+Product C...
+security: SHOWN/SHOWN
+      </programlisting>
+      </section>
+      <section>
+      <title>General User Access With A Security Product</title>
+      <para>To permit any user to file bugs in a Security product
+      while keeping those bugs from becoming visible to anyone
+      outside the securityworkers group unless a member of the
+      securityworkers group removes that restriction....</para>
+      <programlisting> 
+Product Security...
+securityworkers: DEFAULT/MANDATORY
+      </programlisting>
+      </section>
+      <section>
+      <title>Product Isolation With Common Group</title>
+      <para>To permit users of product A to access the bugs for
+      product A, users of product B to access product B, and support
+      staff to access both, 3 groups are needed</para>
+      <orderedlist>
+        <listitem>
+          <para>Support: Contains members of the support staff.</para>
+        </listitem>
+        <listitem>
+          <para>AccessA: Contains users of product A and the Support group.</para>
+        </listitem>
+        <listitem>
+          <para>AccessB: Contains users of product B and the Support group.</para>
+        </listitem>
+      </orderedlist>
+      <para>Once these 3 groups are defined, the products group controls
+      can be set to..</para>
+      <programlisting>
+Product A...
+AccessA: ENTRY, MANDATORY/MANDATORY
+Product B...
+AccessB: ENTRY, MANDATORY/MANDATORY
+      </programlisting>
+      <para>Optionally, the support group could be permitted to make
+      bugs inaccessible to the users and could be permitted to publish
+      bugs relevant to all users in a common product that is read-only
+      to anyone outside the support group. That configuration could
+      be...</para>
+      <programlisting>
+Product A...
+AccessA: ENTRY, MANDATORY/MANDATORY
+Support: SHOWN/NA
+Product B...
+AccessB: ENTRY, MANDATORY/MANDATORY
+Support: SHOWN/NA
+Product Common...
+Support: ENTRY, DEFAULT/MANDATORY, CANEDIT
+      </programlisting>
+      </section>
+    </section>
   </section>
 
   <section id="upgrading">
