@@ -145,7 +145,7 @@ function onAccept()
 
     if (start >= 0)
     {
-      var end = str.indexOf(">", start+1);
+      end = str.indexOf(">", start+1);
       if (end > start)
       {
         var tagContent = TrimString(str.slice(start+1, end));
