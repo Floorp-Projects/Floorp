@@ -261,7 +261,7 @@ delete()
 ########################################################################
 certImport()
 {
-  echo "certutil -d PKITSdb -A -t \",,\" -n $* -i certs/$*.crt"
+  echo "certutil -d PKITSdb -A -t \",,\" -n $* -i $certs/$*.crt"
   certutil -d $PKITSdb -A -t ",," -n $* -i $certs/$*.crt > ${PKITSDIR}/cmdout.txt 2>&1
   RET=$?
   cat ${PKITSDIR}/cmdout.txt
