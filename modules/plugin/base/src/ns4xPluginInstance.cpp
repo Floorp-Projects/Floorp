@@ -553,7 +553,7 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
 
       if (!mStreamStarted) {
         // The plugin called NPN_DestroyStream() from within
-        // NPP_WriteReady(), kill the stream.
+        // NPP_Write(), kill the stream.
 
         return NS_BINDING_ABORTED;
       }
