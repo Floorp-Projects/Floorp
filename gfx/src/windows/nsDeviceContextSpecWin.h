@@ -39,6 +39,7 @@
 #ifndef nsDeviceContextSpecWin_h___
 #define nsDeviceContextSpecWin_h___
 
+#include "nsCOMPtr.h"
 #include "nsIDeviceContextSpec.h"
 #include "nsIPrintOptions.h" // For nsIPrinterEnumerator
 #include "nsIPrintSettings.h"

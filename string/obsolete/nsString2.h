@@ -74,7 +74,6 @@
 #include "nsXPIDLString.h"
 #endif
 
-#include "nsIAtom.h"
 #include "nsStr.h"
 
 class UTF8traits
@@ -407,8 +406,6 @@ public:
   PRInt32 CompareWithConversion(const char* aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aCount=-1) const;
   
   PRBool  EqualsWithConversion(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
-
-  PRBool  EqualsAtom(nsIAtom* anAtom) const;
 
   PRBool  EqualsIgnoreCase(const char* aString,PRInt32 aCount=-1) const;
 

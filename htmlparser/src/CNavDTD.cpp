@@ -43,7 +43,8 @@
 #define ENABLE_RESIDUALSTYLE  
 
      
-#include "nsDebug.h" 
+#include "nsDebug.h"
+#include "nsIAtom.h"
 #include "CNavDTD.h" 
 #include "nsHTMLTokens.h"
 #include "nsCRT.h"

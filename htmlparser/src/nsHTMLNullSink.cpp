@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsIHTMLContentSink.h"
+#include "nsIAtom.h"
 #include "nsHTMLTokens.h"
 #include "nsIParser.h"
 #include "prtypes.h" 

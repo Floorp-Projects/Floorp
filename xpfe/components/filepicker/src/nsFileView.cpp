@@ -51,6 +51,7 @@
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsQuickSort.h"
+#include "nsIAtom.h"
 
 #include "nsWildCard.h"
 

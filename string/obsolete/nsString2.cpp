@@ -1115,31 +1115,6 @@ PRBool nsString::EqualsWithConversion(const char* aString,PRBool aIgnoreCase,PRI
 }
 
 PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount);
-/**
- * Compare this to given atom; note that we compare full strings here.
- * The optional length argument just lets us know how long the given string is.
- * If you provide a length, it is compared to length of this string as an
- * optimization.
- * 
- * @update gess 01/04/99
- * @param  aString -- unistring to compare to this
- * @param  aLength -- length of given string.
- * @return TRUE if equal
- */
-PRBool nsString::EqualsAtom(nsIAtom* aAtom) const{
-  NS_ASSERTION(0!=aAtom,kNullPointerError);
-  PRBool result=PR_FALSE;
-  if(aAtom){
-    PRInt32 cmp=0;
-    const PRUnichar* unicode;
-    if (aAtom->GetUnicode(&unicode) != NS_OK || unicode == nsnull)
-        return PR_FALSE;
-    cmp=Compare2To2(mUStr,unicode, nsCharTraits<PRUnichar>::length(mUStr));
-    result=PRBool(0==cmp);
-  }
-
-   return result;
-}
 
 /**
  *  Determine if given char is a valid space character

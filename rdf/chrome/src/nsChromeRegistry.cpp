@@ -108,6 +108,7 @@
 #include "nsIContent.h"
 #include "nsIDOMWindowCollection.h"
 #include "imgICache.h"
+#include "nsIAtom.h"
 
 static char kChromePrefix[] = "chrome://";
 static char kUseXBLFormsPref[] = "nglayout.debug.enable_xbl_forms";
@@ -244,7 +245,8 @@ NS_IMETHODIMP nsOverlayEnumerator::GetNext(nsISupports **aResult)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsChromeRegistry::nsChromeRegistry()
+nsChromeRegistry::nsChromeRegistry() : mRDFService(nsnull),
+                                       mRDFContainerUtils(nsnull)
 {
   NS_INIT_REFCNT();
 
@@ -3105,6 +3107,7 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
 
   mBatchInstallFlushes = PR_TRUE;
 
+  // process chromeType, chromeProfile, chromeLocType, chromeLocation
   while (aBuffer < bufferEnd) {
     // parse one line of installed-chrome.txt
     chromeType = aBuffer;
@@ -3157,7 +3160,7 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
       if (NS_FAILED(rv))
         return rv;
 
-      /* xpidl strings aren't unified with strings, so this fu is necessary.
+      /* 
        * all we want here is the canonical url
        */
       rv = NS_GetURLSpecFromFile(chromeFile, chromeURL);

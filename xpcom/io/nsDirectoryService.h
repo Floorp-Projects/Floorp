@@ -43,8 +43,7 @@
 #include "nsHashtable.h"
 #include "nsILocalFile.h"
 #include "nsISupportsArray.h"
-#include "nsXPIDLString.h"
-
+#include "nsIAtom.h"
 
 class nsDirectoryService : public nsIDirectoryService,
                            public nsIProperties,

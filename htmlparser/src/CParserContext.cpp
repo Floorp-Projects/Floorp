@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 
+#include "nsIAtom.h"
 #include "CParserContext.h"
 #include "nsToken.h"
 #include "prenv.h"  

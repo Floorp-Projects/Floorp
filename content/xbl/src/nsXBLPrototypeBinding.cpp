@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
+#include "nsIAtom.h"
 #include "nsIXBLPrototypeBinding.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsIInputStream.h"

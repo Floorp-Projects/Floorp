@@ -48,6 +48,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
+#include "nsIAtom.h"
 
 void
 ChangeCSSInlineStyleTxn::AppendDeclaration(nsAString & aOutputString,

@@ -34,6 +34,7 @@
 #include "prlog.h"
 
 #include "nscore.h"
+#include "nsIAtom.h"
 #include "nsPostScriptObj.h"
 #include "isotab.c"
 #include "nsFont.h"

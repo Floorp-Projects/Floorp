@@ -93,6 +93,7 @@
 #include "nsReadableUtils.h"
 #include "nsIExpatSink.h"
 #include "nsCRT.h"
+#include "nsIAtom.h"
 
 ////////////////////////////////////////////////////////////////////////
 

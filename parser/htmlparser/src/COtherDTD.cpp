@@ -42,7 +42,8 @@
      
           
 #include "nsDebug.h"      
-#include "COtherDTD.h" 
+#include "nsIAtom.h"
+#include "COtherDTD.h"
 #include "nsHTMLTokens.h"
 #include "nsCRT.h"     
 #include "nsParser.h"  

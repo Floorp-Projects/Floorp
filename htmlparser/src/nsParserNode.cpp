@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 
+#include "nsIAtom.h"
 #include "nsParserNode.h" 
 #include <string.h>
 #include "nsHTMLTokens.h"

@@ -42,8 +42,9 @@
 
 
 
+#include "nsIAtom.h"
 #include "nsParser.h"
-#include "nsIContentSink.h" 
+#include "nsIContentSink.h"
 #include "nsString.h"
 #include "nsCRT.h" 
 #include "nsScanner.h"
