@@ -39,7 +39,7 @@
 #include "nsCSSLayout.h"
 #include "nsHTMLFrame.h"
 
-#define BROKEN_IMAGE_URL "resource:/html/broken-image.gif"
+#define BROKEN_IMAGE_URL "resource:/res/html/broken-image.gif"
 
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
@@ -351,7 +351,6 @@ ImageFrame::Paint(nsIPresContext& aPresContext,
     // First paint background and borders
     nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
 
-    // XXX when rendering the broken image, do not scale!
     // XXX when we don't have the image, draw the we-don't-have-an-image look
 
     nsIImage* image = mImageLoader.GetImage();
@@ -364,6 +363,11 @@ ImageFrame::Paint(nsIPresContext& aPresContext,
     // borders and padding)
     nsRect inner;
     GetInnerArea(&aPresContext, inner);
+    if (mImageLoader.GetLoadImageFailed()) {
+      float p2t = aPresContext.GetPixelsToTwips();
+      inner.width = nscoord(p2t * image->GetWidth());
+      inner.height = nscoord(p2t * image->GetHeight());
+    }
     aRenderingContext.DrawImage(image, inner);
   }
 
