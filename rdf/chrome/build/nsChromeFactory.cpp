@@ -21,6 +21,7 @@
 #include "nsIGenericFactory.h"
 #include "nsIChromeRegistry.h"
 #include "nscore.h"
+#include "rdf.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
@@ -83,7 +84,9 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
     if (NS_FAILED(rv)) return rv;
 
     rv = compMgr->RegisterComponent(kChromeRegistryCID,
-                                    "Chrome Registry", nsnull, aPath,
+                                    "Chrome Registry",
+                                    NS_RDF_DATASOURCE_PROGID_PREFIX "chrome",
+                                    aPath,
                                     PR_TRUE, PR_TRUE);
 
     return rv;

@@ -32,8 +32,8 @@ class nsIChromeRegistry : public nsISupports {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_ICHROMEREGISTRY_IID; return iid; }
     
-    NS_IMETHOD Init() = 0;
     NS_IMETHOD ConvertChromeURL(nsIURL* aChromeURL) = 0;
+    NS_IMETHOD EnsureRegistryDataSource() = 0;
 };
 
 // for component registration
