@@ -56,7 +56,7 @@ function getTestCases() {
 
     // basic latin test
 
-    for ( var i = 1; i < 0x007A; i++ ) {
+    for ( var i = 0; i < 0x007A; i++ ) {
         var u = new Unicode(i);
         TEST_STRING += String.fromCharCode(i);
         EXPECT_STRING += String.fromCharCode( u.upper );
