@@ -434,7 +434,10 @@ main(int argc, char *argv[])
 	}
 	else
 	{
-		viewReport(view, "no URL or empty URL specified");
+		fprintf(view->out, "<html><head><title>SniffURI Error</title>");
+		fprintf(view->out, "</head><body><h2>Please enter a URI</h2>");
+		fprintf(view->out, "<a href=index.html>Go Back</a>");
+		fprintf(view->out, "</body></html>");
 	}
 
 	exit(0);
