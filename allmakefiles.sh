@@ -324,6 +324,7 @@ modules/plugin/nglsrc/Makefile
 modules/plugin/public/Makefile
 modules/plugin/src/Makefile
 modules/plugin/test/Makefile
+modules/plugin/SanePlugin/Makefile
 "
 
 MAKEFILES_netwerk="
