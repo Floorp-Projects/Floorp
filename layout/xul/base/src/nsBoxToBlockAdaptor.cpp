@@ -897,15 +897,19 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
     // we will set the child's rect to include the overflow size.
        if (mFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
          // make sure we store the overflow size
-         mOverflow.width  = aDesiredSize.mOverflowArea.width;
-         mOverflow.height = aDesiredSize.mOverflowArea.height;
+
+         // This kinda sucks. We should be able to handle the case
+         // where there's overflow above or to the left of the
+         // origin. But for now just chop that stuff off.
+         mOverflow.width  = aDesiredSize.mOverflowArea.XMost();
+         mOverflow.height = aDesiredSize.mOverflowArea.YMost();
 
          // include the overflow size in our child's rect?
          if (mIncludeOverflow) {
              //printf("OutsideChildren width=%d, height=%d\n", aDesiredSize.mOverflowArea.width, aDesiredSize.mOverflowArea.height);
-             aDesiredSize.width = aDesiredSize.mOverflowArea.width;
+             aDesiredSize.width = aDesiredSize.mOverflowArea.XMost();
              if (aDesiredSize.width <= aWidth)
-               aDesiredSize.height = aDesiredSize.mOverflowArea.height;
+               aDesiredSize.height = aDesiredSize.mOverflowArea.YMost();
              else {
               if (aDesiredSize.width > aWidth)
               {
@@ -922,7 +926,7 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
                  mFrame->WillReflow(aPresContext);
                  mFrame->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
                  if (mFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)
-                    aDesiredSize.height = aDesiredSize.mOverflowArea.height;
+                   aDesiredSize.height = aDesiredSize.mOverflowArea.YMost();
 
               }
              }
