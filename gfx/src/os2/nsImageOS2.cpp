@@ -33,7 +33,6 @@
 #include "nsIDeviceContext.h"
 #include "nsRenderingContextOS2.h"
 
-#define ROP_NOTSRCAND 0x22 // NOT(SRC) AND DST
 
 NS_IMPL_ISUPPORTS(nsImageOS2, NS_GET_IID(nsIImage));
 
@@ -264,11 +263,13 @@ nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
       // > the target.
       // >
       // > For monochrome bitmaps GPI replaces 1 with IMAGEBUNDLE foreground
-      // > color and 0 with background color. 
+      // > color and 0 with background color. To make this work with ROP_SRCAND
+      // > we set foreground to black and background to white. Thus AND with 
+      // > 1 (opaque) in mask maps to AND with IMAGEBUNDLE foreground (which is 0)
+      // > always gives 0 - clears opaque region to zeros. 
 
       // Apply mask to target, clear pels we will fill in from the image
-      DrawBitmap( surf->mPS, aptl, ROP_NOTSRCAND, PR_TRUE);
-//      DrawBitmap( surf->mPS, aptl, ROP_SRCAND, PR_TRUE);
+      DrawBitmap( surf->mPS, aptl, ROP_SRCAND, PR_TRUE);
       // Now combine image with target
       DrawBitmap( surf->mPS, aptl, ROP_SRCPAINT, PR_FALSE);
    }
@@ -302,7 +303,7 @@ struct MASKBMPINFO
       memcpy( &bmpInfo, pBI, sizeof( BITMAPINFOHEADER2));
       bmpInfo.cBitCount = 1;
       rgbZero = rgb2Black;
-      rgbOne = rgb2White;
+      rgbOne  = rgb2White;
    }
 };
 
@@ -449,9 +450,10 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                           GPI_ERROR);
 
          // Set image foreground and background colors. These are used in transparent images for blitting 1-bit masks.
+         // To invert colors on ROP_SRCAND we map 1 to black and 0 to white
          IMAGEBUNDLE ib;
-         ib.lColor     = GFX (::GpiQueryColorIndex (MemPS, 0, MK_RGB (255, 255, 255)), GPI_ALTERROR);  // 1 in monochrome image maps to white
-         ib.lBackColor = GFX (::GpiQueryColorIndex (MemPS, 0, MK_RGB (0, 0, 0)), GPI_ALTERROR);        // 0 in monochrome image maps to black
+         ib.lColor     = GFX (::GpiQueryColorIndex (MemPS, 0, MK_RGB (0, 0, 0)), GPI_ALTERROR);        // map 1 in mask to 0x000000 (black) in destination
+         ib.lBackColor = GFX (::GpiQueryColorIndex (MemPS, 0, MK_RGB (255, 255, 255)), GPI_ALTERROR);  // map 0 in mask to 0xFFFFFF (white) in destination
          ib.usMixMode  = FM_OVERPAINT;
          ib.usBackMixMode = BM_OVERPAINT;
          GFX (::GpiSetAttrs (MemPS, PRIM_IMAGE, IBB_COLOR | IBB_BACK_COLOR | IBB_MIX_MODE | IBB_BACK_MIX_MODE, 0, (PBUNDLE)&ib), FALSE);
@@ -520,7 +522,7 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                {
                   // Apply mask to target, clear pels we will fill in from the image
 //                  GFX (::GpiSetBitmap (MemPS, hBmpMask), HBM_ERROR);
-                  GFX (::GpiBitBlt (surf->mPS, MemPS, 4, aptlTile, ROP_NOTSRCAND, 0L), GPI_ERROR);
+                  GFX (::GpiBitBlt (surf->mPS, MemPS, 4, aptlTile, ROP_SRCAND, 0L), GPI_ERROR);
                   // Now combine image with target
                   GFX (::GpiSetBitmap (MemPS, hBmp), HBM_ERROR);
                   GFX (::GpiBitBlt (surf->mPS, MemPS, 4, aptlTile, ROP_SRCPAINT, 0L), GPI_ERROR);
