@@ -216,7 +216,7 @@ PRBool CDTDDebug::DebugRecord(char * path, nsString& aURLRef, char * filename)
 	  // where the vector contains the verification path and
 	  // the filename contains the debug source dump
       char buffer[513];
-      aURLRef.ToCString(buffer,sizeof(buffer)-1);
+      aURLRef.ToCString(buffer,sizeof(buffer));
       sprintf(string,"%s %s %s\r\n", buffer, path, filename);
 
 	  // get the file size, read in the file and parse it line at

@@ -256,7 +256,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
  */
 void CStartToken::DebugDumpSource(ostream& out) {
   char buffer[1000];
-  mTextValue.ToCString(buffer,sizeof(buffer)-1);
+  mTextValue.ToCString(buffer,sizeof(buffer));
   out << "<" << buffer;
   if(!mAttributed)
     out << ">";
@@ -382,7 +382,7 @@ PRInt32 CEndToken::GetTokenType(void) {
  */
 void CEndToken::DebugDumpSource(ostream& out) {
   char buffer[1000];
-  mTextValue.ToCString(buffer,sizeof(buffer)-1);
+  mTextValue.ToCString(buffer,sizeof(buffer));
   out << "</" << buffer << ">";
 }
 
@@ -1103,9 +1103,9 @@ void CAttributeToken::SanitizeKey() {
  */
 void CAttributeToken::DebugDumpToken(ostream& out) {
   char buffer[200];
-  mTextKey.ToCString(buffer,sizeof(buffer)-1);
+  mTextKey.ToCString(buffer,sizeof(buffer));
   out << "[" << GetClassName() << "] " << buffer << "=";
-  mTextValue.ToCString(buffer,sizeof(buffer)-1);
+  mTextValue.ToCString(buffer,sizeof(buffer));
   out << buffer << ": " << mTypeID << endl;
 }
  
@@ -1305,10 +1305,10 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
  */
 void CAttributeToken::DebugDumpSource(ostream& out) {
   static char buffer[1000];
-  mTextKey.ToCString(buffer,sizeof(buffer)-1);
+  mTextKey.ToCString(buffer,sizeof(buffer));
   out << " " << buffer;
   if(mTextValue.Length()){
-    mTextValue.ToCString(buffer,sizeof(buffer)-1);
+    mTextValue.ToCString(buffer,sizeof(buffer));
     out << "=" << buffer;
   }
   if(mLastAttribute)
@@ -1789,7 +1789,7 @@ nsresult CSkippedContentToken::Consume(PRUnichar aChar,nsScanner& aScanner) {
  */
 void CSkippedContentToken::DebugDumpSource(ostream& out) {
   static char buffer[1000];
-  mTextKey.ToCString(buffer,sizeof(buffer)-1);
+  mTextKey.ToCString(buffer,sizeof(buffer));
   out << " " << buffer;
   if(mLastAttribute)
     out<<">";

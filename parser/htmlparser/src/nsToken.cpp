@@ -139,7 +139,8 @@ void CToken::DebugDumpToken(ostream& anOutputStream) {
  */
 void CToken::DebugDumpSource(ostream& anOutputStream) {
   char buf[256];
-  anOutputStream << mTextValue.ToCString(buf,256);
+  mTextValue.ToCString(buf,sizeof(buf));
+  anOutputStream << buf;
 }
 
 /**
