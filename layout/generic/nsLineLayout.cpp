@@ -2203,7 +2203,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify)
         pfd->mFrame->SetRect(pfd->mBounds);
         pfd = pfd->mNext;
       }
-//      aLineBounds.width += dx;
+      aLineBounds.width += dx;
     }
 
     if ((NS_STYLE_DIRECTION_RTL == psd->mDirection) &&
