@@ -156,7 +156,7 @@ nsEntityConverter:: GetVersionBundleInstance(PRUint32 versionNumber)
   PRUint32 i;
   for (i = 0; i < mVersionListLength; i++) {
     if (versionNumber == mVersionList[i].mVersion) {
-      if (NULL == mVersionList[i].mEntities)
+      if (!mVersionList[i].mEntities)
       { // not loaded
         // load the property file
         mVersionList[i].mEntities = LoadEntityBundle(versionNumber);
