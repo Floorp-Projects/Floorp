@@ -34,6 +34,7 @@
  */
 
 #include "jsd_xpc.h"
+#include "jscntxt.h"
 
 #include "nsIXPConnect.h"
 #include "nsIGenericFactory.h"
@@ -51,6 +52,8 @@
 #include "nsWidgetsCID.h"
 #include "nsIAppShell.h"
 #include "nsIJSContextStack.h"
+
+#define CAUTIOUS_SCRIPTHOOK
 
 #ifdef DEBUG_verbose
 #   define DEBUG_COUNT(name, count)                                             \
@@ -183,18 +186,27 @@ jsds_RemoveEphemeral (LiveEphemeral **listHead, LiveEphemeral *item)
  *******************************************************************************/
 
 static void
-jsds_NotifyPendingDeadScripts ()
+jsds_NotifyPendingDeadScripts (JSContext *cx)
 {
     nsCOMPtr<jsdIScriptHook> hook = 0;   
     gJsds->GetScriptHook (getter_AddRefs(hook));
     if (hook)
     {
         DeadScript *ds;
+#ifdef CAUTIOUS_SCRIPTHOOK
+        JSRuntime *rt = JS_GetRuntime(cx);
+#endif
         do {
             ds = gDeadScripts;
             
             /* tell the user this script has been destroyed */
+#ifdef CAUTIOUS_SCRIPTHOOK
+            JS_DISABLE_GC(rt);
+#endif
             hook->OnScriptDestroyed (ds->script);
+#ifdef CAUTIOUS_SCRIPTHOOK
+            JS_ENABLE_GC(rt);
+#endif
             /* get next deleted script */
             gDeadScripts = NS_REINTERPRET_CAST(DeadScript *,
                                                PR_NEXT_LINK(&ds->links));
@@ -218,7 +230,7 @@ jsds_GCCallbackProc (JSContext *cx, JSGCStatus status)
     printf ("new gc status is %i\n", status);
 #endif
     if (status == JSGC_END && gDeadScripts)
-        jsds_NotifyPendingDeadScripts ();
+        jsds_NotifyPendingDeadScripts (cx);
     
     if (gLastGCProc)
         return gLastGCProc (cx, status);
@@ -287,6 +299,11 @@ static void
 jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
                      void* callerdata)
 {
+#ifdef CAUTIOUS_SCRIPTHOOK
+    JSContext *cx = JSD_GetDefaultJSContext(jsdc);
+    JSRuntime *rt = JS_GetRuntime(cx);
+#endif
+
     if (creating) {
         jsdIScriptHook *hook = 0;
         
@@ -296,7 +313,13 @@ jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
             
         nsCOMPtr<jsdIScript> script = 
             getter_AddRefs(jsdScript::FromPtr(jsdc, jsdscript));
+#ifdef CAUTIOUS_SCRIPTHOOK
+        JS_DISABLE_GC(rt);
+#endif
         hook->OnScriptCreated (script);
+#ifdef CAUTIOUS_SCRIPTHOOK
+        JS_ENABLE_GC(rt);
+#endif
     } else {
         
         jsdIScript *jsdis = jsdScript::FromPtr(jsdc, jsdscript);
@@ -309,7 +332,13 @@ jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
             nsCOMPtr<jsdIScriptHook> hook = 0;   
             gJsds->GetScriptHook (getter_AddRefs(hook));
             if (hook) {
+#ifdef CAUTIOUS_SCRIPTHOOK
+                JS_DISABLE_GC(rt);
+#endif
                 hook->OnScriptDestroyed (jsdis);
+#ifdef CAUTIOUS_SCRIPTHOOK
+                JS_ENABLE_GC(rt);
+#endif
             }
         } else {
             /* if a GC *is* running, we've got to wait until it's done before
@@ -910,23 +939,26 @@ NS_IMETHODIMP
 jsdValue::GetJsType (PRUint32 *_rval)
 {
     ASSERT_VALID_VALUE;
-    /* XXX surely this can be done better. */
-    if (JSD_IsValueBoolean(mCx, mValue))
-        *_rval = TYPE_BOOLEAN;
-    else if (JSD_IsValueDouble(mCx, mValue))
-        *_rval = TYPE_DOUBLE;
-    else if (JSD_IsValueInt(mCx, mValue))
-        *_rval = TYPE_INT;
-    else if (JSD_IsValueFunction(mCx, mValue))
-        *_rval = TYPE_FUNCTION;
-    else if (JSD_IsValueNull(mCx, mValue))
+    jsval val;
+
+    val = JSD_GetValueWrappedJSVal (mCx, mValue);
+    
+    if (JSVAL_IS_NULL(val))
         *_rval = TYPE_NULL;
-    else if (JSD_IsValueObject(mCx, mValue))
-        *_rval = TYPE_OBJECT;
-    else if (JSD_IsValueString(mCx, mValue))
+    else if (JSVAL_IS_BOOLEAN(val))
+        *_rval = TYPE_BOOLEAN;
+    else if (JSVAL_IS_DOUBLE(val))
+        *_rval = TYPE_DOUBLE;
+    else if (JSVAL_IS_INT(val))
+        *_rval = TYPE_INT;
+    else if (JSVAL_IS_STRING(val))
         *_rval = TYPE_STRING;
-    else if (JSD_IsValueVoid(mCx, mValue))
+    else if (JSVAL_IS_VOID(val))
         *_rval = TYPE_VOID;
+    else if (JSD_IsValueFunction (mCx, mValue))
+        *_rval = TYPE_FUNCTION;
+    else if (JSVAL_IS_OBJECT(val))
+        *_rval = TYPE_OBJECT;
     else
         NS_ASSERTION (0, "Value has no discernible type.");
 
@@ -1167,7 +1199,10 @@ jsdService::Off (void)
     
     if (gDeadScripts)
         if (gGCStatus == JSGC_END)
-            jsds_NotifyPendingDeadScripts();
+        {
+            JSContext *cx = JSD_GetDefaultJSContext(mCx);
+            jsds_NotifyPendingDeadScripts(cx);
+        }
         else
             return NS_ERROR_NOT_AVAILABLE;
 
