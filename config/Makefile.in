@@ -83,7 +83,7 @@ $(DEPTH)/build/build_number: FORCE
 	@$(MAKE_OBJDIR)
 	$(RM) $@
 	$(PERL) $(srcdir)/bdate.pl > $@
-	$(PERL) $(srcdir)/aboutime.pl $(topsrcdir)/xpfe/browser/resources/content/navigator.xul $@
+	$(PERL) $(srcdir)/aboutime.pl $(topsrcdir)/xpfe/browser/resources/locale/en-US/navigator.dtd $@
 	$(PERL) $(srcdir)/aboutime.pl $(topsrcdir)/xpfe/browser/resources/content/viewSource.xul $@
 
 $(DEPTH)/modules/libpref/src/init/all.js: FORCE
