@@ -446,10 +446,12 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext,
   // XXX This should come from the default style sheet (ua.css), and
   // not be hardcoded. Using solid causes the borders not to show up...
 #if 1
-  aSpacingStyle.mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_INSET; 
-  aSpacingStyle.mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_INSET; 
-  aSpacingStyle.mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_INSET; 
-  aSpacingStyle.mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_INSET; 
+
+  aSpacingStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_INSET);
+  aSpacingStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_INSET);
+  aSpacingStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_INSET);
+  aSpacingStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_INSET);
+
 #endif
   
   nsTableFrame* tableFrame;
@@ -472,10 +474,12 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext,
   if (borderColor == 0xFFFFFFFF)
     borderColor = 0xFFC0C0C0;
 
-  aSpacingStyle.mBorderColor[NS_SIDE_TOP] = 
-  aSpacingStyle.mBorderColor[NS_SIDE_LEFT] = 
-  aSpacingStyle.mBorderColor[NS_SIDE_BOTTOM] = 
-  aSpacingStyle.mBorderColor[NS_SIDE_RIGHT] = borderColor;
+ 
+  aSpacingStyle.SetBorderColor(NS_SIDE_TOP, borderColor);
+  aSpacingStyle.SetBorderColor(NS_SIDE_LEFT, borderColor);
+  aSpacingStyle.SetBorderColor(NS_SIDE_BOTTOM, borderColor);
+  aSpacingStyle.SetBorderColor(NS_SIDE_RIGHT, borderColor);
+
 
   //adjust the border style based on the table rules attribute
   const nsStyleTable* tableStyle;
@@ -484,10 +488,10 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext,
   switch (tableStyle->mRules)
   {
   case NS_STYLE_TABLE_RULES_NONE:
-    aSpacingStyle.mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
-    aSpacingStyle.mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
-    aSpacingStyle.mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_NONE;
-    aSpacingStyle.mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_NONE;
+    aSpacingStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+    aSpacingStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+    aSpacingStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+    aSpacingStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
     break;
   case NS_STYLE_TABLE_RULES_GROUPS:
     // XXX: it depends on which cell this is!
@@ -499,13 +503,13 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext,
     */
     break;
   case NS_STYLE_TABLE_RULES_COLS:
-    aSpacingStyle.mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
-    aSpacingStyle.mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_NONE;
+	aSpacingStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+    aSpacingStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
     break;
 
   case NS_STYLE_TABLE_RULES_ROWS:
-    aSpacingStyle.mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
-    aSpacingStyle.mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_NONE;
+    aSpacingStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+    aSpacingStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
     break;
 
   // do nothing for "ALL" or for any illegal value
@@ -811,7 +815,7 @@ nsIFrame* nsTableCellFrame::CompareCellBorders(nsIFrame* aFrame1,
     const nsStyleSpacing*  border2;
     aFrame1->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)border1);
     aFrame2->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)border2);
-    if (border1->mBorderStyle[aEdge1] >= border2->mBorderStyle[aEdge2])
+    if (border1->GetBorderStyle(aEdge1) >= border2->GetBorderStyle(aEdge2))
       result = aFrame1;
     else
       result = aFrame2;
