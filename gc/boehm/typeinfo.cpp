@@ -129,11 +129,32 @@ sanity_check_vtable_i386(void** vt)
     //
     //    55     push %ebp
     //    89e5   mov  %esp,%ebp
+    //    53     push %ebx
+    //
+    //    or
+    //
+    //    55     push %ebp
+    //    89e5   mov  %esp,%ebp
+    //    56     push %esi
     //
     //    (which is the standard function prologue generated
-    //    by egcs).
-    unsigned** i = reinterpret_cast<unsigned**>(vt) + 1;
-    return !(unsigned(*i) & 3) && ((**i & 0xffffff) == 0xe58955);
+    //    by egcs, plus a ``signature'' instruction that appears
+    //    in the typeid() function's implementation).
+    unsigned char** fp1 = reinterpret_cast<unsigned char**>(vt) + 1;
+
+    // Does it look like an address?
+    unsigned char* ip = *fp1;
+    if ((unsigned(ip) & 3) != 0)
+        return 0;
+
+    // Does it look like it refers to the standard prologue?
+    static unsigned char prologue[] = { 0x55, 0x89, 0xE5 };
+    for (unsigned i = 0; i < sizeof(prologue); ++i)
+	if (*ip++ != prologue[i])
+	    return 0;
+
+    // Is the next instruction a `push %ebx' or `push %esi'?
+    return (*ip == 0x53 || *ip == 0x56);
 }
 
 static inline int
