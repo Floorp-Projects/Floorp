@@ -313,6 +313,7 @@ PRBool nsMsgI18N7bit_data_part(const char *charset, const char *inString, const 
       // convert to unicode
       while (consumedLen < size) {
         srcLen = ((size - consumedLen) >= 512) ? 512 : (size - consumedLen);  // buffer len or remaining src len
+        unicharLength = 512;
         res = decoder->Convert(currentSrcPtr, &srcLen, unicharBuff, &unicharLength);
         if (NS_FAILED(res))
           break;
