@@ -86,6 +86,125 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 #include "prlong.h"
 #include "prinrval.h"
 
+/********************************************************/
+/* The following data and procedures are for preference */
+/********************************************************/
+
+typedef int (*PrefChangedFunc) (const char *, void *);
+
+extern void
+SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data);
+
+extern PRBool
+SI_GetBoolPref(const char * prefname, PRBool defaultvalue);
+
+extern void
+SI_SetBoolPref(const char * prefname, PRBool prefvalue);
+
+extern void
+SI_SetCharPref(const char * prefname, const char * prefvalue);
+
+extern void
+SI_GetCharPref(const char * prefname, char** aPrefvalue);
+
+#ifdef AutoCapture
+static const char *pref_captureForms = "wallet.captureForms";
+static const char *pref_enabled = "wallet.enabled";
+#else
+static const char *pref_WalletNotified = "wallet.Notified";
+#endif /* AutoCapture */
+static const char *pref_WalletKeyFileName = "wallet.KeyFileName";
+static const char *pref_WalletSchemaValueFileName = "wallet.SchemaValueFileName";
+static const char *pref_WalletServer = "wallet.Server";
+static const char *pref_WalletFetchPatches = "wallet.fetchPatches";
+static const char *pref_WalletVersion = "wallet.version";
+static const char *pref_WalletLastModified = "wallet.lastModified";
+
+#ifdef AutoCapture
+PRIVATE PRBool wallet_captureForms = PR_FALSE;
+#else
+PRIVATE PRBool wallet_Notified = PR_FALSE;
+#endif
+PRIVATE char * wallet_Server = nsnull;
+
+#ifdef AutoCapture
+PRIVATE void
+wallet_SetFormsCapturingPref(PRBool x)
+{
+    /* do nothing if new value of pref is same as current value */
+    if (x == wallet_captureForms) {
+        return;
+    }
+
+    /* change the pref */
+    wallet_captureForms = x;
+}
+
+MODULE_PRIVATE int PR_CALLBACK
+wallet_FormsCapturingPrefChanged(const char * newpref, void * data)
+{
+    PRBool x;
+    x = SI_GetBoolPref(pref_captureForms, PR_TRUE);
+    wallet_SetFormsCapturingPref(x);
+    return 0; /* this is PREF_NOERROR but we no longer include prefapi.h */
+}
+
+void
+wallet_RegisterCapturePrefCallbacks(void)
+{
+    PRBool x;
+    static PRBool first_time = PR_TRUE;
+
+    if(first_time)
+    {
+        first_time = PR_FALSE;
+        x = SI_GetBoolPref(pref_captureForms, PR_TRUE);
+        wallet_SetFormsCapturingPref(x);
+        SI_RegisterCallback(pref_captureForms, wallet_FormsCapturingPrefChanged, NULL);
+    }
+}
+
+PRIVATE PRBool
+wallet_GetFormsCapturingPref(void)
+{
+    wallet_RegisterCapturePrefCallbacks();
+    return wallet_captureForms;
+}
+
+PRIVATE PRBool
+wallet_GetEnabledPref(void)
+{
+  /* This pref is not in the prefs panel.  It's purpose is to remove wallet from all UI */
+  static PRBool first_time = PR_TRUE;
+  static PRBool enabled = PR_TRUE;
+  if (first_time) {
+    first_time = PR_FALSE;
+    PRBool x = SI_GetBoolPref(pref_enabled, PR_TRUE);
+    enabled = x;
+  }
+  return enabled;
+}
+
+#else
+
+PRIVATE void
+wallet_SetWalletNotificationPref(PRBool x) {
+  SI_SetBoolPref(pref_WalletNotified, x);
+  wallet_Notified = x;
+}
+
+PRIVATE PRBool
+wallet_GetWalletNotificationPref(void) {
+  static PRBool first_time = PR_TRUE;
+  if (first_time) {
+    PRBool x = SI_GetBoolPref(pref_WalletNotified, PR_FALSE);
+    wallet_Notified = x;
+  }
+  return wallet_Notified;
+}
+#endif /* ! AutoCapture */
+
+
 /*************************************
  * Code that really belongs in necko *
  *************************************/
@@ -105,6 +224,12 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
+#include "nsIHTTPChannel.h"
+#include "nsIHTTPEventSink.h" 
+#include "nsIHTTPHeader.h"
+#include "nsISimpleEnumerator.h"
+#include "nsXPIDLString.h"
+#include "nsIInterfaceRequestor.h" 
 
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 #ifdef ReallyInNecko
@@ -139,7 +264,8 @@ public:
   NS_IMETHOD Init(nsFileSpec dirSpec, const char *out);
 
   nsOutputFileStream   *mOutFile;
-
+  nsFileSpec           mDirSpec;
+  char                 *mFileName;
 };
 
 
@@ -155,6 +281,7 @@ InputConsumer::~InputConsumer()
   if (mOutFile) {
       delete mOutFile;
   }
+  CRTFREEIF(mFileName);
 }
 
 
@@ -164,9 +291,22 @@ NS_IMPL_ISUPPORTS1(InputConsumer, nsIStreamListener);
 NS_IMETHODIMP
 InputConsumer::OnStartRequest(nsIChannel* channel, nsISupports* context)
 {
-    if (! mOutFile->is_open()) 
-    {
-       return NS_ERROR_FAILURE;
+    PRUint32 httpStatus;
+    nsXPIDLCString lastmodified;
+    nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(channel));
+    if (pHTTPCon) {
+        pHTTPCon->GetResponseStatus(&httpStatus);
+        if (httpStatus != 304) 
+        {
+            mOutFile = new nsOutputFileStream(mDirSpec+mFileName);
+            if (!mOutFile->is_open())
+                return NS_ERROR_FAILURE;
+            nsCOMPtr<nsIAtom> lastmodifiedheader;
+            lastmodifiedheader = NS_NewAtom("last-modified");
+            pHTTPCon->GetResponseHeader(lastmodifiedheader, 
+                                        getter_Copies(lastmodified));
+            SI_SetCharPref(pref_WalletLastModified, lastmodified);
+        }
     }
     return NS_OK;
 }
@@ -199,7 +339,12 @@ InputConsumer::OnStopRequest(nsIChannel* channel,
                              nsresult aStatus,
                              const PRUnichar* aMsg)
 {
-  if (mOutFile) {
+  PRUint32 httpStatus;
+  nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(channel));
+  if (pHTTPCon) {
+    pHTTPCon->GetResponseStatus(&httpStatus);
+  }
+  if (mOutFile && httpStatus != 304 ) {
       mOutFile->flush();
       mOutFile->close();
   }
@@ -211,7 +356,8 @@ NS_IMETHODIMP
 InputConsumer::Init(nsFileSpec dirSpec, const char *out)
 
 {
-  mOutFile = new nsOutputFileStream(dirSpec+out);
+  mDirSpec = dirSpec;
+  mFileName = nsCRT::strdup(out);
   return NS_OK;
 }
 
@@ -251,7 +397,27 @@ NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
         printf("ERROR: NewChannelFromURI failed for %s\n", in);
         return rv;
     }
-            
+
+    // Set the If-Modified-Since header providing pref exists and file exists
+
+    char * lastmodified = nsnull;
+    SI_GetCharPref(pref_WalletLastModified, &lastmodified);
+    if (lastmodified) {
+        /* the pref exists */
+        nsInputFileStream strm(dirSpec + out);
+        if (strm.is_open()) {
+            /* the file exists */
+            nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(pChannel));
+            if (pHTTPCon) {
+                nsCOMPtr<nsIAtom> ifmodifiedsinceHeader;
+                ifmodifiedsinceHeader = NS_NewAtom("If-Modified-Since");
+                rv = pHTTPCon->SetRequestHeader(ifmodifiedsinceHeader, lastmodified);
+                if (NS_FAILED(rv)) return rv;
+            }
+            Recycle(lastmodified);
+        }
+    }            
+
     InputConsumer* listener;
     listener = new InputConsumer;
     NS_IF_ADDREF(listener);
@@ -496,124 +662,6 @@ wallet_DumpStopwatch() {
 #endif
 }
 #endif /* DEBUG */
-
-
-/********************************************************/
-/* The following data and procedures are for preference */
-/********************************************************/
-
-typedef int (*PrefChangedFunc) (const char *, void *);
-
-extern void
-SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data);
-
-extern PRBool
-SI_GetBoolPref(const char * prefname, PRBool defaultvalue);
-
-extern void
-SI_SetBoolPref(const char * prefname, PRBool prefvalue);
-
-extern void
-SI_SetCharPref(const char * prefname, const char * prefvalue);
-
-extern void
-SI_GetCharPref(const char * prefname, char** aPrefvalue);
-
-#ifdef AutoCapture
-static const char *pref_captureForms = "wallet.captureForms";
-static const char *pref_enabled = "wallet.enabled";
-#else
-static const char *pref_WalletNotified = "wallet.Notified";
-#endif /* AutoCapture */
-static const char *pref_WalletKeyFileName = "wallet.KeyFileName";
-static const char *pref_WalletSchemaValueFileName = "wallet.SchemaValueFileName";
-static const char *pref_WalletServer = "wallet.Server";
-static const char *pref_WalletFetchPatches = "wallet.fetchPatches";
-static const char *pref_WalletVersion = "wallet.version";
-
-#ifdef AutoCapture
-PRIVATE PRBool wallet_captureForms = PR_FALSE;
-#else
-PRIVATE PRBool wallet_Notified = PR_FALSE;
-#endif
-PRIVATE char * wallet_Server = nsnull;
-
-#ifdef AutoCapture
-PRIVATE void
-wallet_SetFormsCapturingPref(PRBool x)
-{
-    /* do nothing if new value of pref is same as current value */
-    if (x == wallet_captureForms) {
-        return;
-    }
-
-    /* change the pref */
-    wallet_captureForms = x;
-}
-
-MODULE_PRIVATE int PR_CALLBACK
-wallet_FormsCapturingPrefChanged(const char * newpref, void * data)
-{
-    PRBool x;
-    x = SI_GetBoolPref(pref_captureForms, PR_TRUE);
-    wallet_SetFormsCapturingPref(x);
-    return 0; /* this is PREF_NOERROR but we no longer include prefapi.h */
-}
-
-void
-wallet_RegisterCapturePrefCallbacks(void)
-{
-    PRBool x;
-    static PRBool first_time = PR_TRUE;
-
-    if(first_time)
-    {
-        first_time = PR_FALSE;
-        x = SI_GetBoolPref(pref_captureForms, PR_TRUE);
-        wallet_SetFormsCapturingPref(x);
-        SI_RegisterCallback(pref_captureForms, wallet_FormsCapturingPrefChanged, NULL);
-    }
-}
-
-PRIVATE PRBool
-wallet_GetFormsCapturingPref(void)
-{
-    wallet_RegisterCapturePrefCallbacks();
-    return wallet_captureForms;
-}
-
-PRIVATE PRBool
-wallet_GetEnabledPref(void)
-{
-  /* This pref is not in the prefs panel.  It's purpose is to remove wallet from all UI */
-  static PRBool first_time = PR_TRUE;
-  static PRBool enabled = PR_TRUE;
-  if (first_time) {
-    first_time = PR_FALSE;
-    PRBool x = SI_GetBoolPref(pref_enabled, PR_TRUE);
-    enabled = x;
-  }
-  return enabled;
-}
-
-#else
-
-PRIVATE void
-wallet_SetWalletNotificationPref(PRBool x) {
-  SI_SetBoolPref(pref_WalletNotified, x);
-  wallet_Notified = x;
-}
-
-PRIVATE PRBool
-wallet_GetWalletNotificationPref(void) {
-  static PRBool first_time = PR_TRUE;
-  if (first_time) {
-    PRBool x = SI_GetBoolPref(pref_WalletNotified, PR_FALSE);
-    wallet_Notified = x;
-  }
-  return wallet_Notified;
-}
-#endif /* ! AutoCapture */
 
 
 /*************************************************************************/
