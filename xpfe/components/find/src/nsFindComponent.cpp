@@ -32,6 +32,7 @@
 #include "nsITextServicesDocument.h"
 #include "nsTextServicesCID.h"
 #include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIPresShell.h"
 #include "nsIContentViewer.h"
@@ -126,7 +127,8 @@ nsFindComponent::Context::MakeTSDocument(nsIWebShell* aWebShell, nsITextServices
 
   // Get content viewer from the web shell.
   nsCOMPtr<nsIContentViewer> contentViewer;
-  rv = aWebShell->GetContentViewer(getter_AddRefs(contentViewer));
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aWebShell));
+  rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
   if (NS_FAILED(rv) || !contentViewer)
     return rv;
 
