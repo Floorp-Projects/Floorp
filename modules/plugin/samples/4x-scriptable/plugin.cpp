@@ -44,6 +44,10 @@
 #include <windowsx.h>
 #endif
 
+#ifdef XP_MAC
+#include <TextEdit.h>
+#endif
+
 #include "plugin.h"
 
 CPlugin::CPlugin(NPP pNPInstance) :
@@ -56,7 +60,8 @@ CPlugin::CPlugin(NPP pNPInstance) :
   m_hWnd = NULL;
 #endif
 
-  m_String[0] = '\0';
+  const char *ua = NPN_UserAgent(m_pNPInstance);
+  strcpy(m_String, ua);
 }
 
 CPlugin::~CPlugin()
@@ -88,6 +93,8 @@ NPBool CPlugin::init(NPWindow* pNPWindow)
   SetWindowLong(m_hWnd, GWL_USERDATA, (LONG)this);
 #endif
 
+  m_Window = pNPWindow;
+
   m_bInitialized = TRUE;
   return TRUE;
 }
@@ -108,6 +115,21 @@ NPBool CPlugin::isInitialized()
   return m_bInitialized;
 }
 
+int16 CPlugin::handleEvent(void* event)
+{
+#ifdef XP_MAC
+    NPEvent* ev = (NPEvent*)event;
+    if (m_Window) {
+        Rect box = { m_Window->y, m_Window->x,
+                     m_Window->y + m_Window->height, m_Window->x + m_Window->width };
+        if (ev->what == updateEvt) {
+            ::TETextBox(m_String, strlen(m_String), &box, teJustCenter);
+        }
+    }
+#endif
+    return 0;
+}
+
 // this will force to draw a version string in the plugin window
 void CPlugin::showVersion()
 {
@@ -118,6 +140,12 @@ void CPlugin::showVersion()
   InvalidateRect(m_hWnd, NULL, TRUE);
   UpdateWindow(m_hWnd);
 #endif
+
+  if (m_Window) {
+    NPRect r = { m_Window->y, m_Window->x,
+                 m_Window->y + m_Window->height, m_Window->x + m_Window->width };
+    NPN_InvalidateRect(m_pNPInstance, &r);
+  }
 }
 
 // this will clean the plugin window

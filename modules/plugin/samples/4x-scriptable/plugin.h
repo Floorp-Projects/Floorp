@@ -50,6 +50,8 @@ private:
   HWND m_hWnd; 
 #endif
 
+  NPWindow * m_Window;
+  
   NPStream * m_pNPStream;
   NPBool m_bInitialized;
   nsI4xScriptablePlugin * m_pScriptablePeer;
@@ -64,6 +66,8 @@ public:
   NPBool init(NPWindow* pNPWindow);
   void shut();
   NPBool isInitialized();
+  
+  int16 handleEvent(void* event);
 
   void showVersion();
   void clear();

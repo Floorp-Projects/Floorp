@@ -252,6 +252,10 @@ int16	NPP_HandleEvent(NPP instance, void* event)
     return 0;
 
   int16 rv = 0;
+  CPlugin * pPlugin = (CPlugin *)instance->pdata;
+  if (pPlugin)
+    rv = pPlugin->handleEvent(event);
+
   return rv;
 }
 
