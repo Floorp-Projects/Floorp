@@ -2306,6 +2306,13 @@ MapDisplayForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, ns
     if (aDisplay.mClear.GetUnit() == eCSSUnit_Null && ourDisplay->mClear.GetUnit() != eCSSUnit_Null)
       aDisplay.mClear = ourDisplay->mClear;
 
+    // temp fix for bug 24000
+    if (aDisplay.mBreakBefore.GetUnit() == eCSSUnit_Null && ourDisplay->mBreakBefore.GetUnit() != eCSSUnit_Null)
+      aDisplay.mBreakBefore = ourDisplay->mBreakBefore;
+    if (aDisplay.mBreakAfter.GetUnit() == eCSSUnit_Null && ourDisplay->mBreakAfter.GetUnit() != eCSSUnit_Null)
+      aDisplay.mBreakAfter = ourDisplay->mBreakAfter;
+    // end temp fix
+
     // float: enum, none, inherit
     if (aDisplay.mFloat.GetUnit() == eCSSUnit_Null && ourDisplay->mFloat.GetUnit() != eCSSUnit_Null)
       aDisplay.mFloat = ourDisplay->mFloat;

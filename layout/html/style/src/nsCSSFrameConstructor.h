@@ -535,6 +535,25 @@ protected:
                               nsIStyleContext*         aStyleContext,
                               nsFrameItems&            aFrameItems);
 
+  nsresult ConstructPageBreakFrame(nsIPresShell*            aPresShell, 
+                                   nsIPresContext*          aPresContext,
+                                   nsFrameConstructorState& aState,
+                                   nsIContent*              aContent,
+                                   nsIFrame*                aParentFrame,
+                                   nsIStyleContext*         aStyleContext,
+                                   nsFrameItems&            aFrameItems);
+
+  // Construct a page break frame if page-break-before:always is set in aStyleContext
+  // and add it to aFrameItems. Return true if page-break-after:always is set on aStyleContext.
+  // Don't do this for row groups, rows or cell, because tables handle those internally.
+  PRBool PageBreakBefore(nsIPresShell*            aPresShell,
+                         nsIPresContext*          aPresContext,
+                         nsFrameConstructorState& aState,
+                         nsIContent*              aContent,
+                         nsIFrame*                aParentFrame,
+                         nsIStyleContext*         aStyleContext,
+                         nsFrameItems&            aFrameItems);
+
   nsresult ConstructHTMLFrame(nsIPresShell*            aPresShell, 
                               nsIPresContext*          aPresContext,
                               nsFrameConstructorState& aState,

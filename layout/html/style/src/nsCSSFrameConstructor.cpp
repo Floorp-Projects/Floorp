@@ -2281,6 +2281,9 @@ nsCSSFrameConstructor::GetParentFrame(nsIPresShell*            aPresShell,
 }
 
 // Construct the outer, inner table frames and the children frames for the table. 
+// XXX Page break frames for pseudo table frames are not constructed to avoid the risk
+// associated with revising the pseudo frame mechanism. The long term solution
+// of having frames handle page-break-before/after will solve the problem. 
 nsresult
 nsCSSFrameConstructor::ConstructTableFrame(nsIPresShell*            aPresShell,
                                            nsIPresContext*          aPresContext,
@@ -2923,10 +2926,27 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
 
   switch (styleDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_TABLE:
-    nsIFrame* innerTableFrame;
-    rv = ConstructTableFrame(aPresShell, aPresContext, aState, aChildContent, aParentFrame,
-                             childStyleContext, aTableCreator, PR_FALSE, aChildItems,
-                             childFrame, innerTableFrame, isPseudoParent);
+    {
+      PRBool pageBreakAfter = PR_FALSE;
+      PRBool paginated;
+      aPresContext->IsPaginated(&paginated);
+
+      if (paginated) {
+        // See if there is a page break before, if so construct one. Also see if there is one after
+        pageBreakAfter = PageBreakBefore(aPresShell, aPresContext, aState, aChildContent, 
+                                       aParentFrame, childStyleContext, aChildItems);
+      }
+      // construct the table frame
+      nsIFrame* innerTableFrame;
+      rv = ConstructTableFrame(aPresShell, aPresContext, aState, aChildContent, aParentFrame,
+                               childStyleContext, aTableCreator, PR_FALSE, aChildItems,
+                               childFrame, innerTableFrame, isPseudoParent);
+      if (NS_SUCCEEDED(rv) && pageBreakAfter) {
+        // Construct the page break after
+        ConstructPageBreakFrame(aPresShell, aPresContext, aState, aChildContent,
+                                aParentFrame, childStyleContext, aChildItems);
+      }
+    }
     break;
 
   case NS_STYLE_DISPLAY_TABLE_CAPTION:
@@ -6975,8 +6995,56 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
 }
 #endif // MOZ_SVG
 
+PRBool
+nsCSSFrameConstructor::PageBreakBefore(nsIPresShell*            aPresShell,
+                                       nsIPresContext*          aPresContext,
+                                       nsFrameConstructorState& aState,
+                                       nsIContent*              aContent,
+                                       nsIFrame*                aParentFrame,
+                                       nsIStyleContext*         aStyleContext,
+                                       nsFrameItems&            aFrameItems)
+{
+  const nsStyleDisplay* display = (const nsStyleDisplay*)
+    aStyleContext->GetStyleData(eStyleStruct_Display);
+
+  // See if page-break-before is set for all elements except row groups, rows, cells 
+  // (these are handled internally by tables) and construct a page break frame if so.
+  if (display && ((NS_STYLE_DISPLAY_TABLE == display->mDisplay) ||
+                  (!IsTableRelated(display->mDisplay, PR_TRUE)))) { 
+    if (display->mBreakBefore) {
+      ConstructPageBreakFrame(aPresShell, aPresContext, aState, aContent,
+                              aParentFrame, aStyleContext, aFrameItems);
+    }
+    return display->mBreakAfter;
+  }
+  return PR_FALSE;
+}
+
 nsresult
-nsCSSFrameConstructor::ConstructFrame(nsIPresShell*        aPresShell, 
+nsCSSFrameConstructor::ConstructPageBreakFrame(nsIPresShell*            aPresShell, 
+                                               nsIPresContext*          aPresContext,
+                                               nsFrameConstructorState& aState,
+                                               nsIContent*              aContent,
+                                               nsIFrame*                aParentFrame,
+                                               nsIStyleContext*         aStyleContext,
+                                               nsFrameItems&            aFrameItems)
+{
+  nsCOMPtr<nsIStyleContext> pseudoStyle;
+  aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::pageBreakPseudo,
+                                             aStyleContext, PR_FALSE,
+                                             getter_AddRefs(pseudoStyle));
+  nsIFrame* pageBreakFrame;
+  nsresult rv = NS_NewPageBreakFrame(aPresShell, &pageBreakFrame); 
+  if (NS_SUCCEEDED(rv)) {
+    InitAndRestoreFrame(aPresContext, aState, aContent, aParentFrame, 
+                        pseudoStyle, nsnull, pageBreakFrame);
+    aFrameItems.AddChild(pageBreakFrame);
+  }
+  return rv;
+}
+
+nsresult
+nsCSSFrameConstructor::ConstructFrame(nsIPresShell*            aPresShell, 
                                       nsIPresContext*          aPresContext,
                                       nsFrameConstructorState& aState,
                                       nsIContent*              aContent,
@@ -7006,20 +7074,27 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresShell*        aPresShell,
   rv = ResolveStyleContext(aPresContext, aParentFrame, aContent,
                            getter_AddRefs(styleContext));
 
-  if (NS_SUCCEEDED(rv)) {
-    
+  if (NS_SUCCEEDED(rv)) {   
     PRInt32 nameSpaceID;
     aContent->GetNameSpaceID(nameSpaceID);
-    rv = ConstructFrameInternal(aPresShell,
-                                  aPresContext,
-                                  aState,
-                                  aContent,
-                                  aParentFrame,
-                                  tag,
-                                  nameSpaceID,
-                                  styleContext,
-                                  aFrameItems,
-                                  PR_FALSE);
+
+    PRBool pageBreakAfter = PR_FALSE;
+    PRBool paginated;
+    aPresContext->IsPaginated(&paginated);
+
+    if (paginated) {
+      // See if there is a page break before, if so construct one. Also see if there is one after
+      pageBreakAfter = PageBreakBefore(aPresShell, aPresContext, aState, aContent, 
+                                       aParentFrame, styleContext, aFrameItems);
+    }
+    // construct the frame
+    rv = ConstructFrameInternal(aPresShell, aPresContext, aState, aContent, aParentFrame,
+                                tag, nameSpaceID, styleContext, aFrameItems, PR_FALSE);
+    if (NS_SUCCEEDED(rv) && pageBreakAfter) {
+      // Construct the page break after
+      ConstructPageBreakFrame(aPresShell, aPresContext, aState, aContent,
+                              aParentFrame, styleContext, aFrameItems);
+    }
   }
   
   return rv;

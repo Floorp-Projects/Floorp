@@ -196,6 +196,8 @@ table[rules] {
   background: inherit;
   border: inherit;
   -moz-opacity: inherit;
+  page-break-before: inherit;
+  page-break-after: inherit;
 }
 
 /* make sure backgrounds are inherited in tables  -- see bug 4510*/
@@ -507,6 +509,10 @@ noembed, noscript, param {
 
 *|*:-moz-pagecontent {
   display: block;
+}
+
+*|*:-moz-pagebreak {
+  display: -moz-page-break;
 }
 
 *|*:-moz-anonymous-positioned-block {
