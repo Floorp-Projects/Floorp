@@ -145,6 +145,7 @@ public:
     nsresult SetStreamListener(nsIStreamListener *listener);
     nsresult SetCacheEntry(nsICacheEntryDescriptor *entry, PRBool writing);
     nsresult SetEntityID(const nsACString& entity);
+    void     SetFileSize(PRUint64 fileSize) { mFileSize = fileSize; }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMLISTENER
@@ -171,6 +172,7 @@ protected:
 
     nsUint64 mBytesTransfered;
     nsUint64 mBytesToUpload;
+    PRUint64 mFileSize;
     PRPackedBool   mDelayedOnStartFired;
     PRPackedBool   mUploading;
     PRPackedBool   mRetrying;
@@ -200,6 +202,7 @@ DataRequestForwarder::DataRequestForwarder()
     mBytesTransfered = 0;
     mBytesToUpload = 0;
     mRetrying = mUploading = mDelayedOnStartFired = PR_FALSE;
+    mFileSize = LL_MAXUINT;
 }
 
 nsresult 
@@ -214,7 +217,7 @@ DataRequestForwarder::Init(nsIRequest *request)
     mFTPChannel = do_QueryInterface(request);
     mEventSink  = do_QueryInterface(request);
     mListener   = do_QueryInterface(request);
-    
+
     if (!mRequest || !mFTPChannel)
         return NS_ERROR_FAILURE;
     
@@ -388,7 +391,7 @@ DataRequestForwarder::OnTransportStatus(nsITransport *transport, nsresult status
             status == nsISocketTransport::STATUS_SENDING_TO) {
             // compute progress based on whether we are uploading or receiving...
             PRUint64 count = mUploading ? progress                 : PRUint64(mBytesTransfered);
-            PRUint64 max   = mUploading ? PRUint64(mBytesToUpload) : progressMax;
+            PRUint64 max   = mUploading ? PRUint64(mBytesToUpload) : mFileSize;
             mEventSink->OnProgress(this, nsnull, count, max);
         }
     }
@@ -1394,6 +1397,8 @@ nsFtpState::R_size() {
         PRUint32 size32;
         LL_L2UI(size32, mFileSize);
         if (NS_FAILED(mChannel->SetContentLength(size32))) return FTP_ERROR;
+
+        mDRequestForwarder->SetFileSize(mFileSize);
     }
 
     // We may want to be able to resume this
@@ -2204,7 +2209,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
             mDRequestForwarder = new DataRequestForwarder;
             if (!mDRequestForwarder) return NS_ERROR_OUT_OF_MEMORY;
             NS_ADDREF(mDRequestForwarder);
-    
+
             rv = mDRequestForwarder->Init(mChannel);
             
             nsXPIDLCString serverType;
