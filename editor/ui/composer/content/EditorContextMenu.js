@@ -22,48 +22,122 @@
 
 function fillContentContextMenu(contextMenuNode)
 {
-  dump("here!\n")
 	contextMenu = new nsContextMenu(contextMenuNode);
-  dump("herehere!\n")
-  return;
 
+  HideDisabledItem("menu_undo_cm");
+  HideDisabledItem("menu_redo_cm");
+  HideDisabledItem("menu_cut_cm");
+  HideDisabledItem("menu_copy_cm");
+  HideDisabledItem("menu_paste_cm");
+  HideDisabledItem("menu_delete_cm");
+  HideDisabledItem("menu_selectAll_cm");
+  HideDisabledItem("removeLinksMenuitem");
 
-	var message = GetLoadedMessage();
-	var numSelected = (message) ? 1 : 0;
+  ShowMenuItem("undoredo-separator", ShowUndoRedoSeparator());
+  ShowMenuItem("menu_edit-separator", ShowCCPSeparator());
+  ShowMenuItem("menu_selectAll-separator", ShowSelectAllSeparator());
+  ShowMenuItem("menu_link-separator", ShowLinkSeparator());
+  ShowMenuItem("tableMenu-separator", ShowTableMenuSeparator());
+}
 
-	var isNewsgroup = false;
+function cleanupContextMenu( contextMenuNode )
+{
+  ShowHiddenItemOnCleanup("menu_undo_cm");
+  ShowHiddenItemOnCleanup("menu_redo_cm");
+  ShowHiddenItemOnCleanup("menu_cut_cm");
+  ShowHiddenItemOnCleanup("menu_copy_cm");
+  ShowHiddenItemOnCleanup("menu_paste_cm");
+  ShowHiddenItemOnCleanup("menu_delete_cm");
+  ShowHiddenItemOnCleanup("menu_selectAll_cm");
+  ShowHiddenItemOnCleanup("removeLinksMenuitem");
+}
 
+function HideDisabledItem( id )
+{
+  var item = document.getElementById(id);
+  if (!item)
+    return false;
 
-	SetupNewMessageWindowMenuItem("messagePaneContext-openNewWindow", numSelected, (numSelected == 0));
-	SetupEditAsNewMenuItem("messagePaneContext-editAsNew", numSelected, (numSelected == 0));
-	SetupReplyToSenderMenuItem("messagePaneContext-replySender", numSelected, (numSelected == 0));
-	SetupReplyToNewsgroupMenuItem("messagePaneContext-replyNewsgroup", numSelected, isNewsgroup, (numSelected == 0));
-	SetupReplyAllMenuItem("messagePaneContext-replyAll" , numSelected, (numSelected == 0));
-	SetupForwardMenuItem("messagePaneContext-forward", numSelected, (numSelected == 0));
-	SetupMoveMenuItem("messagePaneContext-moveMenu", numSelected, isNewsgroup, (numSelected == 0));"context-copy"
-	SetupCopyMenuItem("messagePaneContext-copyMenu", numSelected, (numSelected == 0));
-	SetupSaveAsMenuItem("messagePaneContext-saveAs", numSelected, (numSelected == 0));
-	SetupPrintMenuItem("messagePaneContext-print", numSelected, (numSelected == 0));
-	SetupDeleteMenuItem("messagePaneContext-delete", numSelected, (numSelected == 0));
-	SetupAddSenderToABMenuItem("messagePaneContext-addSenderToAddressBook", numSelected, (numSelected == 0));
-	SetupAddAllToABMenuItem("messagePaneContext-addAllToAddressBook", numSelected, (numSelected == 0));
+  var enabled = (item.getAttribute('disabled') !='true');
+  if (!enabled)
+  {
+    item.setAttribute('hidden', 'true');
+    item.setAttribute('contexthidden', 'true');
+    return true;
+  }
+  
+  return false;
+}
 
-	//Figure out separators
-	ShowMenuItem("messagePaneContext-sep-open", ShowMessagePaneOpenSeparator());
-	ShowMenuItem("messagePaneContext-sep-reply", ShowMessagePaneReplySeparator());
-	ShowMenuItem("messagePaneContext-sep-edit", ShowMessagePaneEditSeparator());
-	ShowMenuItem("messagePaneContext-sep-addressBook", ShowMessagePaneABSeparator());
-	ShowMenuItem("messagePaneContext-sep-link", ShowMessagePaneLinkSeparator());
-	ShowMenuItem("messagePaneContext-sep-image", ShowMessagePaneImageSeparator());
-	ShowMenuItem("messagePaneContext-sep-copy", ShowMessagePaneCopySeparator());
+function ShowHiddenItemOnCleanup( id )
+{
+  var item = document.getElementById(id);
+  if (!item)
+    return false;
+
+  var isHidden = (item.getAttribute('contexthidden') == 'true');
+  if (isHidden)
+  {
+    item.removeAttribute('hidden');
+    item.removeAttribute('contexthidden');
+    return true;
+  }
+  
+  return false;
 }
 
 function ShowMenuItem(id, showItem)
 {
-	var item = document.getElementById(id);
+  var item = document.getElementById(id);
 	var showing = (item.getAttribute('hidden') !='true');
 	if(item && (showItem != showing))
 		item.setAttribute('hidden', showItem ? '' : 'true');
+}
+
+function IsMenuItemShowing(menuID)
+{
+	var item = document.getElementById(menuID);
+	if(item)
+	{
+		return(item.getAttribute('hidden') !='true');
+	}
+	return false;
+}
+
+function ShowUndoRedoSeparator()
+{
+	return(IsMenuItemShowing("menu_undo_cm")
+		  || IsMenuItemShowing("menu_redo_cm")
+		  );
+}
+
+function ShowCCPSeparator()
+{
+	return(IsMenuItemShowing("menu_cut_cm")
+		  || IsMenuItemShowing("menu_copy_cm")
+		  || IsMenuItemShowing("menu_paste_cm")
+		  || IsMenuItemShowing("menu_delete_cm")
+		  );
+}
+
+function ShowSelectAllSeparator()
+{
+	return(IsMenuItemShowing("menu_selectAll_cm")
+		  );
+}
+
+function ShowLinkSeparator()
+{
+	return(IsMenuItemShowing("menu_preview_cm")
+		  || IsMenuItemShowing("removeLinksMenuitem_cm")
+		  );
+}
+
+function ShowTableMenuSeparator()
+{
+	return(IsMenuItemShowing("tableMenu_cm")
+		  || IsMenuItemShowing("tableProperties_cm")
+		  );
 }
 
 function EnableMenuItem(id, enableItem)
@@ -76,153 +150,8 @@ function EnableMenuItem(id, enableItem)
 	}
 }
 
-function SetupNewMessageWindowMenuItem(menuID, numSelected, forceHide)
-{
-	ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
-	EnableMenuItem(menuID, true);
-}
-
-function SetupEditAsNewMenuItem(menuID, numSelected, forceHide)
-{
-	ShowMenuItem(menuID, (numSelected <= 1)&& !forceHide);
-	EnableMenuItem(menuID, true);
-}
-
-function SetupReplyToSenderMenuItem(menuID, numSelected, forceHide)
-{
-	ShowMenuItem(menuID, (numSelected <= 1)&& !forceHide);
-	EnableMenuItem(menuID, (numSelected == 1));
-}
-
-function SetupReplyToNewsgroupMenuItem(menuID, numSelected, isNewsgroup, forceHide)
-{
-	ShowMenuItem(menuID, (numSelected <= 1) && isNewsgroup && !forceHide);
-	EnableMenuItem(menuID,  (numSelected == 1));
-}
-
-function SetupReplyAllMenuItem(menuID, numSelected, forceHide)
-{
-	ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
-	EnableMenuItem(menuID, (numSelected == 1));
-}
-
-function SetupForwardMenuItem(menuID, numSelected, forceHide)
-{
-	ShowMenuItem(menuID, !forceHide);
-	EnableMenuItem(menuID, (numSelected > 0));
-}
-
-function SetupMoveMenuItem(menuID, numSelected, isNewsgroup, forceHide)
-{
-	ShowMenuItem(menuID, !isNewsgroup && !forceHide);
-	EnableMenuItem(menuID, (numSelected > 0));
-}
-
 function SetupCopyMenuItem(menuID, numSelected, forceHide)
 {
 	ShowMenuItem(menuID, !forceHide);
 	EnableMenuItem(menuID, (numSelected > 0));
 }
-
-function SetupSaveAsMenuItem(menuID, numSelected, forceHide)
-{
-	ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
-	EnableMenuItem(menuID, (numSelected == 1));
-}
-
-function SetupPrintMenuItem(menuID, numSelected, forceHide)
-{
-	ShowMenuItem(menuID, !forceHide);
-	EnableMenuItem(menuID, (numSelected > 0));
-}
-
-function SetupDeleteMenuItem(menuID, numSelected, forceHide)
-{
-	ShowMenuItem(menuID, !forceHide);
-	EnableMenuItem(menuID, (numSelected > 0));
-}
-
-function SetupAddSenderToABMenuItem(menuID, numSelected, forceHide)
-{
-	ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
-	EnableMenuItem(menuID, false);
-}
-
-function SetupAddAllToABMenuItem(menuID, numSelected, forceHide)
-{
-	ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
-	EnableMenuItem(menuID, false);
-}
-
-
-function IsMenuItemShowing(menuID)
-{
-
-	var item = document.getElementById(menuID);
-	if(item)
-	{
-		return(item.getAttribute('hidden') !='true');
-	}
-	return false;
-}
-
-function IsMenuItemShowingWithStyle(menuID)
-{
-	var item = document.getElementById(menuID);
-	if(item)
-	{
-		var style = item.getAttribute( "style" );
-		return ( style.indexOf( "display:none;" ) == -1 )
-	}
-	return false;
-}
-
-function ShowMessagePaneOpenSeparator()
-{
-	return(IsMenuItemShowing("messagePaneContext-openNewWindow")  ||
-		IsMenuItemShowingWithStyle("context-selectall") ||
-		IsMenuItemShowingWithStyle("context-copy"));
-}
-
-function ShowMessagePaneReplySeparator()
-{
-	return (IsMenuItemShowing("messagePaneContext-replySender") ||
-		IsMenuItemShowing("messagePaneContext-replyNewsgroup") ||
-		IsMenuItemShowing("messagePaneContext-replyAll") ||
-		IsMenuItemShowing("messagePaneContext-forward") ||
-		IsMenuItemShowing("messagePaneContext-editAsNew"));
-}
-
-function ShowMessagePaneEditSeparator()
-{
-	return (IsMenuItemShowing("messagePaneContext-moveMenu") ||
-		IsMenuItemShowing("messagePaneContext-copyMenu") ||
-		IsMenuItemShowing("messagePaneContext-saveAs") ||
-		IsMenuItemShowing("messagePaneContext-print") ||
-		IsMenuItemShowing("messagePaneContext-delete"));
-}
-
-function ShowMessagePaneABSeparator()
-{
-	return (IsMenuItemShowing("messagePaneContext-addSenderToAddressBook") ||
-		IsMenuItemShowing("messagePaneContext-addAllToAddressBook"));
-}
-
-function ShowMessagePaneLinkSeparator()
-{
-	return (IsMenuItemShowingWithStyle("context-openlink") ||
-		IsMenuItemShowingWithStyle("context-editlink"));
-}
-
-function ShowMessagePaneImageSeparator()
-{
-	return (IsMenuItemShowingWithStyle("context-viewimage"));
-}
-
-function ShowMessagePaneCopySeparator()
-{
-	return (IsMenuItemShowingWithStyle("context-copylink") ||
-		IsMenuItemShowingWithStyle("context-copyimage"));
-}
-
-
