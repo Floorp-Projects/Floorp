@@ -62,6 +62,7 @@ public:
   NS_IMETHOD SetMenu(nsIMenu * aMenu);
   NS_IMETHOD SetCommand(PRUint32 aCommand);
   NS_IMETHOD GetCommand(PRUint32 & aCommand);
+  NS_IMETHOD GetNativeData(void*& aData);
 
 
 protected:

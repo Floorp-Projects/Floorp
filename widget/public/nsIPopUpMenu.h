@@ -109,6 +109,12 @@ class nsIPopUpMenu : public nsISupports {
     */
     NS_IMETHOD ShowMenu(PRInt32 aX, PRInt32 aY) = 0;
 
+   /**
+    * Gets Native MenuHandle
+    *
+    */
+    NS_IMETHOD  GetNativeData(void*& aData) = 0;
+
 };
 
 #endif

@@ -135,3 +135,10 @@ NS_METHOD nsMenuItem::GetCommand(PRUint32 & aCommand)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::GetNativeData(void *& aData)
+{
+  aData = (void *)mMenu;
+  return NS_OK;
+}
+
