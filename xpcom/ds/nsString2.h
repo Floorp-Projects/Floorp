@@ -235,6 +235,7 @@ public:
   PRBool SetCharAt(PRUnichar aChar,PRUint32 anIndex);
 
 
+#ifndef NEW_STRING_APIS
   /**********************************************************************
     String concatenation methods...
    *********************************************************************/
@@ -274,6 +275,7 @@ public:
    * @return  newly created string
    */
   nsSubsumeStr operator+(PRUnichar aChar);
+#endif
 
   /**********************************************************************
     Lexomorphic transforms...
@@ -464,34 +466,38 @@ public:
    * @param   aString: string to be added to this
    * @return  this
    */
-  nsString& operator=(const nsString& aString) {return Assign(aString);}
-  nsString& operator=(const nsStr& aString) {return Assign(aString);}
   nsString& operator=(char aChar) {return Assign(aChar);}
   nsString& operator=(PRUnichar aChar) {return Assign(aChar);}
   nsString& operator=(const char* aCString) {return Assign(aCString);}
+
+#ifndef NEW_STRING_APIS
+  nsString& operator=(const nsString& aString) {return Assign(aString);}
+  nsString& operator=(const nsStr& aString) {return Assign(aString);}
   nsString& operator=(const PRUnichar* aString) {return Assign(aString);}
   #ifdef AIX
   nsString& operator=(const nsSubsumeStr& aSubsumeString);  // AIX requires a const here
   #else
   nsString& operator=(nsSubsumeStr& aSubsumeString);
   #endif
+#endif
 
   /**
    * Here's a bunch of methods that append varying types...
    * @param   various...
    * @return  this
    */
-  nsString& operator+=(const nsStr& aString){return Append(aString,(PRInt32)aString.mLength);}
-  nsString& operator+=(const nsString& aString){return Append(aString,(PRInt32)aString.mLength);}
   nsString& operator+=(const char* aCString) {return Append(aCString);}
   nsString& operator+=(const char aChar) {
     return Append((PRUnichar) (unsigned char)aChar);    
   }
-
-  nsString& operator+=(const PRUnichar* aUCString) {return Append(aUCString);}
   nsString& operator+=(const PRUnichar aChar){return Append(aChar);}
   nsString& operator+=(const int anInt){return Append(anInt,10);}
 
+#ifndef NEW_STRING_APIS
+  nsString& operator+=(const nsStr& aString){return Append(aString,(PRInt32)aString.mLength);}
+  nsString& operator+=(const nsString& aString){return Append(aString,(PRInt32)aString.mLength);}
+  nsString& operator+=(const PRUnichar* aUCString) {return Append(aUCString);}
+#endif
   /*
    *  Appends n characters from given string to this,
    *  This version computes the length of your given string

@@ -420,28 +420,33 @@ public:
    * @param   aString: string to be added to this
    * @return  this
    */
-  nsCString& operator=(const nsCString& aString) {return Assign(aString);}
-  nsCString& operator=(const nsStr& aString) {return Assign(aString);}
   nsCString& operator=(PRUnichar aChar) {return Assign(aChar);}
   nsCString& operator=(char aChar) {return Assign(aChar);}
-  nsCString& operator=(const char* aCString) {return Assign(aCString);}
   nsCString& operator=(const PRUnichar* aString) {return Assign(aString);}
+
+#ifndef NEW_STRING_APIS
+  nsCString& operator=(const nsCString& aString) {return Assign(aString);}
+  nsCString& operator=(const nsStr& aString) {return Assign(aString);}
+  nsCString& operator=(const char* aCString) {return Assign(aCString);}
   #ifdef AIX
   nsCString& operator=(const nsSubsumeCStr& aSubsumeString);  // AIX requires a const here
   #else
   nsCString& operator=(nsSubsumeCStr& aSubsumeString);
   #endif
+#endif
 
   /**
    * Here's a bunch of methods that append varying types...
    * @param   various...
    * @return  this
    */
-  nsCString& operator+=(const nsCString& aString){return Append(aString,(PRInt32)aString.mLength);}
-  nsCString& operator+=(const char* aCString) {return Append(aCString);}
   nsCString& operator+=(const PRUnichar aChar){return Append(aChar);}
   nsCString& operator+=(const char aChar){return Append(aChar);}
   nsCString& operator+=(const int anInt){return Append(anInt,10);}
+#ifndef NEW_STRING_APIS
+  nsCString& operator+=(const nsCString& aString){return Append(aString,(PRInt32)aString.mLength);}
+  nsCString& operator+=(const char* aCString) {return Append(aCString);}
+#endif
 
   /*
    *  Appends n characters from given string to this,

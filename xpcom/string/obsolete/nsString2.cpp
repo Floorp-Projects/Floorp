@@ -1028,6 +1028,7 @@ nsString& nsString::Assign(PRUnichar aChar) {
   return Append(aChar);
 }
 
+#ifndef NEW_STRING_APIS
 /**
  * WARNING! THIS IS A VERY SPECIAL METHOD. 
  * This method "steals" the contents of aSource and hands it to aDest.
@@ -1046,7 +1047,7 @@ nsString& nsString::operator=(const nsSubsumeStr& aSubsumeString) {
 #endif // AIX
   return *this;
 }
-
+#endif
 
 /**
  * append given string to this string; 
