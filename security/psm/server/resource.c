@@ -53,6 +53,7 @@
 #include "advisor.h"
 #include "p12res.h"
 #include "signtextres.h"
+#include "sdrres.h"
 
 #include <stdarg.h>
 
@@ -356,6 +357,21 @@ SSM_ResourceInit()
                                  NULL,
                                  SSMSignTextResource_Print,
                                  SSMSignTextResource_FormSubmitHandler);
+        SSM_RegisterResourceType("SDR Context",
+                                 SSM_RESTYPE_SDR_CONTEXT,
+                                 SSM_RESTYPE_RESOURCE,
+                                 SSM_CLIENTDEST_FREE,
+                                 SSMSDRContext_Create,
+                                 SSMSDRContext_Destroy,
+                                 NULL,  /* Shutdown */
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 SSMSDRContext_FormSubmitHandler);
     }
     
     return rv;

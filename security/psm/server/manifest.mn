@@ -57,6 +57,7 @@ CSRCS = \
 	autorenewal.c \
 	derprint.c \
 	msgthread.c \
+	sdrres.c \
 	$(NULL) 
 
 RESNAME = psm.rc
