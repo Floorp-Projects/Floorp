@@ -273,12 +273,13 @@ nsEditorShellMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
     if (isContextClick)
     {
       // Set selection to node clicked on if NOT within an existing selection
-      if (element && !NodeIsInSelection && !nsHTMLEditUtils::IsBody(element))
+      //   and not the entire body or table element
+      if (element && !NodeIsInSelection && 
+          !nsHTMLEditUtils::IsBody(element) &&
+          !nsHTMLEditUtils::IsTableElement(element))
       {
-        // But never select entire body
         mEditorShell->SelectElement(element);
       }
-        // Always fall through to do other actions, such as context menu
     }
     else if (buttonNumber == 1)
     {
