@@ -56,6 +56,7 @@
 #include "nsIURI.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIWebShell.h"
 #include "nsIXULDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
@@ -438,14 +439,6 @@ NS_IMETHODIMP nsRootAccessible::GetDocument(nsIDocument **doc)
 NS_IMETHODIMP nsRootAccessible::OnStateChange(nsIWebProgress *aWebProgress,
   nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
 {
-  if (!mListener)
-    return NS_ERROR_FAILURE;
-
-  if (mBusy != eBusyStateLoading && (aStateFlags & STATE_START)) {
-    mBusy = eBusyStateLoading; 
-    mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, this);
-  }
-
   return NS_OK;
 }
 
@@ -462,6 +455,12 @@ NS_IMETHODIMP nsRootAccessible::OnLocationChange(nsIWebProgress *aWebProgress,
   nsIRequest *aRequest, nsIURI *location)
 {
   // Load has been verified, it will occur, about to commence
+  if (mListener && mBusy != eBusyStateLoading) {
+    mBusy = eBusyStateLoading; 
+    mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, this);
+    StartDocReadyTimer(); 
+  }
+
   return NS_OK;
 }
 
