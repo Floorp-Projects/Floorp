@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.32 2002/11/19 21:37:50 jpierre%netscape.com Exp $
+ * $Id: crl.c,v 1.33 2003/03/04 22:34:56 relyea%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -639,6 +639,7 @@ crl_storeCRL (PK11SlotInfo *slot,char *url,
                   CERTSignedCrl *newCrl, SECItem *derCrl, int type)
 {
     CERTSignedCrl *oldCrl = NULL, *crl = NULL;
+    PRBool deleteOldCrl = PR_FALSE;
     CK_OBJECT_HANDLE crlHandle;
 
     PORT_Assert(newCrl);
@@ -686,10 +687,9 @@ crl_storeCRL (PK11SlotInfo *slot,char *url,
 	    url = oldCrl->url;
         }
 
-
         /* really destroy this crl */
         /* first drum it out of the permanment Data base */
-        SEC_DeletePermCRL(oldCrl);
+	deleteOldCrl = PR_TRUE;
     }
 
     /* invalidate CRL cache for this issuer */
@@ -706,7 +706,12 @@ crl_storeCRL (PK11SlotInfo *slot,char *url,
     }
 
 done:
-    if (oldCrl) SEC_DestroyCrl(oldCrl);
+    if (oldCrl) {
+	if (deleteOldCrl && crlHandle != CK_INVALID_HANDLE) {
+	    SEC_DeletePermCRL(oldCrl);
+	}
+	SEC_DestroyCrl(oldCrl);
+    }
 
     return crl;
 }
