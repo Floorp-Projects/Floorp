@@ -54,6 +54,8 @@
 #include "nsWeakReference.h"
 #include "nsISizeOfHandler.h"
 #include "nsTextFormater.h"
+#include "nsStorageStream.h"
+#include "nsIBinaryInputStream.h"
 #ifdef DEBUG
 #include "pure.h"
 #endif
@@ -121,4 +123,6 @@ void XXXNeverCalled()
     TestSegmentedBuffer();
 #endif
     NS_NewSizeOfHandler(0);
+    nsStorageStream();
+    NS_NewBinaryInputStream(0, 0);
 }
