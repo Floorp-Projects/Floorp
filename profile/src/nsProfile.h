@@ -64,6 +64,7 @@ private:
 								
 	nsresult CloneProfileDirectorySpec(nsILocalFile **aLocalFile);
     nsresult AddLevelOfIndirection(nsIFile *aDir);
+    nsresult ShouldDeleteProfileParentDir(nsIFile *profileDir, PRBool *isSalted);
     nsresult DefineLocaleDefaultsDir();
     nsresult UndefineFileLocations();
 
@@ -80,9 +81,6 @@ private:
 public:
     nsProfile();
     virtual ~nsProfile();
-
-    // Deletes associated user directories
-    nsresult DeleteUserDirectories(nsIFile *profileDir);
 
     // Copies all the registry keys from old profile to new profile
     nsresult CopyRegKey(const PRUnichar *oldProfile, const PRUnichar *newProfile);
