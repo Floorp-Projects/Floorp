@@ -3418,7 +3418,7 @@ JS::ExprPairList *JS::Parser::parseLiteralField() {
     $1 = parseFieldName();
     match(Token::colon);
     $2 = parseAssignmentExpression();
-
+    lexer.redesignate(true); // Safe: looking for non-slash punctuation.
     $$ = NodeFactory::LiteralField($1,$2);
 
     return $$;
@@ -3473,6 +3473,7 @@ JS::ExprPairList *JS::Parser::parseArgumentList(NodeQueue<ExprPairList> &args) {
             match(Token::colon);
             // Finish parsing the LiteralField.
             $2 = parseAssignmentExpression();
+            lexer.redesignate(true); // Safe: looking for non-slash punctuation.
             args += NodeFactory::LiteralField($1,$2);
             $$ = parseNamedArgumentListPrime(args);
         } else {
