@@ -79,29 +79,37 @@ union dpun {
     Flt64 d;
 };
 
+union spun {
+  uint32 s;
+  Flt32 f;
+};
+
 struct DummyInit
 {
   DummyInit() {
-    union dpun u;
+    union dpun du;
+    union spun su;
 
-#if notyet    
-    floatPositiveInfinity = 1.0f/fZero;
-    floatNegativeInfinity = -1.0f/fZero;
-    floatNaN = fZero/fZero;
-#endif
+    su.s = 0x7f800000;
+    floatPositiveInfinity = su.f;
     
-	u.s.hi = DOUBLE_HI32_EXPMASK;
-	u.s.lo = 0x00000000;
-	doublePositiveInfinity = u.d;
+	du.s.hi = DOUBLE_HI32_EXPMASK;
+	du.s.lo = 0x00000000;
+	doublePositiveInfinity = du.d;
+
+    su.s = 0xff800000;
+    floatNegativeInfinity = su.f;
     
-	u.s.hi = DOUBLE_HI32_SIGNBIT | DOUBLE_HI32_EXPMASK;
-	u.s.lo = 0x00000000;
-	doubleNegativeInfinity = u.d;
+	du.s.hi = DOUBLE_HI32_SIGNBIT | DOUBLE_HI32_EXPMASK;
+	du.s.lo = 0x00000000;
+	doubleNegativeInfinity = du.d;
 
+    su.s = 0x7f900000;
+    floatNaN = su.f;
 
-	u.s.hi = DOUBLE_HI32_EXPMASK | DOUBLE_HI32_MANTMASK;
-	u.s.lo = 0xffffffff;
-	doubleNaN = u.d;
+	du.s.hi = DOUBLE_HI32_EXPMASK | DOUBLE_HI32_MANTMASK;
+	du.s.lo = 0xffffffff;
+	doubleNaN = du.d;
   }
 };
 
