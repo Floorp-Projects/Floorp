@@ -9,7 +9,9 @@ while (<INFILE>) {
 
 $id = $_;
    if ($id =~ "Build ID:") {
-     print OUTFILE "Build ID: " . $build . "\n";
+     $temp = "Build ID: " . $build;
+     $id =~ s/Build ID:\s\d+/$temp/;
+     print OUTFILE $id;
    }
    else {
       print OUTFILE $_;
