@@ -35,11 +35,14 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.18 2000/10/31 16:52:31 mcgreer%netscape.com Exp $
+ * $Id: rsa.c,v 1.19 2000/11/17 17:58:35 mcgreer%netscape.com Exp $
  */
 
 #include "secerr.h"
 
+#include "prclist.h"
+#include "prlock.h"
+#include "prinit.h"
 #include "blapi.h"
 #include "mpi.h"
 #include "mpprime.h"
@@ -47,12 +50,51 @@
 #include "secitem.h"
 
 /*
-** RSA encryption/decryption. When encrypting/decrypting the output
-** buffer must be at least the size of the public key modulus.
+** RSABlindingParamsStr
+**
+** For discussion of Paul Kocher's timing attack against an RSA private key
+** operation, see http://www.cryptography.com/timingattack/paper.html.  The 
+** countermeasure to this attack, known as blinding, is also discussed in 
+** the Handbook of Applied Cryptography, 11.118-11.119.
 */
+struct RSABlindingParamsStr
+{
+    /* Blinding-specific parameters */
+    PRCList   link;                  /* link to list of structs            */
+    SECItem   modulus;               /* list element "key"                 */
+    mp_int    f, g;                  /* Blinding parameters                */
+    int       counter;               /* number of remaining uses of (f, g) */
+};
+
+/*
+** RSABlindingParamsListStr
+**
+** List of key-specific blinding params.  The arena holds the volatile pool
+** of memory for each entry and the list itself.  The lock is for list
+** operations, in this case insertions and iterations, as well as control
+** of the counter for each set of blinding parameters.
+*/
+struct RSABlindingParamsListStr
+{
+    PRLock  *lock;   /* Lock for the list   */
+    PRCList  head;   /* Pointer to the list */
+};
+
+/*
+** The master blinding params list.
+*/
+static struct RSABlindingParamsListStr blindingParamsList = { 0 };
+
+/* Number of times to reuse (f, g).  Suggested by Paul Kocher */
+#define RSA_BLINDING_PARAMS_MAX_REUSE 50
+
+/* Global, allows optional use of blinding.  On by default. */
+/* Cannot be changed at the moment, due to thread-safety issues. */
+static PRBool nssRSAUseBlinding = PR_TRUE;
 
 static SECStatus
-rsa_keygen_from_primes(mp_int *p, mp_int *q, mp_int *e, RSAPrivateKey *key)
+rsa_keygen_from_primes(mp_int *p, mp_int *q, mp_int *e, RSAPrivateKey *key,
+                       unsigned int keySizeInBits)
 {
     mp_int n, d, phi;
     mp_int psub1, qsub1, tmp;
@@ -72,11 +114,17 @@ rsa_keygen_from_primes(mp_int *p, mp_int *q, mp_int *e, RSAPrivateKey *key)
     CHECK_MPI_OK( mp_init(&tmp)   );
     /* 1.  Compute n = p*q */
     CHECK_MPI_OK( mp_mul(p, q, &n) );
+    /*     verify that the modulus has the desired number of bits */
+    if (mpl_significant_bits(&n) != keySizeInBits) {
+	PORT_SetError(SEC_ERROR_NEED_RANDOM);
+	rv = SECFailure;
+	goto cleanup;
+    }
     /* 2.  Compute phi = (p-1)*(q-1) */
     CHECK_MPI_OK( mp_sub_d(p, 1, &psub1) );
     CHECK_MPI_OK( mp_sub_d(q, 1, &qsub1) );
     CHECK_MPI_OK( mp_mul(&psub1, &qsub1, &phi) );
-    /* 3.  Compute d = e**-1 mod(phi) using extended Euclidean algorithm */
+    /* 3.  Compute d = e**-1 mod(phi) */
     err = mp_invmod(e, &phi, &d);
     /*     Verify that phi(n) and e have no common divisors */
     if (err != MP_OKAY) {
@@ -169,7 +217,12 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
     /* 4.  Generate primes p and q */
     pb = PORT_Alloc(primeLen);
     qb = PORT_Alloc(primeLen);
+    if (!pb || !qb) {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+	goto cleanup;
+    }
     do {
+	PORT_SetError(0);
 	CHECK_SEC_OK( RNG_GenerateGlobalRandomBytes(pb, primeLen) );
 	CHECK_SEC_OK( RNG_GenerateGlobalRandomBytes(qb, primeLen) );
 	pb[0]          |= 0xC0; /* set two high-order bits */
@@ -182,7 +235,7 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
 	CHECK_MPI_OK( mpp_make_prime(&q, primeLen * 8, PR_FALSE, &counter) );
 	if (mp_cmp(&p, &q) < 0)
 	    mp_exch(&p, &q);
-	rv = rsa_keygen_from_primes(&p, &q, &e, key);
+	rv = rsa_keygen_from_primes(&p, &q, &e, key, keySizeInBits);
 	if (rv == SECSuccess)
 	    break; /* generated two good primes */
 	prerr = PORT_GetError();
@@ -274,38 +327,19 @@ cleanup:
 **  RSA Private key operation (no CRT).
 */
 static SECStatus 
-rsa_PrivateKeyOp(RSAPrivateKey *key, 
-                 unsigned char *output, 
-                 unsigned char *input)
+rsa_PrivateKeyOp(RSAPrivateKey *key, mp_int *m, mp_int *c, mp_int *n,
+                 unsigned int modLen)
 {
-    mp_int n, d, m, c;
+    mp_int d;
     mp_err   err = MP_OKAY;
     SECStatus rv = SECSuccess;
-    unsigned int modLen;
-    modLen = rsa_modulusLen(&key->modulus);
-    MP_DIGITS(&n) = 0;
     MP_DIGITS(&d) = 0;
-    MP_DIGITS(&m) = 0;
-    MP_DIGITS(&c) = 0;
-    CHECK_MPI_OK( mp_init(&n) );
     CHECK_MPI_OK( mp_init(&d) );
-    CHECK_MPI_OK( mp_init(&m) );
-    CHECK_MPI_OK( mp_init(&c) );
-    /* copy private key parameters into mp integers */
-    SECITEM_TO_MPINT(key->modulus,         &n); /* n */
-    SECITEM_TO_MPINT(key->privateExponent, &d); /* d */
-    /* copy input into mp integer c */
-    OCTETS_TO_MPINT(input, &c, modLen);
+    SECITEM_TO_MPINT(key->privateExponent, &d);
     /* 1. m = c**d mod n */
-    CHECK_MPI_OK( mp_exptmod(&c, &d, &n, &m) );
-    /* m is the output */
-    err = mp_to_fixlen_octets(&m, output, modLen);
-    if (err >= 0) err = MP_OKAY;
+    CHECK_MPI_OK( mp_exptmod(c, &d, n, m) );
 cleanup:
-    mp_clear(&n);
     mp_clear(&d);
-    mp_clear(&m);
-    mp_clear(&c);
     if (err) {
 	MP_TO_SEC_ERROR(err);
 	rv = SECFailure;
@@ -317,39 +351,32 @@ cleanup:
 **  RSA Private key operation using CRT.
 */
 static SECStatus 
-rsa_PrivateKeyOpCRT(RSAPrivateKey *key, 
-                    unsigned char *output, 
-                    unsigned char *input)
+rsa_PrivateKeyOpCRT(RSAPrivateKey *key, mp_int *m, mp_int *c,
+                    unsigned int modLen)
 {
     mp_int p, q, d_p, d_q, qInv;
-    mp_int m, m1, m2, b2, h, c, ctmp;
+    mp_int m1, m2, b2, h, ctmp;
     mp_err   err = MP_OKAY;
     SECStatus rv = SECSuccess;
-    unsigned int modLen;
-    modLen = rsa_modulusLen(&key->modulus);
     MP_DIGITS(&p)    = 0;
     MP_DIGITS(&q)    = 0;
     MP_DIGITS(&d_p)  = 0;
     MP_DIGITS(&d_q)  = 0;
     MP_DIGITS(&qInv) = 0;
-    MP_DIGITS(&m)    = 0;
     MP_DIGITS(&m1)   = 0;
     MP_DIGITS(&m2)   = 0;
     MP_DIGITS(&b2)   = 0;
     MP_DIGITS(&h)    = 0;
-    MP_DIGITS(&c)    = 0;
     MP_DIGITS(&ctmp) = 0;
     CHECK_MPI_OK( mp_init(&p)    );
     CHECK_MPI_OK( mp_init(&q)    );
     CHECK_MPI_OK( mp_init(&d_p)  );
     CHECK_MPI_OK( mp_init(&d_q)  );
     CHECK_MPI_OK( mp_init(&qInv) );
-    CHECK_MPI_OK( mp_init(&m)    );
     CHECK_MPI_OK( mp_init(&m1)   );
     CHECK_MPI_OK( mp_init(&m2)   );
     CHECK_MPI_OK( mp_init(&b2)   );
     CHECK_MPI_OK( mp_init(&h)    );
-    CHECK_MPI_OK( mp_init(&c)    );
     CHECK_MPI_OK( mp_init(&ctmp) );
     /* copy private key parameters into mp integers */
     SECITEM_TO_MPINT(key->prime1,      &p);    /* p */
@@ -357,40 +384,202 @@ rsa_PrivateKeyOpCRT(RSAPrivateKey *key,
     SECITEM_TO_MPINT(key->exponent1,   &d_p);  /* d_p  = d mod (p-1) */
     SECITEM_TO_MPINT(key->exponent2,   &d_q);  /* d_p  = d mod (q-1) */
     SECITEM_TO_MPINT(key->coefficient, &qInv); /* qInv = q**-1 mod p */
-    /* copy input into mp integer c */
-    OCTETS_TO_MPINT(input, &c, modLen);
     /* 1. m1 = c**d_p mod p */
-    CHECK_MPI_OK( mp_mod(&c, &p, &ctmp) );
+    CHECK_MPI_OK( mp_mod(c, &p, &ctmp) );
     CHECK_MPI_OK( mp_exptmod(&ctmp, &d_p, &p, &m1) );
     /* 2. m2 = c**d_q mod q */
-    CHECK_MPI_OK( mp_mod(&c, &q, &ctmp) );
+    CHECK_MPI_OK( mp_mod(c, &q, &ctmp) );
     CHECK_MPI_OK( mp_exptmod(&ctmp, &d_q, &q, &m2) );
     /* 3.  h = (m1 - m2) * qInv mod p */
     CHECK_MPI_OK( mp_submod(&m1, &m2, &p, &h) );
     CHECK_MPI_OK( mp_mulmod(&h, &qInv, &p, &h)  );
     /* 4.  m = m2 + h * q */
-    CHECK_MPI_OK( mp_mul(&h, &q, &m) );
-    CHECK_MPI_OK( mp_add(&m, &m2, &m) );
-    /* m is the output */
-    err = mp_to_fixlen_octets(&m, output, modLen);
-    if (err >= 0) err = MP_OKAY;
+    CHECK_MPI_OK( mp_mul(&h, &q, m) );
+    CHECK_MPI_OK( mp_add(m, &m2, m) );
 cleanup:
     mp_clear(&p);
     mp_clear(&q);
     mp_clear(&d_p);
     mp_clear(&d_q);
     mp_clear(&qInv);
-    mp_clear(&m);
     mp_clear(&m1);
     mp_clear(&m2);
     mp_clear(&b2);
     mp_clear(&h);
-    mp_clear(&c);
     if (err) {
 	MP_TO_SEC_ERROR(err);
 	rv = SECFailure;
     }
     return rv;
+}
+
+static PRCallOnceType coBPInit = { 0, 0, 0 };
+static PRStatus 
+init_blinding_params_list(void)
+{
+    blindingParamsList.lock = PR_NewLock();
+    if (!blindingParamsList.lock) {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+	return PR_FAILURE;
+    }
+    PR_INIT_CLIST(&blindingParamsList.head);
+    return PR_SUCCESS;
+}
+
+static SECStatus
+generate_blinding_params(struct RSABlindingParamsStr *rsabp, 
+                         RSAPrivateKey *key, mp_int *n, unsigned int modLen)
+{
+    SECStatus rv = SECSuccess;
+    mp_int e, k;
+    mp_err err = MP_OKAY;
+    unsigned char *kb = NULL;
+    MP_DIGITS(&e) = 0;
+    MP_DIGITS(&k) = 0;
+    CHECK_MPI_OK( mp_init(&e) );
+    CHECK_MPI_OK( mp_init(&k) );
+    SECITEM_TO_MPINT(key->publicExponent, &e);
+    /* generate random k < n */
+    kb = PORT_Alloc(modLen);
+    if (!kb) {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+	goto cleanup;
+    }
+    CHECK_SEC_OK( RNG_GenerateGlobalRandomBytes(kb, modLen) );
+    CHECK_MPI_OK( mp_read_unsigned_octets(&k, kb, modLen) );
+    /* k < n */
+    CHECK_MPI_OK( mp_mod(&k, n, &k) );
+    /* f = k**e mod n */
+    CHECK_MPI_OK( mp_exptmod(&k, &e, n, &rsabp->f) );
+    /* g = k**-1 mod n */
+    CHECK_MPI_OK( mp_invmod(&k, n, &rsabp->g) );
+    /* Initialize the counter for this (f, g) */
+    rsabp->counter = RSA_BLINDING_PARAMS_MAX_REUSE;
+cleanup:
+    if (kb)
+	PORT_ZFree(kb, modLen);
+    mp_clear(&k);
+    mp_clear(&e);
+    if (err) {
+	MP_TO_SEC_ERROR(err);
+	rv = SECFailure;
+    }
+    return rv;
+}
+
+static SECStatus
+init_blinding_params(struct RSABlindingParamsStr *rsabp, RSAPrivateKey *key,
+                     mp_int *n, unsigned int modLen)
+{
+    SECStatus rv = SECSuccess;
+    mp_err err = MP_OKAY;
+    MP_DIGITS(&rsabp->f) = 0;
+    MP_DIGITS(&rsabp->g) = 0;
+    /* initialize blinding parameters */
+    CHECK_MPI_OK( mp_init(&rsabp->f) );
+    CHECK_MPI_OK( mp_init(&rsabp->g) );
+    /* List elements are keyed using the modulus */
+    SECITEM_CopyItem(NULL, &rsabp->modulus, &key->modulus);
+    CHECK_SEC_OK( generate_blinding_params(rsabp, key, n, modLen) );
+    return SECSuccess;
+cleanup:
+    mp_clear(&rsabp->f);
+    mp_clear(&rsabp->g);
+    if (err) {
+	MP_TO_SEC_ERROR(err);
+	rv = SECFailure;
+    }
+    return rv;
+}
+
+static SECStatus
+get_blinding_params(RSAPrivateKey *key, mp_int *n, unsigned int modLen,
+                    mp_int *f, mp_int *g)
+{
+    SECStatus rv = SECSuccess;
+    mp_err err = MP_OKAY;
+    int cmp;
+    PRCList *el;
+    struct RSABlindingParamsStr *rsabp = NULL;
+    /* Init the list if neccessary (the init function is only called once!) */
+    if (blindingParamsList.lock == NULL) {
+	if (PR_CallOnce(&coBPInit, init_blinding_params_list) != PR_SUCCESS) {
+	    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	    return SECFailure;
+	}
+    }
+    /* Acquire the list lock */
+    PR_Lock(blindingParamsList.lock);
+    /* Walk the list looking for the private key */
+    for (el = PR_NEXT_LINK(&blindingParamsList.head);
+         el != &blindingParamsList.head;
+         el = PR_NEXT_LINK(el)) {
+	rsabp = (struct RSABlindingParamsStr *)el;
+	cmp = SECITEM_CompareItem(&rsabp->modulus, &key->modulus);
+	if (cmp == 0) {
+	    /* Check the usage counter for the parameters */
+	    if (--rsabp->counter <= 0) {
+		/* Regenerate the blinding parameters */
+		CHECK_SEC_OK( generate_blinding_params(rsabp, key, n, modLen) );
+	    }
+	    /* Return the parameters */
+	    CHECK_MPI_OK( mp_copy(&rsabp->f, f) );
+	    CHECK_MPI_OK( mp_copy(&rsabp->g, g) );
+	    /* Now that the params are located, release the list lock. */
+	    PR_Unlock(blindingParamsList.lock); /* XXX when fails? */
+	    return SECSuccess;
+	} else if (cmp > 0) {
+	    /* The key is not in the list.  Break to param creation. */
+	    break;
+	}
+    }
+    /* At this point, the key is not in the list.  el should point to the
+    ** list element that this key should be inserted before.  NOTE: the list
+    ** lock is still held, so there cannot be a race condition here.
+    */
+    rsabp = (struct RSABlindingParamsStr *)
+              PORT_ZAlloc(sizeof(struct RSABlindingParamsStr));
+    if (!rsabp) {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+	goto cleanup;
+    }
+    /* Initialize the list pointer for the element */
+    PR_INIT_CLIST(&rsabp->link);
+    /* Initialize the blinding parameters 
+    ** This ties up the list lock while doing some heavy, element-specific
+    ** operations, but we don't want to insert the element until it is valid,
+    ** which requires computing the blinding params.  If this proves costly,
+    ** it could be done after the list lock is released, and then if it fails
+    ** the lock would have to be reobtained and the invalid element removed.
+    */
+    rv = init_blinding_params(rsabp, key, n, modLen);
+    if (rv != SECSuccess) {
+	PORT_ZFree(rsabp, sizeof(struct RSABlindingParamsStr));
+	goto cleanup;
+    }
+    /* Insert the new element into the list
+    ** If inserting in the middle of the list, el points to the link
+    ** to insert before.  Otherwise, the link needs to be appended to
+    ** the end of the list, which is the same as inserting before the
+    ** head (since el would have looped back to the head).
+    */
+    PR_INSERT_BEFORE(&rsabp->link, el);
+    /* Return the parameters */
+    CHECK_MPI_OK( mp_copy(&rsabp->f, f) );
+    CHECK_MPI_OK( mp_copy(&rsabp->g, g) );
+    /* Release the list lock */
+    PR_Unlock(blindingParamsList.lock); /* XXX when fails? */
+    return SECSuccess;
+cleanup:
+    /* It is possible to reach this after the lock is already released.
+    ** Ignore the error in that case.
+    */
+    PR_Unlock(blindingParamsList.lock);
+    if (err) {
+	MP_TO_SEC_ERROR(err);
+	rv = SECFailure;
+    }
+    return SECFailure;
 }
 
 /*
@@ -404,10 +593,24 @@ RSA_PrivateKeyOp(RSAPrivateKey *key,
 {
     unsigned int modLen;
     unsigned int offset;
+    SECStatus rv;
+    mp_err err;
+    mp_int n, c, m;
+    mp_int f, g;
     if (!key || !output || !input) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
+    MP_DIGITS(&n) = 0;
+    MP_DIGITS(&c) = 0;
+    MP_DIGITS(&m) = 0;
+    MP_DIGITS(&f) = 0;
+    MP_DIGITS(&g) = 0;
+    CHECK_MPI_OK( mp_init(&n) );
+    CHECK_MPI_OK( mp_init(&c) );
+    CHECK_MPI_OK( mp_init(&m) );
+    CHECK_MPI_OK( mp_init(&f) );
+    CHECK_MPI_OK( mp_init(&g) );
     /* check input out of range (needs to be in range [0..n-1]) */
     modLen = rsa_modulusLen(&key->modulus);
     offset = (key->modulus.data[0] == 0) ? 1 : 0; /* may be leading 0 */
@@ -415,13 +618,44 @@ RSA_PrivateKeyOp(RSAPrivateKey *key,
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
+    SECITEM_TO_MPINT(key->modulus, &n);
+    OCTETS_TO_MPINT(input, &c, modLen);
+    /* If blinding, compute pre-image of ciphertext by multiplying by
+    ** blinding factor
+    */
+    if (nssRSAUseBlinding) {
+	CHECK_SEC_OK( get_blinding_params(key, &n, modLen, &f, &g) );
+	/* c' = c*f mod n */
+	CHECK_MPI_OK( mp_mulmod(&c, &f, &n, &c) );
+    }
+    /* Do the private key operation m = c**d mod n */
     if ( key->prime1.len      == 0 ||
          key->prime2.len      == 0 ||
          key->exponent1.len   == 0 ||
          key->exponent2.len   == 0 ||
          key->coefficient.len == 0) {
-	return rsa_PrivateKeyOp(key, output, input);
+	CHECK_SEC_OK( rsa_PrivateKeyOp(key, &m, &c, &n, modLen) );
     } else {
-	return rsa_PrivateKeyOpCRT(key, output, input);
+	CHECK_SEC_OK( rsa_PrivateKeyOpCRT(key, &m, &c, modLen) );
     }
+    /* If blinding, compute post-image of plaintext by multiplying by
+    ** blinding factor
+    */
+    if (nssRSAUseBlinding) {
+	/* m = m'*g mod n */
+	CHECK_MPI_OK( mp_mulmod(&m, &g, &n, &m) );
+    }
+    err = mp_to_fixlen_octets(&m, output, modLen);
+    if (err >= 0) err = MP_OKAY;
+cleanup:
+    mp_clear(&n);
+    mp_clear(&c);
+    mp_clear(&m);
+    mp_clear(&f);
+    mp_clear(&g);
+    if (err) {
+	MP_TO_SEC_ERROR(err);
+	rv = SECFailure;
+    }
+    return rv;
 }
