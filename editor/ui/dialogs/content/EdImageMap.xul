@@ -25,25 +25,41 @@
 
 <?xml-stylesheet href="chrome://editor/skin/EdImageMap.css" type="text/css"?> 
 
+<!--
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
+-->
 <?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
 
+<!-- 
+<?xul-overlay href="chrome://global/content/taskbarOverlay.xul"?>
+<?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
+-->
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-<?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?>
+<?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
+<!--
+<?xul-overlay href="chrome://sidebar/content/sidebarOverlay.xul"?>
+-->
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorImageMap.dtd">
 
 
 <!-- dialog containing a control requiring initial setup -->
+<!-- was class="imap-window" -->
 <window class="dialog" title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
     onunload="//finishMap();"
     align="vertical"
-    width="640" height="480">
-   
+   >
+<!--
+    width="640" height="480"
+	screenX="10" screenY="10"
+	persist="screenX screenY width height"
+-->
 
   <!-- Methods common to all editor dialogs -->
   <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js" />
@@ -136,29 +152,31 @@
 </menubar>
 
 
-<toolbar id="toolbar" class="standard" persist="collapsed">
+<toolbar id="toolbar" class="standard" persist="collapsed" align="vertical">
   <titledbutton id="cutButton" class="button28" observes="Map:Cut"/>
   <titledbutton id="copyButton" class="button28" observes="Map:Copy"/>
   <titledbutton id="pasteButton" class="button28" observes="Map:Paste"/>
   <titledbutton id="zoomInButton" class="button28" observes="Map:ZoomIn"/>
   <titledbutton id="zoomOutButton" class="button28" observes="Map:ZoomOut"/>
   <titledbutton id="contrastButton" class="button28" toggled="0" oncommand="highContrast()"/>
+ 
   <spring flex="100%"/>
 </toolbar> 
 
-
 <box align="horizontal" flex="100">
 
-  <toolbar id="toolbox" align="vertical">
+  <toolbar id="toolbox">
+  <box align="vertical" flex="100">
     <titledbutton id="pointerButton" class="tool" toggled="1" oncommand="changeTool(event, 'pointer')"/>
     <titledbutton id="rectButton" class="tool" oncommand="changeTool(event, 'rect')"/>
     <titledbutton id="cirButton" class="tool" oncommand="changeTool(event, 'cir')"/>
     <titledbutton id="polyButton" class="tool" oncommand="changeTool(event, 'poly')"/>
     <spring flex="100%"/>
+  </box>
   </toolbar>
 
   <!-- Content Area -->
-  <html:iframe id="content" src="EdImageMapPage.html" flex="100%"/>
+  <iframe id="content" src="EdImageMapPage.html" flex="100%"/>
 
 </box>
 
@@ -168,12 +186,11 @@
 
   <box align="horizontal">
 
-    <!-- Cheap hack until I get key events hooked up
-    <button 
+    <!-- Cheap hack until I get key events hooked up; was class="key-toolbar left" -->
+    <button orient="vertical" id = "DelButton"
     class   = "dialog"
-    id	    = "DelButton"
     value="&delSpotCmd.label;" 
-    oncommand="deleteElement(currentElement)"/> -->
+    oncommand="deleteElement(currentElement)"/>
     
     <spring flex="100%"/>
 
