@@ -41,6 +41,7 @@
 #include "nsEditRules.h"
  
 class nsIDOMKeyEvent;
+class nsITransferable;
 
 /**
  * The HTML editor implementation.<br>
@@ -261,6 +262,8 @@ public:
   NS_IMETHOD Paste(PRInt32 aSelectionType);
   NS_IMETHOD CanPaste(PRInt32 aSelectionType, PRBool &aCanPaste);
 
+  NS_IMETHOD InsertFromDrop();
+
   NS_IMETHOD OutputToString(nsString& aOutputString,
                             const nsString& aFormatType,
                             PRUint32 aFlags);
@@ -449,6 +452,10 @@ protected:
   NS_IMETHOD InsertAsPlaintextQuotation(const nsString& aQuotedText,
                                         nsIDOMNode **aNodeInserted);
 
+  // factored methods for handling insertion of data from transferables (drag&drop or clipboard)
+  NS_IMETHOD PrepareTransferable(nsITransferable **transferable);
+  NS_IMETHOD InsertFromTransferable(nsITransferable *transferable);
+  
   /** simple utility to handle any error with event listener allocation or registration */
   void HandleEventListenerError();
 
