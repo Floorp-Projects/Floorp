@@ -79,6 +79,7 @@
 		</html:div>
 		</html:fieldset>
 	</box>
+
 </html:form>
 
 
@@ -87,11 +88,13 @@
 			<html:legend align="left">
 			<html:div>&internetKeywordsHeader.label;</html:div> 
 			</html:legend>
-						<html:div>
+				<html:div>
 				<html:input name="keyword" type="checkbox" id="pref:0:bool:browser.goBrowsing.enabled" />
 				<html:label for="pref:0:bool:browser.goBrowsing.enabled" accesskey="n" tabindex="0">
 				&enableKeyCheck.label;
 				</html:label>
 			</html:div>
-	</html:fieldset>
+		</html:fieldset>
 	</box>
+</html:div>
+</window>
