@@ -269,7 +269,8 @@ public:
                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
                      const PRUint32 aLocalIP=0,
                      nsISupports * aHistoryState=nsnull,
-                     const PRUnichar* aReferrer=nsnull) = 0;
+                     const PRUnichar* aReferrer=nsnull,
+                     const char * aWindowTarget = nsnull) = 0;
 
   /**
    * Load the document with the specified URI into the WebShell. Assuming you have
@@ -282,7 +283,8 @@ public:
                       nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
                       const PRUint32 aLocalIP=0,
                       nsISupports * aHistoryState=nsnull,
-                      const PRUnichar* aReferrer=nsnull) = 0;
+                      const PRUnichar* aReferrer=nsnull,
+                      const char * aWindowTarget = nsnull) = 0;
 
    /** Set the document for this webshell.
      * This simulates a URI load, in that the same notifications are sent as
