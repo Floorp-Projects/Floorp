@@ -7,7 +7,6 @@
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		title="&accountManagerTitle.label;"
-        width="600" height="420"
         align="vertical"
         class="dialog"
         onload="onLoad(event);">
@@ -18,7 +17,7 @@
 	<keyset id="keyset"/>
 
 	<box align="horizontal" flex="100%" style="padding: 5px">
-		<box align="vertical" flex="1">
+		<box align="vertical">
          <tree rdf:datasources="rdf:msgaccountmanager" flex="100%"
           rdf:containment="http://home.netscape.com/NC-rdf#Settings"
           onselect="onAccountClick(event.target)" id="accounttree"
@@ -46,34 +45,34 @@
          </box>
 		</box>
         <spring style="width: 5px"/>
-        <box flex="5">
-           <tabcontrol flex="100%" align="vertical">
+        <box flex="100%">
+           <tabcontrol align="vertical">
              <deck id="mydeck" flex="100%">
-                <box id="am-main.xul" flex="100%">
+                <box id="am-main.xul">
 <!-- need to specific these src= URLs as absolute URLs
      so that DOM security knows these have the same principal as this file -->
                      <html:iframe src="chrome://messenger/content/am-main.xul" name="am-main.xul"
-                          style="border: none" flex="100%"/>
+                          style="width: 30em; height: 30em; border: none"/>
                 </box>
-                <box id="am-server.xul" flex="100%">
+                <box id="am-server.xul" >
                      <html:iframe src="chrome://messenger/content/am-server.xul" name="am-server.xul"
-                          style="border: none" flex="100%"/>
+                          style="width: 30em; height: 30em; border: none" />
                 </box>
-                <box id="am-copies.xul" flex="100%">
+                <box id="am-copies.xul" >
                      <html:iframe src="chrome://messenger/content/am-copies.xul" name="am-copies.xul"
-                          style="border: none" flex="100%"/>
+                          style="width: 30em; height: 30em; border: none" />
                 </box>
-                <box id="am-advanced.xul" flex="100%">
+                <box id="am-advanced.xul" >
                      <html:iframe src="chrome://messenger/content/am-advanced.xul" name="am-advanced.xul"
-                          style="border: none" flex="100%"/>
+                          style="width: 30em; height: 30em; border: none"/>
                 </box>
-                <box id="am-smtp.xul" flex="100%">
+                <box id="am-smtp.xul" >
                      <html:iframe src="chrome://messenger/content/am-smtp.xul" name="am-smtp.xul"
-                          style="border: none" flex="100%"/>
+                          style="width: 30em; height: 30em; border: none" />
                 </box>
-                <box id="am-serverwithnoidentities.xul" flex="100%">
+                <box id="am-serverwithnoidentities.xul" >
                      <html:iframe src="chrome://messenger/content/am-serverwithnoidentities.xul" name="am-serverwithnoidentities.xul"
-                          style="border: none" flex="100%"/>
+                          style="width: 30em; height: 30em; border: none" />
                 </box>
               </deck>
            </tabcontrol>
