@@ -256,11 +256,10 @@ prefChanged(const char *aPref, void *aClosure)
   {
     PRInt32 dpi;
     rv = gPref->GetIntPref( aPref, &dpi );
-    if( NS_SUCCEEDED(rv) && dpi != 0) {
+    if( NS_SUCCEEDED(rv) && dpi != 0)
       nsFontMetricsOS2::gDPI = dpi;
     else
       nsFontMetricsOS2::gDPI = nsFontMetricsOS2::gSystemRes;
-    }
   }
 
   return 0;
