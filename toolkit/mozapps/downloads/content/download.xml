@@ -152,14 +152,22 @@
         </xul:vbox>
 #endif
         <xul:vbox flex="1">
-          <xul:label xbl:inherits="value=target" crop="center"/>
-          <xul:progressmeter mode="normal" value="0" flex="1"
-                            xbl:inherits="value=progress,mode=progressmode"/>
-          <xul:label xbl:inherits="value=status" crop="center"/>
-        </xul:vbox>
-        <xul:vbox pack="start">
-          <xul:label value="&cancel.label;" class="link"
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('cancel');"/>          
+          <xul:hbox flex="1">
+            <xul:vbox flex="1">
+              <xul:label xbl:inherits="value=target" crop="center"/>
+              <xul:progressmeter mode="normal" value="0" flex="1"
+                                xbl:inherits="value=progress,mode=progressmode"/>
+            </xul:vbox>
+            <xul:vbox pack="start">
+              <xul:label value="&cancel.label;" class="link"
+                        onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.fireEvent('cancel');"/>          
+            </xul:vbox>
+          </xul:hbox>                              
+          <xul:hbox align="center">
+            <xul:label value="&cmd.pause.label;" class="link"
+                       onclick="this.parentNode.parentNode.parentNode.parentNode.fireEvent('pause');"/>
+            <xul:label xbl:inherits="value=status" flex="1" crop="right"/>
+          </xul:hbox>                            
         </xul:vbox>
       </xul:hbox>
     </content>
@@ -285,18 +293,22 @@
         </xul:vbox>
 #endif
         <xul:vbox flex="1">
-          <xul:label xbl:inherits="value=target" flex="1" crop="center"/>
-          <xul:progressmeter mode="normal" value="0" flex="1"
-                            xbl:inherits="value=progress,mode=progressmode"/>
+          <xul:hbox flex="1">
+            <xul:vbox flex="1">
+              <xul:label xbl:inherits="value=target" crop="center"/>
+              <xul:progressmeter mode="normal" value="0" flex="1"
+                                xbl:inherits="value=progress,mode=progressmode"/>
+            </xul:vbox>
+            <xul:vbox pack="start">
+              <xul:label value="&cancel.label;" class="link"
+                        onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.fireEvent('cancel');"/>          
+            </xul:vbox>
+          </xul:hbox>                              
           <xul:hbox align="center">
             <xul:label value="&cmd.resume.label;" class="link"
                        onclick="this.parentNode.parentNode.parentNode.parentNode.fireEvent('resume');"/>
             <xul:label xbl:inherits="value=status" flex="1" crop="right"/>
           </xul:hbox>                            
-        </xul:vbox>
-        <xul:vbox pack="start">
-          <xul:label value="&cancel.label;" class="link"
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('cancel');"/>          
         </xul:vbox>
       </xul:hbox>
     </content>

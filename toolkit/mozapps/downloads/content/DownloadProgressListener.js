@@ -118,7 +118,9 @@ DownloadProgressListener.prototype =
         kRate = parseInt((kRate - fraction) / 10);
 
         // Insert 3 is the download rate (in kilobytes/sec).
-        status = this._replaceInsert(status, 2, kRate + "." + fraction);
+        if (kRate < 100)
+          kRate += "." + fraction;
+        status = this._replaceInsert(status, 2, kRate);
     }
     else
       status = this._replaceInsert(status, 2, "??.?");
