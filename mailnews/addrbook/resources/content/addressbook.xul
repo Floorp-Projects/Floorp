@@ -215,7 +215,7 @@ Contributor(s):
             <menuitem id="menu_cut"/>
             <menuitem id="menu_copy"/>
             <menuitem id="menu_paste"/>
-            <menuitem id="menu_delete" observes="button_delete"/>
+            <menuitem id="menu_delete"/>
             <menuseparator/>
             <menuitem id="menu_selectAll"/>
             <menuseparator/>
