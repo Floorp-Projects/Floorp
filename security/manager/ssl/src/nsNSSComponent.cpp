@@ -776,7 +776,7 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
     fingerprintStr.AssignWithConversion(fingerprint);
     PR_FREEIF(fingerprint);
     if (NS_FAILED(rv2)) return rv2;
-    rv2 = mScriptSecurityManager->GetCertificatePrincipal(fingerprintStr, aPrincipal);
+    rv2 = mScriptSecurityManager->GetCertificatePrincipal(fingerprintStr.get(), aPrincipal);
     if (NS_FAILED(rv2) || !*aPrincipal) return rv2;
 
     nsCOMPtr<nsICertificatePrincipal> certPrincipal = do_QueryInterface(*aPrincipal, &rv2);
@@ -787,7 +787,7 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
     nsCAutoString orgNameStr;
     orgNameStr.AssignWithConversion(orgName);
     PR_FREEIF(orgName);
-    rv2 = certPrincipal->SetCommonName(orgNameStr);
+    rv2 = certPrincipal->SetCommonName(orgNameStr.get());
     if (NS_FAILED(rv2)) return rv2;
   }
 

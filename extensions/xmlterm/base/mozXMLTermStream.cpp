@@ -226,7 +226,7 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindowInternal* aDOMWindow,
   contractID += contentType;
 
   nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory;
-  docLoaderFactory = do_CreateInstance(contractID, &result);
+  docLoaderFactory = do_CreateInstance(contractID.get(), &result);
   if (NS_FAILED(result))
     return result;
 
