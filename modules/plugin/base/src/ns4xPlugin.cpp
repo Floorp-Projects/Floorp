@@ -338,6 +338,9 @@ ns4xPlugin::CheckClassInitialized(void)
   CALLBACKS.utf8fromidentifier =
     NewNPN_UTF8FromIdentifierProc(FP2TV(_utf8fromidentifier));
 
+  CALLBACKS.intfromidentifier =
+    NewNPN_IntFromIdentifierProc(FP2TV(_intfromidentifier));
+
   CALLBACKS.createobject =
     NewNPN_CreateObjectProc(FP2TV(_createobject));
 
@@ -361,6 +364,12 @@ ns4xPlugin::CheckClassInitialized(void)
 
   CALLBACKS.removeproperty =
     NewNPN_RemovePropertyProc(FP2TV(_removeproperty));
+
+  CALLBACKS.hasproperty =
+    NewNPN_HasPropertyProc(FP2TV(_hasproperty));
+
+  CALLBACKS.hasmethod =
+    NewNPN_HasMethodProc(FP2TV(_hasmethod));
 
   CALLBACKS.releasevariantvalue =
     NewNPN_ReleaseVariantValueProc(FP2TV(_releasevariantvalue));
