@@ -183,7 +183,6 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
 
         nsISimpleEnumerator* pModules = nsnull;
         rv = pNetModuleMgr->EnumerateModules("http-response", &pModules);
-        NS_RELEASE(pNetModuleMgr);
         if (NS_FAILED(rv)) return rv;
 
         nsIProxyObjectManager*  proxyObjectManager = nsnull; 
