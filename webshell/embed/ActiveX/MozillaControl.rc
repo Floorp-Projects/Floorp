@@ -68,22 +68,24 @@ VS_VERSION_INFO VERSIONINFO
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "040904B0"
+        BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "\0"
-            VALUE "FileDescription", "MozillaControl Module\0"
+            VALUE "FileDescription", "Mozilla ActiveX control and plugin module\0"
+            VALUE "FileExtents", "*|*\0"
+            VALUE "FileOpenName", "ActiveX (*.*)|ActiveX (*.*)\0"
             VALUE "FileVersion", "1, 0, 0, 1\0"
-            VALUE "InternalName", "MOZILLACONTROL\0"
-            VALUE "LegalCopyright", "Copyright 1997\0"
-            VALUE "OriginalFilename", "MOZILLACONTROL.DLL\0"
-            VALUE "ProductName", "MozillaControl Module\0"
+            VALUE "InternalName", "NPMOZCTL\0"
+            VALUE "LegalCopyright", "Copyright 1999\0"
+            VALUE "MIMEType", "application/x-oleobject|application/oleobject\0"
+            VALUE "OriginalFilename", "NPMOZCTL.DLL\0"
+            VALUE "ProductName", "Mozilla ActiveX control and plugin support\0"
             VALUE "ProductVersion", "1, 0, 0, 1\0"
-            VALUE "OLESelfRegister", "\0"
         END
     END
     BLOCK "VarFileInfo"
     BEGIN
-        VALUE "Translation", 0x409, 1200
+        VALUE "Translation", 0x409, 1252
     END
 END
 
