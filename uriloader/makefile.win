@@ -23,10 +23,11 @@ DEPTH = ..
 
 MODULE = uriloader
 
-DIRS=            \
-	base     \
-	build    \
+DIRS=             \
+	base            \
+	build           \
 	extprotocol     \
+  exthandler      \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
