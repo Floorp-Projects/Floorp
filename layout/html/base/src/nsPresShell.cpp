@@ -1001,8 +1001,8 @@ public:
   NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
   NS_IMETHOD GetCaretEnabled(PRBool *aOutEnabled);
 
-  NS_IMETHOD SetDisplayNonTextSelection(PRBool aInEnable);
-  NS_IMETHOD GetDisplayNonTextSelection(PRBool *aOutEnable);
+  NS_IMETHOD SetSelectionFlags(PRInt16 aInEnable);
+  NS_IMETHOD GetSelectionFlags(PRInt16 *aOutEnable);
 
   // nsISelectionController
 
@@ -3057,13 +3057,13 @@ NS_IMETHODIMP PresShell::GetCaretEnabled(PRBool *aOutEnabled)
   return NS_OK;
 }
 
-NS_IMETHODIMP PresShell::SetDisplayNonTextSelection(PRBool aInEnable)
+NS_IMETHODIMP PresShell::SetSelectionFlags(PRInt16 aInEnable)
 {
-  mDisplayNonTextSelection = PR_TRUE;
+  mDisplayNonTextSelection = aInEnable;
   return NS_OK;
 }
 
-NS_IMETHODIMP PresShell::GetDisplayNonTextSelection(PRBool *aOutEnable)
+NS_IMETHODIMP PresShell::GetSelectionFlags(PRInt16 *aOutEnable)
 {
   if (!aOutEnable)
     return NS_ERROR_INVALID_ARG;

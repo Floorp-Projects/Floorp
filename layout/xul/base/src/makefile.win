@@ -45,6 +45,7 @@ REQUIRES	= xpcom \
 		  gfx \
 		  content \
 		  layout \
+		  webBrowser_core \
 		  $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN

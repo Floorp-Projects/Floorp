@@ -44,6 +44,7 @@ REQUIRES	= xpcom \
 !ifdef MOZ_SVG
               raptor \
 !endif
+		  webBrowser_core \
 		  $(NULL)
 
 

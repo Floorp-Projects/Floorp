@@ -44,7 +44,8 @@ REQUIRES        = xpcom \
                   lwbrk \
                   gfx \
                   widget \
-		  unicharutil \
+                  webBrowser_core \
+            		  unicharutil \
                   $(NULL)
 
 CPPSRCS		=                           \
