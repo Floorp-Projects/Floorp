@@ -72,7 +72,7 @@ static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
 static PRLogModuleInfo* gJSDiagnostics = nsnull;
 #endif
 
-void PR_CALLBACK
+void JS_DLL_CALLBACK
 NS_ScriptErrorReporter(JSContext *cx,
                        const char *message,
                        JSErrorReport *report)
@@ -218,7 +218,7 @@ NS_ScriptErrorReporter(JSContext *cx,
 #define MAYBE_GC_BRANCH_COUNT_MASK 0x00000fff // 4095
 #define MAYBE_STOP_BRANCH_COUNT_MASK 0x003fffff
 
-JSBool PR_CALLBACK
+JSBool JS_DLL_CALLBACK
 nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
 {
   // Get the native context
@@ -1081,7 +1081,7 @@ static JSPropertySpec OptionsProperties[] = {
   {0}
 };
 
-static JSBool PR_CALLBACK
+static JSBool JS_DLL_CALLBACK
 GetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   if (JSVAL_IS_INT(id)) {
@@ -1092,7 +1092,7 @@ GetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   return JS_TRUE;
 }
 
-static JSBool PR_CALLBACK
+static JSBool JS_DLL_CALLBACK
 SetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   if (JSVAL_IS_INT(id)) {
@@ -1455,7 +1455,7 @@ static PRThread *gDOMThread;
 
 static JSGCCallback gOldJSGCCallback;
 
-static JSBool PR_CALLBACK
+static JSBool JS_DLL_CALLBACK
 DOMGCCallback(JSContext *cx, JSGCStatus status)
 {
   if (status == JSGC_BEGIN && PR_GetCurrentThread() != gDOMThread)
