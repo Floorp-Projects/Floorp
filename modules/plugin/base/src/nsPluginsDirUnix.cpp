@@ -372,10 +372,11 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
     // namespace before attempting to load the plug-in seems to
     // work fine.
     if (!pLibrary) {
-        DisplayPR_LoadLibraryErrorMessage(libSpec.value.pathname);
         LoadExtraSharedLibs();
         // try reload plugin ones more
         pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
+        if (!pLibrary)
+            DisplayPR_LoadLibraryErrorMessage(libSpec.value.pathname);
     }
 #endif
 
