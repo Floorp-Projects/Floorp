@@ -785,12 +785,17 @@ nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
       if (gsDebug) 
         printf ("TR %p for cell %p Initial Reflow: desired=%d, MES=%d\n", 
                this, kidFrame, kidSize.width, kidMaxElementSize.width);
-      //XXX: this is a hack, shouldn't it be the case that a min size is 
-      //     never larger than a desired size?
-      if (kidMaxElementSize.width>kidSize.width)
+
+      // XXX the following alerts bugs in the content frames.  
+      if (kidMaxElementSize.width > kidSize.width) {
+        printf("BUG - table cell content max element width greater than desired width \n");
         kidSize.width = kidMaxElementSize.width;
-      if (kidMaxElementSize.height>kidSize.height)
+      }
+      if (kidMaxElementSize.height > kidSize.height) {
+        printf("BUG - table cell content max element height greater than desired height \n");
         kidSize.height = kidMaxElementSize.height;
+      }
+
       ((nsTableCellFrame *)kidFrame)->SetPass1DesiredSize(kidSize);
       ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(kidMaxElementSize);
       NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "unexpected child reflow status");
