@@ -43,6 +43,8 @@
 #include "nsIRDFCompositeDataSource.idl"
 #include "nsIRDFResource.idl"
 
+[ptr] native nsIContent_ptr(nsIContent);
+
 [scriptable, uuid(fb744f8e-1dd1-11b2-a5d7-935c9ab60602)]
 interface nsIXULTemplateBuilder : nsISupports
 {
@@ -61,6 +63,20 @@ interface nsIXULTemplateBuilder : nsISupports
      * Force the template builder to rebuild its content.
      */
     void rebuild();
+
+    /**
+     * Called to initialize a XUL content builder on a particular root
+     * element. This element presumably has a ``datasources''
+     * attribute, which the builder will parse to set up the template
+     * builder's datasources.
+     */
+    [noscript] void init(in nsIContent_ptr aElement);
+
+    /**
+     * Invoked lazily by a XUL element that needs its child content
+     * built.
+     */
+    [noscript] void createContents(in nsIContent_ptr aElement);
 };
 
 /**

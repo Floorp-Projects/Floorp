@@ -33,9 +33,5 @@ XPIDLSRCS	= \
 		nsIXULTemplateBuilder.idl \
 		$(NULL)
 
-EXPORTS		= \
-                nsIRDFContentModelBuilder.h \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

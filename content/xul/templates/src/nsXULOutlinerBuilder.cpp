@@ -637,75 +637,62 @@ nsXULOutlinerBuilder::GetCellText(PRInt32 aRow, const PRUnichar* aColID, nsAStri
 NS_IMETHODIMP
 nsXULOutlinerBuilder::SetOutliner(nsIOutlinerBoxObject* outliner)
 {
+    NS_PRECONDITION(mRoot, "not initialized");
+
     mBoxObject = outliner;
 
-    // XXX seems like there's some frame churn going on here, so we'll
-    // only try to grab the root element if we don't have it
-    // already. (It better not change!)
+    nsCOMPtr<nsIDocument> doc;
+    mRoot->GetDocument(*getter_AddRefs(doc));
+    NS_ASSERTION(doc, "element has no document");
+    if (!doc)
+        return NS_ERROR_UNEXPECTED;
 
-    if (! mRoot) {
-        // Get our root element
-        nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mBoxObject);
-        nsCOMPtr<nsIDOMElement> element;
-        boxObject->GetElement(getter_AddRefs(element));
+    // Grab the doc's principal...
+    nsCOMPtr<nsIPrincipal> docPrincipal;
+    nsresult rv = doc->GetPrincipal(getter_AddRefs(docPrincipal));
+    if (NS_FAILED(rv)) 
+        return rv;
 
-        mRoot = do_QueryInterface(element);
+    PRBool isTrusted = PR_FALSE;
+    rv = IsSystemPrincipal(docPrincipal.get(), &isTrusted);
+    if (NS_SUCCEEDED(rv) && isTrusted) {
+        // Get the datasource we intend to use to remember open state.
+        nsAutoString datasourceStr;
+        mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::statedatasource, datasourceStr);
 
-        LoadDataSources();
-
-        nsCOMPtr<nsIDocument> doc;
-        mRoot->GetDocument(*getter_AddRefs(doc));
-        NS_ASSERTION(doc, "element has no document");
-        if (!doc)
-            return NS_ERROR_UNEXPECTED;
-
-        // Grab the doc's principal...
-        nsCOMPtr<nsIPrincipal> docPrincipal;
-        nsresult rv = doc->GetPrincipal(getter_AddRefs(docPrincipal));
-        if (NS_FAILED(rv)) 
-            return rv;
-
-        PRBool isTrusted = PR_FALSE;
-        rv = IsSystemPrincipal(docPrincipal.get(), &isTrusted);
-        if (NS_SUCCEEDED(rv) && isTrusted) {
-            // Get the datasource we intend to use to remember open state.
-            nsAutoString datasourceStr;
-            mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::statedatasource, datasourceStr);
-
-            // since we are trusted, use the user specified datasource
-            // if non specified, use localstore, which gives us
-            // persistence across sessions
-            if (!datasourceStr.IsEmpty()) {
-                gRDFService->GetDataSource(NS_ConvertUCS2toUTF8(datasourceStr).get(),
-                                           getter_AddRefs(mPersistStateStore));
-            }
-            else {
-                gRDFService->GetDataSource("rdf:local-store",
-                                           getter_AddRefs(mPersistStateStore));
-            }
+        // since we are trusted, use the user specified datasource
+        // if non specified, use localstore, which gives us
+        // persistence across sessions
+        if (! datasourceStr.IsEmpty()) {
+            gRDFService->GetDataSource(NS_ConvertUCS2toUTF8(datasourceStr).get(),
+                                       getter_AddRefs(mPersistStateStore));
         }
-
-        // Either no specific datasource was specified, or we failed
-        // to get one because we are not trusted.
-        //
-        // XXX if it were possible to ``write an arbitrary datasource
-        // back'', then we could also allow an untrusted document to
-        // use a statedatasource from the same codebase.
-        if (! mPersistStateStore) {
-            mPersistStateStore =
-                do_CreateInstance("@mozilla.org/rdf/datasource;1?name=in-memory-datasource");
+        else {
+            gRDFService->GetDataSource("rdf:local-store",
+                                       getter_AddRefs(mPersistStateStore));
         }
-
-        NS_ASSERTION(mPersistStateStore, "failed to get a persistent state store");
-        if (! mPersistStateStore)
-            return NS_ERROR_FAILURE;
-
-        Rebuild();
-
-        EnsureSortVariables();
-        if (mSortVariable)
-          SortSubtree(mRows.GetRoot());
     }
+
+    // Either no specific datasource was specified, or we failed
+    // to get one because we are not trusted.
+    //
+    // XXX if it were possible to ``write an arbitrary datasource
+    // back'', then we could also allow an untrusted document to
+    // use a statedatasource from the same codebase.
+    if (! mPersistStateStore) {
+        mPersistStateStore =
+            do_CreateInstance("@mozilla.org/rdf/datasource;1?name=in-memory-datasource");
+    }
+
+    NS_ASSERTION(mPersistStateStore, "failed to get a persistent state store");
+    if (! mPersistStateStore)
+        return NS_ERROR_FAILURE;
+
+    Rebuild();
+
+    EnsureSortVariables();
+    if (mSortVariable)
+        SortSubtree(mRows.GetRoot());
 
     return NS_OK;
 }

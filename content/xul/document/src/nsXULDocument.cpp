@@ -103,7 +103,6 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContainerUtils.h"
-#include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
@@ -6377,12 +6376,13 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
     if (xblService)
         xblService->ResolveTag(aElement, &nameSpaceID, getter_AddRefs(baseTag));
 
-    // By default, we build content for outliner and then we attach
-    // the outliner content view.
-    // Flag "dont-build-content" is used to identify that we shouldn't build
-    // content and just attach the outliner builder view.
-    if ((nameSpaceID == kNameSpaceID_XUL) &&
-        (baseTag.get() == nsXULAtoms::outliner)) {
+    // By default, we build content for an outliner and then we attach
+    // the outliner content view. However, if the `dont-build-content'
+    // flag is set, then we we'll attach an outliner builder which
+    // directly implements the outliner view.
+    // XXXwaterson maybe we should do the latter by default: it ought
+    // to reduce the footprint a great deal.
+    if ((nameSpaceID == kNameSpaceID_XUL) && (baseTag == nsXULAtoms::outliner)) {
         nsAutoString flags;
         aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::flags, flags);
         if (flags.Find(NS_LITERAL_STRING("dont-build-content").get()) >= 0) {
@@ -6392,6 +6392,8 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
             if (! builder)
                 return NS_ERROR_FAILURE;
 
+            builder->Init(aElement);
+
             // Because the outliner box object won't be created until the
             // frame is available, we need to tuck the template builder
             // away in the binding manager so there's at least one
@@ -6400,14 +6402,21 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
             if (xuldoc)
                 xuldoc->SetTemplateBuilderFor(aElement, builder);
 
+            // Force an <outlinerchildren> to be created if one isn't
+            // there already: this is the only way to create an
+            // <outlinerbody> for the rdfliner.
             nsCOMPtr<nsIContent> bodyContent;
-            nsXULContentUtils::FindChildByTag(aElement, kNameSpaceID_XUL, nsXULAtoms::outlinerchildren, getter_AddRefs(bodyContent));
-            if (!bodyContent) {
+            nsXULContentUtils::FindChildByTag(aElement, kNameSpaceID_XUL,
+                                              nsXULAtoms::outlinerchildren,
+                                              getter_AddRefs(bodyContent));
+
+            if (! bodyContent) {
                 nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(doc);
                 if (domdoc) {
                     nsCOMPtr<nsIDOMElement> bodyElement;
                     domdoc->CreateElement(NS_LITERAL_STRING("outlinerchildren"),
                                           getter_AddRefs(bodyElement));
+
                     bodyContent = do_QueryInterface(bodyElement);
                     aElement->AppendChildTo(bodyContent, PR_FALSE, PR_TRUE);
                 }
@@ -6417,13 +6426,14 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
         }
     }
 
-    nsCOMPtr<nsIRDFContentModelBuilder> builder
+    // Create and initialize a content builder.
+    nsCOMPtr<nsIXULTemplateBuilder> builder
         = do_CreateInstance("@mozilla.org/xul/xul-template-builder;1");
 
     if (! builder)
         return NS_ERROR_FAILURE;
 
-    builder->SetRootContent(aElement);
+    builder->Init(aElement);
 
     nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
     if (xulcontent) {

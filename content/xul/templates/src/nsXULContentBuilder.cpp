@@ -47,7 +47,6 @@
 #include "nsIElementFactory.h"
 #include "nsINodeInfo.h"
 #include "nsIPrincipal.h"
-#include "nsIRDFContentModelBuilder.h"
 #include "nsIServiceManager.h"
 #include "nsITextContent.h"
 #include "nsIXULContent.h"
@@ -127,17 +126,11 @@ IsElementInBuilder(nsIContent *aContent, nsIXULTemplateBuilder *aBuilder)
 // nsXULContentBuilder
 //
 
-class nsXULContentBuilder : public nsXULTemplateBuilder,
-                            public nsIRDFContentModelBuilder
+class nsXULContentBuilder : public nsXULTemplateBuilder
 {
 public:
-    NS_DECL_ISUPPORTS_INHERITED
-
     // nsIXULTemplateBuilder interface
     NS_IMETHOD Rebuild();
-
-    // nsIRDFContentModelBuilder interface
-    NS_IMETHOD SetRootContent(nsIContent* aElement);
     NS_IMETHOD CreateContents(nsIContent* aElement);
 
     // nsIDocumentObserver interface
@@ -315,9 +308,6 @@ PRInt32             nsXULContentBuilder::gRefCnt;
 nsIXULSortService*  nsXULContentBuilder::gXULSortService;
 nsIElementFactory*  nsXULContentBuilder::gHTMLElementFactory;
 nsIElementFactory*  nsXULContentBuilder::gXMLElementFactory;
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsXULContentBuilder, nsXULTemplateBuilder,
-                             nsIRDFContentModelBuilder)
 
 NS_IMETHODIMP
 NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -1757,24 +1747,6 @@ nsXULContentBuilder::Rebuild()
 {
     return Rebuild(mRoot);
 }
-
-//----------------------------------------------------------------------
-//
-// nsIRDFContentModelBuilder methods
-//
-
-NS_IMETHODIMP
-nsXULContentBuilder::SetRootContent(nsIContent* aElement)
-{
-    NS_PRECONDITION(aElement, "null ptr");
-    if (! aElement)
-        return NS_ERROR_NULL_POINTER;
-
-    mRoot = aElement;
-
-    return LoadDataSources();
-}
-
 
 NS_IMETHODIMP
 nsXULContentBuilder::CreateContents(nsIContent* aElement)
