@@ -64,7 +64,7 @@ const int kDefaultExpireDays = 9;
   if (NS_SUCCEEDED(rv) && intPref == 0)
     [checkboxNewWindowBlank setState:YES];
 
-  rv = mPrefService->GetIntPref("chimera.new_tab_page", &intPref);
+  rv = mPrefService->GetIntPref("browser.tabs.startPage", &intPref);
   if (NS_SUCCEEDED(rv) && intPref == 0)
     [checkboxNewTabBlank setState:YES];
 
@@ -141,7 +141,7 @@ const int kDefaultExpireDays = 9;
 
   char *prefName = NULL;
   if (sender == checkboxNewTabBlank)
-    prefName = "chimera.new_tab_page";
+    prefName = "browser.tabs.page";
   else if (sender == checkboxNewWindowBlank)
     prefName = "browser.startup.page";
   else
