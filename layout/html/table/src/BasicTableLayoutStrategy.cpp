@@ -155,11 +155,11 @@ if there is space left over
 // Step 1 - assign the width of all fixed-width columns, 
 //          and calculate min/max table width
 PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresContext,
-                                             PRInt32 maxWidth, 
-                                             PRInt32 aNumCols,
-                                             PRInt32 &aTotalFixedWidth,
-                                             PRInt32 &aMinTableWidth,
-                                             PRInt32 &aMaxTableWidth)
+                                                         PRInt32 maxWidth, 
+                                                         PRInt32 aNumCols,
+                                                         PRInt32 &aTotalFixedWidth,
+                                                         PRInt32 &aMinTableWidth,
+                                                         PRInt32 &aMaxTableWidth)
 {
 #ifdef DEBUG
   nsIFrame *tablePIF=nsnull;
@@ -378,10 +378,10 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
 }
 
 PRBool BasicTableLayoutStrategy::BalanceProportionalColumnsForSpecifiedWidthTable(nsIPresContext* aPresContext,
-                                                                      PRInt32 aAvailWidth,
-                                                                      PRInt32 aMaxWidth,
-                                                                      PRInt32 aMinTableWidth, 
-                                                                      PRInt32 aMaxTableWidth)
+                                                                                  PRInt32 aAvailWidth,
+                                                                                  PRInt32 aMaxWidth,
+                                                                                  PRInt32 aMinTableWidth, 
+                                                                                  PRInt32 aMaxTableWidth)
 {
 #ifdef DEBUG
   nsIFrame *tablePIF=nsnull;
@@ -407,9 +407,9 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumnsForSpecifiedWidthTabl
   }
   else
   { // the table fits somewhere between its min and desired size
-    if (gsDebug) printf ("  * table desired size does not fit, calling BalanceColumnsHTML4Constrained\n");
-    result = BalanceColumnsHTML4Constrained(aPresContext, aAvailWidth,
-                                            aMaxWidth, aMinTableWidth, aMaxTableWidth);
+    if (gsDebug) printf ("  * table desired size does not fit, calling BalanceColumnsConstrained\n");
+    result = BalanceColumnsConstrained(aPresContext, aAvailWidth,
+                                       aMaxWidth, aMinTableWidth, aMaxTableWidth);
   }
   return result;
 }
@@ -439,9 +439,9 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumnsForAutoWidthTable( ns
   }
   else
   { // the table fits somewhere between its min and desired size
-    if (gsDebug) printf ("  * table desired size does not fit, calling BalanceColumnsHTML4Constrained\n");
-    result = BalanceColumnsHTML4Constrained(aPresContext, aAvailWidth,
-                                            aMaxWidth, aMinTableWidth, aMaxTableWidth);
+    if (gsDebug) printf ("  * table desired size does not fit, calling BalanceColumnsConstrained\n");
+    result = BalanceColumnsConstrained(aPresContext, aAvailWidth,
+                                       aMaxWidth, aMinTableWidth, aMaxTableWidth);
   }
   return result;
 }
@@ -506,7 +506,7 @@ PRBool BasicTableLayoutStrategy::SetColumnsToMinWidth(nsIPresContext* aPresConte
 }
 
 PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresContext, 
-                                             PRInt32 aAvailWidth)
+                                                         PRInt32 aAvailWidth)
 {
 #ifdef DEBUG
   nsIFrame *tablePIF=nsnull;
@@ -650,11 +650,11 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
   return result;
 }
 
-PRBool BasicTableLayoutStrategy::BalanceColumnsHTML4Constrained(nsIPresContext* aPresContext,
-                                                    PRInt32 aAvailWidth,
-                                                    PRInt32 aMaxWidth,
-                                                    PRInt32 aMinTableWidth, 
-                                                    PRInt32 aMaxTableWidth)
+PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPresContext,
+                                                            PRInt32 aAvailWidth,
+                                                            PRInt32 aMaxWidth,
+                                                            PRInt32 aMinTableWidth, 
+                                                            PRInt32 aMaxTableWidth)
 {
 #ifdef DEBUG
   nsIFrame *tablePIF=nsnull;
