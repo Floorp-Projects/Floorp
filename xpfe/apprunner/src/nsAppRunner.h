@@ -1,0 +1,93 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ *
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are Copyright (C) 1998
+ * Netscape Communications Corporation.  All Rights Reserved.
+ */
+#ifndef nsAppRunner_h__
+#define nsAppRunner_h__
+
+#include "nsIAppRunner.h"
+
+class string;
+
+// nsAppRunner
+//
+// Implements nsIAppRunner interface.
+//
+class nsAppRunner : public nsIAppRunner
+{
+public:
+// nsISupports interface implementation.
+    NS_DECL_ISUPPORTS
+
+// nsIAppRunner interface implementation.
+    NS_IMETHOD main( int argc, char *argv[] );
+
+// Implementation
+    // ctor
+    nsAppRunner();
+
+    // Access command line options:
+    //   ParseCommandLineOptions - Parses command line options.
+    //   IsOptionSpecified       - Returns PR_TRUE if switch was present in command line args.
+    //   ValueForOption          - Returns option value; e.g., -P"mozilla" -> string("mozilla")
+    virtual PRBool ParseCommandLine( int argc, char *argv[] );
+    virtual PRBool IsOptionSpecified( const char *key );
+    virtual string ValueForOption( const char *key );
+
+    // Process management:
+    //   Initialize       - Initialize kernel services.  Default is to initialize
+    //                      NSPR.
+    //   ShowSplashScreen - Puts up splash screen.  Default is to do nothing.
+    //                      We will override per platform, probably.
+    //   IsSingleInstanceOnly - Default is PR_FALSE, platforms must override
+    //                      if they need to block multiple instances.
+    //   IsAlreadyRunning - Indicate whether another process is already running.
+    //                      Default returns PR_FALSE; platforms should override
+    //                      if they care about this (i.e., return PR_TRUE from
+    //                      PermitsMultipleInstances).
+    //   NotifyServerProcess - Passes request to the server process to be run.
+    //   ...synchronization stuff...TBD
+    virtual PRBool   Initialize();
+    virtual nsresult Exit( nsresult rv );
+    virtual PRBool   ShowSplashScreen();
+    virtual PRBool   IsSingleInstanceOnly() const;
+    virtual PRBool   IsAlreadyRunning() const;
+    virtual PRBool   NotifyServerProcess( int argc, char *argv[] );
+
+    // AppShell loading:
+    //   AppShellCID  - Returns CID for app shell to be loaded/started.
+    //   LoadAppShell - Default creates appShell from ServiceManager using
+    //                  AppShellCID().
+    //   RunShell     - Initialize/Run/Shutdown the app shell
+    //   AppShell     - Returns pointer to app shell
+    virtual nsCID        AppShellCID() const;
+    virtual nsresult     LoadAppShell();
+    virtual nsresult     RunShell();
+    virtual nsIAppShell *AppShell() const;
+
+    // Utilities:
+    //   DisplayMsg - Displays error/status message.  Default is to outpout to
+    //                stderr.  Override to put up message box, etc.
+    virtual void DisplayMsg( const char *title, const char *text );
+            void DisplayMsg( const char *title, const char *text, ... );
+            void DisplayMsg( const char *title, const char *text, valist args );
+
+protected:
+    virtual ~nsAppRunner();
+}; //  nsAppRunner
+
+#endif
