@@ -13,3 +13,5 @@ TestFileTransport
 TestOverlappedIO
 TestDBMAccess
 TestMCTransport
+TestHttp
+TestPageLoad
