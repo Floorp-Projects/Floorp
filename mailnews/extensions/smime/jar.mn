@@ -19,7 +19,6 @@ en-US.jar:
 #ifndef MOZ_XUL_APP
     locale/en-US/messenger/am-smime.dtd                              (resources/locale/en-US/am-smime.dtd) 
     locale/en-US/messenger/am-smime.properties                       (resources/locale/en-US/am-smime.properties) 
-#endif
     locale/en-US/messenger-smime/msgCompSMIMEOverlay.dtd             (resources/locale/en-US/msgCompSMIMEOverlay.dtd)
     locale/en-US/messenger-smime/msgCompSMIMEOverlay.properties      (resources/locale/en-US/msgCompSMIMEOverlay.properties)
     locale/en-US/messenger-smime/msgReadSMIMEOverlay.dtd             (resources/locale/en-US/msgReadSMIMEOverlay.dtd)
@@ -30,3 +29,4 @@ en-US.jar:
     locale/en-US/messenger-smime/certFetchingStatus.dtd              (resources/locale/en-US/certFetchingStatus.dtd)
     locale/en-US/messenger-smime/msgSecurityInfo.properties          (resources/locale/en-US/msgSecurityInfo.properties) 
 *   locale/en-US/messenger-smime/contents.rdf                        (resources/locale/en-US/contents.rdf)
+#endif
