@@ -338,7 +338,7 @@ nsresult nsMailboxUrl::ParseSearchPart()
 	nsXPIDLCString searchPart;
 	nsresult rv = GetQuery(getter_Copies(searchPart));
 	// add code to this function to decompose everything past the '?'.....
-	if (NS_SUCCEEDED(rv) && searchPart && *searchPart)
+	if (NS_SUCCEEDED(rv) && searchPart)
 	{
 		char * messageKey = extractAttributeValue(searchPart, "number=");
 		m_messageID = extractAttributeValue(searchPart,"messageid=");
