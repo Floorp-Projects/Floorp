@@ -121,7 +121,6 @@
           </box>
           <box orient="horizontal" class="indent">
             <radiogroup id="scope" orient="horizontal" autostretch="never">
-              <radio group="scope" id="base" value="0" label="&scopeBase.label;"/>
               <radio group="scope" id="one" value="1" label="&scopeOneLevel.label;"/>
               <radio group="scope" id="sub" value="2" label="&scopeSubtree.label;"/>                
             </radiogroup>

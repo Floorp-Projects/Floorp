@@ -43,7 +43,6 @@ Rights Reserved.
 <!ENTITY searchFilter.accesskey            "f">
 <!ENTITY scope.label                       "Scope: ">
 <!ENTITY scope.accesskey                   "s">
-<!ENTITY scopeBase.label                   "Base">
 <!ENTITY scopeOneLevel.label               "One Level">
 <!ENTITY scopeSubtree.label                "Subtree">
 <!ENTITY return.label                      "Don't return more than">

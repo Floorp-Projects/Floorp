@@ -62,8 +62,6 @@ function fillSettings()
       document.getElementById("search").value = ldapUrl.filter;
       switch(ldapUrl.scope)
       {
-        case 0:
-          document.getElementById("base").checked = true; break;
         case 1:
           document.getElementById("one").checked = true; break;
         case 2:
@@ -93,7 +91,7 @@ function fillDefaultSettings()
 {
   document.getElementById("port").value = gPortNumber;
   document.getElementById("results").value = gMaxHits;
-  document.getElementById("base").checked = true;
+  document.getElementById("sub").checked = true;
 }
 
 // find a unique server-name for the new directory server
@@ -198,12 +196,7 @@ function onOK()
     ldapUrl.scope = 1;
   }
   else {
-    if (document.getElementById("sub").checked){
       ldapUrl.scope = 2;
-    }
-    else {
-      ldapUrl.scope = 0;
-    }
   }
   pref_string_title = gPref_string_desc + ".uri";
   gPrefInt.SetCharPref(pref_string_title, ldapUrl.spec);
