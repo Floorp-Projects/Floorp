@@ -251,10 +251,10 @@ protected:
 
   PtWidget_t          *mWidget;
   nsIWidget						*mParent;
-
+#if 0
   // This is the composite update area (union of all the calls to Invalidate)
   nsIRegion *mUpdateArea;
-
+#endif
   PRBool mShown;
 
   PRUint32 mPreferredWidth, mPreferredHeight;

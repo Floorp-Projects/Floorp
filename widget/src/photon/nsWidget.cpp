@@ -120,7 +120,7 @@ nsWidget::nsWidget()
   mIsToplevel = PR_FALSE;
   mListenForResizes = PR_FALSE;
   mHasFocus = PR_FALSE;
-
+#if 0
   if (NS_OK == nsComponentManager::CreateInstance(kRegionCID,
                                                   nsnull,
                                                   NS_GET_IID(nsIRegion),
@@ -129,14 +129,15 @@ nsWidget::nsWidget()
     mUpdateArea->Init();
     mUpdateArea->SetTo(0, 0, 0, 0);
   }
-
+#endif
   sWidgetCount++;
 }
 
 
 nsWidget::~nsWidget( ) {
-  NS_IF_RELEASE(mUpdateArea);
-
+#if 0
+	NS_IF_RELEASE(mUpdateArea);
+#endif
   // it's safe to always call Destroy() because it will only allow itself
   // to be called once
   Destroy();
@@ -209,8 +210,9 @@ void nsWidget::DestroyNative( void ) {
 #if 0
 	  RemoveDamagedWidget(mWidget);
 #endif
+	  EnableDamage( mWidget, PR_FALSE );
 	  PtDestroyWidget( mWidget );
-
+	  EnableDamage( mWidget, PR_TRUE );
     mWidget = nsnull;
   	}
 	}
@@ -237,9 +239,6 @@ nsIWidget *nsWidget::GetParent( void ) {
   if( mParent ) NS_ADDREF( result );
   return result;
 	}
-
-
-
 
 
 //////////////////////////////////////////////////////////////////////
@@ -276,18 +275,24 @@ the PtRealizeWidget functions */
   PtArg_t   arg;
 
   if( bState ) {
-		PtRealizeWidget(mWidget);
+	  if (PtWidgetIsRealized(mWidget)) {
+		  mShown = PR_TRUE; 
+		  return NS_OK;
+	  }
+	  EnableDamage( mWidget, PR_FALSE );
+	  PtRealizeWidget(mWidget);
 
-		if( mWidget->rid == -1 ) {
-			NS_ASSERTION(0,"nsWidget::Show mWidget's rid == -1\n");
-			mShown = PR_FALSE; 
-			return NS_ERROR_FAILURE;
-			}
-
-		PtSetArg(&arg, Pt_ARG_FLAGS, 0, Pt_DELAY_REALIZE);
-		PtSetResources(mWidget, 1, &arg);
-
+	  if( mWidget->rid == -1 ) {
+		  EnableDamage( mWidget, PR_TRUE );
+		  NS_ASSERTION(0,"nsWidget::Show mWidget's rid == -1\n");
+		  mShown = PR_FALSE; 
+		  return NS_ERROR_FAILURE;
+	  }
+	  PtSetArg(&arg, Pt_ARG_FLAGS, 0, Pt_DELAY_REALIZE);
+	  PtSetResources(mWidget, 1, &arg);
+	  EnableDamage( mWidget, PR_TRUE );
 		/* Always add it to the Widget Damage Queue when it gets realized */
+	  PtDamageWidget(mWidget);
 #if 0
 	  QueueWidgetDamage();
 #endif
@@ -401,12 +406,12 @@ NS_METHOD nsWidget::Resize( PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint ) {
 		
 		/* Add the border to the size of the widget */
 		PhDim_t dim = {aWidth - 2*(*border), aHeight - 2*(*border)};
-		EnableDamage( mWidget, PR_FALSE );
+//		EnableDamage( mWidget, PR_FALSE );
 		
 		PtSetArg( &arg, Pt_ARG_DIM, &dim, 0 );
 		PtSetResources( mWidget, 1, &arg );
 
-		EnableDamage( mWidget, PR_TRUE );
+//		EnableDamage( mWidget, PR_TRUE );
 	}
 	return NS_OK;
 }
@@ -743,10 +748,10 @@ NS_METHOD nsWidget::Invalidate( const nsRect & aRect, PRBool aIsSynchronous ) {
 		if( PtWidgetIsRealized( mWidget ) ) QueueWidgetDamage( );
 #else
 		PhRect_t prect;
-		prect.ul.x = rect.x;
-		prect.ul.y = rect.y;
-		prect.lr.x = rect.x + rect.width - 1;
-		prect.lr.y = rect.y + rect.height - 1;
+		prect.ul.x = rect.x + mWidget->extent.ul.x;
+		prect.ul.y = rect.y + mWidget->extent.ul.y;
+		prect.lr.x = prect.ul.x + rect.width - 1;
+		prect.lr.y = prect.ul.y + rect.height - 1;
 		PtDamageExtent(mWidget, &prect);
 		if (aIsSynchronous)
 		   PtFlush();
@@ -767,9 +772,12 @@ NS_IMETHODIMP nsWidget::InvalidateRegion( const nsIRegion *aRegion, PRBool aIsSy
 	rv = aRegion->GetNativeRegion( ( void*& ) tiles );
 	if (tiles) {
 		if (NS_SUCCEEDED(rv)) {
+			tiles = PhCopyTiles(tiles);
+			PhTranslateTiles(tiles, &mWidget->extent.ul);
 			PtDamageTiles(mWidget, tiles);
 			if (aIsSynchronous)
 			   PtFlush();
+			PhFreeTiles(tiles);
 		}
 	}
 #endif
@@ -905,13 +913,17 @@ NS_METHOD nsWidget::Scroll( PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect ) {
   return NS_OK;
 	}
 
-NS_METHOD nsWidget::BeginResizingChildren( void ) {
-  return NS_OK;
-	}
+NS_METHOD nsWidget::BeginResizingChildren( void ) 
+{
+	PtHold();
+	return NS_OK;
+}
 
-NS_METHOD nsWidget::EndResizingChildren( void ) {
-  return NS_OK;
-	}
+NS_METHOD nsWidget::EndResizingChildren( void ) 
+{
+	PtRelease();
+	return NS_OK;
+}
 
 NS_METHOD nsWidget::GetPreferredSize( PRInt32& aWidth, PRInt32& aHeight ) {
   aWidth  = mPreferredWidth;

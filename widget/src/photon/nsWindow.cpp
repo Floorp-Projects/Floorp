@@ -442,7 +442,7 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
     else if( mWindowType == eWindowType_popup ) {
       		PtAddEventHandler( mClientWidget,
       			 	Ph_EV_PTR_MOTION_BUTTON | Ph_EV_PTR_MOTION_NOBUTTON | 
-      		  	Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE |Ph_EV_BOUNDARY | Ph_EV_WM | Ph_EV_EXPOSE,
+      		  	Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE |Ph_EV_BOUNDARY | Ph_EV_WM /*| Ph_EV_EXPOSE*/,
       			  RawEventHandler, this );
 
       		PtArg_t arg;
@@ -459,13 +459,14 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
     else if( !parentWidget ) {
        if( mClientWidget ) PtAddCallback(mClientWidget, Pt_CB_RESIZE, ResizeHandler, nsnull );
        else {
- 	     			PtRawCallback_t filter_cb;
-		
-		  			filter_cb.event_mask =  Ph_EV_EXPOSE ;
-          	filter_cb.event_f = RawEventHandler;
-          	filter_cb.data = this;
-		  			PtSetResource(mWidget, Pt_CB_FILTER, &filter_cb,1);
-		  
+#if 0
+		   PtRawCallback_t filter_cb;
+		   
+		   filter_cb.event_mask =  Ph_EV_EXPOSE ;
+		   filter_cb.event_f = RawEventHandler;
+		   filter_cb.data = this;
+		   PtSetResource(mWidget, Pt_CB_FILTER, &filter_cb,1);
+#endif		  
           	PtAddCallback(mWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
 
            	PtCallback_t callback;
@@ -473,7 +474,7 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
             callback.data = this;
 
             PtSetArg( &arg[0], Pt_CB_WINDOW, &callback, 0 );
-						PtSetArg( &arg[1], Pt_ARG_WINDOW_NOTIFY_FLAGS, 0xFFFFFFFF, 0XFFFFFFFF );
+		   PtSetArg( &arg[1], Pt_ARG_WINDOW_NOTIFY_FLAGS, 0xFFFFFFFF, 0XFFFFFFFF );
             PtSetResources( mWidget, 2, arg );
        			}
     		}
@@ -619,12 +620,14 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 
 NS_METHOD nsWindow::BeginResizingChildren(void)
 {
-  return NS_OK;
+	PtHold();
+	return NS_OK;
 }
 
 NS_METHOD nsWindow::EndResizingChildren(void)
 {
-  return NS_OK;
+	PtRelease();
+	return NS_OK;
 }
 
 
@@ -691,7 +694,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   PhDim_t  dim = { aWidth, aHeight };
 
 	if( mWidget ) {
-		EnableDamage( mWidget, PR_FALSE );
+//		EnableDamage( mWidget, PR_FALSE );
 
 		// center the dialog
 		if( mWindowType == eWindowType_dialog ) {
@@ -713,7 +716,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
       	}
 			}
 	
-    EnableDamage( mWidget, PR_TRUE );
+  //  EnableDamage( mWidget, PR_TRUE );
   	}
 
 
@@ -750,41 +753,45 @@ NS_IMETHODIMP nsWindow::Resize( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 
 	}
 
 
-int nsWindow::WindowWMHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo ) {
-  PhWindowEvent_t *we = (PhWindowEvent_t *) cbinfo->cbdata;
-  nsWindow * win = (nsWindow*) data;
-
-  switch( we->event_f ) {
+int nsWindow::WindowWMHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo ) 
+{
+	PhWindowEvent_t *we = (PhWindowEvent_t *) cbinfo->cbdata;
+	nsWindow * win = (nsWindow*) data;
+	
+	switch( we->event_f ) {
 		case Ph_WM_CLOSE:
-			{
-  		NS_ADDREF(win);
-
-  		// dispatch an "onclose" event. to delete immediately, call win->Destroy()
-  		nsGUIEvent event;
-  		nsEventStatus status;
-  
-  		event.message = NS_XUL_CLOSE;
-  		event.widget  = win;
-  		event.eventStructType = NS_GUI_EVENT;
-
-  		event.time = 0;
-  		event.point.x = 0;
-  		event.point.y = 0;
- 
-  		win->DispatchEvent(&event, status);
-
-  		NS_RELEASE(win);
-			}
-			break;
-
+		  {
+			  NS_ADDREF(win);
+			  
+			  // dispatch an "onclose" event. to delete immediately, call win->Destroy()
+			  nsGUIEvent event;
+			  nsEventStatus status;
+			  
+			  event.message = NS_XUL_CLOSE;
+			  event.widget  = win;
+			  event.eventStructType = NS_GUI_EVENT;
+			  
+			  event.time = 0;
+			  event.point.x = 0;
+			  event.point.y = 0;
+			  
+			  win->DispatchEvent(&event, status);
+			  
+			  NS_RELEASE(win);
+		  }
+		break;
+		
 		default:
-			/* destroy any pop up widgets ( menus ) */
-			if( gRollupWidget && gRollupListener ) gRollupListener->Rollup();
-			}
-
-  return Pt_CONTINUE;
+		/* destroy any pop up widgets ( menus ) */
+		if (we->event_f == Ph_WM_FOCUS && we->state_f == Ph_WM_EVSTATE_FOCUS)
+		   return Pt_CONTINUE;
+		if( gRollupWidget && gRollupListener ) gRollupListener->Rollup();
 	}
+	
+	return Pt_CONTINUE;
+}
 
+#if 0
 NS_METHOD nsWindow::Show( PRBool bState ) {
 
   if( !mWidget ) return NS_OK; // Will be null durring printing
@@ -802,7 +809,7 @@ NS_METHOD nsWindow::Show( PRBool bState ) {
 
   return nsWidget::Show(bState);
 	}
-
+#endif
 //-------------------------------------------------------------------------
 //
 // Process all nsWindows messages
@@ -820,7 +827,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   PhTile_t  * dmg = NULL;
   PRBool      aClipState;
   nsPaintEvent pev;
-PgFlush();
+
   if( !PtWidgetIsRealized( pWidget ) ) return;
 
   if( !pWin || !pWin->mContext ) return;
@@ -830,35 +837,31 @@ PgFlush();
   if( pWin->mIsResizing ) return;
 
 	if ( pWin->mEventCallback ) {
-		PhArea_t   area;
+		PhRect_t   extent;
 		PhPoint_t  offset;
 		nsRect     nsDmg;
 
 		// Ok...  I ~think~ the damage rect is in window coordinates and is not neccessarily clipped to
 		// the widgets canvas. Mozilla wants the paint coords relative to the parent widget, not the window.
-		PtWidgetArea( pWidget, &area );
+		PtWidgetExtent( pWidget, &extent );
 		PtWidgetOffset( pWidget, &offset );
 
 		/* Build a List of Tiles that might be in front of me.... */
 		PhTile_t *clip_tiles = pWin->GetWindowClipping( );
 
 		/* Intersect the Damage tile list w/ the clipped out list and see whats left! */
-		PhTile_t *new_damage, *tiles;
+		PhTile_t *new_damage;
 
-		if( pWin->mWindowType == eWindowType_popup ) {
+//		if( pWin->mWindowType == eWindowType_popup ) {
 			/* for a eWindowType_popup widget, consider damaging the whole widget - because of problems displaying comboboxes and color pickers */
-			new_damage = PhRectsToTiles( &pWidget->extent, 1 );
-		}
-		else {
-			if( damage->next ) 
-			   tiles = PhCopyTiles( damage->next );
-			else 
-			   tiles = PhRectsToTiles( &damage->rect, 1 );
-
-			/* new_damage is the same as tiles2... I need to release it later */
-			new_damage = PhClipTilings( tiles, clip_tiles, NULL);
-		}
-
+//			new_damage = PhRectsToTiles( &pWidget->extent, 1 );
+//		}
+//		else {
+//			new_damage = PhRectsToTiles(&damage->rect, 1);
+			new_damage = PhCopyTiles(damage->next);
+			/* new_damage is the same as tiles... I need to release it later */
+			new_damage = PhClipTilings( new_damage, clip_tiles, NULL);
+//		}
 		PhFreeTiles( clip_tiles );
 		if( new_damage == nsnull ) return; /* tiles and clip_tiles have been released */
 
@@ -868,12 +871,10 @@ PgFlush();
 		pev.eventStructType = NS_PAINT_EVENT;
 		pev.renderingContext = nsnull;
 		pev.renderingContext = pWin->GetRenderingContext();
-
 		for( dmg = new_damage; dmg; dmg = dmg->next ) {
-
 			/* Copy the Damage Rect - Do I need to Translate it?? If so by what? offset? offset+area? */
-			nsDmg.x = dmg->rect.ul.x - area.pos.x;
-			nsDmg.y = dmg->rect.ul.y - area.pos.y;
+			nsDmg.x = dmg->rect.ul.x - extent.ul.x;
+			nsDmg.y = dmg->rect.ul.y - extent.ul.y;
 			nsDmg.width = dmg->rect.lr.x - dmg->rect.ul.x + 1;
 			nsDmg.height = dmg->rect.lr.y - dmg->rect.ul.y + 1;
 
@@ -931,8 +932,6 @@ PhTile_t *nsWindow::GetWindowClipping( ) {
 	
 	for( w = PtWidgetChildFront( aWidget ); w; w=PtWidgetBrotherBehind( w ) ) {
 		long flags = PtWidgetFlags( w );
-
-//		if( (flags & Pt_OPAQUE) && (w != PtFindDisjoint(w)) && PtWidgetIsRealized( w ) ) {
 		if( (flags & (Pt_OPAQUE|Pt_REALIZED)) && !(PtIsDisjoint(w))) {
 			PhTile_t *tile = PhGetTile( );
 			if( !tile ) return NULL;
