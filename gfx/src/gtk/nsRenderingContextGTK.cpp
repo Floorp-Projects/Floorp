@@ -275,7 +275,7 @@ NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
     }
 
     if (state->mColor != mCurrentColor)
-      SetColor(state->mColor);
+        SetColor(state->mColor);
 
     if (state->mLineStyle != mCurrentLineStyle)
       SetLineStyle(state->mLineStyle);
@@ -392,7 +392,7 @@ NS_IMETHODIMP nsRenderingContextGTK::SetColor(nscolor aColor)
  * function (pav)
  */
   ::gdk_rgb_gc_set_foreground(mRenderingSurface->gc, NS_TO_GDK_RGB(mCurrentColor));
-  ::gdk_rgb_gc_set_background(mRenderingSurface->gc, NS_TO_GDK_RGB(mCurrentColor));
+//  ::gdk_rgb_gc_set_background(mRenderingSurface->gc, NS_TO_GDK_RGB(mCurrentColor));
   
   return NS_OK;
 }
@@ -831,8 +831,9 @@ NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const PRUnichar *aString,
     nsString nsStr;
     nsStr.SetString(aString, aLength);
     char* cStr = nsStr.ToNewCString();
-    GetWidth(cStr, aLength, aWidth);
+    NS_IMETHODIMP ret = GetWidth(cStr, aLength, aWidth);
     delete[] cStr;
+    return ret;
 }
 
 NS_IMETHODIMP
@@ -897,8 +898,9 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawString(const PRUnichar *aString, PRUint
   nsString nsStr;
   nsStr.SetString(aString, aLength);
   char* cStr = nsStr.ToNewCString();
-  DrawString(cStr, aLength, aX, aY, aWidth, aSpacing);
+  NS_IMETHODIMP ret = DrawString(cStr, aLength, aX, aY, aWidth, aSpacing);
   delete[] cStr;
+  return ret;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawString(const nsString& aString,

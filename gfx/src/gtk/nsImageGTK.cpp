@@ -361,10 +361,10 @@ PRBool nsImageGTK::SetAlphaMask(nsIImage *aTheMask)
     srcbits = aTheMask->GetBits();
     memcpy(mAlphaBits,srcbits,num);
 
-    return(PR_TRUE);
+    return PR_TRUE;
   }
 
-  return(PR_FALSE);
+  return PR_FALSE;
 }
 
 //------------------------------------------------------------
