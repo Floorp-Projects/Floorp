@@ -26,6 +26,7 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug42187.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4284.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4294.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug42443.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug43039.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug43204.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4382.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4385.html
@@ -72,6 +73,7 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug48827.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug50695-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug50695-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug51000.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug51037.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug51140.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug51727.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug5188.html
