@@ -717,8 +717,6 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
 #elif defined(XP_UNIX)
     close(self->eventPipe[0]);
     close(self->eventPipe[1]);
-#elif defined(_WIN32) || defined(WIN16)
-    DestroyWindow(self->eventReceiverWindow);
 #endif
 }
 
@@ -811,14 +809,7 @@ _pl_NativeNotify(PLEventQueue* self)
 static PRStatus
 _pl_AcknowledgeNativeNotify(PLEventQueue* self)
 {
-#if defined(_WIN32) || defined(WIN16)
-    MSG aMsg;
-    PR_LOG(event_lm, PR_LOG_DEBUG,
-            ("_pl_AcknowledgeNativeNotify: self=%p", self));
-    PeekMessage(&aMsg, self->eventReceiverWindow,
-            _pr_PostEventMsgId, _pr_PostEventMsgId, PM_REMOVE);
-    return PR_SUCCESS;
-#elif defined(VMS)
+#if defined(VMS)
     PR_LOG(event_lm, PR_LOG_DEBUG,
             ("_pl_AcknowledgeNativeNotify: self=%p notifyCount=%d efn=%d",
              self, self->notifyCount, self->efn));
