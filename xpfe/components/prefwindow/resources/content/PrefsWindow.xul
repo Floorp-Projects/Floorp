@@ -1,7 +1,7 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="xul.css" type="text/css"?>
-<?xml-stylesheet href="dialog.css" type="text/css"?>
-<?xml-stylesheet href="pref.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
 
 <!DOCTYPE window
@@ -11,40 +11,33 @@
 <!ENTITY helpButton.label "Help">
 <!ENTITY cancelButton.label "Cancel">
 <!ENTITY okButton.label "OK">
+]> 
 
-]
-
-> 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
+<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="return StartUp('Top');"  title="window.title">
+        onload="StartUp('Top')"  title="&window.title;">
 
-  
- <html:script language="JavaScript" src="PrefsWindow.js">
- </html:script>
+<html:script language="javascript" src="PrefsWindow.js"/>
 
+&categoryHeader;
+<html:br />
+<html:iframe name="preftree" id="preftree" src="preftree.xul"
+	scrolling="auto" resize="yes"/>
+<html:iframe name="pref-appearance" id="pref-appearance"
+	src="pref-appearance.xul" width="72%" height="326" resize="yes" scrolling="no"/>
+<html:table border="0" width="100%" cellpadding="0" cellspacing="0">
+	<html:tr>
+		<html:td valign="right" width="160">
+			<html:center>					
+				<html:input type="button" align="bottom" value="&helpButton.label;" />				
+				<html:input type="button" align="bottom" value="&cancelButton.label;" onclick="DoCancel();" />				
+				<html:input type="button" align="bottom" value="&okButton.label;" onClick="DoSave();" />
+			 </html:center>	  
+		  </html:td>
+	  </html:tr>
+</html:table>
 
- &categoryHeader;
- <html:br />
- <html:IFRAME NAME="preftree" id="preftree" SRC="preftree.xul" scrolling="auto" resize="yes" />
- 
- <html:IFRAME NAME="pref-appearance" ID="pref-appearance" SRC="pref-appearance.html" width="72%" height="326" resize="yes" scrolling="no" />
-		
-
-	<html:table border="0" width="100%" cellpadding="0" cellspacing="0">
-		<html:tr>
-			<html:td valign="right" width="160">
-				<html:center>
-					
-					<html:input type="button" align="bottom" value="&helpButton.label;" />				
-					<html:input type="button" align="bottom" value="&cancelButton.label;" onclick="DoCancel();" />				
-					<html:input type="button" align="bottom" value="&okButton.label;" onClick="DoSave();" />
-
-				 </html:center>	  
-			  </html:td>
-		  </html:tr>
-	</html:table>
-<window>
+</xul:window>
 
 
 

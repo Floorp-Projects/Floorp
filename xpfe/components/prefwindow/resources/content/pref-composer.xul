@@ -1,7 +1,7 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="xul.css" type="text/css"?>
-<?xml-stylesheet href="dialog.css" type="text/css"?>
-<?xml-stylesheet href="pref.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY  title.label "Composer">
@@ -17,7 +17,6 @@
 <!ENTITY  relSizeRadio.label "Show relative size as points based on your Navigator font sizes">
 <!ENTITY  relfontRadio.label "Show relative HTML font scale: -2, -1, 0, +1, +2, +3, +4">
 <!ENTITY  relScaleRadio.label "Show relative HTML scale and absolute &quot;point-size&quot; attributes">
-
 ]> 
 
 
@@ -25,11 +24,7 @@
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="return StartUp('Composer');"  title="&title.label;">
 
-<html:script language="JavaScript" src="PrefsWindow.js">
-</html:script>
-
-
-
+<html:script language="javascript" src="PrefsWindow.js"/>
 
 <html:DIV ID="top">
 		<html:SPAN ID="lefttext">&compheader;</html:SPAN>

@@ -1,40 +1,31 @@
-var prefsCore;
+var prefwindow = null;
 
 function StartUp(windowName)
 {
 	dump("\nDoing " + windowName + " startup...\n");
-	prefsCore = XPAppCoresManager.Find("PrefsCore");  
-	dump("Looking up PrefsCore...\n");
-	if (prefsCore == null)
+	dump("Looking up prefwindow object...\n");
+	if (prefwindow == null)
 	{
-		dump("Creating PrefsCore...\n");
-		prefsCore = new PrefsCore();
-		if (prefsCore != null)
-		{
-			dump("PrefsCore has been created.\n");
-			prefsCore.Init("PrefsCore");
-		}
-		else
-		{
-			dump("PrefsCore was not created");
-		}
+		dump("Creating prefwindow object...\n");
+    	prefwindow = Components.classes['component://netscape/prefwindow'].createInstance(Components.interfaces.nsIPrefWindow);
 	}
 	else
 	{
-		dump("PrefsCore has already been created! Hurrah!\n");
+		dump("prefwindow has already been created! Hurrah!\n");
 	}
-	if (prefsCore != null && windowName != "Top" && windowName != "Bottom")
+	if (prefwindow != null && windowName != "Top" && windowName != "Bottom")
 	{
-		prefsCore.PanelLoaded(window);
+		prefwindow.PanelLoaded(window);
 	}
 }
 
 function DoSave()
 {
-	prefsCore.SavePrefs();
+	prefwindow.SavePrefs();
 }
 
 function DoCancel()
 {
-	prefsCore.CancelPrefs();
+	prefwindow.CancelPrefs();
 }
+
