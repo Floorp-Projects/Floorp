@@ -34,6 +34,7 @@
 
 int urlLoaded;
 PRBool bTraceEnabled;
+PRBool bLoadAsync;
 
 #include "nsIPostToServer.h"
 
@@ -78,7 +79,7 @@ NS_IMPL_ISUPPORTS(TestConsumer,kIStreamListenerIID);
 TestConsumer::~TestConsumer()
 {
     if (bTraceEnabled) {
-        printf("\nTestConsumer is being deleted...\n");
+        printf("\n+++ TestConsumer is being deleted...\n");
     }
 }
 
@@ -160,6 +161,27 @@ NS_IMETHODIMP TestConsumer::OnStopBinding(nsIURL* aURL, PRInt32 status, const ns
 }
 
 
+nsresult ReadStreamSynchronously(nsIInputStream* aIn)
+{
+    nsresult rv;
+    char buffer[1024];
+
+    if (nsnull != aIn) {
+        int len;
+
+        do {
+            int i;
+
+            rv = aIn->Read(buffer, 0, sizeof(buffer), &len);
+            for (i=0; i<len; i++) {
+                putchar(buffer[i]);
+            }
+        } while (len > 0);
+    }
+    return NS_OK;
+}
+
+
 
 int main(int argc, char **argv)
 {
@@ -171,30 +193,35 @@ int main(int argc, char **argv)
     nsIStreamListener *pConsumer;
     nsIURL *pURL;
     nsresult result;
-    int argn, i;
+    int i;
 
     if (argc < 2) {
-        printf("test: -trace <URL>\n");
+        printf("test: [-trace] [-sync] <URL>\n");
         return 0;
     }
 
-    // Turn on netlib tracing...
-    if (PL_strcasecmp(argv[1], "-trace") == 0) {
-        NET_ToggleTrace();
-        argn = 2;
-        bTraceEnabled = PR_TRUE;
-    } else {
-        argn = 1;
-        bTraceEnabled = PR_FALSE;
-    }
+    bTraceEnabled = PR_FALSE;
+    bLoadAsync    = PR_TRUE;
 
-    for (i = argn; i < argc; i++) {
+    for (i=1; i < argc; i++) {
+        // Turn on netlib tracing...
+        if (PL_strcasecmp(argv[i], "-trace") == 0) {
+            NET_ToggleTrace();
+            bTraceEnabled = PR_TRUE;
+            continue;
+        } 
+        // Turn on synchronous URL loading...
+        if (PL_strcasecmp(argv[i], "-sync") == 0) {
+            bLoadAsync = PR_FALSE;
+            continue;
+        }
+
         urlLoaded = 0;
 
         url_address = argv[i];
         if (bTraceEnabled) {
             url_address.ToCString(buf, 256);
-            printf("loading URL: %s...\n", buf);
+            printf("+++ loading URL: %s...\n", buf);
         }
 
         pConsumer = new TestConsumer;
@@ -220,12 +247,23 @@ int main(int argc, char **argv)
 #endif
         
         // Start the URL load...
-        result = pURL->Open(pConsumer);
-        
-        /* If the open failed, then do not drop into the message loop... */
-        if (NS_OK != result) {
+        if (PR_TRUE == bLoadAsync) {
+            result = pURL->Open(pConsumer);
+
+            /* If the open failed, then do not drop into the message loop... */
+            if (NS_OK != result) {
+                urlLoaded = 1;
+            }
+        } 
+        // Load the URL synchronously...
+        else {
+            nsIInputStream *in;
+
+            in = pURL->Open((PRInt32*)&result);
+            ReadStreamSynchronously(in);
             urlLoaded = 1;
         }
+        
         
         // Enter the message pump to allow the URL load to proceed.
         while ( !urlLoaded ) {
