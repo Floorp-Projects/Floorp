@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+ /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1098,8 +1098,17 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     
   if (aAction == kInsertTextIME) 
   { 
-    nsWSRunObject wsObj(mHTMLEditor, selNode, selOffset);
-    res = wsObj.InsertText(*inString, address_of(selNode), &selOffset, doc);
+    // Right now the nsWSRunObject code bails on empty strings, but IME needs 
+    // the InsertTextImpl() call to still happen since empty strings are meaningful there.
+    if (inString->IsEmpty())
+    {
+      res = mHTMLEditor->InsertTextImpl(*inString, address_of(selNode), &selOffset, doc);
+    }
+    else
+    {
+      nsWSRunObject wsObj(mHTMLEditor, selNode, selOffset);
+      res = wsObj.InsertText(*inString, address_of(selNode), &selOffset, doc);
+    }
     if (NS_FAILED(res)) return res;
   }
   else // aAction == kInsertText
