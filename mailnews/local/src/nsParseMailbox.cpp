@@ -1636,7 +1636,7 @@ nsOutputFileStream * nsParseNewMailState::GetLogFile ()
 	{
 		// ### TODO file spec sub-class for log file
 		nsFileSpec logFile("filter.log");
-		m_logFile = new nsOutputFileStream(logFile, PR_WRONLY | PR_CREATE_FILE);
+		m_logFile = new nsOutputFileStream(logFile, PR_WRONLY | PR_CREATE_FILE, 00600);
 	}
 	return m_logFile;
 }

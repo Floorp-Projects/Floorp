@@ -613,7 +613,7 @@ MimeMultipartRelated_parse_child_line (MimeObject *obj,
 		if (!relobj->file_buffer_spec) 
       return MIME_OUT_OF_MEMORY;
 
-    relobj->output_file_stream = new nsOutputFileStream(*(relobj->file_buffer_spec));
+    relobj->output_file_stream = new nsOutputFileStream(*(relobj->file_buffer_spec), PR_WRONLY | PR_CREATE_FILE, 00600);
 		if (!relobj->output_file_stream) 
     {
 			return MIME_UNABLE_TO_OPEN_TMP_FILE;
@@ -644,7 +644,7 @@ MimeMultipartRelated_parse_child_line (MimeObject *obj,
 			if (!relobj->file_buffer_spec) 
         return MIME_OUT_OF_MEMORY;
 
-      relobj->output_file_stream = new nsOutputFileStream(*(relobj->file_buffer_spec));
+      relobj->output_file_stream = new nsOutputFileStream(*(relobj->file_buffer_spec), PR_WRONLY | PR_CREATE_FILE, 00600);
 			if (!relobj->output_file_stream) 
       {
 				return MIME_UNABLE_TO_OPEN_TMP_FILE;

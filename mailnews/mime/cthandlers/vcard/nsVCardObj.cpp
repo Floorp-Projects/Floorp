@@ -616,7 +616,7 @@ void printVObject(nsOutputFileStream *fp,VObject *o)
 void printVObjectToFile(nsFileSpec *fname, VObject *o)
 {
 #if !defined(MOZADDRSTANDALONE)
-  nsOutputFileStream *fp = new nsOutputFileStream(*fname);
+  nsOutputFileStream *fp = new nsOutputFileStream(*fname, PR_WRONLY | PR_CREATE_FILE, 00600);
 
   if (fp) {
     printVObject(fp,o);
@@ -630,7 +630,7 @@ void printVObjectToFile(nsFileSpec *fname, VObject *o)
 void printVObjectsToFile(nsFileSpec *fname,VObject *list)
 {
 #if !defined(MOZADDRSTANDALONE)
-  nsOutputFileStream *fp = new nsOutputFileStream(*fname);
+  nsOutputFileStream *fp = new nsOutputFileStream(*fname, PR_WRONLY | PR_CREATE_FILE, 00600);
   if (fp) {
     while (list) {
       printVObject(fp,list);
@@ -1463,7 +1463,7 @@ void writeVObject(nsOutputFileStream *fp, VObject *o)
 void writeVObjectToFile(nsFileSpec *fname, VObject *o)
 {
 #if !defined(MOZADDRSTANDALONE)
-  nsOutputFileStream *fp = new nsOutputFileStream(*fname);
+  nsOutputFileStream *fp = new nsOutputFileStream(*fname, PR_WRONLY | PR_CREATE_FILE, 00600);
   
   if (fp) {
     writeVObject(fp,o);
@@ -1477,7 +1477,7 @@ void writeVObjectToFile(nsFileSpec *fname, VObject *o)
 void writeVObjectsToFile(nsFileSpec *fname, VObject *list)
 {
 #if !defined(MOZADDRSTANDALONE)
-  nsOutputFileStream *fp = new nsOutputFileStream(*fname);
+  nsOutputFileStream *fp = new nsOutputFileStream(*fname, PR_WRONLY | PR_CREATE_FILE, 00600);
     if (fp) {
 	while (list) {
 	    writeVObject(fp,list);

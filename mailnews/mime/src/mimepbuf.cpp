@@ -194,7 +194,7 @@ MimePartBufferWrite (MimePartBufferData *data,
 		if (!data->file_buffer_spec) 
       return MIME_OUT_OF_MEMORY;
 
-    data->output_file_stream = new nsOutputFileStream(*(data->file_buffer_spec));
+    data->output_file_stream = new nsOutputFileStream(*(data->file_buffer_spec), PR_WRONLY | PR_CREATE_FILE, 00600);
 		if (!data->output_file_stream) 
     {
 			return MIME_UNABLE_TO_OPEN_TMP_FILE;
@@ -225,7 +225,7 @@ MimePartBufferWrite (MimePartBufferData *data,
 		  if (!data->file_buffer_spec) 
         return MIME_OUT_OF_MEMORY;
 
-      data->output_file_stream = new nsOutputFileStream(*(data->file_buffer_spec));
+      data->output_file_stream = new nsOutputFileStream(*(data->file_buffer_spec), PR_WRONLY | PR_CREATE_FILE, 00600);
 		  if (!data->output_file_stream) 
       {
 			  return MIME_UNABLE_TO_OPEN_TMP_FILE;

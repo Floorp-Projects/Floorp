@@ -3777,9 +3777,8 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
     return NS_ERROR_INVALID_ARG;
   }
 
+  nsOutputFileStream tempOutfile(*tFileSpec, PR_WRONLY | PR_CREATE_FILE, 00600);
   delete tFileSpec;
-
-  nsOutputFileStream tempOutfile(mCopyFileSpec);
   if (! tempOutfile.is_open()) 
   {	  
     // Need to determine what type of operation failed and set status accordingly. 

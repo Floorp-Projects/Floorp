@@ -1761,7 +1761,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
   
   newAttachment->file_spec = tmpSpec;
 
-  mdd->tmpFileStream = new nsOutputFileStream(mdd->tmpFileSpec);
+  mdd->tmpFileStream = new nsOutputFileStream(*tmpSpec, PR_WRONLY | PR_CREATE_FILE, 00600);
   if (!mdd->tmpFileStream)
     return MIME_UNABLE_TO_OPEN_TMP_FILE;
     

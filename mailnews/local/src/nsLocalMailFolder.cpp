@@ -991,7 +991,7 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName)
 	path += nsAutoString(folderName);
 	path.MakeUnique();
 
-	nsOutputFileStream outputStream(path);	
+	nsOutputFileStream outputStream(path, PR_WRONLY | PR_CREATE_FILE, 00600);	
    
 	// Create an empty database for this mail folder, set its name from the user  
 	nsCOMPtr<nsIMsgDatabase> mailDBFactory;

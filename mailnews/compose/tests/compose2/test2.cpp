@@ -338,7 +338,7 @@ WriteTempMailFile(nsFileSpec *mailFile)
   
   PR_snprintf(emailMessage, sizeof(emailMessage), email, to, subject);
 
-  outFile = new nsOutputFileStream(*mailFile);
+  outFile = new nsOutputFileStream(*mailFile, PR_WRONLY | PR_CREATE_FILE, 00600);
 	if (! outFile->is_open()) 
   {
 	    return NS_ERROR_FAILURE;

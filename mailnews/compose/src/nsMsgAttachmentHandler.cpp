@@ -925,7 +925,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
         {
           mFileSpec->Delete(PR_FALSE);
 
-          nsOutputFileStream tempfile(*mFileSpec);
+          nsOutputFileStream tempfile(*mFileSpec, PR_WRONLY | PR_CREATE_FILE, 00600);
 		      if (tempfile.is_open()) 
           {
             char    *tData = nsnull;
