@@ -55,7 +55,6 @@
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIWebNavigation.h"
-#include "nsIIOService.h"
 #include "nsImapStringBundle.h"
 #include "plbase64.h"
 
@@ -65,7 +64,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 
 static const char *sequenceString = "SEQUENCE";
@@ -118,18 +116,6 @@ PRUnichar nsImapService::GetHierarchyDelimiter(nsIMsgFolder* aMsgFolder)
     return delimiter;
 }
 
-PRBool nsImapService::WeAreOffline()
-{
-	nsresult rv = NS_OK;
-  PRBool offline = PR_FALSE;
-
-  NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
-  if (NS_SUCCEEDED(rv) && netService)
-  {
-    netService->GetOffline(&offline);
-  }
-  return offline;
-}
 // N.B., this returns an escaped folder name, appropriate for putting in a url.
 nsresult
 nsImapService::GetFolderName(nsIMsgFolder* aImapFolder,
@@ -749,7 +735,18 @@ nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener *
             nsCOMPtr<nsIImapUrl> imapUrl;
             nsCAutoString urlSpec;
 			      PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
+            PRBool hasMsgOffline = PR_FALSE;
+            nsMsgKey key = atoi(msgKey);
+
             rv = CreateStartOfImapUrl(aSrcMailboxURI, getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
+
+            if (folder)
+            {
+              nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(imapUrl));
+              folder->HasMsgOffline(key, &hasMsgOffline);
+              if (msgurl)
+                msgurl->SetMsgIsInLocalCache(hasMsgOffline);
+            }
 
             // now try to download the message
             nsImapAction imapAction = nsIImapUrl::nsImapOnlineToOfflineCopy;
@@ -967,7 +964,10 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
 
             imapServer->GetImapStringByID(IMAP_HTML_NO_CACHED_BODY_BODY, getter_Copies(errorMsgBody));
             imapServer->GetImapStringByID(IMAP_HTML_NO_CACHED_BODY_TITLE, getter_Copies(errorMsgTitle));
-            return aMsgWindow->DisplayHTMLInMessagePane(errorMsgTitle, errorMsgBody);
+            if (aMsgWindow)
+              return aMsgWindow->DisplayHTMLInMessagePane(errorMsgTitle, errorMsgBody);
+            else
+              return NS_ERROR_FAILURE;
           }
         }
       }

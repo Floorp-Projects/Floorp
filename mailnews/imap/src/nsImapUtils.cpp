@@ -36,8 +36,10 @@
 #include "nsMsgUtils.h"
 #include "nsIImapFlagAndUidState.h"
 #include "nsICharsetConverterManager.h"
+#include "nsIIOService.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 nsresult
 nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
@@ -568,5 +570,18 @@ nsresult CreateUnicodeStringFromUtf7(const char *aSourceString, PRUnichar **aUni
   }
   *aUnicodeStr = convertedString;
   return (convertedString) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+PRBool WeAreOffline()
+{
+	nsresult rv = NS_OK;
+  PRBool offline = PR_FALSE;
+
+  NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
+  if (NS_SUCCEEDED(rv) && netService)
+  {
+    netService->GetOffline(&offline);
+  }
+  return offline;
 }
 

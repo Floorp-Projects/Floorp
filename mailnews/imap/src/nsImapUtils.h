@@ -58,4 +58,6 @@ nsresult CreateUnicodeStringFromUtf7(const char *aSourceString, PRUnichar **resu
 char *
 CreateUtf7ConvertedStringFromUnicode(const PRUnichar *aSourceString);
 
+PRBool WeAreOffline();
+
 #endif //NS_IMAPUTILS_H
