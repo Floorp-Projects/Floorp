@@ -28,7 +28,7 @@
 NS_IMPL_ISUPPORTS2(gfxImageFrame, gfxIImageFrame, nsIInterfaceRequestor)
 
 gfxImageFrame::gfxImageFrame() :
-  mTimeout(-1),
+  mTimeout(100),
   mInitalized(PR_FALSE),
   mDisposalMethod(0)
 {
