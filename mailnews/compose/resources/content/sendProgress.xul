@@ -68,7 +68,7 @@ Contributor(s):
           <box autostretch="never" halign="right">
             <text class="label" value="&status;"/>
           </box>
-          <text class="label" id="dialog.status" value="&#160;"/>
+          <text class="label" id="dialog.status"/>
         </row>
         <row class="thin-separator">             
           <box autostretch="never" halign="right">
@@ -76,7 +76,7 @@ Contributor(s):
           </box>
           <progressmeter id="dialog.progress" mode="normal" value="0"/>
           <box autostretch="never" halign="right">
-            <text class="label" id="dialog.progressText" value="&percentMsg;"/>
+            <text class="label" id="dialog.progressText"/>
           </box>
         </row>
       </rows>
