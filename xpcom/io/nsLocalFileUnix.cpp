@@ -285,7 +285,7 @@ nsLocalFile::InitWithNativePath(const nsACString &filePath)
         
         mPath = homePath + Substring(filePath, 1, filePath.Length() - 1);
     } else {
-        if (filePath.IsEmpty() || filePath.First() != '/') {
+        if (filePath.IsEmpty() || filePath.First() != '/')
             return NS_ERROR_FILE_UNRECOGNIZED_PATH;
         mPath = filePath;
     }
