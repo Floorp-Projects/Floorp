@@ -668,6 +668,8 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
 		        return rv;
             psm->PassPrefs();
         }
+    } else {
+      *okayToPost = PR_TRUE;
     }
 
     return NS_OK;
