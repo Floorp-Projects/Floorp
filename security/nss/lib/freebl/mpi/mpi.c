@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.8 2000/07/27 02:37:48 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.9 2000/07/27 03:02:42 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -2828,6 +2828,64 @@ mp_err   s_mp_add(mp_int *a, mp_int *b)        /* magnitude addition      */
   return MP_OKAY;
 
 } /* end s_mp_add() */
+
+/* }}} */
+
+/* {{{ s_mp_add_offset(a, b, offset) */
+
+/* Compute a = |a| + ( |b| * (RADIX ** offset) )             */
+mp_err   s_mp_add_offset(mp_int *a, mp_int *b, mp_size offset)   
+{
+  mp_word   w, k = 0;
+  mp_size   ib;
+  mp_size   ia;
+  mp_size   lim;
+  mp_err    res;
+
+  /* Make sure a has enough precision for the output value */
+  lim = MP_USED(b) + offset;
+  if((lim > USED(a)) && (res = s_mp_pad(a, lim)) != MP_OKAY)
+    return res;
+
+  /*
+    Add up all digits up to the precision of b.  If b had initially
+    the same precision as a, or greater, we took care of it by the
+    padding step above, so there is no problem.  If b had initially
+    less precision, we'll have to make sure the carry out is duly
+    propagated upward among the higher-order digits of the sum.
+   */
+  lim = USED(b);
+  for(ib = 0, ia = offset; ib < lim; ib++, ia++) {
+    w = (mp_word)DIGIT(a, ia) + DIGIT(b, ib) + k;
+    DIGIT(a, ia) = ACCUM(w);
+    k = CARRYOUT(w);
+  }
+
+  /* If we run out of 'b' digits before we're actually done, make
+     sure the carries get propagated upward...  
+   */
+  lim = USED(a);
+  while(k && ia < lim) {
+    w = (mp_word)DIGIT(a, ia) + k;
+    DIGIT(a, ia) = ACCUM(w);
+    k = CARRYOUT(w);
+    ++ia;
+  }
+
+  /* If there's an overall carry out, increase precision and include
+     it.  We could have done this initially, but why touch the memory
+     allocator unless we're sure we have to?
+   */
+  if(k) {
+    if((res = s_mp_pad(a, USED(a) + 1)) != MP_OKAY)
+      return res;
+
+    DIGIT(a, ia) = (mp_digit)k;
+  }
+
+  return MP_OKAY;
+
+} /* end s_mp_add_offset() */
 
 /* }}} */
 
