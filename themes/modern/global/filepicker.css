@@ -48,3 +48,14 @@ outlinerbody:-moz-outliner-image(FilenameColumn, file) {
   list-style-image: url("chrome://global/skin/filepicker/blank.gif");
 }
 
+
+/* ::::: focus rules ::::: */
+
+#directoryOutliner > outlinerrows > .outliner-bodybox {
+  border: 1px solid transparent;
+} 
+
+#directoryOutliner:focus > outlinerrows > .outliner-bodybox {
+  border-color: #000000;
+}
+
