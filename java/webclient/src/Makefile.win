@@ -26,9 +26,13 @@ MODULE=webclient
 OBJS =                              \
     .\$(OBJDIR)\nsActions.obj  \
     .\$(OBJDIR)\BrowserControlMozillaShim.obj  \
+    .\$(OBJDIR)\DocumentObserver.obj  \
+    .\$(OBJDIR)\jni_util.obj  \
     $(NULL)
 
 LINCS = \
+	-I$(JDKHOME)\include \
+	-I$(JDKHOME)\include\win32 \
 	$(NULL)
 
 
@@ -68,6 +72,9 @@ install:: $(DLL)
 	@echo +++ Creating $(MOZ_SRC)\mozilla\java\webclient\src\$(OBJDIR)\runem.bat.  Use this to run the test browser.
 	@echo set PATH=$(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin;$(PATH) > .\$(OBJDIR)\runem.bat
 	@echo $(JAVA) -Djava.library.path=$(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin -classpath $(JAVAC_CLASSPATH) org.mozilla.webclient.test.EmbeddedMozilla $(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin %1% >> .\$(OBJDIR)\runem.bat
+	@echo +++ Creating $(MOZ_SRC)\mozilla\java\webclient\src\$(OBJDIR)\swingem.bat.  Use this to run the swing based test browser.
+	@echo set PATH=$(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin;$(PATH) > .\$(OBJDIR)\swingem.bat
+	@echo $(JAVA) -Djava.library.path=$(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin -classpath $(JAVAC_CLASSPATH) org.mozilla.webclient.test.swing.SwingEmbeddedMozilla $(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin %1% >> .\$(OBJDIR)\swingem.bat
 
 clobber_all:: clobber
 
@@ -75,3 +82,4 @@ clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
 	rm -f BrowserControlMozillaShim.h
 	rm -f .\$(OBJDIR)\runem.bat
+	rm -f .\$(OBJDIR)\swingem.bat

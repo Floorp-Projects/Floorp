@@ -38,7 +38,7 @@ import java.awt.*;
  * There is one instance of this class and all of the exposed methods
  * are static.
 
- * @version $Id: BrowserControlMozillaShim.java,v 1.4 1999/10/08 00:48:02 edburns%acm.org Exp $
+ * @version $Id: BrowserControlMozillaShim.java,v 1.5 1999/10/20 00:49:19 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlImpl
 
@@ -299,6 +299,17 @@ public static void webShellDelete (int webShellPtr) throws Exception
 	}
 }
 
+public static boolean webShellAddDocListener(int webShellPtr, DocumentLoadListener dl) throws Exception 
+{
+    synchronized(lock) {
+        if (initialized) {
+            return instance.nativeWebShellAddDocListener(webShellPtr, dl);
+        } else {
+            throw new Exception ("instance is not initialized");
+        }
+    }
+}
+
 public static void webShellLoadURL (int webShellPtr, 
 									String urlString) throws Exception 
 {
@@ -527,6 +538,7 @@ private native void nativeUpdateEvent (int windowPtr, int eventTime);
 
 private native int  nativeWidgetCreate (int windowPtr, int x, int y, int width, int height) throws Exception;
 private native void nativeWidgetDelete (int widgetPtr) throws Exception;
+private native boolean nativeWebShellAddDocListener(int windowPtr, DocumentLoadListener dl);
 private native void nativeWidgetResize (int widgetPtr, int x, int y, int width, int height, boolean repaint);
 
 /*
@@ -588,7 +600,7 @@ public static void main(String [] args)
     BrowserControlMozillaShim me = new BrowserControlMozillaShim();
     Log.setApplicationName("BrowserControlMozillaShim");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlMozillaShim.java,v 1.4 1999/10/08 00:48:02 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlMozillaShim.java,v 1.5 1999/10/20 00:49:19 edburns%acm.org Exp $");
     
 }
 

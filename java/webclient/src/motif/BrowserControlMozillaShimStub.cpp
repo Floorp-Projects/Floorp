@@ -73,6 +73,7 @@ jint (* nativeWebShellGetHistoryIndex) (JNIEnv *, jobject, jint);
 jstring (* nativeWebShellGetURL) (JNIEnv *, jobject, jint, jint);
 // added by Mark Goddard OTMP 9/2/1999
 jboolean (* nativeWebShellRefresh)(JNIEnv *, jobject, jint);
+jboolean (* nativeWebShellAddDocListener) (JNIEnv *, jobject, jint, jobject);
 void (* processNativeEventQueue) (JNIEnv *, jobject, jint);
 
 
@@ -219,6 +220,12 @@ void locateBrowserControlStubFunctions(void * dll) {
   if (!nativeWebShellRefresh) {
     printf("got dlsym error %s\n", dlerror());
   }
+
+  nativeWebShellAddDocListener = (jboolean (*) (JNIEnv *, jobject, jint, jobject)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellAddDocListener");
+  if (!nativeWebShellAddDocListener) {
+      printf("got dlsym error %s\n", dlerror());
+  }
+
 
   processNativeEventQueue = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_motif_MozillaEventThread_processNativeEventQueue");
   if (!processNativeEventQueue) {
@@ -817,5 +824,21 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRefresh (
   return (* nativeWebShellRefresh) (env, obj, webShellPtr);
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRefresh()
 
+
+/*
+ * Class:     BrowserControlMozillaShimStub
+ * Method:    nativeWebShellAddDocListener
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL
+Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellAddDocListener (
+	JNIEnv	*	env,
+	jobject		obj,
+	jint		webShellPtr,
+    jobject     listener)
+{
+  return (* nativeWebShellAddDocListener) (env, obj, webShellPtr, listener);
+} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellAddDocListener()
+ 
 
 // EOF

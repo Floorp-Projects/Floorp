@@ -26,7 +26,7 @@ package org.mozilla.webclient;
  * interfaces.
 
  *
- * @version $Id: BrowserControl.java,v 1.1 1999/07/30 01:03:03 edburns%acm.org Exp $
+ * @version $Id: BrowserControl.java,v 1.2 1999/10/20 00:49:18 edburns%acm.org Exp $
  * 
  * @see org.mozilla.webclient.BrowserControlCore
  * @see org.mozilla.webclient.BrowserControlExtended
@@ -35,5 +35,7 @@ package org.mozilla.webclient;
 
 public interface BrowserControl extends BrowserControlCore, BrowserControlExtended
 {
+
+public EventRegistration getEventRegistration();
 
 } // end of interface BrowserControl

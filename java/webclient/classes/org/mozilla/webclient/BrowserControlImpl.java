@@ -31,13 +31,13 @@ import java.awt.Rectangle;
  *
  * <B>Lifetime And Scope</B> <P>
  *
- * @version $Id: BrowserControlImpl.java,v 1.3 1999/10/08 00:48:01 edburns%acm.org Exp $
+ * @version $Id: BrowserControlImpl.java,v 1.4 1999/10/20 00:49:18 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControl
  *
  */
 
-public class BrowserControlImpl extends Object implements BrowserControl
+public class BrowserControlImpl extends Object implements BrowserControl, EventRegistration
 {
 //
 // Protected Constants
@@ -69,8 +69,7 @@ public class BrowserControlImpl extends Object implements BrowserControl
 
 public BrowserControlImpl(int windowPtr, Rectangle bounds) throws Exception 
 {
-	nativeWebShell = BrowserControlMozillaShim.webShellCreate(windowPtr, 
-                                                              bounds);
+	nativeWebShell = BrowserControlMozillaShim.webShellCreate(windowPtr, bounds);
 }
 
 //
@@ -212,6 +211,21 @@ public boolean refresh() throws Exception
 }
 
 /**
+ * get EventRegistration object
+ */
+
+public EventRegistration getEventRegistration() {
+    return this;
+}
+
+/**
+ * add document load event listener
+ */
+public boolean addDocumentLoadListener(DocumentLoadListener dll) throws Exception {
+    return BrowserControlMozillaShim.webShellAddDocListener(nativeWebShell, dll);
+}
+
+/**
  *
  */
 public int getNativeWebShell () 
@@ -245,7 +259,7 @@ public static void main(String [] args)
     //    BrowserControlImpl me = new BrowserControlImpl();
     Log.setApplicationName("BrowserControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.3 1999/10/08 00:48:01 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.4 1999/10/20 00:49:18 edburns%acm.org Exp $");
     
 }
 

@@ -62,6 +62,8 @@ nsMacMessageSink gMessageSink;
 #include "nsIRegistry.h"
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
+#include "DocumentObserver.h"
+#include "nsIDocumentLoader.h"
 
 #define DEBUG_RAPTOR_CANVAS 1
 
@@ -1616,6 +1618,35 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellBack (
 	return JNI_FALSE;
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellBack()
 
+JNIEXPORT jboolean JNICALL 
+    Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellAddDocListener 
+ (JNIEnv *env, 
+  jobject obj, 
+  jint webShellPtr, 
+  jobject doclistener) 
+{
+    
+    // need to pass in the environment to the addition of c doclistener, so 
+    // that it can call into the java stuff again
+    DocumentObserver * documentObserver = new DocumentObserver(env, obj, webShellPtr, doclistener);
+    
+    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    
+	if (initContext == nsnull) {
+		::ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellAddDocListener");
+		return JNI_FALSE;
+	}
+    
+	if (initContext->initComplete) {
+        nsIDocumentLoader  *docloader;
+        initContext->webShell->GetDocumentLoader(docloader );
+        if (docloader != nsnull) {
+            docloader->AddObserver((nsIDocumentLoaderObserver *) documentObserver);
+        }
+        
+    }
+    return JNI_TRUE;
+}
 
 /*
  * Class:     BrowserControlMozillaShim
