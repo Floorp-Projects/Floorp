@@ -35,6 +35,7 @@
 PRInt32 nsRDFXMLSerializer::gRefCnt = 0;
 nsIRDFContainerUtils* nsRDFXMLSerializer::gRDFC;
 nsIRDFResource* nsRDFXMLSerializer::kRDF_instanceOf;
+nsIRDFResource* nsRDFXMLSerializer::kRDF_type;
 nsIRDFResource* nsRDFXMLSerializer::kRDF_nextVal;
 nsIRDFResource* nsRDFXMLSerializer::kRDF_Bag;
 nsIRDFResource* nsRDFXMLSerializer::kRDF_Seq;
@@ -60,6 +61,9 @@ nsRDFXMLSerializer::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
         if (NS_FAILED(rv)) break;
 
         rv = rdf->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_instanceOf);
+        if (NS_FAILED(rv)) break;
+
+        rv = rdf->GetResource(RDF_NAMESPACE_URI "type",       &kRDF_type);
         if (NS_FAILED(rv)) break;
 
         rv = rdf->GetResource(RDF_NAMESPACE_URI "nextVal",    &kRDF_nextVal);
@@ -100,6 +104,7 @@ nsRDFXMLSerializer::~nsRDFXMLSerializer()
         NS_IF_RELEASE(kRDF_Seq);
         NS_IF_RELEASE(kRDF_Alt);
         NS_IF_RELEASE(kRDF_instanceOf);
+        NS_IF_RELEASE(kRDF_type);
         NS_IF_RELEASE(kRDF_nextVal);
 
         if (gRDFC) {
@@ -463,16 +468,29 @@ nsresult
 nsRDFXMLSerializer::SerializeDescription(nsIOutputStream* aStream,
                                          nsIRDFResource* aResource)
 {
-static const char kRDFDescriptionOpenAbout[] = "  <RDF:Description about=\"";
-static const char kRDFDescriptionOpenID[]    = "  <RDF:Description ID=\"";
+static const char kRDFDescriptionOpen[]      = "  <RDF:Description";
+static const char kIDAttr[]                  = " ID=\"";
+static const char kAboutAttr[]               = " about=\"";
 static const char kRDFDescriptionClose[]     = "  </RDF:Description>\n";
 
     nsresult rv;
 
-    // XXX Look for an "RDF:type" property: if one exists, then output
-    // as a "typed node" instead of the more verbose "RDF:Description
-    // type='...'". The problem here is that we may need to open a
-    // namespace to emit the type.
+    PRBool isTypedNode = PR_FALSE;
+    nsAutoString nodeName, nameSpacePrefix, nameSpaceURI;
+
+    nsCOMPtr<nsIRDFNode> typeNode;
+    mDataSource->GetTarget(aResource, kRDF_type, PR_TRUE, getter_AddRefs(typeNode));
+    if (typeNode) {
+        nsCOMPtr<nsIRDFResource> type = do_QueryInterface(typeNode, &rv);
+        if (type) {
+            // Try to get a namespace prefix.  If none is available,
+            // just treat the description as if it weren't a typed node 
+            // after all and emit rdf:type as a normal property.  This 
+            // seems preferable to using a bogus (invented) prefix.
+            isTypedNode = MakeQName(type, nodeName,
+                                    nameSpacePrefix, nameSpaceURI);
+        }
+    }
 
     const char* s;
     rv = aResource->GetValueConst(&s);
@@ -482,12 +500,22 @@ static const char kRDFDescriptionClose[]     = "  </RDF:Description>\n";
     rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mBaseURLSpec.get()), uri);
     rdf_EscapeAttributeValue(uri);
 
+    // Emit an open tag and the subject
+    if (isTypedNode) {
+        rdf_BlockingWrite(aStream, NS_LITERAL_STRING("  <"));
+        rdf_BlockingWrite(aStream, nameSpacePrefix);
+        rdf_BlockingWrite(aStream, NS_LITERAL_STRING(":"));
+        rdf_BlockingWrite(aStream, nodeName);
+    }
+    else 
+        rdf_BlockingWrite(aStream, kRDFDescriptionOpen,
+                          sizeof(kRDFDescriptionOpen) - 1);
     if (uri[0] == PRUnichar('#')) {
         uri.Cut(0, 1);
-        rdf_BlockingWrite(aStream, kRDFDescriptionOpenID, sizeof(kRDFDescriptionOpenID) - 1);
+        rdf_BlockingWrite(aStream, kIDAttr, sizeof(kIDAttr) - 1);
     }
     else {
-        rdf_BlockingWrite(aStream, kRDFDescriptionOpenAbout, sizeof(kRDFDescriptionOpenAbout) - 1);
+        rdf_BlockingWrite(aStream, kAboutAttr, sizeof(kAboutAttr) - 1);
     }
 
     rdf_BlockingWrite(aStream, uri);
@@ -502,6 +530,10 @@ static const char kRDFDescriptionClose[]     = "  </RDF:Description>\n";
     mDataSource->ArcLabelsOut(aResource, getter_AddRefs(arcs));
 
     if (arcs) {
+        // Don't re-serialize rdf:type later on
+        if (isTypedNode)
+            visited.AppendElement(kRDF_type);
+
         while (1) {
             PRBool hasMore = PR_FALSE;
             arcs->HasMoreElements(&hasMore);
@@ -542,6 +574,9 @@ static const char kRDFDescriptionClose[]     = "  </RDF:Description>\n";
         if (arcs) {
             // Forget that we've visited anything
             visited.Clear();
+            // ... except for rdf:type
+            if (isTypedNode)
+                visited.AppendElement(kRDF_type);
 
             while (1) {
                 PRBool hasMore = PR_FALSE;
@@ -574,7 +609,16 @@ static const char kRDFDescriptionClose[]     = "  </RDF:Description>\n";
         }
 
         // Emit a proper close-tag.
-        rdf_BlockingWrite(aStream, kRDFDescriptionClose, sizeof(kRDFDescriptionClose) - 1);
+        if (isTypedNode) {
+            rdf_BlockingWrite(aStream,  NS_LITERAL_STRING("  </"));
+            rdf_BlockingWrite(aStream, nameSpacePrefix);
+            rdf_BlockingWrite(aStream, NS_LITERAL_STRING(":"));
+            rdf_BlockingWrite(aStream, nodeName);
+            rdf_BlockingWrite(aStream,  NS_LITERAL_STRING(">\n"));
+        }
+        else
+            rdf_BlockingWrite(aStream, kRDFDescriptionClose,
+                              sizeof(kRDFDescriptionClose) - 1);
     }
     else {
         // If we saw _no_ child properties, then we can don't need a
@@ -770,7 +814,6 @@ nsresult
 nsRDFXMLSerializer::SerializePrologue(nsIOutputStream* aStream)
 {
 static const char kXMLVersion[] = "<?xml version=\"1.0\"?>\n";
-static const char kXMLNS[]    = "          xmlns";
 
     rdf_BlockingWrite(aStream, kXMLVersion, sizeof(kXMLVersion) - 1);
 
