@@ -131,6 +131,10 @@ public:
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule);
 
+  // Notification that we were unable to render a replaced element.
+  NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
+                                       nsIFrame*       aFrame);
+  
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0);
 
 private:
@@ -807,6 +811,13 @@ StyleSetImpl::StyleRuleRemoved(nsIPresContext* aPresContext,
                                nsIStyleRule* aStyleRule)
 {
   return mFrameConstructor->StyleRuleRemoved(aPresContext, aStyleSheet, aStyleRule);
+}
+
+NS_IMETHODIMP
+StyleSetImpl::CantRenderReplacedElement(nsIPresContext* aPresContext,
+                                        nsIFrame*       aFrame)
+{
+  return mFrameConstructor->CantRenderReplacedElement(aPresContext, aFrame);
 }
 
 void StyleSetImpl::List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets)

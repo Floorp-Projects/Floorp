@@ -49,7 +49,8 @@ public:
                   const nscolor* aBackgroundColor,
                   nsIFrame* aTargetFrame,
                   nsFrameImageLoaderCB aCallBack,
-                  PRBool aNeedSizeUpdate);
+                  PRBool aNeedSizeUpdate,
+                  PRBool aNeedErrorNotification);
   NS_IMETHOD StopImageLoad();
   NS_IMETHOD AbortImageLoad();
   NS_IMETHOD GetTargetFrame(nsIFrame*& aFrameResult) const;
@@ -61,8 +62,6 @@ public:
 protected:
   nsFrameImageLoader();
   ~nsFrameImageLoader();
-
-  void ReflowFrame();
 
   void DamageRepairFrame(const nsRect* aDamageRect);
 

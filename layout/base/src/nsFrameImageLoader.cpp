@@ -112,7 +112,8 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
                          const nscolor* aBackgroundColor,
                          nsIFrame* aTargetFrame,
                          nsFrameImageLoaderCB aCallBack,
-                         PRBool aNeedSizeUpdate)
+                         PRBool aNeedSizeUpdate,
+                         PRBool aNeedErrorNotification)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null ptr");
   NS_PRECONDITION(nsnull == mPresContext, "double init");
@@ -129,6 +130,9 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
   NS_IF_ADDREF(mPresContext);
   if (aNeedSizeUpdate) {
     mImageLoadStatus = NS_IMAGE_LOAD_STATUS_SIZE_REQUESTED;
+  }
+  if (aNeedErrorNotification) {
+    mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_ERROR_REQUESTED;
   }
 
   // Translate url to a C string
@@ -195,7 +199,9 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
     mSize.height = aParam2;
     mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE;
     if (0 != (mImageLoadStatus & NS_IMAGE_LOAD_STATUS_SIZE_REQUESTED)) {
-      ReflowFrame();
+      if (nsnull != mCallBack) {
+        (*mCallBack)(*mPresContext, mTargetFrame, mImageLoadStatus);
+      }
     }
     break;
 
@@ -267,8 +273,11 @@ nsFrameImageLoader::NotifyError(nsIImageRequest *aImageRequest,
 
   mError = aErrorType;
   mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_ERROR;
-  if (0 != (mImageLoadStatus & NS_IMAGE_LOAD_STATUS_SIZE_REQUESTED)) {
-    ReflowFrame();
+  if (0 != (mImageLoadStatus & (NS_IMAGE_LOAD_STATUS_SIZE_REQUESTED |
+                                NS_IMAGE_LOAD_STATUS_ERROR_REQUESTED))) {
+    if (nsnull != mCallBack) {
+      (*mCallBack)(*mPresContext, mTargetFrame, mImageLoadStatus);
+    }
   }
   else {
     DamageRepairFrame(nsnull);
@@ -343,18 +352,6 @@ nsFrameImageLoader::DamageRepairFrame(const nsRect* aDamageRect)
   view->GetViewManager(vm);
   vm->UpdateView(view, bounds, NS_VMREFRESH_NO_SYNC);
   NS_RELEASE(vm);
-}
-
-void
-nsFrameImageLoader::ReflowFrame()
-{
-  PR_LOG(gFrameImageLoaderLMI, PR_LOG_DEBUG,
-         ("nsFrameImageLoader::ReflowFrame frame=%p status=%x",
-          mTargetFrame, mImageLoadStatus));
-
-  if (nsnull != mCallBack) {
-    (*mCallBack)(*mPresContext, mTargetFrame, mImageLoadStatus);
-  }
 }
 
 NS_METHOD

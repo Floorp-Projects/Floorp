@@ -84,6 +84,10 @@ public:
   NS_IMETHOD StyleRuleRemoved(nsIPresContext* aPresContext,
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule) = 0;
+  
+  // Notification that we were unable to render a replaced element.
+  NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
+                                       nsIFrame*       aFrame) = 0;
 };
 
 #endif /* nsIStyleFrameConstruction_h___ */

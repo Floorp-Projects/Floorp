@@ -1682,7 +1682,7 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
                                               ? nsnull
                                               : &aColor.mBackgroundColor,
                                               aForFrame, nsnull,
-                                              PR_FALSE, loader);
+                                              PR_FALSE, PR_FALSE, loader);
     if ((NS_OK != rv) || (nsnull == loader) ||
         (loader->GetImage(image), (nsnull == image))) {
       NS_IF_RELEASE(loader);

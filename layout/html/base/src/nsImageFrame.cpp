@@ -47,6 +47,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsTextFragment.h"
 #include "nsIDOMHTMLMapElement.h"
+#include "nsIStyleSet.h"
 
 #ifndef _WIN32
 #define BROKEN_IMAGE_URL "resource:/res/html/broken-image.gif"
@@ -156,7 +157,7 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
     // Start image loading. Note that we don't specify a background color
     // so transparent images are always rendered using a transparency mask
     rv = aPresContext->StartLoadImage(src, nsnull, aForFrame, aCallBack,
-                                      aNeedSizeUpdate, mImageLoader);
+                                      aNeedSizeUpdate, PR_TRUE, mImageLoader);
     if ((NS_OK != rv) || (nsnull == mImageLoader)) {
       return rv;
     }
@@ -370,6 +371,17 @@ UpdateImageFrame(nsIPresContext& aPresContext, nsIFrame* aFrame,
       }
       NS_RELEASE(content);
     }
+  } else if (NS_IMAGE_LOAD_STATUS_ERROR & aStatus) {
+#if 0
+    // We failed to load the image. Notify the style system
+    nsIPresShell* presShell = aPresContext.GetShell();
+    nsIStyleSet*  styleSet = presShell->GetStyleSet();
+    styleSet->CantRenderReplacedElement(&aPresContext, aFrame);
+    NS_RELEASE(styleSet);
+    NS_RELEASE(presShell);
+#else
+    ;
+#endif
   }
   return NS_OK;
 }
