@@ -40,7 +40,6 @@
 #include "nsClipboard.h"
 #include "nsClipboardHelper.h"
 #include "nsHTMLFormatConverter.h"
-//#include "nsFontRetrieverService.h"
 #include "nsDragService.h"
 #include "nsScrollBar.h"
 #include "nsSound.h"
@@ -62,7 +61,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
-//NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontRetrieverService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 #ifdef IBMBIDI
@@ -195,10 +193,6 @@ static nsModuleComponentInfo components[] =
     NS_HTMLFORMATCONVERTER_CID,
     "@mozilla.org/widget/htmlformatconverter/xlib;1",
     nsHTMLFormatConverterConstructor },
-  //{ "Xlib Font Retriever Service",
-    //NS_FONTRETRIEVERSERVICE_CID,
-    //"@mozilla.org/widget/fontretrieverservice/xlib;1",
-    //nsFontRetrieverServiceConstructor },
   { "Xlib Drag Service",
     NS_DRAGSERVICE_CID,
     //    "@mozilla.org/widget/dragservice/xlib;1",
