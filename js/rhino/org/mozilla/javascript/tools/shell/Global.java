@@ -45,12 +45,24 @@ import org.mozilla.javascript.tools.ToolErrorReporter;
  *
  * @author Norris Boyd
  */
-public class SharedGlobal extends ImporterTopLevel {
+public class Global extends ImporterTopLevel {
+
+    /**
+     * Return name of this class, the global object.
+     *
+     * This method must be implemented in all concrete classes
+     * extending ScriptableObject.
+     *
+     * @see org.mozilla.javascript.Scriptable#getClassName
+     */
+    public String getClassName() {
+        return "global";
+    }
 
     /**
      * Initialize new SharedGlobal object.
      */
-    public SharedGlobal() {
+    public Global() {
         Context cx = Context.enter();
         
         // Initialize the standard objects (Object, Function, etc.)
@@ -62,7 +74,7 @@ public class SharedGlobal extends ImporterTopLevel {
         String[] names = { "print", "quit", "version", "load", "help",
                            "loadClass", "defineClass", "spawn" };
         try {
-            defineFunctionProperties(names, SharedGlobal.class,
+            defineFunctionProperties(names, Global.class,
                                      ScriptableObject.DONTENUM);
         } catch (PropertyException e) {
             throw new Error(e.getMessage());
@@ -96,9 +108,7 @@ public class SharedGlobal extends ImporterTopLevel {
             if (i > 0)
                 Main.out.print(" ");
 
-            // Convert the
-            // arbitrary JavaScript value into a string form.
-
+            // Convert the arbitrary JavaScript value into a string form.
             String s = Context.toString(args[i]);
 
             Main.out.print(s);
@@ -229,8 +239,7 @@ public class SharedGlobal extends ImporterTopLevel {
 
     /**
      * The spawn function runs a given function or script in a different 
-     * thread with a different set of globals. It does share the properties
-     * of the SharedGlobal object.
+     * thread.
      * 
      * js> function g() { a = 7; }
      * js> a = 3;
@@ -243,15 +252,16 @@ public class SharedGlobal extends ImporterTopLevel {
     public static Object spawn(Context cx, Scriptable thisObj, Object[] args, 
                                Function funObj)
     {
+        Scriptable scope = funObj.getParentScope();
         Runner runner;
         if (args.length != 0 && args[0] instanceof Function) {
             Object[] newArgs = null;
             if (args.length > 1 && args[1] instanceof Scriptable) {
                 newArgs = cx.getElements((Scriptable) args[1]);
             }
-            runner = new Runner((Function) args[0], newArgs);
+            runner = new Runner(scope, (Function) args[0], newArgs);
         } else if (args.length != 0 && args[0] instanceof Script) {
-            runner = new Runner((Script) args[0]);
+            runner = new Runner(scope, (Script) args[0]);
         } else {
             throw Context.reportRuntimeError(ToolErrorReporter.getMessage(
                 "msg.spawn.args"));
@@ -260,28 +270,31 @@ public class SharedGlobal extends ImporterTopLevel {
         thread.start();
         return thread;
     }
+    
+    boolean debug = false;
+    boolean processStdin = true;    
+    boolean quitting;
+    NativeArray history;
+    boolean showDebuggerUI = false;
 }
 
 
 class Runner implements Runnable {
 
-    Runner(Function func, Object[] args) {
+    Runner(Scriptable scope, Function func, Object[] args) {
+        this.scope = scope;
         f = func;
         this.args = args;
     }
 
-    Runner(Script script) {
+    Runner(Scriptable scope, Script script) {
+        this.scope = scope;
         s = script;
     }
 
     public void run() {
         Context cx = Context.enter();
 
-        // Create a local scope for this thread to execute in, and use
-        // the shared global properties.
-        Main scope = new Main();
-        scope.setPrototype(Main.sharedGlobal);
-        
         try {
             if (f != null)
                 f.call(cx, scope, scope, args);
@@ -296,6 +309,7 @@ class Runner implements Runnable {
         cx.exit();
     }
 
+    private Scriptable scope;
     private Function f;
     private Script s;
     private Object[] args;

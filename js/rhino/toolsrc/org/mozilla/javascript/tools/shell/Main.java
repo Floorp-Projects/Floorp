@@ -56,7 +56,7 @@ import org.mozilla.javascript.debug.SourceTextManagerImpl;
  *
  * @author Norris Boyd
  */
-public class Main extends ScriptableObject {
+public class Main {
 
     /**
      * Main entry point.
@@ -72,17 +72,8 @@ public class Main extends ScriptableObject {
         errorReporter = new ToolErrorReporter(false, err);
         cx.setErrorReporter(errorReporter);
 
-        // A bit of shorthand: since Main extends ScriptableObject,
-        // we can make it the global object.
-        // We create a shared global with sealed properties that
-        // we can share with other threads (see spawn).
-        sharedGlobal = new SharedGlobal();
-        
         // Create the "global" object where top-level variables will live.
-        // Set its prototype to the sharedGlobal where all the standard
-        // functions and objects live.
-        global = new Main();
-        global.setPrototype(sharedGlobal);
+        global = new Global();
 
         args = processOptions(cx, args);
 
@@ -100,7 +91,7 @@ public class Main extends ScriptableObject {
         
         // Set up "environment" in the global scope to provide access to the
         // System environment variables.
-        Environment.defineClass(sharedGlobal);
+        Environment.defineClass(global);
         Environment environment = new Environment(global);
         global.defineProperty("environment", environment,
                               ScriptableObject.DONTENUM);
@@ -242,18 +233,6 @@ public class Main extends ScriptableObject {
     }
 
     /**
-     * Return name of this class, the global object.
-     *
-     * This method must be implemented in all concrete classes
-     * extending ScriptableObject.
-     *
-     * @see org.mozilla.javascript.Scriptable#getClassName
-     */
-    public String getClassName() {
-        return "global";
-    }
-
-    /**
      * Evaluate JavaScript source.
      *
      * @param cx the current context
@@ -308,6 +287,11 @@ public class Main extends ScriptableObject {
                 catch (EvaluatorException ee) {
                     // Some form of JavaScript error.
                     // Already printed message, so just fall through.
+                }
+                catch (EcmaError ee) {
+                    Context.reportError(ToolErrorReporter.getMessage(
+                        "msg.uncaughtJSException",
+                        ee.toString()));
                 }
                 catch (JavaScriptException jse) {
                 	// Need to propagate ThreadDeath exceptions.
@@ -372,6 +356,11 @@ public class Main extends ScriptableObject {
                 err.println(we.getWrappedException().toString());
                 we.printStackTrace();
             }
+            catch (EcmaError ee) {
+                Context.reportError(ToolErrorReporter.getMessage(
+                    "msg.uncaughtJSException",
+                    ee.toString()));
+            }
             catch (EvaluatorException ee) {
                 // Already printed message, so just fall through.
             }
@@ -416,17 +405,11 @@ public class Main extends ScriptableObject {
     }
 
     static protected ToolErrorReporter errorReporter;
-    static protected Main global;
-    static protected SharedGlobal sharedGlobal;
+    static protected Global global;
     static public InputStream in = System.in;
     static public PrintStream out = System.out;
     static public PrintStream err = System.err;
     
-    boolean quitting;
     SourceTextManager debug_stm;
     //DebugManager debug_dm; // TODO: enable debugger
-    boolean debug = false;
-    boolean processStdin = true;
-    boolean showDebuggerUI = false;
-    NativeArray history;
 }
