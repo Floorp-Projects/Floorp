@@ -22,6 +22,7 @@
 #include <string.h>
 #include "plstr.h"
 #include "nscore.h"
+#include "prtypes.h"
 
 #define CR '\015'
 #define LF '\012'
@@ -29,6 +30,9 @@
 #define FF '\014'
 #define TAB '\011'
 #define CRLF "\015\012"     /* A CR LF equivalent string */
+
+
+extern const PRUnichar kIsoLatin1ToUCS2[256];
 
 
 // This macro can be used in a class declaration for classes that want
