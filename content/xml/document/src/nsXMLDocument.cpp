@@ -23,7 +23,6 @@
 
 
 #include "nsXMLDocument.h"
-#include "nsWellFormedDTD.h"
 #include "nsParserCIID.h"
 #include "nsIParser.h"
 #include "nsIXMLContent.h"

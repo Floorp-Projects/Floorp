@@ -26,7 +26,6 @@
  * MODULE NOTES:
  * @update  gess 4/1/98
  * 
- * This file declares the concrete IContentSink interface.
  * This pure virtual interface is used as the "glue" that connects the parsing 
  * process to the content model construction process.
  *

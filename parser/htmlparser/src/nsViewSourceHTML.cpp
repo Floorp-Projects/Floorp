@@ -48,13 +48,11 @@
 #  define START_TIMER()
 #endif
 
-#include "nsIDTDDebug.h"
 #include "nsViewSourceHTML.h"
 #include "nsCRT.h"
 #include "nsParser.h"
 #include "nsScanner.h"
 #include "nsIParser.h"
-#include "nsTokenHandler.h"
 #include "nsDTDUtils.h"
 #include "nsIContentSink.h"
 #include "nsIHTMLContentSink.h"
@@ -593,7 +591,6 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
         else if(NS_ERROR_HTMLPARSER_BLOCK!=result){
           mTokenizer->PushTokenFront(theToken);
         }
-        // theRootDTD->Verify(kEmptyString,aParser);
       }
       else break;
     }//while
@@ -758,19 +755,6 @@ NS_IMETHODIMP CViewSourceHTML::WillInterruptParse(void){
   if(mSink) {
     result = mSink->WillInterrupt();
   }
-  return result;
-}
-
-/**
- * Called by the parser to initiate dtd verification of the
- * internal context stack.
- * @update	gess 7/23/98
- * @param 
- * @return
- */
-PRBool CViewSourceHTML::Verify(nsString& aURLRef,nsIParser* aParser) {
-  PRBool result=PR_TRUE;
-  mParser=(nsParser*)aParser;
   return result;
 }
 

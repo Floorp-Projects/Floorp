@@ -86,7 +86,6 @@
 #include "nsISupports.h"
 #include "nsIParser.h"
 #include "nsHTMLTokens.h"
-#include "nshtmlpars.h"
 #include "nsVoidArray.h"
 #include "nsDeque.h"
 #include "nsParserCIID.h"
@@ -96,7 +95,6 @@
   {0x80, 0x22, 0x00,    0x60, 0x8, 0x14, 0x98, 0x89}}
 
 class nsIHTMLContentSink;
-class nsIDTDDebug;
 class nsIParserNode;
 class nsParser;
 class nsDTDContext;
@@ -165,17 +163,7 @@ CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
      * @return  TRUE if this DTD parse the given type; FALSE otherwise.
      */
     virtual eAutoDetectResult CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion);
-
-    /**
-     * Called by the parser to initiate dtd verification of the
-     * internal context stack.
-     * @update	gess 7/23/98
-     * @param 
-     * @return
-     */
-    virtual PRBool Verify(nsString& aURLRef,nsIParser* aParser);
-
-   
+  
     /**
       * The parser uses a code sandwich to wrap the parsing process. Before
       * the process begins, WillBuildModel() is called. Afterwards the parser
@@ -328,7 +316,6 @@ protected:
     PRBool              mHadFrameset;
     PRBool              mHadBody;
     nsString            mFilename;
-    nsIDTDDebug*		    mDTDDebug;
     PRInt32             mLineNumber;
     nsParser*           mParser;
     nsITokenizer*       mTokenizer;

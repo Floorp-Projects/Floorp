@@ -28,7 +28,6 @@
 
      
 #include "nsDebug.h" 
-#include "nsIDTDDebug.h"  
 #include "CNavDTD.h" 
 #include "nsHTMLTokens.h"
 #include "nsCRT.h"
@@ -36,7 +35,6 @@
 #include "nsIParser.h"
 #include "nsIHTMLContentSink.h" 
 #include "nsScanner.h"
-#include "nsIDTDDebug.h"
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
 #include "prio.h"
@@ -54,7 +52,10 @@
 #include "nsVoidArray.h"
 #include "nsReadableUtils.h"
 #include "prmem.h"
+
+#if !defined(MOZ_DISABLE_DTD_DEBUG)
 #include "nsLoggingSink.h"
+#endif
 
 
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
@@ -171,9 +172,6 @@ CNavDTD::CNavDTD() : nsIDTD(),
     mExpectedCRC32(0),
 #endif
 
-#ifdef NS_DEBUG
-    mDTDDebug(0), 
-#endif
     mLineNumber(1)
 {
   NS_INIT_REFCNT(); 
@@ -200,6 +198,8 @@ const nsIID& CNavDTD::GetMostDerivedIID(void)const {
 }
 
 
+#if !defined(MOZ_DISABLE_DTD_DEBUG)
+
 nsLoggingSink* GetLoggingSink() {
 
   //these are used when you want to generate a log file for contentsink construction...
@@ -216,7 +216,6 @@ nsLoggingSink* GetLoggingSink() {
     checkForPath=PR_FALSE;
   }
   
-#ifdef NS_DEBUG
 
   if(gLogPath && (!theSink)) {
     static  nsLoggingSink gLoggingSink;
@@ -234,11 +233,12 @@ nsLoggingSink* GetLoggingSink() {
     gLoggingSink.SetOutputStream(theLogFile,PR_TRUE);
     theSink=&gLoggingSink;
   }
-#endif
 
   return theSink;
 }
  
+#endif
+
 /**
  *  Default destructor
  *  
@@ -259,18 +259,17 @@ CNavDTD::~CNavDTD(){
     mTempContext=0;
   }
 
+  
+#if !defined(MOZ_DISABLE_DTD_DEBUG)
   if(mSink) {
     nsLoggingSink *theLogSink=GetLoggingSink();
     if(mSink==theLogSink) {
       theLogSink->ReleaseProxySink();
     }
-
-    NS_IF_RELEASE(mSink);
   }
-
-#ifdef NS_DEBUG
-  NS_IF_RELEASE(mDTDDebug);
 #endif
+
+  NS_IF_RELEASE(mSink);
 }
  
 
@@ -293,39 +292,6 @@ nsresult CNavDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
       theOtherDTD->mDocType=mDocType;
     }
   }
-
-  return result;
-}
-
-/**
- * Called by the parser to initiate dtd verification of the
- * internal context stack.
- * @update  gess 7/23/98
- * @param 
- * @return
- */
-PRBool CNavDTD::Verify(nsString& aURLRef,nsIParser* aParser){
-  PRBool result=PR_TRUE;
-
-  /*
-   * Disable some DTD debugging code in the parser that 
-   * breaks on some compilers because of some broken 
-   * streams code in prstrm.cpp.
-   */
-#ifdef NS_DEBUG
-  if(!mDTDDebug){
-    nsresult rval = NS_NewDTDDebug(&mDTDDebug);
-    if (NS_OK != rval) {
-      fputs("Cannot create parser debugger.\n", stdout);
-      result=-PR_FALSE;
-    }
-    else mDTDDebug->SetVerificationDirectory(kVerificationDir);
-  }
-
-  if(mDTDDebug) {
-    // mDTDDebug->Verify(this,aParser,mBodyContext->GetCount(),mBodyContext->mStack,aURLRef);
-  }
-#endif
 
   return result;
 }
@@ -428,7 +394,7 @@ nsresult CNavDTD::WillBuildModel(  const CParserContext& aParserContext,nsIConte
         //a logging sink. If so, then we'll create one, and make it the
         //proxy for the real sink we're given from the parser.
 
-#ifdef NS_DEBUG
+#if !defined(MOZ_DISABLE_DTD_DEBUG)
       nsLoggingSink *theLogSink=GetLoggingSink();
       if(theLogSink) {   
         theLogSink->SetProxySink(mSink);
@@ -682,12 +648,6 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
         while((theToken=(CToken*)mMisplacedContent.Pop())) {
           IF_FREE(theToken, mTokenAllocator);
         }
-
-#ifdef NS_DEBUG
-        if(mDTDDebug) { 
-          mDTDDebug->DumpVectorRecord(); 
-        } 
-#endif
       } 
     } //if aparser
 
@@ -943,12 +903,6 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
         else {
           return NS_OK;
         }
-
-#ifdef NS_DEBUG
-        if (mDTDDebug) {
-          //mDTDDebug->Verify(this, mParser, mBodyContext->GetCount(), mBodyContext->mStack, mFilename);
-        }
-#endif
       }
     }
 

@@ -35,7 +35,6 @@
  *         
  */
 
-#include "nshtmlpars.h"
 #include "nsISupports.h"
 #include "prtypes.h"
 #include "nsITokenizer.h"
@@ -61,7 +60,6 @@ enum nsDTDMode {
 
 class nsIParser;
 class CToken;
-class nsIDTDDebug;
 class nsIURI;
 class nsString;
 class nsIContentSink;
@@ -175,15 +173,6 @@ class nsIDTD : public nsISupports {
      *  @return  PR_TRUE if given tag can contain other tags
      */
     virtual PRBool IsContainer(PRInt32 aTag) const=0;
-
-    /**
-     * Called by the parser to initiate dtd verification of the
-     * internal context stack.
-     * @update	gess 7/23/98
-     * @param 
-     * @return
-     */
-    virtual PRBool Verify(nsString& aURLRef,nsIParser* aParser)=0;
 
     /**
      * Use this id you want to stop the building content model

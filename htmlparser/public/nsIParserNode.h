@@ -40,7 +40,6 @@
 #ifndef NS_IPARSERNODE__
 #define NS_IPARSERNODE__
 
-#include "nshtmlpars.h"
 #include "nsISupports.h"
 #include "prtypes.h"
 #include "nsString.h"

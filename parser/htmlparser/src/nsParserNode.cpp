@@ -24,7 +24,6 @@
 #include "nsParserNode.h" 
 #include "string.h"
 #include "nsHTMLTokens.h"
-#include "nshtmlpars.h"
 #include "nsITokenizer.h"
 #include "nsDTDUtils.h"
 

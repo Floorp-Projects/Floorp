@@ -28,90 +28,55 @@ DEFINES=-D_IMPL_NS_HTMLPARS -DWIN32_LEAN_AND_MEAN -DXML_DTD
 
 MODULE         = htmlparser
 LIBRARY_NAME   = gkparser
-MODULE_NAME = nsParserModule
+MODULE_NAME	   = nsParserModule
 
-CPPSRCS=					\
-	nsDTDUtils.cpp				\
+CPPSRCS =               \
+	nsDTDUtils.cpp      \
 	nsHTMLTokenizer.cpp \
-	nsXMLTokenizer.cpp \
-	nsExpatTokenizer.cpp \
-	nsElementTable.cpp \
-	CNavDTD.cpp				\
-	COtherDTD.cpp				\
-	nsDTDDebug.cpp				\
-	nsHTMLEntities.cpp			\
-	nsHTMLNullSink.cpp			\
-	nsHTMLTags.cpp				\
-	nsHTMLTokens.cpp			\
-	nsLoggingSink.cpp			\
-	nsParser.cpp				\
-	CParserContext.cpp			\
-	nsParserNode.cpp			\
-	nsScanner.cpp				\
-	nsToken.cpp				\
-	nsTokenHandler.cpp			\
-	nsValidDTD.cpp				\
-	nsWellFormedDTD.cpp			\
-	nsViewSourceHTML.cpp \
-	nsParserModule.cpp			\
+	nsExpatTokenizer.cpp\
+	nsElementTable.cpp  \
+	CNavDTD.cpp         \
+	COtherDTD.cpp       \
+	nsHTMLEntities.cpp  \
+	nsHTMLTags.cpp      \
+	nsHTMLTokens.cpp    \
+	nsParser.cpp        \
+	CParserContext.cpp  \
+	nsParserNode.cpp    \
+	nsScanner.cpp       \
+	nsToken.cpp         \
+	nsWellFormedDTD.cpp \
+	nsViewSourceHTML.cpp\
+	nsParserModule.cpp  \
+!if !defined(MOZ_DISABLE_DTD_DEBUG)
+	nsLoggingSink.cpp   \
+	nsHTMLNullSink.cpp  \
+!endif
 	$(NULL)
 
-CPP_OBJS=					\
-	.\$(OBJDIR)\nsDTDUtils.obj			\
+CPP_OBJS =                          \
+	.\$(OBJDIR)\nsDTDUtils.obj      \
 	.\$(OBJDIR)\nsHTMLTokenizer.obj \
-	.\$(OBJDIR)\nsXMLTokenizer.obj \
-	.\$(OBJDIR)\nsExpatTokenizer.obj \
-	.\$(OBJDIR)\nsElementTable.obj \
-	.\$(OBJDIR)\CNavDTD.obj			\
-	.\$(OBJDIR)\COtherDTD.obj		\
-	.\$(OBJDIR)\nsDTDDebug.obj		\
-	.\$(OBJDIR)\nsHTMLEntities.obj		\
-	.\$(OBJDIR)\nsHTMLNullSink.obj		\
-	.\$(OBJDIR)\nsHTMLTags.obj		\
-	.\$(OBJDIR)\nsHTMLTokens.obj		\
-	.\$(OBJDIR)\nsLoggingSink.obj		\
-	.\$(OBJDIR)\nsParser.obj		\
-	.\$(OBJDIR)\CParserContext.obj		\
-	.\$(OBJDIR)\nsParserNode.obj		\
-	.\$(OBJDIR)\nsScanner.obj		\
-	.\$(OBJDIR)\nsToken.obj			\
-	.\$(OBJDIR)\nsTokenHandler.obj		\
-	.\$(OBJDIR)\nsValidDTD.obj		\
-	.\$(OBJDIR)\nsWellFormedDTD.obj		\
-	.\$(OBJDIR)\nsViewSourceHTML.obj		\
-	.\$(OBJDIR)\nsParserModule.obj		\
+	.\$(OBJDIR)\nsExpatTokenizer.obj\
+	.\$(OBJDIR)\nsElementTable.obj  \
+	.\$(OBJDIR)\CNavDTD.obj         \
+	.\$(OBJDIR)\COtherDTD.obj       \
+	.\$(OBJDIR)\nsHTMLEntities.obj  \
+	.\$(OBJDIR)\nsHTMLTags.obj      \
+	.\$(OBJDIR)\nsHTMLTokens.obj    \
+	.\$(OBJDIR)\nsParser.obj        \
+	.\$(OBJDIR)\CParserContext.obj  \
+	.\$(OBJDIR)\nsParserNode.obj    \
+	.\$(OBJDIR)\nsScanner.obj       \
+	.\$(OBJDIR)\nsToken.obj         \
+	.\$(OBJDIR)\nsWellFormedDTD.obj \
+	.\$(OBJDIR)\nsViewSourceHTML.obj\
+	.\$(OBJDIR)\nsParserModule.obj  \
+!if !defined(MOZ_DISABLE_DTD_DEBUG)
+	.\$(OBJDIR)\nsLoggingSink.obj   \
+	.\$(OBJDIR)\nsHTMLNullSink.obj  \
+!endif
 	$(NULL)
-
-EXPORTS=					\
-	nshtmlpars.h				\
-	nsITokenizer.h \
-	nsIExpatTokenizer.h			\
-	nsIContentSink.h			\
-	nsIHTMLContentSink.h			\
-	nsILoggingSink.h			\
-	nsIHTMLFragmentContentSink.h		\
-	nsHTMLEntities.h			\
-	nsHTMLEntityList.h			\
-	nsHTMLTags.h				\
-	nsHTMLTagList.h				\
-	nsHTMLTokens.h				\
-	nsIParserNode.h				\
-	nsIParser.h				\
-	nsParser.h				\
-	nsToken.h				\
-	nsIDTDDebug.h				\
-	nsIParserFilter.h			\
-	CNavDTD.h				\
-	nsWellFormedDTD.h			\
-	nsValidDTD.h				\
-	COtherDTD.h				\
-	nsIDTD.h				\
-	nsParserCIID.h 				\
-	nsParserError.h 			\
-	nsIElementObserver.h			\
-	nsIParserService.h			\
-	$(NULL)
-
 
 LINCS=  -I$(PUBLIC)\xpcom  \
         -I$(PUBLIC)\raptor \

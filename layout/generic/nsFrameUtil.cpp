@@ -21,7 +21,6 @@
  */
 #include "nsIFrameUtil.h"
 #include "nsFrame.h"
-#include "nsHTMLEntities.h" 
 #include "nsString.h"
 #include "nsRect.h"
 #include <stdlib.h>

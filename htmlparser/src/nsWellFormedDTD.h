@@ -34,7 +34,6 @@
 #include "nsIDTD.h"
 #include "nsISupports.h"
 #include "nsHTMLTokens.h"
-#include "nshtmlpars.h"
 #include "nsIContentSink.h"
 
 #define NS_WELLFORMED_DTD_IID      \
@@ -156,15 +155,6 @@ class CWellFormedDTD : public nsIDTD {
      * @return
      */
     NS_IMETHOD WillInterruptParse(void);
-
-    /**
-     * Called by the parser to initiate dtd verification of the
-     * internal context stack.
-     * @update	gess 7/23/98
-     * @param 
-     * @return
-     */
-    virtual PRBool Verify(nsString& aURLRef,nsIParser* aParser);
 
     /**
      * Set this to TRUE if you want the DTD to verify its

@@ -24,8 +24,7 @@
 //#define RICKG_DEBUG           
      
           
-#include "nsDebug.h"   
-#include "nsIDTDDebug.h"      
+#include "nsDebug.h"      
 #include "COtherDTD.h" 
 #include "nsHTMLTokens.h"
 #include "nsCRT.h"     
@@ -33,7 +32,6 @@
 #include "nsIParser.h"
 #include "nsIHTMLContentSink.h"  
 #include "nsScanner.h"
-#include "nsIDTDDebug.h"
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
 #include "prio.h"
@@ -132,8 +130,7 @@ NS_IMPL_RELEASE(COtherDTD)
 COtherDTD::COtherDTD() : nsIDTD() {
   NS_INIT_REFCNT();
   mSink = 0; 
-  mParser=0;       
-  mDTDDebug=0;   
+  mParser=0;        
   mLineNumber=1;  
   mHasOpenBody=PR_FALSE;
   mHasOpenHead=0;
@@ -199,7 +196,6 @@ COtherDTD::~COtherDTD(){
   
   NS_IF_RELEASE(mTokenizer);
   NS_IF_RELEASE(mSink);
-  NS_IF_RELEASE(mDTDDebug);
 }
  
 /**
@@ -241,38 +237,6 @@ nsresult COtherDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
   }
 
   return result;
-}
-
-/**
- * Called by the parser to initiate dtd verification of the
- * internal context stack.
- * @update  gess 7/23/98
- * @param 
- * @return
- */
-PRBool COtherDTD::Verify(nsString& aURLRef,nsIParser* aParser){
-  PRBool result=PR_TRUE;
-
-  /*
-   * Disable some DTD debugging code in the parser that 
-   * breaks on some compilers because of some broken 
-   * streams code in prstrm.cpp.
-   */
-#if !defined(MOZ_DISABLE_DTD_DEBUG)
-  if(!mDTDDebug){
-    nsresult rval = NS_NewDTDDebug(&mDTDDebug);
-    if (NS_OK != rval) {
-      fputs("Cannot create parser debugger.\n", stdout);
-      result=-PR_FALSE;
-    }
-    else mDTDDebug->SetVerificationDirectory(kVerificationDir);
-  }
-#endif
- 
-  if(mDTDDebug) {
-    // mDTDDebug->Verify(this,aParser,mBodyContext->GetCount(),mBodyContext->mStack,aURLRef);
-  }
-  return result; 
 }
 
 /** 

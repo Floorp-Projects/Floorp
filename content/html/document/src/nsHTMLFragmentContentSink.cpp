@@ -29,7 +29,6 @@
 #include "nsIHTMLContentContainer.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLTokens.h"  
-#include "nsHTMLEntities.h" 
 #include "nsHTMLParts.h"
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"

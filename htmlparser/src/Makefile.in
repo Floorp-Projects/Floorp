@@ -19,20 +19,20 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= htmlparser
-LIBRARY_NAME	= htmlpars
+MODULE         = htmlparser
+LIBRARY_NAME   = htmlpars
 EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsParserModule
-SHORT_LIBNAME	= gkparser
-REQUIRES	= xpcom string necko util uconv expat layout dom pref nkcache
+IS_COMPONENT   = 1
+MODULE_NAME	   = nsParserModule
+SHORT_LIBNAME  = gkparser
+REQUIRES       = xpcom string necko util uconv expat layout dom pref nkcache
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libexpat_s.$(LIB_SUFFIX) \
@@ -43,71 +43,35 @@ ifdef MOZ_PERF_METRICS
 SHARED_LIBRARY_LIBS += $(DIST)/lib/libmozutil_s.$(LIB_SUFFIX)
 endif
 
-CPPSRCS		= \
-		nsDTDUtils.cpp \
+CPPSRCS = \
+		nsDTDUtils.cpp      \
 		nsHTMLTokenizer.cpp \
-		nsXMLTokenizer.cpp \
-		nsExpatTokenizer.cpp \
-		nsElementTable.cpp \
-		CNavDTD.cpp \
-		COtherDTD.cpp \
-		nsHTMLEntities.cpp \
-		nsHTMLNullSink.cpp \
-		nsHTMLTags.cpp \
-		nsHTMLTokens.cpp \
-		nsLoggingSink.cpp \
-		nsParser.cpp \
-		CParserContext.cpp \
-		nsParserModule.cpp \
-		nsParserNode.cpp \
-		nsScanner.cpp \
-		nsToken.cpp \
-		nsTokenHandler.cpp \
-		nsValidDTD.cpp \
+		nsExpatTokenizer.cpp\
+		nsElementTable.cpp  \
+		CNavDTD.cpp         \
+		COtherDTD.cpp       \
+		nsHTMLEntities.cpp  \
+		nsHTMLTags.cpp      \
+		nsHTMLTokens.cpp    \
+		nsParser.cpp        \
+		CParserContext.cpp  \
+		nsParserModule.cpp  \
+		nsParserNode.cpp    \
+		nsScanner.cpp       \
+		nsToken.cpp         \
+		nsTokenHandler.cpp  \
 		nsWellFormedDTD.cpp \
-		nsViewSourceHTML.cpp \
+		nsViewSourceHTML.cpp\
 		$(NULL)
 
-#
-# Disable some DTD debugging code in the parser that 
-# breaks on some compilers because of some broken 
-# streams code in prstrm.cpp.
-#
 ifndef MOZ_DISABLE_DTD_DEBUG
-CPPSRCS		+= nsDTDDebug.cpp 
+CPPSRCS += \
+		nsLoggingSink.cpp   \
+		nsHTMLNullSink.cpp  \
+		$(NULL)
 endif
 
-EXPORTS		= \
-		nshtmlpars.h \
-		nsIContentSink.h \
-		nsITokenizer.h \
-		nsIExpatTokenizer.h \
-		nsIHTMLContentSink.h \
-		nsIHTMLFragmentContentSink.h \
-		nsHTMLEntities.h \
-		nsHTMLEntityList.h \
-		nsHTMLTags.h \
-		nsHTMLTagList.h \
-		nsHTMLTokens.h \
-		nsILoggingSink.h \
-		nsIParserNode.h \
-		nsIParser.h \
-		nsParser.h \
-		nsIDTD.h \
-		nsIDTDDebug.h \
-		nsIParserFilter.h \
-		nsToken.h \
-		CNavDTD.h \
-		COtherDTD.h \
-		nsWellFormedDTD.h \
-		nsValidDTD.h \
-		nsParserCIID.h \
-		nsParserError.h \
-		nsIElementObserver.h \
-		nsIParserService.h \
-		$(NULL)
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+EXPORTS  := $(addprefix $(srcdir)/, $(EXPORTS))
 
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -119,5 +83,4 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_HTMLPARS -DXML_DTD
-
 

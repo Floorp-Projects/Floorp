@@ -40,7 +40,6 @@
 #include "nsIEntityConverter.h"
 #include "nsCRT.h"
 #include "nsIDocumentEncoder.h"   // for output flags
-#include "nshtmlpars.h"
 #include "nsHTMLTokens.h"
 
 #include "nsIOutputStream.h"

@@ -32,7 +32,6 @@
 
 #include "nsISupports.h"
 #include "prtypes.h"
-#include "nshtmlpars.h"
 #include "xmlparse.h"
 
 class CToken;

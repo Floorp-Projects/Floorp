@@ -32,8 +32,6 @@
  *
  **/
 
-
-#include "nshtmlpars.h"
 #include "nsISupports.h"
 #include "nsIStreamListener.h"
 #include "nsIDTD.h"
@@ -87,12 +85,12 @@ typedef enum {
    kCharsetFromWeakDocTypeDefault,
    kCharsetFromUserDefault ,
    kCharsetFromDocTypeDefault,
-   kCharsetFromCache,
    kCharsetFromParentFrame,
    kCharsetFromBookmarks,
    kCharsetFromAutoDetection,
    kCharsetFromMetaTag,
    kCharsetFromByteOrderMark,
+   kCharsetFromCache,
    kCharsetFromHTTPHeader,
    kCharsetFromUserForced,
    kCharsetFromOtherComponent,
