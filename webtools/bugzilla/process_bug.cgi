@@ -863,6 +863,7 @@ sub SnapShotDeps {
 
 
 my $timestamp;
+my $bug_changed;
 
 sub FindWrapPoint {
     my ($string, $startpos) = @_;
@@ -912,7 +913,8 @@ sub LogActivityEntry {
         my $fieldid = GetFieldID($col);
         SendSQL("INSERT INTO bugs_activity " .
                 "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
-                "($i,$whoid,$timestamp,$fieldid,$removestr,$addstr)");
+                "($i,$whoid," . SqlQuote($timestamp) . ",$fieldid,$removestr,$addstr)");
+        $bug_changed = 1;
     }
 }
 
@@ -934,6 +936,7 @@ sub LogDependencyActivity {
 #
 foreach my $id (@idlist) {
     my %dependencychanged;
+    $bug_changed = 0;
     my $write = "WRITE";        # Might want to make a param to control
                                 # whether we do LOW_PRIORITY ...
     SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
@@ -1116,17 +1119,14 @@ The changes made were:
                     " WHERE bug_id = $id");
         }
     }
-
     my $query = "$basequery\nwhere bug_id = $id";
     
 # print "<PRE>$query</PRE>\n";
 
     if ($::comma ne "") {
         SendSQL($query);
-        SendSQL("select delta_ts from bugs where bug_id = $id");
-    } else {
-        SendSQL("select now()");
     }
+    SendSQL("select now()");
     $timestamp = FetchOneColumn();
     
     if (defined $::FORM{'comment'}) {
@@ -1339,7 +1339,9 @@ The changes made were:
             LogActivityEntry($id,$col,$old,$new);
         }
     }
-    
+    if ($bug_changed) {
+        SendSQL("UPDATE bugs SET delta_ts = " . SqlQuote($timestamp) . " WHERE bug_id = $id");
+    }
     print "<TABLE BORDER=1><TD><H2>Changes to bug $id submitted</H2>\n";
     SendSQL("unlock tables");
 
