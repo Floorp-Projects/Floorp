@@ -61,16 +61,19 @@ function setOfflineUI(offline)
 
   //Checking for a preference "network.online", if it's locked, disabling 
   // network icon and menu item
-  var prefService = Components.classes["@mozilla.org/preferences-service;1"];
-  prefService = prefService.getService();
-  prefService = prefService.QueryInterface(Components.interfaces.nsIPrefService);
-  
-  var prefBranch = prefService.getBranch(null);
-  
-  var offlineLocked = prefBranch.prefIsLocked("network.online"); 
-  
-  if (offlineLocked ) {
-      broadcaster.setAttribute("disabled","true");
+  try {
+      var prefService = Components.classes["@mozilla.org/preferences-service;1"];
+      prefService = prefService.getService();
+      prefService = prefService.QueryInterface(Components.interfaces.nsIPrefService);
+      
+      var prefBranch = prefService.getBranch(null);
+      
+      var offlineLocked = prefBranch.prefIsLocked("network.online"); 
+      
+      if (offlineLocked ) {
+          broadcaster.setAttribute("disabled","true");
+      }
+  } catch(e) {
   }
 
   var bundle = srGetStrBundle("chrome://communicator/locale/utilityOverlay.properties");
