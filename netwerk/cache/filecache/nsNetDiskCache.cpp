@@ -522,14 +522,11 @@ nsNetDiskCache::NewCacheEntryIterator(nsISimpleEnumerator **_retval)
 
   *_retval = nsnull ;
 
-  nsISimpleEnumerator* enumerator = new nsDBEnumerator(mDB, this) ;
-  if(enumerator) {
-    NS_ADDREF(enumerator) ;
-    *_retval = enumerator ;
-    return NS_OK ;
-  }
-  else 
-    return NS_ERROR_OUT_OF_MEMORY ;
+  nsDBEnumerator* enumerator = new nsDBEnumerator(mDB, this) ;
+  if(enumerator)
+  	return  enumerator->QueryInterface( nsISimpleEnumerator::GetIID(), (void**)_retval );
+  
+  return NS_ERROR_OUT_OF_MEMORY ;
 }
 
 NS_IMETHODIMP
