@@ -178,7 +178,7 @@ nsIView* nsView::GetViewFor(nsIWidget* aWidget)
   NS_PRECONDITION(nsnull != aWidget, "null widget ptr");
 	
   // The widget's client data points back to the owning view
-  if (NS_SUCCEEDED(aWidget->GetClientData(clientData))) {
+  if (aWidget && NS_SUCCEEDED(aWidget->GetClientData(clientData))) {
     view = (nsIView*)clientData;
 
     if (nsnull != view) {
