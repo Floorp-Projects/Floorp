@@ -66,7 +66,7 @@ public:
                                nsIFrame*& aResult);
 };
 
-class BulletFrame : public nsFrame, nsIInlineReflow {
+class BulletFrame : public nsFrame, private nsIInlineReflow {
 public:
   BulletFrame(nsIContent* aContent, nsIFrame* aParentFrame);
   virtual ~BulletFrame();

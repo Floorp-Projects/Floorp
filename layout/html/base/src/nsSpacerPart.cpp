@@ -33,7 +33,7 @@
 #define TYPE_LINE  1            // line-break + vertical space
 #define TYPE_IMAGE 2            // acts like a sized image with nothing to see
 
-class SpacerFrame : public nsFrame, nsIInlineReflow {
+class SpacerFrame : public nsFrame, private nsIInlineReflow {
 public:
   SpacerFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 

@@ -1650,7 +1650,6 @@ nsCSSBlockFrame::ReflowLine(nsCSSBlockReflowState& aState,
                             nsInlineReflowStatus&  aReflowResult)
 {
   PRBool keepGoing = PR_FALSE;
-  nsInlineReflowStatus rs;
   nsCSSBlockFrame* nextInFlow;
   aState.mInlineLayoutPrepared = PR_FALSE;
 
@@ -1713,7 +1712,6 @@ nsCSSBlockFrame::ReflowLine(nsCSSBlockReflowState& aState,
     }
   }
   keepGoing = PR_TRUE;
-  rs = NS_INLINE_REFLOW_COMPLETE;
 
 done:;
   if (!aLine->IsBlock()) {

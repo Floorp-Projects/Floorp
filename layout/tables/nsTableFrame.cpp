@@ -673,7 +673,7 @@ void nsTableFrame::DumpCellMap () const
             {
               cell = cd->mOverlap->mCell;
               nsTableRowFrame* row2;
-              cell->GetGeometricParent((nsIFrame *&)row);
+              cell->GetGeometricParent((nsIFrame *&)row2);
               rr = row2->GetRowIndex ();
               cc = cell->GetColIndex ();
               printf("O%d,%c ", rr, cc);

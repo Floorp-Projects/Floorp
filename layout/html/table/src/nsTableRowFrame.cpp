@@ -975,12 +975,10 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
 
     nsMargin  margin(0,0,0,0);
     nscoord   topMargin = 0;
-    nscoord   bottomMargin = 0;
 
     if (aState.tableFrame->GetCellMarginData((nsTableCellFrame *)kidFrame, margin) == NS_OK)
     {
       topMargin = margin.top;
-      bottomMargin = margin.bottom;
     }
    
     maxTopMargin = PR_MAX(margin.top,maxTopMargin);

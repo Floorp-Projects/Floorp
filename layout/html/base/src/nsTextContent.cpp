@@ -117,7 +117,7 @@ public:
   nsVoidArray mFrames;
 };
 
-class TextFrame : public nsSplittableFrame, nsIInlineReflow {
+class TextFrame : public nsSplittableFrame, private nsIInlineReflow {
 public:
   TextFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
@@ -1078,9 +1078,6 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
 
   const PRUnichar* lastWordEnd = cpStart;
 
-  PRBool hasMultibyte     = PR_FALSE;
-  PRBool endsInWhitespace = PR_FALSE;
-
   int w = 0;
   while (cp < end) {
     width = fm->GetWidth(cpStart, PRUint32(cp - cpStart));
@@ -1157,7 +1154,7 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
 
     PRUnichar ch = *cp++;
 
-    PRBool isWhitespace;
+    //XXX PRBool isWhitespace;
     if (XP_IS_SPACE(ch)) {
       if (gCalcDebug) printf("Before 11111111111111111111111111111111\n");
       // Compress whitespace down to a single whitespace
@@ -1174,14 +1171,14 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
         continue;
       }
       width = spaceWidth;
-      isWhitespace = PR_TRUE;
+      //XXX isWhitespace = PR_TRUE;
       if (gCalcDebug) printf("After 11111111111111111111111111111111\n");
     } else {
       if (gCalcDebug) printf("Before 2222222222222222222222222222222222222\n");
       // The character is not a space character. Find the end of the
       // word and then measure it.
       if (ch >= 256) {
-        hasMultibyte = PR_TRUE;
+        //XXX hasMultibyte = PR_TRUE;
       }
       const PRUnichar* wordStart = cp - 1; 
       while (cp < end) {
@@ -1201,7 +1198,7 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
 
         ch = *cp;
         if (ch >= 256) {
-          hasMultibyte = PR_TRUE;
+          //XXX hasMultibyte = PR_TRUE;
         }
         if (!XP_IS_SPACE(ch)) {
           cp++;
@@ -1235,7 +1232,7 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
     atLeftMargin = PR_FALSE;
     lastWordEnd  = cp;
     width        = 0;
-    endsInWhitespace = isWhitespace;
+    //XXX endsInWhitespace = isWhitespace;
     if (gCalcDebug) printf("Bottom--------------------------------\n");
   } // while
 
