@@ -19,8 +19,12 @@
 #include "InsertTextTxn.h"
 #include "editor.h"
 #include "nsIDOMCharacterData.h"
+#include "nsIDOMSelection.h"
+#include "nsISelection.h"
+#include "nsIPresShell.h"
 
 static NS_DEFINE_IID(kInsertTextTxnIID, INSERT_TEXT_TXN_IID);
+static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
 
 
 InsertTextTxn::InsertTextTxn()
@@ -30,17 +34,33 @@ InsertTextTxn::InsertTextTxn()
 
 nsresult InsertTextTxn::Init(nsIDOMCharacterData *aElement,
                              PRUint32 aOffset,
-                             const nsString& aStringToInsert)
+                             const nsString& aStringToInsert,
+                             nsIPresShell* aPresShell)
 {
   mElement = aElement;
   mOffset = aOffset;
   mStringToInsert = aStringToInsert;
+  mPresShell = aPresShell;
   return NS_OK;
 }
 
 nsresult InsertTextTxn::Do(void)
 {
-  return (mElement->InsertData(mOffset, mStringToInsert));
+  nsresult res = mElement->InsertData(mOffset, mStringToInsert);
+  // advance caret: This requires the presentation shell to get the selection.
+  nsCOMPtr<nsISelection> frameSelection;
+  res = mPresShell->GetSelection(getter_AddRefs(frameSelection));
+  if (NS_SUCCEEDED(res))
+  {
+    nsCOMPtr<nsIDOMSelection> selection;
+    res = frameSelection->QueryInterface(kIDOMSelectionIID,
+                                          getter_AddRefs(selection));
+    if (NS_SUCCEEDED(res))
+      res = selection->Collapse(mElement, mOffset+mStringToInsert.Length());
+    // We know mOffset+Length should be there
+    // because we just added that many characters.
+  }
+  return res;
 }
 
 nsresult InsertTextTxn::Undo(void)
