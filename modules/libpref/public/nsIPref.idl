@@ -73,54 +73,26 @@ interface nsIPref : nsISupports {
 
   // Config file input
   void ReadUserJSFile(in nsIFileSpec filename);
+  void SavePrefFileAs(in nsIFileSpec filename);
 
   // Commenting out: #ifdef MOZ_OLD_LI_STUFF
   // void ReadLIJSFile(in nsIFileSpec filename);
-
-  void EvaluateConfigScript(in string js_buffer, in PRUint32 length,
-                            in boolean bGlobalContext,
-                            in boolean bCallbacks);
-
-  void EvaluateConfigScriptFile(in string js_buffer, in PRUint32 length,
-                                in nsIFileSpec filename,
-                                in boolean bGlobalContext,
-                                in boolean bCallbacks);
-  
-  void SavePrefFileAs(in nsIFileSpec filename);
-
-
-  // Commenting out: #ifdef MOZ_OLD_LI_STUFF
   // void SaveLIPrefFile(in nsIFileSpec filename);
   
-  /* JS Stuff - don't allow this to be scriptable */
-  [noscript] readonly attribute JSContext configContext;
-  [noscript] readonly attribute JSObject globalConfigObject;
-  [noscript] readonly attribute JSObject prefConfigObject;
-
   /* Getters */
   long GetPrefType(in string pref);
   long GetIntPref(in string pref);
   boolean GetBoolPref(in string pref);
   [noscript] void GetBinaryPref(in string pref, in voidStar buf, inout long buf_length);
-  void GetColorPref(in string pref, out octet red, out octet green, out octet blue);
 
   unsigned long GetColorPrefDWord(in string pref);
-  void GetRectPref(in string pref,
-                   out short left, out short top,
-                   out short right, out short bottom);
-
   /* set preferences */
   void SetCharPref(in string pref, in string value);
   void SetUnicharPref(in string pref, in wstring value);
   void SetIntPref(in string pref, in long value);
   void SetBoolPref(in string pref, in boolean value);
   [noscript] void SetBinaryPref(in string pref, in voidStar value, in unsigned long size);
-  void SetColorPref(in string pref,in octet red, in octet green,in octet blue);
-  void SetColorPrefDWord(in string pref, in unsigned long colorref);
 
-  void SetRectPref(in string pref,
-                   in short left, in short top,
-                   in short right, in short bottom);
   void ClearUserPref(in string pref_name);
   
   /* get defaults */
@@ -128,13 +100,6 @@ interface nsIPref : nsISupports {
   boolean GetDefaultBoolPref(in string pref);
   [noscript] void GetDefaultBinaryPref(in string pref, in voidStar value,
                             out long length);
-  void GetDefaultColorPref(in string pref,
-                           out octet red, out octet green, out octet blue);
-
-  unsigned long GetDefaultColorPrefDWord(in string pref);
-  void GetDefaultRectPref(in string pref,
-                          out short left, out short top,
-                          out short right, out short bottom);
 
   /* set defaults */
   void SetDefaultCharPref(in string pref, in string value);
@@ -142,11 +107,6 @@ interface nsIPref : nsISupports {
   void SetDefaultIntPref(in string pref, in long value);
   void SetDefaultBoolPref(in string pref, in boolean value);
   [noscript] void SetDefaultBinaryPref(in string pref, in voidStar value, in unsigned long size);
-  void SetDefaultColorPref(in string pref,in octet red, in octet green,in octet blue);
-
-  void SetDefaultRectPref(in string pref,
-                   in short left, in short top,
-                   in short right, in short bottom);
   
   /* copy versions of getters */
   string CopyCharPref(in string pref);
@@ -174,11 +134,12 @@ interface nsIPref : nsISupports {
                           in PrefChangedFunc callback,
                           in voidStar closure);
 
-  void CopyPrefsTree(in string srcRoot, in string destRoot);
+  
+  /* void CopyPrefsTree(in string srcRoot, in string destRoot); */
   void DeleteBranch(in string branchName);
   
-  string CreateChildList(in string parent_node);
-  string NextChild(in string child_list, out short index);
+  void CreateChildList(in string parent_node,out string childList);
+  [noscript] string NextChild(in string child_list, inout short index);
 
   /**
    * EnumerateChildren
