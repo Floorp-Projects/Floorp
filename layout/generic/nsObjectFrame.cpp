@@ -2864,8 +2864,8 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   }
 
   // add our PARAM and null seperator
-  mCachedAttrParamNames [mNumCachedAttrs + 1] = "PARAM";
-  mCachedAttrParamValues[mNumCachedAttrs + 1] = nsnull;
+  mCachedAttrParamNames [mNumCachedAttrs] = ToNewUTF8String(NS_LITERAL_STRING("PARAM"));
+  mCachedAttrParamValues[mNumCachedAttrs] = nsnull;
 
   // now fill in the PARAM name/value pairs from the cached DOM nodes
   c = 0;
