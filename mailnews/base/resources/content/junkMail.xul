@@ -24,9 +24,9 @@
 <vbox>
   <hbox align="center">
     <label value="&account.label;" accesskey="&account.accesskey;"/>
-    <menulist/>
+    <menulist id="server" />
     <spacer flex="1"/>
-    <button label="&viewLog.label;" accesskey="&viewLog.accesskey;" oncommmand="viewLog()"/>
+    <button label="&viewLog.label;" accesskey="&viewLog.accesskey;" oncommand="junkLog()"/>
   </hbox>
 
   <separator/>
@@ -36,34 +36,34 @@
   <separator/>
 
   <hbox>
-    <radiogroup flex="1" id="level" orient="horizontal">
+    <radiogroup flex="1" id="junk_level" orient="horizontal">
       <!-- using 0 - 100, in case we ever do a slider or add more levels.  
            this way, the exist pref value will migrate nice. -->
-      <radio flex="1" id="off" value="0" label="&off.label;"/>
-      <radio flex="1" id="lowest" value="20" label="&lowest.label;"/>
-      <radio flex="1" id="low" value="40" label="&low.label;"/>
-      <radio flex="1" id="medium" value="60" label="&medium.label;"/>
-      <radio flex="1" id="high" value="80" label="&high.label;"/>
-      <radio flex="1" id="highest" value="100" label="&highest.label;"/>
+      <radio flex="1" id="off" value="0" accesskey="&off.accesskey;" label="&off.label;"/>
+      <radio flex="1" id="lowest" value="20" accesskey="&lowest.accesskey;" label="&lowest.label;"/>
+      <radio flex="1" id="low" value="40" accesskey="&low.accesskey;" label="&low.label;"/>
+      <radio flex="1" id="medium" value="60" accesskey="&medium.accesskey;" label="&medium.label;"/>
+      <radio flex="1" id="high" value="80" accesskey="&high.accesskey;" label="&high.label;"/>
+      <radio flex="1" id="highest" value="100" accesskey="&highest.accesskey;" label="&highest.label;"/>
     </radiogroup>
   </hbox>
 
   <separator/>
 
   <hbox align="center">
-    <checkbox label="&move.label;"/>
-    <menulist/>
+    <checkbox id="move" accesskey="&move.accesskey;" label="&move.label;"/>
+    <menulist id="move_folder_uri"/>
   </hbox>
 
-  <hbox align="center">
-    <checkbox label="&purge1.label;"/>
-    <textbox/>
+  <hbox autostretch="never" align="center">
+    <checkbox id="purge" accesskey="&purge1.accesskey;" label="&purge1.label;"/>
+    <textbox id="purge_interval" />
     <label value="&purge2.label;"/>
   </hbox>
 
   <hbox align="center">
-    <checkbox label="&whitelist.label;"/>
-    <menulist/>
+    <checkbox id="whitelist" accesskey="&whitelist.accesskey;" label="&whitelist.label;"/>
+    <menulist id="whitelist_ab_uri" />
   </hbox>
 </vbox>
 
