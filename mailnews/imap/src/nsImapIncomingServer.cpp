@@ -1685,6 +1685,11 @@ nsresult nsImapIncomingServer::RequestOverrideInfo(nsIMsgWindow *aMsgWindow)
 
 			  if (!((const char *) password) || nsCRT::strlen((const char *) password) == 0)
 				  PromptForPassword(getter_Copies(password), aMsgWindow);
+
+        // if we still don't have a password then the user must have hit cancel so just
+        // fall out...
+        if (!((const char *) password) || nsCRT::strlen((const char *) password) == 0)
+          return NS_OK;
       }
 
   		rv = m_logonRedirector->Logon(userName, password, logonRedirectorRequester, nsMsgLogonRedirectionServiceIDs::Imap);
