@@ -49,6 +49,11 @@ nsBoxLayoutState::nsBoxLayoutState(const nsBoxLayoutState& aState)
   mMaxElementSize = aState.mMaxElementSize;
 }
 
+nsBoxLayoutState::nsBoxLayoutState(nsIPresShell* aShell):mReflowState(nsnull), mMaxElementSize(nsnull)
+{
+   aShell->GetPresContext(getter_AddRefs(mPresContext));
+}
+
 nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsHTMLReflowMetrics& aDesiredSize):mReflowState(&aReflowState),mPresContext(aPresContext),mType(Dirty)
 {
   mMaxElementSize = aDesiredSize.maxElementSize;
@@ -73,27 +78,6 @@ nsBoxLayoutState::HandleReflow(nsIBox* aRootBox, PRBool aCoelesce)
             nsIReflowCommand::ReflowType  type;
             mReflowState->reflowCommand->GetType(type);
 
-            // atempt to coelesce style changes and reflows
-            // see if the target is a box
-            /*
-             PRBool isAdaptor = PR_FALSE;
-             nsIBox* box = GetTargetBox(mReflowState->reflowCommand, isAdaptor);
-             // if it is mark it dirty. Generating a dirty reflow targeted at us unless on is already
-             // done.
-             if (box && box != aRootBox) {
-               if (type == nsIReflowCommand::StyleChanged) {
-                  // could be a visiblity change need to dirty
-                  // parent so it gets redrawn.
-                  nsIBox* parent;
-                  box->GetParentBox(&parent);
-                  parent->MarkDirty(*this);
-                  DirtyAllChildren(*this, box);
-               } else
-                  box->MarkDirty(*this);
-               return PR_TRUE;
-             }
-             */
-
              // ok if the target was not a box. Then unwind it down 
             if (UnWind(mReflowState->reflowCommand, aRootBox, aCoelesce)) {
                mType = Dirty;
@@ -117,6 +101,11 @@ nsBoxLayoutState::HandleReflow(nsIBox* aRootBox, PRBool aCoelesce)
          case eReflowReason_Initial:
             mType = Initial;
          break;
+
+         case eReflowReason_StyleChange:
+            printf("STYLE CHANGE REFLOW. Blowing away all box caches!!\n");
+            DirtyAllChildren(*this, aRootBox);
+            // fall through to dirty
 
          default:
             mType = Dirty;
@@ -174,11 +163,25 @@ nsBoxLayoutState::UnWind(nsIReflowCommand* aCommand, nsIBox* aBox, PRBool aCoele
          ibox->MarkDirty(*this);      
 
          if (type == nsIReflowCommand::StyleChanged) {
-            // could be a visiblity change need to dirty
-            // parent so it gets redrawn.
+            // could be a visiblity change. Like collapse so we need to dirty
+            // parent so it gets redrawn. But be carefull we
+            // don't want to just mark dirty that would notify the
+            // box and it would notify its layout manager. This would 
+            // be really bad for grid because it would blow away
+            // all is cached infomation for is colums and rows. Because the
+            // our parent is most likely a rows or columns and it will think
+            // its child is getting bigger or something.
             nsIBox* parent;
             ibox->GetParentBox(&parent);
-            parent->MarkDirty(*this);
+            if (parent) {
+              nsFrameState parentState;
+              nsIFrame* parentFrame;
+              parent->GetFrame(&parentFrame);
+              parentFrame->GetFrameState(&parentState);
+              parentState |= NS_FRAME_IS_DIRTY;
+              parentFrame->SetFrameState(parentState);
+            }
+
             DirtyAllChildren(*this, ibox);
          } 
 

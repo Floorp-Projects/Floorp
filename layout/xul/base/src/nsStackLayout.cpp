@@ -221,6 +221,8 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
    nsIBox* child = nsnull;
    PRBool grow;
 
+   PRInt32 passes = 0;
+
    do {
      aBox->GetChildBox(&child);
      grow = PR_FALSE;
@@ -248,6 +250,8 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
         child->GetNextBox(&child);
      }
+     NS_ASSERTION(passes < 10,"Infinite loop! Someone won't stop growing!!");
+     passes++;
    } while(grow);
 
    // if some HTML inside us got bigger we need to force ourselves to

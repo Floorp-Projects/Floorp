@@ -240,11 +240,12 @@ nsObeliskLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxS
      nsBoxSize* last = nsnull;
      temple->BuildBoxSizeList(aTempleBox, aState, first, last);
      aBoxSizes = first;
-  } else {
+  }/* else { */
     nsSprocketLayout::PopulateBoxSizes(aBox, aState, aBoxSizes, aComputedBoxSizes, aMinSize, aMaxSize, aFlexes);
-    return;
-  }
+   // return;
+ // }
 
+  /*
   aMinSize = 0;
   aMaxSize = NS_INTRINSICSIZE;
 
@@ -254,6 +255,12 @@ nsObeliskLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxS
 
   nsIBox* child = nsnull;
   aBox->GetChildBox(&child);
+
+  if (child && !aBoxSizes)
+    aBoxSizes = new (aState) nsBoxSize();
+
+  nsBoxSize* childSize = aBoxSizes;
+
   while(child)
   {
     nscoord flex = 0;
@@ -296,7 +303,14 @@ nsObeliskLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxS
 
 
     child->GetNextBox(&child);
+    if (child && !childSize->next)
+    {
+      childSize->next = new (aState) nsBoxSize();
+      childSize = childSize->next;
+    }
   }
+  */
+
 }
 
 void 
