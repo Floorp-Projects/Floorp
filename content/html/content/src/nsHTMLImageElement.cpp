@@ -499,6 +499,10 @@ nsHTMLImageElement::StringToAttribute(nsIAtom* aAttribute,
     aResult.SetEmptyValue();
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
+  else if (aAttribute == nsHTMLAtoms::src) {
+    aResult.SetStringValue(aValue);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   else if (ParseImageAttribute(aAttribute, aValue, aResult)) {
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
