@@ -178,13 +178,13 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID); // For window.find()
 static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
-static const char *sJSStackContractID = "@mozilla.org/js/xpc/ContextStack;1";
+static const char sJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 
-static const char *kDOMBundleURL = "chrome://global/locale/commonDialogs.properties";
-static const char *kDOMSecurityWarningsBundleURL = "chrome://communicator/locale/dom/dom.properties";
+static const char kDOMBundleURL[] = "chrome://global/locale/commonDialogs.properties";
+static const char kDOMSecurityWarningsBundleURL[] = "chrome://communicator/locale/dom/dom.properties";
 
-static const char * const kCryptoContractID = NS_CRYPTO_CONTRACTID;
-static const char * const kPkcs11ContractID = NS_PKCS11_CONTRACTID;
+static const char kCryptoContractID[] = NS_CRYPTO_CONTRACTID;
+static const char kPkcs11ContractID[] = NS_PKCS11_CONTRACTID;
 
 //*****************************************************************************
 //***    GlobalWindowImpl: Object Management
@@ -4432,8 +4432,8 @@ GlobalWindowImpl::CloseWindow(nsISupports *aWindow)
 // GlobalWindowImpl: Timeout Functions
 //*****************************************************************************
 
-static const char * const kSetIntervalStr = "setInterval";
-static const char * const kSetTimeoutStr = "setTimeout";
+static const char kSetIntervalStr[] = "setInterval";
+static const char kSetTimeoutStr[] = "setTimeout";
 
 nsresult
 GlobalWindowImpl::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
@@ -6053,52 +6053,52 @@ NavigatorImpl::RefreshMIMEArray()
 
 #ifdef DOM_CONTROLLER
 // nsDOMWindowController
-const char * const sCopyString = "cmd_copy";
-const char * const sCutString = "cmd_cut";
-const char * const sPasteString = "cmd_paste";
-const char * const sSelectAllString = "cmd_selectAll";
-const char * const sSelectNoneString = "cmd_selectNone";
-const char * const sCopyLinkString = "cmd_copyLink";
-const char * const sCopyImageLocationString = "cmd_copyImageLocation";
-const char * const sCopyImageContentsString = "cmd_copyImageContents";
+static const char sCopyString[] = "cmd_copy";
+static const char sCutString[] = "cmd_cut";
+static const char sPasteString[] = "cmd_paste";
+static const char sSelectAllString[] = "cmd_selectAll";
+static const char sSelectNoneString[] = "cmd_selectNone";
+static const char sCopyLinkString[] = "cmd_copyLink";
+static const char sCopyImageLocationString[] = "cmd_copyImageLocation";
+static const char sCopyImageContentsString[] = "cmd_copyImageContents";
 
-const char * const sScrollTopString = "cmd_scrollTop";
-const char * const sScrollBottomString = "cmd_scrollBottom";
-const char * const sScrollPageUpString = "cmd_scrollPageUp";
-const char * const sScrollPageDownString = "cmd_scrollPageDown";
-const char * const sMovePageUpString = "cmd_movePageUp";
-const char * const sMovePageDownString = "cmd_movePageDown";
-const char * const sScrollLineUpString = "cmd_scrollLineUp";
-const char * const sScrollLineDownString = "cmd_scrollLineDown";
-const char * const sScrollLeftString = "cmd_scrollLeft";
-const char * const sScrollRightString = "cmd_scrollRight";
-const char * const sBrowserBackString = "cmd_browserBack";
-const char * const sBrowserForwardString = "cmd_browserForward";
+static const char sScrollTopString[] = "cmd_scrollTop";
+static const char sScrollBottomString[] = "cmd_scrollBottom";
+static const char sScrollPageUpString[] = "cmd_scrollPageUp";
+static const char sScrollPageDownString[] = "cmd_scrollPageDown";
+static const char sMovePageUpString[] = "cmd_movePageUp";
+static const char sMovePageDownString[] = "cmd_movePageDown";
+static const char sScrollLineUpString[] = "cmd_scrollLineUp";
+static const char sScrollLineDownString[] = "cmd_scrollLineDown";
+static const char sScrollLeftString[] = "cmd_scrollLeft";
+static const char sScrollRightString[] = "cmd_scrollRight";
+static const char sBrowserBackString[] = "cmd_browserBack";
+static const char sBrowserForwardString[] = "cmd_browserForward";
 
 // These are so the browser can use editor navigation key bindings
 // helps with accessibility (boolean pref accessibility.browsewithcaret)
 
-const char * const sSelectCharPreviousString = "cmd_selectCharPrevious";
-const char * const sSelectCharNextString = "cmd_selectCharNext";
+static const char sSelectCharPreviousString[] = "cmd_selectCharPrevious";
+static const char sSelectCharNextString[] = "cmd_selectCharNext";
 
-const char * const sWordPreviousString = "cmd_wordPrevious";
-const char * const sWordNextString = "cmd_wordNext";
-const char * const sSelectWordPreviousString = "cmd_selectWordPrevious";
-const char * const sSelectWordNextString = "cmd_selectWordNext";
+static const char sWordPreviousString[] = "cmd_wordPrevious";
+static const char sWordNextString[] = "cmd_wordNext";
+static const char sSelectWordPreviousString[] = "cmd_selectWordPrevious";
+static const char sSelectWordNextString[] = "cmd_selectWordNext";
 
-const char * const sBeginLineString = "cmd_beginLine";
-const char * const sEndLineString = "cmd_endLine";
-const char * const sSelectBeginLineString = "cmd_selectBeginLine";
-const char * const sSelectEndLineString = "cmd_selectEndLine";
+static const char sBeginLineString[] = "cmd_beginLine";
+static const char sEndLineString[] = "cmd_endLine";
+static const char sSelectBeginLineString[] = "cmd_selectBeginLine";
+static const char sSelectEndLineString[] = "cmd_selectEndLine";
 
-const char * const sSelectLinePreviousString = "cmd_selectLinePrevious";
-const char * const sSelectLineNextString = "cmd_selectLineNext";
+static const char sSelectLinePreviousString[] = "cmd_selectLinePrevious";
+static const char sSelectLineNextString[] = "cmd_selectLineNext";
 
-const char * const sSelectPagePreviousString = "cmd_selectPagePrevious";
-const char * const sSelectPageNextString = "cmd_selectPageNext";
+static const char sSelectPagePreviousString[] = "cmd_selectPagePrevious";
+static const char sSelectPageNextString[] = "cmd_selectPageNext";
 
-const char * const sSelectMoveTopString = "cmd_selectMoveTop";
-const char * const sSelectMoveBottomString = "cmd_selectMoveBottom";
+static const char sSelectMoveTopString[] = "cmd_selectMoveTop";
+static const char sSelectMoveBottomString[] = "cmd_selectMoveBottom";
 
 NS_IMPL_ADDREF(nsDOMWindowController)
 NS_IMPL_RELEASE(nsDOMWindowController)
