@@ -269,12 +269,21 @@ function HandleDeleteOrMoveMsgCompleted(folder)
       // optimize away.
       if (gNextMessageViewIndexAfterDelete != -1) 
       {
-        // when deleting a message we don't update the commands when the selection goes 0
+        // when deleting a message we don't update the commands when the selection goes to 0
         // (we have a hack in nsMsgDBView which prevents that update) so there is no need to
-        // update commands when we select the next message after the delete the commands already
+        // update commands when we select the next message after the delete; the commands already
         // have the right update state...
         gDBView.suppressCommandUpdating = true;
         outlinerSelection.select(gNextMessageViewIndexAfterDelete);
+        
+        // if gNextMessageViewIndexAfterDelete has the same value 
+        // as the last index we had selected, the outliner won't generate a
+        // selectionChanged notification for the outliner view. So force a manual
+        // selection changed call. (don't worry it's cheap if we end up calling it twice).
+        if (outlinerView)
+          outlinerView.selectionChanged();
+
+
         EnsureRowInThreadOutlinerIsVisible(gNextMessageViewIndexAfterDelete); 
         gDBView.suppressCommandUpdating = false;
       }
