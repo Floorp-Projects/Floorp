@@ -31,38 +31,41 @@
 #include "nsCOMPtr.h"
 
 #include "nsWidgetsCID.h"
-static NS_DEFINE_IID(kMenuBarCID,          NS_MENUBAR_CID);
-static NS_DEFINE_IID(kMenuCID,             NS_MENU_CID);
-static NS_DEFINE_IID(kMenuItemCID,         NS_MENUITEM_CID);
+static NS_DEFINE_IID(kMenuBarCID, NS_MENUBAR_CID);
+static NS_DEFINE_IID(kMenuCID, NS_MENU_CID);
+static NS_DEFINE_IID(kMenuItemCID, NS_MENUITEM_CID);
 
 static NS_DEFINE_IID(kIMenuBarIID, NS_IMENUBAR_IID);
 static NS_DEFINE_IID(kIMenuIID, NS_IMENU_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{                                                                        
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                                        
-  if (aIID.Equals(kIMenuBarIID)) {                                         
-    *aInstancePtr = (void*) ((nsIMenuBar*) this);                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*) ((nsISupports*)(nsIMenuBar*) this);                     
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
+nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIMenuListenerIID)) {                                      
-    *aInstancePtr = (void*) ((nsIMenuListener*)this);                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                     
-  return NS_NOINTERFACE;                                                 
+
+  *aInstancePtr = NULL;
+
+  if (aIID.Equals(kIMenuBarIID)) {
+    *aInstancePtr = (void*) ((nsIMenuBar*) this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*) ((nsISupports*)(nsIMenuBar*) this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(kIMenuListenerIID)) {
+    *aInstancePtr = (void*) ((nsIMenuListener*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  return NS_NOINTERFACE;
 }
 
 NS_IMPL_ADDREF(nsMenuBar)
@@ -192,16 +195,16 @@ NS_METHOD nsMenuBar::RemoveAll()
       if(menu) {
         //void * gtkmenu= nsnull;
         //menu->GetNativeData(&gtkmenu);
-	//if(gtkmenu){
+        //if(gtkmenu){
         //  gtk_container_remove (GTK_CONTAINER (mMenuBar), GTK_WIDGET(gtkmenu) );
-	//}
-	NS_RELEASE(menu);
+        //}
+        NS_RELEASE(menu);
 	
-	g_print("menu release \n");
-	int num =((nsISupports*)mMenusVoidArray[i-1])->Release();
-	while(num) {
-	  g_print("menu release again!\n");
-	  num = ((nsISupports*)mMenusVoidArray[i-1])->Release();
+        g_print("menu release \n");
+        int num =((nsISupports*)mMenusVoidArray[i-1])->Release();
+        while(num) {
+          g_print("menu release again!\n");
+          num = ((nsISupports*)mMenusVoidArray[i-1])->Release();
         }
       }
     }
@@ -256,72 +259,75 @@ nsEventStatus nsMenuBar::MenuConstruct(
     void              * menubarNode,
     void              * aWebShell)
 {
-    mWebShell = (nsIWebShell*) aWebShell;
-    mDOMNode  = (nsIDOMNode*)menubarNode;
+  mWebShell = (nsIWebShell*) aWebShell;
+  mDOMNode  = (nsIDOMNode*)menubarNode;
+  
+  nsIMenuBar * pnsMenuBar = nsnull;
+  nsresult rv = nsComponentManager::CreateInstance(kMenuBarCID,
+                                                   nsnull,
+                                                   kIMenuBarIID,
+                                                   (void**)&pnsMenuBar);
+  if (NS_OK == rv) {
+    if (nsnull != pnsMenuBar) {
+      pnsMenuBar->Create(aParentWindow);
 
-    nsIMenuBar * pnsMenuBar = nsnull;
-    nsresult rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, kIMenuBarIID, (void**)&pnsMenuBar);
-    if (NS_OK == rv) {
-      if (nsnull != pnsMenuBar) {
-        pnsMenuBar->Create(aParentWindow);
-      
-        // set pnsMenuBar as a nsMenuListener on aParentWindow
-        nsCOMPtr<nsIMenuListener> menuListener;
-        pnsMenuBar->QueryInterface(kIMenuListenerIID, getter_AddRefs(menuListener));
-        aParentWindow->AddMenuListener(menuListener);
+      // set pnsMenuBar as a nsMenuListener on aParentWindow
+      nsCOMPtr<nsIMenuListener> menuListener;
+      pnsMenuBar->QueryInterface(kIMenuListenerIID, getter_AddRefs(menuListener));
+      aParentWindow->AddMenuListener(menuListener);
 
-        nsCOMPtr<nsIDOMNode> menuNode;
-        ((nsIDOMNode*)menubarNode)->GetFirstChild(getter_AddRefs(menuNode));
-        while (menuNode) {
-          nsCOMPtr<nsIDOMElement> menuElement(do_QueryInterface(menuNode));
-          if (menuElement) {
-            nsString menuNodeType;
-            nsString menuName;
-            menuElement->GetNodeName(menuNodeType);
-            if (menuNodeType.Equals("menu")) {
-              menuElement->GetAttribute(nsAutoString("name"), menuName);
-              // Don't create the menu yet, just add in the top level names
-              
-                // Create nsMenu
-                nsIMenu * pnsMenu = nsnull;
-                rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
-                if (NS_OK == rv) {
-                  // Call Create
-                  nsISupports * supports = nsnull;
-                  pnsMenuBar->QueryInterface(kISupportsIID, (void**) &supports);
-                  pnsMenu->Create(supports, menuName);
-                  NS_RELEASE(supports);
+      nsCOMPtr<nsIDOMNode> menuNode;
+      ((nsIDOMNode*)menubarNode)->GetFirstChild(getter_AddRefs(menuNode));
+      while (menuNode) {
+        nsCOMPtr<nsIDOMElement> menuElement(do_QueryInterface(menuNode));
+        if (menuElement) {
+          nsString menuNodeType;
+          nsString menuName;
+          menuElement->GetNodeName(menuNodeType);
+          if (menuNodeType.Equals("menu")) {
+            menuElement->GetAttribute(nsAutoString("name"), menuName);
+            // Don't create the menu yet, just add in the top level names
 
-                  pnsMenu->SetLabel(menuName); 
-                  pnsMenu->SetDOMNode(menuNode);
-                  pnsMenu->SetDOMElement(menuElement);
-                  pnsMenu->SetWebShell(mWebShell);
+            // Create nsMenu
+            nsIMenu * pnsMenu = nsnull;
+            rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
+            if (NS_OK == rv) {
+              // Call Create
+              nsISupports * supports = nsnull;
+              pnsMenuBar->QueryInterface(kISupportsIID, (void**) &supports);
+              pnsMenu->Create(supports, menuName);
+              NS_RELEASE(supports);
 
-                  // Make nsMenu a child of nsMenuBar
-		  // nsMenuBar takes ownership of the nsMenu
-                  pnsMenuBar->AddMenu(pnsMenu); 
-		  
-                  // Release the menu now that the menubar owns it
-                  NS_RELEASE(pnsMenu);
-                }
-             } 
+              pnsMenu->SetLabel(menuName); 
+              pnsMenu->SetDOMNode(menuNode);
+              pnsMenu->SetDOMElement(menuElement);
+              pnsMenu->SetWebShell(mWebShell);
 
-          }
-          nsCOMPtr<nsIDOMNode> oldmenuNode(menuNode);  
-          oldmenuNode->GetNextSibling(getter_AddRefs(menuNode));
-        } // end while (nsnull != menuNode)
-          
-        // Give the aParentWindow this nsMenuBar to hold onto.
-	// The parent window should take ownership at this point
-        aParentWindow->SetMenuBar(pnsMenuBar);
-      
-        // HACK: force a paint for now
-        pnsMenuBar->Paint();
-        
-	NS_RELEASE(pnsMenuBar);
+              // Make nsMenu a child of nsMenuBar
+              // nsMenuBar takes ownership of the nsMenu
+              pnsMenuBar->AddMenu(pnsMenu); 
+
+              // Release the menu now that the menubar owns it
+              NS_RELEASE(pnsMenu);
+            }
+          } 
+
+        }
+        nsCOMPtr<nsIDOMNode> oldmenuNode(menuNode);  
+        oldmenuNode->GetNextSibling(getter_AddRefs(menuNode));
+      } // end while (nsnull != menuNode)
+
+      // Give the aParentWindow this nsMenuBar to hold onto.
+      // The parent window should take ownership at this point
+      aParentWindow->SetMenuBar(pnsMenuBar);
+
+      // HACK: force a paint for now
+      pnsMenuBar->Paint();
+
+      NS_RELEASE(pnsMenuBar);
     } // end if ( nsnull != pnsMenuBar )
   }
-  
+
   return nsEventStatus_eIgnore;
   return nsEventStatus_eIgnore;
 }

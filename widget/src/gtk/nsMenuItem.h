@@ -72,21 +72,13 @@ public:
   nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
-  nsEventStatus MenuConstruct(
-    const nsMenuEvent & aMenuEvent,
-    nsIWidget         * aParentWindow, 
-    void              * menuNode,
-	void              * aWebShell);
+  nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent,
+                              nsIWidget         * aParentWindow, 
+                              void              * menuNode,
+                              void              * aWebShell);
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
  
 protected:
-  NS_IMETHOD Create(nsIPopUpMenu   *aParent, 
-                    const nsString &aLabel, 
-                    PRUint32        aCommand) ;
-  NS_IMETHOD Create(nsIMenu * aParent);
-  NS_IMETHOD Create(nsIPopUpMenu * aParent);
-  void Create(nsIWidget * aMBParent, GtkWidget *aParent,
-              const nsString &aLabel, PRBool aIsSeparator);
   nsIWidget    *GetMenuBarParent(nsISupports * aParentSupports);
   GtkWidget    *GetNativeParent();
 

@@ -127,7 +127,7 @@ NS_METHOD nsMenu::Create(nsISupports *aParent, const nsString &aLabel)
       if(menu)
       {
         mMenuParent = menu;
-	NS_RELEASE(menu);
+        NS_RELEASE(menu);
       }
     }
   }
@@ -137,10 +137,10 @@ NS_METHOD nsMenu::Create(nsISupports *aParent, const nsString &aLabel)
 
   gtk_signal_connect (GTK_OBJECT (mMenu), "map",
                       GTK_SIGNAL_FUNC(menu_map_handler),
-		      this);
+                      this);
   gtk_signal_connect (GTK_OBJECT (mMenu), "unmap",
                       GTK_SIGNAL_FUNC(menu_unmap_handler),
-		      this); 	    		      
+                      this);
   return NS_OK;
 }
 
@@ -201,6 +201,7 @@ NS_METHOD nsMenu::AddItem(nsISupports * aItem)
   return NS_OK;
 }
 
+// local method used by nsMenu::AddItem
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 {
@@ -224,6 +225,7 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
   return NS_OK;
 }
 
+// local method used by nsMenu::AddItem
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 {
@@ -293,6 +295,9 @@ NS_METHOD nsMenu::AddSeparator()
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::GetItemCount(PRUint32 &aCount)
 {
+  // this should be right.. does it need to be +1 ?
+  aCount = g_list_length(GTK_MENU_SHELL(mMenu)->children);
+  g_print("nsMenu::GetItemCount = %i\n", aCount);
   return NS_OK;
 }
 
@@ -309,16 +314,8 @@ NS_METHOD nsMenu::InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::InsertSeparator(const PRUint32 aPos)
-{
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
 NS_METHOD nsMenu::RemoveItem(const PRUint32 aPos)
 {
-
-
   //gtk_menu_shell_remove (GTK_MENU_SHELL (mMenu), item);
 
   //delete[] labelStr;
