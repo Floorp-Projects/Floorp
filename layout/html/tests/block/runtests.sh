@@ -48,7 +48,7 @@ run_tests() {
 
     if [ "$mode" = "baseline" ]; then
         rm -r -f baseline
-        nmkdir baseline
+        mkdir baseline
         echo
         echo $MOZ_TEST_VIEWER $print_flags -o baseline/ -f $tests_file
         $MOZ_TEST_VIEWER $print_flags -o baseline/ -f $tests_file
