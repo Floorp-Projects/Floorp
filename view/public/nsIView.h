@@ -208,7 +208,7 @@ public:
    * @param aClip out parameter for bounds
    * @result PR_TRUE of there actually is a clip for the view, else PR_FALSE
    */
-  virtual PRBool GetClip(nsRect *aClip) = 0;
+  virtual PRBool GetClip(nsRect &aClip) = 0;
 
   /**
    * Called to indicate that the visibility of a view has been

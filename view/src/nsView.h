@@ -68,7 +68,7 @@ public:
   virtual void GetBounds(nsRect &aBounds);
   virtual void SetClip(const nsRect &aClip);
   virtual void SetClip(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-  virtual PRBool GetClip(nsRect *aClip);
+  virtual PRBool GetClip(nsRect& aClip);
   virtual void SetVisibility(nsViewVisibility visibility);
   virtual nsViewVisibility GetVisibility();
   virtual void SetZIndex(PRInt32 zindex);
@@ -117,6 +117,8 @@ protected:
   nsViewVisibility  mVis;
   PRInt32           mNumKids;
   nsRect            mBounds;
+  nsRect            mClipRect;
+  nsRect            mContainerRect;
 };
 
 #endif
