@@ -35,6 +35,8 @@
 .set f20,20; .set f21,21; .set f22,22; .set f23,23; .set f24,24
 .set f25,25; .set f26,26; .set f27,27; .set f28,28; .set f29,29
 .set f30,30; .set f31,31
+.set BO_IF,12
+.set CR0_EQ,2
 
 
 
@@ -111,6 +113,10 @@
 		slwi	r5,r5,3			# methodIndex * 8
 		addi	r5,r5,8			# step over junk at start of vTable !
 		lwzx	r11,r5,r4		# get function pointer
+
+		addi	r5,r5,-4    	 	# We need to manually adjust the 'that' pointer, this is CFRONT based
+		lwzx	r5,r4,r5 		# offset = r4(vtable) + r5(methodIndex offset) - 4 
+		add	r3,r5,r3		# adjust 'that' r3 = r3 + r5
 		
 		lwz	r4,28(sp)
 		lwz	r5,32(sp)
