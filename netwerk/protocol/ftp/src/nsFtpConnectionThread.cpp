@@ -17,16 +17,50 @@
  */
 
 #include "nsFtpConnectionThread.h"
+#include "nsFtpStreamListenerEvent.h" // the various events we fire off to the
+                                      // owning thread.
+#include "nsITransport.h"
+#include "nsISocketTransportService.h"
+#include "nsIUrl.h"
+
+#include "nsIInputStream.h"
+
+#include "prcmon.h"
+#include "prprf.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
+
+NS_IMPL_ADDREF(nsFtpConnectionThread);
+NS_IMPL_RELEASE(nsFtpConnectionThread);
+
+NS_IMETHODIMP
+nsFtpConnectionThread::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
+    NS_ASSERTION(aInstancePtr, "no instance pointer");
+    if (aIID.Equals(nsIRunnable::GetIID()) ||
+        aIID.Equals(kISupportsIID) ) {
+        *aInstancePtr = NS_STATIC_CAST(nsFtpConnectionThread*, this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    /*if (aIID.Equals(nsIStreamListener::GetIID()) ||
+        aIID.Equals(nsIStreamObserver::GetIID())) {
+        *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }*/
+    return NS_NOINTERFACE; 
+}
+
 nsFtpConnectionThread::nsFtpConnectionThread(PLEventQueue* aEventQ) {
-	mEventQueue = aEventQ;
+	mEventQueue = aEventQ; // whoever creates us must provide an event queue
+                           // so we can post events back to them.
 }
 
 nsFtpConnectionThread::~nsFtpConnectionThread() {
-
+    NS_IF_RELEASE(mThread);
+    NS_IF_RELEASE(mListener);
 }
 
 
@@ -34,7 +68,7 @@ nsFtpConnectionThread::~nsFtpConnectionThread() {
 NS_IMETHODIMP
 nsFtpConnectionThread::Run() {
     nsresult rv;
-    nsISocketTransport* lCPipe = nsnull;
+    nsITransport* lCPipe = nsnull;
 
     mState = FTP_CONNECT;
 
@@ -48,6 +82,18 @@ nsFtpConnectionThread::Run() {
     if (NS_FAILED(rv)) return rv;
     rv = mUrl->GetPort(port);
 	if (NS_FAILED(rv)) return rv;
+
+    // tell the user that we've begun the transaction.
+    nsFtpOnStartBindingEvent* event =
+        new nsFtpOnStartBindingEvent(mListener, nsnull);
+    if (event == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = event->Fire(mEventQueue);
+    if (NS_FAILED(rv)) {
+        delete event;
+        return rv;
+    }
 
     rv = sts->CreateTransport(host, port, &lCPipe); // the command channel
     if (NS_FAILED(rv)) return rv;
@@ -74,7 +120,7 @@ nsFtpConnectionThread::Run() {
         switch(mState) {
             case FTP_READ_BUF:
                 if (mState == mNextState)
-                    NS_ASSERTION(0);
+                    NS_ASSERTION(0, "ftp read state mixup");
 
                 rv = Read();
                 mState = mNextState;
@@ -86,7 +132,7 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
                 // send off the command
-                rv = lOut->Write(buffer, bufLen, &bytes);
+                rv = mOutStream->Write(buffer, bufLen, &bytes);
                 if (NS_FAILED(rv)) return rv;
 
                 if (bytes < bufLen) {
@@ -120,7 +166,7 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
                 // PR_smprintf(buffer, "PASS %.256s\r\n", mPassword);
             
-                rv = lOut->Write(buffer, bufLen, &bytes);
+                rv = mOutStream->Write(buffer, bufLen, &bytes);
                 if (NS_FAILED(rv)) return rv;
 
                 if (bytes < bufLen) {
@@ -139,7 +185,7 @@ nsFtpConnectionThread::Run() {
                     // logged in
                     mState = FTP_S_SYST;
                 } else {
-                    NS_ASSERTION(0);
+                    NS_ASSERTION(0, "ftp unexpected condition");
                 }
 			    break;
 			    // END: FTP_R_PASS    
@@ -149,7 +195,7 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
 			    // send off the command
-                rv = mOut->(buffer, bufLen, &bytes);
+                rv = mOutStream->Write(buffer, bufLen, &bytes);
                 if (NS_FAILED(rv)) return rv;
 
                 if (bytes < bufLen) {
@@ -184,10 +230,10 @@ nsFtpConnectionThread::Run() {
 
 		    case FTP_S_ACCT:
 			    buffer = "ACCT noaccount\r\n";
-                bufLen = PL_strlen(buffer):
+                bufLen = PL_strlen(buffer);
 
 			    // send off the command
-                rv = mOut->(buffer, bufLen, &bytes);
+                rv = mOutStream->Write(buffer, bufLen, &bytes);
                 if (NS_FAILED(rv)) return rv;
 
                 if (bytes < bufLen) {
@@ -215,7 +261,7 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
                 // send off the command
-                rv = mOut->Write(buffer, bufLen, &bytes);
+                rv = mOutStream->Write(buffer, bufLen, &bytes);
 
                 if (bytes < bufLen) {
                     break;
@@ -245,7 +291,7 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
     		    // send off the command
-                rv = mOut->Write(buffer, bufLen, &bytes);
+                rv = mOutStream->Write(buffer, bufLen, &bytes);
 
                 if (bytes < bufLen) {
                     break;
@@ -351,24 +397,41 @@ nsFtpConnectionThread::Run() {
 	}
 
     // Close the command channel
-    lCPipe->CloseConnection();
+    //lCPipe->CloseConnection();
 }
+
+nsresult nsFtpConnectionThread::Init(nsIThread* aThread, nsIStreamListener* aListener) {
+    mThread = aThread;
+    NS_ADDREF(mThread);
+    mListener = aListener;
+    NS_ADDREF(mListener);
+
+    PRThread* prthread;
+    aThread->GetPRThread(&prthread);
+    PR_CEnterMonitor(this);
+    mEventQueue = PL_CreateEventQueue("ftp worker thread event loop", prthread);
+    // wake up event loop
+    PR_CNotify(this);
+    PR_CExitMonitor(this);
+
+    return NS_OK;
+}
+
 
 nsresult
 nsFtpConnectionThread::Read(void) {
     PRUint32 read, len;
     nsresult rv;
     char *buffer = nsnull;
-    rv = mIn->GetLength(&len);
-    if (NS_FAILURE(rv)) return rv;
+    rv = mInStream->GetLength(&len);
+    if (NS_FAILED(rv)) return rv;
     buffer = new char[len+1];
     if (!buffer) return 0; // XXX need a better return code
-    rv = mIn->(buffer, len, &read);
+    rv = mInStream->Read(buffer, len, &read);
     if (NS_FAILED(rv)) {
         delete [] buffer;
         return rv;
     }
-    *aOutLen = read;
 
 	// get the response code out.
     PR_sscanf(buffer, "%d", &mResponseCode);
