@@ -88,6 +88,23 @@ function Startup()
   window.opener.StartPublishing();
 }
 
+// this function is to be used when we cancel persist's saving
+// since not all messages will be returned to us if we cancel
+// this function changes status for all non-done/non-failure to failure
+function SetProgressStatusCancel()
+{
+  var listitems = document.getElementsByTagName("listitem");
+  if (!listitems)
+    return;
+
+  for (var i=0; i < listitems.length; i++)
+  {
+    var attr = listitems[i].getAttribute("progress");
+    if (attr != "done" && attr != "failed")
+      listitems[i].setAttribute("progress", "failed");
+  }
+}
+
 // Add filename to list of files to publish
 // or set status for file already in the list
 // Returns true if file was in the list
@@ -130,9 +147,6 @@ function SetProgressStatus(filename, status)
 
 function SetProgressFinished(filename, networkStatus)
 {
-  if (!filename)
-    return;
-
   if (filename)
   {
     var status = networkStatus ? "failed" : "done";
@@ -142,7 +156,6 @@ function SetProgressFinished(filename, networkStatus)
     if (SetProgressStatus(filename, status))
       gFinishedCount++;
   }
-    
 
   if (networkStatus != 0)
   {
@@ -153,8 +166,7 @@ function SetProgressFinished(filename, networkStatus)
     else
       gFinalMessage = GetString("PublishSomeFileFailed");
   }
-  
-  if (gFinishedCount == gTotalFileCount || !filename)
+  else if (gFinishedCount == gTotalFileCount || !filename)
   {
     gFinished = true;
     gDialog.Close.setAttribute("label", GetString("Close"));
