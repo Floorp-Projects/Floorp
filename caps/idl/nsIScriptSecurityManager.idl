@@ -58,10 +58,11 @@ interface nsIScriptSecurityManager : nsISupports
 	 */
     void CheckLoadURI(in nsIURI from, in nsIURI uri);
 
-	void CheckCanListenTo(in nsIPrincipal principal);
-
-    boolean HasSubjectPrincipal();
-
+	/**
+	 * Return the principal of the innermost frame of the currently 
+	 * executing script. Will return null if there is no script 
+	 * currently executing.
+	 */
     nsIPrincipal GetSubjectPrincipal();
 
     nsIPrincipal GetSystemPrincipal();

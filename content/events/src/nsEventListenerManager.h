@@ -99,9 +99,6 @@ public:
 
   virtual nsresult RemoveAllListeners(PRBool aScriptOnly);
 
-  virtual nsresult SetPrincipal(nsIPrincipal *aListenedToPrincipal);
-  virtual nsresult GetPrincipal(nsIPrincipal **aListenedToPrincipal);
-
   static nsresult GetIdentifiersForType(nsIAtom* aType, nsIID& aIID, PRInt32* aSubType);
 
 protected:

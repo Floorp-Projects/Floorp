@@ -223,15 +223,11 @@ nsJSProtocolHandler::NewChannel(const char* verb,
     if (NS_FAILED(rv))
         return NS_ERROR_FAILURE;
 
-    PRBool hasPrincipal;
-    if (NS_FAILED(securityManager->HasSubjectPrincipal(&hasPrincipal)))
-        return NS_ERROR_FAILURE;
     nsCOMPtr<nsIPrincipal> principal;
-    if (hasPrincipal) {
-        // script is currently executing; get principal from that script
-        if (NS_FAILED(securityManager->GetSubjectPrincipal(getter_AddRefs(principal))))
-            return NS_ERROR_FAILURE;
-    } else {
+    // script is currently executing; get principal from that script
+    if (NS_FAILED(securityManager->GetSubjectPrincipal(getter_AddRefs(principal))))
+        return NS_ERROR_FAILURE;
+    if (!principal) {
         // No scripts currently executing; get principal from referrer of link
         nsCOMPtr<nsIWebShell> webShell;
         webShell = do_QueryInterface(owner);
