@@ -807,8 +807,8 @@ input[type="button"][disabled]:active {
 input[type="button"]:-moz-buttonlabel {
   box-sizing: border-box;
   content:"   ";
-  font-family: sans-serif;
-  font-size: small;
+  font-family: inherit;
+  font-size: inherit;
   background-color:inherit;
 }
 
@@ -818,8 +818,8 @@ input[type="button"][disabled]:-moz-buttonlabel {
 
 input[type="button"][value]:-moz-buttonlabel {
   content:attr(value);
-  font-family: sans-serif;
-  font-size: small;
+  font-family: inherit;
+  font-size: inherit;
   background-color:inherit;
 }
 
@@ -1041,8 +1041,8 @@ select[disabled] input[type="button"] {
 
 /* combobox display area */
 select input#-moz-display {
-  font-family: sans-serif;
-  font-size: small;
+  font-family: inherit;
+  font-size: inherit;
   box-sizing: border-box;
   border: none;
   background-color: white;
