@@ -77,11 +77,15 @@
 #include "jspubtd.h"
 #endif
 
+#ifndef MODULAR_NETLIB
 #include "libimg.h"             /* Image Lib public API. */ 
 #include "il_strm.h"             /* Image Lib public API. */
+#endif
 
 #include "libi18n.h"
+#ifndef MODULAR_NETLIB
 #include "htmldlgs.h"
+#endif
 
 #include "np.h"
 #include "prefapi.h"
@@ -115,7 +119,9 @@
 #include "xplocale.h"
 
 /* This is only until all platforms have libfont/ checked in */
+#ifndef MODULAR_NETLIB
 #define WEBFONTS
+#endif
 
 #ifdef WEBFONTS
 #include "nf.h"

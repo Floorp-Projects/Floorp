@@ -32,7 +32,7 @@
 #include "prefapi.h"
 #include "mkpadpac.h"
 
-#if defined(XP_WIN)
+#if defined(XP_WIN) && !defined(MODULAR_NETLIB)
 #define ASYNC_DNS
 #endif
 

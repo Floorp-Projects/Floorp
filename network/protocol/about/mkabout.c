@@ -9,7 +9,9 @@
 #include "xplocale.h"
 #include "prefapi.h"
 #include "secnav.h"
+#ifndef MODULAR_NETLIB
 #include "libimg.h"
+#endif
 #include "il_strm.h"
 #include "cookies.h"
 #include "httpauth.h"

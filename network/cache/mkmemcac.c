@@ -39,7 +39,9 @@
 #include "mkstream.h"
 #include "extcache.h"
 #include "mkmemcac.h"
+#ifndef MODULAR_NETLIB
 #include "libimg.h"             /* Image Lib public API. */
+#endif
 #include "prclist.h"
 #include "prmem.h"
 #include "plstr.h"
@@ -375,8 +377,8 @@ PRIVATE int net_CacheHashComp(net_MemoryCacheObject * obj1,
 	 * so that "news:MSGID" and "news:MSGID?headers=all" share the same cache
 	 * file.
 	 */
-	if((XP_TO_UPPER(obj1->cache_obj.address[0]) == 'N'
-		|| XP_TO_UPPER(obj1->cache_obj.address[0]) == 'S')
+	if((NET_TO_UPPER(obj1->cache_obj.address[0]) == 'N'
+		|| NET_TO_UPPER(obj1->cache_obj.address[0]) == 'S')
 	    &&  NET_URL_Type(obj1->cache_obj.address) == NEWS_TYPE_URL)
 	  {
 		ques1 = PL_strchr(obj1->cache_obj.address, '?');
@@ -384,8 +386,8 @@ PRIVATE int net_CacheHashComp(net_MemoryCacheObject * obj1,
 			*ques1 = '\0';
 	  }
 
-    if((XP_TO_UPPER(obj2->cache_obj.address[0]) == 'N'
-        || XP_TO_UPPER(obj2->cache_obj.address[0]) == 'S')
+    if((NET_TO_UPPER(obj2->cache_obj.address[0]) == 'N'
+        || NET_TO_UPPER(obj2->cache_obj.address[0]) == 'S')
         &&  NET_URL_Type(obj2->cache_obj.address) == NEWS_TYPE_URL)
       {
         ques2 = PL_strchr(obj2->cache_obj.address, '?');
@@ -481,12 +483,12 @@ PRIVATE uint32 net_CacheHashFunc(net_MemoryCacheObject * obj1)
     x = (unsigned const char *) obj1->cache_obj.address;
 
 	/* figure out if it's a news type URL */
-    if((XP_TO_UPPER(obj1->cache_obj.address[0]) == 'N'
-        || XP_TO_UPPER(obj1->cache_obj.address[0]) == 'S')
+    if((NET_TO_UPPER(obj1->cache_obj.address[0]) == 'N'
+        || NET_TO_UPPER(obj1->cache_obj.address[0]) == 'S')
         &&  NET_URL_Type(obj1->cache_obj.address) == NEWS_TYPE_URL)
 		news_type_url = TRUE;
 	/* figure out if it's an IMAP type URL */
-	else if (XP_TO_UPPER(obj1->cache_obj.address[0]) == 'M' &&
+	else if (NET_TO_UPPER(obj1->cache_obj.address[0]) == 'M' &&
 		!PL_strncasecmp(obj1->cache_obj.address,"Mailbox://",10))
 		imap_type_url = TRUE;
 

@@ -51,8 +51,8 @@
 	<STYLE SRC=?>
 
 
-  $Revision: 1.2 $
-  $Date: 1998/05/19 00:53:36 $
+  $Revision: 1.3 $
+  $Date: 1998/05/22 23:38:14 $
 
  *********************************************************************/
 
@@ -382,7 +382,7 @@ void crawl_destroyPage(CRAWL_PageInfo page) {
 */
 static CRAWL_TagError 
 crawl_processURL(CRAWL_PageInfo page, char *url, CRAWL_LinkContext context) {
-	/* XP_TO_LOWER(url); */
+	/* NET_TO_LOWER(url); */
 	if (crawl_startsWith("mailto:", url)) return(CRAWL_TAG_NO_ERR);
 	else if (crawl_startsWith("mailbox:", url)) return(CRAWL_TAG_NO_ERR);
 	else if (crawl_startsWith("news:", url)) return(CRAWL_TAG_NO_ERR);
