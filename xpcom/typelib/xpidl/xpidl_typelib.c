@@ -877,10 +877,14 @@ typelib_op_dcl(TreeState *state)
     if (op->op_type_spec && !op_notxpcom)
         num_args++;             /* fake param for _retval */
 
-    if (op_noscript || op_notxpcom)
+    if (op_noscript)
         op_flags |= XPT_MD_HIDDEN;
+    if (op_notxpcom)
+        op_flags |= XPT_MD_NOTXPCOM;
+/*
     if (op->f_varargs)
         op_flags |= XPT_MD_VARARGS;
+*/
     /* XXXshaver constructor? */
 
 #ifdef DEBUG_shaver_method

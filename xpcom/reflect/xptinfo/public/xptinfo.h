@@ -167,7 +167,7 @@ public:
 
     PRBool IsGetter()      const {return (PRBool) (XPT_MD_IS_GETTER(flags) );}
     PRBool IsSetter()      const {return (PRBool) (XPT_MD_IS_SETTER(flags) );}
-    PRBool IsVarArgs()     const {return (PRBool) (XPT_MD_IS_VARARGS(flags));}
+    PRBool IsNotXPCOM()    const {return (PRBool) (XPT_MD_IS_NOTXPCOM(flags));}
     PRBool IsConstructor() const {return (PRBool) (XPT_MD_IS_CTOR(flags)   );}
     PRBool IsHidden()      const {return (PRBool) (XPT_MD_IS_HIDDEN(flags) );}
     const char* GetName()  const {return name;}

@@ -534,8 +534,8 @@ XPT_DumpMethodDescriptor(XPTHeader *header, XPTMethodDescriptor *md,
         else 
             fprintf(stdout, "FALSE\n");
         
-        fprintf(stdout, "%*sIs Varargs?       ", indent, " ");
-        if (XPT_MD_IS_VARARGS(md->flags))
+        fprintf(stdout, "%*sIs NotXPCOM?       ", indent, " ");
+        if (XPT_MD_IS_NOTXPCOM(md->flags))
             fprintf(stdout, "TRUE\n");
         else 
             fprintf(stdout, "FALSE\n");
@@ -579,7 +579,7 @@ XPT_DumpMethodDescriptor(XPTHeader *header, XPTMethodDescriptor *md,
                 XPT_MD_IS_GETTER(md->flags) ? 'G' : ' ',
                 XPT_MD_IS_SETTER(md->flags) ? 'S' : ' ',
                 XPT_MD_IS_HIDDEN(md->flags) ? 'H' : ' ',
-                XPT_MD_IS_VARARGS(md->flags) ? 'V' : ' ',
+                XPT_MD_IS_NOTXPCOM(md->flags) ? 'N' : ' ',
                 XPT_MD_IS_CTOR(md->flags) ? 'C' : ' ',
                 param_type, md->name);
         for (i=0; i<md->num_args; i++) {
