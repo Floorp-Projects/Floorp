@@ -95,8 +95,8 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsDOMCSSDeclaration.h"
+#include "nsICSSOMFactory.h"
 #include "prprf.h"
 #include "prmem.h"
 #include "nsIFormControlFrame.h"
@@ -130,359 +130,6 @@ static NS_DEFINE_CID(kPresStateCID,  NS_PRESSTATE_CID);
 
 #include "nsIPref.h" // Used by the temp pref, should be removed!
  
-//----------------------------------------------------------------------
-
-class nsDOMCSSAttributeDeclaration : public nsDOMCSSDeclaration
-{
-public:
-  nsDOMCSSAttributeDeclaration(nsIHTMLContent *aContent);
-  ~nsDOMCSSAttributeDeclaration();
-
-  NS_IMETHOD RemoveProperty(const nsAReadableString& aPropertyName,
-                            nsAWritableString& aReturn);
-
-  virtual void DropReference();
-  virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
-                                     PRBool aAllocate);
-  virtual nsresult SetCSSDeclaration(nsICSSDeclaration *aDecl);
-  virtual nsresult GetCSSParsingEnvironment(nsIContent* aContent,
-                                            nsIURI** aBaseURI,
-                                            nsICSSLoader** aCSSLoader,
-                                            nsICSSParser** aCSSParser);
-  virtual nsresult ParsePropertyValue(const nsAReadableString& aPropName,
-                                      const nsAReadableString& aPropValue);
-  virtual nsresult ParseDeclaration(const nsAReadableString& aDecl,
-                                    PRBool aParseOnlyOneDecl,
-                                    PRBool aClearOldDecl);
-  virtual nsresult GetParent(nsISupports **aParent);
-
-protected:
-  nsIHTMLContent *mContent;
-};
-
-MOZ_DECL_CTOR_COUNTER(nsDOMCSSAttributeDeclaration)
-
-nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(nsIHTMLContent *aContent)
-{
-  MOZ_COUNT_CTOR(nsDOMCSSAttributeDeclaration);
-
-  // This reference is not reference-counted. The content
-  // object tells us when its about to go away.
-  mContent = aContent;
-}
-
-nsDOMCSSAttributeDeclaration::~nsDOMCSSAttributeDeclaration()
-{
-  MOZ_COUNT_DTOR(nsDOMCSSAttributeDeclaration);
-}
-
-NS_IMETHODIMP
-nsDOMCSSAttributeDeclaration::RemoveProperty(const nsAReadableString& aPropertyName,
-                                             nsAWritableString& aReturn)
-{
-  nsCOMPtr<nsICSSDeclaration> decl;
-  nsresult rv = GetCSSDeclaration(getter_AddRefs(decl), PR_TRUE);
-
-  if (NS_SUCCEEDED(rv) && decl && mContent) {
-    nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(*getter_AddRefs(doc));
-
-    if (doc) {
-      doc->BeginUpdate();
-
-      doc->AttributeWillChange(mContent, kNameSpaceID_None,
-                               nsHTMLAtoms::style);
-    }
-
-    PRInt32 hint;
-    decl->GetStyleImpact(&hint);
-
-    nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
-    nsCSSValue val;
-
-    rv = decl->RemoveProperty(prop, val);
-
-    if (NS_SUCCEEDED(rv)) {
-      // We pass in eCSSProperty_UNKNOWN here so that we don't get the
-      // property name in the return string.
-      val.ToString(aReturn, eCSSProperty_UNKNOWN);
-    } else {
-      // If we tried to remove an invalid property or a property that wasn't
-      //  set we simply return success and an empty string
-      rv = NS_OK;
-    }
-
-    if (doc) {
-      doc->AttributeChanged(mContent, kNameSpaceID_None, nsHTMLAtoms::style,
-                            nsIDOMMutationEvent::MODIFICATION, 
-                            hint);
-      doc->EndUpdate();
-    }
-  }
-
-  return rv;
-}
-
-void
-nsDOMCSSAttributeDeclaration::DropReference()
-{
-  mContent = nsnull;
-}
-
-nsresult
-nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsICSSDeclaration **aDecl,
-                                                PRBool aAllocate)
-{
-  nsHTMLValue val;
-  nsIStyleRule* rule;
-  nsICSSStyleRule*  cssRule;
-  nsresult result = NS_OK;
-
-  *aDecl = nsnull;
-  if (nsnull != mContent) {
-    mContent->GetHTMLAttribute(nsHTMLAtoms::style, val);
-    if (eHTMLUnit_ISupports == val.GetUnit()) {
-      rule = (nsIStyleRule*) val.GetISupportsValue();
-      result = rule->QueryInterface(NS_GET_IID(nsICSSStyleRule), (void**)&cssRule);
-      if (NS_OK == result) {
-        *aDecl = cssRule->GetDeclaration();
-        NS_RELEASE(cssRule);
-      }
-      NS_RELEASE(rule);
-    }
-    else if (PR_TRUE == aAllocate) {
-      result = NS_NewCSSDeclaration(aDecl);
-      if (NS_OK == result) {
-        result = NS_NewCSSStyleRule(&cssRule, nsCSSSelector());
-        if (NS_OK == result) {
-          cssRule->SetDeclaration(*aDecl);
-          cssRule->SetWeight(0x7fffffff);
-          rule = (nsIStyleRule *)cssRule;
-          result = mContent->SetHTMLAttribute(nsHTMLAtoms::style,
-                                              nsHTMLValue(cssRule),
-                                              PR_FALSE);
-          NS_RELEASE(cssRule);
-        }
-        else {
-          NS_RELEASE(*aDecl);
-        }
-      }
-    }
-  }
-
-  return result;
-}
-
-nsresult
-nsDOMCSSAttributeDeclaration::SetCSSDeclaration(nsICSSDeclaration *aDecl)
-{
-  nsHTMLValue val;
-  nsIStyleRule* rule;
-  nsICSSStyleRule*  cssRule;
-  nsresult result = NS_OK;
-
-  if (nsnull != mContent) {
-    mContent->GetHTMLAttribute(nsHTMLAtoms::style, val);
-    if (eHTMLUnit_ISupports == val.GetUnit()) {
-      rule = (nsIStyleRule*) val.GetISupportsValue();
-      result = rule->QueryInterface(NS_GET_IID(nsICSSStyleRule), (void**)&cssRule);
-      if (NS_OK == result) {
-        cssRule->SetDeclaration(aDecl);
-        NS_RELEASE(cssRule);
-      }
-      NS_RELEASE(rule);
-    }
-  }
-
-  return result;
-}
-
-/*
- * This is a utility function.  It will only fail if it can't get a
- * parser.  This means it can return NS_OK without aURI or aCSSLoader
- * being initialized
- */
-nsresult
-nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIContent* aContent,
-                                                       nsIURI** aBaseURI,
-                                                       nsICSSLoader** aCSSLoader,
-                                                       nsICSSParser** aCSSParser)
-{
-  NS_ASSERTION(aContent, "Something is severely broken -- there should be an nsIContent here!");
-  // null out the out params since some of them may not get initialized below
-  *aBaseURI = nsnull;
-  *aCSSLoader = nsnull;
-  *aCSSParser = nsnull;
-  
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult result = aContent->GetNodeInfo(*getter_AddRefs(nodeInfo));
-  if (NS_FAILED(result)) {
-    return result;
-  }
-  nsCOMPtr<nsIDocument> doc;
-  result = nodeInfo->GetDocument(*getter_AddRefs(doc));
-  if (NS_FAILED(result)) {
-    return result;
-  }
-  
-  if (doc) {
-    doc->GetBaseURL(*aBaseURI);
-    nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
-    if (htmlContainer) {
-      htmlContainer->GetCSSLoader(*aCSSLoader);
-    }
-    NS_ASSERTION(*aCSSLoader, "Document with no CSS loader!");
-  }
-  if (*aCSSLoader) {
-    result = (*aCSSLoader)->GetParserFor(nsnull, aCSSParser);
-  } else {
-    result = NS_NewCSSParser(aCSSParser);
-  }
-  if (NS_FAILED(result)) {
-    return result;
-  }
-  
-  // look up our namespace.  If we're XHTML, we need to be case-sensitive
-  // Otherwise, we should not be
-  (*aCSSParser)->SetCaseSensitive(nodeInfo->NamespaceEquals(kNameSpaceID_XHTML));
-
-  return NS_OK;
-}
-
-nsresult
-nsDOMCSSAttributeDeclaration::ParsePropertyValue(const nsAReadableString& aPropName,
-                                                 const nsAReadableString& aPropValue)
-{
-  nsCOMPtr<nsICSSDeclaration> decl;
-  nsresult result = GetCSSDeclaration(getter_AddRefs(decl), PR_TRUE);
-
-  if (!decl) {
-    return result;
-  }
-  
-  nsCOMPtr<nsICSSLoader> cssLoader;
-  nsCOMPtr<nsICSSParser> cssParser;
-  nsCOMPtr<nsIURI> baseURI;
-  nsCOMPtr<nsIDocument> doc;
-
-  result = mContent->GetDocument(*getter_AddRefs(doc));
-  if (NS_FAILED(result)) {
-    return result;
-  }
-  
-  result = GetCSSParsingEnvironment(mContent,
-                                    getter_AddRefs(baseURI),
-                                    getter_AddRefs(cssLoader),
-                                    getter_AddRefs(cssParser));
-  if (NS_FAILED(result)) {
-    return result;
-  }
-
-  PRInt32 hint;
-  if (doc) {
-    doc->BeginUpdate();
-    doc->AttributeWillChange(mContent, kNameSpaceID_None, nsHTMLAtoms::style);
-  }
-  
-  result = cssParser->ParseProperty(aPropName, aPropValue, baseURI, decl, &hint);
-  if (doc) {
-    doc->AttributeChanged(mContent, kNameSpaceID_None,
-                                   nsHTMLAtoms::style,
-                                   nsIDOMMutationEvent::MODIFICATION, hint);
-    doc->EndUpdate();
-  }
-
-  if (cssLoader) {
-    cssLoader->RecycleParser(cssParser);
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAReadableString& aDecl,
-                                               PRBool aParseOnlyOneDecl,
-                                               PRBool aClearOldDecl)
-{
-  nsCOMPtr<nsICSSDeclaration> decl;
-  nsresult result = GetCSSDeclaration(getter_AddRefs(decl), PR_TRUE);
-
-  if (decl) {
-    nsCOMPtr<nsICSSLoader> cssLoader;
-    nsCOMPtr<nsICSSParser> cssParser;
-    nsCOMPtr<nsIURI> baseURI;
-    nsCOMPtr<nsIDocument> doc;
-
-    result = mContent->GetDocument(*getter_AddRefs(doc));
-    if (NS_FAILED(result)) {
-      return result;
-    }
-    result = GetCSSParsingEnvironment(mContent,
-                                      getter_AddRefs(baseURI),
-                                      getter_AddRefs(cssLoader),
-                                      getter_AddRefs(cssParser));
-
-    if (NS_SUCCEEDED(result)) {
-      PRInt32 hint;
-      if (doc) {
-        doc->BeginUpdate();
-
-        doc->AttributeWillChange(mContent, kNameSpaceID_None,
-                                 nsHTMLAtoms::style);
-      }
-      nsCOMPtr<nsICSSDeclaration> declClone;
-      decl->Clone(*getter_AddRefs(declClone));
-
-      if (aClearOldDecl) {
-        // This should be done with decl->Clear() once such a method exists.
-        nsAutoString propName;
-        PRUint32 count, i;
-
-        decl->Count(&count);
-
-        for (i = 0; i < count; i++) {
-          decl->GetNthProperty(0, propName);
-
-          nsCSSProperty prop = nsCSSProps::LookupProperty(propName);
-          nsCSSValue val;
-
-          decl->RemoveProperty(prop, val);
-        }
-      }
-  
-      result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl,
-                                                    aParseOnlyOneDecl, &hint);
-      if (result == NS_CSS_PARSER_DROP_DECLARATION) {
-        SetCSSDeclaration(declClone);
-        result = NS_OK;
-      }
-      if (doc) {
-        if (NS_SUCCEEDED(result) && result != NS_CSS_PARSER_DROP_DECLARATION) {
-          doc->AttributeChanged(mContent, kNameSpaceID_None,
-                                nsHTMLAtoms::style, nsIDOMMutationEvent::MODIFICATION, hint);
-        }
-        doc->EndUpdate();
-      }
-      if (cssLoader) {
-        cssLoader->RecycleParser(cssParser);
-      }
-    }
-  }
-
-  return result;
-}
-
-nsresult
-nsDOMCSSAttributeDeclaration::GetParent(nsISupports **aParent)
-{
-  NS_ENSURE_ARG_POINTER(aParent);
-
-  *aParent = mContent;
-  NS_IF_ADDREF(*aParent);
-
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------
 
 
@@ -612,6 +259,8 @@ nsGenericHTMLElementTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_OK;
 }
 
+static nsICSSOMFactory* gCSSOMFactory = nsnull;
+static NS_DEFINE_CID(kCSSOMFactoryCID, NS_CSSOMFACTORY_CID);
 
 nsGenericHTMLElement::nsGenericHTMLElement()
 {
@@ -679,6 +328,12 @@ nsGenericHTMLElement::DOMQueryInterface(nsIDOMHTMLElement *aElement,
   *aInstancePtr = inst;
 
   return NS_OK;
+}
+
+/* static */ void
+nsGenericHTMLElement::Shutdown()
+{
+  NS_IF_RELEASE(gCSSOMFactory);
 }
 
 nsresult
@@ -854,18 +509,21 @@ nsGenericHTMLElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
   nsDOMSlots *slots = GetDOMSlots();
 
   if (nsnull == slots->mStyle) {
-    slots->mStyle = new nsDOMCSSAttributeDeclaration(this);
-
-    if (nsnull == slots->mStyle) {
-      return NS_ERROR_OUT_OF_MEMORY;
+    if (!gCSSOMFactory) {
+      res = CallGetService(kCSSOMFactoryCID, &gCSSOMFactory);
+      if (NS_FAILED(res))
+        return res;
     }
-    NS_ADDREF(slots->mStyle);
+
+    res = gCSSOMFactory->CreateDOMCSSAttributeDeclaration(this,
+                                                          &slots->mStyle);
+    if (NS_FAILED(res))
+      return res;
   }
 
-  res = slots->mStyle->QueryInterface(NS_GET_IID(nsIDOMCSSStyleDeclaration),
-                                      (void **)aStyle);
-
-  return res;
+  // Why bother with QI?
+  NS_IF_ADDREF(*aStyle = slots->mStyle);
+  return NS_OK;
 }
 
 nsresult

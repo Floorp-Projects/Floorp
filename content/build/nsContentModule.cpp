@@ -47,6 +47,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
 #include "nsDOMCID.h"
+#include "nsCSSOMFactory.h"
 #include "nsEventStateManager.h"
 #include "nsGenericElement.h"
 #include "nsHTMLAtoms.h"
@@ -227,6 +228,7 @@ Shutdown(nsIModule* aSelf)
   NS_IF_RELEASE(nsContentDLF::gUAStyleSheet);
 
   nsContentUtils::Shutdown();
+  nsGenericHTMLElement::Shutdown();
 
   NS_NameSpaceManagerShutdown();
 }
@@ -325,6 +327,7 @@ MAKE_CTOR(CreateXULElementFactory,        nsIElementFactory,           NS_NewXUL
 MAKE_CTOR(CreateControllerCommandManager, nsIControllerCommandManager, NS_NewControllerCommandManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentHTTPStartup)
 MAKE_CTOR(CreateContentDLF,                nsIDocumentLoaderFactory,   NS_NewContentDocumentLoaderFactory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCSSOMFactory)
 
 static NS_IMETHODIMP
 CreateHTMLImgElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -562,6 +565,11 @@ static nsModuleComponentInfo gComponents[] = {
     NS_SUBTREEITERATOR_CID,
     nsnull,
     CreateSubtreeIterator },
+
+  { "CSS Object Model Factory",
+    NS_CSSOMFACTORY_CID,
+    nsnull,
+    nsCSSOMFactoryConstructor },
 
   // Needed to support "new Option;" and "new Image;" in JavaScript
   { "HTML img element",

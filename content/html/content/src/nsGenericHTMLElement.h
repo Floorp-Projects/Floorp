@@ -80,6 +80,8 @@ public:
   nsresult Init(nsINodeInfo *aNodeInfo);
 #endif
 
+  static void Shutdown();
+
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   nsresult DOMQueryInterface(nsIDOMHTMLElement *aElement, REFNSIID aIID,

@@ -52,6 +52,7 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
 		nsCSSDeclaration.cpp \
 		nsCSSLoader.cpp \
+		nsCSSOMFactory.cpp \
 		nsCSSParser.cpp \
 		nsCSSScanner.cpp \
 		nsCSSRule.cpp \
@@ -60,6 +61,7 @@ CPPSRCS		= \
 		nsCSSStyleSheet.cpp \
 		nsCSSValue.cpp \
 		nsComputedDOMStyle.cpp \
+		nsDOMCSSAttrDeclaration.cpp \
 		nsDOMCSSDeclaration.cpp \
 		nsHTMLAttributes.cpp \
 		nsHTMLStyleSheet.cpp \
@@ -79,6 +81,7 @@ EXPORTS		= \
 		nsICSSMediaRule.h \
 		nsICSSNameSpaceRule.h \
 		nsICSSDeclaration.h \
+		nsICSSOMFactory.h \
 		nsIHTMLCSSStyleSheet.h \
 		nsIHTMLAttributes.h \
 		$(NULL)
