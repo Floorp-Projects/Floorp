@@ -363,6 +363,30 @@
 //A72
 //A73
 //A74
+		A764728B0416CFA000A967F8 = {
+			isa = PBXFileReference;
+			name = "broken-image.gif";
+			path = "../../../dist/Embed/res/broken-image.gif";
+			refType = 2;
+		};
+		A764728C0416CFA000A967F8 = {
+			isa = PBXFileReference;
+			name = "loading-image.gif";
+			path = "../../../dist/Embed/res/loading-image.gif";
+			refType = 2;
+		};
+		A764728D0416CFB000A967F8 = {
+			fileRef = A764728B0416CFA000A967F8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		A764728E0416CFB000A967F8 = {
+			fileRef = A764728C0416CFA000A967F8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		A76C8E9B0403980900A967DF = {
 			isa = PBXFileReference;
 			name = libi18n.dylib;
@@ -1265,6 +1289,8 @@
 				F6BD64BB01B316DA01A962F7,
 				F6BD64BC01B316DA01A962F7,
 				F6BD64C701B3172601A962F7,
+				A764728B0416CFA000A967F8,
+				A764728C0416CFA000A967F8,
 				F6BD64C801B3172601A962F7,
 				F6BD64D701B3172601A962F7,
 				F6BD64DD01B3172601A962F7,
@@ -1780,6 +1806,8 @@
 				F6BD650701B3184301A962F7,
 				F6BD650801B3184301A962F7,
 				F6BD650901B3184301A962F7,
+				A764728D0416CFB000A967F8,
+				A764728E0416CFB000A967F8,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
