@@ -213,15 +213,9 @@ static nsresult CtlStyleWatch(PRUint32 aCtlValue, nsIStyleSet *aStyleSet);
 
 // Class ID's
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
-static NS_DEFINE_CID(kCRangeCID, NS_RANGE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-
-// Drag & Drop, Clipboard Support
-static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
-static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
-static NS_DEFINE_CID(kHTMLConverterCID,        NS_HTMLFORMATCONVERTER_CID);
 
 #undef NOISY
 
