@@ -70,9 +70,15 @@ public:
 
   /**
    * Set the root of the view tree. Does not destroy the current root view.
+   * One of following must be true:
+   * a) the aWidget parameter is an nsIWidget instance to render into 
+   *    that is not owned by any view or
+   * b) aView has a nsIWidget instance or
+   * c) aView has a parent view managed by a different view manager 
    * @param aView view to set as root
+   * @param aWidget widget to render into. (Can not be owned by a view)
    */
-  NS_IMETHOD  SetRootView(nsIView *aView) = 0;
+  NS_IMETHOD  SetRootView(nsIView *aView, nsIWidget* aWidget = nsnull) = 0;
 
   /**
    * Get the current framerate i.e. the rate at which timed
@@ -427,6 +433,34 @@ public:
    * @result error status
    */
   NS_IMETHOD RemoveCompositeListener(nsICompositeListener *aListener) = 0;
+
+  /**
+   * Retrieve the widget that a view renders into.
+   * @param aView the view to get the widget for 
+   * @param aWidget the widget that aView renders into.
+   * @result error status
+   */
+
+  NS_IMETHOD GetWidgetForView(nsIView *aView, nsIWidget **aWidget) = 0;
+
+  /**
+   * Retrieve the widget that a view manager renders into
+   * @param aWidget the widget that aView renders into.
+   * @result error status
+   */
+
+  NS_IMETHOD GetWidget(nsIWidget **aWidget) = 0;
+
+  /**
+   * Force update of view manager widget
+   * Callers should use UpdateView(view, NS_VMREFRESH_IMMEDIATE) in most cases instead
+   * @param aWidget the widget that aView renders into.
+   * @result error status
+   */
+
+  NS_IMETHOD ForceUpdate() = 0;
+
+
 };
 
 //when the refresh happens, should it be double buffered?

@@ -958,14 +958,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
              	  if (NS_OK == aView->GetViewManager(vm) && nsnull != vm) {
              	    // I'd use Composite here, but it doesn't always work.
                   // vm->Composite();
-                  nsIView* rootView = nsnull;
-                  if (NS_OK == vm->GetRootView(rootView) && nsnull != rootView) {
-              	    nsIWidget* rootWidget = nsnull;
-              		  if (NS_OK == rootView->GetWidget(rootWidget) && nsnull != rootWidget) {
-                      rootWidget->Update();
-                      NS_RELEASE(rootWidget);
-                    }
-              	  }
+                  vm->ForceUpdate();
                   NS_RELEASE(vm);
                 }
               }
@@ -2461,15 +2454,7 @@ void nsEventStateManager::ForceViewUpdate(nsIView* aView)
   if (NS_OK == aView->GetViewManager(vm) && nsnull != vm) {
     // I'd use Composite here, but it doesn't always work.
     // vm->Composite();
-    nsIView* rootView = nsnull;
-    if (NS_OK == vm->GetRootView(rootView) && nsnull != rootView) {
-      nsIWidget* rootWidget = nsnull;
-      if (NS_OK == rootView->GetWidget(rootWidget) &&
-          nsnull != rootWidget) {
-        rootWidget->Update();
-        NS_RELEASE(rootWidget);
-      }
-    }
+    vm->ForceUpdate();
     NS_RELEASE(vm);
   }
 }
