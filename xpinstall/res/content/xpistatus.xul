@@ -34,29 +34,29 @@
         onload="onLoad()"
         onclose="return false"
         title="&progressTitle.label;"
-        align = "vertical"
+        orient="vertical"
         class = "dialog"
 > 
 
-    <script src="chrome://communicator/content/xpinstall/xpistatus.js"></script>
+    <script src="chrome://communicator/content/xpinstall/xpistatus.js"/>
     <keyset id="keyset"/>
 
-    <box align="vertical" id="mainBox">
-        <box align="horizontal" id="interiorTitleBox">
+    <box orient="vertical" id="mainBox">
+        <box id="interiorTitleBox" orient="horizontal" autostretch="never">
             <text class="headline" id="interiorTitle" value="&progress.label;"/>
             <spring flex="100%"/>
             <image src="chrome://global/skin/animthrob_single.gif" />
         </box>
 
-        <spring id ="verticalSmallSpacer"/>
-        <separator align="center" class="groove" flex="100%"/>            
-        <spring id="verticalSmallSpacer"/>
+        <spring class="vertical-small-spacer"/>
+        <separator class="groove" flex="100%"/>            
+        <spring class="vertical-small-spacer"/>
 
         <text class="label" id="componentList" value="&downloadBeforeUpdate.text;"/>
-        <spring id="verticalSmallSpacer"/>
-        <spring id="verticalSmallSpacer"/>            
+        <spring class="vertical-small-spacer"/>
+        <spring class="vertical-small-spacer"/>            
 
-        <box align="vertical" id="treebox">  
+        <box orient="vertical" id="treebox">  
                 <tree id="modulesTree" class="inset">
                     <treecolgroup>
                       <treecol flex="1"/>
@@ -75,20 +75,15 @@
                 </tree>
         </box>
     
-        <spring id="verticalSmallSpacer"/>
+        <spring class="vertical-small-spacer"/>
 
-        <box align="vertical" id="statusMessages">
+        <box id="statusMessages" orient="vertical">
             <textfield id="dialog.uiPackageName" readonly="" />
             <textfield id="dialog.currentAction" readonly="" />
         </box>
 
-        <box align="horizontal">
-            <box align="vertical">
-                <spring style="height:6px"/>
-                <progressmeter id="dialog.progress" mode="normal" value="0" style="width:200px;height:10px">
-                </progressmeter>
-            </box>
-
+        <box id="progressBox" orient="horizontal" autostretch="never">
+            <progressmeter id="dialog.progress" mode="normal" value="0"/>
             <button class="dialog push" id="cancel" onclick="cancel()" value="&dialogCancel.label;"/>
         </box>
 

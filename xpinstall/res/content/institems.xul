@@ -33,31 +33,30 @@ Contributor(s):
         onload="onLoad()"
         title="&dialog.title;"
         class = "dialog"
-        orient = "vertical"
-        style = "max-width: 40em;" 
+        orient="vertical"
 > 
 
-    <script src="chrome://communicator/content/xpinstall/institems.js"></script>
+    <script src="chrome://communicator/content/xpinstall/institems.js"/>
     <keyset id="keyset"/>
     
-    <box align="vertical" id="mainBox">
-        <box align="horizontal" id="interiorTitleBox">
+    <box orient="vertical" id="mainBox">
+        <box id="interiorTitleBox" orient="horizontal" autostretch="never">
             <text class="headline" id="interiorTitle" value="&items.label;"/>
             <spring flex="100%"/>
             <image src="chrome://global/skin/animthrob_single.gif" />
         </box>      
 
-        <spring id ="verticalSmallSpacer"/>
-        <separator align="center" class="groove" flex="100%"/>            
-        <spring id="verticalSmallSpacer"/>
+        <spring class="vertical-small-spacer"/>
+        <separator class="groove" flex="100%"/>            
+        <spring class="vertical-small-spacer"/>
 
-        <html>&warningText.label;</html>
-        <html>&warningText2.label;</html>
+        <html class="warning-text">&warningText.label;</html>
+        <html class="warning-text">&warningText2.label;</html>
         <separator/>
         <text class="label" id="componentList" value="&componentList.label;"/>
-        <spring id="verticalSmallSpacer"/>
-        <spring id="verticalSmallSpacer"/>            
-        <box align="vertical" id="treebox">
+        <spring class="vertical-small-spacer"/>
+        <spring class="vertical-small-spacer"/>            
+        <box orient="vertical" id="treebox">
                 <tree id="modulesTree" class="inset">
                     <treecolgroup>
                       <treecol flex="1"/>
@@ -77,7 +76,7 @@ Contributor(s):
                 </tree>
         </box>
 
-        <separator align="center" class="groove" flex="100%"/>
+        <separator class="groove" flex="100%"/>
         <box class="selection" id="okCancelButtonsRight"/>
     </box>
 
