@@ -733,7 +733,7 @@ void
 nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
 {
   NS_PRECONDITION(aURI, "Null URI passed to ResetToURI");
-  mDocumentTitle.Truncate();
+  mDocumentTitle.SetIsVoid(PR_TRUE);
 
   mPrincipal = nsnull;
   mSecurityInfo = nsnull;
@@ -2820,6 +2820,9 @@ NS_IMETHODIMP
 nsDocument::GetTitle(nsAString& aTitle)
 {
   aTitle.Assign(mDocumentTitle);
+  // Make sure not to return null from this method even if
+  // mDocumentTitle is void.
+  aTitle.SetIsVoid(PR_FALSE);
 
   return NS_OK;
 }
