@@ -118,7 +118,8 @@ public:
 
   NS_IMETHOD Repaint(PRBool aForce) = 0;
 
-  NS_IMETHOD SetContentViewer(nsIContentViewer* aViewer) = 0;
+  // SetContextView moved to bottom to keep branch/tip interfaces
+  // compatible
   NS_IMETHOD GetContentViewer(nsIContentViewer*& aResult) = 0;
 
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer) = 0;
@@ -140,12 +141,6 @@ public:
   NS_IMETHOD SetName(const PRUnichar* aName) = 0;
   NS_IMETHOD FindChildWithName(const PRUnichar* aName,
                                nsIWebShell*& aResult) = 0;
-
-  // XXX these are here until there a better way to pass along info to a sub doc
-  NS_IMETHOD GetMarginWidth (PRInt32& aWidth)  = 0;
-  NS_IMETHOD SetMarginWidth (PRInt32  aWidth)  = 0;
-  NS_IMETHOD GetMarginHeight(PRInt32& aWidth)  = 0;
-  NS_IMETHOD SetMarginHeight(PRInt32  aHeight) = 0;
 
   // Document load api's
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult) = 0;
@@ -171,6 +166,14 @@ public:
   // SetToolBar
   // SetMenuBar
   // SetStatusBar
+
+  NS_IMETHOD SetContentViewer(nsIContentViewer* aViewer) = 0;
+  // XXX these are here until there a better way to pass along info to a sub doc
+  NS_IMETHOD GetMarginWidth (PRInt32& aWidth)  = 0;
+  NS_IMETHOD SetMarginWidth (PRInt32  aWidth)  = 0;
+  NS_IMETHOD GetMarginHeight(PRInt32& aWidth)  = 0;
+  NS_IMETHOD SetMarginHeight(PRInt32  aHeight) = 0;
+
 };
 
 extern "C" NS_WEB nsresult
