@@ -399,9 +399,6 @@ sub MakeResourceAliases()
 	_InstallResources(":mozilla:extensions:psm-glue:res:locale:en-US:MANIFEST",			"$global_chrome_dir:locale:en-US:");
 	_InstallResources(":mozilla:extensions:psm-glue:res:skin:MANIFEST",					"$navigator_chrome_dir:skin:default");
 
-	 my($netwerk_chrome_dir) = "$chrome_dir" . "Netwerk";
-	_InstallResources(":mozilla:netwerk:protocol:http:res:MANIFEST",					"$netwerk_chrome_dir:content:default:https");
-
 	_InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",				"$global_chrome_dir:content:default");
 	_InstallResources(":mozilla:xpfe:global:resources:content:mac:MANIFEST",			"$global_chrome_dir:content:default");
 	_InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST",					"$global_chrome_dir:skin:default");
@@ -1164,7 +1161,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:uriloader:macbuild:uriLoaderIDL.mcp",					"uriloader");
 
 	# psm glue
-#	BuildIDLProject(":mozilla:extensions:psm-glue:macbuild:psmglueIDL.mcp",			"psmglue");	
+	BuildIDLProject(":mozilla:extensions:psm-glue:macbuild:psmglueIDL.mcp",			"psmglue");	
 	
 	BuildIDLProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",				"libpref");
 	BuildIDLProject(":mozilla:modules:libutil:macbuild:libutilIDL.mcp",				"libutil");
@@ -1465,10 +1462,10 @@ sub BuildNeckoProjects()
 	BuildOneProject(":mozilla:netwerk:streamconv:macbuild:multiMixedConv.mcp",	"multiMixedConv$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
 	# security stuff
-#	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp",			"PSMClient$D.o", "", 0, 0, 0);
-#	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMProtocol.mcp",		"PSMProtocol$D.o", "", 0, 0, 0);	
+	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp",			"PSMClient$D.o", "", 0, 0, 0);
+	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMProtocol.mcp",		"PSMProtocol$D.o", "", 0, 0, 0);	
 
-#	BuildOneProject(":mozilla:extensions:psm-glue:macbuild:PSMGlue.mcp",		"PSMGlue$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);	
+	BuildOneProject(":mozilla:extensions:psm-glue:macbuild:PSMGlue.mcp",		"PSMGlue$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);	
 	
 	print("--- Necko projects complete ----\n");
 } # necko
