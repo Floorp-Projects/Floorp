@@ -454,7 +454,7 @@ cookie_RemoveAllPermissions() {
   cookie_permissionList = NULL;
 }
 
-PRBool deleteCookie(void *aElement, void *aData) {
+PRBool PR_CALLBACK deleteCookie(void *aElement, void *aData) {
     cookie_CookieStruct *cookie = (cookie_CookieStruct*)aElement;
     PR_FREEIF(cookie->path);
     PR_FREEIF(cookie->host);
