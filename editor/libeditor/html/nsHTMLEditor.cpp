@@ -2286,9 +2286,8 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::EDirection aAction)
   if (aAction == eNextWord || aAction == ePreviousWord
       || aAction == eToBeginningOfLine || aAction == eToEndOfLine)
   {
-    if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-    nsCOMPtr<nsISelectionController> selCont (do_QueryInterface(ps));
+    if (!mSelConWeak) return NS_ERROR_NOT_INITIALIZED;
+    nsCOMPtr<nsISelectionController> selCont (do_QueryReferent(mSelConWeak));
     if (!selCont)
       return NS_ERROR_NO_INTERFACE;
 
