@@ -114,7 +114,7 @@
 }
 
 #printButton {
-  list-style-image: url("chrome://communicator/skin/buttons.gif");
+  list-style-image: url("chrome://communicator/skin/icons/btn1.gif");
   -moz-image-region: rect(34px 49px 67px 0);
 }
 
