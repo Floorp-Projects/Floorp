@@ -97,7 +97,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 	return res;
 }
 
-extern "C" NS_EXPORT nsresult NSRegisterSelf(const char * path)
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char * path)
 {
   nsresult res;
 
@@ -132,7 +132,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(const char * path)
   return NS_OK;
 }
 
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char * path)
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const char * path)
 {
   nsresult res;
 
