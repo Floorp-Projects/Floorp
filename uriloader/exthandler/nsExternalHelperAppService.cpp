@@ -461,7 +461,8 @@ static nsDefaultMimeTypeEntry nonDecodableExtensions [] = {
   { APPLICATION_GZIP, "gz" }, 
   { APPLICATION_GZIP, "tgz" },
   { APPLICATION_ZIP, "zip" },
-  { APPLICATION_COMPRESS, "z" }
+  { APPLICATION_COMPRESS, "z" },
+  { APPLICATION_GZIP, "svgz" }
 };
 
 NS_IMPL_ISUPPORTS6(
