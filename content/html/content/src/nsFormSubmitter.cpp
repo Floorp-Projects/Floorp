@@ -1074,7 +1074,6 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
               }
               nsMemory::Free(readbuffer);
               NS_RELEASE(contentFile);
-              if (NS_FAILED(rv)) break;
               // Print CRLF after file
               wantbytes = PL_strlen(CRLF);
               rv = outStream->Write(CRLF, wantbytes, &gotbytes);
