@@ -24,6 +24,7 @@ CPPSRCS=				\
 	nsAbsoluteFrame.cpp		\
         nsInlineFrame.cpp   \
         nsBlockFrame.cpp \
+        nsLineLayout.cpp \
 	nsBRFrame.cpp			\
 	nsBodyFrame.cpp			\
 	nsGlobalVariables.cpp		\
