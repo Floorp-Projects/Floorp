@@ -35,7 +35,7 @@
 #define BASE_H
 
 #ifdef DEBUG
-static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.7 $ $Date: 2001/09/25 20:48:51 $ $Name:  $";
+static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.8 $ $Date: 2001/10/08 19:26:02 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -853,44 +853,44 @@ nssList_SetCompareFunction
 );
 
 /*
- * nssList_AddElement
+ * nssList_Add
  */
 NSS_EXTERN PRStatus
-nssList_AddElement
+nssList_Add
 (
   nssList *list, 
   void *data
 );
 
 /*
- * nssList_AddElementUnique
+ * nssList_AddUnique
  *
  * This will use the compare function to see if the element is already
  * in the list.
  */
 NSS_EXTERN PRStatus
-nssList_AddElementUnique
+nssList_AddUnique
 (
   nssList *list, 
   void *data
 );
 
 /*
- * nssList_RemoveElement
+ * nssList_Remove
  *
  * Uses the compare function to locate the element and remove it.
  */
 NSS_EXTERN PRStatus
-nssList_RemoveElement(nssList *list, void *data);
+nssList_Remove(nssList *list, void *data);
 
 /*
- * nssList_GetElement
+ * nssList_Get
  *
  * Uses the compare function to locate an element.  Also serves as
  * nssList_Exists.
  */
 NSS_EXTERN void *
-nssList_GetElement
+nssList_Get
 (
   nssList *list, 
   void *data
@@ -991,8 +991,23 @@ nssListIterator_Finish
  * nssHash_Create
  *
  */
+
 NSS_EXTERN nssHash *
-nssHash_Create
+nssHash_CreatePointer
+(
+  NSSArena *arenaOpt,
+  PRUint32 numBuckets
+);
+
+NSS_EXTERN nssHash *
+nssHash_CreateString
+(
+  NSSArena *arenaOpt,
+  PRUint32 numBuckets
+);
+
+NSS_EXTERN nssHash *
+nssHash_CreateItem
 (
   NSSArena *arenaOpt,
   PRUint32 numBuckets

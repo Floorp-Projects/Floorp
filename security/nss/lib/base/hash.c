@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: hash.c,v $ $Revision: 1.2 $ $Date: 2001/10/03 14:07:29 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: hash.c,v $ $Revision: 1.3 $ $Date: 2001/10/08 19:26:02 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -86,15 +86,40 @@ nss_identity_hash
   return (PLHashNumber)i;
 }
 
+static PLHashNumber
+nss_item_hash
+(
+  const void *key
+)
+{
+  int i;
+  PLHashNumber h;
+  NSSItem *it = (NSSItem *)key;
+  h = 0;
+  for (i=0; i<it->size; i++)
+    h = (h >> 28) ^ (h << 4) ^ ((unsigned char *)it->data)[i];
+  return h;
+}
+
+static int
+nss_compare_items(const void *v1, const void *v2)
+{
+  PRStatus ignore;
+  return (int)nssItem_Equal((NSSItem *)v1, (NSSItem *)v2, &ignore);
+}
+
 /*
- * nssHash_Create
+ * nssHash_create
  *
  */
-NSS_IMPLEMENT nssHash *
+static nssHash *
 nssHash_Create
 (
   NSSArena *arenaOpt,
-  PRUint32 numBuckets
+  PRUint32 numBuckets,
+  PLHashFunction keyHash,
+  PLHashComparator keyCompare,
+  PLHashComparator valueCompare
 )
 {
   nssHash *rv;
@@ -123,8 +148,9 @@ nssHash_Create
     goto loser;
   }
 
-  rv->plHashTable = PL_NewHashTable(numBuckets, nss_identity_hash, 
-    PL_CompareValues, PL_CompareValues, &nssArenaHashAllocOps, arena);
+  rv->plHashTable = PL_NewHashTable(numBuckets, 
+                                    keyHash, keyCompare, valueCompare,
+                                    &nssArenaHashAllocOps, arena);
   if( (PLHashTable *)NULL == rv->plHashTable ) {
     (void)PZ_DestroyLock(rv->mutex);
     goto loser;
@@ -142,6 +168,51 @@ loser:
 }
 
 /*
+ * nssHash_CreatePointer
+ *
+ */
+NSS_IMPLEMENT nssHash *
+nssHash_CreatePointer
+(
+  NSSArena *arenaOpt,
+  PRUint32 numBuckets
+)
+{
+  return nssHash_Create(arenaOpt, numBuckets, 
+                        nss_identity_hash, PL_CompareValues, PL_CompareValues);
+}
+
+/*
+ * nssHash_CreateString
+ *
+ */
+NSS_IMPLEMENT nssHash *
+nssHash_CreateString
+(
+  NSSArena *arenaOpt,
+  PRUint32 numBuckets
+)
+{
+  return nssHash_Create(arenaOpt, numBuckets, 
+                        PL_HashString, PL_CompareStrings, PL_CompareStrings);
+}
+
+/*
+ * nssHash_CreateItem
+ *
+ */
+NSS_IMPLEMENT nssHash *
+nssHash_CreateItem
+(
+  NSSArena *arenaOpt,
+  PRUint32 numBuckets
+)
+{
+  return nssHash_Create(arenaOpt, numBuckets, 
+                        nss_item_hash, nss_compare_items, PL_CompareValues);
+}
+
+/*
  * nssHash_Destroy
  *
  */
@@ -153,7 +224,11 @@ nssHash_Destroy
 {
   (void)PZ_DestroyLock(hash->mutex);
   PL_HashTableDestroy(hash->plHashTable);
-  nssArena_Destroy(hash->arena);
+  if (hash->arena) {
+    nssArena_Destroy(hash->arena);
+  } else {
+    nss_ZFreeIf(hash);
+  }
 }
 
 /*
