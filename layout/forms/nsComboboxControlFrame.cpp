@@ -915,6 +915,7 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
   }
   nsReflowStatus status;
   nsresult rv = aDisplayFrame->Reflow(aPresContext, txtKidSize, txtKidReflowState, status);
+  if (NS_FAILED(rv)) return;
 
   /////////////////////////////////////////////////////////
   // If we are Constrained then the AreaFrame Reflow is the correct size
@@ -2120,6 +2121,22 @@ nsComboboxControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 NS_IMETHODIMP
 nsComboboxControlFrame::Destroy(nsIPresContext* aPresContext)
 {
+  if (mDroppedDown) {
+    nsCOMPtr<nsIWidget> widget;
+    // Get parent view
+    nsIFrame * listFrame;
+    if (NS_OK == mListControlFrame->QueryInterface(kIFrameIID, (void **)&listFrame)) {
+      nsIView * view = nsnull;
+      listFrame->GetView(aPresContext, &view);
+      NS_ASSERTION(view != nsnull, "nsComboboxControlFrame view is null");
+      if (view) {
+    	  view->GetWidget(*getter_AddRefs(widget));
+        if (widget)
+          widget->CaptureRollupEvents((nsIRollupListener *)this, PR_FALSE, PR_TRUE);
+      }
+    }
+  }
+
    // Cleanup frames in popup child list
   mPopupFrames.DestroyFrames(aPresContext);
   if (mDisplayFrame) {
@@ -2268,7 +2285,7 @@ nsComboboxControlFrame::Paint(nsIPresContext* aPresContext,
   nsAreaFrame::Paint(aPresContext,aRenderingContext,aDirtyRect,aWhichLayer);
 
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-    nsRect rect(0, 0, mRect.width, mRect.height);
+    //nsRect rect(0, 0, mRect.width, mRect.height);
     if (mDisplayFrame) {
       aRenderingContext.PushState();
       PRBool clipEmpty;
