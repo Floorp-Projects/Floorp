@@ -23,27 +23,21 @@
 
 [% PROCESS global/header.html.tmpl 
    title = "Dependency tree for Bug $bugid"
-   h1    = "Dependency tree for bug <a href=\"show_bug.cgi?id=$bugid\">$bugid</a>"
+   h1    = "Dependency tree for <a href=\"show_bug.cgi?id=$bugid\">bug $bugid</a>"
    style = "strike { background-color: #d9d9d9; color: #000000; }"
 %]
 
 [% PROCESS depthControlToolbar %]
 
 [%# Display the tree of bugs that this bug depends on. %]
-<h3>Bugs that bug <a href="show_bug.cgi?id=[% bugid %]">[% bugid %]</a> depends on
+<h3>[% hide_resolved ? "Open b" : "B" %]ugs that <a href="show_bug.cgi?id=[% bugid %]">bug [% bugid %]</a> depends on</h3>
 [% IF dependson_ids.size > 0 %]
-  (<a href="buglist.cgi?bug_id=[% dependson_ids.join(",") %]">view as bug list</a>
+  (
+  [% IF maxdepth -%]Up to [% maxdepth %] level[% "s" IF maxdepth > 1 %] deep | [% END %]
+  <a href="buglist.cgi?bug_id=[% dependson_ids.join(",") %]">view as bug list</a>
   [% IF canedit && dependson_ids.size > 1 %]
     | <a href="buglist.cgi?bug_id=[% dependson_ids.join(",") %]&amp;tweak=1">change several</a>
   [% END %])
-  [% IF maxdepth || hide_resolved %]
-    <small><b>
-      (Only [% "open" IF hide_resolved %] bugs
-            [% " whose depth is less than $maxdepth" IF maxdepth %] 
-            will be shown)
-    </b></small>
-  [% END %]
-  </h3>
   [% INCLUDE display_tree tree=dependson_tree bug_id=bugid %]
 [% ELSE %]
   </h3>
@@ -51,20 +45,14 @@
 [% END %]
 
 [%# Display the tree of bugs that this bug blocks. %]
-<h3>Bugs that bug <a href="show_bug.cgi?id=[% bugid %]">[% bugid %]</a> blocks
+<h3>[% hide_resolved ? "Open b" : "B" %]ugs that <a href="show_bug.cgi?id=[% bugid %]">bug [% bugid %]</a> blocks</h3>
 [% IF blocked_ids.size > 0 %]
-  (<a href="buglist.cgi?bug_id=[% blocked_ids.join(",") %]">view as bug list</a>
+  (
+  [% IF maxdepth -%]Up to [% maxdepth %] level[% "s" IF maxdepth > 1 %] deep | [% END %]
+  <a href="buglist.cgi?bug_id=[% blocked_ids.join(",") %]">view as bug list</a>
   [% IF canedit && blocked_ids.size > 1 %]
     | <a href="buglist.cgi?bug_id=[% blocked_ids.join(",") %]&amp;tweak=1">change several</a>
   [% END %])
-  [% IF maxdepth || hide_resolved %]
-    <small><b>
-      (Only [% "open" IF hide_resolved %] bugs
-            [% " whose depth is less than $maxdepth" IF maxdepth %] 
-            will be shown)
-    </b></small>
-  [% END %]
-  </h3>
   [% INCLUDE display_tree tree=blocked_tree bug_id=bugid %]
 [% ELSE %]
   </h3>
@@ -90,7 +78,7 @@
         [[% IF dep.milestone %][% dep.milestone FILTER html %], [% END %]
         [% dep.assignee_email FILTER html %]] - 
         [% IF dep.seen %]
-          <i>&lt;This bug appears elsewhere in this tree&gt;</i></a>
+          <i>This bug appears elsewhere in this tree.</i></a>
         [% ELSE %]
           [% dep.summary FILTER html %].</a>
         [% END %]
@@ -168,7 +156,7 @@
      [%# Limit entry form: the button can not do anything when total depth
          is less than two, so disable it %]
      <input name="maxdepth" size="4" maxlength="4" value="[% 
-         maxdepth > 0 ? maxdepth : ""
+         maxdepth > 0 && maxdepth <= realdepth ? maxdepth : ""
      %]">
      <input name="id" type="hidden" value="[% bugid %]">
      <input name="hide_resolved" type="hidden" value="[% hide_resolved %]">
@@ -201,7 +189,8 @@
      [%# Unlimited button %]
      <input name="id" type="hidden" value="[% bugid %]">
      <input name="hide_resolved" type="hidden" value="[% hide_resolved %]">
-     <input type="submit" value="&nbsp;Unlimited&nbsp;">
+     <input type="submit" value="&nbsp;Unlimited&nbsp;" 
+       [% maxdepth == 0 || maxdepth == realdepth ? "disabled" : "" %]>
    </form>
    </td>
  </tr>
