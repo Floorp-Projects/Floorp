@@ -216,7 +216,7 @@ nsCommandManager::GetCommandState(const char *aCommandName, nsICommandParams *aC
 
   nsCOMPtr<nsICommandController>  commandController = do_QueryInterface(controller);
   if (commandController)
-    rv = commandController->GetCommandState(aCommandName,aCommandParams);
+    rv = commandController->GetCommandStateWithParams(aCommandName, aCommandParams);
   else
     rv = NS_ERROR_NOT_IMPLEMENTED;
   return rv;
@@ -234,7 +234,7 @@ nsCommandManager::DoCommand(const char *aCommandName, nsICommandParams *aCommand
 
   nsCOMPtr<nsICommandController>  commandController = do_QueryInterface(controller);
   if (commandController)
-	  rv = commandController->DoCommand(aCommandName,aCommandParams);
+	  rv = commandController->DoCommandWithParams(aCommandName, aCommandParams);
   else
 	  rv = controller->DoCommand(aCommandName);
   return rv;
