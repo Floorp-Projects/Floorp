@@ -60,8 +60,8 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH)$(OS_RELEASE),SunOS4.1)
-INCLUDES	+= -I$(srcdir)/../nsprpub/pr/include/md
+ifeq ($(OS_CONFIG),SunOS4.1)
+NSPR_CFLAGS	+= -I$(srcdir)/../nsprpub/pr/include/md
 endif
 
 export:: $(TARGETS)
