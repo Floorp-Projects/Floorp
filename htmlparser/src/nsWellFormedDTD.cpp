@@ -566,13 +566,6 @@ NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
         result = mSink->NotifyError(errTok->GetError());
       }
       break;
-    case eToken_xmlDecl:
-      {
-        nsCOMPtr<nsIXMLContentSink> xmlSink(do_QueryInterface(mSink, &result));
-        if (NS_SUCCEEDED(result))
-          result = xmlSink->AddXMLDecl(theNode);
-      }
-      break;
     case eToken_doctypeDecl:
       result = mSink->AddDocTypeDecl(theNode, 0);
       break;

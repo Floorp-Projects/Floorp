@@ -501,7 +501,6 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, 
       case eToken_cdatasection:     result=new CCDATASectionToken(); break;
       case eToken_error:            result=new CErrorToken(); break;
       case eToken_doctypeDecl:      result=new CDoctypeDeclToken(); break;
-      case eToken_xmlDecl:          result=new CXMLDeclToken(); break;
         default:
           break;
     }
@@ -543,7 +542,6 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag) 
       case eToken_cdatasection:     result=new CCDATASectionToken(); break;
       case eToken_error:            result=new CErrorToken(); break;
       case eToken_doctypeDecl:      result=new CDoctypeDeclToken(); break;
-      case eToken_xmlDecl:          result=new CXMLDeclToken(); break;
         default:
           break;
     }

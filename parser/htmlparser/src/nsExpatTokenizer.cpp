@@ -132,7 +132,8 @@ void nsExpatTokenizer::SetupExpatCallbacks(void) {
     XML_SetNotationDeclHandler(mExpatParser, HandleNotationDecl);
     XML_SetExternalEntityRefHandler(mExpatParser, HandleExternalEntityRef);
     XML_SetCommentHandler(mExpatParser, HandleComment);
-    XML_SetUnknownEncodingHandler(mExpatParser, HandleUnknownEncoding, NULL);    
+    XML_SetUnknownEncodingHandler(mExpatParser, HandleUnknownEncoding, NULL);
+    XML_SetDoctypeDeclHandler(mExpatParser, HandleStartDoctypeDecl, HandleEndDoctypeDecl);
   }
 }
 
@@ -475,37 +476,7 @@ void nsExpatTokenizer::HandleProcessingInstruction(void *userData, const XML_Cha
 }
 
 void nsExpatTokenizer::HandleDefault(void *userData, const XML_Char *s, int len) {
-  nsString str = (PRUnichar*) s;
-  CToken* token = (CToken*) userData;
-  PRBool ProcessingDocTypeDecl = (token != nsnull);  
-
-  str.Truncate(len);
-  if (ProcessingDocTypeDecl) {
-    nsString& tokenStr = token->GetStringValueXXX();
-    tokenStr.Append(str);
-    if (str == "]") {
-      tokenStr.Append(">");
-      AddToken(token, NS_OK, *gTokenDeque, gTokenRecycler);
-      XML_SetUserData(gExpatParser, nsnull);      
-    }
-  }
-  else if (0 == str.Find(kXMLDeclPrefix)) {
-    str.CompressWhitespace(PR_TRUE, PR_TRUE);
-    if (nsString::IsSpace(str[nsCRT::strlen(kXMLDeclPrefix)])) {
-      // Create the XML decl token
-      token = gTokenRecycler->CreateTokenOfType(eToken_xmlDecl, eHTMLTag_unknown);
-      nsString& tokenStr = token->GetStringValueXXX();
-      tokenStr.Append(str);
-      AddToken(token, NS_OK, *gTokenDeque, gTokenRecycler);
-    }
-  }
-  else if (0 == str.Find(kDocTypeDeclPrefix)) {    
-    // Create the DOCTYPE decl token
-    token = gTokenRecycler->CreateTokenOfType(eToken_doctypeDecl, eHTMLTag_unknown);
-    nsString& tokenStr = token->GetStringValueXXX();
-    tokenStr.Append(str);
-    XML_SetUserData(gExpatParser, (void*) token);    
-  }
+  NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleDefault() not yet implemented.");
 }
 
 void nsExpatTokenizer::HandleUnparsedEntityDecl(void *userData, 
@@ -660,3 +631,21 @@ int nsExpatTokenizer::HandleUnknownEncoding(void *encodingHandlerData,
   return result;
 }
 
+void nsExpatTokenizer::HandleStartDoctypeDecl(void *userData, 
+                                              const XML_Char *doctypeName)
+{  
+  CToken* token=gTokenRecycler->CreateTokenOfType(eToken_doctypeDecl,eHTMLTag_unknown);
+  if (token) {
+    nsString& str = token->GetStringValueXXX();
+    str.Append(kDocTypeDeclPrefix);
+    str.Append(" ");
+    str.Append((PRUnichar*) doctypeName);
+    str.Append(">");
+    AddToken(token,NS_OK,*gTokenDeque,gTokenRecycler);
+  }
+}
+
+void nsExpatTokenizer::HandleEndDoctypeDecl(void *userData)
+{
+  // Do nothing
+}
