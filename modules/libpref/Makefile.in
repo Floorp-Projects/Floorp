@@ -17,10 +17,11 @@
 
 DEPTH	= ../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+
 DIRS	= public admin src
 
 include $(topsrcdir)/config/rules.mk

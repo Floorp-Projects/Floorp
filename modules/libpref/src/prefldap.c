@@ -19,7 +19,6 @@
 /* LDAP functions callable from JavaScript */
 
 #include "ldap.h"
-#include "xp_mcom.h"
 #include "prefldap.h"
 
 /*

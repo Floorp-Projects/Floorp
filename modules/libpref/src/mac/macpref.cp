@@ -22,6 +22,7 @@
 #include "prlink.h"
 #include "ufilemgr.h"
 #include "uprefd.h"
+#include "LString.h"
 
 #include <Types.h>
 #include <Resources.h>
@@ -116,7 +117,7 @@ PREF_CopyPathPref(const char *pref_name, char ** return_buffer)
 }
 
 PR_IMPLEMENT(int)
-PREF_SetPathPref(const char *pref_name, const char *path, XP_Bool set_default)
+PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default)
 {
 	FSSpec fileSpec;
 	AliasHandle	aliasH;
@@ -154,10 +155,9 @@ pref_FindAutoAdminLib(FSSpec& spec)
 	return CFileMgr::FileExists(spec);
 }
 
-PR_IMPLEMENT(XP_Bool)
+PR_IMPLEMENT(PRBool)
 PREF_IsAutoAdminEnabled()
 {
 	FSSpec spec;
 	return (XP_Bool) pref_FindAutoAdminLib(spec);
 }
-

@@ -20,13 +20,18 @@
  unixpref.c
  **********************************************************************/
 
+#include <stdio.h>
+#include <assert.h>
 #include "prefapi.h"
 #include "prlink.h"
+#include "prlog.h"
 #include "jsapi.h"
 #include "jsbuffer.h"
 #include "xpassert.h"
 #include "fe_proto.h"
+#include "icondata.h"
 
+static struct fe_icon_type* splash_screen = NULL;
 
 /*
  * pref_InitInitialObjects
@@ -35,12 +40,16 @@
  */
 extern char *fe_GetConfigDirFilename(char *filename);
 
+XP_Bool
+FE_GetLabelAndMnemonic(char* name, char** str, void* v_xm_str, void* v_mnemonic);
+char *fe_GetConfigDirFilename(char *filename);
+
 JSBool
 pref_InitInitialObjects(void)
 {
     JSBool status;
 
-    XP_ASSERT(pref_init_buffer);
+    PR_ASSERT(pref_init_buffer);
 
     status = PREF_EvaluateJSBuffer(pref_init_buffer, strlen(pref_init_buffer));
 
@@ -67,25 +76,24 @@ pref_InitInitialObjects(void)
 /*
  * PREF_GetLabelAndMnemonic
  */
-XP_Bool
+PRBool
 PREF_GetLabelAndMnemonic(char* name, char** str, void* v_xm_str, void* v_mnemonic)
 {
     /* Code moved to where it should have been. */
     return FE_GetLabelAndMnemonic(name, str, v_xm_str, v_mnemonic);
 }
 
-
 /*
  * PREF_GetUrl
  */
-XP_Bool
+PRBool
 PREF_GetUrl(char* name, char** url)
 {
     char buf[256];
 
-    XP_ASSERT(name);
+    PR_ASSERT(name);
 
-    if ( name == NULL || url == NULL ) return FALSE;
+    if ( name == NULL || url == NULL ) return PR_FALSE;
 
     strncpy(buf, name, 200);
     strcat(buf, ".url");
@@ -97,4 +105,11 @@ PREF_GetUrl(char* name, char** url)
     return ( url != NULL && *url != NULL && **url != '\0' );
 }
 
+XP_Bool
+FE_GetLabelAndMnemonic(char* name, char** str, void* v_xm_str, void* v_mnemonic)
+{
+}
 
+char *fe_GetConfigDirFilename(char *filename)
+{
+}

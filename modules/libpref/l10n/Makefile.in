@@ -17,12 +17,12 @@
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES	= security 
+REQUIRES	= security
 
 include $(topsrcdir)/config/rules.mk
 
@@ -32,7 +32,6 @@ all:: other-stuff $(OBJDIR)/resources $(OBJDIR)/un-obscure
 
 other-stuff:
 	cd $(DEPTH)/config; $(MAKE)
-	cd $(DEPTH)/nspr/include; $(MAKE)
 	cd $(DEPTH)/security/lib/util; $(MAKE) export
 	cd $(DEPTH)/security/lib/hash; $(MAKE)
 	

@@ -4,3 +4,4 @@
 
 prefapi.h
 prefldap.h
+nsIPref.h
