@@ -359,7 +359,7 @@ inline PRInt32 RFindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,c
  */
 inline PRInt32 RFindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
   PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
-  PRUint32 theIndex=0;
+  PRInt32 theIndex=0;
   for(theIndex=aLength-1;theIndex>=0;theIndex--){
     PRUnichar theChar=GetUnicharAt(aDest,theIndex);
     if(aIgnoreCase)
