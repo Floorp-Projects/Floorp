@@ -63,6 +63,80 @@ static NS_DEFINE_IID(kIDOMEventReceiverIID,  NS_IDOMEVENTRECEIVER_IID);
 #include "nsISupportsArray.h"
 
 
+class nsToolboxFrame::DragListenerDelegate : public nsIDOMDragListener
+{
+protected:
+  nsToolboxFrame* mFrame;
+
+public:
+  // nsISupports interface
+  NS_DECL_ISUPPORTS
+
+  // nsIDOMEventListener interface
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent)
+  {
+    return mFrame ? mFrame->HandleEvent(aEvent) : NS_OK;
+  }
+
+  // nsIDOMDragListener interface
+  virtual nsresult DragEnter(nsIDOMEvent* aMouseEvent)
+  {
+    return mFrame ? mFrame->DragEnter(aMouseEvent) : NS_OK;
+  }
+
+  virtual nsresult DragOver(nsIDOMEvent* aMouseEvent)
+  {
+    return mFrame ? mFrame->DragOver(aMouseEvent) : NS_OK;
+  }
+
+  virtual nsresult DragExit(nsIDOMEvent* aMouseEvent)
+  {
+    return mFrame ? mFrame->DragExit(aMouseEvent) : NS_OK;
+  }
+
+  virtual nsresult DragDrop(nsIDOMEvent* aMouseEvent)
+  {
+    return mFrame ? mFrame->DragDrop(aMouseEvent) : NS_OK;
+  }
+
+  // Implementation methods
+  DragListenerDelegate(nsToolboxFrame* aFrame) : mFrame(aFrame)
+  {
+    NS_INIT_REFCNT();
+  }
+
+  virtual ~DragListenerDelegate() {}
+
+  void NotifyFrameDestroyed() { mFrame = nsnull; }
+};
+
+
+NS_IMPL_ADDREF(nsToolboxFrame::DragListenerDelegate);
+NS_IMPL_RELEASE(nsToolboxFrame::DragListenerDelegate);
+
+
+NS_IMETHODIMP
+nsToolboxFrame::DragListenerDelegate::QueryInterface(REFNSIID aIID, void** aResult)
+{
+  NS_PRECONDITION(aResult != nsnull, "null ptr");
+  if (! aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  if (aIID.Equals(nsCOMTypeInfo<nsIDOMDragListener>::GetIID()) ||
+      aIID.Equals(nsCOMTypeInfo<nsIDOMEventListener>::GetIID()) ||
+      aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    *aResult = NS_STATIC_CAST(nsIDOMDragListener*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else {
+    *aResult = nsnull;
+    return NS_NOINTERFACE;
+  }
+}
+
+
+
 //
 // NS_NewToolboxFrame
 //
@@ -92,11 +166,10 @@ NS_NewToolboxFrame ( nsIFrame** aNewFrame )
 // Init, if necessary
 //
 nsToolboxFrame :: nsToolboxFrame ( )
-  : mSumOfToolbarHeights(0), mNumToolbars(0), mGrippyHilighted(kNoGrippyHilighted),
+  : mSumOfToolbarHeights(0), mNumToolbars(0), mGrippyHilighted(kNoGrippyHilighted), mDragListenerDelegate(nsnull),
       kCollapsedAtom(dont_AddRef( NS_NewAtom("collapsed"))), 
       kHiddenAtom(dont_AddRef( NS_NewAtom("hidden")))
 {
-  NS_INIT_REFCNT();
   // we start off vertical
   mHorizontal = PR_FALSE;
 }
@@ -109,29 +182,13 @@ nsToolboxFrame :: nsToolboxFrame ( )
 //
 nsToolboxFrame :: ~nsToolboxFrame ( )
 {
+  if (mDragListenerDelegate) {
+    mDragListenerDelegate->NotifyFrameDestroyed();
+    NS_RELEASE(mDragListenerDelegate);
+  }
 	//еее walk mGrippies and delete elements
 }
 
-NS_IMPL_ADDREF(nsToolboxFrame)
-
-NS_IMPL_RELEASE(nsToolboxFrame)
-
-////////////////////////////////////////////////////////////////////////
-nsresult
-nsToolboxFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (aIID.Equals(kIDOMEventReceiverIID)) {
-    *aInstancePtr = (void*)(nsIDOMEventListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(nsIDOMDragListener::GetIID())) {
-    *aInstancePtr = (void*)(nsIDOMDragListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return nsBoxFrame::QueryInterface(aIID, aInstancePtr);
-}
 
 //
 // RefreshStyleContext
@@ -192,12 +249,20 @@ nsToolboxFrame::Init(nsIPresContext&  aPresContext,
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   UpdateStyles(&aPresContext);
 
+  // Register the delegate as a drag listener.
+  mDragListenerDelegate = new DragListenerDelegate(this);
+  if (! mDragListenerDelegate)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(mDragListenerDelegate);
+
   nsCOMPtr<nsIContent> content;
-  GetContent(getter_AddRefs(content));
+  rv = GetContent(getter_AddRefs(content));
+  if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
 
-  if (NS_OK == reciever->AddEventListenerByIID((nsIDOMDragListener *)this, nsIDOMDragListener::GetIID())) {
+  if (NS_OK == reciever->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMDragListener*, mDragListenerDelegate), nsIDOMDragListener::GetIID())) {
     printf("Toolbar registered as Drag Listener\n");
   }
 

@@ -48,12 +48,10 @@
 #include "nsBoxFrame.h"
 
 
-class nsToolboxFrame : public nsBoxFrame, public nsIDOMDragListener
+class nsToolboxFrame : public nsBoxFrame
 {
 public:
   friend nsresult NS_NewToolboxFrame(nsIFrame** aNewFrame);
-
-  NS_DECL_ISUPPORTS
 
     // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
@@ -85,8 +83,7 @@ public:
                               nsIFrame**     aFrame);
 
 /*BEGIN implementations of dragevent handler interface*/
-    virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-public:
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
   virtual nsresult DragEnter(nsIDOMEvent* aDragEvent);
   virtual nsresult DragOver(nsIDOMEvent* aDragEvent);
   virtual nsresult DragExit(nsIDOMEvent* aDragEvent);
@@ -112,7 +109,7 @@ protected:
     nsRect         mBoundingRect;
     PRBool         mCollapsed;
   };
-  
+
   nsToolboxFrame();
   virtual ~nsToolboxFrame();
 
@@ -153,6 +150,9 @@ protected:
 
   const nsCOMPtr<nsIAtom> kCollapsedAtom ;
   const nsCOMPtr<nsIAtom> kHiddenAtom ;
+  
+  class DragListenerDelegate;
+  DragListenerDelegate* mDragListenerDelegate;
   
     // pass-by-value not allowed for a toolbox because it corresponds 1-to-1
     // with an element in the UI.
