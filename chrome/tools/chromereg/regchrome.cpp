@@ -37,4 +37,5 @@ int main(int argc, char **argv)
   // release the chrome registry before we shutdown XPCOM
   chromeReg = 0;
   NS_ShutdownXPCOM(nsnull);
+  return 0;
 }
