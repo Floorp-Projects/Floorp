@@ -29,6 +29,10 @@ titledbutton#netscape-button {
 	list-style-image:url(resource:/res/toolbar/TB_Netscape.gif);
 }
 
+titledbutton#bugzilla-button {
+	list-style-image:url(resource:/res/toolbar/TB_Location.gif);
+}
+
 titledbutton#security-button {
 	list-style-image:url(resource:/res/toolbar/StatusBar-secure.gif);
 }

@@ -355,6 +355,8 @@
 			onclick="BrowserHome()"/>
 		<titledbutton id="netscape-button" align="right" value="Netscape" 
 			onclick="window.frames[0].frames[1].location.href='http://home.netscape.com'"/>
+		<titledbutton id="bugzilla-button" align="right" value="Bugzilla" 
+			onclick="window.frames[0].frames[1].location.href='http://bugzilla.mozilla.org'"/>
 		<spring flex="100%"/>
 	</toolbar>
   </toolbox>
