@@ -1255,7 +1255,7 @@ nsresult nsRange::CompareEndPoints(PRUint16 how, nsIDOMRange* srcRange,
 
   if ((node1 == node2) && (offset1 == offset2))
     *aCmpRet = 0;
-  else if (IsIncreasing(node1, offset2, node2, offset2))
+  else if (IsIncreasing(node1, offset1, node2, offset2))
     *aCmpRet = 1;
   else
     *aCmpRet = -1;
