@@ -443,8 +443,7 @@ public:
   nsString& operator+=(const nsString& aString){return Append(aString,aString.mLength);}
   nsString& operator+=(const char* aCString) {return Append(aCString);}
   nsString& operator+=(const char aChar) {
-    //unsigned theChar=(unsigned)aChar;
-    return Append(PRUnichar(aChar));
+    return Append((PRUnichar) (unsigned char)aChar);    
   }
 
   nsString& operator+=(const PRUnichar* aUCString) {return Append(aUCString);}
