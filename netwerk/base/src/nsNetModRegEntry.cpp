@@ -18,6 +18,7 @@
 
 #include "nsNetModRegEntry.h"
 #include "plstr.h"
+#include "nsIAllocator.h"
 
 
 //////////////////////////////
@@ -46,7 +47,7 @@ nsNetModRegEntry::GetMEventQ(nsIEventQueue **aEventQ) {
 
 NS_IMETHODIMP
 nsNetModRegEntry::GetMTopic(char **aTopic) {
-    *aTopic = new char [PL_strlen(mTopic) + 1];
+    *aTopic = (char *)nsAllocator::Alloc(PL_strlen(mTopic) + 1);
     if (!*aTopic) return NS_ERROR_OUT_OF_MEMORY;
     PL_strcpy(*aTopic, mTopic);
     return NS_OK;
@@ -111,6 +112,8 @@ nsNetModRegEntry::Equals(nsINetModRegEntry* aEntry, PRBool *_retVal) {
     }
 
 end:
+    if (topic)
+        nsAllocator::Free(topic);
     NS_IF_RELEASE(notify);
     NS_IF_RELEASE(eventQ);
     *_retVal = retVal;

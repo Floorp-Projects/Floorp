@@ -574,7 +574,6 @@ nsStdURL::ReconstructSpec()
 	}
 	if (-1 != mPort)
 	{
-		finalSpec += ':';
 		finalSpec += portBuffer;
 	}
 	if (mPath)
