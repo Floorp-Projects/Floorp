@@ -109,7 +109,8 @@ PRUint32  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PR
     PasswordData * data;
     XtVaGetValues(mWidget, XmNuserData, &data, NULL);
     data->mIgnore   = True;
-    data->mPassword.Insert(aText, aStartPos, aText.Length());
+    nsString newText(aText);
+    data->mPassword.Insert(newText, aStartPos, aText.Length());
     char * buf = new char[data->mPassword.Length()+1];
     memset(buf, '*', data->mPassword.Length());
     buf[data->mPassword.Length()] = 0;
