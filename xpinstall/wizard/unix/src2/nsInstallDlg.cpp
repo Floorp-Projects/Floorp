@@ -136,7 +136,7 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
 
     if (bDownload)
     {
-        InitDLProgress();
+        InitDLProgress( TRUE );
 
         pauseLabel = gtk_label_new(gCtx->Res("PAUSE"));
         resumeLabel = gtk_label_new(gCtx->Res("RESUME"));
@@ -180,7 +180,7 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
     XI_GTK_UPDATE_UI();
 
     bInstallClicked = TRUE;
-    WorkDammitWork();
+    PerformInstall();
     if (bDLCancel) // set only when download was cancelled
     {
         // mode auto has no call to gtk_main()
@@ -523,9 +523,9 @@ nsInstallDlg::GetMsg0()
 }
 
 int
-nsInstallDlg::WorkDammitWork()
+nsInstallDlg::PerformInstall()
 {
-    DUMP("WorkDammitWork");
+    DUMP("PerformInstall");
 
     int err = OK;
 
@@ -557,6 +557,11 @@ nsInstallDlg::WorkDammitWork()
     {
         ShowCxnDroppedDlg();
         return err;
+    }
+    else if (err == E_CRC_FAILED)
+    {
+        ShowCRCFailedDlg();
+        goto BAIL;
     }
     else if (err == E_DL_PAUSE || err == E_DL_CANCEL)
     {
@@ -1090,7 +1095,7 @@ nsInstallDlg::DLResume(GtkWidget *aWidget, gpointer aData)
     // enable pause button
     gtk_widget_set_sensitive(gCtx->back, TRUE);
 
-    WorkDammitWork();
+    PerformInstall();
  
     return;
 }
@@ -1137,6 +1142,73 @@ nsInstallDlg::CancelOrPause()
     return err;
 }
 
+static GtkWidget *crcDlg = (GtkWidget *) NULL;
+
+void
+nsInstallDlg::ShowCRCDlg()
+{
+    GtkWidget *label, *okButton, *packer;
+
+    if ( crcDlg == (GtkWidget *) NULL ) {
+       // throw up dialog informing user to press resume
+       // or to cancel out
+       crcDlg = gtk_dialog_new();
+       label = gtk_label_new(gCtx->Res("CRC_CHECK"));
+       okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
+       packer = gtk_packer_new();
+
+       if (crcDlg && label && okButton && packer)
+       {
+           gtk_packer_set_default_border_width(GTK_PACKER(packer), 20);
+           gtk_packer_add_defaults(GTK_PACKER(packer), label, GTK_SIDE_BOTTOM,
+                                   GTK_ANCHOR_CENTER, GTK_FILL_X);
+           gtk_window_set_title(GTK_WINDOW(crcDlg), gCtx->opt->mTitle);
+           gtk_window_set_position(GTK_WINDOW(crcDlg), GTK_WIN_POS_CENTER);
+           gtk_container_add(GTK_CONTAINER(GTK_DIALOG(crcDlg)->vbox), 
+                             packer);
+           gtk_container_add(GTK_CONTAINER(GTK_DIALOG(crcDlg)->action_area),
+                             okButton);
+           gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
+                              GTK_SIGNAL_FUNC(CRCOKCb), crcDlg);
+           gtk_widget_show_all(crcDlg);
+       }
+    }
+    XI_GTK_UPDATE_UI();
+}
+
+int
+nsInstallDlg::ShowCRCFailedDlg()
+{
+    GtkWidget *crcFailedDlg, *label, *okButton, *packer;
+
+    // throw up dialog informing user to press resume
+    // or to cancel out
+    crcFailedDlg = gtk_dialog_new();
+    label = gtk_label_new(gCtx->Res("CRC_FAILED"));
+    okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
+    packer = gtk_packer_new();
+
+    if (crcFailedDlg && label && okButton && packer)
+    {
+        gtk_packer_set_default_border_width(GTK_PACKER(packer), 20);
+        gtk_packer_add_defaults(GTK_PACKER(packer), label, GTK_SIDE_BOTTOM,
+                                GTK_ANCHOR_CENTER, GTK_FILL_X);
+        gtk_window_set_modal(GTK_WINDOW(crcFailedDlg), TRUE);
+        gtk_window_set_title(GTK_WINDOW(crcFailedDlg), gCtx->opt->mTitle);
+        gtk_window_set_position(GTK_WINDOW(crcFailedDlg), GTK_WIN_POS_CENTER);
+        gtk_container_add(GTK_CONTAINER(GTK_DIALOG(crcFailedDlg)->vbox), 
+                          packer);
+        gtk_container_add(GTK_CONTAINER(GTK_DIALOG(crcFailedDlg)->action_area),
+                          okButton);
+        gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
+                           GTK_SIGNAL_FUNC(CRCFailedOK), crcFailedDlg);
+        gtk_widget_show_all(crcFailedDlg);
+    }
+    XI_GTK_UPDATE_UI();
+
+    return OK;
+}
+
 int
 nsInstallDlg::ShowCxnDroppedDlg()
 {
@@ -1171,6 +1243,29 @@ nsInstallDlg::ShowCxnDroppedDlg()
 }
 
 void
+nsInstallDlg::CRCFailedOK(GtkWidget *aWidget, gpointer aData)
+{
+  gtk_main_quit();
+  return;
+}
+
+void
+nsInstallDlg::DestroyCRCDlg()
+{
+  CRCOKCb( (GtkWidget *) NULL, (gpointer) NULL );
+}
+
+void
+nsInstallDlg::CRCOKCb(GtkWidget *aWidget, gpointer aData)
+{
+    if (crcDlg != (GtkWidget *) NULL)
+        gtk_widget_destroy(crcDlg);
+    crcDlg = (GtkWidget *) NULL;
+
+    return;
+}
+
+void
 nsInstallDlg::CxnDroppedOK(GtkWidget *aWidget, gpointer aData)
 {
     GtkWidget *cxnDroppedDlg = (GtkWidget *) aData;
@@ -1194,7 +1289,7 @@ nsInstallDlg::HideNavButtons()
 }
 
 void
-nsInstallDlg::InitDLProgress()
+nsInstallDlg::InitDLProgress( int isFirst )
 {
     GtkWidget *titles[4];
     GtkWidget *hbox;
@@ -1202,72 +1297,83 @@ nsInstallDlg::InitDLProgress()
 
     gCtx->idlg->HideTable();
 
-    sDLProgress.vbox = gtk_vbox_new(FALSE, 10);
-    gtk_notebook_append_page(GTK_NOTEBOOK(gCtx->notebook), 
-        sDLProgress.vbox, NULL);
-    gtk_widget_show(sDLProgress.vbox);
-    
-    table = gtk_table_new(5, 2, FALSE);
-    gtk_box_pack_start(GTK_BOX(sDLProgress.vbox), table, FALSE, 
-        FALSE, 0);
-    gtk_widget_show(table);
+    if ( isFirst == TRUE ) {
+            sDLProgress.vbox = gtk_vbox_new(FALSE, 10);
+            gtk_notebook_append_page(GTK_NOTEBOOK(gCtx->notebook), 
+                sDLProgress.vbox, NULL);
+            gtk_widget_show(sDLProgress.vbox);
+                    
+            table = gtk_table_new(5, 2, FALSE);
+            gtk_box_pack_start(GTK_BOX(sDLProgress.vbox), table, FALSE, 
+                FALSE, 0);
+            gtk_widget_show(table);
 
-    // setup static title progress labels in table left column
-    titles[0] = gtk_label_new(gCtx->Res("DOWNLOADING"));
-    titles[1] = gtk_label_new(gCtx->Res("FROM"));
-    titles[2] = gtk_label_new(gCtx->Res("TO"));
-    titles[3] = gtk_label_new(gCtx->Res("STATUS"));
+            // setup static title progress labels in table left column
+            titles[0] = gtk_label_new(gCtx->Res("DOWNLOADING"));
+            titles[1] = gtk_label_new(gCtx->Res("FROM"));
+            titles[2] = gtk_label_new(gCtx->Res("TO"));
+            titles[3] = gtk_label_new(gCtx->Res("STATUS"));
 
-    // setup dynamic progress labels in right column
-    sDLProgress.compName = gtk_label_new(gCtx->Res("UNKNOWN"));
-    sDLProgress.URL = gtk_label_new(gCtx->Res("UNKNOWN"));
-    sDLProgress.localPath = gtk_label_new(gCtx->Res("UNKNOWN"));
-    sDLProgress.status = gtk_label_new(gCtx->Res("UNKNOWN"));
+            // setup dynamic progress labels in right column
+            sDLProgress.compName = gtk_label_new(gCtx->Res("UNKNOWN"));
+            sDLProgress.URL = gtk_label_new(gCtx->Res("UNKNOWN"));
+            sDLProgress.localPath = gtk_label_new(gCtx->Res("UNKNOWN"));
+            sDLProgress.status = gtk_label_new(gCtx->Res("UNKNOWN"));
 
-    // pack and show titles
-    for (int i = 0; i < 4; ++i)
-    {
-        hbox = gtk_hbox_new(FALSE, 10);
-        gtk_box_pack_end(GTK_BOX(hbox), titles[i], FALSE, FALSE, 0);
-        gtk_table_attach(GTK_TABLE(table), hbox, 
-            0, 1, i, i + 1, GTK_FILL, GTK_FILL, 5, 5);
-        gtk_widget_show(titles[i]);
-        gtk_widget_show(hbox);
+            // pack and show titles
+            for (int i = 0; i < 4; ++i)
+            {
+                hbox = gtk_hbox_new(FALSE, 10);
+                gtk_box_pack_end(GTK_BOX(hbox), titles[i], FALSE, FALSE, 0);
+                gtk_table_attach(GTK_TABLE(table), hbox, 
+                    0, 1, i, i + 1, GTK_FILL, GTK_FILL, 5, 5);
+                gtk_widget_show(titles[i]);
+                gtk_widget_show(hbox);
+            }
+
+            // pack and show dynamic labels 
+            hbox = gtk_hbox_new(FALSE, 10);
+            gtk_box_pack_start(GTK_BOX(hbox), sDLProgress.compName, FALSE, FALSE, 0);
+            gtk_table_attach(GTK_TABLE(table), hbox, 1, 2, 0, 1,
+                GTK_FILL, GTK_FILL, 5, 5);
+            gtk_widget_show(sDLProgress.compName);
+            gtk_widget_show(hbox);
+
+            hbox = gtk_hbox_new(FALSE, 10);
+            gtk_box_pack_start(GTK_BOX(hbox), sDLProgress.URL, FALSE, FALSE, 0);
+            gtk_table_attach(GTK_TABLE(table), hbox, 1, 2, 1, 2,
+                GTK_FILL, GTK_FILL, 5, 5);
+            gtk_widget_show(sDLProgress.URL);
+            gtk_widget_show(hbox);
+
+            hbox = gtk_hbox_new(FALSE, 10);
+            gtk_box_pack_start(GTK_BOX(hbox), sDLProgress.localPath, FALSE, 
+                FALSE, 0);
+            gtk_table_attach(GTK_TABLE(table), hbox, 1, 2, 2, 3,
+                GTK_FILL, GTK_FILL, 5, 5);
+            gtk_widget_show(sDLProgress.localPath);
+            gtk_widget_show(hbox);
+
+            hbox = gtk_hbox_new(FALSE, 10);
+            gtk_box_pack_start(GTK_BOX(hbox), sDLProgress.status, FALSE, 
+                FALSE, 0);
+            gtk_table_attach(GTK_TABLE(table), hbox, 1, 2, 3, 4,
+                GTK_FILL, GTK_FILL, 5, 5);
+            gtk_widget_show(sDLProgress.status);
+            gtk_widget_show(hbox);
+
+            // init and show prog bar
+            sDLProgress.progBar = gtk_progress_bar_new();
+
+            // show prog bar
+            hbox = gtk_hbox_new(TRUE, 10);
+            gtk_box_pack_start(GTK_BOX(hbox), sDLProgress.progBar, FALSE, 
+              TRUE, 0);
+            gtk_box_pack_start(GTK_BOX(sDLProgress.vbox), hbox, FALSE, 
+              FALSE, 0);
+            gtk_widget_show(sDLProgress.progBar);
+            gtk_widget_show(hbox);
     }
-
-    // pack and show dynamic labels 
-    hbox = gtk_hbox_new(FALSE, 10);
-    gtk_box_pack_start(GTK_BOX(hbox), sDLProgress.compName, FALSE, FALSE, 0);
-    gtk_table_attach(GTK_TABLE(table), hbox, 1, 2, 0, 1,
-        GTK_FILL, GTK_FILL, 5, 5);
-    gtk_widget_show(sDLProgress.compName);
-    gtk_widget_show(hbox);
-
-    hbox = gtk_hbox_new(FALSE, 10);
-    gtk_box_pack_start(GTK_BOX(hbox), sDLProgress.URL, FALSE, FALSE, 0);
-    gtk_table_attach(GTK_TABLE(table), hbox, 1, 2, 1, 2,
-        GTK_FILL, GTK_FILL, 5, 5);
-    gtk_widget_show(sDLProgress.URL);
-    gtk_widget_show(hbox);
-
-    hbox = gtk_hbox_new(FALSE, 10);
-    gtk_box_pack_start(GTK_BOX(hbox), sDLProgress.localPath, FALSE, 
-        FALSE, 0);
-    gtk_table_attach(GTK_TABLE(table), hbox, 1, 2, 2, 3,
-        GTK_FILL, GTK_FILL, 5, 5);
-    gtk_widget_show(sDLProgress.localPath);
-    gtk_widget_show(hbox);
-
-    hbox = gtk_hbox_new(FALSE, 10);
-    gtk_box_pack_start(GTK_BOX(hbox), sDLProgress.status, FALSE, 
-        FALSE, 0);
-    gtk_table_attach(GTK_TABLE(table), hbox, 1, 2, 3, 4,
-        GTK_FILL, GTK_FILL, 5, 5);
-    gtk_widget_show(sDLProgress.status);
-    gtk_widget_show(hbox);
-
-    // init and show prog bar
-    sDLProgress.progBar = gtk_progress_bar_new();
 
     // set to non-activity mode and initialize 
     gtk_progress_set_activity_mode(GTK_PROGRESS(sDLProgress.progBar), FALSE);
@@ -1276,13 +1382,6 @@ nsInstallDlg::InitDLProgress()
     // compute total download size
     sDLProgress.downloadedBytes = 0;
     sDLProgress.totalKB = TotalDLSize();
-
-    // show prog bar
-    hbox = gtk_hbox_new(TRUE, 10);
-    gtk_box_pack_start(GTK_BOX(hbox), sDLProgress.progBar, FALSE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(sDLProgress.vbox), hbox, FALSE, FALSE, 0);
-    gtk_widget_show(sDLProgress.progBar);
-    gtk_widget_show(hbox);
 
     XI_GTK_UPDATE_UI();
 }
@@ -1354,3 +1453,8 @@ nsInstallDlg::CompressToFit(char *aOrigStr, char *aOutStr, int aOutStrLen)
     *(aOutStr + aOutStrLen + 1) = 0;
 }
 
+void
+nsInstallDlg::ReInitUI( void )
+{
+  InitDLProgress( FALSE );
+}

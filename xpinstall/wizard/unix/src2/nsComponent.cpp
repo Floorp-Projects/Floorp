@@ -470,9 +470,9 @@ nsComponent::GetResumePos()
 }
 
 int
-nsComponent::SetDownloaded()
+nsComponent::SetDownloaded( int which )
 {
-    mDownloaded = TRUE;
+    mDownloaded = which;
 
     return OK;
 }

@@ -84,7 +84,7 @@ public:
     int             DepGetRefCount();
     int             SetResumePos(int aResPos);
     int             GetResumePos();
-    int             SetDownloaded();
+    int             SetDownloaded(int which);
     int             IsDownloaded();
   
 /*---------------------------------------------------------------*

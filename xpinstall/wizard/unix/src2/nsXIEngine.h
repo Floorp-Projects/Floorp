@@ -34,6 +34,10 @@
 
 #include "xpistub.h"
 
+#define STANDALONE 1
+#include "zipfile.h"
+#include <ctype.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
@@ -61,6 +65,17 @@ typedef struct _xpistub_t
     pfnXPI_Exit     fn_exit;
 } xpistub_t;
 
+#define TYPE_UNDEF 0
+#define TYPE_PROXY 1
+#define TYPE_HTTP 2
+#define TYPE_FTP 3
+
+typedef struct _conn
+{
+  unsigned char type; // TYPE_UNDEF, etc.
+  char *URL;      // URL this connection is for
+  void *conn;     // pointer to open connection
+} CONN;
 
 /*------------------------------------------------------------------------*
  *   nsXIEngine
@@ -103,7 +118,11 @@ private:
                             nsComponent **aOutComp, int *aOutCompNum);
     int     DelDLMarker();
     int     TotalToDownload(int aCustom, nsComponentList *aComps);
-
+    PRBool  CRCCheckDownloadedArchives(char *dlPath, short dlPathLen, 
+              nsComponent *currComp, int count);
+    PRBool  IsArchiveFile(char *path);
+    int     VerifyArchive(char *szArchive);
+    PRBool  CheckConn( char *URL, int type, CONN *myConn, PRBool force );
     char    *mTmp;
     int     mTotalComps;
     char    *mOriginalDir;

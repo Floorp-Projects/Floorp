@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  *     Samir Gehani <sgehani@netscape.com>
+ *     Syd Logan syd@netscape.com
  */
 
 #include "nsFTPConn.h"
@@ -27,6 +28,7 @@
 #include "nsXIEngine.h"
 
 #include <errno.h>
+#include <stdlib.h>
 
 #define CORE_LIB_COUNT 11
 
@@ -58,6 +60,8 @@ EventPumpCB(void)
     return 0;
 }
 
+#define MAXCRC 4
+
 int     
 nsXIEngine::Download(int aCustom, nsComponentList *aComps)
 {
@@ -68,6 +72,7 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
 
     int err = OK;
     nsComponent *currComp = aComps->GetHead(), *markedComp = NULL;
+    nsComponent *currCompSave;
     char *currURL = NULL;
     char *currHost = NULL;
     char *currPath = NULL;
@@ -75,13 +80,14 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
     char *srvPath = NULL;
     char *proxyURL = NULL;
     char *qualURL = NULL;
-    int i;
+    int i, crcPass, bDone;
     int currPort;
     struct stat stbuf;
     int resPos = 0;
     int fileSize = 0;
     int currCompNum = 1, markedCompNum = 0;
     int numToDL = 0; // num xpis to download
+    CONN myConn;
     
     err = GetDLMarkedComp(aComps, aCustom, &markedComp, &markedCompNum);
     if (err == OK && markedComp)
@@ -108,8 +114,15 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
 
     numToDL = TotalToDownload(aCustom, aComps);
 
-    while (currComp)
-    {
+    myConn.URL = (char *) NULL;
+    myConn.type = TYPE_UNDEF;
+
+    crcPass = 0;
+    currCompSave = currComp;
+    bDone = 0;
+    while ( bDone == 0 && crcPass < MAXCRC ) {
+      while (currComp)
+      {
         if ( (aCustom == TRUE && currComp->IsSelected()) || (aCustom == FALSE) )
         {
             // in case we are resuming inter- or intra-installer session
@@ -219,6 +232,8 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
                 // or is this an FTP URL? 
                 else if (strncmp(currURL, kFTPProto, strlen(kFTPProto)) == 0)
                 {
+                    PRBool isNewConn;
+
                     err = nsHTTPConn::ParseURL(kFTPProto, currURL, &currHost, 
                             &currPort, &currPath);
                     if (err != nsHTTPConn::OK)
@@ -234,27 +249,40 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
                     }
                     sprintf(srvPath, "%s%s", currPath, currComp->GetArchive());
 
-                    nsFTPConn *conn = new nsFTPConn(currHost, EventPumpCB);
-                    if (!conn)
-                    {
+                    // closes the old connection if any
+
+                    isNewConn = CheckConn( currHost, TYPE_FTP, &myConn, PR_FALSE ); 
+
+                    err = nsFTPConn::OK;
+
+                    nsFTPConn *conn;
+                    if ( isNewConn == PR_TRUE ) {
+                      conn = new nsFTPConn(currHost, EventPumpCB);
+                      if (!conn) {
                         err = E_MEM;
                         break;
-                    }
-                
-                    err = conn->Open();
-                    if (err == nsFTPConn::OK)
+                      }
+                      err = conn->Open();
+                      myConn.conn = (void *) conn;
+                      myConn.type = TYPE_FTP;
+                      myConn.URL = (char *) calloc(strlen(currHost) + 1, sizeof(char));
+                      if ( myConn.URL != (char *) NULL )
+                        strcpy( myConn.URL, currHost );
+                    } else
+                      conn = (nsFTPConn *) myConn.conn;
+
+                    if (isNewConn == PR_FALSE || err == nsFTPConn::OK)
                     {
                         sprintf(localPath, "%s/%s", XPI_DIR,
                             currComp->GetArchive());
                         err = conn->Get(srvPath, localPath, nsFTPConn::BINARY, 
                             resPos, 1, nsInstallDlg::DownloadCB);
-                        conn->Close();
+//                        conn->Close();
                     }
 
                     XI_IF_FREE(currHost);
                     XI_IF_FREE(currPath);
                     XI_IF_FREE(srvPath);
-                    XI_IF_DELETE(conn);
                 }
 
                 // else error: malformed URL
@@ -299,7 +327,7 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
 
                 if (err == OK) 
                 {
-                    currComp->SetDownloaded();
+                    currComp->SetDownloaded(TRUE);
                     currCompNum++;
                     break;  // no need to failover
                 }
@@ -307,11 +335,95 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
         }
         
         currComp = currComp->GetNext();
+      }
+   
+      CheckConn( "", TYPE_UNDEF, &myConn, true );
+ 
+      bDone = CRCCheckDownloadedArchives(XPI_DIR, strlen(XPI_DIR), currCompSave, currCompNum);
+      crcPass++;
+      if ( bDone == 0 && crcPass < MAXCRC ) {
+        // reset ourselves
+        if (markedComp) {
+          currComp = markedComp;
+          currCompNum = markedCompNum;
+        } else {
+          currComp = aComps->GetHead();
+          currCompNum = 1;
+        }
+        currCompSave = currComp;
+        gCtx->idlg->ReInitUI(); 
+        gCtx->idlg->ShowCRCDlg(); 
+        numToDL = TotalToDownload(aCustom, aComps);
+      }
     }
-    
-    // download complete: remove marker
-    DelDLMarker();
-    return OK;
+    gCtx->idlg->DestroyCRCDlg(); // destroy the CRC dialog if showing
+    if ( crcPass < MAXCRC ) {
+      // download complete: remove marker
+      DelDLMarker();
+      return OK;
+    } else {
+      return E_CRC_FAILED;
+    }
+}
+
+/* 
+ * Name: CheckConn
+ *
+ * Arguments: 
+ *
+ * char *URL; -- URL of connection we need to have established
+ * int type; -- connection type (TYPE_HTTP, etc.)
+ * CONN *myConn; -- connection state (info about currently established 
+ *                   connection)
+ * PRBool force; -- force closing of connection
+ *
+ * Description:
+ *
+ * This function determines if the caller should open a connection based upon 
+ * the current connection that is open (if any), and the type of connection 
+ * desired. If no previous connection was established, the function returns 
+ * true. If the connection is for a different protocol, then true is also 
+ * returned (and the previous connection is closed). If the connection is for 
+ * the same protocol and the URL is different, the previous connection is 
+ * closed and true is returned. Otherwise, the connection has already been
+ * established, and false is returned.
+ *
+ * Return Value: If a new connection needs to be opened, true. Otherwise, 
+ * false is returned.
+ *
+ * Original Code: Syd Logan (syd@netscape.com) 6/24/2001
+ *
+*/
+
+PRBool
+nsXIEngine::CheckConn( char *URL, int type, CONN *myConn, PRBool force )
+{
+	nsFTPConn *fconn;
+	nsHTTPConn *hconn;
+	PRBool retval = false;
+
+	if ( myConn->type == TYPE_UNDEF )
+		retval = PR_TRUE;					// first time
+	else if ( ( myConn->type != type || strcmp( URL, myConn->URL ) || force == PR_TRUE ) /* && gControls->state != ePaused */) {
+		retval = PR_TRUE;
+		switch ( myConn->type ) {
+		case TYPE_HTTP:
+		case TYPE_PROXY:
+			hconn = (nsHTTPConn *) myConn->conn;
+			hconn->Close();
+			break;
+		case TYPE_FTP:
+			fconn = (nsFTPConn *) myConn->conn;
+			fconn->Close();
+      XI_IF_DELETE(fconn);
+			break;
+		}
+	}
+	
+	if ( retval == PR_TRUE && myConn->URL != (char *) NULL )
+    free( myConn->URL );
+
+	return retval;
 }
 
 int     
@@ -395,9 +507,8 @@ nsXIEngine::Install(int aCustom, nsComponentList *aComps, char *aDestination)
 
             currComp = currComp->GetNext();
         }
+        UnloadXPIStub(&stub);
     }
-
-    UnloadXPIStub(&stub);
 
     // restore LD_LIBRARY_PATH settings
 #ifdef SOLARIS
@@ -860,3 +971,157 @@ nsXIEngine::TotalToDownload(int aCustom, nsComponentList *aComps)
 
     return total;
 }
+
+/* 
+ * Name: CRCCheckDownloadedArchives
+ *
+ * Arguments: 
+ *
+ * Handle dlPath;     -- a handle to the location of the XPI files on disk
+ * short dlPathlen;	  -- length, in bytes, of dlPath
+ *
+ * Description:
+ *
+ * This function iterates the XPI files and calls VerifyArchive() on each to 
+ * determine which archives pass checksum checks. 
+ *
+ * Return Value: if all archives pass, true. Otherwise, false.
+ *
+ * Original Code: Syd Logan (syd@netscape.com) 6/24/2001
+ *
+*/
+
+PRBool 
+nsXIEngine::CRCCheckDownloadedArchives(char *dlPath, short dlPathlen, 
+  nsComponent *currComp, int count)
+{
+  int i;
+  PRBool isClean;
+  char buf[ 1024 ];
+
+  isClean = PR_TRUE;
+
+	for(i = 0; currComp != (nsComponent *) NULL && i < MAX_COMPONENTS; i++) {
+    strncpy( buf, (const char *) dlPath, dlPathlen );
+    buf[ dlPathlen ] = '\0';
+    strcat( buf, "/" );
+    strcat( buf, currComp->GetArchive() );
+    nsInstallDlg::MajorProgressCB(buf, i, count, nsInstallDlg::ACT_INSTALL);
+    if (IsArchiveFile(buf) == PR_TRUE && VerifyArchive( buf ) != ZIP_OK) {
+      currComp->SetDownloaded(FALSE); // VerifyArchive has unlinked it
+      isClean = false;
+    }
+    currComp = currComp->GetNext();
+  }
+  return isClean;
+}
+
+/* 
+ * Name: IsArchiveFile( char *path )
+ * 
+ * Arguments:
+ * 
+ * char *path -- NULL terminated pathname 
+ *
+ * Description: 
+ *  
+ * This function extracts the file extension of filename pointed to by path 
+ * and then checks it against a table of extensions. If a match occurs, the 
+ * file is considered to be an archive file that has a checksum we can 
+ * validate, and we return PR_TRUE.
+ * Otherwise, PR_FALSE is returned.
+ *
+ * Return Value: true if the file extension matches one of those we are 
+ * looking for, and false otherwise.
+ *
+ * Original Code: Syd Logan 7/28/2001
+ *
+*/
+
+static char *extensions[] = { "ZIP", "XPI", "JAR" };  // must be uppercase
+
+PRBool
+nsXIEngine::IsArchiveFile( char *buf ) 
+{
+    PRBool ret = false;
+    char lbuf[1024];
+    char *p;
+    int i, max;
+    
+    // if we have a string and it contains a '.'
+    
+    if ( buf != (char *) NULL && ( p = strrchr( buf, '.' ) ) != (char *) NULL ) {
+        p++;
+        
+        // if there are characters after the '.' then see if there is a match
+        
+        if ( *p != '\0' ) {
+            
+            // make a copy of the extension, and fold to uppercase, since mac has no strcasecmp
+            // and we need to ensure we are comparing strings of chars that have the same case. 
+
+            strcpy( lbuf, p );
+            for ( i = 0; i < (int) strlen( lbuf ); i++ )
+            	lbuf[i] = toupper(lbuf[i]);
+            
+            // search
+            	
+            max = sizeof( extensions ) / sizeof ( char * );
+            for ( i = 0; i < max; i++ ) 
+                if ( !strcmp( lbuf, extensions[i] ) ) {
+                    ret = true;
+                    break;
+                }
+        }   
+    }
+    return ( ret );
+}
+
+/*
+ * Name: VerifyArchive
+ *
+ * Arguments:
+ *
+ * char *szArchive;     -- path of archive to verify
+ *
+ * Description:
+ *
+ * This function verifies that the specified path exists, that it is a XPI 
+ * file, and that it has a valid checksum.
+ *
+ * Return Value: If all tests pass, ZIP_OK. Otherwise, !ZIP_OK
+ *
+ * Original Code: Syd Logan (syd@netscape.com) 6/25/2001
+ *
+*/
+
+int
+nsXIEngine::VerifyArchive(char *szArchive)
+{
+  void *vZip;
+  int  iTestRv;
+  char *penv;
+
+  if((iTestRv = ZIP_OpenArchive(szArchive, &vZip)) == ZIP_OK)
+  {
+    /* 1st parameter should be NULL or it will fail */
+    /* It indicates extract the entire archive */
+    iTestRv = ZIP_TestArchive(vZip);
+    ZIP_CloseArchive(&vZip);
+  }
+ 
+  // for testing, this will cause about half of the CRCs to fail. Since 
+  // randomly selecting which fail, likely next pass the same file will 
+  // end up a success.
+ 
+  penv = getenv("MOZ_INSTALL_TEST_CRC");
+  if ( penv != (char *) NULL ) { 
+    if ( random() < RAND_MAX / 2 ) 
+      iTestRv = !ZIP_OK;
+  }
+
+  if ( iTestRv != ZIP_OK )
+    unlink( szArchive );
+  return(iTestRv);
+}
+

@@ -64,7 +64,8 @@
         E_MKDIR_FAIL    = -624,     /* can't make destination dir */
         E_OLD_INST      = -625,     /* old instllation exists */
         E_NO_PERMS      = -626,     /* don't have rwx perms on selected dir */
-        E_NO_DISK_SPACE = -627      /* not eough disk space to install */
+        E_NO_DISK_SPACE = -627,     /* not eough disk space to install */
+        E_CRC_FAILED    = -628      /* CRC failed */
     };
 
 #endif /* _XI_ERRORS_H_ */
