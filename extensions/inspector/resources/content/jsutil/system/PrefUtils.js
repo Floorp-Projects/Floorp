@@ -47,7 +47,7 @@
 
 //////////// global constants ////////////////////
 
-const nsIPref = Components.interfaces.nsIPref;
+const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
 
 ////////////////////////////////////////////////////////////////////////////
 //// class PrefUtils
@@ -58,35 +58,40 @@ var PrefUtils =
   
   init: function()
   {
-    this.mPrefs = XPCU.getService("@mozilla.org/preferences;1", "nsIPref");
+    var prefService = XPCU.getService("@mozilla.org/preferences-service;1", "nsIPrefService");
+    this.mPrefs = prefService.getBranch(null);
   },
 
   addObserver: function(aDomain, aFunction)
   {
     if (!this.mPrefs) this.init();
 
-    this.mPrefs.addObserver(aDomain, aFunction);
+    var pbi = XPCU.QI(this.mPrefs, "nsIPrefBranchInternal");
+    if (pbi)
+      pbi.addObserver(aDomain, aFunction, false);
   },
 
   removeObserver: function(aDomain, aFunction)
   {
     if (!this.mPrefs) this.init();
 
-    this.mPrefs.removeObserver(aDomain, aFunction);
+    var pbi = XPCU.QI(this.mPrefs, "nsIPrefBranchInternal");
+    if (pbi)
+      pbi.removeObserver(aDomain, aFunction);
   },
 
   setPref: function(aName, aValue)
   {
     if (!this.mPrefs) this.init();
     
-    var type = this.mPrefs.GetPrefType(aName);
+    var type = this.mPrefs.getPrefType(aName);
     try {
-      if (type == nsIPref.ePrefString) {
-        this.mPrefs.SetUnicharPref(aName, aValue);
-      } else if (type == nsIPref.ePrefBool) {
-        this.mPrefs.SetBoolPref(aName, aValue);
-      } else if (type == nsIPref.ePrefInt) {
-        this.mPrefs.SetIntPref(aName, aValue);
+      if (type == nsIPrefBranch.PREF_STRING) {
+        this.mPrefs.setComplexValue(aName, Components.interfaces.nsISupportsWString, aValue);
+      } else if (type == nsIPrefBranch.PREF_BOOL) {
+        this.mPrefs.setBoolPref(aName, aValue);
+      } else if (type == nsIPrefBranch.PREF_INT) {
+        this.mPrefs.setIntPref(aName, aValue);
       }
     } catch(ex) {
       debug("ERROR: Unable to write pref \"" + aName + "\".\n");
@@ -97,14 +102,14 @@ var PrefUtils =
   {
     if (!this.mPrefs) this.init();
 
-    var type = this.mPrefs.GetPrefType(aName);
+    var type = this.mPrefs.getPrefType(aName);
     try {
-      if (type == nsIPref.ePrefString) {
-        return this.mPrefs.CopyUnicharPref(aName);
-      } else if (type == nsIPref.ePrefBool) {
-        return this.mPrefs.GetBoolPref(aName);
-      } else if (type == nsIPref.ePrefInt) {
-        return this.mPrefs.GetIntPref(aName);
+      if (type == nsIPrefBranch.PREF_STRING) {
+        return this.mPrefs.getComplexValue(aName, Components.interfaces.nsISupportsWString);
+      } else if (type == nsIPrefBranch.PREF_BOOL) {
+        return this.mPrefs.getBoolPref(aName);
+      } else if (type == nsIPrefBranch.PREF_INT) {
+        return this.mPrefs.getIntPref(aName);
       }
     } catch(ex) {
       debug("ERROR: Unable to read pref \"" + aName + "\".\n");

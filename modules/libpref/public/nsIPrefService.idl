@@ -171,12 +171,12 @@ interface nsIPrefService : nsISupports
 /**
  * Notification sent before reading the default user preferences files.
  */
-#define NS_PREFSERVICE_READ_OBSERVER_ID "prefservice:before-read-userprefs"
+#define NS_PREFSERVICE_READ_TOPIC_ID "prefservice:before-read-userprefs"
 
 /**
  * Notification sent when resetPrefs has been called, but before the actual
  * reset process occurs.
  */
-#define NS_PREFSERVICE_RESET_OBSERVER_ID "prefservice:before-reset"
+#define NS_PREFSERVICE_RESET_TOPIC_ID "prefservice:before-reset"
 
 %}
