@@ -897,6 +897,9 @@ FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
           aFrame->SetStyleContext(&aPresContext, newContext);
         }
       }
+      else {
+        oldContext->RemapStyle(&aPresContext, PR_FALSE);
+      }
       NS_RELEASE(oldContext);
     }
     else {
