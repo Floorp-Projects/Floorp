@@ -30,15 +30,30 @@
 
 int main(int argc, char **argv)
 {
-#if defined(XP_UNIX)
-   long long now;
-   struct timeval tv;
+#if defined(OMIT_LIB_BUILD_TIME)
+    /*
+     * Some platforms don't have any 64-bit integer type
+     * such as 'long long'.  Because we can't use NSPR's
+     * PR_snprintf in this program, it is difficult to
+     * print a static initializer for PRInt64 (a struct).
+     * So we print nothing.  The makefiles that build the
+     * shared libraries will detect the empty output string
+     * of this program and omit the library build time
+     * in PRVersionDescription.
+     */
+#elif defined(XP_UNIX)
+    long long now;
+    struct timeval tv;
+#ifdef HAVE_SVID_GETTOD
+    gettimeofday(&tv);
+#else
     gettimeofday(&tv, NULL);
+#endif
     now = ((1000000LL) * tv.tv_sec) + (long long)tv.tv_usec;
 #if defined(OSF1)
-    return fprintf(stdout, "%ld", now);
+    fprintf(stdout, "%ld", now);
 #else
-    return fprintf(stdout, "%lld", now);
+    fprintf(stdout, "%lld", now);
 #endif
 
 #elif defined(WIN32)
@@ -48,10 +63,12 @@ int main(int argc, char **argv)
     now = b.time;
     now *= 1000000;
     now += (1000 * b.millitm);
-    return fprintf(stdout, "%I64d", now);
+    fprintf(stdout, "%I64d", now);
 #else
 #error "Architecture not supported"
 #endif
+
+    return 0;
 }  /* main */
 
 /* now.c */

@@ -310,7 +310,6 @@ endif
 #
 # Version information generation (begin)
 #
-RM = rm
 ECHO = echo
 INCLUDES = -I$(DIST)/include
 TINC = $(OBJDIR)/_pr_bld.h
@@ -321,17 +320,17 @@ SH_NOW = $(shell $(NOW))
 
 ifeq ($(OS_ARCH), WINNT)
 	SUF = i64
-	SH_QUOTE =
 else
 	SUF = LL
-	SH_QUOTE = "
 endif
 
 $(TINC):
 	@$(MAKE_OBJDIR)
-	@$(ECHO) $(SH_QUOTE)#define _BUILD_STRING \"$(SH_DATE)\"$(SH_QUOTE) > $(TINC)
-	@$(ECHO) $(SH_QUOTE)#define _BUILD_TIME $(SH_NOW)$(SUF)$(SH_QUOTE) >> $(TINC)
-	@$(ECHO) $(SH_QUOTE)#define _PRODUCTION \"$(PROD)\"$(SH_QUOTE) >> $(TINC)
+	@$(ECHO) '#define _BUILD_STRING "$(SH_DATE)"' > $(TINC)
+	@if test ! -z "$(SH_NOW)"; then \
+	    $(ECHO) '#define _BUILD_TIME $(SH_NOW)$(SUF)' >> $(TINC); \
+	fi
+	@$(ECHO) '#define _PRODUCTION "$(PROD)"' >> $(TINC)
 
 
 $(OBJDIR)/prvrsion.$(OBJ_SUFFIX): $(TINC)

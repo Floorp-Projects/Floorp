@@ -24,7 +24,11 @@
 /************************************************************************/
 #include "_pr_bld.h"
 #if !defined(_BUILD_TIME)
+#ifdef HAVE_LONG_LONG
 #define _BUILD_TIME 0
+#else
+#define _BUILD_TIME {0, 0}
+#endif
 #endif
 #if !defined(_BUILD_STRING)
 #define _BUILD_STRING ""

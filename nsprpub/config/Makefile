@@ -31,6 +31,13 @@ else
 PROG_SUFFIX =
 endif
 
+# Temporary workaround to disable the generation of
+# library build time because now.c uses the 'long long'
+# data type that's not available on some platforms.
+ifeq (,$(filter-out NEC SCOOS UNIXWARE,$(OS_ARCH)))
+DEFINES += -DOMIT_LIB_BUILD_TIME
+endif
+
 ifeq ($(OS_ARCH), IRIX)
     ifeq ($(basename $(OS_RELEASE)),6)
 	    ifeq ($(USE_N32),1)

@@ -25,13 +25,10 @@
 #endif
 
 /*
- * To pick up fd_set.  In AIX 4.2, fd_set is defined in <sys/time.h>,
- * which is included by _unixos.h.
+ * To pick up fd_set and the poll events.
  */
-#ifdef AIX4_1
 #include <sys/select.h>
 #include <sys/poll.h>
-#endif
 
 /*
  * Internal configuration macros
