@@ -54,9 +54,10 @@ endif
 
 ifndef NSPR_INSTALL_DIR
 NSPR_INSTALL_DIR = /usr/local/nspr
+NSPR_CONFIG_FLAG = --with-nspr=$(NSPR_INSTALL_DIR)
+else
+NSPR_CONFIG_FLAG = 
 endif
-
--include $(DEPTH)/config/config.mk
 
 all: checkout
 
@@ -75,25 +76,20 @@ checkout:
 
 
 # Build with autoconf
-build:
-	pwd=`pwd`; \
-	echo pwd = $$pwd; \
+configure:	mozilla/configure.in
 	autoobjdir=obj-$(shell mozilla/build/autoconf/config.guess); \
 	echo autoobjdir = $$autoobjdir; \
 	(cd mozilla; $(AUTOCONF)); \
 	if test ! -d mozilla/$$autoobjdir; then $(MKDIR) mozilla/$$autoobjdir; fi; \
-	(cd mozilla/$$autoobjdir; ../configure --with-nspr=$(NSPR_INSTALL_DIR) --enable-toolkit=$(MOZ_TOOLKIT))
-	(cd mozilla/$$autoobjdir; gmake depend)
-	(cd mozilla/$$autoobjdir; gmake)
+	(cd mozilla/$$autoobjdir; ../configure $(NSPR_CONFIG_FLAG) --enable-toolkit=$(MOZ_TOOLKIT)); \
 
-# Do an autoconf build, this isn't working yet. -mcafee
-#
-#	if test ! -d mozilla/$(FOO); then (cd mozilla; $(MKDIR) $(AUTODIR)); fi
-#	@echo cd mozilla/obj-`build/autoconf/config.guess`; ../configure --with-nspr=$(PWD)/$(DIST)
-
+build:	configure
+	(cd mozilla/$$autoobjdir; gmake); \
+#	(cd mozilla/$$autoobjdir; gmake depend); \
 
 # Build & install nspr.  Classic build, no autoconf.
 # Linux/RPM available.
-nspr:
+nspr:	$(NSPR_INSTALL_DIR)/lib/libnspr21.so
+$(NSPR_INSTALL_DIR)/lib/libnspr21.so:
 	($(MAKE) -C mozilla/nsprpub DIST=$(NSPR_INSTALL_DIR) NSDISTMODE=copy NS_USE_GCC=1 MOZILLA_CLIENT=1 NO_MDUPDATE=1 NS_USE_NATIVE= )
 
