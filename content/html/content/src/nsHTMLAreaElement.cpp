@@ -96,10 +96,14 @@ public:
 
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);
-  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
-                           PRBool aNotify);
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue, PRBool aNotify);
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
 
@@ -288,16 +292,8 @@ nsHTMLAreaElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 }
 
 nsresult
-nsHTMLAreaElement::SetAttr(nsINodeInfo* aNodeInfo,
-                           const nsAString& aValue,
-                           PRBool aNotify)
-{
-  return nsGenericHTMLElement::SetAttr(aNodeInfo, aValue, aNotify);
-}
-
-nsresult
 nsHTMLAreaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue,
+                           nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify)
 {
   if (aName == nsHTMLAtoms::accesskey && aNameSpaceID == kNameSpaceID_None) {
@@ -309,7 +305,7 @@ nsHTMLAreaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   }
 
   nsresult rv =
-    nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aValue, aNotify);
+    nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue, aNotify);
 
   if (aName == nsHTMLAtoms::accesskey && aNameSpaceID == kNameSpaceID_None &&
       !aValue.IsEmpty()) {

@@ -423,7 +423,8 @@ nsXULAttribute::SetValue(const nsAString& aValue)
 {
     // We call back to the content node's SetValue() method so we can
     // share all of the work that it does.
-    return mContent->SetAttr(mNodeInfo, aValue, PR_TRUE);
+    return mContent->SetAttr(mNodeInfo->NamespaceID(), mNodeInfo->NameAtom(),
+                             mNodeInfo->GetPrefixAtom(), aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP

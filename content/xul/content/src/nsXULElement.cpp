@@ -1063,7 +1063,9 @@ nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
                 rv = attr->GetValue(value);
                 if (NS_FAILED(rv)) return rv;
 
-                rv = result->SetAttr(attr->GetNodeInfo(), value,
+                nsINodeInfo* ni = attr->GetNodeInfo();
+                rv = result->SetAttr(ni->NamespaceID(), ni->NameAtom(),
+                                     ni->GetPrefixAtom(), value,
                                      PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
             }
@@ -1174,7 +1176,8 @@ nsXULElement::SetAttribute(const nsAString& aName,
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    return SetAttr(ni, aValue, PR_TRUE);
+    return SetAttr(ni->NamespaceID(), ni->NameAtom(), ni->GetPrefixAtom(),
+                   aValue, PR_TRUE);
 }
 
 
@@ -1297,7 +1300,8 @@ nsXULElement::SetAttributeNS(const nsAString& aNamespaceURI,
                                                              getter_AddRefs(ni));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return SetAttr(ni, aValue, PR_TRUE);
+    return SetAttr(ni->NamespaceID(), ni->NameAtom(), ni->GetPrefixAtom(),
+                   aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -2191,24 +2195,26 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
 // NOTE: Changes to this function may need to be made in
 // |SetInlineStyleRule| as well.
 nsresult
-nsXULElement::SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
-                      PRBool aNotify)
+nsXULElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix,
+                      const nsAString& aValue, PRBool aNotify)
 {
-    NS_ASSERTION(nsnull != aNodeInfo, "must have attribute nodeinfo");
-    if (nsnull == aNodeInfo)
-        return NS_ERROR_NULL_POINTER;
+    nsCOMPtr<nsINodeInfo> ni;
+    nsresult rv =
+      NodeInfo()->NodeInfoManager()->GetNodeInfo(aName, aPrefix, aNamespaceID,
+                                                 getter_AddRefs(ni));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    nsresult rv = EnsureAttributes();
+    rv = EnsureAttributes();
     if (NS_FAILED(rv)) return rv;
 
     nsAutoString oldValue;
-    nsXULAttribute* attr = FindLocalAttribute(aNodeInfo);
+    nsXULAttribute* attr = FindLocalAttribute(ni);
     nsXULPrototypeAttribute *protoattr = nsnull;
     if (attr) {
         attr->GetValue(oldValue);
     } else {
         // Don't have it locally, but might be shadowing a prototype attribute.
-        protoattr = FindPrototypeAttribute(aNodeInfo);
+        protoattr = FindPrototypeAttribute(ni);
         if (protoattr) {
             protoattr->mValue.GetValue(oldValue);
         }
@@ -2219,31 +2225,28 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
         return NS_OK;
     }
 
-    nsIAtom *attrName = aNodeInfo->NameAtom();
-    PRInt32 attrns = aNodeInfo->NamespaceID();
-
     // Send the update notification _before_ changing anything
     mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
     if (mDocument && aNotify) {
-        mDocument->AttributeWillChange(this, attrns, attrName);
+        mDocument->AttributeWillChange(this, aNamespaceID, aName);
     }
 
     // Check to see if the CLASS attribute is being set.  If so, we need to
     // rebuild our class list.
-    if (aNodeInfo->Equals(nsXULAtoms::clazz, kNameSpaceID_None)) {
+    if (aName == nsXULAtoms::clazz && aNamespaceID == kNameSpaceID_None) {
         Attributes()->UpdateClassList(aValue);
     }
 
     // Check to see if the STYLE attribute is being set.  If so, we need to
     // create a new style rule based off the value of this attribute, and we
     // need to let the document know about the StyleRule change.
-    if (aNodeInfo->Equals(nsXULAtoms::style, kNameSpaceID_None)) {
+    if (aName == nsXULAtoms::style && aNamespaceID == kNameSpaceID_None) {
         nsCOMPtr<nsIURI> baseURI = GetBaseURI();
         Attributes()->UpdateStyleRule(baseURI, aValue);
     }
 
     if (NodeInfo()->Equals(nsXULAtoms::window) &&
-        aNodeInfo->Equals(nsXULAtoms::hidechrome)) {
+        aName == nsXULAtoms::hidechrome && aNamespaceID == kNameSpaceID_None) {
       nsAutoString val(aValue);
       HideWindowChrome(val.Equals(NS_LITERAL_STRING("true")));
     }
@@ -2263,7 +2266,7 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
     else {
         // Need to create a local attr
         rv = nsXULAttribute::Create(NS_STATIC_CAST(nsIStyledContent*, this),
-                                    aNodeInfo, aValue, &attr);
+                                    ni, aValue, &attr);
         if (NS_FAILED(rv)) return rv;
 
         // transfer ownership here...
@@ -2272,15 +2275,15 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
     }
 
     // Add popup and event listeners
-    AddListenerFor(aNodeInfo, PR_TRUE);
+    AddListenerFor(ni, PR_TRUE);
 
     // If the accesskey attribute changes, unregister it here.
     // It will be registered for the new value in the relevant frames.
     // Also see nsAreaFrame, nsBoxFrame and nsTextBoxFrame's AttributeChanged
-    if (aNodeInfo->Equals(nsXULAtoms::accesskey, kNameSpaceID_None))
+    if (aName == nsXULAtoms::accesskey && aNamespaceID == kNameSpaceID_None)
         UnregisterAccessKey(oldValue);
 
-    FinishSetAttr(attrns, attrName, oldValue, aValue, modHint, aNotify);
+    FinishSetAttr(aNamespaceID, aName, oldValue, aValue, modHint, aNotify);
 
     return NS_OK;
 }
@@ -2323,26 +2326,8 @@ nsXULElement::FinishSetAttr(PRInt32 aAttrNS, nsIAtom* aAttrName,
 }
 
 nsresult
-nsXULElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                      const nsAString& aValue, PRBool aNotify)
-{
-    nsCOMPtr<nsINodeInfo> ni;
-    NodeInfo()->NodeInfoManager()->GetNodeInfo(aName, nsnull, aNameSpaceID,
-                                               getter_AddRefs(ni));
-
-    return SetAttr(ni, aValue, aNotify);
-}
-
-nsresult
-nsXULElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                      nsAString& aResult) const
-{
-    nsCOMPtr<nsIAtom> prefix;
-    return GetAttr(aNameSpaceID, aName, getter_AddRefs(prefix), aResult);
-}
-
-nsresult
-nsXULElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom** aPrefix,
+nsXULElement::GetAttr(PRInt32 aNameSpaceID,
+                      nsIAtom* aName,
                       nsAString& aResult) const
 {
     NS_ASSERTION(nsnull != aName, "must have attribute name");
@@ -2363,7 +2348,6 @@ nsXULElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom** aPrefix,
 
                 nsINodeInfo *ni = attr->GetNodeInfo();
                 if (ni->Equals(aName, aNameSpaceID)) {
-                    NS_IF_ADDREF(*aPrefix = ni->GetPrefixAtom());
                     attr->GetValue(aResult);
                     return aResult.IsEmpty() ? NS_CONTENT_ATTR_NO_VALUE : NS_CONTENT_ATTR_HAS_VALUE;
                 }
@@ -2378,7 +2362,6 @@ nsXULElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom** aPrefix,
 
             nsINodeInfo *ni = attr->mNodeInfo;
             if (ni->Equals(aName, aNameSpaceID)) {
-                NS_IF_ADDREF(*aPrefix = ni->GetPrefixAtom());
                 attr->mValue.GetValue( aResult );
                 return aResult.IsEmpty() ? NS_CONTENT_ATTR_NO_VALUE : NS_CONTENT_ATTR_HAS_VALUE;
             }
@@ -2387,7 +2370,6 @@ nsXULElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom** aPrefix,
 
     // Not found.
     aResult.Truncate();
-    *aPrefix = nsnull;
     return NS_CONTENT_ATTR_NOT_THERE;
 }
 

@@ -1594,13 +1594,9 @@ nsXMLContentSink::AddAttributes(const PRUnichar** aAtts,
       nameSpacePrefix = nsnull;
     }
 
-    nsCOMPtr<nsINodeInfo> ni;
-    mNodeInfoManager->GetNodeInfo(nameAtom, nameSpacePrefix, nameSpaceID,
-                                  getter_AddRefs(ni));
-    NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
-
     // Add attribute to content
-    aContent->SetAttr(ni, nsDependentString(aAtts[1]), PR_FALSE);
+    aContent->SetAttr(nameSpaceID, nameAtom, nameSpacePrefix,
+                      nsDependentString(aAtts[1]), PR_FALSE);
     aAtts += 2;
   }
 

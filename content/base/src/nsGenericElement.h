@@ -62,6 +62,7 @@
 #include "nsIParser.h"
 #include "nsContentUtils.h"
 #include "pldhash.h"
+#include "nsAttrAndChildArray.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -372,6 +373,7 @@ public:
   virtual nsINodeInfo *GetNodeInfo() const;
   virtual nsIAtom *GetIDAttributeName() const;
   virtual nsIAtom *GetClassAttributeName() const;
+  virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
   virtual nsresult RangeAdd(nsIDOMRange* aRange);
   virtual void RangeRemove(nsIDOMRange* aRange);
   virtual const nsVoidArray *GetRangeList() const;
@@ -609,6 +611,11 @@ protected:
     return PR_FALSE;
   }
 
+  /**
+   * Internal hook for converting an attribute name-string to an atomized name
+   */
+  virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const = 0;
+
   PRBool HasDOMSlots() const
   {
     return !(mFlagsOrSlots & GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS);
@@ -728,8 +735,6 @@ protected:
  */
 class nsGenericContainerElement : public nsGenericElement {
 public:
-  nsGenericContainerElement();
-  virtual ~nsGenericContainerElement();
 
   /**
    * Copy attributes and children from another content object
@@ -780,15 +785,15 @@ public:
   }
 
   // Remainder of nsIContent
-  virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                            const nsAString& aValue, PRBool aNotify);
-  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
-                           PRBool aNotify);
   virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsAString& aResult) const;
-  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsIAtom** aPrefix, nsAString& aResult) const;
   virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
@@ -806,30 +811,31 @@ public:
 
   // Child list modification hooks
   virtual PRBool InternalInsertChildAt(nsIContent* aKid, PRUint32 aIndex) {
-    return mChildren.InsertElementAt(aKid, aIndex);
+    return NS_SUCCEEDED(mAttrsAndChildren.InsertChildAt(aKid, aIndex));
   }
   virtual PRBool InternalReplaceChildAt(nsIContent* aKid, PRUint32 aIndex) {
-    return mChildren.ReplaceElementAt(aKid, aIndex);
+    mAttrsAndChildren.ReplaceChildAt(aKid, aIndex);
+    return PR_TRUE;
   }
   virtual PRBool InternalAppendChildTo(nsIContent* aKid) {
-    return mChildren.AppendElement(aKid);
+    return NS_SUCCEEDED(mAttrsAndChildren.AppendChild(aKid));
   }
   virtual PRBool InternalRemoveChildAt(PRUint32 aIndex) {
-    return mChildren.RemoveElementAt(aIndex);
+    mAttrsAndChildren.RemoveChildAt(aIndex);
+    return PR_TRUE;
   }
   
+  virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
+
 #ifdef DEBUG
   void ListAttributes(FILE* out) const;
 #endif
 
 protected:
   /**
-   * The attributes (stored as nsGenericAttribute*)
-   * @see nsGenericAttribute
-   * */
-  nsVoidArray* mAttributes;
-  /** The list of children (stored as nsIContent*) */
-  nsSmallVoidArray mChildren;
+   * Array containing all attributes and children for this element
+   */
+  nsAttrAndChildArray mAttrsAndChildren;
 };
 
 

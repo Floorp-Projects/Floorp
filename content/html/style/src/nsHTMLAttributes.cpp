@@ -1332,6 +1332,12 @@ nsHTMLAttributes::GetAttributeNameAt(PRInt32 aIndex,
   return result;
 }
 
+const nsHTMLAttrName*
+nsHTMLAttributes::AttributeNameAt(PRInt32 aIndex) const
+{
+  return &mAttrNames[aIndex];
+}
+
 NS_IMETHODIMP
 nsHTMLAttributes::GetAttributeCount(PRInt32& aCount) const
 {

@@ -176,15 +176,14 @@ public:
                                   nsEventStatus* aEventStatus);
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue, PRBool aNotify);
-  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
-                           PRBool aNotify)
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
   {
-    // This will end up calling the other SetAttr().
-    return nsGenericHTMLContainerElement::SetAttr(aNodeInfo, aValue, aNotify);
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
   }
-
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify);
 
   /**
    * Forget all information about the current submission (and the fact that we
@@ -531,9 +530,11 @@ nsHTMLFormElement::GetElements(nsIDOMHTMLCollection** aElements)
 
 nsresult
 nsHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue, PRBool aNotify)
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify)
 {
-  if (aName == nsHTMLAtoms::action || aName == nsHTMLAtoms::target) {
+  if ((aName == nsHTMLAtoms::action || aName == nsHTMLAtoms::target) &&
+      aNameSpaceID == kNameSpaceID_None) {
     if (mPendingSubmission) {
       // aha, there is a pending submission that means we're in
       // the script and we need to flush it. let's tell it
@@ -543,7 +544,7 @@ nsHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
     ForgetCurrentSubmission();
   }
-  return nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aName,
+  return nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aName, aPrefix,
                                                 aValue, aNotify);
 }
 

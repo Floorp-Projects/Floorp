@@ -246,7 +246,7 @@ public:
 
   /**
    * Set attribute values. All attribute values are assumed to have a
-   * canonical String representation that can be used for these
+   * canonical string representation that can be used for these
    * methods. The SetAttr method is assumed to perform a translation
    * of the canonical form into the underlying content specific
    * form.
@@ -257,23 +257,28 @@ public:
    * @param aNotify specifies how whether or not the document should be
    *        notified of the attribute change.
    */
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue, PRBool aNotify) = 0;
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
 
   /**
    * Set attribute values. All attribute values are assumed to have a
-   * canonical string representation that can be used for these
+   * canonical String representation that can be used for these
    * methods. The SetAttr method is assumed to perform a translation
    * of the canonical form into the underlying content specific
    * form.
    *
-   * @param aNodeInfo the node info (name, prefix, namespace id) of the
-   *        attribute
+   * @param aNameSpaceID the namespace of the attribute
+   * @param aName the name of the attribute
+   * @param aPrefix the prefix of the attribute
    * @param aValue the value to set
-   * @param aNotify specifies whether or not the document should be
+   * @param aNotify specifies how whether or not the document should be
    *        notified of the attribute change.
    */
-  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify) = 0;
 
   /**
@@ -291,23 +296,6 @@ public:
    */
   virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                            nsAString& aResult) const = 0;
-
-  /**
-   * Get the current value and prefix of the attribute. This returns a form
-   * that is suitable for passing back into SetAttr.
-   *
-   * @param aNameSpaceID the name space of the attr to get
-   * @param aName the name of the attr
-   * @param aPrefix the prefix of the attr [OUT]
-   * @param aName the name of the attr [OUT]
-   * @throws NS_CONTENT_ATTR_NOT_THERE if the attribute is not set and has no
-   *         default value
-   * @throws NS_CONTENT_ATTR_NO_VALUE if the attribute exists but has no value
-   * @throws NS_CONTENT_ATTR_HAS_VALUE if the attribute exists and has a
-   *         non-empty value (==NS_OK)
-   */
-  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsIAtom** aPrefix, nsAString& aResult) const = 0;
 
   /**
    * Determine if an attribute has been set (empty string or otherwise).

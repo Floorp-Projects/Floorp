@@ -195,22 +195,23 @@ public:
                            PRBool aCompileEventHandlers);
   virtual void SetParent(nsIContent* aParent);
 
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue, PRBool aNotify)
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify)
   {
     BeforeSetAttr(aNameSpaceID, aName, &aValue, aNotify);
 
     nsresult rv = nsGenericHTMLLeafFormElement::SetAttr(aNameSpaceID, aName,
-                                                        aValue, aNotify);
+                                                        aPrefix, aValue,
+                                                        aNotify);
 
     AfterSetAttr(aNameSpaceID, aName, &aValue, aNotify);
     return rv;
-  }
-  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
-                           PRBool aNotify)
-  {
-    // This will end up calling the other SetAttr().
-    return nsGenericHTMLLeafFormElement::SetAttr(aNodeInfo, aValue, aNotify);
   }
 
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,

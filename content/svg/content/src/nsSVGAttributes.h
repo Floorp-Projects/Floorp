@@ -50,6 +50,7 @@
 #include "nsISVGValue.h"
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
+#include "nsAttrName.h"
 
 class nsIContent;
 class nsSVGAttributes;
@@ -80,20 +81,20 @@ class nsSVGAttribute : public nsISVGAttribute, // :nsIDOMAttr
 {
 public:
   static nsresult
-  Create(nsINodeInfo* aNodeInfo,
+  Create(const nsAttrName& aName,
          nsISVGValue* value,
          nsSVGAttributeFlags flags,
          nsSVGAttribute** aResult);
 
   // create a generic string attribute:
   static nsresult
-  Create(nsINodeInfo* aNodeInfo,
+  Create(const nsAttrName& aName,
          const nsAString& value,
          nsSVGAttribute** aResult);
 
 protected:
 
-  nsSVGAttribute(nsINodeInfo* aNodeInfo,
+  nsSVGAttribute(const nsAttrName& aName,
                  nsISVGValue* value,
                  nsSVGAttributeFlags flags);
   
@@ -121,7 +122,7 @@ public:
 
   
   // other implementation functions
-  nsINodeInfo* GetNodeInfo()const { return mNodeInfo; }
+  const nsAttrName* Name() const { return &mName; }
   void GetQualifiedName(nsAString& aQualifiedName)const;
 
   nsISVGValue* GetValue() { return mValue; }
@@ -135,7 +136,7 @@ protected:
   
   nsSVGAttributeFlags   mFlags;
   nsSVGAttributes*      mOwner;
-  nsCOMPtr<nsINodeInfo> mNodeInfo;
+  nsAttrName            mName;
   nsCOMPtr<nsISVGValue>  mValue;
 };
 
@@ -163,16 +164,14 @@ public:
 
   PRInt32 Count() const;
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                     nsIAtom** aPrefix,
                      nsAString& aResult);
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAString& aValue,
-                     PRBool aNotify);
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
+                     const nsAString& aValue, PRBool aNotify);
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                        PRBool aNotify);
   NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID,
                               nsIAtom* aName) const;
-  NS_IMETHOD_(already_AddRefed<nsINodeInfo>) GetExistingAttrNameFromQName(const nsAString& aStr);
+  const nsAttrName* GetExistingAttrNameFromQName(const nsAString& aStr);
   NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
                            PRInt32* aNameSpaceID,
                            nsIAtom** aName,
@@ -190,8 +189,8 @@ protected:
   // implementation helpers:
   void ReleaseAttributes();
   void ReleaseMappedAttributes();
-  PRBool GetMappedAttribute(nsINodeInfo* aNodeInfo, nsSVGAttribute** 
-attrib);
+  PRBool GetMappedAttribute(PRInt32 aNamespaceID, nsIAtom* aName,
+                            nsSVGAttribute** attrib);
 
   PRBool IsExplicitAttribute(nsSVGAttribute* attrib);
   PRBool IsMappedAttribute(nsSVGAttribute* attrib);  

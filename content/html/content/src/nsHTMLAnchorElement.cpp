@@ -119,9 +119,13 @@ public:
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
 
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue, PRBool aNotify);
-  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
@@ -639,7 +643,7 @@ nsHTMLAnchorElement::GetHrefURI(nsIURI** aURI)
 
 nsresult
 nsHTMLAnchorElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                             const nsAString& aValue,
+                             nsIAtom* aPrefix, const nsAString& aValue,
                              PRBool aNotify)
 {
   if (aName == nsHTMLAtoms::href && kNameSpaceID_None == aNameSpaceID) {
@@ -654,8 +658,8 @@ nsHTMLAnchorElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     RegUnRegAccessKey(PR_FALSE);
   }
 
-  nsresult rv =
-      nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aValue, aNotify);
+  nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
+                                              aValue, aNotify);
 
   if (aName == nsHTMLAtoms::accesskey && kNameSpaceID_None == aNameSpaceID &&
       !aValue.IsEmpty()) {
@@ -663,13 +667,6 @@ nsHTMLAnchorElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   }
 
   return rv;
-}
-
-nsresult
-nsHTMLAnchorElement::SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
-                             PRBool aNotify)
-{
-  return nsGenericHTMLElement::SetAttr(aNodeInfo, aValue, aNotify);
 }
 
 nsresult

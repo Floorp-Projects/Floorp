@@ -128,24 +128,19 @@ public:
 
   // nsIContent
   virtual void SetParent(nsIContent* aParent) { }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue,
-                           PRBool aNotify)
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
   {
-    return NS_OK;
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
   }
-  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify)
   {
     return NS_OK;
   }
   virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                            nsAString& aResult) const
-  {
-    return NS_CONTENT_ATTR_NOT_THERE;
-  }
-  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                           nsIAtom** aPrefix, nsAString& aResult) const
   {
     return NS_CONTENT_ATTR_NOT_THERE;
   }
@@ -285,14 +280,10 @@ nsDocumentFragment::ReconnectChildren()
 NS_IMETHODIMP
 nsDocumentFragment::DropChildReferences()
 {
-  PRUint32 count = GetChildCount();
-
-  for (PRUint32 index = 0; index < count; ++index) {
-    nsIContent* kid = NS_STATIC_CAST(nsIContent*, mChildren.ElementAt(index));
-    NS_RELEASE(kid);
+  PRUint32 count = mAttrsAndChildren.ChildCount();
+  while (count > 0) {
+    mAttrsAndChildren.RemoveChildAt(--count);
   }
-
-  mChildren.Clear();
 
   return NS_OK;
 }

@@ -85,9 +85,13 @@ public:
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
   virtual nsresult SetAttr(PRUint32 aNameSpaceID, nsIAtom* aName,
-                           const nsAString& aValue, PRBool aNotify);
-  virtual nsresult SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                           nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
@@ -287,35 +291,15 @@ nsHTMLStyleElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
  
 nsresult
 nsHTMLStyleElement::SetAttr(PRUint32 aNameSpaceID, nsIAtom* aName,
-                            const nsAString& aValue, PRBool aNotify)
+                            nsIAtom* aPrefix, const nsAString& aValue,
+                            PRBool aNotify)
 {
   nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aName,
-                                                       aValue, aNotify);
+                                                       aPrefix, aValue,
+                                                       aNotify);
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet();
   }
-
-  return rv;
-}
-
-nsresult
-nsHTMLStyleElement::SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
-                            PRBool aNotify)
-{
-  nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNodeInfo, aValue,
-                                                       aNotify);
-
-  // nsGenericHTMLContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
-  //                                             const nsAString& aValue,
-  //                                             PRBool aNotify)
-  //
-  // calls
-  //
-  // SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-  //              const nsAString& aValue, PRBool aNotify)
-  //
-  // which ends up calling UpdateStyleSheet so we don't call UpdateStyleSheet
-  // here ourselves.
 
   return rv;
 }

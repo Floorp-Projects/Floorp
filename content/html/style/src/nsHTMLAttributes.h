@@ -123,7 +123,7 @@ struct nsHTMLClassList {
  * The union handles NO refcounting automatically, the client has to call
  * Addref and Release manually.
  */
-#define NS_ATTRNAME_NODEINFO_BIT 0x01
+#define NS_HTMLATTRNAME_NODEINFO_BIT 0x01
 union nsHTMLAttrName {
     nsHTMLAttrName()
     {
@@ -137,25 +137,25 @@ union nsHTMLAttrName {
     nsHTMLAttrName(nsINodeInfo* aNodeInfo) : mNodeInfo(aNodeInfo)
     {
         NS_ASSERTION(aNodeInfo, "null nodeinfo-name in nsHTMLAttrName");
-        mBits |= NS_ATTRNAME_NODEINFO_BIT;
+        mBits |= NS_HTMLATTRNAME_NODEINFO_BIT;
     }
 
     PRBool IsAtom() const
     {
-        return !(mBits & NS_ATTRNAME_NODEINFO_BIT);
+        return !(mBits & NS_HTMLATTRNAME_NODEINFO_BIT);
     }
 
     nsINodeInfo* GetNodeInfo() const
     {
         NS_ASSERTION(!IsAtom(), "getting NodeInfo-value of atom-name");
-        return (nsINodeInfo*)(mBits & ~NS_ATTRNAME_NODEINFO_BIT);
+        return (nsINodeInfo*)(mBits & ~NS_HTMLATTRNAME_NODEINFO_BIT);
     }
     
     void SetNodeInfo(nsINodeInfo* aNodeInfo)
     {
         NS_ASSERTION(aNodeInfo, "null nodeinfo-name in nsHTMLAttrName");
         mNodeInfo = aNodeInfo;
-        mBits |= NS_ATTRNAME_NODEINFO_BIT;
+        mBits |= NS_HTMLATTRNAME_NODEINFO_BIT;
     }
 
     void Addref()
@@ -163,7 +163,7 @@ union nsHTMLAttrName {
         // Since both nsINodeInfo and nsIAtom inherits nsISupports as it's first
         // interface we can safly assume that it's first in the vtable
         nsISupports* name = NS_REINTERPRET_CAST(nsISupports *,
-            mBits & ~NS_ATTRNAME_NODEINFO_BIT);
+            mBits & ~NS_HTMLATTRNAME_NODEINFO_BIT);
 
         NS_IF_ADDREF(name);
     }
@@ -173,13 +173,13 @@ union nsHTMLAttrName {
         // Since both nsINodeInfo and nsIAtom inherits nsISupports as it's first
         // interface we can safly assume that it's first in the vtable
         nsISupports* name = NS_REINTERPRET_CAST(nsISupports *,
-            mBits & ~NS_ATTRNAME_NODEINFO_BIT);
+            mBits & ~NS_HTMLATTRNAME_NODEINFO_BIT);
 
         NS_IF_RELEASE(name);
         mBits = 0;
     }
-    nsIAtom* mAtom;  // Used if !(mBits & NS_ATTRNAME_NODEINFO_BIT)
-    nsINodeInfo* mNodeInfo; // Used if (mBits & NS_ATTRNAME_NODEINFO_BIT)
+    nsIAtom* mAtom;  // Used if !(mBits & NS_HTMLATTRNAME_NODEINFO_BIT)
+    nsINodeInfo* mNodeInfo; // Used if (mBits & NS_HTMLATTRNAME_NODEINFO_BIT)
     PRWord mBits;
 };
 
@@ -224,6 +224,8 @@ public:
                                PRInt32* aNamespaceID,
                                nsIAtom** aName,
                                nsIAtom** aPrefix) const;
+
+  const nsHTMLAttrName* AttributeNameAt(PRInt32 aIndex) const;
 
   NS_METHOD GetAttributeCount(PRInt32& aCount) const;
 
