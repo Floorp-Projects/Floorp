@@ -67,7 +67,7 @@ interface nsIIDNService : nsISupports
      *
      * The current input is string, but this may change pending Bug 84186.
      */
-    [noscript] string ConvertUTF8toACE(in string input);
+    ACString convertUTF8toACE(in AUTF8String input);
 
 
     /**
@@ -76,5 +76,10 @@ interface nsIIDNService : nsISupports
      * It takes an ACE-encoded hostname and performs ToUnicode to it, then
      * encodes the resulting string into UTF8.
      */
-    [noscript] string ConvertACEtoUTF8(in string input);
+    AUTF8String convertACEtoUTF8(in ACString input);
+
+    /**
+     * Checks if the input string is ACE encoded or not.
+     */
+    boolean isACE(in ACString input);
 };

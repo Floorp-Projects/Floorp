@@ -109,8 +109,8 @@ nsIDNService::~nsIDNService()
   idn_nameprep_destroy(mNamePrepHandle);
 }
 
-/* [noscript] string ConvertUTF8toACE (in string input); */
-NS_IMETHODIMP nsIDNService::ConvertUTF8toACE(const char *input, char **_retval)
+/* ACString ConvertUTF8toACE (in AUTF8String input); */
+NS_IMETHODIMP nsIDNService::ConvertUTF8toACE(const nsACString & input, nsACString & ace)
 {
   nsresult rv;
   NS_ConvertUTF8toUCS2 ustr(input);
@@ -119,7 +119,6 @@ NS_IMETHODIMP nsIDNService::ConvertUTF8toACE(const char *input, char **_retval)
   normalizeFullStops(ustr);
 
 
-  nsCAutoString ace; 
   PRUint32 len, offset;
   len = 0;
   offset = 0;
@@ -153,16 +152,22 @@ NS_IMETHODIMP nsIDNService::ConvertUTF8toACE(const char *input, char **_retval)
     ace.Append(encodedBuf);
   }
 
-  *_retval = ToNewCString(ace);
-  NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
-
   return NS_OK;
 }
 
 /* [noscript] string ConvertACEtoUTF8 (in string input); */
-NS_IMETHODIMP nsIDNService::ConvertACEtoUTF8(const char *input, char **_retval)
+NS_IMETHODIMP nsIDNService::ConvertACEtoUTF8(const nsACString & input, nsACString & _retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean encodedInACE (in ACString input); */
+NS_IMETHODIMP nsIDNService::IsACE(const nsACString & input, PRBool *_retval)
+{
+  *_retval = Substring(input, 0, 4).Equals(nsDependentCString(mACEPrefix, 4),
+                                           nsCaseInsensitiveCStringComparator());
+
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
