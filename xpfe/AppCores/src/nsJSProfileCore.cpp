@@ -135,7 +135,6 @@ PR_STATIC_CALLBACK(JSBool)
 ProfileCoreCreateNewProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMProfileCore *nativeThis = (nsIDOMProfileCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
@@ -171,7 +170,6 @@ PR_STATIC_CALLBACK(JSBool)
 ProfileCoreRenameProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMProfileCore *nativeThis = (nsIDOMProfileCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
   nsAutoString b1;
 
@@ -210,7 +208,6 @@ PR_STATIC_CALLBACK(JSBool)
 ProfileCoreDeleteProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMProfileCore *nativeThis = (nsIDOMProfileCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
@@ -246,7 +243,6 @@ PR_STATIC_CALLBACK(JSBool)
 ProfileCoreGetProfileList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMProfileCore *nativeThis = (nsIDOMProfileCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString nativeRet;
 
   *rval = JSVAL_NULL;
@@ -280,7 +276,6 @@ PR_STATIC_CALLBACK(JSBool)
 ProfileCoreStartCommunicator(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMProfileCore *nativeThis = (nsIDOMProfileCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
@@ -316,7 +311,6 @@ PR_STATIC_CALLBACK(JSBool)
 ProfileCoreGetCurrentProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMProfileCore *nativeThis = (nsIDOMProfileCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString nativeRet;
 
   *rval = JSVAL_NULL;
@@ -350,7 +344,6 @@ PR_STATIC_CALLBACK(JSBool)
 ProfileCoreMigrateProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMProfileCore *nativeThis = (nsIDOMProfileCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
