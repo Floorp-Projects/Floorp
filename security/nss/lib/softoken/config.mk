@@ -89,7 +89,7 @@ endif
 ifeq ($(OS_TARGET),SunOS)
 ifndef USE_64
 ifeq ($(CPU_ARCH),sparc)
-# The -R '$ORIGIN' linker option instructs libnss3.so to search for its
+# The -R '$ORIGIN' linker option instructs libsoftokn3.so to search for its
 # dependencies (libfreebl_*.so) in the same directory where it resides.
 MKSHLIB += -R '$$ORIGIN'
 endif
