@@ -123,9 +123,11 @@ interface nsIInternetConfigService : nsISupports
   
   [noscript] void getDownloadFolder(out FSSpec fsspec);
   
-  ACString getString(in unsigned long keyenum);
+  string getString(in unsigned long keyenum);
 
   unsigned long getColor(in unsigned long keyenum);
 
   boolean getBoolean(in unsigned long keyenum);
+  
+  wstring getText(in unsigned long keyenum, out unsigned long length);
 };
