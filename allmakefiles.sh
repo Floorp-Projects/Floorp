@@ -385,6 +385,10 @@ xpfe/browser/samples/Makefile
 xpfe/browser/samples/sampleimages/Makefile
 xpfe/components/Makefile
 xpfe/components/public/Makefile
+xpfe/components/sample/Makefile
+xpfe/components/sample/public/Makefile
+xpfe/components/sample/src/Makefile
+xpfe/components/sample/resources/Makefile
 xpfe/components/find/Makefile
 xpfe/components/find/public/Makefile
 xpfe/components/find/src/Makefile
