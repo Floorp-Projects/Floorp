@@ -282,7 +282,8 @@ NS_IMETHODIMP nsPop3IncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
   if (NS_FAILED(rv)) return rv;
   rv = path->Exists(&exists);
   if (NS_FAILED(rv)) return rv;
-  if (!exists) {
+  if (!exists)
+  {
     rv = path->Touch();
     if (NS_FAILED(rv)) return rv;
   }
@@ -291,7 +292,8 @@ NS_IMETHODIMP nsPop3IncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
   if (NS_FAILED(rv)) return rv;
   rv = path->Exists(&exists);
   if (NS_FAILED(rv)) return rv;
-  if (!exists) {
+  if (!exists) 
+  {
     rv = path->Touch();
     if (NS_FAILED(rv)) return rv;
   }
@@ -300,7 +302,8 @@ NS_IMETHODIMP nsPop3IncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
   if (NS_FAILED(rv)) return rv;
   rv = path->Exists(&exists);
   if (NS_FAILED(rv)) return rv;
-  if (!exists) {
+  if (!exists)
+  {
     rv = path->Touch();
     if (NS_FAILED(rv)) return rv;
   }
@@ -316,6 +319,21 @@ NS_IMETHODIMP nsPop3IncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
   
   return NS_OK;
 }
+
+// override this so we can say that deferred accounts can't have messages
+// filed to them, which will remove them as targets of all the move/copy
+// menu items.
+NS_IMETHODIMP
+nsPop3IncomingServer::GetCanFileMessagesOnServer(PRBool *aCanFileMessagesOnServer)
+{
+  NS_ENSURE_ARG_POINTER(aCanFileMessagesOnServer);
+
+  nsXPIDLCString deferredToAccount;
+  GetDeferredToAccount(getter_Copies(deferredToAccount));
+  *aCanFileMessagesOnServer = deferredToAccount.IsEmpty();
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsPop3IncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIMsgFolder *inbox, nsIURI **aResult)
 {
