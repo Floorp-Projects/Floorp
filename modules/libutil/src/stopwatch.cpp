@@ -9,6 +9,8 @@
 #include "windows.h"
 #endif
 
+double gTicks = 1.0e-7;
+
 Stopwatch::Stopwatch() {
 
 #ifdef R__UNIX
@@ -25,7 +27,7 @@ Stopwatch::Stopwatch() {
 Stopwatch::~Stopwatch() {
   EState* state = 0;
   if (mSavedStates) {
-    while (state = (EState*) mSavedStates->Pop()) {
+    while ((state = (EState*) mSavedStates->Pop())) {
       delete state;
     } 
     delete mSavedStates;
@@ -220,6 +222,11 @@ void Stopwatch::Print(void) {
    int  min   = int(realt / 60);
    realt -= min * 60;
    int  sec   = int(realt);
+#ifdef MOZ_PERF_METRICS
    RAPTOR_STOPWATCH_TRACE(("Real time %d:%d:%d, CP time %.3f", hours, min, sec, CpuTime()));
+#else
+   printf("Real time %d:%d:%d, CP time %.3f", hours, min, sec, CpuTime());
+#endif
 }
+
 

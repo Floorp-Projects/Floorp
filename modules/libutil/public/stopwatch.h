@@ -5,8 +5,6 @@
 #include "prlog.h"
 #include "nsDeque.h"
 
-static double gTicks = 1.0e-7;
-
 #ifdef XP_MAC
 #define R__MAC
 #endif
