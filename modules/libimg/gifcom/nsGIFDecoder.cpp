@@ -61,27 +61,36 @@ GIFDecoder::ImgDInit()
      return(il_gif_init(ilContainer));
   }
   else {
-    return nsnull;
+    return NS_OK;
   }
 }
 
 
 NS_IMETHODIMP 
-GIFDecoder::ImgDWriteReady()
+GIFDecoder::ImgDWriteReady(PRUint32 *chunksizep)
 {
+  int ret;
+
   if(ilContainer != NULL) {
-     return(il_gif_write_ready(ilContainer));
+     ret = il_gif_write_ready(ilContainer);
+
+     if(ret != 0)
+         return NS_ERROR_FAILURE;
   }
-  return 0;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 GIFDecoder::ImgDWrite(const unsigned char *buf, int32 len)
 {
+  int ret;
+
   if( ilContainer != NULL ) {
-     return(il_gif_write(ilContainer, buf,len));
+     ret = il_gif_write(ilContainer, buf,len);
+     if(ret != 0)
+         return NS_ERROR_FAILURE;
   }
-  return 0;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -90,7 +99,7 @@ GIFDecoder::ImgDComplete()
   if( ilContainer != NULL ) {
      il_gif_complete(ilContainer);
   }
-  return 0;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -99,7 +108,7 @@ GIFDecoder::ImgDAbort()
   if( ilContainer != NULL ) {
     il_gif_abort(ilContainer);
   }
-  return 0;
+  return NS_OK;
 }
  
 

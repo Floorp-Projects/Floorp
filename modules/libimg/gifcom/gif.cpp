@@ -607,11 +607,11 @@ il_gif_write_ready(il_container *ic)
     int32 max;
     
     if (!gs)
-        return 1;               /* Let imglib generic code decide */
+        return -1;               /* Let imglib generic code decide */
 
     max = MAX(MAX_READ_AHEAD, gs->requested_buffer_fullness);
     if (gs->gathered < max)
-        return 1;               /* Let imglib generic code decide */
+        return -1;               /* Let imglib generic code decide */
     else
         return 0;               /* No more data until timeout expires */
 }
@@ -622,21 +622,26 @@ process_buffered_gif_input_data(gif_struct* gs)
 {
     gstate state;
 	il_container *ic = gs->ic;
+    uint8 err = 0;
 
     /* Force any data we've buffered up to be processed. */
-    il_gif_write(ic, (uint8 *) "", 0);
+    err = il_gif_write(ic, (uint8 *) "", 0);
 
     /* The stream has already finished delivering data and the stream
        completion routine has been called sometime in the past. Now that
        we're actually done handling all of that data, call the stream
        completion routine again, but this time for real. */
     state = gs->state;
+
+    /* test, stop loopers if error */
+    if( state == gif_error){
+            ic->loop_count = 0;
+            gs->destroy_pending =TRUE;
+            ic->state = IC_ABORT_PENDING;
+    }
     if (gs->destroy_pending &&
         ((state == gif_done) || (state == gif_error) || (state == gif_oom))) {
 
-        /* test, stop loopers if error */
-        if( state == gif_error)
-            ic->loop_count = 0;
 
         il_gif_abort(ic);
         if(ic->imgdcb)
@@ -771,7 +776,7 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
   NI_PixmapHeader *src_header = ic->src_header;
   NI_ColorMap *cmap = &src_header->color_space->cmap;
   const uint8 *q, *p=buf,*ep=buf+len;
-  nsresult result = 0;
+
 
     /* If this assert fires, chances are the netlib flubbed and
        continued to send data after the image stream was closed. */

@@ -54,7 +54,7 @@ public:
   /* stream */
   NS_IMETHOD ImgDInit();
 
-  NS_IMETHOD ImgDWriteReady();
+  NS_IMETHOD ImgDWriteReady(PRUint32 *request_size);
   NS_IMETHOD ImgDWrite(const unsigned char *buf, int32 len);
   NS_IMETHOD ImgDComplete();
   NS_IMETHOD ImgDAbort();
@@ -256,28 +256,35 @@ NSGetFactory(nsISupports* serviceMgr,
 NS_IMETHODIMP
 JPGDecoder::ImgDInit()
 {
-   if(ilContainer != NULL) {
-     return(il_jpeg_init(ilContainer));
+  int ret;
+
+  if( ilContainer != NULL ) {
+     ret = il_jpeg_init(ilContainer);
+     if(ret != 1)
+         return NS_ERROR_FAILURE;
   }
-  else {
-    return nsnull;
-  }
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP 
-JPGDecoder::ImgDWriteReady()
-{ /*  IL_StreamWriteReady needs a return 1 */
-  return 1;
+JPGDecoder::ImgDWriteReady(PRUint32 *chunksizep)
+{
+  /* dummy return needed */
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 JPGDecoder::ImgDWrite(const unsigned char *buf, int32 len)
 {
+  int ret;
+
   if( ilContainer != NULL ) {
-     return(il_jpeg_write(ilContainer, buf,len));
+     ret = il_jpeg_write(ilContainer, buf,len);
+     if(ret != 0)
+         return NS_ERROR_FAILURE;
   }
-  return 0;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -286,15 +293,16 @@ JPGDecoder::ImgDComplete()
   if( ilContainer != NULL ) {
      il_jpeg_complete(ilContainer);
   }
-  return 0;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 JPGDecoder::ImgDAbort()
 {
   if( ilContainer != NULL ) {
-    il_jpeg_abort(ilContainer);
+     il_jpeg_abort(ilContainer);
   }
-  return 0;
+  return NS_OK;
+
 }
  

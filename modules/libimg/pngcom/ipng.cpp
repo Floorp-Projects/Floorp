@@ -29,7 +29,6 @@
 #include "nsIImgDCallbk.h"
 #include "ilISystemServices.h"
 
-#define OK 1
 #define MINIMUM_DELAY_TIME 10
 
 
@@ -65,18 +64,16 @@ il_png_init(il_container *ic)
 		ic->ds = ipngs;
 		ipngs->state = PNG_INIT;
 		ipngs->ic = ic;
+
+        /* Initialize the container's source image header. */
+	    /* Always decode to 24 bit pixdepth */
+
+        src_color_space->type = NI_TrueColor;
+        src_color_space->pixmap_depth = 24;
+        src_color_space->bit_alloc.index_depth = 0;
+        return 0;
 	}
-
-    /* Initialize the container's source image header. */
-	/* Always decode to 24 bit pixdepth */
-
-    src_color_space->type = NI_TrueColor;
-    src_color_space->pixmap_depth = 24;
-    src_color_space->bit_alloc.index_depth = 0;
-	
- 
-       
-	return (ipngs != 0);
+    return -1;
 
 }
 
@@ -92,7 +89,6 @@ il_png_write(il_container *ic, const unsigned char *buf, int32 len)
   
 	/*------*/
    
-
 	ipng_ptr = (ipng_structp)ic->ds;   
     if(ipng_ptr->state == PNG_INIT ){
         png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL );
@@ -102,7 +98,7 @@ il_png_write(il_container *ic, const unsigned char *buf, int32 len)
         ipng_ptr->info_p = info_ptr;
 	    if (info_ptr == NULL){
 		      png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
-		      return !OK;
+		      return -1;
 	    }
         png_set_progressive_read_fn(png_ptr, (void *)buf,
         info_callback, row_callback, end_callback); 
@@ -115,12 +111,12 @@ il_png_write(il_container *ic, const unsigned char *buf, int32 len)
     png_ptr->io_ptr = ic;
     if (setjmp(png_ptr->jmpbuf)) {
          png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-         return !OK;
+         return -1;
     }
     png_process_data( png_ptr, info_ptr, (unsigned char *)buf, len );
     ipng_ptr->state = PNG_CONTINUE;
           
-    return OK;
+    return 0;
 }
 
 void
@@ -140,9 +136,7 @@ png_set_dims( il_container *ic, png_structp png_ptr)
       ic->image->header.alpha_shift = 0;
       ic->image->header.is_interleaved_alpha = TRUE;
     }
-#endif 
-
-#if 0
+#else 
     if(png_ptr->num_trans){
       ic->image->header.alpha_bits = 1;
       ic->image->header.alpha_shift = 0;
@@ -226,9 +220,10 @@ png_delay_time_callback(void *closure)
         return;                                        
     
     ipng_ptr->delay_time = 0;         /* Reset for next image */
+    return;
 }
 
-void 
+int
 il_png_complete(il_container *ic)
 {
 	ipng_structp ipng_ptr;
@@ -238,8 +233,7 @@ il_png_complete(il_container *ic)
 	il_png_abort(ic);
    
 	/* notify observers that the current frame has completed. */
- 
-    //il_frame_complete_notify(ic);                
+                 
     ic->imgdcb->ImgDCBHaveImageFrame();
 
     /* An image can specify a delay time before which to display
@@ -258,12 +252,13 @@ il_png_complete(il_container *ic)
 		    ipng_ptr->state = PNG_INIT;
      }
  
-	return;
+	return 0;
 }
 
-void il_png_abort(il_container *ic)
+int
+il_png_abort(il_container *ic)
 {
-/*    il_abort( ic ); */
-	return;
+    /*   il_abort( ic ); */
+	return 0;
 }
 

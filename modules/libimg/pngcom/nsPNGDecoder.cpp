@@ -54,7 +54,7 @@ public:
   /* stream */
   NS_IMETHOD ImgDInit();
 
-  NS_IMETHOD ImgDWriteReady();
+  NS_IMETHOD ImgDWriteReady(PRUint32 *request_size);
   NS_IMETHOD ImgDWrite(const unsigned char *buf, int32 len);
   NS_IMETHOD ImgDComplete();
   NS_IMETHOD ImgDAbort();
@@ -253,50 +253,61 @@ NSGetFactory(nsISupports* serviceMgr,
 NS_IMETHODIMP
 PNGDecoder::ImgDInit()
 {
-   if(ilContainer != NULL) {
-     return(il_png_init(ilContainer));
+  int ret;
+
+  if( ilContainer != NULL ) {
+     ret = il_png_init(ilContainer);
+     if(ret != 0)
+         return NS_ERROR_FAILURE;
   }
-  else {
-    return nsnull;
-  }
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP 
-PNGDecoder::ImgDWriteReady()
+PNGDecoder::ImgDWriteReady(PRUint32 *request_size)
 {
-  if(ilContainer != NULL) {
-    /* see ImageConsumer::OnDataAvailable(). dummy return */ 
-    return 1;
-  }
-  return 0;
+  /* dummy return needed */
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 PNGDecoder::ImgDWrite(const unsigned char *buf, int32 len)
 {
+  int ret;
+
   if( ilContainer != NULL ) {
-     return(il_png_write(ilContainer, buf,len));
+     ret = il_png_write(ilContainer, buf,len);
+     if(ret != 0)
+         return NS_ERROR_FAILURE;
   }
-  return 0;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 PNGDecoder::ImgDComplete()
 {
+  int ret;
+
   if( ilContainer != NULL ) {
-     il_png_complete(ilContainer);
+     ret = il_png_complete(ilContainer);
+     if(ret != 0)
+         return NS_ERROR_FAILURE;
   }
-  return 0;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 PNGDecoder::ImgDAbort()
 {
+  int ret;
+
   if( ilContainer != NULL ) {
-    il_png_abort(ilContainer);
+     ret = il_png_abort(ilContainer);
+     if(ret != 0)
+         return NS_ERROR_FAILURE;
   }
-  return 0;
+  return NS_OK;
 }
  
 

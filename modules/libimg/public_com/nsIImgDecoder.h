@@ -37,7 +37,7 @@ public:
 
 	NS_IMETHOD ImgDInit()=0;
 
-	NS_IMETHOD ImgDWriteReady()=0;
+	NS_IMETHOD ImgDWriteReady(PRUint32 *request_size)=0;
 	NS_IMETHOD ImgDWrite(const unsigned char *buf, int32 len)=0;
 	NS_IMETHOD ImgDComplete()=0;
 	NS_IMETHOD ImgDAbort()=0;
