@@ -51,7 +51,7 @@
 #include "nsMacResources.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsMenuBarLog, 0)
+NS_IMPL_LOG(nsMenuBarLog)
 #define PRINTF NS_LOG_PRINTF(nsMenuBarLog)
 #define FLUSH  NS_LOG_FLUSH(nsMenuBarLog)
 
