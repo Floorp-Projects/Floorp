@@ -1826,15 +1826,19 @@ EDT_ClipboardResult EDT_SetDefaultText(  MWContext *pContext, char *pText ) {
 
 EDT_ClipboardResult EDT_SetDefaultHTML(  MWContext *pContext, char *pHTML ) {
 	CEditBuffer* pEditBuffer = LO_GetEDBuffer( pContext );
-	if (pEditBuffer && pHTML)
+	if (pEditBuffer)
 	{
 		if (!CEditBuffer::IsAlive(pEditBuffer) || !pEditBuffer->IsReady() || !pEditBuffer->IsWritable() )
 		{ //set up the default data for finishedload2
-			pEditBuffer->m_pImportedHTMLStream=XP_STRDUP(pHTML);
+			if (pHTML)
+				pEditBuffer->m_pImportedHTMLStream=XP_STRDUP(pHTML);
 			return EDT_COP_OK;
 		}
 		else
-			return EDT_PasteHTML(pContext,pHTML,ED_PASTE_NORMAL);
+		{
+			pEditBuffer->ReadFromBuffer(pHTML);
+			return EDT_COP_OK;
+		}
 	}
 	return EDT_COP_DOCUMENT_BUSY;
 }

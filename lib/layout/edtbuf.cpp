@@ -10127,7 +10127,9 @@ void CEditBuffer::ReadFromBuffer(XP_HUGE_CHAR_PTR pBuffer){
         delete this; // See ya!
 
         // XP_STRCPY(buffer, XP_GetString(XP_HTML_MISSING_REPLYDATA));
-        int32 length = XP_STRLEN(pBuffer);
+        int32 length = 0;
+        if (pBuffer)
+            length = XP_STRLEN(pBuffer);
         if ( length <= 0 ) {
             pBuffer = EDT_GetEmptyDocumentString();
             length = XP_STRLEN(pBuffer);

@@ -2551,10 +2551,8 @@ htmlarea_reset(FEFormData *fed, LO_FormElementStruct *form)
   int16 charset = text_attr->charset;
 
   if (default_text)
-  {
     fe_forms_clean_text(fed->context, charset, default_text, False);
-    EDT_SetDefaultHTML(ha_fed->editor_context, default_text);
-  }
+  EDT_SetDefaultHTML(ha_fed->editor_context, default_text);
 }
 
 static void
