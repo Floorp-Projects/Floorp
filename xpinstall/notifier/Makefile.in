@@ -38,7 +38,7 @@ EXPORT_RESOURCE_NOTIFIER = \
 		$(srcdir)/notification.gif \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS = -L$(DIST)/lib -lmozreg_s \
+EXTRA_DSO_LDOPTS = -L$(DIST)/lib \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
