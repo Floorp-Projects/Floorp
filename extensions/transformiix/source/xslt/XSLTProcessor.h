@@ -268,56 +268,48 @@ private:
      */
     void copyNode(Node* aNode, ProcessorState* aPs);
 
-    void processAction(Node* aNode, Node* aXsltAction, ProcessorState* aPs);
+    void processAction(Node* aXsltAction, ProcessorState* aPs);
 
     /**
      * Processes the attribute sets specified in the use-attribute-sets attribute
      * of the element specified in aElement
     **/
-    void processAttributeSets(Element* aElement, Node* node,
-                              ProcessorState* ps, Stack* aRecursionStack = 0);
+    void processAttributeSets(Element* aElement, ProcessorState* ps,
+                              Stack* aRecursionStack = 0);
 
     /**
      * Processes the children of the specified element using the given context node
      * and ProcessorState
-     * @param aContext    context node
      * @param aXslElement template to be processed. Must be != NULL
      * @param aPs         current ProcessorState
     **/
-    void processChildren(Node* aContext,
-                         Element* aXslElement,
+    void processChildren(Element* aXslElement,
                          ProcessorState* aPs);
 
-    void processChildrenAsValue(Node* aNode, 
-                                Element* aElement,
+    void processChildrenAsValue(Element* aElement,
                                 ProcessorState* aPs,
                                 MBool aOnlyText,
                                 String& aValue);
 
     /**
      * Invokes the default template for the specified node
-     * @param node  context node
      * @param ps    current ProcessorState
      * @param mode  template mode
     **/
-    void processDefaultTemplate(Node* node,
-                                ProcessorState* ps,
+    void processDefaultTemplate(ProcessorState* ps,
                                 const txExpandedName& mode);
 
     /*
      * Processes an include or import stylesheet
      * @param aHref    URI of stylesheet to process
-     * @param aSource  source document
      * @param aImportFrame current importFrame iterator
      * @param aPs      current ProcessorState
      */
     void processInclude(String& aHref,
-                        Document* aSource,
                         txListIterator* aImportFrame,
                         ProcessorState* aPs);
 
     void processMatchedTemplate(Node* aXslTemplate,
-                                Node* aNode,
                                 txVariableMap* aParams,
                                 const txExpandedName& aMode,
                                 ProcessorState::ImportFrame* aFrame,
@@ -327,37 +319,33 @@ private:
      * Processes the xsl:with-param child elements of the given xsl action.
      * @param aAction  the action node that takes parameters (xsl:call-template
      *                 or xsl:apply-templates
-     * @param aContext the current context node
      * @param aMap     map to place parsed variables in
      * @param aPs      the current ProcessorState
      * @return         errorcode
      */
-    nsresult processParameters(Element* aAction, Node* aContext,
-                               txVariableMap* aMap, ProcessorState* aPs);
+    nsresult processParameters(Element* aAction, txVariableMap* aMap,
+                               ProcessorState* aPs);
 
-    void processStylesheet(Document* aSource,
-                           Document* aStylesheet,
+    void processStylesheet(Document* aStylesheet,
                            txListIterator* aImportFrame,
                            ProcessorState* aPs);
 
     /*
      * Processes the specified template using the given context,
      * ProcessorState, and parameters.
-     * @param aContext  the current context node
      * @param aTemplate the node in the xslt document that contains the
      *                  template
      * @param aParams   map with parameters to the template
      * @param aPs       the current ProcessorState
      */
-    void processTemplate(Node* aContext, Node* aTemplate,
-                         txVariableMap* aParams, ProcessorState* aPs);
+    void processTemplate(Node* aTemplate, txVariableMap* aParams,
+                         ProcessorState* aPs);
 
-    void processTopLevel(Document* aSource,
-                         Element* aStylesheet,
+    void processTopLevel(Element* aStylesheet,
                          txListIterator* importFrame,
                          ProcessorState* aPs);
 
-    ExprResult* processVariable(Node* node, Element* xslVariable, ProcessorState* ps);
+    ExprResult* processVariable(Element* xslVariable, ProcessorState* ps);
 
     void startTransform(Node* aNode, ProcessorState* aPs);
 
@@ -366,7 +354,7 @@ private:
     /*
      * Performs the xsl:copy action as specified in the XSLT specification
      */
-    void xslCopy(Node* aNode, Element* aAction, ProcessorState* aPs);
+    void xslCopy(Element* aAction, ProcessorState* aPs);
 
     /*
      * Performs the xsl:copy-of action as specified in the XSLT specification
