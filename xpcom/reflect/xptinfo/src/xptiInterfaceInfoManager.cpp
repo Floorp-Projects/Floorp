@@ -179,19 +179,18 @@ xptiInterfaceInfoManager::~xptiInterfaceInfoManager()
 #endif
 }
 
-static PRBool
+static nsresult
 GetDirectoryFromDirService(const char* codename, nsILocalFile** aDir)
 {
     NS_ASSERTION(codename,"loser!");
     NS_ASSERTION(aDir,"loser!");
     
-    nsCOMPtr<nsIProperties> dirService = 
-        do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
-    if(!dirService)
-        return PR_FALSE;
+    nsresult rv;
+    nsCOMPtr<nsIProperties> dirService =
+        do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-    return NS_SUCCEEDED(dirService->Get(codename, NS_GET_IID(nsILocalFile), 
-                                        (void**) aDir));
+    return dirService->Get(codename, NS_GET_IID(nsILocalFile), (void**) aDir);
 }
 
 static PRBool
@@ -260,17 +259,17 @@ PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
     nsCOMPtr<nsILocalFile> greComponentDirectory;
     nsresult rv = GetDirectoryFromDirService(NS_GRE_COMPONENT_DIR, 
                                     getter_AddRefs(greComponentDirectory));
-    if (NS_SUCCEEDED(rv) && greComponentDirectory)
+    if(NS_SUCCEEDED(rv) && greComponentDirectory)
     {
         // make sure we only append a directory if its a different one
         PRBool equalsCompDir = PR_FALSE;
         greComponentDirectory->Equals(compDir, &equalsCompDir);
 
-        if (!equalsCompDir)
+        if(!equalsCompDir)
             searchPath->AppendElement(greComponentDirectory);
     }
 
-    (void) AppendFromDirServiceList(NS_APP_PLUGINS_DIR_LIST, searchPath);
+    (void)AppendFromDirServiceList(NS_APP_PLUGINS_DIR_LIST, searchPath);
 
     NS_ADDREF(*aPath = searchPath);
     return PR_TRUE;
@@ -295,7 +294,7 @@ PRBool
 xptiInterfaceInfoManager::GetApplicationDir(nsILocalFile** aDir)
 {
     // We *trust* that this will not change!
-    return GetDirectoryFromDirService(NS_XPCOM_CURRENT_PROCESS_DIR, aDir);
+    return NS_SUCCEEDED(GetDirectoryFromDirService(NS_XPCOM_CURRENT_PROCESS_DIR, aDir));
 }
 
 PRBool 
