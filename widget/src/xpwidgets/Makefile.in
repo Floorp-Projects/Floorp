@@ -30,12 +30,13 @@ LIBRARY_NAME	= raptorbasewidget_s
 
 CPPSRCS		= \
 		nsBaseWidget.cpp \
+		nsBaseFilePicker.cpp \
 		nsTransferable.cpp \
 		nsXIFFormatConverter.cpp \
 		nsBaseDragService.cpp \
 		nsBaseClipboard.cpp \
 		nsFileSpecWithUIImpl.cpp \
-	    nsPrimitiveHelpers.cpp         \
+		nsPrimitiveHelpers.cpp \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
