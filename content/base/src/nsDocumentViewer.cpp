@@ -2126,7 +2126,7 @@ PRBool
 DocumentViewerImpl::DonePrintingPages(PrintObject* aPO)
 {
   //NS_ASSERTION(aPO, "Pointer is null!");
-  PRINT_DEBUG_MSG3("****** In DV::DonePrintingPages PO: %p (%s)\n", aPO, gFrameTypesStr[aPO->mFrameType]);
+  PRINT_DEBUG_MSG3("****** In DV::DonePrintingPages PO: %p (%s)\n", aPO, aPO?gFrameTypesStr[aPO->mFrameType]:"");
 
   if (aPO != nsnull) {
     aPO->mHasBeenPrinted = PR_TRUE;
@@ -3278,7 +3278,8 @@ DocumentViewerImpl::SetupToPrintContent(nsIWebShell*          aParent,
   // BeginDocument may pass back a FAILURE code
   // i.e. On Windows, if you are printing to a file and hit "Cancel" 
   //      to the "File Name" dialog, this comes back as an error
-  nsresult rv = mPrt->mPrintDC->BeginDocument(docTitleStr);
+  // Don't start printing when regression test are executed  
+  nsresult rv = mPrt->mFilePointer ? NS_OK: mPrt->mPrintDC->BeginDocument(docTitleStr);
   PRINT_DEBUG_MSG1("****************** Begin Document ************************\n");
 
   if (docTitleStr != nsnull) {
