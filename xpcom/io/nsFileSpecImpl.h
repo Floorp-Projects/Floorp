@@ -101,6 +101,9 @@ class NS_COM nsFileSpecImpl
 	/* void createDir (); */
 	NS_IMETHOD createDir();
 
+	/* void touch (); */
+	NS_IMETHOD touch();
+
 	/* void rename ([const] in string newLeafName); */
 	NS_IMETHOD rename(const char *newLeafName);
 

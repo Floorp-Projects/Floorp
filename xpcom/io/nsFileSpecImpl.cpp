@@ -327,6 +327,18 @@ NS_IMETHODIMP nsFileSpecImpl::AppendRelativeUnixPath(const char *relativePath)
 }
 
 //----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsFileSpecImpl::touch()
+//----------------------------------------------------------------------------------------
+{
+	// create an empty file, like the UNIX touch command.
+	nsresult rv;
+	rv = openStreamForReadingAndWriting();
+	if (NS_FAILED(rv)) return rv;
+	rv = closeStream();
+	return rv;
+}
+
+//----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsFileSpecImpl::createDir()
 //----------------------------------------------------------------------------------------
 {
