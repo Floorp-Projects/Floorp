@@ -3073,6 +3073,15 @@ fi
 AC_SUBST(MOZ_CALENDAR)
 
 dnl ========================================================
+dnl = Phoenix
+dnl ========================================================
+if test "$MOZ_PHOENIX"; then
+   AC_DEFINE(MOZ_PHOENIX)
+fi
+
+AC_SUBST(MOZ_PHOENIX)
+
+dnl ========================================================
 dnl = FreeType2
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(freetype2,

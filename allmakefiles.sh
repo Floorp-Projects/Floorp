@@ -809,6 +809,18 @@ extensions/transformiix/source/Makefile
 extensions/transformiix/Makefile
 "
 
+MAKEFILES_phoenix="
+browser/Makefile
+browser/base/Makefile
+browser/components/Makefile
+browser/components/prefwindow/Makefile
+browser/components/search/Makefile
+browser/components/search/resources/Makefile
+toolkit/Makefile
+toolkit/skin/unix/Makefile
+toolkit/skin/win/Makefile
+"
+
 if [ "$MACOSX" ]; then
     MAKEFILES_macmorefiles="
        lib/mac/MoreFiles/Makefile
@@ -1206,6 +1218,10 @@ fi
 
 if test -n "$MOZ_CALENDAR"; then
     add_makefiles "$MAKEFILES_calendar"
+fi
+
+if test -n "$MOZ_PHOENIX"; then
+    add_makefiles "$MAKEFILES_phoenix"
 fi
 
 else
