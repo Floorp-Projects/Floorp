@@ -225,6 +225,7 @@ pref("font.scale.outline.min",      6);
 // below a certian pixel size anti-aliased bitmat scaled fonts 
 // produce poor results
 pref("font.scale.aa_bitmap.enable", true);
+pref("font.scale.aa_bitmap.always", false);
 pref("font.scale.aa_bitmap.min", 6);
 pref("font.scale.aa_bitmap.undersize", 80);
 pref("font.scale.aa_bitmap.oversize", 120);
@@ -239,24 +240,28 @@ pref("font.scale.bitmap.oversize",  120);
 
 pref("font.scale.outline.min.ja",      10);
 pref("font.scale.aa_bitmap.min.ja",    12);
+pref("font.scale.aa_bitmap.always.ja", false);
 pref("font.scale.bitmap.min.ja",       16);
 pref("font.scale.bitmap.undersize.ja", 80);
 pref("font.scale.bitmap.oversize.ja",  120);
 
 pref("font.scale.outline.min.ko",      10);
 pref("font.scale.aa_bitmap.min.ko",    12);
+pref("font.scale.aa_bitmap.always.ko", false);
 pref("font.scale.bitmap.min.ko",       16);
 pref("font.scale.bitmap.undersize.ko", 80);
 pref("font.scale.bitmap.oversize.ko",  120);
 
 pref("font.scale.outline.min.zh-CN",      10);
 pref("font.scale.aa_bitmap.min.zh-CN",    12);
+pref("font.scale.aa_bitmap.always.zh-CN", false);
 pref("font.scale.bitmap.min.zh-CN",       16);
 pref("font.scale.bitmap.undersize.zh-CN", 80);
 pref("font.scale.bitmap.oversize.zh-CN",  120);
 
 pref("font.scale.outline.min.zh-TW",      10);
 pref("font.scale.aa_bitmap.min.zh-TW",    12);
+pref("font.scale.aa_bitmap.always.zh-TW", false);
 pref("font.scale.bitmap.min.zh-TW",       16);
 pref("font.scale.bitmap.undersize.zh-TW", 80);
 pref("font.scale.bitmap.oversize.zh-TW",  120);
