@@ -32,14 +32,27 @@
 # GPL.
 #
 
-CORE_DEPTH = ..
+#
+# These macros are defined by mozilla's configure script.
+# We define them manually here.
+#
 
-MODULE = dbm
+DEFINES += -DSTDC_HEADERS -DHAVE_STRERROR
 
-IMPORTS = nspr20/v4.1.2
+ifneq (,$(filter-out OSF1,$(OS_ARCH)))
+DEFINES += -DHAVE_SNPRINTF
+endif
 
-RELEASE = dbm
+ifeq (,$(filter-out IRIX Linux,$(OS_ARCH)))
+DEFINES += -DHAVE_SYS_CDEFS_H
+endif
 
-DIRS =  include \
-        src     \
-	$(NULL)
+ifeq (,$(filter-out DGUX NCR ReliantUNIX SCO_SV SCOOS UNIXWARE,$(OS_ARCH)))
+DEFINES += -DHAVE_SYS_BYTEORDER_H
+endif
+
+#
+# None of the platforms that we are interested in need to
+# define HAVE_COMPAT_H and HAVE_MEMORY_H.
+# SunOS 4.1.3 needs to define HAVE_COMPAT_H.
+#

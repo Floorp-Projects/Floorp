@@ -44,58 +44,14 @@ PROGRAM		= lots
 
 include $(DEPTH)/coreconf/config.mk
 
+include $(DEPTH)/dbm/config/config.mk
+
 ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -DSTDARG -DSTDC_HEADERS
 LIBDBM		= ../src/$(PLATFORM)/dbm$(STATIC_LIB_SUFFIX)
 else
 LIBDBM		= ../src/$(PLATFORM)/libdbm$(STATIC_LIB_SUFFIX)
 endif
 
-ifeq ($(OS_ARCH),AIX)
-CFLAGS		+= -DSTDARG
-endif
-
-ifeq ($(OS_ARCH),BSD_386)
-CFLAGS		+= -g -I../../../include -DXP_UNIX -g -DBSDI -DHAVE_STRERROR -D__386BSD__ -DDEBUG -DMEMMOVE -D__DBINTERFACE_PRIVATE 
-endif
-
-ifeq ($(OS_ARCH),FreeBSD)
-CFLAGS		+= -DSTDARG
-endif
-
-ifeq ($(OS_ARCH),HP-UX)
-CFLAGS		+= -DSTDARG
-endif
-
-ifeq ($(OS_ARCH),IRIX)
-CFLAGS		+= -g -I../../../include -DDEBUG -DSTDARG
-endif
-
-ifeq ($(OS_ARCH),OSF1)
-CFLAGS		+= -DSTDARG
-endif
-
-ifeq ($(OS_ARCH),Linux)
-CFLAGS		+= -DSTDARG
-endif
-
-ifeq ($(OS_ARCH),NCR)
-CFLAGS		+= -DSTDARG
-endif
-
-ifeq ($(OS_ARCH),SCO_SV)
-CFLAGS		+= -DSTDARG
-endif
-
-ifeq ($(OS_ARCH),SunOS)
-CFLAGS		+= -g -I../../../include -D_sun_
-endif
-
-ifeq ($(OS_ARCH),UNIXWARE)
-CFLAGS		+= -DSTDARG
-endif
-
-INCLUDES	+= -I../include
 INCLUDES	+= -I$(CORE_DEPTH)/../dbm/include
 
 LDFLAGS		= $(LDOPTS) $(LIBDBM)
@@ -110,16 +66,4 @@ crash: crash.o $(MYLIBS)
 
 crash.pure: crash.o $(MYLIBS)
 	purify $(CC) -o crash.pure $(CFLAGS) $^
-
-
-
-DBM_SRCS = $(CSRCS)
-
-export:: $(DBM_SRCS)
-
-libs:: $(DBM_SRCS)
-
-program:: $(DBM_SRCS)
-
-private_export:: $(DBM_SRCS)
 

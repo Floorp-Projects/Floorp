@@ -72,15 +72,5 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
-DBM_SRCS = $(EXPORTS) $(PRIVATE_EXPORTS) watcomfx.h
 
-export:: $(DBM_SRCS)
 
-libs:: $(DBM_SRCS)
-
-program:: $(DBM_SRCS)
-
-private_export:: $(DBM_SRCS)
-
-echo::
-	echo "$(DBM_SRCS)"
