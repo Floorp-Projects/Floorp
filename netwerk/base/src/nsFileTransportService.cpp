@@ -51,8 +51,9 @@ nsresult
 nsFileTransportService::Init()
 {
     nsresult rv;
-    rv = NS_NewThreadPool(getter_AddRefs(mPool), NS_FILE_TRANSPORT_WORKER_COUNT,
-                          NS_FILE_TRANSPORT_WORKER_COUNT,
+    rv = NS_NewThreadPool(getter_AddRefs(mPool), 
+                          NS_FILE_TRANSPORT_WORKER_COUNT_MIN,
+                          NS_FILE_TRANSPORT_WORKER_COUNT_MAX,
                           NS_FILE_TRANSPORT_WORKER_STACK_SIZE);
 #ifdef DEBUG
     static void* th = NS_CurrentThread();       // XXX experiment -- is this exported on mac?
