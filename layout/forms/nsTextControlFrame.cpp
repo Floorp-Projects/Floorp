@@ -400,6 +400,9 @@ nsTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
       if (NS_CONTENT_ATTR_NOT_THERE != rv) {
         text->SetMaxTextLength(maxLength);
       }
+    } else if ((nsHTMLAtoms::readonly == aAttribute) && (nsnull != text)) {
+      PRBool oldReadOnly;
+      text->SetReadOnly(nsFormFrame::GetReadonly(this),oldReadOnly);
     }
     // Allow the base class to handle common attributes supported
     // by all form elements... 
