@@ -274,6 +274,8 @@ jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj)
 #else
     if (JSJ_callbacks && JSJ_callbacks->get_java_wrapper != NULL) {
         java_wrapper_obj = JSJ_callbacks->get_java_wrapper(jEnv, (jint)handle);
+    } else  {
+        java_wrapper_obj = NULL;
     }
 #endif /*! OJI */
     if (!java_wrapper_obj) {
