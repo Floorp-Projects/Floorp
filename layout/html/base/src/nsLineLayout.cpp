@@ -250,6 +250,7 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
     break;
   }
   psd->mDirection = mBlockReflowState->mStyleDisplay->mDirection;
+  psd->mChangedFrameDirection = PR_FALSE;
 }
 
 void
@@ -461,6 +462,7 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
         break;
     }
     psd->mDirection = aSpanReflowState->mStyleDisplay->mDirection;
+    psd->mChangedFrameDirection = PR_FALSE;
 
     // Switch to new span
     mCurrentSpan = psd;
@@ -1897,6 +1899,20 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify)
       while (nsnull != pfd) {
         pfd->mBounds.x += dx;
         pfd->mFrame->SetRect(pfd->mBounds);
+        pfd = pfd->mNext;
+      }
+    }
+
+    if (NS_STYLE_DIRECTION_RTL == psd->mDirection && !psd->mChangedFrameDirection) {
+      psd->mChangedFrameDirection = PR_TRUE;
+  
+      /* Assume that all frames have been right aligned.*/
+      PerFrameData* pfd = psd->mFirstFrame;
+      PRUint32 maxX = psd->mRightEdge;
+      while (nsnull != pfd) {
+        pfd->mBounds.x = maxX - pfd->mBounds.width;
+        pfd->mFrame->SetRect(pfd->mBounds);
+        maxX = pfd->mBounds.x;
         pfd = pfd->mNext;
       }
     }
