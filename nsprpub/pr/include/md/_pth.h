@@ -32,13 +32,13 @@
  * changes and small differences, so macros usually do the trick
  */
 #ifdef _PR_DCETHREADS
-#define PTHREAD_MUTEXATTR_INIT        pthread_mutexattr_create
-#define PTHREAD_MUTEXATTR_DESTROY     pthread_mutexattr_delete
-#define PTHREAD_MUTEX_INIT(m, a)      pthread_mutex_init(&(m), a)
-#define PTHREAD_MUTEX_IS_LOCKED(m)    (0 == pthread_mutex_trylock(&(m)))
-#define PTHREAD_CONDATTR_INIT         pthread_condattr_create
-#define PTHREAD_COND_INIT(m, a)       pthread_cond_init(&(m), a)
-#define PTHREAD_CONDATTR_DESTROY      pthread_condattr_delete
+#define _PT_PTHREAD_MUTEXATTR_INIT        pthread_mutexattr_create
+#define _PT_PTHREAD_MUTEXATTR_DESTROY     pthread_mutexattr_delete
+#define _PT_PTHREAD_MUTEX_INIT(m, a)      pthread_mutex_init(&(m), a)
+#define _PT_PTHREAD_MUTEX_IS_LOCKED(m)    (0 == pthread_mutex_trylock(&(m)))
+#define _PT_PTHREAD_CONDATTR_INIT         pthread_condattr_create
+#define _PT_PTHREAD_COND_INIT(m, a)       pthread_cond_init(&(m), a)
+#define _PT_PTHREAD_CONDATTR_DESTROY      pthread_condattr_delete
 
 /* Notes about differences between DCE threads and pthreads 10:
  *   1. pthread_mutex_trylock returns 1 when it locks the mutex
@@ -55,29 +55,29 @@
  * argument to pthread_mutex_init() and pthread_cond_init() must
  * be passed as NULL.
  *
- * The memset calls in PTHREAD_MUTEX_INIT and PTHREAD_COND_INIT
+ * The memset calls in _PT_PTHREAD_MUTEX_INIT and _PT_PTHREAD_COND_INIT
  * are to work around BSDI's using a single bit to indicate a mutex
  * or condition variable is initialized.  This entire BSDI section
  * will go away when BSDI releases updated threads libraries for
  * BSD/OS 3.1 and 4.0.
  */
-#define PTHREAD_MUTEXATTR_INIT(x)     0
-#define PTHREAD_MUTEXATTR_DESTROY(x)  /* */
-#define PTHREAD_MUTEX_INIT(m, a)      (memset(&(m), 0, sizeof(m)), \
+#define _PT_PTHREAD_MUTEXATTR_INIT(x)     0
+#define _PT_PTHREAD_MUTEXATTR_DESTROY(x)  /* */
+#define _PT_PTHREAD_MUTEX_INIT(m, a)      (memset(&(m), 0, sizeof(m)), \
                                       pthread_mutex_init(&(m), NULL))
-#define PTHREAD_MUTEX_IS_LOCKED(m)    (EBUSY == pthread_mutex_trylock(&(m)))
-#define PTHREAD_CONDATTR_INIT(x)      0
-#define PTHREAD_CONDATTR_DESTROY(x)   /* */
-#define PTHREAD_COND_INIT(m, a)       (memset(&(m), 0, sizeof(m)), \
+#define _PT_PTHREAD_MUTEX_IS_LOCKED(m)    (EBUSY == pthread_mutex_trylock(&(m)))
+#define _PT_PTHREAD_CONDATTR_INIT(x)      0
+#define _PT_PTHREAD_CONDATTR_DESTROY(x)   /* */
+#define _PT_PTHREAD_COND_INIT(m, a)       (memset(&(m), 0, sizeof(m)), \
                                       pthread_cond_init(&(m), NULL))
 #else
-#define PTHREAD_MUTEXATTR_INIT        pthread_mutexattr_init
-#define PTHREAD_MUTEXATTR_DESTROY     pthread_mutexattr_destroy
-#define PTHREAD_MUTEX_INIT(m, a)      pthread_mutex_init(&(m), &(a))
-#define PTHREAD_MUTEX_IS_LOCKED(m)    (EBUSY == pthread_mutex_trylock(&(m)))
-#define PTHREAD_CONDATTR_INIT         pthread_condattr_init
-#define PTHREAD_CONDATTR_DESTROY      pthread_condattr_destroy
-#define PTHREAD_COND_INIT(m, a)       pthread_cond_init(&(m), &(a))
+#define _PT_PTHREAD_MUTEXATTR_INIT        pthread_mutexattr_init
+#define _PT_PTHREAD_MUTEXATTR_DESTROY     pthread_mutexattr_destroy
+#define _PT_PTHREAD_MUTEX_INIT(m, a)      pthread_mutex_init(&(m), &(a))
+#define _PT_PTHREAD_MUTEX_IS_LOCKED(m)    (EBUSY == pthread_mutex_trylock(&(m)))
+#define _PT_PTHREAD_CONDATTR_INIT         pthread_condattr_init
+#define _PT_PTHREAD_CONDATTR_DESTROY      pthread_condattr_destroy
+#define _PT_PTHREAD_COND_INIT(m, a)       pthread_cond_init(&(m), &(a))
 #endif
 
 /* The pthread_t handle used to identify a thread can vary in size
@@ -86,45 +86,45 @@
  * more of a problem as we adapt to more pthreads implementations.
  */
 #if defined(_PR_DCETHREADS)
-#define PTHREAD_ZERO_THR_HANDLE(t)        memset(&(t), 0, sizeof(pthread_t))
-#define PTHREAD_THR_HANDLE_IS_ZERO(t) \
+#define _PT_PTHREAD_ZERO_THR_HANDLE(t)        memset(&(t), 0, sizeof(pthread_t))
+#define _PT_PTHREAD_THR_HANDLE_IS_ZERO(t) \
 	(!memcmp(&(t), &pt_zero_tid, sizeof(pthread_t)))
-#define PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
+#define _PT_PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
 #elif defined(IRIX) || defined(OSF1) || defined(AIX) || defined(SOLARIS) \
 	|| defined(HPUX) || defined(LINUX) || defined(FREEBSD) \
 	|| defined(NETBSD) || defined(OPENBSD) || defined(BSDI) \
 	|| defined(VMS) || defined(NTO)
-#define PTHREAD_ZERO_THR_HANDLE(t)        (t) = 0
-#define PTHREAD_THR_HANDLE_IS_ZERO(t)     (t) == 0
-#define PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
+#define _PT_PTHREAD_ZERO_THR_HANDLE(t)        (t) = 0
+#define _PT_PTHREAD_THR_HANDLE_IS_ZERO(t)     (t) == 0
+#define _PT_PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
 #else 
 #error "pthreads is not supported for this architecture"
 #endif
 
 #if defined(_PR_DCETHREADS)
-#define PTHREAD_ATTR_INIT            pthread_attr_create
-#define PTHREAD_ATTR_DESTROY         pthread_attr_delete
-#define PTHREAD_CREATE(t, a, f, r)   pthread_create(t, a, f, r) 
-#define PTHREAD_KEY_CREATE           pthread_keycreate
-#define PTHREAD_ATTR_SETSCHEDPOLICY  pthread_attr_setsched
-#define PTHREAD_ATTR_GETSTACKSIZE(a, s) \
+#define _PT_PTHREAD_ATTR_INIT            pthread_attr_create
+#define _PT_PTHREAD_ATTR_DESTROY         pthread_attr_delete
+#define _PT_PTHREAD_CREATE(t, a, f, r)   pthread_create(t, a, f, r) 
+#define _PT_PTHREAD_KEY_CREATE           pthread_keycreate
+#define _PT_PTHREAD_ATTR_SETSCHEDPOLICY  pthread_attr_setsched
+#define _PT_PTHREAD_ATTR_GETSTACKSIZE(a, s) \
                                      (*(s) = pthread_attr_getstacksize(*(a)), 0)
-#define PTHREAD_GETSPECIFIC(k, r) \
+#define _PT_PTHREAD_GETSPECIFIC(k, r) \
 		pthread_getspecific((k), (pthread_addr_t *) &(r))
 #elif defined(_PR_PTHREADS)
-#define PTHREAD_ATTR_INIT            pthread_attr_init
-#define PTHREAD_ATTR_DESTROY         pthread_attr_destroy
-#define PTHREAD_CREATE(t, a, f, r)   pthread_create(t, &a, f, r) 
-#define PTHREAD_KEY_CREATE           pthread_key_create
-#define PTHREAD_ATTR_SETSCHEDPOLICY  pthread_attr_setschedpolicy
-#define PTHREAD_ATTR_GETSTACKSIZE(a, s) pthread_attr_getstacksize(a, s)
-#define PTHREAD_GETSPECIFIC(k, r)    (r) = pthread_getspecific(k)
+#define _PT_PTHREAD_ATTR_INIT            pthread_attr_init
+#define _PT_PTHREAD_ATTR_DESTROY         pthread_attr_destroy
+#define _PT_PTHREAD_CREATE(t, a, f, r)   pthread_create(t, &a, f, r) 
+#define _PT_PTHREAD_KEY_CREATE           pthread_key_create
+#define _PT_PTHREAD_ATTR_SETSCHEDPOLICY  pthread_attr_setschedpolicy
+#define _PT_PTHREAD_ATTR_GETSTACKSIZE(a, s) pthread_attr_getstacksize(a, s)
+#define _PT_PTHREAD_GETSPECIFIC(k, r)    (r) = pthread_getspecific(k)
 #else
 #error "Cannot determine pthread strategy"
 #endif
 
 #if defined(_PR_DCETHREADS)
-#define PTHREAD_EXPLICIT_SCHED      PTHREAD_DEFAULT_SCHED
+#define _PT_PTHREAD_EXPLICIT_SCHED      _PT_PTHREAD_DEFAULT_SCHED
 #endif
 
 /*
@@ -167,8 +167,8 @@
 #elif defined(AIX)
 #include <sys/priv.h>
 #include <sys/sched.h>
-#ifndef PTHREAD_CREATE_JOINABLE
-#define PTHREAD_CREATE_JOINABLE     PTHREAD_CREATE_UNDETACHED
+#ifndef _PT_PTHREAD_CREATE_JOINABLE
+#define _PT_PTHREAD_CREATE_JOINABLE     _PT_PTHREAD_CREATE_UNDETACHED
 #endif
 #define PT_PRIO_MIN            DEFAULT_PRIO
 #define PT_PRIO_MAX            DEFAULT_PRIO
@@ -212,24 +212,24 @@
 #endif
 
 /*
- * The PTHREAD_YIELD function is called from a signal handler.
+ * The _PT_PTHREAD_YIELD function is called from a signal handler.
  * Needed for garbage collection -- Look at PR_Suspend/PR_Resume
  * implementation.
  */
 #if defined(_PR_DCETHREADS)
-#define PTHREAD_YIELD()            	pthread_yield()
+#define _PT_PTHREAD_YIELD()            	pthread_yield()
 #elif defined(OSF1) || defined(VMS)
 /*
  * sched_yield can't be called from a signal handler.  Must use
  * the _np version.
  */
-#define PTHREAD_YIELD()            	pthread_yield_np()
+#define _PT_PTHREAD_YIELD()            	pthread_yield_np()
 #elif defined(AIX)
 extern int (*_PT_aix_yield_fcn)();
-#define PTHREAD_YIELD()			(*_PT_aix_yield_fcn)()
+#define _PT_PTHREAD_YIELD()			(*_PT_aix_yield_fcn)()
 #elif defined(IRIX)
 #include <time.h>
-#define PTHREAD_YIELD() \
+#define _PT_PTHREAD_YIELD() \
     PR_BEGIN_MACRO               				\
 		struct timespec onemillisec = {0};		\
 		onemillisec.tv_nsec = 1000000L;			\
@@ -238,9 +238,9 @@ extern int (*_PT_aix_yield_fcn)();
 #elif defined(HPUX) || defined(LINUX) || defined(SOLARIS) \
 	|| defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
 	|| defined(BSDI) || defined(NTO)
-#define PTHREAD_YIELD()            	sched_yield()
+#define _PT_PTHREAD_YIELD()            	sched_yield()
 #else
-#error "Need to define PTHREAD_YIELD for this platform"
+#error "Need to define _PT_PTHREAD_YIELD for this platform"
 #endif
 
 #endif /* nspr_pth_defs_h_ */
