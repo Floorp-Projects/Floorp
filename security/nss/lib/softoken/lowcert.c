@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: lowcert.c,v 1.7 2002/06/20 18:46:46 relyea%netscape.com Exp $
+ * $Id: lowcert.c,v 1.8 2002/06/21 20:25:49 relyea%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -538,10 +538,10 @@ nsslowcert_KeyFromDERCert(PRArenaPool *arena, SECItem *derCert, SECItem *key)
     int rv;
     NSSLOWCERTCertKey certkey;
 
+    PORT_Memset(&certkey, 0, sizeof(NSSLOWCERTCertKey));
     rv = nsslowcert_GetCertFields(derCert->data, derCert->len,
 	&certkey.derIssuer, &certkey.serialNumber, NULL, NULL, NULL, NULL);
-
-    PORT_Memset(&certkey, 0, sizeof(NSSLOWCERTCertKey));    
+    
 
     if ( rv ) {
 	goto loser;
