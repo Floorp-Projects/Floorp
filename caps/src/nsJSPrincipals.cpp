@@ -61,8 +61,6 @@ nsJSPrincipals::~nsJSPrincipals()
 {
     if (codebase)
         PL_strfree(codebase); 
-    if (nsIPrincipalPtr)
-        NS_RELEASE(nsIPrincipalPtr);
 }
 
 

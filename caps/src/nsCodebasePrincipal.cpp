@@ -176,7 +176,6 @@ nsCodebasePrincipal::Init(nsIURI *uri)
         return NS_ERROR_FAILURE;
     }
     // JSPrincipals::Init adopts codebase, so no need to free now
-    NS_ADDREF(this);
     mURI = uri;
     NS_ADDREF(mURI);
     return NS_OK;
