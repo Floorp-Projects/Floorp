@@ -57,7 +57,7 @@ public:
 
     // (Corresponds to NPP_Write and NPN_Write.)
     NS_IMETHOD
-    Write(const char* buffer, PRInt32 offset, PRInt32 len, PRInt32 *aWriteCount);
+    Write(const char* buffer, PRUint32 offset, PRUint32 len, PRUint32 *aWriteCount);
 
     // (Corresponds to NPP_NewStream's stype return parameter.)
     NS_IMETHOD

@@ -77,13 +77,13 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
-  NS_IMETHOD OnStatus(nsIURL* aURL, const nsString &aMsg);
-  NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 aStatus,
-                           const nsString& aMsg);
-  NS_IMETHOD GetBindInfo(nsIURL* aURL);
+  NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+  NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
+  NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus,
+                           const PRUnichar* aMsg);
+  NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
   NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream* aStream,
-                             PRInt32 aCount);
+                             PRUint32 aCount);
 
   nsImageDocument* mDocument;
   nsIStreamListener* mNextStream;
@@ -115,8 +115,8 @@ ImageListener::OnStartBinding(nsIURL* aURL, const char *aContentType)
 }
 
 NS_IMETHODIMP
-ImageListener::OnProgress(nsIURL* aURL, PRInt32 aProgress,
-                          PRInt32 aProgressMax)
+ImageListener::OnProgress(nsIURL* aURL, PRUint32 aProgress,
+                          PRUint32 aProgressMax)
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
@@ -125,7 +125,7 @@ ImageListener::OnProgress(nsIURL* aURL, PRInt32 aProgress,
 }
 
 NS_IMETHODIMP
-ImageListener::OnStatus(nsIURL* aURL, const nsString &aMsg)
+ImageListener::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
@@ -134,8 +134,8 @@ ImageListener::OnStatus(nsIURL* aURL, const nsString &aMsg)
 }
 
 NS_IMETHODIMP
-ImageListener::OnStopBinding(nsIURL* aURL, PRInt32 aStatus,
-                             const nsString& aMsg)
+ImageListener::OnStopBinding(nsIURL* aURL, nsresult aStatus,
+                             const PRUnichar* aMsg)
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
@@ -144,17 +144,17 @@ ImageListener::OnStopBinding(nsIURL* aURL, PRInt32 aStatus,
 }
 
 NS_IMETHODIMP
-ImageListener::GetBindInfo(nsIURL* aURL)
+ImageListener::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
   }
-  return mNextStream->GetBindInfo(aURL);
+  return mNextStream->GetBindInfo(aURL, aInfo);
 }
 
 NS_IMETHODIMP
 ImageListener::OnDataAvailable(nsIURL* aURL, nsIInputStream* aStream,
-                               PRInt32 aCount)
+                               PRUint32 aCount)
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
@@ -246,7 +246,7 @@ nsImageDocument::StartImageLoad(nsIURL* aURL, nsIStreamListener*& aListener)
       cx->GetImageGroup(group);
       if (nsnull != group) {
         const char* spec;
-        spec = aURL->GetSpec();
+        (void)aURL->GetSpec(&spec);
         nscolor black = NS_RGB(0, 0, 0);
         nsIStreamListener* listener = nsnull;
         rv = group->GetImageFromStream(spec, nsnull, &mBlack,
@@ -309,9 +309,10 @@ nsImageDocument::CreateSyntheticDocument()
   }
   image->SetDocument(this, PR_FALSE);
 
-  nsAutoString src;
-  mDocumentURL->ToString(src);
+  PRUnichar* src;
+  mDocumentURL->ToString(&src);
   nsHTMLValue val(src);
+  delete src;
   image->SetAttribute(nsHTMLAtoms::src, val, PR_FALSE);
   image->SetAttribute(nsHTMLAtoms::alt, val, PR_FALSE);
 

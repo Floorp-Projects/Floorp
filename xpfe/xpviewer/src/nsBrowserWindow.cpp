@@ -2468,13 +2468,16 @@ nsBrowserWindow::FocusAvailable(nsIWebShell* aFocusedWebShell)
 //----------------------------------------
 NS_IMETHODIMP
 nsBrowserWindow::OnProgress(nsIURL* aURL,
-              PRInt32 aProgress,
-              PRInt32 aProgressMax)
+                            PRUint32 aProgress,
+                            PRUint32 aProgressMax)
 {
   if (mStatusBar) {
     nsAutoString url;
     if (nsnull != aURL) {
-      aURL->ToString(url);
+      PRUnichar* str;
+      aURL->ToString(&str);
+      url = str;
+      delete str;
     }
     url.Append(": progress ");
     url.Append(aProgress, 10);
@@ -2490,7 +2493,7 @@ nsBrowserWindow::OnProgress(nsIURL* aURL,
 
 //----------------------------------------
 NS_IMETHODIMP
-nsBrowserWindow::OnStatus(nsIURL* aURL, const nsString& aMsg)
+nsBrowserWindow::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 {
   SetStatus(aMsg);
   return NS_OK;
@@ -2503,7 +2506,10 @@ nsBrowserWindow::OnStartBinding(nsIURL* aURL, const char *aContentType)
   if (mStatusBar) {
     nsAutoString url;
     if (nsnull != aURL) {
-      aURL->ToString(url);
+      PRUnichar* str;
+      aURL->ToString(&str);
+      url = str;
+      delete str;
     }
     url.Append(": start");
     SetStatus(url);
@@ -2514,12 +2520,15 @@ nsBrowserWindow::OnStartBinding(nsIURL* aURL, const char *aContentType)
 //----------------------------------------
 NS_IMETHODIMP
 nsBrowserWindow::OnStopBinding(nsIURL* aURL,
-                 PRInt32 status,
-                 const nsString& aMsg)
+                               nsresult status,
+                               const PRUnichar* aMsg)
 {
   nsAutoString url;
   if (nsnull != aURL) {
-    aURL->ToString(url);
+    PRUnichar* str;
+    aURL->ToString(&str);
+    url = str;
+    delete str;
   }
   url.Append(": stop");
   SetStatus(url);
@@ -3189,7 +3198,8 @@ nsBrowserWindow::DoDebugSave()
   
   if (rv == NS_OK)
   {
-  const char* name = url->GetFile();
+  const char* name;
+  (void)url->GetFile(&name);
   path = name;
 
   doSave = GetSaveFileNameFromFileSelector(mWindow, path);

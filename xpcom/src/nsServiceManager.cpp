@@ -205,8 +205,8 @@ nsServiceManagerImpl::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
 
 nsresult
 nsServiceManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
-                             nsISupports* *result,
-                             nsIShutdownListener* shutdownListener)
+                                 nsISupports* *result,
+                                 nsIShutdownListener* shutdownListener)
 {
     nsresult err = NS_OK;
     PR_CEnterMonitor(this);

@@ -368,8 +368,10 @@ nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
     if (nsnull != doc) {
       docURL = doc->GetDocumentURL();
       NS_RELEASE(doc);
-      URLName = (char*)PR_Malloc(PL_strlen(docURL->GetSpec())+1);
-      PL_strcpy(URLName, docURL->GetSpec());
+      const char* spec;
+      (void)docURL->GetSpec(&spec);
+      URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
+      PL_strcpy(URLName, spec);
       NS_RELEASE(docURL);
     }
 

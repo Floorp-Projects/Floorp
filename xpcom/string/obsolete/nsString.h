@@ -428,7 +428,7 @@ nsString& Append(float aFloat);
  *  @param   aCount -- number of chars to copy
  *  @return  number of chars copied
  */
-PRInt32 Left(nsString& aCopy,PRInt32 aCount);
+PRInt32 Left(nsString& aCopy,PRInt32 aCount) const;
 
 /*
  *  Copies n characters from this string to given string,
@@ -440,7 +440,7 @@ PRInt32 Left(nsString& aCopy,PRInt32 aCount);
  *  @param   anOffset -- position where copying begins
  *  @return  number of chars copied
  */
-PRInt32 Mid(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount);
+PRInt32 Mid(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount) const;
 
 /*
  *  Copies n characters from this string to given string,
@@ -451,7 +451,7 @@ PRInt32 Mid(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount);
  *  @param  aCount -- number of chars to copy
  *  @return number of chars copied
  */
-PRInt32 Right(nsString& aCopy,PRInt32 aCount);
+PRInt32 Right(nsString& aCopy,PRInt32 aCount) const;
 
 /*
  *  This method inserts n chars from given string into this

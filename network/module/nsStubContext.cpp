@@ -82,8 +82,8 @@ static nsINetSupport *getNetSupport(URL_Struct *URL_s)
       nsISupports *container;
 
       /* The nsINetSupport interface will be implemented by the container */
-      container = pConn->pURL->GetContainer();
-      if (nsnull != container) {
+      nsresult err = pConn->pURL->GetContainer(&container);
+      if (err == NS_OK) {
         container->QueryInterface(kINetSupportIID, (void **) &netSupport);
         NS_RELEASE(container);
       }
@@ -285,7 +285,8 @@ PRIVATE void stub_GraphProgressInit(MWContext  *context,
 
     if (nsnull != (pListener = getStreamListener(URL_s))) {
         nsConnectionInfo *pConn = (nsConnectionInfo *) URL_s->fe_data;
-        pListener->OnProgress(pConn->pURL, 0, content_length);
+        NS_ASSERTION(content_length >= 0, "negative content_length");
+        pListener->OnProgress(pConn->pURL, 0, (PRUint32)content_length);
         NS_RELEASE(pListener);
     }
 }
@@ -304,8 +305,10 @@ PRIVATE void stub_GraphProgress(MWContext  *context,
 
     if (nsnull != (pListener = getStreamListener(URL_s))) {
         nsConnectionInfo *pConn = (nsConnectionInfo *) URL_s->fe_data;
-        pListener->OnProgress(pConn->pURL, bytes_received, 
-                              content_length);
+        NS_ASSERTION(bytes_received >= 0, "negative bytes_received");
+        NS_ASSERTION(content_length >= 0, "negative content_length");
+        pListener->OnProgress(pConn->pURL, (PRUint32)bytes_received, 
+                              (PRUint32)content_length);
         NS_RELEASE(pListener);
     }
 }
@@ -328,8 +331,10 @@ PRIVATE void stub_GraphProgressDestroy(MWContext  *context,
 
     if (nsnull != (pListener = getStreamListener(URL_s))) {
         nsConnectionInfo *pConn = (nsConnectionInfo *) URL_s->fe_data;
-        pListener->OnProgress(pConn->pURL, total_bytes_read, 
-                              content_length);
+        NS_ASSERTION(total_bytes_read >= 0, "negative total_bytes_read");
+        NS_ASSERTION(content_length >= 0, "negative content_length");
+        pListener->OnProgress(pConn->pURL, (PRUint32)total_bytes_read, 
+                              (PRUint32)content_length);
         // XXX The comment above no longer applies, and this function does
         // get called...
         NS_RELEASE(pListener);
@@ -604,7 +609,7 @@ void stub_abort(NET_StreamClass *stream, int status)
 
 int stub_put_block(NET_StreamClass *stream, const char *buffer, int32 length)
 {
-    PRInt32 bytesWritten;
+    PRUint32 bytesWritten;
     nsresult errorCode;
     nsConnectionInfo *pConn = GetConnectionInfoFromStream(stream);
 
@@ -616,7 +621,8 @@ int stub_put_block(NET_StreamClass *stream, const char *buffer, int32 length)
      *       is interrupted...  In this case, Netlib will call put_block(...)
      *       with the string "Transfer Interrupted!"
      */
-    errorCode = pConn->pNetStream->Write(buffer, 0, length, &bytesWritten);
+    NS_ASSERTION(length >= 0, "negative length");
+    errorCode = pConn->pNetStream->Write(buffer, 0, (PRUint32)length, &bytesWritten);
 
     /* Abort the connection... */
     if (NS_BASE_STREAM_EOF == errorCode) {
@@ -628,7 +634,8 @@ int stub_put_block(NET_StreamClass *stream, const char *buffer, int32 length)
     }
 
 	/* Abort the connection if an error occurred... */
-	if (NS_FAILED(errorCode) || (bytesWritten != length)) {
+    NS_ASSERTION(bytesWritten >= 0, "negative bytesWritten");
+	if (NS_FAILED(errorCode) || ((int32)bytesWritten != length)) {
 		return -1;
 	}
     return 1;
@@ -636,12 +643,12 @@ int stub_put_block(NET_StreamClass *stream, const char *buffer, int32 length)
 
 unsigned int stub_is_write_ready(NET_StreamClass *stream)
 {
-    PRInt32 errorCode;
-    unsigned int free_space = 0;
+    nsresult errorCode;
+    PRUint32 free_space = 0;
     URL_Struct *URL_s = (URL_Struct *)stream->data_object;
     nsConnectionInfo *pConn = GetConnectionInfoFromStream(stream);
 
-    free_space = (unsigned int)pConn->pNetStream->GetAvailableSpace(&errorCode);
+    errorCode = pConn->pNetStream->GetAvailableSpace(&free_space);
 
     /*
      * If the InputStream has been closed...  Return 1 byte available so
@@ -652,7 +659,7 @@ unsigned int stub_is_write_ready(NET_StreamClass *stream)
     }
 
     TRACEMSG(("+++ stream is_write_ready.  Returning %d\n", free_space));
-    return free_space;
+    return (int)free_space;
 }
 
 
@@ -705,7 +712,7 @@ NET_NGLayoutConverter(FO_Present_Types format_out,
              * the cached info in the URL object...
              */
             if ((URL_s->address_modified) && (NULL != pConn->pURL)) {
-                pConn->pURL->Set(URL_s->address);
+                pConn->pURL->SetSpec(URL_s->address);
             }
 
             /* 

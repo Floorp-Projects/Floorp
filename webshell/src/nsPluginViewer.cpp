@@ -58,13 +58,13 @@ public:
 
   // nsIStreamListener
   NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
-  NS_IMETHOD OnStatus(nsIURL* aURL, const nsString &aMsg);
-  NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 aStatus,
-                           const nsString& aMsg);
-  NS_IMETHOD GetBindInfo(nsIURL* aURL);
+  NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+  NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
+  NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus,
+                           const PRUnichar* aMsg);
+  NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
   NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream* aStream,
-                             PRInt32 aCount);
+                             PRUint32 aCount);
 
   PluginViewerImpl* mViewer;
   nsIStreamListener* mNextStream;
@@ -317,11 +317,13 @@ PluginViewerImpl::CreatePlugin(nsIPluginHost* aHost, const nsRect& aBounds,
     win->ws_info = nsnull;   //XXX need to figure out what this is. MMP
   #endif
 
-    nsAutoString fullurl;
-    mURL->ToString(fullurl);
+    PRUnichar* fullurl;
+    mURL->ToString(&fullurl);
 
     char* ct = mContentType.ToNewCString();
-    rv = aHost->InstantiatePlugin(ct, fullurl, aResult, mOwner);
+    nsAutoString str = fullurl;
+    rv = aHost->InstantiatePlugin(ct, str, aResult, mOwner);
+    delete fullurl;
     delete ct;
   }
 
@@ -489,8 +491,8 @@ PluginListener::OnStartBinding(nsIURL* aURL, const char *aContentType)
 }
 
 NS_IMETHODIMP
-PluginListener::OnProgress(nsIURL* aURL, PRInt32 aProgress,
-                           PRInt32 aProgressMax)
+PluginListener::OnProgress(nsIURL* aURL, PRUint32 aProgress,
+                           PRUint32 aProgressMax)
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
@@ -499,7 +501,7 @@ PluginListener::OnProgress(nsIURL* aURL, PRInt32 aProgress,
 }
 
 NS_IMETHODIMP
-PluginListener::OnStatus(nsIURL* aURL, const nsString &aMsg)
+PluginListener::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
@@ -508,8 +510,8 @@ PluginListener::OnStatus(nsIURL* aURL, const nsString &aMsg)
 }
 
 NS_IMETHODIMP
-PluginListener::OnStopBinding(nsIURL* aURL, PRInt32 aStatus,
-                              const nsString& aMsg)
+PluginListener::OnStopBinding(nsIURL* aURL, nsresult aStatus,
+                              const PRUnichar* aMsg)
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
@@ -518,17 +520,17 @@ PluginListener::OnStopBinding(nsIURL* aURL, PRInt32 aStatus,
 }
 
 NS_IMETHODIMP
-PluginListener::GetBindInfo(nsIURL* aURL)
+PluginListener::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
   }
-  return mNextStream->GetBindInfo(aURL);
+  return mNextStream->GetBindInfo(aURL, aInfo);
 }
 
 NS_IMETHODIMP
 PluginListener::OnDataAvailable(nsIURL* aURL, nsIInputStream* aStream,
-                                PRInt32 aCount)
+                                PRUint32 aCount)
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
@@ -643,7 +645,9 @@ NS_IMETHODIMP pluginInstanceOwner :: GetURL(const char *aURL, const char *aTarge
         {
           nsAutoString  uniurl = nsAutoString(aURL);
           nsAutoString  unitarget = nsAutoString(aTarget);
-          nsAutoString  base = nsAutoString(url->GetSpec());
+          const char* spec;
+          (void)url->GetSpec(&spec);
+          nsAutoString  base = nsAutoString(spec);
           nsAutoString  fullurl;
 
           // Create an absolute URL

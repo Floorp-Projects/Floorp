@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -25,6 +25,7 @@
 #include "nsIPref.h"
 #include "nsINetService.h"
 #include "nsNetThread.h"
+#include "nsHashtable.h"
 #include "net.h"
 
 class nsITimer;
@@ -37,7 +38,8 @@ public:
     nsNetlibService();
 
     /* Implementation of the nsINetService interface */
-    NS_IMETHOD OpenStream(nsIURL *aUrl, nsIStreamListener *aConsumer);
+    NS_IMETHOD OpenStream(nsIURL *aUrl, 
+                          nsIStreamListener *aConsumer);
     NS_IMETHOD OpenBlockingStream(nsIURL *aUrl, 
                                   nsIStreamListener *aConsumer,
                                   nsIInputStream **aNewStream);
@@ -66,6 +68,18 @@ public:
     NS_IMETHOD GetPlatform(nsString& aPlatform);
     NS_IMETHOD GetUserAgent(nsString& aUA);
     NS_IMETHOD SetCustomUserAgent(nsString aCustom);
+    NS_IMETHOD RegisterProtocol(const nsString& aName,
+                                nsIProtocolURLFactory* aProtocolURLFactory,
+                                nsIProtocol* aProtocol);
+    NS_IMETHOD UnregisterProtocol(const nsString& aName);
+    NS_IMETHOD GetProtocol(const nsString& aName, 
+                           nsIProtocolURLFactory* *aProtocolURLFactory,
+                           nsIProtocol* *aProtocol);
+    NS_IMETHOD CreateURL(nsIURL* *aURL, 
+                         const nsString& aSpec,
+                         const nsIURL* aContextURL = nsnull,
+                         nsISupports* aContainer = nsnull,
+                         nsIURLGroup* aGroup = nsnull);
 
 protected:
     virtual ~nsNetlibService();
@@ -90,6 +104,8 @@ private:
     nsITimer* mPollingTimer;
 
     nsNetlibThread* mNetlibThread;
+
+    nsHashtable* mProtocols;
 };
 
 

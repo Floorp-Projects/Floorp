@@ -130,7 +130,7 @@ CScanner::~CScanner() {
  *  @param   
  *  @return  
  */
-PRInt32 CScanner::RewindToMark(void){
+PRUint32 CScanner::RewindToMark(void){
   mOffset=mMarkPos;
   return mOffset;
 }
@@ -145,7 +145,7 @@ PRInt32 CScanner::RewindToMark(void){
  *  @param   
  *  @return  
  */
-PRInt32 CScanner::Mark(void){
+PRUint32 CScanner::Mark(void){
   if((mOffset>0) && (mOffset>eBufferSizeThreshold)) {
     mBuffer.Cut(0,mOffset);   //delete chars up to mark position
     mOffset=0;
@@ -175,7 +175,7 @@ PRBool CScanner::Append(nsString& aBuffer) {
  *  @param   
  *  @return  
  */
-PRBool CScanner::Append(const char* aBuffer, PRInt32 aLen){
+PRBool CScanner::Append(const char* aBuffer, PRUint32 aLen){
   mBuffer.Append(aBuffer,aLen);
   mTotalRead+=aLen;
   return PR_TRUE;
@@ -238,7 +238,7 @@ nsresult CScanner::FillBuffer(void) {
 nsresult CScanner::Eof() {
   nsresult theError=NS_OK;
 
-  if(mOffset>=mBuffer.Length()) {
+  if(mOffset>=(PRUint32)mBuffer.Length()) {
     theError=FillBuffer();  
   }
   
@@ -261,11 +261,11 @@ nsresult CScanner::Eof() {
 nsresult CScanner::GetChar(PRUnichar& aChar) {
   nsresult result=NS_OK;
   
-  if(mOffset>=mBuffer.Length()) 
+  if(mOffset>=(PRUint32)mBuffer.Length()) 
     result=Eof();
 
   if(NS_OK == result) {
-    aChar=mBuffer[mOffset++];
+    aChar=mBuffer[(PRInt32)mOffset++];
   }
   return result;
 }
@@ -282,11 +282,11 @@ nsresult CScanner::GetChar(PRUnichar& aChar) {
 nsresult CScanner::Peek(PRUnichar& aChar) {
   nsresult result=NS_OK;
   
-  if(mOffset>=mBuffer.Length()) 
+  if(mOffset>=(PRUint32)mBuffer.Length()) 
     result=Eof();
 
   if(NS_OK == result) {
-    aChar=mBuffer[mOffset];        
+    aChar=mBuffer[(PRInt32)mOffset];        
   }
   return result;
 }

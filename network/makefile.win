@@ -38,6 +38,7 @@ DIRS= \
 	cnvts \
 	client \
 !ifdef MODULAR_NETLIB
+	public \
 	module \
 !endif
 	$(NULL)

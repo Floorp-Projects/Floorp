@@ -720,7 +720,7 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
   // the url that follows a "?"
   char* cp = aURLSpec.ToNewCString();
   nsIURL* url;
-  aErrorCode = NS_NewURL(&url, mURL, cp);
+  aErrorCode = NS_NewURL(&url, cp, mURL);
   delete [] cp;
   if (NS_FAILED(aErrorCode)) {
     // import url is bad
@@ -730,9 +730,9 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
 
   if (PR_FALSE == mSheet->ContainsStyleSheet(url)) { // don't allow circular references
 
-    PRInt32 ec;
-    nsIInputStream* in = url->Open(&ec);
-    if (nsnull == in) {
+    nsIInputStream* in;
+    nsresult rv = NS_OpenURL(url, &in);
+    if (rv != NS_OK) {
       // failure to make connection
       // XXX log this somewhere for easier web page debugging
     }

@@ -71,7 +71,7 @@ static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
-static NS_DEFINE_IID(kIHTTPUrlIID, NS_IHTTPURL_IID);
+static NS_DEFINE_IID(kIHTTPURLIID, NS_IHTTPURL_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
@@ -301,12 +301,12 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
-  NS_IMETHOD OnStatus(nsIURL* aURL, const nsString &aMsg);
-  NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg);
-  NS_IMETHOD GetBindInfo(nsIURL* aURL);
+  NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+  NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
+  NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
+  NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
   NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
-                             PRInt32 aLength);
+                             PRUint32 aLength);
 
 protected:
   nsIURL* mURL;
@@ -1381,9 +1381,11 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mCurrentContext->Begin(eHTMLTag_html, mRoot);
   mContextStack.AppendElement(mCurrentContext);
 
+  const char* spec;
+  (void)aURL->GetSpec(&spec);
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::Init: this=%p url='%s'",
-              this, aURL->GetSpec()));
+              this, spec));
 
   return NS_OK;
 }
@@ -1906,8 +1908,9 @@ HTMLContentSink::StartLayout()
 
   // If the document we are loading has a reference or it is a top level
   // frameset document, disable the scroll bars on the views.
-  const char* ref = mDocumentURL->GetRef();
-  if (nsnull != ref) {
+  const char* ref;
+  nsresult rv = mDocumentURL->GetRef(&ref);
+  if (rv == NS_OK) {
     mRef = new nsString(ref);
   }
   PRBool topLevelFrameset = PR_FALSE;
@@ -2200,7 +2203,8 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
     if ((0 == type.Length()) || type.EqualsIgnoreCase("text/css")) {
       nsIURL* url = nsnull;
       nsAutoString absURL;
-      nsIURLGroup* urlGroup = mDocumentURL->GetURLGroup();
+      nsIURLGroup* urlGroup;
+      (void)mDocumentURL->GetURLGroup(&urlGroup);
       result = NS_MakeAbsoluteURL(mDocumentURL, mBaseHREF, href, absURL);
       if (NS_OK != result) {
         return result;
@@ -2210,7 +2214,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
         NS_RELEASE(urlGroup);
       }
       else {
-        result = NS_NewURL(&url, nsnull, absURL);
+        result = NS_NewURL(&url, absURL);
       }
       if (NS_OK != result) {
         return result;
@@ -2269,8 +2273,8 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
       mHead->AppendChildTo(it, PR_FALSE);
 
       // If we are processing an HTTP url, handle meta http-equiv cases
-      nsIHttpUrl* httpUrl = nsnull;
-      rv = mDocumentURL->QueryInterface(kIHTTPUrlIID, (void **)&httpUrl);
+      nsIHttpURL* httpUrl = nsnull;
+      rv = mDocumentURL->QueryInterface(kIHTTPURLIID, (void **)&httpUrl);
       if (NS_OK == rv) {
         nsAutoString header;
         it->GetAttribute(nsHTMLAtoms::httpEquiv, header);
@@ -2363,7 +2367,7 @@ HTMLContentSink::EvaluateScript(nsString& aScript,
       nsIURL* docURL = mDocument->GetDocumentURL();
       const char* url;
       if (docURL) {
-        url = docURL->GetSpec();
+        (void)docURL->GetSpec(&url);
       }
   
       PRBool isUndefined;
@@ -2443,7 +2447,8 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       // Use the SRC attribute value to open an accumulating stream
       nsIURL* url = nsnull;
       nsAutoString absURL;
-      nsIURLGroup* urlGroup = mDocumentURL->GetURLGroup();
+      nsIURLGroup* urlGroup;
+      (void)mDocumentURL->GetURLGroup(&urlGroup);
       rv = NS_MakeAbsoluteURL(mDocumentURL, mBaseHREF, src, absURL);
       if (NS_OK != rv) {
         return rv;
@@ -2453,7 +2458,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
         NS_RELEASE(urlGroup);
       }
       else {
-        rv = NS_NewURL(&url, nsnull, absURL);
+        rv = NS_NewURL(&url, absURL);
       }
       if (NS_OK != rv) {
         return rv;
@@ -2576,7 +2581,8 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
     // XXX what does nav do?
     // Use the SRC attribute value to open an accumulating stream
     nsAutoString absURL;
-    nsIURLGroup* urlGroup = mDocumentURL->GetURLGroup();
+    nsIURLGroup* urlGroup;
+    (void)mDocumentURL->GetURLGroup(&urlGroup);
     rv = NS_MakeAbsoluteURL(mDocumentURL, mBaseHREF, src, absURL);
     if (NS_OK != rv) {
       return rv;
@@ -2586,7 +2592,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       NS_RELEASE(urlGroup);
     }
     else {
-      rv = NS_NewURL(&url, nsnull, absURL);
+      rv = NS_NewURL(&url, absURL);
     }
     if (NS_OK != rv) {
       return rv;
@@ -2755,7 +2761,7 @@ nsAccumulatingURLLoader::nsAccumulatingURLLoader(nsIURL* aURL,
 
   nsresult rv;
   if (aURL) {
-    rv = aURL->Open(this);
+    rv = NS_OpenURL(aURL, this);
     if ((NS_OK != rv) && (nsnull != mFunc)) {
       (*mFunc)(this, *mData, mRef, rv);
     }
@@ -2782,22 +2788,22 @@ nsAccumulatingURLLoader::OnStartBinding(nsIURL* aURL,
 
 NS_IMETHODIMP 
 nsAccumulatingURLLoader::OnProgress(nsIURL* aURL, 
-                                    PRInt32 aProgress, 
-                                    PRInt32 aProgressMax)
+                                    PRUint32 aProgress, 
+                                    PRUint32 aProgressMax)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsAccumulatingURLLoader::OnStatus(nsIURL* aURL, const nsString &aMsg)
+nsAccumulatingURLLoader::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsAccumulatingURLLoader::OnStopBinding(nsIURL* aURL, 
-                                       PRInt32 aStatus, 
-                                       const nsString &aMsg)
+                                       nsresult aStatus, 
+                                       const PRUnichar* aMsg)
 {
   (*mFunc)(this, *mData, mRef, aStatus);
 
@@ -2805,7 +2811,7 @@ nsAccumulatingURLLoader::OnStopBinding(nsIURL* aURL,
 }
 
 NS_IMETHODIMP 
-nsAccumulatingURLLoader::GetBindInfo(nsIURL* aURL)
+nsAccumulatingURLLoader::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
 {
   return NS_OK;
 }
@@ -2815,11 +2821,11 @@ nsAccumulatingURLLoader::GetBindInfo(nsIURL* aURL)
 NS_IMETHODIMP 
 nsAccumulatingURLLoader::OnDataAvailable(nsIURL* aURL, 
                                          nsIInputStream *aIStream, 
-                                         PRInt32 aLength)
+                                         PRUint32 aLength)
 {
   nsresult rv = NS_OK;
   char buffer[BUF_SIZE];
-  PRInt32 len, lenRead;
+  PRUint32 len, lenRead;
   
   aIStream->GetLength(&len);
 

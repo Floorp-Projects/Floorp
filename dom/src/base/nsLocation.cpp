@@ -95,41 +95,14 @@ LocationImpl::SetWebShell(nsIWebShell *aWebShell)
   mWebShell = aWebShell;
 }
 
-nsresult
-LocationImpl::ConcatenateAndSet(const char *aProtocol,
-                                const char *aHost,
-                                PRInt32 aPort,
-                                const char *aFile,
-                                const char *aRef,
-                                const char *aSearch)
+nsresult 
+LocationImpl::SetURL(nsIURL* aURL)
 {
-  nsAutoString href;
-
-  href.SetString(aProtocol);
-  href.Append("://");
-  if (nsnull != aHost) {
-    href.Append(aHost);
-    if (0 < aPort) {
-      href.Append(':');
-      href.Append(aPort, 10);
-    }
-  }
-  href.Append(aFile);
-  if (nsnull != aRef) {
-    if ('#' != *aRef) {
-      href.Append('#');
-    }
-    href.Append(aRef);
-  }
-  if (nsnull != aSearch) {
-    if ('?' != *aSearch) {
-      href.Append('?');
-    }
-    href.Append(aSearch);
-  }
-
   if (nsnull != mWebShell) {
-     return mWebShell->LoadURL(href, nsnull, PR_TRUE);
+    const char* spec;
+    aURL->GetSpec(&spec);
+    nsAutoString s = spec;
+    return mWebShell->LoadURL(s, nsnull, PR_TRUE);
   }
   else {
     return NS_OK;
@@ -148,8 +121,8 @@ LocationImpl::GetHash(nsString& aHash)
   if (NS_OK == result) {
     result = NS_NewURL(&url, href);
     if (NS_OK == result) {
-      ref = url->GetRef();
-      if ((nsnull != ref) && ('\0' != *ref)) {
+      result = url->GetRef(&ref);
+      if (result == NS_OK && (nsnull != ref) && ('\0' != *ref)) {
         aHash.SetString("#");
         aHash.Append(ref);
       }
@@ -175,11 +148,8 @@ LocationImpl::SetHash(const nsString& aHash)
     result = NS_NewURL(&url, href);
     if (NS_OK == result) {
       char *buf = aHash.ToNewCString();
-
-      result = ConcatenateAndSet(url->GetProtocol(), url->GetHost(),
-                                 url->GetPort(), url->GetFile(),
-                                 buf, url->GetSearch());
-
+      url->SetRef(buf);
+      SetURL(url);
       delete buf;
       NS_IF_RELEASE(url);      
     }
@@ -199,11 +169,16 @@ LocationImpl::GetHost(nsString& aHost)
   if (NS_OK == result) {
     result = NS_NewURL(&url, href);
     if (NS_OK == result) {
-      aHost.SetString(url->GetHost());
-      PRInt32 port = url->GetPort();
-      if (-1 != port) {
-        aHost.Append(":");
-        aHost.Append(port, 10);
+      const char* host;
+      result = url->GetHost(&host);
+      if (result == NS_OK) {
+        aHost.SetString(host);
+        PRUint32 port;
+        (void)url->GetHostPort(&port);
+        if (-1 != port) {
+          aHost.Append(":");
+          aHost.Append(port, 10);
+        }
       }
       NS_IF_RELEASE(url);
     }
@@ -224,10 +199,8 @@ LocationImpl::SetHost(const nsString& aHost)
     result = NS_NewURL(&url, href);
     if (NS_OK == result) {
       char *buf = aHost.ToNewCString();
-
-      result = ConcatenateAndSet(url->GetProtocol(), buf,
-                                 -1, url->GetFile(),
-                                 url->GetRef(), url->GetSearch());
+      url->SetHost(buf);
+      SetURL(url);
       delete buf;
       NS_IF_RELEASE(url);      
     }
@@ -247,7 +220,10 @@ LocationImpl::GetHostname(nsString& aHostname)
   if (NS_OK == result) {
     result = NS_NewURL(&url, href);
     if (NS_OK == result) {
-      aHostname.SetString(url->GetHost());
+      const char* host;
+      result = url->GetHost(&host);
+      if (result == NS_OK)
+        aHostname.SetString(host);
       NS_IF_RELEASE(url);
     }
   }
@@ -267,10 +243,8 @@ LocationImpl::SetHostname(const nsString& aHostname)
     result = NS_NewURL(&url, href);
     if (NS_OK == result) {
       char *buf = aHostname.ToNewCString();
-
-      result = ConcatenateAndSet(url->GetProtocol(), buf,
-                                 url->GetPort(), url->GetFile(),
-                                 url->GetRef(), url->GetSearch());
+      url->SetHost(buf);
+      SetURL(url);
       delete buf;
       NS_IF_RELEASE(url);      
     }
@@ -306,9 +280,11 @@ LocationImpl::SetHref(const nsString& aHref)
   if (NS_OK == result) {
     result = NS_NewURL(&oldUrl, oldHref);
     if (NS_OK == result) {
-      result = NS_NewURL(&newUrl, oldUrl, aHref);
+      result = NS_NewURL(&newUrl, aHref, oldUrl);
       if (NS_OK == result) {
-        newHref.SetString(newUrl->GetSpec());
+        const char* spec;
+        result = newUrl->GetSpec(&spec);
+        newHref.SetString(spec);
         NS_RELEASE(newUrl);
       }
       NS_RELEASE(oldUrl);
@@ -333,7 +309,10 @@ LocationImpl::GetPathname(nsString& aPathname)
   if (NS_OK == result) {
     result = NS_NewURL(&url, href);
     if (NS_OK == result) {
-      aPathname.SetString(url->GetFile());
+      const char* file;
+      result = url->GetFile(&file);
+      if (result == NS_OK)
+        aPathname.SetString(file);
       NS_IF_RELEASE(url);
     }
   }
@@ -353,10 +332,8 @@ LocationImpl::SetPathname(const nsString& aPathname)
     result = NS_NewURL(&url, href);
     if (NS_OK == result) {
       char *buf = aPathname.ToNewCString();
-
-      result = ConcatenateAndSet(url->GetProtocol(), url->GetHost(),
-                                 url->GetPort(), buf,
-                                 url->GetRef(), url->GetSearch());
+      url->SetFile(buf);
+      SetURL(url);
       delete buf;
       NS_IF_RELEASE(url);      
     }
@@ -377,7 +354,8 @@ LocationImpl::GetPort(nsString& aPort)
     result = NS_NewURL(&url, href);
     if (NS_OK == result) {
       aPort.SetLength(0);
-      PRInt32 port = url->GetPort();
+      PRUint32 port;
+      (void)url->GetHostPort(&port);
       if (-1 != port) {
         aPort.Append(port, 10);
       }
@@ -410,10 +388,8 @@ LocationImpl::SetPort(const nsString& aPort)
           port = atol(buf);
         }
       }
-      
-      result = ConcatenateAndSet(url->GetProtocol(), url->GetHost(),
-                                 port, url->GetFile(),
-                                 url->GetRef(), url->GetSearch());
+      url->SetHostPort(port);
+      SetURL(url);
       delete buf;
       NS_IF_RELEASE(url);      
     }
@@ -433,8 +409,12 @@ LocationImpl::GetProtocol(nsString& aProtocol)
   if (NS_OK == result) {
     result = NS_NewURL(&url, href);
     if (NS_OK == result) {
-      aProtocol.SetString(url->GetProtocol());
-      aProtocol.Append(":");
+      const char* protocol;
+      result = url->GetProtocol(&protocol);
+      if (result == NS_OK) {
+        aProtocol.SetString(protocol);
+        aProtocol.Append(":");
+      }
       NS_IF_RELEASE(url);
     }
   }
@@ -454,10 +434,8 @@ LocationImpl::SetProtocol(const nsString& aProtocol)
     result = NS_NewURL(&url, href);
     if (NS_OK == result) {
       char *buf = aProtocol.ToNewCString();
-
-      result = ConcatenateAndSet(buf, url->GetHost(),
-                                 url->GetPort(), url->GetFile(),
-                                 url->GetRef(), url->GetSearch());
+      url->SetProtocol(buf);
+      SetURL(url);
       delete buf;
       NS_IF_RELEASE(url);      
     }
@@ -477,8 +455,9 @@ LocationImpl::GetSearch(nsString& aSearch)
   if (NS_OK == result) {
     result = NS_NewURL(&url, href);
     if (NS_OK == result) {
-      const char *search = url->GetSearch();
-      if ((nsnull != search) && ('\0' != *search)) {
+      const char *search;
+      result = url->GetSearch(&search);
+      if (result == NS_OK && (nsnull != search) && ('\0' != *search)) {
         aSearch.SetString("?");
         aSearch.Append(search);
       }
@@ -504,11 +483,8 @@ LocationImpl::SetSearch(const nsString& aSearch)
     result = NS_NewURL(&url, href);
     if (NS_OK == result) {
       char *buf = aSearch.ToNewCString();
-
-      result = ConcatenateAndSet(url->GetProtocol(), url->GetHost(),
-                                 url->GetPort(), url->GetFile(),
-                                 url->GetRef(), buf);
-
+      url->SetSearch(buf);
+      SetURL(url);
       delete buf;
       NS_IF_RELEASE(url);      
     }

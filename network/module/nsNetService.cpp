@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -38,7 +38,12 @@ extern "C" {
 #include "plstr.h"
 
 #include "nsString.h"
+#include "nsINetlibURL.h"
 #include "nsIProtocolConnection.h"
+#include "nsIProtocolURLFactory.h"
+#include "nsIProtocol.h"
+#include "nsIServiceManager.h"
+#include "nsCRT.h"
 
 #ifdef XP_PC
 #include <windows.h>
@@ -113,7 +118,7 @@ extern const char *XP_AppPlatform;
 
 } /* end of extern "C" */
 
-static NS_DEFINE_IID(kIProtocolConnectionIID,  NS_IPROTOCOLCONNECTION_IID);
+static NS_DEFINE_IID(kINetlibURLIID,  NS_INETLIBURL_IID);
 
 
 nsNetlibService::nsNetlibService()
@@ -184,10 +189,13 @@ nsNetlibService::nsNetlibService()
     if (XP_AppVersion)
         PR_Free((char *)XP_AppVersion);
     XP_AppVersion = PL_strdup(buf);
+
+    mProtocols = new nsHashtable();
+    PR_ASSERT(mProtocols);
 }
 
 
-NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 NS_IMPL_THREADSAFE_ISUPPORTS(nsNetlibService,kINetServiceIID);
 
 
@@ -208,6 +216,8 @@ nsNetlibService::~nsNetlibService()
         mNetlibThread->Stop();
         delete mNetlibThread;
     }
+
+    delete mProtocols;
 }
 
 
@@ -215,7 +225,8 @@ nsNetlibService::~nsNetlibService()
 void nsNetlibService::SetupURLStruct(nsIURL *aUrl, URL_Struct *aURL_s) 
 {
   nsresult rv;
-  nsILoadAttribs* loadAttribs = aUrl->GetLoadAttribs();
+  nsILoadAttribs* loadAttribs;
+  rv = aUrl->GetLoadAttribs(&loadAttribs);
 
 
   /* If this url has load attributes, setup the underlying url struct
@@ -276,12 +287,12 @@ void nsNetlibService::SetupURLStruct(nsIURL *aUrl, URL_Struct *aURL_s)
   }
 }
 
-nsresult nsNetlibService::OpenStream(nsIURL *aUrl, 
+nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
                                      nsIStreamListener *aConsumer)
 {
     URL_Struct *URL_s;
     nsConnectionInfo *pConn;
-    nsIProtocolConnection *pProtocol;
+    nsINetlibURL *netlibURL;
     nsresult result;
     nsIStreamListener* consumer;
 
@@ -308,17 +319,25 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
     /* 
      * XXX: Rewrite the resource: URL into a file: URL
      */
-    if (PL_strcmp(aUrl->GetProtocol(), "resource") == 0) {
+    const char* protocol;
+    result = aUrl->GetProtocol(&protocol);
+    NS_ASSERTION(result == NS_OK, "deal with this");
+    if (PL_strcmp(protocol, "resource") == 0) {
       char* fileName;
-
-      fileName = mangleResourceIntoFileURL(aUrl->GetFile());
-      aUrl->Set(fileName);
+      const char* file;
+      result = aUrl->GetFile(&file);
+      NS_ASSERTION(result == NS_OK, "deal with this");
+      fileName = mangleResourceIntoFileURL(file);
+      aUrl->SetSpec(fileName);
       PR_Free(fileName);
     } 
 
     /* Create the URLStruct... */
 
-    URL_s = NET_CreateURLStruct(aUrl->GetSpec(), NET_NORMAL_RELOAD);
+    const char* spec = NULL;
+    result = aUrl->GetSpec(&spec);
+    NS_ASSERTION(result == NS_OK, "deal with this");
+    URL_s = NET_CreateURLStruct(spec, NET_NORMAL_RELOAD);
     if (NULL == URL_s) {
         NS_RELEASE(pConn);
         return NS_FALSE;
@@ -342,10 +361,10 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
      * XXX:  Currently the return value form InitializeURLInfo(...) is 
      *       ignored...  Should the connection abort if it fails?
      */
-    result = aUrl->QueryInterface(kIProtocolConnectionIID, (void**)&pProtocol);
+    result = aUrl->QueryInterface(kINetlibURLIID, (void**)&netlibURL);
     if (NS_OK == result) {
-        pProtocol->InitializeURLInfo(URL_s);
-        NS_RELEASE(pProtocol);
+        netlibURL->SetURLInfo(URL_s);
+        NS_RELEASE(netlibURL);
     }
     
     /* Create a new Context and set its reference count to one.. */
@@ -375,13 +394,13 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
 
 
 nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl, 
-                                              nsIStreamListener *aConsumer,
-                                              nsIInputStream **aNewStream)
+                                             nsIStreamListener *aConsumer,
+                                             nsIInputStream **aNewStream)
 {
     URL_Struct *URL_s;
     nsConnectionInfo *pConn;
     nsNetlibStream *pBlockingStream;
-    nsIProtocolConnection *pProtocol;
+    nsINetlibURL *netlibURL;
     nsIStreamListener* consumer = nsnull;
     nsresult result;
 
@@ -424,17 +443,25 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
         /* 
          * XXX: Rewrite the resource: URL into a file: URL
          */
-        if (PL_strcmp(aUrl->GetProtocol(), "resource") == 0) {
+        const char* protocol;
+        result = aUrl->GetProtocol(&protocol);
+        NS_ASSERTION(result == NS_OK, "deal with this");
+        if (PL_strcmp(protocol, "resource") == 0) {
             char* fileName;
-
-            fileName = mangleResourceIntoFileURL(aUrl->GetFile());
-            aUrl->Set(fileName);
+            const char* file;
+            result = aUrl->GetFile(&file);
+            NS_ASSERTION(result == NS_OK, "deal with this");
+            fileName = mangleResourceIntoFileURL(file);
+            aUrl->SetSpec(fileName);
             PR_Free(fileName);
         } 
 
         /* Create the URLStruct... */
 
-        URL_s = NET_CreateURLStruct(aUrl->GetSpec(), NET_NORMAL_RELOAD);
+        const char* spec = NULL;
+        result = aUrl->GetSpec(&spec);
+        NS_ASSERTION(result == NS_OK, "deal with this");
+        URL_s = NET_CreateURLStruct(spec, NET_NORMAL_RELOAD);
         if (NULL == URL_s) {
             NS_RELEASE(pBlockingStream);
             NS_RELEASE(pConn);
@@ -474,10 +501,10 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
          * XXX:  Currently the return value form InitializeURLInfo(...) is 
          *       ignored...  Should the connection abort if it fails?
          */
-         result = aUrl->QueryInterface(kIProtocolConnectionIID, (void**)&pProtocol);
+         result = aUrl->QueryInterface(kINetlibURLIID, (void**)&netlibURL);
          if (NS_OK == result) {
-             pProtocol->InitializeURLInfo(URL_s);
-             NS_RELEASE(pProtocol);
+             netlibURL->SetURLInfo(URL_s);
+             NS_RELEASE(netlibURL);
          }
 
 /*        printf("+++ Loading %s\n", aUrl); */
@@ -513,6 +540,8 @@ loser:
     *aNewStream = NULL;
     return NS_FALSE;
 }
+
+static NS_DEFINE_IID(kIProtocolConnectionIID, NS_IPROTOCOLCONNECTION_IID);
 
 NS_IMETHODIMP
 nsNetlibService::InterruptStream(nsIURL* aURL)
@@ -552,7 +581,9 @@ nsNetlibService::GetCookieString(nsIURL *aURL, nsString& aCookie)
     // XXX How safe is it to create a stub context without a URL_Struct?
     MWContext *stubContext = new_stub_context(nsnull);
     
-    const char *spec = aURL->GetSpec();
+    const char *spec = NULL;
+    nsresult result = aURL->GetSpec(&spec);
+    NS_ASSERTION(result == NS_OK, "deal with this");
     char *cookie = NET_GetCookie(stubContext, (char *)spec);
 
     if (nsnull != cookie) {
@@ -573,7 +604,9 @@ nsNetlibService::SetCookieString(nsIURL *aURL, const nsString& aCookie)
     // XXX How safe is it to create a stub context without a URL_Struct?
     MWContext *stubContext = new_stub_context(nsnull);
     
-    const char *spec = aURL->GetSpec();
+    const char *spec = NULL;
+    nsresult result = aURL->GetSpec(&spec);
+    NS_ASSERTION(result == NS_OK, "deal with this");
     char *cookie = aCookie.ToNewCString();
 
     NET_SetCookieString(stubContext, (char *)spec, cookie);
@@ -733,6 +766,7 @@ NS_IMETHODIMP
 nsNetlibService::SetCustomUserAgent(nsString aCustom)
 {
     PRInt32 inIdx;
+    PRUnichar junkChar = '[';   // damn emacs
     PRUnichar inChar = ']';
 
     if (!XP_AppVersion || (0 >= aCustom.Length()) )
@@ -750,6 +784,217 @@ nsNetlibService::SetCustomUserAgent(nsString aCustom)
     return NS_OK;
 
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+class nsStringHashKey : public nsHashKey 
+{
+public:
+    nsStringHashKey(const nsString& aName)
+        : mName(aName)
+    {
+    }
+
+    virtual ~nsStringHashKey(void)
+    {
+    }
+
+    virtual PRUint32 HashValue(void) const;
+    virtual PRBool Equals(const nsHashKey *aKey) const;
+    virtual nsHashKey *Clone(void) const;
+
+protected:
+    const nsString& mName;
+};
+
+PRUint32 nsStringHashKey::HashValue(void) const
+{
+    return nsCRT::HashValue(mName);
+}
+
+PRBool nsStringHashKey::Equals(const nsHashKey *aKey) const
+{
+    const nsStringHashKey* other = (const nsStringHashKey*)aKey;
+    return mName.EqualsIgnoreCase(other->mName);
+}
+
+nsHashKey *nsStringHashKey::Clone(void) const
+{
+    return new nsStringHashKey(mName);
+}
+
+struct nsProtocolPair {
+    nsIProtocolURLFactory*      mProtocolURLFactory;
+    nsIProtocol*                mProtocol;
+};
+
+NS_IMETHODIMP 
+nsNetlibService::RegisterProtocol(const nsString& aName, 
+                                  nsIProtocolURLFactory* aProtocolURLFactory,
+                                  nsIProtocol* aProtocol)
+{
+    nsStringHashKey* key = new nsStringHashKey(aName);
+    if (key == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(aProtocolURLFactory);
+    NS_IF_ADDREF(aProtocol);    // XXX remove IF
+    nsProtocolPair* pair = new nsProtocolPair;
+    if (pair == NULL) {
+        delete key;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    pair->mProtocolURLFactory = aProtocolURLFactory;
+    pair->mProtocol = aProtocol;
+    void* result = mProtocols->Put(key, pair);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetlibService::UnregisterProtocol(const nsString& aName)
+{
+    nsStringHashKey key(aName);
+    nsProtocolPair* pair = (nsProtocolPair*)mProtocols->Remove(&key);
+    NS_RELEASE(pair->mProtocolURLFactory);
+    NS_IF_RELEASE(pair->mProtocol);     // XXX remove IF
+    delete pair;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetlibService::GetProtocol(const nsString& aName,
+                             nsIProtocolURLFactory* *aProtocolURLFactory,
+                             nsIProtocol* *aProtocol)
+{
+    nsStringHashKey key(aName);
+    nsProtocolPair* pair = (nsProtocolPair*)mProtocols->Get(&key);
+    if (pair == NULL)
+        return NS_ERROR_FAILURE;
+    if (aProtocolURLFactory)
+        *aProtocolURLFactory = pair->mProtocolURLFactory;
+    if (aProtocol)
+        *aProtocol = pair->mProtocol;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetlibService::CreateURL(nsIURL* *aURL, 
+                           const nsString& aSpec,
+                           const nsIURL* aContextURL,
+                           nsISupports* aContainer,
+                           nsIURLGroup* aGroup)
+{
+    nsAutoString protoName;
+    PRInt32 pos = aSpec.Find(':');
+    if (pos >= 0) {
+        aSpec.Left(protoName, pos);
+    }
+    else if (aContextURL) {
+        const char* str;
+        aContextURL->GetProtocol(&str);
+        protoName = str;
+    }
+    else {
+        protoName = "http";
+    }
+    nsIProtocolURLFactory* protocolURLFactory;
+    nsresult err = GetProtocol(protoName, &protocolURLFactory, NULL);
+    if (err != NS_OK) return err;
+    
+    return protocolURLFactory->CreateURL(aURL, aSpec, aContextURL, aContainer, aGroup);
+}
+
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+
+NS_NET nsresult NS_NewURL(nsIURL** aInstancePtrResult,
+                          const nsString& aSpec,
+                          const nsIURL* aURL,
+                          nsISupports* aContainer,
+                          nsIURLGroup* aGroup)
+{
+    NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
+    if (nsnull == aInstancePtrResult) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    nsINetService *inet = nsnull;
+    nsresult rv = nsServiceManager::GetService(kNetServiceCID,
+                                               kINetServiceIID,
+                                               (nsISupports **)&inet);
+    if (rv != NS_OK) return rv;
+
+    rv = inet->CreateURL(aInstancePtrResult, aSpec, aURL, aContainer, aGroup);
+
+    nsServiceManager::ReleaseService(kNetServiceCID, inet);
+    return rv;
+}
+
+NS_NET nsresult NS_MakeAbsoluteURL(nsIURL* aURL,
+                                   const nsString& aBaseURL,
+                                   const nsString& aSpec,
+                                   nsString& aResult)
+{
+    nsString* string;
+    nsIURL* base = nsnull;
+    if (0 < aBaseURL.Length()) {
+        nsresult err = NS_NewURL(&base, aBaseURL);
+        if (err != NS_OK) return err;
+    }
+    else {
+        const char* str;
+        aURL->GetSpec(&str);
+        nsresult err = NS_NewURL(&base, str);
+        if (err != NS_OK) return err;
+    }
+    nsIURL* url = nsnull;
+    nsresult err = NS_NewURL(&url, aSpec, base);
+    if (err != NS_OK) goto done;
+
+    PRUnichar* str;
+    err = url->ToString(&str);
+    if (err) goto done;
+    string = new nsString(str);
+    delete str;
+    if (string == NULL)
+        err = NS_ERROR_OUT_OF_MEMORY;
+    else
+        aResult = *string;
+
+  done:
+    NS_IF_RELEASE(url);
+    NS_IF_RELEASE(base);
+    return err;
+}
+
+NS_NET nsresult NS_OpenURL(nsIURL* aURL, nsIStreamListener* aConsumer)
+{
+    nsINetService *inet = nsnull;
+    nsresult rv = nsServiceManager::GetService(kNetServiceCID,
+                                               kINetServiceIID,
+                                               (nsISupports **)&inet);
+    if (rv != NS_OK) return rv;
+
+    rv = inet->OpenStream(aURL, aConsumer);
+
+    nsServiceManager::ReleaseService(kNetServiceCID, inet);
+    return rv;
+}
+
+NS_NET nsresult NS_OpenURL(nsIURL* aURL, nsIInputStream* *aNewStream,
+                           nsIStreamListener* aConsumer)
+{
+    nsINetService *inet = nsnull;
+    nsresult rv = nsServiceManager::GetService(kNetServiceCID,
+                                               kINetServiceIID,
+                                               (nsISupports **)&inet);
+    if (rv != NS_OK) return rv;
+
+    rv = inet->OpenBlockingStream(aURL, aConsumer, aNewStream);
+
+    nsServiceManager::ReleaseService(kNetServiceCID, inet);
+    return rv;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void nsNetlibService::SchedulePollingTimer()
 {
@@ -900,6 +1145,9 @@ NS_NET nsresult NS_NewINetService(nsINetService** aInstancePtrResult,
     return gNetlibService->QueryInterface(kINetServiceIID, (void**)aInstancePtrResult);
 }
 
+extern "C" NS_NET nsresult
+NS_InitializeHttpURLFactory(nsINetService* inet);
+
 NS_NET nsresult NS_InitINetService()
 {
     /* XXX: For now only allow a single instance of the Netlib Service */
@@ -908,6 +1156,8 @@ NS_NET nsresult NS_InitINetService()
         if (nsnull == gNetlibService) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
+        // XXX temporarily, until we have pluggable protocols...
+        NS_InitializeHttpURLFactory(gNetlibService);
     }
 
     NS_ADDREF(gNetlibService);

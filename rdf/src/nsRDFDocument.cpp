@@ -195,7 +195,7 @@ nsRDFDocument::StartDocumentLoad(nsIURL *aURL,
     mDocumentURL = aURL;
     NS_ADDREF(aURL);
 
-    mDocumentURLGroup = aURL->GetURLGroup();
+    (void)aURL->GetURLGroup(&mDocumentURLGroup);
 
     rv = nsRepository::CreateInstance(kParserCID, 
                                       nsnull,

@@ -905,7 +905,8 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
     if (nsnull != shell) {
       nsIDocument* doc = shell->GetDocument();
       if (nsnull!=doc) {
-        const char * str = doc->GetDocumentURL()->GetSpec();
+        const char * str;
+        nsresult rv = doc->GetDocumentURL()->GetSpec(&str);
         nsVoidArray * gWorkList = new nsVoidArray();
         gWorkList->AppendElement(new nsString(str));
 #if defined(XP_PC) && defined(NS_DEBUG)

@@ -28,12 +28,10 @@ class nsIInputStream;
 class nsIStreamListener;
 class nsILoadAttribs;
 
-
 /* {a4071430-5263-11d2-929b-00105a1b0d64} */
 #define NS_IURLGROUP_IID      \
 { 0xa4071430, 0x5263, 0x11d2, \
   {0x92, 0x9b, 0x00, 0x10, 0x5a, 0x1b, 0x0d, 0x64} }
-
 
 class nsIURLGroup : public nsISupports
 {

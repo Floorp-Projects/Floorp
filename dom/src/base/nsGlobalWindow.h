@@ -250,6 +250,8 @@ protected:
   void *mScriptObject;
 };
 
+class nsIURL;
+
 class LocationImpl : public nsIScriptObjectOwner, public nsIDOMLocation {
 
 protected:
@@ -284,9 +286,7 @@ public:
   NS_IMETHOD    Replace(const nsString& aUrl);
 
 protected:
-  nsresult ConcatenateAndSet(const char *aProtocol,	const char *aHost,
-                             PRInt32 aPort, const char *aFile,
-                             const char *aRef, const char *aSearch);
+  nsresult SetURL(nsIURL* aURL);
 
   nsIWebShell *mWebShell;
   void *mScriptObject;

@@ -43,9 +43,9 @@ enum nsCharSetID {
 class nsIUnicharInputStream : public nsISupports {
 public:
   NS_IMETHOD Read(PRUnichar* aBuf,
-                  PRInt32 aOffset,
-                  PRInt32 aCount,
-                  PRInt32 *aReadCount) = 0;
+                  PRUint32 aOffset,
+                  PRUint32 aCount,
+                  PRUint32 *aReadCount) = 0;
   NS_IMETHOD Close() = 0;
 };
 
@@ -66,12 +66,12 @@ public:
    * aDst; aSrcLen is updated to indicate how much data was used in
    * the source buffer.
    */
-  virtual PRInt32 Convert(PRUnichar* aDst,
-                          PRInt32 aDstOffset,
-                          PRInt32& aDstLen,
-                          const char* aSrc,
-                          PRInt32 aSrcOffset,
-                          PRInt32& aSrcLen) = 0;
+  NS_IMETHOD Convert(PRUnichar* aDst,
+                     PRUint32 aDstOffset,
+                     PRUint32& aDstLen,
+                     const char* aSrc,
+                     PRUint32 aSrcOffset,
+                     PRUint32& aSrcLen) = 0;
 };
 
 /** Create a new nsUnicharInputStream that provides a converter for the

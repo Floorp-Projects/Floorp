@@ -834,15 +834,15 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
         return result;
       }
       NS_RELEASE(docURL);
-      result = NS_NewURL(&url, nsnull, absURL);
+      result = NS_NewURL(&url, absURL);
       if (NS_OK != result) {
         return result;
       }
-      PRInt32 ec;
-      nsIInputStream* iin = url->Open(&ec);
-      if (nsnull == iin) {
+      nsIInputStream* iin;
+      result = NS_OpenURL(url, &iin);
+      if (NS_OK != result) {
         NS_RELEASE(url);
-        return (nsresult) ec;/* XXX fix url->Open */
+        return result;
       }
       result = NS_NewConverterStream(&uin, nsnull, iin);
       NS_RELEASE(iin);
@@ -1066,7 +1066,8 @@ nsXMLContentSink::StartLayout()
 
   // If the document we are loading has a reference or it is a top level
   // frameset document, disable the scroll bars on the views.
-  const char* ref = mDocumentURL->GetRef();
+  const char* ref;
+  (void)mDocumentURL->GetRef(&ref);
   PRBool topLevelFrameset = PR_FALSE;
   if (mWebShell) {
     nsIWebShell* rootWebShell;
@@ -1129,7 +1130,7 @@ nsXMLContentSink::EvaluateScript(nsString& aScript, PRUint32 aLineNo)
       nsIURL* mDocURL = mDocument->GetDocumentURL();
       const char* mURL;
       if (mDocURL) {
-        mURL = mDocURL->GetSpec();
+         (void)mDocURL->GetSpec(&mURL);
       }
 
       nsAutoString val;
@@ -1240,19 +1241,19 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
         return rv;
       }
       NS_RELEASE(docURL);
-      rv = NS_NewURL(&url, nsnull, absURL);
+      rv = NS_NewURL(&url, absURL);
       if (NS_OK != rv) {
         return rv;
       }
-      PRInt32 ec;
-      nsIInputStream* iin = url->Open(&ec);
-      if (nsnull == iin) {
+      nsIInputStream* iin;
+      rv = NS_OpenURL(url, &iin);
+      if (NS_OK != rv) {
         NS_RELEASE(url);
-        return (nsresult) ec;/* XXX fix url->Open */
+        return rv;
       }
       
       // Drain the stream by reading from it a chunk at a time
-      PRInt32 nb;
+      PRUint32 nb;
       nsresult err;
       do {
         char buf[SCRIPT_BUF_SIZE];

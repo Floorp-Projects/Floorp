@@ -173,7 +173,10 @@ NS_METHOD nsRadioGroup::SetName(const nsString &aName)
 {
   mName.SetLength(0);
   mName.Append(aName);
-  mRadioGroupHashtable->Put(new nsStringHashKey(aName), this);
+  nsStringHashKey* key = new nsStringHashKey(aName);
+  if (key == NULL)
+    return NS_ERROR_OUT_OF_MEMORY;
+  mRadioGroupHashtable->Put(key, this);
   return NS_OK;
 }
 

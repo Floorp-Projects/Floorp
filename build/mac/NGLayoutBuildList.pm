@@ -212,6 +212,7 @@ sub BuildDist()
 	InstallFromManifest(":mozilla:lib:liblayer:include:MANIFEST",					"$distdirectory:layers:");
 
 	#NETWORK
+    InstallFromManifest(":mozilla:network:public:MANIFEST",							"$distdirectory:network:");
     InstallFromManifest(":mozilla:network:cache:MANIFEST",							"$distdirectory:network:");
     InstallFromManifest(":mozilla:network:client:MANIFEST",							"$distdirectory:network:");
     InstallFromManifest(":mozilla:network:cnvts:MANIFEST",							"$distdirectory:network:");

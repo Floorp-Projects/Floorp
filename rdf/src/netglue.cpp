@@ -34,15 +34,15 @@ public:
 
   NS_METHOD GetBindInfo(nsIURL* aURL);
 
-  NS_METHOD OnProgress(nsIURL* aURL, PRInt32 Progress, PRInt32 ProgressMax);
+  NS_METHOD OnProgress(nsIURL* aURL, PRUint32 Progress, PRUint32 ProgressMax);
 
-  NS_METHOD OnStatus(nsIURL* aURL, const nsString& aMsg);
+  NS_METHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
 
   NS_METHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
 
   NS_METHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 length);
 
-  NS_METHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
+  NS_METHOD OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg);
 
 protected:
   // rdfStreamListener::rdfStreamListener();
@@ -70,15 +70,15 @@ rdfStreamListener::GetBindInfo(nsIURL* aURL)
 
 NS_METHOD
 rdfStreamListener::OnProgress(nsIURL* aURL,
-			      PRInt32 Progress,
-			      PRInt32 ProgressMax)
+			      PRUint32 Progress,
+			      PRUint32 ProgressMax)
 {
   return NS_OK;
 }
 
 NS_METHOD
 rdfStreamListener::OnStatus(nsIURL* aURL, 
-			    const nsString& aMsg)
+			    const PRUnichar* aMsg)
 {
   return NS_OK;
 }
@@ -114,8 +114,8 @@ rdfStreamListener::OnDataAvailable(nsIURL* aURL,
 
 NS_METHOD
 rdfStreamListener::OnStopBinding(nsIURL* aURL,
-				 PRInt32 status,
-				 const nsString& aMsg)
+				 nsresult status,
+				 const PRUnichar* aMsg)
 {
   nsresult result = NS_OK;
 

@@ -32,7 +32,10 @@
 #include "plstr.h"
 #include "il_strm.h"
 #include "merrors.h"
+#include "nsINetService.h"
 
+static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kIImageNetContextIID, IL_INETCONTEXT_IID);
 static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
 
@@ -89,12 +92,12 @@ public:
   
   ImageConsumer(ilIURL *aURL, ImageNetContextImpl *aContext);
   
-  NS_IMETHOD GetBindInfo(nsIURL* aURL);
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 Progress, PRInt32 ProgressMax);
-  NS_IMETHOD OnStatus(nsIURL* aURL, const nsString &aMsg);
+  NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
+  NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 Progress, PRUint32 ProgressMax);
+  NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
   NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-  NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 length);
-  NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
+  NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length);
+  NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg);
   
   void Interrupt();
 
@@ -131,19 +134,19 @@ NS_DEFINE_IID(kIStreamNotificationIID, NS_ISTREAMLISTENER_IID);
 NS_IMPL_ISUPPORTS(ImageConsumer,kIStreamNotificationIID);
 
 NS_IMETHODIMP
-ImageConsumer::GetBindInfo(nsIURL* aURL)
+ImageConsumer::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
 {
   return 0;
 }
 
 NS_IMETHODIMP
-ImageConsumer::OnProgress(nsIURL* aURL, PRInt32 Progress, PRInt32 ProgressMax)
+ImageConsumer::OnProgress(nsIURL* aURL, PRUint32 Progress, PRUint32 ProgressMax)
 {
   return 0;
 }
 
 NS_IMETHODIMP
-ImageConsumer::OnStatus(nsIURL* aURL, const nsString& aMsg)
+ImageConsumer::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 {
   return 0;
 }
@@ -178,10 +181,10 @@ ImageConsumer::OnStartBinding(nsIURL* aURL, const char *aContentType)
 
 
 NS_IMETHODIMP
-ImageConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 length)
+ImageConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length)
 {
-  PRInt32 max_read;
-  PRInt32 bytes_read = 0, str_length;
+  PRUint32 max_read;
+  PRUint32 bytes_read = 0, str_length;
   ilINetReader *reader = mURL->GetReader();
 
   if (mInterrupted || mStatus != 0) {
@@ -192,9 +195,9 @@ ImageConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 l
   }
 
   nsresult err = 0;
-  PRInt32 nb;
+  PRUint32 nb;
   do {
-    max_read = (PRInt32)reader->WriteReady();
+    max_read = reader->WriteReady();
     if (0 == max_read) {
       break;
     }
@@ -227,7 +230,7 @@ ImageConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 l
       }
     }
         
-    reader->Write((const unsigned char *)mBuffer, nb);
+    reader->Write((const unsigned char *)mBuffer, (int32)nb);
   } while(nb != 0);
 
   if ((NS_OK != err) && (NS_BASE_STREAM_EOF != err)) {
@@ -269,7 +272,7 @@ ImageConsumer::KeepPumpingStream(nsITimer *aTimer, void *aClosure)
 }
 
 NS_IMETHODIMP
-ImageConsumer::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
+ImageConsumer::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg)
 {
   if (mTimer != nsnull) {
     NS_RELEASE(mTimer);
@@ -282,7 +285,7 @@ ImageConsumer::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
   // Since we're still holding on to the stream, there's still data
   // that needs to be read. So, pump the stream ourselves.
   if((mStream != nsnull) && (status == NS_BINDING_SUCCEEDED)) {
-    PRInt32 str_length;
+    PRUint32 str_length;
     nsresult err = mStream->GetLength(&str_length);
     if (err == NS_OK) {
       err = OnDataAvailable(aURL, mStream, str_length);
@@ -484,7 +487,8 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
       mRequests->AppendElement((void *)ic);
     }
     else {
-      if (nsurl->Open(ic) == NS_OK) {
+      nsresult rv = NS_OpenURL(nsurl, ic);
+      if (rv == NS_OK) {
         mRequests->AppendElement((void *)ic);
       }
       else {

@@ -238,9 +238,9 @@ public:
 
   // nsIStreamObserver
   NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
-  NS_IMETHOD OnStatus(nsIURL* aURL, const nsString &aMsg);
-  NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg);
+  NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+  NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
+  NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 	// nsINetSupport interface methods
   NS_IMETHOD_(void) Alert(const nsString &aText);
@@ -1857,10 +1857,14 @@ nsWebShell::OnConnectionsComplete()
 
         url = document->GetDocumentURL();
         if (nsnull != url) {
-          urlString = url->GetSpec();
+          const char* spec;
+          rv = url->GetSpec(&spec);
 
           /* XXX: The load status needs to be passed in... */
-          rv = mContainer->EndLoadURL(this, urlString, /* XXX */ 0 );
+          if (rv == NS_OK) {
+            urlString = spec;
+            rv = mContainer->EndLoadURL(this, urlString, /* XXX */ 0 );
+          }
           NS_RELEASE(url);
         }
         NS_RELEASE(document);
@@ -1945,7 +1949,10 @@ nsWebShell::RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat)
   data->mShell = this;
   NS_ADDREF(data->mShell);
 
-  data->mUrlSpec = aURL->GetSpec();
+  const char* spec;
+  rv = aURL->GetSpec(&spec);
+
+  data->mUrlSpec  = spec;
   data->mDelay    = millis;
   data->mRepeat   = repeat;
 
@@ -2003,7 +2010,7 @@ nsWebShell::OnStartBinding(nsIURL* aURL, const char *aContentType)
 
 
 NS_IMETHODIMP
-nsWebShell::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
+nsWebShell::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 {
   nsresult rv = NS_OK;
 
@@ -2012,7 +2019,9 @@ nsWebShell::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
   }
 
   if (nsnull != mContainer) {
-    nsAutoString urlString(aURL->GetSpec());
+    const char* spec;
+    (void)aURL->GetSpec(&spec);
+    nsAutoString urlString(spec);
 
     rv = mContainer->ProgressLoadURL(this, urlString, aProgress, aProgressMax);
   }
@@ -2031,7 +2040,7 @@ nsWebShell::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
 
 
 NS_IMETHODIMP
-nsWebShell::OnStatus(nsIURL* aURL, const nsString &aMsg)
+nsWebShell::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 {
   nsresult rv = NS_OK;
 
@@ -2053,7 +2062,7 @@ nsWebShell::OnStatus(nsIURL* aURL, const nsString &aMsg)
 
 
 NS_IMETHODIMP
-nsWebShell::OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg)
+nsWebShell::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
   nsresult rv = NS_OK;
 

@@ -418,8 +418,8 @@ void FE_SetRefreshURLTimer(MWContext *pContext, URL_Struct *URL_s)
     if (nsnull != pConn->pURL) {
       nsISupports* container;
 
-      container = pConn->pURL->GetContainer();
-      if (nsnull != container) {
+      rv = pConn->pURL->GetContainer(&container);
+      if (rv == NS_OK) {
         rv = container->QueryInterface(kRefreshURLIID, (void**)&IRefreshURL);
         if(NS_SUCCEEDED(rv)) {
           nsIURL* newURL;

@@ -39,7 +39,7 @@ public:
      *  @return error status
      */   
     NS_IMETHOD
-    Write(const char* aBuf, PRInt32 aOffset, PRInt32 aCount, PRInt32 *aWriteCount) = 0; 
+    Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount) = 0; 
 };
 
 

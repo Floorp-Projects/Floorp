@@ -1270,13 +1270,13 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetDocumentBase(const char* *result)
     nsIDocument   *doc = shell->GetDocument();
     nsIURL        *docURL = doc->GetDocumentURL();
 
-    *result = docURL->GetSpec();
+    nsresult rv = docURL->GetSpec(result);
 
     NS_RELEASE(shell);
     NS_RELEASE(docURL);
     NS_RELEASE(doc);
 
-    return NS_OK;
+    return rv;
   }
   else
   {

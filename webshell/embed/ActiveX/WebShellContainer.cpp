@@ -210,7 +210,7 @@ CWebShellContainer::OnStartBinding(nsIURL* aURL, const char *aContentType)
 
 
 NS_IMETHODIMP
-CWebShellContainer::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
+CWebShellContainer::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 {
 	ATLTRACE(_T("CWebShellContainer::OnProgress()\n"));
 	return NS_OK;
@@ -218,7 +218,7 @@ CWebShellContainer::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgres
 
 
 NS_IMETHODIMP
-CWebShellContainer::OnStatus(nsIURL* aURL, const nsString &aMsg)
+CWebShellContainer::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 {
 	ATLTRACE(_T("CWebShellContainer::OnStatus()\n"));
 
@@ -233,7 +233,7 @@ CWebShellContainer::OnStatus(nsIURL* aURL, const nsString &aMsg)
 
 
 NS_IMETHODIMP
-CWebShellContainer::OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg)
+CWebShellContainer::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 	ATLTRACE(_T("CWebShellContainer::OnStopBinding()\n"));
 	return NS_OK;

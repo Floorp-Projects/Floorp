@@ -204,11 +204,11 @@ int main(int argc, char** argv)
   // Create a unicode string
   static const char* srcStr = "This is some meaningless text about nothing at all";
   PRInt32 rv2;
-  PRInt32 origSrcLen = nsCRT::strlen((char *)srcStr);
+  PRUint32 origSrcLen = nsCRT::strlen((char *)srcStr);
   const int BUFFER_LENGTH = 100;
   PRUnichar destStr[BUFFER_LENGTH];
-  PRInt32 srcLen = origSrcLen;
-  PRInt32 destLen = BUFFER_LENGTH;
+  PRUint32 srcLen = origSrcLen;
+  PRUint32 destLen = BUFFER_LENGTH;
   rv2 = converter->Convert(destStr,0,destLen,srcStr,0,srcLen);
   if ((NS_OK != rv2) || (srcLen < origSrcLen)) {
     printf("Failed to convert all characters to unicode.\n");

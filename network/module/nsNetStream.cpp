@@ -208,24 +208,27 @@ nsBufferedStream::~nsBufferedStream()
 }
 
 
-PRInt32 nsBufferedStream::GetAvailableSpace(PRInt32 *aErrorCode)
+nsresult nsBufferedStream::GetAvailableSpace(PRUint32 *aCount)
 {
-    PRInt32 size = 0;
+    nsresult err;
+    PRUint32 size = 0;
 
     if (m_bIsClosed) {
-        *aErrorCode = NS_BASE_STREAM_EOF;
+        err = NS_BASE_STREAM_EOF;
     } else {
-        *aErrorCode = NS_OK;
+        err = NS_OK;
 
         LockStream();
+        NS_ASSERTION(m_BufferLength >= m_WriteOffset, "unsigned madness");        
         size = m_BufferLength - m_WriteOffset;
         UnlockStream();
     }
-    return size;
+    *aCount = size;
+    return err;
 }
 
 
-nsresult nsBufferedStream::GetLength(PRInt32 *aLength)
+nsresult nsBufferedStream::GetLength(PRUint32 *aLength)
 {
     LockStream();
     *aLength = m_WriteOffset;
@@ -236,11 +239,11 @@ nsresult nsBufferedStream::GetLength(PRInt32 *aLength)
 
 
 nsresult nsBufferedStream::Write(const char *aBuf, 
-                                 PRInt32 aOffset,
-                                 PRInt32 aLen,
-                                 PRInt32 *aWriteCount)
+                                 PRUint32 aOffset,
+                                 PRUint32 aLen,
+                                 PRUint32 *aWriteCount)
 {
-    PRInt32 bytesFree;
+    PRUint32 bytesFree;
     nsresult  rv = NS_OK;
 
     LockStream();
@@ -259,6 +262,7 @@ nsresult nsBufferedStream::Write(const char *aBuf,
 
     if (!m_bIsClosed && aBuf) {
         /* Grow the buffer if necessary */
+        NS_ASSERTION(m_BufferLength >= m_WriteOffset, "unsigned madness");
         bytesFree = m_BufferLength - m_WriteOffset;
         if (aLen > bytesFree) {
             char *newBuffer;
@@ -298,9 +302,9 @@ done:
 
 
 nsresult nsBufferedStream::Read(char *aBuf, 
-                                PRInt32 aOffset, 
-                                PRInt32 aCount,
-                                PRInt32 *aReadCount)
+                                PRUint32 aOffset, 
+                                PRUint32 aCount,
+                                PRUint32 *aReadCount)
 {
     nsresult rv = NS_OK;
 
@@ -346,7 +350,7 @@ done:
     return rv;
 }
 
-nsAsyncStream::nsAsyncStream(PRInt32 buffer_size)
+nsAsyncStream::nsAsyncStream(PRUint32 buffer_size)
 {
     m_BufferLength = buffer_size;
 
@@ -373,24 +377,26 @@ nsAsyncStream::~nsAsyncStream()
 }
 
 
-PRInt32 nsAsyncStream::GetAvailableSpace(PRInt32 *aErrorCode)
+nsresult nsAsyncStream::GetAvailableSpace(PRUint32 *aCount)
 {
+    nsresult err;
     PRInt32 size = 0;
 
     if (m_bIsClosed) {
-        *aErrorCode = NS_BASE_STREAM_EOF;
+        err = NS_BASE_STREAM_EOF;
     } else {
-        *aErrorCode = NS_OK;
+        err = NS_OK;
 
         LockStream();
         size = m_BufferLength - m_DataLength;
         UnlockStream();
     }
-    return size;
+    *aCount = size;
+    return err;
 }
 
 
-nsresult nsAsyncStream::GetLength(PRInt32 *aLength)
+nsresult nsAsyncStream::GetLength(PRUint32 *aLength)
 {
     LockStream();
     *aLength = m_DataLength;
@@ -401,11 +407,11 @@ nsresult nsAsyncStream::GetLength(PRInt32 *aLength)
 
 
 nsresult nsAsyncStream::Write(const char *aBuf, 
-                              PRInt32 aOffset,
-                              PRInt32 aLen,
-                              PRInt32 *aWriteCount)
+                              PRUint32 aOffset,
+                              PRUint32 aLen,
+                              PRUint32 *aWriteCount)
 {
-    PRInt32 bytesFree;
+    PRUint32 bytesFree;
     nsresult rv = NS_OK;
 
     LockStream();
@@ -428,6 +434,7 @@ nsresult nsAsyncStream::Write(const char *aBuf,
         }
 
         /* Do not store more data than there is space for... */
+        NS_ASSERTION(m_BufferLength >= m_DataLength, "unsigned madness");
         bytesFree = m_BufferLength - m_DataLength;
         if (aLen > bytesFree) {
             aLen = bytesFree;
@@ -461,9 +468,9 @@ done:
 
 
 nsresult nsAsyncStream::Read(char *aBuf, 
-                             PRInt32 aOffset, 
-                             PRInt32 aCount,
-                             PRInt32 *aReadCount)
+                             PRUint32 aOffset, 
+                             PRUint32 aCount,
+                             PRUint32 *aReadCount)
 {
     nsresult  rv = NS_OK;
 
@@ -571,24 +578,26 @@ nsresult nsBlockingStream::Close()
     return NS_OK;
 }
 
-PRInt32 nsBlockingStream::GetAvailableSpace(PRInt32 *aErrorCode)
+nsresult nsBlockingStream::GetAvailableSpace(PRUint32 *aCount)
 {
+    nsresult err;
     PRInt32 size = 0;
 
     if (m_bIsClosed) {
-        *aErrorCode = NS_BASE_STREAM_EOF;
+        err = NS_BASE_STREAM_EOF;
     } else {
-        *aErrorCode = NS_OK;
+        err = NS_OK;
 
         LockStream();
         size = m_BufferLength - m_DataLength;
         UnlockStream();
     }
-    return size;
+    *aCount = size;
+    return err;
 }
 
 
-nsresult nsBlockingStream::GetLength(PRInt32 *aLength)
+nsresult nsBlockingStream::GetLength(PRUint32 *aLength)
 {
     LockStream();
     *aLength = m_DataLength;
@@ -599,11 +608,11 @@ nsresult nsBlockingStream::GetLength(PRInt32 *aLength)
 
 
 nsresult nsBlockingStream::Write(const char *aBuf, 
-                                 PRInt32 aOffset,
-                                 PRInt32 aLen,
-                                 PRInt32 *aWriteCount)
+                                 PRUint32 aOffset,
+                                 PRUint32 aLen,
+                                 PRUint32 *aWriteCount)
 {
-    PRInt32 bytesFree;
+    PRUint32 bytesFree;
     nsresult rv = NS_OK;
 
     LockStream();
@@ -626,6 +635,7 @@ nsresult nsBlockingStream::Write(const char *aBuf,
         }
 
         /* Do not store more data than there is space for... */
+        NS_ASSERTION(m_BufferLength >= m_DataLength, "unsigned madness");
         bytesFree = m_BufferLength - m_DataLength;
         if (aLen > bytesFree) {
             aLen = bytesFree;
@@ -633,9 +643,10 @@ nsresult nsBlockingStream::Write(const char *aBuf,
 
         /* Storing the data will cause m_WriteOffset to wrap */
         if (m_WriteOffset + aLen > m_BufferLength) {
-            PRInt32 delta;
+            PRUint32 delta;
 
             /* Store the first chunk through the end of the buffer */
+            NS_ASSERTION(m_BufferLength >= m_WriteOffset, "unsigned madness");
             delta = m_BufferLength - m_WriteOffset;
             memcpy(&m_Buffer[m_WriteOffset], aBuf, delta);
 
@@ -664,9 +675,9 @@ done:
 
 
 nsresult nsBlockingStream::Read(char *aBuf, 
-                                PRInt32 aOffset, 
-                                PRInt32 aCount,
-                                PRInt32 *aReadCount)
+                                PRUint32 aOffset, 
+                                PRUint32 aCount,
+                                PRUint32 *aReadCount)
 {
     nsresult rv = NS_OK;
 
@@ -732,9 +743,11 @@ done:
 }
 
 
-PRInt32 nsBlockingStream::ReadBuffer(char *aBuf, PRInt32 aCount)
+PRInt32 nsBlockingStream::ReadBuffer(char *aBuf, PRUint32 aCount)
 {
-    PRInt32 bytesRead = 0;
+    if (aCount == 0) return 0; /* avoid calling LockStream, memcpy, etc. */
+
+    PRUint32 bytesRead = 0;
 
     LockStream();
 

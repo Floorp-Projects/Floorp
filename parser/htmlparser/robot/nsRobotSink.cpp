@@ -316,11 +316,14 @@ void RobotSink::ProcessLink(const nsString& aLink)
   nsIURL* docURL = mDocumentURL;
   if (nsnull != docURL) {
     nsIURL* absurl;
-    nsresult rv = NS_NewURL(&absurl, docURL, aLink);
+    nsresult rv = NS_NewURL(&absurl, aLink, docURL);
     if (NS_OK == rv) {
       absURLSpec.Truncate();
-      absurl->ToString(absURLSpec);
+      PRUnichar* str;
+      absurl->ToString(&str);
+      absURLSpec = str;
       NS_RELEASE(absurl);
+      delete str;
     }
   }
 

@@ -202,34 +202,38 @@ nsWebCrawler::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
   if (mVerbose) {
     printf("Crawler: starting ");
-    nsAutoString tmp;
-    aURL->ToString(tmp);
-    fputs(tmp, stdout);
+    PRUnichar* tmp;
+    aURL->ToString(&tmp);
+    nsAutoString tmp2 = tmp;
+    fputs(tmp2, stdout);
+    delete tmp;
     printf("\n");
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebCrawler::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
+nsWebCrawler::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebCrawler::OnStatus(nsIURL* aURL, const nsString& aMsg)
+nsWebCrawler::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebCrawler::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
+nsWebCrawler::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg)
 {
   if (mVerbose) {
     printf("Crawler: stopping ");
-    nsAutoString tmp;
-    aURL->ToString(tmp);
-    fputs(tmp, stdout);
+    PRUnichar* tmp;
+    aURL->ToString(&tmp);
+    nsAutoString tmp2 = tmp;
+    fputs(tmp2, stdout);
+    delete tmp;
     printf("\n");
   }
   return NS_OK;
@@ -286,8 +290,11 @@ nsWebCrawler:: EndLoadURL(nsIWebShell* aShell,
                 PerformRegressionTest(regressionFileName);
               }
             }
-            else
-              printf("could not open output file for %s\n", url->GetFile());
+            else {
+              const char* file;
+              (void)url->GetFile(&file);
+              printf("could not open output file for %s\n", file);
+            }
             NS_RELEASE(url);
           }
         }
@@ -332,7 +339,9 @@ nsWebCrawler::GetOutputFile(nsIURL *aURL, nsString& aOutputName)
   if (nsnull!=aURL)
   {
     char *inputFileName;
-    nsAutoString inputFileFullPath(aURL->GetFile());
+    const char* file;
+    (void)aURL->GetFile(&file);
+    nsAutoString inputFileFullPath(file);
     PRInt32 fileNameOffset = inputFileFullPath.RFind('/');
     if (-1==fileNameOffset)
     {
@@ -509,8 +518,9 @@ nsWebCrawler::OkToLoad(const nsString& aURLSpec)
   nsIURL* url;
   nsresult rv = NS_NewURL(&url, aURLSpec);
   if (NS_OK == rv) {
-    const char* host = url->GetHost();
-    if (nsnull != host) {
+    const char* host;
+    rv = url->GetHost(&host);
+    if (rv == NS_OK) {
       PRInt32 hostlen = PL_strlen(host);
 
       // Check domains to avoid

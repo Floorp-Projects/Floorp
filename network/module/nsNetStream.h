@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -72,7 +72,7 @@ public:
 
     nsNetlibStream(void);
 
-    virtual PRInt32 GetAvailableSpace(PRInt32 *aErrorCode) = 0;
+    NS_IMETHOD GetAvailableSpace(PRUint32 *aCount) = 0;
 
     /* From nsIBaseStream interface */
     NS_IMETHOD Close(void);
@@ -97,32 +97,32 @@ class nsBufferedStream : public nsNetlibStream {
 public:
     nsBufferedStream(void);
 
-    virtual PRInt32 GetAvailableSpace(PRInt32 *aErrorCode);
+    NS_IMETHOD GetAvailableSpace(PRUint32 *aCount);
     
     /* nsIInputStream interface */
-    NS_IMETHOD GetLength(PRInt32 *aLength);
+    NS_IMETHOD GetLength(PRUint32 *aLength);
 
     NS_IMETHOD Read(char *aBuf, 
-                    PRInt32 aOffset, 
-                    PRInt32 aCount,
-                    PRInt32 *aReadCount);
+                    PRUint32 aOffset, 
+                    PRUint32 aCount,
+                    PRUint32 *aReadCount);
 
     /* nsIOutputStream interface */
     NS_IMETHOD Write(const char *aBuf, 
-                     PRInt32 aOffset,
-                     PRInt32 aLen,
-                     PRInt32 *aWriteCount);
+                     PRUint32 aOffset,
+                     PRUint32 aLen,
+                     PRUint32 *aWriteCount);
 
 protected:
     virtual ~nsBufferedStream();
 
 private:
     char *m_Buffer;
-    PRInt32 m_BufferLength;
+    PRUint32 m_BufferLength;
 
-    PRInt32 m_DataLength;
-    PRInt32 m_ReadOffset;
-    PRInt32 m_WriteOffset;
+    PRUint32 m_DataLength;
+    PRUint32 m_ReadOffset;
+    PRUint32 m_WriteOffset;
 };
 
 
@@ -133,34 +133,34 @@ private:
 class nsAsyncStream : public nsNetlibStream {
 
 public:
-    nsAsyncStream(PRInt32 buffer_size);
+    nsAsyncStream(PRUint32 buffer_size);
 
-    virtual PRInt32 GetAvailableSpace(PRInt32 *aErrorCode);
+    NS_IMETHOD GetAvailableSpace(PRUint32 *aCount);
 
     /* nsIInputStream interface */
-    NS_IMETHOD GetLength(PRInt32 *aLength);
+    NS_IMETHOD GetLength(PRUint32 *aLength);
 
     NS_IMETHOD Read(char *aBuf, 
-                    PRInt32 aOffset, 
-                    PRInt32 aCount,
-                    PRInt32 *aReadLength);
+                    PRUint32 aOffset, 
+                    PRUint32 aCount,
+                    PRUint32 *aReadLength);
 
     /* nsIOutputStream interface */
     NS_IMETHOD Write(const char *aBuf, 
-                     PRInt32 aOffset,
-                     PRInt32 aLen,
-                     PRInt32 *aWriteLength);
+                     PRUint32 aOffset,
+                     PRUint32 aLen,
+                     PRUint32 *aWriteLength);
 
 protected:
     virtual ~nsAsyncStream();
 
 private:
     char *m_Buffer;
-    PRInt32 m_BufferLength;
+    PRUint32 m_BufferLength;
 
-    PRInt32 m_DataLength;
-    PRInt32 m_ReadOffset;
-    PRInt32 m_WriteOffset;
+    PRUint32 m_DataLength;
+    PRUint32 m_ReadOffset;
+    PRUint32 m_WriteOffset;
 };
 
 
@@ -172,37 +172,37 @@ class nsBlockingStream : public nsNetlibStream {
 public:
     nsBlockingStream(void);
 
-    virtual PRInt32 GetAvailableSpace(PRInt32 *aErrorCode);
+    NS_IMETHOD GetAvailableSpace(PRUint32 *aCount);
 
     /* nsIBaseStream interface */
     NS_IMETHOD Close(void);
 
     /* nsIInputStream interface */
-    NS_IMETHOD GetLength(PRInt32 *aLength);
+    NS_IMETHOD GetLength(PRUint32 *aLength);
 
     NS_IMETHOD Read(char *aBuf, 
-                    PRInt32 aOffset, 
-                    PRInt32 aCount,
-                    PRInt32 *aReadLength);
-
+                    PRUint32 aOffset, 
+                    PRUint32 aCount,
+                    PRUint32 *aReadLength);
+  
     /* nsIOutputStream interface */
     NS_IMETHOD Write(const char *aBuf, 
-                     PRInt32 aOffset,
-                     PRInt32 aLen,
-                     PRInt32 *aWriteLength);
-
+                     PRUint32 aOffset,
+                     PRUint32 aLen,
+                     PRUint32 *aWriteLength);
+  
 protected:
     virtual ~nsBlockingStream();
 
-    PRInt32 ReadBuffer(char *aBuf, PRInt32 aCount);
+    PRInt32 ReadBuffer(char *aBuf, PRUint32 aCount);
 
 private:
     char *m_Buffer;
-    PRInt32 m_BufferLength;
-
-    PRInt32 m_DataLength;
-    PRInt32 m_ReadOffset;
-    PRInt32 m_WriteOffset;
+    PRUint32 m_BufferLength;
+ 
+    PRUint32 m_DataLength;
+    PRUint32 m_ReadOffset;
+    PRUint32 m_WriteOffset;
 };
 
 #endif /* net_strm_h___ */

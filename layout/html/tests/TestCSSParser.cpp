@@ -105,17 +105,17 @@ int main(int argc, char** argv)
       char* urlName = argv[i];
       // Create url object
       nsIURL* url;
-      rv = NS_NewURL(&url, nsnull, urlName);
+      rv = NS_NewURL(&url, urlName);
       if (NS_OK != rv) {
         printf("invalid URL: '%s'\n", urlName);
         return -1;
       }
 
       // Get an input stream from the url
-      PRInt32 ec;
-      nsIInputStream* in = url->Open(&ec);
-      if (nsnull == in) {
-        printf("open of url('%s') failed: error=%x\n", urlName, ec);
+      nsIInputStream* in;
+      rv = NS_OpenURL(url, &in);
+      if (rv != NS_OK) {
+        printf("open of url('%s') failed: error=%x\n", urlName, rv);
         continue;
       }
 

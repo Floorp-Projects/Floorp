@@ -556,14 +556,14 @@ NS_IMETHODIMP nsXPBaseWindow::NewWebShell(PRUint32 aChromeMask,
 
 NS_IMETHODIMP
 nsXPBaseWindow::OnProgress(nsIURL* aURL,
-                            PRInt32 aProgress,
-                            PRInt32 aProgressMax)
+                           PRUint32 aProgress,
+                           PRUint32 aProgressMax)
 {
   return NS_OK;
 }
 
 //----------------------------------------
-NS_IMETHODIMP nsXPBaseWindow::OnStatus(nsIURL* aURL, const nsString& aMsg)
+NS_IMETHODIMP nsXPBaseWindow::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 {
   return NS_OK;
 }
@@ -575,7 +575,7 @@ NS_IMETHODIMP nsXPBaseWindow::OnStartBinding(nsIURL* aURL, const char *aContentT
 }
 
 //----------------------------------------
-NS_IMETHODIMP nsXPBaseWindow::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
+NS_IMETHODIMP nsXPBaseWindow::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg)
 {
   return NS_OK;
 }
