@@ -219,8 +219,8 @@ public:
         vAlign_Default
     };
 
-    nsBoxFrameInner::Halignment nsBoxFrameInner::GetHAlign();
-    nsBoxFrameInner::Valignment nsBoxFrameInner::GetVAlign();
+    nsBoxFrameInner::Halignment GetHAlign();
+    nsBoxFrameInner::Valignment GetVAlign();
     
 
 #ifdef DEBUG_REFLOW
@@ -2870,7 +2870,7 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
     nscoord y = aPoint.y;
 
     // get the area inside our border.
-    nsRect or(0,0,mOuter->mRect.width, mOuter->mRect.height);
+    nsRect insideBorder(0,0,mOuter->mRect.width, mOuter->mRect.height);
 
     const nsStyleSpacing* spacing;
     nsresult rv = mOuter->GetStyleData(eStyleStruct_Spacing,
@@ -2883,11 +2883,11 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
     nsMargin border;
     spacing->GetBorderPadding(border);
 
-    or.Deflate(border);
+    insideBorder.Deflate(border);
 
     PRBool isHorizontal = mOuter->mInner->mHorizontal;
 
-    if (!or.Contains(nsPoint(x,y)))
+    if (!insideBorder.Contains(nsPoint(x,y)))
         return NS_OK;
 
         //printf("%%%%%% inside box %%%%%%%\n");
@@ -2898,8 +2898,8 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
         nsMargin m;
         mOuter->mInner->GetDebugInset(m);
 
-        if ((isHorizontal && y < or.y + m.top) ||
-            (!isHorizontal && x < or.x + m.left)) {
+        if ((isHorizontal && y < insideBorder.y + m.top) ||
+            (!isHorizontal && x < insideBorder.x + m.left)) {
             //printf("**** inside debug border *******\n");
             while (info) 
             {    
@@ -3101,7 +3101,7 @@ nsBoxFrame::GetCursor(nsIPresContext* aPresContext,
     char idValue[100];
     id.ToCString(idValue,100);
 
-    nsRect or(0,0,mRect.width, mRect.height);
+    nsRect bounds(0,0,mRect.width, mRect.height);
 
    /// printf("----------Box id = %s-----------\n", idValue);
    // printf("x=%d, r.x=%d r.x + r.width=%d\n",newPoint.x, or.x, or.x + or.width);
