@@ -129,7 +129,7 @@ $(LIBCI_JAR): $(DIRS) $(LIBCI_JAR_SRC)
 	zip -5qj $@ $(LIBCI_JAR_SRC) 
 
 force:
-	(cd swfort ; gmake)
+	(cd swfort ; $(MAKE))
 
 
 MD_FILES += $(LIBCI_JAR)
