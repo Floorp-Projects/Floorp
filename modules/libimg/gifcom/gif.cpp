@@ -77,8 +77,10 @@ mailing address.
 #define HOWMANY(x, r)     (((x) + ((r) - 1)) / (r))
 #define ROUNDUP(x, r)     (HOWMANY(x, r) * (r))
 
+#if defined(XP_MAC) /* Mac needs this, but it breaks Tru64 Unix - bug 50782 */
 int il_debug;
 PRLogModuleInfo *il_log_module = NULL;
+#endif
 
 #ifndef MAX
 #    define MAX(x, y)   (((x) > (y)) ? (x) : (y))
