@@ -34,7 +34,7 @@
 /*
  * CMS message methods.
  *
- * $Id: cmsmessage.c,v 1.4 2003/11/18 06:16:25 nelsonb%netscape.com Exp $
+ * $Id: cmsmessage.c,v 1.5 2004/01/07 00:09:17 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -178,7 +178,9 @@ SECItem *
 NSS_CMSMessage_GetContent(NSSCMSMessage *cmsg)
 {
     /* this is a shortcut */
-    return NSS_CMSContentInfo_GetInnerContent(NSS_CMSMessage_GetContentInfo(cmsg));
+    NSSCMSContentInfo * cinfo = NSS_CMSMessage_GetContentInfo(cmsg);
+    SECItem           * pItem = NSS_CMSContentInfo_GetInnerContent(cinfo);
+    return pItem;
 }
 
 /*
