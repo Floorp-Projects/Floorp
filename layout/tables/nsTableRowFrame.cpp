@@ -578,16 +578,8 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
           (availWidth != ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth()) ||
           (nsnull != kidNextInFlow))
       {
-        // XXX TROY
-#if 0
-        // Always let the cell be as high as it wants. We ignore the height that's
-        // passed in and always place the entire row. Let the row group decide
-        // whether we fit or wehther the entire row is pushed
-        nsSize  kidAvailSize(availWidth, NS_UNCONSTRAINEDSIZE);
-#else
         // Reflow the cell to fit the available height
         nsSize  kidAvailSize(availWidth, aReflowState.reflowState.availableHeight);
-#endif
 
         // Reflow the child
         nsHTMLReflowState kidReflowState(aPresContext, kidFrame,
@@ -604,15 +596,10 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
                   desiredSize.width, availWidth);
         }
 #endif
-        // XXX TROY
-#if 0
-        NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "unexpected reflow status");
-#else
         // If any of the cells are not complete, then we're not complete
         if (NS_FRAME_IS_NOT_COMPLETE(status)) {
           aStatus = NS_FRAME_NOT_COMPLETE;
         }
-#endif
 
         if (gsDebug)
         {
@@ -772,8 +759,8 @@ nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
       kidFrame->GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)cellSpacingStyle));
       cellSpacingStyle->CalcBorderPaddingFor(kidFrame, borderPadding);
 
-      // Because we're not splittable always allow the child to be as high as
-      // it wants. The default available width is also unconstrained so we can
+      // For the initial reflow always allow the child to be as high as it
+      // wants. The default available width is also unconstrained so we can
       // get the child's maximum width
       nsSize  kidAvailSize;
       nsHTMLReflowMetrics kidSize(nsnull);
@@ -1420,12 +1407,6 @@ nsTableRowFrame::Reflow(nsIPresContext&          aPresContext,
     rv = IncrementalReflow(aPresContext, aDesiredSize, state, aStatus);
     break;
   }
-
-
-  // XXX TROY
-#if 0
-  aStatus = NS_FRAME_COMPLETE;  // we're never continued
-#endif
 
   if (gsDebug==PR_TRUE) 
   {
