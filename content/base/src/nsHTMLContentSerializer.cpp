@@ -664,7 +664,8 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   // The _moz_dirty attribute is emitted by the editor to
   // indicate that this element should be pretty printed
   // even if we're not in pretty printing mode
-  PRBool hasDirtyAttr = HasDirtyAttr(content);
+  PRBool hasDirtyAttr = content->HasAttr(kNameSpaceID_None,
+                                         nsLayoutAtoms::mozdirty);
 
   nsIAtom *name = content->Tag();
 
@@ -774,7 +775,8 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
   if (!content) return NS_ERROR_FAILURE;
 
-  PRBool hasDirtyAttr = HasDirtyAttr(content);
+  PRBool hasDirtyAttr = content->HasAttr(kNameSpaceID_None,
+                                         nsLayoutAtoms::mozdirty);
 
   nsIAtom *name = content->Tag();
 
@@ -1022,21 +1024,6 @@ nsHTMLContentSerializer::AppendToStringConvertLF(const nsAString& aStr,
 }
 
 PRBool
-nsHTMLContentSerializer::HasDirtyAttr(nsIContent* aContent)
-{
-  nsAutoString val;
-
-  if (NS_CONTENT_ATTR_NOT_THERE != aContent->GetAttr(kNameSpaceID_None,
-                                                     nsLayoutAtoms::mozdirty,
-                                                     val)) {
-    return PR_TRUE;
-  }
-  else {
-    return PR_FALSE;
-  }
-}
-
-PRBool 
 nsHTMLContentSerializer::LineBreakBeforeOpen(nsIAtom* aName, 
                                              PRBool aHasDirtyAttr)
 {
