@@ -749,10 +749,11 @@ usage()
 "---------------------------------------------------------------------------\n"
 "\n"
 "Mechanism lists are colon-separated.  The following mechanisms are recognized:\n"
-"RSA, DSA, RC2, RC4, RC5, DES, DH, SHA1, MD5, MD2, SSL, TLS, RANDOM, FRIENDLY\n"
+"RSA, DSA, RC2, RC4, RC5, DES, DH, FORTEZZA, SHA1, MD5, MD2, SSL, TLS, RANDOM,\n"
+" FRIENDLY\n"
 "\n"
 "Cipher lists are colon-separated.  The following ciphers are recognized:\n"
-"\n"
+"FORTEZZA\n"
 "\nQuestions or bug reports should be sent to modutil-support@netscape.com.\n"
 );
 
