@@ -1556,7 +1556,8 @@ NS_IMETHODIMP
 nsLocalFile::GetParent(nsIFile * *aParent)
 {
 	NS_ENSURE_ARG_POINTER(aParent);
-
+  nsresult rv = NS_OK;
+  
 	switch (mInitType)
 	{
 		case eInitWithPath:
@@ -1570,29 +1571,59 @@ nsLocalFile::GetParent(nsIFile * *aParent)
 			parentPath.Truncate(offset);
 
 			nsCOMPtr<nsILocalFile> localFile;
-			nsresult rv =  NS_NewLocalFile(parentPath.GetBuffer(), getter_AddRefs(localFile));
-
+			rv =  NS_NewLocalFile(parentPath.GetBuffer(), getter_AddRefs(localFile));
 			if (NS_SUCCEEDED(rv) && localFile)
 			{
-				return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)aParent);
+				rv = localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)aParent);
 			}
-			return rv;
 			break;
 		}
 		
 		case eInitWithFSSpec:
 		{
-			break;
+			rv = ResolveAndStat(PR_TRUE);
+			if (NS_FAILED(rv)) return rv;
+ 
+			FSSpec      parentFolderSpec;		  
+			CInfoPBRec 	pBlock = {0};
+
+			parentFolderSpec.name[0] = 0;
+			
+			pBlock.dirInfo.ioVRefNum = mResolvedSpec.vRefNum;
+			pBlock.dirInfo.ioDrDirID = mResolvedSpec.parID;
+			pBlock.dirInfo.ioNamePtr = (StringPtr)parentFolderSpec.name;
+			pBlock.dirInfo.ioFDirIndex = -1;		//get info on parID
+			OSErr err = PBGetCatInfoSync(&pBlock);
+			if (err != noErr) return MacErrorMapper(err);
+			
+			parentFolderSpec.vRefNum = mResolvedSpec.vRefNum;
+			parentFolderSpec.parID = pBlock.dirInfo.ioDrParID;
+
+			nsCOMPtr<nsILocalFile> file;
+			rv =  NS_NewLocalFile("dummy:path", getter_AddRefs(file));
+			if (NS_FAILED(rv)) 
+				return rv;
+			
+			// Init with the FSSpec for the current dir
+			nsCOMPtr<nsILocalFileMac> localFileMac = do_QueryInterface(file, &rv);
+			if (localFileMac) {
+				localFileMac->InitWithFSSpec(&parentFolderSpec);
+				rv = localFileMac->QueryInterface(NS_GET_IID(nsIFile), (void**)aParent);
+			}
+      break;
 		}
 			
 		default:
 			// !!!!! Danger Will Robinson !!!!!
 			// we really shouldn't get here
+			NS_NOTREACHED("Unknown nsLocalFileMac init type");
+			rv = NS_ERROR_FAILURE;
 			break;
 	}
 
-	return NS_OK;
+	return rv;
 }
+
 
 NS_IMETHODIMP  
 nsLocalFile::Exists(PRBool *_retval)
