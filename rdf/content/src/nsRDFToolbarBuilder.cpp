@@ -266,6 +266,11 @@ RDFToolbarBuilderImpl::AddWidgetItem(nsIContent* aElement,
         if (IsContainmentProperty(aElement, property))
             continue;
 
+        // Ignore properties that we have been explicitly _asked_ to
+        // ignore.
+        if (IsIgnoredProperty(aElement, property))
+            continue;
+
         PRInt32 nameSpaceID;
         nsCOMPtr<nsIAtom> tag;
         if (NS_FAILED(rv = mDocument->SplitProperty(property, &nameSpaceID, getter_AddRefs(tag)))) {
@@ -279,7 +284,8 @@ RDFToolbarBuilderImpl::AddWidgetItem(nsIContent* aElement,
             return rv;
         }
 
-        NS_ASSERTION(rv != NS_RDF_NO_VALUE, "arc-out with no target: fix your arcs out cursor");
+        // ArcsLabelsOut is allowed to be promiscuous, giving back
+        // potential arc labels that may not currently have a value.
         if (rv == NS_RDF_NO_VALUE)
             continue;
 

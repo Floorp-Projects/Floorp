@@ -1166,6 +1166,11 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
             continue;
         }
 
+        // Ignore properties that we have been explicitly _asked_ to
+        // ignore.
+        if (IsIgnoredProperty(aElement, property))
+            continue;
+
         PRInt32 nameSpaceID;
         nsCOMPtr<nsIAtom> tag;
         rv = mDocument->SplitProperty(property, &nameSpaceID, getter_AddRefs(tag));
@@ -1177,7 +1182,8 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get target");
         if (NS_FAILED(rv)) return rv;
 
-        NS_ASSERTION(rv != NS_RDF_NO_VALUE, "arc-out with no target: fix your arcs-out cursor");
+        // ArcsLabelsOut is allowed to be promiscuous, giving back
+        // potential arc labels that may not currently have a value.
         if (rv == NS_RDF_NO_VALUE)
             continue;
 
