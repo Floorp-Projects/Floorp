@@ -623,13 +623,15 @@ float nsString::ToFloat(PRInt32* aErrorCode) const
  */
 PRInt32 nsString::ToInteger(PRInt32* aErrorCode,PRInt32 aRadix) const {
   PRInt32     result = 0;
-  PRUnichar*  cp = mStr + mLength-1;
+  PRInt32     decPt=Find(PRUnichar('.'),0);
+  PRUnichar*  cp = (-1==decPt) ? mStr + mLength-1 : mStr+decPt-1;
   char        digit=0;
   PRUnichar   theChar;
   PRInt32     theShift=0;
   PRInt32     theMult=1;
 
   *aErrorCode = (0<mLength) ? NS_OK : NS_ERROR_ILLEGAL_VALUE;
+
 
   // Skip trailing non-numeric...
   while (cp >= mStr) {
@@ -1635,9 +1637,9 @@ PRInt32 nsString::Compare(const nsString &S,PRBool aIgnoreCase) const {
     return 1;
   }
   if (aIgnoreCase) {
-    return nsCRT::strncasecmp(mStr,S.mStr,maxlen);
+    return nsCRT::strcasecmp(mStr,S.mStr);
   }
-  return nsCRT::strncmp(mStr,S.mStr,maxlen);
+  return nsCRT::strcmp(mStr,S.mStr);
 }
 
 /**
@@ -2060,6 +2062,15 @@ NS_BASE int fputs(const nsString& aString, FILE* out)
  * @return
  */
 void nsString::SelfTest(void) {
+
+  nsAutoString a("foobar");
+  nsAutoString b("foo");
+  nsAutoString c(".5111");
+  PRInt32 result=a.Compare(b);
+  PRInt32 result2=result;
+  result=c.ToInteger(&result2);
+  result2=result;
+
 #if 0
 
   static const char* kConstructorError = kConstructorError;
