@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: API.pm,v 1.11 1998/08/13 13:10:23 clayton Exp $
+# $Id: API.pm,v 1.12 1998/08/13 22:03:42 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -2820,12 +2820,7 @@ EXAMPLE:
 
   $status = ldap_url_search_st($ld,$url,$attrsonly,$timeout,$res);
 
-=head1 AUTHOR INFORMATION
-
-Address bug reports and comments to the Netscape DevEdge newsgroups at:
-nntps://secnews.netscape.com/netscape.dev.directory.
-
--head1 CREDITS
+=head1 CREDITS
 
 Most of the Perl API module was written by Clayton Donley to interface with
 C API routines from Netscape Communications Corp., Inc.
