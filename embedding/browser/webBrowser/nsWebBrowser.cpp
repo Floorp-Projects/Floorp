@@ -53,8 +53,8 @@
 #include "nsISHistoryListener.h"
 
 // for painting the background window
-#include "nsIDeviceContext.h"
 #include "nsIRenderingContext.h"
+#include "nsILookAndFeel.h"
 
 // Printing Includes
 #include "nsIContentViewer.h"
@@ -68,9 +68,9 @@
 #include "nsISecureBrowserUI.h"
 
 static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
-static NS_DEFINE_CID(kWebShellCID,         NS_WEB_SHELL_CID);
-static NS_DEFINE_IID(kChildCID,               NS_CHILD_CID);
-static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
+static NS_DEFINE_CID(kWebShellCID, NS_WEB_SHELL_CID);
+static NS_DEFINE_CID(kChildCID, NS_CHILD_CID);
+static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 //*****************************************************************************
 //***    nsWebBrowser: Object Management
@@ -986,13 +986,10 @@ NS_IMETHODIMP nsWebBrowser::Create()
       }
 
    // get the system default window background colour
-   nsCOMPtr<nsIDeviceContext> dc = do_CreateInstance(kDeviceContextCID);
-   dc->Init(mInternalWidget->GetNativeData(NS_NATIVE_WINDOW));
-   SystemAttrStruct info;
-   info.mColor = &mBackgroundColor;
-
-   dc->GetSystemAttribute(eSystemAttr_Color_WindowBackground, &info);
-   dc = nsnull;
+   {
+      nsCOMPtr<nsILookAndFeel> laf = do_GetService(kLookAndFeelCID);
+      laf->GetColor(nsILookAndFeel::eColor_WindowBackground, mBackgroundColor);
+   }
 
    nsCOMPtr<nsIDocShell> docShell(do_CreateInstance(kWebShellCID));
    NS_ENSURE_SUCCESS(SetDocShell(docShell), NS_ERROR_FAILURE);

@@ -64,7 +64,7 @@ public:
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
 
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
-  NS_IMETHOD  GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const;
+  NS_IMETHOD  GetSystemFont(nsSystemFontID anID, nsFont *aFont) const;
 
   //get a low level drawing surface for rendering. the rendering context
   //that is passed in is used to create the drawing surface if there isn't
@@ -107,7 +107,7 @@ private:
   PRInt32       mWidth; 
   PRInt32       mHeight; 
  
-  nsresult GetSystemFontInfo(const BFont *font, nsSystemAttrID anID, nsFont* aFont) const;
+  nsresult GetSystemFontInfo(const BFont *font, nsSystemFontID anID, nsFont* aFont) const;
 };
 
 #endif /* nsDeviceContextBeOS_h___ */

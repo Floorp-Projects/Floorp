@@ -275,12 +275,17 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID,PRInt32 &aMetric)
       break;
 
     case eMetric_WindowBorderWidth:
+      // There was once code in nsDeviceContextQT::GetSystemAttribute to
+      // use the border width obtained from a widget in its Init method.
       break;
 
     case eMetric_WindowBorderHeight:
+      // There was once code in nsDeviceContextQT::GetSystemAttribute to
+      // use the border width obtained from a widget in its Init method.
       break;
 
     case eMetric_Widget3DBorder:
+      aMetric = 4;
       break;
 
     case eMetric_TextFieldHeight:

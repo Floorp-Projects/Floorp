@@ -290,12 +290,15 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     aMetric = 0;
     break;
   case eMetric_WindowBorderWidth:
+    // XXXldb Why is this commented out?
     //    aMetric = mStyle->klass->xthickness;
     break;
   case eMetric_WindowBorderHeight:
+    // XXXldb Why is this commented out?
     //    aMetric = mStyle->klass->ythickness;
     break;
   case eMetric_Widget3DBorder:
+    // XXXldb Why is this commented out?
     //    aMetric = 4;
     break;
   case eMetric_TextFieldHeight:

@@ -85,7 +85,7 @@ public:
   NS_IMETHOD         GetClientRect(nsRect &aRect);
 
   NS_IMETHOD         GetDeviceContextFor(nsIDeviceContextSpec *aDevice,nsIDeviceContext *&aContext);
-  NS_IMETHOD         GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const;
+  NS_IMETHOD         GetSystemFont(nsSystemFontID anID, nsFont *aFont) const;
   NS_IMETHOD         BeginDocument(PRUnichar * aTitle);
   NS_IMETHOD         EndDocument(void);
   NS_IMETHOD         BeginPage(void);

@@ -1611,33 +1611,33 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
     }
   }
   else if (eCSSUnit_Enumerated == aFontData.mFamily.GetUnit()) {
-    nsSystemAttrID sysID;
+    nsSystemFontID sysID;
     switch (aFontData.mFamily.GetIntValue()) {
       // If you add fonts to this list, you need to also patch the list
       // in CheckFontCallback (also in this file).
-      case NS_STYLE_FONT_CAPTION:       sysID = eSystemAttr_Font_Caption;       break;    // css2
-      case NS_STYLE_FONT_ICON:          sysID = eSystemAttr_Font_Icon;          break;
-      case NS_STYLE_FONT_MENU:          sysID = eSystemAttr_Font_Menu;          break;
-      case NS_STYLE_FONT_MESSAGE_BOX:   sysID = eSystemAttr_Font_MessageBox;    break;
-      case NS_STYLE_FONT_SMALL_CAPTION: sysID = eSystemAttr_Font_SmallCaption;  break;
-      case NS_STYLE_FONT_STATUS_BAR:    sysID = eSystemAttr_Font_StatusBar;     break;
-      case NS_STYLE_FONT_WINDOW:        sysID = eSystemAttr_Font_Window;        break;    // css3
-      case NS_STYLE_FONT_DOCUMENT:      sysID = eSystemAttr_Font_Document;      break;
-      case NS_STYLE_FONT_WORKSPACE:     sysID = eSystemAttr_Font_Workspace;     break;
-      case NS_STYLE_FONT_DESKTOP:       sysID = eSystemAttr_Font_Desktop;       break;
-      case NS_STYLE_FONT_INFO:          sysID = eSystemAttr_Font_Info;          break;
-      case NS_STYLE_FONT_DIALOG:        sysID = eSystemAttr_Font_Dialog;        break;
-      case NS_STYLE_FONT_BUTTON:        sysID = eSystemAttr_Font_Button;        break;
-      case NS_STYLE_FONT_PULL_DOWN_MENU:sysID = eSystemAttr_Font_PullDownMenu;  break;
-      case NS_STYLE_FONT_LIST:          sysID = eSystemAttr_Font_List;          break;
-      case NS_STYLE_FONT_FIELD:         sysID = eSystemAttr_Font_Field;         break;
+      case NS_STYLE_FONT_CAPTION:       sysID = eSystemFont_Caption;      break;    // css2
+      case NS_STYLE_FONT_ICON:          sysID = eSystemFont_Icon;         break;
+      case NS_STYLE_FONT_MENU:          sysID = eSystemFont_Menu;         break;
+      case NS_STYLE_FONT_MESSAGE_BOX:   sysID = eSystemFont_MessageBox;   break;
+      case NS_STYLE_FONT_SMALL_CAPTION: sysID = eSystemFont_SmallCaption; break;
+      case NS_STYLE_FONT_STATUS_BAR:    sysID = eSystemFont_StatusBar;    break;
+      case NS_STYLE_FONT_WINDOW:        sysID = eSystemFont_Window;       break;    // css3
+      case NS_STYLE_FONT_DOCUMENT:      sysID = eSystemFont_Document;     break;
+      case NS_STYLE_FONT_WORKSPACE:     sysID = eSystemFont_Workspace;    break;
+      case NS_STYLE_FONT_DESKTOP:       sysID = eSystemFont_Desktop;      break;
+      case NS_STYLE_FONT_INFO:          sysID = eSystemFont_Info;         break;
+      case NS_STYLE_FONT_DIALOG:        sysID = eSystemFont_Dialog;       break;
+      case NS_STYLE_FONT_BUTTON:        sysID = eSystemFont_Button;       break;
+      case NS_STYLE_FONT_PULL_DOWN_MENU:sysID = eSystemFont_PullDownMenu; break;
+      case NS_STYLE_FONT_LIST:          sysID = eSystemFont_List;         break;
+      case NS_STYLE_FONT_FIELD:         sysID = eSystemFont_Field;        break;
     }
 
     nsCompatibility mode = eCompatibility_Standard;
 
-    if (sysID == eSystemAttr_Font_Field ||
-        sysID == eSystemAttr_Font_List ||
-        sysID == eSystemAttr_Font_Button) {
+    if (sysID == eSystemFont_Field ||
+        sysID == eSystemFont_List ||
+        sysID == eSystemFont_Button) {
       nsCOMPtr<nsIPref> prefService(do_GetService(NS_PREF_CONTRACTID));
       if (prefService) {
         PRBool useEitherMode;
@@ -1652,10 +1652,9 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
     nsCOMPtr<nsIDeviceContext> dc;
     aPresContext->GetDeviceContext(getter_AddRefs(dc));
     if (dc) {
-      SystemAttrStruct sysInfo;
-      sysInfo.mFont = &aFont->mFont;
-      aFont->mFont.size = defaultVariableFont.size; // GetSystemAttribute sets the font face but not necessarily the size
-      if (NS_FAILED(dc->GetSystemAttribute(sysID, &sysInfo))) {
+      // GetSystemFont sets the font face but not necessarily the size
+      aFont->mFont.size = defaultVariableFont.size;
+      if (NS_FAILED(dc->GetSystemFont(sysID, &aFont->mFont))) {
         aFont->mFont.name = defaultVariableFont.name;
       }
       aFont->mSize = aFont->mFont.size; // this becomes our cascading size
@@ -1665,12 +1664,12 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
 #ifdef XP_MAC
     if (eCompatibility_NavQuirks == mode) {
       switch (sysID) {
-        case eSystemAttr_Font_Field:
-        case eSystemAttr_Font_List:
+        case eSystemFont_Field:
+        case eSystemFont_List:
           aFont->mFont.name.Assign(NS_LITERAL_STRING("monospace"));
           aFont->mSize = defaultFixedFont.size;
           break;
-        case eSystemAttr_Font_Button:
+        case eSystemFont_Button:
           aFont->mFont.name.Assign(NS_LITERAL_STRING("serif"));
           aFont->mSize = defaultVariableFont.size;
           break;
@@ -1697,7 +1696,7 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
       //    (and the assumption is) it is always a proportional font. Then we
       //    always use 2 points smaller than what the browser has defined as
       //    the default proportional font.
-      case eSystemAttr_Font_Field:
+      case eSystemFont_Field:
         if (eCompatibility_NavQuirks == mode) {
           aFont->mFont.name.Assign(NS_LITERAL_STRING("monospace"));
           aFont->mSize = defaultFixedFont.size;
@@ -1718,8 +1717,8 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
       //    (and the assumption is) it is always a proportional font. Then we
       //    always use 2 points smaller than what the browser has defined as
       //    the default proportional font.
-      case eSystemAttr_Font_Button:
-      case eSystemAttr_Font_List:
+      case eSystemFont_Button:
+      case eSystemFont_List:
         if (eCompatibility_NavQuirks == mode) {
           aFont->mFont.name.Assign(NS_LITERAL_STRING("sans-serif"));
         }
@@ -1732,12 +1731,12 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
 #ifdef XP_UNIX
     if (eCompatibility_NavQuirks == mode) {
       switch (sysID) {
-        case eSystemAttr_Font_Field:
+        case eSystemFont_Field:
           aFont->mFont.name.Assign(NS_LITERAL_STRING("monospace"));
           aFont->mSize = defaultFixedFont.size;
           break;
-        case eSystemAttr_Font_Button:
-        case eSystemAttr_Font_List:
+        case eSystemFont_Button:
+        case eSystemFont_List:
           aFont->mFont.name.Assign(NS_LITERAL_STRING("serif"));
           aFont->mSize = defaultVariableFont.size;
           break;

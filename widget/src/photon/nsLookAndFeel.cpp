@@ -69,6 +69,14 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     res = NS_OK;
   }
 
+  /*
+   * There used to be an entirely separate list of these colors in
+   * nsDeviceContextPh::GetSystemAttribute.  The colors given there
+   * were a bit different from these.  If these are inaccurate, it might
+   * be worth looking at cvs history for the ones there to see if they
+   * were better.
+   */
+
   switch (aID) 
   {
 	  case eColor_WindowBackground:
@@ -239,21 +247,27 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     res = NS_OK;
   }
 
+  /*
+   * There used to be an entirely separate list of these metrics in
+   * nsDeviceContextPh::GetSystemAttribute.  The metrics given there
+   * were a bit different from these.  If these are inaccurate, it might
+   * be worth looking at cvs history for the ones there to see if they
+   * were better.
+   */
+
   switch (aID) 
   {
   case eMetric_WindowTitleHeight:
     aMetric = 0;
     break;
   case eMetric_WindowBorderWidth:
-    //    aMetric = mStyle->klass->xthickness;
     aMetric = 1;
     break;
   case eMetric_WindowBorderHeight:
-    //    aMetric = mStyle->klass->ythickness;
     aMetric = 1;
     break;
   case eMetric_Widget3DBorder:
-    //    aMetric = 4;
+    aMetric = 4;
     break;
   case eMetric_TextFieldHeight:
   	aMetric = 20;

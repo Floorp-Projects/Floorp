@@ -200,11 +200,11 @@ NS_IMETHODIMP nsDeviceContextXp :: CheckFontExistence(const nsString& aFontName)
   return nsFontMetricsXlib::FamilyExists(this, aFontName);
 }
 
-NS_IMETHODIMP nsDeviceContextXp :: GetSystemAttribute(nsSystemAttrID anID, 
-                                                      SystemAttrStruct * aInfo) const
+NS_IMETHODIMP nsDeviceContextXp :: GetSystemFont(nsSystemFontID aID, 
+                                                 nsFont *aFont) const
 {
   if (mParentDeviceContext != nsnull) {
-    return mParentDeviceContext->GetSystemAttribute(anID, aInfo);
+    return mParentDeviceContext->GetSystemFont(aID, aFont);
   }
   return NS_ERROR_FAILURE;
 }

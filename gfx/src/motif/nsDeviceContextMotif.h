@@ -87,7 +87,7 @@ public:
   NS_IMETHOD  GetPaletteInfo(nsPaletteInfo&);
   NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
-  NS_IMETHOD  GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const;
+  NS_IMETHOD  GetSystemFont(nsSystemFontID anID, nsFont *aFont) const;
   NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
 
   NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);

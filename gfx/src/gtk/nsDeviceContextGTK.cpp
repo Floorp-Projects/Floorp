@@ -96,17 +96,17 @@ class nsSystemFontsGTK {
      * The following system font constants exist:
      *
      * css2: http://www.w3.org/TR/REC-CSS2/fonts.html#x27
-     * eSystemAttr_Font_Caption, eSystemAttr_Font_Icon, eSystemAttr_Font_Menu,
-     * eSystemAttr_Font_MessageBox, eSystemAttr_Font_SmallCaption,
-     * eSystemAttr_Font_StatusBar,
+     * eSystemFont_Caption, eSystemFont_Icon, eSystemFont_Menu,
+     * eSystemFont_MessageBox, eSystemFont_SmallCaption,
+     * eSystemFont_StatusBar,
      * // css3
-     * eSystemAttr_Font_Window, eSystemAttr_Font_Document,
-     * eSystemAttr_Font_Workspace, eSystemAttr_Font_Desktop,
-     * eSystemAttr_Font_Info, eSystemAttr_Font_Dialog,
-     * eSystemAttr_Font_Button, eSystemAttr_Font_PullDownMenu,
-     * eSystemAttr_Font_List, eSystemAttr_Font_Field,
+     * eSystemFont_Window, eSystemFont_Document,
+     * eSystemFont_Workspace, eSystemFont_Desktop,
+     * eSystemFont_Info, eSystemFont_Dialog,
+     * eSystemFont_Button, eSystemFont_PullDownMenu,
+     * eSystemFont_List, eSystemFont_Field,
      * // moz
-     * eSystemAttr_Font_Tooltips, eSystemAttr_Font_Widget
+     * eSystemFont_Tooltips, eSystemFont_Widget
      */
     nsFont mDefaultFont;
     nsFont mButtonFont;
@@ -332,111 +332,45 @@ NS_IMETHODIMP nsDeviceContextGTK::GetScrollBarDimensions(float &aWidth, float &a
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextGTK::GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const
+NS_IMETHODIMP nsDeviceContextGTK::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
 {
   nsresult status = NS_OK;
-  GtkStyle *style = gtk_style_new();  // get the default styles
 
   if (!gSystemFonts) {
     gSystemFonts = new nsSystemFontsGTK(mPixelsToTwips);
   }
 
-  switch (anID) {
-    //---------
-    // Colors
-    //---------
-    case eSystemAttr_Color_WindowBackground:
-        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
-        break;
-    case eSystemAttr_Color_WindowForeground:
-        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
-        break;
-    case eSystemAttr_Color_WidgetBackground:
-        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
-        break;
-    case eSystemAttr_Color_WidgetForeground:
-        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
-        break;
-    case eSystemAttr_Color_WidgetSelectBackground:
-        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_SELECTED]);
-        break;
-    case eSystemAttr_Color_WidgetSelectForeground:
-        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_SELECTED]);
-        break;
-    case eSystemAttr_Color_Widget3DHighlight:
-        *aInfo->mColor = NS_RGB(0xa0,0xa0,0xa0);
-        break;
-    case eSystemAttr_Color_Widget3DShadow:
-        *aInfo->mColor = NS_RGB(0x40,0x40,0x40);
-        break;
-    case eSystemAttr_Color_TextBackground:
-        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
-        break;
-    case eSystemAttr_Color_TextForeground: 
-        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
-        break;
-    case eSystemAttr_Color_TextSelectBackground:
-        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_SELECTED]);
-        break;
-    case eSystemAttr_Color_TextSelectForeground:
-        *aInfo->mColor = GDK_COLOR_TO_NS_RGB(style->text[GTK_STATE_SELECTED]);
-        break;
-    //---------
-    // Size
-    //---------
-    case eSystemAttr_Size_ScrollbarHeight:
-        aInfo->mSize = mScrollbarHeight;
-        break;
-    case eSystemAttr_Size_ScrollbarWidth: 
-        aInfo->mSize = mScrollbarWidth;
-        break;
-    case eSystemAttr_Size_WindowTitleHeight:
-        aInfo->mSize = 0;
-        break;
-    case eSystemAttr_Size_WindowBorderWidth:
-        aInfo->mSize = style->klass->xthickness;
-        break;
-    case eSystemAttr_Size_WindowBorderHeight:
-        aInfo->mSize = style->klass->ythickness;
-        break;
-    case eSystemAttr_Size_Widget3DBorder:
-        aInfo->mSize = 4;
-        break;
-    //---------
-    // Fonts
-    //---------
-    case eSystemAttr_Font_Menu:         // css2
-    case eSystemAttr_Font_PullDownMenu: // css3
-        *aInfo->mFont = gSystemFonts->GetMenuFont();
+  switch (aID) {
+    case eSystemFont_Menu:         // css2
+    case eSystemFont_PullDownMenu: // css3
+        *aFont = gSystemFonts->GetMenuFont();
         break;
 
-    case eSystemAttr_Font_Field:        // css3
-    case eSystemAttr_Font_List:         // css3
-        *aInfo->mFont = gSystemFonts->GetFieldFont();
+    case eSystemFont_Field:        // css3
+    case eSystemFont_List:         // css3
+        *aFont = gSystemFonts->GetFieldFont();
         break;
 
-    case eSystemAttr_Font_Button:       // css3
-        *aInfo->mFont = gSystemFonts->GetButtonFont();
+    case eSystemFont_Button:       // css3
+        *aFont = gSystemFonts->GetButtonFont();
         break;
 
-    case eSystemAttr_Font_Caption:      // css2
-    case eSystemAttr_Font_Icon:         // css2
-    case eSystemAttr_Font_MessageBox:   // css2
-    case eSystemAttr_Font_SmallCaption: // css2
-    case eSystemAttr_Font_StatusBar:    // css2
-    case eSystemAttr_Font_Window:       // css3
-    case eSystemAttr_Font_Document:     // css3
-    case eSystemAttr_Font_Workspace:    // css3
-    case eSystemAttr_Font_Desktop:      // css3
-    case eSystemAttr_Font_Info:         // css3
-    case eSystemAttr_Font_Dialog:       // css3
-    case eSystemAttr_Font_Tooltips:     // moz
-    case eSystemAttr_Font_Widget:       // moz
-        *aInfo->mFont = gSystemFonts->GetDefaultFont();
+    case eSystemFont_Caption:      // css2
+    case eSystemFont_Icon:         // css2
+    case eSystemFont_MessageBox:   // css2
+    case eSystemFont_SmallCaption: // css2
+    case eSystemFont_StatusBar:    // css2
+    case eSystemFont_Window:       // css3
+    case eSystemFont_Document:     // css3
+    case eSystemFont_Workspace:    // css3
+    case eSystemFont_Desktop:      // css3
+    case eSystemFont_Info:         // css3
+    case eSystemFont_Dialog:       // css3
+    case eSystemFont_Tooltips:     // moz
+    case eSystemFont_Widget:       // moz
+        *aFont = gSystemFonts->GetDefaultFont();
         break;
   }
-
-  gtk_style_unref(style);
 
   return status;
 }

@@ -357,13 +357,13 @@ nscolor GetSysColorInfo(int iSysColor)
   return NS_RGB( pRGB2->bRed, pRGB2->bGreen, pRGB2->bBlue);
 }
 
-nsresult GetSysFontInfo(nsSystemAttrID anID, nsFont* aFont) 
+nsresult GetSysFontInfo(nsSystemFontID aID, nsFont* aFont) 
 {
   char szFontNameSize[MAXNAMEL];
 
-  switch (anID)
+  switch (aID)
   {
-    case eSystemAttr_Font_Caption: 
+    case eSystemFont_Caption: 
       if (!IsDBCS()) {
         PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
                               gIsWarp4 ? "9.WarpSans" : "8.Helv",
@@ -375,7 +375,7 @@ nsresult GetSysFontInfo(nsSystemAttrID anID, nsFont* aFont)
       } /* endif */
       break;
 
-    case eSystemAttr_Font_Icon: 
+    case eSystemFont_Icon: 
       if (!IsDBCS()) {
         PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "IconText",
                               gIsWarp4 ? "9.WarpSans" : "8.Helv",
@@ -387,7 +387,7 @@ nsresult GetSysFontInfo(nsSystemAttrID anID, nsFont* aFont)
       } /* endif */
       break;
 
-    case eSystemAttr_Font_Menu: 
+    case eSystemFont_Menu: 
       if (!IsDBCS()) {
         PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "Menus",
                               gIsWarp4 ? "9.WarpSans Bold" : "10.Helv",
@@ -399,7 +399,7 @@ nsresult GetSysFontInfo(nsSystemAttrID anID, nsFont* aFont)
       } /* endif */
       break;
 
-    case eSystemAttr_Font_MessageBox: 
+    case eSystemFont_MessageBox: 
       if (!IsDBCS()) {
         PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
                               gIsWarp4 ? "9.WarpSans" : "8.Helv",
@@ -411,7 +411,7 @@ nsresult GetSysFontInfo(nsSystemAttrID anID, nsFont* aFont)
       } /* endif */
       break;
 
-    case eSystemAttr_Font_SmallCaption: 
+    case eSystemFont_SmallCaption: 
       if (!IsDBCS()) {
         PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
                               gIsWarp4 ? "9.WarpSans" : "8.Helv",
@@ -423,8 +423,8 @@ nsresult GetSysFontInfo(nsSystemAttrID anID, nsFont* aFont)
       } /* endif */
       break;
 
-    case eSystemAttr_Font_StatusBar: 
-    case eSystemAttr_Font_Tooltips: 
+    case eSystemFont_StatusBar: 
+    case eSystemFont_Tooltips: 
       if (!IsDBCS()) {
         PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
                               gIsWarp4 ? "9.WarpSans" : "8.Helv",
@@ -436,18 +436,18 @@ nsresult GetSysFontInfo(nsSystemAttrID anID, nsFont* aFont)
       } /* endif */
       break;
 
-    case eSystemAttr_Font_Widget:
+    case eSystemFont_Widget:
 
-    case eSystemAttr_Font_Window:      // css3
-    case eSystemAttr_Font_Document:
-    case eSystemAttr_Font_Workspace:
-    case eSystemAttr_Font_Desktop:
-    case eSystemAttr_Font_Info:
-    case eSystemAttr_Font_Dialog:
-    case eSystemAttr_Font_Button:
-    case eSystemAttr_Font_PullDownMenu:
-    case eSystemAttr_Font_List:
-    case eSystemAttr_Font_Field:
+    case eSystemFont_Window:      // css3
+    case eSystemFont_Document:
+    case eSystemFont_Workspace:
+    case eSystemFont_Desktop:
+    case eSystemFont_Info:
+    case eSystemFont_Dialog:
+    case eSystemFont_Button:
+    case eSystemFont_PullDownMenu:
+    case eSystemFont_List:
+    case eSystemFont_Field:
       if (!IsDBCS()) {
         PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
                               gIsWarp4 ? "9.WarpSans" : "8.Helv",
@@ -514,100 +514,37 @@ nsresult GetSysFontInfo(nsSystemAttrID anID, nsFont* aFont)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextOS2 :: GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const
+NS_IMETHODIMP nsDeviceContextOS2 :: GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
 {
   nsresult status = NS_OK;
 
-  switch (anID) {
-    //---------
-    // Colors
-    //---------
-    case eSystemAttr_Color_WindowBackground:
-        *aInfo->mColor = GetSysColorInfo(SYSCLR_WINDOW);
-        break;
-    case eSystemAttr_Color_WindowForeground:
-        *aInfo->mColor = GetSysColorInfo(SYSCLR_WINDOWTEXT);
-        break;
-    case eSystemAttr_Color_WidgetBackground:
-        *aInfo->mColor = GetSysColorInfo(SYSCLR_BUTTONMIDDLE);
-        break;
-    case eSystemAttr_Color_WidgetForeground:
-        *aInfo->mColor = GetSysColorInfo(SYSCLR_WINDOWTEXT);
-        break;
-    case eSystemAttr_Color_WidgetSelectBackground:
-        *aInfo->mColor = GetSysColorInfo(SYSCLR_HILITEBACKGROUND);
-        break;
-    case eSystemAttr_Color_WidgetSelectForeground:
-        *aInfo->mColor = GetSysColorInfo(SYSCLR_HILITEFOREGROUND);
-        break;
-    case eSystemAttr_Color_Widget3DHighlight:
-        *aInfo->mColor = GetSysColorInfo(SYSCLR_BUTTONLIGHT);
-        break;
-    case eSystemAttr_Color_Widget3DShadow:
-        *aInfo->mColor = GetSysColorInfo(SYSCLR_BUTTONDARK);
-        break;
-    case eSystemAttr_Color_TextBackground:
-        *aInfo->mColor = GetSysColorInfo(SYSCLR_ENTRYFIELD);
-        break;
-    case eSystemAttr_Color_TextForeground:
-        *aInfo->mColor = GetSysColorInfo(SYSCLR_WINDOWTEXT);
-        break;
-    case eSystemAttr_Color_TextSelectBackground:
-        *aInfo->mColor = GetSysColorInfo(SYSCLR_HILITEBACKGROUND);
-        break;
-    case eSystemAttr_Color_TextSelectForeground:
-        *aInfo->mColor = GetSysColorInfo(SYSCLR_HILITEFOREGROUND);
-        break;
-    //---------
-    // Size
-    //---------
-    case eSystemAttr_Size_ScrollbarHeight : 
-        aInfo->mSize = ::WinQuerySysValue(HWND_DESKTOP, SV_CYHSCROLL);
-        break;
-    case eSystemAttr_Size_ScrollbarWidth : 
-        aInfo->mSize = ::WinQuerySysValue(HWND_DESKTOP, SV_CXVSCROLL);
-        break;
-    case eSystemAttr_Size_WindowTitleHeight:
-        aInfo->mSize = ::WinQuerySysValue(HWND_DESKTOP, SV_CYTITLEBAR);
-        break;
-    case eSystemAttr_Size_WindowBorderWidth:
-        aInfo->mSize = ::WinQuerySysValue(HWND_DESKTOP, SV_CXSIZEBORDER);
-        break;
-    case eSystemAttr_Size_WindowBorderHeight:
-        aInfo->mSize = ::WinQuerySysValue(HWND_DESKTOP, SV_CYSIZEBORDER);
-        break;
-    case eSystemAttr_Size_Widget3DBorder:
-        aInfo->mSize = ::WinQuerySysValue(HWND_DESKTOP, SV_CXBORDER);
-        break;
-    //---------
-    // Fonts
-    //---------
-    case eSystemAttr_Font_Caption: 
-    case eSystemAttr_Font_Icon: 
-    case eSystemAttr_Font_Menu: 
-    case eSystemAttr_Font_MessageBox: 
-    case eSystemAttr_Font_SmallCaption: 
-    case eSystemAttr_Font_StatusBar: 
-    case eSystemAttr_Font_Tooltips: 
-    case eSystemAttr_Font_Widget:
+  switch (aID) {
+    case eSystemFont_Caption: 
+    case eSystemFont_Icon: 
+    case eSystemFont_Menu: 
+    case eSystemFont_MessageBox: 
+    case eSystemFont_SmallCaption: 
+    case eSystemFont_StatusBar: 
+    case eSystemFont_Tooltips: 
+    case eSystemFont_Widget:
 
-    case eSystemAttr_Font_Window:      // css3
-    case eSystemAttr_Font_Document:
-    case eSystemAttr_Font_Workspace:
-    case eSystemAttr_Font_Desktop:
-    case eSystemAttr_Font_Info:
-    case eSystemAttr_Font_Dialog:
-    case eSystemAttr_Font_Button:
-    case eSystemAttr_Font_PullDownMenu:
-    case eSystemAttr_Font_List:
-    case eSystemAttr_Font_Field:
+    case eSystemFont_Window:      // css3
+    case eSystemFont_Document:
+    case eSystemFont_Workspace:
+    case eSystemFont_Desktop:
+    case eSystemFont_Info:
+    case eSystemFont_Dialog:
+    case eSystemFont_Button:
+    case eSystemFont_PullDownMenu:
+    case eSystemFont_List:
+    case eSystemFont_Field:
     {
-      status = GetSysFontInfo(anID, aInfo->mFont);
+      status = GetSysFontInfo(aID, aFont);
       break;
     }
-  } // switch 
+  }
 
-  return NS_OK;
+  return status;
 }
 
 nsresult nsDeviceContextOS2::GetDrawingSurface( nsIRenderingContext &aContext, nsDrawingSurface &aSurface)

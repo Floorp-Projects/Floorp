@@ -242,98 +242,32 @@ NS_IMETHODIMP nsDeviceContextXlib::GetScrollBarDimensions(float &aWidth, float &
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextXlib::GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const
+NS_IMETHODIMP nsDeviceContextXlib::GetSystemFont(nsSystemFontID anID, nsFont *aFont) const
 {
-  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::GetSystemAttribute()\n"));
-  nsresult status = NS_OK;
+  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::GetSystemFont()\n"));
 
   switch (anID) {
-    //---------
-    // Colors
-    //---------
-    case eSystemAttr_Color_WindowBackground:
-        *aInfo->mColor = NS_RGB(255,255,255);
-        break;
-    case eSystemAttr_Color_WindowForeground:
-        *aInfo->mColor = NS_RGB(0,0,0);
-        break;
-    case eSystemAttr_Color_WidgetBackground:
-      *aInfo->mColor = NS_RGB(255,255,255);
-        break;
-    case eSystemAttr_Color_WidgetForeground:
-        *aInfo->mColor = NS_RGB(0,0,0);
-        break;
-    case eSystemAttr_Color_WidgetSelectBackground:
-      *aInfo->mColor = NS_RGB(255,255,255);
-        break;
-    case eSystemAttr_Color_WidgetSelectForeground:
-        *aInfo->mColor = NS_RGB(0,0,0);
-        break;
-    case eSystemAttr_Color_Widget3DHighlight:
-        *aInfo->mColor = NS_RGB(0xa0,0xa0,0xa0);
-        break;
-    case eSystemAttr_Color_Widget3DShadow:
-        *aInfo->mColor = NS_RGB(0x40,0x40,0x40);
-        break;
-    case eSystemAttr_Color_TextBackground:
-      *aInfo->mColor = NS_RGB(255,255,255);
-        break;
-    case eSystemAttr_Color_TextForeground: 
-        *aInfo->mColor = NS_RGB(0,0,0);
-        break;
-    case eSystemAttr_Color_TextSelectBackground:
-      *aInfo->mColor = NS_RGB(255,255,255);
-        break;
-    case eSystemAttr_Color_TextSelectForeground:
-        *aInfo->mColor = NS_RGB(0,0,0);
-        break;
-    //---------
-    // Size
-    //---------
-    case eSystemAttr_Size_ScrollbarHeight:
-        aInfo->mSize = 15;
-        break;
-    case eSystemAttr_Size_ScrollbarWidth: 
-        aInfo->mSize = 15;
-        break;
-    case eSystemAttr_Size_WindowTitleHeight:
-        aInfo->mSize = 0;
-        break;
-    case eSystemAttr_Size_WindowBorderWidth:
-      //      aInfo->mSize = style->klass->xthickness;
-      aInfo->mSize = 1;
-        break;
-    case eSystemAttr_Size_WindowBorderHeight:
-      //        aInfo->mSize = style->klass->ythickness;
-        aInfo->mSize = 1;
-        break;
-    case eSystemAttr_Size_Widget3DBorder:
-        aInfo->mSize = 4;
-        break;
-    //---------
-    // Fonts
-    //---------
-    case eSystemAttr_Font_Caption:              // css2
-    case eSystemAttr_Font_Icon:
-    case eSystemAttr_Font_Menu:
-    case eSystemAttr_Font_MessageBox:
-    case eSystemAttr_Font_SmallCaption:
-    case eSystemAttr_Font_StatusBar:
-    case eSystemAttr_Font_Window:                       // css3
-    case eSystemAttr_Font_Document:
-    case eSystemAttr_Font_Workspace:
-    case eSystemAttr_Font_Desktop:
-    case eSystemAttr_Font_Info:
-    case eSystemAttr_Font_Dialog:
-    case eSystemAttr_Font_Button:
-    case eSystemAttr_Font_PullDownMenu:
-    case eSystemAttr_Font_List:
-    case eSystemAttr_Font_Field:
-    case eSystemAttr_Font_Tooltips:             // moz
-    case eSystemAttr_Font_Widget:
-      aInfo->mFont->style       = NS_FONT_STYLE_NORMAL;
-      aInfo->mFont->weight      = NS_FONT_WEIGHT_NORMAL;
-      aInfo->mFont->decorations = NS_FONT_DECORATION_NONE;
+    case eSystemFont_Caption:              // css2
+    case eSystemFont_Icon:
+    case eSystemFont_Menu:
+    case eSystemFont_MessageBox:
+    case eSystemFont_SmallCaption:
+    case eSystemFont_StatusBar:
+    case eSystemFont_Window:                       // css3
+    case eSystemFont_Document:
+    case eSystemFont_Workspace:
+    case eSystemFont_Desktop:
+    case eSystemFont_Info:
+    case eSystemFont_Dialog:
+    case eSystemFont_Button:
+    case eSystemFont_PullDownMenu:
+    case eSystemFont_List:
+    case eSystemFont_Field:
+    case eSystemFont_Tooltips:             // moz
+    case eSystemFont_Widget:
+      aFont->style       = NS_FONT_STYLE_NORMAL;
+      aFont->weight      = NS_FONT_WEIGHT_NORMAL;
+      aFont->decorations = NS_FONT_DECORATION_NONE;
 
       if (!mDefaultFont)
         return NS_ERROR_FAILURE;
@@ -346,33 +280,33 @@ NS_IMETHODIMP nsDeviceContextXlib::GetSystemAttribute(nsSystemAttrID anID, Syste
         if(pr)
           {
             fontName = XGetAtomName(mDisplay, pr);
-            aInfo->mFont->name.AssignWithConversion(fontName);
+            aFont->name.AssignWithConversion(fontName);
             ::XFree(fontName);
           }
   
         pr = 0;
         ::XGetFontProperty(mDefaultFont, XA_WEIGHT, &pr);
         if ( pr > 10 )
-          aInfo->mFont->weight = NS_FONT_WEIGHT_BOLD;
+          aFont->weight = NS_FONT_WEIGHT_BOLD;
     
         pr = 0;
         Atom pixelSizeAtom = ::XInternAtom(mDisplay, "PIXEL_SIZE", 0);
         ::XGetFontProperty(mDefaultFont, pixelSizeAtom, &pr);
         if( pr )
-          aInfo->mFont->size = NSIntPixelsToTwips(pr, mPixelsToTwips);
+          aFont->size = NSIntPixelsToTwips(pr, mPixelsToTwips);
 
         pr = 0;
         ::XGetFontProperty(mDefaultFont, XA_ITALIC_ANGLE, &pr );
         if( pr )
-          aInfo->mFont->style = NS_FONT_STYLE_ITALIC;
+          aFont->style = NS_FONT_STYLE_ITALIC;
     
         pr = 0;
         ::XGetFontProperty(mDefaultFont, XA_UNDERLINE_THICKNESS, &pr);
         if( pr )
-          aInfo->mFont->decorations = NS_FONT_DECORATION_UNDERLINE;
+          aFont->decorations = NS_FONT_DECORATION_UNDERLINE;
       }
       break;
-  } // switch
+  }
 
   return NS_OK;
 }

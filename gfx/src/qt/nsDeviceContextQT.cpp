@@ -267,116 +267,30 @@ NS_IMETHODIMP nsDeviceContextQT::GetScrollBarDimensions(float &aWidth,
 }
 
 NS_IMETHODIMP 
-nsDeviceContextQT::GetSystemAttribute(nsSystemAttrID anID, 
-                                      SystemAttrStruct *aInfo) const
+nsDeviceContextQT::GetSystemFont(nsSystemFontID anID, nsFont *aFont) const
 {
   nsresult    status      = NS_OK;
-  QPalette    palette     = qApp->palette();
-  QColorGroup normalGroup = palette.inactive();
-  QColorGroup activeGroup = palette.active();
 
   switch (anID) {
-    //---------
-    // Colors
-    //---------
-    case eSystemAttr_Color_WindowBackground:
-      *aInfo->mColor = QCOLOR_TO_NS_RGB(normalGroup.background());
-      break;
-
-    case eSystemAttr_Color_WindowForeground:
-      *aInfo->mColor = QCOLOR_TO_NS_RGB(normalGroup.foreground());
-      break;
-
-    case eSystemAttr_Color_WidgetBackground:
-      *aInfo->mColor = QCOLOR_TO_NS_RGB(normalGroup.background());
-      break;
-
-    case eSystemAttr_Color_WidgetForeground:
-      *aInfo->mColor = QCOLOR_TO_NS_RGB(normalGroup.foreground());
-      break;
-
-    case eSystemAttr_Color_WidgetSelectBackground:
-      *aInfo->mColor = QCOLOR_TO_NS_RGB(activeGroup.background());
-      break;
-
-    case eSystemAttr_Color_WidgetSelectForeground:
-      *aInfo->mColor = QCOLOR_TO_NS_RGB(activeGroup.foreground());
-      break;
-
-    case eSystemAttr_Color_Widget3DHighlight:
-      *aInfo->mColor = NS_RGB(0xa0,0xa0,0xa0);
-      break;
-
-    case eSystemAttr_Color_Widget3DShadow:
-      *aInfo->mColor = NS_RGB(0x40,0x40,0x40);
-      break;
-
-    case eSystemAttr_Color_TextBackground:
-      *aInfo->mColor = QCOLOR_TO_NS_RGB(normalGroup.background());
-      break;
-
-    case eSystemAttr_Color_TextForeground: 
-      *aInfo->mColor = QCOLOR_TO_NS_RGB(normalGroup.text());
-      break;
-
-    case eSystemAttr_Color_TextSelectBackground:
-      *aInfo->mColor = QCOLOR_TO_NS_RGB(activeGroup.highlight());
-      break;
-
-    case eSystemAttr_Color_TextSelectForeground:
-      *aInfo->mColor
-       = QCOLOR_TO_NS_RGB(activeGroup.highlightedText());
-      break;
-
-    //---------
-    // Size
-    //---------
-    case eSystemAttr_Size_ScrollbarHeight:
-      aInfo->mSize = mScrollbarHeight;
-      break;
-
-    case eSystemAttr_Size_ScrollbarWidth: 
-      aInfo->mSize = mScrollbarWidth;
-      break;
-
-    case eSystemAttr_Size_WindowTitleHeight:
-      aInfo->mSize = 0;
-      break;
-
-    case eSystemAttr_Size_WindowBorderWidth:
-      aInfo->mSize = mWindowBorderWidth;
-      break;
-
-    case eSystemAttr_Size_WindowBorderHeight:
-      aInfo->mSize = mWindowBorderHeight;
-      break;
-
-    case eSystemAttr_Size_Widget3DBorder:
-      aInfo->mSize = 4;
-      break;
-
-    //---------
-    // Fonts
-    //---------
-    case eSystemAttr_Font_Caption: 
-    case eSystemAttr_Font_Icon: 
-    case eSystemAttr_Font_Menu: 
-    case eSystemAttr_Font_MessageBox: 
-    case eSystemAttr_Font_SmallCaption: 
-    case eSystemAttr_Font_StatusBar: 
-    case eSystemAttr_Font_Window:                   // css3
-    case eSystemAttr_Font_Document:
-    case eSystemAttr_Font_Workspace:
-    case eSystemAttr_Font_Desktop:
-    case eSystemAttr_Font_Info:
-    case eSystemAttr_Font_Dialog:
-    case eSystemAttr_Font_Button:
-    case eSystemAttr_Font_PullDownMenu:
-    case eSystemAttr_Font_List:
-    case eSystemAttr_Font_Field:
-    case eSystemAttr_Font_Tooltips: 
-    case eSystemAttr_Font_Widget:
-      status = GetSystemFontInfo(aInfo->mFont);
+    case eSystemFont_Caption: 
+    case eSystemFont_Icon: 
+    case eSystemFont_Menu: 
+    case eSystemFont_MessageBox: 
+    case eSystemFont_SmallCaption: 
+    case eSystemFont_StatusBar: 
+    case eSystemFont_Window:                   // css3
+    case eSystemFont_Document:
+    case eSystemFont_Workspace:
+    case eSystemFont_Desktop:
+    case eSystemFont_Info:
+    case eSystemFont_Dialog:
+    case eSystemFont_Button:
+    case eSystemFont_PullDownMenu:
+    case eSystemFont_List:
+    case eSystemFont_Field:
+    case eSystemFont_Tooltips: 
+    case eSystemFont_Widget:
+      status = GetSystemFontInfo(aFont);
       break;
   }
   return status;
