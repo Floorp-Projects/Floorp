@@ -142,8 +142,8 @@ struct MenuList_s DemoList[18] =
   {"demo #13", VIEWER_DEMO13},
   {"demo #14", VIEWER_DEMO14},
   {"demo #15", VIEWER_DEMO15},
-  {"demo #15", VIEWER_DEMO16},
-  {"demo #15", VIEWER_DEMO17}
+  {"demo #16", VIEWER_DEMO16},
+  {"demo #17", VIEWER_DEMO17}
 };
 
   for(int i=0; i<=17; i++)
