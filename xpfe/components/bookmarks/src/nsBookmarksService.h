@@ -116,6 +116,7 @@ nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
     nsresult ProcessCachedBookmarkIcon(nsIRDFResource* aSource, const PRUnichar *iconURL, nsIRDFNode** aTarget);
 	nsresult getResourceFromLiteralNode(nsIRDFNode *node, nsIRDFResource **res);
   void AnnotateBookmarkSchedule(nsIRDFResource* aSource, PRBool scheduleFlag);
+  nsresult IsBookmarkedInternal(nsIRDFResource *bookmark, PRBool *isBookmarkedFlag);
 
 	nsresult ChangeURL(nsIRDFResource* aOldURL,
                            nsIRDFResource* aNewURL);
