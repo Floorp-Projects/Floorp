@@ -22,7 +22,6 @@
 #include "nsIImage.h"
 #include "nsVoidArray.h"
 #include "nsRect.h"
-#include "ilINetContext.h"
 #include "nsImageNet.h"
 
 static NS_DEFINE_IID(kIImageRequestIID, NS_IIMAGEREQUEST_IID);
@@ -47,7 +46,8 @@ ImageRequestImpl::Init(IL_GroupContext *aGroupContext,
 		       nsIImageRequestObserver *aObserver,
 		       const nscolor* aBackgroundColor,
 		       PRUint32 aWidth, PRUint32 aHeight,
-		       PRUint32 aFlags)
+		       PRUint32 aFlags,
+           ilINetContext* aNetContext)
 {
   NS_PRECONDITION(nsnull != aGroupContext, "null group context");
   NS_PRECONDITION(nsnull != aUrl, "null URL");
@@ -55,12 +55,13 @@ ImageRequestImpl::Init(IL_GroupContext *aGroupContext,
   NS_Error status;
   IL_IRGB bgcolor;
   PRUint32 flags;
-  nsresult result;
 
   mGroupContext = aGroupContext;
 
-  if (AddObserver(aObserver) == PR_FALSE) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (nsnull != aObserver) {
+    if (AddObserver(aObserver) == PR_FALSE) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   status = XP_NewObserverList(NULL, &mXPObserver);
@@ -87,17 +88,9 @@ ImageRequestImpl::Init(IL_GroupContext *aGroupContext,
     ((aFlags & IL_BYPASS_CACHE) ? nsImageLoadFlags_kBypassCache : 0) |
     ((aFlags & IL_ONLY_FROM_CACHE) ? nsImageLoadFlags_kOnlyFromCache : 0);
   
-  ilINetContext *net_cx;
-
-  if ((result = NS_NewImageNetContext(&net_cx)) != NS_OK) {
-      XP_DisposeObserverList(mXPObserver);
-      mXPObserver = nsnull;
-      return result;
-  }
-
   mImageReq = IL_GetImage(aUrl, aGroupContext, mXPObserver,
                           nsnull == aBackgroundColor ? nsnull : &bgcolor,
-                          aWidth, aHeight, flags, (void *)net_cx);
+                          aWidth, aHeight, flags, (void *)aNetContext);
 			  
   if (mImageReq == nsnull) {
     XP_DisposeObserverList(mXPObserver);

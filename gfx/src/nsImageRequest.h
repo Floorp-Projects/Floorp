@@ -26,6 +26,7 @@
 
 class nsVoidArray;
 class nsIImageRequestObserver;
+class ilINetContext;
 
 class ImageRequestImpl : public nsIImageRequest {
 public:
@@ -36,7 +37,8 @@ public:
                 nsIImageRequestObserver *aObserver,
                 const nscolor* aBackgroundColor,
                 PRUint32 aWidth, PRUint32 aHeight,
-                PRUint32 aFlags);
+                PRUint32 aFlags,
+                ilINetContext* aNetContext);
 
   void* operator new(size_t sz) {
     void* rv = new char[sz];

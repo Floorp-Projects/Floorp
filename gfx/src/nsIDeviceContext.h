@@ -26,7 +26,6 @@
 #include "nsIWidget.h"
 
 class nsIView;
-class nsIRenderingContext;
 class nsIFontCache;
 class nsIFontMetrics;
 class nsIWidget;
@@ -45,6 +44,7 @@ typedef void * nsNativeDeviceContext;
  */
 #define NS_ICON_LOADING_IMAGE 0
 #define NS_ICON_BROKEN_IMAGE  1
+#define NS_NUMBER_OF_ICONS    2
 
 class nsIDeviceContext : public nsISupports
 {
@@ -102,8 +102,12 @@ public:
   virtual nsNativeWidget GetNativeWidget(void) = 0;
 
   //load the specified icon. this is a blocking call that does not return
-  //until the icon is loaded
-  // NS_IMETHOD  LoadIcon(PRInt32 aId, nsIImage*&) = 0;
+  //until the icon is loaded.
+  //release the image when you're done
+  NS_IMETHOD LoadIconImage(nsIRenderingContext& aContext,
+                           PRInt32              aId,
+                           nsIImage*&           aImage) = 0;
+
 };
 
 #endif /* nsIDeviceContext_h___ */

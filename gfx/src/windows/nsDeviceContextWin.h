@@ -37,7 +37,7 @@ public:
   virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext);
 
 protected:
-  ~nsDeviceContextWin();
+  virtual ~nsDeviceContextWin();
 
   HDC mSurface;
 };
