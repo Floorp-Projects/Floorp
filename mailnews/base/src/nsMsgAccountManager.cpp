@@ -1561,13 +1561,14 @@ nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity)
     mailDir->CreateDir();
   }
 
-  nsXPIDLCString key;
-  rv = server->GetKey(getter_Copies(key));
-  if (NS_FAILED(rv)) return rv;  
-  rv = mailDir->AppendRelativeUnixPath(key);
-  if (NS_FAILED(rv)) return rv;
-  
   // set the local path for this "none" server
+  //
+  // we need to set this to <profile>/Mail/Local Mail, because that's where
+  // the 4.x local mail (when using imap) got copied.
+  // it would be great to use the server key, but we don't know it
+  // when we are copying of the mail.
+  rv = mailDir->AppendRelativeUnixPath(LOCAL_MAIL_FAKE_HOST_NAME);
+  if (NS_FAILED(rv)) return rv; 
   rv = server->SetLocalPath(mailDir);
   if (NS_FAILED(rv)) return rv;
     
