@@ -590,13 +590,7 @@ function onClearCurrentView()
 function onSortCol(sortColName)
 {
     const nsIXULSortService = Components.interfaces.nsIXULSortService;
-   /* XXX remove the rdf version once 0.8 is a distant memory
-    * 2/22/2001
-    */
-    const isupports_uri =
-        (Components.classes["@mozilla.org/xul/xul-sort-service;1"]) ?
-         "@mozilla.org/xul/xul-sort-service;1" :
-         "@mozilla.org/rdf/xul-sort-service;1";
+    const isupports_uri = "@mozilla.org/xul/xul-sort-service;1";
     
     var node = document.getElementById(sortColName);
     if (!node)
@@ -604,42 +598,15 @@ function onSortCol(sortColName)
  
     // determine column resource to sort on
     var sortResource = node.getAttribute("resource");
-    var sortDirection = "ascending";
-        //node.setAttribute("sortActive", "true");
-
-    switch (sortColName)
-    {
-        case "usercol-op":
-            document.getElementById("usercol-voice")
-                .setAttribute("sortDirection", "natural");
-            document.getElementById("usercol-nick")
-                .setAttribute("sortDirection", "natural");
-            break;
-        case "usercol-voice":
-            document.getElementById("usercol-op")
-                .setAttribute("sortDirection", "natural");
-            document.getElementById("usercol-nick")
-                .setAttribute("sortDirection", "natural");
-            break;
-        case "usercol-nick":
-            document.getElementById("usercol-voice")
-                .setAttribute("sortDirection", "natural");
-            document.getElementById("usercol-op")
-                .setAttribute("sortDirection", "natural");
-            break;
-    }
+    var sortDirection = node.getAttribute("sortDirection");
     
-    var currentDirection = node.getAttribute("sortDirection");
-    
-    if (currentDirection == "ascending")
+    if (sortDirection == "ascending")
         sortDirection = "descending";
-    else if (currentDirection == "descending")
+    else if (sortDirection == "descending")
         sortDirection = "natural";
     else
         sortDirection = "ascending";
     
-    node.setAttribute ("sortDirection", sortDirection);
- 
     var xulSortService =
         Components.classes[isupports_uri].getService(nsIXULSortService);
     if (!xulSortService)
@@ -650,6 +617,8 @@ function onSortCol(sortColName)
             xulSortService.sort(node, sortResource, sortDirection);
         else
             xulSortService.Sort(node, sortResource, sortDirection);
+        document.persist("user-list", "sortResource");
+        document.persist("user-list", "sortDirection");
     }
     catch(ex)
     {
