@@ -377,3 +377,17 @@ LPSTR GetStringRootKey(HKEY hkRootKey, LPSTR szString, DWORD dwStringSize)
   return(szString);
 }
 
+BOOL WinRegKeyExists(HKEY hkRootKey, LPSTR szKey)
+{
+  HKEY  hkResult;
+  BOOL  bKeyExists = FALSE;
+
+  if(RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult) == ERROR_SUCCESS)
+  {
+    bKeyExists = TRUE;
+    RegCloseKey(hkResult);
+  }
+
+  return(bKeyExists);
+}
+

@@ -29,6 +29,10 @@
 #include "parser.h"
 #include "rdi.h"
 
+#define MOZ_HWND_BROADCAST_MSG_TIMEOUT 5000
+#define MOZ_CLIENT_BROWSER_KEY         "Software\\Clients\\StartMenuInternet"
+#define MOZ_CLIENT_MAIL_KEY            "Software\\Clients\\Mail"
+
 void SetDefault()
 {
   char szBuf[MAX_BUF];
@@ -251,16 +255,31 @@ void ParseAllUninstallLogs()
     RemoveUninstaller(ugUninstall.szUninstallFilename);
   }
 
-  /* Broadcast message only under NT51 (WinXP) regarding the following
-   * registry keys in case they were changed during uninstallation.  If they
+  /* Broadcast message only if the windows registry keys exist
+   * in case they were changed during uninstallation.  If they
    * were, then the broadcast will alert the OS to update the appropriate UIs.
    * This needs to be done regardless if the user canceled the uninstall
    * process or not.
    */
-  if(ulOSType & OS_NT51)
+  if(WinRegKeyExists(HKEY_LOCAL_MACHINE, MOZ_CLIENT_BROWSER_KEY))
   {
-    SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)"Software\\Clients\\StartMenuInternet");
-    SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)"Software\\Clients\\Mail");
+    SendMessageTimeout(HWND_BROADCAST,
+                       WM_SETTINGCHANGE,
+                       0,
+                       (LPARAM)MOZ_CLIENT_BROWSER_KEY,
+                       SMTO_NORMAL|SMTO_ABORTIFHUNG,
+                       MOZ_HWND_BROADCAST_MSG_TIMEOUT,
+                       NULL);
+  }
+  if(WinRegKeyExists(HKEY_LOCAL_MACHINE, MOZ_CLIENT_MAIL_KEY))
+  {
+    SendMessageTimeout(HWND_BROADCAST,
+                       WM_SETTINGCHANGE,
+                       0,
+                       (LPARAM)MOZ_CLIENT_MAIL_KEY,
+                       SMTO_NORMAL|SMTO_ABORTIFHUNG,
+                       MOZ_HWND_BROADCAST_MSG_TIMEOUT,
+                       NULL);
   }
 }
 

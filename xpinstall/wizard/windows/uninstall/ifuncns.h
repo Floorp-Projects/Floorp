@@ -36,5 +36,6 @@ HRESULT     CreateDirectoriesAll(char* szPath);
 HKEY        ParseRootKey(LPSTR szRootKey);
 LPSTR       GetStringRootKey(HKEY hkRootKey, LPSTR szString, DWORD dwStringSize);
 BOOL        SearchForUninstallKeys(char *szStringToMatch);
+BOOL        WinRegKeyExists(HKEY hkRootKey, LPSTR szKey);
 
 #endif
