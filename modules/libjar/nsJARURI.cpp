@@ -46,6 +46,9 @@
 #include "nsReadableUtils.h"
 #include "nsURLHelper.h"
 #include "nsStandardURL.h"
+#include "nsAutoPtr.h"
+
+static NS_DEFINE_CID(kThisImplCID, NS_THIS_JARURI_IMPL_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
  
@@ -57,7 +60,19 @@ nsJARURI::~nsJARURI()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsJARURI, nsIJARURI, nsIURL, nsIURI, nsISerializable)
+NS_IMPL_THREADSAFE_ADDREF(nsJARURI)
+NS_IMPL_THREADSAFE_RELEASE(nsJARURI)
+NS_INTERFACE_MAP_BEGIN(nsJARURI)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIJARURI)
+  NS_INTERFACE_MAP_ENTRY(nsIURI)
+  NS_INTERFACE_MAP_ENTRY(nsIURL)
+  NS_INTERFACE_MAP_ENTRY(nsIJARURI)
+  NS_INTERFACE_MAP_ENTRY(nsISerializable)
+  // see nsJARURI::Equals
+  if (aIID.Equals(kThisImplCID))
+      foundInterface = NS_STATIC_CAST(nsIJARURI *, this);
+  else
+NS_INTERFACE_MAP_END
 
 nsresult
 nsJARURI::Init(const char *charsetHint)
@@ -319,34 +334,23 @@ nsJARURI::GetOriginCharset(nsACString &aOriginCharset)
 NS_IMETHODIMP
 nsJARURI::Equals(nsIURI *other, PRBool *result)
 {
-    nsresult rv;
     *result = PR_FALSE;
 
     if (other == nsnull)
         return NS_OK;	// not equal
 
-    nsCOMPtr<nsIJARURI> otherJAR(do_QueryInterface(other, &rv));
+    nsRefPtr<nsJARURI> otherJAR;
+    nsresult rv = other->QueryInterface(kThisImplCID, getter_AddRefs(otherJAR));
     if (NS_FAILED(rv))
         return NS_OK;   // not equal
 
-    nsCOMPtr<nsIURI> otherJARFile;
-    rv = otherJAR->GetJARFile(getter_AddRefs(otherJARFile));
-    if (NS_FAILED(rv)) return rv;
-
     PRBool equal;
-    rv = mJARFile->Equals(otherJARFile, &equal);
-    if (NS_FAILED(rv)) return rv;
-    if (!equal)
-        return NS_OK;   // not equal
+    rv = mJARFile->Equals(otherJAR->mJARFile, &equal);
+    if (NS_FAILED(rv) || !equal) {
+        return rv;   // not equal
+    }
 
-    nsCAutoString otherJAREntry;
-    rv = otherJAR->GetJAREntry(otherJAREntry);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCAutoString ourJAREntry;
-    rv = GetJAREntry(ourJAREntry);
-    if (NS_SUCCEEDED(rv))
-        *result = (strcmp(ourJAREntry.get(), otherJAREntry.get()) == 0);
+    rv = mJAREntry->Equals(otherJAR->mJAREntry, result);
     return rv;
 }
 

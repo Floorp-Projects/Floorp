@@ -44,6 +44,14 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
+#define NS_THIS_JARURI_IMPL_CID                      \
+{ /* 9a55f629-730b-4d08-b75b-fa7d9570a691 */         \
+    0x9a55f629,                                      \
+    0x730b,                                          \
+    0x4d08,                                          \
+    {0xb7, 0x5b, 0xfa, 0x7d, 0x95, 0x70, 0xa6, 0x91} \
+}
+
 class nsJARURI : public nsIJARURI, nsISerializable
 {
 public:    
