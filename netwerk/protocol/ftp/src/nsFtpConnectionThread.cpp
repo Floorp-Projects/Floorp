@@ -150,8 +150,6 @@ DataRequestForwarder::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
             NS_ASSERTION(0, "Could not create cache output stream.");
             return rv;
         }
-        // make the output stream blocking.  
-        mCacheOutputStream->SetNonBlocking(PR_FALSE);
     }
 #endif
     return mListener->OnStartRequest(this, ctxt); 
@@ -1459,6 +1457,11 @@ nsFtpState::S_list() {
 #ifdef MOZ_NEW_CACHE
     if (mCacheEntry && mReadingFromCache)
     {            
+        if (mGenerateHTMLContent)
+            rv = mChannel->SetContentType("text/html");
+        else
+            rv = mChannel->SetContentType("application/http-index-format");
+        
         nsCOMPtr<nsITransport> transport;
         rv = mCacheEntry->GetTransport(getter_AddRefs(transport));
         if (NS_FAILED(rv)) {
@@ -1957,14 +1960,16 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
         mPort = port;
 
 #ifdef MOZ_NEW_CACHE
+    // if there is no cache, it is NOT an error.
+
     static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
     NS_WITH_SERVICE(nsICacheService, serv, kCacheServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    rv = serv->CreateSession("FTP Directory Listings",
-                             nsICache::STORE_IN_MEMORY,  //FIX this should be disk cache
-                             PR_TRUE,
-                             getter_AddRefs(mCacheSession));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_SUCCEEDED(rv)) {
+        (void) serv->CreateSession("FTP Directory Listings",
+                                    nsICache::STORE_ON_DISK,  //FIX this should be disk cache
+                                    PR_TRUE,
+                                    getter_AddRefs(mCacheSession));
+    }
 #endif
 
     return NS_OK;
@@ -1981,35 +1986,37 @@ nsFtpState::Connect()
     if (NS_FAILED(rv)) return rv;
 
     //FIX: SYNC call.  Should make this async!!!
-    rv = mCacheSession->OpenCacheEntry(urlStr,
-                                       nsICache::ACCESS_READ_WRITE,
-                                       getter_AddRefs(mCacheEntry));
-    if (NS_SUCCEEDED(rv)) {
+    if (mCacheSession) {
+        rv = mCacheSession->OpenCacheEntry(urlStr,
+                                           nsICache::ACCESS_READ_WRITE,
+                                           getter_AddRefs(mCacheEntry));
+        if (NS_SUCCEEDED(rv)) {
 
-        // Decide if we should write over this cache entry or use it...
+            // Decide if we should write over this cache entry or use it...
     
-        nsCacheAccessMode accessMode;
-        mCacheEntry->GetAccessGranted(&accessMode);
+            nsCacheAccessMode accessMode;
+            mCacheEntry->GetAccessGranted(&accessMode);
         
-        if (accessMode & nsICache::ACCESS_READ) {
-            // we can read from the cache.
-            PRUint32 aLoadAttributes;
-            mChannel->GetLoadAttributes(&aLoadAttributes);
+            if (accessMode & nsICache::ACCESS_READ) {
+                // we can read from the cache.
+                PRUint32 aLoadAttributes;
+                mChannel->GetLoadAttributes(&aLoadAttributes);
 
-// FIX we should be honoring the load attributes!
-// aLoadAttributes & nsIChannel::FORCE_RELOAD
+                // FIX we should be honoring the load attributes!
+                // aLoadAttributes & nsIChannel::FORCE_RELOAD
 
-            if (accessMode & nsICache::ACCESS_WRITE) {
-                // we said that we could validate, so here we do it.
-                mCacheEntry->MarkValid();
+                if (accessMode & nsICache::ACCESS_WRITE) {
+                    // we said that we could validate, so here we do it.
+                    mCacheEntry->MarkValid();
+                }
+                // we have a directory listing in our cache.  lets kick off a load
+                mReadingFromCache = PR_TRUE;
+                rv = S_list();
+                if (NS_SUCCEEDED(rv))
+                    return rv;
             }
-            // we have a directory listing in our cache.  lets kick off a load
-            mReadingFromCache = PR_TRUE;
-            rv = S_list();
-            if (NS_SUCCEEDED(rv))
-                return rv;
-        }
-    } 
+        } 
+    }
 #endif
 
     mState = FTP_COMMAND_CONNECT;
