@@ -1338,7 +1338,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
       if (NS_SUCCEEDED(nsMsgI18NConvertToUnicode("UTF-8", body, ucs2)))
         fields->SetBody(ucs2.GetUnicode());
       else
-        fields->SetBody(nsAutoString(body).GetUnicode());
+        fields->SetBody(NS_ConvertASCIItoUCS2(body).GetUnicode());
 
         PR_FREEIF(body);
       } // end if (messageBody)
