@@ -62,6 +62,11 @@ NS_INTERFACE_MAP_END
 ///////////////////////////////////////////////////////////////////////////////
 // nsIURIContentListener
 
+/* void onStartURIOpen (in nsIURI aURI, in string aWindowTarget, out boolean aAbortOpen); */
+NS_IMETHODIMP CWebShellContainer::OnStartURIOpen(nsIURI *aURI, const char *aWindowTarget, PRBool *aAbortOpen)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 /* void getProtocolHandler (in nsIURI aURI, out nsIProtocolHandler aProtocolHandler); */
 NS_IMETHODIMP CWebShellContainer::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
