@@ -33,7 +33,9 @@
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-class nsMsgAccount : public nsIMsgAccount {
+class nsMsgAccount : public nsIMsgAccount,
+                     public nsIShutdownListener
+{
   
 public:
   nsMsgAccount();
@@ -60,6 +62,10 @@ public:
   /* void removeIdentity (in nsIMsgIdentity identity); */
   NS_IMETHOD removeIdentity(nsIMsgIdentity *identity);
 
+  // nsIShutdownListener
+
+  NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports *service);
+  
 private:
   char *m_accountKey;
   nsIPref *m_prefs;
@@ -67,11 +73,37 @@ private:
 
   nsCOMPtr<nsIMsgIdentity> m_defaultIdentity;
   nsCOMPtr<nsISupportsArray> m_identities;
+
+  nsresult getPrefService();
 };
 
 
 
-NS_IMPL_ISUPPORTS(nsMsgAccount, GetIID())
+NS_IMPL_ADDREF(nsMsgAccount)
+NS_IMPL_RELEASE(nsMsgAccount)
+
+nsresult
+nsMsgAccount::QueryInterface(const nsIID& iid, void **result)
+{
+  nsresult rv = NS_NOINTERFACE;
+  if (!result)
+    return NS_ERROR_NULL_POINTER;
+
+  void *res = nsnull;
+  if (iid.Equals(nsCOMTypeInfo<nsIMsgAccount>::GetIID()) ||
+      iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+    res = NS_STATIC_CAST(nsIMsgAccount*, this);
+  else if (iid.Equals(nsCOMTypeInfo<nsIShutdownListener>::GetIID()))
+    res = NS_STATIC_CAST(nsIShutdownListener*, this);
+
+  if (res) {
+    NS_ADDREF(this);
+    *result = res;
+    rv = NS_OK;
+  }
+
+  return rv;
+}
 
 nsMsgAccount::nsMsgAccount():
   m_accountKey(0),
@@ -89,6 +121,16 @@ nsMsgAccount::~nsMsgAccount()
   
 }
 
+nsresult
+nsMsgAccount::getPrefService() {
+
+  if (m_prefs) return NS_OK;
+  
+  return nsServiceManager::GetService(kPrefServiceCID,
+                                      nsCOMTypeInfo<nsIPref>::GetIID(),
+                                      (nsISupports**)&m_prefs,
+                                      this);
+}
 
 NS_IMETHODIMP
 nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
@@ -114,6 +156,11 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
     // ex) mail.account.myaccount.server = "myserver"
     char *serverKeyPref = PR_smprintf("mail.account.%s.server", m_accountKey);
     char *serverKey;
+
+    /* make sure m_prefs is valid */
+    rv = getPrefService();
+    if (NS_FAILED(rv)) return rv;
+    
     rv = m_prefs->CopyCharPref(serverKeyPref, &serverKey);
     PR_FREEIF(serverKeyPref);
 
@@ -250,10 +297,7 @@ nsMsgAccount::SetKey(char *accountKey)
   nsresult rv=NS_OK;
 
   // need the prefs service to do anything
-  if (!m_prefs)
-    rv = nsServiceManager::GetService(kPrefServiceCID,
-                                      nsCOMTypeInfo<nsIPref>::GetIID(),
-                                      (nsISupports**)&m_prefs);
+  rv = getPrefService();
   if (NS_FAILED(rv)) return rv;
 
   m_accountKey = PL_strdup(accountKey);
@@ -267,7 +311,10 @@ nsMsgAccount::SetKey(char *accountKey)
   char *identitiesKeyPref = PR_smprintf("mail.account.%s.identities",
                                         accountKey);
   char *identityKey = nsnull;
-  rv = m_prefs->CopyCharPref(identitiesKeyPref, &identityKey);
+  rv = getPrefService();
+  if (NS_SUCCEEDED(rv)) 
+    rv = m_prefs->CopyCharPref(identitiesKeyPref, &identityKey);
+  
   PR_FREEIF(identitiesKeyPref);
 
 #ifdef DEBUG_alecf
@@ -294,6 +341,18 @@ nsMsgAccount::SetKey(char *accountKey)
     rv = addIdentity(identity);
 
   return rv;
+}
+
+/* called if the prefs service goes offline */
+NS_IMETHODIMP
+nsMsgAccount::OnShutdown(const nsCID& aClass, nsISupports *service)
+{
+  if (aClass.Equals(kPrefServiceCID)) {
+    if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
+    m_prefs = nsnull;
+  }
+
+  return NS_OK;
 }
 
 nsresult
