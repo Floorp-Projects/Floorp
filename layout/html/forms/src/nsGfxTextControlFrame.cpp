@@ -905,6 +905,9 @@ NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext* aPresContext,
     case NS_MOUSE_LEFT_DOUBLECLICK:
     case NS_MOUSE_MIDDLE_DOUBLECLICK:
     case NS_MOUSE_RIGHT_DOUBLECLICK:
+      // XXX shouldn't this have the same check that we handled the mouse up
+      // XXX as did the single click events?
+      // XX Do we ever get here, i.e. are these messages obsolete anyway?
       mPassThroughMouseEvents = eGotClick;
       NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
       return RedispatchMouseEventToSubDoc(aPresContext, aEvent, aEventStatus, PR_FALSE);
@@ -936,6 +939,9 @@ NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext* aPresContext,
     case NS_KEY_PRESS:
     if (NS_KEY_EVENT == aEvent->eventStructType) {
 	    nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+      // XXX What is this all about?  SHouldn't this all be handled
+      // XXX by XBL key bindings, rather than hardwired in here?
+      // XXX Even if it should be hardwired, why VK_RETURN and not VK_ENTER?
 	    if (NS_VK_RETURN == keyEvent->keyCode) 
       {
 	      EnterPressed(aPresContext);
@@ -3975,6 +3981,105 @@ nsEnderEventListener::HandleEvent(nsIDOMEvent* aEvent)
 /*================== nsIKeyListener =========================*/
 
 nsresult
+nsEnderEventListener::DispatchKeyEvent(nsIDOMKeyEvent* aOrigEvent,
+                                       PRInt32 aEventType)
+{
+  nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
+  if (!gfxFrame || !mContent || !mContext || !mView)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsKeyEvent newEvent;
+  newEvent.message = aEventType;
+  newEvent.eventStructType = NS_KEY_EVENT;
+  newEvent.widget = nsnull;
+  newEvent.flags = NS_EVENT_FLAG_INIT;
+  aOrigEvent->GetKeyCode(&(newEvent.keyCode));
+  if (newEvent.message == NS_KEY_PRESS)
+    aOrigEvent->GetCharCode(&(newEvent.charCode));
+  else
+    newEvent.charCode = 0;
+  aOrigEvent->GetShiftKey(&(newEvent.isShift));
+  aOrigEvent->GetCtrlKey(&(newEvent.isControl));
+  aOrigEvent->GetAltKey(&(newEvent.isAlt));
+  aOrigEvent->GetMetaKey(&(newEvent.isMeta));
+
+  nsCOMPtr<nsIEventStateManager> manager;
+  nsresult result = mContext->GetEventStateManager(getter_AddRefs(manager));
+  if (NS_FAILED(result))
+    return result;
+  if (!manager)
+    return NS_ERROR_UNEXPECTED;
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+
+#ifndef SIMPLIFIED_EVENTS_FOR_KEY_UP_AND_DOWN
+  // 1. Give event to event manager for pre event state changes
+  //    and generation of synthetic events.
+  result = manager->PreHandleEvent(mContext, &newEvent, gfxFrame, &status, mView);
+
+  // 2. Give event to the DOM for third party and JS use.
+  if (NS_SUCCEEDED(result)) {
+    result = mContent->HandleDOMEvent(mContext, &newEvent, nsnull,
+                                      NS_EVENT_FLAG_INIT, &status); 
+  }
+
+  // 3. Give event to the frame for browser default processing
+  gfxFrame = mFrame.Reference(); // check for deletion
+  if (gfxFrame && NS_SUCCEEDED(result)) {
+    result = gfxFrame->HandleEvent(mContext, &newEvent, &status);
+  }
+
+  // 4. Give event to event manager for post event state changes and
+  //    generation of synthetic events.
+  gfxFrame = mFrame.Reference(); // check for deletion
+  if (gfxFrame && NS_SUCCEEDED(result)) {
+    result = manager->PostHandleEvent(mContext, &newEvent, gfxFrame,
+                                      &status, mView);
+                                       
+  }
+
+  // Call consume focus events on the inner event state manager to prevent its
+  // PostHandleEvent from immediately blurring us.
+  nsCOMPtr<nsIPresContext> pc;
+  mInnerShell->GetPresContext(getter_AddRefs(pc));
+
+  nsCOMPtr<nsIEventStateManager> esm;
+  pc->GetEventStateManager(getter_AddRefs(esm));
+  esm->ConsumeFocusEvents(PR_TRUE);
+
+  if (newEvent.flags & NS_EVENT_FLAG_STOP_DISPATCH && aOrigEvent) {
+    aOrigEvent->PreventCapture();
+    aOrigEvent->PreventBubble();
+  }
+
+  // Used to do this simplified version for KeyUp and KeyDown events.
+  // This seems bad ... we shouldn't try to second-guess what types
+  // of events the user might want to track.
+#else /* SIMPLIFIED_EVENTS_FOR_KEY_UP_AND_DOWN */
+  // 1. Give event to event manager for pre event state changes
+  //    and generation of synthetic events.
+  result = aManager->PreHandleEvent(mContext, &newEvent, gfxFrame, &status, mView);
+
+  // 2. Give event to the DOM for third party and JS use.
+  if (NS_SUCCEEDED(result)) {
+    result = mContent->HandleDOMEvent(mContext, &newEvent, nsnull,
+                                      NS_EVENT_FLAG_INIT, &status); 
+  }
+
+  // 3. In this case, the frame does no processing of the event
+
+  // 4. Give event to event manager for post event state changes and
+  //    generation of synthetic events.
+  gfxFrame = mFrame.Reference(); // check for deletion
+  if (gfxFrame && NS_SUCCEEDED(result)) {
+    result = aManager->PostHandleEvent(mContext, &newEvent, gfxFrame, &status, mView);
+  }
+#endif /* SIMPLIFIED_EVENTS_FOR_KEY_UP_AND_DOWN */
+
+  return result;
+}
+
+nsresult
 nsEnderEventListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
   nsCOMPtr<nsIDOMKeyEvent>keyEvent;
@@ -3983,47 +4088,7 @@ nsEnderEventListener::KeyDown(nsIDOMEvent* aKeyEvent)
     return NS_OK;
   }
 
-  nsresult result = NS_OK;
-
-  nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
-  if (gfxFrame && mContent)
-  {
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsKeyEvent event;
-    event.eventStructType = NS_KEY_EVENT;
-    event.widget = nsnull;
-    event.message = NS_KEY_DOWN;
-    event.flags = NS_EVENT_FLAG_INIT;
-    keyEvent->GetKeyCode(&(event.keyCode));
-    event.charCode = 0;
-    keyEvent->GetShiftKey(&(event.isShift));
-    keyEvent->GetCtrlKey(&(event.isControl));
-    keyEvent->GetAltKey(&(event.isAlt));
-    keyEvent->GetMetaKey(&(event.isMeta));
-
-    nsIEventStateManager *manager=nsnull;
-    result = mContext->GetEventStateManager(&manager);
-    if (NS_SUCCEEDED(result) && manager) 
-    {
-      //1. Give event to event manager for pre event state changes and generation of synthetic events.
-      result = manager->PreHandleEvent(mContext, &event, gfxFrame, &status, mView);
-
-      //2. Give event to the DOM for third party and JS use.
-      if (NS_SUCCEEDED(result)) {
-        result = mContent->HandleDOMEvent(mContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-      }
-    
-      //3. In this case, the frame does no processing of the event
-
-      //4. Give event to event manager for post event state changes and generation of synthetic events.
-      gfxFrame = mFrame.Reference(); // check for deletion
-      if (gfxFrame && NS_SUCCEEDED(result)) {
-        result = manager->PostHandleEvent(mContext, &event, gfxFrame, &status, mView);
-      }
-      NS_RELEASE(manager);
-    }
-  }
-  return result;
+  return DispatchKeyEvent(keyEvent, NS_KEY_DOWN);
 }
 
 nsresult
@@ -4035,47 +4100,7 @@ nsEnderEventListener::KeyUp(nsIDOMEvent* aKeyEvent)
     return NS_OK;
   }
 
-  nsresult result = NS_OK;
-
-  nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
-  if (gfxFrame && mContent)
-  {
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsKeyEvent event;
-    event.eventStructType = NS_KEY_EVENT;
-    event.widget = nsnull;
-    event.message = NS_KEY_UP;
-    event.flags = NS_EVENT_FLAG_INIT;
-    keyEvent->GetKeyCode(&(event.keyCode));
-    event.charCode = 0;
-    keyEvent->GetShiftKey(&(event.isShift));
-    keyEvent->GetCtrlKey(&(event.isControl));
-    keyEvent->GetAltKey(&(event.isAlt));
-    keyEvent->GetMetaKey(&(event.isMeta));
-
-    nsIEventStateManager *manager=nsnull;
-    result = mContext->GetEventStateManager(&manager);
-    if (NS_SUCCEEDED(result) && manager) 
-    {
-      //1. Give event to event manager for pre event state changes and generation of synthetic events.
-      result = manager->PreHandleEvent(mContext, &event, gfxFrame, &status, mView);
-
-      //2. Give event to the DOM for third party and JS use.
-      if (NS_SUCCEEDED(result)) {
-        result = mContent->HandleDOMEvent(mContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-      }
-    
-      //3. In this case, the frame does no processing of the event
-
-      //4. Give event to event manager for post event state changes and generation of synthetic events.
-      gfxFrame = mFrame.Reference(); // check for deletion
-      if (gfxFrame && NS_SUCCEEDED(result)) {
-        result = manager->PostHandleEvent(mContext, &event, gfxFrame, &status, mView);
-      }
-      NS_RELEASE(manager);
-    }
-  }
-  return result;
+  return DispatchKeyEvent(keyEvent, NS_KEY_UP);
 }
 
 nsresult
@@ -4087,65 +4112,7 @@ nsEnderEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
     return NS_OK;
   }
 
-  nsresult result = NS_OK;
-
-  nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
-  if (gfxFrame && mContent && mContext && mView)
-  {
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsKeyEvent event;
-    event.eventStructType = NS_KEY_EVENT;
-    event.widget = nsnull;
-    event.message = NS_KEY_PRESS;
-    event.flags = NS_EVENT_FLAG_INIT;
-    keyEvent->GetKeyCode(&(event.keyCode));
-    keyEvent->GetCharCode(&(event.charCode));
-    keyEvent->GetShiftKey(&(event.isShift));
-    keyEvent->GetCtrlKey(&(event.isControl));
-    keyEvent->GetAltKey(&(event.isAlt));
-    keyEvent->GetMetaKey(&(event.isMeta));
-
-    nsIEventStateManager *manager=nsnull;
-    result = mContext->GetEventStateManager(&manager);
-    if (NS_SUCCEEDED(result) && manager) 
-    {
-      //1. Give event to event manager for pre event state changes and generation of synthetic events.
-      result = manager->PreHandleEvent(mContext, &event, gfxFrame, &status, mView);
-
-      //2. Give event to the DOM for third party and JS use.
-      if (NS_SUCCEEDED(result)) {
-        result = mContent->HandleDOMEvent(mContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-      }
-    
-      //3. Give event to the frame for browser default processing
-      gfxFrame = mFrame.Reference(); // check for deletion
-      if (gfxFrame && NS_SUCCEEDED(result)) {
-        result = gfxFrame->HandleEvent(mContext, &event, &status);
-      }
-
-      //4. Give event to event manager for post event state changes and generation of synthetic events.
-      gfxFrame = mFrame.Reference(); // check for deletion
-      if (gfxFrame && NS_SUCCEEDED(result)) {
-        result = manager->PostHandleEvent(mContext, &event, gfxFrame, &status, mView);
-      }
-      NS_RELEASE(manager);
-      
-      // Call consume focus events on the inner event state manager to prevent its
-      // PostHandleEvent from immediately blurring us.
-      nsCOMPtr<nsIPresContext> pc;
-      mInnerShell->GetPresContext(getter_AddRefs(pc));
-      
-      nsCOMPtr<nsIEventStateManager> esm;
-      pc->GetEventStateManager(getter_AddRefs(esm));
-      esm->ConsumeFocusEvents(PR_TRUE);
-      
-      if(event.flags & NS_EVENT_FLAG_STOP_DISPATCH) {
-        aKeyEvent->PreventCapture();
-        aKeyEvent->PreventBubble();
-      }
-    }
-  }
-  return result;
+  return DispatchKeyEvent(keyEvent, NS_KEY_PRESS);
 }
 
 /*=============== nsIMouseListener ======================*/
