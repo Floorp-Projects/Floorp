@@ -43,7 +43,7 @@ DEFINES         =
 include config/$(OS_CONFIG).mk
 
 ifdef BUILD_OPT
-OPTIMIZER  = -O
+OPTIMIZER  += -O
 DEFINES    += -UDEBUG -DNDEBUG -UDEBUG_$(shell whoami)
 OBJDIR_TAG = _OPT
 else
