@@ -1,6 +1,6 @@
 /*
  *******************************************************************************
- * $Id: constant.h,v 1.4 1998/07/24 22:31:03 clayton Exp $
+ * $Id: constant.h,v 1.5 1998/07/29 02:58:54 leif Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -35,7 +35,7 @@ extern "C" {
 }
 #endif
 
-#include </export/source/ldapsdk/include/ldap.h>
+#include <ldap.h>
 
 static int
 not_here(s)
