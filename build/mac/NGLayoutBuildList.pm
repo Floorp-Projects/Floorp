@@ -507,7 +507,6 @@ sub MakeResourceAliases()
 	my($editor_chrome_dir) = "$chrome_dir" . "editor:";
 	my($editor_content_chrome_dir) = "$editor_chrome_dir" . "content:";
 	my($editor_locale_chrome_dir) = "$editor_chrome_dir" . "locale:";
-	my($editor_skin_chrome_dir) = "$editor_chrome_dir" . "skin:";
 
 	my($aim_chrome_dir) = "$chrome_dir" . "aim:";
 
@@ -594,11 +593,9 @@ sub MakeResourceAliases()
 	# if ($main::build{editor})
 	{
 		_InstallResources(":mozilla:editor:ui:composer:content:MANIFEST",				"$editor_content_chrome_dir", 0);
-		_InstallResources(":mozilla:editor:ui:composer:skin:MANIFEST",					"$editor_skin_chrome_dir", 0);
 		_InstallResources(":mozilla:editor:ui:composer:locale:en-US:MANIFEST",			"$editor_locale_chrome_dir", 0);
 
 		_InstallResources(":mozilla:editor:ui:dialogs:content:MANIFEST",				"$editor_content_chrome_dir", 0);
-		_InstallResources(":mozilla:editor:ui:dialogs:skin:MANIFEST",					"$editor_skin_chrome_dir", 0);
 		_InstallResources(":mozilla:editor:ui:dialogs:locale:en-US:MANIFEST",			"$editor_locale_chrome_dir", 0);
 	}
 
