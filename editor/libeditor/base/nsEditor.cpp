@@ -551,7 +551,21 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
         result = GetFirstEditableNode(bodyNode, getter_AddRefs(firstNode));
         if (firstNode)
         {
-          result = selection->Collapse(firstNode, 0);
+          // if firstNode is text, set selection to beginning of the text node
+          if (IsTextNode(firstNode)) {
+            result = selection->Collapse(firstNode, 0);
+          }
+          else
+          { // otherwise, it's a leaf node and we set the selection just in front of it
+            nsCOMPtr<nsIDOMNode> parentNode;
+            result = firstNode->GetParentNode(getter_AddRefs(parentNode));
+            if (NS_FAILED(result)) { return result; }
+            if (!parentNode) { return NS_ERROR_NULL_POINTER; }
+            PRInt32 offsetInParent;
+            result = nsEditor::GetChildOffset(firstNode, parentNode, offsetInParent);
+            if (NS_FAILED(result)) return result;
+            result = selection->Collapse(parentNode, offsetInParent);
+          }
           ScrollIntoView(PR_TRUE);
         }
       }
@@ -1590,13 +1604,20 @@ nsresult nsEditor::GetFirstEditableNode(nsIDOMNode *aRoot, nsIDOMNode* *outFirst
     if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(curNode);
-    if (domNode && IsTextNode(domNode) && IsEditable(domNode))
-    {
-      *outFirstNode = domNode;
-      NS_ADDREF(*outFirstNode);
-      return NS_OK;
-    }
-    
+    if (domNode)
+    { // we have a DOM node, see if it is a leaf node
+      PRBool canContainChildren;
+      curNode->CanContainChildren(canContainChildren);
+      if ((PR_FALSE==canContainChildren) || IsTextNode(domNode))
+      { // we have a leaf node, if it's editable, return it.
+        if (IsEditable(domNode))
+        {
+          *outFirstNode = domNode;
+          NS_ADDREF(*outFirstNode);
+          return NS_OK;
+        }
+      }
+    }    
     iter->Next();
   }
   
