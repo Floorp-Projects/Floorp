@@ -32,6 +32,7 @@ class nsIDOMRange;
 class nsISelection;
 class nsIOutputStream;
 class nsISupportsArray;
+class nsIDOMNode;
 
 
 #define NS_IDOCUMENT_ENCODER_IID                     \
@@ -56,8 +57,25 @@ class nsISupportsArray;
 #define NS_HTMLCOPY_TEXT_ENCODER_CID                      \
 { 0x7f915b01, 0x98fc, 0x11d4, { 0x8e, 0xb0, 0xa8, 0x03, 0xf8, 0x0f, 0xf1, 0xbc } }
 
-
+// {0BC1FAC0-B710-11d4-959F-0020183BF181}
+#define NS_IDOCUMENTENCODERNODEFIXUP_IID                     \
+{ 0xbc1fac0, 0xb710, 0x11d4, { 0x95, 0x9f, 0x0, 0x20, 0x18, 0x3b, 0xf1, 0x81 } }
+  
 #define NS_HTMLCOPY_ENCODER_CONTRACTID "@mozilla.org/layout/htmlCopyEncoder"
+
+class nsIDocumentEncoderNodeFixup : public nsISupports
+{
+public:
+
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENTENCODERNODEFIXUP_IID)
+
+  /**
+   * Create a fixed up version of a node. This method is called before
+   * each node in a document is about to be persisted. The implementor
+   * may return a new node with fixed up attributes or nsnull. 
+   */
+  NS_IMETHOD FixupNode(nsIDOMNode *aNode, nsIDOMNode **aOutNode) = 0;
+};
 
 class nsIDocumentEncoder : public nsISupports
 {
@@ -172,6 +190,11 @@ public:
   NS_IMETHOD EncodeToStringWithContext(nsAWritableString& aEncodedString, 
                                        nsAWritableString& aContextString, 
                                        nsAWritableString& aInfoString) = 0;
+
+  /**
+   * Set the fixup object associated with node persistence.
+   */
+  NS_IMETHOD SetNodeFixup(nsIDocumentEncoderNodeFixup *aFixup) = 0;
 };
 
 #endif /* nsIDocumentEncoder_h__ */

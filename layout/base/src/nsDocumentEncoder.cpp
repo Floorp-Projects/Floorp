@@ -91,12 +91,12 @@ public:
   NS_IMETHOD SetRange(nsIDOMRange* aRange);
   NS_IMETHOD SetWrapColumn(PRUint32 aWC);
   NS_IMETHOD SetCharset(const nsAReadableString& aCharset);
-
   NS_IMETHOD EncodeToStream(nsIOutputStream* aStream);
   NS_IMETHOD EncodeToString(nsAWritableString& aOutputString);
   NS_IMETHOD EncodeToStringWithContext(nsAWritableString& aEncodedString, 
                                        nsAWritableString& aContextString,
                                        nsAWritableString& aInfoString);
+  NS_IMETHOD SetNodeFixup(nsIDocumentEncoderNodeFixup *aFixup);
                                        
 protected:
   nsresult SerializeNodeStart(nsIDOMNode* aNode, PRInt32 aStartOffset,
@@ -129,6 +129,7 @@ protected:
   nsCOMPtr<nsIContentSerializer> mSerializer;
   nsCOMPtr<nsIUnicodeEncoder>    mUnicodeEncoder;
   nsCOMPtr<nsIDOMNode>           mCommonParent;
+  nsCOMPtr<nsIDocumentEncoderNodeFixup> mNodeFixup;
 
   nsString          mMimeType;
   nsString          mCharset;
@@ -234,42 +235,52 @@ nsDocumentEncoder::SerializeNodeStart(nsIDOMNode* aNode, PRInt32 aStartOffset,
 {
   PRUint16 type;
 
-  aNode->GetNodeType(&type);
+  nsCOMPtr<nsIDOMNode> node;
+  if (mNodeFixup)
+  {
+    mNodeFixup->FixupNode(aNode, getter_AddRefs(node));
+  }
+  if (!node)
+  {
+    node = do_QueryInterface(aNode);
+  }
+
+  node->GetNodeType(&type);
   switch (type) {
     case nsIDOMNode::ELEMENT_NODE:
     {
-      nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
+      nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
       mSerializer->AppendElementStart(element, aStr);
       break;
     }
     case nsIDOMNode::TEXT_NODE:
     {
-      nsCOMPtr<nsIDOMText> text = do_QueryInterface(aNode);
+      nsCOMPtr<nsIDOMText> text = do_QueryInterface(node);
       mSerializer->AppendText(text, aStartOffset, aEndOffset, aStr);
       break;
     }
     case nsIDOMNode::CDATA_SECTION_NODE:
     {
-      nsCOMPtr<nsIDOMCDATASection> cdata = do_QueryInterface(aNode);
+      nsCOMPtr<nsIDOMCDATASection> cdata = do_QueryInterface(node);
       mSerializer->AppendCDATASection(cdata, aStartOffset, aEndOffset, aStr);
       break;
     }
     case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
     {
-      nsCOMPtr<nsIDOMProcessingInstruction> pi = do_QueryInterface(aNode);
+      nsCOMPtr<nsIDOMProcessingInstruction> pi = do_QueryInterface(node);
       mSerializer->AppendProcessingInstruction(pi, aStartOffset, aEndOffset,
                                                aStr);
       break;
     }
     case nsIDOMNode::COMMENT_NODE:
     {
-      nsCOMPtr<nsIDOMComment> comment = do_QueryInterface(aNode);
+      nsCOMPtr<nsIDOMComment> comment = do_QueryInterface(node);
       mSerializer->AppendComment(comment, aStartOffset, aEndOffset, aStr);
       break;
     }
     case nsIDOMNode::DOCUMENT_TYPE_NODE:
     {
-      nsCOMPtr<nsIDOMDocumentType> doctype = do_QueryInterface(aNode);
+      nsCOMPtr<nsIDOMDocumentType> doctype = do_QueryInterface(node);
       mSerializer->AppendDoctype(doctype, aStr);
       break;
     }
@@ -921,6 +932,14 @@ nsDocumentEncoder::EncodeToStringWithContext(nsAWritableString& aEncodedString,
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP
+nsDocumentEncoder::SetNodeFixup(nsIDocumentEncoderNodeFixup *aFixup)
+{
+  mNodeFixup = aFixup;
+  return NS_OK;
+}
+
 
 nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult); // make mac compiler happy
 
