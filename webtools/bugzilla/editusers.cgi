@@ -600,7 +600,7 @@ sub mirrorListSelectionValues {
 
 # Give a list of IDs of groups the user can see.
 sub visibleGroupsAsString {
-    return join(', ', @{$user->visible_groups_direct()});
+    return join(', ', -1, @{$user->visible_groups_direct()});
 }
 
 # Give a list of IDs of groups the user may bless.
