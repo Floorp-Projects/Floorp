@@ -127,6 +127,7 @@ function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElem
                   dump("*** VALUE=" + value + "\n");
                   formElement.arbitraryvalue = value;
                   this.AddAttributes( formElement, elementEntry, "arbitraryvalue", optAttributes );
+                  this.AddAttributes( formElement, elementEntry, "value", optAttributes);
               }
           }
       }
@@ -154,6 +155,8 @@ function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElem
 
       elementEntry.id       = formElement.id;
       elementEntry.nodeName = formElement.nodeName;
+      // save the type attribute on the element if one is present
+      elementEntry.elType   = ( formElement.type ) ? formElement.type : null;
     }
   }
   if( !this.HasValidElements( this.PageData[currentPageTag] ) )
