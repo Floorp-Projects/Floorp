@@ -531,6 +531,7 @@ BodyFixupRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresCont
       mutableStyleColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
                                             NS_STYLE_BG_IMAGE_NONE;
       mutableStyleColor->mBackgroundImage.SetLength(0);
+      mutableStyleColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
     }
     NS_RELEASE(parentContext);
   }
