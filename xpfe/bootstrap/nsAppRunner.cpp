@@ -802,7 +802,6 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
 {
   nsresult rv;
 
-#ifdef XP_WIN32
   // If starting up in server mode, then we do things differently.
   nsCOMPtr<nsINativeAppSupport> nativeApp;
   rv = GetNativeAppSupport(getter_AddRefs(nativeApp));
@@ -818,7 +817,6 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
           return NS_OK;
       }
   }
-#endif
   
   nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID, &rv));
 
