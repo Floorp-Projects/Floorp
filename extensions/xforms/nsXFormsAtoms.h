@@ -63,6 +63,7 @@ class nsXFormsAtoms
   static NS_HIDDEN_(nsIAtom *) appearance;
   static NS_HIDDEN_(nsIAtom *) incremental;
   static NS_HIDDEN_(nsIAtom *) value;
+  static NS_HIDDEN_(nsIAtom *) clazz;
 
   static NS_HIDDEN_(void) InitAtoms();
 

@@ -40,7 +40,7 @@
 
 interface nsIDOMElement;
 
-[scriptable, uuid(1ea57817-73cc-4224-adb7-55aa83bb3f09)]
+[scriptable, uuid(59de39e3-56ff-47c0-a580-f15dbde45ed3)]
 interface nsIXTFVisual : nsIXTFElement
 {
   // The content tree rooted in 'visualContent' will be rendered where
@@ -72,4 +72,10 @@ interface nsIXTFVisual : nsIXTFElement
 
   // Event notifications:
   void didLayout();
+
+  // Returns an atom holding the name of the "class" attribute.
+  // This is called once during XTFVisual creation.
+  // The xtf element doesn't have to keep a strong ref to the atom.
+  // Note! nsIXTFAttributeHandler can't be used to handle class attribute.
+  nsIAtom getClassAttributeName();
 };

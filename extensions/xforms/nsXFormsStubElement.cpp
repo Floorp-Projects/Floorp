@@ -42,6 +42,7 @@
 #include "nsIDOM3Node.h"
 #include "nsMemory.h"
 #include "nsXFormsUtils.h"
+#include "nsXFormsAtoms.h"
 
 static const nsIID sScriptingIIDs[] = {
   NS_IDOMELEMENT_IID,
@@ -370,6 +371,13 @@ nsXFormsXMLVisualStub::GetApplyDocumentStyleSheets(PRBool *aApplySheets)
 NS_IMETHODIMP
 nsXFormsXMLVisualStub::DidLayout()
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsXMLVisualStub::GetClassAttributeName(nsIAtom** aName)
+{
+  NS_ADDREF(*aName = nsXFormsAtoms::clazz);
   return NS_OK;
 }
 
