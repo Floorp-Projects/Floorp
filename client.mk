@@ -105,6 +105,7 @@ MODULES_suite :=                                \
   mozilla/accessible                            \
   mozilla/security/manager                      \
   mozilla/toolkit                               \
+  mozilla/storage                               \
   $(NULL)
 
 MODULES_toolkit :=                              \
