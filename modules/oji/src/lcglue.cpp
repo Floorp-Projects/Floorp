@@ -215,7 +215,12 @@ map_java_object_to_js_object_impl(JNIEnv *env, void *pNSIPluginInstanceIn, char 
     if(jvmMochaPrefsEnabled == PR_FALSE)
     {
        *errp = strdup("JSObject.getWindow() failed: java preference is disabled");
+#if 0
+       // XXX Causes a compiler error on Windows...
        goto failed;
+#else
+       return 0;
+#endif
     }
      
     /*
