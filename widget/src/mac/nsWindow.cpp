@@ -939,7 +939,7 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 // Invokes callback and  ProcessEvent method on Event Listener object
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event)
+NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus)
 {
   aStatus = nsEventStatus_eIgnore;
   if (nsnull != mEventCallback) {

@@ -371,6 +371,7 @@ char					*str;
 NS_IMETHODIMP nsTextWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
 nsSizeEvent 	event;
+nsEventStatus	eventStatus;
 LongRect			macRect;
 
   mBounds.width  = aWidth;
@@ -404,7 +405,7 @@ LongRect			macRect;
   event.windowSize = &mBounds;
   event.eventStructType = NS_SIZE_EVENT;
   event.widget = this;
- 	this->DispatchEvent(&event);
+ 	this->DispatchEvent(&event, eventStatus);
 	return NS_OK;
 }
 
@@ -417,6 +418,7 @@ LongRect			macRect;
 NS_IMETHODIMP nsTextWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
 nsSizeEvent 	event;
+nsEventStatus	eventStatus;
 LongRect			macRect;
 
   mBounds.x      = aX;
@@ -450,7 +452,7 @@ LongRect			macRect;
   event.windowSize = &mBounds;
   event.widget = this;
   event.eventStructType = NS_SIZE_EVENT;
- 	this->DispatchEvent(&event);
+ 	this->DispatchEvent(&event, eventStatus);
 	return NS_OK;
 }
 
