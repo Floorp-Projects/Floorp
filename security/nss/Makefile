@@ -54,7 +54,11 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-
+ifeq ($(OS_TARGET),WINNT)
+NSPR_IMPORT_VERSION = v4.0.1
+else
+NSPR_IMPORT_VERSION = v4.0
+endif
 
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
