@@ -71,6 +71,7 @@
 #include "nsIExtensionManager.h"
 #include "nsIIOService.h"
 #include "nsILocaleService.h"
+#include "nsILookAndFeel.h"
 #include "nsIObserverService.h"
 #include "nsINativeAppSupport.h"
 #include "nsIPref.h"
@@ -88,6 +89,7 @@
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
+#include "nsWidgetsCID.h"
 #include "nsXPCOM.h"
 #include "nsXPIDLString.h"
 
@@ -867,6 +869,7 @@ public:
   nsresult RegisterProfileService(nsIToolkitProfileService* aProfileService);
   nsresult InitEventQueue();
   nsresult SetWindowCreator(nsINativeAppSupport* native);
+  void     CheckAccessibleSkin();
 
 private:
   nsIServiceManager* mServiceManager;
@@ -992,6 +995,33 @@ ScopedXPCOMStartup::SetWindowCreator(nsINativeAppSupport* native)
   NS_ENSURE_SUCCESS(rv, rv);
 
   return wwatch->SetWindowCreator(creator);
+}
+
+NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+
+void
+ScopedXPCOMStartup::CheckAccessibleSkin()
+{
+  nsCOMPtr<nsILookAndFeel> lookAndFeel (do_GetService(kLookAndFeelCID));
+
+  if (lookAndFeel) {
+    PRInt32 useAccessibilityTheme = 0;
+
+    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_UseAccessibilityTheme,
+                           useAccessibilityTheme);
+
+    if (useAccessibilityTheme) {
+      // If OS accessibility is active, use the classic skin, which obeys the
+      // system accessibility colors.
+      nsCOMPtr<nsIXULChromeRegistry> chromeRegistry
+        (do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
+      if (chromeRegistry) {
+        // Make change this session only
+        chromeRegistry->SetRuntimeProvider(PR_TRUE);
+        chromeRegistry->SelectSkin(NS_LITERAL_CSTRING("classic/1.0"), PR_TRUE);
+      }
+    }
+  }
 }
 
 // don't modify aAppDir directly... clone it first
@@ -1306,6 +1336,8 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     { //extra scoping is needed so we release these components before xpcom shutdown
+      xpcom.CheckAccessibleSkin();
+
       nsCOMPtr<nsIWindowWatcher> windowWatcher
         (do_GetService(NS_WINDOWWATCHER_CONTRACTID));
       nsCOMPtr<nsIDialogParamBlock> ioParamBlock
@@ -1870,6 +1902,8 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
         NS_ENSURE_TRUE(io, 1);
         io->SetOffline(PR_TRUE);
       }
+
+      xpcom.CheckAccessibleSkin();
 
       {
         NS_TIMELINE_ENTER("startupNotifier");
