@@ -214,7 +214,7 @@ main(int argc, char* argv[])
     if (NS_FAILED(rv)) return rv;
 
     // set the key
-    nsIRegistry::Key key, key1;
+    nsRegistryKey key, key1;
 
     rv = registry->AddSubtree(nsIRegistry::Common, NS_ISTREAMCONVERTER_KEY, &key);
     if (NS_FAILED(rv)) return rv;

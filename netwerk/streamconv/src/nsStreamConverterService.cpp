@@ -96,7 +96,7 @@ nsStreamConverterService::BuildGraph() {
     nsresult rv;
     // enumerate the registry subkeys
     nsIRegistry *registry = nsnull;
-    nsIRegistry::Key key;
+    nsRegistryKey key;
     nsIEnumerator *components = nsnull;
     rv = nsServiceManager::GetService(NS_REGISTRY_PROGID,
                                       NS_GET_IID(nsIRegistry),

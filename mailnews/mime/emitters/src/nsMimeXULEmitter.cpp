@@ -1207,7 +1207,7 @@ nsMimeXULEmitter::BuildListOfStatusProviders()
 
   // enumerate the registry subkeys
   nsIRegistry           *registry = nsnull;
-  nsIRegistry::Key      key;
+  nsRegistryKey      key;
   nsIEnumerator         *components = nsnull;
   miscStatusType        *newInfo = nsnull;
 

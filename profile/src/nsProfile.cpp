@@ -242,7 +242,7 @@ NS_IMETHODIMP nsProfile::Startup(const char *filename)
     if (NS_FAILED(rv)) return rv;
     
     // Add the root Profiles node in the registry
-    nsIRegistry::Key key;
+    nsRegistryKey key;
     rv = m_reg->AddSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
     return rv;
 }
@@ -554,14 +554,14 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
     rv = OpenRegistry();
     if (NS_FAILED(rv)) return rv;       
 
-    nsIRegistry::Key key;
+    nsRegistryKey key;
     
     // Get handle to subtree REGISTRY_PROFILE_SUBTREE_STRING
     rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
     
     if (NS_SUCCEEDED(rv))
         {
-            nsIRegistry::Key newKey;
+            nsRegistryKey newKey;
             
             // Get handle to <profileName> passed
             rv = m_reg->GetSubtree(key, profileName, &newKey);
@@ -671,7 +671,7 @@ NS_IMETHODIMP nsProfile::GetProfileCount(PRInt32 *numProfiles)
     
     // Enumerate all subkeys (immediately) under the given node.
     nsCOMPtr<nsIEnumerator> enumKeys;
-    nsIRegistry::Key key;
+    nsRegistryKey key;
     
     rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
     
@@ -709,7 +709,7 @@ NS_IMETHODIMP nsProfile::GetProfileCount(PRInt32 *numProfiles)
                                             
                                             if (NS_SUCCEEDED(rv) && (profile))
                                                 {
-                                                    nsIRegistry::Key profKey;								
+                                                    nsRegistryKey profKey;								
                                                     
                                                     rv = m_reg->GetSubtree(key, profile, &profKey);
                                                     
@@ -763,7 +763,7 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
 
     // Enumerate all subkeys (immediately) under the given node.
     nsCOMPtr<nsIEnumerator> enumKeys;
-    nsIRegistry::Key key;
+    nsRegistryKey key;
     
     rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
     
@@ -791,7 +791,7 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
                                     if (NS_SUCCEEDED(rv))
                                         {
                                             nsXPIDLCString isMigrated;
-                                            nsIRegistry::Key profKey;								
+                                            nsRegistryKey profKey;								
                                             
 					            // Get node name.
                                             rv = node->GetName(profileName );	
@@ -894,7 +894,7 @@ nsProfile::GetCurrentProfile(char **profileName)
     rv = OpenRegistry();
     if (NS_FAILED(rv)) return rv;
     
-    nsIRegistry::Key key;
+    nsRegistryKey key;
 
     rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
     
@@ -1000,13 +1000,13 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& prof
     rv = OpenRegistry();
     if (NS_FAILED(rv)) return rv;
     
-    nsIRegistry::Key key;
+    nsRegistryKey key;
     
     rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
     
     if (NS_SUCCEEDED(rv))
         {
-            nsIRegistry::Key newKey;
+            nsRegistryKey newKey;
             
             rv = m_reg->AddSubtree(key, profileName, &newKey);
             
@@ -1380,7 +1380,7 @@ NS_IMETHODIMP nsProfile::RenameProfile(const char* oldName, const char* newName)
 
 		if (NS_SUCCEEDED(rv))
 		{
-			nsIRegistry::Key profileRootKey;
+			nsRegistryKey profileRootKey;
 
 			rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &profileRootKey);
 
@@ -1399,7 +1399,7 @@ NS_IMETHODIMP nsProfile::RenameProfile(const char* oldName, const char* newName)
 nsresult nsProfile::CopyRegKey(const char *oldProfile, const char *newProfile)
 {
 	nsCOMPtr<nsIEnumerator> enumKeys;
-    nsIRegistry::Key sourceKey, destKey, profileRootKey;
+    nsRegistryKey sourceKey, destKey, profileRootKey;
 
 	nsresult rv;
     rv = OpenRegistry();
@@ -1478,7 +1478,7 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName, const char* canD
 	GetProfileDir(profileName, &profileDirSpec);
 
     
-    nsIRegistry::Key key;
+    nsRegistryKey key;
     
     rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
     if (NS_FAILED(rv)) return rv;
@@ -1554,7 +1554,7 @@ void nsProfile::GetAllProfiles()
 
     // Enumerate all subkeys (immediately) under the given node.
     nsCOMPtr<nsIEnumerator> enumKeys;
-    nsIRegistry::Key key;
+    nsRegistryKey key;
     
     rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
     
@@ -1591,7 +1591,7 @@ void nsProfile::GetAllProfiles()
                                             
                                             if (NS_SUCCEEDED(rv) && (profile))
                                                 {
-                                                    nsIRegistry::Key profKey;								
+                                                    nsRegistryKey profKey;								
                                                     
                                                     rv = m_reg->GetSubtree(key, profile, &profKey);
                                                     
@@ -1683,7 +1683,7 @@ NS_IMETHODIMP nsProfile::StartCommunicator(const char* profileName)
     
 	// First, set the profile to be the current profile.
 	// So that FileLocation services grabs right directory when it needs to.
-    nsIRegistry::Key profileRootKey;
+    nsRegistryKey profileRootKey;
     rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &profileRootKey);
     if (NS_FAILED(rv)) return rv;
     
@@ -1797,7 +1797,7 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
                                     printf("oldProflie = %s\n", profile);
 #endif
                                     
-                                    nsIRegistry::Key key;								
+                                    nsRegistryKey key;								
                                     
                                     rv = oldReg->GetSubtree(nsIRegistry::Users, profile, &key);
                                     
@@ -1876,12 +1876,12 @@ NS_IMETHODIMP nsProfile::UpdateMozProfileRegistry()
 
 	for (PRInt32 idx = 0; idx < mNumOldProfiles; idx++)
 	{
-        nsIRegistry::Key key;
+        nsRegistryKey key;
         rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
         
         if (NS_SUCCEEDED(rv))
             {
-                nsIRegistry::Key newKey;
+                nsRegistryKey newKey;
                 
                 rv = m_reg->SetString(key, REGISTRY_NEED_MIGRATION_STRING, REGISTRY_TRUE_STRING);
                 
@@ -2019,13 +2019,13 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
     if (NS_FAILED(rv)) return rv;
         
 	//unmark migrate flag
-    nsIRegistry::Key key;
+    nsRegistryKey key;
     
     rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
     
     if (NS_SUCCEEDED(rv))
         {
-            nsIRegistry::Key newKey;
+            nsRegistryKey newKey;
             rv = m_reg->GetSubtree(key, profileName, &newKey);
             
             if (NS_SUCCEEDED(rv))
@@ -2192,13 +2192,13 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 
 		if (NS_SUCCEEDED(rv))
 		{
-            nsIRegistry::Key key;
+            nsRegistryKey key;
             
             rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
             
             if (NS_SUCCEEDED(rv))
                 {
-                    nsIRegistry::Key newKey;
+                    nsRegistryKey newKey;
                     
                     if (userProfileName.mLength > 0)
 						{
@@ -2257,7 +2257,7 @@ NS_IMETHODIMP nsProfile::IsPregCookieSet(char **pregSet)
     rv = OpenRegistry();
     if (NS_FAILED(rv)) return rv;
     
-    nsIRegistry::Key key;
+    nsRegistryKey key;
     
     rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
     
@@ -2281,13 +2281,13 @@ NS_IMETHODIMP nsProfile::ProfileExists(const char *profileName)
     rv = OpenRegistry();
     if (NS_FAILED(rv)) return rv;
     
-    nsIRegistry::Key key;
+    nsRegistryKey key;
     
     rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
     
     if (NS_SUCCEEDED(rv))
         {
-            nsIRegistry::Key newKey;
+            nsRegistryKey newKey;
             
             // Get handle to <profileName> passed
             rv = m_reg->GetSubtree(key, profileName, &newKey);			
@@ -2318,7 +2318,7 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(PRInt32 *numProfiles)
     
     // Enumerate all subkeys (immediately) under the given node.
     nsCOMPtr<nsIEnumerator> enumKeys;
-    nsIRegistry::Key key;
+    nsRegistryKey key;
     
     rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &key);
     
@@ -2356,7 +2356,7 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(PRInt32 *numProfiles)
                                             
                                             if (NS_SUCCEEDED(rv) && (profile))
                                                 {
-                                                    nsIRegistry::Key profKey;								
+                                                    nsRegistryKey profKey;								
                                                     
                                                     rv = m_reg->GetSubtree(key, profile, &profKey);
                                                     

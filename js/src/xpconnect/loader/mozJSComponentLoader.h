@@ -63,7 +63,7 @@ public:
     
     PLHashTable *mModules;
     PLHashTable *mGlobals;
-    nsIRegistry::Key mXPCOMKey;
+    nsRegistryKey mXPCOMKey;
 
     PRBool mInitialized;
 };

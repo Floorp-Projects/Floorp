@@ -192,7 +192,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
     if (NS_SUCCEEDED(rv)) 
     {
       // set the key
-      nsIRegistry::Key key, key1;  
+      nsRegistryKey key, key1;  
       rv = NS_OK;
       if (NS_FAILED(registry->GetSubtree(nsIRegistry::Common, NS_IMIME_MISC_STATUS_KEY, &key)))
         rv = registry->AddSubtree(nsIRegistry::Common, NS_IMIME_MISC_STATUS_KEY, &key);

@@ -346,7 +346,7 @@ mozJSComponentLoader::SetRegistryInfo(const char *registryLocation,
         return NS_OK;           // silent failure
 
     nsresult rv;
-    nsIRegistry::Key key;
+    nsRegistryKey key;
     rv = mRegistry->GetSubtreeRaw(mXPCOMKey, registryLocation,
                                   &key);
 
@@ -383,7 +383,7 @@ mozJSComponentLoader::HasChanged(const char *registryLocation,
     if (!mRegistry)
         return PR_TRUE;
 
-    nsIRegistry::Key key;
+    nsRegistryKey key;
     if (NS_FAILED(mRegistry->GetSubtreeRaw(mXPCOMKey, registryLocation, &key)))
         return PR_TRUE;
 
@@ -559,8 +559,7 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
         NS_FAILED(ReallyInit()))
         return nsnull;
     
-    JSObject *obj = JS_NewObject(mContext, &gGlobalClass, mSuperGlobal,
-                                 mSuperGlobal);
+    JSObject *obj = JS_NewObject(mContext, &gGlobalClass, mSuperGlobal, NULL);
     if (!obj)
         return nsnull;
 

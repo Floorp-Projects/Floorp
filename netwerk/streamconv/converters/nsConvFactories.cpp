@@ -70,7 +70,7 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
     if (NS_FAILED(rv)) return rv;
 
     // set the key
-    nsIRegistry::Key key, key1;
+    nsRegistryKey key, key1;
 
     // root key addition
     rv = registry->AddSubtree(nsIRegistry::Common, NS_ISTREAMCONVERTER_KEY, &key);

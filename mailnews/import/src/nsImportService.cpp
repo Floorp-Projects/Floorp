@@ -93,8 +93,8 @@ public:
 private:
 	nsresult	LoadModuleInfo( char *pClsId, const char *pSupports);
 	nsresult	DoDiscover( void);
-	nsresult	GetImportRegKey( nsIRegistry *reg, nsIRegistry::Key *pKey);
-	nsresult	GetImportModulesRegKey( nsIRegistry *reg, nsIRegistry::Key *pKey);
+	nsresult	GetImportRegKey( nsIRegistry *reg, nsRegistryKey *pKey);
+	nsresult	GetImportModulesRegKey( nsIRegistry *reg, nsRegistryKey *pKey);
 
 private:
 	nsImportModuleList *	m_pModules;
@@ -385,9 +385,9 @@ NS_IMETHODIMP nsImportService::GetModule( const char *filter, PRInt32 index, nsI
 
 
 
-nsresult nsImportService::GetImportRegKey( nsIRegistry *reg, nsIRegistry::Key *pKey)
+nsresult nsImportService::GetImportRegKey( nsIRegistry *reg, nsRegistryKey *pKey)
 {
-	nsIRegistry::Key	nScapeKey;
+	nsRegistryKey	nScapeKey;
 
 	nsresult rv = reg->GetSubtree( nsIRegistry::Common, "Netscape", &nScapeKey);
 	if (NS_FAILED(rv)) {
@@ -404,9 +404,9 @@ nsresult nsImportService::GetImportRegKey( nsIRegistry *reg, nsIRegistry::Key *p
 	return( rv);
 }
 
-nsresult nsImportService::GetImportModulesRegKey( nsIRegistry *reg, nsIRegistry::Key *pKey)
+nsresult nsImportService::GetImportModulesRegKey( nsIRegistry *reg, nsRegistryKey *pKey)
 {
-	nsIRegistry::Key	iKey;
+	nsRegistryKey	iKey;
 	nsresult rv = GetImportRegKey( reg, &iKey);
 	if (NS_FAILED( rv))
 		return( rv);
@@ -437,7 +437,7 @@ nsresult nsImportService::DoDiscover( void)
    	rv = reg->OpenDefault();
    	if (NS_FAILED(rv)) return( rv);
    		    	
-	nsIRegistry::Key	modulesKey;
+	nsRegistryKey	modulesKey;
 	rv = GetImportModulesRegKey( reg, &modulesKey);
    	if (NS_FAILED(rv)) return( rv);
     
@@ -464,7 +464,7 @@ nsresult nsImportService::DoDiscover( void)
 				pNodeName = nsnull;
 				rv = node->GetName( &pNodeName);	
 				if (NS_SUCCEEDED( rv) && (pNodeName != nsnull)) {
-					nsIRegistry::Key 	key;
+					nsRegistryKey 	key;
 					rv = reg->GetSubtree( modulesKey, pNodeName, &key);
 					PR_Free( pNodeName);
 					if (NS_SUCCEEDED( rv)) {

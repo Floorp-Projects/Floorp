@@ -170,9 +170,9 @@ NSGetFactory(nsISupports* aServMgr,
 }
 
 
-nsresult GetImportModulesRegKey( nsIRegistry *reg, nsIRegistry::Key *pKey)
+nsresult GetImportModulesRegKey( nsIRegistry *reg, nsRegistryKey *pKey)
 {
-	nsIRegistry::Key	nScapeKey;
+	nsRegistryKey	nScapeKey;
 
 	nsresult rv = reg->GetSubtree( nsIRegistry::Common, "Netscape", &nScapeKey);
 	if (NS_FAILED(rv)) {
@@ -181,7 +181,7 @@ nsresult GetImportModulesRegKey( nsIRegistry *reg, nsIRegistry::Key *pKey)
 	if (NS_FAILED( rv))
 		return( rv);
 
-	nsIRegistry::Key	iKey;
+	nsRegistryKey	iKey;
 	rv = reg->GetSubtree( nScapeKey, "Import", &iKey);
 	if (NS_FAILED( rv)) {
 		rv = reg->AddSubtree( nScapeKey, "Import", &iKey);
@@ -240,7 +240,7 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
     		return( rv);
     	}
     	
-		nsIRegistry::Key	importKey;
+		nsRegistryKey	importKey;
 		
 		rv = GetImportModulesRegKey( reg, &importKey);
 		if (NS_FAILED( rv)) {
@@ -248,7 +248,7 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
 			return( rv);
 		}		
 		    	
-		nsIRegistry::Key	key;
+		nsRegistryKey	key;
     	rv = reg->AddSubtree( importKey, "Outlook Express", &key);
     	if (NS_FAILED(rv)) return( rv);
     	
