@@ -270,6 +270,7 @@ case "$target" in
 *-beos*)
     MKSHLIB='$(CXX) $(DSO_LDOPTS)'
     DSO_LDOPTS='-nostart -Xlinker --ignore-undefined'
+    TK_LIBS='-lbe -lroot'
     ;;
 
 *-bsdi*)
