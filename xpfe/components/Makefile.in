@@ -77,6 +77,11 @@ DIRS    = \
           shistory/public \
           bookmarks/public \
           $(NULL)
+
+ifeq ($(OS_ARCH),WINNT) 
+DIRS    += alerts winhooks
+endif
+
 endif
 
 ifdef MOZ_ENABLE_XREMOTE
