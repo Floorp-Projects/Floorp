@@ -128,6 +128,7 @@ function onAccountWizardLoad() {
 function onCancel() 
 {
   var firstInvalidAccount = getFirstInvalidAccount();
+  var closeWizard = true;
 
   // if the user cancels the the wizard when it pops up because of 
   // an invalid account (example, a webmail account that activation started)
@@ -164,17 +165,16 @@ function onCancel()
         gPrefsBundle.getString('WizardContinue'), 
         null, null, {value:0}, result);
 
-      if (result.value == 0)
-        window.close();
+      if (result.value == 1)
+        closeWizard = false;
     }
-    else
-      window.close();
 
     if(top.okCallback) {
       var state = false;
       top.okCallback(state);
     }
   }
+  return closeWizard;
 }
 
 function FinishAccount() {
