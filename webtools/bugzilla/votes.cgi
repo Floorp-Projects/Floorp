@@ -217,6 +217,7 @@ sub show_user {
     $vars->{'canedit'} = $canedit;
     $vars->{'voting_user'} = { "login" => $name };
     $vars->{'products'} = \@products;
+    $vars->{'bug_id'} = $bug_id;
 
     print $cgi->header();
     $template->process("bug/votes/list-for-user.html.tmpl", $vars)

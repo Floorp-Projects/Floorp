@@ -19,6 +19,23 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
+[%# INTERFACE:
+  # voting_user: hash containing a 'login' field
+  #
+  # products: list of hashes containing details of products relating to
+  #           voting: 
+  #            name: name of product
+  #            bugs: list of bugs the user has voted for
+  #            onevoteonly: one or more votes allowed per bug?
+  #            total: users current vote count for the product
+  #            maxvotes: max votes allowed for a user in this product
+  #            maxperbug: max votes per bug allowed for a user in this product
+  #
+  # bug_id: number; if the user is voting for a bug, this is the bug id
+  #
+  # canedit: boolean; Should the votes be presented in a form, or readonly? 
+  #%]
+
 [% PROCESS global/variables.none.tmpl %]
 
 [% IF !header_done %]
@@ -28,7 +45,9 @@
   [% ELSE %]
     [% title = "Show Votes" %]
   [% END %]
-  [% PROCESS global/header.html.tmpl %]
+  [% PROCESS global/header.html.tmpl
+             style_urls = [ "skins/standard/voting.css" ] 
+  %]
 [% ELSE %]
   <hr>
 [% END %]
@@ -78,9 +97,11 @@
         </tr>
 
         [% FOREACH bug = product.bugs %]
-          <tr>
-            <td></td>
-            <td align="right">
+          <tr [% IF bug.id == bug_id && canedit %] 
+            class="bz_bug_being_voted_on" [% END %]>
+            <td>[% IF bug.id == bug_id && canedit %]Enter New Vote here &rarr;
+              [%- END %]</td>
+            <td align="right"><a name="vote_[% bug.id %]">
               [% IF canedit %]
                 [% IF product.onevoteonly %]
                   <input type="checkbox" name="[% bug.id %]" value="1"
@@ -92,7 +113,7 @@
               [% ELSE %]
                 [% bug.count %]
               [% END %]
-            </td>
+            </a></td>
             <td align="right">
               [% isclosed = !bug.opened %]
                 <a href="show_bug.cgi?id=[% bug.id %]">
