@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+
+<!-- -*- Mode: HTML; indent-tabs-mode: nil; -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/NPL/
+ 
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+ 
+  The Original Code is mozilla.org code.
+ 
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation. All
+  Rights Reserved.
+ 
+  Contributor(s): 
+    Ben Goodger <ben@netscape.com> (Original Author)
+
+-->
+
+<?xml-stylesheet href="chrome://browser/skin/"?>
+<?xml-stylesheet href="chrome://browser/content/bookmarks/bookmarks.css"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://browser/locale/bookmarks/addBookmark.dtd">
+
+<dialog id="addBookmarkDialog" style="width: 22em;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        ondialogaccept="return onOK(event)"
+        title="&newBookmark.title;" title-selectFolder="&selectFolder.label;"
+        onload="Startup();"
+        persist="screenX screenY selectedFolder"
+        screenX="24" screenY="24">
+   
+  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/addBookmark2.js"/>
+
+  <separator id="nameseparator" class="thin"/>
+  
+  <grid>
+    <columns>
+      <column/>
+      <column flex="1"/>
+    </columns>
+    <rows>
+      <row align="center">
+        <label value="&name.label;" accesskey="&name.accesskey;" control="name"/>
+        <textbox id="name" oninput="onFieldInput();"/>
+      </row>
+      <row align="center">
+        <label id="createinlabel" value="&createin.label;"/>
+        <menulist id="select-menu"
+                  oncommand="selectFolder(event);">
+                  <menupopup id="select-folder"/>
+        </menulist>
+      </row>
+    </rows>
+  </grid>
+  <hbox pack="start">
+    <checkbox id="addgroup" label="&addGroup.label;"
+              accesskey="&addGroup.accesskey;"/>
+  </hbox>
+
+  <separator class="thin"/>
+  <script type="application/x-javascript"><![CDATA[
+    if (window.arguments.length < 6)
+      document.getElementById("addgroup").setAttribute("hidden", "true");
+  ]]></script>
+
+</dialog>
