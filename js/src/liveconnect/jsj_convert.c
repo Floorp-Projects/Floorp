@@ -760,7 +760,17 @@ jsj_ConvertJavaObjectToJSNumber(JSContext *cx, JNIEnv *jEnv,
         return jsj_ConvertJavaObjectToJSString(cx, jEnv, class_descriptor,
                                                java_obj, vp);
     }
-
+    /*
+     * Sun Java-Plugin team work around bug to be fixed in JRE1.5, where GetMethodID 
+     * called with a non-existent method name returns a non-null result.
+     * See Mozilla bug 201164.
+     */
+    if ((*jEnv)->ExceptionOccurred(jEnv)) {
+        jsj_UnexpectedJavaError(cx, jEnv, "No doubleValue() method for class %s!",
+            class_descriptor->name);
+        return JS_FALSE;
+    }
+    
     d = (*jEnv)->CallDoubleMethod(jEnv, java_obj, doubleValue);
     if ((*jEnv)->ExceptionOccurred(jEnv)) {
         jsj_UnexpectedJavaError(cx, jEnv, "doubleValue() method failed");
