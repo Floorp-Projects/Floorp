@@ -179,9 +179,12 @@ struct GCMarkNode {
  *   GC_LAST_CONTEXT    Called from js_DestroyContext for last JSContext in a
  *                      JSRuntime, when it is imperative that rt->gcPoke gets
  *                      cleared early in js_GC, if it is set.
+ *   GC_ALREADY_LOCKED  rt->gcLock is already held on entry to js_GC, and kept
+ *                      on return to its caller.
  */
 #define GC_KEEP_ATOMS       0x1
 #define GC_LAST_CONTEXT     0x2
+#define GC_ALREADY_LOCKED   0x4
 
 extern void
 js_ForceGC(JSContext *cx, uintN gcflags);
