@@ -794,6 +794,12 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
       if (NS_FAILED(rv)) return rv;
       rv = oldNewsPath->AppendRelativeUnixPath(OLD_NEWS_DIR_NAME);
       if (NS_FAILED(rv)) return rv;
+      
+      rv = newNewsPath->FromFileSpec(newProfilePath);
+      if (NS_FAILED(rv)) return rv;
+
+      rv = SetPremigratedFilePref(PREF_NEWS_DIRECTORY, oldNewsPath);
+      if (NS_FAILED(rv)) return rv; 
 
       newsDriveDefault = PR_TRUE;
     }
@@ -1061,11 +1067,6 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   ////////////////////////////////////////////////////////////////////////////
   // Set all the appropriate NEWS prefs.
   ////////////////////////////////////////////////////////////////////////////
-  rv = SetPremigratedFilePref(PREF_NEWS_DIRECTORY, oldNewsPath);
-  if (NS_FAILED(rv)) return rv; 
-
-  rv = newNewsPath->FromFileSpec(newProfilePath);
-  if (NS_FAILED(rv)) return rv;
 
   rv = newNewsPath->Exists(&exists);
   if (NS_FAILED(rv)) return rv;
