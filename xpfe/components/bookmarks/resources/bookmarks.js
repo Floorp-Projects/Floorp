@@ -227,8 +227,9 @@ var fileButton = {
     const kNameArc = kRDF.GetResource(NC_NS + "Name");
     var uri = NODE_ID(target.localName == "menupopup" ? target.parentNode : target);
     var nameVal;
+    var str;
     if (uri == "NC:BookmarksRoot") {
-      var str = gBookmarksShell.getLocaleString("bookmarks_root")
+      str = gBookmarksShell.getLocaleString("bookmarks_root")
       const kProfileContractID = "@mozilla.org/profile/manager;1";
       const kProfileIID = Components.interfaces.nsIProfile;
       const kProfile = Components.classes[kProfileContractID].getService(kProfileIID);
@@ -240,7 +241,7 @@ var fileButton = {
       nameVal = kBMDS.GetTarget(kSrc, kNameArc, true);
       nameVal = nameVal.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
     }
-    var str = gBookmarksShell.getLocaleString("file_in");
+    str = gBookmarksShell.getLocaleString("file_in");
     str = str.replace(/%folder_name%/, nameVal);
     menuitem.setAttribute("folder-uri", uri);
     menuitem.setAttribute("value", str);
