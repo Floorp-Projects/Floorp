@@ -79,10 +79,29 @@ nsMenuPopupFrame::Release(void)
 }
 
 
+//
+// QueryInterface
+//
+// Since we inherit from a base class with its own implementation of QI, we
+// need to rely on that for the other interfaces supported, yet we still want
+// to use the map macros. Currently, there is no macro to let you use the
+// inherited version of QI, so we cheat. Hopefully this will change in the near
+// future (pinkerton)
+//
 NS_INTERFACE_MAP_BEGIN(nsMenuPopupFrame)
   NS_INTERFACE_MAP_ENTRY(nsIMenuParent)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMenuParent)
-NS_INTERFACE_MAP_END
+    foundInterface = 0;
+  nsresult status;
+  if ( !foundInterface )
+    status = nsBoxFrame::QueryInterface(aIID, NS_REINTERPRET_CAST(void**,&foundInterface));                                             \
+  else
+    {
+      NS_ADDREF(foundInterface);
+      status = NS_OK;
+    }
+  *aInstancePtr = foundInterface;
+  return status;
+}
 
 //
 // nsMenuPopupFrame cntr
