@@ -45,6 +45,8 @@ function CalendarObject()
    this.remote = false;
    this.remotePath = "";
    this.active = false;
+   this.username = "";
+   this.password = "";
 }
 
 function calendarManager( CalendarWindow )
@@ -657,6 +659,12 @@ function switchCalendar( event )
 {
    dump( "\nRemoveCalendar in calendarManager.js: button is "+event.button );
    if (event.button != 0) 
+   {
+      return;
+   }
+   
+   //16 is the width of the checkbox
+   if( ( event.clientX - event.currentTarget.boxObject.x ) > 16 )
    {
       return;
    }
