@@ -42,7 +42,7 @@ class nsMailCore : public nsBaseAppCore,
   public:
 
     nsMailCore();
-    ~nsMailCore();
+    virtual ~nsMailCore();
                  
 
     NS_DECL_ISUPPORTS

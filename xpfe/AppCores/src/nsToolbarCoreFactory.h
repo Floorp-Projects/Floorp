@@ -30,7 +30,7 @@ class nsToolbarCoreFactory : public nsIFactory
     public:
         
         nsToolbarCoreFactory();
-        ~nsToolbarCoreFactory();
+        virtual ~nsToolbarCoreFactory();
         
         PRBool CanUnload(void);
 

@@ -30,7 +30,7 @@ class nsAppCoresManagerFactory : public nsIFactory
     public:
         
         nsAppCoresManagerFactory();
-        ~nsAppCoresManagerFactory();
+        virtual ~nsAppCoresManagerFactory();
         
         PRBool CanUnload(void);
 
