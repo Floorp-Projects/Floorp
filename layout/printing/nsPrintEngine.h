@@ -259,8 +259,9 @@ public:
                                nsCOMPtr<nsIViewManager>& aVM, 
                                nsCOMPtr<nsIWidget>& aW);
 
-  void SetDialogParent(nsIDOMWindowInternal* aDOMWin) { mDialogParentWin = aDOMWin; }
   static nsIPresShell* GetPresShellFor(nsIDocShell* aDocShell);
+
+  void SetDialogParent(nsIDOMWindowInternal* aDOMWin) { mDialogParentWin = aDOMWin; }
 
   // These calls also update the DocViewer
   void   SetIsPrinting(PRBool aIsPrinting)         { mIsDoingPrinting = aIsPrinting; }
