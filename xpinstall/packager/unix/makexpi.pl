@@ -135,7 +135,7 @@ chdir("$inStagePath/$inComponentName");
 print "stripping libs in $inStagePath/$inComponentName...\n";
 RecursiveStrip(cwd());
 
-system("zip -r $inDestPath/$inComponentName.xpi *");
+system("zip -r -y $inDestPath/$inComponentName.xpi *");
 chdir("$saveCwdir");
 
 system("cp $inComponentName.js install.js");

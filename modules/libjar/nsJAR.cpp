@@ -274,11 +274,17 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
   else
   {
 #if defined(XP_UNIX)
-    char *path;
+    nsXPIDLCString path;
 
-    rv = outFile->GetPath(&path); 
-    if (NS_SUCCEEDED(rv))
+    rv = outFile->GetPath(getter_Copies(path)); 
+    if (NS_SUCCEEDED(rv)) 
+    {
+      if (item->isSymlink) 
+      {
+        err = mZip.ResolveSymlink(path,item);
+      }
       chmod(path, item->mode);
+    }
 #endif
 
     RestoreModTime(item, outFile);  // non-fatal if this fails, ignore errors
