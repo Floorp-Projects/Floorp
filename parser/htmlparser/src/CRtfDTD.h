@@ -24,8 +24,8 @@
  *         
  */
 
-#ifndef NS_NAVHTMLDTD__
-#define NS_NAVHTMLDTD__
+#ifndef NS_RTFDTD__
+#define NS_RTFDTD__
 
 #include "nsIDTD.h"
 #include "nsISupports.h"

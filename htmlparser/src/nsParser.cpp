@@ -32,7 +32,7 @@
 #include "nsWellFormedDTD.h"
 #include "nsViewSourceHTML.h" //uncomment this to partially enable viewsource...
 
-#undef rickgdebug
+#define rickgdebug
 #ifdef  rickgdebug
 #include "CRtfDTD.h"
 #endif
@@ -619,7 +619,7 @@ nsresult nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
  */
 nsresult nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVerifyEnabled){
 
-#ifdef rickgdebug
+#ifdef _rickgdebug
   {
     fstream out("c:/temp/parseout.file",ios::trunc);
     aSourceBuffer.DebugDump(out);
@@ -770,8 +770,7 @@ nsParser::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
   return result;
 }
 
-#undef _DEBUGDUMPFILE 
-#ifdef _DEBUGDUMPFILE
+#ifdef rickgdebug
   fstream* gDumpFile;
 #endif
 
@@ -793,7 +792,7 @@ nsresult nsParser::OnStartBinding(nsIURL* aURL, const char *aSourceType){
   mParserContext->mDTD=0;
   mParserContext->mSourceType=aSourceType;
 
-#ifdef _DEBUGDUMPFILE
+#ifdef rickgdebug
   gDumpFile = new fstream("c:/temp/out.file",ios::trunc);
 #endif
 
@@ -856,7 +855,7 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUin
       nsString& theBuffer=mParserContext->mScanner->GetBuffer();
       theBuffer.ToUCS2(theStartPos);
 
-#ifdef _DEBUGDUMPFILE
+#ifdef rickgdebug
       (*gDumpFile) << mParserContext->mTransferBuffer;
 #endif
 
@@ -889,7 +888,7 @@ nsresult nsParser::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar*
     mObserver->OnStopBinding(aURL, status, aMsg);
   }
 
-#ifdef _DEBUGDUMPFILE
+#ifdef rickgdebug
   if(gDumpFile){
     gDumpFile->close();
     delete gDumpFile;

@@ -32,11 +32,11 @@ static CTokenDeallocator gTokenKiller;
  * @update	gess9/10/98
  */
 nsTagStack::nsTagStack(int aDefaultSize) {
+  mCapacity=aDefaultSize;
+  mCount=0;
 #ifndef NS_DEBUG
   mTags =new eHTMLTags[mCapacity];
 #endif
-  mCapacity=aDefaultSize;
-  mCount=0;
   nsCRT::zero(mTags,mCapacity*sizeof(eHTMLTags));
 }
 

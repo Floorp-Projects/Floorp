@@ -11,11 +11,11 @@
  * NPL.
  *
  * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
+ * Communications Corporation.  Portions created by Netscape are 
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+ 
 /**
  * MODULE NOTES:
  * @update  gess 4/8/98
