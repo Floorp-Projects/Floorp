@@ -227,6 +227,8 @@ bin/components/xmlextras.xpt
 bin/components/libxmlextras.so
 bin/components/nsHelperAppDlg.js
 bin/components/helperAppDlg.xpt
+bin/components/transformiix.xpt
+bin/components/libtransformiix.so
 
 bin/chrome/help.jar
 bin/chrome/toolkit.jar
