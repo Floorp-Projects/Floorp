@@ -216,4 +216,20 @@ function ShowUpdateFromResource( node )
 	OpenTaskURL( "http://www.mozilla.org/binaries.html");
 }
 
+function checkFocusedWindow()
+{
+  var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+  var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
+
+  var sep = document.getElementById("sep-window-list");
+  while (sep = sep.nextSibling) {
+    var url = sep.getAttribute('id');
+    var win = windowManagerInterface.getWindowForResource(url);
+    if (win == window) {
+      sep.setAttribute("checked", "true");
+      break;
+    }
+  }
+}
+
 
