@@ -54,9 +54,9 @@
 /*DSR020697 - now using dirent.h for DIR...*/
 
 #define _ST_FSTYPSZ 16
-typedef unsigned long mode_t;
-typedef          long uid_t;
-typedef          long gid_t;
+//typedef unsigned long mode_t;
+//typedef          long uid_t;
+//typedef          long gid_t;
 typedef unsigned long nlink_t;
 #endif
 
