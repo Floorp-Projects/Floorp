@@ -1384,13 +1384,20 @@ StyleSetImpl::PrintTimer(PRUint32 aTimerID)
 // many items sharing the same ID, and that there are many unique IDs, so
 // this is a comprimise between a sorted-list based lookup and a hash-type 
 // lookup which is not possible due to non-guaranteed-unique keys.
-//
+
+MOZ_DECL_CTOR_COUNTER(StyleContextCache);
+
 StyleContextCache::StyleContextCache(void)
 :mCount(0)
-{ }
+{
+  MOZ_COUNT_CTOR(StyleContextCache);
+}
 
 StyleContextCache:: ~StyleContextCache(void)
-{ mHashTable.Reset(); }
+{
+  mHashTable.Reset();
+  MOZ_COUNT_DTOR(StyleContextCache);
+}
 
 PRUint32 StyleContextCache::Count(void)
 { 
