@@ -968,7 +968,7 @@ nsSSLIOLayerRead(PRFileDesc* fd, void* buf, PRInt32 amount)
 
   if (bytesRead == -1) {
     PRInt32 err = PR_GetError();
-    if (IS_SSL_ERROR(err)) {
+    if (IS_SSL_ERROR(err) || IS_SEC_ERROR(err)) {
       nsHandleSSLError(socketInfo, err);
     }
   }
@@ -1050,12 +1050,12 @@ nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
         // in the table, that means it's TLS intolerant and
         // we don't really need to know anything else.
         gTLSIntolerantSites->Put(&key, nsnull);    
-      } else if (IS_SSL_ERROR(err)) {
+      } else if (IS_SSL_ERROR(err) || IS_SEC_ERROR(err)) {
          // This is the case where  the first write failed with 
          // TLS turned off.
          nsHandleSSLError(socketInfo, err);
        }
-     } else if (IS_SSL_ERROR(err)) {
+     } else if (IS_SSL_ERROR(err) || IS_SEC_ERROR(err)) {
        // This is the case where a subsequent write has failed, 
        // ie not the first write.
        nsHandleSSLError(socketInfo, err);
