@@ -267,7 +267,8 @@ nsHTMLTableAccessible::GetSelectedColumns(PRUint32 *aNumColumns,
   NS_ENSURE_TRUE(states, NS_ERROR_OUT_OF_MEMORY);
 
   *aNumColumns = 0;
-  for (PRInt32 index = 0; index < columnCount; index++) {
+  PRInt32 index;
+  for (index = 0; index < columnCount; index++) {
     rv = IsColumnSelected(index, &states[index]);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -307,7 +308,8 @@ nsHTMLTableAccessible::GetSelectedRows(PRUint32 *aNumRows, PRInt32 **aRows)
   NS_ENSURE_TRUE(states, NS_ERROR_OUT_OF_MEMORY);
 
   *aNumRows = 0;
-  for (PRInt32 index = 0; index < rowCount; index++) {
+  PRInt32 index;
+  for (index = 0; index < rowCount; index++) {
     rv = IsRowSelected(index, &states[index]);
     NS_ENSURE_SUCCESS(rv, rv);
 
