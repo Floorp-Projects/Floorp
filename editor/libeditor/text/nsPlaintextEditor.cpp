@@ -291,7 +291,7 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsAReadableString & characterSe
 
             NS_NAMED_LITERAL_STRING(charsetEquals, "charset=");
             nsAString::const_iterator originalStart, start, end;
-            currentValue.BeginReading(start);
+            originalStart = currentValue.BeginReading(start);
             currentValue.EndReading(end);
             if (FindInReadable(charsetEquals, start, end,
                                nsCaseInsensitiveStringComparator())) {
