@@ -38,7 +38,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.9 2002/01/29 19:00:47 relyea%netscape.com Exp $
+ * $Id: secport.c,v 1.10 2002/02/05 22:20:43 jpierre%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -50,6 +50,7 @@
 #include "nsslocks.h"
 #include "secport.h"
 #include "prvrsion.h"
+#include "prenv.h"
 
 #ifdef DEBUG
 #define THREADMARK
@@ -265,7 +266,7 @@ PORT_FreeArena(PLArenaPool *arena, PRBool zero)
     size_t         len  = sizeof *arena;
     extern const PRVersionDescription * libVersionPoint(void);
     static const PRVersionDescription * pvd;
-    static PRBool  doFreeArenaPool;
+    static PRBool  doFreeArenaPool = PR_FALSE;
 
     if (ARENAPOOL_MAGIC == pool->magic ) {
 	len  = sizeof *pool;
@@ -278,7 +279,8 @@ PORT_FreeArena(PLArenaPool *arena, PRBool zero)
 	if ((pvd->vMajor > 4) || 
 	    (pvd->vMajor == 4 && pvd->vMinor > 1) ||
 	    (pvd->vMajor == 4 && pvd->vMinor == 1 && pvd->vPatch >= 1)) {
-	    doFreeArenaPool = PR_TRUE;
+	    const char *ev = PR_GetEnv("NSS_DISABLE_ARENA_FREE_LIST");
+	    if (!ev) doFreeArenaPool = PR_TRUE;
 	}
     }
     if (doFreeArenaPool) {
