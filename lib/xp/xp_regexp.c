@@ -274,6 +274,7 @@ XP_RegExpMatch(char *str, char *xp, Bool case_insensitive) {
 
 /* ------------------------------ shexp_cmp ------------------------------- */
 
+#if 0
 PUBLIC int 
 XP_RegExpSearch(char *str, char *exp)
 {
@@ -301,4 +302,5 @@ XP_RegExpCaseSearch(char *str, char *exp)
             return XP_RegExpMatch(str, exp, TRUE);
       }
 }
+#endif
 
