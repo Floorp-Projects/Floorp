@@ -223,9 +223,11 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
 
   // See if our event receiver is a content node (and not us).
   PRBool isXULKey = (mType & NS_HANDLER_TYPE_XUL);
+  PRBool isXBLCommand = (mType & NS_HANDLER_TYPE_XBL_COMMAND);
 
-  //XUL handlers shouldn't be triggered by non-trusted events.
-  if (isXULKey) {
+  // XUL handlers and commands shouldn't be triggered by non-trusted
+  // events.
+  if (isXULKey || isXBLCommand) {
     nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aEvent);
     if (privateEvent) {
       PRBool trustedEvent;
@@ -242,7 +244,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
 
   // This is a special-case optimization to make command handling fast.
   // It isn't really a part of XBL, but it helps speed things up.
-  if ((mType & NS_HANDLER_TYPE_XBL_COMMAND) && !isReceiverCommandElement) {
+  if (isXBLCommand && !isReceiverCommandElement) {
     // See if preventDefault has been set.  If so, don't execute.
     PRBool preventDefault;
     nsCOMPtr<nsIDOMNSUIEvent> nsUIEvent(do_QueryInterface(aEvent));
