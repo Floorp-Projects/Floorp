@@ -68,4 +68,9 @@
 #define NS_TO_INT_ROUND(x)            ((PRInt32)floor((x) + 0.5))
 #define NS_TO_INT_ROUND_EXCLUSIVE(x)  ((PRInt32)floor((x) + 0.4999999999999999))
 //@}
+
+
+#define NS_INT_PIXELS_TO_TWIPS(pixels, factor)   ((((float)pixels)*factor) + 0.4999999999999999)
+#define NS_FLOAT_PIXELS_TO_TWIPS(pixels, factor) ((pixels*factor) + 0.4999999999999999)
+
 #endif
