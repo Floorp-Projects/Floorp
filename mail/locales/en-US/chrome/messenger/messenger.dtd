@@ -504,9 +504,9 @@
 <!ENTITY searchSubjectMenu.label "Subject">
 <!ENTITY searchSenderMenu.label "Sender">
 <!ENTITY searchSubjectOrSenderMenu.label "Subject Or Sender">
-<!ENTITY saveAsVirtualFolderMenu.label "Save as Virtual Folder">
-<!ENTITY searchMessageBody.label "Message Body">
+<!ENTITY searchMessageBody.label "Entire Message">
 <!ENTITY findInMessageMenu.label "Find In Message">
+<!ENTITY saveAsVirtualFolderMenu.label "Save as Virtual Folder...">
 
 <!-- Thread Pane -->
 <!ENTITY threadColumn.label "Thread">

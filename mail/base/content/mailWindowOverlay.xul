@@ -1864,12 +1864,11 @@
                   checked="true" oncommand="changeQuickSearchMode(this)"/>
         <menuitem value="3" label="&searchMessageBody.label;" type="radio" 
                   oncommand="changeQuickSearchMode(this)"/>
-        <menuseparator/>
-        <menuitem value="4" label="&saveAsVirtualFolderMenu.label;" 
-                  oncommand="saveViewAsVirtualFolder()"/>
-        <menuseparator/>
-        <menuitem value="5" label="&findInMessageMenu.label;" type="radio" 
+        <menuitem value="4" label="&findInMessageMenu.label;" type="radio" 
                   oncommand="changeQuickSearchMode(this)"/>
+        <menuseparator/>
+        <menuitem value="5" label="&saveAsVirtualFolderMenu.label;" 
+                  oncommand="saveViewAsVirtualFolder()"/>
       </menupopup>
     </button>
   </textbox>
