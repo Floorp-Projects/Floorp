@@ -1,4 +1,4 @@
-#! /bin/ksh  
+#!/bin/sh  
 #
 # This is just a quick script so we can still run our testcases.
 # Longer term we need a scriptable test environment..
@@ -22,6 +22,13 @@ echo "<HTML><BODY>" >> ${PERFRESULTS}
 mkdir -p ${CIPHERDIR}
 cd ${CIPHERDIR}
 
+if [ -z $1 ]; then
+    TESTSET="all"
+else
+    TESTSET=$1
+fi
+
+if [ $TESTSET = "all" -o $TESTSET = "symmkey" ]; then
 echo "<TABLE BORDER=1><TR><TH COLSPAN=6>Symmetric Key Cipher Performance</TH></TR>" >> ${PERFRESULTS}
 echo "<TR bgcolor=lightGreen><TH>MODE</TH><TH>INPUT SIZE (bytes)</TH><TH>SYMMETRIC KEY SIZE (bits)</TH><TH>REPETITIONS (cx/op)</TH><TH>CONTEXT CREATION TIME (ms)</TH><TH>OPERATION TIME (ms)</TH></TR>" >> ${PERFRESULTS}
 
@@ -49,6 +56,11 @@ do
     fi
 done
 
+echo "</TABLE><BR>" >> ${PERFRESULTS}
+
+fi
+
+if [ $TESTSET = "all" -o $TESTSET = "rsa" ]; then
 cat ${RSATESTS} | while read mode keysize bufsize exp reps cxreps
 do
     if [ $mode != "#" ]; then
@@ -63,8 +75,6 @@ do
     fi
 done
 
-echo "</TABLE><BR>" >> ${PERFRESULTS}
-
 echo "<TABLE BORDER=1><TR><TH COLSPAN=7>RSA Cipher Performance</TH></TR>" >> ${PERFRESULTS}
 echo "<TR bgcolor=lightGreen><TH>MODE</TH><TH>INPUT SIZE (bytes)</TH><TH>KEY SIZE (bits)</TH><TH>PUBLIC EXPONENT</TH><TH>REPETITIONS (cx/op)</TH><TH>CONTEXT CREATION TIME (ms)</TH><TH>OPERATION TIME (ms)</TH></TR>" >> ${PERFRESULTS}
 cat ${RSAPERFOUT} | while read md buf mod pe rps cxrps cx op
@@ -75,7 +85,9 @@ do
 done
 
 echo "</TABLE><BR>" >> ${PERFRESULTS}
+fi
 
+if [ $TESTSET = "all" -o $TESTSET = "dsa" ]; then
 cat ${DSATESTS} | while read mode keysize bufsize reps cxreps
 do
     if [ $mode != "#" ]; then
@@ -100,7 +112,9 @@ do
 done
 
 echo "</TABLE><BR>" >> ${PERFRESULTS}
+fi
 
+if [ $TESTSET = "all" -o $TESTSET = "hash" ]; then
 cat ${HASHTESTS} | while read mode bufsize reps
 do
     if [ $mode != "#" ]; then
@@ -122,6 +136,7 @@ do
 done
 
 echo "</TABLE><BR>" >> ${PERFRESULTS}
+fi
 
 #rm -f ${TEMPFILES}
 cd ${CURDIR}
