@@ -17,64 +17,44 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *    travis@netscape.com 
  */
 
 #include "nsCOMPtr.h"
 #include "nsDOMWindowList.h"
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeNode.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsIInterfaceRequestor.h"
 
-static NS_DEFINE_IID(kIDOMWindowCollectionIID, NS_IDOMWINDOWCOLLECTION_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIDOMWindowIID, NS_IDOMWINDOW_IID);
-
-nsDOMWindowList::nsDOMWindowList(nsIWebShell *aWebShell)
+nsDOMWindowList::nsDOMWindowList(nsIDocShell *aDocShell)
 {
   NS_INIT_REFCNT();
   mScriptObject = nsnull;
-  //Not refcnted.  Ref is nulled out be nsGlobalWindow when its
-  //WebShell nulls its ref out.
-  mWebShell = aWebShell;
+  SetDocShell(aDocShell);
 }
 
 nsDOMWindowList::~nsDOMWindowList()
 {
 }
 
-nsresult nsDOMWindowList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIDOMWindowCollectionIID)) {
-    *aInstancePtr = (void*)(nsIDOMWindowCollection*)this;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
-    *aInstancePtr = (void*)(nsIScriptObjectOwner*)this;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)(nsIDOMWindowCollection*)this;
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
 NS_IMPL_ADDREF(nsDOMWindowList)
 NS_IMPL_RELEASE(nsDOMWindowList)
 
+NS_INTERFACE_MAP_BEGIN(nsDOMWindowList)
+   NS_INTERFACE_MAP_ENTRY(nsIDOMWindowCollection)
+   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMWindowCollection)
+NS_INTERFACE_MAP_END
+
 NS_IMETHODIMP
-nsDOMWindowList::SetWebShell(nsIWebShell* aWebShell)
+nsDOMWindowList::SetDocShell(nsIDocShell* aDocShell)
 {
-  mWebShell = aWebShell;
+  nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
+  mDocShellNode = docShellAsNode.get(); // Weak Reference
 
   return NS_OK;
 }
@@ -82,28 +62,28 @@ nsDOMWindowList::SetWebShell(nsIWebShell* aWebShell)
 NS_IMETHODIMP 
 nsDOMWindowList::GetLength(PRUint32* aLength)
 {
-  PRInt32 mLength;
   nsresult ret;
+  PRInt32 length;
 
-  ret = mWebShell->GetChildCount(mLength);
-
-  *aLength = mLength;
+  ret = mDocShellNode->GetChildCount(&length);
+  *aLength = length;
   return ret;
 }
 
 NS_IMETHODIMP 
 nsDOMWindowList::Item(PRUint32 aIndex, nsIDOMWindow** aReturn)
 {
-  nsCOMPtr<nsIWebShell> item;
+  nsCOMPtr<nsIDocShellTreeItem> item;
 
-  mWebShell->ChildAt(aIndex, *getter_AddRefs(item));
+  mDocShellNode->GetChildAt(aIndex, getter_AddRefs(item));
 
   nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(item));
-  if (NS_WARN_IF_FALSE(globalObject, "Couldn't get to the globalObject")) {
-    *aReturn = nsnull;
+  NS_ASSERTION(globalObject, "Couldn't get to the globalObject");
+  if (globalObject) {
+    CallQueryInterface(globalObject.get(), aReturn);
   }
   else {
-    CallQueryInterface(globalObject.get(), aReturn);
+    *aReturn = nsnull;
   }
   return NS_OK;
 }
@@ -111,16 +91,18 @@ nsDOMWindowList::Item(PRUint32 aIndex, nsIDOMWindow** aReturn)
 NS_IMETHODIMP 
 nsDOMWindowList::NamedItem(const nsString& aName, nsIDOMWindow** aReturn)
 {
-  nsCOMPtr<nsIWebShell> item;
+  nsCOMPtr<nsIDocShellTreeItem> item;
 
-  mWebShell->FindChildWithName(aName.GetUnicode(), *getter_AddRefs(item));
+  mDocShellNode->FindChildWithName(aName.GetUnicode(), PR_FALSE,
+    nsnull, getter_AddRefs(item));
 
   nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(item));
-  if (NS_WARN_IF_FALSE(globalObject, "Couldn't get to the globalObject")) {
-    *aReturn = nsnull;
+  NS_ASSERTION(globalObject, "Couldn't get to the globalObject");
+  if (globalObject) {
+    CallQueryInterface(globalObject.get(), aReturn);
   }
   else {
-    CallQueryInterface(globalObject.get(), aReturn);
+    *aReturn = nsnull;
   }
   return NS_OK;
 }

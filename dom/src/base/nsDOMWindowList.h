@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *    travis@netscape.com 
  */
 #ifndef nsDOMWindowList_h___
 #define nsDOMWindowList_h___
@@ -27,14 +28,15 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsString.h"
 
-class nsIWebShell;
+class nsIDocShellTreeNode;
+class nsIDocShell;
 class nsIDOMWindow;
 
 class nsDOMWindowList : public nsIDOMWindowCollection,
                         public nsIScriptObjectOwner
 {
 public:
-  nsDOMWindowList(nsIWebShell *aWebShell);
+  nsDOMWindowList(nsIDocShell *aDocShell);
   virtual ~nsDOMWindowList();
 
   NS_DECL_ISUPPORTS
@@ -49,10 +51,10 @@ public:
   NS_IMETHOD SetScriptObject(void *aScriptObject);
   
   //local methods
-  NS_IMETHOD SetWebShell(nsIWebShell* aWebShell);
+  NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
 
 protected:
-  nsIWebShell *mWebShell;
+  nsIDocShellTreeNode* mDocShellNode; //Weak Reference
   void *mScriptObject;
 };
 
