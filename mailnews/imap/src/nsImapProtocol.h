@@ -33,6 +33,7 @@
 #include "nsImapProxyEvent.h"
 #include "nsImapFlagAndUidState.h"
 #include "nsIMAPNamespace.h"
+#include "nsVoidArray.h"
 
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
@@ -117,6 +118,9 @@ public:
     virtual void PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete);
 	virtual void AddXMozillaStatusLine(uint16 flags);	// for XSender auth info
     
+    virtual void		SetMailboxDiscoveryStatus(EMailboxDiscoverStatus status);
+    virtual EMailboxDiscoverStatus GetMailboxDiscoveryStatus();
+    
 	virtual void ProcessMailboxUpdate(PRBool handlePossibleUndo);
 	// Send log output...
 	void	Log(const char *logSubName, const char *extraInfo, const char *logData);
@@ -128,6 +132,7 @@ public:
 	void	PseudoInterrupt(PRBool the_interrupt);
 
 	PRUint32 GetMessageSize(nsString2 &messageId, PRBool idsAreUids);
+    PRBool GetSubscribingNow();
 
 	PRBool	DeathSignalReceived();
 	void	ResetProgressInfo();
@@ -308,6 +313,21 @@ private:
     PRBool m_fromHeaderSeen;
 
     PRBool m_closeNeededBeforeSelect;
+
+    enum EMailboxHierarchyNameState {
+        kNoOperationInProgress,
+        kDiscoverBaseFolderInProgress,
+		kDiscoverTrashFolderInProgress,
+        kDeleteSubFoldersInProgress,
+		kListingForInfoOnly,
+		kListingForInfoAndDiscovery,
+		kDiscoveringNamespacesOnly
+    };
+    EMailboxHierarchyNameState m_hierarchyNameState;
+    PRBool m_onlineBaseFolderExists;
+    EMailboxDiscoverStatus m_discoveryStatus;
+    nsVoidArray m_listedMailboxList;
+    nsVoidArray m_deletableChildren;
 };
 
 #endif  // nsImapProtocol_h___

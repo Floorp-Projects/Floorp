@@ -44,6 +44,8 @@ PRLogModuleInfo *IMAP;
 
 #define ONE_SECOND ((PRUint32)1000)    // one second
 
+const char *kImapTrashFolderName = "Trash"; // **** needs to be localized ****
+
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 
 #define OUTPUT_BUFFER_SIZE (4096*2) // mscott - i should be able to remove this if I can use nsMsgLineBuffer???
@@ -195,6 +197,10 @@ nsImapProtocol::nsImapProtocol() :
     m_chunkThreshold = 0;
     m_fromHeaderSeen = PR_FALSE;
     m_closeNeededBeforeSelect = PR_FALSE;
+
+    m_hierarchyNameState = kNoOperationInProgress;
+    m_onlineBaseFolderExists = PR_FALSE;
+    m_discoveryStatus = eContinue;
 
 	// where should we do this? Perhaps in the factory object?
 	if (!IMAP)
@@ -2675,10 +2681,213 @@ nsImapProtocol::NotifySearchHit(const char * hitLine)
         m_imapMiscellaneous->AddSearchResult(this, hitLine);
 }
 
+void nsImapProtocol::SetMailboxDiscoveryStatus(EMailboxDiscoverStatus status)
+{
+    PR_EnterMonitor(GetDataMemberMonitor());
+	m_discoveryStatus = status;
+    PR_ExitMonitor(GetDataMemberMonitor());
+}
+
+EMailboxDiscoverStatus nsImapProtocol::GetMailboxDiscoveryStatus( )
+{
+	EMailboxDiscoverStatus returnStatus;
+    PR_EnterMonitor(GetDataMemberMonitor());
+	returnStatus = m_discoveryStatus;
+    PR_ExitMonitor(GetDataMemberMonitor());
+    
+    return returnStatus;
+}
+
+PRBool
+nsImapProtocol::GetSubscribingNow()
+{
+    // ***** code me *****
+    return PR_TRUE;// ***** for now
+}
+
 	// Event handlers for the imap parser. 
 void
 nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
 {
+	// IMAP_LoadTrashFolderName(); **** needs to work on localization issues
+
+	nsIMAPNamespace *ns;
+
+    NS_ASSERTION (m_hostSessionList, "fatal null host session list");
+    if (!m_hostSessionList) return;
+
+    m_hostSessionList->GetDefaultNamespaceOfTypeForHost(
+        GetImapHostName(), GetImapUserName(), kPersonalNamespace, ns);
+	const char *nsPrefix = ns ? ns->GetPrefix() : 0;
+
+	nsString2 canonicalSubDir(eOneByte, 0);
+	if (nsPrefix)
+	{
+        PRUnichar slash = '/';
+		canonicalSubDir = nsPrefix;
+		if (canonicalSubDir.Length() && canonicalSubDir.Last() == slash)
+            canonicalSubDir.SetCharAt((PRUnichar)0, canonicalSubDir.Length());
+	}
+		
+    switch (m_hierarchyNameState)
+	{
+	case kNoOperationInProgress:
+	case kDiscoverTrashFolderInProgress:
+	case kListingForInfoAndDiscovery:
+		{
+            if (canonicalSubDir.Length() &&
+                PL_strstr(adoptedBoxSpec->allocatedPathName,
+                          canonicalSubDir.GetBuffer()))
+                m_onlineBaseFolderExists = TRUE;
+
+            if (ns && nsPrefix)	// if no personal namespace, there can be no Trash folder
+			{
+                PRBool onlineTrashFolderExists = PR_FALSE;
+                if (m_hostSessionList)
+                    m_hostSessionList->GetOnlineTrashFolderExistsForHost(
+                        GetImapHostName(), GetImapUserName(),
+                        onlineTrashFolderExists);
+
+				if (GetDeleteIsMoveToTrash() &&	// don't set the Trash flag if not using the Trash model
+					!onlineTrashFolderExists && 
+                    PL_strstr(adoptedBoxSpec->allocatedPathName, 
+                              kImapTrashFolderName))
+				{
+					PRBool trashExists = PR_FALSE;
+                    nsString2 trashMatch(eOneByte,0);
+                    trashMatch = nsPrefix;
+                    trashMatch += kImapTrashFolderName;
+					{
+						char *serverTrashName = nsnull;
+                        m_runningUrl->AllocateCanonicalPath(
+                            trashMatch.GetBuffer(),
+                            ns->GetDelimiter(), &serverTrashName); 
+						if (serverTrashName)
+						{
+							if (!PL_strcasecmp(nsPrefix, "INBOX."))	// need to special-case this because it should be case-insensitive
+							{
+#ifdef DEBUG
+								NS_ASSERTION (PL_strlen(serverTrashName) > 6,
+                                              "Oops.. less that 6");
+#endif
+								trashExists = ((PL_strlen(serverTrashName) > 6 /* XP_STRLEN("INBOX.") */) &&
+									(PL_strlen(adoptedBoxSpec->allocatedPathName) > 6 /* XP_STRLEN("INBOX.") */) &&
+									!PL_strncasecmp(adoptedBoxSpec->allocatedPathName, serverTrashName, 6) &&	/* "INBOX." */
+									!PL_strcmp(adoptedBoxSpec->allocatedPathName + 6, serverTrashName + 6));
+							}
+							else
+							{
+								trashExists = (PL_strcmp(serverTrashName, adoptedBoxSpec->allocatedPathName) == 0);
+							}
+                            if (m_hostSessionList)
+							m_hostSessionList->
+                                SetOnlineTrashFolderExistsForHost(
+                                    GetImapHostName(), GetImapUserName(),
+                                    trashExists);
+							PR_Free(serverTrashName);
+						}
+					}
+					
+					if (trashExists)
+	                	adoptedBoxSpec->box_flags |= kImapTrash;
+				}
+			}
+
+			// Discover the folder (shuttle over to libmsg, yay)
+			// Do this only if the folder name is not empty (i.e. the root)
+			if (*adoptedBoxSpec->allocatedPathName)
+			{
+                nsString2 boxNameCopy (eOneByte, 0);
+                
+				boxNameCopy = adoptedBoxSpec->allocatedPathName;
+
+                if (m_imapMailfolder)
+                {
+                    m_imapMailfolder->PossibleImapMailbox(this,
+                                                          adoptedBoxSpec);
+                    WaitForFEEventCompletion();
+                
+                    PRBool useSubscription = PR_FALSE;
+
+                    if (m_hostSessionList)
+                        m_hostSessionList->GetHostIsUsingSubscription(
+                            GetImapHostName(), GetImapUserName(),
+                            useSubscription);
+
+					if ((GetMailboxDiscoveryStatus() != eContinue) && 
+						(GetMailboxDiscoveryStatus() != eContinueNew) &&
+						(GetMailboxDiscoveryStatus() != eListMyChildren))
+					{
+                    	SetConnectionStatus(-1);
+					}
+					else if (boxNameCopy.Length() && 
+                             (GetMailboxDiscoveryStatus() == 
+                              eListMyChildren) &&
+                             (!useSubscription || GetSubscribingNow()))
+					{
+						NS_ASSERTION (FALSE, 
+                                      "we should never get here anymore");
+                    	SetMailboxDiscoveryStatus(eContinue);
+					}
+					else if (GetMailboxDiscoveryStatus() == eContinueNew)
+					{
+						if (m_hierarchyNameState ==
+                            kListingForInfoAndDiscovery &&
+                            boxNameCopy.Length() && 
+                            !adoptedBoxSpec->folderIsNamespace)
+						{
+							// remember the info here also
+							nsIMAPMailboxInfo *mb = new
+                                nsIMAPMailboxInfo(boxNameCopy.GetBuffer(),
+                                    adoptedBoxSpec->hierarchySeparator); 
+                            m_listedMailboxList.AppendElement((void*) mb);
+						}
+						SetMailboxDiscoveryStatus(eContinue);
+					}
+				}
+			}
+        }
+        break;
+    case kDiscoverBaseFolderInProgress:
+        {
+            if (canonicalSubDir.Length() &&
+                PL_strstr(adoptedBoxSpec->allocatedPathName,
+                          canonicalSubDir.GetBuffer()))
+                m_onlineBaseFolderExists = TRUE;
+        }
+        break;
+    case kDeleteSubFoldersInProgress:
+        {
+            m_deletableChildren.AppendElement((void*)
+                adoptedBoxSpec->allocatedPathName);
+			delete adoptedBoxSpec->flagState;
+            PR_FREEIF( adoptedBoxSpec);
+        }
+        break;
+	case kListingForInfoOnly:
+		{
+			//UpdateProgressWindowForUpgrade(adoptedBoxSpec->allocatedPathName);
+			ProgressEventFunctionUsingIdWithString(
+                /***** fix me **** MK_MSG_IMAP_DISCOVERING_MAILBOX */ -1,
+                adoptedBoxSpec->allocatedPathName);
+			nsIMAPMailboxInfo *mb = new
+                nsIMAPMailboxInfo(adoptedBoxSpec->allocatedPathName,
+                                  adoptedBoxSpec->hierarchySeparator);
+			m_listedMailboxList.AppendElement((void*) mb);
+            PR_FREEIF(adoptedBoxSpec->allocatedPathName);
+            PR_FREEIF(adoptedBoxSpec);
+		}
+		break;
+	case kDiscoveringNamespacesOnly:
+		{
+            PR_FREEIF(adoptedBoxSpec->allocatedPathName);
+            PR_FREEIF(adoptedBoxSpec);
+		}
+		break;
+    default:
+        NS_ASSERTION (FALSE, "we aren't supposed to be here");
+        break;
+	}
 }
 
 void
@@ -2829,4 +3038,16 @@ nsImapProtocol::GetDeleteIsMoveToTrash()
                                                          GetImapUserName(),
                                                          rv);
     return rv;
+}
+
+nsIMAPMailboxInfo::nsIMAPMailboxInfo(const char *name, char delimiter) :
+    m_mailboxName(eOneByte,0)
+{
+	m_mailboxName = name;
+	m_delimiter = delimiter;
+	m_childrenListed = FALSE;
+}
+
+nsIMAPMailboxInfo::~nsIMAPMailboxInfo()
+{
 }
