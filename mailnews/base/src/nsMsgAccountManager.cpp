@@ -974,13 +974,17 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
       oldstr = nsnull;
     }
     
+#ifdef CAN_UPGRADE_4x_PASSWORDS
     rv = m_prefs->CopyCharPref("mail.pop_password", &oldstr);
     if (NS_SUCCEEDED(rv)) {
-      server->SetPassword("enter your clear text password here");
+      server->SetPassword(oldstr);
       PR_FREEIF(oldstr);
       oldstr = nsnull;
     }
-    
+#else
+    server->SetPassword("enter your clear text password here");
+#endif /* CAN_UPGRADE_4x_PASSWORDS */
+
     char *hostname=nsnull;
     rv = m_prefs->CopyCharPref("network.hosts.pop_server", &hostname);
     if (NS_SUCCEEDED(rv)) {
@@ -1177,8 +1181,8 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
     oldstr = nsnull;
   }
 
+#ifdef CAN_UPGRADE_4x_PASSWORDS
   // upgrade the password
-  // this won't work, since 5.0 is crypto free.
   PR_snprintf(prefName, 1024, "mail.imap.server.%s.password",hostname);
   rv = m_prefs->CopyCharPref(prefName, &oldstr);
   if (NS_SUCCEEDED(rv)) {
@@ -1186,6 +1190,9 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
     PR_FREEIF(oldstr);
     oldstr = nsnull;
   }
+#else
+  server->SetPassword("enter your clear text password here");
+#endif /* CAN_UPGRADE_4x_PASSWORDS */
 
   // upgrade the biff prefs
   PR_snprintf(prefName, 1024, "mail.imap.server.%s.check_new_mail",hostname);
