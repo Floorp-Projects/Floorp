@@ -32,7 +32,6 @@ DIRS	= \
 			filepicker \
 			find \
 			search \
-			sidebar \
 			related \
 			prefwindow \
 			shistory \
@@ -52,6 +51,7 @@ DIRS += \
 		download-manager \
 		history \
 		urlbarhistory \
+		sidebar \
 		$(NULL)
 endif
 
