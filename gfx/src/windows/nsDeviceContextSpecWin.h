@@ -72,7 +72,7 @@ protected:
   void SetGlobalDevMode(HGLOBAL aHGlobal);
   void SetDevMode(LPDEVMODE aDevMode);
 
-  void GetDataFromPrinter(PRUnichar * aName);
+  nsresult GetDataFromPrinter(PRUnichar * aName, nsIPrintSettings* aPS = nsnull);
   void SetupPaperInfoFromSettings();
 
   virtual ~nsDeviceContextSpecWin();
