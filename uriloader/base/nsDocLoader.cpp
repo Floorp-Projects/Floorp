@@ -571,6 +571,13 @@ nsresult nsDocLoaderImpl::RemoveChildGroup(nsDocLoaderImpl* aLoader)
   return rv;
 }
 
+NS_IMETHODIMP nsDocLoaderImpl::GetDocumentChannel(nsIChannel ** aChannel)
+{
+  *aChannel = mDocumentChannel;
+  NS_IF_ADDREF(*aChannel);
+  return NS_OK;
+}
+
 
 void nsDocLoaderImpl::DocLoaderIsEmpty(nsresult aStatus)
 {
