@@ -216,7 +216,7 @@ nsLocaleService::nsLocaleService(void)
                 char* lang = getenv("LANG");
                 if ( lang == nsnull ) {
                     platformLocale.Assign(NS_LITERAL_STRING("en_US"));
-                    result = posixConverter->GetXPLocale("eu-US", xpLocale);
+                    result = posixConverter->GetXPLocale("en-US", xpLocale);
             }
                 else {
                     result = posixConverter->GetXPLocale(lang, xpLocale); 
