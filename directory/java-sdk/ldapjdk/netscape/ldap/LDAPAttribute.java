@@ -385,7 +385,7 @@ public class LDAPAttribute {
             return;
         int ind = -1;
         for (int i=0; i<values.length; i++) {
-            if (!equalValue(attrValue, (byte[])values[i])) {
+            if (equalValue(attrValue, (byte[])values[i])) {
                 ind = i;
                  break;
             }
