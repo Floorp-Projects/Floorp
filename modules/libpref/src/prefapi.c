@@ -101,6 +101,11 @@ PR_IMPLEMENT(PLHashEntry *) pref_AllocEntry(void *pool, const void *key)
     return malloc(sizeof(PLHashEntry));
 }
 
+/* if we're using gcc's -pedantic-errors, uint isn't defined */
+#if defined(__STRICT_ANSI__) || !defined(HAVE_UINT)
+typedef unsigned int uint;
+#endif
+
 PR_IMPLEMENT(void) pref_FreeEntry(void *pool, PLHashEntry *he, uint flag)
 {
 	PrefNode *pref = (PrefNode *) he->value;
