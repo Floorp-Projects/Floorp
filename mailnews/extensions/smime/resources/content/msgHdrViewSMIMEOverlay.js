@@ -129,15 +129,15 @@ function onSMIMEStartHeaders()
   gEncryptionCert = null;
   
   gSMIMEContainer.collapsed = true;
+
   gSignedUINode.collapsed = true;
   gSignedUINode.removeAttribute("signed");
-  gStatusBar.removeAttribute("signed");
-
   gSignedStatusPanel.collapsed = true;
-  gEncryptedStatusPanel.collapsed = true; 
+  gStatusBar.removeAttribute("signed");
 
   gEncryptedUINode.collapsed = true;
   gEncryptedUINode.removeAttribute("encrypted");
+  gEncryptedStatusPanel.collapsed = true; 
   gStatusBar.removeAttribute("encrypted");
 
   forgetEncryptedURI();

@@ -40,35 +40,28 @@
 
 #status-bar #signed-status {
   list-style-image: none;
-  visibility: collapsed;
 }
 
 #status-bar[signed="ok"] #signed-status {
   list-style-image: url("chrome://messenger/skin/smime/icons/sbSignOk.gif");
-  visibility: visible;
 }
 
 #status-bar[signed="unknown"] #signed-status {
   list-style-image: url("chrome://messenger/skin/smime/icons/sbSignUnknown.gif");
-  visibility: visible;
 }
 
 #status-bar[signed="notok"] #signed-status {
   list-style-image: url("chrome://messenger/skin/smime/icons/sbSignNotOk.gif");
-  visibility: visible;
 }
 
 #status-bar #encrypted-status {
   list-style-image: none;
-  visibility: collapsed;
 }
 
 #status-bar[encrypted="ok"] #encrypted-status {
   list-style-image: url("chrome://messenger/skin/smime/icons/sbCryptoOk.gif");
-  visibility: visible;
 }
 
 #status-bar[encrypted="notok"] #encrypted-status {
   list-style-image: url("chrome://messenger/skin/smime/icons/sbCryptoNotOk.gif");
-  visibility: visible;
 }

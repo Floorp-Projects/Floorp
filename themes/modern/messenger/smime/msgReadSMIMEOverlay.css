@@ -39,34 +39,29 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 #status-bar #signed-status {
-  visibility: collapsed;
+  list-style-image: none;
 }
 
 #status-bar[signed="ok"] #signed-status {
   list-style-image: url("chrome://messenger/skin/smime/icons/sbSignOk.gif");
-  visibility: visible;
 }
 
 #status-bar[signed="unknown"] #signed-status {
   list-style-image: url("chrome://messenger/skin/smime/icons/sbSignUnknown.gif");
-  visibility: visible;
 }
 
 #status-bar[signed="notok"] #signed-status {
   list-style-image: url("chrome://messenger/skin/smime/icons/sbSignNotOk.gif");
-  visibility: visible;
 }
 
 #status-bar #encrypted-status {
-  visibility: collapsed;
+  list-style-image: none;
 }
 
 #status-bar[encrypted="ok"] #encrypted-status {
   list-style-image: url("chrome://messenger/skin/smime/icons/sbCryptoOk.gif");
-  visibility: visible;
 }
 
 #status-bar[encrypted="notok"] #encrypted-status {
   list-style-image: url("chrome://messenger/skin/smime/icons/sbCryptoNotOk.gif");
-  visibility: visible;
 }
