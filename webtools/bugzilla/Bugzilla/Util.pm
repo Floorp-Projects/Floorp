@@ -106,7 +106,8 @@ Use trick_taint() when you know that there is no way that the data
 in a scalar can be tainted, but taint mode still bails on it.
 
 B<WARNING!! Using this routine on data that really could be tainted defeats
-the purpose of taint mode.  It should only be used on variables that have been sanity checked in some way and have been determined to be OK.>
+the purpose of taint mode.  It should only be used on variables that have been
+sanity checked in some way and have been determined to be OK.>
 
 =cut
 
