@@ -39,9 +39,9 @@ Rights Reserved.
       <listcol id="textcol-addressingWidget" flex="1"/>
     </listcols>
   
-    <listitem class="addressingWidgetItem">
+    <listitem class="addressingWidgetItem" allowevents="true">
       <listcell class="addressingWidgetCell" align="stretch">
-        <menulist id="addressCol1#1" allowevents="true" disableonsend="true"
+        <menulist id="addressCol1#1" disableonsend="true"
                   class="aw-menulist menulist-compact" flex="1"  
                   oncommand="gContentChanged=true; awSetAutoComplete(this.id.slice(this.id.lastIndexOf('#') + 1));">
           <menupopup>
@@ -57,7 +57,7 @@ Rights Reserved.
       
       <listcell class="addressingWidgetCell">
         <textbox id="addressCol2#1" class="plain textbox-addressingWidget"
-                 type="autocomplete" allowevents="true" flex="1"
+                 type="autocomplete" flex="1"
                  searchSessions="addrbook" timeout="300" maxrows="4" 
                  autoFill="true" autoFillAfterMatch="true" forceComplete="true"
                  minResultsForPopup="3" 
