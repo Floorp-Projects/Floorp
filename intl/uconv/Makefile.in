@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS	= public src
 
-DIRS += ucvja ucvja2
+DIRS += ucvja ucvja2 ucvcn
 
 DIRS += ucvlatin
 

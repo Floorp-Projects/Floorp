@@ -106,6 +106,7 @@ intl/uconv/tests/Makefile
 intl/uconv/ucvja/Makefile
 intl/uconv/ucvlatin/Makefile
 intl/uconv/ucvja2/Makefile
+intl/uconv/ucvcn/Makefile
 intl/locale/Makefile
 intl/locale/public/Makefile
 intl/locale/src/Makefile
