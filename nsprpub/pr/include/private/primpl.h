@@ -1135,12 +1135,8 @@ extern PRStatus _PR_MD_SET_FD_INHERITABLE(PRFileDesc *fd, PRBool inheritable);
                 PR_SetError(PR_IO_TIMEOUT_ERROR, 0); \
         }                                                        
                 
-#ifndef NO_NSPR_10_SUPPORT
-
-PR_EXTERN(void *) _PR_MD_GET_SP(PRThread *thread);
+extern void *_PR_MD_GET_SP(PRThread *thread);
 #define    _PR_MD_GET_SP _MD_GET_SP
-
-#endif /* NO_NSPR_10_SUPPORT */
 
 #endif /* defined(_PR_PTHREADS) */
 
