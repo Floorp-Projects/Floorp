@@ -275,11 +275,18 @@ nsHTMLContentSinkStream::Initialize(nsIOutputStream* aOutStream,
 {
   mDoFormat = (aFlags & nsIDocumentEncoder::OutputFormatted) ? PR_TRUE
                                                              : PR_FALSE;
+      // I don't think anyone calls us with OutputFormatted
+#ifdef DEBUG_akkana
+  NS_ASSERTION(!mDoFormat, "nsHTMLContentSinkStream called with OutputFormatted!\n");
+#endif
+
   mBodyOnly = (aFlags & nsIDocumentEncoder::OutputBodyOnly) ? PR_TRUE
                                                             : PR_FALSE;
   mDoHeader = (!mBodyOnly) && (mDoFormat) &&
                ((aFlags & nsIDocumentEncoder::OutputNoDoctype) ? PR_FALSE
                                                                : PR_TRUE);
+  mMaxColumn = 72;
+
   mStream = aOutStream;
   mString = aOutString;
   if (aCharsetOverride != nsnull)
@@ -1004,66 +1011,29 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
   else if (type == eHTMLTag_text)
   {
     const nsString& text = aNode.GetText();
-    if (!mDoFormat || preformatted)
+    if (preformatted)
     {
       Write(text);
       mColPos += text.Length();
     }
-    else
+    else if (!mDoFormat)
     {
-      PRInt32 mMaxColumn = 72;
-
-      // 1. Determine the length of the input string
-      PRInt32 length = text.Length();
-
-      // 2. If the offset plus the length of the text is smaller
-      // than the max then just add it 
-      if (mColPos + length < mMaxColumn)
+#ifdef DEBUG_akkana
+      printf("Conditionally formatting\n");
+#endif
+      if (HasLongLines(text))
+      {
+        WriteWrapped(text);
+      }
+      else
       {
         Write(text);
         mColPos += text.Length();
       }
-      else
-      {
-        nsString  str = text;
-        PRBool    done = PR_FALSE;
-        PRInt32   indx = 0;
-        PRInt32   offset = mColPos;
-
-        while (!done)
-        {        
-          // find the next break
-          PRInt32 start = mMaxColumn-offset;
-          if (start < 0)
-            start = 0;
-          
-          indx = str.FindChar(' ',PR_FALSE,start);
-
-          // if there is no break than just add it
-          if (indx == kNotFound)
-          {
-            Write(str);
-            mColPos += str.Length();
-            done = PR_TRUE;
-          }
-          else
-          {
-            // make first equal to the str from the 
-            // beginning to the index
-            nsString  first = str;
-
-            first.Truncate(indx);
-  
-            Write(first);
-            Write(NS_LINEBREAK);
-            mColPos = 0;
-  
-            // cut the string from the beginning to the index
-            str.Cut(0,indx);
-            offset = 0;
-          }
-        }
-      }
+    }
+    else
+    {
+      WriteWrapped(text);
     }
   }
   else if (type == eHTMLTag_whitespace)
@@ -1087,7 +1057,78 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
   return NS_OK;
 }
 
+// See if the string has any lines longer than longLineLen:
+// if so, we presume formatting is wonky (e.g. the node has been edited)
+// and we'd better rewrap the whole text node.
+PRBool nsHTMLContentSinkStream::HasLongLines(const nsString& text)
+{
+  const PRInt32 longLineLen = 128;
+  nsString str = text;
+  for (PRInt32 start = 0; start < text.Length(); )
+  {
+    PRInt32 eol = text.FindChar('\n', PR_FALSE, start);
+    if (eol < 0) eol = text.Length();
+    if (eol - start > longLineLen)
+      return PR_TRUE;
+    start = eol+1;
+  }
+  return PR_FALSE;
+}
 
+void nsHTMLContentSinkStream::WriteWrapped(const nsString& text)
+{
+      // 1. Determine the length of the input string
+  PRInt32 length = text.Length();
+
+  // 2. If the offset plus the length of the text is smaller
+  // than the max then just add it 
+  if (mColPos + length < mMaxColumn)
+  {
+    Write(text);
+    mColPos += text.Length();
+  }
+  else
+  {
+    nsString  str = text;
+    PRBool    done = PR_FALSE;
+    PRInt32   indx = 0;
+    PRInt32   offset = mColPos;
+
+    while (!done)
+    {        
+      // find the next break
+      PRInt32 start = mMaxColumn-offset;
+      if (start < 0)
+        start = 0;
+          
+      indx = str.FindChar(' ', PR_FALSE, start);
+
+      // if there is no break than just add it
+      if (indx == kNotFound)
+      {
+        Write(str);
+        mColPos += str.Length();
+        done = PR_TRUE;
+      }
+      else
+      {
+        // make first equal to the str from the 
+        // beginning to the index
+        nsString  first = str;
+
+        first.Truncate(indx);
+  
+        Write(first);
+        Write(NS_LINEBREAK);
+        mColPos = 0;
+  
+        // cut the string from the beginning to the index
+        str.Cut(0,indx);
+        offset = 0;
+      }
+    }
+  }
+}
 
 /**
  *  This gets called by the parser when you want to add
