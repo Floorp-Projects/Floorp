@@ -47,8 +47,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/preftree.css \
 	$(srcdir)/preftree.xul \
 	$(srcdir)/pref.css \
-        $(srcdir)/resources/grippy.gif \
-        $(srcdir)/resources/grippyO.gif \
 	$(NULL)
 
 EXPORT_RESOURCE_TOOLBAR = \
@@ -123,6 +121,8 @@ EXPORT_RESOURCE_TOOLBAR = \
 	$(srcdir)/resources/TB_NewStop.gif \
 	$(srcdir)/resources/TB_NewHome.gif \
 	$(srcdir)/resources/TB_NewPrint.gif \
+        $(srcdir)/resources/grippy.gif \
+        $(srcdir)/resources/grippyO.gif \
 	$(NULL)
 
 EXPORT_RESOURCE_THROBBER = \
