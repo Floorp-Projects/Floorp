@@ -45,6 +45,8 @@
 
 NS_HIDDEN_(nsresult) NS_NewXFormsInputElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsOutputElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsTriggerElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsSubmitElement(nsIXTFElement **aElement);
 
 //Action Module Elements
 NS_HIDDEN_(nsresult) NS_NewXFormsDispatchElement(nsIXTFElement **aResult);
@@ -99,6 +101,10 @@ nsXFormsElementFactory::CreateElement(const nsAString& aTagName,
     return NS_NewXFormsSetValueElement(aElement);
   if (aTagName.EqualsLiteral("submission"))
     return NS_NewXFormsSubmissionElement(aElement);
+  if (aTagName.EqualsLiteral("trigger"))
+    return NS_NewXFormsTriggerElement(aElement);
+  if (aTagName.EqualsLiteral("submit"))
+    return NS_NewXFormsSubmitElement(aElement);
 
   *aElement = nsnull;
   return NS_ERROR_FAILURE;
