@@ -400,6 +400,7 @@ nsFrame::GetStyleContext(nsIStyleContext*& aStyleContext) const
 
 NS_IMETHODIMP nsFrame::SetStyleContext(nsIPresContext* aPresContext,nsIStyleContext* aContext)
 {
+  NS_PRECONDITION(0 == (mState & NS_FRAME_IN_REFLOW), "Shouldn't set style context during reflow");
   NS_PRECONDITION(nsnull != aContext, "null ptr");
   if (aContext != mStyleContext) {
     NS_IF_RELEASE(mStyleContext);
@@ -433,6 +434,7 @@ NS_IMETHODIMP nsFrame::GetStyleData(nsStyleStructID aSID, const nsStyleStruct*& 
 NS_IMETHODIMP nsFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
                                              nsIStyleContext* aParentContext)
 {
+// XXX TURN THIS ON  NS_PRECONDITION(0 == (mState & NS_FRAME_IN_REFLOW), "Shouldn't set style context during reflow");
   NS_ASSERTION(nsnull != mStyleContext, "null style context");
   if (nsnull != mStyleContext) {
     nsIAtom*  pseudoTag = nsnull;
