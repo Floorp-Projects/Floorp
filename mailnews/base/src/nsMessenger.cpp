@@ -60,6 +60,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
+#include "nsIWebNavigation.h"
 
 // mail
 #include "nsMsgUtils.h"
@@ -395,8 +396,9 @@ nsMessenger::OpenURL(const char * url)
       else
       {
         nsAutoString urlStr(unescapedUrl);
-        if (mWebShell)
-          mWebShell->LoadURL(urlStr.GetUnicode());
+        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebShell));
+        if(webNav)
+          webNav->LoadURI(urlStr.GetUnicode());
       }
       PL_strfree(unescapedUrl);
     }
