@@ -30,7 +30,7 @@
 
   <property name="Name" value="webclient"/>
   <property name="name" value="webclient"/>
-  <property name="version" value="2_0_a2b"/>
+  <property name="version" value="2_0_a2"/>
 
 <!-- ************ Per user local properties ******************************* -->
 
@@ -153,8 +153,6 @@
   <target name="clean.test.dist" depends="props">
 
     <delete file="${moz.install.dir}/build.xml" />
-    <delete file="${moz.install.dir}/runwc.bat" />
-    <delete file="${moz.install.dir}/runwc.sh" />
     <delete file="${moz.install.dir}/components/${so.prefix}javadom.${so.extension}" />
     <delete file="${moz.install.dir}/${so.prefix}javadomjni.${so.extension}" />
     <delete file="${moz.install.dir}/${so.prefix}${name}.${so.extension}" />
