@@ -838,11 +838,18 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     
   // first, compute the height which can be set w/o being restricted by aMaxSize.height
   nscoord cellHeight = kidSize.height;
+
   if (NS_UNCONSTRAINEDSIZE != cellHeight) {
     cellHeight += topInset + bottomInset;
   }
   cellHeight = nsTableFrame::RoundToPixel(cellHeight, p2t); // work around block rounding errors
 
+  // if the table allocated extra vertical space to row groups, rows, cells in pagination mode
+  // then use that height as the desired height unless the cell needs to split.
+  nsTableFrame* tableFrameFirstInFlow = (nsTableFrame*)tableFrame->GetFirstInFlow();
+  if ((NS_FRAME_COMPLETE == aStatus) && tableFrameFirstInFlow->IsThirdPassReflow()) {
+    cellHeight = PR_MAX(cellHeight, mRect.height);
+  }
   // next determine the cell's width
   nscoord cellWidth = kidSize.width;      // at this point, we've factored in the cell's style attributes
 

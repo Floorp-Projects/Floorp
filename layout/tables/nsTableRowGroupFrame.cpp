@@ -543,6 +543,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
       }
       // get the height of the tallest cell in the row (excluding cells that span rows)
       rowHeights[rowIndex] = ((nsTableRowFrame*)rowFrame)->GetTallestCell();
+
       // See if a cell spans into the row. If so we'll have to do step 2
       if (!hasRowSpanningCell) {
         if (tableFrame->RowIsSpannedInto(rowIndex + startRowIndex)) {

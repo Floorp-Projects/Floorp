@@ -1828,7 +1828,8 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
 
   nsReflowReason nextReason = aReflowState.reason;
 
-  // The 1st reflow processes the needs of the reflow command
+  // Processes an initial (except when there is mPrevInFlow), incremental, or style 
+  // change reflow 1st. resize reflows are processed in the next phase.
   switch (aReflowState.reason) {
     case eReflowReason_Initial: 
     case eReflowReason_StyleChange: {
@@ -1882,54 +1883,39 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   if (NS_FAILED(rv)) return rv;
+
+  PRBool needPass3Reflow = PR_FALSE;
   PRBool balanced = PR_FALSE;
 
-  // The 2nd reflow is necessary during a constrained initial reflow and other reflows
-  // which require either a strategy init or balance. This isn't done during an
-  // unconstrained reflow because it is useless, and we will be reflowed again later.
+  // Reflow the entire table. This phase is necessary during a constrained initial reflow 
+  // and other reflows which require either a strategy init or balance. This isn't done 
+  // during an unconstrained reflow because another reflow will be processed later.
   if (NeedsReflow(aReflowState) && (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth)) {
-    PRBool haveReflowedColGroups = PR_TRUE;
-    if (!mPrevInFlow) {
-      if (NeedStrategyInit()) {
-        mTableLayoutStrategy->Initialize(aPresContext, aReflowState);
-        BalanceColumnWidths(aPresContext, aReflowState); 
-        balanced = PR_TRUE;
+    // see if an extra (3rd) reflow will be necessary in pagination mode when there is a specified table height 
+    if (isPaginated && !mPrevInFlow && (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight)) {
+      nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState);
+      if ((tableSpecifiedHeight > 0) && 
+          (tableSpecifiedHeight != NS_UNCONSTRAINEDSIZE)) {
+        needPass3Reflow = PR_TRUE;
       }
-      if (NeedStrategyBalance()) {
-        BalanceColumnWidths(aPresContext, aReflowState); 
-        balanced = PR_TRUE;
-      }
-      haveReflowedColGroups = HaveReflowedColGroups();
     }
-    // Constrain our reflow width to the computed table width (of the 1st in flow).
-    // and our reflow height to our avail height minus border, padding, cellspacing
-    aDesiredSize.width = GetDesiredWidth();
-    nsTableReflowState reflowState(aReflowState, *this, nextReason, 
-                                   aDesiredSize.width, aReflowState.availableHeight);
-    ReflowChildren(aPresContext, reflowState, haveReflowedColGroups, PR_FALSE, aStatus);
+    // if we need to reflow the table an extra time, then don't constrain the height of the previous reflow
+    nscoord availHeight = (needPass3Reflow) ? NS_UNCONSTRAINEDSIZE : aReflowState.availableHeight;
 
-    // If we're here that means we had to reflow all the rows, e.g., the column widths 
-    // changed. We need to make sure that any damaged areas are repainted
-    Invalidate(aPresContext, mRect);
-    if (IsRowInserted()) {
-      ProcessRowInserted(aPresContext, *this, PR_FALSE, 0);
-    }
+    ReflowTable(aPresContext, aDesiredSize, aReflowState, availHeight, nextReason, doCollapse, balanced, aStatus);
 
-    if (eReflowReason_Resize == aReflowState.reason) {
-      if (isPaginated && (NS_FRAME_COMPLETE == aStatus) && (reflowState.availSize.height > 0)) {
-        // Try and pull-up some children from a next-in-flow
-        rv = PullUpChildren(aPresContext, aDesiredSize, reflowState, aStatus);
-      }
-      if (!DidResizeReflow()) {
-        // XXX we need to do this in other cases as well, but it needs to be made more incremental
-        doCollapse = PR_TRUE;
-        SetResizeReflow(PR_TRUE);
-      }
+    if (needPass3Reflow) {
+      aDesiredSize.height = CalcDesiredHeight(aPresContext, aReflowState); // distributes extra vertical space to rows
+      SetThirdPassReflow(PR_TRUE); // set it and leave it set for frames that may split
+      ReflowTable(aPresContext, aDesiredSize, aReflowState, aReflowState.availableHeight, 
+                  nextReason, doCollapse, balanced, aStatus);
     }
   }
 
   aDesiredSize.width  = GetDesiredWidth();
-  aDesiredSize.height = CalcDesiredHeight(aPresContext, aReflowState); 
+  if (!needPass3Reflow) {
+    aDesiredSize.height = CalcDesiredHeight(aPresContext, aReflowState); 
+  }
 
   if (IsRowInserted()) {
     ProcessRowInserted(aPresContext, *this, PR_TRUE, aDesiredSize.height);
@@ -1986,7 +1972,61 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
   return rv;
 }
 
-  
+nsresult 
+nsTableFrame::ReflowTable(nsIPresContext*          aPresContext,
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nscoord                  aAvailHeight,
+                          nsReflowReason           aReason,
+                          PRBool&                  aDoCollapse,
+                          PRBool&                  aDidBalance,
+                          nsReflowStatus&          aStatus)
+{
+  nsresult rv = NS_OK;
+  aDoCollapse = PR_FALSE;
+  aDidBalance = PR_FALSE;
+
+  PRBool isPaginated;
+  aPresContext->IsPaginated(&isPaginated);
+
+  PRBool haveReflowedColGroups = PR_TRUE;
+  if (!mPrevInFlow) {
+    if (NeedStrategyInit()) {
+      mTableLayoutStrategy->Initialize(aPresContext, aReflowState);
+      BalanceColumnWidths(aPresContext, aReflowState); 
+      aDidBalance = PR_TRUE;
+    }
+    if (NeedStrategyBalance()) {
+      BalanceColumnWidths(aPresContext, aReflowState);
+      aDidBalance = PR_TRUE;
+    }
+    haveReflowedColGroups = HaveReflowedColGroups();
+  }
+  // Constrain our reflow width to the computed table width (of the 1st in flow).
+  // and our reflow height to our avail height minus border, padding, cellspacing
+  aDesiredSize.width = GetDesiredWidth();
+  nsTableReflowState reflowState(aReflowState, *this, aReason, 
+                                 aDesiredSize.width, aAvailHeight);
+  ReflowChildren(aPresContext, reflowState, haveReflowedColGroups, PR_FALSE, aStatus);
+
+  // If we're here that means we had to reflow all the rows, e.g., the column widths 
+  // changed. We need to make sure that any damaged areas are repainted
+  Invalidate(aPresContext, mRect);
+
+  if (eReflowReason_Resize == aReflowState.reason) {
+    if (isPaginated && (NS_FRAME_COMPLETE == aStatus) && (reflowState.availSize.height > 0)) {
+      // Try and pull-up some children from a next-in-flow
+      rv = PullUpChildren(aPresContext, aDesiredSize, reflowState, aStatus);
+    }
+    if (!DidResizeReflow()) {
+      // XXX we need to do this in other cases as well, but it needs to be made more incremental
+      aDoCollapse = PR_TRUE;
+      SetResizeReflow(PR_TRUE);
+    }
+  }
+  return rv;
+}
+
 nsIFrame*
 nsTableFrame::GetFirstBodyRowGroupFrame()
 {
@@ -3430,46 +3470,47 @@ nsTableFrame::CalcDesiredHeight(nsIPresContext*          aPresContext,
 
   nscoord desiredHeight = naturalHeight;
 
-  // see if a specified table height requires diving additional space to rows
-  nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState);
-  if ((tableSpecifiedHeight > 0) && 
-      (tableSpecifiedHeight != NS_UNCONSTRAINEDSIZE) &&
-      (tableSpecifiedHeight > naturalHeight)) {
-    desiredHeight = tableSpecifiedHeight;
+  // see if a specified table height requires dividing additional space to rows
+  if (!mPrevInFlow) {
+    nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState);
+    if ((tableSpecifiedHeight > 0) && 
+        (tableSpecifiedHeight != NS_UNCONSTRAINEDSIZE) &&
+        (tableSpecifiedHeight > naturalHeight)) {
+      desiredHeight = tableSpecifiedHeight;
 
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) { 
-      // proportionately distribute the excess height to each row. Note that we
-      // don't need to do this if it's an unconstrained reflow
-      nscoord excess = tableSpecifiedHeight - naturalHeight;
-      nscoord sumOfRowHeights = 0;
-      nscoord rowGroupYPos = aReflowState.mComputedBorderPadding.top + cellSpacingY;
+      if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) { 
+        // proportionately distribute the excess height to each row. Note that we
+        // don't need to do this if it's an unconstrained reflow
+        nscoord excess = tableSpecifiedHeight - naturalHeight;
+        nscoord sumOfRowHeights = 0;
+        nscoord rowGroupYPos = aReflowState.mComputedBorderPadding.top + cellSpacingY;
 
-      nsVoidArray rowGroups;
-      PRUint32 numRowGroups;
-      OrderRowGroups(rowGroups, numRowGroups, nsnull);
+        nsVoidArray rowGroups;
+        PRUint32 numRowGroups;
+        OrderRowGroups(rowGroups, numRowGroups, nsnull);
 
-      PRUint32 rgX;
-      for (rgX = 0; rgX < numRowGroups; rgX++) {
-        nsTableRowGroupFrame* rgFrame = 
-          GetRowGroupFrame((nsIFrame*)rowGroups.ElementAt(rgX));
-        if (rgFrame) {
-          sumOfRowHeights += rgFrame->GetHeightOfRows(aPresContext);
+        PRUint32 rgX;
+        for (rgX = 0; rgX < numRowGroups; rgX++) {
+          nsTableRowGroupFrame* rgFrame = 
+            GetRowGroupFrame((nsIFrame*)rowGroups.ElementAt(rgX));
+          if (rgFrame) {
+            sumOfRowHeights += rgFrame->GetHeightOfRows(aPresContext);
+          }
         }
-      }
-
-      nscoord excessAllocated = 0;
-      for (rgX = 0; rgX < numRowGroups; rgX++) {
-        nsTableRowGroupFrame* rgFrame = 
+        nscoord excessAllocated = 0;
+        for (rgX = 0; rgX < numRowGroups; rgX++) {
+          nsTableRowGroupFrame* rgFrame = 
           GetRowGroupFrame((nsIFrame*)rowGroups.ElementAt(rgX));
-        if (rgFrame) {
-          DistributeSpaceToRows(aPresContext, aReflowState, rgFrame, sumOfRowHeights, 
-                                excess, excessAllocated, rowGroupYPos);
+          if (rgFrame) {
+            DistributeSpaceToRows(aPresContext, aReflowState, rgFrame, sumOfRowHeights, 
+                                  excess, excessAllocated, rowGroupYPos);
 
-          // Make sure child views are properly positioned
-          // XXX what happens if childFrame is a scroll frame and this gets skipped?
-          nsTableFrame::RePositionViews(aPresContext, rgFrame);
+            // Make sure child views are properly positioned
+            // XXX what happens if childFrame is a scroll frame and this gets skipped?
+            nsTableFrame::RePositionViews(aPresContext, rgFrame);
+          }
+          rowGroupYPos += cellSpacingY;
         }
-        rowGroupYPos += cellSpacingY;
       }
     }
   }

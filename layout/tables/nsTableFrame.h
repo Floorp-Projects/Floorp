@@ -305,6 +305,15 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+  nsresult ReflowTable(nsIPresContext*          aPresContext,
+                       nsHTMLReflowMetrics&     aDesiredSize,
+                       const nsHTMLReflowState& aReflowState,
+                       nscoord                  aAvailHeight,
+                       nsReflowReason           aReason,
+                       PRBool&                  aDoCollapse,
+                       PRBool&                  aDidBalance,
+                       nsReflowStatus&          aStatus);
+
   NS_IMETHOD GetParentStyleContextProvider(nsIPresContext* aPresContext,
                                            nsIFrame** aProviderFrame, 
                                            nsContextProviderRelationship& aRelationship);
@@ -470,6 +479,8 @@ public:
 
   PRBool HasCellSpanningPctCol() const;
   void SetHasCellSpanningPctCol(PRBool aValue);
+  // is this the 3rd reflow due to a height on a table in pagination mode.
+  PRBool IsThirdPassReflow() const;
 
 protected:
 
@@ -498,6 +509,8 @@ protected:
   void   SetDescendantReflowedNotTimeout(PRBool aValue);
   PRBool RequestedTimeoutReflow() const;
   void   SetRequestedTimeoutReflow(PRBool aValue);
+  void   SetThirdPassReflow(PRBool aValue);
+
   void   InterruptNotification(nsIPresContext* aPresContext,
                                PRBool          aIsRequest);
 
@@ -870,8 +883,9 @@ protected:
     // we know that a descendant will be getting a timeout reflow and we cancel the one
     // targeted at us, as an optimization.
     unsigned mRequestedTimeoutReflow:1;
-    unsigned mRowInserted;
-    int : 22;                          // unused
+    unsigned mRowInserted:1;
+    unsigned mThirdPassReflow:1;
+    int : 21;                          // unused
   } mBits;
 
   nsTableCellMap*         mCellMap;            // maintains the relationships between rows, cols, and cells
@@ -978,6 +992,16 @@ inline PRBool nsTableFrame::RequestedTimeoutReflow() const
 inline void nsTableFrame::SetRequestedTimeoutReflow(PRBool aValue)
 {
   mBits.mRequestedTimeoutReflow = (unsigned)aValue;
+}
+
+inline PRBool nsTableFrame::IsThirdPassReflow() const
+{
+  return (PRBool)mBits.mThirdPassReflow;
+}
+
+inline void nsTableFrame::SetThirdPassReflow(PRBool aValue)
+{
+  mBits.mThirdPassReflow = (unsigned)aValue;
 }
 
 inline PRBool nsTableFrame::IsRowInserted() const
