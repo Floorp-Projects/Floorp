@@ -456,8 +456,6 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   if (mIsViewSource)
     return NS_OK;
 
-  nsresult res = NS_OK;
-
   if (!aRequest)
   {
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
@@ -474,33 +472,55 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
   // Get the channel from the request...
   // If the request is not network based, then ignore it.
-  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest, &res));
-  if (NS_FAILED(res))
+  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+
+  PRUint32 loadFlags = 0;
+  aRequest->GetLoadFlags(&loadFlags);
+
+#ifdef PR_LOGGING
+  if (aProgressStateFlags & STATE_START
+      &&
+      aProgressStateFlags & STATE_IS_REQUEST
+      &&
+      isToplevelProgress
+      &&
+      loadFlags & nsIChannel::LOAD_DOCUMENT_URI)
   {
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-           ("SecureUI:%p: OnStateChange: no channel\n", this));
-    return NS_OK;
+           ("SecureUI:%p: OnStateChange: SOMETHING STARTS FOR TOPMOST DOCUMENT\n", this));
   }
 
+  if (aProgressStateFlags & STATE_STOP
+      &&
+      aProgressStateFlags & STATE_IS_REQUEST
+      &&
+      isToplevelProgress
+      &&
+      loadFlags & nsIChannel::LOAD_DOCUMENT_URI)
+  {
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+           ("SecureUI:%p: OnStateChange: SOMETHING STOPS FOR TOPMOST DOCUMENT\n", this));
+  }
+#endif
+
+  PRBool isSubDocumentRelevant = PR_TRUE;
+
   // We are only interested in requests that load in the browser window...
-  nsCOMPtr<nsIHttpChannel> httpRequest(do_QueryInterface(channel));
+  nsCOMPtr<nsIHttpChannel> httpRequest(do_QueryInterface(aRequest));
   if (!httpRequest) {
-    nsCOMPtr<nsIFileChannel> fileRequest(do_QueryInterface(channel));
+    nsCOMPtr<nsIFileChannel> fileRequest(do_QueryInterface(aRequest));
     if (!fileRequest) {
-      nsCOMPtr<nsIWyciwygChannel> wyciwygRequest(do_QueryInterface(channel));
+      nsCOMPtr<nsIWyciwygChannel> wyciwygRequest(do_QueryInterface(aRequest));
       if (!wyciwygRequest) {
-        nsCOMPtr<nsIFTPChannel> ftpRequest(do_QueryInterface(channel));
+        nsCOMPtr<nsIFTPChannel> ftpRequest(do_QueryInterface(aRequest));
         if (!ftpRequest) {
           PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-                 ("SecureUI:%p: OnStateChange: not a relevant request\n", this));
-          return NS_OK;
+                 ("SecureUI:%p: OnStateChange: not relevant for sub content\n", this));
+          isSubDocumentRelevant = PR_FALSE;
         }
       }
     }
   }
-  
-  PRUint32 loadFlags = 0;
-  aRequest->GetLoadFlags(&loadFlags);
 
 #if defined(DEBUG)
   nsCString info2;
@@ -611,7 +631,9 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
          ("SecureUI:%p: OnStateChange: %s %s -- %s\n", this, _status, 
           info.get(), info2.get()));
 
-  if (aProgressStateFlags & STATE_STOP)
+  if (aProgressStateFlags & STATE_STOP
+      &&
+      channel)
   {
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
            ("SecureUI:%p: OnStateChange: seeing STOP with security state: %d\n", this,
@@ -654,6 +676,9 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       &&
       aProgressStateFlags & STATE_IS_REQUEST)
   {
+    if (!isSubDocumentRelevant)
+      return NS_OK;
+
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
            ("SecureUI:%p: OnStateChange: ++mSubRequestsInProgress\n", this
             ));
@@ -670,13 +695,18 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       &&
       loadFlags & nsIChannel::LOAD_DOCUMENT_URI)
   {
-    NS_ASSERTION(mDocumentRequestsInProgress > 0, "Oops? We see more STOPs than STARTs...");
+    if (mDocumentRequestsInProgress <= 0)
+    {
+      // Ignore stop requests unless a document load is in progress
+      // Unfortunately on application start, see some stops without having seen any starts...
+      return NS_OK;
+    }
 
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
            ("SecureUI:%p: OnStateChange: --mDocumentRequestsInProgress\n", this
             ));
 
-    if (!mToplevelEventSink)
+    if (!mToplevelEventSink && channel)
     {
       nsCOMPtr<nsIInterfaceRequestor> requestor;
       channel->GetNotificationCallbacks(getter_AddRefs(requestor));
@@ -689,26 +719,31 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       // we are arriving at zero, all STOPs for toplevel documents
       // have been received
       
-      mNewToplevelSecurityState = GetSecurityStateFromChannel(channel);
+      if (channel) {
+        mNewToplevelSecurityState = GetSecurityStateFromChannel(channel);
 
-      PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-             ("SecureUI:%p: OnStateChange: remember mNewToplevelSecurityState => %x\n", this,
-              mNewToplevelSecurityState));
+        PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+               ("SecureUI:%p: OnStateChange: remember mNewToplevelSecurityState => %x\n", this,
+                mNewToplevelSecurityState));
 
-      // Get SSL Status information if possible
-      nsCOMPtr<nsISupports> info;
-      channel->GetSecurityInfo(getter_AddRefs(info));
-      nsCOMPtr<nsISSLStatusProvider> sp = do_QueryInterface(info);
-      if (sp) {
-        // Ignore result
-        sp->GetSSLStatus(getter_AddRefs(mSSLStatus));
-      }
-
-      if (info) {
-        nsCOMPtr<nsITransportSecurityInfo> secInfo(do_QueryInterface(info));
-        if (secInfo) {
-            secInfo->GetShortSecurityDescription(getter_Copies(mInfoTooltip));
+        // Get SSL Status information if possible
+        nsCOMPtr<nsISupports> info;
+        channel->GetSecurityInfo(getter_AddRefs(info));
+        nsCOMPtr<nsISSLStatusProvider> sp = do_QueryInterface(info);
+        if (sp) {
+          // Ignore result
+          sp->GetSSLStatus(getter_AddRefs(mSSLStatus));
         }
+
+        if (info) {
+          nsCOMPtr<nsITransportSecurityInfo> secInfo(do_QueryInterface(info));
+          if (secInfo) {
+              secInfo->GetShortSecurityDescription(getter_Copies(mInfoTooltip));
+          }
+        }
+      }
+      else {
+        mNewToplevelSecurityState = nsIWebProgressListener::STATE_IS_INSECURE;
       }
 
       if (!mSubRequestsInProgress)
@@ -724,11 +759,16 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       &&
       aProgressStateFlags & STATE_IS_REQUEST)
   {
+    if (!isSubDocumentRelevant)
+      return NS_OK;
+    
     // if we arrive here, LOAD_DOCUMENT_URI is not set
     
-    NS_ASSERTION(mSubRequestsInProgress > 0, "Oops? We see more STOPs than STARTs...");
-
-    PRInt32 aState = GetSecurityStateFromChannel(channel);
+    PRInt32 aState = nsIWebProgressListener::STATE_IS_INSECURE;
+    
+    if (channel) {
+      aState = GetSecurityStateFromChannel(channel);
+    }
     
     if (aState & STATE_IS_SECURE)
     {
