@@ -974,8 +974,11 @@ NS_IMETHODIMP nsScrollingView :: CreateScrollControls(nsNativeWidget aNative)
 
 NS_IMETHODIMP nsScrollingView :: SetWidget(nsIWidget *aWidget)
 {
-  NS_ASSERTION(PR_FALSE, "please don't try and set a widget here");
-  return NS_ERROR_FAILURE;
+  if (nsnull != aWidget) {
+    NS_ASSERTION(PR_FALSE, "please don't try and set a widget here");
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsScrollingView :: ComputeScrollOffsets(PRBool aAdjustWidgets)
