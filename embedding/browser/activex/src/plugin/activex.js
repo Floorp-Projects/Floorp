@@ -100,15 +100,15 @@ pref("security.classID.allowByDefault", true);
 // This is achieved by writing a policy rule, specifiying the classid of the
 // control and giving the control "AllAccess" or "NoAccess".
 //
-// CIDaaaaaaaa_bbbb_cccc_dddd_eeeeeeeeeeee
+// CIDaaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
 //
 // You could explicitly ban a control (using the appropriate classid) like this
 //
-// pref("capability.policy.default.ClassID.CID039ef260_2a0d_11d5_90a7_0010a4e73d9a", "NoAccess");
+// pref("capability.policy.default.ClassID.CID039ef260-2a0d-11d5-90a7-0010a4e73d9a", "NoAccess");
 //
 // If you want to explicity enable a control then do this:
 //
-// pref("capability.policy.default.ClassID.CID039ef260_2a0d_11d5_90a7_0010a4e73d9a", "AllAccess");
+// pref("capability.policy.default.ClassID.CID039ef260-2a0d-11d5-90a7-0010a4e73d9a", "AllAccess");
 //
 // If you want to explicitly ban or allow a control for one or more sites then
 // you can create a policy for those sites. This example creates a domain
@@ -117,7 +117,7 @@ pref("security.classID.allowByDefault", true);
 //
 // user_pref("capability.policy.policynames", "trustable");
 // user_pref("capability.policy.trustable.sites", "http://www.site1.net http://www.site2.net");
-// user_pref("capability.policy.trustable.ClassID.CID039ef260_2a0d_11d5_90a7_0010a4e73d9a", "AllAccess");
+// user_pref("capability.policy.trustable.ClassID.CID039ef260-2a0d-11d5-90a7-0010a4e73d9a", "AllAccess");
 //
 
 

@@ -2421,7 +2421,6 @@ nsScriptSecurityManager::CheckComponentPermissions(JSContext *cx,
     cidTemp.Adopt(aCID.ToString());
     nsCAutoString cid(NS_LITERAL_CSTRING("CID") +
                       Substring(cidTemp, 1, cidTemp.Length() - 2));
-    cid.ReplaceChar('-','_');
     ToUpperCase(cid);
 
 #ifdef DEBUG_mstoltz
