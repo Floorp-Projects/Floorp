@@ -49,6 +49,7 @@
 
 #include "nsBookmarksService.h"
 #include "nsArrayEnumerator.h"
+#include "nsArray.h"
 #include "nsIDOMWindow.h"
 #include "nsIObserverService.h"
 #include "nsIRDFContainer.h"
@@ -2708,6 +2709,76 @@ nsBookmarksService::CloneResource(nsIRDFResource* aSource,
     NS_ADDREF(*aResult = newResource);
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBookmarksService::GetParent(nsIRDFResource* aSource, nsIRDFResource **aParent)
+{
+    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    if (! aSource)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    nsCOMPtr<nsISimpleEnumerator> arcs;
+    rv = mInner->ArcLabelsIn(aSource, getter_AddRefs(arcs));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // enumerate the arcs pointing to the resource to find an ordinal one.
+    PRBool hasMore;
+    while (NS_SUCCEEDED(arcs->HasMoreElements(&hasMore)) && hasMore) {
+        nsCOMPtr<nsISupports> supports;
+        rv = arcs->GetNext(getter_AddRefs(supports));
+        if (NS_FAILED(rv)) continue;
+
+        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(supports, &rv);
+        if (NS_FAILED(rv)) continue;
+   
+        // Test if the arc is ordinal. We will assume that the parent is determined
+        // by the first ordinal arc that points to the resource.
+        // That's not bullet-proof, since several ordinal arcs can point to the same
+        // resource. However, this will be sufficient for most of the cases.
+        PRBool isOrdinal;
+        rv = gRDFC->IsOrdinalProperty(property, &isOrdinal);
+        if (NS_FAILED(rv)) continue;
+
+        if (isOrdinal) {
+            nsCOMPtr<nsIRDFResource> parent;
+            rv = mInner->GetSource(property, aSource, PR_TRUE, getter_AddRefs(parent));
+            if (NS_FAILED(rv)) continue;
+            NS_ADDREF(*aParent = parent);
+            return NS_OK;
+        }
+    }
+
+    *aParent = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBookmarksService::GetParentChain(nsIRDFResource* aSource, nsIArray** aParents)
+{
+    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    if (! aSource)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+    nsCOMPtr<nsIMutableArray> parentArray;
+    rv = NS_NewArray(getter_AddRefs(parentArray));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_OUT_OF_MEMORY);
+
+    nsCOMPtr<nsIRDFResource> source = aSource, parent;
+    
+    while (NS_SUCCEEDED(rv=GetParent(source, getter_AddRefs(parent)))
+           && parent) {
+        parentArray->InsertElementAt(parent, 0, PR_FALSE);
+        source = parent;
+    }
+
+    if (NS_SUCCEEDED(rv))
+        NS_ADDREF(*aParents = parentArray);
+
+    return rv;
 }
 
 //XXXpch: useless callers of AddBookmarkImmediately and IsBookmarked in nsInternetSearchService.cpp
