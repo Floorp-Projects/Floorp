@@ -1,4 +1,4 @@
-function NavigatorWindow()
+function toNavigatorWindow()
 {
 	// FIX ME - Really need to find the front most navigator window
 	//          and bring it all the way to the front
@@ -22,7 +22,7 @@ function NavigatorWindow()
 }
 
 
-function MessengerWindow()
+function toMessengerWindow()
 {
 	// FIX ME - Really need to find the front most messenger window
 	//          and bring it all the way to the front
@@ -31,7 +31,7 @@ function MessengerWindow()
 }
 
 
-function AddressBook() 
+function toAddressBook() 
 {
 	var wind = window.open("chrome://addressbook/content/addressbook.xul",
 						   "addressbook", "chrome");

@@ -29,23 +29,23 @@
 
 	<!-- Tasks Menu -->
 	<menu id="tasksMenu" name="&tasksMenu.label;">
-		<menuitem name="&navigatorCmd.label;" onclick="goNavigatorWindow()"/>
-		<menuitem name="&messengerCmd.label;" onclick="goMessengerWindow()"/>
-		<menuitem name="&addressBookCmd.label;" onclick="goAddressBook()"/>
+		<menuitem name="&navigatorCmd.label;" onclick="toNavigatorWindow()"/>
+		<menuitem name="&messengerCmd.label;" onclick="toMessengerWindow()"/>
+		<menuitem name="&addressBookCmd.label;" onclick="toAddressBook()"/>
 		<separator/>
 		<menu name="&bookmarkMenu.label;">
-			<menuitem name="&addBookmarkCmd.label;" onclick="goAddBookmark()"/>
-			<menuitem name="&fileBookmarkCmd.label;" onclick="goFileBookmark()"/>
-			<menuitem name="&editBookmarkCmd.label;" onclick="goEditBookmark()"/>
+			<menuitem name="&addBookmarkCmd.label;" onclick="toAddBookmark()"/>
+			<menuitem name="&fileBookmarkCmd.label;" onclick="toFileBookmark()"/>
+			<menuitem name="&editBookmarkCmd.label;" onclick="toEditBookmark()"/>
 		</menu>
-		<menuitem name="&newsgroupsCmd.label;" onclick="goNewsgroups()"/>
+		<menuitem name="&newsgroupsCmd.label;" onclick="toNewsgroups()"/>
 		<separator/>
 		<menu name="&toolsMenu.label;">
-			<menuitem name="&historyCmd.label;" onclick="goHistory()"/>
-			<menuitem name="&securityInfoCmd.label;" onclick="goSecurityInfo()"/>
-			<menuitem name="&messageCenterCmd.label;" onclick="goMessengerCenter()"/>
-			<menuitem name="&importUtilCmd.label;" onclick="goImport()"/>
-			<menuitem name="&javaConsoleCmd.label;" onclick="goJavaConsole()"/>
+			<menuitem name="&historyCmd.label;" onclick="toHistory()"/>
+			<menuitem name="&securityInfoCmd.label;" onclick="toSecurityInfo()"/>
+			<menuitem name="&messageCenterCmd.label;" onclick="toMessengerCenter()"/>
+			<menuitem name="&importUtilCmd.label;" onclick="toImport()"/>
+			<menuitem name="&javaConsoleCmd.label;" onclick="toJavaConsole()"/>
 		</menu>
 		<separator/>
 		<menu name="&windowMenu.label;">
