@@ -131,10 +131,10 @@ typedef ISmartUpdatePrefs FAR* LPSMARTUPDATEPREFS;
 #undef  INTERFACE
 #define INTERFACE ISmartUpdatePrefs
 
-typedef struct _PACKAGEINFO {
+typedef struct _SU_PACKAGEINFO {
 	char	userPackageName[MAX_PATH];  
     char	regPackageName[MAX_PATH];
-} PACKAGEINFO, FAR *LPPACKAGEINFO;
+} SU_PACKAGEINFO, FAR *LPSU_PACKAGEINFO;
 
 // IBrowserPrefs provides the preference UI code with a way to get at
 // various state maintained by the Navigator

@@ -644,8 +644,8 @@ CSmartUpdatePrefs::InitDialog()
 			    
                 LONG err;
                 void* context = NULL;
-                LPPACKAGEINFO packageInfo = new PACKAGEINFO;
-                LPPACKAGEINFO pInfo;
+                LPSU_PACKAGEINFO packageInfo = new PACKAGEINFO;
+                LPSU_PACKAGEINFO pInfo;
                 *(packageInfo->userPackageName) = '\0';
                 *(packageInfo->regPackageName) = '\0';
 
@@ -656,7 +656,7 @@ CSmartUpdatePrefs::InitDialog()
                         if (*(packageInfo->regPackageName) != '\0' &&
                             strcmp(packageInfo->regPackageName, UNINSTALL_NAV_STR) !=0 ) 
                         {
-                            pInfo = new PACKAGEINFO;
+                            pInfo = new SU_PACKAGEINFO;
                             if (*(packageInfo->userPackageName) != '\0') {
                                 lstrcpy(pInfo->userPackageName, packageInfo->userPackageName);
                             } else {
@@ -708,7 +708,7 @@ CSmartUpdatePrefs::OnCommand(int id, HWND hwndCtl, UINT notifyCode)
 		return TRUE;
 
 	} else if (id == IDC_BUTTON2 && notifyCode == BN_CLICKED) {
-        LPPACKAGEINFO packageInfo = NULL;
+        LPSU_PACKAGEINFO packageInfo = NULL;
 	    HWND			 hList = GetDlgItem(m_hwndDlg, IDC_LIST1);
 	    int				 nIndex = 0;
         int              count = 0;
@@ -723,7 +723,7 @@ CSmartUpdatePrefs::OnCommand(int id, HWND hwndCtl, UINT notifyCode)
 	 
         if (nIndex != LB_ERR) {
             // Get the packageInfo data structure
-	        packageInfo = (LPPACKAGEINFO)ListBox_GetItemData(hList, nIndex);
+	        packageInfo = (LPSU_PACKAGEINFO)ListBox_GetItemData(hList, nIndex);
 	                   
             if (packageInfo != NULL) {
                 if (*(packageInfo->regPackageName) != '\0') {
