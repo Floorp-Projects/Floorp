@@ -434,6 +434,7 @@ NS_IMETHODIMP nsXULGroupboxAccessible::GetAccName(nsAString& _retval)
 /**
   * progressmeter
   */
+NS_IMPL_ISUPPORTS_INHERITED1(nsXULProgressMeterAccessible, nsFormControlAccessible, nsIAccessibleValue)
 
 nsXULProgressMeterAccessible::nsXULProgressMeterAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
 nsFormControlAccessible(aNode, aShell)
@@ -463,6 +464,55 @@ NS_IMETHODIMP nsXULProgressMeterAccessible::GetAccValue(nsAString& _retval)
   if (!_retval.IsEmpty() && _retval.Last() != '%')
     _retval.Append(NS_LITERAL_STRING("%"));
   return NS_OK;
+}
+
+/* readonly attribute double maximumValue; */
+NS_IMETHODIMP nsXULProgressMeterAccessible::GetMaximumValue(double *aMaximumValue)
+{
+  *aMaximumValue = 1; // 100% = 1;
+  return NS_OK;
+}
+
+/* readonly attribute double minimumValue; */
+NS_IMETHODIMP nsXULProgressMeterAccessible::GetMinimumValue(double *aMinimumValue)
+{
+  *aMinimumValue = 0;
+  return NS_OK;
+}
+
+/* readonly attribute double currentValue; */
+NS_IMETHODIMP nsXULProgressMeterAccessible::GetCurrentValue(double *aCurrentValue)
+{
+  nsAutoString currentValue;
+  GetAccValue(currentValue);
+  PRInt32 error;
+  *aCurrentValue = currentValue.ToFloat(&error) / 100;
+  return NS_OK;
+}
+
+/* boolean setCurrentValue (in double value); */
+NS_IMETHODIMP nsXULProgressMeterAccessible::SetCurrentValue(double aValue, PRBool *_retval)
+{
+  //Here I do not suppose the min/max are 0/1.00 because I want
+  // these part of code to be more extensible.
+  *_retval = PR_FALSE;
+  double min, max;
+  GetMinimumValue(&min);
+  GetMaximumValue(&max);
+  if (aValue > max || aValue < min)
+    return NS_ERROR_INVALID_ARG;
+
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  NS_ASSERTION(element, "No element for DOM node!");
+  PRUint32 value = PRUint32(aValue * 100.0 + 0.5);
+  nsAutoString valueString;
+  valueString.AppendInt(value);
+  valueString.Append(NS_LITERAL_STRING("%"));
+  if (NS_SUCCEEDED(element->SetAttribute(NS_LITERAL_STRING("value"), valueString))) {
+    *_retval = PR_TRUE;
+    return NS_OK;
+  }
+  return NS_ERROR_INVALID_ARG;
 }
 
 /**

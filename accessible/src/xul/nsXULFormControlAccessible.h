@@ -44,6 +44,7 @@
 #include "nsBaseWidgetAccessible.h"
 #include "nsFormControlAccessible.h"
 #include "nsHTMLFormControlAccessible.h"
+#include "nsIAccessibleValue.h"
 
 class nsXULButtonAccessible : public nsAccessible
 // Don't inherit from nsFormControlAccessible - it doesn't allow children and a button can have a dropmarker child
@@ -95,8 +96,12 @@ public:
   NS_IMETHOD GetAccName(nsAString& _retval);
 };
 
-class nsXULProgressMeterAccessible : public nsFormControlAccessible
+class nsXULProgressMeterAccessible : public nsFormControlAccessible,
+                                     public nsIAccessibleValue
 {
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIACCESSIBLEVALUE
+
 public:
   nsXULProgressMeterAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
