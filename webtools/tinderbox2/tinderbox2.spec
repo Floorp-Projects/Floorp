@@ -56,8 +56,12 @@ make 	prefix=$RPM_BUILD_ROOT/%{_prefix} \
 
 rm -rf $RPM_BUILD_ROOT/%{_prefix}/local_conf
 
+# however this package should own the directory
+
+mkdir -p $RPM_BUILD_ROOT/%{_prefix}/local_conf
+
 %clean
-#rm -rf $RPM_BUILD_ROOT
+rm -rf $RPM_BUILD_ROOT
 
 
 %files
