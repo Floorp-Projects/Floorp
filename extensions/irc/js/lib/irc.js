@@ -364,16 +364,18 @@ function serv_logout(reason)
 
     this.quitting = true;
 
-    this.connection.sendData ("QUIT :" + reason + "\n");
+    this.connection.sendData ("QUIT :" + fromUnicode(reason) + "\n");
     this.connection.disconnect();
 
 }
 
 CIRCServer.prototype.addChannel =
-function serv_addchan (name)
+function serv_addchan (name, charset)
 {
 
-    return new CIRCChannel (this, name);
+    var encodedName = fromUnicode(name + " ", charset);
+    encodedName = encodedName.substr(0, encodedName.length -1);
+    return new CIRCChannel (this, encodedName, charset);
     
 }
     
@@ -801,7 +803,7 @@ function serv_topic (e)
     e.channel = new CIRCChannel (this, e.params[1]);
     e.channel.topicBy = e.user.nick;
     e.channel.topicDate = new Date();
-    e.channel.topic = e.params[2];
+    e.channel.topic = toUnicode(e.params[2], e.channel.charset);
     e.destObject = e.channel;
     e.set = "channel";
 
@@ -846,7 +848,7 @@ function serv_332 (e)
 {
 
     e.channel = new CIRCChannel (this, e.params[2]);
-    e.channel.topic = e.params[3];
+    e.channel.topic = toUnicode(e.params[3], e.channel.charset);
     e.destObject = e.channel;
     e.set = "channel";
 
@@ -1273,6 +1275,7 @@ function serv_nick (e)
 CIRCServer.prototype.onQuit = 
 function serv_quit (e)
 {
+    e.params[1] = toUnicode(e.params[1]);
 
     for (var c in e.server.channels)
     {
@@ -1439,11 +1442,13 @@ function serv_privmsg (e)
         e.user = new CIRCChanUser (e.channel, e.user.nick);
         e.replyTo = e.channel;
         e.set = "channel";
+        e.params[2] = toUnicode(e.params[2], e.channel.charset);
     }
     else
     {
         e.set = "user";
         e.replyTo = e.user; /* send replys to the user who sent the message */
+        e.params[2] = toUnicode(e.params[2]);
     }
 
     if (e.params[2].search (/\x01.*\x01/i) != -1)
@@ -1671,22 +1676,20 @@ function serv_dccsend (e)
  * channel
  */
 
-function CIRCChannel (parent, name)
+function CIRCChannel (parent, name, charset)
 {
+    var encodedName = name;
+    var unicodeName = toUnicode(name, charset);
+    name = name.toLowerCase();
 
-    var encodedName = fromUnicode(name + " ");
-    /* bug 114923 */
-    encodedName = encodedName.substr(0,encodedName.length -1);
-    var unicodeName = toUnicode(encodedName);
-    name = encodedName.toLowerCase();
-    
     if (name in parent.channels)
         return parent.channels[name];
-    
+
     this.parent = parent;
-    this.name = name;               // used internally, lowercased
+    this.name = name; // used internally, lowercased
     this.unicodeName = unicodeName; // converted to unicode for display
     this.encodedName = encodedName; // encoded for communication with server
+    this.charset = charset;
 
     this.users = new Object();
     this.bans = new Object();
@@ -2059,7 +2062,6 @@ function CIRCUser (parent, nick, name, host)
     this.properNick = properNick;
     this.name = name;
     this.host = host;
-
     parent.users[nick] = this;
 
     return this;
@@ -2136,7 +2138,6 @@ function usr_ctcp (code, msg, type)
 CIRCUser.prototype.whois =
 function usr_whois ()
 {
-
     this.parent.whois (this.nick);
 }   
 

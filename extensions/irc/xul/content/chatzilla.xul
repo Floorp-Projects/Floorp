@@ -155,7 +155,7 @@
   
           <hbox>
           <tabs class="tabs-bottom" id="views-tbar-inner" flex="1" crop="right">
-            <tab collapsed="true"/> <!-- dummy tab to keep the freaking xbl from 
+            <tab collapsed="true"/> <!-- dummy tab to keep the freaking xbl from
                                          causing an exception -->
           </tabs>
           </hbox>

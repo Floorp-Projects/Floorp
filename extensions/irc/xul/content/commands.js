@@ -37,6 +37,7 @@ function addCommands(commandObject)
     add ("away", "onInputAway");
     add ("cancel", "onInputCancel");
     add ("charset", "onInputCharset");
+    add ("channel-charset", "onInputChannelCharset");
     add ("clear", "onInputClear");
     add ("client", "onInputClient");
     add ("commands", "onInputCommands");
@@ -56,6 +57,8 @@ function addCommands(commandObject)
     add ("infobar", "onInputInfobar");
     add ("invite", "onInputInvite"); 
     add ("join", "onInputJoin");
+    add ("j", "onInputJoin");
+    add ("join-charset", "onInputJoinCharset");
     add ("kick", "onInputKick");
     add ("leave", "onInputLeave");
     add ("list", "onInputList");

@@ -36,7 +36,7 @@ const MSG_UNKNOWN   = getMsg ("unknown");
 
 client.defaultNick = getMsg("defaultNick");
 
-client.version = "0.8.26";
+client.version = "0.8.31";
 
 client.TYPE = "IRCClient";
 client.COMMAND_CHAR = "/";
@@ -132,20 +132,16 @@ function ()
         scrollDown(client.deck.childNodes[i], true);
 }
 
-function ucConvertIncomingMessage (e)
-{
-    var length = e.params.length;
-    e.params[length - 1] = toUnicode(e.params[length - 1]);
-    return true;
-}
-
-function toUnicode (msg)
+function toUnicode (msg, charset)
 {
     if (!("ucConverter" in client))
         return msg;
     
-    /* XXX set charset again to force the encoder to reset, see bug 114923 */
-    client.ucConverter.charset = client.CHARSET;
+    if (typeof charset == "undefined")
+        client.ucConverter.charset = client.CHARSET;
+    else
+        client.ucConverter.charset = charset;
+
     try
     {
         return client.ucConverter.ConvertToUnicode(msg);
@@ -153,22 +149,50 @@ function toUnicode (msg)
     catch (ex)
     {
         dd ("caught exception " + ex + " converting " + msg + " to charset " +
-            client.CHARSET);
+            charset);
     }
 
     return msg;
 }
 
-function fromUnicode (msg)
+function fromUnicode (msg, charset)
 {
     if (!("ucConverter" in client))
         return msg;
     
-    /* XXX set charset again to force the encoder to reset, see bug 114923 */
-    client.ucConverter.charset = client.CHARSET;
+    if (typeof charset == "undefined")
+        client.ucConverter.charset = client.CHARSET;
+    else
+        client.ucConverter.charset = charset;
+
     return client.ucConverter.ConvertFromUnicode(msg);
 }
 
+function checkCharset (charset)
+{
+    var ex;
+    var converter;
+    
+    try
+    {
+        
+        const UC_CTRID = "@mozilla.org/intl/scriptableunicodeconverter";
+        const nsIUnicodeConverter = 
+            Components.interfaces.nsIScriptableUnicodeConverter;
+        converter =
+            Components.classes[UC_CTRID].getService(nsIUnicodeConverter);
+
+        converter.charset = charset;
+        
+    }
+    catch (ex)
+    {
+        dd ("Caught exception setting charset to " + charset + "\n" + ex);
+        return false;
+    }
+
+    return true;
+}
 function setCharset (charset)
 {
     client.CHARSET = charset;
@@ -196,11 +220,6 @@ function setCharset (charset)
         
         client.ucConverter.charset = charset;
         
-        if (!client.eventPump.getHook("uc-hook"))
-        {
-            client.eventPump.addHook ([{type: "parseddata", set: "server"}],
-                                      ucConvertIncomingMessage, "uc-hook");
-        }
     }
     catch (ex)
     {
@@ -309,7 +328,7 @@ function processStartupURLs()
     if (!wentSomewhere)
     {
         /* if we had nowhere else to go, connect to any default urls */
-        var ary = client.INITIAL_URLS.split(/\s*;\s*/).reverse();
+        var ary = client.INITIAL_URLS.split(/\s*;\s*/);
         for (var i in ary)
         {
             if (ary[i] && ary[i] != "irc://")
@@ -1146,6 +1165,39 @@ function setupMungerMenu(munger)
         }
     }
 }
+
+function joinChannel(e, namelist, key, charset)
+{
+    if (!e.network || !e.network.isConnected())
+    {
+        if (!e.network)
+            client.currentObject.display (getMsg("cli_ijoinMsg"), "ERROR");
+        else
+            client.currentObject.display (getMsg("cli_ijoinMsg2",
+                                                 e.network.name1), "ERROR");
+        return false;
+    }
+
+    var name;
+    for (i in namelist)
+    {
+        name = namelist[i];
+        if (name[0].search(/[#&+!]/) != 0)
+            name = "#" + name;
+
+        e.channel = e.server.addChannel (name, charset);
+        e.channel.join(key);
+
+        if (!("messages" in e.channel))
+        {
+            this.display (getMsg("cli_ijoinMsg3", e.channel.unicodeName),
+                          "INFO");
+        }
+        setCurrentObject(e.channel);
+    }
+    
+    return true;
+}
     
 var testURLs =
     ["irc:", "irc://", "irc:///", "irc:///help", "irc:///help,needkey",
@@ -1305,6 +1357,10 @@ function parseIRCURL (url)
                         rv.needkey = true;
                         rv.key = unescape(arg[1]).replace ("\n", "\\n");
                         break;
+
+                    case "charset":
+                        rv.charset = unescape(arg[1]).replace ("\n", "\\n");
+                        break;
                 }
             }            
         }
@@ -1373,7 +1429,7 @@ function gotoIRCURL (url)
             net = client.networks[url.host];
             if (!("pendingURLs" in net))
                 net.pendingURLs = new Array();
-            net.pendingURLs.push (url);            
+            net.pendingURLs.unshift (url);            
             return;
         }
     }
@@ -1390,7 +1446,7 @@ function gotoIRCURL (url)
             client.connectToNetwork (url.host, pass);
             if (!("pendingURLs" in net))
                 net.pendingURLs = new Array();
-            net.pendingURLs.push (url);            
+            net.pendingURLs.unshift (url);            
             return;
         }
     }
@@ -1426,10 +1482,20 @@ function gotoIRCURL (url)
                 else
                     key = window.prompt (getMsg("gotoIRCURLMsg3", url.spec));
             }
+
+            var charset;
             
+            if ("charset" in url)
+            {
+                if (checkCharset(url.charset))
+                    charset = url.charset;
+                else
+                    display (getMsg("cli_charsetError", url.charset), "ERROR");
+            }
+                    
             ev = {inputData: url.target + " " + key,
                   network: net, server: net.primServ};
-            client.onInputJoin (ev);
+            joinChannel(ev, [url.target], key, charset)
             targetObject = ev.channel;
         }
 
@@ -2302,7 +2368,12 @@ function cli_say(msg)
             msg = filterOutput (msg, "PRIVMSG");
             client.currentObject.display (msg, "PRIVMSG", "ME!",
                                           client.currentObject);
-            client.currentObject.say (fromUnicode(msg));
+            if (client.currentObject.TYPE == "IRCChannel") {
+                var charset = client.currentObject.charset;
+                client.currentObject.say (fromUnicode(msg, charset));
+            } else {
+                client.currentObject.say (fromUnicode(msg));
+            }
             break;
 
         case "IRCClient":
@@ -2391,7 +2462,7 @@ function __display(message, msgtype, sourceObj, destObj)
     var me;
     if ("server" in o && "me" in o.server)
     {
-        me = o.server.me;    /* get the object representing the user           */
+        me = o.server.me;    /* get the object representing the user          */
     }
     if (sourceObj == "ME!") sourceObj = me;   /* if the caller to passes "ME!"*/
     if (destObj == "ME!") destObj = me;       /* substitute the actual object */

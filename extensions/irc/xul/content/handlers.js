@@ -58,7 +58,8 @@ function onTopicKeyPress (e)
     if (e.keyCode == 13)
     {        
         var line = stringTrim(e.target.value);
-        client.currentObject.setTopic (fromUnicode(line));
+        var charset = client.currentObject.charset;
+        client.currentObject.setTopic (fromUnicode(line, charset));
         onTopicEditEnd();
     }
 }
@@ -1047,10 +1048,34 @@ function cli_icharset (e)
                                           "ERROR");
             return false;
         }
-	}
+    }
 
-    client.currentObject.display (getMsg("cli_currentCharset", client.CHARSET),
+    client.currentObject.display (getMsg("cli_currentCharset",
+                                         client.CHARSET),
                                   "INFO");
+
+    return true;
+}
+
+client.onInputChannelCharset =
+function cli_ichancharset (e)
+{
+    if (e.inputData)
+    {
+        if(!checkCharset(e.inputData))
+        {
+            client.currentObject.display (getMsg("cli_charsetError",
+                                                 e.inputData),
+                                          "ERROR");
+            return false;
+        }
+        client.currentObject.charset = e.inputData;
+    }
+
+    client.currentObject.display (getMsg("cli_currentCharset",
+                                         client.currentObject.charset),
+                                  "INFO");
+
     return true;
 }
 
@@ -1548,7 +1573,7 @@ function cli_quit (e)
 client.onInputExit =
 function cli_exit (e)
 {
-    client.quit(e.inputData);    
+    client.quit(fromUnicode(e.inputData));    
     window.close();
     return true;
 }
@@ -1814,7 +1839,7 @@ function cli_imsg (e)
 
     var msg = filterOutput(ary[2], "PRIVMSG", "ME!");
     client.currentObject.display (msg, "PRIVMSG", "ME!", usr);
-    usr.say (fromUnicode(ary[2]));
+    usr.say (fromUnicode(ary[2], client.currentObject.charset));
 
     return true;
 
@@ -1872,7 +1897,7 @@ function cli_iquote (e)
         return false;
     }
 
-    e.server.sendData (e.inputData + "\n");
+    e.server.sendData (fromUnicode(e.inputData) + "\n");
     
     return true;
     
@@ -1928,22 +1953,10 @@ function cli_ictcp (e)
     
 }
 
-
 client.onInputJoin =
 function cli_ijoin (e)
 {
-    if (!e.network || !e.network.isConnected())
-    {
-        if (!e.network)
-            client.currentObject.display (getMsg("cli_ijoinMsg"), "ERROR");
-        else
-            client.currentObject.display (getMsg("cli_ijoinMsg2",
-                                                 e.network.name1), "ERROR");
-        return false;
-    }
-    
     var ary = e.inputData.match(/(((\S+), *)*(\S+)) *(\S+)?/);
-    var name;
     var key = "";
     var namelist;
 
@@ -1956,7 +1969,7 @@ function cli_ijoin (e)
     else
     {
         if (client.currentObject.TYPE == "IRCChannel")
-            namelist = [client.currentObject.name];
+            namelist = [client.currentObject.unicodeName];
         else
             return false;
 
@@ -1964,18 +1977,50 @@ function cli_ijoin (e)
             key = client.currentObject.mode.key
     }
 
-    for (i in namelist)
-    {
-        name = namelist[i];
-        if ((name[0] != "#") && (name[0] != "&") && (name[0] != "+") &&
-            (name[0] != "!"))
-            name = "#" + name;
+    return joinChannel(e, namelist, key, client.CHARSET);
+}
 
-        e.channel = e.server.addChannel (name);
-        e.channel.join(key);
+client.onInputJoinCharset =
+function cli_ijoincharset (e)
+{
+    var ary = e.inputData.match(/(((\S+), *)*(\S+)) *(\S+) *(\S+)?/);
+    var key = "";
+    var namelist;
+    var charset;
+
+    if (ary)
+    {
+        namelist = ary[1].split(/, */);
+        if (5 in ary)
+            charset = ary[5];
+        else
+            return false;
+
+        if (!checkCharset(charset))
+        {
+            client.currentObject.display (getMsg("cli_charsetError",
+                                                 charset),
+                                      "ERROR");
+            return false;
+        }
+
+        if (6 in ary)
+            key = ary[6];
+    }
+    else
+    {
+        if (client.currentObject.TYPE == "IRCChannel")
+            namelist = [client.currentObject.unicodeName];
+        else
+            return false;
+
+        charset = client.CHARSET;
+
+        if (client.currentObject.mode.key)
+            key = client.currentObject.mode.key
     }
 
-    return true;
+    return joinChannel(e, namelist, key, charset);
 }
 
 client.onInputLeave =
@@ -2072,7 +2117,7 @@ function cli_itopic (e)
     }
     else
     {
-        if (!e.channel.setTopic(fromUnicode(e.inputData)))
+        if (!e.channel.setTopic(fromUnicode(e.inputData, e.channel.charset)))
             client.currentObject.display (getMsg("cli_itopicMsg2"), "ERROR");
     }
 
@@ -2102,7 +2147,7 @@ function cli_iaway (e)
     }
     else
     {
-        e.server.sendData ("AWAY :" + e.inputData + "\n");
+        e.server.sendData ("AWAY :" + fromUnicode(e.inputData) + "\n");
     }
 
     return true;
@@ -2682,7 +2727,7 @@ function my_ctcprunk (e)
 CIRCNetwork.prototype.onNotice = 
 function my_notice (e)
 {
-    this.display (e.params[2], "NOTICE", this, e.server.me);
+    this.display (toUnicode(e.params[2]), "NOTICE", this, e.server.me);
 }
 
 CIRCNetwork.prototype.on303 = /* ISON (aka notify) reply */
@@ -2747,8 +2792,8 @@ function my_303 (e)
     
 }
 
-CIRCNetwork.prototype.on321 = /* LIST reply header */
-function my_321 (e)
+CIRCNetwork.prototype.listInit =
+function my_list_init ()
 {
 
     function checkEndList (network)
@@ -2801,7 +2846,6 @@ function my_321 (e)
         this.list = new Array();
         this.list.regexp = null;
     }
-    this.displayHere (e.params[2] + " " + e.params[3], "321");
     if (client.currentObject != this)
         client.currentObject.display (getMsg("my_321", this.name), "INFO");
     this.list.lastLength = 0;
@@ -2810,6 +2854,14 @@ function my_321 (e)
     this.list.displayed = 0;
     setTimeout(outputList, 250, this);
     this.list.endTimeout = setTimeout(checkEndList, 1500, this);
+}
+
+CIRCNetwork.prototype.on321 = /* LIST reply header */
+function my_321 (e)
+{
+
+    this.listInit();
+    this.displayHere (e.params[2] + " " + e.params[3], "321");
 }
 
 CIRCNetwork.prototype.on323 = /* end of LIST reply */
@@ -2827,12 +2879,14 @@ function my_323 (e)
 CIRCNetwork.prototype.on322 = /* LIST reply */
 function my_listrply (e)
 {
+    if (!("list" in this))
+        this.listInit();
     ++this.list.count;
     e.params[2] = toUnicode(e.params[2]);
     if (!(this.list.regexp) || e.params[2].match(this.list.regexp)
                             || e.params[4].match(this.list.regexp))
     {
-        this.list.push([e.params[2], e.params[3], e.params[4]]);
+        this.list.push([e.params[2], e.params[3], toUnicode(e.params[4])]);
     }
 }
 
@@ -2898,7 +2952,8 @@ function my_whoisreply (e)
     {
         case 311:
             text = getMsg("my_whoisreplyMsg",
-                          [nick, e.params[3], e.params[4], e.params[6]]);
+                          [nick, e.params[3], e.params[4],
+                           toUnicode(e.params[6])]);
             break;
             
         case 319:
@@ -3125,12 +3180,12 @@ function my_cprivmsg (e)
         }
         catch (ex)
         {
-            this.say (fromUnicode(e.user.nick + ": " + String(ex)));
+            this.say (fromUnicode(e.user.nick + ": " + String(ex), this.charset));
             return false;
         }
         
         if (typeof (v) != "undefined")
-        {						
+        {
             if (v != null)                
                 v = String(v);
             else
@@ -3144,7 +3199,7 @@ function my_cprivmsg (e)
                 rsp += " ";
             
             this.display (rsp + v, "PRIVMSG", e.server.me, this);
-            this.say (fromUnicode(rsp + v));
+            this.say (fromUnicode(rsp + v, this.charset));
         }
     }
 
@@ -3222,7 +3277,8 @@ function my_topic (e)
 CIRCChannel.prototype.onNotice =
 function my_notice (e)
 {
-    this.display (e.params[2], "NOTICE", e.user, this);   
+    this.display (toUnicode(e.params[2], this.charset),
+                  "NOTICE", e.user, this);   
 }
 
 CIRCChannel.prototype.onCTCPAction =
@@ -3249,19 +3305,17 @@ function my_cjoin (e)
 
     if (userIsMe (e.user))
     {
-        if (!("messages" in this))
-        {
-            this.display (getMsg("cli_ijoinMsg3", this.unicodeName),
-                          "INFO");
-        }
         this.display (getMsg("my_cjoinMsg", e.channel.unicodeName), "JOIN",
                       e.server.me, this);
         setCurrentObject(this);
     }
     else
+    {
         this.display(getMsg("my_cjoinmsg2", [e.user.properNick, e.user.name,
-                                             e.user.host, e.channel.unicodeName]),
+                                             e.user.host,
+                                             e.channel.unicodeName]),
                      "JOIN", e.user, this);
+    }
 
     this._addUserToGraph (e.user);
     
@@ -3340,9 +3394,14 @@ function my_cmode (e)
 {
 
     if ("user" in e)
+    {
+        var msg = toUnicode(e.params.slice(1).join(" "),
+                            e.channel.charset);
         this.display (getMsg("my_cmodeMsg",
-                             [toUnicode(e.params.slice(1).join(" ")),
+                             //[e.params.slice(1).join(" "),
+                             [msg,
                               e.user.properNick]), "MODE", e.user, this);
+    }
 
     for (var u in e.usersAffected)
         e.usersAffected[u].updateGraphResource();
@@ -3431,7 +3490,8 @@ function my_unick (e)
 CIRCUser.prototype.onNotice =
 function my_notice (e)
 {
-    this.display (e.params[2], "NOTICE", this, e.server.me);   
+    this.display (toUnicode(e.params[2], this.charset),
+                  "NOTICE", this, e.server.me);   
 }
 
 CIRCUser.prototype.onCTCPAction =
