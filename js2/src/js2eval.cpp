@@ -336,7 +336,6 @@ namespace MetaData {
                 fWrap->env->addFrame(runtimeFrame);
                 ParameterFrame *oldPFrame = engine->parameterFrame;
                 js2val *oldPSlots = engine->parameterSlots;
-                uint32 oldPCount = engine->parameterCount;
                 try {
                     savePC = engine->pc;
                     engine->pc = NULL;
@@ -1160,8 +1159,10 @@ VariableMemberCommon:
                 str = a->mValue;
             }
             int32 i = JS2VAL_TO_INT(indexVal);
-            if ((i >= 0) && (i < str->length()))
-                *rval = meta->engine->allocString(&(*str)[i], 1);
+            if ((i >= 0) && ((uint32)(i) < str->length())) {
+                jschar c = (*str)[i];
+                *rval = meta->engine->allocString(&c, 1);
+            }
             else
                 *rval = JS2VAL_UNDEFINED;
             return true;

@@ -258,7 +258,7 @@ namespace MetaData {
         String *p = (String *)(meta->alloc(sizeof(String), PondScum::StringFlag));
         size_t len = strlen(s);
         String *result = new (p) String(len, uni::null);
-        for (int i = 0; i < len; i++) {
+        for (size_t i = 0; i < len; i++) {
             (*result)[i] = widen(s[i]);
         }
 //        std::transform(s, s+len, result->begin(), widen);
@@ -512,11 +512,11 @@ namespace MetaData {
                   toString_StringAtom(world.identifiers["toString"]),
                   valueOf_StringAtom(world.identifiers["valueOf"]),
                   packageFrame(NULL),
+                  localFrame(NULL),
                   parameterFrame(NULL),
+                  parameterSlots(NULL),
 				  parameterCount(0),
 				  superConstructorCalled(false),
-                  localFrame(NULL),
-                  parameterSlots(NULL),
                   traceInstructions(false)
     {
         for (int i = 0; i < 256; i++)

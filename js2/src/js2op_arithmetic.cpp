@@ -1174,9 +1174,8 @@
             pc += sizeof(short);
             ASSERT(slotIndex < localFrame->frameSlots->size());
             a = (*localFrame->frameSlots)[slotIndex];
-            int32 i;
-            if (JS2VAL_IS_INT(a) && ((i = JS2VAL_TO_INT(a)) < JS2VAL_INT_MAX)) {
-                (*localFrame->frameSlots)[slotIndex] = INT_TO_JS2VAL(i + 1);
+            if (JS2VAL_IS_INT(a) && (a != INT_TO_JS2VAL(JS2VAL_INT_MAX))) {
+                (*localFrame->frameSlots)[slotIndex] += 2;      // pre-shifted INT as JS2VAL
                 push(a);
             }
             else {
@@ -1192,9 +1191,8 @@
             pc += sizeof(short);
             ASSERT(slotIndex < localFrame->frameSlots->size());
             a = (*localFrame->frameSlots)[slotIndex];
-            int32 i;
-            if (JS2VAL_IS_INT(a) && ((i = JS2VAL_TO_INT(a)) > JS2VAL_INT_MIN)) {
-                (*localFrame->frameSlots)[slotIndex] = INT_TO_JS2VAL(i - 1);
+            if (JS2VAL_IS_INT(a) && (a != INT_TO_JS2VAL(JS2VAL_INT_MIN))) {
+                (*localFrame->frameSlots)[slotIndex] -= 2;
                 push(a);
             }
             else {
