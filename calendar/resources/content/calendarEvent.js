@@ -630,6 +630,12 @@ CalendarAlarmObserver.prototype.fireAlarm = function( calendarEvent )
 {
    dump( "Fire alarm "+ calendarEvent );
    
+   if( typeof( gCalendarWindow ) == "undefined" )
+   {
+      return;
+   }
+      
+
    if( gCalendarWindow.calendarPreferences.getPref( "alarmsplaysound" ) )
    {
       playSound();
