@@ -73,6 +73,9 @@ NET_WritePostData(MWContext  *context,
 
 extern int NET_UUEncode(unsigned char *src, unsigned char *dst, int srclen);
 
+#define NET_TO_UPPER(x) ((((unsigned int) (x)) > 0x7f) ? x : toupper(x))
+#define NET_TO_LOWER(x) ((((unsigned int) (x)) > 0x7f) ? x : tolower(x))
+
 PR_END_EXTERN_C
 
 #endif /* NETUTILS_H */

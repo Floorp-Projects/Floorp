@@ -509,7 +509,7 @@ HG85890
 HG09714
 
 	ptr = PL_strcasestr(CD_RESPONSE_TXT, "DSN");
-	CD_EHLO_DSN_ENABLED = (ptr && XP_TO_UPPER(*(ptr-1)) != 'X');
+	CD_EHLO_DSN_ENABLED = (ptr && NET_TO_UPPER(*(ptr-1)) != 'X');
 	/* should we use auth login */
 	PREF_GetBoolPref("mail.auth_login", &(CD_AUTH_LOGIN_ENABLED));
 	if (CD_AUTH_LOGIN_ENABLED) {

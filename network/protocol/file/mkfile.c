@@ -38,7 +38,13 @@
 #include "glhist.h"
 
 #include "il_strm.h"            /* Image Lib stream converters. */
+#ifndef MODULAR_NETLIB
 #include "libimg.h"             /* Image Lib public API. */
+#else
+#include "il_types.h"
+IL_EXTERN(int)
+IL_Type(const char *buf, int32 len);
+#endif
 
 #if defined(XP_WIN) || defined(XP_OS2)
 #include "errno.h"

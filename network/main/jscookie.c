@@ -33,7 +33,6 @@
 #include "xp_mcom.h"
 #include "jscookie.h"
 #include "ds.h"
-#include "htmldlgs.h"
 #include "xpgetstr.h"
 
 extern int MK_ACCESS_JAVASCRIPT_COOKIE_FILTER;

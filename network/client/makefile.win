@@ -81,8 +81,6 @@ LINCS= \
 include <$(DEPTH)\config\rules.mak> 
 
 libs:: $(LIBRARY)
-
-install::
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 symbols::

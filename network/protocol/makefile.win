@@ -26,7 +26,19 @@ IGNORE_MANIFEST=1
 
 
 DEPTH=..\..
-DIRS= about dataurl file ftp gopher http js marimba remote
+DIRS= \
+	about \
+	file \
+	ftp \
+	gopher \
+	http \
+	remote \
+!ifndef MODULAR_NETLIB
+	dataurl \
+	js \
+	marimba \
+!endif
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak> 
 

@@ -20,6 +20,7 @@
  */
 			   
 #include "mkutils.h"
+#include "netutils.h"
 #include "xp.h"
 #include "mkparse.h"
 #include "xp_time.h"
@@ -1241,7 +1242,7 @@ int NET_MakeRelativeURL( char *base_url,
         /* Case-sensitive for UNIX */
         *(url_ptr-1) != *(base_ptr-1) )
 #else
-        XP_TO_LOWER(*(url_ptr-1)) != XP_TO_LOWER(*(base_ptr-1)) )
+        NET_TO_LOWER(*(url_ptr-1)) != NET_TO_LOWER(*(base_ptr-1)) )
 #endif
     {
         Result = NET_URL_NOT_ON_SAME_DEVICE;
@@ -1268,7 +1269,7 @@ int NET_MakeRelativeURL( char *base_url,
             /* Case-sensitive for UNIX */
             *base_ptr == *url_ptr && 
 #else
-            XP_TO_LOWER(*base_ptr) == XP_TO_LOWER(*url_ptr) &&
+            NET_TO_LOWER(*base_ptr) == NET_TO_LOWER(*url_ptr) &&
 #endif
             *base_ptr != '\0' && *url_ptr != '\0' ){
         base_ptr++;

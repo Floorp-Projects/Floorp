@@ -1802,7 +1802,7 @@ NET_CacheConverter (FO_Present_Types format_out,
 							 */
 							for(i=0; *cp && i < 4; i++)
 							  {
-								*cp = XP_TO_UPPER(*cp);
+								*cp = NET_TO_UPPER(*cp);
 								cp++;
 							  }
 							*cp = '\0'; /* make sure it's terminated */

@@ -21,6 +21,7 @@
  */
 
 #include "mkutils.h"
+#include "netutils.h"
 #include "xp.h"
 #include "mkparse.h"
 #include "mkhelp.h"
@@ -350,7 +351,7 @@ NET_ParseNetHelpURL(URL_Struct *URL_s)
 
 		while (*pCharacter)
 		{
-			*pCharacter = (char) XP_TO_LOWER((unsigned int) *pCharacter);
+			*pCharacter = (char) NET_TO_LOWER((unsigned int) *pCharacter);
 			pCharacter++;
 		}
 

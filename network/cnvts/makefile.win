@@ -41,10 +41,12 @@ MISCDEP=$(LLIBS)
 OBJS=   \
 	.\$(OBJDIR)\cvactive.obj	\
 	.\$(OBJDIR)\cvchunk.obj		\
+!ifndef MODULAR_NETLIB
 	.\$(OBJDIR)\cvcolor.obj		\
-	.\$(OBJDIR)\cvdisk.obj		\
 	.\$(OBJDIR)\cvmime.obj		\
 	.\$(OBJDIR)\cvpics.obj		\
+!endif
+	.\$(OBJDIR)\cvdisk.obj		\
 	.\$(OBJDIR)\cvsimple.obj	\
 	.\$(OBJDIR)\cvunzip.obj		\
 	.\$(OBJDIR)\cvjscfg.obj		\
@@ -55,10 +57,12 @@ OBJS=   \
 TMP_CSRCS =	\
 	cvactive.c	\
 	cvchunk.c	\
+!ifndef MODULAR_NETLIB
 	cvcolor.c	\
-	cvdisk.c	\
 	cvmime.c	\
 	cvpics.c	\
+!endif
+	cvdisk.c	\
 	cvsimple.c	\
 	cvunzip.c	\
 	cvjscfg.c	\
@@ -109,8 +113,6 @@ LINCS= \
 include <$(DEPTH)\config\rules.mak> 
 
 libs:: $(LIBRARY)
-
-install::
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 symbols::

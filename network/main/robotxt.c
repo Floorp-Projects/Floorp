@@ -21,8 +21,8 @@
 
  /********************************************************************
 
-  $Revision: 1.2 $
-  $Date: 1998/05/19 00:53:36 $
+  $Revision: 1.3 $
+  $Date: 1998/05/22 23:38:14 $
 
  *********************************************************************/
 
@@ -155,7 +155,7 @@ crawl_unescape (char *str, char *reserved, int numReserved)
     return (int)(dst - str);
 }
 
-#define CHAR_CMP(x, y) ((x == y) || (XP_TO_LOWER(x) == XP_TO_LOWER(y)))
+#define CHAR_CMP(x, y) ((x == y) || (NET_TO_LOWER(x) == NET_TO_LOWER(y)))
 
 PRBool crawl_startsWith (char *pattern, char *uuid) {
   short l1 = strlen(pattern);
