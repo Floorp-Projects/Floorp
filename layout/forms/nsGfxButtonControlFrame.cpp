@@ -540,6 +540,28 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
   }
 #endif
 
+  PRInt32 type;
+  GetType(&type);
+  // hidden inputs are zero width/height and are finished here
+  if (NS_FORM_INPUT_HIDDEN == type) {
+    aDesiredSize.width = aDesiredSize.height = aDesiredSize.ascent = aDesiredSize.descent = 0;
+    if (aDesiredSize.maxElementSize) {
+      aDesiredSize.maxElementSize->width = aDesiredSize.maxElementSize->height = 0;
+    }
+    // just in case the hidden input is the target of an incremental reflow 
+    if (eReflowReason_Incremental == aReflowState.reason) {
+      nsIFrame* targetFrame;
+      aReflowState.reflowCommand->GetTarget(targetFrame);
+      if (this == targetFrame) {
+        nsIFrame* nextFrame;
+        // Remove the next frame from the reflow path
+        aReflowState.reflowCommand->GetNext(nextFrame); 
+      }
+    }
+    aStatus = NS_FRAME_COMPLETE;   
+    return rv;
+  }
+
   if ((kSuggestedNotSet != mSuggestedWidth) || 
       (kSuggestedNotSet != mSuggestedHeight)) {
     nsHTMLReflowState suggestedReflowState(aReflowState);
