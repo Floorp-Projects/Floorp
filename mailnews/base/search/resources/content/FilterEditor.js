@@ -113,6 +113,8 @@ function filterEditorOnLoad()
             filterAction.type = (getScopeFromFilterList(gFilterList) == Components.interfaces.nsMsgSearchScope.newsFilter) ? nsMsgFilterAction.Delete : nsMsgFilterAction.MoveToFolder;
             gFilter.appendAction(filterAction);
             initializeDialog(gFilter);
+            // Clear the default action added above now that the dialog is initialized.
+            gFilter.clearActionList();
           }
           else{
             // fake the first more button press
@@ -421,7 +423,7 @@ function saveFilter()
     gFilter.appendAction(filterAction);
   }
     
-  if (gChangePriorityCheckbox.checked) 
+  if (gChangePriorityCheckbox.checked)  
   {
     if (!gActionPriority.selectedItem) 
     {
@@ -485,7 +487,7 @@ function saveFilter()
     filterAction.type = nsMsgFilterAction.KillThread;
     gFilter.appendAction(filterAction);
   }
-    
+
   if (gFilter.actionList.Count() <= 0)
   {
     str = gFilterBundle.getString("mustSelectAction");
