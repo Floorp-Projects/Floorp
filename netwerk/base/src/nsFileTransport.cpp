@@ -178,7 +178,7 @@ public:
             return NS_ERROR_FAILURE;
         }
         rv = NS_NewFileOutputStream(mFile, 
-                                    PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
+                                    PR_CREATE_FILE | PR_WRONLY,
                                     0664,
                                     aOutputStream);
         PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
@@ -579,7 +579,7 @@ nsFileTransport::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **resu
 
     nsCOMPtr<nsIOutputStream> str;
     rv = NS_NewFileOutputStream(mFile, 
-                                PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
+                                PR_CREATE_FILE | PR_WRONLY,
                                 0664,
                                 getter_AddRefs(str));
     if (NS_FAILED(rv)) return rv;
