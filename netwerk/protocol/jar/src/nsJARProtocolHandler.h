@@ -42,6 +42,7 @@
 #include "nsIProtocolHandler.h"
 #include "nsIJARURI.h"
 #include "nsIZipReader.h"
+#include "nsIMIMEService.h"
 #include "nsCOMPtr.h"
 
 #define NS_JARPROTOCOLHANDLER_CID					 \
@@ -69,8 +70,12 @@ public:
 
     nsresult Init();
 
+    // returns non addref'ed pointer.  
+    nsIMIMEService* GetCachedMimeService();
+
 protected:
     nsCOMPtr<nsIZipReaderCache> mJARCache;
+    nsCOMPtr<nsIMIMEService> mMimeService;
 };
 
 #endif /* nsJARProtocolHandler_h___ */
