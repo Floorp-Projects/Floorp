@@ -63,6 +63,11 @@ if (!defined $::despot) {
     $::despot = 0;
 }
 
+# Whether or not the HTTP response headers and beginning of the HTML page has
+# already been returned to the client.  Necessary because some user actions
+# (f.e. AddUser) result in PrintHeader() getting called twice.
+$::header_done = 0;
+
 if (!param()) {
     PrintHeader();
     print h1("Despot -- access control for mozilla.org.");
@@ -181,6 +186,8 @@ sub Authenticate {
 }
 
 sub PrintHeader {
+    return if $::header_done;
+
     print header();
 
     my $bg = "white";
@@ -192,6 +199,8 @@ sub PrintHeader {
 
     print start_html(-Title=>"Despot -- configure mozilla users$extra",
                      -BGCOLOR=>$bg);
+
+    $::header_done = 1;
 }
 
 
@@ -341,6 +350,7 @@ sub AddUser() {
         $p = $::db->quote($p);
         $realname = $::db->quote($realname);
         Query("insert into users (email,passwd,neednewpassword,realname) values ('$q',$p,'Yes',$realname)");
+        PrintHeader();
         print p("New account created.  Password initialized to $feedback; " .
                 "please " .
                 a({href=>"mailto:$email?subject=Change your mozilla.org password&body=Your new mozilla.org account has been created.  It initially has a%0apassword $mailwords.  Please go to http://despot.mozilla.org/despot.cgi%0aand change your password as soon as possible.  You won't actually be%0aable to use it for anything until you do."},
@@ -488,6 +498,7 @@ sub GeneratePassword {
 
 
 sub ListPartitions () {
+    PrintHeader();
     print p("If you're wondering what a 'partition' is, " .
             a({-href=>"help.html#partition"}, "read this") . ".");
     ListSomething("partitions", "id", "ListPartitions", "EditPartition", "name",
@@ -683,6 +694,7 @@ sub ViewAccount {
         $line .= td($row[$i]);
         push(@list,Tr($line));
     }
+    PrintHeader();
     print table(@list);
     $query = Query("select partitions.id,repositories.name,partitions.name,class from members,repositories,partitions where members.userid=$::loginid and partitions.id=members.partitionid and repositories.id=partitions.repositoryid order by class");
     while (@row = $query->fetchrow()) {
@@ -762,6 +774,7 @@ sub AddPartition {
 
     if (!(@row = $query->fetchrow())) {
         Query("insert into partitions (name,repositoryid,state,branchid) values ('$partition',$repid,'Open',1)");
+        PrintHeader();
         print p("New partition created.") . hr();
         @row = Query("select LAST_INSERT_ID()")->fetchrow();
     }
