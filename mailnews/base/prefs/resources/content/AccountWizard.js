@@ -141,7 +141,6 @@ function onAccountWizardLoad() {
     }
 }
 
-    
 function onCancel() 
 {
   if ("ActivationOnCancel" in this && ActivationOnCancel())
@@ -523,7 +522,6 @@ function finishAccount(account, accountData)
      }
 }
 
-
 // copy over all attributes from dest into src that already exist in src
 // the assumption is that src is an XPConnect interface full of attributes
 function copyObjectToInterface(dest, src) {
@@ -784,12 +782,10 @@ function AccountToAccountData(account, defaultAccountData)
     
     accountData.incomingServer = account.incomingServer;
     accountData.identity = account.identities.QueryElementAt(0, nsIMsgIdentity);
-    try {accountData.smtp = smtpService.defaultServer;}
-    catch (ex){}
+    accountData.smtp = smtpService.defaultServer;
 
     return accountData;
 }
-
 
 // sets the page data, automatically creating the arrays as necessary
 function setPageData(pageData, tag, slot, value) {
@@ -858,7 +854,6 @@ function GetPageData()
 
     return gPageData;
 }
-    
 
 function PrefillAccountForIsp(ispName)
 {

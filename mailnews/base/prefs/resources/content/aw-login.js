@@ -89,12 +89,7 @@ function loginPageInit() {
     }
 
     var smtpNameInput = document.getElementById("smtpusername");
-    var smtpServer = null;
-    try {
-      smtpServer = parent.smtpService.defaultServer;
-    }
-    catch (ex) {}
-
+    var smtpServer = parent.smtpService.defaultServer;
     if (smtpServer && smtpServer.hostname && smtpServer.username &&
         smtpServer.redirectorType == null) {
       // we have a default SMTP server, so modify and show the static text

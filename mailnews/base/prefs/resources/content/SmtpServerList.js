@@ -50,6 +50,7 @@ var hasEdited=false;            // whether any kind of edits have occured
 var gOldDefaultSmtpServer;
 var gAddedSmtpServers = new Array;
 var gDeletedSmtpServers = new Array;
+
 // event handlersn
 function onLoad()
 {
@@ -136,17 +137,15 @@ function updateButtons()
 
         // can't delete default server
         var server = getSelectedServer();
-        try{
-          if (smtpService.defaultServer == server) {
-              dump("Selected default server!\n");
-              setDefaultButton.setAttribute("disabled", "true");
-              deleteButton.setAttribute("disabled", "true");
-          }
-          else {
-              setDefaultButton.removeAttribute("disabled");
-              deleteButton.removeAttribute("disabled");
-          }
-        } catch(ex){}
+        if (smtpService.defaultServer == server) {
+            dump("Selected default server!\n");
+            setDefaultButton.setAttribute("disabled", "true");
+            deleteButton.setAttribute("disabled", "true");
+        }
+        else {
+            setDefaultButton.removeAttribute("disabled");
+            deleteButton.removeAttribute("disabled");
+        }
     }
 
 }
@@ -163,17 +162,15 @@ function refreshServerList()
     // remove all children
     while (serverList.hasChildNodes())
         serverList.removeChild(serverList.lastChild);
-    try{
-      var defaultServer = smtpService.defaultServer;
-      fillSmtpServers(serverList,smtpService.smtpServers, defaultServer);
 
-      // restore selection
-      for (i=0; i< oldSelectedIds.length; i++) {
-          var element = document.getElementById(oldSelectedIds[i]);
-          if (element)
-              serverList.selectItem(element);
-      }
-    } catch(ex){}
+    var defaultServer = smtpService.defaultServer;
+    fillSmtpServers(serverList, smtpService.smtpServers, defaultServer);
+    // restore selection
+    for (i = 0; i < oldSelectedIds.length; ++i) {
+        var element = document.getElementById(oldSelectedIds[i]);
+        if (element)
+            serverList.selectItem(element);
+    }
 }
 
 // helper functions

@@ -151,12 +151,10 @@ function donePageInit() {
 
         var smtpServerName="";
         if (pageData.server && pageData.server.smtphostname) {
-          try{
-            var smtpServer = parent.smtpService.defaultServer;
-            smtpServerName = pageData.server.smtphostname.value;
-            if (!smtpServerName && smtpServer.hostname)
-                smtpServerName = smtpServer.hostname;
-          } catch(ex){}
+          var smtpServer = parent.smtpService.defaultServer;
+          smtpServerName = pageData.server.smtphostname.value;
+          if (!smtpServerName && smtpServer && smtpServer.hostname)
+              smtpServerName = smtpServer.hostname;
         }
         setDivTextFromForm("smtpServer.name", smtpServerName);
     }

@@ -85,18 +85,14 @@ function getInvalidAccounts(accounts)
 // This will bring up the dialog only once per session and only if we
 // are not the default mail client.
 function showMailIntegrationDialog() {
-    var mapiRegistry;
+    var mapiRegistry = null;
     try {
         var mapiRegistryProgID = "@mozilla.org/mapiregistry;1" 
         if (mapiRegistryProgID in Components.classes) {
           mapiRegistry = Components.classes[mapiRegistryProgID].getService(Components.interfaces.nsIMapiRegistry);
         }
-        else {
-          mapiRegistry = null;
-        }
     }
     catch (ex) { 
-        mapiRegistry = null;
     }
 
     // showDialog is TRUE only if we did not bring up this dialog already

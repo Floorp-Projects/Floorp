@@ -101,12 +101,11 @@ function updateElementWithKeys(account, element, type) {
       element["serverkey"] = account.incomingServer.key;
       break;
     case "smtp":
-      try {element["serverkey"] = smtpService.defaultServer.key;}
-      catch(ex){}
+      if (smtpService.defaultServer)
+        element["serverkey"] = smtpService.defaultServer.key;
       break;
     default:
 //      dump("unknown element type! "+type+"\n");
-      break;
   }
 }
 
@@ -279,6 +278,7 @@ function replaceWithDefaultSmtpServer(deletedSmtpServerKey)
     }
   }
 }
+
 function onAccept() {
   // Check if user/host have been modified.
   if (!checkUserServerChanges(true))
@@ -457,7 +457,6 @@ function ReloadSmtpPanel()
   smtpTrySSL.selectedItem = elements[0];
 }
 
-
 function onDuplicateAccount() {
   //dump("onDuplicateAccount\n");
 
@@ -586,13 +585,10 @@ function saveAccount(accountValues, account)
         dest = server;
       else if (type == "pop3")
         dest = server.QueryInterface(Components.interfaces.nsIPop3IncomingServer);
-
       else if (type == "imap")
         dest = server.QueryInterface(Components.interfaces.nsIImapIncomingServer);
-
       else if (type == "none")
         dest = server.QueryInterface(Components.interfaces.nsINoIncomingServer);
-
       else if (type == "nntp")
         dest = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
       else if (type == "smtp")
@@ -648,7 +644,6 @@ function saveAccount(accountValues, account)
   }
 }
 }
-
 
 function updateButtons(tree,serverId) {
   var canCreate = true;
@@ -873,25 +868,18 @@ function getAccountValue(account, accountValues, type, slot, preftype, isGeneric
     try {
     if (type == "identity")
       source = account.defaultIdentity;
-
     else if (type == "server")
       source = account.incomingServer;
-
     else if (type == "pop3")
       source = server.QueryInterface(Components.interfaces.nsIPop3IncomingServer);
-
     else if (type == "imap")
       source = server.QueryInterface(Components.interfaces.nsIImapIncomingServer);
-
     else if (type == "none")
       source = server.QueryInterface(Components.interfaces.nsINoIncomingServer);
-
     else if (type == "nntp")
       source = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
-
     else if (type == "smtp")
       source = smtpService.defaultServer;
-
     } catch (ex) {
     }
 
@@ -934,6 +922,7 @@ function getAccountValue(account, accountValues, type, slot, preftype, isGeneric
   //dump("Array->Form: accountValues[" + type + "][" + slot + "] = " + value + "\n");
   return value;
 }
+
 //
 // restore the values of the widgets from the given server
 //
