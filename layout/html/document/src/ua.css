@@ -496,5 +496,6 @@ NOFRAMES {
 :SCROLLED-CONTENT {
   background: inherit;
   padding: inherit;
+  display: inherit;
 }
 

@@ -331,7 +331,7 @@ protected:
                             nsIFrame*   aParentFrame,
                             nsIFrame*&  aFrame);
 
-  PRBool IsScrollable(nsIFrame* aFrame, const nsStyleDisplay* aDisplay);
+  PRBool IsScrollable(const nsStyleDisplay* aDisplay);
 
   nsIFrame* GetFrameFor(nsIPresShell* aPresShell, nsIContent* aContent);
 
@@ -1376,8 +1376,7 @@ HTMLStyleSheetImpl::GetAdjustedParentFrame(nsIFrame*  aCurrentParentFrame,
 }
 
 PRBool
-HTMLStyleSheetImpl::IsScrollable(nsIFrame*             aFrame,
-                                 const nsStyleDisplay* aDisplay)
+HTMLStyleSheetImpl::IsScrollable(const nsStyleDisplay* aDisplay)
 {
   // For the time being it's scrollable if the overflow property is auto or
   // scroll, regardless of whether the width  or height is fixed in size
@@ -1442,6 +1441,34 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
                                 aFrameSubTree);
 
       } else {
+        // If the frame is a block-level frame and is scrollable then wrap it
+        // in a scroll frame.
+        // XXX Applies to replaced elements, too, but how to tell if the element
+        // is replaced?
+        nsIFrame* scrollFrame = nsnull;
+
+        // If we're paginated then don't ever make the BODY scrollable
+        // XXX Use a special BODY rule for paged media
+        if (!(aPresContext->IsPaginated() && (nsHTMLAtoms::body == tag))) {
+          if (display->IsBlockLevel() && IsScrollable(display)) {
+            // Create a scroll frame which will wrap the frame that needs to
+            // be scrolled
+            if NS_SUCCEEDED(NS_NewScrollFrame(aContent, aParentFrame, scrollFrame)) {
+              // The scroll frame gets the original style context, and the scrolled
+              // frame gets a SCROLLED-CONTENT pseudo element style context.
+              scrollFrame->SetStyleContext(aPresContext, styleContext);
+
+              nsIStyleContext*  pseudoStyle;
+              pseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent,
+                                                                       nsHTMLAtoms::scrolledContentPseudo,
+                                                                       styleContext);
+              NS_RELEASE(styleContext);
+              styleContext = pseudoStyle;
+              aParentFrame = scrollFrame;
+            }
+          }
+        }
+
         // Handle specific frame types
         rv = ConstructFrameByTag(aPresContext, aContent, aParentFrame,
                                  tag, styleContext, aFrameSubTree);
@@ -1452,43 +1479,13 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
           rv = ConstructFrameByDisplayType(aPresContext, display,
                                            aContent, aParentFrame,
                                            styleContext, aFrameSubTree);
-
-
         }
 
-        // If the frame is a block-level frame and is scrollable then wrap it
-        // in a scroll frame.
-        // XXX Applies to replaced elements, too, but how to tell if the element
-        // is replaced?
-        if (nsnull != aFrameSubTree) {
-          // If we're paginated then don't ever make the BODY scrollable
-          // XXX Use a special BODY rule for paged media
-          if (!(aPresContext->IsPaginated() && (nsHTMLAtoms::body == tag))) {
-            if (display->IsBlockLevel() && IsScrollable(aFrameSubTree, display)) {
-              nsIFrame* scrollFrame;
-    
-              if NS_SUCCEEDED(NS_NewScrollFrame(aContent, aParentFrame, scrollFrame)) {
-                // The scroll frame gets the original style context, and the scrolled
-                // frame gets a SCROLLED-CONTENT pseudo element style context.
-                scrollFrame->SetStyleContext(aPresContext, styleContext);
-  
-                nsIStyleContext*  pseudoStyle;
-                pseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent,
-                                                                         nsHTMLAtoms::scrolledContentPseudo,
-                                                                         styleContext);
-                aFrameSubTree->SetStyleContext(aPresContext, pseudoStyle);
-                NS_RELEASE(pseudoStyle);
-  
-                // Reset the scrolled frame's geometric and content parent
-                aFrameSubTree->SetGeometricParent(scrollFrame);
-                aFrameSubTree->SetContentParent(scrollFrame);
-  
-                // Initialize the scroll frame
-                scrollFrame->Init(*aPresContext, aFrameSubTree);
-                aFrameSubTree = scrollFrame;
-              }
-            }
-          }
+        // Set the scroll frame's initial child list and return the scroll frame
+        // as the frame sub-tree
+        if (nsnull != scrollFrame) {
+          scrollFrame->Init(*aPresContext, aFrameSubTree);
+          aFrameSubTree = scrollFrame;
         }
       }
     }
@@ -1510,7 +1507,7 @@ HTMLStyleSheetImpl::GetFrameFor(nsIPresShell* aPresShell, nsIContent* aContent)
     const nsStyleDisplay* display;
     frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
 
-    if (display->IsBlockLevel() && IsScrollable(frame, display)) {
+    if (display->IsBlockLevel() && IsScrollable(display)) {
       frame->FirstChild(frame);
     }
   }
