@@ -520,6 +520,7 @@
 
       <method name="addTab">
         <parameter name="aURI"/>
+        <parameter name="aReferrerURI"/>
         <body>
           <![CDATA[
             var blank = (aURI == "about:blank");
@@ -588,9 +589,10 @@
             var tabListener = (this.mTabProgressListener)(this, t, blank);
             b.webProgress.addProgressListener(tabListener);
             this.mTabListeners[position] = tabListener;
-            
+
             if (!blank)
-              b.loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE);
+              b.loadURIWithFlags(aURI, nsIWebNavigation.LOAD_FLAGS_NONE,
+                                 aReferrerURI, null, null);
 
             return t;
           ]]>
@@ -942,9 +944,10 @@
       <!-- throws exception for unknown schemes -->
       <method name="loadURI">
         <parameter name="aURI"/>
+        <parameter name="aReferrerURI"/>
         <body>
           <![CDATA[
-            return this.mCurrentBrowser.loadURI(aURI);
+            return this.mCurrentBrowser.loadURI(aURI, aReferrerURI);
           ]]>
         </body>
       </method>
@@ -953,9 +956,10 @@
       <method name="loadURIWithFlags">
         <parameter name="aURI"/>
         <parameter name="aFlags"/>
+        <parameter name="aReferrerURI"/>
         <body>
           <![CDATA[
-            return this.mCurrentBrowser.loadURIWithFlags(aURI, aFlags);
+            return this.mCurrentBrowser.loadURIWithFlags(aURI, aFlags, aReferrerURI);
           ]]>
         </body>
       </method>
