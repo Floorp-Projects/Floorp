@@ -2795,6 +2795,18 @@ nsLineLayout::ApplyFrameJustification(PerSpanData* aPSD, FrameJustificationState
       }
       
       pfd->mBounds.width += dw;
+      // Make sure mCombinedArea includes the new bounds.
+      // Don't just set it to the new bounds because it could include
+      // the overflow of some children of the frame... (e.g., rel pos children).
+      pfd->mCombinedArea.UnionRect(pfd->mCombinedArea,
+        nsRect(0, 0, pfd->mBounds.width, pfd->mBounds.height));
+
+      // Ah, but what if this frame is actually a span with a child
+      // that overflows and the child is moved by justification? How
+      // do we ensure that mCombinedArea includes that child? NO
+      // PROBLEM! RelativePositionFrames gets called later, and it
+      // unions all child frame bounds back into our combinedArea.
+
       deltaX += dw;
       pfd->mFrame->SetRect(pfd->mBounds);
     }
