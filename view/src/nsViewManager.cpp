@@ -2517,7 +2517,7 @@ NS_IMETHODIMP nsViewManager::SetViewChildClipRegion(nsIView *aView, const nsRegi
 /*
   Returns PR_TRUE if and only if aView is a (possibly indirect) child of aAncestor.
 */
-static PRBool IsAncestorOf(nsView* aAncestor, nsView* aView) 
+static PRBool IsAncestorOf(const nsView* aAncestor, const nsView* aView) 
 {
   while (nsnull != aView) {
     aView = aView->GetParent();
@@ -2625,14 +2625,47 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
   // We DON'T use AddCoveringWidgetsToOpaqueRegion here. Our child widgets are going to be moved
   // as if they were scrolled, so we need to examine the display list elements that might be covered by
   // child widgets.
-  
+
+  // However, we do want to ignore areas that are covered by widgets which have not moved.
+  // Unfortunately figuring out that area is not easy, because we don't yet trust the native
+  // widget layer to tell us the correct z-order of native widgets.
+  // We still have to handle at least one case well:
+  // widgets for fixed-position elements when we are scrolling the root scrollable (or something inside
+  // the root scrollable) are on top.
+  nsRegion opaqueRegion;
+  if (mRootScrollable != nsnull) {
+    const nsIView* scrollableClipView;
+    mRootScrollable->GetClipView(&scrollableClipView);
+    if (IsAncestorOf(NS_STATIC_CAST(const nsView*, scrollableClipView), aView)) {
+      // add areas of fixed views to the opaque area.
+      // This is a bit of a hack. We should not be doing special case processing for fixed views.
+      nsView* fixedView = mRootView->GetFirstChild();
+      while (fixedView != nsnull) {
+        if (fixedView->GetZParent() != nsnull && fixedView->GetZIndex() >= 0) {
+          nsRect fixedBounds;
+          fixedView->GetBounds(fixedBounds);
+          opaqueRegion.Or(opaqueRegion, fixedBounds);
+        }
+        fixedView = fixedView->GetNextSibling();
+      }
+
+      // get the region into the coordinates of aView
+      nscoord deltaX = 0, deltaY = 0;
+      nsView* v = aView;
+      while (v != nsnull) {
+        v->ConvertToParentCoords(&deltaX, &deltaY);
+        v = v->GetParent();
+      }
+      opaqueRegion.Offset(-deltaX, -deltaY);
+    }
+  }
+
   // We DO need to use OptimizeDisplayList here to eliminate views that are covered by views we know
   // are opaque. Typically aView itself is opaque and we want to eliminate views behind aView, such as
   // aView's parent, that aren't being scrolled and would otherwise cause us to decide not to blit.
 
   // (Of course it's possible that aView's parent is actually in front of aView (if aView has a negative
   // z-index) but if so, this code still does the right thing. Yay for the display list based approach!)
-  nsRegion opaqueRegion; // empty; no opaque overlay
   OptimizeDisplayList(r, finalTransparentRect, opaqueRegion);
 
   PRBool anyUnscrolledViews = PR_FALSE;
@@ -3067,13 +3100,6 @@ NS_IMETHODIMP nsViewManager::EndUpdateViewBatch(PRUint32 aUpdateFlags)
 NS_IMETHODIMP nsViewManager::SetRootScrollableView(nsIScrollableView *aScrollable)
 {
   mRootScrollable = aScrollable;
-
-  //XXX this needs to go away when layout start setting this bit on it's own. MMP
-  // We don't set ALWAYS_BLIT if this isn't the root of the view manager tree,
-  // because non-roots may not, in fact, always be able to blit
-  if (mRootScrollable && mRootView->GetParent() == nsnull)
-    mRootScrollable->SetScrollProperties(NS_SCROLL_PROPERTY_ALWAYS_BLIT);
-
   return NS_OK;
 }
 
@@ -3667,6 +3693,7 @@ void nsViewManager::ShowDisplayList(PRInt32 flatlen)
     nsView*              view = element->mView;
     nsRect               rect = element->mBounds;
     PRUint32             flags = element->mFlags;
+    PRUint32             viewFlags = element->mView->GetViewFlags();
     nsRect               dim;
     nscoord              vx, vy;
 
@@ -3703,6 +3730,21 @@ void nsViewManager::ShowDisplayList(PRInt32 flatlen)
 
         if (flags & VIEW_RENDERED)
           printf("VIEW_RENDERED ");
+
+        if (flags & VIEW_ISSCROLLED)
+          printf("VIEW_ISSCROLLED ");
+
+        if (flags & VIEW_CLIPPED)
+          printf("VIEW_ISCLIPPED ");
+
+        if (flags & VIEW_TRANSLUCENT)
+          printf("VIEW_ISTRANSLUCENT ");
+
+        if (flags & VIEW_TRANSPARENT)
+          printf("VIEW_ISTRANSPARENT ");
+
+        if (viewFlags & NS_VIEW_FLAG_DONT_BITBLT)
+          printf("NS_VIEW_FLAG_DONT_BITBLT ");
 
         printf("\n");
       }
