@@ -525,6 +525,7 @@ calendarManager.prototype.retrieveAndSaveRemoteCalendar = function calMan_retrie
       Path = ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" );
 
    var Channel = ioService.newChannel( Path, null, null );
+   Channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
 
    var CalendarManager = this;
    
