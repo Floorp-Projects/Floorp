@@ -182,15 +182,6 @@
     </exec>
     <exec os="Windows 2000" dir="${basedir}/src_moz" executable="make" 
                      failonerror="yes"/>
-
-    <exec os="SunOS" dir="${basedir}/src_moz" executable="gmake" 
-                     failonerror="yes">
-      <arg line="buildRunems"/>
-    </exec>
-    <exec os="Linux" dir="${basedir}/src_moz" executable="make" 
-                     failonerror="yes">
-      <arg line="buildRunems"/>
-    </exec>
     <exec os="Windows 2000" dir="${basedir}/src_moz" executable="make" 
                      failonerror="yes"/>
 
