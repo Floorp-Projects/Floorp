@@ -49,11 +49,11 @@ function BuildHTMLAttributeNameList()
           limitFirstChar = name.indexOf("^") >= 0;
           if (limitFirstChar)
           {
-            menuitem = AppendStringToMenulist(gDialog.AddHTMLAttributeNameInput, name.replace(/\^/g, ""));
+            menuitem = gDialog.AddHTMLAttributeNameInput.appendItem(name.replace(/\^/g, ""));
             menuitem.setAttribute("limitFirstChar", "true");
           }
           else
-            AppendStringToMenulist(gDialog.AddHTMLAttributeNameInput, name);
+            gDialog.AddHTMLAttributeNameInput.appendItem(name);
         }
       }
       else if (name == "-")
@@ -80,7 +80,7 @@ function BuildHTMLAttributeNameList()
         // Strip flag characters
         name = name.replace(/[!^#%$+]/g, "");
 
-        menuitem = AppendStringToMenulist(gDialog.AddHTMLAttributeNameInput, name);
+        menuitem = gDialog.AddHTMLAttributeNameInput.appendItem(name);
         if (menuitem)
         {
           // Signify "required" attributes by special style
@@ -250,7 +250,7 @@ function onInputHTMLAttributeName()
                 popup.appendChild(sep);
             }        
           } else {
-            AppendStringToMenulist(gDialog.AddHTMLAttributeValueMenulist, valueList[i]);
+            gDialog.AddHTMLAttributeValueMenulist.appendItem(valueList[i]);
           }
         }
       }
