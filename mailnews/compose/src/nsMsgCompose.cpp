@@ -748,12 +748,12 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
       {
 		nsString aCharset(msgCompHeaderInternalCharset());
         char * utf8Author = nsnull;
-		ConvertFromUnicode(aCharset, author, &utf8Author);
-		if (utf8Author)
+		rv = ConvertFromUnicode(aCharset, author, &utf8Author);
+		if (NS_SUCCEEDED(rv) && utf8Author)
 		{
 			rv = parser->ExtractHeaderAddressName(nsAutoCString(aCharset), utf8Author, &authorName);
 			if (NS_SUCCEEDED(rv))
-				ConvertToUnicode(aCharset, authorName, author);
+				rv = ConvertToUnicode(aCharset, authorName, author);
 		}
 		
 		if (!utf8Author || NS_FAILED(rv))
