@@ -43,8 +43,9 @@ PR_BEGIN_EXTERN_C
 
 /**
  * Call NS_TraceMalloc with a valid log file descriptor to enable logging
- * of compressed malloc traces, including callsite chains.  Integers are
- * unsigned, at most 32 bits, and encoded as follows:
+ * of compressed malloc traces, including callsite chains.  Integers may be
+ * unsigned serial numbers, sizes, or offsets, and require at most 32 bits.
+ * They're encoded as follows:
  *   0-127                  0xxxxxxx (binary, one byte)
  *   128-16383              10xxxxxx xxxxxxxx
  *   16384-0x1fffff         110xxxxx xxxxxxxx xxxxxxxx
