@@ -63,24 +63,24 @@
 #define isatty		mozce_isatty
 
 // math.cpp
-
-#define fd_acos acos
-#define fd_asin asin
-#define fd_atan atan
-#define fd_cos cos
-#define fd_sin sin
-#define fd_tan tan
-#define fd_exp exp
-#define fd_log log
-#define fd_sqrt sqrt
-#define fd_ceil ceil
-#define fd_fabs fabs
-#define fd_floor floor
-#define fd_fmod fmod
-#define fd_atan2 atan2
-#define fd_copysign _copysign
-#define fd_pow pow
-
+/*
+  #define fd_acos acos
+  #define fd_asin asin
+  #define fd_atan atan
+  #define fd_cos cos
+  #define fd_sin sin
+  #define fd_tan tan
+  #define fd_exp exp
+  #define fd_log log
+  #define fd_sqrt sqrt
+  #define fd_ceil ceil
+  #define fd_fabs fabs
+  #define fd_floor floor
+  #define fd_fmod fmod
+  #define fd_atan2 atan2
+  #define fd_copysign _copysign
+  #define fd_pow pow
+*/
 
 // From mbstring.cpp
 #define _mbsinc		mozce_mbsinc
@@ -159,6 +159,7 @@
 #define GetFullPathName           mozce_GetFullPathName
 #define GetIconInfo               mozce_GetIconInfo
 #define GetMapMode                mozce_GetMapMode
+#define GetMessageTime            mozce_GetMessageTime
 #define GetOutlineTextMetrics     mozce_GetOutlineTextMetrics
 #define GetScrollPos              mozce_GetScrollPos
 #define GetScrollRange            mozce_GetScrollRange
@@ -272,6 +273,7 @@
 #define SetEnvironmentVariableA   mozce_SetEnvironmentVariableA
 #define SetPropA                  mozce_SetPropA
 #define StartDocA                 mozce_StartDocA
+#define UnregisterClassA          mozce_UnregisterClassA
 #define VerQueryValueA            mozce_VerQueryValueA
 
 #define CreateDialogIndirectParamA CreateDialogIndirectParamW
@@ -432,6 +434,8 @@ extern "C" {
 
   MOZCE_SHUNT_API DWORD mozce_MsgWaitForMultipleObjects(DWORD nCount, const HANDLE* pHandles, BOOL bWaitAll, DWORD dwMilliseconds, DWORD dwWakeMask);
 
+  MOZCE_SHUNT_API LONG mozce_GetMessageTime(void);
+
   // from win32a.cpp
   
   MOZCE_SHUNT_API DWORD mozce_GetGlyphOutlineA(HDC inDC, CHAR inChar, UINT inFormat, void* inGM, DWORD inBufferSize, LPVOID outBuffer, CONST mozce_MAT2* inMAT2);
@@ -452,6 +456,7 @@ extern "C" {
   MOZCE_SHUNT_API BOOL mozce_PeekMessageA(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg);
   MOZCE_SHUNT_API BOOL mozce_SetCurrentDirectoryA(LPCSTR inPathName);
   MOZCE_SHUNT_API BOOL mozce_VerQueryValueA(const LPVOID inBlock, LPSTR inSubBlock, LPVOID *outBuffer, PUINT outLen);
+  MOZCE_SHUNT_API BOOL mozce_UnregisterClassA(LPCSTR lpClassName, HINSTANCE hInstance);
   MOZCE_SHUNT_API DWORD mozce_GetCurrentDirectoryA(DWORD inBufferLength, LPSTR outBuffer);
   MOZCE_SHUNT_API DWORD mozce_GetEnvironmentVariableA(LPSTR lpName, LPSTR lpBuffer, DWORD nSize);
   MOZCE_SHUNT_API DWORD mozce_GetFileAttributesA(LPCSTR lpFileName);

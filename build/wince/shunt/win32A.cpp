@@ -526,25 +526,6 @@ MOZCE_SHUNT_API BOOL mozce_GetTextExtentExPointA(HDC inDC, char* inStr, int inLe
   printf("mozce_GetTextExtentExPointA called (%d)\n", inLen);
 #endif
 
-  if (inLen == 0)
-      return FALSE;
-
-  wchar_t *ws = NULL;
-  BOOL res;
-
-  ws = (wchar_t *) malloc(inLen * 2);
-
-  MultiByteToWideChar(CP_ACP, 0, 
-		      inStr, inLen, 
-		      ws, inLen);
-  
-  res = GetTextExtentExPointW(inDC, ws, inLen, inMaxExtent, outFit,
-			      outDx, inSize);
-
-  free(ws);
-  return res;
-
-#if 0
     BOOL retval = FALSE;
 
     if (!inStr)
@@ -561,7 +542,6 @@ MOZCE_SHUNT_API BOOL mozce_GetTextExtentExPointA(HDC inDC, char* inStr, int inLe
     }
 
     return retval;
-#endif
 }
 
 
@@ -1109,6 +1089,16 @@ MOZCE_SHUNT_API ATOM mozce_RegisterClassA(CONST WNDCLASSA *lpwc)
     return RegisterClassW(&wcW);   
 }
 
+MOZCE_SHUNT_API BOOL mozce_UnregisterClassA(LPCSTR lpClassName, HINSTANCE hInstance)
+{
+#ifdef DEBUG
+    printf("mozce_UnregisterClassA called\n");
+#endif
+    LPTSTR w = a2w_malloc(lpClassName, -1, NULL);
+    BOOL result = UnregisterClassW(w, hInstance);
+    free(w);
+    return result;
+}
 MOZCE_SHUNT_API UINT mozce_RegisterWindowMessageA(LPCSTR s)
 {
 #ifdef DEBUG

@@ -267,4 +267,8 @@ typedef struct mozce_OUTLINETEXTMETRIC
 
 #define CBM_INIT 4
 
+#ifndef MM_TEXT
+#define MM_TEXT             1
+#endif
+
 #endif
