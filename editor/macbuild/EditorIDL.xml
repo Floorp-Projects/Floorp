@@ -762,7 +762,6 @@
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
-                </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsIHTMLObjectResizer.idl</PATH>
