@@ -132,8 +132,7 @@ public:
         return NS_ERROR_FAILURE;
       }
       
-      nsCOMPtr<nsINodeInfo> nodeInfo;
-      content->GetNodeInfo(getter_AddRefs(nodeInfo));
+      nsINodeInfo *nodeInfo = content->GetNodeInfo();
       if (!nodeInfo) {
         return NS_ERROR_FAILURE;
       }

@@ -65,7 +65,7 @@ public:
   // are explicitly avoiding an FlushPendingNotifications.  The
   // flush guarantees that the list will be up to date.
 
-  NS_IMETHOD GetLength(PRUint32* aLength, PRBool aDoFlush) = 0;
+  NS_IMETHOD_(PRUint32) GetLength(PRBool aDoFlush) = 0;
 
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn,
                   PRBool aDoFlush) = 0;
@@ -73,8 +73,7 @@ public:
   NS_IMETHOD NamedItem(const nsAString& aName, nsIDOMNode** aReturn,
                        PRBool aDoFlush) = 0;
 
-  NS_IMETHOD IndexOf(nsIContent *aContent, PRInt32& aIndex,
-                     PRBool aDoFlush) = 0;
+  NS_IMETHOD_(PRInt32) IndexOf(nsIContent *aContent, PRBool aDoFlush) = 0;
 };
 
 #endif /* nsIContentList_h___ */

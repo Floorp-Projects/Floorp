@@ -366,9 +366,9 @@ public:
                          nsIViewManager* aViewManager,
                          nsIStyleSet* aStyleSet,
                          nsIPresShell** aInstancePtrResult);
-  virtual PRBool DeleteShell(nsIPresShell* aShell);
-  virtual PRInt32 GetNumberOfShells();
-  NS_IMETHOD GetShellAt(PRInt32 aIndex, nsIPresShell** aShell);
+  NS_IMETHOD_(PRBool) DeleteShell(nsIPresShell* aShell);
+  NS_IMETHOD_(PRUint32) GetNumberOfShells() const;
+  NS_IMETHOD_(nsIPresShell *) GetShellAt(PRUint32 aIndex) const;
 
   /**
    * Return the parent document of this document. Will return null
@@ -392,9 +392,9 @@ public:
    * Get the direct children of the document - content in
    * the prolog, the root content and content in the epilog.
    */
-  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent** aResult) const;
-  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const;
-  NS_IMETHOD GetChildCount(PRInt32& aCount);
+  NS_IMETHOD_(nsIContent *) GetChildAt(PRUint32 aIndex) const;
+  NS_IMETHOD_(PRInt32) IndexOf(nsIContent* aPossibleChild) const;
+  NS_IMETHOD_(PRUint32) GetChildCount() const;
 
   /**
    * Get the style sheets owned by this document.

@@ -93,8 +93,7 @@ nsresult nsAccessibleText::GetSelections(nsISelectionController **aSelCon, nsISe
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIPresShell> shell;
-  doc->GetShellAt(0, getter_AddRefs(shell));
+  nsIPresShell *shell = doc->GetShellAt(0);
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mTextNode));
@@ -644,8 +643,7 @@ NS_IMETHODIMP nsAccessibleText::GetCharacterExtents(PRInt32 aOffset,
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIPresShell> shell;
-  doc->GetShellAt(0, getter_AddRefs(shell));
+  nsIPresShell *shell = doc->GetShellAt(0);
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIPresContext> context;
@@ -975,8 +973,7 @@ nsITextControlFrame* nsAccessibleEditableText::GetTextFrame()
   if (!doc) // that could be a composer
     return nsnull;
 
-  nsCOMPtr<nsIPresShell> shell;
-  doc->GetShellAt(0, getter_AddRefs(shell));
+  nsIPresShell *shell = doc->GetShellAt(0);
   NS_ENSURE_TRUE(shell, nsnull);
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mTextNode));

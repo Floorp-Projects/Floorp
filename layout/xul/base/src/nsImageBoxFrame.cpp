@@ -118,9 +118,7 @@ HandleImagePLEvent(nsIContent *aContent, PRUint32 aMessage, PRUint32 aFlags)
     return;
   }
 
-  nsCOMPtr<nsIPresShell> pres_shell;
-  doc->GetShellAt(0, getter_AddRefs(pres_shell));
-
+  nsIPresShell *pres_shell = doc->GetShellAt(0);
   if (!pres_shell) {
     return;
   }

@@ -127,13 +127,13 @@ NS_IMETHODIMP nsAccessProxy::HandleEvent(nsIDOMEvent* aEvent)
 
   // get the Document and PresShell
   nsCOMPtr<nsIDOMDocument> domDoc;
-  nsCOMPtr<nsIPresShell> presShell;
+  nsIPresShell *presShell = nsnull;
   nsCOMPtr<nsIDocument> doc;
   domNode->GetOwnerDocument(getter_AddRefs(domDoc));
   if (domDoc) {
     doc = do_QueryInterface(domDoc);
     if (doc && doc->GetNumberOfShells()>0) {
-      doc->GetShellAt(0, getter_AddRefs(presShell));
+      presShell = doc->GetShellAt(0);
     }
   }
   //return  NS_OK;

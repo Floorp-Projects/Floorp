@@ -276,7 +276,16 @@ NS_IMETHODIMP
 nsAccessNode::GetNumChildren(PRInt32 *aNumChildren)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  return content? content->ChildCount(*aNumChildren) : NS_ERROR_NULL_POINTER;
+
+  if (!content) {
+    *aNumChildren = 0;
+
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aNumChildren = content->GetChildCount();
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -394,11 +403,11 @@ nsAccessNode::GetNextSiblingNode(nsIAccessNode **aAccessNode)
 NS_IMETHODIMP
 nsAccessNode::GetChildNodeAt(PRInt32 aChildNum, nsIAccessNode **aAccessNode)
 {
-  nsCOMPtr<nsIContent> child, content(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   NS_ENSURE_TRUE(content, NS_ERROR_NULL_POINTER);
 
-  content->ChildAt(aChildNum, getter_AddRefs(child));
-  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(child));
+  nsCOMPtr<nsIDOMNode> domNode =
+    do_QueryInterface(content->GetChildAt(aChildNum));
   NS_ENSURE_TRUE(domNode, NS_ERROR_NULL_POINTER);
 
   return MakeAccessNode(domNode, aAccessNode);

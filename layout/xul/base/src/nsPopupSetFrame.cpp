@@ -608,14 +608,12 @@ nsPopupSetFrame::OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
  
     nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(aPopupContent->GetDocument()));
 
-    PRInt32 count;
-    aPopupContent->ChildCount(count);
-    for (PRInt32 i = 0; i < count; i++) {
-      nsCOMPtr<nsIContent> grandChild;
-      aPopupContent->ChildAt(i, getter_AddRefs(grandChild));
+    PRUint32 count = aPopupContent->GetChildCount();
+    for (PRUint32 i = 0; i < count; i++) {
+      nsIContent *grandChild = aPopupContent->GetChildAt(i);
       nsCOMPtr<nsIAtom> tag;
       grandChild->GetTag(getter_AddRefs(tag));
-      if (tag.get() == nsXULAtoms::menuitem) {
+      if (tag == nsXULAtoms::menuitem) {
         // See if we have a command attribute.
         nsAutoString command;
         grandChild->GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);

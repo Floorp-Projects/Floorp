@@ -824,7 +824,7 @@ PR_STATIC_CALLBACK(PRBool) set_animation_mode(nsHashKey *aKey, void *aData, void
 //
 // Walks content and set the animation mode
 // this is a way to turn on/off image animations
-void nsPresContext::SetImgAnimations(nsCOMPtr<nsIContent>& aParent, PRUint16 aMode)
+void nsPresContext::SetImgAnimations(nsIContent *aParent, PRUint16 aMode)
 {
   nsCOMPtr<nsIImageLoadingContent> imgContent(do_QueryInterface(aParent));
   if (imgContent) {
@@ -834,14 +834,9 @@ void nsPresContext::SetImgAnimations(nsCOMPtr<nsIContent>& aParent, PRUint16 aMo
     SetImgAnimModeOnImgReq(imgReq, aMode);
   }
   
-  PRInt32 count;
-  aParent->ChildCount(count);
-  for (PRInt32 i=0;i<count;i++) {
-    nsCOMPtr<nsIContent> child;
-    aParent->ChildAt(i, getter_AddRefs(child));
-    if (child) {
-      SetImgAnimations(child, aMode);
-    }
+  PRUint32 count = aParent->GetChildCount();
+  for (PRUint32 i = 0; i < count; ++i) {
+    SetImgAnimations(aParent->GetChildAt(i), aMode);
   }
 }
 

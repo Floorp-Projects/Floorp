@@ -121,12 +121,10 @@ nsBaseContentList::RemoveElement(nsIContent *aContent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsBaseContentList::IndexOf(nsIContent *aContent, PRInt32& aIndex)
+NS_IMETHODIMP_(PRInt32)
+nsBaseContentList::IndexOf(nsIContent *aContent, PRBool aDoFlush)
 {
-  aIndex = mElements.IndexOf(aContent);
-
-  return NS_OK;
+  return mElements.IndexOf(aContent);
 }
 
 NS_IMETHODIMP
@@ -420,14 +418,13 @@ nsContentList::GetParentObject(nsISupports** aParentObject)
   return NS_OK;
 }
   
-NS_IMETHODIMP 
-nsContentList::GetLength(PRUint32* aLength, PRBool aDoFlush)
+NS_IMETHODIMP_(PRUint32)
+nsContentList::GetLength(PRBool aDoFlush)
 {
   CheckDocumentExistence();
   BringSelfUpToDate(aDoFlush);
     
-  *aLength = mElements.Count();
-  return NS_OK;
+  return mElements.Count();
 }
 
 NS_IMETHODIMP 
@@ -487,20 +484,21 @@ nsContentList::NamedItem(const nsAString& aName, nsIDOMNode** aReturn, PRBool aD
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsContentList::IndexOf(nsIContent *aContent, PRInt32& aIndex, PRBool aDoFlush)
+NS_IMETHODIMP_(PRInt32)
+nsContentList::IndexOf(nsIContent *aContent, PRBool aDoFlush)
 {
   CheckDocumentExistence();
   BringSelfUpToDate(aDoFlush);
     
-  aIndex = mElements.IndexOf(aContent);
-  return NS_OK;
+  return mElements.IndexOf(aContent);
 }
 
 NS_IMETHODIMP
 nsContentList::GetLength(PRUint32* aLength)
 {
-  return GetLength(aLength, PR_TRUE);
+  *aLength = GetLength(PR_TRUE);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -560,8 +558,7 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
   if (mState == LIST_DIRTY) 
     return NS_OK;
 
-  PRInt32 count;
-  aContainer->ChildCount(count);
+  PRInt32 count = aContainer->GetChildCount();
 
   /*
    * We want to handle the case of ContentAppended by sometimes
@@ -586,11 +583,10 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
        */
       nsCOMPtr<nsIDOM3Node> ourLastDOM3Node(do_QueryInterface(ourLastContent));
       if (ourLastDOM3Node) {
-        nsCOMPtr<nsIContent> firstAppendedContent;
-        aContainer->ChildAt(aNewIndexInContainer,
-                            getter_AddRefs(firstAppendedContent));
-        nsCOMPtr<nsIDOMNode> newNode(do_QueryInterface(firstAppendedContent));
+        nsCOMPtr<nsIDOMNode> newNode =
+          do_QueryInterface(aContainer->GetChildAt(aNewIndexInContainer));
         NS_ASSERTION(newNode, "Content being inserted is not a node.... why?");
+
         PRUint16 comparisonFlags;
         nsresult rv =
           ourLastDOM3Node->CompareDocumentPosition(newNode, &comparisonFlags);
@@ -606,10 +602,8 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
     if (!appendToList) {
       // The new stuff is somewhere in the middle of our list; check
       // whether we need to invalidate
-      nsCOMPtr<nsIContent> content;
       for (i = aNewIndexInContainer; i <= count-1; ++i) {
-        aContainer->ChildAt(i, getter_AddRefs(content));
-        if (MatchSelf(content)) {
+        if (MatchSelf(aContainer->GetChildAt(i))) {
           // Uh-oh.  We're gonna have to add elements into the middle
           // of our list. That's not worth the effort.
           mState = LIST_DIRTY;
@@ -633,11 +627,9 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
      * We're up to date.  That means someone's actively using us; we
      * may as well grab this content....
      */
-    nsCOMPtr<nsIContent> content;
     for (i = aNewIndexInContainer; i <= count-1; ++i) {
-      aContainer->ChildAt(i, getter_AddRefs(content));
       PRUint32 limit = PRUint32(-1);
-      PopulateWith(content, PR_TRUE, limit);
+      PopulateWith(aContainer->GetChildAt(i), PR_TRUE, limit);
     }
   }
 
@@ -721,9 +713,7 @@ nsContentList::Match(nsIContent *aContent)
     return PR_FALSE;
 
   if (mMatchAtom) {
-    nsCOMPtr<nsINodeInfo> ni;
-    aContent->GetNodeInfo(getter_AddRefs(ni));
-
+    nsINodeInfo *ni = aContent->GetNodeInfo();
     if (!ni)
       return PR_FALSE;
 
@@ -772,14 +762,11 @@ nsContentList::MatchSelf(nsIContent *aContent)
   
   if (Match(aContent))
     return PR_TRUE;
-  
-  PRInt32 i, count = -1;
 
-  aContent->ChildCount(count);
-  nsCOMPtr<nsIContent> child;
+  PRUint32 i, count = aContent->GetChildCount();
+
   for (i = 0; i < count; i++) {
-    aContent->ChildAt(i, getter_AddRefs(child));
-    if (MatchSelf(child)) {
+    if (MatchSelf(aContent->GetChildAt(i))) {
       return PR_TRUE;
     }
   }
@@ -800,12 +787,10 @@ nsContentList::PopulateWith(nsIContent *aContent, PRBool aIncludeRoot,
     }
   }
   
-  PRInt32 i, count;
-  aContent->ChildCount(count);
-  nsCOMPtr<nsIContent> child;
+  PRUint32 i, count = aContent->GetChildCount();
+
   for (i = 0; i < count; i++) {
-    aContent->ChildAt(i, getter_AddRefs(child));
-    PopulateWith(child, PR_TRUE, aElementsToAppend);
+    PopulateWith(aContent->GetChildAt(i), PR_TRUE, aElementsToAppend);
     if (aElementsToAppend == 0)
       return;
   }
@@ -821,17 +806,15 @@ nsContentList::PopulateWithStartingAfter(nsIContent *aStartRoot,
 #endif
   PRInt32 i = 0;
   if (aStartChild) {
-    aStartRoot->IndexOf(aStartChild, i);
+    i = aStartRoot->IndexOf(aStartChild);
     NS_ASSERTION(i >= 0, "The start child must be a child of the start root!");
     ++i;  // move to one past
   }
-  
-  PRInt32 childCount;
-  aStartRoot->ChildCount(childCount);
-  nsCOMPtr<nsIContent> child;
-  for ( ; i < childCount; ++i) {
-    aStartRoot->ChildAt(i, getter_AddRefs(child));
-    PopulateWith(child, PR_TRUE, aElementsToAppend);
+
+  PRUint32 childCount = aStartRoot->GetChildCount();
+  for ( ; ((PRUint32)i) < childCount; ++i) {
+    PopulateWith(aStartRoot->GetChildAt(i), PR_TRUE, aElementsToAppend);
+
     NS_ASSERTION(aElementsToAppend + mElements.Count() == invariant,
                  "Something is awry in PopulateWith!");
     if (aElementsToAppend == 0)

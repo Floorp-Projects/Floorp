@@ -1120,19 +1120,15 @@ nsresult nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, 
   // Depth first search for all text nodes that are decendants of content node.
   // Append all the text into one flat string
 
-  PRInt32 numChildren = 0;
+  PRUint32 numChildren = aContent->GetChildCount();
 
-  aContent->ChildCount(numChildren);
   if (numChildren == 0) {
     AppendFlatStringFromContentNode(aContent, aFlatString);
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent> contentWalker;
-  PRInt32 index;
-  for (index = 0; index < numChildren; index++) {
-    aContent->ChildAt(index, getter_AddRefs(contentWalker));
-    AppendFlatStringFromSubtree(contentWalker, aFlatString);
+  for (PRUint32 index = 0; index < numChildren; index++) {
+    AppendFlatStringFromSubtree(aContent->GetChildAt(index), aFlatString);
   }
   return NS_OK;
 }
@@ -1162,10 +1158,10 @@ NS_IMETHODIMP nsAccessible::AppendLabelText(nsIDOMNode *aLabelNode, nsAString& _
 /**
   * Called for HTML work only
   */
-NS_IMETHODIMP nsAccessible::AppendLabelFor(nsIContent *aLookNode, const nsAString *aId, nsAString *aLabel)
+NS_IMETHODIMP nsAccessible::AppendLabelFor(nsIContent *aLookNode,
+                                           const nsAString *aId,
+                                           nsAString *aLabel)
 {
-  PRInt32 numChildren = 0;
-
   nsCOMPtr<nsIDOMHTMLLabelElement> labelElement(do_QueryInterface(aLookNode));
   if (labelElement) {
     nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aLookNode));
@@ -1180,11 +1176,10 @@ NS_IMETHODIMP nsAccessible::AppendLabelFor(nsIContent *aLookNode, const nsAStrin
     return rv;
   }
 
-  aLookNode->ChildCount(numChildren);
-  nsCOMPtr<nsIContent> contentWalker;
-  PRInt32 index;
-  for (index = 0; index < numChildren; index++) {
-    aLookNode->ChildAt(index, getter_AddRefs(contentWalker));
+  PRUint32 numChildren = aLookNode->GetChildCount();
+
+  for (PRUint32 index = 0; index < numChildren; index++) { 
+    nsIContent *contentWalker = aLookNode->GetChildAt(index);
     if (contentWalker)
       AppendLabelFor(contentWalker, aId, aLabel);
   }
@@ -1485,8 +1480,12 @@ nsresult nsAccessible::GetParentBlockNode(nsIPresShell *aPresShell, nsIDOMNode *
   nsIFrame *firstTextFrame = nsnull;
   FindTextFrame(index, presContext, childFrame, &firstTextFrame, frame);
   if (firstTextFrame) {
-    nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(firstTextFrame->GetContent()));
-    NS_IF_ADDREF(*aBlockNode = domNode);
+    nsIContent *content = firstTextFrame->GetContent();
+
+    if (content) {
+      CallQueryInterface(content, aBlockNode);
+    }
+
     return NS_OK;
   }
   else {

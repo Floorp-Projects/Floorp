@@ -225,13 +225,13 @@ public:
   NS_DECL_NSIDOMNSXBLFORMCONTROL
 
   // nsIContent
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify, 
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify, 
                            PRBool aDeepSetDocument);
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
                             PRBool aDeepSetDocument);
   NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
                            PRBool aDeepSetDocument);
-  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
@@ -543,9 +543,7 @@ NS_IMETHODIMP
 nsHTMLSelectElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
                                    PRBool aDeepSetDocument) 
 {
-  PRInt32 count = 0;
-  ChildCount(count);
-  WillAddOptions(aKid, this, count);
+  WillAddOptions(aKid, this, GetChildCount());
 
   // Actually perform the append
   return nsGenericHTMLContainerFormElement::AppendChildTo(aKid,
@@ -554,7 +552,7 @@ nsHTMLSelectElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+nsHTMLSelectElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                    PRBool aNotify, PRBool aDeepSetDocument) 
 {
   WillAddOptions(aKid, this, aIndex);
@@ -566,7 +564,7 @@ nsHTMLSelectElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
+nsHTMLSelectElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
                                     PRBool aNotify, PRBool aDeepSetDocument) 
 {
   WillRemoveOptions(this, aIndex);
@@ -579,7 +577,7 @@ nsHTMLSelectElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
+nsHTMLSelectElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   WillRemoveOptions(this, aIndex);
 
@@ -676,12 +674,10 @@ nsHTMLSelectElement::PrintOptions(nsIContent* aOptions, PRInt32 tabs)
   // doesn't *hurt* to search under other stuff and it's more
   // efficient in the normal only-optgroup-and-option case
   // (one less QueryInterface).
-  PRInt32 numChildren;
-  aOptions->ChildCount(numChildren);
-  nsCOMPtr<nsIContent> child;
-  for (PRInt32 i=0;i<numChildren;i++) {
-    aOptions->ChildAt(i,*getter_AddRefs(child));
-    PrintOptions(child, tabs+1);
+  PRUint32 numChildren = aOptions->GetChildCount();
+
+  for (PRUint32 i = 0; i < numChildren; ++i) {
+    PrintOptions(aOptions->GetChildAt(i), tabs + 1);
   }
 
   return NS_OK;
@@ -704,7 +700,7 @@ nsHTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
     if (selectFrame) {
       nsCOMPtr<nsIPresContext> presContext;
       GetPresContext(this, getter_AddRefs(presContext));
-      for (int i=aListIndex;i<aListIndex+numRemoved;i++) {
+      for (int i = aListIndex; i < aListIndex + numRemoved; ++i) {
         selectFrame->RemoveOption(presContext, i);
       }
     }
@@ -728,6 +724,14 @@ nsHTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
   }
 
   return NS_OK;
+}
+
+static PRBool IsOptGroup(nsIContent *aContent)
+{
+  nsINodeInfo *ni = aContent->GetNodeInfo();
+
+  return (ni && ni->Equals(nsHTMLAtoms::optgroup) &&
+          aContent->IsContentOfType(nsIContent::eHTML));
 }
 
 // If the document is such that recursing over these options gets us
@@ -757,9 +761,7 @@ nsHTMLSelectElement::InsertOptionsIntoListRecurse(nsIContent* aOptions,
     mNonOptionChildren++;
   }
 
-  nsCOMPtr<nsIAtom> tag;
-  aOptions->GetTag(getter_AddRefs(tag));
-  if (tag == nsHTMLAtoms::optgroup) {
+  if (IsOptGroup(aOptions)) {
     mOptGroupCount++;
     DispatchDOMEvent(NS_LITERAL_STRING("selectHasGroups"));
   }
@@ -771,12 +773,11 @@ nsHTMLSelectElement::InsertOptionsIntoListRecurse(nsIContent* aOptions,
   // doesn't *hurt* to search under other stuff and it's more
   // efficient in the normal only-optgroup-and-option case
   // (one less QueryInterface).
-  PRInt32 numChildren;
-  aOptions->ChildCount(numChildren);
-  nsCOMPtr<nsIContent> child;
-  for (PRInt32 i = 0; i < numChildren; ++i) {
-    aOptions->ChildAt(i, getter_AddRefs(child));
-    nsresult rv = InsertOptionsIntoListRecurse(child, aInsertIndex, aDepth+1);
+  PRUint32 numChildren = aOptions->GetChildCount();
+
+  for (PRUint32 i = 0; i < numChildren; ++i) {
+    nsresult rv = InsertOptionsIntoListRecurse(aOptions->GetChildAt(i),
+                                               aInsertIndex, aDepth+1);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -810,9 +811,7 @@ nsHTMLSelectElement::RemoveOptionsFromListRecurse(nsIContent* aOptions,
   }
 
   if (mOptGroupCount) {
-    nsCOMPtr<nsIAtom> tag;
-    aOptions->GetTag(getter_AddRefs(tag));
-    if (tag == nsHTMLAtoms::optgroup) {
+    if (IsOptGroup(aOptions)) {
       mOptGroupCount--;
       DispatchDOMEvent(NS_LITERAL_STRING("selectHasNoGroups"));
     }
@@ -825,12 +824,11 @@ nsHTMLSelectElement::RemoveOptionsFromListRecurse(nsIContent* aOptions,
   // doesn't *hurt* to search under other stuff and it's more
   // efficient in the normal only-optgroup-and-option case
   // (one less QueryInterface).
-  PRInt32 numChildren;
-  aOptions->ChildCount(numChildren);
-  nsCOMPtr<nsIContent> child;
-  for (PRInt32 i = 0; i < numChildren; ++i) {
-    aOptions->ChildAt(i, getter_AddRefs(child));
-    nsresult rv = RemoveOptionsFromListRecurse(child, aRemoveIndex,
+  PRUint32 numChildren = aOptions->GetChildCount();
+
+  for (PRUint32 i = 0; i < numChildren; ++i) {
+    nsresult rv = RemoveOptionsFromListRecurse(aOptions->GetChildAt(i),
+                                               aRemoveIndex,
                                                aNumRemoved,
                                                aDepth + 1);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -862,8 +860,8 @@ nsHTMLSelectElement::WillAddOptions(nsIContent* aOptions,
   } else {
     // If there are artifacts, we have to get the index of the option the
     // hard way
-    PRInt32 children;
-    aParent->ChildCount(children);
+    PRInt32 children = aParent->GetChildCount();
+
     if (aContentIndex >= children) {
       // If the content insert is after the end of the parent, then we want to get
       // the next index *after* the parent and insert there.
@@ -872,8 +870,7 @@ nsHTMLSelectElement::WillAddOptions(nsIContent* aOptions,
       // If the content insert is somewhere in the middle of the container, then
       // we want to get the option currently at the index and insert in front of
       // that.
-      nsCOMPtr<nsIContent> currentKid;
-      aParent->ChildAt(aContentIndex, getter_AddRefs(currentKid));
+      nsIContent *currentKid = aParent->GetChildAt(aContentIndex);
       NS_ASSERTION(currentKid, "Child not found!");
       if (currentKid) {
         ind = GetOptionIndexAt(currentKid);
@@ -898,8 +895,7 @@ nsHTMLSelectElement::WillRemoveOptions(nsIContent* aParent,
   }
 
   // Get the index where the options will be removed
-  nsCOMPtr<nsIContent> currentKid;
-  aParent->ChildAt(aContentIndex, getter_AddRefs(currentKid));
+  nsIContent *currentKid = aParent->GetChildAt(aContentIndex);
   if (currentKid) {
     PRInt32 ind;
     if (!mNonOptionChildren) { 
@@ -967,10 +963,8 @@ nsHTMLSelectElement::GetOptionIndexAfter(nsIContent* aOptions)
   nsCOMPtr<nsIContent> parent = aOptions->GetParent();
 
   if (parent) {
-    PRInt32 index;
-    PRInt32 count;
-    parent->IndexOf(aOptions, index);
-    parent->ChildCount(count);
+    PRInt32 index = parent->IndexOf(aOptions);
+    PRInt32 count = parent->GetChildCount();
 
     retval = GetFirstChildOptionIndex(parent, index+1, count);
 
@@ -994,9 +988,7 @@ nsHTMLSelectElement::GetFirstOptionIndex(nsIContent* aOptions)
     return listIndex;
   }
 
-  PRInt32 numChildren;
-  aOptions->ChildCount(numChildren);
-  listIndex = GetFirstChildOptionIndex(aOptions, 0, numChildren);
+  listIndex = GetFirstChildOptionIndex(aOptions, 0, aOptions->GetChildCount());
 
   return listIndex;
 }
@@ -1007,10 +999,9 @@ nsHTMLSelectElement::GetFirstChildOptionIndex(nsIContent* aOptions,
                                               PRInt32 aEndIndex)
 {
   PRInt32 retval = -1;
-  nsCOMPtr<nsIContent> child;
+
   for (PRInt32 i = aStartIndex; i < aEndIndex; ++i) {
-    aOptions->ChildAt(i, getter_AddRefs(child));
-    retval = GetFirstOptionIndex(child);
+    retval = GetFirstOptionIndex(aOptions->GetChildAt(i));
     if (retval != -1) {
       break;
     }

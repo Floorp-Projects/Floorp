@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -300,16 +300,21 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
   return NULL;
 }
 
-static void GetPrimaryPresShell(nsIFrame* aFrame, nsIPresShell** aResult)
+static nsIPresShell *
+GetPrimaryPresShell(nsIFrame* aFrame)
 {
-  *aResult = nsnull;
-
   if (!aFrame)
-    return;
- 
-  nsIDocument* doc = aFrame->GetContent()->GetDocument();
-  if (doc)
-    doc->GetShellAt(0, aResult); // Addref happens here.
+    return nsnull;
+
+  nsIDocument *doc = aFrame->GetContent()->GetDocument();
+
+  nsIPresShell *shell = nsnull;
+
+  if (doc) {
+    shell = doc->GetShellAt(0);
+  }
+
+  return shell;
 }
 
 static PRInt32 GetContentState(nsIFrame* aFrame)
@@ -317,8 +322,7 @@ static PRInt32 GetContentState(nsIFrame* aFrame)
   if (!aFrame)
     return 0;
 
-  nsCOMPtr<nsIPresShell> shell;
-  GetPrimaryPresShell(aFrame, getter_AddRefs(shell));
+  nsIPresShell *shell = GetPrimaryPresShell(aFrame);
   if (!shell)
     return 0;
 

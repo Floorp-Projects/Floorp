@@ -75,15 +75,13 @@ static void
 BuildHandlerChain(nsIContent* aContent, nsXBLPrototypeHandler** aResult)
 {
   nsXBLPrototypeHandler *firstHandler = nsnull, *currHandler = nsnull;
-  
-  PRInt32 handlerCount;
-  aContent->ChildCount(handlerCount);
-  for (PRInt32 j = 0; j < handlerCount; j++) {
-    nsCOMPtr<nsIContent> handler;
-    aContent->ChildAt(j, getter_AddRefs(handler));
-    
+
+  PRUint32 handlerCount = aContent->GetChildCount();
+  for (PRUint32 j = 0; j < handlerCount; j++) {
+    nsIContent *handler = aContent->GetChildAt(j);
+
     nsXBLPrototypeHandler* newHandler = new nsXBLPrototypeHandler(handler);
-    
+
     if (newHandler) {
       if (currHandler)
         currHandler->SetNextHandler(newHandler);

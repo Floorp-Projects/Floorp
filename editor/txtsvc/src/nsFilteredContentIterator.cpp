@@ -203,7 +203,8 @@ nsFilteredContentIterator::Last()
 // ContentToParentOffset: returns the content node's parent and offset.
 //
 static void
-ContentToParentOffset(nsIContent *aContent, nsIDOMNode **aParent, PRInt32 *aOffset)
+ContentToParentOffset(nsIContent *aContent, nsIDOMNode **aParent,
+                      PRInt32 *aOffset)
 {
   if (!aParent || !aOffset)
     return;
@@ -219,10 +220,7 @@ ContentToParentOffset(nsIContent *aContent, nsIDOMNode **aParent, PRInt32 *aOffs
   if (!parent)
     return;
 
-  nsresult rv = parent->IndexOf(aContent, *aOffset);
-
-  if (NS_FAILED(rv))
-    return;
+  *aOffset = parent->IndexOf(aContent);
 
   CallQueryInterface(parent, aParent);
 }

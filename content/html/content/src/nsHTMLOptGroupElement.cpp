@@ -75,13 +75,13 @@ public:
   NS_DECL_NSIDOMHTMLOPTGROUPELEMENT
 
   // nsIContent
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
                            PRBool aDeepSetDocument);
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
                             PRBool aDeepSetDocument);
   NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
                            PRBool aDeepSetDocument);
-  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
@@ -233,9 +233,7 @@ nsHTMLOptGroupElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
   nsCOMPtr<nsISelectElement> sel;
   GetSelect(getter_AddRefs(sel));
   if (sel) {
-    PRInt32 count;
-    ChildCount(count);
-    sel->WillAddOptions(aKid, this, count);
+    sel->WillAddOptions(aKid, this, GetChildCount());
   }
 
   // Actually perform the append
@@ -245,7 +243,7 @@ nsHTMLOptGroupElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
 }
 
 NS_IMETHODIMP
-nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                      PRBool aNotify, PRBool aDeepSetDocument)
 {
   nsCOMPtr<nsISelectElement> sel;
@@ -261,7 +259,7 @@ nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
 }
 
 NS_IMETHODIMP
-nsHTMLOptGroupElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
+nsHTMLOptGroupElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
                                       PRBool aNotify, PRBool aDeepSetDocument)
 {
   nsCOMPtr<nsISelectElement> sel;
@@ -278,7 +276,7 @@ nsHTMLOptGroupElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
 }
 
 NS_IMETHODIMP
-nsHTMLOptGroupElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
+nsHTMLOptGroupElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   nsCOMPtr<nsISelectElement> sel;
   GetSelect(getter_AddRefs(sel));

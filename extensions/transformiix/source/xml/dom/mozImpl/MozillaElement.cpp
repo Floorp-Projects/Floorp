@@ -43,8 +43,7 @@ Element::Element(nsIDOMElement* aElement, Document* aOwner) :
 {
     nsCOMPtr<nsIContent> cont(do_QueryInterface(aElement));
     NS_ASSERTION(cont, "Element doesn't implement nsIContent");
-    nsCOMPtr<nsINodeInfo> nodeInfo;
-    cont->GetNodeInfo(getter_AddRefs(nodeInfo));
+    nsINodeInfo *nodeInfo = cont->GetNodeInfo();
     NS_ASSERTION(nodeInfo, "a element without nodeinfo");
     mNamespaceID = nodeInfo->GetNamespaceID();
 }

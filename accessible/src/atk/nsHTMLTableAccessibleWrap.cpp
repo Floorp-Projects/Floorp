@@ -148,7 +148,7 @@ nsHTMLTableAccessibleWrap::SetSummary(const nsAString &aSummary)
 NS_IMETHODIMP
 nsHTMLTableAccessibleWrap::GetColumns(PRInt32 *aColumns)
 {
-  nsITableLayout *tableLayout = nsnull;
+  nsITableLayout *tableLayout;
   nsresult rv = GetTableLayout(&tableLayout);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -197,7 +197,7 @@ nsHTMLTableAccessibleWrap::GetColumnHeader(nsIAccessibleTable **aColumnHeader)
 NS_IMETHODIMP
 nsHTMLTableAccessibleWrap::GetRows(PRInt32 *aRows)
 {
-  nsITableLayout *tableLayout = nsnull;
+  nsITableLayout *tableLayout;
   nsresult rv = GetTableLayout(&tableLayout);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -454,7 +454,7 @@ NS_IMETHODIMP
 nsHTMLTableAccessibleWrap::IsCellSelected(PRInt32 aRow, PRInt32 aColumn,
                                       PRBool *_retval)
 {
-  nsITableLayout *tableLayout = nsnull;
+  nsITableLayout *tableLayout;
   nsresult rv = GetTableLayout(&tableLayout);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -498,6 +498,8 @@ nsHTMLTableAccessibleWrap::GetTableNode(nsIDOMNode **_retval)
 nsresult
 nsHTMLTableAccessibleWrap::GetTableLayout(nsITableLayout **aLayoutObject)
 {
+  *aLayoutObject = nsnull;
+
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIDOMNode> tableNode;
@@ -507,15 +509,12 @@ nsHTMLTableAccessibleWrap::GetTableLayout(nsITableLayout **aLayoutObject)
   nsCOMPtr<nsIContent> content(do_QueryInterface(tableNode));
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIPresShell> presShell;
-  rv = content->GetDocument()->GetShellAt(0, getter_AddRefs(presShell));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIPresShell *presShell = content->GetDocument()->GetShellAt(0);
 
   nsCOMPtr<nsISupports> layoutObject;
   rv = presShell->GetLayoutObjectFor(content, getter_AddRefs(layoutObject));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aLayoutObject = nsnull;
   return CallQueryInterface(layoutObject, aLayoutObject);
 }
 
@@ -528,7 +527,7 @@ nsHTMLTableAccessibleWrap::GetCellAt(PRInt32        aRowIndex,
           rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool isSelected;
 
-  nsITableLayout *tableLayout = nsnull;
+  nsITableLayout *tableLayout;
   nsresult rv = GetTableLayout(&tableLayout);
   NS_ENSURE_SUCCESS(rv, rv);
 

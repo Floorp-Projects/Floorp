@@ -55,6 +55,15 @@ GenericElementCollection::~GenericElementCollection()
   // reference for us.
 }
 
+static inline PRBool
+MatchHTMLTag(nsIContent *aContent, nsIAtom *aTag)
+{
+  nsINodeInfo *ni = aContent->GetNodeInfo();
+
+  return (ni && ni->Equals(aTag) &&
+          aContent->IsContentOfType(nsIContent::eHTML));
+}
+
 // we re-count every call. A better implementation would be to set ourselves
 // up as an observer of contentAppended, contentInserted, and contentDeleted.
 NS_IMETHODIMP 
@@ -65,16 +74,13 @@ GenericElementCollection::GetLength(PRUint32* aLength)
   *aLength = 0;
 
   if (mParent) {
-    nsCOMPtr<nsIContent> child;
     PRUint32 childIndex = 0;
-    mParent->ChildAt(childIndex, getter_AddRefs(child));
-    while (child) {
-      nsCOMPtr<nsIAtom> childTag;
-      child->GetTag(getter_AddRefs(childTag));
-      if (mTag == childTag) {
+    nsIContent *child;
+
+    while ((child = mParent->GetChildAt(childIndex++))) {
+      if (MatchHTMLTag(child, mTag)) {
         ++(*aLength);
       }
-      mParent->ChildAt(++childIndex, getter_AddRefs(child));
     }
   }
 
@@ -89,15 +95,12 @@ GenericElementCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   *aReturn = nsnull;
 
   if (mParent) {
-    nsCOMPtr<nsIContent> child;
+    nsIContent *child;
     PRUint32 childIndex = 0;
-    mParent->ChildAt(childIndex, getter_AddRefs(child));
 
     PRUint32 theIndex = 0;
-    while (child) {
-      nsCOMPtr<nsIAtom> childTag;
-      child->GetTag(getter_AddRefs(childTag));
-      if (mTag == childTag) {
+    while ((child = mParent->GetChildAt(childIndex++))) {
+      if (MatchHTMLTag(child, mTag)) {
         if (aIndex == theIndex) {
           CallQueryInterface(child, aReturn);
           NS_ASSERTION(aReturn, "content element must be an nsIDOMNode");
@@ -106,7 +109,6 @@ GenericElementCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
         }
         ++theIndex;
       }
-      mParent->ChildAt(++childIndex, getter_AddRefs(child));
     }
   }
 

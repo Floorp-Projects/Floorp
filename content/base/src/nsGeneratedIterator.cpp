@@ -299,7 +299,6 @@ nsresult nsGeneratedContentIterator::Init(nsIDOMRange* aRange)
     return NS_ERROR_NULL_POINTER; 
 
   nsCOMPtr<nsIDOMNode> dN;
-  nsCOMPtr<nsIContent> cChild;
   
   nsCOMPtr<nsIContent> startCon;
   nsCOMPtr<nsIDOMNode> startDOM;
@@ -334,12 +333,13 @@ nsresult nsGeneratedContentIterator::Init(nsIDOMRange* aRange)
     return NS_ERROR_FAILURE;
 
   aRange->GetEndOffset(&endIndx);
-  
+
+  // find first node in range
+  nsIContent *cChild = startCon->GetChildAt(0);
+
   // short circuit when start node == end node
   if (startDOM == endDOM)
   {
-    startCon->ChildAt(0, getter_AddRefs(cChild));
-  
     if (!cChild) // no children, must be a text node or empty container
     {
       mFirst = startCon;
@@ -357,16 +357,13 @@ nsresult nsGeneratedContentIterator::Init(nsIDOMRange* aRange)
     }
   }
   
-  // find first node in range
-  startCon->ChildAt(0, getter_AddRefs(cChild));
-  
   if (!cChild) // no children, must be a text node
   {
     mFirst = startCon; 
   }
   else
   {
-    startCon->ChildAt(startIndx, getter_AddRefs(cChild));
+    cChild = startCon->GetChildAt(startIndx);
     if (!cChild)  // offset after last child, parent is first node
     {
       mFirst = startCon;
@@ -394,7 +391,7 @@ nsresult nsGeneratedContentIterator::Init(nsIDOMRange* aRange)
   }
   
   // find last node in range
-  endCon->ChildAt(0, getter_AddRefs(cChild));
+  cChild = endCon->GetChildAt(0);
 
   if (!cChild) // no children, must be a text node
   {
@@ -406,11 +403,11 @@ nsresult nsGeneratedContentIterator::Init(nsIDOMRange* aRange)
   }
   else
   {
-    endCon->ChildAt(--endIndx, getter_AddRefs(cChild));
+    cChild = endCon->GetChildAt(--endIndx);
     if (!cChild)  // offset after last child, last child is last node
     {
-      endCon->ChildCount(endIndx);
-      endCon->ChildAt(--endIndx, getter_AddRefs(cChild));
+      endIndx = (PRInt32)endCon->GetChildCount();
+      cChild = endCon->GetChildAt(--endIndx);
       if (!cChild)
       {
         NS_NOTREACHED("nsGeneratedContentIterator::nsGeneratedContentIterator");
@@ -449,7 +446,6 @@ nsCOMPtr<nsIContent> nsGeneratedContentIterator::GetDeepFirstChild(nsCOMPtr<nsIC
   if (aRoot) 
   {  
     nsCOMPtr<nsIContent> cN = aRoot;
-    nsCOMPtr<nsIContent> cChild;
 
 #if DO_BEFORE
     //CHECK FOR BEFORESTUFF
@@ -463,8 +459,9 @@ nsCOMPtr<nsIContent> nsGeneratedContentIterator::GetDeepFirstChild(nsCOMPtr<nsIC
       return cN;
     }
 #endif
-    cN->ChildAt(0, getter_AddRefs(cChild));
-    while ( cChild )
+
+    nsIContent *cChild;
+    while ((cChild = cN->GetChildAt(0)))
     {
       cN = cChild;
 
@@ -479,9 +476,8 @@ nsCOMPtr<nsIContent> nsGeneratedContentIterator::GetDeepFirstChild(nsCOMPtr<nsIC
         return cN;
       }
 #endif
-
-      cN->ChildAt(0, getter_AddRefs(cChild));
     }
+
     deepFirstChild = cN;
   }
   
@@ -496,7 +492,6 @@ nsCOMPtr<nsIContent> nsGeneratedContentIterator::GetDeepLastChild(nsCOMPtr<nsICo
   {  
     nsCOMPtr<nsIContent> cN = aRoot;
     nsCOMPtr<nsIContent> cChild;
-    PRInt32 numChildren;
   
 #if DO_AFTER
     //CHECK FOR AFTER STUFF
@@ -511,11 +506,11 @@ nsCOMPtr<nsIContent> nsGeneratedContentIterator::GetDeepLastChild(nsCOMPtr<nsICo
     }
 #endif
 
-    cN->ChildCount(numChildren);
+    PRUint32 numChildren = cN->GetChildCount();
 
     while ( numChildren )
     {
-      cN->ChildAt(--numChildren, getter_AddRefs(cChild));
+      cChild = cN->GetChildAt(--numChildren);
       if (cChild)
       {
 #if DO_AFTER
@@ -529,7 +524,7 @@ nsCOMPtr<nsIContent> nsGeneratedContentIterator::GetDeepLastChild(nsCOMPtr<nsICo
           return cChild;
         }
 #endif
-        cChild->ChildCount(numChildren);
+        numChildren = cChild->GetChildCount();
         cN = cChild;
       }
       else
@@ -550,19 +545,17 @@ nsresult nsGeneratedContentIterator::GetNextSibling(nsCOMPtr<nsIContent> aNode, 
     return NS_ERROR_NULL_POINTER;
   if (!aSibling) 
     return NS_ERROR_NULL_POINTER;
-  
-  nsCOMPtr<nsIContent> sib;
-  nsCOMPtr<nsIContent> parent;
-  PRInt32              indx;
 
-  parent = aNode->GetParent();
+
+  nsIContent *parent = aNode->GetParent();
   if (!parent)
     return NS_ERROR_FAILURE;
 
-  if (NS_FAILED(parent->IndexOf(aNode, indx)))
-    return NS_ERROR_FAILURE;
+  PRInt32 indx = parent->IndexOf(aNode);
 
-  if (NS_SUCCEEDED(parent->ChildAt(++indx, getter_AddRefs(sib))) && sib)
+  nsIContent *sib = parent->GetChildAt(++indx);
+
+  if (sib)
   {
     *aSibling = sib;
   }
@@ -604,16 +597,14 @@ nsresult nsGeneratedContentIterator::GetPrevSibling(nsCOMPtr<nsIContent> aNode, 
   
   nsCOMPtr<nsIContent> sib;
   nsCOMPtr<nsIContent> parent;
-  PRInt32              indx;
 
   parent = aNode->GetParent();
   if (!parent)
     return NS_ERROR_FAILURE;
 
-  if (NS_FAILED(parent->IndexOf(aNode, indx)))
-    return NS_ERROR_FAILURE;
+  PRInt32 indx = parent->IndexOf(aNode);
 
-  if (indx && NS_SUCCEEDED(parent->ChildAt(--indx, getter_AddRefs(sib))) && sib)
+  if (indx && (sib = parent->GetChildAt(--indx)))
   {
     *aSibling = sib;
   }
@@ -661,30 +652,32 @@ nsresult nsGeneratedContentIterator::NextNode(nsCOMPtr<nsIContent> *ioNextNode)
       //*ioNextNode = parent; leave it the same
       return NS_OK;
     }
-    nsCOMPtr<nsIContent>cN;
-    (*ioNextNode)->ChildAt(0, getter_AddRefs(cN));
+    nsIContent *cN = (*ioNextNode)->GetChildAt(0);
     if (cN)
     {
-      *ioNextNode=GetDeepFirstChild(cN);
+      *ioNextNode = GetDeepFirstChild(cN);
+
       return NS_OK;
     }
   }
 
   {
     nsCOMPtr<nsIContent> cN = *ioNextNode;
-    nsCOMPtr<nsIContent> cSibling;
     nsCOMPtr<nsIContent> parent;
-    PRInt32              indx;
   
     // get next sibling if there is one
     parent = cN->GetParent();
-    if (!parent || NS_FAILED(parent->IndexOf(cN, indx)))
+    if (!parent)
     {
       // a little noise to catch some iterator usage bugs.
       NS_NOTREACHED("nsGeneratedContentIterator::NextNode() : no parent found");
       return NS_ERROR_FAILURE;
     }
-    if (NS_SUCCEEDED(parent->ChildAt(++indx, getter_AddRefs(cSibling))) && cSibling)
+
+    PRInt32 indx = parent->IndexOf(cN);
+
+    nsIContent *cSibling = parent->GetChildAt(++indx);
+    if (cSibling)
     {
       // next node is siblings "deep left" child
       *ioNextNode = GetDeepFirstChild(cSibling); 
@@ -717,25 +710,26 @@ nsresult nsGeneratedContentIterator::NextNode(nsCOMPtr<nsIContent> *ioNextNode)
 
 
 //THIS NEEDS TO USE A GENERATED SUBTREEITER HERE
-nsresult nsGeneratedContentIterator::PrevNode(nsCOMPtr<nsIContent> *ioNextNode)
+nsresult
+nsGeneratedContentIterator::PrevNode(nsCOMPtr<nsIContent> *ioNextNode)
 {
   if (!ioNextNode)
     return NS_ERROR_NULL_POINTER;
-   
-  nsCOMPtr<nsIContent> cN = *ioNextNode;
-  nsCOMPtr<nsIContent> cLastChild;
-  PRInt32 numChildren;
-  
-  cN->ChildCount(numChildren);
-  
+
+  nsIContent *cN = *ioNextNode;
+
+  PRUint32 numChildren = cN->GetChildCount();
+
   // if it has children then prev node is last child
-  if (numChildren)
+  if (numChildren > 0)
   {
-    if (NS_FAILED(cN->ChildAt(--numChildren, getter_AddRefs(cLastChild))))
-      return NS_ERROR_FAILURE;
+    nsIContent *cLastChild = cN->GetChildAt(--numChildren);
+
     if (!cLastChild)
       return NS_ERROR_FAILURE;
+
     *ioNextNode = cLastChild;
+
     return NS_OK;
   }
   
@@ -973,7 +967,7 @@ nsresult nsGeneratedSubtreeIterator::Init(nsIDOMRange* aRange)
   // short circuit when start node == end node
   if (startParent == endParent)
   {
-    cStartP->ChildAt(0, getter_AddRefs(cChild));
+    cChild = cStartP->GetChildAt(0);
   
     if (!cChild) // no children, must be a text node or empty container
     {
@@ -1172,12 +1166,15 @@ nsresult nsGeneratedSubtreeIterator::Next()
     if (mGenIter->IsDone())
     {
       mGenIter = 0;
-      if (mIterType == nsIPresShell::After ||
-          NS_FAILED(mCurNode->ChildAt(0,
-                                      getter_AddRefs(nextNode))))
+
+      if (mIterType == nsIPresShell::After)
       {
         if (NS_FAILED(GetNextSibling(mCurNode, address_of(nextNode))))
           return NS_OK;
+      }
+      else
+      {
+        nextNode = mCurNode->GetChildAt(0);
       }
     }
     else

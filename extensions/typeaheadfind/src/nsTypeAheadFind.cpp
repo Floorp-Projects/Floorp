@@ -496,8 +496,7 @@ nsTypeAheadFind::UseInWindow(nsIDOMWindow *aDOMWin)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
-  doc->GetShellAt(0, getter_AddRefs(presShell));
+  nsIPresShell *presShell = doc->GetShellAt(0);
 
   if (!presShell) {
     return NS_OK;
@@ -563,12 +562,11 @@ nsTypeAheadFind::HandleEvent(nsIDOMEvent* aEvent)
       return NS_ERROR_FAILURE;
     }
 
-    PRInt32 numShells = doc->GetNumberOfShells();
-    nsCOMPtr<nsIPresShell> shellToBeDestroyed;
+    PRUint32 numShells = doc->GetNumberOfShells();
     PRBool cancelFind = PR_FALSE;
 
-    for (PRInt32 count = 0; count < numShells; count ++) {
-      doc->GetShellAt(count, getter_AddRefs(shellToBeDestroyed));
+    for (PRUint32 count = 0; count < numShells; count ++) {
+      nsIPresShell *shellToBeDestroyed = doc->GetShellAt(count);
       if (shellToBeDestroyed == focusedShell) {
         cancelFind = PR_TRUE;
         break;
@@ -817,7 +815,7 @@ nsTypeAheadFind::BackOneChar(PRBool *aIsBackspaceUsed)
   mDontTryExactMatch = PR_FALSE;
 
   // ---------- Get new find start ------------------
-  nsCOMPtr<nsIPresShell> presShell;
+  nsIPresShell *presShell = nsnull;
   if (!findBackwards) {
     // For backspace, start from where first char was found
     // unless in backspacing after repeating char mode
@@ -828,7 +826,7 @@ nsTypeAheadFind::BackOneChar(PRBool *aIsBackspaceUsed)
       startNode->GetOwnerDocument(getter_AddRefs(domDoc));
       nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
       if (doc) {
-        doc->GetShellAt(0, getter_AddRefs(presShell));
+        presShell = doc->GetShellAt(0);
       }
     }
     if (!presShell) {
@@ -1503,11 +1501,7 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
     return NS_ERROR_FAILURE;
   }
 
-  PRInt32 childCount;
-
-  if (NS_FAILED(rootContent->ChildCount(childCount))) {
-    return NS_ERROR_FAILURE;
-  }
+  PRUint32 childCount = rootContent->GetChildCount();
 
   mSearchRange->SelectNodeContents(rootNode);
 
@@ -1581,9 +1575,6 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
   PRInt32 startOffset;
   aRange->GetStartOffset(&startOffset);
 
-  nsCOMPtr<nsIContent> childContent;
-  PRBool canContainChildren;
-
   startContent = do_QueryInterface(startNode);
   if (!startContent) {
     NS_NOTREACHED("startContent should never be null");
@@ -1591,9 +1582,8 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
   }
   origContent = startContent;
 
-  if (NS_SUCCEEDED(startContent->CanContainChildren(canContainChildren)) &&
-      canContainChildren) {
-    startContent->ChildAt(startOffset, getter_AddRefs(childContent));
+  if (startContent->CanContainChildren()) {
+    nsIContent *childContent = startContent->GetChildAt(startOffset);
     if (childContent) {
       startContent = childContent;
     }
@@ -1653,8 +1643,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
     // Get the parent
     nsCOMPtr<nsIContent> parent = startContent->GetParent();
     if (parent) {
-      nsCOMPtr<nsIContent> parentsFirstChild;
-      parent->ChildAt(0, getter_AddRefs(parentsFirstChild));
+      nsIContent *parentsFirstChild = parent->GetChildAt(0);
       nsCOMPtr<nsITextContent> textContent =
         do_QueryInterface(parentsFirstChild);
 
@@ -1663,7 +1652,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
         PRBool isOnlyWhitespace;
         textContent->IsOnlyWhitespace(&isOnlyWhitespace);
         if (isOnlyWhitespace)
-          parent->ChildAt(1, getter_AddRefs(parentsFirstChild));
+          parentsFirstChild = parent->GetChildAt(1);
       }
 
       if (parentsFirstChild != startContent) {
@@ -2502,8 +2491,7 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
 
   // ---------- Get presshell -----------
 
-  nsCOMPtr<nsIPresShell> presShell;
-  doc->GetShellAt(0, getter_AddRefs(presShell));
+  nsIPresShell *presShell = doc->GetShellAt(0);
   if (!presShell) {
     return NS_OK;
   }

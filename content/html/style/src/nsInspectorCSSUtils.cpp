@@ -90,30 +90,30 @@ nsInspectorCSSUtils::IsRuleNodeRoot(nsRuleNode *aNode, PRBool *aIsRoot)
 NS_IMETHODIMP
 nsInspectorCSSUtils::AdjustRectForMargins(nsIFrame* aFrame, nsRect& aRect)
 {
-  const nsStyleMargin* margins = aFrame->GetStyleMargin();
-  
-  // adjust coordinates for margins
-  nsStyleCoord coord;
-  if (margins->mMargin.GetTopUnit() == eStyleUnit_Coord) {
-    margins->mMargin.GetTop(coord);
-    aRect.y -= coord.GetCoordValue();
-    aRect.height += coord.GetCoordValue();
-  }
-  if (margins->mMargin.GetLeftUnit() == eStyleUnit_Coord) {
-    margins->mMargin.GetLeft(coord);
-    aRect.x -= coord.GetCoordValue();
-    aRect.width += coord.GetCoordValue();
-  }
-  if (margins->mMargin.GetRightUnit() == eStyleUnit_Coord) {
-    margins->mMargin.GetRight(coord);
-    aRect.width += coord.GetCoordValue();
-  }
-  if (margins->mMargin.GetBottomUnit() == eStyleUnit_Coord) {
-    margins->mMargin.GetBottom(coord);
-    aRect.height += coord.GetCoordValue();
-  }
+    const nsStyleMargin* margins = aFrame->GetStyleMargin();
 
-  return NS_OK;
+    // adjust coordinates for margins
+    nsStyleCoord coord;
+    if (margins->mMargin.GetTopUnit() == eStyleUnit_Coord) {
+        margins->mMargin.GetTop(coord);
+        aRect.y -= coord.GetCoordValue();
+        aRect.height += coord.GetCoordValue();
+    }
+    if (margins->mMargin.GetLeftUnit() == eStyleUnit_Coord) {
+        margins->mMargin.GetLeft(coord);
+        aRect.x -= coord.GetCoordValue();
+        aRect.width += coord.GetCoordValue();
+    }
+    if (margins->mMargin.GetRightUnit() == eStyleUnit_Coord) {
+        margins->mMargin.GetRight(coord);
+        aRect.width += coord.GetCoordValue();
+    }
+    if (margins->mMargin.GetBottomUnit() == eStyleUnit_Coord) {
+        margins->mMargin.GetBottom(coord);
+        aRect.height += coord.GetCoordValue();
+    }
+
+    return NS_OK;
 }
 
 nsStyleContext*
@@ -176,11 +176,11 @@ nsInspectorCSSUtils::GetRuleNodeForContent(nsIContent* aContent,
     nsIDocument* doc = aContent->GetDocument();
     NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
-    nsCOMPtr<nsIPresShell> presShell;
-    doc->GetShellAt(0, getter_AddRefs(presShell));
+    nsIPresShell *presShell = doc->GetShellAt(0);
     NS_ENSURE_TRUE(presShell, NS_ERROR_UNEXPECTED);
 
-    nsRefPtr<nsStyleContext> sContext = GetStyleContextForContent(aContent, presShell);
+    nsRefPtr<nsStyleContext> sContext =
+        GetStyleContextForContent(aContent, presShell);
     *aRuleNode = sContext->GetRuleNode();
     return NS_OK;
 }

@@ -876,8 +876,7 @@ nsTreeContentView::ContentAppended(nsIDocument *aDocument,
                                    nsIContent* aContainer,
                                    PRInt32     aNewIndexInContainer)
 {
-  nsCOMPtr<nsIContent> child;
-  aContainer->ChildAt(aNewIndexInContainer, getter_AddRefs(child));
+  nsIContent *child = aContainer->GetChildAt(aNewIndexInContainer);
   ContentInserted(aDocument, aContainer, child, aNewIndexInContainer);
 
   return NS_OK;
@@ -1202,13 +1201,12 @@ nsTreeContentView::SerializeOptGroup(nsIContent* aContent, PRInt32 aParentIndex,
 }
 
 void
-nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer, nsIContent* aContent, PRInt32* aIndex)
+nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer,
+                                     nsIContent* aContent, PRInt32* aIndex)
 {
-  PRInt32 childCount;
-  aContainer->ChildCount(childCount);
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> content;
-    aContainer->ChildAt(i, getter_AddRefs(content));
+  PRUint32 childCount = aContainer->GetChildCount();
+  for (PRUint32 i = 0; i < childCount; i++) {
+    nsIContent *content = aContainer->GetChildAt(i);
 
     if (content == aContent)
       break;

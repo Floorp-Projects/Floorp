@@ -216,11 +216,9 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
 
   // (2) The children's parent back pointer should not be to this synthetic root
   // but should instead point to the enclosing parent element.
-  PRInt32 childCount;
-  aAnonParent->ChildCount(childCount);
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> child;
-    aAnonParent->ChildAt(i, getter_AddRefs(child));
+  PRUint32 childCount = aAnonParent->GetChildCount();
+  for (PRUint32 i = 0; i < childCount; i++) {
+    nsIContent *child = aAnonParent->GetChildAt(i);
     child->SetParent(aElement);
     child->SetBindingParent(mBoundElement);
 
@@ -462,11 +460,9 @@ PRBool PR_CALLBACK RealizeDefaultContent(nsHashKey* aKey, void* aData, void* aCl
 
         // Now make sure the kids of the clone are added to the insertion point as
         // children.
-        PRInt32 cloneKidCount;
-        clonedContent->ChildCount(cloneKidCount);
-        for (PRInt32 k = 0; k < cloneKidCount; k++) {
-          nsCOMPtr<nsIContent> cloneChild;
-          clonedContent->ChildAt(k, getter_AddRefs(cloneChild));
+        PRUint32 cloneKidCount = clonedContent->GetChildCount();
+        for (PRUint32 k = 0; k < cloneKidCount; k++) {
+          nsIContent *cloneChild = clonedContent->GetChildAt(k);
           bm->SetInsertionParent(cloneChild, insParent);
           currPoint->AddChild(cloneChild);
         }
@@ -509,8 +505,7 @@ nsXBLBinding::GenerateAnonymousContent()
      
   // Find out if we're really building kids or if we're just
   // using the attribute-setting shorthand hack.
-  PRInt32 contentCount;
-  content->ChildCount(contentCount);
+  PRUint32 contentCount = content->GetChildCount();
 
   // Plan to build the content by default.
   PRBool hasContent = (contentCount > 0);
@@ -682,14 +677,13 @@ nsXBLBinding::GenerateAnonymousContent()
   // Always check the content element for potential attributes.
   // This shorthand hack always happens, even when we didn't
   // build anonymous content.
-  PRInt32 length;
-  content->GetAttrCount(length);
+  PRUint32 length = content->GetAttrCount();
 
   PRInt32 namespaceID;
   nsCOMPtr<nsIAtom> name;
   nsCOMPtr<nsIAtom> prefix;
 
-  for (PRInt32 i = 0; i < length; ++i) {
+  for (PRUint32 i = 0; i < length; ++i) {
     content->GetAttrNameAt(i, &namespaceID, getter_AddRefs(name),
                            getter_AddRefs(prefix));
 
@@ -1237,11 +1231,10 @@ nsXBLBinding::GetImmediateChild(nsIAtom* aTag, nsIContent** aResult)
   nsCOMPtr<nsIContent> binding = mPrototypeBinding->GetBindingElement();
 
   *aResult = nsnull;
-  PRInt32 childCount;
-  binding->ChildCount(childCount);
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> child;
-    binding->ChildAt(i, getter_AddRefs(child));
+  PRUint32 childCount = binding->GetChildCount();
+
+  for (PRUint32 i = 0; i < childCount; i++) {
+    nsIContent *child = binding->GetChildAt(i);
     nsCOMPtr<nsIAtom> tag;
     child->GetTag(getter_AddRefs(tag));
     if (aTag == tag) {
@@ -1250,8 +1243,6 @@ nsXBLBinding::GetImmediateChild(nsIAtom* aTag, nsIContent** aResult)
       return;
     }
   }
-
-  return;
 }
 
 PRBool
@@ -1333,14 +1324,11 @@ nsXBLBinding::GetTextData(nsIContent *aParent, nsString& aResult)
 {
   aResult.Truncate(0);
 
-  nsCOMPtr<nsIContent> textChild;
-  PRInt32 textCount;
-  aParent->ChildCount(textCount);
+  PRUint32 textCount = aParent->GetChildCount();
   nsAutoString answer;
-  for (PRInt32 j = 0; j < textCount; j++) {
+  for (PRUint32 j = 0; j < textCount; j++) {
     // Get the child.
-    aParent->ChildAt(j, getter_AddRefs(textChild));
-    nsCOMPtr<nsIDOMText> text(do_QueryInterface(textChild));
+    nsCOMPtr<nsIDOMText> text(do_QueryInterface(aParent->GetChildAt(j)));
     if (text) {
       nsAutoString data;
       text->GetData(data);

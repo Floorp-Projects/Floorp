@@ -234,8 +234,7 @@ nsDOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     nsAutoString value, name;
     mContent->GetAttr(nameSpaceID, nameAtom, value);
 
-    nsCOMPtr<nsINodeInfo> ni;
-    mContent->GetNodeInfo(getter_AddRefs(ni));
+    nsCOMPtr<nsINodeInfo> ni(mContent->GetNodeInfo());
     NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsINodeInfoManager> nimgr;
@@ -262,16 +261,13 @@ nsDOMAttributeMap::GetLength(PRUint32 *aLength)
 {
   NS_ENSURE_ARG_POINTER(aLength);
 
-  PRInt32 n;
-  nsresult rv = NS_OK;
-
-  if (nsnull != mContent) {
-    rv = mContent->GetAttrCount(n);
-    *aLength = PRUint32(n);
+  if (mContent) {
+    *aLength = mContent->GetAttrCount();
   } else {
     *aLength = 0;
   }
-  return rv;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -288,8 +284,7 @@ nsDOMAttributeMap::GetNamedItemNS(const nsAString& aNamespaceURI,
     PRInt32 nameSpaceID = kNameSpaceID_None;
     nsCOMPtr<nsIAtom> prefix;
 
-    nsCOMPtr<nsINodeInfo> ni;
-    mContent->GetNodeInfo(getter_AddRefs(ni));
+    nsCOMPtr<nsINodeInfo> ni(mContent->GetNodeInfo());
     NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsINodeInfoManager> nimgr;
@@ -358,8 +353,7 @@ nsDOMAttributeMap::SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)
     attribute->GetName(name);
     attribute->GetNamespaceURI(nsURI);
 
-    nsCOMPtr<nsINodeInfo> ni;
-    mContent->GetNodeInfo(getter_AddRefs(ni));
+    nsCOMPtr<nsINodeInfo> ni(mContent->GetNodeInfo());
     NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsINodeInfoManager> nimgr;
@@ -416,8 +410,7 @@ nsDOMAttributeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI,
     nsCOMPtr<nsIDOMNode> attribute;
     nsCOMPtr<nsIAtom> prefix;
 
-    nsCOMPtr<nsINodeInfo> ni;
-    mContent->GetNodeInfo(getter_AddRefs(ni));
+    nsCOMPtr<nsINodeInfo> ni(mContent->GetNodeInfo());
     NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsINodeInfoManager> nimgr;

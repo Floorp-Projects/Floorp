@@ -418,30 +418,24 @@ NS_IMETHODIMP
 nsDocLoaderImpl::GetContentViewerContainer(nsISupports* aDocumentID,
                                            nsIContentViewerContainer** aResult)
 {
-  nsISupports* base = aDocumentID;
-  nsIDocument* doc;
-  nsresult rv;
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocumentID));
 
-  rv = base->QueryInterface(kIDocumentIID, (void**)&doc);
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIPresShell> pres;
-    doc->GetShellAt(0, getter_AddRefs(pres));
-    if (nsnull != pres) {
-      nsIPresContext* presContext;
-      rv = pres->GetPresContext(&presContext);
-      if (NS_SUCCEEDED(rv) && nsnull != presContext) {
-        nsISupports* supp;
-        rv = presContext->GetContainer(&supp);
-        if (NS_SUCCEEDED(rv) && nsnull != supp) {          
-          rv = supp->QueryInterface(kIContentViewerContainerIID, (void**)aResult);          
-          NS_RELEASE(supp);
+  if (doc) {
+    nsIPresShell *pres = doc->GetShellAt(0);
+    if (pres) {
+      nsCOMPtr<nsIPresContext> presContext;
+      pres->GetPresContext(getter_AddRefs(presContext));
+      if (presContext) {
+        nsCOMPtr<nsISupports> supp;
+        presContext->GetContainer(getter_AddRefs(supp));
+        if (supp) {
+          return CallQueryInterface(supp, aResult);          
         }
-        NS_RELEASE(presContext);
       }
     }
-    NS_RELEASE(doc);
   }
-  return rv;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

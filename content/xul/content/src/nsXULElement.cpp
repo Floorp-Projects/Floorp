@@ -505,7 +505,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
         // Check each attribute on the prototype to see if we need to do
         // any additional processing and hookup that would otherwise be
         // done 'automagically' by SetAttribute().
-        for (PRInt32 i = 0; i < aPrototype->mNumAttributes; ++i)
+        for (PRUint32 i = 0; i < aPrototype->mNumAttributes; ++i)
             element->AddListenerFor(aPrototype->mAttributes[i].mNodeInfo, PR_TRUE);
     }
 
@@ -716,17 +716,10 @@ nsXULElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
     NS_ENSURE_TRUE(children, NS_ERROR_OUT_OF_MEMORY);
     NS_ADDREF(children);
 
-    PRInt32 count;
-    rv = ChildCount(count);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get child count");
-    if (NS_FAILED(rv)) return rv;
+    PRUint32 count = GetChildCount();
 
-    for (PRInt32 i = 0; i < count; ++i) {
-        nsCOMPtr<nsIContent> child;
-        rv = ChildAt(i, getter_AddRefs(child));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get child");
-        if (NS_FAILED(rv))
-            break;
+    for (PRUint32 i = 0; i < count; ++i) {
+        nsIContent *child = GetChildAt(i);
 
         nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(child);
         if (!domNode) {
@@ -749,14 +742,10 @@ nsXULElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 NS_IMETHODIMP
 nsXULElement::GetFirstChild(nsIDOMNode** aFirstChild)
 {
-    nsresult rv;
-    nsCOMPtr<nsIContent> child;
-    rv = ChildAt(0, getter_AddRefs(child));
+    nsIContent *child = GetChildAt(0);
 
     if (child) {
-        rv = CallQueryInterface(child, aFirstChild);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM node");
-        return rv;
+        return CallQueryInterface(child, aFirstChild);
     }
 
     *aFirstChild = nsnull;
@@ -767,22 +756,12 @@ nsXULElement::GetFirstChild(nsIDOMNode** aFirstChild)
 NS_IMETHODIMP
 nsXULElement::GetLastChild(nsIDOMNode** aLastChild)
 {
-    nsresult rv;
-    PRInt32 count;
-    rv = ChildCount(count);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get child count");
+    PRUint32 count = GetChildCount();
 
-    if (NS_SUCCEEDED(rv) && (count != 0)) {
-        nsCOMPtr<nsIContent> child;
-        rv = ChildAt(count - 1, getter_AddRefs(child));
+    if (count > 0) {
+        nsIContent *child = GetChildAt(count - 1);
 
-        NS_ASSERTION(child, "no child");
-
-        if (child) {
-            rv = CallQueryInterface(child, aLastChild);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM node");
-            return rv;
-        }
+        return CallQueryInterface(child, aLastChild);
     }
 
     *aLastChild = nsnull;
@@ -794,11 +773,9 @@ NS_IMETHODIMP
 nsXULElement::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
 {
     if (nsnull != mParent) {
-        PRInt32 pos;
-        mParent->IndexOf(NS_STATIC_CAST(nsIStyledContent*, this), pos);
+        PRInt32 pos = mParent->IndexOf(this);
         if (pos > 0) {
-            nsCOMPtr<nsIContent> prev;
-            mParent->ChildAt(--pos, getter_AddRefs(prev));
+            nsIContent *prev = mParent->GetChildAt(--pos);
             if (prev) {
                 nsresult rv = CallQueryInterface(prev, aPreviousSibling);
                 NS_ASSERTION(*aPreviousSibling, "not a DOM node");
@@ -818,15 +795,13 @@ NS_IMETHODIMP
 nsXULElement::GetNextSibling(nsIDOMNode** aNextSibling)
 {
     if (nsnull != mParent) {
-        PRInt32 pos;
-        mParent->IndexOf(NS_STATIC_CAST(nsIStyledContent*, this), pos);
+        PRInt32 pos = mParent->IndexOf(this);
         if (pos > -1) {
-            nsCOMPtr<nsIContent> next;
-            mParent->ChildAt(++pos, getter_AddRefs(next));
+            nsIContent *next = mParent->GetChildAt(++pos);
             if (next) {
-                nsresult res = CallQueryInterface(next, aNextSibling);
+                nsresult rv = CallQueryInterface(next, aNextSibling);
                 NS_ASSERTION(*aNextSibling, "not a DOM Node");
-                return res;
+                return rv;
             }
         }
     }
@@ -960,10 +935,7 @@ nsXULElement::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
     nsCOMPtr<nsIContent> oldparent = newcontent->GetParent();
 
     if (oldparent) {
-        PRInt32 oldindex;
-        rv = oldparent->IndexOf(newcontent, oldindex);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to determine index of aNewChild in old parent");
-        if (NS_FAILED(rv)) return rv;
+        PRInt32 oldindex = oldparent->IndexOf(newcontent);
 
         NS_ASSERTION(oldindex >= 0, "old parent didn't think aNewChild was a child");
 
@@ -980,10 +952,7 @@ nsXULElement::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
         if (! refcontent)
             return NS_ERROR_UNEXPECTED;
 
-        PRInt32 pos;
-        rv = IndexOf(refcontent, pos);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to determine index of aRefChild");
-        if (NS_FAILED(rv)) return rv;
+        PRInt32 pos = IndexOf(refcontent);
 
         if (pos >= 0) {
             // Some frames assume that the document will have been set,
@@ -1032,11 +1001,9 @@ nsXULElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
     NS_ASSERTION(oldelement != nsnull, "not an nsIContent");
 
     if (oldelement) {
-        PRInt32 pos;
-        rv = IndexOf(oldelement, pos);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to determine index of aOldChild");
+        PRInt32 pos = IndexOf(oldelement);
 
-        if (NS_SUCCEEDED(rv) && (pos >= 0)) {
+        if (pos >= 0) {
             nsCOMPtr<nsIContent> newelement = do_QueryInterface(aNewChild);
             NS_ASSERTION(newelement != nsnull, "not an nsIContent");
 
@@ -1068,11 +1035,9 @@ nsXULElement::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
     NS_ASSERTION(element != nsnull, "not an nsIContent");
 
     if (element) {
-        PRInt32 pos;
-        rv = IndexOf(element, pos);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to determine index of aOldChild");
+        PRInt32 pos = IndexOf(element);
 
-        if (NS_SUCCEEDED(rv) && (pos >= 0)) {
+        if (pos >= 0) {
             rv = RemoveChildAt(pos, PR_TRUE);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove old child");
         }
@@ -1094,12 +1059,8 @@ nsXULElement::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsXULElement::HasChildNodes(PRBool* aReturn)
 {
-    nsresult rv;
-    PRInt32 count;
-    if (NS_FAILED(rv = ChildCount(count))) {
-        NS_ERROR("unable to count kids");
-        return rv;
-    }
+    PRUint32 count = GetChildCount();
+
     *aReturn = (count > 0);
     return NS_OK;
 }
@@ -1229,13 +1190,10 @@ nsXULElement::GetTagName(nsAString& aTagName)
     return NodeInfo()->GetQualifiedName(aTagName);
 }
 
-NS_IMETHODIMP
-nsXULElement::GetNodeInfo(nsINodeInfo** aResult) const
+NS_IMETHODIMP_(nsINodeInfo *)
+nsXULElement::GetNodeInfo() const
 {
-    *aResult = NodeInfo();
-    NS_IF_ADDREF(*aResult);
-
-    return NS_OK;
+    return NodeInfo();
 }
 
 NS_IMETHODIMP
@@ -1565,11 +1523,10 @@ nsXULElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
 //----------------------------------------------------------------------
 // nsIXULContent interface
 
-NS_IMETHODIMP
-nsXULElement::PeekChildCount(PRInt32& aCount) const
+NS_IMETHODIMP_(PRUint32)
+nsXULElement::PeekChildCount() const
 {
-    aCount = mChildren.Count();
-    return NS_OK;
+    return mChildren.Count();
 }
 
 NS_IMETHODIMP
@@ -1695,7 +1652,7 @@ nsXULElement::GetCompiledEventHandler(nsIAtom *aName, void** aHandler)
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheTests);
     *aHandler = nsnull;
     if (mPrototype) {
-        for (PRInt32 i = 0; i < mPrototype->mNumAttributes; ++i) {
+        for (PRUint32 i = 0; i < mPrototype->mNumAttributes; ++i) {
             nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
 
             if (attr->mNodeInfo->Equals(aName, kNameSpaceID_None)) {
@@ -1749,7 +1706,7 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
 
     if (mPrototype) {
         // Remember the compiled event handler
-        for (PRInt32 i = 0; i < mPrototype->mNumAttributes; ++i) {
+        for (PRUint32 i = 0; i < mPrototype->mNumAttributes; ++i) {
             nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
 
             if (attr->mNodeInfo->Equals(aName, kNameSpaceID_None)) {
@@ -1940,57 +1897,46 @@ nsXULElement::SetNativeAnonymous(PRBool aAnonymous)
     // XXX Need to make this actually do something - bug 165110
 }
 
-NS_IMETHODIMP
-nsXULElement::CanContainChildren(PRBool& aResult) const
+NS_IMETHODIMP_(PRBool)
+nsXULElement::CanContainChildren() const
 {
     // XXX Hmm -- not sure if this is unilaterally true...
-    aResult = PR_TRUE;
-    return NS_OK;
+    return PR_TRUE;
 }
 
-NS_IMETHODIMP
-nsXULElement::ChildCount(PRInt32& aResult) const
+NS_IMETHODIMP_(PRUint32)
+nsXULElement::GetChildCount() const
+{
+    if (NS_FAILED(EnsureContentsGenerated())) {
+        return 0;
+    }
+
+    return PeekChildCount();
+}
+
+NS_IMETHODIMP_(nsIContent *)
+nsXULElement::GetChildAt(PRUint32 aIndex) const
+{
+    if (NS_FAILED(EnsureContentsGenerated())) {
+        return nsnull;
+    }
+
+    return NS_STATIC_CAST(nsIContent*, mChildren.SafeElementAt(aIndex));
+}
+
+NS_IMETHODIMP_(PRInt32)
+nsXULElement::IndexOf(nsIContent* aPossibleChild) const
 {
     nsresult rv;
     if (NS_FAILED(rv = EnsureContentsGenerated())) {
-        aResult = 0;
-        return rv;
+        return -1;
     }
 
-    return PeekChildCount(aResult);
+    return mChildren.IndexOf(aPossibleChild);
 }
 
 NS_IMETHODIMP
-nsXULElement::ChildAt(PRInt32 aIndex, nsIContent** aResult) const
-{
-    nsresult rv;
-    if (NS_FAILED(rv = EnsureContentsGenerated())) {
-        *aResult = nsnull;
-        return rv;
-    }
-
-    nsIContent* content = NS_STATIC_CAST(nsIContent*, mChildren.SafeElementAt(aIndex));
-    *aResult = content;
-    NS_IF_ADDREF(*aResult);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULElement::IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const
-{
-    nsresult rv;
-    if (NS_FAILED(rv = EnsureContentsGenerated())) {
-        aResult = -1;
-        return rv;
-    }
-
-    aResult = mChildren.IndexOf(aPossibleChild);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+nsXULElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
                             PRBool aDeepSetDocument)
 {
     nsresult rv;
@@ -2036,7 +1982,7 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
 }
 
 NS_IMETHODIMP
-nsXULElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+nsXULElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
                              PRBool aDeepSetDocument)
 {
     nsresult rv;
@@ -2118,7 +2064,7 @@ nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify, PRBool aDeepSetDoc
 }
 
 NS_IMETHODIMP
-nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
+nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
     nsresult rv;
     if (NS_FAILED(rv = EnsureContentsGenerated()))
@@ -2318,8 +2264,7 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
     // If someone changes the accesskey, unregister the old one
     //
     if (mDocument && !aOldValue.IsEmpty()) {
-        nsCOMPtr<nsIPresShell> shell;
-        mDocument->GetShellAt(0, getter_AddRefs(shell));
+        nsIPresShell *shell = mDocument->GetShellAt(0);
 
         if (shell) {
             PRBool validElement = PR_TRUE;
@@ -2774,7 +2719,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID,
 }
 
 NS_IMETHODIMP
-nsXULElement::GetAttrNameAt(PRInt32 aIndex,
+nsXULElement::GetAttrNameAt(PRUint32 aIndex,
                             PRInt32* aNameSpaceID,
                             nsIAtom** aName,
                             nsIAtom** aPrefix) const
@@ -2848,15 +2793,16 @@ nsXULElement::GetAttrNameAt(PRInt32 aIndex,
     return NS_ERROR_ILLEGAL_VALUE;
 }
 
-NS_IMETHODIMP
-nsXULElement::GetAttrCount(PRInt32& aResult) const
+NS_IMETHODIMP_(PRUint32)
+nsXULElement::GetAttrCount() const
 {
-    aResult = 0;
     PRBool haveLocalAttributes;
 
+    PRUint32 count = 0;
+
     if (Attributes()) {
-        aResult = Attributes()->Count();
-        haveLocalAttributes = aResult > 0;
+        count = Attributes()->Count();
+        haveLocalAttributes = count > 0;
     } else {
         haveLocalAttributes = PR_FALSE;
     }
@@ -2866,10 +2812,10 @@ nsXULElement::GetAttrCount(PRInt32& aResult) const
 #endif
 
     if (mPrototype) {
-        for (int i = 0; i < mPrototype->mNumAttributes; i++) {
+        for (PRUint32 i = 0; i < mPrototype->mNumAttributes; i++) {
             if (!haveLocalAttributes ||
                 !FindLocalAttribute(mPrototype->mAttributes[i].mNodeInfo)) {
-                aResult++;
+                ++count;
             } else {
 #ifdef DEBUG_ATTRIBUTE_STATS
                 if (haveLocalAttributes)
@@ -2893,7 +2839,7 @@ nsXULElement::GetAttrCount(PRInt32& aResult) const
     }
 #endif
 
-    return NS_OK;
+    return count;
 }
 
 
@@ -2909,7 +2855,7 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
 {
     NS_PRECONDITION(mDocument != nsnull, "bad content");
 
-    PRInt32 i;
+    PRUint32 i;
 
     rdf_Indent(out, aIndent);
     fputs("<XUL", out);
@@ -2922,8 +2868,7 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
 
     fprintf(out, "@%p", (void *)this);
 
-    PRInt32 nattrs;
-    GetAttrCount(nattrs);
+    PRUint32 nattrs = GetAttrCount();
 
     for (i = 0; i < nattrs; ++i) {
         nsCOMPtr<nsIAtom> attr;
@@ -2953,17 +2898,13 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
         fputs(NS_LossyConvertUCS2toASCII(v).get(), out);
     }
 
-    PRInt32 nchildren;
-    ChildCount(nchildren);
+    PRUint32 nchildren = GetChildCount();
 
     if (nchildren) {
         fputs("\n", out);
 
         for (i = 0; i < nchildren; ++i) {
-            nsCOMPtr<nsIContent> child;
-            ChildAt(i, getter_AddRefs(child));
-
-            child->List(out, aIndent + 1);
+            GetChildAt(i)->List(out, aIndent + 1);
         }
 
         rdf_Indent(out, aIndent);
@@ -4152,19 +4093,17 @@ nsXULElement::Focus()
       return NS_OK;
 
   // Obtain a presentation context and then call SetFocus.
-  PRInt32 count = mDocument->GetNumberOfShells();
-  if (count == 0)
+  if (mDocument->GetNumberOfShells() == 0)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> shell;
-  mDocument->GetShellAt(0, getter_AddRefs(shell));
+  nsIPresShell *shell = mDocument->GetShellAt(0);
 
   // Retrieve the context
-  nsCOMPtr<nsIPresContext> aPresContext;
-  shell->GetPresContext(getter_AddRefs(aPresContext));
+  nsCOMPtr<nsIPresContext> presContext;
+  shell->GetPresContext(getter_AddRefs(presContext));
 
   // Set focus
-  return SetFocus(aPresContext);
+  return SetFocus(presContext);
 }
 
 NS_IMETHODIMP
@@ -4175,19 +4114,17 @@ nsXULElement::Blur()
       return NS_OK;
 
   // Obtain a presentation context and then call SetFocus.
-  PRInt32 count = mDocument->GetNumberOfShells();
-  if (count == 0)
+  if (mDocument->GetNumberOfShells() == 0)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> shell;
-  mDocument->GetShellAt(0, getter_AddRefs(shell));
+  nsIPresShell *shell = mDocument->GetShellAt(0);
 
   // Retrieve the context
-  nsCOMPtr<nsIPresContext> aPresContext;
-  shell->GetPresContext(getter_AddRefs(aPresContext));
+  nsCOMPtr<nsIPresContext> presContext;
+  shell->GetPresContext(getter_AddRefs(presContext));
 
   // Set focus
-  return RemoveFocus(aPresContext);
+  return RemoveFocus(presContext);
 }
 
 NS_IMETHODIMP
@@ -4200,12 +4137,11 @@ nsXULElement::Click()
 
   nsCOMPtr<nsIDocument> doc = mDocument; // Strong just in case
   if (doc) {
-    PRInt32 numShells = doc->GetNumberOfShells();
-    nsCOMPtr<nsIPresShell> shell; // Strong
+    PRUint32 numShells = doc->GetNumberOfShells();
     nsCOMPtr<nsIPresContext> context;
 
-    for (PRInt32 i=0; i<numShells; i++) {
-      doc->GetShellAt(i, getter_AddRefs(shell));
+    for (PRUint32 i = 0; i < numShells; ++i) {
+      nsIPresShell *shell = doc->GetShellAt(i);
       shell->GetPresContext(getter_AddRefs(context));
 
       nsMouseEvent eventDown;
@@ -4246,12 +4182,11 @@ nsXULElement::DoCommand()
 {
   nsCOMPtr<nsIDocument> doc = mDocument; // strong just in case
   if (doc) {
-    PRInt32 numShells = doc->GetNumberOfShells();
-    nsCOMPtr<nsIPresShell> shell;
+    PRUint32 numShells = doc->GetNumberOfShells();
     nsCOMPtr<nsIPresContext> context;
 
-    for (PRInt32 i=0; i<numShells; i++) {
-      doc->GetShellAt(i, getter_AddRefs(shell));
+    for (PRUint32 i = 0; i < numShells; ++i) {
+      nsIPresShell *shell = doc->GetShellAt(i);
       shell->GetPresContext(getter_AddRefs(context));
 
       nsEventStatus status = nsEventStatus_eIgnore;
@@ -4302,12 +4237,9 @@ nsXULElement::SetBindingParent(nsIContent* aParent)
 {
   mBindingParent = aParent; // [Weak] no addref
   if (mBindingParent) {
-    PRInt32 count;
-    ChildCount(count);
-    for (PRInt32 i = 0; i < count; i++) {
-      nsCOMPtr<nsIContent> child;
-      ChildAt(i, getter_AddRefs(child));
-      child->SetBindingParent(aParent);
+    PRUint32 count = GetChildCount();
+    for (PRUint32 i = 0; i < count; i++) {
+      GetChildAt(i)->SetBindingParent(aParent);
     }
   }
   return NS_OK;
@@ -4456,7 +4388,7 @@ nsXULPrototypeAttribute *
 nsXULElement::FindPrototypeAttribute(nsINodeInfo *info) const
 {
     if (mPrototype) {
-        for (PRInt32 i = 0; i < mPrototype->mNumAttributes; i++) {
+        for (PRUint32 i = 0; i < mPrototype->mNumAttributes; i++) {
             nsXULPrototypeAttribute *protoattr = &(mPrototype->mAttributes[i]);
             if (protoattr->mNodeInfo->Equals(info))
                 return protoattr;
@@ -4470,7 +4402,7 @@ nsXULElement::FindPrototypeAttribute(PRInt32 ns, nsIAtom *name) const
 {
     if (!mPrototype)
         return nsnull;
-    for (PRInt32 i = 0; i < mPrototype->mNumAttributes; i++) {
+    for (PRUint32 i = 0; i < mPrototype->mNumAttributes; i++) {
         nsXULPrototypeAttribute *protoattr = &(mPrototype->mAttributes[i]);
         if (protoattr->mNodeInfo->Equals(name, ns))
             return protoattr;
@@ -4498,7 +4430,7 @@ nsresult nsXULElement::MakeHeavyweight()
 
     if (proto->mNumAttributes > 0) {
       nsXULAttributes *attrs = mSlots->GetAttributes();
-      for (PRInt32 i = 0; i < proto->mNumAttributes; ++i) {
+      for (PRUint32 i = 0; i < proto->mNumAttributes; ++i) {
           nsXULPrototypeAttribute* protoattr = &(proto->mAttributes[i]);
 
           // We might have a local value for this attribute, in which case
@@ -4531,31 +4463,27 @@ nsresult nsXULElement::MakeHeavyweight()
 nsresult
 nsXULElement::HideWindowChrome(PRBool aShouldHide)
 {
-  PRInt32 shellCount = mDocument->GetNumberOfShells();
-  if (shellCount > 0) {
-    nsCOMPtr<nsIPresShell> shell;
-    mDocument->GetShellAt(0, getter_AddRefs(shell));
+    nsIPresShell *shell = mDocument->GetShellAt(0);
 
     if (shell) {
-      nsIContent* content = NS_STATIC_CAST(nsIContent*, this);
-      nsIFrame* frame = nsnull;
-      shell->GetPrimaryFrameFor(content, &frame);
+        nsIContent* content = NS_STATIC_CAST(nsIContent*, this);
+        nsIFrame* frame = nsnull;
+        shell->GetPrimaryFrameFor(content, &frame);
 
-      nsCOMPtr<nsIPresContext> presContext;
-      shell->GetPresContext(getter_AddRefs(presContext));
+        nsCOMPtr<nsIPresContext> presContext;
+        shell->GetPresContext(getter_AddRefs(presContext));
 
-      if (frame && presContext) {
-        nsIView* view = frame->GetClosestView();
+        if (frame && presContext) {
+            nsIView* view = frame->GetClosestView();
 
-        if (view) {
-          // XXXldb Um, not all views have widgets...
-          view->GetWidget()->HideWindowChrome(aShouldHide);
+            if (view) {
+                // XXXldb Um, not all views have widgets...
+                view->GetWidget()->HideWindowChrome(aShouldHide);
+            }
         }
-      }
     }
-  }
 
-  return NS_OK;
+    return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -4615,7 +4543,7 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
     rv |= aStream->Write32(mNumAttributes);
 
     nsAutoString attributeValue;
-    PRInt32 i;
+    PRUint32 i;
     for (i = 0; i < mNumAttributes; ++i) {
         index = aNodeInfos->IndexOf(mAttributes[i].mNodeInfo);
         NS_ASSERTION(index >= 0, "unknown nsINodeInfo index");
@@ -4681,8 +4609,8 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
     // Read Attributes
     rv |= aStream->Read32(&number);
     mNumAttributes = PRInt32(number);
-	
-    PRInt32 i;
+
+    PRUint32 i;
     if (mNumAttributes > 0) {
         mAttributes = new nsXULPrototypeAttribute[mNumAttributes];
         if (! mAttributes)
@@ -4796,7 +4724,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
 nsresult
 nsXULPrototypeElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsAString& aValue)
 {
-    for (PRInt32 i = 0; i < mNumAttributes; ++i) {
+    for (PRUint32 i = 0; i < mNumAttributes; ++i) {
         if (mAttributes[i].mNodeInfo->Equals(aName, aNameSpaceID)) {
             mAttributes[i].mValue.GetValue( aValue );
             return aValue.IsEmpty() ? NS_CONTENT_ATTR_NO_VALUE : NS_CONTENT_ATTR_HAS_VALUE;

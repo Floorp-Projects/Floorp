@@ -186,16 +186,16 @@ STDMETHODIMP nsAccessNodeWrap::get_attributes(
   if (!content) 
     return E_FAIL;
 
-  PRInt32 numAttribs;
-  content->GetAttrCount(numAttribs);
+  PRUint32 numAttribs = content->GetAttrCount();
+
   if (numAttribs > aMaxAttribs)
     numAttribs = aMaxAttribs;
   *aNumAttribs = NS_STATIC_CAST(unsigned short, numAttribs);
 
-  PRInt32 index, nameSpaceID;
+  PRInt32 nameSpaceID;
   nsCOMPtr<nsIAtom> nameAtom, prefixAtom;
 
-  for (index = 0; index < numAttribs; index++) {
+  for (PRUint32 index = 0; index < numAttribs; index++) {
     aNameSpaceIDs[index] = 0; aAttribValues[index] = aAttribNames[index] = nsnull;
     nsAutoString attributeValue;
     const char *pszAttributeName; 
@@ -486,9 +486,8 @@ nsAccessNodeWrap::get_childAt(unsigned aChildIndex,
   if (!content)
     return E_FAIL;  // Node already shut down
 
-  nsCOMPtr<nsIContent> childContent;
-  content->ChildAt(aChildIndex, getter_AddRefs(childContent));
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(childContent));
+  nsCOMPtr<nsIDOMNode> node =
+    do_QueryInterface(content->GetChildAt(aChildIndex));
 
   if (!node)
     return E_FAIL; // No such child

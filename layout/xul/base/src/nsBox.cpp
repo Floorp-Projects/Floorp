@@ -644,8 +644,7 @@ nsBox::GetBorder(nsMargin& aMargin)
     if (content) {
       nsCOMPtr<nsIDocument> doc = content->GetDocument();
       if (doc) {
-        nsCOMPtr<nsIPresShell> shell;
-        doc->GetShellAt(0, getter_AddRefs(shell));
+        nsIPresShell *shell = doc->GetShellAt(0);
         nsCOMPtr<nsIPresContext> context;
         shell->GetPresContext(getter_AddRefs(context));
         if (gTheme->ThemeSupportsWidget(context, frame, disp->mAppearance)) {

@@ -275,26 +275,24 @@ nsMediaDocument::StartLayout()
     scrollableContainer->ResetScrollbarPreferences();
   }
 
-  PRInt32 numberOfShells = GetNumberOfShells();
-  for (PRInt32 i = 0; i < numberOfShells; i++) {
-    nsCOMPtr<nsIPresShell> shell;
-    GetShellAt(i, getter_AddRefs(shell));
-    if (shell) {
-      // Make shell an observer for next time.
-      shell->BeginObservingDocument();
+  PRUint32 numberOfShells = GetNumberOfShells();
+  for (PRUint32 i = 0; i < numberOfShells; i++) {
+    nsIPresShell *shell = GetShellAt(i);
 
-      // Initial-reflow this time.
-      nsCOMPtr<nsIPresContext> context;
-      shell->GetPresContext(getter_AddRefs(context));
-      nsRect visibleArea;
-      context->GetVisibleArea(visibleArea);
-      shell->InitialReflow(visibleArea.width, visibleArea.height);
+    // Make shell an observer for next time.
+    shell->BeginObservingDocument();
 
-      // Now trigger a refresh.
-      nsIViewManager* vm = shell->GetViewManager();
-      if (vm) {
-        vm->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
-      }
+    // Initial-reflow this time.
+    nsCOMPtr<nsIPresContext> context;
+    shell->GetPresContext(getter_AddRefs(context));
+    nsRect visibleArea;
+    context->GetVisibleArea(visibleArea);
+    shell->InitialReflow(visibleArea.width, visibleArea.height);
+
+    // Now trigger a refresh.
+    nsIViewManager* vm = shell->GetViewManager();
+    if (vm) {
+      vm->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
     }
   }
 

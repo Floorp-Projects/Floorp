@@ -508,7 +508,7 @@ RDFContentSinkImpl::HandleStartElement(const PRUnichar *aName,
   // the attribute list.
   PushNameSpacesFrom(aAtts);
 
-  nsresult rv;
+  nsresult rv = NS_ERROR_UNEXPECTED; // XXX
 
   switch (mState) {
   case eRDFContentSinkState_InProlog:
@@ -536,8 +536,6 @@ RDFContentSinkImpl::HandleStartElement(const PRUnichar *aName,
       PR_LOG(gLog, PR_LOG_ALWAYS,
              ("rdfxml: unexpected content in epilog at line %d",
               aLineNumber));
-
-      rv = NS_ERROR_UNEXPECTED; // XXX
       break;
   }
 

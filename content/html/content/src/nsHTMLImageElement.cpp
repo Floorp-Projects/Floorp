@@ -318,9 +318,7 @@ nsHTMLImageElement::GetXY(PRInt32* aX, PRInt32* aY)
   }
 
   // Get Presentation shell 0
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocument->GetShellAt(0, getter_AddRefs(presShell));
-
+  nsIPresShell *presShell = mDocument->GetShellAt(0);
   if (!presShell) {
     return NS_OK;
   }

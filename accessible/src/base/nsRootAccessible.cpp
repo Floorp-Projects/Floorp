@@ -270,7 +270,7 @@ void nsRootAccessible::GetEventShell(nsIDOMNode *aNode, nsIPresShell **aEventShe
 {
   // XXX aaronl - this is not ideal.
   // We could avoid this whole section and the fallible 
-  // doc->GetShellAt(0, ...) by putting the event handler
+  // doc->GetShellAt(0) by putting the event handler
   // on nsDocAccessible instead.
   // The disadvantage would be that we would be seeing some events
   // for inner documents that we don't care about.
@@ -280,8 +280,10 @@ void nsRootAccessible::GetEventShell(nsIDOMNode *aNode, nsIPresShell **aEventShe
   if (!doc) {   // This is necessary when the node is the document node
     doc = do_QueryInterface(aNode);
   }
-  if (doc)
-    doc->GetShellAt(0, aEventShell);
+  if (doc) {
+    *aEventShell = doc->GetShellAt(0);
+    NS_IF_ADDREF(*aEventShell);
+  }
 }
 
 // --------------- nsIDOMEventListener Methods (3) ------------------------

@@ -98,9 +98,10 @@ public:
       nsCOMPtr<nsIDOMNode> node;
       mNodes->Item(mIndex, getter_AddRefs(node));
       CallQueryInterface(node, &result);
+    } else {
+      result = mContent->GetChildAt(PRInt32(mIndex));
+      NS_IF_ADDREF(result);
     }
-    else 
-      mContent->ChildAt(PRInt32(mIndex), &result);
 
     return result;
   }
@@ -127,7 +128,7 @@ public:
     if (mNodes)
       mNodes->GetLength(&length);
     else
-      mContent->ChildCount(NS_REINTERPRET_CAST(PRInt32&, length));
+      length = mContent->GetChildCount();
 
     NS_ASSERTION(PRInt32(aIndex) >= 0 && aIndex <= length, "out of bounds");
 

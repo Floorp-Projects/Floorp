@@ -448,12 +448,10 @@ void txMozillaXMLOutput::closePrevious(PRInt8 aAction)
                                             getter_AddRefs(wrapper));
             NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create wrapper element");
 
-            nsCOMPtr<nsIContent> childContent;
             nsCOMPtr<nsIDOMNode> child, resultNode;
-            PRInt32 childCount, i;
-            document->GetChildCount(childCount);
+            PRUint32 i, childCount = document->GetChildCount();
             for (i = 0; i < childCount; ++i) {
-                document->ChildAt(0, getter_AddRefs(childContent));
+                nsIContent *childContent = document->GetChildAt(0);
                 if (childContent == mRootContent) {
                     document->SetRootContent(nsnull);
                 }

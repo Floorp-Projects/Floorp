@@ -743,13 +743,8 @@ nsTreeSelection::FireOnSelectHandler()
   if (!document)
     return NS_OK;
 
-  PRInt32 count = document->GetNumberOfShells();
-  for (PRInt32 i = 0; i < count; i++) {
-    nsCOMPtr<nsIPresShell> shell;
-    document->GetShellAt(i, getter_AddRefs(shell));
-    if (!shell)
-      continue;
-
+  nsIPresShell *shell = document->GetShellAt(0);
+  if (shell) {
     // Retrieve the context in which our DOM event will fire.
     nsCOMPtr<nsIPresContext> aPresContext;
     shell->GetPresContext(getter_AddRefs(aPresContext));
@@ -759,7 +754,8 @@ nsTreeSelection::FireOnSelectHandler()
     event.eventStructType = NS_EVENT;
     event.message = NS_FORM_SELECTED;
 
-    content->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    content->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT,
+                            &status);
   }
 
   return NS_OK;

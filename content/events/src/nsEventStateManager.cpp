@@ -41,6 +41,7 @@
 #include "nsEventStateManager.h"
 #include "nsEventListenerManager.h"
 #include "nsIContent.h"
+#include "nsINodeInfo.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "nsIWidget.h"
@@ -487,8 +488,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
               if (gLastFocusedContent) // could have changed in HandleDOMEvent
                 doc = gLastFocusedContent->GetDocument();
               if (doc) {
-                nsCOMPtr<nsIPresShell> shell;
-                doc->GetShellAt(0, getter_AddRefs(shell));
+                nsIPresShell *shell = doc->GetShellAt(0);
                 if (shell) {
                   nsCOMPtr<nsIPresContext> oldPresContext;
                   shell->GetPresContext(getter_AddRefs(oldPresContext));
@@ -639,8 +639,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
             // in the Ender widget case.
             nsCOMPtr<nsIDocument> doc = gLastFocusedContent->GetDocument();
             if (doc) {
-              nsCOMPtr<nsIPresShell> shell;
-              doc->GetShellAt(0, getter_AddRefs(shell));
+              nsIPresShell *shell = doc->GetShellAt(0);
               if (shell) {
                 nsCOMPtr<nsIPresContext> oldPresContext;
                 shell->GetPresContext(getter_AddRefs(oldPresContext));
@@ -734,8 +733,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
         if (domDoc) {
           nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
-          nsCOMPtr<nsIPresShell> shell;
-          document->GetShellAt(0, getter_AddRefs(shell));
+          nsIPresShell *shell = document->GetShellAt(0);
           NS_ASSERTION(shell, "Focus events should not be getting thru when this is null!");
           if (shell) {
             if (focusedElement) {
@@ -805,8 +803,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         event.flags = 0;
 
         if (gLastFocusedContent) {
-          nsCOMPtr<nsIPresShell> shell;
-          gLastFocusedDocument->GetShellAt(0, getter_AddRefs(shell));
+          nsIPresShell *shell = gLastFocusedDocument->GetShellAt(0);
           if (shell) {
             nsCOMPtr<nsIPresContext> oldPresContext;
             shell->GetPresContext(getter_AddRefs(oldPresContext));
@@ -1532,8 +1529,7 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   if(!doc) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  doc->GetShellAt(0, getter_AddRefs(presShell));
+  nsIPresShell *presShell = doc->GetShellAt(0);
   if(!presShell) return NS_ERROR_FAILURE;
   nsCOMPtr<nsIPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
@@ -1778,8 +1774,7 @@ nsEventStateManager::GetParentScrollingView(nsMouseScrollEvent *aEvent,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresShell> pPresShell;
-  parentDoc->GetShellAt(0, getter_AddRefs(pPresShell));
+  nsIPresShell *pPresShell = parentDoc->GetShellAt(0);
   NS_ENSURE_TRUE(pPresShell, NS_ERROR_FAILURE);
 
   /* now find the content node in our parent docshell's document that
@@ -2557,8 +2552,7 @@ nsEventStateManager::MaybeDispatchMouseEventToIframe(
       docContent->GetTag(getter_AddRefs(tag));
       if (tag == nsHTMLAtoms::iframe) {
         // We're an IFRAME.  Send an event to our IFRAME tag.
-        nsCOMPtr<nsIPresShell> parentShell;
-        parentDoc->GetShellAt(0, getter_AddRefs(parentShell));
+        nsIPresShell *parentShell = parentDoc->GetShellAt(0);
         if (parentShell) {
           nsEventStatus status = nsEventStatus_eIgnore;
           nsMouseEvent event;
@@ -3563,12 +3557,11 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
                 if (NS_SUCCEEDED(nsImageMapUtils::FindImageMap(doc,usemap,getter_AddRefs(imageMap))) && imageMap) {
                   nsCOMPtr<nsIContent> map(do_QueryInterface(imageMap));
                   if (map) {
-                    nsCOMPtr<nsIContent> childArea;
-                    PRInt32 count, index;
-                    map->ChildCount(count);
-                    //First see if mCurrentFocus is in this map
+                    nsIContent *childArea;
+                    PRUint32 index, count = map->GetChildCount();
+                    // First see if mCurrentFocus is in this map
                     for (index = 0; index < count; index++) {
-                      map->ChildAt(index, getter_AddRefs(childArea));
+                      childArea = map->GetChildAt(index);
                       if (childArea == mCurrentFocus) {
                         PRInt32 val = 0;
                         TabIndexFrom(childArea, &val);
@@ -3587,7 +3580,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
                     PRInt32 start = index < count ? index + increment : (forward ? 0 : count - 1);
                     for (index = start; index < count && index >= 0; index += increment) {
                       //Iterate over the children.
-                      map->ChildAt(index, getter_AddRefs(childArea));
+                      childArea = map->GetChildAt(index);
 
                       //Got the map area, check its tabindex.
                       PRInt32 val = 0;
@@ -3703,15 +3696,15 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
 PRInt32
 nsEventStateManager::GetNextTabIndex(nsIContent* aParent, PRBool forward)
 {
-  PRInt32 count, tabIndex, childTabIndex;
-  nsCOMPtr<nsIContent> child;
-  
-  aParent->ChildCount(count);
+  PRInt32 tabIndex, childTabIndex;
+  nsIContent *child;
+
+  PRUint32 count = aParent->GetChildCount();
  
   if (forward) {
     tabIndex = 0;
-    for (PRInt32 index = 0; index < count; index++) {
-      aParent->ChildAt(index, getter_AddRefs(child));
+    for (PRUint32 index = 0; index < count; index++) {
+      child = aParent->GetChildAt(index);
       childTabIndex = GetNextTabIndex(child, forward);
       if (childTabIndex > mCurrentTabIndex && childTabIndex != tabIndex) {
         tabIndex = (tabIndex == 0 || childTabIndex < tabIndex) ? childTabIndex : tabIndex; 
@@ -3727,10 +3720,10 @@ nsEventStateManager::GetNextTabIndex(nsIContent* aParent, PRBool forward)
   } 
   else { /* !forward */
     tabIndex = 1;
-    for (PRInt32 index = 0; index < count; index++) {
-      aParent->ChildAt(index, getter_AddRefs(child));
+    for (PRUint32 index = 0; index < count; index++) {
+      child = aParent->GetChildAt(index);
       childTabIndex = GetNextTabIndex(child, forward);
-      if ((mCurrentTabIndex==0 && childTabIndex > tabIndex) ||
+      if ((mCurrentTabIndex == 0 && childTabIndex > tabIndex) ||
           (childTabIndex < mCurrentTabIndex && childTabIndex > tabIndex)) {
         tabIndex = childTabIndex;
       }
@@ -3739,7 +3732,7 @@ nsEventStateManager::GetNextTabIndex(nsIContent* aParent, PRBool forward)
       child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndexStr);
       PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
       if (NS_SUCCEEDED (ec)) {
-        if ((mCurrentTabIndex==0 && val > tabIndex) ||
+        if ((mCurrentTabIndex == 0 && val > tabIndex) ||
             (val < mCurrentTabIndex && val > tabIndex) ) {
           tabIndex = val;
         }
@@ -4152,8 +4145,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
         // associated view manager on exit from this function.
         // See bug 53763.
         nsCOMPtr<nsIViewManager> kungFuDeathGrip;
-        nsCOMPtr<nsIPresShell> shell;
-        doc->GetShellAt(0, getter_AddRefs(shell));
+        nsIPresShell *shell = doc->GetShellAt(0);
         if (shell) {
           kungFuDeathGrip = shell->GetViewManager();
 
@@ -4371,8 +4363,7 @@ nsEventStateManager::GetFocusedFrame(nsIFrame** aFrame)
   if (!mCurrentFocusFrame && mCurrentFocus) {
     nsIDocument* doc = mCurrentFocus->GetDocument();
     if (doc) {
-      nsCOMPtr<nsIPresShell> shell;
-      doc->GetShellAt(0, getter_AddRefs(shell));
+      nsIPresShell *shell = doc->GetShellAt(0);
       if (shell) {
         shell->GetPrimaryFrameFor(mCurrentFocus, &mCurrentFocusFrame);
         if (mCurrentFocusFrame)
@@ -4601,8 +4592,11 @@ nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult)
 }
 
 
-nsresult nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent, nsIContent **aEndContent,
-    nsIFrame **aStartFrame, PRUint32* aStartOffset)
+nsresult
+nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
+                                             nsIContent **aEndContent,
+                                             nsIFrame **aStartFrame,
+                                             PRUint32* aStartOffset)
 {
   // In order to return the nsIContent and nsIFrame of the caret's position,
   // we need to get a pres shell, and then get the selection from it
@@ -4625,7 +4619,7 @@ nsresult nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent
   nsCOMPtr<nsISelection> domSelection;
   if (frameSelection)
     rv = frameSelection->GetSelection(nsISelectionController::SELECTION_NORMAL,
-      getter_AddRefs(domSelection));
+                                      getter_AddRefs(domSelection));
 
   nsCOMPtr<nsIDOMNode> startNode, endNode;
   PRBool isCollapsed = PR_FALSE;
@@ -4637,26 +4631,22 @@ nsresult nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent
     if (domRange) {
       domRange->GetStartContainer(getter_AddRefs(startNode));
       domRange->GetEndContainer(getter_AddRefs(endNode));
-      typedef PRInt32* PRInt32_ptr;
-      domRange->GetStartOffset(PRInt32_ptr(aStartOffset));
+      domRange->GetStartOffset(NS_REINTERPRET_CAST(PRInt32 *, aStartOffset));
 
-      nsCOMPtr<nsIContent> childContent;
-      PRBool canContainChildren;
+      nsIContent *childContent = nsnull;
 
       startContent = do_QueryInterface(startNode);
-      if (NS_SUCCEEDED(startContent->CanContainChildren(canContainChildren)) &&
-          canContainChildren) {
-        startContent->ChildAt(*aStartOffset, getter_AddRefs(childContent));
+      if (startContent->CanContainChildren()) {
+        childContent = startContent->GetChildAt(*aStartOffset);
         if (childContent)
           startContent = childContent;
       }
 
       endContent = do_QueryInterface(endNode);
-      if (NS_SUCCEEDED(endContent->CanContainChildren(canContainChildren)) &&
-          canContainChildren) {
+      if (endContent->CanContainChildren()) {
         PRInt32 endOffset = 0;
         domRange->GetEndOffset(&endOffset);
-        endContent->ChildAt(endOffset, getter_AddRefs(childContent));
+        childContent = endContent->GetChildAt(endOffset);
         if (childContent)
           endContent = childContent;
       }
@@ -5123,14 +5113,14 @@ nsEventStateManager::IsFrameSetDoc(nsIDocShell* aDocShell)
       nsCOMPtr<nsIContent> rootContent;
       doc->GetRootContent(getter_AddRefs(rootContent));
       if (rootContent) {
-        PRInt32 childCount;
-        rootContent->ChildCount(childCount);
-        for (PRInt32 i = 0; i < childCount; ++i) {
-          nsCOMPtr<nsIContent> childContent;
-          rootContent->ChildAt(i, getter_AddRefs(childContent));
-          nsCOMPtr<nsIAtom> childTag;
-          childContent->GetTag(getter_AddRefs(childTag));
-          if (childTag == nsHTMLAtoms::frameset) {
+        PRUint32 childCount = rootContent->GetChildCount();
+        for (PRUint32 i = 0; i < childCount; ++i) {
+          nsIContent *childContent = rootContent->GetChildAt(i);
+
+          nsINodeInfo *ni = childContent->GetNodeInfo();
+
+          if (childContent->IsContentOfType(nsIContent::eHTML) &&
+              ni->Equals(nsHTMLAtoms::frameset)) {
             isFrameSet = PR_TRUE;
             break;
           }

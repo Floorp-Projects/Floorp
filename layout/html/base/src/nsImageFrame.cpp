@@ -493,9 +493,8 @@ nsImageFrame::HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell)
     else {
       // We are in quirks mode, so we can just check the tag name; no need to
       // check the namespace.
-      nsCOMPtr<nsINodeInfo> nodeInfo;
-      mContent->GetNodeInfo(getter_AddRefs(nodeInfo));
-      
+      nsINodeInfo *nodeInfo = mContent->GetNodeInfo();
+
       if (!mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::alt) &&
           nodeInfo &&
           !nodeInfo->Equals(nsHTMLAtoms::object)) {
@@ -1431,8 +1430,7 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
           nsCOMPtr<nsIContent> parentContent = mContent->GetParent();
           if (parentContent)
           {
-            PRInt32 thisOffset;
-            parentContent->IndexOf(mContent, thisOffset);
+            PRInt32 thisOffset = parentContent->IndexOf(mContent);
             nsCOMPtr<nsIDOMNode> parentNode = do_QueryInterface(parentContent);
             nsCOMPtr<nsIDOMNode> rangeNode;
             PRInt32 rangeOffset;
@@ -1693,8 +1691,7 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
             // element to provide the basis for the destination url.
             nsAutoString src;
             if (GetAnchorHREFAndTarget(src, target)) {
-              nsCOMPtr<nsINodeInfo> nodeInfo;
-              mContent->GetNodeInfo(getter_AddRefs(nodeInfo));
+              nsINodeInfo *nodeInfo = mContent->GetNodeInfo();
               NS_ASSERTION(nodeInfo, "Image content without a nodeinfo?");
               nsIDocument* doc = nodeInfo->GetDocument();
               nsCAutoString charset;
@@ -1702,8 +1699,7 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
                 doc->GetDocumentCharacterSet(charset);
               } 
               nsCOMPtr<nsIURI> uri;
-              nsresult rv = NS_NewURI(getter_AddRefs(uri), src,
-                                      charset.get(),
+              nsresult rv = NS_NewURI(getter_AddRefs(uri), src, charset.get(),
                                       baseURL);
               NS_ENSURE_SUCCESS(rv, rv);
             

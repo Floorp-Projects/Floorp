@@ -67,7 +67,7 @@ public:
 
   NS_IMETHOD AppendElement(nsIContent *aContent);
   NS_IMETHOD RemoveElement(nsIContent *aContent);
-  NS_IMETHOD IndexOf(nsIContent *aContent, PRInt32& aIndex);
+  NS_IMETHOD_(PRInt32) IndexOf(nsIContent *aContent, PRBool aDoFlush);
   NS_IMETHOD Reset();
 
   static void Shutdown();
@@ -175,13 +175,12 @@ public:
 
   /// nsIContentList
   NS_IMETHOD GetParentObject(nsISupports** aParentObject);
-  NS_IMETHOD GetLength(PRUint32* aLength, PRBool aDoFlush);
+  NS_IMETHOD_(PRUint32) GetLength(PRBool aDoFlush);
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn,
                   PRBool aDoFlush);
   NS_IMETHOD NamedItem(const nsAString& aName, nsIDOMNode** aReturn,
                        PRBool aDoFlush);
-  NS_IMETHOD IndexOf(nsIContent *aContent, PRInt32& aIndex,
-                     PRBool aDoFlush);
+  NS_IMETHOD_(PRInt32) IndexOf(nsIContent *aContent, PRBool aDoFlush);
 
   // nsIDocumentObserver
   NS_DECL_NSIDOCUMENTOBSERVER

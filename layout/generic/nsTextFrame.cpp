@@ -1981,11 +1981,7 @@ nsTextFrame::GetContentAndOffsetsForSelection(nsIPresContext *aPresContext, nsIC
           }
           else
           {
-            PRInt32 numChildren;
-            if (NS_SUCCEEDED(rv = (*aContent)->ChildCount(numChildren)))
-              *aOffset = numChildren;
-            else
-              return rv;
+            *aOffset = (*aContent)->GetChildCount();
           }
         }
         else

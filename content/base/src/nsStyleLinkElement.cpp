@@ -271,18 +271,14 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
   PRBool doneLoading;
   nsresult rv = NS_OK;
   if (isInline) {
-    PRInt32 count;
-    thisContent->ChildCount(count);
-    if (count < 0)
-      return NS_OK;
+    PRUint32 count = thisContent->GetChildCount();
 
     nsString *content = new nsString();
     NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
 
-    PRInt32 i;
-    nsCOMPtr<nsIContent> node;
+    PRUint32 i;
     for (i = 0; i < count; ++i) {
-      thisContent->ChildAt(i, getter_AddRefs(node));
+      nsIContent *node = thisContent->GetChildAt(i);
       nsCOMPtr<nsIDOMText> tc = do_QueryInterface(node);
       // Ignore nodes that are not DOMText.
       if (!tc) {

@@ -135,7 +135,7 @@ class nsNativeTheme
   }
   
 private:
-  void GetPrimaryPresShell(nsIFrame* aFrame, nsIPresShell** aResult);
+  nsIPresShell *GetPrimaryPresShell(nsIFrame* aFrame);
   PRBool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom);
   PRInt32 CheckIntAttr(nsIFrame* aFrame, nsIAtom* aAtom);
   PRBool GetAttr(nsIFrame* aFrame, nsIAtom* aAtom, nsAString& attrValue);

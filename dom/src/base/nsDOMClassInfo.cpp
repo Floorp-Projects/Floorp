@@ -4620,8 +4620,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   // See if we have a frame.
-  nsCOMPtr<nsIPresShell> shell;
-  doc->GetShellAt(0, getter_AddRefs(shell));
+  nsIPresShell *shell = doc->GetShellAt(0);
 
   if (!shell) {
     return NS_OK;
@@ -5690,8 +5689,7 @@ nsHTMLExternalObjSH::GetPluginInstance(nsIXPConnectWrappedNative *wrapper,
   doc->FlushPendingNotifications();
 
   // See if we have a frame.
-  nsCOMPtr<nsIPresShell> shell;
-  doc->GetShellAt(0, getter_AddRefs(shell));
+  nsIPresShell *shell = doc->GetShellAt(0);
 
   if (!shell) {
     return NS_OK;

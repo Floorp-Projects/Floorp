@@ -44,6 +44,7 @@
 #include "nsISupportsArray.h"
 #include "nsHashtable.h"
 #include "nsIHTMLContent.h"
+#include "nsIHTMLDocument.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
 #include "nsHTMLAtoms.h"
@@ -53,6 +54,7 @@
 #include "nsTableFrame.h"
 #include "nsTableColGroupFrame.h"
 #include "nsTableColFrame.h"
+#include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLTableColElement.h"
 #include "nsIDOMHTMLTableCaptionElem.h"
 #include "nsTableCellFrame.h" // to get IS_CELL_FRAME
@@ -3209,8 +3211,7 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
       // if <form>'s parent is <tr>/<table>/<tbody>/<thead>/<tfoot> in html,
       // NOT create psuedoframe for it.
       // see bug 159359
-      nsCOMPtr<nsINodeInfo> parentNodeInfo, childNodeInfo;
-      aChildContent->GetNodeInfo(getter_AddRefs(childNodeInfo));
+      nsINodeInfo *childNodeInfo = aChildContent->GetNodeInfo();
       // Sometimes aChildContent is a #text node.  In those cases it
       // does not have a nodeinfo, and in those cases we want to
       // construct a foreign frame for it in any case.  So we can just
@@ -3218,14 +3219,16 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
       NS_ASSERTION(childNodeInfo ||
                    aChildContent->IsContentOfType(nsIContent::eTEXT),
                    "Non-#text nodes should have a nodeinfo here!");
-      if (childNodeInfo) {
-        aParentContent->GetNodeInfo(getter_AddRefs(parentNodeInfo));
-        if (childNodeInfo->Equals(nsHTMLAtoms::form, kNameSpaceID_None) &&
-            (parentNodeInfo->Equals(nsHTMLAtoms::table, kNameSpaceID_None) ||
-             parentNodeInfo->Equals(nsHTMLAtoms::tr, kNameSpaceID_None) ||
-             parentNodeInfo->Equals(nsHTMLAtoms::tbody, kNameSpaceID_None) ||
-             parentNodeInfo->Equals(nsHTMLAtoms::thead, kNameSpaceID_None) ||
-             parentNodeInfo->Equals(nsHTMLAtoms::tfoot, kNameSpaceID_None))) {
+      if (aChildContent->IsContentOfType(nsIContent::eHTML) &&
+          childNodeInfo->Equals(nsHTMLAtoms::form) &&
+          aParentContent->IsContentOfType(nsIContent::eHTML)) {
+        nsINodeInfo *parentNodeInfo = aParentContent->GetNodeInfo();
+
+        if (parentNodeInfo->Equals(nsHTMLAtoms::table) ||
+            parentNodeInfo->Equals(nsHTMLAtoms::tr)    ||
+            parentNodeInfo->Equals(nsHTMLAtoms::tbody) ||
+            parentNodeInfo->Equals(nsHTMLAtoms::thead) ||
+            parentNodeInfo->Equals(nsHTMLAtoms::tfoot)) {
           break;
         }
       }
@@ -3734,31 +3737,22 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
     
     // if still scrollable, check the BODY element, but only if we are in an HTML document
     if (isScrollable && isHTML) {
-      // XXX: there is a nice convenient method on nsIHTMLDocument that we could use to get the body
-      //      element - it is called, strangely enough, GetBodyElement, but we cannot use it here
-      //      because the separation between content and layout prohibits including nsIHTMLDocument
-      //      without pulling more of content into content/shared, so we do the search the hard way
-
-      // walk the children of the docElement looking fo the BODY
+      nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
       nsCOMPtr<nsIContent> bodyElement;
-      PRInt32 count = 0;
-      aDocElement->ChildCount(count);
-      for (PRInt32 i = 0; i < count; ++i) {
-        nsCOMPtr<nsIContent> kidElement;
-        aDocElement->ChildAt(i, getter_AddRefs(kidElement));
-        if (kidElement){
-          nsCOMPtr<nsIAtom> kidTag;
-          kidElement->GetTag(getter_AddRefs(kidTag));
-          if (kidTag == nsHTMLAtoms::body) {
-            bodyElement = kidElement;
-            // done looking
-            break;
-          }
-        } else {
-          NS_ASSERTION(PR_FALSE, "null child element returned from ChildAt");
-          break;
+
+      if (htmlDoc) {
+        nsCOMPtr<nsIDOMHTMLElement> body;
+        htmlDoc->GetBody(getter_AddRefs(body));
+
+        bodyElement = do_QueryInterface(body);
+
+        if (bodyElement &&
+            !bodyElement->GetNodeInfo()->Equals(nsHTMLAtoms::body)) {
+          // The body is not a <body> tag, it's a <frameset>.
+          bodyElement = nsnull;
         }
-      }      
+      }
+
       if (bodyElement) {
         nsRefPtr<nsStyleContext> bodyContext;
         bodyContext = aPresContext->ResolveStyleContextFor(bodyElement,
@@ -8027,8 +8021,7 @@ GetAdjustedParentFrame(nsIPresContext* aPresContext,
                        nsIContent*     aParentContent,
                        PRInt32         aChildIndex)
 {
-  nsCOMPtr<nsIContent> childContent;
-  aParentContent->ChildAt(aChildIndex, getter_AddRefs(childContent));
+  nsIContent *childContent = aParentContent->GetChildAt(aChildIndex);
   nsIFrame* newParent = nsnull;
 
   if (nsLayoutAtoms::tableOuterFrame == aParentFrameType) {
@@ -8104,8 +8097,8 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   if (!multiple) {
     nsCOMPtr<nsIBindingManager> bindingManager;
     nsIDocument* document = nsnull; 
-    nsCOMPtr<nsIContent> firstAppendedChild;
-    aContainer->ChildAt(aNewIndexInContainer, getter_AddRefs(firstAppendedChild));
+    nsIContent *firstAppendedChild =
+      aContainer->GetChildAt(aNewIndexInContainer);
     if (firstAppendedChild) {
       document = firstAppendedChild->GetDocument();
     }
@@ -8122,7 +8115,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   if (multiple || hasInsertion) {
     // We have an insertion point.  There are some additional tests we need to do
     // in order to ensure that an append is a safe operation.
-    PRInt32 childCount = 0;
+    PRUint32 childCount = 0;
       
     if (!multiple) {
       // We may need to make multiple ContentInserted calls instead.  A
@@ -8135,7 +8128,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
       //
       // In the multiple insertion point case, we know we're going to need to do
       // multiple ContentInserted calls anyway.
-      insertionPoint->GetContent()->ChildCount(childCount);
+      childCount = insertionPoint->GetContent()->GetChildCount();
     }
 
     if (multiple || childCount > 0) {
@@ -8144,11 +8137,9 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
       // We then make a ContentInserted call with the correct computed index.
       nsIContent* insertionContent = insertionPoint->GetContent();
       
-      PRInt32 containerCount;
-      aContainer->ChildCount(containerCount);
-      for (PRInt32 i = aNewIndexInContainer; i < containerCount; i++) {
-        nsCOMPtr<nsIContent> child;
-        aContainer->ChildAt(i, getter_AddRefs(child));
+      PRUint32 containerCount = aContainer->GetChildCount();
+      for (PRUint32 i = aNewIndexInContainer; i < containerCount; i++) {
+        nsIContent *child = aContainer->GetChildAt(i);
         if (multiple) {
           // Filters are in effect, so the insertion point needs to be refetched for
           // each child.
@@ -8164,7 +8155,8 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
           nsIContent* item = nsCOMPtr<nsIContent>(*iter);
           if (item == child)
             // Call ContentInserted with this index.
-            ContentInserted(aPresContext, aContainer, nsnull, child, iter.index(), mTempFrameTreeState, PR_FALSE);
+            ContentInserted(aPresContext, aContainer, nsnull, child,
+                            iter.index(), mTempFrameTreeState, PR_FALSE);
         }
       }
 
@@ -8219,8 +8211,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
       // Nope, it's an inline, so just reframe the entire stinkin' mess if the
       // content is a block. We _could_ do better here with a little more work...
       // find out if the child is a block or inline, an inline means we don't have to reframe
-      nsCOMPtr<nsIContent> child;
-      aContainer->ChildAt(aNewIndexInContainer, getter_AddRefs(child));
+      nsIContent *child = aContainer->GetChildAt(aNewIndexInContainer);
       PRBool needReframe = !child;
       if (child && child->IsContentOfType(nsIContent::eELEMENT)) {
         nsRefPtr<nsStyleContext> styleContext;
@@ -8249,7 +8240,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   parentFrame = ::GetAdjustedParentFrame(aPresContext, parentFrame, frameType,
                                          aContainer, aNewIndexInContainer);
   // Create some new frames
-  PRInt32                 count;
+  PRUint32                count;
   nsIFrame*               firstAppendedFrame = nsnull;
   nsFrameItems            frameItems;
   nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
@@ -8275,12 +8266,11 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   // the outer table frame's additional child list. 
   nsFrameItems captionItems; 
 
-  PRInt32 i;
-  aContainer->ChildCount(count);
+  PRUint32 i;
+  count = aContainer->GetChildCount();
   for (i = aNewIndexInContainer; i < count; i++) {
-    nsCOMPtr<nsIContent> childContent;
-    aContainer->ChildAt(i, getter_AddRefs(childContent));
-      
+    nsIContent *childContent = aContainer->GetChildAt(i);
+
     // construct a child of a table frame by putting it on a temporary list and then
     // moving it into the appropriate list. This is more efficient than checking the display
     // type of childContent. During the construction of a caption frame, the outer 
@@ -8429,8 +8419,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   // the dummy frame.
   nsCOMPtr<nsIDOMHTMLSelectElement> sel(do_QueryInterface(aContainer));
   if (sel) {
-    nsCOMPtr<nsIContent> childContent;
-    aContainer->ChildAt(aNewIndexInContainer, getter_AddRefs(childContent));
+    nsIContent *childContent = aContainer->GetChildAt(aNewIndexInContainer);
     if (childContent) {
       RemoveDummyFrameFromSelect(aPresContext, shell, aContainer,
                                  childContent, sel);
@@ -8987,8 +8976,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
         }
 #endif
         if (parentContainer) {
-          PRInt32 ix;
-          parentContainer->IndexOf(blockContent, ix);
+          PRInt32 ix = parentContainer->IndexOf(blockContent);
           ContentReplaced(aPresContext, parentContainer, blockContent, blockContent, ix);
         }
         else {
@@ -9951,8 +9939,7 @@ nsCSSFrameConstructor::ContentChanged(nsIPresContext* aPresContext,
           // repair the blocks frame structure properly.
           nsCOMPtr<nsIContent> container = aContent->GetParent();
           if (container) {
-            PRInt32 ix;
-            container->IndexOf(aContent, ix);
+            PRInt32 ix = container->IndexOf(aContent);
             doContentChanged = PR_FALSE;
             rv = ContentReplaced(aPresContext, container,
                                  aContent, aContent, ix);
@@ -11621,34 +11608,33 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
   nsresult rv = NS_OK;
   nsCOMPtr<nsIContent> container = aContent->GetParent();
   if (container) {
-    PRInt32 indexInContainer;
-    rv = container->IndexOf(aContent, indexInContainer);
-    if (NS_SUCCEEDED(rv)) {
-      // Before removing the frames associated with the content object, ask them to save their
-      // state onto a temporary state object.
-      CaptureStateForFramesOf(aPresContext, aContent, mTempFrameTreeState);
+    PRInt32 indexInContainer = container->IndexOf(aContent);
+    // Before removing the frames associated with the content object,
+    // ask them to save their state onto a temporary state object.
+    CaptureStateForFramesOf(aPresContext, aContent, mTempFrameTreeState);
 
-      // Save parent frame because this frame is going away.  But if
-      // this is an out-of-flow, we want to get the _placeholder_'s
-      // parent.
-      nsIFrame* parent = nsnull;
-      if (frame) {
-        if (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
-          shell->GetPlaceholderFrameFor(frame, &frame);
-          NS_ASSERTION(frame, "Out-of-flow with no placeholder?");
-        }
-
-        frame = frame->GetParent();
+    // Save parent frame because this frame is going away.  But if
+    // this is an out-of-flow, we want to get the _placeholder_'s
+    // parent.
+    nsIFrame* parent = nsnull;
+    if (frame) {
+      if (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+        shell->GetPlaceholderFrameFor(frame, &frame);
+        NS_ASSERTION(frame, "Out-of-flow with no placeholder?");
       }
-      
-      // Remove the frames associated with the content object on which the
-      // attribute change occurred.
-      rv = ContentRemoved(aPresContext, container, aContent, indexInContainer, PR_FALSE);
 
-      if (NS_SUCCEEDED(rv)) {
-        // Now, recreate the frames associated with this content object.
-        rv = ContentInserted(aPresContext, container, parent, aContent, indexInContainer, mTempFrameTreeState, PR_FALSE);
-      }      
+      frame = frame->GetParent();
+    }
+
+    // Remove the frames associated with the content object on which
+    // the attribute change occurred.
+    rv = ContentRemoved(aPresContext, container, aContent, indexInContainer,
+                        PR_FALSE);
+
+    if (NS_SUCCEEDED(rv)) {
+      // Now, recreate the frames associated with this content object.
+      rv = ContentInserted(aPresContext, container, parent, aContent,
+                           indexInContainer, mTempFrameTreeState, PR_FALSE);
     }
   } else {
     // The content is the root node, so just rebuild the world.
@@ -11660,6 +11646,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
     if (doc)
       ReconstructDocElementHierarchy(aPresContext);
   }
+
   return rv;
 }
 
@@ -12569,8 +12556,7 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
 
   nsIContent* container = parentFrame->GetContent();
   if (container && textContent) {
-    PRInt32 ix = 0;
-    container->IndexOf(textContent, ix);
+    PRInt32 ix = container->IndexOf(textContent);
     prevSibling = FindPreviousSibling(aPresShell, container, aBlockFrame, ix);
   }
 
@@ -13332,8 +13318,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
       }
 #endif
       if (parentContainer) {
-        PRInt32 ix;
-        parentContainer->IndexOf(aBlockContent, ix);
+        PRInt32 ix = parentContainer->IndexOf(aBlockContent);
         ContentReplaced(aPresContext, parentContainer, aBlockContent, aBlockContent, ix);
       }
       else {
@@ -13660,8 +13645,7 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIPresContext* aPresContext, nsIF
                  NS_STATIC_CAST(void*, parentContainer));
         }
 #endif
-        PRInt32 ix;
-        parentContainer->IndexOf(blockContent, ix);
+        PRInt32 ix = parentContainer->IndexOf(blockContent);
         return ContentReplaced(aPresContext, parentContainer, blockContent, blockContent, ix);
       }
     }

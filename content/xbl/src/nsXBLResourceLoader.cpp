@@ -273,7 +273,7 @@ nsXBLResourceLoader::NotifyBoundElements()
         nsCOMPtr<nsIContent> parent = content->GetParent();
         PRInt32 index = 0;
         if (parent)
-          parent->IndexOf(content, index);
+          index = parent->IndexOf(content);
         
         // If |content| is (in addition to having binding |mBinding|)
         // also a descendant of another element with binding |mBinding|,
@@ -284,8 +284,7 @@ nsXBLResourceLoader::NotifyBoundElements()
         // has a primary frame and whether it's in the undisplayed map
         // before sending a ContentInserted notification, or bad things
         // will happen.
-        nsCOMPtr<nsIPresShell> shell;
-        doc->GetShellAt(0, getter_AddRefs(shell));
+        nsIPresShell *shell = doc->GetShellAt(0);
         if (shell) {
           nsIFrame* childFrame;
           shell->GetPrimaryFrameFor(content, &childFrame);

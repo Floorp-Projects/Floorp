@@ -144,9 +144,7 @@ nsBoxObject::SetDocument(nsIDocument* aDocument)
 {
   mPresState = nsnull;
   if (aDocument) {
-    nsCOMPtr<nsIPresShell> shell;
-    aDocument->GetShellAt(0, getter_AddRefs(shell));
-    mPresShell = shell;
+    mPresShell = aDocument->GetShellAt(0);
   }
   else {
     mPresShell = nsnull;
@@ -185,8 +183,7 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
 
   if (doc) {
     // Get Presentation shell 0
-    nsCOMPtr<nsIPresShell> presShell;
-    doc->GetShellAt(0, getter_AddRefs(presShell));
+    nsIPresShell *presShell = doc->GetShellAt(0);
 
     if(presShell) {
       // Flush all pending notifications so that our frames are uptodate
@@ -282,9 +279,8 @@ nsBoxObject::GetScreenRect(nsRect& aRect)
 
   if (doc) {
     // Get Presentation shell 0
-    nsCOMPtr<nsIPresShell> presShell;
-    doc->GetShellAt(0, getter_AddRefs(presShell));
-    
+    nsIPresShell *presShell = doc->GetShellAt(0);
+
     if (presShell) {
       // Flush all pending notifications so that our frames are uptodate
       presShell->FlushPendingNotifications(PR_FALSE);
@@ -529,10 +525,15 @@ nsBoxObject::GetLastChild(nsIDOMElement * *aLastVisibleChild)
     *aLastVisibleChild = nsnull;
     return NS_ERROR_NOT_INITIALIZED;
   }
-  PRInt32 count;
-  mContent->ChildCount(count);
-  *aLastVisibleChild = GetChildByOrdinalAt(count-1);
-  NS_IF_ADDREF(*aLastVisibleChild);
+
+  PRUint32 count = mContent->GetChildCount();
+
+  if (count > 0) {
+    NS_IF_ADDREF(*aLastVisibleChild = GetChildByOrdinalAt(count-1));
+  } else {
+    *aLastVisibleChild = nsnull;
+  }
+
   return NS_OK;
 }
 

@@ -2582,15 +2582,19 @@ nsHTMLEditRules::JoinBlocks(nsCOMPtr<nsIDOMNode> *aLeftBlock,
       // idea here is to take all children in  rightList that are past
       // theOffset, and pull them into leftlist.
       nsCOMPtr<nsIDOMNode> childToMove;
-      nsCOMPtr<nsIContent> parent(do_QueryInterface(rightList)), child;
-      if (!parent) return NS_ERROR_NULL_POINTER;
-      parent->ChildAt(theOffset, getter_AddRefs(child));
+      nsCOMPtr<nsIContent> parent(do_QueryInterface(rightList));
+      if (!parent)
+        return NS_ERROR_NULL_POINTER;
+
+      nsIContent *child = parent->GetChildAt(theOffset);
       while (child)
       {
         childToMove = do_QueryInterface(child);
         res = mHTMLEditor->MoveNode(childToMove, leftList, -1);
-        if (NS_FAILED(res)) return res;
-        parent->ChildAt(rightOffset, getter_AddRefs(child));
+        if (NS_FAILED(res))
+          return res;
+
+        child = parent->GetChildAt(rightOffset);
       }
     }
     else

@@ -349,7 +349,7 @@ public:
                      const nsAString& aValue, PRBool aNotify);
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                            PRBool aNotify, PRBool aDeepSetDocument);
   NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
                            PRBool aDeepSetDocument);
@@ -476,7 +476,7 @@ nsHTMLScriptElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 }
 
 NS_IMETHODIMP 
-nsHTMLScriptElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+nsHTMLScriptElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                    PRBool aNotify, PRBool aDeepSetDocument)
 {
   nsresult rv = nsGenericHTMLContainerElement::InsertChildAt(aKid, aIndex,

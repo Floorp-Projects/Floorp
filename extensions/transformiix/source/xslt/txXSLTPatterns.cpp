@@ -356,8 +356,8 @@ MBool txIdPattern::matches(Node* aNode, txIMatchContext* aContext)
     if (!content) {
         return MB_FALSE;
     }
-    nsCOMPtr<nsINodeInfo> ni;
-    content->GetNodeInfo(getter_AddRefs(ni));
+
+    nsINodeInfo *ni = content->GetNodeInfo();
     if (!ni) {
         return MB_FALSE;
     }

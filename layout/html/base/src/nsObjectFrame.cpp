@@ -1596,8 +1596,7 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
 
     // now we need to get the shell for the screen
     // XXX assuming that the shell at zero will always be the screen one
-    nsCOMPtr<nsIPresShell> shell;
-    doc->GetShellAt(0, getter_AddRefs(shell));
+    nsIPresShell *shell = doc->GetShellAt(0);
     NS_ENSURE_TRUE(shell, NS_ERROR_NULL_POINTER);
 
     // then the shell can give us the screen frame for this content node
@@ -2926,14 +2925,12 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   nsresult rv = NS_OK;
   NS_ENSURE_TRUE(content, rv);
 
-  PRInt32 cattrs;
-  rv = content->GetAttrCount(cattrs);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRUint32 cattrs = content->GetAttrCount();
 
   if (cattrs < 0x0000FFFF) {
-    // signed 32 bits to unsigned 16 bits conversion
+    // unsigned 32 bits to unsigned 16 bits conversion
     mNumCachedAttrs = NS_STATIC_CAST(PRUint16, cattrs);
-  } else { 
+  } else {
     mNumCachedAttrs = 0xFFFE;  // minus one in case we add an extra "src" entry below
   }
 
@@ -2958,8 +2955,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 
   nsCOMPtr<nsIDOMNodeList> allParams; 
 
-  nsCOMPtr<nsINodeInfo> ni;
-  content->GetNodeInfo(getter_AddRefs(ni));
+  nsINodeInfo *ni = content->GetNodeInfo();
 
   if (ni->NamespaceEquals(kNameSpaceID_XHTML)) {
     // For XHTML elements we need to take the namespace URI into

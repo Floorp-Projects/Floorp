@@ -470,8 +470,7 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   // and it's not of the right type, reframe it.
   PRInt32 numShells = doc->GetNumberOfShells();
   for (PRInt32 i = 0; i < numShells; ++i) {
-    nsCOMPtr<nsIPresShell> shell;
-    doc->GetShellAt(i, getter_AddRefs(shell));
+    nsIPresShell *shell = doc->GetShellAt(i);
     if (shell) {
       nsIFrame* frame = nsnull;
       shell->GetPrimaryFrameFor(thisContent, &frame);
@@ -556,8 +555,7 @@ nsImageLoadingContent::GetOurDocument()
   
   if (!doc) {  // nodeinfo time
     // XXXbz GetOwnerDocument
-    nsCOMPtr<nsINodeInfo> nodeInfo;
-    thisContent->GetNodeInfo(getter_AddRefs(nodeInfo));
+    nsINodeInfo *nodeInfo = thisContent->GetNodeInfo();
     if (nodeInfo) {
       doc = nodeInfo->GetDocument();
     }
@@ -687,8 +685,7 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
   nsCOMPtr<nsILoadGroup> loadGroup;
   document->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
 
-  nsCOMPtr<nsIPresShell> shell;
-  document->GetShellAt(0, getter_AddRefs(shell));
+  nsIPresShell *shell = document->GetShellAt(0);
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIPresContext> presContext;

@@ -30,6 +30,7 @@
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsIDocument.h"
+#include "nsINodeInfo.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsWidgetsCID.h"
@@ -386,16 +387,19 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
   nsIFrame* lastChild = nsnull;
   mChildCount = 0; // number of <frame> or <frameset> children
   nsIFrame* frame;
-  PRInt32 numChildren; // number of any type of children
-  mContent->ChildCount(numChildren);
-  for (int childX = 0; childX < numChildren; childX++) {
+
+  // number of any type of children
+  PRUint32 numChildren = mContent->GetChildCount();
+
+  for (PRUint32 childX = 0; childX < numChildren; childX++) {
     if (mChildCount == numCells) { // we have more <frame> or <frameset> than cells
       break;
     }
-    nsCOMPtr<nsIContent> child;
-    mContent->ChildAt(childX, getter_AddRefs(child));
+    nsIContent *child = mContent->GetChildAt(childX);
+
     if (!child->IsContentOfType(nsIContent::eHTML))
       continue;
+
     nsCOMPtr<nsIAtom> tag;
     child->GetTag(getter_AddRefs(tag));
     if (tag == nsHTMLAtoms::frameset || tag == nsHTMLAtoms::frame) {
@@ -1344,24 +1348,23 @@ nsHTMLFramesetFrame::RecalculateBorderResize()
 
   PRInt32 numCells = mNumRows * mNumCols; // max number of cells
   PRInt32* childTypes = new PRInt32[numCells];
-  PRInt32 childIndex, frameOrFramesetChildIndex = 0;
+  PRUint32 childIndex, frameOrFramesetChildIndex = 0;
 
-  PRInt32 numChildren; // number of any type of children
-  mContent->ChildCount(numChildren);
+  // number of any type of children
+  PRUint32 numChildren = mContent->GetChildCount();
   for (childIndex = 0; childIndex < numChildren; childIndex++) {
-    nsCOMPtr<nsIContent> childCon;
-    mContent->ChildAt(childIndex, getter_AddRefs(childCon));
-    nsCOMPtr<nsIHTMLContent> child(do_QueryInterface(childCon));
-    if (child) {
-      nsCOMPtr<nsIAtom> tag;
-      child->GetTag(getter_AddRefs(tag));
-      if (tag == nsHTMLAtoms::frameset) {
+    nsIContent *child = mContent->GetChildAt(childIndex);
+
+    if (child->IsContentOfType(nsIContent::eHTML)) {
+      nsINodeInfo *ni = child->GetNodeInfo();
+
+      if (ni->Equals(nsHTMLAtoms::frameset)) {
         childTypes[frameOrFramesetChildIndex++] = FRAMESET;
-      } else if (tag == nsHTMLAtoms::frame) {
+      } else if (ni->Equals(nsHTMLAtoms::frame)) {
         childTypes[frameOrFramesetChildIndex++] = FRAME;
       }
       // Don't overflow childTypes array
-      if (frameOrFramesetChildIndex >= numCells) {
+      if (((PRInt32)frameOrFramesetChildIndex) >= numCells) {
         break;
       }
     }

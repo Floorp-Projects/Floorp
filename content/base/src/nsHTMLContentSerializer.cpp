@@ -563,12 +563,12 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
                                              nsAString& aStr)
 {
   nsresult rv;
-  PRInt32 index, count;
+  PRUint32 index, count;
   nsAutoString nameStr, valueStr;
   PRInt32 namespaceID;
   nsCOMPtr<nsIAtom> attrName, attrPrefix;
 
-  aContent->GetAttrCount(count);
+  count = aContent->GetAttrCount();
 
   NS_NAMED_LITERAL_STRING(_mozStr, "_moz");
 

@@ -2552,13 +2552,8 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
             // object's child elements, we can't tell if it's a leaf by looking
             // at whether the frame has any child frames
             nsIContent* content = aFrame->GetContent();
-            PRBool canContainChildren = PR_FALSE;
 
-            if (content) {
-              content->CanContainChildren(canContainChildren);
-            }
-
-            if (canContainChildren) {
+            if (content && content->CanContainChildren()) {
               // The view needs to be visible, but marked as having transparent
               // content
               viewHasTransparentContent = PR_TRUE;

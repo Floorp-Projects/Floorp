@@ -491,7 +491,7 @@ public:
 
   void UpdateAllContexts();
   void NotifyAppend(nsIContent* aContent,
-                    PRInt32 aStartIndex);
+                    PRUint32 aStartIndex);
   void NotifyInsert(nsIContent* aContent,
                     nsIContent* aChildContent,
                     PRInt32 aIndexInContainer);
@@ -780,7 +780,7 @@ public:
   }
 
   nsresult Begin(nsHTMLTag aNodeType, nsIHTMLContent* aRoot,
-                 PRInt32 aNumFlushed, PRInt32 aInsertionPoint);
+                 PRUint32 aNumFlushed, PRInt32 aInsertionPoint);
   nsresult OpenContainer(const nsIParserNode& aNode);
   nsresult CloseContainer(const nsHTMLTag aTag);
   nsresult AddLeaf(const nsIParserNode& aNode);
@@ -816,7 +816,7 @@ public:
     nsHTMLTag mType;
     nsIHTMLContent* mContent;
     PRUint32 mFlags;
-    PRInt32 mNumFlushed;
+    PRUint32 mNumFlushed;
     PRInt32 mInsertionPoint;
   };
 
@@ -1214,7 +1214,7 @@ SinkContext::~SinkContext()
 nsresult
 SinkContext::Begin(nsHTMLTag aNodeType,
                    nsIHTMLContent* aRoot,
-                   PRInt32 aNumFlushed,
+                   PRUint32 aNumFlushed,
                    PRInt32 aInsertionPoint)
 {
   if (mStackSize < 1) {
@@ -1273,14 +1273,11 @@ SinkContext::GetCurrentContainer()
 void
 SinkContext::DidAddContent(nsIContent* aContent, PRBool aDidNotify)
 {
-  PRInt32 childCount;
-
   // If there was a notification done for this content, update the
   // parent's notification count.
   if (aDidNotify && (0 < mStackPos)) {
     nsIContent* parent = mStack[mStackPos - 1].mContent;
-    parent->ChildCount(childCount);
-    mStack[mStackPos - 1].mNumFlushed = childCount;
+    mStack[mStackPos - 1].mNumFlushed = parent->GetChildCount();
   }
 
   if ((mStackPos == 2) && (mSink->mBody == mStack[1].mContent)) {
@@ -1311,8 +1308,7 @@ SinkContext::DidAddContent(nsIContent* aContent, PRBool aDidNotify)
 
     mSink->NotifyInsert(parent, aContent,
                         mStack[mStackPos - 1].mInsertionPoint - 1);
-    parent->ChildCount(childCount);
-    mStack[mStackPos - 1].mNumFlushed = childCount;
+    mStack[mStackPos - 1].mNumFlushed = parent->GetChildCount();
   } else if (!aDidNotify && mSink->IsTimeToNotify()) {
     SINK_TRACE(SINK_TRACE_REFLOW,
                ("SinkContext::DidAddContent: Notification as a result of the "
@@ -1490,13 +1486,10 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
   // we go up the tree, and we're at the level where the next
   // notification needs to be done, do the notification.
   if (mNotifyLevel >= mStackPos) {
-    PRInt32 childCount;
-
     // Check to see if new content has been added after our last
     // notification
-    content->ChildCount(childCount);
 
-    if (mStack[mStackPos].mNumFlushed < childCount) {
+    if (mStack[mStackPos].mNumFlushed < content->GetChildCount()) {
 #ifdef NS_DEBUG
       // Tracing code
       nsCOMPtr<nsIAtom> tag;
@@ -1877,7 +1870,7 @@ SinkContext::FlushTags(PRBool aNotify)
   // Don't release last text node in case we need to add to it again
   FlushText();
 
-  PRInt32 childCount;
+  PRUint32 childCount;
   nsIHTMLContent* content;
 
   // Start from the top of the stack (growing upwards) and append
@@ -1910,7 +1903,7 @@ SinkContext::FlushTags(PRBool aNotify)
     PRBool flushed = PR_FALSE;
     while (stackPos < mStackPos) {
       content = mStack[stackPos].mContent;
-      content->ChildCount(childCount);
+      childCount = content->GetChildCount();
 
       if (!flushed && (mStack[stackPos].mNumFlushed < childCount)) {
 #ifdef NS_DEBUG
@@ -1950,7 +1943,6 @@ SinkContext::FlushTags(PRBool aNotify)
 void
 SinkContext::UpdateChildCounts()
 {
-  PRInt32 childCount;
   nsIHTMLContent* content;
 
   // Start from the top of the stack (growing upwards) and see if any
@@ -1961,8 +1953,7 @@ SinkContext::UpdateChildCounts()
   while (stackPos > 0) {
     if (mStack[stackPos].mFlags & APPENDED) {
       content = mStack[stackPos].mContent;
-      content->ChildCount(childCount);
-      mStack[stackPos].mNumFlushed = childCount;
+      mStack[stackPos].mNumFlushed = content->GetChildCount();
     }
 
     stackPos--;
@@ -2121,7 +2112,7 @@ HTMLContentSink::~HTMLContentSink()
 
   PRInt32 numContexts = mContextStack.Count();
 
-  if (mCurrentContext == mHeadContext) {
+  if (mCurrentContext == mHeadContext && numContexts > 0) {
     // Pop off the second html context if it's not done earlier
     mContextStack.RemoveElementAt(--numContexts);
   }
@@ -2740,8 +2731,7 @@ HTMLContentSink::BeginContext(PRInt32 aPosition)
   // has a child on the stack, the insertion point is
   // before the last child.
   if (aPosition < (mCurrentContext->mStackPos - 1)) {
-    content->ChildCount(insertionPoint);
-    insertionPoint--;
+    insertionPoint = content->GetChildCount() - 1;
   }
 
   sc->Begin(nodeType,
@@ -2972,15 +2962,13 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
 
   PRBool didInitialReflow = PR_FALSE;
 
-  PRInt32 i, ns = mDocument->GetNumberOfShells();
+  PRUint32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
-    nsCOMPtr<nsIPresShell> shell;
-    mDocument->GetShellAt(i, getter_AddRefs(shell));
-    if (shell) {
-      shell->GetDidInitialReflow(&didInitialReflow);
-      if (didInitialReflow) {
-        break;
-      }
+    nsIPresShell *shell = mDocument->GetShellAt(i);
+
+    shell->GetDidInitialReflow(&didInitialReflow);
+    if (didInitialReflow) {
+      break;
     }
   }
 
@@ -3758,8 +3746,7 @@ HTMLContentSink::DidProcessAToken(void)
     // switches to low frequency interrupt mode.
 
     // Get the current user event time
-    nsCOMPtr<nsIPresShell> shell;
-    mDocument->GetShellAt(0, getter_AddRefs(shell));
+    nsIPresShell *shell = mDocument->GetShellAt(0);
 
     if (!shell) {
       // If there's no pres shell in the document, return early since
@@ -3913,10 +3900,9 @@ HTMLContentSink::StartLayout()
     }
   }
 
-  PRInt32 i, ns = mDocument->GetNumberOfShells();
+  PRUint32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
-    nsCOMPtr<nsIPresShell> shell;
-    mDocument->GetShellAt(i, getter_AddRefs(shell));
+    nsIPresShell *shell = mDocument->GetShellAt(i);
 
     if (shell) {
       // Make sure we don't call InitialReflow() for a shell that has
@@ -3986,19 +3972,17 @@ HTMLContentSink::StartLayout()
     // scroll bars.
     ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
-      nsCOMPtr<nsIPresShell> shell;
-      mDocument->GetShellAt(i, getter_AddRefs(shell));
-      if (shell) {
-        nsIViewManager* vm = shell->GetViewManager();
-        if (vm) {
-          nsIView* rootView = nsnull;
-          vm->GetRootView(rootView);
-          if (rootView) {
-            nsCOMPtr<nsIScrollableView> sview(do_QueryInterface(rootView));
+      nsIPresShell *shell = mDocument->GetShellAt(i);
 
-            if (sview) {
-              sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
-            }
+      nsIViewManager* vm = shell->GetViewManager();
+      if (vm) {
+        nsIView* rootView = nsnull;
+        vm->GetRootView(rootView);
+        if (rootView) {
+          nsCOMPtr<nsIScrollableView> sview(do_QueryInterface(rootView));
+
+          if (sview) {
+            sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
           }
         }
       }
@@ -4090,41 +4074,39 @@ HTMLContentSink::ScrollToRef(PRBool aReallyScroll)
   nsAutoString ref;
   CopyUTF8toUTF16(unescapedRef, ref);
 
-  PRInt32 i, ns = mDocument->GetNumberOfShells();
+  PRUint32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
-    nsCOMPtr<nsIPresShell> shell;
-    mDocument->GetShellAt(i, getter_AddRefs(shell));
-    if (shell) {
-      // Scroll to the anchor
-      if (aReallyScroll) {
-        shell->FlushPendingNotifications(PR_FALSE);
-      }
+    nsIPresShell *shell = mDocument->GetShellAt(i);
 
-      // Check an empty string which might be caused by the UTF-8 conversion
-      if (!ref.IsEmpty()) {
-        rv = shell->GoToAnchor(ref, aReallyScroll);
-      } else {
-        rv = NS_ERROR_FAILURE;
-      }
+    // Scroll to the anchor
+    if (aReallyScroll) {
+      shell->FlushPendingNotifications(PR_FALSE);
+    }
 
-      // If UTF-8 URL failed then try to assume the string as a
-      // document's charset.
+    // Check an empty string which might be caused by the UTF-8 conversion
+    if (!ref.IsEmpty()) {
+      rv = shell->GoToAnchor(ref, aReallyScroll);
+    } else {
+      rv = NS_ERROR_FAILURE;
+    }
 
-      if (NS_FAILED(rv)) {
-        nsCAutoString docCharset;
-        rv = mDocument->GetDocumentCharacterSet(docCharset);
+    // If UTF-8 URL failed then try to assume the string as a
+    // document's charset.
 
-        if (NS_SUCCEEDED(rv)) {
-          rv = CharsetConvRef(docCharset, unescapedRef, ref);
-
-          if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
-            rv = shell->GoToAnchor(ref, aReallyScroll);
-        }
-      }
+    if (NS_FAILED(rv)) {
+      nsCAutoString docCharset;
+      rv = mDocument->GetDocumentCharacterSet(docCharset);
 
       if (NS_SUCCEEDED(rv)) {
-        mScrolledToRefAlready = PR_TRUE;
+        rv = CharsetConvRef(docCharset, unescapedRef, ref);
+
+        if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
+          rv = shell->GoToAnchor(ref, aReallyScroll);
       }
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+      mScrolledToRefAlready = PR_TRUE;
     }
   }
 }
@@ -4987,8 +4969,7 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
     // Disable theming for the presshell if the value is no.
     nsAutoString value(aValue);
     if (value.EqualsIgnoreCase("no")) {
-      nsCOMPtr<nsIPresShell> shell;
-      mDocument->GetShellAt(0, getter_AddRefs(shell));
+      nsIPresShell *shell = mDocument->GetShellAt(0);
       if (shell)
         shell->DisableThemeSupport();
     }
@@ -5024,7 +5005,7 @@ HTMLContentSink::ForceReflow()
 #endif
 
 void
-HTMLContentSink::NotifyAppend(nsIContent* aContainer, PRInt32 aStartIndex)
+HTMLContentSink::NotifyAppend(nsIContent* aContainer, PRUint32 aStartIndex)
 {
   mInNotification++;
 
@@ -5434,9 +5415,9 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     parent->AppendChildTo(element, PR_FALSE, PR_FALSE);
   }
 
-  // To prevent script evaluation, in a frameset document, we
-  // suspended the script loader. Now that the script content
-  // has been handled let's resume the script loader.
+  // To prevent script evaluation in a frameset document, we suspended
+  // the script loader. Now that the script content has been handled,
+  // let's resume the script loader.
   if (loader) {
     loader->SetEnabled(PR_TRUE);
   }

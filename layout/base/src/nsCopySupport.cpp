@@ -144,8 +144,7 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
   
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
   if (doc) {
-    nsCOMPtr<nsIPresShell> shell;
-    doc->GetShellAt(0, getter_AddRefs(shell));
+    nsIPresShell *shell = doc->GetShellAt(0);
     if (shell) {
       nsCOMPtr<nsIPresContext> context;
       shell->GetPresContext(getter_AddRefs(context) );
@@ -313,7 +312,10 @@ nsresult nsCopySupport::DoHooks(nsIDocument *aDoc, nsITransferable *aTrans,
     override = do_QueryInterface(isupp);
     if (override)
     {
-      nsresult hookResult = override->OnCopyOrDrag(nsnull, aTrans, aDoPutOnClipboard);
+#ifdef DEBUG
+      nsresult hookResult =
+#endif
+      override->OnCopyOrDrag(nsnull, aTrans, aDoPutOnClipboard);
       NS_ASSERTION(NS_SUCCEEDED(hookResult), "OnCopyOrDrag hook failed");
       if (!*aDoPutOnClipboard)
         break;

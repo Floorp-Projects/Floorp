@@ -66,7 +66,7 @@ public:
      * Peek at a XUL element's child count without forcing children to be
      * instantiated.
      */
-    NS_IMETHOD PeekChildCount(PRInt32& aCount) const = 0;
+    NS_IMETHOD_(PRUint32) PeekChildCount() const = 0;
 
     /**
      * These flags are used to maintain bookkeeping information for partially-

@@ -192,11 +192,11 @@ public:
   NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                        PRBool aNotify);
-  NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
+  NS_IMETHOD GetAttrNameAt(PRUint32 aIndex,
                            PRInt32* aNameSpaceID,
                            nsIAtom** aName,
                            nsIAtom** aPrefix) const;
-  NS_IMETHOD GetAttrCount(PRInt32& aResult) const;
+  NS_IMETHOD_(PRUint32) GetAttrCount() const;
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
@@ -820,27 +820,23 @@ public:
   NS_IMETHOD Compact() {
     return NS_OK;
   }
-  NS_IMETHOD CanContainChildren(PRBool& aResult) const {
-    aResult = PR_FALSE;
-    return NS_OK;
+  NS_IMETHOD_(PRBool) CanContainChildren() const {
+    return PR_FALSE;
   }
-  NS_IMETHOD ChildCount(PRInt32& aResult) const {
-    aResult = 0;
-    return NS_OK;
+  NS_IMETHOD_(PRUint32) GetChildCount() const {
+    return 0;
   }
-  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent** aResult) const {
-    aResult = nsnull;
-    return NS_OK;
+  NS_IMETHOD_(nsIContent *) GetChildAt(PRUint32 aIndex) const {
+    return nsnull;
   }
-  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const {
-    aResult = -1;
-    return NS_OK;
+  NS_IMETHOD_(PRInt32) IndexOf(nsIContent* aPossibleChild) const {
+    return -1;
   }
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
                            PRBool aDeepSetDocument) {
     return NS_OK;
   }
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
                             PRBool aDeepSetDocument) {
     return NS_OK;
   }
@@ -848,7 +844,7 @@ public:
                            PRBool aDeepSetDocument) {
     return NS_OK;
   }
-  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {
+  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify) {
     return NS_OK;
   }
 };
@@ -895,17 +891,17 @@ public:
 
   // Remainder of nsIHTMLContent (and nsIContent)
   NS_IMETHOD Compact();
-  NS_IMETHOD CanContainChildren(PRBool& aResult) const;
-  NS_IMETHOD ChildCount(PRInt32& aResult) const;
-  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent** aResult) const;
-  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const;
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+  NS_IMETHOD_(PRBool) CanContainChildren() const;
+  NS_IMETHOD_(PRUint32) GetChildCount() const;
+  NS_IMETHOD_(nsIContent *) GetChildAt(PRUint32 aIndex) const;
+  NS_IMETHOD_(PRInt32) IndexOf(nsIContent* aPossibleChild) const;
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
                            PRBool aDeepSetDocument);
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
                             PRBool aDeepSetDocument);
   NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
                            PRBool aDeepSetDocument);
-  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
   /** The list of children */
   nsSmallVoidArray mChildren;

@@ -535,11 +535,9 @@ static void
 GetImmediateChild(nsIContent* aContent, nsIAtom *aTag, nsIContent** aResult) 
 {
   *aResult = nsnull;
-  PRInt32 childCount;
-  aContent->ChildCount(childCount);
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> child;
-    aContent->ChildAt(i, getter_AddRefs(child));
+  PRUint32 childCount = aContent->GetChildCount();
+  for (PRUint32 i = 0; i < childCount; i++) {
+    nsIContent *child = aContent->GetChildAt(i);
     nsCOMPtr<nsIAtom> tag;
     child->GetTag(getter_AddRefs(tag));
     if (aTag == tag.get()) {

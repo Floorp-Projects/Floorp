@@ -307,7 +307,10 @@ nsContentAreaDragDrop::DragOver(nsIDOMEvent* inEvent)
           break;
         nsCOMPtr<nsIClipboardDragDropHooks> override = do_QueryInterface(isupp);
         if (override) {
-          nsresult hookResult = override->AllowDrop(inEvent, session, &dropAllowed);
+#ifdef DEBUG
+          nsresult hookResult =
+#endif
+          override->AllowDrop(inEvent, session, &dropAllowed);
           NS_ASSERTION(NS_SUCCEEDED(hookResult), "hook failure in AllowDrop");    
           if (!dropAllowed)
             break;
@@ -450,7 +453,10 @@ nsContentAreaDragDrop::DragDrop(nsIDOMEvent* inMouseEvent)
           break;
         nsCOMPtr<nsIClipboardDragDropHooks> override = do_QueryInterface(isupp);
         if (override) {
-          nsresult hookResult = override->OnPasteOrDrop(inMouseEvent, trans, &actionCanceled);
+#ifdef DEBUG
+          nsresult hookResult =
+#endif
+          override->OnPasteOrDrop(inMouseEvent, trans, &actionCanceled);
           NS_ASSERTION(NS_SUCCEEDED(hookResult), "hook failure in OnPasteOrDrop");
           if (!actionCanceled)
             return NS_OK;
@@ -602,7 +608,10 @@ nsContentAreaDragDrop::DragGesture(nsIDOMEvent* inMouseEvent)
         break;
       nsCOMPtr<nsIClipboardDragDropHooks> override = do_QueryInterface(isupp);
       if (override) {
-        nsresult hookResult = override->AllowStartDrag(inMouseEvent, &allow);
+#ifdef DEBUG
+        nsresult hookResult =
+#endif
+        override->AllowStartDrag(inMouseEvent, &allow);
         NS_ASSERTION(NS_SUCCEEDED(hookResult), "hook failure in AllowStartDrag");
         if (!allow)
           return NS_OK;
@@ -633,7 +642,10 @@ nsContentAreaDragDrop::DragGesture(nsIDOMEvent* inMouseEvent)
           nsCOMPtr<nsIClipboardDragDropHooks> override = do_QueryInterface(isupp);
           if (override)
           {
-            nsresult hookResult = override->OnCopyOrDrag(inMouseEvent, trans, &doContinueDrag);
+#ifdef DEBUG
+            nsresult hookResult =
+#endif
+            override->OnCopyOrDrag(inMouseEvent, trans, &doContinueDrag);
             NS_ASSERTION(NS_SUCCEEDED(hookResult), "hook failure in OnCopyOrDrag");
             if (!doContinueDrag)
               return NS_OK;
@@ -1423,13 +1435,14 @@ nsresult nsTransferableFactory::GetDraggableSelectionData(nsISelection* inSelect
             nsCOMPtr<nsIContent> selStartContent = do_QueryInterface(selectionStart);
             if (selStartContent)
             {
-              PRInt32 childOffset = (anchorOffset < focusOffset) ? anchorOffset : focusOffset;
-              nsCOMPtr<nsIContent> childContent;
-              selStartContent->ChildAt(childOffset, getter_AddRefs(childContent));
+              PRInt32 childOffset =
+                (anchorOffset < focusOffset) ? anchorOffset : focusOffset;
+              nsIContent *childContent =
+                selStartContent->GetChildAt(childOffset);
               // if we find an image, we'll fall into the node-dragging code,
               // rather the the selection-dragging code
-              nsCOMPtr<nsIDOMHTMLImageElement> selectedImage;
-              selectedImage = do_QueryInterface(childContent);
+              nsCOMPtr<nsIDOMHTMLImageElement> selectedImage =
+                do_QueryInterface(childContent);
               if (selectedImage)
               {
                 CallQueryInterface(selectedImage, outImageOrLinkNode);    // addrefs

@@ -366,13 +366,10 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
             aeventnameC.get()));
 #endif
 
-    PRInt32 count = document->GetNumberOfShells();
-    for (PRInt32 i = 0; i < count; i++) {
-      nsCOMPtr<nsIPresShell> shell;
-      document->GetShellAt(i, getter_AddRefs(shell));
-      if (! shell)
-          continue;
-      
+    PRUint32 count = document->GetNumberOfShells();
+    for (PRUint32 i = 0; i < count; i++) {
+      nsIPresShell *shell = document->GetShellAt(i);
+
       // Retrieve the context in which our DOM event will fire.
       nsCOMPtr<nsIPresContext> context;
       rv = shell->GetPresContext(getter_AddRefs(context));

@@ -129,33 +129,33 @@ public:
    * Get the NodeInfo for this element
    * @param aResult the tag [OUT]
    */
-  NS_IMETHOD GetNodeInfo(nsINodeInfo** aResult) const = 0;
+  NS_IMETHOD_(nsINodeInfo *) GetNodeInfo() const = 0;
 
   /**
    * Tell whether this element can contain children
    * @param aResult whether this element can contain children [OUT]
    */
-  NS_IMETHOD CanContainChildren(PRBool& aResult) const = 0;
+  NS_IMETHOD_(PRBool) CanContainChildren() const = 0;
 
   /**
    * Get the number of children
    * @param aResult the number of children [OUT]
    */
-  NS_IMETHOD ChildCount(PRInt32& aResult) const = 0;
+  NS_IMETHOD_(PRUint32) GetChildCount() const = 0;
 
   /**
    * Get a child by index
    * @param aIndex the index of the child to get, or null if index out of bounds
    * @param aResult the child [OUT]
    */
-  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent** aResult) const = 0;
+  NS_IMETHOD_(nsIContent *) GetChildAt(PRUint32 aIndex) const = 0;
 
   /**
    * Get the index of a child within this content
    * @param aPossibleChild the child to get the index
    * @param aIndex the index of the child, or -1 if not a child [OUT]
    */
-  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const = 0;
+  NS_IMETHOD_(PRInt32) IndexOf(nsIContent* aPossibleChild) const = 0;
 
   /**
    * Insert a content node at a particular index.
@@ -167,7 +167,7 @@ public:
    *        occurred
    * @param aDeepSetDocument whether to set document on all children of aKid
    */
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                            PRBool aNotify, PRBool aDeepSetDocument) = 0;
 
   /**
@@ -179,7 +179,7 @@ public:
    *        occurred
    * @param aDeepSetDocument whether to set document on all children of aKid
    */
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
                             PRBool aNotify, PRBool aDeepSetDocument) = 0;
 
   /**
@@ -200,7 +200,7 @@ public:
    * @param aNotify whether to notify the document that the replace has
    *        occurred
    */
-  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) = 0;
+  NS_IMETHOD RemoveChildAt(PRUint32 aIndex, PRBool aNotify) = 0;
 
   /**
    * Normalizes an attribute string into an atom that represents the
@@ -229,8 +229,7 @@ public:
    *        notified of the attribute change.
    */
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAString& aValue,
-                     PRBool aNotify) = 0;
+                     const nsAString& aValue, PRBool aNotify) = 0;
 
   /**
    * Set attribute values. All attribute values are assumed to have a
@@ -245,8 +244,7 @@ public:
    * @param aNotify specifies whether or not the document should be
    *        notified of the attribute change.
    */
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAString& aValue,
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
                      PRBool aNotify) = 0;
 
   /**
@@ -314,7 +312,7 @@ public:
    * @param aPrefix the attribute prefix [OUT]
    *
    */
-  NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
+  NS_IMETHOD GetAttrNameAt(PRUint32 aIndex,
                            PRInt32* aNameSpaceID,
                            nsIAtom** aName,
                            nsIAtom** aPrefix) const = 0;
@@ -324,7 +322,7 @@ public:
    *
    * @param aCountResult the number of attributes [OUT]
    */
-  NS_IMETHOD GetAttrCount(PRInt32& aCountResult) const = 0;
+  NS_IMETHOD_(PRUint32) GetAttrCount() const = 0;
 
   /**
    * Inform content of range ownership changes.  This allows content
@@ -402,7 +400,7 @@ public:
    * These methods are DEPRECATED, DON'T USE THEM!!!
    *
    */
-  NS_IMETHOD GetContentID(PRUint32* aID) = 0;
+  NS_IMETHOD GetContentID(PRUint32 *aId) = 0;
   /**
    * Set the unique content ID for this content.
    * @param aID the ID to set

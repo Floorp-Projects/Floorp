@@ -1456,15 +1456,13 @@ nsXULTemplateBuilder::GetTemplateRoot(nsIContent** aResult)
     {
         // If root node has no template attribute, then look for a child
         // node which is a template tag
-        PRInt32 count = 0;
-        mRoot->ChildCount(count);
+        PRUint32 count = mRoot->GetChildCount();
 
-        for (PRInt32 i = 0; i < count; ++i) {
-            nsCOMPtr<nsIContent> child;
-            mRoot->ChildAt(i, getter_AddRefs(child));
+        for (PRUint32 i = 0; i < count; ++i) {
+            nsIContent *child = mRoot->GetChildAt(i);
 
             if (IsTemplateElement(child)) {
-                NS_ADDREF(*aResult = child.get());
+                NS_ADDREF(*aResult = child);
                 return NS_OK;
             }
         }
@@ -1542,27 +1540,20 @@ nsXULTemplateBuilder::CompileRules()
         mRules.PutSymbol(mMemberSymbol.get(), mMemberVar);
 
     // Compile the rules beneath the <template>
-    PRInt32 count = 0;
-    tmpl->ChildCount(count);
+    PRUint32 count = tmpl->GetChildCount();
 
-    PRInt32 nrules = 0;
+    PRUint32 nrules = 0;
 
-    for (PRInt32 i = 0; i < count; i++) {
-        nsCOMPtr<nsIContent> rule;
-        tmpl->ChildAt(i, getter_AddRefs(rule));
-        if (! rule)
-            break;
+    for (PRUint32 i = 0; i < count; i++) {
+        nsIContent *rule = tmpl->GetChildAt(i);
 
-        PRInt32 nameSpaceID = kNameSpaceID_Unknown;
-        rule->GetNameSpaceID(&nameSpaceID);
-
-        if (nameSpaceID != kNameSpaceID_XUL)
+        if (!rule->IsContentOfType(nsIContent::eXUL))
             continue;
 
         nsCOMPtr<nsIAtom> tag;
         rule->GetTag(getter_AddRefs(tag));
 
-        if (tag.get() == nsXULAtoms::rule) {
+        if (tag == nsXULAtoms::rule) {
             ++nrules;
 
             // If the <rule> has a <conditions> element, then
@@ -1667,14 +1658,12 @@ nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRuleElement,
 
             // otherwise, append the children to the unvisited list: this
             // results in a breadth-first search.
-            PRInt32 count;
-            next->ChildCount(count);
+            PRUint32 count = next->GetChildCount();
 
-            for (PRInt32 i = 0; i < count; ++i) {
-                nsCOMPtr<nsIContent> child;
-                next->ChildAt(i, getter_AddRefs(child));
+            for (PRUint32 i = 0; i < count; ++i) {
+                nsIContent *child = next->GetChildAt(i);
 
-                unvisited.AppendElement(child.get());
+                unvisited.AppendElement(child);
             }
         }
     }
@@ -1744,12 +1733,10 @@ nsXULTemplateBuilder::CompileConditions(nsTemplateRule* aRule,
     // Compile an extended rule's conditions.
     nsresult rv;
 
-    PRInt32 count;
-    aConditions->ChildCount(count);
+    PRUint32 count = aConditions->GetChildCount();
 
-    for (PRInt32 i = 0; i < count; ++i) {
-        nsCOMPtr<nsIContent> condition;
-        aConditions->ChildAt(i, getter_AddRefs(condition));
+    for (PRUint32 i = 0; i < count; ++i) {
+        nsIContent *condition = aConditions->GetChildAt(i);
 
         nsCOMPtr<nsIAtom> tag;
         condition->GetTag(getter_AddRefs(tag));
@@ -1953,23 +1940,22 @@ nsXULTemplateBuilder::CompileBindings(nsTemplateRule* aRule, nsIContent* aBindin
     // Add an extended rule's bindings.
     nsresult rv;
 
-    PRInt32 count;
-    aBindings->ChildCount(count);
+    PRUint32 count = aBindings->GetChildCount();
 
-    for (PRInt32 i = 0; i < count; ++i) {
-        nsCOMPtr<nsIContent> binding;
-        aBindings->ChildAt(i, getter_AddRefs(binding));
+    for (PRUint32 i = 0; i < count; ++i) {
+        nsIContent *binding = aBindings->GetChildAt(i);
 
-        nsCOMPtr<nsIAtom> tag;
-        binding->GetTag(getter_AddRefs(tag));
+        nsINodeInfo *ni = binding->GetNodeInfo();
 
-        if (tag.get() == nsXULAtoms::binding) {
+        if (ni && ni->Equals(nsXULAtoms::binding, kNameSpaceID_XUL)) {
             rv = CompileBinding(aRule, binding);
         }
         else {
 #ifdef PR_LOGGING
             nsAutoString tagstr;
-            tag->ToString(tagstr);
+            if (ni) {
+                ni->GetQualifiedName(tagstr);
+            }
 
             nsCAutoString tagstrC;
             tagstrC.AssignWithConversion(tagstr);
@@ -2079,11 +2065,10 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
 
     PRBool hasContainerTest = PR_FALSE;
 
-    PRInt32 count;
-    aRuleElement->GetAttrCount(count);
+    PRUint32 count = aRuleElement->GetAttrCount();
 
     // Add constraints for the LHS
-    for (PRInt32 i = 0; i < count; ++i) {
+    for (PRUint32 i = 0; i < count; ++i) {
         PRInt32 attrNameSpaceID;
         nsCOMPtr<nsIAtom> attr, prefix;
         rv = aRuleElement->GetAttrNameAt(i, &attrNameSpaceID,
@@ -2259,14 +2244,13 @@ nsXULTemplateBuilder::AddSimpleRuleBindings(nsTemplateRule* aRule, nsIContent* a
     elements.AppendElement(aElement);
     while (elements.Count()) {
         // Pop the next element off the stack
-        PRInt32 i = elements.Count() - 1;
+        PRUint32 i = (PRUint32)(elements.Count() - 1);
         nsIContent* element = NS_STATIC_CAST(nsIContent*, elements[i]);
         elements.RemoveElementAt(i);
 
         // Iterate through its attributes, looking for substitutions
         // that we need to add as bindings.
-        PRInt32 count;
-        element->GetAttrCount(count);
+        PRUint32 count = element->GetAttrCount();
 
         for (i = 0; i < count; ++i) {
             PRInt32 nameSpaceID;
@@ -2284,12 +2268,10 @@ nsXULTemplateBuilder::AddSimpleRuleBindings(nsTemplateRule* aRule, nsIContent* a
         }
 
         // Push kids onto the stack, and search them next.
-        element->ChildCount(count);
+        count = element->GetChildCount();
 
-        while (--count >= 0) {
-            nsCOMPtr<nsIContent> child;
-            element->ChildAt(count, getter_AddRefs(child));
-            elements.AppendElement(child);
+        while (count-- > 0) {
+            elements.AppendElement(element->GetChildAt(count));
         }
     }
 

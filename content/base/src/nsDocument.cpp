@@ -412,13 +412,11 @@ nsDocumentChildNodes::~nsDocumentChildNodes()
 NS_IMETHODIMP
 nsDocumentChildNodes::GetLength(PRUint32* aLength)
 {
-  PRInt32 count = 0;
-
   if (mDocument) {
-    mDocument->GetChildCount(count);
+    *aLength = mDocument->GetChildCount();
+  } else {
+    *aLength = 0;
   }
-
-  *aLength = (PRUint32)count;
 
   return NS_OK;
 }
@@ -429,8 +427,8 @@ nsDocumentChildNodes::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   *aReturn = nsnull;
 
   if (mDocument) {
-    nsCOMPtr<nsIContent> content;
-    mDocument->ChildAt(aIndex, getter_AddRefs(content));
+    nsIContent *content = mDocument->GetChildAt(aIndex);
+
     if (content) {
       return CallQueryInterface(content, aReturn);
     }
@@ -1194,19 +1192,16 @@ nsDocument::DeleteShell(nsIPresShell* aShell)
   return mPresShells.RemoveElement(aShell);
 }
 
-PRInt32
-nsDocument::GetNumberOfShells()
+NS_IMETHODIMP_(PRUint32)
+nsDocument::GetNumberOfShells() const
 {
   return mPresShells.Count();
 }
 
-NS_IMETHODIMP
-nsDocument::GetShellAt(PRInt32 aIndex, nsIPresShell** aShell)
+NS_IMETHODIMP_(nsIPresShell *)
+nsDocument::GetShellAt(PRUint32 aIndex) const
 {
-  *aShell = (nsIPresShell*) mPresShells.SafeElementAt(aIndex);
-  NS_IF_ADDREF(*aShell);
-
-  return NS_OK;
+  return (nsIPresShell*)mPresShells.SafeElementAt(aIndex);
 }
 
 NS_IMETHODIMP
@@ -1406,30 +1401,26 @@ nsDocument::SetRootContent(nsIContent* aRoot)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocument::ChildAt(PRInt32 aIndex, nsIContent** aResult) const
+NS_IMETHODIMP_(nsIContent *)
+nsDocument::GetChildAt(PRUint32 aIndex) const
 {
-  NS_PRECONDITION(aIndex >= 0, "Negative indices are bad");
-  if (aIndex < 0 || aIndex >= mChildren.Count()) {
-    *aResult = nsnull;
-  } else {
-    NS_IF_ADDREF(*aResult = mChildren[aIndex]);
+  if (aIndex >= (PRUint32)mChildren.Count()) {
+    return nsnull;
   }
-  return NS_OK;
+
+  return mChildren[aIndex];
 }
 
-NS_IMETHODIMP
-nsDocument::IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const
+NS_IMETHODIMP_(PRInt32)
+nsDocument::IndexOf(nsIContent* aPossibleChild) const
 {
-  aIndex = mChildren.IndexOf(aPossibleChild);
-  return NS_OK;
+  return mChildren.IndexOf(aPossibleChild);
 }
 
-NS_IMETHODIMP
-nsDocument::GetChildCount(PRInt32& aCount)
+NS_IMETHODIMP_(PRUint32)
+nsDocument::GetChildCount() const
 {
-  aCount = mChildren.Count();
-  return NS_OK;
+  return mChildren.Count();
 }
 
 PRInt32
@@ -1975,9 +1966,7 @@ nsDocument::EndLoad()
         if (innerEvent) {
           nsEventStatus status = nsEventStatus_eIgnore;
 
-          nsCOMPtr<nsIPresShell> shell;
-          ancestor_doc->GetShellAt(0, getter_AddRefs(shell));
-
+          nsIPresShell *shell = ancestor_doc->GetShellAt(0);
           if (shell) {
             nsCOMPtr<nsIPresContext> context;
             shell->GetPresContext(getter_AddRefs(context));
@@ -2659,12 +2648,10 @@ GetElementByAttribute(nsIContent* aContent, nsIAtom* aAttrName,
     return CallQueryInterface(aContent, aResult);
   }
 
-  PRInt32 childCount;
-  aContent->ChildCount(childCount);
+  PRUint32 childCount = aContent->GetChildCount();
 
-  for (PRInt32 i = 0; i < childCount; ++i) {
-    nsCOMPtr<nsIContent> current;
-    aContent->ChildAt(i, getter_AddRefs(current));
+  for (PRUint32 i = 0; i < childCount; ++i) {
+    nsIContent *current = aContent->GetChildAt(i);
 
     GetElementByAttribute(current, aAttrName, aAttrValue, aUniversalMatch,
                           aResult);
@@ -2877,8 +2864,7 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
     }
   }
 
-  nsCOMPtr<nsIPresShell> shell;
-  GetShellAt(0, getter_AddRefs(shell));
+  nsIPresShell *shell = GetShellAt(0);
   if (!shell)
     return NS_ERROR_FAILURE;
 
@@ -3882,8 +3868,7 @@ nsDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
   if (count == 0)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> shell;
-  GetShellAt(0, getter_AddRefs(shell));
+  nsIPresShell *shell = GetShellAt(0);
   if (!shell)
     return NS_ERROR_FAILURE;
 
@@ -3955,9 +3940,7 @@ nsDocument::CreateEvent(const nsAString& aEventType, nsIDOMEvent** aReturn)
 
   // Obtain a presentation context
 
-  nsCOMPtr<nsIPresShell> shell;
-  GetShellAt(0, getter_AddRefs(shell));
-
+  nsIPresShell *shell = GetShellAt(0);
   nsCOMPtr<nsIPresContext> presContext;
 
   if (shell) {

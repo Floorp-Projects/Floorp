@@ -301,8 +301,7 @@ nsresult nsPluginDocReframeEvent::HandlePluginDocReframeEvent() {
   for (PRUint32 i = 0; i < c; i++) {
     nsCOMPtr<nsIDocument> doc (do_QueryElementAt(mDocs, i));
     if (doc) {
-      nsCOMPtr<nsIPresShell> shell;
-      doc->GetShellAt(0, getter_AddRefs(shell));
+      nsIPresShell *shell = doc->GetShellAt(0);
       
       // if this document has a presentation shell, then it has frames and can be reframed
       if (shell) {

@@ -113,23 +113,25 @@ nsNativeThemeGTK::Observe(nsISupports *aSubject, const char *aTopic,
   return NS_OK;
 }
 
-static void GetPrimaryPresShell(nsIFrame* aFrame, nsIPresShell** aResult)
+static nsIPresShell *
+GetPrimaryPresShell(nsIFrame* aFrame)
 {
-  *aResult = nsnull;
-
   if (!aFrame)
-    return;
+    return nsnull;
+
+  nsIPresShell *shell = nsnull;
  
   nsIDocument* doc = aFrame->GetContent()->GetDocument();
-  if (doc)
-    doc->GetShellAt(0, aResult); // Addref happens here.
+  if (doc) {
+    shell = doc->GetShellAt(0);
+  }
+
+  return shell;
 }
 
 static void RefreshWidgetWindow(nsIFrame* aFrame)
 {
-  nsCOMPtr<nsIPresShell> shell;
-
-  GetPrimaryPresShell(aFrame, getter_AddRefs(shell));
+  nsIPresShell *shell = GetPrimaryPresShell(aFrame);
   if (!shell)
     return;
 
@@ -145,8 +147,7 @@ static PRInt32 GetContentState(nsIFrame* aFrame)
   if (!aFrame)
     return 0;
 
-  nsCOMPtr<nsIPresShell> shell;
-  GetPrimaryPresShell(aFrame, getter_AddRefs(shell));
+  nsIPresShell *shell = GetPrimaryPresShell(aFrame);
   if (!shell)
     return 0;
 

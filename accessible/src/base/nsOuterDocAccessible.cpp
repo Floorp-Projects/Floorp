@@ -114,8 +114,7 @@ NS_IMETHODIMP nsOuterDocAccessible::Init()
   nsCOMPtr<nsIDOMNode> innerNode(do_QueryInterface(innerDoc));
   NS_ENSURE_TRUE(innerNode, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIPresShell> innerPresShell;
-  innerDoc->GetShellAt(0, getter_AddRefs(innerPresShell));
+  nsIPresShell *innerPresShell = innerDoc->GetShellAt(0);
   NS_ENSURE_TRUE(innerPresShell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIAccessible> innerAccessible;

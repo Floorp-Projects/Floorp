@@ -1973,8 +1973,7 @@ nsPrintEngine::MapContentForPO(nsPrintObject*   aRootObject,
     nsCOMPtr<nsISupports> container;
     subDoc->GetContainer(getter_AddRefs(container));
 
-    nsCOMPtr<nsIPresShell> presShell;
-    subDoc->GetShellAt(0, getter_AddRefs(presShell));
+    nsIPresShell *presShell = subDoc->GetShellAt(0);
 
     nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(container));
 
@@ -2015,11 +2014,9 @@ nsPrintEngine::MapContentForPO(nsPrintObject*   aRootObject,
   }
 
   // walk children content
-  PRInt32 count;
-  aContent->ChildCount(count);
-  nsCOMPtr<nsIContent> child;
-  for (PRInt32 i = 0; i < count; ++i) {
-    aContent->ChildAt(i, getter_AddRefs(child));
+  PRUint32 count = aContent->GetChildCount();
+  for (PRUint32 i = 0; i < count; ++i) {
+    nsIContent *child = aContent->GetChildAt(i);
     MapContentForPO(aRootObject, aPresShell, child);
   }
 }
@@ -2428,7 +2425,7 @@ nsPrintEngine::SetupToPrintContent(nsIDeviceContext*     aDContext,
 
 #ifdef PR_LOGGING
     {
-      float calcRatio;
+      float calcRatio = 0.0f;
       if (mPrt->mPrintDocList->Count() > 1 && mPrt->mPrintObject->mFrameType == eFrameSet) {
         nsPrintObject* smallestPO = FindSmallestSTF();
         NS_ASSERTION(smallestPO, "There must always be an XMost PO!");
@@ -3906,19 +3903,19 @@ nsPrintEngine::GetPageRangeForSelection(nsIPresShell *        aPresShell,
 
 //---------------------------------------------------------------------
 // Note this is also defined in DocumentViewerImpl
-nsIPresShell*
-nsPrintEngine::GetPresShellFor(nsIDocShell* aDocShell)
+// static
+nsIPresShell *
+GetPresShellFor(nsIDocShell* aDocShell)
 {
   nsCOMPtr<nsIDOMDocument> domDoc(do_GetInterface(aDocShell));
-  if (!domDoc) return nsnull;
+  if (!domDoc)
+    return nsnull;
 
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  if (!doc) return nsnull;
+  if (!doc)
+    return nsnull;
 
-  nsIPresShell* shell = nsnull;
-  doc->GetShellAt(0, &shell);
-
-  return shell;
+  return doc->GetShellAt(0);
 }
 
 //---------------------------------------------------------------------
@@ -4780,7 +4777,7 @@ DumpViews(nsIDocShell* aDocShell, FILE* out)
   if (nsnull != aDocShell) {
     fprintf(out, "docshell=%p \n", aDocShell);
     nsIPresShell* shell = nsPrintEngine::GetPresShellFor(aDocShell);
-    if (nsnull != shell) {
+    if (shell) {
       nsIViewManager* vm = shell->GetViewManager();
       if (vm) {
         nsIView* root;
@@ -4789,7 +4786,6 @@ DumpViews(nsIDocShell* aDocShell, FILE* out)
           root->List(out);
         }
       }
-      NS_RELEASE(shell);
     }
     else {
       fputs("null pres shell\n", out);

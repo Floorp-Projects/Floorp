@@ -210,9 +210,8 @@ nsHTMLTableCellElement::GetTable()
   if (mParent) {  // mParent should be a row
     nsIContent* section = mParent->GetParent();
     if (section) {
-      nsCOMPtr<nsIAtom> tag;
-      section->GetTag(getter_AddRefs(tag));
-      if (tag == nsHTMLAtoms::table) {
+      if (section->IsContentOfType(eHTML) &&
+          section->GetNodeInfo()->Equals(nsHTMLAtoms::table)) {
         // XHTML, without a row group
         result = section;
       } else {

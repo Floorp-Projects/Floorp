@@ -450,7 +450,7 @@ nsContentUtils::GetDocumentAndPrincipal(nsIDOMNode* aNode,
       // manager
       nsCOMPtr<nsINodeInfo> ni;
       if (content) {
-        content->GetNodeInfo(getter_AddRefs(ni));
+        ni = content->GetNodeInfo();
       }
       else {
         attr->GetNodeInfo(getter_AddRefs(ni));
@@ -539,9 +539,8 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
 
       nsCOMPtr<nsIContent> cont = do_QueryInterface(aTrustedNode);
       NS_ENSURE_TRUE(cont, NS_ERROR_UNEXPECTED);
-      
-      nsCOMPtr<nsINodeInfo> ni;
-      cont->GetNodeInfo(getter_AddRefs(ni));
+
+      nsCOMPtr<nsINodeInfo> ni = cont->GetNodeInfo();
       NS_ENSURE_TRUE(ni, NS_ERROR_UNEXPECTED);
       
       ni->GetDocumentPrincipal(getter_AddRefs(trustedPrincipal));
@@ -678,12 +677,11 @@ nsContentUtils::InProlog(nsIDOMNode *aNode)
 
   // Check that there are no elements before aNode to make sure we are not
   // in the epilog
-  PRInt32 pos;
-  doc->IndexOf(cont, pos);
+  PRInt32 pos = doc->IndexOf(cont);
+
   while (pos > 0) {
     --pos;
-    nsCOMPtr<nsIContent> sibl;
-    doc->ChildAt(pos, getter_AddRefs(sibl));
+    nsIContent *sibl = doc->GetChildAt(pos);
     if (sibl->IsContentOfType(nsIContent::eELEMENT)) {
       return PR_FALSE;
     }
@@ -732,13 +730,10 @@ nsContentUtils::doReparentContentWrapper(nsIContent *aChild,
   rv = old_wrapper->GetJSObject(&old);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIContent> child;
-  PRInt32 count = 0, i;
-
-  aChild->ChildCount(count);
+  PRUint32 i, count = aChild->GetChildCount();
 
   for (i = 0; i < count; i++) {
-    aChild->ChildAt(i, getter_AddRefs(child));
+    nsIContent *child = aChild->GetChildAt(i);
     NS_ENSURE_TRUE(child, NS_ERROR_UNEXPECTED);
 
     rv = doReparentContentWrapper(child, aNewDocument, aOldDocument, cx, old);
@@ -790,9 +785,7 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
   nsIDocument* old_doc = aOldDocument;
 
   if (!old_doc) {
-    nsCOMPtr<nsINodeInfo> ni;
-
-    aContent->GetNodeInfo(getter_AddRefs(ni));
+    nsCOMPtr<nsINodeInfo> ni = aContent->GetNodeInfo();
 
     if (ni) {
       old_doc = ni->GetDocument();
@@ -1018,7 +1011,7 @@ nsContentUtils::GetAncestorsAndOffsets(nsIDOMNode* aNode,
   nsIContent* child = content;
   nsIContent* parent = child->GetParent();
   while (parent) {
-    parent->IndexOf(child, offset);
+    offset = parent->IndexOf(child);
     aAncestorNodes->AppendElement(parent);
     aAncestorOffsets->AppendElement(NS_INT32_TO_PTR(offset));
     child = parent;
@@ -1458,7 +1451,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
 
         // Append the index of the form in the document
         nsCOMPtr<nsIContent> formContent(do_QueryInterface(formElement));
-        htmlForms->IndexOf(formContent, index, PR_FALSE);
+        index = htmlForms->IndexOf(formContent, PR_FALSE);
         if (index <= -1) {
           //
           // XXX HACK this uses some state that was dumped into the document
@@ -1503,7 +1496,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
         // causes a signficant pageload performance hit. See bug
         // 166636. Doing this wrong means you will see the assertion
         // below being hit.
-        htmlFormControls->IndexOf(aContent, index, PR_FALSE);
+        index = htmlFormControls->IndexOf(aContent, PR_FALSE);
         NS_ASSERTION(index > -1,
                      "nsFrameManager::GenerateStateKey didn't find content "
                      "by type! See bug 139568");
@@ -1591,11 +1584,7 @@ nsContentUtils::BelongsInForm(nsIDOMHTMLFormElement *aForm,
     content = content->GetParent();
   }
 
-  PRInt32 count = 0;
-
-  form->ChildCount(count);
-
-  if (count > 0) {
+  if (form->GetChildCount() > 0) {
     // The form is a container but aContent wasn't inside the form,
     // return false
 

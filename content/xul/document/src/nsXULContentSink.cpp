@@ -1071,14 +1071,14 @@ XULContentSinkImpl::ReportError(const PRUnichar* aErrorText,
 
   const PRUnichar* atts[] = {name.get(), value.get(), nsnull};;
     
-  rv = HandleStartElement(NS_LITERAL_STRING("parsererror").get(), atts, 1, -1, -1);
+  rv = HandleStartElement(NS_LITERAL_STRING("parsererror").get(), atts, 1, 0, 0);
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = HandleCharacterData(aErrorText, nsCRT::strlen(aErrorText));
   NS_ENSURE_SUCCESS(rv,rv);  
   
   const PRUnichar* noAtts[] = {0, 0};
-  rv = HandleStartElement(NS_LITERAL_STRING("sourcetext").get(), noAtts, 0, -1, -1);
+  rv = HandleStartElement(NS_LITERAL_STRING("sourcetext").get(), noAtts, 0, 0, 0);
   NS_ENSURE_SUCCESS(rv,rv);
   
   rv = HandleCharacterData(aSourceText, nsCRT::strlen(aSourceText));

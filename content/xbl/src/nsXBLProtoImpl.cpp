@@ -178,3 +178,23 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   }
   return NS_OK;
 }
+
+
+nsresult
+NS_NewXBLProtoImpl(nsXBLPrototypeBinding* aBinding, 
+                   const PRUnichar* aClassName, 
+                   nsXBLProtoImpl** aResult)
+{
+  nsXBLProtoImpl* impl = new nsXBLProtoImpl();
+  if (!impl)
+    return NS_ERROR_OUT_OF_MEMORY;
+  if (aClassName)
+    impl->mClassName.AssignWithConversion(aClassName);
+  else
+    aBinding->GetBindingURI(impl->mClassName);
+  aBinding->SetImplementation(impl);
+  *aResult = impl;
+
+  return NS_OK;
+}
+

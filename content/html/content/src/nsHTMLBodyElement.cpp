@@ -155,9 +155,7 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
   if (!aData || (aData->mSID != eStyleStruct_Margin) || !aData->mMarginData || !mPart)
     return NS_OK; // We only care about margins.
 
-  nsHTMLValue   value;
-  PRInt32       attrCount;
-  mPart->GetAttrCount(attrCount);
+  nsHTMLValue value;
   
   PRInt32 bodyMarginWidth  = -1;
   PRInt32 bodyMarginHeight = -1;
@@ -172,7 +170,7 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
   aData->mPresContext->GetCompatibilityMode(&mode);
 
 
-  if (attrCount > 0) {
+  if (mPart->GetAttrCount() > 0) {
     // if marginwidth/marginheight are set, reflect them as 'margin'
     mPart->GetHTMLAttribute(nsHTMLAtoms::marginwidth, value);
     if (eHTMLUnit_Pixel == value.GetUnit()) {

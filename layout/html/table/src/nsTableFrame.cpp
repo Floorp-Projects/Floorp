@@ -635,12 +635,17 @@ PRInt32 nsTableFrame::GetEffectiveColSpan(const nsTableCellFrame& aCell,
 
 PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
 {
-  nsTableCellMap *cellMap = GetCellMap();
-  NS_PRECONDITION (nsnull!=cellMap, "null cellMap.");
+#ifdef DEBUG
+  {
+    nsTableCellMap *cellMap = GetCellMap();
+    NS_PRECONDITION (nsnull!=cellMap, "null cellMap.");
+  }
+#endif
+
   PRInt32 result;
   result = GetStyleTable()->mCols;
   PRInt32 numCols = GetColCount();
-  if (result>numCols)
+  if (result > numCols)
     result = numCols;
   return result;
 }
@@ -2586,8 +2591,12 @@ nsTableFrame::InsertFrames(nsIPresContext* aPresContext,
   // so if there's more than one this gets messy...
   // XXX The frame construction code should be separating out child frames
   // based on the type...
-  nsIFrame* nextSibling = aFrameList->GetNextSibling();
-  NS_PRECONDITION(!nextSibling, "expected only one child frame");
+#ifdef DEBUG
+  {
+    nsIFrame* nextSibling = aFrameList->GetNextSibling();
+    NS_PRECONDITION(!nextSibling, "expected only one child frame");
+  }
+#endif
 
   // See what kind of frame we have
   const nsStyleDisplay* display = aFrameList->GetStyleDisplay();

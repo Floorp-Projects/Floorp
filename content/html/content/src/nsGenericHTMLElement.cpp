@@ -320,8 +320,7 @@ nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
   nsresult rv = NS_OK;
 
   if (mAttributes) {
-    PRInt32 index, count;
-    GetAttrCount(count);
+    PRUint32 index, count = GetAttrCount();
     nsCOMPtr<nsIAtom> name, prefix;
     PRInt32 namespace_id;
     nsAutoString value;
@@ -359,9 +358,11 @@ nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
     }
   }
 
-  PRInt32 id;
-  if (mDocument) {
-    mDocument->GetAndIncrementContentID(&id);
+  nsIDocument *doc = mNodeInfo->GetDocument();
+
+  PRInt32 id = PR_INT32_MAX;
+  if (doc) {
+    doc->GetAndIncrementContentID(&id);
   }
 
   aDst->SetContentID(id);
@@ -528,18 +529,24 @@ nsGenericHTMLElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 }
 
 
-static inline PRBool
-IsBodyTag(nsIAtom *aAtom)
+static PRBool
+IsBody(nsIContent *aContent)
 {
-  return aAtom == nsHTMLAtoms::body;
+  nsINodeInfo *ni = aContent->GetNodeInfo();
+
+  return (ni && ni->Equals(nsHTMLAtoms::body) &&
+          aContent->IsContentOfType(nsIContent::eHTML));
 }
 
-static inline PRBool
-IsOffsetParentTag(nsIAtom *aAtom)
+static PRBool
+IsOffsetParent(nsIContent *aContent)
 {
-  return (aAtom == nsHTMLAtoms::td ||
-          aAtom == nsHTMLAtoms::table ||
-          aAtom == nsHTMLAtoms::th);
+  nsINodeInfo *ni = aContent->GetNodeInfo();
+
+  return (ni && (ni->Equals(nsHTMLAtoms::td) ||
+                 ni->Equals(nsHTMLAtoms::table) ||
+                 ni->Equals(nsHTMLAtoms::th)) &&
+          aContent->IsContentOfType(nsIContent::eHTML));
 }
 
 nsresult
@@ -556,8 +563,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
   }
 
   // Get Presentation shell 0
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocument->GetShellAt(0, getter_AddRefs(presShell));
+  nsIPresShell *presShell = mDocument->GetShellAt(0);
 
   if (!presShell) {
     return NS_OK;
@@ -599,14 +605,11 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
   // the tagName passed in or is the document element.
   nsIFrame* parent = nsnull;
   PRBool done = PR_FALSE;
-  nsCOMPtr<nsIAtom> tag;
 
   nsIContent* content = frame->GetContent();
 
   if (content) {
-    content->GetTag(getter_AddRefs(tag));
-
-    if (IsBodyTag(tag) || content == docElement) {
+    if (IsBody(content) || content == docElement) {
       done = PR_TRUE;
 
       parent = frame;
@@ -666,12 +669,10 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
           break;
         }
 
-        content->GetTag(getter_AddRefs(tag));
-
         // If the tag of this frame is a offset parent tag and this
         // element is *not* positioned, break here. Also break if we
         // hit the body element.
-        if ((!is_positioned && IsOffsetParentTag(tag)) || IsBodyTag(tag)) {
+        if ((!is_positioned && IsOffsetParent(content)) || IsBody(content)) {
           *aOffsetParent = content;
           NS_ADDREF(*aOffsetParent);
 
@@ -958,8 +959,7 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
   mDocument->FlushPendingNotifications(PR_TRUE, PR_FALSE);
 
   // Get the presentation shell
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocument->GetShellAt(0, getter_AddRefs(presShell));
+  nsIPresShell *presShell = mDocument->GetShellAt(0);
   if (!presShell) {
     return NS_OK;
   }
@@ -1256,8 +1256,7 @@ nsGenericHTMLElement::ScrollIntoView(PRBool aTop)
   }
 
   // Get the presentation shell
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocument->GetShellAt(0, getter_AddRefs(presShell));
+  nsIPresShell *presShell = mDocument->GetShellAt(0);
   if (!presShell) {
     return NS_OK;
   }
@@ -1312,10 +1311,7 @@ nsresult
 nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                   PRBool aCompileEventHandlers)
 {
-  PRBool doNothing = PR_FALSE;
-  if (aDocument == mDocument) {
-    doNothing = PR_TRUE; // short circuit useless work
-  }
+  PRBool doNothing = aDocument == mDocument; // short circuit useless work
 
   nsresult result = nsGenericElement::SetDocument(aDocument, aDeep,
                                                   aCompileEventHandlers);
@@ -1323,15 +1319,12 @@ nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     return result;
   }
 
-  if (!doNothing) {
-    if (mDocument && mAttributes) {
-      ReparseStyleAttribute();
-      nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-      if (sheet) {
-        mAttributes->SetStyleSheet(sheet);
-        //      sheet->SetAttributesFor(htmlContent, mAttributes); // sync attributes with sheet
-        NS_RELEASE(sheet);
-      }
+  if (!doNothing && mDocument && mAttributes) {
+    ReparseStyleAttribute();
+    nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
+    if (sheet) {
+      mAttributes->SetStyleSheet(sheet);
+      NS_RELEASE(sheet);
     }
   }
 
@@ -1344,27 +1337,21 @@ nsGenericHTMLElement::FindForm(nsIDOMHTMLFormElement **aForm)
   // XXX: Namespaces!!!
 
   nsIContent* content = this;
-  nsCOMPtr<nsIAtom> tag;
 
   *aForm = nsnull;
 
   while (content) {
-    if (content->IsContentOfType(nsIContent::eHTML)) {
-      content->GetTag(getter_AddRefs(tag));
-
-      // If the current ancestor is a form, return it as our form
-      if (tag == nsHTMLAtoms::form) {
-        return CallQueryInterface(content, aForm);
-      }
+    // If the current ancestor is a form, return it as our form
+    if (content->IsContentOfType(nsIContent::eHTML) &&
+        content->GetNodeInfo()->Equals(nsHTMLAtoms::form)) {
+      return CallQueryInterface(content, aForm);
     }
 
     nsIContent *tmp = content;
     content = tmp->GetParent();
 
     if (content) {
-      PRInt32 i;
-
-      content->IndexOf(tmp, i);
+      PRInt32 i = content->IndexOf(tmp);
 
       if (i < 0) {
         // This means 'tmp' is anonymous content, form controls in
@@ -1391,6 +1378,15 @@ nsGenericHTMLElement::FindAndSetForm(nsIFormControl *aFormControl)
   }
 
   return NS_OK;
+}
+
+static PRBool
+IsArea(nsIContent *aContent)
+{
+  nsINodeInfo *ni = aContent->GetNodeInfo();
+
+  return (ni && ni->Equals(nsHTMLAtoms::area) &&
+          aContent->IsContentOfType(nsIContent::eHTML));
 }
 
 nsresult
@@ -1425,21 +1421,15 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(esm))) && esm) {
       nsCOMPtr<nsIContent> target;
       esm->GetEventTargetContent(aEvent, getter_AddRefs(target));
-      if (target) {
-        nsCOMPtr<nsIAtom> tag;
-        target->GetTag(getter_AddRefs(tag));
-        if (tag && tag.get() == nsHTMLAtoms::area) {
-          targetIsArea = PR_TRUE;
-        }
+      if (target && IsArea(target)) {
+        targetIsArea = PR_TRUE;
       }
     }
 
     if (targetIsArea) {
       //We are over an area.  If our element is not one, then return without
       //running anchor code.
-      nsCOMPtr<nsIAtom> tag;
-      GetTag(getter_AddRefs(tag));
-      if (tag && tag.get() != nsHTMLAtoms::area) {
+      if (IsArea(this)) {
         return ret;
       }
     }
@@ -2235,7 +2225,7 @@ nsGenericHTMLElement::GetHTMLAttribute(nsIAtom* aAttribute,
 }
 
 nsresult
-nsGenericHTMLElement::GetAttrNameAt(PRInt32 aIndex,
+nsGenericHTMLElement::GetAttrNameAt(PRUint32 aIndex,
                                     PRInt32* aNameSpaceID,
                                     nsIAtom** aName,
                                     nsIAtom** aPrefix) const
@@ -2252,14 +2242,21 @@ nsGenericHTMLElement::GetAttrNameAt(PRInt32 aIndex,
   return NS_ERROR_ILLEGAL_VALUE;
 }
 
-nsresult
-nsGenericHTMLElement::GetAttrCount(PRInt32& aCount) const
+NS_IMETHODIMP_(PRUint32)
+nsGenericHTMLElement::GetAttrCount() const
 {
-  if (nsnull != mAttributes) {
-    return mAttributes->GetAttributeCount(aCount);
+  if (!mAttributes) {
+    return 0;
   }
-  aCount = 0;
-  return NS_OK;
+
+  PRInt32 count;
+  nsresult rv = mAttributes->GetAttributeCount(count);
+
+  if (NS_FAILED(rv)) {
+    count = 0;
+  }
+
+  return count;
 }
 
 nsresult
@@ -2411,8 +2408,8 @@ nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
 void
 nsGenericHTMLElement::ListAttributes(FILE* out) const
 {
-  PRInt32 index, count;
-  GetAttrCount(count);
+  PRUint32 index, count = GetAttrCount();
+
   for (index = 0; index < count; index++) {
     // name
     nsCOMPtr<nsIAtom> attr;
@@ -2448,28 +2445,21 @@ nsGenericHTMLElement::List(FILE* out, PRInt32 aIndent) const
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  nsCOMPtr<nsIAtom> tag;
-  GetTag(getter_AddRefs(tag));
-  if (tag) {
-    nsAutoString buf;
-    tag->ToString(buf);
-    fputs(NS_LossyConvertUCS2toASCII(buf).get(), out);
-  }
+  nsAutoString buf;
+  mNodeInfo->GetQualifiedName(buf);
+  fputs(NS_LossyConvertUCS2toASCII(buf).get(), out);
+
   fprintf(out, "@%p", (void*)this);
 
   ListAttributes(out);
 
   fprintf(out, " refcount=%d<", mRefCnt.get());
 
-  PRBool canHaveKids;
-  CanContainChildren(canHaveKids);
-  if (canHaveKids) {
+  if (CanContainChildren()) {
     fputs("\n", out);
-    PRInt32 kids;
-    ChildCount(kids);
-    nsCOMPtr<nsIContent> kid;
+    PRInt32 kids = GetChildCount();
     for (index = 0; index < kids; index++) {
-      ChildAt(index, getter_AddRefs(kid));
+      nsIContent *kid = GetChildAt(index);
       kid->List(out, aIndent + 1);
     }
     for (index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -2480,34 +2470,27 @@ nsGenericHTMLElement::List(FILE* out, PRInt32 aIndent) const
 }
 
 nsresult
-nsGenericHTMLElement::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const {
+nsGenericHTMLElement::DumpContent(FILE* out, PRInt32 aIndent,
+                                  PRBool aDumpAll) const {
    NS_PRECONDITION(nsnull != mDocument, "bad content");
 
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
   nsAutoString buf;
-  nsCOMPtr<nsIAtom> tag;
-  GetTag(getter_AddRefs(tag));
-  if (tag) {
-    tag->ToString(buf);
-    fputs("<",out);
-    fputs(NS_LossyConvertUCS2toASCII(buf).get(), out);
+  mNodeInfo->GetQualifiedName(buf);
+  fputs("<",out);
+  fputs(NS_LossyConvertUCS2toASCII(buf).get(), out);
 
-    if(aDumpAll) ListAttributes(out);
+  if(aDumpAll) ListAttributes(out);
 
-    fputs(">",out);
-  }
+  fputs(">",out);
 
-  PRBool canHaveKids;
-  CanContainChildren(canHaveKids);
-  if (canHaveKids) {
+  if (CanContainChildren()) {
     if(aIndent) fputs("\n", out);
-    PRInt32 kids;
-    ChildCount(kids);
-    nsCOMPtr<nsIContent> kid;
+    PRInt32 kids = GetChildCount();
     for (index = 0; index < kids; index++) {
-      ChildAt(index, getter_AddRefs(kid));
+      nsIContent *kid = GetChildAt(index);
       PRInt32 indent = aIndent ? aIndent + 1 : 0;
       kid->DumpContent(out, indent, aDumpAll);
     }
@@ -2616,16 +2599,15 @@ nsGenericHTMLElement::GetPrimaryFrameFor(nsIContent* aContent,
   }
 
   // Get presentation shell 0
-  nsCOMPtr<nsIPresShell> presShell;
-  aDocument->GetShellAt(0, getter_AddRefs(presShell));
+  nsIPresShell *presShell = aDocument->GetShellAt(0);
+
+  nsIFrame *frame = nsnull;
 
   if (presShell) {
-    nsIFrame *frame = nsnull;
     presShell->GetPrimaryFrameFor(aContent, &frame);
-    return frame;
   }
 
-  return nsnull;
+  return frame;
 }
 
 // static
@@ -2751,8 +2733,7 @@ nsGenericHTMLElement::GetPresContext(nsIHTMLContent* aContent,
   nsIDocument* doc = aContent->GetDocument();
   if (doc) {
     // Get presentation shell 0
-    nsCOMPtr<nsIPresShell> presShell;
-    doc->GetShellAt(0, getter_AddRefs(presShell));
+    nsIPresShell *presShell = doc->GetShellAt(0);
     if (presShell) {
       return presShell->GetPresContext(aPresContext);
     }
@@ -3690,45 +3671,33 @@ nsGenericHTMLContainerElement::Compact()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGenericHTMLContainerElement::CanContainChildren(PRBool& aResult) const
+NS_IMETHODIMP_(PRBool)
+nsGenericHTMLContainerElement::CanContainChildren() const
 {
-  aResult = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
 
-NS_IMETHODIMP
-nsGenericHTMLContainerElement::ChildCount(PRInt32& aCount) const
+NS_IMETHODIMP_(PRUint32)
+nsGenericHTMLContainerElement::GetChildCount() const
 {
-  aCount = mChildren.Count();
-  return NS_OK;
+  return mChildren.Count();
 }
 
-NS_IMETHODIMP
-nsGenericHTMLContainerElement::ChildAt(PRInt32 aIndex,
-                                       nsIContent** aResult) const
+NS_IMETHODIMP_(nsIContent *)
+nsGenericHTMLContainerElement::GetChildAt(PRUint32 aIndex) const
 {
-  // I really prefer NOT to do this test on all ChildAt calls - perhaps we
-  // should add FastChildAt().
-  nsIContent *child = (nsIContent *)mChildren.SafeElementAt(aIndex);
-  NS_IF_ADDREF(child);
-  *aResult = child;
-
-  return NS_OK;
+  return (nsIContent *)mChildren.SafeElementAt(aIndex);
 }
 
-NS_IMETHODIMP
-nsGenericHTMLContainerElement::IndexOf(nsIContent* aPossibleChild,
-                                       PRInt32& aIndex) const
+NS_IMETHODIMP_(PRInt32)
+nsGenericHTMLContainerElement::IndexOf(nsIContent* aPossibleChild) const
 {
-  NS_PRECONDITION(nsnull != aPossibleChild, "null ptr");
-  aIndex = mChildren.IndexOf(aPossibleChild);
-  return NS_OK;
+  return mChildren.IndexOf(aPossibleChild);
 }
 
 NS_IMETHODIMP
 nsGenericHTMLContainerElement::InsertChildAt(nsIContent* aKid,
-                                             PRInt32 aIndex,
+                                             PRUint32 aIndex,
                                              PRBool aNotify,
                                              PRBool aDeepSetDocument)
 {
@@ -3771,7 +3740,7 @@ nsGenericHTMLContainerElement::InsertChildAt(nsIContent* aKid,
 
 NS_IMETHODIMP
 nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
-                                              PRInt32 aIndex,
+                                              PRUint32 aIndex,
                                               PRBool aNotify,
                                               PRBool aDeepSetDocument)
 {
@@ -3859,7 +3828,7 @@ nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
 }
 
 NS_IMETHODIMP
-nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
+nsGenericHTMLContainerElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   nsIDocument* doc = mDocument;
   if (aNotify && (nsnull != doc)) {
@@ -3905,27 +3874,27 @@ nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 
 nsresult
 nsGenericHTMLContainerElement::ReplaceContentsWithText(const nsAString& aText,
-                                                       PRBool aNotify) {
-  PRInt32 children;
-  nsresult rv = ChildCount(children);
-  NS_ENSURE_SUCCESS(rv, rv);
+                                                       PRBool aNotify)
+{
+  PRUint32 count = GetChildCount();
+  nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIContent> firstChild;
   nsCOMPtr<nsIDOMText> textChild;
-  // if we already have a DOMText child, reuse it.
-  if (children > 0) {
-    rv = ChildAt(0, getter_AddRefs(firstChild));
-    NS_ENSURE_SUCCESS(rv, rv);
-    textChild = do_QueryInterface(firstChild);
-  }
-  
-  PRInt32 i;
-  PRInt32 lastChild = textChild ? 1 : 0;
-  for (i = children - 1; i >= lastChild; --i) {
-    RemoveChildAt(i, aNotify);
+
+  if (count > 0) {
+    // if we already have a DOMText child, reuse it.
+    textChild = do_QueryInterface(GetChildAt(0));
+
+    PRUint32 lastChild = textChild ? 1 : 0;
+    PRUint32 i = count - 1;
+    while (i-- > lastChild) {
+      RemoveChildAt(i, aNotify);
+    }
   }
 
-  if (!textChild) {
+  if (textChild) {
+    rv = textChild->SetData(aText);
+  } else {
     nsCOMPtr<nsITextContent> text;
     rv = NS_NewTextNode(getter_AddRefs(text));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3933,8 +3902,6 @@ nsGenericHTMLContainerElement::ReplaceContentsWithText(const nsAString& aText,
     rv = text->SetText(aText, PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = InsertChildAt(text, 0, aNotify, PR_FALSE);
-  } else {
-    rv = textChild->SetData(aText);
   }    
       
   return rv;
@@ -3944,18 +3911,14 @@ nsresult
 nsGenericHTMLContainerElement::GetContentsAsText(nsAString& aText)
 {
   aText.Truncate();
-  PRInt32 children;
-  nsresult rv = ChildCount(children);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 children = GetChildCount();
   
   nsCOMPtr<nsIDOMText> tc;
-  nsCOMPtr<nsIContent> child;
   nsAutoString textData;
 
   PRInt32 i;
   for (i = 0; i < children; ++i) {
-    ChildAt(i, getter_AddRefs(child));
-    tc = do_QueryInterface(child);
+    tc = do_QueryInterface(GetChildAt(i));
     if (tc) {
       if (aText.IsEmpty()) {
         tc->GetData(aText);

@@ -3081,11 +3081,15 @@ nsresult
 nsEditor::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffset)
 {
   NS_ASSERTION((aChild && aParent), "bad args");
-  if (!aChild || !aParent) return NS_ERROR_NULL_POINTER;
+
   nsCOMPtr<nsIContent> content = do_QueryInterface(aParent);
   nsCOMPtr<nsIContent> cChild = do_QueryInterface(aChild);
-  if (!cChild || !content) return NS_ERROR_NULL_POINTER;
-  return content->IndexOf(cChild, aOffset);
+  if (!cChild || !content)
+    return NS_ERROR_NULL_POINTER;
+
+  aOffset = content->IndexOf(cChild);
+
+  return NS_OK;
 }
 
 nsresult 
@@ -3878,21 +3882,12 @@ nsEditor::IsTextNode(nsIDOMNode *aNode)
 PRInt32 
 nsEditor::GetIndexOf(nsIDOMNode *parent, nsIDOMNode *child)
 {
-  PRInt32 idx = 0;
-  
-  NS_PRECONDITION(parent, "null parent passed to nsEditor::GetIndexOf");
-  NS_PRECONDITION(parent, "null child passed to nsEditor::GetIndexOf");
   nsCOMPtr<nsIContent> content = do_QueryInterface(parent);
   nsCOMPtr<nsIContent> cChild = do_QueryInterface(child);
   NS_PRECONDITION(content, "null content in nsEditor::GetIndexOf");
   NS_PRECONDITION(cChild, "null content in nsEditor::GetIndexOf");
-  
-  nsresult res = content->IndexOf(cChild, idx);
-  if (NS_FAILED(res)) 
-  {
-    NS_NOTREACHED("could not find child in parent - nsEditor::GetIndexOf");
-  }
-  return idx;
+
+  return content->IndexOf(cChild);
 }
   
 
@@ -3904,17 +3899,13 @@ nsEditor::GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset)
 {
   nsCOMPtr<nsIDOMNode> resultNode;
   
-  if (!aParent) 
+  nsCOMPtr<nsIContent> parent = do_QueryInterface(aParent);
+
+  if (!parent) 
     return resultNode;
-  
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aParent);
-  nsCOMPtr<nsIContent> cChild;
-  NS_PRECONDITION(content, "null content in nsEditor::GetChildAt");
-  
-  if (NS_FAILED(content->ChildAt(aOffset, getter_AddRefs(cChild))))
-    return resultNode;
-  
-  resultNode = do_QueryInterface(cChild);
+
+  resultNode = do_QueryInterface(parent->GetChildAt(aOffset));
+
   return resultNode;
 }
   

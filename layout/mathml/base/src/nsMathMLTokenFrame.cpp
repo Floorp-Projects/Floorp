@@ -71,22 +71,14 @@ nsMathMLTokenFrame::GetFrameType(nsIAtom** aType) const
 static void
 CompressWhitespace(nsIContent* aContent)
 {
-  PRInt32 numKids;
-  aContent->ChildCount(numKids);
-  for (PRInt32 kid = 0; kid < numKids; kid++) {
-    nsCOMPtr<nsIContent> kidContent;
-    aContent->ChildAt(kid, getter_AddRefs(kidContent));
-    if (kidContent) {       
-      nsCOMPtr<nsIDOMText> kidText(do_QueryInterface(kidContent));
-      if (kidText) {
-        nsCOMPtr<nsITextContent> tc(do_QueryInterface(kidContent));
-        if (tc) {
-          nsAutoString text;
-          tc->CopyText(text);
-          text.CompressWhitespace();
-          tc->SetText(text, PR_FALSE); // not meant to be used if notify is needed
-        }
-      }
+  PRUint32 numKids = aContent->GetChildCount();
+  for (PRUint32 kid = 0; kid < numKids; kid++) {
+    nsCOMPtr<nsITextContent> tc(do_QueryInterface(aContent->GetChildAt(kid)));
+    if (tc) {
+      nsAutoString text;
+      tc->CopyText(text);
+      text.CompressWhitespace();
+      tc->SetText(text, PR_FALSE); // not meant to be used if notify is needed
     }
   }
 }
@@ -296,18 +288,13 @@ nsMathMLTokenFrame::SetTextStyle(nsIPresContext* aPresContext)
   // our content can include comment-nodes, attribute-nodes, text-nodes...
   // we use the DOM to make sure that we are only looking at text-nodes...
   nsAutoString data;
-  PRInt32 numKids;
-  mContent->ChildCount(numKids);
-  for (PRInt32 kid = 0; kid < numKids; kid++) {
-    nsCOMPtr<nsIContent> kidContent;
-    mContent->ChildAt(kid, getter_AddRefs(kidContent));
-    if (kidContent) {
-      nsCOMPtr<nsIDOMText> kidText(do_QueryInterface(kidContent));
-      if (kidText) {
-        nsAutoString kidData;
-        kidText->GetData(kidData);
-        data += kidData;
-      }
+  PRUint32 numKids = mContent->GetChildCount();
+  for (PRUint32 kid = 0; kid < numKids; kid++) {
+    nsCOMPtr<nsIDOMText> kidText(do_QueryInterface(mContent->GetChildAt(kid)));
+    if (kidText) {
+      nsAutoString kidData;
+      kidText->GetData(kidData);
+      data += kidData;
     }
   }
 
