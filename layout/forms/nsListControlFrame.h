@@ -166,7 +166,7 @@ public:
                              PRInt32 aNumChars, nsSize& aSize,
                              nsIRenderingContext *aRendContext);
 #endif
-  NS_IMETHOD GetSize(PRInt32* aSize) const;
+  virtual nsresult GetSizeFromContent(PRInt32* aSize) const;
   NS_IMETHOD GetMaxLength(PRInt32* aSize);
 
   static  void GetScrollBarDimensions(nsIPresContext& aPresContext,

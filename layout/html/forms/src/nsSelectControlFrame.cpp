@@ -339,7 +339,7 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   // here it is determined whether we are a combo box
   PRInt32 sizeAttr;
-  GetSize(&sizeAttr);
+  GetSizeFromContent(&sizeAttr);
   PRBool multiple;
   if (!GetMultiple(&multiple) && 
       ((1 >= sizeAttr) || ((ATTR_NOTSET == sizeAttr) && (1 >= mNumRows)))) {

@@ -173,7 +173,7 @@ public:
                                              float aPixToTwip, 
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
-  NS_IMETHOD GetSize(PRInt32* aSize) const;
+  virtual nsresult GetSizeFromContent(PRInt32* aSize) const;
   NS_IMETHOD GetMaxLength(PRInt32* aSize);
 
   virtual void SetClickPoint(nscoord aX, nscoord aY);

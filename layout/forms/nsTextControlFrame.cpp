@@ -246,7 +246,7 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   GetType(&type);
   if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
     PRInt32 width;
-    if (NS_CONTENT_ATTR_HAS_VALUE != GetSize(&width)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE != GetSizeFromContent(&width)) {
       width = 20;
     }
     //if (eCompatibility_NavQuirks == mode) {
