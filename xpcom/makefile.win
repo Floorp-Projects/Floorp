@@ -34,8 +34,8 @@ DIRS=   typelib        \
         build          \
         appshell       \
         tools          \
-        sample         \
 !if !defined(DISABLE_TESTS)
+        sample         \
         tests          \
         reflect\xptinfo\tests \
         reflect\xptcall\tests \
