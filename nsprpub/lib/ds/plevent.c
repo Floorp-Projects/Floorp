@@ -16,10 +16,8 @@
  * Reserved.
  */
 #if defined(XP_OS2)
-#define INCL_DOSEXCEPTIONS
 #define INCL_WIN
 #include <os2.h>
-#define PostMessage   WinPostMsg
 #define DefWindowProc WinDefWindowProc
 typedef MPARAM WPARAM,LPARAM;
 #endif /* XP_OS2 */
@@ -94,9 +92,9 @@ static void        _md_CreateEventQueue( PLEventQueue *eventQueue );
 #if defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
 PLEventQueue * _pr_MainEventQueue;
 
-#if defined(OS2)
-BOOL rc;
+#if defined(XP_OS2)
 ULONG _pr_PostEventMsgId;
+static char *_pr_eventWindowClass = "NSPR:EventWindow";
 #else
 UINT _pr_PostEventMsgId;
 static char *_pr_eventWindowClass = "NSPR:EventWindow";
@@ -624,9 +622,9 @@ _pl_NativeNotify(PLEventQueue* self)
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
 {
-    BOOL rc;
+    BOOL rc = FALSE;
 
-    if (self == _pr_main_event_queue) {
+    if (self == _pr_MainEventQueue) {
        rc = WinPostMsg( self->eventReceiverWindow, _pr_PostEventMsgId,
                        0, MPFROMP(self));
     }
@@ -783,11 +781,7 @@ _md_EventReceiverProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
         }
     } 
-#ifdef XP_OS2
-    return WinDefWindowProc(hwnd, uMsg, wParam, lParam);
-#else
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
-#endif
 }
 
 
@@ -901,25 +895,35 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 */
 static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 {
-    PSZ _pr_eventWindowClass;
+    /* Must have HMQ for this & can't assume we already have appshell */
+    if( FALSE == WinQueryQueueInfo( HMQ_CURRENT, NULL, 0))
+    {
+       HAB hab = WinInitialize( 0);
+       WinCreateMsgQueue( hab, 0);
+    }
 
-    WinRegisterClass( WinQueryAnchorBlock( HWND_DESKTOP),
-                      _pr_eventWindowClass,
-                      _md_EventReceiverProc,
-                      0, 0);
+    if( !_pr_PostEventMsgId)
+    {
+       WinRegisterClass( 0 /* hab_current */,
+                         _pr_eventWindowClass,
+                         _md_EventReceiverProc,
+                         0, 0);
+
+       _pr_PostEventMsgId = WinAddAtom( WinQuerySystemAtomTable(),
+                                        "NSPR_PostEvent");
+    }
 
     eventQueue->eventReceiverWindow = WinCreateWindow( HWND_DESKTOP,
-                     _pr_eventWindowClass,
-                     "", 0,
-                     0, 0, 0, 0,
-                     HWND_DESKTOP,
-                     HWND_TOP,
-                     0,
-                     NULL,
-                     NULL);
+                                                       _pr_eventWindowClass,
+                                                       "", 0,
+                                                       0, 0, 0, 0,
+                                                       HWND_DESKTOP,
+                                                       HWND_TOP,
+                                                       0,
+                                                       NULL,
+                                                       NULL);
+    PR_ASSERT(eventQueue->eventReceiverWindow);
 
-    eventQueue->postEventMsgId = WinAddAtom(WinQuerySystemAtomTable(),
-                     "NSPR_PostEvent");
     return;    
 } /* end _md_CreateEventQueue() */
 #endif /* XP_OS2 */
