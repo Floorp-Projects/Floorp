@@ -49,7 +49,6 @@ DIRS = 		\
 	autocomplete \
 	console \
 	filepicker \
-	help \
 	history \
 	passwordmgr \
 	printing \
