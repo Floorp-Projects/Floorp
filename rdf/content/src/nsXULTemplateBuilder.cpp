@@ -5114,11 +5114,19 @@ nsXULTemplateBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             }
 
             
-            if (nameSpaceID == kNameSpaceID_HTML) {
-                // If we just built HTML, then we have to recurse "by
-                // hand" because HTML won't build itself up
-                // lazily. Note that we _don't_ need to notify: we'll
-                // add the entire subtree in a single whack.
+            nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(realKid);
+            if (xulcontent) {
+                // Just mark the XUL element as requiring more work to
+                // be done. We'll get around to it when somebody asks
+                // for it.
+                rv = xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
+                if (NS_FAILED(rv)) return rv;
+            }
+            else {
+                // Otherwise, it doesn't support lazy instantiation,
+                // and we have to recurse "by hand". Note that we
+                // _don't_ need to notify: we'll add the entire
+                // subtree in a single whack.
                 //
                 // Note that we don't bother passing aContainer and
                 // aNewIndexInContainer down: since we're HTML, we
@@ -5136,17 +5144,6 @@ nsXULTemplateBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                                                  nsnull /* don't care */);
                     if (NS_FAILED(rv)) return rv;
                 }
-            }
-            else {
-                // Otherwise, just mark the XUL element as requiring
-                // more work to be done. We'll get around to it when
-                // somebody asks for it.
-                nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(realKid);
-                if (! xulcontent)
-                    return NS_ERROR_UNEXPECTED;
-
-                rv = xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
-                if (NS_FAILED(rv)) return rv;
             }
 
             // We'll _already_ have added the unique elements; but if
