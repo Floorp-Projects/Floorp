@@ -1237,7 +1237,7 @@ SinkContext::FlushText(PRBool* aDidFlush)
   nsresult rv = NS_OK;
   PRBool didFlush = PR_FALSE;
   if (0 != mTextLength) {
-    nsIHTMLContent* content;
+    nsIContent* content;
     rv = NS_NewTextNode(&content);
     if (NS_OK == rv) {
       // Set the content's document

@@ -22,9 +22,8 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIHTMLContent.h"
+#include "nsIContent.h"
 #include "nsTextFragment.h"
-#include "nsHTMLValue.h"
 #include "nsVoidArray.h"
 #include "nsINameSpaceManager.h"
 
@@ -34,15 +33,12 @@ extern const nsIID kIDOMEventReceiverIID;
 extern const nsIID kIScriptObjectOwnerIID;
 extern const nsIID kISupportsIID;
 extern const nsIID kIContentIID;
-extern const nsIID kIHTMLContentIID;
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
 class nsIDOMNodeList;
 class nsIEventListenerManager;
 class nsIFrame;
-class nsIHTMLAttributes;
-class nsIHTMLContent;
 class nsIStyleContext;
 class nsIStyleRule;
 class nsISupportsArray;
@@ -51,7 +47,7 @@ struct nsGenericDOMDataNode {
   nsGenericDOMDataNode();
   ~nsGenericDOMDataNode();
 
-  void Init(nsIHTMLContent* aOuterContentObject);
+  void Init(nsIContent* aOuterContentObject);
 
   // Implementation for nsIDOMNode
   nsresult    GetNodeName(nsString& aNodeName) {
@@ -178,41 +174,7 @@ struct nsGenericDOMDataNode {
   nsresult RangeRemove(nsIDOMRange& aRange);
   nsresult GetRangeList(nsVoidArray*& aResult) const;
 
-  // Implementation for nsIHTMLContent
-  nsresult Compact();
-  nsresult SetHTMLAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue,
-                        PRBool aNotify) {
-    return NS_OK;
-  }
-  nsresult GetHTMLAttribute(nsIAtom* aAttribute, nsHTMLValue& aValue) const {
-    return NS_CONTENT_ATTR_NOT_THERE;
-  }
-  nsresult GetID(nsIAtom*& aResult) const {
-    aResult = nsnull;
-    return NS_OK;
-  }
-  nsresult GetClasses(nsVoidArray& aArray) const {
-    return NS_OK;
-  }
-  NS_IMETHOD HasClass(nsIAtom* aClass) const {
-    return NS_COMFALSE;
-  }
-  nsresult GetContentStyleRule(nsIStyleRule*& aResult) {
-    aResult = nsnull;
-    return NS_OK;
-  }
-  nsresult GetInlineStyleRule(nsIStyleRule*& aResult) {
-    aResult = nsnull;
-    return NS_OK;
-  }
-  nsresult MapAttributesInto(nsIStyleContext* aStyleContext,
-                             nsIPresContext* aPresContext) {
-    return NS_OK;
-  }
-  static void MapNoAttributes(nsIHTMLAttributes* aAttributes,
-                              nsIStyleContext* aContext,
-                              nsIPresContext* aPresContext) {
-  }
+  // Implementation for nsIContent
   nsresult SizeOf(nsISizeOfHandler* aHandler) const;
   nsresult BeginConvertToXIF(nsXIFConverter& aConverter) const;
   nsresult ConvertContentToXIF(nsXIFConverter& aConverter) const;
@@ -254,7 +216,7 @@ struct nsGenericDOMDataNode {
   // supporting. Sometimes there is work that we just can't do
   // ourselves, so this is needed to ask the real object to do the
   // work.
-  nsIHTMLContent* mContent;
+  nsIContent* mContent;
 
   nsIDocument* mDocument;
   nsIContent* mParent;
@@ -498,66 +460,13 @@ struct nsGenericDOMDataNode {
     return _g.GetRangeList(aResult);                                       \
   }                                                                        
 
-
-
-#define NS_IMPL_IHTMLCONTENT_USING_GENERIC_DOM_DATA(_g)                \
-  NS_IMETHOD Compact() {                                               \
-    return _g.Compact();                                               \
-  }                                                                    \
-  NS_IMETHOD SetHTMLAttribute(nsIAtom* aAttribute,                     \
-                              const nsHTMLValue& aValue, PRBool aNotify) { \
-    return _g.SetHTMLAttribute(aAttribute, aValue, aNotify);           \
-  }                                                                    \
-  NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute,                     \
-                          nsHTMLValue& aValue) const {                 \
-    return _g.GetHTMLAttribute(aAttribute, aValue);                    \
-  }                                                                    \
-  NS_IMETHOD GetID(nsIAtom*& aResult) const {                          \
-    return _g.GetID(aResult);                                          \
-  }                                                                    \
-  NS_IMETHOD GetClasses(nsVoidArray& aArray) const {                   \
-    return _g.GetClasses(aArray);                                      \
-  }                                                                    \
-  NS_IMETHOD HasClass(nsIAtom* aClass) const {                         \
-    return _g.HasClass(aClass);                                        \
-  }                                                                    \
-  NS_IMETHOD GetContentStyleRule(nsIStyleRule*& aResult) {             \
-    return _g.GetContentStyleRule(aResult);                            \
-  }                                                                    \
-  NS_IMETHOD GetInlineStyleRule(nsIStyleRule*& aResult) {              \
-    return _g.GetInlineStyleRule(aResult);                             \
-  }                                                                    \
-  NS_IMETHOD ToHTMLString(nsString& aResult) const;                    \
-  NS_IMETHOD ToHTML(FILE* out) const;                                  \
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,                    \
-                               const nsString& aValue,                 \
-                               nsHTMLValue& aResult) {                 \
-    return NS_CONTENT_ATTR_NOT_THERE;                                  \
-  }                                                                    \
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,                    \
-                               const nsHTMLValue& aValue,              \
-                               nsString& aResult) const {              \
-    return NS_CONTENT_ATTR_NOT_THERE;                                  \
-  }                                                                    \
-  NS_IMETHOD                                                           \
-    GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const { \
-    aMapFunc = nsGenericDOMDataNode::MapNoAttributes;                  \
-    return NS_OK;                                                      \
-  }                                                                    \
-  NS_IMETHOD GetStyleHintForAttributeChange(                           \
-    const nsIAtom* aAttribute,                                         \
-    PRInt32 *aHint) const                                              \
-  {                                                                    \
-    return NS_OK;                                                      \
-  }
-
 /**
  * This macro implements the portion of query interface that is
  * generic to all html content objects.
  */
 #define NS_IMPL_DOM_DATA_QUERY_INTERFACE(_id, _iptr, _this) \
   if (_id.Equals(kISupportsIID)) {                          \
-    nsIHTMLContent* tmp = _this;                            \
+    nsIContent* tmp = _this;                                \
     nsISupports* tmp2 = tmp;                                \
     *_iptr = (void*) tmp2;                                  \
     NS_ADDREF_THIS();                                       \
@@ -589,12 +498,6 @@ struct nsGenericDOMDataNode {
   }                                                         \
   if (_id.Equals(kIContentIID)) {                           \
     nsIContent* tmp = _this;                                \
-    *_iptr = (void*) tmp;                                   \
-    NS_ADDREF_THIS();                                       \
-    return NS_OK;                                           \
-  }                                                         \
-  if (_id.Equals(kIHTMLContentIID)) {                       \
-    nsIHTMLContent* tmp = _this;                            \
     *_iptr = (void*) tmp;                                   \
     NS_ADDREF_THIS();                                       \
     return NS_OK;                                           \

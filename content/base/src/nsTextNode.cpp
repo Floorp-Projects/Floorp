@@ -20,7 +20,7 @@
 #include "nsGenericDOMDataNode.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIHTMLContent.h"
+#include "nsIContent.h"
 #include "nsITextContent.h"
 #include "nsFrame.h"
 #include "nsIDocument.h"
@@ -34,7 +34,7 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 class nsTextNode : public nsIDOMText,
                    public nsIScriptObjectOwner,
                    public nsIDOMEventReceiver,
-                   public nsIHTMLContent,
+                   public nsIContent,
                    public nsITextContent
 {
 public:
@@ -62,9 +62,6 @@ public:
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
 
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC_DOM_DATA(mInner)
-
   // nsITextContent
   NS_IMETHOD GetText(const nsTextFragment*& aFragmentsResult,
                      PRInt32& aNumFragmentsResult);
@@ -79,9 +76,9 @@ protected:
   nsGenericDOMDataNode mInner;
 };
 
-nsresult NS_NewTextNode(nsIHTMLContent** aInstancePtrResult);
+nsresult NS_NewTextNode(nsIContent** aInstancePtrResult);
 nsresult
-NS_NewTextNode(nsIHTMLContent** aInstancePtrResult)
+NS_NewTextNode(nsIContent** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
@@ -92,7 +89,7 @@ NS_NewTextNode(nsIHTMLContent** aInstancePtrResult)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(kIContentIID, (void **) aInstancePtrResult);
 }
 
 nsTextNode::nsTextNode()
@@ -169,23 +166,6 @@ nsTextNode::List(FILE* out, PRInt32 aIndent) const
   fputs(tmp, out);
 
   fputs(">\n", out);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextNode::ToHTML(FILE* out) const
-{
-  nsAutoString tmp;
-  mInner.mText.AppendTo(tmp);
-  fputs(tmp, out);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextNode::ToHTMLString(nsString& aBuf) const
-{
-  aBuf.Truncate(0);
-  mInner.mText.AppendTo(aBuf);
   return NS_OK;
 }
 

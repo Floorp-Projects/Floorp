@@ -66,9 +66,10 @@ nsGenericXMLElement::~nsGenericXMLElement()
 
 nsresult
 nsGenericXMLElement::CopyInnerTo(nsIContent* aSrcContent,
-                                 nsGenericXMLElement* aDst)
+                                 nsGenericXMLElement* aDst,
+                                 PRBool aDeep)
 {
-  nsresult result = nsGenericContainerElement::CopyInnerTo(aSrcContent, aDst);
+  nsresult result = nsGenericContainerElement::CopyInnerTo(aSrcContent, aDst, aDeep);
   if (NS_OK == result) {
     aDst->mNameSpacePrefix = mNameSpacePrefix;
     NS_IF_ADDREF(mNameSpacePrefix);

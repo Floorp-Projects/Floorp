@@ -17,7 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsGenericDOMDataNode.h"
-#include "nsGenericHTMLElement.h"
+#include "nsGenericElement.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMRange.h"
@@ -36,7 +36,6 @@
 // XXX share all id's in this dir
 
 NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
-extern void NS_QuoteForHTML(const nsString& aValue, nsString& aResult);
 
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMNODE_IID);
@@ -62,7 +61,7 @@ nsGenericDOMDataNode::~nsGenericDOMDataNode()
 }
 
 void
-nsGenericDOMDataNode::Init(nsIHTMLContent* aOuterContentObject)
+nsGenericDOMDataNode::Init(nsIContent* aOuterContentObject)
 {
   NS_ASSERTION((nsnull == mContent) && (nsnull != aOuterContentObject),
                "null ptr");
@@ -686,14 +685,6 @@ nsGenericDOMDataNode::GetRangeList(nsVoidArray*& aResult) const
 
 
 //----------------------------------------------------------------------
-
-// Implementation of nsIHTMLContent
-
-nsresult
-nsGenericDOMDataNode::Compact()
-{
-  return NS_OK;
-}
 
 // XXX not really implemented (yet)
 nsresult

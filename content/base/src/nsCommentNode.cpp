@@ -20,7 +20,7 @@
 #include "nsGenericDOMDataNode.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIHTMLContent.h"
+#include "nsIContent.h"
 #include "nsFrame.h"
 
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
@@ -28,7 +28,7 @@ static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 class nsCommentNode : public nsIDOMComment,
                       public nsIScriptObjectOwner,
                       public nsIDOMEventReceiver,
-                      public nsIHTMLContent
+                      public nsIContent
 {
 public:
   nsCommentNode();
@@ -54,26 +54,23 @@ public:
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
 
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC_DOM_DATA(mInner)
-
 protected:
   nsGenericDOMDataNode mInner;
 };
 
-nsresult NS_NewCommentNode(nsIHTMLContent** aInstancePtrResult);
+nsresult NS_NewCommentNode(nsIContent** aInstancePtrResult);
 nsresult
-NS_NewCommentNode(nsIHTMLContent** aInstancePtrResult)
+NS_NewCommentNode(nsIContent** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIHTMLContent* it = new nsCommentNode();
+  nsIContent* it = new nsCommentNode();
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(kIContentIID, (void **) aInstancePtrResult);
 }
 
 nsCommentNode::nsCommentNode()
@@ -144,27 +141,6 @@ nsCommentNode::List(FILE* out, PRInt32 aIndent) const
   fputs(tmp, out);
 
   fputs(">\n", out);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommentNode::ToHTML(FILE* out) const
-{
-  nsAutoString tmp;
-  tmp.Append("<!--");
-  mInner.mText.AppendTo(tmp);
-  tmp.Append(">");
-  fputs(tmp, out);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCommentNode::ToHTMLString(nsString& aBuf) const
-{
-  aBuf.Truncate(0);
-  aBuf.Append("<!--");
-  mInner.mText.AppendTo(aBuf);
-  aBuf.Append(">");
   return NS_OK;
 }
 

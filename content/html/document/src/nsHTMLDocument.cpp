@@ -72,7 +72,6 @@ static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
@@ -529,35 +528,6 @@ nsHTMLDocument::CreateElement(const nsString& aTagName,
     return rv;
   }
   rv = content->QueryInterface(kIDOMElementIID, (void**)aReturn);
-  return rv;
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::CreateTextNode(const nsString& aData, nsIDOMText** aTextNode)
-{
-  nsIHTMLContent* text = nsnull;
-  nsresult        rv = NS_NewTextNode(&text);
-
-  if (NS_OK == rv) {
-    rv = text->QueryInterface(kIDOMTextIID, (void**)aTextNode);
-    (*aTextNode)->AppendData(aData);
-  }
-
-  return rv;
-}
-
-
-NS_IMETHODIMP    
-nsHTMLDocument::CreateComment(const nsString& aData, nsIDOMComment** aReturn)
-{
-  nsIHTMLContent* comment = nsnull;
-  nsresult        rv = NS_NewCommentNode(&comment);
-
-  if (NS_OK == rv) {
-    rv = comment->QueryInterface(kIDOMCommentIID, (void**)aReturn);
-    (*aReturn)->AppendData(aData);
-  }
-
   return rv;
 }
 

@@ -1202,11 +1202,60 @@ nsGenericContainerElement::~nsGenericContainerElement()
 
 nsresult
 nsGenericContainerElement::CopyInnerTo(nsIContent* aSrcContent,
-                                       nsGenericContainerElement* aDst)
+                                       nsGenericContainerElement* aDst,
+                                       PRBool aDeep)
 {
-  // XXX copy attributes not yet impelemented
-  // XXX deep copy?
-  return NS_OK;
+  nsresult result = NS_OK;
+
+  if (nsnull != mAttributes) {
+    nsGenericAttribute* attr;
+    PRInt32 index;
+    PRInt32 count = mAttributes->Count();
+    for (index = 0; index < count; index++) {
+      attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
+      // XXX Not very efficient, since SetAttribute does a linear search
+      // through its attributes before setting each attribute.
+      result = aDst->SetAttribute(attr->mNameSpaceID, attr->mName,
+                                  attr->mValue, PR_FALSE);
+      if (NS_OK != result) {
+        return result;
+      }
+    }
+  }
+  
+  if (aDeep) {
+    PRInt32 index;
+    PRInt32 count = mChildren.Count();
+    for (index = 0; index < count; index++) {
+      nsIContent* child = (nsIContent*)mChildren.ElementAt(index);
+      if (nsnull != child) {
+        nsIDOMNode* node;
+        result = child->QueryInterface(kIDOMNodeIID, (void**)&node);
+        if (NS_OK == result) {
+          nsIDOMNode* newNode;
+          
+          result = node->CloneNode(aDeep, &newNode);
+          if (NS_OK == result) {
+            nsIContent* newContent;
+            
+            result = newNode->QueryInterface(kIContentIID, (void**)&newContent);
+            if (NS_OK == result) {
+              result = aDst->AppendChildTo(newContent, PR_FALSE);
+              NS_RELEASE(newContent);
+            }
+            NS_RELEASE(newNode);
+          }
+          NS_RELEASE(node);
+        }
+
+        if (NS_OK != result) {
+          return result;
+        }
+      }
+    }
+  }
+
+  return result;
 }
 
 nsresult

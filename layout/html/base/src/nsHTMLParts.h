@@ -223,12 +223,6 @@ NS_NewHTMLUListElement(nsIHTMLContent** aResult, nsIAtom* aTag);
 extern nsresult
 NS_NewHTMLWBRElement(nsIHTMLContent** aResult, nsIAtom* aTag);
 
-extern nsresult
-NS_NewTextNode(nsIHTMLContent** aResult);
-
-extern nsresult
-NS_NewCommentNode(nsIHTMLContent** aResult);
-
 /**
  * Create a new content object for the given tag.
  * Returns NS_ERROR_NOT_AVAILABLE for an unknown/unhandled tag.

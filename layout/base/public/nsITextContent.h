@@ -21,6 +21,7 @@
 #include "nslayout.h"
 class nsString;
 class nsTextFragment;
+class nsIContent;
 
 // IID for the nsITextContent interface
 #define NS_ITEXT_CONTENT_IID \
@@ -54,5 +55,13 @@ public:
                      PRInt32 aLength,
                      PRBool aNotify) = 0;
 };
+
+// XXX These belong elsewhere
+extern nsresult
+NS_NewTextNode(nsIContent** aResult);
+
+extern nsresult
+NS_NewCommentNode(nsIContent** aResult);
+
 
 #endif /* nsITextContent_h___ */

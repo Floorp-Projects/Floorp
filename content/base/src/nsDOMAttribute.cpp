@@ -21,10 +21,7 @@
 #include "nsGenericElement.h"
 #include "nsIContent.h"
 #include "nsIDOMScriptObjectFactory.h"
-// XXX Need to move text node and comment creation
-// out of HTML.
-#include "nsHTMLParts.h"
-#include "nsIHTMLContent.h"
+#include "nsITextContent.h"
 
 static NS_DEFINE_IID(kIDOMAttrIID, NS_IDOMATTR_IID);
 static NS_DEFINE_IID(kIDOMAttributePrivateIID, NS_IDOMATTRIBUTEPRIVATE_IID);
@@ -293,7 +290,7 @@ nsDOMAttribute::GetFirstChild(nsIDOMNode** aFirstChild)
   }
   if (0 < value.Length()) {
     if (nsnull == mChild) {      
-      nsIHTMLContent* content;
+      nsIContent* content;
 
       result = NS_NewTextNode(&content);
       if (NS_OK != result) {

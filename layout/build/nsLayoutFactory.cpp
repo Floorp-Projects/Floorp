@@ -22,6 +22,7 @@
 #include "nsLayoutCID.h"
 #include "nsIDocument.h"
 #include "nsIHTMLContent.h"
+#include "nsITextContent.h"
 #include "nsICollection.h"
 #include "nsIPresShell.h"
 #include "nsISelection.h"
@@ -230,7 +231,7 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
   }
   else if (mClassID.Equals(kTextNodeCID)) {
     // XXX ibid
-    if (NS_FAILED(res = NS_NewTextNode((nsIHTMLContent**) &inst)))
+    if (NS_FAILED(res = NS_NewTextNode((nsIContent**) &inst)))
       return res;
     refCounted = PR_TRUE;
   }

@@ -28,7 +28,9 @@ LIBRARY_NAME = raptorlayout_s
 DEFINES += -D_IMPL_NS_LAYOUT
 
 CPPSRCS =				\
+	nsCommentNode.cpp		\
 	nsGenericElement.cpp		\
+	nsGenericDOMDataNode.cpp	\
 	nsContentList.cpp		\
 	nsDocument.cpp			\
 	nsDocumentFragment.cpp		\
@@ -51,6 +53,7 @@ CPPSRCS =				\
 	nsRangeList.cpp			\
 	nsContentIterator.cpp		\
 	nsLayoutAtoms.cpp		\
+	nsTextNode.cpp			\
 	$(NULL)
 
 MODULE=layout
