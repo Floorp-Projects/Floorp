@@ -184,7 +184,7 @@ static nsHashtable* gCachedFFRESearches = nsnull;
 static nsHashtable* gSpecialCharSets = nsnull;
 static nsHashtable* gStretches = nsnull;
 static nsHashtable* gWeights = nsnull;
-nsISaveAsCharset* gFontSubConverter = nsnull;
+static nsISaveAsCharset* gFontSubConverter = nsnull;
 
 static nsFontNodeArrayXlib* gGlobalList = nsnull;
 
