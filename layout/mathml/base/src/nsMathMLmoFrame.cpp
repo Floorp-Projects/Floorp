@@ -543,11 +543,14 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
 
     // Account the spacing
     aDesiredStretchSize.width += nscoord( (aDesiredStretchSize.leftSpace + aDesiredStretchSize.rightSpace) * em );
+    mBoundingMetrics.width = aDesiredStretchSize.width;
+
     nscoord dx = nscoord( mLeftSpace * em );
     if (0 == dx) return NS_OK;
 
     // adjust the offsets
-    mReference.x = dx;
+    mBoundingMetrics.leftBearing += dx;
+    mBoundingMetrics.rightBearing += dx;
 
     nsRect rect;
     if (NS_MATHML_OPERATOR_IS_MUTABLE(mFlags)) {

@@ -189,36 +189,31 @@ nsMathMLmsubFrame::Place(nsIPresContext*      aPresContext,
   mBoundingMetrics.ascent = 
     PR_MAX(bmBase.ascent, bmSubScript.ascent - actualSubScriptShift);
   mBoundingMetrics.descent = 
-   PR_MAX(bmBase.descent, bmSubScript.descent + actualSubScriptShift);
+    PR_MAX(bmBase.descent, bmSubScript.descent + actualSubScriptShift);
   // add mScriptSpace between base and supscript
   mBoundingMetrics.width = bmBase.width + mScriptSpace + bmSubScript.width;
+  mBoundingMetrics.leftBearing = bmBase.leftBearing;
+  mBoundingMetrics.rightBearing = baseSize.width + mScriptSpace + bmSubScript.rightBearing;
 
-  // to be simplified
-  nscoord dyBase = mBoundingMetrics.ascent - bmBase.ascent;
-  nscoord dySubScript = mBoundingMetrics.ascent - bmSubScript.ascent + actualSubScriptShift;
-
-  nscoord baseTop = mBoundingMetrics.ascent - dyBase - bmBase.ascent + baseSize.ascent;
-  nscoord subScriptTop = mBoundingMetrics.ascent - dySubScript - bmSubScript.ascent + subScriptSize.ascent;
-
-  aDesiredSize.ascent = PR_MAX(baseTop, subScriptTop);
-  aDesiredSize.descent = PR_MAX(baseSize.height-baseTop, subScriptSize.height-subScriptTop);
-
+  // reflow metrics
+  aDesiredSize.ascent = 
+    PR_MAX(baseSize.ascent, subScriptSize.ascent - actualSubScriptShift);
+  aDesiredSize.descent = 
+    PR_MAX(baseSize.descent, subScriptSize.descent + actualSubScriptShift);
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
   aDesiredSize.width = baseSize.width + mScriptSpace + subScriptSize.width;
 
   mReference.x = 0;
   mReference.y = aDesiredSize.ascent - mBoundingMetrics.ascent;
-  mBoundingMetrics.leftBearing = bmBase.leftBearing;
-  mBoundingMetrics.rightBearing = baseSize.width + mScriptSpace + bmSubScript.rightBearing;
 
   if (aPlaceOrigin) {
     nscoord dx, dy;
     // now place the base ...
-    dx = 0; dy = aDesiredSize.ascent - baseTop;
+    dx = 0; dy = aDesiredSize.ascent - baseSize.ascent;
     FinishReflowChild (baseFrame, aPresContext, baseSize, dx, dy, 0);
     // ... and subscript
     dx = baseSize.width; 
-    dy = aDesiredSize.ascent - subScriptTop;
+    dy = aDesiredSize.ascent - (subScriptSize.ascent - actualSubScriptShift);
     FinishReflowChild (subScriptFrame, aPresContext, subScriptSize, dx, dy, 0);
   }
 
