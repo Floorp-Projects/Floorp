@@ -17,7 +17,7 @@ ac_help=
 ac_default_prefix=/usr/local
 # Any additions from configure.in:
 ac_help="$ac_help
-  --enable-random-options          Randomly add options to configure"
+  --enable-random-options Randomly add options to configure"
 ac_help="$ac_help
   --with-x                use the X Window System"
 ac_help="$ac_help
@@ -5290,7 +5290,7 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
-for ac_hdr in sys/byteorder.h compat.h stddef.h stdlib.h
+for ac_hdr in sys/byteorder.h compat.h
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
