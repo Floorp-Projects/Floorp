@@ -27,7 +27,7 @@ interface nsIFile : nsISupports
 {
 
     /**
-     *   Different path types that nsIFile can parse.
+     *   Path Types - Different path types that nsIFile can parse.
      *
      *   NATIVE_PATH is a **native** path.  For example, on windows 
      *   this would be "c:\\foo\\bar" and on the mac it would be 
@@ -42,96 +42,216 @@ interface nsIFile : nsISupports
      *   a nsIFile form a string that comes back from NSPR, use this call
      */
 
-    /**
-     *   Path Types
-     */
     const unsigned long NATIVE_PATH = 0;
     const unsigned long UNIX_PATH   = 1;
     const unsigned long NSPR_PATH   = 2;
 
     /**
      *   Create Types
+     *
+     *   NORMAL_FILE_TYPE - A normal file.  
+     *   DIRECTORY_TYPE   - A directory/folder.
      */
     const unsigned long NORMAL_FILE_TYPE = 0;
     const unsigned long DIRECTORY_TYPE   = 1;
-    const unsigned long SYMLINK_TYPE     = 2;
     
+     
     /**
-     *   Initialization routines.  These function shall be called to 
-     *   setup the nsIFile.  
-     */
-    void init([const] in string filePath, in unsigned long pathType);
-    
+      * initWithKey
+      *
+      * This function will initialize the nsIFile object to the
+      * location of a well known place.  The location is specified
+      * by a string which will be looked up in the registry.  If
+      * the string is not found, NS_ERROR_FILE_UNRECONGNIZED_PATH
+      * will be returned         
+      * 
+      *   @param fileKey
+      *          A string which represents a special system directory
+      *          or a directory which has been registered.
+      *
+      */
+       
+       void initWithKey( [const] in string fileKey);
+
 
     /**
-     *   Initialization routines.  These function shall be called to 
-     *   setup the nsIFile.  
-     */
-    void initFromFile(in nsIFile file);
-
+      * initWithFile
+      *
+      * This function will initialize the nsIFile object to the
+      * exact location of the passed nsIFile.             // what errors can this return?
+      * 
+      *   @param file
+      *          A nsIFile which this object will be initialize
+      *          with.
+      *
+      */
+       
+       void initWithFile(in nsIFile file);
 
     /**
-     *  Create() will create a new file, directory or symlink in the file system.  
-     *  Any nodes that have not been created or resolved, will be.
-     * 
-     *  type -       a create Type
-     *  attributes - unix style octal attributes
-     */
-    void create(in unsigned long type, in unsigned long attributes);
+      * initWithPath
+      *
+      * This function will initialize the nsIFile object.  Any
+      * internal state information will be reset.  Non-terminal
+      * nodes will be resolved. An error will be returned if a
+      * non-terminal is a file (NS_ERROR_FILE_INVALID_PATH)
+      * 
+      *
+      *  NOTE:  This function has a known bug on the macintosh and
+      *         other OSes which do not represent file locations 
+      *         as pathes.  If you do use this function, be very
+      *         aware of this problem as bugs.
+      *
+      *   @param pathType
+      *          A pathType defined above.  If the pathType is not
+      *          recongnized, NS_ERROR_FILE_UNKNOWN_TYPE will
+      *          be returned.
+      *
+      *   @param filePath       
+      *          A string which specifies a full file path to a 
+      *          location.  Relative paths will be treated as an
+      *          error (NS_ERROR_FILE_UNRECONGNIZED_PATH).
+      *
+      */
+      
+       void initWithPath(in unsigned long pathType, [const] in string filePath );
+
     
     /**
-     *  appendPath() will create concatenate a relative path to this nsIFile.  It
-     *  is used for constructing the nsIFile of a descendant.  If this object is 
-     *  already Created, it must be either a directory or symlink to a directory. 
-     *  appendPath() will do what nsString does, it will tag the |node| at the end
-     *  of what the nsIFile already has stuff in it.  It will also do
-     *  non-terminal symlink resolution.
+     *  appendPath
      *
-     *  pathType is only meaningful if |node| is a compound path (eg. "foo/bar/i/am/")
+     *  This function is used for constructing a descendat of the
+     *  current nsIFile.  Non-terminal nodes will be resolved. An 
+     *  error will be returned if a non-terminal is a file 
+     *  (NS_ERROR_FILE_INVALID_PATH).  
+     *
+     *  @param relativePath       
+     *         A unix style string which is intented to be a relative 
+     *         path of the nsIFile.  Starting and trailing '/' will 
+     *         be ignored.  If this path is not a unix style path, an 
+     *         error will be returned (NS_ERROR_FILE_UNRECONGNIZED_PATH).
      */
-    void appendPath([const] in string node, in unsigned long pathType);
+
+      void appendPath([const] in string relativePath);
 
     /**
-     *   Accessor to the file name (the leaf name not the full file path) of the file itself. 
-     *   Calling Set() on this will not rename the file on disk!  
+     *  create
+     *
+     *  This function will create a new file or directory in the 
+     *  file system. Any nodes that have not been created or 
+     *  resolved, will be.  If the file or directory already 
+     *  exists create() will return NS_ERROR_FILE_ALREADY_EXISTS.
+     * 
+     *   @param type
+     *          This specifies the type of file system object
+     *          to be made.  The only two types at this time
+     *          are file and directory which are defined above.
+     *          If the type is unrecongnized, we will return an
+     *          error (NS_ERROR_FILE_UNKNOWN_TYPE).
+     *
+     *   @param permissions
+     *          This unix style octal permissions.  This may
+     *          be ignored on systems that do not need to do
+     *          permissions.
      */
-    attribute string fileName;
+  
+      void create(in unsigned long type, in unsigned long permissions);
+
+
+    /**
+     *   Accessor to the file name (the leaf name not the full file path)
+     *   of the file itself. 
+     */
+    readonly attribute string fileName;
     
     /**
-     *  Accessor to the full file path.  The use of the Path is strongly discouraged 
-     *  The problem affects platforms (Macintosh) in which a path does not fully
-     *  specify a file, because two volumes can have the same name.  This is solved 
-     *  by holding a "private" native data.  This data is lost when you convert to  
-     *  a string.
+     *  getPath
+     *
+     *  Accessor to the full file path.  The use of the path is 
+     *  strongly discouraged.  Bugs will be writen up against
+     *  any use other than displaying a pathname to the user. 
+     *
+     *  The problem affects platforms in which a path does not 
+     *  fully specify a file, because two volumes can have the 
+     *  same name.  This is solved by holding a "private" native 
+     *  data.  This data is lost when you convert to a string.
+     *
+     *  @param type
+     *         This specifies the type of file path to be 
+     *         returned. The file types are defined above.
      */
-    string getPath(in unsigned long pathType);
+
+      string getPath(in unsigned long pathType);
     
   
     /**
-     *  This will copy this file (if created) to the specified 
-     *  newParentDir.  Permissions will try to be mantained.
-     *  If a newName is specified, the file will be renamed.
-     *  If the newParentDir is nsnull, copyTo() will simply  
-     *  rename this file.
+     *  copyTo
      *
-	 *  copyTo will resolve aliases/shortcuts in its this parameter 
-	 *  (the nsIFile instance being operated on).  It will resolve all
-     *  components in its newParentDir parameter (non-terminal and terminal). 
+     *  This will copy this file to the specified newParentDir.  
+     *  If a newName is specified, the file will be renamed.
+     *  If 'this' is not created we will return an error 
+     *  (NS_ERROR_FILE_TARGET_DOES_NOT_EXIST).
+     *
+	 *  copyTo will NOT resolve aliases/shortcuts during the copy.
+     *
+     *   @param newParentDir
+     *          This param is the destination directory. If the 
+     *          newParentDir is nsnull, copyTo() will simply  
+     *          rename the file. If the newParentDir is not 
+     *          null and does not exists, an error will be 
+     *          returned (NS_ERROR_FILE_DESTINATION_NOT_DIR)
+     *
+     *   @param newName
+     *          This param allows you to specify a new name
+     *          for the file to be copied.  This can be nsnull.
+     *
 	 */
-    void copyTo(in nsIFile newParentDir, [const] in string newName);
-    void copyToFollowingLinks(in nsIFile newParentDir, [const] in string newName);
+
+      void copyTo(in nsIFile newParentDir, [const] in string newName);
+     
+    /**
+     *  copyToFollowingLinks
+     *
+     *  This function is identical to copyTo except it, as
+     *  the name implies, follows symbolic links.
+     */
+
+      void copyToFollowingLinks(in nsIFile newParentDir, [const] in string newName);
     
     /**
-     *  This will move (copy then delete) this file (if created) 
-     *  to the specified newParentDir.  Permissions will try 
-     *  to be mantained.  If the MoveTo failes, this will not
-     *  be deleted.
+     *  moveTo
      *
+     *  This will move this file to the specified newParentDir.  
      *  If a newName is specified, the file will be renamed.
+     *  If 'this' is not created we will return an error 
+     *  (NS_ERROR_FILE_TARGET_DOES_NOT_EXIST).
      *
+	 *  moveTo will NOT resolve aliases/shortcuts during the copy.
+     *  moveTo will do the right thing and allow copies across
+     *  volumes.
+     *
+     *   @param newParentDir
+     *          This param is the destination directory. If the 
+     *          newParentDir is nsnull, moveTo() will simply  
+     *          rename the file. If the newParentDir is not 
+     *          null and does not exists, an error will be 
+     *          returned (NS_ERROR_FILE_DESTINATION_NOT_DIR)
+     *
+     *   @param newName
+     *          This param allows you to specify a new name
+     *          for the file to be moved.  This can be nsnull.
+     *
+	 */
+      void moveTo(in nsIFile newParentDir, [const] in string newName);
+
+    /**
+     *  moveToFollowingLinks
+     *
+     *  This function is identical to moveTo except it, as
+     *  the name implies, follows symbolic links.
      */
-    void moveTo(in nsIFile newParentDir, [const] in string newName);
-    void moveToFollowingLinks(in nsIFile newParentDir, [const] in string newName);
+      
+      void moveToFollowingLinks(in nsIFile newParentDir, [const] in string newName);
     
     /**
      *  This will try to execute this file.  It will not block for
@@ -147,11 +267,6 @@ interface nsIFile : nsISupports
      *  This will not resolve any symlinks.
      */
     void delete(in boolean recursive);
-
-    /**
-     *  This will resolve the terminal node of the nsIFile.
-     */
-    //void resolveSymlink(void);
 
     /**
      *  Attributes of nsIFile.
@@ -185,9 +300,25 @@ interface nsIFile : nsISupports
      *  Will determine if the inFile equals this.
      */
     boolean isEqual(in nsIFile inFile);
+    
+    /**
+     *  Will determine the file is a sibling of the parameter inFile.
+     */
+    boolean isContainedIn(in nsIFile inFile);
 };
 
 %{C++
 #define NS_FILE_PROGID "component://netscape/file"
 #define NS_FILE_CLASSNAME "File Specification"
+
+#define NS_ERROR_FILE_UNRECONGNIZED_PATH        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 1)
+#define NS_ERROR_FILE_UNRESOLVABLE_SYMLINK      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 2)
+#define NS_ERROR_FILE_EXECUTION_FAILED          NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 3)
+#define NS_ERROR_FILE_UNKNOWN_TYPE              NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 4)
+#define NS_ERROR_FILE_DESTINATION_NOT_DIR       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 5)
+#define NS_ERROR_FILE_TARGET_DOES_NOT_EXIST     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 6)
+#define NS_ERROR_FILE_COPY_OR_MOVE_FAILED       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 7)
+#define NS_ERROR_FILE_ALREADY_EXISTS            NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 8)
+#define NS_ERROR_FILE_INVALID_PATH              NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 9)
+#define NS_ERROR_FILE_INVALID_PATH              NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 9)
 %}
