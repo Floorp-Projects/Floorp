@@ -308,8 +308,8 @@ public:
   NS_IMETHOD SetStyleSheet(nsIHTMLStyleSheet* aSheet);
   // Strength is an out-of-band weighting, always 0 here
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
-  NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
-  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
+  NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
+  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
 
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
@@ -715,7 +715,7 @@ nsHTMLMappedAttributes::GetStrength(PRInt32& aStrength) const
 }
 
 NS_IMETHODIMP
-nsHTMLMappedAttributes::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+nsHTMLMappedAttributes::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   if (0 < mAttrCount) {
     if (mFontMapper) {
@@ -726,7 +726,7 @@ nsHTMLMappedAttributes::MapFontStyleInto(nsIStyleContext* aContext, nsIPresConte
 }
 
 NS_IMETHODIMP
-nsHTMLMappedAttributes::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+nsHTMLMappedAttributes::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   if (0 < mAttrCount) {
     NS_ASSERTION(mMapper || mFontMapper, "no mapping function");

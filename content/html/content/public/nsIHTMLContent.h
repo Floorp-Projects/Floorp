@@ -23,7 +23,7 @@
 class nsString;
 class nsIFrame;
 class nsIStyleRule;
-class nsIStyleContext;
+class nsIMutableStyleContext;
 class nsIPresContext;
 class nsXIFConverter;
 class nsIHTMLMappedAttributes;
@@ -35,7 +35,7 @@ class nsIURI;
   {0x89, 0x5c, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }
 
 typedef void (*nsMapAttributesFunc)(const nsIHTMLMappedAttributes* aAttributes, 
-                                    nsIStyleContext* aContext, 
+                                    nsIMutableStyleContext* aContext, 
                                     nsIPresContext* aPresContext);
 
 // Abstract interface for all html content

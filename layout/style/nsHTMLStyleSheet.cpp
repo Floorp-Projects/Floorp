@@ -36,6 +36,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
 #include "nsIStyleContext.h"
+#include "nsIMutableStyleContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresContext.h"
 #include "nsILinkHandler.h"
@@ -68,8 +69,8 @@ public:
   // Strength is an out-of-band weighting, always 0 here
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
-  NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
-  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
+  NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
+  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -82,7 +83,7 @@ public:
   HTMLDocumentColorRule(nsIHTMLStyleSheet* aSheet);
   virtual ~HTMLDocumentColorRule();
 
-  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
+  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
 
   nscolor mBackgroundColor;
   PRBool mForegroundSet;
@@ -132,13 +133,13 @@ HTMLColorRule::GetStrength(PRInt32& aStrength) const
 }
 
 NS_IMETHODIMP
-HTMLColorRule::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+HTMLColorRule::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLColorRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+HTMLColorRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   nsStyleColor* styleColor = (nsStyleColor*)(aContext->GetMutableStyleData(eStyleStruct_Color));
 
@@ -166,7 +167,7 @@ HTMLDocumentColorRule::~HTMLDocumentColorRule()
 }
 
 NS_IMETHODIMP
-HTMLDocumentColorRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+HTMLDocumentColorRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   nsStyleColor* styleColor = (nsStyleColor*)(aContext->GetMutableStyleData(eStyleStruct_Color));
 
@@ -199,9 +200,9 @@ public:
   // Strength is an out-of-band weighting, always 0 here
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
-  NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext,
+  NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext,
                               nsIPresContext* aPresContext);
-  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext,
+  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext,
                           nsIPresContext* aPresContext);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -252,13 +253,13 @@ TableBackgroundRule::GetStrength(PRInt32& aStrength) const
 }
 
 NS_IMETHODIMP
-TableBackgroundRule::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+TableBackgroundRule::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TableBackgroundRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+TableBackgroundRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   nsIStyleContext* parentContext = aContext->GetParent();
 

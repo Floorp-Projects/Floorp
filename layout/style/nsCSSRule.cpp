@@ -100,13 +100,13 @@ nsCSSRule::GetStrength(PRInt32& aStrength) const
 }
 
 NS_IMETHODIMP
-nsCSSRule::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+nsCSSRule::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCSSRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+nsCSSRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   return NS_OK;
 }

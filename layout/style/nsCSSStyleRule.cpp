@@ -25,6 +25,7 @@
 #include "nsIHTMLContentContainer.h"
 #include "nsIURL.h"
 #include "nsIStyleContext.h"
+#include "nsIMutableStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"
@@ -432,10 +433,11 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
                        nsIPresContext* aPresContext);
 
 static void MapDeclarationFontInto(nsICSSDeclaration* aDeclaration, 
-                                   nsIStyleContext* aContext, 
+                                   nsIMutableStyleContext* aContext, 
                                    nsIPresContext* aPresContext);
 static void MapDeclarationInto(nsICSSDeclaration* aDeclaration, 
-                               nsIStyleContext* aContext, nsIPresContext* aPresContext);
+                               nsIMutableStyleContext* aContext, 
+                               nsIPresContext* aPresContext);
 
 
 class CSSStyleRuleImpl;
@@ -454,8 +456,8 @@ public:
   // Strength is an out-of-band weighting, useful for mapping CSS ! important
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
-  NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
-  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
+  NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
+  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -516,14 +518,14 @@ CSSImportantRule::GetStrength(PRInt32& aStrength) const
 }
 
 NS_IMETHODIMP
-CSSImportantRule::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+CSSImportantRule::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   MapDeclarationFontInto(mDeclaration, aContext, aPresContext);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CSSImportantRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+CSSImportantRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   MapDeclarationInto(mDeclaration, aContext, aPresContext);
   return NS_OK;
@@ -716,8 +718,8 @@ public:
   NS_IMETHOD GetType(PRInt32& aType) const;
   NS_IMETHOD Clone(nsICSSRule*& aClone) const;
 
-  NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
-  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
+  NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
+  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -1215,14 +1217,14 @@ CSSStyleRuleImpl::Clone(nsICSSRule*& aClone) const
 
 
 NS_IMETHODIMP
-CSSStyleRuleImpl::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+CSSStyleRuleImpl::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   MapDeclarationFontInto(mDeclaration, aContext, aPresContext);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+CSSStyleRuleImpl::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   MapDeclarationInto(mDeclaration, aContext, aPresContext);
   return NS_OK;
@@ -1245,7 +1247,7 @@ nsString& Unquote(nsString& aString)
 
 static void 
 MapDeclarationFontInto(nsICSSDeclaration* aDeclaration, 
-                       nsIStyleContext* aContext, nsIPresContext* aPresContext)
+                       nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   if (nsnull != aDeclaration) {
     nsIStyleContext* parentContext = aContext->GetParent();
@@ -1404,7 +1406,7 @@ MapDeclarationFontInto(nsICSSDeclaration* aDeclaration,
 
 static void 
 MapDeclarationTextInto(nsICSSDeclaration* aDeclaration, 
-                       nsIStyleContext* aContext, nsIStyleContext* aParentContext,
+                       nsIMutableStyleContext* aContext, nsIStyleContext* aParentContext,
                        nsStyleFont* aFont, nsIPresContext* aPresContext)
 {
   const nsStyleFont* parentFont = aFont;
@@ -1499,7 +1501,7 @@ MapDeclarationTextInto(nsICSSDeclaration* aDeclaration,
 
 static void 
 MapDeclarationDisplayInto(nsICSSDeclaration* aDeclaration, 
-                          nsIStyleContext* aContext, nsIStyleContext* aParentContext,
+                          nsIMutableStyleContext* aContext, nsIStyleContext* aParentContext,
                           nsStyleFont* aFont, nsIPresContext* aPresContext)
 {
   nsCSSDisplay*  ourDisplay;
@@ -1631,7 +1633,7 @@ MapDeclarationDisplayInto(nsICSSDeclaration* aDeclaration,
 
 static void 
 MapDeclarationColorInto(nsICSSDeclaration* aDeclaration, 
-                        nsIStyleContext* aContext, nsIStyleContext* aParentContext,
+                        nsIMutableStyleContext* aContext, nsIStyleContext* aParentContext,
                         nsStyleFont* aFont, nsIPresContext* aPresContext)
 {
   nsCSSColor*  ourColor;
@@ -1780,7 +1782,7 @@ MapDeclarationColorInto(nsICSSDeclaration* aDeclaration,
 
 static void 
 MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration, 
-                         nsIStyleContext* aContext, nsIStyleContext* aParentContext,
+                         nsIMutableStyleContext* aContext, nsIStyleContext* aParentContext,
                          nsStyleFont* aFont, nsIPresContext* aPresContext)
 {
   nsCSSMargin*  ourMargin;
@@ -2034,7 +2036,7 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
 
 static void 
 MapDeclarationPositionInto(nsICSSDeclaration* aDeclaration, 
-                           nsIStyleContext* aContext, nsIStyleContext* aParentContext,
+                           nsIMutableStyleContext* aContext, nsIStyleContext* aParentContext,
                            nsStyleFont* aFont, nsIPresContext* aPresContext)
 {
   nsCSSPosition*  ourPosition;
@@ -2121,7 +2123,7 @@ MapDeclarationPositionInto(nsICSSDeclaration* aDeclaration,
 
 static void 
 MapDeclarationListInto(nsICSSDeclaration* aDeclaration, 
-                       nsIStyleContext* aContext, nsIStyleContext* aParentContext,
+                       nsIMutableStyleContext* aContext, nsIStyleContext* aParentContext,
                        nsStyleFont* /*aFont*/, nsIPresContext* aPresContext)
 {
   nsCSSList* ourList;
@@ -2169,7 +2171,7 @@ MapDeclarationListInto(nsICSSDeclaration* aDeclaration,
 
 static void 
 MapDeclarationTableInto(nsICSSDeclaration* aDeclaration, 
-                        nsIStyleContext* aContext, nsIStyleContext* aParentContext,
+                        nsIMutableStyleContext* aContext, nsIStyleContext* aParentContext,
                         nsStyleFont* aFont, nsIPresContext* aPresContext)
 {
   nsCSSTable* ourTable;
@@ -2238,7 +2240,7 @@ MapDeclarationTableInto(nsICSSDeclaration* aDeclaration,
 
 static void 
 MapDeclarationContentInto(nsICSSDeclaration* aDeclaration, 
-                          nsIStyleContext* aContext, nsIStyleContext* aParentContext,
+                          nsIMutableStyleContext* aContext, nsIStyleContext* aParentContext,
                           nsStyleFont* aFont, nsIPresContext* aPresContext)
 {
   nsCSSContent* ourContent;
@@ -2445,7 +2447,7 @@ MapDeclarationContentInto(nsICSSDeclaration* aDeclaration,
 
 static void 
 MapDeclarationUIInto(nsICSSDeclaration* aDeclaration, 
-                     nsIStyleContext* aContext, nsIStyleContext* aParentContext,
+                     nsIMutableStyleContext* aContext, nsIStyleContext* aParentContext,
                      nsStyleFont* /*aFont*/, nsIPresContext* aPresContext)
 {
   nsCSSUserInterface*  ourUI;
@@ -2539,7 +2541,7 @@ MapDeclarationUIInto(nsICSSDeclaration* aDeclaration,
 }
 
 void MapDeclarationInto(nsICSSDeclaration* aDeclaration, 
-                        nsIStyleContext* aContext, nsIPresContext* aPresContext)
+                        nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   if (nsnull != aDeclaration) {
     nsIStyleContext* parentContext = aContext->GetParent();

@@ -45,6 +45,7 @@ EXPORTS =				\
 	nsISpaceManager.h		\
 	nsIStyledContent.h		\
 	nsIStyleContext.h		\
+	nsIMutableStyleContext.h		\
 	nsIStyleFrameConstruction.h	\
 	nsIStyleRule.h			\
 	nsIStyleSet.h			\

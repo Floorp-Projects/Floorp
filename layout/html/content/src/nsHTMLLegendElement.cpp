@@ -25,6 +25,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsIStyleContext.h"
+#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIForm.h"
@@ -193,7 +194,7 @@ nsHTMLLegendElement::AttributeToString(nsIAtom* aAttribute,
 
 static void
 MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIStyleContext* aContext,
+                  nsIMutableStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);

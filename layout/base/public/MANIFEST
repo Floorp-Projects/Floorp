@@ -36,6 +36,7 @@ nsStyleStruct.h
 nsStyleConsts.h
 nsIStyledContent.h
 nsIStyleContext.h
+nsIMutableStyleContext.h
 nsIStyleRule.h
 nsIStyleSet.h
 nsIStyleSheet.h
