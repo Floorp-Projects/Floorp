@@ -139,6 +139,10 @@ public:
                             nsEventStatus* aEventStatus);
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
+
+  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
+  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
+
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
@@ -513,73 +517,13 @@ nsHTMLTextAreaElement::SetValueChanged(PRBool aValueChanged)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::GetDefaultValue(nsAString& aDefaultValue)
 {
-  nsresult rv;
-  PRInt32 nChildren, i;
-
-  nsAutoString defVal;
-
-  ChildCount(nChildren);
-  for (i = 0; i < nChildren; i++) {
-    nsCOMPtr<nsIContent> child;
-    nsCOMPtr<nsIDOMText> textNode;
-
-    rv = ChildAt(i, *getter_AddRefs(child));
-    NS_ENSURE_SUCCESS(rv, rv);
-    textNode = do_QueryInterface(child);
-    if(textNode) {
-      nsAutoString tmp;
-      textNode->GetData(tmp);
-      defVal.Append(tmp);
-    }
-  }
-
-  aDefaultValue.Assign(defVal);
-  
-  return NS_OK;
+  return GetContentsAsText(aDefaultValue);
 }  
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetDefaultValue(const nsAString& aDefaultValue)
 {
-  nsresult rv;
-  PRInt32 nChildren, i;
-  PRBool firstChildUsed = PR_FALSE;
-
-  ChildCount(nChildren);
-  // If a child exist we try to reuse it
-  if (nChildren > 0) {
-    nsCOMPtr<nsIContent> child;
-    nsCOMPtr<nsIDOMText> textNode;
-
-    rv = ChildAt(0, *getter_AddRefs(child));
-    NS_ENSURE_SUCCESS(rv, rv);
-    textNode = do_QueryInterface(child);
-    if(textNode) {
-      rv = textNode->SetData(aDefaultValue);
-      NS_ENSURE_SUCCESS(rv, rv);
-      firstChildUsed = PR_TRUE;
-    }
-  }
-  
-  PRInt32 lastChild = firstChildUsed ? 1 : 0;
-  for (i = nChildren-1; i >= lastChild; i--) {
-    RemoveChildAt(i, PR_TRUE);
-  }
-  
-  if (!firstChildUsed) {
-    nsCOMPtr<nsIContent> textContent;
-    rv = NS_NewTextNode(getter_AddRefs(textContent));
-    NS_ENSURE_SUCCESS(rv, rv);
-      
-    nsCOMPtr<nsIDOMText> textNode;
-    textNode = do_QueryInterface(textContent);
-    rv = textNode->SetData(aDefaultValue);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    AppendChildTo(textContent, PR_TRUE, PR_TRUE);
-  }
-  
-  return NS_OK;
+  return ReplaceContentsWithText(aDefaultValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -831,6 +775,19 @@ nsHTMLTextAreaElement::GetType(PRInt32* aType)
     return NS_FORM_NOTOK;
   }
 }
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::GetInnerHTML(nsAString& aInnerHTML)
+{
+  return GetContentsAsText(aInnerHTML);
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::SetInnerHTML(const nsAString& aInnerHTML)
+{
+  return ReplaceContentsWithText(aInnerHTML, PR_TRUE);
+}
+
 
 #ifdef DEBUG
 NS_IMETHODIMP

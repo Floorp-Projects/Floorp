@@ -91,6 +91,9 @@ public:
   NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
                            PRBool aDeepSetDocument);
 
+  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
+  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
+
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
@@ -253,65 +256,13 @@ nsHTMLScriptElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLScriptElement::GetText(nsAString& aValue)
 {
-  PRInt32 i, count = 0;
-  nsresult rv = NS_OK;
-
-  aValue.Truncate();
-
-  ChildCount(count);
-
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsIContent> child;
-
-    rv = ChildAt(i, *getter_AddRefs(child));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(child));
-
-    if (node) {
-      nsAutoString tmp;
-      node->GetNodeValue(tmp);
-
-      aValue.Append(tmp);
-    }
-  }
-
-  return NS_OK;
+  return GetContentsAsText(aValue);
 }
 
 NS_IMETHODIMP
 nsHTMLScriptElement::SetText(const nsAString& aValue)
 {
-  nsCOMPtr<nsIContent> content;
-  PRInt32 i, count = 0;
-  nsresult rv = NS_OK;
-
-  ChildCount(count);
-
-  if (count) {
-    for (i = count-1; i > 1; i--) {
-      RemoveChildAt(i, PR_FALSE);
-    }
-
-    rv = ChildAt(0, *getter_AddRefs(content));
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    rv = NS_NewTextNode(getter_AddRefs(content));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = InsertChildAt(content, 0, PR_FALSE, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (content) {
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
-
-    if (node) {
-      rv = node->SetNodeValue(aValue);
-    }
-  }
-
-  return rv;
+  return ReplaceContentsWithText(aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -350,6 +301,18 @@ NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Charset, charset)
 NS_IMPL_BOOL_ATTR(nsHTMLScriptElement, Defer, defer)
 NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Type, type)
+
+NS_IMETHODIMP
+nsHTMLScriptElement::GetInnerHTML(nsAString& aInnerHTML)
+{
+  return GetContentsAsText(aInnerHTML);
+}
+
+NS_IMETHODIMP
+nsHTMLScriptElement::SetInnerHTML(const nsAString& aInnerHTML)
+{
+  return ReplaceContentsWithText(aInnerHTML, PR_TRUE);
+}
 
 
 #ifdef DEBUG
