@@ -59,23 +59,20 @@ interface nsIMsgMailNewsUrl : nsIURL {
 	void RegisterListener (in nsIUrlListener aUrlListener);
 	void UnRegisterListener (in nsIUrlListener aUrlListener);
 
-	// Eventually these will be removed and replaced with calls to nsIMsgStatusFeedback
-	void SetErrorMessage (in string errorMessage);
-	void GetErrorMessage (out string errorMessage);
+	// Eventually this will be removed and replaced with calls to nsIMsgStatusFeedback
+	attribute string errorMessage;
 
 	// if you really want to know what the current state of the url is (running or not
 	// running) you should look into becoming a urlListener...
 	void SetUrlState(in boolean runningUrl, in nsresult aStatusCode);
 	void GetUrlState(out boolean runningUrl);
 
-	void GetServer(out nsIMsgIncomingServer aIncomingServer);
+	readonly attribute nsIMsgIncomingServer server;
 
 	// the ownership model for msg feedback
-	void SetStatusFeedback(in nsIMsgStatusFeedback aMsgFeedback);
-	void GetStatusFeedback(out nsIMsgStatusFeedback aMsgFeedback); 
+	attribute nsIMsgStatusFeedback statusFeedback;
 
-	void SetMsgWindow(in nsIMsgWindow aMsgWindow);
-	void GetMsgWindow(out nsIMsgWindow aMsgWindow);
+	attribute nsIMsgWindow msgWindow;
 
 	// the load group is computed from the msgWindow
 	readonly attribute nsILoadGroup loadGroup;
@@ -84,14 +81,14 @@ interface nsIMsgMailNewsUrl : nsIURL {
 	attribute nsIMsgSearchSession searchSession;
 	attribute boolean updatingFolder;
 	attribute boolean addToMemoryCache; 
-  attribute boolean msgIsInLocalCache;
-  attribute boolean suppressErrorMsgs; // used to avoid displaying biff error messages
+	attribute boolean msgIsInLocalCache;
+	attribute boolean suppressErrorMsgs; // used to avoid displaying biff error messages
 
-  attribute nsICacheEntryDescriptor memCacheEntry;
+	attribute nsICacheEntryDescriptor memCacheEntry;
 
 	const unsigned long eCopy     = 0;
 	const unsigned long eMove     = 1;
-	const unsigned long eDisplay     = 2;
+	const unsigned long eDisplay  = 2;
 	boolean IsUrlType(in unsigned long type);
 };
 
