@@ -875,6 +875,10 @@ nsFtpConnectionThread::R_user() {
     } else if (mResponseCode/100 == 2) {
         // no password required, we're already logged in
         return FTP_S_SYST;
+    } else if (mResponseCode/100 == 5) {
+        // problem logging in. typically this means the server
+        // has reached it's user limit.
+        return FTP_ERROR;
     } else {
         // LOGIN FAILED
         if (mAnonymous) {
@@ -1140,12 +1144,7 @@ nsFtpConnectionThread::S_cwd() {
     nsresult rv = NS_OK;
     nsXPIDLCString path;
     PRUint32 bytes;
-    nsCOMPtr<nsIURL> url = do_QueryInterface(mURL, &rv);
-    if (NS_FAILED(rv)) {
-        rv = mURL->GetPath(getter_Copies(path));
-    } else {
-        rv = url->GetDirectory(getter_Copies(path));
-    }
+    rv = mURL->GetPath(getter_Copies(path));
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString cwdStr("CWD ");
