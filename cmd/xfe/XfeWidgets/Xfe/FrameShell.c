@@ -33,7 +33,9 @@
 
 #define BYPASS_SHELL_NAME "SharedBypassShell"
 
+#ifndef __hpux
 #define EDITRES 1
+#endif
 
 #ifdef EDITRES
 #include <X11/Xmu/Editres.h>
