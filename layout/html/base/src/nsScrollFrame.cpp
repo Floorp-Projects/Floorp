@@ -39,121 +39,6 @@ static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
 //----------------------------------------------------------------------
 
-class nsScrollViewFrame : public nsHTMLContainerFrame {
-public:
-  nsScrollViewFrame(nsIContent* aContent, nsIFrame* aParent);
-
-  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
-  
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-
-  NS_IMETHOD  ListTag(FILE* out = stdout) const;
-
-protected:
-  virtual PRIntn GetSkipSides() const;
-};
-
-nsScrollViewFrame::nsScrollViewFrame(nsIContent* aContent, nsIFrame* aParent)
-  : nsHTMLContainerFrame(aContent, aParent)
-{
-}
-
-NS_IMETHODIMP
-nsScrollViewFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
-{
-
-  // Unless it's already a body frame, child frames that are containers
-  // need to be wrapped in a body frame.
-  // XXX Check for it already being a body frame...
-  nsIFrame* wrapperFrame;
-  if (CreateWrapperFrame(aPresContext, aChildList, wrapperFrame)) {
-    mFirstChild = wrapperFrame;
-  } else {
-    mFirstChild = aChildList;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsScrollViewFrame::Reflow(nsIPresContext&          aPresContext,
-                          nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
-                          nsReflowStatus&          aStatus)
-{
-  NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
-                     ("enter nsScrollViewFrame::Reflow: maxSize=%d,%d",
-                      aReflowState.maxSize.width,
-                      aReflowState.maxSize.height));
-
-  // Scroll frame handles the border, and we handle the padding and background
-  const nsStyleSpacing* spacing = (const nsStyleSpacing*)
-    mStyleContext->GetStyleData(eStyleStruct_Spacing);
-  nsMargin padding;
-  spacing->CalcPaddingFor(this, padding);
-
-  // Allow the child frame to be as wide as our max width (minus scrollbar
-  // width and padding), and as high as it wants to be.
-  nsSize  kidMaxSize(aReflowState.maxSize.width, NS_UNCONSTRAINEDSIZE);
-
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.maxSize.width) {
-    nsIDeviceContext* dc = aPresContext.GetDeviceContext();
-    float             sbWidth, sbHeight;
-  
-    dc->GetScrollBarDimensions(sbWidth, sbHeight);
-    kidMaxSize.width -= NSToCoordRound(sbWidth) + padding.left + padding.right;
-    NS_RELEASE(dc);
-  }
-  
-  // Reflow the child
-  nsHTMLReflowMetrics kidMetrics(aDesiredSize.maxElementSize);
-  nsHTMLReflowState   kidReflowState(aPresContext, mFirstChild, aReflowState, kidMaxSize);
-
-  ReflowChild(mFirstChild, aPresContext, kidMetrics, kidReflowState, aStatus);
-  NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-  
-  // Place and size the child
-  nsRect  rect(padding.left, padding.top, kidMetrics.width, kidMetrics.height);
-  mFirstChild->SetRect(rect);
-
-  // Determine our size
-  aDesiredSize.width = kidMetrics.width + padding.left + padding.right;
-  aDesiredSize.height = kidMetrics.height + padding.top + padding.bottom;
-
-  NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
-    ("exit nsScrollViewFrame::Reflow: status=%d width=%d height=%d",
-     aStatus, aDesiredSize.width, aDesiredSize.height));
-  return NS_OK;
-}
-
-PRIntn
-nsScrollViewFrame::GetSkipSides() const
-{
-  // Scroll frame handles the border...
-  return 0xF;
-}
-
-NS_IMETHODIMP
-nsScrollViewFrame::ListTag(FILE* out) const
-{
-  fputs("*scrollviewframe<", out);
-  nsIAtom* atom;
-  mContent->GetTag(atom);
-  if (nsnull != atom) {
-    nsAutoString tmp;
-    atom->ToString(tmp);
-    fputs(tmp, out);
-    NS_RELEASE(atom);
-  }
-  fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
 /**
  * The scroll frame creates and manages the scrolling view. It creates
  * a nsScrollViewFrame which handles padding and rendering of the
@@ -267,7 +152,6 @@ nsScrollFrame::CreateScrollingView()
   if (NS_OK == rv) {
     // Initialize the scrolling view
     // XXX Check for opacity...
-    //view->Init(viewManager, mRect, parentView, &kWidgetCID, nsnull, nsnull);
     view->Init(viewManager, mRect, parentView, nsnull, nsnull, nsnull);
   
     // Insert the view into the view hierarchy
@@ -379,8 +263,20 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Reflow the child and get its desired size. Let it be as high as it
   // wants
+  nsSize  kidReflowSize(kidMaxSize.width, NS_UNCONSTRAINEDSIZE);
+  
+  // Subtract for the scrollbar width
+  if (NS_UNCONSTRAINEDSIZE != kidReflowSize.width) {
+    nsIDeviceContext* dc = aPresContext.GetDeviceContext();
+    float             sbWidth, sbHeight;
+  
+    dc->GetScrollBarDimensions(sbWidth, sbHeight);
+    kidReflowSize.width -= NSToCoordRound(sbWidth);
+    NS_RELEASE(dc);
+  }
+
   nsHTMLReflowState  kidReflowState(aPresContext, mFirstChild, aReflowState,
-                                    nsSize(kidMaxSize.width, NS_UNCONSTRAINEDSIZE));
+                                    kidReflowSize);
 
   // XXX Don't use aDesiredSize...
   ReflowChild(mFirstChild, aPresContext, aDesiredSize, kidReflowState, aStatus);
