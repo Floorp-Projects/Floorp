@@ -2953,6 +2953,7 @@ secuCommandFlag certutil_options[] =
 	}
     }
 
+    /* -A -E or -S    Add the cert to the DB */
     if (certutil.commands[cmd_CreateAndAddCert].activated ||
          certutil.commands[cmd_AddCert].activated ||
 	 certutil.commands[cmd_AddEmailCert].activated) {
