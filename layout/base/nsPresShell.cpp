@@ -73,6 +73,7 @@
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
+#include "nsIGenericTransferable.h"
 #include "nsIDataFlavor.h"
 #include "nsIFormatConverter.h"
 
@@ -80,8 +81,8 @@
 static NS_DEFINE_IID(kIClipboardIID,       NS_ICLIPBOARD_IID);
 static NS_DEFINE_CID(kCClipboardCID,       NS_CLIPBOARD_CID);
 
-static NS_DEFINE_IID(kITransferableIID,    NS_ITRANSFERABLE_IID);
-static NS_DEFINE_CID(kCTransferableCID,    NS_TRANSFERABLE_CID);
+static NS_DEFINE_IID(kIGenericTransferableIID,  NS_IGENERICTRANSFERABLE_IID);
+static NS_DEFINE_CID(kCGenericTransferableCID,  NS_GENERICTRANSFERABLE_CID);
 static NS_DEFINE_IID(kIDataFlavorIID,      NS_IDATAFLAVOR_IID);
 static NS_DEFINE_IID(kCDataFlavorCID,      NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kCXIFConverterCID,    NS_XIFFORMATCONVERTER_CID);
@@ -1578,9 +1579,9 @@ PresShell::DoCopy()
         flavor->Init(kXIFMime, "XIF");
 
         // Create a transferable for putting data on the Clipboard
-        nsITransferable * trans;
-        rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                                kITransferableIID, (void**) &trans);
+        nsIGenericTransferable * genericTrans;
+        rv = nsComponentManager::CreateInstance(kCGenericTransferableCID, nsnull, 
+                                                kIGenericTransferableIID, (void**) &genericTrans);
         if (NS_OK == rv) {
           // The data on the clipboard will be in "XIF" format
           // so give the clipboard transferable a "XIFConverter" for 
@@ -1591,20 +1592,22 @@ PresShell::DoCopy()
           if (NS_OK == rv) {
             // Add the XIF DataFlavor to the transferable
             // this tells the transferable that it can handle receiving the XIF format
-            trans->AddDataFlavor(flavor);
+            genericTrans->AddDataFlavor(flavor);
 
             // Add the converter for going from XIF to other formats
-            trans->SetConverter(xifConverter);
+            genericTrans->SetConverter(xifConverter);
 
             // Now add the XIF data to the transferable
-            trans->SetTransferData(flavor, buffer.ToNewCString(), buffer.Length());
+            genericTrans->SetTransferData(flavor, buffer.ToNewCString(), buffer.Length());
 
             // put the transferable on the clipboard
-            clipboard->SetData(trans, nsnull);
-
+            nsCOMPtr<nsITransferable> trans = do_QueryInterface(genericTrans);
+            if (trans) {
+              clipboard->SetData(trans, nsnull);
+            }
             NS_IF_RELEASE(xifConverter);
           }
-          NS_IF_RELEASE(trans);
+          NS_IF_RELEASE(genericTrans);
         }
         NS_IF_RELEASE(flavor);
       }
@@ -2070,7 +2073,19 @@ PresShell::HandleEvent(nsIView         *aView,
       mSelection->EnableFrameNotification(PR_TRUE); //prevents secondary reset selection called since
       //we are a listener now.
     }
+  if (aEvent->message >= 1400) {
+    int x  = 0;
+  }
     frame->GetFrameForPoint(aEvent->point, &mCurrentEventFrame);
+  if (aEvent->message >= 1400) {
+    int x  = 0;
+    if (aEvent->message >= NS_DRAGDROP_ENTER) {
+      int y = 0;
+    }
+    if (aEvent->message == NS_DRAGDROP_OVER) {
+      int y = 0;
+    }
+  }
     if (nsnull != mCurrentEventFrame) {
       //Once we have the targetFrame, handle the event in this order
       nsIEventStateManager *manager;

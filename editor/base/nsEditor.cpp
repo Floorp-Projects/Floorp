@@ -79,6 +79,7 @@
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
+#include "nsIGenericTransferable.h"
 #include "nsIDataFlavor.h"
 #include "nsIFormatConverter.h"
 
@@ -86,8 +87,8 @@
 static NS_DEFINE_IID(kIClipboardIID,     NS_ICLIPBOARD_IID);
 static NS_DEFINE_CID(kCClipboardCID,     NS_CLIPBOARD_CID);
 
-static NS_DEFINE_IID(kITransferableIID,  NS_ITRANSFERABLE_IID);
-static NS_DEFINE_CID(kCTransferableCID,  NS_TRANSFERABLE_CID);
+static NS_DEFINE_CID(kIGenericTransferableIID,  NS_IGENERICTRANSFERABLE_IID);
+static NS_DEFINE_CID(kCGenericTransferableCID,  NS_GENERICTRANSFERABLE_CID);
 static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
 static NS_DEFINE_IID(kCDataFlavorCID,    NS_DATAFLAVOR_CID);
 
@@ -886,34 +887,36 @@ NS_IMETHODIMP nsEditor::Paste()
   nsresult rv = nsServiceManager::GetService(kCClipboardCID,
                                              kIClipboardIID,
                                              (nsISupports **)&clipboard);
-  nsITransferable *trans = 0;
-  rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, kITransferableIID, (void**) &trans);
+  nsIGenericTransferable *genericTrans = 0;
+  rv = nsComponentManager::CreateInstance(kCGenericTransferableCID, nsnull, 
+                                          kIGenericTransferableIID, (void**) &genericTrans);
+  if (NS_OK == rv) {
+    nsCOMPtr<nsITransferable> trans = do_QueryInterface(genericTrans);
+    if (trans) {
+      nsIDataFlavor *flavor = 0;
+      rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) &flavor);
+      if (NS_OK == rv) {
+        flavor->Init(kTextMime, "Text");
+        genericTrans->AddDataFlavor(flavor);
 
-  //nsIFormatConverter * xifConverter;
-  //rv = nsComponentManager::CreateInstance(kCXIFFormatConverterCID, nsnull, kIFormatConverterIID, (void**) &xifConverter);
+        clipboard->GetData(trans);
 
-  //trans->SetConverter(xifConverter);
+        char *str = 0;
+        PRUint32 len;
+        trans->GetTransferData(flavor, (void **)&str, &len);
 
-  nsIDataFlavor *flavor = 0;
-  rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) &flavor);
-  flavor->Init(kTextMime, "Text");
-  trans->AddDataFlavor(flavor);
+        if (str) {
+          if (str[len-1] == 0) {
+            len--;
+          }
+          stuffToPaste.SetString(str, len);
+        }
 
-  clipboard->GetData(trans);
-
-  char *str = 0;
-  PRUint32 len;
-  trans->GetTransferData(flavor, (void **)&str, &len);
-
-  if (str) {
-    if (str[len-1] == 0) {
-      len--;
+        NS_IF_RELEASE(flavor);
+      }
     }
-    stuffToPaste.SetString(str, len);
+    NS_IF_RELEASE(genericTrans);
   }
-
-  NS_IF_RELEASE(flavor);
-  NS_IF_RELEASE(trans);
   NS_IF_RELEASE(clipboard);
 
 
