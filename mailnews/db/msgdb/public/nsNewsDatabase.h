@@ -58,7 +58,7 @@ public:
 
   // for nsINewsDatabase
   NS_IMETHOD                GetUnreadSet(nsMsgKeySet **pSet);
-  NS_IMETHOD                SetUnreadSet(char * setStr);
+  NS_IMETHOD                SetUnreadSet(const char * setStr);
   
   virtual nsresult		ExpireUpTo(nsMsgKey expireKey);
   virtual nsresult		ExpireRange(nsMsgKey startRange, nsMsgKey endRange);

@@ -383,7 +383,7 @@ NS_IMETHODIMP nsNewsDatabase::GetUnreadSet(nsMsgKeySet **pSet)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsNewsDatabase::SetUnreadSet(char * setStr)
+NS_IMETHODIMP nsNewsDatabase::SetUnreadSet(const char * setStr)
 {
     NS_ASSERTION(setStr, "no setStr!");
     if (!setStr) return NS_ERROR_NULL_POINTER;

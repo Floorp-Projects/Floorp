@@ -446,7 +446,7 @@ NS_IMETHODIMP	nsDBFolderInfo::SetNumNewMessages(PRInt32 numNewMessages)
 NS_IMETHODIMP	nsDBFolderInfo::GetNumMessages(PRInt32 *result) 
 {
 	*result = m_numMessages;
-	return NS_OK;;
+	return NS_OK;
 }
 
 NS_IMETHODIMP	nsDBFolderInfo::SetNumMessages(PRInt32 numMessages) 

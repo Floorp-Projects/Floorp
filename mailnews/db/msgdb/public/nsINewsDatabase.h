@@ -31,7 +31,7 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_INEWSDATABASE_IID; return iid; }
 
   NS_IMETHOD GetUnreadSet(nsMsgKeySet **pSet) = 0;
-  NS_IMETHOD SetUnreadSet(char * setStr) = 0;    
+  NS_IMETHOD SetUnreadSet(const char * setStr) = 0;    
 };
 
 #endif // nsINewsDatabase_h__

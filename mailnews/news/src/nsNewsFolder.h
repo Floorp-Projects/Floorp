@@ -123,6 +123,10 @@ protected:
 	nsISupportsArray *mMessages;
 	char      *mOptionLines;
 	char      *mHostname;
+
+	// cache this until we open the db.
+	nsCString	m_unreadSet;
+
 	nsCOMPtr<nsIFileSpec> mNewsrcFilePath; 
 };
 

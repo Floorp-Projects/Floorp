@@ -310,6 +310,9 @@ nsMsgNewsFolder::GetSubFolders(nsIEnumerator* *result)
 	if (NS_FAILED(rv)) return rv;
 	
     rv = CreateSubFolders(path);
+
+	// force ourselves to get initialized from cache
+    UpdateSummaryTotals(PR_FALSE); 
     if (NS_FAILED(rv)) return rv;
 
     mInitialized = PR_TRUE;      // XXX do this on failure too?
@@ -350,23 +353,29 @@ nsresult nsMsgNewsFolder::GetDatabase()
 		{
 			folderOpen = newsDBFactory->Open(pathSpec, PR_TRUE, PR_FALSE, getter_AddRefs(mDatabase));
 #ifdef DEBUG_NEWS
-      if (NS_SUCCEEDED(folderOpen)) {
-        printf ("newsDBFactory->Open() succeeded\n");
-      }
-      else {
-        printf ("newsDBFactory->Open() failed\n");
-        return rv;
-      }
+        if (NS_SUCCEEDED(folderOpen)) {
+          printf ("newsDBFactory->Open() succeeded\n");
+		}
+        else {
+          printf ("newsDBFactory->Open() failed\n");
+          return rv;
+		}
 #endif
 		}
 
 		if (mDatabase) {
 			rv = mDatabase->AddListener(this);
-      if (NS_FAILED(rv)) return rv;
-       
-      rv = UpdateSummaryTotals(PR_TRUE);
-      if (NS_FAILED(rv)) return rv;
+		    nsresult rv;
+		    nsCOMPtr<nsINewsDatabase> db(do_QueryInterface(mDatabase, &rv));
+		    if (NS_FAILED(rv))
+				return rv;        
+
+		    rv = db->SetUnreadSet(m_unreadSet.GetBuffer());
 		}
+        if (NS_FAILED(rv)) return rv;
+       
+        rv = UpdateSummaryTotals(PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
 	}
 	return NS_OK;
 }
@@ -375,6 +384,7 @@ nsresult nsMsgNewsFolder::GetDatabase()
 NS_IMETHODIMP
 nsMsgNewsFolder::UpdateFolder()
 {
+  GetDatabase();	// want this cached...
   return GetNewMessages();
 }
 
@@ -1248,16 +1258,7 @@ NS_IMETHODIMP nsMsgNewsFolder::SetUnreadSetStr(char * aUnreadSetStr)
     
   if (!aUnreadSetStr) return NS_ERROR_NULL_POINTER;
 
-  rv = GetDatabase();
-  if (NS_FAILED(rv)) return rv;
+  m_unreadSet = aUnreadSetStr;
 
-  NS_ASSERTION(mDatabase, "no database!");
-  if (!mDatabase) return NS_ERROR_FAILURE;
-  
-  nsCOMPtr<nsINewsDatabase> db(do_QueryInterface(mDatabase, &rv));
-  if (NS_FAILED(rv))
-	return rv;        
-
-  rv = db->SetUnreadSet(aUnreadSetStr);
-  return rv;
+  return NS_OK;
 }
