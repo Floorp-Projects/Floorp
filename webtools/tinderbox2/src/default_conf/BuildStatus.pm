@@ -1,8 +1,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 
-# $Revision: 1.8 $ 
-# $Date: 2001/10/09 15:38:27 $ 
+# $Revision: 1.9 $ 
+# $Date: 2001/12/14 20:19:10 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
@@ -94,7 +94,7 @@ package BuildStatus;
                             # You may want this to be 'aqua' if you
                             # need to distinguish from 'building'
 
-                            'html_color'=>  'yellow',
+                            'html_color'=>  'white',
                             'hdml_char'=> '.',
                             'handler'=> \&main::null,
                             'description'=>  'Build in progress - status unavailible',
