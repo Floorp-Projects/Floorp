@@ -465,6 +465,9 @@ struct PLEvent {
     PLDestroyEventProc	destructor;
     void*				owner;
     void*				synchronousResult;
+#ifdef PL_POST_TIMINGS
+    PRIntervalTime      postTime;
+#endif
     /* other fields follow... */
 };
 
