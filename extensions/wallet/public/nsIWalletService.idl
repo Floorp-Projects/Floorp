@@ -37,7 +37,7 @@
 %}
 
 interface nsIPresShell;
-
+native nsAutoString(nsAutoString);
 [ref] native nsAutoStringRef(nsAutoString);
 
 /**
@@ -48,15 +48,11 @@ interface nsIPresShell;
 [scriptable, uuid(738CFD51-ABCF-11d2-AB4B-0080C787AD96)]
 interface nsIWalletService : nsISupports {
   [noscript]void WALLET_PreEdit(in nsAutoStringRef walletList);
-%{ C++
-  void WALLET_PostEdit(nsAutoString walletList);
-%}
+  [noscript]void WALLET_PostEdit(in nsAutoString walletList);
   void WALLET_ChangePassword();
   void WALLET_RequestToCapture(in nsIPresShell shell);
   void WALLET_Prefill(in nsIPresShell shell, in boolean quick);
-%{ C++
-  void WALLET_PrefillReturn(nsAutoString results);
-%}
+  [noscript]void WALLET_PrefillReturn(in nsAutoString results);
   void WALLET_FetchFromNetCenter();
 
   boolean PromptUsernameAndPasswordURL(in wstring text, out wstring user, out wstring pwd, in string urlname, in nsIPrompt dialog);
@@ -70,7 +66,5 @@ interface nsIWalletService : nsISupports {
   [noscript] void WALLET_GetPrefillListForViewer(in nsAutoStringRef aPrefillList);
   [noscript] void SI_GetSignonListForViewer(in nsAutoStringRef aSignonList);
   [noscript] void SI_GetRejectListForViewer(in nsAutoStringRef aRejectList);
-%{ C++
-  void SI_SignonViewerReturn(nsAutoString results);
-%}
+  [noscript] void SI_SignonViewerReturn(in nsAutoString results);
 };
