@@ -550,6 +550,21 @@ NS_IMETHODIMP nsNetSupportDialog::PromptPassword(const PRUnichar *text,
 #endif
 }
 
+nsresult nsNetSupportDialog::Select(const PRUnichar *inDialogTitle, const PRUnichar *inMsg, PRUint32 inCount, const char **inList, PRInt32 *outSelection, PRBool *_retval)
+{
+	 nsresult rv;
+	 NS_WITH_SERVICE(nsIAppShellService, appshellservice, kAppShellServiceCID, &rv);
+      if(NS_FAILED(rv))
+          return rv;
+      nsCOMPtr<nsIWebShellWindow> webshellwindow;
+      appshellservice->GetHiddenWindow(getter_AddRefs( webshellwindow ) );
+     nsCOMPtr<nsIPrompt> prompter(do_QueryInterface( webshellwindow ));
+     PRInt32 selectedIndex;
+     PRBool rtnValue;
+     rv = prompter->Select( inDialogTitle, inMsg, inCount, inList, outSelection,_retval );
+     *outSelection = selectedIndex;
+     return rv;
+}
 
 
 nsresult nsNetSupportDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell)

@@ -7,7 +7,7 @@ function selectDialogOnLoad()
 	if( !param )
 		dump( " error getting param block interface\n" );
 	
-	var messageText = param.GetString( 0 );
+	var messageText = param.GetString( 1 );
 	dump("message: "+ messageText +"\n");
 	{
 		 var messageFragment;
@@ -45,7 +45,7 @@ function selectDialogOnLoad()
 	    }
 	}
 	
-	var windowTitle = param.GetString( 1 );
+	var windowTitle = param.GetString( 0 );
 	window.title = windowTitle;
 	 
 	listBox = document.getElementById("list");
@@ -60,6 +60,9 @@ function selectDialogOnLoad()
 	}
 	dump("number of items "+ listBox.options.length +" "+listBox.length+"\n");
 	listBox.selectedIndex = 0;
+
+	// resize the window to the content
+	window.sizeToContent();
 
 	// Move to the right location
 	moveToAlertPosition();

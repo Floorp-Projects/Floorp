@@ -27,43 +27,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID( kDialogParamBlockCID,          NS_DialogParamBlock_CID);
-
-#if 0
-nsresult FE_Select( nsIDOMWindow* inParent, const PRUnichar* inTitle, const PRUnichar* inMsg, PRUnichar** inList , PRInt32& ioCount, PRInt32* _retval )
-{	
-	nsresult rv;
-	const PRInt32 eSelection = 2 ;
-	nsIDialogParamBlock* block = NULL;
-	rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
-                                                      0,
-                                                      nsIDialogParamBlock::GetIID(),
-                                                      (void**)&block );
-      
-	if ( NS_FAILED( rv ) )
-		return rv;
-	block->SetNumberStrings( ioCount + 2 );
-	block->SetString( 0, inMsg );
-	block->SetString(1, inMsg );
-	block->SetInt( eSelection, ioCount );
-	for ( int32 i =2; i<= ioCount+1; i++ )
-	{
-		block->SetString( i, inList[i-2] );
-	}
-	static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
-	NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
-	 if ( NS_SUCCEEDED( rv ) )
-	 {
- 		rv = dialog->DoDialog( inParent, block, "chrome://global/content/selectDialog.xul" );
-	
-		PRInt32 buttonPressed = 0;
-		block->GetInt( nsICommonDialogs::eButtonPressed, &buttonPressed );
-		block->GetInt( eSelection, &ioCount );
-		*_retval = buttonPressed ? PR_FALSE : PR_TRUE;
-		NS_IF_RELEASE( block );
-	}
-	return rv;
-}
-#endif 
+ 
 
 
 class nsCommonDialogs: public nsICommonDialogs
@@ -267,6 +231,47 @@ NS_IMETHODIMP nsCommonDialogs::PromptPassword(nsIDOMWindow *inParent,  const PRU
 	*_retval = tempInt ? PR_FALSE : PR_TRUE;
 	
 	NS_IF_RELEASE( block );
+	return rv;
+}
+
+
+
+nsresult nsCommonDialogs::Select(nsIDOMWindow *inParent, const PRUnichar *inDialogTitle, const PRUnichar* inMsg, PRUint32 inCount, const char **inList, PRInt32 *outSelection, PRBool *_retval)
+{	
+	nsresult rv;
+	const PRInt32 eSelection = 2 ;
+	nsIDialogParamBlock* block = NULL;
+	rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
+                                                      0,
+                                                      nsIDialogParamBlock::GetIID(),
+                                                      (void**)&block );
+      
+	if ( NS_FAILED( rv ) )
+		return rv;
+	block->SetNumberStrings( inCount + 2 );
+	block->SetString( 0, inDialogTitle );
+	block->SetString(1, inMsg );
+	block->SetInt( eSelection, inCount );
+	for ( PRInt32 i = 2; i<= inCount+1; i++ )
+	{
+		nsAutoString temp(inList[i-2]  );
+		const PRUnichar* text = temp.GetUnicode();
+		
+		block->SetString( i, text);
+	}
+	*outSelection = -1;
+	static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
+	NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
+	 if ( NS_SUCCEEDED( rv ) )
+	 {
+ 		rv = dialog->DoDialog( inParent, block, "chrome://global/content/selectDialog.xul" );
+	
+		PRInt32 buttonPressed = 0;
+		block->GetInt( nsICommonDialogs::eButtonPressed, &buttonPressed );
+		block->GetInt( eSelection, outSelection );
+		*_retval = buttonPressed ? PR_FALSE : PR_TRUE;
+		NS_IF_RELEASE( block );
+	}
 	return rv;
 }
 
