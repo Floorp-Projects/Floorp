@@ -58,7 +58,7 @@ class B
 {
   constructor function B()
   {
-    // objA is defined below, but BEFORE any instances of B are made -
+    // objA is a global variable defined below -
     objX = objA;
   }
 }
