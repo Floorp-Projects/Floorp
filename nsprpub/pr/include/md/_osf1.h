@@ -205,7 +205,6 @@ extern int __poll(struct pollfd filedes[], unsigned int nfds, int timeout);
 #ifdef OSF1_HAVE_MACHINE_BUILTINS_H
 #include <machine/builtins.h>
 #define _PR_HAVE_ATOMIC_OPS
-#define _PR_HAVE_ATOMIC_CAS
 #define _MD_INIT_ATOMIC()
 #define _MD_ATOMIC_INCREMENT(val) (__ATOMIC_INCREMENT_LONG(val) + 1)
 #define _MD_ATOMIC_ADD(ptr, val)  (__ATOMIC_ADD_LONG(ptr, val) + val)
