@@ -1953,7 +1953,7 @@ void nsFontMetricsXlib::RealizeFont()
   mAveCharWidth = NSToCoordRound(rawAverage * f);
 
   unsigned long pr = 0;
-  if (xFont->GetXFontProperty(XA_X_HEIGHT, &pr) &&
+  if (xFont->GetXFontProperty(XA_X_HEIGHT, &pr) && pr != 0 &&
       pr < 0x00ffffff)  // Bug 43214: arbitrary to exclude garbage values
   {
     mXHeight = nscoord(pr * f);
