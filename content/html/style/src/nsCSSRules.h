@@ -175,7 +175,7 @@ public:
   };
 
   struct URL {
-    nsCSSDocumentRule::Function func;
+    Function func;
     nsCString url;
     URL *next;
 
