@@ -806,13 +806,14 @@ RDFXMLDataSourceImpl::Flush(void)
     if (!mIsWritable || !mIsDirty)
         return NS_OK;
 
+    NS_PRECONDITION(mURLSpec != nsnull, "not initialized");
+    if (! mURLSpec)
+        return NS_ERROR_NOT_INITIALIZED;
+
     nsresult rv;
 
-    nsXPIDLCString uri;
-    rv = mInner->GetURI(getter_Copies(uri));
-    if (NS_FAILED(rv)) return rv;
-
-    nsFileURL url(uri);
+    // XXX Replace this with channels someday soon...
+    nsFileURL url(mURLSpec);
     nsFileSpec path(url);
 
     nsOutputFileStream out(path);
