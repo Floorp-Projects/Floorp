@@ -449,15 +449,12 @@ nsClipboard::SelectionGetEvent (GtkWidget        *aWidget,
         nsString ucs2string;
         ucs2string.Adopt(tmpString);
         char *utf8string = ToNewUTF8String(ucs2string);
-        if (!utf8string) {
-            nsMemory::Free(tmpString);
+        if (!utf8string)
             return;
-        }
         
         gtk_selection_data_set_text (aSelectionData, utf8string,
                                      strlen(utf8string));
 
-        nsMemory::Free(tmpString);
         nsMemory::Free(utf8string);
         return;
     }
