@@ -35,6 +35,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
+#include "rdf.h"
 #include "nsIXULSortService.h"
 #include "nsIBookmarkDataSource.h"
 
@@ -255,7 +256,7 @@ nsRDFCore::FindBookmarkShortcut(const nsString& aUserInput, nsString & shortcutU
 							RDFBookmarkDataSource);
 		}
 	}
-	if (NS_FAILED(rv))
+	if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE))
 	{
 		shortcutURL = "";
 		rv = NS_OK;
