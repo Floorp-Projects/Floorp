@@ -23,9 +23,8 @@
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-NS_IMPL_ISUPPORTS2(nsMsgIdentity,
-                   nsIMsgIdentity,
-                   nsIShutdownListener)
+NS_IMPL_ISUPPORTS1(nsMsgIdentity,
+                   nsIMsgIdentity)
 
 nsMsgIdentity::nsMsgIdentity():
   m_signature(0),
@@ -39,9 +38,7 @@ nsMsgIdentity::nsMsgIdentity():
 nsMsgIdentity::~nsMsgIdentity()
 {
   PR_FREEIF(m_identityKey);
-  if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID,
-                                                m_prefs,
-                                                nsnull);
+  if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
 }
 
 nsresult
@@ -50,22 +47,9 @@ nsMsgIdentity::getPrefService()
   if (m_prefs) return NS_OK;
   return nsServiceManager::GetService(kPrefServiceCID,
                                       nsCOMTypeInfo<nsIPref>::GetIID(),
-                                      (nsISupports**)&m_prefs,
-                                      this);
+                                      (nsISupports**)&m_prefs);
 }
 
-
-/* called if the prefs service goes offline */
-NS_IMETHODIMP
-nsMsgIdentity::OnShutdown(const nsCID& aClass, nsISupports *service)
-{
-  if (aClass.Equals(kPrefServiceCID)) {
-    if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
-    m_prefs = nsnull;
-  }
-
-  return NS_OK;
-}
 
 /*
  * accessors for pulling values directly out of preferences

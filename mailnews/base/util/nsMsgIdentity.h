@@ -31,8 +31,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-class NS_MSG_BASE nsMsgIdentity : public nsIMsgIdentity,
-                                  public nsIShutdownListener
+class NS_MSG_BASE nsMsgIdentity : public nsIMsgIdentity
 {
 public:
   nsMsgIdentity();
@@ -40,10 +39,6 @@ public:
   
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGIDENTITY
-
-  // nsIShutdownListener
-  
-  NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports *service);
   
 private:
   nsIMsgSignature* m_signature;
