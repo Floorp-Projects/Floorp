@@ -28,6 +28,8 @@ Repeater::Repeater()
 
 Repeater::~Repeater()
 {
+  if (mRepeating) sRepeaters.remove(this);
+  if (mIdling) sIdlers.remove(this);
 }
 
 // repeater methods
