@@ -21,7 +21,7 @@
  *   Doug Turner <dougt@netscape.com>
 */
 
-#include "nsISupports.idl"
+#include "nsISecureSocketInfo.idl"
 
 %{C++
 #include "cmtcmn.h"
@@ -33,23 +33,12 @@
 [ptr] native nsFileDescStar(PRFileDesc);
 
 [noscript, uuid(deeb8dfc-fb7a-11d3-ac84-00c04fa0d26b)]
-interface nsIPSMSocketInfo : nsISupports {
+interface nsIPSMSocketInfo : nsISecureSocketInfo {
     
-    readonly attribute string           hostName;
-    readonly attribute PRInt32          hostPort;
-    
-    readonly attribute string           proxyName;
-    readonly attribute PRInt32          proxyPort;
-
     readonly attribute psmtControlStar  controlPtr;
     readonly attribute cmSocketStar     socketPtr;
     readonly attribute nsFileDescStar   fileDescPtr;
 
-    attribute boolean                   forceHandshake;
-    
     void getPickledStatus(out charPtr pickledStatus);
-    
-    void proxyStepUp();
-    void TLSStepUp();
 };
 

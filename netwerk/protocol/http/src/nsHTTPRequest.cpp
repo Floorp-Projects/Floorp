@@ -41,7 +41,7 @@
 #include "nsAuthEngine.h"
 #include "nsIServiceManager.h"
 #include "nsISocketTransport.h"
-#include "nsIPSMSocketInfo.h"
+#include "nsISecureSocketInfo.h"
 #include "plstr.h"
 
 #if defined(PR_LOGGING)
@@ -61,6 +61,7 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL,
     mBufferSegmentSize(bufferSegmentSize),
     mBufferMaxSize(bufferMaxSize),
     mPipelinedRequest(nsnull),
+    mDoingProxySSLConnect(PR_FALSE),
     mVersion(HTTP_ONE_ZERO),
     mKeepAliveTimeout(0),
     mRequestSpec(0),
@@ -68,7 +69,6 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL,
     mAbortStatus(NS_OK),
     mHeadersFormed(PR_FALSE),
     mPort(-1),
-    mDoingProxySSLConnect(PR_FALSE),
     mProxySSLConnectAllowed(PR_FALSE)
 {   
     NS_INIT_REFCNT();
@@ -83,7 +83,7 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL,
     mURI->GetSpec(getter_Copies(urlCString));
   
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
-("Creating nsHTTPRequest [this=%x] for URI: %s.\n", 
+("Creating nsHTTPRequest [this=%p] for URI: %s.\n", 
            this,(const char *)urlCString));
 #endif
   
@@ -533,8 +533,8 @@ nsHTTPPipelinedRequest::nsHTTPPipelinedRequest(nsHTTPHandler* i_Handler, const c
         mBufferSegmentSize(0),
         mBufferMaxSize(0),
         mMustCommit(PR_FALSE),
-        mTotalWritten(0),
         mTotalProcessed(0),
+        mTotalWritten(0),
     	mHandler(i_Handler),
         mPort(port),
         mListener(nsnull),
@@ -542,8 +542,8 @@ nsHTTPPipelinedRequest::nsHTTPPipelinedRequest(nsHTTPHandler* i_Handler, const c
 {   
     NS_INIT_REFCNT();
 
-    mHost = host;    
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG,("Creating nsHTTPPipelinedRequest [this=%x], created=%d, deleted=%d\n",
+    mHost = host;
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,("Creating nsHTTPPipelinedRequest [this=%p], created=%d, deleted=%d\n",
                 this, ++sPipelinedRequestCreated, sPipelinedRequestDeleted));
 
     NS_NewISupportsArray(getter_AddRefs(mRequests));
@@ -556,7 +556,7 @@ nsHTTPPipelinedRequest::~nsHTTPPipelinedRequest()
     PRUint32 count = 0;
     PRInt32  index;
 
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG,("Deleting nsHTTPPipelinedRequest [this=%x], created=%d, deleted=%d\n",
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,("Deleting nsHTTPPipelinedRequest [this=%p], created=%d, deleted=%d\n",
                 this, sPipelinedRequestCreated, ++sPipelinedRequestDeleted));
 
     if (mRequests)
@@ -608,7 +608,7 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
     PRUint32 count = 0;
     PRUint32 index;
 
-    PR_LOG(gHTTPLog, PR_LOG_ALWAYS,("nsHTTPPipelinedRequest::WriteRequest()[%x], mOnStopDone=%d, mTransport=%x\n", this, mOnStopDone, mTransport));
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, ("nsHTTPPipelinedRequest::WriteRequest()[%p], mOnStopDone=%d, mTransport=%x\n", this, mOnStopDone, mTransport.get()));
 
     if (!mRequests)
         return NS_ERROR_FAILURE;
@@ -673,7 +673,7 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
     // Build up the request into mRequestBuffer...
     //
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-("\nnsHTTPRequest::Build() [this=%x].\tWriting Request:\n"
+("\nnsHTTPRequest::Build() [this=%p].\tWriting Request:\n"
             "=== Start\n%s=== End\n",
             this, mRequestBuffer.GetBuffer()));
 
@@ -772,7 +772,7 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
             else
             {
                 PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-                       ("nsHTTPRequest [this=%x]. "
+                       ("nsHTTPRequest [this=%p]. "
                         "Finished writing request to server." 
                         "\tStatus: %x\n", this, aStatus));
 
@@ -810,7 +810,7 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
     else
     {
         PR_LOG(gHTTPLog, PR_LOG_ERROR, 
-               ("nsHTTPRequest [this=%x]. Error writing request to server."
+               ("nsHTTPRequest [this=%p]. Error writing request to server."
                 "\tStatus: %x\n", this, aStatus));
         rv = aStatus;
     }
@@ -833,7 +833,7 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
 
             req->mConnection->GetStatus(&channelStatus);
 
-            PR_LOG(gHTTPLog, PR_LOG_DEBUG,("nsHTTPRequest::OnStopRequest() [this=%x]. wasKeptAlive=%d, channelStatus=%x\n", this, wasKeptAlive, channelStatus));
+            PR_LOG(gHTTPLog, PR_LOG_DEBUG,("nsHTTPRequest::OnStopRequest() [this=%p]. wasKeptAlive=%d, channelStatus=%x\n", this, wasKeptAlive, channelStatus));
 
             if (wasKeptAlive && NS_SUCCEEDED(channelStatus))
             {
@@ -900,7 +900,7 @@ nsHTTPPipelinedRequest::RestartRequest(PRUint32 aType)
 {
     nsresult rval = NS_ERROR_FAILURE;
 
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG,("nsHTTPPipelinedRequest::RestartRequest() [this=%x], mTotalProcessed=%u\n", this, mTotalProcessed));
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG,("nsHTTPPipelinedRequest::RestartRequest() [this=%p], mTotalProcessed=%u\n", this, mTotalProcessed));
 
     if (aType == REQUEST_RESTART_SSL)
     {
@@ -919,7 +919,7 @@ nsHTTPPipelinedRequest::RestartRequest(PRUint32 aType)
         rval = mTransport->GetSecurityInfo(getter_AddRefs(securityInfo));
         if (NS_FAILED(rval)) return rval;
 
-        nsCOMPtr<nsIPSMSocketInfo> psmSocketInfo = do_QueryInterface(securityInfo, &rval);
+        nsCOMPtr<nsISecureSocketInfo> psmSocketInfo = do_QueryInterface(securityInfo, &rval);
         if (NS_FAILED(rval)) return rval;
 
         rval = psmSocketInfo->ProxyStepUp();
@@ -952,7 +952,7 @@ nsHTTPPipelinedRequest::RestartRequest(PRUint32 aType)
             NS_RELEASE(req);
         }
 
-        PR_LOG(gHTTPLog, PR_LOG_DEBUG,("nsHTTPPipelinedRequest::RestartRequest() [this=%x], wasKepAlive=%u, mAttempts=%d, mOnStopDone=%d\n", this, wasKeptAlive, mAttempts, mOnStopDone));
+        PR_LOG(gHTTPLog, PR_LOG_DEBUG,("nsHTTPPipelinedRequest::RestartRequest() [this=%p], wasKepAlive=%u, mAttempts=%d, mOnStopDone=%d\n", this, wasKeptAlive, mAttempts, mOnStopDone));
 
         if (wasKeptAlive && mAttempts == 0 && NS_SUCCEEDED(channelStatus))
         {
@@ -1081,7 +1081,7 @@ nsHTTPPipelinedRequest::AddToPipeline(nsHTTPRequest *aRequest)
         sLongestPipeline = count + 1;
 
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
-("nsHTTPPipelinedRequest::AddToPipeline() [this=%x]"
+("nsHTTPPipelinedRequest::AddToPipeline() [this=%p]"
         " count=%u, longest pipeline=%u\n",
         this, count + 1, sLongestPipeline));
 

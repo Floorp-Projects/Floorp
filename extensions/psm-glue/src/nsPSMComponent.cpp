@@ -153,8 +153,9 @@ nsPSMComponent::RegisterCertContentListener()
 }
 
 /* nsISupports Implementation for the class */
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsPSMComponent, 
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsPSMComponent, 
                               nsIPSMComponent, 
+                              nsISecurityManagerComponent,
                               nsIContentHandler,
                               nsISignatureVerifier);
 
@@ -629,7 +630,13 @@ failure:
 }
 
 NS_IMETHODIMP
-nsPSMComponent::DisplaySecurityAdvisor(const char *pickledStatus, const char *hostName, nsIDOMWindow * window)
+nsPSMComponent::DisplaySecurityAdvisor()
+{
+    return DisplayPSMAdvisor(nsnull, nsnull, nsnull);
+}
+
+NS_IMETHODIMP
+nsPSMComponent::DisplayPSMAdvisor(const char *pickledStatus, const char *hostName, nsIDOMWindow* window)
 {
     CMT_CONTROL *controlConnection;
     GetControlConnection( &controlConnection );
@@ -1021,6 +1028,18 @@ nsPSMComponent::CreatePrincipalFromSignature(const char* aRSABuf, PRUint32 aRSAB
 PR_STATIC_CALLBACK(void)
 UselessPK7DataSink(void* arg, const char* buf, CMUint32 len)
 {
+}
+
+NS_IMETHODIMP
+nsPSMComponent::GetPassword(char **aRet)
+{
+  PCMT_CONTROL control;
+  if (NS_SUCCEEDED(GetControlConnection(&control))) {
+    *aRet = nsCRT::strndup((const char*)control->nonce.data, control->nonce.len);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

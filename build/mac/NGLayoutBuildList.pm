@@ -360,6 +360,7 @@ sub Checkout()
     my($nsprpub_tag) = "NSPRPUB_CLIENT_BRANCH";
     my($nss_tab) = "NSS_30_BRANCH";
     my($psm_tag) = "SECURITY_MAC_BRANCH";
+    my($secbase_tag) = "SECURITY_CLIENT_BRANCH";
     my($ldapsdk_tag) = "LDAPCSDK_40_BRANCH"; 
     
     #//
@@ -370,6 +371,7 @@ sub Checkout()
         $session->checkout("mozilla/nsprpub", $nsprpub_tag)            || print "checkout of nsprpub failed\n";        
         $session->checkout("mozilla/security/nss", $nss_tab)           || print "checkout of security/nss failed\n";
         $session->checkout("mozilla/security/psm", $psm_tag)           || print "checkout of security/psm failed\n";
+        $session->checkout("mozilla/security/base", $secbase_tag)      || print "checkout of security/base failed\n";
         $session->checkout("DirectorySDKSourceC", $ldapsdk_tag)        || print "checkout of LDAP C SDK failed\n";
         $session->checkout("SeaMonkeyAll")                             || 
             print "MacCVS reported some errors checking out SeaMonkeyAll, but these are probably not serious.\n";
@@ -867,8 +869,8 @@ sub MakeResourceAliases()
     _InstallResources(":mozilla:xpfe:components:autocomplete:resources:content:MANIFEST",   "$globalContent", 0);
 
     # security
-    _InstallResources(":mozilla:extensions:psm-glue:res:content:MANIFEST",       "$communicatorContent");
-    _InstallResources(":mozilla:extensions:psm-glue:res:locale:en-US:MANIFEST",         "$communicatorLocale");
+    _InstallResources(":mozilla:security:base:res:content:MANIFEST",                    "$communicatorContent");
+    _InstallResources(":mozilla:security:base:res:locale:en-us:MANIFEST",               "$communicatorLocale");
 
     # widget-toolkit
     _InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",                "$globalContent");
@@ -1776,6 +1778,9 @@ sub BuildIDLProjects()
     }
 
     BuildIDLProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp",                         "xpcom");
+
+    # security base
+    BuildIDLProject(":mozilla:security:base:macbuild:securityBaseIDL.mcp",          "securityBase");
 
     # necko
     BuildIDLProject(":mozilla:netwerk:macbuild:netwerkIDL.mcp","necko");

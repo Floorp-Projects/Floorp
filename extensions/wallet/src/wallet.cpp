@@ -52,7 +52,7 @@
 #include "prprf.h"  
 #include "nsIProfile.h"
 #include "nsIContent.h"
-#include "nsIPSMComponent.h"
+#include "nsISecurityManagerComponent.h"
 
 #include "nsIWalletService.h"
 
@@ -3483,17 +3483,22 @@ wallet_IsFromCartman(nsIURI* aURL) {
   if (host && PL_strncasecmp(host, "127.0.0.1",  9) == 0) {
     /* submit is to server on local machine */
     nsresult res;
-    NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_CONTRACTID, &res);
-    PCMT_CONTROL control;
-    if (NS_SUCCEEDED(res) && NS_SUCCEEDED(psm->GetControlConnection(&control))) { 
+    NS_WITH_SERVICE(nsISecurityManagerComponent, psm, PSM_COMPONENT_CONTRACTID, &res);
+    if (NS_SUCCEEDED(res)) { 
       char* password;
       aURL->GetPassword(&password);
-      if (password && PL_strncasecmp(password, (const char*)control->nonce.data, control->nonce.len) == 0) {
+      char* secmanPassword;
+      psm->GetPassword(&secmanPassword);
+
+      if (password && secmanPassword && PL_strncasecmp(password, secmanPassword,  9) == 0) {
         /* password for submit is cartman's password */
         retval = PR_TRUE;
       }
       if (password) {
         Recycle(password);
+      }
+      if (secmanPassword) {
+        Recycle(secmanPassword);
       }
     }
   }
