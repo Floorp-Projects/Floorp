@@ -961,26 +961,34 @@ il_emit_row(
           int i;
           unsigned char *scalemask;
 
-          rgbbuf_p = tmpbuf = rgbbuf;
-          alphabits= alphabitstart;
+
+           unsigned char *alphabits_1= (unsigned char *)PR_MALLOC(len);
+           unsigned char *alphabits;
+           alphabits = alphabits_1;
+
+           rgbbuf_p = tmpbuf = rgbbuf;
 
             for(i=0; i < len; i++){
                 *rgbbuf_p++ = *tmpbuf++;
                 *rgbbuf_p++ = *tmpbuf++;
                 *rgbbuf_p++ = *tmpbuf++;
-
                 *alphabits++ = *tmpbuf++;  /* put alpha channel in separate buffer */
             }
             
-            alphabits = alphabitstart;
+            alphabits = alphabits_1;
+
             if(len != column_count ){
-                if ((scalemask= (unsigned char *)PR_MALLOC(column_count)) != NULL)
+                if ((scalemask= (unsigned char *)PR_MALLOC(mask_header->widthBytes)) != NULL)
                 {
-                    il_scale_alpha8( alphabitstart, len, scalemask, column_count);
-                    nsCRT::memcpy(alphabitstart, scalemask, column_count);
+                    il_scale_alpha8( alphabits, len, scalemask, mask_header->widthBytes);
+                    nsCRT::memcpy(alphabitstart, scalemask, mask_header->widthBytes);
                     PR_DELETE(scalemask);
                 }
             }
+            else
+                nsCRT::memcpy(alphabitstart, alphabits_1, mask_header->widthBytes);
+
+            PR_DELETE(alphabits_1);
             
        } /* else */
    //    img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
