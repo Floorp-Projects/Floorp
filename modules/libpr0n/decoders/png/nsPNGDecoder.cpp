@@ -427,12 +427,6 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
   decoder->mFrame->GetImageBytesPerRow(&bpr);
   decoder->mFrame->GetAlphaBytesPerRow(&abpr);
 
-  PRUint32 length;
-  PRUint8 *bits;
-  decoder->mFrame->LockImagePixels(PR_FALSE);
-  decoder->mFrame->GetImageData(&bits, &length);
-  decoder->mFrame->UnlockImagePixels(PR_FALSE); // we can unlock immediately since we don't use the bits addr
-
   png_bytep line;
   if (decoder->interlacebuf) {
     line = decoder->interlacebuf+(row_num*decoder->ibpr);

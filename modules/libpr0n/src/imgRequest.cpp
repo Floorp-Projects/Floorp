@@ -23,8 +23,6 @@
 
 #include "imgRequest.h"
 
-#include "nsXPIDLString.h"
-
 #include "nsIAtom.h"
 #include "nsIChannel.h"
 #include "nsILoadGroup.h"
@@ -37,6 +35,7 @@
 #include "nsIServiceManager.h"
 
 #include "nsString.h"
+#include "nsXPIDLString.h"
 
 #include "ImageCache.h"
 
@@ -46,13 +45,12 @@
 PRLogModuleInfo *gImgLog = PR_NewLogModule("imgRequest");
 #endif
 
-
 NS_IMPL_ISUPPORTS6(imgRequest, imgIRequest, nsIRequest,
                    imgIDecoderObserver, imgIContainerObserver,
                    nsIStreamListener, nsIStreamObserver)
 
 imgRequest::imgRequest() : 
-  mObservers(0), mProcessing(PR_TRUE), mStatus(imgIRequest::STATUS_NONE), mState(0)
+  mObservers(0), mLoading(PR_FALSE), mProcessing(PR_FALSE), mStatus(imgIRequest::STATUS_NONE), mState(0)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
@@ -138,7 +136,7 @@ nsresult imgRequest::RemoveObserver(imgIDecoderObserver *observer, nsresult stat
       }
     }
 
-    if (mChannel && mProcessing) {
+    if (mChannel && mLoading) {
       PR_LOG(gImgLog, PR_LOG_DEBUG,
              ("[this=%p] imgRequest::RemoveObserver -- load in progress.  canceling\n", this));
 
@@ -206,7 +204,7 @@ NS_IMETHODIMP imgRequest::Cancel(nsresult status)
     }
   }
 
-  if (mChannel && mProcessing)
+  if (mChannel && mLoading)
     mChannel->Cancel(NS_BINDING_ABORTED); // should prolly use status here
 
   return NS_OK;
@@ -423,6 +421,10 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   LOG_SCOPE(gImgLog, "imgRequest::OnStartRequest");
 
   NS_ASSERTION(!mDecoder, "imgRequest::OnStartRequest -- we already have a decoder");
+  NS_ASSERTION(!mLoading, "imgRequest::OnStartRequest -- we are loading again?");
+
+  /* set our loading flag to true */
+  mLoading = PR_TRUE;
 
   /* notify our kids */
   PRInt32 i = -1;
@@ -438,10 +440,6 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
 
   /* do our real work */
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
-
-  if (mChannel && (mChannel != chan)) {
-    NS_WARNING("imgRequest::OnStartRequest -- (mChannel != NULL) && (mChannel != chan)");
-  }
 
   if (!mChannel) {
     PR_LOG(gImgLog, PR_LOG_ALWAYS,
@@ -474,46 +472,6 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
     }
   }
 
-  nsXPIDLCString contentType;
-  nsresult rv = mChannel->GetContentType(getter_Copies(contentType));
-
-  if (NS_FAILED(rv)) {
-    PR_LOG(gImgLog, PR_LOG_ERROR,
-           ("[this=%p] imgRequest::OnStartRequest -- Content type unavailable from the channel\n",
-            this));
-
-    this->RemoveFromCache();
-
-    return NS_BINDING_ABORTED; //NS_BASE_STREAM_CLOSED;
-  }
-#if defined(PR_LOGGING)
-  else {
-    PR_LOG(gImgLog, PR_LOG_DEBUG,
-           ("[this=%p] imgRequest::OnStartRequest -- Content type is %s\n", this, contentType.get()));
-  }
-#endif
-
-  nsCAutoString conid("@mozilla.org/image/decoder;2?type=");
-  conid += contentType.get();
-
-  mDecoder = do_CreateInstance(conid);
-
-  if (!mDecoder) {
-    PR_LOG(gImgLog, PR_LOG_WARNING,
-           ("[this=%p] imgRequest::OnStartRequest -- Decoder not available\n", this));
-
-    // no image decoder for this mimetype :(
-    // this->Cancel(NS_BINDING_ABORTED);
-    this->RemoveFromCache();
-
-    // XXX notify the person that owns us now that wants the imgIContainer off of us?
-
-    //return NS_ERROR_IMAGELIB_NO_DECODER;
-    return NS_ERROR_FAILURE;
-  }
-
-  mDecoder->Init(NS_STATIC_CAST(imgIRequest*, this));
-
   return NS_OK;
 }
 
@@ -523,10 +481,14 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   PR_LOG(gImgLog, PR_LOG_DEBUG,
          ("[this=%p] imgRequest::OnStopRequest\n", this));
 
-  NS_ASSERTION(mChannel && mProcessing, "imgRequest::OnStopRequest -- received multiple OnStopRequest");
+  NS_ASSERTION(mChannel && mLoading, "imgRequest::OnStopRequest -- received multiple OnStopRequest");
 
   mState |= onStopRequest;
 
+  /* set our loading flag to false */
+  mLoading = PR_FALSE;
+
+  /* set our processing flag to false */
   mProcessing = PR_FALSE;
 
   switch(status) {
@@ -575,6 +537,11 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
 
 
 
+/* prototype for this defined below */
+NS_METHOD sniff_mimetype_callback(nsIInputStream* in, void* closure, const char* fromRawSegment,
+                                  PRUint32 toOffset, PRUint32 count, PRUint32 *writeCount);
+
+
 /** nsIStreamListener methods **/
 
 /* void onDataAvailable (in nsIRequest request, in nsISupports ctxt, in nsIInputStream inStr, in unsigned long sourceOffset, in unsigned long count); */
@@ -584,6 +551,64 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
          ("[this=%p] imgRequest::OnDataAvailable\n", this));
 
   NS_ASSERTION(mChannel, "imgRequest::OnDataAvailable -- no channel!");
+
+
+  if (!mProcessing) {
+    /* set our processing flag to true if this is the first OnDataAvailable() */
+    mProcessing = PR_TRUE;
+
+    /* look at the first few bytes and see if we can tell what the data is from that
+     * since servers tend to lie. :(
+     */
+    PRUint32 out;
+    inStr->ReadSegments(sniff_mimetype_callback, this, count, &out);
+
+#ifdef NS_DEBUG
+    /* NS_WARNING if the content type from the channel isn't the same if the sniffing */
+#endif
+
+    if (!mContentType.get()) {
+      nsXPIDLCString contentType;
+      nsresult rv = mChannel->GetContentType(getter_Copies(contentType));
+
+      if (NS_FAILED(rv)) {
+        PR_LOG(gImgLog, PR_LOG_ERROR,
+               ("[this=%p] imgRequest::OnStartRequest -- Content type unavailable from the channel\n",
+                this));
+
+        this->RemoveFromCache();
+
+        return NS_BINDING_ABORTED; //NS_BASE_STREAM_CLOSED;
+      }
+
+      mContentType = contentType;
+    }
+
+#if defined(PR_LOGGING)
+    PR_LOG(gImgLog, PR_LOG_DEBUG,
+           ("[this=%p] imgRequest::OnStartRequest -- Content type is %s\n", this, mContentType.get()));
+#endif
+
+    nsCAutoString conid("@mozilla.org/image/decoder;2?type=");
+    conid += mContentType.get();
+
+    mDecoder = do_CreateInstance(conid);
+
+    if (!mDecoder) {
+      PR_LOG(gImgLog, PR_LOG_WARNING,
+             ("[this=%p] imgRequest::OnStartRequest -- Decoder not available\n", this));
+
+      // no image decoder for this mimetype :(
+      this->Cancel(NS_BINDING_ABORTED);
+      this->RemoveFromCache();
+
+      // XXX notify the person that owns us now that wants the imgIContainer off of us?
+      return NS_ERROR_IMAGELIB_NO_DECODER;
+    }
+
+    mDecoder->Init(NS_STATIC_CAST(imgIRequest*, this));
+
+  }
 
   if (!mDecoder) {
     PR_LOG(gImgLog, PR_LOG_WARNING,
@@ -596,4 +621,73 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
   nsresult rv = mDecoder->WriteFrom(inStr, count, &wrote);
 
   return NS_OK;
+}
+
+static NS_METHOD sniff_mimetype_callback(nsIInputStream* in,
+                                         void* closure,
+                                         const char* fromRawSegment,
+                                         PRUint32 toOffset,
+                                         PRUint32 count,
+                                         PRUint32 *writeCount)
+{
+  imgRequest *request = NS_STATIC_CAST(imgRequest*, closure);
+
+  NS_ASSERTION(request, "request is null!");
+
+  if (count > 0)
+    request->SniffMimeType(fromRawSegment, count);
+
+  *writeCount = 0;
+  return NS_ERROR_FAILURE;
+}
+
+void
+imgRequest::SniffMimeType(const char *buf, PRUint32 len)
+{
+  /* Is it a GIF? */
+  if (len >= 4 && !nsCRT::strncmp(buf, "GIF8", 4))  {
+    mContentType = NS_LITERAL_CSTRING("image/gif");
+    return;
+  }
+
+  /* or a PNG? */
+  if (len >= 4 && ((unsigned char)buf[0]==0x89 &&
+                   (unsigned char)buf[1]==0x50 &&
+                   (unsigned char)buf[2]==0x4E &&
+                   (unsigned char)buf[3]==0x47))
+  { 
+    mContentType = NS_LITERAL_CSTRING("image/png");
+    return;
+  }
+
+  /* maybe a JPEG (JFIF)? */
+  /* JFIF files start with SOI APP0 but older files can start with SOI DQT
+   * so we test for SOI followed by any marker, i.e. FF D8 FF
+   * this will also work for SPIFF JPEG files if they appear in the future.
+   *
+   * (JFIF is 0XFF 0XD8 0XFF 0XE0 <skip 2> 0X4A 0X46 0X49 0X46 0X00)
+   */
+  if (len >= 3 &&
+     ((unsigned char)buf[0])==0xFF &&
+     ((unsigned char)buf[1])==0xD8 &&
+     ((unsigned char)buf[2])==0xFF)
+  {
+    mContentType = NS_LITERAL_CSTRING("image/jpeg");
+    return;
+  }
+
+  /* or how about ART? */
+  /* ART begins with JG (4A 47). Major version offset 2.
+   Minor version offset 3. Offset 4 must be NULL.
+  */
+  if (len >= 5 &&
+   ((unsigned char) buf[0])==0x4a &&
+   ((unsigned char) buf[1])==0x47 &&
+   ((unsigned char) buf[4])==0x00 )
+  {
+    mContentType = NS_LITERAL_CSTRING("image/x-jg");
+    return;
+  }
+
+  /* none of the above?  I give up */
 }

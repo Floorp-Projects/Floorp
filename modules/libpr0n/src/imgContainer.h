@@ -37,6 +37,8 @@
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 
+#include "gfxIImageFrame.h"
+
 #define NS_IMGCONTAINER_CID \
 { /* 5e04ec5e-1dd2-11b2-8fda-c4db5fb666e0 */         \
      0x5e04ec5e,                                     \
@@ -68,6 +70,8 @@ private:
   PRBool   mAnimating;
   
   nsCOMPtr<imgIContainerObserver> mObserver;
+
+
   // GIF specific bits
   nsCOMPtr<nsITimer> mTimer;
   
@@ -78,8 +82,8 @@ private:
   // Private function for doing the frame compositing of animations and in cases
   // where there is a backgound color and single frame placed withing a larger
   // logical screen size. Smart GIF compressors may do this to save space.
-  void DoComposite(
-    gfxIImageFrame** aFrameToUse, nsRect* aDirtyRect, PRInt32 aPrevFrame, PRInt32 aNextFrame);
+  void DoComposite(gfxIImageFrame** aFrameToUse, nsRect* aDirtyRect,
+                   PRInt32 aPrevFrame, PRInt32 aNextFrame);
 };
 
 #endif /* __imgContainer_h__ */
