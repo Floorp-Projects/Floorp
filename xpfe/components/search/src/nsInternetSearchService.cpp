@@ -2595,6 +2595,11 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
  				{
  					nsCAutoString	escapedSearchText;
  					escapedSearchText.AssignWithConversion(searchText);
+
+					// encoding +'s so as to preserve distinction between + and %2B
+					escapedSearchText.ReplaceSubstring("%25", "%2B25");
+					escapedSearchText.ReplaceSubstring("+", "%25");
+
  					nsCAutoString	aCharset;
  					aCharset.AssignWithConversion(mQueryEncodingStr);
  					PRUnichar	*uni = nsnull;
@@ -2603,7 +2608,14 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
  						char	*convertedSearchText = nsnull;
  						if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape("UTF-8", uni, &convertedSearchText)))
  						{
- 							searchText.AssignWithConversion(convertedSearchText);
+
+							// decoding +'s thereby preserving distinction between + and %2B
+ 							nsCAutoString unescapedSearchText(convertedSearchText);
+							unescapedSearchText.ReplaceSubstring("%25", "+");
+							unescapedSearchText.ReplaceSubstring("%2B25", "%25");
+
+ 							searchText.AssignWithConversion(unescapedSearchText);
+
  							Recycle(convertedSearchText);
  						}
 						Recycle(uni);
