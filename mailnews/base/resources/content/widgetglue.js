@@ -75,7 +75,7 @@ var FolderPaneController =
                     	specialFolder = folderTree.selectedItems[0].getAttribute('SpecialFolder');
 					}
 					catch (ex) {
-						dump("see bug #34383, specialFolder failure: " + ex + "\n");
+						//dump("specialFolder failure: " + ex + "\n");
 					}
                     if (specialFolder == "Inbox" || specialFolder == "Trash")
                        return false;
