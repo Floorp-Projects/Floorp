@@ -450,8 +450,8 @@ function ClearThreadTreeSelection()
 
 function ClearMessagePane()
 {
-	messenger.OpenURL("about:blank");	
-
+    if (window.frames["messagepane"].location != "about:blank")
+        window.frames["messagepane"].location = "about:blank"
 }
 
 function StopUrls()
