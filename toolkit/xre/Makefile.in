@@ -60,6 +60,7 @@ REQUIRES = \
 	necko \
 	pref \
 	profile \
+	shellservice \
 	string \
 	uconv \
 	uriloader \
@@ -91,11 +92,6 @@ SHAREDCPPSRCS = \
 	showOSAlert.cpp \
 	$(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-SHAREDCPPSRCS += nsNativeAppSupportWin.cpp
-DEFINES += -DWIN32_LEAN_AND_MEAN
-endif
-
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
 SHAREDCPPSRCS += nsNativeAppSupportGtk.cpp
 endif
@@ -125,6 +121,11 @@ CPPSRCS = \
 	nsAppRunner.cpp \
 	nsXREDirProvider.cpp \
 	$(NULL)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+CPPSRCS += nsNativeAppSupportWin.cpp
+DEFINES += -DWIN32_LEAN_AND_MEAN
+endif
 
 CMMSRCS = $(SHAREDCMMSRCS)
 
