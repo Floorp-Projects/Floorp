@@ -68,7 +68,8 @@
       <rows>
 
         <row hidden="true" align="center">
-          <description>&concatName.label;</description>
+          <label value="&concatName.label;" control="name"
+                 accesskey="&concatName.accesskey;"/>
           <menulist id="name" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">

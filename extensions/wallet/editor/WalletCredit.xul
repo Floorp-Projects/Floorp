@@ -54,7 +54,8 @@
       <rows>
 
         <row align="center">
-          <description>&creditType.label;</description>
+          <label value="&creditType.label;" control="card.type"
+                 accesskey="&creditType.accesskey;"/>
           <menulist id="card.type" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -64,7 +65,8 @@
         </row>
 
         <row align="center">
-          <description>&creditNumber.label;</description>
+          <label value="&creditNumber.label;" control="card.number"
+                 accesskey="&creditNumber.accesskey;"/>
           <menulist id="card.number" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -76,14 +78,16 @@
         <row align="center">
           <description>&creditExpires.label;</description>
           <hbox align="center">
-            <label value="&creditExpiresMonth.label;" />
+            <label value="&creditExpiresMonth.label;" control="card.expdate.month"
+                   accesskey="&creditExpiresMonth.accesskey;"/>
             <menulist id="card.expdate.month" editable="true" disableautoselect="true" flex="40%" width="0"
                       onchange="Append(this)">
               <menupopup onpopupshowing="Append(this.parentNode)">
                 <menuitem label="" len="0"/>
               </menupopup>
             </menulist>
-            <label value="&creditExpiresYear.label;" />
+            <label value="&creditExpiresYear.label;" control="card.expdate.year"
+                   accesskey="&creditExpiresYear.accesskey;"/>
             <menulist id="card.expdate.year" editable="true" disableautoselect="true" flex="60%" width="0"
                       onchange="Append(this)">
               <menupopup onpopupshowing="Append(this.parentNode)">
@@ -94,7 +98,8 @@
         </row>
 
         <row align="center">
-          <description>&creditName.label;</description>
+          <label value="&creditName.label;" control="card.name"
+                 accesskey="&creditName.accesskey;"/>
           <menulist id="card.name" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">

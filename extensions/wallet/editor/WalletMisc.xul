@@ -56,7 +56,8 @@
       <rows>
 
         <row align="center">
-          <description>&miscSS.label;</description>
+          <label value="&miscSS.label;" control="socsec.prefix"
+                 accesskey="&miscSS.accesskey;"/>
           <hbox>
             <menulist id="socsec.prefix" editable="true" disableautoselect="true" flex="33%" width="0"
                       onchange="Append(this)">
@@ -82,7 +83,8 @@
         </row>
 
         <row align="center">
-          <description>&miscLicense.label;</description>
+          <label value="&miscLicense.label;" control="license.number"
+                 accesskey="&miscLicense.accesskey;"/>
           <hbox align="center">
             <menulist id="license.number" editable="true" disableautoselect="true" flex="70" width="0"
                       onchange="Append(this)">
@@ -91,7 +93,8 @@
               </menupopup>
             </menulist>
             <spacer style="width: 5px;"/>
-            <label value="&miscLicenseState.label;" />
+            <label value="&miscLicenseState.label;" control="license.state"
+                   accesskey="&miscLicenseState.accesskey;"/>
             <menulist id="license.state" editable="true" disableautoselect="true" flex="30" width="0"
                       onchange="Append(this)">
               <menupopup onpopupshowing="Append(this.parentNode)">
@@ -102,7 +105,8 @@
         </row>
 
         <row align="center">
-          <description>&miscMaiden.label;</description>
+          <label value="&miscMaiden.label;" control="mothersmaidenname"
+                 accesskey="&miscMaiden.accesskey;"/>
           <menulist id="mothersmaidenname" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -114,7 +118,8 @@
         <row align="center">
           <description>&miscBirthday.label;</description>
           <hbox align="center">
-            <label value="&miscBirthdayMonth.label;" />
+            <label value="&miscBirthdayMonth.label;" control="bdate.month"
+                   accesskey="&miscBirthdayMonth.accesskey;"/>
             <menulist id="bdate.month" editable="true" disableautoselect="true" flex="40%" width="0"
                       onchange="Append(this)">
               <menupopup onpopupshowing="Append(this.parentNode)">
@@ -141,7 +146,8 @@
         <row align="center">
           <description>&miscAnniv.label;</description>
           <hbox align="center">
-            <label value="&miscAnnivMonth.label;" />
+            <label value="&miscAnnivMonth.label;" control="anniv.month"
+                   accesskey="&miscAnnivMonth.accesskey;"/>
             <menulist id="anniv.month" editable="true" disableautoselect="true" flex="40%" width="0"
                       onchange="Append(this)">
               <menupopup onpopupshowing="Append(this.parentNode)">

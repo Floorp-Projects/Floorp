@@ -56,7 +56,8 @@
       <rows>
 
         <row align="center">
-          <description>&addressLine1.label;</description>
+          <label value="&addressLine1.label;" control="street.line1"
+                 accesskey="&addressLine1.accesskey;"/>
           <menulist id="street.line1" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -66,7 +67,8 @@
         </row>
 
         <row align="center">
-          <description>&addressLine2.label;</description>
+          <label value="&addressLine2.label;" control="street.line2"
+                 accesskey="&addressLine2.accesskey;"/>
           <menulist id="street.line2" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -76,7 +78,8 @@
         </row>
 
         <row align="center">
-          <description>&addressLine3.label;</description>
+          <label value="&addressLine3.label;" control="street.line3"
+                 accesskey="&addressLine3.accesskey;"/>
           <menulist id="street.line3" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -86,7 +89,8 @@
         </row>
 
         <row align="center">
-          <description>&addressCity.label;</description>
+          <label value="&addressCity.label;" control="city"
+                 accesskey="&addressCity.accesskey;"/>
           <menulist id="city" editable="true" disableautoselect="true"
                      onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -96,7 +100,8 @@
         </row>
 
         <row align="center">
-          <description>&addressState.label;</description>
+          <label value="&addressState.label;" control="state"
+                 accesskey="&addressState.accesskey;"/>
           <menulist id="state" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -106,7 +111,8 @@
         </row>
 
         <row align="center">
-          <description>&addressZipcode.label;</description>
+          <label value="&addressZipcode.label;" control="postalcode.prefix"
+                 accesskey="&addressZipcode.accesskey;"/>
           <hbox>
           <menulist id="postalcode.prefix" editable="true" disableautoselect="true" flex="55%" width="0"
                     onchange="Append(this)">
@@ -125,7 +131,8 @@
         </row>
 
         <row align="center">
-          <description>&addressCountry.label;</description>
+          <label value="&addressCountry.label;" control="country"
+                 accesskey="&addressCountry.accesskey;"/>
           <menulist id="country" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -135,7 +142,8 @@
         </row>
 
         <row align="center">
-          <description>&email.label;</description>
+          <label value="&email.label;" control="email"
+                 accesskey="&email.accesskey;"/>
           <menulist id="email" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -145,7 +153,8 @@
         </row>
 
         <row align="center">
-          <description>&homepage.label;</description>
+          <label value="&homepage.label;" control="uri"
+                 accesskey="&homepage.accesskey;"/>
           <menulist id="uri" editable="true" disableautoselect="true"
                     onchange="Append(this)">
 

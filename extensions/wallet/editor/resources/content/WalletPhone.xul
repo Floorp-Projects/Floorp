@@ -64,7 +64,8 @@
       <rows>
 
         <row align="center">
-          <description>&phoneDay.label;</description>
+          <label value="&phoneDay.label;" control="phone.loccode"
+                 accesskey="&phoneDay.accesskey;"/>
           <label value="("/>
           <menulist id="phone.loccode" editable="true" disableautoselect="true"
                     onchange="Append(this)">
@@ -86,7 +87,8 @@
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
-          <label value="&phoneDayExt.label;" />
+          <label value="&phoneDayExt.label;" control="phone.extension"
+                 accesskey="&phoneDayExt.accesskey;"/>
           <menulist id="phone.extension" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -96,7 +98,8 @@
         </row>
 
         <row align="center">
-          <description>&phoneEve.label;</description>
+          <label value="&phoneEve.label;" control="altphone.loccode"
+                 accesskey="&phoneEve.accesskey;"/>
           <label value="("/>
           <menulist id="altphone.loccode" editable="true" disableautoselect="true"
                     onchange="Append(this)">
@@ -118,7 +121,8 @@
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
-          <label value="&phoneEveExt.label;" />
+          <label value="&phoneEveExt.label;" control="altphone.extension"
+                 accesskey="&phoneEveExt.accesskey;"/>
           <menulist id="altphone.extension" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -128,7 +132,8 @@
         </row>
 
         <row align="center">
-          <description>&phoneFax.label;</description>
+          <label value="&phoneFax.label;" control="fax.loccode"
+                 accesskey="&phoneFax.accesskey;"/>
           <label value="("/>
           <menulist id="fax.loccode" editable="true" disableautoselect="true"
                     onchange="Append(this)">
@@ -153,7 +158,8 @@
         </row>
 
         <row align="center">
-          <description>&phoneCell.label;</description>
+          <label value="&phoneCell.label;" control="mobile.loccode"
+                 accesskey="&phoneCell.accesskey;"/>
           <label value="("/>
           <menulist id="mobile.loccode" editable="true" disableautoselect="true"
                     onchange="Append(this)">
@@ -178,7 +184,8 @@
         </row>
 
         <row align="center">
-          <description>&phonePager.label;</description>
+          <label value="&phonePager.label;" control="pager.loccode"
+                 accesskey="&phonePager.accesskey;"/>
           <label value="("/>
           <menulist id="pager.loccode" editable="true" disableautoselect="true"
                     onchange="Append(this)">

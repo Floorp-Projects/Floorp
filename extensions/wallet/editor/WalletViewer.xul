@@ -48,7 +48,8 @@
     <!-- tree sidebar -->
     <vbox style="width: 17em">
       <tree id="panelTree" style="width: 0px" flex="1"/>      
-      <button id="clearButton" label="&removeall.label;" oncommand="ClearAll()"/>
+      <button id="clearButton" label="&removeall.label;"
+              accesskey="&removeall.accesskey;" oncommand="ClearAll()"/>
     </vbox>
     <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="1"/>
   </hbox>

@@ -53,7 +53,8 @@
       <rows>
 
         <row align="center">
-          <description>&employName.label;</description>
+          <label value="&employName.label;" control="business.companyname"
+                 accesskey="&employName.accesskey;"/>
           <menulist id="business.companyname" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -63,7 +64,8 @@
         </row>
 
         <row align="center">
-          <description>&employTitle.label;</description>
+          <label value="&employTitle.label;" control="business.jobtitle"
+                 accesskey="&employTitle.accesskey;"/>
           <menulist id="business.jobtitle" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -73,7 +75,8 @@
         </row>
 
         <row align="center">
-          <description>&employDepartment.label;</description>
+          <label value="&employDepartment.label;" control="business.department"
+                 accesskey="&employDepartment.accesskey;"/>
           <menulist id="business.department" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">

@@ -54,7 +54,8 @@
       <rows>
 
         <row align="center">
-          <description>&namePrefix.label;</description>
+          <label value="&namePrefix.label;" accesskey="&namePrefix.accesskey;"
+                 control="name.prefix"/>
           <menulist id="name.prefix" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -64,7 +65,8 @@
         </row>
 
         <row align="center">
-          <description>&nameFirst.label;</description>
+          <label value="&nameFirst.label;" control="name.first"
+                 accesskey="&nameFirst.accesskey;"/>
           <menulist id="name.first" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -74,7 +76,8 @@
         </row>
 
         <row align="center">
-          <description>&nameMiddle.label;</description>
+          <label value="&nameMiddle.label;" control="name.middle"
+                 accesskey="&nameMiddle.accesskey;"/>
           <menulist id="name.middle" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -84,7 +87,8 @@
         </row>
 
         <row align="center">
-          <description>&nameLast.label;</description>
+          <label value="&nameLast.label;" control="name.last"
+                 accesskey="&nameLast.accesskey;"/>
           <menulist id="name.last" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -94,7 +98,8 @@
         </row>
 
         <row align="center">
-          <description>&nameSuffix.label;</description>
+          <label value="&nameSuffix.label;" control="name.suffix"
+                 accesskey="&nameSuffix.accesskey;"/>
           <menulist id="name.suffix" editable="true" disableautoselect="true"
                     onchange="Append(this)">
 
