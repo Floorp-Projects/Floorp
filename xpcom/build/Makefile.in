@@ -40,6 +40,7 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libxpcomthreads_s.a \
 		$(DIST)/lib/libxpcomproxy_s.a \
 		$(DIST)/lib/libxpcombase_s.a \
+		$(DIST)/lib/libxpcomds_s.a \
 		$(DIST)/lib/libxptcall.a \
 		$(DIST)/lib/libxptinfo.a \
 		$(DIST)/lib/libxpt.a \
