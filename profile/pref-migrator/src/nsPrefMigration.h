@@ -151,7 +151,7 @@ class nsPrefMigration: public nsIPrefMigration
       nsresult getPrefService();
 
       nsCOMPtr<nsIPref>         m_prefs;
-      nsCOMPtr<nsIFileSpec>     m_prefsFile; 
+      nsCOMPtr<nsILocalFile>     m_prefsFile; 
       nsCOMPtr<nsIDOMWindowInternal>    m_parentWindow;
       nsCOMPtr<nsIXULWindow>    mPMProgressWindow;
 };

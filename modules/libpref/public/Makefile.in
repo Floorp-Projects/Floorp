@@ -28,7 +28,14 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= pref
 
-XPIDLSRCS	= nsIPref.idl nsISecurityPref.idl
+XPIDLSRCS	= \
+              nsIPref.idl \
+              nsIPrefBranch.idl \
+              nsIPrefBranchInternal.idl \
+              nsIPrefLocalizedString.idl \
+              nsIPrefService.idl \
+              nsISecurityPref.idl \
+              $(NULL)
 
 EXPORTS		= prefldap.h
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -20,12 +20,17 @@
  * Contributor(s): 
  */
 
-#include "nsISupports.idl"
+#include "nsIPrefService.idl"
+#include "nsIFile.idl"
+#include "nsIFileSpec.idl"
 #include "nsILocalFile.idl"
 #include "nsIObserver.idl"
+#include "nsIPrefBranch.idl"
+#include "nsIPrefBranchInternal.idl"
 
-/**
- * @status UNDER_REVIEW
+/*
+ * This entire interface is depricated and should not be used.
+ * See nsIPrefService and nsIPrefBranch for the new implementations.
  */
 
 %{C++
@@ -52,110 +57,190 @@ typedef void (*PrefEnumerationFunc)(const char *, void *);
 native PrefChangedFunc(PrefChangedFunc);
 native PrefEnumerationFunc(PrefEnumerationFunc);
 
-interface nsIFileSpec;
 
 [scriptable, uuid(a22ad7b0-ca86-11d1-a9a4-00805f8a7ac4)]
 interface nsIPref : nsISupports {
-    const long ePrefInvalid = 0;
-    const long ePrefLocked = 1;
-    const long ePrefUserset = 2;
-    const long ePrefConfig = 4;
-    const long ePrefRemote = 8;
-    const long ePrefLilocal = 16;
-    const long ePrefString = 32;
-    const long ePrefInt = 64;
-    const long ePrefBool = 128;
-    const long ePrefValuetypeMask = (ePrefString | ePrefInt | ePrefBool);
-        
-  // Initialize/shutdown
-  void StartUp();
-  void ReadUserPrefs();
-  void ReadUserPrefsFrom(in nsIFileSpec spec);
-  void ResetUserPrefs();
+
+  /*
+   * These are the the Prefs Service methods we will support for now
+   */
+
+  /*
+   * readConfigFile
+   * 
+   * identify and read the configuration (.cfg) file
+   */
+  void readConfigFile();
+
+  /*
+   * readUserPrefs
+   * 
+   * read a user preference file, pass in null for default file
+   */
+  void readUserPrefs(in nsIFile aFile);
+
+  /*
+   * resetPrefs
+   * 
+   * completely flush and reload the preferences system
+   */
   void ResetPrefs();
-  void ShutDown();
 
-  // Config file input
-  void SavePrefFileAs(in nsIFileSpec filename);
+  /*
+   * resetUserPrefs
+   * 
+   * flush all current user prefrences (reset all preferences to the default values)
+   */
+  void ResetUserPrefs();
 
-  /* Getters */
-  long GetPrefType(in string pref);
-  long GetIntPref(in string pref);
-  boolean GetBoolPref(in string pref);
-  [noscript] void GetBinaryPref(in string pref, in voidPtr buf,
-                                inout long buf_length);
+  /*
+   * savePrefFile
+   * 
+   * write current preferences state to a file, pass in null for default file
+   */
+  void savePrefFile(in nsIFile aFile);
 
-  unsigned long GetColorPrefDWord(in string pref);
-  /* set preferences */
-  void SetCharPref(in string pref, in string value);
-  void SetUnicharPref(in string pref, in wstring value);
-  void SetIntPref(in string pref, in long value);
-  void SetBoolPref(in string pref, in boolean value);
-  [noscript] void SetBinaryPref(in string pref, in voidPtr value,
-                                in unsigned long size);
+  /*
+   * branch operations
+   */
 
-    
-  void ClearUserPref(in string pref_name);
-  
-  /* get defaults */
-  long GetDefaultIntPref(in string pref);
-  boolean GetDefaultBoolPref(in string pref);
-  [noscript] void GetDefaultBinaryPref(in string pref, in voidPtr value,
-                            out long length);
+  nsIPrefBranch getBranch(in string aPrefRoot);
+  nsIPrefBranch getDefaultBranch(in string aPrefRoot);
 
-  /* set defaults */
-  void SetDefaultCharPref(in string pref, in string value);
-  void SetDefaultUnicharPref(in string pref, in wstring value);
-  void SetDefaultIntPref(in string pref, in long value);
-  void SetDefaultBoolPref(in string pref, in boolean value);
-  [noscript] void SetDefaultBinaryPref(in string pref, in voidPtr value,
-                                       in unsigned long size);
-  
-  // these are eventually changing from Copy->get
-  string CopyCharPref(in string pref);
-  wstring CopyUnicharPref(in string pref);
-  [noscript] voidPtr CopyBinaryPref(in string pref, out long size);
-    
-  // "localized" prefs - stored in the properties files
-  wstring getLocalizedUnicharPref(in string pref);
-  wstring getDefaultLocalizedUnicharPref(in string pref);
-  
-  string CopyDefaultCharPref(in string pref);
-  wstring CopyDefaultUnicharPref(in string pref);
-  [noscript] voidPtr CopyDefaultBinaryPref(in string pref, out long size);
 
-  nsIFileSpec GetFilePref(in string pref);
-  void SetFilePref(in string pref, in nsIFileSpec value, in boolean setDefault);
-  nsILocalFile getFileXPref(in string pref);
-  void setFileXPref(in string pref, in nsILocalFile value);
+  /*
+   * These are the the Prefs Branch methods we will support for now
+   */
 
-  /* pref attributes */
-  boolean PrefIsLocked(in string pref);
+  const long ePrefInvalid = 0;
+  const long ePrefLocked = 1;
+  const long ePrefUserset = 2;
+  const long ePrefConfig = 4;
+  const long ePrefRemote = 8;
+  const long ePrefLilocal = 16;
+  const long ePrefString = 32;
+  const long ePrefInt = 64;
+  const long ePrefBool = 128;
+  const long ePrefValuetypeMask = (ePrefString | ePrefInt | ePrefBool);
 
-  /* save pref values */
-  void SavePrefFile();
+  /*
+   * the root of this branch, such as "browser."
+   */
+  readonly attribute string root;
 
-  /* callbacks */
-  [noscript] void RegisterCallback(in string domain,
-                        in PrefChangedFunc callback,
-                        in voidPtr closure);
-  [noscript] void UnregisterCallback(in string domain,
-                          in PrefChangedFunc callback,
-                          in voidPtr closure);
+  /*
+   * standard methods for accessing preferences
+   */
+  long    GetPrefType(in string aPrefName);
+
+  boolean GetBoolPref(in string aPrefName);
+  void    SetBoolPref(in string aPrefName, in long aValue);
+
+  string  GetCharPref(in string aPrefName);
+  void    SetCharPref(in string aPrefName, in string aValue);
+
+  long    GetIntPref(in string aPrefName);
+  void    SetIntPref(in string aPrefName, in long aValue);
+
+  /*
+   * methods for accessing complex preferences (i.e. items beyond the simple bool, char, and int)
+   */
+  void getComplexValue(in string aPrefName, in nsIIDRef aType, [iid_is(aType), retval] out nsQIResult aValue);
+  void setComplexValue(in string aPrefName, in nsIIDRef aType, in nsISupports aValue);
+
+  /*
+   * methods for preference state manipulation
+   */
+  void    ClearUserPref(in string aPrefName);
+  boolean PrefIsLocked(in string aPrefName);
+  void    lockPref(in string aPrefName);
+  void    unlockPref(in string aPrefName);
+
+
+  /*
+   * branch-level operations
+   */
+
+  /*
+   * resetBranch
+   * 
+   * clears all user preferences starting at the given preference prefix
+   * pass in null or "" to clear this branch
+   */
+  void resetBranch(in string aStartingAt);
+
+  /*
+   * deleteBranch
+   * 
+   * removes all preferences starting at the given preference prefix
+   * pass in null or "" to remove this branch
+   */
+  void DeleteBranch(in string aStartingAt);
+
+  /*
+   * getChildList
+   *
+   * Returns an array of strings representing the child preferences of the branch root
+   * 
+   * @param startingAt pass in null or "" to enumerate the entire branch
+   * @param count Receives the number of elements in the array.
+   * @param childArray Receives the array of child preferences.
+   */
+  void getChildList(in string aStartingAt,
+                    out unsigned long aCount,
+                    [array, size_is(aCount), retval] out string aChildArray);
+
+
+  /*
+   * Listeners
+   */
+
   /*
    * The observers have their |Observe| methods called with
    * ([the observer], "nsPref:changed", [pref name]).
    */
-  void addObserver(in string domain, in nsIObserver observer);
-  void removeObserver(in string domain, in nsIObserver observer);
+  void addObserver(in string aDomain, in nsIObserver aObserver);
+  void removeObserver(in string aDomain, in nsIObserver aObserver);
 
 
+  /*
+   * Finally some depricated methods
+   */
+
   
-  /* void CopyPrefsTree(in string srcRoot, in string destRoot); */
-  void DeleteBranch(in string branchName);
-  
+  // these are changing from Copy->get
+  string CopyCharPref(in string pref);
+  string CopyDefaultCharPref(in string pref);
+
+  /* get & set defaults */
+  boolean GetDefaultBoolPref(in string pref);
+  long    GetDefaultIntPref(in string pref);
+
+  void SetDefaultBoolPref(in string pref, in boolean value);
+  void SetDefaultCharPref(in string pref, in string value);
+  void SetDefaultIntPref(in string pref, in long value);
+
+  /* unichar & localized unichar prefs */
+  wstring CopyUnicharPref(in string pref);
+  wstring CopyDefaultUnicharPref(in string pref);
+  void SetUnicharPref(in string pref, in wstring value);
+  void SetDefaultUnicharPref(in string pref, in wstring value);
+  wstring getLocalizedUnicharPref(in string pref);
+  wstring getDefaultLocalizedUnicharPref(in string pref);
+
+  /* file & filespec prefs */
+  nsIFileSpec  GetFilePref(in string pref);
+  void         SetFilePref(in string pref, in nsIFileSpec value, in boolean setDefault);
+  nsILocalFile getFileXPref(in string pref);
+  void         setFileXPref(in string pref, in nsILocalFile value);
+
+  /* callbacks */
+  [noscript] void RegisterCallback(in string domain, in PrefChangedFunc callback, in voidPtr closure);
+  [noscript] void UnregisterCallback(in string domain, in PrefChangedFunc callback, in voidPtr closure);
+
   void CreateChildList(in string parent_node,out string childList);
   [noscript] string NextChild(in string child_list, inout short index);
+
 
   /**
    * EnumerateChildren
@@ -167,7 +252,5 @@ interface nsIPref : nsISupports {
    * @param callback A function to call back for each matching preference
    * @param data A piece of data to pass on to the callback
    */
-  [noscript] void EnumerateChildren(in string parent, 
-                                    in PrefEnumerationFunc callback, 
-                                    in voidPtr data);
+  [noscript] void EnumerateChildren(in string parent, in PrefEnumerationFunc callback, in voidPtr data);
 };

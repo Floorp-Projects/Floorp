@@ -412,7 +412,7 @@ nsresult DIR_ShutDown()  /* FEs should call this when the app is shutting down. 
 	NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
 	if (NS_FAILED(rv) || !pPref) 
 		return NS_ERROR_FAILURE;
-	pPref->SavePrefFile();
+	pPref->SavePrefFile(nsnull);
 
 	if (dir_ServerList)
 	{
@@ -487,7 +487,7 @@ nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, P
 		NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
 		if (NS_FAILED(rv) || !pPref) 
 			return NS_ERROR_FAILURE;
-		pPref->SavePrefFile();
+		pPref->SavePrefFile(nsnull);
 
 		return NS_OK;
 	}
@@ -2009,7 +2009,7 @@ nsresult DIR_DeleteServerFromList(DIR_Server *server)
 		NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
 		if (NS_FAILED(rv) || !pPref) 
 			return NS_ERROR_FAILURE;
-		pPref->SavePrefFile();
+		pPref->SavePrefFile(nsnull);
 
 		return NS_OK;
 	}

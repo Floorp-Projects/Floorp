@@ -288,16 +288,16 @@ nsPresContext::GetUserPreferences()
 
   // * document colors
   PRBool usePrefColors = PR_TRUE;
-  PRUint32  colorPref;
+  PRInt32  colorPref;
   PRBool boolPref;
   if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.display.use_system_colors", &boolPref))) {
     usePrefColors = !boolPref;
   }
   if (usePrefColors) {
-    if (NS_SUCCEEDED(mPrefs->GetColorPrefDWord("browser.display.foreground_color", &colorPref))) {
+    if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.foreground_color", &colorPref))) {
       mDefaultColor = (nscolor)colorPref;
     }
-    if (NS_SUCCEEDED(mPrefs->GetColorPrefDWord("browser.display.background_color", &colorPref))) {
+    if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.background_color", &colorPref))) {
       mDefaultBackgroundColor = (nscolor)colorPref;
     }
   }
@@ -320,10 +320,10 @@ nsPresContext::GetUserPreferences()
   if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.underline_anchors", &boolPref))) {
     mUnderlineLinks = boolPref;
   }
-  if (NS_SUCCEEDED(mPrefs->GetColorPrefDWord("browser.anchor_color", &colorPref))) {
+  if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.anchor_color", &colorPref))) {
     mLinkColor = (nscolor)colorPref;
   }
-  if (NS_SUCCEEDED(mPrefs->GetColorPrefDWord("browser.visited_color", &colorPref))) {
+  if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.visited_color", &colorPref))) {
     mVisitedLinkColor = (nscolor)colorPref;
   }
 
@@ -332,10 +332,10 @@ nsPresContext::GetUserPreferences()
     mUseFocusColors = boolPref;
     mFocusTextColor = mDefaultColor;
     mFocusBackgroundColor = mDefaultBackgroundColor;
-    if (NS_SUCCEEDED(mPrefs->GetColorPrefDWord("browser.display.focus_text_color", &colorPref))) {
+    if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.focus_text_color", &colorPref))) {
       mFocusTextColor = (nscolor)colorPref;
     }
-    if (NS_SUCCEEDED(mPrefs->GetColorPrefDWord("browser.display.focus_background_color", &colorPref))) {
+    if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.focus_background_color", &colorPref))) {
       mFocusBackgroundColor = (nscolor)colorPref;
     }
   }

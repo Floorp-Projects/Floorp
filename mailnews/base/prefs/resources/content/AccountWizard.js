@@ -224,7 +224,7 @@ function FinishAccount() {
     // hack hack - save the prefs file NOW in case we crash
     try {
         var prefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-        prefs.SavePrefFile();
+        prefs.savePrefFile(null);
     } catch (ex) {
         dump("Error saving prefs!\n");
 		dump("ex = " + ex + "\n");

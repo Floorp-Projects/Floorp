@@ -676,7 +676,7 @@ nsMessengerMigrator::UpgradePrefs()
     if (NS_FAILED(rv)) return rv;
     
     // we're done migrating, let's save the prefs
-    rv = m_prefs->SavePrefFile();
+    rv = m_prefs->SavePrefFile(nsnull);
     if (NS_FAILED(rv)) return rv;
 
 	// remove the temporary identity we used for migration purposes
