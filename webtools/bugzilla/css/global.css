@@ -167,4 +167,9 @@
 .bz_obsolete { text-decoration: line-through; }
 .bz_inactive { text-decoration: line-through; }
 .bz_closed { text-decoration: line-through; }
+.bz_private { color: darkred ; background : #f3eeee ; }
+.bz_disabled { color: #a0a0a0 ; }
 
+.bz_comment { background-color: #e0e0e0; }
+
+table#flags th, table#flags td { vertical-align: baseline; text-align: left; }
