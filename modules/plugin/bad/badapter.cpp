@@ -167,8 +167,9 @@ public:
     // XXX - I add parameters to the constructor because I wasn't sure if
     // XXX - the 4.0 browser had the npp_instance struct implemented.
     // XXX - If so, then I can access npp_instance through npp->ndata.
-    CPluginInstancePeer(NPP npp, nsMIMEType typeString, nsPluginMode type,
+    CPluginInstancePeer(nsIPluginInstance* pluginInstance, NPP npp, nsMIMEType typeString, nsPluginMode type,
         PRUint16 attribute_cnt, const char** attribute_list, const char** values_list);
+
     virtual ~CPluginInstancePeer(void);
 
     NS_DECL_ISUPPORTS
@@ -214,14 +215,20 @@ public:
     Version(int* plugin_major, int* plugin_minor,
                       int* netscape_major, int* netscape_minor);
 
-	NPP GetNPPInstance(void)   {
-		return npp;
-	}
+	
+	nsIPluginInstance* GetInstance(void) { return mInstance; }
+	NPP GetNPPInstance(void) { return npp; }
+	
+	void SetWindow(NPWindow* window) { mWindow = window; }
+	NPWindow* GetWindow() { return mWindow; }
+	
 protected:
 
     NPP npp;
     // XXX - The next five variables may need to be here since I
     // XXX - don't think np_instance is available in 4.0X.
+    nsIPluginInstance* mInstance;
+    NPWindow* mWindow;
     nsMIMEType typeString;
 	nsPluginMode type;
 	PRUint16 attribute_cnt;
@@ -477,12 +484,15 @@ NPP_Initialize(void)
     }
     nsresult error = NS_OK;  
     // On UNIX the plugin might have been created when calling NPP_GetMIMEType.
-    if (thePlugin == NULL)
+    if (thePlugin == NULL) {
         // create nsIPlugin factory
         error = (NPError)NSGetFactory(kIPluginIID, (nsIFactory**) &thePlugin);
-    if (error == NS_OK)
-        thePlugin->Initialize(thePluginManager);
-
+	    if (error == NS_OK) {
+	    	thePlugin->AddRef();
+	        thePlugin->Initialize(thePluginManager);
+	    }
+	}
+	
     return (NPError) error;	
 }
 
@@ -578,17 +588,15 @@ NPP_New(NPMIMEType pluginType,
     // XXX - Since np_instance is not implemented in the 4.0x browser, I
     // XXX - had to save the plugin parameter in the peer class.
     // XXX - Ask Warren about np_instance.
-    CPluginInstancePeer* peer = 
-        new CPluginInstancePeer(instance, (nsMIMEType)pluginType, 
-                                (nsPluginMode)mode, (PRUint16)argc, 
-                                (const char** )argn, (const char** )argv);
+    CPluginInstancePeer* peer = new CPluginInstancePeer(pluginInstance, instance, (nsMIMEType)pluginType, 
+						                                (nsPluginMode)mode, (PRUint16)argc, (const char** )argn, (const char** )argv);
     assert( peer != NULL );
     if (!peer) return NPERR_OUT_OF_MEMORY_ERROR;
     peer->AddRef();
     pluginInstance->Initialize(peer);
     pluginInstance->Start();
     // Set the user instance and store the peer in npp->pdata.
-    instance->pdata = pluginInstance;
+    instance->pdata = peer;
     peer->Release();
 
     return NPERR_NO_ERROR;
@@ -610,10 +618,12 @@ NPP_Destroy(NPP instance, NPSavedData** save)
     if (instance == NULL)
         return NPERR_INVALID_INSTANCE_ERROR;
     
-    nsIPluginInstance* pluginInstance = (nsIPluginInstance* )instance->pdata;
+    CPluginInstancePeer* peer = (CPluginInstancePeer*) instance->pdata;
+    nsIPluginInstance* pluginInstance = peer->GetInstance();
     pluginInstance->Stop();
     pluginInstance->Destroy();
     pluginInstance->Release();
+	// peer->Release();
     instance->pdata = NULL;
     
     return NPERR_NO_ERROR;
@@ -632,8 +642,14 @@ NPP_SetWindow(NPP instance, NPWindow* window)
     if (instance == NULL)
         return NPERR_INVALID_INSTANCE_ERROR;
 
-    nsIPluginInstance* pluginInstance = (nsIPluginInstance* )instance->pdata;
-    
+    CPluginInstancePeer* peer = (CPluginInstancePeer*) instance->pdata;
+    if ( peer == NULL)
+        return NPERR_INVALID_PLUGIN_ERROR;
+
+	// record the window in the peer, so we can deliver proper events.
+	peer->SetWindow(window);
+
+    nsIPluginInstance* pluginInstance = peer->GetInstance();
     if( pluginInstance == 0 )
         return NPERR_INVALID_PLUGIN_ERROR;
 
@@ -670,7 +686,8 @@ NPP_NewStream(NPP instance,
     if (speer == NULL) return NPERR_OUT_OF_MEMORY_ERROR;
     speer->AddRef();
     nsIPluginStream* pluginStream = NULL; 
-    nsIPluginInstance* pluginInstance = (nsIPluginInstance*) instance->pdata;
+    CPluginInstancePeer* peer = (CPluginInstancePeer*) instance->pdata;
+    nsIPluginInstance* pluginInstance = peer->GetInstance();
     nsresult err = pluginInstance->NewStream(speer, &pluginStream);
     if (err) return NPERR_OUT_OF_MEMORY_ERROR;
     speer->Release();
@@ -789,7 +806,8 @@ NPP_Print(NPP instance, NPPrint* printInfo)
 
 	if (instance != NULL)
 	{
-		nsIPluginInstance* pluginInstance = (nsIPluginInstance*) instance->pdata;
+	    CPluginInstancePeer* peer = (CPluginInstancePeer*) instance->pdata;
+	    nsIPluginInstance* pluginInstance = peer->GetInstance();
 		pluginInstance->Print((nsPluginPrint* ) printInfo );
 	}
 }
@@ -806,9 +824,9 @@ NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
 
 	if( instance != NULL )
 	{
-	    nsIPluginInstance* pluginInstance = (nsIPluginInstance*) instance->pdata;
+	    CPluginInstancePeer* peer = (CPluginInstancePeer*) instance->pdata;
+	    nsIPluginInstance* pluginInstance = peer->GetInstance();
 		pluginInstance->URLNotify(url, NULL, (nsPluginReason)reason, notifyData);
-
 	}
 }
 
@@ -823,15 +841,24 @@ int16
 NPP_HandleEvent(NPP instance, void* event)
 {
 //    TRACE("NPP_HandleEvent\n");
-
 	int16 eventHandled = FALSE;
 	if (instance == NULL)
 		return eventHandled;
-		
-	nsIPluginInstance* pluginInstance = (nsIPluginInstance*) instance->pdata;
+	
+	NPEvent* npEvent = (NPEvent*) event;
+	nsPluginEvent pluginEvent = {
+#ifdef XP_MAC
+		npEvent, NULL
+#else
+		npEvent->event, npEvent->wParam, npEvent->lParam
+#endif
+	};
+	
+    CPluginInstancePeer* peer = (CPluginInstancePeer*) instance->pdata;
+    nsIPluginInstance* pluginInstance = peer->GetInstance();
 	if (pluginInstance) {
         PRBool handled;
-		nsresult err = pluginInstance->HandleEvent((nsPluginEvent*)event, &handled);
+		nsresult err = pluginInstance->HandleEvent(&pluginEvent, &handled);
         if (err) return FALSE;
         eventHandled = (handled == PR_TRUE);
     }
@@ -1069,17 +1096,21 @@ CPluginManager::QueryInterface(const nsIID& iid, void** ptr)
 // CPluginInstancePeer
 //
 
-CPluginInstancePeer::CPluginInstancePeer(NPP npp,
+CPluginInstancePeer::CPluginInstancePeer(nsIPluginInstance* pluginInstance,
+                                         NPP npp,
                                          nsMIMEType typeString, 
                                          nsPluginMode type,
                                          PRUint16 attr_cnt, 
                                          const char** attr_list,
                                          const char** val_list)
-    : npp(npp), typeString(typeString), type(type), attribute_cnt(attr_cnt),
-    attribute_list(NULL), values_list(NULL)
+    :	mInstance(pluginInstance), mWindow(NULL),
+		npp(npp), typeString(typeString), type(type), attribute_cnt(attr_cnt),
+		attribute_list(NULL), values_list(NULL)
 {
     // Set the reference count to 0.
     NS_INIT_REFCNT();
+    
+    mInstance->AddRef();
 
 	attribute_list = (char**) NPN_MemAlloc(attr_cnt * sizeof(const char*));
 	values_list = (char**) NPN_MemAlloc(attr_cnt * sizeof(const char*));
