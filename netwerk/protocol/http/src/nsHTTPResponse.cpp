@@ -483,7 +483,7 @@ nsresult nsHTTPResponse::ParseDateHeader(nsIAtom *aAtom,
 
     status = PR_ParseTimeString((const char*)header, PR_TRUE, aResultTime);
     if (status != PR_SUCCESS && aResultTime)
-        *aResultTime = 0;
+        *aResultTime = LL_Zero ();
     
     return NS_OK;
 }
