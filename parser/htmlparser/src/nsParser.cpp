@@ -315,6 +315,7 @@ eParseMode nsParser::GetParseMode(void){
  *  @param   
  *  @return  
  */
+static
 PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aCommand,nsString& aBuffer) {
 
     //Let's start by tring the defaultDTD, if one exists...
@@ -354,6 +355,7 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aCommand,nsStri
  *  @update  gess 5/13/98
  *  @return  parsermode (define in nsIParser.h)
  */
+static
 eParseMode DetermineParseMode(nsParser& aParser) {
   const char* theModeStr= PR_GetEnv("PARSE_MODE");
   const char* other="other";
@@ -983,7 +985,7 @@ void nsParser::DebugDumpSource(ostream& aStream) {
   PRInt32 theIndex=-1;
   nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
   CToken* theToken;
-  while(theToken=theTokenizer->GetTokenAt(++theIndex)) {
+  while(nsnull != (theToken=theTokenizer->GetTokenAt(++theIndex))) {
     // theToken->DebugDumpToken(out);
     theToken->DebugDumpSource(aStream);
   }
