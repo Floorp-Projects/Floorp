@@ -227,7 +227,9 @@ nsPluginStreamToFile::nsPluginStreamToFile(const char* target, nsIPluginInstance
 	// construct the URL we'll use later in calls to GetURL()
 	mFileURL = mFileSpec;	
 
+#ifdef NS_DEBUG
 	printf("File URL = %s\n", mFileURL.GetAsString());
+#endif
 }
 
 nsPluginStreamToFile::~nsPluginStreamToFile()
@@ -834,7 +836,6 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetMayScript(PRBool *result)
 
 NS_IMETHODIMP nsPluginInstancePeerImpl::SetWindowSize(PRUint32 width, PRUint32 height)
 {
-printf("instance peer setwindowsize called\n");
   return NS_OK;
 }
 
