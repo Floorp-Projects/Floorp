@@ -30,7 +30,7 @@ public:
   /* this macro defines QueryInterface, AddRef and Release for this class */
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD PostMessage(nsIMsgCompFields *fields);
+  NS_IMETHOD PostNewsMessage(nsIMsgCompFields *fields);
 };
 
 #endif /*  __MSGPOST_H__ */

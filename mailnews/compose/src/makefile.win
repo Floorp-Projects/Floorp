@@ -55,6 +55,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj \
 			.\$(OBJDIR)\nsComposer.obj	\
 			.\$(OBJDIR)\nsComposerNameSet.obj	\
 			.\$(OBJDIR)\nsMsgCompPrefs.obj \
+			.\$(OBJDIR)\nsMsgPost.obj \
             $(NULL)
 
 

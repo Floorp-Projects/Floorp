@@ -23,6 +23,6 @@
 [object, uuid(a6fc080a-f1bb-11d2-84c2-004005263078)]
 interface nsIMsgPost: nsISupports {
 
-	void PostMessage(in nsIMsgCompFields fields);
+	void PostNewsMessage(in nsIMsgCompFields fields);
 };
 

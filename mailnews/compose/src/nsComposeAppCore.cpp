@@ -131,7 +131,7 @@ public:
 	NS_IMETHOD SetEditor(nsIDOMEditorAppCore *editor);
 	NS_IMETHOD NewMessage(nsAutoString& aUrl, nsIDOMXULTreeElement *tree,
                           nsIDOMNodeList *nodeList, nsIDOMMsgAppCore *
-                          msgAppCore, const PRInt32 messageType);
+                          msgAppCore, PRInt32 messageType);
 	NS_IMETHOD SendMessage(nsAutoString& aAddrTo, nsAutoString& aAddrCc,
                            nsAutoString& aAddrBcc, 
                            nsAutoString& aAddrNewsgroup,
@@ -612,7 +612,7 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                              nsIDOMXULTreeElement *tree,
                              nsIDOMNodeList *nodeList,
                              nsIDOMMsgAppCore * msgAppCore,
-                             const PRInt32 messageType)
+                             PRInt32 messageType)
 {
 	//char *  urlstr=nsnull;
 	nsresult rv;
@@ -823,7 +823,7 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
 			mMsgSend->SendMessage(mMsgCompFields, NULL);
 
         if (mMsgPost)
-            mMsgPost->PostMessage(mMsgCompFields);
+            mMsgPost->PostNewsMessage(mMsgCompFields);
 	}
 
 	if (nsnull != mScriptContext) {

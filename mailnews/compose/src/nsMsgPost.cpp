@@ -37,7 +37,7 @@ nsMsgPost::~nsMsgPost()
 NS_IMPL_ISUPPORTS(nsMsgPost, nsIMsgPost::GetIID());
 
 nsresult 
-nsMsgPost::PostMessage(nsIMsgCompFields *fields)
+nsMsgPost::PostNewsMessage(nsIMsgCompFields *fields)
 {
 	const char* pBody;
 	PRInt32 nBodyLength;
