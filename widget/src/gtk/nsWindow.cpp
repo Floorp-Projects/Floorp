@@ -1152,7 +1152,7 @@ GdkCursor *nsWindow::GtkCreateCursor(nsCursor aCursorType)
        gdkcursor = gdk_cursor_new(GDK_LEFT_PTR);
        break;
     default:
-      NS_ASSERTION(aCursor, "Invalid cursor type");
+      NS_ASSERTION(aCursorType, "Invalid cursor type");
       break;
   }
 
