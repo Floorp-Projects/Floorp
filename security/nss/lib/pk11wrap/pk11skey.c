@@ -4935,6 +4935,8 @@ PK11_GetPQGParamsFromPrivateKey(SECKEYPrivateKey *privKey)
     return params;
 
 loser:
-    PORT_FreeArena(arena,PR_FALSE);
+    if (arena != NULL) {
+	PORT_FreeArena(arena,PR_FALSE);
+    }
     return NULL;
 }
