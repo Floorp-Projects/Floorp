@@ -729,11 +729,7 @@ case "$target" in
         MDCPUCFG_H=_aix64.cfg
         OBJECT_MODE=64
     else
-        if test -n "$USE_IPV6"; then
-            MDCPUCFG_H=_aix32in6.cfg
-        else
-            MDCPUCFG_H=_aix32.cfg
-        fi
+        MDCPUCFG_H=_aix32.cfg
     fi
     PR_MD_CSRCS=aix.c
     RESOLVE_LINK_SYMBOLS=1
@@ -1992,6 +1988,8 @@ AC_ARG_ENABLE(ipv6,
     [  --enable-ipv6           Compile ipv6 support],
     [ if test "$enableval" = "yes"; then
 	    USE_IPV6=1
+      else
+	    USE_IPV6=
       fi])
 
 
