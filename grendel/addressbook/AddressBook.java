@@ -27,21 +27,16 @@ package grendel.addressbook;
 import grendel.addressbook.addresscard.*;
 import grendel.ui.UIAction;
 import grendel.ui.GeneralFrame;
-import grendel.widgets.CollapsiblePanel;
-import grendel.widgets.GrendelToolBar;
-import calypso.util.QSort;
-import calypso.util.Comparer;
+import grendel.widgets.*;
+import calypso.util.*;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.*;
-import java.util.Vector;
 
 import javax.swing.*;
 import javax.swing.text.*;
-import javax.swing.ImageIcon;
-import javax.swing.JPanel;
 import javax.swing.table.*;
 //import javax.swing.table.DefaultTableModel;
 import javax.swing.event.TableModelEvent;
@@ -58,7 +53,7 @@ public class AddressBook extends GeneralFrame {
   private Hashtable         mMenuItems;
   //   private ACS_Personal      myLocalAddressBook;
 
-  private JMenuBar          mMenubar;
+  private MenuBarCtrl      mMenuBarCtrl;
   private GrendelToolBar    mTtoolbar;
   //    private Component       mStatusbar;
   private JTable            mTable;
@@ -69,6 +64,7 @@ public class AddressBook extends GeneralFrame {
   protected boolean         mSortAscending;
   protected String          ColumnName;
   protected int             mColumnSorted;
+  Preferences prefs = PreferencesFactory.Get();
 
   public static void main(String[] args) {
     AddressBook AddressBookFrame = new AddressBook();
@@ -273,14 +269,19 @@ public class AddressBook extends GeneralFrame {
     // FIXME - need to build the menu bar
     // (Jeff)
 
-    mMenubar = buildMenu("menus.xml",defaultActions);
+    mMenuBarCtrl = buildMenu("menus.xml",defaultActions);
 
-    Component[] menulist = mMenubar.getComponents();
-    for(int j = 0 ; j < menulist.length ; j++) {
-       System.out.println(menulist[j].getName());
-    }
+    JMenuItem aMenuItem = mMenuBarCtrl.getCtrlByName("sortAscending");
+    if (aMenuItem != null) {
+      aMenuItem.setSelected(true);
+    } 
 
-    setJMenuBar(mMenubar);
+    aMenuItem = mMenuBarCtrl.getCtrlByName("byName");
+    if (aMenuItem != null) {
+      aMenuItem.setSelected(true);
+    } 
+
+    setJMenuBar(mMenuBarCtrl);
 
     //collapsble panels holds toolbar.
     CollapsiblePanel collapsePanel = new CollapsiblePanel(true);
@@ -301,6 +302,11 @@ public class AddressBook extends GeneralFrame {
 
     //hack together the data sources.
     mDataSourceList = new DataSourceList ();
+    for(int j = 0 ; j < prefs.getInt("addressbook.datasource.count",1) - 1 ; j++) {
+      String DataSourceName = "DataSourceName" + j;
+      mDataSourceList.addEntry(new LDAPDataSource (prefs.getString("addressbook.datasource.name." + j),
+                                                   prefs.getString("addressbook.datasource.source." + j)));
+    }
     mDataSourceList.addEntry (new FileDataSource ("Local Addressbook","aBook.nab"));
     mDataSourceList.addEntry (new LDAPDataSource ("Four11 Directory", "ldap.four11.com"));
     mDataSourceList.addEntry (new LDAPDataSource ("InfoSpace Directory", "ldap.infospace.com"));
@@ -453,7 +459,7 @@ public class AddressBook extends GeneralFrame {
   class SearchDirectory extends UIAction {
     SearchDirectory() {
       super(searchDirectoryTag);
-      setEnabled(true);
+      this.setEnabled(true);
     }
 
     public void actionPerformed(ActionEvent e) {
@@ -686,13 +692,13 @@ public class AddressBook extends GeneralFrame {
   private GrendelToolBar createToolbar() {
 
     GrendelToolBar toolBar = new GrendelToolBar();
-    addToolbarButton(toolBar, new NewCard(),     "images/newcard.gif",       "Create a new card");
-    addToolbarButton(toolBar, null,     "images/newlist.gif",       "Create a new list");
-    addToolbarButton(toolBar, null,     "images/properties.gif",    "Edit the selected card");
-    addToolbarButton(toolBar, null,     "images/newmsg.gif",        "New Message (Ctrl+M)");
-    addToolbarButton(toolBar, null,     "images/directory.gif",     "Look up an address");
-    addToolbarButton(toolBar, null,     "images/call.gif",          "Start Netscape Conference");
-    addToolbarButton(toolBar, null,     "images/delete.gif",        "Delete selected cards <Del>");
+    addToolbarButton(toolBar, new NewCard(),     "moz-newcard.gif",       "Create a new card");
+    addToolbarButton(toolBar, null,     "moz-newlist.gif",       "Create a new list");
+    addToolbarButton(toolBar, null,     "moz-properties.gif",    "Edit the selected card");
+    addToolbarButton(toolBar, null,     "moz-newmsg.gif",        "New Message (Ctrl+M)");
+    addToolbarButton(toolBar, null,     "moz-stop.gif",     "Look up an address");
+    addToolbarButton(toolBar, null,     "moz-stop.gif",          "Start Netscape Conference");
+    addToolbarButton(toolBar, null,     "moz-delete.gif",        "Delete selected cards <Del>");
 
     return toolBar;
   }
@@ -717,10 +723,14 @@ public class AddressBook extends GeneralFrame {
     //        URL iconUrl = getClass().getResource("images/" + gifName + ".gif");
     //        b.setIcon(new ImageIcon(getClass().getResource(aImageName)));
 
-    // FIXME - need the toolbar graphics for this sub-app
-    // (Jeff)
-
-    b.setIcon(new ImageIcon(getClass().getResource("markAllRead.gif")));
+    File resourceFile = new File(aImageName);
+    try {
+      if (resourceFile.exists()) {
+         b.setIcon(new ImageIcon(resourceFile.getCanonicalFile().toString()));
+      }
+    } catch (IOException e) {
+      System.out.println("IOException occured");
+    }
     //    iconUrl = getClass().getResource("images/" + gifName + "-disabled.gif");
     //    button.setDisabledIcon(ImageIcon.createImageIcon(iconUrl));
 
