@@ -198,9 +198,11 @@ nsresult nsAbView::RemovePrefObservers()
 }
 
 NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener, 
-                             const PRUnichar *colID, const PRUnichar *sortDirection)
+                             const PRUnichar *colID, const PRUnichar *sortDirection, PRUnichar **result)
 {
   nsresult rv;
+
+  NS_ENSURE_ARG_POINTER(result);
 
   mURI = aURI;
   mAbViewListener = abViewListener;
@@ -224,7 +226,20 @@ NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener
   rv = EnumerateCards();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = SortBy(colID, sortDirection);
+  // see if the persisted sortColumn is valid.
+  // it may not be, if you migrated from older versions, or switched between
+  // a mozilla build and a commercial build, which have different columns.
+  nsAutoString actualSortColumn;
+  actualSortColumn = colID; 
+  if (nsCRT::strcmp(colID, NS_LITERAL_STRING(GENERATED_NAME_COLUMN_ID).get()) && mCards.Count()) {
+    nsIAbCard *card = ((AbCard *)(mCards.ElementAt(0)))->card;
+    nsXPIDLString value;
+    rv = card->GetCardUnicharValue(colID, getter_Copies(value));
+    if (NS_FAILED(rv))
+      actualSortColumn = NS_LITERAL_STRING(GENERATED_NAME_COLUMN_ID).get();
+  }
+
+  rv = SortBy(actualSortColumn.get(), sortDirection);
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
@@ -237,7 +252,9 @@ NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener
     rv = mAbViewListener->OnCountChanged(mCards.Count());
     NS_ENSURE_SUCCESS(rv,rv);
   }
-  return rv;
+
+  *result = nsCRT::strdup(actualSortColumn.get());
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAbView::GetDirectory(nsIAbDirectory **aDirectory)
@@ -424,15 +441,7 @@ NS_IMETHODIMP nsAbView::ToggleOpenState(PRInt32 index)
 
 NS_IMETHODIMP nsAbView::CycleHeader(const PRUnichar *colID, nsIDOMElement *elt)
 {
-  nsresult rv;
-
-  // reverse the sort
-  if (nsCRT::strcmp(mSortDirection.get(), NS_LITERAL_STRING("ascending").get()))
-    rv = SortBy(colID, NS_LITERAL_STRING("ascending").get());
-  else 
-    rv = SortBy(colID, NS_LITERAL_STRING("descending").get());
-  NS_ENSURE_SUCCESS(rv,rv);
-  return rv;
+  return NS_OK;
 }
 
 nsresult nsAbView::InvalidateOutliner(PRInt32 row)
@@ -554,13 +563,14 @@ NS_IMETHODIMP nsAbView::SortBy(const PRUnichar *colID, const PRUnichar *sortDir)
 {
   nsresult rv;
 
+  PRInt32 count = mCards.Count();
+
   nsAutoString sortColumn;
   if (!colID) 
-    sortColumn = NS_LITERAL_STRING(GENERATED_NAME_COLUMN_ID);  // default sort
-  else 
+    sortColumn = NS_LITERAL_STRING(GENERATED_NAME_COLUMN_ID).get();  // default sort
+  else
     sortColumn = colID;
 
-  PRInt32 count = mCards.Count();
   PRInt32 i;
 
   // if we are sorting by how we are already sorted, 

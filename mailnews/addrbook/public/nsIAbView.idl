@@ -51,7 +51,11 @@ interface nsIAbViewListener : nsISupports
 [scriptable, uuid(e35c015c-1dd1-11b2-9494-f88326252aae)]
 interface nsIAbView : nsISupports
 {
-    void init(in string URI, in nsIAbViewListener abViewListener, in wstring sortColumn, in wstring sortDirection);
+    /**
+	 * returns the actual sortColumn.  migration, switching from mozilla to netscape 6.x, etc, could cause
+	 * the "persisted" sortColumn to be bogus.
+	 */
+    wstring init(in string URI, in nsIAbViewListener abViewListener, in wstring sortColumn, in wstring sortDirection);
     void close();
 
     void sortBy(in wstring sortColumn, in wstring sortDirection);
