@@ -266,7 +266,7 @@ char* symdup(const char* inSymbol)
         }
     }
 #else /* F_DEMANGLE */
-    retval = strdup(symbolBuf);
+    retval = strdup(inSymbol);
 #endif  /* F_DEMANGLE */
 
     return retval;
