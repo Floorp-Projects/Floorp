@@ -66,7 +66,10 @@ public:
     eMetric_ListHorizontalInsideMinimumPadding,         
 
     eMetric_ListShouldUseVerticalInsidePadding,           // needed only because of GTK
-    eMetric_ListVerticalInsidePadding                     // needed only because of GTK
+    eMetric_ListVerticalInsidePadding,                    // needed only because of GTK
+
+    eMetric_CaretBlinkTime,                               // default, may be overriden by OS
+    eMetric_CaretWidthTwips
   } nsMetricID;
 
   typedef enum {
