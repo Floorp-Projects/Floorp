@@ -50,16 +50,16 @@ static nsrefcnt gRefCnt;
 void nsLayoutAtoms::AddrefAtoms()
 {
   if (0 == gRefCnt) {
-    all = NS_NewAtom("ALL");
-    aural = NS_NewAtom("AURAL");
-    braille = NS_NewAtom("BRAILLE");
-    embossed = NS_NewAtom("EMBOSSED");
-    handheld = NS_NewAtom("HANDHELD");
-    print = NS_NewAtom("PRINT");
-    projection = NS_NewAtom("PROJECTION");
-    screen = NS_NewAtom("SCREEN");
-    tty = NS_NewAtom("TTY");
-    tv = NS_NewAtom("TV");
+    all = NS_NewAtom("all");  // Media atoms must be lower case
+    aural = NS_NewAtom("aural");
+    braille = NS_NewAtom("braille");
+    embossed = NS_NewAtom("embossed");
+    handheld = NS_NewAtom("handheld");
+    print = NS_NewAtom("print");
+    projection = NS_NewAtom("projection");
+    screen = NS_NewAtom("screen");
+    tty = NS_NewAtom("tty");
+    tv = NS_NewAtom("tv");
 
     htmlNameSpace = NS_NewAtom("html");
     xmlNameSpace = NS_NewAtom("xml");
