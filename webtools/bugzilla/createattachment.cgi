@@ -106,7 +106,7 @@ What kind of file is this?
                   "Created an attachment (id=$attachid)\n$desc\n");
 
     print "<TABLE BORDER=1><TD><H2>Attachment to bug $id created</H2>\n";
-    system("./processmail $id $::COOKIE{'Bugzilla_login'}");
+    system("./processmail", $id, $::COOKIE{'Bugzilla_login'});
     print "<TD><A HREF=\"show_bug.cgi?id=$id\">Go Back to BUG# $id</A></TABLE>\n";
 }
 

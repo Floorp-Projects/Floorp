@@ -1668,7 +1668,7 @@ if ( CountIndexes('keywords') != 3 ) {
 # Final checks...
 if ($regenerateshadow) {
     print "Now regenerating the shadow database for all bugs.\n";
-    system("./processmail regenerate");
+    system("./processmail", "regenerate");
 }
 
 unlink "data/versioncache";

@@ -512,7 +512,7 @@ SWITCH: for ($::FORM{'knob'}) {
         $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $num ***";
 
         print "<TABLE BORDER=1><TD><H2>Notation added to bug $num</H2>\n";
-        system("./processmail $num $::FORM{'who'}");
+        system("./processmail", $num, $::FORM{'who'});
         print "<TD><A HREF=\"show_bug.cgi?id=$num\">Go To BUG# $num</A></TABLE>\n";
 
         last SWITCH;
@@ -901,7 +901,7 @@ The changes made were:
 
     foreach my $k (keys(%dependencychanged)) {
         print "<TABLE BORDER=1><TD><H2>Checking for dependency changes on bug $k</H2>\n";
-        system("./processmail $k $::FORM{'who'}");
+        system("./processmail", $k, $::FORM{'who'});
         print "<TD><A HREF=\"show_bug.cgi?id=$k\">Go To BUG# $k</A></TABLE>\n";
     }
 
