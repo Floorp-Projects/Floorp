@@ -641,16 +641,10 @@
         <![CDATA[
           this._multiplier = aNewPane.contentHeight > aOldPane.contentHeight ? 1 : -1;
           var sizeDelta = Math.abs(aOldPane.contentHeight - aNewPane.contentHeight);
-          this._needsSizing = sizeDelta > this._animateIncrement;
           
           this._animateRemainder = sizeDelta % this._animateIncrement;
 
-          // Compute the opacity step, using 0.2 as a maximum step size. 
-          this._opacityStepSize = sizeDelta != 0 ? this._animateIncrement / sizeDelta : 1.0;
-          if (this._opacityStepSize > 0.2)
-            this._opacityStepSize = 0.2;
-
-          this._setUpTimer(aOldPane.contentHeight);
+          this._setUpAnimationTimer(aOldPane.contentHeight);
         ]]>
         </body>
       </method>
@@ -673,67 +667,78 @@
         </getter>
       </property>
       
-      <field name="_animateState">0</field>
       <method name="notify">
         <parameter name="aTimer"/>
         <body>
         <![CDATA[
           if (!document)
-            this._timer.cancel();
-            
-          const STATE_START    = 0;
-          const STATE_SIZE     = 1;
-          const STATE_OPACITY  = 2;
-          const STATE_DONE     = STATE_SIZE | STATE_OPACITY;
+            aTimer.cancel();
           
-          var increment = this._sizeIncrement;
-          if (increment != 0) {
-            window.innerHeight += increment;
-            this._currentHeight += increment;
-          }
-          else 
-            this._animateState |= STATE_SIZE;
-          
-          var lastSelectedPane = document.getElementById(this.lastSelected);
-          if (parseFloat(window.getComputedStyle(lastSelectedPane, "").opacity) < 1.0) {
+          if (aTimer == this._animateTimer) {
+            var increment = this._sizeIncrement;
+            if (increment != 0) {
+              window.innerHeight += increment;
+              this._currentHeight += increment;
+            }
+            else {
+              aTimer.cancel();
+              this._setUpFadeTimer();
+            }
+          } else if (aTimer == this._fadeTimer) {
+            var lastSelectedPane = document.getElementById(this.lastSelected);
             var elt = document.getElementById(this.lastSelected);
-            elt.style.opacity = parseFloat(window.getComputedStyle(elt, "").opacity) + this._opacityStepSize;
+            if (parseFloat(window.getComputedStyle(lastSelectedPane, "").opacity) < (1.0 - this._fadeIncrement))
+              elt.style.opacity = parseFloat(window.getComputedStyle(elt, "").opacity) + this._fadeIncrement;
+            else {
+              aTimer.cancel();
+              elt.style.opacity = 1.0;
+            }
           }
-          else
-            this._animateState |= STATE_OPACITY;
-          
-          if (this._animateState == STATE_DONE)
-            this._timer.cancel();
         ]]>
         </body>
       </method>
       
-      <method name="_setUpTimer">
+      <method name="_setUpAnimationTimer">
         <parameter name="aStartHeight"/>
         <body>
         <![CDATA[
-          if (!this._timer) 
-            this._timer = Components.classes["@mozilla.org/timer;1"]
-                                    .createInstance(Components.interfaces.nsITimer);
+          if (!this._animateTimer) 
+            this._animateTimer = Components.classes["@mozilla.org/timer;1"]
+                                           .createInstance(Components.interfaces.nsITimer);
           else
-            this._timer.cancel();
+            this._animateTimer.cancel();
           this._currentHeight = aStartHeight;
-          this._animateState = 0;
           
-          this._timer.initWithCallback(this, this._animateDelay, 
-                                       Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+          this._animateTimer.initWithCallback(this, this._animateDelay, 
+                                              Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
         ]]>
         </body>
       </method>
       
-      <field name="_timer">null</field>
-      <field name="_animateDelay">50</field>
-      <field name="_animateIncrement">10</field>
+      <method name="_setUpFadeTimer">
+        <body>
+        <![CDATA[
+          if (!this._fadeTimer) 
+            this._fadeTimer = Components.classes["@mozilla.org/timer;1"]
+                                        .createInstance(Components.interfaces.nsITimer);
+          else
+            this._fadeTimer.cancel();
+          
+          this._fadeTimer.initWithCallback(this, this._fadeDelay, 
+                                           Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+        ]]>
+        </body>
+      </method>
+      
+      <field name="_animateTimer">null</field>
+      <field name="_fadeTimer">null</field>
+      <field name="_animateDelay">15</field>
+      <field name="_animateIncrement">40</field>
+      <field name="_fadeDelay">5</field>
+      <field name="_fadeIncrement">0.40</field>
       <field name="_animateRemainder">0</field>
       <field name="_currentHeight">0</field>
       <field name="_multiplier">0</field>
-      <field name="_opacityStepSize">0</field>
-      <field name="_needsSizing">0</field>
 
       <method name="addPane">
         <parameter name="aPaneElement"/>
@@ -1017,6 +1022,7 @@
 # 
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Josh Aas <joshmoz@gmail.com>
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
