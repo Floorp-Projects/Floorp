@@ -1109,9 +1109,15 @@ NS_IMETHODIMP nsRenderingContextGTK::FillEllipse(nscoord aX, nscoord aY, nscoord
 
   UpdateGC();
 
-  ::gdk_draw_arc(mSurface->GetDrawable(), mGC, FALSE,
-                 x, y, w, h,
-                 0, 360 * 64);
+  if (w < 16 || h < 16) {
+    /* Fix for bug 91816 ("bullets are not displayed correctly on certain text zooms")
+     * De-uglify bullets on some X servers:
+     * 1st: Draw... */
+    ::gdk_draw_arc(mSurface->GetDrawable(), mGC, FALSE,
+                   x, y, w, h,
+                   0, 360 * 64);
+    /*  ...then fill. */
+  }
   ::gdk_draw_arc(mSurface->GetDrawable(), mGC, TRUE,
                  x, y, w, h,
                  0, 360 * 64);

@@ -1043,18 +1043,20 @@ nsRenderingContextXlib::FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nsco
     
   UpdateGC();
   Drawable drawable; mRenderingSurface->GetDrawable(drawable);
-  /* Fix for bug 91816 ("bullets are not displayed correctly on certain text zooms")
-   * De-uglify bullets on some X servers:
-   * 1st: Draw... */
-  ::XDrawArc(mDisplay,
-             drawable,
-             *mGC,
-             x,y,w,h, 0, 360 * 64);
-  /*  ...then fill. */
+  if (w < 16 || h < 16) {
+    /* Fix for bug 91816 ("bullets are not displayed correctly on certain text zooms")
+     * De-uglify bullets on some X servers:
+     * 1st: Draw... */
+    ::XDrawArc(mDisplay,
+               drawable,
+               *mGC,
+               x, y, w, h, 0, 360 * 64);
+    /*  ...then fill. */
+  }
   ::XFillArc(mDisplay,
              drawable,
              *mGC,
-             x,y,w,h, 0, 360 * 64);
+             x, y, w, h, 0, 360 * 64);
   
   return NS_OK;  
 }
