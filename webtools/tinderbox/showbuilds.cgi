@@ -492,6 +492,9 @@ sub query_ref {
 sub who_menu {
   my ($td, $mindate, $maxdate, $who) = @_;
   my $treeflag;
+  # this variable isn't doing anything, so i'm going to use it shamelessly
+  $treeflag = $td->{cvs_branch};
+  $treeflag .= "&branchtype=regexp" if $td->{cvs_branch} =~ /\+|\?|\*/;
 
   my $qr = "${rel_path}../registry/who.cgi?email=". url_encode($who)
       . "&d=$td->{cvs_module}|$td->{cvs_branch}|$td->{cvs_root}|$mindate|$maxdate";
