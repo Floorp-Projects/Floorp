@@ -26,8 +26,8 @@
 <!ENTITY editFrameSetCmd.label		  "Edit Frameset">
 <!ENTITY editFrameSetCmd.accesskey		"t">
 
-<!ENTITY printSetupCmd.label "Print Setup...">
-<!ENTITY printSetupCmd.accesskey "r">
+<!ENTITY printSetupCmd.label "Page Setup...">
+<!ENTITY printSetupCmd.accesskey "u">
 <!ENTITY printPreviewCmd.label "Print Preview">
 <!ENTITY printPreviewCmd.accesskey "v">
 <!ENTITY printCmd.label "Print...">
