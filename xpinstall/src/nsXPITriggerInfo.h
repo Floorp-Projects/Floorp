@@ -52,6 +52,7 @@ class nsXPITriggerItem
 {
   public:
     nsXPITriggerItem( const PRUnichar* name, const PRUnichar* URL, PRInt32 flags = 0);
+    ~nsXPITriggerItem();
 
     nsString    mName;
     nsString    mURL;
@@ -74,7 +75,7 @@ class nsXPITriggerInfo
 {
   public:
     nsXPITriggerInfo();
-    virtual ~nsXPITriggerInfo();
+    ~nsXPITriggerInfo();
 
     void                Add( nsXPITriggerItem *aItem ) 
                         { if ( aItem ) mItems.AppendElement( (void*)aItem ); }

@@ -117,15 +117,15 @@ nsSoftwareUpdate::nsSoftwareUpdate()
     /***************************************/
     /* Add us to the Javascript Name Space */
     /***************************************/
-   
-    new nsSoftwareUpdateNameSet();
-    
+
+    RegisterNameset();
+
     /***************************************/
     /* Register us with NetLib             */
     /***************************************/
         // FIX 
-    
-    
+
+
     /***************************************/
     /* Startup the Version Registry        */
     /***************************************/
@@ -157,7 +157,7 @@ nsSoftwareUpdate::nsSoftwareUpdate()
     /***************************************/
 
     nsLoggingProgressNotifier *logger = new nsLoggingProgressNotifier();
-    RegisterNotifier(logger);
+    RegisterNotifier(logger); // XXX [MLK] memory leak
 }
 
 
@@ -364,6 +364,24 @@ nsSoftwareUpdate::RunNextInstall()
 }
 
 
+nsresult
+nsSoftwareUpdate::RegisterNameset()
+{
+    nsresult rv;
+    nsCOMPtr<nsIScriptNameSetRegistry> namesetService = 
+        do_GetService( kCScriptNameSetRegistryCID, &rv );
+
+    if (NS_SUCCEEDED(rv))
+    {
+        nsSoftwareUpdateNameSet* nameset = new nsSoftwareUpdateNameSet();
+        // the NameSet service will AddRef this one
+        namesetService->AddExternalNameSet( nameset );
+    }
+
+    return rv;
+}
+
+
 NS_IMETHODIMP
 nsSoftwareUpdate::SetProgramDirectory(nsIFileSpec *aDir)
 {
@@ -398,17 +416,7 @@ nsSoftwareUpdate::SetProgramDirectory(nsIFileSpec *aDir)
 
 nsSoftwareUpdateNameSet::nsSoftwareUpdateNameSet()
 {
-  NS_INIT_REFCNT();
-
-  nsIScriptNameSetRegistry *scriptNameSet;
-  nsresult result = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
-                                                 kIScriptNameSetRegistryIID,
-                                                (nsISupports **)&scriptNameSet);
-    if (NS_SUCCEEDED(result)) 
-    {
-        scriptNameSet->AddExternalNameSet(this);
-    }
-
+    NS_INIT_ISUPPORTS();
 }
 
 nsSoftwareUpdateNameSet::~nsSoftwareUpdateNameSet()

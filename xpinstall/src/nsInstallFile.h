@@ -53,7 +53,7 @@ class nsInstallFile : public nsInstallObject
                         const nsString& inVRName,
                         const nsString& inVInfo,
                         const nsString& inJarLocation,
-                        const nsString& folderSpec,
+                        nsInstallFolder *folderSpec,
                         const nsString& inPartialPath,
                         PRBool forceInstall,
                         PRInt32 *error);

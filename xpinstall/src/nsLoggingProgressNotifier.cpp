@@ -36,15 +36,16 @@
 
 
 nsLoggingProgressNotifier::nsLoggingProgressNotifier()
+    : mLogStream(0)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsLoggingProgressNotifier::~nsLoggingProgressNotifier()
 {
     if (mLogStream)
     {
-        NS_ASSERTION(PR_FALSE, "We're being destroyed before script finishes!");
+        NS_WARN_IF_FALSE(PR_FALSE, "We're being destroyed before script finishes!");
         mLogStream->close();
         delete mLogStream;
         mLogStream = 0;

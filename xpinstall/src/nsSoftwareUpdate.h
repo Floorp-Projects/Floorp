@@ -67,7 +67,7 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         static   nsIFileSpec*      mProgramDir;
 
         nsresult RunNextInstall();
-        nsresult DeleteScheduledNodes();
+        nsresult RegisterNameset();
         
         PRLock*           mLock;
         PRBool            mInstalling;
@@ -83,8 +83,11 @@ class nsSoftwareUpdateNameSet : public nsIScriptExternalNameSet
         nsSoftwareUpdateNameSet();
         virtual ~nsSoftwareUpdateNameSet();
 
+        // nsISupports
         NS_DECL_ISUPPORTS
-            NS_IMETHOD InitializeClasses(nsIScriptContext* aScriptContext);
-            NS_IMETHOD AddNameSet(nsIScriptContext* aScriptContext);
+
+        // nsIScriptExternalNameSet
+        NS_IMETHOD InitializeClasses(nsIScriptContext* aScriptContext);
+        NS_IMETHOD AddNameSet(nsIScriptContext* aScriptContext);
 };
 #endif

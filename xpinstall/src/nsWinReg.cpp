@@ -26,10 +26,19 @@
 
 /* Public Methods */
 
+MOZ_DECL_CTOR_COUNTER(nsWinReg);
+
 nsWinReg::nsWinReg(nsInstall* suObj)
 {
-	mInstallObject      = suObj;
+    MOZ_COUNT_CTOR(nsWinReg);
+
+    mInstallObject      = suObj;
 	mRootKey = (PRInt32)HKEY_CLASSES_ROOT;
+}
+
+nsWinReg::~nsWinReg()
+{
+    MOZ_COUNT_CTOR(nsWinReg);
 }
 
 PRInt32

@@ -29,10 +29,14 @@
 
 /* Public Methods */
 
+MOZ_DECL_CTOR_COUNTER(nsWinRegItem);
+
 nsWinRegItem::nsWinRegItem(nsWinReg* regObj, PRInt32 root, PRInt32 action, const nsString& sub, const nsString& valname, const nsString& val, PRInt32 *aReturn)
 : nsInstallObject(regObj->InstallObject())
 {
-	mReg     = regObj;
+    MOZ_COUNT_CTOR(nsWinRegItem);
+
+    mReg     = regObj;
 	mCommand = action;
 	mRootkey = root;
 
@@ -54,6 +58,8 @@ nsWinRegItem::nsWinRegItem(nsWinReg* regObj, PRInt32 root, PRInt32 action, const
 nsWinRegItem::nsWinRegItem(nsWinReg* regObj, PRInt32 root, PRInt32 action, const nsString& sub, const nsString& valname, PRInt32 val, PRInt32 *aReturn)
 : nsInstallObject(regObj->InstallObject())
 {
+    MOZ_COUNT_CTOR(nsWinRegItem);
+
 	mReg     = regObj;
 	mCommand = action;
 	mRootkey = root;
@@ -78,6 +84,7 @@ nsWinRegItem::~nsWinRegItem()
   if (mSubkey)  delete mSubkey;
   if (mName)    delete mName;
   if (mValue)   delete mValue;
+  MOZ_COUNT_DTOR(nsWinRegItem);
 }
 
 PRInt32 nsWinRegItem::Complete()

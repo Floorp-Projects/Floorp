@@ -61,6 +61,7 @@ class nsWinReg
     /* Public Methods */
 
                       nsWinReg(nsInstall* suObj);
+                      ~nsWinReg();
 
     PRInt32           SetRootKey(PRInt32 key);
     PRInt32           CreateKey(const nsString& subkey, const nsString& classname, PRInt32* aReturn);

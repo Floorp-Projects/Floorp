@@ -41,7 +41,7 @@ class nsInstallPatch : public nsInstallObject
                         const nsString& inVRName,
                         const nsString& inVInfo,
                         const nsString& inJarLocation,
-                        const nsString& folderSpec,
+                        nsInstallFolder* folderSpec,
                         const nsString& inPartialPath,
                         PRInt32 *error);
 

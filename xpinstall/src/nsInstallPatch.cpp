@@ -65,6 +65,7 @@ static int32   gdiff_validateFile( pDIFFDATA dd, int file );
 static PRBool  su_unbind(char* oldsrc, char* newsrc);
 #endif
 
+MOZ_DECL_CTOR_COUNTER(nsInstallPatch);
 
 nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
                                 const nsString& inVRName,
@@ -74,6 +75,8 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
 
 : nsInstallObject(inInstall)
 {
+    MOZ_COUNT_CTOR(nsInstallPatch);
+
     char tempTargetFile[MAXREGPATHLEN];
     char* tempVersionString = inVRName.ToNewCString();
 
@@ -113,25 +116,34 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
                                 const nsString& inVRName,
                                 const nsString& inVInfo,
                                 const nsString& inJarLocation,
-                                const nsString& folderSpec,
+                                nsInstallFolder* folderSpec,
                                 const nsString& inPartialPath,
                                 PRInt32 *error)
 
 : nsInstallObject(inInstall)
 {
+    MOZ_COUNT_CTOR(nsInstallPatch);
+
     if ((inInstall == nsnull) || (inVRName.Equals("")) || (inJarLocation.Equals(""))) 
     {
         *error = nsInstall::INVALID_ARGUMENTS;
         return;
     }
     
+    nsFileSpec* tmp = folderSpec->GetFileSpec();
+    if (!tmp)
+    {
+        *error = nsInstall::INVALID_ARGUMENTS;
+        return;
+    }
+
     mPatchFile      =   nsnull;
     mTargetFile     =   nsnull;
     mPatchedFile    =   nsnull;
     mRegistryName   =   new nsString(inVRName);
     mJarLocation    =   new nsString(inJarLocation);
     mVersionInfo    =   new nsInstallVersion();
-    mTargetFile     =   new nsFileSpec(folderSpec);
+    mTargetFile     =   new nsFileSpec(*tmp);
 
     if (mRegistryName == nsnull ||
         mJarLocation  == nsnull ||
@@ -169,6 +181,7 @@ nsInstallPatch::~nsInstallPatch()
     if (mPatchFile)
         delete mPatchFile;
 
+    MOZ_COUNT_DTOR(nsInstallPatch);
 }
 
 

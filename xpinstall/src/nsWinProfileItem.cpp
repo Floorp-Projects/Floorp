@@ -27,12 +27,16 @@
 
 /* Public Methods */
 
+MOZ_DECL_CTOR_COUNTER(nsWinProfileItem);
+
 nsWinProfileItem::nsWinProfileItem(nsWinProfile* profileObj, 
                                    nsString sectionName,
                                    nsString keyName,
                                    nsString val,
                                    PRInt32 *aReturn) : nsInstallObject(profileObj->InstallObject())
 {
+  MOZ_COUNT_CTOR(nsWinProfileItem);
+
   mProfile = profileObj;
   mSection = new nsString(sectionName);
   mKey     = new nsString(keyName);
@@ -53,6 +57,8 @@ nsWinProfileItem::~nsWinProfileItem()
   if (mSection) delete mSection;
   if (mKey)     delete mKey;
   if (mValue)   delete mValue;
+
+  MOZ_COUNT_DTOR(nsWinProfileItem);
 }
 
 PRInt32 nsWinProfileItem::Complete()

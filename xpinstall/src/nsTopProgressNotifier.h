@@ -26,6 +26,7 @@
 #ifndef nsTopProgressNotifier_h__
 #define nsTopProgressNotifier_h__
 
+#include "nsCOMPtr.h"
 #include "nsIXPINotifier.h"
 #include "nsVoidArray.h"
 
@@ -49,7 +50,7 @@ class nsTopProgressNotifier : public nsIXPINotifier
    
    private:
         nsVoidArray     *mNotifiers;
-        nsIXPINotifier  *mActive;
+        nsCOMPtr<nsIXPINotifier>  mActive;
 
 };
 

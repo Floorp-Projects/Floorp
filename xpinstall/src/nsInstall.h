@@ -44,6 +44,7 @@
 
 #include "nsInstallObject.h"
 #include "nsInstallVersion.h"
+#include "nsInstallFolder.h"
 
 #include "nsIXPINotifier.h"
 
@@ -55,6 +56,7 @@
 #include "nsIProperties.h"
 #include "nsIEnumerator.h"
 #include "nsIZipReader.h"
+
 
 class nsInstallInfo
 {
@@ -181,35 +183,39 @@ class nsInstall
 
         PRInt32    AbortInstall(PRInt32 aErrorNumber);
         
-        PRInt32    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aSubdir, PRBool aForceMode, PRInt32* aReturn);
-        PRInt32    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aSubdir, PRInt32* aReturn);
-        PRInt32    AddDirectory(const nsString& aRegName, const nsString& aJarSource, const nsString& aFolder, const nsString& aSubdir, PRInt32* aReturn);
+        PRInt32    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aSubdir, PRBool aForceMode, PRInt32* aReturn);
+        PRInt32    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aSubdir, PRInt32* aReturn);
+        PRInt32    AddDirectory(const nsString& aRegName, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aSubdir, PRInt32* aReturn);
         PRInt32    AddDirectory(const nsString& aJarSource, PRInt32* aReturn);
         
-        PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRBool aForceMode, PRInt32* aReturn);
-        PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
-        PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
+        PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsInstallFolder *aFolder, const nsString& aTargetName, PRBool aForceMode, PRInt32* aReturn);
+        PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsInstallFolder *aFolder, const nsString& aTargetName, PRInt32* aReturn);
+        PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aJarSource, nsInstallFolder *aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    AddSubcomponent(const nsString& aJarSource, PRInt32* aReturn);
         
         PRInt32    DeleteComponent(const nsString& aRegistryName, PRInt32* aReturn);
-        PRInt32    DeleteFile(const nsString& aFolder, const nsString& aRelativeFileName, PRInt32* aReturn);
+        PRInt32    DeleteFile(nsInstallFolder* aFolder, const nsString& aRelativeFileName, PRInt32* aReturn);
         PRInt32    DiskSpaceAvailable(const nsString& aFolder, PRInt64* aReturn);
         PRInt32    Execute(const nsString& aJarSource, const nsString& aArgs, PRInt32* aReturn);
         PRInt32    Execute(const nsString& aJarSource, PRInt32* aReturn);
         PRInt32    FinalizeInstall(PRInt32* aReturn);
         PRInt32    Gestalt(const nsString& aSelector, PRInt32* aReturn);
-        PRInt32    GetComponentFolder(const nsString& aComponentName, const nsString& aSubdirectory, nsString** aFolder);
-        PRInt32    GetComponentFolder(const nsString& aComponentName, nsString** aFolder);
-        PRInt32    GetFolder(const nsString& aTargetFolder, const nsString& aSubdirectory, nsString** aFolder);
-        PRInt32    GetFolder(const nsString& aTargetFolder, nsString** aFolder);
+        
+        PRInt32    GetComponentFolder(const nsString& aComponentName, const nsString& aSubdirectory, nsInstallFolder** aFolder);
+        PRInt32    GetComponentFolder(const nsString& aComponentName, nsInstallFolder** aFolder);
+        
+        PRInt32    GetFolder(nsInstallFolder& aTargetFolder, const nsString& aSubdirectory, nsInstallFolder** aFolder);
+        PRInt32    GetFolder(const nsString& aTargetFolder, const nsString& aSubdirectory, nsInstallFolder** aFolder);
+        PRInt32    GetFolder(const nsString& aTargetFolder, nsInstallFolder** aFolder);
+        
         PRInt32    GetLastError(PRInt32* aReturn);
         PRInt32    GetWinProfile(const nsString& aFolder, const nsString& aFile, JSContext* jscontext, JSClass* WinProfileClass, jsval* aReturn);
         PRInt32    GetWinRegistry(JSContext* jscontext, JSClass* WinRegClass, jsval* aReturn);
         PRInt32	   LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aReturn);
-        PRInt32    Patch(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
-        PRInt32    Patch(const nsString& aRegName, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
+        PRInt32    Patch(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aTargetName, PRInt32* aReturn);
+        PRInt32    Patch(const nsString& aRegName, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    ResetError();
-        PRInt32    SetPackageFolder(const nsString& aFolder);
+        PRInt32    SetPackageFolder(nsInstallFolder& aFolder);
         PRInt32    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, const nsString& aVersion, PRInt32* aReturn);
         PRInt32    Uninstall(const nsString& aPackageName, PRInt32* aReturn);
         
@@ -264,13 +270,14 @@ class nsInstall
         
         JSObject*           mWinRegObject;
         JSObject*           mWinProfileObject;
+
         
         nsFileSpec          mJarFileLocation;
         nsIZipReader*       mJarFileData;
         
         nsString            mInstallArguments;
         nsString            mInstallURL;
-        nsString            mPackageFolder;
+        nsInstallFolder*    mPackageFolder;
 
         PRBool              mUserCancelled;
         PRBool              mStatusSent;

@@ -40,6 +40,9 @@ extern JSClass WinRegClass;
 extern JSClass WinProfileClass;
 #endif
 
+#include "nsJSFileSpecObj.h"
+extern JSClass FileSpecObjectClass;
+
 //
 // Install property ids
 //
@@ -56,6 +59,9 @@ enum Install_slots
   INSTALL_INSTALL         = -9,
   INSTALL_INSTALLED_FILES = -10
 };
+
+// prototype for filespec objects
+JSObject *gFileSpecProto = nsnull;
 
 /***********************************************************************/
 //
@@ -369,6 +375,8 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   nsAutoString b2;
   nsAutoString b3;
   nsAutoString b4;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
   PRBool b5;
 
   *rval = JSVAL_NULL;
@@ -400,10 +408,18 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
-    ConvertJSValToStr(b2, cx, argv[2]);
     ConvertJSValToStr(b3, cx, argv[3]);
+    jsObj = JSVAL_TO_OBJECT(argv[2]);
 
-    if(NS_OK != nativeThis->AddDirectory(b0, b1, b2, b3, &nativeRet))
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
+    {
+      JS_ReportError(cx, "GetFolder:Invalid Parameter");
+      return JS_FALSE; 
+    }
+
+    folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+    if(NS_OK != nativeThis->AddDirectory(b0, b1, folder, b3, &nativeRet))
     {
       return JS_FALSE;
     }
@@ -421,10 +437,18 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSvalToVersionString(b1, cx, argv[1]);
     ConvertJSValToStr(b2, cx, argv[2]);
-    ConvertJSValToStr(b3, cx, argv[3]);
     ConvertJSValToStr(b4, cx, argv[4]);
+    jsObj = JSVAL_TO_OBJECT(argv[3]);
+
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
+    {
+      JS_ReportError(cx, "GetFolder:Invalid Parameter");
+      return JS_FALSE; 
+    }
     
-    if(NS_OK != nativeThis->AddDirectory(b0, b1, b2, b3, b4, &nativeRet))
+    folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+    if(NS_OK != nativeThis->AddDirectory(b0, b1, b2, folder, b4, &nativeRet))
     {
         return JS_FALSE;
     }
@@ -444,7 +468,7 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSvalToVersionString(b1, cx, argv[1]);
     ConvertJSValToStr(b2, cx, argv[2]);
-    ConvertJSValToStr(b3, cx, argv[3]);
+    jsObj = JSVAL_TO_OBJECT(argv[3]);
     ConvertJSValToStr(b4, cx, argv[4]);
 
     if(!ConvertJSValToBool(&b5, cx, argv[5]))
@@ -452,7 +476,15 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
       return JS_FALSE;
     }
 
-    if(NS_OK != nativeThis->AddDirectory(b0, b1, b2, b3, b4, b5, &nativeRet))
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
+    {
+      JS_ReportError(cx, "GetFolder:Invalid Parameter");
+      return JS_FALSE; 
+    }
+
+    folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+    if(NS_OK != nativeThis->AddDirectory(b0, b1, b2, folder, b4, b5, &nativeRet))
     {
         return JS_FALSE;
     }
@@ -482,6 +514,8 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   nsAutoString b2;
   nsAutoString b3;
   nsAutoString b4;
+  JSObject* jsObj;
+  nsInstallFolder* folder;
   PRBool b5;
 
   *rval = JSVAL_NULL;
@@ -503,7 +537,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSvalToVersionString(b1, cx, argv[1]);
     ConvertJSValToStr(b2, cx, argv[2]);
-    ConvertJSValToStr(b3, cx, argv[3]);
+    jsObj = JSVAL_TO_OBJECT(argv[3]);
     ConvertJSValToStr(b4, cx, argv[4]);
 
     if(!ConvertJSValToBool(&b5, cx, argv[5]))
@@ -511,7 +545,15 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
       return JS_FALSE;
     }
 
-    if(NS_OK != nativeThis->AddSubcomponent(b0, b1, b2, b3, b4, b5, &nativeRet))
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
+    {
+      JS_ReportError(cx, "AddSubcomponent:Invalid Parameter");
+      return JS_FALSE; 
+    }
+
+    folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+    if(NS_OK != nativeThis->AddSubcomponent(b0, b1, b2, folder, b4, b5, &nativeRet))
     {
     return JS_FALSE;
     }
@@ -529,10 +571,18 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSvalToVersionString(b1, cx, argv[1]);
     ConvertJSValToStr(b2, cx, argv[2]);
-    ConvertJSValToStr(b3, cx, argv[3]);
     ConvertJSValToStr(b4, cx, argv[4]);
+    jsObj = JSVAL_TO_OBJECT(argv[3]);
 
-    if(NS_OK != nativeThis->AddSubcomponent(b0, b1, b2, b3, b4, &nativeRet))
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
+    {
+      JS_ReportError(cx, "AddSubcomponent:Invalid Parameter");
+      return JS_FALSE; 
+    }
+
+    folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+    if(NS_OK != nativeThis->AddSubcomponent(b0, b1, b2, folder, b4, &nativeRet))
     {
         return JS_FALSE;
     }
@@ -548,10 +598,18 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
-    ConvertJSValToStr(b2, cx, argv[2]);
     ConvertJSValToStr(b3, cx, argv[3]);
+    jsObj = JSVAL_TO_OBJECT(argv[2]);
 
-    if(NS_OK != nativeThis->AddSubcomponent(b0, b1, b2, b3, &nativeRet))
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
+    {
+      JS_ReportError(cx, "GetFolder:Invalid Parameter");
+      return JS_FALSE; 
+    }
+
+    folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+    if(NS_OK != nativeThis->AddSubcomponent(b0, b1, folder, b3, &nativeRet))
     {
       return JS_FALSE;
     }
@@ -629,8 +687,9 @@ InstallDeleteFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
-  nsAutoString b0;
+  JSObject* jsObj;
   nsAutoString b1;
+  nsInstallFolder* folder;
 
   *rval = JSVAL_NULL;
 
@@ -644,10 +703,18 @@ InstallDeleteFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     //  public int DeleteFile ( Object folder,
     //                          String relativeFileName);
 
-    ConvertJSValToStr(b0, cx, argv[0]);
+    jsObj = JSVAL_TO_OBJECT(argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
 
-    if(NS_OK != nativeThis->DeleteFile(b0, b1, &nativeRet))
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
+    {
+      JS_ReportError(cx, "DeleteFile:Invalid Parameter");
+      return JS_FALSE; 
+    }
+
+    folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+    if(NS_OK != nativeThis->DeleteFile(folder, b1, &nativeRet))
     {
       return JS_FALSE;
     }
@@ -849,7 +916,7 @@ PR_STATIC_CALLBACK(JSBool)
 InstallGetComponentFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-  nsString* nativeRet;
+  nsInstallFolder* folder;
   nsAutoString b0;
   nsAutoString b1;
 
@@ -864,19 +931,16 @@ InstallGetComponentFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   {
     //  public int GetComponentFolder ( String registryName,
     //                                  String subDirectory);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
-
-    if(NS_OK != nativeThis->GetComponentFolder(b0, b1, &nativeRet))
+    if(JSVAL_IS_STRING(argv[0])) // check if the first argument is a string 
     {
-      return JS_FALSE;
+      ConvertJSValToStr(b0, cx, argv[0]);
+      if(NS_OK != nativeThis->GetComponentFolder(b0, b1, &folder))
+        return JS_FALSE;
     }
 
-    if(nsnull == nativeRet)
-      *rval = JSVAL_NULL;
-    else
-      ConvertStrToJSVal(*nativeRet, cx, rval);
+    if(nsnull != folder)
+      return JS_FALSE;
   }
   else if(argc >= 1)
   {
@@ -884,21 +948,32 @@ InstallGetComponentFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     ConvertJSValToStr(b0, cx, argv[0]);
 
-    if(NS_OK != nativeThis->GetComponentFolder(b0, &nativeRet))
+    if(NS_OK != nativeThis->GetComponentFolder(b0, &folder))
     {
       return JS_FALSE;
     }
 
-    if(nsnull == nativeRet)
-      *rval = JSVAL_NULL;
-    else
-      ConvertStrToJSVal(*nativeRet, cx, rval);
+    if(nsnull != folder)
+      return JS_FALSE;
   }
   else
   {
     JS_ReportError(cx, "Function GetComponentFolder requires 2 parameters");
     return JS_FALSE;
   }
+
+  /* Now create the new JSObject */
+  JSObject* fileSpecObject;
+
+  fileSpecObject = JS_NewObject(cx, &FileSpecObjectClass, gFileSpecProto, NULL);
+  if (fileSpecObject == NULL)
+    return JS_FALSE;
+
+  JS_SetPrivate(cx, fileSpecObject, folder);
+  if (fileSpecObject == NULL)
+    return JS_FALSE;
+
+  *rval = OBJECT_TO_JSVAL(fileSpecObject);
 
   return JS_TRUE;
 }
@@ -911,9 +986,10 @@ PR_STATIC_CALLBACK(JSBool)
 InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-  nsString* nativeRet;
+  JSObject *jsObj;
   nsAutoString b0;
   nsAutoString b1;
+  nsInstallFolder *folder = nsnull;
 
   *rval = JSVAL_NULL;
 
@@ -924,21 +1000,35 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
   if(argc >= 2)
   {
-    //  public int GetFolder ( String folderName, --OR-- Object localDirSpec,
-    //                         String subDirectory);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-    ConvertJSValToStr(b1, cx, argv[1]);
-
-    if(NS_OK != nativeThis->GetFolder(b0, b1, &nativeRet))
+    ConvertJSValToStr(b1, cx, argv[1]); // we know that the second param must be a string
+    if(JSVAL_IS_STRING(argv[0])) // check if the first argument is a string 
     {
-      return JS_FALSE;
+      ConvertJSValToStr(b0, cx, argv[0]);
+      if(NS_OK != nativeThis->GetFolder(b0, b1, &folder))
+        return JS_FALSE;
+    }
+    else /* it must be an object */
+    {
+      jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+      if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
+      {
+        JS_ReportError(cx, "GetFolder:Invalid Parameter");
+        return JS_FALSE; 
+      }
+
+      folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+      if (!folder)
+      {
+        JS_ReportError(cx, "GetFolder:Invalid Parameter");
+        return JS_FALSE;
+      }
+      else if(NS_OK != nativeThis->GetFolder(*folder, b1, &folder))
+        return JS_FALSE;
     }
 
-    if(nsnull == nativeRet)
-      *rval = JSVAL_NULL;
-    else
-      ConvertStrToJSVal(*nativeRet, cx, rval);
+    if(nsnull == folder)
+      return JS_FALSE;
   }
   else if(argc >= 1)
   {
@@ -946,24 +1036,40 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
     ConvertJSValToStr(b0, cx, argv[0]);
 
-    if(NS_OK != nativeThis->GetFolder(b0, &nativeRet))
+    if(NS_OK != nativeThis->GetFolder(b0, &folder))
     {
       return JS_FALSE;
     }
 
-    if(nsnull == nativeRet)
-      *rval = JSVAL_NULL;
-    else
-      ConvertStrToJSVal(*nativeRet, cx, rval);
+    if(nsnull == folder)
+      return JS_FALSE;
   }
   else
   {
-    JS_ReportError(cx, "Function GetFolder requires 2 parameters");
+    JS_ReportError(cx, "Function GetFolder requires at least 1 parameter");
     return JS_FALSE;
   }
 
-  return JS_TRUE;
+  if ( folder )
+  {
+    /* Now create the new JSObject */
+    JSObject* fileSpecObject;
+
+    fileSpecObject = JS_NewObject(cx, &FileSpecObjectClass, gFileSpecProto, NULL);
+    if (fileSpecObject == NULL)
+      return JS_FALSE;
+
+    JS_SetPrivate(cx, fileSpecObject, folder);
+    if (fileSpecObject == NULL)
+      return JS_FALSE;
+
+    *rval = OBJECT_TO_JSVAL(fileSpecObject);
+  }
+
+
+  return JS_TRUE;  
 }
+
 
 
 //
@@ -1132,6 +1238,11 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   nsAutoString b3;
   nsAutoString b4;
 
+  JSObject *jsObj;
+  
+  nsInstallFolder *folder = nsnull;
+
+
   *rval = JSVAL_NULL;
 
   // If there's no private data, this must be the prototype, so ignore
@@ -1150,10 +1261,15 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSvalToVersionString(b1, cx, argv[1]);
     ConvertJSValToStr(b2, cx, argv[2]);
-    ConvertJSValToStr(b3, cx, argv[3]);
-    ConvertJSValToStr(b4, cx, argv[4]);
+    ConvertJSValToStr(b3, cx, argv[4]);
+    jsObj = JSVAL_TO_OBJECT(argv[3]);
 
-   if(NS_OK != nativeThis->Patch(b0, b1, b2, b3, b4, &nativeRet))
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
+      return JS_FALSE; // Do we return an error message to the console here?
+
+    folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+    if(NS_OK != nativeThis->Patch(b0, b1, b2, folder, b3, &nativeRet))
     {
         return JS_FALSE;
     }
@@ -1169,10 +1285,15 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
-    ConvertJSValToStr(b2, cx, argv[2]);
-    ConvertJSValToStr(b3, cx, argv[3]);
+    ConvertJSValToStr(b2, cx, argv[3]);
+    jsObj = JSVAL_TO_OBJECT(argv[2]);
 
-    if(NS_OK != nativeThis->Patch(b0, b1, b2, b3, &nativeRet))
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
+      return JS_FALSE; // Do we return an error message to the console here?
+
+    folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+    if(NS_OK != nativeThis->Patch(b0, b1, folder, b2, &nativeRet))
     {
       return JS_FALSE;
     }
@@ -1233,7 +1354,8 @@ InstallSetPackageFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   nsAutoString b0;
-
+  JSObject *jsObj;
+  nsInstallFolder *folder;
   *rval = JSVAL_NULL;
 
   // If there's no private data, this must be the prototype, so ignore
@@ -1245,12 +1367,22 @@ InstallSetPackageFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   {
     //  public int SetPackageFolder (Object folder);
 
-    ConvertJSValToStr(b0, cx, argv[0]);
-
-    if(NS_OK != nativeThis->SetPackageFolder(b0))
+    jsObj = JSVAL_TO_OBJECT(argv[0]);
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
     {
-      return JS_FALSE;
+      JS_ReportError(cx, "setPackageFolder:Invalid Parameter");
+      return JS_FALSE; 
     }
+
+    folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+    if (!folder)
+    {
+      JS_ReportError(cx, "setPackageFolder:Invalid Parameter");
+      return JS_FALSE; 
+    }
+    else 
+      if(NS_OK != nativeThis->SetPackageFolder(*folder))
+        return JS_FALSE;
 
     *rval = JSVAL_VOID;
   }
@@ -2732,6 +2864,11 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
   }
   nativeInstallObject->SaveWinProfilePrototype(winProfilePrototype);
 #endif
- 
+
+  if(NS_OK != InitFileSpecObjectPrototype(jscontext, global, &gFileSpecProto))
+  {
+    return nsnull;
+  }
+
   return installObject;
 }
