@@ -1024,7 +1024,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 {
   nsresult rv;
   NS_TIMELINE_ENTER("main1");
-  nsCOMPtr<nsISupports> nativeAppOwner(nativeApp);
+  nsCOMPtr<nsISupports> nativeAppOwner(dont_AddRef(nativeApp));
 
   //----------------------------------------------------------------
   // First we need to check if a previous installation occured and
