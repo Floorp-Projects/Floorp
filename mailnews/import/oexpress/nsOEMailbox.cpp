@@ -195,7 +195,7 @@ PRBool CImportMailbox::GetIndexFile( nsIFileSpec* file)
 }
 
 
-const char *CMbxScanner::m_pFromLine = "From - Jan 1965 00:00:00\x0D\x0A";
+const char *CMbxScanner::m_pFromLine = "From - Mon Jan 1 00:00:00 1965\x0D\x0A";
 // let's try a 16K buffer and see how well that works?
 #define	kBufferKB	16
 
