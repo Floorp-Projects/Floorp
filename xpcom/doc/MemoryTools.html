@@ -884,14 +884,20 @@ GC Leak Detector</h2>
  more... <br>
  
                                         <hr width="100%"> 
-                                        <h2> <a name="RefcountTracing"></a>
-3. Refcount Tracing</h2>
- Refcount tracing is used to capture stack traces of AddRef and Release calls
-to use with the Refcount Balancer. It is best to set the XPCOM_MEM_REFCNT_LOG 
-environment variable to point to a file when using it. 
-                                        <p>See <a href="http://www.mozilla.org/performance/refcnt-balancer.html">
-Refcount Balancer</a> for more information. </p>
-                                        <p> </p>
+
+<h2><a name="RefcountTracing">3. Refcount Tracing</a></h2>
+
+<p>Refcount tracing is used to capture stack traces of AddRef and
+Release calls to use with the Refcount Balancer. It is best to set the
+XPCOM_MEM_REFCNT_LOG environment variable to point to a file when using
+it.</p>
+
+<p>See <a
+href="http://www.mozilla.org/performance/refcnt-balancer.html">Refcount
+Balancer</a> for more information.   Also see the <a
+href="http://mozilla.org/performance/leak-tutorial.html">tutorial on
+finding leaks of XPCOM objects</a>.</p>
+
                                         <hr width="100%">
                                         <h2><a name="TraceMalloc"></a>4.
 Trace Malloc</h2>
