@@ -137,8 +137,7 @@ NS_IMETHODIMP nsXULWindow::GetDocShell(nsIDocShell** aDocShell)
 
 NS_IMETHODIMP nsXULWindow::GetZlevel(PRUint32 *outLevel)
 {
-   // report our known zlevel, or be on top if currently modal
-   *outLevel = mContinueModalLoop ? nsIXULWindow::highestZ : mZlevel;
+   *outLevel = mZlevel;
    return NS_OK;
 }
 
