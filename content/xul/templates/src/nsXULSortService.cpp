@@ -1877,12 +1877,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo, PR
 		{
 			nsIContent* kid = NS_STATIC_CAST(nsIContent*, contentSortInfoArray[loop]->content);
 
-			// Because InsertChildAt() only does a
-			// "shallow" SetDocument(), we need to do a
-			// "deep" one now...
-			kid->SetDocument(doc, PR_TRUE, PR_TRUE);
-
-			container->InsertChildAt(kid, childPos++, PR_FALSE);
+			container->InsertChildAt(kid, childPos++, PR_FALSE, PR_TRUE);
 
 			parentNode = (nsIContent *)contentSortInfoArray[loop]->content;
 
@@ -2222,7 +2217,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 				direction = inplaceSortCallback(&node, &temp, &sortInfo);
 				if (direction < 0)
 				{
-					container->InsertChildAt(node, staticCount, aNotify);
+					container->InsertChildAt(node, staticCount, aNotify, PR_FALSE);
 					childAdded = PR_TRUE;
 				}
 				else
@@ -2237,7 +2232,8 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 				direction = inplaceSortCallback(&node, &temp, &sortInfo);
 				if (direction > 0)
 				{
-					container->InsertChildAt(node, staticCount+numChildren, aNotify);
+					container->InsertChildAt(node, staticCount+numChildren, aNotify,
+                                             PR_FALSE);
 					childAdded = PR_TRUE;
 				}
 				else
@@ -2260,7 +2256,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 				if (((x == left) && (direction < 0)) || (((x == right)) && (direction > 0)) || (left == right))
 				{
 					PRInt32		thePos = ((direction > 0) ? x : x-1);
-					container->InsertChildAt(node, thePos, aNotify);
+					container->InsertChildAt(node, thePos, aNotify, PR_FALSE);
 					childAdded = PR_TRUE;
 					
 					sortState->lastWasFirst = (thePos == 0) ? PR_TRUE: PR_FALSE;
@@ -2276,7 +2272,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 
 	if (childAdded == PR_FALSE)
 	{
-		container->InsertChildAt(node, numChildren, aNotify);
+		container->InsertChildAt(node, numChildren, aNotify, PR_FALSE);
 	}
 
 	if ((!sortState->mCache) && (sortInfo.mInner))
@@ -2432,14 +2428,8 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	if (NS_FAILED(rv = treeBody->GetParent(*getter_AddRefs(treeParent))))	return(rv);
 	if (NS_FAILED(rv = treeParent->IndexOf(treeBody, treeBodyIndex)))	return(rv);
 	if (NS_FAILED(rv = treeParent->RemoveChildAt(treeBodyIndex, PR_TRUE)))	return(rv);
-
-	// We need to do a deep SetDocument(), because AppendChildTo()
-	// only does a shallow one.
-	nsCOMPtr<nsIDocument> doc;
-	treeParent->GetDocument(*getter_AddRefs(doc));
-	treeBody->SetDocument(doc, PR_TRUE, PR_TRUE);
-
-	if (NS_FAILED(rv = treeParent->AppendChildTo(treeBody, PR_TRUE)))	return(rv);
+	if (NS_FAILED(rv = treeParent->AppendChildTo(treeBody, PR_TRUE, PR_TRUE)))
+		return(rv);
 
 	return(NS_OK);
 }

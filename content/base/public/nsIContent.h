@@ -77,12 +77,13 @@ public:
   NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const = 0;
 
   NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
-                           PRBool aNotify) = 0;
+                           PRBool aNotify, PRBool aDeepSetDocument) = 0;
 
   NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
-                            PRBool aNotify) = 0;
+                            PRBool aNotify, PRBool aDeepSetDocument) = 0;
 
-  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify) = 0;
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                           PRBool aDeepSetDocument) = 0;
 
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) = 0;
 

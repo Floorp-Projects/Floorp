@@ -1097,15 +1097,9 @@ nsXULElement::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
         if (NS_FAILED(rv)) return rv;
 
         if (pos >= 0) {
-            // Because InsertChildAt() only does a "shallow"
-            // SetDocument(), we need to ensure that a "deep" one is
-            // done now. We do it -before- inserting into the content
-            // model, because some frames assume that the document
-            // will have been set.
-            rv = newcontent->SetDocument(mDocument, PR_TRUE, PR_TRUE);
-            if (NS_FAILED(rv)) return rv;
-
-            rv = InsertChildAt(newcontent, pos, PR_TRUE);
+            // Some frames assume that the document will have been set,
+            // so pass in PR_TRUE for aDeepSetDocument here.
+            rv = InsertChildAt(newcontent, pos, PR_TRUE, PR_TRUE);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to insert aNewChild");
             if (NS_FAILED(rv)) return rv;
         }
@@ -1116,15 +1110,9 @@ nsXULElement::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
         // just append it?
     }
     else {
-        // Because AppendChildTo() only does a "shallow"
-        // SetDocument(), we need to ensure that a "deep" one is done
-        // now. We do it -before- appending to the content model,
-        // because some frames assume that they can get to the
-        // document right away.
-        rv = newcontent->SetDocument(mDocument, PR_TRUE, PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = AppendChildTo(newcontent, PR_TRUE);
+        // Some frames assume that the document will have been set,
+        // so pass in PR_TRUE for aDeepSetDocument here.
+        rv = AppendChildTo(newcontent, PR_TRUE, PR_TRUE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to append a aNewChild");
         if (NS_FAILED(rv)) return rv;
     }
@@ -1162,15 +1150,9 @@ nsXULElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
             NS_ASSERTION(newelement != nsnull, "not an nsIContent");
 
             if (newelement) {
-                // Because ReplaceChildAt() only does a "shallow"
-                // SetDocument(), we need to ensure that a "deep" one
-                // is done now. We do it -before- replacing the nodein
-                // the content model, because some frames assume that
-                // the document will have been set.
-                rv = newelement->SetDocument(mDocument, PR_TRUE, PR_TRUE);
-                if (NS_FAILED(rv)) return rv;
-
-                rv = ReplaceChildAt(newelement, pos, PR_TRUE);
+                // Some frames assume that the document will have been set,
+                // so pass in PR_TRUE for aDeepSetDocument here.
+                rv = ReplaceChildAt(newelement, pos, PR_TRUE, PR_TRUE);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "unable to replace old child");
             }
         }
@@ -1329,7 +1311,7 @@ nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
             if (! newchild)
                 return NS_ERROR_UNEXPECTED;
 
-            rv = result->AppendChildTo(newchild, PR_FALSE);
+            rv = result->AppendChildTo(newchild, PR_FALSE, PR_FALSE);
             if (NS_FAILED(rv)) return rv;
         }
     }
@@ -2592,7 +2574,8 @@ nsXULElement::IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const
 }
 
 NS_IMETHODIMP
-nsXULElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
+nsXULElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+                            PRBool aDeepSetDocument)
 {
     nsresult rv;
     if (NS_FAILED(rv = EnsureContentsGenerated()))
@@ -2611,8 +2594,7 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         //nsRange::OwnerChildInserted(this, aIndex);
 
-        // N.B. that this is "shallow"!
-        aKid->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+        aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
 
         if (mDocument && HasMutationListeners(NS_STATIC_CAST(nsIStyledContent*,this), 
                                               NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
@@ -2638,7 +2620,8 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 }
 
 NS_IMETHODIMP
-nsXULElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
+nsXULElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+                             PRBool aDeepSetDocument)
 {
     nsresult rv;
     if (NS_FAILED(rv = EnsureContentsGenerated()))
@@ -2662,9 +2645,7 @@ nsXULElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         //nsRange::OwnerChildReplaced(this, aIndex, oldKid);
 
-        // N.B. that we only do a "shallow" SetDocument()
-        // here. Callers beware!
-        aKid->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+        aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
 
         if (aNotify && mDocument) {
             mDocument->ContentReplaced(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aKid, aIndex);
@@ -2682,7 +2663,7 @@ nsXULElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 }
 
 NS_IMETHODIMP
-nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
+nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify, PRBool aDeepSetDocument)
 {
     nsresult rv;
     if (NS_FAILED(rv = EnsureContentsGenerated()))
@@ -2696,8 +2677,7 @@ nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         // ranges don't need adjustment since new child is at end of list
 
-        // N.B. that this is only "shallow". Callers beware!
-        aKid->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+        aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
 
         if (mDocument && HasMutationListeners(NS_STATIC_CAST(nsIStyledContent*,this), 
                                               NS_EVENT_BITS_MUTATION_NODEINSERTED)) {

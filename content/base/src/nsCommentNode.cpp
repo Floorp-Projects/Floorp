@@ -82,15 +82,16 @@ public:
     return mInner.IndexOf(aPossibleChild, aResult);
   }
   NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
-                           PRBool aNotify) {
-    return mInner.InsertChildAt(aKid, aIndex, aNotify);
+                           PRBool aNotify, PRBool aDeepSetDocument) {
+    return mInner.InsertChildAt(aKid, aIndex, aNotify, aDeepSetDocument);
   }
   NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
-                            PRBool aNotify) {
-    return mInner.ReplaceChildAt(aKid, aIndex, aNotify);
+                            PRBool aNotify, PRBool aDeepSetDocument) {
+    return mInner.ReplaceChildAt(aKid, aIndex, aNotify, aDeepSetDocument);
   }
-  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify) {
-    return mInner.AppendChildTo(aKid, aNotify);
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                           PRBool aDeepSetDocument) {
+    return mInner.AppendChildTo(aKid, aNotify, aDeepSetDocument);
   }
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {
     return mInner.RemoveChildAt(aIndex, aNotify);

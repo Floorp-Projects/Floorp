@@ -347,9 +347,12 @@ public:
     NS_IMETHOD ChildCount(PRInt32& aResult) const;
     NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;
     NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const;
-    NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
-    NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
-    NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify);
+    NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+                             PRBool aDeepSetDocument);
+    NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
+                              PRBool aNotify, PRBool aDeepSetDocument);
+    NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                             PRBool aDeepSetDocument);
     NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
     NS_IMETHOD GetNameSpaceID(PRInt32& aNameSpeceID) const;
     NS_IMETHOD GetTag(nsIAtom*& aResult) const;

@@ -2609,9 +2609,9 @@ nsresult DocumentViewerImpl::GetSelectionDocument(nsIDeviceContextSpec * aDevSpe
   if (!bodyElement) { return NS_ERROR_NULL_POINTER; }
   bodyElement->SetDocument(doc, PR_FALSE, PR_TRUE);
     // put the head and body into the root
-  rv = htmlElement->AppendChildTo(headElement, PR_FALSE);
+  rv = htmlElement->AppendChildTo(headElement, PR_FALSE, PR_FALSE);
   if (NS_FAILED(rv)) { return rv; }
-  rv = htmlElement->AppendChildTo(bodyElement, PR_FALSE);
+  rv = htmlElement->AppendChildTo(bodyElement, PR_FALSE, PR_FALSE);
   if (NS_FAILED(rv)) { return rv; }
   
   // load the document into the docshell

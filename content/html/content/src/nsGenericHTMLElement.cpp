@@ -3297,7 +3297,7 @@ nsGenericHTMLContainerElement::CopyInnerTo(nsIContent* aSrcContent,
 
             result = newNode->QueryInterface(NS_GET_IID(nsIContent), (void**)&newContent);
             if (NS_OK == result) {
-              result = aDst->AppendChildTo(newContent, PR_FALSE);
+              result = aDst->AppendChildTo(newContent, PR_FALSE, PR_FALSE);
               NS_RELEASE(newContent);
             }
             NS_RELEASE(newNode);
@@ -3415,7 +3415,8 @@ nsGenericHTMLContainerElement::IndexOf(nsIContent* aPossibleChild,
 NS_IMETHODIMP
 nsGenericHTMLContainerElement::InsertChildAt(nsIContent* aKid,
                                              PRInt32 aIndex,
-                                             PRBool aNotify)
+                                             PRBool aNotify,
+                                             PRBool aDeepSetDocument)
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
   nsIDocument* doc = mDocument;
@@ -3428,7 +3429,7 @@ nsGenericHTMLContainerElement::InsertChildAt(nsIContent* aKid,
     aKid->SetParent(this);
     nsRange::OwnerChildInserted(this, aIndex);
     if (nsnull != doc) {
-      aKid->SetDocument(doc, PR_FALSE, PR_TRUE);
+      aKid->SetDocument(doc, aDeepSetDocument, PR_TRUE);
       if (aNotify) {
         doc->ContentInserted(this, aKid, aIndex);
       }
@@ -3458,7 +3459,8 @@ nsGenericHTMLContainerElement::InsertChildAt(nsIContent* aKid,
 NS_IMETHODIMP
 nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
                                               PRInt32 aIndex,
-                                              PRBool aNotify)
+                                              PRBool aNotify,
+                                              PRBool aDeepSetDocument)
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
@@ -3472,7 +3474,7 @@ nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
     NS_ADDREF(aKid);
     aKid->SetParent(this);
     if (nsnull != doc) {
-      aKid->SetDocument(doc, PR_FALSE, PR_TRUE);
+      aKid->SetDocument(doc, aDeepSetDocument, PR_TRUE);
       if (aNotify) {
         doc->ContentReplaced(this, oldKid, aKid, aIndex);
       }
@@ -3488,7 +3490,8 @@ nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
 }
 
 NS_IMETHODIMP
-nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
+nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                                             PRBool aDeepSetDocument)
 {
   NS_PRECONDITION(nsnull != aKid && this != aKid, "null ptr");
   nsIDocument* doc = mDocument;
@@ -3501,7 +3504,7 @@ nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
     aKid->SetParent(this);
     // ranges don't need adjustment since new child is at end of list
     if (nsnull != doc) {
-      aKid->SetDocument(doc, PR_FALSE, PR_TRUE);
+      aKid->SetDocument(doc, aDeepSetDocument, PR_TRUE);
       if (aNotify) {
         doc->ContentAppended(this, mChildren.Count() - 1);
       }

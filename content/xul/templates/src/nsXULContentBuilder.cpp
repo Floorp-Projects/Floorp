@@ -694,7 +694,8 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 rv = content->SetText(value.GetUnicode(), value.Length(), PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
 
-                rv = aRealNode->AppendChildTo(nsCOMPtr<nsIContent>( do_QueryInterface(content) ), aNotify);
+                rv = aRealNode->AppendChildTo(nsCOMPtr<nsIContent>( do_QueryInterface(content) ),
+                                              aNotify, PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
 
                 // XXX Don't bother remembering text nodes as the
@@ -828,7 +829,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 }
 
                 if (NS_FAILED(rv)) {
-                    rv = aRealNode->AppendChildTo(realKid, aNotify);
+                    rv = aRealNode->AppendChildTo(realKid, aNotify, PR_FALSE);
                     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to insert element");
                 }
             }
@@ -1368,7 +1369,7 @@ nsXULContentBuilder::EnsureElementHasGenericChild(nsIContent* parent,
         if (NS_FAILED(rv)) return rv;
 
         // XXX Note that the notification ensures we won't batch insertions! This could be bad! - Dave
-        rv = parent->AppendChildTo(element, aNotify);
+        rv = parent->AppendChildTo(element, aNotify, PR_FALSE);
         if (NS_FAILED(rv)) return rv;
 
         *result = element;

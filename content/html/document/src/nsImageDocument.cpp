@@ -375,9 +375,9 @@ nsImageDocument::CreateSyntheticDocument()
   image->SetHTMLAttribute(nsHTMLAtoms::src, val, PR_FALSE);
   image->SetHTMLAttribute(nsHTMLAtoms::alt, val, PR_FALSE);
 
-  root->AppendChildTo(body, PR_FALSE);
-  center->AppendChildTo(image, PR_FALSE);
-  body->AppendChildTo(center, PR_FALSE);
+  root->AppendChildTo(body, PR_FALSE, PR_FALSE);
+  center->AppendChildTo(image, PR_FALSE, PR_FALSE);
+  body->AppendChildTo(center, PR_FALSE, PR_FALSE);
 
   NS_RELEASE(image);
   NS_RELEASE(center);

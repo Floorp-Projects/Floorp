@@ -556,8 +556,8 @@ nsHTMLOptionElement::SetText(const nsAReadableString& aText)
       if (domtext) {
         result = domtext->SetData(aText);
 
-	      if (NS_SUCCEEDED(result)) {
-          result = AppendChildTo(text, PR_TRUE);
+	    if (NS_SUCCEEDED(result)) {
+          result = AppendChildTo(text, PR_TRUE, PR_FALSE);
 
           if (NS_SUCCEEDED(result)) {
             nsCOMPtr<nsIDocument> doc;
@@ -695,7 +695,7 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
       }
       
       // this addrefs textNode:
-      result = AppendChildTo(content, PR_FALSE);
+      result = AppendChildTo(content, PR_FALSE, PR_FALSE);
       if (NS_FAILED(result)) {
         return result;
       }

@@ -178,7 +178,7 @@ nsHTMLScriptElement::SetText(const nsAReadableString& aValue)
     rv = NS_NewTextNode(getter_AddRefs(content));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = InsertChildAt(content, 0, PR_FALSE);
+    rv = InsertChildAt(content, 0, PR_FALSE, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
