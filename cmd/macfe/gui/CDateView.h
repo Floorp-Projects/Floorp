@@ -123,8 +123,7 @@ protected:
 	enum { eShowArrows = true, eHideArrows = false };
 	void				ShowHideArrows(Boolean inShow);
 
-	// static EKeyStatus	DateFieldFilter(const EventRecord &inKeyEvent, Int16 inKeyPosition = 0);
-	static EKeyStatus	DateFieldFilter(TEHandle inMacTEH, Char16 inKeyCode, Char16& ioCharCode, SInt16 inModifiers);
+	static EKeyStatus	DateFieldFilter(TEHandle inMacTEH, Char16 inKeyCode, Char16& ioCharCode, UInt16 inModifiers);
 	static void			SetDateString(LEditField *inField, UInt16 inValue, UInt8 inLeadingChar);
 	static void			ShowHideArrow(LPane *inArrow, Boolean inShow);
 

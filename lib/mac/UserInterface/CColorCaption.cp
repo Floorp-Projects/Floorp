@@ -142,7 +142,7 @@ CChameleonBroadcastCaption :: MouseWithin ( Point inWhere, const EventRecord & i
 // Restore the text traits to normal when the mouse leaves.
 //
 void
-CChameleonBroadcastCaption :: MouseLeave ( Point inWhere, const EventRecord & inEvent )
+CChameleonBroadcastCaption :: MouseLeave ( )
 {
 #if 0
 	if ( mSavedTraits != GetTextTraitsID() ) {
