@@ -35,40 +35,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-#include "nsISimpleEnumerator.idl"
+const nsCipherInfoService = "@mozilla.org/security/cipherinfo;1";
+const nsICipherInfoService = Components.interfaces.nsICipherInfoService;
+const nsICipherInfo = Components.interfaces.nsICipherInfo;
 
-[scriptable, uuid(028e2b2a-1f0b-43a4-a1a7-365d2d7f35d0)]
-interface nsICipherInfo : nsISupports
+function onLoad()
 {
-  readonly attribute ACString longName;
+  var cipher_name = self.name;
+  
+  var cipher_info_service = Components.classes[nsCipherInfoService].getService(nsICipherInfoService);
+  var cipher = cipher_info_service.getCipherInfoByPrefString(self.name);
 
-  readonly attribute PRBool isSSL2;
-  readonly attribute PRBool isFIPS;
-  readonly attribute PRBool isExportable;
-  readonly attribute PRBool nonStandard;
-  readonly attribute ACString symCipherName;
-  readonly attribute ACString authAlgorithmName;
-  readonly attribute ACString keaTypeName;
-  readonly attribute ACString macAlgorithmName;
-  readonly attribute PRInt32 effectiveKeyBits;
-};
+  var info_name = document.getElementById("name");
+  var info_encryption = document.getElementById("encryption");
+  var info_authAlg = document.getElementById("authAlg");
+  var info_keyAlg = document.getElementById("keyAlg");
+  var info_keySize = document.getElementById("keySize");
+  var info_macAlg = document.getElementById("macAlg");
+  var info_fips = document.getElementById("fips");
+  var info_exportable = document.getElementById("exportable");
 
-[scriptable, uuid(766d47cb-6d8c-4e71-b6b7-336917629a69)]
-interface nsICipherInfoService : nsISupports
-{
-  nsICipherInfo getCipherInfoByPrefString(in ACString aPrefString);
-};
+  try {
+    info_name.setAttribute("value", cipher.longName);
+    info_encryption.setAttribute("value", cipher.symCipherName);
+    info_authAlg.setAttribute("value", cipher.authAlgorithmName);
+    info_keyAlg.setAttribute("value", cipher.keaTypeName);
+    info_keySize.setAttribute("value", cipher.effectiveKeyBits);
+    info_macAlg.setAttribute("value", cipher.macAlgorithmName);
 
-%{C++
+    if (cipher.isFIPS) {
+      info_fips.removeAttribute("collapsed");
+    }
+    else {
+      info_fips.setAttribute("collapsed", "true");
+    }
 
-#define NS_CIPHERINFOSERVICE_CID { /* ec693a6f-0832-49dd-877c-89f6552df5de */ \
-    0xec693a6f,                                                        \
-    0x0832,                                                            \
-    0x49dd,                                                            \
-    {0x87, 0x7c, 0x89, 0xf6, 0x55, 0x2d, 0xf5, 0xde}                   \
+    if (cipher.isExportable) {
+      info_exportable.removeAttribute("collapsed");
+    }
+    else {
+      info_exportable.setAttribute("collapsed", "true");
+    }
   }
-
-#define NS_CIPHERINFOSERVICE_CONTRACTID "@mozilla.org/security/cipherinfo;1"
-
-%}
+  catch (e) {
+  }
+}

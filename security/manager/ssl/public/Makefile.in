@@ -80,6 +80,7 @@ XPIDLSRCS = \
     nsIX509CertValidity.idl \
     nsICRLManager.idl \
     nsISMimeCert.idl \
+    nsICipherInfo.idl \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk
