@@ -239,7 +239,7 @@ IdlInterface* IdlParser::ParseInterface(IdlSpecification &aSpecification)
  * enum_type        =  "enum" identifier  "{" enumerator  <  "," enumerator  >  "}"
  * const_dcl        =  "const" const_type identifier "=" const_exp
  * except_dcl       =  "exception" identifier "{" < member > "}" 
- * attr_dcl         =  [ "readonly"  ] "attribute" param_type_spec identifier
+ * attr_dcl         =  [ "readonly" ] [ "xpidl" ] "attribute" param_type_spec identifier
  * op_dcl           =  [ op_attribute  ] op_type_spec identifier parameter_dcls 
  *                     [ raises_expr ] [ context_expr ] 
  * op_attribute     =  "oneway"  . 
@@ -545,9 +545,10 @@ IdlAttribute* IdlParser::ParseAttribute(IdlSpecification &aSpecification, int aT
     isReadOnly = 1;
     TrimComments();
     token = mScanner->NextToken();
-    if (ATTRIBUTE_TOKEN != token->id) {
-      throw AttributeParsingException("Missing attribute specifier.");
-    }
+    aTokenID = token->id;
+  }
+  if (ATTRIBUTE_TOKEN != aTokenID) {
+    throw AttributeParsingException("Missing attribute specifier.");
   }
   TrimComments();
 
@@ -601,6 +602,13 @@ IdlAttribute* IdlParser::ParseAttribute(IdlSpecification &aSpecification, int aT
         attrObj->SetTypeName(token->stringID);
         break;
       //}
+    case XPIDL_TOKEN:
+      token = mScanner->NextToken();
+      if (IDENTIFIER_TOKEN == token->id) {
+        attrObj->SetType(TYPE_XPIDL_OBJECT);
+        attrObj->SetTypeName(token->stringID);
+        break;
+      }
     default:
       delete attrObj;
       throw AttributeParsingException("Unknow attribute type.");
@@ -673,6 +681,14 @@ IdlFunction* IdlParser::ParseFunction(IdlSpecification &aSpecification, Token &a
         funcObj->SetReturnValue(TYPE_OBJECT, aToken.stringID);
         break;
       //}
+    case XPIDL_TOKEN:
+      {
+        Token* token = mScanner->NextToken();
+        if (IDENTIFIER_TOKEN == token->id) {
+          funcObj->SetReturnValue(TYPE_XPIDL_OBJECT, token->stringID);
+          break;
+        }
+      }
     default:
       delete funcObj;
       throw AttributeParsingException("Unknown type.");
@@ -830,7 +846,7 @@ IdlParameter* IdlParser::ParseFunctionParameter(IdlSpecification &aSpecification
   Token *token = mScanner->NextToken();
   if (token->id == OPTIONAL_TOKEN) {
     argObj->SetIsOptional(1);
-    mScanner->NextToken();
+    token = mScanner->NextToken();
   }
   
   // the paramenter attribute (in, out, inout)
@@ -909,6 +925,13 @@ IdlParameter* IdlParser::ParseFunctionParameter(IdlSpecification &aSpecification
         argObj->SetTypeName(token->stringID);
         break;
       //}
+    case XPIDL_TOKEN:
+      token = mScanner->NextToken();
+      if (IDENTIFIER_TOKEN == token->id) {
+        argObj->SetType(TYPE_XPIDL_OBJECT);
+        argObj->SetTypeName(token->stringID);
+        break;
+      }
     default:
       delete argObj;
       throw ParameterParsingException("Unknow type in parameters list.");

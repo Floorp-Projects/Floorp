@@ -52,6 +52,9 @@ static const char *kDisclaimerStr = "/* AUTO-GENERATED. DO NOT EDIT!!! */\n";
 static const char *kObjTypeStr = "nsIDOM%s*";
 static const char *kObjTypePtrStr = "nsIDOM%sPtr";
 static const char *kUuidStr = "NS_IDOM%s_IID";
+static const char *kXPIDLObjTypeStr = "%s*";
+static const char *kXPIDLObjTypePtrStr = "%sPtr";
+static const char *kXPIDLUuidStr = "NS_I%s_IID";
 
 FileGen::FileGen()
 {
@@ -133,6 +136,8 @@ FileGen::GetVariableTypeForMethodLocal(char *aBuffer, IdlVariable &aVariable)
       case TYPE_OBJECT:
         sprintf(aBuffer, kObjTypePtrStr, aVariable.GetTypeName());
         break;
+      case TYPE_XPIDL_OBJECT:
+        sprintf(aBuffer, kXPIDLObjTypePtrStr, aVariable.GetTypeName());
       default:
         // XXX Fail for other cases
         break;
@@ -173,6 +178,9 @@ FileGen::GetVariableTypeForLocal(char *aBuffer, IdlVariable &aVariable)
       case TYPE_OBJECT:
         sprintf(aBuffer, kObjTypeStr, aVariable.GetTypeName());
         break;
+      case TYPE_XPIDL_OBJECT:
+        sprintf(aBuffer, kXPIDLObjTypeStr, aVariable.GetTypeName());
+        break;
       default:
         // XXX Fail for other cases
         break;
@@ -212,6 +220,9 @@ FileGen::GetVariableTypeForParameter(char *aBuffer, IdlVariable &aVariable)
         break;
       case TYPE_OBJECT:
         sprintf(aBuffer, kObjTypeStr, aVariable.GetTypeName());
+        break;
+      case TYPE_XPIDL_OBJECT:
+        sprintf(aBuffer, kXPIDLObjTypeStr, aVariable.GetTypeName());
         break;
       default:
         // XXX Fail for other cases
@@ -261,6 +272,23 @@ FileGen::GetInterfaceIID(char *aBuffer, IdlInterface &aInterface)
 }
 
 void
+FileGen::GetXPIDLInterfaceIID(char* aBuffer, char* aInterfaceName)
+{
+  char buf[256];
+
+  strcpy(buf, aInterfaceName);
+  StrUpr(buf);
+
+  sprintf(aBuffer, kXPIDLUuidStr, buf);
+}
+
+void
+FileGen::GetXPIDLInterfaceIID(char* aBuffer, IdlInterface &aInterface)
+{
+  GetInterfaceIID(aBuffer, aInterface.GetName());
+}
+
+void
 FileGen::GetCapitalizedName(char *aBuffer, IdlObject &aObject)
 {
   strcpy(aBuffer, aObject.GetName());
@@ -290,9 +318,9 @@ FileGen::CollectAllInInterface(IdlInterface &aInterface,
   for (a = 0; a < acount; a++) {
     IdlAttribute *attr = aInterface.GetAttributeAt(a);
     
-    if ((attr->GetType() == TYPE_OBJECT) &&
+    if (((attr->GetType() == TYPE_OBJECT) || (attr->GetType() == TYPE_XPIDL_OBJECT)) &&
         !PL_HashTableLookup(aTable, attr->GetTypeName())) {
-      PL_HashTableAdd(aTable, attr->GetTypeName(), (void *)1);
+      PL_HashTableAdd(aTable, attr->GetTypeName(), (void *)(attr->GetType()));
     }
   }
   
@@ -301,18 +329,18 @@ FileGen::CollectAllInInterface(IdlInterface &aInterface,
     IdlFunction *func = aInterface.GetFunctionAt(m);
     IdlVariable *rval = func->GetReturnValue();
 
-    if ((rval->GetType() == TYPE_OBJECT) &&
+    if (((rval->GetType() == TYPE_OBJECT) || (rval->GetType() == TYPE_XPIDL_OBJECT)) &&
         !PL_HashTableLookup(aTable, rval->GetTypeName())) {
-      PL_HashTableAdd(aTable, rval->GetTypeName(), (void *)1);
+      PL_HashTableAdd(aTable, rval->GetTypeName(), (void *)(rval->GetType()));
     }
     
     int p, pcount = func->ParameterCount();
     for (p = 0; p < pcount; p++) {
       IdlParameter *param = func->GetParameterAt(p);
         
-      if ((param->GetType() == TYPE_OBJECT) &&
+      if (((param->GetType() == TYPE_OBJECT) || (param->GetType() == TYPE_XPIDL_OBJECT)) &&
           !PL_HashTableLookup(aTable, param->GetTypeName())) {
-        PL_HashTableAdd(aTable, param->GetTypeName(), (void *)1);
+        PL_HashTableAdd(aTable, param->GetTypeName(), (void *)(param->GetType()));
       }
     }
   }
@@ -351,7 +379,7 @@ FileGen::EnumerateAllObjects(IdlSpecification &aSpec,
 
     if (((i == 0) || !aOnlyPrimary) &&
         !PL_HashTableLookup(htable, iface->GetName())) {
-      PL_HashTableAdd(htable, iface->GetName(), (void *)1);
+      PL_HashTableAdd(htable, iface->GetName(), (void *)(int)TYPE_OBJECT);
     }
     
     CollectAllInInterface(*iface, htable);

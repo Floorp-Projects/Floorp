@@ -38,6 +38,7 @@ enum Type {
   TYPE_UINT,
   TYPE_STRING,
   TYPE_OBJECT,
+  TYPE_XPIDL_OBJECT,
   TYPE_VOID
 };
 

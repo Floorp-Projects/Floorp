@@ -42,6 +42,7 @@ enum EIDLTokenType {
   EXCEPTION_TOKEN,
   READONLY_TOKEN,
   OPTIONAL_TOKEN,
+  XPIDL_TOKEN,
   ELLIPSIS_TOKEN,
   IID_TOKEN,
   ATTRIBUTE_TOKEN,
@@ -196,6 +197,7 @@ protected:
   void      UKeywords(char *aCurrentPos, Token *aToken);
   void      VKeywords(char *aCurrentPos, Token *aToken);
   void      WKeywords(char *aCurrentPos, Token *aToken);
+  void      XKeywords(char *aCurrentPos, Token *aToken);
   void      Identifier(char *aCurrentPos, Token *aToken);
   void      Number(int aStartChar, Token *aToken);
   void      String(int aStartChar, Token *aToken);
