@@ -40,6 +40,10 @@
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsBoxLayoutState.h"
+#include "nsWidgetsCID.h"
+#include "nsIViewManager.h"
+
+static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 
 //
 // NS_NewToolbarFrame
@@ -86,6 +90,28 @@ nsLeafBoxFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
+   // see if we need a widget
+  nsCOMPtr<nsIBox> parent (do_QueryInterface(aParent));
+  if (parent) {
+    PRBool needsWidget = PR_FALSE;
+    parent->ChildrenMustHaveWidgets(needsWidget);
+    if (needsWidget) {
+        nsIView* view = nsnull;
+        GetView(aPresContext, &view);
+
+        if (!view) {
+           nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,mStyleContext,PR_TRUE); 
+           GetView(aPresContext, &view);
+        }
+
+        nsIWidget* widget;
+        view->GetWidget(widget);
+
+        if (!widget)
+           view->CreateWidget(kWidgetCID);   
+    }
+  }
+  
   mMouseThrough = unset;
 
   if (mContent) {

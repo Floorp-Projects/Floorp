@@ -125,6 +125,16 @@ nsBox::DumpBox(FILE* aFile)
   return NS_OK;
 }
 
+/**
+ * Hack for deck who requires that all its children has widgets
+ */
+NS_IMETHODIMP 
+nsBox::ChildrenMustHaveWidgets(PRBool& aMust)
+{
+  aMust = PR_FALSE;
+  return NS_OK;
+}
+
 void
 nsBox::GetBoxName(nsAutoString& aName)
 {

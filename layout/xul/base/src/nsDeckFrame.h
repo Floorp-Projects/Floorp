@@ -60,6 +60,29 @@ public:
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**     aFrame);
 
+  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
+
+  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aFrameList);
+
+  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aPrevFrame,
+                          nsIFrame*       aFrameList);
+
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+                nsIContent*      aContent,
+                nsIFrame*        aParent,
+                nsIStyleContext* aContext,
+                nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD ChildrenMustHaveWidgets(PRBool& aMust);
+
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
@@ -74,12 +97,18 @@ protected:
 
   nsDeckFrame(nsIPresShell* aPresShell);
 
-  virtual nsIFrame* GetSelectedFrame();
+  virtual nsIBox* GetSelectedBox();
+  virtual void IndexChanged(nsIPresContext* aPresContext);
+  virtual PRInt32 GetSelectedIndex();
+  virtual void HideBox(nsIPresContext* aPresContext, nsIBox* aBox);
+  virtual void ShowBox(nsIPresContext* aPresContext, nsIBox* aBox);
+  virtual nsresult CreateWidget(nsIPresContext* aPresContext, nsIBox* aBox);
+  virtual nsresult CreateWidgets(nsIPresContext* aPresContext);
 
 private:
 
   static nsCOMPtr<nsIBoxLayout> gLayout;
-  nsIFrame* mSelected;
+  PRInt32 mIndex;
 
 }; // class nsDeckFrame
 

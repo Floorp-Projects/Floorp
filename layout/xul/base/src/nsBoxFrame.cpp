@@ -77,6 +77,9 @@
 #include "nsIDocument.h"
 #include "nsIBindingManager.h"
 #include "nsIScrollableFrame.h"
+#include "nsWidgetsCID.h"
+
+static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 
 //define DEBUG_REDRAW
 
@@ -292,6 +295,28 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
 
   nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
+  // see if we need a widget. Get our parent. Querty interface the parent we are given. 
+  nsCOMPtr<nsIBox> parent (do_QueryInterface(aParent));
+
+  if (parent) {
+    PRBool needsWidget = PR_FALSE;
+    parent->ChildrenMustHaveWidgets(needsWidget);
+    if (needsWidget) {
+        nsIView* view = nsnull;
+        GetView(aPresContext, &view);
+
+        if (!view) {
+           nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,mStyleContext,PR_TRUE); 
+           GetView(aPresContext, &view);
+        }
+
+        nsIWidget* widget;
+        view->GetWidget(widget);
+
+        if (!widget)
+           view->CreateWidget(kWidgetCID);   
+    }
+  }
   
   mInner->mValign = nsBoxFrame::vAlign_Top;
   mInner->mHalign = nsBoxFrame::hAlign_Left;
