@@ -2672,7 +2672,8 @@ jsdService::GC (void)
 #endif
     JS_GC(cx);
 #ifdef GC_MARK_DEBUG
-    fclose (file);
+    if (file)
+        fclose (file);
     js_DumpGCHeap = NULL;
 #endif
     return NS_OK;
