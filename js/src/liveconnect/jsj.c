@@ -465,7 +465,7 @@ JSJ_ConnectToJavaVM(SystemJavaVM *java_vm_arg, void* initargs)
 
     jsjava_vm->java_vm = java_vm;
     jsjava_vm->main_thread_env = jEnv;
-    
+
     /*
      * JVM initialization for netscape.javascript.JSObject is performed
      * independently of the other classes that are initialized in
@@ -479,6 +479,10 @@ JSJ_ConnectToJavaVM(SystemJavaVM *java_vm_arg, void* initargs)
        Java reflection. */
     if (!init_java_VM_reflection(jsjava_vm, jEnv) || 
         !jsj_InitJavaObjReflectionsTable()) {
+        jsj_LogError("LiveConnect was unable to reflect one or more components of the Java runtime.\nGo to http://bugzilla.mozilla.org/show_bug.cgi?id=5369 for details.\n");
+		// This function crashes when called from here.
+		// Check that all the preconditions for this
+		// call are satisfied before making it. [jd]
         JSJ_DisconnectFromJavaVM(jsjava_vm);
         return NULL;
     }
@@ -596,7 +600,7 @@ JSJ_DisconnectFromJavaVM(JSJavaVM *jsjava_vm)
             break;
         }
     }
-    JS_ASSERT(j);
+    JS_ASSERT(j); // vm not found in list
 
 #ifdef JSJ_THREADSAFE
     if (jsjava_vm_list == NULL) {
