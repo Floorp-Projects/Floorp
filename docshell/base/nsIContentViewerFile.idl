@@ -23,6 +23,8 @@
 #include "nsISupports.idl"
 #include "nsIPrintSettings.idl"
 
+interface nsIDOMWindowInternal;
+interface nsIWebProgressListener;
 
 %{ C++
 #include <stdio.h>
@@ -40,8 +42,12 @@ interface nsIContentViewerFile : nsISupports
   /* readonly attribute boolean printable; */
   readonly attribute boolean printable;
 
-  [noscript] void Print(in boolean aSilent,
+  [noscript] void print(in boolean aSilent,
                         in FILE    aDebugFile, 
                         in nsIPrintSettings aPrintSettings);
-};
 
+  [noscript] void printWithParent(in nsIDOMWindowInternal aParentWin,
+                                  in nsIPrintSettings aThePrintSettings,
+                                  in nsIWebProgressListener aWPListener);
+
+};

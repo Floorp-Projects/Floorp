@@ -444,6 +444,7 @@ protected:
 #ifdef NS_PRINTING
   nsPrintEngine*        mPrintEngine;
   PRBool                mClosingWhilePrinting;
+  nsCOMPtr<nsIDOMWindowInternal> mDialogParentWin;
 #if NS_PRINT_PREVIEW
   // These data member support delayed printing when the document is loading
   nsCOMPtr<nsIPrintSettings>       mCachedPrintSettings;
@@ -2201,6 +2202,14 @@ DocumentViewerImpl::Print(PRBool            aSilent,
 #else
   return NS_ERROR_FAILURE;
 #endif
+}
+
+/* [noscript] void printWithParent (in nsIDOMWindowInternal aParentWin, in nsIPrintSettings aThePrintSettings, in nsIWebProgressListener aWPListener); */
+NS_IMETHODIMP 
+DocumentViewerImpl::PrintWithParent(nsIDOMWindowInternal *aParentWin, nsIPrintSettings *aThePrintSettings, nsIWebProgressListener *aWPListener)
+{
+  mDialogParentWin = aParentWin;
+  return Print(aThePrintSettings, aWPListener);
 }
 
 // nsIContentViewerFile interface
