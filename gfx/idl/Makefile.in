@@ -31,6 +31,7 @@ XPIDL_MODULE	= gfx
 
 XPIDLSRCS	= \
 		nsIFontEnumerator.idl \
+		nsIFontList.idl \
 		nsIScriptableRegion.idl \
 		nsIGraphics.idl \
 		nsIScreen.idl \

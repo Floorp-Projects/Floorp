@@ -37,14 +37,14 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 DEFINES=-D_IMPL_NS_GFX -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=nsColor.cpp nsColorNames.cpp nsFont.cpp \
+CPPSRCS=nsColor.cpp nsColorNames.cpp nsFont.cpp nsFontList.cpp \
     nsImageGroup.cpp nsImageManager.cpp nsImageNetContextAsync.cpp \
     nsImageRenderer.cpp nsImageRequest.cpp nsImageSystemServices.cpp \
     nsImageURL.cpp nsRect.cpp nsTransform2D.cpp nsBlender.cpp \
 	nsDeviceContext.cpp nsImageNetContextSync.cpp nsScriptableRegion.cpp nsPrintOptionsImpl.cpp
 
 CPP_OBJS=.\$(OBJDIR)\nsColor.obj .\$(OBJDIR)\nsColorNames.obj \
-    .\$(OBJDIR)\nsFont.obj \
+    .\$(OBJDIR)\nsFont.obj .\$(OBJDIR)\nsFontList.obj \
     .\$(OBJDIR)\nsImageGroup.obj .\$(OBJDIR)\nsImageManager.obj \
     .\$(OBJDIR)\nsImageNetContextAsync.obj .\$(OBJDIR)\nsImageRenderer.obj \
     .\$(OBJDIR)\nsImageRequest.obj .\$(OBJDIR)\nsImageSystemServices.obj \
