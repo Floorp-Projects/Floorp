@@ -1033,7 +1033,20 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
          // in the presence of an href with a value!
          nsAutoString href;
          if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href))
+         {// fix for bug #55921
+           nsIView *dummyView = 0;
+           nsRect frameRect = mRect;
+           nsPoint offsetPoint;
+
+           GetOffsetFromView(aPresContext, offsetPoint, &dummyView);
+
+           frameRect.x = offsetPoint.x;
+           frameRect.y = offsetPoint.y;
+
+           if (frameRect.x <= aEvent->point.x && (frameRect.x + frameRect.width >= aEvent->point.x) &&
+               frameRect.y <= aEvent->point.y && (frameRect.y + frameRect.height >= aEvent->point.y))
            return NS_OK;
+         }
        }
   
        // now try the parent
