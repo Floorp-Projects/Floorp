@@ -744,20 +744,10 @@ nsDownloadManager::Open(nsIDOMWindow* aParent, nsIDownload* aDownload)
 }
 
 NS_IMETHODIMP
-nsDownloadManager::OpenProgressDialogFor(const nsACString & aTargetPath, nsIDOMWindow* aParent, PRBool aCancelDownloadOnClose)
+nsDownloadManager::OpenProgressDialogFor(nsIDownload* aDownload, nsIDOMWindow* aParent, PRBool aCancelDownloadOnClose)
 {
   nsresult rv;
-  nsCStringKey key(aTargetPath);
-  if (!mCurrDownloads.Exists(&key))
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDownload> download;
-  nsDownload* internalDownload = NS_STATIC_CAST(nsDownload*, mCurrDownloads.Get(&key));
-  internalDownload->QueryInterface(NS_GET_IID(nsIDownload), (void**) getter_AddRefs(download));
-  if (!download)
-    return NS_ERROR_FAILURE;
- 
-
+  nsDownload* internalDownload = NS_STATIC_CAST(nsDownload*, aDownload);
   nsCOMPtr<nsIProgressDialog> oldDialog;
   internalDownload->GetDialog(getter_AddRefs(oldDialog));
   
@@ -782,19 +772,19 @@ nsDownloadManager::OpenProgressDialogFor(const nsACString & aTargetPath, nsIDOMW
   
   // start time...
   PRInt64 startTime = 0;
-  download->GetStartTime(&startTime);
+  aDownload->GetStartTime(&startTime);
   
   // source...
   nsCOMPtr<nsIURI> source;
-  download->GetSource(getter_AddRefs(source));
+  aDownload->GetSource(getter_AddRefs(source));
 
   // target...
   nsCOMPtr<nsILocalFile> target;
-  download->GetTarget(getter_AddRefs(target));
+  aDownload->GetTarget(getter_AddRefs(target));
   
   // helper app...
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
-  download->GetMIMEInfo(getter_AddRefs(mimeInfo));
+  aDownload->GetMIMEInfo(getter_AddRefs(mimeInfo));
 
   dl->Init(source, target, nsnull, mimeInfo, startTime, nsnull); 
   dl->SetObserver(this);
