@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.10 2001/01/24 04:20:10 nelsonb%netscape.com Exp $
+ # $Id: nssinit.c,v 1.11 2001/01/26 04:33:45 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -164,66 +164,11 @@ nss_OpenSecModDB(const char * configdir,const char *dbname)
     return SECSuccess;
 }
 
+static CERTCertDBHandle certhandle = { 0 };
+
 static SECStatus
-nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix, const char *secmodName, PRBool readOnly)
-{
-    SECStatus status;
-    SECStatus rv      = SECFailure;
-
-    status = RNG_RNGInit();     	/* initialize random number generator */
-    if (status != SECSuccess)
-	goto loser;
-    RNG_SystemInfoForRNG();
-
-    status = nss_OpenCertDB(configdir, certPrefix, readOnly);
-    if (status != SECSuccess)
-	goto loser;
-
-    status = nss_OpenKeyDB(configdir, keyPrefix, readOnly);
-    if (status != SECSuccess)
-	goto loser;
-
-    status = nss_OpenSecModDB(configdir, secmodName);
-    if (status != SECSuccess)
-	goto loser;
-
-    rv = SECSuccess;
-
-loser:
-    if (rv != SECSuccess) 
-	NSS_Shutdown();
-    return rv;
-}
-
-SECStatus
-NSS_Init(const char *configdir)
-{
-    return nss_Init(configdir, "", "", "secmod.db", PR_TRUE);
-}
-
-SECStatus
-NSS_InitReadWrite(const char *configdir)
-{
-    return nss_Init(configdir, "", "", "secmod.db", PR_FALSE);
-}
-
-SECStatus
-NSS_Initialize(const char *configdir, const char *certPrefix, const char *keyPrefix, const char *secmodName, PRBool readonly)
-{
-    return nss_Init(configdir, certPrefix, keyPrefix, secmodName, readonly);
-}
-
-/*
- * initialize NSS without a creating cert db's, key db's, or secmod db's.
- */
-SECStatus
-NSS_NoDB_Init(const char * configdir)
-{
-          
-      CERTCertDBHandle certhandle = { 0 };
+nss_OpenVolatileCertDB() {
       SECStatus rv = SECSuccess;
-      SECMODModule *module;
-
       /* now we want to verify the signature */
       /*  Initialize the cert code */
       rv = CERT_OpenVolatileCertDB(&certhandle);
@@ -231,12 +176,14 @@ NSS_NoDB_Init(const char * configdir)
 	   return rv;
       }
       CERT_SetDefaultCertDB(&certhandle);
+      return rv;
+}
 
-      rv = RNG_RNGInit();
-      if (rv != SECSuccess) {
-	   return rv;
-      }
-      RNG_SystemInfoForRNG();
+static SECStatus
+nss_OpenVolatileSecModDB() {
+      SECStatus rv = SECSuccess;
+      SECMODModule *module;
+
       PK11_InitSlotLists();
 
       module = SECMOD_NewInternal();
@@ -249,6 +196,90 @@ NSS_NoDB_Init(const char * configdir)
       }
 
       SECMOD_SetInternalModule(module);
+      return rv;
+}
+
+static SECStatus
+nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix, const char *secmodName, PRBool readOnly, PRBool nodb)
+{
+    SECStatus status;
+    SECStatus rv      = SECFailure;
+
+    status = RNG_RNGInit();     	/* initialize random number generator */
+    if (status != SECSuccess)
+	goto loser;
+    RNG_SystemInfoForRNG();
+
+    status = nss_OpenCertDB(configdir, certPrefix, readOnly);
+    if (status != SECSuccess) {
+	if (!nodb) goto loser;
+	status = nss_OpenVolatileCertDB();
+	if (status != SECSuccess) {
+	    goto loser;
+	}
+    }
+
+    status = nss_OpenKeyDB(configdir, keyPrefix, readOnly);
+    if (status != SECSuccess) {
+	if (!nodb) goto loser;
+    }
+
+
+    status = nss_OpenSecModDB(configdir, secmodName);
+    if (status != SECSuccess) {
+	goto loser;
+    }
+
+    rv = SECSuccess;
+
+loser:
+    if (rv != SECSuccess) 
+	NSS_Shutdown();
+    return rv;
+}
+
+SECStatus
+NSS_Init(const char *configdir)
+{
+    return nss_Init(configdir, "", "", "secmod.db", PR_TRUE, PR_FALSE);
+}
+
+SECStatus
+NSS_InitReadWrite(const char *configdir)
+{
+    return nss_Init(configdir, "", "", "secmod.db", PR_FALSE, PR_FALSE);
+}
+
+SECStatus
+NSS_Initialize(const char *configdir, const char *certPrefix, const char *keyPrefix, const char *secmodName, PRBool readonly)
+{
+    return nss_Init(configdir, certPrefix, keyPrefix, 
+						secmodName, readonly, PR_TRUE);
+}
+
+/*
+ * initialize NSS without a creating cert db's, key db's, or secmod db's.
+ */
+SECStatus
+NSS_NoDB_Init(const char * configdir)
+{
+          
+      SECStatus rv = SECSuccess;
+      SECMODModule *module;
+
+     
+      rv = RNG_RNGInit();
+      if (rv != SECSuccess) {
+	   return rv;
+      }
+      RNG_SystemInfoForRNG();
+
+      rv = nss_OpenVolatileCertDB();
+      if (rv != SECSuccess) {
+	   return rv;
+      }
+      rv = nss_OpenVolatileSecModDB();
+
       return rv;
 }
 
