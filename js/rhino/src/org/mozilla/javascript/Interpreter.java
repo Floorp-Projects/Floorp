@@ -77,55 +77,56 @@ public class Interpreter
         Icode_TYPEOFNAME                = BASE_ICODE + 14,
 
     // helper for function calls
-        Icode_NAME_AND_THIS             = BASE_ICODE + 15,
-        Icode_PUSH_PARENT               = BASE_ICODE + 16,
+        Icode_NAME_FAST_THIS            = BASE_ICODE + 15,
+        Icode_NAME_SLOW_THIS            = BASE_ICODE + 16,
+        Icode_PUSH_PARENT               = BASE_ICODE + 17,
 
     // Access to parent scope and prototype
-        Icode_GETPROTO                  = BASE_ICODE + 17,
-        Icode_GETSCOPEPARENT            = BASE_ICODE + 18,
-        Icode_SETPROTO                  = BASE_ICODE + 19,
-        Icode_SETPARENT                 = BASE_ICODE + 20,
+        Icode_GETPROTO                  = BASE_ICODE + 18,
+        Icode_GETSCOPEPARENT            = BASE_ICODE + 19,
+        Icode_SETPROTO                  = BASE_ICODE + 20,
+        Icode_SETPARENT                 = BASE_ICODE + 21,
 
     // Create closure object for nested functions
-        Icode_CLOSURE                   = BASE_ICODE + 21,
+        Icode_CLOSURE                   = BASE_ICODE + 22,
 
     // Special calls
-        Icode_CALLSPECIAL               = BASE_ICODE + 22,
+        Icode_CALLSPECIAL               = BASE_ICODE + 23,
 
     // To return undefined value
-        Icode_RETUNDEF                  = BASE_ICODE + 23,
+        Icode_RETUNDEF                  = BASE_ICODE + 24,
 
     // Exception handling implementation
-        Icode_CATCH                     = BASE_ICODE + 24,
-        Icode_GOSUB                     = BASE_ICODE + 25,
-        Icode_RETSUB                    = BASE_ICODE + 26,
+        Icode_CATCH                     = BASE_ICODE + 25,
+        Icode_GOSUB                     = BASE_ICODE + 26,
+        Icode_RETSUB                    = BASE_ICODE + 27,
 
     // To indicating a line number change in icodes.
-        Icode_LINE                      = BASE_ICODE + 27,
+        Icode_LINE                      = BASE_ICODE + 28,
 
     // To store shorts and ints inline
-        Icode_SHORTNUMBER               = BASE_ICODE + 28,
-        Icode_INTNUMBER                 = BASE_ICODE + 29,
+        Icode_SHORTNUMBER               = BASE_ICODE + 29,
+        Icode_INTNUMBER                 = BASE_ICODE + 30,
 
     // To create and populate array to hold values for [] and {} literals
-        Icode_LITERAL_NEW               = BASE_ICODE + 30,
-        Icode_LITERAL_SET               = BASE_ICODE + 31,
+        Icode_LITERAL_NEW               = BASE_ICODE + 31,
+        Icode_LITERAL_SET               = BASE_ICODE + 32,
 
     // Array literal with skipped index like [1,,2]
-        Icode_SPARE_ARRAYLIT            = BASE_ICODE + 32,
+        Icode_SPARE_ARRAYLIT            = BASE_ICODE + 33,
 
     // Load string register to prepare for the following string operation
-        Icode_LOAD_STR1                 = BASE_ICODE + 33,
-        Icode_LOAD_STR2                 = BASE_ICODE + 34,
-        Icode_LOAD_STR4                 = BASE_ICODE + 35,
+        Icode_REG_STR1                  = BASE_ICODE + 34,
+        Icode_REG_STR2                  = BASE_ICODE + 35,
+        Icode_REG_STR4                  = BASE_ICODE + 36,
 
     // Load index register to prepare for the following index operation
-        Icode_LOAD_IND1                 = BASE_ICODE + 36,
-        Icode_LOAD_IND2                 = BASE_ICODE + 37,
-        Icode_LOAD_IND4                 = BASE_ICODE + 38,
+        Icode_REG_IND1                  = BASE_ICODE + 37,
+        Icode_REG_IND2                  = BASE_ICODE + 38,
+        Icode_REG_IND4                  = BASE_ICODE + 39,
 
     // Last icode
-        MAX_ICODE                       = BASE_ICODE + 38;
+        MAX_ICODE                       = BASE_ICODE + 39;
 
     public Object compile(Scriptable scope,
                           CompilerEnvirons compilerEnv,
@@ -1127,8 +1128,8 @@ public class Interpreter
             boolean skipGetThis = (itsWithDepth == 0
                                    && (itsInFunctionFlag
                                        || !itsData.itsFromEvalCode));
-            iCodeTop = addStringOp(Icode_NAME_AND_THIS, name, iCodeTop);
-            iCodeTop = addByte(skipGetThis ? 1 : 0, iCodeTop);
+            int op = skipGetThis ? Icode_NAME_FAST_THIS : Icode_NAME_SLOW_THIS;
+			iCodeTop = addStringOp(op, name, iCodeTop);
             stackChange(2);
             break;
           }
@@ -1435,13 +1436,13 @@ public class Interpreter
             itsStrings.put(str, index);
         }
         if (index <= 0xFF) {
-            iCodeTop = addIcode(Icode_LOAD_STR1, iCodeTop);
+            iCodeTop = addIcode(Icode_REG_STR1, iCodeTop);
             iCodeTop = addByte(index, iCodeTop);
         } else if (index <= 0xFFFF) {
-            iCodeTop = addIcode(Icode_LOAD_STR2, iCodeTop);
+            iCodeTop = addIcode(Icode_REG_STR2, iCodeTop);
             iCodeTop = addShort(index, iCodeTop);
         } else {
-            iCodeTop = addIcode(Icode_LOAD_STR4, iCodeTop);
+            iCodeTop = addIcode(Icode_REG_STR4, iCodeTop);
             iCodeTop = addInt(index, iCodeTop);
         }
         if (op > BASE_ICODE) {
@@ -1456,13 +1457,13 @@ public class Interpreter
     {
         if (index < 0) Kit.codeBug();
         if (index <= 0xFF) {
-            iCodeTop = addIcode(Icode_LOAD_IND1, iCodeTop);
+            iCodeTop = addIcode(Icode_REG_IND1, iCodeTop);
             iCodeTop = addByte(index, iCodeTop);
         } else if (index <= 0xFFFF) {
-            iCodeTop = addIcode(Icode_LOAD_IND2, iCodeTop);
+            iCodeTop = addIcode(Icode_REG_IND2, iCodeTop);
             iCodeTop = addShort(index, iCodeTop);
         } else {
-            iCodeTop = addIcode(Icode_LOAD_IND4, iCodeTop);
+            iCodeTop = addIcode(Icode_REG_IND4, iCodeTop);
             iCodeTop = addInt(index, iCodeTop);
         }
         if (op > BASE_ICODE) {
@@ -1581,7 +1582,8 @@ public class Interpreter
                     case Icode_VARDEC:           return "VARDEC";
                     case Icode_SCOPE:            return "SCOPE";
                     case Icode_TYPEOFNAME:       return "TYPEOFNAME";
-                    case Icode_NAME_AND_THIS:    return "NAME_AND_THIS";
+                    case Icode_NAME_FAST_THIS:   return "NAME_FAST_THIS";
+                    case Icode_NAME_SLOW_THIS:   return "NAME_SLOW_THIS";
                     case Icode_GETPROTO:         return "GETPROTO";
                     case Icode_PUSH_PARENT:      return "PUSH_PARENT";
                     case Icode_GETSCOPEPARENT:   return "GETSCOPEPARENT";
@@ -1599,12 +1601,12 @@ public class Interpreter
                     case Icode_LITERAL_NEW:      return "LITERAL_NEW";
                     case Icode_LITERAL_SET:      return "LITERAL_SET";
                     case Icode_SPARE_ARRAYLIT:   return "SPARE_ARRAYLIT";
-                    case Icode_LOAD_STR1:        return "LOAD_STR1";
-                    case Icode_LOAD_STR2:        return "LOAD_STR2";
-                    case Icode_LOAD_STR4:        return "LOAD_STR4";
-                    case Icode_LOAD_IND1:        return "LOAD_IND1";
-                    case Icode_LOAD_IND2:        return "LOAD_IND2";
-                    case Icode_LOAD_IND4:        return "LOAD_IND4";
+                    case Icode_REG_STR1:         return "LOAD_STR1";
+                    case Icode_REG_STR2:         return "LOAD_STR2";
+                    case Icode_REG_STR4:         return "LOAD_STR4";
+                    case Icode_REG_IND1:         return "LOAD_IND1";
+                    case Icode_REG_IND2:         return "LOAD_IND2";
+                    case Icode_REG_IND4:         return "LOAD_IND4";
                 }
             }
             return "<UNKNOWN ICODE: "+icode+">";
@@ -1713,49 +1715,38 @@ public class Interpreter
                         pc += 2;
                         break;
                     }
-                    case Icode_NAME_AND_THIS : {
-                        boolean skipGetThis = (0 != iCode[pc]);
-                        out.println(tname+" "+skipGetThis);
-                        ++pc;
-                        break;
-                    }
                     case Icode_LINE : {
                         int line = getShort(iCode, pc);
                         out.println(tname + " : " + line);
                         pc += 2;
                         break;
                     }
-                    case Icode_LITERAL_NEW: {
-                        int numberOfValues = indexReg;
-                        out.println(tname + " : " + numberOfValues);
-                        break;
-                    }
-                    case Icode_LOAD_STR1: {
+                    case Icode_REG_STR1: {
                         String str = strings[0xFF & iCode[pc]];
                         out.println(tname + " \"" + str + '"');
                         ++pc;
                     }
-                    case Icode_LOAD_STR2: {
+                    case Icode_REG_STR2: {
                         String str = strings[getIndex(iCode, pc)];
                         out.println(tname + " \"" + str + '"');
                         pc += 2;
                     }
-                    case Icode_LOAD_STR4: {
+                    case Icode_REG_STR4: {
                         String str = strings[getInt(iCode, pc)];
                         out.println(tname + " \"" + str + '"');
                         pc += 4;
                     }
-                    case Icode_LOAD_IND1: {
+                    case Icode_REG_IND1: {
                         indexReg = 0xFF & iCode[pc];
                         out.println(tname+" "+indexReg);
                         ++pc;
                     }
-                    case Icode_LOAD_IND2: {
+                    case Icode_REG_IND2: {
                         indexReg = getIndex(iCode, pc);
                         out.println(tname+" "+indexReg);
                         pc += 2;
                     }
-                    case Icode_LOAD_IND4: {
+                    case Icode_REG_IND4: {
                         indexReg = getInt(iCode, pc);
                         out.println(tname+" "+indexReg);
                         pc += 4;
@@ -1870,6 +1861,8 @@ public class Interpreter
             case Token.NUMBER :
             case Token.OBJECTLIT:
             case Token.ARRAYLIT:
+            case Icode_NAME_FAST_THIS :
+            case Icode_NAME_SLOW_THIS :
                 return 1;
 
             case Token.THROW :
@@ -1911,33 +1904,29 @@ public class Interpreter
                 // int number
                 return 1 + 4;
 
-            case Icode_LOAD_STR1:
+            case Icode_REG_STR1:
                 // ubyte string index
                 return 1 + 1;
 
-            case Icode_LOAD_STR2:
+            case Icode_REG_STR2:
                 // ushort string index
                 return 1 + 2;
 
-            case Icode_LOAD_STR4:
+            case Icode_REG_STR4:
                 // int string index
                 return 1 + 4;
 
-            case Icode_LOAD_IND1:
+            case Icode_REG_IND1:
                 // ubyte index
                 return 1 + 1;
 
-            case Icode_LOAD_IND2:
+            case Icode_REG_IND2:
                 // ushort index
                 return 1 + 2;
 
-            case Icode_LOAD_IND4:
+            case Icode_REG_IND4:
                 // int index
                 return 1 + 4;
-
-            case Icode_NAME_AND_THIS :
-                // skipGetThis flag
-                return 1 + 1;
 
             case Icode_LINE :
                 // line number
@@ -2568,27 +2557,27 @@ public class Interpreter
                           ? Boolean.FALSE : Boolean.TRUE;
         continue Loop;
     }
-    case Icode_LOAD_STR1:
+    case Icode_REG_STR1:
         stringReg = strings[0xFF & iCode[pc]];
         ++pc;
         continue Loop;
-    case Icode_LOAD_STR2:
+    case Icode_REG_STR2:
         stringReg = strings[getIndex(iCode, pc)];
         pc += 2;
         continue Loop;
-    case Icode_LOAD_STR4:
+    case Icode_REG_STR4:
         stringReg = strings[getInt(iCode, pc)];
         pc += 4;
         continue Loop;
-    case Icode_LOAD_IND1:
+    case Icode_REG_IND1:
         indexReg = 0xFF & iCode[pc];
         ++pc;
         continue Loop;
-    case Icode_LOAD_IND2:
+    case Icode_REG_IND2:
         indexReg = getIndex(iCode, pc);
         pc += 2;
         continue Loop;
-    case Icode_LOAD_IND4:
+    case Icode_REG_IND4:
         indexReg = getInt(iCode, pc);
         pc += 4;
         continue Loop;
@@ -2809,12 +2798,10 @@ public class Interpreter
     case Icode_TYPEOFNAME :
         stack[++stackTop] = ScriptRuntime.typeofName(scope, stringReg);
         continue Loop;
-    case Icode_NAME_AND_THIS : {
-        boolean skipGetThis = (0 != iCode[pc]);
-        stackTop = do_nameAndThis(stack, stackTop, scope, stringReg, skipGetThis);
-        ++pc;
+    case Icode_NAME_FAST_THIS : 
+    case Icode_NAME_SLOW_THIS :
+        stackTop = do_nameAndThis(stack, stackTop, scope, stringReg, op);
         continue Loop;
-    }
     case Token.STRING :
         stack[++stackTop] = stringReg;
         continue Loop;
@@ -3356,7 +3343,7 @@ public class Interpreter
 
     private static int do_nameAndThis(Object[] stack, int stackTop,
                                       Scriptable scope, String name,
-                                      boolean skipGetThis)
+                                      int op)
     {
         Object prop;
         Scriptable obj = scope;
@@ -3371,7 +3358,8 @@ public class Interpreter
             throw ScriptRuntime.notFoundError(scope, name);
         }
 
-        Scriptable thisArg = skipGetThis ? obj : ScriptRuntime.getThis(obj);
+        Scriptable thisArg = (op == Icode_NAME_FAST_THIS) 
+		                     ? obj : ScriptRuntime.getThis(obj);
         stack[++stackTop] = prop;
         stack[++stackTop] = thisArg;
 
