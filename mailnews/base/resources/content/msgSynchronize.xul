@@ -31,7 +31,7 @@ Contributors:
         id="msg-synchronizer" 
         title="&MsgSynchronize.label;"
         onload="OnLoad();"
-        width="380" height="280"
+        style="width: 35em;"
         ondialogaccept="return syncOkButton();">
 
 <script src="chrome://global/content/strres.js"/>
