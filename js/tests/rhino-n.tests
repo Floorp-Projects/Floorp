@@ -12,6 +12,8 @@ ecma/Date/15.9.4.3.js
 ecma_3/Function/regress-94506.js
 #See bug number 9141
 js1_2/regexp/regress-9141.js
+#See bug number 100199
+ecma_3/RegExp/regress-100199.js
 #
 # Unfixable bugs:
 #
