@@ -249,8 +249,6 @@ CopyChars gCopyChars[2][2]={
  *  @return  index of pos if found, else -1 (kNotFound)
  */
 inline PRInt32 FindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
-  PRInt32  theIndex=0;
-  PRInt32  theLength=(PRInt32)aLength;
 
   if(aIgnoreCase) {
     char theChar=(char)nsCRT::ToUpper(aChar);
@@ -285,8 +283,6 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,co
  *  @return  index of pos if found, else -1 (kNotFound)
  */
 inline PRInt32 FindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
-  PRInt32           theIndex=0;
-  PRInt32           theLength=(PRInt32)aLength;
   const PRUnichar*  root=(PRUnichar*)aDest;
   const PRUnichar*  ptr=root+(anOffset-1);
   const PRUnichar*  last=root+aLength;
