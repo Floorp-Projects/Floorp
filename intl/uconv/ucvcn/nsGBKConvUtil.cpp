@@ -58,13 +58,24 @@ PRBool nsGBKConvUtil::UnicodeToGBKChar(
   NS_ASSERTION(gInitToGBKTable, "gGBKToUnicodeTable is not init yet. need to call InitToGBKTable first");
   PRBool found=PR_FALSE;
   *aOutByte1 = *aOutByte2 = 0;
+  if(UNICHAR_IN_RANGE(0xd800, aChar, 0xdfff))
+  {
+    // surrogate is not in here
+    return PR_FALSE;
+  }
   if(UNICHAR_IN_RANGE(0x4e00, aChar, 0x9FFF))
   {
     PRUint16 item = gUnicodeToGBKTable[aChar - 0x4e00];
-    *aOutByte1 = item >> 8;
-    *aOutByte2 = item & 0x00FF;
-    found = PR_TRUE;
+    if(item != 0) 
+    {
+      *aOutByte1 = item >> 8;
+      *aOutByte2 = item & 0x00FF;
+      return PR_TRUE;
+    } else {
+      return PR_FALSE;
+    }
   }
+  // ugly linear search
   for( PRInt32 i = 0; i < MAX_GBK_LENGTH; i++ )
   {
     if( aChar == gGBKToUnicodeTable[i])

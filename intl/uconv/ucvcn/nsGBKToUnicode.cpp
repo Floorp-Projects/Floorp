@@ -154,6 +154,8 @@ NS_IMETHODIMP nsGBKToUnicode::GetMaxLength(const char * aSrc,
 
 #define LEGAL_GBK_MULTIBYTE_FIRST_BYTE(c)  \
       (UINT8_IN_RANGE(0x81, (c), 0xFE))
+#define FIRST_BYTE_IS_SURROGATE(c)  \
+      (UINT8_IN_RANGE(0x90, (c), 0xFE))
 #define LEGAL_GBK_2BYTE_SECOND_BYTE(c) \
       (UINT8_IN_RANGE(0x40, (c), 0x7E)|| UINT8_IN_RANGE(0x80, (c), 0xFE))
 #define LEGAL_GBK_4BYTE_SECOND_BYTE(c) \
@@ -219,16 +221,34 @@ NS_IMETHODIMP nsGBKToUnicode::ConvertNoBuff(const char* aSrc,
         // 4 bytes patten
         // [0x81-0xfe][0x30-0x39][0x81-0xfe][0x30-0x39]
         // preset the 
-        *aDest = UCS2_NO_MAPPING; 
-
+ 
         if (LEGAL_GBK_4BYTE_THIRD_BYTE(aSrc[2]) &&
             LEGAL_GBK_4BYTE_FORTH_BYTE(aSrc[3]))
         {
-           // let's call the delegated 4 byte gb18030 converter to convert it
-           if(! Try4BytesDecoder(aSrc, aDest))
+           if ( ! FIRST_BYTE_IS_SURROGATE(aSrc[0])) 
            {
-             *aDest = UCS2_NO_MAPPING;
+             // let's call the delegated 4 byte gb18030 converter to convert it
+             if(! Try4BytesDecoder(aSrc, aDest))
+               *aDest = UCS2_NO_MAPPING;
+           } else {
+              // let's try supplement mapping
+             NS_ASSERTION(( (iDestlen+1) <= (*aDestLength) ), "no enouth output memory");
+             if ( (iDestlen+1) <= (*aDestLength) )
+             {
+               if(DecodeToSurrogate(aSrc, aDest))
+               {
+                 // surrogte two PRUnichar
+                 iDestlen++;
+                 aDest++;
+               }  else {
+                 *aDest = UCS2_NO_MAPPING;
+              }
+             } else {
+               *aDest = UCS2_NO_MAPPING;
+             }
            }
+        } else {
+          *aDest = UCS2_NO_MAPPING; 
         }
         aSrc += 4;
         i+=3;
@@ -284,6 +304,36 @@ void nsGB18030ToUnicode::Create4BytesDecoder()
 {
   m4BytesDecoder = new nsGB18030Unique4BytesToUnicode();
 }
+PRBool nsGB18030ToUnicode::DecodeToSurrogate(const char* aSrc, PRUnichar* aOut)
+{
+  NS_ASSERTION(FIRST_BYTE_IS_SURROGATE(aSrc[0]),       "illegal first byte");
+  NS_ASSERTION(LEGAL_GBK_4BYTE_SECOND_BYTE(aSrc[1]),   "illegal second byte");
+  NS_ASSERTION(LEGAL_GBK_4BYTE_THIRD_BYTE(aSrc[2]),    "illegal third byte");
+  NS_ASSERTION(LEGAL_GBK_4BYTE_FORTH_BYTE(aSrc[3]),    "illegal forth byte");
+  if(! FIRST_BYTE_IS_SURROGATE(aSrc[0]))
+    return PR_FALSE;
+  if(! LEGAL_GBK_4BYTE_SECOND_BYTE(aSrc[1]))
+    return PR_FALSE;
+  if(! LEGAL_GBK_4BYTE_THIRD_BYTE(aSrc[2]))
+    return PR_FALSE;
+  if(! LEGAL_GBK_4BYTE_FORTH_BYTE(aSrc[3]))
+    return PR_FALSE;
+
+  PRUint8 a1 = (PRUint8) aSrc[0];
+  PRUint8 a2 = (PRUint8) aSrc[1];
+  PRUint8 a3 = (PRUint8) aSrc[2];
+  PRUint8 a4 = (PRUint8) aSrc[3];
+  a1 -= (PRUint8)0x90;
+  a2 -= (PRUint8)0x30;
+  a3 -= (PRUint8)0x81;
+  a4 -= (PRUint8)0x30;
+  PRUint32 idx = (((a1 * 10 + a2 ) * 126 + a3) * 10) + a4;
+
+  *aOut++ = 0xD800 | (0x000003FF & (idx >> 10));
+  *aOut = 0xDC00 | (0x000003FF & idx);
+
+  return PR_TRUE;
+}
 PRBool nsGBKToUnicode::TryExtensionDecoder(const char* aSrc, PRUnichar* aOut)
 {
   if(!mExtensionDecoder)
@@ -304,6 +354,10 @@ PRBool nsGBKToUnicode::TryExtensionDecoder(const char* aSrc, PRUnichar* aOut)
       return PR_TRUE;
   }
   return  PR_FALSE;
+}
+PRBool nsGBKToUnicode::DecodeToSurrogate(const char* aSrc, PRUnichar* aOut)
+{
+  return PR_FALSE;
 }
 PRBool nsGBKToUnicode::Try4BytesDecoder(const char* aSrc, PRUnichar* aOut)
 {

@@ -90,9 +90,11 @@ protected:
   nsCOMPtr<nsIUnicodeEncoder> mExtensionEncoder;
   nsCOMPtr<nsIUnicodeEncoder> m4BytesEncoder;
 protected:
+  PRUnichar mSurrogateHigh;
   nsGBKConvUtil mUtil;
   PRBool TryExtensionEncoder(PRUnichar aChar, char* aDest, PRInt32* aOutLen);
   PRBool Try4BytesEncoder(PRUnichar aChar, char* aDest, PRInt32* aOutLen);
+  virtual PRBool EncodeSurrogate(PRUnichar aSurrogateHigh, PRUnichar aSurrogateLow, char* aDest);
 };
 
 class nsUnicodeToGB18030: public nsUnicodeToGBK
@@ -105,6 +107,7 @@ protected:
       PRInt32 * aDestLength);
   virtual void CreateExtensionEncoder();
   virtual void Create4BytesEncoder();
+  virtual PRBool EncodeSurrogate(PRUnichar aSurrogateHigh, PRUnichar aSurrogateLow, char* aDest);
 };
 
 class nsUnicodeToGB18030Font0: public nsUnicodeToGB18030
