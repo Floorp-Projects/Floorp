@@ -948,17 +948,17 @@ MapTableFrameInto(nsIHTMLAttributes* aAttributes,
                   nsStyleSpacing* aSpacing)
 {
   // set up defaults
-  if (aSpacing->mBorderStyle[0] == NS_STYLE_BORDER_STYLE_NONE) {
-    aSpacing->mBorderStyle[0] = NS_STYLE_BORDER_STYLE_OUTSET;
+  if (aSpacing->GetBorderStyle(0) == NS_STYLE_BORDER_STYLE_NONE) {
+    aSpacing->SetBorderStyle(0, NS_STYLE_BORDER_STYLE_OUTSET);
   }
-  if (aSpacing->mBorderStyle[1] == NS_STYLE_BORDER_STYLE_NONE) {
-    aSpacing->mBorderStyle[1] = NS_STYLE_BORDER_STYLE_OUTSET;
+  if (aSpacing->GetBorderStyle(1) == NS_STYLE_BORDER_STYLE_NONE) {
+    aSpacing->SetBorderStyle(1, NS_STYLE_BORDER_STYLE_OUTSET);
   }
-  if (aSpacing->mBorderStyle[2] == NS_STYLE_BORDER_STYLE_NONE) {
-    aSpacing->mBorderStyle[2] = NS_STYLE_BORDER_STYLE_OUTSET;
+  if (aSpacing->GetBorderStyle(2) == NS_STYLE_BORDER_STYLE_NONE) {
+    aSpacing->SetBorderStyle(2, NS_STYLE_BORDER_STYLE_OUTSET);
   }
-  if (aSpacing->mBorderStyle[3] == NS_STYLE_BORDER_STYLE_NONE) {
-    aSpacing->mBorderStyle[3] = NS_STYLE_BORDER_STYLE_OUTSET;
+  if (aSpacing->GetBorderStyle(3) == NS_STYLE_BORDER_STYLE_NONE) {
+    aSpacing->SetBorderStyle(3, NS_STYLE_BORDER_STYLE_OUTSET);
   }
 
   nsHTMLValue frameValue;
@@ -974,39 +974,39 @@ MapTableFrameInto(nsIHTMLAttributes* aAttributes,
     switch (frameValue.GetIntValue())
     {
     case NS_STYLE_TABLE_FRAME_NONE:
-      aSpacing->mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
-      aSpacing->mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
-      aSpacing->mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_NONE;
-      aSpacing->mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+      aSpacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
+      aSpacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+      aSpacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
       tableStyle->mRules=NS_STYLE_TABLE_RULES_NONE;
       break;
     case NS_STYLE_TABLE_FRAME_ABOVE:
-      aSpacing->mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
-      aSpacing->mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_NONE;
-      aSpacing->mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
+      aSpacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+      aSpacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
       break;
     case NS_STYLE_TABLE_FRAME_BELOW:
-      aSpacing->mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
-      aSpacing->mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
-      aSpacing->mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+      aSpacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
+      aSpacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
       break;
     case NS_STYLE_TABLE_FRAME_HSIDES:
-      aSpacing->mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
-      aSpacing->mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
+      aSpacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
       break;
     case NS_STYLE_TABLE_FRAME_LEFT:
-      aSpacing->mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
-      aSpacing->mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
-      aSpacing->mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+      aSpacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
+      aSpacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
       break;
     case NS_STYLE_TABLE_FRAME_RIGHT:
-      aSpacing->mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
-      aSpacing->mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_NONE;
-      aSpacing->mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+      aSpacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+      aSpacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
       break;
     case NS_STYLE_TABLE_FRAME_VSIDES:
-      aSpacing->mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
-      aSpacing->mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+      aSpacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
       break;
     // BOX and BORDER are ignored, the caller has already set all the border sides
     // any illegal value is also ignored
