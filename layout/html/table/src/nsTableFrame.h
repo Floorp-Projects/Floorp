@@ -666,9 +666,11 @@ protected:
 public:
   // put the children frames in the display order (e.g. thead before tbody before tfoot)
   // and put the non row group frames at the end. Also return the number of row group frames.
-  void OrderRowGroups(nsVoidArray& aChildren,
-                      PRUint32&    aNumRowGroups,
-                      nsIFrame**   aFirstBody = nsnull);
+  void OrderRowGroups(nsVoidArray&           aChildren,
+                      PRUint32&              aNumRowGroups,
+                      nsIFrame**             aFirstBody = nsnull,
+                      nsTableRowGroupFrame** aHead      = nsnull,
+                      nsTableRowGroupFrame** aFoot      = nsnull);
 
   // Returns PR_TRUE if there are any cells above the row at
   // aRowIndex and spanning into the row at aRowIndex     

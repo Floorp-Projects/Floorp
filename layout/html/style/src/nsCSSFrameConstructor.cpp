@@ -10541,6 +10541,7 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell* aPresShell,
           NS_ASSERTION(!state.mFloatedItems.childList, "unexpected floated element");
           NS_RELEASE(headerFooter);
           headerFooterFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
+          ((nsTableRowGroupFrame*)headerFooterFrame)->SetRepeatable(PR_TRUE);
 
           // Table specific initialization
           ((nsTableRowGroupFrame*)headerFooterFrame)->InitRepeatedFrame
@@ -10553,13 +10554,6 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell* aPresShell,
 
       NS_RELEASE(rowGroupStyle);
       
-      // Header and footer must be first, and then the body row groups.
-      // So if we found a body row group, then stop looking for header and
-      // footer elements
-      if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == display->mDisplay) {
-        break;
-      }
-
       // Get the next row group frame
       rowGroupFrame->GetNextSibling(&rowGroupFrame);
     }

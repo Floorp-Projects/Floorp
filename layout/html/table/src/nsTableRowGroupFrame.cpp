@@ -44,6 +44,7 @@
 
 nsTableRowGroupFrame::nsTableRowGroupFrame()
 {
+  SetRepeatable(PR_FALSE);
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   mTimer = new nsReflowTimer(this);
 #endif
@@ -1013,20 +1014,12 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.width = aReflowState.availableWidth;
     aDesiredSize.height = state.y;
 
-    // determine if the row group is repeatable in paginated mode
-    PRBool isPaginated;
-    aPresContext->IsPaginated(&isPaginated);
-    if (isPaginated) {
-      nscoord pageHeight;
-      aPresContext->GetPageHeight(&pageHeight);
-      // don't repeat the thead or tfoot unless it is < 25% of the page height
-      PRBool repeatable = (aDesiredSize.height < (pageHeight / 4));
-      SetRepeatable(repeatable);
-    }
     // shrink wrap rows to height of tallest cell in that row
     PRBool isTableUnconstrainedReflow = 
       (NS_UNCONSTRAINEDSIZE == aReflowState.parentReflowState->availableWidth);
 
+    PRBool isPaginated;
+    aPresContext->IsPaginated(&isPaginated);
     // Avoid calling CalculateRowHeights. We can avoid it if the table is going to be
     // doing a pass 2 reflow. In the case where the table is getting an unconstrained
     // reflow, then we need to do this because the table will skip the pass 2 reflow,
