@@ -150,7 +150,7 @@ class nsFontMetricsOS2 : public nsIFontMetrics
    NS_IMETHOD  GetFontHandle( nsFontHandle &aHandle);
   NS_IMETHOD  GetAveCharWidth(nscoord &aAveCharWidth);
 
-  virtual nsresult   GetSpaceWidth(nscoord &aSpaceWidth);
+  NS_IMETHOD  GetSpaceWidth(nscoord &aSpaceWidth);
 
   NS_IMETHODIMP SetUnicodeFont( HPS aPS, LONG lcid );
 

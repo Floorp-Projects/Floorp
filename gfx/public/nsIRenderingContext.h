@@ -642,14 +642,6 @@ public:
                                nsTextDimensions& aLastWordDimensions,
                                PRInt32*          aFontID = nsnull) = 0;
 #endif
-  /*
-   * XXX Buggy APIs: the DrawString() APIs are not implemented according
-   * to their signature. Indeed aX and aY are not interpreted as the
-   * coordinates of the baseline.
-   * XXX TODO: replace the buggy DrawString() APIs with the newer DrawString2()
-   * APIs and fix callers. The newer APIs are the ones to use in conjunction
-   * with GetTextDimensions().
-   */
 
   /**
    * Draw a string in the RenderingContext
@@ -660,15 +652,6 @@ public:
    * @param aSpacing inter-character spacing to apply
    */
   NS_IMETHOD DrawString(const char *aString, PRUint32 aLength,
-                        nscoord aX, nscoord aY,
-                        const nscoord* aSpacing = nsnull) = 0;
-
-  /** 
-   * Same as above, with the difference that the implementation is
-   * correctly intepreting aX and aY as the horizontal and vertical
-   * starting point of the baseline
-   */
-  NS_IMETHOD DrawString2(const char *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
                         const nscoord* aSpacing = nsnull) = 0;
 
@@ -684,10 +667,6 @@ public:
    * @param aSpacing inter-character spacing to apply
    */
   NS_IMETHOD DrawString(const PRUnichar *aString, PRUint32 aLength,
-                        nscoord aX, nscoord aY,
-                        PRInt32 aFontID = -1,
-                        const nscoord* aSpacing = nsnull) = 0;
-  NS_IMETHOD DrawString2(const PRUnichar *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
                         PRInt32 aFontID = -1,
                         const nscoord* aSpacing = nsnull) = 0;

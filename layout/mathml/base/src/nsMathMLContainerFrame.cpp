@@ -432,10 +432,15 @@ nsMathMLContainerFrame::PaintError(nsIPresContext*      aPresContext,
     aRenderingContext.SetColor(color->mColor);
     aRenderingContext.SetFont(font->mFont);
 
+    nscoord ascent;
+    nsCOMPtr<nsIFontMetrics> fm;
+    aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
+    fm->GetMaxAscent(ascent);
+
     nsAutoString errorMsg(PRUnichar(0xFFFD));
     aRenderingContext.DrawString(errorMsg.get(),
                                  PRUint32(errorMsg.Length()),
-                                 mRect.x, mRect.y);
+                                 mRect.x, mRect.y + ascent);
   }
   return NS_OK;
 }

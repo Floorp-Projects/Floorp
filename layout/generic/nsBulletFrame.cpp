@@ -322,13 +322,17 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
       aPresContext->GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
       GetListItemText(aPresContext, *myList, text);
       aRenderingContext.SetFont(fm);
-      aRenderingContext.DrawString(text, mPadding.left, mPadding.top);
+      nscoord ascent;
+      fm->GetMaxAscent(ascent);
+      aRenderingContext.DrawString(text, mPadding.left, mPadding.top + ascent);
       break;
     }
 #ifdef IBMBIDI
     if (charType != eCharType_LeftToRight) {
       aPresContext->GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
       aRenderingContext.SetFont(fm);
+      nscoord ascent;
+      fm->GetMaxAscent(ascent);
 
       nsBidiPresUtils* bidiUtils;
       aPresContext->GetBidiUtils(&bidiUtils);
@@ -347,7 +351,7 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
                                        charType, level, isBidiSystem);//Mohamed
         }
       }
-      aRenderingContext.DrawString(text, mPadding.left, mPadding.top);
+      aRenderingContext.DrawString(text, mPadding.left, mPadding.top + ascent);
     }   
 #endif // IBMBIDI
   }

@@ -1391,6 +1391,12 @@ NS_IMETHODIMP  nsFontMetricsXlib::GetMaxAdvance(nscoord &aAdvance)
   return NS_OK;
 }
 
+NS_IMETHODIMP  nsFontMetricsXlib::GetSpaceWidth(nscoord &aSpaceWidth)
+{
+  aSpaceWidth = mSpaceWidth;
+  return NS_OK;
+}
+
 NS_IMETHODIMP  nsFontMetricsXlib::GetFont(const nsFont*& aFont)
 {
   aFont = mFont;
@@ -4092,13 +4098,6 @@ nsFontMetricsXlib::FindFont(PRUnichar aChar)
 #endif
 
   return font;
-}
-
-nsresult
-nsFontMetricsXlib::GetSpaceWidth(nscoord &aSpaceWidth)
-{
-  aSpaceWidth = mSpaceWidth;
-  return NS_OK;
 }
 
 // The Font Enumerator

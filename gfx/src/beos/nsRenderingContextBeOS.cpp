@@ -1035,8 +1035,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(char aC, nscoord &aWidth)
   // Check for the very common case of trying to get the width of a single
   // space.
   if ((aC == ' ') && (nsnull != mFontMetrics)) {
-    nsFontMetricsBeOS *fontMetricsBeOS = (nsFontMetricsBeOS*)mFontMetrics;
-    return fontMetricsBeOS->GetSpaceWidth(aWidth);
+    return mFontMetrics->GetSpaceWidth(aWidth);
   }
   return GetWidth(&aC, 1, aWidth);
 }
@@ -1149,31 +1148,6 @@ nsRenderingContextBeOS::GetTextDimensions(const PRUnichar*  aString,
 }
 
 NS_IMETHODIMP
-nsRenderingContextBeOS::DrawString(const char *aString, PRUint32 aLength,
-                                   nscoord aX, nscoord aY,
-                                   const nscoord* aSpacing)
-{
-  nscoord y = 0;
-  if (mFontMetrics) {
-    mFontMetrics->GetMaxAscent(y);
-  }
-  return DrawString2(aString, aLength, aX, aY + y, aSpacing);
-}
-
-NS_IMETHODIMP 
-nsRenderingContextBeOS::DrawString(const PRUnichar* aString, PRUint32 aLength,
-                                   nscoord aX, nscoord aY,
-                                   PRInt32 aFontID,
-                                   const nscoord* aSpacing)
-{
-  nscoord y = 0;
-  if (mFontMetrics) {
-    mFontMetrics->GetMaxAscent(y);
-  }
-  return DrawString2(aString, aLength, aX, aY + y, aFontID, aSpacing);
-}
-
-NS_IMETHODIMP
 nsRenderingContextBeOS::DrawString(const nsString& aString,
                                    nscoord aX, nscoord aY,
                                    PRInt32 aFontID,
@@ -1184,7 +1158,7 @@ nsRenderingContextBeOS::DrawString(const nsString& aString,
 }
 
 NS_IMETHODIMP
-nsRenderingContextBeOS::DrawString2(const char *aString, PRUint32 aLength,
+nsRenderingContextBeOS::DrawString(const char *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY,
                                     const nscoord* aSpacing) 
 {
@@ -1195,15 +1169,6 @@ nsRenderingContextBeOS::DrawString2(const char *aString, PRUint32 aLength,
 
     nscoord x = aX;
     nscoord y = aY;
-
-#if 0
-    // XXX - doesn't seem to be needed right now but leaving just incase -cls
-    // Substract xFontStruct ascent since drawing specifies baseline
-    if (mFontMetrics) {
-      mFontMetrics->GetMaxAscent(y);
-      y += aY;
-    }
-#endif
 
     UpdateView();
 
@@ -1242,7 +1207,7 @@ nsRenderingContextBeOS::DrawString2(const char *aString, PRUint32 aLength,
 }
 
 NS_IMETHODIMP
-nsRenderingContextBeOS::DrawString2(const PRUnichar *aString, PRUint32 aLength,
+nsRenderingContextBeOS::DrawString(const PRUnichar *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY,
                                     PRInt32 aFontID,
                                     const nscoord* aSpacing)
@@ -1256,7 +1221,7 @@ nsRenderingContextBeOS::DrawString2(const PRUnichar *aString, PRUint32 aLength,
   *utf8ptr = '\0';
   utf8str_len = strlen(utf8str);
   
-  DrawString2((char *)utf8str, utf8str_len, aX, aY, aSpacing);
+  DrawString((char *)utf8str, utf8str_len, aX, aY, aSpacing);
 	delete [] utf8str;
 	return NS_OK;
 }

@@ -164,6 +164,8 @@ float offset;
   mMaxAscent = mAscent;
   mMaxDescent = mDescent;
   mMaxAdvance = mHeight;
+
+  GetStringWidth(" ", mSpaceWidth, 1);
 }
 
 /** ---------------------------------------------------
@@ -325,6 +327,17 @@ NS_IMETHODIMP
 nsFontMetricsPS :: GetMaxAdvance(nscoord &aAdvance)
 {
   aAdvance = mMaxAdvance;
+  return NS_OK;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsFontMetricsPS.h
+ *	@update 2/26/99 dwc
+ */
+NS_IMETHODIMP
+nsFontMetricsPS :: GetSpaceWidth(nscoord &aSpaceWidth)
+{
+  aSpaceWidth = mSpaceWidth;
   return NS_OK;
 }
 

@@ -144,15 +144,7 @@ NS_IMETHODIMP nsGraphicsImpl::InvertPolygon(PRUint32 count, PRInt32 *points)
 
 NS_IMETHODIMP nsGraphicsImpl::DrawString(const PRUnichar *text, nscoord x, nscoord y)
 {
-	// this works around a bug in the way the ascent calculation is done.
-	nsCOMPtr<nsIFontMetrics> metrics;
-	if (mRenderer->GetFontMetrics(*getter_AddRefs(metrics)) == NS_OK) {
-		nscoord ascent = 0;
-		metrics->GetMaxAscent(ascent);
-		y -= ascent;
-		return mRenderer->DrawString(text, nsCRT::strlen(text), x, y);
-	}
-	return NS_ERROR_FAILURE;
+  return mRenderer->DrawString(text, nsCRT::strlen(text), x, y);
 }
 
 NS_IMETHODIMP nsGraphicsImpl::SetFont(const PRUnichar *name, nscoord size)

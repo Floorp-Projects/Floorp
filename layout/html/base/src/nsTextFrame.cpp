@@ -543,8 +543,8 @@ public:
         mVisibility->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
       }
       deviceContext->GetMetricsFor(*plainFont, langGroup, mNormalFont);
-      aRenderingContext.SetFont(mNormalFont);
-      aRenderingContext.GetWidth(' ', mSpaceWidth);
+      aRenderingContext.SetFont(mNormalFont); // some users of the struct expect this state
+      mNormalFont->GetSpaceWidth(mSpaceWidth);
       mAveCharWidth = 0;
 #if defined(_WIN32) || defined(XP_OS2)
       mNormalFont->GetAveCharWidth(mAveCharWidth);
@@ -2253,7 +2253,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
       aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,isPaginated));
-      aRenderingContext.DrawString2(text, PRUint32(textLength), dx, dy + mAscent);
+      aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
       PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
                            dx, dy, width);
     }
@@ -2332,10 +2332,10 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
           
           if (isPaginated && !iter.IsBeforeOrAfter()) {
             aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,isPaginated));
-            aRenderingContext.DrawString2(currenttext, currentlength, currentX, dy + mAscent);
+            aRenderingContext.DrawString(currenttext, currentlength, currentX, dy + mAscent);
           } else if (!isPaginated) {
             aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor,isPaginated));
-            aRenderingContext.DrawString2(currenttext, currentlength, currentX, dy + mAscent);
+            aRenderingContext.DrawString(currenttext, currentlength, currentX, dy + mAscent);
           }
 
 #ifdef IBMBIDI
@@ -2349,7 +2349,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
       else if (!isPaginated) 
       {
         aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,isPaginated));
-        aRenderingContext.DrawString2(text, PRUint32(textLength), dx, dy + mAscent);
+        aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
       }
       PaintTextDecorations(aRenderingContext, aStyleContext,
                            aTextStyle, dx, dy, width, text, details,0,(PRUint32)textLength);
@@ -2549,33 +2549,18 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
   }
   PRIntn* sp = sp0;
 
-  nscoord smallY = aY;
-  if (aTextStyle.mSmallCaps) {
-    nscoord normalAscent, smallAscent;
-    aTextStyle.mNormalFont->GetMaxAscent(normalAscent);
-    aTextStyle.mSmallFont->GetMaxAscent(smallAscent);
-    if (normalAscent > smallAscent) {
-      smallY = aY + normalAscent - smallAscent;
-    }
-  }
-
   nsIFontMetrics* lastFont = aTextStyle.mLastFont;
-  nscoord lastY = aY;
-  if (lastFont == aTextStyle.mSmallFont) {
-    lastY = smallY;
-  }
   PRInt32 pendingCount;
   PRUnichar* runStart = bp;
   nscoord charWidth, width = 0;
   PRInt32 countSoFar = 0;
   for (; --aLength >= 0; aBuffer++) {
     nsIFontMetrics* nextFont;
-    nscoord nextY, glyphWidth;
+    nscoord glyphWidth;
     PRUnichar ch = *aBuffer;
     if (aTextStyle.mSmallCaps &&
         (IsLowerCase(ch) || (ch == kSZLIG))) {
       nextFont = aTextStyle.mSmallFont;
-      nextY = smallY;
       PRUnichar upper_ch;
       // German szlig should be expanded to "SS".
       if (ch == kSZLIG)
@@ -2601,7 +2586,6 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
     }
     else if (ch == ' ') {
       nextFont = aTextStyle.mNormalFont;
-      nextY = aY;
       glyphWidth = aTextStyle.mSpaceWidth + aTextStyle.mWordSpacing + aTextStyle.mLetterSpacing
         + aTextStyle.mExtraSpacePerSpace;
       if ((PRUint32)--aTextStyle.mNumSpacesToRender <
@@ -2619,7 +2603,6 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
         aRenderingContext.GetWidth(ch, charWidth);
       }
       nextFont = aTextStyle.mNormalFont;
-      nextY = aY;
       glyphWidth = charWidth + aTextStyle.mLetterSpacing;
     }
     if (nextFont != lastFont) {
@@ -2627,8 +2610,8 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
       if (0 != pendingCount) {
         // Measure previous run of characters using the previous font
         //aRenderingContext.SetColor(aTextStyle.mColor->mColor); commenting out redundat(and destructive) call to setcolor
-        aRenderingContext.DrawString2(runStart, pendingCount,
-                                     aX, aY/*lastY*/ + mAscent, -1,
+        aRenderingContext.DrawString(runStart, pendingCount,
+                                     aX, aY + mAscent, -1,
                                      spacing ? sp0 : nsnull);
 
         // Note: use aY not small-y so that decorations are drawn with
@@ -2644,7 +2627,6 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
       }
       aRenderingContext.SetFont(nextFont);
       lastFont = nextFont;
-      lastY = nextY;
     }
     *bp++ = ch;
     *sp++ = glyphWidth;
@@ -2653,7 +2635,7 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
   pendingCount = bp - runStart;
   if (0 != pendingCount) {
     // Measure previous run of characters using the previous font
-    aRenderingContext.DrawString2(runStart, pendingCount, aX, aY/*lastY*/ + mAscent, -1,
+    aRenderingContext.DrawString(runStart, pendingCount, aX, aY + mAscent, -1,
                                  spacing ? sp0 : nsnull);
 
     // Note: use aY not small-y so that decorations are drawn with
@@ -3110,7 +3092,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
       aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,isPaginated));
-      aRenderingContext.DrawString2(text, PRUint32(textLength), dx, dy + mAscent);
+      aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
       PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
                            dx, dy, width);
     }
@@ -3168,10 +3150,10 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
 
           if (isPaginated && !iter.IsBeforeOrAfter()) {
             aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,isPaginated));
-            aRenderingContext.DrawString2(currenttext, currentlength, currentX, dy + mAscent);
+            aRenderingContext.DrawString(currenttext, currentlength, currentX, dy + mAscent);
           } else if (!isPaginated) {
             aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor,isPaginated));
-            aRenderingContext.DrawString2(currenttext, currentlength, currentX, dy + mAscent);
+            aRenderingContext.DrawString(currenttext, currentlength, currentX, dy + mAscent);
           }
 
           currentX+=newWidth;//increment twips X start
@@ -3182,7 +3164,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
       else if (!isPaginated) 
       {
         aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,isPaginated));
-        aRenderingContext.DrawString2(text, PRUint32(textLength), dx, dy + mAscent);
+        aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
       }
       PaintTextDecorations(aRenderingContext, aStyleContext,
                            aTextStyle, dx, dy, width,

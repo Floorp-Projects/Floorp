@@ -374,13 +374,13 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
     nscoord offset;
     nscoord size;
     nscoord baseline;
-    if (decorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
-      nsCOMPtr<nsIDeviceContext> deviceContext;
-      aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
+    nsCOMPtr<nsIDeviceContext> deviceContext;
+    nsCOMPtr<nsIFontMetrics> fontMet;
+    aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
+    deviceContext->GetMetricsFor(fontStyle->mFont, *getter_AddRefs(fontMet));
+    fontMet->GetMaxAscent(baseline);
 
-      nsCOMPtr<nsIFontMetrics> fontMet;
-      deviceContext->GetMetricsFor(fontStyle->mFont, *getter_AddRefs(fontMet));
-      fontMet->GetMaxAscent(baseline);
+    if (decorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
       fontMet->GetUnderline(offset, size);
       if (decorations & NS_FONT_DECORATION_OVERLINE) {
         aRenderingContext.SetColor(overColor);
@@ -392,12 +392,6 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
       }
     }
     if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
-      nsCOMPtr<nsIDeviceContext> deviceContext;
-      aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
-
-      nsCOMPtr<nsIFontMetrics> fontMet;
-      deviceContext->GetMetricsFor(fontStyle->mFont, *getter_AddRefs(fontMet));
-      fontMet->GetMaxAscent(baseline);
       fontMet->GetStrikeout(offset, size);
       aRenderingContext.SetColor(strikeColor);
       aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, mRect.width, size);
@@ -472,7 +466,7 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
 
                 aRenderingContext.GetWidth(buffer + start, length, width, nsnull);
                 aRenderingContext.DrawString(buffer + start, length, textRect.x,
-                                             textRect.y, width);
+                                             textRect.y + baseline, width);
                 textRect.x += width;
               } // for
               // Restore original x (for aRenderingContext.FillRect below),
@@ -488,7 +482,7 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
     } // frame is bidi
     if (NS_FAILED(rv) )
 #endif // IBMBIDI
-    aRenderingContext.DrawString(mCroppedTitle, textRect.x, textRect.y);
+    aRenderingContext.DrawString(mCroppedTitle, textRect.x, textRect.y + baseline);
 
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
         aRenderingContext.FillRect(textRect.x + mAccessKeyInfo->mBeforeWidth,

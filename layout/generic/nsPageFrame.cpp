@@ -421,6 +421,7 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
                               const nsString&      aStr2,
                               const nsString&      aStr3,
                               const nsRect&        aRect,
+                              nscoord              aAscent,
                               nscoord              aHeight)
 {
   PRInt32 numStrs = 0;
@@ -432,13 +433,13 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
   nscoord strSpace = aRect.width / numStrs;
 
   if (!aStr1.IsEmpty()) {
-    DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintOptions::kJustLeft, aStr1, aRect, aHeight, strSpace);
+    DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintOptions::kJustLeft, aStr1, aRect, aAscent, aHeight, strSpace);
   }
   if (!aStr2.IsEmpty()) {
-    DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintOptions::kJustCenter, aStr2, aRect, aHeight, strSpace);
+    DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintOptions::kJustCenter, aStr2, aRect, aAscent, aHeight, strSpace);
   }
   if (!aStr3.IsEmpty()) {
-    DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintOptions::kJustRight, aStr3, aRect, aHeight, strSpace);
+    DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintOptions::kJustRight, aStr3, aRect, aAscent, aHeight, strSpace);
   }
 }
 
@@ -458,6 +459,7 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
                               PRInt32              aJust,
                               const nsString&      aStr,
                               const nsRect&        aRect,
+                              nscoord              aAscent,
                               nscoord              aHeight,
                               nscoord              aWidth)
 {
@@ -507,7 +509,7 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
     PRBool clipEmpty;
     aRenderingContext.PushState();
     aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace, clipEmpty);
-    aRenderingContext.DrawString(str, x, y);
+    aRenderingContext.DrawString(str, x, y + aAscent);
     aRenderingContext.PopState(clipEmpty);
 #ifdef DEBUG_PRINTING
     PRINT_DEBUG_MSG2("Page: %p", this);
@@ -605,9 +607,11 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     NS_ASSERTION(deviceContext, "Couldn't get the device context"); 
     nsCOMPtr<nsIFontMetrics> fontMet;
     deviceContext->GetMetricsFor(*mHeadFootFont, *getter_AddRefs(fontMet));
+    nscoord ascent = 0;
     nscoord visibleHeight = 0;
     if (fontMet) {
       fontMet->GetHeight(visibleHeight);
+      fontMet->GetMaxAscent(ascent);
     }
 
     // print document headers and footers
@@ -617,7 +621,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     mPrintOptions->GetHeaderStrRight(&headers[2]);  // creates memory
     DrawHeaderFooter(aRenderingContext, this, eHeader, nsIPrintOptions::kJustLeft, 
                      nsAutoString(headers[0]), nsAutoString(headers[1]), nsAutoString(headers[2]), 
-                     rect, visibleHeight);
+                     rect, ascent, visibleHeight);
     PRInt32 i;
     for (i=0;i<3;i++) nsMemory::Free(headers[i]);
 
@@ -627,7 +631,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     mPrintOptions->GetFooterStrRight(&footers[2]);  // creates memory
     DrawHeaderFooter(aRenderingContext, this, eFooter, nsIPrintOptions::kJustRight, 
                      nsAutoString(footers[0]), nsAutoString(footers[1]), nsAutoString(footers[2]), 
-                     rect, visibleHeight);
+                     rect, ascent, visibleHeight);
     for (i=0;i<3;i++) nsMemory::Free(footers[i]);
 
   }

@@ -1275,8 +1275,7 @@ NS_IMETHODIMP nsRenderingContextOS2 :: GetWidth(const char* aString,
     // space.
     if ((1 == aLength) && (aString[0] == ' '))
     {
-      nsFontMetricsOS2* fontMetricsOS2 = (nsFontMetricsOS2*)mFontMetrics;
-      return fontMetricsOS2->GetSpaceWidth(aWidth);
+      return mFontMetrics->GetSpaceWidth(aWidth);
     }
 
     SIZEL size;
@@ -1481,31 +1480,6 @@ nsRenderingContextOS2::GetTextDimensions(const PRUnichar*  aString,
   return GetWidth(aString, aLength, aDimensions.width, aFontID);
 }
 
-NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const char *aString, PRUint32 aLength,
-                                                  nscoord aX, nscoord aY,
-                                                  const nscoord* aSpacing)
-{
-  nscoord y = 0;
-  if (mFontMetrics) {
-   mFontMetrics->GetMaxAscent(y);
-  }
-//  return DrawString2(aString, aLength, aX, aY + y, aSpacing);
-  return DrawString2(aString, aLength, aX, aY, aSpacing);
-}
-
-NS_IMETHODIMP
-nsRenderingContextOS2 :: DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                    nscoord aX, nscoord aY, PRInt32 aFontID,
-                                    const nscoord* aSpacing)
-{
-  nscoord y = 0;
-  if (mFontMetrics) {
-    mFontMetrics->GetMaxAscent(y);
-  }
-  return DrawString2(aString, aLength, aX, aY + y, aFontID, aSpacing);
-//  return DrawString2(aString, aLength, aX, aY, aFontID, aSpacing);
-}
-
 NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const nsString& aString,
                                                   nscoord aX, nscoord aY,
                                                   PRInt32 aFontID,
@@ -1514,16 +1488,11 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const nsString& aString,
   return DrawString(aString.get(), aString.Length(), aX, aY, aFontID, aSpacing);
 }
 
-NS_IMETHODIMP nsRenderingContextOS2 :: DrawString2(const char *aString, PRUint32 aLength,
+NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const char *aString, PRUint32 aLength,
                                                   nscoord aX, nscoord aY,
                                                   const nscoord* aSpacing)
 {
   NS_PRECONDITION(mFontMetrics,"Something is wrong somewhere");
-
-  // Take care of ascent and specifies the drawing on the baseline
-//  nscoord ascent;
-//  mFontMetrics->GetMaxAscent(ascent);
-//  aY -= ascent;
 
   PRInt32 x = aX;
   PRInt32 y = aY;
@@ -1553,7 +1522,7 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString2(const char *aString, PRUint32
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextOS2 :: DrawString2(const PRUnichar *aString, PRUint32 aLength,
+NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                                   nscoord aX, nscoord aY,
                                                   PRInt32 aFontID,
                                                   const nscoord* aSpacing)

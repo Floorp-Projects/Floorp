@@ -247,7 +247,6 @@ public:
   void
   DrawGlyph(nsIRenderingContext& aRenderingContext,
             nsFont&              aFont,
-            nscoord              aFontAscent,
             nsGlyphCode&         aGlyphCode,
             nscoord              aX,
             nscoord              aY,
@@ -555,7 +554,6 @@ nsGlyphTable::GetBoundingMetrics(nsIRenderingContext& aRenderingContext,
 void
 nsGlyphTable::DrawGlyph(nsIRenderingContext& aRenderingContext,
                         nsFont&              aFont,
-                        nscoord              aFontAscent,
                         nsGlyphCode&         aGlyphCode,
                         nscoord              aX,
                         nscoord              aY,
@@ -570,13 +568,6 @@ nsGlyphTable::DrawGlyph(nsIRenderingContext& aRenderingContext,
     // glyph not associated to our primary font, it comes from an external font
     mFontName.StringAt(aGlyphCode.font, aFont.name);
     aRenderingContext.SetFont(aFont);
-    // Now the font is different, the ascent may have changed, so we need to
-    // compensate any change to keep the glyph aligned as expected by the caller
-    nscoord fontAscent;
-    nsCOMPtr<nsIFontMetrics> fm;
-    aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
-    fm->GetMaxAscent(fontAscent);
-    aY += aFontAscent - fontAscent;
   }
 
   //if (mType == NS_TABLE_TYPE_UNICODE)
@@ -951,12 +942,12 @@ InitGlobals()
   }
   // Allocate the placeholders for the preferred parts and variants
   nsGlyphTableList::gParts = new PRInt32[count];
-  if (nsGlyphTableList::gParts) {
-    nsGlyphTableList::gVariants = new PRInt32[count];
-    if (!nsGlyphTableList::gVariants) {
-      delete nsGlyphTableList::gParts;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+  if (!nsGlyphTableList::gParts)
+    return NS_ERROR_OUT_OF_MEMORY;
+  nsGlyphTableList::gVariants = new PRInt32[count];
+  if (!nsGlyphTableList::gVariants) {
+    delete nsGlyphTableList::gParts;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
   PRInt32 i;
   for (i = 0; i < count; i++) {
@@ -1733,8 +1724,6 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
     aRenderingContext.SetColor(color->mColor);
 
     nsAutoString fontName;
-    nscoord fontAscent;
-    nsCOMPtr<nsIFontMetrics> fm;
     const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
       styleContext->GetStyleData(eStyleStruct_Font));
     nsFont theFont(font->mFont);
@@ -1749,26 +1738,21 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
         SetFirstFamily(theFont, fontName);        // to force precedence on this TeX font
       }
       aRenderingContext.SetFont(theFont);
-      aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
-      fm->GetMaxAscent(fontAscent);
 //printf("Painting %04X like a normal char\n", mData[0]);
 //aRenderingContext.SetColor(NS_RGB(255,0,0));
-      aRenderingContext.DrawString(mData.get(), len, mRect.x,
-                                   mRect.y - (fontAscent - mBoundingMetrics.ascent));
+      aRenderingContext.DrawString(mData.get(), len, mRect.x, mRect.y + mBoundingMetrics.ascent);
     }
     else {
       // Set the stretchy font and grab some metrics to adjust the placements ...
       mGlyphTable->GetPrimaryFontName(fontName);
       SetFirstFamily(theFont, fontName);
       aRenderingContext.SetFont(theFont);
-      aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
-      fm->GetMaxAscent(fontAscent);
       // if there is a glyph of appropriate size, paint that glyph
       if (mGlyph) {
 //printf("Painting %04X with a glyph of appropriate size\n", mData[0]);
 //aRenderingContext.SetColor(NS_RGB(0,0,255));
-        mGlyphTable->DrawGlyph(aRenderingContext, theFont, fontAscent, mGlyph,
-                               mRect.x, mRect.y - (fontAscent - mBoundingMetrics.ascent));
+        mGlyphTable->DrawGlyph(aRenderingContext, theFont, mGlyph,
+                               mRect.x, mRect.y + mBoundingMetrics.ascent);
       }
       else { // paint by parts
         // see if this is a composite char and let children paint themselves
@@ -1783,11 +1767,11 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
         }
 //aRenderingContext.SetColor(NS_RGB(0,255,0));
         if (NS_STRETCH_DIRECTION_VERTICAL == mDirection)
-          rv = PaintVertically(aPresContext, aRenderingContext, theFont, fontAscent,
-                               styleContext, mGlyphTable, this, mRect);
+          rv = PaintVertically(aPresContext, aRenderingContext, theFont, styleContext,
+                               mGlyphTable, this, mRect);
         else if (NS_STRETCH_DIRECTION_HORIZONTAL == mDirection)
-          rv = PaintHorizontally(aPresContext, aRenderingContext, theFont, fontAscent,
-                                 styleContext, mGlyphTable, this, mRect);
+          rv = PaintHorizontally(aPresContext, aRenderingContext, theFont, styleContext,
+                                 mGlyphTable, this, mRect);
       }
     }
   }
@@ -1803,7 +1787,6 @@ nsresult
 nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               nsFont&              aFont,
-                              nscoord              aFontAscent,
                               nsIStyleContext*     aStyleContext,
                               nsGlyphTable*        aGlyphTable,
                               nsMathMLChar*        aChar,
@@ -1852,21 +1835,20 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
     ch = chdata[i];
     bm = bmdata[i];
     if (0 == i) { // top
-      dy = aRect.y - aFontAscent + bm.ascent;
+      dy = aRect.y + bm.ascent;
     }
     else if (1 == i) { // middle
-      dy = aRect.y - aFontAscent + bm.ascent +
-           (aRect.height - (bm.ascent + bm.descent))/2;
+      dy = aRect.y + bm.ascent + (aRect.height - (bm.ascent + bm.descent))/2;
     }
     else { // bottom
-      dy = aRect.y - aFontAscent + aRect.height - bm.descent;
+      dy = aRect.y + aRect.height - bm.descent;
     }
     // abcissa passed to DrawString
     offset[i] = dy;
     // *exact* abcissa where the *top-most* pixel of the glyph is painted
-    start[i] = dy + aFontAscent - bm.ascent;
+    start[i] = dy - bm.ascent;
     // *exact* abcissa where the *bottom-most* pixel of the glyph is painted
-    end[i] = dy + aFontAscent + bm.descent; // end = start + height
+    end[i] = dy + bm.descent; // end = start + height
   }
 
   /////////////////////////////////////
@@ -1892,8 +1874,7 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
       }
       if (!clipRect.IsEmpty()) {
         clipRect.Inflate(onePixel, onePixel);
-        aGlyphTable->DrawGlyph(aRenderingContext, aFont, aFontAscent,
-                               ch, dx, dy, &clipRect);
+        aGlyphTable->DrawGlyph(aRenderingContext, aFont, ch, dx, dy, &clipRect);
       }
     }
   }
@@ -1955,7 +1936,7 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
       aRenderingContext.PushState();
       aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
       bm = bmdata[i];
-      while (dy + aFontAscent + bm.descent < start[i+1]) {
+      while (dy + bm.descent < start[i+1]) {
         if (2 > count) {
           stride = bm.descent;
           bm = bmdata[3]; // glue
@@ -1963,8 +1944,7 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
         }
         count++;
         dy += stride;
-        aGlyphTable->DrawGlyph(aRenderingContext, aFont, aFontAscent,
-                               glue, dx, dy);
+        aGlyphTable->DrawGlyph(aRenderingContext, aFont, glue, dx, dy);
         // NS_ASSERTION(5000 == count, "Error - glyph table is incorrectly set");
         if (1000 == count) return NS_ERROR_UNEXPECTED;
       }
@@ -1973,7 +1953,7 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
       // last glyph that may cross past its boundary and collide with the next
       nscoord height = bm.ascent + bm.descent;
       aRenderingContext.SetColor(NS_RGB(0,255,0));
-      aRenderingContext.DrawRect(nsRect(dx, dy+aFontAscent-bm.ascent, width, height));
+      aRenderingContext.DrawRect(nsRect(dx, dy-bm.ascent, width, height));
 #endif
     }
   }
@@ -1985,7 +1965,6 @@ nsresult
 nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 nsFont&              aFont,
-                                nscoord              aFontAscent,
                                 nsIStyleContext*     aStyleContext,
                                 nsGlyphTable*        aGlyphTable,
                                 nsMathMLChar*        aChar,
@@ -2004,7 +1983,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
   nsGlyphCode ch, chdata[4];
   nsBoundingMetrics bm, bmdata[4];
   nscoord stride, offset[3], start[3], end[3];
-  dy = aRect.y - aFontAscent;
+  dy = aRect.y;
   nsGlyphCode glue = aGlyphTable->GlueOf(aPresContext, aChar);
   for (i = 0; i < 4; i++) {
     switch (i) {
@@ -2024,8 +2003,8 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
         NS_WARNING("GetBoundingMetrics failed");
         return rv;
       }
-      if (dy < aRect.y - aFontAscent + bm.ascent) {
-        dy = aRect.y - aFontAscent + bm.ascent;
+      if (dy < aRect.y + bm.ascent) {
+        dy = aRect.y + bm.ascent;
       }
     }
     chdata[i] = ch;
@@ -2059,7 +2038,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
     if (ch) {
 #ifdef SHOW_BORDERS
       aRenderingContext.SetColor(NS_RGB(255,0,0));
-      aRenderingContext.DrawRect(nsRect(start[i], dy + aFontAscent - bmdata[i].ascent,
+      aRenderingContext.DrawRect(nsRect(start[i], dy - bmdata[i].ascent,
                                  end[i] - start[i], bmdata[i].ascent + bmdata[i].descent));
 #endif
       dx = offset[i];
@@ -2074,8 +2053,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
       }
       if (!clipRect.IsEmpty()) {
         clipRect.Inflate(onePixel, onePixel);
-        aGlyphTable->DrawGlyph(aRenderingContext, aFont, aFontAscent,
-                               ch, dx, dy, &clipRect);
+        aGlyphTable->DrawGlyph(aRenderingContext, aFont, ch, dx, dy, &clipRect);
       }
     }
   }
@@ -2114,7 +2092,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
       }
       // paint the rule between the parts
       aRenderingContext.FillRect(end[first] - onePixel,
-                                 dy + aFontAscent - ascent,
+                                 dy - ascent,
                                  start[last] - end[first] + 2*onePixel,
                                  ascent + descent);
       first = last;
@@ -2144,8 +2122,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
         }
         count++;
         dx += stride;
-        aGlyphTable->DrawGlyph(aRenderingContext, aFont, aFontAscent,
-                               glue, dx, dy);
+        aGlyphTable->DrawGlyph(aRenderingContext, aFont, glue, dx, dy);
         // NS_ASSERTION(5000 == count, "Error - glyph table is incorrectly set");
         if (1000 == count) return NS_ERROR_UNEXPECTED;
       }

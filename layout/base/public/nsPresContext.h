@@ -268,23 +268,23 @@ public:
   NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult) = 0;
 
   /** Get the default font correponding to the given ID */
-  NS_IMETHOD GetDefaultFont(const PRUint8 aFontID, nsFont& aResult) = 0;
+  NS_IMETHOD GetDefaultFont(PRUint8 aFontID, nsFont& aResult) = 0;
   /** Set the default font correponding to the given ID */
-  NS_IMETHOD SetDefaultFont(const PRUint8 aFontID, const nsFont& aFont) = 0;
+  NS_IMETHOD SetDefaultFont(PRUint8 aFontID, const nsFont& aFont) = 0;
 
   /** Get a cached boolean pref, by its type
        if the type is not supported, then NS_ERROR_INVALID_ARG is returned
        and the aValue argument is undefined, otherwise aValue is set
        to the value of the boolean pref */
   // *  - initially created for bugs 31816, 20760, 22963
-  NS_IMETHOD GetCachedBoolPref(const PRUint32 aPrefType, PRBool& aValue) = 0;
+  NS_IMETHOD GetCachedBoolPref(PRUint32 aPrefType, PRBool& aValue) = 0;
 
   /** Get a cached integer pref, by its type
        if the type is not supported, then NS_ERROR_INVALID_ARG is returned
        and the aValue argument is undefined, otherwise aValue is set
        to the value of the integer pref */
   // *  - initially created for bugs 30910, 61883, 74186, 84398
-  NS_IMETHOD GetCachedIntPref(const PRUint32 aPrefType, PRInt32& aValue) = 0;
+  NS_IMETHOD GetCachedIntPref(PRUint32 aPrefType, PRInt32& aValue) = 0;
 
   /**
    * Access Nav's magic font scaler value

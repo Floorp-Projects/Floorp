@@ -892,7 +892,8 @@ nsImageFrame::DisplayAltText(nsIPresContext*      aPresContext,
   nsIFontMetrics* fm;
   aRenderingContext.GetFontMetrics(fm);
 
-  nscoord maxDescent, height;
+  nscoord maxAscent, maxDescent, height;
+  fm->GetMaxAscent(maxAscent);
   fm->GetMaxDescent(maxDescent);
   fm->GetHeight(height);
 
@@ -908,7 +909,7 @@ nsImageFrame::DisplayAltText(nsIPresContext*      aPresContext,
     MeasureString(str, strLen, aRect.width, maxFit, aRenderingContext);
     
     // Display the text
-    aRenderingContext.DrawString(str, maxFit, aRect.x, y);
+    aRenderingContext.DrawString(str, maxFit, aRect.x, y + maxAscent);
 
     // Move to the next line
     str += maxFit;

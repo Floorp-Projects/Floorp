@@ -1390,6 +1390,14 @@ NS_IMETHODIMP  nsFontMetricsGTK::GetFontHandle(nsFontHandle &aHandle)
   return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsFontMetricsGTK::GetSpaceWidth(nscoord &aSpaceWidth)
+{
+  aSpaceWidth = mSpaceWidth;
+  return NS_OK;
+}
+
 /*
  * CSS2 "font properties":
  *   font-family
@@ -4076,13 +4084,6 @@ nsFontMetricsGTK::FindFont(PRUnichar aChar)
 #endif
 
   return font;
-}
-
-nsresult
-nsFontMetricsGTK::GetSpaceWidth(nscoord &aSpaceWidth)
-{
-  aSpaceWidth = mSpaceWidth;
-  return NS_OK;
 }
 
 

@@ -1252,8 +1252,7 @@ nsRenderingContextGTK::GetWidth(char aC, nscoord &aWidth)
     // Check for the very common case of trying to get the width of a single
     // space.
   if ((aC == ' ') && (nsnull != mFontMetrics)) {
-    nsFontMetricsGTK* fontMetricsGTK = (nsFontMetricsGTK*)mFontMetrics;
-    return fontMetricsGTK->GetSpaceWidth(aWidth);
+    return mFontMetrics->GetSpaceWidth(aWidth);
   }
   return GetWidth(&aC, 1, aWidth);
 }
@@ -1440,27 +1439,6 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
                                   nscoord aX, nscoord aY,
                                   const nscoord* aSpacing)
 {
-  nscoord y;
-  mFontMetrics->GetMaxAscent(y);
-  return DrawString2(aString, aLength, aX, aY + y, aSpacing);
-}
-
-NS_IMETHODIMP
-nsRenderingContextGTK::DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                  nscoord aX, nscoord aY,
-                                  PRInt32 aFontID,
-                                  const nscoord* aSpacing)
-{
-  nscoord y;
-  mFontMetrics->GetMaxAscent(y);
-  return DrawString2(aString, aLength, aX, aY + y, aFontID, aSpacing);
-}
-
-NS_IMETHODIMP
-nsRenderingContextGTK::DrawString2(const char *aString, PRUint32 aLength,
-                                  nscoord aX, nscoord aY,
-                                  const nscoord* aSpacing)
-{
   if (0 != aLength) {
     g_return_val_if_fail(mTranMatrix != NULL, NS_ERROR_FAILURE);
     g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
@@ -1548,7 +1526,7 @@ nsRenderingContextGTK::DrawString2(const char *aString, PRUint32 aLength,
 }
 
 NS_IMETHODIMP
-nsRenderingContextGTK::DrawString2(const PRUnichar* aString, PRUint32 aLength,
+nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
                                   nscoord aX, nscoord aY,
                                   PRInt32 aFontID,
                                   const nscoord* aSpacing)

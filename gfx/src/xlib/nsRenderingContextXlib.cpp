@@ -1236,8 +1236,7 @@ nsRenderingContextXlib::GetWidth(char aC, nscoord& aWidth)
   // Check for the very common case of trying to get the width of a single
   // space.
   if ((aC == ' ') && (nsnull != mFontMetrics)) {
-    nsFontMetricsXlib* fontMetricsXlib = (nsFontMetricsXlib*)mFontMetrics;
-    return fontMetricsXlib->GetSpaceWidth(aWidth);
+    return mFontMetrics->GetSpaceWidth(aWidth);
   }
   return GetWidth(&aC, 1, aWidth);
 }
@@ -1425,27 +1424,6 @@ nsRenderingContextXlib::DrawString(const char *aString, PRUint32 aLength,
                                    nscoord aX, nscoord aY,
                                    const nscoord* aSpacing)
 {
-  nscoord y;
-  mFontMetrics->GetMaxAscent(y);
-  return DrawString2(aString, aLength, aX, aY + y, aSpacing);
-}
-
-NS_IMETHODIMP
-nsRenderingContextXlib::DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                   nscoord aX, nscoord aY,
-                                   PRInt32 aFontID,
-                                   const nscoord* aSpacing)
-{
-  nscoord y;
-  mFontMetrics->GetMaxAscent(y);
-  return DrawString2(aString, aLength, aX, aY + y, aFontID, aSpacing);
-}
-
-NS_IMETHODIMP
-nsRenderingContextXlib::DrawString2(const char *aString, PRUint32 aLength,
-                                   nscoord aX, nscoord aY,
-                                   const nscoord* aSpacing)
-{
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawString()\n"));
   if (0 != aLength) {
     if (nsnull == mTranMatrix || nsnull == mRenderingSurface || aString == nsnull)
@@ -1540,7 +1518,7 @@ nsRenderingContextXlib::DrawString2(const char *aString, PRUint32 aLength,
 }
 
 NS_IMETHODIMP
-nsRenderingContextXlib::DrawString2(const PRUnichar *aString, PRUint32 aLength,
+nsRenderingContextXlib::DrawString(const PRUnichar *aString, PRUint32 aLength,
                                    nscoord aX, nscoord aY,
                                    PRInt32 aFontID,
                                    const nscoord* aSpacing)

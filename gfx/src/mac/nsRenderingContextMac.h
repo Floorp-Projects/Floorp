@@ -143,13 +143,6 @@ public:
                                nsTextDimensions& aDimensions);
   NS_IMETHOD GetTextDimensions(const PRUnichar *aString, PRUint32 aLength,
                                nsTextDimensions& aDimensions, PRInt32 *aFontID);
-  NS_IMETHOD DrawString2(const char *aString, PRUint32 aLength,
-                        nscoord aX, nscoord aY,
-                        const nscoord* aSpacing);
-  NS_IMETHOD DrawString2(const PRUnichar *aString, PRUint32 aLength,
-                        nscoord aX, nscoord aY,
-                        PRInt32 aFontID,
-                        const nscoord* aSpacing);
 
   NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY);
   NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight); 

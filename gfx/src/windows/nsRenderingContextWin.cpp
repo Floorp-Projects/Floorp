@@ -2214,18 +2214,6 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const char *aString, PRUint32 
 {
   NS_PRECONDITION(mFontMetrics,"Something is wrong somewhere");
 
-  SetupFontAndColor();
-  // Take care of ascent and specifies the drawing on the baseline
-  nscoord ascent = mCurrFontWin->mMaxAscent;
-  return DrawString2(aString, aLength, aX, aY + ascent, aSpacing);
-}
-
-NS_IMETHODIMP nsRenderingContextWin :: DrawString2(const char *aString, PRUint32 aLength,
-                                                  nscoord aX, nscoord aY,
-                                                  const nscoord* aSpacing)
-{
-  NS_PRECONDITION(mFontMetrics,"Something is wrong somewhere");
-
   PRInt32 x = aX;
   PRInt32 y = aY;
 
@@ -2306,7 +2294,7 @@ do_DrawString(const nsFontSwitch* aFontSwitch,
   return PR_TRUE; // don't stop till the end
 }
 
-NS_IMETHODIMP nsRenderingContextWin :: DrawString2(const PRUnichar *aString, PRUint32 aLength,
+NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                                   nscoord aX, nscoord aY,
                                                   PRInt32 aFontID,
                                                   const nscoord* aSpacing)
@@ -2339,18 +2327,6 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString2(const PRUnichar *aString, PRU
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                                  nscoord aX, nscoord aY,
-                                                  PRInt32 aFontID,
-                                                  const nscoord* aSpacing)
-{
-  if (!mFontMetrics) return NS_ERROR_FAILURE;
-
-  SetupFontAndColor();
-  nscoord ascent = mCurrFontWin->mMaxAscent;
-  return DrawString2(aString, aLength, aX, aY + ascent, aFontID, aSpacing);
 }
 
 NS_IMETHODIMP nsRenderingContextWin :: DrawString(const nsString& aString,

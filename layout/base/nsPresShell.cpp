@@ -7283,14 +7283,15 @@ void ReflowCountMgr::PaintCount(const char *    aName,
       aRenderingContext->SetFont(fm);
       char buf[16];
       sprintf(buf, "%d", counter->mCount);
+      nscoord x = 0, y;
       nscoord width, height;
       aRenderingContext->GetWidth((char*)buf, width);
       fm->GetHeight(height);
+      fm->GetMaxAscent(y);
 
       nsRect r;
       aFrame->GetRect(r);
 
-      nscoord x = 0;
       PRUint32 color;
       PRUint32 color2;
       if (aColor != 0) {
@@ -7314,9 +7315,9 @@ void ReflowCountMgr::PaintCount(const char *    aName,
       aRenderingContext->SetColor(NS_RGB(0,0,0));
       aRenderingContext->FillRect(rect);
       aRenderingContext->SetColor(color2);
-      aRenderingContext->DrawString(buf, strlen(buf), x+15,15);
+      aRenderingContext->DrawString(buf, strlen(buf), x+15,y+15);
       aRenderingContext->SetColor(color);
-      aRenderingContext->DrawString(buf, strlen(buf), x,0);
+      aRenderingContext->DrawString(buf, strlen(buf), x,y);
 
       PRBool clipEmpty;
       aRenderingContext->PopState(clipEmpty);

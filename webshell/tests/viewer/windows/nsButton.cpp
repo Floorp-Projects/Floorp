@@ -291,7 +291,7 @@ NS_METHOD nsButton::Paint(nsIRenderingContext& aRenderingContext,
 
   nscoord x = ((rect.width  - textWidth) / 2)  + rect.x;
   nscoord y = ((rect.height - textHeight) / 2) + rect.y;
-  aRenderingContext.DrawString(mLabel, x, y);
+  aRenderingContext.DrawString(mLabel, x, y + textHeight);
 
 
   NS_RELEASE(context);

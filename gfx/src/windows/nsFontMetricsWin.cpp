@@ -2891,7 +2891,7 @@ nsFontMetricsWin::FindGenericFont(HDC aDC, PRUnichar aChar)
     return context.mFont;
   }
 
-#ifdef DEBUG_rbs
+#if defined(DEBUG_rbs) || defined(DEBUG_shanjian)
   nsCAutoString lang; lang.Assign(NS_ConvertUCS2toUTF8(langGroup));
   nsCAutoString generic; generic.Assign(NS_ConvertUCS2toUTF8(mGeneric));
   nsCAutoString family; family.Assign(NS_ConvertUCS2toUTF8(mFont.name));
@@ -3097,7 +3097,7 @@ nsFontMetricsWin::RealizeFont()
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsFontMetricsWin::GetSpaceWidth(nscoord& aSpaceWidth)
 {
   aSpaceWidth = mSpaceWidth;

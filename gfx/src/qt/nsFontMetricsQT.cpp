@@ -1022,6 +1022,12 @@ NS_IMETHODIMP nsFontMetricsQT::GetMaxAdvance(nscoord &aAdvance)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsFontMetricsQT::GetSpaceWidth(nscoord &aSpaceWidth)
+{
+  aSpaceWidth = mSpaceWidth;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsFontMetricsQT::GetFont(const nsFont *&aFont)
 {
   aFont = mFont;
@@ -1634,13 +1640,6 @@ nsFontMetricsQT::FindFont(PRUnichar aChar)
     }
   }
   return font;
-}
- 
-nsresult
-nsFontMetricsQT::GetSpaceWidth(nscoord &aSpaceWidth)
-{
-  aSpaceWidth = mSpaceWidth;
-  return NS_OK;
 }
 
 MOZ_DECL_CTOR_COUNTER(nsFontQT);

@@ -218,6 +218,11 @@ public:
    */
   NS_IMETHOD  GetAveCharWidth(nscoord& aAveCharWidth) = 0;
 #endif
+
+  /**
+   * Returns the often needed width of the space character
+   */
+  NS_IMETHOD  GetSpaceWidth(nscoord& aSpaceCharWidth) = 0;
 };
 
 #endif /* nsIFontMetrics_h___ */

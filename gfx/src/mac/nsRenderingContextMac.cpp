@@ -1208,8 +1208,7 @@ NS_IMETHODIMP nsRenderingContextMac::FillArc(nscoord aX, nscoord aY, nscoord aWi
 NS_IMETHODIMP nsRenderingContextMac::GetWidth(char ch, nscoord &aWidth)
 {
 	if (ch == ' ' && mGS->mFontMetrics) {
-		nsFontMetricsMac* fontMetricsMac = static_cast<nsFontMetricsMac*>(mGS->mFontMetrics);
-		return fontMetricsMac->GetSpaceWidth(aWidth);
+		return mGS->mFontMetrics->GetSpaceWidth(aWidth);
 	}
 
 	char buf[1];
@@ -1222,8 +1221,7 @@ NS_IMETHODIMP nsRenderingContextMac::GetWidth(char ch, nscoord &aWidth)
 NS_IMETHODIMP nsRenderingContextMac::GetWidth(PRUnichar ch, nscoord &aWidth, PRInt32 *aFontID)
 {
 	if (ch == ' ' && mGS->mFontMetrics) {
-		nsFontMetricsMac* fontMetricsMac = static_cast<nsFontMetricsMac*>(mGS->mFontMetrics);
-		return fontMetricsMac->GetSpaceWidth(aWidth);
+		return mGS->mFontMetrics->GetSpaceWidth(aWidth);
 	}
 
 	PRUnichar buf[1];
@@ -1314,35 +1312,10 @@ nsRenderingContextMac::GetTextDimensions(const PRUnichar* aString, PRUint32 aLen
   return rv;
 }
 
-NS_IMETHODIMP
-nsRenderingContextMac::DrawString(const char *aString, PRUint32 aLength,
-                                  nscoord aX, nscoord aY,
-                                  const nscoord* aSpacing)
-{
-  nscoord y = 0;
-  if (mGS->mFontMetrics) {
-    mGS->mFontMetrics->GetMaxAscent(y);
-  }
-  return DrawString2(aString, aLength, aX, aY + y, aSpacing);
-}
-
-NS_IMETHODIMP
-nsRenderingContextMac::DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                  nscoord aX, nscoord aY,
-                                  PRInt32 aFontID,
-                                  const nscoord* aSpacing)
-{
-  nscoord y = 0;
-  if (mGS->mFontMetrics) {
-    mGS->mFontMetrics->GetMaxAscent(y);
-  }
-  return DrawString2(aString, aLength, aX, aY + y, aFontID, aSpacing);
-}
-
 #pragma mark -
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac::DrawString2(const char *aString, PRUint32 aLength,
+NS_IMETHODIMP nsRenderingContextMac::DrawString(const char *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY,
                                          const nscoord* aSpacing)
 {
@@ -1389,7 +1362,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawString2(const char *aString, PRUint32 a
 
 
 //------------------------------------------------------------------------
-NS_IMETHODIMP nsRenderingContextMac::DrawString2(const PRUnichar *aString, PRUint32 aLength,
+NS_IMETHODIMP nsRenderingContextMac::DrawString(const PRUnichar *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY, PRInt32 aFontID,
                                          const nscoord* aSpacing)
 {
