@@ -82,6 +82,7 @@ libprldap50.so
 components/libwallet.so
 components/wallet.xpt 
 components/signonviewer.xpt 
+components/libwalletviewers.so
 
 ; download progress
 components/nsProgressDialog.js
@@ -314,6 +315,9 @@ libsoftokn3.chk
 libsoftokn3.so
 libssl3.so
 libnssckbi.so
+components/libmsgsmime.so
+components/msgsmime.xpt
+components/smime-service.js
 
 
 ; core platform files
