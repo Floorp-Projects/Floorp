@@ -51,7 +51,7 @@ interface nsIPrompt;
  * handler for a given protocol scheme. And you can ask it to load 
  * the url using the default handler.
  */
-[scriptable, uuid(4F38DF07-0B21-4d40-BED0-08E33EB566FB)]
+[scriptable, uuid(a49813a4-98b7-4bdb-998c-8bd9704af0c0)]
 interface nsIExternalProtocolService : nsISupports
 {
   /**
