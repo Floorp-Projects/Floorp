@@ -4466,30 +4466,24 @@ if ($sth->rows == 0) {
     $sth->execute();
     my ($userid) = $sth->fetchrow_array();
    
-    foreach my $group (@groups) {
-        my $query = "SELECT user_id FROM user_group_map 
-            WHERE group_id = $group AND user_id = $userid 
-            AND isbless = 0";
-        $sth = $dbh->prepare($query);
-        $sth->execute();
-        if ( !$sth->fetchrow_array() ) {
-            $dbh->do("INSERT INTO user_group_map 
-                (user_id, group_id, isbless, grant_type) 
-                VALUES ($userid, $group, 0, " . GRANT_DIRECT . ")");
-        }
-    }
-    # the admin also gets an explicit bless capability for the admin group
-    my $sth = $dbh->prepare("SELECT id FROM groups 
-                WHERE name = 'admin'");
-    $sth->execute();
-    my ($id) = $sth->fetchrow_array();
+    # Admins get explicit membership and bless capability for the admin group
+    my ($admingroupid) = $dbh->selectrow_array("SELECT id FROM groups 
+                                                WHERE name = 'admin'");
     $dbh->do("INSERT INTO user_group_map 
         (user_id, group_id, isbless, grant_type) 
-        VALUES ($userid, $id, 1, " . GRANT_DIRECT . ")");
+        VALUES ($userid, $admingroupid, 0, " . GRANT_DIRECT . ")");
+    $dbh->do("INSERT INTO user_group_map 
+        (user_id, group_id, isbless, grant_type) 
+        VALUES ($userid, $admingroupid, 1, " . GRANT_DIRECT . ")");
+
+    # Admins get inherited membership and bless capability for all groups
     foreach my $group ( @groups ) {
         $dbh->do("INSERT INTO group_group_map
             (member_id, grantor_id, grant_type)
-            VALUES ($id, $group, " . GROUP_BLESS . ")");
+            VALUES ($admingroupid, $group, " . GROUP_MEMBERSHIP . ")");
+        $dbh->do("INSERT INTO group_group_map
+            (member_id, grantor_id, grant_type)
+            VALUES ($admingroupid, $group, " . GROUP_BLESS . ")");
     }
 
   print "\n$login is now set up as an administrator account.\n";
