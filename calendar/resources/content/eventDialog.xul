@@ -565,30 +565,30 @@
                      oninput="repeatLengthKeyDown( this )"/>
             <menulist crop="none"
                       oncommand="repeatUnitCommand( this )"
-                      labelnumber="labelplural"
+                      labelnumber="label2"
                       id="repeat-length-units"
                       disable-controller="repeat">
               <menupopup>
                 <menuitem label="&repeat.units.days;"
-                          labelplural="&repeat.units.days;"
-                          labelsingular="&repeat.units.days.singular;"
+                          label1="&repeat.units.days.singular;"
+                          label2="&repeat.units.days;"
                           id="repeat-length-days"
-                          value="days" />
+                          value="DAILY" />
                 <menuitem label="&repeat.units.weeks;"
-                          labelplural="&repeat.units.weeks;"
-                          labelsingular="&repeat.units.weeks.singular;"
+                          label1="&repeat.units.weeks.singular;"
+                          label2="&repeat.units.weeks;"
                           id="repeat-length-weeks"
-                          value="weeks"/>
+                          value="WEEKLY"/>
                 <menuitem label="&repeat.units.months;"
-                          labelplural="&repeat.units.months;"
-                          labelsingular="&repeat.units.months.singular;"
+                          label1="&repeat.units.months.singular;"
+                          label2="&repeat.units.months;"
                           id="repeat-length-months"
-                          value="months"/>
+                          value="MONTHLY"/>
                 <menuitem label="&repeat.units.years;"
-                          labelplural="&repeat.units.years;"
-                          labelsingular="&repeat.units.years.singular;"
+                          label1="&repeat.units.years.singular;"
+                          label2="&repeat.units.years;"
                           id="repeat-length-years"
-                          value="years" />
+                          value="YEARLY" />
               </menupopup>
             </menulist>
           </hbox>
