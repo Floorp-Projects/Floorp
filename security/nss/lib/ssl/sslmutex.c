@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslmutex.c,v 1.6 2001/10/08 18:49:17 jpierre%netscape.com Exp $
+ * $Id: sslmutex.c,v 1.7 2002/02/16 02:52:06 wtc%netscape.com Exp $
  */
 
 #include "sslmutex.h"
@@ -83,7 +83,7 @@ static SECStatus single_process_sslMutex_Lock(sslMutex* pMutex)
     return SECSuccess;
 }
 
-#if defined(LINUX) || defined(AIX)
+#if defined(LINUX) || defined(AIX) || defined(VMS)
 
 #include <unistd.h>
 #include <fcntl.h>

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsnce.c,v 1.18 2002/01/09 23:22:19 javi%netscape.com Exp $
+ * $Id: sslsnce.c,v 1.19 2002/02/16 02:52:07 wtc%netscape.com Exp $
  */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
@@ -246,7 +246,7 @@ static PRBool isMultiProcess  = PR_FALSE;
 #define MAX_SSL3_TIMEOUT      86400L  /* 24 hours */
 #define MIN_SSL3_TIMEOUT          5   /* seconds  */
 
-#if defined(AIX) || defined(LINUX)
+#if defined(AIX) || defined(LINUX) || defined(VMS)
 #define MAX_SID_CACHE_LOCKS 8	/* two FDs per lock */
 #elif defined(OSF1)
 #define MAX_SID_CACHE_LOCKS 16	/* one FD per lock */
