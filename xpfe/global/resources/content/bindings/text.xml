@@ -63,6 +63,12 @@
     <implementation implements="nsIDOMXULLabelElement">
       <constructor>
         <![CDATA[
+          try {
+            var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                                   getService(Components.interfaces.nsIPrefBranch);
+            this.mUnderlineAccesskey = (prefs.getIntPref("ui.key.menuAccessKey") != 0);
+          }
+          catch (e) { }
           this.formatAccessKey();
         ]]>
       </constructor>
@@ -70,6 +76,9 @@
       <method name="formatAccessKey">
         <body>
           <![CDATA[
+            if (!this.mUnderlineAccesskey)
+              return;
+
             var control = this.labeledControlElement;
             if (!control) {
               var bindingParent = document.getBindingParent(this);
@@ -134,6 +143,10 @@
           ]]>
         </body>
       </method>
+
+      <field name="mUnderlineAccesskey">
+        !/Mac/.test(navigator.platform)
+      </field>
 
       <property name="accessKey">
         <getter>
