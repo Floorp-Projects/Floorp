@@ -123,51 +123,69 @@ Contributor(s): ______________________________________. -->
   
   	
 	<!-- keys are appended from the overlay -->
-  <keyset id="keyset"/>
+  <keyset id="keyset">
+	<!-- Edit Menu -->
+	<key id="key_undo"/>
+	<key id="key_redo"/>
+	<key id="key_cut"/>
+	<key id="key_copy"/>
+	<key id="key_paste"/>
+	<key id="key_delete"/>
+	<key id="key_selectAll"/>
+  </keyset>
   
   <broadcasterset id="broadcasterset">
+	<!-- Edit Menu -->
+	<broadcaster id="cmd_undo" oncommand="EditUndo()"/>
+	<broadcaster id="cmd_redo" oncommand="EditRedo()"/>
+	<broadcaster id="cmd_cut" oncommand="EditCut()"/>
+	<broadcaster id="cmd_copy" oncommand="EditCopy()"/>
+	<broadcaster id="cmd_paste" oncommand="EditPaste()"/>
+	<broadcaster id="cmd_delete" oncommand="Delete()"/>
+	<broadcaster id="cmd_selectAll" oncommand="SelectAll()"/>
   </broadcasterset>
 	
   <!-- HELLO!! IS ANYONE READING THIS?  In case you are reading this,
-       note that this menubar is copied verbatim in hiddenWindow.xul.
+       note that this menubar is copied verbatim in hiddenWindow.xul
        Please do be so kind as to reflect any changes made into that
        file as well, in anticipation of the happy day when the parser
        will let us use included files. -->
    <toolbox id="main-toolbox">
     <menubar chromeclass="menubar">
      
-     <menu id="fileMenu"/>
+     <menu id="menu_File"/>
 
-	<menu accesskey="e" value="&editMenu.label;">
-	  <menupopup>
-		  <menuitem value="&undoCmd.label;" oncommand="BrowserReload();"/> 
-		  <menuitem value="&redoCmd.label;" oncommand="BrowserReload();"/> 
-		  <menuseparator /> 
-		  <menuitem value="&cutCmd.label;" oncommand="BrowserReload();"/> 
-		  <menuitem value="&copyCmd.label;" oncommand="BrowserCopy();"/> 
-		  <menuitem value="&pasteCmd.label;" oncommand="BrowserReload();"/> 
-		  <menuitem value="&deleteCmd.label;" oncommand="BrowserReload();"/> 
-		  <menuseparator /> 
-		  <menu value="&walletMenu.label;">
-		    <menupopup> 
-			  <menuitem value="&walletSafeFillCmd.label;" oncommand="WalletSafeFillin();"/> 
-			  <menuitem value="&walletQuickFillCmd.label;" oncommand="WalletQuickFillin();"/> 
-			  <menuitem value="&walletRequestToCaptureCmd.label;" oncommand="WalletRequestToCapture();"/> 
-			  <menuseparator /> 
-			  <menuitem value="&walletContentsCmd.label;" oncommand="WalletEditor();"/> 
-			  <menuitem value="&walletDisplaySignonsCmd.label;" oncommand="SignonViewer();"/> 
-			  <menuitem value="&walletDisplayCookiesCmd.label;" oncommand="CookieViewer();"/> 
-			  <menuseparator /> 
-			  <menuitem value="&walletSamplesCmd.label;" oncommand="WalletSamples();"/> 
-			  <menuitem value="&walletChangePasswordCmd.label;" oncommand="WalletChangePassword();"/>
-		    </menupopup> 
-		  </menu> 
-		  <menuseparator /> 
-		  <menuitem value="&selectAllCmd.label;" oncommand="BrowserSelectAll();"/> 
-		  <menuseparator /> 
-		  <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://pref/content/pref-appearance.xul')"/>
-	  </menupopup>
-    </menu> 
+		<menu id="menu_Edit">
+		  <menupopup>
+			<menuitem id="menu_undo"/>
+			<menuitem id="menu_redo"/>
+			<menuseparator/>
+			<menuitem id="menu_cut"/>
+			<menuitem id="menu_copy"/>
+			<menuitem id="menu_paste"/>
+			<menuseparator/>
+			<menuitem id="menu_delete"/>
+			<menuseparator/>
+			<menuitem id="menu_selectAll"/>
+			<menuseparator /> 
+			<menu value="&walletMenu.label;">
+			  <menupopup> 
+				<menuitem value="&walletSafeFillCmd.label;" oncommand="WalletSafeFillin();"/> 
+				<menuitem value="&walletQuickFillCmd.label;" oncommand="WalletQuickFillin();"/> 
+				<menuitem value="&walletRequestToCaptureCmd.label;" oncommand="WalletRequestToCapture();"/> 
+				<menuseparator /> 
+				<menuitem value="&walletContentsCmd.label;" oncommand="WalletEditor();"/> 
+				<menuitem value="&walletDisplaySignonsCmd.label;" oncommand="SignonViewer();"/> 
+				<menuitem value="&walletDisplayCookiesCmd.label;" oncommand="CookieViewer();"/> 
+				<menuseparator /> 
+				<menuitem value="&walletSamplesCmd.label;" oncommand="WalletSamples();"/> 
+				<menuitem value="&walletChangePasswordCmd.label;" oncommand="WalletChangePassword();"/>
+			  </menupopup> 
+			</menu> 
+			<menuseparator/>
+		    <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://pref/content/pref-appearance.xul')"/>
+		  </menupopup>
+		</menu>
 
     <menu accesskey="v" value="&viewMenu.label;">
 	  <menupopup>
