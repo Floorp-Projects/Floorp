@@ -114,6 +114,8 @@ dnl Note this case statement doesn't seem to handle [] as part of a regexp
 
 dnl set the defaults first
 dnl ========================================================
+AS=
+AS_DASH_C_FLAG='-c'
 DLL_SUFFIX="so"
 MKSHLIB='$(LD) $(DSO_LDOPTS)'
 DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
@@ -153,11 +155,26 @@ dnl MKSHLIB='$(LD) $(DSO_LDOPTS)'
        MKSHLIB='$(CXX) $(DSO_LDOPTS)'
        MKSHLIB_FORCE_ALL='-z allextract'
        MKSHLIB_UNFORCE_ALL='-z defaultextract'
-	DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+	   DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+       AS='/usr/ccs/bin/as'
+       AS_DASH_C_FLAG=''
+
+       case `uname -m` in
+         sun4u)
+           ASFLAGS='-xarch=v8plus -DULTRA_SPARC -P -L -D_ASM -D__STDC__=0'
+           ;;
+         *)
+           ASFLAGS='-xarch=v8 -P -L -D_ASM -D__STDC__=0'
+           ;;
+       esac
+
+       NS_USE_NATIVE=1
     else
        MKSHLIB='$(CC) $(DSO_LDOPTS)'
        MKSHLIB_FORCE_ALL='-Wl,-z -Wl,allextract'
        MKSHLIB_UNFORCE_ALL='-Wl,-z -Wl,defaultextract'
+       AS='$(CC)'
+       ASFLAGS='$(CFLAGS)'
     fi
     ;;
 
@@ -827,6 +844,10 @@ MOZ_ARG_DISABLE_BOOL(static,
   NO_STATIC_LIB=1)
 
 
+AC_SUBST(AS)
+AC_SUBST(ASFLAGS)
+AC_SUBST(AS_DASH_C_FLAG)
+AC_SUBST(NS_USE_NATIVE)
 AC_SUBST(MOZ_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MOZ_SECURITY)
