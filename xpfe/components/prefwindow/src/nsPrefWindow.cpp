@@ -365,8 +365,13 @@ nsresult nsPrefWindow::InitializeOneInputWidget(
                 if (WIDGET_IS_TYPE(inWidgetType,"checkbox"))
                 {
                     boolVal = (PRBool)(boolVal ^ inPrefOrdinal);
-                    inElement->SetDefaultChecked(boolVal);
-                    inElement->SetChecked(boolVal);
+		    nsAutoString val;
+		    (void)inElement->GetAttribute("reversed",val);
+		    if (val.Equals("true")) {
+			    boolVal = !boolVal;
+                    }
+		    inElement->SetDefaultChecked(boolVal);
+		    inElement->SetChecked(boolVal);
                 }
                 else if (WIDGET_IS_TYPE(inWidgetType,"radio") && inPrefOrdinal == boolVal)
                 {
@@ -722,7 +727,12 @@ nsresult nsPrefWindow::FinalizeOneInputWidget(
               return rv;
             if (WIDGET_IS_TYPE(inWidgetType,"checkbox"))
             {
-              boolVal = (PRBool)(boolVal ^ inPrefOrdinal);            
+              boolVal = (PRBool)(boolVal ^ inPrefOrdinal);
+	      nsAutoString val;
+              (void)inElement->GetAttribute("reversed",val);
+              if (val.Equals("true")) {
+              	boolVal = !boolVal;
+              }             
               mPrefs->SetBoolPref(tempPrefName, boolVal);
             }
             else if (WIDGET_IS_TYPE(inWidgetType,"radio") && boolVal)
