@@ -187,7 +187,7 @@
         <filename>Bugzilla/Constants.pm</filename> file in the 
         <filename>contenttypes</filename>
         constant. If your content type is not there, add it. Remember
-        the three- or four-letter tag assigned to you content type. 
+        the three- or four-letter tag assigned to your content type. 
         This tag will be part of the template filename.
       </para>
 
