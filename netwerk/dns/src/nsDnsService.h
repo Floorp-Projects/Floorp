@@ -20,7 +20,10 @@
 #define nsDNSService_h__
 
 #include "nsIDNSService.h"
+#include "nsIRunnable.h"
+#include "nsIThread.h"
 #if defined(XP_MAC)
+#include <OSUtils.h>
 #include <OpenTransport.h>
 #include <OpenTptInternet.h>
 #elif defined (XP_PC)
@@ -29,11 +32,15 @@
 
 class nsIDNSListener;
 class nsICancelable;
+class nsDNSLookup;
 
-class nsDNSService : public nsIDNSService
+class nsDNSService : public nsIDNSService,
+                     public nsIRunnable
+
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIRUNNABLE
 
     // nsDNSService methods:
     nsDNSService();
@@ -48,11 +55,24 @@ public:
     NS_DECL_NSIDNSSERVICE
 
 protected:
-    // nsDNSLookup cache? - list of nsDNSLookups
+    friend class nsDNSLookup;
+    friend pascal void  nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
+
+    nsIThread *   mThread;
+    PRBool        mThreadRunning;
+    // nsDNSLookup cache? - list of nsDNSLookups, hash table (nsHashTable, nsStringKey)
+    // list of nsDNSLookups in order of expiration (PRCList?)
 
 #if defined(XP_MAC)
-    InetSvcRef  mServiceRef;
 
+    InetSvcRef  mServiceRef;
+	QHdr		mCompletionQueue;
+
+#if TARGET_CARBON
+    OTClientContextPtr  mClientContext;
+    OTNotifyUPP         nsDnsServiceNotifierRoutineUPP;
+#endif /* TARGET_CARBON */
+	
 #elif defined(XP_UNIX)
     //XXX - to be defined
 
