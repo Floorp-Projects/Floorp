@@ -20,17 +20,12 @@
  * Contributor(s): 
  */
 
-#ifndef nsError_h
-#define nsError_h
+#ifndef nsError_h__
+#define nsError_h__
 
-#include "nsCom.h"
-#include "prtypes.h"
-
-/**
- * Generic result data type
- */
-
-typedef PRUint32 nsresult;
+#ifndef nscore_h___
+#include "nscore.h"  // needed for nsresult
+#endif
 
 /*
  * To add error code to your module, you need to do the following:
@@ -275,7 +270,5 @@ NS_ErrorAccordingToNSPR();
 #pragma warning(disable: 4251) // 'nsCOMPtr<class nsIInputStream>' needs to have dll-interface to be used by clients of class 'nsInputStream'
 #pragma warning(disable: 4275) // non dll-interface class 'nsISupports' used as base for dll-interface class 'nsIRDFNode'
 #endif
-
-////////////////////////////////////////////////////////////////////////////////
 
 #endif

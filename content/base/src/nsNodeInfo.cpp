@@ -91,7 +91,7 @@ nsNodeInfo::Init(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
 
 // nsISupports
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsNodeInfo, NS_GET_IID(nsINodeInfo));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsNodeInfo, nsINodeInfo);
 
 
 // nsINodeInfo

@@ -19,8 +19,11 @@
  *
  * Contributor(s): 
  */
-
-/* The mother of all xpcom interfaces. */
+  
+/**
+ * The mother of all xpcom interfaces.
+ * @status FROZEN
+ */
 
 /* In order to get both the right typelib and the right header we force
 *  the 'real' output from xpidl to be commentout out in the generated header
@@ -54,7 +57,9 @@ interface nsISupports {
 
 
 %{C++
+#include "nsISupportsBase.h"
 
+#ifndef MOZILLA_STRICT_API
 #include "nsISupportsUtils.h"
-
+#endif
 %}
