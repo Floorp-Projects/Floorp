@@ -2179,6 +2179,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetAttributes(PRUint16& n,
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetAttribute(const char* name, const char* *result)
 {
+  NS_ENSURE_ARG_POINTER(name);
+  NS_ENSURE_ARG_POINTER(result);
   if (nsnull == mAttrNames) {
     PRUint16  numattrs;
     const char * const *names, * const *vals;
@@ -2200,6 +2202,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetAttribute(const char* name, const char* 
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetDOMElement(nsIDOMElement* *result)
 {
+  NS_ENSURE_ARG_POINTER(result);
   nsresult rv = NS_ERROR_FAILURE;
 
   *result = nsnull;
@@ -2466,6 +2469,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetValue(nsPluginInstancePeerVariable varia
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
 {
+  NS_ENSURE_ARG_POINTER(result);
   nsresult rv = NS_ERROR_FAILURE;
 
   *result = nsPluginTagType_Unknown;
@@ -2504,6 +2508,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetTagText(const char* *result)
 {
+    NS_ENSURE_ARG_POINTER(result);
     if (nsnull == mTagText) {
         nsresult rv;
         nsCOMPtr<nsIContent> content;
@@ -2696,6 +2701,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetParameters(PRUint16& n, const char*const
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetParameter(const char* name, const char* *result)
 {
+  NS_ENSURE_ARG_POINTER(name);
+  NS_ENSURE_ARG_POINTER(result);
+  nsresult rv;
   PRInt32 count;
 
   if (nsnull == mParamNames)
@@ -2703,7 +2711,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetParameter(const char* name, const char* 
     PRUint16  numattrs;
     const char * const *names, * const *vals;
 
-    GetParameters(numattrs, names, vals);
+    rv = GetParameters(numattrs, names, vals);
   }
 
   for (count = 0; count < mNumParams; count++)
@@ -2715,14 +2723,17 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetParameter(const char* name, const char* 
     }
   }
 
-  if (count >= mNumParams)
+  if (count >= mNumParams) {
     *result = "";
+    rv = NS_ERROR_FAILURE;
+  }
 
-  return NS_OK;
+  return rv;
 }
   
 NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
 {
+  NS_ENSURE_ARG_POINTER(result);
   nsresult rv = NS_OK;
   if (nsnull == mDocumentBase) {
     if (nsnull == mContext) {
@@ -2748,7 +2759,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentEncoding(const char* *result)
 {
-printf("instance owner getdocumentencoding called\n");
   return NS_ERROR_FAILURE;
 }
   
@@ -2950,34 +2960,69 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetBorderHorizSpace(PRUint32 *result)
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetUniqueID(PRUint32 *result)
 {
+  NS_ENSURE_ARG_POINTER(result);
   *result = NS_PTR_TO_INT32(mContext);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetCode(const char* *result)
 {
-  return GetAttribute("CODE", result);
+  nsresult rv;
+  nsPluginTagType tagType;  
+  NS_ENSURE_SUCCESS(rv = GetTagType(&tagType), rv);
+
+  rv = NS_ERROR_FAILURE;
+  if (nsPluginTagType_Object != tagType)
+    rv = GetAttribute("CODE", result);
+  if (NS_FAILED(rv))
+    rv = GetParameter("CODE", result);
+
+  return rv;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetCodeBase(const char* *result)
 {
-  return GetAttribute("CODEBASE", result);
+  nsresult rv;
+  if (NS_FAILED(rv = GetAttribute("CODEBASE", result)))
+    rv = GetParameter("CODEBASE", result);
+  return rv;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetArchive(const char* *result)
 {
-  return GetAttribute("ARCHIVE", result);
+  nsresult rv;
+  if (NS_FAILED(rv = GetAttribute("ARCHIVE", result)))
+    rv = GetParameter("ARCHIVE", result);
+  return rv;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetName(const char* *result)
 {
-  return GetAttribute("NAME", result);
+  nsresult rv;
+  nsPluginTagType tagType;  
+  NS_ENSURE_SUCCESS(rv = GetTagType(&tagType), rv);
+
+  rv = NS_ERROR_FAILURE;
+  if (nsPluginTagType_Object != tagType)
+    rv = GetAttribute("NAME", result);
+  if (NS_FAILED(rv))
+    rv = GetParameter("NAME", result);
+
+  return rv;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetMayScript(PRBool *result)
 {
+  NS_ENSURE_ARG_POINTER(result);
+  nsPluginTagType tagType;  
+  NS_ENSURE_SUCCESS(GetTagType(&tagType), NS_ERROR_FAILURE);
+
   const char* unused;
-  *result = (GetAttribute("MAYSCRIPT", &unused) == NS_OK ? PR_TRUE : PR_FALSE);
+  if (nsPluginTagType_Object == tagType)
+    *result = NS_SUCCEEDED(GetParameter("MAYSCRIPT", &unused)); 
+  else
+    *result = NS_SUCCEEDED(GetAttribute("MAYSCRIPT", &unused));
+
   return NS_OK;
 }
 
