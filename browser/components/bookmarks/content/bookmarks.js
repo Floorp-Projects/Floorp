@@ -879,21 +879,11 @@ var BookmarksController = {
     case "cmd_bm_properties":
     case "cmd_bm_rename":
       return length == 1;
-    case "cmd_bm_setnewbookmarkfolder":
-      if (length != 1) 
-        return false;
-      return item0 != "NC:NewBookmarkFolder"     &&
-             (type0 == "Folder" || type0 == "PersonalToolbarFolder");
     case "cmd_bm_setpersonaltoolbarfolder":
       if (length != 1)
         return false;
-      return item0 != "NC:PersonalToolbarFolder" &&
+      return item0 != "NC:PersonalToolbarFolder" && 
              item0 != "NC:BookmarksRoot" && type0 == "Folder";
-    case "cmd_bm_setnewsearchfolder":
-      if (length != 1)
-        return false;
-      return item0 != "NC:NewSearchFolder"       && 
-             (type0 == "Folder" || type0 == "PersonalToolbarFolder");
     case "cmd_bm_movebookmark":
       return length > 0 && !aSelection.containsImmutable;
     default:
@@ -1099,44 +1089,10 @@ var BookmarksUtils = {
     if (type != "")
       type = type.split("#")[1];
     if (type == "Folder") {
-      if (this.isPersonalToolbarFolder(aResource))
+      if (aResource == BMSVC.getBookmarksToolbarFolder())
         type = "PersonalToolbarFolder";
     }
     return type;
-  },
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Returns true if aResource is the Personal Toolbar Folder
-  isPersonalToolbarFolder: function (aResource) {
-    return this.getProperty(aResource, NC_NS+"FolderType") == "NC:PersonalToolbarFolder";
-  },
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Returns the folder which 'FolderType' is aProperty
-  getSpecialFolder: function (aProperty)
-  {
-    var sources = BMDS.GetSources(RDF.GetResource(NC_NS+"FolderType"),
-                                  RDF.GetResource(aProperty), true);
-    var folder = null;
-    if (sources.hasMoreElements())
-      folder = sources.getNext();
-    else 
-      folder = RDF.GetResource("NC:BookmarksRoot");
-    return folder;
-  },
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Returns the New Bookmark Folder
-  getNewBookmarkFolder: function()
-  {
-    return this.getSpecialFolder("NC:NewBookmarkFolder");
-  },
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Returns the New Search Folder
-  getNewSearchFolder: function()
-  {
-    return this.getSpecialFolder("NC:NewSearchFolder");
   },
 
   /////////////////////////////////////////////////////////////////////////////
