@@ -74,6 +74,12 @@
 
 #define WINDOWTYPE_ATTRIBUTE NS_LITERAL_STRING("windowtype")
 
+#define PERSIST_ATTRIBUTE  NS_LITERAL_STRING("persist")
+#define SCREENX_ATTRIBUTE  NS_LITERAL_STRING("screenX")
+#define SCREENY_ATTRIBUTE  NS_LITERAL_STRING("screenY")
+#define WIDTH_ATTRIBUTE    NS_LITERAL_STRING("width")
+#define HEIGHT_ATTRIBUTE   NS_LITERAL_STRING("height")
+#define MODE_ATTRIBUTE     NS_LITERAL_STRING("sizemode")
 // CIDs
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
@@ -1012,78 +1018,79 @@ NS_IMETHODIMP nsXULWindow::LoadIconFromXUL()
 
 NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize, PRBool aSizeMode)
 {
-   // can happen when the persistence timer fires at an inopportune time
-   // during window shutdown
-   if (!mDocShell)
-     return NS_ERROR_FAILURE;
+  // can happen when the persistence timer fires at an inopportune time
+  // during window shutdown
+  if (!mDocShell)
+    return NS_ERROR_FAILURE;
 
-   nsCOMPtr<nsIDOMElement> docShellElement;
-   GetWindowDOMElement(getter_AddRefs(docShellElement));
-   if(!docShellElement)
-      return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMElement> docShellElement;
+  GetWindowDOMElement(getter_AddRefs(docShellElement));
+  if(!docShellElement)
+    return NS_ERROR_FAILURE;
 
-   PRInt32 x, y, cx, cy;
-   PRInt32 sizeMode;
+  nsAutoString   persistString;
+  docShellElement->GetAttribute(PERSIST_ATTRIBUTE, persistString);
+  if (persistString.IsEmpty()) // quick check which sometimes helps
+    return NS_OK;
 
-   NS_ENSURE_SUCCESS(GetPositionAndSize(&x, &y, &cx, &cy), NS_ERROR_FAILURE);
-   mWindow->GetSizeMode(&sizeMode);
+  PRInt32 x, y, cx, cy;
+  PRInt32 sizeMode;
 
-   // (But only for size elements which are persisted.)
-   /* Note we use the same cheesy way to determine that as in
-     nsXULDocument.cpp. Some day that'll be fixed and there will
-     be an obscure bug here. */
-   /* Note that storing sizes which are not persisted makes it
-     difficult to distinguish between windows intrinsically sized
-     and not. */
-   nsAutoString   persistString;
-   docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("persist"), persistString);
+  NS_ENSURE_SUCCESS(GetPositionAndSize(&x, &y, &cx, &cy), NS_ERROR_FAILURE);
+  mWindow->GetSizeMode(&sizeMode);
 
-   char           sizeBuf[10];
-   nsAutoString   sizeString;
-   if(aPosition && sizeMode == nsSizeMode_Normal)
-      {
-      if(persistString.Find("screenX") >= 0)
-         {
-         PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)x);
-         sizeString.AssignWithConversion(sizeBuf);
-         docShellElement->SetAttribute(NS_ConvertASCIItoUCS2("screenX"), sizeString);
-         }
-      if(persistString.Find("screenY") >= 0)
-         {
-         PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)y);
-         sizeString.AssignWithConversion(sizeBuf);
-         docShellElement->SetAttribute(NS_ConvertASCIItoUCS2("screenY"), sizeString);
-         }
-      }
+  char           sizeBuf[10];
+  nsAutoString   sizeString,
+                 currentValue;
 
-   if(aSize && sizeMode == nsSizeMode_Normal)
-      {
-      if(persistString.Find("width") >= 0)
-         {
-         PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)cx);
-         sizeString.AssignWithConversion(sizeBuf);
-         docShellElement->SetAttribute(NS_ConvertASCIItoUCS2("width"), sizeString);
-         }
-      if(persistString.Find("height") >= 0)
-         {
-         PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)cy);
-         sizeString.AssignWithConversion(sizeBuf);
-         docShellElement->SetAttribute(NS_ConvertASCIItoUCS2("height"), sizeString);
-         }
-      }
+  // (only for size elements which are persisted)
+  if(aPosition && sizeMode == nsSizeMode_Normal) {
+    if(persistString.Find("screenX") >= 0) {
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)x);
+      sizeString.AssignWithConversion(sizeBuf);
+      docShellElement->GetAttribute(SCREENX_ATTRIBUTE, currentValue);
+      if (!currentValue.Equals(sizeString))
+        docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString);
+    }
+    if(persistString.Find("screenY") >= 0) {
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)y);
+      sizeString.AssignWithConversion(sizeBuf);
+      docShellElement->GetAttribute(SCREENY_ATTRIBUTE, currentValue);
+      if (!currentValue.Equals(sizeString))
+        docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString);
+    }
+  }
 
-   if (aSizeMode && persistString.Find("sizemode") >= 0)
-      {
-      if (sizeMode == nsSizeMode_Minimized)
-        sizeString.Assign(SIZEMODE_MINIMIZED);
-      else if (sizeMode == nsSizeMode_Maximized)
-        sizeString.Assign(SIZEMODE_MAXIMIZED);
-      else
-        sizeString.Assign(SIZEMODE_NORMAL);
-      docShellElement->SetAttribute(NS_ConvertASCIItoUCS2("sizemode"), sizeString);
-      }
+  if(aSize && sizeMode == nsSizeMode_Normal) {
+    if(persistString.Find("width") >= 0) {
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)cx);
+      sizeString.AssignWithConversion(sizeBuf);
+      docShellElement->GetAttribute(WIDTH_ATTRIBUTE, currentValue);
+      if (!currentValue.Equals(sizeString))
+        docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString);
+    }
+    if(persistString.Find("height") >= 0) {
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)cy);
+      sizeString.AssignWithConversion(sizeBuf);
+      docShellElement->GetAttribute(HEIGHT_ATTRIBUTE, currentValue);
+      if (!currentValue.Equals(sizeString))
+        docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString);
+    }
+  }
 
-   return NS_OK;
+  if (aSizeMode && persistString.Find("sizemode") >= 0) {
+    if (sizeMode == nsSizeMode_Minimized)
+      sizeString.Assign(SIZEMODE_MINIMIZED);
+    else if (sizeMode == nsSizeMode_Maximized)
+      sizeString.Assign(SIZEMODE_MAXIMIZED);
+    else
+      sizeString.Assign(SIZEMODE_NORMAL);
+    docShellElement->GetAttribute(MODE_ATTRIBUTE, currentValue);
+    if (!currentValue.Equals(sizeString))
+      docShellElement->SetAttribute(MODE_ATTRIBUTE, sizeString);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::GetWindowDOMWindow(nsIDOMWindowInternal** aDOMWindow)
@@ -1223,7 +1230,6 @@ NS_IMETHODIMP nsXULWindow::SizeShellTo(nsIDocShellTreeItem* aShellItem,
 
       GetSize(&winCX, &winCY);
       SetSize(winCX + widthDelta, winCY + heightDelta, PR_TRUE);
-      PersistPositionAndSize(PR_FALSE, PR_TRUE, PR_FALSE);
       }
 
    return NS_OK;
