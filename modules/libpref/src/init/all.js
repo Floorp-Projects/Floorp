@@ -795,7 +795,7 @@ pref("config.use_system_prefs.accessibility", false);
 pref("editor.resizing.preserve_ratio",       true);
 pref("editor.positioning.offset",            0);
 
-#if OS_ARCH==WINNT
+#ifdef XP_WIN
 pref("font.name.serif.ar", "Times New Roman");
 pref("font.name.sans-serif.ar", "Arial");
 pref("font.name.monospace.ar", "Courier New");
@@ -1011,15 +1011,7 @@ pref("intl.jis0208.map", "CP932");
 # WINNT
 #endif
 
-#if MOZ_WIDGET_TOOLKIT==cocoa
-#define MAC_PREFS 1
-#else
-#if MOZ_WIDGET_TOOLKIT==mac
-#define MAC_PREFS 1
-#endif
-#endif
-
-#ifdef MAC_PREFS
+#ifdef XP_MACOSX
 // Mac specific preference defaults
 pref("browser.drag_out_of_frame_style", 1);
 pref("ui.key.saveLink.shift", false); // true = shift, false = meta
@@ -1194,10 +1186,10 @@ pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 // This indicates whether it should use the native dialog or the XP Dialog
 pref("print.use_native_print_dialog", true);
 
-# MAC_PREFS
+# XP_MACOSX
 #endif
 
-#if MOZ_WIDGET_TOOLKIT==os2
+#if XP_OS2
 
 pref("ui.key.menuAccessKeyFocuses", true);
 pref("browser.display.screen_resolution", 0); // System setting
@@ -1360,7 +1352,7 @@ pref("intl.jis0208.map", "IBM943");
 # OS2
 #endif
 
-#if MOZ_WIDGET_TOOLKIT==beos
+#if XP_BEOS
 
 pref("intl.font_charset", "");
 pref("intl.font_spec_list", "");
@@ -1483,6 +1475,7 @@ pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 # photon
 #endif
 
+#ifndef XP_MACOSX
 #ifdef XP_UNIX
 // Handled differently under Mac/Windows
 pref("network.hosts.smtp_server", "localhost");
@@ -1819,6 +1812,9 @@ pref("print.postscript.nativefont.x-western",      "");
 pref("print.postscript.nativefont.zh-CN",          "");
 pref("print.postscript.nativefont.zh-TW",          "");
 pref("print.postscript.nativefont.zh-HK",          "");
+
+# XP_UNIX
+#endif
 #endif
 
 #if OS_ARCH==OpenVMS
