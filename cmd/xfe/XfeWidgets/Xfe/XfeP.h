@@ -97,7 +97,7 @@ typedef GC		(*XfeGetGCFunc)			(Widget			child);
 /* XfePrimitive & XfeManager class bit gravity							*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#ifdef _ALPHA_
+#if defined(__alpha)
 typedef void (*XfeBitGravityType)(void);
 #else
 typedef int	XfeBitGravityType;
