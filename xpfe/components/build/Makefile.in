@@ -37,6 +37,7 @@ REQUIRES	= xpcom \
 		  rdf \
 		  necko \
 		  necko2 \
+		  nkcache \
 		  timer \
 		  intl \
 		  locale \
