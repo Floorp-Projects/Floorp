@@ -10,3 +10,4 @@ nsIChannel.idl
 nsIRequest.idl
 nsISocketTransportService.idl
 nsIFileTransportService.idl
+nsIFileSystem.idl
