@@ -46,7 +46,7 @@ if ($win32) {
   $chrome =~ s/\\/\//g;
   $platform = "en-win";
 }
-elsif ($darwin)
+elsif ($darwin) {
   $platform = "en-mac"
 }
 
