@@ -100,7 +100,7 @@
 			  <spring flex="100%"/>
 		 	  <box align="horizontal">
 	  	 		<titledbutton align="left"  class="popup" popup="mozillaPopup" tooltip="aTooltip" tooltiptext="Mozilla development info"
-				   popupanchor="topleft" popupalign="bottomleft" value="&mozillaButton.label;" />
+				   popupanchor="bottomright" value="&mozillaButton.label;" />
 	  	 		
 	  	 		<titledbutton align="left"  class="popup" popup="shoppingPopup"
 				   popupanchor="topleft" popupalign="bottomleft" value="&shoppingButton.label;" />
