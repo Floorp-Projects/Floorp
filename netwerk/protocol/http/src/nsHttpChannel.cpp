@@ -2406,11 +2406,11 @@ nsHttpChannel::PromptForIdentity(const char *scheme,
     // format are not lost.
     //
     nsAutoString key;
-    key.AssignWithConversion(host);
+    CopyASCIItoUTF16(host, key); // XXX IDN?
     key.Append(PRUnichar(':'));
     key.AppendInt(port);
     key.AppendLiteral(" (");
-    key.AppendWithConversion(realm);
+    AppendASCIItoUTF16(realm, key);
     key.Append(PRUnichar(')'));
 
     nsresult rv;
@@ -2426,7 +2426,7 @@ nsHttpChannel::PromptForIdentity(const char *scheme,
 
     // figure out what message to display...
     nsAutoString displayHost;
-    displayHost.AssignWithConversion(host);
+    CopyASCIItoUTF16(host, displayHost); // XXX IDN?
     // Add port only if it was originally specified in the URI
     PRInt32 uriPort = -1;
     mURI->GetPort(&uriPort);
@@ -2445,12 +2445,12 @@ nsHttpChannel::PromptForIdentity(const char *scheme,
     else {
         nsAutoString realmU;
         realmU.Assign(PRUnichar('\"'));
-        realmU.AppendWithConversion(realm);
+        AppendASCIItoUTF16(realm, realmU);
         realmU.Append(PRUnichar('\"'));
 
         // prepend "scheme://" displayHost
         nsAutoString schemeU;
-        schemeU.AssignWithConversion(scheme);
+        CopyASCIItoUTF16(scheme, schemeU);
         schemeU.AppendLiteral("://");
         displayHost.Insert(schemeU, 0);
 
