@@ -36,6 +36,7 @@
 
 static NS_DEFINE_IID(kPlaceholderTxnIID,  PLACEHOLDER_TXN_IID);
 static NS_DEFINE_CID(kCContentIteratorCID,   NS_CONTENTITERATOR_CID);
+static NS_DEFINE_IID(kRangeListCID, NS_RANGELIST_CID);
 
 #define CANCEL_OPERATION_IF_READONLY_OR_DISABLED \
   if (mFlags & TEXT_EDITOR_FLAG_READONLY || mFlags & TEXT_EDITOR_FLAG_DISABLED) \
@@ -222,24 +223,47 @@ nsresult
 nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection, 
                                 PRBool          *aCancel,
                                 PlaceholderTxn **aTxn,
-                                const nsString *inString,
-                                nsString       *outString,
+                                const nsString *aInString,
+                                nsString       *aOutString,
                                 TypeInState    typeInState,
                                 PRInt32         aMaxLength)
 {
-  if (!aSelection || !aCancel || !inString || !outString) {return NS_ERROR_NULL_POINTER;}
+  if (!aSelection || !aCancel || !aInString || !aOutString) {return NS_ERROR_NULL_POINTER;}
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
+
+  nsresult result;
+
+  nsString inString = *aInString; // we might want to mutate the input 
+                                  // before setting the output, do that in a local var
 
   if (-1 != aMaxLength && (mFlags&TEXT_EDITOR_FLAG_PLAINTEXT))
   {
     // get the current text length
     // get the length of inString
-    // if l1 is at or over max, cancel the insert
-    // if l1 + l2 > max, set outString to subset of inString so length = max
-    
+    // if len(doc) is at or over max, cancel the insert
+    // if l(doc) + l(input) > max, set aOutString to subset of inString so length = max
+    PRInt32 docLength;
+    result = GetLengthOfDocumentInCharacters(docLength);
+    if (NS_SUCCEEDED(result))
+    {
+      if (docLength >= aMaxLength) 
+      {
+        *aOutString = "";
+        *aCancel = PR_TRUE;
+        return result;
+      }
+      else
+      {
+        PRInt32 inCount = inString.Length();
+        if ((inCount+docLength)>aMaxLength)
+        {
+          inString.Truncate(aMaxLength-docLength);
+        }
+      }
+    }
   }
 
-  nsresult result;
+  
 
   // initialize out params
   *aCancel = PR_FALSE;
@@ -248,22 +272,23 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
   {
     // manage the password buffer
     PRInt32 start, end;
-    GetTextSelectionOffsets(aSelection, start, end);
-    mPasswordText.Insert(*inString, start);
+    result = GetTextSelectionOffsets(aSelection, start, end);
+    NS_ASSERTION((NS_SUCCEEDED(result)), "getTextSelectionOffsets failed!");
+    mPasswordText.Insert(inString, start);
 
     char *password = mPasswordText.ToNewCString();
     printf("mPasswordText is %s\n", password);
     delete [] password;
 
     // change the output to '*' only
-    PRInt32 length = inString->Length();
+    PRInt32 length = inString.Length();
     PRInt32 i;
     for (i=0; i<length; i++)
-      *outString += '*';
+      *aOutString += '*';
   }
   else
   {
-    *outString = *inString;
+    *aOutString = inString;
   }
   
   if (mBogusNode || (PR_TRUE==typeInState.IsAnySet()))
@@ -901,15 +926,45 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
   return result;
 }
 
-// this is a complete ripoff from nsTextEditor::GetTextSelectionOffsetsForRange
-// the two should use common code, or even just be one method
-void nsTextEditRules::GetTextSelectionOffsets(nsIDOMSelection *aSelection,
-                                              PRInt32 &aStartOffset, 
-                                              PRInt32 &aEndOffset)
+nsresult nsTextEditRules::GetLengthOfDocumentInCharacters(PRInt32 &aCount)                                              
 {
   nsresult result;
   // initialize out params
-  aStartOffset = aEndOffset = 0;
+  aCount = 0;
+  
+  nsCOMPtr<nsIDOMSelection> sel;
+  mEditor->GetSelection(getter_AddRefs(sel));
+  if ((NS_SUCCEEDED(result)) && sel)
+  {
+    nsAutoSelectionReset selectionResetter(sel);
+    result = mEditor->SelectAll();
+    if (NS_SUCCEEDED(result))
+    {
+      PRInt32 start, end;
+      result = GetTextSelectionOffsets(sel, start, end);
+      if (NS_SUCCEEDED(result))
+      {
+        NS_ASSERTION(0==start, "GetTextSelectionOffsets failed to set start correctly.");
+        NS_ASSERTION(0<=end, "GetTextSelectionOffsets failed to set end correctly.");
+        if (0<=end) {
+          aCount = end;
+        }
+      }
+    }
+  }
+  return result;
+}
+
+// this is a complete ripoff from nsTextEditor::GetTextSelectionOffsetsForRange
+// the two should use common code, or even just be one method
+nsresult nsTextEditRules::GetTextSelectionOffsets(nsIDOMSelection *aSelection,
+                                                  PRInt32 &aStartOffset, 
+                                                  PRInt32 &aEndOffset)
+{
+  nsresult result;
+  // initialize out params
+  aStartOffset = 0; // default to first char in selection
+  aEndOffset = -1;  // default to total length of text in selection
 
   nsCOMPtr<nsIDOMNode> startNode, endNode, parentNode;
   PRInt32 startOffset, endOffset;
@@ -953,23 +1008,31 @@ void nsTextEditRules::GetTextSelectionOffsets(nsIDOMSelection *aSelection,
       if (textNode)
       {
         nsCOMPtr<nsIDOMNode>currentNode = do_QueryInterface(textNode);
-        if (currentNode.get() == startNode.get())
+        if (!currentNode) {return NS_ERROR_NO_INTERFACE;}
+        if (PR_TRUE==mEditor->IsEditable(currentNode))
         {
-          aStartOffset = totalLength + startOffset;
+          if (currentNode.get() == startNode.get())
+          {
+            aStartOffset = totalLength + startOffset;
+          }
+          if (currentNode.get() == endNode.get())
+          {
+            aEndOffset = totalLength + endOffset;
+            break;
+          }
+          PRUint32 length;
+          textNode->GetLength(&length);
+          totalLength += length;
         }
-        if (currentNode.get() == endNode.get())
-        {
-          aEndOffset = totalLength + endOffset;
-          break;
-        }
-        PRUint32 length;
-        textNode->GetLength(&length);
-        totalLength += length;
       }
       iter->Next();
       iter->CurrentNode(getter_AddRefs(content));
     }
+    if (-1==aEndOffset) {
+      aEndOffset = totalLength;
+    }
   }
+  return result;
 }
 
 

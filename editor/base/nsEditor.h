@@ -334,6 +334,9 @@ protected:
   NS_IMETHOD DoAfterDoTransaction(nsITransaction *aTxn);
   // called after a transaction is undone successfully
   NS_IMETHOD DoAfterUndoTransaction();
+
+  /** make the given selection span the entire document */
+  NS_IMETHOD SelectEntireDocument(nsIDOMSelection *aSelection);
   
 protected:
 // XXXX: Horrible hack! We are doing this because
