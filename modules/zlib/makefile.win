@@ -16,6 +16,6 @@
 
 DEPTH=..\..
 
-DIRS= src
+DIRS= src standalone
 
 include <$(DEPTH)\config\rules.mak>
