@@ -118,9 +118,11 @@ function CreateField( name, index, on)
 	row.appendChild(cell);
 
 	cell = document.createElement( 'treecell');
+	cell.setAttribute( "class", "importsampledata");
 	cell.setAttribute( 'value', " ");
-	cell.setAttribute( 'noDrag', "true");
-	cell.setAttribute( 'style', "border-left: 5px grey ridge; padding-left: 10px;");
+	cell.setAttribute( 'noDrag', "true");	
+	// cell.setAttribute( 'style', "border-left: 5px grey ridge; padding-left: 10px;");
+		
 	row.appendChild( cell);
 
 	item.appendChild(row);
