@@ -264,6 +264,12 @@ public:
     */
   virtual nsresult EndTransaction()=0;
 
+  /** scroll the viewport so the selection is in view.
+    * @param aScrollToBegin  PR_TRUE if the beginning of the selection is to be scrolled into view.
+    *                        PR_FALSE if the end of the selection is to be scrolled into view
+    */
+  virtual nsresult ScrollIntoView(PRBool aScrollToBegin)=0;
+
 
 };
 
