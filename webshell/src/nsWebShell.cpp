@@ -2458,13 +2458,11 @@ nsWebShell::GetTarget(const PRUnichar* aName)
     NS_ADDREF(target);
   } 
   else if (name.EqualsIgnoreCase("_parent")) {
-    if (nsnull == mParent) {
+    GetParent(target);
+    if (target == nsnull) {
       target = this;
+      NS_ADDREF(target);
     }
-    else {
-      target = mParent;
-    }
-    NS_ADDREF(target);
   }
   else if (name.EqualsIgnoreCase("_top")) {
     GetRootWebShell(target);		// this addrefs, which is OK
