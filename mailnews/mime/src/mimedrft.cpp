@@ -221,7 +221,7 @@ mime_dump_attachments ( attachmentList );
   if ((NS_FAILED(rv)) || (!msgComposeService))
     return rv; 
   
-  if (identity)
+  if (identity && composeType == nsIMsgCompType::ForwardInline)
   {
   	PRBool composeHtml = PR_FALSE;
   	identity->GetComposeHtml(&composeHtml);
@@ -1280,11 +1280,31 @@ mime_parse_stream_complete (nsMIMESession *stream)
   
         // Since we have body text, then we should set the compose fields with
         // this data.      
-        if (composeFormat == nsIMsgCompFormat::PlainText)
-          fields->SetTheForcePlainText(PR_TRUE);
+ //       if (composeFormat == nsIMsgCompFormat::PlainText)
+ //         fields->SetTheForcePlainText(PR_TRUE);
         
         if (forward_inline)
         {
+		  if (mdd->identity)
+		  {
+			 PRBool bFormat;
+			 mdd->identity->GetComposeHtml(&bFormat);
+			 if (bFormat)
+			 {
+			   if (body && composeFormat == nsIMsgCompFormat::PlainText)
+			   {
+				char* newbody = (char *)PR_MALLOC (bodyLen + 12); //+11 chars for <pre> & </pre> tags
+				*newbody = 0;
+				PL_strcat(newbody, "<PRE>");
+				PL_strcat(newbody, body);
+				PL_strcat(newbody, "</PRE>");
+				PR_Free(body);
+				body = newbody;
+				composeFormat = nsIMsgCompFormat::HTML;
+			   }
+			 }
+		  }
+
           mime_insert_forwarded_message_headers(&body, mdd->headers, composeFormat,
                                                 mdd->mailcharset);
         }
