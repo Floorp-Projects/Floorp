@@ -90,7 +90,7 @@ public:
    * Hack to find out if the view observer is itself visible, in lieu
    * of having the view trees linked.
    */
-  NS_IMETHOD_(PRBool) IsVisible();
+  NS_IMETHOD_(PRBool) IsVisible() = 0;
 };
 
 #endif
