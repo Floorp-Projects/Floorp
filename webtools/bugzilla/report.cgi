@@ -136,12 +136,6 @@ $columns{''}                 = "42217354";
 
 my @axis_fields = ($row_field, $col_field, $tbl_field);
 my @selectnames = map($columns{$_}, @axis_fields);
-# add product if person is requesting classification
-if (lsearch(\@axis_fields,"classification") >= 0) {
-    if (lsearch(\@axis_fields,"product") < 0) {
-        push(@selectnames,($columns{'product'}));
-    }
-}
 
 # Clone the params, so that Bugzilla::Search can modify them
 my $params = new Bugzilla::CGI($cgi);

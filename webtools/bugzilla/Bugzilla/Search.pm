@@ -139,6 +139,8 @@ sub init {
         push @supptables,
                 "INNER JOIN classifications AS map_classifications " .
                 "ON map_products.classification_id = map_classifications.id";
+        push @supptables, "INNER JOIN products AS map_products " .
+                          "ON bugs.product_id = map_products.id";
     }
 
     if (lsearch($fieldsref, 'map_components.name') >= 0) {
@@ -863,6 +865,8 @@ sub init {
 
          "^classification,(?!changed)" => sub {
              # Generate the restriction condition
+             push @supptables, "INNER JOIN products AS map_products " .
+                               "ON bugs.product_id = map_products.id";
              $f = $ff = "classifications.name";
              $funcsbykey{",$t"}->();
              $term = build_subselect("map_products.classification_id",
