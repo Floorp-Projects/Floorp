@@ -1,0 +1,6 @@
+This is Grendel -- a Java mail/news client.
+
+The grendel.addressbook package talks to LDAP, and provides a nice API
+to all things dealing with addressbook.
+
+See http://www.mozilla.org/projects/grendel/ for more info.

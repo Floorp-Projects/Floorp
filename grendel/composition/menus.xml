@@ -1,0 +1,67 @@
+<xml>
+<head>
+  <link role="stringprops" href="MenuLabels.properties"/>
+</head>
+<body>
+  <menubar id="mail.composition">
+  <menu id="FileMenu" category="file"
+   label="$fileLabel" accel="$fileAccel">
+    <menuitem id="saveAs" category="file" action="saveAs"
+     label="$saveAsLabel" accel="$saveAsAccel"
+     description=""/>
+    <menuitem type="separator"/>
+    <menuitem id="sendNow" category="file" action="sendNow"
+     label="$sendNowLabel" accel="$sendNowAccel"
+     description=""/>
+    <menuitem type="separator"/>
+    <menuitem id="quoteOriginalText" category="file" action="quoteOriginalText"
+     label="$quoteOriginalTextLabel" accel="$quoteOriginalTextAccel"
+     description=""/>
+    <menuitem id="selectAddresses" category="file" action="selectAddresses"
+     label="$selectAddressesLabel" accel="$selectAddressesAccel"
+     description=""/>
+    <menu id="attach" category="file"
+     label="$attachLabel" accel="$attachAccel">
+      <menuitem id="attachFile" category="file" action="attachFill"
+       label="$attachFileLabel" accel="$attachFileAccel"
+       description=""/>
+    </menu>
+    <menuitem type="separator"/>
+    <menuitem id="appExit" category="exit" action="appExit"
+     label="$appExitLabel" accel="$appExitAccel"
+     description=""/>
+  </menu>
+  <menu id="EditMenu" category="edit"
+   label="$editLabel" accel="$editAccel">
+    <menuitem id="cut" category="edit" action="cut-to-clipboard"
+     label="$cutLabel" accel="$cutAccel"
+     description=""/>
+    <menuitem id="copy" category="edit" action="copy-to-clipboard"
+     label="$copyLabel" accel="$copyAccel"
+     description=""/>
+    <menuitem id="paste" category="edit" action="paste-from-clipboard"
+     label="$pasteLabel" accel="$pasteAccel"
+     description=""/>
+    <menuitem id="pasteAsQuotation" category="edit" action="pasteAsQuotation"
+     label="$pasteAsQuotationLabel" accel="$pasteAsQuotationAccel"
+     description=""/>
+    <menuitem type="separator"/>
+    <menuitem id="appPrefs" category="edit" action="appPrefs"
+     label="$appPrefsLabel" accel="$appPrefsAccel"
+     description=""/>
+  </menu>
+  <menu id="ViewMenu" category="view"
+   label="$viewLabel" accel="$viewAccel">
+    <menuitem id="address" category="view" action="viewAddress"
+     label="$addressLabel" accel="$addressAccel"
+     description=""/>
+    <menuitem id="attachments" category="view" action="viewAttachments"
+     label="$attachmentsLabel" accel="$attachmentsAccel"
+     description=""/>
+    <menuitem id="options" category="view" action="viewOptions"
+     label="$optionsLabel" accel="$optionsAccel"
+     description=""/>
+  </menu>
+  </menubar>
+</body>
+</xml>
