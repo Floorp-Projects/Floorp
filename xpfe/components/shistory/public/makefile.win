@@ -29,6 +29,8 @@ XPIDLSRCS =                   \
     .\nsISHTransaction.idl    \
     .\nsISHistory.idl         \
     .\nsISHistoryListener.idl \
+    .\nsISHistoryInternal.idl \
+    .\nsIHistoryEntry.idl     \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
