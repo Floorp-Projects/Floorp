@@ -22,6 +22,8 @@
 #include "plstr.h"
 #include "prmem.h"
 
+static NS_DEFINE_IID(kINNTPNewsgroupPostIID, NS_INNTPNEWSGROUPPOST_IID);
+
 class nsNNTPNewsgroupPost : nsINNTPNewsgroupPost {
     
 public:
@@ -37,7 +39,7 @@ public:
     NS_IMPL_CLASS_GETSET_STR(Subject, m_subject);
     
     NS_IMETHOD AddNewsgroup(const char *newsgroupName);
-    NS_IMETHOD GetNewsgroups(char * *aNewsgroups);
+    NS_IMPL_CLASS_GETTER_STR(GetNewsgroups, m_newsgroups);
     
     NS_IMETHOD GetMessageID(char * *aMessageID);
     
@@ -55,7 +57,7 @@ public:
     NS_IMPL_CLASS_GETSET_STR(Body, m_body);    
 
     NS_IMETHOD AddReference(const char *referenceID);
-    NS_IMETHOD GetReferences(char * *aReferences);
+    NS_IMPL_CLASS_GETTER_STR(GetReferences, m_references);
 
 
     NS_IMETHOD isValid(PRBool *_retval);
@@ -66,7 +68,12 @@ public:
 
     NS_IMETHOD GetFullMessage(char **message);
     
+    // helper routines
+    static char *appendAndAlloc(char *string, const char *newSubstring,
+                                PRBool withComma);
 private:
+
+    
     char *m_relayVersion;
     char *m_postingVersion;
     char *m_from;
@@ -85,12 +92,15 @@ private:
     char *m_control;
     char *m_distribution;
     char *m_organization;
+    char *m_references;
     char *m_body;
     
     char *m_fullMessage;
 
     PRBool m_isControl;
 };
+
+NS_IMPL_ISUPPORTS(nsNNTPNewsgroupPost, kINNTPNewsgroupPostIID);
 
 nsNNTPNewsgroupPost::nsNNTPNewsgroupPost()
 {
@@ -160,14 +170,63 @@ nsNNTPNewsgroupPost::GetFullMessage(char **message)
     return NS_OK;
 }
 
+char *
+nsNNTPNewsgroupPost::appendAndAlloc(char *string,
+                                    const char *newSubstring,
+                                    PRBool withComma)
+{
+    if (!newSubstring) return NULL;
+    
+    if (!string) return PL_strdup(newSubstring);
+    
+    char *separator = withComma ? ", " : " ";
+    char *oldString = string;
+    
+    string = (char *)PR_Calloc(PL_strlen(oldString) +
+                               PL_strlen(separator) +
+                               PL_strlen(newSubstring) + 1,
+                               sizeof(char));
+    
+    PL_strcpy(string, oldString);
+    PL_strcat(string, separator);
+    PL_strcat(string, newSubstring);
+
+    PR_Free(oldString);
+    return string;
+}
+
+nsresult
+nsNNTPNewsgroupPost::AddNewsgroup(const char *newsgroup)
+{
+    m_newsgroups=appendAndAlloc(m_newsgroups, newsgroup, PR_TRUE);
+    return NS_OK;
+}
+nsresult
+nsNNTPNewsgroupPost::AddReference(const char *reference)
+{
+    m_references=appendAndAlloc(m_references, reference, PR_FALSE);
+    return NS_OK;
+}
+
+nsresult
+nsNNTPNewsgroupPost::GetMessageID(char **messageID)
+{
+    // hack - this is where we will somehow generate the ID
+    static char *fakeID = "ABCDEFG@mcom.com";
+    if (!messageID) return NS_ERROR_NULL_POINTER;
+    *messageID = fakeID;
+    return NS_OK;
+}
+
+
 NS_BEGIN_EXTERN_C
 
 nsresult NS_NewNewsgroupPost(nsINNTPNewsgroupPost **aPost)
 {
     if (!aPost) return NS_ERROR_NULL_POINTER;
     nsNNTPNewsgroupPost *post = new nsNNTPNewsgroupPost();
-    return post->QueryInterface(nsINNTPNewsgroupPost::IID(),
-                                (void **)*aPost);
+    return post->QueryInterface(kINNTPNewsgroupPostIID,
+                                (void **)aPost);
 }
 
 NS_END_EXTERN_C
