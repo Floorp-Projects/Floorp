@@ -113,11 +113,11 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
     INNER  JOIN os TOS ON TV.OSID = TOS.OSID";
 
     if ($category && $category !=="%") {
-        $sql .="INNER  JOIN categoryxref TCX ON TM.ID = TCX.ID
+        $sql .=" INNER  JOIN categoryxref TCX ON TM.ID = TCX.ID
         INNER JOIN categories TC ON TCX.CategoryID = TC.CategoryID ";
     }
     if ($editorpick=="true") {
-        $sql .="INNER JOIN reviews TR ON TM.ID = TR.ID ";
+        $sql .=" INNER JOIN reviews TR ON TM.ID = TR.ID ";
     }
 
     $sql .=" WHERE TM.ID = '$id'";
