@@ -13,6 +13,11 @@
 #
 # The Original Code is News and Blogs Account Settings. 
 #
+# The Initial Developer of the Original Code is
+# The Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2004
+# the Initial Developer. All Rights Reserved.
+#
 # Contributor(s):
 #   Scott MacGregor <mscott@mozilla.org>
 #

@@ -14,6 +14,10 @@
  *
  * The Original Code is the News&Blog Feed Downloader
  *
+ * The Initial Developer of the Original Code is
+ * The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *  Myk Melez <myk@mozilla.org) (Original Author)

@@ -14,6 +14,10 @@
 #
 # The Original Code is Thunderbird Phishing Dectector
 #
+# The Initial Developer of the Original Code is
+# The Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
 #  Scott MacGregor <mscott@mozilla.org>

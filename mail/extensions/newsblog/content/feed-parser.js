@@ -14,6 +14,11 @@
 #
 # The Original Code is the RSS Parsing Engine
 #
+# The Initial Developer of the Original Code is
+# The Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2004
+# the Initial Developer. All Rights Reserved.
+#
 # Contributor(s):
 #
 # Alternatively, the contents of this file may be used under the terms of
