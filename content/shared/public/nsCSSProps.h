@@ -34,7 +34,7 @@ class nsString;
    To change the list of properties, see nsCSSPropList.h
 
  */
-#define CSS_PROP(_prop, _hint) eCSSProperty_##_prop,
+#define CSS_PROP(_name, _id, _hint) eCSSProperty_##_id,
 enum nsCSSProperty {
   eCSSProperty_UNKNOWN = -1,
 #include "nsCSSPropList.h"

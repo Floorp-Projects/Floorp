@@ -37,6 +37,10 @@
   The first argument to HTML_TAG is both the enum identifier of the property
   and the string value
 
+  Entries *must* use only lowercase characters.
+
+  ** Break these invarient and bad things will happen. **    
+
  ******/
 
 HTML_TAG(a)

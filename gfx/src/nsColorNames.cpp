@@ -22,7 +22,7 @@
 
 #include "nsColorNames.h"
 #include "nsString.h"
-#include "nsAVLTree.h"
+#include "nsStaticNameTable.h"
 
 
 // define an array of all color names
@@ -39,59 +39,28 @@ const nscolor nsColorNames::kColors[] = {
 };
 #undef GFX_COLOR
 
-struct ColorNode {
-  ColorNode(void)
-    : mStr(),
-      mEnum(eColorName_UNKNOWN)
-  {}
-
-  ColorNode(const nsStr& aStringValue, nsColorName aEnumValue)
-    : mStr(),
-      mEnum(aEnumValue)
-  { // point to the incomming buffer
-    // note that the incomming buffer may really be 2 byte
-    nsStr::Initialize(mStr, aStringValue.mStr, aStringValue.mCapacity, 
-                      aStringValue.mLength, aStringValue.mCharSize, PR_FALSE);
-  }
-
-  nsCAutoString mStr;
-  nsColorName   mEnum;
-};
-
-class ColorComparitor: public nsAVLNodeComparitor {
-public:
-  virtual ~ColorComparitor(void) {}
-  virtual PRInt32 operator()(void* anItem1,void* anItem2) {
-    ColorNode* one = (ColorNode*)anItem1;
-    ColorNode* two = (ColorNode*)anItem2;
-    return one->mStr.CompareWithConversion(two->mStr, PR_TRUE);
-  }
-}; 
-
-
-static PRInt32      gTableRefCount;
-static ColorNode*   gColorArray;
-static nsAVLTree*   gColorTree;
-static ColorComparitor* gComparitor;
+static PRInt32 gTableRefCount;
+static nsStaticCaseInsensitiveNameTable* gColorTable;
 
 void
 nsColorNames::AddRefTable(void) 
 {
   if (0 == gTableRefCount++) {
-    if (! gColorArray) {
-      gColorArray = new ColorNode[eColorName_COUNT];
-      gComparitor = new ColorComparitor();
-      if (gComparitor) {
-        gColorTree = new nsAVLTree(*gComparitor, nsnull);
+    NS_ASSERTION(!gColorTable, "pre existing array!");
+    gColorTable = new nsStaticCaseInsensitiveNameTable();
+    if (gColorTable) {
+#ifdef DEBUG
+    {
+      // let's verify the table...
+      for (PRInt32 index = 0; index < eColorName_COUNT; ++index) {
+        nsCAutoString temp1(kColorNames[index]);
+        nsCAutoString temp2(kColorNames[index]);
+        temp1.ToLowerCase();
+        NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
       }
-      if (gColorArray && gColorTree) {
-        PRInt32 index = -1;
-        while (++index < PRInt32(eColorName_COUNT)) {
-          gColorArray[index].mStr = kColorNames[index];
-          gColorArray[index].mEnum = nsColorName(index);
-          gColorTree->AddItem(&(gColorArray[index]));
-        }
-      }
+    }
+#endif      
+      gColorTable->Init(kColorNames, eColorName_COUNT); 
     }
   }
 }
@@ -100,54 +69,41 @@ void
 nsColorNames::ReleaseTable(void) 
 {
   if (0 == --gTableRefCount) {
-    if (gColorArray) {
-      delete [] gColorArray;
-      gColorArray = nsnull;
-    }
-    if (gColorTree) {
-      delete gColorTree;
-      gColorTree = nsnull;
-    }
-    if (gComparitor) {
-      delete gComparitor;
-      gComparitor = nsnull;
+    if (gColorTable) {
+      delete gColorTable;
+      gColorTable = nsnull;
     }
   }
 }
 
-
 nsColorName 
-nsColorNames::LookupName(const nsCString& aColorName)
+nsColorNames::LookupName(const nsCString& aColor)
 {
-  NS_ASSERTION(gColorTree, "no lookup table, needs addref");
-  if (gColorTree) {
-    ColorNode node(aColorName, eColorName_UNKNOWN);
-    ColorNode*  found = (ColorNode*)gColorTree->FindItem(&node);
-    if (found) {
-      NS_ASSERTION(found->mStr.EqualsIgnoreCase(aColorName), "bad tree");
-      return found->mEnum;
-    }
-  }
+  NS_ASSERTION(gColorTable, "no lookup table, needs addref");
+  if (gColorTable) {
+    return nsColorName(gColorTable->Lookup(aColor));
+  }  
   return eColorName_UNKNOWN;
 }
 
 nsColorName 
-nsColorNames::LookupName(const nsString& aColorName) {
-  nsCAutoString theName; theName.AssignWithConversion(aColorName);
-  return LookupName(theName);
+nsColorNames::LookupName(const nsString& aColor)
+{
+  NS_ASSERTION(gColorTable, "no lookup table, needs addref");
+  if (gColorTable) {
+    return nsColorName(gColorTable->Lookup(aColor));
+  }  
+  return eColorName_UNKNOWN;
 }
 
-
 const nsCString& 
-nsColorNames::GetStringValue(nsColorName aColorName)
+nsColorNames::GetStringValue(nsColorName aColor)
 {
-  NS_ASSERTION(gColorArray, "no lookup table, needs addref");
-  if ((eColorName_UNKNOWN < aColorName) && 
-      (aColorName < eColorName_COUNT) && gColorArray) {
-    return gColorArray[aColorName].mStr;
-  }
-  else {
-    static const nsCString  kNullStr;
+  NS_ASSERTION(gColorTable, "no lookup table, needs addref");
+  if (gColorTable) {
+    return gColorTable->GetStringValue(PRInt32(aColor));
+  } else {
+    static nsCString kNullStr;
     return kNullStr;
   }
 }

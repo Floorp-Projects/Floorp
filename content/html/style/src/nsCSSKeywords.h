@@ -34,7 +34,7 @@ class nsCString;
    To change the list of keywords, see nsCSSKeywordList.h
 
  */
-#define CSS_KEY(_key) eCSSKeyword_##_key,
+#define CSS_KEY(_name,_id) eCSSKeyword_##_id,
 enum nsCSSKeyword {
   eCSSKeyword_UNKNOWN = -1,
 #include "nsCSSKeywordList.h"
