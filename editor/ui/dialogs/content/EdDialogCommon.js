@@ -283,35 +283,6 @@ function AppendStringToMenulist(menulist, string)
   return null;
 }
 
-function AppendLabelAndValueToMenulist(menulist, labelStr, valueStr)
-{
-  if (menulist)
-  {
-    var menupopup = menulist.firstChild;
-    // May not have any popup yet -- so create one
-    if (!menupopup)
-    {
-      menupopup = document.createElementNS(XUL_NS, "menupopup");
-      if (menupopup)
-        menulist.appendChild(menupopup);
-      else
-      {
-        dump("Failed to create menupoup\n");
-        return null;
-      }
-    }
-    var menuItem = document.createElementNS(XUL_NS, "menuitem");
-    if (menuItem)
-    {
-      menuItem.setAttribute("label", labelStr);
-      menuItem.setAttribute("value", valueStr);
-      menupopup.appendChild(menuItem);
-      return menuItem;
-    }
-  }
-  return null;
-}
-
 function ClearMenulist(menulist)
 {
   // Always use "AppendStringToMenulist" so we know there's 
