@@ -378,6 +378,7 @@ XCFLAGS="$X_CFLAGS"
 dnl ========================================================
 dnl set the defaults first
 dnl ========================================================
+AS_BIN=$AS
 AR_FLAGS='cr $@'
 AR_LIST='$(AR) t'
 AR_EXTRACT='$(AR) x'
@@ -3337,7 +3338,7 @@ elif test -n "$GNU_CC" && test -n "$GNU_CXX" && test -n "$GNU_AS"; then
     echo '#include <stdio.h>' > dummy-hello.c
     echo 'int main() { printf("Hello World\n"); exit(0); }' >> dummy-hello.c
     ${CC} -S dummy-hello.c -o dummy-hello.s 2>&5
-    cat dummy-hello.s | ${AS} -o dummy-hello.S - 2>&5
+    cat dummy-hello.s | ${AS_BIN} -o dummy-hello.S - 2>&5
     if test $? = 0; then
         _res_as_stdin="yes"
     else
