@@ -9826,7 +9826,7 @@ EOF
 fi
 
 
-MOZ_ENDER_LITE=0
+MOZ_ENDER_LITE=
 # Check whether --enable-ender-lite or --disable-ender-lite was given.
 if test "${enable_ender_lite+set}" = set; then
   enableval="$enable_ender_lite"
