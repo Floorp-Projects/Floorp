@@ -25,7 +25,9 @@
 #include "nsIFactory.h"
 #include "nsILocale.h"
 #include "nsILocaleFactory.h"
-
+#ifdef XP_PC
+#include "nsIWin32Locale.h"
+#endif
 
 class nsLocaleFactory : public nsILocaleFactory
 {
@@ -36,7 +38,9 @@ private:
   nsString**	fCatagoryList;
   nsILocale*	fSystemLocale;
   nsILocale*	fApplicationLocale;
-  
+#ifdef XP_PC
+  nsIWin32Locale*		fWin32LocaleInterface;
+#endif
 
 public:
 

@@ -541,8 +541,6 @@ win32locale_reverse_conversion_test(void)
 {
 	nsresult			result;
 	nsIWin32Locale*		win32Locale;
-	nsString*			locale, *xp_locale;
-	LCID				loc_id;
 
 	result = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID,
 									NULL,
@@ -557,6 +555,78 @@ win32locale_reverse_conversion_test(void)
 	win32Locale->Release();
 }
 
+void
+win32_test_special_locales(void)
+{
+	nsresult			result;
+	nsIWin32Locale*		win32Locale;
+	nsILocale*			xp_locale;
+	nsILocaleFactory*	xp_locale_factory;
+	nsString*			locale, *result_locale, *catagory;
+	LCID				sys_lcid, user_lcid;
+
+	result = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID,
+									NULL,
+									kIWin32LocaleIID,
+									(void**)&win32Locale);
+	NS_ASSERTION(win32Locale!=NULL,"nsLocaleTest: factory_create_interface failed.");
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
+
+	result = nsComponentManager::FindFactory(kLocaleFactoryCID,
+										(nsIFactory**)&xp_locale_factory);
+	NS_ASSERTION(xp_locale_factory!=NULL,"nsLocaleTest: factory_create_interface failed.");
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
+
+	catagory = new nsString(localeCatagoryList[0]);
+
+	//
+	// derive a system locale
+	//
+	result  = xp_locale_factory->GetSystemLocale(&xp_locale);
+	NS_ASSERTION(xp_locale!=NULL,"nsLocaleTest: factory_create_interface failed.");
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
+
+	sys_lcid = GetSystemDefaultLCID();
+	locale = new nsString();
+	result_locale = new nsString();
+
+	result = win32Locale->GetXPLocale(sys_lcid,locale);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
+	result = xp_locale->GetCatagory(catagory,result_locale);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
+
+	NS_ASSERTION(*locale==*result_locale,"nsLocaleTest: system locale test failed.");
+	delete locale;
+	delete result_locale;
+	xp_locale->Release();
+
+	//
+	// derive a system locale
+	//
+	result  = xp_locale_factory->GetApplicationLocale(&xp_locale);
+	NS_ASSERTION(xp_locale!=NULL,"nsLocaleTest: factory_create_interface failed.");
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
+
+	user_lcid = GetUserDefaultLCID();
+	locale = new nsString();
+	result_locale = new nsString();
+
+	result = win32Locale->GetXPLocale(user_lcid,locale);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
+	result = xp_locale->GetCatagory(catagory,result_locale);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
+
+	NS_ASSERTION(*locale==*result_locale,"nsLocaleTest: system locale test failed.");
+	delete locale;
+	delete result_locale;
+	xp_locale->Release();
+
+	delete catagory;
+	xp_locale_factory->Release();
+	win32Locale->Release();
+
+
+}
 	
 #endif XP_PC
 
@@ -836,7 +906,7 @@ main(int argc, char** argv)
 	win32locale_test();
 	win32locale_conversion_test();
 	win32locale_reverse_conversion_test();
-
+	win32_test_special_locales();
 #endif
 #ifdef XP_UNIX
 
