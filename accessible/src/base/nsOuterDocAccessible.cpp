@@ -42,11 +42,11 @@
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsOuterDocAccessible, nsBlockAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(nsOuterDocAccessible, nsAccessible)
 
 nsOuterDocAccessible::nsOuterDocAccessible(nsIDOMNode* aNode, 
-                                          nsIWeakReference* aShell):
-  nsBlockAccessible(aNode, aShell)
+                                           nsIWeakReference* aShell):
+  nsAccessibleWrap(aNode, aShell)
 {
   mAccChildCount = 1;
 }
@@ -89,7 +89,7 @@ NS_IMETHODIMP nsOuterDocAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y,
 
 NS_IMETHODIMP nsOuterDocAccessible::Init()
 {
-  nsresult rv = nsBlockAccessible::Init(); 
+  nsresult rv = nsAccessibleWrap::Init(); 
   
   // We're in the accessibility cache now
   // In these variable names, "outer" relates to the nsOuterDocAccessible

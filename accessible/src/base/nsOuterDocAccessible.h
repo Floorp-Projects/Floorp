@@ -39,12 +39,12 @@
 #ifndef _nsOuterDocAccessible_H_
 #define _nsOuterDocAccessible_H_
 
-#include "nsBaseWidgetAccessible.h"
+#include "nsAccessibleWrap.h"
 #include "nsIAccessible.h"
 
 class nsIWeakReference;
 
-class nsOuterDocAccessible : public nsBlockAccessible
+class nsOuterDocAccessible : public nsAccessibleWrap
 {
   NS_DECL_ISUPPORTS_INHERITED
 
