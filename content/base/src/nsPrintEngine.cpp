@@ -219,9 +219,9 @@ static const char * gPrintRangeStr[]       = {"kRangeAllPages", "kRangeSpecified
 
 #ifdef EXTENDED_DEBUG_PRINTING
 // Forward Declarations
-void DumpPrintObjectsListStart(char * aStr, nsVoidArray * aDocList);
-void DumpPrintObjectsTree(nsPrintObject * aPO, int aLevel= 0, FILE* aFD = nsnull);
-void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,nsIDeviceContext * aDC, int aLevel= 0, FILE * aFD = nsnull);
+static void DumpPrintObjectsListStart(const char * aStr, nsVoidArray * aDocList);
+static void DumpPrintObjectsTree(nsPrintObject * aPO, int aLevel= 0, FILE* aFD = nsnull);
+static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,nsIDeviceContext * aDC, int aLevel= 0, FILE * aFD = nsnull);
 
 #define DUMP_DOC_LIST(_title) DumpPrintObjectsListStart((_title), mPrt->mPrintDocList);
 #define DUMP_DOC_TREE DumpPrintObjectsTree(mPrt->mPrintObject);
@@ -546,14 +546,16 @@ nsresult nsPrintEngine::GetSeqFrameAndCountPages(nsIFrame*& aSeqFrame, PRInt32& 
 
 // Foward decl for Debug Helper Functions
 #ifdef EXTENDED_DEBUG_PRINTING
-int RemoveFilesInDir(const char * aDir);
-void GetDocTitleAndURL(nsPrintObject* aPO, char *& aDocStr, char *& aURLStr);
-void DumpPrintObjectsTree(nsPrintObject * aPO, int aLevel, FILE* aFD);
-void DumpPrintObjectsList(nsVoidArray * aDocList);
-void RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
-void DumpViews(nsIDocShell* aDocShell, FILE* out);
-void DumpLayoutData(char* aTitleStr, char* aURLStr, nsIPresContext* aPresContext, nsIDeviceContext * aDC, 
-                    nsIFrame * aRootFrame, nsIWebShell * aWebShell, FILE* aFD);
+static int RemoveFilesInDir(const char * aDir);
+static void GetDocTitleAndURL(nsPrintObject* aPO, char *& aDocStr, char *& aURLStr);
+static void DumpPrintObjectsTree(nsPrintObject * aPO, int aLevel, FILE* aFD);
+static void DumpPrintObjectsList(nsVoidArray * aDocList);
+static void RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
+static void DumpViews(nsIDocShell* aDocShell, FILE* out);
+static void DumpLayoutData(char* aTitleStr, char* aURLStr,
+                           nsIPresContext* aPresContext,
+                           nsIDeviceContext * aDC, nsIFrame * aRootFrame,
+                           nsIWebShell * aWebShell, FILE* aFD);
 #endif
 
 //---------------------------------------------------------------------------------
@@ -1196,7 +1198,8 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
   if (factory) {
     nsCOMPtr<nsIDeviceContextSpec> devspec;
     nsCOMPtr<nsIDeviceContext> dx;
-    nsresult rv = factory->CreateDeviceContextSpec(mWindow, mPrt->mPrintSettings, *getter_AddRefs(devspec), PR_TRUE);
+    rv = factory->CreateDeviceContextSpec(mWindow, mPrt->mPrintSettings,
+                                          *getter_AddRefs(devspec), PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       rv = mDeviceContext->GetDeviceContextFor(devspec, *getter_AddRefs(ppDC));
       if (NS_SUCCEEDED(rv)) {
@@ -1547,11 +1550,10 @@ nsPrintEngine::CheckForPrinters(nsIPrintOptions*  aPrintOptions,
       simpEnum->GetNext(getter_AddRefs(supps));
       PRUnichar* defPrinterName;
       aPrintSettings->GetPrinterName(&defPrinterName);
-      if (!defPrinterName || (defPrinterName && !*defPrinterName)) {
+      if (!defPrinterName || !*defPrinterName) {
         if (defPrinterName) nsMemory::Free(defPrinterName);
         nsCOMPtr<nsISupportsString> wStr = do_QueryInterface(supps);
         if (wStr) {
-          PRUnichar* defPrinterName;
           wStr->ToString(&defPrinterName);
           aPrintSettings->SetPrinterName(defPrinterName);
           nsMemory::Free(defPrinterName);
@@ -3317,8 +3319,6 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO, PRBool aDoSyncPrinting, PRBool& aDon
                 nscoord selectionHgt = endRect.y + endRect.height - startRect.y;
                 PRInt32 pageWidth, pageHeight;
                 mPrt->mPrintDocDC->GetDeviceSurfaceDimensions(pageWidth, pageHeight);
-                nsMargin margin(0,0,0,0);
-                mPrt->mPrintSettings->GetMarginInTwips(margin);
                 pageHeight -= margin.top + margin.bottom;
                 PRInt32 totalPages = PRInt32((float(selectionHgt) / float(pageHeight))+0.99);
                 pageSequence->SetTotalNumPages(totalPages);
@@ -4860,7 +4860,7 @@ static void DumpPrintObjectsList(nsVoidArray * aDocList)
 
   NS_ASSERTION(aDocList, "Pointer is null!");
 
-  char * types[] = {"DC", "FR", "IF", "FS"};
+  const char types[][3] = {"DC", "FR", "IF", "FS"};
   PR_PL(("Doc List\n***************************************************\n"));
   PR_PL(("T  P A H    PO    WebShell   Seq     Page      Root     Page#    Rect\n"));
   PRInt32 cnt = aDocList->Count();
@@ -4880,7 +4880,7 @@ static void DumpPrintObjectsList(nsVoidArray * aDocList)
     }
 
     PR_PL(("%s %d %d %d %p %p %p %p %p   %d   %d,%d,%d,%d\n", types[po->mFrameType],
-            po->IsPrintable(), po->mPrintAsIs, po->mHasBeenPrinted, po, po->mWebShell, po->mSeqFrame,
+            po->IsPrintable(), po->mPrintAsIs, po->mHasBeenPrinted, po, po->mWebShell.get(), po->mSeqFrame,
             po->mPageFrame, rootFrame, po->mPageNum, po->mRect.x, po->mRect.y, po->mRect.width, po->mRect.height));
   }
 }
@@ -4893,7 +4893,7 @@ static void DumpPrintObjectsTree(nsPrintObject * aPO, int aLevel, FILE* aFD)
   NS_ASSERTION(aPO, "Pointer is null!");
 
   FILE * fd = aFD?aFD:stdout;
-  char * types[] = {"DC", "FR", "IF", "FS"};
+  const char types[][3] = {"DC", "FR", "IF", "FS"};
   if (aLevel == 0) {
     fprintf(fd, "DocTree\n***************************************************\n");
     fprintf(fd, "T     PO    WebShell   Seq      Page     Page#    Rect\n");
@@ -4903,7 +4903,7 @@ static void DumpPrintObjectsTree(nsPrintObject * aPO, int aLevel, FILE* aFD)
     nsPrintObject* po = (nsPrintObject*)aPO->mKids.ElementAt(i);
     NS_ASSERTION(po, "nsPrintObject can't be null!");
     for (PRInt32 k=0;k<aLevel;k++) fprintf(fd, "  ");
-    fprintf(fd, "%s %p %p %p %p %d %d,%d,%d,%d\n", types[po->mFrameType], po, po->mWebShell, po->mSeqFrame,
+    fprintf(fd, "%s %p %p %p %p %d %d,%d,%d,%d\n", types[po->mFrameType], po, po->mWebShell.get(), po->mSeqFrame,
            po->mPageFrame, po->mPageNum, po->mRect.x, po->mRect.y, po->mRect.width, po->mRect.height);
   }
 }
@@ -4948,7 +4948,7 @@ static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,
   NS_ASSERTION(aPO, "Pointer is null!");
   NS_ASSERTION(aDC, "Pointer is null!");
 
-  char * types[] = {"DC", "FR", "IF", "FS"};
+  const char types[][3] = {"DC", "FR", "IF", "FS"};
   FILE * fd = nsnull;
   if (aLevel == 0) {
     fd = fopen("tree_layout.txt", "w");
@@ -4964,7 +4964,7 @@ static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,
       aPO->mPresShell->GetRootFrame(&rootFrame);
     }
     for (PRInt32 k=0;k<aLevel;k++) fprintf(fd, "  ");
-    fprintf(fd, "%s %p %p %p %p %d %d,%d,%d,%d\n", types[aPO->mFrameType], aPO, aPO->mWebShell, aPO->mSeqFrame,
+    fprintf(fd, "%s %p %p %p %p %d %d,%d,%d,%d\n", types[aPO->mFrameType], aPO, aPO->mWebShell.get(), aPO->mSeqFrame,
            aPO->mPageFrame, aPO->mPageNum, aPO->mRect.x, aPO->mRect.y, aPO->mRect.width, aPO->mRect.height);
     if (aPO->IsPrintable()) {
       char * docStr;
@@ -4989,7 +4989,7 @@ static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,
 }
 
 //-------------------------------------------------------------
-static void DumpPrintObjectsListStart(char * aStr, nsVoidArray * aDocList)
+static void DumpPrintObjectsListStart(const char * aStr, nsVoidArray * aDocList)
 {
   if (!kPrintingLogMod || kPrintingLogMod->level != DUMP_LAYOUT_LEVEL) return;
 
