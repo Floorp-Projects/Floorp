@@ -28,6 +28,7 @@
 #include "msgCore.h"
 #include "nsIFolder.h"
 #include "nsCOMPtr.h"
+#include "nsWeakReference.h"
 
 class nsIMsgFolderCache;
 
@@ -38,7 +39,9 @@ class nsIMsgFolderCache;
  * this particular implementation is not meant to be used directly.
  */
 
-class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer {
+class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer,
+                                        public nsSupportsWeakReference
+{
  public:
   nsMsgIncomingServer();
   virtual ~nsMsgIncomingServer();
@@ -54,8 +57,8 @@ private:
   PRBool m_serverBusy;
 
 protected:
-  char *getPrefName(const char *serverKey, const char *pref);
-  char *getDefaultPrefName(const char *pref);
+  void getPrefName(const char *serverKey, const char *pref, nsCString& fullPrefName);
+  void getDefaultPrefName(const char *pref, nsCString& fullPrefName);
 
   // these are private pref getters and setters for the password
   // field. Callers should be using Get/Set Password

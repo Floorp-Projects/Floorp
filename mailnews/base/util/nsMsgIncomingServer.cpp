@@ -69,7 +69,13 @@ nsMsgIncomingServer::~nsMsgIncomingServer()
     PR_FREEIF(m_serverKey)
 }
 
-NS_IMPL_ISUPPORTS1(nsMsgIncomingServer, nsIMsgIncomingServer)
+NS_IMPL_ADDREF(nsMsgIncomingServer);
+NS_IMPL_RELEASE(nsMsgIncomingServer);
+NS_INTERFACE_MAP_BEGIN(nsMsgIncomingServer)
+    NS_INTERFACE_MAP_ENTRY(nsIMsgIncomingServer)
+    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgIncomingServer)
+NS_INTERFACE_MAP_END
 
 NS_IMPL_GETSET(nsMsgIncomingServer, ServerBusy, PRBool, m_serverBusy)
 NS_IMPL_GETTER_STR(nsMsgIncomingServer::GetKey, m_serverKey)
@@ -208,19 +214,27 @@ nsMsgIncomingServer::CreateRootFolder()
   return rv;
 }
 
-char *
+void
 nsMsgIncomingServer::getPrefName(const char *serverKey,
-                                 const char *fullPrefName)
+                                 const char *prefName,
+                                 nsCString& fullPrefName)
 {
-  return PR_smprintf("mail.server.%s.%s", serverKey, fullPrefName);
+    // mail.server.<key>.<pref>
+    fullPrefName = "mail.server.";
+    fullPrefName.Append(serverKey);
+    fullPrefName.Append('.');
+    fullPrefName.Append(prefName);
 }
 
 // this will be slightly faster than the above, and allows
 // the "default" server preference root to be set in one place
-char *
-nsMsgIncomingServer::getDefaultPrefName(const char *fullPrefName)
+void
+nsMsgIncomingServer::getDefaultPrefName(const char *prefName,
+                                        nsCString& fullPrefName)
 {
-  return PR_smprintf("mail.server.default.%s", fullPrefName);
+    // mail.server.default.<pref>
+    fullPrefName = "mail.server.default.";
+    fullPrefName.Append(prefName);
 }
 
 
@@ -228,9 +242,9 @@ nsresult
 nsMsgIncomingServer::GetBoolValue(const char *prefname,
                                  PRBool *val)
 {
-  char *fullPrefName = getPrefName(m_serverKey, prefname);
+  nsCAutoString fullPrefName;
+  getPrefName(m_serverKey, prefname, fullPrefName);
   nsresult rv = m_prefs->GetBoolPref(fullPrefName, val);
-  PR_Free(fullPrefName);
   
   if (NS_FAILED(rv))
     rv = getDefaultBoolPref(prefname, val);
@@ -242,9 +256,9 @@ nsresult
 nsMsgIncomingServer::getDefaultBoolPref(const char *prefname,
                                         PRBool *val) {
   
-  char *fullPrefName = getDefaultPrefName(prefname);
+  nsCAutoString fullPrefName;
+  getDefaultPrefName(prefname, fullPrefName);
   nsresult rv = m_prefs->GetBoolPref(fullPrefName, val);
-  PR_Free(fullPrefName);
 
   if (NS_FAILED(rv)) {
     *val = PR_FALSE;
@@ -258,7 +272,8 @@ nsMsgIncomingServer::SetBoolValue(const char *prefname,
                                  PRBool val)
 {
   nsresult rv;
-  char *fullPrefName = getPrefName(m_serverKey, prefname);
+  nsCAutoString fullPrefName;
+  getPrefName(m_serverKey, prefname, fullPrefName);
 
   PRBool defaultValue;
   rv = getDefaultBoolPref(prefname, &defaultValue);
@@ -269,8 +284,6 @@ nsMsgIncomingServer::SetBoolValue(const char *prefname,
   else
     rv = m_prefs->SetBoolPref(fullPrefName, val);
   
-  PR_Free(fullPrefName);
-  
   return rv;
 }
 
@@ -278,9 +291,9 @@ nsresult
 nsMsgIncomingServer::GetIntValue(const char *prefname,
                                 PRInt32 *val)
 {
-  char *fullPrefName = getPrefName(m_serverKey, prefname);
+  nsCAutoString fullPrefName;
+  getPrefName(m_serverKey, prefname, fullPrefName);
   nsresult rv = m_prefs->GetIntPref(fullPrefName, val);
-  PR_Free(fullPrefName);
 
   if (NS_FAILED(rv))
     rv = getDefaultIntPref(prefname, val);
@@ -292,9 +305,9 @@ nsresult
 nsMsgIncomingServer::GetFileValue(const char* prefname,
                                   nsIFileSpec **spec)
 {
-  char *fullPrefName = getPrefName(m_serverKey, prefname);
+  nsCAutoString fullPrefName;
+  getPrefName(m_serverKey, prefname, fullPrefName);
   nsresult rv = m_prefs->GetFilePref(fullPrefName, spec);
-  PR_Free(fullPrefName);
 
   return rv;
 }
@@ -303,9 +316,9 @@ nsresult
 nsMsgIncomingServer::SetFileValue(const char* prefname,
                                     nsIFileSpec *spec)
 {
-  char *fullPrefName = getPrefName(m_serverKey, prefname);
+  nsCAutoString fullPrefName;
+  getPrefName(m_serverKey, prefname, fullPrefName);
   nsresult rv = m_prefs->SetFilePref(fullPrefName, spec, PR_FALSE);
-  PR_Free(fullPrefName);
 
   return rv;
 }
@@ -314,9 +327,9 @@ nsresult
 nsMsgIncomingServer::getDefaultIntPref(const char *prefname,
                                         PRInt32 *val) {
   
-  char *fullPrefName = getDefaultPrefName(prefname);
+  nsCAutoString fullPrefName;
+  getDefaultPrefName(prefname, fullPrefName);
   nsresult rv = m_prefs->GetIntPref(fullPrefName, val);
-  PR_Free(fullPrefName);
 
   if (NS_FAILED(rv)) {
     *val = 0;
@@ -331,7 +344,8 @@ nsMsgIncomingServer::SetIntValue(const char *prefname,
                                  PRInt32 val)
 {
   nsresult rv;
-  char *fullPrefName = getPrefName(m_serverKey, prefname);
+  nsCAutoString fullPrefName;
+  getPrefName(m_serverKey, prefname, fullPrefName);
   
   PRInt32 defaultVal;
   rv = getDefaultIntPref(prefname, &defaultVal);
@@ -341,8 +355,6 @@ nsMsgIncomingServer::SetIntValue(const char *prefname,
   else
     rv = m_prefs->SetIntPref(fullPrefName, val);
   
-  PR_Free(fullPrefName);
-  
   return rv;
 }
 
@@ -350,9 +362,9 @@ nsresult
 nsMsgIncomingServer::GetCharValue(const char *prefname,
                                  char  **val)
 {
-  char *fullPrefName = getPrefName(m_serverKey, prefname);
+  nsCAutoString fullPrefName;
+  getPrefName(m_serverKey, prefname, fullPrefName);
   nsresult rv = m_prefs->CopyCharPref(fullPrefName, val);
-  PR_Free(fullPrefName);
   
   if (NS_FAILED(rv))
     rv = getDefaultCharPref(prefname, val);
@@ -364,9 +376,9 @@ nsresult
 nsMsgIncomingServer::GetUnicharValue(const char *prefname,
                                      PRUnichar **val)
 {
-  char *fullPrefName = getPrefName(m_serverKey, prefname);
+  nsCAutoString fullPrefName;
+  getPrefName(m_serverKey, prefname, fullPrefName);
   nsresult rv = m_prefs->CopyUnicharPref(fullPrefName, val);
-  PR_Free(fullPrefName);
   
   if (NS_FAILED(rv))
     rv = getDefaultUnicharPref(prefname, val);
@@ -378,9 +390,9 @@ nsresult
 nsMsgIncomingServer::getDefaultCharPref(const char *prefname,
                                         char **val) {
   
-  char *fullPrefName = getDefaultPrefName(prefname);
+  nsCAutoString fullPrefName;
+  getDefaultPrefName(prefname, fullPrefName);
   nsresult rv = m_prefs->CopyCharPref(fullPrefName, val);
-  PR_Free(fullPrefName);
 
   if (NS_FAILED(rv)) {
     *val = nsnull;              // null is ok to return here
@@ -393,9 +405,9 @@ nsresult
 nsMsgIncomingServer::getDefaultUnicharPref(const char *prefname,
                                            PRUnichar **val) {
   
-  char *fullPrefName = getDefaultPrefName(prefname);
+  nsCAutoString fullPrefName;
+  getDefaultPrefName(prefname, fullPrefName);
   nsresult rv = m_prefs->CopyUnicharPref(fullPrefName, val);
-  PR_Free(fullPrefName);
 
   if (NS_FAILED(rv)) {
     *val = nsnull;              // null is ok to return here
@@ -409,7 +421,8 @@ nsMsgIncomingServer::SetCharValue(const char *prefname,
                                  const char * val)
 {
   nsresult rv;
-  char *fullPrefName = getPrefName(m_serverKey, prefname);
+  nsCAutoString fullPrefName;
+  getPrefName(m_serverKey, prefname, fullPrefName);
 
   if (!val) {
     m_prefs->ClearUserPref(fullPrefName);
@@ -426,7 +439,6 @@ nsMsgIncomingServer::SetCharValue(const char *prefname,
     rv = m_prefs->SetCharPref(fullPrefName, val);
   
   PR_FREEIF(defaultVal);
-  PR_smprintf_free(fullPrefName);
   
   return rv;
 }
@@ -436,7 +448,8 @@ nsMsgIncomingServer::SetUnicharValue(const char *prefname,
                                   const PRUnichar * val)
 {
   nsresult rv;
-  char *fullPrefName = getPrefName(m_serverKey, prefname);
+  nsCAutoString fullPrefName;
+  getPrefName(m_serverKey, prefname, fullPrefName);
 
   if (!val) {
     m_prefs->ClearUserPref(fullPrefName);
@@ -452,8 +465,6 @@ nsMsgIncomingServer::SetUnicharValue(const char *prefname,
     rv = m_prefs->SetUnicharPref(fullPrefName, val);
   
   PR_FREEIF(defaultVal);
-  
-  PR_smprintf_free(fullPrefName);
   
   return rv;
 }
