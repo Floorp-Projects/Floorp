@@ -28,27 +28,27 @@
 set errmsg = ""
 
 echo "Testing simple html to html ..."
-TestOutput -i text/html -o text/html -c OutTestData/simple.html OutTestData/simple.html
+TestOutput -i text/html -o text/html -f 0 -c OutTestData/simple.html OutTestData/simple.html
 if ($status != 0) then
   echo "Simple html to html failed.\n"
   set errmsg = ($errmsg "simple.html")
 endif
 
-echo "Testing simple copy cases ..."
+echo "Testing simple copy case ..."
 TestOutput -i text/html -o text/plain -f 0 -w 0 -c OutTestData/simplecopy.out OutTestData/simple.html
 if ($status != 0) then
   echo "Simple copy test failed.\n"
-  set errmsg = ($errmsg "simple.out")
+  set errmsg = ($errmsg "simplecopy.out")
 endif
 
 echo "Testing non-wrapped plaintext ..."
-TestOutput -i text/html -o text/plain -w 0 -c OutTestData/plainnowrap.out OutTestData/plain.html
+TestOutput -i text/html -o text/plain -f 0 -w 0 -c OutTestData/plainnowrap.out OutTestData/plain.html
 if ($status != 0) then
   echo "Non-wrapped plaintext test failed."
   set errmsg = ($errmsg "plainnowrap.out")
 endif
 
-echo "Testing wrapped plaintext ..."
+echo "Testing wrapped bug unformatted plaintext ..."
 TestOutput -i text/html -o text/plain -f 32 -w 50 -c OutTestData/plainwrap.out OutTestData/plain.html
 if ($status != 0) then
   echo "Wrapped plaintext test failed."
