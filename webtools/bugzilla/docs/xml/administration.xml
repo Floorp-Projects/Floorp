@@ -951,7 +951,7 @@ Support: ENTRY, DEFAULT/MANDATORY, CANEDIT
 
     <para>Revisions are normally released to fix security vulnerabilities
     and are distinguished by an increase in the third number. For example,
-    when 2.16.2 was released, it was a revision to 2.16.1.
+    when 2.16.6 was released, it was a revision to 2.16.5.
     </para>
 
     <para>Point releases are normally released when the Bugzilla team feels
@@ -960,12 +960,12 @@ Support: ENTRY, DEFAULT/MANDATORY, CANEDIT
     stabilization period and release candidates, however the use of 
     development versions or release candidates is beyond the scope of this
     document. Point releases can be distinguished by an increase in the
-    second number, or minor version. For example, 2.16.2 is a newer point
-    release than 2.14.5.
+    second number, or minor version. For example, 2.18.0 is a newer point
+    release than 2.16.5.
     </para>
 
     <para>The examples in this section are written as if you were updating
-    to version 2.16.2.  The procedures are the same regardless if you are
+    to version 2.18.1.  The procedures are the same regardless if you are
     updating to a new point release or a new revision.  However, the chance
     of running into trouble increases when upgrading to a new point release,
     escpecially if you've made local changes.
@@ -997,7 +997,7 @@ bash$ <command>cd /var/www/html/bugzilla</command>
 bash$ <command>cvs login</command>
 Logging in to :pserver:anonymous@cvs-mirror.mozilla.org:2401/cvsroot
 CVS password: <command>anonymous</command>
-bash$ <command>cvs -q update -r BUGZILLA-2_16_2 -dP</command>
+bash$ <command>cvs -q update -r BUGZILLA-2_18_1 -dP</command>
 P checksetup.pl
 P collectstats.pl
 P globals.pl
@@ -1033,19 +1033,19 @@ P template/en/default/list/quips.html.tmpl
 
       <programlisting>
 bash$ <command>cd /var/www/html</command>
-bash$ <command>wget ftp://ftp.mozilla.org/pub/webtools/bugzilla-2.16.2.tar.gz</command>
+bash$ <command>wget ftp://ftp.mozilla.org/pub/mozilla.org/webtools/bugzilla-2.18.1.tar.gz</command>
 <emphasis>Output omitted</emphasis>
-bash$ <command>tar xzvf bugzilla-2.16.2.tar.gz</command>
-bugzilla-2.16.2/
-bugzilla-2.16.2/.cvsignore
-bugzilla-2.16.2/1x1.gif
+bash$ <command>tar xzvf bugzilla-2.18.1.tar.gz</command>
+bugzilla-2.18.1/
+bugzilla-2.18.1/.cvsignore
+bugzilla-2.18.1/1x1.gif
 <emphasis>Output truncated</emphasis>
-bash$ <command>cd bugzilla-2.16.2</command>
+bash$ <command>cd bugzilla-2.18.1</command>
 bash$ <command>cp ../bugzilla/localconfig* .</command>
 bash$ <command>cp -r ../bugzilla/data .</command>
 bash$ <command>cd ..</command>
 bash$ <command>mv bugzilla bugzilla.old</command>
-bash$ <command>mv bugzilla-2.16.2 bugzilla</command>
+bash$ <command>mv bugzilla-2.18.1 bugzilla</command>
 bash$ <command>cd bugzilla</command>
 bash$ <command>./checksetup.pl</command>
 <emphasis>Output omitted</emphasis>
@@ -1086,10 +1086,10 @@ bash$ <command>./checksetup.pl</command>
 
       <programlisting>
 bash$ <command>cd /var/www/html/bugzilla</command>
-bash$ <command>wget ftp://ftp.mozilla.org/pub/webtools/bugzilla-2.16.1-to-2.16.2.diff.gz</command>
+bash$ <command>wget ftp://ftp.mozilla.org/pub/mozilla.org/webtools/bugzilla-2.18.0-to-2.18.1.diff.gz</command>
 <emphasis>Output omitted</emphasis>
-bash$ <command>gunzip bugzilla-2.16.1-to-2.16.2.diff.gz</command>
-bash$ <command>patch -p1 &lt; bugzilla-2.16.1-to-2.16.2.diff</command>
+bash$ <command>gunzip bugzilla-2.18.0-to-2.18.1.diff.gz</command>
+bash$ <command>patch -p1 &lt; bugzilla-2.18.0-to-2.18.1.diff</command>
 patching file checksetup.pl
 patching file collectstats.pl
 patching file globals.pl
