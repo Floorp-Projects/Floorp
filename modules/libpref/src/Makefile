@@ -61,7 +61,7 @@ CONFIG_FILES	+= \
 		  $(NULL)
 endif
 
-ifdef EDITOR
+ifdef MOZ_EDITOR
 CONFIG_FILES	+= \
 		  init/editor.js \
 		  $(NULL)
