@@ -304,15 +304,17 @@ InitGlobals(void)
 
   gSystemCodePage = ::WinQueryCp(HMQ_CURRENT);
 
+  nsresult res;
+
   if (!nsFontMetricsOS2::gGlobalFonts) {
-    nsresult res = nsFontMetricsOS2::InitializeGlobalFonts();
+    res = nsFontMetricsOS2::InitializeGlobalFonts();
     if (NS_FAILED(res)) {
       FreeGlobals();
       return res;
     }
   }
 
-  nsresult res = gPref->GetBoolPref("browser.display.substitute_vector_fonts",
+  res = gPref->GetBoolPref("browser.display.substitute_vector_fonts",
                                     &nsFontMetricsOS2::gSubstituteVectorFonts);
   NS_ASSERTION( NS_SUCCEEDED(res), "Could not get pref 'browser.display.substitute_vector_fonts'" );
 

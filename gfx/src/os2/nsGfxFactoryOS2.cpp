@@ -204,7 +204,7 @@ nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult
 {
   nsresult rv;
 
-  nsIScriptableRegion *inst;
+  nsIScriptableRegion *inst = NULL;
 
   if ( !aResult )
   {

@@ -537,7 +537,7 @@ nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
 
             if( pRawBitData )
             {
-              ULONG rc = GFX (::GpiQueryBitmapBits (MemPS, 0, bihMem.cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&bihDirect), GPI_ALTERROR);
+              LONG rc = GFX (::GpiQueryBitmapBits (MemPS, 0, bihMem.cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&bihDirect), GPI_ALTERROR);
 
               if( rc != GPI_ALTERROR )
               {
@@ -670,16 +670,16 @@ nsImageOS2::BuildTile (HPS hpsTile, PRUint8* pImageBits, PBITMAPINFO2 pBitmapInf
                        {mDecodedRect.XMost (), mDecodedRect.YMost ()} };         // SUR - ex
 
    // Scale up
-   aptl[0].x *= scale;
-   aptl[0].y *= scale;
-   aptl[1].x = (mDecodedRect.XMost() * scale) - 1;
-   aptl[1].y = (mDecodedRect.YMost() * scale) - 1;
+   aptl[0].x = (LONG)(aptl[0].x * scale);
+   aptl[0].y = (LONG)(aptl[0].y * scale);
+   aptl[1].x = (LONG)(mDecodedRect.XMost() * scale) - 1;
+   aptl[1].y = (LONG)(mDecodedRect.YMost() * scale) - 1;
    
    // Draw bitmap once into temporary PS
    GFX (::GpiDrawBits (hpsTile, (PBYTE)pImageBits, pBitmapInfo, 4, aptl, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
 
-   PRInt32 DestWidth  = mInfo->cx * scale;
-   PRInt32 DestHeight = mInfo->cy * scale;
+   PRInt32 DestWidth  = (PRInt32)(mInfo->cx * scale);
+   PRInt32 DestHeight = (PRInt32)(mInfo->cy * scale);
 
    // Copy bitmap horizontally, doubling each time
    if (DestWidth > 0) {
@@ -729,7 +729,6 @@ NS_IMETHODIMP nsImageOS2::DrawTile(nsIRenderingContext &aContext,
    // Get the scale - if greater than 1 then do slow tile which
    nsIDeviceContext *theDeviceContext;
    float scale;
-   PRBool doSlowTile = PR_FALSE;
    aContext.GetDeviceContext(theDeviceContext);
    theDeviceContext->GetCanonicalPixelScale(scale);
 
@@ -868,9 +867,9 @@ NS_IMETHODIMP nsImageOS2::DrawTile(nsIRenderingContext &aContext,
       nscoord ScaledTileWidth = PR_MAX(PRInt32(ImageWidth*scale), 1);
       nscoord ScaledTileHeight = PR_MAX(PRInt32(ImageHeight*scale), 1);
 
-      for (PRInt32 y = y0; y < y1; y += ScaledTileHeight + aPadY * scale)
+      for (PRInt32 y = y0; y < y1; y += (PRInt32)(ScaledTileHeight + aPadY * scale))
       {
-        for (PRInt32 x = x0; x < x1;  x += ScaledTileWidth + aPadX * scale)
+        for (PRInt32 x = x0; x < x1;  x += (PRInt32)(ScaledTileWidth + aPadX * scale))
         {
           Draw(aContext, aSurface,
                0, 0, PR_MIN(ValidRect.width, x1 - x), PR_MIN(ValidRect.height, y1 - y),

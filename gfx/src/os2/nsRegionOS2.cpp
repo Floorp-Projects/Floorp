@@ -76,7 +76,7 @@ HRGN nsRegionOS2::GetHRGN (PRUint32 DestHeight, HPS DestPS)
     const nsRect* pSrc;
     PRECTL pDest = pRects;
 
-    while (pSrc = ri.Next ())
+    while ((pSrc = ri.Next()))
     {
       pDest->xLeft    = pSrc->x;
       pDest->xRight   = pSrc->XMost ();

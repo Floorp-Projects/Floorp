@@ -378,8 +378,7 @@ nsresult nsOffscreenSurface::GetPixelFormat( nsPixelFormat *aFormat)
    // (prob'ly need to get the FOURCC stuff into the act for 16bpp?)
    //
    BITMAPINFOHEADER bih = { sizeof( BITMAPINFOHEADER), 0, 0, 0, 0 };
-   long rc = GFX (::GpiQueryBitmapInfoHeader (mBitmap, 
-                                              (PBITMAPINFOHEADER2)&bih), FALSE);
+   GFX (::GpiQueryBitmapInfoHeader (mBitmap, (PBITMAPINFOHEADER2)&bih), FALSE);
 
    switch( bih.cBitCount)
    {
@@ -481,8 +480,8 @@ nsresult nsOnscreenSurface::Lock( PRInt32 aX, PRInt32 aY,
    PRUint32 width, height;
    GetDimensions( &width, &height);
    POINTL pts[3] = { { 0, 0 }, { width, height }, { 0, 0 } };
-   long lHits = GFX (::GpiBitBlt (mProxySurface->GetPS (), mPS, 3, pts,
-                                  ROP_SRCCOPY, BBO_OR), GPI_ERROR);
+   GFX (::GpiBitBlt (mProxySurface->GetPS (), mPS, 3, pts,
+                     ROP_SRCCOPY, BBO_OR), GPI_ERROR);
 
    return mProxySurface->Lock( aX, aY, aWidth, aHeight,
                                aBits, aStride, aWidthBytes, aFlags);
@@ -496,8 +495,8 @@ nsresult nsOnscreenSurface::Unlock()
    PRUint32 width, height;
    GetDimensions( &width, &height);
    POINTL pts[3] = { { 0, 0 }, { width, height }, { 0, 0 } };
-   long lHits = GFX (::GpiBitBlt (mPS, mProxySurface->GetPS (), 3, pts,
-                                  ROP_SRCCOPY, BBO_OR), GPI_ERROR);
+   GFX (::GpiBitBlt (mPS, mProxySurface->GetPS (), 3, pts,
+                     ROP_SRCCOPY, BBO_OR), GPI_ERROR);
 
    return rc;
 }
