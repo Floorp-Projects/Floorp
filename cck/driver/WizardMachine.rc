@@ -321,7 +321,7 @@ BEGIN
         BLOCK "040904B0"
         BEGIN
             VALUE "CompanyName", "Netscape Communications Corporation\0"
-            VALUE "FileDescription", "CCK WIZARDMACHINE Application\0"
+            VALUE "FileDescription", "WIZARDMACHINE Application\0"
             VALUE "FileVersion", "6.2.0.0\0"
             VALUE "InternalName", "WIZARDMACHINE\0"
             VALUE "LegalCopyright", "Copyright (c) Netscape Communications, 2001\0"
