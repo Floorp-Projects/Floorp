@@ -179,6 +179,8 @@ public:
 
   nsFontGTK*  AddToLoadedFontsList(nsFontGTK* aFont);
   nsFontGTK*  FindNearestSize(nsFontStretch* aStretch, PRUint16 aSize);
+  nsFontGTK*  GetAASBBaseFont(nsFontStretch* aStretch, 
+                              nsFontCharSetInfo* aCharSet);
   nsFontGTK*  PickASizeAndLoad(nsFontStretch* aStretch,
                                nsFontCharSetInfo* aCharSet, 
                                PRUnichar aChar,
