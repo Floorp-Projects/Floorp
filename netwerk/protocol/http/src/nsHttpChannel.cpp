@@ -492,11 +492,11 @@ nsHttpChannel::SetupTransaction()
         // We need to send 'Pragma:no-cache' to inhibit proxy caching even if
         // no proxy is configured since we might be talking with a transparent
         // proxy, i.e. one that operates at the network level.  See bug #14772.
-        mRequestHead.SetHeader(nsHttp::Pragma, NS_LITERAL_CSTRING("no-cache"));
+        mRequestHead.SetHeader(nsHttp::Pragma, NS_LITERAL_CSTRING("no-cache"), PR_TRUE);
         // If we're configured to speak HTTP/1.1 then also send 'Cache-control:
         // no-cache'
         if (mRequestHead.Version() >= NS_HTTP_VERSION_1_1)
-            mRequestHead.SetHeader(nsHttp::Cache_Control, NS_LITERAL_CSTRING("no-cache"));
+            mRequestHead.SetHeader(nsHttp::Cache_Control, NS_LITERAL_CSTRING("no-cache"), PR_TRUE);
     }
     else if ((mLoadFlags & VALIDATE_ALWAYS) && (mCacheAccess & nsICache::ACCESS_READ)) {
         // We need to send 'Cache-Control: max-age=0' to force each cache along
@@ -505,9 +505,9 @@ nsHttpChannel::SetupTransaction()
         //
         // If we're configured to speak HTTP/1.0 then just send 'Pragma: no-cache'
         if (mRequestHead.Version() >= NS_HTTP_VERSION_1_1)
-            mRequestHead.SetHeader(nsHttp::Cache_Control, NS_LITERAL_CSTRING("max-age=0"));
+            mRequestHead.SetHeader(nsHttp::Cache_Control, NS_LITERAL_CSTRING("max-age=0"), PR_TRUE);
         else
-            mRequestHead.SetHeader(nsHttp::Pragma, NS_LITERAL_CSTRING("no-cache"));
+            mRequestHead.SetHeader(nsHttp::Pragma, NS_LITERAL_CSTRING("no-cache"), PR_TRUE);
     }
 
     return mTransaction->SetupRequest(&mRequestHead, mUploadStream, 
@@ -688,13 +688,13 @@ nsHttpChannel::ProcessNormal()
         mResponseHead->ContentType().Equals(NS_LITERAL_CSTRING(APPLICATION_GZIP2)) ||
         mResponseHead->ContentType().Equals(NS_LITERAL_CSTRING(APPLICATION_GZIP3)))) {
         // clear the Content-Encoding header
-        mResponseHead->SetHeader(nsHttp::Content_Encoding, NS_LITERAL_CSTRING("")); 
+        mResponseHead->ClearHeader(nsHttp::Content_Encoding);
     }
     else if (encoding && PL_strcasestr(encoding, "compress") && (
              mResponseHead->ContentType().Equals(NS_LITERAL_CSTRING(APPLICATION_COMPRESS)) ||
              mResponseHead->ContentType().Equals(NS_LITERAL_CSTRING(APPLICATION_COMPRESS2)))) {
         // clear the Content-Encoding header
-        mResponseHead->SetHeader(nsHttp::Content_Encoding, NS_LITERAL_CSTRING(""));
+        mResponseHead->ClearHeader(nsHttp::Content_Encoding);
     }
 
     // this must be called before firing OnStartRequest, since http clients,
@@ -1141,8 +1141,8 @@ nsHttpChannel::CheckCache()
     PRBool doValidation = PR_FALSE;
 
     // Be optimistic: assume that we won't need to do validation
-    mRequestHead.SetHeader(nsHttp::If_Modified_Since, NS_LITERAL_CSTRING(""));
-    mRequestHead.SetHeader(nsHttp::If_None_Match, NS_LITERAL_CSTRING(""));
+    mRequestHead.ClearHeader(nsHttp::If_Modified_Since);
+    mRequestHead.ClearHeader(nsHttp::If_None_Match);
 
     // If the LOAD_FROM_CACHE flag is set, any cached data can simply be used.
     if (mLoadFlags & LOAD_FROM_CACHE) {
@@ -2511,7 +2511,7 @@ nsHttpChannel::SetReferrer(nsIURI *referrer)
 
     // clear existing referrer, if any
     mReferrer = nsnull;
-    mRequestHead.SetHeader(nsHttp::Referer, NS_LITERAL_CSTRING(""));
+    mRequestHead.ClearHeader(nsHttp::Referer);
 
     if (!referrer)
         return NS_OK;
@@ -2656,12 +2656,14 @@ nsHttpChannel::GetRequestHeader(const nsACString &header, nsACString &value)
 }
 
 NS_IMETHODIMP
-nsHttpChannel::SetRequestHeader(const nsACString &header, const nsACString &value)
+nsHttpChannel::SetRequestHeader(const nsACString &header,
+                                const nsACString &value,
+                                PRBool merge)
 {
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
 
-    LOG(("nsHttpChannel::SetRequestHeader [this=%x header=%s value=%s]\n",
-        this, PromiseFlatCString(header).get(), PromiseFlatCString(value).get()));
+    LOG(("nsHttpChannel::SetRequestHeader [this=%x header=\"%s\" value=\"%s\" merge=%u]\n",
+        this, PromiseFlatCString(header).get(), PromiseFlatCString(value).get(), merge));
 
     nsHttpAtom atom = nsHttp::ResolveAtom(header);
     if (!atom) {
@@ -2669,7 +2671,7 @@ nsHttpChannel::SetRequestHeader(const nsACString &header, const nsACString &valu
         return NS_ERROR_NOT_AVAILABLE;
     }
 
-    return mRequestHead.SetHeader(atom, value);
+    return mRequestHead.SetHeader(atom, value, merge);
 }
 
 NS_IMETHODIMP
@@ -2766,10 +2768,12 @@ nsHttpChannel::GetResponseHeader(const nsACString &header, nsACString &value)
 }
 
 NS_IMETHODIMP
-nsHttpChannel::SetResponseHeader(const nsACString &header, const nsACString &value)
+nsHttpChannel::SetResponseHeader(const nsACString &header,
+                                 const nsACString &value,
+                                 PRBool merge)
 {
-    LOG(("nsHttpChannel::SetResponseHeader [this=%x header=\"%s\" value=\"%s\"]\n",
-        this, PromiseFlatCString(header).get(), PromiseFlatCString(value).get()));
+    LOG(("nsHttpChannel::SetResponseHeader [this=%x header=\"%s\" value=\"%s\" merge=%u]\n",
+        this, PromiseFlatCString(header).get(), PromiseFlatCString(value).get(), merge));
 
     if (!mResponseHead)
         return NS_ERROR_NOT_AVAILABLE;
@@ -2785,7 +2789,7 @@ nsHttpChannel::SetResponseHeader(const nsACString &header, const nsACString &val
         atom == nsHttp::Transfer_Encoding)
         return NS_ERROR_ILLEGAL_VALUE;
 
-    nsresult rv = mResponseHead->SetHeader(atom, value);
+    nsresult rv = mResponseHead->SetHeader(atom, value, merge);
 
     // XXX temporary hack until http supports some form of a header change observer
     if ((atom == nsHttp::Set_Cookie) && NS_SUCCEEDED(rv))

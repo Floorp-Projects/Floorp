@@ -471,7 +471,8 @@ nsresult StartLoadingURL(const char* aUrlString)
         if (pHTTPCon) {
             // Setting a sample header.
             rv = pHTTPCon->SetRequestHeader(NS_LITERAL_CSTRING("sample-header"),
-                                            NS_LITERAL_CSTRING("Sample-Value"));
+                                            NS_LITERAL_CSTRING("Sample-Value"),
+                                            PR_FALSE);
             if (NS_FAILED(rv)) return rv;
         }            
         InputTestConsumer* listener;

@@ -457,7 +457,7 @@ nsViewSourceChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     if (mHttpChannel) {
       // we don't want view-source following Refresh: headers, so clear it
       mHttpChannel->SetResponseHeader(NS_LITERAL_CSTRING("Refresh"),
-                                      NS_LITERAL_CSTRING(""));
+                                      NS_LITERAL_CSTRING(""), PR_FALSE);
     }
     return mListener->OnStartRequest(NS_STATIC_CAST(nsIViewSourceChannel*,
                                                     this),

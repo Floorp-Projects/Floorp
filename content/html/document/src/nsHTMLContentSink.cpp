@@ -5319,7 +5319,8 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
         (void)aHeader->GetUnicode(&header);
         (void)httpChannel->SetResponseHeader(
                        NS_ConvertUCS2toUTF8(header),
-                       NS_ConvertUCS2toUTF8(aValue));
+                       NS_ConvertUCS2toUTF8(aValue),
+                       PR_TRUE);
       }
     }
   }
