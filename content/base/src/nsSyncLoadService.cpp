@@ -542,10 +542,6 @@ nsSyncLoadService::LoadLocalXBLDocument(nsIChannel* aChannel,
     nsCOMPtr<nsIDocument> doc = do_CreateInstance(kXMLDocumentCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Do this after making sure the |channel->Open| succeeded (which it
-    // won't if the file doesn't exist) so that we don't have to go
-    // through the work of breaking the circular references between
-    // content sink, script loader, and document.
     nsCOMPtr<nsIXMLContentSink> xblSink;
     rv = NS_NewXBLContentSink(getter_AddRefs(xblSink), doc, docURI, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);

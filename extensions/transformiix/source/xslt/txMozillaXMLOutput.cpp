@@ -53,7 +53,6 @@
 #include "nsIRefreshURI.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsITextContent.h"
-#include "nsIDocumentTransformer.h"
 #include "nsIXMLContent.h"
 #include "nsContentCID.h"
 #include "nsNetUtil.h"
@@ -93,7 +92,7 @@ txMozillaXMLOutput::txMozillaXMLOutput(const String& aRootName,
     mOutputFormat.merge(*aFormat);
     mOutputFormat.setFromDefaults();
 
-    mObserver = do_GetWeakReference(aObserver);
+    mObserver = aObserver;
 
     createResultDocument(aRootName, aRootNsID, aSourceDocument, aResultDocument);
 }
@@ -698,9 +697,8 @@ txMozillaXMLOutput::createResultDocument(const String& aName, PRInt32 aNsID,
     // Set up script loader of the result document.
     nsCOMPtr<nsIScriptLoader> loader;
     doc->GetScriptLoader(getter_AddRefs(loader));
-    nsCOMPtr<nsITransformObserver> observer = do_QueryReferent(mObserver);
     if (loader) {
-        if (observer) {
+        if (mObserver) {
             loader->AddObserver(this);
         }
         else {
@@ -710,8 +708,8 @@ txMozillaXMLOutput::createResultDocument(const String& aName, PRInt32 aNsID,
     }
 
     // Notify the contentsink that the document is created
-    if (observer) {
-        observer->OnDocumentCreated(mDocument);
+    if (mObserver) {
+        mObserver->OnDocumentCreated(mDocument);
     }
 
     // Add a doc-type if requested
@@ -783,8 +781,7 @@ txMozillaXMLOutput::SignalTransformEnd()
         return;
     }
 
-    nsCOMPtr<nsITransformObserver> observer = do_QueryReferent(mObserver);
-    if (!observer) {
+    if (!mObserver) {
         return;
     }
 
@@ -796,8 +793,6 @@ txMozillaXMLOutput::SignalTransformEnd()
     // we remove ourselfs from the scriptloader
     nsCOMPtr<nsIScriptLoaderObserver> kungFuDeathGrip(this);
 
-    mObserver = nsnull;
-
     // XXX Need a better way to determine transform success/failure
     if (mDocument) {
         nsCOMPtr<nsIScriptLoader> loader;
@@ -807,10 +802,10 @@ txMozillaXMLOutput::SignalTransformEnd()
             loader->RemoveObserver(this);
         }
 
-        observer->OnTransformDone(NS_OK, mDocument);
+        mObserver->OnTransformDone(NS_OK, mDocument);
     }
     else {
         // XXX Need better error message and code.
-        observer->OnTransformDone(NS_ERROR_FAILURE, nsnull);
+        mObserver->OnTransformDone(NS_ERROR_FAILURE, nsnull);
     }
 }

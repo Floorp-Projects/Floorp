@@ -44,7 +44,6 @@
 #include "nsIDocumentTransformer.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
-#include "nsWeakPtr.h"
 
 class nsTransformMediator : public nsITransformMediator {
 public:
@@ -73,7 +72,7 @@ protected:
   nsCOMPtr<nsIDOMNode> mSourceDOM;
   nsCOMPtr<nsIDOMNode> mStyleDOM;
   nsCOMPtr<nsIDOMDocument> mResultDoc;
-  nsWeakPtr mObserver;
+  nsCOMPtr<nsITransformObserver> mObserver;
 };
 
 #endif // nsTransformMediator_h__

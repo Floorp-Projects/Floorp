@@ -120,6 +120,57 @@ static const char* kLoadAsData = "loadAsData";
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 
+class nsScriptLoaderObserverProxy : public nsIScriptLoaderObserver
+{
+public:
+  nsScriptLoaderObserverProxy(nsIScriptLoaderObserver* aInner)
+    : mInner(do_GetWeakReference(aInner))
+  {
+  }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISCRIPTLOADEROBSERVER
+
+  nsWeakPtr mInner;
+};
+
+NS_IMPL_ISUPPORTS1(nsScriptLoaderObserverProxy, nsIScriptLoaderObserver);
+
+NS_IMETHODIMP
+nsScriptLoaderObserverProxy::ScriptAvailable(nsresult aResult,
+                                             nsIDOMHTMLScriptElement *aElement,
+                                             PRBool aIsInline,
+                                             PRBool aWasPending,
+                                             nsIURI *aURI,
+                                             PRInt32 aLineNo,
+                                             const nsAString & aScript)
+{
+  nsCOMPtr<nsIScriptLoaderObserver> inner = do_QueryReferent(mInner);
+
+  if (inner) {
+    return inner->ScriptAvailable(aResult, aElement, aIsInline, aWasPending,
+                                  aURI, aLineNo, aScript);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptLoaderObserverProxy::ScriptEvaluated(nsresult aResult,
+                                             nsIDOMHTMLScriptElement *aElement,
+                                             PRBool aIsInline,
+                                             PRBool aWasPending)
+{
+  nsCOMPtr<nsIScriptLoaderObserver> inner = do_QueryReferent(mInner);
+
+  if (inner) {
+    return inner->ScriptEvaluated(aResult, aElement, aIsInline, aWasPending);
+  }
+
+  return NS_OK;
+}
+
+
 // XXX Open Issues:
 // 1) what's not allowed - We need to figure out which HTML tags
 //    (prefixed with a HTML namespace qualifier) are explicitly not
@@ -145,6 +196,8 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  
+  nsCOMPtr<nsIXMLContentSink> kungFuDeathGrip = it;
   nsresult rv = it->Init(aDoc, aURL, aWebShell, aChannel);
   if (NS_OK != rv) {
     delete it;
@@ -223,11 +276,16 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
   if (!mWebShell) {
     mPrettyPrintXML = PR_FALSE;
   }
+  
+  // use this to avoid a circular reference sink->document->scriptloader->sink
+  nsCOMPtr<nsIScriptLoaderObserver> proxy =
+      new nsScriptLoaderObserverProxy(this);
+  NS_ENSURE_TRUE(proxy, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsIScriptLoader> loader;
   nsresult rv = mDocument->GetScriptLoader(getter_AddRefs(loader));
   NS_ENSURE_SUCCESS(rv, rv);
-  loader->AddObserver(this);
+  loader->AddObserver(proxy);
 
   mState = eXMLContentSinkState_InProlog;
   mDocElement = nsnull;
@@ -379,11 +437,15 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   MaybePrettyPrint();
 
   if (mXSLTransformMediator) {
-    rv = SetupTransformMediator();
+    nsCOMPtr<nsIDOMDocument> currentDOMDoc(do_QueryInterface(mDocument));
+    mXSLTransformMediator->SetSourceContentModel(currentDOMDoc);
+    mXSLTransformMediator->SetTransformObserver(this);
+    // Since the mediator now holds a reference to us we drop our reference
+    // to it to avoid owning cycles
+    mXSLTransformMediator = nsnull;
   }
-
-  // Kick off layout for non-XSLT transformed documents.
-  if (!mXSLTransformMediator || NS_FAILED(rv)) {
+  else {
+    // Kick off layout for non-XSLT transformed documents.
     nsCOMPtr<nsIScriptLoader> loader;
     mDocument->GetScriptLoader(getter_AddRefs(loader));
     if (loader) {
@@ -444,9 +506,6 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
   NS_ASSERTION(NS_FAILED(aResult) || aResultDocument,
                "Don't notify about transform success without a document.");
 
-  // Reset the observer on the transform mediator
-  mXSLTransformMediator->SetTransformObserver(nsnull);
-
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
   nsCOMPtr<nsIContentViewer> contentViewer;
   docShell->GetContentViewer(getter_AddRefs(contentViewer));
@@ -504,23 +563,6 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
   return NS_OK;
 }
 
-
-// Provide the transform mediator with the source document's content
-// model and the output document, and register the XML content sink
-// as the transform observer.  The transform mediator will call
-// the nsIObserver::Observe() method on the transform observer once
-// the transform is completed.  The nsISupports pointer to the Observe
-// method will be an nsIDOMElement pointer to the root node of the output
-// content model.
-nsresult
-nsXMLContentSink::SetupTransformMediator()
-{
-  nsCOMPtr<nsIDOMDocument> currentDOMDoc(do_QueryInterface(mDocument));
-  mXSLTransformMediator->SetSourceContentModel(currentDOMDoc);
-  mXSLTransformMediator->SetTransformObserver(this);
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsXMLContentSink::WillInterrupt(void)

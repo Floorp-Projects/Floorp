@@ -179,14 +179,13 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
 }
 
 nsXMLDocument::nsXMLDocument() 
-  : mCountCatalogSheets(0), mParser(nsnull),
-    mCrossSiteAccessEnabled(PR_FALSE), mXMLDeclarationBits(0)
+  : mCountCatalogSheets(0), mCrossSiteAccessEnabled(PR_FALSE),
+    mLoadedAsData(PR_FALSE), mXMLDeclarationBits(0)
 {
 }
 
 nsXMLDocument::~nsXMLDocument()
 {
-  NS_IF_RELEASE(mParser);  
   if (mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nsnull);
   }
@@ -452,6 +451,10 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
   } else if (nsCRT::strcmp("loadAsInteractiveData", aCommand) == 0) {
     aCommand = kLoadAsData; // XBL, for example, needs scripts and styles
   }
+  
+  if (nsCRT::strcmp(aCommand, kLoadAsData) == 0) {
+    mLoadedAsData = PR_TRUE;
+  }
 
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
                                               aChannel, aLoadGroup,
@@ -485,53 +488,43 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 
   static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
-  rv = CallCreateInstance(kCParserCID, &mParser);
-  if (NS_FAILED(rv))  return rv;
+  nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIXMLContentSink> sink;
     
-  nsCOMPtr<nsIDocShell> docShell;
-  if(aContainer)
-  {
-    docShell = do_QueryInterface(aContainer, &rv);
-    if(NS_FAILED(rv) || !(docShell))  return rv; 
-
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
-    if (aSink)
-      sink = do_QueryInterface(aSink);
-    else
-      rv = NS_NewXMLContentSink(getter_AddRefs(sink), this, aUrl, webShell, aChannel);
+  if (aSink) {
+    sink = do_QueryInterface(aSink);
   }
   else {
-    if (aSink)
-      sink = do_QueryInterface(aSink);
-    else
-      rv = NS_NewXMLContentSink(getter_AddRefs(sink), this, aUrl, nsnull, aChannel);
-  }
-
-  if (NS_SUCCEEDED(rv)) {      
-    // Set the parser as the stream listener for the document loader...
-    rv = CallQueryInterface(mParser, aDocListener);
-
-    if (NS_SUCCEEDED(rv)) {
-      SetDocumentCharacterSet(charset);
-      mParser->SetDocumentCharset(charset, charsetSource);
-      mParser->SetCommand(aCommand);
-      mParser->SetContentSink(sink);
-      mParser->Parse(aUrl, nsnull, PR_FALSE, (void *)this);
+    // This is silly, aContainer should be an nsIWebShell
+    nsCOMPtr<nsIWebShell> webShell;
+    if (aContainer) {
+      webShell = do_QueryInterface(aContainer);
+      NS_ENSURE_TRUE(webShell, NS_ERROR_FAILURE);
     }
+    rv = NS_NewXMLContentSink(getter_AddRefs(sink), this, aUrl, webShell,
+                              aChannel);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return rv;
+  // Set the parser as the stream listener for the document loader...
+  rv = CallQueryInterface(parser, aDocListener);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  SetDocumentCharacterSet(charset);
+  parser->SetDocumentCharset(charset, charsetSource);
+  parser->SetCommand(aCommand);
+  parser->SetContentSink(sink);
+  parser->Parse(aUrl, nsnull, PR_FALSE, (void *)this);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsXMLDocument::EndLoad()
 {
-  nsAutoString cmd;
-  if (mParser) mParser->GetCommand(cmd);
-  NS_IF_RELEASE(mParser);
-  if (cmd.EqualsWithConversion(kLoadAsData)) {
+  if (mLoadedAsData) {
     // Generate a document load event for the case when an XML document was loaded
     // as pure data without any presentation attached to it.
     nsEventStatus status = nsEventStatus_eIgnore;
