@@ -478,7 +478,13 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
       if (commandDispatcher) {
         commandDispatcher->SetActive(PR_TRUE);
-        commandDispatcher->SetSuppressFocus(PR_FALSE); // Unsuppress and let the command dispatcher listen again.
+        
+        PRBool isSuppressed;
+        commandDispatcher->GetSuppressFocus(&isSuppressed);
+        while(isSuppressed){
+          commandDispatcher->SetSuppressFocus(PR_FALSE); // Unsuppress and let the command dispatcher listen again.
+          commandDispatcher->GetSuppressFocus(&isSuppressed);
+        }
         commandDispatcher->SetSuppressFocusScroll(PR_FALSE);
       }  
     }
