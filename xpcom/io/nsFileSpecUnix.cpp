@@ -69,6 +69,7 @@
 #if defined(__QNX__)
 #include <unix.h>	/* for realpath */
 #define f_bavail	f_bfree
+extern "C" int truncate(const char *, off_t);
 #endif
 
 #if defined(SUNOS4)
