@@ -886,8 +886,11 @@ nsEventStateManager :: GetSelection ( nsIFrame* inFrame, nsIPresContext* inPresC
         rv = inPresContext->GetShell(getter_AddRefs(shell));
 
         if (NS_SUCCEEDED(rv) && shell)
-          rv = shell->GetFrameSelection(outSelection);
+          rv = shell->GetFrameSelection(getter_AddRefs(frameSel));
       }
+      
+      *outSelection = frameSel.get();
+      NS_IF_ADDREF(*outSelection);
     }
   }
 
