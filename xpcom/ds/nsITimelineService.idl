@@ -106,6 +106,8 @@ interface nsITimelineService : nsISupports
     void stopTimer(in string timerName);
 
     void markTimer(in string timerName);
+
+    void resetTimer(in string timerName);
 };
 
 %{C++
@@ -124,6 +126,7 @@ interface nsITimelineService : nsISupports
 PR_EXTERN(nsresult) NS_TimelineMark(const char *text, ...);
 PR_EXTERN(nsresult) NS_TimelineStartTimer(const char *timerName);
 PR_EXTERN(nsresult) NS_TimelineStopTimer(const char *timerName);
+PR_EXTERN(nsresult) NS_TimelineResetTimer(const char *timerName);
 PR_EXTERN(nsresult) NS_TimelineMarkTimer(const char *timerName, const char *str=nsnull);
 PR_EXTERN(nsresult) NS_TimelineIndent();
 PR_EXTERN(nsresult) NS_TimelineOutdent();
@@ -143,6 +146,7 @@ PR_EXTERN(nsresult) NS_TimelineLeave(const char *text);
 #define NS_TIMELINE_START_TIMER(timerName) NS_TimelineStartTimer(timerName)
 #define NS_TIMELINE_STOP_TIMER(timerName) NS_TimelineStopTimer(timerName)
 #define NS_TIMELINE_MARK_TIMER(timerName) NS_TimelineMarkTimer(timerName)
+#define NS_TIMELINE_RESET_TIMER(timerName) NS_TimelineResetTimer(timerName)
 #define NS_TIMELINE_MARK_TIMER1(timerName, str) NS_TimelineMarkTimer(timerName, str)
 
 /*
@@ -194,6 +198,7 @@ PR_EXTERN(nsresult) NS_TimelineLeave(const char *text);
 #define NS_TIMELINE_START_TIMER(timerName)
 #define NS_TIMELINE_STOP_TIMER(timerName)
 #define NS_TIMELINE_MARK_TIMER(timerName)
+#define NS_TIMELINE_RESET_TIMER(timerName)
 #define NS_TIMELINE_MARK_TIMER1(timerName, str)
 #define NS_TIMELINE_ENTER(text)
 #define NS_TIMELINE_LEAVE(text)
