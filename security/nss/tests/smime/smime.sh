@@ -260,7 +260,7 @@ fi
 if [ $? -ne 0 ]; then
    CMSFAILED=${CMSFAILED-"Create Encrypted-Data"}
 fi
-echo "cmsutil -D -i alice.enc -d ${BOBDIR} -e alicehello.env -p nss"
+echo "cmsutil -D -i alice.enc -d ${BOBDIR} -e alicehello.env -p nss -o alice.data2"
 cmsutil -D -i alice.enc -d ${BOBDIR} -e alicehello.env -p nss -o alice.data2
 diff alice.txt alice.data2
 if [ $? -ne 0 ]; then
