@@ -2528,7 +2528,15 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
       }
 
    //XXX Wrong, but needed for now. See bug 31818.
-   channel->SetOriginalURI(aReferrerURI ? aReferrerURI : aURI);
+   static const char kJavaScriptScheme[] = "javascript";
+   nsXPIDLCString scheme;
+   aURI->GetScheme(getter_Copies(scheme));
+   if (0 == PL_strncmp(NS_STATIC_CAST(const char*, scheme), kJavaScriptScheme, sizeof(kJavaScriptScheme) - 1)) {
+      channel->SetOriginalURI(aReferrerURI ? aReferrerURI : aURI);
+   }
+   else {
+      channel->SetOriginalURI(aURI);
+   }
    
    // Mark the channel as being a document URI...
    nsLoadFlags loadAttribs = 0;
