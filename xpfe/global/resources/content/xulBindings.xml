@@ -627,7 +627,7 @@
 
   <binding id="iframe">
     <interface>
-      <property name="iframe"
+      <property name="docShell"
                 readonly="true"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsIIFrameBoxObject).docShell"/>
     </interface>
