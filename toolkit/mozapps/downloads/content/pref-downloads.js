@@ -1,4 +1,4 @@
-# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 # 
 # The contents of this file are subject to the Mozilla Public License Version
@@ -20,6 +20,7 @@
 # 
 # Contributor(s):
 #   Ben Goodger <ben@bengoodger.com>
+#   Dan Mosedale <dmose@mozilla.org>
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -293,7 +294,21 @@ function showFolder()
     break;
   }
 
-  folder.reveal();
+  try {
+    folder.reveal();
+  } catch (ex) {
+    // if nsILocalFile::Reveal failed (ie it currently just returns an
+    // error on unix), send the directory to the system file: handler
+
+    var uri = Components.classes["@mozilla.org/network/standard-url;1"]
+      .createInstance(Components.interfaces.nsIURI);
+    uri.spec = "file:///" + folder.path;
+
+    var protocolSvc = Components.classes
+      ["@mozilla.org/uriloader/external-protocol-service;1"]
+      .getService(Components.interfaces.nsIExternalProtocolService);
+    protocolSvc.loadUrl(uri);
+  }
 }
 
 function getSpecialFolderKey(aFolderType) 
