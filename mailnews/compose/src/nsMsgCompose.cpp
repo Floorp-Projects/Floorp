@@ -156,15 +156,8 @@ TranslateLineEndings(nsString &aString)
   // of this 
   if (aString.FindChar(CR) < 0)
     return NS_OK;
-  
-  transBuf = aString.ToNewUnicode();
-  if (transBuf)
-  {
-    DoLineEndingConJobUnicode(transBuf, aString.Length());
-    aString.Assign(transBuf);
-    PR_FREEIF(transBuf);
-  }
 
+  DoLineEndingConJobUnicode(aString);
   return NS_OK;
 }
 
@@ -219,12 +212,13 @@ GetNodeLocation(nsIDOMNode *inChild, nsCOMPtr<nsIDOMNode> *outParent, PRInt32 *o
   return result;
 }
 
-nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString aPrefix, nsString aBuf, 
-                                                   nsString aSignature, PRBool aQuoted, PRBool aHTMLEditor)
+nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString& aPrefix, nsString& aBuf, 
+                                                   nsString& aSignature, PRBool aQuoted, PRBool aHTMLEditor)
+
 {
   // First, get the nsIEditor interface for future use
   nsCOMPtr<nsIEditor> editor;
-  nsIDOMNode          *nodeInserted = nsnull;
+  nsCOMPtr<nsIDOMNode> nodeInserted;
 
   aEditorShell->GetEditor(getter_AddRefs(editor));
 
@@ -253,7 +247,7 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
 
     if (!aBuf.IsEmpty())
     {
-      aEditorShell->InsertAsQuotation(aBuf.GetUnicode(), &nodeInserted);
+      aEditorShell->InsertAsQuotation(aBuf.GetUnicode(), getter_AddRefs(nodeInserted));
     }
 
     if (!aSignature.IsEmpty())
@@ -1286,8 +1280,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIChannel * /* aChan
                               PRUint32 sourceOffset, PRUint32 count)
 {
 	nsresult rv = NS_OK;
-	if (!inStr)
-		return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG(inStr);
 
 	char *newBuf = (char *)PR_Malloc(count + 1);
 	if (!newBuf)
@@ -1349,8 +1342,6 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
   nsresult    rv;
 
   mQuotingToFollow = PR_FALSE;
-
-  nsAutoString    tmpURI(originalMsgURI);
   
   // Create a mime parser (nsIStreamConverter)!
   rv = nsComponentManager::CreateInstance(kMsgQuoteCID, 
@@ -1901,9 +1892,9 @@ nsMsgCompose::BuildBodyMessageAndSignature()
   if (m_editor)
   {
   	if (bod)
-    	rv = ConvertAndLoadComposeWindow(m_editor, "", bod, tSignature, PR_FALSE, m_composeHTML);
+    	rv = ConvertAndLoadComposeWindow(m_editor, nsAutoString(""), nsString(bod), tSignature, PR_FALSE, m_composeHTML);
     else
-    	rv = ConvertAndLoadComposeWindow(m_editor, "", "", tSignature, PR_FALSE, m_composeHTML);
+    	rv = ConvertAndLoadComposeWindow(m_editor, nsAutoString(""), nsAutoString(""), tSignature, PR_FALSE, m_composeHTML);
   }
 
   PR_FREEIF(bod);

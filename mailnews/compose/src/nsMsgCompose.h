@@ -55,8 +55,8 @@ class nsMsgCompose : public nsIMsgCompose
 	NS_DECL_NSIMSGCOMPOSE
 
   MSG_ComposeType				        GetMessageType();
-  nsresult                      ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString aPrefix, nsString aBuf, 
-                                                            nsString aSignature, PRBool aQuoted, PRBool aHTMLEditor);
+  nsresult                      ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString& aPrefix, nsString& aBuf, 
+                                                            nsString& aSignature, PRBool aQuoted, PRBool aHTMLEditor);
 
  // Deal with quoting issues...
 	nsresult                      QuoteOriginalMessage(const PRUnichar * originalMsgURI, PRInt32 what); // New template
