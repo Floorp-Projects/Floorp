@@ -71,6 +71,8 @@
 
   function setDisables()
   {
+    var imageBehavior = document.getElementById("networkImageBehaviour");
+
     // if mailnews is installed then we will have networkImageDisableImagesInMailNews checkbox
     var networkImageDisableImagesInMailNews = document.getElementById("networkImageDisableImagesInMailNews");
     if (networkImageDisableImagesInMailNews)
