@@ -16,10 +16,11 @@
  * Reserved.
  */
 //
-//	NSPR.Prefix
+//	zlib.Prefix
 //
-// Global prefix file for the debug NSPR project.
+// Global prefix file for the zlib project.
 //
 //
 
+#include "MacPrefix.h"
 #include "zLibConfig.h"
