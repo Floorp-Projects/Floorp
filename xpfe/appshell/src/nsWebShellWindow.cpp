@@ -1818,6 +1818,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   
   // Always show the window at this point.
   mWindow->Show(PR_TRUE);
+  mWebShell->Show();
 
   return NS_OK;
 }
