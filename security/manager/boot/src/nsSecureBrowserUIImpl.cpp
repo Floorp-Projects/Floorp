@@ -474,9 +474,23 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
          ("SecureUI:%p: OnStateChange %x %s\n", this, aProgressStateFlags, reqname.get()));
 #endif
 
-  // Get the channel from the request...
-  // If the request is not network based, then ignore it.
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+
+  if (channel)
+  {
+    nsCOMPtr<nsIURI> uri;
+    channel->GetURI(getter_AddRefs(uri));
+    if (uri)
+    {
+      PRBool vs;
+      if (NS_SUCCEEDED(uri->SchemeIs("javascript", &vs)) && vs)
+      {
+        // We ignore the progress events for javascript URLs.
+        // If a document loading gets triggered, we will see more events.
+        return NS_OK;
+      }
+    }
+  }
 
   PRUint32 loadFlags = 0;
   aRequest->GetLoadFlags(&loadFlags);
