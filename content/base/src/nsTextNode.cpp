@@ -203,8 +203,47 @@ nsTextNode::HandleDOMEvent(nsIPresContext& aPresContext,
 NS_IMETHODIMP    
 nsTextNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
 {
-  // XXX To be implemented
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult result = NS_OK;
+  nsIContent* newNode;
+  nsITextContent* text;
+  nsAutoString cutText;
+  nsIContent* parentNode;
+  PRUint32 length;
+
+  GetLength(&length);
+  // Cut the second part out of the original text node
+  result = SubstringData(aOffset, length-aOffset, cutText);
+  if (NS_OK == result) {
+    result = DeleteData(aOffset, length-aOffset);
+    if (NS_OK == result) {
+      // Create a new text node and set its data to the
+      // string we just cut out
+      result = NS_NewTextNode(&newNode);
+      if (NS_OK == result) {
+        result = newNode->QueryInterface(kITextContentIID, (void**)&text);
+        if (NS_OK == result) {
+          text->SetText(cutText, cutText.Length(), PR_FALSE);
+          // Find the parent of the current node and insert the
+          // new text node as a child after the current node
+          GetParent(parentNode);
+          if (nsnull != parentNode) {
+            PRInt32 index;
+
+            result = parentNode->IndexOf(this, index);
+            if (NS_OK == result) {
+              result = parentNode->InsertChildAt(newNode, index+1, PR_TRUE);
+            }
+            NS_RELEASE(parentNode);
+          }
+          result = text->QueryInterface(kIDOMTextIID, (void**)aReturn);
+          NS_RELEASE(text);
+        }
+        NS_RELEASE(newNode);
+      }
+    }
+  }
+
+  return result;
 }
 
 //----------------------------------------------------------------------
