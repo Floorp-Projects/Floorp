@@ -1,3 +1,11 @@
+# The content of these urls should be the same yesterday, today and forever.
+#   BTW, the first url is duplicated several times under the expectation
+#   that the first 5 memory readings will be ignored as startup noise.
+http://www.yahoo.com
+http://www.yahoo.com
+http://www.yahoo.com
+http://www.yahoo.com
+http://www.yahoo.com
 http://jrgm.mcom.com/perf/loadtime5/base/bugzilla.mozilla.org
 http://jrgm.mcom.com/perf/loadtime5/base/espn.go.com
 http://jrgm.mcom.com/perf/loadtime5/base/home.netscape.com
