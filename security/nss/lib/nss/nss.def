@@ -756,3 +756,9 @@ SECKEY_PublicKeyStrengthInBits;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.9 { 	# NSS 3.9 release
+;+    global:
+SEC_DupCrl;
+;+    local:
+;+       *;
+;+};
