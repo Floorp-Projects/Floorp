@@ -320,7 +320,7 @@ input[type="radio"]:focus {
 input[type="checkbox"]:hover:active,
 input[type="radio"]:hover:active {
   border-style: inset;
-  background-color: ThreeDHighlight;
+  background-color: ThreeDFace;
 }
 
 *|*:-moz-radio {
