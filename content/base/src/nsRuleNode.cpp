@@ -3484,6 +3484,19 @@ nsRuleNode::ComputeOutlineData(nsStyleStruct* aStartStruct,
   else if (eCSSUnit_Enumerated == marginData.mOutlineColor.GetUnit())
     outline->SetOutlineInvert();
 
+// -moz-border-radius: length, percent, inherit
+  nsStyleCoord  coord;
+  nsStyleCoord  parentCoord;
+  { // scope for compilers with broken |for| loop scoping
+    NS_FOR_CSS_SIDES(side) {
+      parentOutline->mOutlineRadius.Get(side, parentCoord);
+      if (SetCoord(marginData.mOutlineRadius.*(nsCSSRect::sides[side]), coord,
+                   parentCoord, SETCOORD_LPH, aContext, mPresContext,
+                   inherited))
+        outline->mOutlineRadius.Set(side, coord);
+    }
+  }
+
   // outline-style: enum, none, inherit
   if (eCSSUnit_Enumerated == marginData.mOutlineStyle.GetUnit())
     outline->SetOutlineStyle(marginData.mOutlineStyle.GetIntValue());
