@@ -27,6 +27,8 @@
 #include <Xfe/BmButton.h>
 #include <Xfe/BmCascade.h>
 
+#include <Xfe/Cascade.h>
+
 #include <Xm/CascadeB.h>
 #include <Xm/CascadeBG.h>
 #include <Xm/PushB.h>
