@@ -11,7 +11,7 @@
   function Startup()
   {
     dump("Doing Startup...\n");
-    appCore = XPAppCoresManager.Find("EditorAppCore");  
+    appCore = XPAppCoresManager.Find(editorName);  
     dump("Looking up EditorAppCore...\n");
     if (appCore == null) {
       dump("Creating EditorAppCore...\n");
@@ -46,6 +46,18 @@
     if (appCore != null) {
     	appCore.find("test", true, true);
     
+    }
+    
+  }
+
+  function EditorShowClipboard()
+  {
+    dump("In EditorShowClipboard...\n");
+   
+    appCore = XPAppCoresManager.Find(editorName);  
+    if (appCore != null) {
+      dump("Doing EditorShowClipboard...\n");
+      appCore.showClipboard(); 
     }
     
   }
