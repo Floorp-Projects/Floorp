@@ -654,7 +654,6 @@ protected:
     //
     friend class CSSStyleRuleImpl;
     void AddRef(void) {
-      NS_ASSERTION(0 <= mRuleRefs, "bad AddRef");
       mRuleRefs++;
     }
     void Release(void) {
