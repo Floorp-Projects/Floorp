@@ -69,34 +69,6 @@ else
 PROGRAM		= mozilla-bin$(BIN_SUFFIX)
 endif
 
-ifdef BUILD_STATIC_LIBS
-ifeq ($(OS_ARCH),OS2)
-EXTRA_DSO_LIBS = $(addprefix lib,$(shell cat $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS)))
-EXTRA_DSO_LIBS += mpfilelocprovider_s
-EXTRA_DSO_LDOPTS += libuls.lib libconv.lib unikbd.lib
-_COMPONENT_LIST := $(shell cat $(FINAL_LINK_COMP_NAMES))
-else
-ifeq ($(OS_ARCH),WINNT)
-EXTRA_DSO_LDOPTS = $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/components/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_COMPS)))) $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_LIBS))))
-_COMPONENT_LIST := $(shell cat $(FINAL_LINK_COMP_NAMES))
-else
-EXTRA_DSO_LDOPTS = -L$(DIST)/lib/components
-EXTRA_DSO_LIBS = $(shell cat $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS))
-_COMPONENT_LIST := $(shell cat $(FINAL_LINK_COMP_NAMES))
-endif
-endif # WINNT
-else
-EXTRA_DSO_LIBS = gkgfx mpfilelocprovider_s
-ifdef MOZ_OJI
-ifeq ($(OS_ARCH),WINNT)
-EXTRA_DSO_LIBS += jsj$(MOZ_BITS)$(VERSION_NUMBER)
-else
-EXTRA_DSO_LIBS += jsj
-endif
-endif
-endif
-
-
 CPPSRCS		= \
 		nsAppRunner.cpp \
 		nsWindowCreator.cpp \
@@ -113,49 +85,31 @@ XP_LIBS		= \
 		$(NULL)
 
 ifndef BUILD_STATIC_LIBS
+
+EXTRA_DSO_LIBS += gkgfx mpfilelocprovider_s
+ifdef MOZ_OJI
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_DSO_LIBS += jsj$(MOZ_BITS)$(VERSION_NUMBER)
+else
+EXTRA_DSO_LIBS += jsj
+endif
+endif
+
 XP_LIBS		+= \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
+
 else
-CPPSRCS		+= nsStaticComponents.cpp
+include $(topsrcdir)/config/static-config.mk
 
-XP_LIBS		+= \
-		$(PNG_LIBS) \
-		$(MNG_LIBS) \
-		$(JPEG_LIBS) \
-		$(ZLIB_LIBS) \
-		$(MOZ_GDK_PIXBUF_LIBS) \
-		$(MOZ_XIE_LIBS) \
-		$(MOZ_XPRINT_LDFLAGS) \
-		$(NULL)
-
-ifdef MOZ_PSM
-XP_LIBS		+= \
-		$(NSS_LIBS) \
-		$(NULL)
-endif
-
-ifdef MOZ_LDAP_XPCOM
-XP_LIBS		+= \
-		$(LDAP_LIBS) \
-		$(NULL)
-endif
-
-ifdef MOZ_SVG
-XP_LIBS		+= $(MOZ_LIBART_LIBS)
-endif
-
-ifdef MOZ_ENABLE_GTK
-XP_LIBS		+= $(XLDFLAGS) -lXt
-endif
-
-ifdef MOZ_ENABLE_XINERAMA
-XP_LIBS		+= $(MOZ_XINERAMA_LIBS)
-endif
-
-ifdef MOZ_CALENDAR
-XP_LIBS		+= -lical -licalss
-endif
+EXTRA_DEPS	+= \
+	$(STATIC_EXTRA_DEPS) \
+	$(NULL)
+DEFINES		+= $(STATIC_DEFINES)
+CPPSRCS		+= $(STATIC_CPPSRCS)
+EXTRA_DSO_LIBS	+= $(STATIC_EXTRA_DSO_LIBS)
+REQUIRES	+= $(STATIC_REQUIRES)
+XP_LIBS		+= $(STATIC_EXTRA_LIBS)
 
 endif
 
@@ -163,10 +117,6 @@ XP_LIBS		+= \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
-
-ifdef MOZ_ENABLE_PHOTON
-XP_LIBS		+= $(TK_LIBS)
-endif
 
 ifdef NS_TRACE_MALLOC
 DEFINES		+= -DNS_TRACE_MALLOC
@@ -221,23 +171,17 @@ LDFLAGS += \
         $(NULL)   
 endif
 
-XP_DIST_DEP_LIBS := $(filter-out -L$(DIST)/bin -L$(DIST)/lib, $(XP_DIST_LIBS))
-
 ifeq ($(OS_ARCH),OS2)
 ifdef BUILD_STATIC_LIBS
 EXE_DEF_FILE = mozilla.def
 endif
-else
-EXTRA_DEPS	= \
-		$(addprefix $(DIST)/,$(patsubst -l%,bin/$(LIB_PREFIX)%$(DLL_SUFFIX),$(XP_DIST_DEP_LIBS:-l%_s=lib/$(LIB_PREFIX)%_s.a))) \
-		$(NULL)
-
-ifdef BUILD_STATIC_LIBS
-EXTRA_DEPS	+= $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/components/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_COMPS)))) $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_LIBS))))
-endif
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+ifdef BUILD_STATIC_LIBS
+include $(topsrcdir)/config/static-rules.mk
+endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
 $(PROGRAM): $(SPLASH_XPM)
@@ -246,12 +190,6 @@ endif
 ifeq ($(OS_ARCH),Darwin)
 # don't let us build with "-dynamiclib"
 EXTRA_DSO_LDOPTS = -execute
-endif
-
-ifeq ($(OS_ARCH),IRIX)
-ifdef BUILD_STATIC_LIBS
-LDFLAGS	+= -Wl,-LD_LAYOUT:lgot_buffer=80
-endif
 endif
 
 # This code removes the console from release builds
@@ -282,10 +220,6 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 LDFLAGS		+= /SUBSYSTEM:WINDOWS
 endif
-endif
-
-ifdef BUILD_STATIC_LIBS
-DEFINES		+= -D_BUILD_STATIC_BIN=1
 endif
 
 CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
@@ -339,13 +273,6 @@ $(LDSCRIPT): $(ORDERFILE)
 	$(PERL) $(topsrcdir)/config/mklinkscript.pl -o $@ $<
 
 endif
-
-nsStaticComponents.cpp: nsStaticComponents.cpp.in Makefile Makefile.in $(FINAL_LINK_COMP_NAMES)
-	rm -f $@
-	cat $< | \
-	sed -e "s|%DECL_NSGETMODULES%|$(foreach m,$(_COMPONENT_LIST),DECL_NSGETMODULE($(m)))|" | \
-	sed -e "s|%MODULE_LIST%|$(foreach m, $(_COMPONENT_LIST),MODULE($(m)),)|" \
-	> $@
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 

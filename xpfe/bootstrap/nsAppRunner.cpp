@@ -129,7 +129,7 @@ extern "C" void ShowOSAlert(const char* aMessage);
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponent.h"
 nsresult PR_CALLBACK
-apprunner_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
+app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 #endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
@@ -1547,7 +1547,7 @@ int main(int argc, char* argv[])
 
 #ifdef _BUILD_STATIC_BIN
   // Initialize XPCOM's module info table
-  NSGetStaticModuleInfo = apprunner_getModuleInfo;
+  NSGetStaticModuleInfo = app_getModuleInfo;
 #endif
 
   // Handle -help and -version command line arguments.

@@ -63,7 +63,7 @@ static nsStaticModuleInfo gStaticModuleInfo[] = {
  * Our NSGetStaticModuleInfoFunc
  */
 nsresult
-apprunner_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count)
+app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count)
 {
   *info = gStaticModuleInfo;
   *count = sizeof(gStaticModuleInfo) / sizeof(gStaticModuleInfo[0]);
