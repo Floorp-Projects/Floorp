@@ -737,18 +737,16 @@ nsFormSubmission::SubmitTo(nsIURI* aActionURL, const nsAString& aTarget,
   //
   nsCOMPtr<nsILinkHandler> handler;
   aPresContext->GetLinkHandler(getter_AddRefs(handler));
-  if (handler) {
-    nsCAutoString actionURLSpec;
-    aActionURL->GetSpec(actionURLSpec);
+  NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
 
-    handler->OnLinkClickSync(aSource, eLinkVerb_Replace,
-                             NS_ConvertUTF8toUCS2(actionURLSpec).get(),
-                             PromiseFlatString(aTarget).get(),
-                             postDataStream, nsnull,
-                             aDocShell, aRequest);
-  }
+  nsCAutoString actionURLSpec;
+  aActionURL->GetSpec(actionURLSpec);
 
-  return rv;
+  return handler->OnLinkClickSync(aSource, eLinkVerb_Replace,
+                                  NS_ConvertUTF8toUCS2(actionURLSpec).get(),
+                                  PromiseFlatString(aTarget).get(),
+                                  postDataStream, nsnull,
+                                  aDocShell, aRequest);
 }
 
 // JBK moved from nsFormFrame - bug 34297

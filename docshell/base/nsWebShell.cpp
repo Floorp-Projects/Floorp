@@ -601,7 +601,8 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
                     listener->OnStartURIOpen(uri, &abort);
                 }
             }
-            return rv;
+            // We didn't load the URI, so we failed
+            return NS_ERROR_FAILURE;
         }
 
         return InternalLoad(uri,                // New URI
