@@ -3280,7 +3280,7 @@ dnl
 dnl OpenVMS gets a line overflow on the long eval command, so use a temp file.
 dnl
 echo $MAKEFILES | $PERL $srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
-. conftest.sh
+. ./conftest.sh
 rm conftest.sh
 
 AC_OUTPUT($MAKEFILES)
