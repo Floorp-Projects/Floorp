@@ -53,3 +53,4 @@ PRBool nlsASCIIToUnicode(unsigned char * inBuf, unsigned int inBufBytes,
 							unsigned int * outBufLen);
 
 #endif /* _NLSLAYER_H_ */
+
