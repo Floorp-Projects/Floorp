@@ -161,12 +161,12 @@ protected:
 
   nsresult RefreshIfEnabled(nsIViewManager* vm);
   
-  nsresult ProcessStyleLink(nsIContent* aElement,
-                            const nsString& aHref,
-                            PRBool aAlternate,
-                            const nsString& aTitle,
-                            const nsString& aType,
-                            const nsString& aMedia);
+  NS_IMETHOD ProcessStyleLink(nsIContent* aElement,
+                              const nsString& aHref,
+                              PRBool aAlternate,
+                              const nsString& aTitle,
+                              const nsString& aType,
+                              const nsString& aMedia);
 
   nsresult LoadXSLStyleSheet(nsIURI* aUrl);
   nsresult SetupTransformMediator();
