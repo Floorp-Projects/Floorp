@@ -112,6 +112,7 @@ class nsWidget : public nsBaseWidget
 
  protected:
     virtual void InitCallbacks(char * aName = nsnull);
+    virtual void OnDestroy();
     void CreateGC();
 
     NS_IMETHOD CreateNative(GtkWidget *parentWindow) { return NS_OK; }
@@ -137,6 +138,8 @@ class nsWidget : public nsBaseWidget
 
     PRUint32 mPreferredWidth, mPreferredHeight;
     nsRect mBounds;
+    PRBool mIsDestroying;
+    PRBool mOnDestroyCalled;
 };
 
 #endif /* nsWidget_h__ */
