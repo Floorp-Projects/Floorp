@@ -333,11 +333,6 @@ void * nsWidget::GetNativeData(PRUint32 aDataType)
   }
 }
 
-NS_IMETHODIMP nsWidget::SetTitle(const nsString& aTitle)
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsWidget::SetTooltips(PRUint32 aNumberOfTips,
                                     nsRect* aTooltipAreas[])
 {
