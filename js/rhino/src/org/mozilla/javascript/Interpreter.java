@@ -1527,20 +1527,16 @@ public class Interpreter {
             return;
         int type = idata.itsFunctionType;
         if (type == FunctionNode.FUNCTION_STATEMENT) {
-            if (fn.itsClosure == null) {
-                if (fromEvalCode) {
-                    scope.put(fnName, scope, fn);
-                } else {
-                    // ECMA specifies that functions defined in global and
-                    // function scope should have DONTDELETE set.
-                    ScriptableObject.defineProperty(scope,
-                            fnName, fn, ScriptableObject.PERMANENT);
-                }
+            if (fromEvalCode) {
+                scope.put(fnName, scope, fn);
+            } else {
+                // ECMA specifies that functions defined in global and
+                // function scope should have DONTDELETE set.
+                ScriptableObject.defineProperty(scope,
+                        fnName, fn, ScriptableObject.PERMANENT);
             }
         } else if (type == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
-            if (fn.itsClosure != null) {
-                scope.put(fnName, scope, fn);
-            }
+            scope.put(fnName, scope, fn);
         }
     }
 
@@ -1633,8 +1629,11 @@ public class Interpreter {
             if (idata.itsFunctionType != 0 && !idata.itsNeedsActivation)
                 Context.codeBug();
             for (int i = 0; i < idata.itsNestedFunctions.length; i++) {
-                createFunctionObject(idata.itsNestedFunctions[i], scope,
-                                     idata.itsFromEvalCode);
+                InterpreterData fdata = idata.itsNestedFunctions[i].itsData;
+                if (fdata.itsFunctionType == FunctionNode.FUNCTION_STATEMENT) {
+                    InterpretedFunction f = new InterpretedFunction(cx, fdata);
+                    createFunctionObject(f, scope, idata.itsFromEvalCode);
+                }
             }
         }
 
