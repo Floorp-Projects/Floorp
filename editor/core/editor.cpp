@@ -879,7 +879,7 @@ nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
           PRInt32 length=1;
           result = range->GetStartParent(getter_AddRefs(node));
           result = range->GetStartOffset(&offset);
-          nsCOMPtr<nsIDOMCharacterData> text = node.get();
+          nsCOMPtr<nsIDOMCharacterData> text(node);
           if (node)
           { // we have text, so delete a char at the proper offset
             // XXX: doesn't handle beginning/end of text node, which needs to jump to next|prev node
