@@ -331,7 +331,6 @@ TARGET_MD_ARCH=unix
 
 OS_TARGET=`uname -s`
 _COMPILER_PREFIX=
-AC_DEFINE(NECKO)
 
 dnl ========================================================
 dnl GNU specific defaults
@@ -347,12 +346,10 @@ if test "$GNU_CC"; then
     # -Wall - turn on all warnings
     # -pedantic - make compiler warn about non-ANSI stuff, and
     #             be a little bit stricter
-    # -pipe     - speeds up the build a little by using pipes rather than
-    #             temp files
     # Warnings slamm took out for now (these were giving more noise than help):
     # -Wbad-function-cast - warns when casting a function to a new return type
     # -Wconversion - complained when char's or short's were used a function args
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -Wshadow -Wpointer-arith -Wcast-align"
+    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -W -Wno-unused -Wshadow -Wpointer-arith -Wcast-align"
 
     dnl Turn pedantic on but disable the warnings for long long
     _PEDANTIC=1
@@ -2662,7 +2659,7 @@ dnl --enable mathml
 dnl TODO: handle include files here ?
 dnl
 MOZ_ARG_ENABLE_BOOL(mathml,
-[  --enable-mathml         Enable MathML (default=no) ],
+[  --enable-mathml         Enable MathML (BROKEN) ],
   MOZ_MATHML=1
   AC_DEFINE(MOZ_MATHML))
 
