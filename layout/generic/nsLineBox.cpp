@@ -312,11 +312,14 @@ nsLineBox::DeleteLineList(nsIPresContext* aPresContext, nsLineList& aLines)
       child = nextChild;
     }
 
-    while (! aLines.empty()) {
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+
+    do {
       nsLineBox* line = aLines.front();
       aLines.pop_front();
-      delete line;
-    }
+      line->Destroy(shell);
+    } while (! aLines.empty());
   }
 }
 
