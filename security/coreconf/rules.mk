@@ -321,6 +321,13 @@ $(IMPORT_LIBRARY): $(SHARED_LIBRARY)
 	wlib +$(SHARED_LIBRARY)
 endif
 
+ifeq ($(OS_ARCH),OS2)
+$(IMPORT_LIBRARY): $(OBJS)
+	rm -f $@
+	$(IMPLIB) $@ $(patsubst %.lib,%.dll.def,$@)
+	$(RANLIB) $@
+endif
+
 ifdef SHARED_LIBRARY_LIBS
 SUB_SHLOBJS = $(foreach dir,$(SHARED_LIBRARY_DIRS),$(addprefix $(dir)/,$(shell $(MAKE) -C $(dir) --no-print-directory get_objs)))
 endif
