@@ -347,25 +347,29 @@ GetChar(JSTokenStream *ts)
                                  &ts->listenerTSData, ts->listenerData);
                 }
 
-                /*
-                 * Any one of \n, \r, or \r\n ends a line (longest match wins).
-                 * Also allow the Unicode line and paragraph separators.
-                 */
-                for (nl = ts->userbuf.ptr; nl < ts->userbuf.limit; nl++) {
+                nl = ts->saveEOL;
+                if (!nl) {
                     /*
-                     * Try to prevent value-testing on most characters by
-                     * filtering out characters that aren't 000x or 202x.
+                     * Any one of \n, \r, or \r\n ends a line (the longest
+                     * match wins).  Also allow the Unicode line and paragraph
+                     * separators.
                      */
-                    if ((*nl & 0xDFD0) == 0) {
-                        if (*nl == '\n')
-                            break;
-                        if (*nl == '\r') {
-                            if (nl + 1 < ts->userbuf.limit && nl[1] == '\n')
-                                nl++;
-                            break;
+                    for (nl = ts->userbuf.ptr; nl < ts->userbuf.limit; nl++) {
+                        /*
+                         * Try to prevent value-testing on most characters by
+                         * filtering out characters that aren't 000x or 202x.
+                         */
+                        if ((*nl & 0xDFD0) == 0) {
+                            if (*nl == '\n')
+                                break;
+                            if (*nl == '\r') {
+                                if (nl + 1 < ts->userbuf.limit && nl[1] == '\n')
+                                    nl++;
+                                break;
+                            }
+                            if (*nl == LINE_SEPARATOR || *nl == PARA_SEPARATOR)
+                                break;
                         }
-                        if (*nl == LINE_SEPARATOR || *nl == PARA_SEPARATOR)
-                            break;
                     }
                 }
 
@@ -375,8 +379,12 @@ GetChar(JSTokenStream *ts)
                  */
                 if (nl < ts->userbuf.limit)
                     len = PTRDIFF(nl, ts->userbuf.ptr, jschar) + 1;
-                if (len >= JS_LINE_LIMIT)
+                if (len >= JS_LINE_LIMIT) {
                     len = JS_LINE_LIMIT - 1;
+                    ts->saveEOL = nl;
+                } else {
+                    ts->saveEOL = NULL;
+                }
                 js_strncpy(ts->linebuf.base, ts->userbuf.ptr, len);
                 ts->userbuf.ptr += len;
                 olen = len;

@@ -171,6 +171,8 @@ struct JSTokenStream {
     JSSourceHandler     listener;       /* callback for source; eg debugger */
     void                *listenerData;  /* listener 'this' data */
     void                *listenerTSData;/* listener data for this TokenStream */
+    jschar              *saveEOL;       /* save next end of line in userbuf, to
+                                           optimize for very long lines */
 };
 
 #define CURRENT_TOKEN(ts)       ((ts)->tokens[(ts)->cursor])
