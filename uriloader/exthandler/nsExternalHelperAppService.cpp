@@ -119,7 +119,7 @@ nsExternalHelperAppService::~nsExternalHelperAppService()
 {
   if (mMimeInfoCache)
   {
-    mMimeInfoCache->Reset(DeleteEntry, nsnull);
+    mMimeInfoCache->Reset((nsHashtableEnumFunc)DeleteEntry, nsnull);
     delete mMimeInfoCache;
   }
 }
