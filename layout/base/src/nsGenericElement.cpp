@@ -1203,8 +1203,10 @@ nsGenericElement::AddRef()
 NS_IMETHODIMP_(nsrefcnt) 
 nsGenericElement::Release()
 {
-  nsrefcnt rc;
-  NS_RELEASE2(mContent, rc);
+  nsrefcnt rc=0;
+  NS_ASSERTION(mContent, "nsGenericElement: Nothing to release!");
+  if (mContent)
+    NS_RELEASE2(mContent, rc);
   return rc;
 }
 
