@@ -77,6 +77,7 @@ nsFrameList::RemoveFrame(nsIFrame* aFrame)
   if (nsnull != aFrame) {
     nsIFrame* nextFrame;
     aFrame->GetNextSibling(nextFrame);
+    aFrame->SetNextSibling(nsnull);
     if (aFrame == mFirstChild) {
       mFirstChild = nextFrame;
       return PR_TRUE;
@@ -98,6 +99,7 @@ nsFrameList::RemoveFirstChild()
   if (nsnull != mFirstChild) {
     nsIFrame* nextFrame;
     mFirstChild->GetNextSibling(nextFrame);
+    mFirstChild->SetNextSibling(nsnull);
     mFirstChild = nextFrame;
     return PR_TRUE;
   }
@@ -217,11 +219,9 @@ nsFrameList::Split(nsIFrame* aAfterFrame, nsIFrame** aNextFrameResult)
 {
   NS_PRECONDITION(nsnull != aAfterFrame, "null ptr");
   NS_PRECONDITION(nsnull != aNextFrameResult, "null ptr");
-  NS_ASSERTION(aAfterFrame != mFirstChild, "bad split");
   NS_ASSERTION(ContainsFrame(aAfterFrame), "split after unknown frame");
 
-  if ((nsnull != aNextFrameResult) && (nsnull != aAfterFrame) &&
-      (aAfterFrame != mFirstChild)) {
+  if ((nsnull != aNextFrameResult) && (nsnull != aAfterFrame)) {
     nsIFrame* nextFrame;
     aAfterFrame->GetNextSibling(nextFrame);
     aAfterFrame->SetNextSibling(nsnull);
@@ -231,21 +231,32 @@ nsFrameList::Split(nsIFrame* aAfterFrame, nsIFrame** aNextFrameResult)
   return PR_FALSE;
 }
 
-PRBool
+nsIFrame*
 nsFrameList::PullFrame(nsIFrame* aParent,
-                       nsFrameList& aFromList,
-                       nsIFrame** aResult)
+                       nsIFrame* aLastChild,
+                       nsFrameList& aFromList)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull != aResult) {
-    nsIFrame* pulledFrame = aFromList.FirstChild();
+  NS_PRECONDITION(nsnull != aParent, "null ptr");
+
+  nsIFrame* pulledFrame = nsnull;
+  if (nsnull != aParent) {
+    pulledFrame = aFromList.FirstChild();
     if (nsnull != pulledFrame) {
-      aFromList.RemoveFrame(pulledFrame);
-      AppendFrame(aParent, pulledFrame);
-      return PR_TRUE;
+      // Take frame off old list
+      aFromList.RemoveFirstChild();
+
+      // Put it on the end of this list
+      if (nsnull == aLastChild) {
+        NS_ASSERTION(nsnull == mFirstChild, "bad aLastChild");
+        mFirstChild = pulledFrame;
+      }
+      else {
+        aLastChild->SetNextSibling(pulledFrame);
+      }
+      pulledFrame->SetParent(aParent);
     }
   }
-  return PR_FALSE;
+  return pulledFrame;
 }
 
 nsIFrame*
@@ -318,4 +329,18 @@ nsFrameList::GetPrevSiblingFor(nsIFrame* aFrame) const
     frame = next;
   }
   return frame;
+}
+
+void
+nsFrameList::VerifyParent(nsIFrame* aParent) const
+{
+#ifdef NS_DEBUG
+  nsIFrame* frame = mFirstChild;
+  while (nsnull != frame) {
+    nsIFrame* parent;
+    frame->GetParent(parent);
+    NS_ASSERTION(parent == aParent, "bad parent");
+    frame->GetNextSibling(frame);
+  }
+#endif
 }
