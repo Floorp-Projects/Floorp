@@ -28,15 +28,12 @@ CPPSRCS		=  			\
 			TestSocketInput.cpp \
 			TestSocketTransport.cpp \
 			TestFileInput.cpp \
-			nettest.cpp	\
 			TestProtocols.cpp \
 			$(NULL)
 
 BASE_LIBS =	     \
 	-lreg	     \
 	-lxpcom	     \
-	-lraptorbase \
-	-lnetwerk    \
 	$(NULL)
 
 LIBS =		       \
