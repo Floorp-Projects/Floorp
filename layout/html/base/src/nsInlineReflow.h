@@ -193,7 +193,6 @@ protected:
   PRBool mIsBlock;
 
   PRBool mCanBreakBeforeFrame;          // we can break before the frame
-  PRBool mIsInlineAware;
   PRBool mIsFirstChild;
 
   PRBool mComputeMaxElementSize;
