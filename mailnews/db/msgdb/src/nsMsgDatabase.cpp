@@ -1816,17 +1816,15 @@ NS_IMETHODIMP nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsIMsgDBHdr **pnewHdr)
 	nsIMdbRow		*hdrRow;
 	struct mdbOid allMsgHdrsTableOID;
 
-	if (!pnewHdr || !m_mdbAllMsgHeadersTable)
+	if (!pnewHdr || !m_mdbAllMsgHeadersTable || !m_mdbStore)
 		return NS_ERROR_NULL_POINTER;
 
 	allMsgHdrsTableOID.mOid_Scope = m_hdrRowScopeToken;
 	allMsgHdrsTableOID.mOid_Id = key;	// presumes 0 is valid key value
 
-	if (m_mdbStore)
-		err  = m_mdbStore->NewRowWithOid(GetEnv(),
-                                     &allMsgHdrsTableOID, &hdrRow);
-	else
-		err = NS_ERROR_NULL_POINTER;
+	err = m_mdbStore->GetRow(GetEnv(), &allMsgHdrsTableOID, &hdrRow);
+	if (!hdrRow)	
+		err  = m_mdbStore->NewRowWithOid(GetEnv(), &allMsgHdrsTableOID, &hdrRow);
 	if (NS_FAILED(err)) 
 		return err;
     err = CreateMsgHdr(hdrRow, key, pnewHdr);

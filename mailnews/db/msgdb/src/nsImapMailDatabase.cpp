@@ -143,54 +143,7 @@ NS_IMETHODIMP	nsImapMailDatabase::SetSummaryValid(PRBool /* valid */)
 	
 // IMAP does not set local file flags, override does nothing
 void	nsImapMailDatabase::UpdateFolderFlag(nsMsgHdr * /* msgHdr */, PRBool /* bSet */, 
-									 MsgFlags /* flag */, PRFileDesc * /* fid */)
+									 MsgFlags /* flag */, nsIOFileStream ** /* ppFileStream */)
 {
 }
-
-/*
-nsresult
-nsImapMailDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgHdr* *result)
-{
-    nsresult rv;
-
-	nsIRDFService *rdf;
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
-
-    if (NS_FAILED(rv)) return rv;
-
-	char* msgURI;
-
-	nsFileSpec folderPath = path;
-	char* leafName = folderPath.GetLeafName();
-	nsString folderName(leafName);
-	PL_strfree(leafName);
-	if(folderName.Find(".msf") != -1)
-	{
-		nsString realFolderName;
-		folderName.Left(realFolderName, folderName.Length() - 4);
-		folderPath.SetLeafName((const nsString)realFolderName);
-	}
-
-	rv = nsBuildImapMessageURI(folderPath, key, &msgURI);
-    if (NS_FAILED(rv)) return rv;
-
-
-    nsIRDFResource* res = nsnull;
-    rv = rdf->GetResource(msgURI, &res);
-    PR_smprintf_free(msgURI);
-    if (NS_FAILED(rv)) return rv;
-   
-	nsMsgHdr* msgHdr = (nsMsgHdr*)res;
-	nsMsgHdr* msgHdr = new nsMsgHdr();
-	if (msgHdr)
-	{
-		msgHdr->Init(this, hdrRow);
-		msgHdr->SetMessageKey(key);
-	}
-    *result = msgHdr;
-
-    return NS_OK;
-}
-*/
-
 

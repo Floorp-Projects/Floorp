@@ -36,7 +36,7 @@ public:
 protected:
 	// IMAP does not set local file flags, override does nothing
 	virtual void	UpdateFolderFlag(nsMsgHdr *msgHdr, PRBool bSet, 
-									 MsgFlags flag, PRFileDesc *fid);
+									 MsgFlags flag, nsIOFileStream **ppFileStream);
 };
 
 
