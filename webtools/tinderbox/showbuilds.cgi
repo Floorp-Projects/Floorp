@@ -497,7 +497,7 @@ sub print_javascript {
       return false;
     }
     function log_url(logfile) {
-      return "showlog.cgi?log=" + buildtree + "/" + logfile;
+      return "${rel_path}showlog.cgi?log=" + buildtree + "/" + logfile;
     }
     function note(d,noteid,logfile) {
       var version = parseInt(navigator.appVersion);
@@ -523,7 +523,7 @@ sub print_javascript {
     function log(e,buildindex,logfile)
     {
       var logurl = log_url(logfile);
-      var commenturl = "addnote.cgi?log=" + buildtree + "/" + logfile;
+      var commenturl = "${rel_path}addnote.cgi?log=" + buildtree + "/" + logfile;
       var version = parseInt(navigator.appVersion);
 
       if (version < 4 || version >= 5) {
@@ -542,9 +542,9 @@ sub print_javascript {
       q.visibility="show"; 
       q.document.write("<TABLE BORDER=1><TR><TD><B>"
         + builds[buildindex] + "</B><BR>"
-        + "<A HREF=$rel_path" + logurl + ">View Brief Log</A><BR>"
-        + "<A HREF=$rel_path" + logurl + "&fulltext=1"+">View Full Log</A><BR>"
-        + "<A HREF=$rel_path" + commenturl + ">Add a Comment</A><BR>"
+        + "<A HREF=" + logurl + ">View Brief Log</A><BR>"
+        + "<A HREF=" + logurl + "&fulltext=1"+">View Full Log</A><BR>"
+        + "<A HREF=" + commenturl + ">Add a Comment</A><BR>"
 	+ "</TD></TR></TABLE>");
       q.document.close();
       return false;
