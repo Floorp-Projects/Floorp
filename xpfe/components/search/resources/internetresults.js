@@ -1,4 +1,3 @@
-
 function searchResultsOpenURL(event, node)
 {
 	if (event.button != 1)
@@ -18,12 +17,12 @@ function searchResultsOpenURL(event, node)
 	if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 	if (rdf)
 	{
-		var fileSys = rdf.GetDataSource("rdf:internetsearch");
-		if (fileSys)
+		var ds = rdf.GetDataSource("rdf:internetsearch");
+		if (ds)
 		{
 			var src = rdf.GetResource(url, true);
 			var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
-			var target = fileSys.GetTarget(src, prop, true);
+			var target = ds.GetTarget(src, prop, true);
 			if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
 			if (target)	target = target.Value;
 			if (target)	url = target;
@@ -35,27 +34,32 @@ function searchResultsOpenURL(event, node)
 	if (url.substring(0, 3) == "NC:")
 		return(false);
 
-	dump("Opening URL: " + url + "\n");
-	if( top._content )
-	{
-		top._content.location.href = url;
-	}
-	return true;
+    top._content.location.href = url;
+
+	return(true);
 }
 
 
 
 function onLoadInternetResults()
 {
-	var isupports = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
-	if (!isupports)    
-    return(false);
-	var internetSearchService = isupports.QueryInterface(Components.interfaces.nsIInternetSearchService);
-	if (!internetSearchService)    
-    return(false);
-	internetSearchService.ClearResultSearchSites();
+    // clear any previous results on load
+	var iSearch = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
+	if (iSearch)      iSearch = iSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
+	if (iSearch)      iSearch.ClearResultSearchSites();
 
-	return true;
+    // the search URI is passed in as a parameter, so get it and them root the results tree
+    var searchURI = top._content.location.href;
+    if (searchURI)
+    {
+        var offset = searchURI.indexOf("?");
+        if (offset > 0)
+        {
+            searchURI = searchURI.substr(offset+1);
+            loadResultsTree(searchURI);
+        }
+    }
+    return(true);
 }
 
 
@@ -118,9 +122,12 @@ function doEngineClick( event, aNode )
 	if ( html )
 	{
 		var doc = window.frames[0].document;
-		doc.open("text/html", "replace");
-		doc.writeln( html );
-		doc.close();
+		if (doc)
+		{
+    		doc.open("text/html", "replace");
+	    	doc.writeln( html );
+		    doc.close();
+		}
 	}
 	else
 	{
@@ -193,3 +200,4 @@ function doResultClick(node)
 	}
 	return(true);
 }
+
