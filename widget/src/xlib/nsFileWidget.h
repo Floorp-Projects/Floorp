@@ -62,6 +62,8 @@ class nsFileWidget : public nsIFileWidget
   NS_IMETHOD            SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[]);
   NS_IMETHOD            GetDisplayDirectory(nsFileSpec& aDirectory);
   NS_IMETHOD            SetDisplayDirectory(const nsFileSpec& aDirectory);
+  NS_IMETHOD            GetSelectedType(PRInt16& theType);
+
  protected:
   
 };
