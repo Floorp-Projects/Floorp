@@ -584,18 +584,6 @@ public class ClassFileWriter {
     }
 
     /**
-     * Generate the code to leave on stack the given string even if the 
-     * string encoding exeeds the class file limit for single string constant
-     *
-     * @param k the constant
-     */
-    public void addLoadBigString(String k) {
-        if (isUnderStringSizeLimit(k)) {
-    
-        add(ByteCode.LDC, itsConstantPool.addConstant(k));
-    }
-
-    /**
      * Check if k fits limit on string constant size imposed by class file
      * format.
      *
@@ -1653,37 +1641,31 @@ final class ConstantPool
         return (short)theIndex;
     }
 
-    boolean isUnderUtfEncodingLimit(String s)
+    boolean isUnderUtfEncodingLimit(String k)
     {
-        int strLen = s.length();
+        int strLen = k.length();
         if (strLen * 3 <= MAX_UTF_ENCODING_SIZE) {
             return true;
         } else if (strLen > MAX_UTF_ENCODING_SIZE) {
             return false;
         }
-        return strLen == getUtfEncodingLimit(s, 0, strLen);
-    }
 
-    int getUtfEncodingLimit(String s, int start, int end)
-    {
-        if ((end - start) * 3 <= MAX_UTF_ENCODING_SIZE) {
-            return end;
-        }
-        int limit = MAX_UTF_ENCODING_SIZE;
-        for (int i = start; i != end; i++) {
-            int c = s.charAt(i);
-            if (0 != c && c <= 0x7F) }
-                --limit;
-            } else if (c < 0x7FF) {
-                limit -= 2;
-            } else {
-                limit -= 3;
-            }
-            if (limit < 0) {
-                return i;
+        char[] chars = getCharBuffer(strLen);
+        k.getChars(0, strLen, chars, 0);
+
+        int utfLen = strLen;
+        for (int i = 0; i != strLen; i++) {
+            int c = chars[i];
+            if (c == 0 || c > 0x7F) {
+                if (c < 0x7FF) {
+                    ++utfLen;
+                } else {
+                    utfLen += 2;
+                }
             }
         }
-        return end;
+
+        return utfLen <= 65535;
     }
 
     short addUtf8(String k)
