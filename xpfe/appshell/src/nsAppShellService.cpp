@@ -265,22 +265,21 @@ void nsAppShellService::CreateHiddenWindow()
   nsresult rv;
   nsIURI* url = nsnull;
 
-#ifndef NECKO
-  rv = NS_NewURL(&url, "chrome://global/content/hiddenWindow.xul");
-#else
+#if XP_MAC
   rv = NS_NewURI(&url, "chrome://global/content/hiddenWindow.xul");
-#endif
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIWebShellWindow> newWindow;
-    #if XP_MAC
     rv = JustCreateTopWindow(nsnull, url, PR_FALSE, PR_FALSE,
                         0, nsnull, 0, 0,
                         getter_AddRefs(newWindow));
-    #else
+#else
+  rv = NS_NewURI(&url, "about:blank");
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIWebShellWindow> newWindow;
     	 rv = JustCreateTopWindow(nsnull, url, PR_FALSE, PR_FALSE,
                         NS_CHROME_ALL_CHROME, nsnull, 100, 100,
                         getter_AddRefs(newWindow));
-    #endif
+#endif
     if (NS_SUCCEEDED(rv)) {
       mHiddenWindow = newWindow;
       // RegisterTopLevelWindow(newWindow); -- Mac only
