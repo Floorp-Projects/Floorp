@@ -78,6 +78,9 @@ DIRS=                   \
 	calendar \
 	libnls \
 !endif
+!ifdef MOZ_LIBTEST
+	libtest		\
+!endif
 	plugin		\
 	oji
 
