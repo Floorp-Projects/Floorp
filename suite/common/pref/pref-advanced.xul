@@ -45,7 +45,7 @@
 			</html:tr>
 			<html:tr>
 				<html:td>
-					<html:input type="checkbox" id="pref:0:bool:advanced.java.allow" />
+					<html:input type="checkbox" id="pref:0:bool:security.enable_java" />
 					&enbJavaCheck.label;
 				</html:td>
 			</html:tr>
