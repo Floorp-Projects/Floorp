@@ -52,6 +52,7 @@ CPPSRCS		= \
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
