@@ -2958,8 +2958,10 @@ void DlgSequencePrev()
         if(CheckWizardStateCustom(DLG_SELECT_COMPONENTS))
         {
           if(diProgramFolder.bShowDialog)
+          {
             hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diProgramFolder.szTitle, DlgProcProgramFolder);
-          bDone = TRUE;
+            bDone = TRUE;
+          }
         }
         break;
 
