@@ -1600,7 +1600,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMessage *message)
                            &now);
     result.Append("From - ");
     result.Append(timeBuffer);
-    result.Append(CRLF);
+    result.Append(MSG_LINEBREAK);
 
     // *** jt - hard code status line for now; come back later
 
@@ -1608,12 +1608,12 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMessage *message)
     if (mCopyState->m_parseMsgState)
         mCopyState->m_parseMsgState->ParseAFolderLine(
           result.GetBuffer(), result.Length());
-    result = "X-Mozilla-Status: 0001" CRLF;
+    result = "X-Mozilla-Status: 0001" MSG_LINEBREAK;
     *(mCopyState->m_fileStream) << result.GetBuffer();
     if (mCopyState->m_parseMsgState)
         mCopyState->m_parseMsgState->ParseAFolderLine(
           result.GetBuffer(), result.Length());
-    result = "X-Mozilla-Status2: 00000000" CRLF;
+    result = "X-Mozilla-Status2: 00000000" MSG_LINEBREAK;
     *(mCopyState->m_fileStream) << result.GetBuffer();
     if (mCopyState->m_parseMsgState)
         mCopyState->m_parseMsgState->ParseAFolderLine(
@@ -1654,16 +1654,17 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
     if (mCopyState->m_parseMsgState)
     {
       char* start = mCopyState->m_dataBuffer;
-      char* end = PL_strstr(mCopyState->m_dataBuffer, CRLF);
+      char* end = PL_strstr(mCopyState->m_dataBuffer, MSG_LINEBREAK);
       
       while (start && end)
       {
-        // +2 counting for the CRLF
-        mCopyState->m_parseMsgState->ParseAFolderLine(start, end-start+2);
-        start = end+2;
+        mCopyState->m_parseMsgState->ParseAFolderLine(start,
+                                                      end-start +
+                                                      MSG_LINEBREAK_LEN);
+        start = end+MSG_LINEBREAK_LEN;
         if (start >= &mCopyState->m_dataBuffer[readCount])
           break;
-        end = PL_strstr(start, CRLF);
+        end = PL_strstr(start, MSG_LINEBREAK);
       }
     }
 
@@ -1722,9 +1723,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
   if (mCopyState->m_dummyEnvelopeNeeded)
   {
     mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
-    *(mCopyState->m_fileStream) << CRLF;
+    *(mCopyState->m_fileStream) << MSG_LINEBREAK;
     if (mCopyState->m_parseMsgState)
-        mCopyState->m_parseMsgState->ParseAFolderLine(CRLF, 2);
+        mCopyState->m_parseMsgState->ParseAFolderLine(CRLF, MSG_LINEBREAK_LEN);
   }
 
   // CopyFileMessage() and CopyMessages() from servers other than mailbox
