@@ -64,7 +64,7 @@ public abstract class IdScriptable extends ScriptableObject
     protected static final Object NULL_TAG = new Object();
 
     public IdScriptable() {
-        maxId = maxInstanceId();
+        activateIdMap(maxInstanceId());
     }
     
     public boolean has(String name, Scriptable start) {
@@ -172,17 +172,6 @@ public abstract class IdScriptable extends ScriptableObject
 
     synchronized void addPropertyAttribute(int attribute) {
         extraIdAttributes |= attribute;
-        if (maxId != 0) {
-            byte[] array = attributesArray;
-            if (array != null) {
-                for (int i = attributesArray.length; i-- != 0;) {
-                    int old = array[i];
-                    if (old != 0) {
-                        array[i] = (byte)(attribute | old);
-                    }
-                }
-            }
-        }
         super.addPropertyAttribute(attribute);
     }
 
@@ -212,6 +201,7 @@ public abstract class IdScriptable extends ScriptableObject
                     Object[] tmp = new Object[result.length + count];
                     System.arraycopy(result, 0, tmp, 0, result.length);
                     System.arraycopy(ids, 0, tmp, result.length, count);
+                    result = tmp;
                 }
             }
         }
@@ -309,6 +299,11 @@ public abstract class IdScriptable extends ScriptableObject
         return -1;
     }
     
+    /** Activate id support with the given maximum id */
+    protected void activateIdMap(int maxId) {
+        this.maxId = maxId;
+    }
+    
     /** Sets whether newly constructed function objects should be sealed */
     protected void setSealFunctionsFlag(boolean sealed) {
         if (sealed) { setupFlags |= SEAL_FUNCTIONS_FLAG; }
@@ -341,7 +336,7 @@ public abstract class IdScriptable extends ScriptableObject
     public void addAsPrototype(int maxId, Context cx, Scriptable scope, 
                                boolean sealed) 
     {
-        this.maxId = maxId;
+        activateIdMap(maxId);
 
         setSealFunctionsFlag(sealed);
         setFunctionParametrs(cx);
@@ -469,6 +464,7 @@ public abstract class IdScriptable extends ScriptableObject
         }
     }
 
+    // Must be called only from synchronized (this)
     private Object[] ensureIdData() {
         Object[] data = idMapData;
         if (data == null) { 
@@ -478,17 +474,25 @@ public abstract class IdScriptable extends ScriptableObject
     }
     
     private int getAttributes(int id) {
-        int attributes;
+        int attributes = getIdDefaultAttributes(id) | extraIdAttributes;
         byte[] array = attributesArray;
-        if (array == null || (attributes = array[id - 1]) == 0) { 
-            attributes = getIdDefaultAttributes(id) | extraIdAttributes; 
+        if (array != null) {
+            attributes |= 0xFF & array[id - 1];
         }
-        return VISIBLE_ATTR_MASK & attributes;
+        return attributes;
     }
 
     private void setAttributes(int id, int attributes) {
+        int defaultAttrs = getIdDefaultAttributes(id);
+        if ((attributes & defaultAttrs) != defaultAttrs) {
+            // It is a bug to set attributes to less restrictive values 
+            // then given by defaultAttrs
+            throw new RuntimeException("Attempt to unset default attributes");
+        }
+        // Store only additional bits
+        attributes &= ~defaultAttrs;
         byte[] array = attributesArray;
-        if (array == null) {
+        if (array == null && attributes != 0) {
             synchronized (this) {
                 array = attributesArray;
                 if (array == null) {
@@ -496,17 +500,13 @@ public abstract class IdScriptable extends ScriptableObject
                 }
             }
         }
-        attributes &= VISIBLE_ATTR_MASK;
-        array[id - 1] = (byte)(ASSIGNED_ATTRIBUTE_MASK | attributes);
+        if (array != null) {
+            array[id - 1] = (byte)attributes;
+        }
     }
 
     private static final boolean CACHE_NAMES = true;
 
-    private static final int 
-        VISIBLE_ATTR_MASK = READONLY | DONTENUM | PERMANENT;
-
-    private static final int ASSIGNED_ATTRIBUTE_MASK = 0x80;
-    
     private int maxId;
     private Object[] idMapData;
     private byte[] attributesArray;

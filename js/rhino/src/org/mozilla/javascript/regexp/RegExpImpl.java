@@ -46,16 +46,6 @@ public class RegExpImpl implements RegExpProxy {
         parens = new Vector(9);
     }
     
-    protected Object executeRegExp(Object regExp, Scriptable scopeObj, 
-                                String str, int indexp[], int matchType)
-    {
-        if (regExp instanceof NativeRegExp)
-            return ((NativeRegExp) regExp).executeRegExp(scopeObj, str, 
-                                                         indexp, matchType);
-        return null;
-    }
-    
-    
     public boolean isRegExp(Object obj) {
         return obj instanceof NativeRegExp;
     }
@@ -74,7 +64,8 @@ public class RegExpImpl implements RegExpProxy {
         mdata.optarg = 1;
         mdata.mode = GlobData.GLOB_MATCH;
         mdata.parent = ScriptableObject.getTopLevelScope(funObj);
-        Object rval = matchOrReplace(cx, thisObj, args, funObj, mdata, false);
+        Object rval = matchOrReplace(cx, thisObj, args, funObj,
+                                     this, mdata, false);
         return mdata.arrayobj == null ? rval : mdata.arrayobj;
     }
 
@@ -86,7 +77,7 @@ public class RegExpImpl implements RegExpProxy {
         mdata.optarg = 1;
         mdata.mode = GlobData.GLOB_SEARCH;
         mdata.parent = ScriptableObject.getTopLevelScope(funObj);
-        return matchOrReplace(cx, thisObj, args, funObj, mdata, false);
+        return matchOrReplace(cx, thisObj, args, funObj, this, mdata, false);
     }
 
     public Object replace(Context cx, Scriptable thisObj, Object[] args, 
@@ -112,7 +103,8 @@ public class RegExpImpl implements RegExpProxy {
         rdata.length = 0;
         rdata.index = 0;
         rdata.leftIndex = 0;
-        Object val = matchOrReplace(cx, thisObj, args, funObj, rdata, true);
+        Object val = matchOrReplace(cx, thisObj, args, funObj,
+                                    this, rdata, true);
         char[] charArray;
 
         if (rdata.charArray == null) {
@@ -121,12 +113,12 @@ public class RegExpImpl implements RegExpProxy {
                 return rdata.str;
             }
             int leftlen = this.leftContext.length;
-            int length = leftlen + rdata.findReplen(this);
+            int length = leftlen + rdata.findReplen(cx, this);
             charArray = new char[length];
             SubString leftContext = this.leftContext;
             System.arraycopy(leftContext.charArray, leftContext.index,
                              charArray, 0, leftlen);
-            rdata.doReplace(this, charArray, leftlen);
+            rdata.doReplace(cx, this, charArray, leftlen);
             rdata.charArray = charArray;
             rdata.length = length;
         }
@@ -147,6 +139,7 @@ public class RegExpImpl implements RegExpProxy {
      */
     private static Object matchOrReplace(Context cx, Scriptable thisObj,
                                          Object[] args, Function funObj,
+                                         RegExpImpl reImpl,
                                          GlobData data, boolean forceFlat)
         throws JavaScriptException
     {
@@ -154,7 +147,6 @@ public class RegExpImpl implements RegExpProxy {
 
         String str = ScriptRuntime.toString(thisObj);
         data.str = str;
-        RegExpImpl reImpl = RegExpImpl.getRegExpImpl(cx);
         Scriptable scope = ScriptableObject.getTopLevelScope(funObj);
         
         if (args.length == 0)
@@ -179,7 +171,8 @@ public class RegExpImpl implements RegExpProxy {
         int[] indexp = { 0 };
         Object result = null;
         if (data.mode == GlobData.GLOB_SEARCH) {
-            result = re.executeRegExp(funObj, str, indexp, NativeRegExp.TEST);
+            result = re.executeRegExp(cx, funObj, reImpl,
+                                      str, indexp, NativeRegExp.TEST);
             if (result != null && result.equals(Boolean.TRUE))
                 result = new Integer(reImpl.leftContext.length);
             else
@@ -187,10 +180,11 @@ public class RegExpImpl implements RegExpProxy {
         } else if (data.global) {
             re.setLastIndex(0);
             for (int count = 0; indexp[0] <= str.length(); count++) {
-                result = re.executeRegExp(funObj, str, indexp, NativeRegExp.TEST);
+                result = re.executeRegExp(cx, funObj, reImpl,
+                                          str, indexp, NativeRegExp.TEST);
                 if (result == null || !result.equals(Boolean.TRUE))
                     break;
-                data.doGlobal(funObj, count);
+                data.doGlobal(cx, funObj, count, reImpl);
                 if (reImpl.lastMatch.length == 0) {
                     if (indexp[0] == str.length())
                         break;
@@ -198,8 +192,10 @@ public class RegExpImpl implements RegExpProxy {
                 }
             }
         } else {
-            result = re.executeRegExp(funObj, str, indexp,
-                                      ((data.mode == GlobData.GLOB_REPLACE) ? NativeRegExp.TEST : NativeRegExp.MATCH));
+            result = re.executeRegExp(cx, funObj, reImpl, str, indexp,
+                                      ((data.mode == GlobData.GLOB_REPLACE) 
+                                       ? NativeRegExp.TEST 
+                                       : NativeRegExp.MATCH));
         }
 
         return result;
@@ -215,6 +211,7 @@ public class RegExpImpl implements RegExpProxy {
         int length = target.length();
         int result;
         Context cx = Context.getCurrentContext();
+ 
         int version = cx.getLanguageVersion();
         NativeRegExp re = (NativeRegExp) reObj;
         again:
@@ -222,8 +219,9 @@ public class RegExpImpl implements RegExpProxy {
             /* JS1.2 deviated from Perl by never matching at end of string. */
             int ipsave = ip[0]; // reuse ip to save object creation
             ip[0] = i;
-            if (re.executeRegExp(funObj, target, ip, NativeRegExp.TEST) != Boolean.TRUE) 
-            {
+            Object ret = re.executeRegExp(cx, funObj, this, target, ip,
+                                          NativeRegExp.TEST);
+            if (ret != Boolean.TRUE) {
                 // Mismatch: ensure our caller advances i past end of string.
                 ip[0] = ipsave;
                 matchlen[0] = 1;
@@ -276,10 +274,6 @@ public class RegExpImpl implements RegExpProxy {
         return result;
     }
     
-    static RegExpImpl getRegExpImpl(Context cx) { 
-        return (RegExpImpl) ScriptRuntime.getRegExpProxy(cx);
-    }
-        
     /**
      * Analog of REGEXP_PAREN_SUBSTRING in C jsregexp.h.
      * Assumes zero-based; i.e., for $3, i==2
@@ -306,7 +300,8 @@ abstract class GlobData {
     static final int GLOB_REPLACE =    2;
     static final int GLOB_SEARCH =     3;
 
-    abstract void doGlobal(Function funObj, int count) 
+    abstract void doGlobal(Context cx, Function funObj, int count, 
+                           RegExpImpl reImpl) 
         throws JavaScriptException;
 
     byte     mode;      /* input: return index, match object, or void */
@@ -323,13 +318,13 @@ class MatchData extends GlobData {
     /*
      * Analog of match_glob() in jsstr.c
      */
-    void doGlobal(Function funObj, int count) throws JavaScriptException {
+    void doGlobal(Context cx, Function funObj, int count, RegExpImpl reImpl) 
+        throws JavaScriptException 
+    {
         MatchData mdata;
         Object v;
 
         mdata = this;
-        Context cx = Context.getCurrentContext();
-        RegExpImpl reImpl = RegExpImpl.getRegExpImpl(cx);
         if (arrayobj == null) {
             Scriptable s = ScriptableObject.getTopLevelScope(funObj);
             arrayobj = ScriptRuntime.newObject(cx, s, "Array", null);
@@ -352,13 +347,11 @@ class ReplaceData extends GlobData {
     /*
      * Analog of replace_glob() in jsstr.c
      */
-    void doGlobal(Function funObj, int count)
+    void doGlobal(Context cx, Function funObj, int count, RegExpImpl reImpl) 
         throws JavaScriptException
     {
         ReplaceData rdata = this;
 
-        Context cx = Context.getCurrentContext();
-        RegExpImpl reImpl = RegExpImpl.getRegExpImpl(cx);
         SubString lc = reImpl.leftContext;
 
         char[] leftArray = lc.charArray;
@@ -366,7 +359,7 @@ class ReplaceData extends GlobData {
         
         int leftlen = reImpl.lastMatch.index - leftIndex;
         rdata.leftIndex = reImpl.lastMatch.index + reImpl.lastMatch.length;
-        int replen = findReplen(reImpl);
+        int replen = findReplen(cx, reImpl);
         int growth = leftlen + replen;
         char[] charArray;
         if (rdata.charArray != null) {
@@ -382,15 +375,14 @@ class ReplaceData extends GlobData {
         rdata.index += growth;
         System.arraycopy(leftArray, leftIndex, charArray, index, leftlen);
         index += leftlen;
-        doReplace(reImpl, charArray, index);
+        doReplace(cx, reImpl, charArray, index);
     }
 
     static SubString dollarStr = new SubString("$");
 
-    static SubString interpretDollar(RegExpImpl res, char[] da, int dp,
-                                     int bp, int[] skip)
+    static SubString interpretDollar(Context cx, RegExpImpl res, 
+                                     char[] da, int dp, int bp, int[] skip)
     {
-        Context cx = Context.getCurrentContext();
         char[] ca;
         int cp;
         char dc;
@@ -401,8 +393,8 @@ class ReplaceData extends GlobData {
             throw new RuntimeException();
         if ((cx.getLanguageVersion() != Context.VERSION_DEFAULT)
                  && (cx.getLanguageVersion() <= Context.VERSION_1_4))
-			if (dp > bp && da[dp-1] == '\\')
-			    return null;
+            if (dp > bp && da[dp-1] == '\\')
+                return null;
 
         /* Interpret all Perl match-induced dollar variables. */
         dc = da[dp+1];
@@ -450,16 +442,16 @@ class ReplaceData extends GlobData {
             return res.lastParen;
           case '`':
             if (cx.getLanguageVersion() == Context.VERSION_1_2) {
-        	    /*
-        	     * JS1.2 imitated the Perl4 bug where left context at each step
-        	     * in an iterative use of a global regexp started from last match,
-        	     * not from the start of the target string.  But Perl4 does start
-        	     * $` at the beginning of the target string when it is used in a
-        	     * substitution, so we emulate that special case here.
-        	     */
+                /*
+                 * JS1.2 imitated the Perl4 bug where left context at each step
+                 * in an iterative use of a global regexp started from last match,
+                 * not from the start of the target string.  But Perl4 does start
+                 * $` at the beginning of the target string when it is used in a
+                 * substitution, so we emulate that special case here.
+                 */
                 res.leftContext.index = 0;
                 res.leftContext.length = res.lastMatch.index;
-        	}      	
+            }
             return res.leftContext;
           case '\'':
             return res.rightContext;
@@ -472,13 +464,12 @@ class ReplaceData extends GlobData {
      * the result parameter sizep is the return value (errors are
      * propagated with exceptions).
      */
-    int findReplen(RegExpImpl reImpl)
+    int findReplen(Context cx, RegExpImpl reImpl)
         throws JavaScriptException
     {
         if (lambda != null) {
             // invoke lambda function with args lastMatch, $1, $2, ... $n,
             // leftContext.length, whole string.
-            Context cx = Context.getCurrentContext();
             Vector parens = reImpl.parens;
             int parenCount = parens.size();
             Object[] args = new Object[parenCount + 3];
@@ -508,7 +499,7 @@ class ReplaceData extends GlobData {
                 continue;
             }
             int[] skip = { 0 };
-            SubString sub = interpretDollar(reImpl, this.repstr, dp,
+            SubString sub = interpretDollar(cx, reImpl, this.repstr, dp,
                                             bp, skip);
             if (sub != null) {
                 replen += sub.length - skip[0];
@@ -523,7 +514,7 @@ class ReplaceData extends GlobData {
     /**
      * Analog of do_replace in jsstr.c
      */
-    void doReplace(RegExpImpl regExpImpl, char[] charArray,
+    void doReplace(Context cx, RegExpImpl regExpImpl, char[] charArray,
                    int arrayIndex)
     {
         int cp = 0;
@@ -539,7 +530,7 @@ class ReplaceData extends GlobData {
                 arrayIndex += len;
                 cp = dp;
                 int[] skip = { 0 };
-                SubString sub = interpretDollar(regExpImpl, da,
+                SubString sub = interpretDollar(cx, regExpImpl, da,
                                                 dp, bp, skip);
                 if (sub != null) {
                     len = sub.length;

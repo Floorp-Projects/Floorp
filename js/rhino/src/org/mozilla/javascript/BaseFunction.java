@@ -51,6 +51,7 @@ public class BaseFunction extends IdScriptable implements Function {
         BaseFunction obj = new BaseFunction();
         obj.prototypeFlag = true;
         obj.functionName = "";
+        obj.prototypePropertyAttrs = DONTENUM | READONLY | PERMANENT;
         obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
     
@@ -188,7 +189,7 @@ public class BaseFunction extends IdScriptable implements Function {
      * Make value as DontEnum, DontDelete, ReadOnly
      * prototype property of this Function object 
      */
-    protected void setImmunePrototypeProperty(Object value) {
+    public void setImmunePrototypeProperty(Object value) {
         prototypeProperty = (value != null) ? value : NULL_TAG;
         prototypePropertyAttrs = DONTENUM | READONLY | PERMANENT;
     }
@@ -246,7 +247,7 @@ public class BaseFunction extends IdScriptable implements Function {
             sb.append(getFunctionName());
             sb.append("() {\n\t");
         }
-        sb.append("[native code, arity=]\n");
+        sb.append("[native code, arity=");
         sb.append(getArity());
         sb.append("]\n");
         if (!justbody) {
@@ -353,11 +354,13 @@ public class BaseFunction extends IdScriptable implements Function {
         // mode.
         int oldOptLevel = cx.getOptimizationLevel();
         cx.setOptimizationLevel(-1);
-        NativeFunction fn = (NativeFunction) cx.compileFunction(
-                                                global, source,
-                                                filename, linep[0], 
-                                                securityDomain);
-        cx.setOptimizationLevel(oldOptLevel);
+        NativeFunction fn;
+        try {
+            fn = (NativeFunction) cx.compileFunction(global, source,
+                                                     filename, linep[0], 
+                                                     securityDomain);
+        }
+        finally { cx.setOptimizationLevel(oldOptLevel); }
 
         fn.functionName = "anonymous";
         fn.setPrototype(getFunctionPrototype(global));
@@ -512,7 +515,7 @@ public class BaseFunction extends IdScriptable implements Function {
     protected String functionName;
 
     private Object prototypeProperty; 
-    private int prototypePropertyAttrs = EMPTY;
+    private int prototypePropertyAttrs = DONTENUM;
 
     private boolean prototypeFlag;
 }

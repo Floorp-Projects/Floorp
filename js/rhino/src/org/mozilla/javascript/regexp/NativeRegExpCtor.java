@@ -52,81 +52,12 @@ import java.lang.reflect.Method;
  */
 public class NativeRegExpCtor extends NativeFunction {
 
-    public static Scriptable init(Scriptable scope)
-        throws PropertyException
-    {
-        NativeRegExpCtor ctor = new NativeRegExpCtor();
-
-        ctor.functionName = "RegExp";
-
-        ctor.setPrototype(getClassPrototype(scope, "Function"));
-        ctor.setParentScope(scope);
-
-        String[] propNames = { "multiline", "input",        "lastMatch",
-                               "lastParen", "leftContext",  "rightContext" };
-
-        String[] aliases =   { "$*",        "$_",           "$&",
-                               "$+",        "$`",           "$'" };
-
-        for (int i=0; i < propNames.length; i++)
-            ctor.defineProperty(propNames[i], NativeRegExpCtor.class,
-                                ScriptableObject.DONTENUM);
-        for (int i=0; i < aliases.length; i++) {
-            StringBuffer buf = new StringBuffer("get");
-            buf.append(propNames[i]);
-            buf.setCharAt(3, Character.toUpperCase(propNames[i].charAt(0)));
-            Method[] getter = FunctionObject.findMethods(
-                                NativeRegExpCtor.class,
-                                buf.toString());
-            buf.setCharAt(0, 's');
-            Method[] setter = FunctionObject.findMethods(
-                                NativeRegExpCtor.class,
-                                buf.toString());
-            Method m = setter == null ? null : setter[0];
-            ctor.defineProperty(aliases[i], null, getter[0], m,
-                                ScriptableObject.DONTENUM);
-        }
-
-        // We know that scope is a Scriptable object since we
-        // constrained the type on initStandardObjects.
-        ScriptableObject global = (ScriptableObject) scope;
-        global.defineProperty("RegExp", ctor, ScriptableObject.DONTENUM);
-
-        return ctor;
+    public NativeRegExpCtor() {
+        functionName = "RegExp";
     }
-
+    
     public String getClassName() {
         return "Function";
-    }
-
-    private int getDollarNumber(String s) {
-        // assumes s starts with '$'
-        if (s.length() != 2)
-            return 0;
-        char c = s.charAt(1);
-        if (c < '0' || '9' < c)
-            return 0;
-        return c - '0';
-    }
-
-    public boolean has(String id, Scriptable start) {
-        if (id != null && id.length() > 1 && id.charAt(0) == '$') {
-            if (getDollarNumber(id) != 0)
-                return true;
-        }
-        return super.has(id, start);
-    }
-
-    public Object get(String id, Scriptable start) {
-        if (id.length() > 1 && id.charAt(0) == '$') {
-            int dollar = getDollarNumber(id);
-            if (dollar != 0) {
-                dollar--;
-                RegExpImpl res = getImpl();
-                return res.getParenSubString(dollar).toString();
-            }
-        }
-        return super.get(id, start);
     }
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
@@ -142,53 +73,199 @@ public class NativeRegExpCtor extends NativeFunction {
 
     public Scriptable construct(Context cx, Scriptable scope, Object[] args) {
         NativeRegExp re = new NativeRegExp();
-        NativeRegExp.compile(cx, re, args, this);
+        re.compile(cx, scope, args);
         re.setPrototype(getClassPrototype(scope, "RegExp"));
         re.setParentScope(getParentScope());
         return re;
     }
 
-    public static boolean getMultiline(ScriptableObject obj) {
-        return getImpl().multiline;
-    }
-
-    public static void setMultiline(ScriptableObject obj, boolean b) {
-        getImpl().multiline = b;
-    }
-
-    public static String getInput(ScriptableObject obj) {
-        String s = getImpl().input;
-        return s == null ? "" : s;
-    }
-
-    public static void setInput(ScriptableObject obj, String s) {
-        getImpl().input = s;
-    }
-
-    public static String getLastMatch(ScriptableObject obj) {
-        SubString ss = getImpl().lastMatch;
-        return ss == null ? "" : ss.toString();
-    }
-
-    public static String getLastParen(ScriptableObject obj) {
-        SubString ss = getImpl().lastParen;
-        return ss == null ? "" : ss.toString();
-    }
-
-    public static String getLeftContext(ScriptableObject obj) {
-        SubString ss = getImpl().leftContext;
-        return ss == null ? "" : ss.toString();
-    }
-
-    public static String getRightContext(ScriptableObject obj) {
-        SubString ss = getImpl().rightContext;
-        return ss == null ? "" : ss.toString();
-    }
-
     static RegExpImpl getImpl() {
         Context cx = Context.getCurrentContext();
         return (RegExpImpl) ScriptRuntime.getRegExpProxy(cx);
-
     }
 
+    protected int getIdDefaultAttributes(int id) {
+        int shifted = id - idBase;
+        if (1 <= shifted && shifted <= MAX_INSTANCE_ID) { 
+            switch (shifted) {
+                case Id_multiline:
+                case Id_STAR:
+                case Id_input:
+                case Id_UNDERSCORE:
+                    return PERMANENT;
+            }
+            return PERMANENT | READONLY;
+        }
+        return super.getIdDefaultAttributes(id);
+    }
+    
+    private static String stringResult(Object obj) {
+        return (obj == null) ? "" : obj.toString();
+    }
+
+    protected Object getIdValue(int id) {
+        int shifted = id - idBase;
+        if (1 <= shifted && shifted <= MAX_INSTANCE_ID) { 
+            RegExpImpl impl = getImpl();
+            switch (shifted) {
+                case Id_multiline:
+                case Id_STAR:
+                    return wrap_boolean(impl.multiline);
+
+                case Id_input:
+                case Id_UNDERSCORE: 
+                    return stringResult(impl.input);
+
+                case Id_lastMatch:
+                case Id_AMPERSAND:
+                    return stringResult(impl.lastMatch);
+
+                case Id_lastParen:
+                case Id_PLUS:
+                    return stringResult(impl.lastParen);
+
+                case Id_leftContext:
+                case Id_BACK_QUOTE:
+                    return stringResult(impl.leftContext);
+
+                case Id_rightContext:
+                case Id_QUOTE:
+                    return stringResult(impl.rightContext);
+            }
+            // Must be one of $1..$9, convert to 0..8
+            int substring_number = shifted - DOLLAR_ID_BASE - 1;
+            return impl.getParenSubString(substring_number).toString();
+        }
+        return super.getIdValue(id);
+    }
+    
+    protected void setIdValue(int id, Object value) {
+        switch (id - idBase) {
+            case Id_multiline:
+            case Id_STAR:
+                getImpl().multiline = ScriptRuntime.toBoolean(value);
+                return;
+
+            case Id_input:
+            case Id_UNDERSCORE: 
+                getImpl().input = ScriptRuntime.toString(value); 
+                return;
+        }
+        super.setIdValue(id, value);
+    }
+
+    protected String getIdName(int id) {
+        int shifted = id - idBase;
+        if (1 <= shifted && shifted <= MAX_INSTANCE_ID) { 
+            switch (shifted) {
+                case Id_multiline:    return "multiline";
+                case Id_STAR:         return "$*";
+
+                case Id_input:        return "input";
+                case Id_UNDERSCORE:   return "$_";
+
+                case Id_lastMatch:    return "lastMatch";
+                case Id_AMPERSAND:    return "$&";
+
+                case Id_lastParen:    return "lastParen";
+                case Id_PLUS:         return "$+";
+
+                case Id_leftContext:  return "leftContext";
+                case Id_BACK_QUOTE:   return "$`";
+
+                case Id_rightContext: return "rightContext";
+                case Id_QUOTE:        return "$'";
+            }
+            // Must be one of $1..$9, convert to 0..8
+            int substring_number = shifted - DOLLAR_ID_BASE - 1;
+            char[] buf = { '$', (char)('1' + substring_number) };
+            return new String(buf);
+        }
+        return super.getIdName(id);
+    }
+
+    protected int maxInstanceId() {
+        // Note: check for idBase == 0 can not be done in constructor, 
+        // because IdScriptable calls maxInstanceId in its constructor
+        // before NativeRegExpCtor constructor gets chance to run any code
+        if (idBase == 0) { idBase = super.maxInstanceId(); }
+        return idBase + MAX_INSTANCE_ID; 
+    }
+
+// #string_id_map#
+
+    private static final int
+        Id_multiline     = 1,
+        Id_STAR          = 2,  // #string=$*#
+
+        Id_input         = 3,
+        Id_UNDERSCORE    = 4,  // #string=$_#
+
+        Id_lastMatch     = 5,
+        Id_AMPERSAND     = 6,  // #string=$&#
+
+        Id_lastParen     = 7,
+        Id_PLUS          = 8,  // #string=$+#
+
+        Id_leftContext   = 9,
+        Id_BACK_QUOTE    = 10, // #string=$`#
+
+        Id_rightContext  = 11,
+        Id_QUOTE         = 12, // #string=$'#
+        
+        DOLLAR_ID_BASE   = 12;
+        
+    private static final int
+        Id_DOLLAR_1 = DOLLAR_ID_BASE + 1, // #string=$1#
+        Id_DOLLAR_2 = DOLLAR_ID_BASE + 2, // #string=$2#
+        Id_DOLLAR_3 = DOLLAR_ID_BASE + 3, // #string=$3#
+        Id_DOLLAR_4 = DOLLAR_ID_BASE + 4, // #string=$4#
+        Id_DOLLAR_5 = DOLLAR_ID_BASE + 5, // #string=$5#
+        Id_DOLLAR_6 = DOLLAR_ID_BASE + 6, // #string=$6#
+        Id_DOLLAR_7 = DOLLAR_ID_BASE + 7, // #string=$7#
+        Id_DOLLAR_8 = DOLLAR_ID_BASE + 8, // #string=$8#
+        Id_DOLLAR_9 = DOLLAR_ID_BASE + 9, // #string=$9#
+
+        MAX_INSTANCE_ID = DOLLAR_ID_BASE + 9;
+
+    protected int mapNameToId(String s) {
+        int id;
+// #generated# Last update: 2001-05-24 16:09:31 GMT+02:00
+        L0: { id = 0; String X = null; int c;
+            L: switch (s.length()) {
+            case 2: switch (s.charAt(1)) {
+                case '&': if (s.charAt(0)=='$') {id=Id_AMPERSAND; break L0;} break L;
+                case '\'': if (s.charAt(0)=='$') {id=Id_QUOTE; break L0;} break L;
+                case '*': if (s.charAt(0)=='$') {id=Id_STAR; break L0;} break L;
+                case '+': if (s.charAt(0)=='$') {id=Id_PLUS; break L0;} break L;
+                case '1': if (s.charAt(0)=='$') {id=Id_DOLLAR_1; break L0;} break L;
+                case '2': if (s.charAt(0)=='$') {id=Id_DOLLAR_2; break L0;} break L;
+                case '3': if (s.charAt(0)=='$') {id=Id_DOLLAR_3; break L0;} break L;
+                case '4': if (s.charAt(0)=='$') {id=Id_DOLLAR_4; break L0;} break L;
+                case '5': if (s.charAt(0)=='$') {id=Id_DOLLAR_5; break L0;} break L;
+                case '6': if (s.charAt(0)=='$') {id=Id_DOLLAR_6; break L0;} break L;
+                case '7': if (s.charAt(0)=='$') {id=Id_DOLLAR_7; break L0;} break L;
+                case '8': if (s.charAt(0)=='$') {id=Id_DOLLAR_8; break L0;} break L;
+                case '9': if (s.charAt(0)=='$') {id=Id_DOLLAR_9; break L0;} break L;
+                case '_': if (s.charAt(0)=='$') {id=Id_UNDERSCORE; break L0;} break L;
+                case '`': if (s.charAt(0)=='$') {id=Id_BACK_QUOTE; break L0;} break L;
+                } break L;
+            case 5: X="input";id=Id_input; break L;
+            case 9: c=s.charAt(4);
+                if (c=='M') { X="lastMatch";id=Id_lastMatch; }
+                else if (c=='P') { X="lastParen";id=Id_lastParen; }
+                else if (c=='i') { X="multiline";id=Id_multiline; }
+                break L;
+            case 11: X="leftContext";id=Id_leftContext; break L;
+            case 12: X="rightContext";id=Id_rightContext; break L;
+            }
+            if (X!=null && X!=s && !X.equals(s)) id = 0;
+        }
+// #/generated#
+// #/string_id_map#
+
+        return (id != 0) ? idBase + id : super.mapNameToId(s); 
+    }
+    
+    private static int idBase;
 }
