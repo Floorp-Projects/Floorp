@@ -1179,13 +1179,14 @@ NS_IMETHODIMP nsOutlinerBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCoun
   else if (aCount < 0) {
     if (mTopRowIndex > aIndex+count-1) {
       // No need to invalidate. The remove happened
-      // completely offscreen.
+      // completely above us (offscreen).
       mTopRowIndex -= count;
       UpdateScrollbar();
     }
-    else if (mTopRowIndex > aIndex) {
+    else if (mTopRowIndex >= aIndex) {
       // This is a full-blown invalidate.
-      mTopRowIndex = aIndex+count-1;
+      if (mTopRowIndex + mPageCount > rowCount - 1)
+        mTopRowIndex = PR_MAX(0, rowCount - 1 - mPageCount);
       UpdateScrollbar();
       Invalidate();
     }
