@@ -609,7 +609,16 @@ sub on_disconnected {
     return if defined($self->{'__mozbot__shutdown'}); # HACK HACK HACK
     $self->{'__mozbot__shutdown'} = 1; # HACK HACK HACK
     my($reason) = $event->args;
-    if ($reason =~ /Bad user info/osi and $serverRestrictsIRCNames ne $server) {
+    if ($reason =~ /Connection timed out/osi
+        and ($serverRestrictsIRCNames ne $server
+             or $serverExpectsValidUsername ne $server)) {
+        # try to set everything up as simple as possible
+        $serverRestrictsIRCNames = $server;
+        $serverExpectsValidUsername = $server;
+        &Configuration::Save($cfgfile, &configStructure(\$serverRestrictsIRCNames));
+        &debug('Hrm, $server is having issues. We\'re gonna try to be nice.');
+        &debug("The full message from the server was: '$reason'");
+    } elsif ($reason =~ /Bad user info/osi and $serverRestrictsIRCNames ne $server) {
         # change our IRC name to something simpler by setting the flag
         $serverRestrictsIRCNames = $server;
         &Configuration::Save($cfgfile, &configStructure(\$serverRestrictsIRCNames));
