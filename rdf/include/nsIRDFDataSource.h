@@ -19,34 +19,34 @@
 #ifndef nsIRDFDataSource_h__
 #define nsIRDFDataSource_h__
 
-/*
-  This file contains the interface definition for an RDF data source.
-*/
-
 #include "nsISupports.h"
 
 // {0F78DA58-8321-11d2-8EAC-00805F29F370}
 #define NS_IRDFDATASOURCE_IID \
 { 0xf78da58, 0x8321, 0x11d2, { 0x8e, 0xac, 0x0, 0x80, 0x5f, 0x29, 0xf3, 0x70 } }
 
-class nsIRDFNode;
 class nsIRDFCursor;
-class nsIRDFObserver;
 class nsIRDFDataBase;
-class nsString;
+class nsIRDFNode;
+class nsIRDFObserver;
+class nsIRDFResource;
 
-// XXX I didn't make any of these methods "const" because it's
-// probably pretty likely that many data sources will just make stuff
-// up at runtime to answer queries.
+/**
+ * An RDF data source.
+ */
 
 class nsIRDFDataSource : public nsISupports {
 public:
+    // XXX I didn't make any of these methods "const" because it's
+    // probably pretty likely that many data sources will just make
+    // stuff up at runtime to answer queries.
+
     /**
      * Specify the URI for the data source: this is the prefix
      * that will be used to register the data source in the
      * data source registry.
      */
-    NS_IMETHOD Init(const nsString& uri) = 0;
+    NS_IMETHOD Init(const char* uri) = 0;
 
     /**
      * Find an RDF resource that points to a given node over the
@@ -55,10 +55,10 @@ public:
      * @return NS_ERROR_FAILURE if there is no source that leads
      * to the target with the specified property.
      */
-    NS_IMETHOD GetSource(nsIRDFNode* property,
+    NS_IMETHOD GetSource(nsIRDFResource* property,
                          nsIRDFNode* target,
                          PRBool tv,
-                         nsIRDFNode*& source /* out */) = 0;
+                         nsIRDFResource** source /* out */) = 0;
 
     /**
      * Find all RDF resources that point to a given node over the
@@ -68,10 +68,10 @@ public:
      * method returns NS_OK, you may assume that nsIRDFCursor points
      * to a valid (but possibly empty) cursor.
      */
-    NS_IMETHOD GetSources(nsIRDFNode* property,
+    NS_IMETHOD GetSources(nsIRDFResource* property,
                           nsIRDFNode* target,
                           PRBool tv,
-                          nsIRDFCursor*& sources /* out */) = 0;
+                          nsIRDFCursor** sources /* out */) = 0;
 
     /**
      * Find a child of that is related to the source by the given arc
@@ -80,10 +80,10 @@ public:
      * @return NS_ERROR_FAILURE if there is no target accessable from the
      * source via the specified property.
      */
-    NS_IMETHOD GetTarget(nsIRDFNode* source,
-                         nsIRDFNode* property,
+    NS_IMETHOD GetTarget(nsIRDFResource* source,
+                         nsIRDFResource* property,
                          PRBool tv,
-                         nsIRDFNode*& target /* out */) = 0;
+                         nsIRDFNode** target /* out */) = 0;
 
     /**
      * Find all children of that are related to the source by the given arc
@@ -93,24 +93,24 @@ public:
      * method returns NS_OK, you may assume that nsIRDFCursor points
      * to a valid (but possibly empty) cursor.
      */
-    NS_IMETHOD GetTargets(nsIRDFNode* source,
-                          nsIRDFNode* property,
+    NS_IMETHOD GetTargets(nsIRDFResource* source,
+                          nsIRDFResource* property,
                           PRBool tv,
-                          nsIRDFCursor*& targets /* out */) = 0;
+                          nsIRDFCursor** targets /* out */) = 0;
 
     /**
      * Add an assertion to the graph.
      */
-    NS_IMETHOD Assert(nsIRDFNode* source, 
-                      nsIRDFNode* property, 
+    NS_IMETHOD Assert(nsIRDFResource* source, 
+                      nsIRDFResource* property, 
                       nsIRDFNode* target,
-                      PRBool tv = PR_TRUE) = 0;
+                      PRBool tv) = 0;
 
     /**
      * Remove an assertion from the graph.
      */
-    NS_IMETHOD Unassert(nsIRDFNode* source,
-                        nsIRDFNode* property,
+    NS_IMETHOD Unassert(nsIRDFResource* source,
+                        nsIRDFResource* property,
                         nsIRDFNode* target) = 0;
 
     /**
@@ -118,11 +118,11 @@ public:
      *
      * @return NS_OK unless a catastrophic error occurs.
      */
-    NS_IMETHOD HasAssertion(nsIRDFNode* source,
-                            nsIRDFNode* property,
+    NS_IMETHOD HasAssertion(nsIRDFResource* source,
+                            nsIRDFResource* property,
                             nsIRDFNode* target,
                             PRBool tv,
-                            PRBool& hasAssertion /* out */) = 0;
+                            PRBool* hasAssertion /* out */) = 0;
 
     /**
      * Add an observer to this data source.
@@ -144,7 +144,7 @@ public:
      * possible empty) nsIRDFCursor object.
      */
     NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
-                           nsIRDFCursor*& labels /* out */) = 0;
+                           nsIRDFCursor** labels /* out */) = 0;
 
     /**
      * Get a cursor to iterate over all the arcs that originate in
@@ -154,8 +154,8 @@ public:
      * returns NS_OK, you may assume that labels points to a valid (but
      * possible empty) nsIRDFCursor object.
      */
-    NS_IMETHOD ArcLabelsOut(nsIRDFNode* source,
-                            nsIRDFCursor*& labels /* out */) = 0;
+    NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
+                            nsIRDFCursor** labels /* out */) = 0;
 
     /**
      * Request that a data source write it's contents out to 
@@ -164,6 +164,5 @@ public:
     NS_IMETHOD Flush() = 0;
 
 };
-
 
 #endif /* nsIRDFDataSource_h__ */

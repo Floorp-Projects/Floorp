@@ -19,37 +19,37 @@
 #ifndef nsIRDFCursor_h__
 #define nsIRDFCursor_h__
 
-/*
-
-  nsIRDFCursor:
-
-  An iterator for RDF data sources.
-
-*/
-
 #include "nsISupports.h"
 class nsIRDFNode;
 
-// 1c2abdb0-4cef-11d2-bc16-00805f912fe7
-#define NS_IRDFCURSOR_IID \
-{ \
-    0x1c2abdb0, \
-    0x4cef, \
-    0x11d2, \
-  { 0xbc, 0x16, 0x00, 0x80, 0x5f, 0x91, 0x2f, 0xe7 } \
-}
-
-
+/**
+ * A simple cursor that enumerates nodes
+ */
 class nsIRDFCursor : public nsISupports {
 public:
+  /**
+   * Determine whether the cursor has more elements.
+   * @return NS_OK unless a catastrophic error occurs.
+   */
+  NS_IMETHOD HasMoreElements(PRBool* result /* out */) = 0;
 
-  NS_IMETHOD HasMoreElements(PRBool& result /* out */) = 0;
-
-  // XXX If the node struct contains an nsIAtom, did you refcount it
-  // before returning?
-
-  NS_IMETHOD GetNext(nsIRDFNode*& next /* in/out */,
-                     PRBool& tv        /* out */) = 0;
+  /**
+   * Fetch then next element, and possibly the truth value of the arc
+   * that leads to the element.
+   *
+   * @param next A pointer to receive the next <tt>nsIRDFNode</tt> object.
+   * @param tv A pointer to a boolean variable to receive the truth value
+   * of the arc that leads to the element. You pass <tt>nsnull</tt> if 
+   * you don't care to know.
+   * @return NS_ERROR_UNEXPECTED if the cursor is empty; otherwise, NS_OK
+   * unless a catastrophic error occurs.
+   */
+  NS_IMETHOD GetNext(nsIRDFNode** next /* out */,
+                     PRBool* tv /* out */) = 0;
 };
+
+// 1c2abdb0-4cef-11d2-bc16-00805f912fe7
+#define NS_IRDFCURSOR_IID \
+{ 0x1c2abdb0, 0x4cef, 0x11d2, { 0xbc, 0x16, 0x00, 0x80, 0x5f, 0x91, 0x2f, 0xe7 } }
 
 #endif /* nsIRDFCursor_h__ */

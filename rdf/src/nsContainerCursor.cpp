@@ -53,6 +53,8 @@
 ////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_IID(kIRDFResourceManagerIID, NS_IRDFRESOURCEMANAGER_IID);
+static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
+
 static NS_DEFINE_CID(kRDFResourceManagerCID,  NS_RDFRESOURCEMANAGER_CID);
 
 ////////////////////////////////////////////////////////////////////////
@@ -68,24 +70,24 @@ class ContainerCursorImpl : public nsIRDFCursor {
 private:
     nsIRDFResourceManager* mResourceMgr;
     nsIRDFDataSource* mDataSource;
-    nsIRDFNode* mContainer;
+    nsIRDFResource* mContainer;
     nsIRDFNode* mNext;
     PRInt32 mCounter;
 
     void SkipToNext(void);
 
 public:
-    ContainerCursorImpl(nsIRDFDataSource* ds, nsIRDFNode* container);
+    ContainerCursorImpl(nsIRDFDataSource* ds, nsIRDFResource* container);
     virtual ~ContainerCursorImpl(void);
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD HasMoreElements(PRBool& result);
-    NS_IMETHOD GetNext(nsIRDFNode*& next, PRBool& tv);
+    NS_IMETHOD HasMoreElements(PRBool* result);
+    NS_IMETHOD GetNext(nsIRDFNode** next, PRBool* tv);
 };
 
 ContainerCursorImpl::ContainerCursorImpl(nsIRDFDataSource* ds,
-                                         nsIRDFNode* container)
+                                         nsIRDFResource* container)
     : mDataSource(ds), mContainer(container), mNext(nsnull), mCounter(1)
 {
     NS_ASSERTION(ds != nsnull, "null ptr");
@@ -123,21 +125,27 @@ NS_IMPL_ISUPPORTS(ContainerCursorImpl, kIRDFCursorIID);
 
 
 NS_IMETHODIMP
-ContainerCursorImpl::HasMoreElements(PRBool& result)
+ContainerCursorImpl::HasMoreElements(PRBool* result)
 {
-    result = (mNext != nsnull);
+    if (! result)
+        return NS_ERROR_NULL_POINTER;
+
+    *result = (mNext != nsnull);
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-ContainerCursorImpl::GetNext(nsIRDFNode*& next, PRBool& tv)
+ContainerCursorImpl::GetNext(nsIRDFNode** next, PRBool* tv)
 {
+    if (!next)
+        return NS_ERROR_NULL_POINTER;
+
     if (! mNext)
         return NS_ERROR_UNEXPECTED;
 
-    next = mNext; // no need to addref, SkipToNext() did it
-    tv = PR_TRUE;
+    *next = mNext; // no need to addref, SkipToNext() did it
+    if (tv) *tv = PR_TRUE;
 
     SkipToNext();
     return NS_OK;
@@ -153,22 +161,28 @@ ContainerCursorImpl::SkipToNext(void)
     nsresult rv;
     mNext = nsnull;
 
-    nsIRDFNode* RDF_nextVal = nsnull;
-    nsIRDFNode* nextVal     = nsnull;
+    nsIRDFResource* RDF_nextVal = nsnull;
+    nsIRDFNode* nextNode        = nsnull;
+    nsIRDFLiteral* nextVal      = nsnull;
+    const PRUnichar* s;
     nsAutoString next;
     PRInt32 last;
     PRInt32 err;
 
     // XXX we could cache all this crap when the cursor gets created.
-    if (NS_FAILED(rv = mResourceMgr->GetNode(kURIRDF_nextVal, RDF_nextVal)))
+    if (NS_FAILED(rv = mResourceMgr->GetResource(kURIRDF_nextVal, &RDF_nextVal)))
         goto done;
 
-    if (NS_FAILED(rv = mDataSource->GetTarget(mContainer, RDF_nextVal, PR_TRUE, nextVal)))
+    if (NS_FAILED(rv = mDataSource->GetTarget(mContainer, RDF_nextVal, PR_TRUE, &nextNode)))
         goto done;
 
-    if (NS_FAILED(rv = nextVal->GetStringValue(next)))
+    if (NS_FAILED(rv = nextNode->QueryInterface(kIRDFLiteralIID, (void**) &nextVal)))
         goto done;
 
+    if (NS_FAILED(rv = nextVal->GetValue(&s)))
+        goto done;
+
+    next = s;
     last = next.ToInteger(&err);
     if (NS_FAILED(err))
         goto done;
@@ -178,11 +192,11 @@ ContainerCursorImpl::SkipToNext(void)
         next.Append("_");
         next.Append(mCounter, 10);
 
-        nsIRDFNode* ordinalProperty = nsnull;
-        if (NS_FAILED(rv = mResourceMgr->GetNode(next, ordinalProperty)))
+        nsIRDFResource* ordinalProperty = nsnull;
+        if (NS_FAILED(rv = mResourceMgr->GetUnicodeResource(next, &ordinalProperty)))
             break;
             
-        rv = mDataSource->GetTarget(mContainer, ordinalProperty, PR_TRUE, mNext);
+        rv = mDataSource->GetTarget(mContainer, ordinalProperty, PR_TRUE, &mNext);
         NS_IF_RELEASE(ordinalProperty);
 
         ++mCounter;
@@ -196,6 +210,7 @@ ContainerCursorImpl::SkipToNext(void)
     }
 
 done:
+    NS_IF_RELEASE(nextNode);
     NS_IF_RELEASE(nextVal);
     NS_IF_RELEASE(RDF_nextVal);
 }
@@ -205,14 +220,14 @@ done:
 
 nsresult
 NS_NewContainerCursor(nsIRDFDataSource* ds,
-                      nsIRDFNode* container,
-                      nsIRDFCursor*& cursor)
+                      nsIRDFResource* container,
+                      nsIRDFCursor** cursor)
 {
     nsIRDFCursor* result = new ContainerCursorImpl(ds, container);
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    cursor = result;
-    NS_ADDREF(cursor);
+    *cursor = result;
+    NS_ADDREF(result);
     return NS_OK;
 }

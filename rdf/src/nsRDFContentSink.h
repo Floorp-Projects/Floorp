@@ -24,7 +24,7 @@
 
 class nsIURL;
 class nsVoidArray;
-class nsIRDFNode;
+class nsIRDFResource;
 class nsIRDFDataSource;
 class nsIRDFResourceManager;
 class nsINameSpaceManager;
@@ -104,7 +104,7 @@ protected:
     // RDF-specific parsing
     nsresult GetIdAboutAttribute(const nsIParserNode& aNode, nsString& rResource);
     nsresult GetResourceAttribute(const nsIParserNode& aNode, nsString& rResource);
-    nsresult AddProperties(const nsIParserNode& aNode, nsIRDFNode* aSubject);
+    nsresult AddProperties(const nsIParserNode& aNode, nsIRDFResource* aSubject);
 
     virtual nsresult OpenRDF(const nsIParserNode& aNode);
     virtual nsresult OpenObject(const nsIParserNode& aNode);
@@ -112,18 +112,15 @@ protected:
     virtual nsresult OpenMember(const nsIParserNode& aNode);
     virtual nsresult OpenValue(const nsIParserNode& aNode);
 
-    // RDF helper routines
-    nsresult Assert(nsIRDFNode* subject, nsIRDFNode* predicate, nsIRDFNode* object);
-    nsresult Assert(nsIRDFNode* subject, nsIRDFNode* predicate, const nsString& objectLiteral);
-    nsresult Assert(nsIRDFNode* subject, const nsString& predicateURI, const nsString& objectLiteral);
-    nsIRDFResourceManager* mRDFResourceManager;
+    // Miscellaneous RDF junk
+    nsIRDFResourceManager* mResourceMgr;
     nsIRDFDataSource*      mDataSource;
     RDFContentSinkState    mState;
 
     // content stack management
-    PRInt32     PushContext(nsIRDFNode *aContext, RDFContentSinkState aState);
-    nsresult    PopContext(nsIRDFNode*& rContext, RDFContentSinkState& rState);
-    nsIRDFNode* GetContextElement(PRInt32 ancestor = 0);
+    PRInt32         PushContext(nsIRDFResource *aContext, RDFContentSinkState aState);
+    nsresult        PopContext(nsIRDFResource*& rContext, RDFContentSinkState& rState);
+    nsIRDFResource* GetContextElement(PRInt32 ancestor = 0);
 
     nsVoidArray* mContextStack;
 

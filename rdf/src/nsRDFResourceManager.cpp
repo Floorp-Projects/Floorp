@@ -17,160 +17,312 @@
  */
 
 
-#include "nsIRDFNode.h"
-#include "nsRDFResourceManager.h"
-#include "nsString.h"
 #include "nsIAtom.h"
-
-static NS_DEFINE_IID(kIRDFResourceManagerIID, NS_IRDFRESOURCEMANAGER_IID);
+#include "nsIRDFNode.h"
+#include "nsIRDFResourceManager.h"
+#include "nsString.h"
+#include "plhash.h"
+#include "plstr.h"
 
 ////////////////////////////////////////////////////////////////////////
 
-class RDFNodeImpl : public nsIRDFNode {
+static NS_DEFINE_IID(kIRDFResourceManagerIID, NS_IRDFRESOURCEMANAGER_IID);
+static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
+static NS_DEFINE_IID(kIRDFResourceIID,        NS_IRDFRESOURCE_IID);
+static NS_DEFINE_IID(kIRDFNodeIID,            NS_IRDFNODE_IID);
+static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
+
+////////////////////////////////////////////////////////////////////////
+
+class ResourceImpl;
+
+class ResourceManagerImpl : public nsIRDFResourceManager {
+protected:
+    PLHashTable* mResources;
+    virtual ~ResourceManagerImpl(void);
+
 public:
-    RDFNodeImpl(nsRDFResourceManager* mgr, nsIAtom* value);
-    virtual ~RDFNodeImpl(void);
+    ResourceManagerImpl(void);
 
     // nsISupports
     NS_DECL_ISUPPORTS
 
-    // nsIRDFNode
-    NS_IMETHOD GetStringValue(nsString& value) const;
+    // nsIRDFResourceManager
+    NS_IMETHOD GetResource(const char* uri, nsIRDFResource** resource);
+    NS_IMETHOD GetUnicodeResource(const PRUnichar* uri, nsIRDFResource** resource);
+    NS_IMETHOD GetLiteral(const PRUnichar* value, nsIRDFLiteral** literal);
 
-    NS_IMETHOD GetAtomValue(nsIAtom*& value) const;
-
-
-private:
-    nsIAtom*              mValue;
-    nsRDFResourceManager* mMgr;
+    void ReleaseNode(const ResourceImpl* resource);
 };
 
 
-RDFNodeImpl::RDFNodeImpl(nsRDFResourceManager* mgr, nsIAtom* value)
-    : mMgr(mgr), mValue(value)
+////////////////////////////////////////////////////////////////////////
+
+class ResourceImpl : public nsIRDFResource {
+public:
+    ResourceImpl(ResourceManagerImpl* mgr, const char* uri);
+    virtual ~ResourceImpl(void);
+
+    // nsISupports
+    NS_DECL_ISUPPORTS
+
+    // nsIRDFResource
+    NS_IMETHOD GetValue(const char* *uri) const;
+    NS_IMETHOD EqualsResource(const nsIRDFResource* resource, PRBool* result) const;
+    NS_IMETHOD EqualsString(const char* uri, PRBool* result) const;
+
+    // Implementation methods
+    const char* GetURI(void) const {
+        return mURI;
+    }
+
+private:
+    char*                mURI;
+    ResourceManagerImpl* mMgr;
+};
+
+
+ResourceImpl::ResourceImpl(ResourceManagerImpl* mgr, const char* uri)
+    : mMgr(mgr)
 {
     NS_INIT_REFCNT();
-    NS_IF_ADDREF(mValue);
     NS_IF_ADDREF(mMgr);
+    mURI = PL_strdup(uri);
 }
 
 
-RDFNodeImpl::~RDFNodeImpl(void)
+ResourceImpl::~ResourceImpl(void)
 {
     mMgr->ReleaseNode(this);
-    NS_IF_RELEASE(mValue);
+    PL_strfree(mURI);
     NS_IF_RELEASE(mMgr);
 }
 
 
-static NS_DEFINE_IID(kIRDFNodeIID, NS_IRDFNODE_IID);
-NS_IMPL_ISUPPORTS(RDFNodeImpl, kIRDFNodeIID);
+NS_IMPL_ADDREF(ResourceImpl);
+NS_IMPL_RELEASE(ResourceImpl);
+
+nsresult
+ResourceImpl::QueryInterface(REFNSIID iid, void** result)
+{
+    if (! result)
+        return NS_ERROR_NULL_POINTER;
+
+    *result = nsnull;
+    if (iid.Equals(kIRDFResourceIID) ||
+        iid.Equals(kIRDFNodeIID) ||
+        iid.Equals(kISupportsIID)) {
+        *result = NS_STATIC_CAST(nsIRDFResource*, this);
+        AddRef();
+        return NS_OK;
+    }
+    return NS_NOINTERFACE;
+}
 
 NS_IMETHODIMP
-RDFNodeImpl::GetStringValue(nsString& value) const
+ResourceImpl::GetValue(const char* *uri) const
 {
-    mValue->ToString(value);
+    if (!uri)
+        return NS_ERROR_NULL_POINTER;
+
+    *uri = mURI;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-RDFNodeImpl::GetAtomValue(nsIAtom*& value) const
+ResourceImpl::EqualsResource(const nsIRDFResource* resource, PRBool* result) const
 {
-    value = mValue;
-    value->AddRef();
+    if (!resource || !result)
+        return NS_ERROR_NULL_POINTER;
+
+    *result = (resource == this);
     return NS_OK;
 }
+
+
+NS_IMETHODIMP
+ResourceImpl::EqualsString(const char* uri, PRBool* result) const
+{
+    if (!uri || !result)
+        return NS_ERROR_NULL_POINTER;
+
+    *result = (PL_strcmp(uri, mURI) == 0);
+    return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
-// ResourceHashKey
+//
 
-class ResourceHashKey : public nsHashKey
-{
-private:
-    nsIAtom* mResource;
-
+class LiteralImpl : public nsIRDFLiteral {
 public:
-    ResourceHashKey(nsIAtom* resource) : mResource(resource) {
-        NS_IF_ADDREF(mResource);
-    }
+    LiteralImpl(const PRUnichar* s);
+    virtual ~LiteralImpl(void);
 
-    virtual ~ResourceHashKey(void) {
-        NS_IF_RELEASE(mResource);
-    }
+    // nsISupports
+    NS_DECL_ISUPPORTS
 
-    // nsHashKey pure virtual interface methods
-    virtual PRUint32 HashValue(void) const {
-        return (PRUint32) mResource;
-    }
+    // nsIRDFLiteral
+    NS_IMETHOD GetValue(const PRUnichar* *value) const;
+    NS_IMETHOD Equals(const nsIRDFLiteral* literal, PRBool* result) const;
 
-    virtual PRBool Equals(const nsHashKey* aKey) const {
-        ResourceHashKey* that;
-
-        // XXX like to do a dynamic_cast<> here...
-        that = (ResourceHashKey*) aKey;
-
-        return (that->mResource == this->mResource);
-    }
-
-    virtual nsHashKey* Clone(void) const {
-        return new ResourceHashKey(mResource);
-    }
+private:
+    nsAutoString mValue;
 };
 
 
-////////////////////////////////////////////////////////////////////////
-// nsRDFResourceManager
-
-nsRDFResourceManager::nsRDFResourceManager(void)
+LiteralImpl::LiteralImpl(const PRUnichar* s)
+    : mValue(s)
 {
     NS_INIT_REFCNT();
 }
 
-
-nsRDFResourceManager::~nsRDFResourceManager(void)
+LiteralImpl::~LiteralImpl(void)
 {
-    // XXX LEAK! Make sure you release the nodes!
+}
+
+NS_IMPL_ADDREF(LiteralImpl);
+NS_IMPL_RELEASE(LiteralImpl);
+
+nsresult
+LiteralImpl::QueryInterface(REFNSIID iid, void** result)
+{
+    if (! result)
+        return NS_ERROR_NULL_POINTER;
+
+    *result = nsnull;
+    if (iid.Equals(kIRDFLiteralIID) ||
+        iid.Equals(kIRDFNodeIID) ||
+        iid.Equals(kISupportsIID)) {
+        *result = NS_STATIC_CAST(nsIRDFLiteral*, this);
+        AddRef();
+        return NS_OK;
+    }
+    return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP
+LiteralImpl::GetValue(const PRUnichar* *value) const
+{
+    NS_ASSERTION(value, "null ptr");
+    if (! value)
+        return NS_ERROR_NULL_POINTER;
+
+    *value = mValue.GetUnicode();
+    return NS_OK;
 }
 
 
-NS_IMPL_ISUPPORTS(nsRDFResourceManager, kIRDFResourceManagerIID);
+NS_IMETHODIMP
+LiteralImpl::Equals(const nsIRDFLiteral* literal, PRBool* result) const
+{
+    NS_ASSERTION(literal && result, "null ptr");
+    if (!literal || !result)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+    const PRUnichar* p;
+    if (NS_FAILED(rv = literal->GetValue(&p)))
+        return rv;
+
+    nsAutoString s(p);
+
+    *result = s.Equals(mValue);
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
+// ResourceManagerImpl
+
+
+ResourceManagerImpl::ResourceManagerImpl(void)
+    : mResources(nsnull)
+{
+    NS_INIT_REFCNT();
+    mResources = PL_NewHashTable(1023,              // nbuckets
+                                 PL_HashString,     // hash fn
+                                 PL_CompareStrings, // key compare fn
+                                 PL_CompareValues,  // value compare fn
+                                 nsnull, nsnull);   // alloc ops & priv
+}
+
+
+ResourceManagerImpl::~ResourceManagerImpl(void)
+{
+    PL_HashTableDestroy(mResources);
+}
+
+
+NS_IMPL_ISUPPORTS(ResourceManagerImpl, kIRDFResourceManagerIID);
 
 
 NS_IMETHODIMP
-nsRDFResourceManager::GetNode(const nsString& uri, nsIRDFNode*& resource)
+ResourceManagerImpl::GetResource(const char* uri, nsIRDFResource** resource)
 {
-    nsIAtom* atom = NS_NewAtom(uri);
-    if (!atom)
-        return NS_ERROR_OUT_OF_MEMORY;
+    ResourceImpl* result =
+        NS_STATIC_CAST(ResourceImpl*, PL_HashTableLookup(mResources, uri));
 
-    ResourceHashKey key(atom);
+    if (! result) {
+        result = new ResourceImpl(this, uri);
+        if (! result)
+            return NS_ERROR_OUT_OF_MEMORY;
 
-    resource = NS_STATIC_CAST(nsIRDFNode*,mResources.Get(&key));
-    if (! resource) {
-        resource = new RDFNodeImpl(this, atom);
-        if (resource)
-            mResources.Put(&key, resource);
+        // This is a little trick to make storage more efficient. For
+        // the "key" in the table, we'll use the string value that's
+        // stored as a member variable of the ResourceImpl object.
+        PL_HashTableAdd(mResources, result->GetURI(), result);
 
-        // We don't AddRef() the resource.
+        // *We* don't AddRef() the resource, because the resource
+        // AddRef()s *us*.
     }
 
-    atom->Release();
+    result->AddRef();
+    *resource = result;
 
-    if (! resource)
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+ResourceManagerImpl::GetUnicodeResource(const PRUnichar* uri, nsIRDFResource** resource)
+{
+    nsString s(uri);
+    char* cstr = s.ToNewCString();
+    nsresult rv = GetResource(cstr, resource);
+    delete[] cstr;
+    return rv;
+}
+
+
+NS_IMETHODIMP
+ResourceManagerImpl::GetLiteral(const PRUnichar* uri, nsIRDFLiteral** literal)
+{
+    LiteralImpl* result = new LiteralImpl(uri);
+    if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    resource->AddRef();
+    *literal = result;
+    NS_ADDREF(result);
     return NS_OK;
 }
 
 
 void
-nsRDFResourceManager::ReleaseNode(const RDFNodeImpl* resource)
+ResourceManagerImpl::ReleaseNode(const ResourceImpl* resource)
 {
-    nsIAtom* atom;
-    resource->GetAtomValue(atom);
-    ResourceHashKey key(atom);
-    atom->Release();
+    PL_HashTableRemove(mResources, resource->GetURI());
+}
 
-    mResources.Remove(&key);
+////////////////////////////////////////////////////////////////////////
+
+nsresult
+NS_NewRDFResourceManager(nsIRDFResourceManager** mgr)
+{
+    ResourceManagerImpl* result = new ResourceManagerImpl();
+    if (! result)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    *mgr = result;
+    NS_ADDREF(result);
+    return NS_OK;
 }

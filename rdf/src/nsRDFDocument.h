@@ -28,6 +28,7 @@ class nsIArena;
 class nsIParser;
 class nsISupportsArray;
 class nsINameSpaceManager;
+class nsIRDFNode;
 
 /**
  * An NGLayout document context for displaying an RDF graph.
@@ -190,11 +191,11 @@ public:
 
     // nsIRDFDocument interface
     NS_IMETHOD Init(void);
-    NS_IMETHOD SetRootResource(nsIRDFNode* resource);
+    NS_IMETHOD SetRootResource(nsIRDFResource* resource);
     NS_IMETHOD GetDataBase(nsIRDFDataBase*& result);
     NS_IMETHOD CreateChildren(nsIRDFContent* element);
-    NS_IMETHOD AddTreeProperty(nsIRDFNode* resource);
-    NS_IMETHOD RemoveTreeProperty(nsIRDFNode* resource);
+    NS_IMETHOD AddTreeProperty(nsIRDFResource* resource);
+    NS_IMETHOD RemoveTreeProperty(nsIRDFResource* resource);
 
 protected:
     nsIContent*
@@ -202,18 +203,18 @@ protected:
                 const nsIContent* aTest1,
                 const nsIContent* aTest2) const;
 
-    PRBool IsTreeProperty(const nsIRDFNode* resource) const;
+    PRBool IsTreeProperty(const nsIRDFResource* resource) const;
 
     nsresult AttachTextNode(nsIContent* parent,
                             nsIRDFNode* value);
 
     nsresult NewChild(const nsString& tag,
-                      nsIRDFNode* resource,
+                      nsIRDFResource* resource,
                       nsIRDFContent*& result,
                       PRBool childrenMustBeGenerated);
 
     virtual nsresult AddChild(nsIRDFContent* parent,
-                              nsIRDFNode* property,
+                              nsIRDFResource* property,
                               nsIRDFNode* value) = 0;
 
     nsIArena*              mArena;

@@ -33,16 +33,13 @@ public:
     NS_IMETHOD QueryInterface(REFNSIID iid, void** result);
 
     // nsIRDFCursor
-    NS_IMETHOD HasMoreElements(PRBool& result);
-    NS_IMETHOD GetNext(nsIRDFNode*& next, PRBool& tv);
+    NS_IMETHOD HasMoreElements(PRBool* result);
+    NS_IMETHOD GetNext(nsIRDFNode** next, PRBool* tv);
 };
 
-nsIRDFCursor* gEmptyCursor;
-static EmptyCursorImpl gEmptyCursorImpl;
 
 EmptyCursorImpl::EmptyCursorImpl(void)
 {
-    gEmptyCursor = this;
 }
 
 NS_IMETHODIMP_(nsrefcnt)
@@ -75,18 +72,31 @@ EmptyCursorImpl::QueryInterface(REFNSIID iid, void** result)
 
 
 NS_IMETHODIMP
-EmptyCursorImpl::HasMoreElements(PRBool& result)
+EmptyCursorImpl::HasMoreElements(PRBool* result)
 {
-    result = PR_FALSE;
+    if (! result)
+        return NS_ERROR_NULL_POINTER;
+
+    *result = PR_FALSE;
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-EmptyCursorImpl::GetNext(nsIRDFNode*& next, PRBool& tv)
+EmptyCursorImpl::GetNext(nsIRDFNode** next, PRBool* tv)
 {
-    next = nsnull;
+    if (! next)
+        return NS_ERROR_NULL_POINTER;
+
+    *next = nsnull;
     return NS_ERROR_UNEXPECTED;
 }
 
 
+nsresult
+NS_NewEmptyRDFCursor(nsIRDFCursor** result)
+{
+    static EmptyCursorImpl gEmptyCursor;
+    *result = &gEmptyCursor;
+    return NS_OK;
+}

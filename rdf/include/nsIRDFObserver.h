@@ -19,29 +19,36 @@
 #ifndef nsIRDFObserver_h__
 #define nsIRDFObserver_h__
 
-/*
-  This file defines the interface for RDF observers.
-*/
-
 #include "nsISupports.h"
+
+class nsIRDFDataSource;
+class nsIRDFResource;
+class nsIRDFNode;
+
+/**
+ * An observer on an nsIRDFDataSource.
+ */
+class nsIRDFObserver : public nsISupports
+{
+public:
+    /**
+     * Called whenever a new assertion is made in the data source.
+     */
+    NS_IMETHOD OnAssert(nsIRDFResource* subject,
+                        nsIRDFResource* predicate,
+                        nsIRDFNode* object) = 0;
+
+    /**
+     * Called whenever an assertion is removed from the data source.
+     */
+    NS_IMETHOD OnUnassert(nsIRDFResource* subject,
+                          nsIRDFResource* predicate,
+                          nsIRDFNode* object) = 0;
+};
 
 
 // 3cc75360-484a-11d2-bc16-00805f912fe7
 #define NS_IRDFOBSERVER_IID \
-{ \
-    0x3cc75360, \
-    0x484a, \
-    0x11d2, \
-  { 0xbc, 0x16, 0x00, 0x80, 0x5f, 0x91, 0x2f, 0xe7 } \
-}
-
-class nsIRDFDataSource;      
-
-class nsIRDFObserver : public nsISupports
-{
-public:
-  
-};
-
+{ 0x3cc75360, 0x484a, 0x11d2, { 0xbc, 0x16, 0x00, 0x80, 0x5f, 0x91, 0x2f, 0xe7 } }
 
 #endif /* nsIRDFObserver_h__ */

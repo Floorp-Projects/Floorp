@@ -18,10 +18,9 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
+#include "nsIRDFResourceManager.h"
 #include "nsRDFBuiltInDataSources.h"
-#include "nsRDFResourceManager.h"
 #include "nsRDFDocument.h"
-#include "nsRDFRegistryImpl.h"
 #include "nsRDFCID.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -30,16 +29,15 @@ static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 static NS_DEFINE_CID(kRDFBookmarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFHTMLDocumentCID,       NS_RDFHTMLDOCUMENT_CID);
 static NS_DEFINE_CID(kRDFMemoryDataSourceCID,   NS_RDFMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFRegistryCID,           NS_RDFREGISTRY_CID);
 static NS_DEFINE_CID(kRDFResourceManagerCID,    NS_RDFRESOURCEMANAGER_CID);
 static NS_DEFINE_CID(kRDFSimpleDataBaseCID,     NS_RDFSIMPLEDATABASE_CID);
 static NS_DEFINE_CID(kRDFStreamDataSourceCID,   NS_RDFSTREAMDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFTreeDocumentCID,       NS_RDFTREEDOCUMENT_CID);
 
-class nsRDFFactory : public nsIFactory
+class RDFFactoryImpl : public nsIFactory
 {
 public:
-    nsRDFFactory(const nsCID &aClass);
+    RDFFactoryImpl(const nsCID &aClass);
 
     // nsISupports methods
     NS_DECL_ISUPPORTS
@@ -52,7 +50,7 @@ public:
     NS_IMETHOD LockFactory(PRBool aLock);
 
 protected:
-    virtual ~nsRDFFactory();
+    virtual ~RDFFactoryImpl();
 
 private:
     nsCID     mClassID;
@@ -60,19 +58,19 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
-nsRDFFactory::nsRDFFactory(const nsCID &aClass)
+RDFFactoryImpl::RDFFactoryImpl(const nsCID &aClass)
 {
     NS_INIT_REFCNT();
     mClassID = aClass;
 }
 
-nsRDFFactory::~nsRDFFactory()
+RDFFactoryImpl::~RDFFactoryImpl()
 {
     NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 NS_IMETHODIMP
-nsRDFFactory::QueryInterface(const nsIID &aIID,
+RDFFactoryImpl::QueryInterface(const nsIID &aIID,
                                       void **aResult)
 {
     if (! aResult)
@@ -93,12 +91,12 @@ nsRDFFactory::QueryInterface(const nsIID &aIID,
     return NS_NOINTERFACE;
 }
 
-NS_IMPL_ADDREF(nsRDFFactory);
-NS_IMPL_RELEASE(nsRDFFactory);
+NS_IMPL_ADDREF(RDFFactoryImpl);
+NS_IMPL_RELEASE(RDFFactoryImpl);
 
 
 NS_IMETHODIMP
-nsRDFFactory::CreateInstance(nsISupports *aOuter,
+RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
                              const nsIID &aIID,
                              void **aResult)
 {
@@ -111,49 +109,35 @@ nsRDFFactory::CreateInstance(nsISupports *aOuter,
     *aResult = nsnull;
 
     nsresult rv;
-    PRBool wasRefCounted = PR_FALSE;
+    PRBool wasRefCounted = PR_TRUE;
     nsISupports *inst = nsnull;
     if (mClassID.Equals(kRDFResourceManagerCID)) {
-        inst = NS_STATIC_CAST(nsISupports*, new nsRDFResourceManager());
+        if (NS_FAILED(rv = NS_NewRDFResourceManager((nsIRDFResourceManager**) &inst)))
+            return rv;
     }
     else if (mClassID.Equals(kRDFMemoryDataSourceCID)) {
         if (NS_FAILED(rv = NS_NewRDFMemoryDataSource((nsIRDFDataSource**) &inst)))
             return rv;
-
-        wasRefCounted = PR_TRUE;
     }
     else if (mClassID.Equals(kRDFStreamDataSourceCID)) {
         if (NS_FAILED(rv = NS_NewRDFStreamDataSource((nsIRDFDataSource**) &inst)))
             return rv;
-
-        wasRefCounted = PR_TRUE;
     }
     else if (mClassID.Equals(kRDFBookmarkDataSourceCID)) {
         if (NS_FAILED(rv = NS_NewRDFBookmarkDataSource((nsIRDFDataSource**) &inst)))
             return rv;
-
-        wasRefCounted = PR_TRUE;
-    }
-    else if (mClassID.Equals(kRDFRegistryCID)) {
-        inst = NS_STATIC_CAST(nsISupports*, new nsRDFRegistryImpl());
     }
     else if (mClassID.Equals(kRDFSimpleDataBaseCID)) {
         if (NS_FAILED(rv = NS_NewRDFSimpleDataBase((nsIRDFDataBase**) &inst)))
             return rv;
-
-        wasRefCounted = PR_TRUE;
     }
     else if (mClassID.Equals(kRDFHTMLDocumentCID)) {
         if (NS_FAILED(rv = NS_NewRDFHTMLDocument((nsIRDFDocument**) &inst)))
             return rv;
-
-        wasRefCounted = PR_TRUE;
     }
     else if (mClassID.Equals(kRDFTreeDocumentCID)) {
         if (NS_FAILED(rv = NS_NewRDFTreeDocument((nsIRDFDocument**) &inst)))
             return rv;
-
-        wasRefCounted = PR_TRUE;
     }
     else {
         return NS_ERROR_NO_INTERFACE;
@@ -172,7 +156,7 @@ nsRDFFactory::CreateInstance(nsISupports *aOuter,
     return rv;
 }
 
-nsresult nsRDFFactory::LockFactory(PRBool aLock)
+nsresult RDFFactoryImpl::LockFactory(PRBool aLock)
 {
     // Not implemented in simplest case.
     return NS_OK;
@@ -189,7 +173,7 @@ NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
     if (! aFactory)
         return NS_ERROR_NULL_POINTER;
 
-    *aFactory = new nsRDFFactory(aClass);
+    *aFactory = new RDFFactoryImpl(aClass);
     if (aFactory == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
