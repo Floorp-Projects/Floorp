@@ -132,7 +132,7 @@ function rdf_duassert (n1, a, n2)
 }
 
 RDFHelper.prototype.Change =
-function rdf_duassert (n1, a, n2)
+function rdf_change (n1, a, n2)
 {
 
     var oldN2 = this.ds.GetTarget (n1, a, true);
@@ -148,7 +148,7 @@ function rdf_duassert (n1, a, n2)
 }
 
 RDFHelper.prototype.clearTargets =
-function rdf_inittree (n1, a, recurse)
+function rdf_cleart (n1, a, recurse)
 {
     if (typeof recurse == "undefined")
         recurse = false;
