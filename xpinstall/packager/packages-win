@@ -198,6 +198,7 @@ bin\chrome\htmlBindings.xml
 bin\chrome\platformHTMLBindings.xml
 bin\chrome\search\*
 bin\defaults\pref\all.js
+bin\defaults\pref\mailnews.js
 bin\defaults\pref\config.js
 bin\defaults\pref\initpref.js
 bin\defaults\pref\psm-glue.js
@@ -261,5 +262,4 @@ bin\components\impText.dll
 bin\chrome\addressbook\*
 bin\chrome\messenger\*
 bin\chrome\messengercompose\*
-bin\defaults\pref\mailnews.js
 bin\help\mailhelp\*
