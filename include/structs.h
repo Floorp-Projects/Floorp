@@ -331,6 +331,9 @@ struct MWContext_ {
     void *ncast_channel_context;
   /* if the window is displaying an XML file, keep a pointer to the XML file structure here */
     void*   xmlfile;
+#ifdef MODULAR_NETLIB
+    URL_Struct*   modular_data;
+#endif
 };
 
 
