@@ -125,7 +125,7 @@ function filterEditorOnLoad()
       }
       gFilterNameElement.value = name;
     }
-    gFilterNameElement.focus();
+    gFilterNameElement.select();
     moveToAlertPosition();
 }
 
