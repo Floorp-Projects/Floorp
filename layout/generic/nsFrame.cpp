@@ -3340,8 +3340,13 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           return ((result) ? result : NS_ERROR_FAILURE);
         }
         result = iter->FindLineContaining(thisBlock, &thisLine);
-        if (NS_FAILED(result) || thisLine <0)
-          return result;
+
+        if (NS_FAILED(result))
+           return result;
+
+        if (thisLine < 0) 
+          return  NS_ERROR_FAILURE;
+
         int edgeCase = 0;//no edge case. this should look at thisLine
         PRBool doneLooping = PR_FALSE;//tells us when no more block frames hit.
         //this part will find a frame or a block frame. if its a block frame
