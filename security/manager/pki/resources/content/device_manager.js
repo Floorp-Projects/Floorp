@@ -170,12 +170,14 @@ function enableButtons()
     // so grab the token type
     var selected_token = selected_slot.getToken();
     if (selected_token != null) {
-      if (selected_token.needsLogin()) {
+      if (selected_token.needsLogin() || !(selected_token.needsUserInit)) {
         pw_toggle = "false";
-        if (selected_token.isLoggedIn()) {
-          logout_toggle = "false";
-        } else {
-          login_toggle = "false";
+        if(selected_token.needsLogin()) {
+          if (selected_token.isLoggedIn()) {
+            logout_toggle = "false";
+          } else {
+            login_toggle = "false";
+          }
         }
       }
     }
