@@ -45,7 +45,8 @@ xptiFile::xptiFile()
     :   mSize(),
         mDate(),
         mName(nsnull),
-        mGuts(nsnull)
+        mGuts(nsnull),
+        mDirectory(0)
 {
     // empty
     MOZ_COUNT_CTOR(xptiFile);
@@ -53,6 +54,7 @@ xptiFile::xptiFile()
 
 xptiFile::xptiFile(const nsInt64&  aSize,
          const nsInt64&  aDate,
+         PRUint32        aDirectory,
          const char*     aName,
          xptiWorkingSet* aWorkingSet,
          XPTHeader*      aHeader /*= nsnull */)
@@ -60,7 +62,8 @@ xptiFile::xptiFile(const nsInt64&  aSize,
     :   mSize(aSize),
         mDate(aDate),
         mName(aName),
-        mGuts(nsnull)
+        mGuts(nsnull),
+        mDirectory(aDirectory)
 {
     NS_ASSERTION(aWorkingSet,"bad param");
     mName = XPT_STRDUP(aWorkingSet->GetStringArena(), aName);
@@ -76,7 +79,8 @@ xptiFile::xptiFile(const xptiFile& r, xptiWorkingSet* aWorkingSet,
     :   mSize(r.mSize),
         mDate(r.mDate),
         mName(nsnull),
-        mGuts(nsnull)
+        mGuts(nsnull),
+        mDirectory(r.mDirectory)
 {
     NS_ASSERTION(aWorkingSet,"bad param");
     mName = XPT_STRDUP(aWorkingSet->GetStringArena(), r.mName);

@@ -23,6 +23,7 @@
 DEPTH=..\..\..\..
 MODULE	= 	xpcom
 REQUIRES	= jar \
+		  string \
 		  $(NULL)
 
 LIBRARY_NAME=xpcomxptinfo_s

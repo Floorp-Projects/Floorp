@@ -57,7 +57,7 @@ xpti_CompareIIDs(const void *v1, const void *v2)
 
 MOZ_DECL_CTOR_COUNTER(xptiWorkingSet)
 
-xptiWorkingSet::xptiWorkingSet()
+xptiWorkingSet::xptiWorkingSet(nsISupportsArray* aDirectories)
     : mFileCount(0),
       mMaxFileCount(0),
       mFileArray(nsnull),
@@ -68,6 +68,7 @@ xptiWorkingSet::xptiWorkingSet()
                                 "xptiWorkingSet strings")),
       mStructArena(XPT_NewArena(XPTI_STRUCT_ARENA_BLOCK_SIZE, sizeof(double),
                                 "xptiWorkingSet structs")),
+      mDirectories(aDirectories),
       mNameTable(PL_NewHashTable(XPTI_HASHTABLE_SIZE, PL_HashString,
                                  PL_CompareStrings, PL_CompareValues,
                                  nsnull, nsnull)),
@@ -191,13 +192,19 @@ xptiWorkingSet::~xptiWorkingSet()
 }        
 
 PRUint32 
-xptiWorkingSet::FindFileWithName(const char* name)
+xptiWorkingSet::FindFile(PRUint32 dir, const char* name)
 {
     if(mFileArray)
     {
         for(PRUint32 i = 0; i < mFileCount;++i)
-            if(0 == PL_strcasecmp(name, mFileArray[i].GetName()))
+        {
+            xptiFile& file = mFileArray[i];
+            if(file.GetDirectory() == dir && 
+               0 == PL_strcmp(name, file.GetName()))
+            {
                 return i;
+            }    
+        }
     }
     return NOT_FOUND;
 }
@@ -247,7 +254,7 @@ xptiWorkingSet::FindZipItemWithName(const char* name)
     if(mZipItemArray)
     {
         for(PRUint32 i = 0; i < mZipItemCount;++i)
-            if(0 == PL_strcasecmp(name, mZipItemArray[i].GetName()))
+            if(0 == PL_strcmp(name, mZipItemArray[i].GetName()))
                 return i;
     }
     return NOT_FOUND;
@@ -289,3 +296,75 @@ xptiWorkingSet::ExtendZipItemArray(PRUint32 count)
     mMaxZipItemCount = count;
     return PR_TRUE;
 }
+
+/***************************************************************************/
+// Directory stuff...
+
+PRUint32 xptiWorkingSet::GetDirectoryCount()
+{
+    PRUint32 count = 0;
+    mDirectories->Count(&count);
+    return count;
+}
+
+nsresult xptiWorkingSet::GetCloneOfDirectoryAt(PRUint32 i, nsILocalFile** dir)
+{
+    return xptiCloneElementAsLocalFile(mDirectories, i, dir);
+}
+
+nsresult xptiWorkingSet::GetDirectoryAt(PRUint32 i, nsILocalFile** dir)
+{
+    return mDirectories->QueryElementAt(i, NS_GET_IID(nsILocalFile), (void**)dir);
+}       
+
+PRBool xptiWorkingSet::FindDirectory(nsILocalFile* dir, PRUint32* index)
+{
+    PRUint32 count;
+    nsresult rv = mDirectories->Count(&count);
+    if(NS_FAILED(rv))
+        return PR_FALSE;
+
+    for(PRUint32 i = 0; i < count; i++)
+    {
+        PRBool same;
+        nsCOMPtr<nsILocalFile> current;
+        mDirectories->QueryElementAt(i, NS_GET_IID(nsILocalFile), 
+                                     getter_AddRefs(current));
+        if(!current || NS_FAILED(current->Equals(dir, &same)))
+            break;
+        if(same)
+        {
+            *index = i;    
+            return PR_TRUE;       
+        }
+    }
+    return PR_FALSE;
+}
+
+PRBool xptiWorkingSet::FindDirectoryOfFile(nsILocalFile* file, PRUint32* index)
+{
+    nsCOMPtr<nsIFile> dirAbstract;
+    file->GetParent(getter_AddRefs(dirAbstract));
+    if(!dirAbstract)
+        return PR_FALSE;
+    nsCOMPtr<nsILocalFile> dir = do_QueryInterface(dirAbstract);
+    if(!dir)
+        return PR_FALSE;
+    return FindDirectory(dir, index);
+}
+
+PRBool xptiWorkingSet::DirectoryAtHasPersistentDescriptor(PRUint32 i, 
+                                                          const char* desc)
+{
+    nsCOMPtr<nsILocalFile> dir;
+    GetDirectoryAt(i, getter_AddRefs(dir));
+    if(!dir)
+        return PR_FALSE;
+
+    nsXPIDLCString str;
+    if(NS_FAILED(dir->GetPersistentDescriptor(getter_Copies(str))))
+        return PR_FALSE;
+    
+    return 0 == PL_strcmp(desc, str);
+}
+

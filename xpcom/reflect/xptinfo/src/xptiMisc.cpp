@@ -129,3 +129,34 @@ void xptiAutoLog::WriteTimestamp(PRFileDesc* fd, const char* msg)
     PR_fprintf(fd, "\n%s %s\n\n", msg, time);
 }
 
+/***************************************************************************/
+
+nsresult 
+xptiCloneLocalFile(nsILocalFile*  aLocalFile,
+                   nsILocalFile** aCloneLocalFile)
+{
+    nsresult rv;
+    nsCOMPtr<nsIFile> cloneRaw;
+ 
+    rv = aLocalFile->Clone(getter_AddRefs(cloneRaw));
+    if(NS_FAILED(rv))
+        return rv;
+
+    return CallQueryInterface(cloneRaw, aCloneLocalFile);
+}                        
+
+
+nsresult 
+xptiCloneElementAsLocalFile(nsISupportsArray* aArray, PRUint32 aIndex,
+                            nsILocalFile** aLocalFile)
+{
+    nsresult rv;
+    nsCOMPtr<nsILocalFile> original;
+
+    rv = aArray->QueryElementAt(aIndex, NS_GET_IID(nsILocalFile), 
+                                getter_AddRefs(original));
+    if(NS_FAILED(rv))
+        return rv;
+
+    return xptiCloneLocalFile(original, aLocalFile);
+}       
