@@ -110,8 +110,8 @@ public class StoreFactory {
       Class c = null;
       if (proto.equalsIgnoreCase("berkeley")) {
         c = Class.forName("grendel.storage.BerkeleyStore");
-      } else if (proto.equalsIgnoreCase("pop3")) {
-        c = Class.forName("grendel.storage.PopStore");
+      //} else if (proto.equalsIgnoreCase("pop3")) {
+      //  c = Class.forName("grendel.storage.PopStore");
       } else if (proto.equalsIgnoreCase("news")) {
         c = Class.forName("grendel.storage.NewsStore");
       }
