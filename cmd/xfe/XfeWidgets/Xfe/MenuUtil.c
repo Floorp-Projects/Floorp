@@ -770,8 +770,11 @@ XfeDestroyMenuWidgetTree(WidgetList		children,
     
 	for (i = num_children - 1; i >= 0; i--) 
 	{
-		Widget		submenu = XfeCascadeGetSubMenu(children[i]);
 		Boolean		skip = False;
+/* 		Widget		submenu = XfeCascadeGetSubMenu(children[i]); */
+ 		Widget		submenu;
+
+		XtVaGetValues(children[i],XmNsubMenuId,&submenu,NULL);
 
 		if (submenu) 
 		{
