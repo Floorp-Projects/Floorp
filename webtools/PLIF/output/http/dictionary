@@ -1,0 +1,25 @@
+TemplateToolkit
+1
+
+[%- SWITCH section -%]
+  [%- CASE 'contact' -%] [%- SWITCH content -%]
+    [%- CASE 'email' -%] e-mail
+    [%- CASE DEFAULT -%] [%- content -%]
+  [%- END -%]
+  [%- CASE 'personal' -%] [%- SWITCH content -%]
+    [%- CASE 'name' -%] Name
+    [%- CASE DEFAULT -%] [%- content -%]
+  [%- END -%]
+  [%- CASE 'settings' -%] [%- SWITCH content -%]
+    [%- CASE 'cosesEditor.index.variantsSortColumn' -%] Strings Editor: Variants sort column
+    [%- CASE 'cosesEditor.index.stringsSortColumn' -%] Strings Editor: Strings sort column
+    [%- CASE DEFAULT -%] [%- content -%]
+  [%- END -%]
+  [%- CASE 'groups' -%] [%- SWITCH content -%]
+    [%- CASE DEFAULT -%] [%- content -%]
+  [%- END -%]
+  [%- CASE 'fields.control' -%] [%- SWITCH content -%]
+    [%- CASE DEFAULT -%] <input type="text" name="[%- name -%]" value="[%- value -%]">
+  [%- END -%]
+  [%- CASE DEFAULT -%] [%- content -%]
+[%- END -%]

@@ -1,0 +1,9 @@
+TemplateToolkit
+1
+
+[% INCLUDE template.html.header title = 'User Preferences Saved' -%]
+
+  <p>The changes have been saved.</p>
+  <p><a href="?">Return to index.</a></p>
+
+[% INCLUDE template.html.footer %]
