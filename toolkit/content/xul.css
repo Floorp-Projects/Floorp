@@ -148,17 +148,17 @@ tabbrowser {
 }
 
 editor {
-  -moz-binding: url("chrome://global/content/bindings/editor.xml#editor");
+  -moz-binding: url("chrome://global/content/widgets/editor.xml#editor");
 }
 
 iframe {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#iframe");
+  -moz-binding: url("chrome://global/content/widgets/general.xml#iframe");
 }
 
 /********** image **********/
 
 image {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#image");
+  -moz-binding: url("chrome://global/content/widgets/general.xml#image");
 }
 
 /********** checkbox **********/
@@ -181,12 +181,12 @@ radio {
 /******** groupbox *********/
 
 groupbox {
-  -moz-binding: url("chrome://global/content/bindings/groupbox.xml#groupbox");
+  -moz-binding: url("chrome://global/content/widgets/groupbox.xml#groupbox");
   display: -moz-groupbox;
 }
 
 caption {
-  -moz-binding: url("chrome://global/content/bindings/groupbox.xml#caption");
+  -moz-binding: url("chrome://global/content/widgets/groupbox.xml#caption");
 }
 
 .groupbox-body {
@@ -246,44 +246,44 @@ menubar {
 /********* menu ***********/
 
 menubar > menu {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-menubar");
+  -moz-binding: url("chrome://global/content/widgets/menu.xml#menu-menubar");
 }
 
 menubar > menu.menu-iconic {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-menubar-iconic");
+  -moz-binding: url("chrome://global/content/widgets/menu.xml#menu-menubar-iconic");
 }
 
 menu {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menu");
+  -moz-binding: url("chrome://global/content/widgets/menu.xml#menu");
 }
   
 menu.menu-iconic {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-iconic");
+  -moz-binding: url("chrome://global/content/widgets/menu.xml#menu-iconic");
 }
 
 /********* menuitem ***********/
 
 menuitem {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem");
+  -moz-binding: url("chrome://global/content/widgets/menu.xml#menuitem");
 }
 
 menuitem.menuitem-iconic {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
+  -moz-binding: url("chrome://global/content/widgets/menu.xml#menuitem-iconic");
 }
 
 menuitem[type="checkbox"],
 menuitem[type="radio"] {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
+  -moz-binding: url("chrome://global/content/widgets/menu.xml#menuitem-iconic");
 }
 
 menuitem.menuitem-non-iconic {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menubutton-item");
+  -moz-binding: url("chrome://global/content/widgets/menu.xml#menubutton-item");
 }
 
 /********* menuseparator ***********/
 
 menuseparator {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuseparator");
+  -moz-binding: url("chrome://global/content/widgets/menu.xml#menuseparator");
 }
 
 /********* popup & menupopup ***********/
@@ -292,7 +292,7 @@ menuseparator {
 
 popup,
 menupopup {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#popup");
+  -moz-binding: url("chrome://global/content/widgets/popup.xml#popup");
   -moz-box-orient: vertical;
   display: none;
 }
@@ -310,7 +310,7 @@ tooltip[menugenerated="true"] {
 }
 
 tooltip {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#tooltip");
+  -moz-binding: url("chrome://global/content/widgets/popup.xml#tooltip");
   display: -moz-popup;
   margin-top: 21px;
 }
@@ -329,34 +329,34 @@ window[sizemode="maximized"] statusbarpanel.statusbar-resizerpanel {
 
 /*
 titlebar {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#titlebar");  
+  -moz-binding: url("chrome://global/content/widgets/popup.xml#titlebar");  
 }  
 
 resizer[resizerdirection="right"] {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#ew-resizer");
+  -moz-binding: url("chrome://global/content/widgets/popup.xml#ew-resizer");
 }  
 
 resizer[resizerdirection="bottom"] {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#ns-resizer");
+  -moz-binding: url("chrome://global/content/widgets/popup.xml#ns-resizer");
 }  
 
 resizer[resizerdirection="bottomright"] {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#diag-resizer");  
+  -moz-binding: url("chrome://global/content/widgets/popup.xml#diag-resizer");  
 }  
 
 floatingwindow {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#floater-normal");
+  -moz-binding: url("chrome://global/content/widgets/popup.xml#floater-normal");
   -moz-box-orient: vertical;
   display: none;
   z-index: 2147483647; 
 }
 
 floatingwindow[docked="left"] {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#floater-dock-left");
+  -moz-binding: url("chrome://global/content/widgets/popup.xml#floater-dock-left");
 }
 
 button.popupClose {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#close-button") !important;
+  -moz-binding: url("chrome://global/content/widgets/popup.xml#close-button") !important;
 }  
 */
 /******** grid **********/
@@ -390,52 +390,52 @@ listbox {
 }
 
 listcols, listcol {
-  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listbox-base");
+  -moz-binding: url("chrome://global/content/widgets/listbox.xml#listbox-base");
 }
 
 listhead {
-  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listhead");
+  -moz-binding: url("chrome://global/content/widgets/listbox.xml#listhead");
 }
 
 listrows {
-  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listrows");
+  -moz-binding: url("chrome://global/content/widgets/listbox.xml#listrows");
 }
 
 listitem {
-  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listitem");
+  -moz-binding: url("chrome://global/content/widgets/listbox.xml#listitem");
 }
 
 listitem[type="checkbox"] {
-  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listitem-checkbox");
+  -moz-binding: url("chrome://global/content/widgets/listbox.xml#listitem-checkbox");
 }
 
 listheader {
-  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listheader");
+  -moz-binding: url("chrome://global/content/widgets/listbox.xml#listheader");
   -moz-box-ordinal-group: 2147483646;
 }
 
 listcell {
-  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listcell");
+  -moz-binding: url("chrome://global/content/widgets/listbox.xml#listcell");
 }
 
 listcell[type="checkbox"] {
-  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listcell-checkbox");
+  -moz-binding: url("chrome://global/content/widgets/listbox.xml#listcell-checkbox");
 }
 
 .listitem-iconic {
-  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listitem-iconic");
+  -moz-binding: url("chrome://global/content/widgets/listbox.xml#listitem-iconic");
 }
 
 listitem[type="checkbox"].listitem-iconic {
-  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listitem-checkbox-iconic");
+  -moz-binding: url("chrome://global/content/widgets/listbox.xml#listitem-checkbox-iconic");
 }
 
 .listcell-iconic {
-  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listcell-iconic");
+  -moz-binding: url("chrome://global/content/widgets/listbox.xml#listcell-iconic");
 }
 
 listcell[type="checkbox"].listcell-iconic {
-  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listcell-checkbox-iconic");
+  -moz-binding: url("chrome://global/content/widgets/listbox.xml#listcell-checkbox-iconic");
 }
 
 listbox {
@@ -486,7 +486,6 @@ listboxbody {
 listcol {
   -moz-box-orient: vertical;
   min-width: 16px;
-  width: 16px;
 }
 
 listcell {
@@ -496,35 +495,36 @@ listcell {
 /******** tree ******/
 
 tree {
-  -moz-binding: url("chrome://global/content/bindings/tree.xml#tree");
+  -moz-binding: url("chrome://global/content/widgets/tree.xml#tree");
 }
 
 treecols {
-  -moz-binding: url("chrome://global/content/bindings/tree.xml#treecols");
+  -moz-binding: url("chrome://global/content/widgets/tree.xml#treecols");
 }
 
 treecol {
-  -moz-binding: url("chrome://global/content/bindings/tree.xml#treecol");
+  -moz-binding: url("chrome://global/content/widgets/tree.xml#treecol");
+  -moz-box-ordinal-group: 2147483646;
 }
 
 treecol.treecol-image {
-  -moz-binding: url("chrome://global/content/bindings/tree.xml#treecol-image");
+  -moz-binding: url("chrome://global/content/widgets/tree.xml#treecol-image");
 }
 
 tree > treechildren {
   display: -moz-box;
-  -moz-binding: url("chrome://global/content/bindings/tree.xml#treebody");
+  -moz-binding: url("chrome://global/content/widgets/tree.xml#treebody");
   -moz-user-focus: none;
   -moz-user-select: none;
   -moz-box-flex: 1;
 }
 
 treerows {
-  -moz-binding: url("chrome://global/content/bindings/tree.xml#treerows");
+  -moz-binding: url("chrome://global/content/widgets/tree.xml#treerows");
 }
 
 treecolpicker {
-  -moz-binding: url("chrome://global/content/bindings/tree.xml#columnpicker");
+  -moz-binding: url("chrome://global/content/widgets/tree.xml#columnpicker");
 }
 
 tree {
@@ -553,7 +553,7 @@ treecol[hidden="true"] {
 
 deck {
   display: -moz-deck;
-  -moz-binding: url("chrome://global/content/bindings/general.xml#deck");
+  -moz-binding: url("chrome://global/content/widgets/general.xml#deck");
 }
 
 stack, bulletinboard {
@@ -583,14 +583,14 @@ tab {
 }
 
 tabpanels {
-  -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabpanels");
+  -moz-binding: url("chrome://global/content/widgets/tabbox.xml#tabpanels");
   display: -moz-deck;
 }
 
 /********** progressmeter **********/
 
 progressmeter {
-  -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter");
+  -moz-binding: url("chrome://global/content/widgets/progressmeter.xml#progressmeter");
 }
 
 /********** basic rule for anonymous content that needs to pass box properties through
@@ -610,20 +610,20 @@ spacer {
 }
 
 description {
-  -moz-binding: url("chrome://global/content/bindings/text.xml#text-base");
+  -moz-binding: url("chrome://global/content/widgets/text.xml#text-base");
 }
 
 label {
-  -moz-binding: url("chrome://global/content/bindings/text.xml#text-label");
+  -moz-binding: url("chrome://global/content/widgets/text.xml#text-label");
 }
 
 label.text-link {
-  -moz-binding: url("chrome://global/content/bindings/text.xml#text-link");
+  -moz-binding: url("chrome://global/content/widgets/text.xml#text-link");
   -moz-user-focus: normal;
 }
 
 label[control] {
-  -moz-binding: url("chrome://global/content/bindings/text.xml#label-control");
+  -moz-binding: url("chrome://global/content/widgets/text.xml#label-control");
 }
 
 /********** textbox **********/
@@ -639,6 +639,7 @@ textbox[multiline="true"] {
 
 html|*.textbox-input {
   -moz-appearance: none !important;
+  text-align: inherit;
 }
 
 html|*.textbox-textarea {
@@ -741,43 +742,47 @@ popup[type="autocomplete"][hidden="true"] {
 /********** colorpicker **********/
 
 colorpicker {
-  -moz-binding: url("chrome://global/content/bindings/colorpicker.xml#colorpicker");
+  -moz-binding: url("chrome://global/content/widgets/colorpicker.xml#colorpicker");
 }
 
 colorpicker[type="button"] {
-  -moz-binding: url("chrome://global/content/bindings/colorpicker.xml#colorpicker-button");
+  -moz-binding: url("chrome://global/content/widgets/colorpicker.xml#colorpicker-button");
 }
 
 .colorpickertile {
-  -moz-binding: url("chrome://global/content/bindings/colorpicker.xml#colorpickertile");
+  -moz-binding: url("chrome://global/content/widgets/colorpicker.xml#colorpickertile");
 }
 
 /********** menulist **********/
 
 menulist {
-  -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist");
+  -moz-binding: url("chrome://global/content/widgets/menulist.xml#menulist");
 }
 
 menulist[editable] {
-  -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-editable");
+  -moz-binding: url("chrome://global/content/widgets/menulist.xml#menulist-editable");
+}
+
+html|*.menulist-editable-input {
+  -moz-appearance: none !important;
 }
 
 menulist > menupopup > menuitem {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic-noaccel");
+  -moz-binding: url("chrome://global/content/widgets/menu.xml#menuitem-iconic-noaccel");
 }
 
 dropmarker[type="menu"] {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#dropmarker");
+  -moz-binding: url("chrome://global/content/widgets/general.xml#dropmarker");
 }
 
 /********** splitter **********/
 
 splitter {
-  -moz-binding: url("chrome://global/content/bindings/splitter.xml#splitter");
+  -moz-binding: url("chrome://global/content/widgets/splitter.xml#splitter");
 }
 
 grippy {
-  -moz-binding: url("chrome://global/content/bindings/splitter.xml#grippy");
+  -moz-binding: url("chrome://global/content/widgets/splitter.xml#grippy");
 }
 
 .tree-splitter {
@@ -795,7 +800,7 @@ scrollbar {
 
 thumb 
 {
-  -moz-binding: url(chrome://global/content/bindings/scrollbar.xml#thumb);
+  -moz-binding: url(chrome://global/content/widgets/scrollbar.xml#thumb);
 }
 
 scrollbar, scrollbarbutton, slider, thumb {
@@ -809,15 +814,15 @@ scrollbar[value="hidden"] {
 /******** scrollbox ********/
 
 scrollbox {
-  -moz-binding: url("chrome://global/content/bindings/scrollbox.xml#scrollbox");
+  -moz-binding: url("chrome://global/content/widgets/scrollbox.xml#scrollbox");
 }
 
 arrowscrollbox {
-  -moz-binding: url("chrome://global/content/bindings/scrollbox.xml#arrowscrollbox");
+  -moz-binding: url("chrome://global/content/widgets/scrollbox.xml#arrowscrollbox");
 }
 
 autorepeatbutton {
-  -moz-binding: url("chrome://global/content/bindings/scrollbox.xml#autorepeatbutton");
+  -moz-binding: url("chrome://global/content/widgets/scrollbox.xml#autorepeatbutton");
 }
 
 /********** statusbar **********/
@@ -845,18 +850,18 @@ statusbarpanel {
 /********** spinbuttons ***********/
 
 spinbuttons {
-  -moz-binding: url("chrome://global/content/bindings/spinbuttons.xml#spinbuttons");
+  -moz-binding: url("chrome://global/content/widgets/spinbuttons.xml#spinbuttons");
 }
 
 /********** stringbundle **********/
 
 stringbundleset {
-  -moz-binding: url("chrome://global/content/bindings/stringbundle.xml#stringbundleset");
+  -moz-binding: url("chrome://global/content/widgets/stringbundle.xml#stringbundleset");
   visibility: collapse;
 }
 
 stringbundle {
-  -moz-binding: url("chrome://global/content/bindings/stringbundle.xml#stringbundle");
+  -moz-binding: url("chrome://global/content/widgets/stringbundle.xml#stringbundle");
   visibility: collapse;
 }
 
