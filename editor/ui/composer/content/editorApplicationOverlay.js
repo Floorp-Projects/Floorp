@@ -58,12 +58,6 @@ function initEditorContextMenuListener(aEvent)
 
 addEventListener("load", initEditorContextMenuListener, false);
 
-function editLink(aLinkURL)
-{
-  urlSecurityCheck(aLinkURL, window.document);  // XXX what is this? Why do we pass the chrome doc?
-  editPage(aLinkURL, window, false);
-}
-
 function editDocument(aDocument)      
 {
   if (!aDocument)
@@ -74,12 +68,8 @@ function editDocument(aDocument)
 
 function editPageOrFrame()
 {
-  var url;
   var focusedWindow = document.commandDispatcher.focusedWindow;
-  if (isDocumentFrame(focusedWindow))
-    url = focusedWindow.location.href;
-  else
-    url = window._content.location.href;
+  var url = getContentFrameURI(focusedWindow);
 
   editPage(url, window, false)
 }
@@ -92,8 +82,8 @@ function editPageOrFrame()
 function editPage(url, launchWindow, delay)
 {
   var focusedWindow = document.commandDispatcher.focusedWindow;
-  if (isDocumentFrame(focusedWindow))
-    url = focusedWindow.location.href;
+  if (isContentFrame(focusedWindow))
+    url = Components.lookupMethod(focusedWindow, 'location').call(focusedWindow).href;
 
   // Always strip off "view-source:"
   if (url.slice(0,12) == "view-source:")
