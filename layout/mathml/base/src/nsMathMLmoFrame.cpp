@@ -113,9 +113,17 @@ nsMathMLmoFrame::ProcessTextData(nsIPresContext* aPresContext)
 {
   mFlags = 0;
 
+  // don't bother doing anything special if we don't have a
+  // single child with a text content
+  nsAutoString data;
+  if (mFrames.GetLength() != 1) {
+    mMathMLChar.SetData(aPresContext, data); // empty data to reset the char
+    ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mMathMLChar, PR_FALSE);
+    return;
+  }
+
   // kids can be comment-nodes, attribute-nodes, text-nodes...
   // we use the DOM to ensure that we only look at text-nodes...
-  nsAutoString data;
   PRInt32 numKids;
   mContent->ChildCount(numKids);
   for (PRInt32 kid=0; kid<numKids; kid++) {
@@ -712,10 +720,9 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
     }
   }
 
-  if (!useMathMLChar) {
-    // Place our children using the default method
-    Place(aPresContext, aRenderingContext, PR_TRUE, aDesiredStretchSize);
-  }
+  // Place our children using the default method
+  // This will allow our child text frame to get its DidReflow()
+  Place(aPresContext, aRenderingContext, PR_TRUE, aDesiredStretchSize);
 
   // Fixup for the final height.
   // On one hand, our stretchy height can sometimes be shorter than surrounding
@@ -758,27 +765,38 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
     aDesiredStretchSize.mBoundingMetrics.width = mBoundingMetrics.width;
 
     nscoord dx = mEmbellishData.leftSpace;
-    if (!dx) return NS_OK;
+    if (dx) {
+      // adjust the offsets
+      mBoundingMetrics.leftBearing += dx;
+      mBoundingMetrics.rightBearing += dx;
+      aDesiredStretchSize.mBoundingMetrics.leftBearing += dx;
+      aDesiredStretchSize.mBoundingMetrics.rightBearing += dx;
 
-    // adjust the offsets
-    mBoundingMetrics.leftBearing += dx;
-    mBoundingMetrics.rightBearing += dx;
-    aDesiredStretchSize.mBoundingMetrics.leftBearing += dx;
-    aDesiredStretchSize.mBoundingMetrics.rightBearing += dx;
-
-    nsRect rect;
-    if (useMathMLChar) {
-      mMathMLChar.GetRect(rect);
-      mMathMLChar.SetRect(nsRect(rect.x + dx, rect.y, rect.width, rect.height));
-    }
-    else {
-      nsIFrame* childFrame = mFrames.FirstChild();
-      while (childFrame) {
-        childFrame->GetRect(rect);
-        childFrame->MoveTo(aPresContext, rect.x + dx, rect.y);
-        childFrame->GetNextSibling(&childFrame);
+      nsRect rect;
+      if (useMathMLChar) {
+        mMathMLChar.GetRect(rect);
+        mMathMLChar.SetRect(nsRect(rect.x + dx, rect.y, rect.width, rect.height));
+      }
+      else {
+        nsIFrame* childFrame = mFrames.FirstChild();
+        while (childFrame) {
+          childFrame->GetRect(rect);
+          childFrame->MoveTo(aPresContext, rect.x + dx, rect.y);
+          childFrame->GetNextSibling(&childFrame);
+        }
       }
     }
+  }
+
+  if (useMathMLChar && mFrames.FirstChild()) {
+    // even though our child text frame is not doing the rendering, we make it play
+    // nice with other operations that the MathMLChar doesn't handle (e.g., caret)
+    // use our whole height (i.e., with the leading that isn't part of the MathMLChar)
+    nsRect rect;
+    mMathMLChar.GetRect(rect);
+    rect.y = 0;
+    rect.height = aDesiredStretchSize.height;
+    mFrames.FirstChild()->SetRect(aPresContext, rect);
   }
   return NS_OK;
 }
