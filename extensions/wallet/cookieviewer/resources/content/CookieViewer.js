@@ -54,7 +54,7 @@ else if (window.arguments[0] == "popupManager")
   dialogType = popupType;
 
 var cookieBundle;
-var gUpdatingBatch = false;
+var gUpdatingBatch = "";
 
 function Startup() {
 
@@ -140,7 +140,7 @@ function Shutdown() {
 
 var cookieReloadDisplay = {
   observe: function(subject, topic, state) {
-    if (gUpdatingBatch)
+    if (topic == gUpdatingBatch)
       return;
     if (topic == "cookieChanged") {
       if (state == "cookies") {
@@ -384,7 +384,7 @@ function DeleteAllCookies() {
 }
 
 function FinalizeCookieDeletions() {
-  gUpdatingBatch = true;
+  gUpdatingBatch = "cookieChanged";
   for (var c=0; c<deletedCookies.length; c++) {
     cookiemanager.remove(deletedCookies[c].host,
                          deletedCookies[c].name,
@@ -392,7 +392,7 @@ function FinalizeCookieDeletions() {
                          document.getElementById("checkbox").checked);
   }
   deletedCookies.length = 0;
-  gUpdatingBatch = false;
+  gUpdatingBatch = "";
 }
 
 function HandleCookieKeyPress(e) {
@@ -567,21 +567,22 @@ function DeleteAllPermissions() {
 }
 
 function FinalizePermissionDeletions() {
-  gUpdatingBatch = true;
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                    .getService(Components.interfaces.nsIIOService);
-
-  for (var p=0; p<deletedPermissions.length; p++) {
-    if (deletedPermissions[p].type == popupType) {
+  if (!deletedPermissions.length)
+    return;
+  gUpdatingBatch = "perm-changed";
+  if (deletedPermissions[0].type == popupType) {
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(Components.interfaces.nsIIOService);
+    for (var p=0; p<deletedPermissions.length; p++)
       // we lost the URI's original scheme, but this will do because the scheme
       // is stripped later anyway.
-      var uri = ioService.newURI("http://"+deletedPermissions[p].host, null, null);
-      popupmanager.remove(uri);
-    } else
+      popupmanager.remove(ioService.newURI("http://"+deletedPermissions[p].host, null, null));
+  } else {
+    for (var p=0; p<deletedPermissions.length; p++)
       permissionmanager.remove(deletedPermissions[p].host, deletedPermissions[p].type);
   }
   deletedPermissions.length = 0;
-  gUpdatingBatch = false;
+  gUpdatingBatch = "";
 }
 
 function HandlePermissionKeyPress(e) {
