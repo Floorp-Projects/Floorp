@@ -37,6 +37,7 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsISelectElement.h"
+#include "nsISelectControlFrame.h"
 
 // Notify/query select frame for selected state
 #include "nsIFormControlFrame.h"
@@ -92,6 +93,7 @@ public:
   NS_IMETHOD GetLabel(nsString& aLabel);
   NS_IMETHOD SetLabel(const nsString& aLabel);
   NS_IMETHOD GetSelected(PRBool* aSelected);
+  NS_IMETHOD SetSelected(PRBool aValue);
   NS_IMETHOD GetValue(nsString& aValue);
   NS_IMETHOD SetValue(const nsString& aValue);
 
@@ -190,11 +192,11 @@ nsHTMLOptionElement::SetParent(nsIContent* aParent)
     nsIDOMHTMLSelectElement* oldSelectElement = nsnull;
     GetSelect(oldSelectElement);
     if (nsnull != oldSelectElement) {
-      nsISelectElement* select;
+      nsISelectElement* sel;
       
-      if (NS_SUCCEEDED(oldSelectElement->QueryInterface(kISelectElementIID, (void**)&select))) {
-        select->RemoveOption(this);
-        NS_RELEASE(select);
+      if (NS_SUCCEEDED(oldSelectElement->QueryInterface(kISelectElementIID, (void**)&sel))) {
+        sel->RemoveOption(this);
+        NS_RELEASE(sel);
       }
 
       NS_RELEASE(oldSelectElement);
@@ -207,11 +209,11 @@ nsHTMLOptionElement::SetParent(nsIContent* aParent)
     nsIDOMHTMLSelectElement* newSelectElement = nsnull;
     GetSelect(newSelectElement);
     if (nsnull != newSelectElement) {
-      nsISelectElement* select;
+      nsISelectElement* sel;
       
-      if (NS_SUCCEEDED(newSelectElement->QueryInterface(kISelectElementIID, (void**)&select))) {
-        select->AddOption(this);
-        NS_RELEASE(select);
+      if (NS_SUCCEEDED(newSelectElement->QueryInterface(kISelectElementIID, (void**)&sel))) {
+        sel->AddOption(this);
+        NS_RELEASE(sel);
       }
 
       NS_RELEASE(newSelectElement);
@@ -256,10 +258,10 @@ nsHTMLOptionElement::GetSelected(PRBool* aValue)
   nsIFormControlFrame* formControlFrame = nsnull;
   nsresult rv = GetPrimaryFrame(formControlFrame);
   if (NS_SUCCEEDED(rv)) {
-    PRInt32 index;
-    if (NS_OK == GetIndex(&index)) {
+    PRInt32 indx;
+    if (NS_OK == GetIndex(&indx)) {
       nsString value;
-      value.Append(index, 10); // Save the index in base 10
+      value.Append(indx, 10); // Save the index in base 10
       formControlFrame->GetProperty(nsHTMLAtoms::selected, value);
       if (value == "1")
         *aValue = PR_TRUE;
@@ -268,6 +270,25 @@ nsHTMLOptionElement::GetSelected(PRBool* aValue)
     }
   }
   return rv;      
+}
+
+NS_IMETHODIMP 
+nsHTMLOptionElement::SetSelected(PRBool aValue)
+{
+  nsIFormControlFrame* fcFrame = nsnull;
+  nsresult result = GetPrimaryFrame(fcFrame);
+  if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
+    nsISelectControlFrame* selectFrame = nsnull;
+    result = fcFrame->QueryInterface(nsISelectControlFrame::GetIID(),(void **) &selectFrame);
+    if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
+      PRInt32 indx;
+      result == GetIndex(&indx);
+      if (NS_SUCCEEDED(result)) {
+        selectFrame->SetOptionSelected(indx, aValue);
+      }
+    }
+  }
+  return result;
 }
 
 //NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, DefaultSelected, defaultselected)
@@ -289,6 +310,8 @@ NS_IMETHODIMP
 nsHTMLOptionElement::SetDefaultSelected(PRBool aDefaultSelected)
 {
   nsHTMLValue empty(eHTMLUnit_Empty);
+  // When setting DefaultSelected, we must also reset Selected
+  SetSelected(aDefaultSelected);
   if (aDefaultSelected) {
     return mInner.SetHTMLAttribute(nsHTMLAtoms::selected, empty, PR_TRUE);
   } else {
