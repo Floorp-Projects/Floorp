@@ -4,8 +4,15 @@
 }
 
 toolbarbutton#newbookmark {
-  -moz-image-region: rect(0px, 32px, 32px, 0px);
+  -moz-image-region: rect(0px, 224px, 32px, 192px);
 }
+toolbarbutton#newbookmark:hover {
+  -moz-image-region: rect(32px, 224px, 64px, 192px);
+}
+toolbarbutton#newbookmark[disabled="true"] {
+  -moz-image-region: rect(64px, 224px, 96px, 192px);
+}
+
 toolbarbutton#newfolder {
   -moz-image-region: rect(0px, 32px, 32px, 0px);
 }

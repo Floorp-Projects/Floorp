@@ -8,6 +8,4 @@ en-US.jar:
 
 classic.jar:
 +  skin/classic/global/filepicker.css               (skin/filepicker.css)
-+  skin/classic/global/filepicker/folder-home.gif   (skin/folder-home.gif)
-+  skin/classic/global/filepicker/folder-new.gif    (skin/folder-new.gif)
-+  skin/classic/global/filepicker/folder-up.gif     (skin/folder-up.gif)
+   skin/classic/global/Filepicker.png               (skin/Filepicker.png)
