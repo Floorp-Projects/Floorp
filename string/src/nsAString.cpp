@@ -244,13 +244,16 @@ void
 nsAString::do_AssignFromReadable( const self_type& aReadable )
   {
     SetLength(0);
-    SetLength(aReadable.Length());
-      // first setting the length to |0| avoids copying characters only to be overwritten later
-      //  in the case where the implementation decides to re-allocate
+    if ( !aReadable.IsEmpty() )
+      {
+        SetLength(aReadable.Length());
+          // first setting the length to |0| avoids copying characters only to be overwritten later
+          //  in the case where the implementation decides to re-allocate
 
-    const_iterator fromBegin, fromEnd;
-    iterator toBegin;
-    copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), BeginWriting(toBegin));
+        const_iterator fromBegin, fromEnd;
+        iterator toBegin;
+        copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), BeginWriting(toBegin));
+      }
   }
 
 void
@@ -704,13 +707,16 @@ void
 nsACString::do_AssignFromReadable( const self_type& aReadable )
   {
     SetLength(0);
-    SetLength(aReadable.Length());
-      // first setting the length to |0| avoids copying characters only to be overwritten later
-      //  in the case where the implementation decides to re-allocate
+    if ( !aReadable.IsEmpty() )
+      {
+        SetLength(aReadable.Length());
+          // first setting the length to |0| avoids copying characters only to be overwritten later
+          //  in the case where the implementation decides to re-allocate
 
-    const_iterator fromBegin, fromEnd;
-    iterator toBegin;
-    copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), BeginWriting(toBegin));
+        const_iterator fromBegin, fromEnd;
+        iterator toBegin;
+        copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), BeginWriting(toBegin));
+      }
   }
 
 void
