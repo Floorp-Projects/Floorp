@@ -393,7 +393,7 @@ sub EmitDependList {
 
 if (Param("usedependencies")) {
     print "<table><tr>\n";
-    EmitDependList("Bugs that bug $id depends on", "blocked", "dependson");
+    EmitDependList("Bug $id depends on", "blocked", "dependson");
     print qq{
 <td rowspan=2><a href="showdependencytree.cgi?id=$id">Show dependency tree</a>
 };
@@ -403,7 +403,7 @@ if (Param("usedependencies")) {
 };
     }
     print "</td></tr><tr>";
-    EmitDependList("Bugs depending on bug $id", "dependson", "blocked");
+    EmitDependList("Bug $id blocks", "dependson", "blocked");
     print "</tr></table>\n";
 }
 
