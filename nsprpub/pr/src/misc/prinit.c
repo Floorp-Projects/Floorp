@@ -447,6 +447,8 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
          * _PR_XXXCleanup() that we can call here.
          */
         _PR_CleanupThreads();
+        PR_DestroyLock(_pr_sleeplock);
+        _pr_sleeplock = NULL;
         _PR_CleanupLayerCache();
         _PR_CleanupEnv();
         _PR_CleanupStacks();
