@@ -970,7 +970,7 @@ nsInstall::GetFolder(const nsString& targetFolder, const nsString& aSubdirectory
         return INVALID_ARGUMENTS;
 
     *aNewFolder = new nsInstallFolder(targetFolder, aSubdirectory);   
-    if (aNewFolder == nsnull)
+    if (*aNewFolder == nsnull)
     {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -993,7 +993,7 @@ nsInstall::GetFolder( nsInstallFolder& aTargetFolderObj, const nsString& aSubdir
         return INVALID_ARGUMENTS;
   
     *aNewFolder = new nsInstallFolder(aTargetFolderObj, aSubdirectory);
-    if (aNewFolder == nsnull)
+    if (*aNewFolder == nsnull)
     {
         return NS_ERROR_OUT_OF_MEMORY;
     }
