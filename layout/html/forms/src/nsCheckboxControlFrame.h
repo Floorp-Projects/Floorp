@@ -19,6 +19,7 @@
 #define nsCheckboxControlFrame_h___
 
 #include "nsNativeFormControlFrame.h"
+#include "nsIStatefulFrame.h"
 
 //
 // nsCheckboxControlFrame
@@ -40,10 +41,9 @@
 // become checked since "mixed" doesn't exist on normal checkboxes.
 //
 
-class nsCheckboxControlFrame : public nsNativeFormControlFrame {
-private:
-	typedef nsNativeFormControlFrame Inherited;
-
+class nsCheckboxControlFrame : public nsNativeFormControlFrame,
+                               public nsIStatefulFrame
+{
 public:
 
   nsCheckboxControlFrame ( ) ;
@@ -84,9 +84,15 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
 
-    // this should be protected, but VC6 is lame.
+   // this should be protected, but VC6 is lame.
   enum CheckState { eOff, eOn, eMixed } ;
-  
+
+   // nsIStatefulFrame
+  NS_IMETHOD GetStateType(StateType* aStateType);
+  NS_IMETHOD SaveState(nsISupports** aState);
+  NS_IMETHOD RestoreState(nsISupports* aState);
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
 protected:
 
     // native/gfx implementations need to implement needs.
@@ -114,6 +120,9 @@ protected:
   static nsIAtom* GetTristateAtom() ;
   static nsIAtom* GetTristateValueAtom() ;
 
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 }; // class nsCheckboxControlFrame
 
 #endif

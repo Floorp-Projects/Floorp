@@ -29,9 +29,6 @@
   */
 class nsNativeFormControlFrame : public nsFormControlFrame
 {
-private:
-	typedef nsFormControlFrame Inherited;
-
 public:
   nsNativeFormControlFrame();
 

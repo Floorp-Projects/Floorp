@@ -52,6 +52,8 @@ public:
    */
 
   NS_IMETHOD SetOptionSelected(PRInt32 index, PRBool value) = 0;
+  
+  NS_IMETHOD GetOptionSelected(PRInt32 index, PRBool* value) = 0;
 };
 
 #endif

@@ -53,7 +53,7 @@ nsNativeFormControlFrame::Reflow(nsIPresContext&          aPresContext,
                            nsReflowStatus&          aStatus)
 {
 	if (mDidInit) {
-		return Inherited::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+		return nsFormControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 	}
 
   nsresult result = NS_OK;
@@ -264,7 +264,7 @@ NS_METHOD nsNativeFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
                                           nsEventStatus& aEventStatus)
 {
   if (nsnull == mWidget) {
-    return Inherited::HandleEvent(aPresContext, aEvent, aEventStatus);
+    return nsFormControlFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
   }
 
   if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
@@ -298,11 +298,7 @@ NS_METHOD nsNativeFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
 	    break;
 
 	  case NS_MOUSE_LEFT_BUTTON_DOWN:
-	    if (NS_FORM_INPUT_IMAGE == type) {
-	      mLastMouseState = eMouseDown;
-	    } else {
-	      mLastMouseState = (eMouseEnter == mLastMouseState) ? eMouseDown : eMouseNone;
-	    }
+            mLastMouseState = eMouseDown;
 	    break;
 
 	  case NS_MOUSE_LEFT_BUTTON_UP:
@@ -321,7 +317,7 @@ NS_METHOD nsNativeFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
 	    break;
 
 		case NS_KEY_DOWN:
-			return Inherited::HandleEvent(aPresContext, aEvent, aEventStatus);
+			return nsFormControlFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 	}
 
   aEventStatus = nsEventStatus_eConsumeDoDefault;
