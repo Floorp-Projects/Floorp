@@ -18,7 +18,10 @@
 IGNORE_MANIFEST=1
 #
 
-!ifndef NU_CACHE
+DEPTH=..\..
+include <$(DEPTH)\config\config.mak>
+
+!ifdef NU_CACHE
 DIRS=nu
 !endif
 
@@ -65,7 +68,6 @@ CSRCS =	\
 LIBRARY_NAME=netcache
 
 MODULE=netcache 
-DEPTH=..\..
 
 EXTRA_LIBS=
 
