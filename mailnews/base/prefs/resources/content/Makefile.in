@@ -31,7 +31,6 @@ EXPORT_RESOURCE_SAMPLES = \
 		am-server.xul \
 		am-server.js \
 		am-server-top.xul \
-		am-server-pop3.xul \
 		am-copies.xul \
 		am-copies.js \
 		am-advanced.xul \

@@ -23,3 +23,5 @@
 <!ENTITY modelDeleteImmediately.label "Remove it immediately">
 <!ENTITY expungeOnExit.label "Clean up &quot;Expunge&quot;) Inbox on Exit.">
 <!ENTITY emptyTrashOnExit.label "Empty Trash on Exit.">
+<!ENTITY maxMessagesStart.label "Ask me before downloading more than">
+<!ENTITY maxMessagesEnd.label "messages.">

@@ -1,4 +1,0 @@
-<!-- extracted from am-server-nntp.xul -->
-
-<!ENTITY maxMessagesPart1.label "Ask me before downloading more than">
-<!ENTITY maxMessagesPart2.label "messages.">

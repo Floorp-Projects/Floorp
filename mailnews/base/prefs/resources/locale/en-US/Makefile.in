@@ -44,7 +44,6 @@ EXPORT_RESOURCE_SAMPLES = \
 		am-advanced.dtd \
 		am-copies.dtd \
 		am-main.dtd \
-		am-server-pop3.dtd \
 		am-server-top.dtd \
 		$(NULL)
 

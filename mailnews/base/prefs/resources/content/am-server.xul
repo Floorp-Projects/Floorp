@@ -62,7 +62,12 @@
       </box>
       <!-- News -->
       <box align="vertical" flex="100%">
-       
+        <html:div>
+		<html:input type="checkbox"/>&maxMessagesStart.label;
+		<html:spacer/>
+		<html:input type="text" size="6"/>
+		<html:spacer/>&maxMessagesEnd.label;
+        </html:div>
       </box>
       <!-- None -->
       <box align="vertical" flex="100%">
