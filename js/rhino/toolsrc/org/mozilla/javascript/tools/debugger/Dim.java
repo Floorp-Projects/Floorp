@@ -64,14 +64,11 @@ class Dim {
 
     int frameIndex = -1;
 
-    boolean isInterrupted = false;
-    boolean nonDispatcherWaiting = false;
-    int dispatcherIsWaiting = 0;
-    volatile ContextData currentContextData = null;
+    private volatile ContextData interruptedContextData = null;
 
     private Object monitor = new Object();
-    private Object swingMonitor = new Object();
-    private int returnValue = -1;
+    private Object eventThreadMonitor = new Object();
+    private volatile int returnValue = -1;
     private boolean insideInterruptLoop;
     private String evalRequest;
     private StackFrame evalFrame;
@@ -84,8 +81,6 @@ class Dim {
     private final Hashtable urlToSourceInfo = new Hashtable();
     private final Hashtable functionNames = new Hashtable();
     private final Hashtable functionToSource = new Hashtable();
-
-    private final Debugger debuggerImpl = new DebuggerImpl();
 
     static class ContextData
     {
@@ -404,60 +399,146 @@ class Dim {
         }
     }
 
-    private class DebuggerImpl implements Debugger
+    private static final int IPROXY_DEBUG = 0;
+    private static final int IPROXY_LISTEN = 1;
+    private static final int IPROXY_COMPILE_SCRIPT = 2;
+    private static final int IPROXY_EVAL_SCRIPT = 3;
+    private static final int IPROXY_STRING_IS_COMPILABLE = 4;
+    private static final int IPROXY_OBJECT_TO_STRING = 5;
+    private static final int IPROXY_OBJECT_PROPERTY = 6;
+    private static final int IPROXY_OBJECT_IDS = 7;
+
+    /**
+     * Proxy class to implement debug interfaces without bloat of class
+     * files.
+     */
+    private static class DimIProxy
+        implements ContextAction, ContextFactory.Listener, Debugger
     {
+        private Dim dim;
+        private int type;
+
+        String url;
+        String text;
+        Object object;
+        Object id;
+
+        boolean booleanResult;
+        String stringResult;
+        Object objectResult;
+        Object[] objectArrayResult;
+
+        DimIProxy(Dim dim, int type)
+        {
+            this.dim = dim;
+            this.type = type;
+        }
+
+        // ContextAction interface
+
+        public Object run(Context cx)
+        {
+            switch (type) {
+              case IPROXY_COMPILE_SCRIPT:
+                cx.compileString(text, url, 1, null);
+                break;
+
+              case IPROXY_EVAL_SCRIPT:
+                {
+                    Scriptable scope = null;
+                    if (dim.scopeProvider != null) {
+                        scope = dim.scopeProvider.getScope();
+                    }
+                    if (scope == null) {
+                        scope = new ImporterTopLevel(cx);
+                    }
+                    cx.evaluateString(scope, text, url, 1, null);
+                }
+                break;
+
+              case IPROXY_STRING_IS_COMPILABLE:
+                booleanResult = cx.stringIsCompilableUnit(text);
+                break;
+
+              case IPROXY_OBJECT_TO_STRING:
+                if (object == Undefined.instance) {
+                    stringResult = "undefined";
+                } else if (object == null) {
+                    stringResult = "null";
+                } else if (object instanceof NativeCall) {
+                    stringResult = "[object Call]";
+                } else {
+                    stringResult = Context.toString(object);
+                }
+                break;
+
+              case IPROXY_OBJECT_PROPERTY:
+                objectResult = dim.getObjectPropertyImpl(cx, object, id);
+                break;
+
+              case IPROXY_OBJECT_IDS:
+                objectArrayResult = dim.getObjectIdsImpl(cx, object);
+                break;
+
+              default:
+                throw Kit.codeBug();
+            }
+            return null;
+        }
+
+        void withContext()
+        {
+            Context.call(this);
+        }
+
+        // ContextFactory.Listener interface
+
+        public void contextCreated(Context cx)
+        {
+            if (type != IPROXY_LISTEN) Kit.codeBug();
+            ContextData contextData = new ContextData();
+            Debugger debugger = new DimIProxy(dim, IPROXY_DEBUG);
+            cx.setDebugger(debugger, contextData);
+            cx.setGeneratingDebug(true);
+            cx.setOptimizationLevel(-1);
+        }
+
+        public void contextReleased(Context cx)
+        {
+            if (type != IPROXY_LISTEN) Kit.codeBug();
+        }
+
+        // Debugger interface
+
         public DebugFrame getFrame(Context cx, DebuggableScript fnOrScript)
         {
-            return mirrorStackFrame(cx, fnOrScript);
+            if (type != IPROXY_DEBUG) Kit.codeBug();
+
+            FunctionSource item = dim.getFunctionSource(fnOrScript);
+            if (item == null) {
+                // Can not debug if source is not available
+                return null;
+            }
+            return new StackFrame(cx, dim, item);
         }
 
         public void handleCompilationDone(Context cx,
                                           DebuggableScript fnOrScript,
                                           String source)
         {
-            onCompilationDone(cx, fnOrScript, source);
+            if (type != IPROXY_DEBUG) Kit.codeBug();
+
+            if (!fnOrScript.isTopLevel()) {
+                return;
+            }
+            dim.registerTopScript(fnOrScript, source);
         }
     }
 
     void enableForAllNewContexts()
     {
-        ContextFactory.Listener l = new ContextFactory.Listener()
-        {
-            public void contextCreated(Context cx)
-            {
-                initNewContext(cx);
-            }
-
-            public void contextReleased(Context cx) { }
-        };
-        ContextFactory.getGlobal().addListener(l);
-    }
-
-    void initNewContext(Context cx)
-    {
-        ContextData contextData = new ContextData();
-        cx.setDebugger(debuggerImpl, contextData);
-        cx.setGeneratingDebug(true);
-        cx.setOptimizationLevel(-1);
-    }
-
-    DebugFrame mirrorStackFrame(Context cx, DebuggableScript fnOrScript)
-    {
-        FunctionSource item = getFunctionSource(fnOrScript);
-        if (item == null) {
-            // Can not debug if source is not available
-            return null;
-        }
-        return new StackFrame(cx, this, item);
-    }
-
-    void onCompilationDone(Context cx, DebuggableScript fnOrScript,
-                           String source)
-    {
-        if (!fnOrScript.isTopLevel()) {
-            return;
-        }
-        registerTopScript(fnOrScript, source);
+        DimIProxy listener = new DimIProxy(this, IPROXY_LISTEN);
+        ContextFactory.getGlobal().addListener(listener);
     }
 
     FunctionSource getFunctionSource(DebuggableScript fnOrScript)
@@ -544,7 +625,7 @@ class Dim {
         return source;
     }
 
-    private void registerTopScript(DebuggableScript topScript, String source)
+    void registerTopScript(DebuggableScript topScript, String source)
     {
         if (!topScript.isTopLevel()) {
             throw new IllegalArgumentException();
@@ -710,7 +791,7 @@ class Dim {
     }
 
     ContextData currentContextData() {
-        return currentContextData;
+        return interruptedContextData;
     }
 
     void setReturnValue(int returnValue)
@@ -764,109 +845,53 @@ class Dim {
         return result;
     }
 
-    void compileScript(final String url, final String text)
+    void compileScript(String url, String text)
     {
-        withContext(new ContextAction() {
-            public Object run(Context cx)
-            {
-                compileScriptImpl(cx, url, text);
-                return null;
-            }
-        });
+        DimIProxy action = new DimIProxy(this, IPROXY_COMPILE_SCRIPT);
+        action.url = url;
+        action.text = text;
+        action.withContext();
     }
 
     void evalScript(final String url, final String text)
     {
-        withContext(new ContextAction() {
-            public Object run(Context cx)
-            {
-                evalScriptImpl(cx, url, text);
-                return null;
-            }
-        });
+        DimIProxy action = new DimIProxy(this, IPROXY_EVAL_SCRIPT);
+        action.url = url;
+        action.text = text;
+        action.withContext();
     }
 
-    String objectToString(final Object object)
+    String objectToString(Object object)
     {
-        return (String)withContext(new ContextAction() {
-            public Object run(Context cx)
-            {
-                return objectToStringImpl(cx, object);
-            }
-        });
+        DimIProxy action = new DimIProxy(this, IPROXY_OBJECT_TO_STRING);
+        action.object = object;
+        action.withContext();
+        return action.stringResult;
     }
 
-    boolean stringIsCompilableUnit(final String expr)
+    boolean stringIsCompilableUnit(String str)
     {
-        Boolean boxed = (Boolean)withContext(new ContextAction() {
-            public Object run(Context cx)
-            {
-                boolean flag = stringIsCompilableUnitImpl(cx, expr);
-                return flag ? Boolean.TRUE : Boolean.FALSE;
-            }
-        });
-        return boxed.booleanValue();
+        DimIProxy action = new DimIProxy(this, IPROXY_STRING_IS_COMPILABLE);
+        action.text = str;
+        action.withContext();
+        return action.booleanResult;
     }
 
-    Object getObjectProperty(final Object object, final Object id)
+    Object getObjectProperty(Object object, Object id)
     {
-        return withContext(new ContextAction() {
-            public Object run(Context cx)
-            {
-                return getObjectPropertyImpl(cx, object, id);
-            }
-        });
+        DimIProxy action = new DimIProxy(this, IPROXY_OBJECT_PROPERTY);
+        action.object = object;
+        action.id = id;
+        action.withContext();
+        return action.objectResult;
     }
 
-    Object[] getObjectIds(final Object object)
+    Object[] getObjectIds(Object object)
     {
-        return (Object[])withContext(new ContextAction() {
-            public Object run(Context cx)
-            {
-                return getObjectIdsImpl(cx, object);
-            }
-        });
-    }
-
-    private Object withContext(ContextAction action)
-    {
-        return Context.call(action);
-    }
-
-    void compileScriptImpl(Context cx, String url, String text)
-    {
-        cx.compileString(text, url, 1, null);
-    }
-
-    void evalScriptImpl(Context cx, String url, String text)
-    {
-        Scriptable scope = null;
-        if (scopeProvider != null) {
-            scope = scopeProvider.getScope();
-        }
-        if (scope == null) {
-            scope = new ImporterTopLevel(cx);
-        }
-        cx.evaluateString(scope, text, url, 1, null);
-    }
-
-    boolean stringIsCompilableUnitImpl(Context cx, String expr)
-    {
-        return cx.stringIsCompilableUnit(expr);
-    }
-
-    String objectToStringImpl(Context cx, Object object)
-    {
-        if (object == Undefined.instance) {
-            return "undefined";
-        }
-        if (object == null) {
-            return "null";
-        }
-        if (object instanceof NativeCall) {
-            return "[object Call]";
-        }
-        return Context.toString(object);
+        DimIProxy action = new DimIProxy(this, IPROXY_OBJECT_IDS);
+        action.object = object;
+        action.withContext();
+        return action.objectArrayResult;
     }
 
     Object getObjectPropertyImpl(Context cx, Object object, Object id)
@@ -939,131 +964,140 @@ class Dim {
     private void interrupted(Context cx, final StackFrame frame,
                              Throwable scriptException)
     {
-        boolean eventThreadFlag = callback.isGuiEventThread();
         ContextData contextData = frame.contextData();
-        contextData.eventThreadFlag = eventThreadFlag;
         int line = frame.getLineNumber();
         String url = frame.getUrl();
+        boolean eventThreadFlag = callback.isGuiEventThread();
+        contextData.eventThreadFlag = eventThreadFlag;
 
-        synchronized (swingMonitor) {
+        boolean recursiveEventThreadCall = false;
+
+      interruptedCheck:
+        synchronized (eventThreadMonitor) {
             if (eventThreadFlag) {
-                dispatcherIsWaiting++;
-                if (nonDispatcherWaiting) {
-                    // Another thread is stopped in the debugger
-                    // process events until it resumes and we
-                    // can enter
-                    while (nonDispatcherWaiting) {
-                        try {
-                            callback.dispatchNextGuiEvent();
-                            if (this.returnValue == EXIT) {
-                                return;
-                            }
-                            swingMonitor.wait(1);
-                        } catch (InterruptedException exc) {
-                            return;
-                        }
-                    }
+                if (interruptedContextData != null) {
+                    recursiveEventThreadCall = true;
+                    break interruptedCheck;
                 }
             } else {
-                while (isInterrupted || dispatcherIsWaiting > 0) {
+                while (interruptedContextData != null) {
                     try {
-                        swingMonitor.wait();
+                        eventThreadMonitor.wait();
                     } catch (InterruptedException exc) {
                         return;
                     }
                 }
-                nonDispatcherWaiting = true;
             }
-            isInterrupted = true;
-            currentContextData = contextData;
+            interruptedContextData = contextData;
         }
-        do {
-            int frameCount = contextData.frameCount();
-            this.frameIndex = frameCount -1;
 
-            final String threadTitle = Thread.currentThread().toString();
-            final String alertMessage;
-            if (scriptException == null) {
-                alertMessage = null;
-            } else {
-                alertMessage = scriptException.toString();
-            }
+        if (recursiveEventThreadCall) {
+			// XXX: For now the foolowing is commented out as on Linux 
+			// too deep recursion of dispatchNextGuiEvent causes GUI lockout.
+			// Note: it can make GUI unresponsive if long-running script
+			// will be called on GUI thread while processing another interrupt
+			if (false) {
+               // Run event dispatch until gui sets a flag to exit the initial
+               // call to interrupted.
+            	while (this.returnValue == -1) {
+                	try {
+                    	callback.dispatchNextGuiEvent();
+                	} catch (InterruptedException exc) {
+                	}
+            	}
+			}
+            return;
+        }
 
-            int returnValue = -1;
-            if (!eventThreadFlag) {
-                synchronized (monitor) {
-                    if (insideInterruptLoop) Kit.codeBug();
-                    this.insideInterruptLoop = true;
-                    this.evalRequest = null;
+        if (interruptedContextData == null) Kit.codeBug();
+
+        try {
+            do {
+                int frameCount = contextData.frameCount();
+                this.frameIndex = frameCount -1;
+
+                final String threadTitle = Thread.currentThread().toString();
+                final String alertMessage;
+                if (scriptException == null) {
+                    alertMessage = null;
+                } else {
+                    alertMessage = scriptException.toString();
+                }
+
+                int returnValue = -1;
+                if (!eventThreadFlag) {
+                    synchronized (monitor) {
+                        if (insideInterruptLoop) Kit.codeBug();
+                        this.insideInterruptLoop = true;
+                        this.evalRequest = null;
+                        this.returnValue = -1;
+                        callback.enterInterrupt(frame, threadTitle,
+                                                alertMessage);
+                        try {
+                            for (;;) {
+                                try {
+                                    monitor.wait();
+                                } catch (InterruptedException exc) {
+                                    Thread.currentThread().interrupt();
+                                    break;
+                                }
+                                if (evalRequest != null) {
+                                    this.evalResult = null;
+                                    try {
+                                        evalResult = do_eval(cx, evalFrame,
+                                                             evalRequest);
+                                    } finally {
+                                        evalRequest = null;
+                                        evalFrame = null;
+                                        monitor.notify();
+                                    }
+                                    continue;
+                                }
+                                if (this.returnValue != -1) {
+                                    returnValue = this.returnValue;
+                                    break;
+                                }
+                            }
+                        } finally {
+                            insideInterruptLoop = false;
+                        }
+                    }
+                } else {
                     this.returnValue = -1;
                     callback.enterInterrupt(frame, threadTitle, alertMessage);
-                    try {
-                        for (;;) {
-                            try {
-                                monitor.wait();
-                            } catch (InterruptedException exc) {
-                                Thread.currentThread().interrupt();
-                                break;
-                            }
-                            if (evalRequest != null) {
-                                this.evalResult = null;
-                                try {
-                                    evalResult = do_eval(cx, evalFrame, evalRequest);
-                                } finally {
-                                    evalRequest = null;
-                                    evalFrame = null;
-                                    monitor.notify();
-                                }
-                                continue;
-                            }
-                            if (this.returnValue != -1) {
-                                returnValue = this.returnValue;
-                                break;
-                            }
+                    while (this.returnValue == -1) {
+                        try {
+                            callback.dispatchNextGuiEvent();
+                        } catch (InterruptedException exc) {
                         }
-                    } finally {
-                        insideInterruptLoop = false;
                     }
+                    returnValue = this.returnValue;
                 }
-            } else {
-                this.returnValue = -1;
-                callback.enterInterrupt(frame, threadTitle, alertMessage);
-                while (this.returnValue == -1) {
-                    try {
-                        callback.dispatchNextGuiEvent();
-                    } catch (InterruptedException exc) {
-                    }
-                }
-                returnValue = this.returnValue;
-            }
-            switch (returnValue) {
-            case STEP_OVER:
-                contextData.breakNextLine = true;
-                contextData.stopAtFrameDepth = contextData.frameCount();
-                break;
-            case STEP_INTO:
-                contextData.breakNextLine = true;
-                contextData.stopAtFrameDepth = -1;
-                break;
-            case STEP_OUT:
-                if (contextData.frameCount() > 1) {
+                switch (returnValue) {
+                case STEP_OVER:
                     contextData.breakNextLine = true;
-                    contextData.stopAtFrameDepth = contextData.frameCount() -1;
+                    contextData.stopAtFrameDepth = contextData.frameCount();
+                    break;
+                case STEP_INTO:
+                    contextData.breakNextLine = true;
+                    contextData.stopAtFrameDepth = -1;
+                    break;
+                case STEP_OUT:
+                    if (contextData.frameCount() > 1) {
+                        contextData.breakNextLine = true;
+                        contextData.stopAtFrameDepth
+                            = contextData.frameCount() -1;
+                    }
+                    break;
                 }
-                break;
+            } while (false);
+        } finally {
+            synchronized (eventThreadMonitor) {
+                interruptedContextData = null;
+                eventThreadMonitor.notifyAll();
             }
-        } while (false);
-
-        synchronized (swingMonitor) {
-            currentContextData = null;
-            isInterrupted = false;
-            if (eventThreadFlag) {
-                dispatcherIsWaiting--;
-            } else {
-                nonDispatcherWaiting = false;
-            }
-            swingMonitor.notifyAll();
         }
+
     }
 
     private static String do_eval(Context cx, StackFrame frame, String expr)

@@ -126,7 +126,7 @@ function create_gui()
     frame.addWindowListener(function(event, methodName) {
     	print(event + " "+methodName);
 	if (methodName == "windowClosing") {     
-            java.lang.System.exit(0);
+            //java.lang.System.exit(0);
 	}
     });
 

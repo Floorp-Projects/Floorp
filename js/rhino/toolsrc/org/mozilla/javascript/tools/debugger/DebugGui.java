@@ -899,7 +899,10 @@ class FileWindow extends JInternalFrame implements ActionListener {
     void load() {
         String url = getUrl();
         if (url != null) {
-            new Thread(new LoadFile(debugGui,url,sourceInfo.source())).start();
+            RunProxy proxy = new RunProxy(debugGui, RunProxy.LOAD_FILE);
+            proxy.fileName = url;
+            proxy.text = sourceInfo.source();
+            new Thread(proxy).start();
         }
     }
 
@@ -1890,53 +1893,81 @@ class Menubar extends JMenuBar implements ActionListener
 
 }
 
-class OpenFile implements Runnable
+/**
+ * Class to consolidate all cases that require to implement Runnable
+ * to avoid class generation bloat.
+ */
+class RunProxy implements Runnable
 {
-    DebugGui debugGui;
+    static final int OPEN_FILE = 1;
+    static final int LOAD_FILE = 2;
+    static final int UPDATE_SOURCE_TEXT = 3;
+    static final int ENTER_INTERRUPT = 4;
+
+    private DebugGui debugGui;
+    private int type;
+
     String fileName;
     String text;
 
-    OpenFile(DebugGui debugGui, String fileName, String text)
+    Dim.SourceInfo sourceInfo;
+
+    Dim.StackFrame lastFrame;
+    String threadTitle;
+    String alertMessage;
+
+    RunProxy(DebugGui debugGui, int type)
     {
         this.debugGui = debugGui;
-        this.fileName = fileName;
-        this.text = text;
+        this.type = type;
     }
 
-    public void run() {
-        try {
-            debugGui.dim.compileScript(fileName, text);
-        } catch (RuntimeException ex) {
-            MessageDialogWrapper.showMessageDialog(debugGui,
-                                                   ex.getMessage(),
-                                                   "Error Compiling "+fileName,
-                                                   JOptionPane.ERROR_MESSAGE);
-        }
-    }
-}
-
-class LoadFile implements Runnable
-{
-    DebugGui debugGui;
-    String fileName;
-    String text;
-    LoadFile(DebugGui debugGui, String fileName, String text)
-    {
-        this.debugGui = debugGui;
-        this.fileName = fileName;
-        this.text = text;
-    }
     public void run()
     {
-        try {
-            debugGui.dim.evalScript(fileName, text);
-        } catch (RuntimeException ex) {
-            MessageDialogWrapper.showMessageDialog(debugGui,
-                                                   ex.getMessage(),
-                                                   "Run error for "+fileName,
-                                                   JOptionPane.ERROR_MESSAGE);
+        switch (type) {
+          case OPEN_FILE:
+            try {
+                debugGui.dim.compileScript(fileName, text);
+            } catch (RuntimeException ex) {
+                MessageDialogWrapper.showMessageDialog(
+                    debugGui, ex.getMessage(), "Error Compiling "+fileName,
+                    JOptionPane.ERROR_MESSAGE);
+            }
+            break;
+
+          case LOAD_FILE:
+            try {
+                debugGui.dim.evalScript(fileName, text);
+            } catch (RuntimeException ex) {
+                MessageDialogWrapper.showMessageDialog(
+                    debugGui, ex.getMessage(), "Run error for "+fileName,
+                    JOptionPane.ERROR_MESSAGE);
+            }
+            break;
+
+          case UPDATE_SOURCE_TEXT:
+            {
+                String fileName = sourceInfo.url();
+                FileWindow w = debugGui.getFileWindow(fileName);
+                if (w != null) {
+                    w.updateText(sourceInfo);
+                    w.show();
+                } else if (!fileName.equals("<stdin>")) {
+                    debugGui.createFileWindow(sourceInfo, -1);
+                }
+            }
+            break;
+
+          case ENTER_INTERRUPT:
+            debugGui.enterInterruptImpl(lastFrame, threadTitle, alertMessage);
+            break;
+
+          default:
+            throw new IllegalArgumentException(String.valueOf(type));
+
         }
     }
+
 }
 
 class DebugGui extends JFrame implements GuiCallback
@@ -2288,37 +2319,25 @@ class DebugGui extends JFrame implements GuiCallback
 
     // Implementing GuiCallback
 
-    public void updateSourceText(final Dim.SourceInfo sourceInfo)
+    public void updateSourceText(Dim.SourceInfo sourceInfo)
     {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run()
-            {
-                String fileName = sourceInfo.url();
-                FileWindow w = getFileWindow(fileName);
-                if (w != null) {
-                    w.updateText(sourceInfo);
-                    w.show();
-                } else if (!fileName.equals("<stdin>")) {
-                    createFileWindow(sourceInfo, -1);
-                }
-            }
-        });
-
+        RunProxy proxy = new RunProxy(this, RunProxy.UPDATE_SOURCE_TEXT);
+        proxy.sourceInfo = sourceInfo;
+        SwingUtilities.invokeLater(proxy);
     }
 
-    public void enterInterrupt(final Dim.StackFrame lastFrame,
-                               final String threadTitle,
-                               final String alertMessage)
+    public void enterInterrupt(Dim.StackFrame lastFrame,
+                               String threadTitle,
+                               String alertMessage)
     {
         if (SwingUtilities.isEventDispatchThread()) {
             enterInterruptImpl(lastFrame, threadTitle, alertMessage);
         } else {
-            SwingUtilities.invokeLater(new Runnable() {
-                public void run()
-                {
-                    enterInterruptImpl(lastFrame, threadTitle, alertMessage);
-                }
-            });
+            RunProxy proxy = new RunProxy(this, RunProxy.ENTER_INTERRUPT);
+            proxy.lastFrame = lastFrame;
+            proxy.threadTitle = threadTitle;
+            proxy.alertMessage = alertMessage;
+            SwingUtilities.invokeLater(proxy);
         }
     }
 
@@ -2459,7 +2478,10 @@ class DebugGui extends JFrame implements GuiCallback
             if (fileName != null) {
                 String text = readFile(fileName);
                 if (text != null) {
-                    new Thread(new OpenFile(this, fileName, text)).start();
+                    RunProxy proxy = new RunProxy(this, RunProxy.OPEN_FILE);
+                    proxy.fileName = fileName;
+                    proxy.text = text;
+                    new Thread(proxy).start();
                 }
             }
         } else if (cmd.equals("Load")) {
@@ -2467,7 +2489,10 @@ class DebugGui extends JFrame implements GuiCallback
             if (fileName != null) {
                 String text = readFile(fileName);
                 if (text != null) {
-                    new Thread(new LoadFile(this, fileName, text)).start();
+                    RunProxy proxy = new RunProxy(this, RunProxy.LOAD_FILE);
+                    proxy.fileName = fileName;
+                    proxy.text = text;
+                    new Thread(proxy).start();
                 }
             }
         } else if (cmd.equals("More Windows...")) {
