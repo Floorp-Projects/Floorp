@@ -161,9 +161,10 @@ do {\
  * @param op A C-string that is the "operation" that is being
  * performed.
  * @param obj A pointer to an object.
+ * @param cx A pointer to the MWContext.
  * @param msg A message to include in the log entry.
  */
-#define TIMING_STOPCLOCK_OBJECT(op, obj, msg) \
+#define TIMING_STOPCLOCK_OBJECT(op, obj, cx, msg) \
 do {\
     char buf[256];\
     PR_snprintf(buf, sizeof(buf), "%s,%08x", op, obj);\
@@ -172,7 +173,8 @@ do {\
         PRUint32 nElapsed;\
         TimingStopClock(&tmElapsed, buf);\
         LL_L2UI(nElapsed, tmElapsed);\
-        TimingWriteMessage("clock,%s,%ld,%s", buf, nElapsed, msg);\
+        TimingWriteMessage("clock,%s,%ld,%08x,%s",\
+                           buf, nElapsed, cx, msg);\
     }\
 } while (0)
 
@@ -216,7 +218,7 @@ do {\
  * @param name A C-string that is the name for the timer.
  * @param msg A message to include in the log entry.
  */
-#define TIMING_STOPCLOCK_NAME(op, name, msg) \
+#define TIMING_STOPCLOCK_NAME(op, name, cx, msg) \
 do {\
     char buf[256];\
     PR_snprintf(buf, sizeof(buf), "%s,%.64s", op, name);\
@@ -225,7 +227,8 @@ do {\
         PRUint32 nElapsed;\
         TimingStopClock(&tmElapsed, buf);\
         LL_L2UI(nElapsed, tmElapsed);\
-        TimingWriteMessage("clock,%s,%ld,%s", buf, nElapsed, msg);\
+        TimingWriteMessage("clock,%s,%ld,%08x,%s",\
+                           buf, nElapsed, cx, msg);\
     }\
 } while (0)
 
