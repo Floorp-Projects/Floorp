@@ -2,9 +2,10 @@
 <html>
 <head>
 <title> nsIFontList Interface Test </title>
-<!-- Descrpt: nsIFontList Interface Test
+<!-- Descrpt: nsIFontList Interface Test Case
      Author: dsirnapalli@netscape.com
      Revs: 07.26.01 - Created
+     Last Run On: 10.23.01.
 
    - The contents of this file are subject to the Mozilla Public
    - License Version 1.1 (the "License"); you may not use this file
@@ -27,26 +28,52 @@
   -->
 
 <!-- script below is ngdriverspecific  -->
-<script TYPE="text/javascript" SRC="http://bubblegum/ngdriver/suites/testlib.js">
+<script type="text/javascript" src="http://bubblegum/ngdriver/suites/testlib.js">
 </script>
 
 <script type="text/javascript">
+res = "";
 
 function getBrowserVersion()
 {
-  results = "";
 
-  results = results + "<html>";
-  results = results + "<b><h2>Browser Info </h2></b>" + "\n";
-  results = results + "<li><b>App Name:<TAB> </b>" + navigator.appName + "\n";
-  results = results + "<li><b>User Agent:<TAB> </b>" + navigator.userAgent + "\n";
-  results = results + "<li><b>Code Name:<TAB> </b>" + navigator.appCodeName + "\n";
-  results = results + "<li><b>App Version:<TAB> </b>" + navigator.appVersion + "\n";
-  results = results + "<li><b>Language:<TAB> </b>" + navigator.language + "\n";
-  results = results + "<li><b>Platform:<TAB> </b>" + navigator.platform + "\n";
-  results = results + "<hr>" + "\n";
+  res = res + "<font color='#CC6600'> NOTE: </font>" + "<br>";
+  res = res + "For the Test Case to run correctly include the following line into your prefs.js file." + "<br>";
+  res = res + 'user_pref("signed.applets.codebase_principal_support", true);' + "<br>";
+  res = res + 'prefs.js can be found at' + '<br>';
+  res = res + 'WINNT:C:\\WINNT\\Profiles\\profileyouareusing\\Application Data\\MfcEmbed\\Profiles\\default\\somefolder.slt\\prefs.js' + '<br>';
+  res = res + 'WIN98:C:\\WINDOWS\\Application Data\\MfcEmbed\\Profiles\\default\\somefolder.slt\\prefs.js' + '<br>';
+  res = res + '<br><hr ALIGN=LEFT SIZE=5 NOSHADE WIDTH="80%">' + '\n';
 
-  document.results.textarea.value = results;
+  res = res + '<b><h3><font color="#CC6600"> Browser Info </font></h3></b>' + '\n';
+  res = res + '<table BORDER COLS=2 WIDTH="70%">' + '\n';
+  res = res + ' <tr>' + '\n';
+  res = res + '  <td WIDTH="30%"><b> App Name: </b></td>' + '\n';
+  res = res + '  <td>' + navigator.appName + '</td>' + '\n';
+  res = res + ' </tr>' + '\n';
+  res = res + ' <tr>' + '\n';
+  res = res + '  <td><b> User Agent: </b></td>' + '\n';
+  res = res + '  <td>' + navigator.userAgent + '</td>' + '\n';
+  res = res + ' </tr>' + '\n';
+  res = res + ' <tr>' + '\n';
+  res = res + '  <td><b> Code Name: </b></td>' + '\n';
+  res = res + '  <td>' + navigator.appCodeName + '</td>' + '\n';
+  res = res + ' </tr>' + '\n';
+  res = res + ' <tr>' + '\n';
+  res = res + '  <td><b> App Version: </b></td>' + '\n';
+  res = res + '  <td>' + navigator.appVersion + '</td>' + '\n';
+  res = res + ' </tr>' + '\n';
+  res = res + ' <tr>' + '\n';
+  res = res + '  <td><b> Language: </b></td>' + '\n';
+  res = res + '  <td>' + navigator.language + '</td>' + '\n';
+  res = res + ' </tr>' + '\n';
+  res = res + ' <tr>' + '\n';
+  res = res + '  <td><b> Platform: </b></td>' + '\n';
+  res = res + '  <td>' + navigator.platform + '</td>' + '\n';
+  res = res + ' </tr>' + '\n';
+  res = res + '</table>' + '\n';
+  res = res + '<br><hr ALIGN=LEFT SIZE=5 NOSHADE WIDTH="80%">' + '\n';
+
 }
 
 function getFontList()
@@ -71,9 +98,85 @@ function getFontList()
   return fontListObj;
 }
 
-function displayResults(results)
+function getDescription(groupname)
 {
-  document.results.textarea.value = results;
+  var descriptivename;
+  if(groupname == "x-western")
+    descriptivename = " (American/Western European)";
+  else if(groupname == "ar")
+    descriptivename = " (Arabic)";
+  else if(groupname == "el")
+    descriptivename = " (Greek)";
+  else if(groupname == "he")
+    descriptivename = " (Hebrew)";
+  else if(groupname == "ja")
+    descriptivename = " (Japanese)";
+  else if(groupname == "ko")
+    descriptivename = " (Korean)";
+  else if(groupname == "th")
+    descriptivename = " (Thai)";
+  else if(groupname == "tr")
+    descriptivename = " (Turkish)";
+  else if(groupname == "x-baltic")
+    descriptivename = " (Baltic)";
+  else if(groupname == "x-central-euro")
+    descriptivename = " (Eastern European)";
+  else if(groupname == "x-cyrillic")
+    descriptivename = " (Russian)";
+  else if(groupname == "zh-CN")
+    descriptivename = " (China)";
+  else if(groupname == "zh-TW")
+    descriptivename = " (Taiwan)";
+
+  return descriptivename;
+}
+
+function constructFontList(fontList)
+{
+  try
+  {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+
+    res = res + '<b><h3><font color="#CC6600"> Available Fonts </font></h3></b>' + '\n';
+    for(i=0; i<langgroup.length; i++)
+    {
+      res = res + '<br><b><u>' + langgroup[i] + '</u>' + getDescription(langgroup[i]) + '</b> <br><br>';
+      res = res + '<table BORDER COLS=2 WIDTH="90%">' + '\n';
+      for(j=0; j<fonttype.length; j++)
+      {
+        res = res + '<tr>' + '\n';
+        res = res + '<td WIDTH="20%"><b>' + fonttype[j] + ':' + '</b></td>';
+        res = res + '<td>';
+
+        var tempres = "";
+        var fontEnumerator = fontList.availableFonts(langgroup[i], fonttype[j]);
+        while (fontEnumerator.hasMoreElements())
+		{
+		  var fontName = fontEnumerator.getNext();
+		  fontName = fontName.QueryInterface(Components.interfaces.nsISupportsWString);
+		  var fontNameStr = fontName.toString();
+		  if (fontEnumerator.hasMoreElements())
+		    tempres = tempres + fontNameStr + ", ";
+		  else
+		    tempres = tempres + fontNameStr;
+		}
+		res = res + tempres;
+		res = res + '</td>';
+        res = res + ' </tr>' + '\n';
+      }
+      res = res + '</table>';
+    }
+    res = res + '<br><hr ALIGN=LEFT SIZE=5 NOSHADE WIDTH="80%">' + '\n';
+  }
+  catch(e) {
+    alert("Exception: " + e);
+  }
+}
+
+function displayResults()
+{
+  document.results.textarea.value = res;
   if (top.name == "testWindow")
   {
  	fixSubmit();
@@ -85,56 +188,29 @@ function displayResults(results)
 }
 
 </script>
-
 </head>
-<body onLoad="displayResults(results);">
+
+<body onLoad="displayResults();">
 
 <!-- form below is ngdriverspecific  -->
 <form name="results" action="/ngdriver/cgi-bin/writeresults.cgi" method="post">
-<script TYPE="text/javascript">
+<script type="text/javascript">
 document.write('<input name="resultsfile" type="hidden" value="' + window.opener.document.resultsform.resultsfile.value + '">');
 </script>
 <input type="hidden" name="textarea">
 </form>
 
-<script TYPE="text/javascript">
-var langgroup = new Array("x-western", "ar", "el", "he", "ja", "ko", "th",
-                          "tr", "x-baltic", "x-central-euro", "x-cyrillic",
-                          "zh-CN", "zh-TW");
-var fonttype = new Array("serif" , "sans-serif", "cursive", "fantasy", "monospace");
+<script type="text/javascript">
 
+var langgroup = new Array("x-western", "ar", "el", "he", "ja", "ko",
+                          "th", "tr", "x-baltic", "x-central-euro",
+                          "x-cyrillic", "zh-CN", "zh-TW");
+var fonttype = new Array( "serif" , "sans-serif", "cursive",
+                          "fantasy", "monospace");
 getBrowserVersion();
 var fontList = getFontList();
-
-try
-{
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
-
-  results = results + "<H2><B>" + "Available Fonts" + "</B></H2>";
-  for(i=0; i<langgroup.length; i++)
-  {
-    results = results + "<BR><B><U>" + langgroup[i] + "</U></B> <BR>";
-    for(j=0; j<fonttype.length; j++)
-    {
-      results = results + "<B>" + fonttype[j] + "</B> <BR>";
-      var fontEnumerator = fontList.availableFonts(langgroup[i], fonttype[j]);
-      while (fontEnumerator.hasMoreElements())
-      {
-        fontName = fontEnumerator.getNext();
-        fontName = fontName.QueryInterface(Components.interfaces.nsISupportsWString);
-        var fontNameStr = fontName.toString();
-        results = results + fontNameStr + "<BR>";
-      }
-    }
-  }
-  results = results + "<B>" + "<hr>" + "</B>";
-  results = results + "</html>";
-}
-catch(e) {
-  alert("Exception: " + e);
-}
+constructFontList(fontList);
 
 </script>
-
 </body>
+</html>
