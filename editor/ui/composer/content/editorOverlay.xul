@@ -276,7 +276,7 @@
    -->
   <menu id="fileMenu" label="&fileMenu.label;" accesskey="&filemenu.accesskey;">
     <menupopup id="menu_FilePopup">
-      <menuitem id="menu_newBlankPage" label="&newBlankPageCmd.label;" accesskey="&newBlankPage.accesskey;" key="key_newBlankPage" observes="cmd_newEditor"/>
+      <menuitem id="menu_newBlankPage" label="&newBlankPageCmd.label;" accesskey="&newBlankPage.accesskey;" key="key_newBlankPage" command="cmd_newEditor"/>
       <menu id="menu_editNew" label="&newMenu.label;" accesskey="&newMenu.accesskey;">
         <menupopup id="menu_NewPopup">
           <!-- From globalOverlay.xul -->
@@ -638,7 +638,7 @@
   <!-- Editor toolbar items -->
   <!-- note that we override the submenu item label "Blank Window" with "New" used for the menu -->
   <toolbarbutton id="newButton" class="toolbarbutton-1"
-                 label="&newMenu.label;" observes="cmd_newEditor"
+                 label="&newMenu.label;" command="cmd_newEditor"
                  tooltip="aTooltip" tooltiptext="&newToolbarCmd.tooltip;"/>
   <toolbarbutton id="openButton" class="toolbarbutton-1"
                  label="&openToolbarCmd.label;" observes="cmd_open"
