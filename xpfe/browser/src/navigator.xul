@@ -283,6 +283,13 @@
 	</menu>
 </popup>
 
+<popup id="backtooltip">
+ <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   width="80" height="15">
+   Get Back, JoJo
+ </window>
+</popup>
+
   <broadcaster id="canGoBack" disabled="true"/>
   <broadcaster id="canGoForward" disabled="true"/>
   <broadcaster id="canReload"/>
@@ -605,11 +612,11 @@
   <box id="outer-box" align="vertical">
    <toolbox>
     <toolbar class="main-bar" chromeclass="toolbar">
-		  <titledbutton id="back-button" align="bottom" value="&backButton.label;" onclick="BrowserBack()">	
+		  <titledbutton id="back-button" align="bottom" value="&backButton.label;" onclick="BrowserBack()" tooltip="backtooltip">	
 				  <observes element="canGoBack" attribute="disabled" onChange="BrowserSetBack()"/>			
 	      </titledbutton>
 
-	      <titledbutton id="forward-button" align="bottom" value="&forwardButton.label;" 
+	      <titledbutton id="forward-button" align="bottom" value="&forwardButton.label;" tooltip="backtooltip"
 				onclick="BrowserForward()">
 				  <observes element="canGoForward" attribute="disabled" onChange="BrowserSetForward()"/>
 	      </titledbutton>
