@@ -31,7 +31,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsICollection methods:
-  NS_IMETHOD_(PRUint32) Count(void) const { return mCount; }
+  NS_IMETHOD_(PRUint32) Count(void) { return mCount; }
   NS_IMETHOD AppendElement(nsISupports *aElement) {
     // XXX This incorrectly returns a PRBool instead of an nsresult.
     return InsertElementAt(aElement, mCount);
