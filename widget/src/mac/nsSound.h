@@ -32,6 +32,9 @@ class nsSound : public nsISound {
 
   nsSound();
   virtual ~nsSound();
+  char *mPlayBuf;
+  char *mBuffer;
+  PRInt32 mBufferSize;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISOUND

@@ -30,6 +30,10 @@
 
 #include "nsSound.h"
 
+#include "nsIURI.h"
+#include "nsNetUtil.h"
+#include "prmem.h"
+
 #include <unistd.h>
 
 #include <gtk/gtk.h>
@@ -57,25 +61,30 @@ nsSound::nsSound()
 
   lib = PR_LoadLibrary("libesd.so");
 
-  /*
-    if (!lib)
+#if 0
+  if (!lib)
     return;
-    EsdOpenSound = (EsdOpenSoundType) PR_FindSymbol(lib, "esd_open_sound");
-    esdref = (*EsdOpenSound)("localhost");
-  */
+  EsdOpenSound = (EsdOpenSoundType) PR_FindSymbol(lib, "esd_open_sound");
+  esdref = (*EsdOpenSound)("localhost");
+#endif
 }
 
 nsSound::~nsSound()
 {
   /* see above comment */
-  /*
-    if (esdref != -1)
-    {
+
+#if 0
+  if (esdref != -1)
+  {
     EsdCloseType EsdClose = (EsdCloseType) PR_FindSymbol(lib, "esd_close");
     (*EsdClose)(esdref);
     esdref = -1;
-    }
-  */
+  }
+#endif
+  if (mPlayBuf)
+      PR_Free( mPlayBuf );
+  if (mBuffer)
+      PR_Free( mBuffer );
 }
 
 nsresult NS_NewSound(nsISound** aSound)
@@ -84,9 +93,17 @@ nsresult NS_NewSound(nsISound** aSound)
   if (! aSound)
     return NS_ERROR_NULL_POINTER;
   
+  nsSound** mySound;
+
   *aSound = new nsSound();
   if (! *aSound)
     return NS_ERROR_OUT_OF_MEMORY;
+  mySound = (nsSound **) aSound;
+  (*mySound)->mBufferSize = 4098;
+  (*mySound)->mBuffer = (char *) PR_Malloc( (*mySound)->mBufferSize );
+  if ( (*mySound)->mBuffer == (char *) NULL )
+        return NS_ERROR_OUT_OF_MEMORY;
+  (*mySound)->mPlayBuf = (char *) NULL;
   
   NS_ADDREF(*aSound);
   return NS_OK;
@@ -108,20 +125,53 @@ NS_METHOD nsSound::Beep()
 
 NS_METHOD nsSound::Play(nsIURI *aURI)
 {
-/*
+  nsresult rv;
+  nsIInputStream *inputStream;
+  PRUint32 totalLen = 0;
+  PRUint32 len;
+
+#if 0
   if (lib)
   {
-    char *filename;
-    filespec->GetNativePath(&filename);
-
     g_print("there are some issues with playing sound right now, but this should work\n");
     EsdPlayFileType EsdPlayFile = (EsdPlayFileType) PR_FindSymbol(lib, "esd_play_file");
-    (*EsdPlayFile)("mozilla", filename, 1);
 
-    nsCRT::free(filename);
-
+    if ( mPlayBuf ) {
+          ::PlaySound(nsnull, nsnull, 0);       // stop what might be playing so we can free
+          PR_Free( this->mPlayBuf );
+          this->mPlayBuf = (char *) NULL;
+    }
+    rv = NS_OpenURI(&inputStream, aURI);
+    if (NS_FAILED(rv))
+          return rv;
+    do {
+        rv = inputStream->Read(this->mBuffer, this->mBufferSize, &len);
+        if ( len ) {
+                totalLen += len;
+                if ( this->mPlayBuf == (char *) NULL ) {
+                        this->mPlayBuf = (char *) PR_Malloc( len );
+                        if ( this->mPlayBuf == (char *) NULL ) {
+                                        NS_IF_RELEASE( inputStream );
+                                        return NS_ERROR_OUT_OF_MEMORY;
+                        }
+                        memcpy( this->mPlayBuf, this->mBuffer, len );
+                }
+                else {
+                        this->mPlayBuf = (char *) PR_Realloc( this->mPlayBuf, totalLen );
+                        if ( this->mPlayBuf == (char *) NULL ) {
+                                        NS_IF_RELEASE( inputStream );
+                                        return NS_ERROR_OUT_OF_MEMORY;
+                        }
+                        memcpy( this->mPlayBuf + (totalLen - len), this->mBuffer, len );
+                }
+        }
+    } while (len > 0);
+    if ( this->mPlayBuf != (char *) NULL )
+ /*     (*EsdPlayFile)("mozilla", filename, 1); */
+    NS_IF_RELEASE( inputStream );
     return NS_OK;
-  }
-*/
+  } else 
+	return NS_ERROR_NOT_IMPLEMENTED;
+#endif
   return NS_OK;
 }
