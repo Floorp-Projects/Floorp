@@ -55,6 +55,9 @@ function getMsg (msgName, params, deflt)
             rv = console._bundle.GetStringFromName (msgName);
         }
         
+        /* strip leading and trailing quote characters, see comment at the
+         * top of venkman.properties.
+         */
         rv = rv.replace (/^\"/, "");
         rv = rv.replace (/\"$/, "");
 
