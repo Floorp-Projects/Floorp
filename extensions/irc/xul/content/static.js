@@ -1773,7 +1773,10 @@ function setCurrentObject (obj)
     
     /* Unselect currently selected users. */
     userList = document.getElementById("user-list");
-    if (isVisible("user-list-box"))
+    /* If the splitter's collapsed, the userlist *isn't* visible, but we'll not
+     * get told when it becomes visible, so update it even if it's only the 
+     * splitter visible. */
+    if (isVisible("user-list-box") || isVisible("main-splitter"))
     {
         /* Remove currently selected items before this tree gets rerooted,
          * because it seems to remember the selections for eternity if not. */
