@@ -31,6 +31,7 @@
 #include "nsIStreamListener.h"
 #include "nsIStreamProvider.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIProgressEventSink.h"
 #include "nsIStreamIO.h"
 #include "nsITransport.h"
 
@@ -59,7 +60,9 @@ protected:
 
 class nsStreamIOChannel : public nsIStreamIOChannel, 
                           public nsIStreamListener,
-                          public nsIStreamProvider
+                          public nsIStreamProvider,
+                          public nsIProgressEventSink,
+                          public nsIInterfaceRequestor
 {
 public:
     NS_DECL_ISUPPORTS
@@ -69,6 +72,8 @@ public:
     NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSISTREAMPROVIDER
+    NS_DECL_NSIPROGRESSEVENTSINK
+    NS_DECL_NSIINTERFACEREQUESTOR
 
     nsStreamIOChannel(); 
     virtual ~nsStreamIOChannel();
@@ -84,6 +89,7 @@ protected:
 
 protected:
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
+    nsCOMPtr<nsIProgressEventSink>      mProgressSink;
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIURI>                    mURI;
     char*                               mContentType;
