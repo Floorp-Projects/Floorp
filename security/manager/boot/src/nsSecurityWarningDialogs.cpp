@@ -137,6 +137,20 @@ nsSecurityWarningDialogs::AlertDialog(nsIInterfaceRequestor *ctx, const char *pr
   // Stop if alert is not requested
   if (!prefValue) return NS_OK;
 
+  // Check for a show-once pref for this dialog.
+  // If the show-once pref is set to true:
+  //   - The default value of the "show every time" checkbox is unchecked
+  //   - If the user checks the checkbox, we clear the show-once pref.
+
+  nsCAutoString showOncePref(prefName);
+  showOncePref += ".show_once";
+
+  PRBool showOnce = PR_FALSE;
+  mPref->GetBoolPref(showOncePref.get(), &showOnce);
+
+  if (showOnce)
+    prefValue = PR_FALSE;
+
   // Get Prompt to use
   nsCOMPtr<nsIPrompt> prompt = do_GetInterface(ctx);
   if (!prompt) return NS_ERROR_FAILURE;
@@ -157,6 +171,8 @@ nsSecurityWarningDialogs::AlertDialog(nsIInterfaceRequestor *ctx, const char *pr
       
   if (!prefValue) {
     mPref->SetBoolPref(prefName, PR_FALSE);
+  } else if (showOnce) {
+    mPref->SetBoolPref(showOncePref.get(), PR_FALSE);
   }
 
   return rv;
@@ -211,6 +227,16 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
     return NS_OK;
   }
   
+  // See AlertDialog() for a description of how showOnce works.
+  nsCAutoString showOncePref(prefName);
+  showOncePref += ".show_once";
+
+  PRBool showOnce = PR_FALSE;
+  mPref->GetBoolPref(showOncePref.get(), &showOnce);
+
+  if (showOnce)
+    prefValue = PR_FALSE;
+
   // Get Prompt to use
   nsCOMPtr<nsIPrompt> prompt = do_GetInterface(ctx);
   if (!prompt) return NS_ERROR_FAILURE;
@@ -260,6 +286,8 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
 
   if (!prefValue && prefName != nsnull) {
     mPref->SetBoolPref(prefName, PR_FALSE);
+  } else if (prefValue && showOnce) {
+    mPref->SetBoolPref(showOncePref.get(), PR_TRUE);
   }
 
   return rv;
