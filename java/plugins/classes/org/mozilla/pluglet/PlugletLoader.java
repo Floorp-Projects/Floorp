@@ -21,6 +21,7 @@ import java.util.jar.Manifest;
 import java.util.jar.Attributes;
 import java.io.InputStream;
 import org.mozilla.pluglet.mozilla.*;
+import java.security.*;
 
 public class PlugletLoader {
     //  path to jar file. Name of main class sould to be in MANIFEST.
@@ -40,6 +41,17 @@ public class PlugletLoader {
 		//nb
 		return null;
 	    }
+	    if (policy == null) {
+		policy = new PlugletPolicy(Policy.getPolicy());
+	    }
+	    if (policy != Policy.getPolicy()) {
+		Policy.setPolicy(policy);
+	    }
+	    CodeSource codesource = new CodeSource(url,null);
+	    Permission perm = new AllPermission();
+	    PermissionCollection collection = perm.newPermissionCollection();
+	    collection.add(perm);
+	    policy.grantPermission(codesource,collection);
 	    Object pluglet = loader.loadClass(plugletClassName).newInstance();
 	    if (pluglet instanceof Pluglet) {
 		return (Pluglet) pluglet;
@@ -69,6 +81,7 @@ public class PlugletLoader {
 	    return null;
 	}
     }
+    private static PlugletPolicy policy = null;
 }
 
 
