@@ -686,9 +686,6 @@ net_FindAddress (const char *host_ptr,
 		 * finished.
 		 */
 
-        TIMING_MSG(("netlib: net_FindAddress: DNS entry in netlib cache host_ptr=\"%s\"",
-                    host_ptr));
-
         NET_ClearDNSSelect(window_id, sock);
 		
 	    net_addr->inet.ip = cache_pointer->ips[0];
