@@ -597,7 +597,7 @@ public class Codegen extends Interpreter
 
         int start = (scriptOrFnNodes[0].getType() == Token.SCRIPT) ? 1 : 0;
         int end = scriptOrFnNodes.length;
-        if (start == end) badTree();
+        if (start == end) throw badTree();
         boolean generateSwitch = (2 <= end - start);
 
         int switchStart = 0;
@@ -857,7 +857,7 @@ public class Codegen extends Interpreter
                          int contextArg, int scopeArg)
     {
         int regexpCount = n.getRegexpCount();
-        if (regexpCount == 0) badTree();
+        if (regexpCount == 0) throw badTree();
 
         cfw.addPush(regexpCount);
         cfw.add(ByteCode.ANEWARRAY, "java/lang/Object");
@@ -1510,7 +1510,7 @@ class BodyCodegen
                 break;
 
               case Token.RETURN_POPV:
-                if (fnCurrent == null) Codegen.badTree();
+                if (fnCurrent == null) throw Codegen.badTree();
                 // fallthrough
               case Token.RETURN:
                 visitStatement(node);
@@ -1522,7 +1522,7 @@ class BodyCodegen
                 } else if (fnCurrent != null && type == Token.RETURN) {
                     Codegen.pushUndefined(cfw);
                 } else {
-                    if (popvLocal < 0) Codegen.badTree();
+                    if (popvLocal < 0) throw Codegen.badTree();
                     cfw.addALoad(popvLocal);
                 }
                 if (epilogueLabel == -1)
@@ -2100,44 +2100,32 @@ class BodyCodegen
                             +")V");
     }
 
-    private void visitTarget(Node.Target node)
+    private void acquireTargetLabel(Node.Target target)
     {
-        int label = node.labelId;
-        if (label == -1) {
-            label = cfw.acquireLabel();
-            node.labelId = label;
+        if (target.labelId == -1) {
+            target.labelId = cfw.acquireLabel();
         }
-        cfw.markLabel(label);
+    }
+
+    private void visitTarget(Node.Target target)
+    {
+        acquireTargetLabel(target);
+        cfw.markLabel(target.labelId);
     }
 
     private void visitGOTO(Node.Jump node, int type, Node child)
     {
         Node.Target target = node.target;
+        acquireTargetLabel(target);
         int targetLabel = target.labelId;
-        if (targetLabel == -1) {
-            targetLabel = cfw.acquireLabel();
-            target.labelId = targetLabel;
-        }
-        int fallThruLabel = cfw.acquireLabel();
-
-        if ((type == Token.IFEQ) || (type == Token.IFNE)) {
-            if (child == null) {
-                // can have a null child from visitSwitch which
-                // has already generated the code for the child
-                // and just needs the GOTO code emitted
-                addScriptRuntimeInvoke("toBoolean",
-                                       "(Ljava/lang/Object;)Z");
-                if (type == Token.IFEQ)
-                    cfw.add(ByteCode.IFNE, targetLabel);
-                else
-                    cfw.add(ByteCode.IFEQ, targetLabel);
-            }
-            else {
-                if (type == Token.IFEQ)
-                    generateIfJump(child, node, targetLabel, fallThruLabel);
-                else
-                    generateIfJump(child, node, fallThruLabel, targetLabel);
-            }
+        if (type == Token.IFEQ || type == Token.IFNE) {
+            if (child == null) throw Codegen.badTree();
+            int fallThruLabel = cfw.acquireLabel();
+            if (type == Token.IFEQ)
+                generateIfJump(child, node, targetLabel, fallThruLabel);
+            else
+                generateIfJump(child, node, fallThruLabel, targetLabel);
+            cfw.markLabel(fallThruLabel);
         }
         else {
             while (child != null) {
@@ -2149,7 +2137,6 @@ class BodyCodegen
             else
                 cfw.add(ByteCode.GOTO, targetLabel);
         }
-        cfw.markLabel(fallThruLabel);
     }
 
     private void visitFinally(Node node, Node child)
@@ -2755,13 +2742,14 @@ class BodyCodegen
             Node first = thisCase.getFirstChild();
             generateCodeFromNode(first, thisCase);
             cfw.addALoad(selector);
-            addScriptRuntimeInvoke("seqB",
+            addScriptRuntimeInvoke("shallowEq",
                                    "(Ljava/lang/Object;"
                                    +"Ljava/lang/Object;"
-                                   +")Ljava/lang/Boolean;");
+                                   +")Z");
             Node.Target target = new Node.Target();
             thisCase.replaceChild(first, target);
-            generateGOTO(Token.IFEQ, target);
+            acquireTargetLabel(target);
+            cfw.add(ByteCode.IFNE, target.labelId);
         }
         releaseWordLocal(selector);
 
@@ -2769,18 +2757,13 @@ class BodyCodegen
         if (defaultNode != null) {
             Node.Target defaultTarget = new Node.Target();
             defaultNode.getFirstChild().addChildToFront(defaultTarget);
-            generateGOTO(Token.GOTO, defaultTarget);
+            acquireTargetLabel(defaultTarget);
+            cfw.add(ByteCode.GOTO, defaultTarget.labelId);
         }
 
         Node.Target breakTarget = node.target;
-        generateGOTO(Token.GOTO, breakTarget);
-    }
-
-    private void generateGOTO(int type, Node.Target target)
-    {
-        Node.Jump GOTO = new Node.Jump(type);
-        GOTO.target = target;
-        visitGOTO(GOTO, type, null);
+        acquireTargetLabel(breakTarget);
+        cfw.add(ByteCode.GOTO, breakTarget.labelId);
     }
 
     private void visitTypeofname(Node node)
@@ -2950,7 +2933,7 @@ class BodyCodegen
             cfw.add(ByteCode.ISHL);
             break;
           default:
-            Codegen.badTree();
+            throw Codegen.badTree();
         }
         cfw.add(ByteCode.I2D);
         if (childNumberFlag == -1) {
@@ -2992,7 +2975,7 @@ class BodyCodegen
                 cfw.add(ByteCode.IFGT, trueGOTO);
                 break;
             default :
-                Codegen.badTree();
+                throw Codegen.badTree();
 
         }
         if (falseGOTO != -1)
@@ -3107,7 +3090,7 @@ class BodyCodegen
                 addScriptRuntimeInvoke(routine,
                                        "(Ljava/lang/Object;"
                                        +"Ljava/lang/Object;"
-                                       +")I");
+                                       +")Z");
             } else {
                 boolean doubleThenObject = (childNumberFlag == Node.LEFT);
                 if (type == Token.GE || type == Token.GT) {
@@ -3124,9 +3107,9 @@ class BodyCodegen
                 String routine = ((type == Token.LT)
                          || (type == Token.GT)) ? "cmp_LT" : "cmp_LE";
                 if (doubleThenObject)
-                    addOptRuntimeInvoke(routine, "(DLjava/lang/Object;)I");
+                    addOptRuntimeInvoke(routine, "(DLjava/lang/Object;)Z");
                 else
-                    addOptRuntimeInvoke(routine, "(Ljava/lang/Object;D)I");
+                    addOptRuntimeInvoke(routine, "(Ljava/lang/Object;D)Z");
             }
             cfw.add(ByteCode.IFNE, trueGOTO);
             cfw.add(ByteCode.GOTO, falseGOTO);
@@ -3149,17 +3132,7 @@ class BodyCodegen
                 +"Ljava/lang/Object;"
                 +"Lorg/mozilla/javascript/Scriptable;"
                 +")Z");
-            int trueGOTO = cfw.acquireLabel();
-            int skip = cfw.acquireLabel();
-            cfw.add(ByteCode.IFNE, trueGOTO);
-            cfw.add(ByteCode.GETSTATIC, "java/lang/Boolean",
-                                    "FALSE", "Ljava/lang/Boolean;");
-            cfw.add(ByteCode.GOTO, skip);
-            cfw.markLabel(trueGOTO);
-            cfw.add(ByteCode.GETSTATIC, "java/lang/Boolean",
-                                    "TRUE", "Ljava/lang/Boolean;");
-            cfw.markLabel(skip);
-            cfw.adjustStackTop(-1);   // only have 1 of true/false
+            addBooleanWrap();
             return;
         }
 
@@ -3181,7 +3154,7 @@ class BodyCodegen
         }
         else {
             String routine = (type == Token.LT || type == Token.GT)
-                             ? "cmp_LTB" : "cmp_LEB";
+                             ? "cmp_LT" : "cmp_LE";
             generateCodeFromNode(child, node);
             generateCodeFromNode(child.getNext(), node);
             if (childNumberFlag == -1) {
@@ -3191,7 +3164,7 @@ class BodyCodegen
                 addScriptRuntimeInvoke(routine,
                                        "(Ljava/lang/Object;"
                                        +"Ljava/lang/Object;"
-                                       +")Ljava/lang/Boolean;");
+                                       +")Z");
             }
             else {
                 boolean doubleThenObject = (childNumberFlag == Node.LEFT);
@@ -3208,14 +3181,11 @@ class BodyCodegen
                     }
                 }
                 if (doubleThenObject)
-                    addOptRuntimeInvoke(routine,
-                                        "(DLjava/lang/Object;"
-                                        +")Ljava/lang/Boolean;");
+                    addOptRuntimeInvoke(routine, "(DLjava/lang/Object;)Z");
                 else
-                    addOptRuntimeInvoke(routine,
-                                        "(Ljava/lang/Object;D"
-                                        +")Ljava/lang/Boolean;");
+                    addOptRuntimeInvoke(routine, "(Ljava/lang/Object;D)Z");
             }
+            addBooleanWrap();
         }
     }
 
@@ -3289,13 +3259,12 @@ class BodyCodegen
             break;
 
           default:
-            name = null;
-            Codegen.badTree();
+            throw Codegen.badTree();
         }
-        addScriptRuntimeInvoke(name,
-                               "(Ljava/lang/Object;"
-                               +"Ljava/lang/Object;"
-                               +")Ljava/lang/Boolean;");
+        addOptRuntimeInvoke(name,
+                            "(Ljava/lang/Object;"
+                            +"Ljava/lang/Object;"
+                            +")Ljava/lang/Boolean;");
     }
 
     private void visitIfJumpEqOp(Node node, Node child,
@@ -3377,44 +3346,32 @@ class BodyCodegen
         generateCodeFromNode(rChild, node);
 
         String name;
+        byte testCode;
         switch (type) {
           case Token.EQ:
             name = "eq";
-            addScriptRuntimeInvoke(name,
-                                   "(Ljava/lang/Object;"
-                                   +"Ljava/lang/Object;"
-                                   +")Z");
+            testCode = ByteCode.IFNE;
             break;
-
           case Token.NE:
-            name = "neq";
-            addOptRuntimeInvoke(name,
-                                "(Ljava/lang/Object;"
-                                +"Ljava/lang/Object;"
-                                +")Z");
+            name = "eq";
+            testCode = ByteCode.IFEQ;
             break;
-
           case Token.SHEQ:
             name = "shallowEq";
-            addScriptRuntimeInvoke(name,
-                                   "(Ljava/lang/Object;"
-                                   +"Ljava/lang/Object;"
-                                   +")Z");
+            testCode = ByteCode.IFNE;
             break;
-
           case Token.SHNE:
-            name = "shallowNeq";
-            addOptRuntimeInvoke(name,
-                                "(Ljava/lang/Object;"
-                                +"Ljava/lang/Object;"
-                                +")Z");
+            name = "shallowEq";
+            testCode = ByteCode.IFEQ;
             break;
-
           default:
-            name = null;
-            Codegen.badTree();
+            throw Codegen.badTree();
         }
-        cfw.add(ByteCode.IFNE, trueGOTO);
+        addScriptRuntimeInvoke(name,
+                               "(Ljava/lang/Object;"
+                               +"Ljava/lang/Object;"
+                               +")Z");
+        cfw.add(testCode, trueGOTO);
         cfw.add(ByteCode.GOTO, falseGOTO);
     }
 
@@ -3624,13 +3581,13 @@ class BodyCodegen
                 child = child.getNext();
             }
             cfw.addALoad(variableObjectLocal);
-            String runtimeMethod = null;
+            String runtimeMethod;
             if (special == Node.SPECIAL_PROP_PROTO) {
                 runtimeMethod = "getProto";
             } else if (special == Node.SPECIAL_PROP_PARENT) {
                 runtimeMethod = "getParent";
             } else {
-                Codegen.badTree();
+                throw Codegen.badTree();
             }
             addScriptRuntimeInvoke(
                 runtimeMethod,
@@ -3679,13 +3636,13 @@ class BodyCodegen
         if (special != 0) {
             if (type == Token.SETPROP_OP) {
                 cfw.add(ByteCode.DUP);
-                String runtimeMethod = null;
+                String runtimeMethod;
                 if (special == Node.SPECIAL_PROP_PROTO) {
                     runtimeMethod = "getProto";
                 } else if (special == Node.SPECIAL_PROP_PARENT) {
                     runtimeMethod = "getParent";
                 } else {
-                    Codegen.badTree();
+                    throw Codegen.badTree();
                 }
                 cfw.addALoad(variableObjectLocal);
                 addScriptRuntimeInvoke(
@@ -3696,13 +3653,13 @@ class BodyCodegen
             }
             generateCodeFromNode(child, node);
             cfw.addALoad(variableObjectLocal);
-            String runtimeMethod = null;
+            String runtimeMethod;
             if (special == Node.SPECIAL_PROP_PROTO) {
                 runtimeMethod = "setProto";
             } else if (special == Node.SPECIAL_PROP_PARENT) {
                 runtimeMethod = "setParent";
             } else {
-                Codegen.badTree();
+                throw Codegen.badTree();
             }
             addScriptRuntimeInvoke(
                 runtimeMethod,
@@ -3818,6 +3775,26 @@ class BodyCodegen
                       "org/mozilla/javascript/optimizer/OptRuntime",
                       methodName,
                       methodSignature);
+    }
+
+    private void addBooleanWrap()
+    {
+        if (true) {
+            // Trust JVM to do the inlining itself
+            addScriptRuntimeInvoke("wrapBoolean", "(Z)Ljava/lang/Boolean;");
+        } else {
+            int trueGOTO = cfw.acquireLabel();
+            int skip = cfw.acquireLabel();
+            cfw.add(ByteCode.IFNE, trueGOTO);
+            cfw.add(ByteCode.GETSTATIC, "java/lang/Boolean",
+                                    "FALSE", "Ljava/lang/Boolean;");
+            cfw.add(ByteCode.GOTO, skip);
+            cfw.markLabel(trueGOTO);
+            cfw.add(ByteCode.GETSTATIC, "java/lang/Boolean",
+                                    "TRUE", "Ljava/lang/Boolean;");
+            cfw.markLabel(skip);
+            cfw.adjustStackTop(-1);   // only have 1 of true/false
+        }
     }
 
     private void addDoubleWrap()

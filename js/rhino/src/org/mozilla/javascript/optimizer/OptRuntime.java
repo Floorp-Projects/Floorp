@@ -103,129 +103,46 @@ public final class OptRuntime extends ScriptRuntime
         return value;
     }
 
-    public static Object add(Object val1, double val2) {
+    public static Object add(Object val1, double val2)
+    {
         if (val1 instanceof Scriptable)
             val1 = ((Scriptable) val1).getDefaultValue(null);
         if (!(val1 instanceof String))
-            return new Double(toNumber(val1) + val2);
-        return toString(val1).concat(toString(val2));
+            return wrapDouble(toNumber(val1) + val2);
+        return ((String)val1).concat(toString(val2));
     }
 
-    public static Object add(double val1, Object val2) {
+    public static Object add(double val1, Object val2)
+    {
         if (val2 instanceof Scriptable)
             val2 = ((Scriptable) val2).getDefaultValue(null);
         if (!(val2 instanceof String))
-            return new Double(toNumber(val2) + val1);
-        return toString(val1).concat(toString(val2));
+            return wrapDouble(toNumber(val2) + val1);
+        return toString(val1).concat((String)val2);
     }
 
-    public static boolean neq(Object x, Object y) {
-        return !eq(x, y);
+    public static boolean cmp_LT(double d1, Object val2)
+    {
+        double d2 = toNumber(val2);
+        return d1 == d1 && d2 == d2 && d1 < d2;
     }
 
-    public static boolean shallowNeq(Object x, Object y) {
-        return !shallowEq(x, y);
+    public static boolean cmp_LT(Object val1, double d2)
+    {
+        double d1 = toNumber(val1);
+        return d1 == d1 && d2 == d2 && d1 < d2;
     }
 
-    public static Boolean cmp_LTB(double d1, Object val2) {
-        if (cmp_LT(d1, val2) == 1)
-            return Boolean.TRUE;
-        else
-            return Boolean.FALSE;
+    public static boolean cmp_LE(double d1, Object val2)
+    {
+        double d2 = toNumber(val2);
+        return d1 == d1 && d2 == d2 && d1 <= d2;
     }
 
-    public static int cmp_LT(double d1, Object val2) {
-        if (val2 instanceof Scriptable)
-            val2 = ((Scriptable) val2).getDefaultValue(NumberClass);
-        if (!(val2 instanceof String)) {
-            if (d1 != d1)
-                return 0;
-            double d2 = toNumber(val2);
-            if (d2 != d2)
-                return 0;
-            return d1 < d2 ? 1 : 0;
-        }
-        return toString(d1).compareTo(toString(val2)) < 0 ? 1 : 0;
-    }
-
-    public static Boolean cmp_LTB(Object val1, double d2) {
-        if (cmp_LT(val1, d2) == 1)
-            return Boolean.TRUE;
-        else
-            return Boolean.FALSE;
-    }
-
-    public static int cmp_LT(Object val1, double d2) {
-        if (val1 instanceof Scriptable)
-            val1 = ((Scriptable) val1).getDefaultValue(NumberClass);
-        if (!(val1 instanceof String)) {
-            double d1 = toNumber(val1);
-            if (d1 != d1)
-                return 0;
-            if (d2 != d2)
-                return 0;
-            return d1 < d2 ? 1 : 0;
-        }
-        return toString(val1).compareTo(toString(d2)) < 0 ? 1 : 0;
-    }
-
-    public static Boolean cmp_LEB(double d1, Object val2) {
-        if (cmp_LE(d1, val2) == 1)
-            return Boolean.TRUE;
-        else
-            return Boolean.FALSE;
-    }
-
-    public static int cmp_LE(double d1, Object val2) {
-        if (val2 instanceof Scriptable)
-            val2 = ((Scriptable) val2).getDefaultValue(NumberClass);
-        if (!(val2 instanceof String)) {
-            if (d1 != d1)
-                return 0;
-            double d2 = toNumber(val2);
-            if (d2 != d2)
-                return 0;
-            return d1 <= d2 ? 1 : 0;
-        }
-        return toString(d1).compareTo(toString(val2)) <= 0 ? 1 : 0;
-    }
-
-    public static Boolean cmp_LEB(Object val1, double d2) {
-        if (cmp_LE(val1, d2) == 1)
-            return Boolean.TRUE;
-        else
-            return Boolean.FALSE;
-    }
-
-    public static int cmp_LE(Object val1, double d2) {
-        if (val1 instanceof Scriptable)
-            val1 = ((Scriptable) val1).getDefaultValue(NumberClass);
-        if (!(val1 instanceof String)) {
-            double d1 = toNumber(val1);
-            if (d1 != d1)
-                return 0;
-            if (d2 != d2)
-                return 0;
-            return d1 <= d2 ? 1 : 0;
-        }
-        return toString(val1).compareTo(toString(d2)) <= 0 ? 1 : 0;
-    }
-
-    public static int cmp(Object val1, Object val2) {
-        if (val1 instanceof Scriptable)
-            val1 = ((Scriptable) val1).getDefaultValue(NumberClass);
-        if (val2 instanceof Scriptable)
-            val2 = ((Scriptable) val2).getDefaultValue(NumberClass);
-        if (!(val1 instanceof String) || !(val2 instanceof String)) {
-            double d1 = toNumber(val1);
-            if (d1 != d1)
-                return -1;
-            double d2 = toNumber(val2);
-            if (d2 != d2)
-                return -1;
-            return d1 < d2 ? 1 : 0;
-        }
-        return toString(val1).compareTo(toString(val2)) < 0 ? 1 : 0;
+    public static boolean cmp_LE(Object val1, double d2)
+    {
+        double d1 = toNumber(val1);
+        return d1 == d1 && d2 == d2 && d1 <= d2;
     }
 
     public static Object callSimple(Context cx, String id, Scriptable scope,
@@ -340,6 +257,38 @@ public final class OptRuntime extends ScriptRuntime
             return NaNobj;
         }
         return new Double(num);
+    }
+
+    public static Boolean eqB(Object x, Object y)
+    {
+        if (eq(x,y))
+            return Boolean.TRUE;
+        else
+            return Boolean.FALSE;
+    }
+
+    public static Boolean neB(Object x, Object y)
+    {
+        if (eq(x,y))
+            return Boolean.FALSE;
+        else
+            return Boolean.TRUE;
+    }
+
+    public static Boolean seqB(Object x, Object y)
+    {
+        if (shallowEq(x,y))
+            return Boolean.TRUE;
+        else
+            return Boolean.FALSE;
+    }
+
+    public static Boolean sneB(Object x, Object y)
+    {
+        if (shallowEq(x,y))
+            return Boolean.FALSE;
+        else
+            return Boolean.TRUE;
     }
 
 }

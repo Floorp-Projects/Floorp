@@ -2131,7 +2131,7 @@ public class Interpreter
             double lDbl = stack_double(stack, sDbl, stackTop);
             valBln = (rDbl == rDbl && lDbl == lDbl && rDbl <= lDbl);
         } else {
-            valBln = (1 == ScriptRuntime.cmp_LE(rhs, lhs));
+            valBln = ScriptRuntime.cmp_LE(rhs, lhs);
         }
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
         break;
@@ -2146,7 +2146,7 @@ public class Interpreter
             double lDbl = stack_double(stack, sDbl, stackTop);
             valBln = (rDbl == rDbl && lDbl == lDbl && lDbl <= rDbl);
         } else {
-            valBln = (1 == ScriptRuntime.cmp_LE(lhs, rhs));
+            valBln = ScriptRuntime.cmp_LE(lhs, rhs);
         }
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
         break;
@@ -2161,7 +2161,7 @@ public class Interpreter
             double lDbl = stack_double(stack, sDbl, stackTop);
             valBln = (rDbl == rDbl && lDbl == lDbl && rDbl < lDbl);
         } else {
-            valBln = (1 == ScriptRuntime.cmp_LT(rhs, lhs));
+            valBln = ScriptRuntime.cmp_LT(rhs, lhs);
         }
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
         break;
@@ -2176,7 +2176,7 @@ public class Interpreter
             double lDbl = stack_double(stack, sDbl, stackTop);
             valBln = (rDbl == rDbl && lDbl == lDbl && lDbl < rDbl);
         } else {
-            valBln = (1 == ScriptRuntime.cmp_LT(lhs, rhs));
+            valBln = ScriptRuntime.cmp_LT(lhs, rhs);
         }
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
         break;
