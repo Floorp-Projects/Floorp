@@ -67,10 +67,6 @@ public:
   NS_IMETHOD IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, PRBool *_retval) = 0;
   NS_IMETHOD DoCommand(const char * aCommandName, nsISupports *aCommandRefCon) = 0;
 
-protected:
-
-  // are we in HTML edit mode (not source view or plain text editing)
-  PRBool      EditingHTML(nsIEditor* inEditor);
 };
 
 
