@@ -250,7 +250,7 @@ nsresult nsDBFolderInfo::LoadMemberVariables()
 	GetInt32PropertyWithToken(m_flagsColumnToken, m_flags);
 	GetInt32PropertyWithToken(m_folderSizeColumnToken, m_folderSize);
 	GetInt32PropertyWithToken(m_folderDateColumnToken, (PRInt32 &) m_folderDate);
-	GetInt32PropertyWithToken(m_folderDateColumnToken, (PRInt32 &) m_folderDate);
+	GetInt32PropertyWithToken(m_imapUidValidityColumnToken, m_ImapUidValidity);
 	return ret;
 }
 

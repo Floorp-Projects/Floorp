@@ -669,7 +669,6 @@ NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommitType commitType)
 			err = m_mdbStore->SmallCommit(GetEnv());
 			break;
 		case kLargeCommit:
-			err = m_mdbStore->CompressCommit(GetEnv(), &commitThumb);
 			err = m_mdbStore->LargeCommit(GetEnv(), &commitThumb);
 			break;
 		case kSessionCommit:
