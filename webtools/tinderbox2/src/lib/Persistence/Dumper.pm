@@ -13,8 +13,8 @@
 #	was spend in 32878 calls to Data::Dumper::_dump()
 
 
-# $Revision: 1.3 $ 
-# $Date: 2000/11/09 19:10:45 $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/11/09 19:11:22 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Persistence/Dumper.pm,v $ 
 # $Name:  $ 
@@ -87,6 +87,7 @@ sub save_structure {
 sub load_structure {
   my ($data_file,) = @_;
 
+  # This may be the output of a glob, make it taint safe.
   $data_file = main::extract_filename_chars($data_file);
 
   (-r $data_file) || (-R $data_file) ||
