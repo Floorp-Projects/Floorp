@@ -375,6 +375,7 @@ struct callsite {
     uint32      serial;
     lfd_set     lfdset;
     char        *name;
+    const char  *library;
     int         offset;
     callsite    *parent;
     callsite    *siblings;
@@ -389,7 +390,7 @@ static uint32   callsite_serial_generator = 0;
 static uint32   tmstats_serial_generator = 0;
 
 /* Root of the tree of callsites, the sum of all (cycle-compressed) stacks. */
-static callsite calltree_root = {0, 0, LFD_SET_STATIC_INITIALIZER, NULL, 0, NULL, NULL, NULL};
+static callsite calltree_root = {0, 0, LFD_SET_STATIC_INITIALIZER, NULL, NULL, 0, NULL, NULL, NULL};
 
 /* Basic instrumentation. */
 static nsTMStats tmstats = NS_TMSTATS_STATIC_INITIALIZER;
@@ -695,7 +696,8 @@ static callsite *calltree(uint32 *bp)
             site->serial = ++callsite_serial_generator;
             LFD_ZERO(&site->lfdset);
             site->name = method;
-            site->offset = offset;
+            site->library = info.dli_fname;
+            site->offset = (char*)pc - (char*)info.dli_fbase;
             site->parent = parent;
             site->siblings = parent->kids;
             parent->kids = site;
@@ -1273,13 +1275,19 @@ allocation_enumerator(PLHashEntry *he, PRIntn i, void *arg)
     FILE *ofp = (FILE*) arg;
     callsite *site = (callsite*) he->value;
 
-    fprintf(ofp, "%8p %9lu ", he->key, (unsigned long) alloc->size);
+    extern const char* nsGetTypeName(const void* ptr);
+    unsigned *p, *end;
+
+    fprintf(ofp, "0x%08X <%s> (%lu)\n", (unsigned) he->key, nsGetTypeName(he->key), (unsigned long) alloc->size);
+
+    end = (unsigned*)(((char*) he->key) + alloc->size);
+    for (p = (unsigned*)he->key; p < end; ++p)
+        fprintf(ofp, "\t0x%08X\n", *p);
+
     while (site) {
         if (site->name || site->parent)
-            fprintf(ofp, " %s+%d", site->name, site->offset);
+            fprintf(ofp, "%s[%s +0x%X]\n", site->name, site->library, site->offset);
         site = site->parent;
-        if (site)
-            fputc(';', ofp);
     }
     fputc('\n', ofp);
     return HT_ENUMERATE_NEXT;
@@ -1294,7 +1302,6 @@ NS_TraceMallocDumpAllocations(const char *pathname)
     ofp = fopen(pathname, "w");
     if (!ofp)
         return -1;
-    fprintf(ofp, "Address        size  stack\n");
     if (allocations)
         PL_HashTableEnumerateEntries(allocations, allocation_enumerator, ofp);
     rv = ferror(ofp) ? -1 : 0;
