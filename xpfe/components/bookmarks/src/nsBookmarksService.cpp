@@ -4775,9 +4775,9 @@ nsBookmarksService::LoadBookmarks()
   if (bookmarksPrefs)
     bookmarksPrefs->GetBoolPref("import_system_favorites", &useDynamicSystemBookmarks);
 
+  char* systemBookmarksURL = nsnull;
 #if defined(XP_WIN) || defined(XP_BEOS)
   nsCOMPtr<nsIRDFResource> systemFavoritesFolder;
-  char* systemBookmarksURL = nsnull;
 #endif
 
 	{ 
@@ -4883,7 +4883,11 @@ nsBookmarksService::LoadBookmarks()
       if (NS_FAILED(rv)) return rv;
 
       nsCOMPtr<nsIRDFResource> systemFolderResource;
+#if defined(XP_WIN)
       rv = gRDF->GetResource(systemBookmarksURL, getter_AddRefs(systemFolderResource));
+#elif defined(XP_MAC)
+      rv = gRDF->GetResource(kURINC_IEFavoritesRoot, getter_AddRefs(systemFolderResource));
+#endif
       
       rv = container->RemoveElement(systemFolderResource, PR_TRUE);
       if (NS_FAILED(rv)) return rv;
