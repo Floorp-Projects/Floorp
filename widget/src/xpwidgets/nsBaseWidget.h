@@ -199,8 +199,6 @@ protected:
                                    const nsCAutoString & aWidgetName,
                                    PRInt32               aWindowID);
 
-public:
-  static void debug_CleanupCrapSoThatBruceAndPurifyAreHappy();
 #endif
 };
 
