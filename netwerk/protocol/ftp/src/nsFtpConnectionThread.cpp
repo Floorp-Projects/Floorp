@@ -1227,13 +1227,22 @@ nsFtpConnectionThread::R_list() {
     char *listBuf = nsnull; // the buffer receiving the listing
  
     rv = mDInStream->Available(&dataLeft);
-    if (NS_FAILED(rv)) return FTP_ERROR;
+    if (NS_FAILED(rv)) {
+        return FTP_ERROR;
+    }
 
-    bufSize = PR_MIN(dataLeft, NS_FTP_BUFFER_READ_SIZE);
+    // sometimes we can call Available() before the data has arrived
+    if (dataLeft == 0) {
+        bufSize = NS_FTP_BUFFER_READ_SIZE;
+    } else {
+        bufSize = PR_MIN(dataLeft, NS_FTP_BUFFER_READ_SIZE);
+    }
 
     if (bufSize > 0) {
         listBuf = (char*)nsAllocator::Alloc(bufSize + 1);    
-        if (!listBuf) return FTP_ERROR;
+        if (!listBuf) {
+            return FTP_ERROR;
+        }
 
         // this is ascii data coming in. terminate this sucker.
         listBuf[bufSize] = '\0';
@@ -1253,13 +1262,18 @@ nsFtpConnectionThread::R_list() {
         nsIInputStream *stringStream = nsnull;
         nsISupports *stringStrmSup = nsnull;
         rv = NS_NewCharInputStream(&stringStrmSup, listBuf); // char streams keep ref to buffer
-        if (NS_FAILED(rv)) return FTP_ERROR;
+        if (NS_FAILED(rv)) {
+            return FTP_ERROR;
+        }
 
         rv = stringStrmSup->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&stringStream);
-        if (NS_FAILED(rv)) return FTP_ERROR;
+        if (NS_FAILED(rv)) {
+            return FTP_ERROR;
+        }
 
         nsFTPContext *dataCtxt = new nsFTPContext();
-        if (!dataCtxt) return FTP_ERROR;
+        if (!dataCtxt) 
+            return FTP_ERROR;
         dataCtxt->SetContentType("text/ftp-dirListing");
         nsISupports *ctxtSup = nsnull;
         rv = dataCtxt->QueryInterface(NS_GET_IID(nsISupports), (void**)&ctxtSup);
@@ -1270,7 +1284,8 @@ nsFtpConnectionThread::R_list() {
         if (!sentStart) {
             sentStart = PR_TRUE;
             NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
-            if (NS_FAILED(rv)) return FTP_ERROR;
+            if (NS_FAILED(rv)) 
+                return FTP_ERROR;
 
             nsString fromStr("text/ftp-dir-");
             SetDirMIMEType(fromStr);
@@ -1292,7 +1307,8 @@ nsFtpConnectionThread::R_list() {
             // tell the user that we've begun the transaction.
             nsFtpOnStartRequestEvent* startEvent =
                 new nsFtpOnStartRequestEvent(converterListener, mChannel, mContext);
-            if (!startEvent) return FTP_ERROR;
+            if (!startEvent) 
+                return FTP_ERROR;
 
             rv = startEvent->Fire(mEventQueue);
             if (NS_FAILED(rv)) {
@@ -1304,11 +1320,13 @@ nsFtpConnectionThread::R_list() {
         // send data off
         nsFtpOnDataAvailableEvent* availEvent =
             new nsFtpOnDataAvailableEvent(converterListener, mChannel, ctxtSup);
-        if (!availEvent) return FTP_ERROR;
+        if (!availEvent) 
+            return FTP_ERROR;
 
         PRUint32 streamLen;
         rv = stringStream->Available(&streamLen);
-        if (NS_FAILED(rv)) return FTP_ERROR;
+        if (NS_FAILED(rv)) 
+            return FTP_ERROR;
         rv = availEvent->Init(stringStream, 0, streamLen, listBuf); // pass the buffer ptr in so it 
                                                                     // can be deleted later.
         NS_RELEASE(stringStream);
@@ -1324,14 +1342,16 @@ nsFtpConnectionThread::R_list() {
         }
 
         rv = mDInStream->Available(&dataLeft);
-        if (NS_FAILED(rv)) return FTP_ERROR;
+        if (NS_FAILED(rv)) 
+            return FTP_ERROR;
 
         bufSize = PR_MIN(dataLeft, NS_FTP_BUFFER_READ_SIZE);
 
         // don't free the old buf, that'll happen in the availEvent destructor.
         if (bufSize > 0) {
             char *listBuf = (char*)nsAllocator::Alloc(bufSize);    
-            if (!listBuf) return FTP_ERROR;
+            if (!listBuf) 
+                return FTP_ERROR;
 
             // this is ascii data coming in. terminate this sucker.
             listBuf[bufSize] = '\0';
