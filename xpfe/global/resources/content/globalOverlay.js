@@ -103,6 +103,13 @@ function goToggleToolbar( id, elementID )
 	}
 }
 
+function goHelpMenu( url )
+{
+  /* note that this chrome url should probably change to not have all of the navigator controls */
+  /* also, do we want to limit the number of help windows that can be spawned? */
+  window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url );
+}
+
 function goAboutDialog()
 {
 	window.openDialog("chrome:global/content/about.xul", "About", "modal,chrome,resizable=yes,height=450,width=550");
