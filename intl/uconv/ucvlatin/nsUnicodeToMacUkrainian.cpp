@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsUCConstructors.h"
 #include "nsUnicodeToMacUkrainian.h"
 
 //----------------------------------------------------------------------
@@ -50,12 +51,12 @@ static const PRInt16 g_ufShiftTable[] =  {
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToMacUkrainian [implementation]
-
-nsUnicodeToMacUkrainian::nsUnicodeToMacUkrainian() 
-: nsTableEncoderSupport((uShiftTable*) &g_ufShiftTable, 
-                        (uMappingTable*) &g_ufMappingTable, 1)
+NS_METHOD
+nsUnicodeToMacUkrainianConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                   void **aResult) 
 {
+  return CreateTableEncoder((uShiftTable*) &g_ufShiftTable, 
+                            (uMappingTable*) &g_ufMappingTable, 1,
+                            aOuter, aIID, aResult);
 }
 

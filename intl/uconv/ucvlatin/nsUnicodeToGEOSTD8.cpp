@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 
+#include "nsUCConstructors.h"
 #include "nsUnicodeToGEOSTD8.h"
 
 //----------------------------------------------------------------------
@@ -34,11 +35,11 @@ static const PRInt16 g_ufShiftTable[] =  {
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToGEOSTD8 [implementation]
-
-nsUnicodeToGEOSTD8::nsUnicodeToGEOSTD8() 
-: nsTableEncoderSupport((uShiftTable*) &g_ufShiftTable, 
-                        (uMappingTable*) &g_ufMappingTable, 1)
+NS_METHOD
+nsUnicodeToGEOSTD8Constructor(nsISupports *aOuter, REFNSIID aIID,
+                              void **aResult) 
 {
+  return CreateTableEncoder((uShiftTable*) &g_ufShiftTable, 
+                            (uMappingTable*) &g_ufMappingTable, 1,
+                            aOuter, aIID, aResult);
 }

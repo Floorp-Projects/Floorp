@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToJISx0201_h___
 #define nsUnicodeToJISx0201_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToJISx0201 [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to JISx0201.
@@ -50,17 +47,8 @@
  * @created         17/Feb/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToJISx0201 : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToJISx0201();
-
-protected:
-
-};
+NS_METHOD
+nsUnicodeToJISx0201Constructor(nsISupports *aOuter, REFNSIID aIID,
+                               void **aResult);
 
 #endif /* nsUnicodeToJISx0201_h___ */

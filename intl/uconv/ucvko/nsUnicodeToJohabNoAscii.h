@@ -39,24 +39,14 @@
 #ifndef nsUnicodeToJohabNoAscii_h___
 #define nsUnicodeToJohabNoAscii_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToJohabNoAscii [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to Johab Sun Font encoding
  *  ksc5601_1992-3  (Johab without US-ASCII)
  */
-class nsUnicodeToJohabNoAscii : public nsMultiTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToJohabNoAscii();
-
-};
+NS_METHOD
+nsUnicodeToJohabNoAsciiConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                   void **aResult);
 
 #endif /* nsUnicodeToJohabNoAscii_h___ */

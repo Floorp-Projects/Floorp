@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToBIG5HKSCS_h___
 #define nsUnicodeToBIG5HKSCS_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToBIG5HKSCS [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to BIG5-HKSCS.
@@ -50,16 +47,8 @@
  * @created         02/Jul/2000
  * @author  Gavin Ho, Hong Kong Professional Services, Compaq Computer (Hong Kong) Ltd.
  */
-class nsUnicodeToBIG5HKSCS : public nsMultiTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToBIG5HKSCS();
-
-protected:
-};
+NS_METHOD
+nsUnicodeToBIG5HKSCSConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                void **aResult);
 
 #endif /* nsUnicodeToBIG5HKSCS_h___ */

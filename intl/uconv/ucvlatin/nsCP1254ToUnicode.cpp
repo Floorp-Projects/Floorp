@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsUCConstructors.h"
 #include "nsCP1254ToUnicode.h"
 
 //----------------------------------------------------------------------
@@ -50,11 +51,11 @@ static const PRInt16 g_utShiftTable[] =  {
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-//----------------------------------------------------------------------
-// Class nsCP1254ToUnicode [implementation]
-
-nsCP1254ToUnicode::nsCP1254ToUnicode() 
-: nsOneByteDecoderSupport((uShiftTable*) &g_utShiftTable, 
-                          (uMappingTable*) &g_utMappingTable)
+NS_METHOD
+nsCP1254ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                             void **aResult) 
 {
+  return CreateOneByteDecoder((uShiftTable*) &g_utShiftTable, 
+                              (uMappingTable*) &g_utMappingTable,
+                              aOuter, aIID, aResult);
 }

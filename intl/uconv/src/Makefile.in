@@ -51,6 +51,7 @@ CSRCS		= \
 		$(NULL)
 
 CPPSRCS		= \
+		nsUConvModule.cpp \
 		nsCharsetConverterManager.cpp \
 		nsTextToSubURI.cpp \
 		nsUnicodeDecodeHelper.cpp \
@@ -58,7 +59,6 @@ CPPSRCS		= \
 		nsCharsetAliasImp.cpp \
 		nsURLProperties.cpp \
 		nsMappingCache.cpp \
-		nsUConvModule.cpp \
 		nsISO88591ToUnicode.cpp \
 		nsCP1252ToUnicode.cpp \
 		nsMacRomanToUnicode.cpp \

@@ -39,23 +39,13 @@
 #ifndef nsMacArabicToUnicode_h___
 #define nsMacArabicToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsMacArabicToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from MacArabic to Unicode.
  */
-class nsMacArabicToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsMacArabicToUnicode();
-
-};
+NS_METHOD
+nsMacArabicToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                void **aResult);
 
 #endif /* nsMacArabicToUnicode_h___ */

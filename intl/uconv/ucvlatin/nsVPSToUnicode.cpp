@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsVPSToUnicode.h"
+#include "nsUCConstructors.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -50,12 +51,12 @@ static const PRInt16 g_utShiftTable[] =  {
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-//----------------------------------------------------------------------
-// Class nsVPSToUnicode [implementation]
-
-nsVPSToUnicode::nsVPSToUnicode() 
-: nsOneByteDecoderSupport((uShiftTable*) &g_utShiftTable, 
-                          (uMappingTable*) &g_utMappingTable)
+NS_METHOD
+nsVPSToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                          void **aResult) 
 {
+  return CreateOneByteDecoder((uShiftTable*) &g_utShiftTable, 
+                              (uMappingTable*) &g_utMappingTable,
+                              aOuter, aIID, aResult);
 }
 

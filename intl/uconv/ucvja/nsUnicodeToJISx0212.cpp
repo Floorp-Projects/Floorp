@@ -38,6 +38,7 @@
 
 #include "nsUnicodeToJISx0212.h"
 #include "nsUCVJADll.h"
+#include "nsUCConstructors.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -46,13 +47,14 @@ static PRInt16 g0212ShiftTable[] =  {
         0, u2BytesCharset, 
         ShiftCell(0,0,0,0,0,0,0,0)
 };
-//----------------------------------------------------------------------
-// Class nsUnicodeToJISx0212 [implementation]
 
-nsUnicodeToJISx0212::nsUnicodeToJISx0212() 
-: nsTableEncoderSupport((uShiftTable*) g0212ShiftTable,
-                        (uMappingTable*) g_uf0212Mapping,
-                        2 /* max len = src * 2 */)
+NS_METHOD
+nsUnicodeToJISx0212Constructor(nsISupports *aOuter, REFNSIID aIID,
+                               void **aResult)
 {
+  return CreateTableEncoder((uShiftTable*) g0212ShiftTable,
+                            (uMappingTable*) g_uf0212Mapping,
+                            2 /* max len = src * 2 */,
+                            aOuter, aIID, aResult);
 }
 

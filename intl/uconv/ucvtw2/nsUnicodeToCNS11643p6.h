@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToCNS11643p6_h___
 #define nsUnicodeToCNS11643p6_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToCNS11643p6 [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to CNS11643p6.
@@ -50,16 +47,8 @@
  * @created         06/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToCNS11643p6 : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToCNS11643p6();
-
-protected:
-};
+NS_METHOD
+nsUnicodeToCNS11643p6Constructor(nsISupports *aOuter, REFNSIID aIID,
+                                 void **aResult);
 
 #endif /* nsUnicodeToCNS11643p6_h___ */

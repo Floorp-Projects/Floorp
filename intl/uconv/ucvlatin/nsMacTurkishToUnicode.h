@@ -39,10 +39,7 @@
 #ifndef nsMacTurkishToUnicode_h___
 #define nsMacTurkishToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsMacTurkishToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from MacTurkish to Unicode.
@@ -50,15 +47,8 @@
  * @created         05/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsMacTurkishToUnicode : public nsTableDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsMacTurkishToUnicode();
-
-};
+NS_METHOD
+nsMacTurkishToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                 void **aResult);
 
 #endif /* nsMacTurkishToUnicode_h___ */

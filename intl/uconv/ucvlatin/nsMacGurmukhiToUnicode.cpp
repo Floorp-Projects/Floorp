@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsUCConstructors.h"
 #include "nsMacGurmukhiToUnicode.h"
 
 //----------------------------------------------------------------------
@@ -50,10 +51,11 @@ static const PRInt16 g_utShiftTable[] =  {
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-//----------------------------------------------------------------------
-
-nsMacGurmukhiToUnicode::nsMacGurmukhiToUnicode() 
- : nsOneByteDecoderSupport((uShiftTable*) &g_utShiftTable, 
-                          (uMappingTable*) &g_utMappingTable)
+NS_METHOD
+nsMacGurmukhiToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                  void **aResult) 
 {
+   return CreateOneByteDecoder((uShiftTable*) &g_utShiftTable, 
+                               (uMappingTable*) &g_utMappingTable,
+                               aOuter, aIID, aResult);
 }

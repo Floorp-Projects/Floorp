@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsUCConstructors.h"
 #include "nsUnicodeToISO88593.h"
 
 //----------------------------------------------------------------------
@@ -50,11 +51,11 @@ static const PRInt16 g_ufShiftTable[] =  {
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToISO88593 [implementation]
-
-nsUnicodeToISO88593::nsUnicodeToISO88593() 
-: nsTableEncoderSupport((uShiftTable*) &g_ufShiftTable, 
-                        (uMappingTable*) &g_ufMappingTable, 1)
+NS_METHOD
+nsUnicodeToISO88593Constructor(nsISupports *aOuter, REFNSIID aIID,
+                               void **aResult) 
 {
+  return CreateTableEncoder((uShiftTable*) &g_ufShiftTable, 
+                            (uMappingTable*) &g_ufMappingTable, 1,
+                            aOuter, aIID, aResult);
 }

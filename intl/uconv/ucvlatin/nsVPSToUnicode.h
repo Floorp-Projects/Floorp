@@ -39,10 +39,7 @@
 #ifndef nsVPSToUnicode_h___
 #define nsVPSToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsVPSToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from VPS to Unicode.
@@ -50,15 +47,8 @@
  * @created         4/26/1999
  * @author  Frank Tang [ftang]
  */
-class nsVPSToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsVPSToUnicode();
-
-};
+NS_METHOD
+nsVPSToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                          void **aResult);
 
 #endif /* nsVPSToUnicode_h___ */

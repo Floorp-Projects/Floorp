@@ -39,10 +39,7 @@
 #ifndef nsISO88592ToUnicode_h___
 #define nsISO88592ToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsISO88592ToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from ISO88592 to Unicode.
@@ -50,15 +47,8 @@
  * @created         05/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsISO88592ToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsISO88592ToUnicode();
-
-};
+NS_METHOD
+nsISO88592ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                               void **aResult);
 
 #endif /* nsISO88592ToUnicode_h___ */

@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToCP866_h___
 #define nsUnicodeToCP866_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToCP866 [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to CP866.
@@ -50,15 +47,8 @@
  * @created         20/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToCP866 : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToCP866();
-
-};
+NS_METHOD
+nsUnicodeToCP866Constructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult);
 
 #endif /* nsUnicodeToCP866_h___ */

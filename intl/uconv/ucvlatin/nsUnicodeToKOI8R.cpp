@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsUCConstructors.h"
 #include "nsUnicodeToKOI8R.h"
 
 //----------------------------------------------------------------------
@@ -50,11 +51,11 @@ static const PRInt16 g_ufShiftTable[] =  {
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToKOI8R [implementation]
-
-nsUnicodeToKOI8R::nsUnicodeToKOI8R() 
-: nsTableEncoderSupport((uShiftTable*) &g_ufShiftTable, 
-                        (uMappingTable*) &g_ufMappingTable, 1)
+NS_METHOD
+nsUnicodeToKOI8RConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult) 
 {
+  return CreateTableEncoder((uShiftTable*) &g_ufShiftTable, 
+                            (uMappingTable*) &g_ufMappingTable, 1,
+                            aOuter, aIID, aResult);
 }

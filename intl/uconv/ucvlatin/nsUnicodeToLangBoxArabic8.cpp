@@ -37,9 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 
+#include "nsUCConstructors.h"
 #include "nsUnicodeToLangBoxArabic8.h"
 
-#include "nsUCSupport.h"
+#include "nsISupports.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToLangBoxArabic8 [declaration]

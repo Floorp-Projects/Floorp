@@ -39,7 +39,7 @@
 #ifndef nsISO885910ToUnicode_h___
 #define nsISO885910ToUnicode_h___
 
-#include "nsUCSupport.h"
+#include "nsISupports.h"
 
 //----------------------------------------------------------------------
 // Class nsISO885910ToUnicode [declaration]
@@ -50,15 +50,8 @@
  * @created         23/Nov/1998
  * @author  Catalin Rotaru [CATA]
  */
-class nsISO885910ToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsISO885910ToUnicode();
-
-};
+NS_METHOD
+nsISO885910ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                void **aResult);
 
 #endif /* nsISO885910ToUnicode_h___ */

@@ -39,10 +39,7 @@
 #ifndef nsVISCIIToUnicode_h___
 #define nsVISCIIToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsVISCIIToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from VISCII to Unicode.
@@ -50,15 +47,8 @@
  * @created         4/26/1999
  * @author  Frank Tang [ftang]
  */
-class nsVISCIIToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsVISCIIToUnicode();
-
-};
+NS_METHOD
+nsVISCIIToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                             void **aResult);
 
 #endif /* nsVISCIIToUnicode_h___ */

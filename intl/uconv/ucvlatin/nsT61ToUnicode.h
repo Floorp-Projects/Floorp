@@ -39,10 +39,7 @@
 #ifndef nsT61ToUnicode_h___
 #define nsT61ToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsT61ToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from T61 to Unicode.
@@ -50,15 +47,8 @@
  * @created         18/Mar/1998
  * @author  Catalin Rotaru [CATA]
  */
-class nsT61ToUnicode : public nsTableDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsT61ToUnicode();
-
-};
+NS_METHOD
+nsT61ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                          void **aResult);
 
 #endif /* nsT61ToUnicode_h___ */

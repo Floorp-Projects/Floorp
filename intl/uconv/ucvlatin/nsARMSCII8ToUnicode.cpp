@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsUCConstructors.h"
 #include "nsARMSCII8ToUnicode.h"
 
 //----------------------------------------------------------------------
@@ -50,12 +51,12 @@ static const PRInt16 g_utShiftTable[] =  {
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-//----------------------------------------------------------------------
-// Class nsARMSCII8ToUnicode [implementation]
-
-nsARMSCII8ToUnicode::nsARMSCII8ToUnicode() 
-: nsOneByteDecoderSupport((uShiftTable*) &g_utShiftTable, 
-                          (uMappingTable*) &g_utMappingTable)
+NS_METHOD
+nsARMSCII8ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                               void **aResult) 
 {
+  return CreateOneByteDecoder((uShiftTable*) &g_utShiftTable, 
+                              (uMappingTable*) &g_utMappingTable,
+                              aOuter, aIID, aResult);
 }
 

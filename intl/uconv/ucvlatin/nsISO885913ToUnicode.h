@@ -39,10 +39,7 @@
 #ifndef nsISO885913ToUnicode_h___
 #define nsISO885913ToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsISO885913ToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from ISO885913 to Unicode.
@@ -50,15 +47,8 @@
  * @created         05/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsISO885913ToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsISO885913ToUnicode();
-
-};
+NS_METHOD
+nsISO885913ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                void **aResult);
 
 #endif /* nsISO885913ToUnicode_h___ */

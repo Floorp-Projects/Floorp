@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToMacUkrainian_h___
 #define nsUnicodeToMacUkrainian_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToMacUkrainian [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to MacUkrainian.
@@ -50,15 +47,8 @@
  * @created         4/26/1999
  * @author  Frank Tang [ftang]
  */
-class nsUnicodeToMacUkrainian : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToMacUkrainian();
-
-};
+NS_METHOD
+nsUnicodeToMacUkrainianConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                   void **aResult);
 
 #endif /* nsUnicodeToMacUkrainian_h___ */

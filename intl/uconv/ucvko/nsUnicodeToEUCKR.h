@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToEUCKR_h___
 #define nsUnicodeToEUCKR_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToEUCKR [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to EUCKR.
@@ -50,16 +47,8 @@
  * @created         06/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToEUCKR : public nsMultiTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToEUCKR();
-
-protected:
-};
+NS_METHOD
+nsUnicodeToEUCKRConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult);
 
 #endif /* nsUnicodeToEUCKR_h___ */

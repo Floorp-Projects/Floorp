@@ -33,6 +33,7 @@
  *
  */
 
+#include "nsUCConstructors.h"
 #include "nsCP864ToUnicode.h"
 
 //----------------------------------------------------------------------
@@ -47,12 +48,12 @@ static const PRInt16 g_utShiftTable[] =  {
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-//----------------------------------------------------------------------
-// Class nsCP864ToUnicode [implementation]
-
-nsCP864ToUnicode::nsCP864ToUnicode() 
-: nsOneByteDecoderSupport((uShiftTable*) &g_utShiftTable, 
-                          (uMappingTable*) &g_utMappingTable)
+NS_METHOD
+nsCP864ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult) 
 {
+  return CreateOneByteDecoder((uShiftTable*) &g_utShiftTable, 
+                              (uMappingTable*) &g_utMappingTable,
+                              aOuter, aIID, aResult);
 }
 

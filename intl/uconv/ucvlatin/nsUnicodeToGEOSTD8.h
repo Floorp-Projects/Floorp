@@ -23,24 +23,14 @@
 #ifndef nsUnicodeToGEOSTD8_h___
 #define nsUnicodeToGEOSTD8_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToGEOSTD8 [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to GEOSTD8.
  *
  */
-class nsUnicodeToGEOSTD8 : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToGEOSTD8();
-
-};
+NS_METHOD
+nsUnicodeToGEOSTD8Constructor(nsISupports *aOuter, REFNSIID aIID,
+                              void **aResult);
 
 #endif /* nsUnicodeToGEOSTD8_h___ */

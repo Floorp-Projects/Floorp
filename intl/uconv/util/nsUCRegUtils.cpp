@@ -44,8 +44,23 @@
 #include "nsXPIDLString.h"
 #include "nsICharsetConverterManager.h"
 #include "nsCRT.h"
+#include "prprf.h"
 
-nsresult nsRegisterConverters(nsConverterInfo* regInfo,
+static const char gIDFormat[] = 
+  "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}";
+
+static void
+make_cid_string(char* buf, size_t size, const nsCID& cid)
+{
+    PR_snprintf(buf, size, gIDFormat,
+                cid.m0, (PRUint32) cid.m1, (PRUint32) cid.m2,
+                (PRUint32) cid.m3[0], (PRUint32) cid.m3[1],
+                (PRUint32) cid.m3[2], (PRUint32) cid.m3[3],
+                (PRUint32) cid.m3[4], (PRUint32) cid.m3[5],
+                (PRUint32) cid.m3[6], (PRUint32) cid.m3[7]);
+}
+
+nsresult nsRegisterConverters(const nsConverterInfo* regInfo,
                               PRUint32 aCount)
 {
   nsresult rv;
@@ -56,18 +71,21 @@ nsresult nsRegisterConverters(nsConverterInfo* regInfo,
   nsXPIDLCString previous;
   PRUint32 i;
   for (i=0; i<aCount; i++) {
-    const nsConverterInfo* entry = &regInfo[i];
+    const nsConverterInfo& entry = regInfo[i];
     const char *category;
     const char *key;
 
-    if (entry->isEncoder) {
+    if (entry.isEncoder) {
       category = NS_UNICODEENCODER_NAME;
     } else {
       category = NS_UNICODEDECODER_NAME;
     }
-    key = entry->charset;
+    key = entry.charset;
 
-    rv = catman->AddCategoryEntry(category, key, "",
+    // stolen from nsID::ToString, making it stack-based
+    char value[40];
+    make_cid_string(value, 40, entry.cid);
+    rv = catman->AddCategoryEntry(category, key, value,
                                   PR_TRUE,
                                   PR_TRUE,
                                   getter_Copies(previous));
@@ -75,7 +93,8 @@ nsresult nsRegisterConverters(nsConverterInfo* regInfo,
   return rv;
 }
 
-nsresult nsUnregisterConverters(nsConverterInfo* regInfo, PRUint32 aCount)
+nsresult nsUnregisterConverters(const nsConverterInfo* regInfo,
+                                PRUint32 aCount)
 {
   nsresult rv;
   nsCOMPtr<nsICategoryManager> catman =
@@ -85,21 +104,18 @@ nsresult nsUnregisterConverters(nsConverterInfo* regInfo, PRUint32 aCount)
   nsXPIDLCString previous;
   PRUint32 i;
   for (i=0; i<aCount; i++) {
-    const nsConverterInfo* entry = &regInfo[i];
+    const nsConverterInfo& entry = regInfo[i];
     const char *category;
     const char *key;
 
-    if (entry->isEncoder) {
+    if (entry.isEncoder) {
       category = NS_UNICODEDECODER_NAME;
     } else {
       category = NS_UNICODEENCODER_NAME;
     }
-    key = entry->charset;
-
-    char * value = entry->cid.ToString();
+    key = entry.charset;
 
     rv = catman->DeleteCategoryEntry(category, key, PR_TRUE);
-    CRTFREEIF(value);
   }
   return rv;
 }

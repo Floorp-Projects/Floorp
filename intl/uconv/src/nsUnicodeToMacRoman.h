@@ -39,6 +39,8 @@
 #ifndef nsUnicodeToMacRoman_h___
 #define nsUnicodeToMacRoman_h___
 
+#include "nsISupports.h"
+
 // Class ID for our UnicodeToMacRoman charset converter
 // {7B8556AF-EC79-11d2-8AAC-00600811A836}
 #define NS_UNICODETOMACROMAN_CID \
@@ -46,24 +48,14 @@
 
 #define NS_UNICODETOMACROMAN_CONTRACTID "@mozilla.org/intl/unicode/encoder;1?charset=x-mac-roman"
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToMacRoman [declaration]
-
 /**
  * A character set converter from Unicode to MacRoman.
  *
  * @created         05/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToMacRoman : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToMacRoman();
-
-};
+NS_METHOD
+nsUnicodeToMacRomanConstructor(nsISupports *aOuter, REFNSIID aIID,
+                               void **aResult);
 
 #endif /* nsUnicodeToMacRoman_h___ */

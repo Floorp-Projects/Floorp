@@ -42,7 +42,7 @@
 #include "nsUCConstructors.h"
 
 template<class T>
-inline nsresult StabilizedQueryInterface(T* aNewObject,
+inline NS_METHOD StabilizedQueryInterface(T* aNewObject,
                                          REFNSIID aIID,
                                          void **aResult)
 {
@@ -52,7 +52,7 @@ inline nsresult StabilizedQueryInterface(T* aNewObject,
     return rv;
 }
 
-nsresult
+NS_METHOD
 CreateMultiTableDecoder(PRInt32 aTableCount, uRange * aRangeArray, 
                         uShiftTable ** aShiftTable,
                         uMappingTable ** aMappingTable,
@@ -75,8 +75,8 @@ CreateMultiTableDecoder(PRInt32 aTableCount, uRange * aRangeArray,
   return StabilizedQueryInterface(decoder, aIID, aResult);
 }
 
-nsresult
-CreateMultiTableEncoder(PRInt32 aTableCount, uRange * aRangeArray, 
+NS_METHOD
+CreateMultiTableEncoder(PRInt32 aTableCount,
                         uShiftTable ** aShiftTable,
                         uMappingTable ** aMappingTable,
                         PRUint32 aMaxLengthFactor,
@@ -98,12 +98,13 @@ CreateMultiTableEncoder(PRInt32 aTableCount, uRange * aRangeArray,
   return StabilizedQueryInterface(encoder, aIID, aResult);
 }
 
-nsresult CreateTableEncoder(uShiftTable * aShiftTable, 
-                            uMappingTable  * aMappingTable,
-                            PRUint32 aMaxLengthFactor,
-                            nsISupports* aOuter,
-                            REFNSIID aIID,
-                            void** aResult)
+NS_METHOD
+CreateTableEncoder(uShiftTable * aShiftTable, 
+                   uMappingTable  * aMappingTable,
+                   PRUint32 aMaxLengthFactor,
+                   nsISupports* aOuter,
+                   REFNSIID aIID,
+                   void** aResult)
 {
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
@@ -115,4 +116,43 @@ nsresult CreateTableEncoder(uShiftTable * aShiftTable,
     return NS_ERROR_OUT_OF_MEMORY;
 
   return StabilizedQueryInterface(encoder, aIID, aResult);
+}
+
+NS_METHOD
+CreateTableDecoder(uShiftTable * aShiftTable, 
+                   uMappingTable  * aMappingTable,
+                   PRUint32 aMaxLengthFactor,
+                   nsISupports* aOuter,
+                   REFNSIID aIID,
+                   void** aResult)
+{
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
+  
+  nsTableDecoderSupport* decoder =
+      new nsTableDecoderSupport(aShiftTable, aMappingTable,
+                                aMaxLengthFactor);
+  if (!decoder)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return StabilizedQueryInterface(decoder, aIID, aResult);
+}
+
+NS_METHOD
+CreateOneByteDecoder(uShiftTable * aShiftTable, 
+                     uMappingTable * aMappingTable,
+                     
+                     nsISupports* aOuter,
+                     REFNSIID aIID,
+                     void** aResult)
+{
+    if (aOuter) return NS_ERROR_NO_AGGREGATION;
+    
+    nsOneByteDecoderSupport* decoder =
+        new nsOneByteDecoderSupport(aShiftTable, aMappingTable);
+
+    if (!decoder)
+        return NS_ERROR_OUT_OF_MEMORY;
+    
+    return StabilizedQueryInterface(decoder, aIID, aResult);
 }

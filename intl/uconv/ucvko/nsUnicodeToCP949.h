@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToCP949_h___
 #define nsUnicodeToCP949_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToCP949 [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to CP949.
@@ -50,16 +47,8 @@
  * @created         14/May/2001  (patterned after Unicode to EUCKR converter
  * @author  Jungshik Shin 
  */
-class nsUnicodeToCP949 : public nsMultiTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToCP949();
-
-protected:
-};
+NS_METHOD
+nsUnicodeToCP949Constructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult);
 
 #endif /* nsUnicodeToCP949_h___ */

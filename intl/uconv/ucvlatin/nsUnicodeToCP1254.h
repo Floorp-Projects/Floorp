@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToCP1254_h___
 #define nsUnicodeToCP1254_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToCP1254 [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to CP1254.
@@ -50,15 +47,8 @@
  * @created         20/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToCP1254 : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToCP1254();
-
-};
+NS_METHOD
+nsUnicodeToCP1254Constructor(nsISupports *aOuter, REFNSIID aIID,
+                             void **aResult);
 
 #endif /* nsUnicodeToCP1254_h___ */

@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsUCConstructors.h"
 #include "nsUnicodeToMacCE.h"
 
 //----------------------------------------------------------------------
@@ -50,12 +51,12 @@ static const PRInt16 g_MacCEShiftTable[] =  {
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToMacCE [implementation]
-
-nsUnicodeToMacCE::nsUnicodeToMacCE() 
-: nsTableEncoderSupport((uShiftTable*) &g_MacCEShiftTable, 
-                        (uMappingTable*) &g_MacCEMappingTable, 1)
+NS_METHOD
+nsUnicodeToMacCEConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult) 
 {
+  return CreateTableEncoder((uShiftTable*) &g_MacCEShiftTable, 
+                            (uMappingTable*) &g_MacCEMappingTable, 1,
+                            aOuter, aIID, aResult);
 }
 

@@ -39,24 +39,14 @@
 #ifndef nsUnicodeToJohab_h___
 #define nsUnicodeToJohab_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToJohab [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to Johab.
  *
  */
-class nsUnicodeToJohab : public nsMultiTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToJohab();
-
-};
+NS_METHOD
+nsUnicodeToJohabConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult);
 
 #endif /* nsUnicodeToJohab_h___ */

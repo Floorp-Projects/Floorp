@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToMacRomanian_h___
 #define nsUnicodeToMacRomanian_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToMacRomanian [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to MacRomanian.
@@ -50,15 +47,8 @@
  * @created         4/26/1999
  * @author  Frank Tang [ftang]
  */
-class nsUnicodeToMacRomanian : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToMacRomanian();
-
-};
+NS_METHOD
+nsUnicodeToMacRomanianConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                  void **aResult);
 
 #endif /* nsUnicodeToMacRomanian_h___ */

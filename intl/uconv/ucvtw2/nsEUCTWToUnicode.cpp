@@ -38,6 +38,7 @@
 
 #include "nsEUCTWToUnicode.h"
 #include "nsUCvTW2Dll.h"
+#include "nsUCConstructors.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -117,11 +118,13 @@ static const uRange g_EUCTWRanges[] = {
 //----------------------------------------------------------------------
 // Class nsEUCTWToUnicode [implementation]
 
-nsEUCTWToUnicode::nsEUCTWToUnicode() 
-: nsMultiTableDecoderSupport(8, 
-                             (uRange*) &g_EUCTWRanges, 
-                             (uShiftTable**) &g_EUCTWShiftTableSet, 
-                             (uMappingTable**) &g_EUCTWMappingTableSet,
-                             1)
+NS_METHOD
+nsEUCTWToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                void **aResult)
 {
+  return CreateMultiTableDecoder(8, 
+                                 (uRange*) &g_EUCTWRanges, 
+                                 (uShiftTable**) &g_EUCTWShiftTableSet, 
+                                 (uMappingTable**) &g_EUCTWMappingTableSet,
+                                 1, aOuter, aIID, aResult);
 }

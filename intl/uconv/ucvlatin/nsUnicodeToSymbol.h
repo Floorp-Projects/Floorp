@@ -39,24 +39,14 @@
 #ifndef nsUnicodeToSymbol_h___
 #define nsUnicodeToSymbol_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToSymbol [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to Symbol.
  *
  */
-class nsUnicodeToSymbol : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToSymbol();
-
-};
+NS_METHOD
+nsUnicodeToSymbolConstructor(nsISupports *aOuter, REFNSIID aIID,
+                             void **aResult);
 
 #endif /* nsUnicodeToSymbol_h___ */

@@ -38,6 +38,7 @@
 
 #include "nsBIG5ToUnicode.h"
 #include "nsUCvTWDll.h"
+#include "nsUCConstructors.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -68,15 +69,15 @@ static const uRange g_BIG5Ranges[] = {
   { 0x81, 0xFC }
 };
 
-//----------------------------------------------------------------------
-// Class nsBIG5ToUnicode [implementation]
-
-nsBIG5ToUnicode::nsBIG5ToUnicode() 
-: nsMultiTableDecoderSupport(2, 
-                            (uRange* ) &g_BIG5Ranges,
-                            (uShiftTable**) &g_BIG5ShiftTableSet, 
-                            (uMappingTable**) &g_BIG5MappingTableSet, 1)
+NS_METHOD
+nsBIG5ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                           void **aResult)
 {
+  return CreateMultiTableDecoder(2, 
+                                 (uRange* ) &g_BIG5Ranges,
+                                 (uShiftTable**) &g_BIG5ShiftTableSet, 
+                                 (uMappingTable**) &g_BIG5MappingTableSet, 1,
+                                 aOuter, aIID, aResult);
 }
 
 

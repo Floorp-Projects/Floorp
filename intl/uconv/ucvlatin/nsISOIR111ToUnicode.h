@@ -39,10 +39,7 @@
 #ifndef nsISOIR111ToUnicode_h___
 #define nsISOIR111ToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsISOIR111ToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from ISOIR111 to Unicode.
@@ -50,15 +47,8 @@
  * @created         23/Nov/1998
  * @author  Catalin Rotaru [CATA]
  */
-class nsISOIR111ToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsISOIR111ToUnicode();
-
-};
+NS_METHOD
+nsISOIR111ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                               void **aResult);
 
 #endif /* nsISOIR111ToUnicode_h___ */

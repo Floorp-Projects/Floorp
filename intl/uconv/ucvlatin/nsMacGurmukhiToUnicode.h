@@ -39,23 +39,13 @@
 #ifndef nsMacGurmukhiToUnicode_h___
 #define nsMacGurmukhiToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsMacGurmukhiToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from MacGurmukhi to Unicode.
  */
-class nsMacGurmukhiToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsMacGurmukhiToUnicode();
-
-};
+NS_METHOD
+nsMacGurmukhiToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                  void **aResult);
 
 #endif /* nsMacGurmukhiToUnicode_h___ */

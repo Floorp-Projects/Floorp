@@ -39,23 +39,13 @@
 #ifndef nsMacHebrewToUnicode_h___
 #define nsMacHebrewToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsMacHebrewToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from MacHebrew to Unicode.
  */
-class nsMacHebrewToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsMacHebrewToUnicode();
-
-};
+NS_METHOD
+nsMacHebrewToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                void **aResult);
 
 #endif /* nsMacHebrewToUnicode_h___ */

@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsUCConstructors.h"
 #include "nsUnicodeToMacTurkish.h"
 
 //----------------------------------------------------------------------
@@ -50,12 +51,12 @@ static const PRInt16 g_MacTurkishShiftTable[] =  {
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToMacTurkish [implementation]
-
-nsUnicodeToMacTurkish::nsUnicodeToMacTurkish() 
-: nsTableEncoderSupport((uShiftTable*) &g_MacTurkishShiftTable, 
-                        (uMappingTable*) &g_MacTurkishMappingTable, 1)
+NS_METHOD
+nsUnicodeToMacTurkishConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                 void **aResult) 
 {
+  return CreateTableEncoder((uShiftTable*) &g_MacTurkishShiftTable, 
+                            (uMappingTable*) &g_MacTurkishMappingTable, 1,
+                            aOuter, aIID, aResult);
 }
 

@@ -38,6 +38,7 @@
 
 #include "nsBIG5HKSCSToUnicode.h"
 #include "nsUCvTWDll.h"
+#include "nsUCConstructors.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -84,13 +85,16 @@ static const uRange g_BIG5HKSCSRanges[] = {
 //----------------------------------------------------------------------
 // Class nsBIG5HKSCSToUnicode [implementation]
 
-nsBIG5HKSCSToUnicode::nsBIG5HKSCSToUnicode()
-: nsMultiTableDecoderSupport(6,
-                            (uRange* ) &g_BIG5HKSCSRanges,
-                            (uShiftTable**) &g_BIG5HKSCSShiftTableSet,
-                            (uMappingTable**) &g_BIG5HKSCSMappingTableSet,
-                             1)
+NS_METHOD
+nsBIG5HKSCSToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                void **aResult)
 {
+  return CreateMultiTableDecoder(6,
+                                 (uRange* ) &g_BIG5HKSCSRanges,
+                                 (uShiftTable**) &g_BIG5HKSCSShiftTableSet,
+                                 (uMappingTable**) &g_BIG5HKSCSMappingTableSet,
+                                 1,
+                                 aOuter, aIID, aResult);
 }
 
 

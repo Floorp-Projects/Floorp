@@ -36,23 +36,13 @@
 #ifndef nsUnicodeToCP852_h___
 #define nsUnicodeToCP852_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToCP852 [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to CP852.
  */
-class nsUnicodeToCP852 : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToCP852();
-
-};
+NS_METHOD
+nsUnicodeToCP852Constructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult);
 
 #endif /* nsUnicodeToCP852_h___ */

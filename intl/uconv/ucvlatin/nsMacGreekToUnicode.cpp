@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsUCConstructors.h"
 #include "nsMacGreekToUnicode.h"
 
 //----------------------------------------------------------------------
@@ -50,12 +51,12 @@ static const PRInt16 g_MacGreekShiftTable[] =  {
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-//----------------------------------------------------------------------
-// Class nsMacGreekToUnicode [implementation]
-
-nsMacGreekToUnicode::nsMacGreekToUnicode() 
-: nsTableDecoderSupport((uShiftTable*) &g_MacGreekShiftTable, 
-                        (uMappingTable*) &g_MacGreekMappingTable, 1)
+NS_METHOD
+nsMacGreekToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                               void **aResult) 
 {
+  return CreateTableDecoder((uShiftTable*) &g_MacGreekShiftTable, 
+                            (uMappingTable*) &g_MacGreekMappingTable, 1,
+                            aOuter, aIID, aResult);
 }
 

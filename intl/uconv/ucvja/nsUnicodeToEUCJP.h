@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToEUCJP_h___
 #define nsUnicodeToEUCJP_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToEUCJP [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to EUCJP.
@@ -50,17 +47,8 @@
  * @created         17/Feb/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToEUCJP : public nsMultiTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToEUCJP();
-
-protected:
-
-};
+NS_METHOD
+nsUnicodeToEUCJPConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult);
 
 #endif /* nsUnicodeToEUCJP_h___ */

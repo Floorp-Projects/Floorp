@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToISO885910_h___
 #define nsUnicodeToISO885910_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToISO885910 [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to ISO885910.
@@ -50,15 +47,8 @@
  * @created         17/Feb/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToISO885910 : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToISO885910();
-
-};
+NS_METHOD
+nsUnicodeToISO885910Constructor(nsISupports *aOuter, REFNSIID aIID,
+                                void **aResult);
 
 #endif /* nsUnicodeToISO885910_h___ */

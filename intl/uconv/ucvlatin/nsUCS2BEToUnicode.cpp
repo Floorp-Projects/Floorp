@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsUCConstructors.h"
 #include "nsUCS2BEToUnicode.h"
 #include "nsUCvLatinDll.h"
 #include <string.h>

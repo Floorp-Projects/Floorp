@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsUCSupport.h"
+#include "nsUCConstructors.h"
 #include "nsUnicodeToMacRoman.h"
 
 //----------------------------------------------------------------------
@@ -51,12 +51,12 @@ static const PRInt16 g_MacRomanShiftTable[] =  {
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToMacRoman [implementation]
-
-nsUnicodeToMacRoman::nsUnicodeToMacRoman() 
-: nsTableEncoderSupport((uShiftTable*) &g_MacRomanShiftTable, 
-                        (uMappingTable*) &g_MacRomanMappingTable, 1)
+NS_METHOD
+nsUnicodeToMacRomanConstructor(nsISupports *aOuter, REFNSIID aIID,
+                               void **aResult)
 {
+  return CreateTableEncoder((uShiftTable*) &g_MacRomanShiftTable, 
+                            (uMappingTable*) &g_MacRomanMappingTable, 1,
+                            aOuter, aIID, aResult);
 }
 

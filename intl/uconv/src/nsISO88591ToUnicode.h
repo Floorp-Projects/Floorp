@@ -39,6 +39,8 @@
 #ifndef nsISO88591ToUnicode_h___
 #define nsISO88591ToUnicode_h___
 
+#include "nsISupports.h"
+
 // Class ID for our ISO88591ToUnicode charset converter
 // {A3254CB0-8E20-11d2-8A98-00600811A836}
 #define NS_ISO88591TOUNICODE_CID \
@@ -46,24 +48,14 @@
 
 #define NS_ISO88591TOUNICODE_CONTRACTID "@mozilla.org/intl/unicode/decoder;1?charset=ISO-8859-1"
 
-//----------------------------------------------------------------------
-// Class nsISO88591ToUnicode [declaration]
-
 /**
  * A character set converter from ISO88591 to Unicode.
  *
  * @created         23/Nov/1998
  * @author  Catalin Rotaru [CATA]
  */
-class nsISO88591ToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsISO88591ToUnicode();
-
-};
+NS_METHOD
+nsISO88591ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                               void **aResult);
 
 #endif /* nsISO88591ToUnicode_h___ */

@@ -36,22 +36,15 @@
 #ifndef nsCP857ToUnicode_h___
 #define nsCP857ToUnicode_h___
 
-#include "nsUCSupport.h"
+#include "nsISupports.h"
 
-//----------------------------------------------------------------------
-// Class nsCP857ToUnicode [declaration]
 
 /**
  * A character set converter from CP857 to Unicode.
  */
-class nsCP857ToUnicode : public nsOneByteDecoderSupport
-{
-public:
+NS_METHOD
+nsCP857ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult);
 
-  /**
-   * Class constructor.
-   */
-  nsCP857ToUnicode();
-};
 
 #endif /* nsCP857ToUnicode_h___ */

@@ -39,10 +39,7 @@
 #ifndef nsCP1258ToUnicode_h___
 #define nsCP1258ToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsCP1258ToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from CP1258 to Unicode.
@@ -50,15 +47,8 @@
  * @created         4/26/1999
  * @author  Frank Tang [ftang]
  */
-class nsCP1258ToUnicode : public nsOneByteDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsCP1258ToUnicode();
-
-};
+NS_METHOD
+nsCP1258ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult);
 
 #endif /* nsCP1258ToUnicode_h___ */

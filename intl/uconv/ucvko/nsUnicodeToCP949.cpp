@@ -39,6 +39,7 @@
 
 #include "nsUnicodeToCP949.h"
 #include "nsUCvKODll.h"
+#include "nsUCConstructors.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -77,14 +78,14 @@ static const PRUint16 *g_CP949ShiftTable[3] =  {
   gCP949ShiftTable
 };
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToEUCKR [implementation]
-
-nsUnicodeToCP949::nsUnicodeToCP949() 
-: nsMultiTableEncoderSupport(3,
-                        (uShiftTable**) g_CP949ShiftTable, 
-                        (uMappingTable**) g_CP949MappingTable,
-                             2 /* max len = src * 2 */)
+NS_METHOD
+nsUnicodeToCP949Constructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult)
 {
+  return CreateMultiTableEncoder(3,
+                                 (uShiftTable**) g_CP949ShiftTable, 
+                                 (uMappingTable**) g_CP949MappingTable,
+                                 2 /* max len = src * 2 */,
+                                 aOuter, aIID, aResult);
 }
 

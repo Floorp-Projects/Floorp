@@ -39,10 +39,7 @@
 #ifndef nsJohabToUnicode_h___
 #define nsJohabToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsJohabToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Johab to Unicode.
@@ -50,16 +47,8 @@
  * @created         06/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsJohabToUnicode : public nsMultiTableDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsJohabToUnicode();
-
-protected:
-};
+NS_METHOD
+nsJohabToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult);
 
 #endif /* nsJohabToUnicode_h___ */

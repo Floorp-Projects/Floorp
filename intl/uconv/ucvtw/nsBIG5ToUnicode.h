@@ -39,10 +39,7 @@
 #ifndef nsBIG5ToUnicode_h___
 #define nsBIG5ToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsBIG5ToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from BIG5 to Unicode.
@@ -50,17 +47,8 @@
  * @created         06/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsBIG5ToUnicode : public nsMultiTableDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsBIG5ToUnicode();
-
-protected:
-
-};
+NS_METHOD
+nsBIG5ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                void **aResult);
 
 #endif /* nsBIG5ToUnicode_h___ */

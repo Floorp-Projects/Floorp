@@ -38,6 +38,7 @@
 
 #include "nsUnicodeToEUCKR.h"
 #include "nsUCvKODll.h"
+#include "nsUCConstructors.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -69,15 +70,15 @@ static const PRUint16 *g_EUCKRShiftTable[3] =  {
   gDecomposedHangulShiftTable
 };
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToEUCKR [implementation]
-
-nsUnicodeToEUCKR::nsUnicodeToEUCKR() 
-: nsMultiTableEncoderSupport(3,
-                        (uShiftTable**) g_EUCKRShiftTable, 
-                        (uMappingTable**) g_EUCKRMappingTable,
-                             // change from 2 to 8 because of composed jamo
-                             8 /* max length = src * 8 */)
+NS_METHOD
+nsUnicodeToEUCKRConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult)
 {
+  return CreateMultiTableEncoder(3,
+                                 (uShiftTable**) g_EUCKRShiftTable, 
+                                 (uMappingTable**) g_EUCKRMappingTable,
+                                 // change from 2 to 8 because of composed jamo
+                                 8 /* max length = src * 8 */,
+                                 aOuter, aIID, aResult);
 }
 

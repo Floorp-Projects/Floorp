@@ -39,10 +39,7 @@
 #ifndef nsUnicodeToKOI8U_h___
 #define nsUnicodeToKOI8U_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeToKOI8U [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from Unicode to KOI8U.
@@ -50,15 +47,8 @@
  * @created         4/26/1999
  * @author  Frank Tang [ftang]
  */
-class nsUnicodeToKOI8U : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToKOI8U();
-
-};
+NS_METHOD
+nsUnicodeToKOI8UConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult);
 
 #endif /* nsUnicodeToKOI8U_h___ */

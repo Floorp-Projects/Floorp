@@ -39,10 +39,7 @@
 #ifndef nsEUCTWToUnicode_h___
 #define nsEUCTWToUnicode_h___
 
-#include "nsUCSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsEUCTWToUnicode [declaration]
+#include "nsISupports.h"
 
 /**
  * A character set converter from EUCTW to Unicode.
@@ -50,17 +47,8 @@
  * @created         06/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsEUCTWToUnicode : public nsMultiTableDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsEUCTWToUnicode();
-
-protected:
-
-};
+NS_METHOD
+nsEUCTWToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult);
 
 #endif /* nsEUCTWToUnicode_h___ */
