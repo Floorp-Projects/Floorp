@@ -116,7 +116,7 @@ PL_strncpy(char *dest, const char *src, PRUint32 max);
  * unlike the traditional libc implementation.  It returns the "dest" argument.
  *
  * NOTE: If you call this with a source "abcdefg" and a max of 5, the 
- * destination will end up with "abcd\0" (i.e., it's strlen length will be 4)!
+ * destination will end up with "abcd\0" (i.e., its strlen length will be 4)!
  *
  * This means you can do this:
  *
