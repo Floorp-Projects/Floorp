@@ -22,6 +22,7 @@
  */
 
 const mediatorContractId = "@mozilla.org/rdf/datasource;1?name=window-mediator";
+const nsIWebBrowserChrome = Components.interfaces.nsIWebBrowserChrome;
 
 function nsBrowserContentListener(toplevelWindow, contentWindow)
 {
@@ -46,10 +47,28 @@ nsBrowserContentListener.prototype =
         if (windowDocShell)
             windowDocshell.parentURIContentListener = this;
     
+        var registerWindow = false;
+        try {          
+          var treeItem = contentWindow.docShell.QueryInterface(Components.interfaces.nsIDocShellTreeItem);
+          var treeOwner = treeItem.treeOwner;
+          var interfaceRequestor = treeOwner.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+          var webBrowserChrome = interfaceRequestor.getInterface(nsIWebBrowserChrome);
+          if (webBrowserChrome)
+          {
+            var chromeFlags = webBrowserChrome.chromeFlags;
+            if (chromeFlags == nsIWebBrowserChrome.CHROME_ALL || chromeFlags == nsIWebBrowserChrome.CHROME_DEFAULT)
+            {             
+              registerWindow = true;
+            }
+         }
+       } catch (ex) {} 
+
         // register ourselves
+       if (registerWindow)
+       {
         var uriLoader = Components.classes["@mozilla.org/uriloader;1"].getService(Components.interfaces.nsIURILoader);
         uriLoader.registerContentListener(this);
-
+       }
     },
     close: function()
     {
