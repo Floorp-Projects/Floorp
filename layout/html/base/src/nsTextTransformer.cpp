@@ -277,7 +277,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
 			
 			numChars = (next - offset);
 			// check buffer size before copy
-			if((bp + numChars ) > bufEnd) {
+			while((bp + numChars ) > bufEnd) {
 				PRInt32 delta = bp - mBuffer;
 				if(!GrowBuffer()) {
 					goto done;
