@@ -369,8 +369,8 @@ function SetupCompactMenuItem(folderResource, numSelected)
   var folderTree = GetFolderTree();
   var canCompact = GetFolderAttribute(folderTree, folderResource, "CanCompact") == "true";
   var folder = GetMsgFolderFromResource(folderResource);
-  ShowMenuItem("folderPaneContext-compact", (numSelected <=1) && canCompact && (!folder.flags & MSG_FOLDER_FLAG_VIRTUAL));
-  EnableMenuItem("folderPaneContext-compact", folder.isCommandEnabled("cmd_compactFolder") && (!folder.flags & MSG_FOLDER_FLAG_VIRTUAL));
+  ShowMenuItem("folderPaneContext-compact", (numSelected <=1) && canCompact && !(folder.flags & MSG_FOLDER_FLAG_VIRTUAL));
+  EnableMenuItem("folderPaneContext-compact", folder.isCommandEnabled("cmd_compactFolder") && !(folder.flags & MSG_FOLDER_FLAG_VIRTUAL));
 
   if(canCompact)
   {
