@@ -364,7 +364,8 @@ nsWSDLLoadRequest::LoadDefinition(const nsAString& aURI)
     }
     
     nsCOMPtr<nsIDOMElement> element;
-    document->GetDocumentElement(getter_AddRefs(element));
+    if (document)
+      document->GetDocumentElement(getter_AddRefs(element));
     if (element) {
       if (IsElementOfNamespace(element, 
                                NS_LITERAL_STRING(NS_WSDL_NAMESPACE))) {

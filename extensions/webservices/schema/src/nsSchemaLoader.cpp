@@ -358,7 +358,9 @@ LoadListener::HandleEvent(nsIDOMEvent *event)
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIDOMElement> element;
       
-      document->GetDocumentElement(getter_AddRefs(element));
+      if (document)
+        document->GetDocumentElement(getter_AddRefs(element));
+
       if (element) {
         rv = mLoader->ProcessSchemaElement(element, getter_AddRefs(schema));
       }
