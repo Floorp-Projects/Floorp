@@ -997,7 +997,7 @@ nsCSSProps::kKeywordTableTable[eCSSProperty_COUNT_no_shorthands] = {
 const nsAFlatCString& 
 nsCSSProps::LookupPropertyValue(nsCSSProperty aProp, PRInt32 aValue)
 {
-  NS_ASSERTION(aProperty >= 0 && aProperty < eCSSProperty_COUNT, "property out of range");
+  NS_ASSERTION(aProp >= 0 && aProp < eCSSProperty_COUNT, "property out of range");
 
   const PRInt32* kwtable = nsnull;
   if (aProp < eCSSProperty_COUNT_no_shorthands)
