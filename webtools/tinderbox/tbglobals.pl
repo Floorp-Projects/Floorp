@@ -145,6 +145,7 @@ sub tb_load_data {
   $td->{bloaty}     = load_bloaty($td);
   $td->{pageloader} = load_pageloader($td);
   $td->{startup}    = load_startup($td);
+  $td->{scrape}     = load_scrape($td);
   $td->{warnings}   = load_warnings($td);
 
   return $td;
@@ -467,6 +468,25 @@ sub load_startup {
     $startup->{$logfile} = [ $startup_time ];
   }
   return $startup;
+}
+
+# Load data about scrape data.
+#   File format: <logfile>|<aaa>|<bbb>|...
+#
+sub load_scrape {
+  my $treedata = $_[0];
+  local $_;
+
+  my $scrape = {};
+  
+  open(BLOATLOG, "<$treedata->{name}/scrape.dat");
+  while (<BLOATLOG>) {
+    chomp;
+    my ($logfile, $scrape_data) = split /\|/;
+
+    $scrape->{$logfile} = [ $scrape_data ];
+  }
+  return $scrape;
 }
 
 

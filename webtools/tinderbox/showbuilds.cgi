@@ -407,6 +407,20 @@ BEGIN {
         print sprintf "<br>Ts:%4.2fs", $startup_time/1000;
       }
 
+      # Scrape data
+      if (defined $td->{scrape}{$logfile}) {
+        my ($scrape_data)
+            = @{ $td->{startup}{$logfile} };
+        # ex: Tp:5.45s
+        print sprintf "<br>$scrape_data";
+      }
+
+      # Scrape data
+      #if (defined $td->{scrape}{$logfile}) {
+      #  my @scrape_data = @{$td->{scrape}{$logfile}};
+      #  print "<br>@scrape_data[0],@scrape_data[1]";
+      #}
+
       # Warnings
       if (defined $td->{warnings}{$logfile}) {
         my ($warning_count) = $td->{warnings}{$logfile};
