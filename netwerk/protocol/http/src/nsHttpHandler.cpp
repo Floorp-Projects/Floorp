@@ -430,16 +430,14 @@ nsHttpHandler::GetCacheSession(nsCacheStoragePolicy storagePolicy,
 }
 
 nsresult
-nsHttpHandler::GetEventQueueService(nsIEventQueueService **result)
+nsHttpHandler::GetCurrentEventQ(nsIEventQueue **result)
 {
     if (!mEventQueueService) {
         nsresult rv;
         mEventQueueService = do_GetService(kEventQueueServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
     }
-    *result = mEventQueueService;
-    NS_ADDREF(*result);
-    return NS_OK;
+    return mEventQueueService->ResolveEventQueue(NS_CURRENT_EVENTQ, result);
 }
 
 nsresult

@@ -913,9 +913,7 @@ nsHttpTransaction::DeleteSelfOnConsumerThread()
     NS_ASSERTION(!mDestroying, "deleting self again");
     mDestroying = PR_TRUE;
 
-    gHttpHandler->GetEventQueueService(getter_AddRefs(eqs));
-    if (eqs)
-        eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(currentEventQ));
+    gHttpHandler->GetCurrentEventQ(getter_AddRefs(currentEventQ));
 
     if (currentEventQ == mConsumerEventQ)
         delete this;
