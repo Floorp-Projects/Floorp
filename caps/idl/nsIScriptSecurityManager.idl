@@ -34,13 +34,19 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     /**
      * Checks whether the running script is allowed to access aProperty.
      */
-    [noscript] void checkPropertyAccess(in PRUint32 aAction,
-                                        in JSContextPtr aJSContext,
+    [noscript] void checkPropertyAccess(in JSContextPtr aJSContext,
                                         in JSObjectPtr aJSObject,
-                                        in nsISupports aObj,
-                                        in nsIClassInfo aClassInfo,
                                         in string aClassName,
-                                        in string aProperty);
+                                        in string aProperty,
+                                        in PRUint32 aAction);
+
+    /**
+     * Checks whether the running script is allowed to connect to aTargetURI
+     */
+    [noscript] void checkConnect(in JSContextPtr aJSContext,
+                                 in nsIURI aTargetURI,
+                                 in string aClassName,
+                                 in string aPropertyName);
 
     /**
      * Check that the script currently running in context "cx" can load "uri".
