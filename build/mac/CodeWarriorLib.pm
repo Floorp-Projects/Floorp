@@ -102,12 +102,12 @@ else, error_path should be the full path of a file to save error messages into.
 
 $CodeWarriorLib::CLOSE_PROJECTS_FIRST = 0; # If true we close then make. If false, make then close.
 my $last_project_built = "";
-my $project_was_closed = 0;
+my $last_project_was_closed = 0;
 
 sub build_project ($;$$$) {
 	my(
 		$full_path, $target_name, $error_path,
-		$remove_object, $p, $had_errors
+		$remove_object, $p, $project_was_closed, $had_errors
 	) = @_;
 	_close_errors_window();
 
@@ -115,13 +115,14 @@ sub build_project ($;$$$) {
 	{
 		# If we're in "close first" mode, we don't close if the current project
 		# is the same as the previous one.
-		if ($project_was_closed) {
+		if ($last_project_was_closed) {
 			$p = _get_project($last_project_built);
 			_close($p);
 		}
 		$last_project_built = $full_path;
-		$project_was_closed = 0; # now refers to the new project
+		$last_project_was_closed = 0; # now refers to the new project
 	}
+	$project_was_closed = 0;
 	while (1) {
 		$p = _get_project($full_path);
 		if (!$p) {
@@ -130,6 +131,7 @@ sub build_project ($;$$$) {
 				die "### possibly CW Pro 4 bug: be sure to close your Find window\n";
 			}
 			$project_was_closed = 1;
+			$last_project_was_closed = 1;
 			_open_file($full_path);
 		} else {
 			last;
