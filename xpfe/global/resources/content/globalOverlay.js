@@ -23,7 +23,7 @@ function goQuitApplication()
 		var  windowToClose = enumerator.getNext();
 		var domWindow = windowManagerInterface.convertISupportsToDOMWindow( windowToClose );
 		domWindow.focus();
-		if ( domWindow.tryToClose == null )
+		if (!("tryToClose" in domWindow))
 		{
 			// dump(" window.close \n");
 			domWindow.close();
