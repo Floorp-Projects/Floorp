@@ -335,13 +335,15 @@ static NSArray* sToolbarDefaults = nil;
   //  [[mSidebarBrowserView getBrowserView] loadURI: @"http://tinderbox.mozilla.org/SeaMonkey/panel.html" flags:NSLoadFlagsNone];
 
   // Toggle the sidebar icon.
-  [mSidebarToolbarItem setImage:[NSImage imageNamed:@"sidebarOpened"]];
+  if(mSidebarToolbarItem)
+    [mSidebarToolbarItem setImage:[NSImage imageNamed:@"sidebarOpened"]];
 }
 
 - (void)drawerDidClose:(NSNotification *)aNotification
 {
   // Unload the Gecko web page in "My Panels" to save memory.
-  [mSidebarToolbarItem setImage:[NSImage imageNamed:@"sidebarClosed"]];
+  if(mSidebarToolbarItem)
+    [mSidebarToolbarItem setImage:[NSImage imageNamed:@"sidebarClosed"]];
 
   // XXXdwh ignore for now.
   //  [[mSidebarBrowserView getBrowserView] loadURI: @"about:blank" flags:NSLoadFlagsNone];
@@ -388,11 +390,23 @@ static NSArray* sToolbarDefaults = nil;
 - (void)toolbarWillAddItem:(NSNotification *)notification
 {
   NSToolbarItem* item = [[notification userInfo] objectForKey:@"item"];
-  NSString* toolbarItemId = [item itemIdentifier];
-  if ( [toolbarItemId isEqual:SidebarToolbarItemIdentifier] )
+  if ( [[item itemIdentifier] isEqual:SidebarToolbarItemIdentifier] )
     mSidebarToolbarItem = item;
 }
 
+//
+// toolbarWillAddItem: (toolbar delegate method)
+//
+// Called when a button is about to be removed from a toolbar. This is where we should
+// uncache items so we don't access them after they're gone. For instance, we want to
+// clear our ref to the sidebar toolbar item.
+//
+- (void)toolbarDidRemoveItem:(NSNotification *)notification
+{
+  NSToolbarItem* item = [[notification userInfo] objectForKey:@"item"];
+  if ( [[item itemIdentifier] isEqual:SidebarToolbarItemIdentifier] )
+    mSidebarToolbarItem = nil;
+}
 
 - (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
 {
