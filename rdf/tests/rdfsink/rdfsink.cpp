@@ -29,6 +29,7 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
+#include "nsLayoutCID.h" // for NS_NAMESPACEMANAGER_CID
 #include "nsParserCIID.h"
 #include "nsRDFCID.h"
 #include "nsRDFCID.h"
@@ -45,6 +46,7 @@
 #define NETLIB_DLL "netlib.dll"
 #define PARSER_DLL "raptorhtmlpars.dll"
 #define RDF_DLL    "rdf.dll"
+#define LAYOUT_DLL "raptorhtml.dll"
 #endif
 
 ////////////////////////////////////////////////////////////////////////
@@ -57,7 +59,6 @@ static NS_DEFINE_CID(kNetServiceCID,            NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kRDFBookMarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFHTMLDocumentCID,       NS_RDFHTMLDOCUMENT_CID);
 static NS_DEFINE_CID(kRDFMemoryDataSourceCID,   NS_RDFMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFRegistryCID,           NS_RDFREGISTRY_CID);
 static NS_DEFINE_CID(kRDFResourceManagerCID,    NS_RDFRESOURCEMANAGER_CID);
 static NS_DEFINE_CID(kRDFSimpleDataBaseCID,     NS_RDFSIMPLEDATABASE_CID);
 static NS_DEFINE_CID(kRDFStreamDataSourceCID,   NS_RDFSTREAMDATASOURCE_CID);
@@ -66,6 +67,10 @@ static NS_DEFINE_CID(kRDFTreeDocumentCID,       NS_RDFTREEDOCUMENT_CID);
 // parser
 static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID);
 static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
+
+// layout
+static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
+
 
 ////////////////////////////////////////////////////////////////////////
 // IIDs
@@ -82,7 +87,6 @@ SetupRegistry(void)
     nsRepository::RegisterFactory(kRDFBookMarkDataSourceCID, RDF_DLL,    PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kRDFHTMLDocumentCID,       RDF_DLL,    PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kRDFMemoryDataSourceCID,   RDF_DLL,    PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kRDFRegistryCID,           RDF_DLL,    PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kRDFResourceManagerCID,    RDF_DLL,    PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kRDFSimpleDataBaseCID,     RDF_DLL,    PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kRDFStreamDataSourceCID,   RDF_DLL,    PR_FALSE, PR_FALSE);
@@ -90,6 +94,8 @@ SetupRegistry(void)
 
     nsRepository::RegisterFactory(kParserCID,                PARSER_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kWellFormedDTDCID,         PARSER_DLL, PR_FALSE, PR_FALSE);
+
+    nsRepository::RegisterFactory(kNameSpaceManagerCID,      LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
     return NS_OK;
 }
@@ -111,7 +117,6 @@ main(int argc, char** argv)
 
     SetupRegistry();
 
-    nsString uri(argv[1]);
     nsIRDFDataSource* ds = nsnull;
 
     if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFStreamDataSourceCID,
@@ -120,7 +125,7 @@ main(int argc, char** argv)
                                                     (void**) &ds)))
         goto done;
 
-    if (NS_FAILED(rv = ds->Init(uri)))
+    if (NS_FAILED(rv = ds->Init(argv[1])))
         goto done;
 
     while (1) {
