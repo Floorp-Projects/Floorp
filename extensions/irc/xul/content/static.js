@@ -406,7 +406,7 @@ function initHost(obj)
                                "event-tracer", true /* negate */,
                                false /* disable */);
 
-    obj.linkRE = /((\w+):\/\/[^<>\[\]()\'\"\s]+|www(\.[^.<>\[\]()\'\"\s]+){2,})/;
+    obj.linkRE = /((\w+):[^<>\[\]()\'\"\s]+|www(\.[^.<>\[\]()\'\"\s]+){2,})/;
 
     obj.munger = new CMunger();
     obj.munger.enabled = true;
