@@ -23,18 +23,21 @@ DIRS = windows
 DEFINES=-D_IMPL_NS_BASE 
 LIBRARY_NAME=raptorbase 
 
-CPPSRCS=nsArena.cpp nsAtomTable.cpp nsByteBuffer.cpp nsCRT.cpp \
-    nsInputStream.cpp nsString.cpp nsUnicharBuffer.cpp \
+CPPSRCS=nsArena.cpp nsAtomTable.cpp nsBTree.cpp nsByteBuffer.cpp nsCRT.cpp \
+    nsDeque.cpp nsInputStream.cpp nsRBTree.cpp nsString.cpp nsUnicharBuffer.cpp \
     nsUnicharInputStream.cpp nsURL.cpp nsVoidArray.cpp 
 
 CPP_OBJS=.\$(OBJDIR)\nsArena.obj .\$(OBJDIR)\nsAtomTable.obj \
-    .\$(OBJDIR)\nsByteBuffer.obj .\$(OBJDIR)\nsCRT.obj \
-    .\$(OBJDIR)\nsInputStream.obj .\$(OBJDIR)\nsString.obj \
+    .\$(OBJDIR)\nsBTree.obj .\$(OBJDIR)\nsByteBuffer.obj \
+    .\$(OBJDIR)\nsCRT.obj        .\$(OBJDIR)\nsDeque.obj \
+    .\$(OBJDIR)\nsInputStream.obj .\$(OBJDIR)\nsRBTree.obj \
+    .\$(OBJDIR)\nsString.obj \
     .\$(OBJDIR)\nsUnicharBuffer.obj .\$(OBJDIR)\nsUnicharInputStream.obj \
     .\$(OBJDIR)\nsURL.obj .\$(OBJDIR)\nsVoidArray.obj 
 
-EXPORTS=nscore.h nsCRT.h nsIArena.h nsIAtom.h nsIByteBuffer.h \
-    nsIInputStream.h nsITimer.h nsITimerCallback.h nsIUnicharBuffer.h \
+EXPORTS=nscore.h nsIArena.h nsIAtom.h nsIByteBuffer.h \
+    nsBTree.h nsCRT.h nsDeque.h nsIInputStream.h nsITimer.h \
+    nsITimerCallback.h nsIUnicharBuffer.h nsRBTree.h \
     nsIUnicharInputStream.h nsIURL.h nsString.h nsVoidArray.h \
     nsUnitConversion.h 
 
