@@ -69,7 +69,7 @@ extern ostream &operator<<( ostream &s, nsString &str ) {
 
 class TestObserver : public nsIObserver, public nsSupportsWeakReference {
 public:
-    TestObserver( const nsAString &name = NS_LITERAL_STRING("unknown") )
+    TestObserver( const nsAString &name )
         : mName( name ) {
         NS_INIT_REFCNT();
     }
