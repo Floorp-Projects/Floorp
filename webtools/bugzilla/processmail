@@ -36,6 +36,8 @@ $::lockcount = 0;
 my $regenerate = 0;
 my $nametoexclude = "";
 
+my @forcecc;
+
 sub Lock {
     if ($::lockcount <= 0) {
         $::lockcount = 0;
@@ -305,6 +307,7 @@ sub ProcessOneBug {
         foreach my $v (split(/,/, "$::bug{'cclist'},$::bug{'voterlist'}")) {
             push @combinedcc, $v;
         }
+        push (@combinedcc, (@forcecc));
         my $cclist = fixaddresses("cc", \@combinedcc);
         my $logstr = "Bug $i $verb";
         if ($tolist ne "" || $cclist ne "") {
@@ -360,11 +363,6 @@ if (open(FID, "<data/nomail")) {
     close FID;
 }
 
-if (($#ARGV < 0) || ($#ARGV > 1)) {
-    print "Usage error: processmail {bugid} {nametoexclude}\nOr: processmail regenerate\n";
-    exit;
-}
-
 # To recreate the shadow database,  run "processmail regenerate" .
 if ($ARGV[0] eq "regenerate") {
     $regenerate = 1;
@@ -380,6 +378,18 @@ if ($ARGV[0] eq "regenerate") {
         Lock();
     }
     print("\n");
+    exit;
+}
+
+if ($ARGV[0] eq "-forcecc") {
+    shift(@ARGV);
+    foreach my $i (split(/,/, shift(@ARGV))) {
+        push(@forcecc, trim($i));
+    }
+}
+
+if (($#ARGV < 0) || ($#ARGV > 1)) {
+    print "Usage error: processmail {bugid} {nametoexclude}\nOr: processmail regenerate\n";
     exit;
 }
 

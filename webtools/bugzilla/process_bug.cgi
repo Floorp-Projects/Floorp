@@ -678,6 +678,9 @@ The changes made were:
             if ($col eq 'assigned_to' || $col eq 'qa_contact') {
                 $old = DBID_to_name($old) if $old != 0;
                 $new = DBID_to_name($new) if $new != 0;
+                $origcclist .= ",$old"; # make sure to send mail to people
+                                        # if they are going to no longer get
+                                        # updates about this bug.
             }
             if ($col eq 'product') {
                 RemoveVotes($id,
@@ -694,7 +697,7 @@ The changes made were:
     
     print "<TABLE BORDER=1><TD><H2>Changes to bug $id submitted</H2>\n";
     SendSQL("unlock tables");
-    system("./processmail $id $::FORM{'who'}");
+    system("./processmail", "-forcecc", $origcclist, $id, $::FORM{'who'});
     print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
 
     foreach my $k (keys(%dependencychanged)) {
