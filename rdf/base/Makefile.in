@@ -22,11 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public src
-
-ifdef USE_XPIDL
-DIRS += idl
-endif
+DIRS = idl public src
 
 include $(topsrcdir)/config/config.mk
 
