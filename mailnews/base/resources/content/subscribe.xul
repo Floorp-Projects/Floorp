@@ -104,7 +104,9 @@ Rights Reserved.
     
           <treecolgroup id="theSubscribeColumns">
             <treecol flex="7*" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+            <splitter class="tree-splitter"/>
             <treecol flex="1*" id="SubscribedColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subscribed"/>
+            <splitter class="tree-splitter"/>
             <treecol flex="1*" id="TotalMessagesColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
           </treecolgroup>
     
