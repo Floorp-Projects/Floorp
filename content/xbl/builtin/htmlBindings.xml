@@ -82,6 +82,7 @@ Can't yet put script tags in XBL (hyatt has the bug)
       <handler event="keypress" key="c" command="cmd_copy" modifiers="accel"/>
       <handler event="keypress" key="v" command="cmd_paste" modifiers="accel"/>
       <handler event="keypress" key="z" command="cmd_undo" modifiers="accel"/>
+      <handler event="keypress" key="a" command="cmd_selectAll" modifiers="accel"/>
     </handlers>
   </binding>
 
@@ -101,6 +102,7 @@ Can't yet put script tags in XBL (hyatt has the bug)
       <handler event="keypress" key="x" command="cmd_cut" modifiers="accel"/>
       <handler event="keypress" key="c" command="cmd_copy" modifiers="accel"/>
       <handler event="keypress" key="v" command="cmd_paste" modifiers="accel"/>
+      <handler event="keypress" key="a" command="cmd_selectAll" modifiers="accel"/>
 
     </handlers>
 
@@ -123,6 +125,7 @@ Can't yet put script tags in XBL (hyatt has the bug)
     <handler event="keypress" key="x" modifiers="accel" command="cmd_cut"/>
     <handler event="keypress" key="v" modifiers="accel" command="cmd_paste"/>
     <handler event="keypress" key="z" modifiers="accel" command="cmd_undo"/>
+    <handler event="keypress" key="a" modifiers="accel" command="cmd_selectAll"/>
 
     </handlers>
   </binding>
@@ -148,6 +151,7 @@ Can't yet put script tags in XBL (hyatt has the bug)
     <handler event="keypress" key="x" modifiers="accel" command="cmd_cut"/>
     <handler event="keypress" key="v" modifiers="accel" command="cmd_paste"/>
     <handler event="keypress" key="z" modifiers="accel" command="cmd_undo"/>
+    <handler event="keypress" key="a" modifiers="accel" command="cmd_selectAll"/>
 
     </handlers>
   </binding>
