@@ -30,6 +30,7 @@
 	#define botRight(r)	(((Point *) &(r))[1])
 #endif
 
+PRBool	nsMacEventHandler::mInBackground = PR_FALSE;
 
 //-------------------------------------------------------------------------
 //
@@ -100,8 +101,20 @@ PRBool nsMacEventHandler::HandleOSEvent(
 			break;
 
 		case osEvt:
+			unsigned char eventType = ((aOSEvent.message >> 24) & 0x00ff);
+			if (eventType == suspendResumeMessage)
+			{
+					if ((aOSEvent.message & 1) == resumeFlag)
+						mInBackground = PR_FALSE;		// resume message
+					else
+						mInBackground = PR_TRUE;		// suspend message
+					break;
+			}
+			// no break;
+	
 		case nullEvent:
-			retVal = HandleMouseMoveEvent(aOSEvent);
+			if (! mInBackground)
+				retVal = HandleMouseMoveEvent(aOSEvent);
 			break;
 	}
 
