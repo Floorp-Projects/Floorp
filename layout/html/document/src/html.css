@@ -481,6 +481,10 @@ noembed, noscript, param {
   background: transparent;
 }
 
+*|*:-moz-pagecontent {
+  display: block;
+}
+
 *|*:-moz-anonymous-positioned-block {
   display: block;
   position: relative;
@@ -512,7 +516,7 @@ noembed, noscript, param {
   }
 
   *|*:viewport, *|*:viewport-scroll, *|*:canvas {
-    background-color: #A0A0A0 !important;
+    background-color: #737373 !important;
   }
 
   *|*:-moz-any-link, *|*:-moz-any-link img, img[usemap], object[usemap],

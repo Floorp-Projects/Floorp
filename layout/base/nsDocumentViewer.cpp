@@ -1682,6 +1682,61 @@ GetPresShellFor(nsIDocShell* aDocShell)
 //-- Debug helper routines
 //---------------------------------------------------------------
 //---------------------------------------------------------------
+#if defined(XP_PC) && defined(DEBUG_rods) && defined(DEBUG_PRINTING)
+#include "windows.h"
+#include "process.h"
+#include "direct.h"
+
+#define MY_FINDFIRST(a,b) FindFirstFile(a,b) 
+#define MY_FINDNEXT(a,b) FindNextFile(a,b) 
+#define ISDIR(a) (a.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) 
+#define MY_FINDCLOSE(a) FindClose(a) 
+#define MY_FILENAME(a) a.cFileName
+#define MY_FILESIZE(a) (a.nFileSizeHigh * MAXDWORD) + a.nFileSizeLow
+
+int RemoveFilesInDir(const char * aDir)
+{
+	WIN32_FIND_DATA data_ptr;
+	HANDLE find_handle;
+
+  char path[MAX_PATH];
+
+  strcpy(path, aDir);
+
+	// Append slash to the end of the directory names if not there
+	if (path[strlen(path)-1] != '\\')
+    strcat(path, "\\");
+
+  char findPath[MAX_PATH];
+  strcpy(findPath, path);
+  strcat(findPath, "*.*");
+
+	find_handle = MY_FINDFIRST(findPath, &data_ptr);
+
+	if (find_handle != INVALID_HANDLE_VALUE) {
+		do  {
+			if (ISDIR(data_ptr)
+				&& (stricmp(MY_FILENAME(data_ptr),"."))
+				&& (stricmp(MY_FILENAME(data_ptr),".."))) {
+					// skip
+			}
+			else if (!ISDIR(data_ptr)) {
+        if (!strncmp(MY_FILENAME(data_ptr), "dump", 4)) {
+          char fileName[MAX_PATH];
+          strcpy(fileName, aDir);
+          strcat(fileName, "\\");
+          strcat(fileName, MY_FILENAME(data_ptr));
+				  printf("Removing %s\n", fileName);
+          remove(fileName);
+        }
+			}
+		} while(MY_FINDNEXT(find_handle,&data_ptr));
+		MY_FINDCLOSE(find_handle);
+	}
+	return TRUE;
+}
+#endif
+
 #ifdef DEBUG_PRINTING
 
 /** ---------------------------------------------------
@@ -4826,6 +4881,12 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
 {
   nsresult rv = NS_OK;
 
+#if defined(XP_PC) && defined(DEBUG_rods) && defined(DEBUG_PRINTING)
+  if (!mIsDoingPrintPreview) {
+    RemoveFilesInDir(".\\");
+  }
+#endif
+
 #ifdef NS_PRINT_PREVIEW
 
   // if we are printing another URL, then exit
@@ -4993,7 +5054,6 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
   rv = DocumentReadyForPrinting();
 
   mIsCreatingPrintPreview = PR_FALSE;
-
   /* cleaup on failure + notify user */
   if (NS_FAILED(rv)) {
     if (mPrt) {
@@ -5448,7 +5508,7 @@ DocumentViewerImpl::Print(PRBool            aSilent,
       mPrt->mPrintOptions->SetIsCancelled(PR_TRUE);
     }
   }
-  
+ 
   /* cleaup on failure + notify user */
   if (NS_FAILED(rv)) {
     /* cleanup... */

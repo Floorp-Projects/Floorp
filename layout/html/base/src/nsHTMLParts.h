@@ -169,6 +169,7 @@ inline nsresult NS_NewWBRFrame(nsIPresShell* aPresShell, nsIFrame** aResult) {
 extern nsresult NS_NewScrollFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult NS_NewPageFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+extern nsresult NS_NewPageContentFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult NS_NewFirstLetterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 extern nsresult NS_NewFirstLineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 

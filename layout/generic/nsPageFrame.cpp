@@ -49,6 +49,7 @@
 #include "nsReadableUtils.h"
 #include "nsIPrintPreviewContext.h"
 #include "nsIPrintContext.h"
+#include "nsPageContentFrame.h"
 
 #include "nsIView.h" // view flags for clipping
 #include "nsCSSRendering.h"
@@ -56,6 +57,8 @@
 #include "nsHTMLContainerFrame.h" // view creation
 
 #include "nsSimplePageSequence.h" // for nsSharedPageData
+#include "nsIRegion.h"
+#include "nsIViewManager.h"
 
 // for page number localization formatting
 #include "nsTextFormatter.h"
@@ -68,6 +71,11 @@
 #include "nsGfxCIID.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
+
+// Widget Creation
+#include "nsIWidget.h"
+#include "nsWidgetsCID.h"
+static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
 //#define DEBUG_PRINTING
@@ -116,36 +124,38 @@ nsPageFrame::~nsPageFrame()
 {
 }
 
+static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
+static nsIRegion* CreateRegion()
+{
+  nsIRegion* region;
+  nsresult rv = nsComponentManager::CreateInstance(kRegionCID, nsnull, NS_GET_IID(nsIRegion), (void**)&region);
+  if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(region->Init())) {
+      return region;
+    } else {
+      NS_RELEASE(region);
+    }
+  }
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsPageFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aChildList)
 {
-  // only create a view for the area frame if we are printing the selection
-  // (Also skip it if we are doing PrintPreview)
-  nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
-  if (!ppContext) {
-    nsCOMPtr<nsIPrintContext> prtContext = do_QueryInterface(aPresContext);
-    if (prtContext) {
-      nsCOMPtr<nsIPrintSettings> printSettings;
-      prtContext->GetPrintSettings(getter_AddRefs(printSettings));
-      if (printSettings) {
-        PRInt16 printRangeType = nsIPrintSettings::kRangeAllPages; 
-        printSettings->GetPrintRange(&printRangeType);
-        // make sure we are printing the selection
-        if (printRangeType == nsIPrintSettings::kRangeSelection) {
-          nsIView* view;
-          aChildList->GetView(aPresContext, &view);
-          if (view == nsnull) {
-            nsCOMPtr<nsIStyleContext> styleContext;
-            aChildList->GetStyleContext(getter_AddRefs(styleContext));
-            nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aChildList,
-                                                     styleContext, nsnull, PR_TRUE);
-          }
-        }
-      }
+  nsIView * view;
+  aChildList->GetView(aPresContext, &view);
+  if (view != nsnull) {
+    nscoord dx, dy;
+    nsIWidget* widget;
+    view->GetOffsetFromWidget(&dx, &dy, widget);
+    nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
+    if (ppContext && widget != nsnull) {
+      view->CreateWidget(kCChildCID);  
     }
   }
+
   return nsContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 }
 
@@ -161,10 +171,20 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
   if (eReflowReason_Incremental != aReflowState.reason) {
     // Do we have any children?
     // XXX We should use the overflow list instead...
-    if (mFrames.IsEmpty() && (nsnull != mPrevInFlow)) {
-      nsPageFrame*  prevPage = (nsPageFrame*)mPrevInFlow;
+    nsIFrame*           firstFrame  = mFrames.FirstChild();
+    nsPageContentFrame* contentPage = NS_STATIC_CAST(nsPageContentFrame*, firstFrame);
+    NS_ASSERTION(contentPage, "There should always be a content page");
 
-      nsIFrame* prevLastChild = prevPage->mFrames.LastChild();
+#ifdef NS_DEBUG
+    nsCOMPtr<nsIAtom> type;
+    firstFrame->GetFrameType(getter_AddRefs(type));
+    NS_ASSERTION(type.get() == nsLayoutAtoms::pageContentFrame, "This frame isn't a pageContentFrame");
+#endif
+
+    if (contentPage && contentPage->mFrames.IsEmpty() && nsnull != mPrevInFlow) {
+      nsPageFrame*        prevPage        = NS_STATIC_CAST(nsPageFrame*, mPrevInFlow);
+      nsPageContentFrame* prevContentPage = NS_STATIC_CAST(nsPageContentFrame*, prevPage->mFrames.FirstChild());
+      nsIFrame*           prevLastChild   = prevContentPage->mFrames.LastChild();
 
       // Create a continuing child of the previous page's last child
       nsIPresShell* presShell;
@@ -176,7 +196,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
       NS_RELEASE(presShell);
       styleSet->CreateContinuingFrame(aPresContext, prevLastChild, this, &newFrame);
       NS_RELEASE(styleSet);
-      mFrames.SetFrames(newFrame);
+      contentPage->mFrames.SetFrames(newFrame);
     }
 
     // Resize our frame allowing it only to be as big as we are
@@ -193,6 +213,16 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
       // calc location of frame
       nscoord xc = mPD->mReflowMargin.left + mPD->mDeadSpaceMargin.left + mPD->mExtraMargin.left;
       nscoord yc = mPD->mReflowMargin.top + mPD->mDeadSpaceMargin.top + mPD->mExtraMargin.top;
+
+      nsIView * view;
+      frame->GetView(aPresContext, &view);
+      if (view) {
+       nsCOMPtr<nsIViewManager> vm;
+        view->GetViewManager(*getter_AddRefs(vm));
+        nsCOMPtr<nsIRegion> region = dont_AddRef(CreateRegion());
+        region->SetTo(0,0, maxSize.width,maxSize.height);
+        vm->SetViewChildClipRegion(view, region);
+      }
 
       // Get the child's desired size
       ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, xc, yc, 0, aStatus);
@@ -591,15 +621,19 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
 
     nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
     if (ppContext) {
+      // fill page with White
       aRenderingContext.SetColor(NS_RGB(255,255,255));
       rect.x = 0;
       rect.y = 0;
       rect.width  -= mPD->mShadowSize.width;
       rect.height -= mPD->mShadowSize.height;
       aRenderingContext.FillRect(rect);
+      // draw line around outside of page
+      aRenderingContext.SetColor(NS_RGB(0,0,0));
+      aRenderingContext.DrawRect(rect);
 
       if (mPD->mShadowSize.width > 0 && mPD->mShadowSize.height > 0) {
-        aRenderingContext.SetColor(NS_RGB(0,0,0));
+        aRenderingContext.SetColor(NS_RGB(51,51,51));
         nsRect r(0,0, mRect.width, mRect.height);
         nsRect shadowRect;
         shadowRect.x = r.x + r.width - mPD->mShadowSize.width;

@@ -97,6 +97,7 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsLineLayout.obj \
 	.\$(OBJDIR)\nsObjectFrame.obj \
 	.\$(OBJDIR)\nsPageFrame.obj \
+	.\$(OBJDIR)\nsPageContentFrame.obj \
 	.\$(OBJDIR)\nsPlaceholderFrame.obj \
 	.\$(OBJDIR)\nsPresShell.obj \
 	.\$(OBJDIR)\nsScrollFrame.obj \
