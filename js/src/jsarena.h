@@ -152,7 +152,7 @@ struct JSArenaPool {
     JS_BEGIN_MACRO                                                            \
 	char *_m = (char *)(mark);                                            \
 	JSArena *_a = (pool)->current;                                        \
-	if (JS_UPTRDIFF(_m, _a) <= JS_UPTRDIFF(_a->avail, _a)) {              \
+	if (JS_UPTRDIFF(_m, _a->base) <= JS_UPTRDIFF(_a->avail, _a->base)) {  \
 	    _a->avail = (jsuword)JS_ARENA_ALIGN(pool, _m);                    \
 	    JS_CLEAR_UNUSED(_a);                                              \
 	    JS_ArenaCountRetract(pool, _m);                                   \
