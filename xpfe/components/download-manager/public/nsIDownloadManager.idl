@@ -40,7 +40,7 @@
 #include "nsISupports.idl"
 #include "nsIWebProgressListener.idl"
 
-interface nsIDOMXULDocument;
+interface nsIDOMWindowInternal;
 interface nsIDownloadItem;
 
 [scriptable, uuid(9be66cc0-1dd1-11b2-8617-e3a3ed26e3b0)]
@@ -59,15 +59,12 @@ interface nsIDownloadManager : nsISupports {
   */
 
   nsIDownloadItem getItem(in string id);
-  
-  void notifyDownloadEnded(in string id);
 
   /**
-  * initializeUI
-  * Called by the download manager FE to signify that the manager
-  * should begin forwarding progress notifications to the ui listener.
+  * open
+  * Opens the Download Manager front end.
   */
-  void initializeUI(in nsIDOMXULDocument document);
+  void open(in nsIDOMWindowInternal aOwnerDocument);
 
   /**
   * uninitializeUI

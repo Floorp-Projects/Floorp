@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Ben Goodger <ben@netscape.com>
+ *   Blake Ross <blaker@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,41 +37,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
  
-
 #include "nsDownloadManager.h"
-#include "prprf.h"
-#include "nsIServiceManager.h"
 #include "nsIWebProgress.h"
-#include "nsIStringBundle.h"
 #include "nsIRDFLiteral.h"
-#include "nsIRDFXMLSerializer.h"
-#include "nsIContent.h"
-#include "nsIRDFXMLSource.h"
 #include "rdf.h"
 #include "nsNetUtil.h"
-#include "nsMemory.h"
-#include "nsIDOMXULDocument.h"
-#include "nsIDOMXULElement.h"
-#include "prtime.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIDOMEvent.h"
+#include "nsIDOMEventTarget.h"
 #include "nsRDFCID.h"
-#include "nsCRT.h"
-#include "nsString.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsFileSpec.h"
-#include "nsFileStream.h"
+
 
 /* Outstanding issues/todo:
  * 1. Client should be able to set cancel callback so users can cancel downloads from manager FE.
- * 2. InitializeUI/UnitializeUI is lame...would like to keep manager separate from FE as
-     much as possible. The document arg is also lame but the listener needs it to update the UI.
- * 3. Error handling? Holding off on this until law is done with his changes.
- * 4. NotifyDownloadEnded and internalListener should not be on nsIDownloadManager
+ * 2. Error handling? Holding off on this until law is done with his changes.
  */
   
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 
 #define PROFILE_DOWNLOAD_FILE "downloads.rdf"
+#define DOWNLOAD_MANAGER_URL "chrome://communicator/content/downloadmanager/downloadmanager.xul"
 
 nsIRDFResource* gNC_DownloadsRoot;
 nsIRDFResource* gNC_File;
@@ -79,7 +68,6 @@ nsIRDFResource* gNC_Name;
 nsIRDFResource* gNC_ProgressPercent;
 
 nsIRDFService* gRDFService;
-static PRBool gMustUpdateUI = PR_FALSE;
 
 NS_IMPL_ISUPPORTS3(nsDownloadManager, nsIDownloadManager, nsIRDFDataSource, nsIRDFRemoteDataSource)
 
@@ -137,7 +125,7 @@ nsDownloadManager::Init()
   rv = remote->Init(downloadsDB);
   if (NS_FAILED(rv)) return rv;
 
-  rv = remote->Refresh(PR_TRUE);
+  rv = remote->Refresh(PR_FALSE);
   if (NS_FAILED(rv)) return rv;
 
   return gRDFService->RegisterDataSource(this, PR_FALSE);
@@ -165,6 +153,11 @@ nsDownloadManager::AddItem(nsIDownloadItem* aDownloadItem)
   nsresult rv = GetDownloadsContainer(getter_AddRefs(downloads));
   if (NS_FAILED(rv)) return rv;
 
+  DownloadItem* item = NS_STATIC_CAST(DownloadItem*, aDownloadItem);
+  if (!item) return NS_ERROR_FAILURE;
+
+  item->SetDownloadManager(this);
+
   nsXPIDLCString filePath;
   nsCOMPtr<nsILocalFile> target;
   aDownloadItem->GetTarget(getter_AddRefs(target));
@@ -183,8 +176,18 @@ nsDownloadManager::AddItem(nsIDownloadItem* aDownloadItem)
     nsCOMPtr<nsIRDFNode> node;
     downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
   }
-
   downloads->AppendElement(downloadItem);
+  
+  if (!mCurrDownloadItems)
+    mCurrDownloadItems = new nsHashtable();
+  
+  nsCStringKey key(filePath);
+  if (mCurrDownloadItems->Exists(&key)) {
+    DownloadItem* download = NS_STATIC_CAST(DownloadItem*, mCurrDownloadItems->Get(&key));
+    if (download)
+      delete download;
+  }
+  mCurrDownloadItems->Put(&key, aDownloadItem);
 
   nsXPIDLString prettyName;
   aDownloadItem->GetPrettyName(getter_Copies(prettyName));
@@ -208,8 +211,8 @@ nsDownloadManager::AddItem(nsIDownloadItem* aDownloadItem)
 
   nsCOMPtr<nsIDownloadProgressListener> listener(do_CreateInstance("@mozilla.org/download-manager/listener;1", &rv));
   if (NS_FAILED(rv)) return rv;
-  aDownloadItem->SetInternalListener(listener);
-  if (gMustUpdateUI) {
+  item->SetInternalListener(listener);
+  if (mDocument) {
     listener->SetDocument(mDocument);
     listener->SetDownloadItem(aDownloadItem);
   }
@@ -229,16 +232,6 @@ nsDownloadManager::AddItem(nsIDownloadItem* aDownloadItem)
   rv = remote->Flush();
   if (NS_FAILED(rv)) return rv;
 
-  if (!mCurrDownloadItems)
-    mCurrDownloadItems = new nsHashtable();
-
-  nsCStringKey key(filePath);
-  if (mCurrDownloadItems->Exists(&key)) {
-    DownloadItem* download = NS_STATIC_CAST(DownloadItem*, mCurrDownloadItems->Get(&key));
-    if (download)
-      delete download;
-  }
-  mCurrDownloadItems->Put(&key, aDownloadItem);
   return rv;
 }
 
@@ -258,14 +251,37 @@ nsDownloadManager::GetItem(const char* aID, nsIDownloadItem** aDownloadItem)
 }
 
 NS_IMETHODIMP
-nsDownloadManager::InitializeUI(nsIDOMXULDocument* aDocument)
+nsDownloadManager::Open(nsIDOMWindowInternal* aOwnerDocument)
 {
-  mDocument = aDocument;
-  gMustUpdateUI = PR_TRUE;
+  // if we ever have third party download managers hooked up, we'll
+  // open their UI here instead.
+  nsCOMPtr<nsIDOMWindow> newWindow;
+  nsresult rv = aOwnerDocument->OpenDialog(NS_LITERAL_STRING(DOWNLOAD_MANAGER_URL), 
+                                           NS_LITERAL_STRING("_blank"),
+                                           NS_LITERAL_STRING("chrome,titlebar,dependent,centerscreen"),
+                                           nsnull, getter_AddRefs(newWindow));
+
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(newWindow);
+  if (!target) return NS_ERROR_FAILURE;
+  
+  return target->AddEventListener(NS_LITERAL_STRING("load"), this, PR_FALSE);
+}
+
+NS_IMETHODIMP
+nsDownloadManager::HandleEvent(nsIDOMEvent* aEvent)
+{
+  nsCOMPtr<nsIDOMEventTarget> target;
+  nsresult rv = aEvent->GetTarget(getter_AddRefs(target));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(target));
+  mDocument = do_QueryInterface(targetNode);
 
   // get the downloads container
   nsCOMPtr<nsIRDFContainer> downloads;
-  nsresult rv = GetDownloadsContainer(getter_AddRefs(downloads));
+  rv = GetDownloadsContainer(getter_AddRefs(downloads));
   if (NS_FAILED(rv)) return rv;
 
   // get the container's elements (nsIRDFResource's)
@@ -315,9 +331,12 @@ nsDownloadManager::InitializeUI(nsIDOMXULDocument* aDocument)
 
       if (NS_FAILED(rv)) continue;
  
-      item->GetInternalListener(getter_AddRefs(listener));
+      DownloadItem* downloadItem = NS_STATIC_CAST(DownloadItem*, item);
+      if (!downloadItem) continue;
+
+      downloadItem->GetInternalListener(getter_AddRefs(listener));
       if (listener) {
-        listener->SetDocument(aDocument);
+        listener->SetDocument(mDocument);
         listener->SetDownloadItem(item);
       }
     }
@@ -329,12 +348,11 @@ nsDownloadManager::InitializeUI(nsIDOMXULDocument* aDocument)
 NS_IMETHODIMP
 nsDownloadManager::UninitializeUI()
 {
-  gMustUpdateUI = PR_FALSE;
   mDocument = nsnull;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDownloadManager::NotifyDownloadEnded(const char* aTargetPath)
 {
   nsCStringKey key(aTargetPath);
@@ -646,7 +664,7 @@ DownloadItem::OnProgressChange(nsIWebProgress *aWebProgress,
                                 aCurTotalProgress, aMaxTotalProgress);
   }
 
-  if (gMustUpdateUI && mInternalListener) {
+  if (mDownloadManager->MustUpdateUI() && mInternalListener) {
     mInternalListener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
                                         aCurTotalProgress, aMaxTotalProgress);
   }
@@ -666,7 +684,7 @@ DownloadItem::OnLocationChange(nsIWebProgress *aWebProgress,
   if (mListener)
     mListener->OnLocationChange(aWebProgress, aRequest, aLocation);
 
-  if (gMustUpdateUI && mInternalListener)
+  if (mDownloadManager->MustUpdateUI() && mInternalListener)
     mInternalListener->OnLocationChange(aWebProgress, aRequest, aLocation);
 
   if (mPropertiesListener)
@@ -683,7 +701,7 @@ DownloadItem::OnStatusChange(nsIWebProgress *aWebProgress,
   if (mListener)
     mListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
 
-  if (gMustUpdateUI && mInternalListener)
+  if (mDownloadManager->MustUpdateUI() && mInternalListener)
     mInternalListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
 
   if (mPropertiesListener)
@@ -699,21 +717,17 @@ DownloadItem::OnStateChange(nsIWebProgress* aWebProgress,
 {
   if (aStateFlags & STATE_START)
     mTimeStarted = PR_Now();
-  else if (aStateFlags & STATE_STOP) {
-    nsresult rv;
-    nsCOMPtr<nsIDownloadManager> downloadManager = do_GetService("@mozilla.org/download-manager;1", &rv);
-    if (NS_FAILED(rv)) return rv;
-    
+  else if (aStateFlags & STATE_STOP) {    
     char* path;
     mTarget->GetPath(&path);
-    downloadManager->NotifyDownloadEnded(path);
+    mDownloadManager->NotifyDownloadEnded(path);
   }
 
 
   if (mListener)
     mListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
 
-  if (gMustUpdateUI && mInternalListener)
+  if (mDownloadManager->MustUpdateUI() && mInternalListener)
     mInternalListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
 
   if (mPropertiesListener)
@@ -729,7 +743,7 @@ DownloadItem::OnSecurityChange(nsIWebProgress *aWebProgress,
   if (mListener)
     mListener->OnSecurityChange(aWebProgress, aRequest, aState);
 
-  if (gMustUpdateUI && mInternalListener)
+  if (mDownloadManager->MustUpdateUI() && mInternalListener)
     mInternalListener->OnSecurityChange(aWebProgress, aRequest, aState);
 
   if (mPropertiesListener)
@@ -814,14 +828,14 @@ DownloadItem::GetListener(nsIWebProgressListener** aListener)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 DownloadItem::SetInternalListener(nsIDownloadProgressListener* aInternalListener)
 {
   mInternalListener = aInternalListener;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 DownloadItem::GetInternalListener(nsIDownloadProgressListener** aInternalListener)
 {
   *aInternalListener = mInternalListener;
@@ -841,5 +855,12 @@ DownloadItem::GetPropertiesListener(nsIWebProgressListener** aPropertiesListener
 {
   *aPropertiesListener = mPropertiesListener;
   NS_ADDREF(*aPropertiesListener);
+  return NS_OK;
+}
+
+nsresult
+DownloadItem::SetDownloadManager(nsDownloadManager* aDownloadManager)
+{
+  mDownloadManager = aDownloadManager;
   return NS_OK;
 }

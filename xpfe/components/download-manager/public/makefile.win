@@ -24,7 +24,9 @@ DEPTH=..\..\..\..
 MODULE=downloadmanager
 
 XPIDLSRCS =                   \
-    .\nsIDownloadManager.idl \
+    .\nsIDownloadManager.idl  \
+    .\nsIDownloadItem.idl     \
+    .\nsIDownloadProgressListener.idl \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

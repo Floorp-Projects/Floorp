@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Blake Ross <blakeross@telocity.com> 
+ *   Blake Ross <blaker@netscape.com> 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -40,10 +40,10 @@
 #include "nsIWebProgressListener.idl"
 
 interface nsIDownloadItem;
-interface nsIDOMXULDocument;
+interface nsIDOMDocument;
 
 [scriptable, uuid(09cddbea-1dd2-11b2-aa15-c41ffea19d79)]
 interface nsIDownloadProgressListener : nsIWebProgressListener {
   attribute nsIDownloadItem downloadItem;
-  attribute nsIDOMXULDocument document;
+  attribute nsIDOMDocument document;
 };

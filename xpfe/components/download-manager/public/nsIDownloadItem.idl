@@ -90,12 +90,6 @@ interface nsIDownloadItem : nsISupports {
      * passed to this listener and used to update client UI
      */
     attribute nsIWebProgressListener propertiesListener;
-
-    /**
-     * internalListener
-     * Set by the download manager; used to update download manager UI
-     */
-    attribute nsIDownloadProgressListener internalListener;
 };
 
 %{C++
