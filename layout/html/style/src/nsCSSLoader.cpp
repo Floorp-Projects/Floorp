@@ -57,8 +57,6 @@
 #include "nsIXULPrototypeCache.h"
 #endif
 
-#include <iostream.h>
-
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 class CSSLoaderImpl;
@@ -912,16 +910,18 @@ CSSLoaderImpl::DidLoadStyle(nsIStreamLoader* aLoader,
     }
   }
   else {  // load failed or document now gone, cleanup    
+#ifdef DEBUG
     if (mDocument && NS_FAILED(aStatus)) {  // still have doc, must have failed
       // Dump error message to console.
-      char *url;
-      aLoadData->mURL->GetSpec(&url);
-#ifdef DEBUG
-      cerr << "CSSLoaderImpl::DidLoadStyle: Load of URL '" << url 
-           << "' failed.  Error code: " << NS_ERROR_GET_CODE(aStatus) << "\n";
-#endif
-      nsCRT::free(url);
+      nsXPIDLCString url;
+      aLoadData->mURL->GetSpec(getter_Copies(url));
+      nsCAutoString errorMessage(NS_LITERAL_CSTRING("CSSLoaderImpl::DidLoadStyle: Load of URL '") +
+                                 nsLiteralCString(url) +
+                                 NS_LITERAL_CSTRING("' failed.  Error code: "));
+      errorMessage.AppendInt(NS_ERROR_GET_CODE(aStatus));
+      NS_WARNING(errorMessage.get());
     }
+#endif
 
     URLKey  key(aLoadData->mURL);
     Cleanup(key, aLoadData);
@@ -1191,16 +1191,18 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
           }
           NS_RELEASE(in);
         }
+#ifdef DEBUG
         else {
           // Dump an error message to the console
-          char *url;
-          aKey.mURL->GetSpec(&url);
-#ifdef DEBUG
-          cerr << "CSSLoaderImpl::LoadSheet: Load of URL '" << url 
-               << "' failed.  Error code: " << NS_ERROR_GET_CODE(result)  << "\n";
-#endif
-          nsCRT::free(url);
+          nsXPIDLCString url;
+          aKey.mURL->GetSpec(getter_Copies(url));
+          nsCAutoString errorMessage(NS_LITERAL_CSTRING("CSSLoaderImpl::LoadSheet: Load of URL '") +
+                                     nsLiteralCString(url) +
+                                     NS_LITERAL_CSTRING("' failed.  Error code: "));
+          errorMessage.AppendInt(NS_ERROR_GET_CODE(result));
+          NS_WARNING(errorMessage.get());
         }
+#endif
       }
     }
     else if (mDocument || aData->mIsAgent) {  // we're still live, start an async load
@@ -1526,16 +1528,18 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
         }
         NS_RELEASE(in);
       }
+#ifdef DEBUG
       else {
         // Dump an error message to the console
-        char *url;
-        aURL->GetSpec(&url);
-#ifdef DEBUG
-        cerr << "CSSLoaderImpl::LoadAgentSheet: Load of URL '" << url 
-             << "' failed.  Error code: " << NS_ERROR_GET_CODE(result)  << "\n";
-#endif
-        nsCRT::free(url);
+        nsXPIDLCString url;
+        aURL->GetSpec(getter_Copies(url));
+        nsCAutoString errorMessage(NS_LITERAL_CSTRING("CSSLoaderImpl::LoadAgentSheet: Load of URL '") +
+                                   nsLiteralCString(url) +
+                                   NS_LITERAL_CSTRING("' failed.  Error code: "));
+        errorMessage.AppendInt(NS_ERROR_GET_CODE(result));
+        NS_WARNING(errorMessage.get());
       }
+#endif
     }
   }
   return result;
