@@ -1411,6 +1411,9 @@ sub ChangeFieldType ($$$)
     #print "0: $$ref[0]   1: $$ref[1]   2: $$ref[2]   3: $$ref[3]  4: $$ref[4]\n";
 
     my $oldtype = $ref->[1];
+    if (! $ref->[2]) {
+        $oldtype .= qq{ not null};
+    }
     if ($ref->[4]) {
         $oldtype .= qq{ default "$ref->[4]"};
     }
@@ -1419,7 +1422,8 @@ sub ChangeFieldType ($$$)
         print "Updating field type $field in table $table ...\n";
         print "old: $oldtype\n";
         print "new: $newtype\n";
-        $newtype .= " NOT NULL" if $$ref[3];
+#        'not null' should be passed as part of the call to ChangeFieldType()
+#        $newtype .= " NOT NULL" if $$ref[3];
         $dbh->do("ALTER TABLE $table
                   CHANGE $field
                   $field $newtype");
@@ -1549,10 +1553,10 @@ AddField('products', 'votesperuser', 'mediumint not null');
 # tinytext is equivalent to varchar(255), which is quite huge, so I change
 # them all to varchar(64).
 
-ChangeFieldType ('bugs',       'product', 'varchar(64)');
+ChangeFieldType ('bugs',       'product', 'varchar(64) not null');
 ChangeFieldType ('components', 'program', 'varchar(64)');
 ChangeFieldType ('products',   'product', 'varchar(64)');
-ChangeFieldType ('versions',   'program', 'varchar(64)');
+ChangeFieldType ('versions',   'program', 'varchar(64) not null');
 
 # 2000-01-16 Added a "keywords" field to the bugs table, which
 # contains a string copy of the entries of the keywords table for this
@@ -1967,8 +1971,8 @@ if (!($sth->fetchrow_arrayref()->[0])) {
 # the size of the target_milestone field in the bugs table.
 
 ChangeFieldType('bugs', 'target_milestone',
-                'varchar(20) default "---"');
-ChangeFieldType('milestones', 'value', 'varchar(20)');
+                'varchar(20) not null default "---"');
+ChangeFieldType('milestones', 'value', 'varchar(20) not null');
 
 
 # 2000-03-23 Added a defaultmilestone field to the products table, so that
