@@ -468,6 +468,9 @@ NS_NewSyncStreamListener(nsIStreamListener **aResult,
 /**
  * Implement the nsIChannel::Open(nsIInputStream**) method using the channel's
  * AsyncOpen method.
+ *
+ * NOTE: Reading from the returned nsIInputStream may spin the current
+ * thread's event queue, which could result in any event being processed.
  */
 inline nsresult
 NS_ImplementChannelOpen(nsIChannel      *aChannel,
