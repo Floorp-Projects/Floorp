@@ -127,3 +127,5 @@ build:
 clean distclean:
 	$(MAKE) -f client.mk $@
 	$(RM) -rf camino/build
+
+.PHONY: checkout real_checkout build clean distclean
