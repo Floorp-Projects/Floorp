@@ -295,7 +295,7 @@ my %authenticatedUsers; # hash of user@hostname=>users who have authenticated
 sub connect {
     $uptime = time();
 
-    &debug("connecting to $server:$port...");
+    &debug("connecting to $server:$port using nick '$nicks[$nick]'...");
 
     my ($bot, $mailed);
 
@@ -456,22 +456,31 @@ sub on_whois {
     # the bot's host, or whatever
 }
 
-my ($nickHadProblem, $nickProblemEscalated, $nickOriginal) = (0, 0, 0);
+my ($lastNick, $nickFirstTried, $nickHadProblem, $nickProblemEscalated) = (undef, 0, 0, 0);
 
 # this is called both for the welcome message (001) and by the on_nick handler
 sub on_set_nick {
     my ($self, $event) = @_;
-    my($value) = $event->args; # (args can be either array or scalar, either way we want the first value)
+    ($lastNick) = $event->args; # (args can be either array or scalar, we want the first value)
     # Find nick's index.
     my $newnick = 0;
-    $newnick++ while (($newnick < @nicks) and ($value ne $nicks[$newnick]));
+    $newnick++ while (($newnick < @nicks) and ($lastNick ne $nicks[$newnick]));
     # If nick isn't there, add it.
     if ($newnick >= @nicks) {
-        push(@nicks, $value);
+        push(@nicks, $lastNick);
     }
     # set variable
     $nick = $newnick;
     &debug("using nick '$nicks[$nick]'");
+
+    # try to get our hostname
+    $self->whois($nicks[$nick]);
+
+    if ($nickHadProblem) {
+        Mails::NickOk($nicks[$nick]) if $nickProblemEscalated;
+        $nickHadProblem = 0;
+    }
+
     # save
     &Configuration::Save($cfgfile, &::configStructure(\$nick, \@nicks));
 }
@@ -479,58 +488,73 @@ sub on_set_nick {
 sub on_nick_taken {
     my ($self, $event, $nickSlept) = @_, 0;
     return unless $self->connected();
+
+    if ($event->type eq 'erroneusnickname') {
+        my ($currentNick, $triedNick, $err) = $event->args; # current, tried, errmsg
+        &debug("requested nick ('$triedNick') refused by server ('$err')");
+    } elsif ($event->type eq 'nicknameinuse') {
+        my ($currentNick, $triedNick, $err) = $event->args; # current, tried, errmsg
+        &debug("requested nick ('$triedNick') already in use ('$err')");
+    } else {
+        my $type = $event->type;
+        my $args = join(' ', $event->args);
+        &debug("message $type from server: $args");
+    }
+
+    if (defined $lastNick) {
+        &debug("silently abandoning nick change idea :-)");
+        return;
+    }
+
+    # at this point, we don't yet have a nick, but we need one
+    
     if ($nickSlept) {
         &debug("waited for a bit -- reading $cfgfile then searching for a nick...");
         &Configuration::Get($cfgfile, &configStructure(\@nicks, \$nick));
         $nick = 0 if ($nick > $#nicks) or ($nick < 0); # sanitise
-        $nickOriginal = $nick;
+        $nickFirstTried = $nick;
     } else {
-        if (!$nickHadProblem) {
-            if ($event->type eq 'erroneusnickname') {
-                my ($currentNick, $triedNick, $err) = $event->args; # current, tried, errmsg
-                &debug("preferred nick ($triedNick) refused by server ('$err')");
-                if ($currentNick eq $nicks[$nick]) {
-                    # report the error, somehow
-                    &debug("silently abandoning nick change idea :-)");
-                    return;
-                }
-            } else {
-                &debug("preferred nick ($nicks[$nick]) in use, searching for another...");
-            }
-            $nickOriginal = $nick;
-            $nickHadProblem++;
-        } # else we are currently looping
-        $nick++;
-        $nick = 0 if $nick > $#nicks;
-        if ($nick == $nickOriginal) {
+        if (not $nickHadProblem) {
+            $nickHadProblem = 1;
+            $nickFirstTried = $nick;
+        }
+        ++$nick;
+        $nick = 0 if $nick > $#nicks; # sanitise
+
+        if ($nick == $nickFirstTried) {
             # looped!
             local $" = ", ";
             &debug("could not find an acceptable nick");
             &debug("nicks tried: @nicks");
-            if (-t) {
-                print "Please suggest a nick (blank to abort): ";
-                my $new = <>;
-                chomp($new);
-                if ($new) {
-                    @nicks = (@nicks[0..$nickOriginal], $new, @nicks[$nickOriginal+1..$#nicks]);
-                    &debug("saving nicks: @nicks");
-                    &Configuration::Save($cfgfile, &configStructure(\@nicks));
-                } else {
-                    &debug("Could not find an acceptable nick");
-                    exit(1);
-                }
-            } else {
+
+            if (not -t) {
                 &debug("edit $cfgfile to add more nicks *hint* *hint*");
-                $nickProblemEscalated = Mails::NickShortage($cfgfile, $self->server, $self->port,
-                     $self->username, $self->ircname, @nicks) unless $nickProblemEscalated;
-                $nickProblemEscalated++;
+                $nickProblemEscalated ||= # only e-mail once (returns 0 on failure)
+                  Mails::NickShortage($cfgfile, $self->server, $self->port,
+                                      $self->username, $self->ircname, @nicks)
                 &debug("going to wait $sleepdelay seconds so as not to overload ourselves.");
-                $self->schedule($sleepdelay, \&on_nick_taken, $event, 1); # try again, this time don't mail if it goes wrong
+                $self->schedule($sleepdelay, \&on_nick_taken, $event, 1); # try again
                 return; # otherwise we no longer respond to pings.
             }
+
+            # else, we're terminal bound, ask user for nick
+            print "Please suggest a nick (blank to abort): ";
+            my $new = <>;
+            chomp($new);
+            if (not $new) {
+                &debug("Could not find an acceptable nick");
+                exit(1);
+            }
+            # XXX this could introduce duplicates
+            @nicks = (@nicks[0..$nickFirstTried], $new, @nicks[$nickFirstTried+1..$#nicks]);
+            $nick += 1; # try the new nick now
+            $nickFirstTried = $nick;
+            &debug("saving nicks: @nicks");
+            &Configuration::Save($cfgfile, &configStructure(\@nicks));
         }
     }
-    &debug("now going to try nick $nicks[$nick]");
+
+    &debug("now going to try nick '$nicks[$nick]'");
     $self->nick($nicks[$nick]);
 }
 
@@ -546,12 +570,6 @@ sub on_connect {
         $self->quit('having trouble connecting, brb...');
         # XXX we don't call the SpottedQuit handlers here
         return;
-    }
-
-    if ($nickHadProblem) {
-        # Remember which nick we are using
-        &Configuration::Save($cfgfile, &configStructure(\$nick));
-        Mails::NickOk($nicks[$nick]) if $nickProblemEscalated;
     }
 
     # -- #mozwebtools was here --
@@ -601,9 +619,6 @@ sub on_connect {
         }
     }
     @channels = ();
-
-    # try to get our hostname
-    $self->whois($nicks[$nick]);
 
     # tell the modules to set up the scheduled commands
     &debug('setting up scheduler...');
@@ -1822,6 +1837,7 @@ sub notice {
 sub say {
     my $self = shift;
     my ($event, $data) = @_;
+    return unless defined $event->{'target'};
     $data =~ s/^\Q$event->{'target'}\E: //gs;
     &::sendmsg($event->{'bot'}, $event->{'target'}, $data);
 }
@@ -2423,10 +2439,32 @@ sub Set {
     # First let's special case some magic variables...
     if ($variable eq 'currentnick') {
         $self->setNick($event, $value);
+        $self->say($event, "Attempted to change nick to '$value'.");
         return -1;
-    } else {
-        return $self->SUPER::Set($event, $variable, $value);
+    } elsif ($variable eq 'nicks') {
+        if ($value =~ /^([-+])(.*)$/so) {
+            if ($1 eq '+') {
+                # check it isn't there already and is not ''
+                my $value = $2;
+                if ($value eq '') {
+                    $self->say($event, "The empty string is not a valid nick.");
+                    return -1;
+                }
+                my $thenick = 0;
+                $thenick++ while (($thenick < @nicks) and ($value ne $nicks[$thenick]));
+                if ($thenick < @nicks) {
+                    $self->say($event, "That nick (value) is already on the list of possible nicks.");
+                    return -1;
+                }
+            } else {
+                if ($2 eq $nicks[$nick]) {
+                    $self->say($event, "You cannot remove the current nick ('$nicks[$nick]') from the list of allowed nicks... Change the 'currentnick' variable first!");
+                    return -1;
+                }
+            }
+        }
     }
+    return $self->SUPER::Set($event, $variable, $value);
 }
 
 # Get - called to get a particular variable.
