@@ -727,11 +727,9 @@ The changes made were:
             my $value = value_quote($::FORM{$i});
             print qq{<input type=hidden name="$i" value="$value">\n};
         }
+        my $conflictid = DBID_to_name($id);
         print qq{<input type=submit value="Submit my changes anyway">\n};
-        print " This will cause all of the above changes to be overwritten";
-        if ($longchanged) {
-            print ", except for the changes to the description";
-        }
+        print "<BR>Clicking this button will preserve " . DBID_to_name($id) . "'s additional comments, but will overwite any other changes made by " . DBID_to_name($id);
         print qq{.</form>\n<li><a href="show_bug.cgi?id=$id">Throw away my changes, and go revisit bug $id</a></ul>\n};
         PutFooter();
         exit;
