@@ -73,7 +73,7 @@ NS_IMPL_ISUPPORTS1(nsInternetCiter, nsICiter)
 NS_IMETHODIMP
 nsInternetCiter::GetCiteString(const nsAString& aInString, nsAString& aOutString)
 {
-  aOutString.SetLength(0);
+  aOutString.Truncate();
   PRUnichar uch = nl;
 
   // Strip trailing new lines which will otherwise turn up
@@ -121,7 +121,7 @@ nsInternetCiter::StripCitesAndLinebreaks(const nsAString& aInString,
   if (aCiteLevel)
     *aCiteLevel = 0;
 
-  aOutString.SetLength(0);
+  aOutString.Truncate();
   nsReadingIterator <PRUnichar> beginIter,endIter;
   aInString.BeginReading(beginIter);
   aInString.EndReading(endIter);

@@ -223,7 +223,7 @@ nsEditorSpellCheck::GetSuggestedWord(PRUnichar **aSuggestedWord)
     mSuggestedWordIndex++;
   } else {
     // A blank string signals that there are no more strings
-    word.SetLength(0);
+    word.Truncate();
   }
 
   *aSuggestedWord = ToNewUnicode(word);
@@ -288,7 +288,7 @@ nsEditorSpellCheck::GetPersonalDictionaryWord(PRUnichar **aDictionaryWord)
     mDictionaryIndex++;
   } else {
     // A blank string signals that there are no more strings
-    word.SetLength(0);
+    word.Truncate();
   }
 
   *aDictionaryWord = ToNewUnicode(word);

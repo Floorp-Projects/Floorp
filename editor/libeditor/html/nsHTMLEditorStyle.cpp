@@ -1844,7 +1844,7 @@ nsHTMLEditor::GetFontFaceState(PRBool *aMixed, nsAString &outFace)
   if (!aMixed)
       return NS_ERROR_FAILURE;
   *aMixed = PR_TRUE;
-  outFace.SetLength(0);
+  outFace.Truncate();
 
   nsresult res;
   PRBool first, any, all;
@@ -1872,7 +1872,7 @@ nsHTMLEditor::GetFontFaceState(PRBool *aMixed, nsAString &outFace)
   if (!any)
   {
     // there was no font face attrs of any kind.  We are in normal font.
-    outFace.SetLength(0);
+    outFace.Truncate();
     *aMixed = PR_FALSE;
   }
   return res;
@@ -1884,7 +1884,7 @@ nsHTMLEditor::GetFontColorState(PRBool *aMixed, nsAString &aOutColor)
   if (!aMixed)
       return NS_ERROR_NULL_POINTER;
   *aMixed = PR_TRUE;
-  aOutColor.SetLength(0);
+  aOutColor.Truncate();
   
   nsresult res;
   NS_NAMED_LITERAL_STRING(colorStr, "color");
@@ -1902,7 +1902,7 @@ nsHTMLEditor::GetFontColorState(PRBool *aMixed, nsAString &aOutColor)
   if (!any)
   {
     // there was no font color attrs of any kind..
-    aOutColor.SetLength(0);
+    aOutColor.Truncate();
     *aMixed = PR_FALSE;
   }
   return res;

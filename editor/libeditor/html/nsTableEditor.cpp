@@ -3343,7 +3343,7 @@ nsHTMLEditor::GetSelectedOrParentTableElement(nsAString& aTagName,
   NS_ENSURE_ARG_POINTER(aTableElement);
   NS_ENSURE_ARG_POINTER(aSelectedCount);
   *aTableElement = nsnull;
-  aTagName.SetLength(0);
+  aTagName.Truncate();
   *aSelectedCount = 0;
 
   nsCOMPtr<nsISelection> selection;
