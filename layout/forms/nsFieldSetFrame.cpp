@@ -465,13 +465,6 @@ nsFieldSetFrame::Reflow(nsPresContext*          aPresContext,
         if (reflowContent) {
             availSize.width = aReflowState.mComputedWidth;
 
-#if 0
-            if (aReflowState.mComputedHeight != NS_INTRINSICSIZE) {
-              availSize.height = aReflowState.mComputedHeight - mLegendSpace;
-            } else {
-              availSize.height = NS_INTRINSICSIZE;
-            }
-#endif
             nsHTMLReflowState kidReflowState(aPresContext, aReflowState, mContentFrame,
                                              availSize, reason);
 
@@ -481,23 +474,6 @@ nsFieldSetFrame::Reflow(nsPresContext*          aPresContext,
                         borderPadding.left + kidReflowState.mComputedMargin.left,
                         borderPadding.top + mLegendSpace + kidReflowState.mComputedMargin.top,
                         0, aStatus);
-#ifdef NOISY_REFLOW
-            printf("  returned (%d, %d)\n", kidDesiredSize.width, kidDesiredSize.height);
-            if (kidDesiredSize.mComputeMEW)
-              printf("  and maxES %d\n", 
-                     kidDesiredSize.mMaxElementWidth);
-#endif
-
-            /*
-            printf("*** %p computedHgt: %d ", this, aReflowState.mComputedHeight);
-              printf("Reason: ");
-              switch (aReflowState.reason) {
-                case eReflowReason_Initial:printf("Initil");break;
-                case eReflowReason_Incremental:printf("Increm");break;
-                case eReflowReason_Resize: printf("Resize");      break;
-                case eReflowReason_StyleChange:printf("eReflowReason_StyleChange");break;
-              }
-              */
 
             // set the rect. make sure we add the margin back in.
             contentRect.SetRect(borderPadding.left,borderPadding.top + mLegendSpace,kidDesiredSize.width ,kidDesiredSize.height);
@@ -517,17 +493,10 @@ nsFieldSetFrame::Reflow(nsPresContext*          aPresContext,
                 aDesiredSize.mMaxElementWidth = 0;
               aDesiredSize.mMaxElementWidth += borderPadding.left + borderPadding.right;
             }
-
-           // printf("width: %d, height: %d\n", desiredSize.mCombinedArea.width, desiredSize.mCombinedArea.height);
-
-            /*
-            if (mContentFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
-                 mState |= NS_FRAME_OUTSIDE_CHILDREN;
-                 aDesiredSize.mOverflowArea.width += borderPadding.left + borderPadding.right;
-                 aDesiredSize.mOverflowArea.height += borderPadding.top + borderPadding.bottom + mLegendSpace;
+            if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
+              aDesiredSize.mMaximumWidth = kidDesiredSize.mMaximumWidth +
+                                           borderPadding.left + borderPadding.right;
             }
-            */
-
             NS_FRAME_TRACE_REFLOW_OUT("FieldSet::Reflow", aStatus);
 
         } else {
@@ -598,27 +567,22 @@ nsFieldSetFrame::Reflow(nsPresContext*          aPresContext,
     aDesiredSize.width = contentRect.width + borderPadding.left + borderPadding.right;
     aDesiredSize.ascent  = aDesiredSize.height;
     aDesiredSize.descent = 0;
-    aDesiredSize.mMaximumWidth = aDesiredSize.width;
     if (aDesiredSize.mComputeMEW) {
         // if the legend is wider use it
         if (aDesiredSize.mMaxElementWidth < mLegendRect.width + borderPadding.left + borderPadding.right)
           aDesiredSize.mMaxElementWidth = mLegendRect.width + borderPadding.left + borderPadding.right;
     }
     aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
+    // make the mMaximumWidth large enough if the legendframe determines the size
+    if ((aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) && mLegendFrame) {
+      aDesiredSize.mMaximumWidth = PR_MAX(aDesiredSize.mMaximumWidth, mLegendRect.width +
+                                          borderPadding.left + borderPadding.right);
+    }
     if (mLegendFrame)
       ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, mLegendFrame);
     if (mContentFrame)
       ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, mContentFrame);
     FinishAndStoreOverflow(&aDesiredSize);
-
-#ifdef NOISY_REFLOW
-    printf("FIELDSET:  w=%d, maxWidth=%d, MEW=%d\n",
-           aDesiredSize.width, aDesiredSize.mMaximumWidth, 
-           aDesiredSize.mComputeMEW ? aDesiredSize.mMaxElementWidth : -1);
-    if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH)
-      printf("  and preferred size = %d\n", aDesiredSize.mMaximumWidth);
-
-#endif
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
