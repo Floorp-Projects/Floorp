@@ -294,30 +294,35 @@ titledbutton#InsertPopupButton {
 	list-style-image:url("chrome://editor/skin/images/object-popup.gif");
 }
 
-/* Doesn't work! */
-box#ColorButtons:hover {
-  border: 1px solid white;
-}
 div.color-caption {
   border: 1px inset white;
 }
 
 div#ColorButtons {
-  /* This needs to be >= 2x color button width 
-     (color.gif=12px + 2 for border) */
-  width:  28px;
-  height: 19px;
+  /* Width needs to be >= 2x color button width 
+     (color.gif=12px + 2 for border) 
+     for initial layout.
+     Then use relative position to move buttons
+     to desired overlapping locations
+  */
+  width:   28px;
+  max-width:   28px;
+  height:      19px;
+  /* This compensates for remaining gap 
+     on right after relative button positioning
+  */
+  margin-right: -3px;
 }
 
 titledbutton#TextColorPopupButton {
 	list-style-image:url("chrome://editor/skin/images/color.gif");
   border: 1px solid #CCCCCC;
   padding: 0px;
-  margin: 0px;
+  margin:  0px;
   position: relative;
-  top: 2px;
-  left: 2px;
-  z-index: 2;
+  /* Position top left */
+  top:  2px;
+  left: -11px;
 
   /* TEMP: Set color here. TODO: Set color from page */
   background-color: #AA0000;
@@ -331,11 +336,11 @@ titledbutton#BackColorPopupButton {
 	list-style-image:url("chrome://editor/skin/images/color.gif");
   border: 1px solid #CCCCCC;
   padding: 0px;
-  margin: 0px;
+  margin:  0px;
   position: relative;
-  top: 9px;
-  left:-4px;
-  z-index: 1;
+  /* Position lower right */
+  top:  9px;
+  left: 9px;
 
   /* TEMP: Set color here. TODO: Set color from page */
   background-color: yellow;

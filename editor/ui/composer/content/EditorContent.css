@@ -34,6 +34,20 @@ a[name] {
   background-position: center center;
 }
 
+div {
+  /* TEMPORARY TO COMPENSATE FOR BUG */
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/div-in-doc.gif) no-repeat; 
+  background-position: center center;
+}
+
+span {
+  /* TEMPORARY TO COMPENSATE FOR BUG */
+  padding-left: 16px; 
+  background: url(chrome://editor/skin/images/span-in-doc.gif) no-repeat; 
+  background-position: center center;
+}
+
 table {
   empty-cells: show;
 }

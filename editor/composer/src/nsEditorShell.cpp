@@ -837,9 +837,9 @@ nsEditorShell::RemoveTextProperty(const PRUnichar *prop, const PRUnichar *attr)
   //TODO: FIX THIS! IT IS WRONG! IT DOESN'T CONSIDER ALL THE 
   //  OTHER POSSIBLE TEXT ATTRIBUTES!
   static const char*  sAllKnownStyles[] = {
-    "B",
-    "I",
-    "U",
+    "b",
+    "i",
+    "u",
     nsnull      // this null is important
   };
   

@@ -28,7 +28,7 @@
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorPageProperties.dtd">
+<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorColorProperties.dtd">
 
 <window class="dialog" title="&windowTitle.label;"
     xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -38,7 +38,7 @@
 
   <!-- Methods common to all editor dialogs -->
   <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <html:script language="JavaScript" src="chrome://editor/content/EdPageProps.js"/>
+  <html:script language="JavaScript" src="chrome://editor/content/EdColorProps.js"/>
   <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <broadcaster id="args" value=""/>

@@ -50,6 +50,8 @@ EdListProps.xul
 EdListProps.js
 EdPageProps.xul
 EdPageProps.js
+EdColorProps.xul
+EdColorProps.js
 EdAECSSAttributes.js
 EdAEHTMLAttributes.js
 EdAEJSEAttributes.js

@@ -48,6 +48,8 @@ EXPORT_RESOURCE_TOOLBAR = \
 		$(srcdir)/images/table.gif \
 		$(srcdir)/images/anchor.gif \
 		$(srcdir)/images/anchor-in-doc.gif \
+		$(srcdir)/images/div-in-doc.gif \
+		$(srcdir)/images/span-in-doc.gif \
 		$(srcdir)/images/underline.gif \
 		$(srcdir)/images/color.gif \
 		$(srcdir)/images/align.gif \
