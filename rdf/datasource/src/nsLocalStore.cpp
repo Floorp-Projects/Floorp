@@ -26,7 +26,7 @@
 
  */
 
-#include "nsFileSpec.h"
+#include "nsIFileSpec.h"
 #include "nsFileStream.h"
 #include "nsIComponentManager.h"
 #include "nsILocalStore.h"
