@@ -173,9 +173,9 @@ _MSC_VER=1020
 #
 CFLAGS_RELEASE=/DNDEBUG \
 !IF "$(MOZ_BITS)"=="32"
- /MD /O1
+    /MD /O1
 !ELSE
- /O1
+    /O1
 !ENDIF
 
 !IF "$(MOZ_BITS)"=="32"
@@ -518,113 +518,122 @@ EXPORTINC=$(DEPTH)\dist\public\win16
 # at the end of the file.
 
 CINCLUDES= \
- /I$(DEPTH)\include \
+    /I$(DEPTH)\include \
 !if "$(MOZ_BITS)" == "32"
- /I$(DEPTH)\lib\layout \
- /I$(DEPTH)\lib\libstyle \
- /I$(DEPTH)\lib\liblayer\include \
- /I$(DEPTH)\lib\libcnv \
- /I$(DEPTH)\lib\libi18n \
- /I$(DEPTH)\lib\libparse \
- /I$(DEPTH)\lib\plugin \
+    /I$(DEPTH)\lib\layout \
+    /I$(DEPTH)\lib\libstyle \
+    /I$(DEPTH)\lib\liblayer\include \
+    /I$(DEPTH)\lib\libcnv \
+    /I$(DEPTH)\lib\libi18n \
+    /I$(DEPTH)\lib\libparse \
+    /I$(DEPTH)\lib\plugin \
 !ifdef MOZ_MAIL_NEWS
- /I$(DEPTH)\lib\libmsg \
- /I$(DEPTH)\lib\libaddr \
- /I$(DEPTH)\lib\libneo \
+    /I$(DEPTH)\lib\libmsg \
+    /I$(DEPTH)\lib\libaddr \
+    /I$(DEPTH)\lib\libneo \
 !endif
 !else
- /I$(EXPORTINC)
+    /I$(EXPORTINC)
 !endif
 
 RCINCLUDES=$(DEPTH)\cmd\winfe;$(DEPTH)\include
 
 CDEPENDINCLUDES= \
- /I$(DEPTH)\cmd\winfe \
- /I$(DEPTH)\jpeg
+    /I$(DEPTH)\cmd\winfe \
+    /I$(DEPTH)\jpeg
 
 # if you add something to CDISTINCLUDES, you must also add it to the exports target
 # at the end of the file.
 
-CDISTINCLUDES= \
+CDISTINCLUDES1= \
 !if "$(MOZ_BITS)" == "32"
- /I$(DIST)\include \
- /I$(XPDIST)\public\dbm \
- /I$(XPDIST)\public\java \
+    /I$(DIST)\include \
+    /I$(XPDIST)\public\dbm \
+    /I$(XPDIST)\public\java \
 !ifdef MOZ_JAVA
- /I$(XPDIST)\public\applet \
- /I$(XPDIST)\public\softupdt \
+    /I$(XPDIST)\public\applet \
+    /I$(XPDIST)\public\softupdt \
 !endif
- /I$(XPDIST)\public\libreg \
- /I$(XPDIST)\public\hook \
- /I$(XPDIST)\public\pref \
- /I$(XPDIST)\public\libfont \
- /I$(XPDIST)\public\winfont \
- /I$(XPDIST)\public\js \
- /I$(XPDIST)\public\jsdebug \
- /I$(XPDIST)\public\security \
- /I$(XPDIST)\public\htmldlgs \
- /I$(XPDIST)\public\zlib \
- /I$(XPDIST)\public\httpurl \
- /I$(XPDIST)\public\netcache \
- /I$(XPDIST)\public\network \
- /I$(XPDIST)\public\netcnvts\
- /I$(XPDIST)\public\util \
+    /I$(XPDIST)\public\libreg \
+    /I$(XPDIST)\public\hook \
+    /I$(XPDIST)\public\pref
+!endif
+
+CDISTINCLUDES2= \
+!if "$(MOZ_BITS)" == "32"
+    /I$(XPDIST)\public\libfont \
+    /I$(XPDIST)\public\winfont \
+    /I$(XPDIST)\public\js \
+    /I$(XPDIST)\public\jsdebug \
+    /I$(XPDIST)\public\security \
+    /I$(XPDIST)\public\htmldlgs \
+    /I$(XPDIST)\public\zlib \
+    /I$(XPDIST)\public\httpurl \
+    /I$(XPDIST)\public\netcache \
+    /I$(XPDIST)\public\network \
+    /I$(XPDIST)\public\netcnvts\
+    /I$(XPDIST)\public\util
+!endif
+
+CDISTINCLUDES3= \
+!if "$(MOZ_BITS)" == "32"
 #!ifdef MOZ_LOC_INDEP
- /I$(XPDIST)\public\li \
+    /I$(XPDIST)\public\li \
 #!endif MOZ_LOC_INDEP
- /I$(XPDIST)\public\progress \
- /I$(XPDIST)\public\schedulr \
- /I$(XPDIST)\public\xpcom \
+    /I$(XPDIST)\public\progress \
+    /I$(XPDIST)\public\schedulr \
+    /I$(XPDIST)\public\xpcom \
 #!ifdef EDITOR
 !ifdef MOZ_JAVA
- /I$(XPDIST)\public\edtplug \
+    /I$(XPDIST)\public\edtplug \
 !endif
- /I$(XPDIST)\public\spellchk \
+    /I$(XPDIST)\public\spellchk \
 #!endif
 #!ifdef MOZ_LDAP
- /I$(XPDIST)\public\ldap \
+    /I$(XPDIST)\public\ldap \
 #!endif
- /I$(XPDIST)\public\rdf \
- /I$(XPDIST)\public\xml \
- /I$(DIST)\include \
- /I$(XPDIST)\public\img \
- /I$(XPDIST)\public\jtools \
-!else
+    /I$(XPDIST)\public\rdf \
+    /I$(XPDIST)\public\xml \
+    /I$(DIST)\include \
+    /I$(XPDIST)\public\img \
+    /I$(XPDIST)\public\jtools \
 !endif
- /I$(XPDIST)\public \
- /I$(XPDIST)\public\coreincl \
+    /I$(XPDIST)\public \
+    /I$(XPDIST)\public\coreincl \
 !ifndef NO_SECURITY
- /I$(XPDIST)\public\jar \
+    /I$(XPDIST)\public\jar \
 !endif
- /I$(XPDIST)\public\util
+    /I$(XPDIST)\public\util
+
+CDISTINCLUDES = $(CDISTINCLUDES1) $(CDISTINCLUDES2) $(CDISTINCLUDES3)
 
 RCDISTINCLUDES=$(DIST)\include;$(XPDIST)\public\security
 
 #Added MQUOTE
 CDEFINES=/DXP_PC /Dx386 /D_WINDOWS /D_X86_ \
- /DMOCHA \
- /D_MBCS \
- /DEDIT_REMOTE /DLAYERS /DMQUOTE \
- /D_IMAGE_CONVERT \
- /D_IME_COMPOSITION \
+    /DMOCHA \
+    /D_MBCS \
+    /DEDIT_REMOTE /DLAYERS /DMQUOTE \
+	/D_IMAGE_CONVERT \
+	/D_IME_COMPOSITION \
 !if "$(MOZ_BITS)" == "32"
 !ifndef NSPR20
- /DWIN32 /DJAVA_WIN32 /DHW_THREADS /D_AFXDLL \
+    /DWIN32 /DJAVA_WIN32 /DHW_THREADS /D_AFXDLL \
 !else
- /DWIN32 /DJAVA_WIN32 /DNSPR20 /D_AFXDLL \
+    /DWIN32 /DJAVA_WIN32 /DNSPR20 /D_AFXDLL \
 !endif
 !if defined(MSVC4)
- /DMSVC4 \
+    /DMSVC4 \
 !endif
 !else
 !if defined(NSPR20)
- /DNSPR20 \
+	/DNSPR20 \
 !endif
 !endif
 !if defined(MOZ_JAVA)
- /DJAVA \
+    /DJAVA \
 !endif
- /DMOZILLA_CLIENT
+    /DMOZILLA_CLIENT
 
 
 # MOZ_LITENESS_FLAGS deal with MOZ_LIGHT, MOZ_MEDIUM
@@ -635,31 +644,33 @@ CDEFINES=$(CDEFINES) $(MOZ_LITENESS_FLAGS)
 
 RCDEFINES=/DRESOURCE_STR /D_WINDOWS \
 !if defined(MOZ_JAVA)
- /DJAVA \
+     /DJAVA \
 !endif
 !if "$(MOZ_BITS)" == "32"
- /DXP_PC /Dx386 /D_X86_ \
- /DLAYERS /DMQUOTE /D_AFXDLL /D_MBCS \
- /DWIN32 /DJAVA_WIN32 /DHW_THREADS \
+    /DXP_PC /Dx386 /D_X86_ \
+    /DLAYERS /DMQUOTE /D_AFXDLL /D_MBCS \
+    /DWIN32 /DJAVA_WIN32 /DHW_THREADS \
 !if defined(MSVC4)
- /DMSVC4 \
+    /DMSVC4 \
 !endif
- /D_IMAGE_CONVERT \
+	/D_IMAGE_CONVERT \
 !endif
- /DMOZILLA_CLIENT
+    /DMOZILLA_CLIENT
 
 # MOZ_LITENESS_FLAGS deal with MOZ_LITE, MOZ_MEDIUM
 RCDEFINES=$(RCDEFINES) $(MOZ_LITENESS_FLAGS)
 
 CFILEFLAGS=$(CFLAGS_GENERAL) ^
- $(CDEFINES) ^
- $(CINCLUDES) ^
- $(CDISTINCLUDES) 
+    $(CDEFINES) ^
+    $(CINCLUDES) ^
+    $(CDISTINCLUDES1) ^
+    $(CDISTINCLUDES2) ^
+    $(CDISTINCLUDES3) 
 
 
 RCFILEFLAGS=$(RCFLAGS_GENERAL)\
- $(RCFLAGS_DEBUG)\
- $(RCDEFINES)
+    $(RCFLAGS_DEBUG)\
+    $(RCDEFINES)
 
 #
 # if depend is defined, the default is to build depandancies
