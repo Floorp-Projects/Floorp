@@ -2606,7 +2606,7 @@ LPCTSTR nsWindow::WindowClass()
         wc.cbClsExtra       = 0;
         wc.cbWndExtra       = 0;
         wc.hInstance        = nsToolkit::mDllInstance;
-        wc.hIcon            = ::LoadIcon(NULL, IDI_APPLICATION);
+        wc.hIcon            = ::LoadIcon(::GetModuleHandle(NULL), IDI_APPLICATION);
         wc.hCursor          = NULL;
         wc.hbrBackground    = mBrush;
         wc.lpszMenuName     = NULL;
