@@ -5,6 +5,8 @@
 
 __declspec(dllexport) WIDGET GlobalWidgetArray[1000];
 __declspec(dllexport) int GlobalArrayIndex=0;
+__declspec(dllexport) BOOL IsSameCache = TRUE;
+
 
 extern "C" __declspec(dllexport)
 WIDGET* findWidget(CString theName)
