@@ -39,7 +39,7 @@ class nsIMsgSendLater : public nsISupports {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGSENDLATER_IID)
 
-  NS_IMETHOD  SendUnsentMessages(nsIMsgIdentity *identity, char *unsentFolder, char *smtpServer) = 0;
+  NS_IMETHOD  SendUnsentMessages(nsIMsgIdentity *identity) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

@@ -39,7 +39,7 @@ char        *nsMsgCreateTempFileName(char *tFileName);
 // Various utilities for building parts of MIME encoded 
 // messages during message composition
 //
-int         mime_sanity_check_fields (
+nsresult    mime_sanity_check_fields (
 					                  const char *from,
 					                  const char *reply_to,
 					                  const char *to,

@@ -42,6 +42,7 @@ EXPORTS = \
 		MsgCompGlue.h \
 		nsIDOMComposeAppCore.h	\
 		nsIComposer.h	\
+		nsMsgComposeBE.h	\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

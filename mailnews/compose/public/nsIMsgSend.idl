@@ -19,10 +19,25 @@
 #include "nsISupports.idl"
 #include "nsIMsgCompFields.idl"
 
+%{ C++
+#include "nsComposeBE.h"
+%}
 
 [object, uuid(9E9BD970-C5D6-11d2-8297-000000000000)]
 interface nsIMsgSend : nsISupports {
 
-	void SendMessage(in nsIMsgCompFields fields, in string smtp);
+	void SendMessage(in nsIMsgCompFields fields);
+/****
+in PRBool                            digest_p,
+in PRBool                            dont_deliver_p,
+in nsMsgDeliverMode                  mode, 
+in string attachment1_type,
+in string attachment1_body,
+in PRUint32 attachment1_body_length,
+in const struct nsMsgAttachmentData  *attachments,
+in const struct nsMsgAttachedFile    *preloaded_attachments,
+in void                              *relatedPart  nsMsgSendPart  )
+*******/
+
 };
 

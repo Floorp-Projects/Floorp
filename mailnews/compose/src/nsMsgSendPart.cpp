@@ -262,8 +262,9 @@ int nsMsgSendPart::PushBody(char* buffer, PRInt32 length)
 	 */
   if (m_firstBlock) {
     if (m_needIntlConversion) {
+      MWContext *x = nsnull; // RICHIE
       m_intlDocToMailConverter =
-        nsMsgI18NCreateDocToMailConverter(m_state->GetContext(),
+        nsMsgI18NCreateDocToMailConverter(x,
         (!PL_strcasecmp(m_type,
         TEXT_HTML)),
         (unsigned char*) buffer,

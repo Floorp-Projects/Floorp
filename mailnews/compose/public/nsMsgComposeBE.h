@@ -25,6 +25,18 @@
 // Composition back end declarations...
 //
 
+//
+// Callback declarations for message delivery
+//
+// For completion of send operations...
+typedef nsresult (*nsMsgSendCompletionCallback) (nsresult aExitCode, void *tagData);
+
+// For completion of message creation operations...
+typedef nsresult (*nsMsgCreateCompletionCallback) (nsresult aExitCode, nsFileSpec *msgFile, void *tagData);
+
+
+
+// Message delivery modes
 typedef enum
 {
   nsMsgDeliverNow,
@@ -35,6 +47,7 @@ typedef enum
   nsMsgSaveAsTemplate
 } nsMsgDeliverMode;
 
+// Attachment file/URL structures
 struct nsMsgAttachmentData
 {
   char *url;			        // The URL to attach. This should be 0 to signify "end of list".
@@ -86,17 +99,16 @@ typedef struct nsMsgAttachedFile
   char *x_mac_creator;// mac-specific info 
   char *real_name;		// The real name of the file. 
 
-  /* Some statistics about the data that was written to the file, so that when
-	 it comes time to compose a MIME message, we can make an informed decision
-	 about what Content-Transfer-Encoding would be best for this attachment.
-	 (If it's encoded already, we ignore this information and ship it as-is.)
-   */
-  uint32 size;
-  uint32 unprintable_count;
-  uint32 highbit_count;
-  uint32 ctl_count;
-  uint32 null_count;
-  uint32 max_line_length;
+  // Some statistics about the data that was written to the file, so that when
+	// it comes time to compose a MIME message, we can make an informed decision
+	// about what Content-Transfer-Encoding would be best for this attachment.
+  // (If it's encoded already, we ignore this information and ship it as-is.)
+  PRUint32  size;
+  PRUint32  unprintable_count;
+  PRUint32  highbit_count;
+  PRUint32  ctl_count;
+  PRUint32  null_count;
+  PRUint32  max_line_length;
   
   HG68452
 

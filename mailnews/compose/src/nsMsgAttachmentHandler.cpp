@@ -422,13 +422,13 @@ void nsMsgAttachmentHandler::UrlExit(URL_Struct *url, int status,
   url->fe_data = 0;
 
   NS_ASSERTION(m_mime_delivery_state != NULL, "not-null m_mime_delivery_state");
-  NS_ASSERTION(m_mime_delivery_state->GetContext() != NULL, "not-null context");
   NS_ASSERTION(m_url != NULL, "not-null m_url");
 
   if (m_graph_progress_started)
 	{
 	  m_graph_progress_started = PR_FALSE;
-	  FE_GraphProgressDestroy (m_mime_delivery_state->GetContext(), m_url,
+    MWContext *x = nsnull; // RICHIE - temp for now
+	  FE_GraphProgressDestroy (x, m_url,
 							   m_url->content_length, m_size);
 	}
 

@@ -1,4 +1,5 @@
 #include "msgCore.h"
+#include "nsCOMPtr.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgLocalCID.h"
 #include "nsMsgCompCID.h"
@@ -171,15 +172,36 @@ int main(int argc, char *argv[])
     return rv;
   }  
 
-  OnIdentityCheck();
+  nsCOMPtr<nsIMsgIdentity>  identity = nsnull;
+  
+  NS_WITH_SERVICE(nsIMsgMailSession, session, kCMsgMailSessionCID, &rv);
+  if (NS_FAILED(rv)) 
+  {
+    printf("Failure getting Mail Session!\n");
+    return rv;
+  }  
 
-  nsIMsgSendLater *pMsgSendLater;
-  rv = nsComponentManager::CreateInstance(kMsgSendLaterCID, NULL, kIMsgSendLaterIID, (void **) &pMsgSendLater); 
-  if (rv == NS_OK && pMsgSendLater) 
+  nsCOMPtr<nsIMsgAccountManager> accountManager;
+  rv = session->GetAccountManager(getter_AddRefs(accountManager));
+  if (NS_FAILED(rv)) 
+  {
+    printf("Failure getting account Manager!\n");
+    return rv;
+  }  
+  rv = session->GetCurrentIdentity(getter_AddRefs(identity));
+  if (NS_FAILED(rv)) 
+  {
+    printf("Failure getting Identity!\n");
+    return rv;
+  }  
+  
+  nsCOMPtr<nsIMsgSendLater> pMsgSendLater;
+  rv = nsComponentManager::CreateInstance(kMsgSendLaterCID, NULL, kIMsgSendLaterIID, 
+                                          (void **) getter_AddRefs(pMsgSendLater)); 
+  if (NS_SUCCEEDED(rv) && pMsgSendLater) 
   { 
     printf("We succesfully obtained a nsIMsgSendLater interface....\n");    
-    nsIMsgIdentity *identity = nsnull;
-    pMsgSendLater->SendUnsentMessages(identity, "Outbox", "nsmail-2");
+    pMsgSendLater->SendUnsentMessages(identity);
   }
 
 #ifdef XP_PC

@@ -21,6 +21,8 @@
 
 #include "nsIMsgIdentity.h"
 #include "nsIMsgSendLater.h"
+#include "nsIEnumerator.h"
+#include "nsIFileSpec.h"
 
 class nsMsgSendLater: public nsIMsgSendLater
 {
@@ -31,12 +33,21 @@ public:
 	NS_DECL_ISUPPORTS
 
 	// nsIMsgSendLater support
-  NS_IMETHOD          SendUnsentMessages(nsIMsgIdentity *identity, char *unsentFolder, char *smtpServer);
+  NS_IMETHOD                SendUnsentMessages(nsIMsgIdentity *identity);
+
+  // Methods needed for implementing interface...
+  nsIMsgFolder              *GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity);
+  nsresult                  StartNextMailFileSend();
+  nsresult                  CompleteMailFileSend();
 
 private:
   // Private Information
-  nsIMsgIdentity      *mIdentity;
-  char                *mSmtpServer;
+  nsIMsgIdentity            *mIdentity;
+  nsCOMPtr<nsIMsgFolder>    mMessageFolder;
+	nsCOMPtr<nsIMessage>      mMessage;
+  nsIFileSpec               *mTempFileSpec;
+  nsIEnumerator             *mEnumerator;
+  PRBool                    mFirstTime;
 };
 
 

@@ -986,8 +986,7 @@ NS_IMETHODIMP nsComposeAppCore::SendMsg(nsAutoString& aAddrTo,
         mMsgCompFields->GetBody(&bodyString);
         bodyLength = PL_strlen(bodyString);
 
-        mMsgSend->SendMessage(mMsgCompFields, 
-        			"",               				// const char *smtp,
+        mMsgSend->CreateAndSendMessage(mMsgCompFields, 
 					PR_FALSE,         				// PRBool                            digest_p,
 					PR_FALSE,         				// PRBool                            dont_deliver_p,
 					nsMsgDeliverNow,   				// nsMsgDeliverMode                  mode,
@@ -997,8 +996,8 @@ NS_IMETHODIMP nsComposeAppCore::SendMsg(nsAutoString& aAddrTo,
 					NULL,             				// const struct nsMsgAttachmentData   *attachments,
 					NULL,             				// const struct nsMsgAttachedFile     *preloaded_attachments,
 					NULL,             				// nsMsgSendPart                     *relatedPart,
-					NULL);            				// void  (*message_delivery_done_callback)(MWContext *context, void *fe_data,
-								             			//                                         int status, const char *error_message))
+          nsnull,                   // callback function defined in nsMsgComposeBE.h
+          nsnull);                  // tagged FE data that will be passed to the FE
     }
 	}
 	if (nsnull != mScriptContext) {

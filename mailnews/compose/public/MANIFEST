@@ -30,3 +30,4 @@ MsgCompGlue.h
 nsIComposer.h
 nsIMsgSendLater.h
 nsMsgSendLaterFact.h
+nsMsgComposeBE.h

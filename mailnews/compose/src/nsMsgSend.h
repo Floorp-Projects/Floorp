@@ -75,13 +75,7 @@
   translation of CR or LF to CRLF.  So, when we don't know that the document
   has "lines", we don't use quoted-printable.
  */
-/* It's better to send a message as news before sending it as mail, because
-   the NNTP server is more likely to reject the article (for any number of
-   reasons) than the SMTP server is. */
-#undef MAIL_BEFORE_NEWS
-/* Generating a message ID here is a good because it means that if a message
-   is sent to both mail and news, it will have the same ID in both places. */
-#define GENERATE_MESSAGE_ID
+
 /* For maximal compatibility, it helps to emit both
       Content-Type: <type>; name="<original-file-name>"
    as well as
@@ -125,17 +119,20 @@
 //
 // Necessary includes
 //
-#include "rosetta_mailnews.h"
 #include "msgCore.h"
-#include "prprf.h" /* should be defined into msgCore.h? */
-#include "net.h" /* should be defined into msgCore.h? */
-#include "intl_csi.h"
+#include "prprf.h" 
+#include "rosetta_mailnews.h"
 #include "nsFileStream.h"
 #include "nsMsgMessageFlags.h"
 #include "MsgCompGlue.h"
 #include "nsIMsgSend.h"
 #include "nsIURL.h"
 #include "nsMsgAttachmentHandler.h"
+#include "nsMsgCompFields.h"
+
+#include "net.h" /* should be defined into msgCore.h? */
+// RICHIE   #include "intl_csi.h"
+
 
 //
 // Some necessary defines...
@@ -167,34 +164,16 @@
 
 
 
+//
+// Forward declarations...
+//
 class ParseOutgoingMessage;
 class MailDB;
 class nsMsgSendPart;
-class nsMsgCompFields;
 
 class nsMsgComposeAndSend : public nsIMsgSend
 {
 public:
-
-  int	Init(MSG_Pane *pane,
-			 void      *fe_data,
-			 nsMsgCompFields *fields,
-			 PRBool digest_p,
-			 PRBool dont_deliver_p,
-			 nsMsgDeliverMode mode,
-			 const char *attachment1_type,
-			 const char *attachment1_body,
-			 PRUint32 attachment1_body_length,
-			 const struct nsMsgAttachmentData *attachments,
-			 const struct nsMsgAttachedFile *preloaded_attachments,
-			 nsMsgSendPart *relatedPart,
-			 void (*message_delivery_done_callback)
-			 (
-			  void *fe_data,
-			  int status,
-			  const char *error_message));
-
-  void	StartMessageDelivery();
   int	GatherMimeAttachments();
   void	DeliverMessage();
   void	QueueForLater();
@@ -204,7 +183,6 @@ public:
 
   HJ77514
 
-  /* #### SendToMagicFolder(int flag) should be protected or private */
   void    SendToMagicFolder (PRUint32 flag);
   int	  SendToImapMagicFolder(PRUint32 flag);
   void    ImapAppendAddBccHeadersIfNeeded(URL_Struct *url);
@@ -231,27 +209,13 @@ public:
   int HackAttachments(const struct nsMsgAttachmentData *attachments,
 					  const struct nsMsgAttachedFile *preloaded_attachments);
 
-  void	DeliverFileAsMail();
-  void	DeliverFileAsNews();
-  void	DeliverAsNewsExit(URL_Struct *url, int status);
 
   HJ58534
-	  MWContext *GetContext() { return (m_pane ? m_pane->GetContext(): NULL); }
 
   int SetMimeHeader(MSG_HEADER_SET header, const char *value);
   void SetIMAPMessageUID(MessageKey key);
 
   MSG_Pane *m_pane;			/* Pane to use when loading the URLs */
-  void *m_fe_data;			/* passed in and passed to callback */
-  nsMsgCompFields *m_fields;
-
-  PRBool m_dont_deliver_p;	/* If set, we just return the name of the file
-							   we created, instead of actually delivering
-							   this message. */
-
-  nsMsgDeliverMode m_deliver_mode; /* nsMsgDeliverNow, nsMsgQueueForLater,
-									  nsMsgSaveAsDraft, nsMsgSaveAsTemplate
-									*/
 
   PRBool m_attachments_only_p;	/* If set, then we don't construct a complete
 								   MIME message; instead, we just retrieve the
@@ -306,19 +270,12 @@ public:
   nsMsgAttachmentHandler *m_attachments;
   PRInt32 m_status; /* in case some attachments fail but not all */
 
-  /* The caller's `exit' method. */
-  void (*m_message_delivery_done_callback) (
-											void * fe_data, int status,
-											const char * error_msg);
-
   /* The exit method used when downloading attachments only. */
   void (*m_attachments_done_callback) (
 									   void * fe_data, int status,
 									   const char * error_msg,
 									   struct nsMsgAttachedFile *attachments);
 
-  char *m_msg_file_name;				/* Our temporary file */
-  nsOutputFileStream * m_msg_file;
 
   MSG_IMAPFolderInfoMail *m_imapFolderInfo;
   ParseOutgoingMessage *m_imapOutgoingParser;
@@ -333,17 +290,47 @@ public:
   //
 
   //
-  // this macro defines QueryInterface, AddRef and Release for this class 
+  // Define QueryInterface, AddRef and Release for this class 
   //
 	NS_DECL_ISUPPORTS
 
   nsMsgComposeAndSend();
 	virtual     ~nsMsgComposeAndSend();
 
-  void	      DeliverAsMailExit(nsIURL * aUrl, nsresult aExitCode);
+  // Delivery and completion callback routines...
+  void	      DeliverFileAsMail();
+  void	      DeliverFileAsNews();
+  void	      DeliverAsMailExit(nsIURL *aUrl, nsresult aExitCode);
+  void	      DeliverAsNewsExit(nsIURL *aUrl, nsresult aExitCode);
+
+
   void	      Fail(nsresult failure_code, char *error_msg);
   nsresult    DoFcc();
   void	      Clear();
+
+  // Message creation routines
+  //
+  
+  // Init() will allow for either message creation without delivery or full
+  // message creation and send operations
+  //
+  nsresult    Init(
+			             nsMsgCompFields  *fields,
+			             PRBool           digest_p,
+			             PRBool           dont_deliver_p,
+			             nsMsgDeliverMode mode,
+			             const char       *attachment1_type,
+			             const char       *attachment1_body,
+			             PRUint32         attachment1_body_length,
+			             const struct nsMsgAttachmentData   *attachments,
+			             const struct nsMsgAttachedFile     *preloaded_attachments,
+			             nsMsgSendPart    *relatedPart,
+                   void             *fe_data);
+
+  //
+  // Setup the composition fields
+  //
+  nsresult    InitCompositionFields(nsMsgCompFields *fields);
 
   //
   ////////////////////////////////////////////////////////////////////////////////
@@ -351,53 +338,52 @@ public:
   // than before. Again...Please bear with me.
   ////////////////////////////////////////////////////////////////////////////////
   //
-
-  //
-  // The current nsIMsgSend Interface!
-  //
-  NS_IMETHOD SendMessage(
- 						  nsIMsgCompFields                  *fields,
-              const char                        *smtp,
-						  PRBool                            digest_p,
-						  PRBool                            dont_deliver_p,
-						  PRInt32                           mode,
-						  const char                        *attachment1_type,
-						  const char                        *attachment1_body,
-						  PRUint32                          attachment1_body_length,
-						  const struct nsMsgAttachmentData  *attachments,
-						  const struct nsMsgAttachedFile    *preloaded_attachments,
-						  void                              *relatedPart,
-						  void                              (*message_delivery_done_callback)(void *fe_data,
-								                                                                  int status, const char *error_message));
-
   nsresult    MimeDoFCC (
-			                   const char *input_file_name,  XP_FileType input_file_type,
+			                   nsFileSpec *input_file,  XP_FileType input_file_type,
 			                   const char *output_name, XP_FileType output_file_type,
 			                   nsMsgDeliverMode mode,
 			                   const char *bcc_header,
 			                   const char *fcc_header,
 			                   const char *news_url);
 
-  void	StartMessageDelivery(MSG_Pane *pane,
-                          void                *fe_data,
-                          nsMsgCompFields     *fields,
-                          PRBool              digest_p,
-                          PRBool              dont_deliver_p,
-                          nsMsgDeliverMode    mode,
-                          const char          *attachment1_type,
-                          const char          *attachment1_body,
-                          PRUint32            attachment1_body_length,
-                          const struct nsMsgAttachmentData  *attachments,
-                          const struct nsMsgAttachedFile    *preloaded_attachments,
-                          nsMsgSendPart       *relatedPart,
-                          void (*message_delivery_done_callback)
-                                                (void *fe_data,
-                                                 int status,
-                                                 const char *error_message));
+  ////////////////////////////////////////////////////////////////////////////////
+  // The current nsIMsgSend Interfaces exposed to the world!
+  ////////////////////////////////////////////////////////////////////////////////
+  NS_IMETHOD  CreateAndSendMessage(
+ 						              nsIMsgCompFields                  *fields,
+						              PRBool                            digest_p,
+						              PRBool                            dont_deliver_p,
+						              nsMsgDeliverMode                  mode,
+						              const char                        *attachment1_type,
+						              const char                        *attachment1_body,
+						              PRUint32                          attachment1_body_length,
+						              const struct nsMsgAttachmentData  *attachments,
+						              const struct nsMsgAttachedFile    *preloaded_attachments,
+						              void                              *relatedPart,
+                          nsMsgSendCompletionCallback       completionCallback,
+                          void                              *tagData);
+
+  //
+  // All vars necessary for this implementation
+  //
+  nsMsgCompFields         *mCompFields;         // All needed composition fields (header, etc...)
+  nsFileSpec              *mTempFileSpec;       // our temporary file
+  
+  nsOutputFileStream      *mOutputFile;         // the actual output file stream
+
+  PRBool                  m_dont_deliver_p;     // If set, we just return the nsFileSpec of the file
+							                                  // created, instead of actually delivering message.
+  nsMsgDeliverMode        m_deliver_mode;       // nsMsgDeliverNow, nsMsgQueueForLater, nsMsgSaveAsDraft, 
+                                                // nsMsgSaveAsTemplate
+
+  // These are needed for callbacks to the FE...  
+  nsMsgSendCompletionCallback   mSendCompleteCallback;  // Used for completion of actual send operations
+  void                    *m_fe_data;			      // passed in and passed to callback 
+  nsFileSpec              *mReturnFileSpec;     // a holder for file spec's to be returned to caller
 };
 
 // 
-// These routines should only be used by the nsMsgSendPart class.
+// These C routines should only be used by the nsMsgSendPart class.
 //
 extern int    mime_write_message_body(nsMsgComposeAndSend *state, char *buf, PRInt32 size);
 extern char   *mime_get_stream_write_buffer(void);

@@ -153,7 +153,7 @@ nsMsgMIMESetConformToStandard (PRBool conform_p)
   }
 }
 
-int mime_sanity_check_fields (
+nsresult mime_sanity_check_fields (
 					const char *from,
 					const char *reply_to,
 					const char *to,
@@ -200,7 +200,7 @@ int mime_sanity_check_fields (
 				(!bcc || !*bcc) && (!newsgroups || !*newsgroups))
 			return MK_MIME_NO_RECIPIENTS;
 	else
-		return 0;
+		return NS_OK;
 }
 
 static char *
@@ -270,9 +270,7 @@ mime_generate_headers (nsMsgCompFields *fields,
 	pOrg= fields->GetOrganization(); if (pOrg)					size += 3 * PL_strlen (pOrg);
 	pOtherHdr= fields->GetOtherRandomHeaders(); if (pOtherHdr)	size += 3 * PL_strlen (pOtherHdr);
 	pPriority = fields->GetPriority();  if (pPriority)			size += 3 * PL_strlen (pPriority);
-#ifdef GENERATE_MESSAGE_ID
 	pMessageID = fields->GetMessageId(); if (pMessageID)		size += PL_strlen (pMessageID);
-#endif /* GENERATE_MESSAGE_ID */
 
 	/* Add a bunch of slop for the static parts of the headers. */
 	/* size += 2048; */
@@ -284,7 +282,6 @@ mime_generate_headers (nsMsgCompFields *fields,
 	
 	buffer_tail = buffer;
 
-#ifdef GENERATE_MESSAGE_ID
 	if (pMessageID && *pMessageID) {
 		char *convbuf = NULL;
 		PUSH_STRING ("Message-ID: ");
@@ -355,7 +352,6 @@ mime_generate_headers (nsMsgCompFields *fields,
 		}
 #endif /* SUPPORT_X_TEMPLATE_NAME */
 	}
-#endif /* GENERATE_MESSAGE_ID */
 
 	PRExplodedTime now;
     PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
@@ -1771,9 +1767,8 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const char *charset)
 	 
 	 ### mwelch Note that this function simply duplicates and returns an existing
 	 			MIME header, so we don't need to process it. */
-  attachment->m_real_name =
-	MimeGuessURLContentName(attachment->m_mime_delivery_state->GetContext(),
-							url);
+  MWContext *x = NULL;
+  attachment->m_real_name =	MimeGuessURLContentName(x, url);
   if (attachment->m_real_name)
 	return;
 

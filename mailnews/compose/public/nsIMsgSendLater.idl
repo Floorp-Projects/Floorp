@@ -22,6 +22,6 @@
 [object, uuid(E15C83E8-1CF4-11d3-8EF0-00A024A7D144)]
 interface nsIMsgSendLater : nsISupports {
 
-	void SendMessageLater(in nsIMsgIdentity identity, in string unsentFolder, in string smtpServer);
+	void SendMessageLater(in nsIMsgIdentity identity);
 };
 

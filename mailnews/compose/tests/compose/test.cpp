@@ -38,8 +38,6 @@
 #include "prmem.h"
 
 #include "nsIMimeURLUtils.h"
-#include "nsMsgSendLater.h"
-
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
@@ -83,26 +81,6 @@ static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
 
-
-static NS_DEFINE_IID(kIMsgSendLaterIID, NS_IMSGSENDLATER_IID); 
-static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
-
-
-void
-DoIT()
-{
-  nsresult rv = NS_OK;
-  nsIMsgSendLater *pMsgSendLater;
-  
-  rv = nsComponentManager::CreateInstance(kMsgSendLaterCID, NULL, kIMsgSendLaterIID, (void **) &pMsgSendLater); 
-  if (rv == NS_OK && pMsgSendLater) 
-  { 
-    printf("We succesfully obtained a nsIMsgSendLater interface....\n");    
-    nsIMsgIdentity *identity = nsnull;
-    pMsgSendLater->SendUnsentMessages(identity, "Outbox", "nsmail-2");
-  }
-}
-
 nsresult OnIdentityCheck()
 {
 	nsresult result = NS_OK;
@@ -140,17 +118,24 @@ nsresult OnIdentityCheck()
 nsMsgAttachedFile *
 GetAttachments(void)
 {  
-  nsMsgAttachedFile *attachments = (nsMsgAttachedFile *) PR_Malloc(sizeof(nsMsgAttachedFile) * 2);
+  int attachCount = 3;
+  nsMsgAttachedFile *attachments = (nsMsgAttachedFile *) PR_Malloc(sizeof(nsMsgAttachedFile) * attachCount);
 
   if (!attachments)
     return NULL;
   
-  nsCRT::memset(attachments, 0, sizeof(MSG_AttachedFile) * 2);
+  nsCRT::memset(attachments, 0, sizeof(MSG_AttachedFile) * attachCount);
   attachments[0].orig_url = PL_strdup("file://C:/boxster.jpg");
   attachments[0].file_name = PL_strdup("C:\\boxster.jpg");
   attachments[0].type = PL_strdup("image/jpeg");
   attachments[0].encoding = PL_strdup(ENCODING_BINARY);
   attachments[0].description = PL_strdup("Boxster Image");
+
+  attachments[1].orig_url = PL_strdup("file://C:/boxster.jpg");
+  attachments[1].file_name = PL_strdup("C:\\boxster.jpg");
+  attachments[1].type = PL_strdup("image/jpeg");
+  attachments[1].encoding = PL_strdup(ENCODING_BINARY);
+  attachments[1].description = PL_strdup("Boxster Image");
   return attachments;
 }
 
@@ -166,6 +151,18 @@ in RED!</font></font></b>\n\
 <br>&nbsp;\n\
 </body>\n\
 </html>"};
+
+nsresult
+CallMe(nsresult aExitCode, void *tagData)
+{
+  char *buf = (char *)tagData;
+  
+  printf("Called ME!\n");
+  printf("Exit code = %d\n", aExitCode);
+  printf("What were the magic words => [%s]\n", buf);
+  PR_FREEIF(buf);
+  return NS_OK;
+}
 
 /* 
  * This is a test stub for mail composition. This will be enhanced as the
@@ -235,9 +232,6 @@ int main(int argc, char *argv[])
 
   OnIdentityCheck();
 
-
-  DoIT();
-
   rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, 
                                            nsIMsgCompFields::GetIID(), (void **) &pMsgCompFields);   
   if (rv == NS_OK && pMsgCompFields) { 
@@ -282,8 +276,11 @@ int main(int argc, char *argv[])
       nsMsgAttachedFile *ptr = NULL;
       //nsMsgAttachedFile *ptr = GetAttachments();
 
-      pMsgSend->SendMessage(pMsgCompFields, 
-                "",               // const char *smtp,
+      char *tagBuf = (char *)PR_Malloc(256);
+      if (tagBuf)
+        PL_strcpy(tagBuf, "Do that voodo, you do, soooo welllll!\n");
+      
+      pMsgSend->CreateAndSendMessage(pMsgCompFields, 
 						    PR_FALSE,         // PRBool                            digest_p,
 						    PR_FALSE,         // PRBool                            dont_deliver_p,
 						    nsMsgDeliverNow,   // nsMsgDeliverMode                  mode,
@@ -293,8 +290,8 @@ int main(int argc, char *argv[])
 						    NULL,             // const struct nsMsgAttachmentData   *attachments,
 						    ptr,              // const struct nsMsgAttachedFile     *preloaded_attachments,
 						    NULL,             // nsMsgSendPart                     *relatedPart,
-						    NULL);            // void  (*message_delivery_done_callback)(MWContext *context, void *fe_data,
-								                  //                                         int status, const char *error_message))
+						    CallMe,
+						    tagBuf);
 
       PR_FREEIF(ptr);
     }    
