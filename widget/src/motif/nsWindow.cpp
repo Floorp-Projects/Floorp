@@ -234,14 +234,6 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent, nsIWidget *aWidgetPare
   mCursor = eCursor_select;
   SetCursor(eCursor_standard);
 
-/* 
-  XtAddEventHandler(mWidget, 
-		    ExposureMask, 
-		    PR_FALSE, 
-		    nsXtWidget_ExposureMask_EventHandler,
-		    this);
-*/
-
   InitCallbacks();
 
 }
@@ -291,6 +283,13 @@ void nsWindow::InitCallbacks()
 		    PR_FALSE, 
 		    nsXtWidget_LeaveMask_EventHandler,
 		    this);
+
+  XtAddEventHandler(mWidget, 
+		    ExposureMask, 
+		    PR_FALSE, 
+		    nsXtWidget_ExposureMask_EventHandler,
+		    this);
+
 
 }
 
