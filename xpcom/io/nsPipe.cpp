@@ -49,8 +49,8 @@ public:
     PRUint32 ReadableAmount() {
         nsresult rv;
         PRUint32 amt;
-        char* buf;
-        rv = mBuffer->GetReadBuffer(0, &buf, &amt); // should never fail
+        const char* buf;
+        rv = mBuffer->GetReadSegment(0, &buf, &amt); // should never fail
         NS_ASSERTION(NS_SUCCEEDED(rv), "GetInputBuffer failed");
         return amt;
     }
@@ -152,8 +152,8 @@ nsBufferInputStream::GetLength(PRUint32 *aLength)
     if (mBuffer == nsnull)
         return NS_BASE_STREAM_CLOSED;
 
-    char* buf;
-    return mBuffer->GetReadBuffer(0, &buf, aLength);
+    const char* buf;
+    return mBuffer->GetReadSegment(0, &buf, aLength);
 }
 
 NS_IMETHODIMP
@@ -244,8 +244,8 @@ nsBufferInputStream::Fill()
 
             // check read buffer again while in the monitor
             PRUint32 amt;
-            char* buf;
-            rv = mBuffer->GetReadBuffer(0, &buf, &amt);
+            const char* buf;
+            rv = mBuffer->GetReadSegment(0, &buf, &amt);
             if (rv == NS_BASE_STREAM_EOF) return rv;
             if (NS_SUCCEEDED(rv) && amt > 0) return NS_OK;
 
@@ -401,7 +401,7 @@ nsBufferOutputStream::Flush(void)
         // check write buffer again while in the monitor
         PRUint32 amt;
         char* buf;
-        rv = mBuffer->GetWriteBuffer(0, &buf, &amt);
+        rv = mBuffer->GetWriteSegment(&buf, &amt);
         if (rv == NS_BASE_STREAM_EOF) return rv;
         if (NS_SUCCEEDED(rv) && amt > 0) return NS_OK;
 
