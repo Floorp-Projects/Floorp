@@ -27,6 +27,7 @@ class nsString;
 
 class nsInputImage : public nsInput {
 public:
+  typedef nsInput super;
   nsInputImage (nsIAtom* aTag, nsIFormManager* aManager);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,

@@ -33,6 +33,7 @@ class nsIPresContext;
   */
 class nsInput : public nsHTMLContainer {
 public:
+  typedef nsHTMLContainer super;
   /** 
     * main constructor
     * @param aTag the html tag associated with this object
@@ -40,6 +41,15 @@ public:
     */
   nsInput(nsIAtom* aTag, nsIFormManager* aManager);
 
+  /**
+    * @see nsIContentDelegate CreateFrame
+    */
+  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
+                                PRInt32 aIndexInParent,
+                                nsIFrame* aParentFrame);
+
+  virtual void MapAttributesInto(nsIStyleContext* aContext, 
+                                 nsIPresContext* aPresContext);
   /**
     * @see nsISupports QueryInterface
     */
@@ -49,13 +59,6 @@ public:
     * @see nsISupports Release
     */
   NS_IMETHOD_(nsrefcnt) Release(void);
-
-  /**
-    * @see nsIContentDelegate CreateFrame
-    */
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                PRInt32 aIndexInParent,
-                                nsIFrame* aParentFrame);
 
   // nsIFormControl methods
 
@@ -165,6 +168,7 @@ protected:
   nsString*       mName;
   nsString*       mValue;
   PRInt32         mSize;
+  PRInt32         mAlign;
 
   // Aggregator class and instance variable used to aggregate in the
   // nsIFormControl interface to nsInput w/o using multiple

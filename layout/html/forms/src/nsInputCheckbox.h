@@ -25,6 +25,7 @@ class nsString;
 
 class nsInputCheckbox : public nsInput {
 public:
+  typedef nsInput super;
   nsInputCheckbox (nsIAtom* aTag, nsIFormManager* aManager);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,

@@ -29,6 +29,7 @@ class nsString;
 class nsInputRadio : public nsInput 
 {
 public:
+  typedef nsInput super;
   nsInputRadio (nsIAtom* aTag, nsIFormManager* aManager);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,

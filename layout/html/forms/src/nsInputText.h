@@ -35,6 +35,7 @@ enum nsInputTextType {
 
 class nsInputText : public nsInput {
 public:
+  typedef nsInput super;
   nsInputText (nsIAtom* aTag, nsIFormManager* aManager, nsInputTextType aType);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,

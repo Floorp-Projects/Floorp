@@ -183,9 +183,9 @@ nsInputTextFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 nsInputText::nsInputText(nsIAtom* aTag, nsIFormManager* aManager, nsInputTextType aType)
   : nsInput(aTag, aManager), mType(aType)
 {
-  mMaxLength = CSS_NOTSET;
-  mNumRows   = CSS_NOTSET;
-  mNumCols   = CSS_NOTSET;
+  mMaxLength = ATTR_NOTSET;
+  mNumRows   = ATTR_NOTSET;
+  mNumCols   = ATTR_NOTSET;
 }
 
 nsInputText::~nsInputText()
@@ -258,16 +258,16 @@ void nsInputText::GetType(nsString& aResult) const
 void nsInputText::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
 {
   if (aAttribute == nsHTMLAtoms::maxlength) {
-    CacheAttribute(aValue, CSS_NOTSET, mMaxLength);
+    CacheAttribute(aValue, ATTR_NOTSET, mMaxLength);
   }
   else if ((aAttribute == nsHTMLAtoms::rows) && (kInputTextArea == mType)) {
-    CacheAttribute(aValue, CSS_NOTSET, mNumRows);
+    CacheAttribute(aValue, ATTR_NOTSET, mNumRows);
   }
   else if ((aAttribute == nsHTMLAtoms::cols) && (kInputTextArea == mType)) {
-    CacheAttribute(aValue, CSS_NOTSET, mNumCols);
+    CacheAttribute(aValue, ATTR_NOTSET, mNumCols);
   }
   else {
-    nsInput::SetAttribute(aAttribute, aValue);
+    super::SetAttribute(aAttribute, aValue);
   }
 }
 
@@ -284,7 +284,7 @@ nsContentAttr nsInputText::GetAttribute(nsIAtom* aAttribute,
     return GetCacheAttribute(mNumCols, aResult);
   }
   else {
-    return nsInput::GetAttribute(aAttribute, aResult);
+    return super::GetAttribute(aAttribute, aResult);
   }
 }
 

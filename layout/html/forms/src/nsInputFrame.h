@@ -202,6 +202,9 @@ protected:
     */
   void GetStyleSize(nsIPresContext& aContext, const nsSize& aMaxSize, nsSize& aSize);
 
+  PRInt32 GetStyleDim(nsIPresContext& aPresContext, const nsSize& aMaxSize, 
+                      PRInt8 aFlags, PRInt32 aVal);
+
   nsSize       mCacheBounds;
   nsMouseState mLastMouseState;
 };
