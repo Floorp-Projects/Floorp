@@ -69,6 +69,8 @@ NO_PKG_FILES = \
 	xpt_link* \
 	$(NULL)
 
+MOZ_PKG_APPNAME = Firefox
+
 include $(DEPTH)/xpinstall/packager/Makefile
 
 # Rename the archive after it's created, so that we can differentiate between
@@ -80,6 +82,10 @@ PACKAGE_NAME = firefox-i686-linux-gtk2+xft.tar.gz
 else
 ifeq ($(OS_ARCH), WINNT)
 PACKAGE_NAME = Firefox-win32.zip
+else
+ifeq ($(OS_ARCH), Darwin)
+PACKAGE_NAME = Firefox-mac.dmg.gz
+endif
 endif
 endif
 
