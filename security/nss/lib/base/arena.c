@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: arena.c,v $ $Revision: 1.5 $ $Date: 2002/04/04 16:14:26 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: arena.c,v $ $Revision: 1.6 $ $Date: 2004/02/11 19:37:18 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -960,8 +960,8 @@ nss_ZFreeIf
     return PR_SUCCESS;
   }
 
-  h = (struct pointer_header *)&((char *)pointer)
-    [ - sizeof(struct pointer_header) ];
+  h = (struct pointer_header *)((char *)pointer
+    - sizeof(struct pointer_header));
 
   /* Check any magic here */
 
@@ -1037,8 +1037,8 @@ nss_ZRealloc
     return (void *)NULL;
   }
 
-  h = (struct pointer_header *)&((char *)pointer)
-    [ - sizeof(struct pointer_header) ];
+  h = (struct pointer_header *)((char *)pointer
+    - sizeof(struct pointer_header));
 
   /* Check any magic here */
 
