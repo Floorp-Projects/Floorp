@@ -22,17 +22,36 @@
 
 */
 
+tree {
+  background-color: #ccccdd;
+}
+
+
 treecell > titledbutton {
   border: none;
   padding: 0px;
   margin: 0px;
 }
 
+/* Hide the twisty when type != DIRECTORY (XXX is there a != in CSS)*/
 treeitem[type="FILE"] > treerow > treecell > titledbutton.twisty {
   visibility: hidden;
 }
 
-treeitem[type="FILE"] > treerow > treecell.Filename:hover {
+/* Make a file look like a link */
+treeitem[type="FILE"] > treerow > treecell.filename {
+  color: #666699;
+  text-decoration: underline;
+}
+
+treeitem[type="FILE"] > treerow > treecell.filename:hover {
   color: #333366;
   text-decoration: underline;
 }
+
+/* Override rule in xul.css that colors the selected row blue */
+treeitem[selected="true"] > treerow {
+  color: inherit;
+  background-color: inherit;
+}
+
