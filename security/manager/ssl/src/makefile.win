@@ -81,6 +81,17 @@ LINCS = $(LINCS)     \
     $(NULL)
 
 
+!if defined(NSS_3_4)
+CFLAGS=$(CFLAGS) -DNSS_3_4
+
+SUB_LIBRARIES   = \
+    $(DIST)/lib/crmf.lib \
+    $(DIST)/lib/smime3.lib \
+    $(DIST)/lib/ssl3.lib \
+    $(DIST)/lib/nss3.lib \
+    $(DIST)/lib/softokn3.lib \
+    $(NULL)
+!else
 SUB_LIBRARIES   = \
     $(DIST)/lib/smime.lib \
     $(DIST)/lib/crmf.lib \
@@ -97,6 +108,7 @@ SUB_LIBRARIES   = \
     $(DIST)/lib/secutil.lib \
     $(DIST)/lib/dbm.lib \
     $(NULL)
+!endif
 
 LLIBS   = \
     $(LIBNSPR) \
@@ -134,4 +146,9 @@ include <$(DEPTH)\config\rules.mak>
 
 libs:: $(DLL)
     $(MAKE_INSTALL) $(DIST)\lib\nssckbi.dll $(DIST)\bin
-
+!if defined(NSS_3_4)
+    $(MAKE_INSTALL) $(DIST)\lib\softokn3.dll $(DIST)\bin
+    $(MAKE_INSTALL) $(DIST)\lib\nss3.dll $(DIST)\bin
+    $(MAKE_INSTALL) $(DIST)\lib\smime3.dll $(DIST)\bin
+    $(MAKE_INSTALL) $(DIST)\lib\ssl3.dll $(DIST)\bin
+!endif

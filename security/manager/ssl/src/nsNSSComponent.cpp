@@ -77,7 +77,9 @@
 #include "ocsp.h"
 #include "cms.h"
 extern "C" {
+#ifndef NSS_3_4
 #include "pkcs11.h"
+#endif
 #include "pkcs12.h"
 #include "p12plcy.h"
 }
@@ -922,6 +924,7 @@ nsNSSComponent::InitializeNSS()
     ConfigureInternalPKCS11Token();
 
     if (::NSS_InitReadWrite(profileStr) != SECSuccess) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can not init NSS r/w in %s\n", profileStr));
 
       if (supress_warning_preference) {
         which_nss_problem = problem_none;
@@ -932,6 +935,7 @@ nsNSSComponent::InitializeNSS()
 
       // try to init r/o
       if (NSS_Init(profileStr) != SECSuccess) {
+        PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can not init in r/o either\n"));
         which_nss_problem = problem_no_security_at_all;
 
         NSS_NoDB_Init(profileStr);
@@ -987,22 +991,37 @@ nsNSSComponent::InitializeNSS()
   if (problem_none != which_nss_problem) {
     nsString message;
 
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS problem, trying to bring up GUI error message\n"));
+
     // We might want to use different messages, depending on what failed.
     // For now, let's use the same message.
     nsresult rv = GetPIPNSSBundleString(NS_LITERAL_STRING("NSSInitProblem").get(), message);
 
     if (NS_SUCCEEDED(rv)) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get error string\n"));
       nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-      if (wwatch) {
+      if (!wwatch) {
+        PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get window watcher\n"));
+      }
+      else {
         nsCOMPtr<nsIPrompt> prompter;
         wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
-        if (prompter) {
+        if (!prompter) {
+          PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get window prompter\n"));
+        }
+        else {
           nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
-          if (proxyman) {
+          if (!proxyman) {
+            PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get proxy manager\n"));
+          }
+          else {
             nsCOMPtr<nsIPrompt> proxyPrompt;
             proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIPrompt),
                                         prompter, PROXY_SYNC, getter_AddRefs(proxyPrompt));
-            if (proxyPrompt) {
+            if (!proxyPrompt) {
+              PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get proxy for nsIPrompt\n"));
+            }
+            else {
               proxyPrompt->Alert(nsnull, message.get());
             }
           }
@@ -1171,8 +1190,12 @@ static PRBool DecryptionAllowedCallback(SECAlgorithmID *algid,
   return SECMIME_DecryptionAllowed(algid, bulkkey);
 }
 
+#ifdef NSS_3_4
+static void * GetPasswordKeyCallback(void *arg, void *handle)
+#else
 static SECItem * GetPasswordKeyCallback(void *arg,
                                                SECKEYKeyDBHandle *handle)
+#endif
 {
   return NULL;
 }
