@@ -43,6 +43,7 @@
 #include "nsCOMPtr.h"
 #include "nsComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsICategoryManager.h"
 #include "nsCRT.h"
 #include "nsIEnumerator.h"
 #include "nsIModule.h"
@@ -151,6 +152,47 @@ nsCreateInstanceByProgID::operator()( const nsIID& aIID, void** aInstancePtr ) c
             *mErrorPtr = status;
         return status;
     }
+
+nsresult
+nsCreateInstanceFromCategory::operator()( const nsIID& aIID,
+                                          void** aInstancePtr ) const
+{
+    /*
+     * If I were a real man, I would consolidate this with
+     * nsGetServiceFromProgID::operator().
+     */
+    nsresult status;
+    nsXPIDLCString value;
+    nsCOMPtr<nsICategoryManager> catman =
+        do_GetService(NS_CATEGORYMANAGER_PROGID, &status);
+
+    if (NS_FAILED(status)) goto error;
+
+    if (!mCategory || !mEntry) {
+        // when categories have defaults, use that for null mEntry
+        status = NS_ERROR_NULL_POINTER;
+        goto error;
+    }
+    
+    /* find the progID for category.entry */
+    status = catman->GetCategoryEntry(mCategory, mEntry,
+                                      getter_Copies(value));
+    if (NS_FAILED(status)) goto error;
+    if (!value) {
+        status = NS_ERROR_SERVICE_NOT_FOUND;
+        goto error;
+    }
+
+    status = nsComponentManager::CreateInstance(value, mOuter, aIID,
+                                                aInstancePtr);
+    error:
+    if (NS_FAILED(status)) {
+        *aInstancePtr = 0;
+    }
+
+    *mErrorPtr = status;
+    return status;
+}
 
 /* prototypes for the Mac */
 PRBool PR_CALLBACK
@@ -446,9 +488,6 @@ nsComponentManagerImpl::PlatformInit(void)
     rv = mRegistry->AddSubtree(xpcomRoot, classIDKeyName, &mCLSIDKey);
     if (NS_FAILED(rv)) return rv;
     
-    rv = mRegistry->AddSubtree(xpcomRoot, componentLoadersKeyName, &mLoadersKey);
-    if (NS_FAILED(rv)) return rv;
-
     nsCOMPtr<nsIProperties> directoryService;
     rv = nsDirectoryService::Create(nsnull, 
                                     NS_GET_IID(nsIProperties), 
@@ -1636,61 +1675,27 @@ nsComponentManagerImpl::GetLoaderForType(const char *aType,
                                          nsIComponentLoader **aLoader)
 {
     nsStringKey typeKey(aType);
-    nsIComponentLoader *loader;
     nsresult rv;
 
-    loader = (nsIComponentLoader *)mLoaders->Get(&typeKey);
+    nsCOMPtr<nsIComponentLoader> loader;
+    loader = NS_STATIC_CAST(nsIComponentLoader *, mLoaders->Get(&typeKey));
     if (loader) {
-    // nsSupportsHashtable does the AddRef
-    *aLoader = loader;
-    return NS_OK;
+        // nsSupportsHashtable does the AddRef
+        *aLoader = loader;
+        return NS_OK;
     }
 
-    nsRegistryKey loaderKey;
-    rv = mRegistry->GetSubtreeRaw(mLoadersKey, aType, &loaderKey);
+    loader = do_GetServiceFromCategory("component-loader", aType, &rv);
     if (NS_FAILED(rv))
         return rv;
     
-    char *progID;
-    rv = mRegistry->GetStringUTF8(loaderKey, progIDValueName, &progID);
-    if (NS_FAILED(rv))
-        return rv;
-
-#ifdef DEBUG_shaver_off
-    fprintf(stderr, "nCMI: constructing loader for type %s = %s\n", aType, progID);
-#endif
-
-    rv = CreateInstanceByProgID(progID, nsnull, NS_GET_IID(nsIComponentLoader),    (void **)&loader);
-    PR_FREEIF(progID);
-    if (NS_FAILED(rv))
-        return rv;
-
     rv = loader->Init(this, mRegistry);
 
     if (NS_SUCCEEDED(rv)) {
-    mLoaders->Put(&typeKey, loader);
-    *aLoader = loader;
+        mLoaders->Put(&typeKey, loader);
+        *aLoader = loader;
+        NS_ADDREF(*aLoader);
     }
-    return rv;
-}
-
-nsresult
-nsComponentManagerImpl::RegisterComponentLoader(const char *aType, const char *aProgID,
-                                                PRBool aReplace)
-{
-    nsRegistryKey loaderKey;
-    nsresult rv = mRegistry->AddSubtreeRaw(mLoadersKey, aType, &loaderKey);
-    if (NS_FAILED(rv))
-        return rv;
-
-    /* XXX honour aReplace */
-    
-    rv = mRegistry->SetStringUTF8(loaderKey, progIDValueName, aProgID);
-
-#ifdef DEBUG_shaver_off
-    fprintf(stderr, "nNCI: registered %s as component loader for %s\n",
-            aProgID, aType);
-#endif
     return rv;
 }
 
@@ -2031,64 +2036,50 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
     }
 
     rv = iim->AutoRegisterInterfaces();
-    if (NS_FAILED(rv))
-    return rv;
+    if (NS_FAILED(rv)) return rv;
 
-    if (NS_SUCCEEDED(rv))
-    {
-        /* do the native loader first, so we can find other loaders */
-        rv = mNativeComponentLoader->AutoRegisterComponents((PRInt32)when, dir);
-    }
+    /* do the native loader first, so we can find other loaders */
+    rv = mNativeComponentLoader->AutoRegisterComponents((PRInt32)when, dir);
 
-    nsCOMPtr<nsIEnumerator> loaderEnum;
-    if (NS_SUCCEEDED(rv))
-    {
-        /* XXX eagerly instantiate all known loaders */
-        rv = mRegistry->EnumerateSubtrees(mLoadersKey, getter_AddRefs(loaderEnum));
-    }
+    nsCOMPtr<nsICategoryManager> catman =
+        do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIRegistryEnumerator> regEnum;
-    if (NS_SUCCEEDED(rv))
-    {
-        regEnum = do_QueryInterface(loaderEnum, &rv);
-    }
-    
-    struct AutoReg_closure closure;
-    if (NS_SUCCEEDED(rv))
-    {
-        for (rv = regEnum->First();
-             NS_SUCCEEDED(rv) && (regEnum->IsDone() != NS_OK);
-             rv = regEnum->Next()) {
-            const char * type;
-            nsRegistryKey throwAway;
-            /*
-             * CurrentItemInPlaceUTF8 will give us back a _shared_ pointer in 
-             * type.  This is bad XPCOM practice.  It is evil, and requires
-             * great care with the relative lifetimes of type and regEnum.
-             *
-             * It is also faster, and less painful in the allocation department.
-             */
-            rv = regEnum->CurrentItemInPlaceUTF8(&throwAway, &type);
-            if (NS_FAILED(rv))
-                continue;
-            
-            nsCOMPtr<nsIComponentLoader> loader;
-            /* this will create it if we haven't already */
-            GetLoaderForType(type, getter_AddRefs(loader));
+    nsCOMPtr<nsISimpleEnumerator> loaderEnum;
+    rv = catman->EnumerateCategory("component-loader",
+                                   getter_AddRefs(loaderEnum));
+    if (NS_FAILED(rv)) return rv;
 
+    PRBool hasMore;
+    while (NS_SUCCEEDED(loaderEnum->HasMoreElements(&hasMore)) && hasMore) {
+        nsCOMPtr<nsISupports> supports;
+        if (NS_FAILED(loaderEnum->GetNext(getter_AddRefs(supports))))
             continue;
-        }
 
-        /* iterate over all known loaders and ask them to autoregister. */
-        /* XXX convert when to nsIComponentLoader::(when) properly */
-        closure.when = when;
-        closure.spec = dir.get();
-        closure.status = NS_OK;
-        closure.native = mNativeComponentLoader; // prevent duplicate autoreg
+        nsCOMPtr<nsISupportsString> supStr = do_QueryInterface(supports);
+        if (!supStr)
+            continue;
         
-        mLoaders->Enumerate(AutoRegister_enumerate, &closure);
-        rv = closure.status;
+        nsXPIDLCString loaderType;
+        if (NS_FAILED(supStr->GetData(getter_Copies(loaderType))))
+            continue;
+
+        
+        nsCOMPtr<nsIComponentLoader> loader;
+        /* this will create it if we haven't already */
+        GetLoaderForType(loaderType, getter_AddRefs(loader));
     }
+
+    /* iterate over all known loaders and ask them to autoregister. */
+    /* XXX convert when to nsIComponentLoader::(when) properly */
+    struct AutoReg_closure closure;
+    closure.when = when;
+    closure.spec = dir.get();
+    closure.status = NS_OK;
+    closure.native = mNativeComponentLoader; // prevent duplicate autoreg
+    
+    mLoaders->Enumerate(AutoRegister_enumerate, &closure);
+    rv = closure.status;
 
     if (NS_SUCCEEDED(rv))
     {

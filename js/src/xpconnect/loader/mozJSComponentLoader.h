@@ -68,6 +68,7 @@ public:
     JSRuntime *mRuntime;
     JSContext *mContext;
     JSObject  *mCompMgrWrapper;
+    JSObject  *mSeasonPass;     // holds system principal atop the scope chain
     
     PLHashTable *mModules;
     PLHashTable *mGlobals;
