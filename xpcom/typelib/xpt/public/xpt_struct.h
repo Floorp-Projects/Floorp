@@ -239,7 +239,7 @@ XPT_NewStringZ(char *bytes);
  * InterfaceIsTypeDescriptor.
  */
 
-/* XXX why bother with a struct? */
+/* why bother with a struct?  - other code relies on this being a struct */
 struct XPTTypeDescriptorPrefix {
     PRUint8 flags;
 };
@@ -382,14 +382,14 @@ struct XPTMethodDescriptor {
 /* flag bits -- jband and fur were right, and I was miserably wrong */
 #define XPT_MD_GETTER   0x80
 #define XPT_MD_SETTER   0x40
-#define XPT_MD_VARARGS  0x20
+#define XPT_MD_NOTXPCOM 0x20
 #define XPT_MD_CTOR     0x10
 #define XPT_MD_HIDDEN   0x08
 #define XPT_MD_FLAGMASK 0xf8
 
 #define XPT_MD_IS_GETTER(flags)     (flags & XPT_MD_GETTER)
 #define XPT_MD_IS_SETTER(flags)     (flags & XPT_MD_SETTER)
-#define XPT_MD_IS_VARARGS(flags)    (flags & XPT_MD_VARARGS)
+#define XPT_MD_IS_NOTXPCOM(flags)   (flags & XPT_MD_NOTXPCOM)
 #define XPT_MD_IS_CTOR(flags)       (flags & XPT_MD_CTOR)
 #define XPT_MD_IS_HIDDEN(flags)     (flags & XPT_MD_HIDDEN)
 
