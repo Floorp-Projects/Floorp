@@ -59,6 +59,7 @@
 
 #include <Gestalt.h>
 #include <Quickdraw.h>
+#include <MacWindows.h>
 
 #if UNIVERSAL_INTERFACES_VERSION < 0x0340
 enum {
@@ -85,7 +86,6 @@ extern nsIWidget         * gRollupWidget;
 pascal long BorderlessWDEF ( short inCode, WindowPtr inWindow, short inMessage, long inParam ) ;
 long CallSystemWDEF ( short inCode, WindowPtr inWindow, short inMessage, long inParam ) ;
 #endif
-PRBool OnMacOSX();
 
 #define kWindowPositionSlop 20
 
@@ -187,6 +187,7 @@ NS_IMPL_ISUPPORTS_INHERITED3(nsMacWindow, Inherited, nsIEventSink, nsPIWidgetMac
 nsMacWindow::nsMacWindow() : Inherited()
   , mWindowMadeHere(PR_FALSE)
   , mIsDialog(PR_FALSE)
+  , mIsSheet(PR_FALSE)
   , mMacEventHandler(nsnull)
   , mAcceptsActivation(PR_TRUE)
   , mIsActive(PR_FALSE)
@@ -315,6 +316,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
         break;
 
       case eWindowType_dialog:
+        mIsTopWidgetWindow = PR_TRUE;
         if (aInitData)
         {
           // Prior to Carbon, defProcs were solely about appearance. If told to create a dialog,
@@ -348,6 +350,20 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
               break;
             
             default:
+#if TARGET_CARBON
+              if (nsToolkit::OnMacOSX() && aParent && (aInitData->mBorderStyle & eBorderStyle_sheet))
+              {
+                  nsWindowType parentType;
+                  aParent->GetWindowType(parentType);
+                  if (parentType != eWindowType_invisible)
+                  {
+                      // Mac OS X sheet support
+                      mIsSheet = PR_TRUE;
+                      wDefProcID = kWindowSheetProc;
+                  }
+              }
+              else
+#endif
               // we ignore the close flag here, since mac dialogs should never have a close box.
               switch(aInitData->mBorderStyle & (eBorderStyle_resizeh | eBorderStyle_title))
               {
@@ -387,6 +403,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
         break;
 
       case eWindowType_toplevel:
+        mIsTopWidgetWindow = PR_TRUE;
         if (aInitData &&
           aInitData->mBorderStyle != eBorderStyle_all &&
           aInitData->mBorderStyle != eBorderStyle_default &&
@@ -467,9 +484,18 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   // and adjust for any adjustment required to requested window bottom
   nsRect bounds(0, 0, aRect.width, aRect.height - bottomPinDelta);
 
+  // this code used to pass in null for aParent when init'ing the base class
+  // (Mac OS 9.x and earlier has no use for aParent regarding window modality)
+  // but for Mac OS X, we need a valid aParent IFF we have a sheet
+#if TARGET_CARBON
+    if ((aInitData->mBorderStyle == eBorderStyle_default) ||
+      !(aInitData->mBorderStyle & eBorderStyle_sheet))
+#endif
+      aParent = nil;
+
   // init base class
   // (note: aParent is ignored. Mac (real) windows don't want parents)
-  Inherited::StandardCreate(nil, bounds, aHandleEventFunction, aContext, aAppShell, theToolkit, aInitData);
+  Inherited::StandardCreate(aParent, bounds, aHandleEventFunction, aContext, aAppShell, theToolkit, aInitData);
 
   // there is a lot of work that we only want to do if we actually created 
   // the window. Embedding apps would be really torqed off if we mucked around
@@ -517,6 +543,18 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
     
       NS_ASSERTION(err == noErr, "Couldn't install Carbon constrain event handler");    
     }
+
+    if (mIsSheet)
+    {
+        // Mac OS X sheet support
+        ::SetWindowClass(mWindowPtr, kSheetWindowClass);
+        EventTypeSpec windEventList[] = { {kEventClassWindow, kEventWindowUpdate},
+                                          {kEventClassWindow, kEventWindowDrawContent} };
+        OSStatus err1 = ::InstallWindowEventHandler ( mWindowPtr,
+            NewEventHandlerUPP(WindowEventHandler), 2, windEventList, this, NULL );
+    }
+    
+
     
     // Setup the live window resizing if appropriate
     if ( resizable ) {
@@ -661,7 +699,15 @@ nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
         }
         break;
       }      
-        
+
+      case kEventWindowUpdate:
+      case kEventWindowDrawContent:
+      {
+        nsMacWindow *self = NS_REINTERPRET_CAST(nsMacWindow *, userData);
+        if (self) self->mMacEventHandler->UpdateEvent();
+      }
+      break;
+
       default:
         // do nothing...
         break;
@@ -744,12 +790,27 @@ nsMacWindow :: RemoveBorderlessDefProc ( WindowPtr inWindow )
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
 {
+#if TARGET_CARBON
+  // Mac OS X sheet support
+  nsIWidget *parentWidget = mParent;
+  WindowRef parentWindowRef = (parentWidget) ?
+    reinterpret_cast<WindowRef>(parentWidget->GetNativeData(NS_NATIVE_DISPLAY)) : nsnull;
+#endif
+
   Inherited::Show(bState);
   
   // we need to make sure we call ::Show/HideWindow() to generate the 
   // necessary activate/deactivate events. Calling ::ShowHide() is
   // not adequate, unless we don't want activation (popups). (pinkerton).
   if ( bState && !mBounds.IsEmpty() ) {
+#if TARGET_CARBON
+    if ( mIsSheet && parentWindowRef ) {
+        WindowPtr top = GetWindowTop(parentWindowRef);
+        ::ShowSheetWindow(mWindowPtr, top);
+        UpdateWindowMenubar(parentWindowRef, PR_FALSE);
+    }
+    else
+#endif
     if ( mAcceptsActivation )
       ::ShowWindow(mWindowPtr);
     else {
@@ -773,10 +834,114 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
       NS_IF_RELEASE(gRollupListener);
       NS_IF_RELEASE(gRollupWidget);
     }
+#if TARGET_CARBON
+    // Mac OS X sheet support
+    if (mIsSheet) {
+        ::HideSheetWindow(mWindowPtr);
+
+        // if we had several sheets open, when the last one goes away
+        // we need to ensure that the top app window is active
+        WindowPtr top = GetWindowTop(parentWindowRef);
+
+        if ( mAcceptsActivation ) {
+            ::ShowWindow(top);
+        }
+        else {
+            ::ShowHide(top, true);
+            ::BringToFront(top); // competes with ComeToFront, but makes popups work
+        }
+        ComeToFront();
+
+        if (top == parentWindowRef) {
+            UpdateWindowMenubar(parentWindowRef, PR_TRUE);
+        }
+    }
+    else
+#endif
     ::HideWindow(mWindowPtr);
-  }
-  
-  return NS_OK;
+    }
+    return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
+//
+// GetWindowTop
+//
+// find the topmost sheet currently assigned to a baseWindowRef or,
+// if no sheet is attached to it, just return the baseWindowRef itself
+//
+//-------------------------------------------------------------------------
+WindowPtr
+nsMacWindow::GetWindowTop(WindowPtr baseWindowRef)
+{
+    if (!baseWindowRef) return(nsnull);
+
+/*
+    Note: it would be nice to use window groups... something like the
+          following;  however, ::CountWindowGroupContents() and
+          ::GetIndexedWindow() are available on Mac OS X but NOT in
+          CarbonLib on pre-Mac OS X systems which we need to support
+
+    WindowGroupRef group = ::WindowGroupRef(baseWindowRef);
+    if (group)
+    {
+        WindowGroupContentOptions options =
+            kWindowGroupContentsReturnWindows | kWindowGroupContentsVisible;
+
+        ItemCount numWins = ::CountWindowGroupContents(group, options);
+        if (numWins >= 1)
+        {
+            ::GetIndexedWindow(group, 1, options, &baseWindowRef);
+        }
+    }
+*/
+
+    WindowPtr aSheet = ::GetFrontWindowOfClass(kSheetWindowClass, true);
+    while(aSheet)
+    {
+        WindowRef   sheetParent;
+        GetSheetWindowParent(aSheet, &sheetParent);
+        if (sheetParent == baseWindowRef)
+        {
+            return(aSheet);
+        }
+        aSheet = GetNextWindowOfClass(aSheet, kSheetWindowClass, true);
+    }
+    return(baseWindowRef);
+}
+
+
+void
+nsMacWindow::UpdateWindowMenubar(WindowPtr nativeWindowPtr, PRBool enableFlag)
+{
+    // Mac OS X sheet support
+    // when a sheet is up, disable parent window's menus
+    // (at least, until there is a better architecture for menus)
+
+    if (!nativeWindowPtr) return;
+
+    nsCOMPtr<nsIWidget> windowWidget;
+    nsToolkit::GetTopWidget ( nativeWindowPtr, getter_AddRefs(windowWidget));
+    if (!windowWidget) return;
+
+    nsCOMPtr<nsPIWidgetMac> parentWindow ( do_QueryInterface(windowWidget) );
+    if (!parentWindow)  return;
+    nsCOMPtr<nsIMenuBar> menubar;
+    parentWindow->GetMenuBar(getter_AddRefs(menubar));
+    if (!menubar) return;
+
+    PRUint32    numMenus=0;
+    menubar->GetMenuCount(numMenus);
+    for (PRInt32 i = numMenus-1; i >= 0; i--)
+    {
+        nsCOMPtr<nsIMenu> menu;
+        menubar->GetMenuAt(i, *getter_AddRefs(menu));
+        if (menu)
+        {
+            menu->SetEnabled(enableFlag);
+        }
+    }
 }
 
 
@@ -1081,7 +1246,7 @@ nsMacWindow::CalculateAndSetZoomedSize()
       if (screen == primaryScreen) {
         int iconSpace = 96;
 #if TARGET_CARBON
-        if(::OnMacOSX()) {
+        if(nsToolkit::OnMacOSX()) {
           iconSpace = 128;  //icons/grid is wider on Mac OS X
         }
 #endif
@@ -1101,6 +1266,20 @@ nsMacWindow::CalculateAndSetZoomedSize()
   return NS_OK;
 
 } // CalculateAndSetZoomedSize
+
+
+//-------------------------------------------------------------------------
+//
+// Obtain the menubar for a window
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMacWindow::GetMenuBar(nsIMenuBar **_retval)
+{
+  *_retval = mMenuBar;
+  NS_IF_ADDREF(*_retval);
+  return(NS_OK);
+}
 
 
 //-------------------------------------------------------------------------
@@ -1254,7 +1433,7 @@ PRBool nsMacWindow::OnPaint(nsPaintEvent &event)
 NS_IMETHODIMP nsMacWindow::SetTitle(const nsString& aTitle)
 {
 #if TARGET_CARBON
-  if(::OnMacOSX()) {
+  if(nsToolkit::OnMacOSX()) {
     // On MacOS X try to use the unicode friendly CFString version first
     CFStringRef labelRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)aTitle.get(), aTitle.Length());
     if(labelRef) {
@@ -1466,21 +1645,3 @@ CallSystemWDEF ( short inCode, WindowPtr inWindow, short inMessage, long inParam
 #pragma options align=reset
 
 #endif
-
-//
-// Return true if we are on Mac OS X, caching the result after the first call
-//
-PRBool
-OnMacOSX()
-{
-
-  static PRBool gInitVer = PR_FALSE;
-  static PRBool gOnMacOSX = PR_FALSE;
-  if(! gInitVer) {
-    long version;
-    OSErr err = ::Gestalt(gestaltSystemVersion, &version);
-    gOnMacOSX = (err == noErr && version >= 0x00001000);
-    gInitVer = PR_TRUE;
-  }
-  return gOnMacOSX;
-}

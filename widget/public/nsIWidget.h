@@ -149,6 +149,9 @@ enum nsBorderStyle
   // show the close button
   eBorderStyle_close    = 1 << 7,
 
+  // sheet hint (Mac OS X)
+  eBorderStyle_sheet    = 1 << 8,
+
   // whatever the OS wants... i.e. don't do anything
   eBorderStyle_default  = -1
 };

@@ -67,6 +67,11 @@
 #include "prprf.h"    
 #endif
 
+#if defined(XP_MAC) || defined(XP_MACOSX)
+#include <Gestalt.h>
+PRBool OnMacOSX();
+#endif
+
 #include "nsWidgetsCID.h"
 #include "nsIRequestObserver.h"
 
@@ -509,20 +514,39 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
       }  
     }
 
+#if TARGET_CARBON
+    // Mac OS X sheet support
+    PRUint32 sheetMask = nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
+                         nsIWebBrowserChrome::CHROME_MODAL;
+    if (aParent && ((aChromeMask & sheetMask) == sheetMask))
+    {
+        widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_sheet );
+    }
+#endif
+
     zlevel = nsIXULWindow::normalZ;
     if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RAISED)
       zlevel = nsIXULWindow::raisedZ;
     else if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_LOWERED)
       zlevel = nsIXULWindow::loweredZ;
+
 #if defined(XP_MAC) || defined(XP_MACOSX)
     /* Platforms on which modal windows are always application-modal, not
        window-modal (that's just the Mac, right?) want modal windows to
-       be stacked on top of everyone else. */
-    if ((aChromeMask & nsIWebBrowserChrome::CHROME_MODAL) && aParent)
-      zlevel = nsIXULWindow::highestZ;
+       be stacked on top of everyone else.
+
+       On Mac OS X, bind modality to parent window instead of app (ala Mac OS 9)
+    */
+    PRUint32 modalDepMask = nsIWebBrowserChrome::CHROME_MODAL |
+                            nsIWebBrowserChrome::CHROME_DEPENDENT;
+    if (aParent && (aChromeMask & modalDepMask))
+    {
+      if (::OnMacOSX()) aParent->GetZlevel(&zlevel);
+      else  zlevel = nsIXULWindow::highestZ;
+    }
 #else
     /* Platforms with native support for dependent windows (that's everyone
-       but the Mac, right?) know how to stack dependent windows. On these
+       but pre-Mac OS X, right?) know how to stack dependent windows. On these
        platforms, give the dependent window the same level as its parent,
        so we won't try to override the normal platform behaviour. */
     if ((aChromeMask & nsIWebBrowserChrome::CHROME_DEPENDENT) && aParent)
@@ -838,4 +862,23 @@ nsAppShellService::GetNativeAppSupport( nsINativeAppSupport **aResult ) {
     *aResult = mNativeAppSupport;
     NS_IF_ADDREF( *aResult );
     return *aResult ? NS_OK : NS_ERROR_NULL_POINTER;
+}
+
+
+//
+// Return true if we are on Mac OS X, caching the result after the first call
+//
+PRBool
+OnMacOSX()
+{
+
+  static PRBool gInitVer = PR_FALSE;
+  static PRBool gOnMacOSX = PR_FALSE;
+  if(! gInitVer) {
+    long version;
+    OSErr err = ::Gestalt(gestaltSystemVersion, &version);
+    gOnMacOSX = (err == noErr && version >= 0x00001000);
+    gInitVer = PR_TRUE;
+  }
+  return gOnMacOSX;
 }

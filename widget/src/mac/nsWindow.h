@@ -224,6 +224,7 @@ protected:
 #endif
 
 	nsIWidget*				mParent;
+  PRPackedBool      mIsTopWidgetWindow;
   PRPackedBool      mResizingChildren;
   PRPackedBool      mSaveVisible;
   PRPackedBool      mVisible;

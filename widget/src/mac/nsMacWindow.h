@@ -126,6 +126,9 @@ public:
 
     void IsActive(PRBool* aActive);
     void SetIsActive(PRBool aActive);
+    WindowPtr GetWindowTop(WindowPtr baseWindowRef);
+    void UpdateWindowMenubar(WindowPtr parentWindow, PRBool enableFlag);
+
 protected:
 
   void InstallBorderlessDefProc ( WindowPtr inWindow ) ;
@@ -147,6 +150,7 @@ protected:
 
 	PRBool							mWindowMadeHere; // true if we created the window
 	PRBool							mIsDialog;       // true if the window is a dialog
+	PRBool							mIsSheet;        // true if the window is a sheet (Mac OS X)
 	auto_ptr<nsMacEventHandler>		mMacEventHandler;
 	nsIWidget                      *mOffsetParent;
 	PRBool                          mAcceptsActivation;
