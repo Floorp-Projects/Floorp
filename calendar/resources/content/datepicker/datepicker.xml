@@ -9,9 +9,9 @@
 		<!-- ::::::::::::::::: CONTENT ::::::::::::::::::::::::: -->
 		<content id="content">
 		<xul:hbox flex="1" id="hbox">
-			<xul:textbox id="textbox" 
-                                onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.update(new DateFormater().parseShortDate(this.value));"
-                                onblur="this.parentNode.parentNode.parentNode.parentNode.update(new DateFormater().parseShortDate(this.value),true);"/>
+			<xul:textbox id="textbox"
+ 				onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.parseTextDate();"
+ 				onblur="this.parentNode.parentNode.parentNode.parentNode.parseTextDate(true);"/> 
 			
 			<xul:menu class="datepicker-button">
 				<xul:menupopup popupanchor="bottomright" popupalign="topright" onpopupshowing="this.parentNode.parentNode.parentNode.openPopup()">
@@ -55,11 +55,12 @@
 		<parameter name="aValue"/>
         <parameter name="refresh"/>
 			<body><![CDATA[
-            if (!aValue || aValue.toString() == "Invalid Date") {
-					this.mTextBox.setAttribute("value", this.getPrettyDate(this.mValue));
+ 			  if (aValue == null) {  // invalid date, revert to previous date
+ 			    // set textBox.value property, not attribute
+ 			    this.mTextBox.value = this.getPrettyDate(this.mValue);
 				} else {
 					this.mValue = aValue;
-                    this.mTextBox.setAttribute("value", this.getPrettyDate(this.mValue));
+					this.mTextBox.value = this.getPrettyDate(this.mValue);
                     if( this.callback && refresh != false )
                         this.callback();
 				}
@@ -81,6 +82,12 @@
 			]]></body>
 		</method>
 
+		<method name="parseTextDate">
+ 		        <parameter name="aRefresh"/>
+ 			<body><![CDATA[
+ 			   this.update(this.formatter.parseShortDate(this.mTextBox.value), aRefresh);
+  			]]></body>
+		</method>
 		<method name="openPopup">
 			<body><![CDATA[
                             this.calendar.update( this.mValue );
