@@ -1996,17 +1996,11 @@ nsComboboxControlFrame::HandleEvent(nsIPresContext* aPresContext,
   if (aEvent->message == NS_KEY_PRESS) {
     nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
     nsInputEvent *inputEvent = (nsInputEvent*)aEvent;
-    if (!inputEvent->isShift && !inputEvent->isControl && !inputEvent->isMeta) {
-      if (keyEvent->keyCode == NS_VK_F4 && !inputEvent->isAlt)
-        ToggleList(aPresContext);
-      else if (inputEvent->isAlt && (keyEvent->keyCode == NS_VK_DOWN || (mDroppedDown && keyEvent->keyCode == NS_VK_UP)))
-        ToggleList(aPresContext);
-      else if (!mDroppedDown && keyEvent->keyCode == NS_VK_RETURN)
-        CheckFireOnChange();
+    if (!inputEvent->isShift && !inputEvent->isControl && !inputEvent->isMeta && 
+        !mDroppedDown && keyEvent->keyCode == NS_VK_RETURN) {
+      CheckFireOnChange();
     }
   }
-
-
 
   // If we have style that affects how we are selected, feed event down to
   // nsFrame::HandleEvent so that selection takes place when appropriate.

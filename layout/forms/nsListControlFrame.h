@@ -336,6 +336,7 @@ public:
 
 protected:
 
+  void       DropDownToggleKey(nsIDOMEvent* aKeyEvent);
   nsresult   IsOptionDisabled(PRInt32 anIndex, PRBool &aIsDisabled);
   nsresult   ScrollToFrame(nsIContent * aOptElement);
   nsresult   ScrollToIndex(PRInt32 anIndex);
