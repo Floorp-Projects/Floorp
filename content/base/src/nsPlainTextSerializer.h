@@ -164,13 +164,16 @@ protected:
 protected:
   nsString         mCurrentLine;
 
-  PRBool           mInHead;
+  PRPackedBool     mInHead;
+  PRPackedBool     mAtFirstColumn;
+  PRPackedBool     mQuotesPreformatted; // (pref)
+  PRPackedBool     mStructs;            // Output structs (pref)
+
   PRInt32          mIndent;
   // mInIndentString keeps a header that has to be written in the indent.
   // That could be, for instance, the bullet in a bulleted list.
   nsString         mInIndentString;
   PRInt32          mCiteQuoteLevel;
-  PRBool           mAtFirstColumn;
   PRInt32          mFlags;
 
   // The wrap column is how many standard sized chars (western languages)
@@ -184,18 +187,17 @@ protected:
   // Treat quoted text as though it's preformatted -- don't wrap it.
   // Having it on a pref is a temporary measure, See bug 69638.
   PRInt32          mSpanLevel;
-  PRBool           mQuotesPreformatted;
 
-  PRBool           mDoFragment;
+
   PRInt32          mEmptyLines; // Will be the number of empty lines before
                                 // the current. 0 if we are starting a new
                                 // line and -1 if we are in a line.
-  PRBool           mInWhitespace;
-  PRBool           mPreFormatted;
-  PRBool           mStartedOutput; // we've produced at least a character
+
+  PRPackedBool     mInWhitespace;
+  PRPackedBool     mPreFormatted;
+  PRPackedBool     mStartedOutput; // we've produced at least a character
 
   nsString         mURL;
-  PRBool           mStructs;           // Output structs (pref)
   PRInt32          mHeaderStrategy;    /* Header strategy (pref)
                                           0 = no indention
                                           1 = indention, increased with

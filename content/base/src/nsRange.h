@@ -164,13 +164,20 @@ public:
   
   static NS_METHOD    TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartOffset, PRInt32 aEndOffset, PRInt32 aReplaceLength);
 
-//private: I wish VC++ would give me a &&*@!#$ break
-  PRBool       mIsPositioned;
-  PRBool       mIsDetached;
+protected:
+
+  PRPackedBool mBeforeGenContent;
+  PRPackedBool mAfterGenContent;
+
+  PRPackedBool mIsPositioned;
+  PRPackedBool mIsDetached;
+
   PRInt32      mStartOffset;
   PRInt32      mEndOffset;
+
   nsCOMPtr<nsIDOMNode> mStartParent;
   nsCOMPtr<nsIDOMNode> mEndParent;
+
   static PRMonitor    *mMonitor;              // monitor to protect the following statics
   static nsVoidArray  *mStartAncestors;       // just keeping these static to avoid reallocing the arrays.
   static nsVoidArray  *mEndAncestors;         // the contents of these arrays are discarded across calls.
@@ -180,7 +187,8 @@ public:
   // no copy's or assigns
   nsRange(const nsRange&);
   nsRange& operator=(const nsRange&);
-  
+ 
+public:
   // helper routines
   
   static PRBool        InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
@@ -204,6 +212,7 @@ public:
                                       nsIDOMDocumentFragment* docfrag,
                                       PRBool leftP);
 
+protected:
   nsresult      DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
                              nsIDOMNode* aEndN, PRInt32 aEndOffset);
 
@@ -220,10 +229,6 @@ public:
  
   nsresult      ContentOwnsUs(nsIDOMNode* domNode);
 
-  protected:
-	PRBool mBeforeGenContent;
-	PRBool mAfterGenContent;
-  	
 };
 
 // Make a new nsIDOMRange object

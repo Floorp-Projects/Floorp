@@ -195,11 +195,14 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv) && prefs) {
     if(mFlags & nsIDocumentEncoder::OutputFormatted) {
+      PRBool tempBool;
       // Get some prefs that controls how we do formatted output
-      prefs->GetBoolPref(PREF_STRUCTS, &mStructs);
+      prefs->GetBoolPref(PREF_STRUCTS, &tempBool);
+      mStructs = tempBool;
       prefs->GetIntPref(PREF_HEADER_STRATEGY, &mHeaderStrategy);
       // The quotesPreformatted pref is a temporary measure. See bug 69638.
-      prefs->GetBoolPref("editor.quotesPreformatted", &mQuotesPreformatted);
+      prefs->GetBoolPref("editor.quotesPreformatted", &tempBool);
+      mQuotesPreformatted = tempBool;
     }
 
     // XXX We should let the caller pass this in.

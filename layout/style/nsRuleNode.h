@@ -279,10 +279,10 @@ struct nsCachedStyleData
 struct nsRuleData
 {
   nsStyleStructID mSID;
+  PRPackedBool mCanStoreInRuleTree;
   nsIPresContext* mPresContext;
   nsIStyleContext* mStyleContext;
   nsPostResolveFunc mPostResolveCallback;
-  PRBool mCanStoreInRuleTree;
   nsCSSFont* mFontData; // Should always be stack-allocated! We don't own these structures!
   nsCSSDisplay* mDisplayData;
   nsCSSMargin* mMarginData;

@@ -103,13 +103,13 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
 
   PRInt32   mIndent;
   PRInt32   mColPos;
-  PRBool    mInBody;
   PRUint32  mFlags;
+  PRPackedBool  mInBody;
 
-  PRBool    mDoFormat;
-  PRBool    mDoHeader;
-  PRBool    mBodyOnly;
-  PRInt32   mPreLevel;
+  PRPackedBool  mDoFormat;
+  PRPackedBool  mDoHeader;
+  PRPackedBool  mBodyOnly;
+  PRInt32       mPreLevel;
 
   /*
    * mInCDATA is set to PR_TRUE while the serializer is serializing
@@ -120,13 +120,12 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
    * output the content of the element without doing any entity encoding
    * what so ever.
    */
-  PRBool mInCDATA;
+  PRPackedBool mInCDATA;
+  PRPackedBool mIsLatin1;
 
   PRInt32   mMaxColumn;
 
   nsString  mLineBreak;
-
-  PRBool mIsLatin1;
 
   nsCOMPtr<nsIAtom> mCharSet;
 };

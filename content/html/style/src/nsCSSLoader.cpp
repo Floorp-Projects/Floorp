@@ -163,7 +163,6 @@ public:
 
   nsIContent*     mOwningElement;
   nsIParser*      mParserToUnblock;
-  PRBool          mDidBlockParser;
 
   nsICSSStyleSheet* mParentSheet;
   nsICSSImportRule* mParentRule;
@@ -173,9 +172,11 @@ public:
 
   PRUint32        mPendingChildren;
 
-  PRBool          mIsInline;
-  PRBool          mIsAgent;
-  PRBool          mSyncLoad;
+  PRPackedBool    mDidBlockParser;
+
+  PRPackedBool    mIsInline;
+  PRPackedBool    mIsAgent;
+  PRPackedBool    mSyncLoad;
 
   nsICSSLoaderObserver* mObserver;
 };
@@ -358,12 +359,12 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mSheetIndex(aDocIndex),
     mOwningElement(aOwner),
     mParserToUnblock(aParserToUnblock),
-    mDidBlockParser(PR_FALSE),
     mParentSheet(nsnull),
     mParentRule(nsnull),
     mNext(nsnull),
     mParentData(nsnull),
     mPendingChildren(0),
+    mDidBlockParser(PR_FALSE),
     mIsInline(aIsInline),
     mIsAgent(PR_FALSE),
     mSyncLoad(PR_FALSE),

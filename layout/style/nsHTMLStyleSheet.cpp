@@ -107,8 +107,8 @@ public:
   }
 
   nscolor mBackgroundColor;
-  PRBool mForegroundSet;
-  PRBool mBackgroundSet;
+  PRPackedBool mForegroundSet;
+  PRPackedBool mBackgroundSet;
 };
 
 HTMLColorRule::HTMLColorRule(nsIHTMLStyleSheet* aSheet)

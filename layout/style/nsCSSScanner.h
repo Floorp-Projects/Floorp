@@ -95,10 +95,10 @@ enum nsCSSTokenType {
 
 struct nsCSSToken {
   nsCSSTokenType  mType;
+  PRPackedBool    mIntegerValid;
   nsAutoString    mIdent;
   float           mNumber;
   PRInt32         mInteger;
-  PRBool          mIntegerValid;
   PRUnichar       mSymbol;
 
   nsCSSToken();
