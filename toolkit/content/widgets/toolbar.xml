@@ -19,6 +19,16 @@
       <field name="afterPalette">
         null
       </field>
+      <method name="rebuild">
+        <body>
+          <![CDATA[
+            while (this.firstChild != this.afterPalette) {
+              this.removeChild(this.firstChild);
+            }
+            this.buildItemsFromPalette();
+          ]]>
+        </body>
+      </method>
       <method name="buildItemsFromPalette">
         <body>
           <![CDATA[
@@ -28,18 +38,21 @@
             if (!currentSet)
               return;
 
-            var node = this.firstChild;
-            while (node) {
-              if (node.localName == "toolbarpalette")
-                break;
-              node = node.nextSibling;
-            }
-            if (!node)
-              return;
+            var node = this.palette ? this.palette : this.firstChild;
+              
+            if (!this.palette) {
+              while (node) {
+                if (node.localName == "toolbarpalette")
+                  break;
+                node = node.nextSibling;
+              }
+              if (!node)
+                return;
             
-            this.afterPalette = node.nextSibling;
-            this.palette = node;
-            this.removeChild(node);
+              this.afterPalette = node.nextSibling;
+              this.palette = node;
+              this.removeChild(node);
+            }
             
             var items = currentSet.split(",");
             for (var i = 0; i < items.length; i++) {
