@@ -369,7 +369,7 @@ private:
     PRUint32 SegOffset(PRUint32 aPosition) {return aPosition & (mSegmentSize - 1);}
 };
 
-NS_IMPL_ISUPPORTS1(nsStorageInputStream, nsIInputStream)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsStorageInputStream, nsIInputStream)
 
 NS_IMETHODIMP
 nsStorageStream::NewInputStream(PRInt32 aStartingOffset, nsIInputStream* *aInputStream)
