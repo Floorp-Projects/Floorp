@@ -48,6 +48,8 @@
 #include "nsISmtpUrl.h"
 #include "nsCRT.h"
 #include "nsMsgUtils.h"
+#include "nsIMsgAccountManager.h"
+#include "nsMsgBaseCID.h"
 
 NS_IMPL_ADDREF(nsSmtpServer)
 NS_IMPL_RELEASE(nsSmtpServer)
@@ -316,6 +318,99 @@ NS_IMETHODIMP
 nsSmtpServer::GetPassword(char * *aPassword)
 {
     NS_ENSURE_ARG_POINTER(aPassword);
+    if (m_password.IsEmpty())
+    {
+      // try to avoid prompting the user for another password. If the user has set
+      // the appropriate pref, we'll use the password from an incoming server, if 
+      // the user has already logged onto that server.
+
+      // if this is set, we'll only use this, and not the other prefs
+      // user_pref("mail.smtpserver.smtp1.incomingAccount", "server1");
+
+      // if this is set, we'll accept an exact match of user name and server
+      // user_pref("mail.smtp.useMatchingHostNameServer", true);
+
+      // if this is set, and we don't find an exact match of user and host name, 
+      // we'll accept a match of username and domain, where domain
+      // is everything after the first '.'
+      // user_pref("mail.smtp.useMatchingDomainServer", true);
+
+      nsresult rv;
+      nsCAutoString accountKeyPref;
+      nsXPIDLCString accountKey;
+      PRBool useMatchingHostNameServer = PR_FALSE;
+      PRBool useMatchingDomainServer = PR_FALSE;
+      getPrefString("incomingAccount", accountKeyPref);
+      nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+      NS_ENSURE_SUCCESS(rv, rv);
+      prefBranch->GetCharPref(accountKeyPref.get(), getter_Copies(accountKey));
+
+      nsCOMPtr<nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID);
+      nsCOMPtr<nsIMsgIncomingServer> incomingServerToUse;
+      if (accountManager) 
+      {
+        if (!accountKey.IsEmpty()) 
+        {
+          accountManager->GetIncomingServer(accountKey.get(), getter_AddRefs(incomingServerToUse));
+        }
+        else
+        {
+          prefBranch->GetBoolPref("mail.smtp.useMatchingHostNameServer", &useMatchingHostNameServer);
+          prefBranch->GetBoolPref("mail.smtp.useMatchingDomainServer", &useMatchingDomainServer);
+          if (useMatchingHostNameServer || useMatchingDomainServer)
+          {
+            nsXPIDLCString userName;
+            nsXPIDLCString hostName;
+            GetHostname(getter_Copies(hostName));
+            GetUsername(getter_Copies(userName));
+            if (useMatchingHostNameServer)
+              // pass in empty type, to match imap and pop3.
+              accountManager->FindRealServer(userName, hostName, "", getter_AddRefs(incomingServerToUse));
+            PRInt32 dotPos = -1;
+            if (!incomingServerToUse && useMatchingDomainServer 
+              && (dotPos = hostName.FindChar('.')) != kNotFound)
+            {
+              hostName.Cut(0, dotPos);
+              nsCOMPtr<nsISupportsArray> allServers;
+              accountManager->GetAllServers(getter_AddRefs(allServers));
+              if (allServers)
+              {
+                PRUint32 count = 0;
+                allServers->Count(&count);
+                PRInt32 i;
+                for (i = 0; i < count; i++) 
+                {
+                  nsCOMPtr<nsIMsgIncomingServer> server = do_QueryElementAt(allServers, i);
+                  if (server)
+                  {
+                    nsXPIDLCString serverUserName;
+                    nsXPIDLCString serverHostName;
+                    server->GetRealUsername(getter_Copies(serverUserName));
+                    server->GetRealHostName(getter_Copies(serverHostName));
+                    if (serverUserName.Equals(userName))
+                    {
+                      PRInt32 serverDotPos = serverHostName.FindChar('.');
+                      if (serverDotPos != kNotFound)
+                      {
+                        serverHostName.Cut(0, serverDotPos);
+                        if (serverHostName.Equals(hostName))
+                        {
+                          incomingServerToUse = server;
+                          break;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      if (incomingServerToUse)
+        return incomingServerToUse->GetPassword(aPassword);
+
+    }
     *aPassword = ToNewCString(m_password);
     return NS_OK;
 }
