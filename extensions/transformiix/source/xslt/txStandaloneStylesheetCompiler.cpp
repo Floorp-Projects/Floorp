@@ -74,6 +74,9 @@ class txDriver : public txACompileObserver
 nsresult
 TX_CompileStylesheetPath(const nsAString& aHref, txStylesheet** aResult)
 {
+    PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
+           ("TX_CompileStylesheetPath: %s\n",
+            NS_LossyConvertUCS2toASCII(aHref).get()));
     *aResult = nsnull;
     nsAutoString errMsg;
     istream* xslInput = URIUtils::getInputStream(aHref, errMsg);
