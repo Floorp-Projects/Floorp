@@ -242,46 +242,34 @@ foreach my $m (@::legal_target_milestone) {
     }
 }
 
-# Sort the component list...
-my $comps = \%::components;
-foreach my $p (@products) {
-    my @tmp = sort { lc($a) cmp lc($b) } @{$comps->{$p}};
-    $comps->{$p} = \@tmp;
-}    
-
-# and the version list...
-my $vers = \%::versions;
-foreach my $p (@products) {
-    my @tmp = sort { lc($a) cmp lc($b) } @{$vers->{$p}};
-    $vers->{$p} = \@tmp;
-}    
-
-# and the milestone list.
-my $mstones;
-if (Param('usetargetmilestone')) {
-    $mstones = \%::target_milestone;
-    foreach my $p (@products) {
-        my @tmp = sort { lc($a) cmp lc($b) } @{$mstones->{$p}};
-        $mstones->{$p} = \@tmp;
-    }    
+# Create data structures representing each product.
+for (my $i = 0; $i < @products; ++$i) {
+    my $p = $products[$i];
+    
+    # Create hash to hold attributes for each product.
+    my %product = (
+        'name'       => $p,
+        'components' => [ sort { lc($a) cmp lc($b) } @{$::components{$p}} ],
+        'versions'   => [ sort { lc($a) cmp lc($b) } @{$::versions{$p}}   ]
+    );
+    
+    if (Param('usetargetmilestone')) {
+        $product{'milestones'} =  
+                      [ sort { lc($a) cmp lc($b) } @{$::target_milestone{$p}} ];
+    }
+    
+    # Assign hash back to product array.
+    $products[$i] = \%product;
 }
-
-# "foo" or "foos" is a list of all the possible (or legal) products, 
-# components, versions or target milestones.
-# "foobyproduct" is a hash, keyed by product, of sorted lists
-# of the same data.
 
 $vars->{'product'} = \@products;
 
 # We use 'component_' because 'component' is a Template Toolkit reserved word.
-$vars->{'componentsbyproduct'} = $comps;
 $vars->{'component_'} = \@components;
 
-$vars->{'versionsbyproduct'} = $vers;
 $vars->{'version'} = \@versions;
 
 if (Param('usetargetmilestone')) {
-    $vars->{'milestonesbyproduct'} = $mstones;
     $vars->{'target_milestone'} = \@milestones;
 }
 
