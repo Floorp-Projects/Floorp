@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.288 $ ';
+$::UtilsVersion = '$Revision: 1.289 $ ';
 
 package TinderUtils;
 
@@ -1920,7 +1920,7 @@ sub run_all_tests {
                     ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$open_time\">" if ($Settings::TestsPhoneHome);
             print_log 'Txul:' . $open_time . 'ms';
             print_log '</a>' if ($Settings::TestsPhoneHome);
-            print_log '\n';
+            print_log "\n";
 
             # Pull out samples data from log.
             my $raw_data = extract_token_from_file($binary_log, "openingTimes", "=");
@@ -2489,12 +2489,12 @@ sub StartupPerformanceTest {
     }
 
     my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
-    print_log '\n\nTinderboxPrint:';
+    print_log "\n\nTinderboxPrint:";
     print_log "<a title=\"Best startup time out of 10 startups\"href=\"http://$Settings::results_server/graph/query.cgi?testname=startup&tbox="
       . ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$min_startuptime\">" if ($Settings::TestsPhoneHome);
     print_log $ts_prefix . 'Ts:' . $min_startuptime . 'ms';
     print_log '</a>' if ($Settings::TestsPhoneHome);
-    print_log '\n\n';
+    print_log "\n\n";
     
     # Report data back to server
     if($Settings::TestsPhoneHome) {
