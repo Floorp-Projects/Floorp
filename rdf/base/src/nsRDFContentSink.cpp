@@ -1169,7 +1169,7 @@ RDFContentSinkImpl::AddProperties(const nsIParserNode& aNode,
 #if defined(XP_WIN)
 #define STDCALL __stdcall
 #elif defined(XP_OS2)
-#define STDCALL _System
+#define STDCALL
 #else
 #define STDCALL
 #endif
