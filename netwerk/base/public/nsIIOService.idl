@@ -105,40 +105,6 @@ interface nsIIOService : nsISupports
                           in unsigned long bufferMaxSize);
 
     /**
-     * Get the application name string that will be used as part
-     * of a HTTP request.
-     */
-    readonly attribute wstring appCodeName;
-  
-    /**
-     * Get the application version string that will be used as part
-     * of a HTTP request.
-     */
-    readonly attribute wstring appVersion;
-
-    /**
-     * Get the application name.
-     */
-    readonly attribute wstring appName;
-
-    /**
-     * Get the translation of the application. The value for language
-     * is usually a 2-letter code such as "en" and occasionally a 
-     * five-character code to indicate a language subtype, such as "zh_CN". 
-     */
-    attribute wstring language;
-
-    /**
-     * Get the current platform (machine type).
-     */
-    readonly attribute wstring platform;
-
-    /**
-     * Get the HTTP advertised user agent string.
-     */
-    readonly attribute wstring userAgent;
-
-    /**
      * Returns true if networking is in "offline" mode. When in offline mode, attempts
      * to access the network will fail (although this is not necessarily corrolated with
      * whether there is actually a network available -- that's hard to detect without
