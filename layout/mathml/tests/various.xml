@@ -1,5 +1,10 @@
 <?xml version="1.0"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "mathml.dtd">
+<!DOCTYPE html PUBLIC
+  "-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN"
+  "http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd"
+[
+  <!ENTITY mathml "http://www.w3.org/1998/Math/MathML">
+]>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <!--
   *  The contents of this file are subject to the Mozilla Public
@@ -24,7 +29,23 @@
   -->
 
 <head>
-  <title>Various examples of MathML</title>
+<title>Various examples of MathML</title>
+<style>
+maction {
+  background-color: yellow;
+}
+maction:hover  {
+  -moz-outline: 1px dotted black;
+/*  border: 1px solid black; */
+}
+maction[actiontype="restyle#background"] {
+  background-color: #3C6;
+  border: 1px dotted red;
+}
+maction[actiontype="restyle#zoom"] {
+  font-size: 40pt;
+}
+</style>
 </head>
 <body>
 
