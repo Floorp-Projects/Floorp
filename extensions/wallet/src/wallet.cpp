@@ -2595,6 +2595,14 @@ return;
   }
 }
 
+#define FORM_TYPE_TEXT          1
+#define FORM_TYPE_PASSWORD      7
+#define MAX_ARRAY_SIZE 500
+
+extern void
+SI_RememberSignonData2
+  (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt);
+
 PUBLIC void
 WLLT_OnSubmit(nsIContent* formNode) {
 
@@ -2630,7 +2638,7 @@ WLLT_OnSubmit(nsIContent* formNode) {
   nsCRT::free(spec);
 #endif
 
-  /* determine if form is significant enough to capture data for */
+  /* get to the form elements */
   PRInt32 count = 0;
   nsIDOMHTMLFormElement* formElement = nsnull;
   nsresult result = formNode->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElement);
@@ -2639,8 +2647,14 @@ WLLT_OnSubmit(nsIContent* formNode) {
     result = formElement->GetElements(&elements);
     if ((NS_SUCCEEDED(result)) && (nsnull != elements)) {
 
+      char* name_array[MAX_ARRAY_SIZE];
+      char* value_array[MAX_ARRAY_SIZE];
+      uint8 type_array[MAX_ARRAY_SIZE];
+      PRInt32 value_cnt = 0;
+
       /* got to the form elements at long last */
       /* now find out how many text fields are on the form */
+      /* also build arrays for single signon */
       PRUint32 numElements;
       elements->GetLength(&numElements);
       for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
@@ -2653,9 +2667,30 @@ WLLT_OnSubmit(nsIContent* formNode) {
           if ((NS_SUCCEEDED(result)) && (nsnull != inputElement)) {
             nsAutoString type;
             result = inputElement->GetType(type);
-            if ((NS_SUCCEEDED(result)) &&
-                ((type =="") || (type.Compare("text", PR_TRUE) == 0))) {
-              count++;
+            if (NS_SUCCEEDED(result)) {
+              PRBool isText = ((type == "") || (type.Compare("text", PR_TRUE)==0));
+              PRBool isPassword = (type.Compare("password", PR_TRUE)==0);
+              if (isText) {
+                count++;
+              }
+              if (value_cnt < MAX_ARRAY_SIZE) {
+                if (isText) {
+                  type_array[value_cnt] = FORM_TYPE_TEXT;
+                } else if (isPassword) {
+                  type_array[value_cnt] = FORM_TYPE_PASSWORD;
+                }
+                nsAutoString value;
+                result = inputElement->GetValue(value);
+                if (NS_SUCCEEDED(result)) {
+                  nsAutoString field;
+                  result = inputElement->GetName(field);
+                  if (NS_SUCCEEDED(result)) {
+                    value_array[value_cnt] = value.ToNewCString();
+                    name_array[value_cnt] = field.ToNewCString();
+                    value_cnt++;
+                  }
+                }
+              }
             }
             NS_RELEASE(inputElement);
           }
@@ -2663,9 +2698,12 @@ WLLT_OnSubmit(nsIContent* formNode) {
         }
       }
 
+      /* save login if appropriate */
+      SI_RememberSignonData2
+        (URLName, (char**)name_array, (char**)value_array, (char**)type_array, value_cnt);
+
       /* save form if it meets all necessary conditions */
-      if (wallet_GetFormsCapturingPref() && (count>=3) &&
-          wallet_OKToCapture(URLName)) {
+      if (wallet_GetFormsCapturingPref() && (count>=3) && wallet_OKToCapture(URLName)) {
 
         /* conditions all met, now save it */
         for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
@@ -2703,25 +2741,6 @@ WLLT_OnSubmit(nsIContent* formNode) {
                 }
               }
               NS_RELEASE(inputElement);
-#ifdef xxx
-            } else {
-              nsIDOMHTMLSelectElement* selectElement;  
-              result =
-                elementNode->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&selectElement);
-              if ((NS_SUCCEEDED(result)) && (nsnull != selectElement)) {
-                /* it's a select element */
-                nsAutoString field;
-                result = selectElement->GetName(field);
-                if (NS_SUCCEEDED(result)) {
-                  nsAutoString value;
-                  result = selectElement->GetValue(value);
-                  if (NS_SUCCEEDED(result)) {
-                    wallet_Capture(doc, field, value, "");
-                  }
-                }
-                NS_RELEASE(selectElement);
-              }
-#endif
             }
             NS_RELEASE(elementNode);
           }

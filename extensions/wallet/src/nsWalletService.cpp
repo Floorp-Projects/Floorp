@@ -112,7 +112,8 @@ NS_IMETHODIMP nsWalletlibService::WALLET_Prefill
 
 NS_IMETHODIMP nsWalletlibService::WALLET_OKToCapture
         (PRBool* result, PRInt32 count, char* URLName) {
-    ::WLLT_OKToCapture(result, count, URLName);
+//    ::WLLT_OKToCapture(result, count, URLName);
+*result = PR_FALSE;
     return NS_OK;
 }
 
@@ -121,7 +122,7 @@ NS_IMETHODIMP nsWalletlibService::WALLET_Capture(
         nsString name,
         nsString value,
         nsString vcard) {
-    ::WLLT_Capture(doc, name, value, vcard);
+//    ::WLLT_Capture(doc, name, value, vcard);
     return NS_OK;
 }
 
@@ -167,7 +168,7 @@ NS_IMETHODIMP nsWalletlibService::WALLET_GetPrefillListForViewer(nsString& aPref
 
 NS_IMETHODIMP nsWalletlibService::SI_RememberSignonData
         (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt) {
-    ::SINGSIGN_RememberSignonData(URLName, name_array, value_array, type_array, value_cnt);
+//    ::SINGSIGN_RememberSignonData(URLName, name_array, value_array, type_array, value_cnt);
     return NS_OK;
 }
 
