@@ -687,7 +687,8 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
         NS_RELEASE(converter);
         if (NS_FAILED(rv)) return rv;
 
-        rv = conv->AsyncConvertData(aFromType, aToType, nsnull, aListener);
+        // XXX we should pass some context through
+        rv = conv->AsyncConvertData(aFromType, aToType, aListener, nsnull);
         NS_RELEASE(conv);
     }
     
