@@ -639,12 +639,44 @@ wallet_ReadFromURLFieldToSchemaFile
 /* The following routines are for fetching data from NetCenter */
 /***************************************************************/
 
+void
+wallet_FetchFromNetCenter(char* from, char* to) {
+  nsINetService *inet = nsnull;
+  nsIURL * url;
+  if (!NS_FAILED(NS_NewURL(&url, from))) {
+    nsresult rv = nsServiceManager::GetService(kNetServiceCID,
+                                               kINetServiceIID,
+                                               (nsISupports **)&inet);
+    if (NS_OK == rv) {
+      nsIInputStream* newStream;
+      nsIInputStream* *aNewStream = &newStream;
+      rv = inet->OpenBlockingStream(url, nsnull, aNewStream);
+      if (NS_OK == rv) {
+        FILE* fp = fopen(to, "w");
+        if (nsnull!=fp) {
+          char buff[1001];
+          PRUint32 count;
+          while (NS_OK == (*aNewStream)->Read(buff,1000,&count)) {
+            buff[count] = '\0';
+            fputs(buff, fp);
+          }
+          fflush(fp);
+          fclose(fp);
+        }
+      }
+    }
+    nsServiceManager::ReleaseService(kNetServiceCID, inet);
+  }
+}
+
 /*
  * fetch URL-specific field/schema mapping from netcenter and put into local copy of file
  * at URLFieldSchema.tbl
  */
 void
 wallet_FetchURLFieldSchemaFromNetCenter() {
+  wallet_FetchFromNetCenter
+    ("http://people.netscape.com/morse/wallet/URLFieldSchema.tbl","URLFieldSchema.tbl");
 }
 
 /*
@@ -653,6 +685,8 @@ wallet_FetchURLFieldSchemaFromNetCenter() {
  */
 void
 wallet_FetchFieldSchemaFromNetCenter() {
+  wallet_FetchFromNetCenter
+    ("http://people.netscape.com/morse/wallet/FieldSchema.tbl","FieldSchema.tbl");
 }
 
 /*
@@ -661,6 +695,8 @@ wallet_FetchFieldSchemaFromNetCenter() {
  */
 void
 wallet_FetchSchemaConcatFromNetCenter() {
+  wallet_FetchFromNetCenter
+    ("http://people.netscape.com/morse/wallet/SchemaConcat.tbl","SchemaConcat.tbl");
 }
 
 /*********************************************************************/
@@ -677,6 +713,11 @@ PRInt32 FieldToValue(
     XP_List*& itemList,
     XP_List*& resume)
 {
+  /* return if no SchemaToValue list exists */
+  if (!wallet_SchemaToValue_list) {
+    return -1;
+  }
+
   /* fetch schema name from field/schema tables */
   XP_List* FieldToSchema_list = wallet_FieldToSchema_list;
   XP_List* URLFieldToSchema_list = wallet_specificURLFieldToSchema_list;
@@ -856,7 +897,6 @@ wallet_GetPrefills(
 /*
  * initialization for wallet session (done only once)
  */
-#define FIELD_SCHEMA_URL "file:///y|/xxx.html"
 void
 wallet_Initialize() {
   static PRBool wallet_initialized = FALSE;
