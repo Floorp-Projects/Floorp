@@ -53,7 +53,6 @@
 #include "nsIWebBrowserFind.h"
 #include "nsIWebBrowserFocus.h"
 #include "nsIWebBrowserPersist.h"
-#include "imgIContainer.h"
 #include "nsIURI.h"
 #include "nsWeakPtr.h"
 #include "nsRect.h"
@@ -62,6 +61,9 @@
 #include "nsILocalFileMac.h"
 #include "nsWeakReference.h"
 #include "nsIChannel.h"
+#include "nsIHistoryEntry.h"
+#include "nsISHEntry.h"
+#include "nsISHistory.h"
 #include "nsIWidget.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsIMacTextInputEventSink.h"
@@ -76,6 +78,8 @@
 #include "CBrowserChrome.h"
 #include "CWebBrowserCMAttachment.h"
 #include "UMacUnicode.h"
+#include "CHeaderSniffer.h"
+#include "UCustomNavServicesDialogs.h"
 
 // PowerPlant
 #include <UModalDialogs.h>
@@ -561,15 +565,10 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
             break;
 
         case cmd_SaveAs:
-            rv = SaveCurrentURI();
+            rv = SaveDocument(eSaveFormatHTML);
             ThrowIfError_(rv);
             break;
-            
-        case cmd_SaveAllAs:
-            rv = SaveDocument();
-            ThrowIfError_(rv);
-            break;
-            
+                        
         case cmd_Cut:
             rv = GetClipboardHandler(getter_AddRefs(clipCmd));
             if (NS_SUCCEEDED(rv))
@@ -611,7 +610,7 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
                 rv = mContextMenuInfo->GetAssociatedLink(temp);
                 ThrowIfError_(rv);
                 nsCAutoString urlSpec = NS_ConvertUCS2toUTF8(temp);
-                
+
                 if (inCommand == cmd_OpenLinkInNewWindow) {
                     nsCAutoString referrer;
                     rv = GetFocusedWindowURL(temp);
@@ -666,6 +665,33 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
                 ThrowIfError_(rv);
                 currentURL.Insert("view-source:", 0);
                 PostOpenURLEvent(currentURL, nsCString());
+            }
+            break;
+
+        case cmd_SaveLinkTarget:
+            {
+                // Get the URL from the link
+                ThrowIfNil_(mContextMenuInfo);
+                nsAutoString linkText;
+                rv = mContextMenuInfo->GetAssociatedLink(linkText);
+                ThrowIfError_(rv);
+                
+                nsCOMPtr<nsIURI> linkURI;
+                rv = NS_NewURI(getter_AddRefs(linkURI), NS_ConvertUCS2toUTF8(linkText));
+                ThrowIfError_(rv);
+
+                SaveLink(linkURI);
+            }
+            break;
+            
+        case cmd_SaveImage:
+            {
+                ThrowIfNil_(mContextMenuInfo);
+                nsCOMPtr<nsIURI> imgURI;
+                mContextMenuInfo->GetImageSrc(getter_AddRefs(imgURI));
+                ThrowIfNil_(imgURI);
+                
+                SaveLink(imgURI);
             }
             break;
             
@@ -746,7 +772,6 @@ void CBrowserShell::FindCommandStatus(PP_PowerPlant::CommandT inCommand,
             break;
 
         case cmd_SaveAs:
-        case cmd_SaveAllAs:
             outEnabled = haveContent;
             break;
             
@@ -803,7 +828,7 @@ void CBrowserShell::FindCommandStatus(PP_PowerPlant::CommandT inCommand,
         case cmd_ViewImage:
             outEnabled = haveContent && mContextMenuInfo && ((mContextMenuFlags & nsIContextMenuListener2::CONTEXT_IMAGE) != 0);
             break;
-            
+
         case cmd_ViewBackgroundImage:
             outEnabled = haveContent && mContextMenuInfo && ((mContextMenuFlags & nsIContextMenuListener2::CONTEXT_BACKGROUND_IMAGE) != 0);
             break;
@@ -816,6 +841,14 @@ void CBrowserShell::FindCommandStatus(PP_PowerPlant::CommandT inCommand,
                     outEnabled = NS_SUCCEEDED(rv) && canDo;
                 }
             }
+            break;
+            
+        case cmd_SaveLinkTarget:
+            outEnabled = haveContent && mContextMenuInfo && ((mContextMenuFlags & nsIContextMenuListener2::CONTEXT_LINK) != 0);
+            break;
+        
+        case cmd_SaveImage:
+            outEnabled = haveContent && mContextMenuInfo && ((mContextMenuFlags & nsIContextMenuListener2::CONTEXT_IMAGE) != 0);
             break;
             
         case cmd_CopyLinkLocation:
@@ -1100,117 +1133,97 @@ NS_METHOD CBrowserShell::GetCurrentURL(nsACString& urlText)
 //***    CBrowserShell: URI Saving
 //*****************************************************************************
 
-NS_METHOD CBrowserShell::SaveDocument()
-{
-    FSSpec      fileSpec;
-    Boolean     isReplacing;
-    nsresult    rv = NS_OK;
-    
-    if (DoSaveFileDialog(fileSpec, isReplacing)) {
-        if (isReplacing) {
-            OSErr err = ::FSpDelete(&fileSpec);
-            if (err) return NS_ERROR_FAILURE;
-        }
-        rv = SaveDocument(fileSpec);
-    }
-    return rv;
-}
-
-NS_METHOD CBrowserShell::SaveCurrentURI()
-{
-    FSSpec      fileSpec;
-    Boolean     isReplacing;
-    nsresult    rv = NS_OK;
-    
-    if (DoSaveFileDialog(fileSpec, isReplacing)) {
-        if (isReplacing) {
-            OSErr err = ::FSpDelete(&fileSpec);
-            if (err) return NS_ERROR_FAILURE;
-        }
-        rv = SaveCurrentURI(fileSpec);
-    }
-    return rv;
-}
-
-NS_METHOD CBrowserShell::SaveDocument(const FSSpec& outSpec)
+// Save All As from menus
+NS_METHOD CBrowserShell::SaveDocument(ESaveFormat inSaveFormat)
 {
     nsresult    rv;
     
-    nsCOMPtr<nsIWebBrowserPersist> wbPersist(do_GetInterface(mWebBrowser, &rv));
-    if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    rv = mWebBrowserAsWebNav->GetDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDOMDocument> domDocument;
+    rv = mWebBrowserAsWebNav->GetDocument(getter_AddRefs(domDocument));
     if (NS_FAILED(rv)) return rv;
 
-    FSSpec nonConstOutSpec = outSpec;    
-    nsCOMPtr<nsILocalFileMac> localFile;
-    rv = NS_NewLocalFileWithFSSpec(&nonConstOutSpec, PR_FALSE, getter_AddRefs(localFile));
-    if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIFile> parentDir;
-    rv = localFile->GetParent(getter_AddRefs(parentDir));
-    if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsILocalFile> parentDirAsLocal(do_QueryInterface(parentDir, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = wbPersist->SaveDocument(domDoc, localFile, parentDirAsLocal, nsnull, 0, 0);
+    nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDocument));
+    if (!nsDoc)
+        return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDOMLocation> location;
+    nsDoc->GetLocation(getter_AddRefs(location));
+    if (!location)
+        return NS_ERROR_FAILURE;
     
-    return rv;
+    nsAutoString docLocation;
+    rv = location->GetHref(docLocation);
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsCOMPtr<nsIURI> documentURI;
+    rv = NS_NewURI(getter_AddRefs(documentURI), NS_ConvertUCS2toUTF8(docLocation));
+    if (NS_FAILED(rv))
+      return rv;
+
+    return SaveInternal(documentURI, domDocument, nsString(), false, inSaveFormat);     // don't bypass cache
 }
 
-NS_METHOD CBrowserShell::SaveCurrentURI(const FSSpec& outSpec)
+// Save link target
+NS_METHOD CBrowserShell::SaveLink(nsIURI* inURI)
 {
-    nsresult    rv;
-    
-    nsCOMPtr<nsIWebBrowserPersist> wbPersist(do_GetInterface(mWebBrowser, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    FSSpec nonConstOutSpec = outSpec;    
-    nsCOMPtr<nsILocalFileMac> localFile;
-    rv = NS_NewLocalFileWithFSSpec(&nonConstOutSpec, PR_FALSE, getter_AddRefs(localFile));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = wbPersist->SaveURI(nsnull, nsnull, localFile);
-    
-    return rv;
+    return SaveInternal(inURI, nsnull, nsString(), true, eSaveFormatHTML);     // bypass cache
 }
 
-Boolean CBrowserShell::DoSaveFileDialog(FSSpec& outSpec, Boolean& outIsReplacing)
-{
-	UNavServicesDialogs::LFileDesignator	designator;
+const char* const kPersistContractID = "@mozilla.org/embedding/browser/nsWebBrowserPersist;1";
 
+NS_METHOD CBrowserShell::SaveInternal(nsIURI* inURI, nsIDOMDocument* inDocument,
+  const nsAString& inSuggestedFilename, Boolean inBypassCache, ESaveFormat inSaveFormat)
+{
     nsresult rv;
-    nsAutoString docTitle;
-    Str255       defaultName;
+    // Create our web browser persist object.  This is the object that knows
+    // how to actually perform the saving of the page (and of the images
+    // on the page).
+    nsCOMPtr<nsIWebBrowserPersist> webPersist(do_CreateInstance(kPersistContractID, &rv));
+    if (!webPersist)
+        return rv;
+    
+    // Make a temporary file object that we can save to.
+    nsCOMPtr<nsIProperties> dirService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
+    if (!dirService)
+        return rv;
+    nsCOMPtr<nsIFile> tmpFile;
+    dirService->Get("TmpD", NS_GET_IID(nsIFile), getter_AddRefs(tmpFile));
+    static short unsigned int tmpRandom = 0;
+    nsAutoString tmpNo; tmpNo.AppendInt(tmpRandom++);
+    nsAutoString saveFile(NS_LITERAL_STRING("-sav"));
+    saveFile += tmpNo;
+    saveFile += NS_LITERAL_STRING("tmp");
+    tmpFile->Append(saveFile); 
+    
+    // Get the post data if we're an HTML doc.
+    nsCOMPtr<nsIInputStream> postData;
+    if (inDocument) {
+      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
+      nsCOMPtr<nsISHistory> sessionHistory;
+      webNav->GetSessionHistory(getter_AddRefs(sessionHistory));
+      nsCOMPtr<nsIHistoryEntry> entry;
+      PRInt32 sindex;
+      sessionHistory->GetIndex(&sindex);
+      sessionHistory->GetEntryAtIndex(sindex, PR_FALSE, getter_AddRefs(entry));
+      nsCOMPtr<nsISHEntry> shEntry(do_QueryInterface(entry));
+      if (shEntry)
+          shEntry->GetPostData(getter_AddRefs(postData));
+    }
 
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    rv = mWebBrowserAsWebNav->GetDocument(getter_AddRefs(domDoc));
-    if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(domDoc, &rv));
-        if (NS_SUCCEEDED(rv))
-            htmlDoc->GetTitle(docTitle);
-    }
-    
-    // For now, we'll assume that we're saving HTML
-    NS_NAMED_LITERAL_STRING(htmlSuffix, ".html");
-    if (docTitle.IsEmpty())
-        docTitle.Assign(NS_LITERAL_STRING("untitled"));
-    else {
-        if (docTitle.Length() > 31 - htmlSuffix.Length())
-            docTitle.Truncate(31 - htmlSuffix.Length());
-    }
-    docTitle.Append(htmlSuffix);
-    CPlatformUCSConversion::GetInstance()->UCSToPlatform(docTitle, defaultName);
+    // when saving, we first fire off a save with a nsHeaderSniffer as a progress
+    // listener. This allows us to look for the content-disposition header, which
+    // can supply a filename, and maybe has something to do with CGI-generated
+    // content (?)
+    CHeaderSniffer* sniffer = new CHeaderSniffer(webPersist, tmpFile, inURI, inDocument, postData,
+                                        inSuggestedFilename, inBypassCache, inSaveFormat);
+    if (!sniffer)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-    Boolean     result;
+    webPersist->SetProgressListener(sniffer);  // owned
     
-    result = designator.AskDesignateFile(defaultName);
-    if (result) {
-        designator.GetFileSpec(outSpec);
-        outIsReplacing = designator.IsReplacing();
-    }
-    
-    return result;
+    return webPersist->SaveURI(inURI, nsnull, tmpFile);
 }
+
 
 //*****************************************************************************
 //***    CBrowserShell: Text Searching

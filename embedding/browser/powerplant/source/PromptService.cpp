@@ -39,7 +39,6 @@
 #include "PromptService.h"
 #include "nsCOMPtr.h"
 #include "nsIPromptService.h"
-#include "nsIFactory.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIWindowWatcher.h"
@@ -61,18 +60,6 @@
 
 //*****************************************************************************
 // CPromptService
-//*****************************************************************************   
-
-class CPromptService: public nsIPromptService
-{
-public:
-			CPromptService();
-  virtual	~CPromptService();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPROMPTSERVICE
-};
-
 //*****************************************************************************   
 
 NS_IMPL_ISUPPORTS1(CPromptService, nsIPromptService)
@@ -663,72 +650,3 @@ NS_IMETHODIMP CPromptService::Select(nsIDOMWindow *parent, const PRUnichar *dial
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
- 
-//*****************************************************************************
-// CPromptServiceFactory
-//*****************************************************************************   
-
-class CPromptServiceFactory : public nsIFactory
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIFACTORY
-
-  CPromptServiceFactory();
-  virtual ~CPromptServiceFactory();
-};
-
-//*****************************************************************************   
-
-NS_IMPL_ISUPPORTS1(CPromptServiceFactory, nsIFactory)
-
-CPromptServiceFactory::CPromptServiceFactory()
-{
-  NS_INIT_ISUPPORTS();
-}
-
-CPromptServiceFactory::~CPromptServiceFactory()
-{
-}
-
-NS_IMETHODIMP CPromptServiceFactory::CreateInstance(nsISupports *aOuter, const nsIID & aIID, void **aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  
-  *aResult = NULL;  
-  CPromptService *inst = new CPromptService;    
-  if (!inst)
-    return NS_ERROR_OUT_OF_MEMORY;
-    
-  nsresult rv = inst->QueryInterface(aIID, aResult);
-  if (rv != NS_OK) {  
-    // We didn't get the right interface, so clean up  
-    delete inst;  
-  }  
-    
-  return rv;
-}
-
-NS_IMETHODIMP CPromptServiceFactory::LockFactory(PRBool lock)
-{
-    return NS_OK;
-}
-
-//*****************************************************************************   
-
-nsresult NS_NewPromptServiceFactory(nsIFactory** aFactory)
-{
-  NS_ENSURE_ARG_POINTER(aFactory);
-  *aFactory = nsnull;
-  
-  CPromptServiceFactory *result = new CPromptServiceFactory;
-  if (!result)
-    return NS_ERROR_OUT_OF_MEMORY;
-    
-  NS_ADDREF(result);
-  *aFactory = result;
-  
-  return NS_OK;
-}
-
-
