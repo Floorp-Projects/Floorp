@@ -47,6 +47,15 @@
 //we should have the nsIMessage have the ability to get the folder from it.
 #include "nsLocalMailFolder.h"
 
+// this is used for notification of observers using nsVoidArray
+typedef struct _nsMsgRDFNotification {
+  nsIRDFResource *subject;
+  nsIRDFResource *property;
+  nsIRDFNode *object;
+} nsMsgRDFNotification;
+                                                
+
+
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,    NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kMsgRFC822ParserCID,			NS_MSGRFC822PARSER_CID); 
@@ -333,146 +342,31 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
   if (! tv)
     return NS_RDF_NO_VALUE;
 
-	//XXX these need to start being their own functions
-  nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));
+  nsIMsgFolder *folder;
+  rv = source->QueryInterface(nsIMsgFolder::GetIID(),
+                              (void **)&folder);
   if (NS_SUCCEEDED(rv)) {
-    if (peq(kNC_Name, property)) {
-      char *name;
-      rv = folder->GetName(&name);
-      if (NS_FAILED(rv)) return rv;
-      nsString nameString(name);
-      createNode(nameString, target);
-      delete[] name;
-      return NS_OK;
-    }
-	else if (peq(kNC_SpecialFolder, property)) {
-		PRUint32 flags;
-		rv = folder->GetFlags(&flags);
-		if(NS_FAILED(rv)) return rv;
-
-		nsString specialFolderString;
-
-		if(flags & MSG_FOLDER_FLAG_INBOX)
-			specialFolderString = "Inbox";
-		else if(flags & MSG_FOLDER_FLAG_TRASH)
-			specialFolderString = "Trash";
-		else if(flags & MSG_FOLDER_FLAG_QUEUE)
-			specialFolderString = "Unsent Messages";
-		else
-			specialFolderString = "none";
-
-		createNode(specialFolderString, target);
-        return NS_OK;
-	}
-#if 1
-    else if (peq(kNC_Child, property)) {
-
-      nsIEnumerator* subFolders;
-      rv = folder->GetSubFolders(&subFolders);
-      if (NS_FAILED(rv))
-        return NS_RDF_NO_VALUE;
-
-      rv = subFolders->First();
-      if (NS_SUCCEEDED(rv)) {
-        nsISupports *firstFolder;
-        rv = subFolders->CurrentItem(&firstFolder);
-        if (NS_SUCCEEDED(rv)) {
-          firstFolder->QueryInterface(nsIRDFResource::GetIID(), (void**)target);
-        }
-        NS_RELEASE(firstFolder);
-      }
-      NS_RELEASE(subFolders);
-      return NS_FAILED(rv) ? NS_RDF_NO_VALUE : rv;
-    }
+    rv = NS_RDF_NO_VALUE;
     
-    else if (peq(kNC_MessageChild, property)){
-      nsIEnumerator* messages;
-      rv = folder->GetMessages(&messages);
-      if (NS_SUCCEEDED(rv) && rv != NS_RDF_CURSOR_EMPTY) {
-        if (NS_SUCCEEDED(messages->First())) {
-          nsISupports *firstMessage;
-          rv = messages->CurrentItem(&firstMessage);
-          if (NS_SUCCEEDED(rv)) {
-            *target = NS_STATIC_CAST(nsIRDFResource*, firstMessage);
-          }
-        }
-        NS_RELEASE(messages);
-      }
-      return rv == NS_OK ? NS_OK : NS_RDF_NO_VALUE;
-    }
+    if (peq(kNC_Name, property))
+      rv = createFolderNameNode(folder, target);
+    else if (peq(kNC_SpecialFolder, property))
+      rv = createFolderSpecialNode(folder,target);
+#if 1
+    else if (peq(kNC_Child, property))
+      rv = createFolderChildNode(folder,target);
+    else if (peq(kNC_MessageChild, property))
+      rv = createFolderMessageNode(folder,target);
 #endif
-    return NS_RDF_NO_VALUE;
+    NS_RELEASE(folder);
+    return rv;
   }
 
-  nsCOMPtr<nsIMessage> message(do_QueryInterface(source, &rv));
-  if (NS_SUCCEEDED(rv)) {
-		PRBool sort;
-    if (peqSort(kNC_Name, property, &sort) ||
-        peqSort(kNC_Subject, property, &sort)) {
-			nsAutoString subject;
-			if(sort)
-			{
-				message->GetSubjectCollationKey(subject);
-			}
-			else
-			{
-				rv = message->GetMime2EncodedSubject(subject);
-				PRUint32 flags;
-				message->GetFlags(&flags);
-				if(flags & MSG_FLAG_HAS_RE)
-				{
-					nsAutoString reStr="Re: ";
-					reStr +=subject;
-					subject = reStr;
-				}
-			}
-			createNode(subject, target);
-		}
-    else if (peqSort(kNC_Sender, property, &sort))
-    {
-      nsAutoString sender, senderUserName;
-			if(sort)
-			{
-				message->GetAuthorCollationKey(sender);
-				createNode(sender, target);
-			}
-			else
-			{
-				rv = message->GetMime2EncodedAuthor(sender);
-				if(NS_SUCCEEDED(rv = GetSenderName(sender, &senderUserName)))
-					createNode(senderUserName, target);
-			}
-    }
-    else if (peq(kNC_Date, property))
-    {
-			nsAutoString date;
-			rv = message->GetProperty("date", date);
-			PRInt32 error;
-			time_t time = date.ToInteger(&error, 16);
-			struct tm* tmTime = localtime(&time);
-			char dateBuf[100];
-			strftime(dateBuf, 100, "%m/%d/%y %I:%M %p", tmTime);
-			date = dateBuf;
-			createNode(date, target);
-    }
-		else if (peq(kNC_Status, property))
-    {
-			PRUint32 flags;
-			message->GetFlags(&flags);
-			nsAutoString flagStr = "";
-			if(flags & MSG_FLAG_REPLIED)
-				flagStr = "replied";
-			else if(flags & MSG_FLAG_FORWARDED)
-				flagStr = "forwarded";
-			else if(flags & MSG_FLAG_NEW)
-				flagStr = "new";
-			else if(flags & MSG_FLAG_READ)
-				flagStr = "read";
-			createNode(flagStr, target);
-    }
-		else
-			return NS_RDF_NO_VALUE;
-  }
+  nsIMessage *message;
+  rv = source->QueryInterface(nsIMessage::GetIID(),
+                              (void **)&message);
+  if (NS_SUCCEEDED(rv))
+    return createMessageNode(message, property,target);
 	
   return rv;
 }
@@ -622,30 +516,43 @@ NS_IMETHODIMP nsMSGFolderDataSource::RemoveObserver(nsIRDFObserver* n)
   return NS_OK;
 }
 
-nsresult nsMSGFolderDataSource::NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property,
-												nsIRDFNode *object, PRBool assert)
+PRBool
+nsMSGFolderDataSource::assertEnumFunc(void *aElement, void *aData)
+{
+  nsMsgRDFNotification *note = (nsMsgRDFNotification *)aData;
+  nsIRDFObserver* observer = (nsIRDFObserver *)aElement;
+  
+  observer->OnAssert(note->subject,
+                     note->property,
+                     note->object);
+  return PR_TRUE;
+}
+
+PRBool
+nsMSGFolderDataSource::unassertEnumFunc(void *aElement, void *aData)
+{
+  nsMsgRDFNotification* note = (nsMsgRDFNotification *)aData;
+  nsIRDFObserver* observer = (nsIRDFObserver *)aElement;
+
+  observer->OnUnassert(note->subject,
+                     note->property,
+                     note->object);
+  return PR_TRUE;
+}
+
+nsresult nsMSGFolderDataSource::NotifyObservers(nsIRDFResource *subject,
+                                                nsIRDFResource *property,
+                                                nsIRDFNode *object,
+                                                PRBool assert)
 {
 	if(mObservers)
 	{
-		PRInt32 numObservers = mObservers->Count();
-		nsIRDFObserver *observer = nsnull;
-		for(PRInt32 i = 0; i < numObservers; i++)
-		{
-			//Get each observer and tell it an assert or unassert happened.
-			observer = (nsIRDFObserver*)mObservers->ElementAt(i);
-			if(observer)
-			{
-				if(assert)
-				{
-					observer->OnAssert(subject, property, object);
-				}
-				else
-				{
-					observer->OnUnassert(subject, property, object);
-				}
-			}
-		}
-	}
+    nsMsgRDFNotification note = { subject, property, object };
+    if (assert)
+      mObservers->EnumerateForwards(assertEnumFunc, &note);
+    else
+      mObservers->EnumerateForwards(unassertEnumFunc, &note);
+  }
 	return NS_OK;
 }
 
@@ -812,7 +719,9 @@ nsMSGFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 		{
 			nsIMessage* deletedMessage;
 			nsISupports* argument = (*aArguments)[item];
-			if (rv = NS_SUCCEEDED(argument->QueryInterface(nsIMessage::GetIID(), (void**)&deletedMessage)))
+      rv = argument->QueryInterface(nsIMessage::GetIID(),
+                                    (void**)&deletedMessage);
+			if (NS_SUCCEEDED(rv))
 			{
 				rv = folder->DeleteMessage(deletedMessage);
 				NS_RELEASE(deletedMessage);
@@ -827,7 +736,8 @@ nsMSGFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 
       if (peq(aCommand, kNC_Delete)) {
 				nsIMsgFolder *folder;
-				if (rv = NS_SUCCEEDED(nsGetFolderFromMessage(message, &folder))) {
+        rv = nsGetFolderFromMessage(message, &folder);
+				if (NS_SUCCEEDED(rv)) {
 					rv = folder->DeleteMessage(message);
 				}
       }
@@ -898,3 +808,184 @@ NS_IMETHODIMP nsMSGFolderDataSource::OnItemPropertyChanged(nsISupports *item, co
 }
 
 
+nsresult nsMSGFolderDataSource::createFolderNameNode(nsIMsgFolder *folder,
+                                                     nsIRDFNode **target)
+{
+  char *name;
+  nsresult rv = folder->GetName(&name);
+  if (NS_FAILED(rv)) return rv;
+  nsString nameString(name);
+  createNode(nameString, target);
+  delete[] name;
+  return NS_OK;
+}
+
+nsresult
+nsMSGFolderDataSource::createFolderSpecialNode(nsIMsgFolder *folder,
+                                               nsIRDFNode **target)
+{
+  PRUint32 flags;
+  nsresult rv = folder->GetFlags(&flags);
+  if(NS_FAILED(rv)) return rv;
+  
+  nsString specialFolderString;
+  
+  if(flags & MSG_FOLDER_FLAG_INBOX)
+    specialFolderString = "Inbox";
+  else if(flags & MSG_FOLDER_FLAG_TRASH)
+    specialFolderString = "Trash";
+  else if(flags & MSG_FOLDER_FLAG_QUEUE)
+    specialFolderString = "Unsent Messages";
+  else
+    specialFolderString = "none";
+  
+  createNode(specialFolderString, target);
+  return NS_OK;
+}
+
+nsresult
+nsMSGFolderDataSource::createFolderChildNode(nsIMsgFolder *folder,
+                                             nsIRDFNode **target)
+{
+  nsIEnumerator* subFolders;
+  nsresult rv = folder->GetSubFolders(&subFolders);
+  if (NS_FAILED(rv))
+    return NS_RDF_NO_VALUE;
+  
+  rv = subFolders->First();
+  if (NS_SUCCEEDED(rv)) {
+    nsISupports *firstFolder;
+    rv = subFolders->CurrentItem(&firstFolder);
+    if (NS_SUCCEEDED(rv)) {
+      firstFolder->QueryInterface(nsIRDFResource::GetIID(), (void**)target);
+    }
+    NS_RELEASE(firstFolder);
+  }
+  NS_RELEASE(subFolders);
+  return NS_FAILED(rv) ? NS_RDF_NO_VALUE : rv;
+}
+
+
+nsresult
+nsMSGFolderDataSource::createFolderMessageNode(nsIMsgFolder *folder,
+                                               nsIRDFNode **target)
+{
+  nsIEnumerator* messages;
+  nsresult rv = folder->GetMessages(&messages);
+  if (NS_SUCCEEDED(rv) && rv != NS_RDF_CURSOR_EMPTY) {
+    if (NS_SUCCEEDED(messages->First())) {
+      nsISupports *firstMessage;
+      rv = messages->CurrentItem(&firstMessage);
+      if (NS_SUCCEEDED(rv)) {
+        *target = NS_STATIC_CAST(nsIRDFResource*, firstMessage);
+      }
+    }
+    NS_RELEASE(messages);
+  }
+  return rv == NS_OK ? NS_OK : NS_RDF_NO_VALUE;
+}
+
+nsresult
+nsMSGFolderDataSource::createMessageNode(nsIMessage *message,
+                                         nsIRDFResource *property,
+                                         nsIRDFNode **target)
+{
+		PRBool sort;
+    if (peqSort(kNC_Name, property, &sort) ||
+        peqSort(kNC_Subject, property, &sort))
+      return createMessageNameNode(message, sort, target);
+    else if (peqSort(kNC_Sender, property, &sort))
+      return createMessageSenderNode(message, sort, target);
+    else if (peq(kNC_Date, property))
+      return createMessageDateNode(message, target);
+		else if (peq(kNC_Status, property))
+      return createMessageStatusNode(message, target);
+    else
+      return NS_RDF_NO_VALUE;
+}
+
+
+nsresult
+nsMSGFolderDataSource::createMessageNameNode(nsIMessage *message,
+                                             PRBool sort,
+                                             nsIRDFNode **target)
+{
+  nsresult rv = NS_OK;
+  nsAutoString subject;
+  if(sort)
+    {
+      message->GetSubjectCollationKey(subject);
+    }
+  else
+    {
+      rv = message->GetMime2EncodedSubject(subject);
+      PRUint32 flags;
+      message->GetFlags(&flags);
+      if(flags & MSG_FLAG_HAS_RE)
+				{
+					nsAutoString reStr="Re: ";
+					reStr +=subject;
+					subject = reStr;
+				}
+    }
+  createNode(subject, target);
+  return rv;
+}
+
+
+nsresult
+nsMSGFolderDataSource::createMessageSenderNode(nsIMessage *message,
+                                               PRBool sort,
+                                               nsIRDFNode **target)
+{
+  nsresult rv = NS_OK;
+  nsAutoString sender, senderUserName;
+  if(sort)
+    {
+      message->GetAuthorCollationKey(sender);
+      createNode(sender, target);
+    }
+  else
+    {
+      rv = message->GetMime2EncodedAuthor(sender);
+      if(NS_SUCCEEDED(rv = GetSenderName(sender, &senderUserName)))
+        createNode(senderUserName, target);
+    }
+  return rv;
+}
+
+nsresult
+nsMSGFolderDataSource::createMessageDateNode(nsIMessage *message,
+                                             nsIRDFNode **target)
+{
+  nsAutoString date;
+  nsresult rv = message->GetProperty("date", date);
+  PRInt32 error;
+  time_t time = date.ToInteger(&error, 16);
+  struct tm* tmTime = localtime(&time);
+  char dateBuf[100];
+  strftime(dateBuf, 100, "%m/%d/%Y %I:%M %p", tmTime);
+  date = dateBuf;
+  createNode(date, target);
+  return rv;
+}
+
+nsresult
+nsMSGFolderDataSource::createMessageStatusNode(nsIMessage *message,
+                                               nsIRDFNode **target)
+{
+  PRUint32 flags;
+  message->GetFlags(&flags);
+  nsAutoString flagStr = "";
+  if(flags & MSG_FLAG_REPLIED)
+    flagStr = "replied";
+  else if(flags & MSG_FLAG_FORWARDED)
+    flagStr = "forwarded";
+  else if(flags & MSG_FLAG_NEW)
+    flagStr = "new";
+  else if(flags & MSG_FLAG_READ)
+    flagStr = "read";
+  createNode(flagStr, target);
+  return NS_OK;
+}
+  

@@ -28,7 +28,8 @@
 /**
  * The mail data source.
  */
-class nsMSGFolderDataSource : public nsIRDFMSGFolderDataSource, public nsIFolderListener
+class nsMSGFolderDataSource : public nsIRDFMSGFolderDataSource,
+                              public nsIFolderListener
 {
 private:
   char*         mURI;
@@ -122,6 +123,26 @@ protected:
 														nsIRDFNode *object, PRBool assert);
 	nsresult  GetSenderName(nsAutoString& sender, nsAutoString *senderUserName);
 
+  nsresult createFolderNameNode(nsIMsgFolder *folder, nsIRDFNode **target);
+  nsresult createFolderSpecialNode(nsIMsgFolder *folder, nsIRDFNode **target);
+  nsresult createFolderChildNode(nsIMsgFolder *folder, nsIRDFNode **target);
+  nsresult createFolderMessageNode(nsIMsgFolder *folder, nsIRDFNode **target);
+  nsresult createMessageNode(nsIMessage *message, nsIRDFResource *property,
+                             nsIRDFNode **target);
+
+  nsresult createMessageNameNode(nsIMessage *message,
+                                 PRBool sort,
+                                 nsIRDFNode **target);
+  nsresult createMessageSenderNode(nsIMessage *message,
+                                 PRBool sort,
+                                 nsIRDFNode **target);
+  nsresult createMessageDateNode(nsIMessage *message,
+                                 nsIRDFNode **target);
+  nsresult createMessageStatusNode(nsIMessage *message,
+                                   nsIRDFNode **target);
+  
+  static PRBool assertEnumFunc(void *aElement, void *aData);
+  static PRBool unassertEnumFunc(void *aElement, void *aData);
 
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_MessageChild;
