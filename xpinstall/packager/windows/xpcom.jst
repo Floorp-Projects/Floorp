@@ -1,40 +1,24 @@
 function registerMainKeys(winreg)
 {
   var subkey;  //the name of the subkey you are poking around in
-  var valname; //the name of the value you want to look at
-  var value;   //the data in the value you want to look at.
   var err;
 
-  subkey  = "SOFTWARE\\$CompanyName$";
-  winreg.createKey(subkey,"");
+  winreg.createKey("SOFTWARE\\$CompanyName$","");
 
   subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$";
   winreg.createKey(subkey,"");
+  err     = winreg.setValueString(subkey, "CurrentVersion", "$UserAgent$");
 
-  valname = "CurrentVersion";
-  value   = "$UserAgent$";
-  err     = winreg.setValueString(subkey, valname, value);
-
-  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$";
-  winreg.createKey(subkey,"");
+  winreg.createKey("SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$","");
 
   subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
   winreg.createKey(subkey,"");
-
-  valname = "Install Directory";
-  value   = fProgram;
-  err     = winreg.setValueString(subkey, valname, value);
+  err     = winreg.setValueString(subkey, "Install Directory", fProgram);
 
   subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Uninstall";
   winreg.createKey(subkey,"");
-
-  valname = "Uninstall Log Folder";
-  value   = szUninstall;
-  err     = winreg.setValueString(subkey, valname, value);
-
-  valname = "Description";
-  value   = "$ProductName$ ($UserAgentShort$)";
-  err     = winreg.setValueString(subkey, valname, value);
+  err     = winreg.setValueString(subkey, "Uninstall Log Folder", szUninstall);
+  err     = winreg.setValueString(subkey, "Description", "$ProductName$ ($UserAgentShort$)");
 }
 
 function updateWinReg()
@@ -44,8 +28,6 @@ function updateWinReg()
   // subkeys have to exist before values can be put in.
   var winreg = getWinRegistry();
   var subkey;  //the name of the subkey you are poking around in
-  var valname; //the name of the value you want to look at
-  var value;   //the data in the value you want to look at.
   var restrictedAccess;
   var ikwDefined;
 
