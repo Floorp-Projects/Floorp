@@ -55,6 +55,7 @@ viewer:Mozilla Select Profile
 ; viewer:NSPR Logging
 viewer:Plug-ins:MRJPlugin
 viewer:Plug-ins:MRJPlugin.jar
+viewer:Plug-ins:Default Plug-in
 
 viewer:Essential Files:gfx.shlb 
 viewer:Essential Files:libimg.shlb 
