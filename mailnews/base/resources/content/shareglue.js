@@ -30,12 +30,6 @@ function WizardPage() {}
 
 
 
-function CloseMessenger() 
-{
-	dump("\nClose from XUL\nDo something...\n");
-	window.close();
-}
-
 function CharacterSet(){}
 
 function MessengerSetDefaultCharacterSet(aCharset)

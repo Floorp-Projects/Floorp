@@ -46,6 +46,7 @@ newFolderNameDialog.js
 renameFolderNameDialog.xul
 msgViewNavigation.js
 msgMail3PaneWindow.js
+mail3PaneWindowCommands.js
 msgFolderPickerOverlay.xul
 msgFolderPickerOverlay.js
 messengerdnd.js

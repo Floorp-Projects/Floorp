@@ -292,6 +292,12 @@ function MsgOpenNewWindowForMessage(messageUri, folderUri)
 
 }
 
+function CloseMailWindow() 
+{
+	dump("\nClose from XUL\nDo something...\n");
+	window.close();
+}
+
 function MsgMarkMsgAsRead(markRead)
 {
 	var selectedMessages = GetSelectedMessages();
@@ -355,6 +361,34 @@ function MsgFilters() {
     window.openDialog("chrome://messenger/content/FilterListDialog.xul", "FilterDialog", "chrome");
 }
 
+function MsgViewAllHeaders() 
+{
+	pref.SetIntPref("mail.show_headers",2);
+	MsgReload();
+	return true;
+}
+function MsgViewNormalHeaders() 
+{
+	pref.SetIntPref("mail.show_headers",1);
+	MsgReload();
+	return true;
+}
+function MsgViewBriefHeaders() 
+{
+	pref.SetIntPref("mail.show_headers",0);
+	MsgReload();
+	return true;
+}
+
+function MsgReload() 
+{
+	ReloadMessage();
+}
+
+function MsgStop()
+{
+	StopUrls();
+}
 
 function MsgMarkByDate() {}
 function MsgOpenAttachment() {}

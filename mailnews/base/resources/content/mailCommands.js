@@ -19,6 +19,29 @@
  */
 
 
+function GetMsgFolderFromUri(uri)
+{
+	//dump("GetMsgFolderFromUri of " + uri + "\n");
+	try {
+		var resource = GetResourceFromUri(uri);
+		var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+		return msgfolder;
+	}
+	catch (ex) {
+		//dump("failed to get the folder resource\n");
+	}
+	return null;
+}
+
+function GetResourceFromUri(uri)
+{
+	var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
+	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+        var resource = RDF.GetResource(uri);
+
+	return resource;
+}  
+
 function DoRDFCommand(dataSource, command, srcArray, argumentArray)
 {
 

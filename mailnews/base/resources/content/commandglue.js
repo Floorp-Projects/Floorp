@@ -60,20 +60,27 @@ function GetMsgFolderFromURI(folderURI)
 
 function LoadMessage(messageNode)
 {
-  var uri = messageNode.getAttribute('id');
-  dump(uri + "\n");
+	var uri = messageNode.getAttribute('id');
+	dump(uri + "\n");
 
-  if(uri != gCurrentDisplayedMessage)
-  {
-    var resource = RDF.GetResource(uri);
-    var message = resource.QueryInterface(Components.interfaces.nsIMessage); 
-    if (message)
-      setTitleFromFolder(message.msgFolder, message.mime2DecodedSubject);
+	LoadMessageByUri(uri);
 
-	  gCurrentDisplayedMessage = uri;
-	  gHaveLoadedMessage = true;
-	  OpenURL(uri);
-  }
+}
+
+function LoadMessageByUri(uri)
+{  
+	if(uri != gCurrentDisplayedMessage)
+	{
+		var resource = RDF.GetResource(uri);
+		var message = resource.QueryInterface(Components.interfaces.nsIMessage); 
+		if (message)
+			setTitleFromFolder(message.msgFolder, message.mime2DecodedSubject);
+
+		gCurrentDisplayedMessage = uri;
+		gHaveLoadedMessage = true;
+		OpenURL(uri);
+	}
+
 }
 
 function ChangeFolderByDOMNode(folderNode)

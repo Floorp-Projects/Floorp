@@ -292,3 +292,7 @@ nsMsgWindowCommands.prototype =
 	}
 }
 
+function StopUrls()
+{
+	msgWindow.StopUrls();
+}

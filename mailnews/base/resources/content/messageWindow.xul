@@ -51,6 +51,7 @@ Rights Reserved.
 	<html:script src="chrome://messenger/content/accountUtils.js"/>
 
 	<broadcasterset id="broadcasterset"/>
+	<keyset id="keyset"/>
 
 	<popupset>
 		<popup id="emailAddressPopup"  oncreate="return fillEmailAddressMenu(document.popupNode);" popupanchor="bottomleft">

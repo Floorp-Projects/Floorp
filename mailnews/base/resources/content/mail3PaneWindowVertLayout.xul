@@ -54,6 +54,7 @@ Rights Reserved.
 <html:script src="chrome://messenger/content/msgViewNavigation.js"/>
 <html:script src="chrome://messenger/content/mailWindow.js"/>
 <html:script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+<html:script src="chrome://messenger/content/mail3PaneWindowCommands.js"/>
 <html:script src="chrome://messenger/content/mailContextMenus.js"/>
 <html:script src="chrome://messenger/content/messengerdnd.js"/>
 <html:script src="chrome://messenger/content/accountUtils.js"/>

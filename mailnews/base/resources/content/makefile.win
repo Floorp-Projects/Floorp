@@ -51,6 +51,7 @@ install::
 	$(MAKE_INSTALL) newFolderNameDialog.js	$(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL) msgViewNavigation.js	$(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL) msgMail3PaneWindow.js	$(DIST)\bin\chrome\messenger\content
+	$(MAKE_INSTALL) mail3PaneWindowCommands.js	$(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL) msgFolderPickerOverlay.js		$(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL) msgFolderPickerOverlay.xul	$(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL)	renameFolderNameDialog.xul $(DIST)\bin\chrome\messenger\content

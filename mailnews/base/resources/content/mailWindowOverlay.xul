@@ -36,7 +36,7 @@ Rights Reserved.
 	<broadcaster id="cmd_newNavigator"/>
 	<broadcaster id="cmd_newMessage"/>
 	<broadcaster id="cmd_newEditor"/>
-	<broadcaster id="cmd_close" oncommand="CloseMessenger()"/>
+	<broadcaster id="cmd_close" oncommand="CloseMailWindow()"/>
  	<broadcaster id="cmd_quit"/>
 	<!-- Edit Menu -->
 	<broadcaster id="cmd_undo"
@@ -62,8 +62,13 @@ Rights Reserved.
 	<broadcaster id="Messenger:Throbber"/>
 	<broadcaster id="Messenger:LoadingProgress"/>
 	
+	<broadcaster id="cmd_nextMsg" oncommand="goDoCommand('cmd_nextMsg')" disabled="true"/>
 	<broadcaster id="cmd_nextUnreadMsg" oncommand="goDoCommand('cmd_nextUnreadMsg')" disabled="true"/>
+	<broadcaster id="cmd_nextFlaggedMsg" oncommand="goDoCommand('cmd_nextFlaggedMsg')" disabled="true"/>
 	<broadcaster id="cmd_nextUnreadThread" oncommand="goDoCommand('cmd_nextUnreadThread')" disabled="true"/>
+	<broadcaster id="cmd_previousMsg" oncommand="goDoCommand('cmd_previousMsg')" disabled="true"/>
+	<broadcaster id="cmd_previousUnreadMsg" oncommand="goDoCommand('cmd_previousUnreadMsg')" disabled="true"/>
+	<broadcaster id="cmd_previousFlaggedMsg" oncommand="goDoCommand('cmd_previousFlaggedMsg')" disabled="true"/>
 
 	<broadcaster id="cmd_sortBySubject" oncommand="goDoCommand('cmd_sortBySubject')" disabled="true"/>
 	<broadcaster id="cmd_sortByDate" oncommand="goDoCommand('cmd_sortByDate')" disabled="true"/>
@@ -71,10 +76,42 @@ Rights Reserved.
 	<broadcaster id="cmd_sortByPriority" oncommand="goDoCommand('cmd_sortByPriority')" disabled="true"/>
 	<broadcaster id="cmd_sortBySender" oncommand="goDoCommand('cmd_sortBySender')" disabled="true"/>
 	<broadcaster id="cmd_sortBySize" oncommand="goDoCommand('cmd_sortBySize')" disabled="true"/>
+	<broadcaster id="cmd_sortByRead" oncommand="goDoCommand('cmd_sortByRead')" disabled="true"/>
 	<broadcaster id="cmd_sortByStatus" oncommand="goDoCommand('cmd_sortByStatus')" disabled="true"/>
 	<broadcaster id="cmd_sortByUnread" oncommand="goDoCommand('cmd_sortByUnread')" disabled="true"/>
 	<broadcaster id="cmd_sortByOrderReceived" oncommand="goDoCommand('cmd_sortByOrderReceived')" disabled="true"/>
+	<broadcaster id="cmd_sortAscending" oncommand="goDoCommand('cmd_sortAscending')" disabled="true"/>
+	<broadcaster id="cmd_sortDescending" oncommand="goDoCommand('cmd_sortDescending')" disabled="true"/>
+
+	<broadcaster id="cmd_viewAllMsgs" oncommand="goDoCommand('cmd_viewAllMsgs')" disabled="true"/>
+	<broadcaster id="cmd_viewUnreadMsgs" oncommand="goDoCommand('cmd_viewUnreadMsgs')" disabled="true"/>
+	<broadcaster id="cmd_sortByThread" oncommand="goDoCommand('cmd_sortByThread')" disabled="true"/>
+
 </broadcasterset>
+
+<keyset id="keyset">
+	<!-- File Menu -->
+	<key id="key_newNavigator"/>
+	<key id="key_newMessage"/>
+	<key id="key_close"/>
+	<key id="key_quit"/>
+	<!-- Edit Menu -->
+	<key id="key_undo"/>
+	<key id="key_redo"/>
+	<key id="key_cut"/>
+	<key id="key_copy"/>
+	<key id="key_paste"/>
+	<key id="key_delete" shift="false"/>
+	<key id="cmd_shiftDelete" oncommand="goDoCommand('cmd_shiftDelete')"/>
+	<key id="key_selectAll"/>
+	<key id="key_preferences"/>
+  
+	<key id="key_nextMsg" key="&nextMsgCmd.key;" control="false" shift="true" observes="cmd_nextMsg"/>
+	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;" control="false" shift="false" observes="cmd_nextUnreadMsg"/>
+	<key id="key_nextUnreadThread" key="&nextUnreadThreadCmd.key;" control="false" shift="false" observes="cmd_nextUnreadThread"/>
+	<key id="key_previousMsg" key="&previousMsgCmd.key;" control="false" shift="true" observes="cmd_previousMsg"/>
+	<key id="key_previousUnreadMsg" key="&previousUnreadMsgCmd.key;" control="false" shift="false" observes="cmd_previousUnreadMsg"/>
+</keyset>
 
 <menubar id="mailMenubar">
 	<menu id="menu_File">
@@ -123,15 +160,6 @@ Rights Reserved.
 			<menuitem value="&compactFolder.label;" oncommand="MsgCompactFolder();"/>
 			<menuseparator/>
 			<menuitem value="&importCmd.label;" disabled="true" oncommand="MsgImport();"/>
-			<menuseparator/>
-			<menu value="&offlineMenu.label;" disabled="true">
-				<menupopup>
-					<menuitem value="&workOfflineCmd.label;" disabled="true" oncommand="MsgWorkOffline();"/>
-					<menuitem value="&syncCmd.label;" disabled="true" oncommand="MsgSynchronize();"/>
-					<menuitem value="&getSelectedCmd.label;" disabled="true" oncommand="MsgGetSelectedMsg();"/>
-					<menuitem value="&getFlaggedCmd.label;" disabled="true" oncommand="MsgGetFlaggedMsg();"/>
-				</menupopup>
-			</menu>
 			<menuseparator/>
 			<menuitem id="menu_pageSetup"/>
 			<menuitem value="&printPreviewCmd.label;" disabled="true" oncommand="PrintPreview();"/>
@@ -184,24 +212,23 @@ Rights Reserved.
 			<menu value="&sortMenu.label;">
 				<menupopup>
 					<menuitem value="&sortByDateCmd.label;" observes="cmd_sortByDate"/>
-					<menuitem value="&sortByFlagCmd.label;" disabled="true" observes="cmd_sortByFlag"/>
+					<menuitem value="&sortByFlagCmd.label;" observes="cmd_sortByFlag"/>
 					<menuitem value="&sortByPriorityCmd.label;" observes="cmd_sortByPriority"/>
 					<menuitem value="&sortBySenderCmd.label;" observes="cmd_sortBySender"/>
 					<menuitem value="&sortBySizeCmd.label;" observes="cmd_sortBySize"/>
 					<menuitem value="&sortByStatusCmd.label;" observes="cmd_sortByStatus"/>
 					<menuitem value="&sortBySubjectCmd.label;" observes="cmd_sortBySubject"/>
-					<menuitem value="&sortByUnreadCmd.label;" disabled="true" observes="cmd_sortByUnread"/>
+					<menuitem value="&sortByUnreadCmd.label;"  observes="cmd_sortByRead"/>
 					<menuitem value="&sortByOrderReceivedCmd.label;"  observes="cmd_sortByOrderReceived"/>
 					<menuseparator/>
-					<menuitem value="&sortAscendCmd.label;" disabled="true" oncommand="MsgSortAscending();"/>
-					<menuitem value="&sortDescendCmd.label;" disabled="true" oncommand="MsgSortDescending();"/>
+					<menuitem value="&sortAscendCmd.label;" disabled="true" observes="cmd_sortAscending"/>
+					<menuitem value="&sortDescendCmd.label;" disabled="true" observes="cmd_sortDescending"/>
 				</menupopup>
 			</menu>
 			<menu value="&msgsMenu.label;" disabled="true">
 				<menupopup>
-					<menuitem value="&threadsMsgsCmd.label;" disabled="true" oncommand="MsgViewAllThreadMsgs();"/>
-					<menuitem value="&allMsgsCmd.label;" disabled="true" oncommand="MsgViewAllMsgs();"/>
-					<menuitem value="&unreadMsgsCmd.label;" disabled="true" oncommand="MsgViewUnreadMsg();"/>
+					<menuitem value="&allMsgsCmd.label;" disabled="true" observes="cmd_viewAllMsgs"/>
+					<menuitem value="&unreadMsgsCmd.label;" disabled="true" observes="cmd_viewUnreadMsgs"/>
 					<menuitem value="&threadsWithUnreadMsgsCmd.label;" disabled="true" oncommand="MsgViewThreadsUnread();"/>
 					<menuitem value="&watchedThreadsMsgsCmd.label;" disabled="true" oncommand="MsgViewWatchedThreadsUnread();"/>
 					<menuseparator/>
@@ -215,6 +242,7 @@ Rights Reserved.
 					<menuitem id="viewbriefheaders" type="radio" name="viewheadergroup" value="&headersBriefCmd.label;" disabled="true" oncommand="MsgViewBriefHeaders();"/>
 				</menupopup>
 			</menu>
+			<menuitem value="&threadsMsgsCmd.label;" observes="cmd_sortByThread"/>
 			<menuseparator/>
 			<menuitem value="&viewAttachmentsInlineCmd.label;" disabled="true" oncommand="MsgViewAttachInline();"/>
 			<menuitem value="&wrapLongLinesCmd.label;" disabled="true" oncommand="MsgWrapLongLines();"/>
@@ -222,7 +250,7 @@ Rights Reserved.
 			<menuitem value="&increaseFontCmd.label;" disabled="true" oncommand="MsgIncreaseFont();"/>
 			<menuitem value="&decreaseFontCmd.label;" disabled="true" oncommand="MsgDecreaseFont();"/>
 			<menuseparator/>
-			<menuitem value="&reloadCmd.label;" disabled="true" oncommand="MsgReload();"/>
+			<menuitem value="&reloadCmd.label;" oncommand="MsgReload();"/>
 			<menuitem value="&showImagesCmd.label;" disabled="true" oncommand="MsgShowImages();"/>
 			<menuitem value="&stopCmd.label;" disabled="true" oncommand="MsgStop();"/>
 			<menuseparator/>
@@ -340,18 +368,18 @@ Rights Reserved.
 			<menuseparator/>
 			<menu value="&nextMenu.label;">
 				<menupopup>
-					<menuitem value="&nextMsgCmd.label;" oncommand="MsgNextMessage();"/>
-					<menuitem value="&nextUnreadMsgCmd.label;" key="key_nextUnreadMsg" accesskey="&nextUnreadMsgCmd.key;" observes="cmd_nextUnreadMsg"/>
-					<menuitem value="&nextFlaggedMsgCmd.label;" oncommand="MsgNextFlaggedMessage();"/>
+					<menuitem value="&nextMsgCmd.label;" key="key_nextMsg" accesskey="&nextMsgCmd.accesskey;" observes="cmd_nextMsg"/>
+					<menuitem value="&nextUnreadMsgCmd.label;" key="key_nextUnreadMsg" accesskey="&nextUnreadMsgCmd.accesskey;" observes="cmd_nextUnreadMsg"/>
+					<menuitem value="&nextFlaggedMsgCmd.label;" accesskey="&nextFlaggedMsgCmd.accesskey;" observes="cmd_nextFlaggedMsg"/>
 					<menuseparator/>
-					<menuitem value="&nextUnreadThread.label;" observes="cmd_nextUnreadThread"/>
+					<menuitem value="&nextUnreadThread.label;" accesskey="&nextUnreadThreadCmd.accesskey;" observes="cmd_nextUnreadThread"/>
 				</menupopup>
 			</menu>
 			<menu value="&prevMenu.label;">
 				<menupopup>
-					<menuitem value="&prevMsgCmd.label;" oncommand="MsgPreviousMessage();"/>
-					<menuitem value="&prevUnreadMsgCmd.label;" oncommand="MsgPreviousUnreadMessage();"/>
-					<menuitem value="&prevFlaggedMsgCmd.label;" oncommand="MsgPreviousFlaggedMessage();"/>
+					<menuitem value="&prevMsgCmd.label;" key="key_previousMsg" accesskey="&previousMsgCmd.accesskey;" observes="cmd_previousMsg"/>
+					<menuitem value="&prevUnreadMsgCmd.label;" key="key_previousUnreadMsg" accesskey="&previousUnreadMsgCmd.accesskey;" observes="cmd_previousUnreadMsg"/>
+					<menuitem value="&prevFlaggedMsgCmd.label;" accesskey="&previousFlaggedMsgCmd.accesskey;" observes="cmd_previousFlaggedMsg"/>
 				</menupopup>
 			</menu>
 			<menuseparator/>

@@ -207,16 +207,26 @@ Rights Reserved.
 <!ENTITY firstFlaggedMsgCmd.label ".First Flagged Message">  
 <!ENTITY nextMenu.label "Next"> 
 <!ENTITY nextMsgCmd.label "Message">  
+<!ENTITY nextMsgCmd.key "n">  
+<!ENTITY nextMsgCmd.accesskey "m">  
 <!ENTITY nextUnreadMsgCmd.label "Unread Message">  
 <!ENTITY nextUnreadMsgCmd.key "n">  
+<!ENTITY nextUnreadMsgCmd.accesskey "u">  
 <!ENTITY nextFlaggedMsgCmd.label "Flagged Message">  
+<!ENTITY nextFlaggedMsgCmd.accesskey "f">  
 <!ENTITY nextUnflaggedMsgCmd.label "Unflagged Message">  
 <!ENTITY nextUnreadThread.label "Unread Thread">
 <!ENTITY nextUnreadThreadCmd.key "t">  
+<!ENTITY nextUnreadThreadCmd.accesskey "t">  
 <!ENTITY prevMenu.label "Previous"> 
 <!ENTITY prevMsgCmd.label "Message">  
+<!ENTITY previousMsgCmd.key "p">  
+<!ENTITY previousMsgCmd.accesskey "m">  
 <!ENTITY prevUnreadMsgCmd.label "Unread Message">  
+<!ENTITY previousUnreadMsgCmd.key "p">  
+<!ENTITY previousUnreadMsgCmd.accesskey "u">  
 <!ENTITY prevFlaggedMsgCmd.label "Flagged Message">  
+<!ENTITY previousFlaggedMsgCmd.accesskey "f">  
 <!ENTITY backCmd.label ".Back">  
 <!ENTITY forwardCmd.label ".Forward">  
 <!ENTITY msgMenu.label "Message">  

@@ -157,3 +157,8 @@ function SelectMessage(messageUri)
 	gCurrentMessageUri = messageUri;
 	OpenURL(gCurrentMessageUri);
 }
+
+function ReloadMessage()
+{
+	OpenURL(gCurrentMessageUri);
+}
