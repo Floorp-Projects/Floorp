@@ -142,16 +142,6 @@ void LogISSetupType(void)
 
   switch(dwSetupType)
   {
-    case ST_RADIO3:
-      wsprintf(szBuf, "\n    Setup Type: %s\n",
-               diSetupType.stSetupType3.szDescriptionShort);
-      break;
-
-    case ST_RADIO2:
-      wsprintf(szBuf, "\n    Setup Type: %s\n",
-               diSetupType.stSetupType2.szDescriptionShort);
-      break;
-
     case ST_RADIO1:
       wsprintf(szBuf, "\n    Setup Type: %s\n",
                diSetupType.stSetupType1.szDescriptionShort);

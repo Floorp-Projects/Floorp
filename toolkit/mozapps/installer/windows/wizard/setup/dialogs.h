@@ -30,6 +30,7 @@ LRESULT CALLBACK  DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam
 LRESULT CALLBACK  DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
+LRESULT CALLBACK  DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
@@ -47,6 +48,7 @@ void              ToggleCheck(HWND hwndListBox, DWORD dwIndex, DWORD dwACFlag);
 BOOL              AskCancelDlg(HWND hDlg);
 void              lbAddItem(HWND hList, siC *siCComponent);
 HWND              InstantiateDialog(HWND hParent, DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlgProc);
+void              InitSequence(HINSTANCE hInstance);
 void              DlgSequence(int iDirection);
 void              PaintGradientShade(HWND hWnd, HDC hdc);
 BOOL              BrowseForDirectory(HWND hDlg, char *szCurrDir);

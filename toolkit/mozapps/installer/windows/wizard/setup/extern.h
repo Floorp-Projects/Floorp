@@ -87,6 +87,7 @@ extern diQL             diQuickLaunch;
 extern diL              diLicense;
 extern diST             diSetupType;
 extern diSC             diSelectComponents;
+extern diSIP            diSelectInstallPath;
 extern diSC             diSelectAdditionalComponents;
 extern diWI             diWindowsIntegration;
 extern diPF             diProgramFolder;

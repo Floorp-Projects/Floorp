@@ -88,6 +88,7 @@ diL             diLicense;
 diQL            diQuickLaunch;
 diST            diSetupType;
 diSC            diSelectComponents;
+diSIP           diSelectInstallPath;
 diSC            diSelectAdditionalComponents;
 diWI            diWindowsIntegration;
 diPF            diProgramFolder;
@@ -190,10 +191,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     }
     else
     {
-      DlgSequence(NEXT_DLG);
+      InitSequence(hInstance);
     }
   }
 
+#if 0
   while(GetMessage(&msg, NULL, 0, 0))
   {
     if((!IsDialogMessage(hDlgCurrent, &msg)) && (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)))
@@ -211,5 +213,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
   DeInitSetupGeneral();
 
   return(msg.wParam);
-} /*  End of WinMain */
+#endif
+
+  return 0;
+} 
+
+
 

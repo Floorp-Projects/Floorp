@@ -3341,6 +3341,8 @@ HRESULT InitDlgWelcome(diW *diDialog)
     return(1);
   if((diDialog->szMessage2 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+  if((diDialog->szMessage3 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
 
   return(0);
 }
@@ -3351,6 +3353,7 @@ void DeInitDlgWelcome(diW *diDialog)
   FreeMemory(&(diDialog->szMessage0));
   FreeMemory(&(diDialog->szMessage1));
   FreeMemory(&(diDialog->szMessage2));
+  FreeMemory(&(diDialog->szMessage3));
 }
 
 HRESULT InitDlgLicense(diL *diDialog)
@@ -3358,11 +3361,17 @@ HRESULT InitDlgLicense(diL *diDialog)
   diDialog->bShowDialog = FALSE;
   if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+  if((diDialog->szSubTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
   if((diDialog->szLicenseFilename = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->szMessage1 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szMessage2 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szMessage3 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
   return(0);
@@ -3371,9 +3380,12 @@ HRESULT InitDlgLicense(diL *diDialog)
 void DeInitDlgLicense(diL *diDialog)
 {
   FreeMemory(&(diDialog->szTitle));
+  FreeMemory(&(diDialog->szSubTitle));
   FreeMemory(&(diDialog->szLicenseFilename));
   FreeMemory(&(diDialog->szMessage0));
   FreeMemory(&(diDialog->szMessage1));
+  FreeMemory(&(diDialog->szMessage2));
+  FreeMemory(&(diDialog->szMessage3));
 }
 
 HRESULT InitDlgQuickLaunch(diQL *diDialog)
@@ -3407,17 +3419,13 @@ HRESULT InitDlgSetupType(diST *diDialog)
 
   if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+  if((diDialog->szSubTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
   if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((diDialog->szReadmeFilename = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((diDialog->szReadmeApp = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
   diDialog->stSetupType0.dwCItems = 0;
   diDialog->stSetupType1.dwCItems = 0;
-  diDialog->stSetupType2.dwCItems = 0;
-  diDialog->stSetupType3.dwCItems = 0;
   if((diDialog->stSetupType0.szDescriptionShort = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->stSetupType0.szDescriptionLong = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -3428,34 +3436,19 @@ HRESULT InitDlgSetupType(diST *diDialog)
   if((diDialog->stSetupType1.szDescriptionLong = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
-  if((diDialog->stSetupType2.szDescriptionShort = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((diDialog->stSetupType2.szDescriptionLong = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-
-  if((diDialog->stSetupType3.szDescriptionShort = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((diDialog->stSetupType3.szDescriptionLong = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-
   return(0);
 }
 
 void DeInitDlgSetupType(diST *diDialog)
 {
   FreeMemory(&(diDialog->szTitle));
+  FreeMemory(&(diDialog->szSubTitle));
   FreeMemory(&(diDialog->szMessage0));
 
-  FreeMemory(&(diDialog->szReadmeFilename));
-  FreeMemory(&(diDialog->szReadmeApp));
   FreeMemory(&(diDialog->stSetupType0.szDescriptionShort));
   FreeMemory(&(diDialog->stSetupType0.szDescriptionLong));
   FreeMemory(&(diDialog->stSetupType1.szDescriptionShort));
   FreeMemory(&(diDialog->stSetupType1.szDescriptionLong));
-  FreeMemory(&(diDialog->stSetupType2.szDescriptionShort));
-  FreeMemory(&(diDialog->stSetupType2.szDescriptionLong));
-  FreeMemory(&(diDialog->stSetupType3.szDescriptionShort));
-  FreeMemory(&(diDialog->stSetupType3.szDescriptionLong));
 }
 
 HRESULT InitDlgSelectComponents(diSC *diDialog, DWORD dwSM)
@@ -3466,6 +3459,8 @@ HRESULT InitDlgSelectComponents(diSC *diDialog, DWORD dwSM)
   diDialog->bShowDialogSM = dwSM;
   if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+  if((diDialog->szSubTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
   if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
@@ -3475,6 +3470,29 @@ HRESULT InitDlgSelectComponents(diSC *diDialog, DWORD dwSM)
 void DeInitDlgSelectComponents(diSC *diDialog)
 {
   FreeMemory(&(diDialog->szTitle));
+  FreeMemory(&(diDialog->szSubTitle));
+  FreeMemory(&(diDialog->szMessage0));
+}
+
+HRESULT InitDlgSelectInstallPath(diSIP *diDialog)
+{
+  diDialog->bShowDialog = FALSE;
+
+  /* set to show the Single dialog or the Multi dialog for the SelectComponents dialog */
+  if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szSubTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+
+  return(0);
+}
+
+void DeInitDlgSelectInstallPath(diSIP *diDialog)
+{
+  FreeMemory(&(diDialog->szTitle));
+  FreeMemory(&(diDialog->szSubTitle));
   FreeMemory(&(diDialog->szMessage0));
 }
 
@@ -3612,9 +3630,13 @@ HRESULT InitDlgStartInstall(diSI *diDialog)
   diDialog->bShowDialog        = FALSE;
   if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+  if((diDialog->szSubTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
   if((diDialog->szMessageInstall = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->szMessageDownload = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
   return(0);
@@ -3623,8 +3645,10 @@ HRESULT InitDlgStartInstall(diSI *diDialog)
 void DeInitDlgStartInstall(diSI *diDialog)
 {
   FreeMemory(&(diDialog->szTitle));
+  FreeMemory(&(diDialog->szSubTitle));
   FreeMemory(&(diDialog->szMessageInstall));
   FreeMemory(&(diDialog->szMessageDownload));
+  FreeMemory(&(diDialog->szMessage0));
 }
 
 HRESULT InitDlgDownload(diD *diDialog)
@@ -6988,6 +7012,8 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     return(1);
   if(InitDlgSelectComponents(&diSelectComponents, SM_SINGLE))
     return(1);
+  if(InitDlgSelectInstallPath(&diSelectInstallPath))
+    return(1);
   if(InitDlgSelectComponents(&diSelectAdditionalComponents, SM_SINGLE))
     return(1);
   if(InitDlgWindowsIntegration(&diWindowsIntegration))
@@ -7222,24 +7248,27 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("Dialog Welcome",             "Message0",        "", diWelcome.szMessage0,          MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Welcome",             "Message1",        "", diWelcome.szMessage1,          MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Welcome",             "Message2",        "", diWelcome.szMessage2,          MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Welcome",             "Message3",        "", diWelcome.szMessage3,          MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diWelcome.bShowDialog = TRUE;
 
   /* License dialog */
   GetPrivateProfileString("Dialog License",             "Show Dialog",     "", szShowDialog,                  sizeof(szShowDialog), szFileIniConfig);
   GetPrivateProfileString("Dialog License",             "Title",           "", diLicense.szTitle,             MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog License",             "Sub Title",       "", diLicense.szSubTitle,          MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog License",             "License File",    "", diLicense.szLicenseFilename,   MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog License",             "Message0",        "", diLicense.szMessage0,          MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog License",             "Message1",        "", diLicense.szMessage1,          MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog License",             "Message2",        "", diLicense.szMessage2,          MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog License",             "Message3",        "", diLicense.szMessage3,          MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diLicense.bShowDialog = TRUE;
 
   /* Setup Type dialog */
   GetPrivateProfileString("Dialog Setup Type",          "Show Dialog",     "", szShowDialog,                  sizeof(szShowDialog), szFileIniConfig);
   GetPrivateProfileString("Dialog Setup Type",          "Title",           "", diSetupType.szTitle,           MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Setup Type",          "Sub Title",       "", diSetupType.szSubTitle,        MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Setup Type",          "Message0",        "", diSetupType.szMessage0,        MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Setup Type",          "Readme Filename", "", diSetupType.szReadmeFilename,  MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Setup Type",          "Readme App",      "", diSetupType.szReadmeApp,       MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diSetupType.bShowDialog = TRUE;
 
@@ -7252,23 +7281,23 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("Setup Type1", "Description Long",  "", diSetupType.stSetupType1.szDescriptionLong,  MAX_BUF, szFileIniConfig);
   STSetVisibility(&diSetupType.stSetupType1);
 
-  GetPrivateProfileString("Setup Type2", "Description Short", "", diSetupType.stSetupType2.szDescriptionShort, MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Setup Type2", "Description Long",  "", diSetupType.stSetupType2.szDescriptionLong,  MAX_BUF, szFileIniConfig);
-  STSetVisibility(&diSetupType.stSetupType2);
-
-  GetPrivateProfileString("Setup Type3", "Description Short", "", diSetupType.stSetupType3.szDescriptionShort, MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Setup Type3", "Description Long",  "", diSetupType.stSetupType3.szDescriptionLong,  MAX_BUF, szFileIniConfig);
-  STSetVisibility(&diSetupType.stSetupType3);
-
   /* remember the radio button that is considered the Custom type (the last radio button) */
   SetCustomType();
 
   /* Select Components dialog */
   GetPrivateProfileString("Dialog Select Components",   "Show Dialog",  "", szShowDialog,                    sizeof(szShowDialog), szFileIniConfig);
   GetPrivateProfileString("Dialog Select Components",   "Title",        "", diSelectComponents.szTitle,      MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Select Components",   "Sub Title",    "", diSelectComponents.szSubTitle,   MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Select Components",   "Message0",     "", diSelectComponents.szMessage0,   MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diSelectComponents.bShowDialog = TRUE;
+
+  GetPrivateProfileString("Dialog Select Install Path", "Show Dialog",  "", szShowDialog,                    sizeof(szShowDialog), szFileIniConfig);
+  GetPrivateProfileString("Dialog Select Install Path", "Title",        "", diSelectInstallPath.szTitle,     MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Select Install Path", "Sub Title",    "", diSelectInstallPath.szSubTitle,  MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Select Install Path", "Message0",     "", diSelectInstallPath.szMessage0,  MAX_BUF, szFileIniConfig);
+  if(lstrcmpi(szShowDialog, "TRUE") == 0)
+    diSelectInstallPath.bShowDialog = TRUE;
 
   /* Select Additional Components dialog */
   GetPrivateProfileString("Dialog Select Additional Components",   "Show Dialog",  "", szShowDialog,                              sizeof(szShowDialog), szFileIniConfig);
@@ -7367,6 +7396,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   /* Start Install dialog */
   GetPrivateProfileString("Dialog Start Install",       "Show Dialog",      "", szShowDialog,                     sizeof(szShowDialog), szFileIniConfig);
   GetPrivateProfileString("Dialog Start Install",       "Title",            "", diStartInstall.szTitle,           MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Start Install",       "Sub Title",        "", diStartInstall.szSubTitle,        MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Start Install",       "Message Install",  "", diStartInstall.szMessageInstall,  MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Start Install",       "Message Download", "", diStartInstall.szMessageDownload, MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
@@ -7467,16 +7497,6 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     dwSetupType     = ST_RADIO1;
     dwTempSetupType = dwSetupType;
   }
-  else if((lstrcmpi(szBuf, "Setup Type 2") == 0) && diSetupType.stSetupType2.bVisible)
-  {
-    dwSetupType     = ST_RADIO2;
-    dwTempSetupType = dwSetupType;
-  }
-  else if((lstrcmpi(szBuf, "Setup Type 3") == 0) && diSetupType.stSetupType3.bVisible)
-  {
-    dwSetupType     = ST_RADIO3;
-    dwTempSetupType = dwSetupType;
-  }
   else
   {
     if(diSetupType.stSetupType0.bVisible)
@@ -7487,16 +7507,6 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     else if(diSetupType.stSetupType1.bVisible)
     {
       dwSetupType     = ST_RADIO1;
-      dwTempSetupType = dwSetupType;
-    }
-    else if(diSetupType.stSetupType2.bVisible)
-    {
-      dwSetupType     = ST_RADIO2;
-      dwTempSetupType = dwSetupType;
-    }
-    else if(diSetupType.stSetupType3.bVisible)
-    {
-      dwSetupType     = ST_RADIO3;
       dwTempSetupType = dwSetupType;
     }
   }
@@ -7636,6 +7646,8 @@ HRESULT ParseInstallIni()
   GetPrivateProfileString("General", "NEXT_", "", sgInstallGui.szNext_, sizeof(sgInstallGui.szNext_), szFileIniInstall);
   GetPrivateProfileString("General", "BACK_", "", sgInstallGui.szBack_, sizeof(sgInstallGui.szBack_), szFileIniInstall);
   GetPrivateProfileString("General", "IGNORE_", "", sgInstallGui.szIgnore_, sizeof(sgInstallGui.szIgnore_), szFileIniInstall);
+  GetPrivateProfileString("General", "PROXY_MESSAGE", "", sgInstallGui.szProxyMessage, sizeof(sgInstallGui.szProxyMessage), szFileIniInstall);
+  GetPrivateProfileString("General", "PROXY_BUTTON", "", sgInstallGui.szProxyButton, sizeof(sgInstallGui.szProxyButton), szFileIniInstall);
   GetPrivateProfileString("General", "PROXYSETTINGS_", "", sgInstallGui.szProxySettings_, sizeof(sgInstallGui.szProxySettings_), szFileIniInstall);
   GetPrivateProfileString("General", "PROXYSETTINGS", "", sgInstallGui.szProxySettings, sizeof(sgInstallGui.szProxySettings), szFileIniInstall);
   GetPrivateProfileString("General", "SERVER", "", sgInstallGui.szServer, sizeof(sgInstallGui.szServer), szFileIniInstall);
@@ -7889,11 +7901,7 @@ BOOL LocatePath(LPSTR szSection, LPSTR szPath, DWORD dwPathSize)
 
 void SetCustomType()
 {
-  if(diSetupType.stSetupType3.bVisible == TRUE)
-    sgProduct.dwCustomType = ST_RADIO3;
-  else if(diSetupType.stSetupType2.bVisible == TRUE)
-    sgProduct.dwCustomType = ST_RADIO2;
-  else if(diSetupType.stSetupType1.bVisible == TRUE)
+  if(diSetupType.stSetupType1.bVisible == TRUE)
     sgProduct.dwCustomType = ST_RADIO1;
   else if(diSetupType.stSetupType0.bVisible == TRUE)
     sgProduct.dwCustomType = ST_RADIO0;
@@ -8942,6 +8950,7 @@ void DeInitialize()
   DeInitDlgProgramFolder(&diProgramFolder);
   DeInitDlgWindowsIntegration(&diWindowsIntegration);
   DeInitDlgSelectComponents(&diSelectAdditionalComponents);
+  DeInitDlgSelectInstallPath(&diSelectInstallPath);
   DeInitDlgSelectComponents(&diSelectComponents);
   DeInitDlgSetupType(&diSetupType);
   DeInitDlgWelcome(&diWelcome);
@@ -9060,9 +9069,6 @@ void SaveInstallerFiles()
     }
     /* copy the license file */
     if(*diLicense.szLicenseFilename != '\0')
-      FileCopy(diLicense.szLicenseFilename, destInstallDir, FALSE, FALSE);
-    /* copy the readme file */
-    if(*diSetupType.szReadmeFilename != '\0')
       FileCopy(diLicense.szLicenseFilename, destInstallDir, FALSE, FALSE);
 
     /* The dir for xpi files is just "." as opposed to ".\xpi"

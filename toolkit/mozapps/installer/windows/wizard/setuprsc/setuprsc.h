@@ -18,6 +18,9 @@
 #define DLG_MESSAGE                     110
 #define IDB_BITMAP_BANNER               114
 #define IDB_QUICK_LAUNCH                115
+#define IDB_HEADER                      116
+#define IDB_WATERMARK                   117
+#define DLG_SELECT_INSTALL_PATH		118
 #define DLG_BROWSE_DIR                  503
 #define IDC_STATUS                      1001
 #define IDC_STATUS1                     1001
@@ -77,6 +80,7 @@
 #define IDC_BUTTON1                     1055
 #define IDC_README                      1055
 #define IDC_BUTTON_SITE_SELECTOR        1055
+#define IDC_CONNECTION_SETTINGS         1056
 #define IDC_DOWNLOAD_SIZE               1058
 #define IDC_SITE_SELECTOR               1059
 #define IDC_LIST_SITE_SELECTOR          1059
@@ -99,6 +103,7 @@
 #define IDC_DESTINATION                 1074
 #define IDC_CHECK_TURBO_MODE            1075
 #define IDC_CHECK_RECAPTURE_HOMEPAGE    1076
+#define IDC_STATIC_MSG1                 1079
 #define DLG_WELCOME                     2001
 #define DLG_LICENSE                     2002
 #define DLG_SETUP_TYPE                  2003
