@@ -959,7 +959,8 @@ nsImapUrl::GetURI(char** aURI)
 #else
         // jefft -- indeed that is wrong 
         CreateCanonicalSourceFolderPathString(getter_Copies(theFile));
-        nsCString fullFolderPath = (const char *) m_userName;
+        nsCString fullFolderPath = "/";
+        fullFolderPath += (const char *) m_userName;
         char *hostName = nsnull;
         rv = GetHost(&hostName);
         fullFolderPath += '@';
