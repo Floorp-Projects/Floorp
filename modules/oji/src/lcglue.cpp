@@ -27,7 +27,6 @@
 #include "nsJVMManager.h"
 #include "nsIPluginInstancePeer2.h"
 //#include "npglue.h"
-#include "nsCCapsManager.h"
 #include "prinrval.h"
 #include "ProxyJNI.h"
 #include "prcmon.h"

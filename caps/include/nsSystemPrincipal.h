@@ -12,41 +12,41 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/* describes principals by their orginating uris*/
-#ifndef _NS_CODEBASE_PRINCIPAL_H_
-#define _NS_CODEBASE_PRINCIPAL_H_
+/* The privileged system principal. */
+#ifndef _NS_SYSTEM_PRINCIPAL_H_
+#define _NS_SYSTEM_PRINCIPAL_H_
 
 #include "jsapi.h"
-#include "nsICodebasePrincipal.h"
+#include "nsIPrincipal.h"
 #include "nsIURI.h"
 #include "nsJSPrincipals.h"
 
-#define NS_CODEBASEPRINCIPAL_CID \
-{ 0x7ee2a400, 0x0b91, 0xaad3, \
+// TODO: get new cid
+#define NS_SYSTEMPRINCIPAL_CID \
+{ 0x7ee2a400, 0x0c99, 0xaad3, \
 { 0xba, 0x18, 0xd7, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}
 
-class nsCodebasePrincipal : public nsICodebasePrincipal {
+class nsSystemPrincipal : public nsIPrincipal {
 public:
     
-    NS_DEFINE_STATIC_CID_ACCESSOR(NS_CODEBASEPRINCIPAL_CID)
+    //NS_DEFINE_STATIC_CID_ACCESSOR(NS_PRINCIPAL_CID)
         
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPRINCIPAL
-    NS_DECL_NSICODEBASEPRINCIPAL
     
-    nsCodebasePrincipal();
+    nsSystemPrincipal();
     
     NS_IMETHOD
-    Init(nsIURI *uri);
+    Init();
 
-    virtual ~nsCodebasePrincipal(void);
-    
-protected:
-    nsIURI *mURI;
+    virtual ~nsSystemPrincipal(void);
+
+private:
     nsJSPrincipals mJSPrincipals;
+
 };
 
-#endif // _NS_CODEBASE_PRINCIPAL_H_
+#endif // _NS_SYSTEM_PRINCIPAL_H_

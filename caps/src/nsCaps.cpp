@@ -31,6 +31,8 @@
 #include "nsITarget.h"
 #include "nsCCapsManager.h"
 
+#if 0
+
 /* 
  * With the introduction of '-reg_mode' flag, 
  * we now have a variable that holds the information
@@ -326,3 +328,4 @@ nsCapsGetRegistrationModeFlag(void)
 
 PR_END_EXTERN_C
 
+#endif

@@ -37,7 +37,6 @@
 #include "nsIIOService.h"
 #endif // NECKO
 #ifdef OJI
-#include "nsICapsManager.h"
 #include "nsILiveconnect.h"
 #endif
 #include "nsIPluginManager.h"
@@ -203,7 +202,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
 static NS_DEFINE_CID(kCPluginManagerCID,          NS_PLUGINMANAGER_CID);
 #ifdef OJI
-static NS_DEFINE_CID(kCapsManagerCID,             NS_CCAPSMANAGER_CID);
 static NS_DEFINE_CID(kCLiveconnectCID,             NS_CLIVECONNECT_CID);
 #endif
 
@@ -404,7 +402,6 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCPluginManagerCID, NULL, NULL, PLUGIN_DLL, PR_FALSE, PR_FALSE);
 
 #ifdef OJI
-  nsComponentManager::RegisterComponentLib(kCapsManagerCID, NULL, NULL, CAPS_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCLiveconnectCID, NULL, NULL, LIVECONNECT_DLL, PR_FALSE, PR_FALSE);
 #endif
 }

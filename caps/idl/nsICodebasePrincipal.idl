@@ -15,23 +15,18 @@
  * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
-/* Defines the abstract interface for a principal. */
-
-#include "nsISupports.idl"
+/* Defines an interface for codebase principals. */
+#include "nsIPrincipal.idl"
+interface nsIURI;
 
 %{C++
-struct JSPrincipals;
+#define NS_CODEBASEPRINCIPAL_PROGID "component://netscape/codebaseprincipal"
+#define NS_CODEBASEPRINCIPAL_CLASSNAME "codebaseprincipal"
 %}
 
-[ptr] native JSPrincipals(JSPrincipals);
-
-[uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]
-interface nsIPrincipal : nsISupports {
-	void ToString(out string result);
-	void Equals(in nsIPrincipal other, out boolean result);
-	void GetJSPrincipals(out JSPrincipals jsprin);
-	void CanAccess(in string capability, out boolean result);
+[uuid(829fe440-25e1-11d2-8160-006008119d7a)]
+interface nsICodebasePrincipal : nsIPrincipal {
+	nsIURI GetURI();
+	boolean SameOrigin(in nsIPrincipal other);
 };
-
 

@@ -15,23 +15,20 @@
  * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
-/* Defines the abstract interface for a principal. */
-
-#include "nsISupports.idl"
+/* Defines an interface for certificate principals. */
+#include "nsIPrincipal.idl"
 
 %{C++
-struct JSPrincipals;
+#define NS_CERTIFICATEPRINCIPAL_PROGID "component://netscape/certificateprincipal"
+#define NS_CERTIFICATEPRINCIPAL_CLASSNAME "certificateprincipal"
 %}
 
-[ptr] native JSPrincipals(JSPrincipals);
-
-[uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]
-interface nsIPrincipal : nsISupports {
-	void ToString(out string result);
-	void Equals(in nsIPrincipal other, out boolean result);
-	void GetJSPrincipals(out JSPrincipals jsprin);
-	void CanAccess(in string capability, out boolean result);
+[uuid(ebfefcd0-25e1-11d2-8160-006008119d7a)]
+interface nsICertificatePrincipal : nsIPrincipal {
+	void GetPublicKey(out string publicKey);
+	void GetCompanyName(out string ppCompanyName);
+	void GetCertificateAuthority(out string ppCertAuthority);
+	void GetSerialNumber(out string ppSerialNumber);
+	void GetExpirationDate(out string ppExpDate);
+	void GetFingerPrint(out string ppFingerPrint);
 };
-
-

@@ -17,7 +17,6 @@
  */
 #include "nsScriptSecurityManager.h"
 #include "nsIServiceManager.h"
-#include "nsIPrincipalManager.h"
 #include "nsIScriptGlobalObjectData.h"
 #include "nsIPref.h"
 #include "nsIURL.h"
@@ -28,8 +27,9 @@
 #include "plstr.h"
 #include "nsCOMPtr.h"
 #include "nsJSPrincipals.h"
+#include "nsSystemPrincipal.h"
+#include "nsCodebasePrincipal.h"
 #include "nsCRT.h"
-#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kURLCID, NS_STANDARDURL_CID);
@@ -38,15 +38,13 @@ static NS_DEFINE_IID(kIScriptSecurityManagerIID, NS_ISCRIPTSECURITYMANAGER_IID);
 
 NS_IMPL_ISUPPORTS(nsScriptSecurityManager, kIScriptSecurityManagerIID);
 
-static char gUnknownOrigin[] = "[unknown origin]";
 static char gFileScheme[] = "file";
-static nsString gUnknownOriginStr(gUnknownOrigin);
-static nsString gFileUrlPrefix("file:");
 
 static char accessErrorMessage[] = 
     "access disallowed from scripts at %s to documents at another domain";
 
 nsScriptSecurityManager::nsScriptSecurityManager(void)
+    : mSystemPrincipal(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -75,12 +73,16 @@ nsScriptSecurityManager::CheckScriptAccess(nsIScriptContext *aContext,
     JSContext *cx = (JSContext *)aContext->GetNativeContext();
     PRInt32 secLevel = GetSecurityLevel(cx, (char *) aProp, nsnull);
     switch (secLevel) {
-    case SCRIPT_SECURITY_ALL_ACCESS:
+      case SCRIPT_SECURITY_ALL_ACCESS:
         *aResult = PR_TRUE;
         return NS_OK;
-    case SCRIPT_SECURITY_SAME_DOMAIN_ACCESS:
-        return CheckPermissions(cx, (JSObject *) aObj, eJSTarget_Max, aResult);
-    default:
+      case SCRIPT_SECURITY_SAME_DOMAIN_ACCESS: {
+        const char *cap = isWrite  
+                          ? "UniversalBrowserWrite" 
+                          : "UniversalBrowserRead";
+        return CheckPermissions(cx, (JSObject *) aObj, cap, aResult);
+      }
+      default:
         // Default is no access
         *aResult = PR_FALSE;
         return NS_OK;
@@ -88,27 +90,204 @@ nsScriptSecurityManager::CheckScriptAccess(nsIScriptContext *aContext,
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::CanAccessTarget(JSContext *aCx, PRInt16 aTarget, 
-                                         PRBool *aReturn)
+nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext, 
+                                  nsIURI *aURI,
+                                  PRBool *aResult)
 {
 #if 0
-    JSPrincipals *principals;
-    *aReturn = PR_TRUE;
-    GetSubjectPrincipal(aCx, &principals);
-    if ((nsCapsGetRegistrationModeFlag()) && principals && 
-        (NET_URL_Type(principals->codebase) == FILE_TYPE_URL)) 
+    nsXPIDLCString scheme;
+    if (NS_FAILED(aURI->GetScheme(getter_Copies(scheme)))
+        return NS_ERROR_FAILURE;
+    if (nsCRT::strcmp(scheme, "http") == 0 ||
+        nsCRT::strcmp(scheme, "https") == 0 ||
+        nsCRT::strcmp(scheme, "ftp") == 0 ||
+        nsCRT::strcmp(scheme, "mailto") == 0 ||
+        nsCRT::strcmp(scheme, "news") == 0)
     {
+        *aResult = PR_TRUE;
         return NS_OK;
-    } else if (principals && !principals->globalPrivilegesEnabled(aCx, principals)) {
-        *aReturn = PR_FALSE;
     }
-    // only if signed scripts
-    else if (!this->PrincipalsCanAccessTarget(aCx, aTarget)) {
-        *aReturn = PR_FALSE;
+    if (nsCRT::strcmp(scheme, "file") == 0) {
+        JSContext *cx = (JSContext*) (*aContext)->GetNativeContext();
+        nsCOMPtr<nsIPrincipal> principal;
+        if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))
+            return NS_ERROR_FAILURE;
+        nsCOMPtr<nsICodebasePrincipal> codebase;
+        if (NS_SUCCEEDED(principal->QueryInterface(
+                 NS_GET_IID(nsICodebasePrincipal), 
+                 (void **) getter_AddRefs(codebase))))
+        {
+            nsCOMPtr<nsIURI> uri;
+            if (NS_SUCCEEDED(codebase->GetURI(getter_AddRefs(uri))) {
+                nsXPIDLCString scheme2;
+                if (NS_SUCCEEDED(uri->GetScheme(getter_Copies(scheme2)) &&
+                    nsCRT::strcmp(scheme2, "file") == 0)
+                {
+                    *aResult = PR_TRUE;
+                    return NS_OK;
+                }
+            }
+        }
+        if (NS_FAILED(principal->CanAccess("UniversalFileRead", aResult))
+            return NS_ERROR_FAILURE;
+        return NS_OK;
     }
-#else
-    *aReturn = PR_FALSE;
+
+
+
 #endif
+    *aResult = PR_TRUE;
+    return NS_OK;
+}
+
+#if 0
+// temporary: for reference
+const char *
+lm_CheckURL(JSContext *cx, const char *url_string, JSBool checkFile)
+{
+    char *protocol, *absolute;
+    JSObject *obj;
+    MochaDecoder *decoder;
+
+    protocol = NET_ParseURL(url_string, GET_PROTOCOL_PART);
+    if (!protocol || *protocol == '\0' || XP_STRCHR(protocol, '?')) {
+        lo_TopState *top_state;
+
+	obj = JS_GetGlobalObject(cx);
+	decoder = JS_GetPrivate(cx, obj);
+
+	LO_LockLayout();
+	top_state = lo_GetMochaTopState(decoder->window_context);
+        if (top_state && top_state->base_url) {
+	    absolute = NET_MakeAbsoluteURL(top_state->base_url,
+				           (char *)url_string);	/*XXX*/
+            /* 
+	     * Temporarily unlock layout so that we don't hold the lock
+	     * across a call (lm_CheckPermissions) that may result in 
+	     * synchronous event handling.
+	     */
+	    LO_UnlockLayout();
+            if (!lm_CheckPermissions(cx, obj, 
+                                     JSTARGET_UNIVERSAL_BROWSER_READ))
+            {
+                /* Don't leak information about the url of this page. */
+                XP_FREEIF(absolute);
+                return NULL;
+            }
+	    LO_LockLayout();
+	} else {
+	    absolute = NULL;
+	}
+	if (absolute) {
+	    if (protocol) XP_FREE(protocol);
+	    protocol = NET_ParseURL(absolute, GET_PROTOCOL_PART);
+	}
+	LO_UnlockLayout();
+    } else {
+	absolute = JS_strdup(cx, url_string);
+	if (!absolute) {
+	    XP_FREE(protocol);
+	    return NULL;
+	}
+	decoder = NULL;
+    }
+
+    if (absolute) {
+
+	/* Make sure it's a safe URL type. */
+	switch (NET_URL_Type(protocol)) {
+	  case FILE_TYPE_URL:
+            if (checkFile) {
+                const char *subjectOrigin = lm_GetSubjectOriginURL(cx);
+                if (subjectOrigin == NULL) {
+	            XP_FREE(protocol);
+	            return NULL;
+                }
+                if (NET_URL_Type(subjectOrigin) != FILE_TYPE_URL &&
+                    !lm_CanAccessTarget(cx, JSTARGET_UNIVERSAL_FILE_READ)) 
+                {
+                    XP_FREE(absolute);
+                    absolute = NULL;
+                }
+            }
+            break;
+	  case FTP_TYPE_URL:
+	  case GOPHER_TYPE_URL:
+	  case HTTP_TYPE_URL:
+	  case MAILTO_TYPE_URL:
+	  case NEWS_TYPE_URL:
+	  case RLOGIN_TYPE_URL:
+	  case TELNET_TYPE_URL:
+	  case TN3270_TYPE_URL:
+	  case WAIS_TYPE_URL:
+	  case SECURE_HTTP_TYPE_URL:
+	  case URN_TYPE_URL:
+	  case NFS_TYPE_URL:
+	  case MOCHA_TYPE_URL:
+	  case VIEW_SOURCE_TYPE_URL:
+	  case NETHELP_TYPE_URL:
+	  case WYSIWYG_TYPE_URL:
+	  case LDAP_TYPE_URL:
+#ifdef JAVA
+/* DHIREN */
+	  case MARIMBA_TYPE_URL:
+/* ~DHIREN */
+#endif
+	    /* These are "safe". */
+	    break;
+	  case ABOUT_TYPE_URL:
+	    if (XP_STRCASECMP(absolute, "about:blank") == 0)
+		break;
+	    if (XP_STRNCASECMP(absolute, "about:pics", 10) == 0)
+		break;
+	    /* these are OK if we are signed */
+	    if (lm_CanAccessTarget(cx, JSTARGET_UNIVERSAL_BROWSER_READ))
+		break;
+	    /* FALL THROUGH */
+	  default:
+	    /* All others are naughty. */
+	    /* XXX signing - should we allow these for signed scripts? */
+	    XP_FREE(absolute);
+	    absolute = NULL;
+	    break;
+	}
+    }
+
+    if (!absolute) {
+	JS_ReportError(cx, "illegal URL method '%s'",
+		       protocol && *protocol ? protocol : url_string);
+    }
+    if (protocol)
+	XP_FREE(protocol);
+    return absolute;
+}
+#endif
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetSystemPrincipal(nsIPrincipal **result)
+{
+    if (!mSystemPrincipal) {
+        mSystemPrincipal = new nsSystemPrincipal();
+        if (!mSystemPrincipal)
+            return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(mSystemPrincipal);
+    }
+    *result = mSystemPrincipal;
+    NS_ADDREF(*result);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI *aURI, 
+                                                 nsIPrincipal **result)
+{
+    nsCOMPtr<nsCodebasePrincipal> codebase = new nsCodebasePrincipal();
+    if (!codebase)
+        return NS_ERROR_OUT_OF_MEMORY;
+    if (NS_FAILED(codebase->Init(aURI)))
+        return NS_ERROR_FAILURE;
+    *result = codebase;
+    NS_ADDREF(*result);
     return NS_OK;
 }
 
@@ -156,14 +335,17 @@ nsScriptSecurityManager::GetSubjectPrincipal(JSContext *aCx,
     principals = JVM_GetJavaPrincipalsFromStack(pFrameToStartLooking);
     if (principals && principals->codebase) {
         // create new principals
+        /*
         nsresult rv;
         NS_WITH_SERVICE(nsIPrincipalManager, prinMan, 
                         NS_PRINCIPALMANAGER_PROGID, &rv);
+        // NB TODO: create nsIURI to pass in
         if (NS_SUCCEEDED(rv)) 
             rv = prinMan->CreateCodebasePrincipal(principals->codebase, 
                                                   nsnull, result);
         if (NS_SUCCEEDED(rv))
             return NS_OK;
+        */
     }
 #endif
     // Couldn't find principals.
@@ -196,8 +378,12 @@ nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj, 
-                                          PRInt16 aTarget, PRBool* aReturn)
+                                          const char *aCapability,
+                                          PRBool* aReturn)
 {
+    /*
+    ** Get origin of subject and object and compare.
+    */
     nsCOMPtr<nsIPrincipal> subject;
     if (NS_FAILED(GetSubjectPrincipal(aCx, getter_AddRefs(subject))))
         return NS_ERROR_FAILURE;
@@ -207,40 +393,36 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
         return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsICodebasePrincipal> subjectCodebase;
-    if (NS_FAILED(subject->QueryInterface(
+    if (NS_SUCCEEDED(subject->QueryInterface(
                         NS_GET_IID(nsICodebasePrincipal),
 	                (void **) getter_AddRefs(subjectCodebase))))
     {
-        return NS_ERROR_FAILURE;
-    }
-    if (NS_FAILED(subjectCodebase->SameOrigin(object, aReturn)))
-        return NS_ERROR_FAILURE;
+        if (NS_FAILED(subjectCodebase->SameOrigin(object, aReturn)))
+            return NS_ERROR_FAILURE;
 
-    if (*aReturn)
-        return NS_OK;
+        if (*aReturn)
+            return NS_OK;
+    }
 
     /*
     ** If we failed the origin tests it still might be the case that we
     ** are a signed script and have permissions to do this operation.
     ** Check for that here
     */
-    if (aTarget != eJSTarget_Max) {
-        PRBool canAccess;
-        CanAccessTarget(aCx, aTarget, &canAccess);
-        if (canAccess) {
-            *aReturn = PR_TRUE;
-            return NS_OK;
-        }
-    }
+    if (NS_FAILED(subject->CanAccess(aCapability, aReturn)))
+        return NS_ERROR_FAILURE;
+    if (*aReturn)
+        return NS_OK;
     
+    /*
+    ** Access tests failed, so now report error.
+    */
     nsCOMPtr<nsIURI> uri;
     if (NS_FAILED(subjectCodebase->GetURI(getter_AddRefs(uri)))) 
         return NS_ERROR_FAILURE;
-
     char *spec;
     if (NS_FAILED(uri->GetSpec(&spec)))
         return NS_ERROR_FAILURE;
-
     JS_ReportError(aCx, accessErrorMessage, spec);
     nsCRT::free(spec);
     *aReturn = PR_FALSE;

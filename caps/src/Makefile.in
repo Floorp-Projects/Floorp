@@ -28,23 +28,12 @@ LIBRARY_NAME = caps
 IS_COMPONENT = 1
 
 CPPSRCS = \
-		admin.cpp \
-		nsCaps.cpp \
-		nsCCapsManager.cpp \
+		nsSystemPrincipal.cpp \
 		nsCertificatePrincipal.cpp \
 		nsCodebasePrincipal.cpp \
 		nsJSPrincipals.cpp \
-		nsPrincipalArray.cpp \
-		nsPrincipalManager.cpp \
-		nsPrivilege.cpp \
-		nsPrivilegeManager.cpp \
-		nsPrivilegeTable.cpp \
 		nsScriptSecurityManager.cpp \
 		nsSecurityManagerFactory.cpp \
-		nsSystemPrivilegeTable.cpp \
-		nsTarget.cpp \
-		nsUserDialogHelper.cpp \
-		nsUserTarget.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

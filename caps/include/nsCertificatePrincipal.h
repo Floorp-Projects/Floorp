@@ -20,7 +20,7 @@
 #define _NS_CERTIFICATE_PRINCIPAL_H_
 #include "jsapi.h"
 #include "nsVector.h"
-#include "nsIPrincipal.h"
+#include "nsICertificatePrincipal.h"
 
 #define NS_CERTIFICATEPRINCIPALMANAGER_CID \
 { 0x7ee2a4c0, 0x4b91, 0x11d3, \

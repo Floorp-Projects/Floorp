@@ -36,7 +36,6 @@
 #include "jsdbgapi.h"
 #include "libmocha.h"
 #include "libevent.h"
-#include "nsCCapsManager.h"
 #include "prinrval.h"
 #include "ProxyJNI.h"
 #include "prcmon.h"

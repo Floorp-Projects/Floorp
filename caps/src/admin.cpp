@@ -31,6 +31,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#if 0
 /* 
  *             A D M I N   U I   A P I 
  *
@@ -74,6 +75,7 @@ java_netscape_security_removePrivilege(const char * charSetName, char * prinName
 	return result;
 
 }
+#endif
 
 
 #ifdef __cplusplus

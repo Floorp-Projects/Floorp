@@ -50,7 +50,7 @@ private:
     GetObjectPrincipal(JSContext *aCx, JSObject *aObj, nsIPrincipal **result);
 
     NS_IMETHOD
-    CheckPermissions(JSContext *aCx, JSObject *aObj, PRInt16 aTarget, 
+    CheckPermissions(JSContext *aCx, JSObject *aObj, const char *aCapability, 
                      PRBool* result);
     PRInt32 
     GetSecurityLevel(JSContext *cx, char *prop_name, int priv_code);
@@ -60,6 +60,8 @@ private:
 
     char *
     GetSitePolicy(const char *org);
+
+    nsIPrincipal *mSystemPrincipal;
 };
 
 #endif /*_NS_SCRIPT_SECURITY_MANAGER_H_*/
