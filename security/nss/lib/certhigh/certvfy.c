@@ -657,7 +657,8 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
     SECStatus rv;
     SECStatus rvFinal = SECSuccess;
     int count;
-    int currentPathLen = -1;
+    int currentPathLen = 0;
+    int pathLengthLimit = CERT_UNLIMITED_PATH_CONSTRAINT;
     int flags;
     unsigned int caCertType;
     unsigned int requiredCAKeyUsage;
@@ -827,9 +828,8 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 	if ( rv != SECSuccess ) {
 	    if (PORT_GetError() != SEC_ERROR_EXTENSION_NOT_FOUND) {
 		LOG_ERROR_OR_EXIT(log,issuerCert,count+1,0);
-	    } else {
-		currentPathLen = CERT_UNLIMITED_PATH_CONSTRAINT;
-	    }
+	    } 
+	    pathLengthLimit = CERT_UNLIMITED_PATH_CONSTRAINT;
 	    /* no basic constraints found, if we're fortezza, CA bit is already
 	     * verified (isca = PR_TRUE). otherwise, we aren't (yet) a ca
 	     * isca = PR_FALSE */
@@ -839,26 +839,13 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 		PORT_SetError (SEC_ERROR_CA_CERT_INVALID);
 		LOG_ERROR_OR_EXIT(log,issuerCert,count+1,0);
 	    }
-	    
-	    /* make sure that the path len constraint is properly set.
-	     */
-	    if ( basicConstraint.pathLenConstraint ==
-		CERT_UNLIMITED_PATH_CONSTRAINT ) {
-		currentPathLen = CERT_UNLIMITED_PATH_CONSTRAINT;
-	    } else if ( currentPathLen == CERT_UNLIMITED_PATH_CONSTRAINT ) {
-		/* error if the previous CA's path length constraint is
-		 * unlimited but its CA's path is not.
-		 */
-		PORT_SetError (SEC_ERROR_PATH_LEN_CONSTRAINT_INVALID);
-		LOG_ERROR_OR_EXIT(log,issuerCert,count+1,basicConstraint.pathLenConstraint);
-	    } else if (basicConstraint.pathLenConstraint > currentPathLen) {
-		currentPathLen = basicConstraint.pathLenConstraint;
-	    } else {
-		PORT_SetError (SEC_ERROR_PATH_LEN_CONSTRAINT_INVALID);
-		LOG_ERROR_OR_EXIT(log,issuerCert,count+1,basicConstraint.pathLenConstraint);
-	    }
-
+	    pathLengthLimit = basicConstraint.pathLenConstraint;
 	    isca = PR_TRUE;
+	}    
+	/* make sure that the path len constraint is properly set.*/
+	if (pathLengthLimit >= 0 && currentPathLen > pathLengthLimit) {
+	    PORT_SetError (SEC_ERROR_PATH_LEN_CONSTRAINT_INVALID);
+	    LOG_ERROR_OR_EXIT(log, issuerCert, count+1, pathLengthLimit);
 	}
 	
 	/* XXX - the error logging may need to go down into CRL stuff at some
@@ -963,6 +950,14 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 	    PORT_SetError(SEC_ERROR_UNTRUSTED_ISSUER);
 	    LOG_ERROR(log, issuerCert, count+1, 0);
 	    goto loser;
+	} 
+	if (issuerCert->derIssuer.len == 0 ||
+	    !SECITEM_ItemsAreEqual(&issuerCert->derIssuer, 
+	                           &issuerCert->derSubject)) {
+	    /* RFC 3280 says only non-self-issued intermediate CA certs 
+	     * count in path length.
+	     */
+	    ++currentPathLen;
 	}
 
 	CERT_DestroyCertificate(subjectCert);
@@ -1003,6 +998,7 @@ CERT_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 
 /*
  * verify that a CA can sign a certificate with the requested usage.
+ * XXX This function completely ignores cert path length constraints!
  */
 SECStatus
 CERT_VerifyCACertForUsage(CERTCertDBHandle *handle, CERTCertificate *cert,
