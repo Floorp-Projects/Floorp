@@ -44,10 +44,10 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= ipcd
+XPIDL_MODULE= ipcd_dconnect
 
 XPIDLSRCS	= \
 			ipcIDConnectService.idl \
 			$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
