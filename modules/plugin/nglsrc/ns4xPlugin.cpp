@@ -26,20 +26,6 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-#ifdef XP_WIN
-// XXX These are defined in platform specific FE directories right now :-/
-typedef NPError (__stdcall *NP_GETENTRYPOINTS)(NPPluginFuncs* pCallbacks);
-typedef NPError (__stdcall *NP_PLUGININIT)(const NPNetscapeFuncs* pCallbacks);
-typedef NPError (__stdcall *NP_PLUGINSHUTDOWN)();
-#else
-typedef NPError (*NP_GETENTRYPOINTS)(NPPluginFuncs* pCallbacks);
-typedef NPError (*NP_PLUGININIT)(const NPNetscapeFuncs* pCallbacks);
-typedef NPError (*NP_PLUGINSHUTDOWN)();
-#endif /* XP_WIN */
-
-
-////////////////////////////////////////////////////////////////////////
-
 NPNetscapeFuncs ns4xPlugin::CALLBACKS;
 nsIPluginManager *  ns4xPlugin::mPluginManager;
 nsINetworkManager * ns4xPlugin::mNetworkManager;
@@ -90,18 +76,17 @@ ns4xPlugin::CheckClassInitialized(void)
 ////////////////////////////////////////////////////////////////////////
 
 
-ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks)
+ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown)
 {
     NS_INIT_REFCNT();
+
     memcpy((void*) &fCallbacks, (void*) callbacks, sizeof(fCallbacks));
+    fShutdownEntry = aShutdown;
 }
 
 
 ns4xPlugin::~ns4xPlugin(void)
 {
-  NS_IF_RELEASE(mPluginManager);
-  NS_IF_RELEASE(mNetworkManager);
-  NS_IF_RELEASE(mMalloc);
 }
 
 
@@ -182,6 +167,9 @@ ns4xPlugin::CreatePlugin(PRLibrary *library,
         return NS_ERROR_FAILURE;
 #endif    
 
+    NP_PLUGINSHUTDOWN pfnShutdown =
+        (NP_PLUGINSHUTDOWN)PR_FindSymbol(library, "NP_Shutdown");
+
     // the NP_Initialize entry point was misnamed as NP_PluginInit,
     // early in plugin project development.  Its correct name is
     // documented now, and new developers expect it to work.  However,
@@ -201,9 +189,11 @@ ns4xPlugin::CreatePlugin(PRLibrary *library,
     if (pfnInitialize(&ns4xPlugin::CALLBACKS) != NS_OK)
         return NS_ERROR_UNEXPECTED; // XXX shoudl convert the 4.x error...
 
-    (*result) = new ns4xPlugin(&callbacks);
+    *result = new ns4xPlugin(&callbacks, pfnShutdown);
 
-    if ((*result) == NULL)
+    NS_ADDREF(*result);
+
+    if (*result == NULL)
       return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;
@@ -268,6 +258,15 @@ ns4xPlugin::Initialize(nsISupports* browserInterfaces)
 nsresult
 ns4xPlugin::Shutdown(void)
 {
+  if (nsnull != fShutdownEntry)
+  {
+#ifdef NS_DEBUG
+printf("shutting down plugin %08x\n", this);
+#endif
+    fShutdownEntry();
+    fShutdownEntry = nsnull;
+  }
+
   NS_IF_RELEASE(mPluginManager);
   NS_IF_RELEASE(mNetworkManager);
   NS_IF_RELEASE(mMalloc);
@@ -278,6 +277,7 @@ ns4xPlugin::Shutdown(void)
 nsresult
 ns4xPlugin::GetMIMEDescription(const char* *resultingDesc)
 {
+printf("plugin getmimedescription called\n");
   *resultingDesc = "";
   return NS_OK; // XXX make a callback, etc.
 }
@@ -285,12 +285,7 @@ ns4xPlugin::GetMIMEDescription(const char* *resultingDesc)
 nsresult
 ns4xPlugin::GetValue(nsPluginVariable variable, void *value)
 {
-  return NS_OK;
-}
-
-nsresult
-ns4xPlugin::SetValue(nsPluginVariable variable, void *value)
-{
+printf("plugin getvalue %d called\n", variable);
   return NS_OK;
 }
 
@@ -645,13 +640,26 @@ ns4xPlugin::_getvalue(NPP npp, NPNVariable variable, void *result)
 nsresult NP_EXPORT
 ns4xPlugin::_setvalue(NPP npp, NPPVariable variable, void *result)
 {
-    nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
+    ns4xPluginInstance *inst = (ns4xPluginInstance *) npp->ndata;
 
     NS_ASSERTION(inst != NULL, "null instance");
 
     if (inst == NULL)
         return NS_ERROR_FAILURE; // XXX
 
+    switch (variable)
+    {
+      case NPPVpluginWindowBool:
+        return inst->SetWindowless(*((NPBool *)result));
+
+      case NPPVpluginTransparentBool:
+        return inst->SetTransparent(*((NPBool *)result));
+
+      default:
+        return NS_OK;
+    }
+
+#if 0
     nsIPluginInstancePeer *peer;
 
     if (NS_OK == inst->GetPeer(&peer))
@@ -666,6 +674,7 @@ ns4xPlugin::_setvalue(NPP npp, NPPVariable variable, void *result)
     }
     else
       return NS_ERROR_UNEXPECTED;
+#endif
 }
 
 nsresult NP_EXPORT

@@ -25,7 +25,8 @@ LIBRARY_NAME=raptorplugin
 
 EXPORTS =	\
     nsPluginsCID.h  \
-	nsIPluginHost.h
+	nsIPluginHost.h \
+	nsIPluginInstanceOwner.h
 
 CPPSRCS =                              \
     nsPluginHostImpl.cpp  \

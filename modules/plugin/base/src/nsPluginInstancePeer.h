@@ -21,6 +21,7 @@
 
 #include "nsIPluginInstancePeer.h"
 #include "nsIPluginTagInfo.h"
+#include "nsIPluginInstanceOwner.h"
 
 class nsPluginInstancePeerImpl : public nsIPluginInstancePeer, public nsIPluginTagInfo
 {
@@ -36,9 +37,6 @@ public:
   GetValue(nsPluginInstancePeerVariable variable, void *value);
 
   NS_IMETHOD
-  SetValue(nsPluginInstancePeerVariable variable, void *value);
-
-  NS_IMETHOD
   GetMIMEType(nsMIMEType *result);
 
   NS_IMETHOD
@@ -50,6 +48,9 @@ public:
   NS_IMETHOD
   ShowStatus(const char* message);
 
+  NS_IMETHOD
+  SetWindowSize(PRUint32 width, PRUint32 height);
+
   //nsIPluginTagInfo interface
 
   NS_IMETHOD
@@ -60,10 +61,15 @@ public:
 
   //locals
 
-  nsresult Initialize(nsIPluginInstance *aInstance);
+  nsresult Initialize(nsIPluginInstanceOwner *aInstance,
+                      const nsMIMEType aMimeType);
+
+  nsresult GetOwner(nsIPluginInstanceOwner *&aOwner);
 
 private:
-  nsIPluginInstance *mInstance;     //we don't add a ref to this
+  nsIPluginInstance       *mInstance; //we don't add a ref to this
+  nsIPluginInstanceOwner  *mOwner;    //we don't add a ref to this
+  nsMIMEType              mMIMEType;
 };
 
 #endif

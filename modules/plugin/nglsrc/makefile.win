@@ -20,7 +20,8 @@ IGNORE_MANIFEST=1
 
 EXPORTS =	\
     nsPluginsCID.h  \
-	nsIPluginHost.h
+	nsIPluginHost.h \
+	nsIPluginInstanceOwner.h
 
 MAKE_OBJ_TYPE	= DLL
 DLLNAME = raptorplugin

@@ -43,13 +43,28 @@
 
 ////////////////////////////////////////////////////////////////////////
 
+// XXX These are defined in platform specific FE directories right now :-/
+
+//BTW: this sucks rocks.
+#ifdef XP_WIN
+#define PLUGIN_ENTRYPOINT_CALL_TYPE __stdcall
+#else
+#define PLUGIN_ENTRYPOINT_CALL_TYPE
+#endif
+
+typedef NPError (PLUGIN_ENTRYPOINT_CALL_TYPE *NP_GETENTRYPOINTS)(NPPluginFuncs* pCallbacks);
+typedef NPError (PLUGIN_ENTRYPOINT_CALL_TYPE *NP_PLUGININIT)(const NPNetscapeFuncs* pCallbacks);
+typedef NPError (PLUGIN_ENTRYPOINT_CALL_TYPE *NP_PLUGINSHUTDOWN)();
+
+////////////////////////////////////////////////////////////////////////
+
 /**
  * A 5.0 wrapper for a 4.x style plugin.
  */
 class ns4xPlugin : public nsILiveConnectPlugin
 {
 public:
-  ns4xPlugin(NPPluginFuncs* callbacks);
+  ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown);
   ~ns4xPlugin(void);
 
   NS_DECL_ISUPPORTS
@@ -75,9 +90,6 @@ public:
 
   NS_IMETHOD
   GetValue(nsPluginVariable variable, void *value);
-
-  NS_IMETHOD
-  SetValue(nsPluginVariable variable, void *value);
 
   //nsILiveConnectPlugin interface
 
@@ -206,6 +218,8 @@ protected:
    * plugin callbacks for each plugin.
    */
   NPPluginFuncs fCallbacks;
+
+  NP_PLUGINSHUTDOWN fShutdownEntry;
 
   /**
    * The browser-side callbacks that a 4.x-style plugin calls.

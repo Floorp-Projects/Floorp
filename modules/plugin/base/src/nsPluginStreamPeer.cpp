@@ -23,12 +23,15 @@
 
 nsPluginStreamPeer ::  nsPluginStreamPeer()
 {
+  NS_INIT_REFCNT();
+
   mURL = nsnull;
   mLength = 0;
   mLastMod = 0;
   mNotifyData = nsnull;
   mMIMEType = nsnull;
   mURLSpec = nsnull;
+  mReason = nsPluginReason_NoReason;
 }
 
 nsPluginStreamPeer :: ~nsPluginStreamPeer()
@@ -122,7 +125,7 @@ NS_IMETHODIMP nsPluginStreamPeer :: GetNotifyData(void* *result)
 
 NS_IMETHODIMP nsPluginStreamPeer :: GetReason(nsPluginReason *result)
 {
-  *result = nsPluginReason_NoReason;
+  *result = mReason;
   return NS_OK;
 }
 
@@ -155,5 +158,11 @@ nsresult nsPluginStreamPeer :: Initialize(nsIURL *aURL, PRUint32 aLength,
 
   mNotifyData = aNotifyData;
 
+  return NS_OK;
+}
+
+nsresult nsPluginStreamPeer :: SetReason(nsPluginReason aReason)
+{
+  mReason = aReason;
   return NS_OK;
 }
