@@ -28,6 +28,7 @@ Rights Reserved.
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     align="vertical"
     onload="parent.wizardPageLoaded('login');">
+
   <box class="title" align="horizontal">
     <html:div class="title">&loginTitle.label;</html:div>
     <spring flex="100%"/>
@@ -55,7 +56,7 @@ Rights Reserved.
       <html:div>&passwordDesc.label;</html:div>
       <html:div>
         &passwordLabel.label;
-        <html:input type="password" name="password" id="password"/>
+        <html:input type="password" name="server.password" id="server.password"/>
       </html:div>
     </html:div>
   </box>

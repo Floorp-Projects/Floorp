@@ -125,6 +125,8 @@ function initializePage(win, hash) {
     for (var i=0; i<inputs.length; i++) {
         restoreValue(hash, inputs[i]);
     }
+
+    if (win.onInit) win.onInit();
 }
 
 

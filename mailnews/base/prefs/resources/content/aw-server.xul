@@ -26,9 +26,9 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-server.dtd" >
 <window id="serverpage" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    align="vertical"
     onload="parent.wizardPageLoaded('server');">
 
-<box align="vertical" style="width: 100%; height: 100%; margin: 10px">
   <box class="title" align="horizontal">
     <html:div class="title">&serverTitle.label;</html:div>
     <spring flex="100%"/>
@@ -62,5 +62,4 @@ Rights Reserved.
       <html:input type="text" id="smtp.hostname" name="smtp.hostname"/>
     </html:div>
   </box>
-</box>
 </window>
