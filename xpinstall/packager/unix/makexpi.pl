@@ -39,6 +39,9 @@
 #
 
 use Cwd;
+use File::Find;
+
+@libraryList = undef;
 
 ##
 # RecursiveStrip
@@ -55,23 +58,17 @@ sub RecursiveStrip
     my($entry) = "";
     my($saveCwd) = cwd();
 
+    undef @libraryList;
+    find({ wanted => \&find_libraries, no_chdir => 1 }, $targetDir);
     @dirEntries = <$targetDir/*>;
 
-    # strip all .so files in this dir
-    chdir($targetDir);                  # push targetDir
-    system("strip *.so > /dev/null 2>&1");
-    chdir($saveCwd);                    # pop targetDir
+    # strip all .so files
+    system("strip @libraryList") if (defined(@libraryList));
+}
 
-    # iterate over all subdir entries 
-    foreach $entry ( @dirEntries ) 
-    {
-        # if dir entry is dir
-        if (-d $entry)
-        {       
-            # recurse into subdir
-            RecursiveStrip($entry);
-        }
-    }
+sub find_libraries
+{
+    /\.so$/ && push @libraryList, $File::Find::name;
 }
 
 # Make sure there are at least three arguments
