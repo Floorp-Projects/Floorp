@@ -173,6 +173,11 @@ while(<UNICODATA>) {
       }
       $li++;
    }
+   if(( $l ne "") || ($u ne "")) {    # if lower or upper case exist
+      $idx = $cv >> 13;
+      $bits = 1 << (($cv >> 8) & 0x1F) ;
+      $blk[$idx] |= $bits;
+   }
 
 }
 
@@ -328,6 +333,18 @@ for ($i = 0; $i <= $#lcv; $i++)
   #  printf "%4x - %4x - %4x - %4x\n", $lcv[$i], $lv[$i], $ld[$i], $llastd[$i];
   #
 }
+
+print OUT "static PRUint32 gCaseBlocks [8] = {\n";
+for($idx=0;$idx<8;$idx++)
+{
+   printf OUT "0x%08X", $blk[$idx];
+   if($idx != 7) {
+      printf OUT ",\n";
+   } else {
+      printf OUT "\n";
+   }
+}
+print OUT "};\n";
 
 
 ######################################################################
