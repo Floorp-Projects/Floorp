@@ -1363,7 +1363,7 @@ function IsSpellCheckerInstalled()
   if (gSoughtSpellChecker)
     return gHaveSpellChecker;
 
-  var spellcheckerClass = Components.classes["org.mozilla.spellchecker.1"]; 
+  var spellcheckerClass = Components.classes["mozilla.spellchecker.1"]; 
   gHaveSpellChecker = (spellcheckerClass != null);
   gSoughtSpellChecker = true;
   return gHaveSpellChecker;
