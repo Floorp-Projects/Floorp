@@ -49,14 +49,14 @@
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
 
-  <tabbox>
+  <tabbox id="TabBox">
     <tabs flex="1">
       <tab id="PublishTab" oncommand="SelectPublishTab()" label="&publishTab.label;"/>
       <tab id="SettingsTab" oncommand="SelectSettingsTab()" label="&settingsTab.label;"/>
     </tabs>
-    <tabpanels id="TabPanels">
+    <tabpanels>
       <!-- PUBLISH PANEL -->
-      <vbox id="TablePanel">
+      <vbox>
         <spacer class="spacer"/>
         <grid pack="start">
           <columns><column/><column/><column/></columns>

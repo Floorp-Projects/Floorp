@@ -22,9 +22,6 @@
  *   Ryan Cassin (rcassin@supernova.org)
  */
 
-var gPublishPanel = 0;
-var gSettingsPanel = 1;
-var gCurrentPanel = gPublishPanel;
 var gPublishSiteData;
 var gReturnData;
 var gDefaultSiteIndex = -1;
@@ -52,7 +49,7 @@ function Startup()
     return;
   }
 
-  gDialog.TabPanels           = document.getElementById("TabPanels");
+  gDialog.TabBox              = document.getElementById("TabBox");
   gDialog.PublishTab          = document.getElementById("PublishTab");
   gDialog.SettingsTab         = document.getElementById("SettingsTab");
 
@@ -68,7 +65,6 @@ function Startup()
   gDialog.OtherDirList        = document.getElementById("OtherDirList");
 
   // Settings Panel
-  gDialog.SettingsPanel       = document.getElementById("SettingsPanel");
   gDialog.SiteNameInput       = document.getElementById("SiteNameInput");
   gDialog.PublishUrlInput     = document.getElementById("PublishUrlInput");
   gDialog.BrowseUrlInput      = document.getElementById("BrowseUrlInput");
@@ -291,7 +287,7 @@ function AddNewSite()
   // Button in Publish panel allows user
   //  to automatically switch to "Settings" panel
   //  to enter data for new site
-  SwitchPanel(gSettingsPanel);
+  SwitchPanel(gDialog.SettingsTab);
   
   gDialog.SiteList.selectedIndex = -1;
 
@@ -304,42 +300,23 @@ function AddNewSite()
 
 function SelectPublishTab()
 {
-  if (gSettingsChanged)
-  {
-    gCurrentPanel = gPublishPanel;
-    if (!ValidateSettings())
-      return;
+  if (gSettingsChanged && !ValidateSettings())
+    return;
 
-    gCurrentPanel = gSettingsPanel;
-  }
-
-  SwitchPanel(gPublishPanel);
+  SwitchPanel(gDialog.PublishTab);
   SetTextboxFocus(gDialog.PageTitleInput);
 }
 
 function SelectSettingsTab()
 {
-  SwitchPanel(gSettingsPanel);
+  SwitchPanel(gDialog.SettingsTab);
   SetTextboxFocus(gDialog.SiteNameInput);
 }
 
-function SwitchPanel(panel)
+function SwitchPanel(tab)
 {
-  if (gCurrentPanel != panel)
-  {
-    // Set index for starting panel on the <tabpanels> element
-    gDialog.TabPanels.selectedIndex = panel;
-    if (panel == gSettingsPanel)
-    {
-      // Trigger setting of style for the tab widgets
-      gDialog.SettingsTab.selected = "true";
-      gDialog.PublishTab.selected = null;
-    } else {
-      gDialog.PublishTab.selected = "true";
-      gDialog.SettingsTab.selected = null;
-    }
-    gCurrentPanel = panel;
-  }
+  if (gDialog.TabBox.selectedTab != tab)
+    gDialog.TabBox.selectedTab = tab;
 }
 
 function onInputSettings()
@@ -384,12 +361,12 @@ function ValidateSettings()
   var siteName = TrimString(gDialog.SiteNameInput.value);
   if (!siteName)
   {
-    ShowErrorInPanel(gSettingsPanel, "MissingSiteNameError", gDialog.SiteNameInput);
+    ShowErrorInPanel(gDialog.SettingsTab, "MissingSiteNameError", gDialog.SiteNameInput);
     return false;
   }
   if (PublishSiteNameExists(siteName, gPublishSiteData, gDialog.SiteList.selectedIndex))
   {
-    SwitchPanel(gSettingsPanel);
+    SwitchPanel(gDialog.SettingsTab);
     ShowInputErrorMessage(GetString("DuplicateSiteNameError").replace(/%name%/, siteName));            
     SetTextboxFocus(gDialog.SiteNameInput);
     return false;
@@ -402,14 +379,19 @@ function ValidateSettings()
   if (publishUrl)
   {
     publishUrl = FormatUrlForPublishing(publishUrl);
+
+    // Assume scheme = "ftp://" if missing
+    // This compensates when user enters hostname w/o scheme (as most ISPs provide)
+    if (!GetScheme(publishUrl))
+      publishUrl = "ftp://" + publishUrl; 
+
     gDialog.PublishUrlInput.value = publishUrl;
   }
   else
   {
-    ShowErrorInPanel(gSettingsPanel, "MissingPublishUrlError", gDialog.PublishUrlInput);
+    ShowErrorInPanel(gDialog.SettingsTab, "MissingPublishUrlError", gDialog.PublishUrlInput);
     return false;
   }
-
   var browseUrl = GetBrowseUrlInput();
 
   var username = TrimString(gDialog.UsernameInput.value);
@@ -551,7 +533,7 @@ function ValidateData()
   var filename = TrimString(gDialog.FilenameInput.value);
   if (!filename)
   {
-    ShowErrorInPanel(gPublishPanel, "MissingPublishFilename", gDialog.FilenameInput);
+    ShowErrorInPanel(gDialog.PublishTab, "MissingPublishFilename", gDialog.FilenameInput);
     return false;
   }
   gReturnData.filename = filename;
@@ -559,9 +541,9 @@ function ValidateData()
   return true;
 }
 
-function ShowErrorInPanel(panelId, errorMsgId, widgetWithError)
+function ShowErrorInPanel(tab, errorMsgId, widgetWithError)
 {
-  SwitchPanel(panelId);
+  SwitchPanel(tab);
   ShowInputErrorMessage(GetString(errorMsgId));
   if (widgetWithError)
     SetTextboxFocus(widgetWithError);
@@ -569,7 +551,7 @@ function ShowErrorInPanel(panelId, errorMsgId, widgetWithError)
 
 function doHelpButton()
 {
-  if (gCurrentPanel == gPublishPanel)
+  if (gDialog.TabBox.selectedTab == gDialog.PublishTab)
     openHelp("comp-doc-publish-publishtab");
   else
     openHelp("comp-doc-publish-settingstab");
