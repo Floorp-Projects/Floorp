@@ -764,25 +764,22 @@ LoadOneTree(const nsString& aBaseName, const nsString& aOutputName,
             nsIXMLContent** aResult)
 {
   nsAutoString a;
-  a.Append("file:/");
   a.Append(aBaseName);
   a.Append("/");
   a.Append(aOutputName);
-  printf("Reading regression data from ");
-  fputs(a, stdout);
-  printf("\n");
-  nsIURL* au;
-  nsresult rv = NS_NewURL(&au, a);
+  char* fn = a.ToNewCString();
+  printf("Reading regression data from %s\n", fn);
+  FILE* fp = fopen(fn, "r");
+  delete fn;
+  if (!fp) {
+    printf("Unable to open regression data file\n");
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = aFrameUtil->ReadFrameRegressionData(fp, aResult);
   if (NS_FAILED(rv)) {
-    printf("can't create url for regression data\n");
+    printf("can't decode regression data into an xml tree\n");
     return rv;
   }
-  rv = aFrameUtil->LoadFrameRegressionData(au, aResult);
-  if (NS_FAILED(rv)) {
-    printf("can't previous decode regression data into an xml tree\n");
-    return rv;
-  }
-  NS_RELEASE(au);
   return NS_OK;
 }
 
@@ -854,8 +851,8 @@ CompareContainer(nsIXMLContent* aA, nsIXMLContent* aB)
     aB->ChildAt(i, kidb);
     nsIXMLContent* xkida;
     nsIXMLContent* xkidb;
-    if (NS_SUCCEEDED(kida->QueryInterface(kIXMLContentIID, (void**) xkida)) &&
-        NS_SUCCEEDED(kidb->QueryInterface(kIXMLContentIID, (void**) xkidb))) {
+    if (NS_SUCCEEDED(kida->QueryInterface(kIXMLContentIID, (void**) &xkida)) &&
+        NS_SUCCEEDED(kidb->QueryInterface(kIXMLContentIID, (void**) &xkidb))) {
       PRBool status = CompareContainer(xkida, xkidb);
       NS_IF_RELEASE(xkida);
       NS_IF_RELEASE(xkidb);
@@ -888,6 +885,7 @@ nsWebCrawler::PerformRegressionTest(const nsString& aOutputName)
     NS_RELEASE(fu);
     return;
   }
+atree->List(stdout, 0);
   nsIXMLContent* btree;
   rv = LoadOneTree(mOutputDir, aOutputName, fu, &btree);
   if (NS_FAILED(rv)) {
@@ -898,7 +896,8 @@ nsWebCrawler::PerformRegressionTest(const nsString& aOutputName)
   NS_RELEASE(fu);
 
   // Now compare the trees
-  CompareContainer(atree, btree);
+  PRBool passed = CompareContainer(atree, btree);
   NS_IF_RELEASE(atree);
   NS_IF_RELEASE(btree);
+  printf("regression test %s\n", passed ? "passed" : "failed");
 }
