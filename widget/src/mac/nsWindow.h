@@ -70,8 +70,6 @@ public:
                                    nsIAppShell *aAppShell = nsnull,
                                    nsIToolkit *aToolkit = nsnull,
                                    nsWidgetInitData *aInitData = nsnull);
-    NS_IMETHOD              GetClientData(void*& aClientData);
-    NS_IMETHOD              SetClientData(void* aClientData);
     virtual void            Destroy();
     virtual nsIWidget*      GetParent(void);
     virtual nsIEnumerator*  GetChildren();
@@ -79,12 +77,8 @@ public:
     virtual void            RemoveChild(nsIWidget* aChild);
     virtual void            Show(PRBool bState);
     virtual void            Move(PRUint32 aX, PRUint32 aY);
-    virtual void            Resize(PRUint32 aWidth,
-                                   PRUint32 aHeight, PRBool aRepaint);
-    virtual void            Resize(PRUint32 aX,
-                                   PRUint32 aY,
-                                   PRUint32 aWidth,
-                                   PRUint32 aHeight, PRBool aRepaint);
+    virtual void            Resize(PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
+    virtual void            Resize(PRUint32 aX, PRUint32 aY,PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
     virtual void            Enable(PRBool bState);
     virtual void            SetFocus(void);
     virtual void            GetBounds(nsRect &aRect);
@@ -178,6 +172,8 @@ protected:
   virtual void      UpdateVisibilityFlag();
   virtual void      UpdateDisplay();
 
+
+protected:
   EVENT_CALLBACK 		mEventCallback;
   nsIDeviceContext 	*mContext;
   nsIFontMetrics 		*mFontMetrics;
@@ -205,6 +201,32 @@ protected:
 
   nsISupports* 			mOuter;
 
+
+	// keep the list of children
+	class Enumerator
+	{
+	    nsWindow   	**mChildrens;
+	    PRInt32     mCurrentPosition;
+	    PRInt32     mArraySize;
+
+	public:
+	    Enumerator();
+	    ~Enumerator();
+
+	    nsIWidget* Next();
+	    void Reset();
+
+	    void Append(nsWindow* aWidget);
+	    void Remove(nsWindow* aWidget);
+
+	private:
+	    void GrowArray();
+
+	} *mChildren;
+
+
+
+
   class InnerSupport : public nsISupports {
   public:
       InnerSupport() {}
@@ -224,8 +246,8 @@ protected:
 private:
 	// parent window -- this is only used for the main window widget
 	WindowRecord	mWindowRecord;
-	WindowPtr			mWindowPtr;					
-	//LinkedList		mWidgetList;				// list of widgets attached to this main window
+	WindowPtr			mWindowPtr;
+	RgnHandle			mWindowRegion;				// the region defining this window			
 	
 	
 };
