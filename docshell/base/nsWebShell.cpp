@@ -855,8 +855,8 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
       NS_ENSURE_SUCCESS(newMUDV->SetHintCharacterSet (hintCharset), NS_ERROR_FAILURE);
       NS_ENSURE_SUCCESS(newMUDV->SetHintCharacterSetSource (hintCharsetSource), NS_ERROR_FAILURE);
 
-      if (defaultCharSet) {
-        Recycle(defaultCharSet);
+      if (defaultCharset) {
+        Recycle(defaultCharset);
       }
       if (forceCharset) {
         Recycle(forceCharset);
