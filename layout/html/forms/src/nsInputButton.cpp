@@ -75,10 +75,10 @@ public:
   virtual void MapAttributesInto(nsIStyleContext* aContext, 
                                  nsIPresContext* aPresContext);
 
-  virtual void GetDefaultLabel(nsString& aLabel);
-
   nsButtonType GetButtonType() { return mType; }
   nsButtonTagType GetButtonTagType() { return mTagType; }
+
+  virtual void GetDefaultLabel(nsString& aLabel);
 
   virtual PRInt32 GetMaxNumValues(); 
 
@@ -122,6 +122,13 @@ public:
 
   nsButtonType GetButtonType() const;
   nsButtonTagType GetButtonTagType() const;
+
+  virtual PRInt32 GetVerticalBorderWidth(float aPixToTwip) const;
+  virtual PRInt32 GetHorizontalBorderWidth(float aPixToTwip) const;
+  virtual PRInt32 GetVerticalInsidePadding(float aPixToTwip,
+                                           PRInt32 aInnerHeight) const;
+  virtual PRInt32 GetHorizontalInsidePadding(float aPixToTwip, 
+                                             PRInt32 aInnerWidth) const;
 
 protected:
   virtual  ~nsInputButtonFrame();
@@ -211,11 +218,11 @@ nsInputButton::GetDefaultLabel(nsString& aString)
   if (kButton_Reset == mType) {
     aString = "Reset";
   } else if (kButton_Submit == mType) {
-    aString = "Submit";
+    aString = "Submit Query";
   } else if (kButton_Browse == mType) {
     aString = "Browse...";
   } else {
-    aString = "noname";
+    aString = " ";
   }
 }
 
@@ -351,6 +358,34 @@ nsInputButtonFrame::GetButtonTagType() const
   return button->GetButtonTagType();
 }
 
+PRInt32 nsInputButtonFrame::GetVerticalBorderWidth(float aPixToTwip) const
+{
+   return (int)(4 * aPixToTwip + 0.5);
+}
+
+PRInt32 nsInputButtonFrame::GetHorizontalBorderWidth(float aPixToTwip) const
+{
+  return GetVerticalBorderWidth(aPixToTwip);
+}
+
+PRInt32 nsInputButtonFrame::GetVerticalInsidePadding(float aPixToTwip, 
+                                                     PRInt32 aInnerHeight) const
+{
+  //return (int)(4 * aPixToTwip + 0.5);
+  return (int)(aInnerHeight * .25 + 0.5);
+}
+
+PRInt32 nsInputButtonFrame::GetHorizontalInsidePadding(float aPixToTwip, 
+                                                       PRInt32 aInnerWidth) const
+{
+  if (kBackwardMode == GetMode()) {
+    return (int)(aInnerWidth * .25 + 0.5);
+  }
+  else {
+    return (int)(10 * aPixToTwip + 0.5);
+  }
+}
+
 NS_METHOD nsInputButtonFrame::Paint(nsIPresContext& aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               const nsRect& aDirtyRect)
@@ -466,18 +501,21 @@ nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
       nsSize size;
       PRBool widthExplicit, heightExplicit;
       PRInt32 ignore;
-      nsInputDimensionSpec spec(nsHTMLAtoms::size, PR_TRUE, nsHTMLAtoms::value, 1,
-                                PR_FALSE, nsnull, 1);
+      nsInputButton* button = (nsInputButton *)mContent;
+      nsAutoString defaultLabel;
+      button->GetDefaultLabel(defaultLabel);
+      nsInputDimensionSpec spec(nsHTMLAtoms::size, PR_TRUE, nsHTMLAtoms::value, 
+                                &defaultLabel, 1, PR_FALSE, nsnull, 1);
       CalculateSize(aPresContext, this, styleSize, spec, size, 
                     widthExplicit, heightExplicit, ignore);
-
+#if 0
       if (!widthExplicit) {
         size.width += 100;
       } 
       if (!heightExplicit) {
         size.height += 100;
       } 
-
+#endif
       aDesiredLayoutSize.width = size.width;
       aDesiredLayoutSize.height= size.height;
     }

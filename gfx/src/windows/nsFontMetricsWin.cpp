@@ -65,6 +65,9 @@ const char* nsFontMetricsWin::MapFamilyToFont(const nsString& aLogicalFontName)
   if (aLogicalFontName.EqualsIgnoreCase("Courier")) {
     return "Courier New";
   }
+  if (aLogicalFontName.EqualsIgnoreCase("Courier New")) {
+    return "Courier New";
+  }
 
   // the CSS generic names
   if (aLogicalFontName.EqualsIgnoreCase("serif")) {

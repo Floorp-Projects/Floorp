@@ -47,6 +47,12 @@ public:
 
   virtual const nsIID& GetIID();
 
+  virtual PRInt32 GetVerticalBorderWidth(float aPixToTwip) const;
+  virtual PRInt32 GetHorizontalBorderWidth(float aPixToTwip) const;
+  virtual PRInt32 GetVerticalInsidePadding(float aPixToTwip,
+                                           PRInt32 aInnerHeight) const;
+  virtual PRInt32 GetHorizontalInsidePadding(float aPixToTwip, 
+                                             PRInt32 aInnerWidth) const;
 protected:
 
   virtual ~nsInputTextFrame();
@@ -67,6 +73,28 @@ nsInputTextFrame::nsInputTextFrame(nsIContent* aContent,
 
 nsInputTextFrame::~nsInputTextFrame()
 {
+}
+
+PRInt32 nsInputTextFrame::GetVerticalBorderWidth(float aPixToTwip) const
+{
+   return (int)(4 * aPixToTwip + 0.5);
+}
+
+PRInt32 nsInputTextFrame::GetHorizontalBorderWidth(float aPixToTwip) const
+{
+  return GetVerticalBorderWidth(aPixToTwip);
+}
+
+PRInt32 nsInputTextFrame::GetVerticalInsidePadding(float aPixToTwip, 
+                                                     PRInt32 aInnerHeight) const
+{
+  return (int)(5 * aPixToTwip + 0.5);
+}
+
+PRInt32 nsInputTextFrame::GetHorizontalInsidePadding(float aPixToTwip, 
+                                                       PRInt32 aInnerWidth) const
+{
+  return (int)(6 * aPixToTwip + 0.5);
 }
 
 const nsIID&
@@ -125,28 +153,31 @@ nsInputTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
   if ((kInputText_Text == textType) || (kInputText_Password == textType) ||
       (kInputText_FileText == textType)) 
   {
-    nsInputDimensionSpec textSpec(nsHTMLAtoms::size, PR_FALSE, nsHTMLAtoms::value,
-                                  20, PR_FALSE, nsnull, 1);
+    nsInputDimensionSpec textSpec(nsHTMLAtoms::size, PR_FALSE, nsnull,
+                                  nsnull, 21, PR_FALSE, nsnull, 1);
     CalculateSize(aPresContext, this, styleSize, textSpec, size, 
                   widthExplicit, heightExplicit, ignore);
   } 
   else {
-    nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, 10, 
+    nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, nsnull, 20, 
                                   PR_FALSE, nsHTMLAtoms::rows, 1);
     CalculateSize(aPresContext, this, styleSize, areaSpec, size, 
                   widthExplicit, heightExplicit, ignore);
   }
+
+  float p2t = aPresContext->GetPixelsToTwips();
+  PRInt32 scrollbarWidth = GetScrollbarWidth(p2t);
   if (!heightExplicit) {
     if (kInputText_Area == textType) {
-      size.height += gScrollBarWidth;
+      size.height += scrollbarWidth;
+      if (kBackwardMode == GetMode()) {
+        size.height += (int)(7 * p2t + 0.5);
+      }
     } 
-    else {
-      size.height += 100;
-    }
   }
 
   if (!widthExplicit && (kInputText_Area == textType)) {
-    size.width += gScrollBarWidth;
+    size.width += scrollbarWidth;
   }
 
   aDesiredLayoutSize.width  = size.width;

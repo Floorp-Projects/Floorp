@@ -47,7 +47,6 @@ public:
 
 protected:
   virtual ~nsInputCheckboxFrame();
-  PRBool   mCacheState;
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
                               nsReflowMetrics& aDesiredLayoutSize,
@@ -61,7 +60,6 @@ nsInputCheckboxFrame::nsInputCheckboxFrame(nsIContent* aContent, nsIFrame* aPare
 
 nsInputCheckboxFrame::~nsInputCheckboxFrame()
 {
-  mCacheState = PR_FALSE;
 }
 
 NS_METHOD nsInputCheckboxFrame::SetRect(const nsRect& aRect)
@@ -97,15 +95,6 @@ nsInputCheckboxFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                      nsReflowMetrics& aDesiredLayoutSize,
                                      nsSize& aDesiredWidgetSize)
 {
-  nsInputCheckbox* content = (nsInputCheckbox *)mContent; // this must be an nsCheckbox 
-
-  // get the intial state
-  nsHTMLValue value; 
-  nsContentAttr result = content->GetAttribute(nsHTMLAtoms::checked, value); 
-  if (result != eContentAttr_NotThere) {
-    mCacheState = PR_TRUE;/* XXX why cache state? */
-  }
-
   float p2t = aPresContext->GetPixelsToTwips();
   aDesiredWidgetSize.width  = (int)(12 * p2t);
   aDesiredWidgetSize.height = (int)(12 * p2t);
@@ -121,9 +110,16 @@ nsInputCheckboxFrame::GetDesiredSize(nsIPresContext* aPresContext,
 void 
 nsInputCheckboxFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 {
+  // get the intial state of the checkbox
+  nsInputCheckbox* content = (nsInputCheckbox *)mContent; // this must be an nsCheckbox 
+  nsHTMLValue value; 
+  nsContentAttr result = content->GetAttribute(nsHTMLAtoms::checked, value); 
+  PRBool checked = (result != eContentAttr_NotThere) ? PR_TRUE : PR_FALSE;
+
+  // set the widget to the initial state
   nsICheckButton* checkbox;
   if (NS_OK == GetWidget(aView, (nsIWidget **)&checkbox)) {
-	checkbox->SetState(mCacheState);
+	  checkbox->SetState(checked);
     NS_RELEASE(checkbox);
   }
 }

@@ -56,6 +56,12 @@ public:
 
   virtual const nsIID& GetIID();
 
+  virtual PRInt32 GetVerticalBorderWidth(float aPixToTwip) const;
+  virtual PRInt32 GetHorizontalBorderWidth(float aPixToTwip) const;
+  virtual PRInt32 GetVerticalInsidePadding(float aPixToTwip,
+                                           PRInt32 aInnerHeight) const;
+  virtual PRInt32 GetHorizontalInsidePadding(float aPixToTwip, 
+                                             PRInt32 aInnerWidth) const;
 protected:
 
   virtual ~nsSelectFrame();
@@ -64,7 +70,6 @@ protected:
                               const nsReflowState& aReflowState,
                               nsReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
-  PRBool mIsComboBox;
 };
 
 class nsSelect : public nsInput 
@@ -93,6 +98,8 @@ public:
   PRBool  GetMultiple() const { return mMultiple; }
 
   virtual void Reset();
+
+  PRBool mIsComboBox;
 
 protected:
   virtual ~nsSelect();
@@ -140,7 +147,7 @@ protected:
 
 nsSelectFrame::nsSelectFrame(nsIContent* aContent,
                              nsIFrame* aParentFrame)
-  : nsInputFrame(aContent, aParentFrame), mIsComboBox(PR_FALSE)
+  : nsInputFrame(aContent, aParentFrame)
 {
 }
 
@@ -149,10 +156,33 @@ nsSelectFrame::~nsSelectFrame()
 }
 
 
+PRInt32 nsSelectFrame::GetVerticalBorderWidth(float aPixToTwip) const
+{
+   return (int)(1 * aPixToTwip + 0.5);
+}
+
+PRInt32 nsSelectFrame::GetHorizontalBorderWidth(float aPixToTwip) const
+{
+  return GetVerticalBorderWidth(aPixToTwip);
+}
+
+PRInt32 nsSelectFrame::GetVerticalInsidePadding(float aPixToTwip, 
+                                               PRInt32 aInnerHeight) const
+{
+   return (int)(1 * aPixToTwip + 0.5);
+}
+
+PRInt32 nsSelectFrame::GetHorizontalInsidePadding(float aPixToTwip, 
+                                                 PRInt32 aInnerWidth) const
+{
+   return (int)(7 * aPixToTwip + 0.5);
+}
+
 const nsIID&
 nsSelectFrame::GetIID()
 {
-  if (mIsComboBox) {
+  nsSelect* content = (nsSelect *)mContent;
+  if (content->mIsComboBox) {
     return kComboBoxIID;
   }
   else {
@@ -166,7 +196,8 @@ nsSelectFrame::GetCID()
   static NS_DEFINE_IID(kComboCID, NS_COMBOBOX_CID);
   static NS_DEFINE_IID(kListCID, NS_LISTBOX_CID);
 
-  if (mIsComboBox) {
+  nsSelect* content = (nsSelect *)mContent;
+  if (content->mIsComboBox) {
     return kComboCID;
   }
   else {
@@ -208,30 +239,32 @@ nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   PRInt32 rowHeight = 0;
   nsSize calcSize, charSize;
   PRBool widthExplicit, heightExplicit;
-  nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull, maxWidth, PR_TRUE, nsHTMLAtoms::size, 1);
+  nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull, nsnull,
+                                maxWidth, PR_TRUE, nsHTMLAtoms::size, 1);
   PRInt32 numRows = CalculateSize(aPresContext, this, styleSize, textSpec, 
                                   calcSize, widthExplicit, heightExplicit, rowHeight);
 
   // here it is determined whether we are a combo box
   PRInt32 sizeAttr = select->GetSize();
   if (!select->GetMultiple() && ((1 == sizeAttr) || ((ATTR_NOTSET == sizeAttr) && (1 >= numRows)))) {
-    mIsComboBox = PR_TRUE;
+    select->mIsComboBox = PR_TRUE;
   }
 
   aDesiredLayoutSize.width = calcSize.width;
   // account for vertical scrollbar, if present  
-  if (!widthExplicit && ((numRows < select->ChildCount()) || mIsComboBox)) {
-    aDesiredLayoutSize.width += gScrollBarWidth;
+  if (!widthExplicit && ((numRows < select->ChildCount()) || select->mIsComboBox)) {
+    float p2t = aPresContext->GetPixelsToTwips();
+    aDesiredLayoutSize.width += GetScrollbarWidth(p2t);
   }
 
   // XXX put this in widget library, combo boxes are fixed height (visible part)
-  aDesiredLayoutSize.height = (mIsComboBox) ? 350 : calcSize.height; 
+  aDesiredLayoutSize.height = (select->mIsComboBox) ? 350 : calcSize.height; 
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
   aDesiredLayoutSize.descent = 0;
 
   aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
   aDesiredWidgetSize.height = aDesiredLayoutSize.height;
-  if (mIsComboBox) {  // add in pull down size
+  if (select->mIsComboBox) {  // add in pull down size
     aDesiredWidgetSize.height += (rowHeight * numChildren) + 100;
   }
 
@@ -241,7 +274,8 @@ nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
 nsWidgetInitData*
 nsSelectFrame::GetWidgetInitData(nsIPresContext& aPresContext)
 {
-  if (mIsComboBox) {
+  nsSelect* select = (nsSelect *)mContent;
+  if (select->mIsComboBox) {
     nsComboBoxInitData* initData = new nsComboBoxInitData();
     float twipToPix = aPresContext.GetTwipsToPixels();
     initData->mDropDownHeight = NS_TO_INT_ROUND(mWidgetSize.height * twipToPix);
@@ -297,7 +331,7 @@ nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 // nsSelect
 
 nsSelect::nsSelect(nsIAtom* aTag, nsIFormManager* aFormMan)
-  : nsInput(aTag, aFormMan) 
+  : nsInput(aTag, aFormMan), mIsComboBox(PR_FALSE) 
 {
   mMultiple = PR_FALSE;
 }
@@ -431,17 +465,24 @@ nsSelect::Reset()
 
   list->Deselect();
 
+  PRInt32 selIndex = -1;
   for (int i = 0; i < numChildren; i++) {
     nsOption* option = (nsOption*)ChildAt(i);  // YYY this had better be an option 
     PRInt32 selAttr;
     ((nsInput *)option)->GetAttribute(nsHTMLAtoms::selected, selAttr);
     if (ATTR_NOTSET != selAttr) {
       list->SelectItem(i);
+      selIndex = i;
       if (!mMultiple) {
         break;  
       }
     }
     NS_RELEASE(option);  // YYY remove this comment if ok
+  }
+
+  // if none were selected, select 1st one if we are a combo box
+  if (mIsComboBox && (numChildren > 0) && (selIndex < 0)) {
+    list->SelectItem(0);
   }
 }  
 

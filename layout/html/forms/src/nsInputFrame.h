@@ -19,6 +19,7 @@
 #ifndef nsInputFrame_h___
 #define nsInputFrame_h___
 
+#include "nsIFormManager.h"
 #include "nsHTMLContainer.h"
 #include "nsISupports.h"
 #include "nsIWidget.h"
@@ -41,20 +42,23 @@ enum nsMouseState {
 
 struct nsInputDimensionSpec
 {
-  nsIAtom* mColSizeAttr;
-  PRBool   mColSizeAttrInPixels;
-  nsIAtom* mColValueAttr;
-  nscoord  mColDefaultSize;
-  PRBool   mColDefaultSizeInPixels;
-  nsIAtom* mRowSizeAttr;
-  nscoord  mRowDefaultSize;
+  nsIAtom*  mColSizeAttr;            // attribute used to determine width
+  PRBool    mColSizeAttrInPixels;    // is attribute value in pixels (otherwise num chars)
+  nsIAtom*  mColValueAttr;           // attribute used to get value to determine size
+                                     //    if not determined above
+  nsString* mColDefaultValue;        // default value if not determined above
+  nscoord   mColDefaultSize;         // default width if not determined above
+  PRBool    mColDefaultSizeInPixels; // is default width in pixels (otherswise num chars)
+  nsIAtom*  mRowSizeAttr;            // attribute used to determine height
+  nscoord   mRowDefaultSize;         // default height if not determined above
 
   nsInputDimensionSpec(nsIAtom* aColSizeAttr, PRBool aColSizeAttrInPixels, 
-                       nsIAtom* aColValueAttr, nscoord aColDefaultSize,
-                       PRBool aColDefaultSizeInPixels,
+                       nsIAtom* aColValueAttr, nsString* aColDefaultValue,
+                       nscoord aColDefaultSize, PRBool aColDefaultSizeInPixels,
                        nsIAtom* aRowSizeAttr, nscoord aRowDefaultSize)
                        : mColSizeAttr(aColSizeAttr), mColSizeAttrInPixels(aColSizeAttrInPixels),
-                         mColValueAttr(aColValueAttr), mColDefaultSize(aColDefaultSize),
+                         mColValueAttr(aColValueAttr), 
+                         mColDefaultValue(aColDefaultValue), mColDefaultSize(aColDefaultSize),
                          mColDefaultSizeInPixels(aColDefaultSizeInPixels),
                          mRowSizeAttr(aRowSizeAttr), mRowDefaultSize(aRowDefaultSize)
   {
@@ -94,8 +98,6 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
 
-  virtual PRInt32 GetBorderSpacing(nsIPresContext& aPresContext);
-
   NS_IMETHOD  SetRect(const nsRect& aRect);
 
   /**
@@ -117,6 +119,7 @@ public:
 
   // new behavior
 
+  nsFormRenderingMode GetMode() const;
   /**
    * Return true if the underlying form element is a hidden form element
    */
@@ -161,15 +164,23 @@ public:
     */
   virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);  
 
-  static nscoord GetTextSize(nsIPresContext& aContext, nsIFrame* aFrame,
+  static nscoord GetTextSize(nsIPresContext& aContext, nsInputFrame* aFrame,
                              const nsString& aString, nsSize& aSize);
-  static nscoord GetTextSize(nsIPresContext& aContext, nsIFrame* aFrame,
+  static nscoord GetTextSize(nsIPresContext& aContext, nsInputFrame* aFrame,
                              PRInt32 aNumChars, nsSize& aSize);
-
-  static PRInt32 gScrollBarWidth;
 
   void GetWidgetSize(nsSize& aSize) const { aSize.width  = mWidgetSize.width; 
                                             aSize.height = mWidgetSize.height; }
+
+  // XXX similar functionality needs to be added to widget library and these
+  //     need to change to use it.
+  static  PRInt32 GetScrollbarWidth(float aPixToTwip);
+  virtual PRInt32 GetVerticalBorderWidth(float aPixToTwip) const;
+  virtual PRInt32 GetHorizontalBorderWidth(float aPixToTwip) const;
+  virtual PRInt32 GetVerticalInsidePadding(float aPixToTwip,
+                                           PRInt32 aInnerHeight) const;
+  virtual PRInt32 GetHorizontalInsidePadding(float aPixToTwip, 
+                                             PRInt32 aInnerWidth) const;
 
 protected:
 

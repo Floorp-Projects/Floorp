@@ -22,11 +22,18 @@
 class nsIFormControl;
 class nsIPresContext;
 class nsIFrame;
+class nsString;
 
 // IID for the nsIFormManager interface
 #define NS_IFORMMANAGER_IID    \
 { 0x592daa01, 0xcb23, 0x11d1,  \
   { 0x80, 0x2d, 0x0, 0x60, 0x8, 0x15, 0xa7, 0x91 } }
+
+// this is temporary until a more global solution is developed
+enum nsFormRenderingMode {
+  kBackwardMode = 0,  // nav 4
+  kForwardMode        // newest
+};
 
 /** 
   * Abstract form manager interface. Form managers are responsible for
@@ -137,6 +144,9 @@ public:
     * @return the ref count
     */
   virtual nsrefcnt GetRefCount() const = 0;
+
+  virtual nsFormRenderingMode GetMode() const = 0;
+  virtual void                SetMode(nsFormRenderingMode aMode) = 0;
 };
 
 #endif /* nsIFormManager_h___ */

@@ -59,11 +59,48 @@ nsInputFrame::~nsInputFrame()
 {
 }
 
-PRInt32 nsInputFrame::gScrollBarWidth = 360;
-
 NS_METHOD nsInputFrame::SetRect(const nsRect& aRect)
 {
   return nsInputFrameSuper::SetRect(aRect);
+}
+
+nsFormRenderingMode nsInputFrame::GetMode() const
+{
+  nsInput* content = (nsInput *)mContent;
+  nsIFormManager* formMan = content->GetFormManager();
+  if (formMan) {
+    return formMan->GetMode();
+  }
+  else {
+    return kBackwardMode;
+  }
+}
+
+PRInt32 nsInputFrame::GetScrollbarWidth(float aPixToTwip)
+{
+   return (int)(16 * aPixToTwip + 0.5);
+}
+
+PRInt32 nsInputFrame::GetVerticalBorderWidth(float aPixToTwip) const
+{
+   return (int)(3 * aPixToTwip + 0.5);
+}
+
+PRInt32 nsInputFrame::GetHorizontalBorderWidth(float aPixToTwip) const
+{
+  return GetVerticalBorderWidth(aPixToTwip);
+}
+
+PRInt32 nsInputFrame::GetVerticalInsidePadding(float aPixToTwip, 
+                                               PRInt32 aInnerHeight) const
+{
+  return GetVerticalBorderWidth(aPixToTwip);
+}
+
+PRInt32 nsInputFrame::GetHorizontalInsidePadding(float aPixToTwip, 
+                                                 PRInt32 aInnerWidth) const
+{
+  return GetVerticalInsidePadding(aPixToTwip, aInnerWidth);
 }
 
 NS_METHOD
@@ -110,10 +147,6 @@ nsInputFrame::SizeTo(nscoord aWidth, nscoord aHeight)
   return NS_OK;
 }
 
-PRInt32 nsInputFrame::GetBorderSpacing(nsIPresContext& aPresContext)
-{
-  return (int)(2 * (aPresContext.GetPixelsToTwips() + .5));
-}
 
 // XXX it would be cool if form element used our rendering sw, then
 // they could be blended, and bordered, and so on...
@@ -422,7 +455,7 @@ void nsInputFrame::GetStyleSize(nsIPresContext& aPresContext,
 }
 
 nscoord 
-nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsIFrame* aFrame,
+nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsInputFrame* aFrame,
                           const nsString& aString, nsSize& aSize)
 {
   //printf("\n GetTextSize %s", aString.ToNewCString());
@@ -435,9 +468,7 @@ nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsIFrame* aFrame,
 
   nsIFontMetrics* fontMet = fontCache->GetMetricsFor(styleFont->mFont);
   aSize.width  = fontMet->GetWidth(aString);
-  aSize.height = fontMet->GetHeight() + fontMet->GetLeading();
-
-  aSize.height = (int)(((float)aSize.height) * .90); // XXX find out why this is necessary
+  aSize.height = fontMet->GetHeight(); 
 
   nscoord charWidth  = fontMet->GetWidth("W");
 
@@ -449,12 +480,13 @@ nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsIFrame* aFrame,
 }
   
 nscoord
-nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsIFrame* aFrame,
+nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsInputFrame* aFrame,
                           PRInt32 aNumChars, nsSize& aSize)
 {
   nsAutoString val;
+  char repChar = (kBackwardMode == aFrame->GetMode()) ? '%' : 'e';
   for (int i = 0; i < aNumChars; i++) {
-    val += 'e';  // use a typical char, what is the avg width character?
+    val += repChar;  
   }
   return GetTextSize(aPresContext, aFrame, val, aSize);
 }
@@ -487,10 +519,11 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
   if (nsnull != aSpec.mColSizeAttr) {
     colStatus = content->GetAttribute(aSpec.mColSizeAttr, colAttr);
   }
+  float p2t = aPresContext->GetPixelsToTwips();
 
+  // determine the width
   if (eContentAttr_HasValue == colStatus) {  // col attr will provide width
     if (aSpec.mColSizeAttrInPixels) {
-      float p2t = aPresContext->GetPixelsToTwips();
       aBounds.width = (int) (((float)colAttr.GetPixelValue()) * p2t);
     }
     else {
@@ -508,8 +541,11 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
 	    aWidthExplicit = PR_TRUE;
     } 
     else {                       
-      if (eContentAttr_HasValue == valStatus) { // use width of initial value if specified
+      if (eContentAttr_HasValue == valStatus) { // use width of initial value 
         charWidth = GetTextSize(*aPresContext, aFrame, valAttr, aBounds);
+      }
+      else if (aSpec.mColDefaultValue) { // use default value
+        charWidth = GetTextSize(*aPresContext, aFrame, *aSpec.mColDefaultValue, aBounds);
       }
       else if (aSpec.mColDefaultSizeInPixels) {    // use default width in pixels
         charWidth = GetTextSize(*aPresContext, aFrame, 1, aBounds);
@@ -522,6 +558,7 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
     }
   }
 
+  // determine the height
   nsHTMLValue rowAttr;
   nsContentAttr rowStatus = eContentAttr_NotThere;
   if (nsnull != aSpec.mRowSizeAttr) {
@@ -560,18 +597,18 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
     aRowHeight = textSize.height;
   }
 
-  // add padding to width if width wasn't specified either from css or
-  // size attr
+  // add inside padding if necessary
   if (!aWidthExplicit) {
-    aBounds.width += charWidth;
+    aBounds.width += (2 * aFrame->GetHorizontalInsidePadding(p2t, aBounds.width));
+  }
+  if (!aHeightExplicit) {
+    aBounds.height += (2 * aFrame->GetVerticalInsidePadding(p2t, aBounds.height)); 
   }
 
   NS_RELEASE(content);
   if (ATTR_NOTSET == numRows) {
     numRows = aBounds.height / aRowHeight;
   }
-
-  aBounds.height += (2 * aFrame->GetBorderSpacing(*aPresContext)); 
 
   return numRows;
 }

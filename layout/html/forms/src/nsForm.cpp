@@ -143,8 +143,12 @@ public:
 
   virtual void Init(PRBool aReinit);
 
+  virtual nsFormRenderingMode GetMode() const { return mRenderingMode; }
+  virtual void SetMode(nsFormRenderingMode aMode) { mRenderingMode = aMode; }
+
   static nsString* gGET;
   static nsString* gMULTIPART;
+
 
 protected:
   void RemoveRadioGroups();
@@ -165,7 +169,8 @@ protected:
   nsString* mEncoding;
   nsString* mTarget;
   PRInt32 mMethod;
-  PRBool mInited;
+  PRBool  mInited;
+  nsFormRenderingMode mRenderingMode;
 };
 
 #define METHOD_UNSET    0
@@ -745,6 +750,10 @@ void nsForm::SetAttribute(const nsString& aName, const nsString& aValue)
     else {
       mMethod = METHOD_GET;
     }
+  }
+  // temporarily, use type attribute to set the rendering mode
+  else if (atom == nsHTMLAtoms::type) {
+    mRenderingMode = (aValue.EqualsIgnoreCase("forward")) ? kForwardMode : kBackwardMode;
   }
   else {
     // Use default storage for unknown attributes
