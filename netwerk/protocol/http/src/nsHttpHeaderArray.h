@@ -26,6 +26,7 @@
 
 #include "nsVoidArray.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpHeaderVisitor.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsHttp.h"
