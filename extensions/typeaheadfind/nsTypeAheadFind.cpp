@@ -137,15 +137,17 @@ nsTypeAheadFind::nsTypeAheadFind():
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (mFind && prefs) {
     AddRef();
-    // ----------- Listen to prefs
-    prefs->RegisterCallback("accessibility.typeaheadfind", (PrefChangedFunc)nsTypeAheadFind::TypeAheadFindPrefCallback, (void*)this);
-    prefs->RegisterCallback("accessibility.typeaheadfind.linksonly", (PrefChangedFunc)nsTypeAheadFind::TypeAheadFindPrefCallback, (void*)this);
-    prefs->RegisterCallback("accessibility.typeaheadfind.timeout", (PrefChangedFunc)nsTypeAheadFind::TypeAheadFindPrefCallback, (void*)this);
-    prefs->RegisterCallback("accessibility.browsewithcaret", (PrefChangedFunc)nsTypeAheadFind::TypeAheadFindPrefCallback, (void*)this);
     // ----------- Set search options ---------------
     mFind->SetFindBackwards(PR_FALSE);
     mFind->SetCaseSensitive(PR_FALSE);
     mFind->SetWordBreaker(nsnull);
+
+    // ----------- Get initial preferences ----------
+    nsTypeAheadFind::TypeAheadFindPrefsReset("", NS_STATIC_CAST(void*, this));
+
+    // ----------- Listen to prefs ------------------
+    prefs->RegisterCallback("accessibility.typeaheadfind", (PrefChangedFunc)nsTypeAheadFind::TypeAheadFindPrefsReset, NS_STATIC_CAST(void*, this));
+    prefs->RegisterCallback("accessibility.browsewithcaret", (PrefChangedFunc)nsTypeAheadFind::TypeAheadFindPrefsReset, NS_STATIC_CAST(void*, this));
   }
 }
 
@@ -159,10 +161,8 @@ nsTypeAheadFind::~nsTypeAheadFind()
 
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (prefs) {
-    prefs->UnregisterCallback("accessibility.typeaheadfind", (PrefChangedFunc)nsTypeAheadFind::TypeAheadFindPrefCallback, (void*)this);
-    prefs->UnregisterCallback("accessibility.typeaheadfind.linksonly", (PrefChangedFunc)nsTypeAheadFind::TypeAheadFindPrefCallback, (void*)this);
-    prefs->UnregisterCallback("accessibility.typeaheadfind.timeout", (PrefChangedFunc)nsTypeAheadFind::TypeAheadFindPrefCallback, (void*)this);
-    prefs->UnregisterCallback("accessibility.browsewithcaret", (PrefChangedFunc)nsTypeAheadFind::TypeAheadFindPrefCallback, (void*)this);
+    prefs->UnregisterCallback("accessibility.typeaheadfind", (PrefChangedFunc)nsTypeAheadFind::TypeAheadFindPrefsReset, (void*)this);
+    prefs->UnregisterCallback("accessibility.browsewithcaret", (PrefChangedFunc)nsTypeAheadFind::TypeAheadFindPrefsReset, (void*)this);
   }
 }
 
@@ -184,18 +184,20 @@ void nsTypeAheadFind::ReleaseInstance()
 
 // ------- Pref Callbacks (2) ---------------
 
-int PR_CALLBACK nsTypeAheadFind::TypeAheadFindPrefCallback(const char* aPrefName, void* instance_data)
+int PR_CALLBACK nsTypeAheadFind::TypeAheadFindPrefsReset(const char* aPrefName, void* instance_data)
 {
   nsTypeAheadFind* typeAheadFind= NS_STATIC_CAST(nsTypeAheadFind*, instance_data);
   NS_ASSERTION(typeAheadFind, "bad instance data");
 
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+  if (!prefs)
+    return 0;
 
-  if (!nsCRT::strcasecmp(aPrefName,"accessibility.typeaheadfind")) {
+  PRBool wasTypeAheadOn = typeAheadFind->mIsTypeAheadOn;
+  prefs->GetBoolPref("accessibility.typeaheadfind", &typeAheadFind->mIsTypeAheadOn);
+  if (typeAheadFind->mIsTypeAheadOn != wasTypeAheadOn) {
     nsCOMPtr<nsIWebProgress> progress(do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID));
     if (progress) {
-      PRBool wasTypeAheadOn = typeAheadFind->mIsTypeAheadOn;
-      prefs->GetBoolPref("accessibility.typeaheadfind", &typeAheadFind->mIsTypeAheadOn);
       if (!typeAheadFind->mIsTypeAheadOn) {
         typeAheadFind->RemoveCurrentSelectionListener();
         typeAheadFind->RemoveCurrentScrollPositionListener();
@@ -203,7 +205,7 @@ int PR_CALLBACK nsTypeAheadFind::TypeAheadFindPrefCallback(const char* aPrefName
         typeAheadFind->RemoveCurrentWindowFocusListener();
         progress->RemoveProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, typeAheadFind));
       }
-      else if (typeAheadFind->mIsTypeAheadOn != wasTypeAheadOn) {
+      else {
         progress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, typeAheadFind), nsIWebProgress::NOTIFY_STATE_DOCUMENT);  
         // Initialize string bundle
         nsCOMPtr<nsIStringBundleService> stringBundleService(do_GetService(kStringBundleServiceCID));
@@ -212,12 +214,9 @@ int PR_CALLBACK nsTypeAheadFind::TypeAheadFindPrefCallback(const char* aPrefName
       }
     }
   }
-  if (!nsCRT::strcasecmp(aPrefName,"accessibility.typeaheadfind.linksonly"))
-    prefs->GetBoolPref("accessibility.typeaheadfind.linksonly", &typeAheadFind->mLinksOnlyPref);
-  if (!nsCRT::strcasecmp(aPrefName,"accessibility.typeaheadfind.timeout"))
-    prefs->GetIntPref("accessibility.typeaheadfind.timeout", &typeAheadFind->mTimeoutLength);
-  if (!nsCRT::strcasecmp(aPrefName,"accessibility.browsewithcaret"))
-    prefs->GetBoolPref("accessibility.browsewithcaret", &typeAheadFind->mCaretBrowsingOn);
+  prefs->GetBoolPref("accessibility.typeaheadfind.linksonly", &typeAheadFind->mLinksOnlyPref);
+  prefs->GetIntPref("accessibility.typeaheadfind.timeout", &typeAheadFind->mTimeoutLength);
+  prefs->GetBoolPref("accessibility.browsewithcaret", &typeAheadFind->mCaretBrowsingOn);
 
   return 0;  // PREF_OK
 }

@@ -80,3 +80,6 @@ LINCS=\
 
 include <$(DEPTH)\config\rules.mak>
 
+libs::
+    $(MAKE_INSTALL) resources\content\prefs\typeaheadfind.js $(DIST)\bin\defaults\pref
+

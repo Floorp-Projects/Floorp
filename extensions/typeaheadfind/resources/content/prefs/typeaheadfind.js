@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,12 +15,11 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Original Author: Aaron Leventhal (aaronl@netscape.com)
- * Contributors:    
+ *   Aaron Leventhal <aaronl@netscape.com> (original author)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -38,23 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gVersion = "0.1";
-
-var err = initInstall("Type Ahead Find", "typeaheadfind", gVersion);
-logComment("initInstall: " + err);
-
-var fProgram = getFolder("Program");
-logComment("fProgram: " + fProgram);
-
-err = addDirectory("", gVersion, "bin", fProgram, "", true);
-logComment("addDirectory: " + err);
-
-// Register chrome
-registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","typeaheadfind.jar"), "locale/en-US/typeaheadfind/");
-
-if (getLastError() == SUCCESS) {
-  err = performInstall(); 
-  logComment("performInstall: " + err);
-} else {
-  cancelInstall(err);
-}
+pref("accessibility.typeaheadfind", true);
+pref("accessibility.typeaheadfind.linksonly", true);
+pref("accessibility.typeaheadfind.timeout", 2500);

@@ -79,3 +79,8 @@ EXTRA_DSO_LDOPTS += \
 		$(MOZ_UNICHARUTIL_LIBS)  \
 		$(MOZ_COMPONENT_LIBS)
 
+libs::
+	$(INSTALL) $(srcdir)/resources/content/prefs/typeaheadfind.js $(DIST)/bin/defaults/pref
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/resources/content/prefs/typeaheadfind.js $(DESTDIR)$(mozappdir)/defaults/pref

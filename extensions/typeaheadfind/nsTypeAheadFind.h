@@ -60,7 +60,7 @@
 #include "nsITypeAheadFind.h"
 #include "nsIStringBundle.h"
 
-#define TYPEAHEADFIND_BUNDLE_URL "chrome://global-platform/locale/typeaheadfind.properties"
+#define TYPEAHEADFIND_BUNDLE_URL "chrome://typeaheadfind/locale/typeaheadfind.properties"
 
 class nsTypeAheadFind : public nsIDOMFocusListener,
                         public nsIDOMKeyListener,
@@ -112,7 +112,7 @@ public:
   static void ReleaseInstance(void);
 
 protected:
-  static int PR_CALLBACK TypeAheadFindPrefCallback(const char* aPrefName, void* instance_data);
+  static int PR_CALLBACK TypeAheadFindPrefsReset(const char* aPrefName, void* instance_data);
 
   // Helper methods
   void AttachNewSelectionListener();
