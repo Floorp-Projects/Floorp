@@ -113,17 +113,12 @@ sub Checkout()
 	unless (defined($session)) { die "Checkout aborted. Cannot create session file: $session" }
 
 	#//
-	#//	List of the branches we use
-	#//
-	my($LIBPREF_BRANCH) = "XPCOM_BRANCH";
-
-	#//
 	#//	Checkout commands
 	#//
 	if ($main::pull{all})
 	{
-		$session->checkout("RaptorMac")				|| die "checkout failure";
-		$session->checkout("mozilla/modules/libpref",$LIBPREF_BRANCH)	|| die "checkout failure";
+		$session->checkout("RaptorMac")					|| die "checkout failure";
+		$session->checkout("mozilla/modules/libpref")	|| die "checkout failure";
 	}
 }
 
