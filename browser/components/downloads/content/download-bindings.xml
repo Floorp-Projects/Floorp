@@ -14,66 +14,28 @@
       <stylesheet src="chrome://browser/skin/downloads/downloadmanager.css"/>
     </resources>
     <content>
-      <xul:deck anonid="title-deck">
-        <xul:hbox>
+      <xul:hbox>
 #ifdef XP_WIN
-          <xul:image style="width: 16px; max-width: 16px; height: 16px; max-height: 16px;" xbl:inherits="src=image"/>
+        <xul:image style="width: 16px; max-width: 16px; height: 16px; max-height: 16px;" xbl:inherits="src=image"/>
 #endif
-          <xul:label xbl:inherits="value=target"/>
+        <xul:label xbl:inherits="value=target"/>
+      </xul:hbox>
+      <xul:vbox flex="1"
+#ifdef XP_WIN
+                class="indented"
+#endif
+      >
+        <xul:hbox flex="1">
+          <xul:progressmeter mode="normal" value="0"
+                             xbl:inherits="value=progress,mode=progressmode"/>
+          <xul:label xbl:inherits="value=progress"/>
         </xul:hbox>
-        <xul:hbox>
-#ifdef XP_WIN
-          <xul:image style="width: 16px; max-width: 16px; height: 16px; max-height: 16px;" xbl:inherits="src=image"/>
-#endif
-          <xul:label xbl:inherits="value=target" class="link" onclick="this.parentNode.parentNode.parentNode.launch();"/>
+        <xul:hbox align="start">
+          <xul:label value="&cancel.label;" class="link" onclick="this.parentNode.parentNode.parentNode.parentNode.cancel();"/>
         </xul:hbox>
-      </xul:deck>
-      <xul:deck flex="1" anonid="deck"
-#ifdef XP_WIN
-           class="indented"
-#endif
-           >
-        <xul:vbox flex="1">
-          <xul:hbox flex="1">
-            <xul:progressmeter mode="normal" value="0"
-                               xbl:inherits="value=progress,mode=progressmode"/>
-            <xul:label xbl:inherits="value=progress"/>
-          </xul:hbox>
-          <xul:hbox align="start">
-            <xul:label value="&cancel.label;" class="link" onclick="this.parentNode.parentNode.parentNode.parentNode.cancel();"/>
-          </xul:hbox>
-        </xul:vbox>
-        <xul:vbox align="start">
-          <xul:label value="&done.label;" class="bold"/>
-        </xul:vbox>
-        <xul:label value="&cancelled.label;" class="bold"/>
-        <xul:label value="&failed.label;" class="bold"/>
-      </xul:deck>
+      </xul:vbox>
     </content>
     <implementation>           
-      <method name="onEnd">
-        <parameter name="aType"/>
-        <body>
-        <![CDATA[
-          var deck = document.getAnonymousElementByAttribute(this, "anonid", "deck");
-          var index;
-          switch(aType) {
-            case "dl-failed":
-              index = 3;
-              break;
-            case "dl-cancel":
-              index = 2;
-              break;                        
-            case "dl-done":
-            default:
-              index = 1;
-              var titleDeck = document.getAnonymousElementByAttribute(this, "anonid", "title-deck");
-              titleDeck.selectedIndex = 1;
-          }
-          deck.selectedIndex = index;
-        ]]>
-        </body>
-      </method>
       <method name="cancel">
         <body>
         <![CDATA[
@@ -84,40 +46,6 @@
         ]]>
         </body>
       </method>
-      <property name="localFile">
-        <getter>
-        <![CDATA[
-          var lfContractID = "@mozilla.org/file/local;1";
-          var lfIID = Components.interfaces.nsILocalFile;
-          var lf = Components.classes[lfContractID].createInstance(lfIID);
-          lf.initWithPath(this.getAttribute("file"));
-          return lf;
-        ]]>
-        </getter>
-      </property>
-      <method name="launch">
-        <body>
-        <![CDATA[
-          try {
-            this.localFile.launch();
-          }
-          catch(ex) {
-          }
-        ]]>
-        </body>
-      </method>
-      
-      <method name="show">
-        <body>
-        <![CDATA[
-          try {
-            this.localFile.reveal();
-          }
-          catch(ex) {
-          }
-        ]]>
-        </body>
-      </method>       
     </implementation>
   </binding>
 </bindings>

@@ -31,7 +31,7 @@
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      id="pref-navigator"
+      id="pref-navigator"      
       onload="parent.initPanel('chrome://browser/content/pref/pref-navigator.xul');"
       headertitle="&lHeader;">
 
@@ -140,6 +140,7 @@
     </hbox>
     <hbox align="center" pack="end">
       <button label="&useCurrent.label;" accesskey="&useCurrent.accesskey;"
+              label2="&useCurrentMultiple.label;"
               oncommand="setHomePageToCurrentPage();"
               id="browserUseCurrent"
               prefstring="pref.browser.homepage.disable_button.current_page"/>

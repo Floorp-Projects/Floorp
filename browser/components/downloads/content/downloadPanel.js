@@ -1,53 +1,40 @@
 const kObserverServiceProgID = "@mozilla.org/observer-service;1";
 const NC_NS = "http://home.netscape.com/NC-rdf#";
 
-var gDownloadView;
 var gDownloadManager;
 var gDownloadHistoryView;
-var gRDFService;
 
 const dlObserver = {
   observe: function(subject, topic, state) {
+    if (topic != "dl-progress") return;
     var dl = subject.QueryInterface(Components.interfaces.nsIDownload);
     var elt = document.getElementById(dl.target.path);
 
-    switch (topic) {
-      case "dl-progress":
-        if (dl.percentComplete == -1) {
-          if (!elt.hasAttribute("progressmode"))
-            elt.setAttribute("progressmode", "undetermined");
-          if (elt.hasAttribute("progress"))
-            elt.removeAttribute("progress");
-        }
-        else {
-          elt.setAttribute("progress", dl.percentComplete);
-          if (elt.hasAttribute("progressmode"))
-            elt.removeAttribute("progressmode");
-        }    
-        break;
-      default:
-        elt.onEnd(topic);
-        break;
+    if (dl.percentComplete == -1) {
+      if (!elt.hasAttribute("progressmode"))
+        elt.setAttribute("progressmode", "undetermined");
+      if (elt.hasAttribute("progress"))
+        elt.removeAttribute("progress");
     }
-  }
+    else {
+      elt.setAttribute("progress", dl.percentComplete);
+      if (elt.hasAttribute("progressmode"))
+        elt.removeAttribute("progressmode");
+    }    
 };
 
 function Startup() {
-  gDownloadView = document.getElementById("downloadView");
+  var downloadView = document.getElementById("downloadView");
   gDownloadHistoryView = document.getElementById("downloadHistoryView");
   const dlmgrContractID = "@mozilla.org/download-manager;1";
   const dlmgrIID = Components.interfaces.nsIDownloadManager;
   gDownloadManager = Components.classes[dlmgrContractID].getService(dlmgrIID);
   var ds = gDownloadManager.datasource;
-  gDownloadView.database.AddDataSource(ds);
-  gDownloadView.builder.rebuild();
+  downloadView.database.AddDataSource(ds);
+  downloadView.builder.rebuild();
   gDownloadHistoryView.database.AddDataSource(ds);
   gDownloadHistoryView.builder.rebuild();
 
-  const rdfSvcContractID = "@mozilla.org/rdf/rdf-service;1";
-  const rdfSvcIID = Components.interfaces.nsIRDFService;
-  gRDFService = Components.classes[rdfSvcContractID].getService(rdfSvcIID);
-  
   var observerService = Components.classes[kObserverServiceProgID]
                                   .getService(Components.interfaces.nsIObserverService);
   observerService.addObserver(dlObserver, "dl-progress", false);
@@ -98,7 +85,7 @@ var downloadDNDObserver =
 }
 
 function onSelect(aEvent) {
-  window.updateCommands("tree-select");
+  window.updateCommands("list-select");
 }
   
 var downloadViewController = {
@@ -137,8 +124,7 @@ var downloadViewController = {
   
   doCommand: function dVC_doCommand (aCommand)
   {
-    var selectedItem, selectedItems;
-    var file, i;
+    var selectedItem, selectedItems, file, i;
 
     switch (aCommand) {
     case "cmd_openfile":
@@ -211,7 +197,7 @@ var downloadViewController = {
 
   onCommandUpdate: function dVC_onCommandUpdate ()
   {
-    var cmds = ["cmd_properties", "cmd_pause", "cmd_cancel", "cmd_remove",
+    var cmds = ["cmd_properties", "cmd_remove",
                 "cmd_openfile", "cmd_showinshell"];
     for (var command in cmds)
       goUpdateCommand(cmds[command]);
@@ -248,7 +234,7 @@ function buildContextMenu()
   launchItem.hidden = selectionCount != 1;
   launchSep.hidden = selectionCount != 1;
   propsItem.hidden = selectionCount != 1;
-  propsSep.hidden = selectionCoun != 1;
+  propsSep.hidden = selectionCount != 1;
   return true;
 }
     

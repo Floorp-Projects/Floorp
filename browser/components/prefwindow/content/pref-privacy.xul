@@ -36,12 +36,10 @@
       updateBroadcaster(!cookiesEnabled);
       var clearHistButton = document.getElementById("browserClearHistory");
       try {
-        var urlBarHist = Components.classes["@mozilla.org/browser/urlbarhistory;1"]
-                                   .getService(Components.interfaces.nsIUrlbarHistory);
         var isBtnLocked = parent.hPrefWindow.getPrefIsLocked(clearHistButton.getAttribute("prefstring"));
         var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
                                       .getService(Components.interfaces.nsIBrowserHistory);
-        clearHistButton.disabled = ( urlBarHist.count == 0 && globalHistory.count == 0) || isBtnLocked;
+        clearHistButton.disabled = ( globalHistory.count == 0) || isBtnLocked;
       }
       catch(ex) {
       }
@@ -70,9 +68,6 @@
       var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
                                     .getService(Components.interfaces.nsIBrowserHistory);
       globalHistory.removeAllPages();
-      var urlBarHistory = Components.classes["@mozilla.org/browser/urlbarhistory;1"]
-                                    .getService(Components.interfaces.nsIUrlbarHistory);
-      urlBarHistory.clearHistory();
     }
     
     function updateBroadcaster(aDisable)
@@ -102,9 +97,9 @@
       <label value="&days.label;"/>
       <spacer flex="1"/>
       <button label="&clearHistory.label;" accesskey="&clearHistory.accesskey;"
-        oncommand="prefClearGlobalHistory(); this.disabled = true;"
-        id="browserClearHistory"
-        prefstring="pref.browser.history.disable_button.clear_hist"/>
+              oncommand="prefClearGlobalHistory(); this.disabled = true;"
+              id="browserClearHistory"
+              prefstring="pref.browser.history.disable_button.clear_hist"/>
   </groupbox> 
   <groupbox>
     <caption label="&cache.label;"/>
