@@ -33,22 +33,27 @@ Rights Reserved.
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/securityOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/messenger.dtd">
-                     
+<!DOCTYPE window [
+<!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >
+%messengerDTD;
+<!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" >
+%navigatorDTD;
+]>   
+                  
 <window id="messengerWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
-		title="&messengerWindow.title;"
+        title="&messengerWindow.title;"
         titlemodifier="&titleModifier.label;"
         titlemenuseparator="&titleSeperator.label;"
-		onload="OnLoadMessenger()"
-		onunload="OnUnloadMessenger()"
-		orient="vertical"
+        onload="OnLoadMessenger()"
+        onunload="OnUnloadMessenger()"
+        orient="vertical"
         width="750"
         height="500"
         persist="width height screenX screenY"
-		windowtype="mail:3pane">
+        windowtype="mail:3pane">
 
 
 <script type="text/javascript" src="chrome://global/content/strres.js"/>
@@ -71,6 +76,7 @@ Rights Reserved.
 <script type="text/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
 <commands id="commands">
+
 	<commandset id="CommandUpdate_Mail"
 				commandupdater="true"
 				events="focus,folderTree-select,threadTree-select"
@@ -87,6 +93,7 @@ Rights Reserved.
 	<commandset id="selectEditMenuItems"/>
 	<commandset id="undoEditMenuItems"/>
 	<commandset id="clipboardEditMenuItems"/>
+
 </commands>
 
 <broadcasterset id="broadcasterset"/>
@@ -95,29 +102,29 @@ Rights Reserved.
 
 <popupset>
 
-  <popup id="threadPaneContext"/>
-  <popup id="folderPaneContext"/>
+	<popup id="threadPaneContext"/>
+	<popup id="folderPaneContext"/>
 
-  <popup id="emailAddressPopup" popupanchor="bottomleft">
+	<popup id="emailAddressPopup" popupanchor="bottomleft">
       <menuitem value="&AddToAddressBook.label;"
+		accesskey="&AddToAddressBook.accesskey;"
                 oncommand="AddNodeToAddressBook(document.popupNode)"/>
       <menuitem value="&SendMailTo.label;"
+		accesskey="&SendMailTo.accesskey;"
                 oncommand="SendMailToNode(document.popupNode)"/>
-  </popup>
-  
-  <popup id="allHeadersPopup"  oncreate="return fillAllHeadersPopup(document.popupNode);" popupanchor="bottomleft">
+	</popup>
+
+	<popup id="allHeadersPopup"  oncreate="return fillAllHeadersPopup(document.popupNode);" popupanchor="bottomleft">
 		<box id="allHeadersPopupContainer">
-	  </box>
+		</box>
 	</popup>
 
 	<popup id="messagePaneContext"/>
-
 </popupset>
 
 <popupset id="aTooltipSet">
 	<popup id="folderTooltip"/>
 </popupset>
-
 
   <toolbox id="mailToolbarToolbox" class="toolbox-top">
     <menubar id="mailMenubar"/>
@@ -131,7 +138,7 @@ Rights Reserved.
           
 		<box orient="vertical" flex="1">
 			<box align ="horizontal" persist="height" flex="1">
-				<tree id="folderTree" flex="1" style="width:0px;" context="folderPaneContext"  />
+				<tree id="folderTree" flex="1" style="width:0px;" context="folderPaneContext" persist="collapsed width" />
 				<splitter id="gray_vertical_splitter" collapse="before"  persist="state"/>
 				<tree id="threadTree" flex="2" persist="width" style="width:0px" context="threadPaneContext" class="window-focusborder" focusring="false"/>
 			</box>
@@ -147,14 +154,14 @@ Rights Reserved.
 				<!-- message view -->
 				<iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
 			</box>	
-			<statusbar id="status-bar">
+			<statusbar id="status-bar" class="mailwindow-statusbar">
 				<statusbarpanel id="unreadMessageCount" style="min-width: 5px"/>
 				<statusbarpanel id="totalMessageCount" style="min-width: 5px"/>
 			</statusbar>
 		</box>
+
 	</box>
 
-	<toolbar id="taskbar"/>
+	<box id="taskbar" class="toolbox-bottom"/>
 
 </window>
-
