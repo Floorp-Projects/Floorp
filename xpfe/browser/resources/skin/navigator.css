@@ -156,6 +156,7 @@ titledbutton.bookmarkFolder {
    margin: 0px;
    padding: 0px;
    border: none;
+   list-style-image: url("chrome://global/skin/toolbar-dropdown.gif");
 }
 
 toolbar#PersonalToolbar #personaltoolbar-endcap { 

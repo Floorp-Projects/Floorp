@@ -207,7 +207,6 @@ Contributor(s): ______________________________________. -->
 
 <!-- Menu -->
 <menubar id="main-menubar"/>
-
 <!-- Toolbox -->
 <toolbox id="main-toolbox">
   
@@ -218,42 +217,45 @@ Contributor(s): ______________________________________. -->
 
     <!-- button area of personal toolbar -->
     <box align="horizontal" flex="1" style="min-width: 1px">
+
+      // I added the container=true on this button as a temp hack until
+      // we can get this button into rdf. We can't allow drags on this
+      // container so we have to be able to identify it (bug 19588).
+      //     - pinkerton
+      <menu datasources="rdf:bookmarks" ref="NC:BookmarksRoot">
+        <titledbutton class="bookmarkFolder" align="right" container="true"
+          value="&bookmarksButton.label;" crop="right"/>
+        <template>
+          <!-- Recursive rules for nested folders -->
+          <rule iscontainer="true">
+            <menupopup>
+              <menu uri="rdf:*" crop="right" flex="1" align="left"
+                value="rdf:http://home.netscape.com/NC-rdf#Name" >
+                <menupopup />
+              </menu>
+            </menupopup>
+          </rule>
+          <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+            <menupopup>
+              <menuseparator/>
+            </menupopup>
+          </rule>
+          <rule>
+            <menupopup>
+              <menuitem align="left" uri="..." 
+                value="rdf:http://home.netscape.com/NC-rdf#Name"
+                oncommand="OpenBookmarkURL(event.target, 'PersonalToolbar')"/>
+            </menupopup>
+          </rule>
+        </template>
+        <spring class="personaltoolbarspacer" flex="1"/>
+      </menu>
+
       <box align="horizontal"
         flex="1"
         style="min-width: 1px; overflow: hidden"
         datasources="rdf:bookmarks"
         ref="NC:PersonalToolbarFolder" id="innermostBox">
-
-          // pinkerton - i added the container=true on this button as a temp hack until we can get this
-          //   button into rdf. we can't allow drags on this container so we have to be able
-          //   to identify it. (bug 19588)
-        <menu datasources="rdf:bookmarks" ref="NC:BookmarksRoot" container="true">
-          <titledbutton class="bookmarkbutton" align="left"
-            value="&bookmarksButton.label;" crop="right"/>
-		        <spring uri="rdf:*" class="personaltoolbarspacer" flex="1"/>
-          <template>
-            <!-- Recursive rules for nested folders -->
-            <rule iscontainer="true">
-              <menupopup>
-                <menu uri="rdf:*" crop="right" flex="1" align="left"
-                  value="rdf:http://home.netscape.com/NC-rdf#Name" >
-                  <menupopup />
-                </menu>
-              </menupopup>
-            </rule>
-            <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-              <menupopup>
-                <menuseparator/>
-              </menupopup>
-            </rule>
-            <rule>
-              <menupopup>
-                <menuitem align="left" uri="..." 
-                  value="rdf:http://home.netscape.com/NC-rdf#Name"  onclick="OpenBookmarkURL(event.target, 'PersonalToolbar')"/>
-              </menupopup>
-            </rule>
-          </template>
-        </menu>
 
 		    <!-- This template builds content from the bookmarks datasource -->
 		    <template>
@@ -261,14 +263,14 @@ Contributor(s): ______________________________________. -->
 		      <rule parent="box" iscontainer="true">
 		        <menu uri="...">
 		          <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name"
-		                        align="left" class="bookmarkFolder"/>
+		                        align="right" class="bookmarkFolder"/>
 		          <menupopup/>
 		        </menu>
 				<spring uri="rdf:*" class="personaltoolbarspacer" flex="1"/>
 		      </rule>
 		      <rule parent="box">
 		        <titledbutton class="bookmarkbutton" uri="rdf:*" align="left" 
-		          value="rdf:http://home.netscape.com/NC-rdf#Name" crop="right" onclick="OpenBookmarkURL(event.target, 'PersonalToolbar')"/>
+		          value="rdf:http://home.netscape.com/NC-rdf#Name" crop="right" oncommand="OpenBookmarkURL(event.target, 'PersonalToolbar')"/>
 		        <spring uri="rdf:*" class="personaltoolbarspacer" flex="1"/>
 		      </rule>
 
@@ -289,7 +291,7 @@ Contributor(s): ______________________________________. -->
 		      <rule>
 		        <menupopup>
 		          <menuitem align="left" uri="..." 
-		            value="rdf:http://home.netscape.com/NC-rdf#Name"  onclick="OpenBookmarkURL(event.target, 'PersonalToolbar')"/>
+		            value="rdf:http://home.netscape.com/NC-rdf#Name"  oncommand="OpenBookmarkURL(event.target, 'PersonalToolbar')"/>
 		        </menupopup>
 		      </rule>
 		    </template>
@@ -395,7 +397,7 @@ Contributor(s): ______________________________________. -->
 </toolbox>
 
 <!-- sidebar/toolbar/content/status -->
-<box id="sidebar-parent" align="horizontal" flex="100%">
+<box align="horizontal" flex="100%">
   <!-- toolbar/content/status -->
  
   <box id="sidebar-box" chromeclass="extrachrome"/>
