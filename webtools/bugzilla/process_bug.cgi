@@ -766,16 +766,9 @@ if (UserInGroup(Param('timetrackinggroup'))) {
         if (defined $::FORM{$field}) {
             my $er_time = trim($::FORM{$field});
             if ($er_time ne $::FORM{'dontchange'}) {
-                if ($er_time > 99999.99) {
-                    ThrowUserError("value_out_of_range", {field => $field});
-                }
-                if ($er_time =~ /^(?:\d+(?:\.\d*)?|\.\d+)$/) {
-                    DoComma();
-                    $::query .= "$field = " . SqlQuote($er_time);
-                } else {
-                    ThrowUserError("need_positive_number",
-                                   {field => $field});
-                }
+                Bugzilla::Bug::ValidateTime($er_time, $field);
+                DoComma();
+                $::query .= "$field = " . SqlQuote($er_time);
             }
         }
     }
@@ -1274,9 +1267,7 @@ foreach my $id (@idlist) {
 
     delete $::FORM{'work_time'} unless UserInGroup(Param('timetrackinggroup'));
 
-    if ($::FORM{'work_time'} && $::FORM{'work_time'} > 99999.99) {
-        ThrowUserError("value_out_of_range", {field => 'work_time'});
-    }
+    Bugzilla::Bug::ValidateTime($::FORM{'work_time'}, 'work_time');
     if ($::FORM{'comment'} || $::FORM{'work_time'}) {
         if ($::FORM{'work_time'} && 
             (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/)) {

@@ -342,12 +342,8 @@ if (UserInGroup(Param("timetrackinggroup")) &&
     defined $::FORM{'estimated_time'}) {
 
     my $est_time = $::FORM{'estimated_time'};
-    if ($est_time =~ /^(?:\d+(?:\.\d*)?|\.\d+)$/) {
-        $sql .= SqlQuote($est_time) . "," . SqlQuote($est_time);
-    } else {
-        ThrowUserError("need_positive_number",
-                       { field => 'estimated_time' });
-    }
+    Bugzilla::Bug::ValidateTime($est_time, 'estimated_time');
+    $sql .= SqlQuote($est_time) . "," . SqlQuote($est_time);
 } else {
     $sql .= "0, 0";
 }
