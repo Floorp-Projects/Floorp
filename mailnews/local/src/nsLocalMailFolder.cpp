@@ -26,6 +26,7 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsIEnumerator.h"
+#include "nsMailDataBase.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::IID() inside of a class
@@ -45,7 +46,7 @@ nsGetNameFromPath(const nsNativeFileSpec* path)
     return new nsString(pathStr);
 }
 
-static const char kRootPrefix[] = "mailbox://";
+static const char kRootPrefix[] = "mailbox:/";
 static const char kMsgRootFolderPref[] = "mailnews.rootFolder";
 
 static nsresult
@@ -57,7 +58,7 @@ nsURI2Path(const char* uriStr, nsNativeFileSpec& pathResult)
     return NS_ERROR_FAILURE;
 
   // get mailbox root preference
-#if 1
+#if 0
   nsIPref* prefs;
   nsresult rv;
   rv = nsServiceManager::GetService(kPrefCID, kIPrefIID,
@@ -72,24 +73,36 @@ nsURI2Path(const char* uriStr, nsNativeFileSpec& pathResult)
   if (NS_FAILED(rv))
     return rv; 
 #else
-  char rootPath[] = "d:\\users\\warren\\Mail";
+  char rootPath[] = "c:\\program files\\netscape\\users\\putterman\\mail";
 #endif
   path.Append(rootPath);
   uri.Cut(0, nsCRT::strlen(kRootPrefix));
 
-  PRUint32 uriLen = uri.Length();
-  if (uri.RFind('/') == (PRInt32)uriLen - 1) {
+  PRInt32 uriLen = uri.Length();
+  PRInt32 trailPos = uri.RFind('/');
+  if (trailPos != -1 && (trailPos == uriLen - 1)) {
     // delete trailing slash
     uri.Left(uri, uriLen - 1);
     uriLen--;
   }
 
+
   PRInt32 pos;
-  while (uriLen > 0) {
+  while(uriLen > 0) {
     nsAutoString folderName;
-    pos = uri.Find('/');
+
+   	PRInt32 leadingPos = uri.Find('/');
+	//if it's the first character then remove it.
+	if(leadingPos == 0)
+	{
+		uri.Cut(0, 1);
+		uriLen--;
+	}
+
+	pos = uri.Find('/');
     if (pos < 0)
       pos = uriLen;
+
     PRInt32 cnt = uri.Left(folderName, pos);
     NS_ASSERTION(cnt == pos, "something wrong with nsString");
     path.Append("\\");
@@ -118,7 +131,9 @@ nsURI2Name(const char* uriStr, nsString& name)
   if (uri.Find(kRootPrefix) != 0)     // if doesn't start with kRootPrefix
     return NS_ERROR_FAILURE;
   PRInt32 pos = uri.RFind("/");
-  return uri.Right(name, pos);
+  PRInt32 length = uri.Length();
+  PRInt32 count = length - (pos + 1);
+  return uri.Right(name, count);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -166,19 +181,21 @@ nsShouldIgnoreFile(nsString& name)
   if (name.EqualsIgnoreCase("rules.dat"))
     return PR_TRUE;
 
+  PRInt32 len = name.Length();
+
 #if defined (XP_PC) || defined (XP_MAC) 
   // don't add summary files to the list of folders;
   //don't add popstate files to the list either, or rules (sort.dat). 
-  PRInt32 len = name.Length();
-  if ((len > 4 && name.RFind(".snm", PR_TRUE) == len - 1) ||
+  if ((len > 4 && name.RFind(".snm", PR_TRUE) == len - 4) ||
       name.EqualsIgnoreCase("popstate.dat") ||
       name.EqualsIgnoreCase("sort.dat") ||
       name.EqualsIgnoreCase("mailfilt.log") ||
       name.EqualsIgnoreCase("filters.js") ||
-      name.RFind(".toc", PR_TRUE) == len - 1)
+      name.RFind(".toc", PR_TRUE) == len - 4)
     return PR_TRUE;
 #endif
-
+  if ((len > 4 && name.RFind(".sbd", PR_TRUE) == len - 4))
+	  return PR_TRUE;
   return PR_FALSE;
 }
 
@@ -203,6 +220,13 @@ nsMsgLocalMailFolder::CreateSubFolders(void)
     nsAutoString uri;
     uri.Append(mURI);
     uri.Append('/');
+/*	if(PL_strcasecmp(mURI,kRootPrefix)==0)
+	{
+		nsFilePath filePath(path);
+		uri.Append(filePath);
+		uri.Append('/');
+	}
+	*/
     uri.Append(currentFolderName);
     char* uriStr = uri.ToNewCString();
     if (uriStr == nsnull) {
@@ -226,7 +250,6 @@ nsMsgLocalMailFolder::CreateSubFolders(void)
   return rv;
 }
 
-const char* kDirExt = ".sbd";
 
 nsresult
 nsMsgLocalMailFolder::Initialize(void)
@@ -235,16 +258,11 @@ nsMsgLocalMailFolder::Initialize(void)
   nsresult rv = GetPath(path);
   if (NS_FAILED(rv)) return rv;
   nsFilePath aFilePath(path);
-  char* pathStr = (char*)aFilePath;
   PRInt32 newFlags = MSG_FOLDER_FLAG_MAIL;
   if (path.IsDirectory()) {
-    // pathStr specifies a filesystem directory
-    char *lastFour = &pathStr[PL_strlen(pathStr) - PL_strlen(kDirExt)];
-    if (PL_strcasecmp(lastFour, kDirExt)) {
       newFlags |= (MSG_FOLDER_FLAG_DIRECTORY | MSG_FOLDER_FLAG_ELIDED);
       SetFlag(newFlags);
       return CreateSubFolders();
-    }
   }
   else {
     UpdateSummaryTotals();
@@ -648,13 +666,16 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetName(nsString& name)
     {
       SetName("Local Mail");
       mHaveReadNameFromDB = TRUE;
+	  name = mName;
+	  return NS_OK;
     }
     else
     {
       //Need to read the name from the database
     }
   }
-  name = mName;
+  nsURI2Name(mURI, name);
+
   return NS_OK;
 }
 
@@ -669,6 +690,23 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(nsString& prettyName)
     return nsMsgFolder::GetPrettyName(prettyName);
 
   return NS_OK;
+}
+
+nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsDBFolderInfo **folderInfo, nsMsgDatabase **db)
+{
+    nsMailDatabase  *mailDB;
+
+    nsresult openErr;
+    if(!db || !folderInfo)
+		return NS_ERROR_NULL_POINTER;
+
+	nsFilePath filePath(mPath);
+    openErr = nsMailDatabase::Open (filePath, FALSE, &mailDB, FALSE);
+
+    *db = mailDB;
+    if (NS_SUCCEEDED(openErr)&& *db)
+        *folderInfo = (*db)->GetDBFolderInfo();
+    return openErr;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::UpdateSummaryTotals()
@@ -782,7 +820,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetSizeOnDisk(PRUint32 size)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::GetUserName(char** userName)
+NS_IMETHODIMP nsMsgLocalMailFolder::GetUsersName(char** userName)
 {
 #ifdef HAVE_PORT
   return NET_GetPopUsername();

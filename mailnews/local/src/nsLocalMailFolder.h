@@ -26,6 +26,7 @@
 #define nsMsgLocalMailFolder_h__
 
 #include "nsMsgFolder.h" /* include the interface we are going to support */
+#include "nsMailDataBase.h"
 #include "nsFileSpec.h"
 
 class nsMsgLocalMailFolder : public nsMsgFolder, public nsIMsgLocalMailFolder
@@ -92,11 +93,13 @@ public:
 
 	NS_IMETHOD GetSizeOnDisk(PRUint32 size);
 
-	NS_IMETHOD GetUserName(char** userName);
+	NS_IMETHOD GetUsersName(char** userName);
 	NS_IMETHOD GetHostName(char** hostName);
 	NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate);
 	NS_IMETHOD RememberPassword(const char *password);
 	NS_IMETHOD GetRememberedPassword(char ** password);
+
+    virtual nsresult GetDBFolderInfoAndDB(nsDBFolderInfo **folderInfo, nsMsgDatabase **db);
 
 	//nsIMsgMailFolder
   NS_IMETHOD GetPath(nsNativeFileSpec& aPathName);
