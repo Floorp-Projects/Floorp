@@ -45,25 +45,6 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
 {
   D(printf("XFE_NavCenterView Constructor\n"););
 
-#if 0
-  Widget rdf_parent = XtVaCreateManagedWidget("pane", xfePaneWidgetClass,
-                                        parent, NULL);
-
-  m_selector = XtVaCreateManagedWidget("selector",
-                   xfeToolScrollWidgetClass,
-                   rdf_parent,
-                   XmNpaneChildType,       XmPANE_CHILD_ATTACHMENT_ONE,
-                   XmNpaneChildAttachment, XmPANE_CHILD_ATTACH_LEFT,
-                   NULL);
-  /*Widget form = XtVaCreateManagedWidget("form",
-                   xmFormWidgetClass,
-                   pane,
-                   XmNpaneChildType,       XmPANE_CHILD_ATTACHMENT_TWO,
-                   XmNpaneChildAttachment, XmPANE_CHILD_ATTACH_RIGHT,
-                   XmNshadowThickness, 2,
-                   XmNshadowType, XmSHADOW_IN,
-                   NULL);*/
-#endif /*0*/
   Widget nav_form = XtVaCreateManagedWidget("nav_form",
                                             xmFormWidgetClass,
                                             parent,
@@ -80,12 +61,6 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
                    XmNbottomOffset,     0,
                    XmNleftOffset,       0,
                    XmNrightOffset,      0,
-/*
-                   XmNmarginTop,        2,
-                   XmNmarginBottom,     2,
-                   XmNmarginLeft,       2,
-                   XmNmarginRight,      2,
-*/
                    XmNspacing,          0,
                    XmNshadowThickness,  0,
                    NULL);
@@ -138,75 +113,6 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
 XFE_NavCenterView::~XFE_NavCenterView()
 {
 	D(printf("XFE_NavCenterView DESTRUCTING\n"););
-}
-
-//////////////////////////////////////////////////////////////////////////
-XP_Bool
-XFE_NavCenterView::isCommandEnabled(CommandType cmd,
-								   void *calldata, XFE_CommandInfo*)
-{
-  if (cmd == xfeCmdChangeRDFView)
-    {
-      return TRUE;
-    }
-  else
-    {
-      return XFE_View::isCommandEnabled(cmd, calldata);
-    }
-}
-
-void
-XFE_NavCenterView::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo*info)
-{
-  if (cmd == xfeCmdChangeRDFView)
-    {
-      int viewNum = (int)calldata;
-      HT_View view = HT_GetNthView(m_pane,viewNum);
-
-      setRDFView(view);
-
-      return;
-    }
-  else
-    {
-      XFE_View::doCommand(cmd,calldata,info);
-    }
-}
-
-Boolean
-XFE_NavCenterView::handlesCommand(CommandType cmd, void *calldata,
-                                  XFE_CommandInfo* info)
-{
-  if (cmd == xfeCmdChangeRDFView)
-    {
-      return TRUE;
-    }
-  else
-    {
-      return XFE_View::handlesCommand(cmd, calldata, info);
-    }
-}
-
-XP_Bool
-XFE_NavCenterView::isCommandSelected(CommandType cmd,
-                                    void *calldata, XFE_CommandInfo* info)
-{
-    {
-      return XFE_View::isCommandSelected(cmd, calldata, info);
-    }
-}
-
-char *
-XFE_NavCenterView::commandToString(CommandType cmd, void* calldata, 
-                                   XFE_CommandInfo* info)
-{
-  if (cmd == xfeCmdChangeRDFView)
-    {
-      int viewNum = (int)calldata;
-
-      return HT_GetViewName(HT_GetNthView(m_pane, viewNum));
-    }
-  return NULL;
 }
 
 //////////////////////////////////////////////////////////////////////////

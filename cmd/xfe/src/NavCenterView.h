@@ -36,17 +36,6 @@ public:
 
   virtual ~XFE_NavCenterView();
 
-  virtual Boolean isCommandEnabled(CommandType cmd, void *calldata = NULL,
-								   XFE_CommandInfo* i = NULL);
-  virtual void doCommand(CommandType, void *calldata = NULL,
-								   XFE_CommandInfo* i = NULL);
-  virtual Boolean handlesCommand(CommandType cmd, void *calldata = NULL,
-								   XFE_CommandInfo* i = NULL);
-  virtual char* commandToString(CommandType cmd, void *calldata = NULL,
-								   XFE_CommandInfo* i = NULL);
-  virtual XP_Bool isCommandSelected(CommandType cmd, void *calldata = NULL,
-						 XFE_CommandInfo* = NULL);
-
   void notify(HT_Notification ns, HT_Resource n, HT_Event whatHappened);
 
   void setRDFView(HT_View view);
