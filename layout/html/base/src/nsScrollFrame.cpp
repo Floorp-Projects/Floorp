@@ -25,7 +25,7 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsBodyFrame.h"
-#include "nsHTMLBase.h"
+#include "nsHTMLContainerFrame.h"
 #include "nsCSSLayout.h"
 
 #include "nsBodyFrame.h"
@@ -52,7 +52,6 @@ protected:
 nsScrollBodyFrame::nsScrollBodyFrame(nsIContent* aContent, nsIFrame* aParent)
   : nsContainerFrame(aContent, aParent)
 {
-  nsHTMLBase::CreateViewForFrame(nsnull, this, nsnull, PR_TRUE);
 }
 
 void
@@ -99,6 +98,9 @@ nsScrollBodyFrame::Reflow(nsIPresContext&      aPresContext,
                           const nsReflowState& aReflowState,
                           nsReflowStatus&      aStatus)
 {
+  nsHTMLContainerFrame::CreateViewForFrame(aPresContext, this,
+                                           nsnull, PR_TRUE);
+
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
                      ("enter nsScrollBodyFrame::Reflow: maxSize=%d,%d",
                       aReflowState.maxSize.width,
