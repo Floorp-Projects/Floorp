@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<toolbox id="mainToolbox"
+         xmlns="http://www.silverstone.net.nz/2001/manticore/uidl">
+  <toolstrip>
+    <toolbar id="navigation-toolbar" label="Navigation Toolbar">
+	  <toolbarbutton label="Back" command="view-go-back"/>
+	  <toolbarbutton label="Forward" command="view-go-forward"/>
+	  <toolbarbutton label="Stop" command="view-stop"/>
+	  <toolbarbutton label="Reload" command="view-reload"/>
+	</toolbar>
+  </toolstrip>
+</toolbox>
+

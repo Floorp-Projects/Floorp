@@ -1,0 +1,135 @@
+
+namespace Silverstone.Manticore.BrowserWindow
+{
+  using System;
+  using System.ComponentModel;
+  using System.Drawing;
+  using System.Windows.Forms;
+
+  using Silverstone.Manticore.App;
+  using Silverstone.Manticore.Toolkit.Menus;
+  using Silverstone.Manticore.AboutDialog;
+  using Silverstone.Manticore.OpenDialog;
+
+  using Silverstone.Manticore.LayoutAbstraction;
+
+  public class BrowserWindow : System.Windows.Forms.Form 
+  {
+    private System.ComponentModel.Container components;
+
+    protected internal BrowserMenuBuilder menuBuilder;
+    protected internal WebBrowser webBrowser;
+
+    protected internal StatusBar statusBar;
+
+    protected internal ManticoreApp application;
+
+    public BrowserWindow(ManticoreApp app)
+    {
+      application = app;
+
+      // Set up UI
+      InitializeComponent();
+
+      // Perform post-window show startup tasks
+      LayoutStartup();
+    }
+
+    public override void Dispose()
+    {
+      base.Dispose();
+      components.Dispose();
+    }
+
+    private void InitializeComponent()
+    {
+      this.components = new System.ComponentModel.Container();
+
+      // XXX read these from a settings file
+      this.Width = 640;
+      this.Height = 480;
+      
+      this.Text = "Manticore"; // XXX localize
+
+      menuBuilder = new BrowserMenuBuilder("browser\\browser-menu.xml", this);
+      menuBuilder.Build();
+      this.Menu = menuBuilder.mainMenu;
+
+      // Show the resize handle
+      this.SizeGripStyle = SizeGripStyle.Auto;
+
+      webBrowser = new WebBrowser();
+      this.Controls.Add(webBrowser);
+
+      // Set up the Status Bar
+      statusBar = new StatusBar();
+      
+      StatusBarPanel docStatePanel = new StatusBarPanel();
+      StatusBarPanel statusPanel = new StatusBarPanel();
+      StatusBarPanel progressPanel = new StatusBarPanel();
+      StatusBarPanel zonePanel = new StatusBarPanel();
+
+      docStatePanel.Text = "X";
+      progressPanel.Text = "[|||||     ]";
+      zonePanel.Text = "Internet Region";
+      statusPanel.Text = "Document Done";
+      statusPanel.AutoSize = StatusBarPanelAutoSize.Spring;
+      
+      statusBar.Panels.AddRange(new StatusBarPanel[] {docStatePanel, statusPanel, progressPanel, zonePanel});
+      statusBar.ShowPanels = true;
+
+      this.Controls.Add(statusBar);
+    }
+
+    private void LayoutStartup()
+    {
+      // XXX - add a pref to control this, blank, or last page visited.
+      // Visit the homepage
+      String homepageURL = "http://www.silverstone.net.nz/";
+      webBrowser.LoadURL(homepageURL, false);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Menu Command Handlers
+    public void OpenNewBrowser()
+    {
+      application.OpenNewBrowser();
+    }
+
+    public void Open()
+    {
+      OpenDialog dlg = new OpenDialog(0);
+      if (dlg.ShowDialog() == DialogResult.OK)
+        Console.WriteLine(dlg.URL);
+    }
+  }
+
+  public class BrowserMenuBuilder : MenuBuilder
+  {
+    private BrowserWindow browserWindow;
+
+    public BrowserMenuBuilder(String file, BrowserWindow window) : base(file)
+    {
+      browserWindow = window;
+    }
+
+    public override void OnCommand(Object sender, EventArgs e)
+    {
+      CommandMenuItem menuitem = (CommandMenuItem) sender;
+      Console.WriteLine(menuitem.Command);
+      switch (menuitem.Command) {
+      case "file-new-window":
+        browserWindow.OpenNewBrowser();
+        break;
+      case "file-open":
+        browserWindow.Open();
+        break;
+      case "help-about":
+        AboutDialog dlg = new AboutDialog(browserWindow);
+        break;
+      }
+    }
+  }
+}
+
+
