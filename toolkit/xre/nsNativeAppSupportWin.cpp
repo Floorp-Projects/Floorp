@@ -76,6 +76,7 @@
 #include "nsIJSContextStack.h"
 #include "nsIWebNavigation.h"
 #include "nsIWindowMediator.h"
+#include "nsNativeCharsetUtils.h"
 
 #include <windows.h>
 #include <shellapi.h>
@@ -1090,12 +1091,15 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                         nsCAutoString   outpt( NS_LITERAL_CSTRING("\"") );
                         // Now copy the URL converting the Unicode string
                         // to a single-byte ASCII string
-                        outpt.Append( NS_LossyConvertUCS2toASCII( url ) );
+                        nsCAutoString tmpNativeStr;
+                        NS_CopyUnicodeToNative( url, tmpNativeStr );
+                        outpt.Append( tmpNativeStr );
                         // Add the "," used to separate the URL and the page
                         // title
                         outpt.Append( NS_LITERAL_CSTRING("\",\"") );
                         // Now copy the current page title to the return string
-                        outpt.Append( NS_LossyConvertUCS2toASCII( title.get() ));
+                        NS_CopyUnicodeToNative( title, tmpNativeStr );
+                        outpt.Append( tmpNativeStr );
                         // Fill out the return string with the remainin ",""
                         outpt.Append( NS_LITERAL_CSTRING( "\",\"\"" ));
 
