@@ -1298,25 +1298,8 @@ release-sgi-export: $(XFE_PROGNAME)-sgi-export $(COMMON_REL_DEPS)
 release-sgi-france: $(XFE_PROGNAME)-sgi-france $(COMMON_REL_DEPS)
 	./make-release $(OBJDIR) $(XFE_PROGNAME) Netscape "S" sgi-france $(GUESS_CONFIG) $(NEED_YP_VERSION) "$(MCS_CMD)" $(NEED_NLS) "$(EXTRA_REL_FILES)" $(README_FILE)
 
-#######################################################################
-# Java Jar File
-#
-# The definative shipping JAR files are now made in the win32 build
-# this is just for developers
-
-zips: $(JAR_NAME)
-
-$(XPDIST)/classes/$(JAR_NAME): $(BUILD_NUMBER) Makefile $(ALL_CLASS_DEPS)
-	@rm -rf $@
-	@echo "Building `basename $@`"
-	cd $(XPDIST)/classes;					\
-	if test ! -d META-INF; then mkdir META-INF; fi;		\
-	for d in $(MOZILLA_ZIP); do				\
-		files=`find $$d \( -name '*.class' -o -name '*.gif' -o -name '*.props' -o -name '*.mf' -o -name '*.sf' -o -name '*.rsa' -o -name '*.properties*' \) -print`;			\
-		if test -n $${files:-''}; then $(ZIP) $@ $$files ; fi;	\
-	done;							\
-
-$(JAR_NAME): $(XPDIST)/classes/$(JAR_NAME)
+# skip java50.jar building
+java50.jar:
 
 #
 # symbols.gts for Irix, used by gtscc driver. The file needs to
