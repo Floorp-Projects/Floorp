@@ -67,6 +67,9 @@ function Init()
     // If it's a folder, it has no URL.
     dump("disabling url field for folder\n");
     document.getElementById("url").disabled = true;
+    // If it's a folder, it has no Shortcut URL.
+    dump("disabling shortcut url field for folder\n");
+    document.getElementById("shortcut").disabled = true;
   }
 }
 
