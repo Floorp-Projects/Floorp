@@ -412,7 +412,21 @@ nsHttpChannel::SetupTransaction()
         mRequestHead.SetVersion(nsHttpHandler::get()->HttpVersion());
     }
     else {
-        requestURI = mSpec.get();
+        rv = mURI->GetUserPass(buf);
+        if (NS_FAILED(rv)) return rv;
+        if (!buf.IsEmpty() && ((strncmp(mSpec.get(), "http:", 5) == 0) ||
+                                strncmp(mSpec.get(), "https:", 6) == 0)) {
+            nsCOMPtr<nsIURI> tempURI;
+            rv = mURI->Clone(getter_AddRefs(tempURI));
+            if (NS_FAILED(rv)) return rv;
+            rv = tempURI->SetUserPass(nsCString());
+            if (NS_FAILED(rv)) return rv;
+            rv = tempURI->GetAsciiSpec(path);
+            if (NS_FAILED(rv)) return rv;
+            requestURI = path.get();
+        }
+        else
+            requestURI = mSpec.get();
         mRequestHead.SetVersion(nsHttpHandler::get()->ProxyHttpVersion());
     }
 
