@@ -1231,6 +1231,9 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
   if (!aAttributes)
     return;
 
+  nsCompatibility mode;
+  aData->mPresContext->GetCompatibilityMode(&mode);
+
   if (aData->mSID == eStyleStruct_TableBorder && aData->mTableData) {
     const nsStyleDisplay* readDisplay = (nsStyleDisplay*)
                   aData->mStyleContext->GetStyleData(eStyleStruct_Display);
@@ -1243,6 +1246,13 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
           aData->mTableData->mBorderSpacingX.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
         if (aData->mTableData->mBorderSpacingY.GetUnit() == eCSSUnit_Null)
           aData->mTableData->mBorderSpacingY.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+      }
+      else if ((value.GetUnit() == eHTMLUnit_Percent) && (eCompatibility_NavQuirks == mode)) {
+        // in quirks mode, treat a % cellspacing value a pixel value.
+        if (aData->mTableData->mBorderSpacingX.GetUnit() == eCSSUnit_Null)
+          aData->mTableData->mBorderSpacingX.SetFloatValue(100.0f * value.GetPercentValue(), eCSSUnit_Pixel);
+        if (aData->mTableData->mBorderSpacingY.GetUnit() == eCSSUnit_Null)
+          aData->mTableData->mBorderSpacingY.SetFloatValue(100.0f * value.GetPercentValue(), eCSSUnit_Pixel);
       }
     }
   }
@@ -1300,8 +1310,6 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
       // hspace is mapped into left and right margin, 
       // vspace is mapped into top and bottom margins
       // - *** Quirks Mode only ***
-      nsCompatibility mode;
-      aData->mPresContext->GetCompatibilityMode(&mode);
       if (eCompatibility_NavQuirks == mode) {
         aAttributes->GetAttribute(nsHTMLAtoms::hspace, value);
 
@@ -1339,9 +1347,17 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
         nsCSSValue padVal;
         if (value.GetUnit() == eHTMLUnit_Pixel)
           padVal.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
-        else
-          padVal.SetPercentValue(value.GetPercentValue());
-
+        else {
+          // when we support % cellpadding in standard mode, uncomment the following
+          float pctVal = value.GetPercentValue();
+          //if (eCompatibility_NavQuirks == mode) {
+            // in quirks mode treat a pct cellpadding value as a pixel value
+            padVal.SetFloatValue(100.0f * pctVal, eCSSUnit_Pixel);
+          //}
+          //else {
+          //  padVal.SetPercentValue(pctVal);
+          //}
+        }
         if (aData->mMarginData->mPadding->mLeft.GetUnit() == eCSSUnit_Null)
           aData->mMarginData->mPadding->mLeft = padVal;
         if (aData->mMarginData->mPadding->mRight.GetUnit() == eCSSUnit_Null)
@@ -1408,8 +1424,6 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
         if (aData->mMarginData->mBorderWidth->mBottom.GetUnit() == eCSSUnit_Null)
           aData->mMarginData->mBorderWidth->mBottom.SetFloatValue(1.0f, eCSSUnit_Pixel);
 
-        nsCompatibility mode;
-        aData->mPresContext->GetCompatibilityMode(&mode);
         PRUint8 borderStyle = (eCompatibility_NavQuirks == mode) 
                               ? NS_STYLE_BORDER_STYLE_BG_INSET : NS_STYLE_BORDER_STYLE_INSET;
           // BG_INSET results in a border color based on background colors
@@ -1432,9 +1446,6 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
       // ancestor that has a non-transparent
       // background. NS_STYLE_BORDER_OUTSET uses the border color of
       // the table and if that is not set, then it uses the color.
-
-      nsCompatibility mode;
-      aData->mPresContext->GetCompatibilityMode(&mode);
 
       PRUint8 borderStyle = (eCompatibility_NavQuirks == mode) 
                             ? NS_STYLE_BORDER_STYLE_BG_OUTSET :
