@@ -145,6 +145,3 @@ clobber::
 	rm -f nsSetupRegistry.cpp
 	rm -f runem.bat
 
-
-edburns:
-	echo $(LLIBS)

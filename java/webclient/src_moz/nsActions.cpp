@@ -38,8 +38,11 @@
 #include "nsISHEntry.h"
 #include "nsIURI.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIWebNavigation.h"
 
 #include "ns_util.h"
+
+#include "nsEmbedAPI.h"  // for NS_TermEmbedding
 
 void *          handleEvent     (PLEvent * event);
 void            destroyEvent    (PLEvent * event);
@@ -135,7 +138,7 @@ void *
 wsLoadURLEvent::handleEvent ()
 {
   if (mWebNavigation && mURL) {
-    nsresult rv = mWebNavigation->LoadURI(mURL->GetUnicode());
+      nsresult rv = mWebNavigation->LoadURI(mURL->GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
   }
   return nsnull;
 } // handleEvent()
@@ -743,7 +746,7 @@ wsDeallocateInitContextEvent::handleEvent ()
     util_DeallocateShareInitContext(&(mInitContext->shareContext));
 
     //  delete mInitContext;
-        
+    NS_TermEmbedding();
     return (void *) NS_OK;
 } // handleEvent()
 

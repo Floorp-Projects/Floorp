@@ -86,7 +86,7 @@ NS_IMPL_ADDREF(CBrowserContainer)
 NS_IMPL_RELEASE(CBrowserContainer)
 
 NS_INTERFACE_MAP_BEGIN(CBrowserContainer)
-  //  	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
 	NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 	NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
 	NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
@@ -108,15 +108,9 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP CBrowserContainer::GetInterface(const nsIID & uuid, void * *result)
 {
-	const nsIID &iid = NS_GET_IID(nsIPrompt);
-	if (memcmp(&uuid, &iid, sizeof(nsIID)) == 0)
-	{
-		*result = (nsIPrompt *) this;
-		AddRef();
-		return NS_OK;
-	}
-    return NS_ERROR_FAILURE;
+    return QueryInterface(uuid, result);
 }
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1383,5 +1377,4 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
 // 
 // Local functions
 //
-
 
