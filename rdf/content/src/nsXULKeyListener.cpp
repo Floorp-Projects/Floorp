@@ -130,7 +130,8 @@ nsXULKeyListenerImpl::QueryInterface(REFNSIID iid, void** result)
         return NS_ERROR_NULL_POINTER;
 
     *result = nsnull;
-    if (iid.Equals(nsIXULKeyListener::GetIID())) {
+    if (iid.Equals(nsIXULKeyListener::GetIID()) ||
+        iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIXULKeyListener*, this);
         NS_ADDREF_THIS();
         return NS_OK;
