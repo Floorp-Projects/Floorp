@@ -70,9 +70,9 @@
         <separator/>
         <hbox>
           <vbox flex="1" id="managebuttons">
-            <button id="newbutton" label="&newButton.label;" oncommand="CreateProfileWizard();"/>
-            <button id="renbutton" label="&renameButton.label;" oncommand="RenameProfile();"/>
-            <button id="delbutton" label="&deleteButton.label;" oncommand="ConfirmDelete();"/>
+            <button id="newbutton" label="&newButton.label;" accesskey="&newButton.accesskey;" oncommand="CreateProfileWizard();"/>
+            <button id="renbutton" label="&renameButton.label;" accesskey="&renameButton.accesskey;" oncommand="RenameProfile();"/>
+            <button id="delbutton" label="&deleteButton.label;" accesskey="&deleteButton.accesskey;" oncommand="ConfirmDelete();"/>
           </vbox>
           <spacer flex="2"/>
         </hbox>
@@ -99,7 +99,7 @@
   
   <hbox class="selection">
     <separator class="thin" orient="vertical"/>
-    <button id="manage" label="&manage.label;" oncommand="SwitchProfileManagerMode();"/>
+    <button id="manage" label="&manage.label;" accesskey="&manage.accesskey;" oncommand="SwitchProfileManagerMode();"/>
     <spacer flex="1"/>
     <hbox id="okCancelButtons"/>
     <separator class="thin" orient="vertical"/>

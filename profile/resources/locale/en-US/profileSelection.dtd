@@ -30,21 +30,21 @@
 
 <!ENTITY            profilename.label     "Profile Name:">
 
-<!ENTITY            workoffline.label     "Work Offline">
-
 <!ENTITY            password.label        "Password:">
-
-<!ENTITY            manageprofiles.label  "Manage Profiles">
 
 <!ENTITY            start.label           "Start &vendorShortName;">
 <!ENTITY            exit.label            "Exit">
 <!ENTITY            manage.label          "Manage Profiles...">
+<!ENTITY            manage.accesskey      "M">
 
 <!ENTITY            availprofiles.label   "Available Profiles">
 
 <!ENTITY            deleteButton.label    "Delete Profile...">
+<!ENTITY            deleteButton.accesskey "D">
 <!ENTITY            renameButton.label    "Rename Profile...">
+<!ENTITY            renameButton.accesskey "R">
 <!ENTITY            newButton.label       "Create Profile...">
+<!ENTITY            newButton.accesskey   "C">
 
 <!-- manager entities -->
 <!ENTITY            pmTextA.label         "&brandShortName; stores information about your settings, preferences, bookmarks, stored messages and other user items in your user profile.">
@@ -52,8 +52,8 @@
 <!ENTITY            pmTextB.label         "Indicates a profile created with a previous version of Netscape. These profiles must be copied and converted before they can be loaded with &brandShortName;. This is an automated process.">
 
 
-<!ENTITY            offlineState.label    "Work Offline">
+<!ENTITY            offlineState.label    "Work offline">
 <!ENTITY            offlineState.accesskey "o">
 
-<!ENTITY            autoSelectLastProfile.label    "Don't Ask at Startup">
+<!ENTITY            autoSelectLastProfile.label    "Don't ask at startup">
 <!ENTITY            autoSelectLastProfile.accesskey "s">
