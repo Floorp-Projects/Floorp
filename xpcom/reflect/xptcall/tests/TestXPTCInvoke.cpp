@@ -44,7 +44,7 @@
 #include "xptcall.h"
 #include "prlong.h"
 #include "prinrval.h"
-
+#include "nsMemory.h"
 
 // forward declration
 static void DoMultipleInheritenceTest();
@@ -232,7 +232,11 @@ InvokeTestTarget::AddManyManyFloats(float p1, float p2, float p3, float p4,
 NS_IMETHODIMP
 InvokeTestTarget::PassTwoStrings(const char* s1, const char* s2, char** retval)
 {
-    char *ret = "milk";
+    const char milk[] = "milk";
+    char *ret = (char*)nsMemory::Alloc(sizeof(milk));
+    if (!ret)
+      return NS_ERROR_OUT_OF_MEMORY;
+    strncpy(ret, milk, sizeof(milk));
     printf("\t%s %s", s1, s2);
     *retval = ret;
     return NS_OK;
@@ -305,9 +309,10 @@ int main()
     else
         printf("\tFAILED");
 
-    if(NS_SUCCEEDED(test->PassTwoStrings("moo","cow",&outS)))
+    if(NS_SUCCEEDED(test->PassTwoStrings("moo","cow",&outS))) {
         printf(" = %s\n", outS);
-    else
+        nsMemory::Free(outS);
+    } else
         printf("\tFAILED");
 
 
@@ -714,11 +719,11 @@ public:
     FooImpl();
     virtual ~FooImpl();
 
-    virtual char* ImplName() = 0;
+    virtual const char* ImplName() = 0;
 
     int SomeData1;
     int SomeData2;
-    char* Name;
+    const char* Name;
 };
 
 class BarImpl : public nsIBar
@@ -730,11 +735,11 @@ public:
     BarImpl();
     virtual ~BarImpl();
 
-    virtual char * ImplName() = 0;
+    virtual const char * ImplName() = 0;
 
     int SomeData1;
     int SomeData2;
-    char* Name;
+    const char* Name;
 };
 
 /***************************/
@@ -790,11 +795,11 @@ class FooBarImpl : public FooImpl, public BarImpl
 public:
     NS_DECL_ISUPPORTS
 
-    char* ImplName();
+    const char* ImplName();
 
     FooBarImpl();
     virtual ~FooBarImpl();
-    char* MyName;
+    const char* MyName;
 };
 
 FooBarImpl::FooBarImpl() : MyName("FooBarImpl")
@@ -806,7 +811,7 @@ FooBarImpl::~FooBarImpl()
 {
 }
 
-char* FooBarImpl::ImplName()
+const char* FooBarImpl::ImplName()
 {
     return MyName;
 }
