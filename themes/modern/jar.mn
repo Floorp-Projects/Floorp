@@ -44,6 +44,7 @@ modern.jar:
     skin/modern/communicator/pt-grippy-btm-active.gif                 (communicator/pt-grippy-btm-active.gif)
     skin/modern/communicator/pt-grippy-top.gif                        (communicator/pt-grippy-top.gif)
     skin/modern/communicator/pt-grippy-top-active.gif                 (communicator/pt-grippy-top-active.gif)
+    skin/modern/communicator/pt-separator.gif                         (communicator/pt-separator.gif)
     skin/modern/editor/EdImageMap.css                                 (editor/EdImageMap.css)
     skin/modern/editor/EdImageMapPage.css                             (editor/EdImageMapPage.css)
     skin/modern/editor/EditorDialog.css                               (editor/EditorDialog.css)

@@ -96,4 +96,10 @@ toolbargrippy[tbgrippy-collapsed="true"]:hover:active > .toolbargrippy-collapsed
     border-style          :inset;
   }
 
-
+toolbarseparator
+  { 
+    width                 : 1px;
+    border-left           : 1px solid #425973;
+    border-right          : 1px solid #92ABC9;
+    margin                : 2px 0.2em 2px 0.2em;
+  } 

@@ -5,6 +5,11 @@
 @import url(chrome://communicator/skin/bookmarks/bookmarks.css);
 @import url(chrome://communicator/skin/sidebar/sidebar.css);
 
+#navigator-throbber
+  {
+    margin-top            : 0px;
+  }    
+
 #sidebar-parent 
   {
 	  margin-right          : 2px;
@@ -256,11 +261,6 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 	list-style-image          : url("chrome://navigator/skin/urlbar-right.gif");
 	width                             : 4px;                                
 	height                            : 18px;                               
-  }
-
-#urlbar
-  {
-    -moz-binding		  : url(chrome://global/content/xulBindings.xml#textfield);
   }
 
 #page-proxy-button 

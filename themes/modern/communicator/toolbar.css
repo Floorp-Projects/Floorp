@@ -88,11 +88,12 @@
     border                : none;
   }
 
-.toolbarseparator-standard
-  { 
-    width                 : 1px;
-    border-left           : 1px solid #425973;
-    border-right          : 1px solid #92ABC9;
-    margin                : 2px 0.2em 2px 0.2em;
-  } 
-
+.toolbarseparator-primary
+ {
+   margin: 0px;
+   margin-top: 9px;
+   width: 4px;
+   height: 29px;
+   background: url("chrome://communicator/skin/pt-separator.gif") no-repeat;
+   border: none;
+ }
