@@ -41,6 +41,7 @@
 
 interface nsIURI;
 interface nsIFile;
+interface nsIPrompt;
 
 /**
  * The external protocol service is used for finding and launching
@@ -79,6 +80,15 @@ interface nsIExternalProtocolService : nsISupports
   void loadUrl (in nsIURI aURL);
 
   /**
+   * Used to load a URI via an external application. Might prompt the user for
+   * permission to load the external application. Replaces loadUrl()
+   *
+   * @param aURI    The URI to load
+   * @param aPrompt If null we grab one from windowwatcher if we need it
+   */
+  void loadURI(in nsIURI aURI, in nsIPrompt aPrompt);
+
+  /**
    * Gets a human-readable description for the application responsible for
    * handling a specific protocol.
    *
@@ -91,4 +101,4 @@ interface nsIExternalProtocolService : nsISupports
    *        possible to get a description for it.
    */
   AString getApplicationDescription(in AUTF8String aScheme);
-}; 
+};

@@ -436,10 +436,15 @@ pref("image.animation_mode",                "normal");
 // prevents necko connecting to ports 1-5 unless the protocol
 // overrides.
 
+// Default action for unlisted external protocol handlers
+pref("network.protocol-handler.external-default", true);      // OK to load
+pref("network.protocol-handler.warn-external-default", true); // warn before load
+
 // Prevent using external protocol handlers for these schemes
 pref("network.protocol-handler.external.hcp", false);
 pref("network.protocol-handler.external.vbscript", false);
 pref("network.protocol-handler.external.javascript", false);
+pref("network.protocol-handler.external.data", false);
 pref("network.protocol-handler.external.ms-help", false);
 pref("network.protocol-handler.external.shell", false);
 pref("network.protocol-handler.external.vnd.ms.radio", false);
@@ -447,10 +452,6 @@ pref("network.protocol-handler.external.help", false);
 pref("network.protocol-handler.external.disk", false);
 pref("network.protocol-handler.external.disks", false);
 pref("network.protocol-handler.external.afp", false);
-
-// Default action for unlisted external protocol handlers
-// 0 == never load, 1 == always load, 2 == ask the user
-pref("network.protocol-handler.external-default", 2);
 
 // An exposed protocol handler is one that can be used in all contexts.  A
 // non-exposed protocol handler is one that can only be used internally by the

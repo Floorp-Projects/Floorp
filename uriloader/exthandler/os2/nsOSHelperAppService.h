@@ -65,7 +65,7 @@ public:
 
   // override nsIExternalProtocolService methods
   NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
-  NS_IMETHOD LoadUrl(nsIURI * aURL);
+  nsresult LoadUriInternal(nsIURI * aURL);
 
 protected:
   already_AddRefed<nsMIMEInfoOS2> GetFromType(const nsCString& aMimeType);

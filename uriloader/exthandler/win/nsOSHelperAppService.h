@@ -59,7 +59,7 @@ public:
 
   // override nsIExternalProtocolService methods
   NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
-  NS_IMETHOD LoadUrl(nsIURI * aURL);
+  nsresult LoadUriInternal(nsIURI * aURL);
   NS_IMETHOD GetApplicationDescription(const nsACString& aScheme, nsAString& _retval);
 
   // method overrides for windows registry look up steps....

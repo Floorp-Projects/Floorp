@@ -1258,7 +1258,7 @@ NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * a
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURI)
+nsresult nsOSHelperAppService::LoadUriInternal(nsIURI * aURI)
 {
   // Gets a string pref network.protocol-handler.app.<scheme>
   // and executes it

@@ -191,7 +191,6 @@ pref("privacy.popups.policy",               1);
 pref("privacy.popups.usecustom",            true);
 pref("privacy.popups.firstTime",            true);
 
-pref("network.protocols.useSystemDefaults", false); // set to true if user links should use system default handlers
 pref("network.cookie.cookieBehavior",       0); // cookies enabled
 pref("network.cookie.enableForCurrentSessionOnly", false);
 
@@ -240,8 +239,16 @@ pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
 pref("signon.SignonFileName", "signons.txt");
 
+// We want to make sure mail URLs are handled externally...
 pref("network.protocol-handler.external.mailto", true); // for mail
-pref("network.protocol-handler.external.news" , true); // for news 
+pref("network.protocol-handler.external.news", true);   // for news
+pref("network.protocol-handler.external.snews", true);  // for secure news
+pref("network.protocol-handler.external.nntp", true);   // also news
+// ...without warning dialogs
+pref("network.protocol-handler.warn-external.mailto", false);
+pref("network.protocol-handler.warn-external.news", false);
+pref("network.protocol-handler.warn-external.snews", false);
+pref("network.protocol-handler.warn-external.nntp", false);
 
 // By default, all protocol handlers are exposed.  This means that
 // the browser will respond to openURL commands for all URL types.
@@ -249,6 +256,9 @@ pref("network.protocol-handler.external.news" , true); // for news
 // failing over to the system handlers.
 pref("network.protocol-handler.expose-all", true);
 pref("network.protocol-handler.expose.mailto", false);
+pref("network.protocol-handler.expose.news", false);
+pref("network.protocol-handler.expose.snews", false);
+pref("network.protocol-handler.expose.nntp", false);
 
 // Default security warning dialogs to show once.
 pref("security.warn_entering_secure.show_once", true);
