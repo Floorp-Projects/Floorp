@@ -50,11 +50,8 @@
 #include "nsMsgLocalCID.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIMsgLocalMailFolder.h"
-#include "nsIChromeRegistry.h" 
-#include "nsIDirectoryService.h"
-#include "nsAppDirectoryServiceDefs.h"
-
-static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
+#include "nsIMsgMailSession.h"
+#include "nsMsgBaseCID.h"
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsNoIncomingServer,
                             nsMsgIncomingServer,
@@ -108,48 +105,14 @@ NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDi
     PRBool exists;
 	if (!folderNameOnDisk || !parentDir) return NS_ERROR_NULL_POINTER;
 
-	nsCOMPtr<nsIFile> defaultMessagesFile;
-	rv = NS_GetSpecialDirectory(NS_APP_DEFAULTS_50_DIR, getter_AddRefs(defaultMessagesFile));
-	if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-	// bin/defaults better exist
-    rv = defaultMessagesFile->Exists(&exists);
-	if (NS_FAILED(rv)) return rv;
-	if (!exists) return NS_ERROR_FAILURE;
-
-	// bin/defaults/messenger doesn't have to exist
-    // if not, return.
-	rv = defaultMessagesFile->Append("messenger");
-	if (NS_FAILED(rv)) return rv;
-    rv = defaultMessagesFile->Exists(&exists);
-	if (NS_FAILED(rv)) return rv;
-	if (!exists) return NS_OK;
-
-	// test if there is a locale provider
-	// this code stolen from nsMsgServiceProvider.cpp
-  nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    nsXPIDLString lc_name;
-    nsAutoString tmpstr(NS_LITERAL_STRING("global-region"));
-    rv = chromeRegistry->GetSelectedLocale(tmpstr.get(), getter_Copies(lc_name));
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoString localeStr(lc_name);
-      if (!localeStr.IsEmpty()) {
-        nsCOMPtr<nsIFile> tmpdataFilesDir;
-        rv = defaultMessagesFile->Clone(getter_AddRefs(tmpdataFilesDir));
-        NS_ENSURE_SUCCESS(rv,rv);
-        rv = tmpdataFilesDir->AppendUnicode(lc_name);
-        NS_ENSURE_SUCCESS(rv,rv);
-        rv = tmpdataFilesDir->Exists(&exists);
-        NS_ENSURE_SUCCESS(rv,rv);
-        if (exists && (const PRUnichar *)lc_name) {
-            // use locale provider instead
-            rv = defaultMessagesFile->AppendUnicode(lc_name);            
-  	        NS_ENSURE_SUCCESS(rv,rv);
-        }
-      }
-    }
-  }
+  // Get defaults directory for messenger files. MailSession service appends 'messenger' to the 
+  // the app defaults folder and returns it. Locale will be added to the path, if there is one.
+  nsCOMPtr<nsIFile> defaultMessagesFile;
+  rv = mailSession->GetDataFilesDir("messenger", getter_AddRefs(defaultMessagesFile));
+  NS_ENSURE_SUCCESS(rv,rv);
 
 	// check if bin/defaults/messenger/<folderNameOnDisk> 
 	// (or bin/defaults/messenger/<locale>/<folderNameOnDisk> if we had a locale provide) exists.

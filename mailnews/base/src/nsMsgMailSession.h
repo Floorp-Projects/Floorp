@@ -66,6 +66,8 @@ public:
     NS_DECL_NSIFOLDERLISTENER
 
 	nsresult Init();
+    nsresult GetSelectedLocaleDataDir(nsIFile *defaultsDir);
+
 protected:
   nsCOMPtr<nsISupportsArray> mListeners; 
   nsUInt32Array mListenerNotifyFlags;

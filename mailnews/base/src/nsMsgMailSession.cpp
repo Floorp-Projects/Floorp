@@ -46,6 +46,9 @@
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgAccountManager.h"
+#include "nsIChromeRegistry.h"
+#include "nsIDirectoryService.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 NS_IMPL_THREADSAFE_ADDREF(nsMsgMailSession)
 NS_IMPL_THREADSAFE_RELEASE(nsMsgMailSession)
@@ -450,5 +453,79 @@ nsMsgMailSession::ConvertMsgURIToMsgURL(const char *aURI, nsIMsgWindow *aMsgWind
     if (!(aURL))
       return NS_ERROR_NULL_POINTER;
   }
+  return rv;
+}
+
+//----------------------------------------------------------------------------------------
+// GetSelectedLocaleDataDir - If a locale is selected, appends the selected locale to the
+//                            defaults data dir and returns that new defaults data dir
+//----------------------------------------------------------------------------------------
+nsresult
+nsMsgMailSession::GetSelectedLocaleDataDir(nsIFile *defaultsDir)
+{                                                                               
+  NS_ENSURE_ARG_POINTER(defaultsDir);                                     
+
+  nsresult rv;                                                                
+  PRBool baseDirExists = PR_FALSE;                                            
+  rv = defaultsDir->Exists(&baseDirExists);                               
+  NS_ENSURE_SUCCESS(rv,rv);                                                   
+
+  if (baseDirExists) {                                                        
+    nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService("@mozilla.org/chrome/chrome-registry;1", &rv);
+    if (NS_SUCCEEDED(rv)) {                                                 
+      nsXPIDLString localeName;                                           
+      rv = chromeRegistry->GetSelectedLocale(NS_LITERAL_STRING("global-region").get(), getter_Copies(localeName));
+
+      if (NS_SUCCEEDED(rv) && !localeName.IsEmpty()) {
+        PRBool localeDirExists = PR_FALSE;                              
+        nsCOMPtr<nsIFile> localeDataDir;                                
+        
+        rv = defaultsDir->Clone(getter_AddRefs(localeDataDir));     
+        NS_ENSURE_SUCCESS(rv,rv);                                       
+
+        rv = localeDataDir->AppendUnicode(localeName);                  
+        NS_ENSURE_SUCCESS(rv,rv);                                       
+
+        rv = localeDataDir->Exists(&localeDirExists);                   
+        NS_ENSURE_SUCCESS(rv,rv);                                       
+
+        if (localeDirExists) {                                          
+          // use locale provider instead                              
+          rv = defaultsDir->AppendUnicode(localeName);            
+          NS_ENSURE_SUCCESS(rv,rv);                                   
+        }                                                               
+      }                                                                   
+    }                                                                       
+  }                                                                           
+  return NS_OK;                                                               
+} 
+
+//----------------------------------------------------------------------------------------
+// GetDataFilesDir - Gets the application's default folder and then appends the 
+//                   subdirectory named passed in as param dirName. If there is a seleccted
+//                   locale, will append that to the dir path before returning the value
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMsgMailSession::GetDataFilesDir(const char* dirName, nsIFile **dataFilesDir)
+{                                                                                                                                                    
+  NS_ENSURE_ARG_POINTER(dataFilesDir);
+
+  nsresult rv;
+  nsCOMPtr<nsIProperties> directoryService = 
+    do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIFile> defaultsDir;
+  rv = directoryService->Get(NS_APP_DEFAULTS_50_DIR, 
+                             NS_GET_IID(nsIFile), 
+                             getter_AddRefs(defaultsDir));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = defaultsDir->Append(dirName);
+  if (NS_SUCCEEDED(rv))
+    rv = GetSelectedLocaleDataDir(defaultsDir);
+
+  NS_IF_ADDREF(*dataFilesDir = defaultsDir);
+
   return rv;
 }

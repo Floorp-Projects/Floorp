@@ -45,16 +45,15 @@
 #include "nsIRDFService.h"
 #include "nsIRDFRemoteDataSource.h"
 
-#include "nsIChromeRegistry.h" // for chrome registry
 #include "nsIFileChannel.h"
 #include "nsIFileSpec.h"
-#include "nsAppDirectoryServiceDefs.h"
 #include "nsNetUtil.h"
+#include "nsIMsgMailSession.h"
+#include "nsMsgBaseCID.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
-static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
 
 nsMsgServiceProviderService::nsMsgServiceProviderService()
 {
@@ -79,11 +78,13 @@ nsMsgServiceProviderService::Init()
   mInnerDataSource = do_CreateInstance(kRDFCompositeDataSourceCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIFile> dataFilesDir;
-  rv = NS_GetSpecialDirectory(NS_APP_DEFAULTS_50_DIR, getter_AddRefs(dataFilesDir));
-  NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = dataFilesDir->Append("isp");
+  // Get defaults directory for isp files. MailSession service appends 'isp' to the 
+  // the app defaults folder and returns it. Locale will be added to the path, if there is one.
+  nsCOMPtr<nsIFile> dataFilesDir;
+  rv = mailSession->GetDataFilesDir("isp", getter_AddRefs(dataFilesDir));
   NS_ENSURE_SUCCESS(rv,rv);
 
   // test if there is a locale provider
@@ -91,27 +92,6 @@ nsMsgServiceProviderService::Init()
   rv = dataFilesDir->Exists(&isexists);
   NS_ENSURE_SUCCESS(rv,rv);
   if (isexists) {    
-    nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      nsXPIDLString lc_name;
-      rv = chromeRegistry->GetSelectedLocale(NS_LITERAL_STRING("global-region").get(), getter_Copies(lc_name));
-      if (NS_SUCCEEDED(rv) && (const PRUnichar *)lc_name && nsCRT::strlen((const PRUnichar *)lc_name)) {
-
-          nsCOMPtr<nsIFile> tmpdataFilesDir;
-          rv = dataFilesDir->Clone(getter_AddRefs(tmpdataFilesDir));
-          NS_ENSURE_SUCCESS(rv,rv);
-          rv = tmpdataFilesDir->AppendUnicode(lc_name);
-          NS_ENSURE_SUCCESS(rv,rv);
-          rv = tmpdataFilesDir->Exists(&isexists);
-          NS_ENSURE_SUCCESS(rv,rv);
-          if (isexists) {
-            // use locale provider instead
-            rv = dataFilesDir->AppendUnicode(lc_name);            
-            NS_ENSURE_SUCCESS(rv,rv);
-          }
-       }
-    }
-      
     // now enumerate every file in the directory, and suck it into the datasource
     PRBool hasMore = PR_FALSE;
     nsCOMPtr<nsISimpleEnumerator> dirIterator;

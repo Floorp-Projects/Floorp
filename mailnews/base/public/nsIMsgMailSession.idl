@@ -53,6 +53,7 @@
 #include "nsIAtom.idl"
 
 interface nsIMsgWindow;
+interface nsIFile;
 
 [scriptable, uuid(D5124440-D59E-11d2-806A-006008128C4E)]
 interface nsIMsgMailSession : nsISupports {
@@ -67,5 +68,6 @@ interface nsIMsgMailSession : nsISupports {
   boolean IsFolderOpenInWindow(in nsIMsgFolder folder);
 
   string ConvertMsgURIToMsgURL(in string  aURI, in nsIMsgWindow aMsgWindow);
+  nsIFile getDataFilesDir(in string dirName);
 };
 
