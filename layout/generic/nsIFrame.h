@@ -317,6 +317,20 @@ public:
                              PRInt32         aIndexInParent) = 0;
 
   /**
+   * This call is invoked when content is changed in the content tree.
+   * The first frame that maps that content is asked to deal with the
+   * change by generating an incremental reflow command which will be
+   * to reflow the frame tree.
+   *
+   * @param aIndexInParent the index in the content container where
+   *          the new content was deleted.
+   */
+  NS_IMETHOD  ContentChanged(nsIPresShell*   aShell,
+                             nsIPresContext* aPresContext,
+                             nsIContent*     aChild,
+                             nsISupports*    aSubContent) = 0;
+
+  /**
    * Return the reflow metrics for this frame. If the frame is a
    * container then the values for ascent and descent are computed
    * across the the various children in the appropriate manner
