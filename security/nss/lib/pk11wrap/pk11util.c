@@ -97,7 +97,7 @@ static char *dllnames[]= {
 	"Netscape Builtin Root Certs",
 	"Mozilla Builtin Root Certs",
 #else
-	#pragma error,"Uh! Oh! I don't know about this platform."
+	#error "Uh! Oh! I don't know about this platform."
 #endif
 	0 };
 	
