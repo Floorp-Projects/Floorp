@@ -46,7 +46,7 @@ nsButton::nsButton() : nsWidget() , nsIButton()
 NS_METHOD nsButton::CreateNative(GtkWidget *parentWindow)
 {
   mWidget = gtk_button_new_with_label("");
-
+  gtk_widget_set_name(mWidget, "nsButton");
   return NS_OK;
 }
 

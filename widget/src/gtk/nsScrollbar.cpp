@@ -56,7 +56,7 @@ NS_METHOD nsScrollbar::CreateNative(GtkWidget *parentWindow)
   } else {
     mWidget = gtk_vscrollbar_new(GTK_ADJUSTMENT(mAdjustment));
   }
-
+  gtk_widget_set_name(mWidget, "nsScrollbar");
   return NS_OK;
 }
 

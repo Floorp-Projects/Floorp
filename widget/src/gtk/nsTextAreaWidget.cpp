@@ -58,7 +58,7 @@ nsTextAreaWidget::~nsTextAreaWidget()
 NS_METHOD nsTextAreaWidget::CreateNative(GtkWidget *parentWindow)
 {
   mWidget = gtk_text_new(FALSE, FALSE);
-
+  gtk_widget_set_name(mWidget, "nsTextAreaWidget");
   gtk_editable_set_editable(GTK_EDITABLE(mWidget), mMakeReadOnly?PR_FALSE:PR_TRUE);
 
   return NS_OK;
@@ -66,10 +66,8 @@ NS_METHOD nsTextAreaWidget::CreateNative(GtkWidget *parentWindow)
 
 nsresult nsTextAreaWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-
   static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
   static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-
 
   if (aIID.Equals(kITextAreaWidgetIID)) {
       nsITextAreaWidget* textArea = this;

@@ -104,14 +104,14 @@ NS_METHOD nsListBox::SetMultipleSelection(PRBool aMultipleSelections)
 
 NS_METHOD nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 {
-  NS_ALLOC_STR_BUF(text, aItem, 256);
+  NS_ALLOC_STR_BUF(textc, aItem, 256);
 //  str = XmStringCreateLocalized(val);
+  gchar *text[2];
+  text[0] = textc;
+  gtk_clist_insert(GTK_CLIST(mCList), (int)aPosition, text);
+  gtk_clist_set_row_data(GTK_CLIST(mCList), (int)aPosition, aItem);
 
-  gtk_clist_insert(GTK_CLIST(mCList), (int)aPosition+1, NULL);
-  gtk_clist_set_text(GTK_CLIST(mCList), (int)aPosition+1, 0, text);
-  gtk_clist_set_row_data(GTK_CLIST(mCList), (int)aPosition+1, aItem);
-
-  NS_FREE_STR_BUF(text);
+  NS_FREE_STR_BUF(textc);
 
   return NS_OK;
 }
@@ -123,7 +123,7 @@ NS_METHOD nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRInt32  nsListBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 {
-  int index = gtk_clist_find_row_from_data(GTK_CLIST(mCList), aItem)-1;
+  int index = gtk_clist_find_row_from_data(GTK_CLIST(mCList), aItem);
 
   if (index < aStartPos) {
     index = -1;
@@ -149,7 +149,7 @@ PRInt32  nsListBox::GetItemCount()
 //-------------------------------------------------------------------------
 PRBool  nsListBox::RemoveItemAt(PRInt32 aPosition)
 {
-  gtk_clist_remove(GTK_CLIST(mCList), aPosition+1);
+  gtk_clist_remove(GTK_CLIST(mCList), aPosition);
 /*
   int count = 0;
   XtVaGetValues(mCList, XmNitemCount, &count, nsnull);
@@ -251,7 +251,7 @@ PRInt32 nsListBox::GetSelectedIndex()
 //-------------------------------------------------------------------------
 NS_METHOD nsListBox::SelectItem(PRInt32 aPosition)
 {
-  gtk_clist_select_row(GTK_CLIST(mCList), aPosition+1, 0);
+  gtk_clist_select_row(GTK_CLIST(mCList), aPosition, 0);
 /*
   int count = 0;
   XtVaGetValues(mCList,  XmNitemCount, &count, nsnull);
@@ -335,14 +335,16 @@ NS_METHOD nsListBox::CreateNative(GtkWidget *parentWindow)
 {
   // to handle scrolling
   mWidget = gtk_scrolled_window_new (NULL, NULL);
+  gtk_widget_set_name(mWidget, "nsListBox");
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (mWidget),
                                   GTK_POLICY_AUTOMATIC,
 				  GTK_POLICY_ALWAYS);
 
-  mCList = gtk_clist_new(1);
+  mCList = ::gtk_clist_new(1);
   gtk_clist_column_titles_hide(GTK_CLIST(mCList));
   // Default (it may be changed)
   gtk_clist_set_selection_mode(GTK_CLIST(mCList), GTK_SELECTION_BROWSE);
+  gtk_widget_show(mCList);
 
   gtk_container_add (GTK_CONTAINER (mWidget), mCList);
 

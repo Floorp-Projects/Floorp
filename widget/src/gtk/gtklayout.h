@@ -62,8 +62,6 @@ struct _GtkLayoutChild {
   GdkWindow *window;	/* For NO_WINDOW widgets */
   gint x;
   gint y;
-
-  GtkRequisition requisition;
 };
 
 struct _GtkLayout {
