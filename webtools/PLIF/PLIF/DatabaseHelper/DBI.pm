@@ -46,7 +46,8 @@ sub tableExists {
 sub columnExists {
     my $self = shift;
     my($app, $database, $table, $columnName) = @_;
-    my $columns = $database->execute('SHOW COLUMNS FROM ?', $table);
+    $self->assert($table !~ /`/o, 1, 'Internal error: An invalid table name was passed to columnExists (it contained "`" character)');
+    my $columns = $database->execute("SHOW COLUMNS FROM `$table`");
     while (my @columnDefinition = $columns->row) {
         if ($columnDefinition[0] eq $columnName) {
             return @columnDefinition;
