@@ -260,29 +260,29 @@ tree#attachmentBucket {
   font-style: italic;
 }
 
+
 /* askSendFormat dialog */
 
 #askSendFormat {
 	width: 40em;
 }
 
-#convertYes, #convertAltering, #convertNo {
-	border: 1px solid black;
+#askImageBox {
+        vertical-align: top;
 }
 
 #convertYes {
-	list-style-image:url("chrome://messenger/skin/messengercompose/sendConvYes.gif");
+	list-style-image:url("chrome://global/skin/question-icon.gif");
 }
 
 #convertAltering {
-	list-style-image:url("chrome://messenger/skin/messengercompose/sendConvAltering.gif");
+	list-style-image:url("chrome://global/skin/question-icon.gif");
 }
 
 #convertNo {
-	list-style-image:url("chrome://messenger/skin/messengercompose/sendConvNo.gif");
+	list-style-image:url("chrome://global/skin/alert-icon.gif");
 }
 
 #convertDefault {
-	border: 1px solid black;
-	list-style-image:url("chrome://messenger/skin/messengercompose/sendConvYes.gif");
+	list-style-image:url("chrome://global/skin/question-icon.gif");
 } /* Workaround for bug 50217. Please remove this rule, when this bug is fixed. */

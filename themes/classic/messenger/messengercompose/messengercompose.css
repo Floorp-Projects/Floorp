@@ -223,5 +223,31 @@
   {
     margin-left           : 0px;
     -moz-user-focus       : none;
-  }  
-  
+  }
+
+
+/* askSendFormat dialog */
+
+#askSendFormat {
+	width: 40em;
+}
+
+#askImageBox {
+        vertical-align: top;
+}
+
+#convertYes {
+	list-style-image:url("chrome://global/skin/question-icon.gif");
+}
+
+#convertAltering {
+	list-style-image:url("chrome://global/skin/question-icon.gif");
+}
+
+#convertNo {
+	list-style-image:url("chrome://global/skin/alert-icon.gif");
+}
+
+#convertDefault {
+	list-style-image:url("chrome://global/skin/question-icon.gif");
+} /* Workaround for bug 50217. Please remove this rule, when this bug is fixed. */

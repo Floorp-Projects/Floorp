@@ -23,7 +23,7 @@
     <spring style="height:0.5em"/>
     <box align="horizontal">
         <spring style="width:10px"/>
-        <box orient="vertical" valign="middle">
+        <box orient="vertical" id="askImageBox">
             <image id="convertDefault" />
         </box>
         <spring style="width:10px"/>
