@@ -16,7 +16,7 @@
   </script>
 
   <menupopup id="personalManagers">
-    <menuitem id="PSMMentItem" position="1" value="&PSMCmd.label;" oncommand="displaySecurityAdvisor()"/>
+    <menuitem id="PSMMenuItem" position="1" value="&PSMCmd.label;" accesskey="&PSMCmd.accesskey;" oncommand="displaySecurityAdvisor();"/>
   </menupopup>
 
 </overlay>
