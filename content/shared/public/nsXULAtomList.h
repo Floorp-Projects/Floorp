@@ -85,6 +85,7 @@ XUL_ATOM(popup, "popup") // The popup for a context menu, popup menu, or tooltip
 XUL_ATOM(menugenerated, "menugenerated") // Internal
 XUL_ATOM(popupanchor, "popupanchor") // Anchor for popups
 XUL_ATOM(popupalign, "popupalign") // Alignment for popups
+XUL_ATOM(ignorekeys, "ignorekeys") // Alignment for popups
 
 XUL_ATOM(key, "key") // A key element
 XUL_ATOM(broadcaster, "broadcaster") // A broadcaster

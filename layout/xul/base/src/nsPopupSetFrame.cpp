@@ -551,7 +551,17 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
     nsIFrame* activeChild = GetActiveChild();
     nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(activeChild);
     UpdateDismissalListener(childPopup);
+    
+    // First check and make sure this popup wants keyboard navigation
+  
+    // popupsetframe::mElementFrame
+    nsCOMPtr<nsIContent> content;
+    mElementFrame->GetContent(getter_AddRefs(content));
+    nsAutoString property;
+    content->GetAttribute(kNameSpaceID_None, nsXULAtoms::ignorekeys, property);
+    if (! property.EqualsWithConversion("true")) {
     childPopup->InstallKeyboardNavigator();
+  }
   }
   else {
     if (!OnDestroy())
