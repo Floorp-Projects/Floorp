@@ -55,8 +55,6 @@ EXPORTS = \
 	secoid.h \
 	secoidt.h \
 	secport.h \
-	secrng.h \
-	secrngt.h \
 	secerr.h \
 	watcomfx.h \
 	$(NULL)
