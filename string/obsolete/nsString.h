@@ -398,8 +398,9 @@ public:
    */
   nsCString& operator+=(const nsCString& aString){return Append(aString,aString.mLength);}
   nsCString& operator+=(const char* aCString) {return Append(aCString);}
-  nsCString& operator+=(PRUnichar aChar){return Append(aChar);}
-  nsCString& operator+=(char aChar){return Append(aChar);}
+  nsCString& operator+=(const PRUnichar aChar){return Append(aChar);}
+  nsCString& operator+=(const char aChar){return Append(aChar);}
+  nsCString& operator+=(const int anInt){return Append(anInt,10);}
 
   /*
    *  Appends n characters from given string to this,

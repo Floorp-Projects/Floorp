@@ -400,7 +400,7 @@ PRInt32 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool a
   PRInt32 result=0;
   if(aIgnoreCase)
     result=nsCRT::strncasecmp(aStr1,aStr2,aCount);
-  else result=strncmp(aStr1,aStr2,aCount);
+  else result=memcmp(aStr1,aStr2,aCount);
   return result;
 }
 
@@ -618,17 +618,16 @@ CaseConverters gCaseConverters[]={&ConvertCase1,&ConvertCase2};
  */
 PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){ 
 
-  typedef char  chartype;
-  chartype*  from = aString;
-  chartype*  end =  aString + aLength-1;
-  chartype*  to = from;
+  char*  from = aString;
+  char*  end =  aString + aLength-1;
+  char*  to = from;
 
     //this code converts /n, /t, /r into normal space ' ';
     //it also compresses runs of whitespace down to a single char...
   if(aSet && aString && (0 < aLength)){
     PRUint32 aSetLen=strlen(aSet);
     while (from <= end) {
-      chartype theChar = *from++;
+      char theChar = *from++;
       if(kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE)){
         *to++=theChar;
         while (from <= end) {
@@ -644,7 +643,7 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){
     }
     *to = 0;
   }
-  return to - (chartype*)aString;
+  return to - (char*)aString;
 }
 
 
@@ -661,18 +660,17 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){
  */
 PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet){ 
 
-  typedef PRUnichar  chartype;
-  chartype*  from = (chartype*)aString;
-  chartype*  end =  from + aLength-1;
-  chartype*  to = from;
+  PRUnichar*  from = (PRUnichar*)aString;
+  PRUnichar*  end =  from + aLength-1;
+  PRUnichar*  to = from;
 
     //this code converts /n, /t, /r into normal space ' ';
     //it also compresses runs of whitespace down to a single char...
   if(aSet && aString && (0 < aLength)){
     PRUint32 aSetLen=strlen(aSet);
     while (from <= end) {
-      chartype theChar = *from++;
-      if(kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE)){
+      PRUnichar theChar = *from++;
+      if((255<theChar) || (kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE))){
         *to++=theChar;
         while (from <= end) {
           theChar = *from++;
@@ -687,7 +685,7 @@ PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet){
     }
     *to = 0;
   }
-  return to - (chartype*)aString;
+  return to - (PRUnichar*)aString;
 }
 
 typedef PRInt32 (*CompressChars)(char* aString,PRUint32 aCount,const char* aSet);
@@ -706,22 +704,21 @@ CompressChars gCompressChars[]={&CompressChars1,&CompressChars2};
  */
 PRInt32 StripChars1(char* aString,PRUint32 aLength,const char* aSet){ 
 
-  typedef char  chartype;
-  chartype*  to   = aString;
-  chartype*  from = aString-1;
-  chartype*  end  = aString + aLength;
+  char*  to   = aString;
+  char*  from = aString-1;
+  char*  end  = aString + aLength;
 
   if(aSet && aString && (0 < aLength)){
     PRUint32 aSetLen=strlen(aSet);
     while (++from < end) {
-      chartype theChar = *from;
+      char theChar = *from;
       if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE)){
         *to++ = theChar;
       }
     }
     *to = 0;
   }
-  return to - (chartype*)aString;
+  return to - (char*)aString;
 }
 
 
@@ -738,22 +735,24 @@ PRInt32 StripChars1(char* aString,PRUint32 aLength,const char* aSet){
  */
 PRInt32 StripChars2(char* aString,PRUint32 aLength,const char* aSet){ 
 
-  typedef PRUnichar  chartype;
-  chartype*  to   = (chartype*)aString;
-  chartype*  from = (chartype*)aString-1;
-  chartype*  end  = to + aLength;
+  PRUnichar*  to   = (PRUnichar*)aString;
+  PRUnichar*  from = (PRUnichar*)aString-1;
+  PRUnichar*  end  = to + aLength;
 
   if(aSet && aString && (0 < aLength)){
     PRUint32 aSetLen=strlen(aSet);
     while (++from < end) {
-      chartype theChar = *from;
-      if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE)){
+      PRUnichar theChar = *from;
+      //Note the test for ascii range below. If you have a real unicode char, 
+      //and you're searching for chars in the (given) ascii string, there's no
+      //point in doing the real search since it's out of the ascii range.
+      if((255<theChar) || (kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE))){
         *to++ = theChar;
       }
     }
     *to = 0;
   }
-  return to - (chartype*)aString;
+  return to - (PRUnichar*)aString;
 }
 
 typedef PRInt32 (*StripChars)(char* aString,PRUint32 aCount,const char* aSet);

@@ -69,13 +69,13 @@ public:
    * This constructor accepts an isolatin string
    * @param   aCString is a ptr to a 1-byte cstr
    */
-  nsString(const char* aCString);
+  nsString(const char* aCString,PRInt32 aCount=-1);
 
   /**
    * This constructor accepts a unichar string
    * @param   aCString is a ptr to a 2-byte cstr
    */
-  nsString(const PRUnichar* aString);
+  nsString(const PRUnichar* aString,PRInt32 aCount=-1);
 
   /**
    * This is a copy constructor that accepts an nsStr
@@ -442,9 +442,10 @@ public:
   nsString& operator+=(const nsStr& aString){return Append(aString,aString.mLength);}
   nsString& operator+=(const nsString& aString){return Append(aString,aString.mLength);}
   nsString& operator+=(const char* aCString) {return Append(aCString);}
-  //nsString& operator+=(char aChar){return Append(aChar);}
+  nsString& operator+=(const char aChar) {return Append(PRUnichar(unsigned char(aChar)));}
   nsString& operator+=(const PRUnichar* aUCString) {return Append(aUCString);}
-  nsString& operator+=(PRUnichar aChar){return Append(aChar);}
+  nsString& operator+=(const PRUnichar aChar){return Append(aChar);}
+  nsString& operator+=(const int anInt){return Append(anInt,10);}
 
   /*
    *  Appends n characters from given string to this,

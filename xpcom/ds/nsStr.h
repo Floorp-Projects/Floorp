@@ -45,17 +45,26 @@
 /***********************************************************************
   ASSUMPTIONS:
 
-    1. nsStrings and nsAutoString are always null terminated. 
-    2. If you try to set a null char (via SetChar()) a new length is set
-    3. nsCStrings can be upsampled into nsString without data loss
-    4. Char searching is faster than string searching. Use char interfaces
+    1. nsStrings and nsAutoString are always null terminated. However,
+       since it maintains a length byte, you can store NULL's inside
+       the string. Just be careful passing such buffers to 3rd party
+       API's that assume that NULL always terminate the buffer.
+
+    2. nsCStrings can be upsampled into nsString without data loss
+
+    3. Char searching is faster than string searching. Use char interfaces
        if your needs will allow it.
-    5. It's easy to use the stack for nsAutostring buffer storage (fast too!).
+
+    4. It's easy to use the stack for nsAutostring buffer storage (fast too!).
        See the CBufDescriptor class in this file.
-    6. It's ONLY ok to provide non-null-terminated buffers to Append() and Insert()
-       provided you specify a 0<n value for the optional count argument.
-    7. Downsampling from nsString to nsCString is lossy -- avoid it if possible!
-    8. Calls to ToNewCString() and ToNewUnicode() should be matched with calls to Recycle().
+
+    5. If you don't provide the optional count argument to Append() and Insert(),
+       the method will assume that the given buffer is terminated by the first
+       NULL it encounters.
+
+    6. Downsampling from nsString to nsCString can be lossy -- avoid it if possible!
+
+    7. Calls to ToNewCString() and ToNewUnicode() should be matched with calls to Recycle().
 
  ***********************************************************************/
 
@@ -398,6 +407,8 @@ struct NS_COM nsStr {
   static PRInt32 RFindSubstr(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset);
   static PRInt32 RFindChar(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset);
   static PRInt32 RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset);
+
+  static PRBool   DidAcquireMemory(void);
 
 
   PRUint32        mLength;
