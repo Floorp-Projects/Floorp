@@ -867,16 +867,15 @@ nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITag
  *  @param   
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD) {
+nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
   
   nsresult result=NS_OK;
   if(mParserContext->mParserEnabled && !mParserContext->mParserTerminated) {
     result=WillBuildModel(mParserContext->mScanner->GetFilename(),aDefaultDTD);
     if(mParserContext->mDTD) {
       mParserContext->mDTD->WillResumeParse();
-      if(NS_OK==result) {
-     
-        result=Tokenize();
+      if(NS_OK==result) {     
+        result=Tokenize(aIsFinalChunk);
         result=BuildModel();
 
         if((!mParserContext->mMultipart) || (mParserContext->mParserTerminated) || 
@@ -1176,7 +1175,7 @@ nsresult nsParser::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar*
   if(mParserFilter)
      mParserFilter->Finish();
 
-  nsresult result=ResumeParse();
+  nsresult result=ResumeParse(nsnull, PR_TRUE);
   // If the parser isn't enabled, we don't finish parsing till
   // it is reenabled.
 
@@ -1216,9 +1215,13 @@ nsresult nsParser::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar*
  *  @param   
  *  @return  TRUE if it's ok to proceed
  */
-PRBool nsParser::WillTokenize(){
-  PRBool result=PR_TRUE;
-  return result;
+PRBool nsParser::WillTokenize(PRBool aIsFinalChunk){
+  nsresult rv = NS_OK;
+  nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
+  if (theTokenizer) {
+    rv = theTokenizer->WillTokenize(aIsFinalChunk);
+  }  
+  return rv;
 }
 
 
@@ -1230,7 +1233,7 @@ PRBool nsParser::WillTokenize(){
  *  @update  gess 01/04/99
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Tokenize(){
+nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
 
   nsresult result=NS_OK;
 
@@ -1238,7 +1241,7 @@ nsresult nsParser::Tokenize(){
 
   nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
   if(theTokenizer){
-    WillTokenize();
+    WillTokenize(aIsFinalChunk);
     while(NS_SUCCEEDED(result)) {
       mParserContext->mScanner->Mark();
       ++mMinorIteration;
@@ -1253,7 +1256,7 @@ nsresult nsParser::Tokenize(){
           mParserContext->mParserTerminated=PR_TRUE;
       }
     } 
-    DidTokenize();
+    DidTokenize(aIsFinalChunk);
   } 
   else{
     result=mInternalState=NS_ERROR_HTMLPARSER_BADTOKENIZER;
@@ -1270,21 +1273,22 @@ nsresult nsParser::Tokenize(){
  *  @param   
  *  @return  TRUE if all went well
  */
-PRBool nsParser::DidTokenize(){
+PRBool nsParser::DidTokenize(PRBool aIsFinalChunk){
   PRBool result=PR_TRUE;
 
-  if(mTokenObserver) {
-    nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
-    if(theTokenizer) {
+  nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
+  if (theTokenizer) {
+    result = theTokenizer->DidTokenize(aIsFinalChunk);
+    if(mTokenObserver) {
       PRInt32 theCount=theTokenizer->GetCount();
       PRInt32 theIndex;
       for(theIndex=0;theIndex<theCount;theIndex++){
         if((*mTokenObserver)(theTokenizer->GetTokenAt(theIndex))){
           //add code here to pull unwanted tokens out of the stack...
         }
-      }//for
+      }//for      
     }//if
-  }//if
+  }
   return result;
 }
 

@@ -215,6 +215,10 @@ CToken* nsHTMLTokenizer::GetTokenAt(PRInt32 anIndex){
   return (CToken*)mTokenDeque.ObjectAt(anIndex);
 }
 
+nsresult nsHTMLTokenizer::WillTokenize(PRBool aIsFinalChunk)
+{
+  return NS_OK;
+}
 
 /**
  * 
@@ -236,6 +240,10 @@ void nsHTMLTokenizer::PrependTokens(nsDeque& aDeque){
 
 }
 
+nsresult nsHTMLTokenizer::DidTokenize(PRBool aIsFinalChunk)
+{
+  return NS_OK;
+}
 
 /**
  *  This method repeatedly called by the tokenizer. 

@@ -55,7 +55,9 @@ public:
 
           NS_DECL_ISUPPORTS
 
+  virtual nsresult          WillTokenize(PRBool aIsFinalChunk);
   virtual nsresult          ConsumeToken(nsScanner& aScanner);
+  virtual nsresult          DidTokenize(PRBool aIsFinalChunk);
   virtual nsITokenRecycler* GetTokenRecycler(void);
 
   virtual CToken*           PushTokenFront(CToken* theToken);
