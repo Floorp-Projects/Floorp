@@ -170,6 +170,8 @@ optgroup {
   font: list;
   font-style: italic;
   font-weight: bold;
+  -moz-user-select: none;
+  -moz-user-focus: none;
 }
 
 optgroup > option {
