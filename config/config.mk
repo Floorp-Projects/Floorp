@@ -412,7 +412,11 @@ endif
 
 ifndef _ENABLE_PIC
 DSO_CFLAGS=
+ifeq ($(OS_ARCH)_$(HAVE_GCC3_ABI),Darwin_1)
+DSO_PIC_CFLAGS=-mdynamic-no-pic
+else
 DSO_PIC_CFLAGS=
+endif
 MKSHLIB=
 endif
 
