@@ -182,33 +182,27 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
 
   nsCOMPtr<nsISupports> quoteSupport = do_QueryInterface(this);
 
+  // now we want to create a necko channel for this url and we want to open it
   mQuoteChannel = null_nsCOMPtr();
-  rv = NS_NewInputStreamChannel(getter_AddRefs(mQuoteChannel), aURL, nsnull, nsnull, -1);
+  NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
+  rv = netService->NewChannelFromURI(aURL, getter_AddRefs(mQuoteChannel));
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsISupports> ctxt = do_QueryInterface(aURL);
 
   NS_WITH_SERVICE(nsIStreamConverterService, streamConverterService, kIStreamConverterServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
-  nsAutoString from, to;
-  from.AssignWithConversion(MESSAGE_RFC822);
-  to.AssignWithConversion("text/xul");
+
   nsCOMPtr<nsIStreamListener> convertedListener;
-  rv = streamConverterService->AsyncConvertData(from.GetUnicode(),
-                                                to.GetUnicode(),
+  rv = streamConverterService->AsyncConvertData(NS_LITERAL_STRING(MESSAGE_RFC822),
+                                                NS_LITERAL_STRING("text/xul"),
                                                 mStreamListener,
                                                 quoteSupport,
                                                 getter_AddRefs(convertedListener));
   if (NS_FAILED(rv)) return rv;
 
-  NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  // now we want to create a necko channel for this url and we want to open it
-  nsCOMPtr<nsIChannel> aChannel;
-  rv = netService->NewChannelFromURI(aURL, getter_AddRefs(aChannel));
-  if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(aURL);
   //  now try to open the channel passing in our display consumer as the listener 
-  rv = aChannel->AsyncRead(convertedListener, aCtxt);
+  rv = mQuoteChannel->AsyncRead(convertedListener, ctxt);
 
   ReleaseMessageServiceFromURI(aMsgUri, msgService);
   return rv;
