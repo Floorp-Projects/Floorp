@@ -13,4 +13,6 @@ mozilla/security/psm,
 mozilla/security/manager,
 DirectorySDKSourceC,    LDAPCSDK_40_BRANCH
 mozilla/lib/mac/Instrumentation
+mozilla/gfx2
+mozilla/modules/libpr0n
 SeaMonkeyAll
