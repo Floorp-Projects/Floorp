@@ -805,9 +805,9 @@ SWITCH: for ($::FORM{'knob'}) {
 
         last SWITCH;
     };
-    # default
-    my $escaped_knob = html_quote($::FORM{'knob'});
-    ThrowCodeError("Unknown action $escaped_knob!\n");
+    
+    $vars->{'action'} = $::FORM{'knob'};
+    ThrowCodeError("unknown_action");
 }
 
 

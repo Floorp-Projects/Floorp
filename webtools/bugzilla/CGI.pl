@@ -218,11 +218,13 @@ sub CheckFormField (\%$;\@) {
         SendSQL("SELECT description FROM fielddefs WHERE name=" . SqlQuote($fieldname));
         my $result = FetchOneColumn();
         if ($result) {
-            ThrowCodeError("A legal $result was not set.", undef, "abort");
+            $vars->{'field'} = $result;
         }
         else {
-            ThrowCodeError("A legal $fieldname was not set.", undef, "abort");
+            $vars->{'field'} = $fieldname;
         }
+        
+        ThrowCodeError("illegal_field", "abort");
       }
 }
 
@@ -233,9 +235,9 @@ sub CheckFormFieldDefined (\%$) {
        ) = @_;
 
     if (!defined $formRef->{$fieldname}) {
-          ThrowCodeError("$fieldname was not defined; " . 
-                                                    Param("browserbugmessage"));
-      }
+        $vars->{'field'} = $fieldname;  
+        ThrowCodeError("undefined_field");
+    }
 }
 
 sub BugAliasToID {
@@ -876,7 +878,7 @@ sub DisplayError {
 # For "this shouldn't happen"-type places in the code.
 # $vars->{'variables'} is a reference to a hash of useful debugging info.
 sub ThrowCodeError {
-  ($vars->{'error'}, $vars->{'variables'}, my $unlock_tables) = (@_);
+  ($vars->{'error'}, my $unlock_tables, $vars->{'variables'}) = (@_);
 
   SendSQL("UNLOCK TABLES") if $unlock_tables;
   

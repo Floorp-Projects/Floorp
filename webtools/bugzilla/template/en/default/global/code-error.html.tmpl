@@ -42,13 +42,25 @@
     to any [% parameters %] which you may have set before calling
     ThrowCodeError.
 
-  [% ELSIF error == "another_error_tag" %]
-    This is another sample error, without a special title. This 
-    should be the usual usage for this file. This sample can be removed.
+  [% ELSIF error == "group_bit_invalid" %]
+    One of the group bits submitted was invalid.
 
+  [% ELSIF error == "illegal_field" %]
+    A legal [% field FILTER html %] was not set.
+    
+  [% ELSIF error == "inactive_group" %]
+    Attempted to add bug to an inactive group, identified by the bit 
+    '[% bit FILTER html %]'.
+    
   [% ELSIF error == "template_error" %]
     [% template_error_msg %]
 
+  [% ELSIF error == "undefined_field" %]
+    [% field FILTER html %] was not defined; [% Param('browserbugmessage') %]
+
+  [% ELSIF error == "unknown_action" %]
+    Unknown action [% action FILTER html %]!
+    
   [% ELSE %]
     [%# Cope with legacy calling convention, where "error" was the string
       # to print. 
