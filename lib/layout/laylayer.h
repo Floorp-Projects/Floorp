@@ -187,7 +187,7 @@ extern void lo_AddLineListToLayer(MWContext *, lo_DocState *, LO_Element *);
 
 extern CL_Layer *
 lo_CreateCellBackgroundLayer(MWContext *context, LO_CellStruct *cell,
-                             CL_Layer *parent_layer);
+                             CL_Layer *parent_layer, int16 table_nesting_level);
 extern CL_Layer *
 lo_CreateEmbedLayer(MWContext *context, CL_Layer *parent,
                     int32 x, int32 y, int32 width, int32 height,

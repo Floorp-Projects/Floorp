@@ -33,8 +33,8 @@
 
 /* Z-order for internal layers within a group layer */
 #define Z_CONTENT_LAYERS          -1  /* HTML blocks, images, blinking text, windowless plugins */
-#define Z_CELL_BACKGROUND_LAYER   -2  /* Table cell backgrounds */
-#define Z_BACKGROUND_LAYER        -3  /* Layer/document backgrounds */
+#define Z_CELL_BACKGROUND_LAYER   -1000  /* Table cell backgrounds */
+#define Z_BACKGROUND_LAYER        -1001  /* Layer/document backgrounds */
 
 
 #ifdef PROFILE
@@ -1644,7 +1644,7 @@ lo_cellbg_destroy_func(CL_Layer *layer)
  */
 CL_Layer *
 lo_CreateCellBackgroundLayer(MWContext *context, LO_CellStruct *cell,
-                             CL_Layer *parent_layer)
+                             CL_Layer *parent_layer, int16 table_nesting_level)
 {
     CL_Layer *cellbg_layer;
     XP_Rect bbox;
@@ -1652,6 +1652,7 @@ lo_CreateCellBackgroundLayer(MWContext *context, LO_CellStruct *cell,
     CL_LayerVTable vtable;
     int32 layer_x_offset, layer_y_offset;
     int32 parent_x_shift, parent_y_shift;
+	int32 z_order;
 
         
 
@@ -1686,7 +1687,13 @@ lo_CreateCellBackgroundLayer(MWContext *context, LO_CellStruct *cell,
     if (!cellbg_layer)
         return NULL;
 
-    CL_InsertChildByZ(parent_layer, cellbg_layer, Z_CELL_BACKGROUND_LAYER);
+	/* The z-order of the background layer of cells should increase
+	   as the cell's nest within tables.  This ensures that the innermost
+	   cell's background ends up with the highest z-order and gets
+	   displayed 
+	*/	   
+	z_order = Z_CELL_BACKGROUND_LAYER + table_nesting_level;
+    CL_InsertChildByZ(parent_layer, cellbg_layer, z_order);
 
     /* Start loading tiled cell backdrop image, if present */
     if (cell->backdrop.url && *cell->backdrop.url) {

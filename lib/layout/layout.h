@@ -327,7 +327,7 @@ typedef struct lo_TableRec_struct {
 	LO_SubDocStruct *current_subdoc;
 	lo_TableRow *row_list;
 	lo_TableRow *row_ptr;
-	int32 *fixed_col_widths;
+	int32 *fixed_col_widths;	
 } lo_TableRec;
 
 
@@ -829,6 +829,7 @@ struct lo_TopState_struct {
     PRPackedBool flushing_blockage;
     PRPackedBool wedged_on_mocha;
 	Bool in_cell_relayout;
+	int16 table_nesting_level;	/* Counter to keep track of depth of nesting within tables */
 #ifdef DEBUG_ScriptPlugin
 	char * mimetype;
 #endif 

@@ -2265,10 +2265,10 @@ lo_EndCellSubDoc(MWContext *context, lo_DocState *state, lo_DocState *old_state,
 		     * width and height dependencies.
 		     */
 			/* case LO_HRULE:
+			*/
 		    case LO_SUBDOC:
 		    case LO_TABLE:
 				old_state->must_relayout_subdoc = TRUE;
-			*/
 
 			break;
 		    case LO_IMAGE:
@@ -4809,6 +4809,9 @@ lo_BeginTableAttributes(MWContext *context,
 		return;
 	}
 
+	/* Increment table nesting level (used for passing into lo_CreateCellBackGroundLayer() */
+	state->top_state->table_nesting_level++;
+
 	table_ele = (LO_TableStruct *)lo_NewElement(context, state, LO_TABLE, NULL, 0);
 	if (table_ele == NULL)
 	{
@@ -5203,7 +5206,7 @@ lo_BeginTableAttributes(MWContext *context,
 	table->fixed_width_remaining = 0;
 	table->fixed_col_widths = NULL;
 	table->table_width_fixed = FALSE;
-	table->fixed_cols = 0;
+	table->fixed_cols = 0;	
 	
 	/*
 	 * You can't do percentage widths if the parent's
@@ -7608,7 +7611,7 @@ fprintf(stderr, "lo_EndTable called\n");
 							parent_layer = top_state->body_layer;
 						cell_ele->cell_bg_layer =
 							lo_CreateCellBackgroundLayer(context, cell_ele,
-														 parent_layer);
+														 parent_layer, top_state->table_nesting_level);
 					}
 					else
 					{
@@ -7905,8 +7908,10 @@ fprintf(stderr, "lo_EndTable called\n");
 		}
 	}
 	*/
-
 	
+	/* Decrement table nesting level (used for passing into lo_CreateCellBackGroundLayer() */
+	state->top_state->table_nesting_level--;
+
 #ifdef XP_WIN16
 	_hfree(cell_array);
 #else
