@@ -5,7 +5,7 @@ DIST = $(DEPTH)/../../dist/$(OBJDIR)
 endif
 
 # Set os+release dependent make variables
-OS_ARCH         := $(subst /,_,$(shell uname -s))
+OS_ARCH         := $(subst /,_,$(shell uname -s | sed /\ /s//_/))
 
 # Attempt to differentiate between SunOS 5.4 and x86 5.4
 OS_CPUARCH      := $(shell uname -m)
