@@ -377,7 +377,11 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
   case NS_STYLE_BORDER_STYLE_RIDGE:
     np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
                    BORDER_INSIDE, 0.5f, twipsPerPixel);
-    aContext.SetColor ( MakeBevelColor (whichSide, theStyle, theColor, printing));
+    aContext.SetColor ( MakeBevelColor (whichSide, 
+                                        ((theStyle == NS_STYLE_BORDER_STYLE_RIDGE) ?
+                                         NS_STYLE_BORDER_STYLE_GROOVE :
+                                         NS_STYLE_BORDER_STYLE_RIDGE), 
+                                        theColor, printing));
     if (2 == np) {
       //aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
       DrawLine (aContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
@@ -387,10 +391,7 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
     }
     np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
                    BORDER_OUTSIDE, 0.5f, twipsPerPixel);
-    aContext.SetColor ( MakeBevelColor (whichSide,
-       (theStyle == NS_STYLE_BORDER_STYLE_RIDGE)
-          ? NS_STYLE_BORDER_STYLE_GROOVE
-          : NS_STYLE_BORDER_STYLE_RIDGE, theColor,printing));
+    aContext.SetColor ( MakeBevelColor (whichSide, theStyle, theColor,printing));
     if (2 == np) {
       //aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
       DrawLine (aContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
