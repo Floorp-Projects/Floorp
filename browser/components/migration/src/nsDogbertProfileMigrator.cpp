@@ -548,7 +548,7 @@ nsDogbertProfileMigrator::FixDogbertCookies()
   if (!fileOutputStream) return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsILineInputStream> lineInputStream(do_QueryInterface(fileInputStream));
-  nsAutoString buffer, outBuffer;
+  nsCAutoString buffer, outBuffer;
   PRBool moreData = PR_FALSE;
   PRUint32 written = 0;
   do {
@@ -562,7 +562,6 @@ nsDogbertProfileMigrator::FixDogbertCookies()
     if (buffer.IsEmpty() || buffer.CharAt(0) == '#' ||
         buffer.CharAt(0) == nsCRT::CR || buffer.CharAt(0) == nsCRT::LF) {
       fileOutputStream->Write((const char*)buffer.get(), buffer.Length(), &written);
-      // XXX this is wrong! you need buffer.Length() * sizeof(PRUnichar)
       continue;
     }
 
@@ -578,15 +577,13 @@ nsDogbertProfileMigrator::FixDogbertCookies()
       continue;
 
     // separate the expires field from the rest of the cookie line
-    nsAutoString prefix, expiresString, suffix;
+    nsCAutoString prefix, expiresString, suffix;
     buffer.Mid(prefix, hostIndex, expiresIndex-hostIndex-1);
     buffer.Mid(expiresString, expiresIndex, nameIndex-expiresIndex-1);
     buffer.Mid(suffix, nameIndex, buffer.Length()-nameIndex);
 
     // correct the expires field
-    char* expiresCString = ToNewCString(expiresString);
-    unsigned long expires = strtoul(expiresCString, nsnull, 10);
-    nsCRT::free(expiresCString);
+    unsigned long expires = strtoul(expiresString.get(), nsnull, 10);
 
     // if the cookie is supposed to expire at the end of the session
     // expires == 0.  don't adjust those cookies.
@@ -597,14 +594,12 @@ nsDogbertProfileMigrator::FixDogbertCookies()
 
     // generate the output buffer and write it to file
     outBuffer = prefix;
-    outBuffer.Append(PRUnichar('\t'));
-    outBuffer.AppendWithConversion(dateString);
-    outBuffer.Append(PRUnichar('\t'));
+    outBuffer.Append('\t');
+    outBuffer.Append(dateString);
+    outBuffer.Append('\t');
     outBuffer.Append(suffix);
 
-    nsCAutoString convertedBuffer;
-    convertedBuffer.Assign(NS_ConvertUCS2toUTF8(outBuffer));
-    fileOutputStream->Write(convertedBuffer.get(), convertedBuffer.Length(), &written);
+    fileOutputStream->Write(outBuffer.get(), outBuffer.Length(), &written);
   }
   while (1);
   
