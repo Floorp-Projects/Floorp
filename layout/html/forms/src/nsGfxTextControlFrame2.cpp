@@ -49,7 +49,7 @@
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
-
+#include "nsIScrollableView.h"
 
 
 #include "nsIContent.h"
@@ -134,6 +134,10 @@ public:
   NS_IMETHOD GetTableCellSelection(PRBool *aState);
   NS_IMETHOD GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor);
   NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset);
+  NS_IMETHOD SetScrollableView(nsIScrollableView *aScrollableView);
+  //END INTERFACES
+
+
 
 private:
   nsCOMPtr<nsIFrameSelection> mFrameSelection;
@@ -143,7 +147,6 @@ private:
 
 // Implement our nsISupports methods
 NS_IMPL_ISUPPORTS3(nsTextAreaSelectionImpl, nsISelectionController, nsISupportsWeakReference, nsIFrameSelection)
-
 
 
 // BEGIN nsTextAreaSelectionImpl
@@ -433,6 +436,12 @@ nsTextAreaSelectionImpl::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffse
   return mFrameSelection->GetFrameForNodeOffset(aNode, aOffset,aReturnFrame,aReturnOffset);
 }
 
+NS_IMETHODIMP nsTextAreaSelectionImpl::SetScrollableView(nsIScrollableView *aScrollableView)
+{
+  if(mFrameSelection) 
+    return mFrameSelection->SetScrollableView(aScrollableView);
+  return NS_ERROR_FAILURE;
+}
 
 
 
@@ -564,11 +573,25 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
     return rv?rv:NS_ERROR_FAILURE;
   
   nsCOMPtr<nsIContent> content;
-  nsCOMPtr<nsIDOMElement> domElement;
   
+////
+  NS_WITH_SERVICE(nsIElementFactory, elementFactory,
+                  NS_ELEMENT_FACTORY_PROGID_PREFIX
+                  "http://www.w3.org/TR/REC-html40",
+                  &rv);
+  if (!elementFactory)
+    return NS_ERROR_FAILURE;
 
-  if (NS_FAILED(domdoc->CreateElement(NS_ConvertToString("div"),getter_AddRefs(domElement))) && domElement)
-    content = do_QueryInterface(domElement);
+  nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
+  doc->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
+  NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nodeInfoManager->GetNodeInfo(nsHTMLAtoms::div, nsnull, kNameSpaceID_HTML, *getter_AddRefs(nodeInfo));
+
+  elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
+
+////
   if (content)
   {
     content->SetAttribute(kNameSpaceID_None,nsHTMLAtoms::style, NS_ConvertToString(DIV_STRING), PR_FALSE);
@@ -589,8 +612,8 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
                                                    NS_GET_IID(nsIFrameSelection),
                                                    getter_AddRefs(frameSel));
 //create selection controller
-    nsTextAreaSelectionImpl * textSelImpl = new nsTextAreaSelectionImpl(frameSel,shell,content);
-    mSelCon =  do_QueryInterface((nsISupports *)(nsISelectionController *)textSelImpl);//this will addref it once
+    mTextSelImpl = new nsTextAreaSelectionImpl(frameSel,shell,content);
+    mSelCon =  do_QueryInterface((nsISupports *)(nsISelectionController *)mTextSelImpl);//this will addref it once
     mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
 //get the flags 
     PRUint32 editorFlags = 0;
@@ -657,75 +680,6 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 }
 
 
-#if 0
-NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresContext, 
-                                         nsHTMLReflowMetrics&     aDesiredSize,
-                                         const nsHTMLReflowState& aReflowState, 
-                                         nsReflowStatus&          aStatus)
-{
-
-  // Figure out if we are doing Quirks or Standard
-  nsCompatibility mode;
-  aPresContext->GetCompatibilityMode(&mode);
-
-  nsMargin border;
-  border.SizeTo(0, 0, 0, 0);
-  nsMargin padding;
-  padding.SizeTo(0, 0, 0, 0);
-  // Get the CSS border
-  const nsStyleSpacing* spacing;
-  GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
-  spacing->CalcBorderFor(this, border);
-  spacing->CalcPaddingFor(this, padding);
-
-  // calculate the the desired size for the text control
-  // use the suggested size if it has been set
-  nsresult rv = NS_OK;
-  nsHTMLReflowState suggestedReflowState(aReflowState);
-  if ((kSuggestedNotSet != mSuggestedWidth) || 
-      (kSuggestedNotSet != mSuggestedHeight)) {
-      // Honor the suggested width and/or height.
-    if (kSuggestedNotSet != mSuggestedWidth) {
-      suggestedReflowState.mComputedWidth = mSuggestedWidth;
-      aDesiredSize.width = mSuggestedWidth;
-    }
-
-    if (kSuggestedNotSet != mSuggestedHeight) {
-      suggestedReflowState.mComputedHeight = mSuggestedHeight;
-      aDesiredSize.height = mSuggestedHeight;
-    }
-    rv = NS_OK;
-  
-    aDesiredSize.ascent = aDesiredSize.height;
-    aDesiredSize.descent = 0;
-
-    aStatus = NS_FRAME_COMPLETE;
-  } else {
-
-    // this is the right way
-    // Quirks mode will NOT obey CSS border and padding
-    // GetDesiredSize calculates the size without CSS borders
-    // the nsLeafFrame::Reflow will add in the borders
-    if (eCompatibility_NavQuirks == mode) {
-      rv = ReflowNavQuirks(aPresContext, aDesiredSize, aReflowState, aStatus, border, padding);
-    } else {
-      rv = ReflowStandard(aPresContext, aDesiredSize, aReflowState, aStatus, border, padding);
-    }
-
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
-      if (aReflowState.mComputedWidth > aDesiredSize.width) {
-        aDesiredSize.width = aReflowState.mComputedWidth;
-      }
-    }
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
-      if (aReflowState.mComputedHeight > aDesiredSize.height) {
-        aDesiredSize.height = aReflowState.mComputedHeight;
-      }
-    }
-    aStatus = NS_FRAME_COMPLETE;
-  }
-
-#endif
 
 NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresContext, 
                                          nsHTMLReflowMetrics&     aDesiredSize,
@@ -1324,6 +1278,26 @@ nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
   nsresult rv = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   if (mEditor)
     mEditor->PostCreate();
+  //look for scroll view below this frame go along first child list
+  nsIFrame *first;
+  FirstChild(aPresContext,nsnull, &first);
+  while(first)
+  {
+    nsIScrollableView *scrollView;
+    nsIView *view;
+    first->GetView(aPresContext,&view);
+    if (view)
+    {
+      view->QueryInterface(NS_GET_IID(nsIScrollableView),(void **)&scrollView);
+      if (scrollView)
+      {
+        mTextSelImpl->SetScrollableView(scrollView);
+        break;
+      }
+    }
+    first->FirstChild(aPresContext,nsnull, &first);
+  }
+
   return rv;
 }
 
