@@ -143,11 +143,6 @@ LIBS		+= $(STATIC_EXTRA_LIBS)
 endif
 
 # If you change anything that mozilla links to, please talk to dougt@netscape.com
-LIBS		+= \
-		$(MOZ_JS_LIBS) \
-		$(NSPR_LIBS) \
-		$(NULL)
-
 ifdef GRE_BUILD
 LIBS            += \
 		$(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
@@ -158,6 +153,11 @@ LIBS            += \
 else
 LIBS		+= $(XPCOM_LIBS)
 endif
+
+LIBS		+= \
+		$(MOZ_JS_LIBS) \
+		$(NSPR_LIBS) \
+		$(NULL)
 
 ifdef MOZ_JPROF
 LIBS         += -ljprof
