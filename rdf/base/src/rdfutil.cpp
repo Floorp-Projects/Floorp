@@ -47,8 +47,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
-#include "plstr.h"
-#include "prprf.h"
 #include "prtime.h"
 #include "rdfutil.h"
 
@@ -56,10 +54,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
 
 ////////////////////////////////////////////////////////////////////////
-
-static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
-static NS_DEFINE_IID(kIRDFLiteralIID,  NS_IRDFLITERAL_IID);
-static NS_DEFINE_IID(kIRDFServiceIID,  NS_IRDFSERVICE_IID);
 
 static NS_DEFINE_CID(kRDFServiceCID,   NS_RDFSERVICE_CID);
 
@@ -203,7 +197,7 @@ rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI)
         return NS_ERROR_OUT_OF_MEMORY;
 
     rv = service->NewURI(uriStr, nsnull, getter_AddRefs(baseUri));
-    delete[] uriStr;
+    nsCRT::free(uriStr);
 
     if (NS_FAILED(rv)) return rv;
 
@@ -213,7 +207,7 @@ rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI)
         return NS_ERROR_OUT_OF_MEMORY;
 
     rv = service->MakeAbsolute(urlSpec, baseUri, getter_Copies(absUrlStr));
-    delete[] urlSpec;
+    nsCRT::free(urlSpec);
 
     result = (const char*) absUrlStr;
 #endif // NECKO
