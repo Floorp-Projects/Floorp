@@ -1056,7 +1056,11 @@ nsListControlFrame::DisplaySelected(nsIContent* aContent)
    //XXX: This is temporary. It simulates psuedo states by using a attribute selector on 
    // -moz-option-selected in the ua.css style sheet. This will not be needed when
    // The event state manager supports selected states. KMM
-  
+  nsAutoString attr;
+  nsresult rv = aContent->GetAttribute(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, attr);
+  if (rv != NS_CONTENT_ATTR_NOT_THERE)
+    return;
+
   if (PR_TRUE == mIsAllFramesHere) {
     aContent->SetAttribute(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, nsAutoString(), PR_TRUE);
     //ForceRedraw();
@@ -1072,6 +1076,11 @@ nsListControlFrame::DisplayDeselected(nsIContent* aContent)
    //XXX: This is temporary. It simulates psuedo states by using a attribute selector on 
    // -moz-option-selected in the ua.css style sheet. This will not be needed when
    // The event state manager is functional. KMM
+  nsAutoString attr;
+  nsresult rv = aContent->GetAttribute(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, attr);
+  if (rv == NS_CONTENT_ATTR_NOT_THERE)
+    return;
+
   if (PR_TRUE == mIsAllFramesHere) {
     aContent->UnsetAttribute(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, PR_TRUE);
     //ForceRedraw();
