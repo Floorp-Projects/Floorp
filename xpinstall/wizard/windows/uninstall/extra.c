@@ -2202,6 +2202,16 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   {
     /* parse for the "c:\Program Files" directory */
     GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion", "ProgramFilesDir", szVariable, dwVariableSize);
+    /* see if that failed */
+    if (*szVariable == 0)
+    {
+      char* backslash;
+      /* Use the parent of the windows directory */
+      GetWindowsDirectory(szVariable, dwVariableSize);
+      backslash = strrchr(szVariable, '\\');
+      if (backslash)
+        *backslash = 0;
+    }
   }
   else if(lstrcmpi(szVariable, "COMMONFILESDIR") == 0)
   {
