@@ -169,28 +169,38 @@ PluginTypes.prototype = {
       // primary extension for the type to prevent duplicates. If we encounter
       // a duplicate, record the additional MIME type so we know to deactivate
       // support for it too if the user deactivates support for the extension.
-      if (!(mimeInfo.primaryExtension in this._pluginTypeHash)) {
-        var pluginType = new PluginType(aPluginEnabled, mimeInfo);
-        this._pluginTypeHash[mimeInfo.primaryExtension] = pluginType;
-        this._pluginTypes.push(pluginType);
-      }        
-      // We check that the primary extension has already been hashed
-      // by a plugin that is installed in this build before adding a disable
-      // override to the list. Otherwise we might end up showing disabled
-      // plugin entries for plugins that actually aren't installed and configured
-      // in this build, but were for another build that was using this profile.
-      else {
-        // Append this MIME type to the list of MIME types for the extension. 
-        var pluginType = this._pluginTypeHash[mimeInfo.primaryExtension];
-        pluginType.MIMETypes.push(mimeInfo.MIMEType);
+      try {
+        var primExt = mimeInfo.primaryExtension;
+      } catch (e) { }
+
+      if (primExt) {
+        // If there's no extension, there's nothing to do here.
+        if (!(primExt in this._pluginTypeHash)) {
+          var pluginType = new PluginType(aPluginEnabled, mimeInfo);
+          this._pluginTypeHash[primExt] = pluginType;
+          this._pluginTypes.push(pluginType);
+        }
+        // We check that the primary extension has already been hashed
+        // by a plugin that is installed in this build before adding a disable
+        // override to the list. Otherwise we might end up showing disabled
+        // plugin entries for plugins that actually aren't installed and configured
+        // in this build, but were for another build that was using this profile.
+        else {
+          // Append this MIME type to the list of MIME types for the extension.
+          var pluginType = this._pluginTypeHash[primExt];
+          pluginType.MIMETypes.push(mimeInfo.MIMEType);
+        }
       }
     }
   },
 
   sortCallback: function (a, b)
   {
-    var ac = a.MIMEInfo.primaryExtension.toLowerCase();
-    var bc = b.MIMEInfo.primaryExtension.toLowerCase();
+    try {
+      var ac = a.MIMEInfo.primaryExtension.toLowerCase();
+      var bc = b.MIMEInfo.primaryExtension.toLowerCase();
+    } catch (e) { }
+    
     if (ac < bc) 
       return -1;
     else if (ac > bc) 
@@ -232,7 +242,7 @@ PluginTypes.prototype = {
   {
     try {
       var mimeSvc = Components.classes["@mozilla.org/mime;1"].getService(Components.interfaces.nsIMIMEService);
-      return mimeSvc.GetFromTypeAndExtension(aType, "");
+      return mimeSvc.getFromTypeAndExtension(aType, "");
     }
     catch (e) { }
     
