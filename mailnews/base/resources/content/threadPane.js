@@ -82,6 +82,7 @@ nsMsgDBViewCommandUpdater.prototype =
     setTitleFromFolder(aFolder, aSubject);
     gHaveLoadedMessage = true;
     SetKeywords(aKeywords);
+    goUpdateCommand("button_junk");
   },
 
   QueryInterface : function(iid)

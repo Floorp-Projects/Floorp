@@ -508,6 +508,25 @@ function InitMessageMark()
   document.commandDispatcher.updateCommands('create-menu-mark');
 }
 
+function UpdateJunkToolbarButton()
+{
+  try 
+  {
+    var junkButton = document.getElementById("button-junk");
+    if (SelectedMessagesAreJunk())
+    {
+      junkButton.label = junkButton.getAttribute('notjunk_label');
+      junkButton.setAttribute('tooltiptext', junkButton.getAttribute('notjunk_tooltiptext'));
+    }
+    else
+    {
+      junkButton.label = junkButton.getAttribute('junk_label');
+      junkButton.setAttribute('tooltiptext', junkButton.getAttribute('junk_tooltiptext'));
+    }
+  } 
+  catch(e) {}
+}
+
 function UpdateDeleteCommand()
 {
   var value = "value";
@@ -1925,6 +1944,8 @@ function SetUpJunkBar(aMsgHdr)
     junkBar.removeAttribute("collapsed");
   else
     junkBar.setAttribute("collapsed","true");
+ 
+  goUpdateCommand('button_junk');
 }
 
 function OnMsgLoaded(folder, aMessageURI)

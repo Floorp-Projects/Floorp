@@ -176,6 +176,7 @@ nsMsgDBViewCommandUpdater.prototype =
     gCurrentMessageUri = gDBView.URIForFirstSelectedMessage;
     UpdateStandAloneMessageCounts();
     SetKeywords(aKeywords);
+    goUpdateCommand("button_junk");
   },
 
   QueryInterface : function(iid)
@@ -393,6 +394,10 @@ function HideMenus()
 	if (viewMessagesMenu)
 		viewMessagesMenu.setAttribute("hidden", "true");
 
+	var viewMessagesMenuSeparator = document.getElementById('viewMessagesMenuSeparator');
+	if (viewMessagesMenuSeparator)
+		viewMessagesMenuSeparator.setAttribute("hidden", "true");
+
 	var openMessageMenu = document.getElementById('openMessageWindowMenuitem');
 	if (openMessageMenu)
 		openMessageMenu.setAttribute("hidden", "true");
@@ -420,6 +425,14 @@ function HideMenus()
 	var trashSeparator = document.getElementById('trashMenuSeparator');
 	if (trashSeparator)
 		trashSeparator.setAttribute("hidden", "true");
+
+	var goStartPageSeparator = document.getElementById('goStartPageSeparator');
+	if (goStartPageSeparator)
+		goStartPageSeparator.hidden = true;
+
+  var goStartPage = document.getElementById('goStartPage');
+	if (goStartPage)
+   goStartPage.hidden = true;
 }
 
 function OnUnloadMessageWindow()
@@ -726,6 +739,11 @@ var MessageWindowController =
         var loadedFolder = GetLoadedMsgFolder();
         return gCurrentMessageUri && loadedFolder && (loadedFolder.canDeleteMessages || isNewsURI(gCurrentFolderUri));
       case "button_junk":
+        UpdateJunkToolbarButton();
+        // fall through
+      case "cmd_markAsJunk":
+			case "cmd_markAsNotJunk":
+        // can't do junk on news yet
         return (!isNewsURI(gCurrentFolderUri));
 			case "cmd_reply":
 			case "button_reply":
@@ -750,8 +768,6 @@ var MessageWindowController =
 			case "cmd_markAsRead":
 			case "cmd_markAllRead":
 			case "cmd_markThreadAsRead":
-			case "cmd_markAsJunk":
-			case "cmd_markAsNotJunk":
       case "cmd_label0":
       case "cmd_label1":
       case "cmd_label2":

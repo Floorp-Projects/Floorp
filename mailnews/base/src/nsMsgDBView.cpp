@@ -1596,6 +1596,9 @@ NS_IMETHODIMP nsMsgDBView::CycleCell(PRInt32 row, const PRUnichar *colID)
     break;
   case 'j': // junkStatus column
     {
+      if (mIsNews) // junk not supported for news yet.
+        return NS_OK;
+
       nsCOMPtr <nsIMsgDBHdr> msgHdr;
 
       nsresult rv = GetMsgHdrForViewIndex(row, getter_AddRefs(msgHdr));
@@ -1606,7 +1609,7 @@ NS_IMETHODIMP nsMsgDBView::CycleCell(PRInt32 row, const PRUnichar *colID)
         if (junkScoreStr.IsEmpty() || (atoi(junkScoreStr.get()) < 50))
           ApplyCommandToIndices(nsMsgViewCommandType::junk, (nsMsgViewIndex *) &row, 1);
         else
-         ApplyCommandToIndices(nsMsgViewCommandType::unjunk, (nsMsgViewIndex *) &row, 1);
+          ApplyCommandToIndices(nsMsgViewCommandType::unjunk, (nsMsgViewIndex *) &row, 1);
       }
     }
     break;
@@ -2044,9 +2047,11 @@ NS_IMETHODIMP nsMsgDBView::GetCommandStatus(nsMsgViewCommandTypeValue command, P
   case nsMsgViewCommandType::label3:
   case nsMsgViewCommandType::label4:
   case nsMsgViewCommandType::label5:
+    *selectable_p = haveSelection;
+    break;
   case nsMsgViewCommandType::junk:
   case nsMsgViewCommandType::unjunk:
-    *selectable_p = haveSelection;
+    *selectable_p = haveSelection && !mIsNews;  // no junk for news yet
     break;
   case nsMsgViewCommandType::cmdRequiringMsgBody:
     {

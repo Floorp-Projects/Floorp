@@ -252,6 +252,7 @@ var DefaultController =
           gDBView.getCommandStatus(nsMsgViewCommandType.deleteNoTrash, enabled, checkStatus);
         return enabled.value;
       case "button_junk":
+        UpdateJunkToolbarButton();
         if (gDBView)
           gDBView.getCommandStatus(nsMsgViewCommandType.junk, enabled, checkStatus);
         return enabled.value;
@@ -308,11 +309,13 @@ var DefaultController =
       case "cmd_printSetup":
         return true;
       case "cmd_markAsFlagged":
-      case "cmd_markAsJunk":
-      case "cmd_markAsNotJunk":
       case "button_file":
       case "cmd_file":
         return (GetNumSelectedMessages() > 0 );
+      case "cmd_markAsJunk":
+      case "cmd_markAsNotJunk":
+        // can't do news on junk yet.
+        return (GetNumSelectedMessages() > 0 && !isNewsURI(GetFirstSelectedMessage()));
       case "cmd_searchMsgs":
         return true;
       case "cmd_applyFilters":
