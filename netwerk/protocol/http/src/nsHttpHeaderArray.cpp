@@ -167,7 +167,7 @@ nsHttpHeaderArray::ParseHeaderLine(char *line, nsHttpAtom *hdr, char **val)
             if (val) *val = p;
 
             // assign response header
-            SetHeader(atom, nsDependentCString(p));
+            SetHeader(atom, nsDependentCString(p), PR_TRUE);
         }
         else
             LOG(("unknown header; skipping\n"));
