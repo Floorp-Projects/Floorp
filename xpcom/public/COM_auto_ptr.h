@@ -35,7 +35,7 @@
 
 #if defined(NOT_PRODUCTION_CODE) && defined(USE_EXPERIMENTAL_SMART_POINTERS)
 
-#include <cassert>
+#include <assert.h>
 
 
 	/* USER MANUAL
@@ -156,6 +156,10 @@
 	/*
 		Set up some #defines to turn off a couple of troublesome C++ features.
 		Interestingly, none of the compilers barf on template stuff.
+
+		Ideally, we would want declarations like these in a configuration file
+		that that everybody would get.  Deciding exactly how to do that should
+		be part of the process of moving from experimental to production.
 	*/
 
 #if defined(__GNUG__) && (__GNUC_MINOR__ <= 90) && !defined(SOLARIS)
@@ -166,8 +170,24 @@
 	#define NO_EXPLICIT
 #endif
 
+#if defined(IRIX)
+	#define NO_MEMBER_USING_DECLARATIONS
+	#define NO_EXPLICIT
+	#define NO_NEW_CASTS
+#endif
+
+
+
 #ifdef NO_EXPLICIT
 	#define explicit
+#endif
+
+#ifndef NO_NEW_CASTS
+	#define STATIC_CAST(T,x)			static_cast<T>(x)
+	#define REINTERPRET_CAST(T,x)	reinterpret_cast<T>(x)
+#else
+	#define STATIC_CAST(T,x)			((T)(x))
+	#define REINTERPRET_CAST(T,x)	((T)(x))
 #endif
 
 
@@ -186,8 +206,8 @@ class derived_safe : public T
 			using T::AddRef;
 			using T::Release;
 #else
-			unsigned long AddRef() { }
-			unsigned long Release() { }
+			unsigned long AddRef();
+			unsigned long Release();
 #endif
 	};
 
@@ -339,7 +359,7 @@ class COM_auto_ptr
 			get() const
 					// returns a |derived_safe<T>*| to deny clients the use of |AddRef| and |Release|
 				{
-					return reinterpret_cast<derived_safe<T>*>(ptr_);
+					return REINTERPRET_CAST(derived_safe<T>*, ptr_);
 				}
 
 			void
@@ -399,7 +419,7 @@ class func_AddRefs_t
 
 			operator void**()
 				{
-					return reinterpret_cast<void**>(&ptr_);
+					return REINTERPRET_CAST(void**, &ptr_);
 				}
 
 			operator T**()
@@ -446,7 +466,7 @@ class func_doesnt_AddRef_t
 
 			operator void**()
 				{
-					return reinterpret_cast<void**>(&ptr_);
+					return REINTERPRET_CAST(void**, &ptr_);
 				}
 
 			operator T**()
