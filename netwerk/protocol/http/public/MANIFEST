@@ -3,3 +3,4 @@
 #
 
 nsHTTPEnums.h
+nsIHttpEventSink.h
