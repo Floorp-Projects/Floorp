@@ -2640,11 +2640,18 @@ void nsDocShell::SetReferrerURI(nsIURI* aURI)
 NS_IMETHODIMP nsDocShell::ShouldAddToSessionHistory(nsIURI* aURI, 
    PRBool* aShouldAdd)
 {
+   *aShouldAdd = PR_FALSE;
+
    if((!mSessionHistory) || (IsFrame() && mInitialPageLoad))
-      {
-      *aShouldAdd = PR_FALSE;
       return NS_OK;
-      } 
+
+   if(mCurrentURI)
+      {
+      PRBool equals = PR_TRUE;
+      mCurrentURI->Equals(aURI, &equals);
+      if(equals)
+         return NS_OK;
+      }
       
    *aShouldAdd = PR_TRUE;
  
