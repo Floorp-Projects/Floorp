@@ -636,6 +636,13 @@ NS_IMETHODIMP nsImageOS2::DrawTile(nsIRenderingContext &aContext,
    PRBool didTile = PR_FALSE;
    PRInt32 ImageWidth = mInfo->cx;
    PRInt32 ImageHeight = mInfo->cy;
+   
+   // Get the scale - if greater than 1 then do slow tile which
+   nsIDeviceContext *theDeviceContext;
+   float scale;
+   PRBool doSlowTile = PR_FALSE;
+   aContext.GetDeviceContext(theDeviceContext);
+   theDeviceContext->GetCanonicalPixelScale(scale);
 
    nsRect ValidRect (0, 0, ImageWidth, ImageHeight);
    ValidRect.IntersectRect (ValidRect, mDecodedRect);
@@ -646,7 +653,8 @@ NS_IMETHODIMP nsImageOS2::DrawTile(nsIRenderingContext &aContext,
 
    // Don't bother tiling if we only have to draw the bitmap a couple of times
    // Can't tile with 8bit alpha masks because need access destination bitmap values
-   if ((ImageWidth > DrawRect.width / 2 && ImageHeight > DrawRect.height / 2) ||
+   if ((scale > 1.0) ||
+       (ImageWidth > DrawRect.width / 2 && ImageHeight > DrawRect.height / 2) ||
        (ImageWidth > MAX_BUFFER_WIDTH) || (ImageHeight > MAX_BUFFER_HEIGHT) ||
         mAlphaDepth > 1)
       return SlowTile (aContext, aSurface, aSXOffset, aSYOffset, aTileRect);   
@@ -761,21 +769,62 @@ NS_IMETHODIMP nsImageOS2::DrawTile(nsIRenderingContext &aContext,
 nsresult nsImageOS2::SlowTile (nsIRenderingContext& aContext, nsDrawingSurface aSurface, 
                                PRInt32 aSXOffset, PRInt32 aSYOffset, const nsRect &aTileRect)
 {
-  nsRect ImageRect (0, 0, PR_MIN (mInfo->cx, mDecodedRect.width), PR_MIN (mInfo->cy, mDecodedRect.height));
+  PRInt32 x0, y0, x1, y1;
+  nscoord ScaledTileWidth, ScaledTileHeight;
+  PRInt32 ImageWidth = mInfo->cx;
+  PRInt32 ImageHeight = mInfo->cy;
+  nsIDeviceContext *theDeviceContext;
+  float scale;
+  aContext.GetDeviceContext(theDeviceContext);
+  theDeviceContext->GetCanonicalPixelScale(scale);
+  PRInt32 DestScaledWidth = ImageWidth * scale;
+  PRInt32 DestScaledHeight = ImageHeight * scale;
+  
+  nsRect ValidRect (0, 0, ImageWidth, ImageHeight);
+  if (mDecodedRect.height < ImageHeight)
+  {
+    ValidRect.height = mDecodedRect.height - mDecodedRect.y;
+    DestScaledHeight = PR_MAX(PRInt32(ValidRect.height * scale), 1);
+  }
+  if (mDecodedRect.width < ImageWidth)
+  {
+    ValidRect.width = mDecodedRect.width - mDecodedRect.x;
+    DestScaledWidth = PR_MAX(PRInt32(ValidRect.width * scale), 1);
+  }
+  if (mDecodedRect.y > 0)
+  {
+    ValidRect.height -= mDecodedRect.height;
+    DestScaledHeight = PR_MAX(PRInt32(ValidRect.height * scale), 1);
+    ValidRect.y = mDecodedRect.height;
+  }  
+  if (mDecodedRect.x > 0)
+  {
+    ValidRect.width -= mDecodedRect.x;
+    DestScaledWidth = PR_MAX(PRInt32(ValidRect.width * scale), 1);
+    ValidRect.x = mDecodedRect.width;
+  }
+  
+  // put the DestRect into absolute coordintes of the device
+  y0 = aTileRect.y - aSYOffset;
+  x0 = aTileRect.x - aSXOffset;
+  y1 = aTileRect.y + aTileRect.height;
+  x1 = aTileRect.x + aTileRect.width;  
 
-  for (PRInt32 y = aTileRect.y - aSYOffset + mDecodedRect.y ; y < aTileRect.YMost () ; y += mInfo->cy)
-    for (PRInt32 x = aTileRect.x - aSXOffset + mDecodedRect.x ; x < aTileRect.XMost () ; x += mInfo->cx)
+  // this is the width and height of the image in pixels
+  // we need to map this to the pixel height of the device
+  ScaledTileWidth = PR_MAX(PRInt32(ImageWidth*scale), 1);
+  ScaledTileHeight = PR_MAX(PRInt32(ImageHeight*scale), 1);
+  
+  for (PRInt32 y = y0; y < y1; y += ScaledTileHeight)
+  {
+    for (PRInt32 x = x0; x < x1;  x += ScaledTileWidth)
     {
-      nsRect CroppedImage;
-
-      ImageRect.MoveTo (x, y);
-      CroppedImage.IntersectRect (ImageRect, aTileRect);
-
-      Draw (aContext, aSurface,
-            CroppedImage.x - x, CroppedImage.y - y, CroppedImage.width, CroppedImage.height,
-            CroppedImage.x, CroppedImage.y, CroppedImage.width, CroppedImage.height);
+      Draw(aContext, aSurface,
+           0, 0, PR_MIN(ValidRect.width, x1 - x), PR_MIN(ValidRect.height, y1 - y),
+           x, y, PR_MIN(DestScaledWidth, x1-x), PR_MIN(DestScaledHeight, y1 - y));
     }
-
+  }
+  
   return NS_OK;
 }
 
