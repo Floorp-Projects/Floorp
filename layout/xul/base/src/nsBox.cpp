@@ -672,8 +672,7 @@ nsBox::GetBorder(nsMargin& aMargin)
     nsCOMPtr<nsIContent> content;
     frame->GetContent(getter_AddRefs(content));
     if (content) {
-      nsCOMPtr<nsIDocument> doc;
-      content->GetDocument(getter_AddRefs(doc));
+      nsCOMPtr<nsIDocument> doc = content->GetDocument();
       if (doc) {
         nsCOMPtr<nsIPresShell> shell;
         doc->GetShellAt(0, getter_AddRefs(shell));

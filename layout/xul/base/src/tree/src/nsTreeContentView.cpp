@@ -551,8 +551,7 @@ nsTreeContentView::SetTree(nsITreeBoxObject* aTree)
     mRoot = do_QueryInterface(element);
 
     // Add ourselves to document's observers.
-    nsCOMPtr<nsIDocument> document;
-    mRoot->GetDocument(getter_AddRefs(document));
+    nsIDocument* document = mRoot->GetDocument();
     if (document) {
       document->AddObserver(this);
       mDocument = document;
@@ -757,8 +756,7 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
   nsCOMPtr<nsIContent> parent = aContent;
   nsCOMPtr<nsIAtom> parentTag;
   do {
-    nsCOMPtr<nsIContent> temp = parent;
-    temp->GetParent(getter_AddRefs(parent));
+    parent = parent->GetParent();
     if (parent)
       parent->GetTag(getter_AddRefs(parentTag));
   } while (parent && parentTag != nsXULAtoms::tree);
@@ -783,11 +781,9 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
     }
     else if (!hidden && index < 0) {
       // Show this row along with its children.
-      nsCOMPtr<nsIContent> container;
-      aContent->GetParent(getter_AddRefs(container));
+      nsCOMPtr<nsIContent> container = aContent->GetParent();
       if (container) {
-        nsCOMPtr<nsIContent> parent;
-        container->GetParent(getter_AddRefs(parent));
+        nsCOMPtr<nsIContent> parent = container->GetParent();
         if (parent)
           InsertRowFor(parent, container, aContent);
       }
@@ -843,8 +839,7 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
   }
   else if (tag == nsXULAtoms::treerow) {
     if (aAttribute == nsXULAtoms::properties) {
-      nsCOMPtr<nsIContent> parent;
-      aContent->GetParent(getter_AddRefs(parent));
+      nsCOMPtr<nsIContent> parent = aContent->GetParent();
       if (parent) {
         PRInt32 index = FindContent(parent);
         if (index >= 0) {
@@ -859,11 +854,9 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
         aAttribute == nsXULAtoms::mode ||
         aAttribute == nsHTMLAtoms::value ||
         aAttribute == nsHTMLAtoms::label) {
-      nsCOMPtr<nsIContent> parent;
-      aContent->GetParent(getter_AddRefs(parent));
+      nsIContent* parent = aContent->GetParent();
       if (parent) {
-        nsCOMPtr<nsIContent> grandParent;
-        parent->GetParent(getter_AddRefs(grandParent));
+        nsCOMPtr<nsIContent> grandParent = parent->GetParent();
         if (grandParent) {
           PRInt32 index = FindContent(grandParent);
           if (index >= 0) {
@@ -922,7 +915,7 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
   nsCOMPtr<nsIContent> element = aContainer;
   nsCOMPtr<nsIAtom> parentTag;
   
-  while (element) {
+  for (nsIContent* element = aContainer; element; element = element->GetParent()) {
     element->GetTag(getter_AddRefs(parentTag));
     if ((element->IsContentOfType(nsIContent::eXUL) && parentTag == nsXULAtoms::tree) ||
         (element->IsContentOfType(nsIContent::eHTML) && parentTag == nsHTMLAtoms::select))
@@ -930,14 +923,11 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
         break;
       else // this is not for us, we can bail out
         return NS_OK;
-    nsCOMPtr<nsIContent> temp = element;
-    temp->GetParent(getter_AddRefs(element));
   }
 
   if (childTag == nsXULAtoms::treeitem ||
       childTag == nsXULAtoms::treeseparator) {
-    nsCOMPtr<nsIContent> parent;
-    aContainer->GetParent(getter_AddRefs(parent));
+    nsCOMPtr<nsIContent> parent = aContainer->GetParent();
     if (parent)
       InsertRowFor(parent, aContainer, aChild);
   }
@@ -969,8 +959,7 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
       mBoxObject->InvalidateRow(index);
   }
   else if (childTag == nsXULAtoms::treecell) {
-    nsCOMPtr<nsIContent> parent;
-    aContainer->GetParent(getter_AddRefs(parent));
+    nsCOMPtr<nsIContent> parent = aContainer->GetParent();
     if (parent) {
       PRInt32 index = FindContent(parent);
       if (index >= 0)
@@ -1023,10 +1012,9 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
 
   // If we have a legal tag, go up to the tree/select and make sure
   // that it's ours.
-  nsCOMPtr<nsIContent> element = aContainer;
   nsCOMPtr<nsIAtom> parentTag;
   
-  while (element) {
+  for (nsIContent* element = aContainer; element; element = element->GetParent()) {
     element->GetTag(getter_AddRefs(parentTag));
     if ((element->IsContentOfType(nsIContent::eXUL) && parentTag == nsXULAtoms::tree) || 
         (element->IsContentOfType(nsIContent::eHTML) && parentTag == nsHTMLAtoms::select))
@@ -1034,8 +1022,6 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
         break;
       else // this is not for us, we can bail out
         return NS_OK;
-    nsCOMPtr<nsIContent> temp = element;
-    temp->GetParent(getter_AddRefs(element));
   }
 
   if (tag == nsXULAtoms::treeitem ||
@@ -1074,8 +1060,7 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
       mBoxObject->InvalidateRow(index);
   }
   else if (tag == nsXULAtoms::treecell) {
-    nsCOMPtr<nsIContent> parent;
-    aContainer->GetParent(getter_AddRefs(parent));
+    nsCOMPtr<nsIContent> parent = aContainer->GetParent();
     if (parent) {
       PRInt32 index = FindContent(parent);
       if (index >= 0)

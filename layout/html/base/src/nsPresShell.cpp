@@ -4343,9 +4343,8 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   // XXX: The dependency on the command dispatcher needs to be fixed.
   nsIContent* content = aFrame->GetContent();
   if (content) {
-    nsCOMPtr<nsIDocument> document;
-    content->GetDocument(getter_AddRefs(document));
-    if(document){
+    nsIDocument* document = content->GetDocument();
+    if (document){
       nsCOMPtr<nsIFocusController> focusController;
       nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
       document->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
@@ -5769,9 +5768,7 @@ PresShell::GetCurrentEventFrame()
     // then we assume it is no longer in the content tree and the
     // frame shouldn't get an event, nor should we even assume its
     // safe to try and find the frame.
-    nsCOMPtr<nsIDocument> doc;
-    nsresult result = mCurrentEventContent->GetDocument(getter_AddRefs(doc));
-    if (NS_SUCCEEDED(result) && doc) {
+    if (mCurrentEventContent->GetDocument()) {
       GetPrimaryFrameFor(mCurrentEventContent, &mCurrentEventFrame);
     }
   }
@@ -5836,9 +5833,9 @@ PRBool PresShell::InZombieDocument(nsIContent *aContent)
   // Such documents cannot handle DOM events.
   // It might actually be in a node not attached to any document,
   // in which case there is not parent presshell to retarget it to.
-  nsCOMPtr<nsIDocument> doc;
-  mCurrentEventContent->GetDocument(getter_AddRefs(doc));
-  return !doc;
+  // XXXbz shouldn't this use aContent->GetDocument?  Good thing we
+  // only call it on mCurrentEventContent....
+  return !mCurrentEventContent->GetDocument();
 }
 
 nsresult PresShell::RetargetEventToParent(nsIView         *aView,
@@ -6088,8 +6085,7 @@ PresShell::HandleEvent(nsIView         *aView,
           // will *not* go away.  And this happens on every mousemove.
           while (targetElement &&
                  !targetElement->IsContentOfType(nsIContent::eELEMENT)) {
-            nsIContent* temp = targetElement;
-            temp->GetParent(getter_AddRefs(targetElement));
+            targetElement = targetElement->GetParent();
           }
 
           // If we found an element, target it.  Otherwise, target *nothing*.

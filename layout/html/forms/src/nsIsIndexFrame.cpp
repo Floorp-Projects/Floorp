@@ -227,8 +227,7 @@ nsIsIndexFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   nsresult result;
 
   // Get the node info manager (used to create hr's and input's)
-  nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
   nsCOMPtr<nsINodeInfoManager> nimgr;
   result = doc->GetNodeInfoManager(getter_AddRefs(nimgr));
   NS_ENSURE_SUCCESS(result, result);
@@ -417,8 +416,7 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
     // Get the document.
     // We'll need it now to form the URL we're submitting to.
     // We'll also need it later to get the DOM window when notifying form submit observers (bug 33203)
-    nsCOMPtr<nsIDocument> document;
-    mContent->GetDocument(getter_AddRefs(document));
+    nsCOMPtr<nsIDocument> document = mContent->GetDocument();
     if (!document) return NS_OK; // No doc means don't submit, see Bug 28988
 
     // Resolve url to an absolute url
@@ -506,8 +504,7 @@ void nsIsIndexFrame::GetSubmitCharset(nsCString& oCharset)
   // see 17.3 The FORM element in HTML 4 for details
 
   // Get the charset from document
-  nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(getter_AddRefs(doc));
+  nsIDocument* doc = mContent->GetDocument();
   if (doc) {
     doc->GetDocumentCharacterSet(oCharset);
   }

@@ -1455,17 +1455,10 @@ nsListControlFrame::IsOptionElement(nsIContent* aContent)
 nsIContent *
 nsListControlFrame::GetOptionFromContent(nsIContent *aContent) 
 {
-  nsCOMPtr<nsIContent> content = aContent;
-  while (content) {
+  for (nsIContent* content = aContent; content; content = content->GetParent()) {
     if (IsOptionElement(content)) {
-      nsIContent *out = content;
-      NS_ADDREF(out);
-      return out;
+      return content;
     }
-
-    nsCOMPtr<nsIContent> parent;
-    content->GetParent(getter_AddRefs(parent));
-    parent.swap(content);
   }
 
   return nsnull;
@@ -2899,7 +2892,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
     nsCOMPtr<nsIContent> content;
     stateManager->GetEventTargetContent(nsnull, getter_AddRefs(content));
 
-    nsCOMPtr<nsIContent> optionContent = getter_AddRefs(GetOptionFromContent(content));
+    nsCOMPtr<nsIContent> optionContent = GetOptionFromContent(content);
     if (optionContent) {
       aCurIndex = GetIndexFromContent(optionContent);
       rv = NS_OK;
@@ -3109,8 +3102,7 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
         // and then adds in the parent's y coord
         // XXX this assume only one level of nesting of optgroups
         //   which is all the spec specifies at the moment.
-        nsCOMPtr<nsIContent> parentContent;
-        aOptElement->GetParent(getter_AddRefs(parentContent));
+        nsCOMPtr<nsIContent> parentContent = aOptElement->GetParent();
         nsCOMPtr<nsIDOMHTMLOptGroupElement> optGroup(do_QueryInterface(parentContent));
         nsRect optRect(0,0,0,0);
         if (optGroup) {

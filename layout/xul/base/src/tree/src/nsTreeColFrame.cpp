@@ -201,14 +201,10 @@ nsTreeColFrame::EnsureTree()
 {
   if (!mTree && mContent) {
     // Get our parent node.
-    nsCOMPtr<nsIContent> parent;
-    mContent->GetParent(getter_AddRefs(parent));
+    nsIContent* parent = mContent->GetParent();
     if (parent) {
-      nsCOMPtr<nsIContent> grandParent;
-      parent->GetParent(getter_AddRefs(grandParent));
-      nsCOMPtr<nsIDocument> doc;
-      mContent->GetDocument(getter_AddRefs(doc));
-      nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
+      nsIContent* grandParent = parent->GetParent();
+      nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(mContent->GetDocument()));
       nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(grandParent));
 
       nsCOMPtr<nsIBoxObject> boxObject;

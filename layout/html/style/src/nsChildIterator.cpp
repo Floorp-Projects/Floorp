@@ -53,9 +53,8 @@ ChildIterator::Init(nsIContent*    aContent,
   if (! aContent)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDocument> doc;
-  aContent->GetDocument(getter_AddRefs(doc));
-  NS_ASSERTION(doc != nsnull, "element not in the document");
+  nsCOMPtr<nsIDocument> doc = aContent->GetDocument();
+  NS_ASSERTION(doc, "element not in the document");
   if (! doc)
     return NS_ERROR_FAILURE;
 

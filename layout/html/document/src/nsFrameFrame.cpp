@@ -623,11 +623,8 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
   }
   // If the noResize attribute changes, dis/allow frame to be resized
   else if (aAttribute == nsHTMLAtoms::noresize) {
-    nsCOMPtr<nsIContent> parentContent;
-    mContent->GetParent(getter_AddRefs(parentContent));
-
     nsCOMPtr<nsIAtom> parentTag;
-    parentContent->GetTag(getter_AddRefs(parentTag));
+    mContent->GetParent()->GetTag(getter_AddRefs(parentTag));
 
     if (parentTag == nsHTMLAtoms::frameset) {
       nsIFrame* parentFrame = GetParent();

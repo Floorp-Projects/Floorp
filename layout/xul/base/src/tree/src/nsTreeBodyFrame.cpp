@@ -265,8 +265,7 @@ nsTreeColumn::nsTreeColumn(nsIContent* aColElement, nsIFrame* aFrame)
 
   // Cache our index.
   mColIndex = -1;
-  nsCOMPtr<nsIContent> parent;
-  mColElement->GetParent(getter_AddRefs(parent));
+  nsIContent* parent = mColElement->GetParent();
   PRInt32 count;
   parent->ChildCount(count);
   PRInt32 j = 0;
@@ -559,12 +558,9 @@ nsTreeBodyFrame::EnsureBoxObject()
     GetBaseElement(getter_AddRefs(parent));
 
     if (parent) {
-      nsCOMPtr<nsIDocument> parentDoc;
-      parent->GetDocument(getter_AddRefs(parentDoc));
-      if (!parentDoc) // there may be no document, if we're called from Destroy()
+      nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(parent->GetDocument());
+      if (!nsDoc) // there may be no document, if we're called from Destroy()
         return;
-      
-      nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(parentDoc);
       nsCOMPtr<nsIBoxObject> box;
       nsCOMPtr<nsIDOMElement> domElem = do_QueryInterface(parent);
       nsDoc->GetBoxObjectFor(domElem, getter_AddRefs(box));
@@ -612,9 +608,7 @@ nsTreeBodyFrame::EnsureView()
       // If we don't have a box object yet, or no view was set on it,
       // look for a XULTreeBuilder or create a content view.
       
-      nsCOMPtr<nsIContent> parent;
-      mContent->GetParent(getter_AddRefs(parent));
-      nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(parent);
+      nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(mContent->GetParent());
       if (xulele) {
         nsCOMPtr<nsITreeView> view;
 
@@ -1117,9 +1111,7 @@ nsTreeBodyFrame::AdjustEventCoordsToBoxCoordSpace (PRInt32 aX, PRInt32 aY, PRInt
   aY = NSToIntRound(aY * pixelsToTwips);
   
   // Get our box object.
-  nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(getter_AddRefs(doc));
-  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
+  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(mContent->GetDocument()));
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mContent));
   
   nsCOMPtr<nsIBoxObject> boxObject;
@@ -1952,8 +1944,7 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
     nsCOMPtr<imgIDecoderObserver> imgDecoderObserver = listener;
 
     nsCOMPtr<nsIURI> baseURI;
-    nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
     if (!doc)
       // The page is currently being torn down.  Why bother.
       return NS_ERROR_FAILURE;
@@ -3522,18 +3513,16 @@ nsTreeBodyFrame::EnsureColumns()
 nsresult
 nsTreeBodyFrame::GetBaseElement(nsIContent** aContent)
 {
-  nsCOMPtr<nsIContent> parent = mContent;
   nsCOMPtr<nsIAtom> tag;
-  nsCOMPtr<nsIContent> temp;
-
-  while (parent && NS_SUCCEEDED(parent->GetTag(getter_AddRefs(tag)))
-         && tag != nsXULAtoms::tree && tag != nsHTMLAtoms::select) {
-    temp = parent;
-    temp->GetParent(getter_AddRefs(parent));
+  nsIContent* parent;
+  for (parent = mContent;
+       parent && NS_SUCCEEDED(parent->GetTag(getter_AddRefs(tag)))
+         && tag != nsXULAtoms::tree && tag != nsHTMLAtoms::select;
+       parent = parent->GetParent()) {
+    // Do nothing; we just go up till we hit the right tag or run off the tree
   }
 
-  *aContent = parent;
-  NS_IF_ADDREF(*aContent);
+  NS_IF_ADDREF(*aContent = parent);
   return NS_OK;
 }
 

@@ -617,14 +617,14 @@ FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
       // if any methods in here fail, don't report that failure
       // we're just trying to enhance performance here, not test for correctness
       nsFindFrameHint hint;
-      nsCOMPtr<nsIContent> prevSibling, parent;
-      rv = aContent->GetParent(getter_AddRefs(parent));
-      if (NS_SUCCEEDED(rv) && parent)
+      nsIContent* parent = aContent->GetParent();
+      if (parent)
       {
         PRInt32 index;
         rv = parent->IndexOf(aContent, index);
-        if (NS_SUCCEEDED(rv) && index>0)  // no use looking if it's the first child
+        if (NS_SUCCEEDED(rv) && index > 0)  // no use looking if it's the first child
         {
+          nsCOMPtr<nsIContent> prevSibling;
           nsCOMPtr<nsIAtom> tag;
           do {
             parent->ChildAt(--index, getter_AddRefs(prevSibling));
@@ -809,8 +809,7 @@ FrameManager::GetUndisplayedContent(nsIContent* aContent)
   if (!aContent || !mUndisplayedMap)
     return nsnull;
 
-  nsCOMPtr<nsIContent> parent;
-  aContent->GetParent(getter_AddRefs(parent));
+  nsIContent* parent = aContent->GetParent();
   if (!parent)
     return nsnull;
 
@@ -839,8 +838,7 @@ FrameManager::SetUndisplayedContent(nsIContent* aContent,
     mUndisplayedMap = new UndisplayedMap;
   }
   if (mUndisplayedMap) {
-    nsCOMPtr<nsIContent> parent;
-    aContent->GetParent(getter_AddRefs(parent));
+    nsIContent* parent = aContent->GetParent();
     NS_ASSERTION(parent, "undisplayed content must have a parent");
     if (parent) {
       mUndisplayedMap->AddNodeFor(parent, aContent, aStyleContext);
@@ -861,9 +859,7 @@ FrameManager::ChangeUndisplayedContent(nsIContent* aContent,
    printf("ChangeUndisplayedContent(%d): p=%p \n", i++, (void *)aContent);
 #endif
 
-  nsCOMPtr<nsIContent> parent;
-  aContent->GetParent(getter_AddRefs(parent));
-  for (UndisplayedNode* node = mUndisplayedMap->GetFirstNode(parent);
+  for (UndisplayedNode* node = mUndisplayedMap->GetFirstNode(aContent->GetParent());
          node; node = node->mNext) {
     if (node->mContent == aContent) {
       node->mStyle = aStyleContext;

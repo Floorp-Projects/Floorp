@@ -1428,8 +1428,7 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
         selection->GetRangeCount(&rangeCount);
         if (rangeCount == 1) //if not one then let code drop to nsFrame::Paint
         {
-          nsCOMPtr<nsIContent> parentContent;
-          mContent->GetParent(getter_AddRefs(parentContent));
+          nsCOMPtr<nsIContent> parentContent = mContent->GetParent();
           if (parentContent)
           {
             PRInt32 thisOffset;
@@ -1473,8 +1472,7 @@ nsImageMap*
 nsImageFrame::GetImageMap(nsIPresContext* aPresContext)
 {
   if (!mImageMap) {
-    nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(getter_AddRefs(doc));
+    nsIDocument* doc = mContent->GetDocument();
     if (!doc) {
       return nsnull;
     }
@@ -1598,9 +1596,8 @@ nsImageFrame::GetAnchorHREFAndTarget(nsString& aHref, nsString& aTarget)
   aTarget.Truncate();
 
   // Walk up the content tree, looking for an nsIDOMAnchorElement
-  nsCOMPtr<nsIContent> content;
-  mContent->GetParent(getter_AddRefs(content));
-  while (content) {
+  for (nsIContent* content = mContent->GetParent();
+       content; content = content->GetParent()) {
     nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(content));
     if (anchor) {
       anchor->GetHref(aHref);
@@ -1610,9 +1607,6 @@ nsImageFrame::GetAnchorHREFAndTarget(nsString& aHref, nsString& aTarget)
       anchor->GetTarget(aTarget);
       break;
     }
-    nsCOMPtr<nsIContent> parent;
-    content->GetParent(getter_AddRefs(parent));
-    content = parent;
   }
   return status;
 }
@@ -1891,13 +1885,10 @@ nsImageFrame::LoadIcon(const nsAString& aSpec,
 void
 nsImageFrame::GetDocumentCharacterSet(nsACString& aCharset) const
 {
-  nsresult rv;
-  nsCOMPtr<nsIHTMLContent> htmlContent(do_QueryInterface(mContent, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIDocument> doc;
-    rv = htmlContent->GetDocument(getter_AddRefs(doc));
-    if (NS_SUCCEEDED(rv))
-      (void) doc->GetDocumentCharacterSet(aCharset);
+  if (mContent) {
+    NS_ASSERTION(mContent->GetDocument(),
+                 "Frame still alive after content removed from document!");
+    mContent->GetDocument()->GetDocumentCharacterSet(aCharset);
   }
 }
 

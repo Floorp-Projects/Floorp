@@ -736,8 +736,7 @@ nsTreeSelection::FireOnSelectHandler()
   boxObject->GetElement(getter_AddRefs(elt));
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(elt));
-  nsCOMPtr<nsIDocument> document;
-  content->GetDocument(getter_AddRefs(document));
+  nsCOMPtr<nsIDocument> document = content->GetDocument();
   
   // we might be firing on a delay, so it's possible in rare cases that
   // the document may have been destroyed by the time it fires

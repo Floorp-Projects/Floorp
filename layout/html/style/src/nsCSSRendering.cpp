@@ -2797,22 +2797,16 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
     // a root, other wise keep going in order to let the theme stuff
     // draw the background. The canvas really should be drawing the
     // bg, but there's no way to hook that up via css.
-    const nsStyleDisplay* displayData = aForFrame->GetStyleDisplay();
-    if (displayData->mAppearance) {
-      nsIContent* content = aForFrame->GetContent();
-      if (content) {
-        nsCOMPtr<nsIContent> parent;
-        content->GetParent(getter_AddRefs(parent));
-        if (parent)
-          return;
-        else
-          color = aForFrame->GetStyleBackground();
-      }
-      else
-        return;
-    }
-    else
+    if (!aForFrame->GetStyleDisplay()->mAppearance) {
       return;
+    }
+
+    nsIContent* content = aForFrame->GetContent();
+    if (!content || content->GetParent()) {
+      return;
+    }
+        
+    color = aForFrame->GetStyleBackground();
   }
   if (!isCanvas) {
     PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,

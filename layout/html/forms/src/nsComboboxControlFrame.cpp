@@ -388,9 +388,8 @@ nsComboboxControlFrame::Init(nsIPresContext*  aPresContext,
   // Start - Temporary fix for Bug 36558
   //-------------------------------
   mGoodToGo = PR_FALSE;
-  nsCOMPtr<nsIDocument> document;
-  nsresult rv = aContent->GetDocument(getter_AddRefs(document));
-  if (NS_SUCCEEDED(rv) && document) {
+  nsIDocument* document = aContent->GetDocument();
+  if (document) {
 #ifdef MOZ_XUL
     nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(document));
     mGoodToGo = xulDoc?PR_FALSE:PR_TRUE;
@@ -2124,8 +2123,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     mDisplayContent = do_QueryInterface(labelContent);
     mDisplayContent->SetText(NS_LITERAL_STRING("X"), PR_TRUE);
 
-    nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
     // mContent->AppendChildTo(labelContent, PR_FALSE, PR_FALSE);
 
     nsCOMPtr<nsINodeInfoManager> nimgr;

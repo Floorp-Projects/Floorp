@@ -153,9 +153,7 @@ nsMenuBarFrame::Init(nsIPresContext*  aPresContext,
 
   // Hook up the menu bar as a key listener on the whole document.  It will see every
   // key press that occurs, but after everyone else does.
-  nsCOMPtr<nsIDocument> doc;
-  aContent->GetDocument(getter_AddRefs(doc));
-  nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(doc);
+  nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(aContent->GetDocument());
   
   mTarget = target;
 
