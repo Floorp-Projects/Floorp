@@ -69,7 +69,6 @@ DIRS +=				\
   view				\
   widget			\
   layout			\
-  editor			\
   webshell
 
 ifdef MOZ_EDITOR
