@@ -3840,6 +3840,10 @@ MOZ_ARG_DISABLE_BOOL(ldap,
 [  --disable-ldap          Disable LDAP support],
   MOZ_LDAP_XPCOM=
     )
+if test "$MOZ_LDAP_XPCOM"; then
+    LDAP_CFLAGS='-I${DIST}/include/ldap'
+    LDAP_LIBS='-L${DIST}/bin -L${DIST}/lib -lldap40 -llber40'
+fi
 
 dnl --enable-ldap-experimental
 dnl
@@ -4086,6 +4090,8 @@ AC_SUBST(MOZ_INSURIFYING)
 AC_SUBST(MOZ_BUILD_XPFE)
 AC_SUBST(MOZ_LDAP_XPCOM)
 AC_SUBST(MOZ_LDAP_XPCOM_EXPERIMENTAL)
+AC_SUBST(LDAP_CFLAGS)
+AC_SUBST(LDAP_LIBS)
 
 AC_SUBST(XPCOM_USE_LEA)
 AC_SUBST(UNIX_CRASH_ON_ASSERT)

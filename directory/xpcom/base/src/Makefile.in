@@ -73,6 +73,8 @@ CSRCS		= \
 		nsLDAPConnectionCallbacks.c \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) -lldap40 -llber40
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) $(LDAP_LIBS)
 
 include $(topsrcdir)/config/rules.mk
+
+
