@@ -68,7 +68,7 @@ var global = {
         x2.scope = x.scope;
         ExecutionContext.current = x2;
         try {
-            execute(compile(s), x2);
+            execute(parse(s), x2);
         } catch (e if e == THROW) {
             x.result = x2.result;
             throw e;
@@ -96,7 +96,7 @@ var global = {
             }
             b += arguments[m];
         }
-        var f = compile("function (" + p + ") {" + b + "}");
+        var f = parse("function (" + p + ") {" + b + "}");
         var s = {object: global, parent: null};
         return new FunctionObject(f, s);
     },
@@ -905,7 +905,7 @@ function evaluate(s, f, l) {
     var x2 = new ExecutionContext(GLOBAL_CODE);
     ExecutionContext.current = x2;
     try {
-        execute(compile(s, f, l), x2);
+        execute(parse(s, f, l), x2);
     } catch (e if e == THROW) {
         if (x) {
             x.result = x2.result;

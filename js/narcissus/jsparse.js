@@ -213,15 +213,6 @@ var CCp = CompilerContext.prototype;
 CCp.bracketLevel = CCp.curlyLevel = CCp.parenLevel = CCp.hookLevel = 0;
 CCp.ecmaStrictMode = CCp.inForLoopInit = false;
 
-function compile(s, f, l) {
-    var t = new Tokenizer(s, f, l);
-    var x = new CompilerContext(false);
-    var n = Script(t, x);
-    if (!t.done)
-        throw t.newSyntaxError("Syntax error");
-    return n;
-}
-
 function Script(t, x) {
     var n = Statements(t, x);
     n.type = SCRIPT;
@@ -968,4 +959,13 @@ loop:
     while (operators.length)
         reduce();
     return operands.pop();
+}
+
+function parse(s, f, l) {
+    var t = new Tokenizer(s, f, l);
+    var x = new CompilerContext(false);
+    var n = Script(t, x);
+    if (!t.done)
+        throw t.newSyntaxError("Syntax error");
+    return n;
 }
