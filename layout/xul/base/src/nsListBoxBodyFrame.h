@@ -105,9 +105,8 @@ public:
   nscoord ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState);
 
   // scrolling
-  NS_IMETHOD DoScrollToIndex(PRInt32 aRowIndex, PRBool aForceDestruct=PR_FALSE);
   NS_IMETHOD InternalPositionChangedCallback();
-  NS_IMETHOD InternalPositionChanged(PRBool aUp, PRInt32 aDelta, PRBool aForceDestruct=PR_FALSE);
+  NS_IMETHOD InternalPositionChanged(PRBool aUp, PRInt32 aDelta);
   nsListScrollSmoother* GetSmoother();
   void VerticalScroll(PRInt32 aDelta);
 
