@@ -398,7 +398,7 @@ PK11_FindSlotElement(PK11SlotList *list,PK11SlotInfo *slot)
  * Create a new slot structure
  */
 PK11SlotInfo *
-PK11_NewSlotInfo(void)
+PK11_NewSlotInfo(SECMODModule *mod)
 {
     PK11SlotInfo *slot;
 
@@ -411,15 +411,17 @@ PK11_NewSlotInfo(void)
 	PORT_Free(slot);
 	return slot;
     }
-    slot->sessionLock = PZ_NewLock(nssILockSession);
-    if (slot->sessionLock == NULL) {
+    slot->freeListLock = PZ_NewLock(nssILockFreelist);
+    if (slot->freeListLock == NULL) {
+	PZ_DestroyLock(slot->sessionLock);
 	PZ_DestroyLock(slot->refLock);
 	PORT_Free(slot);
 	return slot;
     }
-    slot->freeListLock = PZ_NewLock(nssILockFreelist);
-    if (slot->freeListLock == NULL) {
-	PZ_DestroyLock(slot->sessionLock);
+
+    slot->sessionLock = mod->isThreadSafe ?
+	PZ_NewLock(nssILockSession) : (PZLock *)mod->refLock;
+    if (slot->sessionLock == NULL) {
 	PZ_DestroyLock(slot->refLock);
 	PORT_Free(slot);
 	return slot;
@@ -498,25 +500,25 @@ PK11_DestroySlot(PK11SlotInfo *slot)
    if (slot->mechanismList) {
 	PORT_Free(slot->mechanismList);
    }
-
-   /* finally Tell our parent module that we've gone away so it can unload */
-   if (slot->module) {
-	SECMOD_SlotDestroyModule(slot->module,PR_TRUE);
-   }
 #ifdef PKCS11_USE_THREADS
    if (slot->refLock) {
 	PZ_DestroyLock(slot->refLock);
 	slot->refLock = NULL;
    }
-   if (slot->sessionLock) {
+   if (slot->isThreadSafe && slot->sessionLock) {
 	PZ_DestroyLock(slot->sessionLock);
-	slot->sessionLock = NULL;
    }
+   slot->sessionLock = NULL;
    if (slot->freeListLock) {
 	PZ_DestroyLock(slot->freeListLock);
 	slot->freeListLock = NULL;
    }
 #endif
+
+   /* finally Tell our parent module that we've gone away so it can unload */
+   if (slot->module) {
+	SECMOD_SlotDestroyModule(slot->module,PR_TRUE);
+   }
 
    /* ok, well not quit finally... now we free the memory */
    PORT_Free(slot);

@@ -83,7 +83,7 @@ CK_SESSION_HANDLE PK11_GetRWSession(PK11SlotInfo *slot);
 void PK11_RestoreROSession(PK11SlotInfo *slot,CK_SESSION_HANDLE rwsession);
 PRBool PK11_RWSessionHasLock(PK11SlotInfo *slot,
 					 CK_SESSION_HANDLE session_handle);
-PK11SlotInfo *PK11_NewSlotInfo(void);
+PK11SlotInfo *PK11_NewSlotInfo(SECMODModule *mod);
 SECStatus PK11_Logout(PK11SlotInfo *slot);
 void PK11_LogoutAll(void);
 void PK11_EnterSlotMonitor(PK11SlotInfo *);
