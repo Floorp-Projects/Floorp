@@ -95,7 +95,6 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
     // Get the next child frame in the target chain
     nsIFrame* nextFrame;
     aReflowState.reflowCommand->GetNext(nextFrame);
-    NS_ASSERTION(nextFrame == mFirstChild, "unexpected next reflow command frame");
 
     // Compute the y-offset of this page
     for (nsIFrame* f = mFirstChild; f != nextFrame; f->GetNextSibling(f)) {
