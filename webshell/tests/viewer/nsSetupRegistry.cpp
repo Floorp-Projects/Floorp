@@ -50,6 +50,7 @@
 #include "nsIFileLocator.h"
 
 #include "nsISound.h"
+#include "nsIFileSpecWithUI.h"
 
 #if defined(XP_UNIX) && !defined(MOZ_MONOLITHIC_TOOLKIT)
 #include "nsIUnixToolkitService.h"
@@ -136,6 +137,7 @@ static NS_DEFINE_IID(kCFontRetrieverServiceCID,  NS_FONTRETRIEVERSERVICE_CID);
 static NS_DEFINE_IID(kCTimerCID,            NS_TIMER_CID);
 static NS_DEFINE_IID(kCTimerManagerCID,            NS_TIMERMANAGER_CID);
 static NS_DEFINE_IID(kSoundCID,            NS_SOUND_CID);
+static NS_DEFINE_CID(kFileSpecWithUICID, NS_FILESPECWITHUI_CID);
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCFilePickerCID, NS_FILEPICKER_CID);
 static NS_DEFINE_IID(kCPopUpCID,NS_POPUP_CID);
@@ -336,6 +338,8 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCTimerManagerCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 #endif
   nsComponentManager::RegisterComponentLib(kSoundCID,   "Sound Services", "component://netscape/sound", WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kFileSpecWithUICID, NS_FILESPECWITHUI_CLASSNAME, 
+                                           NS_FILESPECWITHUI_PROGID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
   // WIDGETS
   nsComponentManager::RegisterComponentLib(kCLabelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
