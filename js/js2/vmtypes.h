@@ -86,7 +86,8 @@ namespace VM {
     /********************************************************************/
     
     typedef std::pair<Register, JSType*> TypedRegister;
-    typedef std::vector<TypedRegister> RegisterList;        
+    typedef std::pair<TypedRegister, const StringAtom*> Argument;
+    typedef std::vector<Argument> ArgumentList;        
     typedef std::vector<Instruction *> InstructionStream;
     typedef InstructionStream::iterator InstructionIterator;
     typedef std::map<String, TypedRegister, std::less<String> > VariableMap;
@@ -96,16 +97,16 @@ namespace VM {
      * Helper to print Call operands.
      */
     struct ArgList {
-        const RegisterList& mList;
+        const ArgumentList& mList;
         const JSValues& mRegisters;
-        ArgList(const RegisterList& rl, const JSValues& registers)
+        ArgList(const ArgumentList& rl, const JSValues& registers)
             :   mList(rl), mRegisters(registers) {}
     };        
     
     /********************************************************************/
     
     Formatter& operator<< (Formatter& f, Instruction& i);
-    Formatter& operator<< (Formatter& f, RegisterList& rl);
+    Formatter& operator<< (Formatter& f, ArgumentList& rl);
     Formatter& operator<< (Formatter& f, const ArgList& al);
     Formatter& operator<< (Formatter& f, InstructionStream& is);
     Formatter& operator<< (Formatter& f, TypedRegister& r);

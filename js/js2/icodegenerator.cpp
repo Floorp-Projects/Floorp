@@ -79,7 +79,10 @@ ICodeGenerator::ICodeGenerator(World *world, JSScope *global, JSClass *aClass, I
         mGlobal(global),
         mInstructionMap(new InstructionMap()),
         mClass(aClass),
-        mFlags(flags)
+        mFlags(flags),
+        pLabels(NULL),
+        mHasRestParameter(false),
+        mHasNamedRestParameter(false)
 { 
     iCode = new InstructionStream();
     iCodeOwner = true;
@@ -171,7 +174,23 @@ ICodeModule *ICodeGenerator::complete()
             }
     }
     */
-    ICodeModule* module = new ICodeModule(iCode, variableList, mPermanentRegister.size(), 0, mInstructionMap);
+    ICodeModule* module = new ICodeModule(iCode, 
+                                            variableList, 
+                                            mPermanentRegister.size(), 
+                                            mParameterCount, 
+                                            mInstructionMap, 
+                                            mHasRestParameter, 
+                                            mHasNamedRestParameter);
+    if (pLabels) {
+        uint32 i;
+        uint32 parameterInits = pLabels->size() - 1;        // there's an extra label at the end for the actual entryPoint
+        module->mNonOptionalParameterCount -= parameterInits;
+        module->mParameterInit = new uint32[parameterInits];
+        for (i = 0; i < parameterInits; i++) {
+            module->mParameterInit[i] = (*pLabels)[i]->mOffset;
+        }
+        module->mEntryPoint = (*pLabels)[i]->mOffset;
+    }
     iCodeOwner = false;   // give ownership to the module.
     return module;
 }
@@ -227,10 +246,10 @@ TypedRegister ICodeGenerator::newClass(JSClass *clazz)
     return dest;
 }
 
-TypedRegister ICodeGenerator::newFunction(ICodeModule *icm)
+TypedRegister ICodeGenerator::newFunction(ICodeModule *icm, FunctionDefinition *def)
 {
     TypedRegister dest(getTempRegister(), &Function_Type);
-    NewFunction *instr = new NewFunction(dest, icm);
+    NewFunction *instr = new NewFunction(dest, icm, def);
     iCode->push_back(instr);
     return dest;
 }
@@ -458,7 +477,7 @@ TypedRegister ICodeGenerator::binaryOp(ICodeOp op, TypedRegister source1,
     return dest;
 } 
     
-TypedRegister ICodeGenerator::call(TypedRegister target, TypedRegister thisArg, RegisterList *args)
+TypedRegister ICodeGenerator::call(TypedRegister target, TypedRegister thisArg, ArgumentList *args)
 {
     TypedRegister dest(getTempRegister(), &Any_Type);
     Call *instr = new Call(dest, target, thisArg, *args);
@@ -466,7 +485,7 @@ TypedRegister ICodeGenerator::call(TypedRegister target, TypedRegister thisArg, 
     return dest;
 }
 
-TypedRegister ICodeGenerator::directCall(JSFunction *target, RegisterList *args)
+TypedRegister ICodeGenerator::directCall(JSFunction *target, ArgumentList *args)
 {
     TypedRegister dest(getTempRegister(), &Any_Type);
     DirectCall *instr = new DirectCall(dest, target, *args);
@@ -537,10 +556,11 @@ Label *ICodeGenerator::getLabel()
     return labels.back();
 }
 
-void ICodeGenerator::setLabel(Label *l)
+Label *ICodeGenerator::setLabel(Label *l)
 {
     l->mBase = iCode;
     l->mOffset = iCode->size();
+    return l;
 }
 
 /************************************************************************/
@@ -711,7 +731,7 @@ ICodeGenerator::LValueKind ICodeGenerator::resolveIdentifier(const StringAtom &n
     return Name;
 }
 
-TypedRegister ICodeGenerator::handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, RegisterList *args)
+TypedRegister ICodeGenerator::handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args)
 {
     ASSERT(p->getKind() == ExprNode::identifier);
 
@@ -836,26 +856,28 @@ TypedRegister ICodeGenerator::handleIdentifier(IdentifierExprNode *p, ExprNode::
             NOT_REACHED("Bad lvalue kind");
         }
         break;
-    case ExprNode::call:
-        switch (lValueKind) {
-        case Var:
-            ret = call(v, TypedRegister(NotARegister, &Null_Type), args);
-            break;
-        case Name:
-            ret = call(loadName(name), TypedRegister(NotARegister, &Null_Type), args);
-            break;
-        case Method:
-            ret = call(getMethod(thisBase, slotIndex), thisBase, args);
-            break;
-        case Static:
-            ret = call(getStatic(mClass, name), TypedRegister(NotARegister, &Null_Type), args);
-            break;
-        case Constructor:
-            ret = newClass(mClass);
-            call(getStatic(mClass, name), ret, args);
-            break;
-        default:
-            NOT_REACHED("Bad lvalue kind");
+    case ExprNode::call: 
+        {
+            switch (lValueKind) {
+            case Var:
+                ret = call(v, TypedRegister(NotARegister, &Null_Type), args);
+                break;
+            case Name:
+                ret = call(loadName(name), TypedRegister(NotARegister, &Null_Type), args);
+                break;
+            case Method:
+                ret = call(getMethod(thisBase, slotIndex), thisBase, args);
+                break;
+            case Static:
+                ret = call(getStatic(mClass, name), TypedRegister(NotARegister, &Null_Type), args);
+                break;
+            case Constructor:
+                ret = newClass(mClass);
+                call(getStatic(mClass, name), ret, args);
+                break;
+            default:
+                NOT_REACHED("Bad lvalue kind");
+            }
         }
         break;
     default:
@@ -865,7 +887,7 @@ TypedRegister ICodeGenerator::handleIdentifier(IdentifierExprNode *p, ExprNode::
 
 }
 
-TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, RegisterList *args)
+TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args)
 {   
     ASSERT(b->getKind() == ExprNode::dot);
 
@@ -1095,10 +1117,13 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
     case ExprNode::New:
         {
             InvokeExprNode *i = static_cast<InvokeExprNode *>(p);
-            RegisterList args;
+            ArgumentList args;
             ExprPairList *p = i->pairs;
             while (p) {
-                args.push_back(genExpr(p->value));
+                if (p->field && (p->field->getKind() == ExprNode::identifier))
+                    args.push_back(Argument(genExpr(p->value), &(static_cast<IdentifierExprNode *>(p->field))->name));
+                else
+                    args.push_back(Argument(genExpr(p->value), NULL ));
                 p = p->next;
             }
             if (i->op->getKind() == ExprNode::identifier) {
@@ -1145,10 +1170,13 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
     case ExprNode::call : 
         {
             InvokeExprNode *i = static_cast<InvokeExprNode *>(p);
-            RegisterList args;
+            ArgumentList args;
             ExprPairList *p = i->pairs;
             while (p) {
-                args.push_back(genExpr(p->value));
+                if (p->field && (p->field->getKind() == ExprNode::identifier))
+                    args.push_back(Argument(genExpr(p->value), &(static_cast<IdentifierExprNode *>(p->field))->name));
+                else
+                    args.push_back(Argument(genExpr(p->value), NULL ));
                 p = p->next;
             }
 
@@ -1498,7 +1526,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             icg.genStmt(f->function.body);
             //stdOut << icg;
             ICodeModule *icm = icg.complete();
-            ret = newFunction(icm);
+            ret = newFunction(icm, &f->function);
         }
         break;
 
@@ -1555,6 +1583,17 @@ static bool hasAttribute(const IdentifierList* identifiers, Token::Kind tokenKin
     return false;
 }
 
+JSType *ICodeGenerator::extractType(ExprNode *t)
+{
+    JSType* type = &Any_Type;
+    // FIXME:  need to do code generation for type expressions.
+    if (t && (t->getKind() == ExprNode::identifier)) {
+        IdentifierExprNode* typeExpr = static_cast<IdentifierExprNode*>(t);
+        type = findType(typeExpr->name);
+    }
+    return type;
+}
+
 ICodeModule *ICodeGenerator::genFunction(FunctionStmtNode *f, bool isConstructor, JSClass *superclass)
 {
     bool isStatic = hasAttribute(f->attributes, Token::Static);
@@ -1564,13 +1603,47 @@ ICodeModule *ICodeGenerator::genFunction(FunctionStmtNode *f, bool isConstructor
     icg.allocateParameter(mWorld->identifiers["this"], (mClass) ? mClass : &Any_Type);   // always parameter #0
     VariableBinding *v = f->function.parameters;
     while (v) {
-        if (v->name && (v->name->getKind() == ExprNode::identifier))
-            icg.allocateParameter((static_cast<IdentifierExprNode *>(v->name))->name);
+        if (v->name && (v->name->getKind() == ExprNode::identifier)) {
+            JSType *pType;
+            if ((v == f->function.restParameter) && (v->type == NULL))
+                pType = &Array_Type;
+            else
+                pType = extractType(v->type);
+            icg.allocateParameter((static_cast<IdentifierExprNode *>(v->name))->name, pType);
+        }
+        else
+            NOT_REACHED("qualified or un-named parameters not handled; bugger off.");
         v = v->next;
     }
+    v = f->function.optParameters;
+    if (v) {
+        while (v) {    // include the rest parameter, as it may have an initializer
+            if (v->name && (v->name->getKind() == ExprNode::identifier)) {
+                icg.addParameterLabel(icg.setLabel(icg.getLabel()));
+                if (v->initializer) {           // might be NULL when we get to the restParameter
+                    TypedRegister p = icg.genExpr(v->name);
+                    icg.move(p, icg.genExpr(v->initializer));
+                }
+            }
+            v = v->next;
+        }
+        icg.addParameterLabel(icg.setLabel(icg.getLabel()));    // to provide the entry-point for the default case
+    }
+    v = f->function.restParameter;
+    if (v) {
+        icg.mHasRestParameter = true;
+        if (v->name && (v->name->getKind() == ExprNode::identifier)) {
+            icg.mHasNamedRestParameter = true;
+        }
+    }
     if (isConstructor) {
+        /*
+           See if the first statement is an expression statement consisting
+           of a call to super(). If not we need to add a call to the default 
+           superclass constructor ourselves.
+        */
         TypedRegister thisValue = TypedRegister(0, mClass);
-        RegisterList args;
+        ArgumentList args;
         if (superclass) {
             bool foundSuperCall = false;
             BlockStmtNode *b = f->function.body;
@@ -1664,12 +1737,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                                 if (v->name) {
                                     ASSERT(v->name->getKind() == ExprNode::identifier);
                                     IdentifierExprNode* idExpr = static_cast<IdentifierExprNode*>(v->name);
-                                    JSType* type = &Any_Type;
-                                    // FIXME:  need to do code generation for type expressions.
-                                    if (v->type && v->type->getKind() == ExprNode::identifier) {
-                                        IdentifierExprNode* typeExpr = static_cast<IdentifierExprNode*>(v->type);
-                                        type = findType(typeExpr->name);
-                                    }
+                                    JSType* type = extractType(v->type);
                                     if (isStatic) {
                                         thisClass->defineStatic(idExpr->name, type);
                                         if (v->initializer) {
@@ -1705,15 +1773,15 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                                     if (name == nameExpr->name)
                                         hasDefaultConstructor = true;
                                     thisClass->defineConstructor(name);
-                                    scg.setStatic(thisClass, name, scg.newFunction(icm));
+                                    scg.setStatic(thisClass, name, scg.newFunction(icm, &f->function));
                                 }
                                 else
                                     if (isStatic) {
                                         thisClass->defineStatic(name, &Function_Type);
-                                        scg.setStatic(thisClass, name, scg.newFunction(icm));
+                                        scg.setStatic(thisClass, name, scg.newFunction(icm, &f->function));
                                     }
                                     else
-                                        thisClass->defineMethod(name, new JSFunction(icm));
+                                        thisClass->defineMethod(name, new JSFunction(icm, &f->function));
                             }
                         }                        
                         break;
@@ -1725,12 +1793,12 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                 }
 
                 // add the instance initializer
-                scg.setStatic(thisClass, initName, scg.newFunction(ccg.complete())); 
+                scg.setStatic(thisClass, initName, scg.newFunction(ccg.complete(), NULL)); 
                 // invent a default constructor if necessary, it just calls the 
                 //   initializer and the superclass default constructor
                 if (!hasDefaultConstructor) {
                     TypedRegister thisValue = TypedRegister(0, thisClass);
-                    RegisterList args;
+                    ArgumentList args;
                     ICodeGenerator icg(mWorld, thisScope, thisClass, kIsStaticMethod);
                     icg.allocateParameter(mWorld->identifiers["this"], thisClass);   // always parameter #0
                     if (superclass)
@@ -1738,7 +1806,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                     icg.call(icg.getStatic(thisClass, initName), thisValue, &args);
                     icg.returnStmt(thisValue);
                     thisClass->defineConstructor(nameExpr->name);
-                    scg.setStatic(thisClass, nameExpr->name, scg.newFunction(icg.complete()));
+                    scg.setStatic(thisClass, nameExpr->name, scg.newFunction(icg.complete(), NULL));
                 }
                 // freeze the class.
                 thisClass->complete();
@@ -1760,7 +1828,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             ICodeModule *icm = genFunction(f, false, NULL);
             if (f->function.name->getKind() == ExprNode::identifier) {
                 const StringAtom& name = (static_cast<IdentifierExprNode *>(f->function.name))->name;
-                mGlobal->defineFunction(name, icm);
+                mGlobal->defineFunction(name, icm, &f->function);
             }
         }
         break;

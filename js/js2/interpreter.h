@@ -90,6 +90,7 @@ namespace Interpreter {
     private:
         void broadcast(Event event);
         void initOperatorsPackage();
+        bool hasNamedArguments(ArgumentList &args);
 
     private:
         World& mWorld;

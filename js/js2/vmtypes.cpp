@@ -47,13 +47,13 @@ Formatter& operator<< (Formatter& f, Instruction& i)
     return i.print(f);
 }
 
-Formatter& operator<< (Formatter& f, RegisterList& rl)
+Formatter& operator<< (Formatter& f, ArgumentList& rl)
 {
-    TypedRegister* e = rl.end();
+    Argument* e = rl.end();
     
     f << "(";
-    for (RegisterList::iterator r = rl.begin(); r != e; r++) {
-        f << "R" << r->first; 
+    for (ArgumentList::iterator r = rl.begin(); r != e; r++) {
+        f << "R" << r->first.first; 
         if ((r + 1) != e)
             f << ", ";
     }
@@ -64,16 +64,16 @@ Formatter& operator<< (Formatter& f, RegisterList& rl)
 
 Formatter& operator<< (Formatter& f, const ArgList& al)
 {
-    const RegisterList& rl = al.mList;
+    const ArgumentList& rl = al.mList;
     const JSValues& registers = al.mRegisters;
     f << "(";
-    RegisterList::const_iterator i = rl.begin(), e = rl.end();
+    ArgumentList::const_iterator i = rl.begin(), e = rl.end();
     if (i != e) {
-        TypedRegister r = *i++;
-        f << "R" << r.first << '=' << registers[r.first];
+        Argument r = *i++;
+        f << "R" << r.first.first << '=' << registers[r.first.first];
         while (i != e) {
             r = *i++;
-            f << ", R" << r.first << '=' << registers[r.first];
+            f << ", R" << r.first << '=' << registers[r.first.first];
         }
     }
     f << ")";
