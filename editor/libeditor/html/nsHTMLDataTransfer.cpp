@@ -1713,7 +1713,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(nsIDOMNSRange *aNSRange,
     contextDepth--;
   }
  
-  res = StripFormattingNodes(contextAsNode, PR_TRUE);
+  res = StripFormattingNodes(*outFragNode, PR_TRUE);
   NS_ENSURE_SUCCESS(res, res);
  
   // get the infoString contents
