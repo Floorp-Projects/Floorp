@@ -13,7 +13,7 @@
 #
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998-1999 Netscape Communications Corporation. All
+# Copyright (C) 1998-2000 Netscape Communications Corporation. All
 # Rights Reserved.
 #
 # Contributor(s): 
@@ -26,29 +26,16 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_RESOURCE_SKIN = \
-    $(srcdir)/EditorDialog.css \
-    $(srcdir)/EdImageMap.css \
-    $(srcdir)/EdImageMapPage.css \
-		$(NULL)
+DIRS		= images
 
-EXPORT_RESOURCE_IMAGES = \
-		$(srcdir)/images/Map_checker.gif \
-		$(srcdir)/images/Map_circleTool.gif \
-		$(srcdir)/images/Map_contrast.gif \
-		$(srcdir)/images/Map_Copy.gif \
-		$(srcdir)/images/Map_Cut.gif \
-		$(srcdir)/images/Map_Paste.gif \
-		$(srcdir)/images/Map_pointerTool.gif \
-		$(srcdir)/images/Map_polygonTool.gif \
-		$(srcdir)/images/Map_rectangleTool.gif \
-		$(srcdir)/images/Map_zoomIn.gif \
-		$(srcdir)/images/Map_zoomOut.gif \
+CHROME_DIR = editor
+CHROME_SKIN_DIR = skin
+
+CHROME_SKIN = \
+    EditorDialog.css \
+    EdImageMap.css \
+    EdImageMapPage.css \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_SKIN) $(DIST)/bin/chrome/editor/skin
-	$(INSTALL) $(EXPORT_RESOURCE_IMAGES) $(DIST)/bin/chrome/editor/skin/images
 
