@@ -3199,6 +3199,10 @@ out:
     if (ts)
         js_CloseTokenStream(cx, ts);
     JS_ARENA_RELEASE(&cx->tempPool, mark);
+#if JS_HAS_EXCEPTIONS
+    if (!fun && !cx->fp)
+        js_ReportUncaughtException(cx);
+#endif
     return fun;
 }
 
