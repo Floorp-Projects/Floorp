@@ -61,6 +61,10 @@ function Startup()
   gEditButton     = document.getElementById("editButton");
   gRemoveButton   = document.getElementById("removeButton");
 
+  // Disable the Edit & Remove buttons until we click on something
+  gEditButton.disabled=true;
+  gRemoveButton.disabled=true;
+
   const mimeTypes = "UMimTyp";
   var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].getService();
   if (fileLocator)
@@ -95,14 +99,14 @@ function selectApplication()
       gHandlerField.setAttribute("value", handlerOverride.appDisplayName);
 
     if (handlerOverride.isEditable == "false") {
-      gEditButton.setAttribute("disabled", "true");
-      gRemoveButton.setAttribute("disabled", "true");
+      gEditButton.disabled=true;
+      gRemoveButton.disabled=true;
     }
     else {
-      gEditButton.removeAttribute("disabled");
-      gRemoveButton.removeAttribute("disabled");
+      gEditButton.disabled=false;
+      gRemoveButton.disabled=false;
     }
-      
+
     delete handlerOverride;
   }
 } 
