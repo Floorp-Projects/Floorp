@@ -44,7 +44,6 @@
 #include "nsIMsgIncomingServer.h"
 #include "nsIPop3IncomingServer.h"
 #include "nsIMsgMessageService.h"
-#include "nsINntpService.h"
 #include "nsFileSpec.h"
 
 #include "nsIMessage.h"
@@ -70,7 +69,6 @@ static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
 static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_CID(kCNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
@@ -566,15 +564,17 @@ nsMsgAppCore::OpenURL(const char * url)
 
 	if (url)
 	{
+		nsIMsgMessageService * mailboxService = nsnull;
+
 		// turn off news for now...
 		if (PL_strncmp(url, "news:", 5) == 0) // is it a news url?
 		{
-			nsINntpService * nntpService = nsnull;
-			nsresult rv = nsServiceManager::GetService(kCNntpServiceCID, nsINntpService::GetIID(), (nsISupports **) &nntpService);
-			if (NS_SUCCEEDED(rv) && nntpService)
+			nsresult rv = nsServiceManager::GetService("component://netscape/messenger/messageservice;type=nntp", 
+														nsIMsgMessageService::GetIID(), (nsISupports **) &mailboxService);
+			if (NS_SUCCEEDED(rv) && mailboxService)
 			{
-				nntpService->RunNewsUrl(url, mWebShell, nsnull, nsnull);
-				nsServiceManager::ReleaseService(kCNntpServiceCID, nntpService);
+				mailboxService->DisplayMessage(url, mWebShell, nsnull, nsnull);
+				nsServiceManager::ReleaseService("component://netscape/messenger/messageservice;type=nntp", mailboxService);
 			}
 		}
 
@@ -584,7 +584,6 @@ nsMsgAppCore::OpenURL(const char * url)
 		if (PL_strncmp(url, "mailbox:", 8) == 0 || PL_strncmp(url, kMailboxMessageRootURI, PL_strlen(kMailboxMessageRootURI)) == 0)
 		{
 		
-			nsIMsgMessageService * mailboxService = nsnull;
 			nsresult rv = nsServiceManager::GetService("component://netscape/messenger/messageservice;type=mailbox", 
 														nsIMsgMessageService::GetIID(), (nsISupports **) &mailboxService);
 
