@@ -134,12 +134,7 @@
 
 extern double fd_atan2 __P((double, double));
 extern double fd_copysign __P((double, double));
-
-#ifdef DEBUG
 extern double fd_pow __P((double, double));
-#else
-#define fd_pow pow
-#endif
 
 #elif defined IRIX
 
