@@ -38,6 +38,7 @@ var deleted_signons_count = 1;
 var deleted_rejects_count = 1;
 var deleted_nopreviews_count = 1;
 var deleted_nocaptures_count = 1;
+var pref;
 
 // function : <SignonViewer.js>::Startup();
 // purpose  : initialises interface, calls init functions for each page
@@ -121,8 +122,10 @@ function LoadSignons()
     return false;
   }
 
-  var delim = signonList[0];
-  signonList = signonList.split(delim);
+  if (signonList.length > 0) {
+    var delim = signonList[0];
+    signonList = signonList.split(delim);
+  }
   for(var i = 1; i < signonList.length; i++)
   {
     var currSignon = TrimString(signonList[i]);
@@ -137,7 +140,7 @@ function LoadSignons()
         Components.classes["@mozilla.org/network/standard-url;1"]
           .createInstance(Components.interfaces.nsIURI); 
       uri.spec = site; 
-      if (user.username) {
+      if (user.uri) {
         user = uri.username;
       } else {
         user = "<>";
@@ -181,8 +184,10 @@ function DeleteAllSignons() {
 function LoadReject()
 {
   rejectList = signonviewer.GetRejectValue();
-  var delim = rejectList[0];
-  rejectList = rejectList.split(delim);
+  if (rejectList.length > 0) {
+    var delim = rejectList[0];
+    rejectList = rejectList.split(delim);
+  }
   for(var i = 1; i < rejectList.length; i++)
   {
     var currSignon = TrimString(rejectList[i]);
@@ -227,8 +232,10 @@ function DeleteAllSites() {
 function LoadNopreview()
 {
   nopreviewList = signonviewer.GetNopreviewValue();
-  var delim = nopreviewList[0];
-  nopreviewList = nopreviewList.split(delim);
+  if (nopreviewList.length > 0) {
+    var delim = nopreviewList[0];
+    nopreviewList = nopreviewList.split(delim);
+  }
   for(var i = 1; i < nopreviewList.length; i++)
   {
     var currSignon = TrimString(nopreviewList[i]);
@@ -271,8 +278,10 @@ function DeleteAllNopreviews() {
 function LoadNocapture()
 {
   nocaptureList = signonviewer.GetNocaptureValue();
-  var delim = nocaptureList[0];
-  nocaptureList = nocaptureList.split(delim);
+  if (nocaptureList.length > 0) {
+    var delim = nocaptureList[0];
+    nocaptureList = nocaptureList.split(delim);
+  }
   for(var i = 1; i < nocaptureList.length; i++)
   {
     var currSignon = TrimString(nocaptureList[i]);
@@ -370,14 +379,15 @@ function DeleteItemSelected(tree, prefix, kids) {
   var delnarray = [];
   var rv = "";
   var cookietree = document.getElementById(tree);
+  var i;
   selitems = cookietree.selectedItems;
-  for(var i = 0; i < selitems.length; i++) 
+  for(i = 0; i < selitems.length; i++) 
   { 
     delnarray[i] = document.getElementById(selitems[i].getAttribute("id"));
     var itemid = parseInt(selitems[i].getAttribute("id").substring(prefix.length,selitems[i].getAttribute("id").length));
     rv += (itemid + ",");
   }
-  for(var i = 0; i < delnarray.length; i++) 
+  for(i = 0; i < delnarray.length; i++) 
   { 
     document.getElementById(kids).removeChild(delnarray[i]);
   }
@@ -436,18 +446,19 @@ function HandleEvent( event, page )
 function DoButtonEnabling( treeid )
 {
   var tree = document.getElementById( treeid );
+  var button;
   switch( treeid ) {
   case "signonstree":
-    var button = document.getElementById("removeSignon");
+    button = document.getElementById("removeSignon");
     break;
   case "ignoretree":
-    var button = document.getElementById("removeIgnoredSite");
+    button = document.getElementById("removeIgnoredSite");
     break;
   case "nopreviewtree":
-    var button = document.getElementById("removeNoPreview");
+    button = document.getElementById("removeNoPreview");
     break;
   case "nocapturetree":
-    var button = document.getElementById("removeNoCapture");
+    button = document.getElementById("removeNoCapture");
     break;
   default:
     break;
