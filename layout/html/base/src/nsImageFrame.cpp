@@ -157,6 +157,7 @@ nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus)
   printf(": UpdateImage: status=%x\n", aStatus);
 #endif
   if (NS_IMAGE_LOAD_STATUS_ERROR & aStatus) {
+#ifdef XXX_troy_is_back_from_sabatical
     // We failed to load the image. Notify the pres shell
     nsIPresShell* presShell;
     aPresContext->GetShell(&presShell);
@@ -164,6 +165,7 @@ nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus)
       presShell->CantRenderReplacedElement(aPresContext, this);
       NS_RELEASE(presShell);
     }
+#endif
   }
   else if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
     // Now that the size is available, trigger a content-changed reflow
