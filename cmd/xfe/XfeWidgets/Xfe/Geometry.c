@@ -340,15 +340,26 @@ _XfeConfigureWidget(Widget w,int x,int y,int width,int height)
 	printf("_XfeConfigureWidget(%s,%d,%d,%d,%d)\n",XtName(w),x,y,width,height);
 #endif
 
-#if 0
-	assert( x >= 0 );
-	assert( y >= 0 );
-
-	assert( width > 0 );
-	assert( height > 0 );
+    /* The dimensions could be negative since we use ints.  This would
+     * indicate that the caller is passing in bad dimension values.
+     * 
+     * These assertions help me find such problems.
+     */
+#ifdef DEBUG_ramiro
+	assert( width >= 0 );
+	assert( height >= 0 );
 #endif
 
-	/* Ignore this request if width or height are 0 */
+	/* Ignore this request if width or height are 0.
+     *
+     * The right thing would be for the above asserts to catch 0 as well.
+     *
+     * The problem is that the dynamic nature of manager widgets, sometimes
+     * causes them to resize their children to be tiny (zero).
+     *
+     * Well, its not really a "problem".  Ignoring it is seems like a 
+     * reasonable thing to do for now.
+     */
 	if (!width || !height)
 	{
 		return;
