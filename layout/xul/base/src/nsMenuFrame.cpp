@@ -30,6 +30,8 @@
 #include "nsLayoutAtoms.h"
 #include "nsMenuPopupFrame.h"
 #include "nsMenuBarFrame.h"
+#include "nsIView.h"
+#include "nsIWidget.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   (NS_AREA_FRAME_ABSOLUTE_LIST_INDEX + 1)
 
@@ -334,6 +336,17 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
     // Make sure we clear out our own items.
     if (menuPopup)
       menuPopup->SetCurrentMenuItem(nsnull);
+
+    // Set the focus back to our view's widget.
+    nsIView*  view;
+    GetView(&view);
+    if (!view) {
+      nsPoint offset;
+      GetOffsetFromView(offset, &view);
+    }
+    nsCOMPtr<nsIWidget> widget;
+    view->GetWidget(*getter_AddRefs(widget));
+    widget->SetFocus();
   }
 }
 

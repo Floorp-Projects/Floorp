@@ -350,7 +350,8 @@ NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIFrame* aMenuItem)
   // Unset the current child.
   if (mCurrentMenu) {
     wasOpen = menuFrame->IsOpen();
-    menuFrame->OpenMenu(PR_FALSE);
+    if (wasOpen)
+      menuFrame->OpenMenu(PR_FALSE);
     menuFrame->SelectMenu(PR_FALSE);
   }
 
