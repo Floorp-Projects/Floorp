@@ -63,6 +63,10 @@
 
 #include "nsFrameWindow.h"     // OS/2 only
 
+#ifdef IBMBIDI
+#include "nsBidiKeyboard.h"
+#endif
+
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
 static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
@@ -92,6 +96,9 @@ static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
 static NS_DEFINE_CID(kCSound,   NS_SOUND_CID);
 static NS_DEFINE_CID(kCFileSpecWithUI,   NS_FILESPECWITHUI_CID);
 
+#ifdef IBMBIDI
+static NS_DEFINE_IID(kCBidiKeyboard,   NS_BIDIKEYBOARD_CID);
+#endif
 
 class nsWidgetFactory : public nsIFactory
 {   
@@ -233,6 +240,11 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     else if (mClassID.Equals(kCFontRetrieverService)) {
         inst = (nsISupports*)(nsIFontRetrieverService *)new nsFontRetrieverService();
     }
+#ifdef IBMBIDI
+    else if (mClassID.Equals(kCBidiKeyboard)) {
+        inst = (nsISupports*)(nsIBidiKeyboard*) new nsBidiKeyboard();
+    }
+#endif // IBMBIDI
 
     else if (mClassID.Equals(kCClipboard)) {
         inst = (nsISupports*)(nsBaseClipboard *)new nsClipboard();

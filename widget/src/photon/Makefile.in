@@ -44,6 +44,7 @@ OLD_WIDGETS = \
 
 						
 CPPSRCS		= \
+		nsBidiKeyboard.cpp \
 		nsButton.cpp \
 		nsTextAreaWidget.cpp \
 		nsTextHelper.cpp \

@@ -33,6 +33,7 @@ DIRS		= app_context
 
 CPPSRCS		= \
 		nsAppShell.cpp \
+		nsBidiKeyboard.cpp \
 		nsButton.cpp \
 		nsCheckButton.cpp \
 		nsComboBox.cpp \

@@ -37,6 +37,7 @@ endif
 
 CPPSRCS		= \
 		nsAppShell.cpp \
+		nsBidiKeyboard.cpp \
 		nsCanvas.cpp \
 		nsClipboard.cpp \
 		nsDirPicker.cpp \
