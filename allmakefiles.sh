@@ -1477,6 +1477,9 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/schema-validation/public/Makefile
             extensions/schema-validation/src/Makefile
             " ;;
+        permissions ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/permissions/Makefile
+            " ;;
     esac
 done
 
@@ -2079,6 +2082,7 @@ MAKEFILES_zlib="modules/zlib/standalone/Makefile"
         offline-startup) add_makefiles "$MAKEFILES_offline_startup" ;;
         oji) add_makefiles "$MAKEFILES_oji" ;;
         p3p) add_makefiles "$MAKEFILES_p3p" ;;
+        permissions) add_makefiles "$MAKEFILES_permissions" ;;
         plugin) add_makefiles "$MAKEFILES_plugin" ;;
         png) add_makefiles "$MAKEFILES_png" ;;
         pref) add_makefiles "$MAKEFILES_pref" ;;

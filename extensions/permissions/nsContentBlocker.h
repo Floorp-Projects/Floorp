@@ -70,7 +70,8 @@ private:
   nsresult TestPermission(nsIURI *aCurrentURI,
                           nsIURI *aFirstURI,
                           PRInt32 aContentType,
-                          PRBool *aPermission);
+                          PRBool *aPermission,
+                          PRBool *aFromPrefs);
 
   nsCOMPtr<nsIPermissionManager> mPermissionManager;
   nsCOMPtr<nsIPrefBranchInternal> mPrefBranchInternal;

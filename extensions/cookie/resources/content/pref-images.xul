@@ -92,15 +92,15 @@
     <description>&imageDetails;</description>
 
     <radiogroup id="networkImageBehaviour"
-                prefstring="network.image.imageBehavior">
+                prefstring="permissions.default.image">
       <radio value="2" label="&disableImages.label;"
              accesskey="&disableImages.accesskey;"
              oncommand="setDisables();"/>
-      <radio value="1" label="&accOrgImagesRadio.label;"
+      <radio value="3" label="&accOrgImagesRadio.label;"
              accesskey="&accOrgImagesRadio.accesskey;"
              id="accOrgImages" observes="haveImageBlocking"
              oncommand="setDisables();"/>
-      <radio value="0" label="&accAllImagesRadio.label;"
+      <radio value="1" label="&accAllImagesRadio.label;"
              accesskey="&accAllImagesRadio.accesskey;"
              oncommand="setDisables();"/>
     </radiogroup>

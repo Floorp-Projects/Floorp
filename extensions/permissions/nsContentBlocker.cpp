@@ -90,6 +90,29 @@ nsContentBlocker::Init()
   rv = prefService->GetBranch("permissions.default.", getter_AddRefs(prefBranch));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Migrate old image blocker pref
+  nsCOMPtr<nsIPrefBranch> oldPrefBranch;
+  oldPrefBranch = do_QueryInterface(prefService);
+  PRInt32 oldPref;
+  oldPrefBranch->GetIntPref("network.image.imageBehavior", &oldPref);
+  if (oldPref) {
+    PRInt32 newPref;
+    switch (oldPref) {
+      default:
+        newPref = BEHAVIOR_ACCEPT;
+        break;
+      case 1:
+        newPref = BEHAVIOR_NOFOREIGN;
+        break;
+      case 2:
+        newPref = BEHAVIOR_REJECT;
+        break;
+    }
+    prefBranch->SetIntPref("image", newPref);
+    oldPrefBranch->ClearUserPref("network.image.imageBehavior");
+  }
+
+
   // The branch is not a copy of the prefservice, but a new object, because
   // it is a non-default branch. Adding obeservers to it will only work if
   // we make sure that the object doesn't die. So, keep a reference to it.
@@ -152,11 +175,15 @@ nsContentBlocker::ShouldLoad(PRUint32          aContentType,
       !scheme.LowerCaseEqualsLiteral("https"))
     return NS_OK;
 
-  PRBool shouldLoad;
-  rv = TestPermission(aContentLocation, aRequestingLocation, aContentType, &shouldLoad);
+  PRBool shouldLoad, fromPrefs;
+  rv = TestPermission(aContentLocation, aRequestingLocation, aContentType,
+                      &shouldLoad, &fromPrefs);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!shouldLoad)
-    *aDecision = nsIContentPolicy::REJECT_SERVER;
+    if (fromPrefs)
+      *aDecision = nsIContentPolicy::REJECT_TYPE;
+    else
+      *aDecision = nsIContentPolicy::REJECT_SERVER;
 
   return NS_OK;
 }
@@ -195,8 +222,10 @@ nsresult
 nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
                                  nsIURI *aFirstURI,
                                  PRInt32 aContentType,
-                                 PRBool *aPermission)
+                                 PRBool *aPermission,
+                                 PRBool *aFromPrefs)
 {
+  *aFromPrefs = PR_FALSE;
   // This default will also get used if there is an unknown value in the
   // permission list, or if the permission manager returns unknown values.
   *aPermission = PR_TRUE;
@@ -212,14 +241,14 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If there is nothing on the list, use the default.
+  if (!permission) {
+    permission = mBehaviorPref[aContentType - 1];
+    *aFromPrefs = PR_TRUE;
+  }
+
   // Use the fact that the nsIPermissionManager values map to 
   // the BEHAVIOR_* values above.
   switch (permission) {
-  case nsIPermissionManager::UNKNOWN_ACTION:
-    permission = mBehaviorPref[aContentType - 1];
-    break;
-
-  // if we found an entry, use it
   case BEHAVIOR_ACCEPT:
     *aPermission = PR_TRUE;
     break;
