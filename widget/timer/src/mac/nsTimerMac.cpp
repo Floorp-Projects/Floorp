@@ -199,7 +199,8 @@ void nsTimerImpl::SetType(PRUint32 aType)
 
 
 #pragma mark -
-                
+
+#if 0
 //----------------------------------------------------------------------------------------
 PR_PUBLIC_API(nsresult) NS_NewTimer(nsITimer** aInstancePtrResult)
 //----------------------------------------------------------------------------------------
@@ -215,3 +216,4 @@ PR_PUBLIC_API(nsresult) NS_NewTimer(nsITimer** aInstancePtrResult)
 
     return timer->QueryInterface(nsITimer::GetIID(), (void **) aInstancePtrResult);
 }
+#endif
