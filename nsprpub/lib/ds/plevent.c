@@ -44,6 +44,10 @@ typedef MPARAM WPARAM,LPARAM;
 #include <fcntl.h>
 #endif
 
+#if defined(XP_BEOS)
+#include <kernel/OS.h>
+#endif
+
 #if defined(XP_MAC)
 #include <AppleEvents.h>
 #include "pprthred.h"
