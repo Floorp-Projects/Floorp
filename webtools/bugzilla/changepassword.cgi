@@ -20,6 +20,8 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
+use strict;
+
 print q{Content-type: text/html
 
 <HTML>
