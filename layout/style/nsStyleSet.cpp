@@ -31,7 +31,7 @@
 #include "nsIStyleFrameConstruction.h"
 #include "nsLayoutAtoms.h"
 #include "stopwatch.h"
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
 #include "nsITimeRecorder.h"
 #endif
 
@@ -40,7 +40,7 @@ static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_I
 
 
 class StyleSetImpl : public nsIStyleSet 
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
                    , public nsITimeRecorder
 #endif
 {
@@ -164,7 +164,7 @@ public:
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0);
 
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
   NS_DECL_NSITIMERECORDER
 #endif
 
@@ -196,7 +196,7 @@ protected:
 
   nsIStyleFrameConstruction* mFrameConstructor;
 
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
   Stopwatch mStyleResolutionWatch;
 #endif
 };
@@ -222,7 +222,7 @@ StyleSetImpl::~StyleSetImpl()
   NS_IF_RELEASE(mRecycler);
 }
 
-#ifndef RAPTOR_PERF_METRICS
+#ifndef MOZ_PERF_METRICS
 NS_IMPL_ISUPPORTS(StyleSetImpl, kIStyleSetIID)
 #else
 NS_IMPL_ISUPPORTS2(StyleSetImpl, nsIStyleSet, nsITimeRecorder)
@@ -1096,7 +1096,7 @@ NS_NewStyleSet(nsIStyleSet** aInstancePtrResult)
 
 // nsITimeRecorder implementation
 
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
 NS_IMETHODIMP
 StyleSetImpl::ResetTimer(PRUint32 aTimerID)
 {

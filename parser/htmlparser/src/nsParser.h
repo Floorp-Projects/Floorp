@@ -390,7 +390,7 @@ protected:
     nsresult            mInternalState;
     CObserverService    mObserverService;
 
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
 public:
     Stopwatch           mTotalTime;
     Stopwatch           mParseTime;

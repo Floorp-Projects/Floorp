@@ -489,7 +489,7 @@ protected:
   // if there is no mWindow, this will keep track of the bounds  --dwc0001
   nsRect  mBounds;
 
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
   Stopwatch mTotalTime;
 #endif
 
@@ -2068,7 +2068,7 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
 
   mProcessedEndDocumentLoad = PR_FALSE;
 
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
   {
      char* url;
      nsresult rv = NS_OK;
@@ -3296,7 +3296,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
                               nsresult aStatus,
                               nsIDocumentLoaderObserver * aWebShell)
 {
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
   RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: nsWebShell::OnEndDocumentLoad(), this=%p\n", this));
   NS_STOP_STOPWATCH(mTotalTime)
   RAPTOR_STOPWATCH_TRACE(("Total (Layout + Page Load) Time (webshell=%p): ", this));

@@ -22,10 +22,6 @@ include <$(DEPTH)\config\config.mak>
 LIBRARY_NAME=raptorhtmlpars 
 DEFINES=-D_IMPL_NS_HTMLPARS -DWIN32_LEAN_AND_MEAN -DXML_DTD
 
-!if defined(MOZ_PERF)
-DEFINES = $(DEFINES) -DRAPTOR_PERF_METRICS
-!endif
-
 MODULE=raptor 
 REQUIRES=xpcom raptor netlib 
 IS_COMPONENT = 1
