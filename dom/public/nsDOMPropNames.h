@@ -258,6 +258,7 @@
     "documentview.defaultview", \
     "documentxbl.addbinding", \
     "documentxbl.getanonymousnodes", \
+    "documentxbl.loadbindingdocument", \
     "documentxbl.removebinding", \
     "domexception.code", \
     "domexception.message", \

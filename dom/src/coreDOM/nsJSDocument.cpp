@@ -1183,6 +1183,52 @@ DocumentXBLRemoveBinding(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
 
 //
+// Native method LoadBindingDocument
+//
+PR_STATIC_CALLBACK(JSBool)
+DocumentXBLLoadBindingDocument(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDocument *privateThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMDocumentXBL> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIDocumentXBLIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  nsAutoString b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENTXBL_LOADBINDINGDOCUMENT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    result = nativeThis->LoadBindingDocument(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method CreateElementWithNameSpace
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1378,6 +1424,7 @@ static JSFunctionSpec DocumentMethods[] =
   {"getAnonymousNodes",          DocumentXBLGetAnonymousNodes,     1},
   {"addBinding",          DocumentXBLAddBinding,     2},
   {"removeBinding",          DocumentXBLRemoveBinding,     2},
+  {"loadBindingDocument",          DocumentXBLLoadBindingDocument,     1},
   {"createElementWithNameSpace",          NSDocumentCreateElementWithNameSpace,     2},
   {"createRange",          NSDocumentCreateRange,     0},
   {"load",          NSDocumentLoad,     1},

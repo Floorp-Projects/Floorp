@@ -818,7 +818,7 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
   uri.Truncate(indx);
 
   nsCOMPtr<nsIXBLDocumentInfo> docInfo;
-  GetBindingDocumentInfo(aBoundElement, uri, ref, getter_AddRefs(docInfo));
+  LoadBindingDocumentInfo(aBoundElement, uri, ref, PR_FALSE, getter_AddRefs(docInfo));
   if (!docInfo)
     return NS_ERROR_FAILURE;
 
@@ -903,8 +903,8 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
 }
 
 NS_IMETHODIMP
-nsXBLService::GetBindingDocumentInfo(nsIContent* aBoundElement, const nsCString& aURLStr, const nsCString& aRef,
-                                     nsIXBLDocumentInfo** aResult)
+nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, const nsCString& aURLStr, const nsCString& aRef,
+                                      PRBool aForceSyncLoad, nsIXBLDocumentInfo** aResult)
 {
   nsresult rv;
 
@@ -928,8 +928,9 @@ nsXBLService::GetBindingDocumentInfo(nsIContent* aBoundElement, const nsCString&
     bindingManager->GetXBLDocumentInfo(aURLStr, getter_AddRefs(info));
  
     nsCOMPtr<nsIAtom> tagName;
-    aBoundElement->GetTag(*getter_AddRefs(tagName));
-    if (!info && (tagName.get() != kScrollbarAtom)) {
+    if (aBoundElement)
+      aBoundElement->GetTag(*getter_AddRefs(tagName));
+    if (!info && (tagName.get() != kScrollbarAtom) && !aForceSyncLoad) {
       // The third line of defense is to investigate whether or not the
       // document is currently being loaded asynchronously.  If so, there's no
       // document yet, but we need to glom on our request so that it will be
@@ -961,7 +962,7 @@ nsXBLService::GetBindingDocumentInfo(nsIContent* aBoundElement, const nsCString&
                                          getter_AddRefs(uri));
       uri->SetSpec(aURLStr);
       nsCOMPtr<nsIDocument> document;
-      FetchBindingDocument(aBoundElement, uri, aRef, getter_AddRefs(document));
+      FetchBindingDocument(aBoundElement, uri, aRef, aForceSyncLoad, getter_AddRefs(document));
    
       if (document) {
         NS_NewXBLDocumentInfo(document, getter_AddRefs(info));
@@ -1003,7 +1004,8 @@ nsXBLService::GetBindingDocumentInfo(nsIContent* aBoundElement, const nsCString&
 }
 
 NS_IMETHODIMP
-nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIURI* aURI, const nsCString& aRef, nsIDocument** aResult)
+nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIURI* aURI, const nsCString& aRef, 
+                                   PRBool aForceSyncLoad, nsIDocument** aResult)
 {
   // Initialize our out pointer to nsnull
   *aResult = nsnull;
@@ -1041,7 +1043,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIURI* aURI, cons
 
   nsCOMPtr<nsIAtom> tagName;
   aBoundElement->GetTag(*getter_AddRefs(tagName)); 
-  if (tagName.get() != kScrollbarAtom) {
+  if (tagName.get() != kScrollbarAtom && !aForceSyncLoad) {
     // We can be asynchronous
     nsXBLStreamListener* xblListener = new nsXBLStreamListener(listener, boundDoc, doc);
     

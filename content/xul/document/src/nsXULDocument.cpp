@@ -2978,6 +2978,14 @@ nsXULDocument::RemoveBinding(nsIDOMElement* aContent, const nsString& aURL)
 }
 
 NS_IMETHODIMP
+nsXULDocument::LoadBindingDocument(const nsString& aURL)
+{
+  if (mBindingManager)
+    return mBindingManager->LoadBindingDocument(aURL);
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 nsXULDocument::GetAnonymousNodes(nsIDOMElement* aElement, nsIDOMNodeList** aResult)
 {
   nsresult rv;

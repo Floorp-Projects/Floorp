@@ -2347,6 +2347,14 @@ nsDocument::RemoveBinding(nsIDOMElement* aContent, const nsString& aURL)
 }
 
 NS_IMETHODIMP
+nsDocument::LoadBindingDocument(const nsString& aURL)
+{
+  if (mBindingManager)
+    return mBindingManager->LoadBindingDocument(aURL);
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 nsDocument::GetAnonymousNodes(nsIDOMElement* aElement, nsIDOMNodeList** aResult)
 {
   nsresult rv;

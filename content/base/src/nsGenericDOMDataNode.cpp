@@ -576,7 +576,7 @@ nsGenericDOMDataNode::ConvertContentToXIF(const nsIContent *aOuterContent,
   nsCOMPtr<nsIDOMSelection> sel;
   aConverter->GetSelection(getter_AddRefs(sel));
 
-  if (sel && mDocument->IsInSelection(sel,content))
+  if (sel && mDocument && mDocument->IsInSelection(sel,content))
   {
     nsCOMPtr<nsIEnumerator> enumerator;
     if (NS_SUCCEEDED(sel->GetEnumerator(getter_AddRefs(enumerator)))) {
