@@ -108,7 +108,7 @@ void (* nativeInitialize) (JNIEnv *, jobject, jint);
 void (* nativeProcessEvents) (JNIEnv *, jobject, jint);
 // from BookmarksImpl.h
 jint (* nativeGetBookmarks) (JNIEnv *, jobject, jint);
-jint (* nativeNewRDFNode)  (JNIEnv *, jobject, jstring);
+jint (* nativeNewRDFNode)  (JNIEnv *, jobject, jstring, jboolean);
 // from CurrentPageImpl.h
 void (* nativeCopyCurrentSelectionToSystemClipboard) (JNIEnv *, jobject, jint);
 void (* nativeFindInPage) (JNIEnv *, jobject, jstring, jboolean, jboolean);
@@ -362,7 +362,7 @@ void locateBrowserControlStubFunctions(void * dll) {
   if (!nativeGetBookmarks) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeNewRDFNode = (jint (*) (JNIEnv *, jobject, jstring)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeNewRDFNode");
+  nativeNewRDFNode = (jint (*) (JNIEnv *, jobject, jstring, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeNewRDFNode");
   if (!nativeNewRDFNode) {
     printf("got dlsym error %s\n", dlerror());
   }
@@ -418,6 +418,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
 
 void loadMainDll(void)
 {
+   printf ("Inside NativeLoaderStub.cpp::loadMainDll\n");
     webClientDll = dlopen("libwebclient.so", RTLD_LAZY | RTLD_GLOBAL);
     if (webClientDll) {
         locateBrowserControlStubFunctions(webClientDll);
@@ -445,8 +446,8 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_
  * Signature: (Ljava/lang/String;)I
  */
 JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeNewRDFNode
-(JNIEnv * env, jobject obj, jstring url) {
-  return (* nativeNewRDFNode) (env, obj, url);
+(JNIEnv * env, jobject obj, jstring url, jboolean isFolder) {
+  return (* nativeNewRDFNode) (env, obj, url, isFolder);
 }
 
 
