@@ -30,6 +30,9 @@ XPIDLSRCS =					\
 	.\nsIDOMXULDocument.idl			\
 	.\nsIDOMXULElement.idl			\
 	.\nsIDOMXULTreeElement.idl		\
+	.\nsIDOMXULControlElement.idl          \
+	.\nsIDOMXULLabeledControlEl.idl          \
+	.\nsIDOMXULCheckboxElement.idl          \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
