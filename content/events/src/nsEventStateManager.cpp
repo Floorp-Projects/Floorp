@@ -178,6 +178,13 @@ nsEventStateManager::Init()
 
 nsEventStateManager::~nsEventStateManager()
 {
+#if CLICK_HOLD_CONTEXT_MENUS
+  if ( mClickHoldTimer ) {
+    mClickHoldTimer->Cancel();
+    mClickHoldTimer = nsnull;
+  }
+#endif
+
   NS_IF_RELEASE(mCurrentTargetContent);
   NS_IF_RELEASE(mCurrentRelatedContent);
 
@@ -695,6 +702,26 @@ nsEventStateManager :: CreateClickHoldTimer ( nsIPresContext* inPresContext, nsG
     mClickHoldTimer = nsnull;
   }
   
+  // if content clicked on has a popup, don't even start the timer
+  // since we'll end up conflicting and both will show.
+  nsCOMPtr<nsIContent> clickedContent;
+  if ( mGestureDownFrame ) {
+    mGestureDownFrame->GetContent(getter_AddRefs(clickedContent));
+    if ( clickedContent ) {
+      // check for the |popup| attribute
+      nsAutoString popup;
+      clickedContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popup, popup);
+      if ( popup != NS_LITERAL_STRING("") )
+        return;
+      
+      // check for a <menubutton> like bookmarks
+      nsCOMPtr<nsIAtom> tag;
+      clickedContent->GetTag ( *getter_AddRefs(tag) );
+      if ( tag == nsXULAtoms::menubutton )
+        return;
+    }
+  }
+
   mClickHoldTimer = do_CreateInstance("@mozilla.org/timer;1");
   if ( mClickHoldTimer )
     mClickHoldTimer->Init(sClickHoldCallback, this, kClickHoldDelay, NS_PRIORITY_HIGH);
