@@ -24,7 +24,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresShell.h"
@@ -52,21 +52,13 @@ NS_IMETHODIMP nsBaseFilePicker::DOMWindowToWidget(nsIDOMWindow *dw, nsIWidget **
 
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(dw);
   if (sgo) {
-    nsCOMPtr<nsIWebShell> webShell;
-    sgo->GetWebShell(getter_AddRefs(webShell));
+    nsCOMPtr<nsIDocShell> docShell;
+    sgo->GetDocShell(getter_AddRefs(docShell));
     
-    if (webShell) {
+    if (docShell) {
 
-      nsCOMPtr<nsIContentViewer> contentViewer;
-      rv = webShell->GetContentViewer(getter_AddRefs(contentViewer));
-
-      if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIDocumentViewer> documentViewer;
-        documentViewer = do_QueryInterface(webShell, &rv);
-        
-        if (NS_SUCCEEDED(rv)) {
           nsCOMPtr<nsIPresShell> presShell;
-          rv = documentViewer->GetPresShell(*getter_AddRefs(presShell));
+          rv = docShell->GetPresShell(getter_AddRefs(presShell));
 
           if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsIViewManager> viewManager;
@@ -89,8 +81,6 @@ NS_IMETHODIMP nsBaseFilePicker::DOMWindowToWidget(nsIDOMWindow *dw, nsIWidget **
               }
             }
           }
-        }
-      }
     }
   }
   return rv;
