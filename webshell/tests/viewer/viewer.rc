@@ -111,7 +111,7 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "Help &Yourself",              ID_NOHELP
+        MENUITEM "No Help Available",           ID_NOHELP
     END
 END
 
