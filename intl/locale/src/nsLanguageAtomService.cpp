@@ -218,7 +218,6 @@ nsLanguageAtomService::LookupCharSet(const PRUnichar* aCharSet,
     res = mLangs->QueryElementAt(i, NS_GET_IID(nsILanguageAtom),
                                  getter_AddRefs(lang));
     if (NS_SUCCEEDED(res)) {
-      PRBool same = PR_FALSE;
       nsCOMPtr<nsIAtom> group;
       NS_ENSURE_SUCCESS(lang->GetLanguageGroup(getter_AddRefs(group)),
         NS_ERROR_FAILURE);
