@@ -18,7 +18,8 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
- * Contributor(s):
+ * Contributor(s): 
+ *	Dr Stephen Henson <stephen.henson@gemplus.com>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -32,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.18 2001/03/31 02:49:59 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.19 2001/04/11 00:29:17 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -92,6 +93,9 @@ static SECStatus Null_Cipher(void *ctx, unsigned char *output, int *outputLen,
  */
 static ssl3CipherSuiteCfg cipherSuites[ssl_V3_SUITES_IMPLEMENTED] = {
    /*      cipher_suite                         policy      enabled is_present*/
+ { TLS_DHE_DSS_WITH_RC4_128_SHA,           SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
+ { SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA,      SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
+ { SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA,      SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
  { SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA, SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
  { SSL_FORTEZZA_DMS_WITH_RC4_128_SHA,      SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
  { SSL_RSA_WITH_RC4_128_SHA,               SSL_NOT_ALLOWED, PR_FALSE,PR_FALSE},
@@ -99,6 +103,8 @@ static ssl3CipherSuiteCfg cipherSuites[ssl_V3_SUITES_IMPLEMENTED] = {
  { SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,     SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
  { SSL_RSA_WITH_3DES_EDE_CBC_SHA,          SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
  { SSL_RSA_FIPS_WITH_DES_CBC_SHA,          SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
+ { SSL_DHE_RSA_WITH_DES_CBC_SHA,           SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
+ { SSL_DHE_DSS_WITH_DES_CBC_SHA,           SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
  { SSL_RSA_WITH_DES_CBC_SHA,               SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
  { TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,     SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
  { TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA,    SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
@@ -221,7 +227,10 @@ static const ssl3CipherSuiteDef cipher_suite_defs[] = {
 #endif
     {SSL_RSA_WITH_DES_CBC_SHA,      cipher_des,    mac_sha, kea_rsa},
     {SSL_RSA_WITH_3DES_EDE_CBC_SHA, cipher_3des,   mac_sha, kea_rsa},
-
+    {SSL_DHE_DSS_WITH_DES_CBC_SHA,  cipher_des,    mac_sha, kea_dhe_dss},
+    {SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA,
+                                    cipher_3des,   mac_sha, kea_dhe_dss},
+    {TLS_DHE_DSS_WITH_RC4_128_SHA,  cipher_rc4,    mac_sha, kea_dhe_dss},
 #if 0 /* not implemented */
     {SSL_DH_DSS_EXPORT_WITH_DES40_CBC_SHA,
                                     cipher_des40,  mac_sha, kea_dh_dss_export},
@@ -230,15 +239,16 @@ static const ssl3CipherSuiteDef cipher_suite_defs[] = {
     {SSL_DH_RSA_EXPORT_WITH_DES40_CBC_SHA,
                                     cipher_des40,  mac_sha, kea_dh_rsa_export},
     {SSL_DH_RSA_DES_CBC_SHA,        cipher_des,    mac_sha, kea_dh_rsa},
-    {SSL_DH_RSA_3DES_CBC_SHA,       cipher_des,    mac_sha, kea_dh_rsa},
+    {SSL_DH_RSA_3DES_CBC_SHA,       cipher_3des,   mac_sha, kea_dh_rsa},
     {SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA,
                                     cipher_des40,  mac_sha, kea_dh_dss_export},
-    {SSL_DHE_DSS_DES_CBC_SHA,       cipher_des,    mac_sha, kea_dh_dss},
-    {SSL_DHE_DSS_3DES_CBC_SHA,      cipher_3des,   mac_sha, kea_dh_dss},
     {SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA,
                                     cipher_des40,  mac_sha, kea_dh_rsa_export},
-    {SSL_DHE_RSA_DES_CBC_SHA,       cipher_des,    mac_sha, kea_dh_rsa},
-    {SSL_DHE_RSA_3DES_CBC_SHA,      cipher_des,    mac_sha, kea_dh_rsa},
+#endif
+    {SSL_DHE_RSA_WITH_DES_CBC_SHA,  cipher_des,    mac_sha, kea_dhe_rsa},
+    {SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA,
+                                    cipher_3des,   mac_sha, kea_dhe_rsa},
+#if 0
     {SSL_DH_ANON_EXPORT_RC4_40_MD5, cipher_rc4_40, mac_md5, kea_dh_anon_export},
     {SSL_DH_ANON_EXPORT_RC4_40_MD5, cipher_rc4,    mac_md5, kea_dh_anon_export},
     {SSL_DH_ANON_EXPORT_WITH_DES40_CBC_SHA,
@@ -631,6 +641,8 @@ ssl3_VerifySignedHashes(SSL3Hashes *hash, CERTCertificate *cert,
     	return SECFailure;
     }
 
+
+
     switch (key->keyType) {
     case rsaKey:
     	hashItem.data = hash->md5;
@@ -756,6 +768,96 @@ done:
     return rv;
 }
 
+/* Caller must set hiLevel error code. */
+static SECStatus
+ssl3_ComputeDHKeyHash(SECItem dh_p, SECItem dh_g, SECItem dh_Ys,
+			     SSL3Random *client_rand, SSL3Random *server_rand,
+			     SSL3Hashes *hashes)
+{
+    PK11Context * md5 		= NULL;
+    PK11Context * sha 		= NULL;
+    PRUint8     * hashBuf;
+    PRUint8     * pBuf;
+    SECStatus     rv 		= SECSuccess;
+    unsigned int  outLen;
+    unsigned int  bufLen;
+    PRUint8       buf[2*SSL3_RANDOM_LENGTH + 2 + 4096/8 + 2 + 4096/8];
+
+    bufLen = 2*SSL3_RANDOM_LENGTH + 2 + dh_p.len + 2 + dh_g.len + 2 + dh_Ys.len;
+    if (bufLen <= sizeof buf) {
+    	hashBuf = buf;
+    } else {
+    	hashBuf = PORT_Alloc(bufLen);
+	if (!hashBuf) {
+	    return SECFailure;
+	}
+    }
+
+    md5 = PK11_CreateDigestContext(SEC_OID_MD5);
+    if (md5 == NULL) {
+	ssl_MapLowLevelError(SSL_ERROR_MD5_DIGEST_FAILURE);
+	rv = SECFailure; /* Caller must set hiLevel error code. */
+	goto done;
+    }
+    sha = PK11_CreateDigestContext(SEC_OID_SHA1);
+    if (sha == NULL) {
+	ssl_MapLowLevelError(SSL_ERROR_SHA_DIGEST_FAILURE);
+	rv = SECFailure; /* Caller must set hiLevel error code. */
+	goto done;
+    }
+
+    memcpy(hashBuf, client_rand, SSL3_RANDOM_LENGTH); 
+    	pBuf = hashBuf + SSL3_RANDOM_LENGTH;
+    memcpy(pBuf, server_rand, SSL3_RANDOM_LENGTH);
+    	pBuf += SSL3_RANDOM_LENGTH;
+    pBuf[0]  = (PRUint8)(dh_p.len >> 8);
+    pBuf[1]  = (PRUint8)(dh_p.len);
+    	pBuf += 2;
+    memcpy(pBuf, dh_p.data, dh_p.len);
+    	pBuf += dh_p.len;
+    pBuf[0] = (PRUint8)(dh_g.len >> 8);
+    pBuf[1] = (PRUint8)(dh_g.len);
+    	pBuf += 2;
+    memcpy(pBuf, dh_g.data, dh_g.len);
+    	pBuf += dh_g.len;
+    pBuf[0] = (PRUint8)(dh_Ys.len >> 8);
+    pBuf[1] = (PRUint8)(dh_Ys.len);
+    	pBuf += 2;
+    memcpy(pBuf, dh_Ys.data, dh_Ys.len);
+    	pBuf += dh_Ys.len;
+    PORT_Assert(pBuf - hashBuf == bufLen);
+
+    rv  = PK11_DigestBegin(md5);
+    rv |= PK11_DigestOp(md5, hashBuf, bufLen);
+    rv |= PK11_DigestFinal(md5, hashes->md5, &outLen, MD5_LENGTH);
+    PORT_Assert(rv != SECSuccess || outLen == MD5_LENGTH);
+    if (rv != SECSuccess) {
+	ssl_MapLowLevelError(SSL_ERROR_MD5_DIGEST_FAILURE);
+    	rv = SECFailure;
+	goto done;
+    }
+
+    rv  = PK11_DigestBegin(sha);
+    rv |= PK11_DigestOp(sha, hashBuf, bufLen);
+    rv |= PK11_DigestFinal(sha, hashes->sha, &outLen, SHA1_LENGTH);
+    PORT_Assert(rv != SECSuccess || outLen == SHA1_LENGTH);
+    if (rv != SECSuccess) {
+	ssl_MapLowLevelError(SSL_ERROR_SHA_DIGEST_FAILURE);
+    	rv = SECFailure;
+	goto done;
+    }
+
+    PRINT_BUF(95, (NULL, "DHkey hash: ", hashBuf, bufLen));
+    PRINT_BUF(95, (NULL, "DHkey hash: MD5 result", hashes->md5, MD5_LENGTH));
+    PRINT_BUF(95, (NULL, "DHkey hash: SHA1 result", hashes->sha, SHA1_LENGTH));
+
+done:
+    if (md5 != NULL) PK11_DestroyContext(md5, PR_TRUE);
+    if (sha != NULL) PK11_DestroyContext(sha, PR_TRUE);
+    if (hashBuf != buf && hashBuf != NULL)
+    	PORT_Free(hashBuf);
+    return rv;
+}
 /* Caller must set hiLevel error code. */
 static SECStatus
 ssl3_ComputeFortezzaPublicKeyHash(SECItem publicValue, unsigned char * hash)
@@ -1811,6 +1913,7 @@ ssl3_GenerateSessionKeys(sslSocket *ss, const PK11SymKey *pms)
     PRBool            skipKeysAndIVs = (PRBool)
     					((cipher_def->calg == calg_fortezza) ||
 					 (cipher_def->calg == calg_null));
+    PRBool            isDH = (PRBool) (ss->ssl3->hs.kea_def->exchKeyType == kt_dh);
     CK_MECHANISM_TYPE master_derive;
     CK_MECHANISM_TYPE key_derive;
     CK_MECHANISM_TYPE bulk_mechanism;
@@ -1825,13 +1928,14 @@ ssl3_GenerateSessionKeys(sslSocket *ss, const PK11SymKey *pms)
     PORT_Assert( ssl_HaveSSL3HandshakeLock(ss));
     PORT_Assert( ssl_HaveSpecWriteLock(ss));
     PORT_Assert(ss->ssl3->prSpec == ss->ssl3->pwSpec);
-
     if (isTLS) {
-	master_derive = CKM_TLS_MASTER_KEY_DERIVE;
+	if(isDH) master_derive = CKM_TLS_MASTER_KEY_DERIVE_DH;
+	else master_derive = CKM_TLS_MASTER_KEY_DERIVE;
 	key_derive    = CKM_TLS_KEY_AND_MAC_DERIVE;
 	keyFlags      = CKF_SIGN | CKF_VERIFY;
     } else {
-	master_derive = CKM_SSL3_MASTER_KEY_DERIVE;
+	if (isDH) master_derive = CKM_SSL3_MASTER_KEY_DERIVE_DH;
+	else master_derive = CKM_SSL3_MASTER_KEY_DERIVE;
 	key_derive    = CKM_SSL3_KEY_AND_MAC_DERIVE;
 	keyFlags      = 0;
     }
@@ -1851,7 +1955,7 @@ ssl3_GenerateSessionKeys(sslSocket *ss, const PK11SymKey *pms)
 	pwSpec->master_secret = PK11_DeriveWithFlags((PK11SymKey *)pms, 
 					master_derive, &params, key_derive, 
 					CKA_DERIVE, 0, keyFlags);
-	if (pwSpec->master_secret != NULL && ss->detectRollBack) {
+	if (!isDH && pwSpec->master_secret && ss->detectRollBack) {
 	    SSL3ProtocolVersion client_version;
 	    client_version = pms_version.major << 8 | pms_version.minor;
 	    if (client_version != ss->clientHelloVersion) {
@@ -3065,6 +3169,92 @@ loser:
     return rv;
 }
 
+/* Called from ssl3_SendClientKeyExchange(). */
+static SECStatus
+sendDHClientKeyExchange(sslSocket * ss, SECKEYPublicKey * svrPubKey)
+{
+    PK11SymKey *	pms 		= NULL;
+    SECStatus           rv    		= SECFailure;
+    PRBool              isTLS;
+    CK_MECHANISM_TYPE	target;
+
+    DHParams		dhParam;		/* DH parameters */
+    SECKEYPublicKey	*pubKey = NULL;		/* Ephemeral DH key */
+    SECKEYPrivateKey	*privKey = NULL;	/* Ephemeral DH key */
+
+    PORT_Assert( ssl_HaveSSL3HandshakeLock(ss) );
+    PORT_Assert( ssl_HaveXmitBufLock(ss));
+
+    isTLS = (PRBool)(ss->ssl3->pwSpec->version > SSL_LIBRARY_VERSION_3_0);
+
+    /* Copy DH parameters from server key */
+
+    dhParam.prime.data = svrPubKey->u.dh.prime.data;
+    dhParam.prime.len = svrPubKey->u.dh.prime.len;
+    dhParam.base.data = svrPubKey->u.dh.base.data;
+    dhParam.base.len = svrPubKey->u.dh.base.len;
+
+    /* Generate ephemeral DH keypair */
+    privKey = SECKEY_CreateDHPrivateKey(&dhParam, &pubKey, NULL);
+    if (!privKey || !pubKey) {
+	    ssl_MapLowLevelError(SEC_ERROR_KEYGEN_FAIL);
+	    rv = SECFailure;
+	    goto loser;
+    }
+    PRINT_BUF(50, (ss, "DH public value:",
+					pubKey->u.dh.publicValue.data,
+					pubKey->u.dh.publicValue.len));
+
+    if (isTLS) target = CKM_TLS_MASTER_KEY_DERIVE_DH;
+    else target = CKM_SSL3_MASTER_KEY_DERIVE_DH;
+
+    /* Determine the PMS */
+
+    pms = PK11_PubDerive(privKey, svrPubKey, PR_FALSE, NULL, NULL,
+			    CKM_DH_PKCS_DERIVE, target, CKA_DERIVE, 0, NULL);
+
+    if (pms == NULL) {
+	ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
+	goto loser;
+    }
+
+    SECKEY_DestroyPrivateKey(privKey);
+    privKey = NULL;
+
+    rv = ssl3_InitPendingCipherSpec(ss,  pms);
+    PK11_FreeSymKey(pms); pms = NULL;
+
+    if (rv != SECSuccess) {
+	ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
+	goto loser;
+    }
+
+    rv = ssl3_AppendHandshakeHeader(ss, client_key_exchange, 
+					pubKey->u.dh.publicValue.len + 2);
+    if (rv != SECSuccess) {
+	goto loser;	/* err set by ssl3_AppendHandshake* */
+    }
+    rv = ssl3_AppendHandshakeVariable(ss, 
+					pubKey->u.dh.publicValue.data,
+					pubKey->u.dh.publicValue.len, 2);
+    SECKEY_DestroyPublicKey(pubKey);
+    pubKey = NULL;
+
+    if (rv != SECSuccess) {
+	goto loser;	/* err set by ssl3_AppendHandshake* */
+    }
+
+    rv = SECSuccess;
+
+
+loser:
+
+    if(pms) PK11_FreeSymKey(pms);
+    if(privKey) SECKEY_DestroyPrivateKey(privKey);
+    if(pubKey) SECKEY_DestroyPublicKey(pubKey);
+    return rv;
+}
+
 /* fortezza client-auth portion of ClientKeyExchange message
  * This function appends the KEA public key from the client's  V3 cert
  * (empty for a V1 cert) to the outgoing ClientKeyExchange message.
@@ -3542,6 +3732,10 @@ ssl3_SendClientKeyExchange(sslSocket *ss)
 	rv = sendFortezzaClientKeyExchange(ss, serverKey);
 	break;
 
+    case kt_dh:
+	rv = sendDHClientKeyExchange(ss, serverKey);
+	break;
+
     default:
 	/* got an unknown or unsupported Key Exchange Algorithm.  */
 	SEND_ALERT
@@ -3907,6 +4101,9 @@ ssl3_HandleServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     SECItem          modulus   = {siBuffer, NULL, 0};
     SECItem          exponent  = {siBuffer, NULL, 0};
     SECItem          signature = {siBuffer, NULL, 0};
+    SECItem          dh_p      = {siBuffer, NULL, 0};
+    SECItem          dh_g      = {siBuffer, NULL, 0};
+    SECItem          dh_Ys     = {siBuffer, NULL, 0};
     SSL3Hashes       hashes;
 
     SSL_TRC(3, ("%d: SSL3[%d]: handle server_key_exchange handshake",
@@ -3929,6 +4126,7 @@ ssl3_HandleServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     isTLS = (PRBool)(ss->ssl3->prSpec->version > SSL_LIBRARY_VERSION_3_0);
 
     switch (ss->ssl3->hs.kea_def->exchKeyType) {
+
     case kt_rsa:
     	rv = ssl3_ConsumeHandshakeVariable(ss, &modulus, 2, &b, &length);
     	if (rv != SECSuccess) {
@@ -4004,6 +4202,90 @@ ssl3_HandleServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     	ss->ssl3->hs.ws = wait_cert_request;
     	return SECSuccess;
 
+    case kt_dh:
+    	rv = ssl3_ConsumeHandshakeVariable(ss, &dh_p, 2, &b, &length);
+    	if (rv != SECSuccess) {
+	    goto loser;		/* malformed. */
+	}
+    	rv = ssl3_ConsumeHandshakeVariable(ss, &dh_g, 2, &b, &length);
+    	if (rv != SECSuccess) {
+	    goto loser;		/* malformed. */
+	}
+    	rv = ssl3_ConsumeHandshakeVariable(ss, &dh_Ys, 2, &b, &length);
+    	if (rv != SECSuccess) {
+	    goto loser;		/* malformed. */
+	}
+    	rv = ssl3_ConsumeHandshakeVariable(ss, &signature, 2, &b, &length);
+    	if (rv != SECSuccess) {
+	    goto loser;		/* malformed. */
+	}
+    	if (length != 0) {
+	    if (isTLS)
+		desc = decode_error;
+	    goto alert_loser;		/* malformed. */
+	}
+
+	PRINT_BUF(60, (NULL, "Server DH p", dh_p.data, dh_p.len));
+	PRINT_BUF(60, (NULL, "Server DH g", dh_g.data, dh_g.len));
+	PRINT_BUF(60, (NULL, "Server DH Ys", dh_Ys.data, dh_Ys.len));
+
+	/* failures after this point are not malformed handshakes. */
+	/* TLS: send decrypt_error if signature failed. */
+    	desc = isTLS ? decrypt_error : handshake_failure;
+
+    	/*
+     	 *  check to make sure the hash is signed by right guy
+     	 */
+    	rv = ssl3_ComputeDHKeyHash(dh_p, dh_g, dh_Ys,
+					  &ss->ssl3->hs.client_random,
+					  &ss->ssl3->hs.server_random, &hashes);
+        if (rv != SECSuccess) {
+	    errCode =
+	    	ssl_MapLowLevelError(SSL_ERROR_SERVER_KEY_EXCHANGE_FAILURE);
+	    goto alert_loser;
+	}
+        rv = ssl3_VerifySignedHashes(&hashes, ss->sec->peerCert, &signature,
+				    isTLS, ss->pkcs11PinArg);
+	if (rv != SECSuccess)  {
+	    errCode =
+	    	ssl_MapLowLevelError(SSL_ERROR_SERVER_KEY_EXCHANGE_FAILURE);
+	    goto alert_loser;
+	}
+
+	/*
+	 * we really need to build a new key here because we can no longer
+	 * ignore calling SECKEY_DestroyPublicKey. Using the key may allocate
+	 * pkcs11 slots and ID's.
+	 */
+    	arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+	if (arena == NULL) {
+	    goto no_memory;
+	}
+
+    	ss->sec->peerKey = peerKey = PORT_ArenaZNew(arena, SECKEYPublicKey);
+    	if (peerKey == NULL) {
+	    goto no_memory;
+	}
+
+	peerKey->arena              = arena;
+	peerKey->keyType            = dhKey;
+	peerKey->pkcs11Slot         = NULL;
+	peerKey->pkcs11ID           = CK_INVALID_KEY;
+
+	if (SECITEM_CopyItem(arena, &peerKey->u.dh.prime,        &dh_p) ||
+	    SECITEM_CopyItem(arena, &peerKey->u.dh.base,         &dh_g) ||
+	    SECITEM_CopyItem(arena, &peerKey->u.dh.publicValue,  &dh_Ys))
+	{
+            PORT_FreeArena(arena, PR_FALSE);
+	    goto no_memory;
+        }
+    	ss->sec->peerKey = peerKey;
+	SECITEM_FreeItem(&dh_p,   PR_FALSE);
+	SECITEM_FreeItem(&dh_g,  PR_FALSE);
+	SECITEM_FreeItem(&dh_Ys, PR_FALSE);
+    	ss->ssl3->hs.ws = wait_cert_request;
+    	return SECSuccess;
+
     case kt_fortezza:
 
 	/* Fortezza needs *BOTH* a server cert message
@@ -4036,6 +4318,9 @@ loser:
     if (modulus.data   != NULL) SECITEM_FreeItem(&modulus,   PR_FALSE);
     if (exponent.data  != NULL) SECITEM_FreeItem(&exponent,  PR_FALSE);
     if (signature.data != NULL) SECITEM_FreeItem(&signature, PR_FALSE);
+    if (dh_p.data != NULL) SECITEM_FreeItem(&dh_p, PR_FALSE);
+    if (dh_g.data != NULL) SECITEM_FreeItem(&dh_g, PR_FALSE);
+    if (dh_Ys.data != NULL) SECITEM_FreeItem(&dh_Ys, PR_FALSE);
     PORT_SetError( errCode );
     return SECFailure;
 
@@ -6166,7 +6451,8 @@ cert_block:
 	ssl3->hs.ws = wait_cert_request; /* disallow server_key_exchange */
 	if (ssl3->hs.kea_def->is_limited ||
 	    /* XXX OR server cert is signing only. */
-	    ssl3->hs.kea_def->kea == kea_fortezza) {
+	    ssl3->hs.kea_def->kea == kea_fortezza ||
+	    ssl3->hs.kea_def->exchKeyType == kt_dh) {
 	    ssl3->hs.ws = wait_server_key; /* allow server_key_exchange */
 	}
     }

@@ -16,7 +16,8 @@
 ;+# Copyright (C) 2000 Netscape Communications Corporation.  All
 ;+# Rights Reserved.
 ;+#
-;+# Contributor(s):
+;+# Contributor(s): 
+;+#	Dr Stephen Henson <stephen.henson@gemplus.com>
 ;+#
 ;+# Alternatively, the contents of this file may be used under the
 ;+# terms of the GNU General Public License Version 2 or later (the
@@ -444,6 +445,12 @@ NSSBase64Encoder_Update;
 ;+#PK11_FindKeyByKeyID;
 PK11_InitPin;
 PK11_NeedUserInit;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.3 { 	# NSS 3.3. release
+;+    global:
+SECKEY_CreateDHPrivateKey;
 ;+    local:
 ;+       *;
 ;+};

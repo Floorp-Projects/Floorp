@@ -16,7 +16,8 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
- * Contributor(s):
+ * Contributor(s): 
+ *	Dr Stephen Henson <stephen.henson@gemplus.com>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -378,6 +379,7 @@ static struct mechanismList mechanisms[] = {
      /* ---------------------- SSL Key Derivations ------------------------- */
      {CKM_SSL3_PRE_MASTER_KEY_GEN,	{48, 48, CKF_GENERATE}, PR_FALSE}, 
      {CKM_SSL3_MASTER_KEY_DERIVE,	{48, 48, CKF_DERIVE},   PR_FALSE}, 
+     {CKM_SSL3_MASTER_KEY_DERIVE_DH,	{8, 128, CKF_DERIVE},   PR_FALSE}, 
      {CKM_SSL3_KEY_AND_MAC_DERIVE,	{48, 48, CKF_DERIVE},   PR_FALSE}, 
      {CKM_SSL3_MD5_MAC,			{ 0, 16, CKF_DERIVE},   PR_FALSE}, 
      {CKM_SSL3_SHA1_MAC,		{ 0, 20, CKF_DERIVE},   PR_FALSE}, 
@@ -385,6 +387,7 @@ static struct mechanismList mechanisms[] = {
      {CKM_MD2_KEY_DERIVATION,		{ 0, 16, CKF_DERIVE},   PR_FALSE}, 
      {CKM_SHA1_KEY_DERIVATION,		{ 0, 20, CKF_DERIVE},   PR_FALSE}, 
      {CKM_TLS_MASTER_KEY_DERIVE,	{48, 48, CKF_DERIVE},   PR_FALSE}, 
+     {CKM_TLS_MASTER_KEY_DERIVE_DH,	{8, 128, CKF_DERIVE},   PR_FALSE}, 
      {CKM_TLS_KEY_AND_MAC_DERIVE,	{48, 48, CKF_DERIVE},   PR_FALSE}, 
      /* ---------------------- PBE Key Derivations  ------------------------ */
      {CKM_PBE_MD2_DES_CBC,		{8, 8, CKF_DERIVE},   PR_TRUE},
@@ -703,10 +706,11 @@ pk11_handlePublicKeyObject(PK11Object *object,CK_KEY_TYPE key_type)
 	}
 	break;
     case CKK_DSA:
-	if ( !pk11_hasAttribute(object, CKA_PRIME)) {
+	if ( !pk11_hasAttribute(object, CKA_SUBPRIME)) {
 	    return CKR_TEMPLATE_INCOMPLETE;
 	}
-	if ( !pk11_hasAttribute(object, CKA_SUBPRIME)) {
+    case CKK_DH:
+	if ( !pk11_hasAttribute(object, CKA_PRIME)) {
 	    return CKR_TEMPLATE_INCOMPLETE;
 	}
 	if ( !pk11_hasAttribute(object, CKA_BASE)) {
@@ -719,7 +723,6 @@ pk11_handlePublicKeyObject(PK11Object *object,CK_KEY_TYPE key_type)
 	recover = CK_FALSE;
 	wrap = CK_FALSE;
 	break;
-    case CKK_DH:
     default:
 	return CKR_ATTRIBUTE_VALUE_INVALID;
     }
@@ -925,10 +928,14 @@ pk11_handlePrivateKeyObject(PK11Object *object,CK_KEY_TYPE key_type)
 	
 	break;
     case CKK_DSA:
-	if ( !pk11_hasAttribute(object, CKA_PRIME)) {
+	if ( !pk11_hasAttribute(object, CKA_SUBPRIME)) {
 	    return CKR_TEMPLATE_INCOMPLETE;
 	}
-	if ( !pk11_hasAttribute(object, CKA_SUBPRIME)) {
+	if ( !pk11_hasAttribute(object, CKA_NETSCAPE_DB)) {
+	    return CKR_TEMPLATE_INCOMPLETE;
+	}
+    case CKK_DH:
+	if ( !pk11_hasAttribute(object, CKA_PRIME)) {
 	    return CKR_TEMPLATE_INCOMPLETE;
 	}
 	if ( !pk11_hasAttribute(object, CKA_BASE)) {
@@ -937,14 +944,10 @@ pk11_handlePrivateKeyObject(PK11Object *object,CK_KEY_TYPE key_type)
 	if ( !pk11_hasAttribute(object, CKA_VALUE)) {
 	    return CKR_TEMPLATE_INCOMPLETE;
 	}
-	if ( !pk11_hasAttribute(object, CKA_NETSCAPE_DB)) {
-	    return CKR_TEMPLATE_INCOMPLETE;
-	}
 	encrypt = CK_FALSE;
 	recover = CK_FALSE;
 	wrap = CK_FALSE;
 	break;
-    case CKK_DH:
     default:
 	return CKR_ATTRIBUTE_VALUE_INVALID;
     }
@@ -1959,6 +1962,16 @@ SECKEYLowPublicKey *pk11_GetPubKey(PK11Object *object,CK_KEY_TYPE key_type)
 							object,CKA_VALUE);
 	break;
     case CKK_DH:
+	pubKey->keyType = dhKey;
+	crv = pk11_Attribute2SSecItem(arena,&pubKey->u.dh.prime,
+							object,CKA_PRIME);
+    	if (crv != CKR_OK) break;
+	crv = pk11_Attribute2SSecItem(arena,&pubKey->u.dh.base,
+							object,CKA_BASE);
+    	if (crv != CKR_OK) break;
+    	crv = pk11_Attribute2SSecItem(arena,&pubKey->u.dsa.publicValue,
+							object,CKA_VALUE);
+	break;
     default:
 	crv = CKR_KEY_TYPE_INCONSISTENT;
 	break;
@@ -2044,7 +2057,18 @@ pk11_mkPrivKey(PK11Object *object,CK_KEY_TYPE key_type)
 							object,CKA_NETSCAPE_DB);
 	/* can't set the public value.... */
 	break;
+
     case CKK_DH:
+	privKey->keyType = dhKey;
+	crv = pk11_Attribute2SSecItem(arena,&privKey->u.dh.prime,
+							object,CKA_PRIME);
+    	if (crv != CKR_OK) break;
+	crv = pk11_Attribute2SSecItem(arena,&privKey->u.dh.base,
+							object,CKA_BASE);
+    	if (crv != CKR_OK) break;
+    	crv = pk11_Attribute2SSecItem(arena,&privKey->u.dh.privateValue,
+							object,CKA_VALUE);
+	break;
     default:
 	crv = CKR_KEY_TYPE_INCONSISTENT;
 	break;
