@@ -23,7 +23,6 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsICmdLineService.h"
-#include "nsIObserverService.h"
 #include <stdlib.h>
 
 #include "nsIWidget.h"
@@ -35,9 +34,9 @@
 PRBool            nsAppShell::mPtInited = PR_FALSE;
 nsIEventQueue     *kedlEQueue = nsnull;
 
-//static int modal_count;
-
-typedef int gint;
+/* Global Definitions */
+int ExitMainLoop = 0;
+typedef int gint;			/* Need to define this for EventQueueToken */ 
 
 #include <prlog.h>
 PRLogModuleInfo  *PhWidLog =  PR_NewLogModule("PhWidLog");
@@ -51,10 +50,6 @@ PRLogModuleInfo  *PhWidLog =  PR_NewLogModule("PhWidLog");
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-
-// copied from nsEventQueue.cpp
-static char *gEQActivatedNotification = "nsIEventQueueActivated";
-static char *gEQDestroyedNotification = "nsIEventQueueDestroyed";
 
 // a linked, ordered list of event queues and their tokens
 class EventQueueToken {
@@ -96,8 +91,24 @@ EventQueueTokenQueue::~EventQueueTokenQueue()
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("EventQueueTokenQueue::~EventQueueTokenQueue Destructor\n"));
 
-  NS_ASSERTION(!mHead, "event queue token deleted when not empty");
-  // and leak. it's an error, anyway
+  // if we reach this point with an empty token queue, well, fab. however,
+  // we expect the first event queue to still be active. so we take
+  // special care to unhook that queue (not that failing to do so seems
+  // to hurt anything). more queues than that would be an error.
+//NS_ASSERTION(!mHead || !mHead->mNext, "event queue token list deleted when not empty");
+  // (and skip the assertion for now. we're leaking event queues because they
+  // are referenced by things that leak, so this assertion goes off a lot.)
+  if (mHead)
+  {
+    int err=PtAppRemoveFd(NULL,mHead->mQueue->GetEventQueueSelectFD());
+    if (err==-1)
+    {
+	  printf ("nsAppShell::~EventQueueTokenQueue Run Error calling PtAppRemoveFd\n");
+	  abort();
+    }
+    delete mHead;
+    // and leak the rest. it's an error, anyway
+  }
 }
 
 void EventQueueTokenQueue::PushToken(nsIEventQueue *aQueue, gint aToken)
@@ -154,15 +165,10 @@ nsAppShell::nsAppShell()
 
   NS_INIT_REFCNT();
   mDispatchListener = nsnull;
-//  mLock = PR_NewLock();
   mEventQueueTokens = new EventQueueTokenQueue();
-//  mEventBufferSz = sizeof( PhEvent_t ) + 1000;
-//  mEvent = (PhEvent_t*) PR_Malloc( mEventBufferSz );
 
   // throw on error would really be civilized here
-//  NS_ASSERTION(mLock, "couldn't obtain lock in appshell");
   NS_ASSERTION(mEventQueueTokens, "couldn't allocate event queue token queue");
-//  NS_ASSERTION( mEvent, "Out of memory" );
 
   /* Run this only once per application startup */
   if( !mPtInited )
@@ -182,11 +188,7 @@ nsAppShell::~nsAppShell()
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::~nsAppShell\n"));
 
-//  PR_DestroyLock(mLock);
   delete mEventQueueTokens;
-  
-//  if (mEvent)
-//    PR_Free(mEvent);
 }
 
 
@@ -355,16 +357,16 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::PopThreadEventQueue\n"));
 #endif
 
 
-int done_damn_it = 0;
+/* This routine replaces the standard PtMainLoop() for Photon */
+/* We had to replace it to provide a mechanism (ExitMainLoop) to exit */
+/* the loop. */
+
 void MyMainLoop( void ) 
 {
-//	printf ("kedl: start main loop!\n"); fflush(stdout);
-	done_damn_it = 0;
-	while (! done_damn_it)
+	ExitMainLoop = 0;
+	while (! ExitMainLoop)
 	{
-//		printf ("kedl: process event\n"); fflush(stdout);
 		PtProcessEvent();
-//		printf ("kedl: processed event\n"); fflush(stdout);
 	}
 }
 
@@ -410,32 +412,15 @@ NS_IMETHODIMP nsAppShell::Run()
     return rv;
   }    
 
+
 done:
 
-#ifdef DEBUG
-  printf("Calling PtAppAddFd with event queue\n");
-#endif /* DEBUG */
+  // (has to be called explicitly for this, the primordial appshell, because
+  // of startup ordering problems.)
+  ListenToEventQueue(EQueue, PR_TRUE);
 
-    int err;
-	err = PtAppAddFd(NULL,EQueue->GetEventQueueSelectFD(),Pt_FD_READ,event_processor_callback,EQueue);
-    if (err == -1)
-	{
-		printf("nsAppShell::Run Error calling PtAppAddFd\n");
-		exit(1);
-	}
+  MyMainLoop();		/* PtMainLoop() */
 
-	MyMainLoop();		/* PtMainLoop() */
-
-#ifdef DEBUG
-  printf("Calling PtAppRemoveFd with event queue\n");
-#endif /* DEBUG */
-
-  err=PtAppRemoveFd(NULL,EQueue->GetEventQueueSelectFD());
-  if (err==-1)
-  {
-	printf ("nsAppShell:: Run Error calling PtAppRemoveFd\n");
-  }
-  
   NS_IF_RELEASE(EQueue);
   Release();
   return NS_OK;
@@ -450,30 +435,10 @@ done:
 NS_METHOD nsAppShell::Exit()
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Exit.\n"));
-//  printf ("kedl: TRY to exit main loop!\n"); fflush (stdout);
-  done_damn_it = 1;
+  ExitMainLoop = 1;
 
   return NS_OK;
 }
-
-#if 0
-//-------------------------------------------------------------------------
-//
-// GetNativeData
-//
-//-------------------------------------------------------------------------
-void* nsAppShell::GetNativeData(PRUint32 aDataType)
-{
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::GetNativeData\n"));
-
-  if( aDataType == NS_NATIVE_SHELL )
-  {
-    /* This is what GTK does */
-    return nsnull;
-  }
-  return nsnull;
-}
-#endif
 
 
 NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
@@ -591,4 +556,42 @@ NS_METHOD nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsI
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::EventIsForModalWindow isInWindow=<%d> isMouseEvent=<%d> aForWindow=<%d>\n", isInWindow, isMouseEvent, *aForWindow));
   return NS_OK;
 #endif
+}
+
+NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
+                                             PRBool aListen)
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::ListenToEventQueue\n"));
+
+  gint queueToken;
+  int  err;
+  
+  if (aListen)
+  {
+	/* Priority 0=Invalid 1=Really Slow, trying 5 */
+	err = PtAppAddFdPri(NULL,aQueue->GetEventQueueSelectFD(),Pt_FD_READ,
+	        event_processor_callback,aQueue,15);
+    if (err == -1)
+	{
+		printf("nsAppShell::ListenToEventQueue Error calling PtAppAddFd errno=<%d>\n", errno);
+		if (errno != EBUSY)
+		  abort();
+	}
+
+    mEventQueueTokens->PushToken(aQueue, queueToken);
+  }
+  else 
+  {
+    if (mEventQueueTokens->PopToken(aQueue, &queueToken))
+	{
+	  err=PtAppRemoveFd(NULL,aQueue->GetEventQueueSelectFD());
+	  if (err == -1)
+	  {	
+		printf ("nsAppShell:: Run Error calling PtAppRemoveFd\n");
+		abort();
+	  }
+	}
+  }
+
+  return NS_OK;
 }
