@@ -89,20 +89,11 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 //
 //-------------------------------------------------------------------------
 
-#include "nsITimerManager.h"
-
-
 NS_METHOD nsAppShell::Run(void)
 {
   NS_ADDREF_THIS();
   MSG  msg;
   int  keepGoing = 1;
-
-  nsresult rv;
-  nsCOMPtr<nsITimerManager> timerManager(do_GetService("@mozilla.org/timer/manager;1", &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  timerManager->SetUseIdleTimers(PR_TRUE);
 
   gKeepGoing = 1;
   // Process messages
@@ -125,26 +116,15 @@ NS_METHOD nsAppShell::Run(void)
           mDispatchListener->AfterDispatch();
       }
     } else {
-
-      PRBool hasTimers;
-      timerManager->HasIdleTimers(&hasTimers);
-      if (hasTimers) {
-        do {
-          timerManager->FireNextIdleTimer();
-          timerManager->HasIdleTimers(&hasTimers);
-        } while (hasTimers && !::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
+      if (!gKeepGoing) {
+        // In this situation, PostQuitMessage() was called, but the WM_QUIT
+        // message was removed from the event queue by someone else -
+        // (see bug #54725).  So, just exit the loop as if WM_QUIT had been
+        // reeceived...
+        keepGoing = 0;
       } else {
-
-        if (!gKeepGoing) {
-          // In this situation, PostQuitMessage() was called, but the WM_QUIT
-          // message was removed from the event queue by someone else -
-          // (see bug #54725).  So, just exit the loop as if WM_QUIT had been
-          // reeceived...
-          keepGoing = 0;
-        } else {
-          // Block and wait for any posted application message
-          ::WaitMessage();
-        }
+         // Block and wait for any posted application message
+        ::WaitMessage();
       }
     }
 
@@ -169,10 +149,6 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 
   BOOL gotMessage = false;
 
-  nsresult rv;
-  nsCOMPtr<nsITimerManager> timerManager(do_GetService("@mozilla.org/timer/manager;1", &rv));
-  if (NS_FAILED(rv)) return rv;
-
   do {
     // Give priority to system messages (in particular keyboard, mouse,
     // timer, and paint messages).
@@ -182,17 +158,8 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 
       gotMessage = true;
     } else {
-      PRBool hasTimers;
-      timerManager->HasIdleTimers(&hasTimers);
-      if (hasTimers) {
-        do {
-          timerManager->FireNextIdleTimer();
-          timerManager->HasIdleTimers(&hasTimers);
-        } while (hasTimers && !::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
-      } else {
-        // Block and wait for any posted application message
-        ::WaitMessage();
-      }
+       // Block and wait for any posted application message
+      ::WaitMessage();
     }
 
   } while (!gotMessage);
