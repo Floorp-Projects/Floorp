@@ -18,7 +18,7 @@ class nsInstallVersion: public nsIScriptObjectOwner, public nsIDOMInstallVersion
         static const nsIID& IID() { static nsIID iid = NS_SoftwareUpdateInstallVersion_CID; return iid; }
 
         nsInstallVersion();
-        ~nsInstallVersion();
+        virtual ~nsInstallVersion();
         
         NS_DECL_ISUPPORTS
 
@@ -61,7 +61,7 @@ class nsInstallVersionFactory : public nsIFactory
     public:
         
         nsInstallVersionFactory();
-        ~nsInstallVersionFactory();
+        virtual ~nsInstallVersionFactory();
         
         NS_DECL_ISUPPORTS
 

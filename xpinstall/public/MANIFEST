@@ -4,3 +4,4 @@
 
 nsISoftwareUpdate.h
 nsSoftwareUpdateIIDs.h
+nsIXPInstallProgressNotifier.h

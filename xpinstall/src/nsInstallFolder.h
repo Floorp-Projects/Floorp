@@ -40,7 +40,7 @@ class nsInstallFolder
         
        nsInstallFolder(const nsString& aFolderID);
        nsInstallFolder(const nsString& aFolderID, const nsString& aRelativePath);
-       ~nsInstallFolder();
+       virtual ~nsInstallFolder();
 
        void GetDirectoryPath(nsString& aDirectoryPath);
        

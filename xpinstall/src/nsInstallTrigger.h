@@ -14,6 +14,10 @@
 #include "nsHashtable.h"
 #include "nsVector.h"
 
+
+
+
+
 class nsInstallTrigger: public nsIScriptObjectOwner, public nsIDOMInstallTriggerGlobal
 {
     public:
@@ -43,6 +47,7 @@ class nsInstallTrigger: public nsIScriptObjectOwner, public nsIDOMInstallTrigger
         
     private:
         void *mScriptObject;
+        void CreateTempFileFromURL(const nsString& aURL, nsString& tempFileString);
 
 };
 

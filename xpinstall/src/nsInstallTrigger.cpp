@@ -30,11 +30,18 @@
 #include "pratom.h"
 #include "prefapi.h"
 
+#include "nsSpecialSystemDirectory.h"
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
 static NS_DEFINE_IID(kIInstallTrigger_IID, NS_IDOMINSTALLTRIGGERGLOBAL_IID);
+
+
+
+
+
 
 nsInstallTrigger::nsInstallTrigger()
 {
@@ -126,11 +133,12 @@ nsInstallTrigger::UpdateEnabled(PRBool* aReturn)
 NS_IMETHODIMP    
 nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRInt32* aReturn)
 {
-// fix: aFlags is not processed!
-    nsInstallInfo *nextInstall = new nsInstallInfo( aURL,  "",  ""); 
+    nsString localFile;
+    CreateTempFileFromURL(aURL, localFile);
+
+    nsInstallInfo *nextInstall = new nsInstallInfo( aURL, localFile, aFlags);
 
     // start the download (this will clean itself up)
-    
     nsSoftwareUpdateListener *downloader = new nsSoftwareUpdateListener(nextInstall);
 
     *aReturn = NS_OK;  // maybe we should do something more.
@@ -140,13 +148,12 @@ nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRIn
 NS_IMETHODIMP    
 nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32* aReturn)
 {
-    PRInt32 aFlags = 0;
+    nsString localFile;
+    CreateTempFileFromURL(aURL, localFile);
 
-// fix: aFlags is not processed!
-    nsInstallInfo *nextInstall = new nsInstallInfo( aURL,  "",  ""); 
+    nsInstallInfo *nextInstall = new nsInstallInfo( aURL, localFile, 0);
 
     // start the download (this will clean itself up)
-    
     nsSoftwareUpdateListener *downloader = new nsSoftwareUpdateListener(nextInstall);
 
     *aReturn = NS_OK;  // maybe we should do something more.
@@ -205,6 +212,52 @@ NS_IMETHODIMP
 nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn)
 {
     return NS_OK;
+}
+
+
+
+// this will take a nsIUrl, and create a temporary file.  If it is local, we just us it.
+ 
+void
+nsInstallTrigger::CreateTempFileFromURL(const nsString& aURL, nsString& tempFileString)
+{
+    // Checking to see if the url is local
+
+    if ( aURL.EqualsIgnoreCase("file://", 7) )
+    {       
+        tempFileString.SetString( nsNSPRPath(nsFileURL(aURL)) );
+    }
+    else
+    {
+        nsSpecialSystemDirectory tempFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+    
+        PRInt32 result = aURL.RFind('/');
+        if (result != -1)
+        {    
+            nsString jarName;
+                       
+            aURL.Right(jarName, (aURL.Length() - result) );
+            
+            PRInt32 argOffset = jarName.RFind('?');
+
+            if (argOffset != -1)
+            {
+                // we need to remove ? and everything after it
+                jarName.Truncate(argOffset);
+            }
+            
+            
+            tempFile += jarName;
+        }
+        else
+        {   
+            tempFile += "xpinstall.jar";
+        }
+
+        tempFile.MakeUnique();
+
+        tempFileString.SetString( nsNSPRPath( nsFilePath(tempFile) ) );
+    }
 }
 
 

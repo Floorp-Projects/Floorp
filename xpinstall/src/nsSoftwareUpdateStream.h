@@ -61,7 +61,7 @@ class nsSoftwareUpdateListener : public nsIStreamListener
 
 
     protected:
-        ~nsSoftwareUpdateListener();
+        virtual ~nsSoftwareUpdateListener();
 
 
     private:

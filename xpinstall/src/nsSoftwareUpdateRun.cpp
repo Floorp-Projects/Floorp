@@ -39,21 +39,8 @@
 #include "nspr.h"
 #include "jsapi.h"
 
-#if 0
-#include "nsIEventQueueService.h"
-#include "nsXPComCIID.h"
+#include "nsIXPInstallProgressNotifier.h"
 
-#include "nsIURL.h"
-
-#include "nsAppShellProxy.h"
-
-
-static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
-static NS_DEFINE_IID(kIAppShellServiceIID,   NS_IAPPSHELL_SERVICE_IID);
-static NS_DEFINE_IID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
-#endif
 
 static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
 static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
@@ -77,10 +64,6 @@ static nsresult GetInstallScriptFromJarfile(const char* jarFile, char** scriptBu
 static nsresult SetupInstallContext(const char* jarFile, const char* args, JSRuntime **jsRT, JSContext **jsCX, JSObject **jsGlob);
 
 extern "C" void RunInstallOnThread(void *data);
-
-extern "C" NS_EXPORT PRInt32 RunInstall(const char* jarFile, const char* flags, const char* args, const char* fromURL);
-
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Function name	: XPInstallErrorReporter
@@ -269,31 +252,20 @@ static nsresult SetupInstallContext(const char* jarFile,
 ///////////////////////////////////////////////////////////////////////////////////////////////
 PRInt32 RunInstall(nsInstallInfo *installInfo)
 {   
-#if 0
-    // We are one the UI Thread.  Get and save the eventQueue.
-    // Create the Event Queue for the UI thread...
-    nsIEventQueueService* eventQService;
-    nsresult rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                               kIEventQueueServiceIID,
-                                               (nsISupports **)&eventQService);
-    PLEventQueue* thisEventQueue;
-    if (NS_OK == rv) 
+    if (installInfo->GetFlags() == 0x00000001)
     {
-
-        rv = eventQService->GetThreadEventQueue(PR_GetCurrentThread(), 
-                                                &thisEventQueue);
-
+        RunInstallOnThread((void *)installInfo);
     }
-
-    installInfo->SetUIEventQueue(thisEventQueue);
-#endif
-    PR_CreateThread(PR_USER_THREAD,
-                    RunInstallOnThread,
-                    (void*)installInfo, 
-                    PR_PRIORITY_NORMAL, 
-                    PR_GLOBAL_THREAD, 
-                    PR_UNJOINABLE_THREAD,
-                    0);  
+    else
+    {
+        PR_CreateThread(PR_USER_THREAD,
+                        RunInstallOnThread,
+                        (void*)installInfo, 
+                        PR_PRIORITY_NORMAL, 
+                        PR_GLOBAL_THREAD, 
+                        PR_UNJOINABLE_THREAD,
+                        0);  
+    }
     return 0;
 }
 
@@ -309,112 +281,59 @@ PRInt32 RunInstall(nsInstallInfo *installInfo)
 extern "C" void RunInstallOnThread(void *data)
 {
     nsInstallInfo *installInfo = (nsInstallInfo*)data;
-    nsresult rv;
-
-
-#if 0  
-  /*
-   * Create the Application Shell instance...
-   */
-  nsIAppShellService* appShell;
-  rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                    kIAppShellServiceIID,
-                                    (nsISupports**)&appShell);
-  if (NS_FAILED(rv)) 
-  {
-    return;
-  }
-
-  nsAppShellProxy *appShellProxy = new nsAppShellProxy(installInfo->GetUIEventQueue(), appShell);
-
-  // DO NOT CALL INIT!  appShellProxy->Initialize();
-  
-  nsString *aCID = new nsString("00000000-dead-beef-0000-000000000000");
-  nsIWebShellWindow* newWindow;
-  nsIURL* url;
-  char* urlstr = "resource:/res/samples/xpinstallprogress.xul";
-  NS_NewURL(&url, urlstr);
-
-
-  appShellProxy->CreateDialogWindow(nsnull, 
-                                    url, 
-                                    *aCID, 
-                                    newWindow,
-                                    nsnull, 
-                                    nsnull, 
-                                    250, 
-                                    125);
     
-#endif
-  
-    RunInstall( (const char*) nsAutoCString( installInfo->GetLocalFile() ), 
-                (const char*) nsAutoCString( installInfo->GetFlags()     ), 
-                (const char*) nsAutoCString( installInfo->GetArguments() ),
-                (const char*) nsAutoCString( installInfo->GetFromURL()   ));
-
-#if 0
-    appShellProxy->CloseTopLevelWindow(newWindow);
-
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-    // After Install, we need to update the queue.
-#endif
-
-    nsISoftwareUpdate *softwareUpdate;
-
-    rv = nsComponentManager::CreateInstance( kSoftwareUpdateCID, 
-                                             nsnull,
-                                             kISoftwareUpdateIID,
-                                              (void**) &softwareUpdate);
-
-    if (NS_FAILED(rv)) 
-    {
-        return ;
-    }
-    
-    softwareUpdate->InstallJarCallBack();
-
-
-}
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-// Function name	: RunInstall
-// Description	    : This is the main C entrypoint to run jar installers
-// Return type		: PRInt32
-// Argument         : const char* jarFile  - a native filepath to a jarfile to be run
-// Argument         : const char* flags    - UNUSED
-// Argument         : const char* args     - arguments passed into the javascript env
-// Argument         : const char* fromURL  - a url string of where this file came from UNUSED
-///////////////////////////////////////////////////////////////////////////////////////////////
-
-
-extern "C" NS_EXPORT PRInt32 RunInstall(const char* jarFile, const char* flags, const char* args, const char* fromURL)
-{
-
     char        *scriptBuffer;
     PRUint32    scriptLength;
 
     JSRuntime   *rt;
 	JSContext   *cx;
     JSObject    *glob;
+    
+    nsISoftwareUpdate *softwareUpdate;
 
-    nsresult rv = GetInstallScriptFromJarfile(jarFile, &scriptBuffer, &scriptLength);
+    nsresult rv = nsComponentManager::CreateInstance( kSoftwareUpdateCID, 
+                                                      nsnull,
+                                                      kISoftwareUpdateIID,
+                                                      (void**) &softwareUpdate);
+    
+    nsIXPInstallProgressNotifier *notifier;
+
+    if (NS_SUCCEEDED(rv))
+    {
+        softwareUpdate->GetTopLevelNotifier(&notifier);
+    }
+    else
+    {
+        return;
+    }
+    
+    if(notifier)
+        notifier->BeforeJavascriptEvaluation();
+    
+    
+    nsString args;
+    installInfo->GetArguments(args);
+
+
+    rv = GetInstallScriptFromJarfile( nsAutoCString( installInfo->GetLocalFile() ), 
+                                      &scriptBuffer, 
+                                      &scriptLength);
     
     if (NS_FAILED(rv) || scriptBuffer == nsnull)
     {
-        return rv;
+        goto bail;
     }
 
-    rv = SetupInstallContext(jarFile, args, &rt, &cx, &glob);
+    
+
+    rv = SetupInstallContext(   nsAutoCString( installInfo->GetLocalFile() ), 
+                                nsAutoCString( args ), 
+                                &rt, &cx, &glob);
     if (NS_FAILED(rv))
     {
         delete [] scriptBuffer;
-        return rv;
+        goto bail;
     }
-    
-
-
     
     // Go ahead and run!!
     jsval rval;
@@ -433,8 +352,12 @@ extern "C" NS_EXPORT PRInt32 RunInstall(const char* jarFile, const char* flags, 
     
     JS_DestroyContext(cx);
 	JS_DestroyRuntime(rt);
-	            
-    return rv;
+	          
+
+    if(notifier)
+        notifier->AfterJavascriptEvaluation();
+
+
+bail:
+    softwareUpdate->InstallJarCallBack();
 }
-
-

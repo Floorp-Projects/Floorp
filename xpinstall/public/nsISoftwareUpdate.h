@@ -30,7 +30,7 @@
 #include "nsIFactory.h"
 #include "nsString.h"
 
-class nsInstallInfo;
+#include "nsIXPInstallProgressNotifier.h"
 
 #define NS_ISOFTWAREUPDATE_IID                   \
 { 0x18c2f992, 									 \
@@ -45,18 +45,18 @@ class nsISoftwareUpdate : public nsISupports
     public:
         	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISOFTWAREUPDATE_IID)
         	
-            NS_IMETHOD InstallJar(nsInstallInfo *installInfo) = 0;
+            NS_IMETHOD InstallJar(const nsString& fromURL,
+                                  const nsString& localFile,
+                                  long  flags) = 0; 
             
-            NS_IMETHOD InstallJar(const nsString& fromURL, 
-                                  const nsString& flags, 
-                                  const nsString& args) = 0;  
+            NS_IMETHOD RegisterNotifier(nsIXPInstallProgressNotifier *notifier) = 0;
             
-            // these should be in a private interface:
-            NS_IMETHOD RunNextInstall() = 0;
-            NS_IMETHOD InstallJarCallBack() = 0;
+            NS_IMETHOD InstallPending(void) = 0;
 
+            /* FIX: these should be in a private interface */
+            NS_IMETHOD InstallJarCallBack()                   = 0; 
+            NS_IMETHOD GetTopLevelNotifier(nsIXPInstallProgressNotifier **notifier) = 0;
 };
-
 
 
 class nsSoftwareUpdateFactory : public nsIFactory 

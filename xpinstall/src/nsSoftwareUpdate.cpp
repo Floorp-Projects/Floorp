@@ -38,6 +38,9 @@
 #include "nsInstallVersion.h"
 #include "ScheduledTasks.h"
 
+#include "nsTopProgressNotifier.h"
+#include "nsLoggingProgressNotifier.h"
+
 /* For Javascript Namespace Access */
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
@@ -146,7 +149,6 @@ nsSoftwareUpdate::Startup()
     /* Perform Scheduled Tasks             */
     /***************************************/
     
-#if 1
     PR_CreateThread(PR_USER_THREAD,
                     PerformScheduledTasks,
                     nsnull, 
@@ -154,8 +156,16 @@ nsSoftwareUpdate::Startup()
                     PR_GLOBAL_THREAD, 
                     PR_UNJOINABLE_THREAD,
                     0);  
-#endif 
-//    PerformScheduledTasks(nsnull);
+    
+    /***************************************/
+    /* Create a top level observer         */
+    /***************************************/
+
+    mTopLevelObserver = new nsTopProgressNotifier();
+    
+    nsLoggingProgressNotifier *logger = new nsLoggingProgressNotifier();
+    RegisterNotifier(logger);
+
     
     return NS_OK;
 }
@@ -183,22 +193,33 @@ nsSoftwareUpdate::Shutdown()
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSoftwareUpdate::InstallJar(  const nsString& fromURL, 
-                               const nsString& flags, 
-                               const nsString& args)
+NS_IMETHODIMP 
+nsSoftwareUpdate::RegisterNotifier(nsIXPInstallProgressNotifier *notifier)
 {
-    nsInstallInfo *installInfo = new nsInstallInfo(fromURL, flags, args);
-    InstallJar(installInfo);
+    // we are going to ignore the returned ID and enforce that once you 
+    // register a notifier, you can not remove it.  This should at some
+    // point be fixed.
+
+    (void) mTopLevelObserver->RegisterNotifier(notifier);
     
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSoftwareUpdate::GetTopLevelNotifier(nsIXPInstallProgressNotifier **notifier)
+{
+    *notifier = mTopLevelObserver;
+    return NS_OK;
+}
 
 
 NS_IMETHODIMP
-nsSoftwareUpdate::InstallJar(nsInstallInfo *installInfo)
+nsSoftwareUpdate::InstallJar(  const nsString& fromURL,
+                               const nsString& localFile, 
+                               long flags)
 {
+    nsInstallInfo *installInfo = new nsInstallInfo(fromURL, localFile, flags);
+    
     mJarInstallQueue->Add( installInfo );
     
     RunNextInstall();
@@ -206,6 +227,18 @@ nsSoftwareUpdate::InstallJar(nsInstallInfo *installInfo)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSoftwareUpdate::InstallPending(void)
+{
+    if (mInstalling || mJarInstallQueue->GetSize() > 0)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
 
 NS_IMETHODIMP
 nsSoftwareUpdate::InstallJarCallBack()
@@ -224,7 +257,7 @@ nsSoftwareUpdate::InstallJarCallBack()
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsSoftwareUpdate::RunNextInstall()
 {
     if (mInstalling == PR_TRUE)
