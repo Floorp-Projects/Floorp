@@ -41,13 +41,13 @@
 
     <box id="system" flex="100%" align="vertical">
       <spring style="height: 7px;"/>
-      <box><html:div>&div.walletdataonsystem.label;</html:div></box>
+      <text class="label" value="&div.walletdataonsystem.label;"/>
       <html:div class="separator" align="horizontal" style="margin-bottom: -2px;"/>
       <spring style="height: 10px;"/>
       <box id="system1" flex="100%" align="horizontal">
         <spring style="width: 7px;"/>
         <html:div style="width: 195px;">
-          <box><html:div>&treehead.schemaname.label;</html:div></box>
+          <text class="label" value="&treehead.schemaname.label;"/>
           <tree multiple="true" id="schematree" class="inset"
              style="height: 250px; width: 195px;" align="vertical" onclick="ViewEntries();">
             <treecol width="100%"/>
@@ -56,20 +56,20 @@
           <spring flex="5%"/>
           <spring style="height: 7px;"/>
           <box align="horizontal">
-            <titledbutton id="removeSchema" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteSchema();"/>
-            <titledbutton id="addSchema" class="dialog push" disabled="false" value="&button.add.label;" onclick="AddSchema();"/>
+            <button id="removeSchema" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteSchema();"/>
+            <button id="addSchema" class="dialog push" disabled="false" value="&button.add.label;" onclick="AddSchema();"/>
           </box>
         </html:div>
         <spring style="width: 7px;"/>
         <html:div style="width: 195px;">
-          <box><html:div>&treehead.entries.label;</html:div></box>
+          <text class="label" value="&treehead.entries.label;"/>
           <tree multiple="true" id="entrytree" class="inset"
             style="height: 113px; width: 195px;" align="vertical" onclick="ViewSynonyms();">
             <treecol width="100%"/>
             <treechildren id="entrieslist"/>
           </tree>
           <spring style="height: 7px;"/>
-          <box><html:div>&treehead.synonyms.label;</html:div></box>
+          <text class="label" value="&treehead.synonyms.label;"/>
           <tree multiple="true" id="synonymtree" class="inset"
             style="height: 113px; width: 195px;" align="vertical" onclick="SynonymSelected();">
             <treecol width="100%"/>
@@ -80,11 +80,11 @@
         <html:div>
           <box align="vertical">
             <spring style="height: 12px;"/>
-            <titledbutton id="removeEntry" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteEntry();"/>
-            <titledbutton id="addEntry" class="dialog push" disabled="false" value="&button.add.label;" onclick="AddEntry();"/>
+            <button id="removeEntry" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteEntry();"/>
+            <button id="addEntry" class="dialog push" disabled="false" value="&button.add.label;" onclick="AddEntry();"/>
             <spring style="height: 88px;"/>
-            <titledbutton id="removeSynonym" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteSynonym();"/>
-            <titledbutton id="addSynonym" class="dialog push" disabled="false" value="&button.add.label;" onclick="AddSynonym();"/>
+            <button id="removeSynonym" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteSynonym();"/>
+            <button id="addSynonym" class="dialog push" disabled="false" value="&button.add.label;" onclick="AddSynonym();"/>
           </box>
         </html:div>
         <spring style="width: 7px;"/>
