@@ -1791,6 +1791,10 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
         ((NS_SUCCEEDED(currentFolder->GetHasSubFolders(&hasSubFolders)) && hasSubFolders)
         && !NoDescendentsAreVerified(currentFolder)))
       {
+        PRBool isNamespace;
+        currentImapFolder->GetIsNamespace(&isNamespace);
+        if (!isNamespace) // don't list namespaces explicitly
+        {
         // If there are no subfolders and this is unverified, we don't want to run
         // this url.  That is, we want to undiscover the folder.
         // If there are subfolders and no descendants are verified, we want to 
@@ -1799,6 +1803,7 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
         // to refresh that folder's flags, because it won't be going away.
         currentImapFolder->SetExplicitlyVerify(PR_FALSE);
         currentImapFolder->List();
+      }
       }
       else
       {
