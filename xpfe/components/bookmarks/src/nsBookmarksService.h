@@ -94,22 +94,22 @@ protected:
     PRInt32       mUpdateBatchNest;
     nsXPIDLString mPersonalToolbarName;
     nsXPIDLString mBookmarksRootName;
-    PRPackedBool  mDirty;
-    PRPackedBool  mBrowserIcons;
-    PRPackedBool  mAlwaysLoadIcons;
-    PRPackedBool  busySchedule;
+    PRBool        mDirty;
+    PRBool        mBrowserIcons;
+    PRBool        mAlwaysLoadIcons;
+    PRBool        busySchedule;
 
     // System Bookmark parsing
-#if defined(XP_MAC) || defined(XP_MACOSX)
-    PRPackedBool  mIEFavoritesAvailable;
-
-    nsresult      ReadFavorites();
-#elif defined(XP_WIN)
+#if defined(XP_WIN)
     // @param aDirectory      - Favorites Folder to import from.
     // @param aParentResource - Folder into which to place imported
     //                          Favorites.
     nsresult      ParseFavoritesFolder(nsIFile* aDirectory, 
                                        nsIRDFResource* aParentResource);
+#elif defined(XP_MAC) || defined(XP_MACOSX)
+    PRBool        mIEFavoritesAvailable;
+
+    nsresult      ReadFavorites();
 #endif
 
 #if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
