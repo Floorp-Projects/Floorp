@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<bindings id="xulBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <binding name="scrollbar">
+    <content>
+      <xul:scrollbarbutton type="decrement"/>
+      <xul:slider flex="1"/>
+      <xul:scrollbarbutton type="increment"/>
+    </content>
+  </binding>
+
+</bindings>
