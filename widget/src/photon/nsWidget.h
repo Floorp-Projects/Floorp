@@ -159,6 +159,11 @@ class nsWidget : public nsBaseWidget
  public:
     PRBool     mIsToplevel; 	// are we a "top level" widget?
 
+    // this is the rollup listener variables
+    static nsIRollupListener *gRollupListener;
+    static nsIWidget         *gRollupWidget;
+    static PRBool             gRollupConsumeRollupEvent;
+  
  protected:
     virtual void InitCallbacks(char * aName = nsnull);
     virtual void OnDestroy();
