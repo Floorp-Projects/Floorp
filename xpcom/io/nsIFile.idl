@@ -79,19 +79,13 @@ interface nsIFile : nsISupports
 	readonly attribute string FileName;
 	
 	/**
-	 *	 Accessor to the native full file path.   
+	 *	Accessor to the full file path.  The use of the Path is strongly discouraged 
+	 *  The problem affects platforms (Macintosh) in which a path does not fully
+	 *  specify a file, because two volumes can have the same name.  This is solved 
+	 *  by holding a "private" native data.  This data is lost when you convert to  
+	 *  a string.
 	 */
-	readonly attribute string NativePath;
-	
-	/**
-	 *	 Accessor to the unix style full file path.   
-	 */
-	readonly attribute string UnixStylePath;
-	
-	/**
-	 *	 Accessor to the nspr style full file path.      
-	 */
-	readonly attribute string NSPRStylePath;
+	string GetPath(in unsigned long pathType);
 	
 	/**
 	 *  This will rename the file on disk.  This function will
@@ -133,6 +127,10 @@ interface nsIFile : nsISupports
 	void ResolveSymlink(void);
 
 	/**
+	 *  Will determine if the inFile equals this.
+	 */
+
+	/**
 	 *  Attributes of nsIFile.
 	 */
 	attribute unsigned long LastModificationDate;
@@ -150,5 +148,6 @@ interface nsIFile : nsISupports
 	boolean IsFile();
 	boolean IsHidden();
 	boolean IsSymlink();
-
+	
+	bool IsEqual([const] in nsIFile inFile);
 };
