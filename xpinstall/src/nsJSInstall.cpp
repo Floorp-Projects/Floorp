@@ -2498,6 +2498,9 @@ PRInt32 InitXPInstallObjects(JSContext *jscontext,
   nativeInstallObject->SetScriptObject(installObject);
  
 #ifdef _WINDOWS
+  JSObject *winRegPrototype     = nsnull;
+  JSObject *winProfilePrototype = nsnull;
+
   if(NS_OK != InitWinRegPrototype(jscontext, global, &winRegPrototype))
   {
       return NS_ERROR_FAILURE;
