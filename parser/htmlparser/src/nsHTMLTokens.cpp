@@ -554,7 +554,7 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode)
             if(kLF==theNextChar) {
               // If the "\r" is followed by a "\n", don't replace it and 
               // let it be ignored by the layout system
-              end += 2;
+              end.advance(2);
               result=aScanner.GetChar(theNextChar);
             }
             else {
@@ -658,7 +658,7 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
         if((aMode != eDTDMode_strict) && (aMode != eDTDMode_transitional) && 
            !theLastIteration && !aIgnoreComments) {
           nsReadingIterator<PRUnichar> endComment(theCurrOffset);
-          endComment += 5;
+          endComment.advance(5);
           if ((theStartCommentPos == endPos) && 
               FindInReadable(NS_LITERAL_STRING("<!--"), theCurrOffset, endComment)) {
             theStartCommentPos = theCurrOffset;
@@ -924,7 +924,7 @@ nsresult CMarkupDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 
             if(kLF==theNextChar) {
               // If the "\r" is followed by a "\n", don't replace it and 
               // let it be ignored by the layout system
-              end += 2;
+              end.advance(2);
               result=aScanner.GetChar(theNextChar);
             }
             else {
@@ -1117,7 +1117,7 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
                 temp++;
                 aChar=*temp;
                 if(kMinus==aChar) {
-                  theStartOffset -= 2; // Include "<!" also..
+                  theStartOffset.advance(-2); // Include "<!" also..
                   CopyUnicodeTo(theStartOffset, theCurrOffset, aString);
                   aScanner.SetPosition(theCurrOffset);
                   return result; // We have found the dflt end comment delimiter ("-->")
@@ -1140,7 +1140,7 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
             //If so, rewind just pass than, and use everything up to that point as your comment.
             //If not, the document has no end comment and should be treated as one big comment.
             if(endPos != theBestAltPos) {
-              theStartOffset -= 2;// Include "<!" also..
+              theStartOffset.advance(-2);// Include "<!" also..
               CopyUnicodeTo(theStartOffset, theBestAltPos, aString);
               aScanner.SetPosition(theBestAltPos);
               result=NS_OK;

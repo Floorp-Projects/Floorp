@@ -1342,7 +1342,7 @@ nsPlainTextSerializer::Write(const nsAReadableString& aString)
       // doesn't have the old FindCharInSet function.
       nsAReadableString::const_iterator iter;           aString.BeginReading(iter);
       nsAReadableString::const_iterator done_searching; aString.EndReading(done_searching);
-      iter += bol; 
+      iter.advance(bol); 
       PRInt32 new_newline = bol;
       newline = kNotFound;
       while(iter != done_searching) {
