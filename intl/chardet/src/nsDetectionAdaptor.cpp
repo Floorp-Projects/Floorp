@@ -63,7 +63,11 @@ NS_IMETHODIMP nsMyObserver::Notify(
              mWeakRefDocument->SetDocumentCharacterSet(newcharset);
         }
         if(mWeakRefParser) {
-             mWeakRefParser->SetDocumentCharset(newcharset, kCharsetFromAutoDetection);
+          nsAutoString existingCharset;
+          PRInt32 existingSource;
+          mWeakRefParser->GetDocumentCharset(existingCharset, existingSource);  
+          if (existingSource < kCharsetFromAutoDetection)
+            mWeakRefParser->SetDocumentCharset(newcharset, kCharsetFromAutoDetection);
         }
       }
     }
