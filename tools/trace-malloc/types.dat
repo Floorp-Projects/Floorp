@@ -44,6 +44,11 @@
 #
 
 <JS-unclassified>
+JS_malloc
+js_Interpret
+js_Execute
+
+<JS-unclassified>
 JS_DHashTableEnumerate
 JS_DHashTableEnumerate
 JS_strtod
@@ -423,13 +428,6 @@ PL_HashTableRawAdd
 nsHashtable::Put(nsHashKey *, void *)
 CSSRuleProcessor::GetRuleCascade(nsIAtom *)
 
-<CSSLoaderImpl>
-PR_Malloc
-PL_HashTableFinalize(PLHashTable *)
-PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), int (*)(void const *, void const *), int (*)(void const *, void const *), PLHashAllocOps const *, void *)
-nsHashtable::nsHashtable(unsigned int, int)
-CSSLoaderImpl::CSSLoaderImpl(void)
-
 <CSSRuleProcessor>
 PR_Malloc
 PL_HashTableFinalize(PLHashTable *)
@@ -478,6 +476,13 @@ nsSupportsArray::GrowArrayBy(int)
 nsSupportsArray::InsertElementAt(nsISupports *, unsigned int)
 nsSupportsArray::AppendElement(nsISupports *)
 CSSRuleProcessor::CascadeSheetRulesInto(nsISupports *, void *)
+
+<CSSLoaderImpl>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), int (*)(void const *, void const *), int (*)(void const *, void const *), PLHashAllocOps const *, void *)
+nsHashtable::nsHashtable(unsigned int, int)
+CSSLoaderImpl::CSSLoaderImpl(void)
 
 <CSSNameSpaceRuleImpl>
 PR_Malloc
@@ -706,6 +711,33 @@ nsCheapVoidArray::SwitchToVector(void)
 nsCheapVoidArray::AppendElement(void *)
 nsGenericHTMLContainerElement::AppendChildTo(nsIContent *, int)
 
+<nsGenericHTMLContainerElement>
+PR_Malloc
+nsVoidArray::SizeTo(int)
+nsAutoVoidArray::SizeTo(int)
+nsVoidArray::Compact(void)
+nsAutoVoidArray::Compact(void)
+nsCheapVoidArray::Compact(void)
+nsGenericHTMLContainerElement::Compact(void)
+
+<nsGenericHTMLContainerElement>
+PR_Malloc
+nsVoidArray::SizeTo(int)
+nsAutoVoidArray::SizeTo(int)
+nsVoidArray::GrowArrayBy(int)
+nsVoidArray::InsertElementAt(void *, int)
+nsCheapVoidArray::AppendElement(void *)
+nsGenericHTMLContainerElement::AppendChildTo(nsIContent *, int, int)
+
+<nsGenericHTMLContainerElement>
+PR_Realloc
+nsVoidArray::SizeTo(int)
+nsAutoVoidArray::SizeTo(int)
+nsVoidArray::GrowArrayBy(int)
+nsVoidArray::InsertElementAt(void *, int)
+nsCheapVoidArray::AppendElement(void *)
+nsGenericHTMLContainerElement::AppendChildTo(nsIContent *, int, int)
+
 <nsGenericAttribute>
 PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
@@ -817,6 +849,25 @@ nsFontMetricsGTK::Init(nsFont const &, nsIAtom *, nsIDeviceContext *)
 
 <nsFontMetricsGTK>
 __builtin_new
+nsFontMetricsGTK::SearchNode(nsFontNode *, unsigned short)
+
+<nsFontMetricsGTK>
+PR_Malloc
+nsCompressedCharMap::NewCCMap(void)
+MapToCCMap(unsigned int *)
+MapperToCCMap(nsICharRepresentable *)
+nsFontMetricsGTK::GetFontHandle(void *&)
+
+<nsFontMetricsGTK>
+PR_Malloc
+nsVoidArray::SizeTo(int)
+nsVoidArray::GrowArrayBy(int)
+nsVoidArray::InsertElementAt(void *, int)
+nsCStringArray::InsertCStringAt(nsCString const &, int)
+nsFontMetricsGTK::QueryInterface(nsID const &, void **)
+
+<nsFontMetricsGTK>
+__builtin_new
 nsCStringKey::Clone(void) const
 nsHashtable::Put(nsHashKey *, void *)
 nsFontMetricsGTK::SearchNode(nsFontNode *, unsigned short)
@@ -914,6 +965,50 @@ nsFontMetricsGTK::Init(nsFont const &, nsIAtom *, nsIDeviceContext *)
 __builtin_new
 nsFontMetricsGTK::SearchNode
 
+<nsFontMetricsGTK>
+PR_Malloc
+PR_vsxprintf
+PR_WaitForPollableEvent
+PR_WaitForPollableEvent
+PR_vsmprintf
+PR_smprintf
+nsFontMetricsGTK::SearchNode(nsFontNode *, unsigned short)
+
+<nsFontMetricsGTK>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsFontMetricsGTK::TryNodes(nsACString &, unsigned short)
+
+<nsFontMetricsGTK>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsFontMetricsGTK::TryNode(nsCString *, unsigned short)
+
+<nsFontMetricsGTK>
+PR_Realloc
+nsVoidArray::SizeTo(int)
+nsAutoVoidArray::SizeTo(int)
+nsVoidArray::GrowArrayBy(int)
+nsVoidArray::InsertElementAt(void *, int)
+nsFontMetricsGTK::SearchNode(nsFontNode *, unsigned short)
+
+<nsFontMetricsGTK>
+PR_Realloc
+nsFontMetricsGTK::AddToLoadedFontsList(nsFontGTK *)
+
+<nsFontMetricsGTK>
+PR_Realloc
+PR_vsxprintf
+PR_WaitForPollableEvent
+PR_WaitForPollableEvent
+PR_vsmprintf
+PR_smprintf
+nsFontMetricsGTK::SearchNode(nsFontNode *, unsigned short)
+
 <nsPluginTag>
 __builtin_new
 __builtin_vec_new
@@ -943,6 +1038,22 @@ nsSupportsArray::GrowArrayBy(int)
 nsSupportsArray::InsertElementAt(nsISupports *, unsigned int)
 nsSupportsArray::AppendElement(nsISupports *)
 nsXBLInsertionPoint::AddChild(nsIContent *)
+
+<nsXBLPrototypeBinding>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), int (*)(void const *, void const *), int (*)(void const *, void const *), PLHashAllocOps const *, void *)
+nsHashtable::nsHashtable(unsigned int, int)
+nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent *)
+
+<nsXBLPrototypeBinding>
+JS_DHashAllocTable
+JS_DHashTableInit
+JS_NewDHashTable
+js_LookupProperty
+JS_DefinePropertyWithTinyId
+JS_LookupProperty
+nsXBLPrototypeBinding::InitClass(nsCString const &, nsIScriptContext *, void *, void **)
 
 <nsXBLPrototypeBinding>
 PR_Malloc
@@ -1006,6 +1117,13 @@ PR_Malloc
 PL_ArenaAllocate
 FrameArena::AllocateFrame(unsigned int, void **)
 
+<PresShell>
+PR_Malloc
+PL_ArenaAllocate
+nsDST::NodeArena::AllocLeafNode(void)
+nsDST::Insert(void *, void *, void **)
+PresShell::SetSubShellFor(nsIContent *, nsISupports *)
+
 # The anonymous content table in the PresShell
 <PresShell.mAnonymousContentTable>
 PR_Malloc
@@ -1054,6 +1172,14 @@ PL_ArenaAllocate
 nsDST::NodeArena::AllocLeafNode(void)
 nsDST::LeafNode::operator new(unsigned int, nsDST::NodeArena *)
 nsDST::Insert(void *, void *, void **)
+
+<FrameManager>
+PR_Malloc
+PL_ArenaAllocate
+nsDST::NodeArena::AllocTwoNode(void)
+nsDST::ConvertToTwoNode(nsDST::LeafNode **)
+nsDST::Insert(void *, void *, void **)
+FrameManager::SetFrameProperty(nsIFrame *, nsIAtom *, void *, void (*)(nsIPresContext *, nsIFrame *, nsIAtom *, void *))
 
 <FrameManager>
 PR_Malloc
@@ -1136,6 +1262,13 @@ PR_Malloc
 PL_ArenaFinish
 PL_NewHashTable
 RDFServiceImpl::Init(void)
+
+<RDFServiceImpl>
+PR_Malloc
+nsRDFParserUtils::GetQuotedAttributeValue(nsString const &, nsString const &, nsString &)
+PL_HashTableRawAdd
+PL_HashTableAdd
+RDFServiceImpl::RegisterDataSource(nsIRDFDataSource *, int)
 
 <RDFServiceImpl>
 PR_Malloc
@@ -1362,6 +1495,20 @@ __builtin_new
 __builtin_vec_new
 nsHTMLDocument::nsHTMLDocument(void)
 
+<nsHTMLDocument>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), int (*)(void const *, void const *), int (*)(void const *, void const *), PLHashAllocOps const *, void *)
+nsHashtable::nsHashtable(unsigned int, int)
+nsHTMLDocument::nsHTMLDocument(void)
+
+<nsHTMLDocument>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsHTMLDocument::InvalidateHashTables(void)e
+
 <nsHTMLDocument.mReferrer>
 PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
@@ -1426,11 +1573,71 @@ basic_nsAWritableString<unsigned short>::Assign(basic_nsAReadableString<unsigned
 nsString::nsString(basic_nsAReadableString<unsigned short> const &)
 nsDOMDocumentType::nsDOMDocumentType(basic_nsAReadableString<unsigned short> const &, nsIDOMNamedNodeMap *, nsIDOMNamedNodeMap *, basic_nsAReadableString<unsigned short> const &, basic_nsAReadableString<unsigned short> const &, basic_nsAReadableString<unsigned short> const &)
 
+<Native2WrappedNativeMap>
+JS_DHashAllocTable
+JS_DHashTableInit
+JS_NewDHashTable
+Native2WrappedNativeMap::Native2WrappedNativeMap(int)
+
+<ClassInfo2WrappedNativeProtoMap>
+JS_DHashAllocTable
+JS_DHashTableInit
+JS_NewDHashTable
+ClassInfo2WrappedNativeProtoMap::ClassInfo2WrappedNativeProtoMap(int)
+
+<IID2NativeInterfaceMap>
+JS_DHashAllocTable
+JS_DHashTableInit
+JS_NewDHashTable
+IID2NativeInterfaceMap::IID2NativeInterfaceMap(int)
+
+<IID2WrappedJSClassMap>
+JS_DHashAllocTable
+JS_DHashTableInit
+JS_NewDHashTable
+IID2WrappedJSClassMap::IID2WrappedJSClassMap(int)
+
+<IID2ThisTranslatorMap>
+JS_DHashAllocTable
+JS_DHashTableInit
+JS_NewDHashTable
+IID2ThisTranslatorMap::IID2ThisTranslatorMap(int)
+
+<XPCNativeScriptableSharedMap>
+JS_DHashAllocTable
+JS_DHashTableInit
+JS_NewDHashTable
+XPCNativeScriptableSharedMap::XPCNativeScriptableSharedMap(int)
+
+<JSContext2XPCContextMap>
+JS_DHashAllocTable
+JS_DHashTableInit
+JS_NewDHashTable
+JSContext2XPCContextMap::JSContext2XPCContextMap(int)
+
+<NativeSetMap>
+JS_DHashAllocTable
+JS_DHashTableInit
+JS_NewDHashTable
+NativeSetMap::NativeSetMap(int)
+
+<JSObject2WrappedJSMap>
+JS_DHashAllocTable
+JS_DHashTableInit
+JS_NewDHashTable
+JSObject2WrappedJSMap::JSObject2WrappedJSMap(int)
+
 <nsXPCWrappedJS>
 JS_DHashAllocTable
 JS_DHashTableFinish
 JS_DHashTableOperate
 nsXPCWrappedJS::GetNewOrUsed(XPCCallContext &, JSObject *, nsID const &, nsISupports *, nsXPCWrappedJS **)
+
+<XPCWrappedNativeProtoMap>
+JS_DHashAllocTable
+JS_DHashTableInit
+JS_NewDHashTable
+XPCWrappedNativeProtoMap::XPCWrappedNativeProtoMap(int)
 
 <XPCWrappedNativeProto>
 JS_DHashAllocTable
@@ -1459,6 +1666,14 @@ JS_DHashAllocTable
 JS_DHashTableFinish
 JS_DHashTableOperate
 XPCWrappedNative::GetNewOrUsed(XPCCallContext &, nsISupports *, XPCWrappedNativeScope *, XPCNativeInterface *, XPCWrappedNative **)
+
+<XPCWrappedNativeScope>
+JS_DHashAllocTable
+JS_DHashTableInit
+JS_NewDHashTable
+js_LookupProperty
+js_GetProperty
+XPCWrappedNativeScope::SetGlobal(XPCCallContext &, JSObject *)
 
 <nsXPCWrappedNativeClass>
 __builtin_new
@@ -1685,6 +1900,20 @@ nsHashtable::Put(nsHashKey *, void *)
 nsStaticCaseInsensitiveNameTable::Init(char const **, int)
 
 <nsDrawingSurfaceGTK>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), int (*)(void const *, void const *), int (*)(void const *, void const *), PLHashAllocOps const *, void *)
+nsHashtable::nsHashtable(unsigned int, int)
+nsDrawingSurfaceGTK::Init(_GdkGC *, unsigned int, unsigned int, unsigned int)
+
+<nsDrawingSurfaceGTK>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsDrawingSurfaceGTK::Init(_GdkGC *, unsigned int, unsigned int, unsigned int)
+
+<nsDrawingSurfaceGTK>
 __builtin_new
 nsCStringKey::Clone(void) const
 nsHashtable::Put(nsHashKey *, void *)
@@ -1731,6 +1960,13 @@ nsCStringKey::Clone(void) const
 nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
 nsDirectoryService::Set(char const *, nsISupports *)
+
+<nsDirectoryService>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), int (*)(void const *, void const *), int (*)(void const *, void const *), PLHashAllocOps const *, void *)
+nsHashtable::nsHashtable(unsigned int, int)
+nsDirectoryService::Init(void)
 
 <nsDirectoryService>
 PR_Malloc
@@ -1847,6 +2083,13 @@ nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
 nsXBLDocumentInfo::SetPrototypeBinding(nsACString const &, nsIXBLPrototypeBinding *)
 
 <nsXBLDocumentInfo>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), int (*)(void const *, void const *), int (*)(void const *, void const *), PLHashAllocOps const *, void *)
+nsHashtable::nsHashtable(unsigned int, int)
+nsXBLDocumentInfo::SetPrototypeBinding(nsACString const &, nsIXBLPrototypeBinding *)
+
+<nsXBLDocumentInfo>
 __builtin_new
 nsCStringKey::Clone(void) const
 nsHashtable::Put(nsHashKey *, void *)
@@ -1911,6 +2154,13 @@ nsXULPrototypeCache::PutXBLDocumentInfo(nsIXBLDocumentInfo *)
 <nsXULPrototypeCache>
 PR_Malloc
 PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), int (*)(void const *, void const *), int (*)(void const *, void const *), PLHashAllocOps const *, void *)
+nsHashtable::nsHashtable(unsigned int, int)
+nsXULPrototypeCache::nsXULPrototypeCache(void)
+
+<nsXULPrototypeCache>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
 PL_HashTableRawAdd
 nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
@@ -1962,6 +2212,14 @@ __builtin_new
 nsCategoryManager::AddCategoryEntry(char const *, char const *, char const *, int, int, char **)
 
 <nsCategoryManager>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), int (*)(void const *, void const *), int (*)(void const *, void const *), PLHashAllocOps const *, void *)
+nsHashtable::nsHashtable(unsigned int, int)
+nsObjectHashtable::nsObjectHashtable(void *(*)(nsHashKey *, void *, void *), void *, int (*)(nsHashKey *, void *, void *), void *, unsigned int, int)
+nsCategoryManager::AddCategoryEntry(char const *, char const *, char const *, int, int, char **)
+
+<nsCategoryManager>
 __builtin_new
 nsCStringKey::Clone(void) const
 nsHashtable::Put(nsHashKey *, void *)
@@ -2016,6 +2274,34 @@ PL_HashTableRawAdd
 nsHashtable::Put(nsHashKey *, void *)
 nsCategoryManager::AddCategoryEntry(char const *, char const *, char const *, int, int, char **)
 
+<nsScriptNameSpaceManager>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsScriptNameSpaceManager::RegisterClassName(char const *, int)
+
+<nsScriptNameSpaceManager>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsScriptNameSpaceManager::FillHashWithDOMInterfaces(void)
+
+<nsScriptNameSpaceManager>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsScriptNameSpaceManager::FillHash(nsICategoryManager *, char const *, nsGlobalNameStruct::nametype)
+
+<nsScriptSecurityManager>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsScriptSecurityManager::InitPolicies(unsigned int, char const **, nsISecurityPref *)
+
 <nsScriptSecurityManager>
 __builtin_new
 nsScriptSecurityManager::EnumeratePolicyCallback(char const *, void *)
@@ -2045,6 +2331,13 @@ nsScriptSecurityManager::EnumeratePolicyCallback(char const *, void *)
 <nsStringBundleService>
 __builtin_new
 nsCStringKey::Clone(void) const
+nsHashtable::Put(nsHashKey *, void *)
+nsStringBundleService::insertIntoCache(nsIStringBundle *, nsCStringKey *)
+
+<nsStringBundleService>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
 nsHashtable::Put(nsHashKey *, void *)
 nsStringBundleService::insertIntoCache(nsIStringBundle *, nsCStringKey *)
 
@@ -2164,6 +2457,13 @@ CSSParserImpl::ParseContent(int &, nsICSSDeclaration *, int &)
 <RuleHash>
 __builtin_new
 RuleHash::AppendRuleToTable(nsHashtable &, nsIAtom *, nsICSSStyleRule *)
+
+<RuleHash>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+RuleHash::AppendRuleToTable(nsHashtable &, int, nsICSSStyleRule *)
 
 <RuleHash>
 __builtin_new
@@ -2286,6 +2586,13 @@ nsPersistentProperties::Create(nsISupports *, nsID const &, void **)
 
 <nsPersistentProperties>
 PR_Malloc
+PL_ArenaFinish
+PL_HashTableRawAdd
+nsPersistentProperties::SetStringProperty(nsAString const &, nsAString &, nsAString &)
+nsPersistentProperties::Load(nsIInputStream *)
+
+<nsPersistentProperties>
+PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
 nsMemory::Alloc(unsigned int)
 nsCppSharedAllocator<unsigned short>::allocate(unsigned int, void const *)
@@ -2346,15 +2653,36 @@ nsTextFragment::SetTo(unsigned short const *, int)
 PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
 nsMemory::Alloc(unsigned int)
+ToNewCString(nsAString const &)
+nsTextFragment::operator=(nsAString const &)
+
+<nsTextFragment>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
 char * AllocateStringCopy<unsigned short, char>(basic_nsAReadableString<unsigned short> const &, char *)
 ToNewCString(basic_nsAReadableString<unsigned short> const &)
 nsTextFragment::operator=(basic_nsAReadableString<unsigned short> const &)
+
+<nsStdURL>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+ToNewCString(nsACString const &)
+nsStdURL::GetSpec(char **)
 
 <nsSimpleURI>
 PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
 nsMemory::Alloc(unsigned int)
 nsString::ToNewCString(void) const
+nsSimpleURI::SetSpec(char const *)
+
+<nsSimpleURI>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+ToNewCString(nsAString const &)
 nsSimpleURI::SetSpec(char const *)
 
 <nsNodeInfoManager>
@@ -2499,6 +2827,9 @@ g_realloc
 
 <gtk-unclassified>
 g_malloc0
+
+<gtk-unclassified>
+_XimLcctstoutf8
 
 <gdk_imlib_load_image>
 loader_png
@@ -2729,6 +3060,13 @@ nsGenericContainerElement::AppendChildTo(nsIContent *, int, int)
 <nsObserverService>
 PR_Malloc
 PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsObserverService::GetObserverList(unsigned short const *, nsIObserverList **)
+
+<nsObserverService>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
 PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), int (*)(void const *, void const *), int (*)(void const *, void const *), PLHashAllocOps const *, void *)
 nsHashtable::nsHashtable(unsigned int, int)
 nsObjectHashtable::nsObjectHashtable(void *(*)(nsHashKey *, void *, void *), void *, int (*)(nsHashKey *, void *, void *), void *, unsigned int, int)
@@ -2764,6 +3102,13 @@ PL_HashTableRawAdd
 nsHashtable::Put(nsHashKey *, void *)
 nsObserverService::GetObserverList(nsString const &, nsIObserverList **)
 
+<nsViewManager>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), int (*)(void const *, void const *), int (*)(void const *, void const *), PLHashAllocOps const *, void *)
+nsHashtable::nsHashtable(unsigned int, int)
+nsViewManager::nsViewManager(void)
+
 <nsViewManager2>
 __builtin_new
 nsViewManager2::AddToDisplayList(int *, nsIView *, nsRect &, nsRect &, unsigned int, int, int)
@@ -2775,6 +3120,13 @@ PL_HashTableRawAdd
 nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
 nsBindingManager::SetContentListFor(nsIContent *, nsISupportsArray *)
+
+<nsBindingManager>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), int (*)(void const *, void const *), int (*)(void const *, void const *), PLHashAllocOps const *, void *)
+nsHashtable::nsHashtable(unsigned int, int)
+nsBindingManager::SetInsertionParent(nsIContent *, nsIContent *)
 
 <nsBindingManager>
 PR_Malloc
@@ -2908,6 +3260,13 @@ NS_NewHeapArena(nsIArena **, unsigned int)
 nsDocument::Init(void)
 
 <nsDocument>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), int (*)(void const *, void const *), int (*)(void const *, void const *), PLHashAllocOps const *, void *)
+nsHashtable::nsHashtable(unsigned int, int)
+nsDocument::nsDocument(void)
+
+<nsDocument>
 __builtin_new
 nsDocument::SetHeaderData(nsIAtom *, basic_nsAReadableString<unsigned short> const &)
 
@@ -3036,6 +3395,12 @@ CompositeDataSourceImpl::CompositeDataSourceImpl(void)
 PR_Malloc
 PL_ArenaAllocate
 nsFixedSizeAllocator::Alloc(unsigned int)
+CompositeDataSourceImpl::GetTargets(nsIRDFResource *, nsIRDFResource *, int, nsISimpleEnumerator **)
+
+<CompositeDataSourceImpl>
+PR_Malloc
+PL_ArenaAllocate
+nsFixedSizeAllocator::Alloc(unsigned int)
 CompositeDataSourceImpl::ArcLabelsIn(nsIRDFNode *, nsISimpleEnumerator **)
 
 <CompositeDataSourceImpl>
@@ -3129,6 +3494,13 @@ PR_Realloc
 nsXPIDLString type_info function
 nsXPIDLString type_info function
 nsTextFormatter::vsmprintf(unsigned short const *, void *)
+
+<nsPresContext>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), int (*)(void const *, void const *), int (*)(void const *, void const *), PLHashAllocOps const *, void *)
+nsHashtable::nsHashtable(unsigned int, int)
+nsPresContext::nsPresContext(void)
 
 <nsPresState>
 __builtin_new
@@ -3295,6 +3667,13 @@ nsLayoutHistoryState::nsLayoutHistoryState(void)
 <nsLayoutHistoryState>
 PR_Malloc
 PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), int (*)(void const *, void const *), int (*)(void const *, void const *), PLHashAllocOps const *, void *)
+nsHashtable::nsHashtable(unsigned int, int)
+nsLayoutHistoryState::nsLayoutHistoryState(void)
+
+<nsLayoutHistoryState>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
 PL_HashTableRawAdd
 nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
@@ -3411,6 +3790,14 @@ nsHashtable::nsHashtable(unsigned int, int)
 __17nsObjectHashtablePFP9nsHashKeyPvPv_PvPvPFP9nsHashKeyPvPv_iT2Uii
 nsJAR::nsJAR(void)
 
+<nsJARURI>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+ToNewCString(nsACString const &)
+nsIOService::ResolveRelativePath(char const *, char const *, char **)
+nsJARURI::SetSpec(char const *)
+
 <nsStreamConverterService>
 PR_Malloc
 PL_HashTableFinalize(PLHashTable *)
@@ -3432,6 +3819,11 @@ PL_HashTableRawAdd
 nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
 nsDNSService::GetLookupEntry(char const *, nsDNSLookup **)
+
+<nsDNSService>
+PL_DHashAllocTable
+PL_DHashTableInit
+nsDNSService::Init(void)
 
 <nsDNSService>
 __builtin_new
@@ -3459,6 +3851,10 @@ nsSupportsArray::Create(nsISupports *, nsID const &, void **)
 NS_NewISupportsArray(nsISupportsArray **)
 nsDNSLookup::Init(char const *)
 
+<nsDNSLookup>
+__builtin_new
+nsDNSLookup::Create(char const *)
+
 <nsFormControlList>
 PR_Malloc
 PL_HashTableFinalize(PLHashTable *)
@@ -3466,6 +3862,13 @@ PL_HashTableRawAdd
 nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
 nsFormControlList::AddElementToTable(nsIFormControl *, basic_nsAReadableString<unsigned short> const &)
+
+<nsFormControlList>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), int (*)(void const *, void const *), int (*)(void const *, void const *), PLHashAllocOps const *, void *)
+nsHashtable::nsHashtable(unsigned int, int)
+nsFormControlList::nsFormControlList(nsIDOMHTMLFormElement *)
 
 <nsFormControlList>
 __builtin_new
@@ -3490,6 +3893,21 @@ nsFormControlList::AddElementToTable(nsIFormControl *, basic_nsAReadableString<u
 __builtin_new
 __builtin_vec_new
 NS_NewControllerCommandManager(nsIControllerCommandManager **)
+
+<nsControllerCommandManager>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), int (*)(void const *, void const *), int (*)(void const *, void const *), PLHashAllocOps const *, void *)
+nsHashtable::nsHashtable(unsigned int, int)
+nsControllerCommandManager::nsControllerCommandManager(void)
+
+<nsControllerCommandManager>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
+nsControllerCommandManager::RegisterCommand(nsAString const &, nsIControllerCommand *)
 
 <nsControllerCommandManager>
 PR_Malloc
@@ -3530,12 +3948,7 @@ HTMLAttribute::CopyHTMLAttributes(HTMLAttribute *, HTMLAttribute **)
 
 <HTMLAttributesImpl>
 __builtin_new
-HTMLAttributesImpl::SetAttributeFor(nsIAtom *, basic_nsAReadableString<unsigned short> const &, int, nsIHTMLContent *, nsIHTMLStyleSheet *)
-
-<HTMLAttributesImpl>
-__builtin_new
-nsHTMLMappedAttributes::SetAttribute(nsIAtom *, basic_nsAReadableString<unsigned short> const &)
-HTMLAttributesImpl::SetAttributeFor(nsIAtom *, basic_nsAReadableString<unsigned short> const &, int, nsIHTMLContent *, nsIHTMLStyleSheet *)
+HTMLAttributesImpl::SetAttributeFor(nsIAtom *, nsAString const &, int, nsIHTMLContent *, nsIHTMLStyleSheet *)
 
 <HTMLAttributesImpl>
 __builtin_new
@@ -3584,6 +3997,12 @@ nsCellMap::AppendCell(nsTableCellMap &, nsTableCellFrame &, int, int)
 
 <nsCellMap>
 __builtin_new
+nsCellMap::Grow(nsTableCellMap &, int, int)
+
+<nsCellMap>
+PR_Malloc
+nsVoidArray::SizeTo(int)
+nsVoidArray::nsVoidArray(int)
 nsCellMap::Grow(nsTableCellMap &, int, int)
 
 <nsTableCellMap>
@@ -3885,6 +4304,12 @@ RuleHash::EnumerateAllRules(int, nsIAtom *, nsIAtom *, nsVoidArray const &, void
 __builtin_new
 __builtin_vec_new
 XPCNativeSet::NewInstance(XPCCallContext &, nsIInterfaceInfo *)
+
+<XPCNativeSet>
+JS_DHashAllocTable
+JS_DHashTableFinish
+JS_DHashTableOperate
+XPCNativeSet::ClearCacheEntryForClassInfo(nsIClassInfo *)
 
 <XPCNativeSet>
 __builtin_new
