@@ -1919,114 +1919,22 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
 nsresult
 nsProfile::ShowProfileWizard(void)
 {
-    nsresult rv = NS_OK;
-    PRBool hasParentWindow = PR_FALSE;
-    nsCOMPtr<nsIDOMWindowInternal> PMDOMWindow;
+    nsresult rv;
+    nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService(kWindowWatcherContractID, &rv));
+    if (NS_FAILED(rv)) return rv;
 
-    // Get the window mediator
-    NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
-    if (NS_SUCCEEDED(rv)) 
-    {
-        nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-
-        if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator)))) 
-        {
-            // Get each dom window
-            PRBool more;
-            windowEnumerator->HasMoreElements(&more);
-            while (more) 
-            {
-                nsCOMPtr<nsISupports> protoWindow;
-                rv = windowEnumerator->GetNext(getter_AddRefs(protoWindow));
-                if (NS_SUCCEEDED(rv) && protoWindow) 
-                {
-                    PMDOMWindow = do_QueryInterface(protoWindow);
-                    if (PMDOMWindow) 
-                    {
-                        hasParentWindow = PR_TRUE;
-                        break;
-                    }
-                }
-                windowEnumerator->HasMoreElements(&more);
-            }
-        }
-    }
-
-    if (hasParentWindow)
-    {
-        // Get the script global object for the window
-        nsCOMPtr<nsIScriptGlobalObject> sgo;
-        sgo = do_QueryInterface(PMDOMWindow);
-        if (!sgo) return NS_ERROR_FAILURE;
-
-        // Get the script context from the global context
-        nsCOMPtr<nsIScriptContext> scriptContext;
-        sgo->GetContext( getter_AddRefs(scriptContext));
-        if (!scriptContext) return NS_ERROR_FAILURE;
-
-        // Get the JSContext from the script context
-        JSContext* jsContext = (JSContext*)scriptContext->GetNativeContext();
-        if (!jsContext) return NS_ERROR_FAILURE;
-
-    
-        //-----------------------------------------------------
-        // Create the nsIDialogParamBlock to pass the trigger
-        // list to the dialog
-        //-----------------------------------------------------
-        nsCOMPtr<nsIDialogParamBlock> ioParamBlock;
-        rv = nsComponentManager::CreateInstance("@mozilla.org/embedcomp/dialogparam;1",
-                                            nsnull,
-                                            NS_GET_IID(nsIDialogParamBlock),
-                                            getter_AddRefs(ioParamBlock));
-
-    
-        if ( NS_SUCCEEDED( rv ) ) 
-            ioParamBlock->SetInt(0,4); // standard wizard buttons
-
-        nsCOMPtr<nsISupportsInterfacePointer> ifptr =
-            do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        ifptr->SetData(ioParamBlock);
-        ifptr->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
-
-        nsCOMPtr<nsIDOMWindow> newWindow;
-        rv = PMDOMWindow->OpenDialog(NS_ConvertUTF8toUCS2(PROFILE_WIZARD_URL),
-                                     NS_LITERAL_STRING("_blank"),
-                                     NS_LITERAL_STRING("chrome,modal"),
-                                     ifptr, getter_AddRefs(newWindow));
-        if (NS_FAILED(rv)) {
-            return rv;
-        }
-    }
-    else
-    {
-        // No parent window is available.
-        // So, Create top level window with create profile wizard
-        NS_WITH_SERVICE(nsIAppShellService, wizAppShell,
-                          kAppShellServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIURI> profURI;
-        rv = NS_NewURI(getter_AddRefs(profURI), NS_LITERAL_CSTRING(PROFILE_WIZARD_URL).get());
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIXULWindow> newWindow;
-        rv = wizAppShell->CreateTopLevelWindow(nsnull, profURI,
-                                                PR_TRUE, PR_TRUE, CHROME_STYLE,
-                                                NS_SIZETOCONTENT,           // width 
-                                                NS_SIZETOCONTENT,           // height
-                                                getter_AddRefs(newWindow));
-
-        if (NS_FAILED(rv)) return rv;
-
-        /*
-         * Bring up the wizard...
-         */    
-        rv = wizAppShell->Run();
-    }
+    nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1", &rv));
+    if (NS_FAILED(rv)) return rv;
+    ioParamBlock->SetInt(0,4); // standard wizard buttons
+   
+    nsCOMPtr<nsIDOMWindow> newWindow;
+    rv = windowWatcher->OpenWindow(nsnull,
+                                   PROFILE_WIZARD_URL,
+                                   "_blank",
+                                   kDefaultOpenWindowParams,
+                                   ioParamBlock,
+                                   getter_AddRefs(newWindow));
     return rv;
-
 }
 
 NS_IMETHODIMP nsProfile::ProfileExists(const PRUnichar *profileName, PRBool *exists)

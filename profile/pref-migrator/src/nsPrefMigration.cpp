@@ -57,7 +57,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIWebBrowserChrome.h"
+#include "nsIWindowWatcher.h"
 
 #if defined(XP_MAC) && !defined(DEBUG)
 //lower silly optimization level which takes an age for this file.
@@ -309,37 +309,18 @@ NS_IMETHODIMP
 nsPrefMigration::ProcessPrefs(PRBool showProgressAsModalWindow)
 {
   nsresult rv;
-  nsCOMPtr<nsIURI> pmprogressURL;
-
-  NS_WITH_SERVICE(nsIAppShellService, PMProgressAppShell,
-                  kAppShellServiceCID, &rv);
+  
+  nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv));
   if (NS_FAILED(rv)) return rv;
 
-  rv = NS_NewURI(getter_AddRefs(pmprogressURL), PREF_MIGRATION_PROGRESS_URL);
+  // WindowWatcher can work with or without parent window
+  rv = windowWatcher->OpenWindow(nsnull,
+                                 PREF_MIGRATION_PROGRESS_URL,
+                                 "_blank",
+                                 "centerscreen,modal,titlebar",
+                                 nsnull,
+                                 getter_AddRefs(mPMProgressWindow));
   if (NS_FAILED(rv)) return rv;
-
-  rv = PMProgressAppShell->CreateTopLevelWindow(nsnull, pmprogressURL,
-                                          PR_TRUE, PR_TRUE, CHROME_STYLE,
-                                          NS_SIZETOCONTENT, NS_SIZETOCONTENT,
-                                          getter_AddRefs(mPMProgressWindow));
-  if (NS_FAILED(rv)) return rv;
-
-  if (showProgressAsModalWindow) {
-    nsCOMPtr<nsIInterfaceRequestor> progressRequestor(do_QueryInterface(mPMProgressWindow));
-    nsCOMPtr<nsIWebBrowserChrome> progressChrome;
-
-    if (progressRequestor)
-      progressRequestor->GetInterface(NS_GET_IID(nsIWebBrowserChrome), getter_AddRefs(progressChrome));
-
-    if (progressChrome)
-      progressChrome->ShowAsModal();
-    NS_ASSERTION(progressChrome, "show modal window failed: no available chrome");
-  }
-  else {
-        // we are automatically migrating the profile, so there is no
-        // profile manager window to run the dialog as modal in front of.
-        PMProgressAppShell->Run();
-  }       
 
   return NS_OK;
 }
@@ -435,19 +416,22 @@ extern "C" void ProfileMigrationController(void *data)
 NS_IMETHODIMP
 nsPrefMigration::WindowCloseCallback()
 {
-    nsCOMPtr<nsIDocShell>         docShell;
-    nsresult rv = mPMProgressWindow->GetDocShell(getter_AddRefs(docShell));
-    if (NS_FAILED(rv)) return rv;
- 
-    nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(docShell));
-    if (treeItem) {
-        nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-        rv = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
-        if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(treeOwner));
-        if (baseWindow) (void)baseWindow->Destroy();
-    }
+  nsresult rv;
+  nsCOMPtr<nsIScriptGlobalObject> scriptGO(do_QueryInterface(mPMProgressWindow));
+  if (!scriptGO) return NS_ERROR_FAILURE;
   
+  nsCOMPtr<nsIDocShell> docShell;
+  rv = scriptGO->GetDocShell(getter_AddRefs(docShell));
+  if (!docShell) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(docShell));
+  if (!treeItem) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+  if (!treeOwner) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(treeOwner));
+  if (baseWindow)
+    baseWindow->Destroy();
+   
 #ifdef DEBUG
    printf("end of pref migration\n");
 #endif
@@ -458,62 +442,30 @@ nsPrefMigration::WindowCloseCallback()
 NS_IMETHODIMP
 nsPrefMigration::ShowSpaceDialog(PRInt32 *choice)
 {
-    // Get the DocShell
-    nsCOMPtr<nsIDocShell> docShell;
-    nsresult rv = mPMProgressWindow->GetDocShell(getter_AddRefs(docShell));
-    if (NS_FAILED(rv)) return rv;
+  nsresult rv;
+  nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv));
+  if (NS_FAILED(rv)) return rv;
 
-    // Now convert the DocShell to an nsIDOMWindowInternal
-    nsCOMPtr<nsIDOMWindowInternal> PMDOMWindow(do_GetInterface(docShell));
-    if (!PMDOMWindow) return NS_ERROR_FAILURE;
-
-    // Get the script global object for the window
-    nsCOMPtr<nsIScriptGlobalObject> sgo;
-    sgo = do_QueryInterface(PMDOMWindow);
-    if (!sgo) return NS_ERROR_FAILURE;
-
-    // Get the script context from the global context
-    nsCOMPtr<nsIScriptContext> scriptContext;
-    sgo->GetContext( getter_AddRefs(scriptContext));
-    if (!scriptContext) return NS_ERROR_FAILURE;
-
-    // Get the JSContext from the script context
-    JSContext* jsContext = (JSContext*)scriptContext->GetNativeContext();
-    if (!jsContext) return NS_ERROR_FAILURE;
-
-    
-    //-----------------------------------------------------
-    // Create the nsIDialogParamBlock to pass the trigger
-    // list to the dialog
-    //-----------------------------------------------------
-    nsCOMPtr<nsIDialogParamBlock> ioParamBlock;
-    rv = nsComponentManager::CreateInstance("@mozilla.org/embedcomp/dialogparam;1",
-                                            nsnull,
-                                            NS_GET_IID(nsIDialogParamBlock),
-                                            getter_AddRefs(ioParamBlock));
-
-    
-    if ( NS_SUCCEEDED( rv ) ) 
-      ioParamBlock->SetInt(0,3); //set the Retry, CreateNew and Cancel buttons
-
-    nsCOMPtr<nsISupportsInterfacePointer> ifptr =
-      do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    ifptr->SetData(ioParamBlock);
-    ifptr->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
-        
-    nsCOMPtr<nsIDOMWindow> newWindow;
-    rv = PMDOMWindow->OpenDialog(NS_ConvertASCIItoUCS2(PREF_MIGRATION_NO_SPACE_URL),
-                                 NS_LITERAL_STRING("_blank"),
-                                 NS_LITERAL_STRING("chrome,modal"),
-                                 ifptr, getter_AddRefs(newWindow));
-    if (NS_SUCCEEDED(rv)) {
-      //Now get which button was pressed from the ParamBlock
-      ioParamBlock->GetInt( 0, choice );
-    }
+  nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1", &rv));
+  if (NS_FAILED(rv)) return rv;
   
-    return rv;
+  ioParamBlock->SetInt(0,3); //set the Retry, CreateNew and Cancel buttons
+  
+  // WindowWatcher can work with or without parent window
+  nsCOMPtr<nsIDOMWindow> newWindow;
+  rv = windowWatcher->OpenWindow(mPMProgressWindow,
+                                 PREF_MIGRATION_NO_SPACE_URL,
+                                 "_blank",
+                                 "dialog,chrome,centerscreen,modal,titlebar",
+                                 ioParamBlock,
+                                 getter_AddRefs(newWindow));
+  if (NS_FAILED(rv)) return rv;
+
+  // Now get which button was pressed from the ParamBlock
+  if (NS_SUCCEEDED(rv))
+      ioParamBlock->GetInt( 0, choice );
+      
+  return NS_OK;
 }
 
 
