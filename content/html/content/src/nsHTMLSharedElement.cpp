@@ -52,12 +52,21 @@
 #include "nsMappedAttributes.h"
 #include "nsStyleContext.h"
 
+#ifdef MOZ_SVG
+#include "nsIDOMGetSVGDocument.h"
+#include "nsIDOMSVGDocument.h"
+#include "nsIDocument.h"
+#endif
+
 // XXX nav4 has type= start= (same as OL/UL)
 extern nsAttrValue::EnumTable kListTypeTable[];
 
 class nsHTMLSharedElement : public nsGenericHTMLElement,
                             public nsImageLoadingContent,
                             public nsIDOMHTMLEmbedElement,
+#ifdef MOZ_SVG
+                            public nsIDOMGetSVGDocument,
+#endif
                             public nsIDOMHTMLIsIndexElement,
                             public nsIDOMHTMLParamElement,
                             public nsIDOMHTMLBaseElement,
@@ -84,6 +93,11 @@ public:
 
   // nsIDOMHTMLEmbedElement
   NS_DECL_NSIDOMHTMLEMBEDELEMENT
+
+#ifdef MOZ_SVG
+  // nsIDOMGetSVGDocument
+  NS_DECL_NSIDOMGETSVGDOCUMENT
+#endif
 
   // nsIDOMHTMLIsIndexElement
   NS_DECL_NSIDOMHTMLISINDEXELEMENT
@@ -150,6 +164,9 @@ NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(nsHTMLSharedElement,
                                              nsGenericHTMLElement,
                                              nsIDOMHTMLEmbedElement)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLEmbedElement, embed)
+#ifdef MOZ_SVG
+  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMGetSVGDocument, embed)
+#endif
   NS_INTERFACE_MAP_ENTRY_IF_TAG(imgIDecoderObserver, embed)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIImageLoadingContent, embed)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLParamElement, param)
@@ -186,6 +203,26 @@ NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Width, width)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Name, name)
 //NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Src, src)
+
+#ifdef MOZ_SVG
+// nsIDOMGetSVGDocument
+NS_IMETHODIMP
+nsHTMLSharedElement::GetSVGDocument(nsIDOMSVGDocument** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  *aResult = nsnull;
+
+  if (!mNodeInfo->Equals(nsHTMLAtoms::embed) || !IsInDoc())
+    return NS_OK;
+
+  nsIDocument *sub_doc = GetOwnerDoc()->GetSubDocumentFor(this);
+  if (sub_doc)
+    CallQueryInterface(sub_doc, aResult);
+
+  return NS_OK;
+}
+#endif
 
 // nsIDOMHTMLParamElement
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Value, value)
