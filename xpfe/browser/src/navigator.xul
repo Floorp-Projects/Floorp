@@ -164,6 +164,20 @@
     }
   }
 
+  function OpenHistoryView()
+  {
+    var toolkitCore = XPAppCoresManager.Find("toolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("toolkitCore");
+      }
+    }
+    if (toolkitCore) {
+      toolkitCore.ShowWindow("resource://res/rdf/history.xul",window);
+    }
+  }
+
   function BrowserPrintPreview()
   {
     // Borrowing this method to show how to 
@@ -494,6 +508,7 @@
       <menuitem name="Navigator" onclick="BrowserReload();"/>
       <menuitem name="Messenger" onclick="OpenMessenger();" />
       <menuitem name="Editor"    onclick="OpenEditor();" />
+      <menuitem name="Manage History"    onclick="OpenHistoryView();" />
       <menuitem name="Chat" onclick="BrowserReload();"/>
       <menuitem name="Shopping Cart" onclick="BrowserReload();"/>
       <separator />
