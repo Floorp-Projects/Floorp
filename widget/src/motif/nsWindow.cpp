@@ -99,7 +99,10 @@ nsWindow::nsWindow(nsISupports *aOuter):
   // XXX Til can deal with ColorMaps!
   SetForegroundColor(1);
   SetBackgroundColor(2);
-
+  mBounds.x = 0;
+  mBounds.y = 0;
+  mBounds.width = 0;
+  mBounds.height = 0;
 }
 
 
@@ -132,6 +135,7 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent, nsIWidget *aWidgetPare
 {
   Widget mainWindow = 0, frame = 0;
   Widget parentWidget = 0;
+  mBounds = aRect;
 
   if (nsnull == mToolkit) {
     if (nsnull != aToolkit) {
@@ -469,10 +473,7 @@ printf("Bad bounds computed for nsIWidget\n");
 
    // XXX If this code gets hit, one should question why and how
    // and fix it there.
-    aRect.x = 0 ;
-    aRect.y =  0;
-    aRect.width =  0;
-    aRect.height = 0;
+    aRect = mBounds;
   
 }
 }
