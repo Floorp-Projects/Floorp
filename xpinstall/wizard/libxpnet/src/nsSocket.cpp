@@ -65,8 +65,8 @@
 #endif
 
 const int kUsecsPerSec = 1000000;
-const int kTimeoutThresholdSecs = 120;
-const int kTimeoutThresholdUsecs = kTimeoutThresholdSecs * kUsecsPerSec;
+const int kRecvTimeoutThresholdUsecs = 30 * kUsecsPerSec;
+const int kTimeoutThresholdUsecs = 120 * kUsecsPerSec;
 const int kTimeoutSelectUsecs = 100000;
 const int kKilobyte = 1024;
 const int kUsecsPerKBFactor = (kUsecsPerSec/kKilobyte);
@@ -312,7 +312,7 @@ nsSocket::Send(unsigned char *aBuf, int *aBufSize)
 int
 nsSocket::Recv(unsigned char *aBuf, int *aBufSize)
 {
-  return(Recv(aBuf, aBufSize, kTimeoutThresholdUsecs));
+  return(Recv(aBuf, aBufSize, kRecvTimeoutThresholdUsecs));
 }
 
 int

@@ -56,6 +56,7 @@ const int  kProxySrvrLen = 1024;
 const char kHTTP[8]      = "http://";
 const char kFTP[7]       = "ftp://";
 const char kLoclFile[7]  = "zzzFTP";
+const int  kModTimeOutValue = 3;
 
 static nsHTTPConn       *connHTTP = NULL;
 static nsFTPConn        *connFTP = NULL;
@@ -78,6 +79,8 @@ BOOL                    gbShowDownloadRetryMsg;
 DWORD                   gdwDownloadDialogStatus;
 int                     giIndex;
 int                     giTotalArchivesToDownload;
+DWORD                   gdwTickStart;
+BOOL                    gbStartTickCounter;
 
 double GetPercentSoFar(void);
 
@@ -85,6 +88,9 @@ static void UpdateGaugeFileProgressBar(double value);
        int  ProgressCB(int aBytesSoFar, int aTotalFinalSize);
        void InitDownloadDlg(void);
        void DeInitDownloadDlg();
+
+/* local prototypes */
+siC *GetObjectFromArchiveName(char *szArchiveName);
 
 struct DownloadFileInfo
 {
@@ -108,9 +114,7 @@ struct TickInfo
   DWORD dwTickDif;
   BOOL  bTickStarted;
   BOOL  bTickDownloadResumed;
-};
-
-struct TickInfo gtiPaused;
+} gtiPaused;
 
 BOOL CheckInterval(long *lModLastValue, int iInterval)
 {
@@ -218,7 +222,6 @@ void SetStatusStatus(void)
   static long lModLastValue = 0;
   double        dRate;
   static double dRateCounter;
-  static DWORD  dwTickStart = 0;
   DWORD         dwTickNow;
   DWORD         dwTickDif;
   DWORD         dwKBytesSoFar;
@@ -226,12 +229,12 @@ void SetStatusStatus(void)
   char          szTimeLeft[MAX_BUF_TINY];
 
   /* If the user just clicked on the Resume button, then the time lapsed
-   * between dwTickStart and when the Resume button was clicked needs to
+   * between gdwTickStart and when the Resume button was clicked needs to
    * be subtracted taken into account when calculating dwTickDif.  So
-   * "this" lapsed time needs to be added to dwTickStart. */
+   * "this" lapsed time needs to be added to gdwTickStart. */
   if(gtiPaused.bTickDownloadResumed)
   {
-    dwTickStart = AddToTick(dwTickStart, gtiPaused.dwTickDif);
+    gdwTickStart = AddToTick(gdwTickStart, gtiPaused.dwTickDif);
     InitTickInfo();
   }
 
@@ -239,10 +242,10 @@ void SetStatusStatus(void)
    * which will allow us to get at a 2 decimal precision value for the
    * download rate. */
   dwTickNow = GetTickCount();
-  if(dwTickStart == 0)
-    dwTickNow = dwTickStart = GetTickCount();
+  if((gdwTickStart == 0) && gbStartTickCounter)
+    dwTickNow = gdwTickStart = GetTickCount();
 
-  dwTickDif = GetTickDif(dwTickNow, dwTickStart);
+  dwTickDif = GetTickDif(dwTickNow, gdwTickStart);
 
   /* Only update the UI every UPDATE_INTERVAL_STATUS interval,
    * which is currently set to 1 sec. */
@@ -559,6 +562,7 @@ int DownloadViaProxyOpen(char *szUrl, char *szProxyServer, char *szProxyPort, ch
 
 void DownloadViaProxyClose(void)
 {
+  gbStartTickCounter = FALSE;
   if(connHTTP)
   {
     connHTTP->Close();
@@ -604,6 +608,7 @@ int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *
   if(strrchr(szUrl, '/') != (szUrl + strlen(szUrl)))
     file = strrchr(szUrl, '/') + 1; // set to leaf name
 
+  gbStartTickCounter = TRUE;
   rv = connHTTP->Get(ProgressCB, file); // use leaf from URL
   DownloadViaProxyClose();
   return(rv);
@@ -634,6 +639,7 @@ int DownloadViaHTTPOpen(char *szUrl)
 
 void DownloadViaHTTPClose(void)
 {
+  gbStartTickCounter = FALSE;
   if(connHTTP)
   {
     connHTTP->Close();
@@ -674,6 +680,7 @@ int DownloadViaHTTP(char *szUrl)
   if(strrchr(szUrl, '/') != (szUrl + strlen(szUrl)))
     file = strrchr(szUrl, '/') + 1; // set to leaf name
 
+  gbStartTickCounter = TRUE;
   rv = connHTTP->Get(ProgressCB, file);
   DownloadViaHTTPClose();
   return(rv);
@@ -712,6 +719,7 @@ int DownloadViaFTPOpen(char *szUrl)
 
 void DownloadViaFTPClose(void)
 {
+  gbStartTickCounter = FALSE;
   if(connFTP)
   {
     connFTP->Close();
@@ -754,6 +762,7 @@ int DownloadViaFTP(char *szUrl)
   if(strrchr(path, '/') != (path + strlen(path)))
     file = strrchr(path, '/') + 1; // set to leaf name
 
+  gbStartTickCounter = TRUE;
   rv = connFTP->Get(path, file, nsFTPConn::BINARY, TRUE, ProgressCB);
 
   if(host)
@@ -781,12 +790,6 @@ void PauseTheDownload(int rv, int *iFileDownloadRetries)
 
 void CloseSocket(char *szProxyServer, char *szProxyPort)
 {
-  DWORD dwSavedState = gdwDownloadDialogStatus;
-
-//  /* gdwDownloadDialogStatus needs to be not set before calling
-//   * CloseSocket(), or else the socket will not be properly closed */
-//  gdwDownloadDialogStatus = CS_NONE;
-
   /* Close the socket connection from the first attempt. */
   if((szProxyServer != NULL) && (szProxyPort != NULL) &&
      (*szProxyServer != '\0') && (*szProxyPort != '\0'))
@@ -800,7 +803,29 @@ void CloseSocket(char *szProxyServer, char *szProxyPort)
     else if(strncmp(gszUrl, kFTP, lstrlen(kFTP)) == 0)
       DownloadViaFTPClose();
   }
-//  gdwDownloadDialogStatus = dwSavedState;
+}
+
+siC *GetObjectFromArchiveName(char *szArchiveName)
+{
+  DWORD dwIndex;
+  siC   *siCObject = NULL;
+  siC   *siCNode   = NULL;
+
+  dwIndex = 0;
+  siCObject = SiCNodeGetObject(dwIndex, TRUE, AC_ALL);
+  while(siCObject)
+  {
+    if(lstrcmpi(szArchiveName, siCObject->szArchiveName) == 0)
+    {
+      siCNode = siCObject;
+      break;
+    }
+
+    ++dwIndex;
+    siCObject = SiCNodeGetObject(dwIndex, TRUE, AC_ALL);
+  }
+
+  return(siCNode);
 }
 
 int DownloadFiles(char *szInputIniFile,
@@ -810,7 +835,6 @@ int DownloadFiles(char *szInputIniFile,
                   char *szProxyUser,
                   char *szProxyPasswd,
                   BOOL bShowRetryMsg,
-                  int *iNetRetries,
                   BOOL bIgnoreAllNetworkErrors,
                   char *szFailedFile,
                   DWORD dwFailedFileSize)
@@ -824,11 +848,13 @@ int DownloadFiles(char *szInputIniFile,
   int       rv;
   int       iFileDownloadRetries;
   int       iIgnoreFileNetworkError;
+  int       iLocalTimeOutCounter;
   DWORD     dwTotalEstDownloadSize;
   char      szPartiallyDownloadedFilename[MAX_BUF];
   BOOL      bDownloadInitiated;
   char      szTempURL[MAX_BUF];
   char      szWorkingURLPathOnly[MAX_BUF];
+  siC       *siCCurrentFileObj = NULL;
 
   ZeroMemory(szTempURL, sizeof(szTempURL));
   ZeroMemory(szWorkingURLPathOnly, sizeof(szWorkingURLPathOnly));
@@ -848,6 +874,11 @@ int DownloadFiles(char *szInputIniFile,
   glLastBytesSoFar          = 0;
   glAbsoluteBytesSoFar      = 0;
   glBytesResumedFrom        = 0;
+  gdwTickStart              = 0; /* Initialize the counter used to
+                                  * calculate download rate */
+  gbStartTickCounter        = FALSE; /* used to determine when to start
+                                      * the tick counter used to calculate
+                                      * the download rate */
   gbUrlChanged              = TRUE;
   gbDlgDownloadMinimized    = FALSE;
   gbDlgDownloadJustMinimized = FALSE;
@@ -912,6 +943,9 @@ int DownloadFiles(char *szInputIniFile,
     RemoveSlash(szWorkingURLPathOnly);
     wsprintf(gszUrl, "%s/%s", szWorkingURLPathOnly, szCurrentFile);
 
+    /* retrieve the file's data structure */
+    siCCurrentFileObj = GetObjectFromArchiveName(szCurrentFile);
+
     if((*szPartiallyDownloadedFilename != 0) &&
        (lstrcmpi(szPartiallyDownloadedFilename, szCurrentFile) == 0))
     {
@@ -938,6 +972,7 @@ int DownloadFiles(char *szInputIniFile,
 
     SetSetupCurrentDownloadFile(szCurrentFile);
     iFileDownloadRetries = 0;
+    iLocalTimeOutCounter = 0;
     do
     {
       ProcessWindowsMessages();
@@ -967,16 +1002,18 @@ int DownloadFiles(char *szInputIniFile,
         if(gdwDownloadDialogStatus == CS_PAUSE)
         {
           CloseSocket(szProxyServer, szProxyPort);
-          PauseTheDownload(rv, &iFileDownloadRetries);
-          bDownloadInitiated = FALSE; // restart the download using new socket connection
 
           /* rv needs to be set to something
            * other than E_USER_CANCEL or E_OK */
           rv = nsFTPConn::E_CMD_UNEXPECTED;
+
+          PauseTheDownload(rv, &iFileDownloadRetries);
+          bDownloadInitiated = FALSE; /* restart the download using
+                                       * new socket connection */
         }
         else
         {
-          /* break out of the do loop */
+          /* user canceled; break out of the do loop */
           break;
         }
       }
@@ -984,42 +1021,71 @@ int DownloadFiles(char *szInputIniFile,
               (rv != nsFTPConn::E_CMD_FAIL) &&
               (gdwDownloadDialogStatus != CS_CANCEL))
       {
+        /* We timed out.  No response from the server, or 
+         * we somehow lost connection. */
+
         char szTitle[MAX_BUF_SMALL];
         char szMsgDownloadPaused[MAX_BUF];
 
-        /* Start the pause tick counter here because we don't know how
-         * long before the user will dismiss the MessageBox() */
-        if(!gtiPaused.bTickStarted)
+        /* Incrememt the time out counter on E_TIMEOUT */
+        if(rv == nsSocket::E_TIMEOUT)
         {
-          gtiPaused.dwTickBegin          = GetTickCount();
-          gtiPaused.bTickStarted         = TRUE;
-          gtiPaused.bTickDownloadResumed = FALSE;
+          ++siCCurrentFileObj->iNetTimeOuts;
+          ++iLocalTimeOutCounter;
         }
 
-        /* The connection exepectedly dropped for some reason, so inform
-         * the user that the download will be Paused, and then update the
-         * Download dialog to show the Paused state. */
-        GetPrivateProfileString("Messages",
-                                "MB_WARNING_STR",
-                                "",
-                                szTitle,
-                                sizeof(szTitle),
-                                szFileIniInstall);
-        GetPrivateProfileString("Strings",
-                                "Message Download Paused",
-                                "",
-                                szMsgDownloadPaused,
-                                sizeof(szMsgDownloadPaused),
-                                szFileIniConfig);
-        MessageBox(dlgInfo.hWndDlg,
-                   szMsgDownloadPaused,
-                   szTitle,
-                   MB_ICONEXCLAMATION);
         CloseSocket(szProxyServer, szProxyPort);
-        PauseTheDownload(rv, &iFileDownloadRetries);
+
+        /* If the number of timeouts is %3 == 0, then let's pause
+         * the download process.  Otherwise, just close the
+         * connection and open a new one to see if the download
+         * can be restarted automatically. */
+        if((rv != nsSocket::E_TIMEOUT) ||
+           (rv == nsSocket::E_TIMEOUT) && ((iLocalTimeOutCounter % kModTimeOutValue) == 0))
+        {
+          /* Start the pause tick counter here because we don't know how
+           * long before the user will dismiss the MessageBox() */
+          if(!gtiPaused.bTickStarted)
+          {
+            gtiPaused.dwTickBegin          = GetTickCount();
+            gtiPaused.bTickStarted         = TRUE;
+            gtiPaused.bTickDownloadResumed = FALSE;
+          }
+
+          /* The connection unexepectedly dropped for some reason, so inform
+           * the user that the download will be Paused, and then update the
+           * Download dialog to show the Paused state. */
+          GetPrivateProfileString("Messages",
+                                  "MB_WARNING_STR",
+                                  "",
+                                  szTitle,
+                                  sizeof(szTitle),
+                                  szFileIniInstall);
+          GetPrivateProfileString("Strings",
+                                  "Message Download Paused",
+                                  "",
+                                  szMsgDownloadPaused,
+                                  sizeof(szMsgDownloadPaused),
+                                  szFileIniConfig);
+          MessageBox(dlgInfo.hWndDlg,
+                     szMsgDownloadPaused,
+                     szTitle,
+                     MB_ICONEXCLAMATION);
+
+          /* Let's make sure we're in a paused state */
+          gdwDownloadDialogStatus = CS_PAUSE;
+          PauseTheDownload(rv, &iFileDownloadRetries);
+        }
+        else
+          /* Let's make sure we're _not_ in a paused state */
+          gdwDownloadDialogStatus = CS_NONE;
       }
 
-      ++iFileDownloadRetries;
+      /* We don't count time outs as normal failures.  We're
+       * keeping track of time outs differently. */
+      if(rv != nsSocket::E_TIMEOUT)
+        ++iFileDownloadRetries;
+
       if((iFileDownloadRetries > MAX_FILE_DOWNLOAD_RETRIES) &&
          (rv != nsFTPConn::E_USER_CANCEL) &&
          (gdwDownloadDialogStatus != CS_CANCEL))
@@ -1058,12 +1124,8 @@ int DownloadFiles(char *szInputIniFile,
             (gdwDownloadDialogStatus != CS_CANCEL) &&
             (iFileDownloadRetries <= MAX_FILE_DOWNLOAD_RETRIES));
 
-    if((iFileDownloadRetries > MAX_FILE_DOWNLOAD_RETRIES) && iNetRetries)
-      /* Keep track of how many retries for only the file that had
-       * too many retries.
-       * We don't care about retries unless it's reached the limit
-       * because each retry should not count as a new download. */
-      *iNetRetries = iFileDownloadRetries - 1;
+    /* Save the number of retries for each file */
+    siCCurrentFileObj->iNetRetries = iFileDownloadRetries < 1 ? 0:iFileDownloadRetries - 1;
 
     if((rv == nsFTPConn::E_USER_CANCEL) ||
        (gdwDownloadDialogStatus == CS_CANCEL))

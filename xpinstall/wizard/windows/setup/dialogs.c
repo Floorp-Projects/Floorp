@@ -2708,6 +2708,13 @@ void DlgSequenceNext()
         /* PRE_DOWNLOAD process file manipulation functions */
         ProcessFileOps(T_PRE_DOWNLOAD, NULL);
 
+        /* log if the user selected the turbo mode or not */
+        if(diStartInstall.bTurboModeEnabled)
+        {
+          LogISTurboMode(diStartInstall.bTurboMode);
+          LogMSTurboMode(diStartInstall.bTurboMode);
+        }
+
         if(RetrieveArchives() == WIZ_OK)
         {
           /* POST_DOWNLOAD process file manipulation functions */
