@@ -794,7 +794,7 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aCon
  *  @param   
  *  @return  
  */
-PRBool nsParser::IsValidFragment(nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType){
+PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType){
   PRBool result=PR_FALSE;
   return result;
 }
