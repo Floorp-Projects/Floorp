@@ -13,16 +13,11 @@ var zCustom4 = "Custom 4: ";
 
 var rdf;
 var cvData;
-var cvPrefs = 0;
 
 function OnLoadCardView()
 {
 	rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
 	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-
-	// prefs
-	cvPrefs = new Object;
-	GetCurrentPrefs();
 
 	var doc = document;
 	
@@ -77,86 +72,6 @@ function OnLoadCardView()
 	cvData.cvWorkCountry	= doc.getElementById("cvWorkCountry");
 }
 	
-function SetNameColumn(cmd)
-{
-	var prefValue;
-	
-	switch ( cmd )
-	{
-		case 'firstLastCmd':
-			prefValue = 2;
-			break;
-		case 'lastFirstCmd':
-			prefValue = 1;
-			break;
-		case 'displayNameCmd':
-			prefValue = 0;
-			break;
-	}
-	
-	// set pref in file and locally
-	cvPrefs.prefs.SetIntPref("mail.addr_book.lastnamefirst", prefValue);
-	cvPrefs.nameColumn = prefValue;
-	
-	// FIX ME - this should redraw the card view pane when we can reselect the node
-	ClearResultsTreeSelection();
-	ClearCardViewPane();
-
-	// redraw results tree
-	var resultsTree = top.document.getElementById('resultsTree');
-	if ( resultsTree )
-	{
-		var ref = resultsTree.getAttribute('ref');
-		resultsTree.setAttribute('ref', ref);
-	}
-}
-
-function GetCurrentPrefs()
-{
-	var prefs = Components.classes["component://netscape/preferences"];
-	if ( prefs )
-	{
-		prefs = prefs.getService();
-		if ( prefs )
-			prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
-	}
-			
-	if ( prefs )
-	{
-		try {
-			cvPrefs.prefs = prefs;
-			cvPrefs.displayLastNameFirst = prefs.GetBoolPref("mail.addr_book.displayName.lastnamefirst");
-			cvPrefs.nameColumn = prefs.GetIntPref("mail.addr_book.lastnamefirst");
-			cvPrefs.lastFirstSeparator = ", ";
-			cvPrefs.firstLastSeparator = " ";
-			cvPrefs.titlePrefix = "Card for ";
-		}
-		catch (ex) {
-			dump("failed to get the mail.addr_book.displayName.lastnamefirst pref\n");
-		}
-	}
-	
-	// check "Show Name As" menu item based on pref
-	var menuitemID;
-	switch ( cvPrefs.nameColumn )
-	{
-		case 2:
-			menuitemID = 'firstLastCmd';
-			break;
-		case 1:
-			menuitemID = 'lastFirstCmd';
-			break;
-		case 0:
-		default:
-			menuitemID = 'displayNameCmd';
-			break;
-	}
-	menuitem = top.document.getElementById(menuitemID);
-	if ( menuitem )
-		menuitem.setAttribute('checked', 'true');
-}
-
-
 function DisplayCardViewPane(abNode)
 {
 	var uri = abNode.getAttribute('id');

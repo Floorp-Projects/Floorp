@@ -1,3 +1,6 @@
+var dirTree = 0;
+var resultsTree = 0;
+
 // functions needed from abMainWindow and abSelectAddresses
 
 // Controller object for Results Pane
@@ -26,7 +29,6 @@ var ResultsPaneController =
 			
 			case "cmd_delete":
 			case "button_delete":
-				var resultsTree = document.getElementById('resultsTree');
 				var numSelected = 0;
 				if ( resultsTree && resultsTree.selectedItems )
 					numSelected = resultsTree.selectedItems.length;
@@ -46,8 +48,6 @@ var ResultsPaneController =
 
 	doCommand: function(command)
 	{
-		var resultsTree = document.getElementById('resultsTree');
-		
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -108,7 +108,6 @@ var DirPaneController =
 			case "button_delete":
 				if ( command == "cmd_delete" )
 					goSetMenuValue(command, 'valueAddressBook');
-				var dirTree = document.getElementById('dirTree');
 				if ( dirTree && dirTree.selectedItems )
 					return true;
 				else
@@ -121,8 +120,6 @@ var DirPaneController =
 
 	doCommand: function(command)
 	{
-		var dirTree = document.getElementById('dirTree');
-
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -152,28 +149,29 @@ var DirPaneController =
 	}
 };
 
+function InitCommonJS()
+{
+	dirTree = document.getElementById('dirTree');
+	resultsTree = document.getElementById('resultsTree');
+}
+
 function SetupCommandUpdateHandlers()
 {
-	var widget;
-	
 	// dir pane
-	widget = document.getElementById('dirTree');
-	if ( widget )
-		widget.controllers.appendController(DirPaneController);
+	if ( dirTree )
+		dirTree.controllers.appendController(DirPaneController);
 	
 	// results pane
-	widget = document.getElementById('resultsTree');
-	if ( widget )
-		widget.controllers.appendController(ResultsPaneController);
+	if ( resultsTree )
+		resultsTree.controllers.appendController(ResultsPaneController);
 }
 
 
 function AbNewCard()
 {
 	var selectedAB = 0;
-	var tree = document.getElementById('dirTree');
-	if ( tree && tree.selectedItems && (tree.selectedItems.length == 1) )
-		selectedAB = tree.selectedItems[0].getAttribute('id');
+	if ( dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1) )
+		selectedAB = dirTree.selectedItems[0].getAttribute('id');
 		
 	goNewCardDialog(selectedAB);
 }
@@ -183,15 +181,12 @@ function AbEditCard()
 	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
 	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 
-	var resultsTree = document.getElementById('resultsTree');
-
 	if ( resultsTree.selectedItems && resultsTree.selectedItems.length == 1 )
 	{
 		var uri = resultsTree.selectedItems[0].getAttribute('id');
 		var card = rdf.GetResource(uri);
 		card = card.QueryInterface(Components.interfaces.nsIAbCard);
-		goEditCardDialog(document.getElementById('resultsTree').getAttribute('ref'),
-						 card, top.gUpdateCardView);
+		goEditCardDialog(resultsTree.getAttribute('ref'), card, top.gUpdateCardView);
 	}
 }
 
@@ -211,8 +206,6 @@ function GetSelectedAddresses()
 {
 	var item, uri, rdf, cardResource, card;
 	var selectedAddresses = "";
-	
-	var resultsTree = document.getElementById('resultsTree');
 	
 	rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
 	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
@@ -235,29 +228,41 @@ function GetSelectedAddresses()
 
 function SelectFirstAddressBook()
 {
-	var tree = document.getElementById('dirTree');
 	var body = document.getElementById('dirTreeBody');
-	if ( tree && body )
+	if ( dirTree && body )
 	{
 		var treeitems = body.getElementsByTagName('treeitem');
 		if ( treeitems && treeitems.length > 0 )
 		{
-			tree.selectItem(treeitems[0]);
+			dirTree.selectItem(treeitems[0]);
 			ChangeDirectoryByDOMNode(treeitems[0]);
+		}
+	}
+}
+
+function SelectFirstCard()
+{
+	var body = GetResultsTreeChildren();
+
+	if ( resultsTree && body )
+	{
+		var treeitems = body.getElementsByTagName('treeitem');
+		if ( treeitems && treeitems.length > 0 )
+		{
+			resultsTree.selectItem(treeitems[0]);
+			ResultsPaneSelectionChange();
 		}
 	}
 }
 
 function DirPaneSelectionChange()
 {
-	var dirTree = document.getElementById('dirTree');
 	if ( dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1) )
 	{
 		ChangeDirectoryByDOMNode(dirTree.selectedItems[0]);
 	}
 	else	
 	{
-		var resultsTree = document.getElementById('resultsTree');
 		if ( resultsTree )
 		{
 			ClearResultsTreeSelection();
@@ -270,13 +275,15 @@ function ChangeDirectoryByDOMNode(dirNode)
 {
 	var uri = dirNode.getAttribute('id');
 	
-	var resultsTree = document.getElementById('resultsTree');
 	if ( resultsTree )
 	{
 		if ( uri != resultsTree.getAttribute('ref') )
 		{
 			ClearResultsTreeSelection();
 			resultsTree.setAttribute('ref', uri);
+			WaitUntilDocumentIsLoaded();
+			SortToPreviousSettings();
+			SelectFirstCard();
 		}
 	}
 }
@@ -289,22 +296,79 @@ function ResultsPaneSelectionChange()
 
 function ClearResultsTreeSelection()
 {
-	var resultsTree = document.getElementById('resultsTree');
 	if ( resultsTree )
 		resultsTree.clearItemSelection();
 }
 
+function RedrawResultsTree()
+{
+	if ( resultsTree )
+	{
+		var ref = resultsTree.getAttribute('ref');
+		resultsTree.setAttribute('ref', ref);
+	}
+}
+	
+function RememberResultsTreeSelection()
+{
+	var selectionArray = 0;
+	
+	if ( resultsTree )
+	{
+		var selectedItems = resultsTree.selectedItems;
+		var numSelected = selectedItems.length;
+
+		selectionArray = new Array(numSelected);
+
+		for ( var i = 0; i < numSelected; i++ )
+		{
+			selectionArray[i] = selectedItems[i].getAttribute("id");
+			dump("selectionArray["+i+"] = " + selectionArray[i] + "\n");
+		}
+
+	}
+	return selectionArray;
+}
+
+function RestoreResultsTreeSelection(selectionArray)
+{
+	if ( resultsTree && selectionArray )
+	{
+		var numSelected = selectionArray.length;
+
+		WaitUntilDocumentIsLoaded();
+
+		var rowElement;
+		for ( var i = 0 ; i < numSelected; i++ )
+		{
+			rowElement = document.getElementById(selectionArray[i]);
+			resultsTree.addItemToSelection(rowElement);
+			if ( rowElement && (i==0) )
+				resultsTree.ensureElementIsVisible(rowElement);
+		}
+		ResultsPaneSelectionChange();
+	}
+}
+
+function WaitUntilDocumentIsLoaded()
+{
+	// FIX ME - we should really have this function available in a global place that does not
+	// require that we have access to mailnews code (msgNavigationService) from address book.
+	var msgNavigationService = Components.classes['component://netscape/messenger/msgviewnavigationservice'].getService();
+	msgNavigationService= msgNavigationService.QueryInterface(Components.interfaces.nsIMsgViewNavigationService);
+
+	msgNavigationService.EnsureDocumentIsLoaded(document);
+}
+
 function GetResultsTreeChildren()
 {
-	var tree = document.getElementById('resultsTree');
-	
-	if ( tree && tree.childNodes )
+	if ( resultsTree && resultsTree.childNodes )
 	{
-		for ( var index = tree.childNodes.length - 1; index >= 0; index-- )
+		for ( var index = resultsTree.childNodes.length - 1; index >= 0; index-- )
 		{
-			if ( tree.childNodes[index].tagName == 'treechildren' )
+			if ( resultsTree.childNodes[index].tagName == 'treechildren' )
 			{
-				return(tree.childNodes[index]);
+				return(resultsTree.childNodes[index]);
 			}
 		}
 	}
@@ -327,24 +391,78 @@ function GetResultsTreeItem(row)
 function SortResultPane(column, sortKey)
 {
 	var node = document.getElementById(column);
-	if(!node)    return(false);
+	if (!node)    return(false);
 
+	// sort!!!
+	var sortDirection;
+    var currentDirection = node.getAttribute('sortDirection');
+	if ( currentDirection == "descending" )
+		sortDirection = "ascending";
+    else
+		sortDirection = "descending";
+
+	DoSort(column, sortKey, sortDirection);
+
+    SaveSortSetting(column, sortKey, sortDirection);
+    return(true);
+}
+
+function DoSort(column, key, direction)
+{
 	var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
 	if (!isupports)    return(false);
 	
 	var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
 	if (!xulSortService)    return(false);
 
-	// sort!!!
-	sortDirection = "ascending";
-    var currentDirection = node.getAttribute('sortDirection');
-    if (currentDirection == "ascending")
-            sortDirection = "descending";
-    else if (currentDirection == "descending")
-            sortDirection = "ascending";
-    else    sortDirection = "ascending";
+	var node = document.getElementById(column);
+	
+	if ( node )
+	{
+		var selectionArray = RememberResultsTreeSelection();
+		xulSortService.Sort(node, key, direction);
+		ClearResultsTreeSelection()	;
+		WaitUntilDocumentIsLoaded();
+		RestoreResultsTreeSelection(selectionArray);
+	}
+}
 
-	xulSortService.Sort(node, sortKey, sortDirection);
+function SortToPreviousSettings()
+{
+	if ( dirTree && resultsTree )
+	{
+		var ref = resultsTree.getAttribute('ref');
+		var folder = document.getElementById(ref);
+		if ( folder )
+		{
+			var column = folder.getAttribute('sortColumn');	
+			var key = folder.getAttribute('sortKey');
+			var direction = folder.getAttribute('sortDirection');
+			
+			if ( !column || !key )
+			{
+				column = "NameColumn";
+				key = 'http://home.netscape.com/NC-rdf#Name';
+			}
+			if ( !direction )
+				direction = 'ascending';
+			
+			DoSort(column, key, direction);
+		}	
+	}
+}
 
-    return(true);
+function SaveSortSetting(column, key, direction)
+{
+	if ( dirTree && resultsTree )
+	{
+		var ref = resultsTree.getAttribute('ref');
+		var folder = document.getElementById(ref);
+		if ( folder )
+		{
+			folder.setAttribute('sortColumn', column);	
+			folder.setAttribute('sortKey', key);
+			folder.setAttribute('sortDirection', direction);
+		}	
+	}
 }

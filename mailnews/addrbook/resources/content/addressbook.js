@@ -1,12 +1,15 @@
+var cvPrefs = 0;
 var addressbook = 0;
 var gUpdateCardView = 0;
 
 function OnLoadAddressBook()
 {
-
 	top.addressbook = Components.classes["component://netscape/addressbook"].createInstance();
 	top.addressbook = top.addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
 	top.gUpdateCardView = UpdateCardView;
+
+	InitCommonJS();
+	GetCurrentPrefs();
 
 	// FIX ME - later we will be able to use onload from the overlay
 	OnLoadCardView();
@@ -19,7 +22,90 @@ function OnLoadAddressBook()
 	}
 
 	SetupCommandUpdateHandlers();
+	
 	SelectFirstAddressBook();
+}
+
+
+function GetCurrentPrefs()
+{
+	// prefs
+	if ( cvPrefs == 0 )
+		cvPrefs = new Object;
+
+	var prefs = Components.classes["component://netscape/preferences"];
+	if ( prefs )
+	{
+		prefs = prefs.getService();
+		if ( prefs )
+			prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+	}
+			
+	if ( prefs )
+	{
+		try {
+			cvPrefs.prefs = prefs;
+			cvPrefs.displayLastNameFirst = prefs.GetBoolPref("mail.addr_book.displayName.lastnamefirst");
+			cvPrefs.nameColumn = prefs.GetIntPref("mail.addr_book.lastnamefirst");
+			cvPrefs.lastFirstSeparator = ", ";
+			cvPrefs.firstLastSeparator = " ";
+			cvPrefs.titlePrefix = "Card for ";
+		}
+		catch (ex) {
+			dump("failed to get the mail.addr_book.displayName.lastnamefirst pref\n");
+		}
+	}
+	
+	// check "Show Name As" menu item based on pref
+	var menuitemID;
+	switch ( cvPrefs.nameColumn )
+	{
+		case 2:
+			menuitemID = 'firstLastCmd';
+			break;
+		case 1:
+			menuitemID = 'lastFirstCmd';
+			break;
+		case 0:
+		default:
+			menuitemID = 'displayNameCmd';
+			break;
+	}
+	menuitem = top.document.getElementById(menuitemID);
+	if ( menuitem )
+		menuitem.setAttribute('checked', 'true');
+}
+
+
+function SetNameColumn(cmd)
+{
+	var prefValue;
+	
+	switch ( cmd )
+	{
+		case 'firstLastCmd':
+			prefValue = 2;
+			break;
+		case 'lastFirstCmd':
+			prefValue = 1;
+			break;
+		case 'displayNameCmd':
+			prefValue = 0;
+			break;
+	}
+	
+	// set pref in file and locally
+	cvPrefs.prefs.SetIntPref("mail.addr_book.lastnamefirst", prefValue);
+	cvPrefs.nameColumn = prefValue;
+	
+	var selectionArray = RememberResultsTreeSelection();
+	ClearResultsTreeSelection()	;
+	
+	RedrawResultsTree();
+	
+	WaitUntilDocumentIsLoaded();
+	SortToPreviousSettings();
+	RestoreResultsTreeSelection(selectionArray);
 }
 
 
@@ -28,9 +114,8 @@ function CommandUpdate_AddressBook()
 	goUpdateCommand('button_delete');
 	
 	// get selection info from dir pane
-	var tree = document.getElementById('dirTree');
 	var oneAddressBookSelected = false;
-	if ( tree && tree.selectedItems && (tree.selectedItems.length == 1) )
+	if ( dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1) )
 		oneAddressBookSelected = true;
 		
 	// get selection info from results pane
@@ -50,10 +135,8 @@ function CommandUpdate_AddressBook()
 
 function UpdateCardView()
 {
-	var tree = document.getElementById('resultsTree');
-
-	if ( tree && tree.selectedItems && (tree.selectedItems.length == 1) )
-		DisplayCardViewPane(tree.selectedItems[0]);
+	if ( resultsTree && resultsTree.selectedItems && (resultsTree.selectedItems.length == 1) )
+		DisplayCardViewPane(resultsTree.selectedItems[0]);
 	else
 		ClearCardViewPane();
 }
@@ -75,7 +158,7 @@ function AbNewAddressBook()
 
 function AbCreateNewAddressBook(name)
 {
-	top.addressbook.newAddressBook(document.getElementById('dirTree').database, document.getElementById('resultsTree'), name);
+	top.addressbook.newAddressBook(dirTree.database, resultsTree, name);
 }
 
 function AbPrintCard()

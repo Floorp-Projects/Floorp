@@ -37,7 +37,8 @@ Rights Reserved.
 		  onblur="goOnEvent(this,'blur')"
 		  allownegativeassertions="false"
           coalesceduplicatearcs="false"
-          multiple="true">
+          multiple="true"
+          persist="sortColumn sortKey sortDirection">
 		
 		<template>
 			<rule>

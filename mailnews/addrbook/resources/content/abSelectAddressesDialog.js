@@ -10,6 +10,8 @@ var prefixBcc = "Bcc: ";
 
 function OnLoadSelectAddress()
 {
+	InitCommonJS();
+
 	var toAddress="", ccAddress="", bccAddress="";
 
 	doSetOKCancel(SelectAddressOKButton, 0);
@@ -134,8 +136,6 @@ function AddSelectedAddressesIntoBucket(prefix)
 	rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
 	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 
-	var resultsTree = document.getElementById('resultsTree');
-	
 	if ( resultsTree && resultsTree.selectedItems && resultsTree.selectedItems.length )
 	{
 		for ( item = 0; item < resultsTree.selectedItems.length; item++ )
