@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.14 2001/06/29 04:35:04 javi%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.15 2001/06/30 18:04:39 bryner%uiuc.edu Exp $
  */
 
 #include "prmem.h"
@@ -624,14 +624,14 @@ nsPKCS12Blob::handleError(int myerr)
                               NS_LITERAL_STRING("SuccessfulP12Restore").get(), 
                               errorMsg);
     if (NS_FAILED(rv)) return rv;
-    errPrompt->Alert(nsnull, errorMsg.GetUnicode());
+    errPrompt->Alert(nsnull, errorMsg.get());
     return PR_TRUE;
   case PIP_PKCS12_BACKUP_OK:
     rv = nssComponent->GetPIPNSSBundleString(
                               NS_LITERAL_STRING("SuccessfulP12Backup").get(), 
                               errorMsg);
     if (NS_FAILED(rv)) return rv;
-    errPrompt->Alert(nsnull, errorMsg.GetUnicode());
+    errPrompt->Alert(nsnull, errorMsg.get());
     return PR_TRUE;
   case PIP_PKCS12_USER_CANCELED:
     return PR_TRUE;  /* Just ignore it for now */
@@ -657,7 +657,7 @@ nsPKCS12Blob::handleError(int myerr)
                               NS_LITERAL_STRING("PKCS12PasswordInvalid").get(), 
                               errorMsg);
     if (NS_FAILED(rv)) return rv;
-    errPrompt->Alert(nsnull, errorMsg.GetUnicode());
+    errPrompt->Alert(nsnull, errorMsg.get());
     break;
 #endif
   case SEC_ERROR_BAD_PASSWORD:
@@ -665,7 +665,7 @@ nsPKCS12Blob::handleError(int myerr)
                             NS_LITERAL_STRING("PK11BadPassword").get(), 
                             errorMsg);
     if (NS_FAILED(rv)) return rv;
-    errPrompt->Alert(nsnull, errorMsg.GetUnicode());
+    errPrompt->Alert(nsnull, errorMsg.get());
     break;
   case SEC_ERROR_BAD_DER:
   case SEC_ERROR_PKCS12_CORRUPT_PFX_STRUCTURE:
@@ -674,14 +674,14 @@ nsPKCS12Blob::handleError(int myerr)
                             NS_LITERAL_STRING("PKCS12DecodeErr").get(), 
                             errorMsg);
     if (NS_FAILED(rv)) return rv;
-    errPrompt->Alert(nsnull, errorMsg.GetUnicode());
+    errPrompt->Alert(nsnull, errorMsg.get());
     break;
   default:
     rv = nssComponent->GetPIPNSSBundleString(
                             NS_LITERAL_STRING("PKCS12UnknownErrRestore").get(), 
                             errorMsg);
     if (NS_FAILED(rv)) return rv;
-    errPrompt->Alert(nsnull, errorMsg.GetUnicode());
+    errPrompt->Alert(nsnull, errorMsg.get());
   }
   if (NS_FAILED(rv)) return rv;
   return keepGoing;

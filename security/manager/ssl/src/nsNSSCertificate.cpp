@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.36 2001/06/27 00:33:17 javi%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.37 2001/06/30 18:04:38 bryner%uiuc.edu Exp $
  */
 
 #include "prmem.h"
@@ -1036,7 +1036,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     nsAutoString verifyDesc;
     nsAutoString typestr(NS_LITERAL_STRING("VerifySSLClient").get());
     typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
+    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
   }
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
@@ -1045,7 +1045,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     nsAutoString verifyDesc;
     nsAutoString typestr(NS_LITERAL_STRING("VerifySSLServer").get());
     typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
+    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
   }
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
@@ -1054,7 +1054,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     nsAutoString verifyDesc;
     nsAutoString typestr(NS_LITERAL_STRING("VerifySSLStepUp").get());
     typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
+    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
   }
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
@@ -1063,7 +1063,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     nsAutoString verifyDesc;
     nsAutoString typestr(NS_LITERAL_STRING("VerifyEmailSigner").get());
     typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
+    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
   }
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
@@ -1072,7 +1072,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     nsAutoString verifyDesc;
     nsAutoString typestr(NS_LITERAL_STRING("VerifyEmailRecip").get());
     typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
+    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
   }
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
@@ -1081,7 +1081,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     nsAutoString verifyDesc;
     nsAutoString typestr(NS_LITERAL_STRING("VerifyObjSign").get());
     typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
+    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
   }
 #if 0
@@ -1091,7 +1091,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     nsAutoString verifyDesc;
     nsAutoString typestr(NS_LITERAL_STRING("VerifyProtectObjSign").get());
     typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
+    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
   }
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
@@ -1100,7 +1100,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     nsAutoString verifyDesc;
     nsAutoString typestr(NS_LITERAL_STRING("VerifyUserImport").get());
     typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
+    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
   }
 #endif
@@ -1110,7 +1110,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     nsAutoString verifyDesc;
     nsAutoString typestr(NS_LITERAL_STRING("VerifySSLCA").get());
     typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
+    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
   }
 #if 0
@@ -1120,7 +1120,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     nsAutoString verifyDesc;
     nsAutoString typestr(NS_LITERAL_STRING("VerifyCAVerifier").get());
     typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
+    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
   }
 #endif
@@ -1130,7 +1130,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     nsAutoString verifyDesc;
     nsAutoString typestr(NS_LITERAL_STRING("VerifyStatusResponder").get());
     typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
+    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
   }
 #if 0
@@ -1140,7 +1140,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     nsAutoString verifyDesc;
     nsAutoString typestr(NS_LITERAL_STRING("VerifyAnyCA").get());
     typestr.AppendWithConversion(suffix);
-    rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
+    rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
   }
 #endif
