@@ -20,6 +20,7 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
+#                 Zach Lipton <zach@zachlipton.org>
 
 use strict;
 use diagnostics;
@@ -372,20 +373,25 @@ sub EditUser() {
     print MyForm("GeneratePassword") . hidden(-name=>"email");
     print submit("Generate a new random password for this user");
     print end_form();
-    print MyForm("DeleteUser") . hidden(-name=>"email");
-    print submit("Delete user");
-    print end_form();
-
+# DeleteUser is currently a bad idea, as it leaves dangling pointers.  
+# See bugzilla.mozilla.org bug 17589
+#
+#    print MyForm("DeleteUser") . hidden(-name=>"email");
+#    print submit("Delete user");
+#    print end_form();
 }
 
-sub DeleteUser() {
-    my $q = SqlQuote($F::email);
-    Query("delete from users where email = '$q'");
-    Query("insert into syncneeded (needed) values (1)");
-    print h1("OK, $F::email is gone.");
-    print hr();
-    MainMenu();
-}
+# DeleteUser is currently a bad idea, as it leaves dangling pointers.  
+# See bugzilla.mozilla.org bug 17589
+# 
+#sub DeleteUser() {
+#    my $q = SqlQuote($F::email);
+#    Query("delete from users where email = '$q'");
+#    Query("insert into syncneeded (needed) values (1)");
+#    print h1("OK, $F::email is gone.");
+#    print hr();
+#    MainMenu();
+#}
 
 sub ChangeUser() {
     foreach my $field ("email") {
