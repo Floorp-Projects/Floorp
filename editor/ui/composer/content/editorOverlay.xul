@@ -103,6 +103,15 @@
     <command id="cmd_image"            oncommand="goDoCommand('cmd_image')"/>
     <command id="cmd_hline"            oncommand="goDoCommand('cmd_hline')"/>
     <command id="cmd_table"            oncommand="goDoCommand('cmd_table')"/>
+    <command id="cmd_form"             oncommand="goDoCommand('cmd_form')"/>
+    <command id="cmd_inputtag"         oncommand="goDoCommand('cmd_inputtag')"/>
+    <command id="cmd_inputimage"       oncommand="goDoCommand('cmd_inputimage')"/>
+    <command id="cmd_textarea"         oncommand="goDoCommand('cmd_textarea')"/>
+    <command id="cmd_select"           oncommand="goDoCommand('cmd_select')"/>
+    <command id="cmd_button"           oncommand="goDoCommand('cmd_button')"/>
+    <command id="cmd_label"            oncommand="goDoCommand('cmd_label')"/>
+    <command id="cmd_fieldset"         oncommand="goDoCommand('cmd_fieldset')"/>
+    <command id="cmd_isindex"          oncommand="goDoCommand('cmd_isindex')"/>
     <command id="cmd_objectProperties" oncommand="goDoCommand('cmd_objectProperties')"/>
     <command id="cmd_insertChars"      oncommand="goDoCommand('cmd_insertChars')"    label="&insertCharsCmd.label;"/>
     <command id="cmd_insertHTML"       oncommand="goDoCommand('cmd_insertHTML')"     label="&insertHTMLCmd.label;"/>
@@ -158,10 +167,10 @@
     <command id="cmd_find"          oncommand="goDoCommand('cmd_find')"/>
     <command id="cmd_findNext"      oncommand="goDoCommand('cmd_findNext')"   label="&findAgainCmd.label;"/>
     <command id="cmd_spelling"      oncommand="goDoCommand('cmd_spelling')"/>
-    <command id="cmd_validate"      oncommand="goDoCommand('cmd_validate')"/>
+    <command id="cmd_validate"      label="&validateCmd.label;" accesskey="&validate.accesskey;" oncommand="goDoCommand('cmd_validate')"/>
     <command id="cmd_checkLinks"    oncommand="goDoCommand('cmd_checkLinks')"/>
     <command id="cmd_pasteQuote"    oncommand="goDoCommand('cmd_pasteQuote')" label="&pasteAsQuotationCmd.label;"/>
-    <command id="cmd_publishSettings" oncommand="goDoCommand('cmd_publishSettings')"/>
+    <command id="cmd_publishSettings" label="&publishSettings.label;" accesskey="&publishSettings.accesskey;" oncommand="goDoCommand('cmd_publishSettings')"/>
   </commandset>
 
   <!-- style related commands that update on creation, and on selection change -->
@@ -344,16 +353,14 @@
       <menuitem id="menu_delete"/>
       <menuseparator id="edEditMenuSep2" />
       <menuitem id="menu_selectAll"/>
-      <menuseparator id="sep_find" class="hide-in-IM"/>
+      <menuseparator id="sep_find"/>
       <menuitem id="menu_find"       accesskey="&editfind.accesskey;"            key="findkb"         observes="cmd_find" label="&findCmd.label;"/>
       <menuitem id="menu_findnext"   accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="cmd_findNext"/>
-      <menuseparator id="sep_checkspelling" class="hide-in-IM" />
+      <menuseparator id="sep_checkspelling"/>
       <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="cmd_spelling" label="&checkSpellingCmd.label;"/>
-      <menuitem id="menu_validate" class="hide-in-IM" observes="cmd_validate"
-        label="&validateCmd.label;"/>
       <menuseparator id="menu_PrefsSeparator"/>
-      <menuitem id="menu_publishSettings" label="&publishSettings.label;" accesskey="&publishSettings.accesskey;" observes="cmd_publishSettings"/>
       <menuitem id="menu_preferences"     observes="cmd_preferences"/>
+      <!-- Note: other Edit items (menu_validate, menu_publishSettings) are inserted from composerOverlay.xul -->
     </menupopup>
   </menu>
 
@@ -852,6 +859,21 @@
     <menuitem id="menu_checkLinks" observes="cmd_checkLinks"
      label="&checkLinksCmd.label;"/>
     <menuseparator />
+      <menu     accesskey="&insertformmenu.accesskey;"   id="insertFormMenu"        label="&insertFormMenu.label;">
+        <menupopup>
+          <menuitem accesskey="&insertform.accesskey;"        command="cmd_form"        label="&insertFormCmd.label;"/>
+          <menuseparator/>
+          <menuitem accesskey="&insertinputtag.accesskey;"    command="cmd_inputtag"    label="&insertInputTagCmd.label;"/>
+          <menuitem accesskey="&insertinputimage.accesskey;"  command="cmd_inputimage"  label="&insertInputImageCmd.label;"/>
+          <menuitem accesskey="&inserttextarea.accesskey;"    command="cmd_textarea"    label="&insertTextAreaCmd.label;"/>
+          <menuitem accesskey="&insertselect.accesskey;"      command="cmd_select"      label="&insertSelectCmd.label;"/>
+          <menuitem accesskey="&insertbutton.accesskey;"      command="cmd_button"      label="&insertButtonCmd.label;"/>
+          <menuitem accesskey="&insertlabel.accesskey;"       command="cmd_label"       label="&insertLabelCmd.label;"/>
+          <menuitem accesskey="&insertfieldset.accesskey;"    command="cmd_fieldset"    label="&insertFieldSetCmd.label;"/>
+          <menuseparator/>
+          <menuitem accesskey="&insertisindex.accesskey;"     command="cmd_isindex"     label="&insertIsIndexCmd.label;"/>
+        </menupopup>
+      </menu>
     <menuitem label="&testSelectionCmd.label;"
            oncommand="EditorTestSelection()"/>
     <menuitem label="&testTableLayoutCmd.label;"
