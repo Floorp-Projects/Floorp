@@ -24,23 +24,66 @@
   <glossdiv id="gloss-a">
     <title>A</title>
 
-    <glossentry>
+    <glossentry id="gloss-apache">
       <glossterm>Apache</glossterm>
 
       <glossdef>
         <para>In this context, Apache is the web server most commonly used
-        for serving up 
-        <glossterm>Bugzilla</glossterm>
-
+        for serving up Bugzilla 
         pages. Contrary to popular belief, the apache web server has nothing
         to do with the ancient and noble Native American tribe, but instead
         derived its name from the fact that it was 
         <quote>a patchy</quote>
-
         version of the original 
         <acronym>NCSA</acronym>
-
         world-wide-web server.</para>
+
+        <variablelist>
+          <title>Useful Directives when configuring Bugzilla</title>
+
+          <varlistentry>
+            <term><computeroutput><ulink url="http://httpd.apache.org/docs-2.0/mod/core.html#addhandler">AddHandler</ulink></computeroutput></term>
+            <listitem>
+              <para>Tell Apache that it's OK to run CGI scripts.</para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><computeroutput><ulink url="http://httpd.apache.org/docs-2.0/mod/core.html#allowoverride">AllowOverride</ulink></computeroutput></term>
+            <term><computeroutput><ulink url="http://httpd.apache.org/docs-2.0/mod/core.html#options">Options</ulink></computeroutput></term>
+            <listitem>
+              <para>These directives are used to tell Apache many things about
+              the directory they apply to. For Bugzilla's purposes, we need
+              them to allow script execution and <filename>.htaccess</filename>
+              overrides.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><computeroutput><ulink url="http://httpd.apache.org/docs-2.0/mod/mod_dir.html#directoryindex">DirectoryIndex</ulink></computeroutput></term>
+            <listitem>
+              <para>Used to tell Apache what files are indexes. If you can
+              not add <filename>index.cgi</filename> to the list of valid files,
+              you'll need to set <computeroutput>$index_html</computeroutput> to
+              1 in <filename>localconfig</filename> so
+              <command>./checksetup.pl</command> will create an
+              <filename>index.html</filename> that redirects to
+              <filename>index.cgi</filename>.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><computeroutput><ulink url="http://httpd.apache.org/docs-2.0/mod/core.html#scriptinterpretersource">ScriptInterpreterSource</ulink></computeroutput></term>
+            <listitem>
+              <para>Used when running Apache on windows so the shebang line
+              doesn't have to be changed in every Bugzilla script.
+              </para>
+            </listitem>
+          </varlistentry>
+        </variablelist>
+
+        <para>For more information about how to configure Apache for Bugzilla,
+        see <xref linkend="http-apache"/>.
+        </para>
       </glossdef>
     </glossentry>
   </glossdiv>
@@ -88,6 +131,17 @@
   <glossdiv id="gloss-c">
     <title>
     </title>
+
+    <glossentry id="gloss-cgi">
+      <glossterm>Common Gateway Interface</glossterm>
+      <acronym>CGI</acronym>
+      <glossdef>
+        <para><acronym>CGI</acronym> is an acronym for Common Gateway Interface. This is
+        a standard for interfacing an external application with a web server. Bugzilla
+        is an example of a <acronym>CGI</acronym> application.
+        </para>
+      </glossdef>
+    </glossentry>
 
     <glossentry id="gloss-component">
       <glossterm>Component</glossterm>
@@ -138,10 +192,9 @@
   </glossdiv>
 
   <glossdiv id="gloss-g">
-    <title>
-    </title>
+    <title>G</title>
 
-    <glossentry>
+    <glossentry id="gloss-groups">
       <glossterm>Groups</glossterm>
 
       <glossdef>
@@ -155,6 +208,18 @@
         in the 
         <glossterm>Bugzilla</glossterm>
         database.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv id="gloss-j">
+    <title>J</title>
+
+    <glossentry id="gloss-javascript">
+      <glossterm>JavaScript</glossterm>
+      <glossdef>
+        <para>JavaScript is cool, we should talk about it.
+        </para>
       </glossdef>
     </glossentry>
   </glossdiv>
@@ -289,6 +354,18 @@
         certain dates. Bugzilla facilitates meeting these milestones by
         giving you the ability to declare by which milestone a bug will be
         fixed, or an enhancement will be implemented.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry id="gloss-tcl">
+      <glossterm>Tool Command Language</glossterm>
+      <acronym>TCL</acronym>
+      <glossdef>
+        <para>TCL is an open source scripting language available for Windows,
+        Macintosh, and Unix based systems. Bugzilla 1.0 was written in TCL but
+        never released. The first release of Bugzilla was 2.0, which was when
+        it was ported to perl.
+        </para>
       </glossdef>
     </glossentry>
   </glossdiv>

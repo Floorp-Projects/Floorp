@@ -904,71 +904,11 @@
         is provided for those that want to know exactly what is created.
         </para>
 
-        <para>Note the instructions which follow are Apache-specific. If you
+        <para>FIX ME BEFORE RELEASE!!!!!
+        Note the instructions which follow are Apache-specific. If you
         use IIS, Netscape, or other non-Apache web servers, please consult
         your system documentation for how to secure these files from being
         transmitted to curious users.</para>
-
-        <para><filename>$BUGZILLA_HOME/.htaccess</filename>
-        <programlisting><![CDATA[
-# don't allow people to retrieve non-cgi executable files or our private data
-<FilesMatch ^(.*\.pl|.*localconfig.*|processmail|runtests.sh)$>
-  deny from all
-</FilesMatch>
-<FilesMatch ^(localconfig.js|localconfig.rdf)$>
-  allow from all
-</FilesMatch>
-        ]]></programlisting> 
-        </para>
-
-        <para><filename>$BUGZILLA_HOME/data/.htaccess</filename> 
-        <programlisting><![CDATA[
-# nothing in this directory is retrievable unless overriden by an .htaccess
-# in a subdirectory; the only exception is duplicates.rdf, which is used by
-# duplicates.xul and must be loadable over the web
-deny from all
-<Files duplicates.rdf>
-  allow from all
-</Files>
-        ]]></programlisting>
-        </para>
-
-        <para><filename>$BUGZILLA_HOME/data/webdot</filename>
-        <programlisting><![CDATA[
-# Restrict access to .dot files to the public webdot server at research.att.com 
-# if research.att.com ever changed their IP, or if you use a different
-# webdot server, you'll need to edit this
-<FilesMatch ^[0-9]+\.dot$>
-  Allow from 192.20.225.10
-  Deny from all
-</FilesMatch>
-
-# Allow access by a local copy of 'dot' to .png, .gif, .jpg, and
-# .map files
-<FilesMatch ^[0-9]+\.(png|gif|jpg|map)$>
-  Allow from all
-</FilesMatch>
-
-# And no directory listings, either.
-Deny from all
-        ]]></programlisting>
-        </para>
-
-        <para><filename>$BUGZILLA_HOME/Bugzilla/.htaccess</filename>
-        <programlisting>
-# nothing in this directory is retrievable unless overriden by an .htaccess
-# in a subdirectory
-deny from all
-         </programlisting>
-         </para>
-
-        <para><filename>$BUGZILLA_HOME/template/.htaccess</filename>
-        <programlisting>
-# nothing in this directory is retrievable unless overriden by an .htaccess
-# in a subdirectory
-deny from all
-         </programlisting>
-         </para>
 
       </listitem>
     </orderedlist>
