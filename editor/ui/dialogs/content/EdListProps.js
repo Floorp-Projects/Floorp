@@ -32,9 +32,24 @@ var gListType = "";
 var gMixedListSelection = false;
 var gBulletStyleType = "";
 var gOriginalBulletStyleType = "";
-var gOnesArray = ["I","II","III","IV","V","VI","VII","VIII","IX"];
-var gTensArray = ["X","XX","XXX","XL","L","LX","LXX","LXXX","XC"];
-var gHundredsArray = ["C","CC","CCC","CD","D","DC","DCC","DCCC","CM"];
+const gOnesArray = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
+const gTensArray = ["", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC"];
+const gHundredsArray = ["", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM"];
+const gThousandsArray = ["", "M", "MM", "MMM", "MMMM", "MMMMM", "MMMMMM", "MMMMMMM", "MMMMMMMM", "MMMMMMMMM"];
+const A = "A".charCodeAt(0);
+
+// These indexes must correspond to order of items in menulists:
+const UL_LIST = 1;
+const OL_LIST = 2;
+const DL_LIST = 3;
+const UL_TYPE_DISC = 1;
+const UL_TYPE_CIRCLE = 2;
+const UL_TYPE_SQUARE = 3;
+const OL_TYPE_DECIMAL = 1;
+const OL_TYPE_UPPER_ROMAN = 2;
+const OL_TYPE_LOWER_ROMAN = 3;
+const OL_TYPE_UPPER_ALPHA = 4;
+const OL_TYPE_LOWER_ALPHA = 5;
 
 // dialog initialization code
 function Startup()
@@ -108,11 +123,11 @@ function InitDialog()
     {
       type = type.toLowerCase();
       if (type == "disc")
-        index = 1;
+        index = UL_TYPE_DISC;
       else if (type == "circle")
-        index = 2;
+        index = UL_TYPE_CIRCLE;
       else if (type == "square")
-        index = 3;
+        index = UL_TYPE_SQUARE;
     }
   }
   else if (gListType == "ol")
@@ -121,32 +136,33 @@ function InitDialog()
     {
       case "1":
       case "decimal":
-        index = 1;
+        index = OL_TYPE_DECIMAL;
         break;
       case "I":
       case "upper-roman":
-        index = 2;
+        index = OL_TYPE_UPPER_ROMAN;
         break;
       case "i":
       case "lower-roman":
-        index = 3;
+        index = OL_TYPE_LOWER_ROMAN;
         break;
       case "A":
       case "upper-alpha":
-        index = 4;
+        index = OL_TYPE_UPPER_ALPHA;
         break;
       case "a":
       case "lower-alpha":
-        index = 5;
+        index = OL_TYPE_LOWER_ALPHA;
         break;
     }
     gNumberStyleIndex = index;
   }
   gDialog.BulletStyleList.selectedIndex = index;
 
-  // Convert attribute number to appropriate letter or roman numeral
-  gDialog.StartingNumberInput.value = 
-    ConvertStartAttrToUserString(globalElement.getAttribute("start"), index);
+  if (globalElement)
+    // Convert attribute number to appropriate letter or roman numeral
+    gDialog.StartingNumberInput.value = 
+      ConvertStartAttrToUserString(globalElement.getAttribute("start"), index);
 
   gOriginalBulletStyleType = type;
 }
@@ -154,29 +170,22 @@ function InitDialog()
 // Convert attribute number to appropriate letter or roman numeral
 function ConvertStartAttrToUserString(startAttr, numberStyleIndex)
 {
-  if (!startAttr)
-    return startAttr;
-
-  var start = "";
   switch (numberStyleIndex)
   {
-    case 1:
-      start = startAttr;
+    case OL_TYPE_UPPER_ROMAN:
+      startAttr = ConvertArabicToRoman(startAttr);
       break;
-    case 2:
-      start = toRoman(startAttr);
+    case OL_TYPE_LOWER_ROMAN:
+      startAttr = ConvertArabicToRoman(startAttr).toLowerCase();
       break;
-    case 3:
-      start = toRoman(startAttr).toLowerCase();
+    case OL_TYPE_UPPER_ALPHA:
+      startAttr = ConvertArabicToLetters(startAttr);
       break;
-    case 4:
-      start = String.fromCharCode(Number(startAttr) + 64);
-      break;
-    case 5:
-      start = String.fromCharCode(Number(startAttr) + 96);
+    case OL_TYPE_LOWER_ALPHA:
+      startAttr = ConvertArabicToLetters(startAttr).toLowerCase();
       break;
   }
-  return start;
+  return startAttr;
 }
 
 function BuildBulletStyleList()
@@ -199,7 +208,7 @@ function BuildBulletStyleList()
     AppendStringToMenulistById(gDialog.BulletStyleList,"SolidSquare");
 
     gDialog.BulletStyleList.selectedIndex = gBulletStyleIndex;
-    gDialog.ListTypeList.selectedIndex = 1;
+    gDialog.ListTypeList.selectedIndex = UL_LIST;
   }
   else if (gListType == "ol")
   {
@@ -217,7 +226,7 @@ function BuildBulletStyleList()
     AppendStringToMenulistById(gDialog.BulletStyleList,"Style_a");
 
     gDialog.BulletStyleList.selectedIndex = gNumberStyleIndex;
-    gDialog.ListTypeList.selectedIndex = 2;
+    gDialog.ListTypeList.selectedIndex = OL_LIST;
   } 
   else 
   {
@@ -227,7 +236,7 @@ function BuildBulletStyleList()
     gDialog.StartingNumberLabel.setAttribute("disabled", "true");
 
     if (gListType == "dl")
-      gDialog.ListTypeList.selectedIndex = 3;
+      gDialog.ListTypeList.selectedIndex = DL_LIST;
     else
     {
       // No list or mixed selection that starts outside a list
@@ -252,14 +261,14 @@ function SelectListType()
   var NewType;
   switch (gDialog.ListTypeList.selectedIndex)
   {
-    case 1:
+    case UL_LIST:
       NewType = "ul";
       break;
-    case 2:
+    case OL_LIST:
       NewType = "ol";
       SetTextboxFocus(gDialog.StartingNumberInput);
       break;
-    case 3:
+    case DL_LIST:
       NewType = "dl";
       break;
     default:
@@ -312,13 +321,13 @@ function ValidateData()
       switch (gDialog.BulletStyleList.selectedIndex)
       {
         // Index 0 = automatic, the default, so we don't set it explicitly
-        case 1:
+        case UL_TYPE_DISC:
           type = "disc";
           break;
-        case 2:
+        case UL_TYPE_CIRCLE:
           type = "circle";
           break;
-        case 3:
+        case UL_TYPE_SQUARE:
           type = "square";
           break;
       }
@@ -334,19 +343,19 @@ function ValidateData()
       switch (gDialog.BulletStyleList.selectedIndex)
       {
         // Index 0 = automatic, the default, so we don't set it explicitly
-        case 1:
+        case OL_TYPE_DECIMAL:
           type = "1";
           break;
-        case 2:
+        case OL_TYPE_UPPER_ROMAN:
           type = "I";
           break;
-        case 3:
+        case OL_TYPE_LOWER_ROMAN:
           type = "i";
           break;
-        case 4:
+        case OL_TYPE_UPPER_ALPHA:
           type = "A";
           break;
-        case 5:
+        case OL_TYPE_LOWER_ALPHA:
           type = "a";
           break;
       }
@@ -372,38 +381,49 @@ function ConvertUserStringToStartAttr(selectedIndex)
 
   switch (selectedIndex)
   {
-    // Index 0 = automatic, the default, so we don't set it explicitly
-    case 1:
-      startingNumber = Number(startingNumber);
-      break;
-    case 2:
+    case OL_TYPE_UPPER_ROMAN:
+    case OL_TYPE_LOWER_ROMAN:
       // If the input isn't an integer, assume it's a roman numeral. Convert it.
       if (!Number(startingNumber))
-        startingNumber = toArabic(startingNumber);
+        startingNumber = ConvertRomanToArabic(startingNumber);
       break;
-    case 3:
-      // If the input isn't an integer, assume it's a roman numeral. Convert it.
+    case OL_TYPE_UPPER_ALPHA:
+    case OL_TYPE_LOWER_ALPHA:
+      // Get the number equivalent of the letters
       if (!Number(startingNumber))
-        startingNumber = toArabic(startingNumber);
-      break;
-    case 4:
-      // Convert to ASCII and get the number equivalent of the letter
-      if (!Number(startingNumber) && startingNumber)
-        startingNumber = startingNumber.toUpperCase().charCodeAt(0) - 64;
-      break;
-    case 5:
-      // Convert to ASCII and get the number equivalent of the letter
-      if (!Number(startingNumber) && startingNumber)
-        startingNumber = startingNumber.toLowerCase().charCodeAt(0) - 96;
+        startingNumber = ConvertLettersToArabic(startingNumber);
       break;
   }
   return startingNumber;
 }
 
-function toArabic(num)
+function ConvertLettersToArabic(letters)
+{
+  letters = letters.toUpperCase();
+  if (!letters || /[^A-Z]/.test(letters))
+    return "";
+
+  var num = 0;
+  for (var i = 0; i < letters.length; i++)
+    num = num * 26 + letters.charCodeAt(i) - A + 1;
+  return num;
+}
+
+function ConvertArabicToLetters(num)
+{
+  var letters = "";
+  while (num) {
+    num--;
+    letters = String.fromCharCode(A + (num % 26)) + letters;
+    num = Math.floor(num / 26);
+  }
+  return letters;
+}
+
+function ConvertRomanToArabic(num)
 {
   num = num.toUpperCase();
-  if (checkRomanInput(num))
+  if (num && !/[^MDCLXVI]/i.test(num))
   {
     var Arabic = 0;
     var last_digit = 1000;
@@ -447,71 +467,17 @@ function toArabic(num)
   return "";
 }
 
-function toRoman(num)
+function ConvertArabicToRoman(num)
 {
-  if (checkArabicInput(num))
+  if (/^\d{1,4}$/.test(num))
   {
-    var ones = num % 10;
-    num = (num - ones) / 10;
-    var tens = num % 10;
-    num = (num - tens) / 10;
-    var hundreds = num % 10;
-    num = (num - hundreds) / 10;
-
-    var Roman = "";
-
-    for (var i=0; i < num; i++)
-      Roman += "M";
-
-    if (hundreds)
-      Roman += gHundredsArray[hundreds-1];
-
-    if (tens)
-      Roman += gTensArray[tens-1];
-
-    if (ones)
-      Roman += gOnesArray[ones-1];
-
-    return Roman;
+    var digits = ("000" + num).substr(-4);
+    return gThousandsArray[digits.charAt(0)] +
+           gHundredsArray[digits.charAt(1)] +
+           gTensArray[digits.charAt(2)] +
+           gOnesArray[digits.charAt(3)];
   }
   return "";
-}
-
-function checkArabicInput(num)
-{
-  if (!num)
-    return false;
-
-  num = String(num);
-  for (var k = 0; k < num.length; k++)
-  {
-	  if (num.charAt(k) < "0" || num.charAt(k) > "9")
-		  return false;
-  }
-
-	if (num > 4000 || num <= 0)
-    return false;
-
-	return true;
-}
-
-function checkRomanInput(num)
-{
-  if (!num)
-    return false;
-
-  num = num.toUpperCase();
-  for (var k = 0; k < num.length; k++)
-  {
-    if (num.charAt(k) != "I" && num.charAt(k) != "V" && 
-        num.charAt(k) != "X" && num.charAt(k) != "L" && 
-        num.charAt(k) != "C" && num.charAt(k) != "D" && 
-        num.charAt(k) != "M")
-    {
-      return false;
-    }
-  }
-  return true;
 }
 
 function onAccept()
