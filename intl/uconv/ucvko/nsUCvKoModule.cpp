@@ -62,6 +62,7 @@
 #include "nsUnicodeToJohabNoAscii.h"
 #include "nsCP949ToUnicode.h"
 #include "nsUnicodeToCP949.h"
+#include "nsISO2022KRToUnicode.h"
 
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -97,6 +98,7 @@ NS_UCONV_REG_UNREG(nsUnicodeToJohab, "Unicode", "x-johab",  NS_UNICODETOJOHAB_CI
 NS_UCONV_REG_UNREG(nsUnicodeToJohabNoAscii, "Unicode", "x-johab-noascii",  NS_UNICODETOJOHABNOASCII_CID);
 NS_UCONV_REG_UNREG(nsCP949ToUnicode, "x-windows-949", "Unicode" , NS_CP949TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToCP949, "Unicode", "x-windows-949",  NS_UNICODETOCP949_CID);
+NS_UCONV_REG_UNREG(nsISO2022KRToUnicode, "ISO-2022-KR", "Unicode" , NS_ISO2022KRTOUNICODE_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEUCKRToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToEUCKR);
@@ -107,6 +109,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToJohab);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToJohabNoAscii);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP949ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP949);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsISO2022KRToUnicode);
 
 static nsModuleComponentInfo components[] = 
 {
@@ -163,6 +166,12 @@ static nsModuleComponentInfo components[] =
     NS_UNICODEENCODER_CONTRACTID_BASE "x-windows-949",
     nsUnicodeToCP949Constructor,
     nsUnicodeToCP949RegSelf, nsUnicodeToCP949UnRegSelf
+  },
+  { 
+    DECODER_NAME_BASE "ISO-2022-KR" , NS_ISO2022KRTOUNICODE_CID, 
+    NS_UNICODEDECODER_CONTRACTID_BASE "ISO-2022-KR",
+    nsISO2022KRToUnicodeConstructor ,
+    nsISO2022KRToUnicodeRegSelf , nsISO2022KRToUnicodeUnRegSelf 
   }
 };
 
