@@ -100,12 +100,12 @@
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 #else
-#include "nsIIOService.h"
 #include "nsIURL.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 
 #endif
+#include "nsIIOService.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #if defined(ClientWallet) || defined(SingleSignon)
 #include "nsIWalletService.h"
