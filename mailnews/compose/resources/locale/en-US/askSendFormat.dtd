@@ -4,7 +4,7 @@
 <!ENTITY recipient.label "Some of the recipients are not listed as being able to receive HTML mail.">
 
 <!ENTITY convertibleDefault.label "">
-<!ENTITY convertibleYes.label "Your message can be converted to plaintext without losing information or changing the look.">
+<!ENTITY convertibleYes.label "Your message can be converted to plaintext without losing information.">
 <!ENTITY convertibleAltering.label "Your message can be converted to plaintext without losing important information. However, the plaintext version might look different from what you saw in the composer.">
 <!ENTITY convertibleNo.label "However, you used formatting (e.g. colors) that cannot be converted to plaintext.">
 
