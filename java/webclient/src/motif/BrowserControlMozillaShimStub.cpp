@@ -20,11 +20,20 @@
  * BrowserControlMozillaShimStub.cpp
  */
 
-#include <dlfcn.h>
-#include <jni.h>
-#include "../BrowserControlMozillaShim.h"
+// PENDING(mark): I suppose this is where I need to go into my explaination of why
+// this file is needed...
 
-void * mozWebShellDll;
+// For loading DLL
+#include <dlfcn.h>
+// JNI...yada, yada, yada
+#include <jni.h>
+// JNI Header
+#include "../BrowserControlMozillaShim.h"
+// JNI Header
+#include "MozillaEventThread.h"
+
+// Global reference to webclient dll
+void * webClientDll;
 
 extern void locateMotifBrowserControlStubFunctions(void *);
 
@@ -62,6 +71,8 @@ jboolean (* nativeWebShellGoTo) (JNIEnv *, jobject, jint, jint);
 jint (* nativeWebShellGetHistoryLength) (JNIEnv *, jobject, jint);
 jint (* nativeWebShellGetHistoryIndex) (JNIEnv *, jobject, jint);
 jstring (* nativeWebShellGetURL) (JNIEnv *, jobject, jint, jint);
+void (* processNativeEventQueue) (JNIEnv *, jobject, jint);
+
 
 void locateBrowserControlStubFunctions(void * dll) {
   nativeInitialize = (void (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize");
@@ -200,6 +211,20 @@ void locateBrowserControlStubFunctions(void * dll) {
   if (!nativeWebShellGetURL) {
     printf("got dlsym error %s\n", dlerror());
   }
+  processNativeEventQueue = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_motif_MozillaEventThread_processNativeEventQueue");
+  if (!processNativeEventQueue) {
+    printf("got dlsym error %s\n", dlerror());
+  }
+}
+
+/*
+ * Class:     org_mozilla_webclient_motif_MotifMozillaEventQueue
+ * Method:    processNativeEventQueue
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MozillaEventThread_processNativeEventQueue
+    (JNIEnv * env, jobject obj, jint gtkWinPtr) {
+    (* processNativeEventQueue) (env, obj, gtkWinPtr);
 }
 
 
@@ -213,11 +238,11 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize (
 	JNIEnv		*	env,
 	jobject			obj)
 {
-  mozWebShellDll = dlopen("libwebclient.so", RTLD_LAZY | RTLD_GLOBAL);
+  webClientDll = dlopen("libwebclient.so", RTLD_LAZY | RTLD_GLOBAL);
 
-  if (mozWebShellDll) {
-    locateBrowserControlStubFunctions(mozWebShellDll);
-    locateMotifBrowserControlStubFunctions(mozWebShellDll);
+  if (webClientDll) {
+    locateBrowserControlStubFunctions(webClientDll);
+    locateMotifBrowserControlStubFunctions(webClientDll);
     
     (* nativeInitialize) (env, obj);
   } else {

@@ -54,6 +54,7 @@ nsMacMessageSink gMessageSink;
 
 #ifdef XP_UNIX
 #include <gtk/gtk.h>
+#include "motif/MozillaEventThread.h"
 #endif
 
 #include "nsActions.h"
@@ -234,7 +235,7 @@ EmbeddedEventHandler (void * arg) {
 #ifndef NECKO    
     NS_InitINetService();
 #endif
-    // HACK(mark): EmbeddedThread isn't set until after this method returns!!
+    // HACK(mark): On Unix, embeddedThread isn't set until after this method returns!!
     initContext->embeddedThread = PR_GetCurrentThread();
 
     // Create the action queue
@@ -302,14 +303,19 @@ EmbeddedEventHandler (void * arg) {
 #if DEBUG_RAPTOR_CANVAS
     printf("EmbeddedEventHandler(%lx): enter event loop\n", initContext);
 #endif
-    
+
+    // Don't loop here. The looping will be handled by a Java Thread 
+    // (see org.mozilla.webclient.motif.MozillaEventThread).
+#ifndef XP_UNIX	
     do {
         if (!processEventLoop(initContext)) {
-#ifndef XP_UNIX	
             break;
-#endif
         }
     } while (PR_TRUE);
+#else
+    // Just need to loop once for Unix
+    processEventLoop(initContext);
+#endif
 }
 
 // It appears the current thread (belonging to Java) is assumed to be
@@ -333,6 +339,9 @@ InitEmbeddedEventHandler (WebShellInitContext* initContext)
 #if DEBUG_RAPTOR_CANVAS
     printf("InitEmbeddedEventHandler(%lx): Creating embedded thread...\n", initContext);
 #endif
+    // Don't create a NSPR Thread on Unix, because we will use a Java Thread instead.
+    // (see org.mozilla.webclient.motif.MozillaEventThread).
+#ifndef XP_UNIX
     initContext->embeddedThread = ::PR_CreateThread(PR_SYSTEM_THREAD,
                                                     EmbeddedEventHandler,
                                                     (void*)initContext,
@@ -340,6 +349,9 @@ InitEmbeddedEventHandler (WebShellInitContext* initContext)
                                                     PR_GLOBAL_THREAD,
                                                     PR_UNJOINABLE_THREAD,
                                                     0);
+#else
+    EmbeddedEventHandler((void *) initContext);
+#endif
 #if DEBUG_RAPTOR_CANVAS
 	printf("InitEmbeddedEventHandler(%lx): Embedded Thread created...\n", initContext);
 #endif
@@ -352,14 +364,7 @@ InitEmbeddedEventHandler (WebShellInitContext* initContext)
 	    return;
         }
     }
-#ifdef XP_UNIX
-    // PENDING(mark): HACK! Sleep for 3 seconds just to make sure everything
-    // starts up correctly. Not sure why this helps yet.
-    ::PR_Sleep(PR_SecondsToInterval(3));
-#endif
 }
-
-
 
 static nsEventStatus PR_CALLBACK
 HandleRaptorEvent (nsGUIEvent *)
@@ -1089,7 +1094,50 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCreate (
 	initContext->w = width;
 	initContext->h = height;
 
+#ifdef XP_UNIX
+    // This probably needs some explaining...
+    // On Unix, instead of using a NSPR thread to manage our Mozilla event loop, we
+    // use a Java Thread (for reasons I won't go into now, see 
+    // org.mozilla.webclient.motif.MozillaEventThread for more details). This java thread will 
+    // process any pending native events in 
+    // org.mozilla.webclient.motif.MozillaEventThread.processNativeEventQueue()
+    // (see below). However, when processNativeEventQueue() gets called, it needs access to it's associated
+    // WebShellInitContext structure in order to process any GTK / Mozilla related events. So what we
+    // do is we keep a static Hashtable inside the class MozillaEventThread to store mappings of
+    // gtkWindowID's to WebShellInitContext's (since there is one WebShellInitContext to one GTK Window). 
+    // This is what this part of the code does:
+    //
+    // 1) It first accesses the class org.mozilla.webclient.motif.MozillaEventThread
+    // 2) It then accesses a static method in this class called "storeContext()" which takes as
+    //    arguments, a GTK window pointer and a WebShellInitContext pointer
+    // 3) Then it invokes the method
+    // 4) Inside MozillaEventThread.run(), you can see the code which fetches the appropriate 
+    //    WebShellInitContext and then calls processNativeEventQueue() with it below.
+
+    // PENDING(mark): Should we cache this? Probably....
+    jclass mozillaEventThreadClass = env->FindClass("org/mozilla/webclient/motif/MozillaEventThread");
+
+    if (mozillaEventThreadClass == NULL) {
+        printf("Error: Cannot find class org.mozilla.webclient.motif.MozillaEventThread!\n");
+
+        ThrowExceptionToJava(env, "Error: Cannot find class org.mozilla.webclient.motif.MozillaEventThread!");
+        return 0;
+    }
+
+    jmethodID storeMethodID = env->GetStaticMethodID(mozillaEventThreadClass, "storeContext", "(II)V");
+
+    if (storeMethodID == NULL) {
+        printf("Error: Cannot get static method storeContext(int, int) from MozillaEventThread!\n");
+
+        ThrowExceptionToJava(env, "Error: Cannot get static method storeContext(int, int) from MozillaEventThread!");
+        return 0;
+    }
+
+    // PENDING(mark): How do I catch this if there's an exception?
+    env->CallStaticVoidMethod(mozillaEventThreadClass, storeMethodID, windowPtr, (int) initContext);
+#else
 	InitEmbeddedEventHandler(initContext);
+#endif
 
 	return (jint) initContext;
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCreate()
@@ -1739,6 +1787,29 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetURL (
 
 	return urlString;
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetURL()
+
+
+#ifdef XP_UNIX
+/*
+ * Class:     org_mozilla_webclient_motif_MotifMozillaEventQueue
+ * Method:    processNativeEventQueue
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MozillaEventThread_processNativeEventQueue
+    (JNIEnv * env, jobject obj, jint webShellInitContextPtr) {
+    // Given a WebShellInitContext pointer, process any pending Mozilla / GTK events
+    WebShellInitContext * initContext = (WebShellInitContext *) webShellInitContextPtr;
+
+    // Initialize the WebShellInitContext if it's hasn't been already
+    if (initContext->initComplete == FALSE) {
+        InitEmbeddedEventHandler(initContext);
+    }
+
+    // Process any pending events...
+    processEventLoop(initContext);
+}
+#endif
+
 
 #ifdef XP_UNIX
 }// End extern "C"
