@@ -86,18 +86,22 @@ window[wait-cursor] {
 
 .message-icon {
   list-style-image: url("chrome://global/skin/icons/alert-message.gif");
+  width:32px;height:32px;
 }
 
 .alert-icon {
   list-style-image: url("chrome://global/skin/icons/alert-exclam.gif");
+  width:32px;height:32px;
 }
 
 .error-icon {
   list-style-image: url("chrome://global/skin/icons/alert-error.gif");
+  width:32px;height:32px;
 }
 
 .question-icon {
   list-style-image: url("chrome://global/skin/icons/alert-question.gif");
+  width:32px;height:32px;
 }
 
 /* ::::: status bar ::::: */

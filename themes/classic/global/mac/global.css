@@ -93,21 +93,25 @@
   .message-icon 
     {
       list-style-image    : url("chrome://global/skin/message-icon.gif");
+      width:32px;height:32px;
     }
 
   .alert-icon 
     {
       list-style-image    : url("chrome://global/skin/alert-icon.gif");
+      width:32px;height:32px;
     }
   
   .error-icon 
     {
       list-style-image    : url("chrome://global/skin/error-icon.gif");
+      width:32px;height:32px;
     }
   
   .question-icon 
     {
       list-style-image    : url("chrome://global/skin/question-icon.gif");
+      width:32px;height:32px;
     }
 
 /**
