@@ -579,6 +579,24 @@ public:
   }
 
   /**
+   * Call to let the content node know that it may now have a frame.
+   * The content node may use this to determine what MayHaveFrame
+   * returns.
+   */
+  NS_IMETHOD_(void) SetMayHaveFrame(PRBool aMayHaveFrame)
+  {
+  }
+
+  /**
+   * Returns PR_TRUE if there is a chance that the content node has a
+   * frame, PR_FALSE otherwise.
+   */
+  NS_IMETHOD_(PRBool) MayHaveFrame() const
+  {
+    return PR_TRUE;
+  }
+    
+  /**
    * This method is called when the parser begins creating the element's 
    * children, if any are present.
    *

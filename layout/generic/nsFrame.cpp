@@ -547,6 +547,11 @@ nsFrame::Init(nsPresContext*  aPresContext,
   NS_IF_ADDREF(mContent);
   mParent = aParent;
 
+  if (mContent) {
+    mContent->SetMayHaveFrame(PR_TRUE);
+    NS_ASSERTION(mContent->MayHaveFrame(), "SetMayHaveFrame failed?");
+  }
+
   if (aPrevInFlow) {
     // Make sure the general flags bits are the same
     nsFrameState state = aPrevInFlow->GetStateBits();

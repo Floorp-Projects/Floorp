@@ -828,6 +828,13 @@ nsGenericDOMDataNode::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(PRBool)
+nsGenericDOMDataNode::MayHaveFrame() const
+{
+  nsIContent* parent = GetParent();
+  return parent && parent->MayHaveFrame();
+}
+
 nsresult
 nsGenericDOMDataNode::RangeAdd(nsIDOMRange* aRange)
 {

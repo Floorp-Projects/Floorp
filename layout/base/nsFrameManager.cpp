@@ -377,6 +377,10 @@ nsFrameManager::GetPrimaryFrameFor(nsIContent* aContent)
     return nsnull;
   }
 
+  if (!aContent->MayHaveFrame()) {
+    return nsnull;
+  }
+
   if (mPrimaryFrameMap.ops) {
     PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
         PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_LOOKUP));
@@ -393,6 +397,7 @@ nsFrameManager::GetPrimaryFrameFor(nsIContent* aContent)
     //             very fast in the embedded hash table.
     //             This would almost completely remove the lookup penalty for things
     //             like <SCRIPT> and comments in very large documents.
+    // XXX with the nsIContent::MayHaveFrame bit, is that really necessary now?
 
     // Give the frame construction code the opportunity to return the
     // frame that maps the content object
