@@ -150,6 +150,7 @@ class NS_APPSHELL nsSpecialFileSpec : public nsFileSpec
         ,   App_UsersPanels50          = App_FileBase   +  90
         ,   App_SearchFile50           = App_FileBase   + 100
         ,   App_SearchDirectory50      = App_FileBase   + 101
+        ,   App_UsersMimeTypes50	   = App_FileBase   + 102
         };
                     //nsSpecialFileSpec();
                     nsSpecialFileSpec(Type aType);        

@@ -77,7 +77,6 @@
 
 // hack for copying panels.rdf into migrated profile dir
 #define PANELS_RDF_FILE                "panels.rdf"
-#define HELPERAPPS_RDF_FILE				"helperApps.rdf"
 
 // A default profile name, in case automigration 4x profile fails
 #define DEFAULT_PROFILE_NAME           "default"
@@ -1418,8 +1417,6 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
     // This is a hack. Once the localFileSpec implementation
     // is complete, this will be removed.
 	rv = CopyDefaultFile(profDefaultsDir, newProfDir, PANELS_RDF_FILE);
-	if (NS_FAILED(rv)) return rv;
-	rv = CopyDefaultFile(profDefaultsDir, newProfDir, HELPERAPPS_RDF_FILE);
 	if (NS_FAILED(rv)) return rv;
     // hack finish.
 	

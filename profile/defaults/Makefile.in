@@ -31,7 +31,7 @@ FILES := \
 	bookmarks.html \
 	panels.rdf \
 	search.rdf \
-	helperApps.rdf \
+	mimeTypes.rdf \
 	$(NULL)
 
 FILES := $(addprefix $(srcdir)/, $(FILES))
