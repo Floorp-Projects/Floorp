@@ -82,11 +82,23 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
   static NS_DEFINE_IID(kImageCID, NS_IMAGE_CID);
   static NS_DEFINE_IID(kImageIID, NS_IIMAGE_IID);
 
+ if (!aImage)
+    return NS_ERROR_NULL_POINTER;
+  
+  // initialize in case of failure
+  NS_ASSERTION(!aImage->bits, "We have bits already?");
+  aImage->bits = nsnull;
+  aImage->haveBits = PR_FALSE;
+  if (aMask)
+  {
+    aMask->haveBits = PR_FALSE;
+    aMask->bits = nsnull;
+  }
+
   // Create a new image object
   rv = nsComponentManager::CreateInstance(kImageCID, nsnull, kImageIID, (void **)&img);
-  if (NS_OK != rv) {
-    // XXX What about error handling?
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   // Have the image match the depth and color space associated with the
@@ -96,7 +108,10 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
   PRInt32 depth;
   IL_ColorSpace *colorSpace;
 
-  dc->GetILColorSpace(colorSpace);
+  rv = dc->GetILColorSpace(colorSpace);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   depth = colorSpace->pixmap_depth;
 
   // Initialize the image object
@@ -110,13 +125,18 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
       maskflag = nsMaskRequirements_kNeeds8Bit;
 
   rv = img->Init(aWidth, aHeight, depth, maskflag);
-  if(NS_FAILED(rv)){
-      //ptn dont forget cleanup of colorsp.
-      return NS_ERROR_OUT_OF_MEMORY;
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   // Update the pixmap image and mask information
-  aImage->bits = img->GetBits();
+
+  // Don't get the bits here, because we can't guarantee that this address
+  // will still be valid when we start using it. We *must* wait until we're
+  // inside a lock/unlocks pixels block before getting the bits address
+  // aImage->bits = img->GetBits(); 
+  aImage->haveBits = PR_TRUE;
+
   aImage->client_data = img;  // we don't need to add a ref here, because there's
                               // already one from the call to create the image object
  
@@ -125,7 +145,10 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
   aImage->header.widthBytes = img->GetLineStride();
 
   if (aMask) {
-    aMask->bits = img->GetAlphaBits();
+    // see comment about about getting the bits here
+    // aMask->bits = img->GetAlphaBits();
+    aMask->haveBits = PR_TRUE;
+
     aMask->client_data = img;
     // We must add another reference here, because when the mask's pixmap is
     // destroyed it will release a reference
@@ -190,14 +213,41 @@ ImageRendererImpl::ControlPixmapBits(void* aDisplayContext,
 				                             IL_Pixmap* aImage, PRUint32 aControlMsg)
 {
   nsIDeviceContext *dc = (nsIDeviceContext *)aDisplayContext;
+  
+  if (!aImage) 
+      return NS_ERROR_NULL_POINTER;
+  
   nsIImage *img = (nsIImage *)aImage->client_data;
+  if (!img) 
+      return NS_ERROR_UNEXPECTED;
 
-  if (aControlMsg == IL_RELEASE_BITS) {
-    img->Optimize(dc);
+  PRBool   isMask = aImage->header.is_mask;
+  nsresult rv = NS_OK;
+      
+  switch (aControlMsg)
+  {
+    case IL_LOCK_BITS:
+      rv = img->LockImagePixels(isMask);
+      if (NS_FAILED(rv)) 
+          return rv;
+      // the pixels may have moved, so need to update the bits ptr
+      aImage->bits = (isMask) ? img->GetAlphaBits() : img->GetBits();
+      break;
+      
+    case IL_UNLOCK_BITS:
+      rv = img->UnlockImagePixels(isMask);
+      break;
+      
+    case IL_RELEASE_BITS:
+      rv = img->Optimize(dc);
+      break;
+      
+    default:
+      NS_NOTREACHED("Uknown control msg");
   }
-    return NS_OK;
-}
 
+  return rv;
+}
 
 NS_IMETHODIMP
 ImageRendererImpl::DestroyPixmap(void* aDisplayContext, IL_Pixmap* aImage)
@@ -221,7 +271,7 @@ ImageRendererImpl::DisplayPixmap(void* aDisplayContext,
 {
   // Image library doesn't drive the display process.
   // XXX Why is this part of the API?
-      return NS_OK;
+      return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
@@ -230,7 +280,7 @@ ImageRendererImpl::DisplayIcon(void* aDisplayContext,
 			                         PRInt32 aX, PRInt32 aY, PRUint32 aIconNumber)
 {
   // XXX Why is this part of the API?
-      return NS_OK;
+      return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
@@ -240,7 +290,7 @@ ImageRendererImpl::GetIconDimensions(void* aDisplayContext,
                         				     PRUint32 aIconNumber)
 {
   // XXX Why is this part of the API?
-      return NS_OK;
+      return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 extern "C" NS_GFX_(nsresult)
