@@ -566,6 +566,11 @@ nsHttpTransaction::Restart()
     mSecurityInfo = 0;
     NS_IF_RELEASE(mConnection);
 
+    // disable pipelining for the next attempt in case pipelining caused the
+    // reset.  this is being overly cautious since we don't know if pipelining
+    // was the problem here.
+    mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
+
     return gHttpHandler->InitiateTransaction(this, mPriority);
 }
 
