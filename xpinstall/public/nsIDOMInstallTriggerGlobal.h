@@ -60,7 +60,7 @@ public:
     EQUAL = 0
   };
 
-  NS_IMETHOD    UpdateEnabled(nsIScriptGlobalObject* aGlobalObject, PRBool* aReturn)=0;
+  NS_IMETHOD    UpdateEnabled(nsIScriptGlobalObject* aGlobalObject, PRBool aUseWhitelist, PRBool* aReturn)=0;
 
   NS_IMETHOD    Install(nsIScriptGlobalObject* globalObject, nsXPITriggerInfo* aInfo, PRBool* aReturn)=0;
 
