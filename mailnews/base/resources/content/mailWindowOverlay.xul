@@ -109,6 +109,7 @@
     <command id="cmd_emptyTrash" oncommand="goDoCommand('cmd_emptyTrash')" disabled="true"/>
     <command id="cmd_compactFolder" oncommand="goDoCommand('cmd_compactFolder')" disabled="true"/>
     <command id="cmd_synchronizeOffline" oncommand="goDoCommand('cmd_synchronizeOffline')" disabled="true"/>
+    <commandset id="mailDownloadCommands"/>
     <command id="cmd_settingsOffline" oncommand="goDoCommand('cmd_settingsOffline')" disabled="true"/>
     
     <command id="cmd_printSetup" oncommand="goDoCommand('cmd_printSetup')" disabled="true"/>
