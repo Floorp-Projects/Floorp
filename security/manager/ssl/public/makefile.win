@@ -57,7 +57,6 @@ XPIDLSRCS= \
     .\nsIPKCS11Slot.idl \
     .\nsIPK11TokenDB.idl \
     .\nsINSSDialogs.idl \
-    .\nsICertificateManager.idl \
     $(NULL)
 
 

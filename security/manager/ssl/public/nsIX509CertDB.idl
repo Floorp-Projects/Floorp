@@ -49,6 +49,11 @@ native nsAutoString(nsAutoString);
 [scriptable, uuid(da48b3c0-1284-11d5-ac67-000064657374)]
 interface nsIX509CertDB : nsISupports {
 
+  /* the database is responsible for managing cert trust */
+  const unsigned long UNTRUSTED       =      0;
+  const unsigned long TRUSTED_SSL     = 1 << 0;
+  const unsigned long TRUSTED_EMAIL   = 1 << 1;
+  const unsigned long TRUSTED_OBJSIGN = 1 << 2;
 
   nsIX509Cert getCertByNickname(in nsIPK11Token aToken,
                                 in wstring aNickname);
@@ -80,20 +85,21 @@ interface nsIX509CertDB : nsISupports {
 */
 
   /*
-   * getCertificateNames
+   * getCertNicknames
    *
-   * Obtain a list of certificate names from the database.
+   * Obtain a list of certificate nicknames from the database.
    * What the name is depends on type:
    *  user, ca, or server cert - the nickname
    *  email cert - the email address
    *
    * aToken - PKCS#11 token to get certs from (null for all tokens)
    * aType - type of certificate to obtain (see nsIX509Cert)
-   * rCertNameList - a string of certificate names seperated by a delimiter
+   * count, certNameList - the returned array of names
    */
-  [noscript] void getCertificateNames(in nsIPK11Token aToken, 
-                                      in unsigned long aType,
-                                      in nsAutoStringRef rCertNameList);
+  void getCertNicknames(in nsIPK11Token aToken, 
+                        in unsigned long aType,
+                        out unsigned long count,
+                        [array, size_is(count)] out wstring certNameList);
 
   /*
    * importCertificate

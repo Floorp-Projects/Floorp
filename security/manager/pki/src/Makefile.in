@@ -51,7 +51,6 @@ EXPORTS =  \
 CPPSRCS = \
 	nsNSSDialogs.cpp \
 	nsPKIModule.cpp \
-        nsCertificateManager.cpp \
 	nsPKIParamBlock.cpp \
 	$(NULL)
 
