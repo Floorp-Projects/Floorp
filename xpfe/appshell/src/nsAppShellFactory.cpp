@@ -23,7 +23,6 @@
 #include "nsAppShellCIDs.h"
 #include "nsICmdLineService.h"
 #include "nsIFileLocator.h"
-#include "nsIGlobalHistory.h"
 #include "nsINetSupportDialogService.h"
 
 /* extern the factory entry points for each component... */
@@ -39,7 +38,6 @@ static NS_DEFINE_IID(kCmdLineServiceCID,  NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_IID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
 static NS_DEFINE_IID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
 static NS_DEFINE_IID(kFileLocatorCID,     NS_FILELOCATOR_CID);
-static NS_DEFINE_IID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
 static NS_DEFINE_IID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 /*
@@ -53,7 +51,6 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kProtocolHelperCID,  NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kXPConnectFactoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsComponentManager::RegisterComponent(kGlobalHistoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
    	nsComponentManager::RegisterComponent(kNetSupportDialogCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
 
    return NS_OK;
@@ -70,7 +67,6 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::UnregisterComponent(kFileLocatorCID,  path);
     nsComponentManager::UnregisterComponent(kProtocolHelperCID,  path);
     nsComponentManager::UnregisterComponent(kXPConnectFactoryCID, path);
-    nsComponentManager::UnregisterComponent(kGlobalHistoryCID, path);  
     nsComponentManager::UnregisterComponent(kNetSupportDialogCID, path);
 
     return NS_OK;
@@ -114,9 +110,6 @@ NSGetFactory(nsISupports* serviceMgr,
   }
   else if (aClass.Equals(kXPConnectFactoryCID)) {
     rv = NS_NewXPConnectFactoryFactory(aFactory);
-  }
-  else if (aClass.Equals(kGlobalHistoryCID)) {
-    rv = NS_NewGlobalHistoryFactory(aFactory);
   }
   else if (aClass.Equals(kProtocolHelperCID)) {
     rv = NS_NewDefaultProtocolHelperFactory(aFactory);

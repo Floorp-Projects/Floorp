@@ -31,7 +31,6 @@
 #include "nsIWidget.h"
 #include "nsIWebShellWindow.h"
 #include "nsWebShellWindow.h"
-#include "nsIGlobalHistory.h"
 
 #include "nsIAppShellComponent.h"
 #include "nsIRegistry.h"
@@ -66,7 +65,6 @@ static NS_DEFINE_IID(kPICSCID, NS_PICS_CID);
 static NS_DEFINE_IID(kAppShellCID,          NS_APPSHELL_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
-static NS_DEFINE_IID(kCGlobalHistoryCID, NS_GLOBALHISTORY_CID);
 static NS_DEFINE_IID(kMetaCharsetCID, NS_META_CHARSET_CID);
 
 /* Define Interface IDs */
@@ -77,7 +75,6 @@ static NS_DEFINE_IID(kIAppShellServiceIID,   NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kIAppShellIID,          NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIWebShellWindowIID,    NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIScriptNameSetRegistryIID, NS_ISCRIPTNAMESETREGISTRY_IID);
-static NS_DEFINE_IID(kIGlobalHistoryIID, NS_IGLOBALHISTORY_IID);
 static NS_DEFINE_IID(kIMetaCharsetServiceIID, NS_IMETA_CHARSET_SERVICE_IID);
 
 
@@ -214,16 +211,6 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
       goto done;
    }
    rv = nsServiceManager::ReleaseService(kMetaCharsetCID, metacharset);
-
-  // Initialise the global History
-  nsIGlobalHistory *  gHistory;
-  rv = nsServiceManager::GetService(kCGlobalHistoryCID,
-                                    kIGlobalHistoryIID,
-                                    (nsISupports **)&gHistory);
-  if (NS_FAILED(rv)) {
-    goto done;
-  }
-  gHistory->Init();
 
   // Create widget application shell
   rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID,

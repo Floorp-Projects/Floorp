@@ -881,7 +881,7 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRI
 	}
     
     // Update global history.
-    NS_ASSERTION(mGHistory != nsnull, "history not initialized");
+    //NS_ASSERTION(mGHistory != nsnull, "history not initialized");
     if (mGHistory && mWebShell) {
         nsresult rv;
 

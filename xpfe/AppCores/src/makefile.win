@@ -34,6 +34,7 @@ LCFLAGS = \
 
 LINCS= \
     -I$(XPDIST)\public\editor   \
+        -I$(XPDIST)\public\browser      \
     -I$(XPDIST)\public\txtsvc   \
     -I$(XPDIST)\public\js       \
 	-I$(XPDIST)\public\netlib 	\
