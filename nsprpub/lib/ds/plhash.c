@@ -179,7 +179,7 @@ PL_HashTableDestroy(PLHashTable *ht)
 /*
 ** Multiplicative hash, from Knuth 6.4.
 */
-#define GOLDEN_RATIO    0x9E3779B9U
+#define GOLDEN_RATIO    0x9E3779B9U  /* 2/(1+sqrt(5))*(2^32) */
 
 PR_IMPLEMENT(PLHashEntry **)
 PL_HashTableRawLookup(PLHashTable *ht, PLHashNumber keyHash, const void *key)
