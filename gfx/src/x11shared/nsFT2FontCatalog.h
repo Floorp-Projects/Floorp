@@ -40,14 +40,10 @@
 
 #ifndef NS_FT2_FONT_CATALOG_H
 #define NS_FT2_FONT_CATALOG_H
-/*
- * since this patch won't delete "gfx/src/x11shared/nsFreeType.h",
- * using "freetype/nsFreeType.h" will prevent this file from
- * including the one under "x11shared". This can be changed to
- * "#include nsFreeType.h" safely after deleting
- * unused "x11shared/nsFreeType.h".
- */
-#include "freetype/nsFreeType.h"
+
+#include "nspr.h"
+#include "nsHashtable.h"
+#include "nsIServiceManager.h"
 #include "nsCompressedCharMap.h"
 #include "nsICharRepresentable.h"
 
@@ -55,6 +51,7 @@
 #include "nsIPref.h"
 #include "nsNameValuePairDB.h"
 #include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
 #if (defined(MOZ_ENABLE_FREETYPE2))
 //
 // To limit the potential for namespace collision we limit the 
@@ -83,12 +80,52 @@ typedef unsigned short FT_UShort;
 #define STRNMATCH(s1,s2,l) (strncmp((s1),(s2),(l))==0)
 #define STRCASEMATCH(s1,s2) (strcasecmp((s1),(s2))==0)
 
+#define FREE_IF(x) if(x) free((void*)x)
+
+typedef struct {
+  const char             *mConverterName;
+  PRUint8                 mCmapPlatformID;
+  PRUint8                 mCmapEncoding;
+  nsIUnicodeEncoder*      mConverter;
+} nsTTFontEncoderInfo;
+
+typedef struct nsTTFontFamilyEncoderInfo {
+  const char                *mFamilyName;
+  nsTTFontEncoderInfo *mEncodingInfo;
+} nsTTFontFamilyEncoderInfo;
+
 typedef struct {
   const char   *mDirName; // encoded in the native charset
 } nsDirCatalogEntry;
 
-#define CPR1 1  // designate CodePageRange1 to use for "GetRangeLanguage"
-#define CPR2 2  // designate CodePageRange2 to use for "GetRangeLanguage"
+
+#define FCE_FLAGS_ISVALID 0x01
+#define FCE_FLAGS_UNICODE 0x02
+#define FCE_FLAGS_SYMBOL  0x04
+
+typedef struct {
+  const char   *mFontFileName;
+  time_t        mMTime;
+  PRUint32      mFlags;
+  const char   *mFontType;
+  int           mFaceIndex;
+  int           mNumFaces;
+  const char   *mFamilyName;
+  const char   *mStyleName;
+  FT_UShort     mWeight;
+  FT_UShort     mWidth;
+  int           mNumGlyphs;
+  int           mNumUsableGlyphs;
+  FT_Long       mFaceFlags;
+  FT_Long       mStyleFlags;
+  FT_Long       mCodePageRange1;
+  FT_Long       mCodePageRange2;
+  char          mVendorID[5];
+  const char   *mFoundryName;
+  int           mNumEmbeddedBitmaps;
+  int          *mEmbeddedBitmapHeights;
+  PRUint16     *mCCMap;       // compressed char map
+} nsFontCatalogEntry;
 
 typedef struct {
   nsFontCatalogEntry **fonts;
@@ -109,39 +146,28 @@ typedef struct {
 
 typedef struct {
   unsigned long bit;
-  const char *language;
-} nsulCodePageRangeLanguage;
+  const char *charsetName;
+} nsulCodePageRangeCharSetName;
 
-#endif
-
-class nsFT2FontCatalog : public nsIFontCatalogService {
+class nsFT2FontCatalog {
+friend class nsFT2FontNode;
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIFONTCATALOGSERVICE
+  static void        FreeGlobals();
+  static PRBool      InitGlobals(FT_LibraryRec_ *);
+  static void        GetFontNames(const char* aPattern, nsFontCatalog* aFC);
 
-  nsFT2FontCatalog();
-  virtual ~nsFT2FontCatalog();
-
-#if (defined(MOZ_ENABLE_FREETYPE2))
-
-  void        FreeGlobals();
-  PRBool      InitGlobals(FT_LibraryRec_ *);
-  void        GetFontNames(const nsACString & aFamilyName,
-                           const nsACString & aLanguage,
-                           PRUint16       aWeight,
-                           PRUint16       aWidth,
-                           PRUint16       aSlant,
-                           PRUint16       aSpacing,
-                           nsFontCatalog* aFC);
+  static PRUint16*   GetCCMap(nsFontCatalogEntry *aFce);
+  static nsTTFontFamilyEncoderInfo* GetCustomEncoderInfo(const char *);
+  static nsTTFontFamilyEncoderInfo* GetCustomEncoderInfo(nsFontCatalogEntry *);
   static const char* GetFileName(nsFontCatalogEntry *aFce);
   static const char* GetFamilyName(nsFontCatalogEntry *aFce);
   static PRInt32*    GetEmbeddedBitmapHeights(nsFontCatalogEntry *aFce);
   static PRInt32     GetFaceIndex(nsFontCatalogEntry *aFce);
   static PRInt32     GetNumEmbeddedBitmaps(nsFontCatalogEntry *aFce);
-  static const char* GetFoundry(nsFontCatalogEntry *aFce);
+
 
 protected:
-  static void   AddDir(nsDirCatalog *dc, nsDirCatalogEntry *dir);
+  void   AddDir(nsDirCatalog *dc, nsDirCatalogEntry *dir);
   PRBool AddFceIfCurrent(const char*, nsHashtable*, PRInt64, nsFontCatalog*);
   void   AddFont(nsFontCatalog *fc, nsFontCatalogEntry *fce);
   int    CheckFontSummaryVersion(nsNameValuePairDB *aDB);
@@ -152,15 +178,22 @@ protected:
   void   FixUpFontCatalog(nsFontCatalog *fc);
   static PRBool FreeFceHashEntry(nsHashKey* aKey, void* aData, void* aClosure);
   void   FreeFontCatalog(nsFontCatalog *fc);
-  static void   FreeFontCatalogEntry(nsFontCatalogEntry *);
+  void   FreeFontCatalogEntry(nsFontCatalogEntry *);
+  void   doFreeGlobals();
+  static nsICharsetConverterManager2* GetCharSetManager();
   static void GetDirsPrefEnumCallback(const char* aName, void* aClosure);
+  void   doGetDirsPrefEnumCallback(const char* aName, void* aClosure);
   int    GetFontCatalog(FT_LibraryRec_*, nsFontCatalog *, nsDirCatalog *);
+  void   doGetFontNames(const char* aPattern, nsFontCatalog* aFC);
   PRBool GetFontSummaryName(const nsACString &, const nsACString &,
                                    nsACString &, nsACString &);
-  unsigned long GetRangeLanguage(const nsACString &, PRInt16 aRange);
+  const char* GetFoundry(nsFontCatalogEntry *aFce);
+  const char* GetRange1CharSetName(unsigned long aBit);
+  const char* GetRange2CharSetName(unsigned long aBit);
   PRBool HandleFontDir(FT_LibraryRec_ *, nsFontCatalog *,
                        const nsACString &, const nsACString &);
   void   HandleFontFile(FT_LibraryRec_ *, nsFontCatalog *, const char*);
+  PRBool doInitGlobals(FT_LibraryRec_ *);
   PRBool IsSpace(FT_Long);
   nsDirCatalog *NewDirCatalog();
   nsFontCatalogEntry* NewFceFromFontFile(FT_LibraryRec_*, const char*,int,int*);
@@ -168,22 +201,26 @@ protected:
   nsFontCatalog *NewFontCatalog();
   PRBool ReadFontDirSummary(const nsACString&, nsHashtable*);
   PRBool ParseCCMapLine(nsCompressedCharMap*,long,const char*);
+  PRBool ParseXLFD(char *, char**, char**, char**, char**);
   void   PrintCCMap(nsNameValuePairDB *aDB, PRUint16 *aCCMap);
   void   PrintFontSummaries(nsNameValuePairDB *, nsFontCatalog *);
   void   PrintFontSummaryVersion(nsNameValuePairDB *aDB);
   void   PrintPageBits(nsNameValuePairDB*,PRUint16*,PRUint32);
   int    ReadFontSummaries(nsHashtable*, nsNameValuePairDB *);
 
-  static nsIPref* sPref;
+  nsCOMPtr<nsIPref> mPref;
   nsFontCatalog *mFontCatalog;
-
+  nsHashtable   *mFontFamilies;
   PRPackedBool   mIsNewCatalog;
-  static nsHashtable   *sVendorNames;
-  nsHashtable   *mRange1Language;
-  nsHashtable   *mRange2Language;
-  PRBool         mAvailableFontCatalogService;
-#endif
+  nsHashtable   *mVendorNames;
+  nsHashtable   *mRange1CharSetNames;
+  nsHashtable   *mRange2CharSetNames;
+  static nsICharsetConverterManager2* sCharSetManager;
 };
+
+extern nsFT2FontCatalog* gFT2FontCatalog;
+
+#endif
 
 #endif /* NS_FT2_FONT_CATALOG_H */
 

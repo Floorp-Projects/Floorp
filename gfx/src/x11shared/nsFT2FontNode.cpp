@@ -39,17 +39,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsFT2FontNode.h"
-/*
- * since this patch won't delete "gfx/src/x11shared/nsFreeType.h",
- * using "freetype/nsFreeType.h" will prevent this file from
- * including the one under "x11shared". This can be changed to
- * "#include nsFreeType.h" safely after deleting
- * unused "x11shared/nsFreeType.h".
- */
-#include "freetype/nsFreeType.h"
+#include "nsFreeType.h"
 #include "nsFontDebug.h"
 #include "nsFontFreeType.h"
-#include "nsIServiceManager.h"
 
 #if (!defined(MOZ_ENABLE_FREETYPE2))
 
@@ -69,7 +61,6 @@ void nsFT2FontNode::GetFontNames(const char* aPattern,
 
 nsHashtable* nsFT2FontNode::mFreeTypeNodes = nsnull;
 PRBool       nsFT2FontNode::sInited = PR_FALSE;
-nsIFontCatalogService* nsFT2FontNode::sFcs = nsnull;
 
 void
 nsFT2FontNode::FreeGlobals()
@@ -79,6 +70,7 @@ nsFT2FontNode::FreeGlobals()
     delete mFreeTypeNodes;
     mFreeTypeNodes = nsnull;
   }
+  nsFreeTypeFreeGlobals();
   sInited = PR_FALSE;
 }
 
@@ -90,19 +82,22 @@ nsFT2FontNode::InitGlobals()
   
   sInited = PR_TRUE;
 
-  nsServiceManager::GetService("@mozilla.org/gfx/xfontcatalogservice;1",
-                               NS_GET_IID(nsIFontCatalogService),
-                               (nsISupports**) &sFcs);
-  if (!sFcs) {
-    NS_ERROR("Font Catalog Service init failed\n");
+  nsresult rv;
+  rv = nsFreeTypeInitGlobals();
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!gFT2FontCatalog)
     return NS_ERROR_FAILURE;
-  }
 
   mFreeTypeNodes = new nsHashtable();
   if (!mFreeTypeNodes)
     return NS_ERROR_FAILURE;
   
-  LoadNodeTable();
+  if (gFT2FontCatalog->mFontCatalog) {
+    LoadNodeTable(gFT2FontCatalog->mFontCatalog);
+  }
+  //setup the weighting table
   WeightTableInitCorrection(nsFreeTypeFont::sLinearWeightTable,
                             nsFreeType::gAATTDarkTextMinValue,
                             nsFreeType::gAATTDarkTextGain);
@@ -113,13 +108,14 @@ nsFT2FontNode::InitGlobals()
 void
 nsFT2FontNode::GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
 {
-  int j;
+  int i, j;
   PRBool rslt;
   char *pattern, *foundry, *family, *charset, *encoding;
   const char *charSetName;
   nsFontNode *node;
-  nsISupportsArray* arrayFC;
-  nsCAutoString familyTmp, languageTmp;
+  nsFontCatalog * aFC;
+
+  if (!gFT2FontCatalog) return;
 
   FONT_CATALOG_PRINTF(("looking for FreeType font matching %s", aPattern));
   nsCAutoString patt(aPattern);
@@ -129,7 +125,8 @@ nsFT2FontNode::GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
   if (!pattern)
     goto cleanup_and_return;
 
-  rslt = ParseXLFD(pattern, &foundry, &family, &charset, &encoding);
+  rslt = gFT2FontCatalog->ParseXLFD(pattern, &foundry, &family,
+                                    &charset, &encoding);
   if (!rslt)
     goto cleanup_and_return;
 
@@ -137,47 +134,32 @@ nsFT2FontNode::GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
   if (charset && !encoding) {
     goto cleanup_and_return;
   }
-
-  if (family)
-    familyTmp.Assign(family);
-
-  sFcs->GetFontCatalogEntries(familyTmp, languageTmp, 0, 0, 0, 0, &arrayFC);
-  PRUint32 count;
-  arrayFC->Count(&count);
-  for (PRUint32 i = 0; i < count; i++) {
-    nsISupports* item = (nsISupports*)arrayFC->ElementAt(i);
-    nsCOMPtr<nsITrueTypeFontCatalogEntry> fce = do_QueryInterface(item);
-    if (!fce)
-      continue;
-    nsCAutoString foundryName, familyName;
-    PRUint32 flags, codePageRange1, codePageRange2;
-    PRUint16 weight, width;
-    fce->GetFamilyName(familyName);
-    fce->GetFlags(&flags);
-    fce->GetWidth(&width);
-    fce->GetWeight(&weight);
-    fce->GetCodePageRange1(&codePageRange1);
-    fce->GetCodePageRange2(&codePageRange2);
+  
+  aFC = gFT2FontCatalog->NewFontCatalog();
+  nsFT2FontCatalog::GetFontNames(aPattern, aFC);
+  
+  for (i=0; i<aFC->numFonts; i++) {
+    nsFontCatalogEntry *fce = aFC->fonts[i];
     if (!charset) { // get all encoding
-      FONT_CATALOG_PRINTF(("found FreeType %s-%s-*-*", foundryName.get(),
-                           familyName.get()));
+      FONT_CATALOG_PRINTF(("found FreeType %s-%s-*-*", fce->mFoundryName,
+                           fce->mFamilyName));
       for (j=0; j<32; j++) {
         unsigned long bit = 1 << j;
-        if (bit & codePageRange1) {
-          charSetName = nsFreeType::GetRange1CharSetName(bit);
+        if (bit & fce->mCodePageRange1) {
+          charSetName = gFT2FontCatalog->GetRange1CharSetName(bit);
           NS_ASSERTION(charSetName, "failed to get charset name");
           if (!charSetName)
             continue;
           node = LoadNode(fce, charSetName, aNodes);
         }
-        if (bit & codePageRange2) {
-          charSetName = nsFreeType::GetRange2CharSetName(bit);
+        if (bit & fce->mCodePageRange2) {
+          charSetName = gFT2FontCatalog->GetRange2CharSetName(bit);
           if (!charSetName)
             continue;
           LoadNode(fce, charSetName, aNodes);
         }
       }
-      if (!(foundryName.get()) && familyName.get() && flags&FCE_FLAGS_SYMBOL) {
+      if (!foundry && family && fce->mFlags&FCE_FLAGS_SYMBOL) {
         // the "registry-encoding" is not used but LoadNode will fail without
         // some value for this
         LoadNode(fce, "symbol-fontspecific", aNodes);
@@ -190,11 +172,11 @@ nsFT2FontNode::GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
       charsetName.Append('-');
       charsetName.Append(encoding);
       CharSetNameToCodeRangeBits(charsetName.get(), &cpr1_bits, &cpr2_bits);
-      if (!(cpr1_bits & codePageRange1)
-          && !(cpr2_bits & codePageRange2))
+      if (!(cpr1_bits & fce->mCodePageRange1)
+          && !(cpr2_bits & fce->mCodePageRange2))
         continue;
       FONT_CATALOG_PRINTF(("found FreeType -%s-%s-%s",
-                           familyName.get(),charset,encoding));
+                           fce->mFamilyName,charset,encoding));
       LoadNode(fce, charsetName.get(), aNodes);
     }
   }
@@ -209,20 +191,21 @@ cleanup_and_return:
 }
 
 nsFontNode*
-nsFT2FontNode::LoadNode(nsITrueTypeFontCatalogEntry *aFce,
-                        const char *aCharSetName,
+nsFT2FontNode::LoadNode(nsFontCatalogEntry *aFce, const char *aCharSetName,
                         nsFontNodeArray* aNodes)
 {
+  if (!gFT2FontCatalog)
+    return nsnull;
+
   nsFontCharSetMap *charSetMap = GetCharSetMap(aCharSetName);
   if (!charSetMap->mInfo) {
     return nsnull;
   }
-  nsCAutoString nodeName, familyName;
-  aFce->GetVendorID(nodeName);
-  aFce->GetFamilyName(familyName);
-
+  const char *foundry;
+  foundry = gFT2FontCatalog->GetFoundry(aFce);
+  nsCAutoString nodeName(foundry);
   nodeName.Append('-');
-  nodeName.Append(familyName);
+  nodeName.Append(aFce->mFamilyName);
   nodeName.Append('-');
   nodeName.Append(aCharSetName);
   nsCStringKey key(nodeName);
@@ -238,14 +221,8 @@ nsFT2FontNode::LoadNode(nsITrueTypeFontCatalogEntry *aFce,
     node->mCharSetInfo = charSetMap->mInfo;
   }
 
-  PRInt64 styleFlags;
-  PRUint16 fceWeight, fceWidth;
-  aFce->GetStyleFlags(&styleFlags);
-  aFce->GetWidth(&fceWidth);
-  aFce->GetWeight(&fceWeight);
-
   int styleIndex;
-  if (styleFlags & FT_STYLE_FLAG_ITALIC)
+  if (aFce->mStyleFlags & FT_STYLE_FLAG_ITALIC)
     styleIndex = NS_FONT_STYLE_ITALIC;
   else
     styleIndex = NS_FONT_STYLE_NORMAL;
@@ -258,7 +235,7 @@ nsFT2FontNode::LoadNode(nsITrueTypeFontCatalogEntry *aFce,
     node->mStyles[styleIndex] = style;
   }
 
-  int weightIndex = WEIGHT_INDEX(fceWeight);
+  int weightIndex = WEIGHT_INDEX(aFce->mWeight);
   nsFontWeight* weight = style->mWeights[weightIndex];
   if (!weight) {
     weight = new nsFontWeight;
@@ -268,16 +245,16 @@ nsFT2FontNode::LoadNode(nsITrueTypeFontCatalogEntry *aFce,
     style->mWeights[weightIndex] = weight;
   }
 
-  nsFontStretch* stretch = weight->mStretches[fceWidth];
+  nsFontStretch* stretch = weight->mStretches[aFce->mWidth];
   if (!stretch) {
     stretch = new nsFontStretch;
     if (!stretch) {
       return nsnull;
     }
-    weight->mStretches[fceWidth] = stretch;
+    weight->mStretches[aFce->mWidth] = stretch;
   }
   if (!stretch->mFreeTypeFaceID) {
-    stretch->mFreeTypeFaceID = aFce;
+    stretch->mFreeTypeFaceID = nsFreeTypeGetFaceID(aFce);
   }
   if (aNodes) {
     int i, n, found = 0;
@@ -295,35 +272,24 @@ nsFT2FontNode::LoadNode(nsITrueTypeFontCatalogEntry *aFce,
 }
 
 PRBool
-nsFT2FontNode::LoadNodeTable()
+nsFT2FontNode::LoadNodeTable(nsFontCatalog *aFontCatalog)
 {
-  int j;
-  nsISupportsArray* arrayFC;
-  nsCAutoString family, language;
-  sFcs->GetFontCatalogEntries(family, language, 0, 0, 0, 0, &arrayFC);
-  PRUint32 count;
-  arrayFC->Count(&count);
-  for (PRUint32 i = 0; i < count; i++) {
-    nsISupports* item = (nsISupports*)arrayFC->ElementAt(i);
+  if (!gFT2FontCatalog)
+    return PR_FALSE;
+
+  int i, j;
+ 
+  for (i=0; i<aFontCatalog->numFonts; i++) {
     const char *charsetName;
-    nsCOMPtr<nsITrueTypeFontCatalogEntry> fce = do_QueryInterface(item);
-    if (!fce)
-      continue;
-    PRUint32 flags, codePageRange1, codePageRange2;
-    PRUint16 weight, width;
-    fce->GetFlags(&flags);
-    fce->GetWidth(&width);
-    fce->GetWeight(&weight);
-    fce->GetCodePageRange1(&codePageRange1);
-    fce->GetCodePageRange2(&codePageRange2);
-    if ((!flags&FCE_FLAGS_ISVALID)
-        || (weight < 100) || (weight > 900) || (width > 8))
+    nsFontCatalogEntry *fce = aFontCatalog->fonts[i];
+    if ((!fce->mFlags&FCE_FLAGS_ISVALID)
+        || (fce->mWeight < 100) || (fce->mWeight > 900) || (fce->mWidth > 8))
       continue;
     for (j=0; j<32; j++) {
       unsigned long bit = 1 << j;
-      if (!(bit & codePageRange1))
+      if (!(bit & fce->mCodePageRange1))
         continue;
-      charsetName = nsFreeType::GetRange1CharSetName(bit);
+      charsetName = gFT2FontCatalog->GetRange1CharSetName(bit);
       NS_ASSERTION(charsetName, "failed to get charset name");
       if (!charsetName)
         continue;
@@ -331,115 +297,16 @@ nsFT2FontNode::LoadNodeTable()
     }
     for (j=0; j<32; j++) {
       unsigned long bit = 1 << j;
-      if (!(bit & codePageRange2))
+      if (!(bit & fce->mCodePageRange2))
         continue;
-      charsetName = nsFreeType::GetRange2CharSetName(bit);
+      charsetName = gFT2FontCatalog->GetRange2CharSetName(bit);
       if (!charsetName)
         continue;
       LoadNode(fce, charsetName, nsnull);
     }
   }
+
   return 0;
-}
-
-//
-// Parse XLFD
-// The input is a typical XLFD string.
-//
-// the XLFD entries look like this:
-//  -adobe-courier-medium-r-normal--12-120-75-75-m-70-iso8859-1
-//  -adobe-courier-medium-r-*-*-12-*-*-*-*-*-*-*
-//
-// the fields are:
-// -foundry-family-weight-slant-width-style-pixelsize-pointsize-
-//    resolution_x-resolution_y-spacing-avg_width-registry-encoding
-//
-// see ftp://ftp.x.org/pub/R6.4/xc/doc/hardcopy/XLFD
-//
-PRBool
-nsFT2FontNode::ParseXLFD(char *aPattern, char** aFoundry, char** aFamily,
-                         char** aCharset, char** aEncoding)
-{
-  char *p;
-  int i;
-
-  *aFoundry  = nsnull;
-  *aFamily   = nsnull;
-  *aCharset  = nsnull;
-  *aEncoding = nsnull;
-
-  // start of pattern
-  p = aPattern;
-  NS_ASSERTION(*p == '-',"garbled pattern: does not start with a '-'");
-  if (*p++ != '-')
-    return PR_FALSE;
-
-  // foundry
-  NS_ASSERTION(*p,"garbled pattern: unexpected end of pattern");
-  if (!*p)
-    return PR_FALSE;
-  if (*p == '*')
-    *aFoundry = nsnull;
-  else
-    *aFoundry = p;
-  while (*p && (*p!='-'))
-    p++;
-  if (!*p)
-    return PR_TRUE; // short XLFD
-  NS_ASSERTION(*p == '-',"garbled pattern: cannot find end of foundry");
-  *p++ = '\0';
-
-  // family
-  if (!*p)
-    return PR_TRUE; // short XLFD
-  if (*p == '*')
-    *aFamily = nsnull;
-  else
-    *aFamily = p;
-  while (*p && (*p!='-'))
-    p++;
-  if (!*p)
-    return PR_TRUE; // short XLFD
-  NS_ASSERTION(*p == '-',"garbled pattern: cannot find end of family");
-  *p++ = '\0';
-
-  // skip forward to charset
-  for (i=0; i<10; i++) {
-    while (*p && (*p!='-'))
-      p++;
-    if (!*p)
-      return PR_TRUE; // short XLFD
-    *p++ = '\0';
-  }
-
-  // charset
-  NS_ASSERTION(*p,"garbled pattern: unexpected end of pattern");
-  if (!*p)
-    return PR_FALSE;
-  if (*p == '*')
-    *aCharset = nsnull;
-  else
-    *aCharset = p;
-  while (*p && (*p!='-'))
-    p++;
-  if (!*p)
-    return PR_TRUE; // short XLFD
-  NS_ASSERTION(*p == '-',"garbled pattern: cannot find end of charset");
-  *p++ = '\0';
-
-  // encoding
-  NS_ASSERTION(*p,"garbled pattern: unexpected end of pattern");
-  if (!*p)
-    return PR_FALSE;
-  if (*p == '*')
-    *aEncoding = nsnull;
-  else
-    *aEncoding = p;
-  while (*p && (*p!='-'))
-    p++;
-  if (*p)
-    return PR_TRUE; // short XLFD
-  return PR_TRUE;
 }
 
 #endif
