@@ -31,7 +31,7 @@
 #include "nsCOMPtr.h"
 
 
-class nsMessage: public nsRDFResource, public nsIDBMessage
+class NS_MSG_BASE nsMessage: public nsRDFResource, public nsIDBMessage
 {
 public: 
 	nsMessage(void);

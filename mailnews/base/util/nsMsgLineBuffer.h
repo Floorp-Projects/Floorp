@@ -24,7 +24,7 @@
 // anything suitable (nsStrImpl might be, when its done). nsIByteBuffer
 // would do, if I had a stream for input, which I don't.
 
-class nsByteArray 
+class NS_MSG_BASE nsByteArray 
 {
 public:
 	nsByteArray();
@@ -43,13 +43,13 @@ protected:
 };
 
 
-class nsMsgLineBufferHandler : public nsByteArray
+class NS_MSG_BASE nsMsgLineBufferHandler : public nsByteArray
 {
 public:
 	virtual PRInt32 HandleLine(char *line, PRUint32 line_length) = 0;
 };
 
-class nsMsgLineBuffer : public nsByteArray
+class NS_MSG_BASE nsMsgLineBuffer : public nsByteArray
 {
 public:
 	nsMsgLineBuffer(nsMsgLineBufferHandler *handler, PRBool convertNewlinesP);
@@ -78,7 +78,7 @@ protected:
 
 class nsIInputStream;
 
-class nsMsgLineStreamBuffer
+class NS_MSG_BASE nsMsgLineStreamBuffer
 {
 public:
 	// aBufferSize -- size of the buffer you want us to use for buffering stream data

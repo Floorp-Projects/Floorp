@@ -19,11 +19,11 @@
 #define _nsUInt32Array_H_
 
 #include "nscore.h"
-#include "xp_core.h"
 #include "nsCRT.h"
 #include "prmem.h"
+#include "msgCore.h"
 
-class nsUInt32Array
+class NS_MSG_BASE nsUInt32Array
 {
 public:
 	// Construction/destruction

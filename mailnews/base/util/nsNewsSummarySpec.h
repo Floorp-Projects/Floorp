@@ -20,13 +20,14 @@
 #define _nsNewsSummarySpec_H
 
 #include "nsFileSpec.h"
+#include "msgCore.h"
 
 // Class to name a summary file for a newsgroup,
 // given a full folder file spec. 
 // Note this class expects the invoking code to fully specify the folder path. 
 // This class does NOT prepend the local folder directory, or put .sbd on the containing
 // directory names.
-class nsNewsSummarySpec : public nsFileSpec
+class NS_MSG_BASE nsNewsSummarySpec : public nsFileSpec
 {
 public:
 			nsNewsSummarySpec();

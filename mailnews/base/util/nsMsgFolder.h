@@ -37,7 +37,7 @@
   * MsgFolder
   */ 
 
-class nsMsgFolder: public nsRDFResource, public nsIMsgFolder
+class NS_MSG_BASE nsMsgFolder: public nsRDFResource, public nsIMsgFolder
 {
 public: 
   nsMsgFolder(void);

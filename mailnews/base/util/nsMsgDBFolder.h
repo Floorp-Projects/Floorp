@@ -32,7 +32,7 @@
   * class derived from nsMsgFolder for those folders that use an nsIMsgDatabase
   */ 
 
-class nsMsgDBFolder: public nsMsgFolder, public nsIDBChangeListener
+class NS_MSG_BASE nsMsgDBFolder: public nsMsgFolder, public nsIDBChangeListener
 {
 public: 
 	nsMsgDBFolder(void);

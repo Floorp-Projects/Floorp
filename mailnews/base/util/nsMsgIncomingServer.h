@@ -18,6 +18,7 @@
 
 #include "nsIMsgIncomingServer.h"
 #include "nsIPref.h"
+#include "msgCore.h"
 
 /*
  * base class for nsIMsgIncomingServer - derive your class from here
@@ -26,7 +27,7 @@
  * this particular implementation is not meant to be used directly.
  */
 
-class nsMsgIncomingServer : public nsIMsgIncomingServer {
+class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer {
  public:
   NS_DECL_ISUPPORTS
 

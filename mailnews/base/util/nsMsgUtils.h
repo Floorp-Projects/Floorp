@@ -20,19 +20,20 @@
 #include "nsString.h"
 #include "nsIEnumerator.h"
 #include "nsIMsgFolder.h"
+#include "msgCore.h"
 #include "nsCOMPtr.h"
 
 //These are utility functions that can used throughout the mailnews code
 
 //Utilities for getting a message service.
-nsresult GetMessageServiceProgIDForURI(const char *uri, nsString &progID);
+NS_MSG_BASE nsresult GetMessageServiceProgIDForURI(const char *uri, nsString &progID);
 //Use ReleaseMessageServiceFromURI to release the service.
-nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **messageService);
-nsresult ReleaseMessageServiceFromURI(const char *uri, nsIMsgMessageService *messageService);
+NS_MSG_BASE nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **messageService);
+NS_MSG_BASE nsresult ReleaseMessageServiceFromURI(const char *uri, nsIMsgMessageService *messageService);
 
 
 //An enumerator for converting nsIMsgHdrs to nsIMessages.
-class nsMessageFromMsgHdrEnumerator: public nsIEnumerator
+class NS_MSG_BASE nsMessageFromMsgHdrEnumerator: public nsIEnumerator
 {
 protected:
 	nsCOMPtr<nsIEnumerator> mSrcEnumerator;
@@ -50,10 +51,10 @@ public:
 	NS_IMETHOD IsDone(void);
 };
 
-nsresult NS_NewMessageFromMsgHdrEnumerator(nsIEnumerator *srcEnumerator,
+NS_MSG_BASE nsresult NS_NewMessageFromMsgHdrEnumerator(nsIEnumerator *srcEnumerator,
 										   nsIMsgFolder *folder,	
 										   nsMessageFromMsgHdrEnumerator **messageEnumerator);
 
-nsresult NS_MsgGetPriorityFromString(const char *priority, nsMsgPriority *outPriority);
+NS_MSG_BASE nsresult NS_MsgGetPriorityFromString(const char *priority, nsMsgPriority *outPriority);
 
-nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriority p, nsString2 *outName);
+NS_MSG_BASE nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriority p, nsString2 *outName);

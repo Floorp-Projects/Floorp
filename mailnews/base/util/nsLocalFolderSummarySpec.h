@@ -19,6 +19,7 @@
 #ifndef _nsLocalFolderSummarySpec_H
 #define _nsLocalFolderSummarySpec_H
 
+#include "msgCore.h"
 #include "nsFileSpec.h"
 
 // Class to name a summary file for a local mail folder,
@@ -27,7 +28,7 @@
 // Note this class expects the invoking code to fully specify the folder path. 
 // This class does NOT prepend the local folder directory, or put .sbd on the containing
 // directory names.
-class nsLocalFolderSummarySpec : public nsFileSpec
+class NS_MSG_BASE nsLocalFolderSummarySpec : public nsFileSpec
 {
 public:
 			virtual ~nsLocalFolderSummarySpec();

@@ -23,12 +23,13 @@
 #ifndef _nsMsgGroupRecord_h_
 #define _nsMsgGroupRecord_h__
 
+#include "msgCore.h"
 #include "prtypes.h"
 #include "nsISupports.h"
 
 class nsIMAPGroupRecord;
 
-class nsMsgGroupRecord {
+class NS_MSG_BASE nsMsgGroupRecord {
 public:
 	static nsMsgGroupRecord* Create(nsMsgGroupRecord* parent,
 								   const char* partname,

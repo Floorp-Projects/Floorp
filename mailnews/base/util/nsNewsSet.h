@@ -19,6 +19,8 @@
 #ifndef _nsNewsSet_H_
 #define _nsNewsSet_H_
 
+#include "msgCore.h"
+
 // msg_NewsArtSet represents a set of articles.  Typically, it is the set of
 // read articles from a .newsrc file, but it can be used for other purposes
 // too.
@@ -28,7 +30,8 @@
 
 class MSG_NewsHost;
 
-class nsNewsSet {
+
+class NS_MSG_BASE nsNewsSet {
 public:
 	// Creates an empty set.
 	static nsNewsSet* Create(MSG_NewsHost* host = NULL);

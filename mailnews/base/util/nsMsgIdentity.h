@@ -21,6 +21,7 @@
 
 #include "nsIMsgIdentity.h"
 #include "nsIPref.h"
+#include "msgCore.h"
 
 ///////////////////////////////////////////////////////////////////////////////////
 // an identity is an object designed to encapsulate all the information we need 
@@ -30,7 +31,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-class nsMsgIdentity : public nsIMsgIdentity
+class NS_MSG_BASE nsMsgIdentity : public nsIMsgIdentity
 {
 public:
   nsMsgIdentity();
