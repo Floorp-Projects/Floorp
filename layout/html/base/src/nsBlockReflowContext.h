@@ -91,6 +91,10 @@ public:
     return mMetrics.mMaximumWidth;
   }
 
+  PRBool BlockShouldInvalidateItself() const {
+    return mBlockShouldInvalidateItself;
+  }
+
   // Compute the largest of two adjacent vertical margins, as per the
   // CSS2 spec section 8.3.1
   static nscoord MaxMargin(nscoord a, nscoord b) {
@@ -135,6 +139,7 @@ protected:
   nsSize mMaxElementSize;
   PRPackedBool mIsTable;
   PRPackedBool mComputeMaximumWidth;
+  PRPackedBool mBlockShouldInvalidateItself;
 };
 
 #endif /* nsBlockReflowContext_h___ */
