@@ -338,7 +338,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   nsSize              kidReflowSize(scrollAreaSize.width, NS_UNCONSTRAINEDSIZE);
   nsHTMLReflowState   kidReflowState(aPresContext, mFirstChild, aReflowState,
                                      kidReflowSize);
-  nsHTMLReflowMetrics kidDesiredSize(nsnull);
+  nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.maxElementSize);
 
   ReflowChild(mFirstChild, aPresContext, kidDesiredSize, kidReflowState, aStatus);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
@@ -403,6 +403,15 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   // XXX This should really be "if we have a visible horizontal scrollbar"...
   if (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow) {
     aDesiredSize.height += NSToCoordRound(sbHeight);
+  }
+
+  if (nsnull != aDesiredSize.maxElementSize) {
+    nscoord maxWidth = aDesiredSize.maxElementSize->width;
+    maxWidth += border.left + border.right + NSToCoordRound(sbWidth);
+    nscoord maxHeight = aDesiredSize.maxElementSize->height;
+    maxHeight += border.top + border.bottom;
+    aDesiredSize.maxElementSize->width = maxWidth;
+    aDesiredSize.maxElementSize->height = maxHeight;
   }
 
   aDesiredSize.ascent = aDesiredSize.height;
