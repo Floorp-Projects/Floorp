@@ -36,6 +36,7 @@ class nsIPresShell;
 class nsIViewManager;
 class ChangeAttributeTxn;
 class CreateElementTxn;
+class InsertElementTxn;
 class DeleteElementTxn;
 class InsertTextTxn;
 class DeleteTextTxn;
@@ -47,25 +48,6 @@ class nsVoidArray;
 //This is the monitor for the editor.
 PRMonitor *getEditorMonitor();
 
-/*
-struct Properties
-{
-  Properties (nsIAtom *aPropName, nsIAtom *aValue, PRBool aAppliesToAll);
-  ~Properties();
-
-  nsIAtom *mPropName;
-  nsIAtom *mValue;
-  PRBool   mAppliesToAll;
-};
-
-inline Property::Property(nsIAtom *aPropName, nsIAtom *aValue, PRBool aAppliesToAll)
-{
-  mPropName = aPropName;
-  mPropValue = aPropValue;
-  mAppliesToAll = aAppliesToAll;
-};
-
-*/
 
 /** implementation of an editor object.  it will be the controler/focal point 
  *  for the main editor services. i.e. the GUIManager, publishing, transaction 
@@ -123,7 +105,8 @@ public:
 
   virtual nsresult CreateNode(const nsString& aTag,
                               nsIDOMNode *    aParent,
-                              PRInt32         aPosition);
+                              PRInt32         aPosition,
+                              nsIDOMNode **   aNewNode);
 
   virtual nsresult InsertNode(nsIDOMNode * aNode,
                               nsIDOMNode * aParent,
@@ -135,7 +118,8 @@ public:
   virtual nsresult DeleteSelection(nsIEditor::Direction aDir);
 
   virtual nsresult SplitNode(nsIDOMNode * aExistingRightNode,
-                             PRInt32      aOffset);
+                             PRInt32      aOffset,
+                             nsIDOMNode ** aNewLeftNode);
 
   virtual nsresult JoinNodes(nsIDOMNode * aNodeToKeep,
                             nsIDOMNode * aNodeToJoin,
@@ -206,6 +190,11 @@ protected:
                                              nsIDOMNode     *aParent,
                                              PRInt32         aPosition,
                                              CreateElementTxn ** aTxn);
+
+  virtual nsresult CreateTxnForInsertElement(nsIDOMNode * aNode,
+                                             nsIDOMNode * aParent,
+                                             PRInt32      aOffset,
+                                             InsertElementTxn ** aTxn);
 
   virtual nsresult CreateTxnForDeleteElement(nsIDOMNode * aElement,
                                              DeleteElementTxn ** aTxn);

@@ -72,6 +72,8 @@ public:
 
   virtual nsresult GetRedoString(nsString **aString);
 
+  virtual nsresult GetNewNode(nsIDOMNode **aNewNode);
+
 protected:
   
   /** the document into which the new node will be inserted */

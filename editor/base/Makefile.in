@@ -28,6 +28,7 @@ CPPSRCS =                       \
     nsEditor.cpp                \
     nsTextEditor.cpp            \
     nsEditorEventListeners.cpp  \
+    nsEditProperty.cpp          \
     nsEditFactory.cpp           \
     nsTextEditFactory.cpp       \
     ChangeAttributeTxn.cpp      \
@@ -36,6 +37,7 @@ CPPSRCS =                       \
     InsertTextTxn.cpp           \
     DeleteTextTxn.cpp           \
     CreateElementTxn.cpp        \
+    InsertElementTxn.cpp        \
     DeleteElementTxn.cpp        \
     DeleteRangeTxn.cpp          \
     SplitElementTxn.cpp         \

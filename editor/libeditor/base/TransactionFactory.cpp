@@ -22,6 +22,7 @@
 #include "InsertTextTxn.h"
 #include "DeleteTextTxn.h"
 #include "CreateElementTxn.h"
+#include "InsertElementTxn.h"
 #include "DeleteElementTxn.h"
 #include "DeleteRangeTxn.h"
 #include "ChangeAttributeTxn.h"
@@ -32,6 +33,7 @@ static NS_DEFINE_IID(kEditAggregateTxnIID,  EDIT_AGGREGATE_TXN_IID);
 static NS_DEFINE_IID(kInsertTextTxnIID,     INSERT_TEXT_TXN_IID);
 static NS_DEFINE_IID(kDeleteTextTxnIID,     DELETE_TEXT_TXN_IID);
 static NS_DEFINE_IID(kCreateElementTxnIID,  CREATE_ELEMENT_TXN_IID);
+static NS_DEFINE_IID(kInsertElementTxnIID,  INSERT_ELEMENT_TXN_IID);
 static NS_DEFINE_IID(kDeleteElementTxnIID,  DELETE_ELEMENT_TXN_IID);
 static NS_DEFINE_IID(kDeleteRangeTxnIID,    DELETE_RANGE_TXN_IID);
 static NS_DEFINE_IID(kChangeAttributeTxnIID,CHANGE_ATTRIBUTE_TXN_IID);
@@ -57,6 +59,8 @@ TransactionFactory::GetNewTransaction(REFNSIID aTxnType, EditTxn **aResult)
     *aResult = new DeleteTextTxn();
   else if (aTxnType.Equals(kCreateElementTxnIID))
     *aResult = new CreateElementTxn();
+  else if (aTxnType.Equals(kInsertElementTxnIID))
+    *aResult = new InsertElementTxn();
   else if (aTxnType.Equals(kDeleteElementTxnIID))
     *aResult = new DeleteElementTxn();
   else if (aTxnType.Equals(kDeleteRangeTxnIID))

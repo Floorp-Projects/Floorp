@@ -24,6 +24,7 @@ CPPSRCS =				\
       nsEditor.cpp			     \
       nsTextEditor.cpp       \
       nsEditorEventListeners.cpp   \
+      nsEditProperty.cpp      \
       nsEditFactory.cpp      \
       nsTextEditFactory.cpp  \
       EditTxn.cpp            \
@@ -32,6 +33,7 @@ CPPSRCS =				\
       InsertTextTxn.cpp      \
       DeleteTextTxn.cpp      \
       CreateElementTxn.cpp   \
+      InsertElementTxn.cpp   \
       DeleteElementTxn.cpp   \
       DeleteRangeTxn.cpp     \
       SplitElementTxn.cpp    \
@@ -43,7 +45,8 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsEditor.obj		        \
   .\$(OBJDIR)\nsTextEditor.obj        \
   .\$(OBJDIR)\nsEditorEventListeners.obj		\
-	.\$(OBJDIR)\nsEditFactory.obj		    \
+	.\$(OBJDIR)\nsEditProperty.obj	    \
+  .\$(OBJDIR)\nsEditFactory.obj		    \
   .\$(OBJDIR)\nsTextEditFactory.obj		\
   .\$(OBJDIR)\EditTxn.obj             \
   .\$(OBJDIR)\EditAggregateTxn.obj    \
@@ -51,6 +54,7 @@ CPP_OBJS =					\
   .\$(OBJDIR)\InsertTextTxn.obj       \
   .\$(OBJDIR)\DeleteTextTxn.obj       \
   .\$(OBJDIR)\CreateElementTxn.obj    \
+  .\$(OBJDIR)\InsertElementTxn.obj    \
   .\$(OBJDIR)\DeleteElementTxn.obj    \
   .\$(OBJDIR)\DeleteRangeTxn.obj      \
   .\$(OBJDIR)\SplitElementTxn.obj     \

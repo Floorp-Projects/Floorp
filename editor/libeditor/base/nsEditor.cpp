@@ -48,6 +48,7 @@
 #include "EditAggregateTxn.h"
 #include "ChangeAttributeTxn.h"
 #include "CreateElementTxn.h"
+#include "InsertElementTxn.h"
 #include "DeleteElementTxn.h"
 #include "InsertTextTxn.h"
 #include "DeleteTextTxn.h"
@@ -78,6 +79,7 @@ static NS_DEFINE_IID(kEditAggregateTxnIID,  EDIT_AGGREGATE_TXN_IID);
 static NS_DEFINE_IID(kInsertTextTxnIID,     INSERT_TEXT_TXN_IID);
 static NS_DEFINE_IID(kDeleteTextTxnIID,     DELETE_TEXT_TXN_IID);
 static NS_DEFINE_IID(kCreateElementTxnIID,  CREATE_ELEMENT_TXN_IID);
+static NS_DEFINE_IID(kInsertElementTxnIID,  INSERT_ELEMENT_TXN_IID);
 static NS_DEFINE_IID(kDeleteElementTxnIID,  DELETE_ELEMENT_TXN_IID);
 static NS_DEFINE_IID(kDeleteRangeTxnIID,    DELETE_RANGE_TXN_IID);
 static NS_DEFINE_IID(kChangeAttributeTxnIID,CHANGE_ATTRIBUTE_TXN_IID);
@@ -566,14 +568,12 @@ nsresult
 nsEditor::Do(nsITransaction *aTxn)
 {
   nsresult result = NS_OK;
-  if (nsnull!=aTxn)
+  if (aTxn)
   {
-    if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
-    {
+    if (mTxnMgr) {
       result = mTxnMgr->Do(aTxn);
     }
-    else
-    {
+    else {
       result = aTxn->Do();
     }
   }
@@ -690,12 +690,19 @@ nsresult nsEditor::ScrollIntoView(PRBool aScrollToBegin)
 
 nsresult nsEditor::CreateNode(const nsString& aTag,
                               nsIDOMNode *    aParent,
-                              PRInt32         aPosition)
+                              PRInt32         aPosition,
+                              nsIDOMNode **   aNewNode)
 {
   CreateElementTxn *txn;
   nsresult result = CreateTxnForCreateElement(aTag, aParent, aPosition, &txn);
-  if (NS_SUCCEEDED(result))  {
+  if (NS_SUCCEEDED(result)) 
+  {
     result = Do(txn);  
+    if (NS_SUCCEEDED(result)) 
+    {
+      result = txn->GetNewNode(aNewNode);
+      NS_ASSERTION((NS_SUCCEEDED(result)), "GetNewNode can't fail if txn::Do succeeded.");
+    }
   }
   return result;
 }
@@ -720,16 +727,28 @@ nsresult nsEditor::InsertNode(nsIDOMNode * aNode,
                               nsIDOMNode * aParent,
                               PRInt32      aPosition)
 {
-  // GetLayoutObjectFor test
-  nsAutoString cellTag("TD");
-  nsCOMPtr<nsIDOMNode> node;
-  if (NS_SUCCEEDED(GetFirstNodeOfType(nsnull, cellTag, getter_AddRefs(node))))
-  {
-    PRInt32 cellIndex;
-    GetColIndexForCell(mPresShell, node, cellIndex);
-    printf("%d\n", cellIndex);
+  InsertElementTxn *txn;
+  nsresult result = CreateTxnForInsertElement(aNode, aParent, aPosition, &txn);
+  if (NS_SUCCEEDED(result))  {
+    result = Do(txn);  
   }
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return result;
+}
+
+nsresult nsEditor::CreateTxnForInsertElement(nsIDOMNode * aNode,
+                                             nsIDOMNode * aParent,
+                                             PRInt32      aPosition,
+                                             InsertElementTxn ** aTxn)
+{
+  nsresult result = NS_ERROR_NULL_POINTER;
+  if (aNode && aParent && aTxn)
+  {
+    result = TransactionFactory::GetNewTransaction(kInsertElementTxnIID, (EditTxn **)aTxn);
+    if (NS_SUCCEEDED(result)) {
+      result = (*aTxn)->Init(aNode, aParent, aPosition);
+    }
+  }
+  return result;
 }
 
 nsresult nsEditor::DeleteNode(nsIDOMNode * aElement)
@@ -753,7 +772,6 @@ nsresult nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aElement,
       result = (*aTxn)->Init(aElement);
     }
   }
-
   return result;
 }
 
@@ -1280,12 +1298,19 @@ nsEditor::GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
 
 nsresult 
 nsEditor::SplitNode(nsIDOMNode * aNode,
-                    PRInt32      aOffset)
+                    PRInt32      aOffset,
+                    nsIDOMNode **aNewLeftNode)
 {
   SplitElementTxn *txn;
   nsresult result = CreateTxnForSplitNode(aNode, aOffset, &txn);
-  if (NS_SUCCEEDED(result))  {
-    result = Do(txn);  
+  if (NS_SUCCEEDED(result))  
+  {
+    result = Do(txn);
+    if (NS_SUCCEEDED(result))
+    {
+      result = txn->GetNewNode(aNewLeftNode);
+      NS_ASSERTION((NS_SUCCEEDED(result)), "result must succeeded for GetNewNode");
+    }
   }
   return result;
 }
