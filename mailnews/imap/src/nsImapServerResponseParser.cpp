@@ -1435,8 +1435,10 @@ void nsImapServerResponseParser::resp_text_code()
 			fNextToken = GetNextToken();
 			if (ContinueParse())
 			{
-				fFolderUIDValidity = atoi(fNextToken);
-				fHighestRecordedUID = 0;
+                // ** jt -- the returned uidvalidity is the destination folder
+                // uidvalidity; don't use it for current folder
+				// fFolderUIDValidity = atoi(fNextToken);
+				// fHighestRecordedUID = 0; ??? this should be wrong
 				fNextToken = GetNextToken();
 				if (ContinueParse())
 				{
@@ -1450,8 +1452,8 @@ void nsImapServerResponseParser::resp_text_code()
 			fNextToken = GetNextToken();
 			if (ContinueParse())
 			{
-				fFolderUIDValidity = atoi(fNextToken);
-				fHighestRecordedUID = 0;
+                // ** jt -- destination folder uidvalidity
+				// fFolderUIDValidity = atoi(fNextToken);
                 // original message set; ignore it
 				fNextToken = GetNextToken();
 				if (ContinueParse())
