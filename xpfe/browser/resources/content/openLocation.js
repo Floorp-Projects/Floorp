@@ -39,14 +39,16 @@ function onLoad() {
 
 	browser = window.arguments[0];
 
-	if ( !browser ) {
-		dialog.topWindowDiv.setAttribute("style","display:none;");
-		var pNode = dialog.newWindowDiv.parentNode;
-		pNode.removeChild(dialog.newWindowDiv);
-		pNode.appendChild(dialog.newWindowDiv);
+  if ( !browser ) {
+    // No browser supplied - we are calling from Composer
+    dialog.topWindow.checked = false;
+    dialog.editNewWindow.checked = true;
 
-		dialog.editNewWindow.checked = true;
-	} else {
+    dialog.topWindowDiv.setAttribute("style","display:none;");
+    var pNode = dialog.newWindowDiv.parentNode;
+    pNode.removeChild(dialog.newWindowDiv);
+    pNode.appendChild(dialog.newWindowDiv);
+  } else {
     dialog.topWindow.checked = true;
   }
 	doSetOKCancel(open, 0, 0, 0);
