@@ -102,6 +102,7 @@ $(OBJDIR)/gtscc$(BIN_SUFFIX):	$(OBJDIR)/gtscc.o
 
 #update build number from within make script
 $(DEPTH)/build/build_number: FORCE
+	@$(MAKE_OBJDIR)
 	$(RM) $@
 	$(PERL) bdate.pl > $@
 	$(PERL) aboutime.pl $(topsrcdir)/l10n/us/xp/about-all.html $@
