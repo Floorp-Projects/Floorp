@@ -405,6 +405,11 @@ void nsMsgKeySet::SetLastMember(PRInt32 newHighWaterMark)
 							m_data[m_length - 2] = -(newHighWaterMark - rangeStart);
 							break;
 						}
+					}
+					else {
+						// prevent the infinite loop
+						// see bug #13062
+						break;
 					}	
 				}
 				else if (m_data[m_length - 1] > newHighWaterMark)	// no, so last number must be last member
