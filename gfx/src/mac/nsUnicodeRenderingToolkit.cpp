@@ -26,6 +26,7 @@
 #include "nsTransform2D.h"
 #include "nsFontMetricsMac.h"
 #include "nsGraphicState.h"
+#include "prprf.h"
 
 #define BAD_FONT_NUM -1
 #define BAD_SCRIPT 0x7F
@@ -33,6 +34,7 @@
 
 //#define DISABLE_TEC_FALLBACK
 #define DISABLE_ATSUI_FALLBACK
+//#define DISABLE_UPLUS_FALLBACK
 
 
 
@@ -245,6 +247,32 @@ PRBool nsUnicodeRenderingToolkit :: QuestionMarkFallbackDrawChar(
 	  DrawScriptText(question, 3, x, y, oWidth);
 	  return PR_TRUE;
 }
+//------------------------------------------------------------------------
+
+PRBool nsUnicodeRenderingToolkit :: UPlusFallbackGetWidth(
+	const PRUnichar *aCharPt, 
+	short& oWidth)
+{
+	  char buf[16];
+	  PRUint32 len = PR_snprintf(buf, 16 , "<U+%04X>", *aCharPt);
+	  if(len != -1) 
+		  GetScriptTextWidth(buf, len, oWidth);
+	  return (-1 != len);
+}
+//------------------------------------------------------------------------
+
+PRBool nsUnicodeRenderingToolkit :: UPlusFallbackDrawChar(
+	const PRUnichar *aCharPt, 
+	PRInt32 x, 
+	PRInt32 y, 
+	short& oWidth)
+{
+	  char buf[16];
+	  PRUint32 len = PR_snprintf(buf, 16 , "<U+%04X>", *aCharPt);
+	  if(len != -1) 
+		  DrawScriptText(buf, len, x, y, oWidth);
+	  return (-1 != len);
+}
 
 //------------------------------------------------------------------------
 void nsUnicodeRenderingToolkit :: GetScriptTextWidth(
@@ -361,6 +389,12 @@ nsresult nsUnicodeRenderingToolkit :: GetTextSegmentWidth(
 									  		mGS->mColor );
 		  }
 #endif
+#ifndef DISABLE_UPLUS_FALLBACK  
+		  // Fallback to UPlus
+		  if(! fallbackDone)
+		  	fallbackDone = UPlusFallbackGetWidth(aString, thisWidth);
+#endif
+		  	
 		  // Fallback to question mark
 		  if(! fallbackDone)
 		  	QuestionMarkFallbackGetWidth(aString, thisWidth);
@@ -477,6 +511,12 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
 									  		mGS->mColor );
 		  }
 #endif
+#ifndef DISABLE_UPLUS_FALLBACK  
+		  // Fallback to U+xxxx
+		  if(! fallbackDone)
+		  	fallbackDone = UPlusFallbackDrawChar(aString, x, y, thisWidth);
+#endif
+		  	
 		  // Fallback to question mark
 		  if(! fallbackDone)
 		  	QuestionMarkFallbackDrawChar(aString, x, y, thisWidth);

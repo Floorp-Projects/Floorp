@@ -50,6 +50,9 @@ private:
 	PRBool 				ATSUIFallbackGetWidth(const PRUnichar *pChar, short& oWidth, short fontNum,	short aSize, PRBool aBold, PRBool aItalic, nscolor aColor);
 	PRBool 				ATSUIFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth, short fontNum, short aSize, PRBool aBold, PRBool aItalic, nscolor aColor);
 	
+	PRBool 				UPlusFallbackGetWidth(const PRUnichar *pChar, short& oWidth);
+	PRBool 				UPlusFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth);
+
 	PRBool 				QuestionMarkFallbackGetWidth(const PRUnichar *pChar, short& oWidth);
 	PRBool 				QuestionMarkFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth);
 	
