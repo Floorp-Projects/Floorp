@@ -404,11 +404,11 @@ public:
   NS_IMETHOD    GetZIndex(nsAWritableString& aZIndex)=0;
   NS_IMETHOD    SetZIndex(const nsAReadableString& aZIndex)=0;
 
-  NS_IMETHOD    GetBehavior(nsAWritableString& aBehavior)=0;
-  NS_IMETHOD    SetBehavior(const nsAReadableString& aBehavior)=0;
+  NS_IMETHOD    GetMozBinding(nsAWritableString& aMozBinding)=0;
+  NS_IMETHOD    SetMozBinding(const nsAReadableString& aMozBinding)=0;
 
-  NS_IMETHOD    GetOpacity(nsAWritableString& aOpacity)=0;
-  NS_IMETHOD    SetOpacity(const nsAReadableString& aOpacity)=0;
+  NS_IMETHOD    GetMozOpacity(nsAWritableString& aMozOpacity)=0;
+  NS_IMETHOD    SetMozOpacity(const nsAReadableString& aMozOpacity)=0;
 };
 
 
@@ -657,10 +657,10 @@ public:
   NS_IMETHOD    SetWordSpacing(const nsAReadableString& aWordSpacing);  \
   NS_IMETHOD    GetZIndex(nsAWritableString& aZIndex);  \
   NS_IMETHOD    SetZIndex(const nsAReadableString& aZIndex);  \
-  NS_IMETHOD    GetBehavior(nsAWritableString& aBehavior);  \
-  NS_IMETHOD    SetBehavior(const nsAReadableString& aBehavior);  \
-  NS_IMETHOD    GetOpacity(nsAWritableString& aOpacity);  \
-  NS_IMETHOD    SetOpacity(const nsAReadableString& aOpacity);  \
+  NS_IMETHOD    GetMozBinding(nsAWritableString& aMozBinding);  \
+  NS_IMETHOD    SetMozBinding(const nsAReadableString& aMozBinding);  \
+  NS_IMETHOD    GetMozOpacity(nsAWritableString& aMozOpacity);  \
+  NS_IMETHOD    SetMozOpacity(const nsAReadableString& aMozOpacity);  \
 
 
 
@@ -909,10 +909,10 @@ public:
   NS_IMETHOD    SetWordSpacing(const nsAReadableString& aWordSpacing) { return _to SetWordSpacing(aWordSpacing); } \
   NS_IMETHOD    GetZIndex(nsAWritableString& aZIndex) { return _to GetZIndex(aZIndex); } \
   NS_IMETHOD    SetZIndex(const nsAReadableString& aZIndex) { return _to SetZIndex(aZIndex); } \
-  NS_IMETHOD    GetBehavior(nsAWritableString& aBehavior) { return _to GetBehavior(aBehavior); } \
-  NS_IMETHOD    SetBehavior(const nsAReadableString& aBehavior) { return _to SetBehavior(aBehavior); } \
-  NS_IMETHOD    GetOpacity(nsAWritableString& aOpacity) { return _to GetOpacity(aOpacity); } \
-  NS_IMETHOD    SetOpacity(const nsAReadableString& aOpacity) { return _to SetOpacity(aOpacity); } \
+  NS_IMETHOD    GetMozBinding(nsAWritableString& aMozBinding) { return _to GetMozBinding(aMozBinding); } \
+  NS_IMETHOD    SetMozBinding(const nsAReadableString& aMozBinding) { return _to SetMozBinding(aMozBinding); } \
+  NS_IMETHOD    GetMozOpacity(nsAWritableString& aMozOpacity) { return _to GetMozOpacity(aMozOpacity); } \
+  NS_IMETHOD    SetMozOpacity(const nsAReadableString& aMozOpacity) { return _to SetMozOpacity(aMozOpacity); } \
 
 
 extern "C" NS_DOM nsresult NS_InitCSS2PropertiesClass(nsIScriptContext *aContext, void **aPrototype);

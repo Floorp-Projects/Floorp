@@ -335,18 +335,6 @@ nsDOMCSSDeclaration::SetBackgroundRepeat(const nsAReadableString& aBackgroundRep
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBehavior(nsAWritableString& aBehavior)
-{
-  return GetPropertyValue(NS_ConvertASCIItoUCS2("behavior"), aBehavior);
-}
-
-NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBehavior(const nsAReadableString& aBehavior)
-{
-  return SetProperty(NS_ConvertASCIItoUCS2("behavior"), aBehavior, nsAutoString());
-}
-
-NS_IMETHODIMP
 nsDOMCSSDeclaration::GetBorder(nsAWritableString& aBorder)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border"), aBorder);
@@ -1153,48 +1141,56 @@ nsDOMCSSDeclaration::SetOrphans(const nsAReadableString& aOrphans)
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetOutline(nsAWritableString& aOutline)
 {
+  // XXX Because of the renaming to -moz-outline, this does nothing.
   return GetPropertyValue(NS_ConvertASCIItoUCS2("outline"), aOutline);
 }
 
 NS_IMETHODIMP
 nsDOMCSSDeclaration::SetOutline(const nsAReadableString& aOutline)
 {
+  // XXX Because of the renaming to -moz-outline, this does nothing.
   return SetProperty(NS_ConvertASCIItoUCS2("outline"), aOutline, nsAutoString());
 }
 
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetOutlineColor(nsAWritableString& aOutlineColor)
 {
+  // XXX Because of the renaming to -moz-outline, this does nothing.
   return GetPropertyValue(NS_ConvertASCIItoUCS2("outline-color"), aOutlineColor);
 }
 
 NS_IMETHODIMP
 nsDOMCSSDeclaration::SetOutlineColor(const nsAReadableString& aOutlineColor)
 {
+  // XXX Because of the renaming to -moz-outline, this does nothing.
   return SetProperty(NS_ConvertASCIItoUCS2("outline-color"), aOutlineColor, nsAutoString());
 }
 
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetOutlineStyle(nsAWritableString& aOutlineStyle)
 {
+  // XXX Because of the renaming to -moz-outline, this does nothing.
   return GetPropertyValue(NS_ConvertASCIItoUCS2("outline-style"), aOutlineStyle);
 }
 
 NS_IMETHODIMP
 nsDOMCSSDeclaration::SetOutlineStyle(const nsAReadableString& aOutlineStyle)
 {
+  // XXX Because of the renaming to -moz-outline, this does nothing.
   return SetProperty(NS_ConvertASCIItoUCS2("outline-style"), aOutlineStyle, nsAutoString());
 }
 
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetOutlineWidth(nsAWritableString& aOutlineWidth)
 {
+  // XXX Because of the renaming to -moz-outline, this does nothing.
   return GetPropertyValue(NS_ConvertASCIItoUCS2("outline-width"), aOutlineWidth);
 }
 
 NS_IMETHODIMP
 nsDOMCSSDeclaration::SetOutlineWidth(const nsAReadableString& aOutlineWidth)
 {
+  // XXX Because of the renaming to -moz-outline, this does nothing.
   return SetProperty(NS_ConvertASCIItoUCS2("outline-width"), aOutlineWidth, nsAutoString());
 }
 
@@ -1726,15 +1722,26 @@ nsDOMCSSDeclaration::SetZIndex(const nsAReadableString& aZIndex)
   return SetProperty(NS_ConvertASCIItoUCS2("z-index"), aZIndex, nsAutoString());
 }
 
-
-NS_IMETHODIMP 
-nsDOMCSSDeclaration::GetOpacity(nsAWritableString& aOpacity)
+NS_IMETHODIMP
+nsDOMCSSDeclaration::GetMozBinding(nsAWritableString& aBehavior)
 {
-  return GetPropertyValue(NS_ConvertASCIItoUCS2("opacity"), aOpacity);
+  return GetPropertyValue(NS_ConvertASCIItoUCS2("-moz-binding"), aBehavior);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetOpacity(const nsAReadableString& aOpacity)
+nsDOMCSSDeclaration::SetMozBinding(const nsAReadableString& aBehavior)
 {
-  return SetProperty(NS_ConvertASCIItoUCS2("opacity"), aOpacity, nsAutoString());
+  return SetProperty(NS_ConvertASCIItoUCS2("-moz-binding"), aBehavior, nsAutoString());
+}
+
+NS_IMETHODIMP 
+nsDOMCSSDeclaration::GetMozOpacity(nsAWritableString& aOpacity)
+{
+  return GetPropertyValue(NS_ConvertASCIItoUCS2("-moz-opacity"), aOpacity);
+}
+
+NS_IMETHODIMP
+nsDOMCSSDeclaration::SetMozOpacity(const nsAReadableString& aOpacity)
+{
+  return SetProperty(NS_ConvertASCIItoUCS2("-moz-opacity"), aOpacity, nsAutoString());
 }

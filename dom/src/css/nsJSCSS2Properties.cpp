@@ -168,8 +168,8 @@ enum CSS2Properties_slots {
   CSS2PROPERTIES_WIDTH = -120,
   CSS2PROPERTIES_WORDSPACING = -121,
   CSS2PROPERTIES_ZINDEX = -122,
-  CSS2PROPERTIES_BEHAVIOR = -123,
-  CSS2PROPERTIES_OPACITY = -124
+  CSS2PROPERTIES_MOZBINDING = -123,
+  CSS2PROPERTIES_MOZOPACITY = -124
 };
 
 /***********************************************************************/
@@ -1656,24 +1656,24 @@ GetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case CSS2PROPERTIES_BEHAVIOR:
+      case CSS2PROPERTIES_MOZBINDING:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSS2PROPERTIES_BEHAVIOR, PR_FALSE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSS2PROPERTIES_MOZBINDING, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
           nsAutoString prop;
-          rv = a->GetBehavior(prop);
+          rv = a->GetMozBinding(prop);
           if (NS_SUCCEEDED(rv)) {
             nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
           }
         }
         break;
       }
-      case CSS2PROPERTIES_OPACITY:
+      case CSS2PROPERTIES_MOZOPACITY:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSS2PROPERTIES_OPACITY, PR_FALSE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSS2PROPERTIES_MOZOPACITY, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
           nsAutoString prop;
-          rv = a->GetOpacity(prop);
+          rv = a->GetMozOpacity(prop);
           if (NS_SUCCEEDED(rv)) {
             nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
           }
@@ -3177,26 +3177,26 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case CSS2PROPERTIES_BEHAVIOR:
+      case CSS2PROPERTIES_MOZBINDING:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSS2PROPERTIES_BEHAVIOR, PR_TRUE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSS2PROPERTIES_MOZBINDING, PR_TRUE);
         if (NS_SUCCEEDED(rv)) {
           nsAutoString prop;
           nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-          rv = a->SetBehavior(prop);
+          rv = a->SetMozBinding(prop);
           
         }
         break;
       }
-      case CSS2PROPERTIES_OPACITY:
+      case CSS2PROPERTIES_MOZOPACITY:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSS2PROPERTIES_OPACITY, PR_TRUE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSS2PROPERTIES_MOZOPACITY, PR_TRUE);
         if (NS_SUCCEEDED(rv)) {
           nsAutoString prop;
           nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-          rv = a->SetOpacity(prop);
+          rv = a->SetMozOpacity(prop);
           
         }
         break;
@@ -3392,8 +3392,8 @@ static JSPropertySpec CSS2PropertiesProperties[] =
   {"width",    CSS2PROPERTIES_WIDTH,    JSPROP_ENUMERATE},
   {"wordSpacing",    CSS2PROPERTIES_WORDSPACING,    JSPROP_ENUMERATE},
   {"zIndex",    CSS2PROPERTIES_ZINDEX,    JSPROP_ENUMERATE},
-  {"behavior",    CSS2PROPERTIES_BEHAVIOR,    JSPROP_ENUMERATE},
-  {"opacity",    CSS2PROPERTIES_OPACITY,    JSPROP_ENUMERATE},
+  {"MozBinding",    CSS2PROPERTIES_MOZBINDING,    JSPROP_ENUMERATE},
+  {"MozOpacity",    CSS2PROPERTIES_MOZOPACITY,    JSPROP_ENUMERATE},
   {0}
 };
 
