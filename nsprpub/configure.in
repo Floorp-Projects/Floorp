@@ -335,6 +335,7 @@ case "$target" in
     AC_DEFINE(AIX)
     AC_DEFINE(SYSV)
     DSO_LDOPTS='-brtl -bM:SRE -bnoentry -bexpall'
+    OS_LIBS="-lc_r $OS_LIBS"
     case "${target_os}" in
     aix3.2*)
         USE_NSPR_THREADS=1
@@ -352,6 +353,7 @@ case "$target" in
         AC_DEFINE(AIX4_1)
         MKSHLIB=
         DSO_LDOPTS=
+        USE_PTHREADS=1
         AIX_LINK_OPTS='-bnso -berok'
         ;;
     aix4.3*)
@@ -361,6 +363,7 @@ case "$target" in
         AC_DEFINE(AIX4_3)
         AC_DEFINE(HAVE_SOCKLEN_T)
         USE_IPV6=1
+        USE_PTHREADS=1
         AIX_LINK_OPTS='-brtl -bnso -berok'
         ;;
     *)
@@ -386,6 +389,7 @@ case "$target" in
         fi
     fi
     PR_MD_CSRCS=aix.c
+    RESOLVE_LINK_SYMBOLS=1
     ;;
         
 *-beos*)
@@ -935,14 +939,18 @@ dnl ========================================================
 dnl Check options
 dnl ========================================================
 
-AC_CHECK_LIB(pthread, pthread_attr_init, 
-             _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread",
-    AC_CHECK_LIB(c_r, pthread_attr_init,
-        _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r",
-        AC_CHECK_LIB(c, pthread_attr_init,
-            _HAVE_PTHREADS=1 )
+AC_CHECK_LIB(pthreads, pthread_attr_init,
+    _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthreads",
+    AC_CHECK_LIB(pthread, pthread_attr_init, 
+        _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread",
+        AC_CHECK_LIB(c_r, pthread_attr_init,
+            _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r",
+            AC_CHECK_LIB(c, pthread_attr_init,
+                _HAVE_PTHREADS=1
+            )
         )
     )
+)
 
 AC_ARG_WITH(pthreads,
     [  --with-pthreads         Use system pthreads library as thread subsystem],
@@ -1060,7 +1068,7 @@ if test -n "$USE_PTHREADS"; then
     *-solaris*)
 	    AC_DEFINE(_REENTRANT)
         if test "$ac_cv_have_dash_pthreads" = "yes"; then
-            PTHREAD_LDFLAGS=
+            _PTHREAD_LDFLAGS=
         fi
 	    ;;
     *-freebsd*)
@@ -1068,7 +1076,7 @@ if test -n "$USE_PTHREADS"; then
 	    AC_DEFINE(_THREAD_SAFE)
 	    dnl -pthread links in -lc_r, so don't specify it explicitly.
 	    if test "$ac_cv_have_dash_pthread" = "yes"; then
-	        PTHREAD_LDFLAGS=
+	        _PTHREAD_LDFLAGS=
 	    fi
 	    ;;
     *-hpuxB.10.10*)
@@ -1087,16 +1095,13 @@ if test -n "$USE_PTHREADS"; then
 	    ;;
     esac
 
-    AC_CHECK_FUNC(pthread_create,,[
-       AC_CHECK_LIB(pthread, pthread_create, [OS_LIBS="-lpthread $OS_LIBS"])
-    ])
-
 else 
     if test -n "$USE_USER_PTHREADS"; then
 	    USE_PTHREADS=
 	    USE_NSPR_THREADS=
     else
 	    USE_NSPR_THREADS=1
+            _PTHREAD_LDFLAGS=
 	    dnl AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
     fi
 fi
@@ -1129,7 +1134,7 @@ case "$target" in
 *-mingw*|*-cygwin*|*-uwin*)
     dnl win32 does not use pthreads
     USE_PTHREADS=
-    PTHREAD_LDFLAGS=
+    _PTHREAD_LDFLAGS=
     USE_USER_PTHREADS=
     ;;
 *-solaris*)
@@ -1154,6 +1159,8 @@ case "$target" in
     fi
     ;;
 esac
+
+OS_LIBS="$_PTHREAD_LDFLAGS $OS_LIBS"
 
 AC_CHECK_FUNC(dlopen,,[
     AC_CHECK_LIB(dl, dlopen, [OS_LIBS="-ldl $OS_LIBS"])
