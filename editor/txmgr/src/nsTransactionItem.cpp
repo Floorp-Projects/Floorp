@@ -74,6 +74,29 @@ nsTransactionItem::Do()
 nsresult
 nsTransactionItem::Undo()
 {
+  nsresult result = UndoChildren();
+
+  if (!NS_SUCCEEDED(result)) {
+    RecoverFromUndoError();
+    return result;
+  }
+
+  if (!mTransaction)
+    return NS_OK;
+
+  result = mTransaction->Undo();
+
+  if (!NS_SUCCEEDED(result)) {
+    RecoverFromUndoError();
+    return result;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsTransactionItem::UndoChildren()
+{
   nsTransactionItem *item;
   nsresult result;
   PRInt32 sz = 0;
@@ -95,42 +118,30 @@ nsTransactionItem::Undo()
       result = mUndoStack->Peek(&item);
 
       if (!NS_SUCCEEDED(result)) {
-        RecoverFromUndo();
         return result;
       }
 
       result = item->Undo();
 
       if (!NS_SUCCEEDED(result)) {
-        RecoverFromUndo();
         return result;
       }
 
       result = mUndoStack->Pop(&item);
 
       if (!NS_SUCCEEDED(result)) {
-        RecoverFromUndo();
         return result;
       }
 
       result = mRedoStack->Push(item);
 
       if (!NS_SUCCEEDED(result)) {
-        /* If we got an error here, I doubt we can recover! */
-        RecoverFromUndo();
+        /* XXX: If we got an error here, I doubt we can recover!
+         * XXX: Should we just push the item back on the undo stack?
+         */
         return result;
       }
     }
-  }
-
-  if (!mTransaction)
-    return NS_OK;
-
-  result = mTransaction->Undo();
-
-  if (!NS_SUCCEEDED(result)) {
-    RecoverFromUndo();
-    return result;
   }
 
   return NS_OK;
@@ -139,9 +150,7 @@ nsTransactionItem::Undo()
 nsresult
 nsTransactionItem::Redo()
 {
-  nsTransactionItem *item;
   nsresult result;
-  PRInt32 sz = 0;
 
   if (!mTransaction)
     return NS_OK;
@@ -151,44 +160,47 @@ nsTransactionItem::Redo()
   if (!NS_SUCCEEDED(result))
     return result;
 
-  if (!mRedoStack)
-    return NS_OK;
-
-  /* Redo all of the transaction items children! */
-  result = mRedoStack->GetSize(&sz);
+  result = RedoChildren();
 
   if (!NS_SUCCEEDED(result)) {
-    RecoverFromRedo();
+    RecoverFromRedoError();
     return result;
   }
+
+  return NS_OK;
+}
+
+nsresult
+nsTransactionItem::RedoChildren()
+{
+  nsTransactionItem *item;
+  nsresult result;
+  PRInt32 sz = 0;
 
   while (sz-- > 0) {
     result = mRedoStack->Peek(&item);
 
     if (!NS_SUCCEEDED(result)) {
-      RecoverFromRedo();
       return result;
     }
 
     result = item->Redo();
 
     if (!NS_SUCCEEDED(result)) {
-      RecoverFromRedo();
       return result;
     }
 
     result = mRedoStack->Pop(&item);
 
     if (!NS_SUCCEEDED(result)) {
-      RecoverFromRedo();
       return result;
     }
 
     result = mUndoStack->Push(item);
 
     if (!NS_SUCCEEDED(result)) {
-      /* If we got an error here, I doubt we can recover! */
-      RecoverFromRedo();
+      // XXX: If we got an error here, I doubt we can recover!
+      // XXX: Should we just push the item back on the redo stack?
       return result;
     }
   }
@@ -231,15 +243,37 @@ nsTransactionItem::Write(nsIOutputStream *aOutputStream)
 }
 
 nsresult
-nsTransactionItem::RecoverFromUndo(void)
+nsTransactionItem::RecoverFromUndoError(void)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  //
+  // If this method gets called, we never got to the point where we
+  // successfully called Undo() for the transaction item itself.
+  // Just redo any children that successfully called undo!
+  //
+  return RedoChildren();
 }
 
 nsresult
-nsTransactionItem::RecoverFromRedo(void)
+nsTransactionItem::RecoverFromRedoError(void)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+  //
+  // If this method gets called, we already successfully called Redo()
+  // for the transaction item itself. Undo all the children that successfully
+  // called Redo(), then undo the transaction item itself.
+  //
 
+  nsTransactionItem *item;
+  nsresult result;
+
+  result = UndoChildren();
+
+  if (!NS_SUCCEEDED(result)) {
+    return result;
+  }
+
+  if (!mTransaction)
+    return NS_OK;
+
+  return mTransaction->Undo();
+}
 

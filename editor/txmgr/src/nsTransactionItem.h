@@ -46,8 +46,11 @@ public:
 
 private:
 
-  virtual nsresult RecoverFromUndo();
-  virtual nsresult RecoverFromRedo();
+  virtual nsresult UndoChildren();
+  virtual nsresult RedoChildren();
+
+  virtual nsresult RecoverFromUndoError();
+  virtual nsresult RecoverFromRedoError();
 
   virtual nsresult GetNumberOfUndoItems(PRInt32 *aNumItems);
   virtual nsresult GetNumberOfRedoItems(PRInt32 *aNumItems);
