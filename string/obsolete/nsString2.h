@@ -149,6 +149,26 @@ void Truncate(PRInt32 anIndex=0);
  */
 PRBool IsOrdered(void) const;
 
+/**
+ *  Determine whether or not the characters in this
+ *  string are in store as 1 or 2 byte (unicode) strings.
+ *  
+ *  @return  TRUE if ordered.
+ */
+PRBool IsUnicode(void) const {
+  PRBool result=PRBool(mCharSize==eTwoByte);
+  return result;
+}
+
+/**
+ *  Determine whether or not this string has a length of 0
+ *  
+ *  @return  TRUE if empty.
+ */
+PRBool IsEmpty(void) const {
+  return PRBool(0==mLength);
+}
+
 /**********************************************************************
   Accessor methods...
  *********************************************************************/
@@ -773,16 +793,6 @@ public:
   nsSubsumeStr(const PRUnichar* aString);
   nsSubsumeStr(const char* aString);
 };
-
-#ifdef  RICKG_DEBUG
-/********************************************************
- This class's only purpose in life is to test nsString2.
- ********************************************************/
-class CStringTester {
-public:
-    CStringTester();
-};
-#endif
 
 #endif
 

@@ -478,7 +478,7 @@ PRInt32 nsStr::FindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnor
  * @param 
  * @return
  */
-PRInt32 nsStr::FindChar(const nsStr& aDest,const PRUnichar aChar, PRBool aIgnoreCase,PRUint32 anOffset) {
+PRInt32 nsStr::FindChar(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRUint32 anOffset) {
   PRInt32 result=gFindChars[aDest.mCharSize](aDest.mStr,aDest.mLength,anOffset,aChar,aIgnoreCase);
   return result;
 }
@@ -553,7 +553,7 @@ PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgno
  * @param 
  * @return
  */
-PRInt32 nsStr::RFindChar(const nsStr& aDest,const PRUnichar aChar, PRBool aIgnoreCase,PRUint32 anOffset) {
+PRInt32 nsStr::RFindChar(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRUint32 anOffset) {
   PRInt32 result=gRFindChars[aDest.mCharSize](aDest.mStr,aDest.mLength,anOffset,aChar,aIgnoreCase);
   return result;
 }

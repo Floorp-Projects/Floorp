@@ -1,3 +1,4 @@
+#define RICKG_DEBUG 1
 
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
@@ -101,14 +102,32 @@ public:
  ***********************************************************************/
 
 void Subsume(nsStr& aDest,nsStr& aSource){
-  aDest.mStr=aSource.mStr;
-  aDest.mLength=aSource.mLength;
-  aDest.mCharSize=aSource.mCharSize;
-  aDest.mCapacity=aSource.mCapacity;
-  aDest.mOwnsBuffer=aSource.mOwnsBuffer;
-  aSource.mOwnsBuffer=PR_FALSE;
-  aSource.mStr=0;
+  if(aSource.mStr && aSource.mLength) {
+    if(aSource.mOwnsBuffer){
+      aDest.mStr=aSource.mStr;
+      aDest.mLength=aSource.mLength;
+      aDest.mCharSize=aSource.mCharSize;
+      aDest.mCapacity=aSource.mCapacity;
+      aDest.mOwnsBuffer=aSource.mOwnsBuffer;
+      aSource.mOwnsBuffer=false;
+      aSource.mStr=0;
+    }
+    else{
+      nsStr::Assign(aDest,aSource,0,aSource.mLength,0);
+    }
+  } 
+  else nsStr::Truncate(aDest,0,0);
 }
+
+#ifdef RICKG_DEBUG
+/********************************************************
+ This class's only purpose in life is to test nsString2.
+ ********************************************************/
+class CStringTester {
+public:
+    CStringTester();
+};
+#endif
 
 /**
  * Default constructor. Note that we actually allocate a small buffer
@@ -1917,7 +1936,8 @@ CStringTester::CStringTester() {
       nsSubsumeStr temp3=theString+'?';
       nsString2 temp4(temp3);
       temp1=temp3;
-      nsSubsumeStr temp5("hello");
+      nsAutoString2 temp5("hello");
+      nsSubsumeStr temp6(temp5);
     }
 
     nsString2 theString1(theSize);
