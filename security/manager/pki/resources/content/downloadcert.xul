@@ -56,7 +56,7 @@
      -  * trust for email
      -  * trust for object signing
     -->
-  <hbox orient = "vertical">
+  <vbox>
     <html id="message2"/>
     <checkbox label="&downloadCert.trustSSL;" checked="false" 
      id="trustSSL"/>
@@ -64,7 +64,7 @@
      id="trustEmail"/>
     <checkbox label="&downloadCert.trustObjSign;" checked="false" 
      id="trustObjSign"/>
-  </hbox>
+  </vbox>
 
   <separator />
 
