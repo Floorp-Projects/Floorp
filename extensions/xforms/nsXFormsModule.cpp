@@ -44,6 +44,42 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXFormsElementFactory)
 
+static NS_IMETHODIMP
+RegisterXFormsModule(nsIComponentManager *aCompMgr,
+                     nsIFile *aPath,
+                     const char *aRegistryLocation,
+                     const char *aComponentType,
+                     const nsModuleComponentInfo *aInfo)
+{
+  nsCOMPtr<nsICategoryManager> catman =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
+
+  if (!catman)
+    return NS_ERROR_FAILURE;
+
+  nsXPIDLCString previous;
+  return catman->AddCategoryEntry("agent-style-sheets",
+                                  "xforms stylesheet",
+                                  "resource://gre/res/xforms.css",
+                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
+}
+
+static NS_IMETHODIMP
+UnregisterXFormsModule(nsIComponentManager *aCompMgr,
+                       nsIFile *aPath,
+                       const char *aRegistryLocation,
+                       const nsModuleComponentInfo *aInfo)
+{
+  nsCOMPtr<nsICategoryManager> catman =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
+
+  if (!catman)
+    return NS_ERROR_FAILURE;
+
+  return catman->DeleteCategoryEntry("agent-style-sheets",
+                                     "xforms stylesheet", PR_TRUE);
+}
+
 static const nsModuleComponentInfo components[] = {
   { "XForms element factory",
     NS_XFORMSELEMENTFACTORY_CID,
