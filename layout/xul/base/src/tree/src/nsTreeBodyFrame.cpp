@@ -634,8 +634,19 @@ nsTreeBodyFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
     PRInt32 rowCount;
     mView->GetRowCount(&rowCount);
     PRInt32 lastPageTopRow = PR_MAX(0, rowCount - mPageCount);
-    if (mTopRowIndex >= lastPageTopRow)
+    if (mTopRowIndex > lastPageTopRow)
       ScrollToRow(lastPageTopRow);
+
+    // make sure that the current selected item is still
+    // visible after the tree changes size.
+    nsCOMPtr<nsITreeSelection> sel;
+    mView->GetSelection(getter_AddRefs(sel));
+    if (sel) {
+      PRInt32 currentIndex;
+      sel->GetCurrentIndex(&currentIndex);
+      if (currentIndex != -1)
+        EnsureRowIsVisible(currentIndex);
+    }
 
     InvalidateScrollbar();
     CheckVerticalOverflow();
