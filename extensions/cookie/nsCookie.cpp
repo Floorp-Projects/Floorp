@@ -343,10 +343,10 @@ cookie_Put(nsOutputFileStream strm, const nsString& aLine)
  * strip carriage returns and line feeds from end of line
  */
 PRInt32
-cookie_GetLine(nsInputFileStream strm, nsAutoString*& aLine) {
+cookie_GetLine(nsInputFileStream strm, nsAutoString& aLine) {
 
   /* read the line */
-  aLine = new nsAutoString("");   
+  aLine.Truncate();
   char c;
   for (;;) {
     c = strm.get();
@@ -359,7 +359,7 @@ cookie_GetLine(nsInputFileStream strm, nsAutoString*& aLine) {
       return -1;
     }
     if (c != '\r') {
-      *aLine += c;
+      aLine += c;
     }
   }
   return 0;
@@ -1749,7 +1749,7 @@ cookie_SavePermissions() {
 /* reads the HTTP cookies permission from disk */
 PRIVATE void
 cookie_LoadPermissions() {
-  nsAutoString * buffer;
+  nsAutoString buffer;
   cookie_PermissionStruct * new_cookie_permission;
   nsFileSpec dirSpec;
   nsresult rv = cookie_ProfileDirectory(dirSpec);
@@ -1768,31 +1768,28 @@ cookie_LoadPermissions() {
    */
   cookie_LockPermissionList();
   while(cookie_GetLine(strm,buffer) != -1) {
-    if (buffer->CharAt(0) == '#' || buffer->CharAt(0) == CR ||
-        buffer->CharAt(0) == LF || buffer->CharAt(0) == 0) {
-      delete buffer;
+    if (buffer.CharAt(0) == '#' || buffer.CharAt(0) == CR ||
+        buffer.CharAt(0) == LF || buffer.CharAt(0) == 0) {
       continue;
     }
     int hostIndex, permissionIndex;
     hostIndex = 0;
-    if ((permissionIndex=buffer->FindChar('\t', PR_FALSE,hostIndex)+1) == 0) {
-      delete buffer;
+    if ((permissionIndex=buffer.FindChar('\t', PR_FALSE,hostIndex)+1) == 0) {
       continue;      
     }
 
     /* ignore leading periods in host name */
-    while (hostIndex < permissionIndex && (buffer->CharAt(hostIndex) == '.')) {
+    while (hostIndex < permissionIndex && (buffer.CharAt(hostIndex) == '.')) {
       hostIndex++;
     }
 
     nsString host, permission;
-    buffer->Mid(host, hostIndex, permissionIndex-hostIndex-1);
-    buffer->Mid(permission, permissionIndex, buffer->Length()-permissionIndex);
+    buffer.Mid(host, hostIndex, permissionIndex-hostIndex-1);
+    buffer.Mid(permission, permissionIndex, buffer.Length()-permissionIndex);
 
     /* create a new cookie_struct and fill it in */
     new_cookie_permission = PR_NEW(cookie_PermissionStruct);
     if (!new_cookie_permission) {
-      delete buffer;
       cookie_UnlockPermissionListst();
       strm.close();
       return;
@@ -1804,7 +1801,6 @@ cookie_LoadPermissions() {
     } else {
       new_cookie_permission->permission = PR_FALSE;
     }
-    delete buffer;
 
     /*
      * a host value of "@@@@" is a special code designating the
@@ -1911,7 +1907,7 @@ PRIVATE void
 cookie_LoadCookies() {
   cookie_CookieStruct *new_cookie, *tmp_cookie_ptr;
   size_t new_len;
-  nsAutoString * buffer;
+  nsAutoString buffer;
   PRBool added_to_list;
   nsFileSpec dirSpec;
   nsresult rv = cookie_ProfileDirectory(dirSpec);
@@ -1937,35 +1933,32 @@ cookie_LoadCookies() {
    */
   while (cookie_GetLine(strm,buffer) != -1){
     added_to_list = PR_FALSE;
-    if (buffer->CharAt(0) == '#' || buffer->CharAt(0) == CR ||
-        buffer->CharAt(0) == LF || buffer->CharAt(0) == 0) {
-      delete buffer;
+    if (buffer.CharAt(0) == '#' || buffer.CharAt(0) == CR ||
+        buffer.CharAt(0) == LF || buffer.CharAt(0) == 0) {
       continue;
     }
     int hostIndex, isDomainIndex, pathIndex, xxxIndex, expiresIndex, nameIndex, cookieIndex;
     hostIndex = 0;
-    if ((isDomainIndex=buffer->FindChar('\t', PR_FALSE,hostIndex)+1) == 0 ||
-        (pathIndex=buffer->FindChar('\t', PR_FALSE,isDomainIndex)+1) == 0 ||
-        (xxxIndex=buffer->FindChar('\t', PR_FALSE,pathIndex)+1) == 0 ||
-        (expiresIndex=buffer->FindChar('\t', PR_FALSE,xxxIndex)+1) == 0 ||
-        (nameIndex=buffer->FindChar('\t', PR_FALSE,expiresIndex)+1) == 0 ||
-        (cookieIndex=buffer->FindChar('\t', PR_FALSE,nameIndex)+1) == 0 ) {
-      delete buffer;
+    if ((isDomainIndex=buffer.FindChar('\t', PR_FALSE,hostIndex)+1) == 0 ||
+        (pathIndex=buffer.FindChar('\t', PR_FALSE,isDomainIndex)+1) == 0 ||
+        (xxxIndex=buffer.FindChar('\t', PR_FALSE,pathIndex)+1) == 0 ||
+        (expiresIndex=buffer.FindChar('\t', PR_FALSE,xxxIndex)+1) == 0 ||
+        (nameIndex=buffer.FindChar('\t', PR_FALSE,expiresIndex)+1) == 0 ||
+        (cookieIndex=buffer.FindChar('\t', PR_FALSE,nameIndex)+1) == 0 ) {
       continue;
     }
     nsAutoString host, isDomain, path, xxx, expires, name, cookie;
-    buffer->Mid(host, hostIndex, isDomainIndex-hostIndex-1);
-    buffer->Mid(isDomain, isDomainIndex, pathIndex-isDomainIndex-1);
-    buffer->Mid(path, pathIndex, xxxIndex-pathIndex-1);
-    buffer->Mid(xxx, xxxIndex, expiresIndex-xxxIndex-1);
-    buffer->Mid(expires, expiresIndex, nameIndex-expiresIndex-1);
-    buffer->Mid(name, nameIndex, cookieIndex-nameIndex-1);
-    buffer->Mid(cookie, cookieIndex, buffer->Length()-cookieIndex);
+    buffer.Mid(host, hostIndex, isDomainIndex-hostIndex-1);
+    buffer.Mid(isDomain, isDomainIndex, pathIndex-isDomainIndex-1);
+    buffer.Mid(path, pathIndex, xxxIndex-pathIndex-1);
+    buffer.Mid(xxx, xxxIndex, expiresIndex-xxxIndex-1);
+    buffer.Mid(expires, expiresIndex, nameIndex-expiresIndex-1);
+    buffer.Mid(name, nameIndex, cookieIndex-nameIndex-1);
+    buffer.Mid(cookie, cookieIndex, buffer.Length()-cookieIndex);
 
     /* create a new cookie_struct and fill it in */
     new_cookie = PR_NEW(cookie_CookieStruct);
     if (!new_cookie) {
-      delete buffer;
       cookie_UnlockCookieList();
       strm.close();
       return;
@@ -1988,7 +1981,6 @@ cookie_LoadCookies() {
     char * expiresCString = expires.ToNewCString();
     new_cookie->expires = atol(expiresCString);
     nsCRT::free(expiresCString);
-    delete buffer;
 
     /* start new cookie list if one does not already exist */
     if (!cookie_cookieList) {
