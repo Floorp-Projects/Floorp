@@ -34,7 +34,6 @@ EXPORTS =                               \
         nsBufferHandle.h                \
         nsBufferHandleUtils.h           \
         nsCharTraits.h                  \
-        nsCommonString.h                \
         nsFragmentedString.h            \
         nsLiteralString.h               \
         nsLocalString.h                 \
