@@ -537,7 +537,7 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
   // when going through the "close window" key event handler
   // (that is, hitting ^W on Windows). the addref just below
   // prevents our untimely destruction.
-  nsCOMPtr<nsJSContext> kungFuDeathGrip(this);
+  nsCOMPtr<nsIScriptContext> kungFuDeathGrip(this);
   mRef = nsnull;
   mTerminationFunc = nsnull;
 
