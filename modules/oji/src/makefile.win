@@ -37,7 +37,9 @@ PDBFILE=$(LIBNAME).pdb
 #//------------------------------------------------------------------------
 
 OBJS = .\$(OBJDIR)\jvmmgr.obj \
-       .\$(OBJDIR)\scd.obj
+       .\$(OBJDIR)\scd.obj \
+       .\$(OBJDIR)\ProxyJNI.obj \
+       .\$(OBJDIR)\nsCSecurityContext.obj
 
 #//------------------------------------------------------------------------
 #//
@@ -82,7 +84,7 @@ LINCS= $(LINCS) -I_jri \
 		$(NULL)
 
 CSRCS = jvmmgr.cpp \
-        scd.cpp
+        scd.cpp 
 
 !endif # MOZ_OJI
 
