@@ -97,8 +97,10 @@ pref("browser.download_window_rect",        "-1,-1,-1,-1");
 pref("browser.wfe.ignore_def_check",false);
 pref("browser.wfe.use_windows_colors",true);
 pref("browser.startup_mode",1);
-pref("browser.show_about_as_stupid_modal_window", false);
 
+// Dialog modality issues
+pref("browser.prefWindowModal", true);
+pref("browser.show_about_as_stupid_modal_window", false);
 
 // various default search settings
 pref("browser.search.defaulturl", "http://info.netscape.com/fwd/sidb1dnet/http://search.netscape.com/cgi-bin/search?search=");
@@ -448,6 +450,10 @@ pref("security.policy.default.node.replacechild", "sameOrigin");
 
 pref("security.policy.default.window.status", "sameOrigin");
 pref("security.policy.default.window.scriptglobals", "sameOrigin");
+
+// Middle-mouse handling
+pref("middlemouse.paste", false);
+pref("middlemouse.openNewWindow", false);
 
 /* 0=lines, 1=pages, 2=history */
 pref("mousewheel.withnokey.action",0);
