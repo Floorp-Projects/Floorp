@@ -107,6 +107,7 @@ public:
 protected:
   virtual PRBool GetWasCollapsed(nsBoxLayoutState& aState);
   virtual void SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas);
+  virtual PRBool GetDefaultFlex(PRInt32& aFlex);
 
   enum eMouseThrough {
     unset,
