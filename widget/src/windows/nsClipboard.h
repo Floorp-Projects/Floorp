@@ -43,8 +43,8 @@ public:
   
 
   // nsIClipboard  
-  NS_IMETHOD SetTransferable(nsITransferable * aTransferable, nsIClipboardOwner * anOwner);
-  NS_IMETHOD GetTransferable(nsITransferable ** aTransferable);
+  NS_IMETHOD SetData(nsITransferable * aTransferable, nsIClipboardOwner * anOwner);
+  NS_IMETHOD GetData(nsITransferable ** aTransferable);
 
   NS_IMETHOD GetClipboard();
   NS_IMETHOD SetClipboard();

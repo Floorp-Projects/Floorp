@@ -105,7 +105,7 @@ nsresult nsClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   * Sets the transferable object
   *
   */
-NS_IMETHODIMP nsClipboard::SetTransferable(nsITransferable * aTransferable, nsIClipboardOwner * anOwner)
+NS_IMETHODIMP nsClipboard::SetData(nsITransferable * aTransferable, nsIClipboardOwner * anOwner)
 {
   if (aTransferable == mTransferable && anOwner == mClipboardOwner) {
     return NS_OK;
@@ -130,7 +130,7 @@ NS_IMETHODIMP nsClipboard::SetTransferable(nsITransferable * aTransferable, nsIC
   * Gets the transferable object
   *
   */
-NS_IMETHODIMP nsClipboard::GetTransferable(nsITransferable ** aTransferable)
+NS_IMETHODIMP nsClipboard::GetData(nsITransferable ** aTransferable)
 {
   *aTransferable = mTransferable;
   if (nsnull != mTransferable) {
