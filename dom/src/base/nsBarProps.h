@@ -31,7 +31,6 @@
 
 #include "nscore.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMBarProp.h"
 
 class nsIWebBrowserChrome;

@@ -23,7 +23,6 @@
 #ifndef nsPluginArray_h___
 #define nsPluginArray_h___
 
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMPluginArray.h"
 #include "nsIDOMPlugin.h"
 #include "nsIPluginHost.h"
