@@ -7,7 +7,6 @@ embed.jar:
 	content/global/dialogOverlay.js			 (toolkit/content/global/dialogOverlay.js) 
 	content/global/commonDialog.xul			 (toolkit/content/global/commonDialog.xul) 
 	content/global/commonDialog.js			  (toolkit/content/global/commonDialog.js) 
-	content/global/strres.js					(toolkit/content/global/strres.js) 
 	content/global/logo.gif					 (toolkit/content/global/logo.gif) 
 	content/global/about.xul					(toolkit/content/global/about.xul) 
 	content/global/mozilla.html				 (toolkit/content/global/mozilla.html) 
