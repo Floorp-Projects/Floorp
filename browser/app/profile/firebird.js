@@ -39,6 +39,8 @@
 //  The first character after a period must be alphabetic.
 
 // pref("startup.homepage_override_url","chrome://browser-region/locale/region.properties");
+pref("general.startup.browser", true);
+
 pref("browser.chromeURL","chrome://browser/content/");
 pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindow.xul");
 pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul");
