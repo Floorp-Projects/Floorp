@@ -80,6 +80,8 @@ public:
 
     NS_IMETHOD GetToPrinter(PRBool &aToPrinter);
  
+    NS_IMETHOD GetPrinter ( char **aPrinter );
+
     NS_IMETHOD GetFirstPageFirst(PRBool &aFpf);
  
     NS_IMETHOD GetGrayscale(PRBool &aGrayscale);
