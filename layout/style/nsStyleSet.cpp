@@ -193,15 +193,18 @@ public:
 
   virtual nsIStyleContext* ResolveStyleFor(nsIPresContext* aPresContext,
                                            nsIContent* aContent,
-                                           nsIFrame* aParentFrame);
+                                           nsIFrame* aParentFrame,
+                                           PRBool aForceUnique = PR_FALSE);
 
   virtual nsIStyleContext* ResolvePseudoStyleFor(nsIPresContext* aPresContext,
                                                  nsIAtom* aPseudoTag,
-                                                 nsIFrame* aParentFrame);
+                                                 nsIFrame* aParentFrame,
+                                                 PRBool aForceUnique = PR_FALSE);
 
   virtual nsIStyleContext* ProbePseudoStyleFor(nsIPresContext* aPresContext,
                                                nsIAtom* aPseudoTag,
-                                               nsIFrame* aParentFrame);
+                                               nsIFrame* aParentFrame,
+                                               PRBool aForceUnique = PR_FALSE);
 
   // xxx style rules enumeration
 
@@ -216,7 +219,8 @@ protected:
   virtual ~StyleSetImpl();
   PRBool EnsureArray(nsISupportsArray** aArray);
   nsIStyleContext* GetContext(nsIPresContext* aPresContext, nsIFrame* aParentFrame, 
-                              nsIStyleContext* aParentContext, nsISupportsArray* aRules);
+                              nsIStyleContext* aParentContext, nsISupportsArray* aRules,
+                              PRBool aForceUnique);
   PRInt32 RulesMatching(nsISupportsArray* aSheets,
                         nsIPresContext* aPresContext,
                         nsIContent* aContent,
@@ -461,11 +465,13 @@ PRInt32 StyleSetImpl::RulesMatching(nsISupportsArray* aSheets,
 }
 
 nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, nsIFrame* aParentFrame, 
-                                          nsIStyleContext* aParentContext, nsISupportsArray* aRules)
+                                          nsIStyleContext* aParentContext, nsISupportsArray* aRules,
+                                          PRBool aForceUnique)
 {
   nsIStyleContext* result;
 
-  if ((nsnull != aParentContext) && (0 == aRules->Count()) && 
+  if ((PR_FALSE == aForceUnique) && 
+      (nsnull != aParentContext) && (0 == aRules->Count()) && 
       (0 == aParentContext->GetStyleRuleCount())) {
     // this and parent are empty
     result = aParentContext;
@@ -476,9 +482,16 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, nsIFrame
 #if USE_CONTEXT_HASH
     // check for cached ruleSet to context or create
     ContextKey tempKey(aParentContext, aRules);
-    result = (nsIStyleContext*)mStyleContexts.Get(&tempKey);
+    if (PR_FALSE == aForceUnique) {
+      result = (nsIStyleContext*)mStyleContexts.Get(&tempKey);
+    } else {
+      result = nsnull;
+    }
     if (nsnull == result) {
       if (NS_OK == NS_NewStyleContext(&result, aParentContext, aRules, aPresContext)) {
+        if (PR_TRUE == aForceUnique) {
+          result->ForceUnique();
+        }
         tempKey.SetContext(result);
         mStyleContexts.Put(&tempKey, result);  // hashtable clones key, so this is OK (table gets first ref)
 //fprintf(stdout, "+");
@@ -489,14 +502,18 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, nsIFrame
     }
     NS_ADDREF(result);  // add ref for the caller
 #else
-    if (nsnull != aParentContext) {
+    if ((PR_FALSE == aForceUnique) && (nsnull != aParentContext)) {
       result = aParentContext->FindChildWithRules(aRules);
     }
     else {
       result = nsnull;
     }
     if (nsnull == result) {
-      NS_NewStyleContext(&result, aParentContext, aRules, aPresContext);
+      if (NS_OK == NS_NewStyleContext(&result, aParentContext, aRules, aPresContext)) {
+        if (PR_TRUE == aForceUnique) {
+          result->ForceUnique();
+        }
+      }
 //fprintf(stdout, "+");
     }
     else {
@@ -509,7 +526,8 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, nsIFrame
 
 nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
                                                nsIContent* aContent,
-                                               nsIFrame* aParentFrame)
+                                               nsIFrame* aParentFrame,
+                                               PRBool aForceUnique)
 {
   nsIStyleContext*  result = nsnull;
   nsIStyleContext*  parentContext = nsnull;
@@ -529,7 +547,7 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
     ruleCount += RulesMatching(mDocSheets, aPresContext, aContent, aParentFrame, rules);
     ruleCount += RulesMatching(mBackstopSheets, aPresContext, aContent, aParentFrame, rules);
 
-    result = GetContext(aPresContext, aParentFrame, parentContext, rules);
+    result = GetContext(aPresContext, aParentFrame, parentContext, rules, aForceUnique);
 
     NS_RELEASE(rules);
   }
@@ -563,7 +581,8 @@ PRInt32 StyleSetImpl::RulesMatching(nsISupportsArray* aSheets,
 
 nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContext,
                                                      nsIAtom* aPseudoTag,
-                                                     nsIFrame* aParentFrame)
+                                                     nsIFrame* aParentFrame,
+                                                     PRBool aForceUnique)
 {
   nsIStyleContext*  result = nsnull;
   nsIStyleContext*  parentContext = nsnull;
@@ -583,7 +602,7 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
     ruleCount += RulesMatching(mDocSheets, aPresContext, aPseudoTag, aParentFrame, rules);
     ruleCount += RulesMatching(mBackstopSheets, aPresContext, aPseudoTag, aParentFrame, rules);
 
-    result = GetContext(aPresContext, aParentFrame, parentContext, rules);
+    result = GetContext(aPresContext, aParentFrame, parentContext, rules, aForceUnique);
 
     NS_RELEASE(rules);
   }
@@ -595,7 +614,8 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
 
 nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
                                                    nsIAtom* aPseudoTag,
-                                                   nsIFrame* aParentFrame)
+                                                   nsIFrame* aParentFrame,
+                                                   PRBool aForceUnique)
 {
   nsIStyleContext*  result = nsnull;
   nsIStyleContext*  parentContext = nsnull;
@@ -616,7 +636,7 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
     ruleCount += RulesMatching(mBackstopSheets, aPresContext, aPseudoTag, aParentFrame, rules);
 
     if (0 < ruleCount) {
-      result = GetContext(aPresContext, aParentFrame, parentContext, rules);
+      result = GetContext(aPresContext, aParentFrame, parentContext, rules, aForceUnique);
     }
 
     NS_RELEASE(rules);

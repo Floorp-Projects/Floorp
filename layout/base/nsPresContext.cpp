@@ -107,13 +107,14 @@ nsPresContext::GetShell()
 
 nsIStyleContext*
 nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
-                                      nsIFrame* aParentFrame)
+                                      nsIFrame* aParentFrame,
+                                      PRBool aForceUnique)
 {
   nsIStyleContext* result = nsnull;
 
   nsIStyleSet* set = mShell->GetStyleSet();
   if (nsnull != set) {
-    result = set->ResolveStyleFor(this, aContent, aParentFrame);
+    result = set->ResolveStyleFor(this, aContent, aParentFrame, aForceUnique);
     NS_RELEASE(set);
   }
 
@@ -122,13 +123,14 @@ nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
 
 nsIStyleContext*
 nsPresContext::ResolvePseudoStyleContextFor(nsIAtom* aPseudoTag,
-                                            nsIFrame* aParentFrame)
+                                            nsIFrame* aParentFrame,
+                                            PRBool aForceUnique)
 {
   nsIStyleContext* result = nsnull;
 
   nsIStyleSet* set = mShell->GetStyleSet();
   if (nsnull != set) {
-    result = set->ResolvePseudoStyleFor(this, aPseudoTag, aParentFrame);
+    result = set->ResolvePseudoStyleFor(this, aPseudoTag, aParentFrame, aForceUnique);
     NS_RELEASE(set);
   }
 
@@ -137,13 +139,14 @@ nsPresContext::ResolvePseudoStyleContextFor(nsIAtom* aPseudoTag,
 
 nsIStyleContext*
 nsPresContext::ProbePseudoStyleContextFor(nsIAtom* aPseudoTag,
-                                          nsIFrame* aParentFrame)
+                                          nsIFrame* aParentFrame,
+                                          PRBool aForceUnique)
 {
   nsIStyleContext* result = nsnull;
 
   nsIStyleSet* set = mShell->GetStyleSet();
   if (nsnull != set) {
-    result = set->ProbePseudoStyleFor(this, aPseudoTag, aParentFrame);
+    result = set->ProbePseudoStyleFor(this, aPseudoTag, aParentFrame, aForceUnique);
     NS_RELEASE(set);
   }
 
