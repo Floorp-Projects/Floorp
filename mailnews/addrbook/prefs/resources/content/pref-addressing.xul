@@ -13,10 +13,9 @@
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["emailCollection", "emailCollectionIncoming",
-                       "emailCollectionOutgoing", "emailCollectionNewsgroup",
-                       "addressingAutocomplete", "enableCABsizeLimit",
-                       "CABsizeLimit", "autocompleteLDAP", 
+    var _elementIDs = ["emailCollectionIncoming", "emailCollectionOutgoing", 
+                       "emailCollectionNewsgroup", "addressingAutocomplete",
+                       "enableCABsizeLimit", "CABsizeLimit", "autocompleteLDAP", 
                        "directoriesList", "autocompleteSkipDirectory"];
 
   function onLoad(){
@@ -25,37 +24,6 @@
   }
 
   function Startup(){
-    doEnabling();
-  }
-
-  function doEnabling()
-  {
-    var emailCollection = document.getElementById("emailCollection");
-    var emailCollectionIncoming = document.getElementById("emailCollectionIncoming");
-    var emailCollectionOutgoing = document.getElementById("emailCollectionOutgoing");
-    var emailCollectionNewsgroup = document.getElementById("emailCollectionNewsgroup");
-    var emailCollectionTypeText = document.getElementById("emailCollectionTypeText");
-    var enableCABsizeLimit = document.getElementById("enableCABsizeLimit");
-    var CABsizeLimit = document.getElementById("CABsizeLimit");
-    var useCABSizelimitPart2 = document.getElementById("useCABSizelimitPart2");
-    
-    if( emailCollection.checked && !emailCollection.disabled ){
-      emailCollectionIncoming.removeAttribute("disabled");
-      emailCollectionOutgoing.removeAttribute("disabled");
-      emailCollectionNewsgroup.removeAttribute("disabled");
-      emailCollectionTypeText.removeAttribute("disabled");
-      enableCABsizeLimit.removeAttribute("disabled");
-      CABsizeLimit.removeAttribute("disabled");
-      useCABSizelimitPart2.removeAttribute("disabled");
-    } else {
-      emailCollectionIncoming.setAttribute("disabled", "true");
-      emailCollectionOutgoing.setAttribute("disabled", "true");
-      emailCollectionNewsgroup.setAttribute("disabled", "true");
-      emailCollectionTypeText.setAttribute("disabled", "true");
-      enableCABsizeLimit.setAttribute("disabled", "true");
-      CABsizeLimit.setAttribute("disabled", "true");
-      useCABSizelimitPart2.setAttribute("disabled", "true");
-    }
     enableAutocomplete();
   }
   ]]>
@@ -63,53 +31,45 @@
     
   <box class="box-smallheader" title="&pane.title;"/>
 
-  <titledbox orient="vertical">
+  <titledbox orient="vertical" class="small-margin">
     <label value="&emailCollectiontitle.label;"/>
-  <html>&emailCollectiontext.label;</html>
-            <vbox autostretch="never">
-                <checkbox id="emailCollection" label="&emailCollectionEnable.label;"
-                          pref="true" preftype="bool" prefstring="mail.collect_email_address"
-                          prefattribute="checked" oncommand="doEnabling();"/>
-            </vbox>
+  <html class="small-margin">&emailCollectiontext.label;</html>
     <box orient="vertical" autostretch="never" class="indent">
-    <text class="label" value="&emailCollectionTypeText.label;" id="emailCollectionTypeText"/>
-    <checkbox id="emailCollectionIncoming" label="&emailCollectionIncomingEnable.label;"
+    <checkbox class="small-margin" id="emailCollectionIncoming" label="&emailCollectionIncomingEnable.label;"
               pref="true" preftype="bool" prefstring="mail.collect_email_address_incoming"
               prefattribute="checked"/>
     <checkbox id="emailCollectionOutgoing" label="&emailCollectionOutgoingEnable.label;"
               pref="true" preftype="bool" prefstring="mail.collect_email_address_outgoing"
               prefattribute="checked"/>
-    <checkbox id="emailCollectionNewsgroup" label="&emailCollectionNewsgroupEnable.label;"
+    <checkbox class="small-margin" id="emailCollectionNewsgroup" label="&emailCollectionNewsgroupEnable.label;"
               pref="true" preftype="bool" prefstring="mail.collect_email_address_newsgroup"
               prefattribute="checked"/>
-		<box autostretch="never">
-      <checkbox id="enableCABsizeLimit" label="&useCABSizelimitPart1.label;"
-				pref="true" preftype="bool" prefstring="mail.collect_email_address_enable_size_limit"
-				prefattribute="checked"/>
-			<textbox id="CABsizeLimit" size="6" pref="true" preftype="int"
-					prefstring="mail.collect_email_address_size_limit" prefattribute="value"/>
-			<text id="useCABSizelimitPart2" class="label" value="&useCABSizelimitPart2.label;"/>
-		</box> 
 	</box>
+    <box autostretch="never">
+      <checkbox class="small-margin" id="enableCABsizeLimit" label="&useCABSizelimitPart1.label;"
+                pref="true" preftype="bool" prefstring="mail.collect_email_address_enable_size_limit"
+                prefattribute="checked"/>
+      <textbox class="small-margin" id="CABsizeLimit" size="6" pref="true" preftype="int"
+               prefstring="mail.collect_email_address_size_limit" prefattribute="value"/>
+      <text id="useCABSizelimitPart2" class="label small-margin" value="&useCABSizelimitPart2.label;"/>
+    </box> 
 	</titledbox>
 	
-    <titledbox orient="vertical"  id="addressAutocompletion">
+    <titledbox class="small-margin" orient="vertical"  id="addressAutocompletion">
       <label value="&addressingTitle.label;"/>
-      <html>&addressingText.label;</html>
-      <separator class="thin"/>
-      <html>&autocompleteText.label;</html>
+      <html class="small-margin">&autocompleteText.label;</html>
       <box autostretch="never">
-        <checkbox id="addressingAutocomplete" label="&addressingEnable.label;"
+        <checkbox class="small-margin" id="addressingAutocomplete" label="&addressingEnable.label;"
           pref="true" preftype="bool" prefstring="mail.enable_autocomplete"
           prefattribute="checked"/>
       </box>
       <box autostretch="never">
-        <checkbox id="autocompleteLDAP" label="&directories.label;" 
+        <checkbox class="small-margin" id="autocompleteLDAP" label="&directories.label;" 
                   pref="true" preftype="bool" 
                   prefstring="ldap_2.autoComplete.useDirectory" 
                   prefattribute="checked" 
                   oncommand="enableAutocomplete();"/>
-        <menulist id="directoriesList" flex="1"
+        <menulist class="small-margin" id="directoriesList" flex="1"
                   pref="true" preftype="string" 
                   prefstring="ldap_2.autoComplete.directoryServer"
                   prefattribute="value">
@@ -117,16 +77,15 @@
             oncreate="createDirectoriesList(true);">
           </menupopup>
        </menulist>
-       <button id="editButton" label="&editDirectories.label;" 
+       <button class="small-margin" id="editButton" label="&editDirectories.label;" 
                pref="true" preftype="bool" 
                prefstring="pref.ldap.disable_button.edit_directories" 
                prefattribute="disabled"
                oncommand="onEditDirectories();"/>
      </box>
-     <separator class="thin"/>
-     <html>&matchText.label;</html>
+     <html class="small-margin">&matchText.label;</html>
      <box autostretch="never">
-       <checkbox id="autocompleteSkipDirectory"
+       <checkbox class="small-margin" id="autocompleteSkipDirectory"
                  label="&skipDirectory.label;" 
                  pref="true" preftype="bool" 
                  prefstring="ldap_2.autoComplete.skipDirectoryIfLocalMatchFound"

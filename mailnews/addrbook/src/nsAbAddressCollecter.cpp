@@ -45,7 +45,6 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 NS_IMPL_ISUPPORTS1(nsAbAddressCollecter, nsIAbAddressCollecter)
 
-static const char *PREF_COLLECT_EMAIL_ADDRESS = "mail.collect_email_address";
 static const char *PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT = "mail.collect_email_address_enable_size_limit";
 static const char *PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT = "mail.collect_email_address_size_limit";
 
@@ -53,7 +52,6 @@ nsAbAddressCollecter::nsAbAddressCollecter()
 {
 	NS_INIT_REFCNT();
 	maxCABsize = -1;
-	collectAddresses = PR_FALSE;
 	sizeLimitEnabled = -1;
 
 	//set up the pref callbacks:
@@ -91,9 +89,6 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 {
 	nsresult rv;
 
-
-	if(!collectAddresses)
-		return NS_OK;
 
 	NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
   NS_ENSURE_SUCCESS(rv, rv);
@@ -353,18 +348,6 @@ nsresult nsAbAddressCollecter::SplitFullName (const char *fullName, char **first
 }
 
 int PR_CALLBACK 
-nsAbAddressCollecter::collectEmailAddressPrefChanged(const char *newpref, void *data){
-	nsresult rv;
-	nsAbAddressCollecter *adCol = (nsAbAddressCollecter *) data;
-	NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-	if(NS_FAILED(pPref->GetBoolPref(PREF_COLLECT_EMAIL_ADDRESS, &adCol->collectAddresses))){
-		adCol->collectAddresses = PR_TRUE;
-	}
-
-	return 0;
-}
-
-int PR_CALLBACK 
 nsAbAddressCollecter::collectEmailAddressEnableSizeLimitPrefChanged(const char *newpref, void *data){
 	nsresult rv;
 	nsAbAddressCollecter *adCol = (nsAbAddressCollecter *) data;
@@ -398,11 +381,6 @@ void nsAbAddressCollecter::setupPrefs(void){
 	if (NS_FAILED(rv)) 
 		return;
 
-	rv = pPref->GetBoolPref(PREF_COLLECT_EMAIL_ADDRESS, &collectAddresses);
-	if (NS_FAILED(rv))
-		return;
-
-	pPref->RegisterCallback(PREF_COLLECT_EMAIL_ADDRESS, collectEmailAddressPrefChanged, this);
 	pPref->RegisterCallback(PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT, collectEmailAddressEnableSizeLimitPrefChanged, this);
 	pPref->RegisterCallback(PREF_COLLECT_EMAIL_ADDRESS_SIZE_LIMIT, collectEmailAddressSizeLimitPrefChanged, this);
 

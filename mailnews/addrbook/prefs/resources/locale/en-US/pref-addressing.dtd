@@ -18,8 +18,8 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!ENTITY window.title           "Address Books">
-<!ENTITY pane.title             "Address Books">
+<!ENTITY window.title           "Addressing">
+<!ENTITY pane.title             "Addressing">
 <!ENTITY pane.description       "Settings for addressing messages">
 <!ENTITY pinpoint.label         "Pinpoint Addressing">
 <!ENTITY lookFor.label          "Look for addresses in the following:">
@@ -41,18 +41,16 @@ Rights Reserved.
 <!ENTITY emailCollectionNewsgroupEnable.label	"Newsgroup Messages">
 <!ENTITY emailCollectionTypeText.label "Save email addresses from:">
 <!ENTITY emailCollectiontitle.label	"Email Address Collection">
-<!ENTITY emailCollectiontext.label	"Email Address Collection saves the email addresses from your incoming and/or outgoing messages and stores them in a local address book, 'Collected Addresses'.">
+<!ENTITY emailCollectiontext.label	"Email addresses from messages can be added to a local address book, 'Collected Addresses'. Add email addresses from:">
 <!ENTITY useCABSizelimitPart1.label	"Limit the Collected Address book to">
-<!ENTITY useCABSizelimitPart2.label	"cards.">
+<!ENTITY useCABSizelimitPart2.label	"cards">
 
 <!-- Autocompletion -->
 <!ENTITY addressingTitle.label                 "Address Autocompletion">
 <!-- LOCALIZATION NOTE (addressingText.label) : do not translate "LDAP" in below line -->
-<!ENTITY addressingText.label                  "When you address messages, Mail can autocomplete addresses for you by looking for matching entries in your address books or by using an address lookup service(LDAP directory server), and show you a list of possible matches.">
 <!ENTITY addressingEnable.label                "Local Address Books">
-<!ENTITY autocompleteText.label                "When I address messages, autocomplete using:">
-<!-- LOCALIZATION NOTE (directories.label) : do not translate "LDAP" in below line -->
-<!ENTITY directories.label                     "LDAP Directory Server:">
+<!ENTITY autocompleteText.label                "When addressing messages, look for matching entries in:">
+<!ENTITY directories.label                     "Directory Server:">
 <!ENTITY editDirectories.label                 "Edit Directories...">
 <!ENTITY matchText.label                       "If there is a match in your local address books:">
-<!ENTITY skipDirectory.label                   "Use the address and do not search in the directory">
+<!ENTITY skipDirectory.label                   "Do not search in the directory">

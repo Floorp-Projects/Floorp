@@ -45,7 +45,6 @@ public:
 	nsresult SetNamesForCard(nsIAbCard *senderCard, const char *fullName);
 	nsresult SplitFullName (const char *fullName, char **firstName, char **lastName);
 private:
-	static int PR_CALLBACK collectEmailAddressPrefChanged(const char *newpref, void *data);
 	static int PR_CALLBACK collectEmailAddressEnableSizeLimitPrefChanged(const char *newpref, void *data);
 	static int PR_CALLBACK collectEmailAddressSizeLimitPrefChanged(const char *newpref, void *data);
 	void setupPrefs(void);
@@ -53,7 +52,6 @@ protected:
 	nsCOMPtr <nsIAddrDatabase> m_historyAB;
 	nsCOMPtr <nsIAbDirectory> m_historyDirectory;
 	PRInt32 maxCABsize;
-	PRBool collectAddresses;
 	PRInt32 sizeLimitEnabled;
 
 };
