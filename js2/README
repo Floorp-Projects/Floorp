@@ -5,7 +5,7 @@ Building JS2 on WINNT:
 [/d/JS_2] cvs -z3 co mozilla/js2
           cvs -z3 co mozilla/js/src/fdlibm
 
-In Visual C++:
+Compiling in Visual C++:
 
 Workspace:    D:\JS_2\mozilla\js2\src\winbuild\dikdik.dsw
 
@@ -15,14 +15,16 @@ Project Files:   D:\JS_2\mozilla\js2\src\winbuild\DikDik.dsp
 
 
 RUNNING THE JS2 SHELL AFTER YOU'VE BUILT IT:
-(Note the 3 underbars between "shell" and "Win32" in "DikDik_shell___Win32_Debug")                      [/d/JS_2/mozilla/js2/tests/cpp/winbuild/DikDik_shell___Win32_Debug] ./DikDik_shell.exe
+(Note the 3 underbars between "shell" and "Win32" in "DikDik_shell___Win32_Debug")
+cd  (path to)/mozilla/js2/tests/cpp/winbuild/DikDik_shell___Win32_Debug
+[(path to)/mozilla/js2/tests/cpp/winbuild/DikDik_shell___Win32_Debug] ./DikDik_shell.exe
 
 
 
 Building JS2 on LINUX:
 ---------------------------------------------------------------------------------------------
 [/d/JS_2] cvs -z3 co mozilla/js2
-               cvs -z3 co mozilla/js/src/fdlibm
+          cvs -z3 co mozilla/js/src/fdlibm
 
 [/d/JS_2] cd mozilla/js2
 
@@ -30,6 +32,11 @@ Building JS2 on LINUX:
 [/d/JS_2/mozilla/js2] autoconf      <--- FIRST TIME ONLY
 [/d/JS_2/mozilla/js2] ./configure --enable-debug     <--- FIRST TIME ONLY
 [/d/JS_2/mozilla/js2] make
+
+
+RUNNING THE JS2 SHELL AFTER YOU'VE BUILT IT:
+cd   (path to)/mozilla/js2/tests/cpp
+[ (path to)/mozilla/js2/tests/cpp] ./dikdik
 
 
 
@@ -42,7 +49,12 @@ There is also (path to ):mozilla:js2:tests:cpp:macbuild:parser_test.mcp, if you 
 without getting complaints about unimplemented features from the back end.
 
 
+RUNNING THE JS2 SHELL AFTER YOU'VE BUILT IT:
+cd   (path to):mozilla:js2:tests:cpp:macbuild
+[ (path to):mozilla:js2:tests:cpp:macbuild] ./js2_shell
 
+
+---------------------------------------------------------------------------------------------
 
 /***************************************************************************/
 // The stuff below looks pretty out of date to me.
