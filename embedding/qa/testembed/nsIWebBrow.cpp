@@ -69,92 +69,92 @@ CNsIWebBrowser::~CNsIWebBrowser()
 
 }
 
-void CNsIWebBrowser::WBAddListener()
+void CNsIWebBrowser::WBAddListener(PRInt16 displayMode)
 {
 	// AddWebBrowserListener
 	nsWeakPtr weakling(
         dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIContextMenuListener*, qaBrowserImpl))));
     rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIContextMenuListener));
-	RvTestResult(rv, "AddWebBrowserListener(). nsIContextMenuListener test", 1);
+	RvTestResult(rv, "AddWebBrowserListener(). nsIContextMenuListener test", displayMode);
 	RvTestResultDlg(rv, "AddWebBrowserListener(). nsIContextMenuListener test", true);
 }
 
-void CNsIWebBrowser::WBRemoveListener()
+void CNsIWebBrowser::WBRemoveListener(PRInt16 displayMode)
 {
 	// RemoveWebBrowserListener
 	nsWeakPtr weakling(
         dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIContextMenuListener*, qaBrowserImpl))));
 
 	rv = qaWebBrowser->RemoveWebBrowserListener(weakling, NS_GET_IID(nsIContextMenuListener));
-	RvTestResult(rv, "RemoveWebBrowserListener(). nsIContextMenuListener test", 1);
+	RvTestResult(rv, "RemoveWebBrowserListener(). nsIContextMenuListener test", displayMode);
 	RvTestResultDlg(rv, "RemoveWebBrowserListener(). nsIContextMenuListener test");
 }
 
-void CNsIWebBrowser::WBGetContainerWindow()
+void CNsIWebBrowser::WBGetContainerWindow(PRInt16 displayMode)
 {
 	// GetContainerWindow
 	nsCOMPtr<nsIWebBrowserChrome> qaWebBrowserChrome;
 	rv = qaWebBrowser->GetContainerWindow(getter_AddRefs(qaWebBrowserChrome));
-	RvTestResult(rv, "nsIWebBrowser::GetContainerWindow() test", 1);
+	RvTestResult(rv, "nsIWebBrowser::GetContainerWindow() test", displayMode);
 	RvTestResultDlg(rv, "nsIWebBrowser::GetContainerWindow() test");
 	if (!qaWebBrowserChrome)
-		QAOutput("Didn't get web browser chrome object.", 2);
+		QAOutput("Didn't get web browser chrome object.", displayMode);
 	else {
 		rv = qaWebBrowserChrome->ShowAsModal();
-		RvTestResult(rv, "nsIWebBrowserChrome::ShowAsModal() test", 1);
+		RvTestResult(rv, "nsIWebBrowserChrome::ShowAsModal() test", displayMode);
 		RvTestResultDlg(rv, "nsIWebBrowserChrome::ShowAsModal() test");
 	}
 }
 
-void CNsIWebBrowser::WBSetContainerWindow()
+void CNsIWebBrowser::WBSetContainerWindow(PRInt16 displayMode)
 {
 	// SetContainerWindow
 
 	rv = qaWebBrowser->SetContainerWindow(qaWebBrowserChrome);
-	RvTestResult(rv, "nsIWebBrowser::SetContainerWindow() test", 1);
+	RvTestResult(rv, "nsIWebBrowser::SetContainerWindow() test", displayMode);
 	RvTestResultDlg(rv, "nsIWebBrowser::SetContainerWindow() test");
 }
 
-void CNsIWebBrowser::WBGetURIContentListener()
+void CNsIWebBrowser::WBGetURIContentListener(PRInt16 displayMode)
 {
 	// GetParentURIContentListener
 
 	rv = qaWebBrowser->GetParentURIContentListener(getter_AddRefs(qaURIContentListener));
-	RvTestResult(rv, "nsIWebBrowser::GetParentURIContentListener() test", 1);
+	RvTestResult(rv, "nsIWebBrowser::GetParentURIContentListener() test", displayMode);
 	RvTestResultDlg(rv, "nsIWebBrowser::GetParentURIContentListener() test");
 	if (!qaURIContentListener)
-		QAOutput("Didn't get uri content listener object.", 2);
+		QAOutput("Didn't get uri content listener object.", displayMode);
 	else {
 		nsCOMPtr<nsISupports> qaSupports;
 		rv = qaURIContentListener->GetLoadCookie(getter_AddRefs(qaSupports));
-		RvTestResult(rv, "nsIURIContentListener::GetLoadCookie() test", 1);
+		RvTestResult(rv, "nsIURIContentListener::GetLoadCookie() test", displayMode);
 		RvTestResultDlg(rv, "nsIURIContentListener::GetLoadCookie() test");
 	}
 }
 
-void CNsIWebBrowser::WBSetURIContentListener()
+void CNsIWebBrowser::WBSetURIContentListener(PRInt16 displayMode)
 {
 	// SetParentURIContentListener
 
 	rv = qaWebBrowser->SetParentURIContentListener(qaURIContentListener);
-	RvTestResult(rv, "nsIWebBrowser::SetParentURIContentListener() test", 1);
+	RvTestResult(rv, "nsIWebBrowser::SetParentURIContentListener() test", displayMode);
 	RvTestResultDlg(rv, "nsIWebBrowser::SetParentURIContentListener() test");
 	if (!qaURIContentListener)
-		QAOutput("Didn't get uri content listener object.", 2);
+		QAOutput("Didn't get uri content listener object.", displayMode);
 }
 
-void CNsIWebBrowser::WBGetDOMWindow()
+void CNsIWebBrowser::WBGetDOMWindow(PRInt16 displayMode)
 {
 	// GetContentDOMWindow
 	nsCOMPtr<nsIDOMWindow> qaDOMWindow;
 	rv = qaWebBrowser->GetContentDOMWindow(getter_AddRefs(qaDOMWindow));
-	RvTestResult(rv, "nsIWebBrowser::GetContentDOMWindow() test", 1);
+	RvTestResult(rv, "nsIWebBrowser::GetContentDOMWindow() test", displayMode);
 	RvTestResultDlg(rv, "nsIWebBrowser::GetContentDOMWindow() test");
 	if (!qaDOMWindow)
-		QAOutput("Didn't get dom window object.", 2);
+		QAOutput("Didn't get dom window object.", displayMode);
 	else {
 		rv = qaDOMWindow->ScrollTo(50,50);
-		RvTestResult(rv, "nsIDOMWindow::ScrollTo() test", 1);
+		RvTestResult(rv, "nsIDOMWindow::ScrollTo() test", displayMode);
 		RvTestResultDlg(rv, "nsIDOMWindow::ScrollTo() test");
 	}
 }
@@ -167,54 +167,54 @@ void CNsIWebBrowser::OnStartTests(UINT nMenuID)
 			RunAllTests();
 			break ;
 		case ID_INTERFACES_NSIWEBBROWSER_ADDWEBBROWSERLISTENER :
-			WBAddListener();
+			WBAddListener(2);
 			break ;
 		case ID_INTERFACES_NSIWEBBROWSER_REMOVEWEBBROWSERLISTENER :
-			WBRemoveListener();
+			WBRemoveListener(2);
 			break ;
 		case ID_INTERFACES_NSIWEBBROWSER_GETCONTAINERWINDOW  :
-			WBGetContainerWindow();
+			WBGetContainerWindow(2);
 			break ;
 		case ID_INTERFACES_NSIWEBBROWSER_SETCONTAINERWINDOW :
-			WBSetContainerWindow();
+			WBSetContainerWindow(2);
 			break ;
 		case ID_INTERFACES_NSIWEBBROWSER_GETPARENTURICONTENTLISTENER :
-			WBGetURIContentListener();
+			WBGetURIContentListener(2);
 			break ;
 		case ID_INTERFACES_NSIWEBBROWSER_SETPARENTURICONTENTLISTENER :
-			WBSetURIContentListener();
+			WBSetURIContentListener(2);
 			break ;
 		case ID_INTERFACES_NSIWEBBROWSER_GETCONTENTDOMWINDOW  :
-			WBGetDOMWindow();
+			WBGetDOMWindow(2);
 			break ;
 		case ID_INTERFACES_NSIWEBBROWSER_NSIWBSETUPSETPROPERTY  :
-			WBSSetupProperty();
+			WBSSetupProperty(2);
 			break ;
 	}
 }
 
 void CNsIWebBrowser::RunAllTests()
 {
-	WBAddListener();
-	WBRemoveListener();
-	WBGetContainerWindow();
-	WBSetContainerWindow();
-	WBGetURIContentListener();
-	WBSetURIContentListener();
-	WBGetDOMWindow();
-	WBSSetupProperty();
+	WBAddListener(1);
+	WBRemoveListener(1);
+	WBGetContainerWindow(1);
+	WBSetContainerWindow(1);
+	WBGetURIContentListener(1);
+	WBSetURIContentListener(1);
+	WBGetDOMWindow(1);
+	WBSSetupProperty(1);
 }
 
-void CNsIWebBrowser::WBSSetupProperty()
+void CNsIWebBrowser::WBSSetupProperty(PRInt16 displayMode)
 {
 	// nsIWebBrowserSetup methods
 
 	nsCOMPtr <nsIWebBrowserSetup> qaWBSetup(do_QueryInterface(qaWebBrowser, &rv));
-	RvTestResult(rv, "nsIWebBrowserSetup object test", 1);
+	RvTestResult(rv, "nsIWebBrowserSetup object test", displayMode);
 	RvTestResultDlg(rv, "nsIWebBrowserSetup object test");
 
 	if (!qaWBSetup) {
-		QAOutput("Didn't get WebBrowser Setup object.", 2);
+		QAOutput("Didn't get WebBrowser Setup object.", displayMode);
 		return;
 	}
 

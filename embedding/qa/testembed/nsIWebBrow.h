@@ -71,18 +71,18 @@ public:
 	CBrowserImpl	*qaBrowserImpl;
 
 	// local test methods for nsIWebBrowser
-	void WBAddListener(void);
-	void WBRemoveListener(void);
-	void WBGetContainerWindow(void);
-	void WBSetContainerWindow(void);
-	void WBGetURIContentListener(void);
-	void WBSetURIContentListener(void);
-	void WBGetDOMWindow(void);
+	void WBAddListener(PRInt16);
+	void WBRemoveListener(PRInt16);
+	void WBGetContainerWindow(PRInt16);
+	void WBSetContainerWindow(PRInt16);
+	void WBGetURIContentListener(PRInt16);
+	void WBSetURIContentListener(PRInt16);
+	void WBGetDOMWindow(PRInt16);
 	void OnStartTests(UINT nMenuID);
-	void RunAllTests(void);
+	void RunAllTests();
 
 	// local test methods for nsIWebBrowserSetup
-	void WBSSetupProperty(void);
+	void WBSSetupProperty(PRInt16);
 
 	// local test variables
 
