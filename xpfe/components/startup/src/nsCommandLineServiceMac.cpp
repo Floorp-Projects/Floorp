@@ -55,52 +55,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsAppShellCIDs.h"
 static NS_DEFINE_IID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
 
-static nsIWebShellWindow* FindWebShellWindow(nsIXULWindowCallbacks* cb);
-
-//----------------------------------------------------------------------------------------
-// The return value has been AddRefed. Callers should release it.
-nsIWebShellWindow* FindWebShellWindow(nsIXULWindowCallbacks* inCallbacks)
-//----------------------------------------------------------------------------------------
-{
-        // Temporary - we'll create a brand new window EVERY time.
-        nsresult rv;
-        NS_WITH_SERVICE(nsIAppShellService, appShellService, kAppShellServiceCID, &rv);
-        if (NS_FAILED(rv))
-                return nsnull;
-
-        const PRInt32 windowWidth  = 615;
-        const PRInt32 windowHeight = 650;
-        nsCOMPtr<nsIURI> urlObj;
-    char * urlStr = "chrome://navigator/content";
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return nsnull;
-
-    nsIURI *uri = nsnull;
-    rv = service->NewURI(urlStr, nsnull, &uri);
-    if (NS_FAILED(rv)) return nsnull;
-
-    rv = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&urlObj);
-    NS_RELEASE(uri);
-        if (NS_FAILED(rv))
-                return nsnull;
-
-        nsIWebShellWindow *aWindow = nsnull;                    // we will return the window AddRefed
-        rv = appShellService->CreateTopLevelWindow(
-        nsnull,
-        urlObj, // nsIURI* of chrome
-        PR_TRUE, PR_TRUE,
-        NS_CHROME_ALL_CHROME,
-        inCallbacks, // callbacks
-        NS_SIZETOCONTENT, NS_SIZETOCONTENT,
-        &aWindow);
-        if (NS_FAILED(rv))
-                return nsnull;
-        return aWindow;
-}
-
-#pragma mark -
-
-
 // the static instance
 nsMacCommandLine nsMacCommandLine::sMacCommandLine;
 
