@@ -3349,7 +3349,7 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
                     mOSHE = mLSHE;
             }
         
-      }
+        }
         // Page has begun to load
         mBusyFlags = BUSY_FLAGS_BUSY | BUSY_FLAGS_BEFORE_PAGE_LOAD;
         nsCOMPtr<nsIWidget> mainWidget;
@@ -4113,7 +4113,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     //
     if (mIsBeingDestroyed) {
         return NS_ERROR_FAILURE;
-	}
+    }
     
     mURIResultedInDocument = PR_FALSE;  // reset the clock...
    
