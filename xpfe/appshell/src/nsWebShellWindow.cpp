@@ -109,7 +109,9 @@ static NS_DEFINE_IID(kIXULCommandIID, NS_IXULCOMMAND_IID);
 static NS_DEFINE_IID(kIContentIID,    NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
+#ifdef DEBUG_rods
 #define DEBUG_MENUSDEL 1
+#endif
 
 #include "nsIWebShell.h"
 
@@ -417,7 +419,11 @@ nsCOMPtr<nsIDOMNode> nsWebShellWindow::FindNamedParentFromDoc(nsIDOMDocument * a
   while (node) {
     nsString name;
     node->GetNodeName(name);
+
+#ifdef DEBUG_rods
     printf("Looking for [%s] [%s]\n", aName.ToNewCString(), name.ToNewCString()); // this leaks
+#endif
+
     if (name.Equals(aName))
       return node;
     nsCOMPtr<nsIDOMNode> oldNode(node);
@@ -523,12 +529,21 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
     if (NS_OK == menuDelegate->QueryInterface(kIXULCommandIID, (void**) &icmd)) {
       mMenuDelegates.AppendElement(icmd);
       nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(menuDelegate));
-      if (listener) {
+
+      if (listener) 
+      {
         pnsMenuItem->AddMenuListener(listener);
-        if (DEBUG_MENUSDEL) printf("Adding menu listener to [%s]\n", menuitemName.ToNewCString());
-      } else {
-        if (DEBUG_MENUSDEL) printf("*** NOT Adding menu listener to [%s]\n", menuitemName.ToNewCString());
+        
+#ifdef DEBUG_MENUSDEL
+        printf("Adding menu listener to [%s]\n", menuitemName.ToNewCString());
+#endif
+      } 
+#ifdef DEBUG_MENUSDEL
+      else 
+      {
+        printf("*** NOT Adding menu listener to [%s]\n", menuitemName.ToNewCString());
       }
+#endif
     }
   } 
   return NS_OK;
@@ -571,7 +586,11 @@ void nsWebShellWindow::LoadSubMenu(
       if (menuitemElement) {
         nsString menuitemNodeType;
         menuitemElement->GetNodeName(menuitemNodeType);
+
+#ifdef DEBUG_saari
         printf("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("separator"));
+#endif
+
         if (menuitemNodeType.Equals("menuitem")) {
           // Load a menuitem
           LoadMenuItem(pnsMenu, menuitemElement, menuitemNode);
@@ -624,7 +643,10 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
             menuElement->GetNodeName(menuNodeType);
             if (menuNodeType.Equals("menu")) {
               menuElement->GetAttribute(nsAutoString("name"), menuName);
+
+#ifdef DEBUG_rods
               printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
+#endif
               CreateMenu(pnsMenuBar, menuNode, menuName);
             } 
 
@@ -906,7 +928,9 @@ PRInt32 nsWebShellWindow::GetDocHeight(nsIDocument * aDoc)
 //----------------------------------------
 NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
 {
-  if (DEBUG_MENUSDEL) printf("OnConnectionsComplete\n");
+#ifdef DEBUG_MENUSDEL
+  printf("OnConnectionsComplete\n");
+#endif
 
   // register as document listener
   // this is needed for menus
@@ -1029,7 +1053,10 @@ void nsWebShellWindow::ExecuteJavaScriptString(nsString& aJavaScript)
       PRBool isUndefined = PR_FALSE;
       nsString rVal("xxx");
       scriptContext->EvaluateString(aJavaScript, url, 0, rVal, &isUndefined);
-      if (DEBUG_MENUSDEL) printf("EvaluateString - %d [%s]\n", isUndefined, rVal.ToNewCString());
+
+#ifdef DEBUG_MENUSDEL
+      printf("EvaluateString - %d [%s]\n", isUndefined, rVal.ToNewCString());
+#endif
     }
 
   }
