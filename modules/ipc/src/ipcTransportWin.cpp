@@ -56,8 +56,8 @@
 // windows message thread
 //-----------------------------------------------------------------------------
 
-#define IPC_WM_SEND_MESSAGE (WM_USER + 0x1)
-#define IPC_WM_SHUTDOWN     (WM_USER + 0x2)
+#define IPC_WM_SENDMSG    (WM_USER + 0x1)
+#define IPC_WM_SHUTDOWN   (WM_USER + 0x2)
 
 static nsresult       ipcThreadStatus = NS_OK;
 static PRThread      *ipcThread;
@@ -148,7 +148,7 @@ ipcThreadWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         return TRUE;
     }
 
-    if (uMsg == IPC_WM_SEND_MESSAGE) {
+    if (uMsg == IPC_WM_SENDMSG) {
         ipcMessage *msg = (ipcMessage *) lParam;
         if (msg) {
             LOG(("  sending message...\n"));
@@ -334,7 +334,7 @@ ipcTransport::SendMsg_Internal(ipcMessage *msg)
     NS_ENSURE_TRUE(ipcDaemonHwnd, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_TRUE(ipcHwnd, NS_ERROR_NOT_INITIALIZED);
 
-    if (!PostMessage(ipcHwnd, IPC_WM_SEND_MESSAGE, 0, (LPARAM) msg)) {
+    if (!PostMessage(ipcHwnd, IPC_WM_SENDMSG, 0, (LPARAM) msg)) {
         LOG(("  PostMessage failed w/ error = %u\n", GetLastError()));
         delete msg;
         return NS_ERROR_FAILURE;

@@ -167,7 +167,7 @@ IPCM_HandleMsg(ipcClient *client, const ipcMessage *rawMsg)
     };
 
     int type = IPCM_GetMsgType(rawMsg);
-    LOG(("ipcCommandModule::HandleMsg [type=%d]\n", type));
+    LOG(("IPCM_HandleMsg [type=%d]\n", type));
 
     if (type < IPCM_MSG_TYPE_UNKNOWN) {
         if (handlers[type]) {
