@@ -1375,6 +1375,7 @@ PK11_TokenKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *param,
     if (isToken) {
 	PK11_Authenticate(symKey->slot,PR_TRUE,wincx);
         session = PK11_GetRWSession(symKey->slot);  /* Should always be original slot */
+	symKey->owner = PR_FALSE;
     } else {
         session = symKey->session;
         pk11_EnterKeyMonitor(symKey);
