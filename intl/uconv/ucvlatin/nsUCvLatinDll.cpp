@@ -27,6 +27,7 @@
 #include "nsICharsetConverterInfo.h"
 #include "nsUCvLatinCID.h"
 #include "nsUCvLatinDll.h"
+#include "nsAsciiToUnicode.h"
 #include "nsISO88591ToUnicode.h"
 #include "nsISO88592ToUnicode.h"
 #include "nsISO88593ToUnicode.h"
@@ -75,6 +76,7 @@
 #include "nsUCS2LEToUnicode.h"
 #include "nsT61ToUnicode.h"
 #include "nsUserDefinedToUnicode.h"
+#include "nsUnicodeToAscii.h"
 #include "nsUnicodeToISO88591.h"
 #include "nsUnicodeToISO88592.h"
 #include "nsUnicodeToISO88593.h"
@@ -154,6 +156,12 @@ struct FactoryData
 
 FactoryData g_FactoryData[] =
 {
+  {
+    &kAsciiToUnicodeCID,
+    nsAsciiToUnicode::CreateInstance,
+    "us-ascii",
+    "Unicode"
+  },
   {
     &kISO88591ToUnicodeCID,
     nsISO88591ToUnicode::CreateInstance,
@@ -441,6 +449,12 @@ FactoryData g_FactoryData[] =
     nsUserDefinedToUnicode::CreateInstance,
     "x-user-defined",
     "Unicode"
+  },
+  {
+    &kUnicodeToAsciiCID,
+    nsUnicodeToAscii::CreateInstance,
+    "Unicode",
+    "us-ascii"
   },
   {
     &kUnicodeToISO88591CID,
