@@ -330,8 +330,11 @@ WeekView.prototype.createEventBox = function ( calItem )
 
 
 
-    var eventBox = document.createElement( "vbox" );
-   
+    var eventBox = document.createElement("vbox");
+
+    // XXX Consider changing this to only store the ID
+    eventBox.calEvent = calEvent;
+
     var ElementOfRef = document.getElementById("week-tree-day-" + gRefColumnIndex + "-item-" + startHour) ;
     var hourHeight = ElementOfRef.boxObject.height;
     var Height = eventDuration * hourHeight + 1;
@@ -359,42 +362,41 @@ WeekView.prototype.createEventBox = function ( calItem )
                   - 2;
     eventBox.setAttribute("left", boxLeft);
    
-   // set the event box to be of class week-view-event-class and the appropriate calendar-color class
-   //this.setEventboxClass(eventBox, calItem, "week-view");
+    // set the event box to be of class week-view-event-class and the appropriate calendar-color class
+    //this.setEventboxClass(eventBox, calItem, "week-view");
   
-   eventBox.setAttribute("eventbox", "weekview");
-   eventBox.setAttribute("dayindex", index + 1);
-   eventBox.setAttribute("onclick", "weekEventItemClick(this, event)" );
-   eventBox.setAttribute("ondblclick", "weekEventItemDoubleClick(this, event)");
-   eventBox.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);");
-   eventBox.setAttribute("ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)");
-   eventBox.setAttribute("ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)");
-   eventBox.setAttribute("id", "week-view-event-box-" + calItem.id);
-   eventBox.setAttribute("name", "week-view-event-box-" + calItem.id);
-   eventBox.setAttribute("onmouseover", "gCalendarWindow.changeMouseOverInfo( null, calItem )");
-   eventBox.setAttribute("tooltip", "eventTooltip");
+    eventBox.setAttribute("eventbox", "weekview");
+    eventBox.setAttribute("dayindex", index + 1);
+    eventBox.setAttribute("onclick", "weekEventItemClick(this, event)" );
+    eventBox.setAttribute("ondblclick", "weekEventItemDoubleClick(this, event)");
+    eventBox.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);");
+    eventBox.setAttribute("ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)");
+    eventBox.setAttribute("ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)");
+    eventBox.setAttribute("id", "week-view-event-box-" + calItem.id);
+    eventBox.setAttribute("name", "week-view-event-box-" + calItem.id);
+    eventBox.setAttribute("onmouseover", "gCalendarWindow.changeMouseOverInfo( null, calItem )");
+    eventBox.setAttribute("tooltip", "eventTooltip");
 
-   // The event description. This doesn't go multi line, but does crop properly.
-   var eventDescriptionElement = document.createElement( "label" );
-   //eventDescriptionElement.calendarEventDisplay = calendarEventDisplay;
-   eventDescriptionElement.setAttribute("class", "week-view-event-label-class" );
-   eventDescriptionElement.setAttribute("value", eventText );
-   eventDescriptionElement.setAttribute("flex", "1" );
+    // The event description. This doesn't go multi line, but does crop properly.
+    var eventDescriptionElement = document.createElement("label");
 
-   var DescriptionText = document.createTextNode(" ");
-   eventDescriptionElement.appendChild(DescriptionText);
+    //eventDescriptionElement.calendarEventDisplay = calendarEventDisplay;
+    eventDescriptionElement.setAttribute("class", "week-view-event-label-class" );
+    eventDescriptionElement.setAttribute("value", eventText );
+    eventDescriptionElement.setAttribute("flex", "1" );
 
-   eventDescriptionElement.setAttribute("height", Height);
-   eventDescriptionElement.setAttribute("crop", "end");
-   eventDescriptionElement.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);");
-   eventDescriptionElement.setAttribute("ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)");
-   eventDescriptionElement.setAttribute("ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)");
-   
-   eventBox.appendChild(eventDescriptionElement);
-    
-//   this.kungFooDeathGripOnEventBoxes.push( eventBox );
-   
-   return( eventBox );
+    var DescriptionText = document.createTextNode(" ");
+    eventDescriptionElement.appendChild(DescriptionText);
+
+    eventDescriptionElement.setAttribute("height", Height);
+    eventDescriptionElement.setAttribute("crop", "end");
+    eventDescriptionElement.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);");
+    eventDescriptionElement.setAttribute("ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)");
+    eventDescriptionElement.setAttribute("ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)");
+
+    eventBox.appendChild(eventDescriptionElement);
+
+    return eventBox;
 }
 
 /** PUBLIC

@@ -457,22 +457,22 @@ function dayViewHourDoubleClick( event )
 *    event      - the click event, Not used yet 
 */
 
-function weekEventItemClick( eventBox, event )
+function weekEventItemClick(eventBox, event)
 {
-   //do this check, otherwise on double click you get into an infinite loop
-   if( event.detail == 1 )
-   {
-      gCalendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
+    //do this check, otherwise on double click you get into an infinite loop
+    if (event.detail == 1) {
+        var calEvent = eventBox.calEvent;
+        
+        gCalendarWindow.EventSelection.replaceSelection(calEvent);
 
-      var newDate = new Date( eventBox.calendarEventDisplay.displayDate );
+        var newDate = new Date(calEvent.startDate.jsDate);
 
-      gCalendarWindow.setSelectedDate( newDate, false );
-   }
+        gCalendarWindow.setSelectedDate(newDate, false);
+    }
 
-   if ( event ) 
-   {
-      event.stopPropagation();
-   }
+    if (event) {
+        event.stopPropagation();
+    }
 }
 
 
@@ -490,7 +490,7 @@ function weekEventItemDoubleClick( eventBox, event )
    // we only care about button 0 (left click) events
    if (event.button != 0) return;
    
-   editEvent( eventBox.calendarEventDisplay.event );
+   editEvent( eventBox.calEvent );
 
    if ( event ) 
    {
@@ -720,13 +720,25 @@ function createCalendar()
     var calendar = Components.classes["@mozilla.org/calendar/calendar;1?type=" + caltype].getService(Components.interfaces.calICalendar);
     if (calendar.uri || caltype == "memory")
         return calendar;
-    var uri = getCharPref(prefobj, "default-calendar.uri", null);
+        
+    var ioservice = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+
+    var uri = null;
+    if (caltype == "caldav") {
+        var uriString = getCharPref(prefobj, "default-calendar.uri", null);
+        uri = ioservice.newURI(uriString, null, null);
+    } else if (caltype == "storage") {
+        var pathString = getCharPref(prefobj, "default-calendar.path", null);
+        var dbFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+        dbFile.initWithPath(pathString);
+        uri = ioservice.newFileURI(dbFile);
+    }
+
     if (!uri) {
         throw "Calendar type " + caltype + 
             " requires that default-calendar.uri pref be set!";
     }
-    ioservice = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-    calendar.uri = ioservice.newURI(uri, null, null);
+    calendar.uri = uri;
     return calendar;
 }
 
@@ -1023,7 +1035,6 @@ function editEventCommand()
 //used to check if there were external changes for shared calendar
 function saveItem( calendarEvent, Server, functionToRun, originalEvent )
 {
-
     if (functionToRun == 'addEvent')
         gCalendar.addItem(calendarEvent, null);
 
