@@ -106,7 +106,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsISelectionController.h"//for the enums
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
-//#define DEBUG_TABLE 1
+#define DEBUG_TABLE 1
 
 // Selection's use of generated content iterators has been turned off
 // temporarily since it bogs down selection in large documents. Using
@@ -135,10 +135,10 @@ static NS_DEFINE_IID(kCSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 
 
 //PROTOTYPES
-#ifdef OLD_SELECTION
 static nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode);
 static nsresult ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *aChildOffset);
-#endif
+static nsIDOMNode *GetCellParent(nsIDOMNode *aDomNode);
+
 
 #ifdef PRINT_RANGE
 static void printRange(nsIDOMRange *aDomRange);
@@ -471,7 +471,7 @@ private:
   nsITableLayout* GetTableLayout(nsIContent *aTableContent);
   nsITableCellLayout* GetCellLayout(nsIContent *aCellContent);
 
-  nsresult SelectBlockOfCells(nsIContent *aEndNode);
+  nsresult SelectBlockOfCells(nsIContent *aStartNode, nsIContent *aEndNode);
   nsresult SelectRowOrColumn(nsIContent *aCellContent, PRUint32 aTarget);
   nsresult GetCellIndexes(nsIContent *aCell, PRInt32 &aRowIndex, PRInt32 &aColIndex);
 
@@ -485,13 +485,15 @@ private:
   nsresult CreateAndAddRange(nsIDOMNode *aParentNode, PRInt32 aOffset);
   nsresult ClearNormalSelection();
 
+  nsCOMPtr<nsIDOMNode> mCellParent; //used to snap to table selection
   nsCOMPtr<nsIContent> mStartSelectedCell;
   nsCOMPtr<nsIContent> mEndSelectedCell;
   nsCOMPtr<nsIContent> mAppendStartSelectedCell;
   nsCOMPtr<nsIContent> mUnselectCellOnMouseUp;
-  PRBool   mSelectingTableCells;
+  PRBool   mDragSelectingCells;
   PRInt32  mSelectingTableCellMode;
   PRInt32  mSelectedCellIndex;
+  PRBool   mIsEditor;
 
   //batching
   PRInt32 mBatching;
@@ -923,11 +925,12 @@ nsSelection::nsSelection()
   }
   mHint = HINTLEFT;
   sInstanceCount ++;
-  mSelectingTableCells = PR_FALSE;
+  mDragSelectingCells = PR_FALSE;
   mSelectingTableCellMode = 0;
-
   mSelectedCellIndex = 0;
 
+
+  
   // Check to see if the autocopy pref is enabled
   //   and add the autocopy listener if it is
   nsresult rv;
@@ -1359,7 +1362,6 @@ void printRange(nsIDOMRange *aDomRange)
 }
 #endif /* PRINT_RANGE */
 
-#ifdef OLD_SELECTION
 nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode)
 {
   nsCOMPtr<nsIAtom> atom;
@@ -1376,8 +1378,6 @@ nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode)
 
   return atom;
 }
-
-
 
 nsresult
 ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *aChildOffset)
@@ -1400,8 +1400,28 @@ ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *aChildOffset)
   }
   return result;
 }
-#endif
 
+nsIDOMNode *
+GetCellParent(nsIDOMNode *aDomNode)
+{
+    if (!aDomNode)
+      return 0;
+    nsCOMPtr<nsIDOMNode> parent(aDomNode);
+    nsCOMPtr<nsIDOMNode> current(aDomNode);
+    PRInt32 childOffset;
+    nsCOMPtr<nsIAtom> tag;
+    // Start with current node and look for a table cell
+    while(current)
+    {
+      tag = GetTag(current);
+      if (tag == nsSelection::sCellAtom)
+        return current;
+      if (NS_FAILED(ParentOffset(current,getter_AddRefs(parent),&childOffset)) || !parent)
+        return 0;
+      current = parent;
+    }
+    return 0;
+}
 
 
 NS_IMETHODIMP
@@ -2528,7 +2548,7 @@ nsSelection::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset,
   
   mHint = HINT(aHint);
   // Don't take focus when dragging off of a table
-  if (!mSelectingTableCells)
+  if (!mDragSelectingCells)
   {
 #ifdef IBMBIDI
     BidiLevelFromClick(aNewFocus, aContentOffset);
@@ -2657,6 +2677,13 @@ nsSelection::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
       return NS_ERROR_FAILURE; //not in the right content. mLimiter said so
   }
 
+  // Clear all table selection data
+  mSelectingTableCellMode = 0;
+  mDragSelectingCells = PR_FALSE;
+  mStartSelectedCell = nsnull;
+  mEndSelectedCell = nsnull;
+  mAppendStartSelectedCell = nsnull;
+
   //HACKHACKHACK
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIDOMNode> domNode;
@@ -2696,18 +2723,85 @@ nsSelection::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
 #else
     if (aContentEndOffset > aContentOffset)
 #endif // IBMBIDI
-      mDomSelections[index]->Extend(domNode,aContentEndOffset);
+    mDomSelections[index]->Extend(domNode,aContentEndOffset);
+
+    //find out if we are inside a table. if so, find out which one and which cell
+    //once we do that, the next time we get a takefocus, check the parent tree. 
+    //if we are no longer inside same table ,cell then switch to table selection mode.
+    // BUT only do this in an editor
+
+    nsCOMPtr<nsIPresContext> presContext;
+    nsresult result = mTracker->GetPresContext(getter_AddRefs(presContext));
+    if (NS_FAILED(result) || !presContext)
+      return result?result:NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIPresShell> presShell;
+    presContext->GetShell(getter_AddRefs(presShell));
+    if (!presShell)
+      return NS_ERROR_FAILURE;
+
+    PRInt16 displaySelection;
+    result = presShell->GetSelectionFlags(&displaySelection);
+    if (NS_FAILED(result))
+      return result;
+
+    // Editor has DISPLAY_ALL selection type
+    if (displaySelection == nsISelectionDisplay::DISPLAY_ALL)
+    {
+      mCellParent = GetCellParent(domNode);
+#ifdef DEBUG_TABLE_SELECTION
+      if (mCellParent)
+        printf(" * TakeFocus - Collapsing into new cell\n");
+#endif
+    }
   }
   else {
     // Now update the range list:
     if (aContinueSelection && domNode)
     {
-      if (mDomSelections[index]->GetDirection() == eDirNext && aContentEndOffset > aContentOffset) //didnt go far enough 
+      PRInt32 offset;
+      nsIDOMNode *cellparent = GetCellParent(domNode);
+      if (mCellParent && cellparent && cellparent != mCellParent) //switch to cell selection mode
       {
-        mDomSelections[index]->Extend(domNode, aContentEndOffset);//this will only redraw the diff 
+#ifdef DEBUG_TABLE_SELECTION
+printf(" * TakeFocus - moving into new cell\n");
+#endif
+        nsCOMPtr<nsIDOMNode> parent;
+        nsCOMPtr<nsIContent> parentContent;
+        nsMouseEvent event;
+        nsresult result;
+
+        // Start selecting in the cell we were in before
+        result = ParentOffset(mCellParent, getter_AddRefs(parent),&offset);
+        parentContent = do_QueryInterface(parent);
+        if (parentContent)
+          result = HandleTableSelection(parentContent, offset, nsISelectionPrivate::TABLESELECTION_CELL, &event);
+
+        // Find the parent of this new cell and extend selection to it
+        result = ParentOffset(cellparent,getter_AddRefs(parent),&offset);
+        parentContent = do_QueryInterface(parent);
+
+        // XXXX We need to REALLY get the current key shift state
+        //  (we'd need to add event listener -- let's not bother for now)
+        event.isShift = PR_FALSE; //aContinueSelection;
+        if (parentContent)
+        {
+          mCellParent = cellparent;
+          // Continue selection into next cell
+          result = HandleTableSelection(parentContent, offset, nsISelectionPrivate::TABLESELECTION_CELL, &event);
+        }
       }
       else
-        mDomSelections[index]->Extend(domNode, aContentOffset);
+      {
+        // XXXX Problem: Shift+click in browser is appending text selection to selected table!!!
+        //   is this the place to erase seleced cells ?????
+        if (mDomSelections[index]->GetDirection() == eDirNext && aContentEndOffset > aContentOffset) //didnt go far enough 
+        {
+          mDomSelections[index]->Extend(domNode, aContentEndOffset);//this will only redraw the diff 
+        }
+        else
+          mDomSelections[index]->Extend(domNode, aContentOffset);
+      }
     }
   }
 
@@ -2748,20 +2842,6 @@ nsSelection::SetMouseDownState(PRBool aState)
   mMouseDownState = aState;
   if (!mMouseDownState)
   {
-    // Mouse up kills dragging-table cell selection
-#ifdef DEBUG_TABLE_SELECTION
-printf("SetMouseDownState to FALSE - stopping cell selection\n");
-#endif
-    // Clear the start cell for appending a block
-    //   of cells when last selection action was NOT a cell
-    if (!mSelectingTableCells)
-      mAppendStartSelectedCell = nsnull;
-    else
-      mSelectingTableCells = PR_FALSE;
-
-    mStartSelectedCell = nsnull;
-    mEndSelectedCell = nsnull;
-
     short reason;
     if (aState)
       reason = nsISelectionListener::MOUSEDOWN_REASON;
@@ -3125,8 +3205,10 @@ nsSelection::ClearNormalSelection()
 nsresult
 nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt32 aTarget, nsMouseEvent *aMouseEvent)
 {
-  if (!aParentContent) return NS_ERROR_NULL_POINTER;
-  if (mSelectingTableCells && (aTarget & nsISelectionPrivate::TABLESELECTION_TABLE))
+  NS_ENSURE_TRUE(aParentContent, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aMouseEvent, NS_ERROR_NULL_POINTER);
+
+  if (mMouseDownState && mDragSelectingCells && (aTarget & nsISelectionPrivate::TABLESELECTION_TABLE))
   {
     // We were selecting cells and user drags mouse in table border or inbetween cells,
     //  just do nothing
@@ -3154,13 +3236,9 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
   nsSelectionBatcher selectionBatcher(mDomSelections[index]);
 
   PRInt32 startRowIndex, startColIndex, curRowIndex, curColIndex;
-  if (mSelectingTableCells)
+  if (mMouseDownState && mDragSelectingCells)
   {
     // We are drag-selecting
-#ifdef DEBUG_TABLE_SELECTION
-printf("HandleTableSelection: mSelectingTableCellMode = %x\n", mSelectingTableCellMode);
-#endif
-
     if (aTarget != nsISelectionPrivate::TABLESELECTION_TABLE)
     {
       // If dragging in the same cell as last event, do nothing
@@ -3205,9 +3283,6 @@ printf(" Dragged into a new column or row\n");
 #ifdef DEBUG_TABLE_SELECTION
 printf("HandleTableSelection: Dragged into a new cell\n");
 #endif
-        // Clear this to be sure SelectBlockOfCells works correctly
-        mAppendStartSelectedCell = nsnull;
-        
         // Trick for quick selection of rows and columns
         // Hold down shift, then start selecting in one direction
         // If next cell dragged into is in same row, select entire row,
@@ -3236,7 +3311,7 @@ printf("HandleTableSelection: Dragged into a new cell\n");
         }
         
         // Reselect block of cells to new end location
-        return SelectBlockOfCells(childContent);
+        return SelectBlockOfCells(mStartSelectedCell, childContent);
       }
     }
     // Do nothing if dragging in table, but outside a cell
@@ -3245,7 +3320,6 @@ printf("HandleTableSelection: Dragged into a new cell\n");
   else 
   {
     // Not dragging  -- mouse event is down or up
-
     if (mMouseDownState)
     {
 #ifdef DEBUG_TABLE_SELECTION
@@ -3278,7 +3352,7 @@ printf("HandleTableSelection: Mouse down event\n");
           // No cells selected -- remove non-cell selection
           mDomSelections[index]->RemoveAllRanges();
         }
-        mSelectingTableCells = PR_TRUE;    // Signal to start drag-cell-selection
+        mDragSelectingCells = PR_TRUE;    // Signal to start drag-cell-selection
         mSelectingTableCellMode = aTarget;
         // Set start for new drag-selection block (not appended)
         mStartSelectedCell = childContent;
@@ -3316,7 +3390,7 @@ printf("HandleTableSelection: Saving mUnselectCellOnMouseUp\n");
         //TODO: We currently select entire table when clicked between cells,
         //  should we restrict to only around border?
         //  *** How do we get location data for cell and click?
-        mSelectingTableCells = PR_FALSE;
+        mDragSelectingCells = PR_FALSE;
         mStartSelectedCell = nsnull;
         mEndSelectedCell = nsnull;
 
@@ -3333,7 +3407,7 @@ printf("aTarget == %d\n", aTarget);
         // Start drag-selecting mode so multiple rows/cols can be selected
         // Note: Currently, nsFrame::GetDataForTableSelection
         //       will never call us for row or column selection on mouse down
-        mSelectingTableCells = PR_TRUE;
+        mDragSelectingCells = PR_TRUE;
       
         // Force new selection block
         mStartSelectedCell = nsnull;
@@ -3346,7 +3420,7 @@ printf("aTarget == %d\n", aTarget);
     else
     {
 #ifdef DEBUG_TABLE_SELECTION
-printf("HandleTableSelection: Mouse UP event\n");
+printf("HandleTableSelection: Mouse UP event. mDragSelectingCells=%d, mStartSelectedCell=%d\n", mDragSelectingCells, mStartSelectedCell);
 #endif
       // First check if we are extending a block selection
       PRInt32 rangeCount;
@@ -3356,10 +3430,33 @@ printf("HandleTableSelection: Mouse UP event\n");
       if (rangeCount > 0 && aMouseEvent->isShift && 
           mAppendStartSelectedCell && mAppendStartSelectedCell != childContent)
       {
-        // If Shift is down as well, append a block selection
-        return SelectBlockOfCells(childContent);
+        // Shift key is down: append a block selection
+        mDragSelectingCells = PR_FALSE;
+        return SelectBlockOfCells(mAppendStartSelectedCell, childContent);
       }
-    
+
+      if (mDragSelectingCells)
+        mAppendStartSelectedCell = mStartSelectedCell;
+        
+      mDragSelectingCells = PR_FALSE;
+      mStartSelectedCell = nsnull;
+      mEndSelectedCell = nsnull;
+
+      // Any other mouseup actions require that Ctrl or Cmd key is pressed
+      //  else stop table selection mode
+      PRBool doMouseUpAction = PR_FALSE;
+#if defined(XP_MAC) || defined(XP_MACOSX)
+      doMouseUpAction = aMouseEvent->isMeta;
+#else
+      doMouseUpAction = aMouseEvent->isControl;
+#endif
+      if (!doMouseUpAction)
+      {
+#ifdef DEBUG_TABLE_SELECTION
+printf("HandleTableSelection: Ending cell selection on mouseup: mAppendStartSelectedCell=%d\n", mAppendStartSelectedCell);
+#endif
+        return NS_OK;
+      }
       // Unselect a cell only if it wasn't
       //  just selected on mousedown
       if( childContent == mUnselectCellOnMouseUp)
@@ -3404,11 +3501,9 @@ printf("HandleTableSelection: Unselecting single selected cell\n");
 #endif
               // This was the only cell selected.
               // Collapse to "normal" selection inside the cell
-              mSelectingTableCells = PR_FALSE;
               mStartSelectedCell = nsnull;
               mEndSelectedCell = nsnull;
               mAppendStartSelectedCell = nsnull;
-              mSelectingTableCellMode = 0;
               //TODO: We need a "Collapse to just before deepest child" routine
               // Even better, should we collapse to just after the LAST deepest child
               //  (i.e., at the end of the cell's contents)?
@@ -3417,71 +3512,40 @@ printf("HandleTableSelection: Unselecting single selected cell\n");
 #ifdef DEBUG_TABLE_SELECTION
 printf("HandleTableSelection: Removing cell from multi-cell selection\n");
 #endif
-            //TODO: Should we try to reassign to a different existing cell?
-            //mStartSelectedCell = nsnull;
-            //mEndSelectedCell = nsnull;
-            // Other cells are selected:
+            // Unselecting the start of previous block 
+            // XXX What do we use now!
+            if (childContent == mAppendStartSelectedCell)
+               mAppendStartSelectedCell = nsnull;
+
             // Deselect cell by removing its range from selection
             return mDomSelections[index]->RemoveRange(range);
           }
         }
         mUnselectCellOnMouseUp = nsnull;
-        // Should we just return here?
-        // (we failed to unselect the cell)
       }
-      // We have mouse up in a cell that was just selected on mouse down,
-      //  (and no drag or shift-extend action intervened)
-      //  Use it as the start of a block that 
-      //  we may append by using Shift+click in another cell
-      mAppendStartSelectedCell = childContent;
-#ifdef DEBUG_TABLE_SELECTION
-printf("HandleTableSelection: Setting mAppendStartSelectedCell for append block\n");
-#endif
     }
   }
   return result;
 }
 
 nsresult
-nsSelection::SelectBlockOfCells(nsIContent *aEndCell)
+nsSelection::SelectBlockOfCells(nsIContent *aStartCell, nsIContent *aEndCell)
 {
-  if (!aEndCell) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(aStartCell, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aEndCell, NS_ERROR_NULL_POINTER);
   mEndSelectedCell = aEndCell;
 
   nsCOMPtr<nsIContent> startCell;
   nsresult result = NS_OK;
 
-  if (mAppendStartSelectedCell)
-  {
-    // We are appending a new block
-#ifdef DEBUG_TABLE_SELECTION
-printf("SelectBlockOfCells -- using mAppendStartSelectedCell\n");
-#endif
-    startCell = mAppendStartSelectedCell;
-  }
-  else if (mStartSelectedCell)
-  {
-    startCell = mStartSelectedCell;
-#ifdef DEBUG_TABLE_SELECTION
-printf("SelectBlockOfCells -- using mStartSelectedCell\n");
-#endif
-  }
-
-  if (!startCell)
-  {
-#ifdef DEBUG_TABLE_SELECTION
-printf("SelectBlockOfCells -- NO START CELL!\n");
-#endif
-    return NS_OK;
-  }
   // If new end cell is in a different table, do nothing
   nsCOMPtr<nsIContent> table;
-  if (!IsInSameTable(startCell, aEndCell, getter_AddRefs(table)))
+  if (!IsInSameTable(aStartCell, aEndCell, getter_AddRefs(table)))
     return NS_OK;
 
   // Get starting and ending cells' location in the cellmap
   PRInt32 startRowIndex, startColIndex, endRowIndex, endColIndex;
-  result = GetCellIndexes(startCell, startRowIndex, startColIndex);
+  result = GetCellIndexes(aStartCell, startRowIndex, startColIndex);
   if(NS_FAILED(result)) return result;
   result = GetCellIndexes(aEndCell, endRowIndex, endColIndex);
   if(NS_FAILED(result)) return result;
@@ -3493,9 +3557,9 @@ printf("SelectBlockOfCells -- NO START CELL!\n");
 
   PRInt32 curRowIndex, curColIndex;
 
-  if (!mAppendStartSelectedCell)
+  if (mDragSelectingCells)
   {
-    // Not appending - remove selected cells outside of new block limits
+    // Drag selecting: remove selected cells outside of new block limits
 
     PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
 
@@ -3647,7 +3711,7 @@ nsSelection::SelectRowOrColumn(nsIContent *aCellContent, PRUint32 aTarget)
       mStartSelectedCell = do_QueryInterface(firstCell);
     }
     nsCOMPtr<nsIContent> lastCellContent = do_QueryInterface(lastCell);
-    result = SelectBlockOfCells(lastCellContent);
+    result = SelectBlockOfCells(mStartSelectedCell, lastCellContent);
 
     // This gets set to the cell at end of row/col, 
     //   but we need it to be the cell under cursor

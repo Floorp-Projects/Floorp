@@ -476,8 +476,10 @@ protected:
   //   of the enclosing cell or table (if not inside a cell)
   //  aTarget tells us what table element to select (currently only cell and table supported)
   //  (enums for this are defined in nsIFrame.h)
-  NS_IMETHOD GetDataForTableSelection(nsIFrameSelection *aFrameSelection, nsMouseEvent *aMouseEvent, 
-                                      nsIContent **aParentContent, PRInt32 *aContentOffset, PRInt32 *aTarget);
+  NS_IMETHOD GetDataForTableSelection(nsIFrameSelection *aFrameSelection, 
+                                      nsIPresShell *aPresShell, nsMouseEvent *aMouseEvent, 
+                                      nsIContent **aParentContent, PRInt32 *aContentOffset, 
+                                      PRInt32 *aTarget);
 
   static void XMLQuote(nsString& aString);
 
