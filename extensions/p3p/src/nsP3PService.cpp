@@ -36,65 +36,21 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsP3PService.h"
+#include "nsCompactPolicy.h"
 #include "nsIHttpChannel.h"
-#include "nsINetModuleMgr.h"
-#include "nsIServiceManager.h"
 #include "nsIURI.h"
 #include "nsString.h"
-#include "nsCRT.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranchInternal.h"
-#include "nsIDocument.h"
-#include "nsIDOMDocument.h"
-
-#define NS_P3P_ENABLED 3
-
-static NS_DEFINE_CID(kINetModuleMgrCID, NS_NETMODULEMGR_CID);
-
-static nsresult
-StartListeningToHeaders(nsP3PService* aService) 
-{
-  nsresult result = NS_OK;
-    
-  nsCOMPtr<nsINetModuleMgr> netModuleMgr(do_GetService(kINetModuleMgrCID)); 
-  
-  if (netModuleMgr) {
-    result = netModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_CONTRACTID,
-                                          aService);
-  }
-
-  return result;
-}
-
-static nsresult
-StopListeningToHeaders(nsP3PService* aService) 
-{
-  
-  nsresult result = NS_OK;
-  nsCOMPtr<nsINetModuleMgr> netModuleMgr(do_GetService(kINetModuleMgrCID)); 
-  
-  if (netModuleMgr) {
-    result = netModuleMgr->UnregisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_CONTRACTID,
-                                            aService);
-  }
-
-  return result;
-}
+#include "nsCOMPtr.h"
 
 /***********************************
  *   nsP3PService Implementation   *
  ***********************************/
 
-NS_IMPL_ISUPPORTS4(nsP3PService,
-                   nsICookieConsent,
-                   nsIHttpNotify,
-                   nsINetNotify,
-                   nsIObserver);
+NS_IMPL_ISUPPORTS1(nsP3PService, nsICookieConsent)
 
 nsP3PService::nsP3PService() 
   : mCompactPolicy(nsnull)
 {
-  NS_INIT_ISUPPORTS( );
 }
 
 nsP3PService::~nsP3PService() 
@@ -103,33 +59,8 @@ nsP3PService::~nsP3PService()
 }
 
 nsresult
-nsP3PService::Init() 
-{
-  // Register perf.
-  nsresult result = NS_OK;
-  nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID));
-
-  if (prefService) {
-    nsCOMPtr<nsIPrefBranchInternal> prefInternal(do_QueryInterface(prefService));
-   
-    if (prefInternal) {
-      prefInternal->AddObserver("network.cookie.cookieBehavior", this, PR_FALSE);
-    }
-    
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    prefService->GetBranch(0,getter_AddRefs(prefBranch));
-    
-    result = PrefChanged(prefBranch,"network.cookie.cookieBehavior");
-  }
-
-  return result;
-}
-
-nsresult
 nsP3PService::ProcessResponseHeader(nsIHttpChannel* aHttpChannel) 
 {
-  NS_ENSURE_ARG_POINTER(aHttpChannel);
-  
   nsresult result = NS_OK;
   
   nsCAutoString p3pHeader;
@@ -155,48 +86,6 @@ nsP3PService::ProcessResponseHeader(nsIHttpChannel* aHttpChannel)
   return result;
 }
 
-nsresult
-nsP3PService::PrefChanged(nsIPrefBranch *aPrefBranch, 
-                          const char *aPrefValue)
-{
-  NS_ASSERTION(aPrefBranch,"pref not available");
-
-  nsresult result = NS_OK;
-  if (aPrefBranch) {
-    PRInt32 val;
-    aPrefBranch->GetIntPref(aPrefValue, &val);
-    result = (val == NS_P3P_ENABLED)? StartListeningToHeaders(this):
-                                      StopListeningToHeaders(this);
-  }
-  return result;
-}
-
-NS_IMETHODIMP
-nsP3PService::Observe(nsISupports* aSubject,
-                      const char * aTopic,
-                      const PRUnichar *aData)
-{
-  nsresult result = NS_OK;
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_QueryInterface(aSubject));
-  if (prefBranch) {
-    result = PrefChanged(prefBranch,NS_ConvertUCS2toUTF8(aData).get());
-  }
-  return result;
-}
-
-NS_IMETHODIMP
-nsP3PService::OnExamineResponse(nsIHttpChannel* aHttpChannel) 
-{
-  return ProcessResponseHeader(aHttpChannel);
-}
-
-
-NS_IMETHODIMP
-nsP3PService::OnModifyRequest(nsIHttpChannel* aHttpChannel) 
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsP3PService::GetConsent(const char* aURI, 
                          nsIHttpChannel* aHttpChannel, 
@@ -211,11 +100,11 @@ nsP3PService::GetConsent(const char* aURI,
     aHttpChannel->GetURI(getter_AddRefs(uri));  
     
     if (uri) {
-      nsXPIDLCString spec;
+      nsCAutoString spec;
       uri->GetSpec(spec);
 
       if (aURI) {
-        NS_ASSERTION(nsCRT::strcmp(aURI,spec) == 0,"URIs don't match");
+        NS_ASSERTION(spec.Equals(aURI), "URIs don't match");
       }
     }
 #endif

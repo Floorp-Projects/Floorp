@@ -38,14 +38,13 @@
 #include "nsICategoryManager.h"
 #include "nsIComponentManager.h"
 #include "nsIGenericFactory.h"
-#include "nsIHttpProtocolHandler.h"
 #include "nsIServiceManager.h"
 #include "nsP3PCIID.h"
 #include "nsP3PService.h"
 #include "nsCompactPolicy.h"
 #include "nsPolicyReference.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsP3PService,Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsP3PService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPolicyReference)
 
 static nsModuleComponentInfo gP3PComponents[] =
@@ -75,4 +74,3 @@ Shutdown(nsIModule* aSelf)
 }
 
 NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsP3PModule, gP3PComponents,Initialize,Shutdown)
-
