@@ -196,23 +196,17 @@ function UpdatePageReport(event)
 }
 
 #ifdef MOZ_ENABLE_XREMOTE
-function RegisterTabOpenObserver()
-{
-  const observer = {
-    observe: function(subject, topic, data)
-    {
-      if (topic != "open-new-tab-request" || subject != window)
-        return;
+const gTabOpenObserver = {
+  observe: function(subject, topic, data)
+  {
+    if (topic != "open-new-tab-request" || subject != window)
+      return;
 
-      delayedOpenTab(data);
-    }
-  };
-
-  const service = Components.classes["@mozilla.org/observer-service;1"]
-    .getService(Components.interfaces.nsIObserverService);
-  service.addObserver(observer, "open-new-tab-request", false);
-}
+    delayedOpenTab(data);
+  }
+};
 #endif
+
 function Startup()
 {
   gBrowser = document.getElementById("content");
@@ -246,7 +240,9 @@ function Startup()
                             .getService(Components.interfaces.nsIXRemoteService);
   remoteService.addBrowserInstance(window);
 
-  RegisterTabOpenObserver();
+  var observerService = Components.classes["@mozilla.org/observer-service;1"]
+    .getService(Components.interfaces.nsIObserverService);
+  observerService.addObserver(gTabOpenObserver, "open-new-tab-request", false);
 #endif
 #endif
 
@@ -483,6 +479,10 @@ function Shutdown()
   remoteService = Components.classes["@mozilla.org/browser/xremoteservice;1"]
                             .getService(Components.interfaces.nsIXRemoteService);
   remoteService.removeBrowserInstance(window);
+
+  var observerService = Components.classes["@mozilla.org/observer-service;1"]
+    .getService(Components.interfaces.nsIObserverService);
+  observerService.removeObserver(gTabOpenObserver, "open-new-tab-request");
 #endif
   try {
     gBrowser.removeProgressListener(window.XULBrowserWindow);
