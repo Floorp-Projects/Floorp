@@ -284,9 +284,13 @@ public class RegExpImpl implements RegExpProxy {
      * Assumes zero-based; i.e., for $3, i==2
      */
     SubString getParenSubString(int i) {
-        if (i >= parens.size())
-            return SubString.emptySubString;
-        return (SubString) parens.get(i);
+        if (i < parens.size()) {
+            SubString parsub = (SubString)parens.get(i);
+            if (parsub != null) {
+                return parsub;
+            }
+        }
+        return SubString.emptySubString;
     }
 
     String          input;         /* input string to match (perl $_, GC root) */
