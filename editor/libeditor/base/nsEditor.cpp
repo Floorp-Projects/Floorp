@@ -708,7 +708,7 @@ nsEditor::InsertText(const nsString& aStringToInsert)
   nsresult result;
   nsCOMPtr<nsIDOMSelection> selection;
   result = mPresShell->GetSelection(getter_AddRefs(selection));
-  BeginTransaction();
+  //BeginTransaction();
   if (NS_SUCCEEDED(result) && selection)
   {
     PRBool collapsed;
@@ -722,7 +722,7 @@ nsEditor::InsertText(const nsString& aStringToInsert)
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
-  EndTransaction();
+  //EndTransaction();
   return result;
 }
 
@@ -888,7 +888,7 @@ nsresult nsEditor::CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn)
 }
 #endif
 
-//#define DELETE_SELECTION_DOESNT_GO_THROUGH_RANGE
+#define DELETE_SELECTION_DOESNT_GO_THROUGH_RANGE
 
 nsresult 
 nsEditor::DeleteSelection(nsIEditor::Direction aDir)
