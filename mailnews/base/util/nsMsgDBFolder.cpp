@@ -592,6 +592,7 @@ NS_IMETHODIMP nsMsgDBFolder::GetOfflineStoreOutputStream(nsIOutputStream **outpu
     nsFileSpec fileSpec;
     mPath->GetFileSpec(&fileSpec);
     rv = NS_NewIOFileStream(getter_AddRefs(supports), fileSpec, PR_WRONLY | PR_CREATE_FILE, 00700);
+    NS_ENSURE_SUCCESS(rv, rv);
     supports->QueryInterface(NS_GET_IID(nsIOutputStream), (void **) outputStream);
 
     nsCOMPtr <nsIRandomAccessStore> seekable = do_QueryInterface(supports);
