@@ -1659,9 +1659,6 @@ nsBookmarksService::Init()
 			if (*prefVal)
 			{
 				mPersonalToolbarName.AssignWithConversion(prefVal);
-#ifdef	DEBUG
-				printf("Obtained name of Personal Toolbar from user preferences.\n");
-#endif
 			}
 			nsCRT::free(prefVal);
 			prefVal = nsnull;
@@ -1671,18 +1668,12 @@ nsBookmarksService::Init()
 		{
 			// rjc note: always try to get the string bundle (see above) before trying this
 			getLocaleString("DefaultPersonalToolbarFolder", mPersonalToolbarName);
-#ifdef	DEBUG
-			printf("Obtained name of Personal Toolbar from bookmarks string bundle.\n");
-#endif
 		}
 
 		if (mPersonalToolbarName.Length() == 0)
 		{
 			// no preference, so fallback to a well-known name
 			mPersonalToolbarName.AssignWithConversion(kDefaultPersonalToolbarFolder);
-#ifdef	DEBUG
-			printf("Obtained name of Personal Toolbar from fallback hard-coded string.\n");
-#endif
 		}
 	}
 
