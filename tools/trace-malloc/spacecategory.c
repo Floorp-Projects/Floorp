@@ -156,6 +156,11 @@ STCategoryNode* findCategoryNode(const char *catName, STGlobals *g)
         if (!strcmp(g->mCategoryMap[i]->categoryName, catName))
             return g->mCategoryMap[i]->node;
     }
+
+    /* Check if we are looking for the root node */
+    if (!strcmp(catName, ST_ROOT_CATEGORY_NAME))
+        return &g->mCategoryRoot;
+
     return NULL;
 }
 
@@ -534,6 +539,13 @@ int categorizeAllocation(STAllocation* aAllocation, STGlobals* g)
     }
     node->run->mAllocations[node->run->mAllocationCount++] = aAllocation;
 
+    /*
+    ** Make sure run's stats are calculated. We dont go update the parents of allocation
+    ** at this time. That will happen when we focus on this category. This updating of
+    ** stats will provide us fast categoryreports.
+    */
+    recalculateAllocationCost(node->run, aAllocation, PR_FALSE);
+
     /* Propogate upwards the statistics */
     /* XXX */
 #if defined(DEBUG_dp) && 0
@@ -569,18 +581,22 @@ PRBool printNodeProcessor(void* clientData, STCategoryNode* node)
 /*
 ** walkTree
 **
-** General purpose tree walker. Issues callback for each node
+** General purpose tree walker. Issues callback for each node.
+** If 'maxdepth' > 0, then stops after processing that depth. Root is
+** depth 0, the nodes below it are depth 1 etc...
 */
 #define MODINC(n, mod) ((n+1) % mod)
 
-void walkTree(STCategoryNode* root, STCategoryNodeProcessor func, void *clientData)
+void walkTree(STCategoryNode* root, STCategoryNodeProcessor func, void *clientData, int maxdepth)
 {
     STCategoryNode* nodes[1024], *node;
     PRUint32 begin, end, i;
     int ret = 0;
+    int curdepth = 0, ncurdepth = 0;
 
     nodes[0] = root;
     begin = 0; end = 1;
+    ncurdepth = 1;
     while (begin != end)
     {
         node = nodes[begin];
@@ -595,6 +611,22 @@ void walkTree(STCategoryNode* root, STCategoryNodeProcessor func, void *clientDa
         {
             nodes[end] = node->children[i];
             end = MODINC(end, 1024);
+        }
+        /* Depth tracking. Do it only if walkTree is contrained by a maxdepth */
+        if (maxdepth > 0 && --ncurdepth == 0)
+        {
+            /*
+            ** No more children in current depth. The rest of the nodes
+            ** we have in our list should be nodes in the depth below us.
+            */
+            ncurdepth = (begin < end) ? (end - begin) : (1024 - begin + end);
+            if (++curdepth > maxdepth)
+            {
+                /*
+                ** Gone too deep. Stop.
+                */
+                break;
+            }
         }
     }
     return;
@@ -615,7 +647,7 @@ int freeRule(STCategoryRule* rule)
 
 void freeNodeRun(STCategoryNode* root)
 {
-   walkTree(root, freeNodeRunProcessor, NULL);
+   walkTree(root, freeNodeRunProcessor, NULL, 0);
 }
 
 void freeNodeMap(STGlobals* g)
@@ -675,7 +707,7 @@ int categorizeRun(const STRun* aRun, STGlobals* g)
     /*
     ** First, cleanup our tree
     */
-    walkTree(&g->mCategoryRoot, freeNodeRunProcessor, NULL);
+    walkTree(&g->mCategoryRoot, freeNodeRunProcessor, NULL, 0);
 
     if (g->mNCategoryMap > 0)
     {
@@ -692,7 +724,7 @@ int categorizeRun(const STRun* aRun, STGlobals* g)
     g->mCategoryRoot.categoryName = ST_ROOT_CATEGORY_NAME;
 
 #if defined(DEBUG_dp)
-    walkTree(&g->mCategoryRoot, printNodeProcessor, NULL);
+    walkTree(&g->mCategoryRoot, printNodeProcessor, NULL, 0);
     fprintf(stderr, "DEBUG: categorizing ends: %dms [%d rules, %d allocations]\n",
             PR_IntervalToMilliseconds(PR_IntervalNow() - start), g->mNRules, aRun->mAllocationCount);
 #endif
@@ -700,3 +732,82 @@ int categorizeRun(const STRun* aRun, STGlobals* g)
     return 0;
 }
 
+
+/*
+** displayCategoryReport
+**
+** Generate the category report - a list of all categories and details about each
+** depth parameter controls how deep we traverse the category tree.
+*/
+PRBool displayCategoryNodeProcessor(void* clientData, STCategoryNode* node)
+{
+    STCategoryNode* root = (STCategoryNode *) clientData;
+    PRUint32 byteSize = 0, heapCost = 0, count = 0;
+    double percent = 0;
+    char buf[256];
+
+    if (node->run)
+    {
+        /*
+        ** Byte size
+        */
+        byteSize = node->run->mStats.mSize;
+
+        /*
+        ** Composite count
+        */
+        count = node->run->mStats.mCompositeCount;
+
+        /*
+        ** Heap operation cost
+        **/
+        heapCost = node->run->mStats.mHeapRuntimeCost;
+
+        /*
+        ** % of total size
+        */
+        if (root->run)
+        {
+            percent = ((double) byteSize) / root->run->mStats.mSize * 100;
+        }
+    }
+
+    PR_fprintf(globals.mRequest.mFD,
+               " <tr>\n"
+               "  <td>");
+    /* a link to topcallsites report with focus on category */
+    PR_snprintf(buf, sizeof(buf), "top_callsites.html?mCategory=%s", node->categoryName);
+    htmlAnchor(buf, node->categoryName, NULL);
+    PR_fprintf(globals.mRequest.mFD,
+               "</td>\n"
+               "  <td align=right>%u</td>\n"
+               "  <td align=right>%4.1f%%</td>\n"
+               "  <td align=right>%u</td>\n"
+               "  <td align=right>" ST_MICROVAL_FORMAT "</td>\n"
+               " </tr>\n",
+               byteSize, percent, count,
+               ST_MICROVAL_PRINTABLE(heapCost));
+
+    return PR_TRUE;
+}
+
+
+int displayCategoryReport(STCategoryNode *root, int depth)
+{
+    PR_fprintf(globals.mRequest.mFD,
+               "<table border=1>\n"
+               " <tr>\n"
+               "  <th>Category</th>\n"
+               "  <th>Composite Byte Size</th>\n"
+               "  <th>%% of Total Size</th>\n"
+               "  <th>Heap Object Count</th>\n"
+               "  <th>Composite Heap Operations Seconds</th>\n"
+               " </tr>\n"
+               );
+
+    walkTree(root, displayCategoryNodeProcessor, root, depth);
+
+    PR_fprintf(globals.mRequest.mFD, "</table>\n");
+
+    return 0;
+}
