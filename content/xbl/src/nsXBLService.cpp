@@ -52,7 +52,6 @@
 
 #include "nsIXULContentUtils.h"
 #include "nsIXULPrototypeCache.h"
-#include "nsIXBLStreamListener.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
@@ -143,7 +142,7 @@ int nsXBLBindingRequest::gRefCnt = 0;
 // nsXBLStreamListener, a helper class used for 
 // asynchronous parsing of URLs
 /* Header file */
-class nsXBLStreamListener : public nsIStreamListener, public nsIXBLStreamListener
+class nsXBLStreamListener : public nsIStreamListener
 {
 public:
   NS_DECL_ISUPPORTS
@@ -165,7 +164,7 @@ private:
 
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS3(nsXBLStreamListener, nsIStreamListener, nsIStreamObserver, nsIXBLStreamListener)
+NS_IMPL_ISUPPORTS2(nsXBLStreamListener, nsIStreamListener, nsIStreamObserver)
 
 nsXBLStreamListener::nsXBLStreamListener(nsIStreamListener* aInner, nsIDocument* aDocument,
                                          nsIDocument* aBindingDocument)
@@ -770,7 +769,7 @@ nsXBLService::GetBindingDocument(nsIContent* aBoundElement, const nsCString& aUR
       // document is currently being loaded asynchronously.  If so, there's no
       // document yet, but we need to glom on our request so that it will be
       // processed whenever the doc does finish loading.
-      nsCOMPtr<nsIXBLStreamListener> listener;
+      nsCOMPtr<nsIStreamListener> listener;
       bindingManager->GetLoadingDocListener(aURLStr, getter_AddRefs(listener));
       if (listener) {
         // Create a new load observer.
@@ -778,7 +777,7 @@ nsXBLService::GetBindingDocument(nsIContent* aBoundElement, const nsCString& aUR
         bindingURI += "#";
         bindingURI += aRef;
         nsXBLBindingRequest* req = new nsXBLBindingRequest(aRef, aBoundElement);
-        nsIXBLStreamListener* ilist = listener.get();
+        nsIStreamListener* ilist = listener.get();
         nsXBLStreamListener* xblListener = NS_STATIC_CAST(nsXBLStreamListener*, ilist);
         xblListener->AddRequest(req);
       }

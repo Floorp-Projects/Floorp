@@ -1,6 +1,4 @@
 nsIBindingManager.h
 nsIXBLBinding.h
 nsIXBLService.h
-nsIXBLStreamListener.h
-
 
