@@ -263,9 +263,6 @@ nsProxyObject::GetQueue()
     return mDestQueue; 
 }
 
-
-static long counter = 0;
-
 nsresult
 nsProxyObject::PostAndWait(nsProxyObjectCallInfo *proxyInfo)
 {

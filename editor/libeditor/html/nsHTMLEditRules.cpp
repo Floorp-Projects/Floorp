@@ -354,8 +354,6 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
   nsCOMPtr<nsIDOMNode> selNode;
   PRInt32 selOffset;
 
-  char specialChars[] = {'\t','\n',0};
-  
   // if the selection isn't collapsed, delete it.
   PRBool bCollapsed;
   res = aSelection->GetIsCollapsed(&bCollapsed);

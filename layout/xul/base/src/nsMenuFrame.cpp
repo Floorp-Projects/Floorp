@@ -737,7 +737,7 @@ nsMenuFrame::Reflow(nsIPresContext*   aPresContext,
       
       nsRect rect;
       popupChild->GetRect(rect);
-      nsresult rv = ReflowChild(popupChild, aPresContext, kidDesiredSize, kidReflowState,
+      ReflowChild(popupChild, aPresContext, kidDesiredSize, kidReflowState,
                                   rect.x, rect.y, NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_MOVE_CHILD_VIEWS, aStatus);
 
       // Set the child's width and height to its desired size
@@ -764,7 +764,7 @@ nsMenuFrame::Reflow(nsIPresContext*   aPresContext,
     
       nsRect rect;
       popupChild->GetRect(rect);
-      nsresult rv = ReflowChild(popupChild, aPresContext, kidDesiredSize, kidReflowState,
+      ReflowChild(popupChild, aPresContext, kidDesiredSize, kidReflowState,
                                   rect.x, rect.y, 
                                   NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_MOVE_CHILD_VIEWS, aStatus);
 
@@ -977,10 +977,10 @@ nsMenuFrame::UpdateMenuType(nsIPresContext* aPresContext)
   else if (value.Equals("radio")) {
     mType = eMenuType_Radio;
 
-    nsAutoString value;
-    mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, value);
-    if ( mGroupName != value )
-      mGroupName = value;
+    nsAutoString valueName;
+    mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, valueName);
+    if ( mGroupName != valueName )
+      mGroupName = valueName;
   } 
   else {
     if (mType != eMenuType_Normal)

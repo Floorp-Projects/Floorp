@@ -1402,7 +1402,7 @@ PRBool nsTextFormatter::SelfTest()
    nsAutoString out(buf);
    printf("%s \n",out.ToNewCString());
    const PRUnichar *uout = out.GetUnicode();
-   for(int i=0;i<out.Length();i++)
+   for(PRUint32 i=0;i<out.Length();i++)
       printf("%2X ", uout[i]);
 
    return passed;

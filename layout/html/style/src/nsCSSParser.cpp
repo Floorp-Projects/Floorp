@@ -1900,6 +1900,10 @@ PRBool CSSParserImpl::ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue)
 					str.Append(tk->mIdent);
 				}
 				break;
+			default:
+				// There is a whole bunch of cases that are
+				// not handled by this switch.  Ignore them.
+				break;
 		}
 	  if (NS_HexToRGB(str, &rgba)) {
 	    aValue.SetColorValue(rgba);

@@ -1592,8 +1592,6 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
       aDesiredSize.width = mRect.width;
 
     } else {
-      nscoord pass1Height = aDesiredSize.height;
-
       // Constrain our reflow width to the computed table width. Note: this is based
       // on the width of the first-in-flow
       nsHTMLReflowState reflowState(aReflowState);
@@ -3279,8 +3277,6 @@ void nsTableFrame::SetTableWidth(nsIPresContext*          aPresContext,
   }
 
   // Compute the insets (sum of border and padding)
-  const nsStyleSpacing* spacing =
-    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin borderPadding;
   GetTableBorder (borderPadding); // this gets the max border value at every edge
   borderPadding += aReflowState.mComputedPadding;
@@ -3505,9 +3501,6 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext*          aPresContext
               ((nsTableRowGroupFrame*)childFrame)->GetHeightOfRows(aPresContext, sumOfRowHeights);
             }
             if (!firstRowGroupFrame) {
-              // the first row group's y position starts inside our padding
-              const nsStyleSpacing* spacing =
-                (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
               nsMargin borderPadding = aReflowState.mComputedBorderPadding;
               rowGroupYPos = borderPadding.top;
               firstRowGroupFrame = childFrame;

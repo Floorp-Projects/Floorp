@@ -777,9 +777,9 @@ nsGfxScrollFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsGfxScrollFrame* aOuter):mHScrollbarFrame(nsnull),
                                                mVScrollbarFrame(nsnull),
                                                mScrollAreaFrame(nsnull),
+                                               mOnePixel(20),
                                                mHasVerticalScrollbar(PR_FALSE), 
-                                               mHasHorizontalScrollbar(PR_FALSE),
-                                               mOnePixel(20)
+                                               mHasHorizontalScrollbar(PR_FALSE)
 {
    NS_INIT_REFCNT();
    mOuter = aOuter;

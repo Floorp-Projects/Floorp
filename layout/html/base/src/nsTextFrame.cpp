@@ -2196,11 +2196,13 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
 
   nsFrameState  frameState;
   GetFrameState(&frameState);
+#if 0
   PRBool isSelected = ((frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT);
-  /*if (!aSelected && !isSelected) //already set thanks
+  if (!aSelected && !isSelected) //already set thanks
   {
     return NS_OK;
-  }*/
+  }
+#endif
 
   // check whether style allows selection
 	const nsStyleUserInterface* userinterface;

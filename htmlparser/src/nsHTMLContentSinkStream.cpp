@@ -1011,7 +1011,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
 // and we'd better rewrap the whole text node.
 PRBool nsHTMLContentSinkStream::HasLongLines(const nsString& text)
 {
-  const PRInt32 longLineLen = 128;
+  const PRUint32 longLineLen = 128;
   nsString str = text;
   PRUint32 start=0;
   PRUint32 theLen=text.Length();

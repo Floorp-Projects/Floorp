@@ -574,14 +574,14 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   : mBlock(aFrame),
     mPresContext(aPresContext),
     mReflowState(aReflowState),
+    mNeedResizeReflow(PR_FALSE),
+    mIsInlineIncrReflow(PR_FALSE),
     mIsTopMarginRoot(PR_FALSE),
     mIsBottomMarginRoot(PR_FALSE),
     mApplyTopMargin(PR_FALSE),
     mNextRCFrame(nsnull),
     mPrevBottomMargin(0),
-    mLineNumber(0),
-    mNeedResizeReflow(PR_FALSE),
-    mIsInlineIncrReflow(PR_FALSE)
+    mLineNumber(0)
 {
   const nsMargin& borderPadding = BorderPadding();
 
@@ -1647,8 +1647,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       shell->GetFrameManager(getter_AddRefs(frameManager));  
       if (frameManager) {
         nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
-        nsISpaceManager *spaceManager = reflowState.mSpaceManager;
-        NS_ADDREF(spaceManager);
+        NS_ADDREF(reflowState.mSpaceManager);
         rv = frameManager->SetFrameProperty(this, nsLayoutAtoms::spaceManagerProperty,
                                             reflowState.mSpaceManager, nsnull /* should be nsSpaceManagerDestroyer*/);
       }

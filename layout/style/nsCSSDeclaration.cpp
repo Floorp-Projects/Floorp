@@ -380,10 +380,11 @@ nsCSSMargin::nsCSSMargin(void)
 
 nsCSSMargin::nsCSSMargin(const nsCSSMargin& aCopy)
   : mMargin(nsnull), mPadding(nsnull), 
-    mBorderWidth(nsnull), mBorderColor(nsnull), mBorderStyle(nsnull), mBorderRadius(nsnull), mOutlineRadius(nsnull),
+    mBorderWidth(nsnull), mBorderColor(nsnull), mBorderStyle(nsnull), mBorderRadius(nsnull),
     mOutlineWidth(aCopy.mOutlineWidth),
     mOutlineColor(aCopy.mOutlineColor),
     mOutlineStyle(aCopy.mOutlineStyle),
+    mOutlineRadius(nsnull),
     mFloatEdge(aCopy.mFloatEdge)
 {
   CSS_IF_COPY(mMargin, nsCSSRect);

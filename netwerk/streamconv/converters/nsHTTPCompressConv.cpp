@@ -35,12 +35,12 @@ NS_IMPL_THREADSAFE_ISUPPORTS2 (nsHTTPCompressConv, nsIStreamConverter, nsIStream
 // nsFTPDirListingConv methods
 nsHTTPCompressConv::nsHTTPCompressConv ()
     :   mListener (nsnull),
-        mInpBuffer  (NULL), mInpBufferLen (0),
-        mOutBuffer  (NULL), mOutBufferLen (0),
         mMode (HTTP_COMPRESS_IDENTITY),
+        mOutBuffer  (NULL), mInpBuffer  (NULL),
+	mOutBufferLen (0),  mInpBufferLen (0),
         mCheckHeaderDone (PR_FALSE),
-        mGzipStreamInitialized (PR_FALSE), mGzipStreamEnded (PR_FALSE),
-        hMode (0), mLen (0), mSkipCount (0), mFlags (0)
+        mGzipStreamEnded (PR_FALSE), mGzipStreamInitialized (PR_FALSE),
+        mLen (0), hMode (0), mSkipCount (0), mFlags (0)
 {
     NS_INIT_ISUPPORTS ();
 }

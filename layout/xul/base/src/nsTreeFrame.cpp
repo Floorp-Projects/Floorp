@@ -403,12 +403,14 @@ nsTreeFrame::Reflow(nsIPresContext*          aPresContext,
 
   mSlatedForReflow = PR_FALSE;
   
-  nsRect rect;
-  GetRect(rect);
-  if (rect.width != aReflowState.mComputedWidth && aReflowState.reason == eReflowReason_Resize) {
-    // We're doing a resize and changing the width of the table. All rows must
-    // reflow. Reset our generation.
-    SetUseGeneration(PR_FALSE);
+  if (aReflowState.reason == eReflowReason_Resize) {
+    nsRect rect;
+    GetRect(rect);
+    if (rect.width != aReflowState.mComputedWidth) {
+      // We're doing a resize and changing the width of the table. All rows must
+      // reflow. Reset our generation.
+      SetUseGeneration(PR_FALSE);
+    }
   }
 
   if (UseGeneration()) {

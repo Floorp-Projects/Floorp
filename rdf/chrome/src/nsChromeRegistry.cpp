@@ -1243,18 +1243,20 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCAutoString& aProviderTy
           installContainer->Init(installSource, resource);
         }
 
-        // Put all our elements into the install container.
-        nsCOMPtr<nsISimpleEnumerator> seqKids;
-        container->GetElements(getter_AddRefs(seqKids));
-        PRBool moreKids;
-        seqKids->HasMoreElements(&moreKids);
-        while (moreKids) {
-          nsCOMPtr<nsISupports> supp;
-          seqKids->GetNext(getter_AddRefs(supp));
-          nsCOMPtr<nsIRDFNode> kid = do_QueryInterface(supp);
-          installContainer->AppendElement(kid);
-          seqKids->HasMoreElements(&moreKids);
-        }
+        { // Restrict variable scope
+	  // Put all our elements into the install container.
+	  nsCOMPtr<nsISimpleEnumerator> seqKids;
+	  container->GetElements(getter_AddRefs(seqKids));
+	  PRBool moreKids;
+	  seqKids->HasMoreElements(&moreKids);
+	  while (moreKids) {
+	    nsCOMPtr<nsISupports> supp;
+	    seqKids->GetNext(getter_AddRefs(supp));
+	    nsCOMPtr<nsIRDFNode> kid = do_QueryInterface(supp);
+	    installContainer->AppendElement(kid);
+	    seqKids->HasMoreElements(&moreKids);
+	  }
+	}
 
         // See if we're a packages seq.  If so, we need to set up the baseURL and
         // the package arcs.

@@ -933,7 +933,6 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
 
   // now we need to adjust layout, because the AreaFrame
   // doesn't position things exactly where we want them
-  nscoord insideWidth  = dispWidth;
   nscoord insideHeight = aDesiredSize.height - aBorderPadding.top - aBorderPadding.bottom;
 
   // the gets for the Display "block" frame and for the button
@@ -2285,7 +2284,6 @@ nsComboboxControlFrame::Paint(nsIPresContext* aPresContext,
   nsAreaFrame::Paint(aPresContext,aRenderingContext,aDirtyRect,aWhichLayer);
 
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-    //nsRect rect(0, 0, mRect.width, mRect.height);
     if (mDisplayFrame) {
       aRenderingContext.PushState();
       PRBool clipEmpty;

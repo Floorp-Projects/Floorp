@@ -422,7 +422,6 @@ JVM_GetJavaPrincipalsFromStackAsNSVector(JSStackFrame  *pCurrentFrame)
        return NULL;
     }
 
-    JSPrincipals  *principals = NULL;
     JVMContext* context = GetJVMContext();
     JSContext *pJSCX = context->js_context;
     if (pJSCX == NULL)
@@ -455,7 +454,6 @@ JVM_GetJavaPrincipalsFromStack(JSStackFrame  *pCurrentFrame)
        return NULL;
     }
 
-    JSPrincipals  *principals = NULL;
     JVMContext* context = GetJVMContext();
     JSContext *pJSCX = context->js_context;
     if (pJSCX == NULL)

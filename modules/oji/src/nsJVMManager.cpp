@@ -524,7 +524,6 @@ nsJVMManager::StartupJVM(void)
  */
 
     PR_ASSERT(fJVM == NULL);
-    nsIPlugin* plugin = NULL;
     /*
     **TODO: amusil. Load the plugin by getting into Service manager.
     **              Right now there is no API to do this stuff. We need to

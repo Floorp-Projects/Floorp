@@ -99,7 +99,7 @@ nsRDFParserUtils::StripAndConvert(nsString& aResult)
     // should we be doing that? If so then it needs to live in two places (bad)
     // so we should add a translate numeric entity method from the parser...
     char cbuf[100];
-    PRInt32 i = 0;
+    PRUint32 i = 0;
     while (i < aResult.Length()) {
         // If we have the start of an entity (and it's not at the end of
         // our string) then translate the entity into it's unicode value.
@@ -112,7 +112,7 @@ nsRDFParserUtils::StripAndConvert(nsString& aResult)
                 char* cp = cbuf;
                 char* limit = cp + sizeof(cbuf) - 1;
                 PRBool ok = PR_FALSE;
-                PRInt32 slen = aResult.Length();
+                PRUint32 slen = aResult.Length();
                 while ((i < slen) && (cp < limit)) {
                     PRUnichar f = aResult.CharAt(i);
                     if (f == ';') {
@@ -153,7 +153,7 @@ nsRDFParserUtils::StripAndConvert(nsString& aResult)
                 char* limit = cp + sizeof(cbuf) - 1;
                 *cp++ = char(e);
                 PRBool ok = PR_FALSE;
-                PRInt32 slen = aResult.Length();
+                PRUint32 slen = aResult.Length();
                 while ((i < slen) && (cp < limit)) {
                     PRUnichar f = aResult.CharAt(i);
                     if (f == ';') {

@@ -107,7 +107,7 @@ nsXULTextFrame::AttributeChanged(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-nsXULTextFrame::nsXULTextFrame():mTitle(""), mCropType(CropRight),mAccessKeyInfo(nsnull)
+nsXULTextFrame::nsXULTextFrame():mCropType(CropRight),mTitle(""), mAccessKeyInfo(nsnull)
 {
 	mState |= NS_STATE_NEED_LAYOUT;
 }

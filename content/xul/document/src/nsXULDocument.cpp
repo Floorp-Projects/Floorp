@@ -5286,7 +5286,7 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
     //
     //     rdf:bookmarks rdf:history http://foo.bar.com/blah.cgi?baz=9
     //
-    PRInt32 first = 0;
+    PRUint32 first = 0;
 
     while(1) {
         while (first < datasources.Length() && nsCRT::IsAsciiSpace(datasources.CharAt(first)))
@@ -5295,7 +5295,7 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
         if (first >= datasources.Length())
             break;
 
-        PRInt32 last = first;
+        PRUint32 last = first;
         while (last < datasources.Length() && !nsCRT::IsAsciiSpace(datasources.CharAt(last)))
             ++last;
 
