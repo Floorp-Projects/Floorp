@@ -293,7 +293,6 @@
             var searchAttribute = this.searchAttribute;
             var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
 
-            dump("Saving searchvalue: " + searchValue + " (type = " + searchAttribute + ")\n");
             searchValue.attrib = searchAttribute;
             if (searchAttribute == nsMsgSearchAttrib.Priority)
                searchValue.priority = this.anonymousContent[1].selectedItem.data;
@@ -308,7 +307,7 @@
         <argument name="searchValue"/>
         <body>
           <![CDATA[
-            this.internalSearchValue = searchValue;
+            this.internalValue = searchValue;
             this.save();
           ]]>
         </body>
@@ -317,9 +316,7 @@
   </binding>
   <binding id="searchterm" extends="xul:box">
     <interface>
-      <!-- the three tags that make up a term - to use, set the
-           attribute in the XUL to the ID of the term.
-        -->
+      <!-- the actual nsIMsgSearchTerm object -->
       <property name="searchTerm" onget="return this.internalSearchTerm">
         <setter>
           <![CDATA[
@@ -357,6 +354,9 @@
            ]]>
         </setter>
       </property>
+      <!-- the three tags that make up a term - to use, set the
+           attribute in the XUL to the ID of the term.
+        -->
       <property name="searchattribute" 
                 onget="return document.getElementById(this.getAttribute('searchattribute'));"
                 onset="this.setAttribute('searchattribute',val.id)"/>
@@ -409,12 +409,10 @@
             var searchTerm = this.searchTerm;
             searchTerm.attrib = this.searchattribute.value;
             searchTerm.op = this.searchoperator.value;
-            dump("saving search value..\n");
             if (this.searchvalue.value)
               this.searchvalue.save();
             else
               this.searchvalue.saveTo(searchTerm.value);
-            dump("Reassigning back to me!\n");
             searchTerm.value = this.searchvalue.value;
             searchTerm.booleanAnd = this.booleanAnd;
           ]]>
