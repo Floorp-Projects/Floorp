@@ -50,6 +50,8 @@
 #include "nsReadableUtils.h"
 
 class nsIScriptContext;
+class JSRuntime;
+class nsIJSRuntimeService;
 
 MOZ_DECL_CTOR_COUNTER(nsXBLTextWithLineNumber)
 
@@ -117,6 +119,12 @@ public:
 protected:
   nsXBLProtoImplMember* mNext;  // The members of an implementation are chained.
   PRUnichar* mName;               // The name of the field, method, or property.
+  static nsIJSRuntimeService* gJSRuntimeService;
+  static JSRuntime* gScriptRuntime;
+  static PRInt32 gScriptRuntimeRefcnt;
+
+  static nsresult AddJSGCRoot(void* aScriptObjectRef, const char* aName);
+  static nsresult RemoveJSGCRoot(void* aScriptObjectRef);
 };
 
 #endif // nsXBLProtoImplMember_h__
