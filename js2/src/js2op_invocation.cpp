@@ -185,7 +185,8 @@
             retval = top();
             rts();
             if (pc == NULL) 
-                return pop();
+                return retval;
+            push(retval);
 	}
         break;
 

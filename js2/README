@@ -22,6 +22,27 @@ Welcome to Epimetheus.
 ep> (use ^z to exit)
 
 
+Building JS2 on LINUX:
+---------------------------------------------------------------------------------------------
+[/d/JS_2] cvs -z3 co mozilla/js2
+          cvs -z3 co mozilla/js/src/fdlibm
+
+[/d/JS_2] cd mozilla/js/src/fdlibm
+
+[/d/JS_2/mozilla/js/src/fdlibm] make -f Makefile.ref    <-- builds libfdm.a
+
+[/d/JS_2/mozilla/js/src/fdlibm] cd mozilla/js2
+
+[/d/JS_2/mozilla/js2] automake    <--- FIRST TIME ONLY
+[/d/JS_2/mozilla/js2] autoconf    <--- FIRST TIME ONLY
+[/d/JS_2/mozilla/js2] ./configure --enable-debug    <--- FIRST TIME ONLY
+[/d/JS_2/mozilla/js2] make
+
+
+RUNNING THE JS2 SHELL AFTER YOU'VE BUILT IT:
+cd   (path to)/mozilla/js2/tests/cpp
+[ (path to)/mozilla/js2/tests/cpp] ./dikdik
+
 
 
 ---------------------------------------------------------------------------------------------

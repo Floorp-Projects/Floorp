@@ -234,6 +234,7 @@ public:
         BytecodeContainer *bCon;
         Frame *topFrame;
         Phase phase;
+        js2val *execStackTop;
     };
     void jsr(Phase execPhase, BytecodeContainer *bCon);
     bool activationStackEmpty() { return (activationStackTop == activationStack); }

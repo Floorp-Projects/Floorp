@@ -382,6 +382,117 @@ namespace MetaData {
         activationStackTop = activationStack = new ActivationFrame[MAX_ACTIVATION_STACK];
     }
 
+#ifdef NYI_DEBUG
+
+    enum { BRANCH_OFFSET = 1, STR_PTR, NAME_INDEX, FRAME_INDEX, BRANCH_PAIR, U16 };
+    struct {
+        JS2Op op;
+        char *name;
+        int flags;
+    } opcodeData[] =
+    {
+        { eAdd,  "Add", 0 },
+        { eSubtract,  "Subtract", 0 },
+        { eMultiply,  "Multiply", 0 },
+        { eDivide,  "Divide", 0 },
+        { eModulo,  "Modulo", 0 },
+        { eEqual,  "Equal", 0 },
+        { eNotEqual,  "NotEqual", 0 },
+        { eLess,  "Less", 0 },
+        { eGreater,  "Greater", 0 },
+        { eLessEqual,  "LessEqual", 0 },
+        { eGreaterEqual,  "GreaterEqual", 0 },
+        { eLogicalXor,  "LogicalXor", 0 },
+        { eLogicalNot,  "LogicalNot", 0 },
+        { eMinus,  "Minus", 0 },
+        { ePlus,  "Plus", 0 },
+        { eComplement,  "Complement", 0 },
+        { eLeftShift,  "LeftShift", 0 },
+        { eRightShift,  "RightShift", 0 },
+        { eLogicalRightShift,  "LogicalRightShift", 0 },
+        { eBitwiseAnd,  "BitwiseAnd", 0 },
+        { eBitwiseXor,  "BitwiseXor", 0 },
+        { eBitwiseOr,  "BitwiseOr", 0 },
+        { eTrue,  "True", 0 },
+        { eFalse,  "False", 0 },
+        { eNull,  "Null", 0 },
+        { eNumber,  "Number", 0 },
+        { eRegExp,  "RegExp", 0 },
+        { eUInt64,  "UInt64", 0 },
+        { eInt64,  "Int64", 0 },
+        { eString,  "String", STR_PTR },            // <string pointer:u32>
+        { eThis,  "This", 0 },
+        { eNewObject,  "NewObject", U16 },         // <argCount:u16>
+        { eNewArray,  "NewArray", U16 },          // <argCount:u16>
+
+        { eThrow,  "Throw", 0 },
+        { eTry,  "Try", BRANCH_PAIR },               // <finally displacement:s32> <catch displacement:s32>
+        { eCallFinally,  "CallFinally", BRANCH_OFFSET },       // <branch displacement:s32>
+        { eReturnFinally,  "ReturnFinally", 0 },
+        { eHandler,  "Handler", 0 },
+
+        { eFirst,  "First", 0 },
+        { eNext,  "Next", 0 },
+        { eForValue,  "ForValue", 0 },
+
+        { eSlotRead,  "SlotRead", U16 },          // <slot index:u16>
+        { eSlotWrite,  "SlotWrite", U16 },         // <slot index:u16>
+
+        { eLexicalRead,  "LexicalRead", NAME_INDEX },       // <multiname index:u16>
+        { eLexicalWrite,  "LexicalWrite", NAME_INDEX },      // <multiname index:u16>
+        { eLexicalRef,  "LexicalRef", NAME_INDEX },        // <multiname index:u16>
+        { eLexicalDelete,  "LexicalDelete", NAME_INDEX },     // <multiname index:u16>
+        { eDotRead,  "DotRead", NAME_INDEX },           // <multiname index:u16>
+        { eDotWrite,  "DotWrite", NAME_INDEX },          // <multiname index:u16>
+        { eDotRef,  "DotRef", NAME_INDEX },            // <multiname index:u16>
+        { eDotDelete,  "DotDelete", NAME_INDEX },         // <multiname index:u16>
+        { eBracketRead,  "BracketRead", 0 },
+        { eBracketWrite,  "BracketWrite", 0 },
+        { eBracketRef,  "BracketRef", 0 },
+        { eBracketReadForRef,  "BracketReadForRef", 0 },
+        { eBracketWriteRef,  "BracketWriteRef", 0 },
+        { eBracketDelete,  "BracketDelete", 0 },
+
+        { eReturn,  "Return", 0 },
+        { eReturnVoid,  "ReturnVoid", 0 },
+        { ePushFrame,  "PushFrame", FRAME_INDEX },         // <frame index:u16>
+        { ePopFrame,  "PopFrame", 0 },
+        { eBranchFalse,  "BranchFalse", BRANCH_OFFSET },       // <branch displacement:s32> XXX save space with short and long versions instead ?
+        { eBranchTrue,  "BranchTrue", BRANCH_OFFSET },        // <branch displacement:s32>
+        { eBranch,  "Branch", BRANCH_OFFSET },            // <branch displacement:s32>
+        { eNew,  "New", U16 },               // <argCount:u16>
+        { eCall,  "Call", U16 },              // <argCount:u16>
+        { eTypeof,  "Typeof", 0 },
+        { eIs,  "Is", 0 },
+
+        { ePopv,  "Popv", 0 },
+        { ePop,  "Pop", 0 },
+        { eDup,  "Dup", 0 },
+
+        { eLexicalPostInc,  "LexicalPostInc", NAME_INDEX },    // <multiname index:u16>
+        { eLexicalPostDec,  "LexicalPostDec", NAME_INDEX },    // <multiname index:u16>
+        { eLexicalPreInc,  "LexicalPreInc", NAME_INDEX },     // <multiname index:u16>
+        { eLexicalPreDec,  "LexicalPreDec", NAME_INDEX },     // <multiname index:u16>
+        { eDotPostInc,  "DotPostInc", NAME_INDEX },        // <multiname index:u16>
+        { eDotPostDec,  "DotPostDec", NAME_INDEX },        // <multiname index:u16>
+        { eDotPreInc,  "DotPreInc", NAME_INDEX },         // <multiname index:u16>
+        { eDotPreDec,  "DotPreDec", NAME_INDEX },         // <multiname index:u16>
+        { eBracketPostInc,  "BracketPostInc", 0 },
+        { eBracketPostDec,  "BracketPostDec", 0 },
+        { eBracketPreInc,  "BracketPreInc", 0 },
+        { eBracketPreDec,  "BracketPreDec", 0 }
+
+    };
+
+    void dumpBytecode(uint8 *start, uint8 *end)
+    {
+        uint8 *pc = start;
+        while () {
+        }
+    }
+
+#endif
+
     // Return the effect of an opcode on the execution stack.
     // Some ops (e.g. eCall) have a variable effect, those are handled separately
     // (see emitOp)
@@ -568,6 +679,7 @@ namespace MetaData {
         activationStackTop->pc = pc;
         activationStackTop->phase = phase;
         activationStackTop->topFrame = meta->env.getTopFrame();
+        activationStackTop->execStackTop = sp;
         activationStackTop++;
         bCon = new_bCon;
         pc = new_bCon->getCodeStart();
@@ -586,6 +698,7 @@ namespace MetaData {
         phase = activationStackTop->phase;
         while (meta->env.getTopFrame() != activationStackTop->topFrame)
             meta->env.removeTopFrame();
+        sp = activationStackTop->execStackTop;
 
     }
 
