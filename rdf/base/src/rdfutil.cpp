@@ -1098,7 +1098,7 @@ rdf_ContainerIndexOf(nsIRDFDataSource* aDataSource,
             return rv;
         }
 
-        if (element != nsCOMPtr<nsIRDFNode>(aElement))
+        if (element != nsCOMPtr<nsIRDFNode>( do_QueryInterface(aElement)) )
             continue;
 
         *aIndex = index;
