@@ -525,6 +525,12 @@ protected:
      */
     nsresult ResumeWalk();
 
+    /**
+     * Report that an overlay failed to load
+     * @param aURI the URI of the overlay that failed to load
+     */
+    void ReportMissingOverlay(nsIURI* aURI);
+    
 #if defined(DEBUG_waterson) || defined(DEBUG_hyatt)
     // timing
     nsTime mLoadStart;
