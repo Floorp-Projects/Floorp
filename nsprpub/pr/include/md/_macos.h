@@ -51,12 +51,11 @@ struct _MDProcess {
 };
 
 struct _MDThread {
-    jmp_buf jb;
-    int osErrCode;
-	PRLock		*asyncIOLock;
-	PRCondVar	*asyncIOCVar;
-    void *cookie;
-    PRBool notifyPending;
+    jmp_buf      jb;
+    int          osErrCode;
+	PRLock *     asyncIOLock;
+	PRCondVar *  asyncIOCVar;
+    PRBool       notifyPending;
 };
 
 struct _MDThreadStack {
@@ -83,8 +82,21 @@ struct _MDCPU {
     PRInt8 notused;
 };
 
+typedef struct _MDSocketCallerInfo {
+	PRThread *	thread;
+	void *		cookie;
+} _MDSocketCallerInfo;
+
 struct _MDFileDesc {
-    PRInt32 osfd;
+    PRInt32     osfd;
+	PRBool      connectionOpen;
+	PRBool      readReady;
+	PRBool      writeReady;
+	PRBool      exceptReady;
+	PRLock *    miscLock;
+	_MDSocketCallerInfo  misc;
+	_MDSocketCallerInfo  read;
+	_MDSocketCallerInfo  write;
 };
 
 /*
@@ -377,7 +389,8 @@ extern PRStatus _MD_setsockopt(PRFileDesc *fd, PRInt32 level, PRInt32 optname, c
 #define _MD_SENDTO			_MD_sendto
 #define _MD_RECVFROM		_MD_recvfrom
 #define _MD_PR_POLL			_MD_poll
-#define _MD_INIT_FILEDESC(fd)
+#define _MD_INIT_FILEDESC	_MD_initfiledesc
+#define _MD_FREE_FILEDESC	_MD_freefiledesc
 #define _MD_MAKE_NONBLOCK	_MD_makenonblock
 
 #define _MD_GET_SOCKET_ERROR() 		_PR_MD_CURRENT_THREAD()->md.osErrCode

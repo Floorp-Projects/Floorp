@@ -101,6 +101,9 @@ PR_IMPLEMENT(PRFileDesc*) PR_AllocFileDesc(
 PR_IMPLEMENT(void) PR_FreeFileDesc(PRFileDesc *fd)
 {
     PR_ASSERT(fd);
+#ifdef XP_MAC
+	_PR_MD_FREE_FILEDESC(fd);
+#endif
     _PR_Putfd(fd);
 }
 
