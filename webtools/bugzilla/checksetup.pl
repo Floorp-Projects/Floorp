@@ -1238,7 +1238,7 @@ my $db_base = 'mysql';
 if ($my_db_check) {
     # Do we have the database itself?
 
-    my $sql_want = "3.23.6";  # minimum version of MySQL
+    my $sql_want = "3.23.41";  # minimum version of MySQL
 
 # original DSN line was:
 #    my $dsn = "DBI:$db_base:$my_db_name;$my_db_host;$my_db_port";

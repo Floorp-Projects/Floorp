@@ -31,7 +31,7 @@
 <!ENTITY newest-perl-ver "5.8">
 
 <!-- For minimum versions -->
-<!ENTITY min-mysql-ver "3.23.6">
+<!ENTITY min-mysql-ver "3.23.41">
 <!ENTITY min-perl-ver "5.6">
 <!ENTITY min-template-ver "2.08">
 <!ENTITY min-file-temp-ver "1.804">
