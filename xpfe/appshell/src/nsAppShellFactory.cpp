@@ -49,7 +49,6 @@
 #include "nsCommandLineService.h"  
 #include "nsAppShellService.h"
 #include "nsWindowMediator.h"
-#include "nsTimingService.h"
 
 #include "nsUserInfo.h"
 
@@ -60,7 +59,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCmdLineService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShellService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowMediator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimingService)
 
 static const nsModuleComponentInfo gAppShellModuleInfo[] =
 {
@@ -88,11 +86,6 @@ static const nsModuleComponentInfo gAppShellModuleInfo[] =
     NS_USERINFO_CID,
     NS_USERINFO_CONTRACTID,
     nsUserInfoConstructor,
-  },
-  { "Timing Service",
-    NS_TIMINGSERVICE_CID,
-    NS_TIMINGSERVICE_CONTRACTID,
-    nsTimingServiceConstructor,
   },
 };
 
