@@ -102,7 +102,7 @@ nsObserverList::AddObserver(nsIObserver* anObserver, PRBool ownsWeak)
 nsresult
 nsObserverList::RemoveObserver(nsIObserver* anObserver)
 {
-	PRBool removed;
+    PRBool removed = PR_FALSE;
     
     NS_ENSURE_ARG(anObserver);
 

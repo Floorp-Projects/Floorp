@@ -407,7 +407,7 @@ class nsAppDirectoryEnumerator : public nsISimpleEnumerator
         return *result ? NS_OK : NS_ERROR_FAILURE;
     }
 
-    ~nsAppDirectoryEnumerator() // I don't expect to be subclassed
+    virtual ~nsAppDirectoryEnumerator()
     {
     }
 
