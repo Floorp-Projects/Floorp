@@ -566,7 +566,7 @@ SECMOD_HasRootCerts(void)
  * Functions to find specific slots.
  ***********************************************************/
 PK11SlotList *
-PK11_FindSlotsByAliases(const char *dllName, const char* slotName,
+PK11_FindSlotsByNames(const char *dllName, const char* slotName,
                         const char* tokenName, PRBool presentOnly)
 {
     SECMODModuleList *mlp;

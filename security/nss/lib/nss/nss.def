@@ -758,17 +758,17 @@ SECKEY_PublicKeyStrengthInBits;
 ;+};
 ;+NSS_3.9 { 	# NSS 3.9 release
 ;+    global:
-DER_DecodeTimeChoice;
 CERT_DestroyOidSequence;
-DER_EncodeTimeChoice;
 CERT_GetOidString;
 ;;CERT_TimeChoiceTemplate DATA ;
+DER_DecodeTimeChoice;
+DER_EncodeTimeChoice;
 DSAU_DecodeDerSigToLen;
 DSAU_EncodeDerSigWithLen;
 NSS_Get_CERT_TimeChoiceTemplate;
 PK11_DeriveWithFlagsPerm;
 PK11_ExportEncryptedPrivKeyInfo;
-PK11_FindSlotsByAliases;
+PK11_FindSlotsByNames;
 PK11_GetSymKeyType;
 PK11_MoveSymKey;
 PK11_PubDeriveExtended;
