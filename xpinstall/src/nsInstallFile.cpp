@@ -192,7 +192,7 @@ PRInt32 nsInstallFile::CompleteFileMove()
             
             char* leafName = mFinalFile->GetLeafName();
             mExtracedFile->Rename(leafName);
-            delete [] leafName;
+            nsCRT::free(leafName);
 
         }
         else
@@ -209,7 +209,7 @@ PRInt32 nsInstallFile::CompleteFileMove()
             
                 char* leafName = mFinalFile->GetLeafName();
                 mExtracedFile->Rename(leafName);
-                delete [] leafName;
+                nsCRT::free(leafName);
             }
             else
             {

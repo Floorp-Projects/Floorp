@@ -320,7 +320,7 @@ nsInstallPatch::NativeReplace(const nsFileSpec& oldfile, nsFileSpec& newFile)
         
         char* leafName = newFile.GetLeafName();
         newFile.Rename(leafName);
-        delete [] leafName;
+        nsCRT::free(leafName);
     }
     
     return nsInstall::SUCCESS;
