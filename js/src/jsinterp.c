@@ -406,11 +406,9 @@ js_AllocStack(JSContext *cx, uintN nslots, void **markp)
 #ifdef DEBUG
             jsuword depthdiff = fp->script->depth * sizeof(jsval);
             JS_ASSERT(JS_UPTRDIFF(fp->sp, fp->spbase) <= depthdiff);
-            JS_ASSERT(JS_UPTRDIFF(*markp, fp->spbase) <= depthdiff);
+            JS_ASSERT(JS_UPTRDIFF(*markp, fp->spbase) >= depthdiff);
 #endif
             end = fp->spbase + fp->script->depth;
-            if (end > (jsval *) *markp)
-                end = (jsval *) *markp;
             for (vp = fp->sp; vp < end; vp++)
                 *vp = JSVAL_VOID;
         }
