@@ -1,0 +1,54 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Author:
+ *   Conrad Carlen <ccarlen@netscape.com>
+ *
+ * Contributor(s): 
+ */
+ 
+#include "nsISupports.idl"
+
+
+//
+// nsIWebBrowserFind interface
+//
+// Searches for text in a web browser.
+//
+
+[scriptable, uuid(2f977d44-5485-11d4-87e2-0010a4e75ef2)]
+interface nsIWebBrowserFind : nsISupports
+{
+	/**
+		Finds the next occurance of the string using the
+		current attributes. At least the searchString
+		attribute must have been set before calling this
+		or NS_ERROR_NOT_INITIALIZED will be returned.
+		All other attributes can be defaults. 
+	*/
+	
+	boolean		findNext();
+                              
+    attribute wstring searchString;
+    
+    attribute boolean findBackwards;
+    attribute boolean wrapFind;
+    attribute boolean entireWord;
+    attribute boolean matchCase;                          
+};
