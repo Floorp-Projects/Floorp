@@ -1434,9 +1434,8 @@ nsFontGTKSubstitute::nsFontGTKSubstitute(nsFontGTK* aFont)
 
 nsFontGTKSubstitute::~nsFontGTKSubstitute()
 {
-  if ((!--gCount) && gConverter) {
-    nsServiceManager::ReleaseService(kSaveAsCharsetCID, gConverter);
-    gConverter = nsnull;
+  if (!--gCount) {
+    NS_IF_RELEASE(gConverter);
   }
   // Do not free mSubstituteFont here. It is owned by somebody else.
 }
@@ -1447,16 +1446,15 @@ nsFontGTKSubstitute::Convert(const PRUnichar* aSrc, PRUint32 aSrcLen,
 {
   nsresult res;
   if (!gConverter) {
-    nsServiceManager::GetService(kSaveAsCharsetCID,
-      NS_GET_IID(nsISaveAsCharset), (nsISupports**) &gConverter);
+    nsComponentManager::CreateInstance(kSaveAsCharsetCID, nsnull,
+      NS_GET_IID(nsISaveAsCharset), (void**) &gConverter);
     if (gConverter) {
       res = gConverter->Init("ISO-8859-1",
                              nsISaveAsCharset::attr_FallbackQuestionMark +
                                nsISaveAsCharset::attr_EntityBeforeCharsetConv,
                              nsIEntityConverter::transliterate);
       if (NS_FAILED(res)) {
-        nsServiceManager::ReleaseService(kSaveAsCharsetCID, gConverter);
-        gConverter = nsnull;
+        NS_RELEASE(gConverter);
       }
     }
   }
