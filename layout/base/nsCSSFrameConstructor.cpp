@@ -153,7 +153,7 @@ static PRBool gReallyNoisyContentUpdates = PR_FALSE;
 static PRBool gNoisyInlineConstruction = PR_FALSE;
 #endif
 
-#define XULTREE
+//#define XULTREE
 #ifdef XULTREE
 #include "nsXULTreeFrame.h"
 #include "nsXULTreeGroupFrame.h"
