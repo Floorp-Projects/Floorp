@@ -24,6 +24,7 @@
 #include "nsIComponentManager.h"
 #include "nsIGenericFactory.h"
 #include "nsIChromeRegistry.h"
+#include "nsIChromeEntry.h"
 #include "nscore.h"
 #include "rdf.h"
 #include "nsCOMPtr.h"
@@ -33,6 +34,7 @@
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
+static NS_DEFINE_CID(kChromeEntryCID, NS_CHROMEENTRY_CID);
 static NS_DEFINE_CID(kChromeProtocolHandlerCID, NS_CHROMEPROTOCOLHANDLER_CID);
 
 static NS_IMETHODIMP
@@ -51,6 +53,24 @@ NS_ConstructChromeRegistry(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     NS_RELEASE(chromeRegistry);
     return rv;
 }
+
+static NS_IMETHODIMP
+NS_ConstructChromeEntry(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    nsresult rv;
+    NS_ASSERTION(aOuter == nsnull, "no aggregation");
+    nsIChromeEntry* chromeEntry;
+    rv = NS_NewChromeEntry(&chromeEntry);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("Unable to construct chrome entry");
+        return rv;
+    }
+    rv = chromeEntry->QueryInterface(aIID, aResult);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find correct interface");
+    NS_RELEASE(chromeEntry);
+    return rv;
+}
+
 
 // Module implementation
 class nsChromeModule : public nsIModule
@@ -71,6 +91,7 @@ protected:
     PRBool mInitialized;
     nsCOMPtr<nsIGenericFactory> mChromeRegistryFactory;
     nsCOMPtr<nsIGenericFactory> mChromeProtocolHandlerFactory;
+    nsCOMPtr<nsIGenericFactory> mChromeEntryFactory;
 };
 
 //----------------------------------------------------------------------
@@ -110,6 +131,7 @@ nsChromeModule::Shutdown()
     // Release the factory objects
     mChromeRegistryFactory = nsnull;
     mChromeProtocolHandlerFactory = nsnull;
+    mChromeEntryFactory = nsnull;
 }
 
 // Create a factory object for creating instances of aClass.
@@ -147,6 +169,17 @@ nsChromeModule::GetClassObject(nsIComponentManager *aCompMgr,
             // one.
             rv = NS_NewGenericFactory(getter_AddRefs(mChromeRegistryFactory),
                                       NS_ConstructChromeRegistry);
+        }
+        fact = mChromeRegistryFactory;
+    }
+    else if (aClass.Equals(kChromeEntryCID)) {
+        if (!mChromeEntryFactory) {
+            // Create and save away the factory object for creating
+            // new instances of ChromeRegistry. This way if we are called
+            // again for the factory, we won't need to create a new
+            // one.
+            rv = NS_NewGenericFactory(getter_AddRefs(mChromeEntryFactory),
+                                      NS_ConstructChromeEntry);
         }
         fact = mChromeRegistryFactory;
     }
@@ -188,7 +221,9 @@ struct Components {
 // The list of components we register
 static Components gComponents[] = {
     { "Chrome Registry", &kChromeRegistryCID,
-      "component://netscape/chrome", },
+      "component://netscape/chrome/chrome-registry", },
+    { "Chrome Entry", &kChromeEntryCID,
+      "component://netscape/chrome/chrome-entry", },
     { "Chrome Protocol Handler", &kChromeProtocolHandlerCID,
       NS_NETWORK_PROTOCOL_PROGID_PREFIX "chrome", },
 };

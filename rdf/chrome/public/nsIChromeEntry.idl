@@ -25,13 +25,21 @@
 [scriptable, uuid(C0E45041-A6C6-11d3-97FB-00400553EEF0)]
 interface nsIChromeEntry : nsISupports
 {
-  readonly attribute wstring name;
-  readonly attribute wstring displayText;
-  readonly attribute wstring versionNumber;
-  readonly attribute wstring author;
-  readonly attribute wstring siteURL;
-  readonly attribute wstring previewImageURL;
+  attribute wstring name;
+  attribute wstring displayText;
+  attribute wstring versionNumber;
+  attribute wstring author;
+  attribute wstring siteURL;
+  attribute wstring previewImageURL;
 };
 
 %{ C++
+
+// {96CF5BC2-A715-11d3-97FB-00400553EEF0}
+#define NS_CHROMEENTRY_CID \
+{ 0x96cf5bc2, 0xa715, 0x11d3, { 0x97, 0xfb, 0x0, 0x40, 0x5, 0x53, 0xee, 0xf0 } }
+
+extern nsresult
+NS_NewChromeEntry(nsIChromeEntry** aResult);
+
 %}

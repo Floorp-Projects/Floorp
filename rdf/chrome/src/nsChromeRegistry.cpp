@@ -24,6 +24,7 @@
 #include "nsFileSpec.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsIChromeRegistry.h"
+#include "nsIChromeEntry.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFRemoteDataSource.h"
@@ -77,7 +78,7 @@ DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, archive);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, theme);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, name);
 
-// This nasty function should disappear when we land Necko completely and 
+// XXX This nasty function should disappear when we land Necko completely and 
 // change chrome://global/skin/foo to chrome://skin@global/foo
 //
 void BreakProviderAndRemainingFromPath(const char* i_path, char** o_provider, char** o_remaining);
@@ -234,6 +235,27 @@ NS_IMETHODIMP nsChromeEntryEnumerator::GetNext(nsISupports **aResult)
   nsCOMPtr<nsISupports> supports;
   mCurrentArcs->GetNext(getter_AddRefs(supports));
 
+  // The resource that we obtain is the name of the skin/locale/package with
+  // "chrome:" prepended to it. It has arcs to simple literals
+  // for each of the fields that should be in the chrome entry.
+  // We need to construct a chrome entry and then fill in the
+  // values by enumerating the arcs out of our resource (to the
+  // literals)
+  nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(supports, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIChromeEntry> chromeEntry;
+  rv = nsComponentManager::CreateInstance("component://netscape/chrome/chrome-entry",
+                                          nsnull,
+                                          NS_GET_IID(nsIChromeEntry),
+                                          getter_AddRefs(chromeEntry));
+
+  // XXX Now that we have a resource, we must examine all of its outgoing
+  // arcs and use the literals at the ends of the arcs to set the fields
+  // of the chrome entry.
+
+/*
   nsCOMPtr<nsIRDFLiteral> value = do_QueryInterface(supports, &rv);
   if (NS_FAILED(rv))
     return NS_OK;
@@ -242,15 +264,16 @@ NS_IMETHODIMP nsChromeEntryEnumerator::GetNext(nsISupports **aResult)
   rv = value->GetValueConst(&valueStr);
   if (NS_FAILED(rv))
     return rv;
-/*
+    */
+
   nsCOMPtr<nsISupports> sup;
-  sup = do_QueryInterface(url, &rv);
+  sup = do_QueryInterface(chromeEntry, &rv);
   if (NS_FAILED(rv))
     return NS_OK;
 
   *aResult = sup;
   NS_ADDREF(*aResult);
-*/
+
   return NS_OK;
 }
 
@@ -313,6 +336,10 @@ private:
     NS_IMETHOD RefreshWindow(nsIDOMWindow* aWindow);
 
 		NS_IMETHOD ProcessStyleSheet(nsIURL* aURL, nsICSSLoader* aLoader, nsIDocument* aDocument);
+
+    NS_IMETHOD GetArcs(nsIRDFDataSource* aDataSource,
+                          const nsCAutoString& aType,
+                          nsISimpleEnumerator** aResult);
 
 };
 
@@ -828,22 +855,6 @@ nsChromeRegistry::GetChromeResource(nsIRDFDataSource *aDataSource,
         return NS_ERROR_UNEXPECTED;
     }
 
-    return NS_OK;
-}
-
-
-nsresult
-NS_NewChromeRegistry(nsIChromeRegistry** aResult)
-{
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    nsChromeRegistry* chromeRegistry = new nsChromeRegistry();
-    if (chromeRegistry == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(chromeRegistry);
-    *aResult = chromeRegistry;
     return NS_OK;
 }
 
@@ -1399,7 +1410,6 @@ nsChromeRegistry::GetEnumeratorForType(const nsCAutoString& type, nsISimpleEnume
   nsCOMPtr<nsIRDFRemoteDataSource> remoteProfile = do_QueryInterface(profileDataSource);
   nsCOMPtr<nsIRDFRemoteDataSource> remoteInstall = do_QueryInterface(installDataSource);
    
-  nsCAutoString fileURL;
   nsCOMPtr<nsIFileLocator> fl;
   
   rv = nsComponentManager::CreateInstance("component://netscape/filelocator",
@@ -1411,12 +1421,10 @@ nsChromeRegistry::GetEnumeratorForType(const nsCAutoString& type, nsISimpleEnume
     return NS_OK;
 
   // Build a fileSpec that points to the destination
-  // (profile dir + chrome + package + provider + chrome.rdf)
   nsCOMPtr<nsIFileSpec> chromeFileInterface;
   fl->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, getter_AddRefs(chromeFileInterface));
   nsFileSpec fileSpec;
 
-  PRBool exists = PR_FALSE;
   if (chromeFileInterface) {
     // Read in the profile data source (or try to anyway)
     chromeFileInterface->GetFileSpec(&fileSpec);
@@ -1439,9 +1447,15 @@ nsChromeRegistry::GetEnumeratorForType(const nsCAutoString& type, nsISimpleEnume
   remoteInstall->Refresh(PR_TRUE);
 
   // Get some arcs from each data source.
-  
-  // Build an nsChromeEntryEnumerator and return it.
+  nsCOMPtr<nsISimpleEnumerator> profileArcs, installArcs;
 
+  GetArcs(profileDataSource, type, getter_AddRefs(profileArcs));
+  GetArcs(installDataSource, type, getter_AddRefs(installArcs));
+
+  // Build an nsChromeEntryEnumerator and return it.
+  *aResult = new nsChromeEntryEnumerator(profileArcs, installArcs);
+  NS_ADDREF(*aResult);
+  
   return NS_OK;
 }
 
@@ -1464,4 +1478,57 @@ nsChromeRegistry::GetLocales(nsISimpleEnumerator** aResult)
 {
   nsCAutoString type("locales");
 	return GetEnumeratorForType(type, aResult);
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::GetArcs(nsIRDFDataSource* aDataSource,
+                          const nsCAutoString& aType,
+                          nsISimpleEnumerator** aResult)
+{
+  nsCOMPtr<nsIRDFContainer> container;
+  nsresult rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+                                          nsnull,
+                                          NS_GET_IID(nsIRDFContainer),
+                                          getter_AddRefs(container));
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  nsCAutoString lookup("chrome:");
+  lookup += aType;
+
+  // Get the chromeResource from this lookup string
+  nsCOMPtr<nsIRDFResource> chromeResource;
+  if (NS_FAILED(rv = GetPackageTypeResource(lookup, getter_AddRefs(chromeResource)))) {
+      NS_ERROR("Unable to retrieve the resource corresponding to the chrome skin or content.");
+      return rv;
+  }
+  nsAllocator::Free(lookup);
+
+  if (NS_FAILED(container->Init(aDataSource, chromeResource)))
+    return NS_OK;
+
+  nsCOMPtr<nsISimpleEnumerator> arcs;
+  if (NS_FAILED(container->GetElements(getter_AddRefs(arcs))))
+    return NS_OK;
+  
+  *aResult = arcs;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+nsresult
+NS_NewChromeRegistry(nsIChromeRegistry** aResult)
+{
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    nsChromeRegistry* chromeRegistry = new nsChromeRegistry();
+    if (chromeRegistry == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(chromeRegistry);
+    *aResult = chromeRegistry;
+    return NS_OK;
 }
