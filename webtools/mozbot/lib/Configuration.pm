@@ -98,7 +98,7 @@ sub Save {
                     $value = $$value while ref($value) eq 'REF';
                     if (ref($value) eq 'SCALAR') {
                         if (defined($$value)) {
-                            print FILE $variable.'='.$$value."\n";
+                            print FILE $variable.'='.$$value."\n" or confess("Could not save configuration: $!");
                         }
                     } elsif (ref($value) eq 'HASH') {
                         my @keys = keys %$value;
@@ -115,24 +115,26 @@ sub Save {
                                         last;
                                     }
                                 }
-                                print FILE "$variable=$delimiter$item$delimiter=>$data\n"
-                                  if defined($delimiter);
+                                if (defined($delimiter)) {
+                                  print FILE "$variable=$delimiter$item$delimiter=>$data\n"
+                                    or confess("Could not save configuration: $!");
+                                }
                                 # else, silent data loss... XXX
                             }
                         } else {
-                            print FILE "$variable\n";
+                            print FILE "$variable\n" or confess("Could not save configuration: $!");
                         }
                     } elsif (ref($value) eq 'ARRAY') {
                         if (@$value > 0) {
                             foreach my $item (@$value) {
                                 if (defined($item)) {
-                                    print FILE "$variable=$item\n";
+                                    print FILE "$variable=$item\n" or confess("Could not save configuration: $!");
                                 } else {
-                                    print FILE "$variable=\n";
+                                    print FILE "$variable=\n" or confess("Could not save configuration: $!");
                                 }
                             }
                         } else {
-                            print FILE "$variable\n";
+                            print FILE "$variable\n" or confess("Could not save configuration: $!");
                         }
                     } else {
                         confess("Unsupported data type '".ref($value)."' writing $variable (".$$config{$variable}.')');
@@ -141,18 +143,18 @@ sub Save {
                 } # else seen it already
             } else { # unknown
                 if (defined($value)) {
-                    print FILE "$variable=$value\n";
+                    print FILE "$variable=$value\n" or confess("Could not save configuration: $!");
                 } else {
-                    print FILE "$variable\n";
+                    print FILE "$variable\n" or confess("Could not save configuration: $!");
                 }
             }
         } else {
             # might be a comment
-            print FILE $_."\n";
+            print FILE $_."\n" or confess("Could not save configuration: $!");
         }
     }
     # actually do make a change to the real file    
-    close FILE;
+    close FILE or confess("Could not save configuration: $!");
 
     # -- #mozwebtools was here --
     # * Hixie is sad as his bot crashes.
