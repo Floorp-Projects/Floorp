@@ -288,6 +288,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
                                            */
     // Get column information
     nsTableColFrame *colFrame = mTableFrame->GetColFrame(colIndex);
+    if (gsDebug) printf("BTLS::APCW - got colFrame %p for colIndex %d\n", colFrame, colIndex);
     NS_ASSERTION(nsnull!=colFrame, "bad col frame");
 
     // Get the columns's style
@@ -302,6 +303,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
       haveColWidth = PR_TRUE;
       specifiedFixedColWidth = colPosition->mWidth.GetCoordValue();
       specifiedFixedColWidth += (cellPadding*2);
+      if (gsDebug) printf("BTLS::APCW - got specified col width = %d\n", specifiedFixedColWidth);
     }
 
     /* Scan the column, simulatneously assigning column widths

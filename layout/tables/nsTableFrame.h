@@ -39,6 +39,13 @@ struct InnerTableReflowState;
 struct nsStylePosition;
 struct nsStyleSpacing;
 
+/**
+ * Child list name indices
+ * @see #GetAdditionalChildListName()
+ */
+#define NS_TABLE_FRAME_COLGROUP_LIST_INDEX 0
+#define NS_TABLE_FRAME_LAST_LIST_INDEX    NS_TABLE_FRAME_COLGROUP_LIST_INDEX
+
 /* ============================================================================ */
 
 /** nsTableFrame maps the inner portion of a table (everything except captions.)
@@ -93,6 +100,11 @@ public:
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
+
+  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const;
+
+  NS_IMETHOD  GetAdditionalChildListName(PRInt32   aIndex,
+                                         nsIAtom*& aListName) const;
 
   /** complete the append of aRowGroupFrame to the table
     * this builds the cell map
@@ -511,10 +523,6 @@ protected:
     */
   virtual void BuildCellIntoMap (nsTableCellFrame *aCell, PRInt32 aRowIndex, PRInt32 aColIndex);
 
-  /** returns the index of the first child after aStartIndex that is a row group 
-    */
-  virtual nsTableRowGroupFrame* NextRowGroupFrame (nsTableRowGroupFrame*);
-
   /** return the number of columns as specified by the input. 
     * has 2 side effects:<br>
     * calls SetStartColumnIndex on each nsTableColumn<br>
@@ -589,6 +597,9 @@ public: /* ----- Cell Map public methods ----- */
   /** returns PR_TRUE if table layout requires a preliminary pass over the content */
   PRBool RequiresPass1Layout();
 
+public:
+  static nsIAtom* gColGroupAtom;
+
 private:
   void DebugPrintCount() const; // Debugging routine
 
@@ -606,6 +617,7 @@ private:
   nsCellMap*   mCellMap;            // maintains the relationships between rows, cols, and cells
   ColumnInfoCache *mColCache;       // cached information about the table columns
   nsITableLayoutStrategy * mTableLayoutStrategy; // the layout strategy for this frame
+  nsIFrame*    mColGroups;          // the list of colgroup frames
 };
 
 
