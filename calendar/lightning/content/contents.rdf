@@ -20,10 +20,10 @@
 
   <!-- overlay information -->
   <RDF:Seq about="urn:mozilla:overlays">
-    <RDF:li resource="chrome://messenger/content/mailWindowOverlay.xul"/>
+    <RDF:li resource="chrome://messenger/content/messenger.xul"/>
   </RDF:Seq>
 
-  <RDF:Seq about="chrome://messenger/content/mailWindowOverlay.xul">
+  <RDF:Seq about="chrome://messenger/content/messenger.xul">
     <RDF:li>chrome://lightning/content/tools-overlay.xul</RDF:li>
   </RDF:Seq>
 
