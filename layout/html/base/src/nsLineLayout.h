@@ -40,6 +40,9 @@ class nsSpaceManager;
 class nsPlaceholderFrame;
 struct nsStyleText;
 
+#define NS_LINELAYOUT_NUM_FRAMES        5
+#define NS_LINELAYOUT_NUM_SPANS         5
+
 class nsLineLayout {
 public:
   nsLineLayout(nsIPresContext* aPresContext,
@@ -382,30 +385,19 @@ protected:
       }
       return pfd;
     }
-
-    // PerFrameData objects are allocated in the pres shell's dynamic
-    // stack arena.
-    void* operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW {
-      void *ptr;
-      aPresShell->AllocateStackMemory(sz, &ptr);
-      return ptr;
-    }
-
-    void operator delete(void* aPtr, size_t sz) {
-      NS_NOTREACHED("PerFrameData destructors are not called");
-    }
-
-private:
-    // The normal operator new is disallowed.
-    void* operator new(size_t sz) CPP_THROW_NEW { return nsnull; };
-
   };
+  PerFrameData mFrameDataBuf[NS_LINELAYOUT_NUM_FRAMES];
+  PerFrameData* mFrameFreeList;
+  PRInt32 mInitialFramesFreed;
 
 #if defined(AIX_XLC_364) || defined(XP_OS2_VACPP)
 public:
 #endif
   struct PerSpanData {
-    PerSpanData* mParent;
+    union {
+      PerSpanData* mParent;
+      PerSpanData* mNextFreeSpan;
+    };
     PerFrameData* mFrame;
     PerFrameData* mFirstFrame;
     PerFrameData* mLastFrame;
@@ -435,34 +427,26 @@ public:
       }
       mLastFrame = pfd;
     }
-
-    // PerSpanData objects are allocated in the pres shell's dynamic
-    // stack arena.
-    void* operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW {
-      void *ptr;
-      aPresShell->AllocateStackMemory(sz, &ptr);
-      return ptr;
-    }
-
-    void operator delete(void* aPtr, size_t sz) {
-      NS_NOTREACHED("PerSpanData destructors are not called");
-    }
-
-private:
-    // The normal operator new is disallowed.
-    void* operator new(size_t sz) CPP_THROW_NEW { return nsnull; };
-
   };
 #if defined(AIX_XLC_364) || defined(XP_OS2_VACPP)
 protected:
 #endif
+  PerSpanData mSpanDataBuf[NS_LINELAYOUT_NUM_SPANS];
+  PerSpanData* mSpanFreeList;
+  PRInt32 mInitialSpansFreed;
   PerSpanData* mRootSpan;
   PerSpanData* mCurrentSpan;
   PRInt32 mSpanDepth;
+#ifdef DEBUG
+  PRInt32 mSpansAllocated, mSpansFreed;
+  PRInt32 mFramesAllocated, mFramesFreed;
+#endif
 
   nsresult NewPerFrameData(PerFrameData** aResult);
 
   nsresult NewPerSpanData(PerSpanData** aResult);
+
+  void FreeSpan(PerSpanData* psd);
 
   PRBool InBlockContext() const {
     return mSpanDepth == 0;
