@@ -324,6 +324,11 @@ public:
    * Returns true if the given element is an XForms label.
    */
   static NS_HIDDEN_(PRBool) IsLabelElement(nsIDOMNode *aElement);
+  
+  /**
+   * Tries to focus a form control and returns true if succeeds.
+   */
+  static NS_HIDDEN_(PRBool) FocusControl(nsIDOMElement *aElement);
 
 };
 

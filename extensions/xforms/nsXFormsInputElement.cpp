@@ -80,6 +80,7 @@ public:
   // nsIXFormsControl
   NS_IMETHOD Bind();
   NS_IMETHOD Refresh();
+  NS_IMETHOD TryFocus(PRBool* aOK);
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
@@ -340,6 +341,13 @@ nsXFormsInputElement::Refresh()
     input->SetReadOnly(readonly);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsInputElement::TryFocus(PRBool* aOK)
+{
+  *aOK = GetRelevantState() && nsXFormsUtils::FocusControl(mControl);
   return NS_OK;
 }
 

@@ -79,6 +79,7 @@ public:
 
   // nsIXFormsControl
   NS_IMETHOD Refresh();
+  NS_IMETHOD TryFocus(PRBool* aOK);
 
   // nsIDOMEventListener
   NS_DECL_NSIDOMEVENTLISTENER
@@ -340,6 +341,13 @@ nsXFormsSelectElement::Refresh()
     }
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsSelectElement::TryFocus(PRBool* aOK)
+{
+  *aOK = GetRelevantState() && nsXFormsUtils::FocusControl(mSelect);
   return NS_OK;
 }
 

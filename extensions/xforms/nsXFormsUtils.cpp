@@ -41,6 +41,7 @@
 #include "nsString.h"
 #include "nsXFormsAtoms.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMNSHTMLElement.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
@@ -938,4 +939,14 @@ nsXFormsUtils::IsLabelElement(nsIDOMNode *aElement)
   }
 
   return PR_FALSE;
+}
+
+/* static */ PRBool
+nsXFormsUtils::FocusControl(nsIDOMElement *aElement)
+{
+  PRBool ret = PR_FALSE;
+  nsCOMPtr<nsIDOMNSHTMLElement> element(do_QueryInterface(aElement));
+  if (element && NS_SUCCEEDED(element->Focus()))
+    ret = PR_TRUE;
+  return ret;
 }

@@ -160,6 +160,7 @@ public:
 
   // nsIXFormsControl
   NS_IMETHOD Refresh();
+  NS_IMETHOD TryFocus(PRBool* aOK);
 
   nsXFormsRepeatElement() : mAddingChildren(PR_FALSE) {};  
 };
@@ -424,6 +425,17 @@ nsXFormsRepeatElement::Refresh()
     }
   }
  
+  return NS_OK;
+}
+
+/**
+ * @todo "Setting focus to a repeating structure sets the focus to
+ *        the repeat item represented by the repeat index."
+ */
+NS_IMETHODIMP
+nsXFormsRepeatElement::TryFocus(PRBool* aOK)
+{
+  *aOK = PR_FALSE;
   return NS_OK;
 }
 

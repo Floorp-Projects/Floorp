@@ -42,6 +42,7 @@
 #include "nsIDOM3Node.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMNodeList.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIDOMHTMLDivElement.h"
@@ -78,6 +79,9 @@ class nsXFormsGroupElement : public nsXFormsControlStub,
                              public nsIXFormsContextControl
 {
 protected:
+  /** Tries to focus a child form control.*/
+  PRBool TryFocusChildControl(nsIDOMNode* aParent);
+  
   /** The UI HTML element used to represent the tag */
   nsCOMPtr<nsIDOMHTMLDivElement> mHTMLElement;
 
@@ -103,6 +107,7 @@ public:
 
   // nsIXFormsControl
   NS_IMETHOD Refresh();
+  NS_IMETHOD TryFocus(PRBool* aOK);
 
   // nsIXFormsContextControl
   NS_DECL_NSIXFORMSCONTEXTCONTROL
@@ -211,6 +216,48 @@ nsXFormsGroupElement::Refresh()
   result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
   NS_ENSURE_STATE(mBoundNode);
   
+  return NS_OK;
+}
+
+PRBool
+nsXFormsGroupElement::TryFocusChildControl(nsIDOMNode* aParent)
+{
+  if (!aParent)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMNodeList> children;
+  nsresult rv = aParent->GetChildNodes(getter_AddRefs(children));
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
+  PRUint32 childCount = 0;
+  children->GetLength(&childCount);
+  nsCOMPtr<nsIDOMNode> child;
+
+  for (PRUint32 i = 0; i < childCount; ++i) {
+    children->Item(i, getter_AddRefs(child));
+    nsCOMPtr<nsIXFormsControl> control(do_QueryInterface(child));
+    PRBool focus = PR_FALSE;
+    if (control) {
+      control->TryFocus(&focus);
+      if (focus)
+        return PR_TRUE;
+    }
+    focus = TryFocusChildControl(child);
+    if (focus)
+      return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsXFormsGroupElement::TryFocus(PRBool* aOK)
+{
+  *aOK = PR_FALSE;
+  if (GetRelevantState()) {
+    *aOK = TryFocusChildControl(mElement);
+  }
   return NS_OK;
 }
 

@@ -61,6 +61,11 @@ interface nsIXFormsControl : nsISupports
   void refresh();
 
   /**
+   * Tries to move focus to form control and returns true if succeeded.
+   */
+  boolean tryFocus();
+
+  /**
    * The instance node that the control is bound to.
    */
   readonly attribute nsIDOMNode boundNode;

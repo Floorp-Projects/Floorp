@@ -63,6 +63,7 @@ public:
 
   // nsIXFormsControl
   NS_IMETHOD Refresh();
+  NS_IMETHOD TryFocus(PRBool* aOK);
 
 protected:
   nsCOMPtr<nsIDOMHTMLButtonElement> mButton;
@@ -133,6 +134,13 @@ nsXFormsTriggerElement::Refresh()
   // Get context node, if any  
   result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsTriggerElement::TryFocus(PRBool* aOK)
+{
+  *aOK = GetRelevantState() && nsXFormsUtils::FocusControl(mButton);
   return NS_OK;
 }
 

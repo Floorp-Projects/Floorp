@@ -76,6 +76,14 @@ nsXFormsControlStub::Bind()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsControlStub::TryFocus(PRBool* aOK)
+{
+  *aOK = PR_FALSE;
+  return NS_OK;
+}
+  
+
 nsresult
 nsXFormsControlStub::ProcessNodeBinding(const nsString          &aBindingAttr,
                                         PRUint16                 aResultType,
@@ -128,6 +136,19 @@ nsXFormsControlStub::GetReadOnlyState()
   return res;
 }
 
+PRBool
+nsXFormsControlStub::GetRelevantState()
+{
+  PRBool res = PR_TRUE;
+  if (mBoundNode && mMDG) {
+    const nsXFormsNodeState* ns = mMDG->GetNodeState(mBoundNode);
+    if (ns) {
+      res = ns->IsRelevant();
+    }
+  }
+  return res;
+}
+
 void  
 nsXFormsControlStub::ToggleProperty(const nsAString &aOn,
                                     const nsAString &aOff)
@@ -174,6 +195,9 @@ nsXFormsControlStub::HandleDefault(nsIDOMEvent *aEvent,
     } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Readwrite].name)) {
       ToggleProperty(NS_LITERAL_STRING("read-write"),
                      NS_LITERAL_STRING("read-only"));
+    } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Focus].name)) {
+      PRBool tmp;
+      TryFocus(&tmp);
     } else {
       *aHandled = PR_FALSE;
     }

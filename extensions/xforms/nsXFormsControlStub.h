@@ -88,6 +88,7 @@ public:
   NS_IMETHOD GetDependencies(nsIArray **aDependencies);
   NS_IMETHOD GetElement(nsIDOMElement **aElement);
   NS_IMETHOD Bind();
+  NS_IMETHOD TryFocus(PRBool* aOK);
 
   // nsIXTFXMLVisual overrides
   /** This sets the notification mask and initializes mElement */
@@ -138,6 +139,9 @@ protected:
 
   /** Returns the read only state of the control (ie. mBoundNode) */
   PRBool GetReadOnlyState();
+  
+  /** Returns the relevant state of the control */
+  PRBool GetRelevantState();
 
   /**
    * Processes the node binding of a control, get the current MDG (mMDG) and
