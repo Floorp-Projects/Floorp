@@ -3143,23 +3143,6 @@ then
     AC_DEFINE(MOZ_X11)
 fi
 
-dnl ========================================================
-dnl = Setting MOZ_EXTRA_X11CONVERTERS turns on additional 
-dnl = converters in intl/uconv that are used only by X11 gfx 
-dnl = implementations. By default, it's undefined so that 
-dnl = those converters are not built on other platforms/toolkits. 
-dnl = (see bug 180851)
-dnl ========================================================
-
-if (test "$MOZ_ENABLE_GTK"  || test "$MOZ_ENABLE_GTK2") \
-&& test "$MOZ_ENABLE_COREXFONTS" \
-|| test "$MOZ_ENABLE_XLIB" \
-|| test "$MOZ_ENABLE_XPRINT" 
-then
-    AC_DEFINE(MOZ_EXTRA_X11CONVERTERS)
-    MOZ_EXTRA_X11CONVERTERS=1
-fi
-AC_SUBST(MOZ_EXTRA_X11CONVERTERS)
 
 dnl ========================================================
 dnl =
@@ -3282,6 +3265,24 @@ then
         MOZ_ENABLE_XPRINT=,
         MOZ_ENABLE_XPRINT=1 )
 fi
+
+dnl ========================================================
+dnl = Setting MOZ_EXTRA_X11CONVERTERS turns on additional 
+dnl = converters in intl/uconv that are used only by X11 gfx 
+dnl = implementations. By default, it's undefined so that 
+dnl = those converters are not built on other platforms/toolkits. 
+dnl = (see bug 180851)
+dnl ========================================================
+
+if (test "$MOZ_ENABLE_GTK"  || test "$MOZ_ENABLE_GTK2") \
+&& test "$MOZ_ENABLE_COREXFONTS" \
+|| test "$MOZ_ENABLE_XLIB" \
+|| test "$MOZ_ENABLE_XPRINT" 
+then
+    AC_DEFINE(MOZ_EXTRA_X11CONVERTERS)
+    MOZ_EXTRA_X11CONVERTERS=1
+fi
+AC_SUBST(MOZ_EXTRA_X11CONVERTERS)
 
 dnl ========================================================
 dnl = Build Personal Security Manager
