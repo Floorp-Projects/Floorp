@@ -10114,6 +10114,14 @@ if test "${PNG_DIR}" -a -d "${PNG_DIR}" -a "$SYSTEM_PNG" = 1; then
 fi
 
 
+if test "$MOZ_BYPASS_PROFILE_AT_STARTUP"; then
+  cat >> confdefs.h <<\EOF
+#define MOZ_BYPASS_PROFILE_AT_STARTUP 1
+EOF
+
+fi
+
+
 MOZ_FULLCIRCLE=
 FULLCIRCLE_LIBS=
 # Check whether --enable-fullcircle or --disable-fullcircle was given.
@@ -10149,9 +10157,9 @@ CFLAGS="$CFLAGS -I${FULLCIRCLE_DIR}"
 LDFLAGS="$LDFLAGS -L${FULLCIRCLE_DIR}"
 LIBS="-lfullsoft $LIBS"
 echo $ac_n "checking "for FCInitialize in -lfullsoft"""... $ac_c" 1>&6
-echo "configure:10153: checking "for FCInitialize in -lfullsoft"" >&5;
+echo "configure:10161: checking "for FCInitialize in -lfullsoft"" >&5;
 cat > conftest.$ac_ext <<EOF
-#line 10155 "configure"
+#line 10163 "configure"
 #include "confdefs.h"
  #include <stdio.h>
 	      #include "fullsoft.h" 
@@ -10159,7 +10167,7 @@ int main() {
  FCInitialize(); exit(0); 
 ; return 0; }
 EOF
-if { (eval echo configure:10163: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:10171: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   FULLCIRCLE_LIBS="-I${FULLCIRCLE_DIR} -L${FULLCIRCLE_DIR} -lfullsoft" result="yes"
 else
