@@ -11,3 +11,11 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
+firefox.ico: firefox.ico.in
+  $(INSTALL) $^ $(topsrcdir)/$(OBJDIR)/browser/app/
+
+browser.ico: firefox.ico.in
+  $(INSTALL) $^ $(topsrcdir)/$(OBJDIR)/toolkit/mozapps/installer/wizard/windows/setuprsc/
+
+firefox.icns: firefox.icns.in
+  $(INSTALL) $^ $(topsrcdir)/$(OBJDIR)/browser/app/macbuild/
