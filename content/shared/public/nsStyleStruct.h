@@ -747,6 +747,18 @@ struct nsStyleDisplay : public nsStyleStruct {
 
   PRBool IsPositioned() const {return IsAbsolutelyPositioned() ||
                                       (NS_STYLE_POSITION_RELATIVE == mPosition);}
+
+  PRBool IsScrollableOverflow() const {
+    return mOverflow != NS_STYLE_OVERFLOW_VISIBLE &&
+           mOverflow != NS_STYLE_OVERFLOW_CLIP;
+  }
+
+  // For table elements that don't support scroll frame creation, we
+  // support 'overflow: hidden' to mean 'overflow: -moz-hidden-unscrollable'.
+  PRBool IsTableClip() const {
+    return mOverflow == NS_STYLE_OVERFLOW_CLIP ||
+           mOverflow == NS_STYLE_OVERFLOW_HIDDEN;
+  }
 };
 
 struct nsStyleTable: public nsStyleStruct {
