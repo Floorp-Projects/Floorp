@@ -26,6 +26,7 @@ var msgCompose = null;
 var MAX_RECIPIENTS = 0;
 var currentAttachment = null;
 var tabIntoBodyPhase = 0;
+var documentLoaded = false;
 
 var other_header = "";
 var update_compose_title_as_you_type = true;
@@ -50,20 +51,7 @@ if (prefs) {
 
 var editorDocumentListener = {
 	NotifyDocumentCreated: function() {
-
-		CompFields2Recipients(msgCompose.compFields);
-
-		if (document.getElementById("msgRecipient#1").value == "")
-		{
-			dump("set focus on the recipient\n");
-			document.getElementById("msgRecipient#1").focus();
-		}
-		else
-		{
-			dump("set focus on the body\n");
-			contentWindow.focus();
-		}
-		SetComposeWindowTitle(13);
+		documentLoaded = true;
 	}
 };
 
@@ -116,6 +104,18 @@ function GetArgs()
 		dump("[" + argname + "=" + args[argname] + "]\n");
 	}
 	return args;
+}
+
+function WaitFinishLoadingDocument()
+{
+	if (documentLoaded)
+	{
+		CompFields2Recipients(msgCompose.compFields);
+		SetComposeWindowTitle(13);
+		AdjustFocus();
+	}
+	else
+		setTimeout("WaitFinishLoadingDocument();", 200);
 }
 
 function ComposeStartup()
@@ -236,8 +236,7 @@ function ComposeStartup()
 			
 			// Now that we have an Editor AppCore, we can finish to initialize the Compose AppCore
 			msgCompose.editor = window.editorShell;
-
-			document.getElementById("msgRecipient#1").focus();
+			WaitFinishLoadingDocument();
 		}
 	}
 }
@@ -570,6 +569,20 @@ function getIdentityForKey(key)
     var accountManager = msgService.accountManager;
 
     return accountManager.getIdentity(key);
+}
+
+function AdjustFocus()
+{
+	if (document.getElementById("msgRecipient#1").value == "")
+	{
+		dump("set focus on the recipient\n");
+		document.getElementById("msgRecipient#1").focus();
+	}
+	else
+	{
+		dump("set focus on the body\n");
+		contentWindow.focus();
+	}
 }
 
 function SetComposeWindowTitle(event) 

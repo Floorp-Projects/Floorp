@@ -44,7 +44,8 @@
 #include "nsMsgPrompts.h"
 #include "nsMimeTypes.h"
 #include "nsICharsetConverterManager.h"
-#include "nsTextFormater.h" 
+#include "nsTextFormater.h"
+#include "nsIEditor.h"
 
 // XXX temporary so we can use the current identity hack -alecf
 #include "nsIMsgMailSession.h"
@@ -57,6 +58,16 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kMsgQuoteCID, NS_MSGQUOTE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
+
+static PRInt32 GetReplyOnTop()
+{
+	PRInt32 reply_on_top = 1;
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+  	if (NS_SUCCEEDED(rv))
+		prefs->GetIntPref("mailnews.reply_on_top", &reply_on_top);
+	return reply_on_top;
+}
 
 nsMsgCompose::nsMsgCompose()
 {
@@ -110,17 +121,33 @@ NS_IMPL_ISUPPORTS(nsMsgCompose, nsCOMTypeInfo<nsMsgCompose>::GetIID());
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 nsresult
-ConvertAndLoadComposeWindow(nsIEditorShell *aEditor, nsString aBuf, PRBool aQuoted, PRBool aHTMLEditor)
+ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString aBuf, PRBool aQuoted, PRBool aHTMLEditor)
 {
   // Now, insert it into the editor...
   if ( (aQuoted) )
-    aEditor->InsertAsQuotation(aBuf.GetUnicode());
+    aEditorShell->InsertAsQuotation(aBuf.GetUnicode());
   else
   {
     if (aHTMLEditor)
-      aEditor->InsertSource(aBuf.GetUnicode());
+      aEditorShell->InsertSource(aBuf.GetUnicode());
     else
-      aEditor->InsertText(aBuf.GetUnicode());
+      aEditorShell->InsertText(aBuf.GetUnicode());
+  }
+  
+  nsCOMPtr<nsIEditor> editor;
+  aEditorShell->GetEditor(getter_AddRefs(editor));
+  if (editor)
+  {
+	switch (GetReplyOnTop())
+	{
+		/* TODO: in case of the user want the insertion point at the end of the body,
+		         we need to be smarter than just doing editor->EndOfDocument() because
+		         if we have a signature, we need to put the cursor just before it.
+		*/
+		case 0	: editor->EndOfDocument();					break;
+		case 2	: editor->SelectAll();						break;
+		default	: editor->BeginningOfDocument();			break;
+	}
   }
 
   return NS_OK;
@@ -752,7 +779,8 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
 		}
         if (NS_SUCCEEDED(rv))
         {
-          mMsgBody = "<br><br>";
+          if (GetReplyOnTop() == 1)
+          	mMsgBody = "<br><br>";
           mMsgBody += author;
           mMsgBody += " wrote:<br><BLOCKQUOTE TYPE=CITE><html>";
         }
@@ -1457,7 +1485,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   // looking manner
   //
   char      *htmlBreak = "<BR>";
-  char      *dashes = "--";
+  char      *dashes = "-- ";
   if (sigData != "")
   {
     if (m_composeHTML)
