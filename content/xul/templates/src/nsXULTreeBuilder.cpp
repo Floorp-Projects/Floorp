@@ -941,12 +941,6 @@ nsXULOutlinerBuilder::Rebuild()
     if (! mRoot)
         return NS_ERROR_NOT_INITIALIZED;
 
-    // Forbid re-entrancy while rebuilding
-    if (mIsBuilding)
-        return NS_OK;
-
-    AutoLatch latch(&mIsBuilding);
-
     nsresult rv;
 
     mRows.Clear();
