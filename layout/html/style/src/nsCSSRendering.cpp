@@ -2356,19 +2356,51 @@ static nsIFrame*
 GetNearestScrollFrame(nsIFrame* aFrame)
 {
   for (nsIFrame* f = aFrame; f; f->GetParent(&f)) {
-    nsIAtom*  frameType;
-    
+    nsCOMPtr<nsIAtom> frameType;
+
     // Is it a scroll frame?
-    f->GetFrameType(&frameType);
+    f->GetFrameType(getter_AddRefs(frameType));
     if (nsLayoutAtoms::scrollFrame == frameType) {
-      NS_RELEASE(frameType);
       return f;
     }
-
-    NS_IF_RELEASE(frameType);
   }
 
   return nsnull;
+}
+
+// Returns the root scrollable frame, which is the first child of the root
+// frame.
+static nsIScrollableFrame*
+GetRootScrollableFrame(nsIPresContext* aPresContext, nsIFrame* aRootFrame)
+{
+  nsIScrollableFrame* scrollableFrame = nsnull;
+
+  nsCOMPtr<nsIAtom> frameType;
+  aRootFrame->GetFrameType(getter_AddRefs(frameType));
+
+  if (nsLayoutAtoms::viewportFrame == frameType) {
+    nsIFrame* childFrame;
+    aRootFrame->FirstChild(aPresContext, nsnull, &childFrame);
+
+    if (childFrame) {
+      childFrame->GetFrameType(getter_AddRefs(frameType));
+
+      if (nsLayoutAtoms::scrollFrame == frameType) {
+        // Use this frame, even if we are using GFX frames for the
+        // viewport, which contains another scroll frame below this
+        // frame, since the GFX scrollport frame does not implement
+        // nsIScrollableFrame.
+        CallQueryInterface(childFrame, &scrollableFrame);
+      }
+    }
+  }
+#ifdef DEBUG
+  else {
+    NS_WARNING("aRootFrame is not a viewport frame");
+  }
+#endif // DEBUG
+
+  return scrollableFrame;
 }
 
 const nsStyleBackground*
@@ -2868,17 +2900,17 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
 
     // get the nsIScrollableFrame interface from the scrollFrame
     nsIFrame* scrollFrame = GetNearestScrollFrame(aForFrame);
-    if (scrollFrame) {
-      nsCOMPtr<nsIScrollableFrame> scrollableFrame(do_QueryInterface(scrollFrame));
-      if (scrollableFrame) {
-        scrollableFrame->GetScrolledFrame(aPresContext, scrolledFrame);
-        if (scrolledFrame) {
-          scrolledFrame->GetRect(viewportArea);
-          scrolledFrame->GetView(aPresContext, &viewportView);
-        }
-      }
+    nsIScrollableFrame* scrollableFrame;
+    CallQueryInterface(scrollFrame, &scrollableFrame);
+    if (scrollableFrame) {
+      scrollableFrame->GetScrolledFrame(aPresContext, scrolledFrame);
     }
-    if (!scrolledFrame) {
+
+    if (scrolledFrame) {
+      scrolledFrame->GetRect(viewportArea);
+      scrolledFrame->GetView(aPresContext, &viewportView);
+    }
+    else {
       // The viewport isn't scrollable, so use the root frame's view
       nsCOMPtr<nsIPresShell> presShell;
       aPresContext->GetShell(getter_AddRefs(presShell));
@@ -2893,6 +2925,31 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
       viewportView->GetBounds(viewportArea);
       viewportArea.x = 0;
       viewportArea.y = 0;
+
+      scrollableFrame = GetRootScrollableFrame(aPresContext, rootFrame);
+    }
+
+    NS_ASSERTION(scrollableFrame, "no scrollable frame");
+
+    // Now, account for scrollbars, if we have any.
+    PRBool verticalVisible;
+    PRBool horizontalVisible;
+    scrollableFrame->GetScrollbarVisibility(aPresContext, &verticalVisible,
+                                            &horizontalVisible);
+
+    if (verticalVisible || horizontalVisible) {
+      nscoord verticalWidth;
+      nscoord horizontalHeight;
+      scrollableFrame->GetScrollbarSizes(aPresContext, &verticalWidth,
+                                         &horizontalHeight);
+      if (verticalVisible) {
+        // Assumes vertical scrollbars are on the right.
+        viewportArea.width -= verticalWidth;
+      }
+      if (horizontalVisible) {
+        // Assumes horizontal scrollbars are on the bottom.
+        viewportArea.height -= horizontalHeight;
+      }
     }
 
     // Get the anchor point
