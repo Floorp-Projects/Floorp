@@ -631,7 +631,7 @@ NS_IMETHODIMP nsMsgMessageDataSource::OnItemPropertyFlagChanged(nsISupports *ite
 NS_IMETHODIMP nsMsgMessageDataSource::OnFolderLoaded(nsIFolder *folder)
 {
 	nsresult rv = NS_OK;
-	return NS_OK;
+	return rv;
 }
 
 

@@ -215,7 +215,7 @@ NS_IMETHODIMP nsMsgNotificationManager::OnItemPropertyFlagChanged(nsISupports *i
 NS_IMETHODIMP nsMsgNotificationManager::OnFolderLoaded(nsIFolder *folder)
 {
 	nsresult rv = NS_OK;
-	return NS_OK;
+	return rv;
 }
 
 
