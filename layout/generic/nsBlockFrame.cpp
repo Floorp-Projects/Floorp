@@ -910,7 +910,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   if (NS_FRAME_IS_NOT_COMPLETE(state.mReflowStatus)) {
-    if (NS_STYLE_OVERFLOW_CLIP == aReflowState.mStyleDisplay->mOverflowX) {
+    if (NS_STYLE_OVERFLOW_CLIP == aReflowState.mStyleDisplay->mOverflow) {
       state.mReflowStatus = NS_FRAME_COMPLETE;
     }
     else {
@@ -1382,7 +1382,7 @@ nsBlockFrame::ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
   // XXX_perf: This can be done incrementally.  It is currently one of
   // the things that makes incremental reflow O(N^2).
   nsRect area(0, 0, aMetrics.width, aMetrics.height);
-  if (NS_STYLE_OVERFLOW_CLIP != aReflowState.mStyleDisplay->mOverflowX) {
+  if (NS_STYLE_OVERFLOW_CLIP != aReflowState.mStyleDisplay->mOverflow) {
     for (line_iterator line = begin_lines(), line_end = end_lines();
          line != line_end;
          ++line) {
@@ -5326,7 +5326,7 @@ nsBlockFrame::Paint(nsPresContext*      aPresContext,
   // If overflow is hidden then set the clip rect so that children don't
   // leak out of us. Note that because overflow'-clip' only applies to
   // the content area we do this after painting the border and background
-  if (NS_STYLE_OVERFLOW_CLIP == disp->mOverflowX) {
+  if (NS_STYLE_OVERFLOW_CLIP == disp->mOverflow) {
     aRenderingContext.PushState();
     SetOverflowClipRect(aRenderingContext);
   }
@@ -5340,7 +5340,7 @@ nsBlockFrame::Paint(nsPresContext*      aPresContext,
   PaintDecorationsAndChildren(aPresContext, aRenderingContext,
                               aDirtyRect, aWhichLayer, PR_TRUE);
 
-  if (NS_STYLE_OVERFLOW_CLIP == disp->mOverflowX)
+  if (NS_STYLE_OVERFLOW_CLIP == disp->mOverflow)
     aRenderingContext.PopState();
 
 #if 0

@@ -149,7 +149,6 @@ public:
   static const PRInt32 kListStyleKTable[];
   static const PRInt32 kOutlineColorKTable[];
   static const PRInt32 kOverflowKTable[];
-  static const PRInt32 kOverflowSubKTable[];
   static const PRInt32 kPageBreakKTable[];
   static const PRInt32 kPageBreakInsideKTable[];
   static const PRInt32 kPageMarksKTable[];

@@ -1637,8 +1637,8 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
     // setting -moz-hidden-unscrollable overflow (NS_STYLE_OVERFLOW_CLIP)
     // doesn't paint the caret for some reason.
     const nsStyleDisplay* disp = GetStyleDisplay();
-    if (disp->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE &&
-        disp->mOverflowX != NS_STYLE_OVERFLOW_CLIP) {
+    if (disp->mOverflow != NS_STYLE_OVERFLOW_VISIBLE &&
+        disp->mOverflow != NS_STYLE_OVERFLOW_CLIP) {
       rv = divContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::style,
                                NS_LITERAL_STRING("overflow: inherit;"),
                                PR_FALSE);

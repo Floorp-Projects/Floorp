@@ -650,7 +650,7 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
     const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
     if ((nsViewVisibility_kShow == aView->GetVisibility()
          && NS_STYLE_VISIBILITY_HIDDEN == vis->mVisible)
-        || (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflowX
+        || (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow
             && (kidState & NS_FRAME_OUTSIDE_CHILDREN) != 0)) {
       viewHasTransparentContent = PR_TRUE;
     }
@@ -671,7 +671,7 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
   //   in the style context...
   PRBool isBlockLevel = display->IsBlockLevel() || (kidState & NS_FRAME_OUT_OF_FLOW);
   PRBool hasClip = display->IsAbsolutelyPositioned() && (display->mClipFlags & NS_STYLE_CLIP_RECT);
-  PRBool hasOverflowClip = isBlockLevel && (display->mOverflowX == NS_STYLE_OVERFLOW_CLIP);
+  PRBool hasOverflowClip = isBlockLevel && (display->mOverflow == NS_STYLE_OVERFLOW_CLIP);
   if (hasClip || hasOverflowClip) {
     nsSize frameSize = aFrame->GetSize();
     nsRect  clipRect;
@@ -922,7 +922,7 @@ nsContainerFrame::FrameNeedsView(nsIFrame* aFrame)
   // block-level, but we can't trust that the style context 'display' value is
   // set correctly
   if ((display->IsBlockLevel() || display->IsFloating()) &&
-      (display->mOverflowX == NS_STYLE_OVERFLOW_CLIP)) {
+      (display->mOverflow == NS_STYLE_OVERFLOW_CLIP)) {
     // XXX Check for the frame being a block frame and only force a view
     // in that case, because adding a view for box frames seems to cause
     // problems for XUL...
