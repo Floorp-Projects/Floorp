@@ -527,10 +527,12 @@ else
 	$(CC) -o $@ -c $(CFLAGS) $<
 endif
 
+# The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
+# a '-c' flag.
 $(OBJDIR)/%.o: %.s
 	@$(MAKE_OBJDIR)
 	@$(MAKE_DEPDIR)
-	$(AS) -o $@ $(ASFLAGS) -c $<
+	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $<
 
 $(OBJDIR)/%.o: %.S
 	@$(MAKE_OBJDIR)

@@ -173,12 +173,12 @@ endif
 #
 # Default command macros; can be overridden in <arch>.mk.
 #
-AS		= $(CC)
-ASFLAGS		= $(CFLAGS)
 BSDECHO		= echo
 ifdef USE_AUTOCONF
 CCC		= $(CXX)
 else
+AS		= $(CC)
+ASFLAGS		= $(CFLAGS)
 CC		= gcc
 CCC		= g++
 endif
