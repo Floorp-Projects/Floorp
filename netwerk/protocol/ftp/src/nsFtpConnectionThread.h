@@ -161,7 +161,9 @@ private:
     nsresult    Process();
 
     void KillControlConnection();
-    nsresult StopProcessing();
+    // Set aPreventNotification to true if StopProcessing should not
+    // notify the listener.
+    nsresult StopProcessing(PRBool aPreventNotification = PR_FALSE);
     nsresult EstablishControlConnection();
     nsresult SendFTPCommand(nsCString& command);
     void ConvertFilespecToVMS(nsCString& fileSpec);

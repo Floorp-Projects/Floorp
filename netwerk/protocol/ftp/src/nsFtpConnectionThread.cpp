@@ -1946,14 +1946,19 @@ nsFtpState::Cancel(nsresult status)
     if (NS_SUCCEEDED(mControlStatus))
         mControlStatus = status;
 
-    // kill the data connection immediately. 
-    NS_IF_RELEASE(mDRequestForwarder);
+    // kill the data connection immediately. But first, save it's
+    // notification-firing state
+    PRBool fired = PR_FALSE;
+    if (mDRequestForwarder) {
+        fired = mDRequestForwarder->HaveFiredNotification();
+        NS_RELEASE(mDRequestForwarder);
+    }
     if (mDPipeRequest) {
         mDPipeRequest->Cancel(status);
         mDPipeRequest = 0;
     }
 
-    (void) StopProcessing();   
+    (void) StopProcessing(fired);   
     return NS_OK;
 }
 
@@ -2352,7 +2357,7 @@ nsFtpState::KillControlConnection() {
 }
 
 nsresult
-nsFtpState::StopProcessing() {
+nsFtpState::StopProcessing(PRBool aPreventNotification) {
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpState stopping", this));
 
 #ifdef DEBUG_dougt
@@ -2373,7 +2378,7 @@ nsFtpState::StopProcessing() {
     if ( NS_SUCCEEDED(broadcastErrorCode))
         broadcastErrorCode = mInternalError;
 
-    if (mChannel && 
+    if (mChannel && !aPreventNotification &&
         ( (!mDRequestForwarder) || 
           ( mDRequestForwarder && !mDRequestForwarder->HaveFiredNotification() ))) {
         nsCOMPtr<nsIStreamListener> channelListener = do_QueryInterface(mChannel);
