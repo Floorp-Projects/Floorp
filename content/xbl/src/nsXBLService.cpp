@@ -310,6 +310,7 @@ nsXBLStreamListener::OnStopRequest(nsIRequest* request, nsISupports* aCtxt, nsre
       nsXBLBindingRequest::Destroy(mXBLService->mPool, req);
     }
 
+    mBindingRequests.Clear();
     mDocument = nsnull;
     mBindingDocument = nsnull;
   }
