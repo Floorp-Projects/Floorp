@@ -499,7 +499,7 @@ nsresult nsCharsetMenu::InitBrowserMoreXMenu(nsIRDFService * aRDFServ,
   char cs1[] = { "iso-8859-1, iso-8859-15, iso-8859-2, iso-8859-3, iso-8859-4, iso-8859-7, iso-8859-9, iso-8859-10, iso-8859-13, iso-8859-14" };
   char cs2[] = { "iso-2022-jp, shift_jis, euc-jp, big5, x-euc-tw, gb2312, x-gbk, hz-gb-2312, iso-2022-cn, euc-kr, utf-7, utf-8" };
   char cs3[] = { "koi8-r, iso-8859-5, windows-1251, iso-ir-111, ibm866, x-mac-cyrillic, koi8-u, x-mac-ukrainian" };
-  char cs4[] = { "windows-1258, x-viet-tcvn5712, viscii, x-viet-vps, tis-620, armscii-8, iso-8859-6, windows-1256, iso-8859-8, windows-1255" };
+  char cs4[] = { "windows-1258, x-viet-tcvn5712, viscii, x-viet-vps, tis-620, armscii-8" };
   char cs5[] = { "x-mac-roman, x-mac-ce, x-mac-turkish, x-mac-croatian, x-mac-romanian, x-mac-icelandic, x-mac-greek" };
   char cs6[] = { "windows-1252, windows-1250, windows-1254, windows-1257, windows-1253" };
   nsObjectArray mBrowserMore1Menu;
