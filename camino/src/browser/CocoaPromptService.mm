@@ -466,6 +466,8 @@ CocoaPromptService::GetButtonStringFromFlags(PRUint32 btnFlags,
 NS_IMETHODIMP
 CocoaPromptService::CookieDialog(nsIDOMWindow *parent, nsICookie *cookie, const nsACString & hostname, PRInt32 cookiesFromHost, PRBool changingCookie, PRBool *rememberDecision, PRBool *_retval)
 {
+  NS_ENSURE_ARG_POINTER(rememberDecision && _retval);
+
   NSString* dialogText = [NSString stringWithFormat:NSLocalizedString(@"CookieText",@"CookieText"),
                            PromiseFlatCString(hostname).get()];
   PRUnichar* textStr = [dialogText createNewUnicodeBuffer];
@@ -479,7 +481,8 @@ CocoaPromptService::CookieDialog(nsIDOMWindow *parent, nsICookie *cookie, const 
   PRUnichar* denyStr = [denyText createNewUnicodeBuffer];
 
   long buttonFlags = (BUTTON_TITLE_IS_STRING << kButton0) | (BUTTON_TITLE_IS_STRING << kButton1);
-  PRInt32 buttonPressed = 0; 
+  PRInt32 buttonPressed = 0;
+  *rememberDecision = PR_TRUE;          // "remember this decision" should be checked when we show the dialog
   ConfirmEx(parent, titleStr, textStr, buttonFlags, allowStr, denyStr, nil, checkboxStr, rememberDecision, &buttonPressed);
   *_retval = (buttonPressed == 0);      // button 0 is allow, button 1 is deny, so return true if allow is clicked
 
