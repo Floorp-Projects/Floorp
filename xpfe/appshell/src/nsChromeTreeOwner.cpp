@@ -181,6 +181,11 @@ NS_IMETHODIMP nsChromeTreeOwner::ShowModal()
    return mXULWindow->ShowModal();   
 }
 
+NS_IMETHODIMP nsChromeTreeOwner::ExitModalLoop(nsresult aStatus)
+{
+   return mXULWindow->ExitModalLoop(aStatus);   
+}
+
 NS_IMETHODIMP nsChromeTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
    nsIDocShellTreeItem** aDocShellTreeItem)
 {

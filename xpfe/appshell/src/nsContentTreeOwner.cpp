@@ -183,6 +183,11 @@ NS_IMETHODIMP nsContentTreeOwner::ShowModal()
    return mXULWindow->ShowModal();   
 }
 
+NS_IMETHODIMP nsContentTreeOwner::ExitModalLoop(nsresult aStatus)
+{
+   return mXULWindow->ExitModalLoop(aStatus);   
+}
+
 NS_IMETHODIMP nsContentTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
    nsIDocShellTreeItem** aDocShellTreeItem)
 {
@@ -298,6 +303,11 @@ NS_IMETHODIMP nsContentTreeOwner::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 NS_IMETHODIMP nsContentTreeOwner::ShowAsModal()
 {
    return ShowModal();
+}
+
+NS_IMETHODIMP nsContentTreeOwner::ExitModalEventLoop(nsresult aStatus)
+{
+   return ExitModalLoop(aStatus);   
 }
 
 NS_IMETHODIMP
