@@ -1,0 +1,151 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?> 
+
+<!DOCTYPE window> 
+
+<window style="height: 100%; width: 100%;" 
+xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
+
+<box align="vertical" style="height: 100%; width: 100%">
+	<tabcontrol align="vertical" flex="100%" >
+	   <tabbox align="horizontal">
+		  <tab>centered</tab>
+		  <tab>percent</tab>
+		  <tab>html</tab>
+		  <tab><html:img src="resource:/res/toolbar/TB_Stop.gif"/></tab>
+          <tab>native</tab>
+          <tab>iframe</tab>
+		  <tab>dialog</tab>
+	   </tabbox>
+   
+	  <tabpanel flex="100%" style="border: 2px outset gray">
+
+		   <!-- tab 1 -->
+		   <box align="horizontal">
+			   <spring flex="100%"/> 
+			   <box align="vertical"> 
+					<spring flex="100%"/> 
+								<titledbutton class="push" value="centered"/>
+					<!--html:button>This is a test</html:button-->
+					<spring flex="100%"/> 
+			   </box> 
+			   <spring flex="100%"/> 
+			</box> 
+
+			<!-- tab2 -->
+			<box align="horizontal">
+					<titledbutton class="push" value="10%" flex="10%"/>
+   					<titledbutton class="push" value="20%" flex="20%"/>
+					<titledbutton class="push" value="30%" flex="30%"/>
+					<titledbutton class="push" value="40%" flex="40%"/>
+			</box> 
+
+            <!-- tab3 -->
+			<html:div>
+				This is just some basic html.
+                                <html:input type="text" value="text" flex="100%"/>
+			</html:div>
+
+            <!-- tab4 -->
+			<toolbox>  
+			   <toolbar>
+				  <titledbutton id="back-button" align="bottom" value="Back"/>	
+				  <titledbutton src="resource:/res/toolbar/TB_Forward.gif" align="bottom" value="Forward"/>
+				  <titledbutton src="resource:/res/toolbar/TB_Reload.gif" align="bottom" value="Reload"/>
+				  <titledbutton src="resource:/res/toolbar/TB_Stop.gif" align="bottom" value="Stop"/>
+				  <titledbutton src="resource:/res/toolbar/TB_Home.gif" align="bottom" value="Home"/>
+				  <titledbutton src="resource:/res/toolbar/TB_Print.gif" align="bottom" value="Print"/> 
+				
+                  <spring flex="100%"/>
+
+			      <titledbutton src="resource:/res/throbber/anims00.gif" align="right"/>
+    
+				</toolbar>
+
+				<toolbar>
+				  <titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="Mozilla" />
+				  <titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="ABC News"/>
+				</toolbar>
+		  </toolbox>
+
+          <!-- tab 5 -->
+          <box align="vertical">
+              <html:input type="text" value="text" flex="100%"/>
+          </box>
+
+          <html:iframe src="http://www.yahoo.com" />
+
+		  <!-- tab 6 -->
+		  <box align="vertical">
+			<html:div>
+			  Category:
+			</html:div>
+			<box align="horizontal" flex="100%">
+				   <html:div style="width: 100px; background-color: rgb(255,255,255)">
+					  table
+				   </html:div>
+
+				<box align="vertical" flex="100%">
+					<box align="horizontal" style="margin: 10px; margin-top: 0; margin-bottom: 0; background-color: #8080c0; color: white">
+					   <html:div><html:B>Navigator</html:B></html:div>
+   					   <spring flex="100%"/>
+					   <html:div>Specify you preferences for browsing the web</html:div>
+					</box>
+
+					<box align="vertical" style="margin: 10px; padding: 10px; border: 2px groove white">
+					   <html:div><html:input type="radio"/>Blank Page  </html:div>
+					   <html:div><html:input type="radio"/>Home Page   </html:div>
+					   <html:div><html:input type="radio"/>Last Visited</html:div>
+					</box>
+
+					<box align="vertical" style="margin: 10px; padding: 10px; border: 2px groove white">
+					   <html:div>Clicking the home button will take you to this page.</html:div>
+					   <box align="horizontal">
+						  <html:div>Location: </html:div> 
+						  <html:input type="text" flex="100%"/>
+					   </box>
+	  				   <box align="horizontal">
+						  <spring flex="100%"/>
+						  <html:input disabled="true" type="button" value="Use current page"/>
+						  <spring style="width:10px"/>
+						  <html:input type="button" value="Browse"/>
+					   </box>
+					</box>
+
+					<box align="vertical" style="margin: 10px; padding: 10px; border: 2px groove white">
+					   <html:div>History is a list a pages you have previously visited.</html:div>
+   					   <box align="horizontal">
+						   <html:div>Pages in history expire in: <html:input type="text" value="9"/> days. </html:div>
+						   <spring flex="100%"/>
+ 						   <html:input type="button" value="Clear History"/>
+					   </box>
+						<box align="horizontal">
+						   <html:div>Clear the list of sites on the location bar.</html:div>
+						   <spring flex="100%"/>
+ 						   <html:input type="button" value="Clear Location Bar"/>
+					   </box>
+					</box>
+
+					<spring flex="100%"/>
+
+				</box>
+			  
+			</box>
+			  <box align="horizontal" style="margin: 5px;">
+				   <spring flex="100%"/>
+				   <html:input type="button" value="Ok"/>
+				   <spring style="width:10px"/>
+				   <html:input type="button" value="Cancel"/>
+				   <spring style="width:10px"/>
+				   <html:input type="button" value="Help"/>
+			   </box>
+		</box>
+
+
+	   </tabpanel> 
+	</tabcontrol>
+</box>
+
+</window>
+
