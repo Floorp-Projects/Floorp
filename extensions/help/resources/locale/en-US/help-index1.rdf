@@ -12,12 +12,12 @@
      <rdf:li>
        <rdf:Description ID="adding"
          nc:name="adding"
-         nc:link="mail_help.xhtml#adding_entries_to_your_address_book"/>
+         nc:link=""/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="address_books"
-         nc:name="adding address books"
-         nc:link="mail_help.xhtml#adding_entries_to_your_address_book"/>
+         nc:name="address books"
+         nc:link="mail_help.xhtml#about_address_books"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="attaching_files_to_messages"
@@ -30,19 +30,9 @@
 <rdf:Description about="#adding">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="adding:address_book_entries"
-         nc:name="adding address book entries"
-         nc:link="mail_help.xhtml#adding_entries_to_your_address_book"/>
-     </rdf:li>
-     <rdf:li>
        <rdf:Description ID="adding:images_to_web_pages"
          nc:name="inserting images to web pages"
 	 nc:link="composer_help.html#adding:images_to_web_pagesIDX"/>
-     </rdf:li>
-     <rdf:li>
-       <rdf:Description ID="adding:LDAP_directories"
-         nc:name="adding LDAP directories"
-         nc:link="mail_help.xhtml#adding_and_removing_ldap_directories"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="adding:mail_account"
@@ -67,7 +57,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="address_books:adding_entries"
          nc:name="adding address book entries"
-         nc:link="mail_help.xhtml#adding_entries_to_your_address_book"/>
+         nc:link="mail_help.xhtml#adding_entries_to_your_address_books"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="address_books:creating"
@@ -112,12 +102,12 @@
      <rdf:li>
        <rdf:Description ID="bookmarks"
          nc:name="bookmarks"
-	 nc:link="nav_help.html#bookmarks:bookmarking_search_resultsIDX"/>
+	 nc:link="nav_help.html#bookmarks:visitingIDX"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="browser"
          nc:name="browser"
-	 nc:link="customize_help.html#browser:changing_your_home_pageIDX"/>
+	 nc:link="nav_help.html"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="browsing_anonymously"
@@ -207,11 +197,11 @@
      <rdf:li>
        <rdf:Description ID="Composer"
          nc:name="Composer"
-	 nc:link="composer_help.html#Composer:adding_tablesIDX"/>
+	 nc:link="composer_help.html"/>
      </rdf:li><rdf:li>
        <rdf:Description ID="Cookie_Manager"
          nc:name="Cookie Manager"
-	 nc:link="using_priv_help.html#Cookie_Manager:cookies_stored_byIDX"/>
+	 nc:link="using_priv_help.html#Cookie_Manager:usingIDX"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="cookies"
@@ -449,7 +439,7 @@
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="cookies:email_and"
-         nc:name="email and cookies"
+         nc:name="e-mail and cookies"
 	 nc:link="privacy_help.html#cookies:email_andIDX"/>
      </rdf:li>
      <rdf:li>
@@ -559,8 +549,8 @@
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="email_addresses"
-         nc:name="email addresses"
-         nc:link="mail_help.xhtml#adding_entries_to_your_address_books"/>
+         nc:name="e-mail addresses"
+         nc:link=""/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="encryption"
@@ -574,12 +564,12 @@
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="email_addresses:address_books_and"
-         nc:name="adding emails to address books"
+         nc:name="adding e-mail addresses to address books"
          nc:link="mail_help.xhtml#adding_entries_to_your_address_books"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="email_addresses:in_mail_messages"
-         nc:name="email in mail messages"
+         nc:name="e-mail address in messages"
          nc:link="mail_help.xhtml#addressing_a_message"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
@@ -589,7 +579,7 @@
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="encryption:of_email_messages"
-         nc:name="encrypted emails"
+         nc:name="encrypted e-mail messages"
 	 nc:link="mail_sec_help.html#encryption:of_email_messagesIDX"/>
      </rdf:li>
      <rdf:li>
@@ -650,7 +640,7 @@
      <rdf:li>
        <rdf:Description ID="Form_Manager"
          nc:name="Form Manager"
-	 nc:link="using_priv_help.html#Form_Manager:encrypting_stored_informationIDX"/>
+	 nc:link="using_priv_help.html#Form_Manager:usingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -740,7 +730,7 @@
      <rdf:li>
        <rdf:Description ID="HTML"
          nc:name="HTML"
-         nc:link="mail_help.xhtml#editing_or_inserting_html_elements"/>
+         nc:link=""/>
      </rdf:li><rdf:li>
        <rdf:Description ID="HTTP_Networking"
          nc:name="HTTP Networking"
@@ -774,7 +764,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="images"
          nc:name="images"
-	 nc:link="privacy_help.html#images:email_andIDX"/>
+	 nc:link=""/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="IMAP"
@@ -809,7 +799,7 @@
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="images:email_and"
-         nc:name="email and images"
+         nc:name="e-mail and images"
 	 nc:link="privacy_help.html#images:email_andIDX"/>
      </rdf:li>
      <rdf:li>
@@ -841,11 +831,6 @@
        <rdf:Description ID="IMAP:advanced_mail_settings"
          nc:name="advanced IMAP mail settings"
          nc:link="mail_help.xhtml#advanced_imap_server_settings"/>
-     </rdf:li>
-     <rdf:li>
-       <rdf:Description ID="IMAP:Mail_settings"
-         nc:name="IMAP Mail settings"
-         nc:link="mail_help.xhtml#imap_server_settings"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="IMAP:server_settings"
@@ -890,7 +875,7 @@
      <rdf:li>
        <rdf:Description ID="JavaScript"
          nc:name="JavaScript"
-	 nc:link="cs_nav_prefs_advanced.html#JavaScript:preferencesIDX"/>
+         nc:link=""/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="JSConsole"
@@ -918,24 +903,14 @@
 <rdf:Description about="help-indexAZ.rdf#k">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="keyboard"
-         nc:name="keyboard"
+       <rdf:Description ID="keyboard_preferences"
+         nc:name="keyboard preferences"
 	 nc:link="cs_nav_prefs_advanced.html#keyboard_navigation"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="keyboard_shortcuts"
          nc:name="keyboard shortcuts"
 	 nc:link="shortcuts.html"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#keyboard">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="keyboard:preferences"
-         nc:name="keyboard preferences"
-	 nc:link="cs_nav_prefs_advanced.html#keyboard_navigation"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -975,7 +950,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Labels"
          nc:name="Labels"
-         nc:link="mail_help.xhtml#labels"/>
+         nc:link="mail_help.xhtml#labeling_messages"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="languages"
@@ -1024,7 +999,7 @@
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="LDAP:adding_to_address_book"
-         nc:name="adding to address book"
+         nc:name="adding directories to address book"
          nc:link="mail_help.xhtml#adding_and_removing_ldap_directories"/>
      </rdf:li>
      <rdf:li>
@@ -1050,7 +1025,7 @@
      <rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups"
          nc:name="Mail and Newsgroups"
-         nc:link="mail_help.xhtml#using_the_mail_account_setup_wizard"/>
+         nc:link="mail_help.xhtml"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="master_password"
@@ -1159,7 +1134,7 @@
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:general_preferences"
-         nc:name="general preferences"
+         nc:name="general mail preferences"
          nc:link="mail_help.xhtml#mail_and_newsgroup_preferences"/>
      </rdf:li>
      <rdf:li>
@@ -1310,7 +1285,7 @@
      <rdf:li>
        <rdf:Description ID="Navigator"
          nc:name="Navigator"
-	 nc:link="customize_help.html#Navigator:changing_your_home_pageIDX"/>
+	 nc:link="nav_help.html"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Newsgroups"
@@ -1355,7 +1330,7 @@
      <rdf:li>
        <rdf:Description ID="Navigator:keyboard_shortcuts"
          nc:name="keyboard shortcuts"
-	 nc:link="shortcuts.html#Navigator:keyboard_shortcutsIDX"/>
+	 nc:link="shortcuts.html#navigator"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Navigator:opening_pages"
@@ -1364,7 +1339,7 @@
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Navigator:preferences"
-         nc:name="preferences"
+         nc:name="Navigator Preferences"
 	 nc:link="cs_nav_prefs_navigator.html#Navigator:preferencesIDX"/>
      </rdf:li>
      <rdf:li>
@@ -1410,7 +1385,7 @@
      <rdf:li>
        <rdf:Description ID="Offline"
          nc:name="Offline"
-         nc:link="mail_help.xhtml#disk_space_preferences"/>
+         nc:link=""/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1426,11 +1401,6 @@
        <rdf:Description ID="Offline:Mail_and_Newsgroups"
          nc:name="Offline Mail and News"
          nc:link="mail_help.xhtml#working_offline"/>
-     </rdf:li>
-     <rdf:li>
-       <rdf:Description ID="Offline:Mail_settings"
-         nc:name="Mail settings"
-         nc:link="mail_help.xhtml#mail_and_newsgroups_account_settings"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1465,22 +1435,17 @@
      <rdf:li>
        <rdf:Description ID="popup_windows"
          nc:name="popup windows"
-	 nc:link="cs_priv_prefs_popup.html#popup_windows:preferencesIDX"/>
+	 nc:link="cs_priv_prefs_popup.html#blocking_popups"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="popups"
          nc:name="popups"
-	 nc:link="chrome://help/locale/cs_priv_prefs_popup.html#popupsIDX"/>
-     </rdf:li>
-     <rdf:li>
-       <rdf:Description ID="popups"
-         nc:name="popups"
-	 nc:link="cs_priv_prefs_popup.html#popupsIDX"/>
+	 nc:link="cs_priv_prefs_popup.html#blocking_popups"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences"
          nc:name="preferences"
-	 nc:link="cs_nav_prefs_advanced.html#preferences:advancedIDX"/>
+	 nc:link=""/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="print"
@@ -1495,7 +1460,7 @@
      <rdf:li>
        <rdf:Description ID="profiles"
          nc:name="profiles"
-	 nc:link="profiles_help.html#profiles:creatingIDX"/>
+	 nc:link="profiles_help.html"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="proxies"
@@ -1516,7 +1481,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="password_manager:encrypting_stored_passwords"
          nc:name="Encrypting Stored Passwords"
-	 nc:link="using_priv_help.html#Password_Manager:encrypting_stored_passwordsIDXX"/>
+	 nc:link="using_priv_help.html#Password_Manager:encrypting_stored_passwordsIDX"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="password_manager:master_password"
@@ -1525,7 +1490,7 @@
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="password_manager:preferences"
-         nc:name="Preferences"
+         nc:name="Password Preferences"
 	 nc:link="passwords_help.html#Password_Manager:preferencesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
@@ -1535,7 +1500,7 @@
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="passwords:preferences"
-         nc:name="Preferences"
+         nc:name="Password Preferences"
 	 nc:link="passwords_help.html#passwords:preferencesIDX"/>
      </rdf:li>
      <rdf:li>
@@ -1554,11 +1519,6 @@
 <rdf:Description about="#POP">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="POP:about"
-         nc:name="about POP"
-         nc:link="mail_help.xhtml#about_post_office_protocol"/>
-     </rdf:li>
-     <rdf:li>
        <rdf:Description ID="POP:server_settings"
          nc:name="POP server settings"
          nc:link="mail_help.xhtml#pop_server_settings"/>
@@ -1875,12 +1835,12 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="save"
          nc:name="save"
-	 nc:link="nav_help.html#save:web_pagesIDX"/>
+	 nc:link=""/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="security"
          nc:name="security"
-	 nc:link="mail_sec_help.html#security:checking_before_sending_messageIDX"/>
+	 nc:link=""/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="security_devices"
@@ -1895,7 +1855,7 @@
      <rdf:li>
        <rdf:Description ID="settings"
          nc:name="settings"
-         nc:link="certs_prefs_help.xhtml#certificate_settings"/>
+         nc:link=""/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="security_modules"
@@ -1905,7 +1865,7 @@
      <rdf:li>
        <rdf:Description ID="search"
          nc:name="search"
-	 nc:link="nav_help.html#search:Advanced_modeIDX"/>
+	 nc:link="nav_help.html#nav_search"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="shortcuts"
@@ -1915,11 +1875,11 @@
      <rdf:li>
        <rdf:Description ID="Sidebar"
          nc:name="Sidebar"
-	 nc:link="customize_help.html#Sidebar:adding_tabsIDX"/>
+	 nc:link="customize_help.html#cust_sidebar_define"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="signing_email_messages"
-         nc:name="signing email messages"
+         nc:name="signing e-mail messages"
 	 nc:link="mail_sec_help.html#signing_email_messagesIDX"/>
      </rdf:li>
      <rdf:li>
@@ -1935,7 +1895,7 @@
      <rdf:li>
        <rdf:Description ID="SMTP"
          nc:name="SMTP"
-         nc:link="mail_help.xhtml#account_settings"/>
+         nc:link=""/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="software_installation"
@@ -2121,16 +2081,6 @@
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="#software_installation">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="software_installation:preferences"
-         nc:name="software install preferences"
-	 nc:link="cs_nav_prefs_advanced.html#software_installation:preferencesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
 <rdf:Description about="#SSL">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -2166,7 +2116,7 @@
      <rdf:li>
        <rdf:Description ID="toolbar"
          nc:name="toolbar"
-	 nc:link="customize_help.html#toolbar:hiding_a_toolbarIDX"/>
+	 nc:link=""/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2286,7 +2236,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="web_pages"
          nc:name="web pages"
-	 nc:link="nav_help.html#web_pages:copyingIDX"/>
+	 nc:link=""/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Working_Offline"
@@ -2337,21 +2287,6 @@
        <rdf:Description ID="web_pages:stopping"
          nc:name="stopping"
 	 nc:link="nav_help.html#web_pages:stoppingIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-indexAZ.rdf#x">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="XML"
-         nc:name="XML"
-	 nc:link="glossary.html#XMLIDX"/>
-     </rdf:li>
-     <rdf:li>
-       <rdf:Description ID="XSLT"
-         nc:name="XSLT"
-	 nc:link="glossary.html#XSLTIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
