@@ -125,6 +125,8 @@ END_COM_MAP()
 	virtual HRESULT SetPosition(const RECT &rcPos);
 	virtual HRESULT Draw(HDC hdc);
 	virtual HRESULT DoVerb(LONG nVerb, LPMSG lpMsg = NULL);
+	virtual HRESULT Advise(IUnknown *pIUnkSink, const IID &iid, DWORD *pdwCookie);
+	virtual HRESULT Unadvise(const IID &iid, DWORD dwCookie);
 
 	virtual const CLSID &GetObjectCLSID() const
 	{
