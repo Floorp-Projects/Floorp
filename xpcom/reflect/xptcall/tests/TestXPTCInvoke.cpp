@@ -140,7 +140,10 @@ int main()
         printf("\t1 + 1 = %d\n", out);
     else
         printf("\tFAILED");
-    if(NS_SUCCEEDED(test->AddTwoLLs(LL_INIT(0,1),LL_INIT(0,1),&out64)))
+    PRInt64 one, two;
+    LL_I2L(one, 1);
+    LL_I2L(two, 2);
+    if(NS_SUCCEEDED(test->AddTwoLLs(one,one,&out64)))
     {
         LL_L2I(tmp32, out64);
         printf("\t1L + 1L = %d\n", (int)tmp32);
@@ -151,7 +154,7 @@ int main()
         printf("\t2 * 2 = %d\n", out);
     else
         printf("\tFAILED");
-    if(NS_SUCCEEDED(test->MultTwoLLs(LL_INIT(0,2),LL_INIT(0,2),&out64)))
+    if(NS_SUCCEEDED(test->MultTwoLLs(two,two,&out64)))
     {
         LL_L2I(tmp32, out64);
         printf("\t2L * 2L = %d\n", (int)tmp32);
