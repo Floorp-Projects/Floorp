@@ -3483,7 +3483,7 @@ nsBrowserStatusHandler.prototype =
           this.throbberElement.setAttribute("busy", true);
 
         // XXX: This needs to be based on window activity...
-        this.stopCommand.removeAttribute("Browser:Stop");
+        this.stopCommand.removeAttribute("disabled");
       }
     }
     else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
