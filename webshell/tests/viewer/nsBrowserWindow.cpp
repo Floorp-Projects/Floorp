@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIPref.h"
+#include "prmem.h"
 
 #ifdef XP_MAC
 #include "nsBrowserWindow.h"
@@ -136,6 +137,7 @@ static NS_DEFINE_IID(kIDialogIID, NS_IDIALOG_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
+static NS_DEFINE_IID(kINetSupportIID,         NS_INETSUPPORT_IID);
 
 
 static const char* gsAOLFormat = "AOLMAIL";
@@ -1553,15 +1555,25 @@ nsBrowserWindow::OnStopBinding(nsIURL* aURL,
 NS_IMETHODIMP_(void)
 nsBrowserWindow::Alert(const nsString &aText)
 {
-  nsAutoString str(aText);
-  printf("Browser Window Alert: %s\n", str);
+  char* msg = nsnull;
+
+  msg = aText.ToNewCString();
+  if (nsnull != msg) {
+    printf("Browser Window Alert: %s\n", msg);
+    PR_Free(msg);
+  }
 }
 
 NS_IMETHODIMP_(PRBool)
 nsBrowserWindow::Confirm(const nsString &aText)
 {
-  nsAutoString str(aText);
-  printf("Browser Window Confirm: %s (returning false)\n", str);
+  char* msg= nsnull;
+
+  msg = aText.ToNewCString();
+  if (nsnull != msg) {
+    printf("Browser Window Confirm: %s (returning false)\n", msg);
+    PR_Free(msg);
+  }
 
   return PR_FALSE;
 }
@@ -1571,12 +1583,18 @@ nsBrowserWindow::Prompt(const nsString &aText,
 			const nsString &aDefault,
 			nsString &aResult)
 {
-  nsAutoString str(aText);
+  char* msg = nsnull;
   char buf[256];
-  printf("Browser Window: %s\n", str);
-  printf("Prompt: ");
-  scanf("%s", buf);
-  aResult = buf;
+
+  msg = aText.ToNewCString();
+  if (nsnull != msg) {
+    printf("Browser Window: %s\n", msg);
+    PR_Free(msg);
+
+    printf("Prompt: ");
+    scanf("%s", buf);
+    aResult = buf;
+  }
   
   return (aResult.Length() > 0);
 }
@@ -1586,16 +1604,22 @@ nsBrowserWindow::PromptUserAndPassword(const nsString &aText,
 				       nsString &aUser,
 				       nsString &aPassword)
 {
-  nsAutoString str(aText);
+  char* msg = nsnull;
   char buf[256];
-  printf("Browser Window: %s\n", str);
-  printf("User: ");
-  scanf("%s", buf);
-  aUser = buf;
-  printf("Password: ");
-  scanf("%s", buf);
-  aPassword = buf;
-  
+
+  msg = aText.ToNewCString();
+  if (nsnull != msg) {
+    printf("Browser Window: %s\n", msg);
+    PR_Free(msg);
+
+    printf("User: ");
+    scanf("%s", buf);
+    aUser = buf;
+
+    printf("Password: ");
+    scanf("%s", buf);
+    aPassword = buf;
+  }
   return (aUser.Length() > 0);
 }
 
@@ -1603,12 +1627,16 @@ NS_IMETHODIMP_(PRBool)
 nsBrowserWindow::PromptPassword(const nsString &aText,
 				nsString &aPassword)
 {
-  nsAutoString str(aText);
+  char* msg = nsnull;
   char buf[256];
-  printf("Browser Window: %s\n", str);
-  printf("Password: ");
-  scanf("%s", buf);
-  aPassword = buf;
+
+  msg = aText.ToNewCString();
+  if (nsnull != msg) {
+    printf("Browser Window: %s\n", msg);
+    printf("Password: ");
+    scanf("%s", buf);
+    aPassword = buf;
+  }
  
   return PR_TRUE;
 }

@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIPref.h"
+#include "prmem.h"
 
 #ifdef XP_MAC
 #include "nsXPBaseWindow.h"
@@ -76,6 +77,8 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIDOMMouseListenerIID,   NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID,   NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
+
+static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
 
 //----------------------------------------------------------------------
 nsXPBaseWindow::nsXPBaseWindow() :
@@ -638,15 +641,21 @@ NS_IMETHODIMP nsXPBaseWindow::OnStopBinding(nsIURL* aURL, PRInt32 status, const 
 //----------------------------------------
 NS_IMETHODIMP_(void) nsXPBaseWindow::Alert(const nsString &aText)
 {
-  nsAutoString str(aText);
+  char *str;
+
+  str = aText.ToNewCString();
   printf("Browser Window Alert: %s\n", str);
+  PR_Free(str);
 }
 
 //----------------------------------------
 NS_IMETHODIMP_(PRBool) nsXPBaseWindow::Confirm(const nsString &aText)
 {
-  nsAutoString str(aText);
+  char *str;
+
+  str = aText.ToNewCString();
   printf("Browser Window Confirm: %s (returning false)\n", str);
+  PR_Free(str);
 
   return PR_FALSE;
 }
@@ -656,9 +665,13 @@ NS_IMETHODIMP_(PRBool) nsXPBaseWindow::Prompt(const nsString &aText,
                                               const nsString &aDefault,
                                               nsString &aResult)
 {
-  nsAutoString str(aText);
+  char *str;
   char buf[256];
+
+  str = aText.ToNewCString();
   printf("Browser Window: %s\n", str);
+  PR_Free(str);
+
   printf("Prompt: ");
   scanf("%s", buf);
   aResult = buf;
@@ -671,9 +684,13 @@ NS_IMETHODIMP_(PRBool) nsXPBaseWindow::PromptUserAndPassword(const nsString &aTe
                                                              nsString &aUser,
                                                              nsString &aPassword)
 {
-  nsAutoString str(aText);
+  char *str;
   char buf[256];
+
+  str = aText.ToNewCString();
   printf("Browser Window: %s\n", str);
+  PR_Free(str);
+
   printf("User: ");
   scanf("%s", buf);
   aUser = buf;
@@ -688,9 +705,13 @@ NS_IMETHODIMP_(PRBool) nsXPBaseWindow::PromptUserAndPassword(const nsString &aTe
 NS_IMETHODIMP_(PRBool) nsXPBaseWindow::PromptPassword(const nsString &aText,
                                                       nsString &aPassword)
 {
-  nsAutoString str(aText);
+  char *str;
   char buf[256];
+
+  str = aText.ToNewCString();
   printf("Browser Window: %s\n", str);
+  PR_Free(str);
+
   printf("Password: ");
   scanf("%s", buf);
   aPassword = buf;
