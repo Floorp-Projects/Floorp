@@ -325,7 +325,7 @@ NS_METHOD nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
     }
 
     nsReflowMetrics desiredSize(nsnull);
-    nsReflowState   reflowState(eReflowReason_Initial, availSize);
+    nsReflowState   reflowState(mFrame, aReflowState, availSize, eReflowReason_Initial);
     mFrame->WillReflow(*aPresContext);
     mFrame->Reflow(aPresContext, desiredSize, reflowState, aStatus);
 

@@ -181,7 +181,7 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
       // It's a floating frame that's the target. Reflow the body making it
       // look like a resize occured. This will reflow the placeholder which will
       // resize the floating frame...
-      nsReflowState reflowState(eReflowReason_Resize, aReflowState.maxSize);
+      nsReflowState reflowState(next, aReflowState, aReflowState.maxSize, eReflowReason_Resize);
       return Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
     }
   }
@@ -207,7 +207,7 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
 
     // Get the column's desired rect
     nsIRunaround* reflowRunaround;
-    nsReflowState reflowState(aReflowState, kidMaxSize);
+    nsReflowState reflowState(mFirstChild, aReflowState, kidMaxSize);
     nsRect        desiredRect;
 
     mFirstChild->WillReflow(*aPresContext);

@@ -33,6 +33,7 @@ class nsISpaceManager;
 class nsIStyleContext;
 class nsIView;
 class nsIWidget;
+class nsIFrame;
 class nsReflowCommand;
 
 struct nsPoint;
@@ -76,33 +77,45 @@ enum nsReflowReason {
 };
 
 /**
- * Reflow state passed to a frame during reflow.
+ * Reflow state passed to a frame during reflow. The reflow states are linked
+ * together. The max size represents the available space on which to reflow
+ * your frame, and is computed as the parent frame's available content area
+ * minus any room for margins that your frame requests.
  *
  * @see #Reflow()
  */
 struct nsReflowState {
-  nsReflowReason   reason;         // the reason for the reflow
-  nsReflowCommand* reflowCommand;  // only used for incremental changes
-  nsSize           maxSize;        // the available space in which to reflow
+  nsReflowReason       reason;            // the reason for the reflow
+  nsReflowCommand*     reflowCommand;     // only used for incremental changes
+  nsSize               maxSize;           // the available space in which to reflow
+  const nsReflowState* parentReflowState; // pointer to parent's reflow state
+  nsIFrame*            frame;             // the frame being reflowed
 
-  // Construct a non-incremental reflow state
-  nsReflowState(nsReflowReason aReason, const nsSize& aMaxSize) {
-    reason = aReason; reflowCommand = nsnull; maxSize = aMaxSize;
-  }
-  // Construct a reflow state for an incremental change
-  nsReflowState(nsReflowCommand* aReflowCommand, const nsSize& aMaxSize) {
-    reason = eReflowReason_Incremental;
-    reflowCommand = aReflowCommand;
-    maxSize = aMaxSize;
-  }
+  // Constructs an initial reflow state (no parent reflow state) for a
+  // non-incremental reflow command
+  nsReflowState(nsIFrame*      aFrame,
+                nsReflowReason aReason, 
+                const nsSize&  aMaxSize);
 
-  // Construct a reflow state similar to an existing reflow state except that
-  // it has a different max size
-  nsReflowState(const nsReflowState& aReflowState, const nsSize& aMaxSize) {
-    reason = aReflowState.reason;
-    reflowCommand = aReflowState.reflowCommand;
-    maxSize = aMaxSize;
-  }
+  // Constructs an initial reflow state (no parent reflow state) for an
+  // incremental reflow command
+  nsReflowState(nsIFrame*        aFrame,
+                nsReflowCommand& aReflowCommand,
+                const nsSize&    aMaxSize);
+
+  // Construct a reflow state for the given frame, parent reflow state, and
+  // max size. Uses the reflow reason and reflow command from the parent's
+  // reflow state
+  nsReflowState(nsIFrame*            aFrame,
+                const nsReflowState& aParentReflowState,
+                const nsSize&        aMaxSize);
+
+  // Constructs a reflow state that overrides the reflow reason of the parent
+  // reflow state. Sets the reflow command to NULL
+  nsReflowState(nsIFrame*            aFrame,
+                const nsReflowState& aParentReflowState,
+                const nsSize&        aMaxSize,
+                nsReflowReason       aReflowReason);
 };
 
 //----------------------------------------------------------------------
@@ -320,28 +333,34 @@ public:
 
   /**
    * The frame is given a maximum size and asked for its desired size.
-   * size. This is the frame's opportunity to reflow its children.
+   * This is the frame's opportunity to reflow its children.
    *
    * @param aDesiredSize <i>out</i> parameter where you should return the
    *          desired size and ascent/descent info. You should include any
    *          space you want for border/padding in the desired size you return.
    *
-   * @param aMaxSize the available space in which to lay out. Each
-   *          dimension can either be constrained or unconstrained (a
-   *          value of NS_UNCONSTRAINEDSIZE). If constrained you
-   *          should choose a value that's less than or equal to the
-   *          constrained size. If unconstrained you can choose as
-   *          large a value as you like.
-   *
    *          It's okay to return a desired size that exceeds the max
    *          size if that's the smallest you can be, i.e. it's your
    *          minimum size.
    *
-   * @param aMaxElementSize an optional parameter for returning your
+   *          maxElementSize is an optional parameter for returning your
    *          maximum element size. If may be null in which case you
    *          don't have to compute a maximum element size. The
    *          maximum element size must be less than or equal to your
    *          desired size.
+   *
+   * @param aReflowState information about your reflow including the reason
+   *          for the reflow and the available space in which to lay out. Each
+   *          dimension of the available space can either be constrained or
+   *          unconstrained (a value of NS_UNCONSTRAINEDSIZE). If constrained
+   *          you should choose a value that's less than or equal to the
+   *          constrained size. If unconstrained you can choose as
+   *          large a value as you like.
+   *
+   *          Note that the available space can be negative. In this case you
+   *          still must return an accurate desired size. If you're a container
+   *          you must <b>always</b> reflow at least one frame regardless of the
+   *          available space
    */
   NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
                     nsReflowMetrics&     aDesiredSize,
@@ -562,5 +581,70 @@ public:
 protected:
   static NS_LAYOUT PRLogModuleInfo* gLogModule;
 };
+
+// Constructs an initial reflow state (no parent reflow state) for a
+// non-incremental reflow command
+inline nsReflowState::nsReflowState(nsIFrame*      aFrame,
+                                    nsReflowReason aReason, 
+                                    const nsSize&  aMaxSize)
+{
+  NS_PRECONDITION(aReason != eReflowReason_Incremental, "unexpected reflow reason");
+#ifdef NS_DEBUG
+  nsIFrame* parent;
+  aFrame->GetGeometricParent(parent);
+  NS_PRECONDITION(nsnull == parent, "not root frame");
+#endif
+  reason = aReason;
+  reflowCommand = nsnull;
+  maxSize = aMaxSize;
+  parentReflowState = nsnull;
+  frame = aFrame;
+}
+
+// Constructs an initial reflow state (no parent reflow state) for an
+// incremental reflow command
+inline nsReflowState::nsReflowState(nsIFrame*        aFrame,
+                                    nsReflowCommand& aReflowCommand,
+                                    const nsSize&    aMaxSize)
+{
+#ifdef NS_DEBUG
+  nsIFrame* parent;
+  aFrame->GetGeometricParent(parent);
+  NS_PRECONDITION(nsnull == parent, "not root frame");
+#endif
+  reason = eReflowReason_Incremental;
+  reflowCommand = &aReflowCommand;
+  maxSize = aMaxSize;
+  parentReflowState = nsnull;
+  frame = aFrame;
+}
+
+// Construct a reflow state for the given frame, parent reflow state, and
+// max size. Uses the reflow reason and reflow command from the parent's
+// reflow state
+inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
+                                    const nsReflowState& aParentReflowState,
+                                    const nsSize&        aMaxSize)
+{
+  reason = aParentReflowState.reason;
+  reflowCommand = aParentReflowState.reflowCommand;
+  maxSize = aMaxSize;
+  parentReflowState = &aParentReflowState;
+  frame = aFrame;
+}
+
+// Constructs a reflow state that overrides the reflow reason of the parent
+// reflow state. Sets the reflow command to NULL
+inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
+                                    const nsReflowState& aParentReflowState,
+                                    const nsSize&        aMaxSize,
+                                    nsReflowReason       aReflowReason)
+{
+  reason = aReflowReason;
+  reflowCommand = nsnull;
+  maxSize = aMaxSize;
+  parentReflowState = &aParentReflowState;
+  frame = aFrame;
+}
 
 #endif /* nsIFrame_h___ */

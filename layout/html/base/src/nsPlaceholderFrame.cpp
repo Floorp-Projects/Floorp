@@ -79,7 +79,8 @@ NS_METHOD nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
     // Resize reflow the anchored item into the available space
     // XXX Check for complete?
     nsReflowMetrics desiredSize(nsnull);
-    nsReflowState   reflowState(eReflowReason_Initial, aReflowState.maxSize);
+    nsReflowState   reflowState(mAnchoredItem, aReflowState, aReflowState.maxSize,
+                                eReflowReason_Initial);
     mAnchoredItem->WillReflow(*aPresContext);
     mAnchoredItem->Reflow(aPresContext, desiredSize, reflowState, aStatus);
     mAnchoredItem->SizeTo(desiredSize.width, desiredSize.height);
@@ -94,7 +95,8 @@ NS_METHOD nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
     // of the incremental reflow methods and propagating things down
     // properly to the contained frame.
     nsReflowMetrics desiredSize(nsnull);
-    nsReflowState   reflowState(eReflowReason_Resize, aReflowState.maxSize);
+    nsReflowState   reflowState(mAnchoredItem, aReflowState, aReflowState.maxSize,
+                                eReflowReason_Resize);
     mAnchoredItem->WillReflow(*aPresContext);
     mAnchoredItem->Reflow(aPresContext, desiredSize, reflowState, aStatus);
     mAnchoredItem->SizeTo(desiredSize.width, desiredSize.height);

@@ -41,6 +41,9 @@ static const PRBool gsDebug2 = PR_FALSE;
 /* ----------- RowReflowState ---------- */
 
 struct RowReflowState {
+  // Our reflow state
+  const nsReflowState& reflowState;
+
   // The body's available size (computed from the body's parent)
   nsSize availSize;
 
@@ -64,16 +67,17 @@ struct RowReflowState {
   nsTableFrame *tableFrame;
    
 
-  RowReflowState( nsIPresContext*  aPresContext,
-                  const nsSize&    aMaxSize)
+  RowReflowState( nsIPresContext*      aPresContext,
+                  const nsReflowState& aReflowState)
+    : reflowState(aReflowState)
   {
-    availSize.width = aMaxSize.width;
-    availSize.height = aMaxSize.height;
+    availSize.width = reflowState.maxSize.width;
+    availSize.height = reflowState.maxSize.height;
     prevMaxPosBottomMargin = 0;
     prevMaxNegBottomMargin = 0;
     x=0;
-    unconstrainedWidth = PRBool(aMaxSize.width == NS_UNCONSTRAINEDSIZE);
-    unconstrainedHeight = PRBool(aMaxSize.height == NS_UNCONSTRAINEDSIZE);
+    unconstrainedWidth = PRBool(reflowState.maxSize.width == NS_UNCONSTRAINEDSIZE);
+    unconstrainedHeight = PRBool(reflowState.maxSize.height == NS_UNCONSTRAINEDSIZE);
     maxCellHeight=0;
     maxCellVertSpace=0;
     maxCellHorzSpace=0;
@@ -343,7 +347,8 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     if (NS_UNCONSTRAINEDSIZE == aState.availSize.width)
     {
       // Reflow the child into the available space
-      nsReflowState kidReflowState(eReflowReason_Resize, kidAvailSize);
+      nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
+                                   eReflowReason_Resize);
       kidFrame->WillReflow(*aPresContext);
       status = ReflowChild(kidFrame, aPresContext, desiredSize,
                            kidReflowState);
@@ -360,7 +365,8 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
         availWidth += aState.tableFrame->GetColumnWidth(cellStartingCol+numColSpan);
 
       kidAvailSize.width = availWidth;
-      nsReflowState kidReflowState(eReflowReason_Resize, kidAvailSize);
+      nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
+                                   eReflowReason_Resize);
       kidFrame->WillReflow(*aPresContext);
       status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
     }
@@ -633,7 +639,8 @@ PRBool nsTableRowFrame::PullUpChildren(nsIPresContext*      aPresContext,
       availWidth += aState.tableFrame->GetColumnWidth(cellStartingCol+numColSpan);
     NS_ASSERTION(0<availWidth, "illegal width for this column");
     kidAvailSize.width = availWidth;
-    nsReflowState kidReflowState(eReflowReason_Resize, kidAvailSize);
+    nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
+                                 eReflowReason_Resize);
     kidFrame->WillReflow(*aPresContext);
     status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
     if (nsnull!=pKidMaxElementSize)
@@ -897,7 +904,8 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
     nsReflowStatus status;
     if (NS_UNCONSTRAINEDSIZE == aState.availSize.width)
     {
-      nsReflowState kidReflowState(eReflowReason_Initial, kidAvailSize);
+      nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
+                                   eReflowReason_Initial);
       // Reflow the child into the available space
       kidFrame->WillReflow(*aPresContext);
       status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
@@ -914,7 +922,7 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
         availWidth += aState.tableFrame->GetColumnWidth(cellStartingCol+numColSpan);
       NS_ASSERTION(0<availWidth, "illegal width for this column");
       kidAvailSize.width = availWidth;
-      nsReflowState kidReflowState(eReflowReason_Initial, kidAvailSize);
+      nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize, eReflowReason_Initial);
       kidFrame->WillReflow(*aPresContext);
       status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
     }
@@ -1029,7 +1037,7 @@ nsTableRowFrame::Reflow(nsIPresContext*      aPresContext,
   // Check for an overflow list
   MoveOverflowToChildList();
 
-  RowReflowState state(aPresContext, aReflowState.maxSize);
+  RowReflowState state(aPresContext, aReflowState);
   mContentParent->GetContentParent((nsIFrame*&)(state.tableFrame));
 
   // Reflow the existing frames

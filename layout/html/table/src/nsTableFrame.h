@@ -183,10 +183,10 @@ protected:
     *
     * @see ResizeReflow
     */
-  virtual nsReflowStatus ResizeReflowPass1(nsIPresContext*  aPresContext,
-                                           nsReflowMetrics& aDesiredSize,
-                                           const nsSize&    aMaxSize,
-                                           nsSize*          aMaxElementSize);
+  virtual nsReflowStatus ResizeReflowPass1(nsIPresContext*      aPresContext,
+                                           nsReflowMetrics&     aDesiredSize,
+                                           const nsReflowState& aReflowState,
+                                           nsSize*              aMaxElementSize);
 
   /** second pass of ResizeReflow.
     * lays out all table content with aMaxSize(computed_table_width, given_table_height) 
@@ -201,7 +201,7 @@ protected:
     */
   virtual nsReflowStatus ResizeReflowPass2(nsIPresContext*  aPresContext,
                                            nsReflowMetrics& aDesiredSize,
-                                           const nsSize&    aMaxSize,
+                                           const nsReflowState& aReflowState,
                                            nsSize*          aMaxElementSize,
                                            PRInt32 aMinCaptionWidth,
                                            PRInt32 mMaxCaptionWidth);

@@ -43,6 +43,9 @@ NS_DEF_PTR(nsIContent);
 /* ----------- RowGroupReflowState ---------- */
 
 struct RowGroupReflowState {
+  // Our reflow state
+  const nsReflowState& reflowState;
+
   // The body's available size (computed from the body's parent)
   nsSize availSize;
 
@@ -63,16 +66,17 @@ struct RowGroupReflowState {
   // Remember the height of the first row, because it's our maxElementHeight (plus header/footers)
   nscoord firstRowHeight;
 
-  RowGroupReflowState(nsIPresContext*  aPresContext,
-                      const nsSize&    aMaxSize)
+  RowGroupReflowState(nsIPresContext*      aPresContext,
+                      const nsReflowState& aReflowState)
+    : reflowState(aReflowState)
   {
-    availSize.width = aMaxSize.width;
-    availSize.height = aMaxSize.height;
+    availSize.width = reflowState.maxSize.width;
+    availSize.height = reflowState.maxSize.height;
     prevMaxPosBottomMargin = 0;
     prevMaxNegBottomMargin = 0;
     y=0;  // border/padding/margin???
-    unconstrainedWidth = PRBool(aMaxSize.width == NS_UNCONSTRAINEDSIZE);
-    unconstrainedHeight = PRBool(aMaxSize.height == NS_UNCONSTRAINEDSIZE);
+    unconstrainedWidth = PRBool(reflowState.maxSize.width == NS_UNCONSTRAINEDSIZE);
+    unconstrainedHeight = PRBool(reflowState.maxSize.height == NS_UNCONSTRAINEDSIZE);
     firstRow = PR_TRUE;
     firstRowHeight=0;
   }
@@ -296,7 +300,8 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
     }
 
     // Reflow the child into the available space
-    nsReflowState kidReflowState(eReflowReason_Resize, kidAvailSize);
+    nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
+                                 eReflowReason_Resize);
     kidFrame->WillReflow(*aPresContext);
     status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
 
@@ -531,7 +536,8 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
       mLastContentIsComplete = prevLastContentIsComplete;
       break;
     }
-    nsReflowState kidReflowState(eReflowReason_Resize, aState.availSize);
+    nsReflowState kidReflowState(kidFrame, aState.reflowState, aState.availSize,
+                                 eReflowReason_Resize);
     kidFrame->WillReflow(*aPresContext);
     status = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
 
@@ -760,7 +766,8 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     // Try to reflow the child into the available space. It might not
     // fit or might need continuing.
     nsReflowMetrics kidSize(pKidMaxElementSize);
-    nsReflowState   kidReflowState(eReflowReason_Initial, aState.availSize);
+    nsReflowState   kidReflowState(kidFrame, aState.reflowState, aState.availSize,
+                                   eReflowReason_Initial);
     kidFrame->WillReflow(*aPresContext);
     nsReflowStatus status = ReflowChild(kidFrame,aPresContext, kidSize,
                                         kidReflowState);
@@ -847,7 +854,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*      aPresContext,
   // Check for an overflow list
   MoveOverflowToChildList();
 
-  RowGroupReflowState state(aPresContext, aReflowState.maxSize);
+  RowGroupReflowState state(aPresContext, aReflowState);
 
   // Reflow the existing frames
   if (nsnull != mFirstChild) {
