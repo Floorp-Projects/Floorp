@@ -209,8 +209,6 @@ public:
    */
   NS_IMETHOD  DidReflow(nsIPresContext& aPresContext,
                         nsDidReflowStatus aStatus);
-  NS_IMETHOD  GetReflowMetrics(nsIPresContext&      aPresContext,
-                               nsHTMLReflowMetrics& aMetrics);
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
 
   NS_IMETHOD AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace);

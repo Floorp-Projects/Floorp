@@ -1200,22 +1200,6 @@ nsFrame::Reflow(nsIPresContext&          aPresContext,
     aDesiredSize.maxElementSize->height = 0;
   }
   aStatus = NS_FRAME_COMPLETE;
-
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrame::GetReflowMetrics(nsIPresContext&      aPresContext,
-                          nsHTMLReflowMetrics& aMetrics)
-{
-  aMetrics.width = mRect.width;
-  aMetrics.height = mRect.height;
-  aMetrics.ascent = mRect.height;
-  aMetrics.descent = 0;
   return NS_OK;
 }
 
