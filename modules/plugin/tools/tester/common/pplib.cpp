@@ -192,7 +192,7 @@ static char * readFileToNewAllocatedZeroTerminatedBuffer(XP_HFILE hFile)
 #ifdef XP_MAC
   iSize = 32000;  /* HACK for the MAC */
 #else  
-  #ifdef XP_UNIX
+  #if defined(XP_UNIX) || defined(XP_OS2)
     struct stat buf;
     fstat(fileno(hFile), &buf);
     iSize = buf.st_size;
@@ -471,7 +471,7 @@ BOOL PP_WriteString(char * szSection, char * szKey, char * szString, XP_HFILE hF
     return FALSE;
   }
   
-#if (defined XP_MAC || defined XP_UNIX)
+#if (defined XP_MAC || defined XP_UNIX || defined XP_OS2)
 	rewind(hFile);
 #else
   // change file size
