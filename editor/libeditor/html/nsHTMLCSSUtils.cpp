@@ -881,7 +881,7 @@ nsHTMLCSSUtils::BuildCSSDeclarations(nsVoidArray & aPropertyArray,
       nsIAtom * cssPropertyAtom;
       // find the equivalent css value for the index-th property in
       // the equivalence table
-      (*aEquivTable[index].processValueFunctor) (aEquivTable[index].caseSensitiveValue ? &value : &lowerCasedValue,
+      (*aEquivTable[index].processValueFunctor) ((!aGetOrRemoveRequest || aEquivTable[index].caseSensitiveValue) ? &value : &lowerCasedValue,
                                                  cssValue,
                                                  aEquivTable[index].defaultValue,
                                                  aEquivTable[index].prependValue,
