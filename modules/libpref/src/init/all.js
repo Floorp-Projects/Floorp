@@ -412,7 +412,7 @@ pref("dom.allow_scripts_to_close_windows",          false);
 
 pref("dom.disable_open_during_load",                false);
 pref("dom.popup_maximum",                           20);
-pref("dom.popup_allowed_events", "change click dblclick mouseup reset submit");
+pref("dom.popup_allowed_events", "change click dblclick mousedown mouseup reset submit");
 pref("dom.disable_open_click_delay", 1000);
 
 pref("dom.event.contextmenu.enabled",       true);
