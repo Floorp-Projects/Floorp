@@ -1134,7 +1134,8 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   if (mHasVerticalScrollbar)
      AddVerticalScrollbar(aState, scrollAreaRect, scrollBarRight);
      
-
+  nsRect oldScrollAreaBounds;
+  mScrollAreaBox->GetClientRect(oldScrollAreaBounds);
 
   // layout our the scroll area
   LayoutBox(aState, mScrollAreaBox, scrollAreaRect);
@@ -1347,10 +1348,37 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
      needsLayout = PR_FALSE;
   }
 
-  
+  // may need to update fixed position children of the viewport,
+  // if the client area changed size because of some dirty reflow
+  // (if the reflow is initial or resize, the fixed children will
+  // be re-laid out anyway)
+  if ((oldScrollAreaBounds.width != scrollAreaRect.width
+      || oldScrollAreaBounds.height != scrollAreaRect.height)
+      && nsBoxLayoutState::Dirty == aState.GetLayoutReason()) {
+    nsIFrame* parentFrame;
+    mOuter->GetParent(&parentFrame);
+    if (parentFrame) {
+      nsCOMPtr<nsIAtom> parentFrameType;
+      parentFrame->GetFrameType(getter_AddRefs(parentFrameType));
+      if (parentFrameType.get() == nsLayoutAtoms::viewportFrame) {
+        // Usually there are no fixed children, so don't do anything unless there's
+        // at least one fixed child
+        nsIFrame* child;
+        if (NS_SUCCEEDED(parentFrame->FirstChild(mOuter->mPresContext,
+          nsLayoutAtoms::fixedList, &child)) && child) {
+          nsCOMPtr<nsIPresShell> presShell;
+          mOuter->mPresContext->GetShell(getter_AddRefs(presShell));
+
+          // force a reflow of the fixed children
+          nsFrame::CreateAndPostReflowCommand(presShell, parentFrame,
+            nsIReflowCommand::UserDefined, nsnull, nsnull, nsLayoutAtoms::fixedList);
+        }
+      }
+    }
+  }
   
   return NS_OK;
-}  
+}
 
 void
 nsGfxScrollFrameInner::ScrollbarChanged(nsIPresContext* aPresContext, nscoord aX, nscoord aY)
