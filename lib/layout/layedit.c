@@ -863,7 +863,7 @@ LO_Element *lo_strip_mquotes(LO_Element **elist)
 }
 
 void LO_EditorReflow(MWContext *context, ED_TagCursor *pCursor, 
-			int32 iStartLine, int iStartEditOffset, XP_Bool bDisplayTables)
+			int32 iStartLine, int iStartEditOffset)
 {
 	PA_Tag *pTag;
 	PA_Tag *pNextTag = 0;
@@ -1576,9 +1576,11 @@ void LO_PositionCaretBounded(MWContext *context, int32 x, int32 y,
 	}
 }
 
+#if 0
 PRIVATE
-void LO_Resize( MWContext *pContext ){
+void LO_Resize( MWContext * pContext ){
 }
+#endif
 
 void LO_RefetchWindowDimensions( MWContext *pContext ){
 	int32 doc_id;
@@ -1674,7 +1676,7 @@ lo_VerifyList( MWContext *pContext, lo_TopState* top_state,
 		 */
 		if ( eptr->lo_any.edit_element != NULL ) 
 		{
-			/*EDT_VerifyLayoutElement( pContext, eptr, print );*/
+			/*EDT_VerifyLayoutElement( eptr );*/
 		}
         /*
          * Update our loop variables
@@ -1989,7 +1991,6 @@ lo_VerifyStateLayoutImplementation( MWContext *pContext, lo_TopState *top_state,
      * Prints information to stderr if the layout is invalid.
      */
  	Bool result;
-	int32 doc_id;
 	LO_Element **array;
 	LO_Element *eptr;
     LO_Element *start;

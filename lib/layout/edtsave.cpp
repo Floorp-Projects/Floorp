@@ -110,7 +110,7 @@ void CEditImageLoader::LoadImage(){
 
 // The image library is telling us the size of the image.  Actually do the 
 //  insert now.
-void CEditImageLoader::SetImageInfo(int32 ele_id, int32 width, int32 height){
+void CEditImageLoader::SetImageInfo(int32 width, int32 height){
     if( m_pImageData->iHeight == 0 || m_pImageData->iWidth == 0 ){
         m_pImageData->iHeight = height;
         m_pImageData->iWidth = width;    
@@ -140,7 +140,7 @@ extern "C"
 #else
 PRIVATE
 #endif
-unsigned int edt_file_save_stream_write_ready( NET_StreamClass *stream ){
+unsigned int edt_file_save_stream_write_ready( NET_StreamClass * /* stream */ ){
     return MAX_WRITE_READY;
 }
 
@@ -159,7 +159,7 @@ extern "C"
 #else
 PRIVATE
 #endif
-void edt_file_save_stream_complete( NET_StreamClass *stream ){	
+void edt_file_save_stream_complete( NET_StreamClass * /* stream */ ){	
 }
 
 #if defined(XP_OS2)
@@ -167,7 +167,7 @@ extern "C"
 #else
 PRIVATE
 #endif
-void edt_file_save_stream_abort (NET_StreamClass *stream, int status) {	
+void edt_file_save_stream_abort (NET_StreamClass * /* stream */, int /* status */ ) {	
 }
 
 
@@ -176,10 +176,10 @@ extern "C"
 #else
 PRIVATE
 #endif
-void edt_UrlExit( URL_Struct *pURL, int status, MWContext *context )
+void edt_UrlExit( URL_Struct *pURL, int status, MWContext * /* context */ )
 {
     // hardts, changed from CEditSaveObject to CFileSaveObject
-    ((CFileSaveObject*)(pURL->fe_data))->NetFetchDone(pURL, status, context );
+    ((CFileSaveObject*)(pURL->fe_data))->NetFetchDone(status);
 
     NET_FreeURLStruct(pURL);
 }
@@ -189,7 +189,7 @@ extern "C"
 #else
 PRIVATE
 #endif
-NET_StreamClass * edt_MakeFileSaveStream (int format_out, void *closure,
+NET_StreamClass * edt_MakeFileSaveStream (int /* format_out */, void * /* closure */,
     URL_Struct *url, MWContext *context ) {
 
     NET_StreamClass *stream;
@@ -242,7 +242,7 @@ extern "C"
 // CFileSaveObject
 //-----------------------------------------------------------------------------
 
-CFileSaveObject::CFileSaveObject( MWContext *pContext, char *pSrcURL, 
+CFileSaveObject::CFileSaveObject( MWContext *pContext, 
                                   ITapeFileSystem *tapeFS, XP_Bool bAutoSave,
                                   CEditSaveToTempData *pSaveToTempData) : 
         m_pContext( pContext ) ,
@@ -527,7 +527,7 @@ void CFileSaveObject::CheckFinishedSave(intn oneBased,ED_FileError iError) // on
   }
 }
 
-void CFileSaveObject::NetFetchDone( URL_Struct *pUrl, int status, MWContext *pContext ){
+void CFileSaveObject::NetFetchDone( int status ){
     // close the file in any case.
     if( m_pOutStream ){
         m_tapeFS->CloseStream(m_iCurFile-1);
@@ -859,7 +859,7 @@ CEditSaveObject::CEditSaveObject( CEditBuffer *pBuffer,
                                     XP_Bool bAutoAdjustLinks,
                                     XP_Bool bAutoSave,
                                     CEditSaveToTempData *pSaveToTempData ) :
-        CFileSaveObject( pBuffer->m_pContext,pSrcURL,tapeFS,bAutoSave, pSaveToTempData ),
+        CFileSaveObject( pBuffer->m_pContext,tapeFS,bAutoSave, pSaveToTempData ),
         m_pBuffer( pBuffer ),
         m_pDocStateSave( 0 ),
         m_pSrcURL( XP_STRDUP( pSrcURL ) ),
@@ -1720,7 +1720,7 @@ typedef struct edtPrivStructStr {
 } edtPrivStruct;
 
 static unsigned int
-edt_TapeIsReady(NET_StreamClass *stream) {	
+edt_TapeIsReady(NET_StreamClass * /* stream */ ) {	
     return MAX_WRITE_READY;
 }
 
@@ -1733,7 +1733,7 @@ edt_TapeComplete(NET_StreamClass *stream) {
 }
 
 static void
-edt_TapeAbort(NET_StreamClass *stream, int status) {	
+edt_TapeAbort(NET_StreamClass *stream, int /* status */) {	
     edt_TapeComplete(stream);
 }
 

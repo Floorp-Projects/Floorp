@@ -1144,8 +1144,7 @@ void EDT_ResetLayoutElement( ED_Element* /* pElement */, intn /* iEditOffset */,
 }
 
 #ifdef DEBUG
-void EDT_VerifyLayoutElement( MWContext *pContext, LO_Element *pLoElement,
-        XP_Bool bPrint ){
+void EDT_VerifyLayoutElement( LO_Element *pLoElement ){
     CEditElement *pElement = pLoElement->lo_any.edit_element;
     if( pElement ){
         if( !pElement->IsLeaf() ){
@@ -2196,10 +2195,10 @@ void EDT_ImageLoadCancel( MWContext *pContext ){
     }
 }
 
-void EDT_SetImageInfo(MWContext *pContext, int32 ele_id, int32 width, int32 height){
+void EDT_SetImageInfo(MWContext *pContext, int32 /* ele_id */, int32 width, int32 height){
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
     if( pEditBuffer->m_pLoadingImage ){
-        pEditBuffer->m_pLoadingImage->SetImageInfo( ele_id, width, height );
+        pEditBuffer->m_pLoadingImage->SetImageInfo( width, height );
     }
 }
 

@@ -1655,6 +1655,10 @@ void CEditBuffer::FixupInsertPoint(){
 }
 
 void CEditBuffer::FixupInsertPoint(CEditInsertPoint& ip){
+    XP_ASSERT(ip.m_pElement);
+    if ( ip.m_pElement == NULL )
+    	return;
+    
     if( ip.m_iPos == 0 && ! IsPhantomInsertPoint(ip) ){
         CEditLeafElement *pPrev = ip.m_pElement->PreviousLeafInContainer();
         if( pPrev && pPrev->GetLen() != 0 ){
@@ -2120,7 +2124,7 @@ void CEditBuffer::Reflow( CEditElement* pStartElement,
     CEditTagCursor cursor(this, pEdStart, iOffset, pEndElement);
     //CEditTagCursor *pCursor = new CEditTagCursor(this, m_pRoot, iOffset);
 
-    LO_EditorReflow(m_pContext, &cursor, iLineNum, iOffset, m_bDisplayTables);
+    LO_EditorReflow(m_pContext, &cursor, iLineNum, iOffset);
 
 
 #if defined( DEBUG_shannon )
@@ -12780,6 +12784,8 @@ EDT_ClipboardResult CEditBuffer::PasteCellsIntoTable( IStreamIn& stream, EEditCo
 
     // Shouldn't be here if this is "normal" or entire table
     XP_ASSERT(iCopyType > eCopyTable);
+    if ( iCopyType > eCopyTable )
+    	return EDT_COP_CLIPBOARD_BAD;
     
     // Move caret into target cell
     if( m_pDragTableData )
@@ -12813,7 +12819,7 @@ EDT_ClipboardResult CEditBuffer::PasteCellsIntoTable( IStreamIn& stream, EEditCo
     int32 bMergeEnd = stream.ReadInt();
     CEditTableElement* pSourceTable =(CEditTableElement*)CEditElement::StreamCtor(&stream, this);
 
-    XP_ASSERT(pSourceTable->IsTable());
+    XP_ASSERT(pSourceTable && pSourceTable->IsTable());
 
     if( pTableCell && pSourceTable )
     {
