@@ -641,7 +641,7 @@ JS_NewRuntime(uint32 maxbytes)
     rt->requestDone = JS_NEW_CONDVAR(rt->gcLock);
     if (!rt->requestDone)
         goto bad;
-    js_SetupLocks(20, 32);      /* this is asymmetric with JS_ShutDown. */
+    js_SetupLocks(8, 16);       /* this is asymmetric with JS_ShutDown. */
     rt->rtLock = JS_NEW_LOCK();
     if (!rt->rtLock)
         goto bad;
