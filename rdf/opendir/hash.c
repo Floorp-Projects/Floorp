@@ -68,6 +68,9 @@ HashLookup(HashTable ht, char* key) {
     return NULL;
 }
 
+int catCount = 0;
+int itemCount = 0;
+
 void 
 HashAdd (HashTable ht, char* key, void* value) {
     int offset = hashKey(ht, key);
@@ -85,6 +88,11 @@ HashAdd (HashTable ht, char* key, void* value) {
 	prev = he;
 	he = he->next;
     }
+	if (startsWith("http://", key)) {
+		itemCount++;
+	} else {
+		catCount++;
+	}
     he = (HashEntry) fgetMem(sizeof(HashEntryStruct));
     he->value = value;
     he->key   = key;

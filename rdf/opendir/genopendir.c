@@ -20,6 +20,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "rdf.h"
+#include "gs.h"
 
 RDF_Resource 
 getNodeFromQuery (char* query) {
@@ -94,13 +95,26 @@ AnswerOpenDirQuery (WriteClientProc callBack, void* obj, char *query) {
          
          
       }
-	  (*callBack)(obj, "</ul>");
+      (*callBack)(obj, "</ul>");
     }
   }
   free(buff);  
 }
 
-      
+void 
+AnswerSearchQuery (WriteClientProc callBack, void* obj, char *query) {
+    RDF_Cursor c = RDFGS_Search(0, query, 0);
+    char *buff = (char*) malloc(10000);
+    RDF_Resource name = RDF_GetResource("name", 1);
+    RDF_Resource u ;
+    while (c && (u = (RDF_Resource) RDFGS_NextValue(c))) {
+      char* nm = (char*) RDF_OnePropValue(0, u, name, RDF_STRING_TYPE);
+      char* id = RDF_ResourceID(u);
+      sprintf(buff, "<li><a href=\"%s\">%s</a>", id, (nm ? nm : id));
+      (*callBack)(obj, buff);
+    }
+    freeMem(buff);
+}
     
     
   
