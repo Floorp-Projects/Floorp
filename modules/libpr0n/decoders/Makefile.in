@@ -26,15 +26,16 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= ppm png gif jpeg bmp mng xbm
+DIRS		= $(MOZ_IMG_DECODERS)
 
+ifneq (,$(findstring icon,$(MOZ_IMG_DECODERS)))
 ifeq ($(OS_ARCH),WINNT)
-DIRS		+= icon/win icon
+DIRS		:= icon/win $(DIRS)
 endif
-
 ifeq ($(OS_ARCH),OS2)
-DIRS		+= icon/os2 icon
+DIRS		:= icon/os2 $(DIRS)
 endif
+endif # icon
 
 include $(topsrcdir)/config/rules.mk
 

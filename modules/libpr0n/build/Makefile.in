@@ -47,24 +47,19 @@ CPPSRCS = \
 		nsImageModule.cpp \
 		$(NULL)
 
+DEFINES		+= $(foreach d,$(filter-out icon mng,$(MOZ_IMG_DECODERS)),\
+			-DIMG_BUILD_${d})
+
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../src \
-		-I$(srcdir)/../decoders/gif \
-		-I$(srcdir)/../decoders/jpeg \
-		-I$(srcdir)/../decoders/png \
-		-I$(srcdir)/../decoders/bmp \
-		-I$(srcdir)/../decoders/xbm \
-		-I$(srcdir)/../decoders/ppm \
+		$(foreach d,$(filter-out icon mng,$(MOZ_IMG_DECODERS)), \
+			-I$(srcdir)/../decoders/${d}) \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
 		../src/$(LIB_PREFIX)imglib2_s.$(LIB_SUFFIX) \
-		../decoders/gif/$(LIB_PREFIX)imggif_s.$(LIB_SUFFIX) \
-		../decoders/jpeg/$(LIB_PREFIX)imgjpeg_s.$(LIB_SUFFIX) \
-		../decoders/png/$(LIB_PREFIX)imgpng_s.$(LIB_SUFFIX) \
-		../decoders/bmp/$(LIB_PREFIX)imgbmp_s.$(LIB_SUFFIX) \
-		../decoders/xbm/$(LIB_PREFIX)imgxbm_s.$(LIB_SUFFIX) \
-		../decoders/ppm/$(LIB_PREFIX)imgppm_s.$(LIB_SUFFIX) \
+		$(foreach d,$(filter-out icon mng,$(MOZ_IMG_DECODERS)), \
+			../decoders/${d}/$(LIB_PREFIX)img${d}_s.$(LIB_SUFFIX))\
 		$(NULL)
 
 EXTRA_DSO_LIBS	= \
@@ -73,6 +68,7 @@ EXTRA_DSO_LIBS	= \
 
 
 EXTRA_DSO_LDOPTS = \
+		$(LIBS_DIR) \
 		$(JPEG_LIBS) \
 		$(PNG_LIBS) $(ZLIB_LIBS) \
 		$(EXTRA_DSO_LIBS) \
@@ -80,4 +76,14 @@ EXTRA_DSO_LDOPTS = \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+export::
+	@echo "$(MOZ_IMG_DECODERS)" > tmp_img_list
+	@if `cmp -s _img_list tmp_img_list`; then \
+		rm -f tmp_img_list; \
+	else \
+		rm -f _img_list; \
+		mv tmp_img_list _img_list; \
+		touch Makefile; \
+	fi
 

@@ -28,7 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= imggif
 LIBRARY_NAME	= imggif_s
-EXPORT_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 MODULE_NAME	= nsGIFModule2
 
