@@ -30,7 +30,8 @@ class nsSound : public nsISound {
 
   nsSound();
   virtual ~nsSound();
-
+  nsresult Init();
+  
   NS_DECL_ISUPPORTS
   NS_DECL_NSISOUND
 };
