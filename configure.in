@@ -161,6 +161,13 @@ dnl MKSHLIB='$(LD) $(DSO_LDOPTS)'
     fi
     ;;
 
+*-*-sunos*) 
+dnl Assumes the native ld is being used.
+    DSO_LDOPTS=''
+    MKSHLIB_FORCE_ALL=''
+    MKSHLIB_UNFORCE_ALL=''
+    ;;
+
 alpha*-*-linux*)
 	CFLAGS="$CFLAGS -mieee" ;;
 
