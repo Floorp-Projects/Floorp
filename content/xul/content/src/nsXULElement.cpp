@@ -4752,7 +4752,7 @@ nsXULPrototypeScript::nsXULPrototypeScript(PRUint16 aLineNo, const char *aVersio
       mJSObject(nsnull),
       mLangVersion(aVersion)
 {
-    MOZ_COUNT_CTOR(nsXULPrototypeScript);
+    NS_LOG_ADDREF(this, 1, ClassName(), ClassSize());
     AddJSGCRoot(&mJSObject, "nsXULPrototypeScript::mJSObject");
 }
 
@@ -4760,7 +4760,6 @@ nsXULPrototypeScript::nsXULPrototypeScript(PRUint16 aLineNo, const char *aVersio
 nsXULPrototypeScript::~nsXULPrototypeScript()
 {
     RemoveJSGCRoot(&mJSObject);
-    MOZ_COUNT_DTOR(nsXULPrototypeScript);
 }
 
 

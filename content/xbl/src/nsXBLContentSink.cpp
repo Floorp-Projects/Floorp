@@ -862,16 +862,17 @@ nsXBLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
 
   prototype->mNodeInfo = aNodeInfo;
 
-  // Reset the refcnt to 0.  Normally XUL prototype elements get a refcnt of 1
-  // to represent ownership by the XUL prototype document.  In our case we have
-  // no prototype document, and our initial ref count of 1 will come from being
-  // wrapped by a real XUL element in the Create call below.
-  prototype->mRefCnt = 0;
-
   AddAttributesToXULPrototype(aAtts, aAttsCount, prototype);
 
-  // Following this function call, the prototype's ref count will be 1.
-  return nsXULElement::Create(prototype, mDocument, PR_FALSE, aResult);
+  nsresult rv = nsXULElement::Create(prototype, mDocument, PR_FALSE, aResult);
+
+  // XUL prototype elements start with a refcnt of 1 to represent
+  // ownership by the XUL prototype document.  In our case we have no
+  // prototype document, so release that reference.  The Create call
+  // above took a reference.
+  prototype->Release();
+
+  return rv;
 #endif
 }
 

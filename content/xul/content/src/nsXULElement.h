@@ -210,14 +210,23 @@ public:
                                  nsIURI* aDocumentURI,
                                  const nsCOMArray<nsINodeInfo> *aNodeInfos) = 0;
 
-    void AddRef() { ++mRefCnt; };
+#ifdef NS_BUILD_REFCNT_LOGGING
+    virtual const char* ClassName() = 0;
+    virtual PRUint32 ClassSize() = 0;
+#endif
+
+    void AddRef() {
+        ++mRefCnt;
+        NS_LOG_ADDREF(this, mRefCnt, ClassName(), ClassSize());
+    }
     void Release()
     {
         --mRefCnt;
+        NS_LOG_RELEASE(this, mRefCnt, ClassName());
         if (mRefCnt == 0)
             delete this;
-    };
-    virtual void ReleaseSubtree() { Release(); };
+    }
+    virtual void ReleaseSubtree() { Release(); }
 
 protected:
     nsXULPrototypeNode(Type aType)
@@ -235,17 +244,20 @@ public:
           mAttributes(nsnull),
           mClassList(nsnull)
     {
-        MOZ_COUNT_CTOR(nsXULPrototypeElement);
+        NS_LOG_ADDREF(this, 1, ClassName(), ClassSize());
     }
 
     virtual ~nsXULPrototypeElement()
     {
-        MOZ_COUNT_DTOR(nsXULPrototypeElement);
-
         delete[] mAttributes;
         delete mClassList;
         delete[] mChildren;
     }
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+    virtual const char* ClassName() { return "nsXULPrototypeElement"; }
+    virtual PRUint32 ClassSize() { return sizeof(*this); }
+#endif
 
     virtual void ReleaseSubtree()
     {
@@ -307,6 +319,11 @@ public:
     nsXULPrototypeScript(PRUint16 aLineNo, const char *aVersion);
     virtual ~nsXULPrototypeScript();
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+    virtual const char* ClassName() { return "nsXULPrototypeScript"; }
+    virtual PRUint32 ClassSize() { return sizeof(*this); }
+#endif
+
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsIScriptContext* aContext,
                                const nsCOMArray<nsINodeInfo> *aNodeInfos);
@@ -354,13 +371,17 @@ public:
     nsXULPrototypeText()
         : nsXULPrototypeNode(eType_Text)
     {
-        MOZ_COUNT_CTOR(nsXULPrototypeText);
+        NS_LOG_ADDREF(this, 1, ClassName(), ClassSize());
     }
 
     virtual ~nsXULPrototypeText()
     {
-        MOZ_COUNT_DTOR(nsXULPrototypeText);
     }
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+    virtual const char* ClassName() { return "nsXULPrototypeText"; }
+    virtual PRUint32 ClassSize() { return sizeof(*this); }
+#endif
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsIScriptContext* aContext,
