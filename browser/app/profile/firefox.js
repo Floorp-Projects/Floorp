@@ -220,7 +220,7 @@ pref("browser.bookmarks.sort.resource", "rdf:http://home.netscape.com/NC-rdf#Nam
 // Scripts & Windows prefs
 pref("dom.disable_open_during_load",              true);
 pref("javascript.options.showInConsole",          false);
-/ Make the status bar reliably present and unaffected by pages
+// Make the status bar reliably present and unaffected by pages
 pref("dom.disable_window_open_feature.status",    true);
 // This is the pref to control the location bar, change this to true to 
 // force this instead of or in addition to the status bar - this makes 
