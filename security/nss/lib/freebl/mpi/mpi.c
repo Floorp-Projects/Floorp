@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.38 2002/09/07 01:07:12 jpierre%netscape.com Exp $
+ *  $Id: mpi.c,v 1.39 2002/09/07 02:59:04 jpierre%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -1075,8 +1075,7 @@ mp_err mp_expt(mp_int *a, mp_int *b, mp_int *c)
   mp_int   s, x;
   mp_err   res;
   mp_digit d;
-  unsigned int dig;
-  int      bit;
+  int      dig, bit;
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
@@ -1451,8 +1450,7 @@ mp_err s_mp_exptmod(const mp_int *a, const mp_int *b, const mp_int *m, mp_int *c
   mp_int   s, x, mu;
   mp_err   res;
   mp_digit d;
-  unsigned int dig;
-  int      bit;
+  int      dig, bit;
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
@@ -1986,7 +1984,7 @@ mp_size mp_trailing_zeros(const mp_int *mp)
 {
   mp_digit d;
   mp_size  n = 0;
-  unsigned int ix;
+  int      ix;
 
   if (!mp || !MP_DIGITS(mp) || !mp_cmp_z(mp))
     return n;
@@ -2900,7 +2898,7 @@ mp_err   s_mp_lshd(mp_int *mp, mp_size p)
 {
   mp_err  res;
   mp_size pos;
-  unsigned int ix;
+  int     ix;
 
   if(p == 0)
     return MP_OKAY;
@@ -3029,8 +3027,7 @@ void     s_mp_div_2(mp_int *mp)
 mp_err s_mp_mul_2(mp_int *mp)
 {
   mp_digit *pd;
-  unsigned int ix;
-  unsigned int used;
+  int      ix, used;
   mp_digit kin = 0;
 
   /* Shift digits leftward by 1 bit */
@@ -4696,7 +4693,7 @@ mp_err
 mp_to_unsigned_octets(const mp_int *mp, unsigned char *str, mp_size maxlen)
 {
   int  ix, pos = 0;
-  unsigned int  bytes;
+  int  bytes;
 
   ARGCHK(mp != NULL && str != NULL && !SIGN(mp), MP_BADARG);
 
@@ -4726,7 +4723,7 @@ mp_err
 mp_to_signed_octets(const mp_int *mp, unsigned char *str, mp_size maxlen)
 {
   int  ix, pos = 0;
-  unsigned int  bytes;
+  int  bytes;
 
   ARGCHK(mp != NULL && str != NULL && !SIGN(mp), MP_BADARG);
 
@@ -4764,7 +4761,7 @@ mp_err
 mp_to_fixlen_octets(const mp_int *mp, unsigned char *str, mp_size length)
 {
   int  ix, pos = 0;
-  unsigned int  bytes;
+  int  bytes;
 
   ARGCHK(mp != NULL && str != NULL && !SIGN(mp), MP_BADARG);
 
