@@ -118,12 +118,49 @@ function (aTitle, aContentURL, aCustomizeURL)
     var panel_index = container.IndexOf(panel_resource);
     if (panel_index != -1)
     {
-        this.window.alert(aContentURL + " already exists in My Sidebar.");
+        var titleMessage, dialogMessage;
+        try {
+            var stringBundle = getStringBundle("chrome://communicator/locale/sidebar/sidebar.properties");
+            if (stringBundle) {
+                titleMessage = stringBundle.GetStringFromName("dupePanelAlertTitle");
+                dialogMessage = stringBundle.GetStringFromName("dupePanelAlertMessage");
+                dialogMessage = dialogMessage.replace(/%url%/, aContentURL);
+            }
+        }
+        catch (e) {
+            titleMessage = "My Sidebar";
+            dialogMessage = aContentURL + " already exists in My Sidebar.";
+        }
+          
+        var cDlgService = Components.classes["component://netscape/appshell/commonDialogs"].getService();
+        if (cDlgService) 
+            cDlgService = cDlgService.QueryInterface(Components.interfaces.nsICommonDialogs);
+        cDlgService.Alert(this.window, titleMessage, dialogMessage);
+
         return;
     }
     
-    var rv = this.window.confirm("Add " + aTitle + " to My Sidebar?\n\n" +
-                                 "Source: " + aContentURL);
+    var titleMessage, dialogMessage;
+    try {
+        var stringBundle = getStringBundle("chrome://communicator/locale/sidebar/sidebar.properties");
+        if (stringBundle) {
+            titleMessage = stringBundle.GetStringFromName("addPanelConfirmTitle");
+            dialogMessage = stringBundle.GetStringFromName("addPanelConfirmMessage");
+            dialogMessage = dialogMessage.replace(/%title%/, aTitle);
+            dialogMessage = dialogMessage.replace(/%url%/, aContentURL);
+            dialogMessage = dialogMessage.replace(/#/g, "\n");
+        }
+    }
+    catch (e) {
+        titleMessage = "Add Panel to My Sidebar";
+        dialogMessage = "Add the panel'" + aTitle + "' to My Sidebar?\n\n" + "Source: " + aContentURL;
+    }
+          
+    var cDlgService = Components.classes["component://netscape/appshell/commonDialogs"].getService();
+    if (cDlgService) 
+        cDlgService = cDlgService.QueryInterface(Components.interfaces.nsICommonDialogs);
+    var rv = cDlgService.Confirm(this.window, titleMessage, dialogMessage);
+      
     if (!rv)
         return;
 
@@ -209,10 +246,30 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
         throw Components.results.NS_ERROR_INVALID_ARG;
     }
 
-    var rv = this.window.confirm("Add the following search engine?\n\n" +
-                                 "Name:\n'" + suggestedTitle + "'\n\n" +
-                                 "Search Category:\n'" + suggestedCategory +
-                                 "'\n\nDownload URL:\n'" + engineURL + "'");
+    var titleMessage, dialogMessage;
+    try {
+        var stringBundle = getStringBundle("chrome://communicator/locale/sidebar/sidebar.properties");
+        if (stringBundle) {
+            titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
+            dialogMessage = stringBundle.GetStringFromName("addEngineConfirmMessage");
+            dialogMessage = dialogMessage.replace(/%title%/, suggestedTitle);
+            dialogMessage = dialogMessage.replace(/%category%/, suggestedCategory);
+            dialogMessage = dialogMessage.replace(/%url%/, engineURL);
+            dialogMessage = dialogMessage.replace(/#/g, "\n");
+        }
+    }
+    catch (e) {
+        titleMessage = "Add Search Engine";
+        dialogMessage = "Add the following search engine?\n\nName: " + suggestedTitle;
+        dialogMessage += "\nSearch Category: " + suggestedCategory;
+        dialogMessage += "\nSource: " + engineURL;
+    }
+          
+    var cDlgService = Components.classes["component://netscape/appshell/commonDialogs"].getService();
+    if (cDlgService) 
+        cDlgService = cDlgService.QueryInterface(Components.interfaces.nsICommonDialogs);
+    var rv = cDlgService.Confirm(this.window, titleMessage, dialogMessage);
+      
     if (!rv)
         return;
 
@@ -314,4 +371,19 @@ function getSidebarDatasourceURI(panels_file_id)
         debug("caught " + ex + " getting sidebar datasource uri");
         return null;
     }
+}
+
+function getStringBundle(aURL) 
+{
+  var stringBundleService = Components.classes["component://netscape/intl/stringbundle"].getService();
+  stringBundleService = stringBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
+  var appLocale;
+  var localeService = Components.classes["component://netscape/intl/nslocaleservice"].getService();
+  if (localeService)
+    localeService = localeService.QueryInterface(Components.interfaces.nsILocaleService);
+  if (localeService)
+    appLocale = localeService.GetApplicationLocale();
+  var stringBundle = stringBundleService.CreateBundle(aURL, appLocale);
+  if (stringBundle)
+    return stringBundle.QueryInterface(Components.interfaces.nsIStringBundle);
 }
