@@ -304,7 +304,6 @@ nsImageControlFrame::HandleEvent(nsIPresContext* aPresContext,
       mLastClickPoint.y = NSTwipsToIntPixels(aEvent->point.y, t2p);
 
       mGotFocus = PR_TRUE;
-      return NS_OK;
       break;
     }
   }
