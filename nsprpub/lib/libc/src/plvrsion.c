@@ -60,11 +60,6 @@ static PRVersionDescription prVersionDescription_libplc21 =
     /* specialString    */ ""
 };
 
-PR_IMPLEMENT(const PRVersionDescription*) libVersionPoint()
-{
-    return &prVersionDescription_libplc21;
-}  /* versionEntryPointType */
-
 #ifdef XP_UNIX
 
 /*
@@ -74,6 +69,21 @@ static char rcsid[] = "$Version: NSPR " PR_VERSION "  " _BUILD_STRING " $";
 static char sccsid[] = "@(#)NSPR " PR_VERSION "  " _BUILD_STRING;
 
 #endif /* XP_UNIX */
+
+PR_IMPLEMENT(const PRVersionDescription*) libVersionPoint()
+{
+#ifdef XP_UNIX
+    /*
+     * Add dummy references to rcsid and sccsid to prevent them
+     * from being optimized away as unused variables.
+     */
+    const char *dummy;
+    
+    dummy = rcsid;
+    dummy = sccsid;
+#endif
+    return &prVersionDescription_libplc21;
+}  /* versionEntryPointType */
 
 /* plvrsion.c */
 
