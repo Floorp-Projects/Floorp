@@ -35,6 +35,8 @@ fi
 
 MANPATH=/usr/share/man:/usr/openwin/man:/usr/local/man
 
+RMAIL=rmail
+
 export CVSROOT HOME os_name os_version os_full MANPATH
 
 
@@ -67,6 +69,7 @@ then
 elif [ $os_name = "Linux" ]
 then
     PATH=/lib:/usr/lib:/bin:/sbin:/usr/bin:/usr/sbin:$PATH
+    RMAIL=sendmail
 elif [ $os_name = "AIX" ]
 then
     PATH=$PATH:/tools/contrib/bin:/usr/local/bin 
