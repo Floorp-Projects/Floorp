@@ -270,7 +270,7 @@ function initHTMLView()
   gHtmlString += "<title>"+windowTitle+"</title></head><body>";
   if (gMyTitle.length > 0)
   {
-    gHtmlString += "<table><tr><td valign=bottom align=center>";
+    gHtmlString += "<table><tr><td class=bottomcenter>";
     gHtmlString += gMyTitle;
     gHtmlString += "</td></tr></table>";
   }
