@@ -406,8 +406,9 @@ nsMathMLmtableOuterFrame::Reflow(nsIPresContext*          aPresContext,
 
     const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
       mStyleContext->GetStyleData(eStyleStruct_Font));
+    aReflowState.rendContext->SetFont(font->mFont);
     nsCOMPtr<nsIFontMetrics> fm;
-    aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
+    aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
 
     nscoord axisHeight;
     GetAxisHeight(*aReflowState.rendContext, fm, axisHeight);
