@@ -46,7 +46,7 @@ pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search
 pref("keyword.URL", "http://keyword.netscape.com/keyword/");
 pref("keyword.enabled", false);
 pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
-pref("general.useragent.contentlocale", "chrome://navigator/locale/navigator.properties");
+pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region.properties");
 pref("general.useragent.misc", "rv:1.1b");
 
 pref("general.startup.browser",             true);
