@@ -28,7 +28,6 @@ dirs="  base \
         ../formctls/bugs \
         ../style/bugs \
         ../xbl \
-        net \
         "
 
 # This doesn't appear to work on Linux right now; needs support for a
