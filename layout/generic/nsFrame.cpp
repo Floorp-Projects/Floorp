@@ -593,7 +593,11 @@ nsFrame::DisplaySelection(nsIPresContext& aPresContext, PRBool isOkToTurnOn)
     GetStyleData(eStyleStruct_UserInterface,
                       (const nsStyleStruct*&) userinterface);
     if (userinterface)
-      result = userinterface->mUserSelect;
+    {
+      if (isOkToTurnOn && (userinterface->mUserSelect != NS_STYLE_USER_SELECT_NONE)) {
+        result = PR_TRUE;
+      }
+    }
   }
   return result;
 }
