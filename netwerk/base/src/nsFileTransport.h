@@ -70,7 +70,7 @@ public:
     nsresult Init(nsISupports* context,
                   nsIStreamListener* listener,
                   State state);
-    void Continue(void);
+    void Process(void);
 
 protected:
     char*                       mPath;
@@ -84,6 +84,7 @@ protected:
     nsIBaseStream*              mFileStream;    // cast to nsIInputStream/nsIOutputStream for reading/writing
     nsIByteBufferInputStream*   mBufferStream;
     nsresult                    mStatus;
+    PRUint32                    mSourceOffset;
 };
 
 #define NS_FILE_TRANSPORT_BUFFER_SIZE   (4*1024)

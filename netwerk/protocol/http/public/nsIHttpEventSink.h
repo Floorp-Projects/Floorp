@@ -19,7 +19,7 @@
 #ifndef nsIHttpEventSink_h___
 #define nsIHttpEventSink_h___
 
-#include "nsISupports.h"
+#include "nsIStreamListener.h"
 #include "nscore.h"
 
 class nsIUrl;
@@ -37,7 +37,7 @@ class nsIUrl;
  * argument of nsINetService::NewConnection for http URLs. It defines
  * the callbacks to the application program (the html parser).
  */
-class nsIHttpEventSink : public nsISupports
+class nsIHttpEventSink : public nsIStreamListener
 {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTTPEVENTSINK_IID);
@@ -45,12 +45,17 @@ public:
     /**
      * Notify the EventSink that progress as occurred for the URL load.<BR>
      */
-    NS_IMETHOD OnProgress(nsIUrl* aURL, PRUint32 aProgress, PRUint32 aProgressMax) = 0;
+    NS_IMETHOD OnProgress(nsISupports* context, PRUint32 aProgress, PRUint32 aProgressMax) = 0;
 
     /**
      * Notify the EventSink with a status message for the URL load.<BR>
      */
-    NS_IMETHOD OnStatus(nsIUrl* aURL, const PRUnichar* aMsg) = 0;
+    NS_IMETHOD OnStatus(nsISupports* context, const PRUnichar* aMsg) = 0;
+
+    /**
+     * Called after the headers have been received signaling that they now may be accessed.
+     */
+    NS_IMETHOD OnHeadersAvailable(nsISupports* context) = 0;
 
 };
 

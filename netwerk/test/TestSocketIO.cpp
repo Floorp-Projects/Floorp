@@ -29,6 +29,7 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIByteBufferInputStream.h"
+#include "nsCRT.h"
 
 #ifdef XP_PC
 #define XPCOM_DLL  "xpcom32.dll"
@@ -62,6 +63,7 @@ public:
 
   NS_IMETHOD OnDataAvailable(nsISupports* context,
                              nsIInputStream *aIStream, 
+                             PRUint32 aSourceOffset,
                              PRUint32 aLength);
 
   NS_IMETHOD OnStopBinding(nsISupports* context,
@@ -95,6 +97,7 @@ InputTestConsumer::OnStartBinding(nsISupports* context)
 NS_IMETHODIMP
 InputTestConsumer::OnDataAvailable(nsISupports* context,
                                    nsIInputStream *aIStream, 
+                                   PRUint32 aSourceOffset,
                                    PRUint32 aLength)
 {
   char buf[1025];
@@ -226,7 +229,7 @@ main(int argc, char* argv[])
   rv = NS_NewByteBufferInputStream(&stream);
   if (NS_FAILED(rv)) return rv;
 
-  char *buffer = PR_smprintf("GET %s HTML/1.0\r\n\r\n", fileName);
+  char *buffer = PR_smprintf("GET %s HTML/1.0%s%s", fileName, CRLF, CRLF);
   stream->Fill(buffer, strlen(buffer), &bytesWritten);
   printf("\n+++ Request is: %s\n", buffer);
 

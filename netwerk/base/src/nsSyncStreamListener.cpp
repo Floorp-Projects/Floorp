@@ -32,6 +32,7 @@ public:
     NS_IMETHOD OnStartBinding(nsISupports* context);
     NS_IMETHOD OnDataAvailable(nsISupports* context,
                                nsIInputStream *aIStream, 
+                               PRUint32 aSourceOffset,
                                PRUint32 aLength);
     NS_IMETHOD OnStopBinding(nsISupports* context,
                              nsresult aStatus,
@@ -47,7 +48,7 @@ public:
     nsresult Init(nsIInputStream* *result);
 
 protected:
-    nsIByteBufferOutputStream*  mOutputStream;
+    nsIOutputStream*    mOutputStream;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,17 +58,10 @@ nsSyncStreamListener::Init(nsIInputStream* *result)
 {
     nsresult rv;
     nsIInputStream* in;
-    nsIOutputStream* out;
 
-    rv = NS_NewPipe(&in, &out);
+    rv = NS_NewPipe(&in, &mOutputStream);
     if (NS_FAILED(rv)) return rv;
 
-    rv = out->QueryInterface(nsIByteBufferOutputStream::GetIID(), (void**)&mOutputStream);
-    NS_RELEASE(out);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(in);
-        return rv;
-    }
     *result = in;
     return NS_OK;
 }
@@ -103,6 +97,7 @@ nsSyncStreamListener::OnStartBinding(nsISupports* context)
 NS_IMETHODIMP 
 nsSyncStreamListener::OnDataAvailable(nsISupports* context,
                                       nsIInputStream *aIStream, 
+                                      PRUint32 aSourceOffset,
                                       PRUint32 aLength)
 {
     nsresult rv;

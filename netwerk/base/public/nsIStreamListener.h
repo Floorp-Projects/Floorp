@@ -48,7 +48,8 @@ public:
      * @return The return value is currently ignored.
      */
     NS_IMETHOD OnDataAvailable(nsISupports* context,
-                               nsIInputStream *aIStream, 
+                               nsIInputStream *aIStream,
+                               PRUint32 aSourceOffset,
                                PRUint32 aLength) = 0;
 
 };

@@ -98,6 +98,7 @@ public:
     // nsIStreamListener methods:
     NS_IMETHOD OnDataAvailable(nsISupports* context,
                                nsIInputStream *aIStream, 
+                               PRUint32 aSourceOffset,
                                PRUint32 aLength);
 
     // nsFtpProtocolConnection methods:
