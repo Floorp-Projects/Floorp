@@ -130,6 +130,7 @@ public:
 #include "XPCBrowser.h"
 #include "LegacyPlugin.h"
 
+#include "IHTMLLocationImpl.h"
 
 /*
  * This file contains partial implementations of various IE objects and
@@ -139,10 +140,60 @@ public:
  * might want to initiate a load, or obtain the user agent.
  */
 
+class IELocation :
+    public CComObjectRootEx<CComSingleThreadModel>,
+    public IHTMLLocationImpl<IELocation>
+{
+public:
+BEGIN_COM_MAP(IELocation)
+    COM_INTERFACE_ENTRY(IDispatch)
+    COM_INTERFACE_ENTRY(IHTMLLocation)
+END_COM_MAP()
+
+    PluginInstanceData *mData;
+    nsCOMPtr<nsIDOMLocation> mDOMLocation;
+
+    IELocation() : mData(NULL)
+    {
+    }
+
+    HRESULT Init(PluginInstanceData *pData)
+    {
+	NS_PRECONDITION(pData != nsnull, "null ptr");
+
+        mData = pData;
+
+        // Get the DOM window
+        nsCOMPtr<nsIDOMWindow> domWindow;
+        NPN_GetValue(mData->pPluginInstance, NPNVDOMWindow, 
+                     NS_STATIC_CAST(nsIDOMWindow **, getter_AddRefs(domWindow)));
+        if (!domWindow)
+        {
+            return E_FAIL;
+        }
+        nsCOMPtr<nsIDOMWindowInternal> windowInternal = do_QueryInterface(domWindow);
+        if (windowInternal)
+        {
+            windowInternal->GetLocation(getter_AddRefs(mDOMLocation));
+        }
+        if (!mDOMLocation)
+            return E_FAIL;
+
+        return S_OK;
+    }
+
+    virtual nsresult GetDOMLocation(nsIDOMLocation **aLocation)
+    {
+        *aLocation = mDOMLocation;
+        NS_IF_ADDREF(*aLocation);
+        return NS_OK;
+    }
+};
+
 // Note: corresponds to the window.navigator property in the IE DOM
 class IENavigator :
     public CComObjectRootEx<CComSingleThreadModel>,
-    public IDispatchImpl<IOmNavigator, &IID_IOmNavigator, &LIBID_MSHTML>
+    public IDispatchImpl<IOmNavigator, &__uuidof(IOmNavigator), &LIBID_MSHTML>
 {
 public:
 BEGIN_COM_MAP(IENavigator)
@@ -289,13 +340,14 @@ END_COM_MAP()
 // Note: Corresponds to the window object in the IE DOM
 class IEWindow :
     public CComObjectRootEx<CComSingleThreadModel>,
-    public IDispatchImpl<IHTMLWindow2, &IID_IHTMLWindow2, &LIBID_MSHTML>
+    public IDispatchImpl<IHTMLWindow2, &__uuidof(IHTMLWindow2), &LIBID_MSHTML>
 {
 public:
     PluginInstanceData *mData;
     CComObject<IENavigator> *mNavigator;
+    CComObject<IELocation>  *mLocation;
 
-    IEWindow() : mNavigator(NULL), mData(NULL)
+    IEWindow() : mNavigator(NULL), mLocation(NULL), mData(NULL)
     {
     }
 
@@ -310,6 +362,15 @@ public:
         }
         mNavigator->AddRef();
         mNavigator->Init(mData);
+
+        CComObject<IELocation>::CreateInstance(&mLocation);
+        if (!mLocation)
+        {
+            return E_UNEXPECTED;
+        }
+        mLocation->AddRef();
+        mLocation->Init(mData);
+
         return S_OK;
     }
 
@@ -319,6 +380,10 @@ protected:
         if (mNavigator)
         {
             mNavigator->Release();
+        }
+        if (mLocation)
+        {
+            mLocation->Release();
         }
     }
 
@@ -421,7 +486,9 @@ END_COM_MAP()
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_location( 
         /* [out][retval] */ IHTMLLocation __RPC_FAR *__RPC_FAR *p)
     {
-        return E_NOTIMPL;
+        if (mLocation)
+            return mLocation->QueryInterface(__uuidof(IHTMLLocation), (void **) p);
+        return E_FAIL;
     }
     
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_history( 
@@ -450,7 +517,9 @@ END_COM_MAP()
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_navigator( 
         /* [out][retval] */ IOmNavigator __RPC_FAR *__RPC_FAR *p)
     {
-        return mNavigator->QueryInterface(__uuidof(IOmNavigator), (void **) p);
+        if (mNavigator)
+            return mNavigator->QueryInterface(__uuidof(IOmNavigator), (void **) p);
+        return E_FAIL;
     }
     
     virtual /* [id][propput] */ HRESULT STDMETHODCALLTYPE put_name( 
@@ -468,7 +537,8 @@ END_COM_MAP()
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_parent( 
         /* [out][retval] */ IHTMLWindow2 __RPC_FAR *__RPC_FAR *p)
     {
-        return E_NOTIMPL;
+        *p = NULL;
+        return S_OK;
     }
     
     virtual /* [id] */ HRESULT STDMETHODCALLTYPE open( 
@@ -478,7 +548,8 @@ END_COM_MAP()
         /* [in][defaultvalue] */ VARIANT_BOOL replace,
         /* [out][retval] */ IHTMLWindow2 __RPC_FAR *__RPC_FAR *pomWindowResult)
     {
-        return E_NOTIMPL;
+        *pomWindowResult = NULL;
+        return E_FAIL;
     }
     
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_self( 
@@ -490,13 +561,15 @@ END_COM_MAP()
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_top( 
         /* [out][retval] */ IHTMLWindow2 __RPC_FAR *__RPC_FAR *p)
     {
-        return E_NOTIMPL;
+        *p = NULL;
+        return S_OK;
     }
     
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_window( 
         /* [out][retval] */ IHTMLWindow2 __RPC_FAR *__RPC_FAR *p)
     {
-        return E_NOTIMPL;
+        *p = NULL;
+        return S_OK;
     }
     
     virtual /* [id] */ HRESULT STDMETHODCALLTYPE navigate( 
@@ -842,7 +915,7 @@ END_COM_MAP()
 // Note: Corresponds to the document object in the IE DOM
 class IEDocument :
     public CComObjectRootEx<CComSingleThreadModel>,
-    public IDispatchImpl<IHTMLDocument2, &IID_IHTMLDocument2, &LIBID_MSHTML>,
+    public IDispatchImpl<IHTMLDocument2, &__uuidof(IHTMLDocument2), &LIBID_MSHTML>,
     public IServiceProvider,
     public IOleContainer,
     public IBindHost,
@@ -973,6 +1046,10 @@ END_COM_MAP()
         else if (IsEqualIID(riid, __uuidof(IHTMLWindow2)))
         {
             ATLTRACE(_T("  IHTMLWindow2\n"));
+            if (mWindow)
+            {
+                return mWindow->QueryInterface(riid, ppvObject);
+            }
         }
         else if (IsEqualIID(riid, __uuidof(IHTMLDocument2)))
         {
@@ -1179,7 +1256,9 @@ END_COM_MAP()
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_location( 
         /* [out][retval] */ IHTMLLocation **p)
     {
-        return E_NOTIMPL;
+        if (mWindow)
+            return mWindow->get_location(p);
+        return E_FAIL;
     }
     
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_lastModified( 
