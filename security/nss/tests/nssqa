@@ -230,7 +230,7 @@ case `uname -s` in
 			Debug "Copy results from $NT_MASTERDIR/mozilla/tests_results/security to $RESULTDIR"
 			cp -r $NT_MASTERDIR/mozilla/tests_results/security/* $RESULTDIR
 		fi
-		Exit "Done."
+		return
 		;;
 esac
 
@@ -247,7 +247,6 @@ else
 	Debug "This is a 32 bit platform"
 fi
 
-Exit "Done."
 }
 
 if [ $O_FILE = ON ]
@@ -257,3 +256,4 @@ else
 	nssqa_main
 fi
 
+Exit "Done."

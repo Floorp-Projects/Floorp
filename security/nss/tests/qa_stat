@@ -27,7 +27,9 @@
 
 O_OPTIONS=ON
 
-. /u/sonmi/bin/header
+. `dirname $0`/header
+
+EARLY_EXIT=TRUE
 
 DOCDIR=/u/sonmi/doc
 
@@ -41,7 +43,15 @@ Debug "RESULTDIR $RESULTDIR"
 ########################################################################
 find_qa_systems()
 {
-for w in `ls $RESULTDIR | grep \. | sed -e "s/\..*//" | sort -u`
+
+#the line below had a bug, which caused nssqa as being run when only 
+#the .nssqa file existed
+#FIXME remaining bugs: 
+#when only debug but not opt is being run this is not recognized. 
+#2000 and NT are reported the same way
+#it should also examine the directory (.1) for files 
+
+for w in `ls $RESULTDIR | grep \.1$ | sed -e "s/\..*//" | sort -u`
 do
 	NO_RSH="FALSE"
 	QA_OS=""
@@ -116,6 +126,10 @@ set_files()
 							#doesn't seem to work - this is a tmp workaround
 		fi
 	
+		if [ ! -x $RESULTDIR -o ! -r  $RESULTDIR -o ! -w $RESULTDIR ]
+		then
+			glob_usage "$RESULTDIR does not have the right permissions `ls -l $RESULTDIR`"
+		fi
 		if [ -d $RESULTDIR ]
 		then
 			cd $RESULTDIR
@@ -265,8 +279,9 @@ qa_errorlist()
 		lline
 	fi
 
-	#FIXME - take bad password out!!!!
-	grep red */results.html | grep -v 'bad password' |
+	#FIXME it should also examine the files for passed messages, since 
+	#sometimes empty results and output.log files are generated
+	grep red */results.html | 
 		sed -e 's/.results.html:<TR><TD>/ /' -e 's/<[^>]*>/ /g'
 	if [ "$1" = "1" ]
 	then
@@ -439,5 +454,6 @@ qa_errorlist 2  | sed -e "s/^/<br>/" >>$HTML_FILE
 
 html_footer >>$HTML_FILE
 
+EARLY_EXIT=FALSE
 FILENAME=$HTML_FILE		#we might want to mail it...
 Exit
