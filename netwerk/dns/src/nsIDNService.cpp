@@ -47,6 +47,7 @@
 #include "punycode.h"
 
 //-----------------------------------------------------------------------------
+// RFC 1034 - 3.1. Name space specifications and terminology
 static const PRUint32 kMaxDNSNodeLen = 63;
 
 //-----------------------------------------------------------------------------
@@ -363,7 +364,7 @@ nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out)
 
   out.Truncate();
 
-  if (in.Length() >= kMaxDNSNodeLen) {
+  if (in.Length() > kMaxDNSNodeLen) {
     NS_ERROR("IDN node too large");
     return NS_ERROR_FAILURE;
   }
@@ -375,6 +376,11 @@ nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out)
     rv = stringPrep(in, strPrep);
     if (NS_SUCCEEDED(rv))
       rv = encodeToACE(strPrep, out);
+  }
+
+  if (out.Length() > kMaxDNSNodeLen) {
+    NS_ERROR("IDN node too large");
+    return NS_ERROR_FAILURE;
   }
 
   return rv;
