@@ -418,7 +418,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 	_mkdir((char *)(LPCTSTR) cdPath);
 	_mkdir((char *)(LPCTSTR) tempPath);
 	_mkdir((char *)(LPCTSTR) workspacePath);
-
+	_mkdir((char *)(LPCTSTR) cdshellPath);
 	GetCurrentDirectory(sizeof(olddir), olddir);
 
 	if(SetCurrentDirectory((char *)(LPCTSTR) tempPath) == FALSE)
