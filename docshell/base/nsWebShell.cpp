@@ -985,6 +985,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
     NS_WITH_SERVICE(nsIDocumentLoader, docLoaderService, kDocLoaderServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
+
     rv = docLoaderService->CreateDocumentLoader(&mDocLoader);
     if (NS_FAILED(rv)) return rv;
   }
@@ -3715,10 +3716,10 @@ nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
     // Replace the top most history entry with the new url
     mSHist->SetURLForIndex(curIndex, newURL->GetUnicode());
   }
-  else {
-    delete newURL;
-    delete historyURL;
-  }
+  
+  if (newURL) delete newURL;
+  if (historyURL) delete historyURL;
+  
 
   return NS_OK;
 }
