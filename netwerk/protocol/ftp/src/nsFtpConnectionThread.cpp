@@ -31,6 +31,8 @@
 #include "nsIPipe.h"
 #include "nsIBufferOutputStream.h"
 #include "nsIMIMEService.h"
+#include "nsXPIDLString.h" 
+
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 
@@ -1635,9 +1637,9 @@ nsFtpConnectionThread::Run() {
     if(NS_FAILED(rv)) return rv;
 
     // Create the command channel transport
-    char *host;
+    nsXPIDLCString host;
     PRInt32 port = 0;
-    rv = mUrl->GetHost(&host);
+    rv = mUrl->GetHost(getter_Copies(host));
     if (NS_FAILED(rv)) return rv;
     rv = mUrl->GetPort(&port);
     if (NS_FAILED(rv)) return rv;
@@ -1646,7 +1648,6 @@ nsFtpConnectionThread::Run() {
     // COMMAND CHANNEL SETUP
     ///////////////////////////////
     rv = mSTS->CreateTransport(host, port, &mCPipe); // the command channel
-    nsCRT::free(host);
     if (NS_FAILED(rv)) return rv;
 
     // get the output stream so we can write to the server
