@@ -284,6 +284,14 @@ NS_IMETHODIMP nsWindow::Destroy()
 	nsBaseWidget::OnDestroy();
 	nsBaseWidget::Destroy();
 	
+  // just to be safe. If we're going away and for some reason we're still
+  // the rollup widget, rollup and turn off capture.
+  if ( this == gRollupWidget ) {
+    if ( gRollupListener )
+      gRollupListener->Rollup();
+    CaptureRollupEvents(nsnull, PR_FALSE, PR_TRUE);
+  }
+
 	NS_IF_RELEASE(mMenuBar);
 	SetMenuBar(nsnull);
 
