@@ -324,15 +324,6 @@ extern nsresult
 NS_NewSelectControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                          nsIFrame*& aResult);
 
-// bullet
-extern nsresult
-NS_NewBulletFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                  nsIFrame*& aResult);
-
-extern nsresult
-NS_NewBulletFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                  nsIFrame*& aResult);
-
 // table frame factories
 
 extern nsresult
@@ -376,10 +367,6 @@ extern nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
                                       nsIDocument* aDoc,
                                       nsIURL* aURL,
                                       nsIWebShell* aWebShell);
-
-
-extern nsresult
-  NS_NewHTMLBullet(nsIHTMLContent** aInstancePtrResult);
 
 /** Create a new table content object <TABLE> */
 extern nsresult
