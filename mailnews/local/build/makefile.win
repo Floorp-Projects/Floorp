@@ -22,15 +22,15 @@ MAKE_OBJ_TYPE=DLL
 DLLNAME=msglocal
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-EXPORTS=\
-	nsMsgLocalCID.h     \
-        $(NULL)
+EXPORTS=								\
+			nsMsgLocalCID.h				\
+			$(NULL)
 
-CPPSRCS=                         \
-		nsMsgLocalFactory.cpp		\
+CPPSRCS=								\
+			nsMsgLocalFactory.cpp		\
 
 CPP_OBJS=\
-	.\$(OBJDIR)\nsMsgLocalFactory.obj		\
+	.\$(OBJDIR)\nsMsgLocalFactory.obj	\
 	$(NULL)
 
 # XXX linking in raptor is a heinous crime that will go away once we
@@ -39,23 +39,23 @@ CPP_OBJS=\
 
 LLIBS=\
 	$(DIST)\lib\xpcom32.lib     \
-	$(DIST)\lib\msglocal.lib     \
+	$(DIST)\lib\msglocal.lib    \
     $(LIBNSPR)		            \
     $(DIST)\lib\libplc21.lib    \
     $(DIST)\lib\raptorbase.lib  \
-    $(DIST)\lib\rdfutil_s.lib  \
-    $(DIST)\lib\xpcom32.lib  \
+    $(DIST)\lib\rdfutil_s.lib	\
 	$(NULL)
 
 MISCDEP=$(LLIBS)
 
 # XXX Note dependencies on implementation dirs for factory methods.
 
-LINCS=  -I$(DEPTH)\mailnews\local\src         \
-		-I$(PUBLIC)\xpcom \
-		-I$(PUBLIC)\mailnews \
-		-I$(PUBLIC)\raptor \
-		-I$(PUBLIC)\rdf \
+LINCS=  -I$(DEPTH)\mailnews\local\src	\
+		-I$(PUBLIC)\xpcom				\
+		-I$(PUBLIC)\mailnews			\
+		-I$(PUBLIC)\raptor				\
+		-I$(PUBLIC)\rdf					\
+		-I$(PUBLIC)\netlib				\
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
