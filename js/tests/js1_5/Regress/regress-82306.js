@@ -16,12 +16,14 @@
 * Copyright (C) 1998 Netscape Communications Corporation. All
 * Rights Reserved.
 *
-* Contributor(s): pschwartau@netscape.com
+* Contributor(s): pschwartau@netscape.com, epstein@tellme.com
 * Date: 23 May 2001
 *
 * SUMMARY: Regression test for Bugzilla bug 82306
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=82306
 *
+* This test used to crash the JS engine. This was discovered
+* by Mike Epstein <epstein@tellme.com>
 */
 //-------------------------------------------------------------------------------------------------
 var bug = 82306;
