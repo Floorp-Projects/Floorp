@@ -39,6 +39,7 @@
 #include "nsIBoxObject.h"
 #include "nsPIBoxObject.h"
 #include "nsIPresState.h"
+#include "nsPoint.h"
 
 class nsIBoxLayoutManager;
 class nsIBoxPaintManager;
@@ -62,7 +63,7 @@ public:
 
   virtual nsIFrame* GetFrame();
   nsresult GetOffsetRect(nsRect& aRect);
-  nsresult GetScreenRect(nsRect& aRect);
+  nsresult GetScreenPosition(nsIntPoint& aPoint);
   nsIDOMElement* GetChildByOrdinalAt(PRUint32 aIndex);
 
 protected:

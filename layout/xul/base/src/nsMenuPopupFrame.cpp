@@ -2204,43 +2204,14 @@ nsMenuPopupFrame::MoveTo(PRInt32 aLeft, PRInt32 aTop)
   mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::top, top, PR_FALSE);
 
   nsIView* view = GetView();
+  NS_ASSERTION(view->GetParent(), "Must have parent!");
   
   // Retrieve screen position of parent view
-  nsPoint screenPos;
-  GetScreenPosition(view->GetParent(), screenPos);
+  nsIntPoint screenPos = view->GetParent()->GetScreenPosition();
 
   // Move the widget
+  // XXXbz don't we want screenPos to be the parent _widget_'s position, then?
   view->GetWidget()->Move(aLeft - screenPos.x, aTop - screenPos.y);
-}
-
-void
-nsMenuPopupFrame::GetScreenPosition(nsIView* aView, nsPoint& aScreenPosition)
-{
-  nsPoint screenPos(0,0);
-
-  nsIView* currView = aView;
-  nsIView* nextView = nsnull;
-  
-  while (1) {
-    screenPos += currView->GetPosition();
-
-    nextView = currView->GetParent();
-    if (!nextView) 
-      break;
-    else 
-      currView = nextView;
-  }
-
-  nsIWidget* rootWidget = currView->GetWidget();
-  nsRect bounds, screenBounds;
-  rootWidget->GetScreenBounds(bounds);
-  rootWidget->WidgetToScreen(bounds, screenBounds);
-
-  float t2p;
-  t2p = mPresContext->TwipsToPixels();
-
-  aScreenPosition.x = NSTwipsToIntPixels(screenPos.x, t2p) + screenBounds.x;
-  aScreenPosition.y = NSTwipsToIntPixels(screenPos.y, t2p) + screenBounds.y;
 }
 
 void 
