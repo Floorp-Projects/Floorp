@@ -61,7 +61,7 @@ CPPSRCS=				\
 	UnionExpr.cpp			\
 	VariableRefExpr.cpp		\
 	XPathNames.cpp			\
-!if undefined(TX_EXE)
+!if !defined(TX_EXE)
 	nsNodeSet.cpp			\
 	XPathProcessor.cpp		\
 !endif
@@ -102,7 +102,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\UnionExpr.obj			\
 	.\$(OBJDIR)\VariableRefExpr.obj			\
 	.\$(OBJDIR)\XPathNames.obj			\
-!if undefined(TX_EXE)
+!if !defined(TX_EXE)
 	.\$(OBJDIR)\nsNodeSet.obj			\
 	.\$(OBJDIR)\XPathProcessor.obj		\
 !endif
