@@ -425,7 +425,7 @@ function serv_poll(e)
         this.sendQueue.length > 0)                            
     {
         var s = this.sendQueue.pop();
-        dd ("queued send: " + s);
+        //dd ("queued send: " + s);
         this.connection.sendData (s);
         this.lastSend = d;
     }
@@ -1146,8 +1146,6 @@ function serv_ctcp (e)
 {
     var ary = e.meat.match (/^\x01(\S+) ?(.*)\x01$/i);
 
-    dd (ary);
-    
     if (ary == null)
         return false;
 

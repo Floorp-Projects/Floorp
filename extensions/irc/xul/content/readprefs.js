@@ -116,7 +116,7 @@ function getCharPref (prefObj, prefName, defaultValue)
         rv = defaultValue;
     }
 
-    dd ("getCharPref: returning '" + rv + "' for " + prefName);
+    //dd ("getCharPref: returning '" + rv + "' for " + prefName);
     return rv;
     
 }
