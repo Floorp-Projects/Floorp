@@ -107,7 +107,6 @@
 
 #define cmd_BookmarksWindow 		1030	// Show the bm pane of NavCenter in new window
 #define cmd_HistoryWindow			1031	// Show history pane of NavCenter in new window
-//#define cmd_OpenURL					1032
 #define cmd_Redo					1034
 
 #define cmd_ViewFrameSource			1035
