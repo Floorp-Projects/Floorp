@@ -108,7 +108,7 @@ nsDOMAttribute::SetContent(nsIContent* aContent)
 void 
 nsDOMAttribute::SetName(const nsString& aName)
 {
-  mName.SetString(aName);
+  mName=aName;
 }
 
 nsresult
@@ -144,7 +144,7 @@ nsDOMAttribute::SetScriptObject(void *aScriptObject)
 nsresult
 nsDOMAttribute::GetName(nsString& aName)
 {
-  aName.SetString(mName);
+  aName=mName;
   return NS_OK;
 }
 
@@ -164,7 +164,7 @@ nsDOMAttribute::GetValue(nsString& aValue)
     }
     NS_IF_RELEASE(nameAtom);
   }
-  aValue.SetString(mValue);
+  aValue=mValue;
   return result;
 }
 
@@ -180,7 +180,7 @@ nsDOMAttribute::SetValue(const nsString& aValue)
     result = mContent->SetAttribute(nameSpaceID, nameAtom, aValue, PR_TRUE);
     NS_IF_RELEASE(nameAtom);
   }
-  mValue.SetString(aValue);
+  mValue=aValue;
 
   return result;
 }

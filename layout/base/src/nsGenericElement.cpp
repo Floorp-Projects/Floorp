@@ -1055,7 +1055,7 @@ nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
   if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
     nsAutoString propName, prefix;
     propName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
-    prefix.SetString(propName, 2);
+    prefix.SetString(propName.GetUnicode(), 2);
     if (prefix == "on") {
       nsIEventListenerManager *manager = nsnull;
 
