@@ -551,7 +551,9 @@ nsresult nsPluginHostImpl :: LoadPlugins(void)
     if (result == ERROR_SUCCESS)
     {
       strcat(path, "\\Program\\Plugins");
-      printf("plugins at: %s\n", path);
+#ifdef NS_DEBUG
+printf("plugins at: %s\n", path);
+#endif
     }
 
     ::RegCloseKey(keyloc);
@@ -592,7 +594,7 @@ nsresult nsPluginHostImpl :: LoadPlugins(void)
       if (len > 6)  //np*.dll
       {
         if ((0 == stricmp(&dent->name[len - 4], ".dll")) && //ends in '.dll'
-            (0 == strnicmp(dent->name, "np", 2)))           //starts with 'np'
+            (0 == PL_strncasecmp(dent->name, "np", 2)))           //starts with 'np'
         {
           PRLibrary *plugin;
 
@@ -828,7 +830,9 @@ nsresult nsPluginHostImpl :: LoadPlugins(void)
                   if (nsnull == PR_FindSymbol(plugin, "NSGetFactory"))
                     plugintag->mFlags |= NS_PLUGIN_FLAG_OLDSCHOOL;
 
+#ifdef NS_DEBUG
 printf("plugin %s added to list %s\n", plugintag->mName, (plugintag->mFlags & NS_PLUGIN_FLAG_OLDSCHOOL) ? "(old school)" : "");
+#endif
                   plugintag->mNext = mPlugins;
                   mPlugins = plugintag;
                 }
@@ -848,7 +852,9 @@ printf("plugin %s added to list %s\n", plugintag->mName, (plugintag->mFlags & NS
   }
 
 #else
+#ifdef NS_DEBUG
   printf("Don't know how to locate plugins directory on Unix yet...\n");
+#endif
 #endif
 
   return NS_OK;
@@ -924,7 +930,7 @@ nsresult nsPluginHostImpl :: InstantiatePlugin(const char *aMimeType, nsIURL *aU
 
               if (extlen == len)
               {
-                if (strnicmp(extensions, ext, extlen) == 0)
+                if (PL_strncasecmp(extensions, ext, extlen) == 0)
                   break;
               }
 
@@ -941,7 +947,9 @@ nsresult nsPluginHostImpl :: InstantiatePlugin(const char *aMimeType, nsIURL *aU
           if (cnt < variants)
           {
             aMimeType = plugins->mMimeTypeArray[cnt];
+#ifdef NS_DEBUG
 printf("found plugin via extension %s\n", ext);
+#endif
             break;
           }
 
@@ -961,7 +969,9 @@ printf("found plugin via extension %s\n", ext);
       strcat(path, plugins->mName);
 
       plugins->mLibrary = PR_LoadLibrary(path);
+#ifdef NS_DEBUG
 printf("loaded plugin %s for mime type %s\n", plugins->mName, aMimeType);
+#endif
     }
 
     if (nsnull != plugins->mLibrary)
@@ -973,7 +983,9 @@ printf("loaded plugin %s for mime type %s\n", plugins->mName, aMimeType);
         if (plugins->mFlags & NS_PLUGIN_FLAG_OLDSCHOOL)
         {
           nsresult rv = ns4xPlugin::CreatePlugin(plugins->mLibrary, (nsIPlugin **)&plugins->mEntryPoint);
+#ifdef NS_DEBUG
 printf("result of creating plugin adapter: %d\n", rv);
+#endif
         }
         else
           plugins->mEntryPoint = (nsIPlugin *)PR_FindSymbol(plugins->mLibrary, "NSGetFactory");
@@ -988,7 +1000,9 @@ printf("result of creating plugin adapter: %d\n", rv);
 
         if (NS_OK == plugins->mEntryPoint->CreateInstance(nsnull, kIPluginInstanceIID, (void **)aPluginInst))
         {
+#ifdef NS_DEBUG
 printf("successfully created plugin instance\n");
+#endif
           nsPluginInstancePeerImpl *peer = new nsPluginInstancePeerImpl();
 
           peer->Initialize(*aPluginInst);     //this will not add a ref to the instance. MMP
@@ -1004,7 +1018,10 @@ printf("successfully created plugin instance\n");
   else
   {
     if ((nsnull != aURL) || (nsnull != aMimeType))
-printf("unable to find plugin to handle %s\n", aMimeType ? aMimeType : "(mime type unspecified)");
+#ifdef NS_DEBUG
+printf("unable to find plugin to handle %s\n", aMimeType ? aMimeType : "(mime type unspecified)")
+#endif
+    ;
 
     return NS_ERROR_FAILURE;
   }

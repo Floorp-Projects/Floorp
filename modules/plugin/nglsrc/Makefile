@@ -37,7 +37,7 @@ CPPSRCS =                              \
     nsPluginStreamPeer.cpp  \
     $(NULL)
 
-REQUIRES = raptor plugin java xpcom netlib
+REQUIRES = raptor plugin java xpcom netlib libplc21
 
 LCFLAGS =-D_IMPL_NS_PLUGIN
 
