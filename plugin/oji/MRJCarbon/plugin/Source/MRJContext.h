@@ -48,6 +48,7 @@
 #include "JManager.h"
 #include "nsIPluginTagInfo2.h"
 
+
 //
 // Instance state information about the plugin.
 //
@@ -87,8 +88,11 @@ public:
 	void suspendApplet();
 	void resumeApplet();
 	jobject getApplet();
+
+	nsIPluginInstance* getInstance();
+	nsIPluginInstancePeer* getPeer();
 	
-	void handleEvent(EventRecord* event);
+	Boolean handleEvent(EventRecord* event);
 	
 	void idle(short modifiers);
 	void drawApplet();
@@ -101,6 +105,9 @@ public:
 	void keyPress(long message, short modifiers);
 	void keyRelease(long message, short modifiers);
 	
+    void scrollingBegins();
+    void scrollingEnds();
+
 	void setWindow(nsPluginWindow* pluginWindow);
 	Boolean inspectWindow();
 	
@@ -148,27 +155,33 @@ private:
 	static CGrafPtr getEmptyPort();
 
 	void setProxyInfoForURL(char * url, JMProxyType proxyType);
+	
+	OSStatus installEventHandlers(WindowRef window);
+	OSStatus removeEventHandlers(WindowRef window);
+	
 private:
-	MRJPluginInstance*		mPluginInstance;
-	MRJSession*				mSession;
-	JMSessionRef 			mSessionRef;
-	nsIPluginInstancePeer* 	mPeer;
-	JMAppletLocatorRef		mLocator;
-	JMAWTContextRef			mContext;
-	JMAppletViewerRef		mViewer;
-	JMFrameRef				mViewerFrame;
-	Boolean					mIsActive;
-	nsPluginPoint           mCachedOrigin;
-	nsPluginRect            mCachedClipRect;
-	RgnHandle				mPluginClipping;
-	nsPluginWindow*			mPluginWindow;
-	CGrafPtr				mPluginPort;
-	char*					mDocumentBase;
-	char*					mAppletHTML;
-	MRJPage*				mPage;
-	MRJSecurityContext*     mSecurityContext;
+	MRJPluginInstance*		    mPluginInstance;
+	MRJSession*				    mSession;
+	nsIPluginInstancePeer* 	    mPeer;
+	JMAppletLocatorRef		    mLocator;
+	JMAWTContextRef			    mContext;
+	JMAppletViewerRef		    mViewer;
+	JMFrameRef				    mViewerFrame;
+	Boolean					    mIsActive;
+	Boolean                     mIsFocused;
+	Boolean                     mIsVisible;
+	nsPluginPoint               mCachedOrigin;
+	nsPluginRect                mCachedClipRect;
+	RgnHandle				    mPluginClipping;
+	nsPluginWindow*			    mPluginWindow;
+	CGrafPtr				    mPluginPort;
+	char*					    mDocumentBase;
+	char*					    mAppletHTML;
+	MRJPage*				    mPage;
+	MRJSecurityContext*         mSecurityContext;
 #ifdef TARGET_CARBON
-    jobject                 mAppletFrame;
-    ControlRef              mAppletControl;
+    jobject                     mAppletFrame;
+    ControlRef                  mAppletControl;
+    UInt32                      mScrollCounter;
 #endif
 };
