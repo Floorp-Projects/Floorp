@@ -38,6 +38,12 @@ LD_ALL = -all
 LD_NONE = -none
 endif
 
+ifeq ($(USE_NGLAYOUT_GTK),1)
+BASE_DSO_FLAGS = -lgmbasegtk
+else
+BASE_DSO_FLAGS = -lgmbasemotif
+endif
+
 EXTRA_DSO_LDOPTS = \
 	-L$(DIST)/lib	\
 	-lraptorhtmldoc_s	\
@@ -52,7 +58,7 @@ EXTRA_DSO_LDOPTS = \
 	-lraptorhtmlpars	\
 	-lraptorgfx	\
 	-lraptorbase	\
-	-lgmbaseunix	\
+	$(BASE_DSO_FLAGS) \
 	-ljsdom		\
 	-ljs		\
 	-lnetlib	\

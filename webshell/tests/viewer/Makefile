@@ -39,9 +39,11 @@ OBJS    = $(CPPSRCS:.cpp=.o)
 ifeq ($(USE_NGLAYOUT_GTK),1)
 	GFX_LIB    = -lgfxgtk
 	WIDGET_LIB = -lwidgetgtk
+	BASE_DSO_FLAGS = -lgmbasegtk
 else
 	GFX_LIB    = -lgfxmotif
 	WIDGET_LIB = -lwidgetmotif
+	BASE_DSO_FLAGS = -lgmbasemotif
 endif
 
 ifdef MOZ_OJI
@@ -59,7 +61,7 @@ EX_LIBS = \
 	$(GFX_LIB) \
 	-lraptorhtml \
 	$(DIST)/lib/libraptorhtmlforms_s.a \
-	-lgmbaseunix \
+	$(BASE_DSO_FLAGS) \
 	-lraptorhtmlpars \
 	-lraptorview \
 	-lreg \

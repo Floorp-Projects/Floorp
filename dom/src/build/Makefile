@@ -38,9 +38,11 @@ LD_NONE = -none
 endif
 
 ifeq ($(USE_NGLAYOUT_GTK),1)
-GFX_DSO_FLAGS = -lgfxgtk
+GFX_DSO_FLAGS  = -lgfxgtk
+BASE_DSO_FLAGS = -lgmbasegtk
 else
-GFX_DSO_FLAGS = -lgfxmotif
+GFX_DSO_FLAGS  = -lgfxmotif
+BASE_DSO_FLAGS = -lgmbasemotif
 endif
 
 EXTRA_DSO_LDOPTS = \
@@ -55,7 +57,7 @@ EXTRA_DSO_LDOPTS = \
 	-lraptorbase	\
 	-lraptorgfx	\
 	$(GFX_DSO_FLAGS) \
-	-lgmbaseunix	\
+	$(BASE_DSO_FLAGS) \
 	-lnetlib	\
 	-ljs		\
 	-lxpcom		\
