@@ -197,7 +197,7 @@ sub getField {
 sub getFieldByID {
     my $self = shift;
     my($ID) = @_;
-    my $field = $self->fieldsByID($ID);
+    my $field = $self->fieldsByID->{$ID};
     if (not defined($field)) {
         $field = $self->insertField($self->app->getService('user.fieldFactory')->createFieldByID($self->app, $self, $ID));
     }
@@ -343,6 +343,7 @@ sub levelInGroup {
 sub insertField {
     my $self = shift;
     my($field) = @_;
+    $self->assert(ref($field) and $field->provides('user.field'), 1, 'Tried to insert something that wasn\'t a field object into a user\'s field hash');
     $self->fields->{$field->category}->{$field->name} = $field;
     $self->fieldsByID->{$field->fieldID} = $field;
     return $field;
