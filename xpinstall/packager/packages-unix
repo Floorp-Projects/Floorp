@@ -298,6 +298,7 @@ bin/res/ua.css
 bin/res/html.css
 bin/res/quirk.css
 bin/res/forms.css
+bin/res/platform-forms.css
 bin/res/viewsource.css
 bin/res/mathml.css
 bin/res/rdf/article.gif

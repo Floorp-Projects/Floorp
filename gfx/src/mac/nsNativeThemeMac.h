@@ -44,9 +44,10 @@
 #include "nsIAtom.h"
 #include "nsILookAndFeel.h"
 #include "nsIDeviceContext.h"
+#include "nsNativeTheme.h"
 
-
-class nsNativeThemeMac : public nsITheme
+class nsNativeThemeMac : private nsNativeTheme,
+                         public nsITheme
 {
 public:
   nsNativeThemeMac();
@@ -79,7 +80,8 @@ protected:
   enum {
     kAquaPushButtonEndcaps = 14,
     kAquaPushButtonTopBottom = 2,
-    
+    kAquaSmallPushButtonEndcaps = 10,
+
     kAquaDropdownLeftEndcap = 9,
     kAquaDropwdonRightEndcap = 20     // wider on right to encompass the button
   };
@@ -87,25 +89,17 @@ protected:
   nsresult GetSystemColor(PRUint8 aWidgetType, nsILookAndFeel::nsColorID& aColorID);
   nsresult GetSystemFont(PRUint8 aWidgetType, nsSystemFontID& aFont);
 
-  PRBool IsDisabled(nsIFrame* aFrame);
-  PRBool IsChecked(nsIFrame* aFrame, PRBool aIsHTML);
-  PRBool IsSelected(nsIFrame* aFrame);
-  PRBool IsDefaultButton(nsIFrame* aFrame);
-  PRBool IsIndeterminate(nsIFrame* aFrame);
-  PRBool IsSortedColumn(nsIFrame* aFrame);
-  PRBool IsSortReversed(nsIFrame* aFrame);
-  PRBool DoTabsPointUp(nsIFrame* aFrame);
 
-    // Appearance Manager drawing routines
+  // Appearance Manager drawing routines
   void DrawCheckbox ( const Rect& inBoxRect, PRBool inChecked, PRBool inDisabled, PRInt32 inState ) ;
+  void DrawSmallCheckbox ( const Rect& inBoxRect, PRBool inChecked, PRBool inDisabled, PRInt32 inState );
   void DrawRadio ( const Rect& inBoxRect, PRBool inChecked, PRBool inDisabled, PRInt32 inState ) ;
+  void DrawSmallRadio ( const Rect& inBoxRect, PRBool inChecked, PRBool inDisabled, PRInt32 inState );
   void DrawToolbar ( const Rect& inBoxRect ) ;
   void DrawEditText ( const Rect& inBoxRect, PRBool inIsDisabled ) ;
   void DrawListBox ( const Rect& inBoxRect, PRBool inIsDisabled ) ;
   void DrawProgress ( const Rect& inBoxRect, PRBool inIsDisabled, PRBool inIsIndeterminate, 
                         PRBool inIsHorizontal, PRInt32 inValue ) ;
-  void DrawFullScrollbar  ( const Rect& inScrollbarRect, PRInt32 inWidgetHit, PRInt32 inLineHeight, PRBool inIsDisabled,
-                             PRInt32 inMax, PRInt32 inValue, PRInt32 inState ) ;
   void DrawTab ( const Rect& inBoxRect, PRBool inIsDisabled, PRBool inIsFrontmost, 
                   PRBool inIsHorizontal, PRBool inTabBottom, PRInt32 inState ) ;
   void DrawTabPanel ( const Rect& inBoxRect, PRBool inIsDisabled ) ;
@@ -117,26 +111,7 @@ protected:
   void DrawCheckboxRadio ( ThemeButtonKind inKind, const Rect& inBoxRect, PRBool inChecked, 
                               PRBool inDisabled, PRInt32 inState ) ;
 
-    // some utility routines
-  nsIFrame* GetScrollbarParent(nsIFrame* inButton, nsPoint* offset);
-  nsIFrame* GetScrollbarParentLocalRect(nsIFrame* inButton, nsTransform2D* inMatrix, Rect* outAdjustedRect);
-
 private:
 
   ThemeEraseUPP mEraseProc;
-  
-  nsCOMPtr<nsIAtom> mCheckedAtom;
-  nsCOMPtr<nsIAtom> mDisabledAtom;
-  nsCOMPtr<nsIAtom> mSelectedAtom;
-  nsCOMPtr<nsIAtom> mDefaultAtom;
-  nsCOMPtr<nsIAtom> mValueAtom;
-  nsCOMPtr<nsIAtom> mModeAtom;
-  nsCOMPtr<nsIAtom> mOrientAtom;
-  nsCOMPtr<nsIAtom> mCurPosAtom;
-  nsCOMPtr<nsIAtom> mMaxPosAtom;
-  nsCOMPtr<nsIAtom> mScrollbarAtom;
-  nsCOMPtr<nsIAtom> mClassAtom;
-  nsCOMPtr<nsIAtom> mSortDirectionAtom;
-  nsCOMPtr<nsIAtom> mInputAtom;
-  nsCOMPtr<nsIAtom> mInputCheckedAtom;
 };

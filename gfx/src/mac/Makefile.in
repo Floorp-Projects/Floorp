@@ -45,6 +45,7 @@ REQUIRES    = xpcom \
         content \
         layout \
         locale \
+        dom \
         $(NULL)
 
 CPPSRCS = \

@@ -75,9 +75,17 @@ _FILES	= \
 	arrowd.gif \
 	$(NULL)
 
-ifeq ($(OS_ARCH),OS2)
-PLATFORM_FORMS_CSS	= $(srcdir)/os2/platform-forms.css
+ifeq ($(OS_ARCH), OS2)
+PLATFORM_DIR = os2
+else
+ifeq ($(MOZ_WIDGET_TOOLKIT), cocoa)
+PLATFORM_DIR = mac
+else
+PLATFORM_DIR = win
 endif
+endif
+
+PLATFORM_FORMS_CSS	= $(srcdir)/$(PLATFORM_DIR)/platform-forms.css
 
 GARBAGE		+= $(addprefix $(DIST)/bin/res/,$(_FILES)) $(DIST)/bin/res/ua.css
 

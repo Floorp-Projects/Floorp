@@ -3173,11 +3173,7 @@ nsresult nsChromeRegistry::GetUserSheetURL(PRBool aIsChrome, nsACString & aURL)
 
 nsresult nsChromeRegistry::GetFormSheetURL(nsACString& aURL)
 {
-#ifdef XP_OS2
   aURL = mUseXBLForms ? "chrome://forms/skin/forms.css" : "resource:/res/platform-forms.css";
-#else
-  aURL = mUseXBLForms ? "chrome://forms/skin/forms.css" : "resource:/res/forms.css";
-#endif
 
   return NS_OK;
 }
