@@ -244,11 +244,11 @@ nsrefcnt _class::AddRef(void)                                \
 #ifdef MOZ_TRACE_XPCOM_REFCNT
 #define NS_RELEASE(_ptr)                                                \
  nsTraceRefcnt::Release((_ptr), (_ptr)->Release(), __FILE__, __LINE__); \
- (_ptr) = nsnull
+ (_ptr) = NULL
 #else
 #define NS_RELEASE(_ptr) \
  (_ptr)->Release();      \
- (_ptr) = nsnull
+ (_ptr) = NULL
 #endif
 
 /**
@@ -268,16 +268,16 @@ nsrefcnt _class::AddRef(void)                                \
 #define NS_RELEASE2(_ptr, _result)                                       \
  _result = ((nsrefcnt) nsTraceRefcnt::Release((_ptr), (_ptr)->Release(), \
                                               __FILE__, __LINE__));      \
- if (0 == (_result)) (_ptr) = nsnull
+ if (0 == (_result)) (_ptr) = NULL
 #else
 #define NS_RELEASE2(_ptr, _result) \
  _result = (_ptr)->Release();      \
- if (0 == (_result)) (_ptr) = nsnull
+ if (0 == (_result)) (_ptr) = NULL
 
 #endif
 
 /**
- * Macro for releasing a reference to an interface that checks for nsnull;
+ * Macro for releasing a reference to an interface that checks for NULL;
  *
  * Note that when MOZ_TRACE_XPCOM_REFCNT is defined that the release will
  * be done before the trace message is logged. If the reference count
@@ -292,11 +292,11 @@ nsrefcnt _class::AddRef(void)                                \
    ? ((nsrefcnt) nsTraceRefcnt::Release((_ptr), (_ptr)->Release(), \
                                         __FILE__, __LINE__))       \
    : 0);                                                           \
-  (_ptr) = nsnull
+  (_ptr) = NULL
 #else
 #define NS_IF_RELEASE(_ptr)                \
   ((0 != (_ptr)) ? (_ptr)->Release() : 0); \
-  (_ptr) = nsnull
+  (_ptr) = NULL
 #endif
 
 /**
@@ -334,11 +334,11 @@ nsrefcnt _class::Release(void)                         \
 #define NS_IMPL_QUERY_INTERFACE(_class,_classiiddef)                     \
 nsresult _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 {                                                                        \
-  if (nsnull == aInstancePtr) {                                            \
+  if (NULL == aInstancePtr) {                                            \
     return NS_ERROR_NULL_POINTER;                                        \
   }                                                                      \
                                                                          \
-  *aInstancePtr = nsnull;                                                  \
+  *aInstancePtr = NULL;                                                  \
                                                                          \
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 \
   static NS_DEFINE_IID(kClassIID, _classiiddef);                         \
@@ -468,7 +468,7 @@ nsrefcnt _class::Release(void)                         \
  */
 #if defined(NS_DEBUG)
 #define NS_VERIFY_THREADSAFE_INTERFACE(_iface)                              \
- if (nsnull != (_iface)) {                                                    \
+ if (NULL != (_iface)) {                                                    \
    nsISupports* tmp;                                                        \
    static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);             \
    NS_PRECONDITION((NS_OK == _iface->QueryInterface(kIsThreadsafeIID,       \
@@ -479,11 +479,11 @@ nsrefcnt _class::Release(void)                         \
 #define NS_IMPL_THREADSAFE_QUERY_INTERFACE(_class,_classiiddef)          \
 nsresult _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 {                                                                        \
-  if (nsnull == aInstancePtr) {                                            \
+  if (NULL == aInstancePtr) {                                            \
     return NS_ERROR_NULL_POINTER;                                        \
   }                                                                      \
                                                                          \
-  *aInstancePtr = nsnull;                                                  \
+  *aInstancePtr = NULL;                                                  \
                                                                          \
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 \
   static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);           \
