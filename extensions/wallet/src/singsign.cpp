@@ -180,6 +180,9 @@ SI_GetBoolPref(const char * prefname, PRBool defaultvalue) {
 
 PUBLIC void
 SI_SetCharPref(const char * prefname, const char * prefvalue) {
+  if (!prefvalue) {
+    return; /* otherwise the SetCharPref routine called below will crash */
+  }
   nsresult ret;
   nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &ret);
   if (!NS_FAILED(ret)) {
