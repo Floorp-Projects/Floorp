@@ -186,10 +186,14 @@ public:
 class nsXULPrototypeNode
 {
 public:
-    enum Type { eType_Element, eType_Script, eType_Text };
+    enum Type { eType_Element, eType_RefCounted_Element, eType_Script, eType_Text };
 
     Type                     mType;
-    PRInt32                  mLineNo;
+
+    union {
+      PRInt32                  mLineNo;
+      PRInt32                  mRefCnt;
+    };
 
     virtual ~nsXULPrototypeNode() {}
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,

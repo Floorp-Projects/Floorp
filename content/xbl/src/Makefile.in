@@ -34,6 +34,7 @@ REQUIRES	= xpcom \
       dom \
       gfx \
       layout \
+      layout_xul \
       widget \
       view \
       caps \
@@ -42,11 +43,13 @@ REQUIRES	= xpcom \
       xpconnect \
       pref \
       docshell \
+      webshell \
       chrome \
       lwbrk \
       xul \
       xuldoc \
       gfx2 \
+      rdf \
       imglib2 \
       unicharutil \
       $(NULL)
@@ -94,5 +97,6 @@ LOCAL_INCLUDES	= \
     -I$(srcdir)/../../html/document/src \
     -I$(srcdir)/../../xml/document/src \
     -I$(srcdir)/../../xsl/document/src \
+    -I$(srcdir)/../../xul/content/src \
 		$(NULL)
 

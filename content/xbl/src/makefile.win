@@ -30,17 +30,20 @@ REQUIRES	= xpcom \
       widget \
       view \
       caps \
+      layout_xul \
       htmlparser \
       necko \
       xpconnect \
       pref \
       docshell \
+      webshell \
       chrome \
       lwbrk \
       gfx2 \
       imglib2 \
       layout \
       gfx \
+      rdf \
       content_xul \
       unicharutil \
       $(NULL)
@@ -108,6 +111,7 @@ LINCS=-I..\..\html\style\src -I..\..\html\base\src \
   -I..\..\html\document\src \
   -I..\..\xml\document\src \
   -I..\..\xsl\document\src \
+  -I..\..\xul\content\src \
   -I..\..\base\src \
   $(NULL)
 

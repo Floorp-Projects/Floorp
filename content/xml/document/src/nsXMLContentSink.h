@@ -135,10 +135,12 @@ protected:
 
   virtual nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
                              PRBool* aDidFlush=nsnull);
-  nsresult AddAttributes(const nsIParserNode& aNode,
-                         nsIContent* aContent,
-                         PRBool aIsHTML);
+  virtual nsresult AddAttributes(const nsIParserNode& aNode,
+                                 nsIContent* aContent,
+                                 PRBool aIsHTML);
   nsresult AddContentAsLeaf(nsIContent *aContent);
+  virtual nsresult CreateElement(const nsIParserNode& aNode, PRInt32 aNameSpaceID, 
+                                 nsINodeInfo* aNodeInfo, nsIContent** aResult);
   nsresult PushNameSpacesFrom(const nsIParserNode& aNode);
   static void SplitXMLName(nsAReadableString& aString, nsIAtom **aPrefix,
                            nsIAtom **aTagName);
