@@ -64,11 +64,17 @@ sub JarIt
         my $indivPath = "$destPath/$indivDir";
         MkDirs($indivPath, ".", false);
         
-        foreach $file (split(' ', "$args $overrides")) {
+        foreach $file (split(' ', $args)) {
             if ($verbose eq true) {
                 print "adding individual file $file to dist\n";
             }
-            EnsureFileInDir("$indivPath/$file", $file, false);
+            EnsureFileInDir("$indivPath/$file", $file, false, false);
+        }
+        foreach $file (split(' ', $overrides)) {
+            if ($verbose eq true) {
+                print "adding individual file $file to dist\n";
+            }
+            EnsureFileInDir("$indivPath/$file", $file, false, true);
         }
     }
 
@@ -76,6 +82,7 @@ sub JarIt
         system "zip -u $destPath/$jarfile $args\n" || die "zip failed";
     }
     if (!($overrides eq "")) {
+        print "+++ overriding $overrides\n";
         system "zip $destPath/$jarfile $overrides\n" || die "zip failed";
     }
 
@@ -163,9 +170,9 @@ sub CopyFile
 
 sub EnsureFileInDir
 {
-    my ($destPath, $srcPath, $doCleanup) = @_;
+    my ($destPath, $srcPath, $doCleanup, $override) = @_;
 
-    if (!-e $destPath) {
+    if (!-e $destPath || $override eq true) {
         my $dir = "";
         my $file;
         if ($destPath =~ /([\w\d.\-\\\/]+)[\\\/]([\w\d.\-]+)/) {
@@ -187,6 +194,9 @@ sub EnsureFileInDir
         CopyFile($file, $destPath, $doCleanup);
         return 1;
     }
+#    elsif ($doCleanup eq false && -e $destPath) {
+#        print "!!! file $destPath already exists -- need to add '+' rule to jar.mn\n";
+#    }
     return 0;
 }
 

@@ -241,53 +241,6 @@ TMPDIR=$(MOZ_SRC)\tmp
 $(TMPDIR):
 	-mkdir $(TMPDIR)
 
-!ifdef JDIRS
-!if defined(JAVA_OR_NSJVM)
-#//------------------------------------------------------------------------
-#//
-#// Rule to recursively make all subdirectories specified by the JDIRS target
-#//
-#//------------------------------------------------------------------------
-
-export:: $(JAVA_DESTPATH) $(JDIRS)
-
-$(JDIRS):: $(JAVA_DESTPATH) $(TMPDIR)
-
-!if "$(WINOS)" == "WIN95"
-JDIRS = $(JDIRS:/=\)
-!endif
-
-!if defined(NO_CAFE)
-
-$(JDIRS)::
-    @echo +++ make: building package: $@
-    @echo $(JAVAC_PROG) $(JAVAC_FLAGS) > $(TMPDIR)\javac.cfg
-    -@$(DEPTH)\config\buildpkg $(TMPDIR)\javac.cfg $@ 
-    @$(RM) $(TMPDIR)\javac.cfg
-#    @$(DEPTH)\config\buildpkg $@ $(DEPTH)\dist\classes
-
-!else
-
-# compile using symantec cafe's super-speedy compiler!
-$(JDIRS)::
-    @echo +++ make: building package $@
-!if "$(WINOS)" == "WIN95"
-    -@$(MKDIR) $(DEPTH)\dist\classes\$(@:/=\)
-!else
-    -@$(MKDIR) $(DEPTH)\dist\classes\$@ 2> NUL
-!endif
-    $(MOZ_TOOLS)\bin\sj -classpath $(JAVA_DESTPATH);$(JAVA_SOURCEPATH) \
-            -d $(JAVA_DESTPATH) $(JAVAC_OPTIMIZER) $@\*.java
-
-
-!endif # NO_CAFE
-
-clobber clobber_all::
-    -for %g in ($(JDIRS)) do $(RM_R) $(XPDIST:/=\)/classes/%g
-
-!endif # JAVA_OR_NSJVM
-!endif # JDIRS
-
 !if defined(INSTALL_FILE_LIST) && defined(INSTALL_DIR)
 #//------------------------------------------------------------------------
 #//
@@ -322,7 +275,6 @@ LIBRARY=$(OBJDIR)\$(LIBRARY_NAME)$(LIBRARY_SUFFIX).lib
 #// Set the MAKE_ARGS variable to indicate the target being built...  This is used
 #// when processing subdirectories via the $(DIRS) rule
 #//
-
 
 
 #
@@ -639,7 +591,7 @@ chrome::
 
 install:: chrome
 
-!ifdef WARREN_JAR_PACKAGING
+!ifndef MOZ_DISABLE_JAR_PACKAGING
 
 !if exist($(JAR_MANIFEST))
 chrome:: 
@@ -651,7 +603,9 @@ chrome::
     -for %t in ($(CHROME_TYPE)) do echo %t,install,url,jar:resource:/chrome/$(CHROME_DIR:\=/).jar!/ >>$(DIST)\bin\chrome\installed-chrome.txt
 !endif
 
-!else # WARREN_JAR_PACKAGING
+regchrome:
+
+!else # !MOZ_DISABLE_JAR_PACKAGING
 
 ################################################################################
 # Generate chrome building rules.
@@ -800,8 +754,6 @@ chrome::
 
 !endif # chrome
 
-!endif # WARREN_JAR_PACKAGING
-
 regchrome:
 !if !defined(MOZ_DISABLE_JAR_PACKAGING)
   $(PERL) $(DEPTH)\config\zipchrome.pl win32 update $(DIST)\bin\chrome
@@ -811,6 +763,8 @@ regchrome:
 #  people apparently have trouble with that so do the rules.mak stuff instead
 #    $(PERL) $(DEPTH)\config\installchrome.pl win32 resource $(DIST)\bin\chrome
 !endif
+
+!endif # !MOZ_DISABLE_JAR_PACKAGING
 
 ################################################################################
 

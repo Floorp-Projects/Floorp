@@ -508,5 +508,7 @@ XPTLINK_PROG=$(DIST)\bin\xpt_link.exe
 
 XPIDL_GEN_DIR=.\_xpidlgen
 
+#MOZ_DISABLE_JAR_PACKAGING=1     # temporary
+
 !endif # CONFIG_CONFIG_MAK
 
