@@ -43,6 +43,9 @@
 #include "nsXPIDLString.h"
 #include "nsString.h"
 
+#include "nsIDOMWindow.h"
+#include "nsIUnkContentTypeHandler.h"
+
 static NS_DEFINE_CID(kURILoaderCID, NS_URI_LOADER_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 
@@ -166,8 +169,9 @@ public:
 
 protected:
     virtual ~nsDocumentOpenInfo();
-
     nsDocumentOpenInfo* Clone();
+
+    nsresult InvokeUnknownContentHandler(nsIChannel * aChannel, const char * aContentType, nsIDOMWindow * aDomWindow);
 
 protected:
     nsCOMPtr<nsIURIContentListener> m_contentListener;
@@ -387,6 +391,12 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
       // the listener is doing all the work from here...we are done!!!
       if (bAbortProcess) return rv;
 
+      if (NS_FAILED(rv))
+      {
+        nsCOMPtr<nsIDOMWindow> domWindow (do_GetInterface(contentListener));
+        return InvokeUnknownContentHandler(aChannel, contentType, domWindow);
+      }
+
       // okay, all registered listeners have had a chance to handle this content...
       // did one of them give us a stream listener back? if so, let's start reading data
       // into it...
@@ -394,6 +404,17 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
     } 
   }
   return rv;
+}
+
+nsresult nsDocumentOpenInfo::InvokeUnknownContentHandler(nsIChannel * aChannel, const char * aContentType, nsIDOMWindow * aDomWindow)
+{
+  NS_ENSURE_ARG(aChannel);
+  NS_ENSURE_ARG(aDomWindow);
+
+  nsCOMPtr<nsIUnknownContentTypeHandler> handler (do_GetService(NS_IUNKNOWNCONTENTTYPEHANDLER_PROGID));
+  NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
+
+  return handler->HandleUnknownContentType( aChannel, aContentType, aDomWindow );
 }
 
 nsresult nsDocumentOpenInfo::RetargetOutput(nsIChannel * aChannel, const char * aSrcContentType, const char * aOutContentType,
