@@ -90,6 +90,16 @@ if (defined $::FORM{'id'}) {
 # Make sure there are bugs to process.
 scalar(@idlist) || ThrowUserError("no_bugs_chosen");
 
+# Validate all timetracking fields
+foreach my $field ("estimated_time", "work_time", "remaining_time") {
+    if (defined $::FORM{$field}) {
+        my $er_time = trim($::FORM{$field});
+        if ($er_time ne $::FORM{'dontchange'}) {
+            Bugzilla::Bug::ValidateTime($er_time, $field);
+        }
+    }
+}
+
 # do a match on the fields if applicable
 
 # The order of these function calls is important, as both Flag::validate
@@ -772,7 +782,6 @@ if (UserInGroup(Param('timetrackinggroup'))) {
         if (defined $::FORM{$field}) {
             my $er_time = trim($::FORM{$field});
             if ($er_time ne $::FORM{'dontchange'}) {
-                Bugzilla::Bug::ValidateTime($er_time, $field);
                 DoComma();
                 $::query .= "$field = " . SqlQuote($er_time);
             }
@@ -1283,7 +1292,6 @@ foreach my $id (@idlist) {
             if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
                 ThrowUserError('comment_required', undef, "abort");
             }
-            Bugzilla::Bug::ValidateTime($work_time, 'work_time');
             # AppendComment (called below) can in theory raise an error,
             # but because we've already validated work_time here it's
             # safe to log the entry before adding the comment.
