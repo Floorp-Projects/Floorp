@@ -976,8 +976,8 @@ nsHTTPChannel::Authenticate(const char *iChallenge, nsIChannel **oChannel)
     // change this later to include other kinds of authentication. TODO 
     if (NS_FAILED(rv = nsBasicAuth::Authenticate(
                         mURI, 
-                        NSCAP_STATIC_CAST(const char*, iChallenge), 
-                        NSCAP_STATIC_CAST(const char*, newUserPass),
+                        NS_STATIC_CAST(const char*, iChallenge), 
+                        NS_STATIC_CAST(const char*, newUserPass),
                         getter_Copies(authString))))
         return rv; // Failed to construct an authentication string.
 
