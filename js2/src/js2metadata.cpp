@@ -194,7 +194,7 @@ namespace MetaData {
             break;
         }
 		StringFormatter sFmt;
-		PrettyPrinter pp(sFmt);
+		PrettyPrinter pp(sFmt, 80);
 		fnDef->print(pp, NULL, true);
         pp.end();
 		fnInst->sourceText = engine->allocStringPtr(&sFmt.getString());
