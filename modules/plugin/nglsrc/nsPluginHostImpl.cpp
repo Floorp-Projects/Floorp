@@ -1877,6 +1877,8 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
     aOwner->SetInstance(instance);
 
     nsPluginInstancePeerImpl *peer = new nsPluginInstancePeerImpl();
+    if(peer == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
 
     // set up the peer for the instance
     peer->Initialize(aOwner, mimetype);     
@@ -2228,6 +2230,9 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 #endif
 					// create a tag describing this plugin.
 					nsPluginTag* pluginTag = new nsPluginTag();
+          if(pluginTag == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+
 					pluginTag->mNext = mPlugins;
 					mPlugins = pluginTag;
 					
@@ -2324,7 +2329,10 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
 												  nsIPluginInstance* aInstance)
 {
 	nsPluginStreamListenerPeer  *listener = (nsPluginStreamListenerPeer *)new nsPluginStreamListenerPeer();
-	nsresult                rv;
+  if (listener == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv;
 
 	if (!aURL)
 		return NS_OK;
@@ -2359,7 +2367,10 @@ nsresult nsPluginHostImpl::NewFullPagePluginStream(nsIStreamListener *&aStreamLi
                                                   nsIPluginInstance *aInstance)
 {
   nsPluginStreamListenerPeer  *listener = (nsPluginStreamListenerPeer *)new nsPluginStreamListenerPeer();
-  nsresult                rv;
+  if (listener == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv;
 
   rv = listener->InitializeFullPage(aInstance);
 
