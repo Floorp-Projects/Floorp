@@ -199,7 +199,7 @@ function onCancel()
 
 function doHelpButton()
 {
-  openHelp('validation_prefs');
+  openHelp("validation-crl-auto-update-prefs");
 }
 
 function onAccept()
