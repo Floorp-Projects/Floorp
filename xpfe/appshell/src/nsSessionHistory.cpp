@@ -468,7 +468,7 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
             PRInt32  ccount=0;
             prev->GetChildCount(ccount);
 
-            prev->LoadURL(cURL, nsnull, PR_FALSE);
+            prev->LoadURL(cURL, nsnull, PR_FALSE, (nsLoadFlags) LOAD_HISTORY);
             if (aIsReload && (ccount > 0)) {
               /* If this is a reload, on a page with frames, you want to return
                * true so that consecutive calls by the frame children in to 
