@@ -18,3 +18,7 @@
 	bannerEnd="<!--/AD_TAG-->"
 >
 </search>
+
+<browser
+	alsomatch="http://search.netscape.com/search.tmpl"
+>

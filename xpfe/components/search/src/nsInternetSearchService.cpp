@@ -229,6 +229,7 @@ private:
 	static nsIRDFResource		*kNC_Child;
 	static nsIRDFResource		*kNC_Data;
 	static nsIRDFResource		*kNC_Name;
+	static nsIRDFResource		*kNC_Description;
 	static nsIRDFResource		*kNC_URL;
 	static nsIRDFResource		*kRDF_InstanceOf;
 	static nsIRDFResource		*kRDF_type;
@@ -305,6 +306,7 @@ nsIRDFResource			*InternetSearchDataSource::kNC_Ref;
 nsIRDFResource			*InternetSearchDataSource::kNC_Child;
 nsIRDFResource			*InternetSearchDataSource::kNC_Data;
 nsIRDFResource			*InternetSearchDataSource::kNC_Name;
+nsIRDFResource			*InternetSearchDataSource::kNC_Description;
 nsIRDFResource			*InternetSearchDataSource::kNC_URL;
 nsIRDFResource			*InternetSearchDataSource::kRDF_InstanceOf;
 nsIRDFResource			*InternetSearchDataSource::kRDF_type;
@@ -346,6 +348,7 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 		gRDFService->GetResource(NC_NAMESPACE_URI "child",               &kNC_Child);
 		gRDFService->GetResource(NC_NAMESPACE_URI "data",                &kNC_Data);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Name",                &kNC_Name);
+		gRDFService->GetResource(NC_NAMESPACE_URI "Description",         &kNC_Description);
 		gRDFService->GetResource(NC_NAMESPACE_URI "URL",                 &kNC_URL);
 		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf",         &kRDF_InstanceOf);
 		gRDFService->GetResource(RDF_NAMESPACE_URI "type",               &kRDF_type);
@@ -375,6 +378,7 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 		NS_IF_RELEASE(kNC_Child);
 		NS_IF_RELEASE(kNC_Data);
 		NS_IF_RELEASE(kNC_Name);
+		NS_IF_RELEASE(kNC_Description);
 		NS_IF_RELEASE(kNC_URL);
 		NS_IF_RELEASE(kRDF_InstanceOf);
 		NS_IF_RELEASE(kRDF_type);
@@ -1147,7 +1151,14 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url)
 
 			nsAutoString		action;
 			if (NS_FAILED(rv = GetData(data, "search", "action", action)))	continue;
+			if (shortURL.EqualsIgnoreCase(action))
+			{
+				foundEngine = PR_TRUE;
+				break;
+			}
 
+			// extension for engines which can have multiple "actions"
+			if (NS_FAILED(rv = GetData(data, "browser", "alsomatch", action)))	continue;
 			if (shortURL.EqualsIgnoreCase(action))
 			{
 				foundEngine = PR_TRUE;
@@ -1904,6 +1915,18 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir, PRBool check
 											getter_AddRefs(nameLiteral))))
 									{
 										mInner->Assert(searchRes, kNC_Name, nameLiteral, PR_TRUE);
+									}
+								}
+
+								// save description of search engine (if specified)
+								nsAutoString	descValue;
+								if (NS_SUCCEEDED(rv = GetData(data, "search", "description", descValue)))
+								{
+									nsCOMPtr<nsIRDFLiteral>	descLiteral;
+									if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(descValue.GetUnicode(),
+											getter_AddRefs(descLiteral))))
+									{
+										mInner->Assert(searchRes, kNC_Description, descLiteral, PR_TRUE);
 									}
 								}
 								
