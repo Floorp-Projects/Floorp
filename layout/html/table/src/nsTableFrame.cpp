@@ -635,12 +635,7 @@ PRInt32 nsTableFrame::GetEffectiveColSpan(const nsTableCellFrame& aCell,
 
 PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
 {
-#ifdef DEBUG
-  {
-    nsTableCellMap *cellMap = GetCellMap();
-    NS_PRECONDITION (nsnull!=cellMap, "null cellMap.");
-  }
-#endif
+  NS_PRECONDITION (GetCellMap(), "null cellMap.");
 
   PRInt32 result;
   result = GetStyleTable()->mCols;
@@ -2591,12 +2586,7 @@ nsTableFrame::InsertFrames(nsIPresContext* aPresContext,
   // so if there's more than one this gets messy...
   // XXX The frame construction code should be separating out child frames
   // based on the type...
-#ifdef DEBUG
-  {
-    nsIFrame* nextSibling = aFrameList->GetNextSibling();
-    NS_PRECONDITION(!nextSibling, "expected only one child frame");
-  }
-#endif
+  NS_PRECONDITION(!aFrameList->GetNextSibling(), "expected only one child frame");
 
   // See what kind of frame we have
   const nsStyleDisplay* display = aFrameList->GetStyleDisplay();
@@ -2791,7 +2781,9 @@ NS_METHOD nsTableFrame::IR_StyleChanged(nsIPresContext*      aPresContext,
                                  aReflowState.availSize.width, aReflowState.availSize.height); 
   nsIFrame* lastReflowed;
   nsRect overflowArea;
-  return ReflowChildren(aPresContext, reflowState, PR_FALSE, PR_FALSE, aStatus, lastReflowed, overflowArea);
+  nsresult rv = ReflowChildren(aPresContext, reflowState, PR_FALSE, PR_FALSE, aStatus, lastReflowed, overflowArea);
+  SetNeedStrategyInit(PR_TRUE);
+  return rv;
 }
 
 static void
