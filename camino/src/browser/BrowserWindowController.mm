@@ -1728,6 +1728,32 @@ enum BWCOpenDest {
   CFRelease(escapedTitle);
 }
 
+- (IBAction)sendURLFromLink:(id)aSender
+{
+  nsCOMPtr<nsIDOMElement> linkContent;
+  nsAutoString href;
+  GeckoUtils::GetEnclosingLinkElementAndHref(mContextMenuNode, getter_AddRefs(linkContent), href);
+  
+  // XXXdwh Handle simple XLINKs if we want to be compatible with Mozilla, but who
+  // really uses these anyway? :)
+  if (!linkContent || href.IsEmpty())
+    return;
+  
+  NSString* urlString = [NSString stringWith_nsAString: href];
+  
+  // we need to encode entities in the title and url strings first. For some reason
+  // CFURLCreateStringByAddingPercentEscapes is only happy with UTF-8 strings.
+  CFStringRef urlUTF8String   = CFStringCreateWithCString(kCFAllocatorDefault, [urlString   UTF8String], kCFStringEncodingUTF8);
+  CFStringRef escapedURL   = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, urlUTF8String,   NULL, CFSTR("&?="), kCFStringEncodingUTF8);
+  
+  NSString* mailtoURLString = [NSString stringWithFormat:@"mailto:?body=%@", (NSString*)escapedURL];
+  
+  [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:mailtoURLString]];
+  
+  CFRelease(urlUTF8String);
+  CFRelease(escapedURL);
+}
+
 - (NSToolbarItem*)throbberItem
 {
     // find our throbber toolbar item.

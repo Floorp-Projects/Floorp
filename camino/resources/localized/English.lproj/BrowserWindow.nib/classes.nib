@@ -140,6 +140,7 @@
                 saveLinkAs = id; 
                 savePageAs = id; 
                 sendURL = id; 
+                sendURLFromLink = id; 
                 smallerTextSize = id; 
                 stop = id; 
                 toggleBookmarkManager = id; 

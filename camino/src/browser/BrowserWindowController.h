@@ -232,6 +232,7 @@ typedef enum
 - (IBAction)pageSetup:(id)aSender;
 - (IBAction)performSearch:(id)aSender;
 - (IBAction)sendURL:(id)aSender;
+- (IBAction)sendURLFromLink:(id)aSender;
 
 - (void)startThrobber;
 - (void)stopThrobber;
