@@ -83,7 +83,6 @@
     	            <box autostretch="never" valign="middle" mousethrough="always">
                     <spring class="smallspacer"/>
                     <spring id="textCW" class="color-well"/>
-                    <image class="popup-trigger"/>
                   </box>
                 </stack>
                 <data id="textData" pref="true" preftype="color" prefstring="editor.text_color" prefattribute="value"/>
@@ -95,7 +94,6 @@
     	            <box autostretch="never" valign="middle" mousethrough="always">
                     <spring class="smallspacer"/>
                     <spring id="linkCW" class="color-well"/>
-                    <image class="popup-trigger"/>
                   </box>
                 </stack>
                 <data id="linkData" pref="true" preftype="color" prefstring="editor.link_color" prefattribute="value"/>
@@ -107,7 +105,6 @@
     	            <box autostretch="never" valign="middle" mousethrough="always">
                     <spring class="smallspacer"/>
                     <spring id="activeCW" class="color-well"/>
-                    <image class="popup-trigger"/>
                   </box>
                 </stack>
                 <data id="aLinkData" pref="true" preftype="color" prefstring="editor.active_link_color" prefattribute="value"/>
@@ -119,7 +116,6 @@
     	            <box autostretch="never" valign="middle" mousethrough="always">
                     <spring class="smallspacer"/>
                     <spring id="visitedCW" class="color-well"/>
-                    <image class="popup-trigger"/>
                   </box>
                   <data id="fLinkData" pref="true" preftype="color" prefstring="editor.followed_link_color" prefattribute="value"/>
                 </stack>
@@ -131,7 +127,6 @@
     	            <box autostretch="never" valign="middle" mousethrough="always">
                     <spring class="smallspacer"/>
                     <spring id="backgroundCW" class="color-well"/>
-                    <image class="popup-trigger"/>
                   </box>
                 </stack>
                 <data id="backgroundColorData" pref="true" preftype="color" prefstring="editor.background_color" prefattribute="value"/>
