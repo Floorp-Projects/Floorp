@@ -190,6 +190,8 @@ xGC *nsGCCacheXlib::GetGC(Display *display, Drawable drawable, unsigned long fla
     entry->gc->AddRef(); // addref the newly created xGC
     entry->flags = flags;
     entry->gcv = *gcv;
+    if (entry->clipRegion)
+	XDestroyRegion(entry->clipRegion);
     entry->clipRegion = NULL;
     //printf("creating new (use)gc=%X\n",entry->gc); 
   }
