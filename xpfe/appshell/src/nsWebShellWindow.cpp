@@ -2855,3 +2855,10 @@ nsWebShellWindow::HandleUrl(const PRUnichar * aCommand, const PRUnichar * aURLSp
   return NS_OK;
   
 }
+
+NS_IMETHODIMP
+nsWebShellWindow::IsIntrinsicallySized(PRBool& aResult)
+{
+  aResult = mIntrinsicallySized;
+  return NS_OK;
+}

@@ -108,6 +108,7 @@
 #include "rdf.h"
 
 #include "nsIFrameReflow.h"
+#include "nsIBrowserWindow.h"
 #include "nsIDOMXULFocusTracker.h"
 #include "nsIXULFocusTracker.h"
 #include "nsIDOMEventCapturer.h"
@@ -3960,6 +3961,7 @@ XULDocumentImpl::StartLayout(void)
       nsCOMPtr<nsIPresContext> cx;
       shell->GetPresContext(getter_AddRefs(cx));
 
+      PRBool intrinsic = PR_FALSE;
 		  if (cx) {
 			  nsCOMPtr<nsISupports> container;
 			  cx->GetContainer(getter_AddRefs(container));
@@ -3968,13 +3970,20 @@ XULDocumentImpl::StartLayout(void)
 			    webShell = do_QueryInterface(container);
 			    if (webShell) {
 					  webShell->SetScrolling(NS_STYLE_OVERFLOW_HIDDEN);
+            nsCOMPtr<nsIWebShellContainer> webShellContainer;
+            webShell->GetContainer(*getter_AddRefs(webShellContainer));
+            if (webShellContainer) {
+              nsCOMPtr<nsIBrowserWindow> browser = do_QueryInterface(webShellContainer);
+              if (browser)
+                browser->IsIntrinsicallySized(intrinsic);
+            }
 			    }
 			  }
 		  }
         
 		  nsRect r;
       cx->GetVisibleArea(r);
-      if (r.width < 5 || r.height < 5) {
+      if (intrinsic) {
         // Flow at an unconstrained width and height
         r.width = NS_UNCONSTRAINEDSIZE;
         r.height = NS_UNCONSTRAINEDSIZE;
