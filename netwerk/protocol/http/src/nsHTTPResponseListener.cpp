@@ -56,7 +56,7 @@ extern PRLogModuleInfo* gHTTPLog;
 // This specifies the maximum allowable size for a server Status-Line
 // or Response-Header.
 //
-static const int kMAX_HEADER_SIZE = 60000;
+static const PRUint32 kMAX_HEADER_SIZE = 60000;
 
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID) ;
 
@@ -862,16 +862,24 @@ nsWriteLineToString(nsIInputStream* in,
   nsCString* str = (nsCString*)closure;
   *writeCount = 0;
 
-  const char* buf = fromRawSegment;
-  while (count-- > 0) {
-    const char c = *buf++;
+  char c = 0;
+
+  const char *buf = fromRawSegment;
+  for (; count>0; --count) {
+    c = *buf++;
     (*writeCount)++;
     if (c == LF) {
       break;
     }
   }
   str->Append(fromRawSegment, *writeCount);
-  return NS_BASE_STREAM_WOULD_BLOCK;
+  //
+  // If the entire segment has been read, and no LF has been found,
+  // then return OK to continue reading the next segment (if there
+  // is one).  Else, return WOULD_BLOCK to cause ReadSegments to exit
+  // and allow us to parse this header.
+  //
+  return (c != LF) ? NS_OK : NS_BASE_STREAM_WOULD_BLOCK;
 }
 
 
