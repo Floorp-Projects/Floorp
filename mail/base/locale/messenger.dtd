@@ -474,6 +474,11 @@
 <!ENTITY folderContextCopyLocation.accesskey "C">
 
 <!-- Search Bar -->
+<!ENTITY viewPicker.label "View:">
+<!ENTITY viewPicker.accesskey "i">
+<!ENTITY viewPickerAll.label "All">
+<!ENTITY viewPickerUnread.label "Unread">
+<!ENTITY viewPickerCustomView.label "Customize...">
 <!ENTITY SearchSubjectOrSender.label "Subject or Sender contains:">
 <!ENTITY SearchSubjectOrSender.accesskey "S">
 <!ENTITY SearchNameOrEmail.label "Name or Email contains:">

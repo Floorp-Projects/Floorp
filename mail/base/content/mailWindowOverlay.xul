@@ -38,11 +38,12 @@
   xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script src="chrome://messenger/content/mailCommands.js"/>
-<script src="chrome://messenger/content/mailWindowOverlay.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mailWindowOverlay.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mailCore.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/msgViewPickerOverlay.js"/>
 
 <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/> 
@@ -1628,13 +1629,29 @@
 </toolbox>
 
 <hbox id="searchBox" persist="collapsed" align="center">
+  <label value="&viewPicker.label;" control="viewPicker"  accesskey="&viewPicker.accesskey;"/>
+  <menulist id="viewPicker" oncreate="FillLabelValues();" oncommand="viewChange(this);">
+    <menupopup id="viewPickerPopup">
+      <menuitem value="0" id="viewPickerAll" label="&viewPickerAll.label;"/>
+      <menuitem value="1" id="viewPickerUnread" label="&viewPickerUnread.label;"/>
+      <menuseparator/>
+      <menuitem value="2" id="labelMenuItem1"/>
+      <menuitem value="3" id="labelMenuItem2"/>
+      <menuitem value="4" id="labelMenuItem3"/>
+      <menuitem value="5" id="labelMenuItem4"/>
+      <menuitem value="6" id="labelMenuItem5"/>
+      <menuseparator id="lastDefaultView"/>
+      <menuseparator id="createCustomViewSeparator"/>
+      <menuitem id="createCustomView" value="7" label="&viewPickerCustomView.label;"/>
+    </menupopup>
+  </menulist>
   <label id="searchCriteria" value="&SearchSubjectOrSender.label;" control="searchInput" 
          accesskey="&SearchSubjectOrSender.accesskey;"/>
   <textbox id="searchInput" flex="5" onfocus="this.select();" onclick="this.select();" oninput="onSearchInput(false);" onkeypress="onSearchKeyPress(event);"/>
   <button id="clearButton" label="&clearButton.label;" disabled="true" tooltiptext="&clearButton.tooltip;" oncommand="onClearSearch();" 
           accesskey="&clearButton.accesskey;"/>
   <button id="advancedButton" label="&advancedButton.label;" tooltiptext="&advancedButton.tooltip;" oncommand="onAdvancedSearch();"
-          accesskey="&advancedButton.accesskey;"/>
+          accesskey="&advancedButton.accesskey;" hidden="true"/>
 </hbox>
 
 <hbox id="junkBar" collapsed="true">
