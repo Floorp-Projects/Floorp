@@ -994,12 +994,21 @@ SSM_SetSMIMEExport(void)
     SECMIME_EnableCipher(CIPHER_FAMILYID_MASK, 0);
 }
 
+#ifdef XP_MAC
+#define LOADABLE_CERTS_MODULE "System:NSSckbiDebug.shlb"
+#endif
 
 SECStatus
 SSM_InitNSS(char* certpath, SSMControlConnection *ctrl, PRInt32 policy)
 {
     SECStatus status;
     SECStatus rv = SECFailure;
+    PRBool hasRoot = PR_FALSE;
+    PK11SlotList *slotList = NULL;
+    PK11SlotListElement *listElement;
+    SSMTextGenContext *cx = NULL;
+    char *modName=NULL;
+    SSMStatus srv;
 
     PR_EnterMonitor(policySetLock);
     if (policySet) {
@@ -1050,9 +1059,40 @@ SSM_InitNSS(char* certpath, SSMControlConnection *ctrl, PRInt32 policy)
 
     /* set default policy strings */
     CERT_SetCAPolicyStringCallback(SSM_GetCAPolicyString, ctrl);
-
-
+#if 0    
+    /*
+     * Load the PKCS#11 module that has the root CA's in it.
+     */
+     SSM_DEBUG("Trying to load the PKCS#11 module that contains the root certs\n");
+    slotList = PK11_GetAllTokens(CKM_INVALID_MECHANISM, PR_FALSE, PR_FALSE, ctrl); 
+	if (slotList) {
+	    for (listElement=slotList->head; listElement != NULL; 
+	         listElement = listElement->next) {
+	         if (PK11_HasRootCerts(listElement->slot)) {
+	             hasRoot = PR_TRUE;
+	         }    
+	    }     
+	}
+	if (!hasRoot) {
+	    srv = SSMTextGen_NewTopLevelContext(NULL, &cx);
+	    if (srv != SSM_SUCCESS) {
+	        SSM_DEBUG("Couldn't create a new TextGenContext\n");
+	        goto loser;
+	    }
+	    srv = SSM_FindUTF8StringInBundles(cx, "root_certificates", &modName);
+	    if (srv != SSM_SUCCESS) {
+	        SSM_DEBUG("Couldn't get the value for \"root_certificates\" "
+	                  "from properties file");
+	        goto loser;          
+	    }
+	    SECMOD_AddNewModule(modName, LOADABLE_CERTS_MODULE, 0, 0);
+	}
+#endif	
 loser:
+    PR_FREEIF(modName);
+    if (slotList) {
+        PK11_FreeSlotList(slotList);
+    }
     if (rv != SECSuccess) {
         ssm_ShutdownNSS(ctrl);
     }
