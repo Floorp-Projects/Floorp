@@ -142,7 +142,7 @@ Usage(const char *progName)
 	"          [-DNv] [-f fortezza_nickname] [-2 filename]\n"
 	"          [-w dbpasswd] [-C cipher(s)] [-t threads] hostname\n"
 	" where -v means verbose\n"
-	"       -D means no TCP Delays\n"
+	"       -D means no TCP delays\n"
 	"       -N means no session reuse\n",
 	progName);
     exit(1);
@@ -275,7 +275,7 @@ PRCondVar * threadEndQ;
 
 int         numUsed;
 int         numRunning;
-PRUint32    numConnected;
+PRInt32     numConnected;
 int         max_threads = 8;	/* default much less than max. */
 
 typedef enum { rs_idle = 0, rs_running = 1, rs_zombie = 2 } runState;
@@ -666,7 +666,7 @@ retry:
 	return SECSuccess;
     } 
 
-    if (!NoDelay) {
+    if (NoDelay) {
 	opt.option         = PR_SockOpt_NoDelay;
 	opt.value.no_delay = PR_TRUE;
 	prStatus = PR_SetSocketOption(tcp_sock, &opt);
@@ -964,9 +964,9 @@ main(int argc, char **argv)
 
 	case 'd': dir = optstate->value; break;
 
-	case 'f': fNickName = strdup(optstate->value); break;
+	case 'f': fNickName = PL_strdup(optstate->value); break;
 
-        case 'n': nickName = strdup(optstate->value); break;
+        case 'n': nickName = PL_strdup(optstate->value); break;
 
 	case 'o': MakeCertOK = 1; break;
 
@@ -980,7 +980,7 @@ main(int argc, char **argv)
 
         case 'v': verbose++; break;
 
-	case 'w': passwd = strdup(optstate->value); break;
+	case 'w': passwd = PL_strdup(optstate->value); break;
 
 	case 0:   /* positional parameter */
 	    if (hostName) {
