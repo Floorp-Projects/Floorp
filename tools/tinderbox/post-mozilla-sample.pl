@@ -18,6 +18,10 @@ package PostMozilla;
 
 
 sub main {
+  # Get build directory from caller.
+  my ($mozilla_build_dir) = @_;
+ 
+  
   TinderUtils::print_log "Post-Mozilla build goes here.\n";
 
   #

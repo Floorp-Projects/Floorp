@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.55 $ ';
+$::UtilsVersion = '$Revision: 1.56 $ ';
 
 package TinderUtils;
 
@@ -27,13 +27,6 @@ package TinderUtils;
 #
 require "post-mozilla.pl" if -e "post-mozilla.pl";
 
-
-#
-# Driver script should call into this file like this:
-#   TinderUtils::Setup()
-#   tree_specific_overrides()
-#   TinderUtils::Build($args);
-#
 
 sub Setup {
   InitVars();
@@ -112,8 +105,6 @@ sub ParseArgs {
             PrintUsage();
         }
     }
-
-
 
     return $args;
 }
@@ -465,7 +456,7 @@ sub adjust_start_time {
     # to 1 minute intervals to make them nice and even.
     my $cycle = 1 * 60;    # Updates every 1 minutes.
     my $begin = 0 * 60;    # Starts 0 minutes after the hour.
-    my $lag = 0 * 60;      # Takes 0 minute to update.
+    my $lag   = 0 * 60;    # Takes 0 minute to update.
     return int(($start_time - $begin - $lag) / $cycle) * $cycle + $begin;
 }
 
@@ -616,7 +607,13 @@ sub BuildIt {
         
 		# Make sure we have client.mk
         unless (-e "$TreeSpecific::name/client.mk") {
-            run_shell_command "$Settings::CVS $cvsco $TreeSpecific::name/client.mk";
+		  
+		  # Set CVSROOT here.  We should only need to checkout a new
+		  # version of client.mk once; we might have more than one
+		  # cvs tree so set CVSROOT here to avoid confusion.
+		  $ENV{CVSROOT} = ":pserver:$ENV{USER}%netscape.com\@cvs.mozilla.org:/cvsroot";
+		  
+		  run_shell_command("$Settings::CVS $cvsco $TreeSpecific::name/client.mk");
         }
         
 		# Create toplevel source directory.
@@ -646,27 +643,13 @@ sub BuildIt {
             } else {
 			  $build_status = 'success';
 			}
-        
-			# Build the embedded app.
-			# Currently this is a post-build-seamonkey hack.
-			if (($Settings::EmbedTest or $Settings::BuildEmbed) and $build_status eq 'success') {
-			  print_log "$binary_basename binary exists, building $embed_binary_basename now.\n";
-			  
-			  my $tmpEmbedConfigDir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/embedding/config";
-			  chdir $tmpEmbedConfigDir or die "chdir $Settings::Topsrcdir: $!\n";
-			  
-			  my $make = "$Settings::Make";
-			  
-			  my $statusEmbed = run_shell_command "$make";
-			  if ($statusEmbed != 0) {
-				$build_status = 'busted';
-			  } elsif (not BinaryExists($full_embed_binary_name)) {
-				print_log "Error: binary not found: gtkEmbed\n";
-				$build_status = 'busted';
-			  }	else {
-				$build_status = 'success';
-			  }
-			  
+
+			# TestGtkEmbed built by default, report if not found.
+			if (not BinaryExists($full_embed_binary_name)) {
+			  print_log "Error: binary not found: $Settings::EmbedBinaryName\n";
+			  $build_status = 'busted';
+			} else {
+			  $build_status = 'success';
 			}
         }
 
@@ -687,7 +670,7 @@ sub BuildIt {
 		#
 		my $external_build = "$Settings::BaseDir/post-mozilla.pl";
 		if (-e $external_build and $build_status eq 'success') {
-		  $build_status = PostMozilla::main();
+		  $build_status = PostMozilla::main($build_dir);
 		}
 
         close LOG;

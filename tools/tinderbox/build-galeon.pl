@@ -16,35 +16,57 @@ use strict;
 
 package PostMozilla;
 
+sub checkout {
+  my ($mozilla_build_dir) = @_;
+
+  # chdir to build directory
+  chdir "$mozilla_build_dir";
+
+  # checkout galeon source
+  $ENV{CVSROOT} = ":pserver:anonymous\@anoncvs.gnome.org:/cvs/gnome";
+
+  my $status = TinderUtils::run_shell_command("cvs checkout galeon");
+
+  # hack in the galeon prefs, if needed
+
+  return $status;
+}
+
 
 sub main {
+  my ($mozilla_build_dir) = @_;
+
   TinderUtils::print_log "Post-Mozilla build goes here.\n";
 
   my $post_status = 'success';  # Success until we report a failure.
   my $status = 0;
-  my $galeon_alive_test = 1;
-  my $galeon_test8_test = 1;
-  my $galeon_dir = "/u/mcafee/gnome/galeon";
+  my $galeon_alive_test = 0;
+  my $galeon_test8_test = 0;
+  my $galeon_dir = "$mozilla_build_dir/galeon";
 
-  # Hack.  This needs to auto-pull into the tbox build directory.
-  chdir "/u/mcafee/gnome";
-  $status = TinderUtils::run_shell_command "checkout";
+  # Checkout/update the galeon code.
+  $status = checkout($mozilla_build_dir);
   if ($status != 0) {
-	$post_status = 'busted';
+  	$post_status = 'busted';
   }
 
   # Build galeon if we passed the checkout command.
   if ($post_status ne 'busted') {
 	# Build galeon.
 
-	#
-	# Hack.  There should be a configure step in here.
-	# We need to point at mozilla installation, etc.
-	#
-
 	chdir $galeon_dir;
+	
+	# Make sure we have a configure
+	unless (-e "configure") {
+	  $status = TinderUtils::run_shell_command("./autogen.sh");
+	}
+
+	# Not sure how to only do this when we need to.
+	# Force a configure for now.
+	$status = TinderUtils::run_shell_command("./configure --sysconfdir=/etc --with-mozilla-libs=$mozilla_build_dir/mozilla/dist/bin --with-mozilla-includes=$mozilla_build_dir/mozilla/dist/include --with-nspr-includes=$mozilla_build_dir/mozilla/dist/include/nspr --with-mozilla-home=$mozilla_build_dir/mozilla/dist/bin");
+	
 	TinderUtils::DeleteBinary("$galeon_dir/src/galeon-bin");
-	$status = TinderUtils::run_shell_command "gmake";
+	$status = TinderUtils::run_shell_command("gmake");
 	
 	if ($status != 0) {
 	  $post_status = 'busted';
