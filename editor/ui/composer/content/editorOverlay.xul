@@ -36,7 +36,24 @@
 <script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
 <script language="JavaScript" src="chrome://editor/content/ComposerCommands.js"/>
 
-  <keyset id="platformOverlayKeyset" />
+  <!--keyset id="platformOverlayKeyset" /--> <!-- Don't do that, only one keyset per window! Anyway, this keyset is not defined! -->
+
+  <key id="pastequotationkb" xulkey="true" shift="true" key="&editpaste.keybinding;" observes="cmd_pasteQuote" />
+  <key id="findkb"          xulkey="true" key="&editfind.keybinding;"          shift="false" observes="cmd_find" />
+  <key id="findnextkb"      xulkey="true" key="&editfindnext.keybinding;"      shift="false" observes="cmd_findNext" />
+  <key id="checkspellingkb" xulkey="true" key="&editcheckspelling.keybinding;" shift="false" observes="cmd_spelling" />
+
+  <key id="boldkb"        xulkey="true" key="&stylebold.keybinding;"      shift="false" observes="cmd_bold"/>
+  <key id="italickb"      xulkey="true" key="&styleitalic.keybinding;"    shift="false" observes="cmd_italic"/>
+  <key id="underlinekb"   xulkey="true" key="&styleunderline.keybinding;" shift="false" observes="cmd_underline"/>
+
+  <key id="fontfixedwidthkb" xulkey="true" key="&formatfontfixed.keybinding;" shift="true" oncommand="EditorSetFontFace('cmd_fontFace', 'tt')" />
+  <key id="increaseindentkb" xulkey="true" key="&formatindent.keybinding;" shift="false" observes="cmd_indent" />
+  <key id="decreaseindentkb" xulkey="true" key="&formatoutdent.keybinding;" shift="false" observes="cmd_outdent" />
+
+  <key id="removestyleskb"     shift="true" xulkey="true" key="&formatremovestyles.keybinding;"   observes="cmd_removeStyles" />
+  <key id="decreasefontsizekb" shift="true" xulkey="true" key="&decreaseFontSize.keybinding;"     observes="cmd_decreaseFont" />
+  <key id="increasefontsizekb" shift="true" xulkey="true" key="&increaseFontSize.keybinding;"     observes="cmd_increaseFont" />
 
   <keyset id="defaultKeySet">
 
@@ -56,25 +73,25 @@
     <key id="key_cut"/>
     <key id="key_copy"/>
     <key id="key_paste"/>
-    <key id="pastequotationkb" xulkey="true" shift="true" key="&editpaste.keybinding;" observes="cmd_pasteQuote" />
+    <key id="pastequotationkb"/>
     <key id="key_delete"/>
     <key id="key_selectAll"/>
-    <key id="findkb"          xulkey="true" key="&editfind.keybinding;"          shift="false" observes="cmd_find" />
-    <key id="findnextkb"      xulkey="true" key="&editfindnext.keybinding;"      shift="false" observes="cmd_findNext" />
-    <key id="checkspellingkb" xulkey="true" key="&editcheckspelling.keybinding;" shift="false" observes="cmd_spelling" />
+    <key id="findkb"/>
+    <key id="findnextkb"/>
+    <key id="checkspellingkb"/>
     <key id="key_preferences"/>
 
-    <key id="boldkb"        xulkey="true" key="&stylebold.keybinding;"      shift="false" observes="cmd_bold"/>
-    <key id="italickb"      xulkey="true" key="&styleitalic.keybinding;"    shift="false" observes="cmd_italic"/>
-    <key id="underlinekb"   xulkey="true" key="&styleunderline.keybinding;" shift="false" observes="cmd_underline"/>
+    <key id="boldkb"/>
+    <key id="italickb"/>
+    <key id="underlinekb"/>
 
-    <key id="fontfixedwidthkb" xulkey="true" key="&formatfontfixed.keybinding;" shift="true" oncommand="EditorSetFontFace('cmd_fontFace', 'tt')" />
-    <key id="increaseindentkb" xulkey="true" key="&formatindent.keybinding;" shift="false" observes="cmd_indent" />
-    <key id="decreaseindentkb" xulkey="true" key="&formatoutdent.keybinding;" shift="false" observes="cmd_outdent" />
+    <key id="fontfixedwidthkb"/>
+    <key id="increaseindentkb"/>
+    <key id="decreaseindentkb"/>
 
-    <key id="removestyleskb"     shift="true" xulkey="true" key="&formatremovestyles.keybinding;"   observes="cmd_removeStyles" />
-    <key id="decreasefontsizekb" shift="true" xulkey="true" key="&decreaseFontSize.keybinding;"     observes="cmd_decreaseFont" />
-    <key id="increasefontsizekb" shift="true" xulkey="true" key="&increaseFontSize.keybinding;"     observes="cmd_increaseFont" />
+    <key id="removestyleskb"/>
+    <key id="decreasefontsizekb"/>
+    <key id="increasefontsizekb"/>
 
   </keyset>
 
