@@ -43,6 +43,9 @@
 #include "ssl.h"
 #include "sslproto.h"
 #include "secmod.h"
+extern "C" {
+#include "pkcs11.h"
+}
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gPIPNSSLog = nsnull;
@@ -121,6 +124,7 @@ nsNSSComponent::GetPIPNSSBundleString(const PRUnichar *name,
     nsresult rv = mPIPNSSBundle->GetStringFromName(name, &ptrv);
     if (NS_SUCCEEDED(rv)) {
       outString = ptrv;
+      return NS_OK;
     } else {
       outString.SetLength(0);
     }
@@ -128,7 +132,7 @@ nsNSSComponent::GetPIPNSSBundleString(const PRUnichar *name,
   } else {
     outString.SetLength(0);
   }
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 void
@@ -191,6 +195,87 @@ nsNSSComponent::InstallLoadableRoots()
     nsMemory::Free(fullModuleName);
     nsMemory::Free(modNameCString);
   }
+}
+
+#define SHORT_PK11_STRING 33
+#define LONG_PK11_STRING  65
+
+char *
+nsNSSComponent::GetPK11String(const PRUnichar *name, PRUint32 len)
+{
+  nsresult rv;
+  nsString nsstr;
+  char *tmpstr = NULL;
+  char *str = NULL;
+  int tmplen;
+  str = (char *)PR_Malloc(len+1);
+  rv = GetPIPNSSBundleString(name, nsstr);
+  if (NS_FAILED(rv)) return NULL;
+  tmpstr = nsstr.ToNewCString();
+  if (!tmpstr) return NULL;
+  tmplen = strlen(tmpstr);
+  memcpy(str, tmpstr, tmplen);
+  memset(str + tmplen, ' ', len - tmplen);
+  str[len] = '\0';
+  PR_Free(tmpstr);
+  return str;
+}
+
+nsresult
+nsNSSComponent::ConfigureInternalPKCS11Token()
+{
+  char *manufacturerID             = NULL;
+  char *libraryDescription         = NULL;
+  char *tokenDescription           = NULL;
+  char *privateTokenDescription    = NULL;
+  char *slotDescription            = NULL;
+  char *privateSlotDescription     = NULL;
+  char *fipsSlotDescription        = NULL;
+  char *fipsPrivateSlotDescription = NULL; 
+
+  manufacturerID = GetPK11String(NS_LITERAL_STRING("ManufacturerID"), 
+                                 SHORT_PK11_STRING);
+  if (manufacturerID == NULL) goto loser;
+  libraryDescription = GetPK11String(NS_LITERAL_STRING("LibraryDescription"), 
+                                     SHORT_PK11_STRING);
+  if (libraryDescription == NULL) goto loser;
+  tokenDescription = GetPK11String(NS_LITERAL_STRING("TokenDescription"), 
+                                   SHORT_PK11_STRING);
+  if (tokenDescription == NULL) goto loser;
+  privateTokenDescription = 
+                    GetPK11String(NS_LITERAL_STRING("PrivateTokenDescription"), 
+                                  SHORT_PK11_STRING);
+  if (privateTokenDescription == NULL) goto loser;
+  slotDescription = GetPK11String(NS_LITERAL_STRING("SlotDescription"), 
+                                  LONG_PK11_STRING);
+  if (slotDescription == NULL) goto loser;
+  privateSlotDescription = 
+                     GetPK11String(NS_LITERAL_STRING("PrivateSlotDescription"), 
+                                   LONG_PK11_STRING);
+  if (privateSlotDescription == NULL) goto loser;
+  fipsSlotDescription = GetPK11String(NS_LITERAL_STRING("FipsSlotDescription"),
+                                      LONG_PK11_STRING);
+  if (fipsSlotDescription == NULL) goto loser;
+  fipsPrivateSlotDescription = 
+                 GetPK11String(NS_LITERAL_STRING("FipsPrivateSlotDescription"), 
+                               LONG_PK11_STRING);
+  if (fipsPrivateSlotDescription == NULL) goto loser;
+
+  PK11_ConfigurePKCS11(manufacturerID, libraryDescription, tokenDescription,
+                       privateTokenDescription, slotDescription, 
+                       privateSlotDescription, fipsSlotDescription, 
+                       fipsPrivateSlotDescription, 0, 0);
+  return NS_OK;
+loser:
+  PR_Free(manufacturerID);
+  PR_Free(libraryDescription);
+  PR_Free(tokenDescription);
+  PR_Free(privateTokenDescription);
+  PR_Free(slotDescription);
+  PR_Free(privateSlotDescription);
+  PR_Free(fipsSlotDescription);
+  PR_Free(fipsPrivateSlotDescription); 
+  return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -277,6 +362,7 @@ nsNSSComponent::Init()
     PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to create pipnss bundle.\n"));
     return rv;
   }      
+  ConfigureInternalPKCS11Token();
   InstallLoadableRoots();
   return rv;
 }
@@ -296,11 +382,19 @@ nsNSSComponent::DisplaySecurityAdvisor()
   return NS_ERROR_FAILURE; // not implemented
 }
 
+typedef enum {
+    PSMCertificateUnknown = -1,
+    PSMCertificateCACert,
+    PSMCertificateServerCert,
+    PSMCertificateUserCert,
+    PSMCertificateEmailCert
+} PSMCertificateType;
+
 class CertDownloader : public nsIStreamListener
 {
 public:
   CertDownloader() {NS_ASSERTION(PR_FALSE, "don't use this constructor."); }
-  CertDownloader(PRInt32 type);
+  CertDownloader(PSMCertificateType type);
   virtual ~CertDownloader();
   
   NS_DECL_ISUPPORTS
@@ -310,11 +404,11 @@ protected:
   char* mByteData;
   PRInt32 mBufferOffset;
   PRInt32 mContentLength;
-  PRInt32 mType;
+  PSMCertificateType mType;
 };
 
 
-CertDownloader::CertDownloader(PRInt32 type)
+CertDownloader::CertDownloader(PSMCertificateType type)
   : mByteData(nsnull),
     mType(type)
 {
@@ -392,7 +486,6 @@ CertDownloader::OnStopRequest(nsIChannel* channel,
    
 */
 
-
 NS_IMETHODIMP
 nsNSSComponent::HandleContent(const char * aContentType,
                               const char * aCommand,
@@ -406,20 +499,20 @@ nsNSSComponent::HandleContent(const char * aContentType,
   nsresult rv = NS_OK;
   if (!aChannel) return NS_ERROR_NULL_POINTER;
   
-  PRUint32 type = (PRUint32) -1;
+  PSMCertificateType type;
   
   if (!nsCRT::strcasecmp(aContentType, "application/x-x509-ca-cert"))
-    type = 1;  //CA cert
+    type = PSMCertificateCACert;
   else if (!nsCRT::strcasecmp(aContentType, "application/x-x509-server-cert"))
-    type =  2; //Server cert
+    type = PSMCertificateServerCert;
   else if (!nsCRT::strcasecmp(aContentType, "application/x-x509-user-cert"))
-    type =  3; //User cert
+    type = PSMCertificateUserCert;
   else if (!nsCRT::strcasecmp(aContentType, "application/x-x509-email-cert"))
-    type =  4; //Someone else's email cert
+    type = PSMCertificateEmailCert;
+  else
+    type = PSMCertificateUnknown;
   
-  if (type != (PRUint32) -1) {
-    // I can't directly open the passed channel cause it fails :-(
-    
+  if (type != PSMCertificateUnknown) {
     nsCOMPtr<nsIURI> uri;
     rv = aChannel->GetURI(getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;

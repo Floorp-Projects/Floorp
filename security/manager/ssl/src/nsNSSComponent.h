@@ -97,6 +97,8 @@ private:
 
   void InstallLoadableRoots();
   nsresult InitializePIPNSSBundle();
+  nsresult ConfigureInternalPKCS11Token();
+  char * GetPK11String(const PRUnichar *name, PRUint32 len);
 
   nsCOMPtr<nsIStringBundle> mPIPNSSBundle;
   static PRBool mNSSInitialized;
