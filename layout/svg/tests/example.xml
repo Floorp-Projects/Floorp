@@ -133,6 +133,5 @@ function findNode(node, nodename)
   <foreignobject>
     <html:div style="position:absolute;top:5px;left:385px;">Simple Polygons</html:div>
     <html:div style="position:absolute;top:250px;left:165px;">A Simple Graph</html:div>
-    <html:input type="button" value="Move It" onclick="moveit();"/>
   </foreignobject>
 </svg> 
