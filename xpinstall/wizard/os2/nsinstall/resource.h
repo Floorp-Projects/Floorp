@@ -21,7 +21,6 @@
  * Contributor(s):
  *     Troy Chevalier <troy@netscape.com>
  *     Sean Su <ssu@netscape.com>
- *     IBM Corp.
  */
 
 #define IDS_PROMPT                      1
@@ -34,3 +33,4 @@
 #define IDC_STATUS                      1001
 #define IDC_GAUGE                       1002
 
+#define ID_FILE_BASE                    10000
