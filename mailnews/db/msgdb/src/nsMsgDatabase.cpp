@@ -599,7 +599,6 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 				if (ret == NS_OK)
 					ret = InitNewDB();
 			}
-			PR_FREEIF(nativeFileName);
 			if(thumb)
 			{
 				thumb->CutStrongRef(m_mdbEnv);
