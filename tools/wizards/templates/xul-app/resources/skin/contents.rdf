@@ -12,7 +12,7 @@ ${license_xml}
   <!-- skin information -->
   <RDF:Description about="urn:mozilla:skin:${skin_name_short}/${skin_version}"
         chrome:displayName="${skin_name_short}"
-        chrome:author="app_author}"
+        chrome:author="${app_author}"
         chrome:name="${skin_name_short}/${skin_version}">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:skin:${skin_name_short}/${skin_version}:packages">
