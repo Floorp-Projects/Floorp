@@ -41,6 +41,7 @@ ulimit -c 0
 ##
 MOZ_DIST_BIN="/usr/lib/mozilla"
 MOZ_PROGRAM="/usr/lib/mozilla/mozilla-bin"
+MOZ_CLIENT_PROGRAM="/usr/bin/mozilla-xremote-client"
 
 ##
 ## Set MOZILLA_FIVE_HOME
@@ -117,7 +118,7 @@ function set_jvm_vars() {
 }
 
 function check_running() {
-    $MOZ_PROGRAM -remote 'ping()' 2>/dev/null >/dev/null
+    $MOZ_CLIENT_PROGRAM 'ping()' 2>/dev/null >/dev/null
     RETURN_VAL=$?
     if [ "$RETURN_VAL" -eq "2" ]; then
       echo 0
@@ -130,7 +131,7 @@ function check_running() {
 
 function open_mail() {
     if [ "${ALREADY_RUNNING}" -eq "1" ]; then
-      exec $MOZ_PROGRAM -remote 'xfeDoCommand(openInbox)' \
+      exec $MOZ_CLIENT_PROGRAM 'xfeDoCommand(openInbox)' \
         2>/dev/null >/dev/null
     else
       exec $MOZ_PROGRAM $*
@@ -139,7 +140,7 @@ function open_mail() {
 
 function open_compose() {
     if [ "${ALREADY_RUNNING}" -eq "1" ]; then
-      exec $MOZ_PROGRAM -remote 'xfeDoCommand(composeMessage)' \
+      exec $MOZ_CLIENT_PROGRAM 'xfeDoCommand(composeMessage)' \
         2>/dev/null >/dev/null
     else
       exec $MOZ_PROGRAM $*
@@ -157,7 +158,7 @@ ALREADY_RUNNING=`check_running`
 # If there is no command line argument at all then try to open a new
 # window in an already running instance.
 if [ "${ALREADY_RUNNING}" -eq "1" ] && [ -z "$1" ]; then
-  exec $MOZ_PROGRAM -remote "xfeDoCommand(openBrowser)" 2>/dev/null >/dev/null
+  exec $MOZ_CLIENT_PROGRAM "xfeDoCommand(openBrowser)" 2>/dev/null >/dev/null
 fi
 
 # if there's no command line argument and there's not a running
@@ -195,10 +196,10 @@ if [ "${USE_EXIST}" -eq "1" ] && [ "${ALREADY_RUNNING}" -eq "1" ]; then
     if [ "${RETURN_VAL}" -ne "0" ] && [ -e `pwd`/$opt ]; then
       opt="`pwd`/$opt"
     fi
-    exec $MOZ_PROGRAM -remote "openurl($opt)" 2>/dev/null >/dev/null
+    exec $MOZ_CLIENT_PROGRAM "openurl($opt)" 2>/dev/null >/dev/null
   fi
   # just pass it off if it looks like a url
-  exec $MOZ_PROGRAM -remote "openurl($opt,new-window)" 2>/dev/null >/dev/null
+  exec $MOZ_CLIENT_PROGRAM "openurl($opt,new-window)" 2>/dev/null >/dev/null
 fi
 
 exec $MOZ_PROGRAM ${1+"$@"}

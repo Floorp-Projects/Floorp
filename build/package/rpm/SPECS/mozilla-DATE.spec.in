@@ -79,6 +79,16 @@ Prereq: fileutils mozilla = %{version}-%{release}
 %description js-debugger
 JavaScript debugger for use with Mozilla.
 
+%package dom-inspector
+Summary: A tool for inspecting the DOM of pages in Mozilla.
+Group: Applications/Internet
+Prereq: fileutils mozilla = %{version}-%{release}
+
+%description dom-inspector
+This is a tool that allows you to inspect the DOM for web pages in
+Mozilla.  This is of great use to people who are doing Mozilla chrome
+development or web page development.
+
 %prep
 
 %setup -q -n mozilla
@@ -127,9 +137,9 @@ BUILD_OFFICIAL=1 ./configure --prefix=%{_prefix} --enable-optimize \
 	--enable-nspr-autoconf --with-extensions --without-mng \
 	--enable-crypto --disable-xprint
 
-BUILD_OFFICIAL=1 make -s export
-BUILD_OFFICIAL=1 make -j$CPUS -s install
-#BUILD_OFFICIAL=1 make -s
+#BUILD_OFFICIAL=1 make -s export
+#BUILD_OFFICIAL=1 make -j$CPUS -s libs
+BUILD_OFFICIAL=1 make -s
 
 %install
 /bin/rm -rf $RPM_BUILD_ROOT
@@ -202,6 +212,11 @@ BUILD_OFFICIAL=1 make -j$CPUS -s install
 
 echo libnssckbi.so >> /tmp/mozilla-psm.list
 
+# manually add the nss libraries
+echo libnss3.so >> /tmp/mozilla-psm.list.shared
+echo libsmime3.so >> /tmp/mozilla-psm.list.shared
+echo libssl3.so >> /tmp/mozilla-psm.list.shared
+
 #%{SOURCE7} --package psm --output-file /tmp/mozilla-psm.list.shared \
 #    --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
 #    --source $RPM_BUILD_DIR/mozilla/dist --shared
@@ -222,7 +237,19 @@ echo libnssckbi.so >> /tmp/mozilla-psm.list
 %{SOURCE7} --package venkman --output-file /tmp/mozilla-js-debugger.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
     --source $RPM_BUILD_DIR/mozilla/dist
-%{SOURCE7} --package venkman --output-file /tmp/mozilla-js-debugger.list.shared \
+%{SOURCE7} --package venkman \
+    --output-file /tmp/mozilla-js-debugger.list.shared \
+    --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
+    --source $RPM_BUILD_DIR/mozilla/dist --shared
+
+/bin/rm -f /tmp/mozilla-dom-inspector.list
+/bin/rm -f /tmp/mozilla-dom-inspector.list.shared
+/bin/rm -f /tmp/mozilla-dom-inspector.package
+%{SOURCE7} --package inspector --output-file /tmp/mozilla-dom-inspector.list \
+    --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
+    --source $RPM_BUILD_DIR/mozilla/dist
+%{SOURCE7} --package inspector \
+    --output-file /tmp/mozilla-dom-inspector.list.shared \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
     --source $RPM_BUILD_DIR/mozilla/dist --shared
 
@@ -266,10 +293,11 @@ popd
     $RPM_BUILD_ROOT/%{prefix}/lib/mozilla \
     $RPM_BUILD_DIR/mozilla/dist/bin \
     %{prefix}/lib/mozilla
-#%{SOURCE8} /tmp/mozilla-psm.list.shared /tmp/mozilla-psm.package \
-#    $RPM_BUILD_ROOT/%{prefix}/lib \
-#    $RPM_BUILD_DIR/mozilla/dist/bin \
-#    %{prefix}/lib
+# note that this pulls from dist/lib, not dist/bin to get the psm libraries!
+%{SOURCE8} /tmp/mozilla-psm.list.shared /tmp/mozilla-psm.package \
+    $RPM_BUILD_ROOT/%{prefix}/lib \
+    $RPM_BUILD_DIR/mozilla/dist/lib \
+    %{prefix}/lib
 
 %{SOURCE8} /tmp/mozilla-chat.list /tmp/mozilla-chat.package \
     $RPM_BUILD_ROOT/%{prefix}/lib/mozilla \
@@ -284,7 +312,18 @@ popd
     $RPM_BUILD_ROOT/%{prefix}/lib/mozilla \
     $RPM_BUILD_DIR/mozilla/dist/bin \
     %{prefix}/lib/mozilla
-%{SOURCE8} /tmp/mozilla-js-debugger.list.shared /tmp/mozilla-js-debugger.package \
+%{SOURCE8} /tmp/mozilla-js-debugger.list.shared \
+    /tmp/mozilla-js-debugger.package \
+    $RPM_BUILD_ROOT/%{prefix}/lib \
+    $RPM_BUILD_DIR/mozilla/dist/bin \
+    %{prefix}/lib
+
+%{SOURCE8} /tmp/mozilla-dom-inspector.list /tmp/mozilla-dom-inspector.package \
+    $RPM_BUILD_ROOT/%{prefix}/lib/mozilla \
+    $RPM_BUILD_DIR/mozilla/dist/bin \
+    %{prefix}/lib/mozilla
+%{SOURCE8} /tmp/mozilla-dom-inspector.list.shared \
+    /tmp/mozilla-dom-inspector.package \
     $RPM_BUILD_ROOT/%{prefix}/lib \
     $RPM_BUILD_DIR/mozilla/dist/bin \
     %{prefix}/lib
@@ -314,6 +353,10 @@ popd
 
 install -c -m 755 %{SOURCE1} $RPM_BUILD_ROOT/%{prefix}/bin/mozilla
 install -c -m 755 %{SOURCE11} $RPM_BUILD_ROOT/%{prefix}/lib/mozilla/
+
+# put mozilla-xremote-client into the standard path
+/bin/cp $RPM_BUILD_DIR/mozilla/dist/bin/mozilla-xremote-client \
+        $RPM_BUILD_ROOT/%{prefix}/bin
 
 # set up our desktop files
 /bin/mkdir -p $RPM_BUILD_ROOT/%{prefix}/share/pixmaps/
@@ -411,9 +454,26 @@ if [ -f /usr/lib/mozilla/rebuild-databases.sh ]; then
     /usr/lib/mozilla/rebuild-databases.sh
 fi
 
+%post dom-inspector
+# run ldconfig before regxpcom
+/sbin/ldconfig >/dev/null 2>/dev/null
+
+if [ -f /usr/lib/mozilla/rebuild-databases.sh ]; then
+    /usr/lib/mozilla/rebuild-databases.sh
+fi
+
+%postun dom-inspector
+# run ldconfig before regxpcom
+/sbin/ldconfig >/dev/null 2>/dev/null
+
+if [ -f /usr/lib/mozilla/rebuild-databases.sh ]; then
+    /usr/lib/mozilla/rebuild-databases.sh
+fi
+
 %files -f /tmp/mozilla.package
 %defattr(-,root,root)
 %{prefix}/bin/mozilla
+%{prefix}/bin/mozilla-xremote-client
 %{prefix}/lib/mozilla/rebuild-databases.sh
 %{prefix}/share/pixmaps/mozilla-icon.png
 %{prefix}/share/pixmaps/mozilla-mail-icon.gif
@@ -456,6 +516,9 @@ fi
 %files js-debugger -f /tmp/mozilla-js-debugger.package
 %defattr(-,root,root)
 
+%files dom-inspector -f /tmp/mozilla-dom-inspector.package
+%defattr(-,root,root)
+
 %files devel
 %defattr(-,root,root)
 %dir %{prefix}/include/mozilla
@@ -467,6 +530,12 @@ fi
 
 
 %changelog
+* Sat Dec 29 2001 Christopher Blizzard <blizzard@redhat.com>
+- Add mozilla-xremote-client to the package in /usr/bin
+
+* Fri Dec 14 2001 Christopher Blizzard <blizzard@redhat.com>
+- Add DOM Inspector package.
+
 * Thu Nov 01 2001 Christopher Blizzard <blizzard@redhat.com>
 - Add JS debugger package.
 
