@@ -950,7 +950,10 @@ function EditorSelectColor(colorType, mouseEvent)
   {
     if (currentColor != gColorObj.TextColor)
     {
-      window.editorShell.SetTextProperty("font", "color", gColorObj.TextColor);
+      if (gColorObj.TextColor)
+        window.editorShell.SetTextProperty("font", "color", gColorObj.TextColor);
+      else
+        window.editorShell.RemoveTextProperty("font", "color");
     }
     // Update the command state (this will trigger color button update)
     goUpdateCommand("cmd_fontColor");
