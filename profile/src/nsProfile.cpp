@@ -2253,14 +2253,17 @@ nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
     }
     else if (inAtom == sApp_SearchFile50)
     {
-        // Here we differ from nsFileLocator - It checks for the
-        // existance of this file and if it does not exist, copies
-        // it from the defaults folder to the profile folder. Since
-        // WE set up any profile folder, we'll make sure it's copied then.
-        
+        // We do need to ensure that this file exists. If
+        // not, it needs to be copied from the defaults
+        // folder.
+         
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
+        {
             rv = localFile->Append(SEARCH_FILE_50_NAME);
+            if (NS_SUCCEEDED(rv))
+                rv = EnsureProfileFileExists(localFile);
+        }
     }
     else if (inAtom == sApp_MailDirectory50)
     {
