@@ -112,17 +112,24 @@ protected:
   void InitSubContentChain(nsTreeRowGroupFrame* aRowGroupFrame);
 
   void ConstructContentChain(nsIContent* aRowContent);
+  void ConstructOldContentChain(nsIPresContext& aPresContext, nsIContent* aOldRowContent);
+  void CreateOldContentChain(nsIPresContext& aPresContext, nsIContent* aOldRowContent, nsIContent* topOfChain);
+
+  void FindChildOfCommonContentChainAncestor(nsIContent *startContent, nsIContent **child);
+
+  PRBool IsAncestor(nsIContent *aRowContent, nsIContent *aOldRowContent, nsIContent **firstDescendant);
+
   void FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpwardHint, 
                               nsIContent* aDownwardHint, nsIContent** aResult);
   void FindRowContentAtIndex(PRInt32& aIndex, nsIContent* aParent, 
                              nsIContent** aResult);
+  void MarkTreeAsDirty(nsIPresContext& aPresContext, nsTreeFrame* aTreeFrame);
+
   void GetFirstRowContent(nsIContent** aRowContent);
 
   void ComputeVisibleRowCount(PRInt32& rowCount, nsIContent* aParent);
 
   void PostAppendRow(nsIFrame* aRowFrame, nsIPresContext& aPresContext);
-
-  void MarkTreeAsDirty(nsIPresContext& aPresContext, nsTreeFrame* aTreeFrame);
 
 public:
   // Helpers that allow access to info. The tree is the primary consumer of this

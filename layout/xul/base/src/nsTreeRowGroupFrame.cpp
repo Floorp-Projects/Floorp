@@ -205,6 +205,148 @@ nsTreeRowGroupFrame::ConstructContentChain(nsIContent* aRowContent)
 }
 
 void 
+nsTreeRowGroupFrame::ConstructOldContentChain(nsIPresContext& aPresContext, nsIContent* aOldRowContent)
+{
+	nsCOMPtr<nsIContent> childOfCommonAncestor;
+
+	//Find the first child of the common ancestor between the new top row's content chain
+	//and the old top row.  Everything between this child and the old top row potentially need
+	//to have their content chains reset.
+	FindChildOfCommonContentChainAncestor(aOldRowContent, getter_AddRefs(childOfCommonAncestor));
+
+	if(childOfCommonAncestor)
+	{
+      //Set up the old top rows content chian.
+	  CreateOldContentChain(aPresContext, aOldRowContent, childOfCommonAncestor);
+	}
+}
+
+void
+nsTreeRowGroupFrame::FindChildOfCommonContentChainAncestor(nsIContent *startContent, nsIContent **child)
+{
+
+	PRUint32 count;
+
+	if(mContentChain)
+	{
+	  nsresult rv = mContentChain->Count(&count);
+
+	  if(NS_SUCCEEDED(rv) && (count >0))
+	  {
+	    for(PRInt32 curItem = count - 1; curItem >= 0; curItem--)
+		{
+		  nsCOMPtr<nsISupports> supports;
+          mContentChain->GetElementAt(curItem, getter_AddRefs(supports));
+          nsCOMPtr<nsIContent> curContent = do_QueryInterface(supports);
+
+		  //See if curContent is an ancestor of startContent.
+		  if(IsAncestor(curContent, startContent, child))
+		  {
+			return;
+		  }
+		}
+	  }
+	}
+
+	//mContent isn't actually put in the content chain, so we need to
+	//check it separately.
+	if(IsAncestor(mContent, startContent, child))
+		return;
+
+	*child = nsnull;
+}
+
+
+PRBool
+nsTreeRowGroupFrame::IsAncestor(nsIContent *aRowContent, nsIContent *aOldRowContent, nsIContent** firstDescendant)
+{
+  nsCOMPtr<nsIContent> prevContent;	
+  nsCOMPtr<nsIContent> currContent = dont_QueryInterface(aOldRowContent);
+  while (currContent) {
+
+	if(aRowContent == currContent.get())
+	{
+		if(firstDescendant)
+		{
+		  *firstDescendant = prevContent;
+		  NS_IF_ADDREF(*firstDescendant);
+		}
+		return PR_TRUE;
+	}
+	prevContent = currContent;
+	prevContent->GetParent(*getter_AddRefs(currContent));
+  }
+
+  return PR_FALSE;
+}
+
+void
+nsTreeRowGroupFrame::CreateOldContentChain(nsIPresContext& aPresContext, nsIContent* aOldRowContent, nsIContent* topOfChain)
+{
+  nsCOMPtr<nsIContent> currContent = dont_QueryInterface(aOldRowContent);
+  nsCOMPtr<nsIContent> prevContent;
+
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext.GetShell(getter_AddRefs(shell));
+
+  //For each item between the oldtoprow and the new first child of common ancestor between
+  //new top row and old top row we need to see if the content chain has to be reset.
+  while(currContent.get() != topOfChain)
+  {
+
+
+    nsIFrame* result = nsnull;
+    shell->GetPrimaryFrameFor(currContent, &result);
+      
+    if(result)
+	{
+      const nsStyleDisplay *display;
+	  result->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+	  if (display->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW_GROUP)
+	  {
+        nsTreeRowGroupFrame *curRowGroup = (nsTreeRowGroupFrame*)result;
+		//Get the current content's parent's first child
+		nsCOMPtr<nsIContent> parent;
+		currContent->GetParent(*getter_AddRefs(parent));
+		
+		nsCOMPtr<nsIContent> firstChild;
+		parent->ChildAt(0, *getter_AddRefs(firstChild));
+
+		nsIFrame *parentFrame;
+		curRowGroup->GetParent(&parentFrame);
+
+	    result->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+	    if (display->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW_GROUP)
+		{
+           //Get the current content's parent's first frame.
+           nsTreeRowGroupFrame *parentRowGroupFrame = (nsTreeRowGroupFrame*)parentFrame;
+		   nsIFrame *currentTopFrame = parentRowGroupFrame->GetFirstFrame();
+
+			nsCOMPtr<nsIContent> topContent;
+			currentTopFrame->GetContent(getter_AddRefs(topContent));
+
+			//If the current content's parent's first child is different than the
+			//current frame's parent's first child then we know they are out of synch
+			//and we need to set the content chain correctly.
+			if(topContent.get() != firstChild.get())
+			{
+
+				nsCOMPtr<nsISupportsArray> contentChain;
+				NS_NewISupportsArray(getter_AddRefs(contentChain));
+
+				contentChain->InsertElementAt(firstChild, 0);
+
+				parentRowGroupFrame->SetContentChain(contentChain);
+			}
+		}
+	  }
+	}
+	prevContent = currContent;
+	prevContent->GetParent(*getter_AddRefs(currContent));
+  }
+}
+
+void 
 nsTreeRowGroupFrame::GetFirstRowContent(nsIContent** aResult)
 {
   *aResult = nsnull;
@@ -460,8 +602,13 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
       // Now that we've lost some rows, we need to create a
       // content chain that provides a hint for moving forward.
       nsCOMPtr<nsIContent> topRowContent;
+
       FindPreviousRowContent(delta, rowContent, nsnull, getter_AddRefs(topRowContent));
-      ConstructContentChain(topRowContent);
+
+    ConstructContentChain(topRowContent);
+	//Now construct the chain for the old top row so its content chain gets
+	//set up correctly.
+	ConstructOldContentChain(aPresContext, rowContent);
     }
   }
   else {
@@ -473,6 +620,7 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
     tableFrame->InvalidateCellMap();
     nsCOMPtr<nsIContent> topRowContent;
     FindRowContentAtIndex(aNewIndex, mContent, getter_AddRefs(topRowContent));
+
     if (topRowContent)
       ConstructContentChain(topRowContent);
   }
@@ -833,11 +981,15 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
 
   // We may just be a normal row group.
   if (!mIsLazy)
+  {
     return mFrames.FirstChild();
+  }
    
   // If we have a frame and no content chain (e.g., unresolved/uncreated content)
   if (mTopFrame && !mContentChain)
-    return mTopFrame;
+  {
+	  return mTopFrame;
+  }
 
   // See if we have any frame whatsoever.
   LocateFrame(nsnull, &mTopFrame);
@@ -863,6 +1015,7 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
         // been synched up, and we can now remove our element and
         // pass the content chain inwards.
         InitSubContentChain((nsTreeRowGroupFrame*)mTopFrame);
+
         return mTopFrame;
       }
       else mLinkupFrame = mTopFrame; // We have some frames that we'll eventually catch up with.
@@ -951,16 +1104,17 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
     }
 
     SetContentChain(nsnull);
+
     return mTopFrame;
   }
-  
   return nsnull;
 }
   
 void 
 nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFrame* aFrame, nsIFrame** aResult) 
 { 
-  if (mIsLazy) {
+
+   if (mIsLazy) {
     // We're ultra-cool. We build our frames on the fly.
     LocateFrame(aFrame, aResult);
     if (*aResult && (*aResult == mLinkupFrame)) {
@@ -979,7 +1133,7 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFram
         // old frame. 
         mBottomFrame = mLinkupFrame;
         mLinkupFrame = nsnull;
-        return;
+		return;
       }
       else *aResult = nsnull; // No true linkup. We need to make a frame.
     }
@@ -1064,6 +1218,7 @@ nsTreeRowGroupFrame::TreeAppendFrames(nsIFrame* aFrameList)
   mFrames.AppendFrames(nsnull, aFrameList);
   return NS_OK;
 }
+
 
 PRBool nsTreeRowGroupFrame::ContinueReflow(nsIPresContext& aPresContext, nscoord y, nscoord height) 
 { 
@@ -1254,7 +1409,7 @@ nsTreeRowGroupFrame::IsValidRow(PRInt32 aRowIndex)
 void
 nsTreeRowGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
 {
-
+//XXX need to write
 }
 
 void
