@@ -37,6 +37,9 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 
+#include "gfxIImageFrame.h"
+
+#include "nsICachingChannel.h"
 #include "ImageCache.h"
 
 #include "ImageLogging.h"
@@ -485,7 +488,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   }
 
   /* get the expires info */
-#if defined(MOZ_NEW_CACHE) && defined(HAVE_CACHING_CHANNEL)
+#if defined(MOZ_NEW_CACHE)
   if (mCacheEntry) {
     nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(chan));
     if (cacheChannel) {
@@ -494,7 +497,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
       if (cacheToken) {
         nsCOMPtr<nsICacheEntryDescriptor> entryDesc(do_QueryInterface(cacheToken));
         if (entryDesc) {
-          PRTime expiration;
+          PRUint32 expiration;
           /* get the expiration time from the caching channel's token */
           entryDesc->GetExpirationTime(&expiration);
 
