@@ -843,7 +843,7 @@ wallet_ReadFromURLFieldToSchemaFile
   /* open input stream */
   nsSpecialSystemDirectory walletFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
   walletFile += "res";
-  walletFile += "wallet";
+//  walletFile += "wallet";
   walletFile += filename;
   nsInputFileStream strm(walletFile);
   if (!strm.is_open()) {
@@ -1687,7 +1687,7 @@ wallet_PostEdit() {
     /* open SchemaValue file */
     nsSpecialSystemDirectory walletFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
     walletFile += "res";
-    walletFile += "wallet";
+//    walletFile += "wallet";
     walletFile += "SchemaValue.tbl";
     nsOutputFileStream strm(walletFile);
     if (!strm.is_open()) {
@@ -1974,6 +1974,24 @@ WLLT_Capture(nsIDocument* doc, nsString field, nsString value) {
       wallet_WriteToFile("SchemaValue.tbl", wallet_SchemaToValue_list, TRUE);
     }
   }
+}
+
+#else
+
+PUBLIC void
+WLLT_PreEdit(nsIURL* url) {
+}
+
+PUBLIC void
+WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
+}
+
+PUBLIC void
+WLLT_OKToCapture(PRBool * result, PRInt32 count, char* URLName) {
+}
+
+PUBLIC void
+WLLT_Capture(nsIDocument* doc, nsString field, nsString value) {
 }
 
 #endif
