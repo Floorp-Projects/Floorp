@@ -850,16 +850,23 @@ static NSArray* sToolbarDefaults = nil;
   BOOL useSel = aIsFromMenu;
   if (aIsFromMenu) {
     // Use selection only if the sidebar is open and the bookmarks panel is displaying.
-    if ([mSidebarDrawer state] == NSDrawerClosedState)
-      useSel = NO;
-    else
-      if ([mSidebarTabView tabViewItemAtIndex: 0] != [mSidebarTabView selectedTabViewItem])
-        useSel = NO;
+    useSel = [self bookmarksAreVisible:NO];
   }
   
   [mSidebarBookmarksDataSource addBookmark: self useSelection: useSel isFolder: aIsFolder URL:aURL title:aTitle];
 }
 
+- (BOOL)bookmarksAreVisible:(BOOL)inRequireSelection
+{
+  // we should really identify the tab by identifier, not index.
+  BOOL bookmarksShowing =  ([mSidebarDrawer state] == NSDrawerOpenState) && 
+            ([mSidebarTabView tabViewItemAtIndex: 0] == [mSidebarTabView selectedTabViewItem]);
+            
+  if (inRequireSelection)
+    bookmarksShowing &= ([mSidebarBookmarksDataSource haveSelectedRow]);
+  
+  return bookmarksShowing;
+}
 
 - (IBAction)bookmarkPage: (id)aSender
 {
@@ -1215,6 +1222,17 @@ static NSArray* sToolbarDefaults = nil;
     zoom = 0.01;
 
   markupViewer->SetTextZoom(zoom);
+}
+
+- (void)getInfo:(id)sender
+{
+  [mSidebarBookmarksDataSource ensureBookmarks];
+  [mSidebarBookmarksDataSource showBookmarkInfo:sender];
+}
+
+- (BOOL)canGetInfo
+{
+  return [self bookmarksAreVisible:YES];
 }
 
 - (BOOL)shouldShowBookmarkToolbar

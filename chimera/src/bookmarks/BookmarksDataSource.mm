@@ -790,6 +790,11 @@
   [bic showWindow:bic];
 }
 
+- (BOOL)haveSelectedRow
+{
+  return ([mOutlineView selectedRow] != -1);
+}
+
 -(void)outlineViewSelectionDidChange: (NSNotification*) aNotification
 {
   BookmarkInfoController *bic = [BookmarkInfoController sharedBookmarkInfoController]; 

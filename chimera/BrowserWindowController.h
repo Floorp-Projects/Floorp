@@ -196,8 +196,11 @@ class nsIDOMNode;
 - (void)stopThrobber;
 - (void)clickThrobber:(id)aSender;
 
--(void) biggerTextSize;
--(void) smallerTextSize;
+- (void)biggerTextSize;
+- (void)smallerTextSize;
+- (void)getInfo:(id)sender;
+
+- (BOOL)canGetInfo;
 
 - (BOOL)shouldShowBookmarkToolbar;
 
@@ -205,6 +208,7 @@ class nsIDOMNode;
 - (IBAction)manageBookmarks: (id)aSender;
 - (void)importBookmarks: (NSString*)aURLSpec;
 - (IBAction)toggleSidebar:(id)aSender;
+- (BOOL)bookmarksAreVisible:(BOOL)inRequireSelection;
 
 - (void)newTab:(BOOL)allowHomepage;
 - (void)closeTab;

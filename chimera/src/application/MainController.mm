@@ -345,6 +345,13 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     NSBeep();
 }
 
+-(IBAction) getInfo:(id)aSender
+{
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController getInfo: aSender]; 
+}
+
 -(IBAction) goBack:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -679,25 +686,17 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
         action == @selector(biggerTextSize:) ||
         action == @selector(smallerTextSize:) ||
         action == @selector(viewSource:) ||
-        action == @selector(savePage:)) {
-    if (browserController)
-      return YES;
-    return NO;
+        action == @selector(savePage:))
+  {
+    return (browserController != nil);
   }
 
-  if (action == @selector(newTab:)) {
-    if (browserController && [browserController newTabsAllowed])
-      return YES;
-    return NO;
-  }
+  if (action == @selector(newTab:))
+    return (browserController && [browserController newTabsAllowed]);
   
   // check if someone has previously done a find before allowing findAgain to be enabled
-  if (action == @selector(findAgain:)) {
-    if (browserController)
-      return (mFindDialog && [[mFindDialog getSearchText] length] > 0);
-    else
-      return NO;
-  }
+  if (action == @selector(findAgain:))
+    return (browserController && mFindDialog && [[mFindDialog getSearchText] length] > 0);
   
   // check what the state of the personal toolbar should be, but only if there is a browser
   // window open. Popup windows that have the personal toolbar removed should always gray
@@ -739,24 +738,20 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
           return NO;
   }
   
+  if ( action == @selector(getInfo:) )
+    return (browserController && [browserController canGetInfo]);
 
   // only activate if we've got multiple tabs open.
   if ((action == @selector(closeTab:) ||
-       action == @selector (nextTab:) ||
-       action == @selector (previousTab:)))
+       action == @selector(nextTab:) ||
+       action == @selector(previousTab:)))
   {
-    if (browserController && [[browserController getTabBrowser] numberOfTabViewItems] > 1)
-      return YES;
-
-    return NO;
+    return (browserController && [[browserController getTabBrowser] numberOfTabViewItems] > 1);
   }
 
-  if ( action == @selector(doStop:) ) {
-    if (browserController)
-      return [[browserController getBrowserWrapper] isBusy];
-    else
-      return NO;
-  }
+  if ( action == @selector(doStop:) )
+    return (browserController && [[browserController getBrowserWrapper] isBusy]);
+
   if ( action == @selector(goBack:) || action == @selector(goForward:) ) {
     if (browserController) {
       CHBrowserView* browserView = [[browserController getBrowserWrapper] getBrowserView];
