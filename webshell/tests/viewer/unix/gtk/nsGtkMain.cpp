@@ -137,7 +137,7 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 #include <signal.h>
 #include <unistd.h>
-#include "nsTraceRefcnt.h"
+#include "nsTraceRefcntImpl.h"
 
 extern "C" char * strsignal(int);
 
@@ -154,7 +154,7 @@ ah_crap_handler(int signum)
          strsignal(signum));
   
   printf("stack logged to someplace\n");
-  nsTraceRefcnt::WalkTheStack(stdout);
+  nsTraceRefcntImpl::WalkTheStack(stdout);
 
   printf("Sleeping for 5 minutes.\n");
   printf("Type 'gdb %s %d' to attach your debugger to this thread.\n",

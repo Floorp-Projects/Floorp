@@ -240,6 +240,15 @@ NS_GetDebug(nsIDebug* *result)
     return xpcomFunctions->getDebug(result);
 }
 
+
+extern "C" NS_COM nsresult
+NS_GetTraceRefcnt(nsITraceRefcnt* *result)
+{
+    if (!xpcomFunctions)
+        return NS_ERROR_NOT_INITIALIZED;
+    return xpcomFunctions->getTraceRefcnt(result);
+}
+
 #endif // #ifndef  XPCOM_GLUE_NO_DYNAMIC_LOADING
 
 

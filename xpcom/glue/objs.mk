@@ -34,22 +34,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-XPCOM_GLUE_SRC_LCSRCS =              \
-		nsCOMPtr.cpp         \
-		nsDebug.cpp          \
-		nsGenericFactory.cpp \
+XPCOM_GLUE_SRC_LCSRCS =			       \
+		nsCOMPtr.cpp		       \
+		nsComponentManagerUtils.cpp    \
+		nsDebug.cpp		       \
+		nsGenericFactory.cpp	       \
 		nsIInterfaceRequestorUtils.cpp \
-		nsMemory.cpp         \
-		nsWeakReference.cpp  \
-		nsComponentManagerUtils.cpp \
-		$(NULL)
+		nsMemory.cpp		       \
+		nsTraceRefcnt.cpp              \
+		nsWeakReference.cpp	       \
+		$(NULL)			       \
 
 XPCOM_GLUE_SRC_LEXPORTS =           \
 		nsCOMPtr.h	    \
 		nsDebug.h	    \
-		nsIGenericFactory.h \
 		nsGenericFactory.h  \
+		nsIGenericFactory.h \
 		nsMemory.h	    \
+		nsTraceRefcnt.h     \
 		nsWeakReference.h   \
 		$(NULL)
 

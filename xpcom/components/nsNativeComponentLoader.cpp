@@ -457,7 +457,7 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll,
 //
 
 #if defined(MOZ_DEMANGLE_SYMBOLS)
-#include "nsTraceRefcnt.h" // for nsTraceRefcnt::DemangleSymbol()
+#include "nsTraceRefcntImpl.h" // for nsTraceRefcntImpl::DemangleSymbol()
 #endif
 
 nsresult 
@@ -491,7 +491,7 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
         
         char demangled[4096] = "\0";
         
-        nsTraceRefcnt::DemangleSymbol(symbol.get(),demangled,sizeof(demangled));
+        nsTraceRefcntImpl::DemangleSymbol(symbol.get(),demangled,sizeof(demangled));
         
         if (demangled && *demangled != '\0')
             demangledSymbol = demangled;
