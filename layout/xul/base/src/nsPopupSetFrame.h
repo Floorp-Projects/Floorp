@@ -95,15 +95,16 @@ public:
                          const nsString& aPopupAlignment);
 
 
-  //void ActivateMenuPopup(PRBool aActivateFlag);
+  void ActivateMenuPopup(PRBool aActivateFlag);
 
 protected:
-  //void MarkAsGenerated();
-  //void SetActiveChild(nsIContent* aPopupContent);
+  void MarkAsGenerated(nsIContent* aPopupContent);
+  void SetActiveChild(nsIContent* aPopupContent);
 
 protected:
   nsFrameList mPopupFrames;
   nsIFrame* mActiveChild;
+  nsIContent* mActiveContent; // [WEAK]
   nsIPresContext* mPresContext; // Our pres context.
 
   PRInt32 mXPos; // Active child's x position

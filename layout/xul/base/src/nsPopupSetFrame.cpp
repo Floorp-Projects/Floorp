@@ -371,17 +371,75 @@ nsPopupSetFrame::CreatePopup(nsIFrame* aElementFrame, nsIContent* aPopupContent,
                              const nsString& aPopupAlignment)
 {
   // Generate the popup.
-  //MarkAsGenerated(aPopupContent);
+  MarkAsGenerated(aPopupContent);
 
   // Now we'll have it in our child frame list. Make it our active child.
-  //SetActiveChild(aPopupContent);
+  SetActiveChild(aPopupContent);
 
   // Show the popup at the specified position.
   mXPos = aXPos;
   mYPos = aYPos;
 
   // Mark the view as active.
-  //ActivateMenuPopup(PR_TRUE);
+  ActivateMenuPopup(PR_TRUE);
 
   return NS_OK;
+}
+
+void
+nsPopupSetFrame::MarkAsGenerated(nsIContent* aPopupContent)
+{
+  // Ungenerate all other popups in the set. No more than one can exist
+  // at any point in time.
+  PRInt32 childCount;
+  mContent->ChildCount(childCount);
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> childContent;
+    mContent->ChildAt(i, *getter_AddRefs(childContent));
+
+    // Retrieve the menugenerated attribute.
+    nsAutoString value;
+    childContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, 
+                               value);
+    if (value == "true") {
+      // Ungenerate this element.
+      childContent->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated,
+                                   PR_TRUE);
+    }
+  }
+
+  // Set our attribute, but only if we aren't already generated.
+  // Retrieve the menugenerated attribute.
+  nsAutoString value;
+  aPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, 
+                              value);
+  if (value != "true") {
+    // Ungenerate this element.
+    aPopupContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, "true",
+                                PR_TRUE);
+  }
+}
+
+void
+nsPopupSetFrame::SetActiveChild(nsIContent* aPopupContent)
+{
+  mActiveContent = aPopupContent; // Weak ref
+  nsIFrame* frame = mPopupFrames.FirstChild();
+  while (frame) {
+    nsCOMPtr<nsIContent> childContent;
+    frame->GetContent(getter_AddRefs(childContent));
+    if (childContent.get() == mActiveContent) {
+      mActiveChild = frame;
+      break;
+    }
+
+    frame->GetNextSibling(&frame);
+  }
+}
+
+void
+nsPopupSetFrame::ActivateMenuPopup(PRBool aActivateFlag)
+{
+
+
 }
