@@ -362,8 +362,7 @@ nsMsgAppCore::Open3PaneWindow()
 	nsIAppShellService* appShell;
 	char *  urlstr=nsnull;
 	nsresult rv;
-	nsString controllerCID;
-
+	
 	urlstr = "resource:/res/samples/messenger.html";
 	rv = nsServiceManager::GetService(kAppShellServiceCID,
 									  nsIAppShellService::GetIID(),
@@ -383,10 +382,9 @@ nsMsgAppCore::Open3PaneWindow()
 
 
 	nsIWebShellWindow* newWindow;
-	controllerCID = "6B75BB61-BD41-11d2-9D31-00805F8ADDDE";
 	appShell->CreateTopLevelWindow(nsnull,      // parent
                                    url,
-                                   controllerCID,
+                                   PR_TRUE,
                                    newWindow,   // result widget
                                    nsnull,      // observer
                                    nsnull,      // callbacks
@@ -796,9 +794,6 @@ nsMsgAppCore::AccountManager(nsIDOMWindow *parent)
   NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  // this is so lame - what IS this?!
-  nsString controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
-
   nsCOMPtr<nsIURL> url;
   rv = NS_NewURL(getter_AddRefs(url),
                  "resource:/res/mailnews/messenger/AccountManager.xul");
@@ -808,7 +803,7 @@ nsMsgAppCore::AccountManager(nsIDOMWindow *parent)
   nsIWebShellWindow* newWindow;
   rv = appShell->CreateDialogWindow(nsnull, // parent
                                     url, // UI url
-                                    controllerCID, 
+                                    PR_TRUE, 
                                     newWindow,
                                     nsnull, // stream observer
                                     cb, // callbacks

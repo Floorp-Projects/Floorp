@@ -53,14 +53,14 @@ private:
 
   NS_IMETHOD CreateTopLevelWindow(nsIWebShellWindow * aParent,
                                   nsIURL* aUrl, 
-                                  nsString& aControllerIID,
+                                  PRBool showWindow,
                                   nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight)
     { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD CreateDialogWindow(  nsIWebShellWindow * aParent,
                                   nsIURL* aUrl, 
-                                  nsString& aControllerIID,
+                                  PRBool showWindow,
                                   nsIWebShellWindow*& aResult,
                                   nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
