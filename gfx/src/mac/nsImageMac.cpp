@@ -325,7 +325,7 @@ PRUint16                red,green,blue,*cur16;
 
 //------------------------------------------------------------
 
-nsresult nsImageMac::Optimize(nsDrawingSurface aDrawingSurface)
+nsresult nsImageMac::Optimize(nsIDeviceContext* aContext)
 {
 /*PRInt16 i;
 

@@ -1048,7 +1048,7 @@ void nsView :: List(FILE* out, PRInt32 aIndent) const
     kid->List(out, aIndent + 1);
     kid = kid->GetNextSibling();
   }
-  for (i = aIndent; --i >= 0; ) fputs("  ", out);
+  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
   fputs(">\n", out);
 }
 
