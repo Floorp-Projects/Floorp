@@ -425,11 +425,17 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, co
     // html text - charset conv then fallback to entity or NCR
     // plain text - charset conv then fallback to '?'
     char charset_buf[kMAX_CSNAME+1];
-    res = aConv->Init(aCharset.ToCString(charset_buf, kMAX_CSNAME+1), 
-                      bTEXT_HTML ? 
-                      nsISaveAsCharset::attr_htmlTextDefault : 
-                      nsISaveAsCharset::attr_plainTextDefault + nsISaveAsCharset::attr_FallbackQuestionMark, 
-                      nsIEntityConverter::html40);
+    if (bTEXT_HTML) {
+      res = aConv->Init(aCharset.ToCString(charset_buf, kMAX_CSNAME+1), 
+                        nsISaveAsCharset::attr_htmlTextDefault, 
+                        nsIEntityConverter::html40);
+    }
+    else {
+      // fallback for text/plain: first try transliterate then '?'
+      res = aConv->Init(aCharset.ToCString(charset_buf, kMAX_CSNAME+1), 
+                        nsISaveAsCharset::attr_FallbackQuestionMark + nsISaveAsCharset::attr_EntityAfterCharsetConv, 
+                        nsIEntityConverter::transliterate);
+    }
     if (NS_SUCCEEDED(res)) {
       res = aConv->Convert(inString, outString);
     }
