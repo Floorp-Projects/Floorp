@@ -348,7 +348,10 @@ MWContext* FE_MakeNewWindow(MWContext* old_context,
 				whichLayout = CBrowserWindow::titlebarless_res_ID; // titlebar-less browser window
 			else if (chrome->topmost == true && chrome->hide_title_bar == false) // removed z-lock == true test - 2/11/97 mjc
 				whichLayout = CBrowserWindow::floating_res_ID;
-			else whichLayout = CBrowserWindow::res_ID;
+			else if (chrome->allow_resize)
+				whichLayout = CBrowserWindow::res_ID;
+			else	// If not explicitly resizable make sure window is created wo Zoom widget (Bug #s 86787, 96213)
+				whichLayout = CBrowserWindow::nozoom_res_ID;
 		}
 
 			// еее also, there are places in the code (ie CURLDispatcher) which check the res_ID of a window

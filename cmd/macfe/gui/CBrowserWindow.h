@@ -48,7 +48,8 @@ class CBrowserWindow : public CNetscapeWindow, public CSaveWindowStatus, public 
 				res_ID = 1010, 
 				dialog_res_ID = 1013, 
 				titlebarless_res_ID = 1012, 
-				floating_res_ID = 1014};
+				floating_res_ID = 1014,
+				nozoom_res_ID = 1016};
 				
 		enum EBooleanParms {
 			kShow		= true,
