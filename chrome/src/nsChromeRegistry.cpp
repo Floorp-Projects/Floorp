@@ -553,11 +553,34 @@ SplitURL(nsIURI* aChromeURI, nsCString& aPackage, nsCString& aProvider, nsCStrin
         }
         else {
             NS_ERROR("unknown provider");
+            return NS_ERROR_FAILURE;
+        }
+    } else {
+        // Protect against URIs containing .. that reach up out of the 
+        // chrome directory to grant chrome privileges to non-chrome files.
+        int depth = 0;
+        PRBool sawSlash = PR_TRUE;  // .. at the beginning is suspect as well as /..
+        for (const char* p=aFile; *p; p++) {
+            if (sawSlash) {
+                if (p[0] == '.') {                
+                    if (p[1] == '.') {
+                        depth--;    // we have /.., decrement depth. 
+                    } else if (p[1] == '/') {
+                                   // we have /./, leave depth alone
+                    }
+                } else if (p[0] != '/') {
+                    depth++;        // we have /x for some x that is not /
+                }
+            }
+            sawSlash = (p[0] == '/');
+            if (depth < 0)
+                return NS_ERROR_FAILURE;
         }
     }
 
     return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsChromeRegistry::Canonify(nsIURI* aChromeURI)
@@ -570,7 +593,9 @@ nsChromeRegistry::Canonify(nsIURI* aChromeURI)
         return NS_ERROR_NULL_POINTER;
 
     nsCAutoString package, provider, file;
-    SplitURL(aChromeURI, package, provider, file);
+    nsresult rv;
+    rv = SplitURL(aChromeURI, package, provider, file);
+    if (NS_FAILED(rv)) return rv;
 
     nsCAutoString canonical = kChromePrefix;
     canonical += package;
