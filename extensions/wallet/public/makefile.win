@@ -26,7 +26,6 @@ XPIDLSRCS= \
         .\nsIPasswordSink.idl \
         .\nsIWalletService.idl    \
         .\nsIPassword.idl    \
-        .\nsIPasswordManager.idl    \
         $(NULL)
 
 MODULE = wallet

@@ -8,6 +8,7 @@ nsIChannel.idl
 nsIFileChannel.idl
 nsIDownloader.idl
 nsIFileTransportService.idl
+nsIPasswordManager.idl
 nsIPrompt.idl
 nsIProtocolProxyService.idl
 nsIProxyAutoConfig.idl
