@@ -991,8 +991,10 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
     if (mLastSize.width != aDesiredSize.width || mLastSize.height != aDesiredSize.height)
        changedSize = PR_TRUE;
   
+    PRUint32 layoutFlags;
+    aState.GetLayoutFlags(layoutFlags);
     nsContainerFrame::FinishReflowChild(mFrame, aPresContext, &reflowState,
-                                        aDesiredSize, aX, aY, NS_FRAME_NO_MOVE_FRAME);
+                                        aDesiredSize, aX, aY, layoutFlags | NS_FRAME_NO_MOVE_FRAME);
   } else {
     aDesiredSize.ascent = mBlockAscent;
   }
