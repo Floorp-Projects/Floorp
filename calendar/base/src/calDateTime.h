@@ -80,6 +80,7 @@ protected:
     PRBool mIsUtc;
     PRBool mIsDate;
     nsCString mTimezone;
+    PRInt32 mTimezoneOffset;
 
     PRInt16 mWeekday;
     PRInt16 mYearday;

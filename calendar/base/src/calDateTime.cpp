@@ -64,6 +64,7 @@ calDateTime::calDateTime()
     mIsUtc = PR_FALSE;
     mWeekday = 0;
     mYearday = 0;
+    mTimezoneOffset = 0;
 }
 
 calDateTime::calDateTime(struct icaltimetype *atimeptr)
@@ -214,6 +215,10 @@ calDateTime::SetTimeInTimezone(PRTime aTime, const char *aTimezone)
     struct icaltimetype icalt;
     time_t tt;
 
+    icaltimezone *zone = icaltimezone_get_builtin_timezone_from_tzid(aTimezone);
+    if (!zone)
+        return NS_ERROR_FAILURE;
+
     PRInt64 temp, million;
     LL_I2L(million, PR_USEC_PER_SEC);
     LL_DIV(temp, aTime, million);
@@ -221,10 +226,7 @@ calDateTime::SetTimeInTimezone(PRTime aTime, const char *aTimezone)
     LL_L2I(sectime, temp);
 
     tt = sectime;
-    icalt = icaltime_from_timet(tt, 0);
-    if (aTimezone && (strncmp(aTimezone, "UTC", 3) != 0))
-        icalt = icaltime_as_utc(icalt, aTimezone);
-
+    icalt = icaltime_from_timet_with_zone(tt, 0, zone);
     FromIcalTime(&icalt);
 
     return NS_OK;
@@ -234,12 +236,23 @@ NS_IMETHODIMP
 calDateTime::GetInTimezone(const char *aTimezone, calIDateTime **aResult)
 {
     struct icaltimetype icalt;
+    icaltimezone *zone, *utc;
+
     ToIcalTime(&icalt);
 
-    icalt = icaltime_as_zone(icalt, aTimezone);
+    utc = icaltimezone_get_utc_timezone();
+    zone = icaltimezone_get_builtin_timezone_from_tzid(aTimezone);
+    if (!zone)
+        return NS_ERROR_FAILURE;
+
+    icaltimezone_convert_time(&icalt, utc, zone);
+
     calDateTime *cdt = new calDateTime(&icalt);
-    if (!cdt)
-        return NS_ERROR_OUT_OF_MEMORY;
+    if (zone != utc) {
+        int ignored;
+        cdt->mIsUtc = PR_FALSE;
+        cdt->mTimezoneOffset = icaltimezone_get_utc_offset (zone, &icalt, &ignored);
+    }
 
     NS_ADDREF (*aResult = cdt);
     return NS_OK;
@@ -290,7 +303,7 @@ NS_IMETHODIMP_(void)
 calDateTime::ToIcalTime(icaltimetype *icalt)
 {
     icalt->year = mYear;
-    icalt->month = mMonth;
+    icalt->month = mMonth + 1;
     icalt->day = mDay;
     icalt->hour = mHour;
     icalt->minute = mMinute;
@@ -298,13 +311,17 @@ calDateTime::ToIcalTime(icaltimetype *icalt)
 
     icalt->is_utc = mIsUtc ? 1 : 0;
     icalt->is_date = mIsDate ? 1 : 0;
+
+    icalt->zone = NULL;
 }
 
 void
 calDateTime::FromIcalTime(icaltimetype *icalt)
 {
+    NS_ASSERTION(icalt->zone == NULL, "Got icaltimetype with a non-null zone!");
+
     mYear = icalt->year;
-    mMonth = icalt->month;
+    mMonth = icalt->month - 1;
     mDay = icalt->day;
     mHour = icalt->hour;
     mMinute = icalt->minute;
@@ -312,6 +329,9 @@ calDateTime::FromIcalTime(icaltimetype *icalt)
 
     mIsUtc = icalt->is_utc ? PR_TRUE : PR_FALSE;
     mIsDate = icalt->is_date ? PR_TRUE : PR_FALSE;
+
+    mTimezoneOffset = 0;
+    mTimezone.Assign("");
 
     // reconstruct nativetime
     time_t tt = icaltime_as_timet(*icalt);
@@ -401,14 +421,21 @@ calDateTime::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                 LL_I2L(thousands, 1000);
                 LL_MUL(utcTime, utcTime, thousands);
 
-                mIsUtc = PR_FALSE;
-                mTimezone.AssignLiteral("");
+                mIsUtc = PR_TRUE;
 
-                nsresult rv = SetNativeTime(utcTime);
-                if (NS_FAILED(rv)) {
+                jsval tzoffsetval;
+                if (!JS_CallFunctionName(cx, dobj, "getTimezoneOffset", 0, nsnull, &tzoffsetval)) {
                     mValid = PR_FALSE;
                 } else {
-                    mValid = PR_TRUE;
+                    JS_ValueToECMAInt32(cx, tzoffsetval, &mTimezoneOffset);
+                    mTimezone.AssignLiteral("");
+                    nsresult rv = SetNativeTime(utcTime);
+
+                    if (NS_FAILED(rv)) {
+                        mValid = PR_FALSE;
+                    } else {
+                        mValid = PR_TRUE;
+                    }
                 }
             }
 

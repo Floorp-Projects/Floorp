@@ -57,10 +57,9 @@ interface calIDateTime : nsISupports
   // true if this thing is set/valid
   readonly attribute boolean valid;
 
-  // this thing's base PRTime value, either
-  // as UTC or as local.  Setting this
-  // will explode the PRTime value to
-  // year/etc.
+  // this thing's base PRTime value, either as UTC or as timezoneless-
+  // local.  Setting this will explode the PRTime value to year/etc
+  // based on the current value of timezoneOffset.
   attribute PRTime nativeTime;
 
   // Year, fully exploded (e.g. "1989", "2004")
@@ -85,13 +84,17 @@ interface calIDateTime : nsISupports
   // zone
   attribute PRBool isUtc;
 
-  // if true, this calIDateTime represents a date (whole day), not a specific second
+  // if true, this calIDateTime represents a date (whole day), not a
+  // specific second
   attribute PRBool isDate;
 
   // an associated timezone that's the preferred way of representing
   // this object.  If this is null/empty, then there is no preferred
   // timezone, and UTC or localtime is assumed (based on isUtc).
   attribute AUTF8String timezone;
+
+  // the offset in minutes from UTC that this date is stored in.
+  attribute PRInt32 timezoneOffset;
 
   //
   // computed values
