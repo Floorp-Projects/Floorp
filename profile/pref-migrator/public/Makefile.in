@@ -28,6 +28,7 @@ EXPORTS		= nsPrefMigrationCIDs.h
 
 XPIDLSRCS	= \
 		nsIPrefMigration.idl \
+		nsIPrefMigrationProgress.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
