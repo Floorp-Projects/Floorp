@@ -32,15 +32,14 @@ interface nsIDOMComposeAppCore : nsIDOMBaseAppCore {
 
     void SetWindow(in nsIDOMWindow ptr);
     void SetEditor(in nsIDOMEditorAppCore ptr);
-	void CompleteCallback(in nsString script);
-    void NewMessage(in nsString url);
-    void ReplyMessage(in nsString url, in nsIDOMXULTreeElement tree, in nsIDOMNodeList node,
-		in nsIDOMMsgAppCore msgAppCore, in long replyType);
-    void ForwardMessage(in nsString url, in nsIDOMXULTreeElement tree, in nsIDOMNodeList node,
-		in nsIDOMMsgAppCore msgAppCore, in long forwardType);
+		void CompleteCallback(in nsString script);
+    void NewMessage(in nsString url, in nsIDOMXULTreeElement tree,
+										in nsIDOMNodeList node, 
+										in nsIDOMMsgAppCore msgAppCore,
+										in long messageType);
 	void SendMessage(in nsString addrTo, in nsString addrCc,
-                     in nsString addrBcc,
-                     in nsString subject, in nsString msg);
+									 in nsString addrBcc,
+									 in nsString subject, in nsString msg);
 	long SendMessage2();
 };
 

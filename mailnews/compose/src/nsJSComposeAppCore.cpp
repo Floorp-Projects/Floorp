@@ -261,101 +261,6 @@ ComposeAppCoreNewMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   nsIDOMComposeAppCore *nativeThis = (nsIDOMComposeAppCore*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
   nsAutoString b0;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 1) {
-
-   nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
-   if (NS_OK != nativeThis->NewMessage(b0)) {
-      return JS_FALSE;
-    }
-
-    *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function NewMessage requires 1 parameter");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-//
-// Native method ReplyMessage
-//
-PR_STATIC_CALLBACK(JSBool)
-ComposeAppCoreReplyMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMComposeAppCore *nativeThis = (nsIDOMComposeAppCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  nsAutoString b0;
-  nsIDOMXULTreeElement * b1;
-  nsIDOMNodeList * b2;
-  nsIDOMMsgAppCore * b3;
-  PRInt32 b4;
-  int32 i;
-  const nsString typeName;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 5) {
-
-   nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
-   rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&b1, nsIDOMXULTreeElement::GetIID(),
-                                  typeName,
-                                  cx,
-                                  argv[1]);
-
-   rBool &= nsJSUtils::nsConvertJSValToObject((nsISupports**)&b2, nsIDOMNodeList::GetIID(),
-                                  typeName,
-                                  cx,
-                                  argv[2]);
-
-   rBool &= nsJSUtils::nsConvertJSValToObject((nsISupports**)&b3, nsIDOMMsgAppCore::GetIID(),
-                                  typeName,
-                                  cx,
-                                  argv[3]);
-
-   JS_ValueToInt32(cx, argv[4], &i);
-   b4 = i;
-
-   if (!rBool || NS_OK != nativeThis->ReplyMessage(b0, b1, b2, b3, b4)) {
-      return JS_FALSE;
-    }
-
-    *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function ReplyMessage requires 5 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method ForwardMessage
-//
-PR_STATIC_CALLBACK(JSBool)
-ComposeAppCoreForwardMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMComposeAppCore *nativeThis = (nsIDOMComposeAppCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  nsAutoString b0;
   nsIDOMXULTreeElement * b1;
   nsIDOMNodeList * b2;
   nsIDOMMsgAppCore * b3;
@@ -392,14 +297,14 @@ ComposeAppCoreForwardMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
    JS_ValueToInt32(cx, argv[4], &i);
    b4 = 1;
 
-   if (!rBool || NS_OK != nativeThis->ForwardMessage(b0, b1, b2, b3, b4)) {
+   if (!rBool || NS_OK != nativeThis->NewMessage(b0, b1, b2, b3, b4)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function ForwardMessage requires 5 parameters");
+    JS_ReportError(cx, "Function NewMessage requires 5 parameters");
     return JS_FALSE;
   }
 
@@ -520,9 +425,7 @@ static JSFunctionSpec ComposeAppCoreMethods[] =
   {"SetWindow",				ComposeAppCoreSetWindow,		1},
   {"SetEditor",				ComposeAppCoreSetEditor,		1},
   {"CompleteCallback",		ComposeAppCoreCompleteCallback,	1},
-  {"NewMessage",			ComposeAppCoreNewMessage,		1},
-  {"ReplyMessage",			ComposeAppCoreReplyMessage,		5},
-  {"ForwardMessage",		ComposeAppCoreForwardMessage,	5},
+  {"NewMessage",			ComposeAppCoreNewMessage,		5},
   {"SendMessage",			ComposeAppCoreSendMessage,		5},
   {"SendMessage2",			ComposeAppCoreSendMessage2,		0},
   {0}

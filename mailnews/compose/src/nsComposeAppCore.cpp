@@ -55,6 +55,9 @@
 #include "nsIXULWindowCallbacks.h"
 #include "nsIDocumentViewer.h"
 #include "nsIRDFResource.h"
+#include "nsFileSpec.h"
+#include "nsFileStream.h"
+
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIDocumentIID, nsIDocument::GetIID());
@@ -111,13 +114,12 @@ public:
 	NS_IMETHOD CompleteCallback(nsAutoString& aScript);
 	NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
 	NS_IMETHOD SetEditor(nsIDOMEditorAppCore *editor);
-	NS_IMETHOD NewMessage(nsAutoString& aUrl);
-	NS_IMETHOD ReplyMessage(nsAutoString& url, nsIDOMXULTreeElement *tree,
-			nsIDOMNodeList *nodeList, nsIDOMMsgAppCore * msgAppCore, const PRInt32 replyType);
-	NS_IMETHOD ForwardMessage(nsAutoString& url, nsIDOMXULTreeElement *tree,
-			nsIDOMNodeList *nodeList, nsIDOMMsgAppCore * msgAppCore, const PRInt32 forwardType);
+	NS_IMETHOD NewMessage(nsAutoString& aUrl, nsIDOMXULTreeElement *tree,
+                          nsIDOMNodeList *nodeList, nsIDOMMsgAppCore *
+                          msgAppCore, const PRInt32 messageType);
 	NS_IMETHOD SendMessage(nsAutoString& aAddrTo, nsAutoString& aAddrCc,
-		nsAutoString& aAddrBcc, nsAutoString& aSubject, nsAutoString& aMsg);
+                           nsAutoString& aAddrBcc, nsAutoString& aSubject,
+                           nsAutoString& aMsg);
 	NS_IMETHOD SendMessage2(PRInt32 * _retval);
 
 protected:
@@ -139,6 +141,8 @@ protected:
 	/* jefft */
 	nsIMsgCompFields *mMsgCompFields;
 	nsIMsgSend *mMsgSend;
+    // ****** Hack Alert ***** Hack Alert ***** Hack Alert *****
+    void HackToGetBody(PRInt32 what);
 };
 
 //
@@ -177,42 +181,46 @@ nsComposeAppCore::ConstructBeforeJavaScript(nsIWebShell *aWebShell)
 NS_IMETHODIMP 
 nsComposeAppCore::ConstructAfterJavaScript(nsIWebShell *aWebShell)
 {
-	nsIDOMDocument* domDoc = nsnull;
-	if (nsnull != aWebShell) {
-		nsIContentViewer* mCViewer;
-		aWebShell->GetContentViewer(&mCViewer);
-		if (nsnull != mCViewer) {
-		  nsIDocumentViewer* mDViewer;
-		  if (NS_OK == mCViewer->QueryInterface(nsIDocumentViewer::GetIID(), (void**) &mDViewer)) {
-			  nsIDocument* mDoc;
-			  mDViewer->GetDocument(mDoc);
-			  if (nsnull != mDoc) {
-				  if (NS_OK == mDoc->QueryInterface(nsIDOMDocument::GetIID(), (void**) &domDoc)) {
-				}
-				NS_RELEASE(mDoc);
-			  }
-			  NS_RELEASE(mDViewer);
-		  }
-		  NS_RELEASE(mCViewer);
-		}
-	}
-
-	if (mMsgCompFields && domDoc)
-	{
-        char *aString;
-        mMsgCompFields->GetTo(&aString);
-        nsString to = aString;
-        mMsgCompFields->GetCc(&aString);
-        nsString cc = aString;
-        mMsgCompFields->GetBcc(&aString);
-        nsString bcc = aString;
-        mMsgCompFields->GetSubject(&aString);
-        nsString subject = aString;
-        mMsgCompFields->GetBody(&aString);
-        nsString body = aString;
-		
-		SetWindowFields(domDoc, to, cc, bcc, subject, body);
-	}
+    mWebShell = aWebShell;
+#if 1 // --**--**-- This should the way it should work. However, we don't know
+      // how to query for the nsIDOMEditorAppCore interface from nsIWebShell.
+ 	nsIDOMDocument* domDoc = nsnull;
+ 	if (nsnull != aWebShell) {
+ 		nsIContentViewer* mCViewer;
+ 		aWebShell->GetContentViewer(&mCViewer);
+ 		if (nsnull != mCViewer) {
+ 		  nsIDocumentViewer* mDViewer;
+ 		  if (NS_OK == mCViewer->QueryInterface(nsIDocumentViewer::GetIID(), (void**) &mDViewer)) {
+ 			  nsIDocument* mDoc;
+ 			  mDViewer->GetDocument(mDoc);
+ 			  if (nsnull != mDoc) {
+ 				  if (NS_OK == mDoc->QueryInterface(nsIDOMDocument::GetIID(), (void**) &domDoc)) {
+ 				}
+ 				NS_RELEASE(mDoc);
+ 			  }
+ 			  NS_RELEASE(mDViewer);
+ 		  }
+ 		  NS_RELEASE(mCViewer);
+ 		}
+ 	}
+ 
+ 	if (mMsgCompFields && domDoc)
+ 	{
+         char *aString;
+         mMsgCompFields->GetTo(&aString);
+         nsString to = aString;
+         mMsgCompFields->GetCc(&aString);
+         nsString cc = aString;
+         mMsgCompFields->GetBcc(&aString);
+         nsString bcc = aString;
+         mMsgCompFields->GetSubject(&aString);
+         nsString subject = aString;
+         mMsgCompFields->GetBody(&aString);
+         nsString body = aString;
+ 		
+ 		SetWindowFields(domDoc, to, cc, bcc, subject, body);
+ 	}
+#endif    
 	return NS_OK;
 }
 
@@ -268,8 +276,39 @@ nsComposeAppCore::GetScriptContext(nsIDOMWindow * aWin)
   return scriptContext;
 }
 
+void 
+nsComposeAppCore::HackToGetBody(PRInt32 what)
+{
+    char *buffer = (char *) PR_CALLOC(1024);
+    if (buffer)
+    {
+        nsFileSpec fileSpec("c:\\temp\\tempMessage.eml");
+        nsInputFileStream fileStream(fileSpec);
+        nsString msgBody = what == 2 ? "--------Original Message--------\r\n" 
+            : ""; 
 
-void nsComposeAppCore::SetWindowFields(nsIDOMDocument *domDoc, nsString& msgTo, nsString& msgCc, nsString& msgBcc,
+        while (!fileStream.eof() && !fileStream.failed() &&
+               fileStream.is_open())
+        {
+            fileStream.readline(buffer, 1024);
+            if (*buffer == 0)
+                break;
+        }
+        while (!fileStream.eof() && !fileStream.failed() &&
+               fileStream.is_open())
+        {
+            fileStream.readline(buffer, 1024);
+            if (what == 1)
+                msgBody += "> ";
+            msgBody += buffer;
+        }
+        mMsgCompFields->SetBody(msgBody.ToNewCString(), NULL);
+        PR_Free(buffer);
+    }
+}
+
+void 
+nsComposeAppCore::SetWindowFields(nsIDOMDocument *domDoc, nsString& msgTo, nsString& msgCc, nsString& msgBcc,
 		nsString& msgSubject, nsString& msgBody)
 {
 	nsresult res = NS_OK;
@@ -302,16 +341,21 @@ void nsComposeAppCore::SetWindowFields(nsIDOMDocument *domDoc, nsString& msgTo, 
 						if (id == "msgBcc") inputElement->SetValue(msgBcc);
 						if (id == "msgSubject") inputElement->SetValue(msgSubject);
 					}
-
+                    
 				}
 			}
-
-			if (mEditor)
-			{
-				mEditor->InsertText(msgBody);
-			}
-		}
-	}
+        }
+        // ****** We need to find a way to query for nsIDOMEditorAppCore
+        // interface from either a nsIWebShell or nsIDOMDocument instead of
+        // relying on setting the mEditor pointer from the JavaScript. We tend
+        // to set to the wrong instance of nsComposeAppCore. In theory we
+        // should have only one nsComposeAppCore running at a given time. We
+        // seems not being able to achieve this at the moment.
+        if (mEditor)
+        {
+			mEditor->InsertText(msgBody);
+        }
+    }
 }
 
 
@@ -436,7 +480,7 @@ NS_IMETHODIMP
 nsComposeAppCore::SetWindow(nsIDOMWindow* aWin)
 {
 	mWindow = aWin;
-	NS_ADDREF(mWindow);
+	// NS_ADDREF(mWindow);
 	mScriptContext = GetScriptContext(aWin);
 	return NS_OK;
 }
@@ -446,7 +490,7 @@ NS_IMETHODIMP
 nsComposeAppCore::SetEditor(nsIDOMEditorAppCore* editor)
 {
 	mEditor = editor;
-	NS_ADDREF(mEditor);
+	// NS_ADDREF(mEditor);
 	return NS_OK;
 }
 
@@ -455,11 +499,41 @@ NS_IMETHODIMP
 nsComposeAppCore::CompleteCallback(nsAutoString& aScript)
 {
 	mScript = aScript;
+#if 0 // --*--*--*-- This doesn't work. There are more than one instance of
+      // nsComposeAppCore. Which one are we setting?
+	nsCOMPtr<nsIDOMDocument> domDoc;
+    nsresult res;
+
+ 	if (nsnull != mWindow) {
+        res = mWindow->GetDocument(getter_AddRefs(domDoc));
+ 	}
+ 
+ 	if (NS_SUCCEEDED(res) && mMsgCompFields && domDoc)
+ 	{
+         char *aString;
+         mMsgCompFields->GetTo(&aString);
+         nsString to = aString;
+         mMsgCompFields->GetCc(&aString);
+         nsString cc = aString;
+         mMsgCompFields->GetBcc(&aString);
+         nsString bcc = aString;
+         mMsgCompFields->GetSubject(&aString);
+         nsString subject = aString;
+         mMsgCompFields->GetBody(&aString);
+         nsString body = aString;
+ 		
+ 		SetWindowFields(domDoc, to, cc, bcc, subject, body);
+ 	}
+#endif 
 	return NS_OK;
 }
 
 NS_IMETHODIMP    
-nsComposeAppCore::NewMessage(nsAutoString& aUrl)
+nsComposeAppCore::NewMessage(nsAutoString& aUrl,
+                             nsIDOMXULTreeElement *tree,
+                             nsIDOMNodeList *nodeList,
+                             nsIDOMMsgAppCore * msgAppCore,
+                             const PRInt32 messageType)
 {
 
 	char *  urlstr=nsnull;
@@ -489,94 +563,79 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl)
                                    this,      // callbacks
                                    615,         // width
                                    650);        // height
+
+	if (tree && nodeList && msgAppCore) {
+		nsCOMPtr<nsISupports> object;
+		rv = msgAppCore->GetRDFResourceForMessage(tree, nodeList,
+                                                   getter_AddRefs(object));
+		if ((NS_SUCCEEDED(rv)) && object) {
+			nsCOMPtr<nsIMessage> message;
+			rv = object->QueryInterface(nsIMessage::GetIID(),
+                                         getter_AddRefs(message));
+			if ((NS_SUCCEEDED(rv)) && message) {
+				nsString aString = "";
+				nsString bString = "";
+
+				message->GetSubject(aString);
+                switch (messageType)
+                {
+                default:        
+                case 0:         // reply to sender
+                case 1:         // reply to all
+                {
+                    bString += "Re: ";
+                    bString += aString;
+                    mMsgCompFields->SetSubject(bString.ToNewCString(), NULL);
+                    message->GetAuthor(aString);
+                    mMsgCompFields->SetTo(aString.ToNewCString(), NULL);
+                    if (messageType == 1)
+                    {
+                        nsString cString, dString;
+                        message->GetRecipients(cString);
+                        message->GetCCList(dString);
+                        if (cString.Length() > 0 && dString.Length() > 0)
+                            cString = cString + ", ";
+                        cString = cString + dString;
+                        mMsgCompFields->SetCc(cString.ToNewCString(), NULL);
+                    }
+                    HackToGetBody(1);
+                    break;
+                }
+                case 2:         // forward as attachment
+                case 3:         // forward as inline
+                case 4:         // forward as quoted
+                {
+                    bString += "[Fwd: ";
+                    bString += aString;
+                    bString += "]";
+                    mMsgCompFields->SetSubject(bString.ToNewCString(), NULL);
+                    /* We need to get more information out from the message. */
+                    nsCOMPtr<nsIRDFResource> rdfResource;
+                    rv = object->QueryInterface(kIRDFResourceIID,
+                                                getter_AddRefs(rdfResource));
+                    if (rdfResource)
+                    {	
+                        const char *uri = 0;
+                        rdfResource->GetValue(&uri);
+                        nsString messageUri = uri;
+                    }
+                    if (messageType == 2)
+                        HackToGetBody(0);
+                    else if (messageType == 3)
+                        HackToGetBody(2);
+                    else
+                        HackToGetBody(1);
+                    break;
+                }
+                }
+                    
+            }
+        }
+	}
+
 done:
 	NS_RELEASE(url);
     (void)nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsComposeAppCore::ReplyMessage(nsAutoString& url, 
-                                             nsIDOMXULTreeElement *tree,
-                                             nsIDOMNodeList *nodeList,
-                                             nsIDOMMsgAppCore * msgAppCore,
-                                             const PRInt32 replyType)
-{
-	nsresult res;
-
-	if (url && tree && nodeList && msgAppCore) {
-		nsCOMPtr<nsISupports> object;
-		res = msgAppCore->GetRDFResourceForMessage(tree, nodeList,
-                                                   getter_AddRefs(object));
-		if ((NS_SUCCEEDED(res)) && object) {
-			nsCOMPtr<nsIMessage> message;
-			res = object->QueryInterface(nsIMessage::GetIID(),
-                                         getter_AddRefs(message));
-			if ((NS_SUCCEEDED(res)) && message) {
-				nsString aString;
-				nsString bString = "Re: ";
-
-				message->GetSubject(aString);
-				bString = bString + aString;
-				mMsgCompFields->SetSubject(bString.ToNewCString(), NULL);
-				message->GetAuthor(aString);
-				mMsgCompFields->SetTo(aString.ToNewCString(), NULL);
-                if (replyType == 1)
-                {
-					nsString cString, dString;
-                    message->GetRecipients(cString);
-					message->GetCCList(dString);
-					if (cString.Length() > 0 && dString.Length() > 0)
-						cString = cString + ", ";
-					cString = cString + dString;
-                    mMsgCompFields->SetCc(cString.ToNewCString(), NULL);
-                }
-                /* We need to get more information out from the message. */
-				NewMessage(url);
-			}
-		}
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsComposeAppCore::ForwardMessage(nsAutoString& url,
-                                               nsIDOMXULTreeElement *tree,
-                                               nsIDOMNodeList *nodeList,
-                                               nsIDOMMsgAppCore * msgAppCore,
-                                               const PRInt32 forwardType)
-{
-	nsresult res;
-
-	if (url && tree && nodeList && msgAppCore) {
-		nsCOMPtr<nsISupports> object;
-		res = msgAppCore->GetRDFResourceForMessage(tree, nodeList,
-                                                  getter_AddRefs(object)); 
-		if ((NS_SUCCEEDED(res)) && object) {
-			nsCOMPtr<nsIMessage> message;
-			res = object->QueryInterface(nsIMessage::GetIID(),
-                                         getter_AddRefs(message)); 
-			if ((NS_SUCCEEDED(res)) && message && mMsgCompFields) {
-				nsString aString;
-				nsString bString = "[Fwd: ";
-				message->GetSubject(aString);
-				bString += aString;
-				bString += "]";
-				mMsgCompFields->SetSubject(bString.ToNewCString(), NULL);
-                /* We need to get more information out from the message. */
-                nsCOMPtr<nsIRDFResource> rdfResource;
-                res = object->QueryInterface(kIRDFResourceIID,
-                                             getter_AddRefs(rdfResource));
-                if (rdfResource)
-                {	
-					const char *uri = 0;
-					rdfResource->GetValue(&uri);
-
-					nsString messageUri = uri;
-
-                    NewMessage(url);
-                }
-			}
-		}
-	}
 	return NS_OK;
 }
 
@@ -630,7 +689,6 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
 	}
 
 	PR_FREEIF(pUserEmail);
-
 	return NS_OK;
 }
 

@@ -41,29 +41,28 @@ class nsIDOMComposeAppCore : public nsIDOMBaseAppCore {
   NS_IMETHOD CompleteCallback(nsAutoString& script) = 0;
 
   /* void NewMessage (in nsAutoString url); */
-  NS_IMETHOD NewMessage(nsAutoString& url) = 0;
+  NS_IMETHOD NewMessage(nsAutoString& url, nsIDOMXULTreeElement *tree,
+												nsIDOMNodeList *nodeList, nsIDOMMsgAppCore *
+												msgAppCore, const PRInt32 messageType) = 0;
 
-  /* void ReplyMessage (...); */
-  NS_IMETHOD ReplyMessage(nsAutoString& url, nsIDOMXULTreeElement *tree,
-	  nsIDOMNodeList *nodeList, nsIDOMMsgAppCore * msgAppCore, const PRInt32 replyType) = 0;
-
-  /* void ForwardMessage (...); */
-  NS_IMETHOD ForwardMessage(nsAutoString& url, nsIDOMXULTreeElement *tree,
-	  nsIDOMNodeList *nodeList, nsIDOMMsgAppCore * msgAppCore, const PRInt32 forwardType) = 0;
-
- /* void SendMessage (in nsAutoString addrTo, in nsAutoString addrCc, in nsAutoString addrBcc, in nsAutoString subject, in nsAutoString msg); */
-  NS_IMETHOD SendMessage(nsAutoString& addrTo, nsAutoString& addrCc, nsAutoString& addrBcc, nsAutoString& subject, nsAutoString& msg) = 0;
+	/* void SendMessage (in nsAutoString addrTo, in nsAutoString addrCc, in
+		 nsAutoString addrBcc, in nsAutoString subject, in nsAutoString msg); */ 
+  NS_IMETHOD SendMessage(nsAutoString& addrTo, nsAutoString& addrCc,
+												 nsAutoString& addrBcc, nsAutoString& subject,
+												 nsAutoString& msg) = 0;
 
   /* void SendMessage2 (); */
   NS_IMETHOD SendMessage2(PRInt32 *_retval) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIDOMComposeAppCore *priv);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx,
+																						nsIDOMComposeAppCore *priv);
 #endif
 };
 extern "C" 
-nsresult NS_InitComposeAppCoreClass(nsIScriptContext *aContext, void **aPrototype);
+nsresult NS_InitComposeAppCoreClass(nsIScriptContext *aContext, void
+																		**aPrototype);
  
 
 
