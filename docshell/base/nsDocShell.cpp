@@ -2193,7 +2193,7 @@ NS_IMETHODIMP nsDocShell::UpdateCurrentSessionHistory()
       return NS_OK;
 
    // XXXTAB
-   NS_ERROR("Not Yet Implemented");
+   //NS_ERROR("Not Yet Implemented");
    return NS_OK;
 }
 
