@@ -370,6 +370,10 @@ nsMultiMixedConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *
 NS_IMETHODIMP
 nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
                                   nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count) {
+
+    if (!mToken.get()) // no token, no love.
+        return NS_ERROR_FAILURE;
+
     nsresult rv = NS_OK;
     char *buffer = nsnull;
     PRUint32 bufLen = count, read;
@@ -589,12 +593,19 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
     mToken.Adopt(nsCRT::strdup(boundaryString.get()));
     mTokenLen = boundaryString.Length();
     
+    if (mTokenLen == 0 || !boundaryString.get())
+        return NS_ERROR_FAILURE;
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMultiMixedConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                                 nsresult aStatus) {
+
+    if (!mToken.get())  // no token, no love.
+        return NS_ERROR_FAILURE;
+
     if (mPartChannel) {
         // we've already called SendStart() (which sets up the mPartChannel,
         // and fires an OnStart()) send any data left over, and then fire the stop.
@@ -611,7 +622,12 @@ nsMultiMixedConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
         // underlying data production problem. we should not be in
         // the middle of sending data. if we were, mPartChannel,
         // above, would have been true.
-        (void) mFinalListener->OnStartRequest(request, ctxt);
+        
+        // if we send the start, the URI Loader's m_targetStreamListener, may
+        // be pointing at us causing a nice stack overflow.  So, don't call 
+        // OnStartRequest!  -  This breaks necko's semantecs. 
+        //(void) mFinalListener->OnStartRequest(request, ctxt);
+        
         (void) mFinalListener->OnStopRequest(request, ctxt, aStatus);
     }
 
