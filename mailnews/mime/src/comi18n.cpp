@@ -15,6 +15,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#define NS_IMPL_IDS
+#include "nsICharsetConverterManager.h"
+#include "nsICharsetAlias.h"
+#undef NS_IMPL_IDS
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,9 +32,8 @@
 #include "nsCRT.h"
 #include "comi18n.h"
 
-#define NS_IMPL_IDS
+
 #include "nsIServiceManager.h"
-#include "nsICharsetConverterManager.h"
 #include "nsIStringCharsetDetector.h"
 #include "nsIPref.h"
 
@@ -1139,7 +1143,7 @@ char *intl_decode_mime_part2_str(const char *header, char* charset)
             break;                          /* exit the loop because there are no charset info */
     *q++ = '\0';
     if (charset)
-      PL_strcpy(charset, p);
+      PL_strcpy(charset, PL_strcasecmp(p, "us-ascii") ? p : "iso-8859-1");
 
     if (*(q+1) == '?' &&
         (*q == 'Q' || *q == 'q' || *q == 'B' || *q == 'b'))
@@ -1328,6 +1332,20 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
   mAutoDetect = autoDetect;
   mMaxNumCharsDetect = maxNumCharsDetect;
 
+  // Resolve charset alias
+  NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res); 
+  if (NS_SUCCEEDED(res) && (nsnull != calias)) {
+    nsString aAlias;
+    aAlias.SetString(from_charset);
+    if (aAlias.Length()) {
+      res = calias->GetPreferred(aAlias, mInputCharset);
+    }
+    aAlias.SetString(to_charset);
+    if (aAlias.Length()) {
+      res = calias->GetPreferred(aAlias, mOutputCharset);
+    }
+  }
+
   if (mAutoDetect) {
     char detector_progid[128];
     char* detector_name = nsnull;
@@ -1335,13 +1353,14 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
 
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
     if (nsnull != prefs && NS_SUCCEEDED(res)) {
-      if (NS_SUCCEEDED(prefs->CopyCharPref("intl.charset.detector", &detector_name))) {
+      if (NS_SUCCEEDED(prefs->CopyCharPref("mail.charset.detector", &detector_name))) {
         PL_strcat(detector_progid, detector_name);
         PR_FREEIF(detector_name);
       }
-    }
-    else {
-      PL_strcat(detector_progid, "japsm"); //fallback
+      else if (NS_SUCCEEDED(prefs->CopyCharPref("intl.charset.detector", &detector_name))) {
+        PL_strcat(detector_progid, detector_name);
+        PR_FREEIF(detector_name);
+      }
     }
 
     res = nsComponentManager::CreateInstance(detector_progid, nsnull, 
@@ -1360,26 +1379,15 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
   NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
 
   if (NS_SUCCEEDED(res) && (nsnull != ccm)) {
-    nsString aCharset;
-
     // create a decoder (conv to unicode), ok if failed if we do auto detection
-    aCharset.SetString(from_charset);
-    res = ccm->GetUnicodeDecoder(&aCharset, &mDecoder);
-    if (NS_FAILED(res) && !mAutoDetect) {
-      return -1;
+    res = ccm->GetUnicodeDecoder(&mInputCharset, &mDecoder);
+    if (NS_SUCCEEDED(res) || mAutoDetect) {
+      // create an encoder (conv from unicode)
+      res = ccm->GetUnicodeEncoder(&mOutputCharset, &mEncoder);
     }
-    // create an encoder (conv from unicode)
-    aCharset.SetString(to_charset);
-    res = ccm->GetUnicodeEncoder(&aCharset, &mEncoder);
-    if (NS_FAILED(res)) {
-      return -1;
-    }
-  }
-  else {
-    return -1;
   }
 
-  return 0;
+  return NS_SUCCEEDED(res) ? 0 : -1;
 }
 
 PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength)
@@ -1537,10 +1545,16 @@ PRInt32 MIME_ConvertString(const char* from_charset, const char* to_charset,
 PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset, const char* to_charset,
                             const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength)
 {
+  char srcCharset[kMAX_CSNAME+1], dstCharset[kMAX_CSNAME+1];
   MimeCharsetConverterClass aMimeCharsetConverterClass;
   PRInt32 res;
 
-  res = aMimeCharsetConverterClass.Initialize(from_charset, to_charset, autoDetection, -1);
+  srcCharset[0] = '\0';
+  dstCharset[0] = '\0';
+  PL_strcpy(srcCharset, PL_strcasecmp(from_charset, "us-ascii") ? (char *) from_charset : "iso-8859-1");
+  PL_strcpy(dstCharset, PL_strcasecmp(to_charset, "us-ascii") ? (char *) to_charset : "iso-8859-1");
+
+  res = aMimeCharsetConverterClass.Initialize(srcCharset, dstCharset, autoDetection, -1);
 
   if (res != -1) {
     res = aMimeCharsetConverterClass.Convert(inBuffer, inLength, outBuffer, outLength);
