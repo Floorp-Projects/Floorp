@@ -434,7 +434,7 @@ extern NS_HTMLPARS nsresult NS_NewOtherHTMLDTD(nsIDTD** aInstancePtrResult);
 
 
 
-#endif 
+#endif //NS_OTHERDTD__
 
 
 
