@@ -45,3 +45,9 @@ and it did not compile there. It was originally built on Solaris.
 Jan 30, 2004
 
 The server was configured to redirect to web-sniffer.net, a similar tool.
+
+
+Jan 19, 2005
+
+The code was ported to Linux and renamed SniffURI. A new Web site called
+sniffuri.org was set up for the project.
