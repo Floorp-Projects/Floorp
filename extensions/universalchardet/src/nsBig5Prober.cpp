@@ -65,8 +65,6 @@ nsProbingState nsBig5Prober::HandleData(const char* aBuf, PRUint32 aLen)
   if (mState == eDetecting)
     if (mDistributionAnalyser.GotEnoughData() && GetConfidence() > SHORTCUT_THRESHOLD)
       mState = eFoundIt;
-//    else
-//      mDistributionAnalyser.HandleData(aBuf, aLen);
 
   return mState;
 }

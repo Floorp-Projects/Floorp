@@ -56,10 +56,13 @@ nsSBCSGroupProber::~nsSBCSGroupProber()
 
 const char* nsSBCSGroupProber::GetCharSetName()
 {
+  //if we have no answer yet
   if (mBestGuess == -1)
   {
     GetConfidence();
+    //no charset seems positive
     if (mBestGuess == -1)
+      //we will use default.
       mBestGuess = 0;
   }
   return mProbers[mBestGuess]->GetCharSetName();
@@ -76,6 +79,7 @@ void  nsSBCSGroupProber::Reset(void)
   mState = eDetecting;
 }
 
+//This filter apply to all scripts that does not use latin letters (english letter)
 PRBool nsSBCSGroupProber::FilterWithoutEnglishLetters(const char* aBuf, PRUint32 aLen, char** newBuf, PRUint32& newLen)
 {
   //do filtering to reduce load to probers
@@ -93,14 +97,16 @@ PRBool nsSBCSGroupProber::FilterWithoutEnglishLetters(const char* aBuf, PRUint32
       meetMSB = PR_TRUE;
     else if (*curPtr < 'A' || (*curPtr > 'Z' && *curPtr < 'a') || *curPtr > 'z') 
     {
-      if (meetMSB && curPtr > prevPtr) //more than a symbol in this segment, copy it
+      //current char is a symbol, most likely a punctuation. we treat it as segment delimiter
+      if (meetMSB && curPtr > prevPtr) 
+      //this segment contains more than single symbol, and it has upper ascii, we need to keep it
       {
         while (prevPtr < curPtr) *newptr++ = *prevPtr++;  
         prevPtr++;
         *newptr++ = ' ';
         meetMSB = PR_FALSE;
       }
-      else
+      else //ignore current segment. (either because it is just a symbol or just a english word
         prevPtr = curPtr+1;
     }
   }
@@ -110,6 +116,7 @@ PRBool nsSBCSGroupProber::FilterWithoutEnglishLetters(const char* aBuf, PRUint32
   return PR_TRUE;
 }
 
+//This filter apply to all scripts that does use latin letters (english letter)
 PRBool nsSBCSGroupProber::FilterWithEnglishLetters(const char* aBuf, PRUint32 aLen, char** newBuf, PRUint32& newLen)
 {
   //do filtering to reduce load to probers
@@ -131,7 +138,8 @@ PRBool nsSBCSGroupProber::FilterWithEnglishLetters(const char* aBuf, PRUint32 aL
     if (!(*curPtr & 0x80) &&
         (*curPtr < 'A' || (*curPtr > 'Z' && *curPtr < 'a') || *curPtr > 'z') )
     {
-      if (curPtr > prevPtr && !isInTag) //more than a symbol in this segment, copy it
+      if (curPtr > prevPtr && !isInTag) //current segment contains more than just a symbol 
+                                        // and it is not inside a tag, keep it
       {
         while (prevPtr < curPtr) *newptr++ = *prevPtr++;  
         prevPtr++;
@@ -154,6 +162,9 @@ nsProbingState nsSBCSGroupProber::HandleData(const char* aBuf, PRUint32 aLen)
   char *newBuf1, *newBuf2;
   PRUint32 newLen1, newLen2;
 
+  //apply filter to original buffer, and we got new buffer back
+  //depend on what script it is, we will feed them the new buffer 
+  //we got after applying proper filter
   FilterWithoutEnglishLetters(aBuf, aLen, &newBuf1, newLen1);
   FilterWithEnglishLetters(aBuf, aLen, &newBuf2, newLen2);
 
@@ -162,8 +173,10 @@ nsProbingState nsSBCSGroupProber::HandleData(const char* aBuf, PRUint32 aLen)
      if (!mIsActive[i])
        continue;
      if (mProbers[i]->KeepEnglishLetters())
+       //for scripts that use english letters, feed them with buffer got from FilterWithEnglishLetters
        st = mProbers[i]->HandleData(newBuf2, newLen2);
      else 
+       //for scripts that does not use english letters, feed them with buffer got from FilterWithoutEnglishLetters
        st = mProbers[i]->HandleData(newBuf1, newLen1);
      if (st == eFoundIt)
      {
@@ -200,9 +213,9 @@ float nsSBCSGroupProber::GetConfidence(void)
   switch (mState)
   {
   case eFoundIt:
-    return (float)0.99;
+    return (float)0.99; //sure yes
   case eNotMe:
-    return (float)0.01;
+    return (float)0.01;  //sure no
   default:
     for (i = 0; i < NUM_OF_SBCS_PROBERS; i++)
     {

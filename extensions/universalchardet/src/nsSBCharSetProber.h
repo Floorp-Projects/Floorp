@@ -32,9 +32,9 @@
 
 typedef struct
 {
-  unsigned char *charToOrderMap;     //[256]
-  char *precedenceMatrix;           //[SAMPLE_SIZE][SAMPLE_SIZE];
-  PRBool keepEnglishLetter;
+  unsigned char *charToOrderMap;     //[256] table use to find a char's order
+  char *precedenceMatrix;           //[SAMPLE_SIZE][SAMPLE_SIZE]; table to find a 2-char sequence's frequency
+  PRBool keepEnglishLetter;         //it says if this script contains latin letters
   const char* charsetName;
 } SequenceModel;
 
@@ -53,12 +53,15 @@ public:
 protected:
   nsProbingState mState;
   SequenceModel *mModel;
+
+  //char order of last character
   unsigned char mLastOrder;
 
   PRUint32 mTotalSeqs;
   PRUint32 mNegativeSeqs;
 
   PRUint32 mTotalChar;
+  //characters that fall in our sampling range
   PRUint32 mFreqChar;
 };
 
