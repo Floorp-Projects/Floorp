@@ -50,6 +50,7 @@
 #include "nsIEventStateManager.h"
 #include "nsIObserver.h"
 #include "nsILookAndFeel.h"
+#include "nsIIOService.h"
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
 #endif
@@ -78,6 +79,7 @@ public:
   NS_IMETHOD SetImageAnimationMode(PRUint16 aMode);
   NS_IMETHOD GetImageLoadFlags(nsLoadFlags& aLoadFlags);
   NS_IMETHOD GetLookAndFeel(nsILookAndFeel** aLookAndFeel);
+  NS_IMETHOD GetIOService(nsIIOService** aIOService);
   NS_IMETHOD GetBaseURL(nsIURI** aURLResult);
   NS_IMETHOD GetMedium(nsIAtom** aMediumResult) = 0;
   NS_IMETHOD ClearStyleDataAndReflow(void);
@@ -213,6 +215,7 @@ protected:
   nsILinkHandler*       mLinkHandler;   // [WEAK]
   nsISupports*          mContainer;     // [WEAK]
   nsCOMPtr<nsILookAndFeel> mLookAndFeel;
+  nsCOMPtr<nsIIOService> mIOService;
 
   nsFont                mDefaultVariableFont;
   nsFont                mDefaultFixedFont;

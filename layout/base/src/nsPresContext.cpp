@@ -888,24 +888,42 @@ nsPresContext::SetImageAnimationMode(PRUint16 aMode)
   return NS_OK;
 }
 
-/* This function has now been deprecated.  It is no longer necesary to
- * hold on to presContext just to get a nsLookAndFeel.  nsLookAndFeel is
- * now a service provided by ServiceManager.
+/*
+ * It is no longer necesary to hold on to presContext just to get a
+ * nsILookAndFeel, which can now be obtained through the service
+ * manager.  However, this cached copy can be used when a pres context
+ * is available, for faster performance.
  */
 NS_IMETHODIMP
 nsPresContext::GetLookAndFeel(nsILookAndFeel** aLookAndFeel)
 {
   NS_PRECONDITION(aLookAndFeel, "null out param");
-  nsresult result = NS_OK;
   if (! mLookAndFeel) {
-    mLookAndFeel = do_GetService(kLookAndFeelCID,&result);
+    nsresult rv;
+    mLookAndFeel = do_GetService(kLookAndFeelCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   *aLookAndFeel = mLookAndFeel;
-  NS_IF_ADDREF(*aLookAndFeel);
-  return result;
+  NS_ADDREF(*aLookAndFeel);
+  return NS_OK;
 }
 
-
+/*
+ * Get the cached IO service, faster than the service manager could.
+ */
+NS_IMETHODIMP
+nsPresContext::GetIOService(nsIIOService** aIOService)
+{
+  NS_PRECONDITION(aIOService, "null out param");
+  if (! mIOService) {
+    nsresult rv;
+    mIOService = do_GetIOService(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  *aIOService = mIOService;
+  NS_ADDREF(*aIOService);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsPresContext::GetBaseURL(nsIURI** aResult)
@@ -1517,10 +1535,7 @@ nsPresContext::GetContainer(nsISupports** aResult)
 NS_IMETHODIMP
 nsPresContext::GetEventStateManager(nsIEventStateManager** aManager)
 {
-  NS_PRECONDITION(nsnull != aManager, "null ptr");
-  if (nsnull == aManager) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aManager, "null ptr");
 
   if (!mEventManager) {
     nsresult rv;
@@ -1528,10 +1543,10 @@ nsPresContext::GetEventStateManager(nsIEventStateManager** aManager)
     if (NS_FAILED(rv)) {
       return rv;
     }
-  }
 
-  //Not refcnted, set null in destructor
-  mEventManager->SetPresContext(this);
+    //Not refcnted, set null in destructor
+    mEventManager->SetPresContext(this);
+  }
 
   *aManager = mEventManager;
   NS_IF_ADDREF(*aManager);

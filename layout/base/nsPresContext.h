@@ -67,6 +67,7 @@ class nsString;
 class nsIEventStateManager;
 class nsIURI;
 class nsILookAndFeel;
+class nsIIOService;
 class nsICSSPseudoComparator;
 class nsILanguageAtom;
 class nsITheme;
@@ -161,9 +162,14 @@ public:
   NS_IMETHOD GetImageLoadFlags(nsLoadFlags& aLoadFlags) = 0;
 
   /**
-   * Get look and feel object
+   * Get cached look and feel service.
    */
   NS_IMETHOD GetLookAndFeel(nsILookAndFeel** aLookAndFeel) = 0;
+
+  /**
+   * Get cached IO service.
+   */
+  NS_IMETHOD GetIOService(nsIIOService** aIOService) = 0;
 
   /** 
    * Get base url for presentation
