@@ -77,9 +77,6 @@ public:
   nsresult GetNetAddr(PRNetAddr *aNetAddr);
   nsresult SetNetAddr(const PRNetAddr *aNetAddr);
 
-  nsresult GetOldBlockVal(PRBool *aOldBlockVal);
-  nsresult SetOldBlockVal(PRBool aOldBlockVal);
-
   /* Set SSL Status values */
   nsresult SetSSLStatus(nsISSLStatus *aSSLStatus);  
 
@@ -95,7 +92,6 @@ protected:
   nsXPIDLCString mProxyHostName;
   PRInt32 mPort, mProxyPort;
   PRNetAddr mNetAddr;
-  PRBool mOldBlockVal;
 
   /* SSL Status */
   nsCOMPtr<nsISSLStatus> mSSLStatus;
