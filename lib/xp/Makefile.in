@@ -53,11 +53,12 @@ CSRCS =		  xp_stub.c
 endif
 
 CSRCS +=          \
-	 	  xp_file.c \
-		  xp_list.c \
-		  xp_hash.c \
-		  allxpstr.c \
-		  $(NULL)
+	xp_file.c \
+	xp_list.c \
+	xp_hash.c \
+	allxpstr.c \
+	xp_stubs.c \
+	$(NULL)
 
 EXPORTS=xp_linebuf.h
 
