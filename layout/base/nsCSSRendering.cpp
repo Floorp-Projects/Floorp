@@ -162,6 +162,7 @@ nscolor nsCSSRendering::MakeBevelColor(PRIntn whichSide, PRUint8 style,
     theColor = colors[0];
     break;
   case NS_SIDE_LEFT:
+  default:
     theColor = colors[0];
     break;
   }
@@ -1685,16 +1686,15 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     nsIFrameImageLoader* loader = nsnull;
     PRBool transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
       (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
-    nsSize loadSize(0, 0);
     nsresult rv = aPresContext.StartLoadImage(aColor.mBackgroundImage,
                                               transparentBG
                                               ? nsnull
                                               : &aColor.mBackgroundColor,
-                                              aForFrame, loadSize,
                                               nsnull,
-                                              PR_FALSE, PR_FALSE, &loader);
+                                              aForFrame, nsnull, nsnull,
+                                              &loader);
     if ((NS_OK != rv) || (nsnull == loader) ||
-        (loader->GetImage(image), (nsnull == image))) {
+        (loader->GetImage(&image), (nsnull == image))) {
       NS_IF_RELEASE(loader);
       // Redraw will happen later
       if (!transparentBG) {
@@ -1714,11 +1714,8 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     }
 #endif
 
-    // Convert image dimensions into nscoord's
-    float p2t;
-    aPresContext.GetScaledPixelsToTwips(&p2t);
-    nscoord tileWidth = NSIntPixelsToTwips(imageSize.width, p2t);
-    nscoord tileHeight = NSIntPixelsToTwips(imageSize.height, p2t);
+    nscoord tileWidth = imageSize.width;
+    nscoord tileHeight = imageSize.height;
     if ((tileWidth == 0) || (tileHeight == 0)) {
       return;
     }
