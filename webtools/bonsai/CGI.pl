@@ -282,7 +282,7 @@ sub cvsmenu {
      print "</dl>
 <p></tr><tr><td>
    <font size=-1> Questions, Comments, Feature requests? 
-      mail <a href=maito:$maintainer>$maintainer</a>
+      mail <a href=\"mailto:$maintainer\">$maintainer</a>
    </font>
 </tr></table>
 ";
