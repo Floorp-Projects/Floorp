@@ -60,12 +60,14 @@ private:
   nsIPresShell   *mPresShell;
   nsIViewManager *mViewManager;
   PRUint32        mUpdateCount;
-  nsCOMPtr<nsIDOMDocument> mDoc;
   nsCOMPtr<nsITransactionManager> mTxnMgr;
 
 
   friend PRBool NSCanUnload(nsISupports* serviceMgr);
   static PRInt32 gInstanceCount;
+
+protected:
+  nsCOMPtr<nsIDOMDocument> mDoc;
 
 public:
   /** The default constructor. This should suffice. the setting of the interfaces is done
@@ -278,8 +280,6 @@ protected:
 
   NS_IMETHOD GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
 
-//Methods not exposed in nsIEditor
-
   /** Create an aggregate transaction for deleting current selection
    *  Used by all methods that need to delete current selection,
    *    then insert something new to replace it
@@ -289,6 +289,8 @@ protected:
    *    if there was a selection to delete.
    */
   NS_IMETHOD CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, EditAggregateTxn **aAggTxn);
+
+  NS_IMETHOD DebugDumpContent() const;
 
 protected:
 // XXXX: Horrible hack! We are doing this because

@@ -135,7 +135,7 @@ NS_IMETHODIMP InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransacti
           if (childTxn)
           {
             nsCOMPtr<InsertTextTxn> otherInsertTxn;
-            otherInsertTxn = do_QueryInterface(childTxn, &result);
+            otherInsertTxn = do_QueryInterface(childTxn);
             if (otherInsertTxn)
             {
               if (PR_TRUE==IsSequentialInsert(otherInsertTxn))

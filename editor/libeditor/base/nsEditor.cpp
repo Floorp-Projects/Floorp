@@ -1128,7 +1128,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
     {
       result = NS_ERROR_UNEXPECTED; 
       nsCOMPtr<nsIEnumerator> enumerator;
-      enumerator = do_QueryInterface(selection,&result);
+      enumerator = do_QueryInterface(selection);
       if (enumerator)
       {
         enumerator->First(); 
@@ -1144,8 +1144,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
             result = range->GetStartParent(getter_AddRefs(node));
             if ((NS_SUCCEEDED(result)) && (node))
             {
-              result = NS_ERROR_UNEXPECTED; 
-              nodeAsText = do_QueryInterface(node,&result);
+              nodeAsText = do_QueryInterface(node);
               range->GetStartOffset(&offset);
               if (!nodeAsText) {
                 result = NS_ERROR_EDITOR_NO_TEXTNODE;
@@ -1451,7 +1450,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
   if ((NS_SUCCEEDED(result)) && selection)
   {
     nsCOMPtr<nsIEnumerator> enumerator;
-    enumerator = do_QueryInterface(selection,&result);
+    enumerator = do_QueryInterface(selection);
     if (enumerator)
     {
       for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
@@ -1553,7 +1552,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
     { // there is a priorNode, so delete it's last child (if text content, delete the last char.)
       // if it has no children, delete it
       nsCOMPtr<nsIDOMCharacterData> priorNodeAsText;
-      priorNodeAsText = do_QueryInterface(priorNode, &result);
+      priorNodeAsText = do_QueryInterface(priorNode);
       if (priorNodeAsText)
       {
         PRUint32 length=0;
@@ -1590,7 +1589,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
     { // there is a priorNode, so delete it's last child (if text content, delete the last char.)
       // if it has no children, delete it
       nsCOMPtr<nsIDOMCharacterData> nextNodeAsText;
-      nextNodeAsText = do_QueryInterface(nextNode,&result);
+      nextNodeAsText = do_QueryInterface(nextNode);
       if (nextNodeAsText)
       {
         PRUint32 length=0;
@@ -1815,6 +1814,9 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
                         nsIDOMNode*  aNewLeftNode,
                         nsIDOMNode*  aParent)
 {
+
+printf("SplitNodeImpl: left=%p, right=%p, offset=%d\n", aNewLeftNode, aExistingRightNode, aOffset);
+  
   nsresult result;
   NS_ASSERTION(((nsnull!=aExistingRightNode) &&
                 (nsnull!=aNewLeftNode) &&
@@ -1826,6 +1828,7 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
   {
     nsCOMPtr<nsIDOMNode> resultNode;
     result = aParent->InsertBefore(aNewLeftNode, aExistingRightNode, getter_AddRefs(resultNode));
+    //printf("  after insert\n"); content->List();  // DEBUG
     if (NS_SUCCEEDED(result))
     {
       // split the children between the 2 nodes
@@ -1847,21 +1850,26 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
         }
         else
         {  // otherwise it's an interior node, so shuffle around the children
+           // go through list backwards so deletes don't interfere with the iteration
           nsCOMPtr<nsIDOMNodeList> childNodes;
           result = aExistingRightNode->GetChildNodes(getter_AddRefs(childNodes));
           if ((NS_SUCCEEDED(result)) && (childNodes))
           {
-            PRInt32 i=0;
-            for ( ; ((NS_SUCCEEDED(result)) && (i<aOffset)); i++)
+            PRInt32 i=aOffset-1;
+            for ( ; ((NS_SUCCEEDED(result)) && (0<=i)); i--)
             {
               nsCOMPtr<nsIDOMNode> childNode;
               result = childNodes->Item(i, getter_AddRefs(childNode));
               if ((NS_SUCCEEDED(result)) && (childNode))
               {
                 result = aExistingRightNode->RemoveChild(childNode, getter_AddRefs(resultNode));
+                //printf("  after remove\n"); content->List();  // DEBUG
                 if (NS_SUCCEEDED(result))
                 {
-                  result = aNewLeftNode->AppendChild(childNode, getter_AddRefs(resultNode));
+                  nsCOMPtr<nsIDOMNode> firstChild;
+                  aNewLeftNode->GetFirstChild(getter_AddRefs(firstChild));
+                  result = aNewLeftNode->InsertBefore(childNode, firstChild, getter_AddRefs(resultNode));
+                  //printf("  after append\n"); content->List();  // DEBUG
                 }
               }
             }
@@ -1917,7 +1925,7 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
       result = aNodeToJoin->GetChildNodes(getter_AddRefs(childNodes));
       if ((NS_SUCCEEDED(result)) && (childNodes))
       {
-        PRUint32 i;
+        PRInt32 i;  // must be signed int!
         PRUint32 childCount=0;
         childNodes->GetLength(&childCount);
         nsCOMPtr<nsIDOMNode> firstNode; //only used if aNodeToKeepIsFirst is false
@@ -1927,7 +1935,9 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
           // GetFirstChild returns nsnull firstNode if aNodeToKeep has no children, that's ok.
         }
         nsCOMPtr<nsIDOMNode> resultNode;
-        for (i=0; ((NS_SUCCEEDED(result)) && (i<childCount)); i++)
+        // have to go through the list backwards to keep deletes from interfering with iteration
+        nsCOMPtr<nsIDOMNode> previousChild;
+        for (i=childCount-1; ((NS_SUCCEEDED(result)) && (0<=i)); i--)
         {
           nsCOMPtr<nsIDOMNode> childNode;
           result = childNodes->Item(i, getter_AddRefs(childNode));
@@ -1935,11 +1945,15 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
           {
             if (PR_TRUE==aNodeToKeepIsFirst)
             { // append children of aNodeToJoin
-              result = aNodeToKeep->AppendChild(childNode, getter_AddRefs(resultNode)); 
+              //was result = aNodeToKeep->AppendChild(childNode, getter_AddRefs(resultNode));
+              result = aNodeToKeep->InsertBefore(childNode, previousChild, getter_AddRefs(resultNode));
+              previousChild = do_QueryInterface(childNode);
             }
             else
             { // prepend children of aNodeToJoin
+              //was result = aNodeToKeep->InsertBefore(childNode, firstNode, getter_AddRefs(resultNode));
               result = aNodeToKeep->InsertBefore(childNode, firstNode, getter_AddRefs(resultNode));
+              firstNode = do_QueryInterface(childNode);
             }
           }
         }
@@ -2045,6 +2059,28 @@ NS_IMETHODIMP nsEditor::GetLayoutObject(nsIDOMNode *aNode, nsISupports **aLayout
     }
   }
   return result;
+}
+
+NS_IMETHODIMP
+nsEditor::DebugDumpContent() const
+{
+  nsCOMPtr<nsIContent>content;
+  nsCOMPtr<nsIDOMNodeList>nodeList;
+  nsAutoString bodyTag = "body";
+  mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+  if (nodeList)
+  {
+    PRUint32 count;
+    nodeList->GetLength(&count);
+    NS_ASSERTION(1==count, "there is not exactly 1 body in the document!");
+    nsCOMPtr<nsIDOMNode>bodyNode;
+    nodeList->Item(0, getter_AddRefs(bodyNode));
+    if (bodyNode) {
+      content = do_QueryInterface(bodyNode);
+    }
+  }
+  content->List();
+  return NS_OK;
 }
 
 

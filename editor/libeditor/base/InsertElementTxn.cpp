@@ -54,13 +54,14 @@ InsertElementTxn::~InsertElementTxn()
 
 NS_IMETHODIMP InsertElementTxn::Do(void)
 {
-  if (gNoisy) { printf("Do Insert Element\n"); }
+  if (gNoisy) { printf("%p Do Insert Element of %p into parent %p at offset %d\n", 
+                       this, mNode, mParent, mOffset); }
   if (!mNode || !mParent)
     return NS_ERROR_NULL_POINTER;
 
   nsresult result;
   nsCOMPtr<nsIDOMNode>refNode;
-  if (0!=mOffset)
+  //if (0!=mOffset)
   { // get a ref node
     PRInt32 i=0;
     result = mParent->GetFirstChild(getter_AddRefs(refNode));
@@ -94,7 +95,8 @@ NS_IMETHODIMP InsertElementTxn::Do(void)
 
 NS_IMETHODIMP InsertElementTxn::Undo(void)
 {
-  if (gNoisy) { printf("Undo Insert Element\n"); }
+  if (gNoisy) { printf("%p Undo Insert Element of %p into parent %p at offset %d\n", 
+                       this, mNode, mParent, mOffset); }
   if (!mNode || !mParent)
     return NS_ERROR_NULL_POINTER;
 

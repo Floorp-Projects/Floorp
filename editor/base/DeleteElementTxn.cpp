@@ -50,7 +50,7 @@ DeleteElementTxn::~DeleteElementTxn()
 
 NS_IMETHODIMP DeleteElementTxn::Do(void)
 {
-  if (gNoisy) { printf("Do Delete Element element = %p\n", mElement.get()); }
+  if (gNoisy) { printf("%p Do Delete Element element = %p\n", this, mElement.get()); }
   if (!mElement)
     return NS_ERROR_NULL_POINTER;
 
@@ -65,12 +65,12 @@ NS_IMETHODIMP DeleteElementTxn::Do(void)
 #ifdef NS_DEBUG
   // begin debug output
   nsCOMPtr<nsIDOMElement> element;
-  element = do_QueryInterface(mElement, &result);
+  element = do_QueryInterface(mElement);
   nsAutoString elementTag="text node";
   if (element)
     element->GetTagName(elementTag);
   nsCOMPtr<nsIDOMElement> parentElement;
-  parentElement = do_QueryInterface(mParent, &result);
+  parentElement = do_QueryInterface(mParent);
   nsAutoString parentElementTag="text node";
   if (parentElement)
     parentElement->GetTagName(parentElementTag);
@@ -80,7 +80,7 @@ NS_IMETHODIMP DeleteElementTxn::Do(void)
   if (c&&p)
   {
     if (gNoisy)
-      printf("DeleteElementTxn:  deleting child %s from parent %s\n", c, p); 
+      printf("  DeleteElementTxn:  deleting child %s from parent %s\n", c, p); 
     delete [] c;
     delete [] p;
   }
@@ -97,9 +97,34 @@ NS_IMETHODIMP DeleteElementTxn::Do(void)
 
 NS_IMETHODIMP DeleteElementTxn::Undo(void)
 {
-  if (gNoisy) { printf("Do Delete Element element = %p, parent = %p\n", mElement.get(), mParent.get()); }
+  if (gNoisy) { printf("%p Undo Delete Element element = %p, parent = %p\n", this, mElement.get(), mParent.get()); }
   if (!mParent  ||  !mElement)
     return NS_ERROR_NULL_POINTER;
+
+#ifdef NS_DEBUG
+  // begin debug output
+  nsCOMPtr<nsIDOMElement> element;
+  element = do_QueryInterface(mElement);
+  nsAutoString elementTag="text node";
+  if (element)
+    element->GetTagName(elementTag);
+  nsCOMPtr<nsIDOMElement> parentElement;
+  parentElement = do_QueryInterface(mParent);
+  nsAutoString parentElementTag="text node";
+  if (parentElement)
+    parentElement->GetTagName(parentElementTag);
+  char *c, *p;
+  c = elementTag.ToNewCString();
+  p = parentElementTag.ToNewCString();
+  if (c&&p)
+  {
+    if (gNoisy)
+      printf("  DeleteElementTxn:  inserting child %s back into parent %s\n", c, p); 
+    delete [] c;
+    delete [] p;
+  }
+  // end debug output
+#endif
 
   nsCOMPtr<nsIDOMNode> resultNode;
   nsresult result = mParent->InsertBefore(mElement, mRefNode, getter_AddRefs(resultNode));
@@ -108,7 +133,7 @@ NS_IMETHODIMP DeleteElementTxn::Undo(void)
 
 NS_IMETHODIMP DeleteElementTxn::Redo(void)
 {
-  if (gNoisy) { printf("Redo Delete Element\n"); }
+  if (gNoisy) { printf("%p Redo Delete Element element = %p, parent = %p\n", this, mElement.get(), mParent.get()); }
   if (!mParent  ||  !mElement)
     return NS_ERROR_NULL_POINTER;
 

@@ -310,7 +310,18 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           aProcessed=PR_TRUE;
           if (mEditor)
           {
-            mEditor->SetTextProperty(nsIEditProperty::i);
+            // XXX: move this logic down into texteditor rules delegate
+            //      should just call mEditor->ChangeTextProperty(prop)
+            PRBool any = PR_FALSE;
+            PRBool all = PR_FALSE;
+            PRBool first = PR_FALSE;
+            mEditor->GetTextProperty(nsIEditProperty::i, first, any, all);
+            if (PR_FALSE==first) {
+              mEditor->SetTextProperty(nsIEditProperty::i);
+            }
+            else {
+              mEditor->RemoveTextProperty(nsIEditProperty::i);
+            }
           }
         }
 
@@ -336,7 +347,18 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           aProcessed=PR_TRUE;
           if (mEditor)
           {
-            mEditor->SetTextProperty(nsIEditProperty::b);
+            // XXX: move this logic down into texteditor rules delegate
+            //      should just call mEditor->ChangeTextProperty(prop)
+            PRBool any = PR_FALSE;
+            PRBool all = PR_FALSE;
+            PRBool first = PR_FALSE;
+            mEditor->GetTextProperty(nsIEditProperty::b, first, any, all);
+            if (PR_FALSE==first) {
+              mEditor->SetTextProperty(nsIEditProperty::b);
+            }
+            else {
+              mEditor->RemoveTextProperty(nsIEditProperty::b);
+            }
           }
         }
         break;
@@ -348,7 +370,19 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           aProcessed=PR_TRUE;
           if (mEditor)
           {
-            mEditor->SetTextProperty(nsIEditProperty::u);
+            // XXX: move this logic down into texteditor rules delegate
+            //      should just call mEditor->ChangeTextProperty(prop)
+            PRBool any = PR_FALSE;
+            PRBool all = PR_FALSE;
+            PRBool first = PR_FALSE;
+            mEditor->GetTextProperty(nsIEditProperty::u, first, any, all);
+            if (PR_FALSE==first) {
+              mEditor->SetTextProperty(nsIEditProperty::u);
+            }
+            else {
+              mEditor->RemoveTextProperty(nsIEditProperty::u);
+            }
+
           }
         }
         break;

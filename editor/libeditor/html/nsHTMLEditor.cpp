@@ -113,9 +113,9 @@ NS_IMETHODIMP nsHTMLEditor::SetTextProperty(nsIAtom *aProperty)
   return nsTextEditor::SetTextProperty(aProperty);
 }
 
-NS_IMETHODIMP nsHTMLEditor::GetTextProperty(nsIAtom *aProperty, PRBool &aAny, PRBool &aAll)
+NS_IMETHODIMP nsHTMLEditor::GetTextProperty(nsIAtom *aProperty, PRBool &aFirst, PRBool &aAny, PRBool &aAll)
 {
-  return nsTextEditor::GetTextProperty(aProperty, aAny, aAll);
+  return nsTextEditor::GetTextProperty(aProperty, aFirst, aAny, aAll);
 }
 
 NS_IMETHODIMP nsHTMLEditor::RemoveTextProperty(nsIAtom *aProperty)
