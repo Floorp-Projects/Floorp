@@ -61,14 +61,5 @@
         </treeitem>
       </treechildren>
     </template>
-
-    <!-- remove the TREEHEAD when bug 9923 is fixed. -->
-    <treehead>
-      <treerow>
-        <treecell/>
-        <treecell/>
-        <treecell/>
-      </treerow>
-    </treehead>
   </tree>
 </window>
