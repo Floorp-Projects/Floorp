@@ -430,7 +430,8 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
       if(mTitlePreface.Length() > 0)
          {
          // Title will be: "Preface: Doc Title - Mozilla"
-         title = mTitlePreface + docTitle;
+         title = mTitlePreface;
+         title.Append(docTitle);
          }
       else 
          {

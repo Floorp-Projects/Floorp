@@ -545,7 +545,7 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
      if (NS_SUCCEEDED(prevShell->GetCurrentURI(getter_AddRefs(pURI))) && pURI) {
        nsXPIDLCString spec;
        if (NS_SUCCEEDED(pURI->GetSpec(getter_Copies(spec))))
-         pSURL = spec;
+         pSURL.Assign(spec);
      }
    }
 
@@ -556,7 +556,7 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
      
    //Compare the URLs
    {
-     if ((pSURL) == cURL)
+     if ((pSURL).Equals(cURL))
        urlChanged = PR_FALSE;
      else
        urlChanged = PR_TRUE;
@@ -689,7 +689,7 @@ nsHistoryEntry::Compare(nsIWebShell * aPrevEntry, PRBool aIsReload) {
      if (NS_SUCCEEDED(prevShell->GetCurrentURI(getter_AddRefs(pURI)))) {
        nsXPIDLCString spec;
        if (NS_SUCCEEDED(pURI->GetSpec(getter_Copies(spec))))
-         pSURL = spec;
+         pSURL.Assign(spec);
      }
    }
    if (cur) {
@@ -698,7 +698,7 @@ nsHistoryEntry::Compare(nsIWebShell * aPrevEntry, PRBool aIsReload) {
    }
    //Compare the URLs
    {
-     if (pSURL == cURL)
+     if (pSURL.Equals(cURL))
        urlChanged = PR_FALSE;
      else
        urlChanged = PR_TRUE;

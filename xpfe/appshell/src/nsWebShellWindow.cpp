@@ -739,16 +739,16 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
 	    keyElement->GetAttribute(altAtom, altValue);
 	    keyElement->GetAttribute(commandAtom, commandValue);
 	    
-	    if(keyChar != " ")
+	    if(!keyChar.Equals(" "))
 	      pnsMenuItem->SetShortcutChar(keyChar);
 	      
-	    if(shiftValue == "true")
+	    if(shiftValue.Equals("true"))
 	      modifiers |= knsMenuItemShiftModifier;
 	    
-	    if(altValue == "true")
+	    if(altValue.Equals("true"))
 	      modifiers |= knsMenuItemAltModifier;
 	    
-	    if(commandValue == "false")
+	    if(commandValue.Equals("false"))
 	     modifiers |= knsMenuItemCommandModifier;
 	      
         pnsMenuItem->SetModifiers(modifiers);

@@ -438,7 +438,7 @@ NS_IMETHODIMP  nsWindowMediator::UpdateWindowTitle( nsIXULWindow* inWindow, cons
  			GetAttribute( inWindow, typeAttrib, displayString );
  			displayString.ToLowerCase();
  			
-			if ( displayString=="false" )
+			if ( displayString.Equals("false") )
 				display=PR_FALSE;
 				
 			rv = Assert( window , kNC_Name, newTitle, display );
