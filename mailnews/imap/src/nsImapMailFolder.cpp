@@ -2832,6 +2832,7 @@ NS_IMETHODIMP nsImapMailFolder::ReplayOfflineMoveCopy(nsMsgKey *msgKeys, PRInt32
   nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
   if (NS_SUCCEEDED(rv))
   {
+    nsCOMPtr <nsIURI> resultUrl;
     nsCAutoString uids;
     AllocateUidStringFromKeys(msgKeys, numKeys, uids);
     rv = imapService->OnlineMessageCopy(m_eventQueue, 
@@ -2841,8 +2842,17 @@ NS_IMETHODIMP nsImapMailFolder::ReplayOfflineMoveCopy(nsMsgKey *msgKeys, PRInt32
                          PR_TRUE,
                          isMove,
                          aUrlListener,
-                         nsnull, nsnull, aWindow);
-
+                         getter_AddRefs(resultUrl), nsnull, aWindow);
+    if (resultUrl)
+    {
+      nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(resultUrl);
+      if (mailnewsUrl)
+      {
+        nsCOMPtr <nsIUrlListener> folderListener = do_QueryInterface(aDstFolder);
+        if (folderListener)
+          mailnewsUrl->RegisterListener(folderListener);
+      }
+    }
   }
   return rv;
 }
@@ -3079,6 +3089,15 @@ void nsImapMailFolder::FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKey
       NS_ASSERTION(uidOfMessage != nsMsgKey_None, "got invalid msg key");
       if (uidOfMessage != nsMsgKey_None && (showDeletedMessages || ! (flags & kImapMsgDeletedFlag)))
       {
+        if (mDatabase)
+        {
+          PRBool dbContainsKey;
+          if (NS_SUCCEEDED(mDatabase->ContainsKey(uidOfMessage, &dbContainsKey)) && dbContainsKey)
+          {
+            NS_ASSERTION(PR_FALSE, "db has key - flagState messed up?");
+            continue;
+          }
+        }
         keysToFetch.Add(uidOfMessage);
       }
     }
@@ -3795,14 +3814,17 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
         case nsIImapUrl::nsImapDeleteMsg:
         case nsIImapUrl::nsImapOnlineMove:
         case nsIImapUrl::nsImapOnlineCopy:
-          if (m_copyState)
+          if (NS_SUCCEEDED(aExitCode))
           {
-            if (NS_SUCCEEDED(aExitCode))
-            {
               if (folderOpen)
                 UpdateFolder(aWindow);
               else
                 UpdatePendingCounts(PR_TRUE, PR_FALSE);
+          }
+          if (m_copyState)
+          {
+            if (NS_SUCCEEDED(aExitCode))
+            {
               if (m_copyState->m_isMove && !m_copyState->m_isCrossServerOp)
               {
                 nsCOMPtr<nsIMsgFolder> srcFolder;
