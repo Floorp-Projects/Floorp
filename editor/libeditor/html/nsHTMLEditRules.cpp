@@ -719,7 +719,7 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
 
   PRBool useCSS;
   mHTMLEditor->IsCSSEnabled(&useCSS);
-  nsAutoString typeAttrName(NS_LITERAL_STRING("align"));
+  NS_NAMED_LITERAL_STRING(typeAttrName, "align");
   nsIAtom  *dummyProperty = nsnull;
   if (useCSS && mHTMLEditor->mHTMLCSSUtils->IsCSSEditableProperty(nodeToExamine, dummyProperty, &typeAttrName))
   {
@@ -775,7 +775,7 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
       if (elem)
       {
         nsAutoString typeAttrVal;
-        res = elem->GetAttribute(typeAttrName, typeAttrVal);
+        res = elem->GetAttribute(NS_LITERAL_STRING("align"), typeAttrVal);
         ToLowerCase(typeAttrVal);
         if (NS_SUCCEEDED(res) && typeAttrVal.Length())
         {
@@ -1083,11 +1083,13 @@ nsHTMLEditRules::WillInsert(nsISelection *aSelection, PRBool *aCancel)
   return CreateStyleForInsertText(aSelection, doc);
 }    
 
+#ifdef XXX_DEAD_CODE
 nsresult
 nsHTMLEditRules::DidInsert(nsISelection *aSelection, nsresult aResult)
 {
   return nsTextEditRules::DidInsert(aSelection, aResult);
 }
+#endif
 
 nsresult
 nsHTMLEditRules::WillInsertText(PRInt32          aAction,
@@ -1144,8 +1146,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
   if (NS_FAILED(res)) return res;
 
   // dont put text in places that cant have it
-  nsAutoString textTag(NS_LITERAL_STRING("__moz_text"));
-  if (!mHTMLEditor->IsTextNode(selNode) && !mHTMLEditor->CanContainTag(selNode, textTag))
+  if (!mHTMLEditor->IsTextNode(selNode) && !mHTMLEditor->CanContainTag(selNode, NS_LITERAL_STRING("__moz_text")))
     return NS_ERROR_FAILURE;
 
   // we need to get the doc
@@ -1193,13 +1194,13 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     const PRUnichar *unicodeBuf = tString.get();
     nsCOMPtr<nsIDOMNode> unused;
     PRInt32 pos = 0;
+    NS_NAMED_LITERAL_STRING(newlineStr, "\n");
         
     // for efficiency, break out the pre case seperately.  This is because
     // its a lot cheaper to search the input string for only newlines than
     // it is to search for both tabs and newlines.
     if (isPRE || bPlaintext)
     {
-      NS_NAMED_LITERAL_STRING(newlineStr, "\n");
       char newlineChar = '\n';
       while (unicodeBuf && (pos != -1) && (pos < (PRInt32)(*inString).Length()))
       {
@@ -1238,9 +1239,8 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     else
     {
       NS_NAMED_LITERAL_STRING(tabStr, "\t");
-      NS_NAMED_LITERAL_STRING(newlineStr, "\n");
+      NS_NAMED_LITERAL_STRING(spacesStr, "    ");
       char specialChars[] = {'\t','\n',0};
-      nsAutoString tabString(NS_LITERAL_STRING("    "));
       while (unicodeBuf && (pos != -1) && (pos < (PRInt32)inString->Length()))
       {
         PRInt32 oldPos = pos;
@@ -1261,13 +1261,12 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
         }
 
         nsDependentSubstring subStr(tString, oldPos, subStrLen);
-        
         nsWSRunObject wsObj(mHTMLEditor, curNode, curOffset);
-        
+
         // is it a tab?
         if (subStr.Equals(tabStr))
         {
-          res = wsObj.InsertText(tabString, address_of(curNode), &curOffset, doc);
+          res = wsObj.InsertText(spacesStr, address_of(curNode), &curOffset, doc);
           if (NS_FAILED(res)) return res;
           pos++;
         }
@@ -2643,11 +2642,12 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
         }
       }
       nsCOMPtr<nsIDOMElement> curElement = do_QueryInterface(curNode);
+      NS_NAMED_LITERAL_STRING(typestr, "type");
       if (aBulletType && !aBulletType->IsEmpty()) {
-        res = mHTMLEditor->SetAttribute(curElement, NS_ConvertASCIItoUCS2("type"), *aBulletType);
+        res = mHTMLEditor->SetAttribute(curElement, typestr, *aBulletType);
       }
       else {
-        res = mHTMLEditor->RemoveAttribute(curElement, NS_LITERAL_STRING("type"));
+        res = mHTMLEditor->RemoveAttribute(curElement, typestr);
       }
       if (NS_FAILED(res)) return res;
       continue;
@@ -2788,7 +2788,7 @@ nsHTMLEditRules::WillMakeDefListItem(nsISelection *aSelection,
                                      PRBool *aHandled)
 {
   // for now we let WillMakeList handle this
-  nsAutoString listType(NS_LITERAL_STRING("dl"));
+  NS_NAMED_LITERAL_STRING(listType, "dl");
   return WillMakeList(aSelection, &listType, aEntireList, nsnull, aCancel, aHandled, aItemType);
 }
 
@@ -3017,6 +3017,7 @@ nsHTMLEditRules::WillCSSIndent(nsISelection *aSelection, PRBool *aCancel, PRBool
     if (NS_FAILED(res)) return res;
   }
   
+  NS_NAMED_LITERAL_STRING(quoteType, "blockquote");
   // if nothing visible in list, make an empty block
   if (ListIsEmptyLine(arrayOfNodes))
   {
@@ -3110,10 +3111,10 @@ nsHTMLEditRules::WillCSSIndent(nsISelection *aSelection, PRBool *aCancel, PRBool
       else {
         if (!curQuote) // || transitionList[i])
         {
-          nsAutoString quoteType; quoteType.Assign(NS_LITERAL_STRING("div"));
-          res = SplitAsNeeded(&quoteType, address_of(curParent), &offset);
+          NS_NAMED_LITERAL_STRING(divquoteType, "div");
+          res = SplitAsNeeded(&divquoteType, address_of(curParent), &offset);
           if (NS_FAILED(res)) return res;
-          res = mHTMLEditor->CreateNode(quoteType, curParent, offset, getter_AddRefs(curQuote));
+          res = mHTMLEditor->CreateNode(divquoteType, curParent, offset, getter_AddRefs(curQuote));
           if (NS_FAILED(res)) return res;
           RelativeChangeIndentation(curQuote, +1);
           // remember our new block for postprocessing
@@ -3162,12 +3163,13 @@ nsHTMLEditRules::WillHTMLIndent(nsISelection *aSelection, PRBool *aCancel, PRBoo
   res = GetNodesForOperation(arrayOfRanges, address_of(arrayOfNodes), kIndent);
   if (NS_FAILED(res)) return res;                                 
                                      
+  NS_NAMED_LITERAL_STRING(quoteType, "blockquote");
+
   // if nothing visible in list, make an empty block
   if (ListIsEmptyLine(arrayOfNodes))
   {
     nsCOMPtr<nsIDOMNode> parent, theBlock;
     PRInt32 offset;
-    nsAutoString quoteType(NS_LITERAL_STRING("blockquote"));
     
     // get selection location
     res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(parent), &offset);
@@ -3288,7 +3290,6 @@ nsHTMLEditRules::WillHTMLIndent(nsISelection *aSelection, PRBool *aCancel, PRBoo
         // or if this node doesn't go in blockquote we used earlier.
         if (!curQuote) 
         {
-          nsAutoString quoteType(NS_LITERAL_STRING("blockquote"));
           res = SplitAsNeeded(&quoteType, address_of(curParent), &offset);
           if (NS_FAILED(res)) return res;
           res = mHTMLEditor->CreateNode(quoteType, curParent, offset, getter_AddRefs(curQuote));
@@ -3861,7 +3862,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
   {
     PRInt32 offset;
     nsCOMPtr<nsIDOMNode> brNode, parent, theDiv, sib;
-    nsAutoString divType(NS_LITERAL_STRING("div"));
+    NS_NAMED_LITERAL_STRING(divType, "div");
     res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(parent), &offset);
     if (NS_FAILED(res)) return res;
     res = SplitAsNeeded(&divType, address_of(parent), &offset);
@@ -3954,7 +3955,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
       if (useCSS) {
         RemoveAlignment(curNode, *alignType, PR_TRUE);
         nsCOMPtr<nsIDOMElement> curElem = do_QueryInterface(curNode);
-        nsAutoString attrName(NS_LITERAL_STRING("align"));
+        NS_NAMED_LITERAL_STRING(attrName, "align");
         PRInt32 count;
         mHTMLEditor->mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(curNode, nsnull,
                                                    &attrName, alignType, &count);
@@ -3976,7 +3977,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
     // or if this node doesn't go in div we used earlier.
     if (!curDiv || transitionList[i])
     {
-      nsAutoString divType(NS_LITERAL_STRING("div"));
+      NS_NAMED_LITERAL_STRING(divType, "div");
       res = SplitAsNeeded(&divType, address_of(curParent), &offset);
       if (NS_FAILED(res)) return res;
       res = mHTMLEditor->CreateNode(divType, curParent, offset, getter_AddRefs(curDiv));
@@ -4056,7 +4057,7 @@ nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAReadableString *
   if (NS_FAILED(res)) return res;
   res = mHTMLEditor->GetLastEditableChild(aNode, address_of(lastChild));
   if (NS_FAILED(res)) return res;
-  nsAutoString attr(NS_LITERAL_STRING("align"));
+  NS_NAMED_LITERAL_STRING(attr, "align");
   if (!firstChild)
   {
     // this cell has no content, nothing to align
@@ -4079,8 +4080,7 @@ nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAReadableString *
   else
   {
     // else we need to put in a div, set the alignment, and toss in all the children
-    nsAutoString divType(NS_LITERAL_STRING("div"));
-    res = mHTMLEditor->CreateNode(divType, aNode, 0, getter_AddRefs(divNode));
+    res = mHTMLEditor->CreateNode(NS_LITERAL_STRING("div"), aNode, 0, getter_AddRefs(divNode));
     if (NS_FAILED(res)) return res;
     // set up the alignment on the div
     nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(divNode);
@@ -4340,6 +4340,7 @@ nsHTMLEditRules::IsLastNode(nsIDOMNode *aNode)
 }
 
 
+#ifdef XXX_DEAD_CODE
 ///////////////////////////////////////////////////////////////////////////
 // AtStartOfBlock: is node/offset at the start of the editable material in this block?
 //                  
@@ -4382,8 +4383,6 @@ nsHTMLEditRules::AtEndOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aB
 }
 
 
-// not needed at moment - leaving around in case we go back to it.
-#if 0
 ///////////////////////////////////////////////////////////////////////////
 // CreateMozDiv: makes a div with type = _moz
 //                       
@@ -5382,41 +5381,6 @@ nsHTMLEditRules::MakeTransitionList(nsISupportsArray *inArrayOfNodes,
  ********************************************************/
  
 ///////////////////////////////////////////////////////////////////////////
-// InsertTab: top level logic for determining how to insert a tab
-//                       
-nsresult 
-nsHTMLEditRules::InsertTab(nsISelection *aSelection, 
-                           nsAWritableString *outString)
-{
-  nsCOMPtr<nsIDOMNode> parentNode;
-  PRInt32 offset;
-  PRBool isPRE;
-  
-  nsresult res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(parentNode), &offset);
-  if (NS_FAILED(res)) return res;
-  
-  if (!parentNode) return NS_ERROR_FAILURE;
-    
-  res = mHTMLEditor->IsPreformatted(parentNode, &isPRE);
-  if (NS_FAILED(res)) return res;
-    
-  if (isPRE)
-  {
-    outString->Assign(PRUnichar('\t'));
-  }
-  else
-  {
-    // number of spaces should be a pref?
-    // note that we dont play around with nbsps here anymore.  
-    // let the AfterEdit whitespace cleanup code handle it.
-    outString->Assign(NS_LITERAL_STRING("    "));
-  }
-  
-  return NS_OK;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
 // IsInListItem: if aNode is the descendant of a listitem, return that li.
 //               But table element boundaries are stoppers on the search.
 //               Also test if aNode is an li itself.
@@ -5827,7 +5791,7 @@ nsHTMLEditRules::MakeBlockquote(nsISupportsArray *arrayOfNodes)
     // if no curBlock, make one
     if (!curBlock)
     {
-      nsAutoString quoteType(NS_LITERAL_STRING("blockquote"));
+      NS_NAMED_LITERAL_STRING(quoteType, "blockquote");
       res = SplitAsNeeded(&quoteType, address_of(curParent), &offset);
       if (NS_FAILED(res)) return res;
       res = mHTMLEditor->CreateNode(quoteType, curParent, offset, getter_AddRefs(curBlock));
@@ -6950,149 +6914,6 @@ nsHTMLEditRules::ListIsEmptyLine(nsISupportsArray *arrayOfNodes)
 
 
 nsresult 
-nsHTMLEditRules::DoTextNodeWhitespace(nsIDOMCharacterData *aTextNode, PRInt32 aStart, PRInt32 aEnd)
-{
-  // check parms
-  if (!aTextNode) return NS_ERROR_NULL_POINTER;
-  if (aStart == -1)  // -1 means do the whole darn node please
-  {
-    aStart = 0;
-    aTextNode->GetLength((PRUint32*)&aEnd);
-  }
-  if (aStart == aEnd) return NS_OK;
-  
-  nsresult res = NS_OK;
-  PRBool isPRE;
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aTextNode);
-  
-  res = mHTMLEditor->IsPreformatted(node,&isPRE);
-  if (NS_FAILED(res)) return res;
-    
-  if (isPRE)
-  {
-    // text node has a Preformatted style. All we need to do is strip out any nbsp's 
-    // we just put in and replace them with spaces.
-  
-    // moose: write me!
-    return res;
-  }
-  
-  // else we are not preformatted.  Need to convert any adjacent spaces to alterating
-  // space/nbsp pairs; need to convert stranded nbsp's to spaces; need to convert
-  // tabs to whitespace; need to convert returns to whitespace.
-  PRInt32 j = 0;
-  nsAutoString tempString;
-
-  aTextNode->SubstringData(aStart, aEnd, tempString);
-  
-  // identify runs of whitespace
-  PRInt32 runStart = -1, runEnd = -1;
-  do {
-    PRUnichar c = tempString[j];
-    PRBool isSpace = nsCRT::IsAsciiSpace(c);
-    if (isSpace || c==nbsp)
-    {
-      if (runStart<0) runStart = j;
-      runEnd = j+1;
-    }
-    // translation of below line:
-    // if we have a whitespace run, AND
-    // either we are at the end of it, or the end of the whole string,
-    // THEN process it
-    if (runStart>=0 && (!(isSpace || c==nbsp)  ||  (j==aEnd-1)) )
-    {
-      // current char is non whitespace, but we have identified an earlier
-      // run of whitespace.  convert it if needed.
-      NS_PRECONDITION(runEnd>runStart, "this is what happens when integers turn bad!");
-      // runStart to runEnd is a run of whitespace
-      nsAutoString runStr, newStr;
-      tempString.Mid(runStr, runStart, runEnd-runStart);
-      
-      res = ConvertWhitespace(runStr, newStr);
-      if (NS_FAILED(res)) return res;
-      
-      if (runStr != newStr)
-      {
-        // delete the original whitespace run
-        EditTxn *txn;
-        // note 1: we are not telling edit listeners about these because they don't care
-        // note 2: we are not wrapping these in a placeholder because we know they already are
-        res = mHTMLEditor->CreateTxnForDeleteText(aTextNode, aStart+runStart, runEnd-runStart, (DeleteTextTxn**)&txn);
-        if (NS_FAILED(res))  return res; 
-        if (!txn)  return NS_ERROR_OUT_OF_MEMORY;
-        res = mHTMLEditor->Do(txn); 
-        if (NS_FAILED(res))  return res; 
-        // The transaction system (if any) has taken ownwership of txn
-        NS_IF_RELEASE(txn);
-        
-        // insert the new run
-        res = mHTMLEditor->CreateTxnForInsertText(newStr, aTextNode, aStart+runStart, (InsertTextTxn**)&txn);
-        if (NS_FAILED(res))  return res; 
-        if (!txn)  return NS_ERROR_OUT_OF_MEMORY;
-        res = mHTMLEditor->Do(txn);
-        // The transaction system (if any) has taken ownwership of txns.
-        NS_IF_RELEASE(txn);
-      } 
-      runStart = -1; // reset our run     
-    }
-    j++; // next char please!
-  } while ((PRUint32)j < tempString.Length());
-
-  return res;
-}
-
-
-nsresult 
-nsHTMLEditRules::ConvertWhitespace(const nsAReadableString & inString, nsAWritableString & outString)
-{
-  PRUint32 j,len = inString.Length();
-  nsReadingIterator <PRUnichar> iter;
-  inString.BeginReading(iter);
-  switch (len)
-  {
-    case 0:
-      outString.SetLength(0);
-      return NS_OK;
-    case 1:
-      if (*iter == '\n')   // a bit of a hack: don't convert single newlines that 
-        outString.Assign(NS_LITERAL_STRING("\n"));     // dont have whitespace adjacent.  This is to preserve 
-      else                    // html source formatting to some degree.
-        outString.Assign(NS_LITERAL_STRING(" "));
-      return NS_OK;
-    case 2:
-      outString.Assign(PRUnichar(nbsp));
-      outString.Append(NS_LITERAL_STRING(" "));
-      return NS_OK;
-    case 3:
-      outString.Assign(NS_LITERAL_STRING(" "));
-      outString += PRUnichar(nbsp);
-      outString.Append(NS_LITERAL_STRING(" "));
-      return NS_OK;
-  }
-  if (len%2)  // length is odd
-  {
-    for (j=0;j<len;j++)
-    {
-      if (!(j & 0x01)) outString.Append(NS_LITERAL_STRING(" "));      // even char
-      else outString += PRUnichar(nbsp); // odd char
-    }
-  }
-  else
-  {
-    outString.Assign(NS_LITERAL_STRING(" "));
-    outString += PRUnichar(nbsp);
-    outString += PRUnichar(nbsp);
-    for (j=0;j<len-3;j++)
-    {
-      if (!(j%2)) outString.Append(NS_LITERAL_STRING(" "));      // even char
-      else outString += PRUnichar(nbsp); // odd char
-    }
-  }  
-  return NS_OK;
-}
-
-
-nsresult 
 nsHTMLEditRules::PopListItem(nsIDOMNode *aListItem, PRBool *aOutOfList)
 {
   // check parms
@@ -7703,7 +7524,7 @@ nsHTMLEditRules::AlignBlock(nsIDOMElement * aElement, const nsAReadableString * 
   }
 
   RemoveAlignment(node, *aAlignType, aContentsOnly);
-  nsAutoString attr(NS_LITERAL_STRING("align"));
+  NS_NAMED_LITERAL_STRING(attr, "align");
   PRBool useCSS;
   nsresult res;
   mHTMLEditor->IsCSSEnabled(&useCSS);

@@ -1317,7 +1317,7 @@ NS_IMETHODIMP nsHTMLEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent,
   nsCOMPtr<nsIDOMNode> node = *aInOutParent;
   PRInt32 theOffset = *aInOutOffset;
   nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(node);
-  nsAutoString brType(NS_LITERAL_STRING("br"));
+  NS_NAMED_LITERAL_STRING(brType, "br");
   nsCOMPtr<nsIDOMNode> brNode;
   if (nodeAsText)  
   {
@@ -1553,12 +1553,11 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAReadableString& aSourceToInse
 
   // Do not use nsAutoRules -- rules code won't let us insert in <head>
   // Use the head node as a parent and delete/insert directly
-  nsCOMPtr<nsIDOMNodeList>nodeList; 
-  nsAutoString headTag(NS_LITERAL_STRING("head")); 
-
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
-  res = doc->GetElementsByTagName(headTag, getter_AddRefs(nodeList));
+
+  nsCOMPtr<nsIDOMNodeList>nodeList; 
+  res = doc->GetElementsByTagName(NS_LITERAL_STRING("head"), getter_AddRefs(nodeList));
   if (NS_FAILED(res)) return res;
   if (!nodeList) return NS_ERROR_NULL_POINTER;
 
@@ -2283,7 +2282,7 @@ nsHTMLEditor::GetHTMLBackgroundColorState(PRBool *aMixed, nsAWritableString &aOu
   nsresult res = GetSelectedOrParentTableElement(*getter_AddRefs(element), tagName, selectedCount);
   if (NS_FAILED(res)) return res;
 
-  nsAutoString styleName(NS_LITERAL_STRING("bgcolor"));
+  NS_NAMED_LITERAL_STRING(styleName, "bgcolor"); 
 
   while (element)
   {
@@ -2426,9 +2425,8 @@ nsHTMLEditor::MakeOrChangeList(const nsAReadableString& aListType, PRBool entire
       res = CreateNode(aListType, parent, offset, getter_AddRefs(newList));
       if (NS_FAILED(res)) return res;
       // make a list item
-      nsAutoString tag(NS_LITERAL_STRING("li"));
       nsCOMPtr<nsIDOMNode> newItem;
-      res = CreateNode(tag, newList, 0, getter_AddRefs(newItem));
+      res = CreateNode(NS_LITERAL_STRING("li"), newList, 0, getter_AddRefs(newItem));
       if (NS_FAILED(res)) return res;
       res = selection->Collapse(newItem,0);
       if (NS_FAILED(res)) return res;
@@ -2612,8 +2610,7 @@ nsHTMLEditor::Indent(const nsAReadableString& aIndent)
     if (!node) res = NS_ERROR_FAILURE;
     if (NS_FAILED(res)) return res;
   
-    nsAutoString inward(NS_LITERAL_STRING("indent"));
-    if (aIndent == inward)
+    if (aIndent == NS_LITERAL_STRING("indent"))
     {
       if (isCollapsed)
       {
@@ -2621,7 +2618,7 @@ nsHTMLEditor::Indent(const nsAReadableString& aIndent)
         nsCOMPtr<nsIDOMNode> parent = node;
         nsCOMPtr<nsIDOMNode> topChild = node;
         nsCOMPtr<nsIDOMNode> tmp;
-        nsAutoString bq(NS_LITERAL_STRING("blockquote"));
+        NS_NAMED_LITERAL_STRING(bq, "blockquote");
         while ( !CanContainTag(parent, bq))
         {
           parent->GetParentNode(getter_AddRefs(tmp));
@@ -3212,6 +3209,7 @@ nsHTMLEditor::SetHTMLBackgroundColor(const nsAReadableString& aColor)
 
   PRBool setColor = (aColor.Length() > 0);
 
+  NS_NAMED_LITERAL_STRING(bgcolor, "bgcolor");
   if (element)
   {
     if (selectedCount > 0)
@@ -3224,9 +3222,9 @@ nsHTMLEditor::SetHTMLBackgroundColor(const nsAReadableString& aColor)
         while(cell)
         {
           if (setColor)
-            res = SetAttribute(cell, NS_LITERAL_STRING("bgcolor"), aColor);
+            res = SetAttribute(cell, bgcolor, aColor);
           else
-            res = RemoveAttribute(cell, NS_LITERAL_STRING("bgcolor"));
+            res = RemoveAttribute(cell, bgcolor);
           if (NS_FAILED(res)) break;
 
           GetNextSelectedCell(getter_AddRefs(cell), nsnull);
@@ -3243,9 +3241,9 @@ nsHTMLEditor::SetHTMLBackgroundColor(const nsAReadableString& aColor)
   }
   // Use the editor method that goes through the transaction system
   if (setColor)
-    res = SetAttribute(element, NS_LITERAL_STRING("bgcolor"), aColor);
+    res = SetAttribute(element, bgcolor, aColor);
   else
-    res = RemoveAttribute(element, NS_LITERAL_STRING("bgcolor"));
+    res = RemoveAttribute(element, bgcolor);
 
   return res;
 }
@@ -3593,12 +3591,11 @@ static nsresult SetSelectionAroundHeadChildren(nsCOMPtr<nsISelection> aSelection
 {
   nsresult res = NS_OK;
   // Set selection around <head> node
-  nsCOMPtr<nsIDOMNodeList>nodeList; 
-  nsAutoString headTag(NS_LITERAL_STRING("head")); 
-
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(aDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
-  res = doc->GetElementsByTagName(headTag, getter_AddRefs(nodeList));
+
+  nsCOMPtr<nsIDOMNodeList>nodeList; 
+  res = doc->GetElementsByTagName(NS_LITERAL_STRING("head"), getter_AddRefs(nodeList));
   if (NS_FAILED(res)) return res;
   if (!nodeList) return NS_ERROR_NULL_POINTER;
 
@@ -4204,17 +4201,6 @@ nsHTMLEditor::GetEnclosingTable(nsIDOMNode *aNode)
 #pragma mark -
 #endif
 
-void nsHTMLEditor::CacheInlineStyles(nsIDOMNode *aNode)
-{
-  if (!aNode) return;
-  nsCOMPtr<nsIDOMNode> resultNode;
-  mCachedNode = do_QueryInterface(aNode);
-  IsTextPropertySetByContent(aNode, mBoldAtom, 0, 0, mCachedBoldStyle, getter_AddRefs(resultNode));
-  IsTextPropertySetByContent(aNode, mItalicAtom, 0, 0, mCachedItalicStyle, getter_AddRefs(resultNode));
-  IsTextPropertySetByContent(aNode, mUnderlineAtom, 0, 0, mCachedUnderlineStyle, getter_AddRefs(resultNode));
-  
-}
-
 void nsHTMLEditor::ClearInlineStylesCache()
 {
   mCachedNode = nsnull;
@@ -4774,6 +4760,8 @@ nsHTMLEditor::GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOu
   return res;
 }
 
+// jfrancis or glazman may want to use this method (currently it's unused)
+#ifdef XXX_DEAD_CODE
 nsresult 
 nsHTMLEditor::GetFirstEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstLeaf)
 {
@@ -4808,6 +4796,7 @@ nsHTMLEditor::GetFirstEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOu
 }
 
 
+// jfrancis or glazman may want to use this method (currently it's unused)
 nsresult 
 nsHTMLEditor::GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastLeaf)
 {
@@ -4840,6 +4829,7 @@ nsHTMLEditor::GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOut
   *aOutLastLeaf = child;
   return res;
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // IsEmptyNode: figure out if aNode is an empty node.
