@@ -79,7 +79,8 @@
 #include "nsIServiceManager.h"
 #include "nsGUIEvent.h"
 
-#define DEBUG_SLIDER PR_FALSE
+// Turn this on if you want to debug slider frames.
+#undef DEBUG_SLIDER
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -448,11 +449,11 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 
   SyncLayout(aState);
 
-  if (DEBUG_SLIDER) {
-     PRInt32 c = GetCurrentPosition(scrollbar);
-     PRInt32 m = GetMaxPosition(scrollbar);
-     printf("Current=%d, max=%d\n",c,m);
-  }
+#ifdef DEBUG_SLIDER
+  PRInt32 c = GetCurrentPosition(scrollbar);
+  PRInt32 m = GetMaxPosition(scrollbar);
+  printf("Current=%d, max=%d\n", c, m);
+#endif
 
   // redraw only if thumb changed size.
   if (oldThumbRect != thumbRect)
@@ -888,8 +889,9 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
   // set the new position
   scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, NS_ConvertASCIItoUCS2(ch), PR_TRUE);
 
-  if (DEBUG_SLIDER)
-     printf("Current Pos=%s\n",ch);
+#ifdef DEBUG_SLIDER
+  printf("Current Pos=%s\n",ch);
+#endif
 
 }
 
