@@ -444,6 +444,7 @@ sub AddToDatabase {
           # Clean up a few variables...
           $branch =~ s/^T//;
           $dir =~ s!/$!!;
+          $dir =~ s!^\./!!;
           $addlines = 0 if ($addlines =~ /^\s*$/);
           $removelines = 0 if ($removelines =~ /^\s*$/);
           $removelines = abs($removelines);
