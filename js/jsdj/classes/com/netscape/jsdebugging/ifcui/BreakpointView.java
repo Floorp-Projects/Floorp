@@ -26,7 +26,7 @@ import java.util.Observable;
 import java.util.Observer;
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import com.netscape.jsdebugging.ifcui.palomar.widget.layout.*;
 
 public class BreakpointView 
@@ -49,8 +49,8 @@ public class BreakpointView
         _breakpointTyrant = emperor.getBreakpointTyrant();
         _commandTyrant = emperor.getCommandTyrant();
 
-        if(ASS)ER.T(null!=_breakpointTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_commandTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_breakpointTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_commandTyrant,"emperor init order problem", this);
 
         _breakpointTyrant.addObserver(this);
 
@@ -307,7 +307,7 @@ public class BreakpointView
 
     public boolean editBreakpoint( Breakpoint bp )
     {
-        if(ASS)ER.T(null!=bp,"null Breakpoint", this);
+        if(AS.S)ER.T(null!=bp,"null Breakpoint", this);
 
         String condition = bp.getBreakCondition();
         if( null == condition )
@@ -373,8 +373,6 @@ public class BreakpointView
     private static final String EDIT_CMD  = "EDIT_CMD";
     private static final String DEL_CMD   = "DEL_CMD";
     private static final String DONE_CMD  = "DONE_CMD";
-
-    private static final boolean ASS = true; // enable ASSERT support?
 }    
 
 

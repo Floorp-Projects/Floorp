@@ -2,7 +2,7 @@
 
 The build system here currently supports only Microsoft nmake (I use the one
 from MSDEV 4.2). It assumes that Symantec Visual Cafe is installed (i.e. it uses
-sj.exe), and also uses awk. I mostly use the 4NT shell, but I think that
+sj.exe), and also uses gawk. I mostly use the 4NT shell, but I think that
 everything still works with the default NT shell.
 
 This system can build all the Java code here. It can also do jar packaging (with

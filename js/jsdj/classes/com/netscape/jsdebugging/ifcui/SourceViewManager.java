@@ -26,7 +26,7 @@ import java.util.Observable;
 import java.util.Observer;
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import com.netscape.jsdebugging.api.*;
 
 public class SourceViewManager
@@ -41,9 +41,9 @@ public class SourceViewManager
         _sourceTyrant   = emperor.getSourceTyrant();
         _stackTyrant    = emperor.getStackTyrant();
 
-        if(ASS)ER.T(null!=_controlTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_sourceTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_stackTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_controlTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_sourceTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_stackTyrant,"emperor init order problem", this);
 
         _sourceViews    = new Hashtable();
         _preferedNewViewRect = new Rect(0,0,100,100);
@@ -90,7 +90,7 @@ public class SourceViewManager
 
                 SourceTextItem sti = 
                     _sourceTyrant.findSourceItem( loc.getURL() );
-                if(ASS)ER.T(null!=sti,"could not find SourceTextItem for " + loc.getURL(),this);
+                if(AS.S)ER.T(null!=sti,"could not find SourceTextItem for " + loc.getURL(),this);
                 if(null == sti)
                     return;
 
@@ -145,11 +145,11 @@ public class SourceViewManager
 
     private synchronized SourceView _createViewAtRect( Rect rect, SourceTextItem item )
         {
-            if(ASS)ER.T(null!=rect,"null rect in _createViewAtRect", this);
+            if(AS.S)ER.T(null!=rect,"null rect in _createViewAtRect", this);
 
             if( null != findView(item.getURL()) )
             {
-                if(ASS)ER.T( false, "tried to create second SourceView for:" + item.getURL(), this);
+                if(AS.S)ER.T( false, "tried to create second SourceView for:" + item.getURL(), this);
                 return null;
             }
 
@@ -280,8 +280,6 @@ public class SourceViewManager
     private String          _selectedTextInMainSourceView = null;
 
     private static final String UPDATE_MARKS = "UPDATE_MARKS";
-
-    private static final boolean ASS = true; // enable ASSERT support?
 }    
 
 

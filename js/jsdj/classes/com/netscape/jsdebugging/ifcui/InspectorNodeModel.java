@@ -24,7 +24,7 @@ package com.netscape.jsdebugging.ifcui;
 
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 
 public class InspectorNodeModel
 {

@@ -33,7 +33,7 @@ import com.netscape.jsdebugging.ifcui.palomar.widget.layout.*;
 import com.netscape.jsdebugging.ifcui.palomar.widget.toolbar.*;
 import com.netscape.jsdebugging.ifcui.palomar.widget.toolTip.*;
 import com.netscape.jsdebugging.ifcui.palomar.widget.PopupButton;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import com.netscape.jsdebugging.ifcui.palomar.util.AssertFailureHandler;
 
 
@@ -63,12 +63,12 @@ public class JSDebuggerApp
     // -- parsed below --
     public void setMode(String s)
     {
-        if(ASS)ER.T(null==_emperor, "attempt to setMode while running", this);
+        if(AS.S)ER.T(null==_emperor, "attempt to setMode while running", this);
         _modeString = s;
     }
     public void setHost(String s)
     {
-        if(ASS)ER.T(null==_emperor, "attempt to setHost while running", this);
+        if(AS.S)ER.T(null==_emperor, "attempt to setHost while running", this);
         _host = s;
     }
 
@@ -109,7 +109,7 @@ public class JSDebuggerApp
             return;
         }
 
-        if(ASS)
+        if(AS.DEBUG)
         {
             Thread t = Thread.currentThread();
             _uiThreadForAssertCheck = t;
@@ -161,7 +161,7 @@ public class JSDebuggerApp
         // this needs to be done after our mode is established
         _initStartupPrefs();
 
-        if(ASS)
+        if(AS.DEBUG)
         {
             if( Emperor.LOCAL == _mode )
                 Log.setFilename("jsdclog.log", true);
@@ -365,7 +365,7 @@ public class JSDebuggerApp
         statusWindow.hide();
         setWaitCursor(false);
 
-        if(ASS)Log.log(null, "startup success" );
+        if(AS.DEBUG)Log.log(null, "startup success" );
         _signalInitSuccessToHTMLPage();
 //        System.out.println("++++ initForReal() end" );
     }
@@ -410,7 +410,7 @@ public class JSDebuggerApp
     // assumes that wait cursor is showing!!!
     private boolean userHasAgreedToLicense()
     {
-        if(ASS)ER.T(_waitCount == 1,"hasUserAgreedToLicense() called when _waitCount != 1");
+        if(AS.S)ER.T(_waitCount == 1,"hasUserAgreedToLicense() called when _waitCount != 1");
 
         String baseDir = Env.getCodebaseDir();
         if( null == baseDir )
@@ -484,7 +484,7 @@ public class JSDebuggerApp
         if( PREVIEW_VERSION != 0 )
             msg += " Preview Release "+PREVIEW_VERSION;
         msg += "\n\n";
-        if(ASS || IS_INTERNAL_RELEASE || ALWAYS_SHOW_BUILD_DATE)
+        if(AS.DEBUG || IS_INTERNAL_RELEASE || ALWAYS_SHOW_BUILD_DATE)
             msg += "Built: "+BuildDate.display()+"\n\n";
         if( WILL_EXPIRE )
             msg += "This software will expire in "+ daysTillDeath() +" days\n\n";
@@ -631,7 +631,7 @@ public class JSDebuggerApp
     // implement AssertFailureHandler
     public int assertFailed( String msgRaw, String msgCooked, Object ob )
     {
-        if(ASS)
+        if(AS.DEBUG)
         {
             // All these single use vars are here because the code
             // used to allow for internal or external dlgs (and may again)
@@ -661,8 +661,8 @@ public class JSDebuggerApp
     {
         _waitCount += set ? 1 : -1;
 
-        if(ASS)ER.T(_waitCount >= 0,"_waitCount went negative", this );
-        if(ASS)ER.T(Thread.currentThread()==_uiThreadForAssertCheck,"setWaitCursor() called on non-UI thread",this);
+        if(AS.S)ER.T(_waitCount >= 0,"_waitCount went negative", this );
+        if(AS.S)ER.T(Thread.currentThread()==_uiThreadForAssertCheck,"setWaitCursor() called on non-UI thread",this);
                 
         if( (1 == _waitCount && set) || (0 == _waitCount && !set) )
         {
@@ -704,6 +704,4 @@ public class JSDebuggerApp
     private static final String EXIT_APP_CMD = "EXIT_APP_CMD";
     private static final String LOAD_FAILED_CMD = "LOAD_FAILED_CMD";
     private static final String SHOW_ABOUT_CMD = "SHOW_ABOUT_CMD";
-
-    private static final boolean ASS = true; // enable ASSERT support?
 }

@@ -26,7 +26,7 @@ import java.util.Observable;
 import java.util.Observer;
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import com.netscape.jsdebugging.api.*;
 import netscape.security.PrivilegeManager;
 
@@ -41,7 +41,7 @@ public class BreakpointTyrant
         super();
         _emperor = emperor;
         _controlTyrant  = emperor.getControlTyrant();
-        if(ASS)ER.T(null!=_controlTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_controlTyrant,"emperor init order problem", this);
 
         PrivilegeManager.enablePrivilege("Debugger");
         _dc = _emperor.getDebugController();
@@ -55,7 +55,7 @@ public class BreakpointTyrant
 
         _controlTyrant.addObserver(this);
 
-        if(ASS)
+        if(AS.DEBUG)
         {
             _uiThreadForAssertCheck = Thread.currentThread();
         }
@@ -82,7 +82,7 @@ public class BreakpointTyrant
 
         if( null != (bp = findBreakpoint(loc)) )
         {
-            if(ASS)ER.T(false,"attempted to add existing Breakpoint: "+bp,this);
+            if(AS.S)ER.T(false,"attempted to add existing Breakpoint: "+bp,this);
             return bp;
         }
 
@@ -100,7 +100,7 @@ public class BreakpointTyrant
     {
         if( null == findBreakpoint(bp) )
         {
-            if(ASS)ER.T(false,"attempted to remove non-existant Breakpoint: "+bp,this);
+            if(AS.S)ER.T(false,"attempted to remove non-existant Breakpoint: "+bp,this);
             return;
         }
 
@@ -310,7 +310,7 @@ public class BreakpointTyrant
                 continue;
 
             JSPC pc = script.getClosestPC(bp.getLine());
-//            if(ASS)ER.T(null==pc,"null returned from script.getClosestPC",this);
+//            if(AS.S)ER.T(null==pc,"null returned from script.getClosestPC",this);
             if( null == pc )
                 continue;
 
@@ -377,7 +377,7 @@ public class BreakpointTyrant
             Breakpoint bp = (Breakpoint) vec.elementAt(i);
 
             JSPC pc = script.getClosestPC(bp.getLine());
-//            if(ASS)ER.T(null==pc,"null returned from script.getClosestPC",this);
+//            if(AS.S)ER.T(null==pc,"null returned from script.getClosestPC",this);
             if( null == pc )
                 continue;
 
@@ -436,7 +436,7 @@ public class BreakpointTyrant
     // helper
     private void _notifyObservers( int type, Breakpoint bp )
     {
-        if(ASS)ER.T(Thread.currentThread()==_uiThreadForAssertCheck,"_notifyObservers called on thread other than UI thread",this);
+        if(AS.S)ER.T(Thread.currentThread()==_uiThreadForAssertCheck,"_notifyObservers called on thread other than UI thread",this);
         setChanged();
         notifyObservers( new BreakpointTyrantUpdate(type,bp) );
     }
@@ -444,7 +444,7 @@ public class BreakpointTyrant
     // these are called by our script hook
     public void justLoadedScript(Script script)
     {
-//        if(ASS)System.out.println( "loaded script: " + script );
+//        if(AS.DEBUG)System.out.println( "loaded script: " + script );
         if( ! _enabled )
             return;
         if( ! script.isValid() )
@@ -459,7 +459,7 @@ public class BreakpointTyrant
     }
     public void aboutToUnloadScript(Script script)
     {
-//        if(ASS)System.out.println( "unloaded script: " + script );
+//        if(AS.DEBUG)System.out.println( "unloaded script: " + script );
         if( ! _enabled )
             return;
         synchronized(this)
@@ -501,8 +501,6 @@ public class BreakpointTyrant
     private BPTyrantScriptHook  _scriptHook;
     private boolean             _enabled = false;
     private Thread              _uiThreadForAssertCheck = null;
-
-    private static final boolean ASS = true; // enable ASSERT support?
 }    
 
 // used here only...

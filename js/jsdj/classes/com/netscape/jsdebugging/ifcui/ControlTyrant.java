@@ -26,7 +26,7 @@ import java.util.Observable;
 import java.util.Observer;
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import netscape.security.PrivilegeManager;
 import netscape.security.ForbiddenTargetException;
 import com.netscape.jsdebugging.api.*;
@@ -66,7 +66,7 @@ public class ControlTyrant
         else
             _useServerSideStepper = false;
 
-        if(ASS)
+        if(AS.DEBUG)
         {
             _uiThreadForAssertCheck = Thread.currentThread();
         }
@@ -89,7 +89,7 @@ public class ControlTyrant
     {
         if( STOPPED == _state )
             return _threadState;
-        if(ASS)ER.T(false,"getThreadState called when not really stopped",this);
+        if(AS.S)ER.T(false,"getThreadState called when not really stopped",this);
         return null;
     }
 
@@ -97,7 +97,7 @@ public class ControlTyrant
     {
         if( STOPPED == _state )
             return _pc;
-        if(ASS)ER.T(false,"getPC called when not really stopped",this);
+        if(AS.S)ER.T(false,"getPC called when not really stopped",this);
         return null;
     }
 
@@ -105,7 +105,7 @@ public class ControlTyrant
     {
         if( STOPPED == _state )
             return _sourceLocation;
-        if(ASS)ER.T(false,"getSourceLocation called when not really stopped",this);
+        if(AS.S)ER.T(false,"getSourceLocation called when not really stopped",this);
         return null;
     }
 
@@ -134,7 +134,7 @@ public class ControlTyrant
     {
         if( _state != STOPPED || _semaphore.available() || null == _threadState )
         {
-            if(ASS)ER.T(false,"abort called when not really stopped",this);
+            if(AS.S)ER.T(false,"abort called when not really stopped",this);
             return;
         }
 
@@ -174,7 +174,7 @@ public class ControlTyrant
     {
         if( _state != STOPPED || _semaphore.available() )
         {
-            if(ASS)ER.T(false,"_setServerSideStepper called when not really stopped",this);
+            if(AS.S)ER.T(false,"_setServerSideStepper called when not really stopped",this);
             return;
         }
         _interrupt = false;
@@ -192,7 +192,7 @@ public class ControlTyrant
                 _dc.sendInterruptStepOut(_threadState);
                 break;
             default:
-                if(ASS)ER.T(false,"invalid type passed to _setServerSideStepper",this);
+                if(AS.S)ER.T(false,"invalid type passed to _setServerSideStepper",this);
                 return;
         }
         _serverSideStepperIsSet = true;
@@ -205,7 +205,7 @@ public class ControlTyrant
     {
         if( _state != STOPPED || _semaphore.available() )
         {
-            if(ASS)ER.T(false,"_setStepHandler called when not really stopped",this);
+            if(AS.S)ER.T(false,"_setStepHandler called when not really stopped",this);
             return;
         }
         _interrupt = false;
@@ -235,11 +235,11 @@ public class ControlTyrant
     {
         if( _state != STOPPED || _semaphore.available() )
         {
-            if(ASS)ER.T(false,"_continueAndNotify called when not really stopped",this);
+            if(AS.S)ER.T(false,"_continueAndNotify called when not really stopped",this);
             return;
         }
 
-//        if(ASS){System.out.println( "running again" );}
+//        if(AS.DEBUG){System.out.println( "running again" );}
 
         // transition state
         _state = RUNNING;
@@ -250,14 +250,14 @@ public class ControlTyrant
         {
             _semaphore.release();
             _threadState.resume();
-//            if(ASS){System.out.println( "returning after interrupt" );}
+//            if(AS.DEBUG){System.out.println( "returning after interrupt" );}
         }
     }
 
     public synchronized void evaluatingBreakpoint(boolean b)
     {
         _evaluatingBreakpoint += (b ? 1 : -1);
-        if(ASS)ER.T(_evaluatingBreakpoint >= 0,"_evaluatingBreakpoint less than zero",this);
+        if(AS.S)ER.T(_evaluatingBreakpoint >= 0,"_evaluatingBreakpoint less than zero",this);
     }
 
     public synchronized void breakpointHookCalledButElectedNotToStop(JSThreadState ts)
@@ -282,30 +282,30 @@ public class ControlTyrant
     // called by both breakpoints and interrupt hook (on JS thread)
     void aboutToExecute(JSThreadState debug, JSPC pc, Hook hook)
     {
-        if(ASS)Log.trace("ControlTyrant.aboutToExecute", "1)  entered" );
+        if(AS.DEBUG)Log.trace("ControlTyrant.aboutToExecute", "1)  entered" );
         if( ! _enabled )
         {
-            if(ASS)Log.trace("ControlTyrant.aboutToExecute", "2)  exit, ! _enabled" );
+            if(AS.DEBUG)Log.trace("ControlTyrant.aboutToExecute", "2)  exit, ! _enabled" );
             return;
         }
 
         if( _evaluatingBreakpoint > 0 )
         {
-            if(ASS)System.out.println("ignoring break while evaluating breakpoint");
+            if(AS.DEBUG)System.out.println("ignoring break while evaluating breakpoint");
             return;
         }
 
         PrivilegeManager.enablePrivilege("Debugger");
 
         // grab the semaphore (return if not available)
-        if(ASS)Log.trace("ControlTyrant.aboutToExecute", "3)  about to call _semaphore.grab()" );
+        if(AS.DEBUG)Log.trace("ControlTyrant.aboutToExecute", "3)  about to call _semaphore.grab()" );
         if( ! _semaphore.grab() )
         {
-            if(ASS)System.out.println( "blowing past nested break at: " + pc );
-            if(ASS)Log.trace("ControlTyrant.aboutToExecute", "4)  exit  _semaphore.grab() failed" );
+            if(AS.DEBUG)System.out.println( "blowing past nested break at: " + pc );
+            if(AS.DEBUG)Log.trace("ControlTyrant.aboutToExecute", "4)  exit  _semaphore.grab() failed" );
             return;
         }
-        if(ASS)Log.trace("ControlTyrant.aboutToExecute", "5)  exit  _semaphore.grab() succeeded" );
+        if(AS.DEBUG)Log.trace("ControlTyrant.aboutToExecute", "5)  exit  _semaphore.grab() succeeded" );
 
         if( hook instanceof CtrlDebugBreakHook )
         {
@@ -326,9 +326,9 @@ public class ControlTyrant
 
         _threadState = debug;
         _pc = pc;
-        if(ASS)Log.trace("ControlTyrant.aboutToExecute", "6)  about to call _pc.getSourceLocation()");
+        if(AS.DEBUG)Log.trace("ControlTyrant.aboutToExecute", "6)  about to call _pc.getSourceLocation()");
         _sourceLocation = (JSSourceLocation) _pc.getSourceLocation();
-        if(ASS)Log.trace("ControlTyrant.aboutToExecute", "7)  _pc.getSourceLocation() returned");
+        if(AS.DEBUG)Log.trace("ControlTyrant.aboutToExecute", "7)  _pc.getSourceLocation() returned");
         
         if(false)
         {
@@ -339,8 +339,8 @@ public class ControlTyrant
                             (_pc.getScript().getBaseLineNumber()+_pc.getScript().getLineExtent()-1)+"]";
             String where = "pc: " + _pc.getPC();
 
-            if(ASS){System.out.println(leadin+" "+url+" "+fun+" "+script+" "+where);}
-//            if(ASS)Thread.dumpStack();
+            if(AS.DEBUG){System.out.println(leadin+" "+url+" "+fun+" "+script+" "+where);}
+//            if(AS.DEBUG)Thread.dumpStack();
         }
 
         // Hitting any other type of hook clears the interrupt stepper
@@ -357,32 +357,32 @@ public class ControlTyrant
             {
                 case StepHandler.STOP:
                     _stepHandler = null;
-                    if(ASS)Log.trace("ControlTyrant.aboutToExecute", "8)  StepHandler.STOP");
+                    if(AS.DEBUG)Log.trace("ControlTyrant.aboutToExecute", "8)  StepHandler.STOP");
                     break;
                 case StepHandler.CONTINUE_SEND_INTERRUPT:
-                    if(ASS)Log.trace("ControlTyrant.aboutToExecute", "9)  StepHandler.CONTINUE_SEND_INTERRUPT about to sendInterrupt");
+                    if(AS.DEBUG)Log.trace("ControlTyrant.aboutToExecute", "9)  StepHandler.CONTINUE_SEND_INTERRUPT about to sendInterrupt");
                     _dc.sendInterrupt();
-                    if(ASS)Log.trace("ControlTyrant.aboutToExecute", "10)  sendInterrupt returned");
+                    if(AS.DEBUG)Log.trace("ControlTyrant.aboutToExecute", "10)  sendInterrupt returned");
                     _semaphore.release();
-                    if(ASS)Log.trace("ControlTyrant.aboutToExecute", "10.5)  _semaphore.release() returned");
+                    if(AS.DEBUG)Log.trace("ControlTyrant.aboutToExecute", "10.5)  _semaphore.release() returned");
                     return;
                 case StepHandler.CONTINUE_DONE:
-                    if(ASS)Log.trace("ControlTyrant.aboutToExecute", "11)  StepHandler.CONTINUE_DONE");
+                    if(AS.DEBUG)Log.trace("ControlTyrant.aboutToExecute", "11)  StepHandler.CONTINUE_DONE");
                     _stepHandler = null;
                     _semaphore.release();
                     return;
             }
         }
 
-        // if(ASS){System.out.println( "about to send HIT_EXEC_HOOK" );}
-        // if(ASS){System.out.println( "this = " + this );}
-        // if(ASS){System.out.println( "HIT_EXEC_HOOK = " + HIT_EXEC_HOOK );}
-        // if(ASS){System.out.println( "hook = " + hook );}
-        // if(ASS){System.out.println( "Thread = " + Thread.currentThread() );}
+        // if(AS.DEBUG){System.out.println( "about to send HIT_EXEC_HOOK" );}
+        // if(AS.DEBUG){System.out.println( "this = " + this );}
+        // if(AS.DEBUG){System.out.println( "HIT_EXEC_HOOK = " + HIT_EXEC_HOOK );}
+        // if(AS.DEBUG){System.out.println( "hook = " + hook );}
+        // if(AS.DEBUG){System.out.println( "Thread = " + Thread.currentThread() );}
 
-        if(ASS)Log.trace("ControlTyrant.aboutToExecute", "12)  about to call _threadState.leaveSuspended()");
+        if(AS.DEBUG)Log.trace("ControlTyrant.aboutToExecute", "12)  about to call _threadState.leaveSuspended()");
         _threadState.leaveSuspended();
-        if(ASS)Log.trace("ControlTyrant.aboutToExecute", "13)  _threadState.leaveSuspended() returned");
+        if(AS.DEBUG)Log.trace("ControlTyrant.aboutToExecute", "13)  _threadState.leaveSuspended() returned");
 
         // post message to UI thread
         _app.performCommandLater( this, HIT_EXEC_HOOK, hook );
@@ -406,7 +406,7 @@ public class ControlTyrant
                 null == _sourceLocation.getURL() ||
                 null == st.findSourceItem(_sourceLocation.getURL()) )
             {
-                if(ASS){System.out.println( "continuing: source text unavailable");}
+                if(AS.DEBUG){System.out.println( "continuing: source text unavailable");}
                 _state = STOPPED;
                 _continueAndNotify(false);
                 return;
@@ -415,7 +415,7 @@ public class ControlTyrant
             _emperor.setWaitCursor(true);
             _interrupt = false;
 
-            // if(ASS){System.out.println( "got stop command, transitioning state" );}
+            // if(AS.DEBUG){System.out.println( "got stop command, transitioning state" );}
 
             _emperor.bringAppToFront();
 
@@ -442,7 +442,7 @@ public class ControlTyrant
         }
         else
         {
-            if(ASS)ER.T(false,"unhandled command received in perform command: " + cmd,this);
+            if(AS.S)ER.T(false,"unhandled command received in perform command: " + cmd,this);
         }
 
     }
@@ -498,8 +498,8 @@ public class ControlTyrant
                 }
                 catch(Exception e)
                 {
-                    if(ASS){System.out.println("threw during wait for command response");}
-                    if(ASS){System.out.println(e);}
+                    if(AS.DEBUG){System.out.println("threw during wait for command response");}
+                    if(AS.DEBUG){System.out.println(e);}
                 }
             }
             if( -1 == _debugBreakResponse )
@@ -511,14 +511,14 @@ public class ControlTyrant
 
     private void _notifyOfStateChange()
     {
-        if(ASS)ER.T(Thread.currentThread()==_uiThreadForAssertCheck,"_notifyObservers called on thread other than UI thread",this);
+        if(AS.S)ER.T(Thread.currentThread()==_uiThreadForAssertCheck,"_notifyObservers called on thread other than UI thread",this);
         setChanged();
         notifyObservers( new ControlTyrantUpdate( ControlTyrantUpdate.STATE_CHANGED,_state) );
     }
 
     private void _notifyOfDebuggerDisabled()
     {
-        if(ASS)ER.T(Thread.currentThread()==_uiThreadForAssertCheck,"_notifyObservers called on thread other than UI thread",this);
+        if(AS.S)ER.T(Thread.currentThread()==_uiThreadForAssertCheck,"_notifyObservers called on thread other than UI thread",this);
         setChanged();
         notifyObservers( new ControlTyrantUpdate( ControlTyrantUpdate.DEBUGGER_DISABLED,_state) );
     }
@@ -553,7 +553,7 @@ public class ControlTyrant
 
     private final String HIT_EXEC_HOOK      = "HIT_EXEC_HOOK";
     private final String HIT_ERROR_REPORTER = "HIT_ERROR_REPORTER";
-    private static final boolean ASS = true; // enable ASSERT support?
+    
 }
 
 /***************************************************************************/
@@ -591,8 +591,8 @@ class CtrlInterruptHook
         try {
             if( null != _ctrlTyrant )
             {
-                if(ASS)ER.T(debug instanceof JSThreadState,"wrong kind of threadstate",this);
-                if(ASS)ER.T(pc instanceof JSPC,"wrong kind of pc",this);
+                if(AS.S)ER.T(debug instanceof JSThreadState,"wrong kind of threadstate",this);
+                if(AS.S)ER.T(pc instanceof JSPC,"wrong kind of pc",this);
                 _ctrlTyrant.aboutToExecute( (JSThreadState)debug, (JSPC) pc, this );
             }
             if( null != _nextHook )
@@ -606,7 +606,7 @@ class CtrlInterruptHook
 
     private ControlTyrant _ctrlTyrant;
     private InterruptHook _nextHook;
-    private static final boolean ASS = true; // enable ASSERT support?
+    
 }    
 
 // used internally only...    
@@ -625,8 +625,8 @@ class CtrlDebugBreakHook
         try {
             if( null != _ctrlTyrant )
             {
-                if(ASS)ER.T(debug instanceof JSThreadState,"wrong kind of threadstate",this);
-                if(ASS)ER.T(pc instanceof JSPC,"wrong kind of pc",this);
+                if(AS.S)ER.T(debug instanceof JSThreadState,"wrong kind of threadstate",this);
+                if(AS.S)ER.T(pc instanceof JSPC,"wrong kind of pc",this);
                 _ctrlTyrant.aboutToExecute( (JSThreadState)debug, (JSPC) pc, this );
             }
             if( null != _nextHook )
@@ -640,6 +640,5 @@ class CtrlDebugBreakHook
 
     private ControlTyrant _ctrlTyrant;
     private DebugBreakHook _nextHook;
-    private static final boolean ASS = true; // enable ASSERT support?
 }    
 

@@ -25,7 +25,7 @@ package com.netscape.jsdebugging.ifcui;
 import netscape.application.*;
 import netscape.util.*;
 import com.netscape.jsdebugging.api.JSSourceLocation;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 
 // XXX implementation note: we currently maintain a string representaion for
 // quick lookups. This will change when the Breakpoint becomes more complex...
@@ -39,14 +39,14 @@ public class Location
     public Location( JSSourceLocation jssl )
     {
         this( jssl.getURL(), jssl.getLine() );
-        if(ASS)ER.T(null!=jssl,"null JSSourceLocation passed to Location ctor",this);
+        if(AS.S)ER.T(null!=jssl,"null JSSourceLocation passed to Location ctor",this);
     }
 
     public Location( String  url,
                      int     line )
     {
-        if(ASS)ER.T(null!=url,"null url in Location ctor",this);
-        if(ASS)ER.T(line >=0,"negative line in Location ctor",this);
+        if(AS.S)ER.T(null!=url,"null url in Location ctor",this);
+        if(AS.S)ER.T(line >=0,"negative line in Location ctor",this);
 
         _url    = url; 
         _line   = line;
@@ -68,8 +68,8 @@ public class Location
     // override Object
     public boolean equals(Object obj)
     {
-        if(ASS)ER.T(obj!=null,"null obect handed to Location equals",this);
-        if(ASS)ER.T(obj instanceof Location,"non-Location obect handed to Location equals",this);
+        if(AS.S)ER.T(obj!=null,"null obect handed to Location equals",this);
+        if(AS.S)ER.T(obj instanceof Location,"non-Location obect handed to Location equals",this);
 
         Location other = (Location) obj;
         if( _stringRep.equals(other._stringRep) )
@@ -86,8 +86,8 @@ public class Location
     // implement Comparable
     public int compareTo(Object obj)
     {
-        if(ASS)ER.T(obj!=null,"null obect handed to Location compareTo",this);
-        if(ASS)ER.T(obj instanceof Location,"non-Location object handed to Location compareTo",this);
+        if(AS.S)ER.T(obj!=null,"null obect handed to Location compareTo",this);
+        if(AS.S)ER.T(obj instanceof Location,"non-Location object handed to Location compareTo",this);
 
         Location other = (Location) obj;
         int retval = _url.compareTo( other._url );
@@ -120,7 +120,5 @@ public class Location
     private String  _url; 
     private int     _line;
     private String  _stringRep;
-
-    private static final boolean ASS = true; // enable ASSERT support?
 }
 

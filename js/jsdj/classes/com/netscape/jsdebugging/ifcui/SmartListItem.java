@@ -24,7 +24,7 @@ package com.netscape.jsdebugging.ifcui;
 
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 
 public class SmartListItem extends ListItem
 {
@@ -55,10 +55,10 @@ public class SmartListItem extends ListItem
     protected final Rect myRect()
     {
         ListView lv = listView();
-        if(ASS)ER.T(lv!=null,"ListItem with no parent called myRect()",this);
+        if(AS.S)ER.T(lv!=null,"ListItem with no parent called myRect()",this);
         return lv.rectForItem(this);
     }
-    private static final boolean ASS = true; // enable ASSERT support?
+    
 }    
 
 

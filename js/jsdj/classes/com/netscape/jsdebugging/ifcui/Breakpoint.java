@@ -22,7 +22,7 @@
 
 package com.netscape.jsdebugging.ifcui;
 
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import netscape.application.*;
 import netscape.util.*;
 import com.netscape.jsdebugging.api.*;
@@ -48,7 +48,7 @@ public class Breakpoint
     {
         this();
         _loc = loc;
-        if(ASS)ER.T(null!=loc,"null location in Breakpoint ctor",this);
+        if(AS.S)ER.T(null!=loc,"null location in Breakpoint ctor",this);
     }
 
     public Breakpoint()
@@ -69,7 +69,7 @@ public class Breakpoint
 
     public void putHook(Script script, Hook hook)
     {
-        if(ASS)ER.T(null==_hooks.get(script),"putting an existing hook",this);
+        if(AS.S)ER.T(null==_hooks.get(script),"putting an existing hook",this);
         _hooks.put(script, hook);
     }
 
@@ -81,7 +81,7 @@ public class Breakpoint
     public Hook removeHook(Script script)
     {
         Hook hook = (Hook) _hooks.remove(script);
-        if(ASS)ER.T(null!=hook,"removing a non-existant hook",this);
+        if(AS.S)ER.T(null!=hook,"removing a non-existant hook",this);
         return hook;
     }
 
@@ -94,8 +94,8 @@ public class Breakpoint
     // override Object
     public boolean equals(Object obj)
     {
-        if(ASS)ER.T(obj!=null,"null object handed to Breakpoint equals",this);
-        if(ASS)ER.T(obj instanceof Breakpoint,"non-Breakpoint obect handed to Breakpoint equals",this);
+        if(AS.S)ER.T(obj!=null,"null object handed to Breakpoint equals",this);
+        if(AS.S)ER.T(obj instanceof Breakpoint,"non-Breakpoint obect handed to Breakpoint equals",this);
         return _loc.equals( ((Breakpoint)obj)._loc );
     }
 
@@ -108,8 +108,8 @@ public class Breakpoint
     // implement Comparable
     public int compareTo(Object obj)
     {
-        if(ASS)ER.T(obj!=null,"null obect handed to Breakpoint compareTo",this);
-        if(ASS)ER.T(obj instanceof Breakpoint,"non-Breakpoint obect handed to Breakpoint compareTo",this);
+        if(AS.S)ER.T(obj!=null,"null obect handed to Breakpoint compareTo",this);
+        if(AS.S)ER.T(obj instanceof Breakpoint,"non-Breakpoint obect handed to Breakpoint compareTo",this);
 
         Breakpoint other = (Breakpoint) obj;
         return _loc.compareTo(((Breakpoint)obj)._loc);
@@ -139,6 +139,5 @@ public class Breakpoint
     private Hashtable      _hooks;
     private Location       _loc;
     private String         _breakCondition;
-    private static final boolean ASS = true; // enable ASSERT support?
 }
 

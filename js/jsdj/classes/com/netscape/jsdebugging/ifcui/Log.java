@@ -26,7 +26,7 @@ import java.io.*;
 import java.util.Date;
 import netscape.security.PrivilegeManager;
 import netscape.security.ForbiddenTargetException;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 
 public final class Log
 {
@@ -125,7 +125,7 @@ public final class Log
     }
     public static synchronized void setFilename(String filename, boolean useCodebase)
     {
-        if(ASS)ER.T(null==_fullFilename,"tried to set filename after first log entry written");
+        if(AS.S)ER.T(null==_fullFilename,"tried to set filename after first log entry written");
         _baseFilename = filename;
         _useCodebase = useCodebase;
         _generateFilename();
@@ -236,7 +236,5 @@ public final class Log
     private static boolean          _useCodebase    = false;
     private static String           _fullFilename   = null;
     private static String           _baseFilename   = "jsdlog.log";
-
-    private static final boolean ASS = true; // enable ASSERT support?
 }    
 

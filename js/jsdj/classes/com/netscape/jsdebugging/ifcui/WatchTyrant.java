@@ -26,7 +26,7 @@ import java.util.Observable;
 import java.util.Observer;
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 
 public class WatchTyrant
     extends Observable 
@@ -40,9 +40,9 @@ public class WatchTyrant
         _consoleTyrant  = emperor.getConsoleTyrant();
         _stackTyrant    = emperor.getStackTyrant();
 
-        if(ASS)ER.T(null!=_controlTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_consoleTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_stackTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_controlTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_consoleTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_stackTyrant,"emperor init order problem", this);
         
         _evalStrings = new Vector();
 
@@ -115,8 +115,6 @@ public class WatchTyrant
     private ConsoleTyrant   _consoleTyrant;
     private StackTyrant     _stackTyrant;
     private Vector          _evalStrings;
-
-    private static final boolean ASS = true; // enable ASSERT support?
 }    
 
 

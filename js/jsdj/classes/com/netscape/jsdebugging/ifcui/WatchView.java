@@ -26,7 +26,7 @@ import java.util.Observable;
 import java.util.Observer;
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import com.netscape.jsdebugging.ifcui.palomar.widget.layout.*;
 
 public class WatchView 
@@ -49,8 +49,8 @@ public class WatchView
         _watchTyrant  = emperor.getWatchTyrant();
         _commandTyrant = emperor.getCommandTyrant();
 
-        if(ASS)ER.T(null!=_watchTyrant     ,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_commandTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_watchTyrant     ,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_commandTyrant,"emperor init order problem", this);
 
         _listview = new BackgroundHackListView();
 
@@ -275,8 +275,6 @@ public class WatchView
     private static final String DEL_CMD   = "DEL_CMD";
     private static final String EVAL_CMD  = "EVAL_CMD";
     private static final String DONE_CMD  = "DONE_CMD";
-
-    private static final boolean ASS = true; // enable ASSERT support?
 }    
 
 

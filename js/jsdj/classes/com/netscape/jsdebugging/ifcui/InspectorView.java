@@ -26,7 +26,7 @@ import java.util.Observable;
 import java.util.Observer;
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import com.netscape.jsdebugging.ifcui.palomar.widget.layout.*;
 
 public class InspectorView 
@@ -51,9 +51,9 @@ public class InspectorView
         _controlTyrant  = emperor.getControlTyrant();
         _commandTyrant = emperor.getCommandTyrant();
 
-        if(ASS)ER.T(null!=_inspectorTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_controlTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_commandTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_inspectorTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_controlTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_commandTyrant,"emperor init order problem", this);
 
         _editKeyTextFilter = new EditKeyTextFilter(_commandTyrant);
 
@@ -308,7 +308,7 @@ public class InspectorView
     private void _pushItemToTop(int index)
     {
         Rect rectitem = _listview.rectForItemAt(index);
-        // if(ASS)System.out.println("rectitem.y "+rectitem.y);
+        // if(AS.DEBUG)System.out.println("rectitem.y "+rectitem.y);
         ((ScrollView)(_listview.superview())).scrollBy( 0, -rectitem.y );
     }
 
@@ -455,7 +455,7 @@ public class InspectorView
     private static final String COPY_VALUE_CMD = "COPY_VALUE_CMD";
     private static final String DONE_CMD       = "DONE_CMD";
 
-    private static final boolean ASS = true; // enable ASSERT support?
+    
 }    
 
 /***************************************************************************/
@@ -474,7 +474,7 @@ final class InspectorListView extends SmartItemListView
     private InspectorView     _iv;
     private InspectorListItem _mousedItem;
 
-    private static final boolean ASS = true; // enable ASSERT support?
+    
 }
 
 /***************************************************************************/
@@ -597,7 +597,7 @@ final class InspectorListItem extends SmartListItem
     private InspectorItemDrawer _drawer;
     private InspectorNodeModel  _model;
 
-    private static final boolean ASS = true; // enable ASSERT support?
+    
 }    
 
 /***************************************************************************/
@@ -801,6 +801,4 @@ final class InspectorItemDrawer
     private static final int    _spacerDY = 3;
 
     private static final int    _boxDim = 11;
-    
-    private static final boolean ASS = true; // enable ASSERT support?
 }    

@@ -26,7 +26,7 @@ import java.util.Observable;
 import java.util.Observer;
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import com.netscape.jsdebugging.ifcui.palomar.widget.layout.*;
 import com.netscape.jsdebugging.api.*;
 
@@ -44,10 +44,10 @@ public class StackView extends InternalWindow
         _commandTyrant = emperor.getCommandTyrant();
         _sourceTyrant = emperor.getSourceTyrant();
 
-        if(ASS)ER.T(null!=_stackTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_controlTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_commandTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_sourceTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_stackTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_controlTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_commandTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_sourceTyrant,"emperor init order problem", this);
 
         _listview = new BackgroundHackListView();
 
@@ -126,7 +126,7 @@ public class StackView extends InternalWindow
                     }
                     catch(InvalidInfoException e)
                     {
-                        if(ASS)ER.T(false,"InvalidInfoException in StackViewView",this);
+                        if(AS.S)ER.T(false,"InvalidInfoException in StackViewView",this);
                     }
                     if( null != pc )
                     {
@@ -203,7 +203,7 @@ public class StackView extends InternalWindow
 
     private ListView        _listview;
 
-    private static final boolean ASS = true; // enable ASSERT support?
+    
 }
         
 class StackViewListItem extends ListItem
@@ -232,7 +232,7 @@ class StackViewListItem extends ListItem
 
     private StackViewItemDrawer _drawer;
 
-    private static final boolean ASS = true; // enable ASSERT support?
+    
 }    
 
 class StackViewItemDrawer
@@ -306,6 +306,4 @@ class StackViewItemDrawer
     private int _height;
     private Polygon _polyExecPoint;
     private Point   _ptText;
-
-    private static final boolean ASS = true; // enable ASSERT support?
 }    

@@ -27,7 +27,7 @@ import java.util.Observer;
 import netscape.security.PrivilegeManager;
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import com.netscape.jsdebugging.ifcui.palomar.widget.PopupButton;
 import com.netscape.jsdebugging.api.*;
 
@@ -116,10 +116,10 @@ public class CommandTyrant
         // ............................................
 
         // check in debugging build only...
-        if(ASS)
+        if(AS.DEBUG)
         {
             for( i = 0; i < CMD_COUNT; i++ )
-                if(ASS)ER.T(null!=_cmdStatesArray[i].name, "name not set for cmdstate number " + i, this);
+                if(AS.S)ER.T(null!=_cmdStatesArray[i].name, "name not set for cmdstate number " + i, this);
         }
 
         // build the hashtable
@@ -289,22 +289,22 @@ public class CommandTyrant
         {
             Class.forName("java.awt.datatransfer.Clipboard");
             Class.forName("netscape.application.jdk11compatibility.JDKClipboard");
-//            if(ASS)System.out.println( "using native clipboard");
+//            if(AS.DEBUG)System.out.println( "using native clipboard");
         } 
         catch(Exception e)
         {
             _usingLocalClipboard = true;
-//            if(ASS)System.out.println( "using local clipboard");
+//            if(AS.DEBUG)System.out.println( "using local clipboard");
         }
 
 
-        if(ASS)ER.T(null!=_controlTyrant   ,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_breakpointTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_sourceTyrant    ,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_stackTyrant     ,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_watchTyrant     ,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_consoleTyrant   ,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_inspectorTyrant ,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_controlTyrant   ,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_breakpointTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_sourceTyrant    ,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_stackTyrant     ,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_watchTyrant     ,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_consoleTyrant   ,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_inspectorTyrant ,"emperor init order problem", this);
 
         _controlTyrant.addObserver(this);
         _sourceTyrant.addObserver(this);
@@ -348,7 +348,7 @@ public class CommandTyrant
         CmdState cmdState = findCmdState(cmd);
         if( null == cmdState )
         {
-            if(ASS)ER.T( false, "failed to find cmdState named: " + cmd, this);
+            if(AS.S)ER.T( false, "failed to find cmdState named: " + cmd, this);
             return;
         }
         switch(cmdState.id)
@@ -592,7 +592,7 @@ public class CommandTyrant
                 Test.doTest(_emperor);
                 break;
             default:
-                if(ASS)ER.T( false, "cmdState id not handled: " + cmdState.id, this);
+                if(AS.S)ER.T( false, "cmdState id not handled: " + cmdState.id, this);
                 break;                
         }
     }
@@ -610,7 +610,7 @@ public class CommandTyrant
             catch(Exception e)
             {
                 _usingLocalClipboard = true;
-//                if(ASS)System.out.println( "switching to use local clipboard");
+//                if(AS.DEBUG)System.out.println( "switching to use local clipboard");
             }
         }
 
@@ -628,7 +628,7 @@ public class CommandTyrant
             catch(Exception e)
             {
                 _usingLocalClipboard = true;
-//                if(ASS)System.out.println( "switching to use local clipboard");
+//                if(AS.DEBUG)System.out.println( "switching to use local clipboard");
             }
         }
         return _localClipboard;
@@ -735,8 +735,6 @@ public class CommandTyrant
 
     private CmdState[]       _cmdStatesArray;
     private Hashtable        _cmdStatesHashtable;
-
-    private static final boolean ASS = true; // enable ASSERT support?
 }    
 
 

@@ -26,7 +26,7 @@ import java.util.Observable;
 import java.util.Observer;
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import com.netscape.jsdebugging.ifcui.palomar.widget.layout.*;
 import com.netscape.jsdebugging.api.*;
 
@@ -44,10 +44,10 @@ public class PageListView
         _commandTyrant = emperor.getCommandTyrant();
         _stackTyrant    = emperor.getStackTyrant();
 
-        if(ASS)ER.T(null!=_controlTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_sourceTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_commandTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_stackTyrant     ,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_controlTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_sourceTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_commandTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_stackTyrant     ,"emperor init order problem", this);
 
         _listview = new BackgroundHackListView();
 
@@ -240,8 +240,6 @@ public class PageListView
 
     private static final String CLOSE_CMD = "CLOSE_CMD";
     private static final String OPEN_CMD  = "OPEN_CMD";
-
-    private static final boolean ASS = true; // enable ASSERT support?
 }    
 
 

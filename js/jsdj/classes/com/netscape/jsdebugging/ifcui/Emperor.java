@@ -27,7 +27,7 @@ import netscape.security.PrivilegeManager;
 import netscape.security.ForbiddenTargetException;
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import com.netscape.jsdebugging.ifcui.palomar.widget.toolTip.*;
 import netscape.javascript.*;
 import com.netscape.jsdebugging.api.*;
@@ -65,7 +65,7 @@ public class Emperor
         
         _debuggerIsActive = true;
 
-        if(ASS)
+        if(AS.DEBUG)
         {
             _uiThreadForAssertCheck = Thread.currentThread();
         }
@@ -575,7 +575,7 @@ public class Emperor
     {
         try
         {
-            if(ASS)ER.T(Thread.currentThread()==_uiThreadForAssertCheck,"bringAppToFront() called on non-UI thread",this);
+            if(AS.S)ER.T(Thread.currentThread()==_uiThreadForAssertCheck,"bringAppToFront() called on non-UI thread",this);
             RootView mrv = Application.application().mainRootView();
             if( null != mrv.mainWindow() )
                 return;
@@ -667,7 +667,5 @@ public class Emperor
     private Thread              _uiThreadForAssertCheck = null;
 
     private boolean             _isApplet;
-    
-    private static final boolean ASS = true; // enable ASSERT support?
 }
 

@@ -22,7 +22,7 @@
 
 package com.netscape.jsdebugging.ifcui;
 
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import com.netscape.jsdebugging.api.*;
 
 class StepOver implements StepHandler
@@ -53,7 +53,7 @@ class StepOver implements StepHandler
             case CallChain.DISJOINT:
                 return STOP;
             default:
-                if(ASS)ER.T(false,"coding error in StepOut (missed case)",this);
+                if(AS.S)ER.T(false,"coding error in StepOut (missed case)",this);
                 break;
         }
 
@@ -72,6 +72,4 @@ class StepOver implements StepHandler
     private CallChain           _callChain;
     private JSSourceLocation    _startSourceLocation;
     private JSPC                _startPC;
-
-    private static final boolean ASS = true; // enable ASSERT support?
 }    

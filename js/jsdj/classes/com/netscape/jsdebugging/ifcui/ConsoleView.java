@@ -26,7 +26,7 @@ import java.util.Observable;
 import java.util.Observer;
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import com.netscape.jsdebugging.ifcui.palomar.widget.layout.*;
 import com.netscape.jsdebugging.api.*;
 
@@ -44,9 +44,9 @@ public class ConsoleView
         _consoleTyrant = emperor.getConsoleTyrant();
         _commandTyrant = emperor.getCommandTyrant();
 
-        if(ASS)ER.T(null!=_controlTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_consoleTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_commandTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_controlTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_consoleTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_commandTyrant,"emperor init order problem", this);
 
         _editKeyTextFilter = new EditKeyTextFilter(_commandTyrant);
 
@@ -154,7 +154,7 @@ public class ConsoleView
             // get the text of the last item in the list
 
             int listItemIndex = _listview.count() - 1;
-            if(ASS)ER.T(listItemIndex>=0,"bad listview item",this);
+            if(AS.S)ER.T(listItemIndex>=0,"bad listview item",this);
 
             buf = new StringBuffer( _listview.itemAt(listItemIndex).title() );
             _listview.removeItemAt(listItemIndex);
@@ -334,8 +334,6 @@ public class ConsoleView
 
     private static final String     EVAL_CMD = "EVAL_CMD";
     private static final String     DRAW_CMD = "DRAW_CMD";
-
-    private static final boolean ASS = true; // enable ASSERT support?
 }
 
 class NoSelectListView extends BackgroundHackListView

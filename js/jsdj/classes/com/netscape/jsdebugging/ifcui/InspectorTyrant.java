@@ -26,7 +26,7 @@ import java.util.Observable;
 import java.util.Observer;
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import netscape.security.PrivilegeManager;
 import netscape.security.ForbiddenTargetException;
 import com.netscape.jsdebugging.api.*;
@@ -42,8 +42,8 @@ public class InspectorTyrant
         _controlTyrant  = emperor.getControlTyrant();
         _stackTyrant    = emperor.getStackTyrant();
 
-        if(ASS)ER.T(null!=_controlTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_stackTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_controlTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_stackTyrant,"emperor init order problem", this);
 
         _controlTyrant.addObserver(this);
         _stackTyrant.addObserver(this);
@@ -158,7 +158,7 @@ public class InspectorTyrant
                             }
                             catch(NumberFormatException e)
                             {
-                                if(ASS)ER.T(false,"failed to parse property name as number: "+name,this);
+                                if(AS.S)ER.T(false,"failed to parse property name as number: "+name,this);
                                 stringVec.addElement("["+name+"]");
                             }
                         }
@@ -320,6 +320,4 @@ public class InspectorTyrant
     private StackTyrant         _stackTyrant;
     private String              _errorString;
     private InspectorNodeModel  _rootNode;
-
-    private static final boolean ASS = true; // enable ASSERT support?
 }    

@@ -26,7 +26,7 @@ import java.util.Observable;
 import java.util.Observer;
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import java.io.StringBufferInputStream;
 import java.io.DataInputStream;
 import com.netscape.jsdebugging.ifcui.palomar.widget.layout.*;
@@ -53,11 +53,11 @@ public class SourceView extends InternalWindow
         _sourceViewManager = emperor.getSourceViewManager();
         _stackTyrant    = emperor.getStackTyrant();
 
-        if(ASS)ER.T(null!=_controlTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_sourceTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_breakpointTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_sourceViewManager,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_stackTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_controlTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_sourceTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_breakpointTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_sourceViewManager,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_stackTyrant,"emperor init order problem", this);
 
         _sourceLineVectorModel = 
             new SourceLineVectorModel(this, _controlTyrant, _stackTyrant, 
@@ -294,7 +294,7 @@ public class SourceView extends InternalWindow
     private String                  _selectedText = null;
     private int                     _selectedLineNumber = 0;
 
-    private static final boolean ASS = true; // enable ASSERT support?
+    
 }    
 
 /***************************************************************************/
@@ -399,7 +399,7 @@ final class SourceTextListView extends SmartItemListView
 
     public void drawMarks()
     {
-        if(ASS)ER.T(null!=_drawer,"SourceTextListView has null drawer",this);
+        if(AS.S)ER.T(null!=_drawer,"SourceTextListView has null drawer",this);
         if( null == _drawer || null == _drawer.marksRect())
         {
             draw();
@@ -413,7 +413,7 @@ final class SourceTextListView extends SmartItemListView
 
     public void drawMarksOfItemAt(int i)
     {
-        if(ASS)ER.T(null!=_drawer,"SourceTextListView has null drawer",this);
+        if(AS.S)ER.T(null!=_drawer,"SourceTextListView has null drawer",this);
         if( null == _drawer )
         {
             drawItemAt(i);
@@ -459,7 +459,7 @@ final class SourceTextListView extends SmartItemListView
     private int                  _dragOrigin = -1;
     private int                  _dragLast;
     private int                  _dragAdjLineOrigin;
-    private static final boolean ASS = true; // enable ASSERT support?
+    
 }    
 
 /***************************************************************************/
@@ -637,7 +637,7 @@ final class SourceTextItemDrawer
         StringBuffer buf = new StringBuffer();
         String s = String.valueOf(number);
         int len = s.length();
-        if(ASS)ER.T(len<=_lineNumberColumnCount,"lineNumberColumnCount screwed up",this);
+        if(AS.S)ER.T(len<=_lineNumberColumnCount,"lineNumberColumnCount screwed up",this);
 
         for( int i = 0; i < _lineNumberColumnCount-len; i++ )
             buf.append('0');
@@ -663,7 +663,7 @@ final class SourceTextItemDrawer
     private boolean _showLineNumbers;
     private int     _charWidth;
 
-    private static final boolean ASS = true; // enable ASSERT support?
+    
 }    
 
 final class SourceTextListItem extends SmartListItem
@@ -980,7 +980,6 @@ final class SourceTextListItem extends SmartListItem
     private int                  _dragOrigin = -1;
     private int                  _charCount;
     private SourceTextItemDrawer _drawer;
-    private static final boolean ASS = true; // enable ASSERT support?
 }    
 
 /***************************************************************************/

@@ -23,6 +23,7 @@
 package com.netscape.jsdebugging.ifcui;
 
 import com.netscape.jsdebugging.api.*;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 
 class StepInto implements StepHandler
 {
@@ -64,12 +65,10 @@ class StepInto implements StepHandler
         if( sourceLocation.getLine() > _startSourceLocation.getLine() )
             return STOP;
 
-        if(ASS){System.out.println( "returning from step_into - not our stop" );}
+        if(AS.DEBUG){System.out.println( "returning from step_into - not our stop" );}
         return CONTINUE_SEND_INTERRUPT;
     }
 
     private JSSourceLocation    _startSourceLocation;
     private JSPC                _startPC;
-
-    private static final boolean ASS = true; // enable ASSERT support?
 }    

@@ -26,7 +26,7 @@ import java.util.Observable;
 import java.util.Observer;
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import com.netscape.jsdebugging.ifcui.palomar.widget.layout.*;
 import com.netscape.jsdebugging.ifcui.palomar.widget.toolbar.*;
 import com.netscape.jsdebugging.ifcui.palomar.widget.toolTip.*;
@@ -61,8 +61,8 @@ public class CommandView
         _controlTyrant  = emperor.getControlTyrant();
         _commandTyrant = emperor.getCommandTyrant();
 
-        if(ASS)ER.T(null!=_controlTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_commandTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_controlTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_commandTyrant,"emperor init order problem", this);
 
         _commandTyrant.addObserver(this);
 
@@ -73,7 +73,7 @@ public class CommandView
         for( int i = 0; i < count; i++ )
         {
             CmdState state = _commandTyrant.findCmdState(i);
-            if(ASS)ER.T(null!=state,"invalid cmd state initing _items",this);
+            if(AS.S)ER.T(null!=state,"invalid cmd state initing _items",this);
             _items[i] = new CmdViewItem(state.enabled,state.checked);
         }
 
@@ -201,7 +201,7 @@ public class CommandView
     private void addMenuItem( int id, String text, MenuItem menuitem )
     {
         CmdState state = _commandTyrant.findCmdState(id);
-        if(ASS)ER.T(null!=state,"invalid cmd state while creating menu item",this);
+        if(AS.S)ER.T(null!=state,"invalid cmd state while creating menu item",this);
         _items[id].menuItem = menuitem.submenu().addItem(text,state.name,_commandTyrant);
     }
 
@@ -215,7 +215,7 @@ public class CommandView
     private void addButton( int id, String text, String tip, String image, boolean toggle )
     {
         CmdState state = _commandTyrant.findCmdState(id);
-        if(ASS)ER.T(null!=state,"invalid cmd state while creating buttons",this);
+        if(AS.S)ER.T(null!=state,"invalid cmd state while creating buttons",this);
         CmdViewItem item = _items[id];
 
         Bitmap bmp = _loadBitmap(image, true);
@@ -241,12 +241,12 @@ public class CommandView
             ClassLoader loader = getClass().getClassLoader();
             if(null != loader)
             {
-//                if(ASS)System.out.println("using loader.getResourceAsStream()");
+//                if(AS.DEBUG)System.out.println("using loader.getResourceAsStream()");
                 in = loader.getResourceAsStream(fullname); 
             }
             else
             {
-//                if(ASS)System.out.println("using ClassLoader.getSystemResourceAsStream()");
+//                if(AS.DEBUG)System.out.println("using ClassLoader.getSystemResourceAsStream()");
                 in = ClassLoader.getSystemResourceAsStream(fullname);
             }
 
@@ -297,7 +297,7 @@ public class CommandView
         }
         if(null == bitmap)
         {
-            if(ASS)System.err.println("loading bitmap from jar failed, trying Bitmap.bitmapNamed()");
+            if(AS.DEBUG)System.err.println("loading bitmap from jar failed, trying Bitmap.bitmapNamed()");
             bitmap = Bitmap.bitmapNamed(name);
         }
         
@@ -307,7 +307,7 @@ public class CommandView
     private void refreshSingleItemState(int i, boolean force)
     {
         CmdState state = _commandTyrant.findCmdState(i);
-        if(ASS)ER.T(null!=state,"invalid cmd state in refreshAllStates()",this);
+        if(AS.S)ER.T(null!=state,"invalid cmd state in refreshAllStates()",this);
         CmdViewItem item = _items[i];
 
         if( null != item.button )
@@ -366,8 +366,5 @@ public class CommandView
     private boolean _oldPageListShowing;
     private boolean _oldInterruptOn;
     private boolean _oldBkeakpointSet;
-
-
-    private static final boolean ASS = true; // enable ASSERT support?
 }
 

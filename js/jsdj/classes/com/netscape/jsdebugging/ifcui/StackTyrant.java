@@ -26,7 +26,7 @@ import java.util.Observable;
 import java.util.Observer;
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import com.netscape.jsdebugging.api.*;
 
 public class StackTyrant
@@ -39,7 +39,7 @@ public class StackTyrant
         _emperor = emperor;
         _controlTyrant  = emperor.getControlTyrant();
 
-        if(ASS)ER.T(null!=_controlTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_controlTyrant,"emperor init order problem", this);
 
         _controlTyrant.addObserver(this);
     }
@@ -62,11 +62,11 @@ public class StackTyrant
                 }
                 catch(InvalidInfoException e)
                 {
-                    if(ASS)ER.T(false,"InvalidInfoException in StackTyrant",this);
+                    if(AS.S)ER.T(false,"InvalidInfoException in StackTyrant",this);
                 }
 
-                if(ASS)ER.T(null!=stack,"stack is null!",this);
-                if(ASS)ER.T(0!=stack.length,"stack is empty!",this);
+                if(AS.S)ER.T(null!=stack,"stack is null!",this);
+                if(AS.S)ER.T(0!=stack.length,"stack is empty!",this);
 
                 if( null != stack )
                 {
@@ -96,7 +96,7 @@ public class StackTyrant
     {
         if( null == _frameArray )
             return null;
-//        if(ASS)ER.T(null!=_frameArray,"getCurrentFrame called when no frameArray!",this);
+//        if(AS.S)ER.T(null!=_frameArray,"getCurrentFrame called when no frameArray!",this);
 
         return _frameArray[_currentFrameIndex];
     }
@@ -109,7 +109,7 @@ public class StackTyrant
         if( ControlTyrant.STOPPED != _controlTyrant.getState() )
             return null;
 
-  //      if(ASS)ER.T(null!=_frameArray,"getCurrentLocation called when no frameArray!",this);
+  //      if(AS.S)ER.T(null!=_frameArray,"getCurrentLocation called when no frameArray!",this);
 
         StackFrameInfo rawframe = _frameArray[_currentFrameIndex];
         if( null == rawframe || ! (rawframe instanceof JSStackFrameInfo) )
@@ -122,7 +122,7 @@ public class StackTyrant
         }
         catch(InvalidInfoException e)
         {
-            if(ASS)ER.T(false,"InvalidInfoException in StackTyrant",this);
+            if(AS.S)ER.T(false,"InvalidInfoException in StackTyrant",this);
             return null;
         }
         return (JSSourceLocation)pc.getSourceLocation();
@@ -130,8 +130,8 @@ public class StackTyrant
 
     public void setCurrentFrame( int i )
     {
-        if(ASS)ER.T(null==_frameArray||i>=0,"setCurrentFrame index out of bounds!",this);
-        if(ASS)ER.T(null==_frameArray||i<_frameArray.length,"setCurrentFrame index out of bounds!",this);
+        if(AS.S)ER.T(null==_frameArray||i>=0,"setCurrentFrame index out of bounds!",this);
+        if(AS.S)ER.T(null==_frameArray||i<_frameArray.length,"setCurrentFrame index out of bounds!",this);
         _currentFrameIndex = i;
         _notifyCurrentFrameChanged();
     }
@@ -156,8 +156,6 @@ public class StackTyrant
 
     private int              _currentFrameIndex;
     private StackFrameInfo[] _frameArray;
-
-    private static final boolean ASS = true; // enable ASSERT support?
 }    
 
 class StackTyrantUpdate

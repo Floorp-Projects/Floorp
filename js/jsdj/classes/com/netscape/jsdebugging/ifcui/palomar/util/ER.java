@@ -24,23 +24,18 @@ import java.util.Hashtable;
 * ASSERT support for Java
 * <PRE>
 * usage:
-*     // set flag in your class
-*     private static final boolean ASS = true;    // false to disable ASSERT
+*     // use in your class
+*     if(AS.S)ER.T(expr, message, this);
 *
 *     // use in your class
-*     if(ASS)ER.T( expr, message, this);
-*
-*     // use in your class
-*     if(ASS)ER.T( i==5, "i is screwed up in foo()", this);
+*     if(AS.S)ER.T(i==5, "i is screwed up in foo()", this);
 * </PRE>
 *
 * There are various versions of the T() method.
 *
-* Setting  "ASS = false" in this class will globally disable
-* ASSERT, but the local expressions will still be evaluated.
-*
-* Debuggers can be set to catch "com.netscape.jsdebugging.ifcui.palomar.util.DebuggerCaughtException"
-* exceptions. The effect of a DebugBreak() is thus available.
+* Debuggers can be set to catch the exception:
+* <pre>com.netscape.jsdebugging.ifcui.palomar.util.DebuggerCaughtException</pre>
+* The effect of a DebugBreak() is thus available.
 *
 * Handlers can be set on a per thread basis. If present, the handler for
 * the given thread will be called on assert failure. This allows the possiblity
@@ -49,9 +44,8 @@ import java.util.Hashtable;
 *
 */
 
-public class ER
+public final class ER
 {
-
     /**
     * This class is never instantiated
     */
@@ -60,66 +54,51 @@ public class ER
     /**
     * call with only an expression
     */
-    public static void T( boolean expr )
+    public static void T(boolean expr)
     {
-        if( ASS )
-            if( ! expr )
-                assert_fail( null, null, true );
+        if(AS.S)
+            if(! expr)
+                assert_fail(null, null, true);
     }
 
     /**
     * call with an expression and an object that is either a msg or 'this'
     */
-    public static void T( boolean expr, Object ob )
+    public static void T(boolean expr, Object ob)
     {
-        if( ASS )
-            if( ! expr )
-                if( ob instanceof String )
-                    assert_fail( (String)ob, null, true );
+        if(AS.S)
+            if(! expr)
+                if(ob instanceof String)
+                    assert_fail((String)ob, null, true);
                 else
-                    assert_fail( null, ob, true );
-    }
-
-    /**
-    * Runs like the normal T method, except that it is intended to
-    * work when not on the IFC thread, which would otherwise freeze
-    * the program.  This just throws the DebuggerCaughtException.
-    *
-    * Should modify this to promt the user on the command line
-    * but this is not implemented yet.
-    */
-    public static void T_NO_GUI( boolean expr, String message )
-    {
-        if( ASS )
-            if( ! expr )
-                assert_fail(message, null, false);
+                    assert_fail(null, ob, true);
     }
 
     /**
     * call with an expression, a msg, and a classname (for use in static methods)
     */
-    public static void T( boolean expr, String msg, String classname )
+    public static void T(boolean expr, String msg, String classname)
     {
-        if( ASS )
-            if( ! expr )
+        if(AS.S)
+            if(! expr)
                 try
                 {
-                    assert_fail( msg, Class.forName(classname), true );
+                    assert_fail(msg, Class.forName(classname), true);
                 }
-                catch( ClassNotFoundException e )
+                catch(ClassNotFoundException e)
                 {
-                    assert_fail( msg, null, true );
+                    assert_fail(msg, null, true);
                 }
     }
 
     /**
     * call with an expression, a msg, and 'this' (the 'normal' case)
     */
-    public static void T( boolean expr, String msg, Object ob )
+    public static void T(boolean expr, String msg, Object ob)
     {
-        if( ASS )
-            if( ! expr )
-                assert_fail( msg, ob, true );
+        if(AS.S)
+            if(! expr)
+                assert_fail(msg, ob, true);
     }
 
     /**
@@ -127,11 +106,11 @@ public class ER
     */
     public static void setFailureHandler(Thread t, AssertFailureHandler h)
     {
-        if(ASS)
+        if(AS.S)
         {
-            if( null == _FailureHandlers )
+            if(null == _FailureHandlers)
                 _FailureHandlers = new Hashtable();
-            if( null != h )
+            if(null != h)
                 _FailureHandlers.put(t,h);
             else
                 _FailureHandlers.remove(t);
@@ -143,31 +122,53 @@ public class ER
     */
     public static AssertFailureHandler getFailureHandler(Thread t)
     {
-        if(ASS)
+        if(AS.S)
         {
-            if( null != _FailureHandlers )
+            if(null != _FailureHandlers)
                 return (AssertFailureHandler) _FailureHandlers.get(t);
         }
         return null;
     }
 
+    public static boolean getDumpStackOnFailure()
+    {
+        return _dumpStackOnFailure;
+    }
+    public static void    setDumpStackOnFailure(boolean dump)
+    {
+        _dumpStackOnFailure = dump;
+    }
+
+    public static void dumpThreadsAndStack()
+    {
+        Thread t = Thread.currentThread();
+        System.out.println("----------------------------------------------");
+        t.getThreadGroup().list();
+        System.out.println("----------------------------------------------");
+        System.out.println(t);
+        System.out.println("----------------------------------------------");
+        t.dumpStack();
+    }
+
     private static void assert_fail(String msg, Object ob, boolean useHandler)
     {
-        if( ASS )
+        if(AS.S)
         {
-            String errMsg = buildString( msg, ob );
-            System.out.println( "===============!!!==============" );
-            System.out.println( errMsg );
-            System.out.println( "===============!!!==============" );
+            String errMsg = buildString(msg, ob);
+            System.out.println("==============================!!!=============================");
+            System.out.println(errMsg);
+            if(_dumpStackOnFailure)
+                dumpThreadsAndStack();
+            System.out.println("==============================!!!=============================");
 
             int choice = AssertFailureHandler.DEBUG;
 
-            if( useHandler && null != _FailureHandlers )
+            if(useHandler && null != _FailureHandlers)
             {
                 AssertFailureHandler handler = (AssertFailureHandler) 
                         _FailureHandlers.get(Thread.currentThread());
-                if( null != handler )
-                    choice = handler.assertFailed( msg, errMsg, ob );
+                if(null != handler)
+                    choice = handler.assertFailed(msg, errMsg, ob);
             }
 
             switch(choice)
@@ -184,7 +185,7 @@ public class ER
                     {
                         throw new DebuggerCaughtException(errMsg);
                     }
-                    catch( DebuggerCaughtException e )
+                    catch(DebuggerCaughtException e)
                     {
                         // eat exception (but catch in debugger)
                     }
@@ -192,15 +193,15 @@ public class ER
         }
     }
 
-    private static String buildString( String msg, Object ob )
+    private static String buildString(String msg, Object ob)
     {
         String str = null;
-        if( ASS )
+        if(AS.S)
         {
             str = "!!!Assertion failed!!!";
-            if( null != msg )
+            if(null != msg)
                 str += "\n  " + msg;
-            if( null != ob )
+            if(null != ob)
             {
                 str += "\n  Classname =  " + ob.getClass();
                 str += "\n  Object dump: " + ob;
@@ -210,8 +211,7 @@ public class ER
     }
 
     private static Hashtable _FailureHandlers = null;
-
-    private static final boolean ASS = true; // false to diasable
+    private static boolean _dumpStackOnFailure = true;
 }
 
 /**
@@ -222,4 +222,3 @@ class DebuggerCaughtException extends RuntimeException {
         super(msg);
     }
 }
-

@@ -26,7 +26,7 @@ import netscape.application.*;
 import netscape.util.*;
 import java.io.FileInputStream;
 import com.netscape.jsdebugging.ifcui.palomar.widget.layout.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 
 class LicenseViewer
     extends InternalWindow

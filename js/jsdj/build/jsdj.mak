@@ -253,6 +253,18 @@ api_corba_fast :
     @echo building com.netscape.jsdebugging.api.corba
     @sj $(CORBA_JAVA_FLAGS) $(JSDEBUGGING_DIR)\api\corba\*.java
 
+palomar_assert_on :
+    @echo generating com.netscape.jsdebugging.ifcui.palomar.util with assert on
+    @gawk -f $(BUILD_DIR)\gen_dbg.awk -vvalue=true -vpackage_name=com.netscape.jsdebugging.ifcui.palomar.util > $(JSDEBUGGING_DIR)\ifcui\palomar\util\AS.java
+    @echo building com.netscape.jsdebugging.ifcui.palomar.util
+    @sj $(JAVAFLAGS) $(JSDEBUGGING_DIR)\ifcui\palomar\util\*.java
+
+palomar_assert_off :
+    @echo generating com.netscape.jsdebugging.ifcui.palomar.util with assert on
+    @gawk -f $(BUILD_DIR)\gen_dbg.awk -vvalue=false -vpackage_name=com.netscape.jsdebugging.ifcui.palomar.util > $(JSDEBUGGING_DIR)\ifcui\palomar\util\AS.java
+    @echo building com.netscape.jsdebugging.ifcui.palomar.util
+    @sj $(JAVAFLAGS) $(JSDEBUGGING_DIR)\ifcui\palomar\util\*.java
+
 ########## packaging #################
 
 JSLOGGER_CLASS_FILES = \

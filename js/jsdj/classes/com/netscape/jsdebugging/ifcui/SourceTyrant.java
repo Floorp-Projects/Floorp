@@ -26,7 +26,7 @@ import java.util.Observable;
 import java.util.Observer;
 import netscape.application.*;
 import netscape.util.*;
-import com.netscape.jsdebugging.ifcui.palomar.util.ER;
+import com.netscape.jsdebugging.ifcui.palomar.util.*;
 import netscape.security.PrivilegeManager;
 import netscape.security.ForbiddenTargetException;
 import com.netscape.jsdebugging.api.*;
@@ -44,8 +44,8 @@ public class SourceTyrant
         PrivilegeManager.enablePrivilege("Debugger");
         _sourceTextProvider = _emperor.getSourceTextProvider();
 
-        if(ASS)ER.T(null!=_controlTyrant,"emperor init order problem", this);
-        if(ASS)ER.T(null!=_sourceTextProvider,"no SourceTextProvider found",this);
+        if(AS.S)ER.T(null!=_controlTyrant,"emperor init order problem", this);
+        if(AS.S)ER.T(null!=_sourceTextProvider,"no SourceTextProvider found",this);
 
         _controlTyrant.addObserver(this);
     }
@@ -99,7 +99,7 @@ public class SourceTyrant
         if( _selectedSourceTextItem == s )
             return;
 
-//        if(ASS)System.out.println("sel changed to " + s.getURL() );
+//        if(AS.DEBUG)System.out.println("sel changed to " + s.getURL() );
 
         _selectedSourceTextItem = s;
         _notifyObservers( SourceTyrantUpdate.SELECT_CHANGED, s );
@@ -168,8 +168,8 @@ public class SourceTyrant
 
     public synchronized void makeAdjustment( SourceTextItem sti, int line, int offset )
     {
-        if(ASS)ER.T(null!=sti,"bad SourceTextItem in makeAdjustment",this);
-        if(ASS)ER.T(line >=0,"bad line in makeAdjustment",this);
+        if(AS.S)ER.T(null!=sti,"bad SourceTextItem in makeAdjustment",this);
+        if(AS.S)ER.T(line >=0,"bad line in makeAdjustment",this);
 
         if( null == _adjustments )
         {
@@ -220,8 +220,8 @@ public class SourceTyrant
 
     public int getAdjustment( SourceTextItem sti, int line )
     {
-        if(ASS)ER.T(null!=sti,"bad SourceTextItem in getAdjustment",this);
-        if(ASS)ER.T(line >=0,"bad line in getAdjustment",this);
+        if(AS.S)ER.T(null!=sti,"bad SourceTextItem in getAdjustment",this);
+        if(AS.S)ER.T(line >=0,"bad line in getAdjustment",this);
 
         if( null == _adjustments )
             return 0;
@@ -243,8 +243,8 @@ public class SourceTyrant
 
     public int userLine2SystemLine( SourceTextItem sti, int line )
     {
-        if(ASS)ER.T(null!=sti,"bad SourceTextItem in userLine2SystemLine",this);
-        if(ASS)ER.T(line >=0,"bad line in userLine2SystemLine",this);
+        if(AS.S)ER.T(null!=sti,"bad SourceTextItem in userLine2SystemLine",this);
+        if(AS.S)ER.T(line >=0,"bad line in userLine2SystemLine",this);
 
         if( null == _adjustments )
             return line;
@@ -264,8 +264,8 @@ public class SourceTyrant
 
     public int systemLine2UserLine( SourceTextItem sti, int line )
     {
-        if(ASS)ER.T(null!=sti,"bad SourceTextItem in userLine2SystemLine",this);
-        if(ASS)ER.T(line >=0,"bad line in userLine2SystemLine",this);
+        if(AS.S)ER.T(null!=sti,"bad SourceTextItem in userLine2SystemLine",this);
+        if(AS.S)ER.T(line >=0,"bad line in userLine2SystemLine",this);
 
         if( null == _adjustments )
             return line;
@@ -289,7 +289,7 @@ public class SourceTyrant
 
     public int[] getUserAdjustedLineArray( SourceTextItem sti )
     {
-        if(ASS)ER.T(null!=sti,"bad SourceTextItem in getUserAdjustedLineArray",this);
+        if(AS.S)ER.T(null!=sti,"bad SourceTextItem in getUserAdjustedLineArray",this);
 
         if( null == _adjustments )
             return null;
@@ -318,7 +318,7 @@ public class SourceTyrant
         for(int i = 0; i < count; i++)
         {
             AdjustmentItem adj = (AdjustmentItem) v.elementAt(i);
-            if(ASS)ER.T(adj.offset!=0,"adj.offset == 0",this);
+            if(AS.S)ER.T(adj.offset!=0,"adj.offset == 0",this);
             cummulative_offset += adj.offset;
             adj.cummulative_offset = cummulative_offset;
         }
@@ -339,8 +339,6 @@ public class SourceTyrant
     private String              _selectedText             = null;
 
     private Hashtable           _adjustments = null;
-
-    private static final boolean ASS = true; // enable ASSERT support?
 }    
 
 class AdjustmentItem
