@@ -48,9 +48,28 @@ static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 
 nsFtpProtocolHandler::nsFtpProtocolHandler() {
     NS_INIT_REFCNT();
+    NS_NEWXPCOM(mRootConnectionList, nsHashtable);
+    NS_NEWXPCOM(mThreadArray, nsVoidArray);
+}
+
+// cleans up a connection list entry
+PRBool CleanupConnEntry(nsHashKey *aKey, void *aData, void *closure) {
+    // XXX do we need to explicitly close the streams?
+    delete aData;
+    return PR_TRUE;
 }
 
 nsFtpProtocolHandler::~nsFtpProtocolHandler() {
+    mRootConnectionList->Reset(CleanupConnEntry);
+    NS_DELETEXPCOM(mRootConnectionList);
+
+    nsIThread *thread;
+    while ( (thread = (nsIThread*)mThreadArray->ElementAt(0)) ) {
+        thread->Join();
+        NS_RELEASE(thread);
+        mThreadArray->RemoveElementAt(0);
+    }
+    NS_DELETEXPCOM(mThreadArray);
 }
 
 NS_IMPL_ISUPPORTS(nsFtpProtocolHandler, NS_GET_IID(nsIProtocolHandler));
@@ -169,11 +188,20 @@ nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
     rv = nsFTPChannel::Create(nsnull, NS_GET_IID(nsIFTPChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->Init(verb, url, aGroup, eventSinkGetter);
+    nsIThread* connThread = nsnull;
+    rv = channel->Init(verb, url, aGroup, eventSinkGetter, 
+                       mRootConnectionList, &connThread);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpProtocolHandler::NewChannel() FAILED\n"));
         return rv;
+    }
+
+    // add this thread to the array.
+    if (!mThreadArray->AppendElement(connThread)) {
+        NS_RELEASE(connThread);
+        NS_RELEASE(channel);
+        return NS_ERROR_FAILURE;
     }
 
     *result = channel;

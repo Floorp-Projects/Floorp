@@ -20,6 +20,8 @@
 #define nsFtpProtocolHandler_h___
 
 #include "nsIProtocolHandler.h"
+#include "nsHashtable.h"
+#include "nsVoidArray.h"
 
 // {25029490-F132-11d2-9588-00805F369F95}
 #define NS_FTPPROTOCOLHANDLER_CID \
@@ -43,6 +45,8 @@ public:
     
 protected:
     nsISupports*        mEventSinkGetter;
+    nsHashtable*        mRootConnectionList;    // hash of FTP connections
+    nsVoidArray*        mThreadArray;           // array of FTP connection threads
 };
 
 #endif /* nsFtpProtocolHandler_h___ */

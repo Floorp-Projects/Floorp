@@ -157,14 +157,14 @@ public:
         // Open the input stream:
         rv = NS_NewTypicalInputFileStream(&str, inSpec);
         if (NS_FAILED(rv)) goto done;
-        rv = str->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), (void**)&inStr);
+        rv = str->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&inStr);
         NS_RELEASE(str);
         if (NS_FAILED(rv)) goto done;
         
         // Open the output stream:
         rv = NS_NewTypicalOutputFileStream(&str, outSpec);
         if (NS_FAILED(rv)) goto done;
-        rv = str->QueryInterface(nsCOMTypeInfo<nsIOutputStream>::GetIID(), (void**)&outStr);
+        rv = str->QueryInterface(NS_GET_IID(nsIOutputStream), (void**)&outStr);
         NS_RELEASE(str);
         if (NS_FAILED(rv)) goto done;
 
@@ -234,7 +234,7 @@ protected:
     PRUint32 mBufferSize;
 };
 
-NS_IMPL_ISUPPORTS(FileSpecWorker, nsCOMTypeInfo<nsIRunnable>::GetIID());
+NS_IMPL_ISUPPORTS(FileSpecWorker, NS_GET_IID(nsIRunnable));
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -341,7 +341,7 @@ protected:
     PRUint32 mBufferSize;
 };
 
-NS_IMPL_ISUPPORTS(FileChannelWorker, nsCOMTypeInfo<nsIRunnable>::GetIID());
+NS_IMPL_ISUPPORTS(FileChannelWorker, NS_GET_IID(nsIRunnable));
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -382,7 +382,7 @@ Test(CreateFun create, PRUint32 count,
                     bufSize);
         if (NS_FAILED(rv)) goto done;
 
-        rv = NS_NewThread(&thread, worker);
+        rv = NS_NewThread(&thread, worker, 0, PR_JOINABLE_THREAD);
         NS_RELEASE(worker);
         if (NS_FAILED(rv)) goto done;
 

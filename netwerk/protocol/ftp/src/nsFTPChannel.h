@@ -30,9 +30,8 @@
 #include "nsIBufferOutputStream.h"
 #include "nsIBufferInputStream.h"
 #include "nsILoadGroup.h"
-
 #include "nsCOMPtr.h"
-
+#include "nsHashtable.h"
 
 class nsIEventSinkGetter;
 class nsIProgressEventSink;
@@ -55,8 +54,12 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
+    // initializes the channel. creates the FTP connection thread
+    // and returns it so the protocol handler can cache it and
+    // join() it on shutdown.
     nsresult Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
-                  nsIEventSinkGetter* getter);
+                  nsIEventSinkGetter* getter, nsHashtable *aConnectionList,
+                  nsIThread **_retval);
 
 protected:
     nsIURI*                 mUrl;
@@ -73,8 +76,11 @@ protected:
     PRUint32                mSourceOffset;
     PRInt32                 mAmount;
     nsILoadGroup*           mLoadGroup;
-    nsString2               mContentType;
+    nsAutoString            mContentType;
+    PRInt32                 mContentLength;
     nsCOMPtr<nsISupports>   mOwner;
+    nsHashtable*            mConnectionList; // thread safe list of connections.
+    nsIThread*              mConnectionThread; // the thread for this connection.
 };
 
 #define NS_FTP_SEGMENT_SIZE   (4*1024)

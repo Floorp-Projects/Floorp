@@ -156,7 +156,7 @@ nsresult nsSocketTransportService::Init(void)
   //
   if (NS_SUCCEEDED(rv) && !mThread) {
     mThreadRunning = PR_TRUE;
-    rv = NS_NewThread(&mThread, this);
+    rv = NS_NewThread(&mThread, this, 0, PR_JOINABLE_THREAD);
   }
 
   return rv;

@@ -30,6 +30,43 @@
 #include "prtime.h"
 #include "nsString2.h"
 #include "nsIEventQueue.h"
+#include "nsHashtable.h"
+#include "nsIChannel.h"
+#include "nsIFTPContext.h"
+
+// The cache object string key has the following syntax
+// "HostPort" NOTE: no seperators.
+class nsConnCacheObj {
+public:
+    nsConnCacheObj(nsIChannel *aChannel,
+                   nsIInputStream *aInputStream,
+                   nsIOutputStream *aOutputStream)
+    { 
+        mSocketTransport = aChannel;
+        NS_ADDREF(mSocketTransport);
+
+        mInputStream = aInputStream;
+        NS_ADDREF(mInputStream);
+
+        mOutputStream = aOutputStream;
+        NS_ADDREF(mOutputStream);
+
+        mServerType = 0;
+    };
+    ~nsConnCacheObj()
+    {
+        NS_RELEASE(mSocketTransport);
+        NS_RELEASE(mInputStream);
+        NS_RELEASE(mOutputStream);
+    };
+
+    nsIChannel      *mSocketTransport;      // the connection
+    nsIInputStream  *mInputStream;          // to read from server
+    nsIOutputStream *mOutputStream;         // to write to server
+    PRUint32         mServerType;           // what kind of server is it.
+    nsCAutoString    mCwd;                  // what dir are we in
+    PRBool           mList;                 // are we sending LIST or NLST
+};
 
 // ftp server types
 #define FTP_GENERIC_TYPE     0
@@ -111,11 +148,15 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIRUNNABLE
 
-    nsFtpConnectionThread(nsIEventQueue* aEventQ, nsIStreamListener *aListener,
-                          nsIChannel* channel, nsISupports* ctxt);
+    nsFtpConnectionThread();
     virtual ~nsFtpConnectionThread();
 
-    nsresult Init(nsIURI* aUrl);
+    nsresult Init(nsIURI* aUrl,
+                  nsIEventQueue* aEventQ,
+                  nsIStreamListener *aListener,
+                  nsIChannel* channel,
+                  nsISupports* ctxt,
+                  nsHashtable* aConnectionList);
     nsresult Process();
 
     // user level setup
@@ -178,7 +219,7 @@ private:
 
     FTP_STATE           mState;             // the current state
     FTP_STATE           mNextState;         // the next state
-    FTP_ACTION          mAction;            // the higher level action
+    FTP_ACTION          mAction;            // the higher level action (GET/PUT)
 
     nsISocketTransportService *mSTS;        // the socket transport service;
 
@@ -188,14 +229,11 @@ private:
     nsIOutputStream*    mCOutStream;        // command channel output
     nsIInputStream*     mCInStream;         // command channel input
 
-    //nsString2           mDataAddress;       // the host:port combo for the data connection
     nsIOutputStream*    mDOutStream;        // data channel output
     nsIInputStream*     mDInStream;         // data channel input
 
-    nsIBufferInputStream* mCBufInStream;    // data channel input (async)
-
     PRInt32             mResponseCode;      // the last command response code.
-    nsString2           mResponseMsg;       // the last command response text
+    nsCAutoString       mResponseMsg;       // the last command response text
     nsString2           mUsername;
     nsString2           mPassword;
     nsString2           mFilename;          // url filename (if any)
@@ -206,7 +244,12 @@ private:
     PRInt32             mServerType;
     PRBool              mPasv;
     PRBool              mList;              // use LIST instead of NLST
+    nsCAutoString       mCwd;               // Our current working dir.
+    nsCAutoString       mCwdAttempt;        // the dir we're trying to get into.
 // end "these ...."
+
+    nsStringKey         *mCacheKey;         // the key into the cache hash.
+    PRLock              *mCacheLock;        // the lock for accessing the cache.
 
     PRBool              mConnected;
     PRBool              mUseDefaultPath;    // use PWD to figure out path
@@ -214,16 +257,24 @@ private:
     PRBool              mDirectory;         // this url is a directory
     PRBool              mBin;               // transfer mode (ascii or binary)
     PRBool              mContinueRead;      // continue digesting a multi-line reponse
+    PRBool              mResetMode;         // have we reset the mode to ascii
+    PRBool              mAnonymous;         // try connecting anonymous (default)
+    PRBool              mRetryPass;         // retrying the password
+    PRBool              mCachedConn;        // is this connection from the cache
+    PRBool              mSentStart;         // have we sent an OnStartRequest() notification
+    nsresult            mInternalError;     // represents internal state errors
 
     nsIStreamListener*  mListener;          // the listener we want to call
                                             // during our event firing.
     nsIChannel*         mChannel;
     nsISupports*        mContext;
+    nsIFTPContext*      mFTPContext;        // FTP channel specific context.
 
     PRBool              mKeepRunning;       // thread event loop boolean
 
     nsString2           mContentType;       // the content type of the data we're dealing w/.
     char*               mURLSpec;
+    nsHashtable*        mConnectionList;    // list of open FTP connections
 
 };
 
