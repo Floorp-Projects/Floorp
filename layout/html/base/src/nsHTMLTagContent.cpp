@@ -1543,12 +1543,14 @@ nsHTMLTagContent::MapImageBorderInto(nsIStyleContext* aContext,
 PRBool nsHTMLTagContent::ParseColor(const nsString& aString,
                                     nsHTMLValue& aResult)
 {
-  char cbuf[40];
-  aString.ToCString(cbuf, sizeof(cbuf));
   if (aString.Length() > 0) {
+    nsAutoString  colorStr (aString);
+    colorStr.CompressWhitespace();
+    char cbuf[40];
+    colorStr.ToCString(cbuf, sizeof(cbuf));
     nscolor color;
     if (NS_ColorNameToRGB(cbuf, &color)) {
-      aResult.SetStringValue(aString);
+      aResult.SetStringValue(colorStr);
       return PR_TRUE;
     }
     if (NS_HexToRGB(cbuf, &color)) {
