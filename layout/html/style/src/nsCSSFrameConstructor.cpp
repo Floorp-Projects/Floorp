@@ -111,7 +111,7 @@ static PRBool gReallyNoisyContentUpdates = PR_FALSE;
 static PRBool gNoisyInlineConstruction = PR_FALSE;
 #endif
 
-#define NEWGFX_LIST
+//#define NEWGFX_LIST
 #define NEWGFX_LIST_SCROLLFRAME
 
 #ifdef NEWGFX_LIST
