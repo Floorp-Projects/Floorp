@@ -458,9 +458,7 @@ BulletFrame::DeleteFrame(nsIPresContext& aPresContext)
 NS_IMETHODIMP
 BulletFrame::ListTag(FILE* out) const
 {
-  PRInt32 contentIndex;
-  GetContentIndex(contentIndex);
-  fprintf(out, "Bullet(%d)@%p", contentIndex, this);
+  fprintf(out, "Bullet(%d)@%p", ContentIndexInContainer(this), this);
   return NS_OK;
 }
 
@@ -469,10 +467,7 @@ BulletFrame::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
-  PRInt32 contentIndex;
-  GetContentIndex(contentIndex);
-  fprintf(out, "Bullet(%d)@%p ", 
-          contentIndex, this);
+  fprintf(out, "Bullet(%d)@%p ", ContentIndexInContainer(this), this);
   nsIView* view;
   GetView(view);
   if (nsnull != view) {
@@ -1581,9 +1576,7 @@ nsBlockFrame::ListTag(FILE* out) const
       atom->ToString(tmp);
       fputs(tmp, out);
     }
-    PRInt32 contentIndex;
-    GetContentIndex(contentIndex);
-    fprintf(out, ">(%d)@%p", contentIndex, this);
+    fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
   } else {
     nsBlockFrameSuper::ListTag(out);
   }
@@ -2045,19 +2038,6 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
       frame = placeholder;
       isBlock = PR_FALSE;
     }
-
-    // XXX CONSTRUCTION See if it wants to be scrolled if overflows...
-#if 0
-    nsIFrame* kidFrame = nsnull;
-    nsresult rv;
-    if ((NS_STYLE_OVERFLOW_SCROLL == kidDisplay->mOverflow) ||
-        (NS_STYLE_OVERFLOW_AUTO == kidDisplay->mOverflow)) {
-      rv = NS_NewScrollFrame(&kidFrame, aKid, aParentFrame);
-      if (NS_OK == rv) {
-        kidFrame->SetStyleContext(aPresContext, kidSC);
-      }
-    }
-#endif
 
     // If the child is an inline then add it to the lastLine (if it's
     // an inline line, otherwise make a new line). If the child is a

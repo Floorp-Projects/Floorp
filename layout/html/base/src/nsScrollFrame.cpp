@@ -294,9 +294,7 @@ nsScrollBodyFrame::ListTag(FILE* out) const
     fputs(tmp, out);
     NS_RELEASE(atom);
   }
-  PRInt32 contentIndex;
-  GetContentIndex(contentIndex);
-  fprintf(out, ">(%d)@%p", contentIndex, this);
+  fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
   return NS_OK;
 }
 
@@ -431,9 +429,7 @@ nsScrollInnerFrame::ListTag(FILE* out) const
     fputs(tmp, out);
     NS_RELEASE(atom);
   }
-  PRInt32 contentIndex;
-  GetContentIndex(contentIndex);
-  fprintf(out, ">(%d)@%p", contentIndex, this);
+  fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
   return NS_OK;
 }
 
@@ -551,9 +547,7 @@ nsScrollOuterFrame::ListTag(FILE* out) const
     fputs(tmp, out);
     NS_RELEASE(atom);
   }
-  PRInt32 contentIndex;
-  GetContentIndex(contentIndex);
-  fprintf(out, ">(%d)@%p", contentIndex, this);
+  fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
   return NS_OK;
 }
 
