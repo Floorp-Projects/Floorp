@@ -45,6 +45,7 @@
 #include "nsMimeTypes.h"
 #include "msgCore.h"
 #include "nsMimeStringResources.h"
+#include "mimemoz2.h"
 
 
 #define MIME_SUPERCLASS mimeMultipartClass
@@ -667,6 +668,41 @@ MimeMultipartSigned_emit_child (MimeObject *obj)
    */
   status = (((MimeMultipartClass *)(&MIME_SUPERCLASS))->create_child(obj));
   if (status < 0) return status;
+
+  // Notify the charset of the first part.
+  if (obj->options && !(obj->options->override_charset)) {
+    MimeObject *firstChild = ((MimeContainer*) obj)->children[0];
+    char *disposition = MimeHeaders_get (firstChild->headers,
+                                         HEADER_CONTENT_DISPOSITION, 
+                                         PR_TRUE,
+                                         PR_FALSE);
+    // check if need to show as inline
+    if (!disposition)
+    {
+      const char *content_type = firstChild->content_type;
+      if (!nsCRT::strcasecmp (content_type, TEXT_PLAIN) ||
+          !nsCRT::strcasecmp (content_type, TEXT_HTML) ||
+          !nsCRT::strcasecmp (content_type, TEXT_MDL) ||
+          !nsCRT::strcasecmp (content_type, MULTIPART_ALTERNATIVE) ||
+          !nsCRT::strcasecmp (content_type, MULTIPART_RELATED) ||
+          !nsCRT::strcasecmp (content_type, MESSAGE_NEWS) ||
+          !nsCRT::strcasecmp (content_type, MESSAGE_RFC822)) {
+        char *ct = MimeHeaders_get(mult->hdrs, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
+        if (ct) {
+          char *cset = MimeHeaders_get_parameter (ct, "charset", NULL, NULL);
+          if (cset) {
+            mimeEmitterUpdateCharacterSet(obj->options, cset);
+            if (!nsCRT::strcasecmp(cset, "us-ascii"))
+              SetMailCharacterSetToMsgWindow(obj, NS_LITERAL_STRING("ISO-8859-1").get());
+            else
+              SetMailCharacterSetToMsgWindow(obj, NS_ConvertASCIItoUCS2(cset).get());
+            PR_Free(cset);
+          }
+          PR_Free(ct);
+        }
+      }
+    }
+  }
 
   /* Retrieve the child that it created.
    */
