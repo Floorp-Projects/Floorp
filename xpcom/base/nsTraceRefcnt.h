@@ -73,13 +73,11 @@ public:
 
   static NS_COM void LogAddRef(void* aPtr,
                                nsrefcnt aRefCnt,
-                               const char* aFile,
-                               int aLine);
+                               const char* aClass);
 
   static NS_COM void LogRelease(void* aPtr,
                                 nsrefcnt aRefCnt,
-                                const char* aFile,
-                                int aLine);
+                                const char* aClass);
 
 #ifdef DEBUG
   /**

@@ -471,15 +471,14 @@ nsTraceRefcnt::Destroy(void* aPtr,
 NS_COM void
 nsTraceRefcnt::LogAddRef(void* aPtr,
                          nsrefcnt aRefCnt,
-                         const char* aFile,
-                         int aLine)
+                         const char* aClazz)
 {
   InitTraceLog();
   if (PR_LOG_TEST(gTraceRefcntLog, PR_LOG_DEBUG)) {
     char sb[16384];
     WalkTheStack(sb, sizeof(sb));
     // Can't use PR_LOG(), b/c it truncates the line
-    printf("%s(%d)\t%p\tAddRef\t%d\t%s\n", aFile, aLine, aPtr, aRefCnt, sb);
+    printf("%s\t%p\tAddRef\t%d\t%s\n", aClazz, aPtr, aRefCnt, sb);
   }
 }
 
@@ -487,15 +486,14 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
 NS_COM void
 nsTraceRefcnt::LogRelease(void* aPtr,
                          nsrefcnt aRefCnt,
-                         const char* aFile,
-                         int aLine)
+                         const char* aClazz)
 {
   InitTraceLog();
   if (PR_LOG_TEST(gTraceRefcntLog, PR_LOG_DEBUG)) {
     char sb[16384];
     WalkTheStack(sb, sizeof(sb));
     // Can't use PR_LOG(), b/c it truncates the line
-    printf("%s(%d)\t%p\tRelease\t%d\t%s\n", aFile, aLine, aPtr, aRefCnt, sb);
+    printf("%s\t%p\tRelease\t%d\t%s\n", aClazz, aPtr, aRefCnt, sb);
   }
 }
 

@@ -193,7 +193,7 @@ NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                \
 {                                                            \
   NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");  \
   ++mRefCnt;                                                 \
-  NS_LOG_ADDREF(this, mRefCnt, __FILE__, __LINE__);          \
+  NS_LOG_ADDREF(this, mRefCnt, #_class);                     \
   return mRefCnt;                                            \
 }
 
@@ -201,17 +201,17 @@ NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                \
  * Use this macro to implement the Release method for a given <i>_class</i>
  * @param _class The name of the class implementing the method
  */
-#define NS_IMPL_RELEASE(_class)                        \
-NS_IMETHODIMP_(nsrefcnt) _class::Release(void)         \
-{                                                      \
-  NS_PRECONDITION(0 != mRefCnt, "dup release");        \
-  --mRefCnt;                                           \
-  NS_LOG_RELEASE(this, mRefCnt, __FILE__, __LINE__);   \
-  if (mRefCnt == 0) {                                  \
-    NS_DELETEXPCOM(this);                              \
-    return 0;                                          \
-  }                                                    \
-  return mRefCnt;                                      \
+#define NS_IMPL_RELEASE(_class)                              \
+NS_IMETHODIMP_(nsrefcnt) _class::Release(void)               \
+{                                                            \
+  NS_PRECONDITION(0 != mRefCnt, "dup release");              \
+  --mRefCnt;                                                 \
+  NS_LOG_RELEASE(this, mRefCnt, #_class);                    \
+  if (mRefCnt == 0) {                                        \
+    NS_DELETEXPCOM(this);                                    \
+    return 0;                                                \
+  }                                                          \
+  return mRefCnt;                                            \
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -767,15 +767,15 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 #endif
 
 #ifdef MOZ_LOG_REFCNT
-#define NS_LOG_ADDREF(_ptr, _refcnt, _file, _line) \
-  nsTraceRefcnt::LogAddRef((_ptr), (_refcnt), (_file), (_line))
+#define NS_LOG_ADDREF(_ptr, _refcnt, _class) \
+  nsTraceRefcnt::LogAddRef((_ptr), (_refcnt), (_class))
 
-#define NS_LOG_RELEASE(_ptr, _refcnt, _file, _line) \
-  nsTraceRefcnt::LogRelease((_ptr), (_refcnt), (_file), (_line))
+#define NS_LOG_RELEASE(_ptr, _refcnt, _class) \
+  nsTraceRefcnt::LogRelease((_ptr), (_refcnt), (_class))
 
 #else
-#define NS_LOG_ADDREF(_file, _line, _ptr, _refcnt)
-#define NS_LOG_RELEASE(_file, _line, _ptr, _refcnt)
+#define NS_LOG_ADDREF(_ptr, _refcnt, _class)
+#define NS_LOG_RELEASE(_ptr, _refcnt, _class)
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
