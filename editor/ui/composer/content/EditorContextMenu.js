@@ -25,8 +25,6 @@ function fillContentContextMenu(event, contextMenuNode)
   if ( event.target != contextMenuNode )
     return;
    
-	contextMenu = new nsContextMenu(contextMenuNode);
-
   HideDisabledItem("menu_undo_cm");
   HideDisabledItem("menu_redo_cm");
   HideDisabledItem("menu_cut_cm");
