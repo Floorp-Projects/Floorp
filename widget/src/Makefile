@@ -17,7 +17,11 @@
 
 DEPTH=../..
 
+ifeq ($(OS_TARGET),Rhapsody)
+DIRS = rhapsody
+else
 DIRS = motif
+endif
 
 include $(DEPTH)/config/config.mk
 
