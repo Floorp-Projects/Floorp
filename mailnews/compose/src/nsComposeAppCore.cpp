@@ -145,6 +145,7 @@ public:
 
 
 	// nsIComposeAppCore
+	NS_IMETHOD Dispose(void);
 	NS_IMETHOD CloseWindow(void);
 	NS_IMETHOD CompleteCallback(nsAutoString& aScript);
 	NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
@@ -268,19 +269,13 @@ nsComposeAppCore::nsComposeAppCore()
 
 nsComposeAppCore::~nsComposeAppCore()
 {
-	// remove ourselves from the app cores manager...
-	// if we were able to inherit directly from nsBaseAppCore then it would do this for
-	// us automatically
-	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIDOMAppCoresManager, appCoreManager, kAppCoresManagerCID, &rv); 
-	if (NS_SUCCEEDED(rv) && appCoreManager)
-		appCoreManager->Remove((nsIDOMBaseAppCore *) this);
-
+/*
 	NS_IF_RELEASE(mWebShell);
 	NS_IF_RELEASE(mWebShellWindow);
 	NS_IF_RELEASE(mScriptContext);
 	NS_IF_RELEASE(mWindow);
 	NS_IF_RELEASE(mEditor);
+*/
 	NS_IF_RELEASE(mMsgSend);
 	NS_IF_RELEASE(mMsgCompFields);
 }
@@ -358,6 +353,26 @@ nsComposeAppCore::ConstructAfterJavaScript(nsIWebShell *aWebShell)
  		
  		SetWindowFields(domDoc, to, cc, bcc, newsgroup, subject, body);
  	}
+	return NS_OK;
+}
+
+nsresult nsComposeAppCore::Dispose()
+{
+	// remove ourselves to the app cores manager...
+	// if we were able to inherit directly from nsBaseAppCore then it would do this for
+	// us automatically
+
+	nsresult res;
+
+	NS_WITH_SERVICE(nsIDOMAppCoresManager, appCoreManager, kAppCoresManagerCID, &res); 
+	if (NS_SUCCEEDED(res) && appCoreManager)
+	{
+//		if (mEditor)
+//			appCoreManager->Remove((nsIDOMBaseAppCore *) mEditor);
+		appCoreManager->Remove((nsIDOMBaseAppCore *) this);
+	}
+
+	NS_RELEASE(this);	//??
 	return NS_OK;
 }
 
