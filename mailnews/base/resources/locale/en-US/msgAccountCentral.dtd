@@ -30,7 +30,7 @@ Contributor(s):
 <!ENTITY subscribeNewsLink.label      "Manage newsgroup subscriptions"> 
 
 <!ENTITY accountsSectionHdr.label     "Accounts"> 
-<!ENTITY subscribeImapFolders.label   "Subscribe to folders"> 
+<!ENTITY subscribeImapFolders.label   "Manage folder subscriptions"> 
 <!ENTITY settingsLink.label           "View settings for this account"> 
 <!ENTITY newAcctLink.label            "Create a new account"> 
 
