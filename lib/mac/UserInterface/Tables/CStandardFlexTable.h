@@ -427,7 +427,7 @@ public:
 									const Rect&			inBounds);
 	
 	static void DrawTextString(	const char*		inText, 
-								const FontInfo*	inFontInfo,
+								const TextDrawingStuff & inTextInfo,
 								SInt16			inMargin,
 								const Rect&		inBounds,
 								SInt16			inJustification = teFlushLeft,

@@ -2450,12 +2450,13 @@ void CStandardFlexTable::SelectionChanged()
 //----------------------------------------------------------------------------------------
 void CStandardFlexTable::DrawTextString(
 	const char*		inText, 
-	const FontInfo*	inFontInfo,
+	const TextDrawingStuff & inTextInfo,
 	SInt16			inMargin,
 	const Rect&		inBounds,
 	SInt16			inJustification,
 	Boolean			inDoTruncate,
 	TruncCode		inTruncWhere)
+// correctly handles UTF8 encoding
 //----------------------------------------------------------------------------------------
 {
 	Rect r = inBounds;
@@ -2463,14 +2464,25 @@ void CStandardFlexTable::DrawTextString(
 	r.left  += inMargin;
 	r.right -= inMargin;
 	
-	UGraphicGizmos::PlaceTextInRect(inText, 
-									strlen(inText),
-									r,
-									inJustification,
-									teCenter,
-									inFontInfo,
-									inDoTruncate,
-									inTruncWhere );								
+	if (inTextInfo.encoding == CStandardFlexTable::TextDrawingStuff::eDefault)
+		UGraphicGizmos::PlaceTextInRect(inText,
+											strlen(inText),
+											r,
+											inJustification,
+											teCenter,
+											&inTextInfo.mTextFontInfo,
+											inDoTruncate,
+											inTruncWhere );								
+	else
+		UGraphicGizmos::PlaceUTF8TextInRect(inText,
+											strlen(inText),
+											r,
+											inJustification,
+											teCenter,
+											&inTextInfo.mTextFontInfo,
+											inDoTruncate,
+											inTruncWhere );								
+
 } // CStandardFlexTable::DrawTextString
 
 //----------------------------------------------------------------------------------------
