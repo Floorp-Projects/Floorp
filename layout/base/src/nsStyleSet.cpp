@@ -30,7 +30,7 @@ class ContextKey : public nsHashKey {
 public:
   ContextKey(nsIStyleContext* aContext);
   ContextKey(nsIStyleContext* aParent, nsISupportsArray* aRules);
-  ~ContextKey(void);
+  virtual ~ContextKey(void);
 
   void        SetContext(nsIStyleContext* aContext);
 
