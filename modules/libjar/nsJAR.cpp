@@ -1199,7 +1199,7 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
   rv = zipFile->GetPath(getter_Copies(path));
   if (NS_FAILED(rv)) return rv;
 
-  nsCStringKey key(path);
+  nsCStringKey key(path.get());
   nsJAR* zip = NS_STATIC_CAST(nsJAR*, NS_STATIC_CAST(nsIZipReader*,mZips.Get(&key))); // AddRefs
   if (zip) {
 #ifdef ZIP_CACHE_HIT_RATE
@@ -1323,7 +1323,7 @@ nsZipReaderCache::ReleaseZip(nsJAR* zip)
   rv = zipFile->GetPath(getter_Copies(path));
   if (NS_FAILED(rv)) return rv;
 
-  nsCStringKey key(path);
+  nsCStringKey key(path.get());
   PRBool removed = mZips.Remove(&key);  // Releases
   NS_ASSERTION(removed, "botched");
 
