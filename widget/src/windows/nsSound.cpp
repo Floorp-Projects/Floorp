@@ -22,7 +22,7 @@
  */
 
 #include "nscore.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 #include "plstr.h"
 #include <stdio.h>
 

@@ -216,7 +216,7 @@ xptiInterfaceInfo::GetName(char **name)
     if(!mName)
         return NS_ERROR_UNEXPECTED;
 
-    char* ptr = *name = (char*) nsAllocator::Clone(mName, PL_strlen(mName)+1);
+    char* ptr = *name = (char*) nsMemory::Clone(mName, PL_strlen(mName)+1);
     return ptr ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -225,7 +225,7 @@ xptiInterfaceInfo::GetIID(nsIID **iid)
 {
     NS_PRECONDITION(iid, "bad param");
 
-    nsIID* ptr = *iid = (nsIID*) nsAllocator::Clone(&mIID, sizeof(nsIID));
+    nsIID* ptr = *iid = (nsIID*) nsMemory::Clone(&mIID, sizeof(nsIID));
     return ptr ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

@@ -61,10 +61,10 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
     res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
     if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
       if (mLocale.Length() && mLocale.EqualsIgnoreCase(aLocaleUnichar)) {
-        nsAllocator::Free(aLocaleUnichar);
+        nsMemory::Free(aLocaleUnichar);
         return NS_OK;
       }
-      nsAllocator::Free(aLocaleUnichar);
+      nsMemory::Free(aLocaleUnichar);
     }
   }
 
@@ -92,7 +92,7 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
 
   if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
     mLocale = aLocaleUnichar; // cache locale name
-    nsAllocator::Free(aLocaleUnichar);
+    nsMemory::Free(aLocaleUnichar);
 
     nsCOMPtr <nsIPosixLocale> posixLocale = do_GetService(kPosixLocaleFactoryCID, &res);
     if (NS_SUCCEEDED(res)) {
@@ -105,7 +105,7 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
       res = platformCharset->GetDefaultCharsetForLocale(mLocale.GetUnicode(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
         mCharset = mappedCharset;
-        nsAllocator::Free(mappedCharset);
+        nsMemory::Free(mappedCharset);
       }
     }
   }

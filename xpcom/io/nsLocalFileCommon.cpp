@@ -76,7 +76,7 @@ private:
    nsresult res;                                                \
    if(NS_SUCCEEDED(res = (func)(&tmp))) {                       \
      if(NS_SUCCEEDED(res = gConverter.FSToNewUCS(tmp, (arg)))){ \
-       nsAllocator::Free(tmp);                                  \
+       nsMemory::Free(tmp);                                     \
      }                                                          \
    }                                                            \
    return res;                                                  \
@@ -87,7 +87,7 @@ private:
    nsresult res;                                                \
    if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((arg), &tmp))) { \
      (func)(tmp);                                               \
-     nsAllocator::Free(tmp);                                    \
+     nsMemory::Free(tmp);                                       \
    }                                                            \
    NS_ASSERTION(NS_SUCCEEDED(res), assertion_msg);              \
 }
@@ -97,7 +97,7 @@ private:
    nsresult res;                                                \
    if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((arg), &tmp))) { \
      res = (func)(tmp);                                         \
-     nsAllocator::Free(tmp);                                    \
+     nsMemory::Free(tmp);                                       \
    }                                                            \
    return res;                                                  \
 }
@@ -107,7 +107,7 @@ private:
    nsresult res;                                                \
    if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((arg2), &tmp))){ \
      res = (func)(arg1, tmp);                                   \
-     nsAllocator::Free(tmp);                                    \
+     nsMemory::Free(tmp);                                       \
    }                                                            \
    return res;                                                  \
 }
@@ -117,7 +117,7 @@ private:
    nsresult res;                                                \
    if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((arg1), &tmp))){ \
      res = (func)(tmp, arg2);                                   \
-     nsAllocator::Free(tmp);                                    \
+     nsMemory::Free(tmp);                                       \
    }                                                            \
    return res;                                                  \
 }
@@ -206,13 +206,13 @@ nsFSStringConversion::UCSToNewFS( const PRUnichar* aIn, char** aOut)
         PRInt32 outLength;
         res= mEncoder->GetMaxLength(aIn, inLength,&outLength);
         if(NS_SUCCEEDED(res)) {
-           *aOut = (char*)nsAllocator::Alloc(outLength+1);
+           *aOut = (char*)nsMemory::Alloc(outLength+1);
            if(nsnull != aOut) {
               res = mEncoder->Convert(aIn, &inLength, *aOut,  &outLength);
               if(NS_SUCCEEDED(res)) {
                  (*aOut)[outLength] = '\0';
               } else {
-                 nsAllocator::Free(*aOut);
+                 nsMemory::Free(*aOut);
                  aOut = nsnull;
               }
            } else {
@@ -235,13 +235,13 @@ nsFSStringConversion::FSToNewUCS( const char* aIn, PRUnichar** aOut)
         PRInt32 outLength;
         res= mDecoder->GetMaxLength(aIn, inLength,&outLength);
         if(NS_SUCCEEDED(res)) {
-           *aOut = (PRUnichar*)nsAllocator::Alloc(2*(outLength+1));
+           *aOut = (PRUnichar*)nsMemory::Alloc(2*(outLength+1));
            if(nsnull != aOut) {
               res = mDecoder->Convert(aIn, &inLength, *aOut,  &outLength);
               if(NS_SUCCEEDED(res)) {
                  (*aOut)[outLength] = '\0';
               } else {
-                 nsAllocator::Free(*aOut);
+                 nsMemory::Free(*aOut);
                  aOut = nsnull;
               }
            } else {
@@ -320,7 +320,7 @@ void nsFileSpec::operator = (const nsString& inNativePath)
    nsresult res;                                                
    if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((inNativePath.GetUnicode()), &tmp))) { 
      *this = tmp;
-     nsAllocator::Free(tmp);                                    
+     nsMemory::Free(tmp);                                    
    }                                                            
    mError = res;
    NS_ASSERTION(NS_SUCCEEDED(res), "nsFileSpec = filed");
@@ -333,7 +333,7 @@ nsFileSpec nsFileSpec::operator + (const nsString& inRelativeUnixPath) const
    if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((inRelativeUnixPath.GetUnicode()), &tmp))) { 
      resultSpec = *this;
      resultSpec += tmp;
-     nsAllocator::Free(tmp);                                    
+     nsMemory::Free(tmp);                                    
    }                                                            
    NS_ASSERTION(NS_SUCCEEDED(res), "nsFileSpec + filed");
    return resultSpec;
@@ -344,7 +344,7 @@ void nsFileSpec::operator += (const nsString& inRelativeUnixPath)
    nsresult res;                                                
    if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((inRelativeUnixPath.GetUnicode()), &tmp))) { 
      *this += tmp;
-     nsAllocator::Free(tmp);                                    
+     nsMemory::Free(tmp);                                    
    }                                                            
    mError = res;
    NS_ASSERTION(NS_SUCCEEDED(res), "nsFileSpec + filed");

@@ -23,7 +23,7 @@
 #include "nsISupports.idl"
 
 interface nsIPipe;
-interface nsIAllocator;
+interface nsIMemory;
 interface nsIBufferInputStream;
 interface nsIBufferOutputStream;
 
@@ -41,7 +41,7 @@ interface nsIPipe : nsISupports {
     void initialize(in unsigned long segmentSize,
                     in unsigned long maxSize,
                     in nsIPipeObserver observer,
-                    in nsIAllocator segmentAllocator);
+                    in nsIMemory segmentAllocator);
     readonly attribute nsIBufferInputStream inputStream;
     readonly attribute nsIBufferOutputStream outputStream;
     attribute nsIPipeObserver observer;

@@ -388,7 +388,7 @@ static void TestEntityConversion(PRUint32 version)
     res = entityConv->ConvertToEntity(inString[i], version, &entity);
     if (NS_SUCCEEDED(res) && NULL != entity) {
       cout << inString[i] << " " << entity << "\n";
-      nsAllocator::Free(entity);
+      nsMemory::Free(entity);
     }
   }
 
@@ -401,7 +401,7 @@ static void TestEntityConversion(PRUint32 version)
       if (';' == (char) entities[i])
         cout << "\n";
     }
-    nsAllocator::Free(entities);
+    nsMemory::Free(entities);
   }
 
   cout << "==============================\n";
@@ -439,7 +439,7 @@ static void TestSaveAsCharset()
   res = saveAsCharset->Convert(inString.GetUnicode(), &outString);
   if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
   if (NULL == outString) {cout << "\tFailed!! output null\n";}
-  else {cout << outString << "\n"; nsAllocator::Free(outString);}
+  else {cout << outString << "\n"; nsMemory::Free(outString);}
 
   cout << "ISO-2022-JP " << "attr_plainTextDefault " << "entityNone " << "\n";
   res = saveAsCharset->Init("ISO-2022-JP", 
@@ -449,11 +449,11 @@ static void TestSaveAsCharset()
   res = saveAsCharset->Convert(inString.GetUnicode(), &outString);
   if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
   if (NULL == outString) {cout << "\tFailed!! output null\n";}
-  else {cout << outString << "\n"; nsAllocator::Free(outString);}
+  else {cout << outString << "\n"; nsMemory::Free(outString);}
   if (NS_ERROR_UENC_NOMAPPING == res) {
     outString = inString.ToNewUTF8String();
     if (NULL == outString) {cout << "\tFailed!! output null\n";}
-    else {cout << "Fall back to UTF-8: " << outString << "\n"; nsAllocator::Free(outString);}
+    else {cout << "Fall back to UTF-8: " << outString << "\n"; nsMemory::Free(outString);}
   }
 
   cout << "ISO-2022-JP " << "attr_FallbackQuestionMark " << "entityNone " << "\n";
@@ -464,7 +464,7 @@ static void TestSaveAsCharset()
   res = saveAsCharset->Convert(inString.GetUnicode(), &outString);
   if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
   if (NULL == outString) {cout << "\tFailed!! output null\n";}
-  else {cout << outString << "\n"; nsAllocator::Free(outString);}
+  else {cout << outString << "\n"; nsMemory::Free(outString);}
 
   cout << "ISO-2022-JP " << "attr_FallbackEscapeU " << "entityNone " << "\n";
   res = saveAsCharset->Init("ISO-2022-JP", 
@@ -474,7 +474,7 @@ static void TestSaveAsCharset()
   res = saveAsCharset->Convert(inString.GetUnicode(), &outString);
   if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
   if (NULL == outString) {cout << "\tFailed!! output null\n";}
-  else {cout << outString << "\n"; nsAllocator::Free(outString);}
+  else {cout << outString << "\n"; nsMemory::Free(outString);}
 
   cout << "ISO-8859-1 " << "attr_htmlTextDefault " << "html40Latin1 " << "\n";
   res = saveAsCharset->Init("ISO-8859-1", 
@@ -484,7 +484,7 @@ static void TestSaveAsCharset()
   res = saveAsCharset->Convert(inString.GetUnicode(), &outString);
   if (NS_ERROR_UENC_NOMAPPING != res && NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
   if (NULL == outString) {cout << "\tFailed!! output null\n";}
-  else {cout << outString << "\n"; nsAllocator::Free(outString);}
+  else {cout << outString << "\n"; nsMemory::Free(outString);}
 
   cout << "ISO-8859-1 " << "attr_FallbackHexNCR+attr_EntityAfterCharsetConv " << "html40Latin1 " << "\n";
   res = saveAsCharset->Init("ISO-8859-1", 
@@ -495,7 +495,7 @@ static void TestSaveAsCharset()
   res = saveAsCharset->Convert(inString.GetUnicode(), &outString);
   if (NS_ERROR_UENC_NOMAPPING != res && NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
   if (NULL == outString) {cout << "\tFailed!! output null\n";}
-  else {cout << outString << "\n"; nsAllocator::Free(outString);}
+  else {cout << outString << "\n"; nsMemory::Free(outString);}
 
 
   cout << "==============================\n";

@@ -150,7 +150,7 @@ nsSoftwareUpdate::nsSoftwareUpdate()
         // EVIL version registry does not take a nsIFile.;
         VR_SetRegDirectory( nativePath );
         if (nativePath)
-            nsAllocator::Free(nativePath);
+            nsMemory::Free(nativePath);
             
     }
 }

@@ -25,7 +25,7 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 #include "nsString.h"
 #include "nsIFileStream.h"
 #include "nsIStreamListener.h"

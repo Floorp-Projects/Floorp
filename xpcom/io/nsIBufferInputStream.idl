@@ -54,7 +54,7 @@ interface nsIBufferInputStream : nsIInputStream
 
     
     [noscript] unsigned long ReadSegments(in nsWriteSegmentFun writer,
-                                          in voidStar closure,
+                                          in voidPtr closure,
                                           in unsigned long count);
 
     /**

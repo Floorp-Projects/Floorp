@@ -21,7 +21,7 @@
  */
 
 #include "nsHTTPCompressConv.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "plstr.h"
 #include "prlog.h"
 #include "nsIChannel.h"
@@ -50,10 +50,10 @@ nsHTTPCompressConv::~nsHTTPCompressConv ()
     NS_IF_RELEASE(mListener);
 
 	if (mInpBuffer != NULL)
-		nsAllocator::Free (mInpBuffer);
+		nsMemory::Free (mInpBuffer);
 
     if (mOutBuffer != NULL)
-		nsAllocator::Free (mOutBuffer);
+		nsMemory::Free (mOutBuffer);
 }
 
 NS_IMETHODIMP
@@ -82,8 +82,8 @@ nsHTTPCompressConv::AsyncConvertData (
 	if (!PL_strncasecmp (fromStr, HTTP_DEFLATE_TYPE, strlen (HTTP_DEFLATE_TYPE)))
         mMode = HTTP_COMPRESS_DEFLATE;
 
-	nsAllocator::Free (fromStr);
-	nsAllocator::Free (  toStr);
+	nsMemory::Free (fromStr);
+	nsMemory::Free (  toStr);
 
     // hook ourself up with the receiving listener. 
     mListener = aListener;
@@ -140,20 +140,20 @@ nsHTTPCompressConv::OnDataAvailable (
 
             if (mInpBuffer != NULL && streamLen > mInpBufferLen)
             {
-                mInpBuffer = (unsigned char *) nsAllocator::Realloc (mInpBuffer, mInpBufferLen = streamLen);
+                mInpBuffer = (unsigned char *) nsMemory::Realloc (mInpBuffer, mInpBufferLen = streamLen);
                
                 if (mOutBufferLen < streamLen * 2)
-                    mOutBuffer = (unsigned char *) nsAllocator::Realloc (mOutBuffer, mOutBufferLen = streamLen * 3);
+                    mOutBuffer = (unsigned char *) nsMemory::Realloc (mOutBuffer, mOutBufferLen = streamLen * 3);
 
                 if (mInpBuffer == NULL || mOutBuffer == NULL)
                     return NS_ERROR_OUT_OF_MEMORY;
             }
 
             if (mInpBuffer == NULL)
-                mInpBuffer = (unsigned char *) nsAllocator::Alloc (mInpBufferLen = streamLen);
+                mInpBuffer = (unsigned char *) nsMemory::Alloc (mInpBufferLen = streamLen);
 
             if (mOutBuffer == NULL)
-                mOutBuffer = (unsigned char *) nsAllocator::Alloc (mOutBufferLen = streamLen * 3);
+                mOutBuffer = (unsigned char *) nsMemory::Alloc (mOutBufferLen = streamLen * 3);
 
             if (mInpBuffer == NULL || mOutBuffer == NULL)
                 return NS_ERROR_OUT_OF_MEMORY;
@@ -169,7 +169,7 @@ nsHTTPCompressConv::OnDataAvailable (
                 int code = uncompress (mOutBuffer, &uLen, mInpBuffer, mInpBufferLen);
                 if (code == Z_BUF_ERROR)
                 {
-                    mOutBuffer = (unsigned char *) nsAllocator::Realloc (mOutBuffer, mOutBufferLen *= 3);
+                    mOutBuffer = (unsigned char *) nsMemory::Realloc (mOutBuffer, mOutBufferLen *= 3);
                     if (mOutBuffer == NULL)
                         return NS_ERROR_OUT_OF_MEMORY;
                     
@@ -293,7 +293,7 @@ nsHTTPCompressConv::do_OnDataAvailable (nsIChannel *aChannel, nsISupports *aCont
 
 	nsCOMPtr<nsIByteArrayInputStream> convertedStreamSup;
 
-	char * lBuf = (char *) nsAllocator::Alloc (aCount);
+	char * lBuf = (char *) nsMemory::Alloc (aCount);
 	if (lBuf == NULL)
 		return NS_ERROR_OUT_OF_MEMORY;
 

@@ -94,7 +94,7 @@ protected:
 
   /**
    *  Overloaded in order to get extra bytes for data.
-   *  This needs to use our standard nsAllocator (rickg)
+   *  This needs to use our standard nsMemory (rickg)
    *
    **/
   void* operator new(size_t aSize,size_t additionalBytes) {

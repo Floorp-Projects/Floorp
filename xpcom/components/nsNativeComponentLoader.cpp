@@ -231,7 +231,7 @@ nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
         }
         if (uLibrary != eLibrary
                 && uLibrary != nsnull)
-            nsAllocator::Free(uLibrary);
+            nsMemory::Free(uLibrary);
 
         if (NS_FAILED(rv)) continue;
     }
@@ -772,7 +772,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
             break;
         }
     }
-    if (leafName) nsAllocator::Free(leafName);
+    if (leafName) nsMemory::Free(leafName);
 #endif
         
     if (validExtension == PR_FALSE)
@@ -1009,7 +1009,7 @@ nsNativeComponentLoader::GetRegistryDllInfo(const char *aLocation,
 
     rv = GetRegistryDllInfo(key, lastModifiedTime, fileSize);
     if (aLocation != eLocation)
-        nsAllocator::Free(eLocation);
+        nsMemory::Free(eLocation);
     return rv;
 }
 
@@ -1054,7 +1054,7 @@ nsNativeComponentLoader::SetRegistryDllInfo(const char *aLocation,
     if (NS_FAILED(rv)) return rv;
     rv = mRegistry->SetLongLong(key, fileSizeValueName, fileSize);
     if (aLocation != eLocation)
-        nsAllocator::Free(eLocation);
+        nsMemory::Free(eLocation);
     return rv;
 }
 
@@ -1074,7 +1074,7 @@ nsNativeComponentLoader::RemoveRegistryDllInfo(const char *aLocation)
 
     rv = mRegistry->RemoveSubtree(mXPCOMKey, eLocation);
     if (aLocation != eLocation)
-        nsAllocator::Free(eLocation);
+        nsMemory::Free(eLocation);
     return rv;
 }
 

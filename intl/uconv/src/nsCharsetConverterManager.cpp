@@ -219,7 +219,7 @@ nsresult nsCharsetConverterManager::RegisterConverterTitles(
 
   char * p = str.ToNewCString();
   res = aRegistry->AddSubtree(nsIRegistry::Common, p, &key);
-  nsAllocator::Free(p);
+  nsMemory::Free(p);
   if (NS_FAILED(res)) return res;
   res = aRegistry->SetStringUTF8(key, "name", "chrome://global/locale/charsetTitles.properties");
   if (NS_FAILED(res)) return res;
@@ -239,7 +239,7 @@ nsresult nsCharsetConverterManager::RegisterConverterData(
 
   char * p = str.ToNewCString();
   res = aRegistry->AddSubtree(nsIRegistry::Common, p, &key);
-  nsAllocator::Free(p);
+  nsMemory::Free(p);
   if (NS_FAILED(res)) return res;
   res = aRegistry->SetStringUTF8(key, "name", "resource:/res/charsetData.properties");
   if (NS_FAILED(res)) return res;

@@ -2007,7 +2007,7 @@ CSSStyleSheetImpl::CheckRuleForAttributes(nsICSSRule *aRule)
           sel->mAttr->ToString(str);
           char * chars = str.ToNewCString();
           fprintf(stderr, "[%s@%p]", chars, this);
-          nsAllocator::Free(chars);
+          nsMemory::Free(chars);
 #endif
           AtomKey key(sel->mAttr);
           mInner->mRelevantAttributes.Put(&key, sel->mAttr);

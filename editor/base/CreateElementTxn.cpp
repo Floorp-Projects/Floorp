@@ -76,7 +76,7 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
     char* nodename = mTag.ToNewCString();
     printf("Do Create Element parent = %p <%s>, offset = %d\n", 
            mParent.get(), nodename, mOffsetInParent);
-    nsAllocator::Free(nodename);
+    nsMemory::Free(nodename);
   }
 
   NS_ASSERTION(mEditor && mParent, "bad state");

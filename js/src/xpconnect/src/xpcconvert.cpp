@@ -617,7 +617,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             if(useAllocator)
             {
                 int len = (JS_GetStringLength(str) + 1) * sizeof(char);
-                if(!(*((void**)d) = nsAllocator::Alloc(len)))
+                if(!(*((void**)d) = nsMemory::Alloc(len)))
                 {
                     return JS_FALSE;
                 }
@@ -655,7 +655,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             if(useAllocator)
             {
                 int byte_len = (JS_GetStringLength(str)+1)*sizeof(jschar);
-                if(!(*((void**)d) = nsAllocator::Alloc(byte_len)))
+                if(!(*((void**)d) = nsMemory::Alloc(byte_len)))
                 {
                     // XXX should report error
                     return JS_FALSE;
@@ -1080,7 +1080,7 @@ XPCConvert::JSErrorToXPCException(JSContext* cx,
                                   formattedMsg, ifaceName, methodName, data);
 
         if(formattedMsg)
-            nsAllocator::Free(formattedMsg);
+            nsMemory::Free(formattedMsg);
         NS_RELEASE(data);
     }
     else
@@ -1298,7 +1298,7 @@ XPCConvert::JSArray2Native(JSContext* cx, void** d, jsval s,
 #define POPULATE(_mode, _t)                                                  \
     PR_BEGIN_MACRO                                                           \
         cleanupMode = _mode;                                                 \
-        if(nsnull == (array = nsAllocator::Alloc(capacity * sizeof(_t))))    \
+        if(nsnull == (array = nsMemory::Alloc(capacity * sizeof(_t))))    \
         {                                                                    \
             if(pErr)                                                         \
                 *pErr = NS_ERROR_OUT_OF_MEMORY;                              \
@@ -1368,10 +1368,10 @@ failure:
             for(PRUint32 i = 0; i < initedCount; i++)
             {
                 void* p = a[i];
-                if(p) nsAllocator::Free(p);
+                if(p) nsMemory::Free(p);
             }
         }
-        nsAllocator::Free(array);
+        nsMemory::Free(array);
     }
 
     return JS_FALSE;
@@ -1482,7 +1482,7 @@ XPCConvert::JSStringWithSize2Native(JSContext* cx, void* d, jsval s,
                 if(useAllocator && 0 != capacity)
                 {
                     len = (capacity + 1) * sizeof(char);
-                    if(!(*((void**)d) = nsAllocator::Alloc(len)))
+                    if(!(*((void**)d) = nsMemory::Alloc(len)))
                         return JS_FALSE;
                     return JS_TRUE;
                 }
@@ -1512,7 +1512,7 @@ XPCConvert::JSStringWithSize2Native(JSContext* cx, void* d, jsval s,
             if(useAllocator)
             {
                 JSUint32 alloc_len = (len + 1) * sizeof(char);
-                if(!(*((void**)d) = nsAllocator::Alloc(alloc_len)))
+                if(!(*((void**)d) = nsMemory::Alloc(alloc_len)))
                 {
                     return JS_FALSE;
                 }
@@ -1548,7 +1548,7 @@ XPCConvert::JSStringWithSize2Native(JSContext* cx, void* d, jsval s,
                 if(useAllocator && 0 != capacity)
                 {
                     len = (capacity + 1) * sizeof(jschar);
-                    if(!(*((void**)d) = nsAllocator::Alloc(len)))
+                    if(!(*((void**)d) = nsMemory::Alloc(len)))
                         return JS_FALSE;
                     return JS_TRUE;
                 }
@@ -1577,7 +1577,7 @@ XPCConvert::JSStringWithSize2Native(JSContext* cx, void* d, jsval s,
             if(useAllocator)
             {
                 JSUint32 alloc_len = (len + 1) * sizeof(jschar);
-                if(!(*((void**)d) = nsAllocator::Alloc(alloc_len)))
+                if(!(*((void**)d) = nsMemory::Alloc(alloc_len)))
                 {
                     // XXX should report error
                     return JS_FALSE;

@@ -47,7 +47,7 @@
 #include "nsIComponentManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIGenericFactory.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsIXPConnect.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
@@ -116,7 +116,7 @@ extern const char XPC_ARG_FORMATTER_FORMAT_STR[]; // format string
     NS_ENSURE_ARG_POINTER(dest); \
     char* result; \
     if(src) \
-        result = (char*) nsAllocator::Clone(src, \
+        result = (char*) nsMemory::Clone(src, \
                                 sizeof(char)*(strlen(src)+1)); \
     else \
         result = nsnull; \

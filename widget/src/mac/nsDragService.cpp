@@ -451,7 +451,7 @@ printf("looking for data in type %s, mac flavor %ld\n", NS_STATIC_CAST(const cha
                                                                         &convertedText, &convertedTextLen );
               if ( convertedText ) {
                 // out with the old, in with the new 
-                nsAllocator::Free(dataBuff);
+                nsMemory::Free(dataBuff);
                 dataBuff = convertedText;
                 dataSize = convertedTextLen * 2;
                 dataFound = PR_TRUE;
@@ -484,7 +484,7 @@ printf("looking for data in type %s, mac flavor %ld\n", NS_STATIC_CAST(const cha
          if ( errCode != NS_OK ) printf("nsDragService:: Error setting data into transferable\n");
         #endif
           
-        nsAllocator::Free ( dataBuff );
+        nsMemory::Free ( dataBuff );
         errCode = NS_OK;
 
         // we found one, get out of this loop!
@@ -620,7 +620,7 @@ nsDragService :: DragSendDataProc ( FlavorType inFlavor, void* inRefCon, ItemRef
         retVal = ::SetDragItemFlavorData ( inDragRef, inItemRef, inFlavor, data, dataSize, 0 );
         NS_ASSERTION ( retVal == noErr, "SDIFD failed in DragSendDataProc" );
     }
-    nsAllocator::Free ( data );
+    nsMemory::Free ( data );
   } // if valid refcon
   
   return retVal;
@@ -661,7 +661,7 @@ nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference
     char* mappings = LookupMimeMappingsForItem(inDragRef, inItemIndex) ;
     nsMimeMapperMac theMapper ( mappings );
     theMapper.MapMacOSTypeToMimeType ( inFlavor, mimeFlavor );
-    nsAllocator::Free ( mappings );
+    nsMemory::Free ( mappings );
     
     // if someone was asking for text/plain, lookup unicode instead so we can convert it.
     PRBool needToDoConversionToPlainText = PR_FALSE;
@@ -686,7 +686,7 @@ nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference
         PRInt32 plainTextLen = 0;
         nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( castedUnicode, *outDataSize / 2, &plainTextData, &plainTextLen );
         if ( *outData ) {
-          nsAllocator::Free(*outData);
+          nsMemory::Free(*outData);
           *outData = plainTextData;
           *outDataSize = plainTextLen;
         }
@@ -724,7 +724,7 @@ nsDragService :: LookupMimeMappingsForItem ( DragReference inDragRef, ItemRefere
 #if 0 
   OSErr err = ::GetFlavorDataSize ( inDragRef, itemRef, nsMimeMapperMac::MappingFlavor(), &mapperSize );
   if ( !err && mapperSize > 0 ) {
-    mapperData = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(mapperSize + 1));
+    mapperData = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(mapperSize + 1));
     if ( !mapperData )
       return nsnull;
 	          
@@ -762,7 +762,7 @@ nsDragService :: ExtractDataFromOS ( DragReference inDragRef, ItemReference inIt
   Size buffSize = 0;
   OSErr err = ::GetFlavorDataSize ( inDragRef, inItemRef, inFlavor, &buffSize );
   if ( !err && buffSize > 0 ) {
-    buff = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(buffSize + 1));
+    buff = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(buffSize + 1));
     if ( buff ) {	     
       err = ::GetFlavorData ( inDragRef, inItemRef, inFlavor, buff, &buffSize, 0 );
       if ( err ) {
@@ -778,7 +778,7 @@ nsDragService :: ExtractDataFromOS ( DragReference inDragRef, ItemReference inIt
 
   if ( NS_FAILED(retval) ) {
     if ( buff )
-      nsAllocator::Free(buff);
+      nsMemory::Free(buff);
   }
   else {
     *outBuffer = buff;

@@ -165,7 +165,7 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
 
   if (NS_SUCCEEDED(res)) {
     nsAutoString aLocale(aLocaleUnichar);
-    nsAllocator::Free(aLocaleUnichar);
+    nsMemory::Free(aLocaleUnichar);
 
     short scriptcode, langcode, regioncode;
     nsCOMPtr <nsIMacLocale> macLocale = do_GetService(kMacLocaleFactoryCID, &res);
@@ -181,7 +181,7 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
       res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
         mCharset.Assign(mappedCharset);
-        nsAllocator::Free(mappedCharset);
+        nsMemory::Free(mappedCharset);
       }
     }
   }

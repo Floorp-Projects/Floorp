@@ -21,14 +21,14 @@
  */
 
 #include "nsDebug.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsXPIDLString.h"
 #include "plstr.h"
 
 // If the allocator changes, fix it here.
-#define XPIDL_STRING_ALLOC(__len)  ((PRUnichar*) nsAllocator::Alloc((__len) * sizeof(PRUnichar)))
-#define XPIDL_CSTRING_ALLOC(__len) ((char*) nsAllocator::Alloc((__len) * sizeof(char)))
-#define XPIDL_FREE(__ptr)          (nsAllocator::Free(__ptr))
+#define XPIDL_STRING_ALLOC(__len)  ((PRUnichar*) nsMemory::Alloc((__len) * sizeof(PRUnichar)))
+#define XPIDL_CSTRING_ALLOC(__len) ((char*) nsMemory::Alloc((__len) * sizeof(char)))
+#define XPIDL_FREE(__ptr)          (nsMemory::Free(__ptr))
 
 ////////////////////////////////////////////////////////////////////////
 // nsXPIDLString

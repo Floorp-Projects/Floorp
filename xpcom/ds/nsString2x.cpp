@@ -3,7 +3,7 @@
 #include "nsBufferManager.h"
 #include <stdio.h>  
 #include <stdlib.h>  
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 
 static const char* kNullPointerError = "Unexpected null pointer";
 static const char* kWhitespace="\b\t\r\n ";
@@ -1105,7 +1105,7 @@ PRUint32 HashCode(const nsString& aDest) {
 }
 
 void Recycle( PRUnichar* aBuffer) { 
-  nsAllocator::Free(aBuffer); 
+  nsMemory::Free(aBuffer); 
 }
 
 

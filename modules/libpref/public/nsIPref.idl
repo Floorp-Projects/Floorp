@@ -83,7 +83,7 @@ interface nsIPref : nsISupports {
   long GetPrefType(in string pref);
   long GetIntPref(in string pref);
   boolean GetBoolPref(in string pref);
-  [noscript] void GetBinaryPref(in string pref, in voidStar buf, inout long buf_length);
+  [noscript] void GetBinaryPref(in string pref, in voidPtr buf, inout long buf_length);
 
   unsigned long GetColorPrefDWord(in string pref);
   /* set preferences */
@@ -91,7 +91,7 @@ interface nsIPref : nsISupports {
   void SetUnicharPref(in string pref, in wstring value);
   void SetIntPref(in string pref, in long value);
   void SetBoolPref(in string pref, in boolean value);
-  [noscript] void SetBinaryPref(in string pref, in voidStar value, in unsigned long size);
+  [noscript] void SetBinaryPref(in string pref, in voidPtr value, in unsigned long size);
 
     
   void ClearUserPref(in string pref_name);
@@ -99,7 +99,7 @@ interface nsIPref : nsISupports {
   /* get defaults */
   long GetDefaultIntPref(in string pref);
   boolean GetDefaultBoolPref(in string pref);
-  [noscript] void GetDefaultBinaryPref(in string pref, in voidStar value,
+  [noscript] void GetDefaultBinaryPref(in string pref, in voidPtr value,
                             out long length);
 
   /* set defaults */
@@ -107,19 +107,19 @@ interface nsIPref : nsISupports {
   void SetDefaultUnicharPref(in string pref, in wstring value);
   void SetDefaultIntPref(in string pref, in long value);
   void SetDefaultBoolPref(in string pref, in boolean value);
-  [noscript] void SetDefaultBinaryPref(in string pref, in voidStar value, in unsigned long size);
+  [noscript] void SetDefaultBinaryPref(in string pref, in voidPtr value, in unsigned long size);
   
     // these are eventually changing from Copy->get
   string CopyCharPref(in string pref);
   wstring CopyUnicharPref(in string pref);
-  [noscript] voidStar CopyBinaryPref(in string pref, out long size);
+  [noscript] voidPtr CopyBinaryPref(in string pref, out long size);
     
     // "localized" prefs - stored in the properties files
     wstring getLocalizedUnicharPref(in string pref);
   
   string CopyDefaultCharPref(in string pref);
   wstring CopyDefaultUnicharPref(in string pref);
-  [noscript] voidStar CopyDefaultBinaryPref(in string pref, out long size);
+  [noscript] voidPtr CopyDefaultBinaryPref(in string pref, out long size);
 
   nsIFileSpec GetFilePref(in string pref);
   void SetFilePref(in string pref, in nsIFileSpec value, in boolean setDefault);
@@ -133,10 +133,10 @@ interface nsIPref : nsISupports {
   /* callbacks */
   [noscript] void RegisterCallback(in string domain,
                         in PrefChangedFunc callback,
-                        in voidStar closure);
+                        in voidPtr closure);
   [noscript] void UnregisterCallback(in string domain,
                           in PrefChangedFunc callback,
-                          in voidStar closure);
+                          in voidPtr closure);
 
   
   /* void CopyPrefsTree(in string srcRoot, in string destRoot); */
@@ -157,5 +157,5 @@ interface nsIPref : nsISupports {
    */
   [noscript] void EnumerateChildren(in string parent, 
                                     in PrefEnumerationFunc callback, 
-                                    in voidStar data);
+                                    in voidPtr data);
 };

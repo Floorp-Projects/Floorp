@@ -26,7 +26,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 
 #include "nsIDocumentViewer.h"
 
@@ -441,7 +441,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
   //       allowing cleanup processing on error
   for (;;) {
     // NOTE: Remember to de-allocate buf_str and buf_style
-    //       using nsAllocator::Free, if opcodes != 0
+    //       using nsMemory::Free, if opcodes != 0
     result = lineTermAux->ReadAux(&opcodes, &opvals, &buf_row, &buf_col,
                                   &buf_str, &buf_style);
     if (NS_FAILED(result)) {
@@ -466,9 +466,9 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
     bufString = buf_str;
     bufStyle = buf_style;
 
-    // De-allocate buf_str, buf_style using nsAllocator::Free
-    nsAllocator::Free(buf_str);
-    nsAllocator::Free(buf_style);
+    // De-allocate buf_str, buf_style using nsMemory::Free
+    nsMemory::Free(buf_str);
+    nsMemory::Free(buf_style);
 
     char* temCString = bufString.ToNewCString();
     XMLT_LOG(mozXMLTermSession::ReadAll,68,("bufString=%s\n", temCString));
@@ -2955,7 +2955,7 @@ NS_IMETHODIMP mozXMLTermSession::SetHistory(PRInt32 aHistory)
 // Get HTML prompt string
 NS_IMETHODIMP mozXMLTermSession::GetPrompt(PRUnichar **_aPrompt)
 {
-  // NOTE: Need to be sure that this may be freed by nsAllocator::Free
+  // NOTE: Need to be sure that this may be freed by nsMemory::Free
   *_aPrompt = mPromptHTML.ToNewUnicode();
   return NS_OK;
 }

@@ -69,7 +69,7 @@ interface nsIScriptSecurityManager : nsISupports
      * @param prop The ordinal of the property being accessed (see nsDOMPropEnums.h)
      * @param isWrite True if write access is being attempted
      */
-	void CheckScriptAccess(in JSContextPtr cx, in voidStar obj, 
+	void CheckScriptAccess(in JSContextPtr cx, in voidPtr obj, 
 	                       in long prop, in boolean isWrite);
 
 	/**
@@ -107,7 +107,7 @@ interface nsIScriptSecurityManager : nsISupports
 	 * Return true if the given JavaScript function object was compiled with
 	 * a principal that is allowed to execute scripts.
 	 */
-    boolean CanExecuteFunction(in voidStar jsFunction);
+    boolean CanExecuteFunction(in voidPtr jsFunction);
 
 
 	///////////////// Capabilities /////////////////////

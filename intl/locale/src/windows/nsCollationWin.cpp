@@ -108,7 +108,7 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
     nsString aLocale;
     aLocale.Assign(aLocaleUnichar);
     if (NULL != aLocaleUnichar) {
-      nsAllocator::Free(aLocaleUnichar);
+      nsMemory::Free(aLocaleUnichar);
     }
 
     nsCOMPtr <nsIWin32Locale> win32Locale = do_GetService(kWin32LocaleFactoryCID, &res);
@@ -126,7 +126,7 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
       res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
         mCharset.Assign(mappedCharset);
-        nsAllocator::Free(mappedCharset);
+        nsMemory::Free(mappedCharset);
       }
     }
   }

@@ -23,7 +23,7 @@
 //	First checked in on 98/12/03 by John R. McMullen, derived from net.h/mkparse.c.
 
 #include "nsEscape.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsCRT.h"
 
 const int netCharType[256] =
@@ -86,7 +86,7 @@ NS_COM char* nsEscapeCount(
             extra += 2; /* the escape, plus an extra byte for each nibble */
 	}
 
-	char* result = (char *)nsAllocator::Alloc(len + extra + 1);
+	char* result = (char *)nsMemory::Alloc(len + extra + 1);
     if (!result)
         return 0;
 
@@ -174,7 +174,7 @@ NS_COM PRInt32 nsUnescapeCount(char * str)
 NS_COM char *
 nsEscapeHTML(const char * string)
 {
-  char *rv = (char *) nsAllocator::Alloc(nsCRT::strlen(string)*6 + 1); /* The +1 is for the trailing null! */
+  char *rv = (char *) nsMemory::Alloc(nsCRT::strlen(string)*6 + 1); /* The +1 is for the trailing null! */
 	char *ptr = rv;
 
 	if(rv)

@@ -43,7 +43,7 @@
 #include "nsIDirectoryService.h"
 
 #include "nsCRT.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 
 #include "nsISupportsArray.h"
 #include "nsInt64.h"

@@ -314,7 +314,7 @@ nsXPCWrappedJS::GetIID(nsIID** iid)
 {
     NS_PRECONDITION(iid, "bad param");
 
-    *iid = (nsIID*) nsAllocator::Clone(&(GetIID()), sizeof(nsIID));
+    *iid = (nsIID*) nsMemory::Clone(&(GetIID()), sizeof(nsIID));
     return *iid ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
@@ -334,7 +334,7 @@ nsXPCWrappedJS::DebugDump(PRInt16 depth)
         GetClass()->GetInterfaceInfo()->GetName(&name);
         XPC_LOG_ALWAYS(("interface name is %s", name));
         if(name)
-            nsAllocator::Free(name);
+            nsMemory::Free(name);
         char * iid = GetClass()->GetIID().ToString();
         XPC_LOG_ALWAYS(("IID number is %s", iid));
         delete iid;

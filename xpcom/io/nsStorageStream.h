@@ -32,6 +32,7 @@
 
 #include "nsIStorageStream.h"
 #include "nsIOutputStream.h"
+#include "nsMemory.h"
 
 class nsSegmentedBuffer;
 
@@ -42,7 +43,7 @@ public:
     nsStorageStream();
     virtual ~nsStorageStream();
     
-    NS_METHOD Init(PRUint32 segmentSize, PRUint32 maxSize, nsIAllocator *segmentAllocator = 0);
+    NS_METHOD Init(PRUint32 segmentSize, PRUint32 maxSize, nsIMemory *segmentAllocator = 0);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTORAGESTREAM

@@ -3,7 +3,7 @@
 #include "nsBufferManager.h"
 #include <stdio.h>  
 #include <stdlib.h>  
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 
 static const char* kWhitespace="\b\t\r\n ";
 
@@ -1005,7 +1005,7 @@ PRUint32 HashCode(const nsCString& aDest) {
 }
 
 void Recycle( char* aBuffer) { 
-  nsAllocator::Free(aBuffer); 
+  nsMemory::Free(aBuffer); 
 }
 
 /*****************************************************************

@@ -391,7 +391,7 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsCStringArray **aE
             curVertexAtom->ToString(curVertexStr);
             char * curVertexCString = curVertexStr.ToNewCString();
             nsStringKey *curVertex = new nsStringKey(curVertexCString);
-            nsAllocator::Free(curVertexCString);
+            nsMemory::Free(curVertexCString);
 
             SCTableData *data3 = (SCTableData*)lBFSTable.Get(curVertex);
             BFSState *curVertexState = (BFSState*)data3->data;
@@ -563,8 +563,8 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
             PRUnichar *fromUni = fromStr.ToNewUnicode();
             PRUnichar *toUni   = toStr.ToNewUnicode();
             rv = conv->Convert(dataToConvert, fromUni, toUni, aContext, &convertedData);
-            nsAllocator::Free(fromUni);
-            nsAllocator::Free(toUni);
+            nsMemory::Free(fromUni);
+            nsMemory::Free(toUni);
             NS_RELEASE(conv);
             NS_RELEASE(dataToConvert);
             dataToConvert = convertedData;
@@ -666,8 +666,8 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
             PRUnichar *toStrUni   = toStr.ToNewUnicode();
 
             rv = converter->AsyncConvertData(fromStrUni, toStrUni, forwardListener, aContext);
-            nsAllocator::Free(fromStrUni);
-            nsAllocator::Free(toStrUni);
+            nsMemory::Free(fromStrUni);
+            nsMemory::Free(toStrUni);
             if (NS_FAILED(rv)) {
                 delete converterChain;
                 return rv;

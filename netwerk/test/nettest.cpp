@@ -141,7 +141,7 @@ NS_IMETHODIMP TestConsumer::OnStopRequest(nsISupports *context, nsIChannel* chan
       mUrl->ToNewCString(&url);
 
       printf("Unable to load URL %s\n", url);
-      nsAllocator::Free(url);
+      nsMemory::Free(url);
 	}
 	
     urlLoaded = 1;
@@ -270,7 +270,7 @@ int main(int argc, char **argv)
                 pURL->ToNewCString(&url);
 
                 printf("Unable to load URL %s\n", url);
-				nsAllocator::Free(url);
+				nsMemory::Free(url);
                 urlLoaded = 1;
             }
         } 

@@ -21,7 +21,7 @@
  */
 #include "nsCrypto.h"
 #include "nsIServiceManager.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 #include "nsCRT.h"
 #include "prprf.h"
 #include "prmem.h"

@@ -173,7 +173,7 @@ nsMIMEService::GetTypeFromURI(nsIURI *aURI, char **aContentType) {
         char *ext = extStr.ToNewCString();
         if (!ext) return NS_ERROR_OUT_OF_MEMORY;
         rv = GetTypeFromExtension(ext, aContentType);
-        nsAllocator::Free(ext);
+        nsMemory::Free(ext);
     }
     else
         return NS_ERROR_FAILURE;

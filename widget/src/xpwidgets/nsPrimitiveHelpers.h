@@ -73,7 +73,7 @@ public:
     // be reallocated regardless (disposing the old buffer is taken care of internally, see
     // the note below).
     //
-    // NOTE: this assumes that it can use nsAllocator to dispose of the old buffer.
+    // NOTE: this assumes that it can use nsMemory to dispose of the old buffer.
   static nsresult ConvertPlatformToDOMLinebreaks ( const char* inFlavor, void** ioData, PRInt32* ioLengthInBytes ) ;
 
 }; // class nsLinebreakHelpers

@@ -29,7 +29,7 @@
 #include "nsIEnumerator.h"
 #include "prmem.h"
 #include "plstr.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsIFileSpec.h"
 
 static void display( nsIRegistry *reg, nsRegistryKey root, const char *name );
@@ -254,7 +254,7 @@ static void displayValues( nsIRegistry *reg, nsRegistryKey root ) {
                                         rv = reg->GetStringUTF8( root, name, &strValue );
                                         if ( rv == NS_OK ) {
                                             printString( strValue, strlen(name) );
-                                            nsAllocator::Free( strValue );
+                                            nsMemory::Free( strValue );
                                         } else {
                                             printf( "\t Error getting string value, rv=0x%08X", (int)rv );
                                         }
@@ -290,7 +290,7 @@ static void displayValues( nsIRegistry *reg, nsRegistryKey root ) {
                             printf( "\t= ? (error getting value, rv=0x%08X)", (int)rv );
                         }
                         printf("\n");
-                        nsAllocator::Free( name );
+                        nsMemory::Free( name );
                     } else {
                         printf( "Error getting value name, rv=0x%08X\n", (int)rv );
                     }

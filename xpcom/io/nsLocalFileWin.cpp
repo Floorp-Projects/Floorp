@@ -24,7 +24,7 @@
 
 
 #include "nsCOMPtr.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 
 #include "nsLocalFileWin.h"
 
@@ -151,7 +151,7 @@ class nsDirEnumerator : public nsISimpleEnumerator
             if (mDir == nsnull)    // not a directory?
                 return NS_ERROR_FAILURE;
 			
-			nsAllocator::Free(filepath);
+			nsMemory::Free(filepath);
 
             mParent          = parent;    
             return NS_OK;
@@ -325,7 +325,7 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
         
     
     // Get the native path for |this|
-    char* filePath = (char*) nsAllocator::Clone( workingPath, strlen(workingPath)+1 );
+    char* filePath = (char*) nsMemory::Clone( workingPath, strlen(workingPath)+1 );
 
     if (filePath == nsnull)
         return NS_ERROR_NULL_POINTER;
@@ -347,15 +347,15 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
             // we have a drive letter and a colon (eg 'c:'
             // this is resolve already
             
-            *resolvedPath = (char*) nsAllocator::Clone( filePath, strlen(filePath)+2 );
+            *resolvedPath = (char*) nsMemory::Clone( filePath, strlen(filePath)+2 );
             strcat(*resolvedPath, "\\");
 
-            nsAllocator::Free(filePath);
+            nsMemory::Free(filePath);
             return NS_OK;
         }
         else
         {
-            nsAllocator::Free(filePath);
+            nsMemory::Free(filePath);
             return NS_ERROR_FILE_INVALID_PATH;
         }
     }
@@ -389,7 +389,7 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
                 // something is wrong.  we should not have
                 // both slash being null and resolveTerminal 
                 // not set!
-                nsAllocator::Free(filePath);
+                nsMemory::Free(filePath);
                 return NS_ERROR_NULL_POINTER;
             }
         }
@@ -425,7 +425,7 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
             { 
                 WIN32_FIND_DATA wfd; 
                 
-                char *temp = (char*) nsAllocator::Alloc( MAX_PATH );
+                char *temp = (char*) nsMemory::Alloc( MAX_PATH );
                 if (temp == nsnull)
                     return NS_ERROR_NULL_POINTER;
                 
@@ -459,19 +459,19 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
                         slash = carot;
                     }
 
-                    nsAllocator::Free(filePath);
+                    nsMemory::Free(filePath);
                     filePath = temp;
             
                 }
                 else
                 {
-                    nsAllocator::Free(temp);
+                    nsMemory::Free(temp);
                 }
             }
             else
             {
                 // could not resolve shortcut.  Return error;
-                nsAllocator::Free(filePath);
+                nsMemory::Free(filePath);
                 return NS_ERROR_FILE_INVALID_PATH;
             }
         }
@@ -539,7 +539,7 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
        return result;
     
 	mResolvedPath.Assign(resolvePath);
-    nsAllocator::Free(resolvePath);
+    nsMemory::Free(resolvePath);
 
     // if we are not resolving the terminal node, we have to "fake" windows
     // out and append the ".lnk" file extension before getting any information
@@ -571,7 +571,7 @@ nsLocalFile::Clone(nsIFile **file)
     nsCOMPtr<nsILocalFile> localFile;
 
     rv = NS_NewLocalFile(aFilePath, getter_AddRefs(localFile));
-    nsAllocator::Free(aFilePath);
+    nsMemory::Free(aFilePath);
     
     if (NS_SUCCEEDED(rv) && localFile)
     {
@@ -596,7 +596,7 @@ nsLocalFile::InitWithPath(const char *filePath)
     
     if ( (filePath[2] == 0) && (filePath[1] == ':') )
     {
-        nativeFilePath = (char*) nsAllocator::Clone( filePath, 4 );
+        nativeFilePath = (char*) nsMemory::Clone( filePath, 4 );
         // C : //
         nativeFilePath[2] = '\\';
     }
@@ -605,7 +605,7 @@ nsLocalFile::InitWithPath(const char *filePath)
          ( (filePath[0] == '\\') && (filePath[1] == '\\') ) )  // netwerk path
     {
         // This is a native path
-        nativeFilePath = (char*) nsAllocator::Clone( filePath, strlen(filePath)+1 );
+        nativeFilePath = (char*) nsMemory::Clone( filePath, strlen(filePath)+1 );
     }
     
     if (nativeFilePath == nsnull)
@@ -619,7 +619,7 @@ nsLocalFile::InitWithPath(const char *filePath)
         temp[len] = '\0';
     
     mWorkingPath.Assign(nativeFilePath);
-    nsAllocator::Free( nativeFilePath );
+    nsMemory::Free( nativeFilePath );
     return NS_OK;
 }
 
@@ -749,7 +749,7 @@ nsLocalFile::GetLeafName(char * *aLeafName)
     else
         leaf++;
 
-    *aLeafName = (char*) nsAllocator::Clone(leaf, strlen(leaf)+1);
+    *aLeafName = (char*) nsMemory::Clone(leaf, strlen(leaf)+1);
     return NS_OK;
 }
 
@@ -778,7 +778,7 @@ NS_IMETHODIMP
 nsLocalFile::GetPath(char **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
-    *_retval = (char*) nsAllocator::Clone(mWorkingPath, strlen(mWorkingPath)+1);
+    *_retval = (char*) nsMemory::Clone(mWorkingPath, strlen(mWorkingPath)+1);
     return NS_OK;
 }
 
@@ -795,7 +795,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
     char* inFilePath;
     destParent->GetTarget(&inFilePath);  
     nsCString destPath = inFilePath;
-    nsAllocator::Free(inFilePath);
+    nsMemory::Free(inFilePath);
 
     destPath.Append("\\");
 
@@ -804,7 +804,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
         char *aFileName;
         sourceFile->GetLeafName(&aFileName);
         destPath.Append(aFileName);
-        nsAllocator::Free(aFileName);
+        nsMemory::Free(aFileName);
     }
     else
     {
@@ -836,7 +836,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
     if (!copyOK)  // CopyFile and MoveFile returns non-zero if succeeds (backward if you ask me).
         rv = ConvertWinError(GetLastError());
     
-    nsAllocator::Free(filePath);
+    nsMemory::Free(filePath);
 
     return rv;
 }
@@ -901,7 +901,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const char *newName, PRBool followSym
 
                     rv = realDest->InitWithPath(target);
                     
-                    nsAllocator::Free(target);
+                    nsMemory::Free(target);
 
                     if (NS_FAILED(rv)) 
                         return rv;
@@ -950,7 +950,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const char *newName, PRBool followSym
                 const char* leaf = (const char*) _mbsrchr((const unsigned char*) temp, '\\');
                 if (leaf[0] == '\\')
                     leaf++;
-                allocatedNewName = (char*) nsAllocator::Clone( leaf, strlen(leaf)+1 );
+                allocatedNewName = (char*) nsMemory::Clone( leaf, strlen(leaf)+1 );
             }
             else
             {
@@ -959,14 +959,14 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const char *newName, PRBool followSym
         }
         else
         {
-            allocatedNewName = (char*) nsAllocator::Clone( newName, strlen(newName)+1 );
+            allocatedNewName = (char*) nsMemory::Clone( newName, strlen(newName)+1 );
         }
         
         rv = target->Append(allocatedNewName);
         if (NS_FAILED(rv)) 
             return rv;
 
-        nsAllocator::Free(allocatedNewName);
+        nsMemory::Free(allocatedNewName);
 
         target->Create(DIRECTORY_TYPE, 0644);  // TODO, what permissions should we use
         if (NS_FAILED(rv))
@@ -1032,7 +1032,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const char *newName, PRBool followSym
             InitWithPath(newParentPath);
             Append(aFileName); 
 
-            nsAllocator::Free(aFileName);
+            nsMemory::Free(aFileName);
         }
         else
         {
@@ -1040,7 +1040,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const char *newName, PRBool followSym
             Append(newName);
         }
         
-        nsAllocator::Free(newParentPath);
+        nsMemory::Free(newParentPath);
     }
         
     return NS_OK;
@@ -1096,7 +1096,7 @@ nsLocalFile::Spawn(const char **args, PRUint32 count)
     rv = PR_CreateProcessDetached(mResolvedPath, my_argv, NULL, NULL);
 
      // free up our argv
-     nsAllocator::Free(my_argv);
+     nsMemory::Free(my_argv);
 
      if (PR_SUCCESS == rv)
          return NS_OK;
@@ -1586,7 +1586,7 @@ nsLocalFile::IsExecutable(PRBool *_retval)
         *_retval = PR_FALSE;
     }
     
-    nsAllocator::Free(path);
+    nsMemory::Free(path);
     
     return NS_OK;
 }
@@ -1661,7 +1661,7 @@ nsLocalFile::IsSymlink(PRBool *_retval)
         *_retval = PR_TRUE;
     }
     
-    nsAllocator::Free(path);
+    nsMemory::Free(path);
     
     return NS_OK;
 }
@@ -1701,8 +1701,8 @@ nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
     if (strcmp(inFilePath, filePath) == 0)
         *_retval = PR_TRUE;
     
-    nsAllocator::Free(inFilePath);
-    nsAllocator::Free(filePath);
+    nsMemory::Free(inFilePath);
+    nsMemory::Free(filePath);
 
     return NS_OK;
 }
@@ -1734,8 +1734,8 @@ nsLocalFile::Contains(nsIFile *inFile, PRBool recur, PRBool *_retval)
 
     }
         
-    nsAllocator::Free(inFilePath);
-    nsAllocator::Free(myFilePath);
+    nsMemory::Free(inFilePath);
+    nsMemory::Free(myFilePath);
 
     return NS_OK;
 }
@@ -1761,7 +1761,7 @@ nsLocalFile::GetTarget(char **_retval)
 #endif
     ResolveAndStat(PR_TRUE);
         
-    *_retval = (char*) nsAllocator::Clone( mResolvedPath, strlen(mResolvedPath)+1 );
+    *_retval = (char*) nsMemory::Clone( mResolvedPath, strlen(mResolvedPath)+1 );
     return NS_OK;
 }
 

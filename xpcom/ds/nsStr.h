@@ -107,7 +107,7 @@
            GNU documentation for more details).
 
     I should also briefly mention that all the string classes use a "memory agent" 
-    object to perform memory operations. This class proxies the standard nsAllocator
+    object to perform memory operations. This class proxies the standard nsMemory
     for actual memory calls, but knows the structure of nsStr making heap operations
     more localized.
     
@@ -191,7 +191,7 @@
 #define _nsStr
 
 #include "nscore.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include <string.h>
 #include <stdio.h>
 #include "plhash.h"
@@ -493,8 +493,8 @@ inline void AddNullTerminator(nsStr& aDest) {
  * Return the given buffer to the heap manager. Calls allocator::Free()
  * @return string length
  */
-inline void Recycle( char* aBuffer) { nsAllocator::Free(aBuffer); }
-inline void Recycle( PRUnichar* aBuffer) { nsAllocator::Free(aBuffer); }
+inline void Recycle( char* aBuffer) { nsMemory::Free(aBuffer); }
+inline void Recycle( PRUnichar* aBuffer) { nsMemory::Free(aBuffer); }
 
 /**
 * This method is used to access a given char in the given string

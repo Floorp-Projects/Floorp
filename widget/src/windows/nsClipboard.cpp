@@ -237,7 +237,7 @@ nsresult nsClipboard::GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLe
   if (aHGBL != NULL) {
     LPSTR lpStr = (LPSTR)::GlobalLock(aHGBL);
     DWORD allocSize = ::GlobalSize(aHGBL);
-    char* data = NS_STATIC_CAST(char*, nsAllocator::Alloc(allocSize));
+    char* data = NS_STATIC_CAST(char*, nsMemory::Alloc(allocSize));
     if ( data ) {    
        nsCRT::memcpy ( data, lpStr, allocSize );
     
@@ -514,7 +514,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                 NS_ASSERTION ( aIndex < numFiles, "Asked for a file index out of range of list" );
                 if (numFiles > 0) {
                   UINT fileNameLen = ::DragQueryFile(dropFiles, aIndex, nsnull, 0);
-                  char* buffer = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(fileNameLen + 1));
+                  char* buffer = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(fileNameLen + 1));
                   if ( buffer ) {
                     ::DragQueryFile(dropFiles, aIndex, buffer, fileNameLen + 1);
                     *aData = buffer;
@@ -609,7 +609,7 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
                                                                       &convertedText, &convertedTextLen );
             if ( convertedText ) {
               // out with the old, in with the new 
-              nsAllocator::Free(data);
+              nsMemory::Free(data);
               data = convertedText;
               dataLen = convertedTextLen * 2;
               dataFound = PR_TRUE;
@@ -640,7 +640,7 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
         NS_ASSERTION ( genericDataWrapper, "About to put null data into the transferable" );
         aTransferable->SetTransferData(flavorStr, genericDataWrapper, dataLen);
 
-        nsAllocator::Free ( NS_REINTERPRET_CAST(char*, data) );        
+        nsMemory::Free ( NS_REINTERPRET_CAST(char*, data) );        
         res = NS_OK;
         
         // we found one, get out of the loop

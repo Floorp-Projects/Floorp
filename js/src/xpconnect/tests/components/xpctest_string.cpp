@@ -68,7 +68,7 @@ xpcstringtest::GetStringA(char **_retval)
     if(!_retval)
         return NS_ERROR_NULL_POINTER;
 
-    *_retval = (char*) nsAllocator::Clone(myResult,
+    *_retval = (char*) nsMemory::Clone(myResult,
                                           sizeof(char)*(strlen(myResult)+1));
     return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -82,7 +82,7 @@ xpcstringtest::GetStringB(char **s)
     if(!s)
         return NS_ERROR_NULL_POINTER;
 
-    *s = (char*) nsAllocator::Clone(myResult,
+    *s = (char*) nsMemory::Clone(myResult,
                                     sizeof(char)*(strlen(myResult)+1));
 
     return *s ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -111,7 +111,7 @@ static PRUnichar* GetTestWString(int* size)
 
     if(!sWStr)
     {
-        sWStr = (PRUnichar*) nsAllocator::Alloc(space);
+        sWStr = (PRUnichar*) nsMemory::Alloc(space);
         if(sWStr)
         {
             PRUnichar* p = sWStr;
@@ -137,7 +137,7 @@ NS_IMETHODIMP xpcstringtest::GetWStringCopied(PRUnichar **s)
     if(!str)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    *s = (PRUnichar*) nsAllocator::Clone(str, size);
+    *s = (PRUnichar*) nsMemory::Clone(str, size);
     return *s ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }        
 

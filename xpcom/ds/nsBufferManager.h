@@ -159,7 +159,7 @@ inline nsresult SVAlloc( nsStringValueImpl<CharType>& aDest, PRUint32 aCount) {
   aDest.mBuffer = new CharType[1+aDest.mCapacity];
 
   // PRUint32 theSize=(theNewCapacity<<aDest.mCharSize);
-  // aDest.mBuffer = (char*)nsAllocator::Alloc(theSize);
+  // aDest.mBuffer = (char*)nsMemory::Alloc(theSize);
 
   if(aDest.mBuffer) {
     aDest.mBuffer[0]=0;
@@ -184,7 +184,7 @@ inline nsresult SVFree( nsStringValueImpl<CharType>& aDest){
   aDest.mRefCount--;
   
   if((aDest.mBuffer) && (!aDest.mRefCount)){    
-    delete [] aDest.mBuffer;   // nsAllocator::Free(aDest.mBuffer);
+    delete [] aDest.mBuffer;   // nsMemory::Free(aDest.mBuffer);
     aDest.mBuffer=0;
   }
 

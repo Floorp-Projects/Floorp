@@ -53,7 +53,7 @@
 #include "jsapi.h"
 #include "jsprf.h"
 #include "nscore.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsIGenericFactory.h"
 #include "nsIJSRuntimeService.h"
 #include "nsCOMPtr.h"
@@ -196,7 +196,7 @@ Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             *c = '\n';
 #endif
     fputs(bytes, gOutFile);
-    nsAllocator::Free(bytes);
+    nsMemory::Free(bytes);
     return JS_TRUE;
 }
 

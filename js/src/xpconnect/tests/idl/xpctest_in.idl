@@ -67,8 +67,8 @@ interface nsIXPCTestIn : nsISupports {
 	// native types must be marked noscript or they break the idl
 	// compiler
 
-	[noscript] voidStar EchoVoidStar( in voidStar vs );
-	[noscript] charStar EchoCharStar( in charStar cs );
+	[noscript] voidPtr EchoVoidPtr( in voidPtr vs );
+	[noscript] charPtr EchoCharPtr( in charPtr cs );
 /*
 	[noscript] voidRef EchoVoidRef( in voidRef vf );
 	[noscript] nsIDRef EchoNsIDRef( in nsIDRef r );

@@ -80,7 +80,7 @@ nsProxyEventObject::DebugDump(const char * message, PRUint32 hashKey)
     GetClass()->GetInterfaceInfo()->GetName(&name);
     printf("interface name is %s\n", name);
     if(name)
-        nsAllocator::Free(name);
+        nsMemory::Free(name);
     char * iid = GetClass()->GetProxiedIID().ToString();
     printf("IID number is %s\n", iid);
     delete iid;

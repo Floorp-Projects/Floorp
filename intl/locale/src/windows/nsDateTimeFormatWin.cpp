@@ -66,10 +66,10 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
     res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
     if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
       if (mLocale.Length() && mLocale.EqualsIgnoreCase(aLocaleUnichar)) {
-        nsAllocator::Free(aLocaleUnichar);
+        nsMemory::Free(aLocaleUnichar);
         return NS_OK;
       }
-      nsAllocator::Free(aLocaleUnichar);
+      nsMemory::Free(aLocaleUnichar);
     }
   }
 
@@ -113,7 +113,7 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
   // Get LCID and charset name from locale, if available
   if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
     mLocale.Assign(aLocaleUnichar); // cache locale name
-    nsAllocator::Free(aLocaleUnichar);
+    nsMemory::Free(aLocaleUnichar);
 
     nsCOMPtr <nsIWin32Locale> win32Locale = do_GetService(kWin32LocaleFactoryCID, &res);
     if (NS_SUCCEEDED(res)) {
@@ -126,7 +126,7 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
       res = platformCharset->GetDefaultCharsetForLocale(mLocale.GetUnicode(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
         mCharset.Assign(mappedCharset);
-        nsAllocator::Free(mappedCharset);
+        nsMemory::Free(mappedCharset);
       }
     }
   }

@@ -74,7 +74,7 @@ NS_IMETHODIMP InsertElementTxn::Do(void)
     printf("%p Do Insert Element of %p <%s> into parent %p at offset %d\n", 
            this, nodeAsContent.get(), nodename,
            parentAsContent.get(), mOffset); 
-    nsAllocator::Free(nodename);
+    nsMemory::Free(nodename);
   }
 
   if (!mNode || !mParent) return NS_ERROR_NOT_INITIALIZED;

@@ -911,7 +911,7 @@ nsresult nsCharsetMenu::AddFromPrefsToMenu(
   if (value != NULL) {
     res = AddFromStringToMenu(value, aRDFServ, aCCMan, aArray, aContainer, 
       aDecs, aIDPrefix);
-    nsAllocator::Free(value);
+    nsMemory::Free(value);
   }
 
   return res;

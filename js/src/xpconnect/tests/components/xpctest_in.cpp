@@ -102,7 +102,7 @@ NS_IMETHODIMP xpcTestIn :: EchoWchar(PRUnichar wc, PRUnichar *_retval) {
 };
 NS_IMETHODIMP xpcTestIn :: EchoString(const PRUnichar *ws, char **_retval) {
 /*	const char s[] = *ws;
-    **_retval= (char*) nsAllocator::Clone(s, 
+    **_retval= (char*) nsMemory::Clone(s, 
                                     sizeof(char)*(strlen(s)+1));
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 */
@@ -140,12 +140,12 @@ NS_IMETHODIMP xpcTestIn :: EchoPRUint64(PRUint64 i, PRUint64 *_retval) {
 	*_retval = i;
 	return NS_OK;
 };
-NS_IMETHODIMP xpcTestIn :: EchoVoidStar(void * vs, void * *_retval) {
+NS_IMETHODIMP xpcTestIn :: EchoVoidPtr(void * vs, void * *_retval) {
 	*_retval = vs;
 	return NS_OK;
 }; 
 
-NS_IMETHODIMP xpcTestIn :: EchoCharStar(char * cs, char * *_retval) {
+NS_IMETHODIMP xpcTestIn :: EchoCharPtr(char * cs, char * *_retval) {
 	**_retval = *cs;
 	return NS_OK;
 };

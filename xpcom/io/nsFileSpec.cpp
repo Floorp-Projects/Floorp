@@ -24,7 +24,7 @@
 
 #include "nsDebug.h"
 #include "nsEscape.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 
 #include "prtypes.h"
 #include "plstr.h"
@@ -1362,7 +1362,7 @@ void nsPersistentFileDescriptor::SetData(const char* inData, PRInt32 inSize)
 nsAutoCString::~nsAutoCString()
 //----------------------------------------------------------------------------------------
 {
-    nsAllocator::Free(NS_REINTERPRET_CAST(void*, NS_CONST_CAST(char*, mCString)));
+    nsMemory::Free(NS_REINTERPRET_CAST(void*, NS_CONST_CAST(char*, mCString)));
 }
 
 //========================================================================================

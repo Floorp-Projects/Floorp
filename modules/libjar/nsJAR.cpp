@@ -780,7 +780,7 @@ void nsJAR::ReportError(const char* aFilename, PRInt16 errorCode)
     PRUnichar* messageUni = message.ToNewUnicode();
     if (!messageUni) return;
     console->LogStringMessage(messageUni);
-    nsAllocator::Free(messageUni);
+    nsMemory::Free(messageUni);
   }
 #ifndef DEBUG
   else // If JS console reporting failed, print to stderr.
@@ -789,7 +789,7 @@ void nsJAR::ReportError(const char* aFilename, PRInt16 errorCode)
     char* messageCstr = message.ToNewCString();
     if (!messageCstr) return;
     fprintf(stderr, "%s\n", messageCstr);
-    nsAllocator::Free(messageCstr);
+    nsMemory::Free(messageCstr);
   }
 }
 

@@ -216,13 +216,13 @@ xptiInterfaceInfoManager::BuildFileList(nsISupportsArray** aFileList)
 
         if(xptiFileType::IsUnknown(name))
         {
-            nsAllocator::Free(name);
+            nsMemory::Free(name);
             continue;
         }
 
         LOG_AUTOREG(("found file: %s\n", name));
 
-        nsAllocator::Free(name);
+        nsMemory::Free(name);
 
         if(!fileList->InsertElementAt(file, count))
             return PR_FALSE;
@@ -430,8 +430,8 @@ xptiSortFileList(const void * p1, const void *p2, void * closure)
     PRBool isXPT2 = xptiFileType::IsXPT(name2);
     int nameOrder = PL_strcmp(name1, name2);
     
-    nsAllocator::Free(name1);
-    nsAllocator::Free(name2);
+    nsMemory::Free(name1);
+    nsMemory::Free(name2);
 
     // XXX need to test with non-empty working sets to be sure this right
 
@@ -590,7 +590,7 @@ xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aFileList,
                 if(k == countOfFilesInWorkingSet)
                     same = PR_FALSE;
             }
-            nsAllocator::Free(name);
+            nsMemory::Free(name);
         }
         if(same)
             return NO_FILES_CHANGED;
@@ -626,7 +626,7 @@ xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aFileList,
                 }    
             
                 PRBool sameName = (0 == PL_strcasecmp(name, target.GetName()));
-                nsAllocator::Free(name);
+                nsMemory::Free(name);
                 if(sameName)
                 {
                     if(nsInt64(size) != target.GetSize() ||
@@ -695,7 +695,7 @@ xptiInterfaceInfoManager::AddOnlyNewFileFromFileList(nsISupportsArray* aFileList
         if(xptiWorkingSet::NOT_FOUND != aWorkingSet->FindFileWithName(name))
         {
             // This file was found in the working set, so skip it.       
-            nsAllocator::Free(name);
+            nsMemory::Free(name);
             continue;
         }
 
@@ -704,7 +704,7 @@ xptiInterfaceInfoManager::AddOnlyNewFileFromFileList(nsISupportsArray* aFileList
         xptiFile fileRecord;
         fileRecord = xptiFile(nsInt64(size), nsInt64(date),
                               name, aWorkingSet);
-        nsAllocator::Free(name);
+        nsMemory::Free(name);
 
         if(xptiFileType::IsXPT(fileRecord.GetName()))
         {
@@ -827,7 +827,7 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aF
         xptiFile fileRecord;
         fileRecord = xptiFile(nsInt64(size), nsInt64(date),
                               name, aWorkingSet);
-        nsAllocator::Free(name);
+        nsMemory::Free(name);
 
 //        printf("* found %s\n", fileRecord.GetName());
 
@@ -1223,7 +1223,7 @@ xptiInterfaceInfoManager::DEBUG_DumpFileList(nsISupportsArray* aFileList)
             return PR_FALSE;
 
         printf("* found %s\n", name);
-        nsAllocator::Free(name);
+        nsMemory::Free(name);
     }
     return PR_TRUE;
 }
@@ -1254,7 +1254,7 @@ xptiInterfaceInfoManager::DEBUG_DumpFileArray(nsILocalFile** aFileArray,
             return PR_FALSE;
 
         printf("found file: %s\n", name);
-        nsAllocator::Free(name);
+        nsMemory::Free(name);
     }        
     return PR_TRUE;        
 }        

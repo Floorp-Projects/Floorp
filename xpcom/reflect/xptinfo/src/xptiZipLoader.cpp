@@ -87,7 +87,7 @@ xptiZipLoader::EnumerateZipEntries(nsILocalFile* file,
         
         if(header)
             result = sink->FoundEntry(itemName, index++, header, aWorkingSet);
-        nsAllocator::Free(itemName);
+        nsMemory::Free(itemName);
 
         if(!header)
             return PR_FALSE;

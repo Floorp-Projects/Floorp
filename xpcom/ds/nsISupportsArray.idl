@@ -81,10 +81,10 @@ interface nsISupportsArray : nsICollection {
   
   [notxpcom, noscript]
       boolean EnumerateForwards(in nsISupportsArrayEnumFunc aFunc,
-                                in voidStar aData);
+                                in voidPtr aData);
   [notxpcom, noscript]
       boolean EnumerateBackwards(in nsISupportsArrayEnumFunc aFunc,
-                                 in voidStar aData);
+                                 in voidPtr aData);
 %{C++
 private:
 //  NS_IMETHOD_(nsISupportsArray&) operator=(const nsISupportsArray& other) = 0;

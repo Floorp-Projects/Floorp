@@ -128,7 +128,7 @@ interface nsIPrefBranch : nsISupports
     [noscript]
     void EnumerateChildren(in string parent,
                            in PrefEnumerationFunc callback,
-                           in voidStar data);
+                           in voidPtr data);
     /*
      * Listeners/Callbacks
      */
@@ -148,10 +148,10 @@ interface nsIPrefBranch : nsISupports
      */
     [noscript] void registerCallback(in string domain,
                                      in PrefChangedFunc callback,
-                                     in voidStar closure);
+                                     in voidPtr closure);
     [noscript] void unregisterCallback(in string domain,
                                        in PrefChangedFunc callback,
-                                       in voidStar closure);
+                                       in voidPtr closure);
     
                            
 };

@@ -147,7 +147,7 @@ nsXPCWrappedJSClass::~nsXPCWrappedJSClass()
         mRuntime->GetWrappedJSClassMap()->Remove(this);
     }
     if(mName)
-        nsAllocator::Free(mName);
+        nsMemory::Free(mName);
     NS_IF_RELEASE(mInfo);
 }
 
@@ -275,7 +275,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         if(NS_SUCCEEDED(current->GetIID(&iid)) && iid)
         {
             PRBool found = aIID.Equals(*iid);
-            nsAllocator::Free(iid);
+            nsMemory::Free(iid);
             if(found)
             {
                 *aInstancePtr = (void*) self;
@@ -426,7 +426,7 @@ nsXPCWrappedJSClass::CleanupPointerArray(const nsXPTType& datum_type,
         for(JSUint32 k = 0; k < array_count; k++)
         {
             void* p = pp[k];
-            if(p) nsAllocator::Free(p);
+            if(p) nsMemory::Free(p);
         }
     }
 }
@@ -444,7 +444,7 @@ nsXPCWrappedJSClass::CleanupPointerTypeObject(const nsXPTType& type,
     else
     {
         void* p = *((void**)pp);
-        if(p) nsAllocator::Free(p);
+        if(p) nsMemory::Free(p);
     }
 }        
 
@@ -614,7 +614,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
             {
                 if(iidIsOwned)
                 {
-                    nsAllocator::Free((void*)conditional_iid);
+                    nsMemory::Free((void*)conditional_iid);
                     iidIsOwned = JS_FALSE;
                 }
                 conditional_iid = nsnull;
@@ -687,7 +687,7 @@ pre_call_clean_up:
                         CleanupPointerArray(datum_type, array_count, pp);
                     }
                     // always release the array if it is inout
-                    nsAllocator::Free(pp);
+                    nsMemory::Free(pp);
                 }
             }
             else
@@ -700,7 +700,7 @@ pre_call_clean_up:
     {
         if(iidIsOwned)
         {
-            nsAllocator::Free((void*)conditional_iid);
+            nsMemory::Free((void*)conditional_iid);
             iidIsOwned = JS_FALSE;
         }
         conditional_iid = nsnull;
@@ -816,7 +816,7 @@ pre_call_clean_up:
                 {
                     printf(text);     
                     printf("\n");
-                    nsAllocator::Free(text);        
+                    nsMemory::Free(text);        
                 }
                 else
                     printf(cant_get_text);     
@@ -906,7 +906,7 @@ pre_call_clean_up:
         {
             if(iidIsOwned)
             {
-                nsAllocator::Free((void*)conditional_iid);
+                nsMemory::Free((void*)conditional_iid);
                 iidIsOwned = JS_FALSE;
             }
             conditional_iid = nsnull;
@@ -1005,7 +1005,7 @@ pre_call_clean_up:
             {
                 if(iidIsOwned)
                 {
-                    nsAllocator::Free((void*)conditional_iid);
+                    nsMemory::Free((void*)conditional_iid);
                     iidIsOwned = JS_FALSE;
                 }
                 conditional_iid = nsnull;
@@ -1048,7 +1048,7 @@ pre_call_clean_up:
                     {
                         CleanupPointerArray(datum_type, array_count, pp);
                     }
-                    nsAllocator::Free(pp);
+                    nsMemory::Free(pp);
                 }
             }
             else
@@ -1067,7 +1067,7 @@ done:
         js_FreeStack(cx, mark);
 
     if(conditional_iid && iidIsOwned)
-        nsAllocator::Free((void*)conditional_iid);
+        nsMemory::Free((void*)conditional_iid);
 
     if(cx)
         JS_SetErrorReporter(cx, older);
@@ -1121,7 +1121,7 @@ nsXPCWrappedJSClass::DebugDump(PRInt16 depth)
         mInfo->GetName(&name);
         XPC_LOG_ALWAYS(("interface name is %s", name));
         if(name)
-            nsAllocator::Free(name);
+            nsMemory::Free(name);
         char * iid = mIID.ToString();
         XPC_LOG_ALWAYS(("IID number is %s", iid));
         delete iid;

@@ -23,7 +23,7 @@
 #ifndef nsSegmentedBuffer_h__
 #define nsSegmentedBuffer_h__
 
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "prclist.h"
 
 class nsSegmentedBuffer
@@ -33,7 +33,7 @@ public:
     ~nsSegmentedBuffer();
 
     nsresult Init(PRUint32 segmentSize, PRUint32 maxSize,
-                  nsIAllocator* allocator = nsnull);
+                  nsIMemory* allocator = nsnull);
 
     char* AppendNewSegment();   // pushes at end
 
@@ -82,7 +82,7 @@ protected:
 protected:
     PRUint32            mSegmentSize;
     PRUint32            mMaxSize;
-    nsIAllocator*       mSegAllocator;
+    nsIMemory*       mSegAllocator;
     char**              mSegmentArray;
     PRUint32            mSegmentArrayCount;
     PRInt32             mFirstSegmentIndex;

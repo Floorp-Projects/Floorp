@@ -364,7 +364,7 @@ TestRead(nsINetDataCacheManager *aCache, PRUint32 aFlags)
         NS_ASSERTION(NS_SUCCEEDED(rv) &&
                      !memcmp(storedUriKey, &uriCacheKey[0], sizeof uriCacheKey),
                      "nsICachedNetData::GetKey failed");
-        nsAllocator::Free(storedUriKey);
+        nsMemory::Free(storedUriKey);
 
         // Test GetSecondaryKey() method
         PRUint32 storedSecondaryKeyLength;

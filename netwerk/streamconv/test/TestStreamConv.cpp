@@ -88,7 +88,7 @@ public:
         rv = inStr->Available(&len);
         if (NS_FAILED(rv)) return rv;
 
-        char *buffer = (char*)nsAllocator::Alloc(len + 1);
+        char *buffer = (char*)nsMemory::Alloc(len + 1);
         if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
 
         rv = inStr->Read(buffer, len, &read);
@@ -96,7 +96,7 @@ public:
         if (NS_SUCCEEDED(rv)) {
             printf("CONTEXT %p: Received %u bytes and the following data: \n %s\n\n", ctxt, read, buffer);
         }
-        nsAllocator::Free(buffer);
+        nsMemory::Free(buffer);
 
         return NS_OK;
     }

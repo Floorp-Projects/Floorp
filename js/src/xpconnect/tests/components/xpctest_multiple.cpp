@@ -57,7 +57,7 @@ xpcTestParentOne :: xpcTestParentOne()
 NS_IMETHODIMP xpcTestParentOne :: GetParentOneAttribute(char * *_retval) 
 {                                                             
 	char aString[] = "xpcTestParentOne attribute";     
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };                                                            
@@ -72,7 +72,7 @@ NS_IMETHODIMP
 xpcTestParentOne :: ParentOneMethod(char * *_retval)                   
 {                                                             
 	char aString[] = "xpcTestParentOne method";  
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };                                                                   
@@ -122,7 +122,7 @@ NS_IMETHODIMP
 xpcTestParentTwo :: GetParentTwoAttribute(char * *_retval)             
 {                                                             
 	char aString[] = "xpcTestParentTwo attribute";               
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };                                                        
@@ -138,7 +138,7 @@ NS_IMETHODIMP
 xpcTestParentTwo :: ParentTwoMethod(char **_retval) 
 {                  
 	char aString[] = "xpcTestParentTwo method";  
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };
@@ -193,7 +193,7 @@ NS_IMETHODIMP
 xpcTestChild2:: GetChildAttribute(char * *_retval) 
 {
 	char aString[] = "xpcTestChild2 attribute";    
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };
@@ -209,7 +209,7 @@ NS_IMETHODIMP
 xpcTestChild2 ::ChildMethod(char **_retval) 
 {
 	char aString[] = "xpcTestChild2 method";  
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };
@@ -219,7 +219,7 @@ NS_IMETHODIMP
 xpcTestChild2 :: GetParentOneAttribute(char * *_retval)     
 {                                                             
 	char aString[] = "xpcTestChild2 attribute";     
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };                                                            
@@ -235,7 +235,7 @@ NS_IMETHODIMP
 xpcTestChild2 :: ParentOneMethod(char * *_retval)                   
 {                                                             
 	char aString[] = "xpcTestChild2 method";  
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };                                  
@@ -244,7 +244,7 @@ NS_IMETHODIMP
 xpcTestChild2 :: GetParentTwoAttribute(char * *_retval)             
 {                                                             
 	char aString[] = "xpcTestChild2 attribute";               
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };                                                            
@@ -259,7 +259,7 @@ xpcTestChild2 :: SetParentTwoAttribute(const char * aParentTwoAttribute)
 NS_IMETHODIMP                                                 
 xpcTestChild2 :: ParentTwoMethod(char **_retval) {                  
 	char aString[] = "xpcTestChild2 method";  
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };                                 
@@ -316,7 +316,7 @@ NS_IMETHODIMP
 xpcTestChild3:: GetChildAttribute(char * *_retval) 
 {
 	char aString[] = "xpcTestChild3 attribute";    
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };
@@ -332,7 +332,7 @@ NS_IMETHODIMP
 xpcTestChild3 ::ChildMethod(char **_retval) 
 {
 	const char aString[] = "xpcTestChild3 method";
-    *_retval = (char*) nsAllocator::Clone((const char *)aString,
+    *_retval = (char*) nsMemory::Clone((const char *)aString,
 				sizeof(char)*(strlen((const char *)aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };
@@ -342,7 +342,7 @@ NS_IMETHODIMP
 xpcTestChild3 :: GetParentOneAttribute(char * *_retval)     
 {                                                             
 	const char aString[] = "xpcTestChild3 attribute";     
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };                                                            
@@ -358,7 +358,7 @@ NS_IMETHODIMP
 xpcTestChild3 :: ParentOneMethod(char * *_retval)                   
 {                                                             
 	char aString[] = "xpcTestChild3 method";  
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };                                  
@@ -413,7 +413,7 @@ NS_IMETHODIMP
 xpcTestChild4:: GetChildAttribute(char * *_retval) 
 {
 	char aString[] = "xpcTestChild4 attribute";    
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };
@@ -429,7 +429,7 @@ NS_IMETHODIMP
 xpcTestChild4 ::ChildMethod(char **_retval) 
 {
 	char aString[] = "xpcTestChild4 method";  
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };
@@ -484,7 +484,7 @@ NS_IMETHODIMP
 xpcTestChild5:: GetChildAttribute(char * *_retval) 
 {
 	char aString[] = "xpcTestChild5 attribute";    
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };
@@ -500,7 +500,7 @@ NS_IMETHODIMP
 xpcTestChild5 ::ChildMethod(char **_retval) 
 {
 	char aString[] = "xpcTestChild5 method";  
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };
@@ -510,7 +510,7 @@ NS_IMETHODIMP
 xpcTestChild5 :: GetParentOneAttribute(char * *_retval)     
 {                                                             
 	char aString[] = "xpcTestChild5 attribute";     
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };                                                            
@@ -526,7 +526,7 @@ NS_IMETHODIMP
 xpcTestChild5 :: ParentOneMethod(char * *_retval)                   
 {                                                             
 	char aString[] = "xpcTestChild5 method";  
-    *_retval = (char*) nsAllocator::Clone(aString,            
+    *_retval = (char*) nsMemory::Clone(aString,            
 				sizeof(char)*(strlen(aString)+1));            
 	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
 };                                  

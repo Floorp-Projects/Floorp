@@ -814,7 +814,7 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     gPref->CopyCharPref("font.default", &value);
     if (value) {
       mDefaultFont = value;
-      nsAllocator::Free(value);
+      nsMemory::Free(value);
       value = nsnull;
     }
     else {
@@ -881,7 +881,7 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     gPref->CopyCharPref(name.GetBuffer(), &value);
     if (value) {
       mUserDefined = value;
-      nsAllocator::Free(value);
+      nsMemory::Free(value);
       value = nsnull;
       mIsUserDefined = 1;
     }
@@ -1788,7 +1788,7 @@ nsFontGTKSubstitute::Convert(const PRUnichar* aSrc, PRUint32 aSrcLen,
         }
         p++;
       }
-      nsAllocator::Free(conv);
+      nsMemory::Free(conv);
       conv = nsnull;
       return i;
     }
@@ -2863,7 +2863,7 @@ PrefEnumCallback(const char* aName, void* aClosure)
   nsCAutoString name;
   if (value) {
     name = value;
-    nsAllocator::Free(value);
+    nsMemory::Free(value);
     value = nsnull;
     s->mFont = s->mMetrics->TryNode(&name, s->mChar);
   }
@@ -2873,7 +2873,7 @@ PrefEnumCallback(const char* aName, void* aClosure)
   gPref->CopyDefaultCharPref(aName, &value);
   if (value) {
     name = value;
-    nsAllocator::Free(value);
+    nsMemory::Free(value);
     value = nsnull;
     s->mFont = s->mMetrics->TryNode(&name, s->mChar);
   }
@@ -2899,7 +2899,7 @@ nsFontMetricsGTK::FindGenericFont(PRUnichar aChar)
     nsFontGTK* font;
     if (value) {
       str = value;
-      nsAllocator::Free(value);
+      nsMemory::Free(value);
       value = nsnull;
       font = TryNode(&str, aChar);
       if (font && font->SupportsChar(aChar)) {
@@ -2910,7 +2910,7 @@ nsFontMetricsGTK::FindGenericFont(PRUnichar aChar)
     gPref->CopyDefaultCharPref(pref.GetBuffer(), &value);
     if (value) {
       str = value;
-      nsAllocator::Free(value);
+      nsMemory::Free(value);
       value = nsnull;
       font = TryNode(&str, aChar);
       if (font && font->SupportsChar(aChar)) {
@@ -3068,7 +3068,7 @@ EnumerateNode(void* aElement, void* aData)
   PRUnichar* str = node->mName.ToNewUnicode();
   if (!str) {
     for (j = j - 1; j >= 0; j--) {
-      nsAllocator::Free(array[j]);
+      nsMemory::Free(array[j]);
     }
     info->mIndex = 0;
     return PR_FALSE; // stop
@@ -3100,13 +3100,13 @@ EnumFonts(nsIAtom* aLangGroup, const char* aGeneric, PRUint32* aCount,
   }
 
   PRUnichar** array =
-    (PRUnichar**) nsAllocator::Alloc(gGlobalList->Count() * sizeof(PRUnichar*));
+    (PRUnichar**) nsMemory::Alloc(gGlobalList->Count() * sizeof(PRUnichar*));
   if (!array) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   EnumerateNodeInfo info = { array, 0, aLangGroup };
   if (!gGlobalList->EnumerateForwards(EnumerateNode, &info)) {
-    nsAllocator::Free(array);
+    nsMemory::Free(array);
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -3118,7 +3118,7 @@ EnumFonts(nsIAtom* aLangGroup, const char* aGeneric, PRUint32* aCount,
     *aResult = array;
   }
   else {
-    nsAllocator::Free(array);
+    nsMemory::Free(array);
   }
 
   return NS_OK;

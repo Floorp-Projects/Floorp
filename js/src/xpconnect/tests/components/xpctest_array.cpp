@@ -140,7 +140,7 @@ xpcarraytest::MultiplyEachItemInIntegerArrayAndAppend(PRInt32 val, PRUint32 *cou
     if(valueArray && count && 0 != (in_count = *count) && nsnull != (in = *valueArray))
     {
         PRInt32* out = 
-            (PRInt32*) nsAllocator::Alloc(in_count * 2 * sizeof(PRUint32));
+            (PRInt32*) nsMemory::Alloc(in_count * 2 * sizeof(PRUint32));
 
         if(!out)
             return NS_ERROR_OUT_OF_MEMORY;
@@ -150,7 +150,7 @@ xpcarraytest::MultiplyEachItemInIntegerArrayAndAppend(PRInt32 val, PRUint32 *cou
             out[i*2]   = in[i];
             out[i*2+1] = in[i] * val;
         }
-        nsAllocator::Free(in);
+        nsMemory::Free(in);
         *valueArray = out;
         *count = in_count * 2;
         return NS_OK;
@@ -182,16 +182,16 @@ xpcarraytest::CallEchoMethodOnEachInArray(nsIID * *uuid, PRUint32 *count, void *
     }
 
     // cleanup
-    nsAllocator::Free(*uuid);
-    nsAllocator::Free(*result);
+    nsMemory::Free(*uuid);
+    nsMemory::Free(*result);
 
     // set up to hand over array of 'this'
 
-    *uuid = (nsIID*) nsAllocator::Clone(&NS_GET_IID(nsIXPCTestArray), 
+    *uuid = (nsIID*) nsMemory::Clone(&NS_GET_IID(nsIXPCTestArray), 
                                         sizeof(nsIID));
 
     nsISupports** outArray = (nsISupports**) 
-            nsAllocator::Alloc(2 * sizeof(nsISupports*));
+            nsMemory::Alloc(2 * sizeof(nsISupports*));
 
     outArray[0] = outArray[1] = this;    
     NS_ADDREF(this);
@@ -222,7 +222,7 @@ xpcarraytest::CallEchoMethodOnEachInArray2(PRUint32 *count, nsIEcho ***result)
     }
 
     // cleanup
-    nsAllocator::Free(*result);
+    nsMemory::Free(*result);
 
     // setup return
     *count = 0;
@@ -242,7 +242,7 @@ xpcarraytest::DoubleStringArray(PRUint32 *count, char ***valueArray)
     if(!count || !*count)
         return NS_OK;
 
-    char** outArray = (char**) nsAllocator::Alloc(*count * 2 * sizeof(char*));
+    char** outArray = (char**) nsMemory::Alloc(*count * 2 * sizeof(char*));
     if(!outArray)
         return NS_ERROR_OUT_OF_MEMORY;
     
@@ -250,8 +250,8 @@ xpcarraytest::DoubleStringArray(PRUint32 *count, char ***valueArray)
     for(PRUint32 i = 0; i < *count; i++)
     {
         int len = strlen(p[i]);
-        outArray[i*2] = (char*)nsAllocator::Alloc(((len * 2)+1) * sizeof(char));                        
-        outArray[(i*2)+1] = (char*)nsAllocator::Alloc(((len * 2)+1) * sizeof(char));                        
+        outArray[i*2] = (char*)nsMemory::Alloc(((len * 2)+1) * sizeof(char));                        
+        outArray[(i*2)+1] = (char*)nsMemory::Alloc(((len * 2)+1) * sizeof(char));                        
 
         for(int k = 0; k < len; k++)
         {
@@ -259,10 +259,10 @@ xpcarraytest::DoubleStringArray(PRUint32 *count, char ***valueArray)
             outArray[(i*2)+1][k*2] = outArray[(i*2)+1][(k*2)+1] = p[i][k];
         }
         outArray[i*2][len*2] = outArray[(i*2)+1][len*2] = '\0';
-        nsAllocator::Free(p[i]);
+        nsMemory::Free(p[i]);
     }
 
-    nsAllocator::Free(p);
+    nsMemory::Free(p);
     *valueArray = outArray; 
     *count = *count * 2;
     return NS_OK;
@@ -308,7 +308,7 @@ xpcarraytest::DoubleString(PRUint32 *count, char **str)
     if(!count || !*count)
         return NS_OK;
 
-    char* out = (char*) nsAllocator::Alloc(((*count * 2)+1) * sizeof(char));                        
+    char* out = (char*) nsMemory::Alloc(((*count * 2)+1) * sizeof(char));                        
     if(!out)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -316,7 +316,7 @@ xpcarraytest::DoubleString(PRUint32 *count, char **str)
     for(k = 0; k < *count; k++)
         out[k*2] = out[(k*2)+1] = (*str)[k];
     out[k*2] = '\0';
-    nsAllocator::Free(*str);
+    nsMemory::Free(*str);
     *str = out; 
     *count = *count * 2;
     return NS_OK;
@@ -332,12 +332,12 @@ xpcarraytest::GetStrings(PRUint32 *count, char ***str)
     if(mReceiver)
         return mReceiver->GetStrings(count, str);
 
-    char** out = (char**) nsAllocator::Alloc(scount * sizeof(char*));
+    char** out = (char**) nsMemory::Alloc(scount * sizeof(char*));
     if(!out)
         return NS_ERROR_OUT_OF_MEMORY;
     for(PRUint32 i = 0; i < scount; ++i)
     {
-        out[i] = (char*) nsAllocator::Clone(strings[i], strlen(strings[i])+1);
+        out[i] = (char*) nsMemory::Clone(strings[i], strlen(strings[i])+1);
         // failure unlikely, leakage foolishly tolerated in this test case
         if(!out[i])
             return NS_ERROR_OUT_OF_MEMORY;

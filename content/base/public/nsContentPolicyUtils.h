@@ -25,7 +25,7 @@
 
 #include "nsString.h"
 #include "nsIContentPolicy.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 #include "nsIServiceManager.h"
 
 #ifndef __nsContentPolicyUtils_h__

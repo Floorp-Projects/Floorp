@@ -45,7 +45,7 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIGenericFactory.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 #include "nsIXPConnect.h"
 #include "nsCOMPtr.h"
 #include "nsIModule.h"

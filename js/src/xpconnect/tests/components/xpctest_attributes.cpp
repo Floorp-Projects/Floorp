@@ -68,11 +68,11 @@ xpcTestObjectReadOnly :: xpcTestObjectReadOnly() {
 	charProperty = 'X';
 
 	const char _id[] = "a68cc6a6-6552-11d3-82ef-0060b0eb596f";
-	stringID = (char*) nsAllocator::Clone(_id, sizeof(char)*(strlen(_id)+1));
+	stringID = (char*) nsMemory::Clone(_id, sizeof(char)*(strlen(_id)+1));
 };
 
 NS_IMETHODIMP xpcTestObjectReadOnly :: GetID(char **_retval) {
-    *_retval= (char*) nsAllocator::Clone(stringID, 
+    *_retval= (char*) nsMemory::Clone(stringID, 
                                          sizeof(char)*(strlen(stringID)+1));
 	return *_retval? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -82,7 +82,7 @@ NS_IMETHODIMP xpcTestObjectReadOnly :: GetStrReadOnly(char * *aStrReadOnly){
 
 	if(!aStrReadOnly)
 		return NS_ERROR_NULL_POINTER;
-    *aStrReadOnly = (char*) nsAllocator::Clone(aStrReadOnly, 
+    *aStrReadOnly = (char*) nsMemory::Clone(aStrReadOnly, 
                                                sizeof(char)*(strlen(aString)+1));
 	return *aStrReadOnly ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 };
@@ -168,14 +168,14 @@ xpcTestObjectReadWrite :: xpcTestObjectReadWrite() {
 	charProperty = 'X';
 
 	const char s[] = "XPConnect Read-Writable String";
-	stringProperty = (char*) nsAllocator::Clone(s, 
+	stringProperty = (char*) nsMemory::Clone(s, 
                                                 sizeof(char)*(strlen(s)+1));
 };
 
 NS_IMETHODIMP xpcTestObjectReadWrite :: GetStringProperty(char * *aStringProperty) {
 	if(!aStringProperty)
 		return NS_ERROR_NULL_POINTER;
-    *aStringProperty = (char*) nsAllocator::Clone(stringProperty, 
+    *aStringProperty = (char*) nsMemory::Clone(stringProperty, 
                                                sizeof(char)*(strlen(stringProperty)+1));
 	return *aStringProperty ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 
@@ -269,7 +269,7 @@ NS_IMPL_ISUPPORTS2(xpcTestAttributes, nsIXPCTestObjectReadWrite, nsIXPCTestObjec
 NS_IMETHODIMP xpcTestAttributes ::GetName(char * *aString) {
 	if(!aString)
 		return NS_ERROR_NULL_POINTER;
-    *aString = (char*) nsAllocator::Clone(name, 
+    *aString = (char*) nsMemory::Clone(name, 
 				sizeof(char)*(strlen(name)+1));
 	return *aString ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 

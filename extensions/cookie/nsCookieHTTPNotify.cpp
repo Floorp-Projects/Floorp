@@ -29,7 +29,7 @@
 #include "nsCRT.h"
 #include "nsXPIDLString.h"
 #include "nsIServiceManager.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsINetModuleMgr.h" 
 #include "nsILoadGroup.h"
 #include "nsICategoryManager.h"
@@ -67,7 +67,7 @@ NS_METHOD nsCookieHTTPNotify::RegisterProc(nsIComponentManager *aCompMgr,
     nsXPIDLCString prevEntry;
     rv = catman->AddCategoryEntry(NS_HTTP_STARTUP_CATEGORY, "Http Cookie Notify", cidString,
                                   PR_TRUE, PR_TRUE, getter_Copies(prevEntry));
-    nsAllocator::Free(cidString);
+    nsMemory::Free(cidString);
 
     return NS_OK;
 
@@ -86,7 +86,7 @@ NS_METHOD nsCookieHTTPNotify::UnregisterProc(nsIComponentManager *aCompMgr,
     nsXPIDLCString prevEntry;
     rv = catman->DeleteCategoryEntry("http-startup-category", cidString, PR_TRUE,
                                      getter_Copies(prevEntry));
-    nsAllocator::Free(cidString);
+    nsMemory::Free(cidString);
 
     // Return value is not used from this function.
     return NS_OK;
@@ -192,7 +192,7 @@ nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext)
     // only set a cookie header if we have a value to send
     if (*cookieRaw)
         rv = pHTTPConnection->SetRequestHeader(mCookieHeader, cookieRaw);
-    nsAllocator::Free((void *)cookieRaw);
+    nsMemory::Free((void *)cookieRaw);
 
     return rv;
 }

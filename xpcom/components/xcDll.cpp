@@ -323,7 +323,7 @@ PRBool nsDll::Load(void)
             char* displayPath;
             m_dllSpec->GetPath(&displayPath);
             nsTraceRefcnt::LoadLibrarySymbols(displayPath, m_instance);
-            nsAllocator::Free(displayPath);
+            nsMemory::Free(displayPath);
         }
 #endif
     }

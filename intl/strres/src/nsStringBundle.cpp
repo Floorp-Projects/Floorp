@@ -28,7 +28,7 @@
 #include "nsIStringBundle.h"
 #include "nscore.h"
 #include "nsILocale.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "plstr.h"
 #include "nsNetUtil.h"
 #include "nsIURL.h"
@@ -326,7 +326,7 @@ nsStringBundle::GetLangCountry(nsILocale* aLocale, nsString& lang, nsString& cou
   nsString  	category; category.AssignWithConversion("NSILOCALE_MESSAGES");
   nsresult	  result	 = aLocale->GetCategory(category.GetUnicode(), &lc_name_unichar);
   lc_name.Assign(lc_name_unichar);
-  nsAllocator::Free(lc_name_unichar);
+  nsMemory::Free(lc_name_unichar);
 
   NS_ASSERTION(NS_SUCCEEDED(result),"nsStringBundle::GetLangCountry: locale.GetCategory failed");
   NS_ASSERTION(lc_name.Length()>0,"nsStringBundle::GetLangCountry: locale.GetCategory failed");

@@ -48,7 +48,7 @@
 #include "nsIComponentManager.h"
 #include "nsIJSContextStack.h"
 #include "nsIJSRuntimeService.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsIXPCSecurityManager.h"
 #include "nsICategoryManager.h"
 
@@ -167,7 +167,7 @@ NS_IMETHODIMP nsTestXPCFoo::GetFoo(char * *aFoo)
     if(!aFoo)
         return NS_ERROR_NULL_POINTER;
     if(mFoo)
-        *aFoo = (char*) nsAllocator::Clone(mFoo, strlen(mFoo)+1);
+        *aFoo = (char*) nsMemory::Clone(mFoo, strlen(mFoo)+1);
     else
         *aFoo = NULL;
     return NS_OK;
@@ -178,11 +178,11 @@ NS_IMETHODIMP nsTestXPCFoo::SetFoo(const char * aFoo)
 //    printf("nsTestXPCFoo::Set called ");
     if(mFoo)
     {
-        nsAllocator::Free(mFoo);
+        nsMemory::Free(mFoo);
         mFoo = NULL;
     }
     if(aFoo)
-        mFoo = (char*) nsAllocator::Clone(aFoo, strlen(aFoo)+1);
+        mFoo = (char*) nsMemory::Clone(aFoo, strlen(aFoo)+1);
     return NS_OK;
 }
 
@@ -198,7 +198,7 @@ nsTestXPCFoo::nsTestXPCFoo()
 nsTestXPCFoo::~nsTestXPCFoo()
 {
     if(mFoo)
-        nsAllocator::Free(mFoo);
+        nsMemory::Free(mFoo);
 }
 
 /***************************************************************************/
@@ -616,7 +616,7 @@ static void ShowXPCException()
             {
                 printf(str);
                 printf("\n");
-                nsAllocator::Free(str);
+                nsMemory::Free(str);
 
                 nsresult res;
                 e->GetResult(&res);
@@ -635,7 +635,7 @@ static void ShowXPCException()
                             {
                                 printf(str2);
                                 printf("\n");
-                                nsAllocator::Free(str2);
+                                nsMemory::Free(str2);
                             }                            
                         }                            
                     }                            

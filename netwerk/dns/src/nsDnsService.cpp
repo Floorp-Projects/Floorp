@@ -503,7 +503,7 @@ nsDNSLookup::InitiateLookup(void)
 
     if (numeric || (colon && hex)) {
         // presume it is numeric and try to converting to an IP-Address
-        PRNetAddr *netAddr = (PRNetAddr*)nsAllocator::Alloc(sizeof(PRNetAddr));    
+        PRNetAddr *netAddr = (PRNetAddr*)nsMemory::Alloc(sizeof(PRNetAddr));    
         if (!netAddr) return NS_ERROR_OUT_OF_MEMORY;
 
         status = PR_StringToNetAddr(mHostName, netAddr);;
@@ -548,7 +548,7 @@ nsDNSLookup::InitiateLookup(void)
             nsStringKey key(mHostName);
             (void) nsDNSService::gService->mLookups.Remove(&key);
         }
-        nsAllocator::Free(netAddr);
+        nsMemory::Free(netAddr);
         if(PR_SUCCESS == status) // it WAS numeric, we're done.
             return rv;
     }

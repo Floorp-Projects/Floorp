@@ -22,7 +22,7 @@
  */
 
 
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 
 #include "nsAEGetURLSuiteHandler.h"
 #include "nsCommandLineServiceMac.h"
@@ -108,7 +108,7 @@ void AEGetURLSuiteHandler::HandleGetURLEvent(AppleEvent *appleEvent, AppleEvent 
 	// we need to look for other parameters, to do with destination etc.
 
 	long		dataSize = directParameter.GetDataSize();
-	char*	urlString = (char *)nsAllocator::Alloc(dataSize + 1);
+	char*	urlString = (char *)nsMemory::Alloc(dataSize + 1);
 	ThrowIfNil(urlString);
 	
 	directParameter.GetCString(urlString, dataSize);
@@ -116,6 +116,6 @@ void AEGetURLSuiteHandler::HandleGetURLEvent(AppleEvent *appleEvent, AppleEvent 
 	nsMacCommandLine&  cmdLine = nsMacCommandLine::GetMacCommandLine();
 	cmdLine.DispatchURLToNewBrowser(urlString);
 	
-	nsAllocator::Free(urlString);	
+	nsMemory::Free(urlString);	
 }
 

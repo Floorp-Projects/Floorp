@@ -125,9 +125,9 @@ XPCJSStackFrame::XPCJSStackFrame()
 XPCJSStackFrame::~XPCJSStackFrame()
 {
     if(mFilename)
-        nsAllocator::Free(mFilename);
+        nsMemory::Free(mFilename);
     if(mFunname)
-        nsAllocator::Free(mFunname);
+        nsMemory::Free(mFunname);
     if(mCaller)
         NS_RELEASE(mCaller);
 }
@@ -162,7 +162,7 @@ XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp)
                     if(filename)
                     {
                         self->mFilename = (char*)
-                                nsAllocator::Clone(filename,
+                                nsMemory::Clone(filename,
                                         sizeof(char)*(strlen(filename)+1));
                     }
 
@@ -176,7 +176,7 @@ XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp)
                         if(funname)
                         {
                         self->mFunname = (char*)
-                                nsAllocator::Clone(funname,
+                                nsMemory::Clone(funname,
                                         sizeof(char)*(strlen(funname)+1));
                         }
                     }
@@ -218,7 +218,7 @@ XPCJSStackFrame::CreateStackFrameLocation(JSBool isJSFrame,
     if(!failed && aFilename)
     {
         self->mFilename = (char*)
-                nsAllocator::Clone(aFilename,
+                nsMemory::Clone(aFilename,
                         sizeof(char)*(strlen(aFilename)+1));
         if(!self->mFilename)
             failed = JS_TRUE;
@@ -227,7 +227,7 @@ XPCJSStackFrame::CreateStackFrameLocation(JSBool isJSFrame,
     if(!failed && aFunctionName)
     {
         self->mFunname = (char*)
-                nsAllocator::Clone(aFunctionName,
+                nsMemory::Clone(aFunctionName,
                         sizeof(char)*(strlen(aFunctionName)+1));
         if(!self->mFunname)
             failed = JS_TRUE;
@@ -304,7 +304,7 @@ NS_IMETHODIMP XPCJSStackFrame::ToString(char **_retval)
                 (strlen(frametype) + strlen(filename) + strlen(funname)) +
               sizeof(format) + 6 /* space for lineno */;
 
-    char* buf = (char*) nsAllocator::Alloc(len);
+    char* buf = (char*) nsMemory::Alloc(len);
     if(!buf)
         return NS_ERROR_OUT_OF_MEMORY;
 

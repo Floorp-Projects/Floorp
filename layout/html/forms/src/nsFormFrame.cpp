@@ -956,7 +956,7 @@ nsFormFrame::URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder)
   nsString* result = new nsString;
   result->AssignWithConversion(outBuf);
   nsCRT::free(outBuf);
-  nsAllocator::Free(convertedBuf);
+  nsMemory::Free(convertedBuf);
   return result;
 }
 
@@ -1332,7 +1332,7 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
             contentLen += PL_strlen(value) + crlfLen;
           }
           delete [] name;
-          nsAllocator::Free(value);
+          nsMemory::Free(value);
         }
         delete [] names;
         delete [] values;
@@ -1481,7 +1481,7 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
             }
             delete [] name;
-            nsAllocator::Free(value);
+            nsMemory::Free(value);
           }
           delete [] names;
           delete [] values;

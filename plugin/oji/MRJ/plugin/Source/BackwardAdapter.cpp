@@ -33,7 +33,7 @@
 #include "npapi.h"
 #include "nsIPluginManager2.h"
 #include "nsIServiceManager.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 #include "nsLiveConnect.h"
 #include "nsIEventHandler.h"
 #include "nsplugin.h"
@@ -59,7 +59,7 @@
 
 #pragma mark CPluginManager
 
-class CPluginManager : public nsIPluginManager2, public nsIServiceManager, public nsIAllocator {
+class CPluginManager : public nsIPluginManager2, public nsIServiceManager, public nsIMemory {
 public:
 	// Need an operator new for this.
 	void* operator new(size_t size) { return ::NPN_MemAlloc(size); }
@@ -1885,7 +1885,7 @@ CPluginManager::GetService(const nsCID& aClass, const nsIID& aIID,
                nsISupports* *result,
                nsIShutdownListener* shutdownListener)
 {
-	// the only service we support currently is nsIAllocator.
+	// the only service we support currently is nsIMemory.
 	if (aClass.Equals(kPluginManagerCID) || aClass.Equals(kAllocatorCID)) {
 		return QueryInterface(aIID, (void**) result);
 	}
@@ -1908,7 +1908,7 @@ CPluginManager::ReleaseService(const nsCID& aClass, nsISupports* service,
 }
 
 //////////////////////////////
-// nsIAllocator methods.
+// nsIMemory methods.
 //////////////////////////////
 
 NS_METHOD_(void*)
@@ -1971,8 +1971,8 @@ CPluginManager::QueryInterface(const nsIID& iid, void** ptr)
         AddRef();                                                            
         return NS_OK;                                                        
     }
-    if (iid.Equals(NS_GET_IID(nsIAllocator))) {                                                          
-        *ptr = (void*) (nsIAllocator*)this;                                        
+    if (iid.Equals(NS_GET_IID(nsIMemory))) {                                                          
+        *ptr = (void*) (nsIMemory*)this;                                        
         AddRef();                                                            
         return NS_OK;                                                        
     }

@@ -438,7 +438,7 @@ nsSecureBrowserUIImpl::IsURLHTTPS(nsIURI* aURL, PRBool* value)
     if ( PL_strncasecmp(scheme, "https",  5) == 0 )
 		*value = PR_TRUE;
 	
-	nsAllocator::Free(scheme);
+	nsMemory::Free(scheme);
 	return NS_OK;
 }
 
@@ -454,7 +454,7 @@ void nsSecureBrowserUIImpl::GetBundleString(const nsString& name, nsString &outS
     else
       outString.SetLength(0);;
     
-    nsAllocator::Free(ptrv);
+    nsMemory::Free(ptrv);
   }
   else
   {

@@ -106,7 +106,7 @@ NS_IMETHODIMP xpctestEcho::In2OutOneString(const char* input, char** output)
     char* p;
     int len;
     if(input && output &&
-       (NULL != (p = (char*)nsAllocator::Alloc(len=strlen(input)+1))))
+       (NULL != (p = (char*)nsMemory::Alloc(len=strlen(input)+1))))
     {
         memcpy(p, input, len);
         *output = p;
@@ -198,7 +198,7 @@ xpctestEcho::SharedString(const char **str)
     // to do non-shared we clone the string:
     char buf[] = "a static string";
     int len;
-    *str = (char*)nsAllocator::Alloc(len=strlen(buf)+1);
+    *str = (char*)nsMemory::Alloc(len=strlen(buf)+1);
     memcpy(*str, buf, len);
 */
     return NS_OK;

@@ -20,7 +20,7 @@
 #include "nsURLHelper.h"
 #include "prprf.h"
 #include "nsCRT.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsIIOService.h"
 #include "nsIURI.h"
 
@@ -168,7 +168,7 @@ nsURLUnescape(char* str, char **result)
     static const char hexChars[] = "0123456789ABCDEF";
     int len = PL_strlen(str);
 
-    *result = (char *)nsAllocator::Alloc(len + 1);
+    *result = (char *)nsMemory::Alloc(len + 1);
     if (!*result)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -381,7 +381,7 @@ NS_NET nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos,
             }
 
             if (scheme) {
-                char* str = (char*)nsAllocator::Alloc(length + 1);
+                char* str = (char*)nsMemory::Alloc(length + 1);
                 if (str == nsnull)
                     return NS_ERROR_OUT_OF_MEMORY;
                 nsCRT::memcpy(str, &inURI[start], length);

@@ -133,7 +133,7 @@ nsTXTToHTMLConv::OnDataAvailable(nsIChannel *aChannel, nsISupports *aContext,
     nsresult rv = NS_OK;
     nsString pushBuffer;
     PRUint32 amtRead = 0;
-    char *buffer = (char*)nsAllocator::Alloc(aCount+1);
+    char *buffer = (char*)nsMemory::Alloc(aCount+1);
     if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
     
     do {
@@ -174,7 +174,7 @@ nsTXTToHTMLConv::OnDataAvailable(nsIChannel *aChannel, nsISupports *aContext,
             nsCOMPtr<nsISupports>    inputDataSup;
             rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup), pushBuffer);
             if (NS_FAILED(rv)) {
-                nsAllocator::Free(buffer);
+                nsMemory::Free(buffer);
                 return rv;
             }
 
@@ -183,13 +183,13 @@ nsTXTToHTMLConv::OnDataAvailable(nsIChannel *aChannel, nsISupports *aContext,
             rv = mListener->OnDataAvailable(aChannel, aContext,
                                             inputData, 0, pushBuffer.Length());
             if (NS_FAILED(rv)) {
-                nsAllocator::Free(buffer);
+                nsMemory::Free(buffer);
                 return rv;
             }
         }
     } while (amtRead < aCount);
 
-    nsAllocator::Free(buffer);
+    nsMemory::Free(buffer);
     return rv; 
 } 
 // nsTXTToHTMLConv methods

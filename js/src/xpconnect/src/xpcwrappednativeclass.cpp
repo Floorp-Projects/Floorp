@@ -170,7 +170,7 @@ nsXPCWrappedNativeClass::~nsXPCWrappedNativeClass()
     }
     DestroyMemberDescriptors();
     if(mName)
-        nsAllocator::Free(mName);
+        nsMemory::Free(mName);
     NS_RELEASE(mInfo);
 }
 
@@ -374,7 +374,7 @@ nsXPCWrappedNativeClass::HandlePossibleNameCaseError(JSContext* cx, jsid id)
                         locationStr, badName, ifaceName, goodName);
             }
             if(locationStr)
-                nsAllocator::Free(locationStr);
+                nsMemory::Free(locationStr);
         }
     }
 }        
@@ -520,7 +520,7 @@ nsXPCWrappedNativeClass::GetInterfaceTypeFromParam(
             return JS_FALSE;
         }
 
-        if(!(*result = (nsID*) nsAllocator::Clone(dispatchParams[argnum].val.p,
+        if(!(*result = (nsID*) nsMemory::Clone(dispatchParams[argnum].val.p,
                                                   sizeof(nsID))))
         {
             JS_ReportOutOfMemory(cx);
@@ -753,7 +753,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
 
         if(conditional_iid)
         {
-            nsAllocator::Free((void*)conditional_iid);
+            nsMemory::Free((void*)conditional_iid);
             conditional_iid = nsnull;
         }
     }
@@ -898,7 +898,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
 
             if(conditional_iid)
             {
-                nsAllocator::Free((void*)conditional_iid);
+                nsMemory::Free((void*)conditional_iid);
                 conditional_iid = nsnull;
             }
         }
@@ -1023,7 +1023,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         }
         if(conditional_iid)
         {
-            nsAllocator::Free((void*)conditional_iid);
+            nsMemory::Free((void*)conditional_iid);
             conditional_iid = nsnull;
         }
     }
@@ -1062,7 +1062,7 @@ done:
                         for(JSUint32 k = 0; k < array_count; k++)
                         {
                             void* o = a[k];
-                            if(o) nsAllocator::Free(o);
+                            if(o) nsMemory::Free(o);
                         }
                     }
                     else // if(dp->IsValInterface())
@@ -1076,17 +1076,17 @@ done:
                     }
                 }
                 // always free the array itself
-                nsAllocator::Free(p);
+                nsMemory::Free(p);
             }
             else if(dp->IsValOwned())
-                nsAllocator::Free(p);
+                nsMemory::Free(p);
             else if(dp->IsValInterface())
                 ((nsISupports*)p)->Release();
         }
     }
 
     if(conditional_iid)
-        nsAllocator::Free((void*)conditional_iid);
+        nsMemory::Free((void*)conditional_iid);
 
     if(dispatchParams && dispatchParams != paramBuffer)
         delete [] dispatchParams;

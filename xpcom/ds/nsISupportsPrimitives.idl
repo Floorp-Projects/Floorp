@@ -152,11 +152,11 @@ interface nsISupportsDouble : nsISupports
 interface nsISupportsVoid : nsISupports
 {
     /*
-    *  This would be: "[noscript] attribute voidStar data;" but for...
+    *  This would be: "[noscript] attribute voidPtr data;" but for...
     *  http://bugzilla.mozilla.org/show_bug.cgi?id=11454
     */
-    [noscript] void GetData([shared,retval] out voidStar aData);
-    [noscript] void SetData(in voidStar aData);
+    [noscript] void GetData([shared,retval] out voidPtr aData);
+    [noscript] void SetData(in voidPtr aData);
     string toString();
 };
 

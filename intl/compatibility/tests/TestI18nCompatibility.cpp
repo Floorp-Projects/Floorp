@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
       nsString tempStr(charsetUni);
       char *tempCstr = tempStr.ToNewCString();
 
-      nsAllocator::Free(charsetUni);
+      nsMemory::Free(charsetUni);
 
       if (NULL != tempCstr) {
         cout << csid << " " << tempCstr << "\n";

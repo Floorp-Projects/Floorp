@@ -22,7 +22,7 @@
 
 #include "nsNetModRegEntry.h"
 #include "plstr.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsProxyObjectManager.h"
@@ -88,7 +88,7 @@ nsNetModRegEntry::GetTopic(char **topic)
 {
     if (mTopic) 
     {
-        *topic = (char *) nsAllocator::Clone(mTopic, nsCRT::strlen(mTopic) + 1);
+        *topic = (char *) nsMemory::Clone(mTopic, nsCRT::strlen(mTopic) + 1);
         return NS_OK;
     }
     return NS_ERROR_NULL_POINTER;
@@ -115,7 +115,7 @@ nsNetModRegEntry::Equals(nsINetModRegEntry* aEntry, PRBool *_retVal)
         {
             *_retVal = PR_TRUE;
         }
-        nsAllocator::Free(topic);
+        nsMemory::Free(topic);
     }
     return rv;
 }

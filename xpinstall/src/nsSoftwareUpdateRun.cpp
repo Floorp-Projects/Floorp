@@ -107,7 +107,7 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
         rv = errorObject->Init(report->ucmessage, newFileUni, report->uclinebuf,
                                report->lineno, column, report->flags,
                                "XPInstall JavaScript");
-        nsAllocator::Free((void *)newFileUni);
+        nsMemory::Free((void *)newFileUni);
         if (NS_SUCCEEDED(rv)) {
             rv = consoleService->LogMessage(errorObject);
             if (NS_SUCCEEDED(rv)) {

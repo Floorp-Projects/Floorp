@@ -572,7 +572,7 @@ CertDownloader::CertDownloader(PRInt32 type)
 CertDownloader::~CertDownloader()
 {
     if (mByteData)
-        nsAllocator::Free(mByteData);
+        nsMemory::Free(mByteData);
 }
 
 NS_IMPL_ISUPPORTS(CertDownloader,NS_GET_IID(nsIStreamListener));
@@ -586,7 +586,7 @@ CertDownloader::OnStartRequest(nsIChannel* channel, nsISupports* context)
         return NS_ERROR_FAILURE;
     
     mBufferOffset = 0;
-    mByteData = (char*) nsAllocator::Alloc(mContentLength);
+    mByteData = (char*) nsMemory::Alloc(mContentLength);
     if (!mByteData)
         return NS_ERROR_OUT_OF_MEMORY;
 

@@ -256,7 +256,7 @@ nsXPINotifierImpl::Init()
                     aDistributor->GetValue(&uri);
 
                     rv = OpenRemoteDataSource(uri, PR_FALSE, getter_AddRefs(remoteDatasource));
-					nsAllocator::Free(uri);
+					nsMemory::Free(uri);
                     if (NS_FAILED(rv)) break;
                     
                     distributorEnumerator->HasMoreElements(&moreElements);
@@ -547,8 +547,8 @@ nsXPINotifierImpl::OnEndLoad(nsIRDFXMLSink *aSink)
                     PRUnichar* versionCString;
                     version->GetValue(&versionCString);
                     nsString versionString(versionCString);
-					nsAllocator::Free(versionCString);
-					nsAllocator::Free(regkeyCString);
+					nsMemory::Free(versionCString);
+					nsMemory::Free(regkeyCString);
 
                     // check to see if this software title should be "flashed"
                     if (IsNewerOrUninstalled(nsAutoCString(regKeyString), nsAutoCString(versionString)))

@@ -388,7 +388,7 @@ PRBool nsUnicodeRenderingToolkit :: TransliterateFallbackGetWidth(
   		}
   		
   		 
-    	nsAllocator::Free(conv);
+    	nsMemory::Free(conv);
     	return PR_TRUE;
     }
   }
@@ -446,7 +446,7 @@ PRBool nsUnicodeRenderingToolkit :: TransliterateFallbackDrawChar(
     	} else {
   			DrawScriptText(conv, l, x, y, oWidth);
   		}
-    	nsAllocator::Free(conv);
+    	nsMemory::Free(conv);
     	return PR_TRUE;
     }
   }

@@ -122,12 +122,12 @@ nsXPCException::Reset()
 {
     if(mMessage)
     {
-        nsAllocator::Free(mMessage);
+        nsMemory::Free(mMessage);
         mMessage = nsnull;
     }
     if(mName)
     {
-        nsAllocator::Free(mName);
+        nsMemory::Free(mName);
         mName = nsnull;
     }
     NS_IF_RELEASE(mLocation);
@@ -206,14 +206,14 @@ nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *a
 
     if(aMessage)
     {
-        if(!(mMessage = (char*) nsAllocator::Clone(aMessage,
+        if(!(mMessage = (char*) nsMemory::Clone(aMessage,
                                            sizeof(char)*(strlen(aMessage)+1))))
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
     if(aName)
     {
-        if(!(mName = (char*) nsAllocator::Clone(aName,
+        if(!(mName = (char*) nsMemory::Clone(aName,
                                            sizeof(char)*(strlen(aName)+1))))
             return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -281,12 +281,12 @@ nsXPCException::ToString(char **_retval)
 
     char* temp = JS_smprintf(format, msg, mResult, resultName, location, data);
     if(indicatedLocation)
-        nsAllocator::Free(indicatedLocation);
+        nsMemory::Free(indicatedLocation);
 
     char* final = nsnull;
     if(temp)
     {
-        final = (char*) nsAllocator::Clone(temp, sizeof(char)*(strlen(temp)+1));
+        final = (char*) nsMemory::Clone(temp, sizeof(char)*(strlen(temp)+1));
         JS_smprintf_free(temp);
     }
 
@@ -379,9 +379,9 @@ xpcJSErrorReport::xpcJSErrorReport()
 
 xpcJSErrorReport::~xpcJSErrorReport()
 {
-    if(mMessage)  nsAllocator::Free(mMessage);
-    if(mFilename) nsAllocator::Free(mFilename);
-    if(mLinebuf)  nsAllocator::Free(mLinebuf);
+    if(mMessage)  nsMemory::Free(mMessage);
+    if(mFilename) nsMemory::Free(mFilename);
+    if(mLinebuf)  nsMemory::Free(mLinebuf);
 }
 
 // static
@@ -401,18 +401,18 @@ xpcJSErrorReport::NewReport(const char* aMessage,
 
     JSBool success = JS_TRUE;
 
-    if(!(self->mMessage = (char*) nsAllocator::Clone(aMessage,
+    if(!(self->mMessage = (char*) nsMemory::Clone(aMessage,
                                        sizeof(char)*(strlen(aMessage)+1))))
         success = JS_FALSE;
 
     if(success && aReport->filename)
-       if(!(self->mFilename = (char*) nsAllocator::Clone(aReport->filename,
+       if(!(self->mFilename = (char*) nsMemory::Clone(aReport->filename,
                                 sizeof(char)*(strlen(aReport->filename)+1))))
         success = JS_FALSE;
 
     if(success && aReport->linebuf)
     {
-       if(!(self->mLinebuf = (char*) nsAllocator::Clone(aReport->linebuf,
+       if(!(self->mLinebuf = (char*) nsMemory::Clone(aReport->linebuf,
                                 sizeof(char)*(strlen(aReport->linebuf)+1))))
         success = JS_FALSE;
 
@@ -547,7 +547,7 @@ xpcJSErrorReport::ToString(char **_retval)
     char* final = nsnull;
     if(temp)
     {
-        final = (char*) nsAllocator::Clone(temp,
+        final = (char*) nsMemory::Clone(temp,
                                         sizeof(char)*(strlen(temp)+1));
         JS_smprintf_free(temp);
     }

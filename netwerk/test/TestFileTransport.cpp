@@ -25,7 +25,7 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsString.h"
 #include "nsIFileStreams.h"
 #include "nsIStreamListener.h"
@@ -90,7 +90,7 @@ public:
         if (name == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
         nsAutoString str; str.AssignWithConversion(name);
-        nsAllocator::Free(name);
+        nsMemory::Free(name);
         str.AppendWithConversion(".bak");
         nsFileSpec spec(origFile);
         spec.SetLeafName(str);

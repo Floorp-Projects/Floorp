@@ -890,9 +890,9 @@ void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize)
 {  
   if (mBufferSize < aNewSize)
   {
-    nsAllocator::Free(mBuffer);
+    nsMemory::Free(mBuffer);
     mBufferSize = 2*aNewSize+1; // make the twice as large
-    mBuffer = NS_STATIC_CAST(char*, nsAllocator::Alloc(mBufferSize));
+    mBuffer = NS_STATIC_CAST(char*, nsMemory::Alloc(mBufferSize));
     if(mBuffer){
       mBuffer[0] = 0;
       mBufferLength = 0;
@@ -1208,7 +1208,7 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
 #ifdef DEBUG_wrapping
   char* foo = aString.ToNewCString();
   printf("Write(%s): wrap col = %d, mColPos = %d\n", foo, mWrapColumn, mColPos);
-  nsAllocator::Free(foo);
+  nsMemory::Free(foo);
 #endif
 
   PRInt32 bol = 0;
@@ -1297,7 +1297,7 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
     foo = remaining.ToNewCString();
     //    printf("Next line: bol = %d, newlinepos = %d, totLen = %d, string = '%s'\n",
     //           bol, nextpos, totLen, foo);
-    nsAllocator::Free(foo);
+    nsMemory::Free(foo);
 #endif
 
     if(nextpos < 0) {

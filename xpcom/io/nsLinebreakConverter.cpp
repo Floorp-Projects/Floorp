@@ -22,7 +22,7 @@
 
 #include "nsLinebreakConverter.h"
 
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsCRT.h"
 
 
@@ -117,7 +117,7 @@ static T* ConvertBreaks(const T* inSrc, PRInt32& ioLen, const char* srcBreak, co
   // handle the no conversion case
   if (nsCRT::strcmp(srcBreak, destBreak) == 0)
   {
-    resultString = (T *)nsAllocator::Alloc(sizeof(T) * ioLen);
+    resultString = (T *)nsMemory::Alloc(sizeof(T) * ioLen);
     if (!resultString) return nsnull;
     nsCRT::memcpy(resultString, inSrc, sizeof(T) * ioLen); // includes the null, if any
     return resultString;
@@ -130,7 +130,7 @@ static T* ConvertBreaks(const T* inSrc, PRInt32& ioLen, const char* srcBreak, co
   // breaks are only 1 char long, i.e. CR <-> LF
   if (srcBreakLen == destBreakLen && srcBreakLen == 1)
   {
-    resultString = (T *)nsAllocator::Alloc(sizeof(T) * ioLen);
+    resultString = (T *)nsMemory::Alloc(sizeof(T) * ioLen);
     if (!resultString) return nsnull;
     
     const T* src = inSrc;
@@ -163,7 +163,7 @@ static T* ConvertBreaks(const T* inSrc, PRInt32& ioLen, const char* srcBreak, co
     PRInt32 numLinebreaks = CountLinebreaks(inSrc, ioLen, srcBreak);
     
     PRInt32 newBufLen = ioLen - (numLinebreaks * srcBreakLen) + (numLinebreaks * destBreakLen);
-    resultString = (T *)nsAllocator::Alloc(sizeof(T) * newBufLen);
+    resultString = (T *)nsMemory::Alloc(sizeof(T) * newBufLen);
     if (!resultString) return nsnull;
     
     const T* src = inSrc;
@@ -261,7 +261,7 @@ static T* ConvertUnknownBreaks(const T* inSrc, PRInt32& ioLen, const char* destB
     src ++;
   }
   
-  T* resultString = (T *)nsAllocator::Alloc(sizeof(T) * finalLen);
+  T* resultString = (T *)nsMemory::Alloc(sizeof(T) * finalLen);
   if (!resultString) return nsnull;
 
   src = inSrc;
@@ -472,7 +472,7 @@ nsresult nsLinebreakConverter::ConvertStringLineBreaks(nsString& ioString,
     if (stringBuf != ioString.mUStr)  // we reallocated
     {
       // this is pretty evil. Is there a better way?
-      nsAllocator::Free(ioString.mUStr);
+      nsMemory::Free(ioString.mUStr);
       ioString.mUStr = stringBuf;
       ioString.mLength = newLen - 1;
       ioString.mCapacity = newLen;
@@ -488,7 +488,7 @@ nsresult nsLinebreakConverter::ConvertStringLineBreaks(nsString& ioString,
     
     if (stringBuf != ioString.mStr)  // we reallocated
     {
-      nsAllocator::Free(ioString.mStr);
+      nsMemory::Free(ioString.mStr);
       ioString.mStr = stringBuf;
       ioString.mLength = newLen - 1;
       ioString.mCapacity = newLen;

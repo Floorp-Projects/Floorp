@@ -128,7 +128,7 @@ nsInstallTrigger::HandleContent(const char * aContentType,
             PRBool value;
             rv = StartSoftwareUpdate(NS_ConvertASCIItoUCS2(spec), 0, &value);
             
-                nsAllocator::Free(spec);
+                nsMemory::Free(spec);
 
             if (NS_SUCCEEDED(rv) && value) 
                 return NS_OK;

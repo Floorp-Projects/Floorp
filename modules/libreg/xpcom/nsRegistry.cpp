@@ -28,7 +28,7 @@
 #include "prlock.h"
 #include "prlog.h"
 #include "nsCRT.h"
-#include "nsAllocator.h"
+#include "nsMemory.h"
 
 #include "nsCOMPtr.h"
 #include "nsILocalFile.h"
@@ -483,7 +483,7 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid ) {
     PR_Unlock(mregLock);
 
     if (regFile)
-      nsAllocator::Free(regFile);
+      nsMemory::Free(regFile);
 
     // Store the registry that was opened for optimizing future opens.
     mCurRegID = regid;
@@ -689,7 +689,7 @@ NS_IMETHODIMP nsRegistry::GetStringUTF8( nsRegistryKey baseKey, const char *path
         // See if that worked.
         if( rv == NS_OK ) 
         {
-            *result =(char*)nsAllocator::Alloc( length + 1 );
+            *result =(char*)nsMemory::Alloc( length + 1 );
             if( *result ) 
             {
                 // Get string from registry into result buffer.
@@ -788,7 +788,7 @@ NS_IMETHODIMP nsRegistry::GetBytesUTF8( nsRegistryKey baseKey, const char *path,
                 // See if that worked.
                 if( rv == NS_OK ) 
                 {
-                    *result = NS_REINTERPRET_CAST(PRUint8*,nsAllocator::Alloc( *length ));
+                    *result = NS_REINTERPRET_CAST(PRUint8*,nsMemory::Alloc( *length ));
                     if( *result ) 
                     {
                         // Get bytes from registry into result field.
@@ -1335,7 +1335,7 @@ NS_IMETHODIMP nsRegistry::EscapeKey(PRUint8* key, PRUint32 termination, PRUint32
     }
     //    New length includes two extra chars for escapees.
     *length += escapees * 2;
-    *escaped = (PRUint8*)nsAllocator::Alloc(*length + termination);
+    *escaped = (PRUint8*)nsMemory::Alloc(*length + termination);
     if (*escaped == nsnull)
     {
         *length = 0;
@@ -1398,7 +1398,7 @@ NS_IMETHODIMP nsRegistry::UnescapeKey(PRUint8* escaped, PRUint32 termination, PR
     }
     //    New length includes two extra chars for escapees.
     *length -= escapees * 2;
-    *key = (PRUint8*)nsAllocator::Alloc(*length + termination);
+    *key = (PRUint8*)nsMemory::Alloc(*length + termination);
     if (*key == nsnull)
     {
         *length = 0;
@@ -1440,7 +1440,7 @@ NS_IMETHODIMP nsRegistry::UnescapeKey(PRUint8* escaped, PRUint32 termination, PR
     }
     if (escapees < 0)
     {
-        nsAllocator::Free(*key);
+        nsMemory::Free(*key);
         *length = 0;
         *key = nsnull;
         return NS_ERROR_INVALID_ARG;

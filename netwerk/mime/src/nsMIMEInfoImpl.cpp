@@ -45,7 +45,7 @@ nsMIMEInfoImpl::GetFileExtensions(PRUint32 *elementCount, char ***extensions) {
     *elementCount = mExtensions.Count();
     if (*elementCount < 1) return NS_OK;;
 
-    char **_retExts = (char**)nsAllocator::Alloc((*elementCount)*2*sizeof(char*));
+    char **_retExts = (char**)nsMemory::Alloc((*elementCount)*2*sizeof(char*));
     if (!_retExts) return NS_ERROR_OUT_OF_MEMORY;
 
     for (PRUint8 i=0; i < *elementCount; i++) {

@@ -819,7 +819,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
                                         &myFunc);
         }
         for (PRUint32 l = 0; l < argCount; l++) {
-          nsAllocator::Free(args[l]);
+          nsMemory::Free(args[l]);
         }
       }
       else if (tagName.get() == kPropertyAtom) {
@@ -1328,7 +1328,7 @@ nsXBLBinding::BuildInsertionTable()
           token = nsCRT::strtok( newStr, ", ", &newStr );
         }
 
-        nsAllocator::Free(str);
+        nsMemory::Free(str);
       }
     }
   }
@@ -1455,7 +1455,7 @@ nsXBLBinding::ConstructAttributeTable(nsIContent* aElement)
       token = nsCRT::strtok( newStr, ", ", &newStr );
     }
 
-    nsAllocator::Free(str);
+    nsMemory::Free(str);
   }
 
   // Recur into our children.

@@ -29,7 +29,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "prlog.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
@@ -193,7 +193,7 @@ NS_IMETHODIMP mozLineTerm::ArePrefsSecure(PRBool *_retval)
   result = prefService->CopyCharPref("javascript.security_policy", &policyStr);
   if (NS_SUCCEEDED(result) && policyStr) {
     secString.Append(policyStr);
-    nsAllocator::Free(policyStr);
+    nsMemory::Free(policyStr);
   } else {
     secString.Append("default");
   }
@@ -205,7 +205,7 @@ NS_IMETHODIMP mozLineTerm::ArePrefsSecure(PRBool *_retval)
 
   char *secLevelString;
   result = prefService->CopyCharPref(prefStr, &secLevelString);
-  nsAllocator::Free(prefStr);
+  nsMemory::Free(prefStr);
 
   if (NS_FAILED(result) || !secLevelString)
     return NS_ERROR_FAILURE;
@@ -214,7 +214,7 @@ NS_IMETHODIMP mozLineTerm::ArePrefsSecure(PRBool *_retval)
            ("secLevelString=%s\n", secLevelString));
 
   *_retval = (PL_strcmp(secLevelString, "sameOrigin") == 0);
-  nsAllocator::Free(secLevelString);
+  nsMemory::Free(secLevelString);
 
   if (!(*_retval)) {
     XMLT_ERROR("mozLineTerm::ArePrefsSecure: Error - Please add the line\n"
@@ -259,7 +259,7 @@ NS_IMETHODIMP mozLineTerm::GetSecurePrincipal(nsIDOMDocument *domDoc,
 #else
   const char temStr[] = "unknown";
   PRInt32 temLen = strlen(temStr);
-  *aPrincipalStr = strncpy((char*) nsAllocator::Alloc(temLen+1),
+  *aPrincipalStr = strncpy((char*) nsMemory::Alloc(temLen+1),
                            temStr, temLen+1);
 #endif
 
@@ -272,8 +272,8 @@ NS_IMETHODIMP mozLineTerm::GetSecurePrincipal(nsIDOMDocument *domDoc,
     // Return null string
     XMLT_ERROR("mozLineTerm::GetSecurePrincipal: Error - "
                "Insecure document principal %s\n", *aPrincipalStr);
-    nsAllocator::Free(*aPrincipalStr);
-    *aPrincipalStr = (char*) nsAllocator::Alloc(1);
+    nsMemory::Free(*aPrincipalStr);
+    *aPrincipalStr = (char*) nsMemory::Alloc(1);
     **aPrincipalStr = '\0';
   }
 
@@ -334,7 +334,7 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
     return NS_ERROR_FAILURE;
 
   if (strlen(securePrincipal) == 0) {
-    nsAllocator::Free(securePrincipal);
+    nsMemory::Free(securePrincipal);
     XMLT_ERROR("mozLineTerm::OpenAux: Error - "
                "Failed to create LineTerm for insecure document principal\n");
     return NS_ERROR_FAILURE;
@@ -404,7 +404,7 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
   }
 
   // Free cookie CString
-  nsAllocator::Free(cookieCStr);
+  nsMemory::Free(cookieCStr);
 
   if (mLoggingEnabled) {
     // Log time stamp for LineTerm open operation
@@ -414,7 +414,7 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
       char* temStr = timeStamp.ToNewCString();
       fprintf(stderr, "<TS %s> LineTerm %d opened by principal %s\n",
               temStr, mLTerm, securePrincipal);
-      nsAllocator::Free(temStr);
+      nsMemory::Free(temStr);
     }
   }
 
@@ -573,7 +573,7 @@ NS_IMETHODIMP mozLineTerm::Write(const PRUnichar *buf,
     if (NS_SUCCEEDED(result) && (timeStamp.Length() > 0)) {
       char* temStr = timeStamp.ToNewCString();
       fprintf(stderr, "<TS %s>\n", temStr);
-      nsAllocator::Free(temStr);
+      nsMemory::Free(temStr);
 
     } else if (newline) {
       fprintf(stderr, "\n");
@@ -645,7 +645,7 @@ NS_IMETHODIMP mozLineTerm::ReadAux(PRInt32 *opcodes, PRInt32 *opvals,
     XMLT_LOG(mozLineTerm::ReadAux,72,("cursor_col=%d\n", cursor_col));
 
     int allocBytes = sizeof(PRUnichar)*(retCode + 1);
-    *_retval = (PRUnichar*) nsAllocator::Alloc(allocBytes);
+    *_retval = (PRUnichar*) nsMemory::Alloc(allocBytes);
 
     for (j=0; j<retCode; j++)
       (*_retval)[j] = (PRUnichar) ubuf[j];
@@ -655,7 +655,7 @@ NS_IMETHODIMP mozLineTerm::ReadAux(PRInt32 *opcodes, PRInt32 *opvals,
 
     if (retstyle != nsnull) {
       // Return style array as well
-      *retstyle = (PRUnichar*) nsAllocator::Alloc(allocBytes);
+      *retstyle = (PRUnichar*) nsMemory::Alloc(allocBytes);
 
       for (j=0; j<retCode; j++)
         (*retstyle)[j] = (PRUnichar) ustyle[j];

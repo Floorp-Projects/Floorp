@@ -271,7 +271,7 @@ nsToolboxFrame::DragDrop(nsIDOMEvent* aMouseEvent)
                 dragSession->SetCanDrop(PR_TRUE);
               }
               
-              nsAllocator::Free ( whichFlavor );
+              nsMemory::Free ( whichFlavor );
             }
           } // foreach drag item
         }

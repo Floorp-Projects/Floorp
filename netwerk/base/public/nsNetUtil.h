@@ -33,7 +33,7 @@
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsCOMPtr.h"
 #include "nsIHTTPProtocolHandler.h"
 #include "nsIStreamLoader.h"
@@ -75,7 +75,7 @@ NS_NewURI(nsIURI* *result,
     if (specStr == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     nsresult rv = NS_NewURI(result, specStr, baseURI, ioService);
-    nsAllocator::Free(specStr);
+    nsMemory::Free(specStr);
     return rv;
 }
 
@@ -213,11 +213,11 @@ NS_MakeAbsoluteURI(nsString& result,
         return NS_ERROR_OUT_OF_MEMORY;
     }
     nsresult rv = NS_MakeAbsoluteURI(&resultStr, specStr, baseURI, ioService);
-    nsAllocator::Free(specStr);
+    nsMemory::Free(specStr);
     if (NS_FAILED(rv)) return rv;
 
     result.AssignWithConversion(resultStr);
-    nsAllocator::Free(resultStr);
+    nsMemory::Free(resultStr);
     return rv;
 }
 

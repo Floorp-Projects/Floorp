@@ -53,8 +53,6 @@ typedef unsigned long       size_t;
 
 [ptr]         native voidPtr(void);
 [ptr]         native charPtr(char);
-[ptr]         native voidStar(void);
-[ptr]         native charStar(char);
 
 [ref, nsid]   native nsIDRef(nsID);
 [ref, nsid]   native nsIIDRef(nsIID);

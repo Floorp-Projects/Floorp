@@ -21,7 +21,7 @@
  */
 
 ////////////////////////////////////////////////////////////////////////////////
-// Implementation of nsIAllocator using NSPR
+// obsolete
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifndef nsAllocator_h__
@@ -32,65 +32,4 @@
 #include "nsAgg.h"
 #include "nsIFactory.h"
 
-class nsAllocatorImpl : public nsIAllocator {
-public:
-    static const nsCID& CID() { static nsCID cid = NS_ALLOCATOR_CID; return cid; }
-
-    /**
-     * Allocates a block of memory of a particular size. 
-     *
-     * @param size - the size of the block to allocate
-     * @result the block of memory
-     */
-    NS_IMETHOD_(void*) Alloc(PRUint32 size);
-
-    /**
-     * Reallocates a block of memory to a new size.
-     *
-     * @param ptr - the block of memory to reallocate
-     * @param size - the new size
-     * @result the rellocated block of memory
-     */
-    NS_IMETHOD_(void*) Realloc(void* ptr, PRUint32 size);
-
-    /**
-     * Frees a block of memory. 
-     *
-     * @param ptr - the block of memory to free
-     */
-    NS_IMETHOD Free(void* ptr);
-
-    /**
-     * Attempts to shrink the heap.
-     */
-    NS_IMETHOD HeapMinimize(void);
-
-    ////////////////////////////////////////////////////////////////////////////
-
-    nsAllocatorImpl(nsISupports* outer);
-    virtual ~nsAllocatorImpl(void);
-
-    NS_DECL_AGGREGATED
-
-    static NS_METHOD
-    Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
-};
-
-////////////////////////////////////////////////////////////////////////////////
-#if 0
-class nsAllocatorFactory : public nsIFactory {
-public:
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              REFNSIID aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
-
-    nsAllocatorFactory(void);
-    virtual ~nsAllocatorFactory(void);
-
-    NS_DECL_ISUPPORTS
-};
-#endif
-////////////////////////////////////////////////////////////////////////////////
 #endif // nsAllocator_h__

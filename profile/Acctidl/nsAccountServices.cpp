@@ -31,7 +31,7 @@
 #include "windows.h"
 #include "nscore.h"
 #include "nsIAccountServices.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 #include "plstr.h"
 #include "stdio.h"
 #include "nsIAccount.h"

@@ -146,7 +146,7 @@ nsClipboard::~nsClipboard()
 
   // free the selection data, if any
   if (mSelectionData.data != nsnull)
-    nsAllocator::Free(mSelectionData.data);
+    nsMemory::Free(mSelectionData.data);
 
   gtk_object_remove_data(GTK_OBJECT(sWidget), "cb");
 
@@ -475,7 +475,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
   }
     
   // transferable is now owning the data, so we can free it.
-  nsAllocator::Free(mSelectionData.data);
+  nsMemory::Free(mSelectionData.data);
   mSelectionData.data = nsnull;
   mSelectionData.length = 0;
 
@@ -620,7 +620,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
     // the conversion. 
     decoder->GetMaxLength(data, numberOfBytes, &outUnicodeLen);   // |outUnicodeLen| is number of chars
     if (outUnicodeLen) {
-      unicodeData = NS_REINTERPRET_CAST(PRUnichar*, nsAllocator::Alloc((outUnicodeLen + 1) * sizeof(PRUnichar)));
+      unicodeData = NS_REINTERPRET_CAST(PRUnichar*, nsMemory::Alloc((outUnicodeLen + 1) * sizeof(PRUnichar)));
       if ( unicodeData ) {
         PRInt32 numberTmp = numberOfBytes;
         rv = decoder->Convert(data, &numberTmp, unicodeData, &outUnicodeLen);
@@ -780,7 +780,7 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
   g_print("    returning %i\n  }\n", *outResult);
 #endif
 
-  nsAllocator::Free(mSelectionData.data);
+  nsMemory::Free(mSelectionData.data);
   mSelectionData.data = nsnull;
   mSelectionData.length = 0;
 
@@ -874,7 +874,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
       nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText (castedUnicode, dataLength / 2,
                                                              &plainTextData, &plainTextLen);
       if (clipboardData) {
-        nsAllocator::Free(NS_REINTERPRET_CAST(char*, clipboardData));
+        nsMemory::Free(NS_REINTERPRET_CAST(char*, clipboardData));
         clipboardData = plainTextData;
         dataLength = plainTextLen;
       }
@@ -883,7 +883,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
         PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, clipboardData);
         nsString str(castedUnicode, dataLength);
         char *utf8String = str.ToNewUTF8String();
-        nsAllocator::Free(NS_REINTERPRET_CAST(char*, clipboardData));
+        nsMemory::Free(NS_REINTERPRET_CAST(char*, clipboardData));
         clipboardData = utf8String;
         dataLength = strlen(utf8String);
       }
@@ -920,7 +920,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
       PRUnichar *castedData = NS_REINTERPRET_CAST(PRUnichar*, clipboardData);
       encoder->GetMaxLength(castedData, dataLength, &platformLen);
       if ( platformLen ) {
-        platformText = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(platformLen + sizeof(char)));
+        platformText = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(platformLen + sizeof(char)));
         if ( platformText ) {
           PRInt32 len = (PRInt32)dataLength;
           rv = encoder->Convert(castedData, &len, platformText, &platformLen);
@@ -946,7 +946,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
           g_print("\nXmbTextListToTextProperty succeeded\n  text is %s\n  length is %d\n", prop.value,
                   prop.nitems);
 #endif
-          nsAllocator::Free(platformText);
+          nsMemory::Free(platformText);
           platformText = (char *)prop.value;
           platformLen = prop.nitems;
         }
@@ -957,7 +957,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
 #endif
 
       if (clipboardData) {
-        nsAllocator::Free(NS_REINTERPRET_CAST(char*, clipboardData));
+        nsMemory::Free(NS_REINTERPRET_CAST(char*, clipboardData));
         clipboardData = platformText;
         dataLength = platformLen;
       }

@@ -39,7 +39,7 @@ nsSegmentedBuffer::~nsSegmentedBuffer()
 
 nsresult
 nsSegmentedBuffer::Init(PRUint32 segmentSize, PRUint32 maxSize,
-                        nsIAllocator* allocator)
+                        nsIMemory* allocator)
 {
     if (mSegmentArrayCount != 0)
         return NS_ERROR_FAILURE;        // initialized more than once
@@ -47,7 +47,7 @@ nsSegmentedBuffer::Init(PRUint32 segmentSize, PRUint32 maxSize,
     mMaxSize = maxSize;
     mSegAllocator = allocator;
     if (mSegAllocator == nsnull) {
-        mSegAllocator = nsAllocator::GetGlobalAllocator();
+        mSegAllocator = nsMemory::GetGlobalMemoryService();
     }
     else {
         NS_ADDREF(mSegAllocator);
@@ -68,7 +68,7 @@ nsSegmentedBuffer::AppendNewSegment()
 
     if (mSegmentArray == nsnull) {
         PRUint32 bytes = mSegmentArrayCount * sizeof(char*);
-        mSegmentArray = (char**)nsAllocator::Alloc(bytes);
+        mSegmentArray = (char**)nsMemory::Alloc(bytes);
         if (mSegmentArray == nsnull)
             return nsnull;
         nsCRT::memset(mSegmentArray, 0, bytes);
@@ -77,7 +77,7 @@ nsSegmentedBuffer::AppendNewSegment()
     if (IsFull()) {
         PRUint32 newArraySize = mSegmentArrayCount * 2;
         PRUint32 bytes = newArraySize * sizeof(char*);
-        char** newSegArray = (char**)nsAllocator::Realloc(mSegmentArray, bytes);
+        char** newSegArray = (char**)nsMemory::Realloc(mSegmentArray, bytes);
         if (newSegArray == nsnull)
             return nsnull;
         mSegmentArray = newSegArray;
@@ -159,7 +159,7 @@ nsSegmentedBuffer::Empty()
             if (mSegmentArray[i])
                 mSegAllocator->Free(mSegmentArray[i]);
         }
-        nsAllocator::Free(mSegmentArray);
+        nsMemory::Free(mSegmentArray);
         mSegmentArray = nsnull;
     }
     mSegmentArrayCount = NS_SEGMENTARRAY_INITIAL_COUNT;

@@ -156,11 +156,11 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
           if ( numTextBytes != noErr )
             errCode = NS_ERROR_FAILURE;
 #endif
-          nsAllocator::Free ( plainTextData ); 
+          nsMemory::Free ( plainTextData ); 
         }      
       } // if unicode
         
-      nsAllocator::Free ( data );
+      nsMemory::Free ( data );
     }
   } // foreach flavor in transferable
 
@@ -252,7 +252,7 @@ nsClipboard :: GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32
                                                                       &convertedText, &convertedTextLen );
             if ( convertedText ) {
               // out with the old, in with the new 
-              nsAllocator::Free(clipboardData);
+              nsMemory::Free(clipboardData);
               clipboardData = convertedText;
               dataSize = convertedTextLen * 2;
               dataFound = PR_TRUE;
@@ -273,7 +273,7 @@ nsClipboard :: GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32
 #ifdef NS_DEBUG
           if ( errCode != NS_OK ) printf("nsClipboard:: Error setting data into transferable\n");
 #endif
-        nsAllocator::Free ( clipboardData );
+        nsMemory::Free ( clipboardData );
         
         // we found one, get out of this loop!
         break;        
@@ -331,7 +331,7 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
       return NS_ERROR_OUT_OF_MEMORY;
     long dataSize = ::GetScrap ( dataHand, inMacFlavor, &offsetUnused );
     if ( dataSize > 0 ) {
-      char* dataBuff = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(dataSize));
+      char* dataBuff = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(dataSize));
       if ( !dataBuff )
         return NS_ERROR_OUT_OF_MEMORY;
       ::HLock(dataHand);
@@ -379,7 +379,7 @@ nsClipboard :: HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRInt32 a
   char* mimeMapperData = nsnull;
   GetDataOffClipboard ( nsMimeMapperMac::MappingFlavor(), (void**)&mimeMapperData, 0 );
   nsMimeMapperMac theMapper ( mimeMapperData );
-  nsAllocator::Free ( mimeMapperData );
+  nsMemory::Free ( mimeMapperData );
   
   PRUint32 length;
   aFlavorList->Count(&length);

@@ -75,10 +75,10 @@ main(int argc, char* argv[])
     while (i++ < cycles) {
         rv = ServiceMakeAbsolute(uri, rel, &absURLString);
         if (NS_FAILED(rv)) return rv;
-        nsAllocator::Free(absURLString);
+        nsMemory::Free(absURLString);
 
         rv = URLMakeAbsolute(uri, rel, &absURLString);
-        nsAllocator::Free(absURLString);
+        nsMemory::Free(absURLString);
     }
 
     return rv;

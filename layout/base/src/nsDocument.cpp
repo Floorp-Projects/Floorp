@@ -3508,7 +3508,7 @@ nsDocument::SaveFile(nsFileSpec*     aFileSpec,
 
   // Get a document encoder instance:
   nsCOMPtr<nsIDocumentEncoder> encoder;
-  char* progid = (char *)nsAllocator::Alloc(strlen(NS_DOC_ENCODER_PROGID_BASE)
+  char* progid = (char *)nsMemory::Alloc(strlen(NS_DOC_ENCODER_PROGID_BASE)
                                             + aFormatType.Length() + 1);
   if (! progid)
     return NS_ERROR_OUT_OF_MEMORY;

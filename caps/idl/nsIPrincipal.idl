@@ -62,13 +62,13 @@ interface nsIPrincipal : nsISupports {
 
     void SetCanEnableCapability(in string capability, in short canEnable);
 
-    boolean IsCapabilityEnabled(in string capability, in voidStar annotation);
+    boolean IsCapabilityEnabled(in string capability, in voidPtr annotation);
 	
-	void EnableCapability(in string capability, inout voidStar annotation);
+	void EnableCapability(in string capability, inout voidPtr annotation);
 
-    void RevertCapability(in string capability, inout voidStar annotation);
+    void RevertCapability(in string capability, inout voidPtr annotation);
 
-    void DisableCapability(in string capability, inout voidStar annotation);
+    void DisableCapability(in string capability, inout voidPtr annotation);
 };
 
 

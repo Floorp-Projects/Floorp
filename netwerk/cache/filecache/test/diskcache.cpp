@@ -343,7 +343,7 @@ TestRecordID(nsINetDataCache *cache)
         match = randomStream->Match(metaData, metaDataLength);
         NS_ASSERTION(match, "Meta-data corrupted or incorrect");
 
-        nsAllocator::Free(metaData);
+        nsMemory::Free(metaData);
         delete randomStream;
     }
     return NS_OK;
@@ -406,7 +406,7 @@ TestEnumeration(nsINetDataCache *cache)
         NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get record meta-data");
         match = randomStream->Match(metaData, metaDataLength);
         NS_ASSERTION(match, "Meta-data corrupted or incorrect");
-        nsAllocator::Free(metaData);
+        nsMemory::Free(metaData);
 
         delete randomStream;
     }
@@ -448,7 +448,7 @@ TestRead(nsINetDataCache *cache)
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
         match = randomStream->Match(metaData, metaDataLength);
         NS_ASSERTION(match, "Meta-data corrupted or incorrect");
-        nsAllocator::Free(metaData);
+        nsMemory::Free(metaData);
 
         // Test GetKey() method
         rv = record->GetKey(&storedCacheKeyLength, &storedCacheKey);
@@ -456,7 +456,7 @@ TestRead(nsINetDataCache *cache)
                      (storedCacheKeyLength == sizeof cacheKey) &&
                      !memcmp(storedCacheKey, &cacheKey[0], sizeof cacheKey),
                      "nsINetDataCacheRecord::GetKey failed");
-        nsAllocator::Free(storedCacheKey);
+        nsMemory::Free(storedCacheKey);
 
         PRUint32 expectedStreamLength = randomStream->Next() & 0xffff;
 

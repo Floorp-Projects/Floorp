@@ -48,7 +48,7 @@
     aFoo->GetFoo(&bar);
     // Use bar here...
     printf("bar is %s!\n", bar);
-    nsAllocator::Free(bar);
+    nsMemory::Free(bar);
 
   This makes your life harder, because you need to convolute your code
   to ensure that you don't leak `bar'.
@@ -62,7 +62,7 @@
     aFoo->GetFoo( getter_Copies(bar) );
     // Use bar here...
     printf("bar is %s!\n", (const char*) bar);
-    // no need to remember to nsAllocator::Free().
+    // no need to remember to nsMemory::Free().
 
   Like nsCOMPtr, nsXPIDLString uses some syntactic sugar to make it
   painfully clear exactly what the code expects. You need to wrap an

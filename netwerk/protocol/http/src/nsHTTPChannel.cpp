@@ -1075,7 +1075,7 @@ nsHTTPChannel::ReadFromCache()
            ("nsHTTPChannel::ReadFromCache [this=%x].\t"
             "Using cache copy for: %s\n",
             this, URLSpec));
-    nsAllocator::Free(URLSpec);
+    nsMemory::Free(URLSpec);
 #endif /* PR_LOGGING */
 
     // Create a cache transport to read the cached response...
@@ -1550,7 +1550,7 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("ProcessRedirect [this=%x].\tRedirecting to: %s.\n",
           this, newURLSpec));
-  nsAllocator::Free(newURLSpec);
+  nsMemory::Free(newURLSpec);
 #endif /* PR_LOGGING */
 
   if (checkSecurity)
@@ -2159,7 +2159,7 @@ nsHTTPChannel::ProcessNotModifiedResponse(nsIStreamListener *aListener)
          ("nsHTTPChannel::ProcessNotModifiedResponse [this=%x].\t"
           "Using cache copy for: %s\n",
           this, URLSpec));
-  nsAllocator::Free(URLSpec);
+  nsMemory::Free(URLSpec);
 #endif /* PR_LOGGING */
 
     // Orphan the current nsHTTPServerListener instance...  It will be

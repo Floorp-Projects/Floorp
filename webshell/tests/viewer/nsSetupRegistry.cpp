@@ -40,7 +40,7 @@
 
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
 #include "nsIGenericFactory.h"

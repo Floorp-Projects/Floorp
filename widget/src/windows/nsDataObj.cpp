@@ -550,7 +550,7 @@ HRESULT nsDataObj::GetText(nsCAutoString * aDataFlavor, FORMATETC& aFE, STGMEDIU
    
     // replace the unicode data with our plaintext data. Recall that |plainTextLen| doesn't include
     // the null in the length.
-    nsAllocator::Free(data);
+    nsMemory::Free(data);
     if ( plainTextData ) {
       data = plainTextData;
       allocLen = plainTextLen + sizeof(char);
@@ -575,7 +575,7 @@ HRESULT nsDataObj::GetText(nsCAutoString * aDataFlavor, FORMATETC& aFE, STGMEDIU
   aSTG.hGlobal = hGlobalMemory;
 
   // Now, delete the memory that was created by CreateDataFromPrimitive (or our text/plain data)
-  nsAllocator::Free(data);
+  nsMemory::Free(data);
 
   return ResultFromScode(S_OK);
 }

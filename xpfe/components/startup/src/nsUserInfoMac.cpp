@@ -45,7 +45,7 @@ nsUserInfo::GetFullname(PRUnichar **aFullname)
 	 {
 		 nsString fullName;
 		 fullName.AssignWithConversion( cName );
-		 nsAllocator::Free( cName );
+		 nsMemory::Free( cName );
      *aFullname = fullName.ToNewUnicode();
    }
    return result;
@@ -69,7 +69,7 @@ nsUserInfo::GetUsername(char * *aUsername)
 	if ( NS_FAILED( rv ) ) return rv;
 	
   nsCAutoString   tempString(cString);
-  nsAllocator::Free( cString );
+  nsMemory::Free( cString );
   const char*     atString = "@";
   PRInt32         atOffset = tempString.Find(atString);
   if (atOffset != kNotFound)
@@ -88,7 +88,7 @@ nsUserInfo::GetDomain(char * *aDomain)
 	nsresult rv = ic.GetString( kICEmail, &cString );
 	if ( NS_FAILED( rv ) ) return rv;
   nsCAutoString   tempString( cString);
-  nsAllocator::Free( cString );
+  nsMemory::Free( cString );
   const char*     atString = "@";
   PRInt32         atOffset = tempString.Find(atString);
   if (atOffset != kNotFound)
