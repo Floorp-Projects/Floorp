@@ -56,6 +56,7 @@ LCFLAGS =                               \
 LLIBS=                                  \
  comctl32.lib                           \
  comdlg32.lib                           \
+ shell32.lib                           \
  $(DIST)\lib\xpcom32.lib                \
  $(DIST)\lib\raptorgfxwin.lib           \
  $(DIST)\lib\raptorbase.lib             \
