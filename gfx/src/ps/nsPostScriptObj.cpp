@@ -625,17 +625,33 @@ XP_File f;
   XP_FilePrintf(f, "end\n");
   XP_FilePrintf(f, "/NoglyphFont exch definefont pop\n");
   XP_FilePrintf(f, "\n");
-  XP_FilePrintf(f, "/mbshow {\n");
-  XP_FilePrintf(f, "  dup -8 bitshift 255 and\n");
-  XP_FilePrintf(f, "  exch 255 and\n");
-  XP_FilePrintf(f, "  2 string dup\n");
-  XP_FilePrintf(f, "  4 -1 roll\n");
-  XP_FilePrintf(f, "  0 exch put\n");
-  XP_FilePrintf(f, "  dup 3 -1 roll\n");
-  XP_FilePrintf(f, "  1 exch put\n");
-  XP_FilePrintf(f, "  show\n");
+
+  XP_FilePrintf(f, "/mbshow {                       %% num\n");
+  XP_FilePrintf(f, "    8 array                     %% num array\n");
+  XP_FilePrintf(f, "    -1                          %% num array counter\n");
+  XP_FilePrintf(f, "    {\n");
+  XP_FilePrintf(f, "        dup 7 ge { exit } if\n");
+  XP_FilePrintf(f, "        1 add                   %% num array counter\n");
+  XP_FilePrintf(f, "        2 index 16#100 mod      %% num array counter mod\n");
+  XP_FilePrintf(f, "        3 copy put pop          %% num array counter\n");
+  XP_FilePrintf(f, "        2 index 16#100 idiv     %% num array counter num\n");
+  XP_FilePrintf(f, "        dup 0 le\n");
+  XP_FilePrintf(f, "        {\n");
+  XP_FilePrintf(f, "            pop exit\n");
+  XP_FilePrintf(f, "        } if\n");
+  XP_FilePrintf(f, "        4 -1 roll pop\n");
+  XP_FilePrintf(f, "        3 1 roll\n");
+  XP_FilePrintf(f, "    } loop                      %% num array counter\n");
+  XP_FilePrintf(f, "    3 -1 roll pop               %% array counter\n");
+  XP_FilePrintf(f, "    dup 1 add string            %% array counter string\n");
+  XP_FilePrintf(f, "    0 1 3 index\n");
+  XP_FilePrintf(f, "    {                           %% array counter string index\n");
+  XP_FilePrintf(f, "        2 index 1 index sub     %% array counter string index sid\n");
+  XP_FilePrintf(f, "        4 index 3 2 roll get    %% array counter string sid byte\n");
+  XP_FilePrintf(f, "        2 index 3 1 roll put    %% array counter string\n");
+  XP_FilePrintf(f, "    } for\n");
+  XP_FilePrintf(f, "    show pop pop\n");
   XP_FilePrintf(f, "} def\n");
-  XP_FilePrintf(f, "\n");
 
   XP_FilePrintf(f, "/draw_undefined_char\n");
   XP_FilePrintf(f, "{\n");
@@ -907,21 +923,26 @@ nsPostScriptObj::preshow(const PRUnichar* txt, int len)
 	PRInt32 *ncode = nsnull;
 	nsStringKey key(inbuffer, 1);
 
-	ncode = (int *) gU2Ntable->Get(&key);
+	ncode = (PRInt32 *) gU2Ntable->Get(&key);
 
 	if (ncode && *ncode) {
 	} else {
 	  PRInt32 insize, outsize;
 	  outsize = 6;
 	  insize = 1;
+          // example, 13327 (USC2 0x340f) -> 14913679 (gb18030 0xe3908f)
 	  res = gEncoder->Convert(inbuffer, &insize, outbuffer, &outsize);
 	  if (NS_SUCCEEDED(res) && outsize > 1) {
-	    PRInt32 code = ((outbuffer[0] & 0xff) << 8) + (outbuffer[1] & 0xff);
-	    if (code > 1) {
+            int i;
+            PRInt32 code = 0;
+            for(i=1;i<=outsize;i++) {
+              code += (outbuffer[i - 1] & 0xff) << (8 * (outsize - i));
+            }
+            if (code) {
 	      ncode = new PRInt32;
 	      *ncode = code;
 	      gU2Ntable->Put(&key, ncode);
-	      XP_FilePrintf(f, "%d %d u2nadd\n", uch, code);
+	      XP_FilePrintf(f, "%d %u u2nadd\n", uch, code);
             }
 	  }
 	}
