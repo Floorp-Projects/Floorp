@@ -29,7 +29,7 @@
   border: none !important;
 }
 
-#FormatToolbar > toolbarbutton[toggled="true"] {
+#FormatToolbar > toolbarbutton[checked="true"] {
   background-color: transparent;
 }
 
@@ -41,8 +41,8 @@
   list-style-image: url("chrome://editor/skin/btn2/dec-font-size-hov.gif");
 }
 
-#DecreaseFontSizeButton[toggled="true"],
-#DecreaseFontSizeButton[toggled="true"]:hover,
+#DecreaseFontSizeButton[checked="true"],
+#DecreaseFontSizeButton[checked="true"]:hover,
 #DecreaseFontSizeButton:hover:active {
   list-style-image: url("chrome://editor/skin/btn2/dec-font-size-act.gif");
 }
@@ -60,8 +60,8 @@
   list-style-image: url("chrome://editor/skin/btn2/inc-font-size-hov.gif");
 }
 
-#IncreaseFontSizeButton[toggled="true"],
-#IncreaseFontSizeButton[toggled="true"]:hover,
+#IncreaseFontSizeButton[checked="true"],
+#IncreaseFontSizeButton[checked="true"]:hover,
 #IncreaseFontSizeButton:hover:active {
   list-style-image: url("chrome://editor/skin/btn2/inc-font-size-act.gif");
 }
@@ -83,7 +83,7 @@
   list-style-image: url("chrome://editor/skin/btn2/bold-act.gif");
 }
 
-#boldButton[toggled="true"] {
+#boldButton[checked="true"] {
   list-style-image: url("chrome://editor/skin/btn2/bold-sel.gif");
 }
 
@@ -104,7 +104,7 @@
   list-style-image: url("chrome://editor/skin/btn2/italic-act.gif");
 }
 
-#italicButton[toggled="true"] {
+#italicButton[checked="true"] {
   list-style-image: url("chrome://editor/skin/btn2/italic-sel.gif");
 }
 
@@ -125,7 +125,7 @@
   list-style-image: url("chrome://editor/skin/btn2/underline-act.gif");
 }
 
-#underlineButton[toggled="true"] {
+#underlineButton[checked="true"] {
   list-style-image: url("chrome://editor/skin/btn2/underline-sel.gif");
 }
 
@@ -146,7 +146,7 @@
   list-style-image: url("chrome://editor/skin/btn2/bullets-act.gif");
 }
 
-#ulButton[toggled="true"] {
+#ulButton[checked="true"] {
   list-style-image: url("chrome://editor/skin/btn2/bullets-sel.gif");
 }
 
@@ -167,7 +167,7 @@
   list-style-image: url("chrome://editor/skin/btn2/numbers-act.gif");
 }
 
-#olButton[toggled="true"] {
+#olButton[checked="true"] {
   list-style-image: url("chrome://editor/skin/btn2/numbers-sel.gif");
 }
 
@@ -184,8 +184,8 @@
   list-style-image: url("chrome://editor/skin/btn2/outdent-hov.gif");
 }
 
-#outdentButton[toggled="true"],
-#outdentButton[toggled="true"]:hover,
+#outdentButton[checked="true"],
+#outdentButton[checked="true"]:hover,
 #outdentButton:hover:active {
   list-style-image: url("chrome://editor/skin/btn2/outdent-act.gif");
 }
@@ -203,8 +203,8 @@
   list-style-image: url("chrome://editor/skin/btn2/indent-hov.gif");
 }
 
-#indentButton[toggled="true"],
-#indentButton[toggled="true"]:hover,
+#indentButton[checked="true"],
+#indentButton[checked="true"]:hover,
 #indentButton:hover:active {
   list-style-image: url("chrome://editor/skin/btn2/indent-act.gif");
 }
@@ -336,7 +336,7 @@
   list-style-image: url("chrome://editor/skin/btn2/left-act.gif");
 }
 
-#align-left-button[toggled="true"] {
+#align-left-button[checked="true"] {
   list-style-image: url("chrome://editor/skin/btn2/left-sel.gif");
 }
 
@@ -357,7 +357,7 @@
   list-style-image: url("chrome://editor/skin/btn2/center-act.gif");
 }
 
-#align-center-button[toggled="true"] {
+#align-center-button[checked="true"] {
   list-style-image: url("chrome://editor/skin/btn2/center-sel.gif");
 }
 
@@ -378,7 +378,7 @@
   list-style-image: url("chrome://editor/skin/btn2/right-act.gif");
 }
 
-#align-right-button[toggled="true"] {
+#align-right-button[checked="true"] {
   list-style-image: url("chrome://editor/skin/btn2/right-sel.gif");
 }
 
@@ -399,7 +399,7 @@
   list-style-image: url("chrome://editor/skin/btn2/justify-act.gif");
 }
 
-#align-justify-button[toggled="true"] {
+#align-justify-button[checked="true"] {
   list-style-image: url("chrome://editor/skin/btn2/justify-sel.gif");
 }
 

@@ -29,10 +29,80 @@
           ]]>
         </getter>
       </property>
+
+      <property name="type"
+                onget="return this.getAttribute('type');"
+                onset="this.setAttribute('type', val); return val;"/>
+
+      <property name="dlgType"
+                onget="return this.getAttribute('dlgType');"
+                onset="this.setAttribute('dlgType', val); return val;"/>
+
+      <property name="group"
+                onget="return this.getAttribute('group');"
+                onset="this.setAttribute('group', val); return val;"/>
+
+      <property name="open"
+                onget="return this.getAttribute('open') == 'true';"
+                onset="this.setAttribute('open', val); return val;"/>
+
+      <property name="checked" onget="return this.getAttribute('checked') == 'true';">
+        <setter><![CDATA[
+          if (this.type == "checkbox") {
+            this.checkState = val ? 1 : 0;
+          } else if (this.type == "radio" && val) {
+            var sibs = this.parentNode.getElementsByAttribute("group", this.group);
+            for (var i = 0; i < sibs.length; ++i)
+              if (sibs[i].checked)
+                sibs[i].checked = false;
+          }
+
+          if (val)
+            this.setAttribute("checked", "true");
+          else
+            this.removeAttribute("checked");
+          
+          return val;
+        ]]></setter>
+      </property>
+      
+      <property name="checkState">
+        <getter><![CDATA[
+          var state = this.getAttribute("checkState");
+          if (state == "")
+            return this.checked ? 1 : 0;
+          else
+            return state == "0" ? 0 : (state == "2" ? 2 : 1);
+        ]]></getter>
+        <setter><![CDATA[
+          this.setAttribute("checkState", val);
+          return val;
+        ]]></setter>
+      </property>
+      
+      <property name="autoCheck"
+                onget="return this.getAttribute('autoCheck') == 'true';"
+                onset="this.setAttribute('autoCheck', val); return val;"/>
     </implementation>
+
+    <handlers>
+      <handler event="command">
+      <![CDATA[
+        if (this.autoCheck || !this.hasAttribute("autoCheck")) {
+          if (this.type == "checkbox") {
+            this.checked = !this.checked;
+          } else if (this.type == "radio") {
+            this.checked = true;
+          }
+        }
+      ]]>
+      </handler>
+
+    </handlers>
   </binding>
 
-  <binding id="button" extends="chrome://global/content/bindings/button.xml#button-base">
+  <binding id="button" display="xul:button"
+           extends="chrome://global/content/bindings/button.xml#button-base">
     <resources>
       <stylesheet src="chrome://global/skin/button.css"/>
     </resources>

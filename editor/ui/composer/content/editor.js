@@ -2006,7 +2006,7 @@ function onButtonUpdate(button, commmandID)
   var commandNode = document.getElementById(commmandID);
   var state = commandNode.getAttribute("state");
 
-  button.setAttribute("toggled", state);
+  button.checked = state == "true";
 }
 
 //--------------------------------------------------------------------
@@ -2015,7 +2015,7 @@ function onStateButtonUpdate(button, commmandID, onState)
   var commandNode = document.getElementById(commmandID);
   var state = commandNode.getAttribute("state");
 
-  button.setAttribute("toggled", (state == onState) ? "true" : "false");
+  button.checked = state == onState;
 }
 
 
@@ -2032,7 +2032,7 @@ function onStyleChange(theStyle)
   var theButton = document.getElementById(theStyle + "Button");
   if (theButton)
   {
-    theButton.setAttribute("toggled", (isOn == "true") ? 1 : 0);
+    theButton.checked = isOn == "true";
   }
 
   var theMenuItem = document.getElementById(theStyle + "MenuItem");

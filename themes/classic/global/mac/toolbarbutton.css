@@ -99,9 +99,9 @@ toolbarbutton[disabled="true"][buttondown="true"] > .toolbarbutton-box {
   background-color    : transparent;
 }
 
-/* ..... toggled state ..... */
+/* ..... checked state ..... */
 
-toolbarbutton[toggled="true"] > .toolbarbutton-box {
+toolbarbutton[checked="true"] > .toolbarbutton-box {
   border-left         : 1px solid #9D9D9D;
   border-top          : 1px solid #9D9D9D;
   border-right        : 1px solid #FFFFFF;
@@ -109,7 +109,7 @@ toolbarbutton[toggled="true"] > .toolbarbutton-box {
   background-color	  : #FFFFFF;
 }
     
-toolbarbutton[toggled="true"]:hover > .toolbarbutton-box {
+toolbarbutton[checked="true"]:hover > .toolbarbutton-box {
   border-left         : 1px solid #9D9D9D;
   border-top          : 1px solid #9D9D9D;
   border-right        : 1px solid #FFFFFF;

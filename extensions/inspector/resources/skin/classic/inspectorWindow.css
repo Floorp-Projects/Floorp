@@ -60,7 +60,7 @@
   list-style-image: url("chrome://inspector/skin/btnSelecting.gif");
 }
 
-#btnSelecting[toggled="true"] {
+#btnSelecting[checked="true"] {
   list-style-image: url("chrome://inspector/skin/btnSelecting-act.gif");
 }
 

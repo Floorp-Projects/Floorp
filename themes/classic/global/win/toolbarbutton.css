@@ -96,9 +96,9 @@ toolbarbutton[disabled="true"][buttondown="true"] > .toolbarbutton-box {
   padding             : 2px;
 }
 
-/* ..... toggled state ..... */
+/* ..... checked state ..... */
 
-toolbarbutton[toggled="true"] > .toolbarbutton-box {
+toolbarbutton[checked="true"] > .toolbarbutton-box {
   border-left         : 1px solid ThreeDShadow;
   border-top          : 1px solid ThreeDShadow;
   border-right        : 1px solid ThreeDHighlight;
@@ -106,7 +106,7 @@ toolbarbutton[toggled="true"] > .toolbarbutton-box {
   background-color	  : ThreeDHighlight;
 }
     
-toolbarbutton[toggled="true"]:hover > .toolbarbutton-box {
+toolbarbutton[checked="true"]:hover > .toolbarbutton-box {
   border-left         : 1px solid ThreeDShadow;
   border-top          : 1px solid ThreeDShadow;
   border-right        : 1px solid ThreeDHighlight;

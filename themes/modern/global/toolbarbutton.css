@@ -84,11 +84,11 @@ toolbarbutton[open="true"] > .toolbarbutton-box {
   padding: 2px 1px 0px 3px;
 }
 
-/* ..... toggled state ..... */
+/* ..... checked state ..... */
   
-toolbarbutton[toggled="true"],
-toolbarbutton[toggled="true"]:hover,
-toolbarbutton[toggled="true"]:hover:active {
+toolbarbutton[checked="true"],
+toolbarbutton[checked="true"]:hover,
+toolbarbutton[checked="true"]:hover:active {
   border-top: 1px solid #454C55;
   border-right: 1px solid #7D848D;
   border-bottom: 1px solid #7D848D;
@@ -97,7 +97,7 @@ toolbarbutton[toggled="true"]:hover:active {
   color: #EFF1F4;
 }
 
-toolbarbutton[toggled="true"]:hover:active > .toolbarbutton-box {
+toolbarbutton[checked="true"]:hover:active > .toolbarbutton-box {
   padding: 1px 2px 1px 2px;
 }
 

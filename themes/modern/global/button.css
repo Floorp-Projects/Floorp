@@ -115,54 +115,64 @@ button[default]:focus {
   height: 8px;
 }
   
-/* .......... active/open state .......... */
+/* .......... active/open/checked state .......... */
 
 button:hover:active,
+button[checked="true"],
 button[open="true"] {
   color: #FFFFFF;
 }
   
 button:hover:active > .box-inherit > .button-box-left > .button-left-top,
+button[checked="true"] > .box-inherit > .button-box-left > .button-left-top,
 button[open="true"] > .box-inherit > .button-box-left > .button-left-top {
   background-image: url("chrome://global/skin/button/btn-act-lft-top.gif");
 }
 
 button:hover:active > .box-inherit > .button-box-left > .button-left-mid,
+button[checked="true"] > .box-inherit > .button-box-left > .button-left-mid,
 button[open="true"] > .box-inherit > .button-box-left > .button-left-mid {
   background-image: url("chrome://global/skin/button/btn-act-lft-mid.gif");
 }
 
 button:hover:active > .box-inherit > .button-box-left > .button-left-btm,
+button[checked="true"] > .box-inherit > .button-box-left > .button-left-btm,
 button[open="true"] > .box-inherit > .button-box-left > .button-left-btm {
   background-image: url("chrome://global/skin/button/btn-act-lft-btm.gif");
 }
 
 button:hover:active > .box-inherit > .button-stack > .button-box-mid,
+button[checked="true"] > .box-inherit > .button-stack > .button-box-mid,
 button[open="true"] > .box-inherit > .button-stack > .button-box-mid {
   background-color: #90A1B3;
 }
   
 button:hover:active > .box-inherit > .button-stack > .button-box-mid > .button-mid-top,
+button[checked="true"] > .box-inherit > .button-stack > .button-box-mid > .button-mid-top,
 button[open="true"] > .box-inherit > .button-stack > .button-box-mid > .button-mid-top {
   background-image: url("chrome://global/skin/button/btn-act-mid-top.gif");
 }
 
 button:hover:active > .box-inherit > .button-stack > .button-box-mid > .button-mid-btm,
+button[checked="true"] > .box-inherit > .button-stack > .button-box-mid > .button-mid-btm,
 button[open="true"] > .box-inherit > .button-stack > .button-box-mid > .button-mid-btm {
   background-image: url("chrome://global/skin/button/btn-act-mid-btm.gif");
 }
 
 button:hover:active > .box-inherit > .button-box-right > .button-right-top,
+button[checked="true"] > .box-inherit > .button-box-right > .button-right-top,
 button[open="true"] > .box-inherit > .button-box-right > .button-right-top {
   background-image: url("chrome://global/skin/button/btn-act-rit-top.gif");
 }
 
 button:hover:active > .box-inherit > .button-box-right > .button-right-mid,
+button[checked="true"] > .box-inherit > .button-box-right > .button-right-mid,
 button[open="true"] > .box-inherit > .button-box-right > .button-right-mid {
   background-image: url("chrome://global/skin/button/btn-act-rit-mid.gif");
 }
 
 button:hover:active > .box-inherit > .button-box-right > .button-right-btm,
+button[checked="true"] > .box-inherit > .button-box-right > .button-right-btm,
 button[open="true"] > .box-inherit > .button-box-right > .button-right-btm {
   background-image: url("chrome://global/skin/button/btn-act-rit-btm.gif");
 }

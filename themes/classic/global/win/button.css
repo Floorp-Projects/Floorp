@@ -48,12 +48,15 @@
     }
   
   button:hover:active,
-  button[open="true"]
+  button[open="true"],
+  button[checked="true"]
     {
       border              : 1px solid ThreeDDarkShadow;
     }
 
   button:hover:active > .button-box,
+  button[checked="true"] > .button-box,
+  button[checked="true"]:focus > .button-box,
   button[open="true"] > .button-box,
   button[open="true"]:focus > .button-box
     {
@@ -61,6 +64,8 @@
     }
 
   button:hover:active > .button-box > .button-box-2,
+  button[checked="true"] > .button-box > .button-box-2,
+  button[checked="true"]:focus> .button-box > .button-box-2,
   button[open="true"] > .button-box > .button-box-2,
   button[open="true"]:focus > .button-box > .button-box-2
     {

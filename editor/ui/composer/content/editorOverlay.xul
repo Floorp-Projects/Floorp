@@ -744,25 +744,25 @@
   <toolbarbutton id="IncreaseFontSizeButton" observes="cmd_increaseFont"
           tooltip="aTooltip" tooltiptext="&increaseFontSizeToolbarCmd.tooltip;"/>
 
-  <toolbarbutton id="boldButton" observes="cmd_bold"
+  <toolbarbutton id="boldButton" type="checkbox" autoCheck="false" observes="cmd_bold"
           tooltip="aTooltip" tooltiptext="&boldToolbarCmd.tooltip;">
-    <observes element="cmd_bold" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_bold')"/>
+    <observes element="cmd_bold" type="checkbox" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_bold')"/>
   </toolbarbutton>
-  <toolbarbutton id="italicButton" observes="cmd_italic"
+  <toolbarbutton id="italicButton" type="checkbox" autoCheck="false" observes="cmd_italic"
           tooltip="aTooltip" tooltiptext="&italicToolbarCmd.tooltip;">
     <observes element="cmd_italic" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_italic')"/>
   </toolbarbutton>
-  <toolbarbutton id="underlineButton" observes="cmd_underline"
+  <toolbarbutton id="underlineButton" type="checkbox" autoCheck="false" observes="cmd_underline"
           tooltip="aTooltip" tooltiptext="&underlineToolbarCmd.tooltip;">
     <observes element="cmd_underline" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_underline')"/>
   </toolbarbutton>
 
-  <toolbarbutton id="ulButton" observes="cmd_ul"
+  <toolbarbutton id="ulButton" type="radio" group="lists" autoCheck="false" observes="cmd_ul"
           tooltip="aTooltip" tooltiptext="&bulletListToolbarCmd.tooltip;">
       <observes element="cmd_ul" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_ul')"/>
   </toolbarbutton>
 
-  <toolbarbutton id="olButton" observes="cmd_ol"
+  <toolbarbutton id="olButton" type="radio" group="lists" autoCheck="false" observes="cmd_ol"
           tooltip="aTooltip" tooltiptext="&numberListToolbarCmd.tooltip;">
       <observes element="cmd_ol" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_ol')"/>
   </toolbarbutton>
@@ -773,25 +773,25 @@
           tooltip="aTooltip" tooltiptext="&indentToolbarCmd.tooltip;"/>
 
   <!-- alignment buttons -->
-  <toolbarbutton id="align-left-button" 
+  <toolbarbutton id="align-left-button" type="radio" group="align" autoCheck="false"
                  oncommand="doStatefulCommand('cmd_align', 'left')"
                  tooltip="aTooltip" tooltiptext="&alignLeft.tooltip;" >
     <observes element="cmd_align" attribute="state" 
               onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_align', 'left')" />
   </toolbarbutton>
-  <toolbarbutton id="align-center-button"
+  <toolbarbutton id="align-center-button" type="radio" group="align" autoCheck="false"
                  oncommand="doStatefulCommand('cmd_align', 'center')"
                  tooltip="aTooltip" tooltiptext="&alignCenter.tooltip;" >
     <observes element="cmd_align" attribute="state" 
               onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_align', 'center')"/>
   </toolbarbutton>
-  <toolbarbutton id="align-right-button"
+  <toolbarbutton id="align-right-button" type="radio" group="align" autoCheck="false"
                  oncommand="doStatefulCommand('cmd_align', 'right')"
                  tooltip="aTooltip" tooltiptext="&alignRight.tooltip;" >
     <observes element="cmd_align" attribute="state"
               onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_align', 'right')"/>
   </toolbarbutton>
-  <toolbarbutton id="align-justify-button"
+  <toolbarbutton id="align-justify-button" type="radio" group="align" autoCheck="false"
                  oncommand="doStatefulCommand('cmd_align', 'justify')"
                  tooltip="aTooltip" tooltiptext="&alignJustify.tooltip;" >
     <observes element="cmd_align" attribute="state"
