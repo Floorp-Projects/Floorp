@@ -418,14 +418,15 @@ nsDOMAttributeMap::RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn)
 
         // Drop the reference held in the hash table
         NS_RELEASE(attribute);
+
+        // Unset the attribute in the content
+        result = mContent->UnsetAttribute(nameSpaceID, nameAtom, PR_TRUE);
       }
       else {
         result = NS_ERROR_DOM_NOT_FOUND_ERR;
         *aReturn = nsnull;
       }
 
-      // Unset the attribute in the content
-      result = mContent->UnsetAttribute(nameSpaceID, nameAtom, PR_TRUE);
       NS_IF_RELEASE(nameAtom);
     }
   }
