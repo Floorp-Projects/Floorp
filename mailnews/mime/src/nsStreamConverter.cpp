@@ -425,13 +425,14 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
     {
       // okay, we are just doing a regular message display url
       // since we didn't have any special extensions after the url...
-      // we need to know if we need to use the text/xul or text/html emitter.
+      // we need to know if we need to use the application/vnd.mozilla.xul+xml
+      // or text/html emitter.
       // check the desired output content type that was passed into AsyncConvertData.
 
-      if (mDesiredOutputType && nsCRT::strcasecmp(mDesiredOutputType, "text/xul") == 0)
+      if (mDesiredOutputType && nsCRT::strcasecmp(mDesiredOutputType, "application/vnd.mozilla.xul+xml") == 0)
       {
         CRTFREEIF(mOutputFormat);
-        mOutputFormat = nsCRT::strdup("text/xul");
+        mOutputFormat = nsCRT::strdup("application/vnd.mozilla.xul+xml");
         *aNewType = nsMimeOutput::nsMimeMessageXULDisplay;
       }
       else
@@ -557,7 +558,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   {
     case nsMimeOutput::nsMimeMessageXULDisplay:
       CRTFREEIF(mOutputFormat);
-      mOutputFormat = nsCRT::strdup("text/xul");
+      mOutputFormat = nsCRT::strdup("application/vnd.mozilla.xul+xml");
     break;
 		case nsMimeOutput::nsMimeMessageSplitDisplay:    // the wrapper HTML output to produce the split header/body display
       mWrapperOutput = PR_TRUE;

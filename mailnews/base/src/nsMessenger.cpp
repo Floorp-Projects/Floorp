@@ -598,7 +598,7 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
     if (NS_FAILED(rv)) goto done;
 
     from.AssignWithConversion(MESSAGE_RFC822);
-    to.AssignWithConversion("text/xul");
+    to.AssignWithConversion("application/vnd.mozilla.xul+xml");
   
     channelSupport = do_QueryInterface(aListener->m_channel);
 

@@ -96,7 +96,7 @@ EmbedContentListener::IsPreferred(const char        *aContentType,
   if (aContentType &&
       (!strcasecmp(aContentType, "text/html")   ||
        !strcasecmp(aContentType, "text/plain")  ||
-       !strcasecmp(aContentType, "text/xul")    ||
+       !strcasecmp(aContentType, "application/vnd.mozilla.xul+xml")    ||
        !strcasecmp(aContentType, "text/rdf")    ||
        !strcasecmp(aContentType, "text/xml")    ||
        !strcasecmp(aContentType, "text/css")    ||

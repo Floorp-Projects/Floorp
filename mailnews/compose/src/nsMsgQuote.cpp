@@ -214,7 +214,7 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
 
   nsCOMPtr<nsIStreamListener> convertedListener;
   rv = streamConverterService->AsyncConvertData(NS_LITERAL_STRING("message/rfc822").get(),
-                                                NS_LITERAL_STRING("text/xul").get(),
+                                                NS_LITERAL_STRING("application/vnd.mozilla.xul+xml").get(),
                                                 mStreamListener,
                                                 quoteSupport,
                                                 getter_AddRefs(convertedListener));

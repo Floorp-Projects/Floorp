@@ -1088,7 +1088,7 @@ nsBrowserInstance::IsPreferred(const char * aContentType,
   // regardlesss of the uri load command.
   //    incoming Type                     Preferred type
   //      text/html
-  //      text/xul
+  //      application/vnd.mozilla.xul+xml
   //      text/rdf
   //      text/xml
   //      text/css
@@ -1103,7 +1103,7 @@ nsBrowserInstance::IsPreferred(const char * aContentType,
      // (1) list all content types we want to  be the primary handler for....
      // and suggest a desired content type if appropriate...
      if (nsCRT::strcasecmp(aContentType,  "text/html") == 0
-       || nsCRT::strcasecmp(aContentType, "text/xul") == 0
+       || nsCRT::strcasecmp(aContentType, "application/vnd.mozilla.xul+xml") == 0
        || nsCRT::strcasecmp(aContentType, "text/rdf") == 0 
        || nsCRT::strcasecmp(aContentType, "text/xml") == 0
        || nsCRT::strcasecmp(aContentType, "text/css") == 0
@@ -1551,7 +1551,7 @@ static nsModuleComponentInfo components[] = {
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/xul", 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/vnd.mozilla.xul+xml", 
     nsBrowserContentHandlerConstructor 
   },
   { "Browser Content Handler",

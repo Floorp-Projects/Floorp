@@ -27,7 +27,7 @@
   "@mozilla.org/messenger/headerparser;1"
 
 #define NS_MAILNEWS_MIME_STREAM_CONVERTER_CONTRACTID \
-	NS_ISTREAMCONVERTER_KEY "?from=message/rfc822&to=text/xul"
+	NS_ISTREAMCONVERTER_KEY "?from=message/rfc822&to=application/vnd.mozilla.xul+xml"
 
 #define NS_MAILNEWS_MIME_STREAM_CONVERTER_CONTRACTID1 \
 	NS_ISTREAMCONVERTER_KEY "?from=message/rfc822&to=text/html"

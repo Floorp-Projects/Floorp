@@ -339,7 +339,7 @@ static Components gComponents[] = {
   { "HTML content serializer", NS_HTMLCONTENTSERIALIZER_CID,
     NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "text/html", },
   { "XUL content serializer", NS_XMLCONTENTSERIALIZER_CID,
-    NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "text/xul", },
+    NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "application/vnd.mozilla.xul+xml", },
   { "plaintext content serializer", NS_PLAINTEXTSERIALIZER_CID,
     NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "text/plain", },
   { "plaintext sink", NS_PLAINTEXTSERIALIZER_CID,

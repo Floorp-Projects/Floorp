@@ -501,7 +501,7 @@ NS_IMETHODIMP PhMozEmbedChrome::IsPreferred(const char *aContentType, nsURILoadC
   {
     PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("checking content type %s\n", aContentType));
     if (nsCRT::strcasecmp(aContentType,  "text/html") == 0
-        || nsCRT::strcasecmp(aContentType, "text/xul") == 0
+        || nsCRT::strcasecmp(aContentType, "application/vnd.mozilla.xul+xml") == 0
         || nsCRT::strcasecmp(aContentType, "text/rdf") == 0 
         || nsCRT::strcasecmp(aContentType, "text/xml") == 0
         || nsCRT::strcasecmp(aContentType, "text/css") == 0
