@@ -268,3 +268,8 @@ Element* Document::getElementById(const String aID)
    */
   return NULL;
 }
+
+String Document::getBaseURI()
+{
+    return documentBaseURI;
+}
