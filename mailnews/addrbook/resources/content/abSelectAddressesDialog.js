@@ -146,7 +146,7 @@ function AddSelectedAddressesIntoBucket(prefix)
 			uri = resultsTree.selectedItems[item].getAttribute('id');
 			cardResource = rdf.GetResource(uri);
 			card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
-			address = prefix + "\"" + card.DisplayName + "\" <" + card.PrimaryEmail + ">";
+			address = prefix + "\"" + card.displayName + "\" <" + card.primaryEmail + ">";
 			AddAddressIntoBucket(address);
 		}
 	}	
