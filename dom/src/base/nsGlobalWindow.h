@@ -248,19 +248,23 @@ public:
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD SetScriptObject(void *aScriptObject);
 
-  NS_IMETHOD    GetUserAgent(nsString& aUserAgent);
-
   NS_IMETHOD    GetAppCodeName(nsString& aAppCodeName);
-
-  NS_IMETHOD    GetAppVersion(nsString& aAppVersion);
 
   NS_IMETHOD    GetAppName(nsString& aAppName);
 
+  NS_IMETHOD    GetAppVersion(nsString& aAppVersion);
+
   NS_IMETHOD    GetLanguage(nsString& aLanguage);
+
+  NS_IMETHOD    GetMimeTypes(nsIDOMMimeTypeArray** aMimeTypes);
 
   NS_IMETHOD    GetPlatform(nsString& aPlatform);
 
+  NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins);
+
   NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy);
+
+  NS_IMETHOD    GetUserAgent(nsString& aUserAgent);
 
   NS_IMETHOD    JavaEnabled(PRBool* aReturn);
 

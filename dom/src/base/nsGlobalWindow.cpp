@@ -2136,6 +2136,18 @@ NavigatorImpl::GetSecurityPolicy(nsString& aSecurityPolicy)
 }
 
 NS_IMETHODIMP
+NavigatorImpl::GetMimeTypes(nsIDOMMimeTypeArray** aMimeTypes)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+NavigatorImpl::GetPlugins(nsIDOMPluginArray** aPlugins)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 NavigatorImpl::JavaEnabled(PRBool* aReturn)
 {
   *aReturn = PR_FALSE;
