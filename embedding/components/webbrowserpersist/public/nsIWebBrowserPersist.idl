@@ -64,6 +64,8 @@ interface nsIWebBrowserPersist : nsISupports
   const unsigned long PERSIST_FLAGS_SERIALIZE_OUTPUT = 1024;
   /** Don't make any adjustments to filenames */
   const unsigned long PERSIST_FLAGS_DONT_CHANGE_FILENAMES = 2048;
+  /** Fail on broken inline links */
+  const unsigned long PERSIST_FLAGS_FAIL_ON_BROKEN_LINKS = 4096;
 
   /**
    * Flags governing how data is fetched and saved from the network. 
