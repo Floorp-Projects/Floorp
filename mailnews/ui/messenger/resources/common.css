@@ -9,11 +9,11 @@ tree {
 	background-color: #000000;
 	border: none;
 	border-spacing: 0px;
-	border-collapse: collapse;
+	//border-collapse: collapse;
 	width: 100%;
 }
 
-treerow {
+treeitem {
 	display: table-row;
 }
 
@@ -33,7 +33,7 @@ treecell {
 	font-size: 10pt;
 }
 
-treehead treerow treecell {
+treehead treeitem treecell {
 	background-color: #a0a0a0;
 	border: thin black solid;
 	color: black;
@@ -44,6 +44,6 @@ icon {
 	list-style-image: url(http://www.shadowland.org/client/images/ClosedRead.gif);
 }
 
-:TREE-SELECTION {
+treecell[selected] {
 	background-color: #000080;
 }
