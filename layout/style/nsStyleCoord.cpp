@@ -241,26 +241,27 @@ nsStyleSides::nsStyleSides(void)
   memset(this, 0x00, sizeof(nsStyleSides));
 }
 
-#define COMPARE_SIDE(side)                                                            \
-  if ((eStyleUnit_Percent <= m##side##Unit) && (m##side##Unit < eStyleUnit_Coord)) {  \
-    if (m##side##Value.mFloat != aOther.m##side##Value.mFloat)                        \
-      return PR_FALSE;                                                                \
-  }                                                                                   \
-  else {                                                                              \
-    if (m##side##Value.mInt != aOther.m##side##Value.mInt)                            \
-      return PR_FALSE;                                                                \
+#define COMPARE_SIDE(side)                                                    \
+  if ((eStyleUnit_Percent <= mUnits[side]) &&                                 \
+      (mUnits[side] < eStyleUnit_Coord)) {                                    \
+    if (mValues[side].mFloat != aOther.mValues[side].mFloat)                  \
+      return PR_FALSE;                                                        \
+  }                                                                           \
+  else {                                                                      \
+    if (mValues[side].mInt != aOther.mValues[side].mInt)                      \
+      return PR_FALSE;                                                        \
   }
 
 PRBool nsStyleSides::operator==(const nsStyleSides& aOther) const
 {
-  if ((mLeftUnit == aOther.mLeftUnit) && 
-      (mTopUnit == aOther.mTopUnit) &&
-      (mRightUnit == aOther.mRightUnit) &&
-      (mBottomUnit == aOther.mBottomUnit)) {
-    COMPARE_SIDE(Left);
-    COMPARE_SIDE(Top);
-    COMPARE_SIDE(Right);
-    COMPARE_SIDE(Bottom);
+  if ((mUnits[NS_SIDE_LEFT] == aOther.mUnits[NS_SIDE_LEFT]) && 
+      (mUnits[NS_SIDE_TOP] == aOther.mUnits[NS_SIDE_TOP]) &&
+      (mUnits[NS_SIDE_RIGHT] == aOther.mUnits[NS_SIDE_RIGHT]) &&
+      (mUnits[NS_SIDE_BOTTOM] == aOther.mUnits[NS_SIDE_BOTTOM])) {
+    COMPARE_SIDE(NS_SIDE_LEFT);
+    COMPARE_SIDE(NS_SIDE_TOP);
+    COMPARE_SIDE(NS_SIDE_RIGHT);
+    COMPARE_SIDE(NS_SIDE_BOTTOM);
     return PR_TRUE;
   }
   return PR_FALSE;
