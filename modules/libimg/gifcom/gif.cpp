@@ -1240,10 +1240,7 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
         case gif_image_header:
         {
             PRUintn height, width;
-
-            if(gs->images_decoded > 0) //animated image
-                   ic->imgdcb->ImgDCBHaveImageFrame();
-
+                                                                                                                                    
             /* Get image offsets, with respect to the screen origin */
             gs->x_offset = GETINT16(q);
             gs->y_offset = GETINT16(q + 2);
@@ -1499,9 +1496,11 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
             {
                 /* Flush the image data unconditionally, so that we can
                    notify observers that the current frame has completed. */
-                if(ic->imgdcb)
+                if(ic->imgdcb){
                      ic->imgdcb->ImgDCBFlushImage();
-                
+                     ic->imgdcb->ImgDCBHaveImageFrame();
+                }
+
                 gs->images_decoded++;
 
                 /* An image can specify a delay time before which to display
@@ -1525,7 +1524,7 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
         }
         break;
 
-        case gif_done:
+        case gif_done:                
             return 0;
             break;
 
