@@ -701,7 +701,7 @@ nsresult nsMsgSearchAdapter::EncodeImapValue(char *encoding, const char *value, 
   {
     nsCAutoString lengthStr;
     PL_strcat(encoding, "{");
-    lengthStr.AppendInt(strlen(value));
+    lengthStr.AppendInt((PRInt32) strlen(value));
     PL_strcat(encoding, lengthStr.get());
     PL_strcat(encoding, "}"CRLF);
     PL_strcat(encoding, value);
