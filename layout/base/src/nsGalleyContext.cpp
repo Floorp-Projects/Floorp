@@ -16,9 +16,6 @@
  * Reserved.
  */
 #include "nsPresContext.h"
-#include "nsIRenderingContext.h"
-#include "nsIView.h"
-#include "nsIWidget.h"
 #include "nsGfxCIID.h"
 
 static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
