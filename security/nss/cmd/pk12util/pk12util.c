@@ -138,10 +138,16 @@ p12u_InitFile(PRBool fileImport, char *filename)
     return p12cxt;
 }
 
+#define TEMPFILE "Pk12uTemp"
+
 static p12uContext *
 p12u_CreateTemporaryDigestFile(void)
 {
     p12uContext *p12cxt;
+#if defined(_WIN32) || defined(_WINDOWS) || defined(XP_OS2)
+    char *tmpdir,*filename,*last;
+    int len;
+#endif
 
     p12cxt = (p12uContext *)PR_CALLOC(sizeof(p12uContext));
     if(!p12cxt) {
@@ -170,8 +176,9 @@ p12u_CreateTemporaryDigestFile(void)
 	strcat(filename,"\\");
     }
     strcat(filename,TEMPFILE);
+    p12cxt->filename = filename;
 #else
-    p12cxt->filename = strdup("/tmp/Pk12uTemp");
+    p12cxt->filename = strdup("/tmp/"TEMPFILE); 
 #endif
 
     if (!p12cxt->filename) {
