@@ -136,7 +136,9 @@ var folderListener = {
        if (eventType == "FolderLoaded") {
          if (folder) {
            var uri = folder.URI;
-           if (uri == gCurrentFolderToReroot) {
+           var rerootingFolder = (uri == gCurrentFolderToReroot);
+           if (rerootingFolder) {
+            viewDebug("uri = gCurrentFolderToReroot, setting gQSViewIsDirty\n");
              gQSViewIsDirty = true;
              gCurrentFolderToReroot = null;
              var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
@@ -188,7 +190,7 @@ var folderListener = {
              // if you change the scrolling code below,
              // double check the scrolling logic in
              // searchBar.js, restorePreSearchView()
-
+             viewDebug("uri == current loading folder uri\n");
              gCurrentLoadingFolderURI = "";
 
              // if we didn't just scroll, 
@@ -246,30 +248,39 @@ var folderListener = {
               }
            }
            //folder loading is over, now issue quick search if there is an email address
-//           dump("in folder loaded gVirtualFolderTerms = " + gVirtualFolderTerms + "\n");
-           if (gSearchEmailAddress)
+           viewDebug("in folder loaded gVirtualFolderTerms = " + gVirtualFolderTerms + "\n");
+           viewDebug("in folder loaded gMsgFolderSelected = " + gMsgFolderSelected.URI + "\n");
+           if (rerootingFolder)
            {
-             Search(gSearchEmailAddress);
-             gSearchEmailAddress = null;
-           } 
-           else if (gVirtualFolderTerms)
-           {
-              gDefaultSearchViewTerms = null;
-              ViewChangeByValue(-1); // override current view
-              Search("");
-//              gVirtualFolderTerms = null;
-           }
-           else if (gMsgFolderSelected.flags & MSG_FOLDER_FLAG_VIRTUAL)
-           {
-              gDefaultSearchViewTerms = null;
-           }
-           else if (gDefaultSearchViewTerms)
-           {
-             Search("");
-           }
-           else
-           {
-             ViewChangeByValue(pref.getIntPref("mailnews.view.last"));
+             if (gSearchEmailAddress)
+             {
+               Search(gSearchEmailAddress);
+               gSearchEmailAddress = null;
+             } 
+             else if (gVirtualFolderTerms)
+             {
+                gDefaultSearchViewTerms = null;
+                ViewChangeByValue(-1); // override current view
+                viewDebug("searching gVirtualFolderTerms\n");
+                Search("");
+  //              gVirtualFolderTerms = null;
+             }
+             else if (gMsgFolderSelected.flags & MSG_FOLDER_FLAG_VIRTUAL)
+             {
+                viewDebug("selected folder is virtual\n");
+                gDefaultSearchViewTerms = null;
+                ViewChangeByValue(-1); // override current view
+             }
+             else if (gDefaultSearchViewTerms)
+             {
+                viewDebug("searching gDefaultSearchViewTerms and rerootingFolder\n");
+               Search("");
+             }
+             else
+             {
+              viewDebug("changing view by value\n");
+               ViewChangeByValue(pref.getIntPref("mailnews.view.last"));
+             }
            }
          }
        } 
