@@ -23,6 +23,7 @@
 #include "nsIFactory.h"
 #include "nsIServiceManager.h"
 #include "nsII18nCompatibility.h"
+#include "nsI18nCompatibility.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kI18nCompatibilityCID, NS_I18NCOMPATIBILITY_CID);
@@ -30,8 +31,6 @@ static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-
-extern char * I18N_CSIDtoCharsetName(PRUint16 csid);
 
 class nsI18nCompatibility : public nsII18nCompatibility {
  public: 
