@@ -101,7 +101,7 @@ nsAppShellService::Initialize(void)
   nsresult rv;
   
 #ifdef MOZ_FULLCIRCLE
-  FC_Initialize();
+  FCInitialize();
 #endif
   // Create the Event Queue for the UI thread...
   nsIEventQueueService* mEventQService;
