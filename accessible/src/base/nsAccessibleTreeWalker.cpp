@@ -120,21 +120,31 @@ void nsAccessibleTreeWalker::GetKids(nsIDOMNode *aParentNode)
   }
 
   // Walk anonymous content? Not currently used for HTML -- anonymous content there uses frame walking
-  if (parentContent && !parentContent->IsContentOfType(nsIContent::eHTML) && mBindingManager) {
-    // Walk anonymous content
-    mBindingManager->GetXBLChildNodesFor(parentContent, getter_AddRefs(mState.siblingList)); // returns null if no anon nodes
-    if (mState.siblingList) {
-      mState.siblingIndex = 0;   // Indicates our index into the sibling list
-      mState.siblingList->Item(0, getter_AddRefs(mState.domNode));
+  mState.siblingIndex = 0;   // Indicates our index into the sibling list
+  if (parentContent) {
+    if (mBindingManager && !parentContent->IsContentOfType(nsIContent::eHTML)) {
+      // Walk anonymous content
+      mBindingManager->GetXBLChildNodesFor(parentContent, getter_AddRefs(mState.siblingList)); // returns null if no anon nodes
+    }
+    if (!mState.siblingList) {
+      // Walk normal DOM. Just use nsIContent -- it doesn't require 
+      // the mallocs that GetChildNodes() needs
+      //aParentNode->GetChildNodes(getter_AddRefs(mState.siblingList));
+      mState.parentContent = parentContent;
+      mState.domNode = do_QueryInterface(parentContent->GetChildAt(0 /* 0 == mState.siblingIndex */));
+      return;
+    }
+  }
+  else {
+    // We're on document node, that's why we could not QI to nsIContent.
+    // So, use nsIDOMNodeList method to walk content.
+    aParentNode->GetChildNodes(getter_AddRefs(mState.siblingList));
+    if (!mState.siblingList) {
       return;
     }
   }
 
-  // Walk normal DOM
-  mState.siblingIndex = eSiblingsWalkNormalDOM;  // Default value - indicates no sibling list
-  if (aParentNode) {
-    aParentNode->GetFirstChild(getter_AddRefs(mState.domNode));
-  }
+  mState.siblingList->Item(0 /* 0 == mState.siblingIndex */, getter_AddRefs(mState.domNode));
 }
 
 NS_IMETHODIMP nsAccessibleTreeWalker::GetParent()
@@ -175,6 +185,7 @@ NS_IMETHODIMP nsAccessibleTreeWalker::PopState()
 void nsAccessibleTreeWalker::ClearState()
 {
   mState.siblingList = nsnull;
+  mState.parentContent = nsnull;
   mState.accessible = nsnull;
   mState.domNode = nsnull;
   mState.siblingIndex = eSiblingsUninitialized;
@@ -195,9 +206,8 @@ NS_IMETHODIMP nsAccessibleTreeWalker::PushState()
 void nsAccessibleTreeWalker::GetNextDOMNode()
 {
   // Get next DOM node
-  if (mState.siblingIndex == eSiblingsWalkNormalDOM) {
-    nsCOMPtr<nsIDOMNode> currentNode = mState.domNode;
-    currentNode->GetNextSibling(getter_AddRefs(mState.domNode));
+  if (mState.parentContent) {
+    mState.domNode = do_QueryInterface(mState.parentContent->GetChildAt(++mState.siblingIndex));
   }
   else if (mState.siblingIndex == eSiblingsWalkFrames) {
     if (mState.frame) {
