@@ -56,7 +56,7 @@
         ondialogextra2="newFolder()"
         ondialogaccept="return onOK(event)"
         buttons="accept,cancel" 
-        buttonlabelextra2="&newFolder.label;" buttonaccesskeyextra2="&newFolder.accesskey;"
+        buttonlabelextra2="&button.newfolder.label;" buttonaccesskeyextra2="&button.newfolder.accesskey;"
 #ifdef XP_UNIX
         buttonlabelaccept="&acceptButton.label;"
 #endif

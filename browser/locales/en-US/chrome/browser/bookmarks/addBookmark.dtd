@@ -14,7 +14,7 @@
 <!ENTITY moveto.label               "Move to:">
 <!ENTITY moveto.accesskey           "M">
 <!ENTITY button.newfolder.label     "New Folder...">
-<!ENTITY button.newfolder.accesskey "w">
+<!ENTITY button.newfolder.accesskey "o">
 <!ENTITY alwayscreateinfolder.label "Don't show this dialog again">
 <!ENTITY alwayscreateinfolder.accesskey "a">
 <!ENTITY dontshowmessage.tooltip    "When this option is selected, new Bookmarks will be added using the title provided by the page.">
@@ -26,6 +26,4 @@
 <!ENTITY expanderUp.tooltip      "Hide">
 <!ENTITY addGroup.label          "Bookmark all tabs in a folder">
 <!ENTITY addGroup.accesskey      "B">
-<!ENTITY newFolder.label         "New Folder...">
-<!ENTITY newFolder.accesskey     "N">
 <!ENTITY acceptButton.label      "Add">
