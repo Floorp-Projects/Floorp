@@ -127,7 +127,7 @@ nsresult nsXPFCMenuContainerWin :: Update()
       {
         char * name = container_item->GetLabel().ToNewCString();
 
-        ::AppendMenu(GetParent()->GetNativeHandle(), 
+        ::AppendMenu((HMENU)GetParent()->GetNativeHandle(), 
                      MF_POPUP, 
                      (PRUint32)mMenu, 
                      (LPSTR)name);
@@ -151,7 +151,7 @@ nsresult nsXPFCMenuContainerWin :: SetShellContainer(nsIShellInstance * aShellIn
                                                 nsIWebViewerContainer * aWebViewerContainer)
 {
 
-  mHwnd = aShellInstance->GetApplicationWindowNativeInstance();
+  mHwnd = (HWND)aShellInstance->GetApplicationWindowNativeInstance();
   mMenu = ::CreateMenu();
   ::SetMenu(mHwnd, mMenu);
 
