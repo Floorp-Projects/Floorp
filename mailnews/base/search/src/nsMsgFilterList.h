@@ -84,7 +84,7 @@ public:
 	// IO routines, used by filter object filing code.
 	nsresult WriteIntAttr( nsMsgFilterFileAttrib attrib, int value);
 	nsresult WriteStrAttr(nsMsgFilterFileAttrib attrib, nsString2 &str);
-	nsresult WriteBoolAttr(nsMsgFilterFileAttrib attrib, XP_Bool boolVal);
+	nsresult WriteBoolAttr(nsMsgFilterFileAttrib attrib, PRBool boolVal);
 protected:
 		// type-safe accessor when you really have to have an nsMsgFilter
 		nsresult GetMsgFilterAt(PRUint32 filterIndex, nsMsgFilter **filter);
