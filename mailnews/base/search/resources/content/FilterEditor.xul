@@ -11,8 +11,8 @@
   onload="filterEditorOnLoad('msgFccFolderPicker');">
 
 <html:script language="JavaScript" src="chrome://messenger/content/FilterEditor.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
 <html:script language="JavaScript" src="chrome://global/content/strres.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
 
 <box align="vertical" style="width: 100%;">
   <box align="horizontal" class="padded">
@@ -39,6 +39,12 @@
           <html:option value="any">&anyText.label;</html:option>
           <html:option value="keyword">&keyword.label;</html:option>
           <html:option value="age">&age.label;</html:option>
+          <html:option value="priority">&priority.label;</html:option>
+          <html:option value="status">&status.label;</html:option>
+          <html:option value="to">&to.label;</html:option>
+          <html:option value="cc">&cc.label;</html:option>
+          <html:option value="toOrCc">&toOrCc.label;</html:option>
+          <html:option value="body">&body.label;</html:option>
         </html:select>
         <box align="horizontal" id="rule1-verb">
         <spring name="preverb" class="spacer"/>
