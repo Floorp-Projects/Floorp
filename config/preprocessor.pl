@@ -313,6 +313,14 @@ sub expand {
     print "$line\n";
 }
 
+sub literal {
+    my $stack = shift;
+    return if $stack->disabled;
+    die "argument expected\n" unless @_;
+    my $line = shift;
+    print "$line\n";
+}
+
 sub include {
     my $stack = shift;
     return if $stack->disabled;
