@@ -233,64 +233,62 @@ PRBool nsPSMDetector::HandleData(const char* aBuf, PRUint32 aLen)
 static nsVerifier *gZhTwVerifierSet[ZHTW_DETECTOR_NUM_VERIFIERS] = {
       &nsCP1252Verifier,
       &nsUTF8Verifier,
-      &nsUCS2BEVerifier,
-      &nsUCS2LEVerifier,
       &nsBIG5Verifier,
       &nsISO2022CNVerifier,
-      &nsEUCTWVerifier
+      &nsEUCTWVerifier,
+      &nsUCS2BEVerifier,
+      &nsUCS2LEVerifier
 };
 //==========================================================
 #define KO_DETECTOR_NUM_VERIFIERS 6
 static nsVerifier *gKoVerifierSet[KO_DETECTOR_NUM_VERIFIERS] = {
       &nsCP1252Verifier,
       &nsUTF8Verifier,
-      &nsUCS2BEVerifier,
-      &nsUCS2LEVerifier,
       &nsEUCKRVerifier,
-      &nsISO2022KRVerifier
+      &nsISO2022KRVerifier,
+      &nsUCS2BEVerifier,
+      &nsUCS2LEVerifier
 };
 //==========================================================
 #define ZHCN_DETECTOR_NUM_VERIFIERS 7
 static nsVerifier *gZhCnVerifierSet[ZHCN_DETECTOR_NUM_VERIFIERS] = {
       &nsCP1252Verifier,
       &nsUTF8Verifier,
-      &nsUCS2BEVerifier,
-      &nsUCS2LEVerifier,
       &nsGB2312Verifier,
       &nsISO2022CNVerifier,
-      &nsHZVerifier
+      &nsHZVerifier,
+      &nsUCS2BEVerifier,
+      &nsUCS2LEVerifier
 };
 //==========================================================
 #define JA_DETECTOR_NUM_VERIFIERS 7
 static nsVerifier *gJaVerifierSet[JA_DETECTOR_NUM_VERIFIERS] = {
       &nsCP1252Verifier,
       &nsUTF8Verifier,
-      &nsUCS2BEVerifier,
-      &nsUCS2LEVerifier,
       &nsSJISVerifier,
       &nsEUCJPVerifier,
-      &nsISO2022JPVerifier
+      &nsISO2022JPVerifier,
+      &nsUCS2BEVerifier,
+      &nsUCS2LEVerifier
 };
 //==========================================================
 #define ZH_DETECTOR_NUM_VERIFIERS 9
 static nsVerifier *gZhVerifierSet[ZH_DETECTOR_NUM_VERIFIERS] = {
       &nsCP1252Verifier,
       &nsUTF8Verifier,
-      &nsUCS2BEVerifier,
-      &nsUCS2LEVerifier,
       &nsGB2312Verifier,
       &nsBIG5Verifier,
       &nsISO2022CNVerifier,
       &nsHZVerifier,
-      &nsEUCTWVerifier
+      &nsEUCTWVerifier,
+      &nsUCS2BEVerifier,
+      &nsUCS2LEVerifier
 };
 //==========================================================
 #define CJK_DETECTOR_NUM_VERIFIERS 14
 static nsVerifier *gCJKVerifierSet[CJK_DETECTOR_NUM_VERIFIERS] = {
       &nsCP1252Verifier,
       &nsUTF8Verifier,
-      &nsUCS2BEVerifier,
-      &nsUCS2LEVerifier,
       &nsSJISVerifier,
       &nsEUCJPVerifier,
       &nsISO2022JPVerifier,
@@ -300,7 +298,9 @@ static nsVerifier *gCJKVerifierSet[CJK_DETECTOR_NUM_VERIFIERS] = {
       &nsEUCTWVerifier,
       &nsGB2312Verifier,
       &nsISO2022CNVerifier,
-      &nsHZVerifier
+      &nsHZVerifier,
+      &nsUCS2BEVerifier,
+      &nsUCS2LEVerifier
 };
 //==========================================================
 class nsXPCOMDetector : 
@@ -489,17 +489,17 @@ NS_IMETHODIMP nsXPCOMDetectorFactory::CreateInstance(
   } else if (mCID.Equals(kCJKPSMDetectorCID)) {
       inst1 = new nsXPCOMDetector(CJK_DETECTOR_NUM_VERIFIERS, gCJKVerifierSet);
   } else if (mCID.Equals(kJAStringPSMDetectorCID)) {
-      inst2 = new nsXPCOMStringDetector(JA_DETECTOR_NUM_VERIFIERS, gJaVerifierSet);
+      inst2 = new nsXPCOMStringDetector(JA_DETECTOR_NUM_VERIFIERS - 2, gJaVerifierSet);
   } else if (mCID.Equals(kKOStringPSMDetectorCID)) {
-      inst2 = new nsXPCOMStringDetector(KO_DETECTOR_NUM_VERIFIERS, gKoVerifierSet);
+      inst2 = new nsXPCOMStringDetector(KO_DETECTOR_NUM_VERIFIERS - 2, gKoVerifierSet);
   } else if (mCID.Equals(kZHCNStringPSMDetectorCID)) {
-      inst2 = new nsXPCOMStringDetector(ZHCN_DETECTOR_NUM_VERIFIERS, gZhCnVerifierSet);
+      inst2 = new nsXPCOMStringDetector(ZHCN_DETECTOR_NUM_VERIFIERS - 2, gZhCnVerifierSet);
   } else if (mCID.Equals(kZHTWStringPSMDetectorCID)) {
-      inst2 = new nsXPCOMStringDetector(ZHTW_DETECTOR_NUM_VERIFIERS, gZhTwVerifierSet);
+      inst2 = new nsXPCOMStringDetector(ZHTW_DETECTOR_NUM_VERIFIERS - 2, gZhTwVerifierSet);
   } else if (mCID.Equals(kZHStringPSMDetectorCID)) {
-      inst2 = new nsXPCOMStringDetector(ZH_DETECTOR_NUM_VERIFIERS, gZhVerifierSet);
+      inst2 = new nsXPCOMStringDetector(ZH_DETECTOR_NUM_VERIFIERS - 2, gZhVerifierSet);
   } else if (mCID.Equals(kCJKStringPSMDetectorCID)) {
-      inst2 = new nsXPCOMStringDetector(CJK_DETECTOR_NUM_VERIFIERS, gCJKVerifierSet);
+      inst2 = new nsXPCOMStringDetector(CJK_DETECTOR_NUM_VERIFIERS - 2, gCJKVerifierSet);
   }
   if((NULL == inst1) && (NULL == inst2)) {
     return NS_ERROR_OUT_OF_MEMORY;
