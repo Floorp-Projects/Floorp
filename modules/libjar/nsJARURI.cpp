@@ -46,11 +46,6 @@
 #include "nsIZipReader.h"
 #include "nsReadableUtils.h"
 #include "nsAutoPtr.h"
-#include "nsNetCID.h"
-#include "nsIObjectInputStream.h"
-#include "nsIObjectOutputStream.h"
-
-static NS_DEFINE_CID(kJARURICID, NS_JARURI_CID);
 
 static NS_DEFINE_CID(kThisImplCID, NS_THIS_JARURI_IMPL_CID);
 
@@ -64,7 +59,6 @@ nsJARURI::~nsJARURI()
 {
 }
 
-// XXX Why is this threadsafe?
 NS_IMPL_THREADSAFE_ADDREF(nsJARURI)
 NS_IMPL_THREADSAFE_RELEASE(nsJARURI)
 NS_INTERFACE_MAP_BEGIN(nsJARURI)
@@ -73,7 +67,6 @@ NS_INTERFACE_MAP_BEGIN(nsJARURI)
   NS_INTERFACE_MAP_ENTRY(nsIURL)
   NS_INTERFACE_MAP_ENTRY(nsIJARURI)
   NS_INTERFACE_MAP_ENTRY(nsISerializable)
-  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
   // see nsJARURI::Equals
   if (aIID.Equals(kThisImplCID))
       foundInterface = NS_STATIC_CAST(nsIJARURI *, this);
@@ -142,98 +135,17 @@ nsJARURI::CreateEntryURL(const nsACString& entryFilename,
 // nsISerializable methods:
 
 NS_IMETHODIMP
-nsJARURI::Read(nsIObjectInputStream* aInputStream)
+nsJARURI::Read(nsIObjectInputStream* aStream)
 {
-    nsresult rv;
-
-    rv = aInputStream->ReadObject(PR_TRUE, getter_AddRefs(mJARFile));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aInputStream->ReadObject(PR_TRUE, getter_AddRefs(mJAREntry));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aInputStream->ReadCString(mCharsetHint);
-    return rv;
+    NS_NOTREACHED("nsJARURI::Read");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsJARURI::Write(nsIObjectOutputStream* aOutputStream)
+nsJARURI::Write(nsIObjectOutputStream* aStream)
 {
-    nsresult rv;
-    
-    rv = aOutputStream->WriteCompoundObject(mJARFile, NS_GET_IID(nsIURI),
-                                            PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aOutputStream->WriteCompoundObject(mJAREntry, NS_GET_IID(nsIURL),
-                                            PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aOutputStream->WriteStringZ(mCharsetHint.get());
-    return rv;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIClassInfo methods:
-
-NS_IMETHODIMP 
-nsJARURI::GetInterfaces(PRUint32 *count, nsIID * **array)
-{
-    *count = 0;
-    *array = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsJARURI::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
-{
-    *_retval = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsJARURI::GetContractID(char * *aContractID)
-{
-    *aContractID = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsJARURI::GetClassDescription(char * *aClassDescription)
-{
-    *aClassDescription = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsJARURI::GetClassID(nsCID * *aClassID)
-{
-    *aClassID = (nsCID*) nsMemory::Alloc(sizeof(nsCID));
-    if (!*aClassID)
-        return NS_ERROR_OUT_OF_MEMORY;
-    return GetClassIDNoAlloc(*aClassID);
-}
-
-NS_IMETHODIMP 
-nsJARURI::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
-{
-    *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsJARURI::GetFlags(PRUint32 *aFlags)
-{
-    // XXX We implement THREADSAFE addref/release, but probably shouldn't.
-    *aFlags = nsIClassInfo::MAIN_THREAD_ONLY;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsJARURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
-{
-    *aClassIDNoAlloc = kJARURICID;
-    return NS_OK;
+    NS_NOTREACHED("nsJARURI::Write");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -537,17 +537,6 @@
     {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-#define NS_RESURL_CLASSNAME \
-    "nsResURL"
-#define NS_RESURL_CID                    \
-{ /* ff8fe7ec-2f74-4408-b742-6b7a546029a8 */         \
-    0xff8fe7ec,                                      \
-    0x2f74,                                          \
-    0x4408,                                          \
-    {0xb7, 0x42, 0x6b, 0x7a, 0x54, 0x60, 0x29, 0xa8} \
-}
-
-
 /******************************************************************************
  * netwerk/protocol/file/ classes
  */

@@ -41,7 +41,6 @@
 
 #include "nsIJARURI.h"
 #include "nsISerializable.h"
-#include "nsIClassInfo.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
@@ -53,18 +52,7 @@
     {0xb7, 0x5b, 0xfa, 0x7d, 0x95, 0x70, 0xa6, 0x91} \
 }
 
-#define NS_JARURI_CLASSNAME \
-    "nsJARURI"
-#define NS_JARURI_CID                                \
-{ /* 245abae2-b947-4ded-a46d-9829d3cca462 */         \
-    0x245abae2,                                      \
-    0xb947,                                          \
-    0x4ded,                                          \
-    {0xa4, 0x6d, 0x98, 0x29, 0xd3, 0xcc, 0xa4, 0x62} \
-}
-
-
-class nsJARURI : public nsIJARURI, nsISerializable, nsIClassInfo
+class nsJARURI : public nsIJARURI, nsISerializable
 {
 public:    
     NS_DECL_ISUPPORTS
@@ -72,7 +60,6 @@ public:
     NS_DECL_NSIURL
     NS_DECL_NSIJARURI
     NS_DECL_NSISERIALIZABLE
-    NS_DECL_NSICLASSINFO
 
     // nsJARURI
     nsJARURI();

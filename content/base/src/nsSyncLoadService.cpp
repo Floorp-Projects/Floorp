@@ -596,7 +596,9 @@ nsSyncLoadService::LoadLocalXBLDocument(nsIChannel* aChannel,
 
     nsCOMPtr<nsIInputStream> in;
     nsresult rv = aChannel->Open(getter_AddRefs(in));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
 
     // Get uri and loadgroup
     nsCOMPtr<nsIURI> docURI;

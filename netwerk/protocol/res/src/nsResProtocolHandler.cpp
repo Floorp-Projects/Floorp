@@ -52,8 +52,6 @@
 #include "nsNetUtil.h"
 #include "nsURLHelper.h"
 
-static NS_DEFINE_CID(kResURLCID, NS_RESURL_CID);
-
 static nsResProtocolHandler *gResHandler = nsnull;
 
 #if defined(PR_LOGGING)
@@ -75,6 +73,15 @@ static PRLogModuleInfo *gResLog;
 //----------------------------------------------------------------------------
 // nsResURL : overrides nsStandardURL::GetFile to provide nsIFile resolution
 //----------------------------------------------------------------------------
+
+#include "nsStandardURL.h"
+
+class nsResURL : public nsStandardURL
+{
+public:
+    nsResURL() : nsStandardURL(PR_TRUE) {}
+    NS_IMETHOD GetFile(nsIFile **);
+};
 
 NS_IMETHODIMP
 nsResURL::GetFile(nsIFile **result)
@@ -99,21 +106,6 @@ nsResURL::GetFile(nsIFile **result)
 #endif
 
     return rv;
-}
-
-/* virtual */ nsStandardURL*
-nsResURL::StartClone()
-{
-    nsResURL *clone;
-    NS_NEWXPCOM(clone, nsResURL);
-    return clone;
-}
-
-NS_IMETHODIMP 
-nsResURL::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
-{
-    *aClassIDNoAlloc = kResURLCID;
-    return NS_OK;
 }
 
 //----------------------------------------------------------------------------
