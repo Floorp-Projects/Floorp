@@ -27,9 +27,7 @@
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 
 <!DOCTYPE dialog [
-  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
-  %brandDTD;
-  <!ENTITY % pageReportTimeDTD SYSTEM "chrome://browser/locale/pageReportFirstTime.dtd" >
+  <!ENTITY % pageReportFirstTimeDTD SYSTEM "chrome://browser/locale/pageReportFirstTime.dtd" >
   %pageReportFirstTimeDTD;
 ]>            
  
@@ -37,7 +35,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&caption.label;"
         onload="onLoad()"
-        style="width: 20em;"
+        style="width: 40em;"
         buttons="accept"
         persist="screenX screenY"
         screenX="24" screenY="24">
@@ -46,12 +44,16 @@
     &startDescription.label;
   </description>
 
+  <separator class="thin"/>
+
   <hbox pack="center">
-    <statusbar style="width:5em">
-      <statusbarpanel id="page-report-button" blocked="true"/>
-      <statusbarpanel flex="1"><description>Document: Done</description>
+    <statusbar style="width:20em">
+      <statusbarpanel class="statusbarpanel-iconic" id="page-report-button" blocked="true"/>
+      <statusbarpanel flex="1" pack="left"><description>Document: Done</description></statusbarpanel>
     </statusbar>
   </hbox>
+
+  <separator class="thin"/>
 
   <description>
     &endDescription.label;
