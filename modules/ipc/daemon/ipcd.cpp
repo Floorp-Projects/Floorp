@@ -80,6 +80,18 @@ IPC_SendMsg(ipcClient *client, ipcMessage *msg)
     return PR_SUCCESS;
 }
 
+PRUint32
+IPC_GetClientID(ipcClient *client)
+{
+    return client->ID();
+}
+
+const char *
+IPC_GetPrimaryClientName(ipcClient *client)
+{
+    return client->PrimaryName();
+}
+
 ipcClient *
 IPC_GetClientByID(PRUint32 clientID)
 {

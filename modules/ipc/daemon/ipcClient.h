@@ -75,6 +75,9 @@ public:
     const ipcStringNode *Names()   const { return mNames.First(); }
     const ipcIDNode     *Targets() const { return mTargets.First(); }
 
+    // returns primary client name (the one specified in the "client hello" message)
+    const char *PrimaryName() const { return mNames.First() ? mNames.First()->Value() : NULL; }
+
     //
     // returns TRUE if successfully enqueued.  will return FALSE if client
     // does not have a registered message handler for this message's target.
