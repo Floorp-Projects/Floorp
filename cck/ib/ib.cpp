@@ -494,7 +494,47 @@ CString GetBrowser(void)
 
 	return retflag;
 }
+/*BOOL Progress() 
+{
 
+	CProgressCtrl progressDlg(this);
+	progressDlg.Create(IDD_NEW_DIALOG);
+	CProgressCtrl *pProgressDlg = &progressDlg;
+				
+	//CRuntimeClass *pProgDlgThread = RUNTIME_CLASS(CProgDlgThread);	//This is the multi-threading stuff for the progress dialog
+	//AfxBeginThread(pProgDlgThread);
+
+	pProgressDlg->m_ProgressText.SetWindowText("Creating a CD Layout...");
+	pProgressDlg->m_ProgressBar.SetPos(0);
+	pProgressDlg->m_ProgressBar.SetRange(0,4);
+	pProgressDlg->m_ProgressBar.SetStep(1);
+				
+		pProgressDlg->m_ProgressText.SetWindowText("Loading Globals...");
+//		LoadGlobals();
+		pProgressDlg->m_ProgressBar.StepIt();
+		pProgressDlg->UpdateWindow();
+
+		pProgressDlg->m_ProgressText.SetWindowText("Reading files...");
+//		ReadIniFile();
+		pProgressDlg->m_ProgressBar.StepIt();
+		pProgressDlg->UpdateWindow();
+
+		pProgressDlg->m_ProgressText.SetWindowText("Merging files...");
+//		MergeFiles();
+		pProgressDlg->m_ProgressBar.StepIt();
+		pProgressDlg->UpdateWindow();
+
+		pProgressDlg->m_ProgressText.SetWindowText("Creating CD Layout...");
+//		CreateMedia();
+		pProgressDlg->m_ProgressBar.StepIt();
+		pProgressDlg->UpdateWindow();
+
+		AfxMessageBox("CD Directory created", MB_OK);
+	}
+
+	return TRUE;
+}
+*/
 extern "C" __declspec(dllexport)
 int StartIB(CString parms, WIDGET *curWidget)
 {
@@ -524,7 +564,14 @@ int StartIB(CString parms, WIDGET *curWidget)
 	CNewDialog newprog;
 	newprog.Create(IDD_NEW_DIALOG,NULL );
 	newprog.ShowWindow(SW_SHOW);
-
+/////////////////////////////
+	CWnd * dlg;
+	CRect tmpRect = CRect(7,7,173,13);
+	dlg = newprog.GetDlgItem(IDC_BASE_TEXT);
+	CWnd* pwnd = newprog.GetDlgItem(IDD_NEW_DIALOG);
+	dlg->SetWindowText("         Customization is in Progress");
+	
+/////////////////////////////
 	_mkdir((char *)(LPCTSTR) cdPath);
 	_mkdir((char *)(LPCTSTR) tempPath);
 	_mkdir((char *)(LPCTSTR) workspacePath);
@@ -566,8 +613,12 @@ int StartIB(CString parms, WIDGET *curWidget)
 		fclose(f);
 	}
 
+	dlg->SetWindowText("         Replacing XPI Files");
+
 	// Put all the extracted files back into their new XPI homes
 	ReplaceXPIFiles();
+
+	dlg->SetWindowText("         Copying default files into the configuration");
 
 	// Copy remaining default installer files into config
 	// preserving any existing files that we created already
@@ -621,19 +672,28 @@ int StartIB(CString parms, WIDGET *curWidget)
 	}
 	
 	// Didn't work...
+	dlg->SetWindowText("         Checking for neccessary components to install");
 
 	invisible();
+	
+	dlg->SetWindowText("         Checking for Third Party Software");
 
 	AddThirdParty();
 
+	dlg->SetWindowText("         Replacing config.ini");
+
 	ReplaceINIFile();
 
+	dlg->SetWindowText("         Creating Desktop Shortcut for Help");
+
 	SetCurrentDirectory(olddir);
-	newprog.DestroyWindow();
 	CString TargetDir = GetGlobal("Root");
 	CString TargetFile = TargetDir + "wizardmachine.ini";
 	CString MozBrowser = GetBrowser();
 	CreateShortcut(MozBrowser, TargetFile, "HelpLink", TargetDir, FALSE);
+
+	dlg->SetWindowText("         Customization is Complete");
+	newprog.DestroyWindow();
 	return rv;
 
 }

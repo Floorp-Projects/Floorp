@@ -88,10 +88,11 @@ BOOL CNewDialog::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 CRect tmpRect = CRect(7,7,173,13);
+CWnd * dlg;
 
-/*dlg = GetDlgItem(IDC_BASE_TEXT);
+dlg = GetDlgItem(IDC_BASE_TEXT);
 dlg->SetWindowText("Customization is in Progress");
-dlg = GetDlgItem(IDC_TITLE_TEXT);
+/*dlg = GetDlgItem(IDC_TITLE_TEXT);
 dlg->ShowWindow(SW_HIDE);
 dlg = GetDlgItem(IDC_EDIT1);
 dlg->ShowWindow(SW_HIDE);
@@ -101,10 +102,9 @@ dlg = GetDlgItem(IDCANCEL);
 dlg->ShowWindow(SW_HIDE);
 */
 SetWindowText("Progress");	
-CWnd * dlg;
-dlg= new CProgressCtrl;
-((CProgressCtrl*)dlg)->Create(WS_TABSTOP|PBS_VERTICAL, tmpRect, this, 12345);
-dlg->ShowWindow(SW_SHOW);
+
+//((CProgressCtrl*)dlg)->Create(WS_TABSTOP|PBS_VERTICAL, tmpRect, this, 12345);
+//dlg->ShowWindow(SW_SHOW);
 
 	// TODO: Add extra initialization here
 	
