@@ -811,17 +811,19 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
 
-#ifdef DEBUG_rodsXXX
+#ifdef DEBUG_rods
   if (!isInDropDownMode) {
     PRInt32 numRows = 1;
     GetSizeAttribute(&numRows);
     printf("%d ", numRows);
     if (numRows == 2) {
       COMPARE_QUIRK_SIZE("nsListControlFrame", 56, 38) 
-    } if (numRows == 3) {
+    } else if (numRows == 3) {
       COMPARE_QUIRK_SIZE("nsListControlFrame", 56, 54) 
-    } if (numRows == 4) {
+    } else if (numRows == 4) {
       COMPARE_QUIRK_SIZE("nsListControlFrame", 56, 70) 
+    } else {
+      COMPARE_QUIRK_SIZE("nsListControlFrame", 127, 118) 
     }
   }
 #endif
@@ -2309,7 +2311,7 @@ nsListControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate
   PRInt32 length = 0;
   GetNumberOfOptions(&length);
   if (mSelectionCacheLength != length) {
-    NS_ASSERTION(0,"nsListControlFrame: Cache sync'd with content!\n");
+    //NS_ASSERTION(0,"nsListControlFrame: Cache sync'd with content!\n");
     changed = PR_TRUE; // Assume the worst, there was a change.
   }
 
@@ -2317,10 +2319,22 @@ nsListControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate
   if (NS_SUCCEEDED(rv)) {
     if (!changed) {
       PRBool selected;
-      for (PRInt32 i = 0; i < length; i++) {
-        selected = IsContentSelectedByIndex(i);
-        if (selected != (PRBool)mSelectionCache->ElementAt(i)) {
-          mSelectionCache->ReplaceElementAt((void*)selected, i);
+      // the content array of options is actually
+      // out of sync with the array 
+      // so until bug 38825 is fixed.
+      if (mSelectionCacheLength != length) { // this shouldn't happend
+        for (PRInt32 i = 0; i < length; i++) {
+          selected = IsContentSelectedByIndex(i);
+          if (selected != (PRBool)mSelectionCache->ElementAt(i)) {
+            mSelectionCache->ReplaceElementAt((void*)selected, i);
+            changed = PR_TRUE;
+          }
+        }
+      } else {
+        mSelectionCache->Clear();
+        for (PRInt32 i = 0; i < length; i++) {
+          selected = IsContentSelectedByIndex(i);
+          mSelectionCache->InsertElementAt((void*)selected, i);
           changed = PR_TRUE;
         }
       }
@@ -2800,17 +2814,20 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
         ResetSelectedItem();
         mComboboxFrame->ListWasSelected(mPresContext); 
       } 
+      REFLOW_DEBUG_MSG(">>>>>> Option is disabled");
       return NS_OK;
     }
   }
 
   const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
   if (!disp->IsVisible()) {
+    REFLOW_DEBUG_MSG(">>>>>> Select is NOT visible");
     return NS_OK;
   }
 
   if (IsInDropDownMode() == PR_TRUE) {
     if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, mOldSelectedIndex, mSelectedIndex))) {
+      REFLOW_DEBUG_MSG2(">>>>>> Found Index: %d", mSelectedIndex);
       if (kNothingSelected != mSelectedIndex) {
         SetContentSelected(mSelectedIndex, PR_TRUE);  
       }
@@ -2819,6 +2836,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
       } 
     }
   } else {
+    REFLOW_DEBUG_MSG(">>>>>> Didn't find");
     mButtonDown = PR_FALSE;
     CaptureMouseEvents(mPresContext, PR_FALSE);
     UpdateSelection(PR_TRUE, PR_FALSE, mContent);
@@ -2833,6 +2851,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
     aMouseEvent->PreventDefault();
     aMouseEvent->PreventCapture();
     aMouseEvent->PreventBubble();
+    REFLOW_DEBUG_MSG(">>>>>> Returning and preventing bubbling");
     return NS_ERROR_FAILURE; //consumes event
   }
   return NS_OK;
@@ -3043,6 +3062,7 @@ nsresult
 nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
 {
   NS_ASSERTION(aMouseEvent != nsnull, "aMouseEvent is null.");
+  //REFLOW_DEBUG_MSG("MouseMove\n");
 
   if (mComboboxFrame) { // Synonym for IsInDropDownMode()
     PRBool isDroppedDown = PR_FALSE;
@@ -3075,6 +3095,7 @@ nsresult
 nsListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
 {
   NS_ASSERTION(aMouseEvent != nsnull, "aMouseEvent is null.");
+  //REFLOW_DEBUG_MSG("DragMove\n");
 
   if (!mComboboxFrame) { // Synonym for IsInDropDownMode()
     // check to make sure we are a mulitple select list
