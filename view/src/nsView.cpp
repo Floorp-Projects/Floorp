@@ -396,15 +396,26 @@ void nsView::ResetWidgetBounds(PRBool aRecurse, PRBool aMoveOnly,
     }
 
     nsIDeviceContext  *dx;
-    float             t2p;
+    float             t2p, p2t;
   
     mViewManager->GetDeviceContext(dx);
     t2p = dx->AppUnitsToDevUnits();
+    p2t = dx->DevUnitsToAppUnits();
     NS_RELEASE(dx);
 
     nsPoint offset(0, 0);
     if (GetParent()) {
-      GetParent()->GetNearestWidget(&offset);
+      nsIWidget* parentWidget = GetParent()->GetNearestWidget(&offset);
+
+      nsWindowType type;
+      mWindow->GetWindowType(type);
+      if (type == eWindowType_popup) {
+        // put offset into screen coordinates
+        nsRect screenRect(0,0,1,1);
+        parentWidget->WidgetToScreen(screenRect, screenRect);
+        offset += nsPoint(NSIntPixelsToTwips(screenRect.x, p2t),
+                          NSIntPixelsToTwips(screenRect.y, p2t));
+      }
     }
 
     nsRect newBounds(NSTwipsToIntPixels((mDimBounds.x + offset.x), t2p),
@@ -568,11 +579,11 @@ NS_IMETHODIMP nsView::SetContentTransparency(PRBool aTransparent)
 }
 
 nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
-                                   nsWidgetInitData *aWidgetInitData,
-                                   nsNativeWidget aNative,
-                                   PRBool aEnableDragDrop,
-                                   PRBool aResetVisibility,
-                                   nsContentType aContentType)
+                               nsWidgetInitData *aWidgetInitData,
+                               nsNativeWidget aNative,
+                               PRBool aEnableDragDrop,
+                               PRBool aResetVisibility,
+                               nsContentType aContentType)
 {
   nsIDeviceContext  *dx;
   nsRect            trect = mDimBounds;
@@ -615,8 +626,13 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
 
         nsIWidget* parentWidget = GetParent() ? GetParent()->GetNearestWidget(nsnull)
           : nsnull;
-        mWindow->Create(parentWidget, trect,
-                        ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
+        if (aWidgetInitData->mWindowType == eWindowType_popup) {
+          mWindow->Create(parentWidget->GetNativeData(NS_NATIVE_WINDOW), trect,
+                          ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
+        } else {
+          mWindow->Create(parentWidget, trect,
+                          ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
+        }
       }
       if (aEnableDragDrop) {
         mWindow->EnableDragDrop(PR_TRUE);

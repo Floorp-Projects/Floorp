@@ -343,14 +343,18 @@ static void AdjustChildWidgets(nsView *aView,
   nsPoint aWidgetToParentViewOrigin, float aScale, PRBool aInvalidate)
 {
   if (aView->HasWidget()) {
-    nsRect bounds = aView->GetBounds();
-    nsPoint widgetOrigin = aWidgetToParentViewOrigin
-      + nsPoint(bounds.x, bounds.y);
     nsIWidget* widget = aView->GetWidget();
-    widget->Move(NSTwipsToIntPixels(widgetOrigin.x, aScale),
-                 NSTwipsToIntPixels(widgetOrigin.y, aScale));
-    if (aInvalidate) {
-      widget->Invalidate(PR_FALSE);
+    nsWindowType type;
+    widget->GetWindowType(type);
+    if (type != eWindowType_popup) {
+      nsRect bounds = aView->GetBounds();
+      nsPoint widgetOrigin = aWidgetToParentViewOrigin
+        + nsPoint(bounds.x, bounds.y);
+      widget->Move(NSTwipsToIntPixels(widgetOrigin.x, aScale),
+                   NSTwipsToIntPixels(widgetOrigin.y, aScale));
+      if (aInvalidate) {
+        widget->Invalidate(PR_FALSE);
+      }
     }
   } else {
     // Don't recurse if the view has a widget, because we adjusted the view's

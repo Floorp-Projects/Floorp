@@ -1248,6 +1248,9 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
      aInitData->mWindowType == eWindowType_invisible) ?
     nsnull : aParent;
 
+  NS_ASSERTION(aInitData->mWindowType != eWindowType_popup ||
+               !aParent, "Popups should not be hooked into nsIWidget hierarchy");
+
   BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
              aAppShell, aToolkit, aInitData);
 
