@@ -488,6 +488,7 @@ nsPop3Protocol::nsPop3Protocol(nsIURI* aURL)
   m_password_already_sent(PR_FALSE)
 {
   SetLookingForCRLF(MSG_LINEBREAK_LEN == 2);
+  m_ignoreCRLFs = PR_TRUE;
 }
 
 nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
@@ -2825,19 +2826,25 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
       status = buffer_size;
       do
       {
-        PRInt32 res = BufferInput(line, buffer_size);
-        if (res < 0) return(Error(POP3_MESSAGE_WRITE_ERROR));
-			  // BufferInput(CRLF, 2);
-        res = BufferInput(MSG_LINEBREAK, MSG_LINEBREAK_LEN);
-        if (res < 0) return(Error(POP3_MESSAGE_WRITE_ERROR));
+        if (m_pop3ConData->msg_closure)
+        {
+          m_ignoreCRLFs = PR_TRUE;
+          PRInt32 res = BufferInput(line, buffer_size);
+          if (res < 0) return(Error(POP3_MESSAGE_WRITE_ERROR));
+          // BufferInput(CRLF, 2);
+          m_ignoreCRLFs = PR_FALSE;
+          res = BufferInput(MSG_LINEBREAK, MSG_LINEBREAK_LEN);
+          if (res < 0) return(Error(POP3_MESSAGE_WRITE_ERROR));
 
-        m_pop3ConData->parsed_bytes += (buffer_size+2); // including CRLF
-			  // now read in the next line
-			  PR_Free(line);
-		    line = m_lineStreamBuffer->ReadNextLine(inputStream, buffer_size,
-                                                    pauseForMoreData);
+          m_pop3ConData->parsed_bytes += (buffer_size+2); // including CRLF
+        }
+
+        // now read in the next line
+        PR_Free(line);
+        line = m_lineStreamBuffer->ReadNextLine(inputStream, buffer_size,
+                                                pauseForMoreData);
         PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
-			  status += (buffer_size+2); // including CRLF
+        status += (buffer_size+2); // including CRLF
       } while (/* !pauseForMoreData && */ line);
     }
 

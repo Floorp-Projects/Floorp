@@ -90,6 +90,7 @@ protected:
   nsMsgLineBufferHandler *m_handler;
   PRBool		m_convertNewlinesP;
   PRBool      m_lookingForCRLF; 
+  PRBool    m_ignoreCRLFs;
 };
 
 // I'm adding this utility class here for lack of a better place. This utility class is similar to nsMsgLineBuffer
