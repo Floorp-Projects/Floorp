@@ -3698,9 +3698,13 @@ js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
      * behave properly.
      */
     older = JS_SetErrorReporter(cx, NULL);
-    if (OBJ_GET_PROPERTY(cx, obj, (jsid)atom, &fval) &&
-        !JSVAL_IS_PRIMITIVE(fval)) {
+    if (!OBJ_GET_PROPERTY(cx, obj, (jsid)atom, &fval)) {
+        JS_ClearPendingException(cx);
+        ok = JS_TRUE;
+    } else if (!JSVAL_IS_PRIMITIVE(fval)) {
         ok = js_InternalCall(cx, obj, fval, argc, argv, rval);
+        if (!ok)
+            JS_ClearPendingException(cx);
     } else {
         ok = JS_TRUE;
     }
@@ -3976,37 +3980,52 @@ js_GetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot)
 JSBool
 js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 {
-    uint32 nslots, rlimit, i;
+    JSScope *scope;
+    uint32 nslots, i;
     JSClass *clasp;
     jsval *newslots;
 
     JS_LOCK_OBJ(cx, obj);
+    scope = OBJ_SCOPE(obj);
     nslots = (uint32) obj->slots[-1];
     if (slot >= nslots) {
+        /*
+         * At this point, obj may or may not own scope.  If some path calls
+         * js_GetMutableScope but does not add a slot-owning property, then
+         * scope->object == obj but nslots will be nominal.  If obj shares a
+         * prototype's scope, then we cannot update scope->map here, but we
+         * must update obj->slots[-1] when we grow obj->slots.
+         *
+         * See js_Mark, before the last return, where we make a special case
+         * for unmutated (scope->object != obj) objects.
+         */
+        JS_ASSERT(nslots == JS_INITIAL_NSLOTS);
         clasp = LOCKED_OBJ_GET_CLASS(obj);
-        rlimit = JSSLOT_START(clasp) + JSCLASS_RESERVED_SLOTS(clasp);
+        nslots = JSSLOT_FREE(clasp);
         if (clasp->reserveSlots)
-            rlimit += clasp->reserveSlots(cx, obj);
-        JS_ASSERT(slot < rlimit);
-        if (rlimit > nslots)
-            nslots = rlimit;
+            nslots += clasp->reserveSlots(cx, obj);
+        JS_ASSERT(slot < nslots);
 
         newslots = (jsval *)
             JS_realloc(cx, obj->slots - 1, (nslots + 1) * sizeof(jsval));
         if (!newslots) {
-            JS_UNLOCK_OBJ(cx, obj);
+            JS_UNLOCK_SCOPE(cx, scope);
             return JS_FALSE;
         }
-        for (i = 1 + newslots[0]; i <= rlimit; i++)
+        for (i = 1 + newslots[0]; i <= nslots; i++)
             newslots[i] = JSVAL_VOID;
+        if (scope->object == obj)
+            scope->map.nslots = nslots;
         newslots[0] = nslots;
-        if (OBJ_SCOPE(obj)->object == obj)
-            obj->map->nslots = nslots;
         obj->slots = newslots + 1;
     }
 
+    /* Whether or not we grew nslots, we may need to advance freeslot. */
+    if (scope->object == obj && slot >= scope->map.freeslot)
+        scope->map.freeslot = slot + 1;
+
     obj->slots[slot] = v;
-    JS_UNLOCK_OBJ(cx, obj);
+    JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
 }
 
