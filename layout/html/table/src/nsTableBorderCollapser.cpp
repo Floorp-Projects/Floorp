@@ -233,12 +233,11 @@ void nsTableBorderCollapser::ComputeLeftBorderForEdgeAt(nsIPresContext* aPresCon
     widthToAdd = NSToCoordCeil(p2t);
   border->mWidth *= NSToCoordCeil(p2t);
   border->mLength = rowRect.height;
-  border->mInsideNeighbor = cellFrame->mBorderEdges;
   // we need to factor in the table's horizontal borders.
   // but we can't compute that length here because we don't know how thick top and bottom borders are
   // see DidComputeHorizontalCollapsingBorders
-  if (nsnull!=cellFrame)
-  {
+  if (cellFrame) {
+    border->mInsideNeighbor = cellFrame->mBorderEdges;
     cellFrame->SetBorderEdge(NS_SIDE_LEFT, aRowIndex, aColIndex, border, 0);  // set the left edge of the cell frame
   }
   border->mWidth += widthToAdd;
