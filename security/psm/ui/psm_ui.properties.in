@@ -5457,7 +5457,6 @@ ca_policy_buttons_content:
 </html>
 :ca_policy_buttons_content
 
-ca_policy_top
 ;
 ; CA certificate info  
 ; top level frame set
