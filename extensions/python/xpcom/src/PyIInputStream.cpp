@@ -80,6 +80,9 @@ static PyObject *DoPyRead_Size(nsIInputStream *pI, PRUint32 n)
 		if (NS_FAILED(r))
 			return PyXPCOM_BuildPyException(r);
 	}
+	if (n==0) { // mozilla will assert if we alloc zero bytes.
+		return PyBuffer_New(0);
+	}
 	char *buf = (char *)nsMemory::Alloc(n);
 	if (buf==NULL) {
 		PyErr_NoMemory();

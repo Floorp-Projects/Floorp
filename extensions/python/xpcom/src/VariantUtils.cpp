@@ -2482,6 +2482,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 			if (val == Py_None)
 				break; // Remains NULL.
 			size_t nbytes = sequence_size * element_size;
+			if (nbytes==0) nbytes = 1; // avoid assertion about 0 bytes
 			*pp = (void *)nsMemory::Alloc(nbytes);
 			memset(*pp, 0, nbytes);
 			rc = FillSingleArray(*pp, val, sequence_size, element_size, array_type&XPT_TDP_TAGMASK);
