@@ -72,6 +72,7 @@ class nsAutoConfig : public nsIAutoConfig,
         nsresult evaluateLocalFile(nsIFile *file);
         nsresult writeFailoverFile();
         nsresult getEmailAddr(nsACString & emailAddr);
+        nsresult PromptForEMailAddress(nsACString &emailAddress);
         nsCString mBuf, mCurrProfile;
         nsCOMPtr<nsIPrefBranch> mPrefBranch;
         PRBool mLoaded;
