@@ -278,4 +278,28 @@ typedef struct _uid_validity_info {
 	int32 returnValidity;
 } uid_validity_info;
 
+
+#define kDownLoadCacheSize 1536
+
+class TLineDownloadCache {
+public:
+    TLineDownloadCache();
+    virtual ~TLineDownloadCache();
+
+    uint32  CurrentUID();
+    uint32  SpaceAvailable();
+    XP_Bool CacheEmpty();
+    
+    msg_line_info *GetCurrentLineInfo();
+    
+    void ResetCache();
+    void CacheLine(const char *line, uint32 uid);
+private:
+    char   fLineCache[kDownLoadCacheSize];
+    uint32 fBytesUsed;
+    
+    msg_line_info *fLineInfo;
+    
+};
+
 #endif
