@@ -20,11 +20,17 @@
 
 #include "nsHTMLContainerFrame.h"
 #include "nsIAnchoredItems.h"
+#include "nsIAbsoluteItems.h"
+#include "nsVoidArray.h"
 
-struct nsBodyReflowState;
 class nsSpaceManager;
 
-class nsBodyFrame : public nsHTMLContainerFrame, public nsIAnchoredItems {
+struct nsStyleDisplay;
+struct nsStylePosition;
+
+class nsBodyFrame : public nsHTMLContainerFrame,
+                    public nsIAnchoredItems,
+                    public nsIAbsoluteItems {
 public:
   static nsresult NewFrame(nsIFrame** aInstancePtrResult,
                            nsIContent* aContent,
@@ -56,8 +62,11 @@ public:
   virtual void AddAnchoredItem(nsIFrame*         aAnchoredItem,
                                AnchoringPosition aPosition,
                                nsIFrame*         aContainer);
-
   virtual void RemoveAnchoredItem(nsIFrame* aAnchoredItem);
+
+  // nsIAbsoluteItems
+  NS_IMETHOD  AddAbsoluteItem(nsAbsoluteFrame* aAnchorFrame);
+  NS_IMETHOD  RemoveAbsoluteItem(nsAbsoluteFrame* aAnchorFrame);
 
   NS_IMETHOD VerifyTree() const;
 
@@ -75,8 +84,24 @@ protected:
 
   virtual PRIntn GetSkipSides() const;
 
+  void ReflowAbsoluteItems(nsIPresContext*      aPresContext,
+                           const nsReflowState& aReflowState);
+
+  nsIView* CreateAbsoluteView(const nsStylePosition* aPosition,
+                              const nsStyleDisplay*  aDisplay) const;
+
+  void TranslatePoint(nsIFrame* aFrameFrom, nsPoint& aPoint) const;
+
+  void ComputeAbsoluteFrameBounds(nsIFrame*              aAnchorFrame,
+                                  const nsReflowState&   aState,
+                                  const nsStylePosition* aPosition,
+                                  nsRect&                aRect) const;
+
+  void AddFrame(nsIFrame* aFrame);
+
 private:
   nsSpaceManager* mSpaceManager;
+  nsVoidArray     mAbsoluteItems;
 
   void CreateColumnFrame(nsIPresContext* aPresContext);
   nsSize GetColumnAvailSpace(nsIPresContext* aPresContext,

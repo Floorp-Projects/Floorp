@@ -18,23 +18,26 @@
 #ifndef nsAbsoluteFrame_h___
 #define nsAbsoluteFrame_h___
 
-#include "nsContainerFrame.h"
-struct nsStylePosition;
-struct nsStyleDisplay;
+#include "nsFrame.h"
 
 // Implementation of a frame that's used as a placeholder for an absolutely
 // positioned frame
-class nsAbsoluteFrame : public nsContainerFrame {
+class nsAbsoluteFrame : public nsFrame {
 public:
   /**
-   * Create a new absolutely positioned frame
+   * Create a placeholder for an absolutely positioned frame. Also creates
+   * the absolutely positioned frame itself
+   *
+   * @see #GetAbsoluteFrame()
    */
   static nsresult NewFrame(nsIFrame**  aInstancePtrResult,
                            nsIContent* aContent,
                            nsIFrame*   aParent);
 
+  // Returns the associated anchored item
+  nsIFrame*   GetAbsoluteFrame() const {return mFrame;}
+
   // nsIFrame overrides
-  NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
   NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
                      nsReflowMetrics&     aDesiredSize,
                      const nsReflowState& aReflowState,
@@ -42,21 +45,15 @@ public:
   NS_IMETHOD  ListTag(FILE* out = stdout) const;
 
 protected:
+  nsIFrame* mFrame;  // the absolutely positioned frame
+
   // Constructor. Takes as arguments the content object, the index in parent,
   // and the Frame for the content parent
   nsAbsoluteFrame(nsIContent* aContent, nsIFrame* aParent);
 
   virtual ~nsAbsoluteFrame();
 
-  nsIView*  CreateView(nsIView*               aContainingView,
-                       const nsRect&          aRect,
-                       const nsStylePosition* aPosition,
-                       const nsStyleDisplay*  aDisplay) const;
   nsIFrame* GetContainingBlock() const;
-  void      ComputeViewBounds(nsIFrame*              aContainingBlock,
-                              const nsStylePosition* aPosition,
-                              nsRect&                aRect) const;
-  void      GetOffsetFromFrame(nsIFrame* aFrameTo, nsPoint& aOffset) const;
 };
 
 #endif /* nsAbsoluteFrame_h___ */

@@ -17,12 +17,14 @@
  */
 #include "nsHTMLIIDs.h"
 #include "nsIHTMLContent.h"
+#include "nsIAbsoluteItems.h"
 #include "nsIAnchoredItems.h"
 #include "nsIFloaterContainer.h"
 #include "nsIRunaround.h"
 #include "nsIInlineReflow.h"
 #include "nsCSSBlockFrame.h"
 
+const nsIID kIAbsoluteItemsIID = NS_IABSOLUTE_ITEMS_IID;
 const nsIID kIAnchoredItemsIID = NS_IANCHORED_ITEMS_IID;
 const nsIID kIFloaterContainerIID = NS_IFLOATER_CONTAINER_IID;
 const nsIID kIHTMLContentIID = NS_IHTMLCONTENT_IID;
