@@ -51,8 +51,8 @@ static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
 static void mime_crypto_write_base64 (void *closure, const char *buf,
 						  unsigned long size);
-static nsresult mime_encoder_output_fn(const char *buf, PRInt32 size, void *closure);
-static nsresult mime_nested_encoder_output_fn (const char *buf, PRInt32 size, void *closure);
+static nsresult PR_CALLBACK mime_encoder_output_fn(const char *buf, PRInt32 size, void *closure);
+static nsresult PR_CALLBACK mime_nested_encoder_output_fn (const char *buf, PRInt32 size, void *closure);
 static int make_multipart_signed_header_string(PRBool outer_p,
 									char **header_return,
 									char **boundary_return);
@@ -70,7 +70,7 @@ static char *mime_make_separator(const char *prefix);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 MimeEncoderData *
-MIME_B64EncoderInit(nsresult (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
+MIME_B64EncoderInit(nsresult (*PR_CALLBACK output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
 {
   MimeEncoderData *returnEncoderData = nsnull;
   nsIMimeConverter *converter;
@@ -85,7 +85,7 @@ MIME_B64EncoderInit(nsresult (*output_fn) (const char *buf, PRInt32 size, void *
 }
 
 MimeEncoderData *	
-MIME_QPEncoderInit(nsresult (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
+MIME_QPEncoderInit(nsresult (*PR_CALLBACK output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
 {
   MimeEncoderData *returnEncoderData = nsnull;
   nsIMimeConverter *converter;
@@ -100,7 +100,7 @@ MIME_QPEncoderInit(nsresult (*output_fn) (const char *buf, PRInt32 size, void *c
 }
 
 MimeEncoderData *	
-MIME_UUEncoderInit(char *filename, nsresult (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
+MIME_UUEncoderInit(char *filename, nsresult (*PR_CALLBACK output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
 {
   MimeEncoderData *returnEncoderData = nsnull;
   nsIMimeConverter *converter;
