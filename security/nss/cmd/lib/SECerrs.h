@@ -477,3 +477,18 @@ ER3(SEC_ERROR_UNRECOGNIZED_OID,			(SEC_ERROR_BASE + 143),
 
 ER3(SEC_ERROR_OCSP_INVALID_SIGNING_CERT,	(SEC_ERROR_BASE + 144),
 "Invalid OCSP signing certificate in OCSP response.")
+
+ER3(SEC_ERROR_REVOKED_CERTIFICATE_CRL,          (SEC_ERROR_BASE + 145),
+"Certificate is revoked in issuer's certificate revocation list.")
+
+ER3(SEC_ERROR_REVOKED_CERTIFICATE_OCSP,         (SEC_ERROR_BASE + 146),
+"Issuer's OCSP responder reports certificate is revoked.")
+
+ER3(SEC_ERROR_CRL_INVALID_VERSION,              (SEC_ERROR_BASE + 147),
+"Issuer's Certificate Revocation List has an unknown version number.")
+
+ER3(SEC_ERROR_CRL_V1_CRITICAL_EXTENSION,        (SEC_ERROR_BASE + 148),
+"Issuer's V1 Certificate Revocation List has a critical extension.")
+
+ER3(SEC_ERROR_CRL_UNKNOWN_CRITICAL_EXTENSION,   (SEC_ERROR_BASE + 149),
+"Issuer's V2 Certificate Revocation List has an unknown critical extension.")
