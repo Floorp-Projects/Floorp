@@ -66,6 +66,8 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsHTMLFragmentContentSink.obj	\
 	.\$(OBJDIR)\nsImageDocument.obj		\
 	.\$(OBJDIR)\nsMarkupDocument.obj	\
+	.\$(OBJDIR)\nsWyciwygChannel.obj	\
+	.\$(OBJDIR)\nsWyciwygProtocolHandler.obj	\
 	$(NULL)
 
 EXPORTS =					\

@@ -66,6 +66,8 @@ CPPSRCS		= \
 		nsHTMLDocument.cpp \
 		nsImageDocument.cpp \
 		nsMarkupDocument.cpp \
+		nsWyciwygChannel.cpp \
+		nsWyciwygProtocolHandler.cpp \
 		$(NULL)
 
 EXPORTS		= \

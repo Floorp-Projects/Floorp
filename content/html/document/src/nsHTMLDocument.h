@@ -51,8 +51,8 @@
 #include "nsIRDFService.h"
 #include "pldhash.h"
 
-// Doc write dummy request
-#include "nsIChannel.h"
+// Document.Write() related
+#include "nsIWyciwygChannel.h"
 #include "nsILoadGroup.h"
 #include "nsNetUtil.h"
 
@@ -216,8 +216,8 @@ protected:
   nsresult ScriptWriteCommon(PRBool aNewlineTerminate);
   nsresult OpenCommon(nsIURI* aUrl);
 
-  nsresult AddDocWriteDummyRequest(void);
-  nsresult RemoveDocWriteDummyRequest(void);
+  nsresult CreateAndAddWyciwygChannel(void);
+  nsresult RemoveWyciwygChannel(void);
 
   nsresult BaseResetToURI(nsIURI* aURI);
 
@@ -279,6 +279,7 @@ protected:
 
   PRUint32 mIsWriting : 1;
   PRUint32 mWriteLevel : 31;
+  PRUint32 mWyciwygSessionCnt;
 
   nsCOMPtr<nsIDOMNode> mBodyContent;
 
@@ -290,7 +291,7 @@ protected:
 
   PLDHashTable mIdAndNameHashTable;
 
-  nsCOMPtr<nsIRequest> mDocWriteDummyRequest;
+  nsCOMPtr<nsIWyciwygChannel> mWyciwygChannel;
 };
 
 #endif /* nsHTMLDocument_h___ */

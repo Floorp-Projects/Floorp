@@ -128,6 +128,7 @@
 #include "nsIJSContextStack.h"
 #include "nsContentUtils.h"
 #include "nsIDocumentViewer.h"
+#include "nsIWyciwygChannel.h"
 
 #include "nsContentCID.h"
 #include "nsIPrompt.h"
@@ -304,11 +305,11 @@ nsHTMLDocument::nsHTMLDocument()
   mParser = nsnull;
   mDTDMode = eDTDMode_quirks;  
   mCSSLoader = nsnull;
-  mDocWriteDummyRequest = nsnull;
 
   mForms = nsnull;
   mIsWriting = 0;
   mWriteLevel = 0;
+  mWyciwygSessionCnt = 0;
 
 #ifdef IBMBIDI
   mTexttype = IBMBIDI_TEXTTYPE_LOGICAL;
@@ -493,8 +494,8 @@ nsHTMLDocument::BaseResetToURI(nsIURI *aURL)
     }
   }
 
-  NS_ASSERTION(mDocWriteDummyRequest == nsnull, "nsHTMLDocument::Reset() - dummy doc write request still exists!");
-  mDocWriteDummyRequest = nsnull;
+  NS_ASSERTION(mWyciwygChannel == nsnull, "nsHTMLDocument::Reset() - Wyciwyg Channel  still exists!");
+  mWyciwygChannel = nsnull;
 
   return result;
 }
@@ -2397,10 +2398,9 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
     }
   }
 
-  // Add a doc write dummy request into the document load group
-  NS_ASSERTION(mDocWriteDummyRequest == nsnull, "nsHTMLDocument::OpenCommon(): doc write dummy request exists!");
-  AddDocWriteDummyRequest();
-
+  // Add a wyciwyg channel request into the document load group
+  NS_ASSERTION(mWyciwygChannel == nsnull, "nsHTMLDocument::OpenCommon(): wyciwyg channel already exists!");
+  CreateAndAddWyciwygChannel();
   return result;
 }
 
@@ -2489,16 +2489,13 @@ nsHTMLDocument::Close()
     // one line of code here!
     FlushPendingNotifications();
 
-    // Remove the doc write dummy request from the document load group
+    // Remove the wyciwyg channel request from the document load group
     // that we added in OpenCommon().  If all other requests between
     // document.open() and document.close() have completed, then this
     // method should cause the firing of an onload event.
-
-    NS_ASSERTION(mDocWriteDummyRequest, "nsHTMLDocument::Close(): Trying to "
-                 "remove non-existent doc write dummy request!");
-    RemoveDocWriteDummyRequest();
-    NS_ASSERTION(mDocWriteDummyRequest == nsnull, "nsHTMLDocument::Close(): "
-                 "Doc write dummy request could not be removed!");  
+    NS_ASSERTION(mWyciwygChannel, "nsHTMLDocument::Close(): Trying to remove non-existent wyciwyg channel!");  
+    RemoveWyciwygChannel();
+    NS_ASSERTION(mWyciwygChannel == nsnull, "nsHTMLDocument::Close(): nsIWyciwyg Channel could not be removed!");  
   }
 
   return NS_OK;
@@ -2519,17 +2516,22 @@ nsHTMLDocument::WriteCommon(const nsAReadableString& aText,
 
   mWriteLevel++;
 
-  if (aNewlineTerminate) {
-    rv = mParser->Parse(aText + NS_LITERAL_STRING("\n"),
+  static NS_NAMED_LITERAL_STRING(new_line, "\n");
+  static NS_NAMED_LITERAL_STRING(empty, "");
+  const nsAString  *term = aNewlineTerminate ? &new_line : &empty;
+
+  const nsAString& text = aText + *term;
+
+  // Save the data in cache
+  if (mWyciwygChannel) {
+    mWyciwygChannel->WriteToCache(NS_ConvertUCS2toUTF8(text).get());
+  } 
+
+  rv = mParser->Parse(text ,
                         NS_GENERATE_PARSER_KEY(),
                         NS_LITERAL_STRING("text/html"), PR_FALSE,
                         (!mIsWriting || (mWriteLevel > 1)));
-  } else {
-    rv = mParser->Parse(aText,
-                        NS_GENERATE_PARSER_KEY(),
-                        NS_LITERAL_STRING("text/html"), PR_FALSE,
-                        (!mIsWriting || (mWriteLevel > 1)));
-  }
+
   mWriteLevel--;
 
   return rv;
@@ -3831,127 +3833,47 @@ nsHTMLDocument::GetForms(nsIDOMHTMLCollection** aForms)
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
-//
-// DocWriteDummyRequest
-//
-//   This is a dummy request implementation that is used to make sure that
-//   the onload event fires for document.writes that occur after the document
-//   has finished loading.  Since such document.writes() blow away the old document
-//   we need some way to generate document load notifications for the content that
-//   is document.written.  The addition and removal of the dummy request generates
-//   the appropriate load notifications which bubble up through a chain of observers
-//   till the document viewer's LoadComplete() method which fires the onLoad event.
-//
-
-class DocWriteDummyRequest : public nsIChannel
-{
-protected:
-  DocWriteDummyRequest();
-  virtual ~DocWriteDummyRequest();
-
-  static PRInt32 gRefCnt;
-
-  nsCOMPtr<nsIURI> mURI;
-  nsLoadFlags mLoadFlags;
-  nsCOMPtr<nsILoadGroup> mLoadGroup;
-
-public:
-  static nsresult
-  Create(nsIRequest** aResult);
-
-  NS_DECL_ISUPPORTS
-
-	// nsIRequest
-  NS_IMETHOD GetName(PRUnichar* *result) { 
-    *result = ToNewUnicode(NS_LITERAL_STRING("about:dummy-doc-write-request"));
-    return NS_OK;
-  }
-  NS_IMETHOD IsPending(PRBool *_retval) { *_retval = PR_TRUE; return NS_OK; }
-  NS_IMETHOD GetStatus(nsresult *status) { *status = NS_OK; return NS_OK; } 
-  NS_IMETHOD Cancel(nsresult status);
-  NS_IMETHOD Suspend(void) { return NS_OK; }
-  NS_IMETHOD Resume(void)  { return NS_OK; }
-
- 	// nsIChannel
-  NS_IMETHOD GetOriginalURI(nsIURI* *aOriginalURI) { *aOriginalURI = mURI; NS_ADDREF(*aOriginalURI); return NS_OK; }
-  NS_IMETHOD SetOriginalURI(nsIURI* aOriginalURI) { mURI = aOriginalURI; return NS_OK; }
-  NS_IMETHOD GetURI(nsIURI* *aURI) { *aURI = mURI; NS_ADDREF(*aURI); return NS_OK; }
-  NS_IMETHOD Open(nsIInputStream **_retval) { *_retval = nsnull; return NS_OK; }
-  NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt) { return NS_OK; }
-  NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags) { *aLoadFlags = mLoadFlags; return NS_OK; }
-  NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) { mLoadFlags = aLoadFlags; return NS_OK; }
-  NS_IMETHOD GetOwner(nsISupports * *aOwner) { *aOwner = nsnull; return NS_OK; }
-  NS_IMETHOD SetOwner(nsISupports * aOwner) { return NS_OK; }
-  NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { *aLoadGroup = mLoadGroup; NS_IF_ADDREF(*aLoadGroup); return NS_OK; }
-  NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { mLoadGroup = aLoadGroup; return NS_OK; }
-  NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) { *aNotificationCallbacks = nsnull; return NS_OK; }
-  NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) { return NS_OK; }
-  NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) { *aSecurityInfo = nsnull; return NS_OK; } 
-  NS_IMETHOD GetContentType(char * *aContentType) { *aContentType = nsnull; return NS_OK; } 
-  NS_IMETHOD SetContentType(const char * aContentType) { return NS_OK; } 
-  NS_IMETHOD GetContentLength(PRInt32 *aContentLength) { return NS_OK; }
-  NS_IMETHOD SetContentLength(PRInt32 aContentLength) { return NS_OK; }
-
-};
-
-PRInt32 DocWriteDummyRequest::gRefCnt;
-
-NS_IMPL_ADDREF(DocWriteDummyRequest);
-NS_IMPL_RELEASE(DocWriteDummyRequest);
-NS_IMPL_QUERY_INTERFACE2(DocWriteDummyRequest, nsIRequest, nsIChannel);
 
 nsresult
-DocWriteDummyRequest::Create(nsIRequest** aResult)
-{
-  DocWriteDummyRequest* request = new DocWriteDummyRequest();
-  if (!request)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-  return request->QueryInterface(NS_GET_IID(nsIRequest), (void**) aResult); 
-}
-
-
-DocWriteDummyRequest::DocWriteDummyRequest()
-{
-  NS_INIT_REFCNT();
-
-  gRefCnt++;
-  mLoadGroup = nsnull;
-  mLoadFlags = 0;
-  mURI = nsnull;
-}
-
-
-DocWriteDummyRequest::~DocWriteDummyRequest()
-{
-  gRefCnt--;
-}
-
-NS_IMETHODIMP
-DocWriteDummyRequest::Cancel(nsresult status)
-{
-  // XXX To be implemented?
-  return NS_OK;
-}
-
-// ----------------------------------------------------------------------------
-
-nsresult
-nsHTMLDocument::AddDocWriteDummyRequest(void)
+nsHTMLDocument::CreateAndAddWyciwygChannel(void)
 { 
   nsresult rv = NS_OK;
+  nsAutoString  url;
+  nsXPIDLCString originalSpec, urlPart;
+  
 
-  rv = DocWriteDummyRequest::Create(getter_AddRefs(mDocWriteDummyRequest));
-  if (NS_FAILED(rv)) return rv;
+  mDocumentURL->GetSpec(getter_Copies(originalSpec));
+  nsCOMPtr<nsIIOService> ioService(do_GetService("@mozilla.org/network/io-service;1", &rv));
+  if (ioService) {
+    ioService->ExtractUrlPart(originalSpec.get(), nsIIOService::url_Path, 0, 0, getter_Copies(urlPart));
+  }
+  
+  // Generate the wyciwyg url
+  url.AssignWithConversion( "wyciwyg://" );
+  url.AppendInt(mWyciwygSessionCnt++, 10);
+  url.AppendWithConversion("/");
+  url.AppendWithConversion(urlPart);
+
+  nsCOMPtr<nsIURI> wcwgURI;
+  NS_NewURI(getter_AddRefs(wcwgURI), url);
+
+  // Create the nsIWyciwygChannel to store
+  // out-of-band document.write() script to cache
+  nsCOMPtr<nsIChannel> channel;
+  // Create a wyciwyg Channel
+  rv = NS_OpenURI(getter_AddRefs(channel), wcwgURI);
+  if (NS_SUCCEEDED(rv) && channel) {    
+    mWyciwygChannel = do_QueryInterface(channel);
+    mWyciwygChannel->CreateCacheEntry(NS_ConvertUCS2toUTF8(url).get());
+  }
 
   nsCOMPtr<nsILoadGroup> loadGroup;
 
   rv = GetDocumentLoadGroup(getter_AddRefs(loadGroup));
   if (NS_FAILED(rv)) return rv;
 
-  if (loadGroup) {
-    nsCOMPtr<nsIChannel> channel(do_QueryInterface(mDocWriteDummyRequest));
+  // Use the Parent document's loadgroup to trigger load notifications
+  if (loadGroup && channel) {
     rv = channel->SetLoadGroup(loadGroup);
     if (NS_FAILED(rv)) return rv;
 
@@ -3959,10 +3881,10 @@ nsHTMLDocument::AddDocWriteDummyRequest(void)
     channel->GetLoadFlags(&loadFlags);
     loadFlags |= nsIChannel::LOAD_DOCUMENT_URI;
     channel->SetLoadFlags(loadFlags);
+    
+    channel->SetOriginalURI(wcwgURI);
 
-    channel->SetOriginalURI(mDocumentURL);
-
-    rv = loadGroup->AddRequest(mDocWriteDummyRequest, nsnull);
+    rv = loadGroup->AddRequest(mWyciwygChannel, nsnull);
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -3970,7 +3892,7 @@ nsHTMLDocument::AddDocWriteDummyRequest(void)
 }
 
 nsresult
-nsHTMLDocument::RemoveDocWriteDummyRequest(void)
+nsHTMLDocument::RemoveWyciwygChannel(void)
 {
   nsresult rv = NS_OK;
 
@@ -3980,11 +3902,12 @@ nsHTMLDocument::RemoveDocWriteDummyRequest(void)
 
   // note there can be a write request without a load group if
   // this is a synchronously constructed about:blank document
-  if (loadGroup && mDocWriteDummyRequest) {
-    rv = loadGroup->RemoveRequest(mDocWriteDummyRequest, nsnull, NS_OK);
+  if (loadGroup && mWyciwygChannel) {
+    mWyciwygChannel->CloseCacheEntry();
+    rv = loadGroup->RemoveRequest(mWyciwygChannel, nsnull, NS_OK);
     if (NS_FAILED(rv)) return rv;
   }
-  mDocWriteDummyRequest = nsnull;
+  mWyciwygChannel = nsnull;
 
   return rv;
 }
