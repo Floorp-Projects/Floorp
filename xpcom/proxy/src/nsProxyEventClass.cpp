@@ -107,7 +107,8 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
                 nsCOMPtr<nsIInterfaceInfo> oldest = info;
                 nsCOMPtr<nsIInterfaceInfo> parent;
 
-                while(NS_SUCCEEDED(oldest->GetParent(getter_AddRefs(parent))))
+                while(NS_SUCCEEDED(oldest->GetParent(getter_AddRefs(parent)))&&
+                      parent)
                 {
                     oldest = parent;
                 }
