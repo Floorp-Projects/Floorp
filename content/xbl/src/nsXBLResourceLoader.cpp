@@ -127,9 +127,11 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
         if (!il) continue;
       }
 
-      // Now kick off the image load
+      // Now kick off the image load...
+      // Passing NULL for pretty much everything -- cause we don't care!
+      // XXX: initialDocumentURI is NULL! 
       nsCOMPtr<imgIRequest> req;
-      il->LoadImage(url, nsnull, nsnull, nsnull, nsnull, nsIRequest::LOAD_BACKGROUND, nsnull, nsnull, getter_AddRefs(req));
+      il->LoadImage(url, nsnull, nsnull, nsnull, nsnull, nsnull, nsIRequest::LOAD_BACKGROUND, nsnull, nsnull, getter_AddRefs(req));
     }
     else if (curr->mType == nsXBLAtoms::stylesheet) {
       if (!cssLoader) {

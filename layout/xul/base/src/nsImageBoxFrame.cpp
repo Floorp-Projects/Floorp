@@ -456,7 +456,18 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
   nsCOMPtr<nsILoadGroup> loadGroup;
   GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
 
-  il->LoadImage(srcURI, nsnull, loadGroup, mListener, aPresContext, mLoadFlags, nsnull, nsnull, getter_AddRefs(mImageRequest));
+  // Get the document URI for the referrer...
+  nsCOMPtr<nsIURI> documentURI;
+  nsCOMPtr<nsIDocument> doc;
+  if (mContent) {
+    (void) mContent->GetDocument(*getter_AddRefs(doc));
+    if (doc) {
+      doc->GetDocumentURL(getter_AddRefs(documentURI));
+    }
+  }
+
+  // XXX: initialDocumentURI is NULL!
+  il->LoadImage(srcURI, nsnull, documentURI, loadGroup, mListener, aPresContext, mLoadFlags, nsnull, nsnull, getter_AddRefs(mImageRequest));
 
   aResize = PR_TRUE;
 }

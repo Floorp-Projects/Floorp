@@ -886,12 +886,17 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
 
         nsCOMPtr<nsIDocument> doc;
         nsCOMPtr<nsILoadGroup> loadGroup;
+        nsCOMPtr<nsIURI> documentURI;
         shell->GetDocument(getter_AddRefs(doc));
         if (doc) {
           doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+
+          // Get the documment URI for the referrer.
+          doc->GetDocumentURL(getter_AddRefs(documentURI));
         }
 
-        il->LoadImage(uri, nsnull, loadGroup, this, context, nsIRequest::LOAD_NORMAL,
+        // XXX: initialDocumentURI is NULL!
+        il->LoadImage(uri, nsnull, documentURI, loadGroup, this, context, nsIRequest::LOAD_NORMAL,
                       nsnull, nsnull, getter_AddRefs(mRequest));
       }
     }

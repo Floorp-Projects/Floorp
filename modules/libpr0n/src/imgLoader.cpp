@@ -112,11 +112,18 @@ inline int merge_flags(const nsLoadFlags& inFlags, nsLoadFlags& outFlags)
   return 1;
 }
 
-/* imgIRequest loadImage (in nsIURI aURI, in nsIURI parentURI, in nsILoadGroup aLoadGroup, in imgIDecoderObserver aObserver, in nsISupports aCX, in nsLoadFlags aLoadFlags, in nsISupports cacheKey, in imgIRequest aRequest); */
+/* imgIRequest loadImage (in nsIURI aURI, in nsIURI initialDocumentURI, in nsILoadGroup aLoadGroup, in imgIDecoderObserver aObserver, in nsISupports aCX, in nsLoadFlags aLoadFlags, in nsISupports cacheKey, in imgIRequest aRequest); */
 
-NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsIURI *parentURI, nsILoadGroup *aLoadGroup,
-                                   imgIDecoderObserver *aObserver, nsISupports *aCX, nsLoadFlags aLoadFlags,
-                                   nsISupports *cacheKey, imgIRequest *aRequest, imgIRequest **_retval)
+NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, 
+                                   nsIURI *initialDocumentURI,
+                                   nsIURI *referrerURI,
+                                   nsILoadGroup *aLoadGroup,
+                                   imgIDecoderObserver *aObserver,
+                                   nsISupports *aCX,
+                                   nsLoadFlags aLoadFlags,
+                                   nsISupports *cacheKey,
+                                   imgIRequest *aRequest,
+                                   imgIRequest **_retval)
 {
   NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
 
@@ -301,7 +308,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsIURI *parentURI, nsILoadGroup
 
     nsCOMPtr<nsIHttpChannel> newHttpChannel = do_QueryInterface(newChannel);
     if (newHttpChannel) {
-      newHttpChannel->SetDocumentURI(parentURI);
+      newHttpChannel->SetDocumentURI(initialDocumentURI);
     }
 
     if (aLoadGroup) {
@@ -348,24 +355,8 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsIURI *parentURI, nsILoadGroup
       nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(newChannel));
 
       if (httpChannel) {
-        nsresult rv;
-        // Get the defloadRequest from the loadgroup
-        nsCOMPtr<nsIRequest> defLoadRequest;
-        rv = aLoadGroup->GetDefaultLoadRequest(getter_AddRefs(defLoadRequest));
-
-        if (NS_SUCCEEDED(rv) && defLoadRequest) {
-          nsCOMPtr<nsIChannel> reqChannel(do_QueryInterface(defLoadRequest));
-
-          if (reqChannel) {
-            // Get the referrer from the loadchannel
-            nsCOMPtr<nsIURI> referrer;
-            rv = reqChannel->GetURI(getter_AddRefs(referrer));
-            if (NS_SUCCEEDED(rv)) {
-              // Set the referrer
-              httpChannel->SetReferrer(referrer, nsIHttpChannel::REFERRER_INLINES);
-            }
-          }   
-        }
+        // Set the referrer
+        httpChannel->SetReferrer(referrerURI, nsIHttpChannel::REFERRER_INLINES);
       }
     }
 

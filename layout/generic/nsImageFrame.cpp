@@ -2001,8 +2001,19 @@ nsImageFrame::RealLoadImage(const nsAString& aSpec, nsIPresContext *aPresContext
 
   nsCOMPtr<nsIURI> baseURI;
   rv = aPresContext->GetBaseURL(getter_AddRefs(baseURI));
+
+  // Get the document URI for the referrer...
+  nsCOMPtr<nsIURI> documentURI;
+  nsCOMPtr<nsIDocument> doc;
+  if (mContent) {
+    (void) mContent->GetDocument(*getter_AddRefs(doc));
+    if (doc) {
+      doc->GetDocumentURL(getter_AddRefs(documentURI));
+    }
+  }
+
   nsCOMPtr<imgIRequest> tempRequest;
-  return il->LoadImage(uri, baseURI, loadGroup, mListener, aPresContext, loadFlags, nsnull, aRequest, getter_AddRefs(tempRequest));
+  return il->LoadImage(uri, baseURI, documentURI, loadGroup, mListener, aPresContext, loadFlags, nsnull, aRequest, getter_AddRefs(tempRequest));
 }
 
 #define INTERNAL_GOPHER_LENGTH 16 /* "internal-gopher-" length */
