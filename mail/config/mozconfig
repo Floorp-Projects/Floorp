@@ -3,7 +3,8 @@
 #  . $topsrcdir/mail/config/mozconfig
 # to the top of your mozconfig file.
 
-export MOZ_THUNDERBIRD=1
+MOZ_THUNDERBIRD=1
+export MOZ_THUNDERBIRD
 mk_add_options MOZ_THUNDERBIRD=1
 
 ac_add_options --enable-crypto
