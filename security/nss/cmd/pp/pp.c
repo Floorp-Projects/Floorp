@@ -35,7 +35,7 @@
  * Pretty-print some well-known BER or DER encoded data (e.g. certificates,
  * keys, pkcs7)
  *
- * $Id: pp.c,v 1.1 2000/03/31 20:12:37 relyea%netscape.com Exp $
+ * $Id: pp.c,v 1.2 2000/10/06 21:40:52 nelsonb%netscape.com Exp $
  */
 
 #include "secutil.h"
@@ -48,6 +48,7 @@ extern int fprintf(FILE *, char *, ...);
 
 #include "pk11func.h"
 #include "nspr.h"
+#include "nss.h"
 
 static void Usage(char *progName)
 {
@@ -126,10 +127,17 @@ int main(int argc, char **argv)
     if (!outFile) outFile = stdout;
 
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    SECU_PKCS11Init(PR_FALSE);
-    SEC_Init();
+    rv = NSS_NoDB_Init(NULL);
+    if (rv != SECSuccess) {
+	fprintf(stderr, "%s: NSS_NoDB_Init failed\n", progName);
+	exit(1);
+    }
 
     rv = SECU_ReadDERFromFile(&der, inFile, ascii);
+    if (rv != SECSuccess) {
+	fprintf(stderr, "%s: SECU_ReadDERFromFile failed\n", progName);
+	exit(1);
+    }
 
     /* Data is untyped, using the specified type */
     data.data = der.data;
