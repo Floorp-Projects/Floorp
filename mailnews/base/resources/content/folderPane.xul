@@ -35,7 +35,7 @@
 	<tree datasources="rdf:null"
 	      id="folderTree" class="mail-folders"
 		  onselect="top.FolderPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
-		  onblur="goOnEvent(this,'blur')"
+		  onblur="goOnEvent(this,'blur')" dd-nodropbetweenrows="true"
 		ondragover="return DragOverTree(event);"
 		ondraggesture="return BeginDragFolderTree(event);"
 		ondragdrop="return DropOnFolderTree(event);"

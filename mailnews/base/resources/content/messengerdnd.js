@@ -48,13 +48,14 @@ function GetRDFService()
 
 function DragOverTree(event)
 {
-    if (event.target.localName != "treecell" &&
-        event.target.localName != "treeitem")
-        return false;
+  if (event.target.localName != "treecell" &&
+       event.target.localName != "treeitem") {        
+    event.preventBubble();
+    return;
+  }
 
 	var validFlavor = false;
 	var dragSession = null;
-	var retVal = true;
 
 	var dragService = GetDragService();
 	if ( !dragService )	return(false);
@@ -65,17 +66,16 @@ function DragOverTree(event)
 	if ( dragSession.isDataFlavorSupported("text/nsmessage") )	validFlavor = true;
 	//XXX other flavors here...
 
-	// touch the attribute on the rowgroup to trigger the repaint with the drop feedback.
+	// touch the attribute on the treeItem to trigger the repaint with the drop feedback
+	// (recall that it is two levels above the target, which is a treeCell).
 	if ( validFlavor )
 	{
 		//XXX this is really slow and likes to refresh N times per second.
-		var rowGroup = event.target.parentNode.parentNode;
-		rowGroup.setAttribute ( "dd-triggerrepaint", 0 );
+		event.target.parentNode.parentNode.setAttribute ( "dd-triggerrepaint", 0 );
 		dragSession.canDrop = true;
-		// necessary??
-		retVal = false; // do not propagate message
+		event.preventBubble();  // do not propagate message
 	}
-	return(retVal);
+
 }
 
 function BeginDragFolderTree(event)
