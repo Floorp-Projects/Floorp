@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -66,6 +66,7 @@ nsPop3Sink::~nsPop3Sink()
     PR_FREEIF(m_accountUrl);
     PR_FREEIF(m_outputBuffer);
     PR_FREEIF(m_mailDirectory);
+    NS_IF_RELEASE(m_popServer);
 	if (m_newMailParser)
 		delete m_newMailParser;
 }
@@ -124,6 +125,7 @@ nsPop3Sink::BeginMailDelivery(PRBool* aBool)
 #ifdef DEBUG
     m_fileCounter++;
 #endif
+
     nsFileSpec fileSpec(m_mailDirectory);
     fileSpec += "Inbox";
     m_outFileStream = new nsOutputFileStream(fileSpec, 
@@ -204,19 +206,24 @@ nsPop3Sink::IncorporateBegin(const char* uidlString,
 }
 
 nsresult
-nsPop3Sink::SetMailDirectory(const char* path)
+nsPop3Sink::SetPopServer(nsIPop3IncomingServer *server)
 {
-    PR_FREEIF(m_mailDirectory);
-    if (path)
-        m_mailDirectory = PL_strdup(path);
-    return NS_OK;
+  NS_IF_RELEASE(m_popServer);
+  m_popServer=server;
+  NS_ADDREF(m_popServer);
+  
+  PR_FREEIF(m_mailDirectory);
+  m_popServer->GetRootFolderPath(&m_mailDirectory);
+
+  return NS_OK;
 }
 
 nsresult
-nsPop3Sink::GetMailDirectory(const char** path)
+nsPop3Sink::GetPopServer(nsIPop3IncomingServer* *server)
 {
-    if (path)
-        *path = m_mailDirectory;
+    if (!server) return NS_ERROR_NULL_POINTER;
+    *server = m_popServer;
+    if (*server) NS_ADDREF(*server);
     return NS_OK;
 }
 

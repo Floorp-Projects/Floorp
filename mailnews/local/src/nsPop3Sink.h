@@ -52,8 +52,8 @@ public:
     NS_IMETHOD BiffGetNewMail();
     NS_IMETHOD SetBiffStateAndUpdateFE(PRUint32 aBiffState);
     NS_IMETHOD SetSenderAuthedFlag(void* closure, PRBool authed);
-    NS_IMETHOD SetMailDirectory(const char* mailDirectory);
-    NS_IMETHOD GetMailDirectory(const char** mailDirectory);
+    NS_IMETHOD SetPopServer(nsIPop3IncomingServer *server);
+    NS_IMETHOD GetPopServer(nsIPop3IncomingServer* *server);
 
     static char*  GetDummyEnvelope(void);
     
@@ -68,6 +68,7 @@ protected:
     char* m_outputBuffer;
     PRInt32 m_outputBufferSize;
     char* m_mailDirectory;
+    nsIPop3IncomingServer *m_popServer;
 	nsParseNewMailState	*m_newMailParser;
 #ifdef DEBUG
     PRInt32 m_fileCounter;

@@ -441,16 +441,29 @@ nsMsgAppCore::Open3PaneWindow()
 nsresult
 nsMsgAppCore::GetNewMail()
 {
-  // get the pop3 service and ask it to fetch new mail....
-  nsIPop3Service * pop3Service = nsnull;
-  nsresult rv = nsServiceManager::GetService(kCPop3ServiceCID, nsIPop3Service::GetIID(),
-                                      (nsISupports **) &pop3Service);
-  if (NS_SUCCEEDED(rv) && pop3Service)
-	  pop3Service->GetNewMail(nsnull,nsnull);
 
-  nsServiceManager::ReleaseService(kCPop3ServiceCID, pop3Service);
+    nsresult rv;
+    NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    NS_WITH_SERVICE(nsIPop3Service, pop3Service, kCPop3ServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-  return NS_OK;
+    nsIMsgIncomingServer *server;
+    rv = mailSession->GetCurrentServer(&server);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIPop3IncomingServer *popServer;
+    rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
+                                (void **)&popServer);
+    if (NS_SUCCEEDED(rv)) {
+        rv = pop3Service->GetNewMail(nsnull,popServer,nsnull);
+        NS_RELEASE(popServer);
+    }
+    
+    NS_RELEASE(server);
+    
+    return rv;
 }
                               
 extern "C"
@@ -509,47 +522,37 @@ nsMsgAppCore::SetWindow(nsIDOMWindow* aWin)
 	return NS_OK;
 }
 
+
+// this should really go through all the pop servers and initialize all
+// folder roots
 void nsMsgAppCore::InitializeFolderRoot()
 {
+    nsresult rv;
+    
 	// get the current identity from the mail session....
-	nsIMsgMailSession * mailSession = nsnull;
-	nsresult rv = nsServiceManager::GetService(kCMsgMailSessionCID,
-	    							  nsIMsgMailSession::GetIID(),
-                                      (nsISupports **) &mailSession);
-	if (NS_SUCCEEDED(rv) && mailSession)
-	{
-		nsIMsgIncomingServer* server = nsnull;
-		rv = mailSession->GetCurrentServer(&server);
-		if (NS_SUCCEEDED(rv) && server)
-		{
-			char * folderRoot = nsnull;
-            nsIPop3IncomingServer *popServer;
-            rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
-                                        (void **)&popServer);
-            if (NS_SUCCEEDED(rv)) {
-                popServer->GetRootFolderPath(&folderRoot);
-                if (folderRoot)
-                    {
-                        // everyone should have a inbox so let's
-                        // tack that folder name on to the root path...
-                        char * fullPath =
-                            PR_smprintf("%s%c%s", folderRoot,
-                                        PR_GetDirectorySeparator(),
-                                        "Inbox");
-                        if (fullPath)
-                            {
-                                m_folderPath = fullPath;
-                                PR_Free(fullPath);
-                            }
-                    } // if we have a folder root for the current identity
-                NS_IF_RELEASE(popServer);
-            }
-			NS_IF_RELEASE(server);
-		} // if we have an server
-		// now release the mail service because we are done with it
-		nsServiceManager::ReleaseService(kCMsgMailSessionCID, mailSession);
-	} // if we have a mail session
+    NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+    if (NS_FAILED(rv)) return;
 
+    nsIMsgIncomingServer* server = nsnull;
+    rv = mailSession->GetCurrentServer(&server);
+    if (NS_SUCCEEDED(rv) && server) {
+        char * folderRoot = nsnull;
+        nsIPop3IncomingServer *popServer;
+        rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
+                                    (void **)&popServer);
+        if (NS_SUCCEEDED(rv)) {
+            popServer->GetRootFolderPath(&folderRoot);
+            if (folderRoot) {
+                // everyone should have a inbox so let's
+                // tack that folder name on to the root path...
+                m_folderPath = folderRoot;
+                m_folderPath += "Inbox";
+            } // if we have a folder root for the current identity
+            NS_IF_RELEASE(popServer);
+        }
+        NS_IF_RELEASE(server);
+    } // if we have an server
+    
 	return;
 }
 

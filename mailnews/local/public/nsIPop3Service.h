@@ -21,6 +21,7 @@
 
 #include "nscore.h"
 #include "nsISupports.h"
+#include "nsIPop3IncomingServer.h"
 #include "MailNewsTypes.h"
 #include "nsFileSpec.h"
 
@@ -64,9 +65,13 @@ public:
 	// call so you can get mail on different pop3 accounts....
 	//////////////////////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD GetNewMail(nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
+	NS_IMETHOD GetNewMail(nsIUrlListener * aUrlListener,
+                          nsIPop3IncomingServer *popServer,
+                          nsIURL ** aURL) = 0;
 
-	NS_IMETHOD CheckForNewMail(nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
+	NS_IMETHOD CheckForNewMail(nsIUrlListener * aUrlListener,
+                               nsIPop3IncomingServer *popServer,
+                               nsIURL ** aURL) = 0;
 
 };
 

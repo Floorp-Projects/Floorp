@@ -20,6 +20,7 @@
 #define nsIPop3Sink_h__
 
 #include "nsISupports.h"
+#include "nsIPop3IncomingServer.h"
 
 /* starting interface nsIPop3Sink */
 
@@ -51,8 +52,8 @@ public:
     NS_IMETHOD BiffGetNewMail() = 0;
     NS_IMETHOD SetBiffStateAndUpdateFE(PRUint32 aBiffState) = 0;
     NS_IMETHOD SetSenderAuthedFlag(void* closure, PRBool authed) = 0;
-    NS_IMETHOD SetMailDirectory(const char* mailDirectory) = 0;
-    NS_IMETHOD GetMailDirectory(const char** mailDirectory) = 0;
+    NS_IMETHOD SetPopServer(nsIPop3IncomingServer *server) = 0;
+    NS_IMETHOD GetPopServer(nsIPop3IncomingServer* *server) = 0;
 };
 
 #endif /*  nsIPop3Sink_h__ */

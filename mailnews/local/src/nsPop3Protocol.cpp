@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -608,12 +608,17 @@ nsPop3Protocol::Load(nsIURL* aURL, nsISupports * aConsumer)
     NS_IF_RELEASE(m_nsIPop3Sink);
     m_nsIPop3URL->GetPop3Sink(&m_nsIPop3Sink);
 
-    const char* mailDirectory = 0;
+    nsIPop3IncomingServer *popServer=nsnull;
+    char* mailDirectory = 0;
 
-    m_nsIPop3Sink->GetMailDirectory(&mailDirectory);
+    m_nsIPop3Sink->GetPopServer(&popServer);
+    popServer->GetRootFolderPath(&mailDirectory);
+    NS_RELEASE(popServer);
 
-	m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), 
-                                                  mailDirectory); 
+    m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), 
+                                                  mailDirectory);
+    PR_Free(mailDirectory);
+  
     PR_ASSERT(m_pop3ConData->uidlinfo);
 
 	m_pop3ConData->biffstate = MSG_BIFF_NOMAIL;
@@ -2485,9 +2490,14 @@ nsPop3Protocol::CommitState(PRBool remove_last_entry)
         m_pop3ConData->newuidl = NULL;
     }
     if (!m_pop3ConData->only_check_for_new_mail) {
-        const char* mailDirectory = 0;
-        m_nsIPop3Sink->GetMailDirectory(&mailDirectory);
+        char* mailDirectory = 0;
+        nsIPop3IncomingServer *popServer = nsnull;
+        m_nsIPop3Sink->GetPopServer(&popServer);
+        popServer->GetRootFolderPath(&mailDirectory);
+        NS_IF_RELEASE(popServer);
+        
         net_pop3_write_state(m_pop3ConData->uidlinfo, mailDirectory);
+        PR_Free(mailDirectory);
     }
     return 0;
 }
