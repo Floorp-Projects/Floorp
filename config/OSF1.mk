@@ -67,6 +67,7 @@ PT_LOCALE		= pt
 
 ifeq ($(OS_RELEASE),V2)
 PORT_FLAGS		+= -DNEED_TIME_R
+V2_CXX_FLAGS	= -x cxx
 else
 OS_LIBS			+= -lrt -lc_r
 endif
@@ -77,7 +78,7 @@ endif
 
 AR			= ar rcl $@
 CC			= cc -ieee_with_inexact -std1
-CCC			= cxx -ieee_with_inexact -msg_quiet
+CCC			= cxx -ieee_with_inexact -msg_quiet $(V2_CXX_FLAGS)
 SHELL			= /usr/bin/ksh
 WHOAMI			= /bin/whoami
 UNZIP_PROG		= $(NS_BIN)unzip
