@@ -2606,6 +2606,7 @@ out:
 
 /* Routines to print out values during debugging. */
 
+static
 void printChar(jschar *cp) {
     fprintf(stderr, "jschar* (0x%p) \"", cp);
     while (*cp)
@@ -2614,6 +2615,7 @@ void printChar(jschar *cp) {
     fputc('\n', stderr);
 }
 
+static
 void printString(JSString *str) {
     jsuint i;
     fprintf(stderr, "string (0x%p) \"", str);
@@ -2625,6 +2627,7 @@ void printString(JSString *str) {
 
 void printVal(jsval val);
 
+static
 void printObj(JSObject *jsobj) {
     jsuint i;
     jsval val;
@@ -2665,11 +2668,13 @@ void printVal(jsval val) {
     fflush(stderr);
 }
 
+static
 void printId(jsid id) {
     fprintf(stderr, "id %d (0x%p) is ", (int)id, (void *)id);
     printVal(js_IdToValue(id));
 }
 
+static
 void printAtom(JSAtom *atom) {
     printString(ATOM_TO_STRING(atom));
 }
