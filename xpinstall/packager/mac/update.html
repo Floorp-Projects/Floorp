@@ -68,13 +68,13 @@ function launch() {
          if ( e.name.match(/browser/i) )
          {
            // browser made up of browser.xpi + install.xpi on the Mac
-           xpi["Browser"] = "browser.xpi";
-           xpi["XPCOM"]   = "xpcom.xpi";
+           xpi["Browser"] = "xpi/browser.xpi";
+           xpi["XPCOM"]   = "xpi/xpcom.xpi";
            numxpi += 2;
          }
          else
          {
-           xpi[e.value] = e.name+".xpi";
+           xpi[e.value] = "xpi/"+e.name+".xpi";
            numxpi++;
          }
        }
