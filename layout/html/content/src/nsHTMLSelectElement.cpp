@@ -407,9 +407,10 @@ nsHTMLSelectElement::GetLength(PRUint32* aLength)
 {
   if (nsnull != mOptions) {
     Init();
+    return mOptions->GetLength(aLength);
   }
-  
-  return mOptions->GetLength(aLength);
+  *aLength = 0;
+  return NS_ERROR_FAILURE;
 }
 
 static PRBool
