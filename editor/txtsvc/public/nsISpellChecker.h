@@ -28,7 +28,7 @@
 
 class nsITextServicesDocument;
 class nsString;
-class nsVoidArray;
+class nsStringArray;
 
 /**
  * A generic interface for a spelling checker.
@@ -50,10 +50,9 @@ public:
    * Selects (hilites) the next misspelled word in the document.
    * @param aWord will contain the misspelled word.
    * @param aSuggestions is an array of nsStrings, that represent the
-   * suggested replacements for the misspelled word. The caller is
-   * responsible for calling delete for each nsString entry in this array.
+   * suggested replacements for the misspelled word.
    */
-  NS_IMETHOD NextMisspelledWord(nsString *aWord, nsVoidArray *aSuggestions) = 0;
+  NS_IMETHOD NextMisspelledWord(nsString *aWord, nsStringArray *aSuggestions) = 0;
 
   /**
    * Checks if a word is misspelled. No document is required to use this method.
@@ -61,10 +60,9 @@ public:
    * @param aIsMisspelled will be set to true if the word is misspelled.
    * @param aSuggestions is an array of nsStrings which represent the
    * suggested replacements for the misspelled word. The array will be empty
-   * if there aren't any suggestions. The caller is responsible for calling
-   * delete for each nsString entry in this array.
+   * if there aren't any suggestions.
    */
-  NS_IMETHOD CheckWord(nsString *aWord, PRBool *aIsMisspelled, nsVoidArray *aSuggestions) = 0;
+  NS_IMETHOD CheckWord(nsString *aWord, PRBool *aIsMisspelled, nsStringArray *aSuggestions) = 0;
 
   /**
    * Replaces the old word with the specified new word.
@@ -97,10 +95,9 @@ public:
   /**
    * Returns the list of words in the user's personal dictionary.
    * @param aWordList is an array of nsStrings that represent the
-   * list of words in the user's personal dictionary. The caller is
-   * responsible for calling delete for each nsString entry in this array.
+   * list of words in the user's personal dictionary.
    */
-  NS_IMETHOD GetPersonalDictionary(nsVoidArray *aWordList) = 0;
+  NS_IMETHOD GetPersonalDictionary(nsStringArray *aWordList) = 0;
 };
 
 #endif // nsISpellChecker_h__
