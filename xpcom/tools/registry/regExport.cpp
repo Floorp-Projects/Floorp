@@ -32,6 +32,20 @@ static void displayValues( nsIRegistry *reg, nsIRegistry::Key root );
 static void printString( const char *value, int indent );
 
 int main( int argc, char *argv[] ) {
+
+
+#ifdef __MWERKS__
+	// Hack in some arguments.  A NULL registry name is supposed to tell libreg
+	// to use the default registry (which does seem to work).
+	argc = 2;
+	const char* myArgs[] =
+	{
+		"regExport"
+	,	NULL
+	};
+	argv = const_cast<char**>(myArgs);
+#endif
+
     // Get nsRegistry factory.
     nsCID cid = NS_IREGISTRY_IID; // Not really an IID, but this factory stuff is a hack anyway.
     nsIFactory *factory;
@@ -246,7 +260,7 @@ static void displayValues( nsIRegistry *reg, nsIRegistry::Key root ) {
     return;
 }
 
-static void printString( const char *value, int indent ) {
+static void printString( const char *value, int /*indent*/ ) {
     // For now, just dump contents.
     printf( "\t = %s", value );
     return;
