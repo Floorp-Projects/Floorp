@@ -108,16 +108,8 @@ namespace JSTypes {
         JSProperties mProperties;
         JSMap* mPrototype;
     public:
-        const JSValue& getProperty(const String& name) const
-        {
-<<<<<<< jstypes.h
-=======
-            return mProperties[name];
-        }
-        
         const JSValue& getProperty(const String& name)
         {
->>>>>>> 1.13
         #ifdef XP_MAC
             JSProperties::const_iterator i = mProperties.find(name);
             if (i != mProperties.end())
