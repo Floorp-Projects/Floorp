@@ -98,6 +98,7 @@ public:
                          PRBool aVisible,
                          nsIWebShell *&aNewWebShell);
   NS_IMETHOD CanCreateNewWebShell(PRBool& aResult);
+  NS_IMETHOD ChildShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode, PRBool& aResult);
   NS_IMETHOD SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
                                 nsIWebShell* aOpenerShell, PRUint32 aChromeMask,
                                 nsIWebShell** aNewShell);
