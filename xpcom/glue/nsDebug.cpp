@@ -150,13 +150,13 @@ NS_COM void nsDebug::AbortIfFalse(const char* aStr, const char* aExpr,
 #elif defined(XP_MAC)
   DebugStr(StringPtr(buf));
   ExitToShell();
-#elif defined(XP_UNIX)
-  PR_Abort();
 #elif defined(XP_BEOS)
   {
 	DEBUGGER(buf + 1);
   } 
 #endif
+  // If we get here, make sure we abort:
+  PR_Abort();
 }
 
 NS_COM PRBool nsDebug::WarnIfFalse(const char* aStr, const char* aExpr,
