@@ -202,7 +202,10 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 			PyThreadState_Delete(threadStateSave);
 	}
 #else
-	PyGILState_Release(state);
+	// If we initialized Python, then we will also have acquired the thread
+	// lock.  In that case, we want to leave it unlocked, so other threads
+	// are free to run, even if they aren't running Python code.
+	PyGILState_Release(bDidInitPython ? PyGILState_UNLOCKED : state);
 #endif 
 
 	NS_TIMELINE_STOP_TIMER("PyXPCOM: Python threadstate setup");
