@@ -252,6 +252,7 @@ protected:
    PRBool    mIsTopWidgetWindow;
    BOOL      mIsScrollBar;
    BOOL      mInSetFocus;
+   BOOL      mChromeHidden;
    nsContentType mContentType;
 
    HWND      GetParentHWND() const;

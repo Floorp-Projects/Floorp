@@ -182,6 +182,7 @@ nsWindow::nsWindow() : nsBaseWidget()
     mOS2Toolkit         = nsnull;
     mIsScrollBar         = FALSE;
     mInSetFocus         = FALSE;
+    mChromeHidden       = FALSE;
 
     mIsTopWidgetWindow = PR_FALSE;
 
@@ -1780,8 +1781,10 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
 
   if (aShouldHide) {
     hwndParent = HWND_OBJECT;
+    mChromeHidden = TRUE;
   } else {
     hwndParent = hwndFrame;
+    mChromeHidden = FALSE;
   }
   hwndTitleBar = (HWND)WinQueryProperty(hwndFrame, "hwndTitleBar");
   if (hwndTitleBar)
@@ -3269,11 +3272,13 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
            title[outlen] = '\0';
          }
        }
-       if (mFrameWnd) {
-         HWND hwndTitleBar = (HWND)WinQueryProperty(mFrameWnd, "hwndTitleBar");
-         WinSetWindowText( hwndTitleBar, title );
-       } else {
-         WinSetWindowText( mWnd, title );
+       WinSetWindowText( GetMainWindow(), title );
+       if (mChromeHidden) {
+         /* If the chrome is hidden, set the text of the titlebar directly */
+         if (mFrameWnd) {
+           HWND hwndTitleBar = (HWND)WinQueryProperty(mFrameWnd, "hwndTitleBar");
+           WinSetWindowText( hwndTitleBar, title );
+         }
        }
        delete [] title;
      }
