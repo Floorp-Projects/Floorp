@@ -25,6 +25,6 @@
 
 DEPTH=..
 
-DIRS= public res src stub
+DIRS= public res src stub notifier
 
 include <$(DEPTH)\config\rules.mak>
