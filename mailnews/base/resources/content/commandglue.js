@@ -758,7 +758,7 @@ function GetSelectedFolderResource()
 function ChangeMessagePaneVisibility(now_hidden)
 {
   // we also have to hide the File/Attachments menuitem
-  node = document.getElementById("fileAttachmentMenu");
+  var node = document.getElementById("fileAttachmentMenu");
   if (node)
     node.hidden = now_hidden;
 
