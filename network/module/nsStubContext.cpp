@@ -309,6 +309,7 @@ PRIVATE void stub_AllConnectionsComplete(MWContext *context)
 #define stub_FreeFormElement                (FreeFormElement_t)stub_noop
 #define stub_FreeImageElement               (FreeImageElement_t)stub_noop
 #define stub_FreeEmbedElement               (FreeEmbedElement_t)stub_noop
+#define stub_FreeBuiltinElement             (FreeBuiltinElement_t)stub_noop
 #define stub_FreeJavaAppElement             (FreeJavaAppElement_t)stub_noop
 #define stub_CreateEmbedWindow              (CreateEmbedWindow_t)stub_noop
 #define stub_SaveEmbedWindow                (SaveEmbedWindow_t)stub_noop
@@ -321,6 +322,7 @@ PRIVATE void stub_AllConnectionsComplete(MWContext *context)
 #define stub_DisplayText                    (DisplayText_t)stub_noop
 #define stub_DisplayImage                   (DisplayImage_t)stub_noop
 #define stub_DisplayEmbed                   (DisplayEmbed_t)stub_noop
+#define stub_DisplayBuiltin                 (DisplayBuiltin_t)stub_noop
 #define stub_DisplayJavaApp                 (DisplayJavaApp_t)stub_noop
 #define stub_DisplaySubImage                (DisplaySubImage_t)stub_noop
 #define stub_DisplayEdge                    (DisplayEdge_t)stub_noop
