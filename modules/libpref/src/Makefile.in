@@ -108,7 +108,7 @@ include $(topsrcdir)/config/rules.mk
 VPATH += $(srcdir)/init $(srcdir)/unix
 
 # this comes after rules.mk because rules.mk blows it away
-INCLUDES	+= -I$(topsrcdir)/cmd/xfe/icons -I$(srcdir)/unix -I./unix
+INCLUDES	+= -I$(srcdir)/unix -I./unix
 
 $(LIBRARY): $(OBJS)
 

@@ -105,7 +105,7 @@ XFE_Splash::XFE_Splash(Widget toplevel)
 
   fe_InitColormap (m_context);
 
-  PREF_AlterSplashIcon(&Splash);
+  //PREF_AlterSplashIcon(&Splash);
 
   fe_NewMakeIcon(m_shell,
 		 BlackPixelOfScreen(XtScreen(m_shell)), //XXX hack... doesn't really matter though.

@@ -104,7 +104,7 @@ DEFINES += -DNSPR20
 VPATH += init/ unix/
 
 # this comes after rules.mk because rules.mk blows it away
-INCLUDES	+= -I$(DEPTH)/cmd/xfe/icons -Iunix
+INCLUDES	+= -Iunix
 
 $(LIBRARY): $(OBJS)
 

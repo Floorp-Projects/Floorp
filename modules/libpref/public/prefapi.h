@@ -382,10 +382,8 @@ PR_EXTERN(int) PREF_UnregisterCallback( const char* domain,
 PR_EXTERN(XP_Bool) PREF_IsAutoAdminEnabled();
 
 #ifdef XP_UNIX
-struct fe_icon_data;
 typedef void* XmStringPtr;
 typedef void* KeySymPtr;
-PR_EXTERN(void) PREF_AlterSplashIcon(struct fe_icon_data*);
 PR_EXTERN(XP_Bool) PREF_GetLabelAndMnemonic(char*, char**, XmStringPtr xmstring, KeySymPtr keysym);
 PR_EXTERN(XP_Bool) PREF_GetUrl(char*, char**);
 #endif
