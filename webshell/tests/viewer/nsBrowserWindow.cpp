@@ -1449,15 +1449,18 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
         NS_SUCCEEDED(mLocation->QueryInterface(kIWidgetIID,
                                                (void**)&locationWidget))) {
       if (mThrobber) {
+	      PRInt32 width = PR_MAX(aWidth - (2*BUTTON_WIDTH + THROBBER_WIDTH), 0);
+      
 	      locationWidget->Resize(2*BUTTON_WIDTH, 0,
-                               aWidth - (2*BUTTON_WIDTH + THROBBER_WIDTH),
+                               width,
                                BUTTON_HEIGHT,
                                PR_TRUE);
 	      mThrobber->MoveTo(aWidth - THROBBER_WIDTH, 0);
       }
       else {
+	      PRInt32 width = PR_MAX(aWidth - 2*BUTTON_WIDTH, 0);
 	      locationWidget->Resize(2*BUTTON_WIDTH, 0,
-                               aWidth - 2*BUTTON_WIDTH,
+                               width,
                                BUTTON_HEIGHT,
                                PR_TRUE);
       }
