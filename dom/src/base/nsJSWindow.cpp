@@ -1026,7 +1026,6 @@ WindowAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
-  nsAutoString b0;
 
   *rval = JSVAL_NULL;
 
@@ -1050,18 +1049,114 @@ WindowAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  if (argc >= 0) {
 
-    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
-    if (NS_OK != nativeThis->Alert(b0)) {
+    if (NS_OK != nativeThis->Alert(cx, argv+0, argc-0)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function alert requires 1 parameters");
+    JS_ReportError(cx, "Function alert requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Confirm
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowConfirm(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRBool nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.confirm", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Confirm(cx, argv+0, argc-0, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    *rval = BOOLEAN_TO_JSVAL(nativeRet);
+  }
+  else {
+    JS_ReportError(cx, "Function confirm requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Prompt
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowPrompt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.prompt", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Prompt(cx, argv+0, argc-0, nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function prompt requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -2531,7 +2626,9 @@ static JSFunctionSpec WindowMethods[] =
 {
   {"Equals",          WindowEquals,     1},
   {"dump",          WindowDump,     1},
-  {"alert",          WindowAlert,     1},
+  {"alert",          WindowAlert,     0},
+  {"confirm",          WindowConfirm,     0},
+  {"prompt",          WindowPrompt,     0},
   {"focus",          WindowFocus,     0},
   {"blur",          WindowBlur,     0},
   {"close",          WindowClose,     0},

@@ -134,7 +134,9 @@ public:
   NS_IMETHOD    Equals(nsIDOMWindow* aWindow, PRBool* aReturn);
 
   NS_IMETHOD    Dump(const nsString& aStr);
-  NS_IMETHOD    Alert(const nsString& aStr);
+  NS_IMETHOD    Alert(JSContext *cx, jsval *argv, PRUint32 argc);
+  NS_IMETHOD    Confirm(JSContext *cx, jsval *argv, PRUint32 argc, PRBool* aReturn);
+  NS_IMETHOD    Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aReturn);
   NS_IMETHOD    Focus();
   NS_IMETHOD    Blur();
   NS_IMETHOD    Close();
