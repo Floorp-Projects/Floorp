@@ -140,8 +140,9 @@ PRInt32 nsMsgBiffManager::FindServer(nsIMsgIncomingServer *server)
 
 nsresult nsMsgBiffManager::AddBiffEntry(nsBiffEntry *biffEntry)
 {
+	PRInt32 i;
 	PRInt32 count = mBiffArray->Count();
-	for(PRInt32 i = 0; i < count; i++)
+	for(i = 0; i < count; i++)
 	{
 		nsBiffEntry *current = (nsBiffEntry*)mBiffArray->ElementAt(i);
 		if(biffEntry->nextBiffTime < current->nextBiffTime)
