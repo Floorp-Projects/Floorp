@@ -868,6 +868,10 @@ interface jsdIScript : jsdIEphemeral
      */
     readonly attribute string        functionName;
     /**
+     * Fetch the function object as a jsdIValue.
+     */
+    readonly attribute jsdIValue     functionObject;
+    /**
      * Source code for this script, without function declaration.
      */
     readonly attribute AString functionSource;
