@@ -249,7 +249,12 @@ PopulateCompWinKeys(char *cfgText)
 	/* ComponentsWin: components and their descriptions, and other properties */
 	gControls->cfg->selCompMsg = NewHandleClear(kValueMaxLen);
 	FillKeyValueUsingResID(sCompDlg, sMsg0, gControls->cfg->selCompMsg, cfgText);
-
+	
+	/* AdditionsWin: additional components */
+	gControls->cfg->selAddMsg = NewHandleClear(kValueMaxLen);
+	FillKeyValueUsingResID(sAddDlg, sMsg0, gControls->cfg->selAddMsg, cfgText);
+	gControls->cfg->bAdditionsExist = false;
+	
 	gControls->cfg->numComps = 0;
 	for (i=0; i<kMaxComponents; i++)
 	{
@@ -357,7 +362,7 @@ PopulateCompWinKeys(char *cfgText)
 		if (currKey)
 			DisposePtr(currKey);
 		
-		/* attributes (SELECTED|INVISIBLE|LAUNCHAPP) */
+		/* attributes (SELECTED|INVISIBLE|LAUNCHAPP|ADDITIONAL) */
 		GetIndString(pkey, rParseKeys, sAttributes);
 		currKey = PascalToC(pkey);
 		Handle attrValH = NewHandleClear(255);
@@ -401,6 +406,18 @@ PopulateCompWinKeys(char *cfgText)
 				gControls->cfg->comp[i].launchapp = false;
 			if (attrType)
 				DisposePtr(attrType);
+			
+			GetIndString(pkey, rParseKeys, sADDITIONAL);
+			attrType = PascalToC(pkey);
+			if (NULL != strstr(*attrValH, attrType))
+			{
+				gControls->cfg->comp[i].additional = true;
+				gControls->cfg->bAdditionsExist = true; /* doesn't matter if set multiple times */
+			}
+			else
+				gControls->cfg->comp[i].additional = false;
+			if (attrType)
+				DisposePtr(attrType);	
 				
 			HUnlock(attrValH);
 		}

@@ -26,12 +26,6 @@
 /*-----------------------------------------------------------*
  *   Components Window
  *-----------------------------------------------------------*/
-
-#define INVERT_HIGHLIGHT(_rectPtr)          \
-			hiliteVal = LMGetHiliteMode();  \
-			BitClr(&hiliteVal, pHiliteBit); \
-			LMSetHiliteMode(hiliteVal);	    \
-			InvertRect(_rectPtr);
 			
 static int rowToComp[kMaxComponents];
 static int numRows = 0;			
@@ -91,7 +85,8 @@ ShowComponentsWin(void)
 	{
 		if (totalRows >= gControls->cfg->numComps)
 			break;
-		if (!gControls->cfg->comp[i].invisible && (gControls->cfg->st[instChoice].comp[i] == kInSetupType))
+		if (!gControls->cfg->comp[i].invisible && !gControls->cfg->comp[i].additional &&
+			(gControls->cfg->st[instChoice].comp[i] == kInSetupType))
 			totalRows++;
 	}
 		
@@ -152,7 +147,7 @@ ShowComponentsWin(void)
 }
 
 Boolean
-PopulateCompInfo(void)
+PopulateCompInfo()
 {
 	int 	i;
 	char	*currDesc;
@@ -162,7 +157,7 @@ PopulateCompInfo(void)
 	
 	for (i=0; i<gControls->cfg->numComps; i++)
 	{
-		if (gControls->cfg->comp[i].invisible == false)
+		if (!gControls->cfg->comp[i].invisible && !gControls->cfg->comp[i].additional)
 		{
 			HLock(gControls->cfg->comp[i].shortDesc);
 			currDesc = *gControls->cfg->comp[i].shortDesc;
@@ -353,7 +348,7 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 			ClearDiskSpaceMsgs();
 						
 			KillControls(gWPtr);
-			ShowTerminalWin();
+			ShowAdditionsWin();
 			return;
 		}
 	}

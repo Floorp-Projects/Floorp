@@ -37,7 +37,10 @@ void HandleNextEvent(EventRecord* nextEvt)
 		case mouseUp:
 			if (gCurrWin == kComponentsID)
 				InComponentsContent(nextEvt, gWPtr);
+			else if (gCurrWin == kAdditionsID)
+				InAdditionsContent(nextEvt, gWPtr);
 			break;
+			
 
 		case keyDown:
 			HandleKeyDown(nextEvt);
@@ -144,15 +147,15 @@ void HandleKeyDown(EventRecord* evt)
 				case kComponentsID:					
 					ClearDiskSpaceMsgs();
 					KillControls(gWPtr);
-					// if additions exist				// XXX_ADD
-						// show additions dialog
-					// else
+					if (gControls->cfg->bAdditionsExist)
+						ShowAdditionsWin();
+					else
 						ShowTerminalWin();
 					return;
 				case kAdditionsID:
 					KillControls(gWPtr);
-					// reinit top of listbox
-					// erase any thing and clear disk space msgs
+					// XXX reinit top of listbox
+					ClearDiskSpaceMsgs();
 					ShowTerminalWin();
 					return;
 				case kTerminalID:
@@ -335,7 +338,11 @@ void HandleOSEvt(EventRecord* evt)
 			switch(gCurrWin)
 			{
 				case kComponentsID:
-					MouseMovedInComponentsWin(evt); 
+					MouseMovedInComponentsWin(evt);
+					break; 
+				case kAdditionsID:
+					MouseMovedInAdditionsWin(evt);
+					break;
 				default:
 					break;
 			}

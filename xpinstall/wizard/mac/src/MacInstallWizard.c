@@ -212,6 +212,7 @@ InitControlsObject(void)
 	gControls->ww 	= (WelcWin *) 		NewPtrClear(sizeof(WelcWin));
 	gControls->stw 	= (SetupTypeWin *) 	NewPtrClear(sizeof(SetupTypeWin));	
 	gControls->cw 	= (CompWin *) 		NewPtrClear(sizeof(CompWin));
+	gControls->aw 	= (CompWin *) 		NewPtrClear(sizeof(CompWin));
 	gControls->tw 	= (TermWin*) 		NewPtrClear(sizeof(TermWin));
 
 	if (!gControls->lw || !gControls->ww || !gControls->stw || 

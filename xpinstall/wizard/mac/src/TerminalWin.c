@@ -269,7 +269,12 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 			
 			/* treat last setup type  selection as custom */
 			if (gControls->opt->instChoice == gControls->cfg->numSetupTypes)
-				ShowComponentsWin();
+			{
+				if (gControls->cfg->bAdditionsExist)
+					ShowAdditionsWin();
+				else
+					ShowComponentsWin();
+			}
 			else
 				ShowSetupTypeWin();
 			return;

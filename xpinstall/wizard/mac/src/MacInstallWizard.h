@@ -98,7 +98,13 @@ if (err) 								\
 	| (unsigned long)((_src2char & 0x000000FF) << 16) 								\
 	| (unsigned long)((_src3char & 0x000000FF) << 8)								\
 	| (unsigned long)((_src4char & 0x000000FF)))))
-											
+	
+#define INVERT_HIGHLIGHT(_rectPtr)          \
+			hiliteVal = LMGetHiliteMode();  \
+			BitClr(&hiliteVal, pHiliteBit); \
+			LMSetHiliteMode(hiliteVal);	    \
+			InvertRect(_rectPtr);
+														
 									
 #define NUM_WINS 		5
 #define kLicenseID		0		/* window object ids */
@@ -284,6 +290,7 @@ if (err) 								\
 #define sC				20
 
 #define sCompDlg		21
+#define sAddDlg			48
 #define sComponent		22
 #define sArchive		23
 #define sInstSize		24
@@ -311,7 +318,8 @@ if (err) 								\
 		
 #define	sSELECTED		28
 #define sINVISIBLE		29
-#define	sLAUNCHAPP		30	/* end parse keys */
+#define	sLAUNCHAPP		30	
+#define sADDITIONAL		47	/* end parse keys */
 
 #define	eParseFailed	501	/* errors */
 
@@ -337,6 +345,7 @@ typedef struct InstComp {
 	Boolean selected;
 	Boolean invisible;
 	Boolean launchapp;
+	Boolean	additional;
 	
 	/* dependees */
 	Handle	depName[kMaxComponents];
@@ -401,6 +410,7 @@ typedef struct Config {
 	short		numComps;
 	Handle		selCompMsg;
 	Handle 		selAddMsg;
+	Boolean 	bAdditionsExist;
 	InstComp	comp[kMaxComponents];
 	
 	/* TerminalWin */
@@ -503,11 +513,12 @@ typedef struct InstWiz {
 	Options		*opt;
 	
 	/* Window control-holding abstractions */
-	LicWin			*lw;
-	WelcWin			*ww;
-	SetupTypeWin	*stw;
-	CompWin			*cw;
-	TermWin 		*tw;
+	LicWin			*lw;	/* LicenseWin */
+	WelcWin			*ww;	/* WelcomeWin */
+	SetupTypeWin	*stw;	/* SetupTypeWin */
+	CompWin			*cw;	/* ComponentsWin */
+	CompWin			*aw;	/* AdditionsWin */
+	TermWin 		*tw;	/* TerminalWin */
 			
 	/* General wizard controls */
 	ControlHandle backB;
@@ -548,7 +559,6 @@ void		MakeMenus(void);
 void 		MainEventLoop(void);
 void		ErrorHandler(void);
 void		Shutdown(void);
-void		EssentialFiles2Components(char *filename);
 
 /*-----------------------------------------------------------*
  *   Parser 
@@ -645,6 +655,8 @@ short		pstrcmp(unsigned char*, unsigned char*);
 unsigned char* pstrcpy(unsigned char*, unsigned char*);
 unsigned char* pstrcat(unsigned char*, unsigned char*);
 void		InSetupTypeContent(EventRecord *, WindowPtr);
+Boolean		LegacyFileCheck(short, long);
+int			CompareVersion(Handle, Handle);
 void		EnableSetupTypeWin(void);
 void		DisableSetupTypeWin(void);
 
@@ -663,8 +675,6 @@ void		UpdateRowHighlight(Point);
 void		UpdateLongDesc(int);
 void		ResolveDependees(int, int);
 void		UpdateRefCount(int, int);
-Boolean		LegacyFileCheck(short, long);
-int			CompareVersion(Handle, Handle);
 void		EnableComponentsWin(void);
 void		DisableComponentsWin(void);
 
@@ -672,8 +682,15 @@ void		DisableComponentsWin(void);
  *   AdditionsWin
  *-----------------------------------------------------------*/
 void		ShowAdditionsWin(void); 
+Boolean		AddPopulateCompInfo(void);
 void		InAdditionsContent(EventRecord*, WindowPtr);
 void		UpdateAdditionsWin(void);
+void		MouseMovedInAdditionsWin(EventRecord *);
+short		AddGetCompRow(int);
+void		AddSetOptInfo(Boolean);
+void		AddInitRowHighlight(int);
+void		AddUpdateRowHighlight(Point);
+void		AddUpdateLongDesc(int);
 void		EnableAdditionsWin(void);
 void		DisableAdditionsWin(void);
  
