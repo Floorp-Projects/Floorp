@@ -152,8 +152,8 @@ class nsViewer : public nsDispatchListener {
     virtual nsDocLoader* SetupViewer(nsIWidget **aMainWindow,int argc, char **argv);
     virtual void CleanupViewer(nsDocLoader* aDl);
     virtual nsEventStatus DispatchMenuItem(nsGUIEvent *aEvent);
-    virtual nsEventStatus nsViewer::DispatchMenuItem(PRUint32 aId);
-    virtual nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd);
+    virtual nsEventStatus DispatchMenuItem(PRUint32 aId);
+    virtual nsEventStatus ProcessMenu(PRUint32 aId, WindowData* wd);
 
     virtual nsresult ShowPrintPreview(nsIWebWidget* web, PRIntn aColumns);
     virtual WindowData* CreateTopLevel(const char* title, int aWidth, int aHeight);
