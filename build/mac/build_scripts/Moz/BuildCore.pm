@@ -9,6 +9,8 @@ use vars qw( @ISA @EXPORT );
 
 # perl includes
 use Cwd;
+use POSIX;
+use Time::Local;
 use File::Basename;
 use LWP::Simple;
 
@@ -45,7 +47,7 @@ sub DoPrebuildCheck()
 }
 
 #//--------------------------------------------------------------------------------------------------
-#// Configure Build System
+#// GenBuildSystemInfo
 #//--------------------------------------------------------------------------------------------------
 
 sub GenBuildSystemInfo()
@@ -240,8 +242,8 @@ sub get_url_contents($)
 #//--------------------------------------------------------------------------------------------------
 sub uniq
 {
-  my $lastval;
-  grep(($_ ne $lastval, $lastval = $_)[$[], @_);
+    my $lastval;
+    grep(($_ ne $lastval, $lastval = $_)[$[], @_);
 }
 
 
@@ -250,22 +252,81 @@ sub uniq
 #//--------------------------------------------------------------------------------------------------
 sub get_files_from_content($)
 {
-  my($content) = @_;
-
-  my(@jscalls) = grep (/return js_file_menu[^{]*/, split(/\n/, $content));
-  my $i;
-
-  for ($i = 0; $i < @jscalls ; $i++)
-  {
-    $jscalls[$i] =~ s/.*\(|\).*//g;
-    my(@callparams) = split(/,/, $jscalls[$i]);
-    my ($repos, $dir, $file, $rev) = grep(s/['\s]//g, @callparams);
-    $jscalls[$i] = "$dir/$file";
-  }
+    my($content) = @_;
+  
+    my(@jscalls) = grep (/return js_file_menu[^{]*/, split(/\n/, $content));
+    my $i;
+  
+    for ($i = 0; $i < @jscalls ; $i++)
+    {
+        $jscalls[$i] =~ s/.*\(|\).*//g;
+        my(@callparams) = split(/,/, $jscalls[$i]);
+        my ($repos, $dir, $file, $rev) = grep(s/['\s]//g, @callparams);
+        $jscalls[$i] = "$dir/$file";
+    }
 
   &uniq(sort(@jscalls));
 }
 
+#//--------------------------------------------------------------------------------------------------
+#// getLastUpdateTime
+#// 
+#// Get the last time we updated. Return 0 on failure
+#//--------------------------------------------------------------------------------------------------
+sub getLastUpdateTime($)
+{
+    my($timestamp_file) = @_;
+ 
+    my($time_string);
+    
+    local(*TIMESTAMP_FILE);  
+    unless (open(TIMESTAMP_FILE, "< $timestamp_file")) { return 0; }
+
+    while (<TIMESTAMP_FILE>)
+    {
+        my($line) = $_;
+        chomp($line);
+
+        # ignore comments and empty lines
+        if ($line =~ /^\#/ || $line =~ /^\s*$/) {
+            next;
+        }
+        
+        $time_string = $line;
+    }
+
+    # get the epoch seconds
+    my($last_update_secs) = $time_string;
+    $last_update_secs =~ s/\s#.+$//;
+    
+    print "FAST_UPDATE found that you last updated at ".localtime($last_update_secs)."\n";
+    
+    # how long ago was this, in hours?
+    my($gm_now) = time();
+    my($update_hours) = 1 + ceil(($gm_now - $last_update_secs) / (60 * 60));
+    
+    return $update_hours;
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// saveCheckoutTimestamp
+#// 
+#// Create a file on disk containing the current time. Param is time(), which is an Epoch seconds
+#// (and therefore in GMT).
+#// 
+#//--------------------------------------------------------------------------------------------------
+sub saveCheckoutTimestamp($$)
+{
+    my($gm_secs, $timestamp_file) = @_;
+        
+    local(*TIMESTAMP_FILE);
+    open(TIMESTAMP_FILE, ">$timestamp_file") || die "Failed to open $timestamp_file\n";
+    print(TIMESTAMP_FILE "# time of last checkout or update, in GMT. Used by FAST_UPDATE\n");
+    print(TIMESTAMP_FILE "$gm_secs \# around ".localtime()." local time\n");
+    close(TIMESTAMP_FILE);
+
+}
 
 #//--------------------------------------------------------------------------------------------------
 #// FastUpdate
@@ -273,39 +334,82 @@ sub get_files_from_content($)
 #// Use Bonsai url data to update only those dirs which have new files
 #// 
 #//--------------------------------------------------------------------------------------------------
-sub FastUpdate($)
+sub FastUpdate($$)
 {
-    my($num_hours) = @_;
+    my($modules, $timestamp_file) = @_;          # list of modules to check out
 
-    my($the_module) = "SeaMonkeyAll";
-    my($the_branch) = "HEAD";
-    my($search_type) = "hours";
-    my($min_date) = "";
-    my($max_date) = "";
-    my($url) = "http://bonsai.mozilla.org/cvsquery.cgi?treeid=default&module=${the_module}&branch=${the_branch}&branchtype=match&dir=&file=&filetype=match&who=&whotype=match&sortby=Date&hours=${num_hours}&date=${search_type}&mindate=${min_date}&maxdate=${max_date}&cvsroot=%2Fcvsroot";
+    my($num_hours) = getLastUpdateTime($timestamp_file);
+    if ($num_hours == 0 || $num_hours > 170) {
+        print "Can't fast_update; last update was too long ago, or never. Doing normal checkout.\n";
+        return 0;
+    }
 
-    my(@files) = &get_files_from_content(&get_url_contents($url));
+    print "Doing fast update, pulling files changed in the last $num_hours hours\n";
 
-	my(@cvs_co_list);
+    my($cvsfile) = AskAndPersistFile($main::filepaths{"sessionpath"});
+    my($session) = Moz::MacCVS->new( $cvsfile );
+    unless (defined($session)) { die "Error: Checkout aborted. Cannot create session file: $session" }
 
-	my($co_file);
-	foreach $co_file (@files)
-	{
-	  my(@cvs_co) = ["", "", ""];
-	  @cvs_co[0] = $co_file;
-	  push(@cvs_co_list, \@cvs_co);
-	}
+    # activate MacCVS
+    ActivateApplication('Mcvs');
+    
+    my($checkout_start_time) = time();
 
-	CheckoutModules(\@cvs_co_list);
+    #print "Time now is $checkout_start_time ($checkout_start_time + 0)\n";
+    
+    my($this_co);
+    foreach $this_co (@$modules)
+    {
+        my($module, $revision, $date) = ($this_co->[0], $this_co->[1], $this_co->[2]);        
+        
+        # assume that things pulled by date wont change
+        if ($date ne "") {
+            print "$module is pulled by date, so ignoring in FastUpdate.\n";
+            next;
+        }
+
+        my($search_type) = "hours";
+        my($min_date) = "";
+        my($max_date) = "";
+        my($url) = "http://bonsai.mozilla.org/cvsquery.cgi?treeid=default&module=${module}&branch=${revision}&branchtype=match&dir=&file=&filetype=match&who=&whotype=match&sortby=Date&hours=${num_hours}&date=${search_type}&mindate=${min_date}&maxdate=${max_date}&cvsroot=%2Fcvsroot";
+
+        if ($revision eq "") {
+            print "Getting list of checkins to $module from Bonsai...\n";
+        } else {
+            print "Getting list of checkins to $module on branch $revision from Bonsai...\n";
+        }
+        my(@files) = &get_files_from_content(&get_url_contents($url));
+
+        if ($#files > 0)
+        {
+           my(@cvs_co_list);
+        
+           my($co_file);
+           foreach $co_file (@files)
+           {
+               print "Updating $co_file\n";
+               push(@cvs_co_list, $co_file);
+           }
+
+            my($result) = $session->update($revision, \@cvs_co_list);
+            # result of 1 is success
+            if (!$result) { die "Error: Fast update failed\n"; }
+        } else {
+            print "No files in this module changed\n";        
+        }
+    }
+    
+    saveCheckoutTimestamp($checkout_start_time, $timestamp_file);
+    return 1;
 }
 
 
 #//--------------------------------------------------------------------------------------------------
 #// Checkout
 #//--------------------------------------------------------------------------------------------------
-sub CheckoutModules($)
+sub CheckoutModules($$$)
 {
-    my($modules) = @_;          # list of modules to check out
+    my($modules, $pull_date, $timestamp_file) = @_;          # list of modules to check out
 
     my($start_time) = TimeStart();
 
@@ -314,34 +418,34 @@ sub CheckoutModules($)
     my($session) = Moz::MacCVS->new( $cvsfile );
     unless (defined($session)) { die "Error: Checkout aborted. Cannot create session file: $session" }
 
+    my($checkout_start_time) = time();
+    
     # activate MacCVS
     ActivateApplication('Mcvs');
 
     my($this_co);
     foreach $this_co (@$modules)
     {
-        my($module, $revision, $date) = ($this_co->[0], $this_co->[1], $this_co->[2]);        
+        my($module, $revision, $date) = ($this_co->[0], $this_co->[1], $this_co->[2]);
+        if ($date eq "") {
+            $date = $pull_date;
+        }
         CheckOutModule($session, $module, $revision, $date);
         # print "Checking out $module with ref $revision, date $date\n";
     }
 
+    saveCheckoutTimestamp($checkout_start_time, $timestamp_file);
     TimeEnd($start_time, "Checkout");
 }
 
 #//--------------------------------------------------------------------------------------------------
-#// Checkout
+#// ReadCheckoutModulesFile
 #//--------------------------------------------------------------------------------------------------
-sub Checkout($$)
+sub ReadCheckoutModulesFile($$)
 {
-    my($checkout_list, $pull_date) = @_;
+    my($modules_file, $co_list) = @_;
     
-    unless ( $main::build{pull} ) { return; }
-
-    StartBuildModule("pull");
-
-    my(@cvs_co_list);
-    
-    my($checkout_file) = getScriptFolder().":".$checkout_list;
+    my($checkout_file) = getScriptFolder().":".$modules_file;
     local(*CHECKOUT_FILE);  
     open(CHECKOUT_FILE, "< $checkout_file") || die "Error: failed to open checkout list $checkout_file\n";
     while (<CHECKOUT_FILE>)
@@ -380,21 +484,53 @@ sub Checkout($$)
         }
         else
         {
-            die "Error: unrecognized line '$line' in $checkout_list\n";
+            die "Error: unrecognized line '$line' in $modules_file\n";
         }
         
         # strip surrounding space from date
         @cvs_co[$date] =~ s/^\s*|\s*$//g;
-        if (@cvs_co[$date] eq "") {
-            @cvs_co[$date] = $pull_date;
-        }
+        
         # print "Going to check out '@cvs_co[$module]', '@cvs_co[$revision]', '@cvs_co[$date]'\n";
-        push(@cvs_co_list, \@cvs_co);
+        push(@$co_list, \@cvs_co);
     }
 
     close(CHECKOUT_FILE);
+}
 
-    CheckoutModules(\@cvs_co_list);
+#//--------------------------------------------------------------------------------------------------
+#// PullFromCVS
+#//--------------------------------------------------------------------------------------------------
+sub PullFromCVS($$)
+{
+    unless ( $main::build{pull} ) { return; }
+    
+    my($modules_file, $timestamp_file) = @_;
+
+    StartBuildModule("pull");
+    
+    my(@cvs_co_list);
+    ReadCheckoutModulesFile($modules_file, \@cvs_co_list);
+
+    if ($main::FAST_UPDATE && $main::options{pull_by_date})
+    {
+        die "Error: you can't use FAST_UPDATE if you are pulling by date.\n";
+    }
+
+    my($did_fast_update) = $main::FAST_UPDATE && FastUpdate(\@cvs_co_list, $timestamp_file);
+    if (!$did_fast_update)
+    {
+        my($pull_date) = "";
+        if ($main::options{pull_by_date})
+        {
+            # acceptable CVS date formats are (in local time):
+            # ISO8601 (e.g. "1972-09-24 20:05") and Internet (e.g. "24 Sep 1972 20:05").
+            # Perl's localtime() string format also seems to work.
+            $pull_date = localtime().""; # force string interp.
+            print "Pulling by date $pull_date\n";
+        }
+
+        CheckoutModules(\@cvs_co_list, $pull_date, $timestamp_file);
+    }
 
     EndBuildModule("pull");
 }
@@ -442,24 +578,8 @@ sub RunBuild($$$$)
     # run a pre-build check to see that the tools etc are in order
     DoPrebuildCheck();
     
-    if ($main::FAST_UPDATE)
-    {
-        my($hours) = 8;     # update files checked in during last 8 hours
-        FastUpdate($hours);
-    } else
-    {
-        my($pull_date) = "";
-        if ($main::options{pull_by_date})
-        {
-            # acceptable CVS date formats are (in local time):
-            # ISO8601 (e.g. "1972-09-24 20:05") and Internet (e.g. "24 Sep 1972 20:05").
-            # Perl's localtime() string format also seems to work.
-            $pull_date = localtime().""; # force string interp.
-            print "Pulling by date $pull_date\n";
-            
-        }
-        Checkout($input_files->{"checkoutdata"}, $pull_date);
-    }
+    # do the pull
+    PullFromCVS($input_files->{"checkoutdata"}, $input_files->{"checkouttime"});
     
     unless ($do_build) { return; }
 
