@@ -104,6 +104,7 @@ class nsJAR : public nsIZipReader
     PRInt16                  mGlobalStatus;   // Global signature verification status
     PRIntervalTime           mReleaseTime;    // used by nsZipReaderCache for flushing entries
     nsZipReaderCache*        mCache;          // if cached, this points to the cache it's contained in
+	PRLock*					 mLock;	
 
     //-- Private functions
     nsresult ParseManifest(nsISignatureVerifier* verifier);

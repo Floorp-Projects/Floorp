@@ -148,7 +148,7 @@ DeleteManifestEntry(nsHashKey* aKey, void* aData, void* closure)
 // The following initialization makes a guess of 10 entries per jarfile.
 nsJAR::nsJAR(): mManifestData(nsnull, nsnull, DeleteManifestEntry, nsnull, 10),
                 mParsedManifest(PR_FALSE), mGlobalStatus(nsIZipReader::NOT_SIGNED),
-                mReleaseTime(0), mCache(nsnull)
+                mReleaseTime(0), mCache(nsnull), mLock(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -156,6 +156,8 @@ nsJAR::nsJAR(): mManifestData(nsnull, nsnull, DeleteManifestEntry, nsnull, 10),
 nsJAR::~nsJAR()
 {
   Close();
+  if (mLock) 
+	PR_DestroyLock(mLock);
 }
 
 NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsJAR, nsIZipReader)
@@ -206,7 +208,8 @@ NS_IMETHODIMP
 nsJAR::Init(nsIFile* zipFile)
 {
   mZipFile = zipFile;
-  return NS_OK;
+  mLock = PR_NewLock();
+  return mLock ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
@@ -243,6 +246,10 @@ nsJAR::Close()
 NS_IMETHODIMP
 nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
 {
+  // nsZipArchive and zlib are not thread safe
+  // we need to use a lock to prevent bug #51267
+  nsAutoLock lock(mLock);
+
   nsresult rv;
   nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(outFile, &rv);
   if (NS_FAILED(rv)) return rv;
@@ -311,6 +318,10 @@ nsJAR::FindEntries(const char *aPattern, nsISimpleEnumerator **result)
 NS_IMETHODIMP
 nsJAR::GetInputStream(const char* aFilename, nsIInputStream** result)
 {
+  // nsZipArchive and zlib are not thread safe
+  // we need to use a lock to prevent bug #51267
+  nsAutoLock lock(mLock);
+
   NS_ENSURE_ARG_POINTER(result);
   nsresult rv;
   nsJARInputStream* jis = nsnull;
