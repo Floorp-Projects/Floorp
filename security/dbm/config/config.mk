@@ -63,6 +63,5 @@ endif
 
 #
 # None of the platforms that we are interested in need to
-# define HAVE_COMPAT_H and HAVE_MEMORY_H.
-# SunOS 4.1.3 needs to define HAVE_COMPAT_H.
+# define HAVE_MEMORY_H.
 #
