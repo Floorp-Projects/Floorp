@@ -63,81 +63,80 @@ public class Interpreter
 
     // various types of ++/--
         Icode_NAMEINC                   = -5,
-        Icode_PROPINC                   = -6,
-        Icode_VARINC                    = -7,
-        Icode_NAMEDEC                   = -8,
-        Icode_PROPDEC                   = -9,
-        Icode_VARDEC                    = -10,
+        Icode_VARINC                    = -6,
+        Icode_NAMEDEC                   = -7,
+        Icode_VARDEC                    = -8,
 
-        Icode_ELEM_INC_DEC              = -11,
-        Icode_REF_INC_DEC               = -12,
+        Icode_PROP_INC_DEC              = -9,
+        Icode_ELEM_INC_DEC              = -10,
+        Icode_REF_INC_DEC               = -11,
 
     // helper codes to deal with activation
-        Icode_SCOPE                     = -13,
-        Icode_TYPEOFNAME                = -14,
+        Icode_SCOPE                     = -12,
+        Icode_TYPEOFNAME                = -13,
 
     // helper for function calls
-        Icode_NAME_FAST_THIS            = -15,
-        Icode_NAME_SLOW_THIS            = -16,
-        Icode_PUSH_PARENT               = -17,
+        Icode_NAME_FAST_THIS            = -14,
+        Icode_NAME_SLOW_THIS            = -15,
+        Icode_PUSH_PARENT               = -16,
 
     // Create closure object for nested functions
-        Icode_CLOSURE                   = -18,
+        Icode_CLOSURE                   = -17,
 
     // Special calls
-        Icode_CALLSPECIAL               = -19,
+        Icode_CALLSPECIAL               = -18,
 
     // To return undefined value
-        Icode_RETUNDEF                  = -20,
+        Icode_RETUNDEF                  = -19,
 
     // Exception handling implementation
-        Icode_CATCH                     = -21,
-        Icode_GOSUB                     = -22,
-        Icode_RETSUB                    = -23,
+        Icode_CATCH                     = -20,
+        Icode_GOSUB                     = -21,
+        Icode_RETSUB                    = -22,
 
     // To indicating a line number change in icodes.
-        Icode_LINE                      = -24,
+        Icode_LINE                      = -23,
 
     // To store shorts and ints inline
-        Icode_SHORTNUMBER               = -25,
-        Icode_INTNUMBER                 = -26,
+        Icode_SHORTNUMBER               = -24,
+        Icode_INTNUMBER                 = -25,
 
     // To create and populate array to hold values for [] and {} literals
-        Icode_LITERAL_NEW               = -27,
-        Icode_LITERAL_SET               = -28,
+        Icode_LITERAL_NEW               = -26,
+        Icode_LITERAL_SET               = -27,
 
     // Array literal with skipped index like [1,,2]
-        Icode_SPARE_ARRAYLIT            = -29,
+        Icode_SPARE_ARRAYLIT            = -28,
 
     // Load index register to prepare for the following index operation
-        Icode_REG_IND_C0                = -30,
-        Icode_REG_IND_C1                = -31,
-        Icode_REG_IND_C2                = -32,
-        Icode_REG_IND_C3                = -33,
-        Icode_REG_IND_C4                = -34,
-        Icode_REG_IND_C5                = -35,
-        Icode_REG_IND1                  = -36,
-        Icode_REG_IND2                  = -37,
-        Icode_REG_IND4                  = -38,
+        Icode_REG_IND_C0                = -29,
+        Icode_REG_IND_C1                = -30,
+        Icode_REG_IND_C2                = -31,
+        Icode_REG_IND_C3                = -32,
+        Icode_REG_IND_C4                = -33,
+        Icode_REG_IND_C5                = -34,
+        Icode_REG_IND1                  = -35,
+        Icode_REG_IND2                  = -36,
+        Icode_REG_IND4                  = -37,
 
     // Load string register to prepare for the following string operation
-        Icode_REG_STR_C0                = -39,
-        Icode_REG_STR_C1                = -40,
-        Icode_REG_STR_C2                = -41,
-        Icode_REG_STR_C3                = -42,
-        Icode_REG_STR1                  = -43,
-        Icode_REG_STR2                  = -44,
-        Icode_REG_STR4                  = -45,
+        Icode_REG_STR_C0                = -38,
+        Icode_REG_STR_C1                = -39,
+        Icode_REG_STR_C2                = -40,
+        Icode_REG_STR_C3                = -41,
+        Icode_REG_STR1                  = -42,
+        Icode_REG_STR2                  = -43,
+        Icode_REG_STR4                  = -44,
 
     // Version of getvar/setvar that read var index directly from bytecode
-        Icode_GETVAR1                   = -46,
-        Icode_SETVAR1                   = -47,
+        Icode_GETVAR1                   = -45,
+        Icode_SETVAR1                   = -46,
 
     // Construct special reference
-        Icode_SPECIAL_REF               = -48,
+        Icode_SPECIAL_REF               = -47,
 
     // Last icode
-        MIN_ICODE                       = -48;
+        MIN_ICODE                       = -47;
 
     static {
         // Checks for byte code consistencies, good compiler can eliminate them
@@ -1162,11 +1161,12 @@ public class Interpreter
           case Token.GETVAR : {
             String name = child.getString();
             if (itsData.itsNeedsActivation) {
+                int incrDecrType = (type == Token.INC)
+                                   ? Node.POST_INC : Node.POST_DEC;
                 iCodeTop = addIcode(Icode_SCOPE, iCodeTop);
                 stackChange(1);
-                int op = (type == Token.INC)
-                         ? Icode_PROPINC : Icode_PROPDEC;
-                iCodeTop = addStringOp(op, name, iCodeTop);
+                iCodeTop = addStringOp(Icode_PROP_INC_DEC, name, iCodeTop);
+                iCodeTop = addByte(incrDecrType, iCodeTop);
             } else {
                 int i = scriptOrFn.getParamOrVarIndex(name);
                 int op = (type == Token.INC)
@@ -1177,12 +1177,12 @@ public class Interpreter
             break;
           }
           case Token.GETPROP : {
+            int incrDecrType = node.getExistingIntProp(Node.INCRDECR_PROP);
             Node object = child.getFirstChild();
             iCodeTop = generateICode(object, iCodeTop);
             String property = object.getNext().getString();
-            int op = (type == Token.INC)
-                     ? Icode_PROPINC : Icode_PROPDEC;
-            iCodeTop = addStringOp(op, property, iCodeTop);
+            iCodeTop = addStringOp(Icode_PROP_INC_DEC, property, iCodeTop);
+            iCodeTop = addByte(incrDecrType, iCodeTop);
             break;
           }
           case Token.GETELEM : {
@@ -1608,11 +1608,10 @@ public class Interpreter
           case Icode_SWAP:             return "SWAP";
           case Icode_IFEQ_POP:         return "IFEQ_POP";
           case Icode_NAMEINC:          return "NAMEINC";
-          case Icode_PROPINC:          return "PROPINC";
           case Icode_VARINC:           return "VARINC";
           case Icode_NAMEDEC:          return "NAMEDEC";
-          case Icode_PROPDEC:          return "PROPDEC";
           case Icode_VARDEC:           return "VARDEC";
+          case Icode_PROP_INC_DEC:     return "PROP_INC_DEC";
           case Icode_ELEM_INC_DEC:     return "ELEM_INC_DEC";
           case Icode_REF_INC_DEC:      return "REF_INC_DEC";
           case Icode_SCOPE:            return "SCOPE";
@@ -1696,6 +1695,7 @@ public class Interpreter
                 pc += 2;
                 break;
               }
+              case Icode_PROP_INC_DEC :
               case Icode_ELEM_INC_DEC :
               case Icode_REF_INC_DEC: {
                 int incrDecrType = iCode[pc];
@@ -1860,6 +1860,7 @@ public class Interpreter
                 // index of potential function name for debugging
                 return 1 + 2;
 
+            case Icode_PROP_INC_DEC:
             case Icode_ELEM_INC_DEC:
             case Icode_REF_INC_DEC:
                 // type of ++/--
@@ -2490,6 +2491,14 @@ switch (op) {
         stack[stackTop] = ScriptRuntime.setProp(lhs, stringReg, rhs, scope);
         continue Loop;
     }
+    case Icode_PROP_INC_DEC : {
+        Object lhs = stack[stackTop];
+        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.propIncrDecr(lhs, stringReg, scope,
+                                                     iCode[pc]);
+        ++pc;
+        continue Loop;
+    }
     case Token.GETELEM :
         stackTop = do_getElem(stack, sDbl, stackTop, cx, scope);
         continue Loop;
@@ -2528,14 +2537,6 @@ switch (op) {
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.referenceIncrDecr(lhs, iCode[pc]);
         ++pc;
-        continue Loop;
-    }
-    case Icode_PROPINC :
-    case Icode_PROPDEC : {
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.postIncrDecr(lhs, stringReg, scope,
-                                                     op == Icode_PROPINC);
         continue Loop;
     }
     case Token.LOCAL_SAVE :

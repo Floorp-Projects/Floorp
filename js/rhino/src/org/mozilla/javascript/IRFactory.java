@@ -842,7 +842,10 @@ class IRFactory
             Node lvalueLeft = Node.newString(Token.BINDNAME, s);
             return new Node(Token.SETNAME, lvalueLeft, op);
 
-        } else if (childType == Token.GETELEM || childType == Token.GET_REF) {
+        } else if (childType == Token.GETPROP
+                   || childType == Token.GETELEM
+                   || childType == Token.GET_REF)
+        {
             Node n = new Node(nodeType, childNode);
             int type;
             if (nodeType == Token.INC) {
@@ -852,23 +855,6 @@ class IRFactory
             }
             n.putIntProp(Node.INCRDECR_PROP, type);
             return n;
-        } else if (childType == Token.GETPROP) {
-            if (post) {
-                return new Node(nodeType, childNode);
-            }
-
-            /*
-             * Transform INC/DEC ops to +=1, -=1,
-             * expecting later optimization of all +/-=1 cases to INC, DEC.
-             */
-            Node rhs = (Node) createNumber(1.0);
-
-            return createAssignmentOp(nodeType == Token.INC
-                                        ? Token.ADD
-                                        : Token.SUB,
-                                      childNode,
-                                      rhs,
-                                      true);
         }
         // TODO: This should be a ReferenceError--but that's a runtime
         //  exception. Should we compile an exception into the code?
@@ -1088,23 +1074,17 @@ class IRFactory
         }
     }
 
-    Object createAssignmentOp(int assignOp, Object left, Object right)
+    Object createAssignmentOp(int assignOp, Object leftObj, Object rightObj)
     {
-        return createAssignmentOp(assignOp, (Node)left, (Node)right, false);
-    }
+        Node left = (Node)leftObj;
+        Node right = (Node)rightObj;
 
-    private Node createAssignmentOp(int assignOp, Node left, Node right,
-                                    boolean tonumber)
-    {
         int nodeType = left.getType();
         switch (nodeType) {
           case Token.NAME: {
             String s = left.getString();
 
             Node opLeft = Node.newString(Token.NAME, s);
-            if (tonumber)
-                opLeft = new Node(Token.POS, opLeft);
-
             Node op = new Node(assignOp, opLeft, right);
             Node lvalueLeft = Node.newString(Token.BINDNAME, s);
             return new Node(Token.SETNAME, lvalueLeft, op);
@@ -1120,9 +1100,6 @@ class IRFactory
                        : Token.SETELEM_OP;
 
             Node opLeft = new Node(Token.USE_STACK);
-            if (tonumber) {
-                opLeft = new Node(Token.POS, opLeft);
-            }
             Node op = new Node(assignOp, opLeft, right);
             return new Node(type, obj, id, op);
           }
@@ -1131,9 +1108,6 @@ class IRFactory
             Node ref = left.getFirstChild();
 
             Node opLeft = new Node(Token.USE_STACK);
-            if (tonumber) {
-                opLeft = new Node(Token.POS, opLeft);
-            }
             Node op = new Node(assignOp, opLeft, right);
             return new Node(Token.SET_REF_OP, ref, op);
           }

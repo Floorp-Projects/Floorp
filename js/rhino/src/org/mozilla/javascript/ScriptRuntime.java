@@ -1724,29 +1724,45 @@ public class ScriptRuntime {
         throw notFoundError(scopeChain, id);
     }
 
-    public static Object postIncrDecr(Object obj, String id, Scriptable scope, boolean increment)
+    public static Object propIncrDecr(Object obj, String id,
+                                      Scriptable scope, int type)
     {
         Scriptable start = toObject(scope, obj);
         Scriptable m = start;
-        do {
-            Object value = m.get(id, start);
-            if (value != Scriptable.NOT_FOUND) {
-                double number;
-                if (value instanceof Number) {
-                    number = ((Number)value).doubleValue();
-                } else {
-                    number = toNumber(value);
-                    // convert result to number
-                    value = new Double(number);
+        Object value;
+      search: {
+            do {
+                value = m.get(id, start);
+                if (value != Scriptable.NOT_FOUND) {
+                    break search;
                 }
-                if (increment) { ++number; }
-                else { --number; }
-                m.put(id, start, new Double(number));
-                return value;
+                m = m.getPrototype();
+            } while (m != null);
+            return Undefined.instance;
+        }
+        boolean post = (type == Node.POST_INC || type == Node.POST_DEC);
+        double number;
+        if (value instanceof Number) {
+            number = ((Number)value).doubleValue();
+        } else {
+            number = toNumber(value);
+            if (post) {
+                // convert result to number
+                value = new Double(number);
             }
-            m = m.getPrototype();
-        } while (m != null);
-        return Undefined.instance;
+        }
+        if (type == Node.PRE_INC || type == Node.POST_INC) {
+            ++number;
+        } else {
+            --number;
+        }
+        Number result = new Double(number);
+        m.put(id, start, result);
+        if (post) {
+            return value;
+        } else {
+            return result;
+        }
     }
 
     public static Object elemIncrDecr(Object obj, Object index,

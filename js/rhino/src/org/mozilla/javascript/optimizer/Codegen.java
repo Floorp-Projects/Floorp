@@ -2741,16 +2741,17 @@ class BodyCodegen
                 +"Z)Ljava/lang/Object;");
             break;
           case Token.GETPROP: {
+            int incrDecrType = node.getExistingIntProp(Node.INCRDECR_PROP);
             Node getPropChild = child.getFirstChild();
             generateCodeFromNode(getPropChild, node);
             generateCodeFromNode(getPropChild.getNext(), node);
             cfw.addALoad(variableObjectLocal);
-            cfw.addPush(isInc);
-            addScriptRuntimeInvoke("postIncrDecr",
+            cfw.addPush(incrDecrType);
+            addScriptRuntimeInvoke("propIncrDecr",
                                    "(Ljava/lang/Object;"
                                    +"Ljava/lang/String;"
                                    +"Lorg/mozilla/javascript/Scriptable;"
-                                   +"Z)Ljava/lang/Object;");
+                                   +"I)Ljava/lang/Object;");
             break;
           }
           case Token.GETELEM: {
