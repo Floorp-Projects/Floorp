@@ -27,19 +27,28 @@ LIBRARY_NAME	= pref
 
 REQUIRES	= js pref dbm security ldap img layer xpcom util
 
+
+PREF_JS_EXPORTS	= 	$(srcdir)/initpref.js \
+			$(srcdir)/init/all.js 	\
+			$(srcdir)/init/mailnews.js \
+			$(srcdir)/init/editor.js \
+			$(srcdir)/init/config.js \
+			$(NULL)
+
+
 ifneq ($(subst /,_,$(shell uname -s)),OS2)
-CSRCS		= unix/unixpref.c
+PREF_JS_EXPORTS		+= $(srcdir)/unix/unix.js
 else
+PREF_JS_EXPORTS		+= $(srcdir)/win/winpref.js $(srcdir)/os2/os2pref.js
 CSRCS		= prefldap.c
 LIBRARY		= xppref32.$(LIB_SUFFIX)
-EXPORTS		= initpref.js init/all.js init/config.js win/winpref.js os2/os2pref.js
-OS2_IMPLIB	= 1
-DEF_FILE	= xpOS2.def
-EXTRA_LIBS	= $(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib \
-		  $(LIBNSPR) \
-		  $(DIST)/lib/libldap.lib $(DIST)/lib/liblber.lib \
-		  $(DIST)/lib/libldap.lib $(DIST)/lib/libhash.lib \
-		  $(NULL)
+OS2_IMPLIB    	= 1
+DEF_FILE      	= xpOS2.def
+EXTRA_LIBS    	= 	$(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib \
+			$(LIBNSPR) \
+			$(DIST)/lib/libldap.lib $(DIST)/lib/liblber.lib \
+			$(DIST)/lib/libldap.lib $(DIST)/lib/libhash.lib \
+			$(NULL)
 endif
 
 CSRCS		+= prefapi.c
@@ -48,61 +57,25 @@ CPPSRCS		+= nsPref.cpp
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= -I$(topsrcdir)/cmd/xfe/icons -I$(srcdir)/unix -Iunix
+#INCLUDES	+= -I$(srcdir)/unix -Iunix
 
 DEFINES		+= -DB1M
 
-GARBAGE		+= unix/jsbuffer.h
+GARBAGE	+=		$(DIST)/bin/components/initpref.js	\
+			$(DIST)/bin/components/all.js	\
+			$(DIST)/bin/components/mailnews.js	\
+			$(DIST)/bin/components/editor.js	\
+			$(DIST)/bin/components/config.js	\
+			$(DIST)/bin/netscape.cfg		\
+			$(NULL)
 
-CONFIG_FILES	= initpref.js \
-		  init/all.js \
-		  $(NULL)
-
-ifdef MOZ_MAIL_NEWS
-CONFIG_FILES	+= \
-		  init/mailnews.js \
-		  $(NULL)
-endif
-
-ifdef MOZ_SECURITY
-CONFIG_FILES	+= \
-		  init/security.js \
-		  $(NULL)
-endif
-
-ifdef MOZ_EDITOR
-CONFIG_FILES	+= \
-		  init/editor.js \
-		  $(NULL)
-endif
-
-ifndef MOZ_MAIL_NEWS
-CONFIG_FILES	+= \
-		  init/configr.js \
-		  $(NULL)
+ifneq ($(subst /,_,$(shell uname -s)),OS2)
+GARBAGE			+= $(DIST)/bin/components/unix.js
 else
-CONFIG_FILES	+= \
-		  init/config.js \
-		  $(NULL)
+GARBAGE			+= $(DIST)/bin/components/winpref.js $(DIST)/bin/components/os2prefs.js
 endif
 
-CONFIG_FILES	+= \
-		  unix/unix.js \
-		  $(NULL)
+$(LIBRARY): $(OBJS) 
 
-CONFIG_FILES	:= $(addprefix $(srcdir)/, $(CONFIG_FILES))
-
-$(LIBRARY): $(OBJS)
-
-unix/unixpref.c: unix/jsbuffer.h
-	@if test ! -d unix; then rm -f unix && mkdir -p unix; else true; fi
-	@if test ! -f $@; then $(INSTALL) $(srcdir)/unix/unixpref.c unix/; else true; fi
-
-unix/jsbuffer.h: Makefile $(CONFIG_FILES)
-	@if test ! -d unix; then rm -f unix && mkdir -p unix; else true; fi
-	@(echo "/* This is an automatically generated file */" > $@; \
-	 echo >> $@; \
-	 echo "static char* pref_init_buffer[] = {" >> $@; \
-	 cat $(CONFIG_FILES) | sed 's/\\/\\\\/g' | sed 's/\\r/\\n/' | sed 's/\"/\\\"/g' | sed 's/^M//g' | sed 's/^/"/' | sed 's/$$/\\n",/' >> $@; \
-	echo "0 };" >> $@; \
-	)
+install::
+	$(INSTALL) -m 444 $(srcdir)/init/netscape.cfg $(DIST)/bin
