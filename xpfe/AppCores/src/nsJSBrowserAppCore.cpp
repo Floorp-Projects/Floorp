@@ -366,48 +366,6 @@ BrowserAppCoreWalletChangePassword(JSContext *cx, JSObject *obj, uintN argc, jsv
 
 
 //
-// Native method WalletSafeFillin
-//
-PR_STATIC_CALLBACK(JSBool)
-BrowserAppCoreWalletSafeFillin(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  nsIDOMWindowPtr b0;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 1) {
-
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
-                                           kIWindowIID,
-                                           "Window",
-                                           cx,
-                                           argv[0])) {
-      return JS_FALSE;
-    }
-
-    if (NS_OK != nativeThis->WalletSafeFillin(b0)) {
-      return JS_FALSE;
-    }
-
-    *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function walletSafeFillin requires 1 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
 // Native method WalletQuickFillin
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -475,39 +433,6 @@ BrowserAppCoreWalletSamples(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   else {
     JS_ReportError(cx, "Function walletSamples requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method SignonViewer
-//
-PR_STATIC_CALLBACK(JSBool)
-BrowserAppCoreSignonViewer(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->SignonViewer()) {
-      return JS_FALSE;
-    }
-
-    *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function signonViewer requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -977,7 +902,7 @@ BrowserAppCoreFindNext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 //
 JSClass BrowserAppCoreClass = {
   "BrowserAppCore", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetBrowserAppCoreProperty,
@@ -1010,10 +935,8 @@ static JSFunctionSpec BrowserAppCoreMethods[] =
   {"loadInitialPage",          BrowserAppCoreLoadInitialPage,     0},
   {"walletEditor",          BrowserAppCoreWalletEditor,     0},
   {"walletChangePassword",          BrowserAppCoreWalletChangePassword,     0},
-  {"walletSafeFillin",          BrowserAppCoreWalletSafeFillin,     1},
   {"walletQuickFillin",          BrowserAppCoreWalletQuickFillin,     1},
   {"walletSamples",          BrowserAppCoreWalletSamples,     0},
-  {"signonViewer",          BrowserAppCoreSignonViewer,     0},
   {"cookieViewer",          BrowserAppCoreCookieViewer,     0},
   {"setToolbarWindow",          BrowserAppCoreSetToolbarWindow,     1},
   {"setContentWindow",          BrowserAppCoreSetContentWindow,     1},
