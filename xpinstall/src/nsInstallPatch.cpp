@@ -541,7 +541,7 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
         outFileSpec->GetParent(parent);
         
         outFileSpec->Delete(PR_FALSE);
-        anotherName.Copy(parent);
+        anotherName.CopyToDir(parent);
         
         *outFileSpec = anotherName;
         
