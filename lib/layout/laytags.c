@@ -1503,7 +1503,7 @@ lo_process_anchor_tag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 {
     lo_DocLists *doc_lists;
 #ifdef DOM
-    DOM_Node *node = state->top_state->current_node;
+    DOM_Node *node = ACTIVE_NODE(state);
     DOM_Element *element = (DOM_Element *)node;
     JSContext *cx = context->mocha_context;
 #else
@@ -1514,6 +1514,9 @@ lo_process_anchor_tag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 
 #ifdef DOM
     XP_ASSERT(node->type == NODE_TYPE_ELEMENT);
+#ifdef DEBUG_shaver
+    PR_ASSERT(node->type == NODE_TYPE_ELEMENT);
+#endif
 #endif
 	/*
 	 * Opening a new anchor
@@ -4146,7 +4149,7 @@ lo_SetStyleSheetProperties(MWContext *context, lo_DocState *state, PA_Tag *tag)
 {
   JSContext *cx = context->mocha_context;
   DOM_StyleDatabase *db = state->top_state->style_db;
-  DOM_Node *node = state->top_state->current_node;
+  DOM_Node *node = ACTIVE_NODE(state);
 
   if (!node)
     return;
@@ -4525,12 +4528,16 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 
 	LO_LockLayout();
 
+#ifdef DOM
+    LM_ReflectTagNode(tag, state, context);
+#endif
+
 	if(!tag->is_end && lo_IsEmptyTag(tag->type))
 	{
 #ifdef DOM
-      lo_SetStyleSheetProperties(context, state, tag);
+        lo_SetStyleSheetProperties(context, state, tag);
 #else
-      lo_SetStyleSheetProperties(context, style_struct, tag);
+        lo_SetStyleSheetProperties(context, style_struct, tag);
 #endif
 	}
 	
@@ -7644,13 +7651,19 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
         /* find the last element on the line list and its node */
 #define FIND_LAST_ELEMENT(eptr)                                               \
         eptr = state->line_list;                                              \
+        if (!eptr)                                                            \
+            eptr = state->end_last_line;                                      \
+        /* if there are no elements in state, try the currently active one */ \
+        if (!eptr)                                                            \
+            eptr = state->top_state->doc_state->line_list;                    \
+        if (!eptr)                                                            \
+            eptr = state->top_state->doc_state->end_last_line;                \
         if (eptr) {                                                           \
             while (eptr->lo_any.next != NULL) {                               \
                 eptr = eptr->lo_any.next;                                     \
             }                                                                 \
-        } else {                                                              \
-            eptr = state->end_last_line;                                      \
         }
+        
         FIND_LAST_ELEMENT(eptr);
         if (!eptr)
           return;
@@ -7673,6 +7686,12 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
             /* if we popped stuff, resync the end pointer */
             if (resyncElements) {
                 FIND_LAST_ELEMENT(eptr);
+                if (!eptr) {
+#ifdef DEBUG_shaver
+                    fprintf(stderr, "can't find new eptr for resync!\n");
+#endif
+                    return;
+                }
                 XP_ASSERT(eptr->lo_any.node == node);
             }
 

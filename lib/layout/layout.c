@@ -275,6 +275,7 @@ lo_NewTopState(MWContext *context, char *url)
 #ifdef DOM
 	top_state->top_node = NULL;
 	top_state->current_node = NULL;
+    top_state->active_node = NULL;
 	top_state->style_db = NULL;
 #endif
 
@@ -4161,12 +4162,6 @@ LO_ProcessTag(void *data_object, PA_Tag *tag, intn status)
 	}
 	context = doc_data->window_id;
 	
-#ifdef DOM
-    if (state && context)
-        last_node = LM_ReflectTagNode(tag, state, context);
-    else
-        last_node = NULL;
-#endif
 	/*
 	 * if we get called with abort/complete then ignore oom condition
 	 * and clean up

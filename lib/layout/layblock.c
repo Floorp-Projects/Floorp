@@ -649,7 +649,7 @@ lo_BeginLayerTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
     CL_Layer *parent_layer;
 #ifdef DOM
     DOM_AttributeEntry *entry;
-    DOM_Node *node = state->top_state->current_node;
+    DOM_Node *node = ACTIVE_NODE(state);
     DOM_StyleDatabase *db = state->top_state->style_db;
     JSContext *cx = context->mocha_context;
 #endif
@@ -1046,8 +1046,9 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
   } else {
     if (!DOM_StyleGetProperty(cx, db, node, LAYER_SRC_STYLE, &entry))
       return;
-    if (entry)
-      inflow = JS_TRUE;
+    if (!entry)
+      return;
+    inflow = JS_TRUE;
   }
 
   param = XP_NEW_ZAP(LO_BlockInitializeStruct);

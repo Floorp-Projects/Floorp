@@ -34,6 +34,7 @@
 #include "intl_csi.h"
 #ifdef DOM
 #include "domstyle.h"
+#include "lm_dom.h"
 #endif
 
 void
@@ -306,7 +307,7 @@ LO_CheckForContentHiding(lo_DocState *state, MWContext *context)
 {
   JSContext *cx = context->mocha_context;
   DOM_StyleDatabase *db = state->top_state->style_db;
-  DOM_Node *node = state->top_state->current_node;
+  DOM_Node *node = ACTIVE_NODE(state);
   DOM_AttributeEntry *entry;
   
   if (!db || !cx || !node ||

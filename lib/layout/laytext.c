@@ -8553,7 +8553,7 @@ lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
   JSContext *cx = context->mocha_context;
   DOM_StyleDatabase *db = state->top_state->style_db;
   DOM_AttributeEntry *entry;
-  DOM_Node *node = state->top_state->current_node;
+  DOM_Node *node = ACTIVE_NODE(state);
   LO_TextAttr text_attr, *newptr = NULL;
   JSBool copied = JS_FALSE;
   LO_Color col;

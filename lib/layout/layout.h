@@ -854,7 +854,8 @@ struct lo_TopState_struct {
 #endif 
 #ifdef DOM
     struct DOM_Node *top_node;     /* top of the DOM_Node tree */
-    struct DOM_Node *current_node; /* active node (only during tree gen) */
+    struct DOM_Node *current_node; /* node that's parent of next content */
+    struct DOM_Node *active_node;  /* node for which we're making elements */
     struct DOM_StyleDatabase *style_db;
 #endif
 	void*	LAPIprobe;

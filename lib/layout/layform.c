@@ -55,6 +55,7 @@
 
 #ifdef DOM
 #include "domstyle.h"
+#include "lm_dom.h"
 #endif
 
 #ifndef XP_TRACE
@@ -815,7 +816,7 @@ new_form_element(MWContext *context, lo_DocState *state, int32 type)
             DOM_AttributeEntry *entry;
             JSContext *cx = context->mocha_context;
             DOM_StyleDatabase *db = state->top_state->style_db;
-            DOM_Node *node = state->top_state->current_node;
+            DOM_Node *node = ACTIVE_NODE(state);
             
             if (node && (cx || db)) {
                 /*

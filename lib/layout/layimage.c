@@ -34,6 +34,7 @@
 #include "layers.h"
 #ifdef DOM
 #include "domstyle.h"
+#include "lm_dom.h"
 #endif
 
 extern int MK_OUT_OF_MEMORY;
@@ -1515,7 +1516,7 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 #ifdef DOM
     JSContext *cx = context->mocha_context;
     DOM_StyleDatabase *db = state->top_state->style_db;
-    DOM_Element *element = (DOM_Element *)state->top_state->current_node;
+    DOM_Element *element = (DOM_Element *)ACTIVE_NODE(state);
     DOM_AttributeEntry *entry;
 #endif
 
