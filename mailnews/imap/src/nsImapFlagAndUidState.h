@@ -51,34 +51,29 @@ public:
     NS_DECL_ISUPPORTS
     nsImapFlagAndUidState(int numberOfMessages, PRUint16 flags = 0);
     nsImapFlagAndUidState(const nsImapFlagAndUidState& state, PRUint16 flags = 0);
-    virtual				 ~nsImapFlagAndUidState();
+    virtual ~nsImapFlagAndUidState();
     
 
-	NS_DECL_NSIIMAPFLAGANDUIDSTATE
+    NS_DECL_NSIIMAPFLAGANDUIDSTATE
 
-//    NS_IMETHOD			GetNumberOfMessages(PRInt32 *result);
-//    NS_IMETHOD			GetUidOfMessage(PRInt32 zeroBasedIndex, PRUint32 *result);
-//    NS_IMETHOD			GetMessageFlags(PRInt32 zeroBasedIndex, imapMessageFlagsType *result);
-//	NS_IMETHOD			GetNumberOfRecentMessages(PRInt32 *result);
-
-    PRInt32				GetNumberOfDeletedMessages();
+    PRInt32               GetNumberOfDeletedMessages();
     
-    imapMessageFlagsType GetMessageFlagsFromUID(PRUint32 uid, PRBool *foundIt, PRInt32 *ndx);
-	PRBool				 IsLastMessageUnseen(void);
+    imapMessageFlagsType  GetMessageFlagsFromUID(PRUint32 uid, PRBool *foundIt, PRInt32 *ndx);
+    PRBool                IsLastMessageUnseen(void);
     
-    PRUint32			 GetHighestNonDeletedUID();
-    PRUint16               GetSupportedUserFlags() { return fSupportedUserFlags; };
+    PRUint32              GetHighestNonDeletedUID();
+    PRUint16              GetSupportedUserFlags() { return fSupportedUserFlags; };
 
 private:
     
   static PRBool PR_CALLBACK FreeCustomFlags(nsHashKey *aKey, void *aData, void *closure);
     PRInt32                 fNumberOfMessagesAdded;
-    PRInt32					fNumberOfMessageSlotsAllocated;
-	PRInt32					fNumberDeleted;
+    PRInt32                 fNumberOfMessageSlotsAllocated;
+    PRInt32                 fNumberDeleted;
     nsMsgKeyArray           fUids;
     imapMessageFlagsType    *fFlags;
     nsHashtable             *m_customFlagsHash;	// Hash table, mapping uids to extra flags
-	PRUint16				fSupportedUserFlags;
+    PRUint16                fSupportedUserFlags;
 };
 
 

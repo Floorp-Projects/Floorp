@@ -598,7 +598,7 @@ PRBool nsIMAPNamespaceList::GetFolderIsNamespace(const char *hostName,
       rv = (strcmp(convertedFolderName, prefix) == 0);
     }
     
-    PR_FREEIF(convertedFolderName);
+    PR_Free(convertedFolderName);
   }
   else
   {

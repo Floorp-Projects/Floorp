@@ -776,8 +776,8 @@ nsImapService::CopyMessages(nsMsgKeyArray *keys, nsIMsgFolder *srcFolder, nsIStr
     if (NS_SUCCEEDED(rv))
     {
       nsCString messageIds;
-      
-      AllocateImapUidString(keys->GetArray(), keys->GetSize(), messageIds);
+      PRUint32 numKeys = keys->GetSize();
+      AllocateImapUidString(keys->GetArray(), numKeys, nsnull, messageIds);
       nsCOMPtr<nsIImapUrl> imapUrl;
       nsCAutoString urlSpec;
       PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);

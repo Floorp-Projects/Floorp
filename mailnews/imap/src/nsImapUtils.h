@@ -42,6 +42,8 @@
 #include "nsString.h"
 #include "nsIMsgIncomingServer.h"
 
+class nsImapFlagAndUidState;
+
 static const char kImapRootURI[] = "imap:/";
 static const char kImapMessageRootURI[] = "imap-message:/";
 
@@ -62,6 +64,6 @@ nsBuildImapMessageURI(const char *baseURI, PRUint32 key, nsCString& uri);
 extern nsresult
 nsCreateImapBaseMessageURI(const char *baseURI, char **baseMessageURI);
 
-void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsCString &returnString);
+void AllocateImapUidString(PRUint32 *msgUids, PRUint32 &msgCount, nsImapFlagAndUidState *flagState, nsCString &returnString);
 
 #endif //NS_IMAPUTILS_H

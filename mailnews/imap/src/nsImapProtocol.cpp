@@ -3699,16 +3699,15 @@ void nsImapProtocol::FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsI
   {
     nsCString idString;
 
-    PRUint32 msgsToDownload = (msgCountLeft > kHdrsToFetchAtOnce) ? kHdrsToFetchAtOnce : msgCountLeft;
-      AllocateImapUidString(msgUids + msgsDownloaded, msgsToDownload, idString);  // 20 * 200
+    PRUint32 msgsToDownload = msgCountLeft;
+    AllocateImapUidString(msgUids + msgsDownloaded, msgsToDownload, m_flagState, idString);  // 20 * 200
 
-    // except I don't think this works ### DB
     FetchMessage(idString.get(),  fields, PR_TRUE);                  // msg ids are uids                 
 
     msgsDownloaded += msgsToDownload;
     msgCountLeft -= msgsToDownload;
 
-    }
+  }
   while (msgCountLeft > 0 && !DeathSignalReceived());
 }     
     

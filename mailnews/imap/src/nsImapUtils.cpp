@@ -52,86 +52,85 @@
 #include "nsMsgBaseCID.h"
 #include "nsImapCore.h"
 #include "nsMsgUtils.h"
-#include "nsIImapFlagAndUidState.h"
+#include "nsImapFlagAndUidState.h"
 #include "nsISupportsObsolete.h"
 
 nsresult
 nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 {
-	nsresult rv;
-
-	nsAutoString sbdSep;
-
-	rv = nsGetMailFolderSeparator(sbdSep);
-	if (NS_FAILED(rv)) 
-		return rv;
-
-	nsCAutoString uri(uriStr);
-	if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
-		return NS_ERROR_FAILURE;
-
-	if ((PL_strcmp(rootURI, kImapRootURI) != 0) &&
-		   (PL_strcmp(rootURI, kImapMessageRootURI) != 0)) 
-	{
-		pathResult = nsnull;
-		rv = NS_ERROR_FAILURE; 
-	}
-
-	// the server name is the first component of the path, so extract it out
-	PRInt32 hostStart;
-
-	hostStart = uri.FindChar('/');
-	if (hostStart <= 0) return NS_ERROR_FAILURE;
-
-	// skip past all //
-	while (uri.CharAt(hostStart) =='/') hostStart++;
-
-	// cut imap://[userid@]hostname/folder -> [userid@]hostname/folder
-	nsCAutoString hostname;
-	uri.Right(hostname, uri.Length() - hostStart);
-
-	nsCAutoString username;
-
-	PRInt32 atPos = hostname.FindChar('@');
-	if (atPos != -1) {
-		hostname.Left(username, atPos);
-		hostname.Cut(0, atPos+1);
-	}
+  nsresult rv;
   
-	nsCAutoString folder;
-	// folder comes after the hostname, after the '/'
-
-
-	// cut off first '/' and everything following it
-	// hostname/folder -> hostname
-	PRInt32 hostEnd = hostname.FindChar('/');
-	if (hostEnd > 0) 
-	{
-		hostname.Right(folder, hostname.Length() - hostEnd - 1);
-		hostname.Truncate(hostEnd);
-	}
-
-	nsCOMPtr<nsIMsgIncomingServer> server;
+  nsAutoString sbdSep;
+  
+  rv = nsGetMailFolderSeparator(sbdSep);
+  if (NS_FAILED(rv)) 
+    return rv;
+  
+  nsCAutoString uri(uriStr);
+  if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
+    return NS_ERROR_FAILURE;
+  
+  if ((PL_strcmp(rootURI, kImapRootURI) != 0) &&
+    (PL_strcmp(rootURI, kImapMessageRootURI) != 0)) 
+  {
+    pathResult = nsnull;
+    rv = NS_ERROR_FAILURE; 
+  }
+  
+  // the server name is the first component of the path, so extract it out
+  PRInt32 hostStart;
+  
+  hostStart = uri.FindChar('/');
+  if (hostStart <= 0) return NS_ERROR_FAILURE;
+  
+  // skip past all //
+  while (uri.CharAt(hostStart) =='/') hostStart++;
+  
+  // cut imap://[userid@]hostname/folder -> [userid@]hostname/folder
+  nsCAutoString hostname;
+  uri.Right(hostname, uri.Length() - hostStart);
+  
+  nsCAutoString username;
+  
+  PRInt32 atPos = hostname.FindChar('@');
+  if (atPos != -1) {
+    hostname.Left(username, atPos);
+    hostname.Cut(0, atPos+1);
+  }
+  
+  nsCAutoString folder;
+  // folder comes after the hostname, after the '/'
+  // cut off first '/' and everything following it
+  // hostname/folder -> hostname
+  PRInt32 hostEnd = hostname.FindChar('/');
+  if (hostEnd > 0) 
+  {
+    hostname.Right(folder, hostname.Length() - hostEnd - 1);
+    hostname.Truncate(hostEnd);
+  }
+  
+  nsCOMPtr<nsIMsgIncomingServer> server;
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
-           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+    do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if(NS_FAILED(rv)) return rv;
-
+  
   char *unescapedUserName = ToNewCString(username);
   if (unescapedUserName)
   {
-	  nsUnescape(unescapedUserName);
-	  rv = accountManager->FindServer(unescapedUserName,
-									  hostname.get(),
-									  "imap",
-									  getter_AddRefs(server));
-	  PR_FREEIF(unescapedUserName);
+    nsUnescape(unescapedUserName);
+    rv = accountManager->FindServer(unescapedUserName,
+      hostname.get(),
+      "imap",
+      getter_AddRefs(server));
+    PR_Free(unescapedUserName);
   }
   else
-	  rv = NS_ERROR_OUT_OF_MEMORY;
-
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  
   if (NS_FAILED(rv)) return rv;
   
-  if (server) {
+  if (server) 
+  {
     nsCOMPtr<nsIFileSpec> localPath;
     rv = server->GetLocalPath(getter_AddRefs(localPath));
     if (NS_FAILED(rv)) return rv;
@@ -141,37 +140,38 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
     
     pathResult.CreateDirectory();
   }
-
-	if (NS_FAILED(rv)) 
-	{
-		pathResult = nsnull;
-		return rv;
-	}
-
+  
+  if (NS_FAILED(rv)) 
+  {
+    pathResult = nsnull;
+    return rv;
+  }
+  
   if (!folder.IsEmpty())
   {
-      nsCAutoString parentName = folder;
-      nsCAutoString leafName = folder;
-      PRInt32 dirEnd = parentName.FindChar('/');
-
-      while(dirEnd > 0)
-      {
-          parentName.Right(leafName, parentName.Length() - dirEnd -1);
-          parentName.Truncate(dirEnd);
-          NS_MsgHashIfNecessary(parentName);
-          parentName.AppendWithConversion(sbdSep);
-          pathResult += parentName.get();
-		  // this fixes a strange purify warning.
-          parentName = leafName.get();
-          dirEnd = parentName.FindChar('/');
-      }
-      if (!leafName.IsEmpty()) {
-        NS_MsgHashIfNecessary(leafName);
-        pathResult += leafName.get();
-      }
+    nsCAutoString parentName = folder;
+    nsCAutoString leafName = folder;
+    PRInt32 dirEnd = parentName.FindChar('/');
+    
+    while(dirEnd > 0)
+    {
+      parentName.Right(leafName, parentName.Length() - dirEnd -1);
+      parentName.Truncate(dirEnd);
+      NS_MsgHashIfNecessary(parentName);
+      parentName.AppendWithConversion(sbdSep);
+      pathResult += parentName.get();
+      // this fixes a strange purify warning.
+      parentName = leafName.get();
+      dirEnd = parentName.FindChar('/');
+    }
+    if (!leafName.IsEmpty()) 
+    {
+      NS_MsgHashIfNecessary(leafName);
+      pathResult += leafName.get();
+    }
   }
-
-	return NS_OK;
+  
+  return NS_OK;
 }
 
 nsresult
@@ -180,17 +180,21 @@ nsImapURI2FullName(const char* rootURI, const char* hostname, const char* uriStr
 {
     nsAutoString uri; uri.AssignWithConversion(uriStr);
     nsAutoString fullName;
-    if (uri.Find(rootURI) != 0) return NS_ERROR_FAILURE;
+    if (uri.Find(rootURI) != 0)
+      return NS_ERROR_FAILURE;
     uri.Right(fullName, uri.Length() - strlen(rootURI));
     uri = fullName;
     PRInt32 hostStart = uri.Find(hostname);
-    if (hostStart <= 0) return NS_ERROR_FAILURE;
+    if (hostStart <= 0) 
+      return NS_ERROR_FAILURE;
     uri.Right(fullName, uri.Length() - hostStart);
     uri = fullName;
     PRInt32 hostEnd = uri.FindChar('/');
-    if (hostEnd <= 0) return NS_ERROR_FAILURE;
+    if (hostEnd <= 0) 
+      return NS_ERROR_FAILURE;
     uri.Right(fullName, uri.Length() - hostEnd - 1);
-    if (fullName.IsEmpty()) return NS_ERROR_FAILURE;
+    if (fullName.IsEmpty())
+      return NS_ERROR_FAILURE;
     *name = ToNewCString(fullName);
     return NS_OK;
 }
@@ -198,27 +202,27 @@ nsImapURI2FullName(const char* rootURI, const char* hostname, const char* uriStr
 /* parses ImapMessageURI */
 nsresult nsParseImapMessageURI(const char* uri, nsCString& folderURI, PRUint32 *key, char **part)
 {
-	if(!key)
-		return NS_ERROR_NULL_POINTER;
-
-	nsCAutoString uriStr(uri);
-	PRInt32 keySeparator = uriStr.RFindChar('#');
-	if(keySeparator != -1)
-	{
+  if(!key)
+    return NS_ERROR_NULL_POINTER;
+  
+  nsCAutoString uriStr(uri);
+  PRInt32 keySeparator = uriStr.RFindChar('#');
+  if(keySeparator != -1)
+  {
     PRInt32 keyEndSeparator = uriStr.FindCharInSet("/?&", 
-                                                   keySeparator); 
-		nsAutoString folderPath;
-		uriStr.Left(folderURI, keySeparator);
-		folderURI.Cut(4, 8);	// cut out the _message part of imap-message:
-		nsCAutoString keyStr;
+      keySeparator); 
+    nsAutoString folderPath;
+    uriStr.Left(folderURI, keySeparator);
+    folderURI.Cut(4, 8);	// cut out the _message part of imap-message:
+    nsCAutoString keyStr;
     if (keyEndSeparator != -1)
-        uriStr.Mid(keyStr, keySeparator+1, 
-                   keyEndSeparator-(keySeparator+1));
+      uriStr.Mid(keyStr, keySeparator+1, 
+      keyEndSeparator-(keySeparator+1));
     else
-        uriStr.Right(keyStr, uriStr.Length() - (keySeparator + 1));
-		PRInt32 errorCode;
-		*key = keyStr.ToInteger(&errorCode);
-
+      uriStr.Right(keyStr, uriStr.Length() - (keySeparator + 1));
+    PRInt32 errorCode;
+    *key = keyStr.ToInteger(&errorCode);
+    
     if (part && keyEndSeparator != -1)
     {
       PRInt32 partPos = uriStr.Find("part=", PR_FALSE, keyEndSeparator);
@@ -227,42 +231,42 @@ nsresult nsParseImapMessageURI(const char* uri, nsCString& folderURI, PRUint32 *
         nsCString partSubStr;
         uriStr.Right(partSubStr, uriStr.Length() - keyEndSeparator);
         *part = ToNewCString(partSubStr);
-
+        
       }
     }
-	}
-	return NS_OK;
-
+  }
+  return NS_OK;
+  
 }
 
 nsresult nsBuildImapMessageURI(const char *baseURI, PRUint32 key, nsCString& uri)
 {
-	
-	uri.Append(baseURI);
-	uri.Append('#');
-	uri.AppendInt(key);
-	return NS_OK;
+  
+  uri.Append(baseURI);
+  uri.Append('#');
+  uri.AppendInt(key);
+  return NS_OK;
 }
 
 nsresult nsCreateImapBaseMessageURI(const char *baseURI, char **baseMessageURI)
 {
-	if(!baseMessageURI)
-		return NS_ERROR_NULL_POINTER;
-
-	nsCAutoString tailURI(baseURI);
-
-	// chop off mailbox:/
-	if (tailURI.Find(kImapRootURI) == 0)
-		tailURI.Cut(0, PL_strlen(kImapRootURI));
-	
-	nsCAutoString baseURIStr(kImapMessageRootURI);
-	baseURIStr += tailURI;
-
-	*baseMessageURI = ToNewCString(baseURIStr);
-	if(!*baseMessageURI)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	return NS_OK;
+  if(!baseMessageURI)
+    return NS_ERROR_NULL_POINTER;
+  
+  nsCAutoString tailURI(baseURI);
+  
+  // chop off mailbox:/
+  if (tailURI.Find(kImapRootURI) == 0)
+    tailURI.Cut(0, PL_strlen(kImapRootURI));
+  
+  nsCAutoString baseURIStr(kImapMessageRootURI);
+  baseURIStr += tailURI;
+  
+  *baseMessageURI = ToNewCString(baseURIStr);
+  if(!*baseMessageURI)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  return NS_OK;
 }
 
 // nsImapMailboxSpec stuff
@@ -271,30 +275,30 @@ NS_IMPL_ISUPPORTS1(nsImapMailboxSpec, nsIMailboxSpec)
 
 nsImapMailboxSpec::nsImapMailboxSpec()
 {
-	folder_UIDVALIDITY = 0;
-	number_of_messages = 0;
-	number_of_unseen_messages = 0;
-	number_of_recent_messages = 0;
-	
-	box_flags = 0;
-	
-	allocatedPathName = nsnull;
-	unicharPathName = nsnull;
-	hierarchySeparator = '\0';
-	hostName = nsnull;
-	
-	folderSelected = PR_FALSE;
-	discoveredFromLsub = PR_FALSE;
-
-	onlineVerified = PR_FALSE;
-	namespaceForFolder = nsnull;
+  folder_UIDVALIDITY = 0;
+  number_of_messages = 0;
+  number_of_unseen_messages = 0;
+  number_of_recent_messages = 0;
+  
+  box_flags = 0;
+  
+  allocatedPathName = nsnull;
+  unicharPathName = nsnull;
+  hierarchySeparator = '\0';
+  hostName = nsnull;
+  
+  folderSelected = PR_FALSE;
+  discoveredFromLsub = PR_FALSE;
+  
+  onlineVerified = PR_FALSE;
+  namespaceForFolder = nsnull;
 }
 
 nsImapMailboxSpec::~nsImapMailboxSpec()
 {
-	nsCRT::free(allocatedPathName);
-	nsCRT::free(unicharPathName);
-	nsCRT::free(hostName);
+  nsCRT::free(allocatedPathName);
+  nsCRT::free(unicharPathName);
+  nsCRT::free(hostName);
 }
 
 NS_IMPL_GETSET(nsImapMailboxSpec, Folder_UIDVALIDITY, PRInt32, folder_UIDVALIDITY);
@@ -312,33 +316,33 @@ NS_IMPL_GETSET(nsImapMailboxSpec, NamespaceForFolder, nsIMAPNamespace *, namespa
 
 NS_IMETHODIMP nsImapMailboxSpec::GetUnicharPathName(PRUnichar **aUnicharPathName)
 {
-	if (!aUnicharPathName)
-		return NS_ERROR_NULL_POINTER;
-	*aUnicharPathName = (unicharPathName) ? nsCRT::strdup(unicharPathName) : nsnull;
-	return NS_OK;
+  if (!aUnicharPathName)
+    return NS_ERROR_NULL_POINTER;
+  *aUnicharPathName = (unicharPathName) ? nsCRT::strdup(unicharPathName) : nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMailboxSpec::GetFlagState(nsIImapFlagAndUidState ** aFlagState)
 {
-	if (!aFlagState)
-		return NS_ERROR_NULL_POINTER;
-	*aFlagState = flagState;
-	NS_IF_ADDREF(*aFlagState);
-	return NS_OK;
+  if (!aFlagState)
+    return NS_ERROR_NULL_POINTER;
+  *aFlagState = flagState;
+  NS_IF_ADDREF(*aFlagState);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMailboxSpec::SetFlagState(nsIImapFlagAndUidState * aFlagState)
 {
-	flagState = aFlagState;
-	return NS_OK;
+  flagState = aFlagState;
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP nsImapMailboxSpec::SetUnicharPathName(const PRUnichar *aUnicharPathName)
 {
-	PR_FREEIF(unicharPathName);
-	unicharPathName= (aUnicharPathName) ? nsCRT::strdup(aUnicharPathName ) : nsnull;
-	return (unicharPathName) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  PR_Free(unicharPathName);
+  unicharPathName= (aUnicharPathName) ? nsCRT::strdup(aUnicharPathName ) : nsnull;
+  return (unicharPathName) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 nsImapMailboxSpec& nsImapMailboxSpec::operator=(const nsImapMailboxSpec& aCopy) 
@@ -350,10 +354,10 @@ nsImapMailboxSpec& nsImapMailboxSpec::operator=(const nsImapMailboxSpec& aCopy)
 	
   box_flags = aCopy.box_flags;
 	
-  allocatedPathName = (aCopy.allocatedPathName) ? nsCRT::strdup(aCopy.allocatedPathName) : nsnull;
+  allocatedPathName = (aCopy.allocatedPathName) ? strdup(aCopy.allocatedPathName) : nsnull;
   unicharPathName = (aCopy.unicharPathName) ? nsCRT::strdup(aCopy.unicharPathName) : nsnull;
   hierarchySeparator = aCopy.hierarchySeparator;
-  hostName = nsCRT::strdup(aCopy.hostName);
+  hostName = strdup(aCopy.hostName);
 	
   flagState = aCopy.flagState;
 	
@@ -367,11 +371,15 @@ nsImapMailboxSpec& nsImapMailboxSpec::operator=(const nsImapMailboxSpec& aCopy)
   return *this;
 }
 
-void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsCString &returnString)
+// use the flagState to determine if the gaps in the msgUids correspond to gaps in the mailbox,
+// in which case we can still use ranges. If flagState is null, we won't do this.
+void AllocateImapUidString(PRUint32 *msgUids, PRUint32 &msgCount, 
+                           nsImapFlagAndUidState *flagState, nsCString &returnString)
 {
   PRUint32 startSequence = (msgCount > 0) ? msgUids[0] : 0xFFFFFFFF;
   PRUint32 curSequenceEnd = startSequence;
   PRUint32 total = msgCount;
+  PRInt32  curFlagStateIndex = -1;
 
   for (PRUint32 keyIndex=0; keyIndex < total; keyIndex++)
   {
@@ -381,21 +389,43 @@ void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsCString &retu
 
     if (lastKey)
       curSequenceEnd = curKey;
-    if (nextKey == curSequenceEnd + 1 && !lastKey)
+
+    if (!lastKey)
     {
-      curSequenceEnd = nextKey;
-      continue;
+      if (nextKey == curSequenceEnd + 1)
+      {
+        curSequenceEnd = nextKey;
+        curFlagStateIndex++;
+        continue;
+      }
+      if (flagState)
+      {
+        if (curFlagStateIndex == -1)
+        {
+          PRBool foundIt;
+          flagState->GetMessageFlagsFromUID(curSequenceEnd, &foundIt, &curFlagStateIndex);
+          NS_ASSERTION(foundIt, "flag state missing key");
+        }
+        curFlagStateIndex++;
+        PRUint32 nextUidInFlagState;
+        nsresult rv = flagState->GetUidOfMessage(curFlagStateIndex, &nextUidInFlagState);
+        if (NS_SUCCEEDED(rv) && nextUidInFlagState == nextKey)
+        {
+          curSequenceEnd = nextKey;
+          continue;
+        }
+      }
     }
-    else if (curSequenceEnd > startSequence)
+    if (curSequenceEnd > startSequence)
     {
       returnString.AppendInt(startSequence);
       returnString += ':';
       returnString.AppendInt(curSequenceEnd);
       if (!lastKey)
         returnString += ',';
-//      sprintf(currentidString, "%ld:%ld,", startSequence, curSequenceEnd);
       startSequence = nextKey;
       curSequenceEnd = startSequence;
+      curFlagStateIndex = -1;
     }
     else
     {
@@ -404,7 +434,15 @@ void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsCString &retu
       returnString.AppendInt(msgUids[keyIndex]);
       if (!lastKey)
         returnString += ',';
-//      sprintf(currentidString, "%ld,", msgUids[keyIndex]);
+      curFlagStateIndex = -1;
+    }
+    // check if we've generated too long a string - if there's no flag state,
+    // it means we just need to go ahead and generate a too long string
+    // because the calling code won't handle breaking up the strings.
+    if (flagState && returnString.Length() > 950) 
+    {
+      msgCount = total;
+      break;
     }
   }
 }
