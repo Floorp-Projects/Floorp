@@ -319,36 +319,35 @@ nsRangeUpdater::SelAdjDeleteNode(nsIDOMNode *aNode)
       item->startOffset--;
     if ((item->endNode.get() == parent) && (item->endOffset > offset))
       item->endOffset--;
-  }
+      
+    // check for range endpoints that are in aNode
+    if (item->startNode == aNode)
+    {
+      item->startNode   = parent;
+      item->startOffset = offset;
+    }
+    if (item->endNode == aNode)
+    {
+      item->endNode   = parent;
+      item->endOffset = offset;
+    }
 
-  // check for range endpoints that are in aNode
-  if (item->startNode == aNode)
-  {
-    item->startNode   = parent;
-    item->startOffset = offset;
-  }
-  if (item->endNode == aNode)
-  {
-    item->endNode   = parent;
-    item->endOffset = offset;
-  }
+    // check for range endpoints that are in descendants of aNode
+    nsCOMPtr<nsIDOMNode> oldStart;
+    if (nsEditorUtils::IsDescendantOf(item->startNode, aNode))
+    {
+      oldStart = item->startNode;  // save for efficiency hack below.
+      item->startNode   = parent;
+      item->startOffset = offset;
+    }
 
-  // check for range endpoints that are in descendants of aNode
-  nsCOMPtr<nsIDOMNode> oldStart;
-  if (nsEditorUtils::IsDescendantOf(item->startNode, aNode))
-  {
-    oldStart = item->startNode;  // save for efficiency hack below.
-    item->startNode   = parent;
-    item->startOffset = offset;
+    // avoid having to call IsDescendantOf() for common case of range startnode == range endnode.
+    if ((item->endNode == oldStart) || nsEditorUtils::IsDescendantOf(item->endNode, aNode))
+    {
+      item->endNode   = parent;
+      item->endOffset = offset;
+    }
   }
-
-  // avoid having to call IsDescendantOf() for common case of range startnode == range endnode.
-  if ((item->endNode == oldStart) || nsEditorUtils::IsDescendantOf(item->endNode, aNode))
-  {
-    item->endNode   = parent;
-    item->endOffset = offset;
-  }
-
   return NS_OK;
 }
 
