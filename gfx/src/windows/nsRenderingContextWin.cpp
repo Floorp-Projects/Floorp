@@ -119,7 +119,7 @@ public:
 GraphicsState :: GraphicsState()
 {
   mNext = nsnull;
-  mMatrix.SetToIdentity();  
+  mMatrix.SetToIdentity();
   mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
   mClipRegion = NULL;
   mColor = NS_RGB(0, 0, 0);
@@ -162,6 +162,7 @@ GraphicsState :: ~GraphicsState()
   mDottedPen = NULL;
 }
 
+// gIsWIN95 includes Win98 and WinME too
 #define NOT_SETUP 0x33
 static PRBool gIsWIN95 = NOT_SETUP;
 
@@ -182,7 +183,7 @@ nsRenderingContextWin :: nsRenderingContextWin()
     OSVERSIONINFO os;
     os.dwOSVersionInfoSize = sizeof(os);
     ::GetVersionEx(&os);
-    // XXX This may need tweaking for win98
+    // gIsWIN95 must be true for Win98 and WinME too
     if (VER_PLATFORM_WIN32_NT == os.dwPlatformId) {
       gIsWIN95 = PR_FALSE;
     }
@@ -2768,7 +2769,7 @@ NS_IMETHODIMP nsRenderingContextWin :: CreateDrawingSurface(HDC aDC, nsIDrawingS
 /**
  * ConditionRect is used to fix a coordinate overflow problem under WIN95/WIN98.
  * Some operations fail for rectangles whose coordinates have very large
- * absolute values.  Since these values are off the screen, they can be
+ * absolute values.  Since these values are (hopefully) off the screen, they can be
  * truncated to reasonable ones.
  *
  * @param aSrcRect input rectangle
@@ -2781,14 +2782,17 @@ NS_IMETHODIMP nsRenderingContextWin :: CreateDrawingSurface(HDC aDC, nsIDrawingS
 void 
 nsRenderingContextWin::ConditionRect(nsRect& aSrcRect, RECT& aDestRect)
 {
-   // XXX: TODO find the exact values for the and bottom limits. These limits were determined by
-   // printing out the RECT coordinates and noticing when they failed. There must be an offical
-   // document that describes what the coordinate limits are for calls
-   // such as ::FillRect and ::IntersectClipRect under WIN95 which fail when large negative and
-   // position values are passed.
+  // There is no limit in NT class Windows versions (this includes W2K and XP)
+  if (!gIsWIN95)
+  {
+    aDestRect.top = aSrcRect.y;
+    aDestRect.bottom = aSrcRect.y + aSrcRect.height;
+    aDestRect.left = aSrcRect.x;
+    aDestRect.right = aSrcRect.x + aSrcRect.width;
+    return;
+  }
 
-   // The following is for WIN95. If range of legal values for the rectangles passed for 
-   // clipping and drawing is smaller on WIN95 than under WINNT.                              
+  // The following is for WIN95, WIN98 and WINME
   const nscoord kBottomRightLimit = 16384;
   const nscoord kTopLeftLimit = -8192;
 
@@ -2797,13 +2801,13 @@ nsRenderingContextWin::ConditionRect(nsRect& aSrcRect, RECT& aDestRect)
                       : aSrcRect.y;
   aDestRect.bottom = ((aSrcRect.y + aSrcRect.height) > kBottomRightLimit)
                       ? kBottomRightLimit
-                      : (aSrcRect.y+aSrcRect.height);
+                      : (aSrcRect.y + aSrcRect.height);
   aDestRect.left = (aSrcRect.x < kTopLeftLimit)
                       ? kTopLeftLimit
                       : aSrcRect.x;
   aDestRect.right = ((aSrcRect.x + aSrcRect.width) > kBottomRightLimit)
                       ? kBottomRightLimit
-                      : (aSrcRect.x+aSrcRect.width);
+                      : (aSrcRect.x + aSrcRect.width);
 }
 
 
