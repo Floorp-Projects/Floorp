@@ -46,6 +46,8 @@ nsReplacementPolicy::~nsReplacementPolicy()
         nsAllocator::Free(mRankedEntries);
     if (mMapRecordIdToEntry)
         nsAllocator::Free(mMapRecordIdToEntry);
+    if (mCaches)
+        delete mCaches;
 }
 
 nsresult
