@@ -2359,7 +2359,7 @@ nsListControlFrame::IsTargetOptionDisabled(PRBool &aIsDisabled)
   rv = mPresContext->GetEventStateManager(&stateManager);
   if (NS_OK == rv) {
     nsIContent * content;
-    rv = stateManager->GetEventTargetContent(&content);
+    rv = stateManager->GetEventTargetContent(nsnull, &content);
     if (NS_OK == rv && nsnull != content) {
       if (IsOptionElement(content)) {
         aIsDisabled = nsFormFrame::GetDisabled(this, content);
@@ -2445,7 +2445,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   nsIEventStateManager *stateManager;
   if (NS_OK == mPresContext->GetEventStateManager(&stateManager)) {
     nsIContent * content;
-    stateManager->GetEventTargetContent(&content);
+    stateManager->GetEventTargetContent(nsnull, &content);
 
     nsIContent * optionContent = GetOptionFromContent(content);
     NS_RELEASE(content);

@@ -546,6 +546,9 @@ protected:
                           nsIFrame*            aFrame,
                           nsFramePaintLayer    aWhichLayer);
 
+public:
+  void SetShouldSetFocus() { mDidSetFocus = PR_FALSE; };
+
 protected:
   nsCOMPtr<nsIWebShell> mWebShell;
   PRBool mCreatingViewer;

@@ -1072,8 +1072,8 @@ void nsGfxTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
                   // and setting this to true won't propigate into the DOM, because we
                   // got here via the DOM
                   // See: nsEnderEventListener::Focus
-                  mDidSetFocus = PR_TRUE;
                   result = widget->SetFocus();
+                  mDidSetFocus = PR_TRUE;
                   NS_RELEASE(widget);
                 }
               }
@@ -3400,6 +3400,18 @@ nsEnderEventListener::Blur(nsIDOMEvent* aEvent)
     // this causes two blur notifcations to be sent
     // I removed this 
     // rods - 11/12/99 
+    // Dispatch the change event
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsGUIEvent event;
+    event.eventStructType = NS_GUI_EVENT;
+    event.widget = nsnull;
+    event.message = NS_BLUR_CONTENT;
+    event.flags = NS_EVENT_FLAG_INIT;
+    
+    gfxFrame->SetShouldSetFocus();
+
+    // Have the content handle the event.
+    mContent->HandleDOMEvent(mContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
 
   }
 

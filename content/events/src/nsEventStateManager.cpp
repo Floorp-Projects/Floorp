@@ -47,6 +47,7 @@
 #include "nsIDeviceContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsISelfScrollingFrame.h"
+#include "nsIPrivateDOMEvent.h"
 
 #undef DEBUG_scroll     // define to see ugly mousewheel messages
 
@@ -68,6 +69,7 @@ nsIPresContext * gCurrentlyFocusedPresContext = 0; // Strong
 
 nsIContent * gLastFocusedContent = 0;
 nsIDocument * gLastFocusedDocument = 0; // Strong reference
+nsIPresContext* gLastFocusedPresContext = 0; // Weak
 
 PRUint32 nsEventStateManager::mInstanceCount = 0;
 
@@ -105,6 +107,11 @@ nsEventStateManager::nsEventStateManager()
 
 nsEventStateManager::~nsEventStateManager()
 {
+  if (mPresContext == gLastFocusedPresContext) {
+    gLastFocusedPresContext = nsnull;
+    NS_IF_RELEASE(gLastFocusedDocument);
+  }
+
   NS_IF_RELEASE(mCurrentTargetContent);
   NS_IF_RELEASE(mCurrentRelatedContent);
 
@@ -125,7 +132,7 @@ nsEventStateManager::~nsEventStateManager()
   if(mInstanceCount == 0) {
     NS_IF_RELEASE(gLastFocusedContent);
     NS_IF_RELEASE(gLastFocusedDocument);
-
+    
 	NS_IF_RELEASE(gCurrentlyFocusedPresContext);
   }
 }
@@ -192,114 +199,75 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     break;
   case NS_GOTFOCUS:
     {
-      nsIContent* oldFocusedContent;
-      mCurrentTarget->GetContent(&oldFocusedContent);
-      if(gLastFocusedContent == oldFocusedContent) {
-        NS_IF_RELEASE(oldFocusedContent);
-        break;     
+      // XXX if I am ender, break.
+
+      if (gLastFocusedDocument == mDocument)
+        break;
+      
+      if (gLastFocusedDocument) {
+        nsCOMPtr<nsIScriptGlobalObject> globalObject;
+        gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+        if(globalObject) {
+
+          nsEventStatus status = nsEventStatus_eIgnore;
+          nsEvent event;
+          event.eventStructType = NS_EVENT;
+          event.message = NS_BLUR_CONTENT;
+
+          nsCOMPtr<nsIEventStateManager> esm;
+          gLastFocusedPresContext->GetEventStateManager(getter_AddRefs(esm));
+          esm->SetFocusedContent(nsnull);
+          gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+          globalObject->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+        }   
+      }   
+            
+      //fire focus
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsEvent focusevent;
+      focusevent.eventStructType = NS_EVENT;
+      focusevent.message = NS_FOCUS_CONTENT;
+
+      if (!mDocument) {
+        nsCOMPtr<nsIPresShell> presShell;
+        aPresContext->GetShell(getter_AddRefs(presShell));
+        if (presShell) {
+          presShell->GetDocument(&mDocument);
+        }
       }
-      NS_IF_RELEASE(oldFocusedContent);
-    
-      // ask focus target about its CSS user-focus style
-      PRBool surpressBlurAndFocus = PR_FALSE;
-      nsCOMPtr<nsIStyleContext> context;
-      mCurrentTarget->GetStyleContext(getter_AddRefs(context));
-      
-      const nsStyleUserInterface* styleStruct = (const nsStyleUserInterface*)context->GetStyleData(eStyleStruct_UserInterface);
-      if (NS_STYLE_USER_FOCUS_IGNORE == styleStruct->mUserFocus) {
-        // we want to surpress the blur and the following focus based on user-focus: ignore;
-        surpressBlurAndFocus = PR_TRUE;
-      }
-          
-          if(!surpressBlurAndFocus) {
-              // TODO: fire blur only if the focus target is not a child of the currently focused node 
-              // (it would just get focus again a second later)
-              PRBool isChild = PR_FALSE;
-              
-              if(!isChild){
-                // Ask if the last focused content can accept blur
-                nsCOMPtr<nsIContent> oldFocus = gLastFocusedContent;
-                if (oldFocus) {
-                 // nsIFocusableContent *focusChange;
-                 // if (NS_SUCCEEDED(oldFocus->QueryInterface(kIFocusableContentIID, (void **)&focusChange))) {
-                 //   NS_RELEASE(focusChange);
-                                       
-                      //fire blur only if target can accept focus
-                      nsEventStatus status = nsEventStatus_eIgnore;
-                      nsEvent event;
-                      event.eventStructType = NS_EVENT;
-                      event.message = NS_BLUR_CONTENT;
 
-                      if (!mDocument) {
-                        nsCOMPtr<nsIPresShell> presShell;
-                        aPresContext->GetShell(getter_AddRefs(presShell));
-                        if (presShell) {
-                          presShell->GetDocument(&mDocument);
-                        }
-                      }
+      if (mDocument) {
+        // fire focus on window, not document
+        nsCOMPtr<nsIScriptGlobalObject> globalObject;
+        mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+        if (globalObject) {
+          nsIContent* currentFocus = mCurrentFocus;
+          mCurrentFocus = nsnull;
+          mDocument->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status);
+          globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status); 
+          mCurrentFocus = currentFocus;
+        }
 
-                      if (gLastFocusedDocument) {
-                        mCurrentTarget = nsnull;
-                        
-                        nsCOMPtr<nsIScriptGlobalObject> globalObject;
-                        gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-                        if(globalObject) {
-                          globalObject->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-                          gLastFocusedDocument->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-                        }   
-                      }   
-                  }
-                //}
-              }
-      
-              // Ask if target can accept focus
-              mCurrentTarget = aTargetFrame;
-      
-              //fire focus
-              nsEventStatus status = nsEventStatus_eIgnore;
-              nsEvent focusevent;
-              focusevent.eventStructType = NS_EVENT;
-              focusevent.message = NS_FOCUS_CONTENT;
-
-              if (!mDocument) {
-                nsCOMPtr<nsIPresShell> presShell;
-                aPresContext->GetShell(getter_AddRefs(presShell));
-                if (presShell) {
-                  presShell->GetDocument(&mDocument);
-                }
-              }
-
-              if (mDocument) {
-                nsCOMPtr<nsIContent> newFoo;
-                mCurrentTarget->GetContent(getter_AddRefs(newFoo));
-                NS_IF_RELEASE(gLastFocusedContent);
-                gLastFocusedContent = newFoo;
-                NS_IF_ADDREF(gLastFocusedContent);
-                
-                mCurrentTarget = nsnull;
-                // fire focus on window, not document
-                nsCOMPtr<nsIScriptGlobalObject> globalObject;
-                mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-                if (globalObject) {
-                  globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status); 
-                  mDocument->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status);
-                }
-
-                NS_IF_RELEASE(gLastFocusedDocument);
-                gLastFocusedDocument = mDocument;
-                NS_IF_ADDREF(gLastFocusedDocument);
-              }
+        NS_IF_RELEASE(gLastFocusedDocument);
+        gLastFocusedDocument = mDocument;
+        gLastFocusedPresContext = aPresContext;
+        NS_IF_ADDREF(gLastFocusedDocument);
       }
     }
     break;
     
   case NS_LOSTFOCUS:
     {
+      // If I am Ender, break.
+
       // Hold the blur, wait for the focus so we can query the style of the focus
       // target as to what to do with the event. If appropriate we fire the blur
       // at that time.
+      NS_IF_RELEASE(mCurrentFocus);
+      mCurrentFocus = nsnull;
       NS_IF_RELEASE(gLastFocusedDocument);
       gLastFocusedDocument = mDocument;
+      gLastFocusedPresContext = aPresContext;
       NS_IF_ADDREF(gLastFocusedDocument);
     }
     break;
@@ -591,41 +559,8 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
             newFocus = current;
           }
 
-          PRBool focusChangeFailed = PR_TRUE;
-          if (focusable) {
-            if (current.get() != mCurrentFocus) {
-              nsCOMPtr<nsIContent> content = do_QueryInterface(focusable);
-              if (ChangeFocus(content, mCurrentTarget, PR_TRUE))
-                focusChangeFailed = PR_FALSE;
-            } else {
-              focusChangeFailed = PR_FALSE;
-            }
-          }
-
-          // ask focus target the magic question
-          PRBool surpressBlurAndFocus = PR_FALSE;
-          nsCOMPtr<nsIStyleContext> context;
-            
-          if(!mCurrentTarget) break;
-          mCurrentTarget->GetStyleContext(getter_AddRefs(context));
-          if(!context) break;
-            
-          const nsStyleUserInterface* styleStruct = (const nsStyleUserInterface*)context->GetStyleData(eStyleStruct_UserInterface);
-          if(!styleStruct) break;
-            
-          if (NS_STYLE_USER_FOCUS_IGNORE == styleStruct->mUserFocus) {
-            // we want to surpress the blur and the following focus
-            surpressBlurAndFocus = PR_TRUE;
-          }  
-          
-          if(!surpressBlurAndFocus) {
-            if (nsnull != aEvent->widget) {
-              aEvent->widget->SetFocus();
-            }
-            if (focusChangeFailed) {
-              SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-            }
-          }
+          nsCOMPtr<nsIContent> content = do_QueryInterface(focusable);
+          ChangeFocus(content, mCurrentTarget, PR_TRUE);
         }
         SetContentState(newFocus, NS_EVENT_STATE_ACTIVE);
       }
@@ -1442,36 +1377,36 @@ nsEventStateManager::DispatchKeyPressEvent(nsIPresContext* aPresContext,
 }
 
 PRBool
-nsEventStateManager::ChangeFocus(nsIContent* aFocusContent, nsIFrame* aFocusFrame, PRBool aSetFocus)
+nsEventStateManager::ChangeFocus(nsIContent* aFocusContent, nsIFrame* aTargetFrame, PRBool aSetFocus)
 {
   nsCOMPtr<nsIFocusableContent> focusChange = do_QueryInterface(aFocusContent);
   
-  if (focusChange && aFocusFrame) {
+  if (aTargetFrame) {
  
-    PRBool surpressBlurAndFocus = PR_FALSE;
+    PRBool suppressBlurAndFocus = PR_FALSE;
     nsCOMPtr<nsIStyleContext> context;
-    aFocusFrame->GetStyleContext(getter_AddRefs(context));
+    aTargetFrame->GetStyleContext(getter_AddRefs(context));
   
     const nsStyleUserInterface* styleStruct = (const nsStyleUserInterface*)context->GetStyleData(eStyleStruct_UserInterface);
     if (NS_STYLE_USER_FOCUS_IGNORE == styleStruct->mUserFocus) {
       // we want to surpress the blur and the following focus
-      surpressBlurAndFocus = PR_TRUE;
+      suppressBlurAndFocus = PR_TRUE;
     }
   
-    if(!surpressBlurAndFocus) {
-    if (aSetFocus) {
-        NS_IF_RELEASE(gLastFocusedContent);     
-      focusChange->SetFocus(mPresContext);
-        gLastFocusedContent = aFocusContent;
-        NS_IF_ADDREF(gLastFocusedContent);
-    } else {
-      focusChange->RemoveFocus(mPresContext);
-    }
-    }
-    return PR_TRUE;
-  }
-  //XXX Need to deal with Object tag
+    if(!suppressBlurAndFocus) {
 
+      if (focusChange) {
+        focusChange->SetFocus(mPresContext);
+      }
+      else {
+        SendFocusBlur(mPresContext, nsnull);
+      }
+    }
+  } 
+  else {
+    printf("OH MY GOD!\n");
+  }
+  
   return PR_FALSE;
 } 
 
@@ -1760,8 +1695,15 @@ nsEventStateManager::GetFocusedEventTarget(nsIFrame **aFrame)
 
 
 NS_IMETHODIMP
-nsEventStateManager::GetEventTargetContent(nsIContent** aContent)
+nsEventStateManager::GetEventTargetContent(nsEvent* aEvent, nsIContent** aContent)
 {
+  if (aEvent->message == NS_FOCUS_CONTENT ||
+      aEvent->message == NS_BLUR_CONTENT) {
+    *aContent = mCurrentFocus;
+    NS_IF_ADDREF(*aContent);
+    return NS_OK;
+  }
+
   if (mCurrentTargetContent) {
     *aContent = mCurrentTargetContent;
     NS_IF_ADDREF(*aContent);
@@ -1837,19 +1779,23 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
     NS_IF_ADDREF(mHoverContent);
   }
 
-  if ((aState & NS_EVENT_STATE_FOCUS) && (aContent != mCurrentFocus)) {
-    SendFocusBlur(mPresContext, aContent);
+  if ((aState & NS_EVENT_STATE_FOCUS)) {
+    if (aContent == mCurrentFocus) {
+      //printf("NOOOOOOOOO!\n");
+    } else {
+      SendFocusBlur(mPresContext, aContent);
 
-    //transferring ref to notifyContent from mCurrentFocus
-    notifyContent[3] = mCurrentFocus;
-    mCurrentFocus = aContent;
-    NS_IF_ADDREF(mCurrentFocus);
+      //transferring ref to notifyContent from mCurrentFocus
+      notifyContent[3] = mCurrentFocus;
+      mCurrentFocus = aContent;
+      NS_IF_ADDREF(mCurrentFocus);
 
-	gCurrentlyFocusedContent = mCurrentFocus;
+	    gCurrentlyFocusedContent = mCurrentFocus;
 
-	NS_IF_RELEASE(gCurrentlyFocusedPresContext);
-	gCurrentlyFocusedPresContext = mPresContext;
-	NS_IF_ADDREF(gCurrentlyFocusedPresContext);
+	    NS_IF_RELEASE(gCurrentlyFocusedPresContext);
+	    gCurrentlyFocusedPresContext = mPresContext;
+	    NS_IF_ADDREF(gCurrentlyFocusedPresContext);
+    }
   }
 
   if (aContent) { // notify about new content too
@@ -1936,15 +1882,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
 NS_IMETHODIMP
 nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent)
 {
-  if (mCurrentFocus == aContent) {
-    return NS_OK;
-  }
-
-
-
-  PRBool surpressBlurAndFocus = PR_FALSE;
-
-
+  PRBool suppressBlurAndFocus = PR_FALSE;
 
   if(mCurrentTarget) {
     nsCOMPtr<nsIStyleContext> context;
@@ -1954,50 +1892,32 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
  
     const nsStyleUserInterface* styleStruct = (const nsStyleUserInterface*)context->GetStyleData(eStyleStruct_UserInterface);
     if (NS_STYLE_USER_FOCUS_IGNORE == styleStruct->mUserFocus) {
-      // we want to surpress the blur and the following focus
-      surpressBlurAndFocus = PR_TRUE;
-	}
-
-      }
-      
-  if(!surpressBlurAndFocus) {
-  
-  nsIContent* targetBeforeEvent = mCurrentTargetContent;
-
-  if (mCurrentFocus) {
-    nsCOMPtr<nsIDocument> doc;
-    
-    // Make sure the content still has a document reference. If not,
-    // then we assume it is no longer in the content tree and should
-    // not receive the event.
-    nsresult result = mCurrentFocus->GetDocument(*getter_AddRefs(doc));
-    if (NS_SUCCEEDED(result) && doc) {
-      //ChangeFocus(mCurrentFocus, mCurrentTarget, PR_FALSE);
-      
-      //fire blur
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event;
-      event.eventStructType = NS_EVENT;
-      event.message = NS_BLUR_CONTENT;
-      
-      mCurrentTargetContent = mCurrentFocus;
-      NS_ADDREF(mCurrentTargetContent);
-      
-      if (nsnull != mPresContext) {
-        mCurrentFocus->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-      }
-      
-      if (gLastFocusedDocument) {
-        nsCOMPtr<nsIScriptGlobalObject> globalObject;
-        gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-        if(globalObject)
-          globalObject->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-		  gLastFocusedDocument->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-      }
-      NS_IF_RELEASE(mCurrentTargetContent);
-    }
+      // we want to suppress the blur and the following focus
+      return NS_OK;
+	  }
   }
 
+  if (nsnull != gLastFocusedPresContext && gLastFocusedContent) { 
+    //fire blur
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsEvent event;
+    event.eventStructType = NS_EVENT;
+    event.message = NS_BLUR_CONTENT;
+
+    nsCOMPtr<nsIEventStateManager> esm;
+    gLastFocusedPresContext->GetEventStateManager(getter_AddRefs(esm));
+    esm->SetFocusedContent(gLastFocusedContent);
+    gLastFocusedContent->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+    esm->SetFocusedContent(nsnull);
+  }
+  
+  NS_IF_RELEASE(gLastFocusedContent);
+  NS_IF_RELEASE(mCurrentFocus);
+  gLastFocusedContent = aContent;
+  mCurrentFocus = aContent;
+  NS_IF_ADDREF(aContent);
+  NS_IF_ADDREF(aContent);
+ 
   if (nsnull != aContent) {
     //fire focus
     nsEventStatus status = nsEventStatus_eIgnore;
@@ -2005,87 +1925,67 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     event.eventStructType = NS_EVENT;
     event.message = NS_FOCUS_CONTENT;
 
-    mCurrentTargetContent = aContent;
-    NS_ADDREF(mCurrentTargetContent);
+    NS_IF_RELEASE(mCurrentFocus);
+    mCurrentFocus = aContent;
+    NS_IF_ADDREF(mCurrentFocus);
 
     if (nsnull != mPresContext) {
       aContent->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
     }
-
-    NS_IF_RELEASE(mCurrentTargetContent);
-
-    //reset mCurretTargetContent to what it was
-    mCurrentTargetContent = targetBeforeEvent;
-
+    
     nsAutoString tabIndex;
     aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndex);
     PRInt32 ec, val = tabIndex.ToInteger(&ec);
     if (NS_OK == ec) {
       mCurrentTabIndex = val;
     }
-
-    nsIFrame * currentFocusFrame = nsnull;
-    nsCOMPtr<nsIPresShell> shell;
-    if (mPresContext) {
-      nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
-      if (NS_SUCCEEDED(rv) && shell){
-        shell->GetPrimaryFrameFor(aContent, &currentFocusFrame);
-      }
-    }
-
-    // Check to see if the newly focused content's frame has a view with a widget
-    // i.e TextField or TextArea, if so, don't set the focus on their window
-    PRBool shouldSetFocusOnWindow = PR_TRUE;
-    if (nsnull != currentFocusFrame) {
-      nsIView * view = nsnull;
-      currentFocusFrame->GetView(aPresContext, &view);
-      if (view != nsnull) {
-        nsIWidget *window = nsnull;
-        view->GetWidget(window);
-        if (window != nsnull) { // addrefs
-          shouldSetFocusOnWindow = PR_FALSE;
-          NS_RELEASE(window);
-        }
-      }
-    }
-
-    // Find the window that this frame is in and
-    // make sure it has focus
-    // XXX Note: mLastWindowToHaveFocus this does not track when ANY focus
-    // event comes through, the only place this gets set is here
-    // so some windows may get multiple focus events
-    // For example, if you clicked in the window (generates focus event)
-    // then click on a gfx control (generates another focus event)
-    if (shouldSetFocusOnWindow && nsnull != currentFocusFrame) {
-      nsIFrame * parentFrame;
-      currentFocusFrame->GetParentWithView(aPresContext, &parentFrame);
-      if (nsnull != parentFrame) {
-        nsIView * pView;
-        parentFrame->GetView(aPresContext, &pView);
-        if (nsnull != pView) {
-          nsIWidget *window = nsnull;
-
-          nsIView *ancestor = pView;
-          while (nsnull != ancestor) {
-            ancestor->GetWidget(window); // addrefs
-            if (nsnull != window) {
-              if (window != mLastWindowToHaveFocus) {
-                window->SetFocus();
-                NS_IF_RELEASE(mLastWindowToHaveFocus);
-                mLastWindowToHaveFocus = window;
-              } else {
-                NS_IF_RELEASE(window);
-              }
-	            break;
-	          }
-	          ancestor->GetParent(ancestor);
-          }
-        }
-      }
-    }
-
   }
 
+  nsIFrame * currentFocusFrame = mCurrentTarget;
+
+  // Check to see if the newly focused content's frame has a view with a widget
+  // i.e TextField or TextArea, if so, don't set the focus on their window
+  PRBool shouldSetFocusOnWindow = PR_TRUE;
+  if (nsnull != currentFocusFrame) {
+    nsIView * view = nsnull;
+    currentFocusFrame->GetView(aPresContext, &view);
+    if (view != nsnull) {
+      nsIWidget *window = nsnull;
+      view->GetWidget(window);
+      if (window != nsnull) { // addrefs
+        shouldSetFocusOnWindow = PR_FALSE;
+        NS_RELEASE(window);
+      }
+    }
+  }
+
+  // Find the window that this frame is in and
+  // make sure it has focus
+  // XXX Note: mLastWindowToHaveFocus this does not track when ANY focus
+  // event comes through, the only place this gets set is here
+  // so some windows may get multiple focus events
+  // For example, if you clicked in the window (generates focus event)
+  // then click on a gfx control (generates another focus event)
+  if (shouldSetFocusOnWindow && nsnull != currentFocusFrame) {
+    nsIFrame * parentFrame;
+    currentFocusFrame->GetParentWithView(aPresContext, &parentFrame);
+    if (nsnull != parentFrame) {
+      nsIView * pView;
+      parentFrame->GetView(aPresContext, &pView);
+      if (nsnull != pView) {
+        nsIWidget *window = nsnull;
+
+        nsIView *ancestor = pView;
+        while (nsnull != ancestor) {
+          ancestor->GetWidget(window); // addrefs
+          if (nsnull != window) {
+            window->SetFocus();
+	          break;
+	        }
+	        ancestor->GetParent(ancestor);
+        }
+      }
+    }
   }
   
   return NS_OK;
@@ -2096,6 +1996,15 @@ nsEventStateManager::GetFocusedContent(nsIContent** aContent)
 {
   *aContent = mCurrentFocus;
   NS_IF_ADDREF(*aContent);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventStateManager::SetFocusedContent(nsIContent* aContent)
+{
+  NS_IF_RELEASE(mCurrentFocus);
+  mCurrentFocus = aContent;
+  NS_IF_ADDREF(mCurrentFocus);
   return NS_OK;
 }
 
