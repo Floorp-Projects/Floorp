@@ -5131,7 +5131,6 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
       aTag !=  nsHTMLAtoms::textarea &&
       aTag !=  nsHTMLAtoms::combobox &&
       aTag !=  nsHTMLAtoms::isindex &&
-      aTag !=  nsXULAtoms::splitter &&
       aTag !=  nsXULAtoms::scrollbar
      ) {
      return NS_OK;
