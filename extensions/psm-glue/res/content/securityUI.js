@@ -32,8 +32,8 @@ function SetSecurityButton()
     securityUI = ui.QueryInterface(Components.interfaces.nsSecureBrowserUI);
 
     var button  = document.getElementById('security-button');
-	if (button && window.content)
-		securityUI.init(window.content, button);
+	if (button && window._content)
+		securityUI.init(window._content, button);
 }
 
 function displayPageInfo()

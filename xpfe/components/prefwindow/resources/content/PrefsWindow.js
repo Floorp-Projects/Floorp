@@ -105,8 +105,8 @@ function openit()  {
 		dump( "window found "+inputfield+"\n");
 		if ( inputfield )
 		{
-			dump("setting home page to "+topWindowOfType.content.location.href+"\n");
-			inputfield.value = topWindowOfType.content.location.href;
+			dump("setting home page to "+topWindowOfType._content.location.href+"\n");
+			inputfield.value = topWindowOfType._content.location.href;
 		}
 	}
 	else

@@ -393,7 +393,7 @@ void
 nsBrowserInstance::ReinitializeContentVariables()
 {
   nsCOMPtr<nsIDOMWindow> content;
-  mDOMWindow->GetContent(getter_AddRefs(content));
+  mDOMWindow->Get_content(getter_AddRefs(content));
   SetContentWindow(content);
 }
 

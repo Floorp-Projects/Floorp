@@ -158,17 +158,17 @@ function openTopWin( url )
     var topWindowOfType = windowManagerInterface.getMostRecentWindow( "navigator:browser" );
     if ( topWindowOfType )
     {
-        dump("setting page: " + topWindowOfType.content.location.href + "\n");
+        dump("setting page: " + topWindowOfType._content.location.href + "\n");
         topWindowOfType.focus();
 		// urn:
 		var pos = url.indexOf("urn:");
 		dump("\n ** openTopWin, url=" + url + ", pos=" + pos + "\n");
 		if (pos == 0) {
-        	topWindowOfType.content.location.href = xlateURL(url);
+        	topWindowOfType._content.location.href = xlateURL(url);
 		}
 		else
 		{
-        	topWindowOfType.content.location.href = url;
+        	topWindowOfType._content.location.href = url;
 		}
     }
     else

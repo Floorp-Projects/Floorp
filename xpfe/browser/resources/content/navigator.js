@@ -76,7 +76,7 @@ var gFocusedURL = null;
 function savePage( url ) 
 {
   // Default is to save current page.
-  url = url ? url : window.content.location.href;
+  url = url ? url : window._content.location.href;
   // Use stream xfer component to prompt for destination and save.
   var xfer = getService("component://netscape/appshell/component/xfer", "nsIStreamTransfer");
   try {
@@ -98,7 +98,7 @@ function getContentAreaFrameCount()
 {
   dump("*** check number of frames in content area \n");
   var saveFrameItem = document.getElementById("savepage");
-  if (!window.content.frames.length ||
+  if (!window._content.frames.length ||
       !isDocumentFrame(document.commandDispatcher.focusedWindow))
     saveFrameItem.setAttribute("hidden", "true");
   else 
@@ -124,7 +124,7 @@ function contentAreaFrameFocus()
  **/   
 function isDocumentFrame(aFocusedWindow)
 {
-  var contentFrames = window.content.frames;
+  var contentFrames = window._content.frames;
   if (contentFrames.length) {
     for (var i = 0; i < contentFrames.length; i++ ) {
       if (aFocusedWindow == contentFrames[i])
@@ -138,19 +138,19 @@ function isDocumentFrame(aFocusedWindow)
 
 function UpdateBookmarksLastVisitedDate(event)
 {
-	if ((window.content.location.href) && (window.content.location.href != ""))
+	if ((window._content.location.href) && (window._content.location.href != ""))
 	{
 		try
 		{
 
       var wnd = document.commandDispatcher.focusedWindow;
-      if (window == wnd) wnd = window.content;
+      if (window == wnd) wnd = window._content;
       var docCharset = wnd.document.characterSet;
 
 			// if the URL is bookmarked, update its "Last Visited" date
 			var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
 			if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
-			if (bmks)	bmks.UpdateBookmarkLastVisitedDate(window.content.location.href, docCharset);
+			if (bmks)	bmks.UpdateBookmarkLastVisitedDate(window._content.location.href, docCharset);
 		}
 		catch(ex)
 		{
@@ -161,7 +161,7 @@ function UpdateBookmarksLastVisitedDate(event)
 
 function UpdateInternetSearchResults(event)
 {
-	if ((window.content.location.href) && (window.content.location.href != ""))
+	if ((window._content.location.href) && (window._content.location.href != ""))
 	{
 		var	searchInProgressFlag = false;
 
@@ -169,7 +169,7 @@ function UpdateInternetSearchResults(event)
 		{
 			var search = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
 			if (search)	search = search.QueryInterface(Components.interfaces.nsIInternetSearchService);
-			if (search)	searchInProgressFlag = search.FindInternetSearchResults(window.content.location.href);
+			if (search)	searchInProgressFlag = search.FindInternetSearchResults(window._content.location.href);
 		}
 		catch(ex)
 		{
@@ -385,7 +385,7 @@ function Startup()
     // Create the browser instance component.
     createBrowserInstance();
     
-	window.content.appCore= appCore;
+	window._content.appCore= appCore;
     if (appCore == null) {
         // Give up.
         window.close();
@@ -499,9 +499,9 @@ function Shutdown()
 
   function tryToSetContentWindow() {
     var startpage = startPageDefault;
-    if ( window.content ) {
+    if ( window._content ) {
         dump("Setting content window\n");
-        appCore.setContentWindow( window.content );
+        appCore.setContentWindow( window._content );
         // Have browser app core load appropriate initial page.
 
 /* sspitzer: I think this code is unnecessary, but I'll leave it until I prove it */
@@ -540,7 +540,7 @@ function Shutdown()
 
 	// if we're already viewing a translated page, then just get the
 	// last argument (which we expect to always be "AlisTargetURI")
-	var targetURI = window.content.location.href;
+	var targetURI = window._content.location.href;
 	var targetURIIndex = targetURI.indexOf("AlisTargetURI=");
 	if (targetURIIndex >= 0)
 	{
@@ -548,7 +548,7 @@ function Shutdown()
 	}
 	service += "&AlisTargetURI=" + escape(targetURI);
 
-	//window.content.location.href = service;
+	//window._content.location.href = service;
 	if (appCore)
 	  appCore.loadUrl(service);
     else
@@ -558,7 +558,7 @@ function Shutdown()
   function RefreshUrlbar()
   {
    //Refresh the urlbar bar
-    document.getElementById('urlbar').value = window.content.location.href;
+    document.getElementById('urlbar').value = window._content.location.href;
   }
 
 function gotoHistoryIndex( aEvent )
@@ -620,7 +620,7 @@ function BrowserReallyReload(reloadType)
 
 function BrowserHome()
   {
-   window.content.home();
+   window._content.home();
    RefreshUrlbar();
   }
 
@@ -655,13 +655,13 @@ function OpenBookmarkURL(node, datasources)
       return false;
     }
 	// Check if we have a browser window
-	if ( window.content == null )
+	if ( window._content == null )
 	{
 		window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url ); 
 	}
 	else
 	{
-  	  //window.content.location.href = url;
+  	  //window._content.location.href = url;
 	  if (appCore)
 	     appCore.loadUrl(url);
 	  else
@@ -694,12 +694,12 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 		// Fallback to a Netscape default (one that we can get sidebar search results for)
 		defaultSearchURL = fallbackDefaultSearchURL;
 	}
-    dump("This is before the search " + window.content.location.href + "\n");
+    dump("This is before the search " + window._content.location.href + "\n");
 	dump("This is before the search " + searchStr + "\n");
-	if ((window.content.location.href == searchStr) || (searchStr == '')) 
+	if ((window._content.location.href == searchStr) || (searchStr == '')) 
 	{
 		if (!(defaultSearchURL == fallbackDefaultSearchURL)) {
-		//	window.content.location.href = defaultSearchURL;
+		//	window._content.location.href = defaultSearchURL;
 		// Call in to BrowserAppCore instead of replacing 
 		// the url in the content area so that B/F buttons work right
 		    if (appCore)
@@ -709,7 +709,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 		}
 		else
 		{
-			//window.content.location.href = "http://search.netscape.com/"
+			//window._content.location.href = "http://search.netscape.com/"
 			// Call in to BrowserAppCore instead of replacing 
 		    // the url in the content area so that B/F buttons work right
 			if (appCore)
@@ -766,7 +766,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 					}
 				}
 			}  
-		//	window.content.location.href = defaultSearchURL
+		//	window._content.location.href = defaultSearchURL
 		// Call in to BrowserAppCore instead of replacing 
 		// the url in the content area so that B/F buttons work right
 		    if (appCore)
@@ -922,7 +922,7 @@ function RevealSearchPanel()
   {
     var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
     var wnd = document.commandDispatcher.focusedWindow;
-    if (window == wnd) wnd = window.content;
+    if (window == wnd) wnd = window._content;
     var docCharset = wnd.document.characterSet;
 
     bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
@@ -1005,7 +1005,7 @@ function BrowserEditBookmarks()
   {
     if (appCore != null) {
       appCore.SetDocumentCharset(aCharset);
-      window.content.location.reload();
+      window._content.location.reload();
     } else {
       dump("BrowserAppCore has not been created!\n");
     }
@@ -1128,7 +1128,7 @@ function BrowserEditBookmarks()
     }
     catch(e) {
     }
-    window.content.focus();
+    window._content.focus();
   }
 
   function readFromClipboard()
@@ -1255,7 +1255,7 @@ function BrowserEditBookmarks()
     try 
     {
       var wnd = document.commandDispatcher.focusedWindow;
-      if (window == wnd) wnd = window.content;
+      if (window == wnd) wnd = window._content;
       docCharset = "charset="+ wnd.document.characterSet;
       dump("*** Current document charset: " + docCharset + "\n");
     }
@@ -1275,7 +1275,7 @@ function BrowserEditBookmarks()
         window.openDialog( "chrome://navigator/content/viewSource.xul",
 						         "_blank",
 						         "chrome,dialog=no",
-					           window.content.location, docCharset);
+					           window._content.location, docCharset);
       }
 
       catch(ex) 
@@ -1289,7 +1289,7 @@ function BrowserEditBookmarks()
         window.openDialog( "chrome://navigator/content/viewSource.xul",
 					         "_blank",
 					         "chrome,dialog=no",
-					         window.content.location);
+					         window._content.location);
     }
   }
 
@@ -1311,7 +1311,7 @@ function BrowserEditBookmarks()
           window.openDialog( "chrome://navigator/content/pageInfo.xul",
                              "_blank",
                              "chrome,dialog=no",
-                             window.content.location, charsetArg);
+                             window._content.location, charsetArg);
         }
       
       catch(ex) 
@@ -1324,7 +1324,7 @@ function BrowserEditBookmarks()
       window.openDialog( "chrome://navigator/content/viewSource.xul",
                          "_blank",
                          "chrome,dialog=no",
-                         window.content.location);
+                         window._content.location);
     }
   }
 

@@ -1537,7 +1537,7 @@ nsEditorShell::CheckOpenWindowForURLMatch(const PRUnichar* inFileURL, nsIDOMWind
   nsFileSpec   fileSpec(fileURL);
 
   nsCOMPtr<nsIDOMWindow> contentWindow;
-  inCheckWindow->GetContent(getter_AddRefs(contentWindow));
+  inCheckWindow->Get_content(getter_AddRefs(contentWindow));
   if (contentWindow)
   {
     // get the content doc
