@@ -19,13 +19,13 @@
 
 <box align="vertical" style="width: 100%; height: 100%">
 	<tabcontrol align="vertical" style="margin: 5px; border: 2px groove white">
-	   <tabbox align="horizontal">
+	   <tabbox include="chrome://addressbook/content/nsFrag1.xul" align="horizontal">
 	      <tab>Name</tab>
 	      <tab>Address</tab>
 	      <tab>Other</tab>
 	   </tabbox>
 	   
-	   <tabpanel align="vertical" flex="100%">
+	   <tabpanel include="chrome://addressbook/content/nsFrag2.xul" align="vertical" flex="100%">
 			<box index="name" align="vertical">
 				<box align="vertical" value="Name" class="CardEdit">
 					<box align="horizontal">
