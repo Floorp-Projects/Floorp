@@ -68,12 +68,15 @@ struct nsActivePlugin
   nsIPluginInstancePeer* mPeer;
   nsIPluginInstance*     mInstance;
   PRBool                 mStopped;
+  PRTime                 mllStopTime;
 
   nsActivePlugin(nsIPluginInstance* aInstance, char * url);
   ~nsActivePlugin();
+
+  void setStopped(PRBool stopped);
 };
 
-#define MAX_NUMBER_OF_STOPPED_PLUGINS 16
+#define MAX_NUMBER_OF_STOPPED_PLUGINS 10
 
 class nsActivePluginList
 {
@@ -91,6 +94,7 @@ public:
   nsActivePlugin * find(nsIPluginInstance* instance);
   nsActivePlugin * findStopped(char * url);
   PRUint32 getStoppedCount();
+  nsActivePlugin * findOldestStopped();
 };
 
 #define NS_PLUGIN_FLAG_ENABLED    0x0001    //is this plugin enabled?
