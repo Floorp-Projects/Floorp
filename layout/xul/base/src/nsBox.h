@@ -74,6 +74,11 @@ public:
   NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIBox** aBox);
   NS_IMETHOD GetDebug(PRBool& aDebug);
 
+  // XXX Eventually these will move into nsIFrame.
+  // These methods are used for XBL <children>.
+  NS_IMETHOD GetInsertionPoint(nsIFrame** aFrame) { return NS_OK; };
+  NS_IMETHOD SetInsertionPoint(nsIFrame* aFrame) { return NS_OK; };
+
   nsBox(nsIPresShell* aShell);
 
   virtual nsresult SyncLayout(nsBoxLayoutState& aBoxLayoutState);

@@ -874,6 +874,11 @@ nsBoxFrame::RemoveFrame(nsIPresContext* aPresContext,
                            nsIAtom* aListName,
                            nsIFrame* aOldFrame)
 {
+  nsIFrame* insertionPoint = nsnull;
+  GetInsertionPoint(&insertionPoint);
+  if (insertionPoint)
+    return insertionPoint->RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+
   SanityCheck(mFrames);
 
   // remove child from our info list
@@ -898,6 +903,11 @@ nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
                             nsIFrame* aPrevFrame,
                             nsIFrame* aFrameList)
 {
+   nsIFrame* insertionPoint = nsnull;
+   GetInsertionPoint(&insertionPoint);
+   if (insertionPoint)
+     return insertionPoint->InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
+
    SanityCheck(mFrames);
 
    nsIBox* prevBox = GetBox(aPrevFrame);
@@ -933,6 +943,11 @@ nsBoxFrame::AppendFrames(nsIPresContext* aPresContext,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
 {
+   nsIFrame* insertionPoint = nsnull;
+   GetInsertionPoint(&insertionPoint);
+   if (insertionPoint)
+     return insertionPoint->AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+
    SanityCheck(mFrames);
 
     // append them after

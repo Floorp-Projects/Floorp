@@ -3285,6 +3285,10 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
     contentFrame->SetInitialChildList(aPresContext, nsnull,
                                       childItems.childList);
  
+    // Create any anonymous frames the doc element frame requires
+    CreateAnonymousFrames(aPresShell, aPresContext, nsnull, aState, aDocElement, contentFrame,
+                          childItems);
+
     // only support absolute positioning if we are a block.
     // if we are a box don't do it.
     if (isBlockFrame) {
@@ -5072,13 +5076,12 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
                                    nsnull, explicitItems.childList);
       }
 
-      /* XXX comes online soon.
       if (frame) {
         // XXX Eventually generalize to HTML as well. For now,
         // leave this on nsIBox.
         nsCOMPtr<nsIBox> box(do_QueryInterface(aNewFrame));
         box->SetInsertionPoint(frame);
-      }*/
+      }
     }
 
     return NS_OK;
