@@ -31,6 +31,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsIDOMEventCapturer.h"
 #include "nsGUIEvent.h"
+#include "nsFrameList.h"
 
 class nsIEventListenerManager;
 class nsIDOMDocument;
@@ -71,6 +72,7 @@ public:
   NS_IMETHOD    GetParent(nsIDOMWindow** aOpener);
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop);
   NS_IMETHOD    GetClosed(PRBool* aClosed);
+  NS_IMETHOD    GetFrames(nsIDOMWindowCollection** aFrames);
 
   NS_IMETHOD    GetStatus(nsString& aStatus);
   NS_IMETHOD    SetStatus(const nsString& aStatus);
@@ -146,6 +148,7 @@ protected:
   nsTimeoutImpl *mRunningTimeout;
   PRUint32 mTimeoutPublicIdCounter;
   nsIEventListenerManager* mListenerManager;
+  nsFrameList *mFrames;
 };
 
 /* 

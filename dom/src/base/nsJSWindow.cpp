@@ -27,6 +27,7 @@
 #include "nsString.h"
 #include "nsIDOMNavigator.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMWindowCollection.h"
 #include "nsIDOMWindow.h"
 
 
@@ -35,10 +36,12 @@ static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINavigatorIID, NS_IDOMNAVIGATOR_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
+static NS_DEFINE_IID(kIWindowCollectionIID, NS_IDOMWINDOWCOLLECTION_IID);
 static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 
 NS_DEF_PTR(nsIDOMNavigator);
 NS_DEF_PTR(nsIDOMDocument);
+NS_DEF_PTR(nsIDOMWindowCollection);
 NS_DEF_PTR(nsIDOMWindow);
 
 //
@@ -53,9 +56,10 @@ enum Window_slots {
   WINDOW_PARENT = -16,
   WINDOW_TOP = -17,
   WINDOW_CLOSED = -18,
-  WINDOW_STATUS = -19,
-  WINDOW_DEFAULTSTATUS = -110,
-  WINDOW_NAME = -111
+  WINDOW_FRAMES = -19,
+  WINDOW_STATUS = -110,
+  WINDOW_DEFAULTSTATUS = -111,
+  WINDOW_NAME = -112
 };
 
 /***********************************************************************/
@@ -268,6 +272,33 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool prop;
         if (NS_OK == a->GetClosed(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_FRAMES:
+      {
+        nsIDOMWindowCollection* prop;
+        if (NS_OK == a->GetFrames(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
         }
         else {
           return JS_FALSE;
@@ -769,6 +800,7 @@ static JSPropertySpec WindowProperties[] =
   {"parent",    WINDOW_PARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"top",    WINDOW_TOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"closed",    WINDOW_CLOSED,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"frames",    WINDOW_FRAMES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"status",    WINDOW_STATUS,    JSPROP_ENUMERATE},
   {"defaultStatus",    WINDOW_DEFAULTSTATUS,    JSPROP_ENUMERATE},
   {"name",    WINDOW_NAME,    JSPROP_ENUMERATE},

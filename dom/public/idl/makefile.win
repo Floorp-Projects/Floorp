@@ -23,7 +23,8 @@ MODULE=raptor
 
 IDLSRCS =  \
         Navigator.idl \
-	Location.idl
+	Location.idl \
+	WindowCollection.idl
 
 GLOBAL_IDLSRC = Window.idl
 

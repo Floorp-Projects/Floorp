@@ -22,13 +22,15 @@ LIBRARY_NAME=jsdombase_s
 
 DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS =			\
-	nsJSEnvironment.cpp	\
-	nsJSWindow.cpp          \
-	nsJSNavigator.cpp       \
-	nsJSLocation.cpp	\
-	nsGlobalWindow.cpp      \
-	nsLocation.cpp		\
+CPPSRCS =			 \
+	nsJSEnvironment.cpp	 \
+	nsJSWindow.cpp           \
+	nsJSNavigator.cpp        \
+	nsJSLocation.cpp	 \
+	nsJSWindowCollection.cpp \
+	nsGlobalWindow.cpp       \
+	nsLocation.cpp		 \
+	nsFrameList.cpp		 \
 	$(NULL)
 
 MODULE=raptor 
@@ -42,6 +44,8 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsJSNavigator.obj		\
 	.\$(OBJDIR)\nsLocation.obj		\
 	.\$(OBJDIR)\nsJSLocation.obj		\
+	.\$(OBJDIR)\nsFrameList.obj		\
+	.\$(OBJDIR)\nsJSWindowCollection.obj	\
 	$(NULL)
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
