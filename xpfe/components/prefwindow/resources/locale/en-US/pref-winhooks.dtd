@@ -32,3 +32,7 @@
 <!ENTITY chrome.label     "Chrome Protocol (chrome:)">
 <!ENTITY chrome.accesskey "C">
 
+<!-- This entity is for the "show this dialog" checkbox. -->
+<!ENTITY showDialog.label "Check that Windows is set up to match these preferences each time &brandShortName; starts up.">
+<!ENTITY showDialog.accesskey "k">
+
