@@ -117,6 +117,15 @@ SetDOMImplementationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// DOMImplementation class properties
+//
+static JSPropertySpec DOMImplementationProperties[] =
+{
+  {0}
+};
+
+
+//
 // DOMImplementation finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -132,7 +141,7 @@ FinalizeDOMImplementation(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateDOMImplementation(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -142,7 +151,7 @@ EnumerateDOMImplementation(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveDOMImplementation(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -305,15 +314,6 @@ JSClass DOMImplementationClass = {
   FinalizeDOMImplementation,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// DOMImplementation class properties
-//
-static JSPropertySpec DOMImplementationProperties[] =
-{
-  {0}
 };
 
 

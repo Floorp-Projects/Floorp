@@ -141,6 +141,16 @@ SetHTMLHeadingElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLHeadingElement class properties
+//
+static JSPropertySpec HTMLHeadingElementProperties[] =
+{
+  {"align",    HTMLHEADINGELEMENT_ALIGN,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLHeadingElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -156,7 +166,7 @@ FinalizeHTMLHeadingElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLHeadingElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -166,7 +176,7 @@ EnumerateHTMLHeadingElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLHeadingElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -187,16 +197,6 @@ JSClass HTMLHeadingElementClass = {
   FinalizeHTMLHeadingElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLHeadingElement class properties
-//
-static JSPropertySpec HTMLHeadingElementProperties[] =
-{
-  {"align",    HTMLHEADINGELEMENT_ALIGN,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

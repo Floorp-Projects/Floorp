@@ -422,6 +422,27 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 
 
 //
+// HTMLTextAreaElement class properties
+//
+static JSPropertySpec HTMLTextAreaElementProperties[] =
+{
+  {"defaultValue",    HTMLTEXTAREAELEMENT_DEFAULTVALUE,    JSPROP_ENUMERATE},
+  {"form",    HTMLTEXTAREAELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"accessKey",    HTMLTEXTAREAELEMENT_ACCESSKEY,    JSPROP_ENUMERATE},
+  {"cols",    HTMLTEXTAREAELEMENT_COLS,    JSPROP_ENUMERATE},
+  {"disabled",    HTMLTEXTAREAELEMENT_DISABLED,    JSPROP_ENUMERATE},
+  {"name",    HTMLTEXTAREAELEMENT_NAME,    JSPROP_ENUMERATE},
+  {"readOnly",    HTMLTEXTAREAELEMENT_READONLY,    JSPROP_ENUMERATE},
+  {"rows",    HTMLTEXTAREAELEMENT_ROWS,    JSPROP_ENUMERATE},
+  {"tabIndex",    HTMLTEXTAREAELEMENT_TABINDEX,    JSPROP_ENUMERATE},
+  {"type",    HTMLTEXTAREAELEMENT_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"value",    HTMLTEXTAREAELEMENT_VALUE,    JSPROP_ENUMERATE},
+  {"controllers",    NSHTMLTEXTAREAELEMENT_CONTROLLERS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // HTMLTextAreaElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -437,7 +458,7 @@ FinalizeHTMLTextAreaElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLTextAreaElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -447,7 +468,7 @@ EnumerateHTMLTextAreaElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLTextAreaElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -573,27 +594,6 @@ JSClass HTMLTextAreaElementClass = {
   FinalizeHTMLTextAreaElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLTextAreaElement class properties
-//
-static JSPropertySpec HTMLTextAreaElementProperties[] =
-{
-  {"defaultValue",    HTMLTEXTAREAELEMENT_DEFAULTVALUE,    JSPROP_ENUMERATE},
-  {"form",    HTMLTEXTAREAELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"accessKey",    HTMLTEXTAREAELEMENT_ACCESSKEY,    JSPROP_ENUMERATE},
-  {"cols",    HTMLTEXTAREAELEMENT_COLS,    JSPROP_ENUMERATE},
-  {"disabled",    HTMLTEXTAREAELEMENT_DISABLED,    JSPROP_ENUMERATE},
-  {"name",    HTMLTEXTAREAELEMENT_NAME,    JSPROP_ENUMERATE},
-  {"readOnly",    HTMLTEXTAREAELEMENT_READONLY,    JSPROP_ENUMERATE},
-  {"rows",    HTMLTEXTAREAELEMENT_ROWS,    JSPROP_ENUMERATE},
-  {"tabIndex",    HTMLTEXTAREAELEMENT_TABINDEX,    JSPROP_ENUMERATE},
-  {"type",    HTMLTEXTAREAELEMENT_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"value",    HTMLTEXTAREAELEMENT_VALUE,    JSPROP_ENUMERATE},
-  {"controllers",    NSHTMLTEXTAREAELEMENT_CONTROLLERS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

@@ -213,6 +213,19 @@ SetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// Plugin class properties
+//
+static JSPropertySpec PluginProperties[] =
+{
+  {"description",    PLUGIN_DESCRIPTION,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"filename",    PLUGIN_FILENAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"name",    PLUGIN_NAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"length",    PLUGIN_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // Plugin finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -228,7 +241,7 @@ FinalizePlugin(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumeratePlugin(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -238,7 +251,7 @@ EnumeratePlugin(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolvePlugin(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -345,19 +358,6 @@ JSClass PluginClass = {
   FinalizePlugin,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// Plugin class properties
-//
-static JSPropertySpec PluginProperties[] =
-{
-  {"description",    PLUGIN_DESCRIPTION,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"filename",    PLUGIN_FILENAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"name",    PLUGIN_NAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"length",    PLUGIN_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

@@ -293,6 +293,22 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// Location class properties
+//
+static JSPropertySpec LocationProperties[] =
+{
+  {"hash",    LOCATION_HASH,    JSPROP_ENUMERATE},
+  {"host",    LOCATION_HOST,    JSPROP_ENUMERATE},
+  {"hostname",    LOCATION_HOSTNAME,    JSPROP_ENUMERATE},
+  {"pathname",    LOCATION_PATHNAME,    JSPROP_ENUMERATE},
+  {"port",    LOCATION_PORT,    JSPROP_ENUMERATE},
+  {"protocol",    LOCATION_PROTOCOL,    JSPROP_ENUMERATE},
+  {"search",    LOCATION_SEARCH,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // Location finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -308,7 +324,7 @@ FinalizeLocation(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateLocation(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -318,7 +334,7 @@ EnumerateLocation(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveLocation(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -496,22 +512,6 @@ JSClass LocationClass = {
   FinalizeLocation,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// Location class properties
-//
-static JSPropertySpec LocationProperties[] =
-{
-  {"hash",    LOCATION_HASH,    JSPROP_ENUMERATE},
-  {"host",    LOCATION_HOST,    JSPROP_ENUMERATE},
-  {"hostname",    LOCATION_HOSTNAME,    JSPROP_ENUMERATE},
-  {"pathname",    LOCATION_PATHNAME,    JSPROP_ENUMERATE},
-  {"port",    LOCATION_PORT,    JSPROP_ENUMERATE},
-  {"protocol",    LOCATION_PROTOCOL,    JSPROP_ENUMERATE},
-  {"search",    LOCATION_SEARCH,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

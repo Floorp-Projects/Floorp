@@ -98,7 +98,8 @@ public:
   virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
                         jsval aID, jsval *aVp);
   virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
-  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
+  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
+                            PRBool *aDidDefineProperty);
   virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
   virtual void      Finalize(JSContext *aContext, JSObject *aObj);
 
@@ -615,7 +616,8 @@ nsHTMLFormElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 
 
 PRBool    
-nsHTMLFormElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
+nsHTMLFormElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
+                           PRBool *aDidDefineProperty)
 {
   if (!JSVAL_IS_STRING(aID)) {
     return PR_TRUE;
@@ -675,9 +677,11 @@ nsHTMLFormElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
     ret = ::JS_DefineProperty(aContext, myObj,
                               str, OBJECT_TO_JSVAL(obj),
                               nsnull, nsnull, 0);
+
+    *aDidDefineProperty = PR_TRUE;
   }
   else {
-    ret = mInner.Resolve(aContext, aObj, aID);
+    ret = mInner.Resolve(aContext, aObj, aID, aDidDefineProperty);
   }
   
   return ret;

@@ -219,6 +219,19 @@ SetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLStyleElement class properties
+//
+static JSPropertySpec HTMLStyleElementProperties[] =
+{
+  {"disabled",    HTMLSTYLEELEMENT_DISABLED,    JSPROP_ENUMERATE},
+  {"media",    HTMLSTYLEELEMENT_MEDIA,    JSPROP_ENUMERATE},
+  {"type",    HTMLSTYLEELEMENT_TYPE,    JSPROP_ENUMERATE},
+  {"sheet",    LINKSTYLE_SHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // HTMLStyleElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -234,7 +247,7 @@ FinalizeHTMLStyleElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLStyleElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -244,7 +257,7 @@ EnumerateHTMLStyleElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLStyleElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -265,19 +278,6 @@ JSClass HTMLStyleElementClass = {
   FinalizeHTMLStyleElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLStyleElement class properties
-//
-static JSPropertySpec HTMLStyleElementProperties[] =
-{
-  {"disabled",    HTMLSTYLEELEMENT_DISABLED,    JSPROP_ENUMERATE},
-  {"media",    HTMLSTYLEELEMENT_MEDIA,    JSPROP_ENUMERATE},
-  {"type",    HTMLSTYLEELEMENT_TYPE,    JSPROP_ENUMERATE},
-  {"sheet",    LINKSTYLE_SHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

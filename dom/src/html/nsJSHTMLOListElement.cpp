@@ -201,6 +201,18 @@ SetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLOListElement class properties
+//
+static JSPropertySpec HTMLOListElementProperties[] =
+{
+  {"compact",    HTMLOLISTELEMENT_COMPACT,    JSPROP_ENUMERATE},
+  {"start",    HTMLOLISTELEMENT_START,    JSPROP_ENUMERATE},
+  {"type",    HTMLOLISTELEMENT_TYPE,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLOListElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -216,7 +228,7 @@ FinalizeHTMLOListElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLOListElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -226,7 +238,7 @@ EnumerateHTMLOListElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLOListElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -247,18 +259,6 @@ JSClass HTMLOListElementClass = {
   FinalizeHTMLOListElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLOListElement class properties
-//
-static JSPropertySpec HTMLOListElementProperties[] =
-{
-  {"compact",    HTMLOLISTELEMENT_COMPACT,    JSPROP_ENUMERATE},
-  {"start",    HTMLOLISTELEMENT_START,    JSPROP_ENUMERATE},
-  {"type",    HTMLOLISTELEMENT_TYPE,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

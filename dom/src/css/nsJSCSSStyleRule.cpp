@@ -157,6 +157,17 @@ SetCSSStyleRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// CSSStyleRule class properties
+//
+static JSPropertySpec CSSStyleRuleProperties[] =
+{
+  {"selectorText",    CSSSTYLERULE_SELECTORTEXT,    JSPROP_ENUMERATE},
+  {"style",    CSSSTYLERULE_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // CSSStyleRule finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -172,7 +183,7 @@ FinalizeCSSStyleRule(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateCSSStyleRule(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -182,7 +193,7 @@ EnumerateCSSStyleRule(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveCSSStyleRule(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -203,17 +214,6 @@ JSClass CSSStyleRuleClass = {
   FinalizeCSSStyleRule,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// CSSStyleRule class properties
-//
-static JSPropertySpec CSSStyleRuleProperties[] =
-{
-  {"selectorText",    CSSSTYLERULE_SELECTORTEXT,    JSPROP_ENUMERATE},
-  {"style",    CSSSTYLERULE_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

@@ -328,6 +328,23 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLLayerElement class properties
+//
+static JSPropertySpec HTMLLayerElementProperties[] =
+{
+  {"top",    HTMLLAYERELEMENT_TOP,    JSPROP_ENUMERATE},
+  {"left",    HTMLLAYERELEMENT_LEFT,    JSPROP_ENUMERATE},
+  {"visibility",    HTMLLAYERELEMENT_VISIBILITY,    JSPROP_ENUMERATE},
+  {"background",    HTMLLAYERELEMENT_BACKGROUND,    JSPROP_ENUMERATE},
+  {"bgColor",    HTMLLAYERELEMENT_BGCOLOR,    JSPROP_ENUMERATE},
+  {"name",    HTMLLAYERELEMENT_NAME,    JSPROP_ENUMERATE},
+  {"zIndex",    HTMLLAYERELEMENT_ZINDEX,    JSPROP_ENUMERATE},
+  {"document",    HTMLLAYERELEMENT_DOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // HTMLLayerElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -343,7 +360,7 @@ FinalizeHTMLLayerElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLLayerElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -353,7 +370,7 @@ EnumerateHTMLLayerElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLLayerElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -374,23 +391,6 @@ JSClass HTMLLayerElementClass = {
   FinalizeHTMLLayerElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLLayerElement class properties
-//
-static JSPropertySpec HTMLLayerElementProperties[] =
-{
-  {"top",    HTMLLAYERELEMENT_TOP,    JSPROP_ENUMERATE},
-  {"left",    HTMLLAYERELEMENT_LEFT,    JSPROP_ENUMERATE},
-  {"visibility",    HTMLLAYERELEMENT_VISIBILITY,    JSPROP_ENUMERATE},
-  {"background",    HTMLLAYERELEMENT_BACKGROUND,    JSPROP_ENUMERATE},
-  {"bgColor",    HTMLLAYERELEMENT_BGCOLOR,    JSPROP_ENUMERATE},
-  {"name",    HTMLLAYERELEMENT_NAME,    JSPROP_ENUMERATE},
-  {"zIndex",    HTMLLAYERELEMENT_ZINDEX,    JSPROP_ENUMERATE},
-  {"document",    HTMLLAYERELEMENT_DOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

@@ -132,6 +132,16 @@ SetCryptoProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// Crypto class properties
+//
+static JSPropertySpec CryptoProperties[] =
+{
+  {"version",    CRYPTO_VERSION,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // Crypto finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -147,7 +157,7 @@ FinalizeCrypto(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateCrypto(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -157,7 +167,7 @@ EnumerateCrypto(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveCrypto(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -495,16 +505,6 @@ JSClass CryptoClass = {
   FinalizeCrypto,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// Crypto class properties
-//
-static JSPropertySpec CryptoProperties[] =
-{
-  {"version",    CRYPTO_VERSION,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

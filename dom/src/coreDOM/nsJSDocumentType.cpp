@@ -199,6 +199,21 @@ SetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// DocumentType class properties
+//
+static JSPropertySpec DocumentTypeProperties[] =
+{
+  {"name",    DOCUMENTTYPE_NAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"entities",    DOCUMENTTYPE_ENTITIES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"notations",    DOCUMENTTYPE_NOTATIONS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"publicId",    DOCUMENTTYPE_PUBLICID,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"systemId",    DOCUMENTTYPE_SYSTEMID,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"internalSubset",    DOCUMENTTYPE_INTERNALSUBSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // DocumentType finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -214,7 +229,7 @@ FinalizeDocumentType(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateDocumentType(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -224,7 +239,7 @@ EnumerateDocumentType(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveDocumentType(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -245,21 +260,6 @@ JSClass DocumentTypeClass = {
   FinalizeDocumentType,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// DocumentType class properties
-//
-static JSPropertySpec DocumentTypeProperties[] =
-{
-  {"name",    DOCUMENTTYPE_NAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"entities",    DOCUMENTTYPE_ENTITIES,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"notations",    DOCUMENTTYPE_NOTATIONS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"publicId",    DOCUMENTTYPE_PUBLICID,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"systemId",    DOCUMENTTYPE_SYSTEMID,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"internalSubset",    DOCUMENTTYPE_INTERNALSUBSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

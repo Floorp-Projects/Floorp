@@ -294,6 +294,22 @@ SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLScriptElement class properties
+//
+static JSPropertySpec HTMLScriptElementProperties[] =
+{
+  {"text",    HTMLSCRIPTELEMENT_TEXT,    JSPROP_ENUMERATE},
+  {"htmlFor",    HTMLSCRIPTELEMENT_HTMLFOR,    JSPROP_ENUMERATE},
+  {"event",    HTMLSCRIPTELEMENT_EVENT,    JSPROP_ENUMERATE},
+  {"charset",    HTMLSCRIPTELEMENT_CHARSET,    JSPROP_ENUMERATE},
+  {"defer",    HTMLSCRIPTELEMENT_DEFER,    JSPROP_ENUMERATE},
+  {"src",    HTMLSCRIPTELEMENT_SRC,    JSPROP_ENUMERATE},
+  {"type",    HTMLSCRIPTELEMENT_TYPE,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLScriptElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -309,7 +325,7 @@ FinalizeHTMLScriptElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLScriptElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -319,7 +335,7 @@ EnumerateHTMLScriptElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLScriptElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -340,22 +356,6 @@ JSClass HTMLScriptElementClass = {
   FinalizeHTMLScriptElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLScriptElement class properties
-//
-static JSPropertySpec HTMLScriptElementProperties[] =
-{
-  {"text",    HTMLSCRIPTELEMENT_TEXT,    JSPROP_ENUMERATE},
-  {"htmlFor",    HTMLSCRIPTELEMENT_HTMLFOR,    JSPROP_ENUMERATE},
-  {"event",    HTMLSCRIPTELEMENT_EVENT,    JSPROP_ENUMERATE},
-  {"charset",    HTMLSCRIPTELEMENT_CHARSET,    JSPROP_ENUMERATE},
-  {"defer",    HTMLSCRIPTELEMENT_DEFER,    JSPROP_ENUMERATE},
-  {"src",    HTMLSCRIPTELEMENT_SRC,    JSPROP_ENUMERATE},
-  {"type",    HTMLSCRIPTELEMENT_TYPE,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

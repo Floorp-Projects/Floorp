@@ -470,6 +470,29 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLTableElement class properties
+//
+static JSPropertySpec HTMLTableElementProperties[] =
+{
+  {"caption",    HTMLTABLEELEMENT_CAPTION,    JSPROP_ENUMERATE},
+  {"tHead",    HTMLTABLEELEMENT_THEAD,    JSPROP_ENUMERATE},
+  {"tFoot",    HTMLTABLEELEMENT_TFOOT,    JSPROP_ENUMERATE},
+  {"rows",    HTMLTABLEELEMENT_ROWS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"tBodies",    HTMLTABLEELEMENT_TBODIES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"align",    HTMLTABLEELEMENT_ALIGN,    JSPROP_ENUMERATE},
+  {"bgColor",    HTMLTABLEELEMENT_BGCOLOR,    JSPROP_ENUMERATE},
+  {"border",    HTMLTABLEELEMENT_BORDER,    JSPROP_ENUMERATE},
+  {"cellPadding",    HTMLTABLEELEMENT_CELLPADDING,    JSPROP_ENUMERATE},
+  {"cellSpacing",    HTMLTABLEELEMENT_CELLSPACING,    JSPROP_ENUMERATE},
+  {"frame",    HTMLTABLEELEMENT_FRAME,    JSPROP_ENUMERATE},
+  {"rules",    HTMLTABLEELEMENT_RULES,    JSPROP_ENUMERATE},
+  {"summary",    HTMLTABLEELEMENT_SUMMARY,    JSPROP_ENUMERATE},
+  {"width",    HTMLTABLEELEMENT_WIDTH,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLTableElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -485,7 +508,7 @@ FinalizeHTMLTableElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLTableElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -495,7 +518,7 @@ EnumerateHTMLTableElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLTableElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -816,29 +839,6 @@ JSClass HTMLTableElementClass = {
   FinalizeHTMLTableElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLTableElement class properties
-//
-static JSPropertySpec HTMLTableElementProperties[] =
-{
-  {"caption",    HTMLTABLEELEMENT_CAPTION,    JSPROP_ENUMERATE},
-  {"tHead",    HTMLTABLEELEMENT_THEAD,    JSPROP_ENUMERATE},
-  {"tFoot",    HTMLTABLEELEMENT_TFOOT,    JSPROP_ENUMERATE},
-  {"rows",    HTMLTABLEELEMENT_ROWS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"tBodies",    HTMLTABLEELEMENT_TBODIES,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"align",    HTMLTABLEELEMENT_ALIGN,    JSPROP_ENUMERATE},
-  {"bgColor",    HTMLTABLEELEMENT_BGCOLOR,    JSPROP_ENUMERATE},
-  {"border",    HTMLTABLEELEMENT_BORDER,    JSPROP_ENUMERATE},
-  {"cellPadding",    HTMLTABLEELEMENT_CELLPADDING,    JSPROP_ENUMERATE},
-  {"cellSpacing",    HTMLTABLEELEMENT_CELLSPACING,    JSPROP_ENUMERATE},
-  {"frame",    HTMLTABLEELEMENT_FRAME,    JSPROP_ENUMERATE},
-  {"rules",    HTMLTABLEELEMENT_RULES,    JSPROP_ENUMERATE},
-  {"summary",    HTMLTABLEELEMENT_SUMMARY,    JSPROP_ENUMERATE},
-  {"width",    HTMLTABLEELEMENT_WIDTH,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

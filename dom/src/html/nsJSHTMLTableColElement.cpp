@@ -273,6 +273,21 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 
 
 //
+// HTMLTableColElement class properties
+//
+static JSPropertySpec HTMLTableColElementProperties[] =
+{
+  {"align",    HTMLTABLECOLELEMENT_ALIGN,    JSPROP_ENUMERATE},
+  {"ch",    HTMLTABLECOLELEMENT_CH,    JSPROP_ENUMERATE},
+  {"chOff",    HTMLTABLECOLELEMENT_CHOFF,    JSPROP_ENUMERATE},
+  {"span",    HTMLTABLECOLELEMENT_SPAN,    JSPROP_ENUMERATE},
+  {"vAlign",    HTMLTABLECOLELEMENT_VALIGN,    JSPROP_ENUMERATE},
+  {"width",    HTMLTABLECOLELEMENT_WIDTH,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLTableColElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -288,7 +303,7 @@ FinalizeHTMLTableColElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLTableColElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -298,7 +313,7 @@ EnumerateHTMLTableColElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLTableColElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -319,21 +334,6 @@ JSClass HTMLTableColElementClass = {
   FinalizeHTMLTableColElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLTableColElement class properties
-//
-static JSPropertySpec HTMLTableColElementProperties[] =
-{
-  {"align",    HTMLTABLECOLELEMENT_ALIGN,    JSPROP_ENUMERATE},
-  {"ch",    HTMLTABLECOLELEMENT_CH,    JSPROP_ENUMERATE},
-  {"chOff",    HTMLTABLECOLELEMENT_CHOFF,    JSPROP_ENUMERATE},
-  {"span",    HTMLTABLECOLELEMENT_SPAN,    JSPROP_ENUMERATE},
-  {"vAlign",    HTMLTABLECOLELEMENT_VALIGN,    JSPROP_ENUMERATE},
-  {"width",    HTMLTABLECOLELEMENT_WIDTH,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

@@ -154,6 +154,17 @@ SetCSSValueProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// CSSValue class properties
+//
+static JSPropertySpec CSSValueProperties[] =
+{
+  {"cssText",    CSSVALUE_CSSTEXT,    JSPROP_ENUMERATE},
+  {"cssValueType",    CSSVALUE_CSSVALUETYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // CSSValue finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -169,7 +180,7 @@ FinalizeCSSValue(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateCSSValue(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -179,7 +190,7 @@ EnumerateCSSValue(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveCSSValue(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -200,17 +211,6 @@ JSClass CSSValueClass = {
   FinalizeCSSValue,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// CSSValue class properties
-//
-static JSPropertySpec CSSValueProperties[] =
-{
-  {"cssText",    CSSVALUE_CSSTEXT,    JSPROP_ENUMERATE},
-  {"cssValueType",    CSSVALUE_CSSVALUETYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

@@ -1873,8 +1873,11 @@ nsGenericElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 }
 
 PRBool    
-nsGenericElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
+nsGenericElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
+                          PRBool* aDidDefineProperty)
 {
+  *aDidDefineProperty = PR_FALSE;
+
   return PR_TRUE;
 }
 

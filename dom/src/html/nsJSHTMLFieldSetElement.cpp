@@ -133,6 +133,16 @@ SetHTMLFieldSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 
 
 //
+// HTMLFieldSetElement class properties
+//
+static JSPropertySpec HTMLFieldSetElementProperties[] =
+{
+  {"form",    HTMLFIELDSETELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // HTMLFieldSetElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -148,7 +158,7 @@ FinalizeHTMLFieldSetElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLFieldSetElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -158,7 +168,7 @@ EnumerateHTMLFieldSetElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLFieldSetElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -179,16 +189,6 @@ JSClass HTMLFieldSetElementClass = {
   FinalizeHTMLFieldSetElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLFieldSetElement class properties
-//
-static JSPropertySpec HTMLFieldSetElementProperties[] =
-{
-  {"form",    HTMLFIELDSETELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

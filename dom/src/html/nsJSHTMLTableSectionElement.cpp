@@ -234,6 +234,20 @@ SetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
 
 
 //
+// HTMLTableSectionElement class properties
+//
+static JSPropertySpec HTMLTableSectionElementProperties[] =
+{
+  {"align",    HTMLTABLESECTIONELEMENT_ALIGN,    JSPROP_ENUMERATE},
+  {"ch",    HTMLTABLESECTIONELEMENT_CH,    JSPROP_ENUMERATE},
+  {"chOff",    HTMLTABLESECTIONELEMENT_CHOFF,    JSPROP_ENUMERATE},
+  {"vAlign",    HTMLTABLESECTIONELEMENT_VALIGN,    JSPROP_ENUMERATE},
+  {"rows",    HTMLTABLESECTIONELEMENT_ROWS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // HTMLTableSectionElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -249,7 +263,7 @@ FinalizeHTMLTableSectionElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLTableSectionElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -259,7 +273,7 @@ EnumerateHTMLTableSectionElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLTableSectionElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -367,20 +381,6 @@ JSClass HTMLTableSectionElementClass = {
   FinalizeHTMLTableSectionElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLTableSectionElement class properties
-//
-static JSPropertySpec HTMLTableSectionElementProperties[] =
-{
-  {"align",    HTMLTABLESECTIONELEMENT_ALIGN,    JSPROP_ENUMERATE},
-  {"ch",    HTMLTABLESECTIONELEMENT_CH,    JSPROP_ENUMERATE},
-  {"chOff",    HTMLTABLESECTIONELEMENT_CHOFF,    JSPROP_ENUMERATE},
-  {"vAlign",    HTMLTABLESECTIONELEMENT_VALIGN,    JSPROP_ENUMERATE},
-  {"rows",    HTMLTABLESECTIONELEMENT_ROWS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

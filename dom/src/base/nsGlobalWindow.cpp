@@ -2329,16 +2329,23 @@ PRBool GlobalWindowImpl::EnumerateProperty(JSContext* aContext, JSObject* aObj)
   return ::JS_EnumerateStandardClasses(aContext, aObj);
 }
 
-PRBool GlobalWindowImpl::Resolve(JSContext* aContext, JSObject* aObj, jsval aID)
+PRBool GlobalWindowImpl::Resolve(JSContext* aContext, JSObject* aObj,
+                                 jsval aID, PRBool* aDidDefineProperty)
 {
+  *aDidDefineProperty = PR_FALSE;
+
   if (JSVAL_IS_STRING(aID)) {
     JSBool resolved;
     JSString *str;
 
     if (!::JS_ResolveStandardClass(aContext, aObj, aID, &resolved))
       return PR_FALSE;
-    if (resolved)
+
+    if (resolved) {
+      *aDidDefineProperty = PR_TRUE;
+
       return PR_TRUE;
+    }
 
     str = JSVAL_TO_STRING(aID);
     if (mDocShell) {
@@ -2380,10 +2387,14 @@ PRBool GlobalWindowImpl::Resolve(JSContext* aContext, JSObject* aObj, jsval aID)
             }
             // Okay, if we now have a childObj, we can define it and proceed.
             if (childObj) {
-              ::JS_DefineUCProperty(aContext, (JSObject *) mScriptObject,
-                                    chars, ::JS_GetStringLength(str),
-                                    OBJECT_TO_JSVAL(childObj), nsnull, nsnull,
-                                    0);
+              if (!::JS_DefineUCProperty(aContext, (JSObject *) mScriptObject,
+                                         chars, ::JS_GetStringLength(str),
+                                         OBJECT_TO_JSVAL(childObj), nsnull,
+                                         nsnull, 0)) {
+                return PR_FALSE;
+              }
+
+              *aDidDefineProperty = PR_TRUE;
             }
           }
         }

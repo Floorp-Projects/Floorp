@@ -353,6 +353,24 @@ SetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLFormElement class properties
+//
+static JSPropertySpec HTMLFormElementProperties[] =
+{
+  {"elements",    HTMLFORMELEMENT_ELEMENTS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"length",    HTMLFORMELEMENT_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"name",    HTMLFORMELEMENT_NAME,    JSPROP_ENUMERATE},
+  {"acceptCharset",    HTMLFORMELEMENT_ACCEPTCHARSET,    JSPROP_ENUMERATE},
+  {"action",    HTMLFORMELEMENT_ACTION,    JSPROP_ENUMERATE},
+  {"enctype",    HTMLFORMELEMENT_ENCTYPE,    JSPROP_ENUMERATE},
+  {"method",    HTMLFORMELEMENT_METHOD,    JSPROP_ENUMERATE},
+  {"target",    HTMLFORMELEMENT_TARGET,    JSPROP_ENUMERATE},
+  {"encoding",    NSHTMLFORMELEMENT_ENCODING,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // HTMLFormElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -368,7 +386,7 @@ FinalizeHTMLFormElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLFormElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -378,7 +396,7 @@ EnumerateHTMLFormElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLFormElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -559,24 +577,6 @@ JSClass HTMLFormElementClass = {
   FinalizeHTMLFormElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLFormElement class properties
-//
-static JSPropertySpec HTMLFormElementProperties[] =
-{
-  {"elements",    HTMLFORMELEMENT_ELEMENTS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"length",    HTMLFORMELEMENT_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"name",    HTMLFORMELEMENT_NAME,    JSPROP_ENUMERATE},
-  {"acceptCharset",    HTMLFORMELEMENT_ACCEPTCHARSET,    JSPROP_ENUMERATE},
-  {"action",    HTMLFORMELEMENT_ACTION,    JSPROP_ENUMERATE},
-  {"enctype",    HTMLFORMELEMENT_ENCTYPE,    JSPROP_ENUMERATE},
-  {"method",    HTMLFORMELEMENT_METHOD,    JSPROP_ENUMERATE},
-  {"target",    HTMLFORMELEMENT_TARGET,    JSPROP_ENUMERATE},
-  {"encoding",    NSHTMLFORMELEMENT_ENCODING,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

@@ -141,6 +141,16 @@ SetHTMLDivElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLDivElement class properties
+//
+static JSPropertySpec HTMLDivElementProperties[] =
+{
+  {"align",    HTMLDIVELEMENT_ALIGN,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLDivElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -156,7 +166,7 @@ FinalizeHTMLDivElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLDivElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -166,7 +176,7 @@ EnumerateHTMLDivElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLDivElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -187,16 +197,6 @@ JSClass HTMLDivElementClass = {
   FinalizeHTMLDivElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLDivElement class properties
-//
-static JSPropertySpec HTMLDivElementProperties[] =
-{
-  {"align",    HTMLDIVELEMENT_ALIGN,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

@@ -141,6 +141,16 @@ SetHTMLTitleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLTitleElement class properties
+//
+static JSPropertySpec HTMLTitleElementProperties[] =
+{
+  {"text",    HTMLTITLEELEMENT_TEXT,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLTitleElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -156,7 +166,7 @@ FinalizeHTMLTitleElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLTitleElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -166,7 +176,7 @@ EnumerateHTMLTitleElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLTitleElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -187,16 +197,6 @@ JSClass HTMLTitleElementClass = {
   FinalizeHTMLTitleElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLTitleElement class properties
-//
-static JSPropertySpec HTMLTitleElementProperties[] =
-{
-  {"text",    HTMLTITLEELEMENT_TEXT,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

@@ -191,6 +191,18 @@ SetHTMLFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLFontElement class properties
+//
+static JSPropertySpec HTMLFontElementProperties[] =
+{
+  {"color",    HTMLFONTELEMENT_COLOR,    JSPROP_ENUMERATE},
+  {"face",    HTMLFONTELEMENT_FACE,    JSPROP_ENUMERATE},
+  {"size",    HTMLFONTELEMENT_SIZE,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLFontElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -206,7 +218,7 @@ FinalizeHTMLFontElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLFontElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -216,7 +228,7 @@ EnumerateHTMLFontElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLFontElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -237,18 +249,6 @@ JSClass HTMLFontElementClass = {
   FinalizeHTMLFontElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLFontElement class properties
-//
-static JSPropertySpec HTMLFontElementProperties[] =
-{
-  {"color",    HTMLFONTELEMENT_COLOR,    JSPROP_ENUMERATE},
-  {"face",    HTMLFONTELEMENT_FACE,    JSPROP_ENUMERATE},
-  {"size",    HTMLFONTELEMENT_SIZE,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

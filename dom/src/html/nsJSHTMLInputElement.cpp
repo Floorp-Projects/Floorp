@@ -722,6 +722,37 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLInputElement class properties
+//
+static JSPropertySpec HTMLInputElementProperties[] =
+{
+  {"defaultValue",    HTMLINPUTELEMENT_DEFAULTVALUE,    JSPROP_ENUMERATE},
+  {"defaultChecked",    HTMLINPUTELEMENT_DEFAULTCHECKED,    JSPROP_ENUMERATE},
+  {"form",    HTMLINPUTELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"accept",    HTMLINPUTELEMENT_ACCEPT,    JSPROP_ENUMERATE},
+  {"accessKey",    HTMLINPUTELEMENT_ACCESSKEY,    JSPROP_ENUMERATE},
+  {"align",    HTMLINPUTELEMENT_ALIGN,    JSPROP_ENUMERATE},
+  {"alt",    HTMLINPUTELEMENT_ALT,    JSPROP_ENUMERATE},
+  {"checked",    HTMLINPUTELEMENT_CHECKED,    JSPROP_ENUMERATE},
+  {"disabled",    HTMLINPUTELEMENT_DISABLED,    JSPROP_ENUMERATE},
+  {"maxLength",    HTMLINPUTELEMENT_MAXLENGTH,    JSPROP_ENUMERATE},
+  {"name",    HTMLINPUTELEMENT_NAME,    JSPROP_ENUMERATE},
+  {"readOnly",    HTMLINPUTELEMENT_READONLY,    JSPROP_ENUMERATE},
+  {"size",    HTMLINPUTELEMENT_SIZE,    JSPROP_ENUMERATE},
+  {"src",    HTMLINPUTELEMENT_SRC,    JSPROP_ENUMERATE},
+  {"tabIndex",    HTMLINPUTELEMENT_TABINDEX,    JSPROP_ENUMERATE},
+  {"type",    HTMLINPUTELEMENT_TYPE,    JSPROP_ENUMERATE},
+  {"useMap",    HTMLINPUTELEMENT_USEMAP,    JSPROP_ENUMERATE},
+  {"value",    HTMLINPUTELEMENT_VALUE,    JSPROP_ENUMERATE},
+  {"controllers",    NSHTMLINPUTELEMENT_CONTROLLERS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"textLength",    NSHTMLINPUTELEMENT_TEXTLENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"selectionStart",    NSHTMLINPUTELEMENT_SELECTIONSTART,    JSPROP_ENUMERATE},
+  {"selectionEnd",    NSHTMLINPUTELEMENT_SELECTIONEND,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLInputElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -737,7 +768,7 @@ FinalizeHTMLInputElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLInputElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -747,7 +778,7 @@ EnumerateHTMLInputElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLInputElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -960,37 +991,6 @@ JSClass HTMLInputElementClass = {
   FinalizeHTMLInputElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLInputElement class properties
-//
-static JSPropertySpec HTMLInputElementProperties[] =
-{
-  {"defaultValue",    HTMLINPUTELEMENT_DEFAULTVALUE,    JSPROP_ENUMERATE},
-  {"defaultChecked",    HTMLINPUTELEMENT_DEFAULTCHECKED,    JSPROP_ENUMERATE},
-  {"form",    HTMLINPUTELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"accept",    HTMLINPUTELEMENT_ACCEPT,    JSPROP_ENUMERATE},
-  {"accessKey",    HTMLINPUTELEMENT_ACCESSKEY,    JSPROP_ENUMERATE},
-  {"align",    HTMLINPUTELEMENT_ALIGN,    JSPROP_ENUMERATE},
-  {"alt",    HTMLINPUTELEMENT_ALT,    JSPROP_ENUMERATE},
-  {"checked",    HTMLINPUTELEMENT_CHECKED,    JSPROP_ENUMERATE},
-  {"disabled",    HTMLINPUTELEMENT_DISABLED,    JSPROP_ENUMERATE},
-  {"maxLength",    HTMLINPUTELEMENT_MAXLENGTH,    JSPROP_ENUMERATE},
-  {"name",    HTMLINPUTELEMENT_NAME,    JSPROP_ENUMERATE},
-  {"readOnly",    HTMLINPUTELEMENT_READONLY,    JSPROP_ENUMERATE},
-  {"size",    HTMLINPUTELEMENT_SIZE,    JSPROP_ENUMERATE},
-  {"src",    HTMLINPUTELEMENT_SRC,    JSPROP_ENUMERATE},
-  {"tabIndex",    HTMLINPUTELEMENT_TABINDEX,    JSPROP_ENUMERATE},
-  {"type",    HTMLINPUTELEMENT_TYPE,    JSPROP_ENUMERATE},
-  {"useMap",    HTMLINPUTELEMENT_USEMAP,    JSPROP_ENUMERATE},
-  {"value",    HTMLINPUTELEMENT_VALUE,    JSPROP_ENUMERATE},
-  {"controllers",    NSHTMLINPUTELEMENT_CONTROLLERS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"textLength",    NSHTMLINPUTELEMENT_TEXTLENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"selectionStart",    NSHTMLINPUTELEMENT_SELECTIONSTART,    JSPROP_ENUMERATE},
-  {"selectionEnd",    NSHTMLINPUTELEMENT_SELECTIONEND,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

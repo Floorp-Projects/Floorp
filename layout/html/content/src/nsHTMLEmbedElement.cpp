@@ -83,7 +83,8 @@ public:
   virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
                         jsval aID, jsval *aVp);
   virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
-  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
+  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
+                            PRBool* aDidDefineProperty);
   virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
   virtual void      Finalize(JSContext *aContext, JSObject *aObj);
 
@@ -486,9 +487,10 @@ nsHTMLEmbedElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 }
 
 PRBool    
-nsHTMLEmbedElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
+nsHTMLEmbedElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
+                            PRBool *aDidDefineProperty)
 {
-  return mInner.Resolve(aContext, aObj, aID);
+  return mInner.Resolve(aContext, aObj, aID, aDidDefineProperty);
 }
 
 PRBool    

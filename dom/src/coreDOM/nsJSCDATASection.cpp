@@ -113,6 +113,15 @@ SetCDATASectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// CDATASection class properties
+//
+static JSPropertySpec CDATASectionProperties[] =
+{
+  {0}
+};
+
+
+//
 // CDATASection finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -128,7 +137,7 @@ FinalizeCDATASection(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateCDATASection(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -138,7 +147,7 @@ EnumerateCDATASection(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveCDATASection(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -159,15 +168,6 @@ JSClass CDATASectionClass = {
   FinalizeCDATASection,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// CDATASection class properties
-//
-static JSPropertySpec CDATASectionProperties[] =
-{
-  {0}
 };
 
 

@@ -142,6 +142,16 @@ SetStyleSheetListProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// StyleSheetList class properties
+//
+static JSPropertySpec StyleSheetListProperties[] =
+{
+  {"length",    STYLESHEETLIST_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // StyleSheetList finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -157,7 +167,7 @@ FinalizeStyleSheetList(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateStyleSheetList(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -167,7 +177,7 @@ EnumerateStyleSheetList(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveStyleSheetList(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -232,16 +242,6 @@ JSClass StyleSheetListClass = {
   FinalizeStyleSheetList,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// StyleSheetList class properties
-//
-static JSPropertySpec StyleSheetListProperties[] =
-{
-  {"length",    STYLESHEETLIST_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

@@ -181,6 +181,18 @@ SetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 
 
 //
+// CSSStyleDeclaration class properties
+//
+static JSPropertySpec CSSStyleDeclarationProperties[] =
+{
+  {"cssText",    CSSSTYLEDECLARATION_CSSTEXT,    JSPROP_ENUMERATE},
+  {"length",    CSSSTYLEDECLARATION_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"parentRule",    CSSSTYLEDECLARATION_PARENTRULE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // CSSStyleDeclaration finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -196,7 +208,7 @@ FinalizeCSSStyleDeclaration(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateCSSStyleDeclaration(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -206,7 +218,7 @@ EnumerateCSSStyleDeclaration(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveCSSStyleDeclaration(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -484,18 +496,6 @@ JSClass CSSStyleDeclarationClass = {
   FinalizeCSSStyleDeclaration,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// CSSStyleDeclaration class properties
-//
-static JSPropertySpec CSSStyleDeclarationProperties[] =
-{
-  {"cssText",    CSSSTYLEDECLARATION_CSSTEXT,    JSPROP_ENUMERATE},
-  {"length",    CSSSTYLEDECLARATION_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"parentRule",    CSSSTYLEDECLARATION_PARENTRULE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

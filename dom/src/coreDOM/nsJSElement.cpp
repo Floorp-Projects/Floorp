@@ -134,6 +134,16 @@ SetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// Element class properties
+//
+static JSPropertySpec ElementProperties[] =
+{
+  {"tagName",    ELEMENT_TAGNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // Element finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -149,7 +159,7 @@ FinalizeElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -159,7 +169,7 @@ EnumerateElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -840,16 +850,6 @@ JSClass ElementClass = {
   FinalizeElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// Element class properties
-//
-static JSPropertySpec ElementProperties[] =
-{
-  {"tagName",    ELEMENT_TAGNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

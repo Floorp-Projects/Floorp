@@ -172,6 +172,19 @@ SetMimeTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// MimeType class properties
+//
+static JSPropertySpec MimeTypeProperties[] =
+{
+  {"description",    MIMETYPE_DESCRIPTION,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"enabledPlugin",    MIMETYPE_ENABLEDPLUGIN,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"suffixes",    MIMETYPE_SUFFIXES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"type",    MIMETYPE_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // MimeType finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -187,7 +200,7 @@ FinalizeMimeType(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateMimeType(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -197,7 +210,7 @@ EnumerateMimeType(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveMimeType(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -218,19 +231,6 @@ JSClass MimeTypeClass = {
   FinalizeMimeType,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// MimeType class properties
-//
-static JSPropertySpec MimeTypeProperties[] =
-{
-  {"description",    MIMETYPE_DESCRIPTION,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"enabledPlugin",    MIMETYPE_ENABLEDPLUGIN,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"suffixes",    MIMETYPE_SUFFIXES,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"type",    MIMETYPE_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

@@ -585,6 +585,35 @@ SetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLAnchorElement class properties
+//
+static JSPropertySpec HTMLAnchorElementProperties[] =
+{
+  {"accessKey",    HTMLANCHORELEMENT_ACCESSKEY,    JSPROP_ENUMERATE},
+  {"charset",    HTMLANCHORELEMENT_CHARSET,    JSPROP_ENUMERATE},
+  {"coords",    HTMLANCHORELEMENT_COORDS,    JSPROP_ENUMERATE},
+  {"href",    HTMLANCHORELEMENT_HREF,    JSPROP_ENUMERATE},
+  {"hreflang",    HTMLANCHORELEMENT_HREFLANG,    JSPROP_ENUMERATE},
+  {"name",    HTMLANCHORELEMENT_NAME,    JSPROP_ENUMERATE},
+  {"rel",    HTMLANCHORELEMENT_REL,    JSPROP_ENUMERATE},
+  {"rev",    HTMLANCHORELEMENT_REV,    JSPROP_ENUMERATE},
+  {"shape",    HTMLANCHORELEMENT_SHAPE,    JSPROP_ENUMERATE},
+  {"tabIndex",    HTMLANCHORELEMENT_TABINDEX,    JSPROP_ENUMERATE},
+  {"target",    HTMLANCHORELEMENT_TARGET,    JSPROP_ENUMERATE},
+  {"type",    HTMLANCHORELEMENT_TYPE,    JSPROP_ENUMERATE},
+  {"protocol",    NSHTMLANCHORELEMENT_PROTOCOL,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"host",    NSHTMLANCHORELEMENT_HOST,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"hostname",    NSHTMLANCHORELEMENT_HOSTNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"pathname",    NSHTMLANCHORELEMENT_PATHNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"search",    NSHTMLANCHORELEMENT_SEARCH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"port",    NSHTMLANCHORELEMENT_PORT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"hash",    NSHTMLANCHORELEMENT_HASH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"text",    NSHTMLANCHORELEMENT_TEXT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // HTMLAnchorElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -600,7 +629,7 @@ FinalizeHTMLAnchorElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLAnchorElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -610,7 +639,7 @@ EnumerateHTMLAnchorElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLAnchorElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -701,35 +730,6 @@ JSClass HTMLAnchorElementClass = {
   FinalizeHTMLAnchorElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLAnchorElement class properties
-//
-static JSPropertySpec HTMLAnchorElementProperties[] =
-{
-  {"accessKey",    HTMLANCHORELEMENT_ACCESSKEY,    JSPROP_ENUMERATE},
-  {"charset",    HTMLANCHORELEMENT_CHARSET,    JSPROP_ENUMERATE},
-  {"coords",    HTMLANCHORELEMENT_COORDS,    JSPROP_ENUMERATE},
-  {"href",    HTMLANCHORELEMENT_HREF,    JSPROP_ENUMERATE},
-  {"hreflang",    HTMLANCHORELEMENT_HREFLANG,    JSPROP_ENUMERATE},
-  {"name",    HTMLANCHORELEMENT_NAME,    JSPROP_ENUMERATE},
-  {"rel",    HTMLANCHORELEMENT_REL,    JSPROP_ENUMERATE},
-  {"rev",    HTMLANCHORELEMENT_REV,    JSPROP_ENUMERATE},
-  {"shape",    HTMLANCHORELEMENT_SHAPE,    JSPROP_ENUMERATE},
-  {"tabIndex",    HTMLANCHORELEMENT_TABINDEX,    JSPROP_ENUMERATE},
-  {"target",    HTMLANCHORELEMENT_TARGET,    JSPROP_ENUMERATE},
-  {"type",    HTMLANCHORELEMENT_TYPE,    JSPROP_ENUMERATE},
-  {"protocol",    NSHTMLANCHORELEMENT_PROTOCOL,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"host",    NSHTMLANCHORELEMENT_HOST,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"hostname",    NSHTMLANCHORELEMENT_HOSTNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"pathname",    NSHTMLANCHORELEMENT_PATHNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"search",    NSHTMLANCHORELEMENT_SEARCH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"port",    NSHTMLANCHORELEMENT_PORT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"hash",    NSHTMLANCHORELEMENT_HASH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"text",    NSHTMLANCHORELEMENT_TEXT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

@@ -143,6 +143,17 @@ SetNotationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// Notation class properties
+//
+static JSPropertySpec NotationProperties[] =
+{
+  {"publicId",    NOTATION_PUBLICID,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"systemId",    NOTATION_SYSTEMID,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // Notation finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -158,7 +169,7 @@ FinalizeNotation(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateNotation(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -168,7 +179,7 @@ EnumerateNotation(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveNotation(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -189,17 +200,6 @@ JSClass NotationClass = {
   FinalizeNotation,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// Notation class properties
-//
-static JSPropertySpec NotationProperties[] =
-{
-  {"publicId",    NOTATION_PUBLICID,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"systemId",    NOTATION_SYSTEMID,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

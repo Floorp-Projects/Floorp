@@ -166,6 +166,17 @@ SetHTMLBaseElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLBaseElement class properties
+//
+static JSPropertySpec HTMLBaseElementProperties[] =
+{
+  {"href",    HTMLBASEELEMENT_HREF,    JSPROP_ENUMERATE},
+  {"target",    HTMLBASEELEMENT_TARGET,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLBaseElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -181,7 +192,7 @@ FinalizeHTMLBaseElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLBaseElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -191,7 +202,7 @@ EnumerateHTMLBaseElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLBaseElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -212,17 +223,6 @@ JSClass HTMLBaseElementClass = {
   FinalizeHTMLBaseElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLBaseElement class properties
-//
-static JSPropertySpec HTMLBaseElementProperties[] =
-{
-  {"href",    HTMLBASEELEMENT_HREF,    JSPROP_ENUMERATE},
-  {"target",    HTMLBASEELEMENT_TARGET,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

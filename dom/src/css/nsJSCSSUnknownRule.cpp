@@ -113,6 +113,15 @@ SetCSSUnknownRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// CSSUnknownRule class properties
+//
+static JSPropertySpec CSSUnknownRuleProperties[] =
+{
+  {0}
+};
+
+
+//
 // CSSUnknownRule finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -128,7 +137,7 @@ FinalizeCSSUnknownRule(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateCSSUnknownRule(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -138,7 +147,7 @@ EnumerateCSSUnknownRule(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveCSSUnknownRule(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -159,15 +168,6 @@ JSClass CSSUnknownRuleClass = {
   FinalizeCSSUnknownRule,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// CSSUnknownRule class properties
-//
-static JSPropertySpec CSSUnknownRuleProperties[] =
-{
-  {0}
 };
 
 

@@ -144,6 +144,16 @@ SetBarPropProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// BarProp class properties
+//
+static JSPropertySpec BarPropProperties[] =
+{
+  {"visible",    BARPROP_VISIBLE,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // BarProp finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -159,7 +169,7 @@ FinalizeBarProp(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateBarProp(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -169,7 +179,7 @@ EnumerateBarProp(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveBarProp(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -190,16 +200,6 @@ JSClass BarPropClass = {
   FinalizeBarProp,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// BarProp class properties
-//
-static JSPropertySpec BarPropProperties[] =
-{
-  {"visible",    BARPROP_VISIBLE,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

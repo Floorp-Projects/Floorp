@@ -142,6 +142,16 @@ SetNamedNodeMapProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// NamedNodeMap class properties
+//
+static JSPropertySpec NamedNodeMapProperties[] =
+{
+  {"length",    NAMEDNODEMAP_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // NamedNodeMap finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -157,7 +167,7 @@ FinalizeNamedNodeMap(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateNamedNodeMap(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -167,7 +177,7 @@ EnumerateNamedNodeMap(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveNamedNodeMap(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -500,16 +510,6 @@ JSClass NamedNodeMapClass = {
   FinalizeNamedNodeMap,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// NamedNodeMap class properties
-//
-static JSPropertySpec NamedNodeMapProperties[] =
-{
-  {"length",    NAMEDNODEMAP_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

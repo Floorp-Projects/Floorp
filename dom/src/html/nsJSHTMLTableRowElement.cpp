@@ -340,6 +340,23 @@ SetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 
 
 //
+// HTMLTableRowElement class properties
+//
+static JSPropertySpec HTMLTableRowElementProperties[] =
+{
+  {"rowIndex",    HTMLTABLEROWELEMENT_ROWINDEX,    JSPROP_ENUMERATE},
+  {"sectionRowIndex",    HTMLTABLEROWELEMENT_SECTIONROWINDEX,    JSPROP_ENUMERATE},
+  {"cells",    HTMLTABLEROWELEMENT_CELLS,    JSPROP_ENUMERATE},
+  {"align",    HTMLTABLEROWELEMENT_ALIGN,    JSPROP_ENUMERATE},
+  {"bgColor",    HTMLTABLEROWELEMENT_BGCOLOR,    JSPROP_ENUMERATE},
+  {"ch",    HTMLTABLEROWELEMENT_CH,    JSPROP_ENUMERATE},
+  {"chOff",    HTMLTABLEROWELEMENT_CHOFF,    JSPROP_ENUMERATE},
+  {"vAlign",    HTMLTABLEROWELEMENT_VALIGN,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLTableRowElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -355,7 +372,7 @@ FinalizeHTMLTableRowElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLTableRowElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -365,7 +382,7 @@ EnumerateHTMLTableRowElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLTableRowElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -473,23 +490,6 @@ JSClass HTMLTableRowElementClass = {
   FinalizeHTMLTableRowElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLTableRowElement class properties
-//
-static JSPropertySpec HTMLTableRowElementProperties[] =
-{
-  {"rowIndex",    HTMLTABLEROWELEMENT_ROWINDEX,    JSPROP_ENUMERATE},
-  {"sectionRowIndex",    HTMLTABLEROWELEMENT_SECTIONROWINDEX,    JSPROP_ENUMERATE},
-  {"cells",    HTMLTABLEROWELEMENT_CELLS,    JSPROP_ENUMERATE},
-  {"align",    HTMLTABLEROWELEMENT_ALIGN,    JSPROP_ENUMERATE},
-  {"bgColor",    HTMLTABLEROWELEMENT_BGCOLOR,    JSPROP_ENUMERATE},
-  {"ch",    HTMLTABLEROWELEMENT_CH,    JSPROP_ENUMERATE},
-  {"chOff",    HTMLTABLEROWELEMENT_CHOFF,    JSPROP_ENUMERATE},
-  {"vAlign",    HTMLTABLEROWELEMENT_VALIGN,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

@@ -166,6 +166,17 @@ SetHTMLModElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLModElement class properties
+//
+static JSPropertySpec HTMLModElementProperties[] =
+{
+  {"cite",    HTMLMODELEMENT_CITE,    JSPROP_ENUMERATE},
+  {"dateTime",    HTMLMODELEMENT_DATETIME,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLModElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -181,7 +192,7 @@ FinalizeHTMLModElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLModElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -191,7 +202,7 @@ EnumerateHTMLModElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLModElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -212,17 +223,6 @@ JSClass HTMLModElementClass = {
   FinalizeHTMLModElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLModElement class properties
-//
-static JSPropertySpec HTMLModElementProperties[] =
-{
-  {"cite",    HTMLMODELEMENT_CITE,    JSPROP_ENUMERATE},
-  {"dateTime",    HTMLMODELEMENT_DATETIME,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

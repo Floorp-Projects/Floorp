@@ -141,6 +141,16 @@ SetHTMLParagraphElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
 
 
 //
+// HTMLParagraphElement class properties
+//
+static JSPropertySpec HTMLParagraphElementProperties[] =
+{
+  {"align",    HTMLPARAGRAPHELEMENT_ALIGN,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLParagraphElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -156,7 +166,7 @@ FinalizeHTMLParagraphElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLParagraphElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -166,7 +176,7 @@ EnumerateHTMLParagraphElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLParagraphElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -187,16 +197,6 @@ JSClass HTMLParagraphElementClass = {
   FinalizeHTMLParagraphElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLParagraphElement class properties
-//
-static JSPropertySpec HTMLParagraphElementProperties[] =
-{
-  {"align",    HTMLPARAGRAPHELEMENT_ALIGN,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

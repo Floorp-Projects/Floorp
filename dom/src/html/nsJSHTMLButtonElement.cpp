@@ -282,6 +282,22 @@ SetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLButtonElement class properties
+//
+static JSPropertySpec HTMLButtonElementProperties[] =
+{
+  {"form",    HTMLBUTTONELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"accessKey",    HTMLBUTTONELEMENT_ACCESSKEY,    JSPROP_ENUMERATE},
+  {"disabled",    HTMLBUTTONELEMENT_DISABLED,    JSPROP_ENUMERATE},
+  {"name",    HTMLBUTTONELEMENT_NAME,    JSPROP_ENUMERATE},
+  {"tabIndex",    HTMLBUTTONELEMENT_TABINDEX,    JSPROP_ENUMERATE},
+  {"type",    HTMLBUTTONELEMENT_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"value",    HTMLBUTTONELEMENT_VALUE,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLButtonElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -297,7 +313,7 @@ FinalizeHTMLButtonElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLButtonElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -307,7 +323,7 @@ EnumerateHTMLButtonElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLButtonElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -408,22 +424,6 @@ JSClass HTMLButtonElementClass = {
   FinalizeHTMLButtonElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLButtonElement class properties
-//
-static JSPropertySpec HTMLButtonElementProperties[] =
-{
-  {"form",    HTMLBUTTONELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"accessKey",    HTMLBUTTONELEMENT_ACCESSKEY,    JSPROP_ENUMERATE},
-  {"disabled",    HTMLBUTTONELEMENT_DISABLED,    JSPROP_ENUMERATE},
-  {"name",    HTMLBUTTONELEMENT_NAME,    JSPROP_ENUMERATE},
-  {"tabIndex",    HTMLBUTTONELEMENT_TABINDEX,    JSPROP_ENUMERATE},
-  {"type",    HTMLBUTTONELEMENT_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"value",    HTMLBUTTONELEMENT_VALUE,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

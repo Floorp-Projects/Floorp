@@ -240,6 +240,21 @@ SetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// XULDocument class properties
+//
+static JSPropertySpec XULDocumentProperties[] =
+{
+  {"popupNode",    XULDOCUMENT_POPUPNODE,    JSPROP_ENUMERATE},
+  {"tooltipNode",    XULDOCUMENT_TOOLTIPNODE,    JSPROP_ENUMERATE},
+  {"commandDispatcher",    XULDOCUMENT_COMMANDDISPATCHER,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"width",    XULDOCUMENT_WIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"height",    XULDOCUMENT_HEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"controls",    XULDOCUMENT_CONTROLS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // XULDocument finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -255,7 +270,7 @@ FinalizeXULDocument(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateXULDocument(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -265,7 +280,7 @@ EnumerateXULDocument(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveXULDocument(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -373,21 +388,6 @@ JSClass XULDocumentClass = {
   FinalizeXULDocument,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// XULDocument class properties
-//
-static JSPropertySpec XULDocumentProperties[] =
-{
-  {"popupNode",    XULDOCUMENT_POPUPNODE,    JSPROP_ENUMERATE},
-  {"tooltipNode",    XULDOCUMENT_TOOLTIPNODE,    JSPROP_ENUMERATE},
-  {"commandDispatcher",    XULDOCUMENT_COMMANDDISPATCHER,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"width",    XULDOCUMENT_WIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"height",    XULDOCUMENT_HEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"controls",    XULDOCUMENT_CONTROLS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

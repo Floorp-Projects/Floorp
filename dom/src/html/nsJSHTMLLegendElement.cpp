@@ -182,6 +182,18 @@ SetHTMLLegendElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLLegendElement class properties
+//
+static JSPropertySpec HTMLLegendElementProperties[] =
+{
+  {"form",    HTMLLEGENDELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"accessKey",    HTMLLEGENDELEMENT_ACCESSKEY,    JSPROP_ENUMERATE},
+  {"align",    HTMLLEGENDELEMENT_ALIGN,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLLegendElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -197,7 +209,7 @@ FinalizeHTMLLegendElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLLegendElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -207,7 +219,7 @@ EnumerateHTMLLegendElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLLegendElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -228,18 +240,6 @@ JSClass HTMLLegendElementClass = {
   FinalizeHTMLLegendElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLLegendElement class properties
-//
-static JSPropertySpec HTMLLegendElementProperties[] =
-{
-  {"form",    HTMLLEGENDELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"accessKey",    HTMLLEGENDELEMENT_ACCESSKEY,    JSPROP_ENUMERATE},
-  {"align",    HTMLLEGENDELEMENT_ALIGN,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

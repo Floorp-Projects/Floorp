@@ -310,6 +310,23 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLOptionElement class properties
+//
+static JSPropertySpec HTMLOptionElementProperties[] =
+{
+  {"form",    HTMLOPTIONELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"defaultSelected",    HTMLOPTIONELEMENT_DEFAULTSELECTED,    JSPROP_ENUMERATE},
+  {"text",    HTMLOPTIONELEMENT_TEXT,    JSPROP_ENUMERATE},
+  {"index",    HTMLOPTIONELEMENT_INDEX,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"disabled",    HTMLOPTIONELEMENT_DISABLED,    JSPROP_ENUMERATE},
+  {"label",    HTMLOPTIONELEMENT_LABEL,    JSPROP_ENUMERATE},
+  {"selected",    HTMLOPTIONELEMENT_SELECTED,    JSPROP_ENUMERATE},
+  {"value",    HTMLOPTIONELEMENT_VALUE,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLOptionElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -325,7 +342,7 @@ FinalizeHTMLOptionElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLOptionElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -335,7 +352,7 @@ EnumerateHTMLOptionElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLOptionElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -356,23 +373,6 @@ JSClass HTMLOptionElementClass = {
   FinalizeHTMLOptionElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLOptionElement class properties
-//
-static JSPropertySpec HTMLOptionElementProperties[] =
-{
-  {"form",    HTMLOPTIONELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"defaultSelected",    HTMLOPTIONELEMENT_DEFAULTSELECTED,    JSPROP_ENUMERATE},
-  {"text",    HTMLOPTIONELEMENT_TEXT,    JSPROP_ENUMERATE},
-  {"index",    HTMLOPTIONELEMENT_INDEX,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"disabled",    HTMLOPTIONELEMENT_DISABLED,    JSPROP_ENUMERATE},
-  {"label",    HTMLOPTIONELEMENT_LABEL,    JSPROP_ENUMERATE},
-  {"selected",    HTMLOPTIONELEMENT_SELECTED,    JSPROP_ENUMERATE},
-  {"value",    HTMLOPTIONELEMENT_VALUE,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

@@ -2114,8 +2114,11 @@ nsXULElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 
 
 PRBool
-nsXULElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
+nsXULElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
+                      PRBool *aDidDefineProperty)
 {
+    *aDidDefineProperty = PR_FALSE;
+
     return PR_TRUE;
 }
 

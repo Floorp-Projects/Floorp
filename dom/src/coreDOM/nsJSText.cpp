@@ -113,6 +113,15 @@ SetTextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// Text class properties
+//
+static JSPropertySpec TextProperties[] =
+{
+  {0}
+};
+
+
+//
 // Text finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -128,7 +137,7 @@ FinalizeText(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateText(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -138,7 +147,7 @@ EnumerateText(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveText(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -203,15 +212,6 @@ JSClass TextClass = {
   FinalizeText,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// Text class properties
-//
-static JSPropertySpec TextProperties[] =
-{
-  {0}
 };
 
 

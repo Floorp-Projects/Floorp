@@ -350,6 +350,27 @@ SetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLElement class properties
+//
+static JSPropertySpec HTMLElementProperties[] =
+{
+  {"id",    HTMLELEMENT_ID,    JSPROP_ENUMERATE},
+  {"title",    HTMLELEMENT_TITLE,    JSPROP_ENUMERATE},
+  {"lang",    HTMLELEMENT_LANG,    JSPROP_ENUMERATE},
+  {"dir",    HTMLELEMENT_DIR,    JSPROP_ENUMERATE},
+  {"className",    HTMLELEMENT_CLASSNAME,    JSPROP_ENUMERATE},
+  {"style",    HTMLELEMENT_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"offsetTop",    HTMLELEMENT_OFFSETTOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"offsetLeft",    HTMLELEMENT_OFFSETLEFT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"offsetWidth",    HTMLELEMENT_OFFSETWIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"offsetHeight",    HTMLELEMENT_OFFSETHEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"offsetParent",    HTMLELEMENT_OFFSETPARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"innerHTML",    HTMLELEMENT_INNERHTML,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -365,7 +386,7 @@ FinalizeHTMLElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -375,7 +396,7 @@ EnumerateHTMLElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -396,27 +417,6 @@ JSClass HTMLElementClass = {
   FinalizeHTMLElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLElement class properties
-//
-static JSPropertySpec HTMLElementProperties[] =
-{
-  {"id",    HTMLELEMENT_ID,    JSPROP_ENUMERATE},
-  {"title",    HTMLELEMENT_TITLE,    JSPROP_ENUMERATE},
-  {"lang",    HTMLELEMENT_LANG,    JSPROP_ENUMERATE},
-  {"dir",    HTMLELEMENT_DIR,    JSPROP_ENUMERATE},
-  {"className",    HTMLELEMENT_CLASSNAME,    JSPROP_ENUMERATE},
-  {"style",    HTMLELEMENT_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"offsetTop",    HTMLELEMENT_OFFSETTOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"offsetLeft",    HTMLELEMENT_OFFSETLEFT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"offsetWidth",    HTMLELEMENT_OFFSETWIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"offsetHeight",    HTMLELEMENT_OFFSETHEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"offsetParent",    HTMLELEMENT_OFFSETPARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"innerHTML",    HTMLELEMENT_INNERHTML,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

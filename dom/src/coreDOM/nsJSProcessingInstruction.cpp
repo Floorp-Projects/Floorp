@@ -179,6 +179,18 @@ SetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
 
 
 //
+// ProcessingInstruction class properties
+//
+static JSPropertySpec ProcessingInstructionProperties[] =
+{
+  {"target",    PROCESSINGINSTRUCTION_TARGET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"data",    PROCESSINGINSTRUCTION_DATA,    JSPROP_ENUMERATE},
+  {"sheet",    LINKSTYLE_SHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // ProcessingInstruction finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -194,7 +206,7 @@ FinalizeProcessingInstruction(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateProcessingInstruction(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -204,7 +216,7 @@ EnumerateProcessingInstruction(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveProcessingInstruction(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -225,18 +237,6 @@ JSClass ProcessingInstructionClass = {
   FinalizeProcessingInstruction,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// ProcessingInstruction class properties
-//
-static JSPropertySpec ProcessingInstructionProperties[] =
-{
-  {"target",    PROCESSINGINSTRUCTION_TARGET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"data",    PROCESSINGINSTRUCTION_DATA,    JSPROP_ENUMERATE},
-  {"sheet",    LINKSTYLE_SHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

@@ -600,56 +600,6 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
-// HTMLObjectElement finalizer
-//
-PR_STATIC_CALLBACK(void)
-FinalizeHTMLObjectElement(JSContext *cx, JSObject *obj)
-{
-  nsJSUtils::nsGenericFinalize(cx, obj);
-}
-
-
-//
-// HTMLObjectElement enumerate
-//
-PR_STATIC_CALLBACK(JSBool)
-EnumerateHTMLObjectElement(JSContext *cx, JSObject *obj)
-{
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
-}
-
-
-//
-// HTMLObjectElement resolve
-//
-PR_STATIC_CALLBACK(JSBool)
-ResolveHTMLObjectElement(JSContext *cx, JSObject *obj, jsval id)
-{
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
-}
-
-
-/***********************************************************************/
-//
-// class for HTMLObjectElement
-//
-JSClass HTMLObjectElementClass = {
-  "HTMLObjectElement", 
-  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
-  JS_PropertyStub,
-  JS_PropertyStub,
-  GetHTMLObjectElementProperty,
-  SetHTMLObjectElementProperty,
-  EnumerateHTMLObjectElement,
-  ResolveHTMLObjectElement,
-  JS_ConvertStub,
-  FinalizeHTMLObjectElement,
-  nsnull,
-  nsJSUtils::nsCheckAccess
-};
-
-
-//
 // HTMLObjectElement class properties
 //
 static JSPropertySpec HTMLObjectElementProperties[] =
@@ -674,6 +624,56 @@ static JSPropertySpec HTMLObjectElementProperties[] =
   {"width",    HTMLOBJECTELEMENT_WIDTH,    JSPROP_ENUMERATE},
   {"contentDocument",    HTMLOBJECTELEMENT_CONTENTDOCUMENT,    JSPROP_ENUMERATE},
   {0}
+};
+
+
+//
+// HTMLObjectElement finalizer
+//
+PR_STATIC_CALLBACK(void)
+FinalizeHTMLObjectElement(JSContext *cx, JSObject *obj)
+{
+  nsJSUtils::nsGenericFinalize(cx, obj);
+}
+
+
+//
+// HTMLObjectElement enumerate
+//
+PR_STATIC_CALLBACK(JSBool)
+EnumerateHTMLObjectElement(JSContext *cx, JSObject *obj)
+{
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
+}
+
+
+//
+// HTMLObjectElement resolve
+//
+PR_STATIC_CALLBACK(JSBool)
+ResolveHTMLObjectElement(JSContext *cx, JSObject *obj, jsval id)
+{
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
+}
+
+
+/***********************************************************************/
+//
+// class for HTMLObjectElement
+//
+JSClass HTMLObjectElementClass = {
+  "HTMLObjectElement", 
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
+  JS_PropertyStub,
+  JS_PropertyStub,
+  GetHTMLObjectElementProperty,
+  SetHTMLObjectElementProperty,
+  EnumerateHTMLObjectElement,
+  ResolveHTMLObjectElement,
+  JS_ConvertStub,
+  FinalizeHTMLObjectElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

@@ -93,11 +93,12 @@ public:
   virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj) {
     return mInner.EnumerateProperty(aContext, aObj);
   }
-  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID) {
-    return mInner.EnumerateProperty(aContext, aObj);
+  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
+                            PRBool *aDidDefineProperty) {
+    return mInner.Resolve(aContext, aObj, aID, aDidDefineProperty);
   }
   virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID) {
-    return mInner.EnumerateProperty(aContext, aObj);
+    return mInner.Convert(aContext, aObj, aID);
   }
   virtual void      Finalize(JSContext *aContext, JSObject *aObj) {
     mInner.Finalize(aContext, aObj);

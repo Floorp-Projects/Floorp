@@ -141,6 +141,16 @@ SetHTMLTableCaptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
 
 
 //
+// HTMLTableCaptionElement class properties
+//
+static JSPropertySpec HTMLTableCaptionElementProperties[] =
+{
+  {"align",    HTMLTABLECAPTIONELEMENT_ALIGN,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLTableCaptionElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -156,7 +166,7 @@ FinalizeHTMLTableCaptionElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLTableCaptionElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -166,7 +176,7 @@ EnumerateHTMLTableCaptionElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLTableCaptionElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -187,16 +197,6 @@ JSClass HTMLTableCaptionElementClass = {
   FinalizeHTMLTableCaptionElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLTableCaptionElement class properties
-//
-static JSPropertySpec HTMLTableCaptionElementProperties[] =
-{
-  {"align",    HTMLTABLECAPTIONELEMENT_ALIGN,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

@@ -229,6 +229,22 @@ SetStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// StyleSheet class properties
+//
+static JSPropertySpec StyleSheetProperties[] =
+{
+  {"type",    STYLESHEET_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"disabled",    STYLESHEET_DISABLED,    JSPROP_ENUMERATE},
+  {"ownerNode",    STYLESHEET_OWNERNODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"parentStyleSheet",    STYLESHEET_PARENTSTYLESHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"href",    STYLESHEET_HREF,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"title",    STYLESHEET_TITLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"media",    STYLESHEET_MEDIA,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // StyleSheet finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -244,7 +260,7 @@ FinalizeStyleSheet(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateStyleSheet(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -254,7 +270,7 @@ EnumerateStyleSheet(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveStyleSheet(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -275,22 +291,6 @@ JSClass StyleSheetClass = {
   FinalizeStyleSheet,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// StyleSheet class properties
-//
-static JSPropertySpec StyleSheetProperties[] =
-{
-  {"type",    STYLESHEET_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"disabled",    STYLESHEET_DISABLED,    JSPROP_ENUMERATE},
-  {"ownerNode",    STYLESHEET_OWNERNODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"parentStyleSheet",    STYLESHEET_PARENTSTYLESHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"href",    STYLESHEET_HREF,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"title",    STYLESHEET_TITLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"media",    STYLESHEET_MEDIA,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

@@ -183,6 +183,19 @@ SetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// Attr class properties
+//
+static JSPropertySpec AttrProperties[] =
+{
+  {"name",    ATTR_NAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"specified",    ATTR_SPECIFIED,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"value",    ATTR_VALUE,    JSPROP_ENUMERATE},
+  {"ownerElement",    ATTR_OWNERELEMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // Attr finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -198,7 +211,7 @@ FinalizeAttr(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateAttr(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -208,7 +221,7 @@ EnumerateAttr(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveAttr(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -229,19 +242,6 @@ JSClass AttrClass = {
   FinalizeAttr,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// Attr class properties
-//
-static JSPropertySpec AttrProperties[] =
-{
-  {"name",    ATTR_NAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"specified",    ATTR_SPECIFIED,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"value",    ATTR_VALUE,    JSPROP_ENUMERATE},
-  {"ownerElement",    ATTR_OWNERELEMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

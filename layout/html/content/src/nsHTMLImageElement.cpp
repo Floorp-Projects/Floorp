@@ -103,7 +103,8 @@ public:
   virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
                         jsval aID, jsval *aVp);
   virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
-  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
+  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
+                            PRBool *aDidDefineProperty);
   virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
   virtual void      Finalize(JSContext *aContext, JSObject *aObj);
 
@@ -723,7 +724,8 @@ nsHTMLImageElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 }
 
 PRBool    
-nsHTMLImageElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
+nsHTMLImageElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
+                            PRBool *aDidDefineProperty)
 {
   if (JSVAL_IS_STRING(aID) && mInner.mDOMSlots) {
     JSString *str;
@@ -742,11 +744,13 @@ nsHTMLImageElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
                             chars, ::JS_GetStringLength(str),
                             JSVAL_VOID, nsnull, nsnull, 0);
 
+      *aDidDefineProperty = PR_TRUE;
+
       return PR_TRUE;
     }
   }
 
-  return mInner.Resolve(aContext, aObj, aID);
+  return mInner.Resolve(aContext, aObj, aID, aDidDefineProperty);
 }
 
 PRBool    

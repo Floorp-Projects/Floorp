@@ -456,6 +456,26 @@ SetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLSelectElement class properties
+//
+static JSPropertySpec HTMLSelectElementProperties[] =
+{
+  {"type",    HTMLSELECTELEMENT_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"selectedIndex",    HTMLSELECTELEMENT_SELECTEDINDEX,    JSPROP_ENUMERATE},
+  {"value",    HTMLSELECTELEMENT_VALUE,    JSPROP_ENUMERATE},
+  {"length",    HTMLSELECTELEMENT_LENGTH,    JSPROP_ENUMERATE},
+  {"form",    HTMLSELECTELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"options",    HTMLSELECTELEMENT_OPTIONS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"disabled",    HTMLSELECTELEMENT_DISABLED,    JSPROP_ENUMERATE},
+  {"multiple",    HTMLSELECTELEMENT_MULTIPLE,    JSPROP_ENUMERATE},
+  {"name",    HTMLSELECTELEMENT_NAME,    JSPROP_ENUMERATE},
+  {"size",    HTMLSELECTELEMENT_SIZE,    JSPROP_ENUMERATE},
+  {"tabIndex",    HTMLSELECTELEMENT_TABINDEX,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLSelectElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -471,7 +491,7 @@ FinalizeHTMLSelectElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLSelectElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -481,7 +501,7 @@ EnumerateHTMLSelectElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLSelectElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -766,26 +786,6 @@ JSClass HTMLSelectElementClass = {
   FinalizeHTMLSelectElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLSelectElement class properties
-//
-static JSPropertySpec HTMLSelectElementProperties[] =
-{
-  {"type",    HTMLSELECTELEMENT_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"selectedIndex",    HTMLSELECTELEMENT_SELECTEDINDEX,    JSPROP_ENUMERATE},
-  {"value",    HTMLSELECTELEMENT_VALUE,    JSPROP_ENUMERATE},
-  {"length",    HTMLSELECTELEMENT_LENGTH,    JSPROP_ENUMERATE},
-  {"form",    HTMLSELECTELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"options",    HTMLSELECTELEMENT_OPTIONS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"disabled",    HTMLSELECTELEMENT_DISABLED,    JSPROP_ENUMERATE},
-  {"multiple",    HTMLSELECTELEMENT_MULTIPLE,    JSPROP_ENUMERATE},
-  {"name",    HTMLSELECTELEMENT_NAME,    JSPROP_ENUMERATE},
-  {"size",    HTMLSELECTELEMENT_SIZE,    JSPROP_ENUMERATE},
-  {"tabIndex",    HTMLSELECTELEMENT_TABINDEX,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

@@ -178,6 +178,19 @@ SetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// History class properties
+//
+static JSPropertySpec HistoryProperties[] =
+{
+  {"length",    HISTORY_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"current",    HISTORY_CURRENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"previous",    HISTORY_PREVIOUS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"next",    HISTORY_NEXT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // History finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -193,7 +206,7 @@ FinalizeHistory(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHistory(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -203,7 +216,7 @@ EnumerateHistory(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHistory(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -373,19 +386,6 @@ JSClass HistoryClass = {
   FinalizeHistory,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// History class properties
-//
-static JSPropertySpec HistoryProperties[] =
-{
-  {"length",    HISTORY_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"current",    HISTORY_CURRENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"previous",    HISTORY_PREVIOUS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"next",    HISTORY_NEXT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

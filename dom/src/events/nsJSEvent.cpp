@@ -232,6 +232,23 @@ SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// Event class properties
+//
+static JSPropertySpec EventProperties[] =
+{
+  {"type",    EVENT_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"target",    EVENT_TARGET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"currentTarget",    EVENT_CURRENTTARGET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"originalTarget",    EVENT_ORIGINALTARGET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"eventPhase",    EVENT_EVENTPHASE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"bubbles",    EVENT_BUBBLES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"cancelable",    EVENT_CANCELABLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"timeStamp",    EVENT_TIMESTAMP,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // Event finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -247,7 +264,7 @@ FinalizeEvent(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateEvent(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -257,7 +274,7 @@ EnumerateEvent(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveEvent(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -467,23 +484,6 @@ JSClass EventClass = {
   FinalizeEvent,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// Event class properties
-//
-static JSPropertySpec EventProperties[] =
-{
-  {"type",    EVENT_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"target",    EVENT_TARGET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"currentTarget",    EVENT_CURRENTTARGET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"originalTarget",    EVENT_ORIGINALTARGET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"eventPhase",    EVENT_EVENTPHASE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"bubbles",    EVENT_BUBBLES,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"cancelable",    EVENT_CANCELABLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"timeStamp",    EVENT_TIMESTAMP,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

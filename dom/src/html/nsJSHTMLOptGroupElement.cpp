@@ -169,6 +169,17 @@ SetHTMLOptGroupElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 
 
 //
+// HTMLOptGroupElement class properties
+//
+static JSPropertySpec HTMLOptGroupElementProperties[] =
+{
+  {"disabled",    HTMLOPTGROUPELEMENT_DISABLED,    JSPROP_ENUMERATE},
+  {"label",    HTMLOPTGROUPELEMENT_LABEL,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLOptGroupElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -184,7 +195,7 @@ FinalizeHTMLOptGroupElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLOptGroupElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -194,7 +205,7 @@ EnumerateHTMLOptGroupElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLOptGroupElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -215,17 +226,6 @@ JSClass HTMLOptGroupElementClass = {
   FinalizeHTMLOptGroupElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLOptGroupElement class properties
-//
-static JSPropertySpec HTMLOptGroupElementProperties[] =
-{
-  {"disabled",    HTMLOPTGROUPELEMENT_DISABLED,    JSPROP_ENUMERATE},
-  {"label",    HTMLOPTGROUPELEMENT_LABEL,    JSPROP_ENUMERATE},
-  {0}
 };
 
 
