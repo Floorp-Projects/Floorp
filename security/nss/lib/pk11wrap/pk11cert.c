@@ -342,6 +342,7 @@ PK11_IsUserCert(PK11SlotInfo *slot, CERTCertificate *cert,
 	case dsaKey:
 	    PK11_SETATTRS(&theTemplate,CKA_VALUE, pubKey->u.dsa.publicValue.data,
 						pubKey->u.dsa.publicValue.len);
+	    break;
 	case dhKey:
 	    PK11_SETATTRS(&theTemplate,CKA_VALUE, pubKey->u.dh.publicValue.data,
 						pubKey->u.dh.publicValue.len);
