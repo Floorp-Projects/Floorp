@@ -36,7 +36,7 @@ CVS=cvs -q co -P
 CVTREX = :pserver:$(USER)@cvsserver:/m/src
 CVST=cvs -q -d $(CVTREX) co -P
 
-LIBNLS_BRANCH           = -r libnls_v3_Normandy
+LIBNLS_BRANCH           = -r libnls_v3_zulu_branch
 LIBNLS_DIR              = ns/modules/libnls
 
 
