@@ -165,15 +165,35 @@
 
         _getValuesFromPS();
 
-        // XXX TEMPORARY
-        // XXX Until bug 119491 ("Cleanup global vars in PostScript and Xprint
-        // modules") is fixed we will hide the ``Print...'' button
+        // Hide the ``Print...'' button when the underlying gfx code does not
+        // support multiple devicecontext to be used concurrently
+        // (e.g. printing and printpreview at the same time; required as 
+        // legacy support for unices.'s PostScript module (Xprint
+        // on unices.does not have problems with that))
         // XXX the scaling widgets, and the orientation widgets on unices.
         var canPrint = true;
         try
         {
           var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
           canPrint = prefs.getBoolPref("print.whileInPrintPreview");
+          if (!canPrint)
+          {           
+            // Ask the printerfeatures database if this printer device 
+            // supports multiple device instances which can be used
+            // concurrently
+            var smdci = prefs.getBoolPref("print.tmp.printerfeatures." + 
+                                          print.currentPrintSettings.printerName +
+                                          ".can_use_multiple_devicecontexts_concurrently");
+
+            // We can print from print preview when we can use multiple
+            // devicecontext instances in parallel (regardless what
+            // "print.whileInPrintPreview" may say here...)
+            if (smdci)
+            {
+              canPrint = true;
+            }
+          }
+
         } catch(e) {}
 
         if (!canPrint)
@@ -192,7 +212,6 @@
             document.getAnonymousNodes(this)[i].setAttribute("hidden", "true");
           }
         }
-        // XXX TEMPORARY
       ]]>
       </constructor>
 
