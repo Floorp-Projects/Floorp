@@ -24,8 +24,7 @@
 #include "nsSwitchToUIThread.h"
 
 #include "nsIMenu.h"
-#include "nsVoidArray.h"
-#include "nsVoidArray.h"
+#include "nsISupportsArray.h"
 
 class nsIMenuListener;
 
@@ -68,7 +67,8 @@ public:
   NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
 
   // Native Impl Methods
-  nsIMenu    * GetMenuParent()    { return mMenuParent;    }
+  // These are not ref counted
+  nsIMenu    * GetMenuParent()    { return mMenuParent;    } 
   nsIMenuBar * GetMenuBarParent() { return mMenuBarParent; }
   HMENU        GetNativeMenu()    { return mMenu;          }
 
@@ -82,7 +82,7 @@ protected:
   nsIMenuBar * mMenuBarParent;
   nsIMenu    * mMenuParent;
 
-  nsVoidArray * mItems;
+  nsISupportsArray * mItems;
   nsIMenuListener * mListener;
 
 };
