@@ -81,12 +81,12 @@ static nsresult GetConvertedChromeURL(const char* uriStr, nsIFileSpec* *outSpec)
   nsString tmpStr; tmpStr.AssignWithConversion(uriScheme);
    
   NS_ASSERTION(((tmpStr == fileStr) || (tmpStr == resStr) || (tmpStr == resoStr)), "won't deal remote URI yet! \n");
-   
+
+  nsSpecialSystemDirectory dir(nsSpecialSystemDirectory::Moz_BinDirectory);
+  nsFileURL fileURL(dir); // file:///moz_0511/mozilla/...
+
   if ((tmpStr != fileStr)) {
        /* resolve to fileURL */
-       nsSpecialSystemDirectory dir(nsSpecialSystemDirectory::Moz_BinDirectory);
-       nsFileURL fileURL(dir); // file:///moz_0511/mozilla/...
-       
        char *uriPath = nsnull;
        uri->GetPath(&uriPath);
        fileURL += uriPath;
