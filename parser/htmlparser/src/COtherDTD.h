@@ -26,7 +26,7 @@
 #ifndef NS_OTHERHTMLDTD__
 #define NS_OTHERHTMLDTD__
 
-#include "nsHTMLDTD.h"
+#include "nsIDTD.h"
 #include "nsHTMLTokens.h"
 #include "nshtmlpars.h"
 
@@ -38,7 +38,7 @@
 
 
 
-class COtherDTD : public nsHTMLDTD {
+class COtherDTD : public nsIDTD {
             
 	public:
 
@@ -126,7 +126,7 @@ class COtherDTD : public nsHTMLDTD {
      * @param   aCount number of elements in given array
      * @return  TRUE if stack is valid, else FALSE
      */ //-----------------------------------------------------
-    virtual PRBool VerifyContextStack(eHTMLTags aStack[],PRInt32 aCount) const;
+    virtual PRBool VerifyContextStack(PRInt32 aStack[],PRInt32 aCount) const;
 
     /** -------------------------------------------------------
      * This method tries to design a context map (without actually

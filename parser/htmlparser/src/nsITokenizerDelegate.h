@@ -40,6 +40,7 @@
 
 #include "prtypes.h"
 #include "nsParserTypes.h"
+#include "nsIDTD.h"
 
 class CScanner;
 class CToken;
@@ -54,6 +55,7 @@ class ITokenizerDelegate {
       virtual PRBool      WillAddToken(CToken& aToken)=0;
 
       virtual eParseMode  GetParseMode() const=0;
+      virtual nsIDTD*     GetDTD(void) const=0;
 };
 
 #endif
