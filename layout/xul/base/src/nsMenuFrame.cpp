@@ -302,7 +302,7 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
       
       if (cancel) {
         if (IsMenu() && !isMenuBar && mMenuOpen) {
-          // Submenus don't get closed up.
+          // Submenus don't get closed up immediately.
         }
         else mMenuParent->SetCurrentMenuItem(nsnull);
       }
@@ -326,7 +326,7 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
     // kick off the timer.
     if (!isMenuBar && IsMenu() && !mMenuOpen && !mOpenTimer) {
 
-      PRInt32 menuDelay = 250;   // ms
+      PRInt32 menuDelay = 300;   // ms
 
       nsILookAndFeel * lookAndFeel;
       if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, 
@@ -587,6 +587,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     // Make sure we clear out our own items.
     if (menuPopup) {
       menuPopup->SetCurrentMenuItem(nsnull);
+      menuPopup->KillCloseTimer();
 
       PRBool onMenuBar = PR_TRUE;
       if (mMenuParent)

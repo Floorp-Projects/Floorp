@@ -44,7 +44,12 @@
 #include "nsIDeviceContext.h"
 #include "nsRect.h"
 #include "nsIDOMXULDocument.h"
+#include "nsILookAndFeel.h"
+#include "nsIComponentManager.h"
 
+
+static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 
@@ -86,6 +91,7 @@ nsMenuPopupFrame::Release(void)
 //
 NS_INTERFACE_MAP_BEGIN(nsMenuPopupFrame)
   NS_INTERFACE_MAP_ENTRY(nsIMenuParent)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 
@@ -93,7 +99,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 // nsMenuPopupFrame cntr
 //
 nsMenuPopupFrame::nsMenuPopupFrame()
-:mCurrentMenu(nsnull)
+:mCurrentMenu(nsnull), mTimerMenu(nsnull), mCloseTimer(nsnull)
 {
 
 } // cntr
@@ -584,6 +590,13 @@ nsMenuPopupFrame::GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResu
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMenuPopupFrame::GetCurrentMenuItem(nsIMenuFrame** aResult)
+{
+  *aResult = mCurrentMenu;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
 {
   if (mCurrentMenu == aMenuItem)
@@ -594,9 +607,23 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
     PRBool isOpen = PR_FALSE;
     mCurrentMenu->MenuIsOpen(isOpen);
     mCurrentMenu->SelectMenu(PR_FALSE);
-    if (isOpen)
-      mCurrentMenu->OpenMenu(PR_FALSE);
+    if (isOpen) {
+      // Don't close up immediately.
+      // Kick off a close timer.
+      PRInt32 menuDelay = 300;   // ms
 
+      nsILookAndFeel * lookAndFeel;
+      if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, 
+                      kILookAndFeelIID, (void**)&lookAndFeel)) {
+        lookAndFeel->GetMetric(nsILookAndFeel::eMetric_SubmenuDelay, menuDelay);
+       NS_RELEASE(lookAndFeel);
+      }
+
+      // Kick off the timer.
+      NS_NewTimer(getter_AddRefs(mCloseTimer));
+      mCloseTimer->Init(this, menuDelay, NS_PRIORITY_HIGHEST); 
+      mTimerMenu = mCurrentMenu;
+    }
   }
 
   // Set the new child.
@@ -992,3 +1019,59 @@ nsMenuPopupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   *aFrame = this;
   return NS_OK;
 }
+
+NS_IMETHODIMP_(void)
+nsMenuPopupFrame::Notify(nsITimer* aTimer)
+{
+  // Our timer has fired.
+  if (aTimer == mCloseTimer.get()) {
+    PRBool menuOpen = PR_FALSE;
+    mTimerMenu->MenuIsOpen(menuOpen);
+    if (menuOpen) {
+      if (mCurrentMenu != mTimerMenu) {
+        // See if our child has a current menu.
+        // If so, then we need to be selected.
+        nsIFrame* child;
+        mTimerMenu->GetMenuChild(&child);
+        if (child) {
+          nsCOMPtr<nsIMenuParent> menuPopup = do_QueryInterface(child);
+          nsCOMPtr<nsIMenuFrame> frame;
+          menuPopup->GetCurrentMenuItem(getter_AddRefs(frame));
+          if (frame) {
+            SetCurrentMenuItem(mTimerMenu);
+          }
+          else {
+            // Close up.
+            mTimerMenu->OpenMenu(PR_FALSE);
+          }
+        }
+        else {
+          // Close up.
+          mTimerMenu->OpenMenu(PR_FALSE);
+        }
+      }
+    }
+    mCloseTimer->Cancel();
+    mCloseTimer = nsnull;
+  }
+  
+  mCloseTimer = nsnull;
+  mTimerMenu = nsnull;
+}
+
+NS_IMETHODIMP
+nsMenuPopupFrame::KillCloseTimer()
+{
+  if (mCloseTimer && mTimerMenu) {
+    PRBool menuOpen = PR_FALSE;
+    mTimerMenu->MenuIsOpen(menuOpen);
+    if (menuOpen) {
+      mTimerMenu->OpenMenu(PR_FALSE);
+    }
+    mCloseTimer->Cancel();
+    mCloseTimer = nsnull;
+    mTimerMenu = nsnull;
+  }
+  return NS_OK;
+}
+

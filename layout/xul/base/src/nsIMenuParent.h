@@ -35,6 +35,7 @@ class nsIMenuParent : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IMENUPARENT_IID; return iid; }
 
+  NS_IMETHOD GetCurrentMenuItem(nsIMenuFrame** aMenuItem) = 0;
   NS_IMETHOD SetCurrentMenuItem(nsIMenuFrame* aMenuItem) = 0;
   NS_IMETHOD GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult) = 0;
   NS_IMETHOD GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult) = 0;

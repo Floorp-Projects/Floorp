@@ -402,6 +402,14 @@ nsMenuBarFrame::GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMenuBarFrame::GetCurrentMenuItem(nsIMenuFrame** aResult)
+{
+  *aResult = mCurrentMenu;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
 {
   if (mCurrentMenu == aMenuItem)
