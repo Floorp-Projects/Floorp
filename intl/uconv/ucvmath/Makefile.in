@@ -47,14 +47,7 @@ CPPSRCS		= \
 		nsUCvMathModule.cpp \
 		$(NULL)
 
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-CPPSRCS		+= \
-		nsUnicodeToTeXCMRttf.cpp \
-		nsUnicodeToTeXCMMIttf.cpp \
-		nsUnicodeToTeXCMSYttf.cpp \
-		nsUnicodeToTeXCMEXttf.cpp \
-		$(NULL)
-else
+ifeq (,$(filter OS2 WINNT,$(OS_ARCH)))
 CPPSRCS		+= \
 		nsUnicodeToTeXCMRt1.cpp \
 		nsUnicodeToTeXCMMIt1.cpp \
@@ -62,6 +55,12 @@ CPPSRCS		+= \
 		nsUnicodeToTeXCMEXt1.cpp \
 		$(NULL)
 endif
+CPPSRCS		+= \
+		nsUnicodeToTeXCMRttf.cpp \
+		nsUnicodeToTeXCMMIttf.cpp \
+		nsUnicodeToTeXCMSYttf.cpp \
+		nsUnicodeToTeXCMEXttf.cpp \
+		$(NULL)
 
 
 EXPORTS		= nsUCvMathCID.h

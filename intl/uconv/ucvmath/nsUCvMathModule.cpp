@@ -50,12 +50,11 @@
 #include "nsUCvMathCID.h"
 #include "nsUCvMathDll.h"
 
-#if defined(XP_PC) || defined(XP_MAC)
 #include "nsUnicodeToTeXCMRttf.h"
 #include "nsUnicodeToTeXCMMIttf.h"
 #include "nsUnicodeToTeXCMSYttf.h"
 #include "nsUnicodeToTeXCMEXttf.h"
-#else
+#if !defined(XP_WIN) && !defined(XP_OS2) && !defined(XP_MAC)
 #include "nsUnicodeToTeXCMRt1.h"
 #include "nsUnicodeToTeXCMMIt1.h"
 #include "nsUnicodeToTeXCMSYt1.h"
@@ -78,12 +77,11 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 NS_CONVERTER_REGISTRY_START
 
-#if defined(XP_PC) || defined(XP_MAC)
 NS_UCONV_REG_UNREG("Unicode", "x-ttf-cmr",   NS_UNICODETOTEXCMRTTF_CID)
 NS_UCONV_REG_UNREG("Unicode", "x-ttf-cmmi",  NS_UNICODETOTEXCMMITTF_CID)
 NS_UCONV_REG_UNREG("Unicode", "x-ttf-cmsy",  NS_UNICODETOTEXCMSYTTF_CID)
 NS_UCONV_REG_UNREG("Unicode", "x-ttf-cmex",  NS_UNICODETOTEXCMEXTTF_CID)
-#else
+#if !defined(XP_WIN) && !defined(XP_OS2) && !defined(XP_MAC)
 NS_UCONV_REG_UNREG("Unicode", "x-t1-cmr",   NS_UNICODETOTEXCMRT1_CID)
 NS_UCONV_REG_UNREG("Unicode", "x-t1-cmmi",  NS_UNICODETOTEXCMMIT1_CID)
 NS_UCONV_REG_UNREG("Unicode", "x-t1-cmsy",  NS_UNICODETOTEXCMSYT1_CID)
@@ -100,12 +98,11 @@ NS_CONVERTER_REGISTRY_END
 
 NS_IMPL_NSUCONVERTERREGSELF
 
-#if defined(XP_PC) || defined(XP_MAC)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMRttf);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMMIttf);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMSYttf);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMEXttf);
-#else
+#if !defined(XP_WIN) && !defined(XP_OS2) && !defined(XP_MAC)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMRt1);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMMIt1);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMSYt1);
@@ -120,7 +117,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMTExtra);
 
 static const nsModuleComponentInfo components[] = 
 {
-#if defined(XP_PC) || defined(XP_MAC)
   { 
     ENCODER_NAME_BASE "x-ttf-cmr" , NS_UNICODETOTEXCMRTTF_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-ttf-cmr",
@@ -141,7 +137,7 @@ static const nsModuleComponentInfo components[] =
     NS_UNICODEENCODER_CONTRACTID_BASE "x-ttf-cmex",
     nsUnicodeToTeXCMEXttfConstructor, 
   },
-#else
+#if !defined(XP_WIN) && !defined(XP_OS2) && !defined(XP_MAC)
   { 
     ENCODER_NAME_BASE "x-t1-cmr" , NS_UNICODETOTEXCMRT1_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-t1-cmr",
