@@ -143,12 +143,16 @@ nsHTTPCacheListener::OnStartRequest(nsIRequest *aRequest,
     LOG(("nsHTTPCacheListener::OnStartRequest [this=%x]\n", this)); 
     mBodyBytesReceived = 0;
     
+#ifdef MOZ_NEW_CACHE
+    mChannel->GetContentLength(&mContentLength);
+#else
     // get and store the content length which will be used in ODA for computing
     // progress information. 
     nsCOMPtr<nsIChannel> chan = do_QueryInterface(aRequest);
     if (!chan) return NS_ERROR_FAILURE;
 
     chan->GetContentLength(&mContentLength) ;
+#endif
 
     return mResponseDataListener->OnStartRequest(mChannel, aContext);
 }
