@@ -1076,6 +1076,7 @@ void nsRenderingContextWin :: DestroyDrawingSurface(nsDrawingSurface aDS)
   {
     mDC = mMainDC;
     mSurface = mMainSurface;
+    NS_IF_ADDREF(mSurface);
   }
 
   NS_IF_RELEASE(surf);
