@@ -338,7 +338,7 @@
           <!--menuitem label="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" command="cmd_quoteMessage"/-->  
           <menuitem label="&editRewrapCmd.label;" accesskey="&editRewrapCmd.accesskey;" command="cmd_rewrap" oncommand="editorShell.Rewrap(false)"/>
           <menuseparator/>
-          <menu label="&outputFormatMenu.label;" accesskey="&outputFormatMenu.accesskey;" command="cmd_outputFormat">
+          <menu id="outputFormatMenu" label="&outputFormatMenu.label;" accesskey="&outputFormatMenu.accesskey;" command="cmd_outputFormat">
             <menupopup>
               <menuitem type="radio" name="output_format" label="&autoFormatCmd.label;" accesskey="&autoFormatCmd.accesskey;" id="1" checked="true"/>
               <menuitem type="radio" name="output_format" label="&plainTextFormatCmd.label;" accesskey="&plainTextFormatCmd.accesskey;" id="2"/>
