@@ -61,7 +61,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsFontPackageService,
 /* from nsIFontPackageSercice.h */
 nsFontPackageService::nsFontPackageService() : mHandler(nsnull)
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 

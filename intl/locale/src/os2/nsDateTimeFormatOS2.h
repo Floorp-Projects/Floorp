@@ -56,7 +56,7 @@ class nsDateTimeFormatOS2 : public nsIDateTimeFormat {
                                   const PRExplodedTime*  explodedTime, 
                                   nsString& stringOut);
 
-  nsDateTimeFormatOS2() {NS_INIT_ISUPPORTS();}
+  nsDateTimeFormatOS2() {}
 
   virtual ~nsDateTimeFormatOS2() {}
 };

@@ -62,7 +62,7 @@ public:
                                   const PRExplodedTime*  explodedTime, 
                                   nsString& stringOut); 
 
-  nsDateTimeFormatMac() {NS_INIT_ISUPPORTS();}
+  nsDateTimeFormatMac() {}
   
   virtual ~nsDateTimeFormatMac() {}
   

@@ -45,7 +45,6 @@ NS_IMPL_ISUPPORTS1(nsCollationOS2, nsICollation)
 
 nsCollationOS2::nsCollationOS2()
 {
-  NS_INIT_ISUPPORTS();
   mCollation = NULL;
 }
 
