@@ -127,6 +127,7 @@ static nsEUCStatistics gEUCJPStatistics =
 static nsEUCStatistics gEUCKRStatistics = 
 #include "EUCKRStatistics.h"
 // end of EUCKRStatistics.h include
+*/
 
 //==========================================================
 /*
