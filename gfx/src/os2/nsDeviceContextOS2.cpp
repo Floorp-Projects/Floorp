@@ -116,10 +116,7 @@ nsresult nsDeviceContextOS2::Init( nsNativeWidget aWidget)
 {
   nsresult retval = DeviceContextImpl::Init(aWidget);
 
-  HWND  hwnd = (HWND)aWidget;
-  HDC   hdc = WinOpenWindowDC(hwnd);
-
-  CommonInit(hdc);
+  CommonInit(WinOpenWindowDC((HWND)aWidget));
 
   return retval;
 }
@@ -607,9 +604,14 @@ nsresult nsDeviceContextOS2::GetDrawingSurface( nsIRenderingContext &aContext, n
 
 NS_IMETHODIMP nsDeviceContextOS2 :: CheckFontExistence(const nsString& aFontName)
 {
-  HWND    hwnd = (HWND)mWidget;
-  HPS     hps = ::WinGetPS(hwnd);
+  HPS   hps = NULL;
   PRBool  isthere = PR_FALSE;
+
+  if (NULL != mPrintDC){
+    hps = mPrintPS;
+  } else {
+    hps = ::WinGetPS((HWND)mWidget);
+  }
 
   char fontName[FACESIZE];
   aFontName.ToCString( fontName, FACESIZE);
@@ -618,7 +620,8 @@ NS_IMETHODIMP nsDeviceContextOS2 :: CheckFontExistence(const nsString& aFontName
   long lFonts = GpiQueryFonts( hps, QF_PUBLIC | QF_PRIVATE,
                                fontName, &lWant, 0, 0);
 
-  ::WinReleasePS(hps);
+  if (NULL == mPrintDC)
+    ::WinReleasePS(hps);
 
   if (lFonts > 0)
     return NS_OK;
