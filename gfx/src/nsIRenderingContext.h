@@ -68,6 +68,8 @@ typedef void * nsDrawingSurface;
 class nsIRenderingContext : public nsISupports
 {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_IRENDERING_CONTEXT_IID; return iid; }
+
   //TBD: bind/unbind, transformation of scalars (hacky), 
   //potential drawmode for selection, polygons. MMP
 
