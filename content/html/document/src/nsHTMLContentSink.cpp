@@ -258,6 +258,8 @@ public:
 
   // Script processing related routines
   nsresult ResumeParsing();
+  nsresult PreEvaluateScript();
+  nsresult PostEvaluateScript();
   nsresult EvaluateScript(nsString& aScript,
                           PRInt32 aLineNo);
 
@@ -295,6 +297,8 @@ public:
   nsresult AddText(const nsString& aText);
   nsresult FlushText(PRBool* aDidFlush = nsnull);
   nsresult FlushTags();
+
+  PRBool   IsCurrentContainer(nsHTMLTag mType);
 
   void MaybeMarkSinkDirty();
   void MaybeMarkSinkClean();
@@ -528,8 +532,8 @@ MakeContentObject(nsHTMLTag aNodeType,
   case eHTMLTag_basefont:
     rv = NS_NewHTMLBaseFontElement(aResult, aAtom);
     break;
-  case eHTMLTag_blockquote:/* XXX need a real object??? how does type=cite work? */
-    rv = NS_NewHTMLSpanElement(aResult, aAtom);
+  case eHTMLTag_blockquote:
+    rv = NS_NewHTMLQuoteElement(aResult, aAtom);
     break;
   case eHTMLTag_body:
     rv = NS_NewHTMLBodyElement(aResult, aAtom);
@@ -919,6 +923,17 @@ SinkContext::Begin(nsHTMLTag aNodeType, nsIHTMLContent* aRoot)
   mTextLength = 0;
 
   return NS_OK;
+}
+
+PRBool
+SinkContext::IsCurrentContainer(nsHTMLTag aTag)
+{
+  if (aTag == mStack[mStackPos-1].mType) {
+    return PR_TRUE;
+  }
+  else {
+    return PR_FALSE;
+  }
 }
 
 void
@@ -2748,6 +2763,52 @@ HTMLContentSink::ResumeParsing()
 }
 
 nsresult
+HTMLContentSink::PreEvaluateScript()
+{
+  // Cause frame creation and reflow of all body children that 
+  // have thus far been appended. Note that if mDirty is true
+  // then we know that the current body child has not yet been
+  // added to the content model. 
+  // We don't want the current body child to be appended (and
+  // have frames be constructed for it) since the current script
+  // may add new content to the tree (and cause an immediate 
+  // reflow). As long as frames don't exist for the subtree rooted
+  // by the current body child, new content added to the subtree
+  // will not generate new frames and, hence, we won't have to 
+  // worry about reflowing of incomplete content or double frame
+  // creation.
+  if (mDirty) {
+    if (nsnull != mBody) {
+      SINK_TRACE(SINK_TRACE_REFLOW,
+                 ("HTMLContentSink::PreEvaluateScript: reflow content"));
+      mDocument->ContentAppended(mBody, mBodyChildCount);
+      mBody->ChildCount(mBodyChildCount);
+    }
+    mDirty = PR_FALSE;
+  }
+
+  return mCurrentContext->FlushTags();
+}
+
+nsresult
+HTMLContentSink::PostEvaluateScript()
+{
+  // If the script added new content directly to the body, we update
+  // our body child count so that frames aren't created twice.
+  if (nsnull != mBody) {
+    mBody->ChildCount(mBodyChildCount);
+    // If the script is not a body child, we shouldn't include
+    // the element that we eagerly appended (the ancestor of the
+    // script), since it is not yet complete.
+    if (!mCurrentContext->IsCurrentContainer(eHTMLTag_body)) {
+      mBodyChildCount--;
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
 HTMLContentSink::EvaluateScript(nsString& aScript,
                                 PRInt32 aLineNo)
 {
@@ -2795,8 +2856,13 @@ nsDoneLoadingScript(nsIUnicharStreamLoader* aLoader,
   HTMLContentSink* sink = (HTMLContentSink*)aRef;
 
   if (NS_OK == aStatus) {
+
+    sink->PreEvaluateScript();
+
     // XXX We have no way of indicating failure. Silently fail?
     sink->EvaluateScript(aData, 0);
+
+    sink->PostEvaluateScript();
   }
 
   sink->ResumeParsing();
@@ -2841,8 +2907,6 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   // Don't process scripts that aren't JavaScript
   if (isJavaScript) {
     nsAutoString script;
-  
-    mCurrentContext->FlushTags();
 
     // If there is a SRC attribute...
     if (src.Length() > 0) {
@@ -2876,12 +2940,25 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       }
     }
     else {
+      PRBool enabled = PR_TRUE;
+
+      PreEvaluateScript();
+
       // Otherwise, get the text content of the script tag
       script = aNode.GetSkippedContent();
 
       PRUint32 lineNo = (PRUint32)aNode.GetSourceLineNumber();
 
       EvaluateScript(script, lineNo);
+      
+      PostEvaluateScript();
+
+      // If the parse was disabled as a result of this evaluate script
+      // (for example, if the script document.wrote a SCRIPT SRC= tag,
+      // we remind the parser to block.
+      if ((nsnull != mParser) && (PR_FALSE == mParser->IsParserEnabled())) {
+        rv = NS_ERROR_HTMLPARSER_BLOCK;
+      }
     }
   }
 
