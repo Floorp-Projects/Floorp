@@ -108,7 +108,7 @@
 <!ENTITY charsetLatin5.accesskey "9">
 <!ENTITY dcharIso10Cmd.label "Nordic (ISO-8859-10)">
 <!ENTITY charsetLatin6.accesskey "1">
-<!ENTITY dcharIso13Cmd.label "Greek (ISO-8859-13)">
+<!ENTITY dcharIso13Cmd.label "Baltic (ISO-8859-13)">
 <!ENTITY charsetLatin7.accesskey "n">
 <!ENTITY dcharIso14Cmd.label "Celtic (ISO-8859-14)">
 <!ENTITY charsetLatin8.accesskey "f">
