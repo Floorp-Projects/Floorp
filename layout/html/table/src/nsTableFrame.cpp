@@ -5914,8 +5914,9 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
         propData->mLeftBorderWidth = 0;
         tableBorderReset[NS_SIDE_LEFT] = PR_TRUE;
       }
+      nsTableRowFrame* rowFrame;
       for (PRInt32 rowX = info.rowIndex; rowX <= cellEndRowIndex; rowX++) {
-        nsTableRowFrame* rowFrame = (rowX == info.rowIndex) ? info.topRow : rowFrame->GetNextRow();
+        rowFrame = (rowX == info.rowIndex) ? info.topRow : rowFrame->GetNextRow();
         CalcDominateBorder(this, info.cg, info.leftCol, info.rg, rowFrame, info.cell, PR_TRUE, NS_SIDE_LEFT, 
                            PR_FALSE, t2p, owner, ownerBStyle, ownerWidth, ownerColor);
         BCCornerInfo& tlCorner = (0 == rowX) ? topCorners[0] : bottomCorners[0]; // top left
@@ -5946,8 +5947,9 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
         propData->mRightBorderWidth = 0;
         tableBorderReset[NS_SIDE_RIGHT] = PR_TRUE;
       }
+      nsTableRowFrame* rowFrame;
       for (PRInt32 rowX = info.rowIndex; rowX <= cellEndRowIndex; rowX++) {
-        nsTableRowFrame* rowFrame = (rowX == info.rowIndex) ? info.topRow : rowFrame->GetNextRow();
+        rowFrame = (rowX == info.rowIndex) ? info.topRow : rowFrame->GetNextRow();
         CalcDominateBorder(this, info.cg, info.rightCol, info.rg, rowFrame, info.cell, PR_TRUE, NS_SIDE_RIGHT, 
                            PR_TRUE, t2p, owner, ownerBStyle, ownerWidth, ownerColor);
         // update/store the top right & bottom right corners 
