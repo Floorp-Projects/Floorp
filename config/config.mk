@@ -148,8 +148,12 @@ endif
 AS		= $(CC)
 ASFLAGS		= $(CFLAGS)
 BSDECHO		= echo
+ifdef USE_AUTOCONF
+CCC		= $(CXX)
+else
 CC		= gcc
 CCC		= g++
+endif
 CCF		= $(CC) $(CFLAGS)
 LINK_EXE	= $(LINK) $(OS_LFLAGS) $(LFLAGS)
 LINK_DLL	= $(LINK) $(OS_DLLFLAGS) $(DLLFLAGS)
