@@ -50,6 +50,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= negotiateauth
 LIBRARY_NAME	= negotiateauth
 IS_COMPONENT	= 1
+MOZILLA_INTERNAL_API = 1
 
 REQUIRES	= \
 		xpcom \
