@@ -1018,6 +1018,13 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext*       aPresContext,
     }
    
     if (nukeScrollbar || (value == "0" && !mIsFull)) {
+      
+      // clear the scrollbar out of the event state manager so that the
+      // event manager doesn't send events to the destroyed scrollbar frames
+      nsCOMPtr<nsIPresShell> shell;
+      aPresContext->GetShell(getter_AddRefs(shell));
+      ClearFrameRefs(shell, mScrollbar);
+      
       // Nuke the scrollbar.
       mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mScrollbar, nsnull);
       mScrollbarList.DestroyFrames(aPresContext);
@@ -1959,6 +1966,30 @@ nsTreeRowGroupFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsIConte
   return rv;
   
 } // AttributeChanged
+
+
+void
+nsTreeRowGroupFrame::ClearFrameRefs(nsIPresShell *aShell, nsIFrame *aParent)
+{
+  nsIFrame* child;
+  aParent->FirstChild(nsnull,&child);
+
+  while (child) {
+
+    // since we're destroying anonymous frames, we should also
+    // set the parent to null. Otherwise, the event manager holds a
+    // reference to the anonymous node, but the parent <scrollbar> node
+    // goes away
+    // we don't do this to aParent because that's the scrollbar node itself
+    nsCOMPtr<nsIContent> content;
+    child->GetContent(getter_AddRefs(content));
+    content->SetParent(nsnull);
+    
+    ClearFrameRefs(aShell, child);
+    child->GetNextSibling(&child);
+  }
+  aShell->ClearFrameRefs(aParent);
+}
 
 
 

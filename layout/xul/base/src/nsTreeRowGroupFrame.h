@@ -150,6 +150,8 @@ protected:
 
   void ComputeTotalRowCount(PRInt32& rowCount, nsIContent* aParent);
 
+  static void ClearFrameRefs(nsIPresShell* aPresShell, nsIFrame *aParent);
+  
 public:
   // Helpers that allow access to info. The tree is the primary consumer of this
   // info.
