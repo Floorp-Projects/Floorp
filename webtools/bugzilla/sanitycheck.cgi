@@ -160,9 +160,11 @@ SendSQL("select userid,login_name from profiles");
 
 my %profid;
 
+my $emailregexp = Param("emailregexp");
+
 while (@row = FetchSQLData()) {
     my ($id, $email) = (@row);
-    if ($email =~ /^[^@, ]*@[^@, ]*\.[^@, ]*$/) {
+    if ($email =~ /$emailregexp/o) {
         $profid{$id} = 1;
     } else {
         Alert "Bad profile id $id &lt;$email&gt;."
