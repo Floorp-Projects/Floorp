@@ -42,7 +42,7 @@
 #include "nsIProtocolConnection.h"
 #include "nsIUrl.h"
 #include "nsIHTTPConnection.h"
-#include "nsIHTTPEventSink.h" 
+#include "nsIHttpEventSink.h" 
 
 #ifdef XP_PC
 #define XPCOM_DLL  "xpcom32.dll"
