@@ -54,8 +54,10 @@ Usage(char *progName)
     FPS "Usage:	 %s -i importfile [-d certdir] [-P dbprefix] [-h tokenname]\n",
 				 progName);
     FPS "\t\t [-k slotpwfile | -K slotpw] [-w p12filepwfile | -W p12filepw]\n");
+    FPS "\t\t [-v]\n");
     FPS "Usage:	 %s -o exportfile -n certname [-d certdir] [-P dbprefix]\n", progName);
     FPS "\t\t [-k slotpwfile | -K slotpw] [-w p12filepwfile | -W p12filepw]\n");
+    FPS "\t\t [-v]\n");
     exit(PK12UERR_USAGE);
 }
 
@@ -711,7 +713,6 @@ enum {
     opt_Import,
     opt_SlotPWFile,
     opt_SlotPW,
-    opt_Mode,
     opt_Nickname,
     opt_Export,
     opt_P12FilePWFile,
@@ -727,7 +728,6 @@ static secuCommandFlag pk12util_options[] =
     { /* opt_Import	       */ 'i', PR_TRUE,	 0, PR_FALSE },
     { /* opt_SlotPWFile	       */ 'k', PR_TRUE,	 0, PR_FALSE },
     { /* opt_SlotPW	       */ 'K', PR_TRUE,	 0, PR_FALSE },
-    { /* opt_Mode	       */ 'm', PR_TRUE,	 0, PR_FALSE },
     { /* opt_Nickname	       */ 'n', PR_TRUE,	 0, PR_FALSE },
     { /* opt_Export	       */ 'o', PR_TRUE,	 0, PR_FALSE },
     { /* opt_P12FilePWFile     */ 'w', PR_TRUE,	 0, PR_FALSE },
