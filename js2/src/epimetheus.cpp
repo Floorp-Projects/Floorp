@@ -215,6 +215,7 @@ js2val load(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 arg
     // Set the environment to global object and system frame so that the
     // load happens into the top frame.
     if (argc) {
+        // Save off the current top frame and root it.
         Frame *curTop = meta->env.getTopFrame();
         JS2Object::RootIterator ri = JS2Object::addRoot(&curTop);
         meta->env.setTopFrame(meta->env.getPackageOrGlobalFrame());
