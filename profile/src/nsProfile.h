@@ -64,7 +64,7 @@ public:
 	nsresult AutoMigrate();
 
 	nsresult CreateDefaultProfile(void);
-	nsresult TriggerActivation(char *profileName);
+	nsresult TriggerActivation(const char *profileName);
 	nsresult CleanUp();
 	nsresult CheckDomain(PRBool *valid, char *domainName);
 };

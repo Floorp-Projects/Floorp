@@ -1877,6 +1877,7 @@ static const char *prefsToConvert[] = {
       "helpers.private_mailcap_file",
       "helpers.private_mime_types_file",
       "li.server.ldap.userbase",
+      "mail.default_drafts",
       "mail.default_fcc",
       "mail.default_templates",
       "mail.directory",

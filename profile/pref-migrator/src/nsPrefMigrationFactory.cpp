@@ -48,14 +48,17 @@ CreateNewPrefMigration(nsISupports* aOuter, REFNSIID aIID, void **aResult)
     return rv;                                                       
 }
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrefConverter)
 
 static nsModuleComponentInfo components[] = 
 {
     { "Profile Migration", 
       NS_PREFMIGRATION_CID,
       NS_PROFILEMIGRATION_PROGID, 
-      CreateNewPrefMigration
-    }
+      CreateNewPrefMigration },
+    { "Pref Conversion",
+      NS_PREFCONVERTER_CID,
+      NS_PREFCONVERTER_PROGID, nsPrefConverterConstructor}
 };
 
 NS_IMPL_NSGETMODULE("nsPrefMigrationModule", components);
