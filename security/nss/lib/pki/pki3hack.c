@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.18 $ $Date: 2002/01/04 19:21:54 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.19 $ $Date: 2002/01/05 03:00:08 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -141,10 +141,15 @@ STAN_AddNewSlotToDefaultTD
   PK11SlotInfo *sl
 )
 {
+    NSSTrustDomain *td =g_default_trust_domain;
     NSSToken *token;
-    token = nssToken_CreateFromPK11SlotInfo(g_default_trust_domain, sl);
+    token = nssToken_CreateFromPK11SlotInfo(td, sl);
     PK11Slot_SetNSSToken(sl, token);
-    nssList_Add(g_default_trust_domain->tokenList, token);
+    nssList_Add(td->tokenList, token);
+    if (td->tokens) {
+	nssListIterator_Destroy(td->tokens);
+    }
+    td->tokens = nssList_CreateIterator(td->tokenList);
     return PR_SUCCESS;
 }
 
