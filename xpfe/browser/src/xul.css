@@ -11,8 +11,21 @@ toolbox {
         background-color:darkgray;
 }
 
-toolbar.Foo {
-        background-image:url(file:///Incoming/bk.gif);
+:TOOLBOX-NORMAL {
+	background-color: lightgray;
+	color: lightgray;
+	border-bottom: solid darkGray 1px;
+	border-top: solid white 0px;
+	border-left: solid white 0px;
+	border-right: solid darkGray 1px;
+}
+:TOOLBOX-ROLLOVER {
+	background-color: purple;
+	color: green;
+	border-bottom: solid darkGray 1px;
+	border-top: solid white 0px;
+	border-left: solid white 0px;
+	border-right: solid darkGray 1px;
 }
 
 window-test { 
