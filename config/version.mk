@@ -44,8 +44,6 @@ INCLUDED_VERSION_MK=1
 # PBI      : Private build info.  Not used currently.
 #            Guessing the best way would be to set an env var.
 # BINARY   : Binary name.  Not used currently.
-# RCINCLUDE: Another .rc file to merge with the built .rc file.
-#            Not used currently.
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ifndef RESFILE
 RCFILE=./module.rc
@@ -60,13 +58,16 @@ endif
 ifdef MODULE
 _RC_STRING += -MODNAME $(MODULE)
 endif
+ifdef RCINCLUDE
+_RC_STRING += -RCINCLUDE $(srcdir)/$(RCINCLUDE)
+endif
 
 GARBAGE += $(RESFILE) $(RCFILE)
 
 #dummy target so $(RCFILE) doesn't become the default =P
 all::
 
-$(RCFILE):
+$(RCFILE): $(RCINCLUDE)
 	$(PERL) $(topsrcdir)/config/version_win.pl $(_RC_STRING)
 
 endif  # RESFILE
