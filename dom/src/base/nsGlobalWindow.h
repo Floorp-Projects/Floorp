@@ -45,6 +45,7 @@
 #include "nsIDOMNavigator.h"
 #include "nsIDOMNSLocation.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIDOMJSWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -90,7 +91,8 @@ class GlobalWindowImpl : public nsIScriptGlobalObject,
                          public nsIDOMEventReceiver,
                          public nsPIDOMWindow,
                          public nsIDOMViewCSS,
-                         public nsSupportsWeakReference
+                         public nsSupportsWeakReference,
+                         public nsIInterfaceRequestor
 {
 public:
   // nsISupports
@@ -160,6 +162,9 @@ public:
 
   // nsIDOMAbstractView
   NS_DECL_NSIDOMABSTRACTVIEW
+
+  // nsIInterfaceRequestor
+  NS_DECL_NSIINTERFACEREQUESTOR
 
   // Object Management
   GlobalWindowImpl();
