@@ -1269,9 +1269,11 @@ HBRUSH CWizardUI::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 BOOL CWizardUI::OnWizardFinish() 
 {
 	// TODO: Add your specialized code here and/or call the base class
-
 	UpdateGlobals();
 
+	if (CurrentNode->navControls->onNextAction)
+		if (!theApp.interpret(CurrentNode->navControls->onNextAction, NULL))
+			return FALSE;
 	return CPropertyPage::OnWizardFinish();
 }
 

@@ -1009,6 +1009,16 @@ BOOL CWizardMachineApp::interpret(CString cmds, WIDGET *curWidget)
 						_mkdir (tmpPath);
 					}
 				}
+				else if (strcmp(pcmd, "Message") ==0)
+				{
+					CString DisplayVal = replaceVars(parms,NULL);
+					int retval= AfxMessageBox((LPCTSTR)(DisplayVal),MB_YESNO);
+						if (retval == IDYES)
+							return TRUE;
+						else
+							return FALSE;
+				}
+
 				else if (strcmp(pcmd, "DisplayImage") == 0)
 				{
 					// This is to dsiplay an image in a separate dialog
