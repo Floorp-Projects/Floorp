@@ -650,7 +650,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 	if (classid.Find("clsid:") != -1)
 	{
             classid.Cut(0, 6); // Strip off the "clsid:". What's left is the class ID.
-	    bJavaPluginClsid = (classid.Equals(JAVA_CLASS_ID));
+	    bJavaPluginClsid = (classid.EqualsWithConversion(JAVA_CLASS_ID));
 	}
 
       // if we find "java:" in the class id, or we match the Java classid number, we have a java applet
@@ -702,7 +702,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
       {
         // These are some builtin types that we know about for now.
         // (Eventually this will move somewhere else.)
-        if (classid.Equals("browser"))
+        if (classid.EqualsWithConversion("browser"))
         {
           widgetCID = kCAppShellCID;
 	        rv = InstantiateWidget(aPresContext, aMetrics, aReflowState, widgetCID);
@@ -1742,8 +1742,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
 
         if (NS_OK == rv)
         {
-          nsAutoString  uniurl = nsAutoString(aURL);
-          nsAutoString  unitarget = nsAutoString(aTarget);
+          nsAutoString  uniurl; uniurl.AssignWithConversion(aURL);
+          nsAutoString  unitarget; unitarget.AssignWithConversion(aTarget);
           nsAutoString  fullurl;
           nsIURI* baseURL;
 
@@ -1797,7 +1797,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::ShowStatus(const char *aStatusMsg)
 
         if(browserChrome)
           {
-          nsAutoString  msg = nsAutoString(aStatusMsg);
+          nsAutoString  msg; msg.AssignWithConversion(aStatusMsg);
           browserChrome->SetJSStatus(msg.GetUnicode());
           }
         }

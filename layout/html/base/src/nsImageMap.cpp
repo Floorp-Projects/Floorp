@@ -327,37 +327,37 @@ void Area::ToHTML(nsString& aResult)
   }
 
   aResult.Truncate();
-  aResult.Append("<AREA SHAPE=");
+  aResult.AppendWithConversion("<AREA SHAPE=");
   nsAutoString shape;
   GetShapeName(shape);
   aResult.Append(shape);
-  aResult.Append(" COORDS=\"");
+  aResult.AppendWithConversion(" COORDS=\"");
   if (nsnull != mCoords) {
     PRInt32 i, n = mNumCoords;
     for (i = 0; i < n; i++) {
-      aResult.Append(mCoords[i], 10);
+      aResult.AppendWithConversion(mCoords[i], 10);
       if (i < n - 1) {
-        aResult.Append(',');
+        aResult.AppendWithConversion(',');
       }
     }
   }
-  aResult.Append("\" HREF=\"");
+  aResult.AppendWithConversion("\" HREF=\"");
   aResult.Append(href);
-  aResult.Append("\"");
+  aResult.AppendWithConversion("\"");
   if (0 < target.Length()) {
-    aResult.Append(" TARGET=\"");
+    aResult.AppendWithConversion(" TARGET=\"");
     aResult.Append(target);
-    aResult.Append("\"");
+    aResult.AppendWithConversion("\"");
   }
   if (0 < altText.Length()) {
-    aResult.Append(" ALT=\"");
+    aResult.AppendWithConversion(" ALT=\"");
     aResult.Append(altText);
-    aResult.Append("\"");
+    aResult.AppendWithConversion("\"");
   }
   if (mSuppressFeedback) {
-    aResult.Append(" SUPPRESS");
+    aResult.AppendWithConversion(" SUPPRESS");
   }
-  aResult.Append('>');
+  aResult.AppendWithConversion('>');
 }
 
 /**
@@ -376,11 +376,11 @@ void Area::BeginConvertToXIF(nsXIFConverter& aConverter) const
     mArea->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::alt, altText);
   }
 
-  nsAutoString  tag("area");
+  nsAutoString  tag; tag.AssignWithConversion("area");
   aConverter.BeginStartTag(tag);
 
 
-  nsAutoString name("shape");
+  nsAutoString name; name.AssignWithConversion("shape");
   nsAutoString shape;
   GetShapeName(shape);
   aConverter.AddAttribute(name,shape);
@@ -390,36 +390,36 @@ void Area::BeginConvertToXIF(nsXIFConverter& aConverter) const
   if (nsnull != mCoords) {
     PRInt32 i, n = mNumCoords;
     for (i = 0; i < n; i++) {
-      coords.Append(mCoords[i], 10);
+      coords.AppendWithConversion(mCoords[i], 10);
       if (i < n - 1) {
         coords.Append(',');
       }
     }
   }
-  name.Assign("coords");
+  name.AssignWithConversion("coords");
   aConverter.AddAttribute(name,coords);
 
-  name.Assign("href");
+  name.AssignWithConversion("href");
   aConverter.AddAttribute(name,href);
 
   
   if (0 < target.Length()) {
-    name.Assign("target");
+    name.AssignWithConversion("target");
     aConverter.AddAttribute(name,target);
   }
   if (0 < altText.Length()) {
-    name.Assign("alt");
+    name.AssignWithConversion("alt");
     aConverter.AddAttribute(name,altText);
   }
   if (mSuppressFeedback) {
-    name.Assign("suppress");
+    name.AssignWithConversion("suppress");
     aConverter.AddAttribute(name);
   }
 }
 
 void Area::FinishConvertToXIF(nsXIFConverter& aConverter) const
 {
-  nsAutoString  tag("area");
+  nsAutoString  tag; tag.AssignWithConversion("area");
   aConverter.FinishStartTag(tag,PR_TRUE);
 }
 
@@ -464,7 +464,7 @@ void DefaultArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
 
 void DefaultArea::GetShapeName(nsString& aResult) const
 {
-  aResult.Append("default");
+  aResult.AppendWithConversion("default");
 }
 
 //----------------------------------------------------------------------
@@ -525,7 +525,7 @@ void RectArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
 
 void RectArea::GetShapeName(nsString& aResult) const
 {
-  aResult.Append("rect");
+  aResult.AppendWithConversion("rect");
 }
 
 //----------------------------------------------------------------------
@@ -635,7 +635,7 @@ void PolyArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
 
 void PolyArea::GetShapeName(nsString& aResult) const
 {
-  aResult.Append("polygon");
+  aResult.AppendWithConversion("polygon");
 }
 
 //----------------------------------------------------------------------
@@ -700,7 +700,7 @@ void CircleArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
 
 void CircleArea::GetShapeName(nsString& aResult) const
 {
-  aResult.Append("circle");
+  aResult.AppendWithConversion("circle");
 }
 
 //----------------------------------------------------------------------

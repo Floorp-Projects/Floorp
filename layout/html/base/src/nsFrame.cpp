@@ -1813,22 +1813,22 @@ nsFrame::GetFrameName(nsString& aResult) const
 nsresult
 nsFrame::MakeFrameName(const char* aType, nsString& aResult) const
 {
-  aResult = aType;
+  aResult.AssignWithConversion(aType);
   if (nsnull != mContent) {
     nsIAtom* tag;
     mContent->GetTag(tag);
     if ((tag != nsnull) && (tag != nsLayoutAtoms::textTagName)) {
-      aResult.Append("(");
+      aResult.AppendWithConversion("(");
       nsAutoString buf;
       tag->ToString(buf);
       aResult.Append(buf);
       NS_RELEASE(tag);
-      aResult.Append(")");
+      aResult.AppendWithConversion(")");
     }
   }
   char buf[40];
   PR_snprintf(buf, sizeof(buf), "(%d)", ContentIndexInContainer(this));
-  aResult.Append(buf);
+  aResult.AppendWithConversion(buf);
   return NS_OK;
 }
 #endif
@@ -1840,21 +1840,21 @@ nsFrame::XMLQuote(nsString& aString)
   for (i = 0; i < len; i++) {
     PRUnichar ch = aString.CharAt(i);
     if (ch == '<') {
-      nsAutoString tmp("&lt;");
+      nsAutoString tmp; tmp.AssignWithConversion("&lt;");
       aString.Cut(i, 1);
       aString.Insert(tmp, i);
       len += 3;
       i += 3;
     }
     else if (ch == '>') {
-      nsAutoString tmp("&gt;");
+      nsAutoString tmp; tmp.AssignWithConversion("&gt;");
       aString.Cut(i, 1);
       aString.Insert(tmp, i);
       len += 3;
       i += 3;
     }
     else if (ch == '\"') {
-      nsAutoString tmp("&quot;");
+      nsAutoString tmp; tmp.AssignWithConversion("&quot;");
       aString.Cut(i, 1);
       aString.Insert(tmp, i);
       len += 5;

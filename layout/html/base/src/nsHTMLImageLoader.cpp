@@ -81,7 +81,7 @@ void
 nsHTMLImageLoader::SetURL(const nsString& aNewSpec)
 {
   mURLSpec = aNewSpec;
-  if (mBaseURL && !aNewSpec.Equals("")) {
+  if (mBaseURL && !aNewSpec.IsEmpty()) {
     nsString empty;
     nsresult rv;
     rv = NS_MakeAbsoluteURI(mURL, mURLSpec, mBaseURL);
@@ -170,7 +170,7 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext)
     // We were not initialized!
     return NS_ERROR_NULL_POINTER;
   }
-  if (mURL.Equals("")) {
+  if (mURL.IsEmpty()) {
     return NS_OK;
   }
 
@@ -179,14 +179,14 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext)
   // of the absolute url...
   nsAutoString internalImageURLSpec;
   nsString* urlSpec = &mURL;
-  if (mURLSpec.Compare(GOPHER_SPEC, PR_FALSE, GOPHER_SPEC_SIZE) == 0) {
+  if (mURLSpec.CompareWithConversion(GOPHER_SPEC, PR_FALSE, GOPHER_SPEC_SIZE) == 0) {
     // We found a special image source value that refers to a
     // builtin image. Rewrite the source url as a resource url.
     urlSpec = &internalImageURLSpec;
     mURLSpec.Mid(internalImageURLSpec, GOPHER_SPEC_SIZE,
                  mURLSpec.Length() - GOPHER_SPEC_SIZE);
-    internalImageURLSpec.Insert("resource:/res/html/gopher-", 0);
-    internalImageURLSpec.Append(".gif");
+    internalImageURLSpec.InsertWithConversion("resource:/res/html/gopher-", 0);
+    internalImageURLSpec.AppendWithConversion(".gif");
   }
 
   // This is kind of sick, but its possible that we will get a

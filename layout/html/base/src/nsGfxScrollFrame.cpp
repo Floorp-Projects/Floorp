@@ -281,14 +281,14 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContent> content;
-  elementFactory->CreateInstanceByTag(nsAutoString("scrollbar"), getter_AddRefs(content));
-  content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, nsAutoString("horizontal"), PR_FALSE);
+  elementFactory->CreateInstanceByTag(NS_ConvertToString("scrollbar"), getter_AddRefs(content));
+  content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, NS_ConvertToString("horizontal"), PR_FALSE);
   aAnonymousChildren.AppendElement(content);
 
   // create vertical scrollbar
   content = nsnull;
-  elementFactory->CreateInstanceByTag(nsAutoString("scrollbar"), getter_AddRefs(content));
-  content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, nsAutoString("vertical"), PR_FALSE);
+  elementFactory->CreateInstanceByTag(NS_ConvertToString("scrollbar"), getter_AddRefs(content));
+  content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, NS_ConvertToString("vertical"), PR_FALSE);
   aAnonymousChildren.AppendElement(content);
 
       // XXX For GFX never have scrollbars
@@ -1028,7 +1028,7 @@ nsGfxScrollFrameInner::SetAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize,
       frame->GetContent(getter_AddRefs(content));
       char ch[100];
       sprintf(ch,"%d", aSize);
-      nsAutoString newValue(ch);
+      nsAutoString newValue; newValue.AssignWithConversion(ch);
       content->SetAttribute(kNameSpaceID_None, aAtom, newValue, aReflow);
       return PR_TRUE;
   }

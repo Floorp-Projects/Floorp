@@ -246,13 +246,13 @@ static void DecimalToText(PRInt32 ordinal, nsString& result)
 {
    char cbuf[40];
    PR_snprintf(cbuf, sizeof(cbuf), "%ld", ordinal);
-   result.Append(cbuf);
+   result.AppendWithConversion(cbuf);
 }
 static void DecimalLeadingZeroToText(PRInt32 ordinal, nsString& result)
 {
    char cbuf[40];
    PR_snprintf(cbuf, sizeof(cbuf), "%02ld", ordinal);
-   result.Append(cbuf);
+   result.AppendWithConversion(cbuf);
 }
 
 
@@ -267,7 +267,7 @@ static void RomanToText(PRInt32 ordinal, nsString& result, const char* achars, c
     ordinal = 1;
   }
   nsAutoString addOn, decStr;
-  decStr.Append(ordinal, 10);
+  decStr.AppendWithConversion(ordinal, 10);
   PRIntn len = decStr.Length();
   const PRUnichar* dp = decStr.GetUnicode();
   const PRUnichar* end = dp + len;
@@ -744,7 +744,7 @@ nsBulletFrame::GetListItemText(nsIPresContext* aCX,
       break;
  
   }
-  result.Append(".");
+  result.AppendWithConversion(".");
 }
 
 #define MIN_BULLET_SIZE 5               // from laytext.c
