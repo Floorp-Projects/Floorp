@@ -51,12 +51,11 @@ DIRS		= profile
 #PREF_JS_EXPORTS = $(srcdir)/profile/xulrunner.js
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
-PROGRAM = xulrun$(BIN_SUFFIX)
-DEFINES += -DXULRUNNER_PROGNAME=\"xulrun\"
+PROGRAM = xulrunner$(BIN_SUFFIX)
 else
 PROGRAM = xulrunner-bin$(BIN_SUFFIX)
-DEFINES += -DXULRUNNER_PROGNAME=\"xulrunner\"
 endif
+DEFINES += -DXULRUNNER_PROGNAME=\"xulrunner\"
 
 REQUIRES = \
         xpcom \
@@ -66,7 +65,10 @@ REQUIRES = \
 
 CPPSRCS = nsXULRunnerApp.cpp
 
-LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
+LOCAL_INCLUDES += \
+        -I$(topsrcdir)/toolkit/xre \
+        -I$(topsrcdir)/toolkit/profile/src \
+        $(NULL)
 
 ifdef BUILD_STATIC_LIBS
 STATIC_COMPONENTS_LINKER_PATH = -L$(DIST)/lib/components
