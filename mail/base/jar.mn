@@ -35,7 +35,6 @@ classic.jar:
 +   skin/classic/communicator/communicator.css      (skin/communicator.css)
 +   skin/classic/messenger/primaryToolbar.css       (skin/primaryToolbar.css)
 +   skin/classic/messenger/accountCentral.css       (skin/accountCentral.css)
-+   skin/classic/messenger/threadPane.css           (skin/threadPane.css)
 +   skin/classic/messenger/messageHeader.css        (skin/messageHeader.css)
 +   skin/classic/messenger/mailWindow1.css          (skin/mailWindow1.css)
 +   skin/classic/messenger/junkMail.css             (skin/junkMail.css)
@@ -50,6 +49,7 @@ classic.jar:
     skin/classic/messenger/icons/throbber-small.png (skin/icons/throbber-small.png)
     skin/classic/messenger/icons/mail-16.gif        (skin/icons/mail-16.gif)
     skin/classic/messenger/icons/junkbar.png        (skin/icons/junkbar.png)
++   skin/classic/messenger/icons/folder-junk.png    (skin/icons/folder-junk.png)
 
 comm.jar:
 *+  content/navigator/viewSource.xul                (content/viewSource.xul)
