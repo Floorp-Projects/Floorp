@@ -162,6 +162,7 @@ FINAL_LINK_COMP_NAMES = $(DEPTH)/config/final-link-comp-names
 # NSS libs needed for final link in static build
 # 
 NSS_LIBS	= \
+	$(DIST)/lib/libsmime.$(LIB_SUFFIX) \
 	$(DIST)/lib/libcrmf.$(LIB_SUFFIX) \
 	$(DIST)/lib/libssl.$(LIB_SUFFIX) \
 	$(DIST)/lib/libnss.$(LIB_SUFFIX) \
