@@ -252,7 +252,7 @@ HRESULT CBrowserView::CreateBrowser()
     // Register the BrowserImpl object to receive progress messages
     // These callbacks will be used to update the status/progress bars
     nsWeakPtr weakling(
-        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, mpBrowserImpl))));
+        do_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, mpBrowserImpl)));
     (void)mWebBrowser->AddWebBrowserListener(weakling, 
                                 NS_GET_IID(nsIWebProgressListener));
 

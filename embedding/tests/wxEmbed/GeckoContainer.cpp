@@ -98,7 +98,7 @@ nsresult GeckoContainer::CreateBrowser(PRInt32 aX, PRInt32 aY,
     browserBaseWindow->Create();
 
     nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, this));
-    nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
+    nsCOMPtr<nsIWeakReference> thisListener(do_GetWeakReference(listener));
     (void)mWebBrowser->AddWebBrowserListener(thisListener, 
         NS_GET_IID(nsIWebProgressListener));
 

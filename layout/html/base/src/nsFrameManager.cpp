@@ -1209,7 +1209,7 @@ nsresult CantRenderReplacedElementEvent::AddLoadGroupRequest(nsIPresShell* aPres
   rv = mDummyLayoutRequest->SetLoadGroup(loadGroup);
   if (NS_FAILED(rv)) return rv;
   
-  mPresShell = getter_AddRefs(NS_GetWeakReference(aPresShell));
+  mPresShell = do_GetWeakReference(aPresShell);
 
   return loadGroup->AddRequest(mDummyLayoutRequest, nsnull);
 }

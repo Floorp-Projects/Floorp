@@ -1082,9 +1082,8 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
 
     if (aDoCapture) {
         gRollupListener = aListener;
-        gRollupWindow =
-            getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWidget*,
-                                                              this)));
+        gRollupWindow = do_GetWeakReference(NS_STATIC_CAST(nsIWidget*,
+                                                           this));
         gtk_grab_add(widget);
         GrabPointer();
         GrabKeyboard();

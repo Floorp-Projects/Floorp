@@ -486,7 +486,7 @@ void CTests::OnTestsCreateprofile()
 void CTests::OnTestsAddTooltipListener()
 {
     nsWeakPtr weakling(
-        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsITooltipListener*, qaBrowserImpl))));
+        do_GetWeakReference(NS_STATIC_CAST(nsITooltipListener*, qaBrowserImpl)));
  
 	rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsITooltipListener));
 	RvTestResult(rv, "AddWebBrowserListener(). Add Tooltip Listener test", 2);
@@ -497,7 +497,7 @@ void CTests::OnTestsAddTooltipListener()
 void CTests::OnTestsAddWebProgListener()
 {
     nsWeakPtr weakling(
-        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl))));
+        do_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl)));
  
 	rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
 	RvTestResult(rv, "AddWebBrowserListener(). Add Web Prog Lstnr test", 2);
@@ -510,7 +510,7 @@ void CTests::OnTestsAddHistoryListener()
    // addSHistoryListener test
 
 	nsWeakPtr weakling(
-        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsISHistoryListener*, qaBrowserImpl))));
+        do_GetWeakReference(NS_STATIC_CAST(nsISHistoryListener*, qaBrowserImpl)));
 
 	rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsISHistoryListener));
 	RvTestResult(rv, "AddWebBrowserListener(). Add History Lstnr test", 2);
@@ -523,7 +523,7 @@ void CTests::OnTestsRemovehistorylistener()
   // RemoveSHistoryListener test
 
 	nsWeakPtr weakling(
-        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsISHistoryListener*, qaBrowserImpl))));
+        do_GetWeakReference(NS_STATIC_CAST(nsISHistoryListener*, qaBrowserImpl)));
 
 	rv = qaWebBrowser->RemoveWebBrowserListener(weakling, NS_GET_IID(nsISHistoryListener));
 	RvTestResult(rv, "RemoveWebBrowserListener(). Remove History Lstnr test", 2);
@@ -534,7 +534,7 @@ void CTests::OnTestsRemovehistorylistener()
 void CTests::OnTestsAddUriContentListenerByWebBrowser()
 {
     nsWeakPtr weakling(
-        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl))));
+        do_GetWeakReference(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl)));
 
     rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIURIContentListener));
 	RvTestResult(rv, "AddWebBrowserListener(). add nsIURIContentListener test", 2);
@@ -624,7 +624,7 @@ void CTests::OnTestsNSNewChannelAndAsyncOpen()
 
 		QAOutput("AynchOpen() test.", 2);
 		nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
-		nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
+		nsCOMPtr<nsIWeakReference> thisListener(do_GetWeakReference(listener));
 		qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
 
 		if (!listener)
@@ -809,7 +809,7 @@ void CTests::OnVerifybugs70228()
 void CTests::OnVerifybugs90195()
 {
     nsWeakPtr weakling(
-        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsITooltipListener*, qaBrowserImpl))));
+        do_GetWeakReference(NS_STATIC_CAST(nsITooltipListener*, qaBrowserImpl)));
 
     rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsITooltipListener));
 	RvTestResult(rv, "AddWebBrowserListener(). Add Tool Tip Lstnr test", 2);

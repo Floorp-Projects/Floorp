@@ -746,7 +746,7 @@ nsLoadGroup::GetRequests(nsISimpleEnumerator * *aRequests)
 NS_IMETHODIMP
 nsLoadGroup::SetGroupObserver(nsIRequestObserver* aObserver)
 {
-    mObserver = getter_AddRefs(NS_GetWeakReference(aObserver));
+    mObserver = do_GetWeakReference(aObserver);
     return NS_OK;
 }
 

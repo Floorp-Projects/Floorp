@@ -1235,7 +1235,7 @@ nsDNSService::InstallPrefObserver()
     if (NS_FAILED(rv))  return rv;
     
     // save for later
-    mPrefService = getter_AddRefs( NS_GetWeakReference(prefs));
+    mPrefService = do_GetWeakReference(prefs);
     
     nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefs, &rv);
     if (NS_FAILED(rv))  return rv;

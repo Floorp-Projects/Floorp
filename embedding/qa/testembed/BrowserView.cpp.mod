@@ -240,7 +240,7 @@ HRESULT CBrowserView::CreateBrowser()
     // Register the BrowserImpl object to receive progress messages
 	// These callbacks will be used to update the status/progress bars
     nsWeakPtr weakling(
-        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, mpBrowserImpl))));
+        do_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, mpBrowserImpl)));
     rv = mWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
 	
 	if (NS_FAILED(rv))
@@ -275,7 +275,7 @@ HRESULT CBrowserView::DestroyBrowser()
 	}
 
 	nsWeakPtr weakling(
-    dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, mpBrowserImpl))));
+    do_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, mpBrowserImpl)));
 	nsresult rv;
     rv = mWebBrowser->RemoveWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
 	if (NS_FAILED(rv))
@@ -1509,7 +1509,7 @@ void CBrowserView::OnInterfacesNsishistory()
 
    // addSHistoryListener test
 	nsWeakPtr weakling(
-        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsISHistoryListener*, mpBrowserImpl))));
+        do_GetWeakReference(NS_STATIC_CAST(nsISHistoryListener*, mpBrowserImpl)));
 	rv = mWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsISHistoryListener));
 
 	if (NS_FAILED(rv))
@@ -1549,7 +1549,7 @@ void CBrowserView::OnInterfacesNsishistory()
       // RemoveSHistoryListener test
 /*
        nsWeakPtr weakling(
-       dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsISHistoryListener*, mpBrowserImpl))));
+       do_GetWeakReference(NS_STATIC_CAST(nsISHistoryListener*, mpBrowserImpl)));
 	   rv = theSessionHistory->RemoveSHistoryListener(weakling);
 */
 }

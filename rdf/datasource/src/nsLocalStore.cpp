@@ -386,7 +386,7 @@ LocalStoreImpl::Init()
 
     // for later
     if (!gRDF)
-        gRDF = getter_AddRefs(NS_GetWeakReference(rdf));
+        gRDF = do_GetWeakReference(rdf);
 
     rdf->RegisterDataSource(this, PR_FALSE);
 

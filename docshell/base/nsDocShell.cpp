@@ -7077,7 +7077,7 @@ nsDocShellFocusController::ClosingDown(nsIDocShell* aDocShell)
 nsDocShell::InterfaceRequestorProxy::InterfaceRequestorProxy(nsIInterfaceRequestor* p)
 {
     if (p) {
-        mWeakPtr = getter_AddRefs(NS_GetWeakReference(p));
+        mWeakPtr = do_GetWeakReference(p);
     }
 }
  

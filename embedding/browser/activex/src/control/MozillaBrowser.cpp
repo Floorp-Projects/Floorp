@@ -1173,7 +1173,7 @@ HRESULT CMozillaBrowser::CreateBrowser()
 
     // Subscribe for progress notifications
     nsCOMPtr<nsIWeakReference> listener(
-        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, mWebBrowserContainer))));
+        do_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, mWebBrowserContainer)));
     mWebBrowser->AddWebBrowserListener(listener, NS_GET_IID(nsIWebProgressListener));
 
     // Visible

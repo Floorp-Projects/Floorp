@@ -1417,7 +1417,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   NS_ENSURE_SUCCESS(EnsureWebBrowserChrome(), NS_ERROR_FAILURE);
   mWebBrowser->SetContainerWindow(mWebBrowserChrome);
   nsWeakPtr weakling(
-      dont_AddRef(NS_GetWeakReference((nsIWebProgressListener*)mWebBrowserChrome)));
+      do_GetWeakReference((nsIWebProgressListener*)mWebBrowserChrome));
   mWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
 
   webBrowserWin->Create();

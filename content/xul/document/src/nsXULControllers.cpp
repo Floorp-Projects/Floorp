@@ -124,7 +124,7 @@ nsXULControllers::GetCommandDispatcher(nsIDOMXULCommandDispatcher** _result)
 NS_IMETHODIMP
 nsXULControllers::SetCommandDispatcher(nsIDOMXULCommandDispatcher* aCommandDispatcher)
 {
-  mCommandDispatcher = getter_AddRefs(NS_GetWeakReference(aCommandDispatcher));
+  mCommandDispatcher = do_GetWeakReference(aCommandDispatcher);
   return NS_OK;
 }
 

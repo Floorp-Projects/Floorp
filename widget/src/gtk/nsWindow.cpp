@@ -936,7 +936,7 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     }
 
     gRollupListener = aListener;
-    gRollupWidget = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWidget*,this)));
+    gRollupWidget = do_GetWeakReference(NS_STATIC_CAST(nsIWidget*,this));
   } else {
     // make sure that the grab window is marked as released
     if (sGrabWindow == this) {

@@ -111,7 +111,7 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
 {
   NS_ENSURE_ARG(inPresShell);
   
-  mPresShell = getter_AddRefs(NS_GetWeakReference(inPresShell));    // the presshell owns us, so no addref
+  mPresShell = do_GetWeakReference(inPresShell);    // the presshell owns us, so no addref
   NS_ASSERTION(mPresShell, "Hey, pres shell should support weak refs");
 
   // get nsILookAndFeel from the pres context, which has one cached.
@@ -149,7 +149,7 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
   nsCOMPtr<nsISelectionPrivate> privateSelection = do_QueryInterface(domSelection);
   if (privateSelection)
     privateSelection->AddSelectionListener(this);
-  mDomSelectionWeak = getter_AddRefs(NS_GetWeakReference(domSelection));
+  mDomSelectionWeak = do_GetWeakReference(domSelection);
   
   // set up the blink timer
   if (mVisible)
@@ -218,7 +218,7 @@ NS_IMETHODIMP nsCaret::GetCaretDOMSelection(nsISelection **aDOMSel)
 NS_IMETHODIMP nsCaret::SetCaretDOMSelection(nsISelection *aDOMSel)
 {
   NS_ENSURE_ARG_POINTER(aDOMSel);
-  mDomSelectionWeak = getter_AddRefs( NS_GetWeakReference(aDOMSel) );   // weak reference to pres shell
+  mDomSelectionWeak = do_GetWeakReference(aDOMSel);   // weak reference to pres shell
   return NS_OK;
 }
 

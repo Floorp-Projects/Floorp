@@ -228,7 +228,7 @@ nsDSURIContentListener::SetParentContentListener(nsIURIContentListener*
         // Store the parent listener as a weak ref. Parents not supporting
         // nsISupportsWeakReference assert but may still be used.
         mParentContentListener = nsnull;
-        mWeakParentContentListener = getter_AddRefs(NS_GetWeakReference(aParentListener));
+        mWeakParentContentListener = do_GetWeakReference(aParentListener);
         if (!mWeakParentContentListener)
         {
             mParentContentListener = aParentListener;

@@ -1435,7 +1435,7 @@ nsPluginStreamInfo::RequestRead(nsByteRange* rangeList)
     return NS_ERROR_FAILURE;
   
   nsCOMPtr<nsIWeakReference> pWeakRefPluginStreamListenerPeer = 
-    getter_AddRefs(NS_GetWeakReference(suppWeakRef));
+           do_GetWeakReference(suppWeakRef);
   if (!pWeakRefPluginStreamListenerPeer)
     return NS_ERROR_FAILURE;
 
@@ -2006,12 +2006,12 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     channel->GetNotificationCallbacks(getter_AddRefs(callbacks));
     if (callbacks)
-      mWeakPtrChannelCallbacks = getter_AddRefs(NS_GetWeakReference(callbacks));
+      mWeakPtrChannelCallbacks = do_GetWeakReference(callbacks);
 
     nsCOMPtr<nsILoadGroup> loadGroup;
     channel->GetLoadGroup(getter_AddRefs(loadGroup));
     if (loadGroup)
-      mWeakPtrChannelLoadGroup = getter_AddRefs(NS_GetWeakReference(loadGroup));
+      mWeakPtrChannelLoadGroup = do_GetWeakReference(loadGroup);
   }
 
   PRInt32 length;
@@ -3713,7 +3713,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
     if (document == currentdocument)
       return rv;
 
-    mCurrentDocument = getter_AddRefs(NS_GetWeakReference(document));
+    mCurrentDocument = do_GetWeakReference(document);
 
     // ReloadPlugins will do the job smartly: nothing will be done 
     // if no changes detected, in such a case just return

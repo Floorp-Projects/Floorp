@@ -280,7 +280,7 @@ nsIOService::CacheProtocolHandler(const char *scheme, nsIProtocolHandler *handle
 #endif /* DEBUG_dp */
                 return NS_ERROR_FAILURE;
             }
-            mWeakHandler[i] = getter_AddRefs(NS_GetWeakReference(handler));
+            mWeakHandler[i] = do_GetWeakReference(handler);
             return NS_OK;
         }
     }

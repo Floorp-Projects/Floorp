@@ -100,7 +100,7 @@ NS_METHOD nsMenuItem::Create ( nsIMenu* aParent, const nsString & aLabel, PRBool
 {
   mContent = aNode;         // addref
   mMenuParent = aParent;    // weak
-  mWebShellWeakRef = getter_AddRefs(NS_GetWeakReference(aShell));
+  mWebShellWeakRef = do_GetWeakReference(aShell);
   
   mEnabled = aEnabled;
   mMenuType = aItemType;

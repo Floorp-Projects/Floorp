@@ -88,7 +88,7 @@
   if (!theLoadGroup)
     error;
 		nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
-		//nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
+		//nsCOMPtr<nsIWeakReference> thisListener(do_GetWeakReference(listener));
 		//qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
 
 		// this calls nsIStreamListener::OnDataAvailable()

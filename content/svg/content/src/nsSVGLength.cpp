@@ -128,7 +128,7 @@ nsSVGLength::nsSVGLength(float value,
 nsresult nsSVGLength::Init(nsIDOMSVGElement* owner)
 {
   NS_ASSERTION(owner, "need owner");
-  mOwnerElementRef = NS_GetWeakReference(owner);
+  mOwnerElementRef = do_GetWeakReference(owner);
   NS_ENSURE_TRUE(mOwnerElementRef, NS_ERROR_FAILURE);
   return NS_OK;
 }

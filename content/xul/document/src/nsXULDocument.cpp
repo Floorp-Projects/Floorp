@@ -570,7 +570,7 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                                  nsIStreamListener **aDocListener,
                                  PRBool aReset, nsIContentSink* aSink)
 {
-    mDocumentLoadGroup = getter_AddRefs(NS_GetWeakReference(aLoadGroup));
+    mDocumentLoadGroup = do_GetWeakReference(aLoadGroup);
 
     mDocumentTitle.Truncate();
 

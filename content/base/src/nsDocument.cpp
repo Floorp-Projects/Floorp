@@ -731,7 +731,7 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
   mDocumentBaseURL = mDocumentURL;
 
   if (aLoadGroup) {
-    mDocumentLoadGroup = getter_AddRefs(NS_GetWeakReference(aLoadGroup));
+    mDocumentLoadGroup = do_GetWeakReference(aLoadGroup);
     // there was an assertion here that aLoadGroup was not null.  This
     // is no longer valid nsWebShell::SetDocument does not create a
     // load group, and it works just fine.
@@ -4102,7 +4102,7 @@ nsDocument::RemoveReference(void *aKey, nsISupports **aOldReference)
 NS_IMETHODIMP
 nsDocument::SetContainer(nsISupports *aContainer)
 {
-  mDocumentContainer = dont_AddRef(NS_GetWeakReference(aContainer));
+  mDocumentContainer = do_GetWeakReference(aContainer);
 
   return NS_OK;
 }

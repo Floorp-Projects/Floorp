@@ -889,7 +889,7 @@ nsDocLoaderImpl::AddProgressListener(nsIWebProgressListener *aListener,
                                      PRUint32 aNotifyMask)
 {
   nsresult rv;
-  nsWeakPtr listener = getter_AddRefs(NS_GetWeakReference(aListener));
+  nsWeakPtr listener = do_GetWeakReference(aListener);
   if (!listener) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -913,7 +913,7 @@ NS_IMETHODIMP
 nsDocLoaderImpl::RemoveProgressListener(nsIWebProgressListener *aListener)
 {
   nsresult rv;
-  nsWeakPtr listener = getter_AddRefs(NS_GetWeakReference(aListener));
+  nsWeakPtr listener = do_GetWeakReference(aListener);
   if (!listener) {
     return NS_ERROR_INVALID_ARG;
   }

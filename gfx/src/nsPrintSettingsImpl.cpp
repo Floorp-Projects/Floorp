@@ -129,7 +129,7 @@ NS_IMETHODIMP nsPrintSettings::SetPrintSession(nsIPrintSession *aPrintSession)
   // use a weak ref so that it doesn't have to be cleared.
   NS_ENSURE_ARG(aPrintSession);
   
-  mSession = getter_AddRefs(NS_GetWeakReference(aPrintSession));
+  mSession = do_GetWeakReference(aPrintSession);
   if (!mSession) {
     // This may happen if the implementation of this object does
     // not support weak references - programmer error.

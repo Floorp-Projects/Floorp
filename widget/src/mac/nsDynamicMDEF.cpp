@@ -421,7 +421,7 @@ void nsBuildMenu(MenuHandle theMenu, PRBool isChild)
               gPreviousTopLevelMenuHandle = theMenu;
               gPreviousTopLevelMenu = menu;
               
-              gPreviousMenuBar = getter_AddRefs(NS_GetWeakReference(menubar));
+              gPreviousMenuBar = do_GetWeakReference(menubar);
 	            //printf("exit BuildMenu \n");
 	            return;   
 	          }

@@ -73,7 +73,7 @@ void CNsIWebBrowser::WBAddListener(PRInt16 displayMode)
 {
 	// AddWebBrowserListener
 	nsWeakPtr weakling(
-        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIContextMenuListener*, qaBrowserImpl))));
+        do_GetWeakReference(NS_STATIC_CAST(nsIContextMenuListener*, qaBrowserImpl)));
     rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIContextMenuListener));
 	RvTestResult(rv, "AddWebBrowserListener(). nsIContextMenuListener test", displayMode);
 	RvTestResultDlg(rv, "AddWebBrowserListener(). nsIContextMenuListener test", true);
@@ -83,7 +83,7 @@ void CNsIWebBrowser::WBRemoveListener(PRInt16 displayMode)
 {
 	// RemoveWebBrowserListener
 	nsWeakPtr weakling(
-        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIContextMenuListener*, qaBrowserImpl))));
+        do_GetWeakReference(NS_STATIC_CAST(nsIContextMenuListener*, qaBrowserImpl)));
 
 	rv = qaWebBrowser->RemoveWebBrowserListener(weakling, NS_GET_IID(nsIContextMenuListener));
 	RvTestResult(rv, "RemoveWebBrowserListener(). nsIContextMenuListener test", displayMode);
