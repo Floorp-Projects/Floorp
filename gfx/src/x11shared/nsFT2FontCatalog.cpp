@@ -57,11 +57,9 @@
 #include "nsLocalFileUnix.h"
 #include "nsIEnumerator.h"
 #include "nsITimelineService.h"
+#include "nsFT2FontCatalog.h"
 
 #if (!defined(MOZ_ENABLE_FREETYPE2))
-class nsFT2FontCatalog {
-  static void GetFontNames(const char* aPattern, nsFontNodeArray* aNodes);
-};
 
 // nsFreeType stubs for development systems without a FreeType dev env
 void nsFT2FontCatalog::GetFontNames(const char* aPat, nsFontNodeArray* aNodes) {};
@@ -111,7 +109,6 @@ extern char *ctime(const time_t *timep);
 #include FT_TRUETYPE_TABLES_H
 #include FT_TRUETYPE_IDS_H
 #include "nsFreeType.h"
-#include "nsFT2FontCatalog.h"
 
 extern PRUint32 gFontDebug;
 

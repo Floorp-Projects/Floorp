@@ -45,6 +45,13 @@
 #include "nsIPref.h"
 #include "nsNameValuePairDB.h"
 
+#if (!defined(MOZ_ENABLE_FREETYPE2))
+class nsFT2FontCatalog {
+public:
+  static void GetFontNames(const char* aPattern, nsFontNodeArray* aNodes);
+};
+#else
+
 //
 // To limit the potential for namespace collision we limit the 
 // number of Moz files that include FreeType's include (and hence 
@@ -190,6 +197,7 @@ protected:
   nsHashtable   *mRange1CharSetNames;
   nsHashtable   *mRange2CharSetNames;
 };
+#endif
 
 
 #endif /* NS_FT2_FONT_CATALOG_H */
