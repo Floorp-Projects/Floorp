@@ -43,9 +43,12 @@
 #include "nsCP1252ToUnicode.h"
 #include "nsCP1253ToUnicode.h"
 #include "nsCP1254ToUnicode.h"
+#include "nsCP1255ToUnicode.h"
+#include "nsCP1256ToUnicode.h"
 #include "nsCP1257ToUnicode.h"
 #include "nsCP1258ToUnicode.h"
 #include "nsCP874ToUnicode.h"
+#include "nsCP866ToUnicode.h"
 #include "nsKOI8RToUnicode.h"
 #include "nsKOI8UToUnicode.h"
 #include "nsMacRomanToUnicode.h"
@@ -64,6 +67,11 @@
 #include "nsUTF8ToUnicode.h"
 #include "nsUTF7ToUnicode.h"
 #include "nsMUTF7ToUnicode.h"
+#include "nsUCS4BEToUnicode.h"
+#include "nsUCS4LEToUnicode.h"
+#include "nsUCS2BEToUnicode.h"
+#include "nsUCS2LEToUnicode.h"
+#include "nsT61ToUnicode.h"
 #include "nsUnicodeToISO88591.h"
 #include "nsUnicodeToISO88592.h"
 #include "nsUnicodeToISO88593.h"
@@ -80,9 +88,12 @@
 #include "nsUnicodeToCP1252.h"
 #include "nsUnicodeToCP1253.h"
 #include "nsUnicodeToCP1254.h"
+#include "nsUnicodeToCP1255.h"
+#include "nsUnicodeToCP1256.h"
 #include "nsUnicodeToCP1257.h"
 #include "nsUnicodeToCP1258.h"
 #include "nsUnicodeToCP874.h"
+#include "nsUnicodeToCP866.h"
 #include "nsUnicodeToKOI8R.h"
 #include "nsUnicodeToKOI8U.h"
 #include "nsUnicodeToMacRoman.h"
@@ -101,6 +112,11 @@
 #include "nsUnicodeToUTF8.h"
 #include "nsUnicodeToUTF7.h"
 #include "nsUnicodeToMUTF7.h"
+#include "nsUnicodeToUCS2BE.h"
+#include "nsUnicodeToUCS2LE.h"
+#include "nsUnicodeToUCS4BE.h"
+#include "nsUnicodeToUCS4LE.h"
+#include "nsUnicodeToT61.h"
 
 // just for NS_IMPL_IDS; this is a good, central place to implement GUIDs
 #include "nsIUnicodeDecoder.h"
@@ -229,6 +245,18 @@ FactoryData g_FactoryData[] =
     "Unicode"
   },
   {
+    &kCP1255ToUnicodeCID,
+    nsCP1255ToUnicode::CreateInstance,
+    "windows-1255",
+    "Unicode"
+  },
+  {
+    &kCP1256ToUnicodeCID,
+    nsCP1256ToUnicode::CreateInstance,
+    "windows-1256",
+    "Unicode"
+  },
+  {
     &kCP1257ToUnicodeCID,
     nsCP1257ToUnicode::CreateInstance,
     "windows-1257",
@@ -244,6 +272,12 @@ FactoryData g_FactoryData[] =
     &kCP874ToUnicodeCID,
     nsCP874ToUnicode::CreateInstance,
     "TIS-620",
+    "Unicode"
+  },
+  {
+    &kCP866ToUnicodeCID,
+    nsCP866ToUnicode::CreateInstance,
+    "IBM866",
     "Unicode"
   },
   {
@@ -355,6 +389,36 @@ FactoryData g_FactoryData[] =
     "Unicode"
   },
   {
+    &kUCS2BEToUnicodeCID,
+    nsUCS2BEToUnicode::CreateInstance,
+    "X-ISO-10646-UCS-2-BE",
+    "Unicode"
+  },
+  {
+    &kUCS2LEToUnicodeCID,
+    nsUCS2LEToUnicode::CreateInstance,
+    "X-ISO-10646-UCS-2-LE",
+    "Unicode"
+  },
+  {
+    &kUCS4BEToUnicodeCID,
+    nsUCS4BEToUnicode::CreateInstance,
+    "X-ISO-10646-UCS-4-BE",
+    "Unicode"
+  },
+  {
+    &kUCS4LEToUnicodeCID,
+    nsUCS4LEToUnicode::CreateInstance,
+    "X-ISO-10646-UCS-4-LE",
+    "Unicode"
+  },
+  {
+    &kT61ToUnicodeCID,
+    nsT61ToUnicode::CreateInstance,
+    "T.61-8bit",
+    "Unicode"
+  },
+  {
     &kUnicodeToISO88591CID,
     nsUnicodeToISO88591::CreateInstance,
     "Unicode",
@@ -451,6 +515,18 @@ FactoryData g_FactoryData[] =
     "windows-1254"
   },
   {
+    &kUnicodeToCP1255CID,
+    nsUnicodeToCP1255::CreateInstance,
+    "Unicode",
+    "windows-1255"
+  },
+  {
+    &kUnicodeToCP1256CID,
+    nsUnicodeToCP1256::CreateInstance,
+    "Unicode",
+    "windows-1256"
+  },
+  {
     &kUnicodeToCP1257CID,
     nsUnicodeToCP1257::CreateInstance,
     "Unicode",
@@ -467,6 +543,12 @@ FactoryData g_FactoryData[] =
     nsUnicodeToCP874::CreateInstance,
     "Unicode",
     "TIS-620"
+  },
+  {
+    &kUnicodeToCP866CID,
+    nsUnicodeToCP866::CreateInstance,
+    "Unicode",
+    "IBM866"
   },
   {
     &kUnicodeToKOI8RCID,
@@ -575,6 +657,36 @@ FactoryData g_FactoryData[] =
     nsUnicodeToMUTF7::CreateInstance,
     "Unicode",
     "x-imap4-modified-utf7"
+  },
+  {
+    &kUnicodeToUCS2BECID,
+    nsUnicodeToUCS2BE::CreateInstance,
+    "Unicode",
+    "X-ISO-10646-UCS-2-BE"
+  },
+  {
+    &kUnicodeToUCS2LECID,
+    nsUnicodeToUCS2LE::CreateInstance,
+    "Unicode",
+    "X-ISO-10646-UCS-2-LE"
+  },
+  {
+    &kUnicodeToUCS4BECID,
+    nsUnicodeToUCS4BE::CreateInstance,
+    "Unicode",
+    "X-ISO-10646-UCS-4-BE"
+  },
+  {
+    &kUnicodeToUCS4LECID,
+    nsUnicodeToUCS4LE::CreateInstance,
+    "Unicode",
+    "X-ISO-10646-UCS-4-LE"
+  },
+  {
+    &kUnicodeToT61CID,
+    nsUnicodeToT61::CreateInstance,
+    "Unicode",
+    "T.61-8bit"
   }
 };
 
