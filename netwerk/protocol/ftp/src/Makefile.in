@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= necko2
+MODULE		= necko
 LIBRARY_NAME	= nkftp_s
 REQUIRES	= xpcom \
 		  string \

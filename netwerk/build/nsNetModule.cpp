@@ -177,6 +177,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAboutCacheEntry)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "nsFtpProtocolHandler.h"
 #include "nsFTPDirListingConv.h"
 #include "nsGopherDirListingConv.h"
 #include "nsMultiMixedConv.h"
@@ -188,6 +189,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAboutCacheEntry)
 #ifdef BUILD_BINHEX_DECODER
 #include "nsBinHexDecoder.h"
 #endif
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFtpProtocolHandler, Init);
 
 nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
 nsresult NS_NewGopherDirListingConv(nsGopherDirListingConv** result);
@@ -827,6 +830,13 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_HTTPDIGESTAUTH_CID,
       NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX "digest",
       nsHttpDigestAuthConstructor },
+
+    // from netwerk/protocol/ftp:
+    { "The FTP Protocol Handler", 
+      NS_FTPPROTOCOLHANDLER_CID,
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ftp",
+      nsFtpProtocolHandlerConstructor
+    },
 
     // from netwerk/protocol/data:
     { "Data Protocol Handler", 

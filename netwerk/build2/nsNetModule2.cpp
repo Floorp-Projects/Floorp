@@ -38,10 +38,7 @@
 #include "nsIGenericFactory.h"
 
 #include "nsGopherHandler.h"
-#include "nsFtpProtocolHandler.h"
 #include "nsViewSourceHandler.h"
-
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFtpProtocolHandler, Init);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Module implementation for the net library
@@ -52,13 +49,6 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_GOPHERHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "gopher",
       nsGopherHandler::Create
-    },
-
-    // from netwerk/protocol/ftp:
-    { "The FTP Protocol Handler", 
-      NS_FTPPROTOCOLHANDLER_CID,
-      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ftp",
-      nsFtpProtocolHandlerConstructor
     },
 
     // from netwerk/protocol/viewsource:

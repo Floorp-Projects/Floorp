@@ -43,13 +43,11 @@ CPPSRCS		= nsNetModule2.cpp
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)nkgopher_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)nkftp_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkviewsource_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../protocol/gopher/src \
-		-I$(srcdir)/../protocol/ftp/src \
 		-I$(srcdir)/../protocol/viewsource/src \
 		$(NULL)
 
