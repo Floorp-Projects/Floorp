@@ -384,7 +384,7 @@ extern void vr_findGlobalRegName ()
     char *def = NULL;
     char *home = getenv("HOME");
     if (home != NULL) {
-        def = (char *) XP_ALLOC(XP_STRLEN(home) + XP_STRLEN(DEF_REG));
+        def = (char *) XP_ALLOC(XP_STRLEN(home) + XP_STRLEN(DEF_REG)+1);
         if (def != NULL) {
           XP_STRCPY(def, home);
           XP_STRCAT(def, DEF_REG);
