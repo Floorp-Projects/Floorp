@@ -162,16 +162,6 @@ ifeq ($(OS_ARCH),WINNT)
 LIB			:= $(addprefix $(OBJDIR)/, $(LIB))
 endif # WINNT
 endif # DLL
-MAKE_OBJDIR		= mkdir $(OBJDIR)
-MAKE_DEPDIR		= mkdir $(OBJDIR)/.deps
-else  # OS2, WINNT
-define MAKE_OBJDIR
-if test ! -d $(@D); then rm -rf $(@D); $(NSINSTALL) -D $(@D); else true; fi
-endef
-ifdef COMPILER_DEPEND
-define MAKE_DEPDIR
-if test ! -d $(@D)/.deps; then rm -rf $(@D)/.deps; mkdir $(@D)/.deps; else true; fi
-endef
 endif # OS2, WINNT
 
 ifndef OS2_IMPLIB
@@ -184,18 +174,22 @@ PACKAGE			= .
 endif
 
 ifdef JAVA_OR_NSJVM
-ALL_TRASH		= $(TARGETS) $(OBJS) $(OBJDIR) LOGS TAGS $(GARBAGE) \
+ALL_TRASH		= $(TARGETS) $(OBJS) LOGS TAGS $(GARBAGE) \
 			  $(NOSUCHFILE) $(JDK_HEADER_CFILES) $(JDK_STUB_CFILES) \
 			  $(JRI_HEADER_CFILES) $(JRI_STUB_CFILES) $(JMC_STUBS) \
 			  $(JMC_HEADERS) $(JMC_EXPORT_FILES) so_locations \
-			  _gen _jmc _jri _stubs .deps $(wildcard gts_tmp_*) \
+			  _gen _jmc _jri _stubs $(MDDEPDIR) $(wildcard gts_tmp_*) \
 			  $(wildcard $(JAVA_DESTPATH)/$(PACKAGE)/*.class)
 else
-ALL_TRASH		= $(TARGETS) $(OBJS) $(OBJDIR) LOGS TAGS $(GARBAGE) \
+ALL_TRASH		= $(TARGETS) $(OBJS) LOGS TAGS $(GARBAGE) \
 			  $(NOSUCHFILE) \
 			  $(JMC_STUBS) \
 			  so_locations \
-			  _gen _stubs .deps $(wildcard gts_tmp_*)
+			  _gen _stubs $(MDDEPDIR) $(wildcard gts_tmp_*)
+endif
+
+ifndef USE_AUTOCONF
+ALL_TRASH		+= $(OBJDIR)
 endif
 
 ifdef JAVA_OR_NSJVM
@@ -283,6 +277,32 @@ everything:: clobber_all alldep
 #XXXceb
 # Directory SDK doesn't use NSPR
 TARGETS			+= tweak_nspr
+
+
+#
+# Rules to make OBJDIR and MDDEPDIR (for --enable-md).
+# These rules replace the MAKE_OBJDIR and MAKE_DEPDIR macros.
+# The macros often failed with parallel builds (-jN),
+# because two processes would simultaneously try to make the same  directory.
+# Using these rules insures that 'make' will have only one process
+# create the directories.
+#
+ifdef MDDEPDIR
+$(MDDEPDIR):
+	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; fi
+endif
+
+ifeq "$(OBJDIR)" "."
+# No need to make the current directory, "."
+MAKE_DIRS := $(MDDEPDIR)
+else
+$(OBJDIR):
+	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; fi
+
+MAKE_DIRS := $(OBJDIR) $(MDDEPDIR)
+endif
+
+
 
 #
 # Since the NSPR folks won't help, we'll fix things the sneaky way.
@@ -412,9 +432,7 @@ endif
 # PROGRAM = Foo
 # creates OBJS, links with LIBS to create Foo
 #
-$(PROGRAM): $(PROGOBJS)
-	@$(MAKE_OBJDIR)
-	@$(MAKE_DEPDIR)
+$(PROGRAM): $(PROGOBJS) $(MAKE_DIRS)
 ifeq ($(OS_ARCH),OS2)
 	$(LINK) -FREE -OUT:$@ $(LDFLAGS) $(OS_LFLAGS) $(PROGOBJS)  $(EXTRA_LIBS) -MAP:$(@:.exe=.map) $(OS_LIBS) $(DEF_FILE)
 else
@@ -422,9 +440,9 @@ ifeq ($(OS_ARCH),WINNT)
 	$(CC) $(PROGOBJS) -Fe$@ -link $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS)
 else
 ifeq ($(CPP_PROG_LINK),1)
-	$(CCC) $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
+	$(CCC) $(WRAP_MALLOC_CFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 else
-	$(CCF) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(CC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
 endif
 endif
@@ -438,13 +456,11 @@ endif
 # creates Foo.o Bar.o, links with LIBS to create Foo, Bar.
 #
 #
-$(SIMPLE_PROGRAMS):$(OBJDIR)/%: $(OBJDIR)/%.o 
-	@$(MAKE_OBJDIR)
-	@$(MAKE_DEPDIR)
+$(SIMPLE_PROGRAMS):$(OBJDIR)/%: $(OBJDIR)/%.o $(MAKE_DIRS)
 ifeq ($(CPP_PROG_LINK),1)
-	$(CCC) $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
+	$(CCC) $(WRAP_MALLOC_CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 else
-	$(CCF) -o $@ $^ $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(CC) -o $@ $^ $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
 
 #
@@ -454,39 +470,33 @@ endif
 #
 pure:	$(PROGRAM)
 ifeq ($(CPP_PROG_LINK),1)
-	$(PURIFY) $(CCC) $(CXXFLAGS) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(PURIFY) $(CCC) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 else
-	$(PURIFY) $(CCF) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(PURIFY) $(CC) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
 	$(INSTALL) -m 555 $^.pure $(DIST)/bin
 
 quantify: $(PROGRAM)
 ifeq ($(CPP_PROG_LINK),1)
-	$(QUANTIFY) $(CCC) $(CXXFLAGS) -o $^.quantify $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(QUANTIFY) $(CCC) -o $^.quantify $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 else
-	$(QUANTIFY) $(CCF) -o $^.quantify $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(QUANTIFY) $(CC) -o $^.quantify $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
 	$(INSTALL) -m 555 $^.quantify $(DIST)/bin
 
 ifneq ($(OS_ARCH),OS2)
-$(LIBRARY): $(OBJS) $(LOBJS)
-	@$(MAKE_OBJDIR)
-	@$(MAKE_DEPDIR)
+$(LIBRARY): $(OBJS) $(LOBJS) $(MAKE_DIRS)
 	rm -f $@
 	$(AR) $(OBJS) $(LOBJS)
 	$(RANLIB) $@
 else
 ifdef OS2_IMPLIB
-$(LIBRARY): $(OBJS) $(DEF_FILE) 
-	@$(MAKE_OBJDIR)
-	@$(MAKE_DEPDIR)
+$(LIBRARY): $(OBJS) $(DEF_FILE) $(MAKE_DIRS)
 	rm -f $@
 	$(IMPLIB) $@ $(DEF_FILE)
 	$(RANLIB) $@
 else
-$(LIBRARY): $(OBJS)
-	@$(MAKE_OBJDIR)
-	@$(MAKE_DEPDIR)
+$(LIBRARY): $(OBJS) $(MAKE_DIRS)
 	rm -f $@
 	$(AR) $(LIBOBJS),,
 	$(RANLIB) $@
@@ -494,25 +504,19 @@ endif
 endif
 
 ifneq ($(OS_ARCH),OS2)
-$(SHARED_LIBRARY): $(OBJS) $(LOBJS)
-	@$(MAKE_OBJDIR)
-	@$(MAKE_DEPDIR)
+$(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(MAKE_DIRS)
 	rm -f $@
 	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS)
 	chmod +x $@
 else
-$(SHARED_LIBRARY): $(OBJS) $(DEF_FILE)
-	@$(MAKE_OBJDIR)
-	@$(MAKE_DEPDIR)
+$(SHARED_LIBRARY): $(OBJS) $(DEF_FILE) $(MAKE_DIRS)
 	rm -f $@
 	$(LINK_DLL) $(OBJS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
 	chmod +x $@
 endif
 
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-$(DLL): $(OBJS) $(EXTRA_LIBS)
-	@$(MAKE_OBJDIR)
-	@$(MAKE_DEPDIR)
+$(DLL): $(OBJS) $(EXTRA_LIBS) $(MAKE_DIRS)
 	rm -f $@
 ifeq ($(OS_ARCH),OS2)
 	$(LINK_DLL) $(OBJS) $(EXTRA_LIBS) $(OS_LIBS)
@@ -521,18 +525,14 @@ else
 endif
 endif
 
-$(OBJDIR)/%: %.c
-	@$(MAKE_OBJDIR)
-	@$(MAKE_DEPDIR)
+$(OBJDIR)/%: %.c $(MAKE_DIRS)
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	$(CC) -Fo$@ -c $(CFLAGS) $<
 else
-	$(CCF) $(LDFLAGS) -o $@ $<
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 endif
 
-$(OBJDIR)/%.o: %.c
-	@$(MAKE_OBJDIR)
-	@$(MAKE_DEPDIR)
+$(OBJDIR)/%.o: %.c $(MAKE_DIRS)
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	$(CC) -Fo$@ -c $(CFLAGS) $<
 else
@@ -541,31 +541,23 @@ endif
 
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
-$(OBJDIR)/%.o: %.s
-	@$(MAKE_OBJDIR)
-	@$(MAKE_DEPDIR)
+$(OBJDIR)/%.o: %.s $(MAKE_DIRS)
 	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $<
 
-$(OBJDIR)/%.o: %.S
-	@$(MAKE_OBJDIR)
-	@$(MAKE_DEPDIR)
+$(OBJDIR)/%.o: %.S $(MAKE_DIRS)
 	$(AS) -o $@ $(ASFLAGS) -c $<
 
-$(OBJDIR)/%: %.cpp
-	@$(MAKE_OBJDIR)
-	@$(MAKE_DEPDIR)
+$(OBJDIR)/%: %.cpp $(MAKE_DIRS)
 	$(CCC) -o $@ $(CXXFLAGS) $< $(LDFLAGS)
 
 #
 # Please keep the next two rules in sync.
 #
-$(OBJDIR)/%.o: %.cc
+$(OBJDIR)/%.o: %.cc $(MAKE_DIRS)
 	@$(MAKE_OBJDIR)
 	$(CCC) -o $@ -c $(CXXFLAGS) $<
 
-$(OBJDIR)/%.o: %.cpp
-	@$(MAKE_OBJDIR)
-	@$(MAKE_DEPDIR)
+$(OBJDIR)/%.o: %.cpp $(MAKE_DIRS)
 ifdef STRICT_CPLUSPLUS_SUFFIX
 	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > $(OBJDIR)/t_$*.cc
 	$(CCC) -o $@ -c $(CXXFLAGS) $(OBJDIR)/t_$*.cc
@@ -589,6 +581,17 @@ endif #STRICT_CPLUSPLUS_SUFFIX
 
 %: %.sh
 	rm -f $@; cp $< $@; chmod +x $@
+
+# Cancel these implicit rules
+#
+%: %,v
+
+%: RCS/%,v
+
+%: s.%
+
+%: SCCS/s.%
+
 
 
 # these rules only apply when the XPIDL compiler is available
@@ -844,9 +847,7 @@ $(JMC_GEN_DIR)/M%.h: $(JMCSRCDIR)/%.class
 $(JMC_GEN_DIR)/M%.c: $(JMCSRCDIR)/%.class
 	$(JMC) -d $(JMC_GEN_DIR) -module $(JMC_GEN_FLAGS) $(?F:.class=)
 
-$(OBJDIR)/M%.o: $(JMC_GEN_DIR)/M%.h $(JMC_GEN_DIR)/M%.c
-	@$(MAKE_OBJDIR)
-	@$(MAKE_DEPDIR)
+$(OBJDIR)/M%.o: $(JMC_GEN_DIR)/M%.h $(JMC_GEN_DIR)/M%.c $(MAKE_DIRS)
 ifeq ($(OS_ARCH),OS2)
 	$(CC) -Fo$@ -c $(CFLAGS) $(JMC_GEN_DIR)/M$*.c
 else
@@ -857,39 +858,30 @@ export:: $(JMC_HEADERS) $(JMC_STUBS)
 endif # JAVA_OR_NSJVM
 endif
 
-#
-# Copy each element of EXPORTS to $(XPDIST)/public/$(MODULE)/
-#
-ifneq ($(EXPORTS),)
-$(XPDIST)/include$(INCL_SUBDIR)::
-	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
+################################################################################
+# Copy each element of EXPORTS to $(XPDIST)/include
 
-#
-# INCL_SUBDIR is used for special cases like XfeWidgets/* where the
-# headers are expected to live in subdirs.
-#
-export:: $(EXPORTS) $(XPDIST)/include$(INCL_SUBDIR)
+ifneq ($(EXPORTS),)
+$(XPDIST)/include::
+	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; fi
+
+export:: $(EXPORTS) $(XPDIST)/include
 	$(INSTALL) -m 444 $^
 endif
 
 ################################################################################
-
+# Copy each element of IDLSRCS to $(XPDIST)/idl
 
 ifneq ($(IDLSRCS),)
-$(XPDIST)/idl$(INCL_SUBDIR)::
-	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
+$(XPDIST)/idl::
+	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; fi
 
-export:: $(IDLSRCS) $(XPDIST)/idl$(INCL_SUBDIR)
+export:: $(IDLSRCS) $(XPDIST)/idl
 	$(INSTALL) -m 444 $^
 
 endif
 
 ##############################################################################
-
-
-ifdef USE_AUTOCONF
-ALL_TRASH := $(filter-out $(OBJDIR), $(ALL_TRASH))
-endif
 
 ifndef NO_MDUPDATE
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
@@ -930,19 +922,21 @@ endif
 #############################################################################
 # X dependency system
 #############################################################################
-
+ifdef COMPILER_DEPEND
+depend::
+	@echo Warning: No need to run \"$(MAKE) depend\" with \"--enable-md\". 2>&1
+else
 $(MKDEPENDENCIES)::
-	@$(MAKE_OBJDIR)
 	touch $(MKDEPENDENCIES)
 ifdef USE_AUTOCONF
-	$(MKDEPEND) -p$(OBJDIR_NAME)/ -o'.o' -f$(MKDEPENDENCIES) $(DEFINES) $(ACDEFINES) $(INCLUDES) $(addprefix $(srcdir)/,$(CSRCS) $(CPPSRCS)) >/dev/null 2>/dev/null
+	$(MKDEPEND) -p$(OBJDIR_NAME)/ -o'.o' -f$(MKDEPENDENCIES) $(DEFINES) $(ACDEFINES) $(INCLUDES) $(addprefix $(srcdir)/,$(CSRCS) $(CPPSRCS)) >/dev/null 2>&1
 	@mv depend.mk depend.mk.old && cat depend.mk.old | sed "s|^$(OBJDIR_NAME)/$(srcdir)/|$(OBJDIR_NAME)/|g" > depend.mk && rm -f depend.mk.old
 else
 	$(MKDEPEND) -p$(OBJDIR_NAME)/ -o'.o' -f$(MKDEPENDENCIES) $(INCLUDES) $(CSRCS) $(CPPSRCS)
 endif
 
 ifndef MOZ_NATIVE_MAKEDEPEND
-$(MKDEPEND)::
+$(MKDEPEND):
 	cd $(DEPTH)/config; $(MAKE) nsinstall tweak_nspr
 	cd $(MKDEPEND_DIR); $(MAKE)
 endif
@@ -957,7 +951,7 @@ $(MOZILLA_DETECT_GEN):
 
 detect: $(MOZILLA_DETECT_GEN)
 
-endif
+endif # ! USE_AUTOCONF
 
 ifndef MOZ_NATIVE_MAKEDEPEND
 MKDEPEND_BUILTIN = $(MKDEPEND) 
@@ -965,17 +959,12 @@ else
 MKDEPEND_BUILTIN =
 endif
 
-ifdef COMPILER_DEPEND
-depend::
-	@echo Warning: No need to run \"$(MAKE) depend\" with \"--enable-md\". 2>&1
-else
 ifdef OBJS
-depend:: $(MKDEPEND_BUILTIN) $(MKDEPENDENCIES)
+depend::  $(MAKE_DIRS) $(MKDEPEND_BUILTIN) $(MKDEPENDENCIES)
 else
 depend::
 endif
 	+$(LOOP_OVER_DIRS)
-endif
 
 dependclean::
 	rm -f $(MKDEPENDENCIES)
@@ -983,13 +972,14 @@ dependclean::
 
 -include $(OBJDIR)/depend.mk
 
-endif
+endif # ! COMPILER_DEPEND
+
 #############################################################################
 # Yet another depend system: -MD
 ifdef COMPILER_DEPEND
 ifdef OBJS
 MDDEPEND_FILES := $(foreach obj, $(OBJS), \
-                    $(dir $(obj)).deps/$(basename $(notdir $(obj))).pp)
+                    $(MDDEPDIR)/$(basename $(notdir $(obj))).pp)
 MDDEPEND_FILES := $(wildcard $(MDDEPEND_FILES))
 ifdef MDDEPEND_FILES
 ifdef PERL
@@ -999,9 +989,11 @@ ifdef PERL
 # The script has an advantage over including the *.pp files directly
 # because it handles missing header files. 'make' would complain that
 # there is no way to build missing headers.
-foo := $(shell $(PERL) $(topsrcdir)/config/mddepend.pl $(MDDEPEND_FILES) \
-        >$(OBJDIR)/.deps/.all.pp)
--include $(OBJDIR)/.deps/.all.pp
+#foo := $(shell $(PERL) $(topsrcdir)/config/mddepend.pl $(MDDEPEND_FILES) \
+#        >$(MDDEPDIR)/.all.pp)
+$(MDDEPDIR)/.all.pp: $(MDDEPEND_FILES)
+	@$(PERL) $(topsrcdir)/config/mddepend.pl $(MDDEPEND_FILES) >$@
+-include $(MDDEPDIR)/.all.pp
 else
 include $(MDDEPEND_FILES)
 endif
@@ -1039,7 +1031,7 @@ endif
 # hundreds of built-in suffix rules for stuff we don't need.
 #
 .SUFFIXES:
-.SUFFIXES: .out .a .ln .o .c .cc .C .cpp .y .l .s .S .h .sh .i .pl .class .java .html
+.SUFFIXES: .out .a .ln .o .c .cc .C .cpp .y .l .s .S .h .sh .i .pl .class .java .html .pp .mk .in
 
 #
 # Don't delete these files if we get killed.
@@ -1050,7 +1042,7 @@ endif
 # Fake targets.  Always run these rules, even if a file/directory with that
 # name already exists.
 #
-.PHONY: all all_platforms alltags boot checkout clean clobber clobber_all export install libs realclean run_viewer run_apprunner $(OBJDIR) $(DIRS) FORCE
+.PHONY: all all_platforms alltags boot checkout clean clobber clobber_all export install libs realclean run_viewer run_apprunner $(DIRS) FORCE
 
 # Used as a dependency to force targets to rebuild
 FORCE:
