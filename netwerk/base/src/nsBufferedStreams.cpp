@@ -279,7 +279,7 @@ nsBufferedOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *result)
     while (count > 0) {
         PRUint32 amt = PR_MIN(count, mFillPoint - mCursor);
         if (amt > 0) {
-            nsCRT::memcpy(mBuffer + mCursor, buf, amt);
+            nsCRT::memcpy(mBuffer + mCursor, buf + written, amt);
             written += amt;
             count -= amt;
             mCursor += amt;
