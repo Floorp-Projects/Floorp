@@ -753,7 +753,7 @@ nsIOService::NewFileURI(nsIFile *aSpec, nsIURI **_retval)
     NS_ENSURE_ARG_POINTER(aSpec);
     
     nsXPIDLCString urlString;
-    rv = aSpec->GetURL(getter_Copies(urlString));
+    rv = GetURLSpecFromFile(aSpec, getter_Copies(urlString));
     if (NS_FAILED(rv)) return rv;
 
     return NewURI(urlString, nsnull, _retval);
@@ -1042,3 +1042,71 @@ nsIOService::Observe(nsISupports *subject,
     }
     return NS_OK;
 }
+
+nsresult
+nsIOService::ParseFileURL(const char* inURL,
+                          char **outHost, char **outDirectory,
+                          char **outFileBaseName, char **outFileExtension)
+{
+    nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
+
+    NS_ENSURE_ARG(inURL);
+    NS_ENSURE_ARG_POINTER(outHost);
+    *outHost = nsnull;
+    NS_ENSURE_ARG_POINTER(outDirectory);
+    *outDirectory = nsnull;
+    NS_ENSURE_ARG_POINTER(outFileBaseName);
+    *outFileBaseName = nsnull;
+    NS_ENSURE_ARG_POINTER(outFileExtension);
+    *outFileExtension = nsnull;
+
+	nsXPIDLCString scheme;
+    rv = ExtractScheme(inURL, nsnull, nsnull, getter_Copies(scheme));
+    if (NS_FAILED(rv)) return rv;
+    if (nsCRT::strcmp(scheme.get(), "file") != 0) {
+        NS_ERROR("must be a file:// url");
+        return NS_ERROR_UNEXPECTED;
+    }
+    
+    nsCOMPtr<nsIURLParser> parser;
+    rv = GetParserForScheme(scheme, getter_AddRefs(parser));
+    if (NS_FAILED(rv)) return rv;
+
+    PRUint32 pathPos, filepathPos, directoryPos, basenamePos, extensionPos;
+    PRInt32 pathLen, filepathLen, directoryLen, basenameLen, extensionLen;
+
+    // invoke the parser to extract the URL path
+    rv = parser->ParseURL(inURL, -1,
+                          nsnull, nsnull, // dont care about scheme
+                          nsnull, nsnull, // dont care about authority
+                          &pathPos, &pathLen);
+    if (NS_FAILED(rv)) return rv;
+
+    // invoke the parser to extract filepath from the path
+    rv = parser->ParsePath(inURL + pathPos, pathLen,
+                           &filepathPos, &filepathLen,
+                           nsnull, nsnull,  // dont care about param
+                           nsnull, nsnull,  // dont care about query
+                           nsnull, nsnull); // dont care about ref
+    if (NS_FAILED(rv)) return rv;
+
+    filepathPos += pathPos;
+
+    // invoke the parser to extract the directory and filename from filepath
+    rv = parser->ParseFilePath(inURL + filepathPos, filepathLen,
+                           &directoryPos, &directoryLen,
+                           &basenamePos, &basenameLen,
+                           &extensionPos, &extensionLen);
+    if (NS_FAILED(rv)) return rv;
+
+    if (directoryLen > 0)
+        *outDirectory = PL_strndup(inURL + filepathPos + directoryPos, directoryLen);
+    if (basenameLen > 0)
+        *outFileBaseName = PL_strndup(inURL + filepathPos + basenamePos, basenameLen);
+    if (extensionLen > 0)
+        *outFileExtension = PL_strndup(inURL + filepathPos + extensionPos, extensionLen);
+    // since we are using a no-auth url parser, there will never be a host
+
+    return NS_OK;
+}
+ 
