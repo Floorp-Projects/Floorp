@@ -1,0 +1,68 @@
+body { font-size: 11px; }
+
+table.head {
+    border: 0;
+    width: 100%;
+    font-size: 26px;
+    font-weight: bold;
+}
+
+table.small {
+     height: 100px;
+     width: 100;
+     font-size:10px;
+}
+
+table.weekdisplay {
+     border: 1px solid black;
+     width: 100%;
+}
+
+tr.height { height: 20px; }
+
+td.weekdisplay {
+    text-align: center;
+    border: 1px solid black;
+    background-color: #e0e0e0;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+td.topcenter  {
+    vertical-align: top;
+    text-align: center;
+}
+
+td.bottomcenter  {
+    vertical-align: bottom;
+    text-align: center;
+}
+
+td.bottomborder { border-bottom:1px solid black; }
+
+td.bordertop {
+    border: 1px solid black;
+    vertical-align: top;
+}
+
+td.normaltop {
+    font-size: 11px;
+    vertical-align: top;
+}
+
+td.big {
+    text-align: center;
+    font-size: 26px;
+    font-weight: bold;
+    border-bottom: 1px solid black;
+}
+
+.top { vertical-align: top; }
+
+.left {text-align: left; }
+
+.right {text-align: right; }
+
+.center {text-align: center; }
+
+.noborder { border: 0; }
