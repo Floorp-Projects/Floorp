@@ -856,9 +856,11 @@ namespace JavaScript {
 		Reader &getReader() {return lexer.reader;}
 		World &getWorld() {return lexer.world;}
 
+	  public:
 		void syntaxError(const char *message, uint backUp = 1);
 		void syntaxError(const String &message, uint backUp = 1);
 		const Token &require(bool preferRegExp, Token::Kind kind);
+	  private:
 		String &copyTokenChars(const Token &t);
 
 		ExprNode *parseIdentifierQualifiers(ExprNode *e, bool &foundQualifiers);
