@@ -308,47 +308,6 @@ void nsSupportsArray::DeleteArray(void)
   }
 }
 
-#if 0
-NS_IMETHODIMP_(nsISupportsArray&) 
-nsISupportsArray::operator=(const nsISupportsArray& other)
-{
-  NS_ASSERTION(0, "should be an abstract method");
-  return *this; // bogus
-}
-#endif
-
-NS_IMETHODIMP_(nsISupportsArray&) 
-nsSupportsArray::operator=(nsISupportsArray const& aOther)
-{
-  PRUint32 otherCount = 0;
-  nsresult rv = ((nsISupportsArray&)aOther).Count(&otherCount);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "this method should return an error!");
-  if (NS_FAILED(rv)) return *this;
-  
-  if (otherCount > mArraySize) {
-    DeleteArray();
-    if (!GrowArrayBy(otherCount - mArraySize))
-      // Can't grow mArray, can't return an error -- copy mArraySize elements.
-      otherCount = mArraySize;
-  }
-  else {
-    Clear();
-  }
-  mCount = otherCount;
-  while (0 < otherCount--) {
-    mArray[otherCount] = ((nsISupportsArray&)aOther).ElementAt(otherCount);
-  }
-#if DEBUG_SUPPORTSARRAY
-  if (mCount > mMaxCount &&
-      mCount < (PRInt32)(sizeof(MaxElements)/sizeof(MaxElements[0])))
-  {
-    MaxElements[mCount]++;
-    MaxElements[mMaxCount]--;
-    mMaxCount = mCount;
-  }
-#endif
-  return *this;
-}
 
 NS_IMETHODIMP_(PRBool)
 nsSupportsArray::Equals(const nsISupportsArray* aOther)

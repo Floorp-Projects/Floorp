@@ -145,10 +145,6 @@ public:
 
   NS_IMETHOD_(PRBool) SizeTo(PRInt32 aSize);
 protected:
-  NS_IMETHOD_(nsISupportsArray&) operator=(const nsISupportsArray& aOther);
-  NS_IMETHOD_(PRBool) operator==(const nsISupportsArray& aOther) { return Equals(&aOther); }
-  NS_IMETHOD_(nsISupports*) operator[](PRUint32 aIndex) { return ElementAt(aIndex); }
-  
   void DeleteArray(void);
 
   NS_IMETHOD_(PRBool) GrowArrayBy(PRInt32 aGrowBy);
