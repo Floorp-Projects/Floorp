@@ -82,7 +82,7 @@ class nsEventStateManager : public nsSupportsWeakReference,
   enum nsTextfieldSelectModel {
     eTextfieldSelect_unset = -1,
     eTextfieldSelect_manual = 0,
-    eTextfieldSelect_auto = 1,   // select textfields when focused with keyboard
+    eTextfieldSelect_auto = 1   // select textfields when focused with keyboard
   };
 
 public:
