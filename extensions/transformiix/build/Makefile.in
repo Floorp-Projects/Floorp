@@ -145,10 +145,6 @@ EXTRA_DSO_LDOPTS += \
   $(MOZ_JS_LIBS) \
   $(NULL)
 
-ifdef BUILD_SHARED_LIBS
-FORCE_USE_PIC=1
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir)/../source/xslt -I$(srcdir)/../source/base \
