@@ -1,90 +1,69 @@
-/*
- * The contents of this file are subject to the Mozilla Public License
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
  * Version 1.1 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
  * http://www.mozilla.org/MPL/
  *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific language governing rights and limitations
- * under the License.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * The Original Code is the Mozilla OS/2 libraries.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is John Fairhurst,
- * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
- * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
+ * The Initial Developer of the Original Code is 
+ * IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
- */
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsdragservice_h
-#define _nsdragservice_h
-
-// Drag service.  Manages drag & drop events, converts between OS/2 and
-//                mozilla-style databuffers.
-//
-// This exists as a singleton in the nsModule; it's created at creation of the
-// primaeval appshell and destroyed at DLL unload-time.
-//
+#ifndef nsDragService_h__
+#define nsDragService_h__
 
 #include "nsBaseDragService.h"
 
-class nsFileSpec;
-
-// This implements nsIDragSession and nsIDragService.
+#define INCL_PM
+#include <os2.h>
 
 class nsDragService : public nsBaseDragService
 {
- public:
-   nsDragService();
-   virtual ~nsDragService();
 
-   // nsIDragService
-   NS_IMETHOD InvokeDragSession( nsIDOMNode *aDOMNode,
-				 nsISupportsArray *anArrayTransferables,
-                                 nsIRegion *aRegion, PRUint32 aActionType);
+public:
+  nsDragService();
+  virtual ~nsDragService();
 
-   // nsIDragSession
-   NS_IMETHOD GetData( nsITransferable *aTransferable, PRUint32 aItemIndex);
-   NS_IMETHOD GetNumDropItems( PRUint32 *aNumItems);
-   NS_IMETHOD IsDataFlavorSupported( nsString *aDataFlavour);
+  // nsIDragService
+  NS_IMETHOD InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * aTransferables, nsIScriptableRegion * aRegion, PRUint32 aActionType);
 
-   // platform methods, called from nsWindow
-   void    InitDragOver( PDRAGINFO aDragInfo);
-   MRESULT TermDragOver();
+  // nsIDragSession
+  NS_IMETHOD GetNumDropItems(PRUint32 *aNumDropItems);
+  NS_IMETHOD GetData(nsITransferable *aTransferable, PRUint32 aItemIndex);
+  NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval);
 
-   void InitDragExit( PDRAGINFO aDragInfo);
-   void TermDragExit();
+  HWND mDragWnd;
 
-   void InitDrop( PDRAGINFO aDragInfo);
-   void TermDrop();
+  // our source data items
+  nsCOMPtr<nsISupportsArray> mSourceDataItems;
 
- protected:
-   // Natives
-   void     CreateDragItems( PULONG pCount, PDRAGITEM *ppItems,
-                             nsITransferable *aTransferable);
-   void     FillDragItem( PDRAGITEM aItem, nsITransferable *aTransferable);
-   void     FillDragItem( PDRAGITEM aItem, nsFileSpec *aFilespec);
-   nsresult InvokeDrag( PDRAGITEM aItems, ULONG aCItems, PRUint32 aActionType);
-   MRESULT  HandleMessage( ULONG msg, MPARAM mp1, MPARAM mp2);
-   void     DoPushedOS2FILE( PDRAGITEM pItem, const char *szRf,
-                             void **pData, PRUint32 *cData);
-   void     DoMozillaXfer( PDRAGITEM pItem, char *szFlavour,
-                           void **ppData, PRUint32 *cData);
 
-   HWND      mDragWnd;
-   HPOINTER  mIcon;
-
-   // State; allocated draginfo & outstanding items
-   PDRAGINFO mDragInfo;
-   PFNWP     mWndProc;
-   ULONG     mDragItems;
-
-   friend MRESULT EXPENTRY fnwpDragSource(HWND,ULONG,MPARAM,MPARAM);
+  friend MRESULT EXPENTRY nsDragWindowProc( HWND, ULONG, MPARAM, MPARAM);
 };
 
-nsresult NS_GetDragService( nsISupports **aDragService);
-
-#endif
+#endif // nsDragService_h__

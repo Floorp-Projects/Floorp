@@ -51,6 +51,7 @@
 #include "nsplugindefs.h"
 
 #include "nsITimer.h"
+#include "nsIServiceManager.h"
 
 #include <stdlib.h>
 #include <ctype.h>
@@ -1942,6 +1943,7 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
       gWidgetModuleData->ConvertToUcs( (char *)inbuf, (PRUnichar *)outbuf, 4);
 
       event.charCode = outbuf[0];
+
       if (event.isControl && !(fsFlags & (KC_VIRTUALKEY | KC_DEADKEY))) {
         if (!event.isShift && (event.charCode >= 'A' && event.charCode <= 'Z'))
         {
@@ -2240,13 +2242,11 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
     
         case DM_DRAGOVER:
-          rc = MRFROM2SHORT(DOR_DROP, DO_COPY);
-          result = PR_TRUE;
-//          result = OnDragOver( mp1, mp2, rc);
+          result = OnDragOver(mp1, mp2, rc);
           break;
     
         case DM_DRAGLEAVE:
-          result = OnDragLeave( mp1, mp2);
+          result = OnDragLeave(mp1, mp2);
           break;
     
         case DM_DROP:
@@ -3000,30 +3000,44 @@ void nsWindow::RemoveFromStyle( ULONG style)
 
 #define DispatchDragDropEvent(msg) DispatchStandardEvent(msg,NS_DRAGDROP_EVENT)
 
-// XXXX KNOCKED OUT UNTIL nsDragService.cpp is fixed
-
-PRBool nsWindow::OnDragOver( MPARAM mp1, MPARAM mp2, MRESULT &mr)
+PRBool nsWindow::OnDragOver(MPARAM mp1, MPARAM mp2, MRESULT &mr)
 {
-   // Drawing drop feedback should be fun, have to get DrgGetPS() involved
-   // somehow.
+  nsresult rv;
+  USHORT usDrop = DOR_DROP;
+  USHORT usDefaultOp = DO_MOVE;
+  PDRAGINFO pdraginfo = (PDRAGINFO)mp1;
+  
+  nsCOMPtr<nsIDragService> dragService = do_GetService("@mozilla.org/widget/dragservice;1", &rv);
+  nsCOMPtr<nsIDragSession> dragSession;
+  dragService->GetCurrentSession(getter_AddRefs(dragSession));
+  if (dragSession) {
+    PRBool canDrop;
+    dragSession->GetCanDrop(&canDrop);
+    if (!canDrop)
+      usDrop = DOR_NODROP;
+  
+    switch (pdraginfo->usOperation) {
+    case DO_COPY:
+       usDefaultOp = DO_COPY;
+       dragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_COPY);
+       break;
+    case DO_LINK:
+       usDefaultOp = DO_LINK;
+       dragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_LINK);
+       break;
+    default:
+       dragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_MOVE);
+       break;
+    }
+  } else {
+    usDrop = DOR_NEVERDROP;
+  }
 
-   // Tell drag service about the drag
-  //   gWidgetModuleData->dragService->InitDragOver( (PDRAGINFO) mp1);
+  mr = MRFROM2SHORT(usDrop, usDefaultOp);
 
-   // Invoke gecko for enter if appropriate
-  //   if( !mDragInside)
-  //   {
-  //      DispatchDragDropEvent( NS_DRAGDROP_ENTER);
-  //      mDragInside = TRUE;
-  //   }
+  DispatchDragDropEvent(NS_DRAGDROP_OVER);
 
-   // Invoke for 'over' to set candrop flag
-  //   DispatchDragDropEvent( NS_DRAGDROP_OVER);
-
-   // Get action back from drag service
-  //   mr = gWidgetModuleData->dragService->TermDragOver();
-
-   return PR_TRUE;
+  return PR_TRUE;
 }
 
 PRBool nsWindow::OnDragLeave( MPARAM mp1, MPARAM mp2)
@@ -3037,15 +3051,30 @@ PRBool nsWindow::OnDragLeave( MPARAM mp1, MPARAM mp2)
    return PR_TRUE;
 }
 
-PRBool nsWindow::OnDrop( MPARAM mp1, MPARAM mp2)
+PRBool nsWindow::OnDrop(MPARAM mp1, MPARAM mp2)
 {
-  //   gWidgetModuleData->dragService->InitDrop( (PDRAGINFO) mp1);
-     DispatchDragDropEvent( NS_DRAGDROP_DROP);
-  //   gWidgetModuleData->dragService->TermDrop();
+  nsresult rv;
+  PDRAGINFO pdraginfo = (PDRAGINFO)mp1;
+  
+  nsCOMPtr<nsIDragService> dragService = do_GetService("@mozilla.org/widget/dragservice;1", &rv);
+  nsCOMPtr<nsIDragSession> dragSession;
+  dragService->GetCurrentSession(getter_AddRefs(dragSession));
 
-   mDragInside = FALSE;
+  switch (pdraginfo->usOperation) {
+  case DO_COPY:
+     dragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_COPY);
+     break;
+  case DO_LINK:
+     dragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_LINK);
+     break;
+  default:
+     dragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_MOVE);
+     break;
+  }
 
-   return PR_TRUE;
+  DispatchDragDropEvent( NS_DRAGDROP_DROP);
+
+  return PR_TRUE;
 }
 
 // --------------------------------------------------------------------------

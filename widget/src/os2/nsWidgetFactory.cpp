@@ -63,7 +63,6 @@
 #include "nsClipboardHelper.h"
 #include "nsTransferable.h"
 #include "nsHTMLFormatConverter.h"
-// OS2TODO #include "nsDragService.h"
 
 #include "nsFrameWindow.h" // OS/2 only
 
@@ -79,7 +78,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
-// OS2TODO NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 
 
 // custom "contructor" methods
@@ -240,15 +239,10 @@ static const nsModuleComponentInfo components[] =
     NS_CLIPBOARDHELPER_CID,
     "@mozilla.org/widget/clipboardhelper;1",
     nsClipboardHelperConstructor },
-
-// OS2TODO
-#if 0
   { "OS/2 Drag Service",
     NS_DRAGSERVICE_CID,
     "@mozilla.org/widget/dragservice;1",
     nsDragServiceConstructor },
-#endif
-
   { "OS/2 File Picker",
     NS_FILEPICKER_CID,
     "@mozilla.org/filepicker;1",
