@@ -67,5 +67,5 @@ FILES=\
         xpidl-test-1.xul                \
         $(NULL)
 
-install::
-        -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\res\rdf
+install:: $(FILES:/=\)
+	!@$(MAKE_INSTALL) $** $(DIST)\bin\res\rdf
