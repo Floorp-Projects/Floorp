@@ -805,7 +805,7 @@ str_toLocaleUpperCase(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSString *str;
 
     /*
-     * Forcefully ignore the first (or any) argument and return toLowerCase(),
+     * Forcefully ignore the first (or any) argument and return toUpperCase(),
      * ECMA has reserved that argument, presumbaly for defining the locale.
      */
     if (cx->localeCallbacks && cx->localeCallbacks->localeToUpperCase) {
