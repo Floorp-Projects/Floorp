@@ -30,6 +30,7 @@
 #include "nsCSSRendering.h"
 #include "nsXULAtoms.h"
 #include "nsCOMPtr.h"
+#include "nsINameSpaceManager.h"
 
 static void ForceDrawFrame(nsIFrame * aFrame)
 {
@@ -234,19 +235,19 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
 	  // Take the tree item content and toggle the value of its open attribute.
 	  nsString attrValue;
     nsCOMPtr<nsIAtom> kOpenAtom ( dont_AddRef(NS_NewAtom("open")) );
-    nsresult result = pTreeItemContent->GetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, attrValue);
+    nsresult result = pTreeItemContent->GetAttribute(kNameSpaceID_None, kOpenAtom, attrValue);
     attrValue.ToLowerCase();
     PRBool isExpanded =  (result == NS_CONTENT_ATTR_NO_VALUE ||
 						 (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
     if (isExpanded)
 	  {
 		  // We're collapsing and need to remove frames from the flow.
-		  pTreeItemContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, PR_TRUE);
+		  pTreeItemContent->UnsetAttribute(kNameSpaceID_None, kOpenAtom, PR_TRUE);
 	  }
 	  else
 	  {
 		  // We're expanding and need to add frames to the flow.
-		  pTreeItemContent->SetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, "true", PR_TRUE);
+		  pTreeItemContent->SetAttribute(kNameSpaceID_None, kOpenAtom, "true", PR_TRUE);
 	  }
   }
   return NS_OK;
@@ -264,14 +265,14 @@ void nsTreeCellFrame::Select(nsIPresContext& aPresContext, PRBool isSelected, PR
   if (isSelected)
 	{
 		// We're selecting the node.
-		mContent->SetAttribute(nsXULAtoms::nameSpaceID, kSelectedCellAtom, "true", notifyForReflow);
-    pParentContent->SetAttribute(nsXULAtoms::nameSpaceID, kSelectedAtom, "true", notifyForReflow);
+		mContent->SetAttribute(kNameSpaceID_None, kSelectedCellAtom, "true", notifyForReflow);
+    pParentContent->SetAttribute(kNameSpaceID_None, kSelectedAtom, "true", notifyForReflow);
 	}
 	else
 	{
 		// We're deselecting the node.
-		mContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kSelectedCellAtom, notifyForReflow);
-    pParentContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kSelectedAtom, notifyForReflow);
+		mContent->UnsetAttribute(kNameSpaceID_None, kSelectedCellAtom, notifyForReflow);
+    pParentContent->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, notifyForReflow);
 	}
 
   NS_IF_RELEASE(pParentContent);
@@ -288,14 +289,14 @@ void nsTreeCellFrame::Hover(nsIPresContext& aPresContext, PRBool isHover, PRBool
   if (isHover)
 	{
 		// We're hovering over the node.
-		mContent->SetAttribute(nsXULAtoms::nameSpaceID, kHoverCellAtom, "true", notifyForReflow);
-    pParentContent->SetAttribute(nsXULAtoms::nameSpaceID, kHoverAtom, "true", notifyForReflow);
+		mContent->SetAttribute(kNameSpaceID_None, kHoverCellAtom, "true", notifyForReflow);
+    pParentContent->SetAttribute(kNameSpaceID_None, kHoverAtom, "true", notifyForReflow);
 	}
 	else
 	{
 		// We're deselecting the node.
-		mContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kHoverCellAtom, notifyForReflow);
-    pParentContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kHoverAtom, notifyForReflow);
+		mContent->UnsetAttribute(kNameSpaceID_None, kHoverCellAtom, notifyForReflow);
+    pParentContent->UnsetAttribute(kNameSpaceID_None, kHoverAtom, notifyForReflow);
 	}
 
   NS_IF_RELEASE(pParentContent);

@@ -29,6 +29,7 @@ static int   STRIPE_WIDTH = 20;       // pixels
 static int   ANIMATION_INCREMENT = 4; // pixels
 static int   ANIMATION_SPEED = 50;    // miliseconds
 
+#include "nsINameSpaceManager.h"
 #include "nsProgressMeterFrame.h"
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
@@ -210,7 +211,7 @@ nsProgressMeterFrame::Init(nsIPresContext&  aPresContext,
 
   // get the value
   nsAutoString value;
-  if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::value, value)) &&
+  if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value)) &&
       (value.Length() > 0)) {
 	  setProgress(value);
   }
@@ -218,12 +219,12 @@ nsProgressMeterFrame::Init(nsIPresContext&  aPresContext,
 
    // get the alignment
   nsAutoString align;
-  mContent->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::align, align);
+  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, align);
   setAlignment(align); 
 
   // get the mode
   nsAutoString mode;
-  mContent->GetAttribute(nsXULAtoms::nameSpaceID, nsXULAtoms::mode, mode);
+  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::mode, mode);
   setMode(mode); 
 
 
@@ -681,7 +682,7 @@ nsProgressMeterFrame::AttributeChanged(nsIPresContext* aPresContext,
     nsAutoString newValue;
 
 	// get attribute and set it
-    aChild->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::value, newValue);
+    aChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, newValue);
     setProgress(newValue);
 
     // redraw

@@ -33,6 +33,7 @@
 #include "nsIPresContext.h"
 #include "nsIWidget.h"
 #include "nsXULAtoms.h"
+#include "nsINameSpaceManager.h"
 
 #if 0
 //
@@ -525,8 +526,8 @@ nsToolboxFrame :: CollapseToolbar ( TabInfo & inTab )
   const nsCOMPtr<nsIAtom> kSelectedAtom ( dont_AddRef( NS_NewAtom("collapsed")) );
    
   if ( inTab.mToolbar ) {
-//    inTab.mToolbar->SetAttribute ( nsXULAtoms::nameSpaceID, kSelectedAtom, "true", PR_TRUE );
-    inTab.mToolbar->SetAttribute ( nsnull, kSelectedAtom, "true", PR_TRUE );
+//    inTab.mToolbar->SetAttribute ( kNameSpaceID_None, kSelectedAtom, "true", PR_TRUE );
+    inTab.mToolbar->SetAttribute ( kNameSpaceID_None, kSelectedAtom, "true", PR_TRUE );
   }
    
 } // CollapseToolbar
@@ -543,6 +544,6 @@ nsToolboxFrame :: ExpandToolbar ( TabInfo & inTab )
 {
   const nsCOMPtr<nsIAtom> kSelectedAtom ( dont_AddRef( NS_NewAtom("collapsed")) );
     
-  mContent->UnsetAttribute ( nsXULAtoms::nameSpaceID, kSelectedAtom, PR_TRUE );
+  mContent->UnsetAttribute ( kNameSpaceID_None, kSelectedAtom, PR_TRUE );
 
 } // ExpandToolbar
