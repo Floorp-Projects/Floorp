@@ -681,12 +681,10 @@ nsStdURL::Resolve(const char *relativePath, char **result)
 
     if (!relativePath) return NS_ERROR_NULL_POINTER;
 
-    // Make sure that if there is a : its before other delimiters
-    // If not then its an absolute case
-    static const char delimiters[] = "/;?#:";
-    char* brk = PL_strpbrk(relativePath, delimiters);
-    if (brk && (*brk == ':')) // This is an absolute case
-    {
+    nsXPIDLCString scheme;
+    rv = ExtractURLScheme(relativePath, nsnull, nsnull, getter_Copies(scheme));
+    if (NS_SUCCEEDED(rv)) {
+        // then aSpec is absolute
         rv = DupString(result, relativePath);
         char* path = PL_strstr(*result,"://");
         if (path) {
