@@ -191,6 +191,14 @@ nsHTMLReflowState::GetContainingBlockReflowState(const nsHTMLReflowState* aParen
       // reflow state...
       nsresult rv = aParentRS->frame->IsPercentageBase(isContainingBlock);
       if (NS_SUCCEEDED(rv) && isContainingBlock) {
+        // a block inside a table cell needs to use the table cell
+        if (aParentRS->parentReflowState) {
+          nsCOMPtr<nsIAtom> fType;
+          aParentRS->parentReflowState->frame->GetFrameType(getter_AddRefs(fType));
+          if (nsLayoutAtoms::tableCellFrame == fType.get()) {
+            aParentRS = aParentRS->parentReflowState;
+          }
+        }
         return aParentRS;
       }
     }
