@@ -143,7 +143,7 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
     NSSCertificate *c = STAN_GetNSSCertificate(cert);
     context = c->object.cryptoContext;
     if (!context) {
-	return PR_FAILURE; /* wasn't a temp cert */
+	return SECFailure; /* wasn't a temp cert */
     }
     stanNick = NSSCertificate_GetNickname(c, NULL);
     if (stanNick && nickname && strcmp(nickname, stanNick) != 0) {
