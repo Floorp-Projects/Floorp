@@ -367,7 +367,7 @@ public:
 
     class Iterator : public ConstIterator {
     protected:
-        PRWord* mElementRef;
+        void** mElementRef;
 
     public:
         Iterator& operator++() {
@@ -389,9 +389,10 @@ public:
             return temp; }
 
         void*& operator*() const {
-            return mIsSingleton
-                ? NS_REINTERPRET_CAST(void*&, !mIsExhausted ? *mElementRef : kDummyLast)
-                : mPath.TopNode()->GetElementAt(mPath.TopIndex()); }
+            if (mIsSingleton)
+                return !mIsExhausted ? *mElementRef : kDummyLast;
+            else
+                return mPath.TopNode()->GetElementAt(mPath.TopIndex()); }
 
         PRBool operator==(const Iterator& aOther) const {
             return mIsSingleton
@@ -407,7 +408,7 @@ public:
 
         Iterator(PRWord* aElementRef, PRBool aIsExhausted)
             : ConstIterator(*aElementRef, aIsExhausted),
-              mElementRef(aElementRef) {}
+              mElementRef(NS_REINTERPRET_CAST(void**, aElementRef)) {}
 
         friend class nsVoidBTree;
     };
@@ -422,7 +423,7 @@ protected:
     const Path LeftMostPath() const;
     const Path RightMostPath() const;
 
-    static PRWord kDummyLast;
+    static void* kDummyLast;
 };
 
 
