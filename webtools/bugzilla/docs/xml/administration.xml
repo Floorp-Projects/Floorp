@@ -698,6 +698,16 @@
       in order to make <emphasis>any</emphasis> change to bugs in that
       product.
     </para>    
+    <note>
+      <para>
+        By default, bugs can also be seen by the Assignee, the Reporter, and 
+        by everyone on the CC List, regardless of whether or not the bug would 
+        typically be viewable by them. Visibility to the Reporter and CC List can 
+        be overridden (on a per-bug basis) by bringing up the bug, finding the 
+        section that starts with <quote>Users in the roles selected below...</quote>
+        and un-checking the box next to either 'Reporter' or 'CC List' (or both).
+      </para>
+    </note>
     <section>
       <title>Creating Groups</title>
       <para>To create Groups:</para>
