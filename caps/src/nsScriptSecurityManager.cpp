@@ -93,7 +93,7 @@ static NS_DEFINE_IID(kObserverServiceIID, NS_IOBSERVERSERVICE_IID);
 // Convenience Functions //
 ///////////////////////////
 // Result of this function should not be freed.
-static const PRUnichar *
+static inline const PRUnichar *
 JSValIDToString(JSContext *cx, const jsval idval) {
     JSString *str = JS_ValueToString(cx, idval);
     if(!str)
@@ -101,7 +101,20 @@ JSValIDToString(JSContext *cx, const jsval idval) {
     return NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(str));
 }
 
-// Convinience method to get the current js context stack.
+static inline PRBool
+IsDOMClass(nsIClassInfo* aClassInfo)
+{
+    if (!aClassInfo)
+        return PR_FALSE;
+
+    PRUint32 classFlags;
+    nsresult rv = aClassInfo->GetFlags(&classFlags);
+
+    return NS_SUCCEEDED(rv) && (classFlags & nsIClassInfo::DOM_OBJECT);
+}
+
+
+// Convenience method to get the current js context stack.
 // Uses cached JSContextStack service instead of calling through
 // to the service manager.
 JSContext *
@@ -126,6 +139,8 @@ nsScriptSecurityManager::GetSafeJSContext()
     // Get JSContext from stack.
     if (!mJSContextStack) {
         mJSContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+        if (!mJSContextStack)
+            return nsnull;
     }
 
     JSContext *cx;
@@ -267,11 +282,11 @@ nsScriptSecurityManager::CheckJSFunctionCallerAccess(JSContext *cx, JSObject *ob
                                NS_LITERAL_STRING("caller").get()) == 0,
                  "CheckJSFunctionCallerAccess called for a property other than \'caller\'");
     // Get the security manager
-    //XXX: Any way to avoid this service lookup?
-    nsresult rv;
-    nsCOMPtr<nsIScriptSecurityManager> ssm =
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
+
+    nsScriptSecurityManager *ssm =
+        nsScriptSecurityManager::GetScriptSecurityManager();
+
+    if (!ssm)
     {
         NS_ERROR("Failed to get security manager service");
         return JS_FALSE;
@@ -282,8 +297,9 @@ nsScriptSecurityManager::CheckJSFunctionCallerAccess(JSContext *cx, JSObject *ob
     JSObject* target = JSVAL_TO_OBJECT(*vp);
 
     // Do the same-origin check - this sets a JS exception if the check fails
-    rv = ssm->CheckPropertyAccess(cx, target, "Function", sCallerID,
-                                  nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
+    nsresult rv =
+        ssm->CheckPropertyAccess(cx, target, "Function", sCallerID,
+                                 nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
 
     if (NS_FAILED(rv))
         return JS_FALSE; // Security check failed
@@ -437,11 +453,11 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                 nsCOMPtr<nsIPrincipal> objectPrincipal;
                 if(aJSObject)
                 {
-                    if (NS_FAILED(
-                          GetObjectPrincipal(
-                            cx,
-                            NS_REINTERPRET_CAST(JSObject*, aJSObject),
-                            getter_AddRefs(objectPrincipal))))
+                    rv = doGetObjectPrincipal(cx,
+                                              NS_REINTERPRET_CAST(JSObject*,
+                                                                  aJSObject),
+                                              getter_AddRefs(objectPrincipal));
+                    if (NS_FAILED(rv))
                         return NS_ERROR_FAILURE;
                 }
                 else if(aTargetURI)
@@ -615,18 +631,9 @@ nsScriptSecurityManager::CheckSameOrigin(JSContext *aCx, nsIPrincipal* aSubject,
     return NS_ERROR_DOM_PROP_ACCESS_DENIED;
 }
 
-PRBool
-nsScriptSecurityManager::IsDOMClass(nsIClassInfo* aClassInfo)
-{
-    if (!aClassInfo)
-        return PR_FALSE;
-    PRUint32 classFlags;
-    nsresult rv = aClassInfo->GetFlags(&classFlags);
-    return NS_SUCCEEDED(rv) && (classFlags & nsIClassInfo::DOM_OBJECT);
-}
-
 nsresult
-nsScriptSecurityManager::GetClassPolicy(nsIPrincipal* principal, const char* aClassName,
+nsScriptSecurityManager::GetClassPolicy(nsIPrincipal* principal,
+                                        const char* aClassName,
                                         ClassPolicy** result)
 {
     nsresult rv;
@@ -1045,7 +1052,8 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
                                              getter_AddRefs(subject));
     //-- If subject is null, get a principal from the function object's scope.
     if (NS_SUCCEEDED(rv) && !subject)
-        rv = GetObjectPrincipal(aCx, (JSObject*)aFunObj, getter_AddRefs(subject));
+        rv = doGetObjectPrincipal(aCx, (JSObject*)aFunObj,
+                                  getter_AddRefs(subject));
 
     if (NS_FAILED(rv)) return rv;
     if (!subject) return NS_ERROR_FAILURE;
@@ -1072,7 +1080,7 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
     */
     JSObject* obj = (JSObject*)aTargetObj;
     nsCOMPtr<nsIPrincipal> object;
-    if (NS_FAILED(GetObjectPrincipal(aCx, obj, getter_AddRefs(object))))
+    if (NS_FAILED(doGetObjectPrincipal(aCx, obj, getter_AddRefs(object))))
         return NS_ERROR_FAILURE;
     if (subject == object)
         return NS_OK;
@@ -1390,7 +1398,7 @@ nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
         // Function is brutally-shared chrome. For this case only,
         // get a principal from the object's scope instead of the
         // principal compiled into the function.
-        return GetObjectPrincipal(cx, obj, result);
+        return doGetObjectPrincipal(cx, obj, result);
     }
 
     *result = scriptPrincipal.get();
@@ -1466,40 +1474,59 @@ nsScriptSecurityManager::GetSubjectPrincipal(JSContext *cx,
     return GetPrincipalAndFrame(cx, result, &fp);
 }
 
-nsresult
+NS_IMETHODIMP
 nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
                                             nsIPrincipal **result)
 {
-    JSObject *parent = aObj;
+    return doGetObjectPrincipal(aCx, aObj, result);
+}
+
+// static
+nsresult
+nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj,
+                                              nsIPrincipal **result)
+{
+    NS_ASSERTION(aCx && aObj && result, "Bad call to doGetObjectPrincipal()!");
+
     do
     {
-        JSClass *jsClass = JS_GetClass(aCx, parent);
-        const uint32 privateNsISupports = JSCLASS_HAS_PRIVATE |
-                                          JSCLASS_PRIVATE_IS_NSISUPPORTS;
-        if (jsClass && (jsClass->flags & (privateNsISupports)) ==
-                            privateNsISupports)
+        const JSClass *jsClass = JS_GetClass(aCx, aObj);
+
+        if (jsClass && !(~jsClass->flags & (JSCLASS_HAS_PRIVATE |
+                                            JSCLASS_PRIVATE_IS_NSISUPPORTS)))
         {
-            nsCOMPtr<nsISupports> supports = (nsISupports *) JS_GetPrivate(aCx, parent);
-            nsCOMPtr<nsIScriptObjectPrincipal> objPrin =
-                do_QueryInterface(supports);
-            if (!objPrin)
+            // No need to refcount |priv| here.
+            nsISupports *priv = (nsISupports *)JS_GetPrivate(aCx, aObj);
+            nsCOMPtr<nsIScriptObjectPrincipal> objPrin;
+
+            /*
+             * If it's a wrapped native (as most
+             * JSCLASS_PRIVATE_IS_NSISUPPORTS objects are in mozilla),
+             * check the underlying native instead.
+             */
+            nsCOMPtr<nsIXPConnectWrappedNative> xpcWrapper =
+                do_QueryInterface(priv);
+
+            if (xpcWrapper)
             {
-                /*
-                 * If it's a wrapped native, check the underlying native
-                 * instead.
-                 */
-                nsCOMPtr<nsIXPConnectWrappedNative> xpcNative =
-                    do_QueryInterface(supports);
-                if (xpcNative)
-                    xpcNative->GetNative(getter_AddRefs(supports));
+                nsCOMPtr<nsISupports> supports;
+                xpcWrapper->GetNative(getter_AddRefs(supports));
+
                 objPrin = do_QueryInterface(supports);
+            }
+            else
+            {
+                objPrin = do_QueryInterface(priv);
             }
 
             if (objPrin && NS_SUCCEEDED(objPrin->GetPrincipal(result)))
+            {
                 return NS_OK;
+            }
         }
-        parent = JS_GetParent(aCx, parent);
-    } while (parent);
+
+        aObj = JS_GetParent(aCx, aObj);
+    } while (aObj);
 
     // Couldn't find a principal for this object.
     return NS_ERROR_FAILURE;
@@ -1686,13 +1713,14 @@ Localize(const char *genericString, nsString &result)
     nsAutoString strtmp;
     strtmp.AssignWithConversion(genericString);
 
-    PRUnichar *ptrv = nsnull;
-    ret = bundle->GetStringFromName(strtmp.get(), &ptrv);
+    nsXPIDLString ptrv;
+    ret = bundle->GetStringFromName(strtmp.get(), getter_Copies(ptrv));
     NS_RELEASE(bundle);
-    if (NS_FAILED(ret))
-        NS_WARNING("cannot get string from name\n");
-    result = ptrv;
-    nsCRT::free(ptrv);
+
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(ret), "cannot get string from name\n");
+
+    result.Assign(ptrv);
+
     return ret;
 }
 
@@ -2197,18 +2225,21 @@ nsScriptSecurityManager::GetScriptSecurityManager()
         nsresult rv;
 
         rv = nsJSPrincipals::Startup();
-        if (NS_FAILED(rv))
-            NS_WARNING("can't initialize JS engine security protocol glue!");
+
+        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+                         "can't initialize JS engine security protocol glue!");
 
         nsCOMPtr<nsIXPConnect> xpc =
-                 do_GetService(nsIXPConnect::GetCID(), &rv);
+            do_GetService(nsIXPConnect::GetCID(), &rv);
         if (NS_SUCCEEDED(rv) && xpc)
         {
             rv = xpc->SetDefaultSecurityManager(
                             NS_STATIC_CAST(nsIXPCSecurityManager*, ssecMan),
                             nsIXPCSecurityManager::HOOK_ALL);
-            if (NS_FAILED(rv))
-                NS_WARNING("failed to install xpconnect security manager!");
+
+            NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+                             "failed to install xpconnect security manager!");
+
 #ifdef DEBUG_jband
             else
                 printf("!!!!! xpc security manager registered\n");

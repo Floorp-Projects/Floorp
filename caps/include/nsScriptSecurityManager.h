@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -285,8 +285,8 @@ private:
                                 jsval id, JSAccessMode mode,
                                 jsval *vp);
 
-    static PRBool
-    IsDOMClass(nsIClassInfo* aClassInfo);
+    static nsresult
+    doGetObjectPrincipal(JSContext *cx, JSObject *obj, nsIPrincipal **result);
 
     nsresult
     GetBaseURIScheme(nsIURI* aURI, char** aScheme);
