@@ -531,4 +531,5 @@ function ViewPageSource(messages)
 							url,
 							"view-source" );
 	}
+        return true;
 }
