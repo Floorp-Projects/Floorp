@@ -634,8 +634,59 @@ nsPopupSetFrame::OnCreate(nsIContent* aPopupContent)
     if (NS_SUCCEEDED(rv) && shell) {
       rv = shell->HandleDOMEventWithTarget(aPopupContent, &event, &status);
     }
+
     if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
       return PR_FALSE;
+
+    // The menu is going to show, and the create handler has executed.
+    // We should now walk all of our menu item children, checking to see if any
+    // of them has a command attribute.  If so, then several attributes must
+    // potentially be updated.
+ 
+    nsCOMPtr<nsIDocument> doc;
+    aPopupContent->GetDocument(*getter_AddRefs(doc));
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+
+    PRInt32 count;
+    aPopupContent->ChildCount(count);
+    for (PRInt32 i = 0; i < count; i++) {
+      nsCOMPtr<nsIContent> grandChild;
+      aPopupContent->ChildAt(i, *getter_AddRefs(grandChild));
+      nsCOMPtr<nsIAtom> tag;
+      grandChild->GetTag(*getter_AddRefs(tag));
+      if (tag.get() == nsXULAtoms::menuitem) {
+        // See if we have a command attribute.
+        nsAutoString command;
+        grandChild->GetAttribute(kNameSpaceID_None, nsXULAtoms::command, command);
+        if (!command.IsEmpty()) {
+          // We do! Look it up in our document
+          nsCOMPtr<nsIDOMElement> commandElt;
+          domDoc->GetElementById(command, getter_AddRefs(commandElt));
+          nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
+
+          nsAutoString commandDisabled, menuDisabled;
+          commandContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, commandDisabled);
+          grandChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, menuDisabled);
+          if (!commandDisabled.Equals(menuDisabled)) {
+            // The menu's disabled state needs to be updated to match the command.
+            if (commandDisabled.IsEmpty()) 
+              grandChild->UnsetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, PR_TRUE);
+            else grandChild->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, commandDisabled, PR_TRUE);
+          }
+
+          nsAutoString commandValue, menuValue;
+          commandContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, commandValue);
+          grandChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, menuValue);
+          if (!commandValue.Equals(menuValue)) {
+            // The menu's value state needs to be updated to match the command.
+            // Note that (unlike the disabled state) if the command has *no* value, we
+            // assume the menu is supplying its own.
+            if (!commandValue.IsEmpty()) 
+              grandChild->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, commandValue, PR_TRUE);
+          }
+        }
+      }
+    }
   }
 
   return PR_TRUE;
