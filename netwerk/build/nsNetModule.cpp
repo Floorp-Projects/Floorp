@@ -138,6 +138,7 @@ UnregisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
 #include "nsAboutBloat.h"
 #include "nsAboutCache.h"
 #include "nsAboutCredits.h"
+#include "nsAboutPlugins.h"
 #include "mzAboutMozilla.h"
 #include "nsKeywordProtocolHandler.h"
 
@@ -628,6 +629,11 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_ABOUT_CREDITS_MODULE_CID,
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "credits",
       nsAboutCredits::Create
+    },
+    { "about:plugins",
+      NS_ABOUT_PLUGINS_MODULE_CID,
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "plugins",
+      nsAboutPlugins::Create
     },
     { "about:mozilla",
       MZ_ABOUT_MOZILLA_MODULE_CID,

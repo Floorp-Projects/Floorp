@@ -32,6 +32,7 @@ CPP_OBJS=                                      \
 	.\$(OBJDIR)\nsAboutBloat.obj           \
 	.\$(OBJDIR)\nsAboutCredits.obj		 	\
 	.\$(OBJDIR)\mzAboutMozilla.obj		\
+	.\$(OBJDIR)\nsAboutPlugins.obj \
 	.\$(OBJDIR)\nsAboutCache.obj		\
 	$(NULL)
 
