@@ -21,13 +21,32 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES	= xpcom netlib
-
-CPPSRCS		= TestAtoms.cpp TestCRT.cpp FilesTest.cpp
+CPPSRCS		= TestAtoms.cpp TestCRT.cpp CvtURL.cpp FilesTest.cpp 
 
 LIBS		= \
+	-lnetlib \
+	-labouturl \
+	-lfileurl \
+	-lremoturl \
+	-lgophurl \
+	-lnetcnvts \
+	-lsockstuburl \
+	-lftpurl \
+	-lmimetype \
+	-lpwcac \
+	-lhttpurl \
+	-lnetwork \
+	-lnetutil \
+	-lnetcache \
+	-lgmbase$(MOZ_TOOLKIT) \
+	$(TK_LIBS) \
+	-lpref \
+	-lsecfree \
+	-ljs \
+	-lxp \
 	-lraptorbase \
 	-lxpcom \
+	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)
 
