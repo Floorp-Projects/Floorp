@@ -1070,6 +1070,8 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     if (needsVerticalScrollbar) {
       bidiScrolledAreaWidth -= scrollbarWidth;
     }
+    bidiScrolledAreaWidth -= (aReflowState.mComputedBorderPadding.left +
+                              aReflowState.mComputedBorderPadding.right);
 
     firstPassState.mComputedWidth  = bidiScrolledAreaWidth;
     firstPassState.availableWidth = bidiScrolledAreaWidth;
