@@ -23,7 +23,10 @@
 #include "nsTraceRefcnt.h"
 #include "nsID.h"
 #include "nsError.h"
+
+#if defined(NS_MT_SUPPORTED)
 #include "prcmon.h"
+#endif  /* NS_MT_SUPPORTED */
 
 /*@{*/
 
@@ -385,6 +388,14 @@ nsresult _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
  * Use this macro to implement the AddRef method for a given <i>_class</i>
  * @param _class The name of the class implementing the method
  */
+#if defined(XP_PC)
+#define NS_IMPL_THREADSAFE_ADDREF(_class)                                   \
+nsrefcnt _class::AddRef(void)                                               \
+{                                                                           \
+  return InterlockedIncrement((LONG*)&mRefCnt);                             \
+}
+
+#else /* ! XP_PC */
 #define NS_IMPL_THREADSAFE_ADDREF(_class)                                   \
 nsrefcnt _class::AddRef(void)                                               \
 {                                                                           \
@@ -394,11 +405,25 @@ nsrefcnt _class::AddRef(void)                                               \
   NS_UNLOCK_INSTANCE();                                                     \
   return count;                                                             \
 }
+#endif /* ! XP_PC */
 
 /**
  * Use this macro to implement the Release method for a given <i>_class</i>
  * @param _class The name of the class implementing the method
  */
+#if defined(XP_PC)
+#define NS_IMPL_THREADSAFE_RELEASE(_class)             \
+nsrefcnt _class::Release(void)                         \
+{                                                      \
+  NS_PRECONDITION(0 != mRefCnt, "dup release");        \
+  if (0 == InterlockedDecrement((LONG*)&mRefCnt)) {    \
+    NS_DELETEXPCOM(this);                              \
+    return 0;                                          \
+  }                                                    \
+  return mRefCnt; /* Not threadsafe but who cares. */  \
+}
+
+#else /* ! XP_PC */
 #define NS_IMPL_THREADSAFE_RELEASE(_class)             \
 nsrefcnt _class::Release(void)                         \
 {                                                      \
@@ -413,6 +438,7 @@ nsrefcnt _class::Release(void)                         \
   }                                                    \
   return count;                                        \
 }
+#endif /* ! XP_PC */
 
 //----------------------------------------------------------------------
 
