@@ -32,6 +32,15 @@ CPPSRCS = \
 		mimecal.cpp	\
 		$(NULL)
 
+EXTRA_DSO_LDOPTS = 	\
+	$(NSPR_LIBS)	\
+	-L$(DIST)/bin	\
+	-L$(DIST)/lib	\
+	-lxp			\
+	-lxpcom			\
+	-lraptorbase	\
+	$(NULL)
+
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
