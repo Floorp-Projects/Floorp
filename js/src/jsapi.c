@@ -858,10 +858,46 @@ JS_SetVersion(JSContext *cx, JSVersion version)
     return oldVersion;
 }
 
+static struct v2smap {
+    JSVersion   version;
+    const char  *string;
+} v2smap[] = {
+    {JSVERSION_1_0,     "1.0"},
+    {JSVERSION_1_1,     "1.1"},
+    {JSVERSION_1_2,     "1.2"},
+    {JSVERSION_1_3,     "1.3"},
+    {JSVERSION_1_4,     "1.4"},
+    {JSVERSION_1_5,     "1.5"},
+    {JSVERSION_DEFAULT, "default"},
+    {JSVERSION_UNKNOWN, NULL},          /* must be last, NULL is sentinel */
+};
+
+JS_PUBLIC_API(const char *)
+JS_VersionToString(JSVersion version)
+{
+    int i;
+
+    for (i = 0; v2smap[i].string; i++)
+        if (v2smap[i].version == version)
+            return v2smap[i].string;
+    return "unknown";
+}
+
+JS_PUBLIC_API(JSVersion)
+JS_StringToVersion(const char *string)
+{
+    int i;
+
+    for (i = 0; v2smap[i].string; i++)
+        if (strcmp(v2smap[i].string, string) == 0)
+            return v2smap[i].version;
+    return JSVERSION_UNKNOWN;
+}
+
 JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void)
 {
-    return "JavaScript-C 1.4 release 1 1998 10 31";
+    return "JavaScript-C 1.5 pre-release 1 1999 10 31";
 }
 
 
@@ -890,7 +926,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 #if JS_HAS_UNDEFINED
     /*
      * Define a top-level property 'undefined' with the undefined value.
-     * (proposed ECMA v2.)
+     * (proposed ECMA v2, now in ECMA ed3?)
      */
     if (!OBJ_DEFINE_PROPERTY(cx, obj,
 			     (jsid)cx->runtime->atomState.typeAtoms[JSTYPE_VOID],
