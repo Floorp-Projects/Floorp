@@ -316,6 +316,11 @@ nsMsgDatabase::~nsMsgDatabase()
 		NS_RELEASE(m_HeaderParser);
 		m_HeaderParser = nsnull;
 	}
+	if (m_mdbEnv)
+	{
+		m_mdbEnv->CutStrongRef(m_mdbEnv); //??? is this right?
+		m_mdbEnv = nsnull;
+	}
     if (m_ChangeListeners) 
 	{
         // better not be any listeners, because we're going away.
