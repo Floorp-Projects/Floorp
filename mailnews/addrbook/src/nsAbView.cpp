@@ -1191,7 +1191,7 @@ NS_IMETHODIMP nsAbView::SwapFirstNameLastName()
   // prepare for displayname generation
   // no cache for pref and bundle since the swap operation is not executed frequently
   PRBool displayNameAutoGeneration;
-  PRBool displayNameLastnamefirst;
+  PRBool displayNameLastnamefirst = PR_FALSE;
 
   nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
