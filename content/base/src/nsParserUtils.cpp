@@ -124,6 +124,9 @@ nsParserUtils::IsJavaScriptLanguage(const nsString& aName, const char* *aVersion
       aName.EqualsIgnoreCase("Mocha")) {
     version = JSVERSION_DEFAULT;
   }
+  else if (aName.EqualsIgnoreCase("JavaScript1.0")) {
+    version = JSVERSION_1_0;
+  }
   else if (aName.EqualsIgnoreCase("JavaScript1.1")) {
     version = JSVERSION_1_1;
   }
