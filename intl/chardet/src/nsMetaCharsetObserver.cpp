@@ -276,10 +276,12 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
              nsAutoString newCharset;
              NS_ASSERTION(end>=start, "wrong index");
              contentPart1.Mid(newCharset, start, end - start);
-             if(! newCharset.EqualsIgnoreCase(charset)) 
+             
+             nsAutoString charsetString(charset);
+             if(! newCharset.EqualsIgnoreCase(charsetString)) 
              {
                  PRBool same = PR_FALSE;
-                 res = mAlias->Equals( newCharset, charset , &same);
+                 res = mAlias->Equals( newCharset, charsetString , &same);
                  if(NS_SUCCEEDED(res) && (! same))
                  {
                      nsAutoString preferred;
