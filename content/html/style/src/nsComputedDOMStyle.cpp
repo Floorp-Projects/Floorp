@@ -2102,8 +2102,8 @@ nsComputedDOMStyle::GetBorderStyleFor(PRUint8 aSide,
 
   if(border) {
     const nsCString& style=
-    nsCSSProps::SearchKeywordTable(border->GetBorderStyle(aSide),nsCSSProps::kBorderStyleKTable);
-      val->SetString(style);
+      nsCSSProps::SearchKeywordTable(border->GetBorderStyle(aSide),nsCSSProps::kBorderStyleKTable);
+    val->SetString(style);
   }
   else {
     val->SetString("");
