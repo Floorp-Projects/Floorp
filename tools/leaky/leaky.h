@@ -30,6 +30,8 @@ struct TreeNode {
     nextSibling = NULL;
     descendants = NULL;
     nextRoot = NULL;
+    bytesLeaked = 0;
+    descendantBytesLeaked = 0;
   }
 
   TreeNode* GetDirectDescendant(Symbol* aSymbol);
