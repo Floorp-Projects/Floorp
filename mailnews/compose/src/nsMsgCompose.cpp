@@ -1070,7 +1070,9 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
   {
       nsXPIDLCString escapedVCard;
       // make sure, if there is no card, this returns an empty string, or NS_ERROR_FAILURE
-      if (NS_SUCCEEDED(identity->GetEscapedVCard(getter_Copies(escapedVCard))) && !escapedVCard.IsEmpty()) 
+      rv = identity->GetEscapedVCard(getter_Copies(escapedVCard));
+
+      if (NS_SUCCEEDED(rv) && !escapedVCard.IsEmpty()) 
       {
           nsCString vCardUrl;
           vCardUrl = "data:text/x-vcard;charset=utf8;base64,";
