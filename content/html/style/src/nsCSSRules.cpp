@@ -126,8 +126,8 @@ NS_INTERFACE_MAP_BEGIN(CSSGroupRuleRuleListImpl)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(CSSGroupRuleRuleListImpl);
-NS_IMPL_RELEASE(CSSGroupRuleRuleListImpl);
+NS_IMPL_ADDREF(CSSGroupRuleRuleListImpl)
+NS_IMPL_RELEASE(CSSGroupRuleRuleListImpl)
 
 NS_IMETHODIMP    
 CSSGroupRuleRuleListImpl::GetLength(PRUint32* aLength)
@@ -215,8 +215,8 @@ CSSCharsetRuleImpl::~CSSCharsetRuleImpl(void)
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(CSSCharsetRuleImpl, nsCSSRule);
-NS_IMPL_RELEASE_INHERITED(CSSCharsetRuleImpl, nsCSSRule);
+NS_IMPL_ADDREF_INHERITED(CSSCharsetRuleImpl, nsCSSRule)
+NS_IMPL_RELEASE_INHERITED(CSSCharsetRuleImpl, nsCSSRule)
 
 // QueryInterface implementation for CSSCharsetRuleImpl
 NS_INTERFACE_MAP_BEGIN(CSSCharsetRuleImpl)
@@ -228,7 +228,7 @@ NS_INTERFACE_MAP_BEGIN(CSSCharsetRuleImpl)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSCharsetRule)
 NS_INTERFACE_MAP_END
 
-IMPL_STYLE_RULE_INHERIT(CSSCharsetRuleImpl, nsCSSRule);
+IMPL_STYLE_RULE_INHERIT(CSSCharsetRuleImpl, nsCSSRule)
 
 #ifdef DEBUG
 NS_IMETHODIMP
@@ -417,8 +417,8 @@ CSSImportRuleImpl::~CSSImportRuleImpl(void)
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(CSSImportRuleImpl, nsCSSRule);
-NS_IMPL_RELEASE_INHERITED(CSSImportRuleImpl, nsCSSRule);
+NS_IMPL_ADDREF_INHERITED(CSSImportRuleImpl, nsCSSRule)
+NS_IMPL_RELEASE_INHERITED(CSSImportRuleImpl, nsCSSRule)
 
 // QueryInterface implementation for CSSImportRuleImpl
 NS_INTERFACE_MAP_BEGIN(CSSImportRuleImpl)
@@ -431,7 +431,7 @@ NS_INTERFACE_MAP_BEGIN(CSSImportRuleImpl)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSImportRule)
 NS_INTERFACE_MAP_END
 
-IMPL_STYLE_RULE_INHERIT(CSSImportRuleImpl, nsCSSRule);
+IMPL_STYLE_RULE_INHERIT(CSSImportRuleImpl, nsCSSRule)
 
 #ifdef DEBUG
 NS_IMETHODIMP
@@ -744,8 +744,8 @@ CSSMediaRuleImpl::~CSSMediaRuleImpl(void)
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(CSSMediaRuleImpl, nsCSSRule);
-NS_IMPL_RELEASE_INHERITED(CSSMediaRuleImpl, nsCSSRule);
+NS_IMPL_ADDREF_INHERITED(CSSMediaRuleImpl, nsCSSRule)
+NS_IMPL_RELEASE_INHERITED(CSSMediaRuleImpl, nsCSSRule)
 
 // QueryInterface implementation for CSSMediaRuleImpl
 NS_INTERFACE_MAP_BEGIN(CSSMediaRuleImpl)
@@ -758,7 +758,7 @@ NS_INTERFACE_MAP_BEGIN(CSSMediaRuleImpl)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSMediaRule)
 NS_INTERFACE_MAP_END
 
-IMPL_STYLE_RULE_INHERIT2(CSSMediaRuleImpl, nsCSSRule);
+IMPL_STYLE_RULE_INHERIT2(CSSMediaRuleImpl, nsCSSRule)
 
 static PRBool
 SetStyleSheetReference(nsISupports* aRule, void* aSheet)
@@ -1189,8 +1189,8 @@ CSSNameSpaceRuleImpl::~CSSNameSpaceRuleImpl(void)
   NS_IF_RELEASE(mPrefix);
 }
 
-NS_IMPL_ADDREF_INHERITED(CSSNameSpaceRuleImpl, nsCSSRule);
-NS_IMPL_RELEASE_INHERITED(CSSNameSpaceRuleImpl, nsCSSRule);
+NS_IMPL_ADDREF_INHERITED(CSSNameSpaceRuleImpl, nsCSSRule)
+NS_IMPL_RELEASE_INHERITED(CSSNameSpaceRuleImpl, nsCSSRule)
 
 // QueryInterface implementation for CSSNameSpaceRuleImpl
 NS_INTERFACE_MAP_BEGIN(CSSNameSpaceRuleImpl)
@@ -1202,7 +1202,7 @@ NS_INTERFACE_MAP_BEGIN(CSSNameSpaceRuleImpl)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSNameSpaceRule)
 NS_INTERFACE_MAP_END
 
-IMPL_STYLE_RULE_INHERIT(CSSNameSpaceRuleImpl, nsCSSRule);
+IMPL_STYLE_RULE_INHERIT(CSSNameSpaceRuleImpl, nsCSSRule)
 
 #ifdef DEBUG
 NS_IMETHODIMP

@@ -139,8 +139,8 @@ NS_INTERFACE_MAP_BEGIN(nsFrameLoader)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(nsFrameLoader);
-NS_IMPL_RELEASE(nsFrameLoader);
+NS_IMPL_ADDREF(nsFrameLoader)
+NS_IMPL_RELEASE(nsFrameLoader)
 
 NS_IMETHODIMP
 nsFrameLoader::Init(nsIContent *aOwner)

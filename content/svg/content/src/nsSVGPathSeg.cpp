@@ -137,7 +137,7 @@ nsSVGPathSegClosePath::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegClosePath, PATHSEG_CLOSEPATH, "z");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegClosePath, PATHSEG_CLOSEPATH, "z")
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGPathSegMovetoAbs
@@ -213,7 +213,7 @@ nsSVGPathSegMovetoAbs::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegMovetoAbs, PATHSEG_MOVETO_ABS, "M");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegMovetoAbs, PATHSEG_MOVETO_ABS, "M")
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegMovetoAbs methods:
@@ -321,7 +321,7 @@ nsSVGPathSegMovetoRel::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegMovetoRel, PATHSEG_MOVETO_REL, "m");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegMovetoRel, PATHSEG_MOVETO_REL, "m")
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegMovetoRel methods:
@@ -428,7 +428,7 @@ nsSVGPathSegLinetoAbs::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegLinetoAbs, PATHSEG_LINETO_ABS, "L");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegLinetoAbs, PATHSEG_LINETO_ABS, "L")
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegLinetoAbs methods:
@@ -536,7 +536,7 @@ nsSVGPathSegLinetoRel::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegLinetoRel, PATHSEG_LINETO_REL, "l");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegLinetoRel, PATHSEG_LINETO_REL, "l")
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegLinetoRel methods:
@@ -651,7 +651,7 @@ nsSVGPathSegCurvetoCubicAbs::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegCurvetoCubicAbs, PATHSEG_CURVETO_CUBIC_ABS, "C");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegCurvetoCubicAbs, PATHSEG_CURVETO_CUBIC_ABS, "C")
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegCurvetoCubicAbs methods:
@@ -822,7 +822,7 @@ nsSVGPathSegCurvetoCubicRel::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegCurvetoCubicRel, PATHSEG_CURVETO_CUBIC_REL, "c");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegCurvetoCubicRel, PATHSEG_CURVETO_CUBIC_REL, "c")
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegCurvetoCubicRel methods:
@@ -989,7 +989,7 @@ nsSVGPathSegCurvetoQuadraticAbs::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegCurvetoQuadraticAbs, PATHSEG_CURVETO_QUADRATIC_ABS, "Q");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegCurvetoQuadraticAbs, PATHSEG_CURVETO_QUADRATIC_ABS, "Q")
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegCurvetoQuadraticAbs methods:
@@ -1129,7 +1129,7 @@ nsSVGPathSegCurvetoQuadraticRel::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegCurvetoQuadraticRel, PATHSEG_CURVETO_QUADRATIC_REL, "q");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegCurvetoQuadraticRel, PATHSEG_CURVETO_QUADRATIC_REL, "q")
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegCurvetoQuadraticRel methods:
@@ -1275,7 +1275,7 @@ nsSVGPathSegArcAbs::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegArcAbs, PATHSEG_ARC_ABS, "A");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegArcAbs, PATHSEG_ARC_ABS, "A")
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegArcAbs methods:
@@ -1464,7 +1464,7 @@ nsSVGPathSegArcRel::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegArcRel, PATHSEG_ARC_REL, "a");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegArcRel, PATHSEG_ARC_REL, "a")
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegArcRel methods:
@@ -1641,7 +1641,7 @@ nsSVGPathSegLinetoHorizontalAbs::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegLinetoHorizontalAbs, PATHSEG_LINETO_HORIZONTAL_ABS, "H");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegLinetoHorizontalAbs, PATHSEG_LINETO_HORIZONTAL_ABS, "H")
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegLinetoHorizontalAbs methods:
@@ -1733,7 +1733,7 @@ nsSVGPathSegLinetoHorizontalRel::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegLinetoHorizontalRel, PATHSEG_LINETO_HORIZONTAL_REL, "h");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegLinetoHorizontalRel, PATHSEG_LINETO_HORIZONTAL_REL, "h")
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegLinetoHorizontalRel methods:
@@ -1825,7 +1825,7 @@ nsSVGPathSegLinetoVerticalAbs::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegLinetoVerticalAbs, PATHSEG_LINETO_VERTICAL_ABS, "V");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegLinetoVerticalAbs, PATHSEG_LINETO_VERTICAL_ABS, "V")
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegLinetoVerticalAbs methods:
@@ -1917,7 +1917,7 @@ nsSVGPathSegLinetoVerticalRel::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegLinetoVerticalRel, PATHSEG_LINETO_VERTICAL_REL, "v");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegLinetoVerticalRel, PATHSEG_LINETO_VERTICAL_REL, "v")
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegLinetoVerticalRel methods:
@@ -2014,7 +2014,7 @@ nsSVGPathSegCurvetoCubicSmoothAbs::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegCurvetoCubicSmoothAbs, PATHSEG_CURVETO_CUBIC_SMOOTH_ABS, "S");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegCurvetoCubicSmoothAbs, PATHSEG_CURVETO_CUBIC_SMOOTH_ABS, "S")
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegCurvetoCubicSmoothAbs methods:
@@ -2153,7 +2153,7 @@ nsSVGPathSegCurvetoCubicSmoothRel::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegCurvetoCubicSmoothRel, PATHSEG_CURVETO_CUBIC_SMOOTH_REL, "s");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegCurvetoCubicSmoothRel, PATHSEG_CURVETO_CUBIC_SMOOTH_REL, "s")
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegCurvetoCubicSmoothRel methods:
@@ -2288,7 +2288,7 @@ nsSVGPathSegCurvetoQuadraticSmoothAbs::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegCurvetoQuadraticSmoothAbs, PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS, "T");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegCurvetoQuadraticSmoothAbs, PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS, "T")
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegCurvetoQuadraticSmoothAbs methods:
@@ -2395,7 +2395,7 @@ nsSVGPathSegCurvetoQuadraticSmoothRel::GetValueString(nsAString& aValue)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSeg methods:
-NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegCurvetoQuadraticSmoothRel, PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL, "t");
+NS_IMPL_NSIDOMSVGPATHSEG(nsSVGPathSegCurvetoQuadraticSmoothRel, PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL, "t")
 
 //----------------------------------------------------------------------
 // nsIDOMSVGPathSegCurvetoQuadraticSmoothRel methods:

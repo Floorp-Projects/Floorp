@@ -63,7 +63,7 @@ nsTextContentChangeData::~nsTextContentChangeData()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsTextContentChangeData, nsITextContentChangeData);
+NS_IMPL_ISUPPORTS1(nsTextContentChangeData, nsITextContentChangeData)
 
 
 NS_IMETHODIMP

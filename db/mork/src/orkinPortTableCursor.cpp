@@ -133,7 +133,7 @@ orkinPortTableCursor::CanUsePortTableCursor(nsIMdbEnv* mev,
 }
 
 // { ===== begin nsIMdbISupports methods =====
-NS_IMPL_QUERY_INTERFACE0(orkinPortTableCursor);
+NS_IMPL_QUERY_INTERFACE0(orkinPortTableCursor)
 
 /*virtual*/ nsrefcnt
 orkinPortTableCursor::AddRef() // add strong ref with no

@@ -213,8 +213,8 @@ nsHTMLOptionElement::~nsHTMLOptionElement()
 // ISupports
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLOptionElement, nsGenericElement);
-NS_IMPL_RELEASE_INHERITED(nsHTMLOptionElement, nsGenericElement);
+NS_IMPL_ADDREF_INHERITED(nsHTMLOptionElement, nsGenericElement)
+NS_IMPL_RELEASE_INHERITED(nsHTMLOptionElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLOptionElement

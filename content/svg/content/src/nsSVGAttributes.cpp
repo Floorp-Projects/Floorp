@@ -427,7 +427,7 @@ nsSVGAttributes::Create(nsIContent* aContent, nsSVGAttributes** aResult)
 
 //----------------------------------------------------------------------
 // nsISupports interface
-NS_IMPL_ISUPPORTS1(nsSVGAttributes,nsIDOMNamedNodeMap);
+NS_IMPL_ISUPPORTS1(nsSVGAttributes,nsIDOMNamedNodeMap)
 
 //----------------------------------------------------------------------
 // Implementation Helpers

@@ -152,7 +152,7 @@ orkinTable::CanUseTable(nsIMdbEnv* mev,
 
 
 // { ===== begin nsIMdbISupports methods =====
-NS_IMPL_QUERY_INTERFACE0(orkinTable);
+NS_IMPL_QUERY_INTERFACE0(orkinTable)
 
 /*virtual*/ nsrefcnt
 orkinTable::AddRef() // add strong ref with no

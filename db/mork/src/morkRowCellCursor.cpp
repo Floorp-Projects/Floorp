@@ -135,7 +135,7 @@ morkRowCellCursor::morkRowCellCursor(morkEnv* ev,
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(morkRowCellCursor, morkCursor, nsIMdbRowCellCursor);
+NS_IMPL_ISUPPORTS_INHERITED1(morkRowCellCursor, morkCursor, nsIMdbRowCellCursor)
 
 /*public non-poly*/ void
 morkRowCellCursor::CloseRowCellCursor(morkEnv* ev) 

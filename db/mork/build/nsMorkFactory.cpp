@@ -67,7 +67,7 @@ static const nsModuleComponentInfo components[] =
     }
 };
 
-NS_IMPL_NSGETMODULE(nsMorkModule, components);
+NS_IMPL_NSGETMODULE(nsMorkModule, components)
 
 
 

@@ -50,7 +50,7 @@ nsLDAPOperation::~nsLDAPOperation()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPOperation, nsILDAPOperation);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPOperation, nsILDAPOperation)
 
 /**
  * Initializes this operation.  Must be called prior to use. 

@@ -123,8 +123,8 @@ NS_INTERFACE_MAP_BEGIN(nsRDFDOMNodeList)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(nsRDFDOMNodeList);
-NS_IMPL_RELEASE(nsRDFDOMNodeList);
+NS_IMPL_ADDREF(nsRDFDOMNodeList)
+NS_IMPL_RELEASE(nsRDFDOMNodeList)
 
 
 ////////////////////////////////////////////////////////////////////////

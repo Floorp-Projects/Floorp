@@ -116,11 +116,11 @@ nsLDAPConnection::~nsLDAPConnection()
 // nsLDAPConnection gets destroyed while do_QueryReferent() is called,
 // since converting to the strong reference isn't MT safe.
 //
-NS_IMPL_THREADSAFE_ADDREF(nsLDAPConnection);
+NS_IMPL_THREADSAFE_ADDREF(nsLDAPConnection)
 NS_IMPL_THREADSAFE_QUERY_INTERFACE3(nsLDAPConnection,
                                     nsILDAPConnection,
                                     nsISupportsWeakReference,
-                                    nsIDNSListener);
+                                    nsIDNSListener)
 
 nsrefcnt
 nsLDAPConnection::Release(void)
@@ -548,7 +548,7 @@ nsLDAPConnectionLoop::~nsLDAPConnectionLoop()
         PR_DestroyLock(mLock);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPConnectionLoop, nsIRunnable);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPConnectionLoop, nsIRunnable)
 
 NS_IMETHODIMP
 nsLDAPConnectionLoop::Init()

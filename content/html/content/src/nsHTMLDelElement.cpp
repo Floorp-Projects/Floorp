@@ -103,8 +103,8 @@ nsHTMLDelElement::~nsHTMLDelElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLDelElement, nsGenericElement);
-NS_IMPL_RELEASE_INHERITED(nsHTMLDelElement, nsGenericElement);
+NS_IMPL_ADDREF_INHERITED(nsHTMLDelElement, nsGenericElement)
+NS_IMPL_RELEASE_INHERITED(nsHTMLDelElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLDelElement

@@ -141,9 +141,9 @@ static void doDestroyComputedDOMStyle(nsComputedDOMStyle *aComputedStyle)
   }
 }
 
-NS_IMPL_ADDREF(nsComputedDOMStyle);
+NS_IMPL_ADDREF(nsComputedDOMStyle)
 NS_IMPL_RELEASE_WITH_DESTROY(nsComputedDOMStyle,
-                             doDestroyComputedDOMStyle(this));
+                             doDestroyComputedDOMStyle(this))
 
 
 NS_IMETHODIMP

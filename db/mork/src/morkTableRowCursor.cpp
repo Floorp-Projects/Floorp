@@ -121,7 +121,7 @@ morkTableRowCursor::morkTableRowCursor(morkEnv* ev,
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(morkTableRowCursor, morkCursor, nsIMdbTableRowCursor);
+NS_IMPL_ISUPPORTS_INHERITED1(morkTableRowCursor, morkCursor, nsIMdbTableRowCursor)
 /*public non-poly*/ void
 morkTableRowCursor::CloseTableRowCursor(morkEnv* ev) 
 {

@@ -150,7 +150,7 @@ orkinEnv::CanUseEnv(mork_bool inMutable, mdb_err* outErr) const
 
 
 // { ===== begin nsIMdbISupports methods =====
-NS_IMPL_QUERY_INTERFACE0(orkinEnv);
+NS_IMPL_QUERY_INTERFACE0(orkinEnv)
 
 /*virtual*/ nsrefcnt
 orkinEnv::AddRef() // add strong ref with no

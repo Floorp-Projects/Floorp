@@ -214,7 +214,7 @@ PRBool nsLDAPServiceEntry::DeleteEntry()
 // 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsLDAPService,
                               nsILDAPService,
-                              nsILDAPMessageListener);
+                              nsILDAPMessageListener)
 
 
 // constructor

@@ -145,7 +145,7 @@ ImageListener::ImageListener(nsImageDocument* aDocument)
 
 ImageListener::~ImageListener()
 {
-};
+}
 
 NS_IMETHODIMP
 ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)

@@ -42,7 +42,7 @@
 #include "nsISupportsUtils.h"
 #include "nsLDAPBERValue.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPMessage, nsILDAPMessage);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPMessage, nsILDAPMessage)
 
 // constructor
 //

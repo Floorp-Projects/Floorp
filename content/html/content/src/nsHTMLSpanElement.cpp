@@ -103,8 +103,8 @@ nsHTMLSpanElement::~nsHTMLSpanElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLSpanElement, nsGenericElement);
-NS_IMPL_RELEASE_INHERITED(nsHTMLSpanElement, nsGenericElement);
+NS_IMPL_ADDREF_INHERITED(nsHTMLSpanElement, nsGenericElement)
+NS_IMPL_RELEASE_INHERITED(nsHTMLSpanElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLSpanElement

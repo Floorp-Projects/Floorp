@@ -117,8 +117,8 @@ nsHTMLDirectoryElement::~nsHTMLDirectoryElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLDirectoryElement, nsGenericElement);
-NS_IMPL_RELEASE_INHERITED(nsHTMLDirectoryElement, nsGenericElement);
+NS_IMPL_ADDREF_INHERITED(nsHTMLDirectoryElement, nsGenericElement)
+NS_IMPL_RELEASE_INHERITED(nsHTMLDirectoryElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLDirectoryElement

@@ -163,8 +163,8 @@ nsHTMLButtonElement::~nsHTMLButtonElement()
 
 // nsISupports
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLButtonElement, nsGenericElement);
-NS_IMPL_RELEASE_INHERITED(nsHTMLButtonElement, nsGenericElement);
+NS_IMPL_ADDREF_INHERITED(nsHTMLButtonElement, nsGenericElement)
+NS_IMPL_RELEASE_INHERITED(nsHTMLButtonElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLButtonElement

@@ -236,7 +236,7 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS1(nsProxyLoadStream, nsIInputStream);
+NS_IMPL_ISUPPORTS1(nsProxyLoadStream, nsIInputStream)
 
 //----------------------------------------------------------------------
 //
@@ -302,9 +302,9 @@ public:
 PRInt32 PlaceHolderRequest::gRefCnt;
 nsIURI* PlaceHolderRequest::gURI;
 
-NS_IMPL_ADDREF(PlaceHolderRequest);
-NS_IMPL_RELEASE(PlaceHolderRequest);
-NS_IMPL_QUERY_INTERFACE2(PlaceHolderRequest, nsIRequest, nsIChannel);
+NS_IMPL_ADDREF(PlaceHolderRequest)
+NS_IMPL_RELEASE(PlaceHolderRequest)
+NS_IMPL_QUERY_INTERFACE2(PlaceHolderRequest, nsIRequest, nsIChannel)
 
 nsresult
 PlaceHolderRequest::Create(nsIRequest** aResult)
@@ -4341,7 +4341,7 @@ nsXULDocument::CachedChromeStreamListener::~CachedChromeStreamListener()
 
 
 NS_IMPL_ISUPPORTS2(nsXULDocument::CachedChromeStreamListener,
-                   nsIRequestObserver, nsIStreamListener);
+                   nsIRequestObserver, nsIStreamListener)
 
 NS_IMETHODIMP
 nsXULDocument::CachedChromeStreamListener::OnStartRequest(nsIRequest *request,
@@ -4395,7 +4395,7 @@ nsXULDocument::ParserObserver::~ParserObserver()
     NS_IF_RELEASE(mDocument);
 }
 
-NS_IMPL_ISUPPORTS1(nsXULDocument::ParserObserver, nsIRequestObserver);
+NS_IMPL_ISUPPORTS1(nsXULDocument::ParserObserver, nsIRequestObserver)
 
 NS_IMETHODIMP
 nsXULDocument::ParserObserver::OnStartRequest(nsIRequest *request,

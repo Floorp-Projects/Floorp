@@ -166,7 +166,7 @@ orkinRowCellCursor::CanUseRowCellCursor(nsIMdbEnv* mev, mork_bool inMutable,
 }
 
 // { ===== begin nsIMdbISupports methods =====
-NS_IMPL_QUERY_INTERFACE0(orkinRowCellCursor);
+NS_IMPL_QUERY_INTERFACE0(orkinRowCellCursor)
 
 /*virtual*/ nsrefcnt
 orkinRowCellCursor::AddRef() // add strong ref with no

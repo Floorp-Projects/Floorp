@@ -128,7 +128,7 @@ orkinFile::CanUseFile(nsIMdbEnv* mev,
 
 
 // { ===== begin nsIMdbISupports methods =====
-NS_IMPL_QUERY_INTERFACE1(orkinFile, nsIMdbFile);
+NS_IMPL_QUERY_INTERFACE1(orkinFile, nsIMdbFile)
 
 /*virtual*/ nsrefcnt
 orkinFile::AddRef() // add strong ref with no

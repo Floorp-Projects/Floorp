@@ -116,7 +116,7 @@ morkFile::morkFile(morkEnv* ev, const morkUsage& inUsage,
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(morkFile, morkObject, nsIMdbFile);
+NS_IMPL_ISUPPORTS_INHERITED1(morkFile, morkObject, nsIMdbFile)
 /*public non-poly*/ void
 morkFile::CloseFile(morkEnv* ev) // called by CloseMorkNode();
 {

@@ -116,8 +116,8 @@ nsHTMLFontElement::~nsHTMLFontElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLFontElement, nsGenericElement);
-NS_IMPL_RELEASE_INHERITED(nsHTMLFontElement, nsGenericElement);
+NS_IMPL_ADDREF_INHERITED(nsHTMLFontElement, nsGenericElement)
+NS_IMPL_RELEASE_INHERITED(nsHTMLFontElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLFontElement

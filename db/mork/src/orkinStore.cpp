@@ -156,7 +156,7 @@ orkinStore::CanUseStore(nsIMdbEnv* mev,
 
 // { ===== begin nsIMdbISupports methods =====
 
-NS_IMPL_QUERY_INTERFACE0(orkinStore);
+NS_IMPL_QUERY_INTERFACE0(orkinStore)
 
 /*virtual*/ nsrefcnt
 orkinStore::AddRef() // add strong ref with no

@@ -124,7 +124,7 @@ orkinThumb::CanUseThumb(nsIMdbEnv* mev,
 
 
 // { ===== begin nsIMdbISupports methods =====
-NS_IMPL_QUERY_INTERFACE1(orkinThumb, nsIMdbThumb);
+NS_IMPL_QUERY_INTERFACE1(orkinThumb, nsIMdbThumb)
 
 /*virtual*/ nsrefcnt
 orkinThumb::AddRef() // add strong ref with no

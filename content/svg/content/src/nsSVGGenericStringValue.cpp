@@ -88,7 +88,7 @@ nsSVGGenericStringValue::~nsSVGGenericStringValue()
 
 // nsISupports methods:
 
-NS_IMPL_ISUPPORTS1(nsSVGGenericStringValue, nsISVGValue);
+NS_IMPL_ISUPPORTS1(nsSVGGenericStringValue, nsISVGValue)
 
 
 // nsISVGValue methods:

@@ -156,7 +156,7 @@ orkinSorting::CanUseSorting(nsIMdbEnv* mev,
 
 
 // { ===== begin nsIMdbISupports methods =====
-NS_IMPL_QUERY_INTERFACE0(orkinSorting);
+NS_IMPL_QUERY_INTERFACE0(orkinSorting)
 
 /*virtual*/ nsrefcnt
 orkinSorting::AddRef() // add strong ref with no

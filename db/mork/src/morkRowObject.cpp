@@ -118,7 +118,7 @@ morkRowObject::morkRowObject(morkEnv* ev,
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(morkRowObject, morkObject, nsIMdbRow);
+NS_IMPL_ISUPPORTS_INHERITED1(morkRowObject, morkObject, nsIMdbRow)
 // { ===== begin nsIMdbCollection methods =====
 
 // { ----- begin attribute methods -----
