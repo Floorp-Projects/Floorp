@@ -30,5 +30,9 @@ EXPORTS= mkaccess.h httpurl.h httpauth.h cookies.h
 REQUIRES	= netcache network nspr2 dbm util pref js java fileurl \
 	security layer img httpurl mimetype htmldlgs
 
+ifdef MOZ_SMOOTH_PROGRESS
+REQUIRES	+= progress
+endif
+
 include $(DEPTH)/config/rules.mk
 

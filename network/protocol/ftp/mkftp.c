@@ -56,6 +56,10 @@
 #include "pwcacapi.h"
 #include "secnav.h"
 
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#include "progress.h"
+#endif
+
 #ifdef XP_OS2 /* DSR072196 */
 #include "os2sock.h"
 #endif /* XP_OS2 */
@@ -1366,8 +1370,13 @@ net_send_port(ActiveEntry * ce)
     opt.value.non_blocking = PR_TRUE;
     sock_status = PR_SetSocketOption(cd->listen_sock, &opt);
     if (sock_status != PR_SUCCESS)
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+        PM_Status(ce->window_id, ce->URL_s,
+                  XP_GetString(XP_ERROR_COULD_NOT_MAKE_CONNECTION_NON_BLOCKING));
+#else
         NET_Progress(ce->window_id, 
                      XP_GetString( XP_ERROR_COULD_NOT_MAKE_CONNECTION_NON_BLOCKING ) );
+#endif
 
 HG31456
 
@@ -1497,8 +1506,12 @@ net_get_ftp_file_type(ActiveEntry *ce)
 			/* start the graph progress now since we know the size
 		 	 */
 			ce->URL_s->content_length = cd->total_size_of_files_to_post; 
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+            PM_Progress(ce->window_id, ce->URL_s, 0, ce->URL_s->content_length);
+#else
 	    	FE_GraphProgressInit(ce->window_id, ce->URL_s, ce->URL_s->content_length);
 			cd->destroy_graph_progress = TRUE;
+#endif
 			cd->original_content_length = ce->URL_s->content_length;
 
 #ifdef EDITOR
@@ -2137,7 +2150,11 @@ net_begin_put_response(ActiveEntry * ce)
 				XP_GetString( XP_POSTING_FILE ),
 			   cd->file_to_post);
 
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+    PM_Status(ce->window_id, ce->URL_s, cd->output_buffer);
+#else
 	NET_Progress(ce->window_id, cd->output_buffer);
+#endif
 		
     if(cd->pasv_mode)
       {
@@ -2220,6 +2237,7 @@ net_do_put(ActiveEntry * ce)
         PR_Close(cd->dsock);
         cd->dsock = NULL;
 
+#if !defined(SMOOTH_PROGRESS) || defined(MODULAR_NETLIB)
         if(cd->destroy_graph_progress)
 		  {
             FE_GraphProgressDestroy(ce->window_id, 	
@@ -2228,6 +2246,7 @@ net_do_put(ActiveEntry * ce)
 									ce->bytes_received);
 			cd->destroy_graph_progress = FALSE;
 		  }
+#endif
 
        	/* go read the response since we need to
        	 * get the "226 sucessful transfer" message
@@ -2293,6 +2312,9 @@ net_do_put(ActiveEntry * ce)
 	else if(ce->status > 0)
 	  {
     	ce->bytes_received += ce->status;
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+        PM_Progress(ce->window_id, ce->URL_s, ce->bytes_received, ce->URL_s->content_length);
+#else
     	FE_GraphProgress(ce->window_id,
                      	ce->URL_s,
                      	ce->bytes_received,
@@ -2300,6 +2322,7 @@ net_do_put(ActiveEntry * ce)
                      	ce->URL_s->content_length);
     	FE_SetProgressBarPercent(ce->window_id,
                              	(long)(((double)ce->bytes_received*100) / (double)(uint32)ce->URL_s->content_length) );
+#endif
 	  }
 
 	return(ce->status);
@@ -2531,8 +2554,12 @@ HG69136
 
 	/* start the graph progress indicator
      */
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+    PM_Progress(ce->window_id, ce->URL_s, 0, ce->URL_s->real_content_length);
+#else
     FE_GraphProgressInit(ce->window_id, ce->URL_s, ce->URL_s->real_content_length);
 	cd->destroy_graph_progress = TRUE;
+#endif
 	cd->original_content_length = ce->URL_s->real_content_length;
 
     return(0); /* continue */
@@ -2617,7 +2644,11 @@ net_ftp_push_partial_cache_file(ActiveEntry * ce)
     {
         /* All done, switch over to incoming data */
         TRACEMSG(("Closing FTP cache file"));
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+        PM_Status(ce->window_id, ce->URL_s, XP_GetString(XP_PROGRESS_FILEDONE));
+#else
         NET_Progress(ce->window_id, XP_GetString(XP_PROGRESS_FILEDONE));
+#endif
         NET_ClearFileReadSelect(ce->window_id, XP_Fileno(cd->partial_cache_fp));
         NET_XP_FileClose(cd->partial_cache_fp);
         cd->partial_cache_fp = NULL;
@@ -2625,7 +2656,11 @@ net_ftp_push_partial_cache_file(ActiveEntry * ce)
         NET_SetReadSelect(ce->window_id, ce->socket);
         ce->local_file = FALSE;
         cd->next_state = FTP_READ_FILE;
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+        PM_Status(ce->window_id, ce->URL_s, XP_GetString(XP_PROGRESS_RECEIVE_FTPFILE));
+#else
         NET_Progress (ce->window_id, XP_GetString(XP_PROGRESS_RECEIVE_FTPFILE));
+#endif
         return 0;
     }
     else
@@ -2633,8 +2668,12 @@ net_ftp_push_partial_cache_file(ActiveEntry * ce)
         /* write the data */
         TRACEMSG(("Transferring %ld bytes from cache file.", status));
         ce->bytes_received += status;
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+        PM_Progress(ce->window_id, ce->URL_s, ce->bytes_received, ce->URL_s->real_content_length);
+#else
         FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->real_content_length);
         FE_SetProgressBarPercent(ce->window_id, (long)(((double)ce->bytes_received*100) / (double)(uint32)ce->URL_s->real_content_length) );
+#endif
         status = (*cd->stream->put_block)(cd->stream, NET_Socket_Buffer, status);
         cd->pause_for_read = TRUE;
         return status;
@@ -2666,7 +2705,11 @@ net_start_ftp_read_file(ActiveEntry * ce)
         ce->local_file = TRUE;
         cd->next_state = FTP_READ_CACHE;
         cd->partial_cache_fp = fp;
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+        PM_Status(ce->window_id, ce->URL_s, XP_GetString(XP_PROGRESS_READFILE));
+#else
         NET_Progress(ce->window_id, XP_GetString(XP_PROGRESS_READFILE));
+#endif
         return net_ftp_push_partial_cache_file(ce);
     }
 
@@ -2678,7 +2721,11 @@ net_start_ftp_read_file(ActiveEntry * ce)
     ce->socket = cd->dsock;
     NET_SetReadSelect(ce->window_id, ce->socket);
 
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+    PM_Status(ce->window_id, ce->URL_s, XP_GetString(XP_PROGRESS_RECEIVE_FTPFILE));
+#else
     NET_Progress (ce->window_id, XP_GetString(XP_PROGRESS_RECEIVE_FTPFILE));
+#endif
 
     return(0); /* continue */
 }
@@ -2713,11 +2760,15 @@ net_ftp_read_file(ActiveEntry * ce)
 	if(status > 0) 
 	  { 
 		ce->bytes_received += status; 
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+        PM_Progress(ce->window_id, ce->URL_s, ce->bytes_received, ce->URL_s->real_content_length);
+#else
 		FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->real_content_length);
 		if (ce->URL_s->real_content_length == 0)
 			FE_SetProgressBarPercent(ce->window_id, 0);
 		else
     		FE_SetProgressBarPercent(ce->window_id, (long)(((double)ce->bytes_received*100) / (double)(uint32)ce->URL_s->real_content_length) );
+#endif
         status = PUTBLOCK(NET_Socket_Buffer, status);
         cd->pause_for_read = TRUE;
       }
@@ -2775,7 +2826,11 @@ net_start_ftp_read_dir(ActiveEntry * ce)
 
     cd->sort_base = NET_SortInit();
 
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+    PM_Status(ce->window_id, ce->URL_s, XP_GetString(XP_PROGRESS_RECEIVE_FTPDIR));
+#else
     NET_Progress (ce->window_id, XP_GetString(XP_PROGRESS_RECEIVE_FTPDIR));
+#endif
 
     if (*cd->path != '\0')  /* Not Empty path: */
       {
@@ -2905,7 +2960,11 @@ net_ftp_read_dir(ActiveEntry * ce)
     if(ce->status > 1)
       {
     	ce->bytes_received += ce->status;
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+        PM_Progress(ce->window_id, ce->URL_s, ce->bytes_received, ce->URL_s->content_length);
+#else
 		FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, ce->status, ce->URL_s->content_length);
+#endif
 	  }
 
     if(!line)
@@ -4612,11 +4671,14 @@ net_ProcessFTP(ActiveEntry * ce)
                     cd->calling_netlib_all_the_time = FALSE;
 				  }
 
+#if !defined(SMOOTH_PROGRESS) || defined(MODULAR_NETLIB)
                 if(cd->destroy_graph_progress)
                     FE_GraphProgressDestroy(ce->window_id, 	
 											ce->URL_s, 	
 											cd->original_content_length,
 											ce->bytes_received);
+#endif
+
 #ifdef EDITOR
                 if(cd->destroy_file_upload_progress_dialog) {
                     /* Convert from netlib errors to editor errors. */

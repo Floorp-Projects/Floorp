@@ -72,6 +72,7 @@ LINCS= \
     -I$(PUBLIC)\security	\
     -I$(PUBLIC)\network \
     -I$(PUBLIC)\mimetype \
+    -I$(PUBLIC)\progress \
     $(NULL)
 #!endif
 
