@@ -105,11 +105,10 @@ DIRS		+= \
 		rdf \
 		docshell \
 		webshell \
-		embedding \
 		editor \
 		sun-java \
 		profile \
-	        themes \
+		themes \
 		$(NULL)
 
 # This must preceed xpfe
@@ -121,7 +120,11 @@ ifdef MOZ_BUILD_XPFE
 DIRS		+= xpfe
 endif
 
-DIRS		+= xpinstall
+# embedding must follow xpfe, needs xpfelocation_s.a.
+DIRS		+= \
+		xpinstall \
+		embedding \
+		$(NULL)
 
 ifdef MOZ_EXTENSIONS
 DIRS		+= extensions
