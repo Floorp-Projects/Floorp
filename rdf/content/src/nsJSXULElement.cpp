@@ -38,6 +38,7 @@
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIDOMXULElement.h"
+#include "nsIXULTemplateBuilder.h"
 #include "nsIRDFResource.h"
 #include "nsIDOMNodeList.h"
 #include "nsIControllers.h"
@@ -50,6 +51,7 @@ static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kICSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
 static NS_DEFINE_IID(kIRDFCompositeDataSourceIID, NS_IRDFCOMPOSITEDATASOURCE_IID);
 static NS_DEFINE_IID(kIXULElementIID, NS_IDOMXULELEMENT_IID);
+static NS_DEFINE_IID(kIXULTemplateBuilderIID, NS_IXULTEMPLATEBUILDER_IID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 static NS_DEFINE_IID(kIControllersIID, NS_ICONTROLLERS_IID);
@@ -62,9 +64,10 @@ enum XULElement_slots {
   XULELEMENT_CLASSNAME = -2,
   XULELEMENT_STYLE = -3,
   XULELEMENT_DATABASE = -4,
-  XULELEMENT_RESOURCE = -5,
-  XULELEMENT_CONTROLLERS = -6,
-  XULELEMENT_ANONYMOUSCONTENT = -7
+  XULELEMENT_BUILDER = -5,
+  XULELEMENT_RESOURCE = -6,
+  XULELEMENT_CONTROLLERS = -7,
+  XULELEMENT_ANONYMOUSCONTENT = -8
 };
 
 /***********************************************************************/
@@ -133,6 +136,19 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           if (NS_SUCCEEDED(rv)) {
             // get the js object; n.b., this will do a release on 'prop'
             nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsIRDFCompositeDataSource), cx, obj, vp);
+          }
+        }
+        break;
+      }
+      case XULELEMENT_BUILDER:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_BUILDER, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIXULTemplateBuilder* prop;
+          rv = a->GetBuilder(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object; n.b., this will do a release on 'prop'
+            nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsIXULTemplateBuilder), cx, obj, vp);
           }
         }
         break;
@@ -230,21 +246,6 @@ SetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       
           rv = a->SetClassName(prop);
           
-        }
-        break;
-      }
-      case XULELEMENT_DATABASE:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_DATABASE, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIRDFCompositeDataSource* prop;
-          if (PR_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports **) &prop,
-                                                  kIRDFCompositeDataSourceIID, cx, *vp)) {
-            rv = NS_ERROR_DOM_NOT_XPC_OBJECT_ERR;
-          }
-      
-          rv = a->SetDatabase(prop);
-          NS_IF_RELEASE(prop);
         }
         break;
       }
@@ -602,7 +603,8 @@ static JSPropertySpec XULElementProperties[] =
   {"id",    XULELEMENT_ID,    JSPROP_ENUMERATE},
   {"className",    XULELEMENT_CLASSNAME,    JSPROP_ENUMERATE},
   {"style",    XULELEMENT_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"database",    XULELEMENT_DATABASE,    JSPROP_ENUMERATE},
+  {"database",    XULELEMENT_DATABASE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"builder",    XULELEMENT_BUILDER,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"resource",    XULELEMENT_RESOURCE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"controllers",    XULELEMENT_CONTROLLERS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"anonymousContent",    XULELEMENT_ANONYMOUSCONTENT,    JSPROP_ENUMERATE | JSPROP_READONLY},

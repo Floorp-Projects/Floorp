@@ -32,6 +32,7 @@
 class nsIDOMElement;
 class nsIDOMCSSStyleDeclaration;
 class nsIRDFCompositeDataSource;
+class nsIXULTemplateBuilder;
 class nsIRDFResource;
 class nsIDOMNodeList;
 class nsIControllers;
@@ -53,7 +54,8 @@ public:
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle)=0;
 
   NS_IMETHOD    GetDatabase(nsIRDFCompositeDataSource** aDatabase)=0;
-  NS_IMETHOD    SetDatabase(nsIRDFCompositeDataSource* aDatabase)=0;
+
+  NS_IMETHOD    GetBuilder(nsIXULTemplateBuilder** aBuilder)=0;
 
   NS_IMETHOD    GetResource(nsIRDFResource** aResource)=0;
 
@@ -84,7 +86,7 @@ public:
   NS_IMETHOD    SetClassName(const nsString& aClassName);  \
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);  \
   NS_IMETHOD    GetDatabase(nsIRDFCompositeDataSource** aDatabase);  \
-  NS_IMETHOD    SetDatabase(nsIRDFCompositeDataSource* aDatabase);  \
+  NS_IMETHOD    GetBuilder(nsIXULTemplateBuilder** aBuilder);  \
   NS_IMETHOD    GetResource(nsIRDFResource** aResource);  \
   NS_IMETHOD    GetControllers(nsIControllers** aControllers);  \
   NS_IMETHOD    GetAnonymousContent(nsIDOMNodeList** aAnonymousContent);  \
@@ -105,7 +107,7 @@ public:
   NS_IMETHOD    SetClassName(const nsString& aClassName) { return _to SetClassName(aClassName); } \
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { return _to GetStyle(aStyle); } \
   NS_IMETHOD    GetDatabase(nsIRDFCompositeDataSource** aDatabase) { return _to GetDatabase(aDatabase); } \
-  NS_IMETHOD    SetDatabase(nsIRDFCompositeDataSource* aDatabase) { return _to SetDatabase(aDatabase); } \
+  NS_IMETHOD    GetBuilder(nsIXULTemplateBuilder** aBuilder) { return _to GetBuilder(aBuilder); } \
   NS_IMETHOD    GetResource(nsIRDFResource** aResource) { return _to GetResource(aResource); } \
   NS_IMETHOD    GetControllers(nsIControllers** aControllers) { return _to GetControllers(aControllers); } \
   NS_IMETHOD    GetAnonymousContent(nsIDOMNodeList** aAnonymousContent) { return _to GetAnonymousContent(aAnonymousContent); } \

@@ -977,6 +977,7 @@
     "xuleditorelement.editorshell", \
     "xulelement.addbroadcastlistener", \
     "xulelement.anonymouscontent", \
+    "xulelement.builder", \
     "xulelement.blur", \
     "xulelement.classname", \
     "xulelement.click", \

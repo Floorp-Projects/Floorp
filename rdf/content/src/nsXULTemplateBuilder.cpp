@@ -62,6 +62,7 @@
 #include "nsIRDFContainerUtils.h" 
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIXULDocument.h"
+#include "nsIXULTemplateBuilder.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFRemoteDataSource.h"
@@ -2333,7 +2334,8 @@ ContentSupportMap::Get(nsIContent* aElement, Match** aMatch)
 // nsXULTemplateBuilder
 //
 
-class nsXULTemplateBuilder : public nsIRDFContentModelBuilder,
+class nsXULTemplateBuilder : public nsIXULTemplateBuilder,
+                             public nsIRDFContentModelBuilder,
                              public nsIRDFObserver
 {
 public:
@@ -2344,6 +2346,9 @@ public:
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
+
+    // nsIXULTemplateBuilder interface
+    NS_DECL_NSIXULTEMPLATEBUILDER
 
     // nsIRDFContentModelBuilder interface
     NS_IMETHOD SetDocument(nsIXULDocument* aDocument);
@@ -2514,7 +2519,6 @@ public:
    
     nsresult RemoveGeneratedContent(nsIContent* aElement);
 
-    // XXX. Urg. Hack until layout can batch reflows. See bug 10818.
     PRBool
     IsTreeWidgetItem(nsIContent* aElement);
 
@@ -2522,7 +2526,7 @@ public:
     GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult);
 
     nsresult
-    AddDatabasePropertyToHTMLElement(nsIContent* aElement, nsIRDFCompositeDataSource* aDataBase);
+    InitHTMLTemplateRoot();
 
     nsresult
     GetElementsForResource(nsIRDFResource* aResource, nsISupportsArray* aElements);
@@ -3979,7 +3983,23 @@ nsXULTemplateBuilder::Init()
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS2(nsXULTemplateBuilder, nsIRDFContentModelBuilder, nsIRDFObserver);
+NS_IMPL_ISUPPORTS3(nsXULTemplateBuilder,
+                   nsIXULTemplateBuilder,
+                   nsIRDFContentModelBuilder,
+                   nsIRDFObserver);
+
+//----------------------------------------------------------------------
+//
+// nsIXULTemplateBuilder methods
+//
+
+NS_IMETHODIMP
+nsXULTemplateBuilder::Rebuild()
+{
+    CompileRules();
+    RebuildContainer(mRoot);
+    return NS_OK;
+}
 
 //----------------------------------------------------------------------
 //
@@ -3994,7 +4014,6 @@ nsXULTemplateBuilder::SetDocument(nsIXULDocument* aDocument)
     mDocument = aDocument; // not refcounted
     return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsXULTemplateBuilder::SetDataBase(nsIRDFCompositeDataSource* aDataBase)
@@ -4015,15 +4034,15 @@ nsXULTemplateBuilder::SetDataBase(nsIRDFCompositeDataSource* aDataBase)
 
         // Now set the database on the element, so that script writers can
         // access it.
-        nsCOMPtr<nsIDOMXULElement> element( do_QueryInterface(mRoot) );
-        if (element) {
-            rv = element->SetDatabase(aDataBase);
+        nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(mRoot);
+        if (xulcontent) {
+            rv = xulcontent->InitTemplateRoot(aDataBase, this);
             if (NS_FAILED(rv)) return rv;
         }
         else {
             // Hmm. This must be an HTML element. Try to set it as a
             // JS property "by hand".
-            rv = AddDatabasePropertyToHTMLElement(mRoot, mDB);
+            rv = InitHTMLTemplateRoot();
             if (NS_FAILED(rv)) return rv;
         }
     }
@@ -5957,9 +5976,7 @@ nsXULTemplateBuilder::RemoveGeneratedContent(nsIContent* aElement)
 PRBool
 nsXULTemplateBuilder::IsTreeWidgetItem(nsIContent* aElement)
 {
-    // Determine if this is a <tree> or a <treeitem> tag, in which
-    // case, some special logic will kick in to force batched reflows.
-    // XXX Should be removed when Bug 10818 is fixed.
+    // Determine if this is a <tree> or a <treeitem> element
     nsresult rv;
 
     PRInt32 nameSpaceID;
@@ -5970,23 +5987,21 @@ nsXULTemplateBuilder::IsTreeWidgetItem(nsIContent* aElement)
     rv = aElement->GetTag(*getter_AddRefs(tag));
     if (NS_FAILED(rv)) return PR_FALSE;
 
-    // If we're building content under a <tree> or a <treeitem>,
-    // then DO NOT notify layout until we're all done.
-    if ((nameSpaceID == kNameSpaceID_XUL) &&
-        ((tag.get() == nsXULAtoms::tree) || (tag.get() == nsXULAtoms::treeitem))) {
-        return PR_TRUE;
-    }
-    else {
+    if (nameSpaceID != kNameSpaceID_XUL)
         return PR_FALSE;
-    }
+
+    if ((tag.get() == nsXULAtoms::tree) || (tag.get() == nsXULAtoms::treeitem))
+        return PR_TRUE;
+
+    return PR_FALSE;
 
 }
 
 nsresult
-nsXULTemplateBuilder::AddDatabasePropertyToHTMLElement(nsIContent* aElement, nsIRDFCompositeDataSource* aDataBase)
+nsXULTemplateBuilder::InitHTMLTemplateRoot()
 {
     // Use XPConnect and the JS APIs to whack aDatabase as the
-    // 'database' property onto aElement.
+    // 'database' and 'builder' properties onto aElement.
     nsresult rv;
 
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
@@ -6009,10 +6024,10 @@ nsXULTemplateBuilder::AddDatabasePropertyToHTMLElement(nsIContent* aElement, nsI
     if (! jscontext)
         return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(aElement);
+    nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(mRoot);
     NS_ASSERTION(owner != nsnull, "unable to get script object owner");
     if (! owner)
-         return NS_ERROR_UNEXPECTED;
+        return NS_ERROR_UNEXPECTED;
 
     JSObject* jselement;
     rv = owner->GetScriptObject(context, (void**) &jselement);
@@ -6024,28 +6039,54 @@ nsXULTemplateBuilder::AddDatabasePropertyToHTMLElement(nsIContent* aElement, nsI
 
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-    rv = xpc->WrapNative(jscontext,                       
-                         jselement,
-                         aDataBase,
-                         NS_GET_IID(nsIRDFCompositeDataSource),
-                         getter_AddRefs(wrapper));
+    {
+        // database
+        nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
+        rv = xpc->WrapNative(jscontext,                       
+                             jselement,
+                             mDB,
+                             NS_GET_IID(nsIRDFCompositeDataSource),
+                             getter_AddRefs(wrapper));
 
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to xpconnect-wrap database");
-    if (NS_FAILED(rv)) return rv;
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to xpconnect-wrap database");
+        if (NS_FAILED(rv)) return rv;
 
-    JSObject* jsobj;
-    rv = wrapper->GetJSObject(&jsobj);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get jsobj from xpconnect wrapper");
-    if (NS_FAILED(rv)) return rv;
+        JSObject* jsobj;
+        rv = wrapper->GetJSObject(&jsobj);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get jsobj from xpconnect wrapper");
+        if (NS_FAILED(rv)) return rv;
 
-    jsval jsdatabase = OBJECT_TO_JSVAL(jsobj);
+        jsval jsdatabase = OBJECT_TO_JSVAL(jsobj);
 
-    PRBool ok;
-    ok = JS_SetProperty(jscontext, jselement, "database", &jsdatabase);
-    NS_ASSERTION(ok, "unable to set database property");
-    if (! ok)
-        return NS_ERROR_FAILURE;
+        PRBool ok;
+        ok = JS_SetProperty(jscontext, jselement, "database", &jsdatabase);
+        NS_ASSERTION(ok, "unable to set database property");
+        if (! ok)
+            return NS_ERROR_FAILURE;
+    }
+
+    {
+        // builder
+        nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
+        rv = xpc->WrapNative(jscontext,
+                             jselement,
+                             NS_STATIC_CAST(nsIXULTemplateBuilder*, this),
+                             NS_GET_IID(nsIXULTemplateBuilder),
+                             getter_AddRefs(wrapper));
+
+        if (NS_FAILED(rv)) return rv;
+
+        JSObject* jsobj;
+        rv = wrapper->GetJSObject(&jsobj);
+        if (NS_FAILED(rv)) return rv;
+
+        jsval jsbuilder = OBJECT_TO_JSVAL(jsobj);
+
+        PRBool ok;
+        ok = JS_SetProperty(jscontext, jselement, "builder", &jsbuilder);
+        if (! ok)
+            return NS_ERROR_FAILURE;
+    }
 
     return NS_OK;
 }
@@ -6150,6 +6191,7 @@ nsXULTemplateBuilder::SetEmpty(nsIContent *aElement, const Match* aMatch)
     return NS_OK;
 
 }
+
 
 void 
 nsXULTemplateBuilder::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult)

@@ -5,7 +5,8 @@ interface XULElement : Element {
                  attribute DOMString                       id;
                  attribute DOMString                       className;
         readonly attribute CSSStyleDeclaration             style;
-                 attribute xpidl nsIRDFCompositeDataSource database;
+        readonly attribute xpidl nsIRDFCompositeDataSource database;
+        readonly attribute xpidl nsIXULTemplateBuilder     builder;
         readonly attribute xpidl nsIRDFResource            resource;
         readonly attribute xpidl nsIControllers            controllers;
         readonly attribute NodeList                        anonymousContent;
@@ -14,9 +15,9 @@ interface XULElement : Element {
         void removeBroadcastListener(in DOMString attr, in Element element);
         void doCommand();
 
-		void focus();
-		void blur();
-		void click();
+        void focus();
+        void blur();
+        void click();
 		
         NodeList getElementsByAttribute(in DOMString name, in DOMString value);
 };
