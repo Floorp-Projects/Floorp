@@ -289,7 +289,7 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
     }
 
 	  status = obj->options->charset_conversion_fn(input_autodetect, line, length,
-												   input_charset,
+                           !nsCRT::strcasecmp(input_charset, "us-ascii") ? "ISO-8859-1" : input_charset,
 												   "UTF-8",
 												   &converted,
 												   &converted_len,
