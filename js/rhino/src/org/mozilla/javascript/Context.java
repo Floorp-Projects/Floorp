@@ -454,7 +454,8 @@ public class Context
      *
      * @return an integer that is one of VERSION_1_0, VERSION_1_1, etc.
      */
-    public int getLanguageVersion() {
+    public int getLanguageVersion()
+    {
        return version;
     }
 
@@ -468,7 +469,9 @@ public class Context
      *
      * @param version the version as specified by VERSION_1_0, VERSION_1_1, etc.
      */
-    public void setLanguageVersion(int version) {
+    public void setLanguageVersion(int version)
+    {
+        checkLanguageVersion(version);
         Object listeners = propertyListeners;
         if (listeners != null && version != this.version) {
             firePropertyChangeImpl(listeners, languageVersionProperty,
@@ -476,6 +479,21 @@ public class Context
                                new Integer(version));
         }
         this.version = version;
+    }
+
+    static void checkLanguageVersion(int version)
+    {
+        switch (version) {
+            case VERSION_DEFAULT:
+            case VERSION_1_0:
+            case VERSION_1_1:
+            case VERSION_1_2:
+            case VERSION_1_3:
+            case VERSION_1_4:
+            case VERSION_1_5:
+                return;
+        }
+        throw new IllegalArgumentException("Bad language version: "+version);
     }
 
     /**
@@ -1528,7 +1546,8 @@ public class Context
      * @since 1.3
      *
      */
-    public int getOptimizationLevel() {
+    public int getOptimizationLevel()
+    {
         return optimizationLevel;
     }
 
@@ -1549,15 +1568,19 @@ public class Context
      * @since 1.3
      *
      */
-    public void setOptimizationLevel(int optimizationLevel) {
-        if (optimizationLevel < 0) {
-            optimizationLevel = -1;
-        } else if (optimizationLevel > 9) {
-                optimizationLevel = 9;
-        }
+    public void setOptimizationLevel(int optimizationLevel)
+    {
+        checkOptimizationLevel(optimizationLevel);
         if (codegenClass == null)
             optimizationLevel = -1;
         this.optimizationLevel = optimizationLevel;
+    }
+
+    static void checkOptimizationLevel(int optimizationLevel)
+    {
+        if (!(-1 <= optimizationLevel && optimizationLevel <= 9))
+            throw new IllegalArgumentException(
+                "Optimization level outside [-1..9]: "+optimizationLevel);
     }
 
     /**

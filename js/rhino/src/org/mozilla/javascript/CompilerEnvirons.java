@@ -38,7 +38,7 @@
 
 package org.mozilla.javascript;
 
-public final class CompilerEnvirons
+public class CompilerEnvirons
 {
     public void initFromContext(Context cx, ErrorReporter syntaxErrorReporter)
     {
@@ -104,9 +104,20 @@ public final class CompilerEnvirons
         return languageVersion;
     }
 
+    public void setLanguageVersion(int languageVersion)
+    {
+        Context.checkLanguageVersion(languageVersion);
+        this.languageVersion = languageVersion;
+    }
+
     public final boolean isGenerateDebugInfo()
     {
         return generateDebugInfo;
+    }
+
+    public void setGenerateDebugInfo(boolean flag)
+    {
+        this.generateDebugInfo = flag;
     }
 
     public final boolean isUseDynamicScope()
@@ -114,9 +125,20 @@ public final class CompilerEnvirons
         return useDynamicScope;
     }
 
+    public void setUseDynamicScope(boolean flag)
+    {
+        this.useDynamicScope = flag;
+    }
+
     public final int getOptimizationLevel()
     {
         return optimizationLevel;
+    }
+
+    public void setOptimizationLevel(int level)
+    {
+        Context.checkOptimizationLevel(level);
+        this.optimizationLevel = level;
     }
 
     private ErrorReporter syntaxErrorReporter;
