@@ -352,6 +352,8 @@ static int cvt_f(SprintfState *ss, double d, const PRUnichar *fmt0, const PRUnic
         }
     }
 #endif
+    sprintf(fout, fin, d);
+
     /*
     ** This assert will catch overflow's of fout, when building with
     ** debugging on. At least this way we can track down the evil piece
