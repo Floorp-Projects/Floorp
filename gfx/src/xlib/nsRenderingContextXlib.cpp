@@ -143,7 +143,7 @@ NS_IMPL_RELEASE(nsRenderingContextXlib)
 NS_IMETHODIMP
 nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
 {
-  printf("nsRenderingContextXlib::Init()\n");
+  printf("nsRenderingContextXlib::Init(DeviceContext, Widget)\n");
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
@@ -162,7 +162,7 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
 NS_IMETHODIMP
 nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface)
 {
-  printf("nsRenderingContxtXbli::Init()\n");
+  printf("nsRenderingContxtXlib::Init(DeviceContext, DrawingSurface)\n");
 
   mContext = aContext;
   NS_IF_ADDREF(mContext);
@@ -221,7 +221,9 @@ nsRenderingContextXlib::LockDrawingSurface(PRInt32 aX, PRInt32 aY,
                                            PRUint32 aFlags)
 {
   printf("nsRenderingContextXlib::LockDrawingSurface()\n");
-  return NS_OK;
+  PushState();
+  return mRenderingSurface->Lock(aX, aY, aWidth, aHeight,
+                                 aBits, aStride, aWidthBytes, aFlags);
 }
 
 NS_IMETHODIMP
@@ -274,6 +276,8 @@ nsRenderingContextXlib::PushState(void)
 
   state->mMatrix = mTMatrix;
 
+  mStateCache->AppendElement(state);
+
   if (nsnull == mTMatrix)
     mTMatrix = new nsTransform2D();
   else
@@ -292,7 +296,6 @@ nsRenderingContextXlib::PushState(void)
   state->mColor = mCurrentColor;
   state->mLineStyle = mCurrentLineStyle;
 
-  mStateCache->AppendElement(state);
   return NS_OK;
 }
 
@@ -509,6 +512,9 @@ nsRenderingContextXlib::SetColor(nscolor aColor)
 
   mCurrentColor = aColor;
   xlib_rgb_gc_set_foreground(mRenderingSurface->GetGC(), NS_RGB(NS_GET_R(aColor),
+                                                                NS_GET_G(aColor),
+                                                                NS_GET_B(aColor)));
+  xlib_rgb_gc_set_background(mRenderingSurface->GetGC(), NS_RGB(NS_GET_R(aColor),
                                                                 NS_GET_G(aColor),
                                                                 NS_GET_B(aColor)));
   printf("Setting color to %d %d %d\n", NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
@@ -1265,7 +1271,6 @@ nsRenderingContextXlib::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
   height = NSToCoordRound(mP2T * aImage->GetHeight());
   
   return DrawImage(aImage, aX, aY, width, height);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1273,30 +1278,24 @@ nsRenderingContextXlib::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
                                   nscoord aWidth, nscoord aHeight)
 {
   printf("nsRenderingContextXlib::DrawImage()\n");
-  nscoord x, y, w, h;
+  nsRect tr;
   
-  x = aX;
-  y = aY;
-  w = aWidth;
-  h = aHeight;
-
-  mTMatrix->TransformCoord(&x, &y, &w, &h);
-  
-  return aImage->Draw(*this, mRenderingSurface,
-                      x, y, w, h);
-  return NS_OK;
+  tr.x = aX;
+  tr.y = aY;
+  tr.width = aWidth;
+  tr.height = aHeight;
+  return DrawImage(aImage, tr);
 }
 
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawImage(nsIImage *aImage, const nsRect& aRect)
 {
   printf("nsRenderingContextXlib::DrawImage()\n");
-  return DrawImage(aImage,
-                   aRect.x,
-                   aRect.y,
-                   aRect.width,
-                   aRect.height);
-  return NS_OK;
+
+  nsRect tr;
+  tr = aRect;
+  mTMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
+  return aImage->Draw(*this, mRenderingSurface, tr.x, tr.y, tr.width, tr.height);
 }
 
 NS_IMETHODIMP
