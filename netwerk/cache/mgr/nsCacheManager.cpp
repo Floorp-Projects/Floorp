@@ -35,9 +35,11 @@
 #include "nsIServiceManager.h"
 #define FILE_CACHE_IS_READY
 // Limit the number of entries in the cache to conserve memory space
-// in the nsReplacementPolicy code
+// in the nsReplacementPolicy code.
+// MAX_DISK_CACHE_ENTRIES should be the same as MAX_DISK_CACHE_RECORDS
+// defined in nsNetDiskCache.cpp
 #define MAX_MEM_CACHE_ENTRIES    800
-#define MAX_DISK_CACHE_ENTRIES  3200
+#define MAX_DISK_CACHE_ENTRIES   512 
 
 // Cache capacities in MB, overridable via APIs
 #define DEFAULT_MEMORY_CACHE_CAPACITY  1024
@@ -70,7 +72,7 @@ static int PR_CALLBACK memCacheSizeChanged(const char *pref, void *closure)
 }
 
 #define CACHE_HIGH_WATER_MARK(capacity) ((PRUint32)(0.98 * (capacity)))
-#define CACHE_LOW_WATER_MARK(capacity)  ((PRUint32)(0.97 * (capacity)))
+#define CACHE_LOW_WATER_MARK(capacity)  ((PRUint32)(0.75 * (capacity)))
 
 nsCacheManager* gCacheManager = 0;
 PRBool gCacheManagerNeedToEvict = PR_FALSE;

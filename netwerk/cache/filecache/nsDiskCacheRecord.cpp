@@ -305,7 +305,10 @@ nsDiskCacheRecord::Delete(void)
   if (NS_FAILED(rv)) 
     return NS_ERROR_FAILURE ;
   else
+  {
+    mDiskCache->mNumEntries--;
     return NS_OK ;
+  }
 }
 
 
