@@ -186,12 +186,11 @@
       <menuitem name="Home" onclick="BrowserHome();"/>
     </menu>
 	
-	<menu name="Bookmarks" datasources="rdf:bookmarks" id="NC:BookmarksRoot" open="true"/>
-
-    <menu name="Window">
-      <menuitem name="Edit Bookmarks..." onclick="BrowserEditBookmarks();"/>
-    </menu>
-
+	<menu name="Bookmarks" datasources="rdf:bookmarks" id="NC:BookmarksRoot" open="true">
+		<menuitem name="Add Bookmark"/>
+		<menuitem name="Edit Bookmarks..." onclick="BrowserEditBookmarks();"/>
+		<separator/>
+	</menu>
   </menubar>
   
   <html:div id="header">
