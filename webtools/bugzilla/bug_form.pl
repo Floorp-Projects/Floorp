@@ -201,6 +201,7 @@ sub show_bug {
     $bug{'blocked'} = \@list2;
 
     # Groups
+    my @groups;
     if ($::usergroupset ne '0' || $bug{'groupset'} ne '0') {      
         my $bug_groupset = $bug{'groupset'};
 
@@ -213,7 +214,6 @@ sub show_bug {
                 "AND ((isactive = 1 AND (bit & $::usergroupset != 0)) OR
                  (bit & $bug_groupset != 0))");
 
-        my @groups;
         $user{'inallgroups'} = 1;
 
         while (MoreSQLData()) {
@@ -254,9 +254,8 @@ sub show_bug {
             ($bug{'reporter_accessible'}, 
              $bug{'cclist_accessible'}) = FetchSQLData();        
         }
-        
-        $vars->{'groups'} = \@groups;
     }
+    $vars->{'groups'} = \@groups;
 
     my $movers = Param("movers");
     $user{'canmove'} = Param("move-enabled") 
@@ -296,11 +295,12 @@ sub show_bug {
     $bug{'cc'} = \@cc if $cc[0];
 
     # Next bug in list (if there is one)
+    my @bug_list;
     if ($::COOKIE{"BUGLIST"} && $id) 
     {
-        my @bug_list = split(/:/, $::COOKIE{"BUGLIST"});
-        $vars->{'bug_list'} = \@bug_list;
+        @bug_list = split(/:/, $::COOKIE{"BUGLIST"});
     }
+    $vars->{'bug_list'} = \@bug_list;
 
     $bug{'comments'} = GetComments($bug{'bug_id'});
 
