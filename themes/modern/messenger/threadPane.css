@@ -198,3 +198,19 @@ outlinerbody:-moz-outliner-image(subjectCol, news, attach) {
   list-style-image: url("chrome://messenger/skin/icons/message-news-attach.gif");
 }
 
+outlinerbody:-moz-outliner-image(subjectCol, news, offline) {
+  padding-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/message-news-offl.gif");
+}
+
+outlinerbody:-moz-outliner-image(subjectCol, news, new, offline) {
+  padding-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/message-news-new-offl.gif");
+}
+
+outlinerbody:-moz-outliner-image(subjectCol, news, attach, offline) {
+  padding-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/message-news-attach-offl.gif");
+}
+
+
