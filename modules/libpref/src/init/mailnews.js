@@ -305,3 +305,4 @@ pref("mail.biff.play_sound",true);
 pref("mail.biff.use_default_sound",true);
 pref("mail.biff.sound_file","");
 
+pref("mail.content_disposition_type", 0);
