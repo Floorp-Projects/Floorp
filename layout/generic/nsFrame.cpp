@@ -2095,27 +2095,50 @@ NS_IMETHODIMP nsFrame::GetOriginToViewOffset(nsIPresContext* aPresContext,
 
     if (NS_SUCCEEDED(rv)) {
       nsPoint viewOffsetFromParent(0,0);
-      nsIView *tmpView = view;
+      nsIView *pview = view;
 
-      while (tmpView && tmpView != parentView) {
+      nsCOMPtr<nsIViewManager> vVM;
+
+      rv = view->GetViewManager(*getter_AddRefs(vVM));
+
+      if (NS_FAILED(rv))
+        return rv;
+
+      while (pview && pview != parentView) {
         nsPoint viewPos;
 
-        rv = tmpView->GetPosition(&viewPos.x, &viewPos.y);
+        rv = pview->GetPosition(&viewPos.x, &viewPos.y);
 
         if (NS_FAILED(rv))
           return rv;
 
         viewOffsetFromParent += viewPos;
 
-        rv = tmpView->GetParent(tmpView);
+        nsIView *tmpView = nsnull;
+        rv = pview->GetParent(tmpView);
 
         if (NS_FAILED(rv))
           return rv;
+
+        if (tmpView) {
+          nsCOMPtr<nsIViewManager> tmpVM;
+          rv = tmpView->GetViewManager(*getter_AddRefs(tmpVM));
+
+          if (NS_FAILED(rv))
+            return rv;
+
+          if (vVM != tmpVM) {
+            // Don't cross ViewManager boundaries!
+            break;
+          }
+        }
+
+        pview = tmpView;
       }
 
 #ifdef DEBUG_KIN
-      if (tmpView != parentView) {
-        // XXX: At this point, tmpView is probably null since it traversed
+      if (pview != parentView) {
+        // XXX: At this point, pview is probably null since it traversed
         //      all the way up view's parent hierarchy and did not run across
         //      parentView. In the future, instead of just returning an offset
         //      of (0,0) for this case, we may want offsetToParentView to
@@ -2129,7 +2152,7 @@ NS_IMETHODIMP nsFrame::GetOriginToViewOffset(nsIPresContext* aPresContext,
       }
 #endif // DEBUG
 
-      if (tmpView == parentView)
+      if (pview == parentView)
         aOffset = offsetToParentView - viewOffsetFromParent;
 
       if (aView)
