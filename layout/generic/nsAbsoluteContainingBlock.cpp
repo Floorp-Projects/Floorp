@@ -156,52 +156,6 @@ nsAbsoluteContainingBlock::ReplaceFrame(nsIFrame*       aDelegatingFrame,
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
-
-// Destructor function for the collapse offset frame property
-static void
-DestroyRectFunc(nsIPresContext* aPresContext,
-                nsIFrame*       aFrame,
-                nsIAtom*        aPropertyName,
-                void*           aPropertyValue)
-{
-  delete (nsRect*)aPropertyValue;
-}
-
-static nsRect*
-GetOverflowAreaProperty(nsIPresContext* aPresContext,
-                        nsIFrame*       aFrame,
-                        PRBool          aCreateIfNecessary = PR_FALSE)
-{
-  nsCOMPtr<nsIPresShell>     presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-
-  if (presShell) {
-    nsCOMPtr<nsIFrameManager>  frameManager;
-    presShell->GetFrameManager(getter_AddRefs(frameManager));
-  
-    if (frameManager) {
-      void* value;
-  
-      frameManager->GetFrameProperty(aFrame, nsLayoutAtoms::overflowAreaProperty,
-                                     0, &value);
-      if (value) {
-        return (nsRect*)value;  // the property already exists
-
-      } else if (aCreateIfNecessary) {
-        // The property isn't set yet, so allocate a new rect, set the property,
-        // and return the newly allocated rect
-        nsRect*  overflow = new nsRect(0, 0, 0, 0);
-
-        frameManager->SetFrameProperty(aFrame, nsLayoutAtoms::overflowAreaProperty,
-                                       overflow, DestroyRectFunc);
-        return overflow;
-      }
-    }
-  }
-
-  return nsnull;
-}
-
 nsresult
 nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
                                   nsIPresContext*          aPresContext,
@@ -257,7 +211,7 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
       kidFrame->GetFrameState(&kidFrameState);
       if (kidFrameState & NS_FRAME_OUTSIDE_CHILDREN) {
         // Get the property
-        nsRect* overflowArea = ::GetOverflowAreaProperty(aPresContext, kidFrame);
+        nsRect* overflowArea =  kidFrame->GetOverflowAreaProperty(aPresContext);
 
         if (overflowArea) {
           // The overflow area is in the child's coordinate space, so translate
@@ -291,7 +245,7 @@ nsAbsoluteContainingBlock::CalculateChildBounds(nsIPresContext* aPresContext,
     f->GetFrameState(&frameState);
     if (frameState & NS_FRAME_OUTSIDE_CHILDREN) {
       // Get the property
-      nsRect* overflowArea = ::GetOverflowAreaProperty(aPresContext, f);
+      nsRect* overflowArea = f->GetOverflowAreaProperty(aPresContext);
   
       if (overflowArea) {
         // The overflow area is in the child's coordinate space, so translate
@@ -550,7 +504,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   aKidFrame->GetFrameState(&kidFrameState);
   if (kidFrameState & NS_FRAME_OUTSIDE_CHILDREN) {
     // Get the property (creating a rect struct if necessary)
-    nsRect* overflowArea = ::GetOverflowAreaProperty(aPresContext, aKidFrame, PR_TRUE);
+    nsRect* overflowArea = aKidFrame->GetOverflowAreaProperty(aPresContext, PR_TRUE);
 
     NS_ASSERTION(overflowArea, "should have created rect");
     if (overflowArea) {

@@ -1245,6 +1245,15 @@ public:
                              void*           aPropertyValue) = 0;
 #endif // IBMBIDI
 
+  /** Create or retrieve the previously stored overflow area, if the frame does 
+    * not overflow and no creation is required return nsnull.
+    * @param aPresContext PresContext
+    * @param aCreateIfNecessary  create a new nsRect for the overflow area
+    * @return pointer to the overflow area rectangle 
+    */
+  virtual nsRect* GetOverflowAreaProperty(nsIPresContext* aPresContext,
+                                          PRBool          aCreateIfNecessary = PR_FALSE) = 0;
+
   /**
    * Return PR_TRUE if and only if this frame obeys visibility:hidden.
    * if it does not, then nsContainerFrame will hide its view even though

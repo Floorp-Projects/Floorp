@@ -4549,6 +4549,87 @@ GetIBSpecialSibling(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+// Destructor function for the overflow area property
+static void
+DestroyRectFunc(nsIPresContext* aPresContext,
+                nsIFrame*       aFrame,
+                nsIAtom*        aPropertyName,
+                void*           aPropertyValue)
+{
+  delete (nsRect*)aPropertyValue;
+}
+
+nsRect*
+nsFrame::GetOverflowAreaProperty(nsIPresContext* aPresContext,
+                                 PRBool          aCreateIfNecessary) 
+{
+  nsFrameState  frameState;
+  GetFrameState(&frameState);
+  if (!((frameState & NS_FRAME_OUTSIDE_CHILDREN) || aCreateIfNecessary)) {
+    return nsnull;
+  }
+  nsCOMPtr<nsIPresShell>     presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+
+  if (presShell) {
+    nsCOMPtr<nsIFrameManager>  frameManager;
+    presShell->GetFrameManager(getter_AddRefs(frameManager));
+  
+    if (frameManager) {
+      void* value;
+  
+      frameManager->GetFrameProperty((nsIFrame*)this, nsLayoutAtoms::overflowAreaProperty,
+                                     0, &value);
+      if (value) {
+        return (nsRect*)value;  // the property already exists
+
+      } else if (aCreateIfNecessary) {
+        // The property isn't set yet, so allocate a new rect, set the property,
+        // and return the newly allocated rect
+        nsRect*  overflow = new nsRect(0, 0, 0, 0);
+
+        frameManager->SetFrameProperty((nsIFrame*)this, nsLayoutAtoms::overflowAreaProperty,
+                                       overflow, DestroyRectFunc);
+        return overflow;
+      }
+    }
+  }
+
+  return nsnull;
+}
+
+void 
+nsFrame::StoreOverflow(nsIPresContext*      aPresContext,
+                       nsHTMLReflowMetrics& aMetrics)
+{ 
+  if ((aMetrics.mOverflowArea.x < 0) ||
+      (aMetrics.mOverflowArea.y < 0) ||
+      (aMetrics.mOverflowArea.XMost() > aMetrics.width) ||
+      (aMetrics.mOverflowArea.YMost() > aMetrics.height)) {
+    mState |= NS_FRAME_OUTSIDE_CHILDREN;
+    nsRect* overflowArea = GetOverflowAreaProperty(aPresContext, PR_TRUE); 
+    NS_ASSERTION(overflowArea, "should have created rect");
+    if (overflowArea) {
+       *overflowArea = aMetrics.mOverflowArea;
+    }
+  } 
+  else {
+    if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
+      // remove the previously stored overflow area 
+      nsCOMPtr<nsIPresShell>     presShell;
+      aPresContext->GetShell(getter_AddRefs(presShell));
+      if (presShell) {
+        nsCOMPtr<nsIFrameManager>  frameManager;
+        presShell->GetFrameManager(getter_AddRefs(frameManager));
+        if (frameManager) {
+          frameManager->RemoveFrameProperty((nsIFrame*)this, nsLayoutAtoms::overflowAreaProperty);
+        }
+      }
+    }
+    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+  }   
+}
+
 nsresult
 nsFrame::DoGetParentStyleContextFrame(nsIPresContext* aPresContext,
                                       nsIFrame**      aProviderFrame,
@@ -5634,6 +5715,16 @@ void nsFrame::DisplayReflowExit(nsIPresContext*      aPresContext,
        DR_state->PrettyUC(aMetrics.mOverflowArea.width, width);
        DR_state->PrettyUC(aMetrics.mOverflowArea.height, height);
        printf("o=(%s,%s) %s x %s", x, y, width, height);
+       nsRect* storedOverflow = aFrame->GetOverflowAreaProperty(aPresContext);
+       if (storedOverflow) {
+         if (aMetrics.mOverflowArea != *storedOverflow) {
+           DR_state->PrettyUC(storedOverflow->x, x);
+           DR_state->PrettyUC(storedOverflow->y, y);
+           DR_state->PrettyUC(storedOverflow->width, width);
+           DR_state->PrettyUC(storedOverflow->height, height);
+           printf("sto=(%s,%s) %s x %s", x, y, width, height);
+         }
+       }
     }
     printf("\n");
     if (DR_state->mDisplayPixelErrors) {

@@ -686,15 +686,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       mAbsoluteContainer.CalculateChildBounds(aPresContext, childBounds);
       aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
 
-      // Make sure the NS_FRAME_OUTSIDE_CHILDREN flag is set correctly
-      if ((aMetrics.mOverflowArea.x < 0) ||
-          (aMetrics.mOverflowArea.y < 0) ||
-          (aMetrics.mOverflowArea.XMost() > aMetrics.width) ||
-          (aMetrics.mOverflowArea.YMost() > aMetrics.height)) {
-        mState |= NS_FRAME_OUTSIDE_CHILDREN;
-      } else {
-        mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
-      }
+      StoreOverflow(aPresContext, aMetrics);
 
       return NS_OK;
     }
@@ -952,6 +944,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   
   // Compute our final size
   ComputeFinalSize(aReflowState, state, aMetrics);
+  StoreOverflow(aPresContext, aMetrics);
 
   // see if verifyReflow is enabled, and if so store off the space manager pointer
 #ifdef DEBUG
@@ -1012,17 +1005,8 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     // Factor the absolutely positioned child bounds into the overflow area
     aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
 
-    // Make sure the NS_FRAME_OUTSIDE_CHILDREN flag is set correctly
-    if ((aMetrics.mOverflowArea.x < 0) ||
-        (aMetrics.mOverflowArea.y < 0) ||
-        (aMetrics.mOverflowArea.XMost() > aMetrics.width) ||
-        (aMetrics.mOverflowArea.YMost() > aMetrics.height)) {
-      mState |= NS_FRAME_OUTSIDE_CHILDREN;
-    } else {
-      mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
-    }
+    StoreOverflow(aPresContext, aMetrics);
   }
-
   // Clear the space manager pointer in the block reflow state so we
   // don't waste time translating the coordinate system back on a dead
   // space manager.
@@ -1430,18 +1414,6 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   }
 
   ComputeCombinedArea(aReflowState, aMetrics);
-
-  // If the combined area of our children exceeds our bounding box
-  // then set the NS_FRAME_OUTSIDE_CHILDREN flag, otherwise clear it.
-  if ((aMetrics.mOverflowArea.x < 0) ||
-      (aMetrics.mOverflowArea.y < 0) ||
-      (aMetrics.mOverflowArea.XMost() > aMetrics.width) ||
-      (aMetrics.mOverflowArea.YMost() > aMetrics.height)) {
-    mState |= NS_FRAME_OUTSIDE_CHILDREN;
-  }
-  else {
-    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
-  }
 }
 
 void
