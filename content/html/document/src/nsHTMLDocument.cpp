@@ -1425,7 +1425,7 @@ nsHTMLDocument::CreateElement(const nsAReadableString& aTagName,
   nsAutoString tmp(aTagName);
   tmp.ToLowerCase();
 
-  mNodeInfoManager->GetNodeInfo(aTagName, nsnull, kNameSpaceID_None,
+  mNodeInfoManager->GetNodeInfo(tmp, nsnull, kNameSpaceID_None,
                                 *getter_AddRefs(nodeInfo));
 
   nsCOMPtr<nsIHTMLContent> content;
