@@ -701,6 +701,64 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
         //fake event
         nsMenuEvent fake;
         menuListener->MenuConstruct(fake, aParentWindow, menubarNode, mWebShell);
+
+      // XXX ok this is somewhat of a kludge but it is needed. When the menu bar is added the client area got smaller
+      // unfortunately the document will already have been flowed. So we need to reflow it to a smaller size. -EDV
+      // BEGIN REFLOW CODE
+      nsresult rv = NS_ERROR_FAILURE;
+
+      // do a reflow
+      nsCOMPtr<nsIContentViewerContainer> contentViewerContainer;
+      contentViewerContainer = do_QueryInterface(mWebShell);
+      if (!contentViewerContainer) {
+          NS_ERROR("Webshell doesn't support the content viewer container interface");
+          return;
+      }
+
+      nsCOMPtr<nsIContentViewer> contentViewer;
+      if (NS_FAILED(rv = contentViewerContainer->GetContentViewer(getter_AddRefs(contentViewer)))) {
+          NS_ERROR("Unable to retrieve content viewer.");
+          return;
+      }
+
+      nsCOMPtr<nsIDocumentViewer> docViewer;
+      docViewer = do_QueryInterface(contentViewer);
+      if (!docViewer) {
+          NS_ERROR("Document viewer interface not supported by the content viewer.");
+          return;
+      }
+
+      nsCOMPtr<nsIPresContext> presContext;
+      if (NS_FAILED(rv = docViewer->GetPresContext(*getter_AddRefs(presContext)))) {
+          NS_ERROR("Unable to retrieve the doc viewer's presentation context.");
+          return;
+      }
+
+      nsCOMPtr<nsIPresShell> presShell;
+      if (NS_FAILED(rv = presContext->GetShell(getter_AddRefs(presShell)))) {
+          NS_ERROR("Unable to retrieve the shell from the presentation context.");
+          return;
+      }
+
+
+      nsRect rect;
+
+      if (NS_FAILED(rv = mWindow->GetClientBounds(rect))) {
+          NS_ERROR("Failed to get web shells bounds");
+          return;
+      }
+
+      // convert to twips
+      float p2t;
+      presContext->GetScaledPixelsToTwips(&p2t);
+      rect.width = NSIntPixelsToTwips(rect.width, p2t);
+      rect.height = NSIntPixelsToTwips(rect.height, p2t);
+    
+      if (NS_FAILED(rv = presShell->ResizeReflow(rect.width,rect.height))) {
+          NS_ERROR("Failed to reflow the document after the menu was added");
+          return;
+      }
+      // END REFLOW CODE
                   
       } // end if ( nsnull != pnsMenuBar )
     }
