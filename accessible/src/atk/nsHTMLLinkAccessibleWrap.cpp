@@ -169,13 +169,12 @@ NS_IMETHODIMP nsHTMLImageMapAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (content) {
-    nsCOMPtr<nsIURI> baseURI;
-    if (NS_SUCCEEDED(content->GetBaseURI(getter_AddRefs(baseURI)))) {
-      nsCOMPtr<nsIDOMElement> area(do_QueryInterface(domNode));
-      nsAutoString hrefValue;
-      if (NS_SUCCEEDED(area->GetAttribute(NS_LITERAL_STRING("href"), hrefValue))) {
-        return NS_NewURI(aURI, hrefValue, nsnull, baseURI);
-      }
+    nsCOMPtr<nsIURI> baseURI = content->GetBaseURI();
+
+    nsCOMPtr<nsIDOMElement> area(do_QueryInterface(domNode));
+    nsAutoString hrefValue;
+    if (NS_SUCCEEDED(area->GetAttribute(NS_LITERAL_STRING("href"), hrefValue))) {
+      return NS_NewURI(aURI, hrefValue, nsnull, baseURI);
     }
   }
 
