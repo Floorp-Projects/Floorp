@@ -277,7 +277,10 @@ nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner) {
           
           case kNotFound:
             break;
-          
+        
+          case 0: //preceeds a EOF...
+            break;
+            
           default:
             if(!nsString::IsSpace(theChar)) {
               nsAutoString temp(theChar);
