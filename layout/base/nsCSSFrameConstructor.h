@@ -866,6 +866,16 @@ protected:
                              nsIFrame*                aFrame,
                              nsIFrame*                aFrameList);
 
+  PRBool NeedSpecialFrameReframe(nsIPresShell*    aPresShell,
+                                 nsIPresContext*  aPresContext,
+                                 nsIContent*      aParent1,
+                                 nsIContent*      aParent2,
+                                 nsIFrame*&       aParentFrame,
+                                 nsIContent*      aChild,
+                                 PRInt32          aIndexInContainer,
+                                 nsIFrame*&       aPrevSibling,
+                                 nsIFrame*        aNextSibling);
+
   nsresult SplitToContainingBlock(nsIPresContext*          aPresContext,
                                   nsFrameConstructorState& aState,
                                   nsIFrame*                aFrame,
