@@ -165,7 +165,7 @@ typedef struct
  * 1970.  In 5.0 it was made cross platform so that all platforms use
  * expiration times starting from 1970.  That means that mac cookies 
  * generated in 4.x cannot be migrated to 5.0 as is -- instead the 
- * expiration time must first be increased by
+ * expiration time must first be decreased by
  * the number of seconds between 1-1-1900 and 1-1-1970
  * 
  *  70 years * 365 days/year * 86,400 secs/day      = 2,207,520,000 seconds
@@ -1468,7 +1468,7 @@ Fix4xCookies(nsIFileSpec * profilePath) {
      * expires == 0.  don't adjust those cookies.
      */
     if (expires) {
-    	expires += SECONDS_BETWEEN_1900_AND_1970;
+    	expires -= SECONDS_BETWEEN_1900_AND_1970;
     }
     char dateString[36];
     PR_snprintf(dateString, sizeof(dateString), "%lu", expires);
