@@ -66,7 +66,7 @@ var gURIFixup = null;
 var gLocalStore = null;
 var gCharsetMenu = null;
 var gLastBrowserCharset = null;
-
+var gPrevCharset = null;
 var gReportButton = null;
 var gURLBar = null;
 var gProxyButton = null;
@@ -87,22 +87,14 @@ var gToolbarMode = "icons";
 var gIconSize = "";
 var gMustLoadSidebar = false;
 var gURIFixup = null;
-
 var gProgressMeterPanel = null;
 var gProgressCollapseTimer = null;
-
 var gPrefService = null;
-
 var appCore = null;
-
-//cached elements
 var gBrowser = null;
 
 // Global variable that holds the nsContextMenu instance.
 var gContextMenu = null;
-
-// Global variable that caches the default search engine info
-var gDefaultEngine = null;
 
 var gPrintSettingsAreGlobal = true;
 var gSavePrintSettings = true;
@@ -234,6 +226,7 @@ function UpdatePageReport(event)
     gReportButton.removeAttribute("blocked");
 }
 
+#ifdef MOZ_ENABLE_XREMOTE
 function RegisterTabOpenObserver()
 {
   const observer = {
@@ -250,7 +243,7 @@ function RegisterTabOpenObserver()
     .getService(Components.interfaces.nsIObserverService);
   service.addObserver(observer, "open-new-tab-request", false);
 }
-
+#endif
 function Startup()
 {
   // init globals
@@ -330,39 +323,34 @@ function Startup()
   // hook up UI through progress listener
   gBrowser.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
-  // load appropriate initial page from commandline
-  var isPageCycling = false;
-
-  // page cycling for tinderbox tests
-  if (!appCore.cmdLineURLUsed)
-    isPageCycling = appCore.startPageCycler();
-
+#ifdef ENABLE_PAGE_CYCLER
+  appCore.startPageCycler();
+#else
   // only load url passed in when we're not page cycling
-  if (!isPageCycling) {
-    var uriToLoad;
+  var uriToLoad;
 
-    // Check for window.arguments[0]. If present, use that for uriToLoad.
-    if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
-      uriToLoad = window.arguments[0];
-    
-    if (uriToLoad && uriToLoad != "about:blank") {
-      if (gURLBar)
-        gURLBar.value = uriToLoad;
-      if ("arguments" in window && window.arguments.length >= 3) {
-        loadURI(uriToLoad, window.arguments[2]);
-      } else {
-        loadURI(uriToLoad);
-      }
+  // Check for window.arguments[0]. If present, use that for uriToLoad.
+  if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
+    uriToLoad = window.arguments[0];
+  
+  if (uriToLoad && uriToLoad != "about:blank") {
+    if (gURLBar)
+      gURLBar.value = uriToLoad;
+    if ("arguments" in window && window.arguments.length >= 3) {
+      loadURI(uriToLoad, window.arguments[2]);
+    } else {
+      loadURI(uriToLoad);
     }
-#ifdef MOZ_ENABLE_XREMOTE
-    // hook up remote support
-    var remoteService;
-    remoteService = Components.classes[XREMOTESERVICE_CONTRACTID]
-                              .getService(Components.interfaces.nsIXRemoteService);
-    remoteService.addBrowserInstance(window);
-
-    RegisterTabOpenObserver();
   }
+#ifdef MOZ_ENABLE_XREMOTE
+  // hook up remote support
+  var remoteService;
+  remoteService = Components.classes[XREMOTESERVICE_CONTRACTID]
+                            .getService(Components.interfaces.nsIXRemoteService);
+  remoteService.addBrowserInstance(window);
+
+  RegisterTabOpenObserver();
+#endif
 #endif
   if (window.opener) {
     var openerSidebarBox = window.opener.document.getElementById("sidebar-box");
@@ -4438,7 +4426,6 @@ function SetForcedCharset(charset)
     BrowserSetForcedCharacterSet(charset);
 }
 
-var gPrevCharset = null;
 function UpdateCurrentCharset()
 {
     var menuitem = null;
