@@ -98,6 +98,9 @@
 //                 append(const UNICODE_CHAR* source, Int32 sourceLength)
 // TK  12/22/1999  Enhanced Trim() to to remove additional "white space"
 //                 characters (added \n, \t, and \r).
+//
+// TK  02/14/2000  Added a constructon  which accepts a UNICODE_CHAR* array, and
+//                 its associated length.
 
 #include <stdlib.h>
 #include <string.h>
@@ -189,6 +192,36 @@ String::String(const UNICODE_CHAR* source)
   if (source)
     {
       strLength = bufferLength = UnicodeLength(source);
+
+      //Set up the new buffer to be the same size as the input char array.
+      strBuffer = new UNICODE_CHAR[bufferLength];
+
+      //Now store the char array in the new string buffer.
+      //Can't use strcpy since the destination is a UNICODE_CHAR buffer.
+      //Also make sure to pick up the null terminator at the end of the char
+      //array.
+      for (copyLoop=0; copyLoop<strLength; copyLoop++)
+        strBuffer[copyLoop] = source[copyLoop];
+    }
+  else
+    {
+      //Create an empty string
+      strBuffer = NULL;
+      bufferLength = 0;
+      strLength = 0;
+    }
+}
+
+//
+//Create a String from a UNICODE_CHAR buffer and a supplied string length
+//
+String::String(const UNICODE_CHAR* source, Int32 length)
+{
+  Int32 copyLoop;
+
+  if (source)
+    {
+      strLength = bufferLength = length;
 
       //Set up the new buffer to be the same size as the input char array.
       strBuffer = new UNICODE_CHAR[bufferLength];
@@ -843,7 +876,7 @@ Int32 String::indexOf(UNICODE_CHAR data, Int32 offset) const
 //
 Int32 String::indexOf(const String& data) const
 {
-  indexOf(data, 0);
+  return indexOf(data, 0);
 }
 
 //
