@@ -1452,7 +1452,12 @@ Fix4xCookies(nsIFileSpec * profilePath) {
     unsigned long expires = strtoul(expiresCString, nsnull, 10);
     nsCRT::free(expiresCString);
 
-    expires -= SECONDS_BETWEEN_1900_AND_1970;
+    /* if the cookie is supposed to expire at the end of the session
+     * expires == 0.  don't adjust those cookies.
+     */
+    if (expires) {
+    	expires -= SECONDS_BETWEEN_1900_AND_1970;
+    }
     char dateString[36];
     PR_snprintf(dateString, sizeof(dateString), "%lu", expires);
 
