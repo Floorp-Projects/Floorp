@@ -139,6 +139,7 @@ sub count {
 sub validate {
     # Validates fields containing flag modifications.
 
+    my $user = Bugzilla->user;
     my ($data, $bug_id) = @_;
   
     # Get a list of flags to validate.  Uses the "map" function
@@ -213,6 +214,24 @@ sub validate {
                 }
             }
         }
+
+        # Make sure the user is authorized to modify flags, see bug 180879
+        # - The flag is unchanged
+        next if ($status eq $flag->{status});
+
+        # - User can clear flags set by itself
+        next if (($status eq "X") && ($user->id eq $flag->{setter}));
+
+        # - User in the $grant_gid group can set/clear flags,
+        #   including "+" and "-"
+        next if (!$flag->{type}->{grant_gid}
+                 || $user->in_group(&::GroupIdToName($flag->{type}->{grant_gid})));
+
+        # - Any other flag modification is denied
+        ThrowUserError("flag_update_denied",
+                        { name       => $flag->{type}->{name},
+                          status     => $status,
+                          old_status => $flag->{status} });
     }
 }
 

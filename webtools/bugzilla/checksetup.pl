@@ -1685,7 +1685,9 @@ $table{flagtypes} =
     is_requesteeble     TINYINT       NOT NULL  DEFAULT 0 , 
     is_multiplicable    TINYINT       NOT NULL  DEFAULT 0 , 
     
-    sortkey             SMALLINT      NOT NULL  DEFAULT 0 
+    sortkey             SMALLINT      NOT NULL  DEFAULT 0 , 
+    grant_group_id      MEDIUMINT     NULL , 
+    request_group_id    MEDIUMINT     NULL
    ';
 
 $table{flaginclusions} =
@@ -4123,6 +4125,11 @@ if (GetFieldDef("group_group_map", "isbless")) {
 # Allow profiles to optionally be linked to a unique identifier in an outside
 # login data source
 AddField("profiles", "extern_id", "varchar(64)");
+
+# 2004-11-20 - LpSolit@netscape.net - Bug 180879
+# Add grant and request groups for flags
+AddField('flagtypes', 'grant_group_id', 'mediumint null');
+AddField('flagtypes', 'request_group_id', 'mediumint null');
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.

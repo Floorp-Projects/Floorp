@@ -317,12 +317,20 @@ if ($action eq 'del') {
         $hasproduct = 1;
     }
 
+    my $hasflags = 0;
+    SendSQL("SELECT id FROM flagtypes 
+             WHERE grant_group_id = $gid OR request_group_id = $gid");
+    if (FetchOneColumn()) {
+        $hasflags = 1;
+    }
+
     $vars->{'gid'}         = $gid;
     $vars->{'name'}        = $name;
     $vars->{'description'} = $desc;
     $vars->{'hasusers'}    = $hasusers;
     $vars->{'hasbugs'}     = $hasbugs;
     $vars->{'hasproduct'}  = $hasproduct;
+    $vars->{'hasflags'}    = $hasflags;
     $vars->{'buglist'}     = $buglist;
 
     print Bugzilla->cgi->header();
@@ -365,8 +373,19 @@ if ($action eq 'delete') {
             $cantdelete = 1;
         }
     }
+    SendSQL("SELECT id FROM flagtypes 
+             WHERE grant_group_id = $gid OR request_group_id = $gid");
+    if (FetchOneColumn()) {
+        if (!defined $cgi->param('removeflags')) {
+            $cantdelete = 1;
+        }
+    }
 
     if (!$cantdelete) {
+        SendSQL("UPDATE flagtypes SET grant_group_id = NULL 
+                 WHERE grant_group_id = $gid");
+        SendSQL("UPDATE flagtypes SET request_group_id = NULL 
+                 WHERE request_group_id = $gid");
         SendSQL("DELETE FROM user_group_map WHERE group_id = $gid");
         SendSQL("DELETE FROM group_group_map WHERE grantor_id = $gid");
         SendSQL("DELETE FROM bug_group_map WHERE group_id = $gid");

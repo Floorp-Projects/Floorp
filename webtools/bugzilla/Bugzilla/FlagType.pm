@@ -49,7 +49,8 @@ my @base_columns =
   ("1", "flagtypes.id", "flagtypes.name", "flagtypes.description", 
    "flagtypes.cc_list", "flagtypes.target_type", "flagtypes.sortkey", 
    "flagtypes.is_active", "flagtypes.is_requestable", 
-   "flagtypes.is_requesteeble", "flagtypes.is_multiplicable");
+   "flagtypes.is_requesteeble", "flagtypes.is_multiplicable", 
+   "flagtypes.grant_group_id", "flagtypes.request_group_id");
 
 # Note: when adding tables to @base_tables, make sure to include the separator 
 # (i.e. a comma or words like "LEFT OUTER JOIN") before the table name, 
@@ -181,6 +182,7 @@ sub count {
 }
 
 sub validate {
+    my $user = Bugzilla->user;
     my ($data, $bug_id, $attach_id) = @_;
   
     # Get a list of flag types to validate.  Uses the "map" function
@@ -249,6 +251,22 @@ sub validate {
                                  attach_id => $attach_id });
             }
         }
+
+        # Make sure the user is authorized to modify flags, see bug 180879
+        # - User in the $grant_gid group can set flags, including "+" and "-"
+        next if (!$flag_type->{grant_gid}
+                 || $user->in_group(&::GroupIdToName($flag_type->{grant_gid})));
+
+        # - User in the $request_gid group can request flags
+        next if ($status eq '?'
+                 && (!$flag_type->{request_gid}
+                     || $user->in_group(&::GroupIdToName($flag_type->{request_gid}))));
+
+        # - Any other flag modification is denied
+        ThrowUserError("flag_update_denied",
+                        { name       => $flag_type->{name},
+                          status     => $status,
+                          old_status => "X" });
     }
 }
 
@@ -348,6 +366,12 @@ sub sqlify_criteria {
         push(@$columns, "COUNT(flagexclusions.type_id) AS num_exclusions");
         $$having = "num_exclusions = 0";
     }
+    if ($criteria->{group}) {
+        my $gid = $criteria->{group};
+        detaint_natural($gid);
+        push(@criteria, "(flagtypes.grant_group_id = $gid " .
+                        " OR flagtypes.request_group_id = $gid)");
+    }
     
     return @criteria;
 }
@@ -368,7 +392,9 @@ sub perlify_record {
     $type->{'is_requestable'} = $_[8];
     $type->{'is_requesteeble'} = $_[9];
     $type->{'is_multiplicable'} = $_[10];
-    $type->{'flag_count'} = $_[11];
+    $type->{'grant_gid'} = $_[11];
+    $type->{'request_gid'} = $_[12];
+    $type->{'flag_count'} = $_[13];
         
     return $type;
 }

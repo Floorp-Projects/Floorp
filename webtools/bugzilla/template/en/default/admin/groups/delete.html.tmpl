@@ -29,6 +29,7 @@
   # hasusers: boolean int. True if the group includes users in it.
   # hasbugs: boolean int. True if the group includes bugs in it.
   # hasproduct: boolean int. True if the group is binded to a product.
+  # hasflags: boolean int. True if the group is used by a flag type.
   # buglist: string. The list of bugs included in this group.
   #%]
 
@@ -81,11 +82,20 @@
     <br><input type="checkbox" name="unbind">Delete this group anyway,
     and make the <U>[% name FILTER html %]</U> publicly visible.</p>
   [% END %]
+  
+  [% IF hasflags %]
+    <p><b>This group restricts who can make changes to flags of certain types.
+    You cannot delete this group while there are flag types using it.</b>
+
+    <br><a href="editflagtypes.cgi?action=list&group=[% gid FILTER html %]">Show
+    me which types</a> - <input type="checkbox" name="removeflags">Remove all
+    flag types from this group for me.</p>
+  [% END %]
 
   <h2>Confirmation</h2>
 
   <p>Do you really want to delete this group?</p>
-  [% IF (hasusers || hasbugs || hasproduct) %]
+  [% IF (hasusers || hasbugs || hasproduct || hasflags) %]
     <p><b>You must check all of the above boxes or correct the
           indicated problems first before you can proceed.</b></p>
   [% END %]

@@ -90,9 +90,12 @@ exit;
 
 sub list {
     # Define the variables and functions that will be passed to the UI template.
-    $vars->{'bug_types'} = Bugzilla::FlagType::match({ 'target_type' => 'bug' }, 1);
+    $vars->{'bug_types'} = 
+      Bugzilla::FlagType::match({ 'target_type' => 'bug', 
+                                  'group' => $::FORM{'group'} }, 1);
     $vars->{'attachment_types'} = 
-      Bugzilla::FlagType::match({ 'target_type' => 'attachment' }, 1);
+      Bugzilla::FlagType::match({ 'target_type' => 'attachment', 
+                                  'group' => $::FORM{'group'} }, 1);
 
     # Return the appropriate HTTP response headers.
     print Bugzilla->cgi->header();
@@ -129,6 +132,13 @@ sub edit {
         $vars->{'type'} = Bugzilla::FlagType::get($::FORM{'id'});
         $vars->{'type'}->{'inclusions'} = Bugzilla::FlagType::get_inclusions($::FORM{'id'});
         $vars->{'type'}->{'exclusions'} = Bugzilla::FlagType::get_exclusions($::FORM{'id'});
+        # Users want to see group names, not IDs
+        foreach my $group ("grant_gid", "request_gid") {
+            my $gid = $vars->{'type'}->{$group};
+            next if (!$gid);
+            SendSQL("SELECT name FROM groups WHERE id = $gid");
+            $vars->{'type'}->{$group} = FetchOneColumn();
+        }
     }
     # Otherwise set the target type (the minimal information about the type
     # that the template needs to know) from the URL parameter and default
@@ -208,6 +218,7 @@ sub insert {
     validateIsRequestable();
     validateIsRequesteeble();
     validateAllowMultiple();
+    validateGroups();
     
     my $name = SqlQuote($::FORM{'name'});
     my $description = SqlQuote($::FORM{'description'});
@@ -224,11 +235,13 @@ sub insert {
     # Insert a record for the new flag type into the database.
     SendSQL("INSERT INTO flagtypes (id, name, description, cc_list, 
                  target_type, sortkey, is_active, is_requestable, 
-                 is_requesteeble, is_multiplicable) 
+                 is_requesteeble, is_multiplicable, 
+                 grant_group_id, request_group_id) 
              VALUES ($id, $name, $description, $cc_list, '$target_type', 
                  $::FORM{'sortkey'}, $::FORM{'is_active'}, 
                  $::FORM{'is_requestable'}, $::FORM{'is_requesteeble'}, 
-                 $::FORM{'is_multiplicable'})");
+                 $::FORM{'is_multiplicable'}, $::FORM{'grant_gid'}, 
+                 $::FORM{'request_gid'})");
     
     # Populate the list of inclusions/exclusions for this flag type.
     foreach my $category_type ("inclusions", "exclusions") {
@@ -267,6 +280,7 @@ sub update {
     validateIsRequestable();
     validateIsRequesteeble();
     validateAllowMultiple();
+    validateGroups();
     
     my $name = SqlQuote($::FORM{'name'});
     my $description = SqlQuote($::FORM{'description'});
@@ -282,7 +296,9 @@ sub update {
                      is_active = $::FORM{'is_active'} , 
                      is_requestable = $::FORM{'is_requestable'} , 
                      is_requesteeble = $::FORM{'is_requesteeble'} , 
-                     is_multiplicable = $::FORM{'is_multiplicable'} 
+                     is_multiplicable = $::FORM{'is_multiplicable'} , 
+                     grant_group_id = $::FORM{'grant_gid'} , 
+                     request_group_id = $::FORM{'request_gid'} 
               WHERE  id = $::FORM{'id'}");
     
     # Update the list of inclusions/exclusions for this flag type.
@@ -499,3 +515,16 @@ sub validateAllowMultiple {
     $::FORM{'is_multiplicable'} = $::FORM{'is_multiplicable'} ? 1 : 0;
 }
 
+sub validateGroups {
+    # Convert group names to group IDs
+    foreach my $col ("grant_gid", "request_gid") {
+      my $name = $::FORM{$col};
+      $::FORM{$col} ||= "NULL";
+      next if (!$name);
+      SendSQL("SELECT id FROM groups WHERE name = " . SqlQuote($name));
+      $::FORM{$col} = FetchOneColumn();
+      if (!$::FORM{$col}) {
+        ThrowUserError("group_unknown", { name => $name });
+      }
+    }
+}

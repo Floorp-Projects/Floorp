@@ -344,6 +344,17 @@
     [% title = "Flag Type Name Invalid" %]
     The name <em>[% name FILTER html %]</em> must be 1-50 characters long.
 
+  [% ELSIF error == "flag_update_denied" %]
+    [% title = "Flag Modification Denied" %]
+    You tried to [% IF status == "+" %] grant [% ELSIF status == "-" %] deny
+    [% ELSIF status == "X" %] clear [% ELSE %] request [% END %]
+    <code>[% name FILTER html %]</code>
+    [% IF status == "?" && old_status != "X" %], but this flag is already
+    set[% END %].
+    Only a sufficiently empowered user [% IF status == "X" %] or the user who
+    set <code>[% name FILTER html %][% old_status FILTER html %]</code> in
+    the first place [% END %] can make this change.
+
   [% ELSIF error == "format_not_found" %]
     [% title = "Format Not Found" %]
     The requested format <em>[% format FILTER html %]</em> does not exist with
@@ -361,6 +372,11 @@
   [% ELSIF error == "group_not_specified" %]
     [% title = "Group not specified" %]
     No group was specified.
+
+  [% ELSIF error == "group_unknown" %]
+    [% title = "Unknown Group" %]
+    The group [% name FILTER html %] does not exist. Please specify
+    a valid group name. Create it first if necessary!
 
   [% ELSIF error == "illegal_at_least_x_votes" %]
     [% title = "Your Search Makes No Sense" %]
