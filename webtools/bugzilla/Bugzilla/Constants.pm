@@ -64,6 +64,8 @@ use base qw(Exporter);
 
     DEFAULT_COLUMN_LIST
     DEFAULT_QUERY_NAME
+
+    COMMENT_COLS
 );
 
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
@@ -211,5 +213,8 @@ use constant DEFAULT_COLUMN_LIST => (
 # Used by query.cgi and buglist.cgi as the named-query name
 # for the default settings.
 use constant DEFAULT_QUERY_NAME => '(Default query)';
+
+# The column length for displayed (and wrapped) bug comments.
+use constant COMMENT_COLS => 80;
 
 1;

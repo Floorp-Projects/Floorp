@@ -107,6 +107,7 @@ foreach my $include_path (@include_paths) {
             csv       => sub { return $_ } ,
             unitconvert => sub { return $_ },
             time      => sub { return $_ } ,
+            wrap_comment => sub { return $_ },
             none      => sub { return $_ } ,
             ics       => [ sub { return sub { return $_; } }, 1] ,
         },

@@ -300,9 +300,9 @@ my $modules = [
         version => '2.08' 
     }, 
     { 
-        name => 'Text::Wrap', 
-        version => '2001.0131' 
-    },
+        name => 'Text::Autoformat', 
+        version => '0' 
+    }, 
     { 
         name => 'Mail::Mailer', 
         version => '1.65'
@@ -1262,6 +1262,7 @@ END
                 csv => sub { return $_; },
                 unitconvert => sub { return $_; },
                 time => sub { return $_; },
+                wrap_comment => sub { return $_; },
                 none => sub { return $_; } ,
                },
            }) || die ("Could not create Template Provider: "
@@ -1836,6 +1837,7 @@ $table{longdescs} =
     work_time decimal(5,2) not null default 0,
     thetext mediumtext,
     isprivate tinyint not null default 0,
+    already_wrapped tinyint not null default 0,
     index(bug_id),
     index(who),
     index(bug_when),
@@ -4237,6 +4239,22 @@ AddField("profiles", "extern_id", "varchar(64)");
 # Add grant and request groups for flags
 AddField('flagtypes', 'grant_group_id', 'mediumint null');
 AddField('flagtypes', 'request_group_id', 'mediumint null');
+
+# 2005-01-29 - mkanat@kerio.com
+if (!GetFieldDef('longdescs', 'already_wrapped')) {
+    AddField('longdescs', 'already_wrapped', 'tinyint not null default 0');
+    # Old, pre-wrapped comments should not be auto-wrapped
+    $dbh->do('UPDATE longdescs SET already_wrapped = 1');
+    # If an old comment doesn't have a newline in the first 80 characters,
+    # (or doesn't contain a newline at all) and it contains a space,
+    # then it's probably a mis-wrapped comment and we should wrap it
+    # at display-time.
+    print "Fixing old, mis-wrapped comments...\n";
+    $dbh->do(q{UPDATE longdescs SET already_wrapped = 0
+                WHERE ( POSITION('\n' IN thetext ) > 80
+                        OR POSITION('\n' IN thetext ) = 0 )
+                  AND SUBSTRING(thetext FROM 1 FOR 80) LIKE '% %'});
+}
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.

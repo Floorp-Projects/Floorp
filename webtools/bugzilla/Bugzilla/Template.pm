@@ -378,6 +378,9 @@ sub create {
                      1
                      ],
 
+            # Wrap a displayed comment to the appropriate length
+            wrap_comment => \&Bugzilla::Util::wrap_comment,
+
             # We force filtering of every variable in key security-critical
             # places; we have a none filter for people to use when they 
             # really, really don't want a variable to be changed.

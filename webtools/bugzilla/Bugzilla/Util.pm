@@ -22,6 +22,7 @@
 #                 Jacob Steenhagen <jake@bugzilla.org>
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Christopher Aillon <christopher@aillon.com>
+#                 Max Kanat-Alexander <mkanat@kerio.com>
 
 package Bugzilla::Util;
 
@@ -32,14 +33,37 @@ use base qw(Exporter);
                              html_quote url_quote value_quote xml_quote
                              css_class_quote
                              lsearch max min
-                             trim diff_strings
+                             trim diff_strings wrap_comment
                              format_time format_time_decimal
                              file_mod_time);
 
 use Bugzilla::Config;
 use Bugzilla::Error;
+use Bugzilla::Constants;
 use Date::Parse;
 use Date::Format;
+use Text::Autoformat qw(autoformat break_wrap);
+
+our $autoformat_options = {
+    # Reformat all paragraphs, not just the first one.
+    all        => 1,
+    # Break only on spaces, and let long lines overflow.
+    break      => break_wrap,
+    # Columns are COMMENT_COLS wide.
+    right      => COMMENT_COLS,
+    # Don't reformat into perfect paragraphs, just wrap.
+    fill       => 0,
+    # Don't compress whitespace.
+    squeeze    => 0,
+    # Lines starting with ">" are not wrapped.
+    ignore     => qr/^>/,
+    # Don't re-arrange numbered lists.
+    renumber   => 0,
+    # Keep short lines at the end of paragraphs as-is.
+    widow      => 0,
+    # Even if a paragraph looks centered, don't "auto-center" it.
+    autocentre => 0,
+};
 
 # This is from the perlsec page, slightly modifed to remove a warning
 # From that page:
@@ -178,6 +202,11 @@ sub diff_strings {
     return ($removed, $added);
 }
 
+sub wrap_comment ($) {
+    my ($comment) = @_;
+    return autoformat($comment, $autoformat_options);
+}
+
 sub format_time {
     my ($time) = @_;
 
@@ -277,6 +306,7 @@ Bugzilla::Util - Generic utility functions for bugzilla
   # Functions for manipulating strings
   $val = trim(" abc ");
   ($removed, $added) = diff_strings($old, $new);
+  $wrapped = wrap_comment($comment);
 
   # Functions for formatting time
   format_time($time);
@@ -401,6 +431,16 @@ and returns what items were removed from or added to the new one,
 compared to the old one. Returns a list, where the first entry is a scalar
 containing removed items, and the second entry is a scalar containing added
 items.
+
+=item C<wrap_comment($comment)>
+
+Takes a bug comment, and wraps it to the appropriate length. The length is
+currently specified in C<Bugzilla::Constants::COMMENT_COLS>. Lines beginning
+with ">" are assumed to be quotes, and they will not be wrapped.
+
+The intended use of this function is to wrap comments that are about to be
+displayed or emailed. Generally, wrapped text should not be stored in the
+database.
 
 =back
 

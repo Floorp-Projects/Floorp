@@ -893,11 +893,6 @@ sub insert
   my $comment = "Created an attachment (id=$attachid)\n$::FORM{'description'}\n";
   $comment .= ("\n" . $::FORM{'comment'}) if $::FORM{'comment'};
 
-  use Text::Wrap;
-  $Text::Wrap::columns = 80;
-  $Text::Wrap::huge = 'overflow';
-  $comment = Text::Wrap::wrap('', '', $comment);
-
   AppendComment($::FORM{'bugid'}, 
                 Bugzilla->user->login,
                 $comment,
@@ -1151,26 +1146,9 @@ sub update
   # add the comment to the bug.
   if ( $::FORM{'comment'} )
   {
-    use Text::Wrap;
-    $Text::Wrap::columns = 80;
-    $Text::Wrap::huge = 'wrap';
-
     # Prepend a string to the comment to let users know that the comment came from
     # the "edit attachment" screen.
     my $comment = qq|(From update of attachment $::FORM{'id'})\n| . $::FORM{'comment'};
-
-    my $wrappedcomment = "";
-    foreach my $line (split(/\r\n|\r|\n/, $comment))
-    {
-      if ( $line =~ /^>/ )
-      {
-        $wrappedcomment .= $line . "\n";
-      }
-      else
-      {
-        $wrappedcomment .= wrap('', '', $line) . "\n";
-      }
-    }
 
     # Get the user's login name since the AppendComment function needs it.
     my $who = DBID_to_name($::userid);
@@ -1178,8 +1156,7 @@ sub update
     my $neverused = $::userid;
 
     # Append the comment to the list of comments in the database.
-    AppendComment($bugid, $who, $wrappedcomment, $::FORM{'isprivate'}, $timestamp);
-
+    AppendComment($bugid, $who, $comment, $::FORM{'isprivate'}, $timestamp);
   }
   
   # Define the variables and functions that will be passed to the UI template.

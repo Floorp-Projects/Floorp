@@ -970,7 +970,8 @@ sub GetLongDescriptionAsText {
     my $count = 0;
     my $anyprivate = 0;
     my ($query) = ("SELECT profiles.login_name, DATE_FORMAT(longdescs.bug_when,'%Y.%m.%d %H:%i'), " .
-                   "       longdescs.thetext, longdescs.isprivate " .
+                   "       longdescs.thetext, longdescs.isprivate, " .
+                   "       longdescs.already_wrapped " .
                    "FROM   longdescs, profiles " .
                    "WHERE  profiles.userid = longdescs.who " .
                    "AND    longdescs.bug_id = $id ");
@@ -989,7 +990,8 @@ sub GetLongDescriptionAsText {
     $query .= "ORDER BY longdescs.bug_when";
     SendSQL($query);
     while (MoreSQLData()) {
-        my ($who, $when, $text, $isprivate, $work_time) = (FetchSQLData());
+        my ($who, $when, $text, $isprivate, $work_time, $already_wrapped) = 
+            (FetchSQLData());
         if ($count) {
             $result .= "\n\n------- Additional comment #$count from $who".Param('emailsuffix')."  ".
                 Bugzilla::Util::format_time($when) . " -------\n";
@@ -997,7 +999,7 @@ sub GetLongDescriptionAsText {
         if (($isprivate > 0) && Param("insidergroup")) {
             $anyprivate = 1;
         }
-        $result .= $text;
+        $result .= ($already_wrapped ? $text : wrap_comment($text));
         $count++;
     }
 

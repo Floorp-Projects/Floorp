@@ -17,6 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Maxwell Kanat-Alexander <mkanat@kerio.com>
   #%]
 
 [% DEFAULT start_at = 0 mode = "show" %]
@@ -82,8 +83,13 @@
 [%# Don't indent the <pre> block, since then the spaces are displayed in the
   # generated HTML
   #%]
+[% IF comment.already_wrapped %]
+    [% wrapped_comment = comment.body %]
+[% ELSE %]
+    [% wrapped_comment = comment.body FILTER wrap_comment %]
+[% END %]
 <pre[% ' id="comment_text_' _ count _ '"' IF mode == "edit" %]>
-  [%- comment.body FILTER quoteUrls -%]
+  [%- wrapped_comment FILTER quoteUrls -%]
 </pre>
     </div>
   [% END %]
