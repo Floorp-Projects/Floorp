@@ -1,3 +1,6 @@
+comm.jar:
+*       content/necko/contents.rdf  (content/contents.rdf)
+
 en-US.jar:
 *       locale/en-US/necko/contents.rdf   (locale/en-US/contents.rdf)
         locale/en-US/necko/necko.properties   (locale/en-US/necko.properties)
