@@ -168,7 +168,7 @@ private:
 
 //  nsPICSElementObserver* mPICSElementObserver;
   nsIObserver* mPICSElementObserver;
-  nsIWebShellServices* mWebShellServices;
+  nsCOMPtr<nsIWebShellServices> mWebShellServices;
 
   nsIDocumentLoader* mDocLoaderService;
 //  nsVoidArray* currentURLList;
@@ -364,7 +364,6 @@ nsPICS::nsPICS()
 
   mPrefs = nsnull;
   mPICSElementObserver = nsnull;
-  mWebShellServices = nsnull;
   mWebShellServicesURLTable = nsnull;
 //  currentURLList = nsnull;
   mDocLoaderService = nsnull;
@@ -754,21 +753,17 @@ nsPICS::OnEndDocumentLoad(nsIDocumentLoader* loader,
 {
   nsresult rv = NS_OK;
 
-  nsIContentViewerContainer *cont;
-
   if(!mPICSRatingsEnabled)
     return rv;
   mWebShellServices = nsnull;
 
-  rv = loader->GetContainer(&cont);
+  nsCOMPtr<nsISupports> cont;
+  rv = loader->GetContainer(getter_AddRefs(cont));
   if (NS_OK == rv) {
-    nsIWebShellServices  *ws;
-    if(cont) {
-      rv = cont->QueryInterface(kIWebShellServicesIID, (void **)&ws);
-      if (NS_OK == rv) {
-        mWebShellServices = ws;
-        ws->SetRendering(PR_TRUE);
-      }
+    nsCOMPtr<nsIWebShellServices> ws(do_QueryInterface(cont));
+    if(ws) {
+      mWebShellServices = ws;
+      ws->SetRendering(PR_TRUE);
     }
   }
   return rv;
@@ -790,8 +785,6 @@ nsPICS::OnStartURLLoad(nsIDocumentLoader* loader,
   rv = channel->GetContentType(&aContentType);
   if (NS_FAILED(rv)) return rv;
 
-  nsIContentViewerContainer *cont;
-
   if(!mPICSRatingsEnabled)
     goto done;
  
@@ -801,15 +794,13 @@ nsPICS::OnStartURLLoad(nsIDocumentLoader* loader,
   if(0 == PL_strcmp("text/html", aContentType)) {
     mWebShellServices = nsnull;
 
-    rv = loader->GetContainer(&cont);
+    nsCOMPtr<nsISupports> cont;
+    rv = loader->GetContainer(getter_AddRefs(cont));
     if (NS_OK == rv) {
-      nsIWebShellServices  *ws;
-      if(cont) {
-        rv = cont->QueryInterface(kIWebShellServicesIID, (void **)&ws);
-        if (NS_OK == rv) {
+      nsCOMPtr<nsIWebShellServices> ws(do_QueryInterface(cont));
+        if (ws) {
           mWebShellServices = ws;
           ws->SetRendering(PR_FALSE);
-        }
       }
     }
 
@@ -891,32 +882,23 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
 
-  nsIContentViewerContainer *cont;
   char* uProtocol;
   char* uHost;
   char* uFile;
-  nsIURI* rootURL;
-  nsIWebShellServices  *ws;
 
   nsVoidArray* currentURLList;
 
   if(!mPICSRatingsEnabled)
     return NS_OK;
  
+  nsCOMPtr<nsISupports> cont;
+  NS_ENSURE_SUCCESS(loader->GetContainer(getter_AddRefs(cont)), NS_ERROR_FAILURE);
+  
+  nsCOMPtr<nsIWebShellServices> ws(do_QueryInterface(cont));
+  NS_ENSURE_TRUE(ws, NS_ERROR_FAILURE);
+  
+  mWebShellServices = ws;
 
-  rv = loader->GetContainer(&cont);
-  if (NS_OK == rv) {
-    
-    if(cont) {
-      rv = cont->QueryInterface(kIWebShellServicesIID, (void **)&ws);
-      if (NS_OK == rv) {
-        mWebShellServices = ws;
-      }
-    }
-  }
-
-  if(ws == nsnull)
-    return NS_ERROR_NULL_POINTER;
   nsVoidKey key((void*)ws);
 
   if(mWebShellServicesURLTable == nsnull) {
