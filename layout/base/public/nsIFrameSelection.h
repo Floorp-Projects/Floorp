@@ -412,6 +412,17 @@ public:
    */
   NS_IMETHOD GetLimiter(nsIContent **aLimiterContent)=0;
 
+  /** This will tell the frame selection that a double click has been pressed 
+   *  so it can track abort future drags if inside the same selection
+   *  @aDoubleDown has the double click down happened
+   */
+  NS_IMETHOD SetMouseDoubleDown(PRBool aDoubleDown)=0;
+
+  /** This will return whether the double down flag was set.
+   *  @aDoubleDown is the return boolean value
+   */
+  NS_IMETHOD GetMouseDoubleDown(PRBool *aDoubleDown)=0;
+
 #ifdef IBMBIDI
   /** GetPrevNextBidiLevels will return the frames and associated Bidi levels of the characters
    *   logically before and after a (collapsed) selection.

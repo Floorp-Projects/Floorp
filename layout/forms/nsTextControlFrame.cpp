@@ -624,6 +624,8 @@ public:
   NS_IMETHOD SetScrollableView(nsIScrollableView *aScrollableView);
   NS_IMETHOD GetScrollableView(nsIScrollableView **aScrollableView);
   NS_IMETHOD CommonPageMove(PRBool aForward, PRBool aExtend, nsIScrollableView *aScrollableView, nsIFrameSelection *aFrameSel);
+  NS_IMETHOD SetMouseDoubleDown(PRBool aDoubleDown);
+  NS_IMETHOD GetMouseDoubleDown(PRBool *aDoubleDown);
 #ifdef IBMBIDI
   NS_IMETHOD GetPrevNextBidiLevels(nsIPresContext *aPresContext,
                                    nsIContent *aNode,
@@ -1178,23 +1180,27 @@ NS_IMETHODIMP nsTextInputSelectionImpl::SetHint(nsIFrameSelection::HINT aHint)
 
 NS_IMETHODIMP nsTextInputSelectionImpl::SetScrollableView(nsIScrollableView *aScrollableView)
 {
-  if(mFrameSelection) 
-    return mFrameSelection->SetScrollableView(aScrollableView);
-  return NS_ERROR_FAILURE;
+  return mFrameSelection->SetScrollableView(aScrollableView);
 }
 
 NS_IMETHODIMP nsTextInputSelectionImpl::GetScrollableView(nsIScrollableView **aScrollableView)
 {
-  if(mFrameSelection) 
-    return mFrameSelection->GetScrollableView(aScrollableView);
-  return NS_ERROR_FAILURE;
+  return mFrameSelection->GetScrollableView(aScrollableView);
+}
+
+NS_IMETHODIMP nsTextInputSelectionImpl::SetMouseDoubleDown(PRBool aDoubleDown)
+{
+  return mFrameSelection->SetMouseDoubleDown(aDoubleDown);
+}
+
+NS_IMETHODIMP nsTextInputSelectionImpl::GetMouseDoubleDown(PRBool *aDoubleDown)
+{
+  return mFrameSelection->GetMouseDoubleDown(aDoubleDown);
 }
 
 NS_IMETHODIMP nsTextInputSelectionImpl::CommonPageMove(PRBool aForward, PRBool aExtend, nsIScrollableView *aScrollableView, nsIFrameSelection *aFrameSel)
 {
-  if(mFrameSelection) 
-    return mFrameSelection->CommonPageMove(aForward, aExtend, aScrollableView, this);
-  return NS_ERROR_FAILURE;
+  return mFrameSelection->CommonPageMove(aForward, aExtend, aScrollableView, this);
 }
 
 #ifdef IBMBIDI
