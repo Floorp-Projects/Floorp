@@ -21,6 +21,9 @@
 
 
 DEPTH	= ..\..
+
+LCFLAGS = /GX
+
 include <$(DEPTH)/config/config.mak>
 MODULE=dumpdeps
 
