@@ -1288,13 +1288,15 @@ treeitem[selected="true"] > treerow {
 treecell { 
   white-space: nowrap;
   vertical-align: middle;
+  padding: 1px 0px 1px 2px;
 } 
 
 treehead > treerow > treecell { 
   background-color: #CCCCCC; 
   color: black;
   border-right: 1px solid white;
-  padding-left: 5px;
+  vertical-align: middle;
+  padding: 0px 0px 0px 5px;
 } 
 
 tree.inset > treehead > treerow > treecell {
@@ -1339,11 +1341,6 @@ treecell.image > titledbutton:active {
  border: none;
  list-style-image: inherit;
  width: 100%;
-}
-
-treecell {
- vertical-align: middle;
- padding-left: 2px;
 }
 
 /* BEN: make rule for property list cells  */
