@@ -172,49 +172,47 @@ MimeInlineTextHTML_parse_line (char *line, PRInt32 length, MimeObject *obj)
 
   if (!textHTML->charset)
   {
+    char * cp;
     // First, try to detect a charset via a META tag!
-    if (PL_strncasestr(line, "META", length) && 
-        PL_strncasestr(line, "HTTP-EQUIV", length) && 
-        PL_strncasestr(line, "CONTENT", length) && 
-        PL_strncasestr(line, "CHARSET", length) 
+    if ((cp = PL_strncasestr(line, "META", length)) && 
+        (cp = PL_strncasestr(cp, "HTTP-EQUIV=", length - (int)(cp - line))) && 
+        (cp = PL_strncasestr(cp, "CONTENT=", length - (int)(cp - line))) && 
+        (cp = PL_strncasestr(cp, "CHARSET=", length - (int)(cp - line))) 
         ) 
-    { 
-      char *workLine = (char *)PR_Malloc(length + 1);
-      if (workLine)
+    {
+      if (cp)
       {
-        nsCRT::memset(workLine, 0, length + 1);
-        PL_strncpy(workLine, line, length);
-        char *cp1 = PL_strncasestr(workLine, "CHARSET", length);
-        if (cp1)
+        char* cp1 = cp + 8;  //8 for the length of "CHARSET="
+        char* cp2 = PL_strnpbrk(cp1, " \"\'", length - (int)(cp1 - line));
+        if (cp2)
         {
-          char *cp = PL_strncasestr(cp1, "=", (length - (int)(cp1-workLine)));
-          if (cp) {
-            cp++;
-            char seps[]   = " \"\'"; 
-            char *token; 
-            char* newStr; 
-            token = nsCRT::strtok(cp, seps, &newStr); 
-            // Fix bug 101434, in this case since this parsing is a char* 
-            // operation, a real UTF-16 or UTF-32 document won't be parse 
-            // correctly, if it got parse, it cannot be UTF-16 nor UTF-32
-            // there fore, we ignore them if somehow we got that value
-            // 6 == strlen("UTF-16") or strlen("UTF-32"), this will cover
-            // UTF-16, UTF-16BE, UTF-16LE, UTF-32, UTF-32BE, UTF-32LE
-            if ((token != NULL) &&
-                nsCRT::strncasecmp(token, "UTF-16", 6) &&
-                nsCRT::strncasecmp(token, "UTF-32", 6))
-              { 
-                textHTML->charset = nsCRT::strdup(token); 
-              } 
+          char* charset = PL_strndup(cp1, (int)(cp2 - cp1));
+ 
+          // Fix bug 101434, in this case since this parsing is a char* 
+          // operation, a real UTF-16 or UTF-32 document won't be parse 
+          // correctly, if it got parse, it cannot be UTF-16 nor UTF-32
+          // there fore, we ignore them if somehow we got that value
+          // 6 == strlen("UTF-16") or strlen("UTF-32"), this will cover
+          // UTF-16, UTF-16BE, UTF-16LE, UTF-32, UTF-32BE, UTF-32LE
+          if ((charset != nsnull) &&
+              nsCRT::strncasecmp(charset, "UTF-16", 6) &&
+              nsCRT::strncasecmp(charset, "UTF-32", 6))
+          { 
+            textHTML->charset = charset; 
+
+            // write out the data without the charset part...
+            if (textHTML->charset)
+            {
+              int err = MimeObject_write(obj, line, cp - line, PR_TRUE);
+              if (err == 0)
+                err = MimeObject_write(obj, cp2, length - (int)(cp2 - line), PR_TRUE);
+
+              return err;
+            }
           }
+          PR_FREEIF(charset);
         }
-
-        PR_FREEIF(workLine);
       }
-
-      // Eat the META tag line that specifies CHARSET!
-      if (textHTML->charset)
-        return 0;
     }
   }
 
