@@ -24,6 +24,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNSRange.h"
 #include "nsIDOMDocument.h"
+#include "nsIDocument.h"
 #include "nsIDOMEventReceiver.h" 
 #include "nsIDOMKeyListener.h" 
 #include "nsIDOMMouseListener.h"
@@ -530,6 +531,17 @@ NS_IMETHODIMP nsHTMLEditor::OutputHTMLToString(nsString& aOutputString)
                                                    nsnull,
                                                    nsIDocumentEncoder::GetIID(),
                                                    getter_AddRefs(encoder));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  rv = GetDocument(getter_AddRefs(domdoc));
+  if (NS_FAILED(rv))
+    return rv;
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+  nsString mimetype ("text/html");
+
+  rv = encoder->Init(doc, mimetype);
   if (NS_FAILED(rv))
     return rv;
 
