@@ -332,8 +332,11 @@ nsresult nsMsgSearchSession::BuildUrlQueue ()
 	{
 		nsCOMPtr <nsIMsgSearchAdapter> adapter = do_QueryInterface((m_scopeList.ElementAt(i))->m_adapter);
 		nsXPIDLCString url;
-		adapter->GetEncoding(getter_Copies(url));
-		AddUrl (url);
+    if (adapter)
+    {
+		  adapter->GetEncoding(getter_Copies(url));
+		  AddUrl (url);
+    }
 	}
 
 	if (i > 0)
@@ -347,16 +350,22 @@ nsresult nsMsgSearchSession::GetNextUrl()
 {
   nsCString nextUrl;
   nsCOMPtr <nsIMsgMessageService> msgService;
+  nsXPIDLCString folderUri;
 
   m_urlQueue.CStringAt(0, nextUrl);
-  nsresult rv = GetMessageServiceFromURI(nextUrl.GetBuffer(), getter_AddRefs(msgService));
   nsMsgSearchScopeTerm *currentTerm = GetRunningScope();
+  nsCOMPtr <nsIMsgFolder> folder = currentTerm->m_folder;
+  if (folder)
+  {
+    folder->GetURI(getter_Copies(folderUri));
+  nsresult rv = GetMessageServiceFromURI((const char *) folderUri, getter_AddRefs(msgService));
 
   if (NS_SUCCEEDED(rv) && msgService && currentTerm)
     msgService->Search(this, m_window, currentTerm->m_folder, nextUrl.GetBuffer());
 
 	return rv;
-
+  }
+  return NS_OK;
 }
 
 nsresult nsMsgSearchSession::AddUrl(const char *url)

@@ -27,7 +27,9 @@
 #include "nsMsgSearchTerm.h"
 #include "nsMsgBodyHandler.h"
 #include "nsMsgResultElement.h"
-
+#include "nsIMsgImapMailFolder.h"
+#include "nsMsgSearchImap.h"
+#include "nsMsgLocalSearch.h"
 //---------------------------------------------------------------------------
 // nsMsgSearchTerm specifies one criterion, e.g. name contains phil
 //---------------------------------------------------------------------------
@@ -1171,8 +1173,9 @@ PRBool nsMsgSearchScopeTerm::IsOfflineMail ()
 {
 	// Find out whether "this" mail folder is online or offline
 	NS_ASSERTION(m_folder, "scope doesn't have folder");
-//	if (m_folder->GetType() == FOLDER_IMAPMAIL && !NET_IsOffline() && m_searchServer)    // make sure we are not in offline IMAP (mscott)
-//		return PR_FALSE;
+  nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_folder);
+	if (imapFolder /* && !NET_IsOffline() && m_searchServer */)    // make sure we are not in offline IMAP (mscott)
+		return PR_FALSE;
 	return PR_TRUE;  // if POP or IMAP in offline mode
 }
 
@@ -1198,7 +1201,47 @@ nsresult nsMsgSearchScopeTerm::TimeSlice (PRBool *aDone)
 
 nsresult nsMsgSearchScopeTerm::InitializeAdapter (nsMsgSearchTermArray &termList)
 {
-	return NS_OK;
+	NS_ASSERTION (m_adapter == NULL, "already initialized");
+	nsresult err = NS_OK;
+
+	// mscott: i have added m_searchServer into this switch to take into account the user's preference
+	// for searching locally or on the server...
+	switch (m_attribute)
+	{
+		case nsMsgSearchScope::MailFolder:    
+      // since we don't support offline, we're either doing an online imap search
+      // or an offline mail search.
+				if (!IsOfflineMail())   // Online IMAP && searching the server?
+				  m_adapter = new nsMsgSearchOnlineMail (this, termList);
+				else
+				  m_adapter = new nsMsgSearchOfflineMail (this, termList);
+			break;
+#ifdef DOING_NEWS_YET
+		case nsMsgSearchScope::Newsgroup:
+			if (m_folder->KnowsSearchNntpExtension())
+				m_adapter = new nsMsgSearchNewsEx (this, termList);
+			else
+				m_adapter = new nsMsgSearchNews (this, termList);
+			break;
+		case nsMsgSearchScope::AllSearchableGroups:
+				m_adapter = new msMsgSearchNewsEx (this, termList);
+			break;
+#endif
+		case nsMsgSearchScope::LdapDirectory:
+      NS_ASSERTION(PR_FALSE, "not supporting LDAP yet");
+			break;
+		case nsMsgSearchScope::OfflineNewsgroup:
+      NS_ASSERTION(PR_FALSE, "not supporting offline news");
+			break;
+		default:
+			NS_ASSERTION(PR_FALSE, "invalid scope");
+			err = NS_ERROR_FAILURE;
+	}
+
+	if (m_adapter)
+		err = m_adapter->ValidateTerms ();
+
+	return err;
 }
 
 

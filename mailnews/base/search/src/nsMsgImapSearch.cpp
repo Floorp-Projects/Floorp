@@ -26,31 +26,8 @@
 #include "nsMsgResultElement.h"
 #include "nsMsgSearchTerm.h"
 #include "nsIMsgHdr.h"
-
+#include "nsMsgSearchImap.h"
 // Implementation of search for IMAP mail folders
-
-//-----------------------------------------------------------------------------
-//---------- Adapter class for searching online (IMAP) folders ----------------
-//-----------------------------------------------------------------------------
-
-class nsMsgSearchOnlineMail : public nsMsgSearchAdapter
-{
-public:
-	nsMsgSearchOnlineMail (nsMsgSearchScopeTerm *scope, nsMsgSearchTermArray &termList);
-	virtual ~nsMsgSearchOnlineMail ();
-
-	NS_IMETHOD ValidateTerms ();
-	NS_IMETHOD Search ();
-	virtual const char *GetEncoding ();
-
-	static nsresult Encode (nsCString *ppEncoding, nsMsgSearchTermArray &searchTerms, const PRUnichar *srcCharset, const PRUnichar *destCharset);
-	
-	nsresult AddResultElement (nsIMsgDBHdr *);
-
-protected:
-	nsCString m_encoding;
-};
-
 
 
 nsMsgSearchOnlineMail::nsMsgSearchOnlineMail (nsMsgSearchScopeTerm *scope, nsMsgSearchTermArray &termList) : nsMsgSearchAdapter (scope, termList)
@@ -83,9 +60,10 @@ nsresult nsMsgSearchOnlineMail::ValidateTerms ()
 }
 
 
-const char *nsMsgSearchOnlineMail::GetEncoding ()
+NS_IMETHODIMP nsMsgSearchOnlineMail::GetEncoding (char **result)
 {
-    return m_encoding;
+  *result = m_encoding.ToNewCString();
+  return NS_OK;
 }
 
 nsresult nsMsgSearchOnlineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
@@ -302,6 +280,7 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString *pEncoding, nsMsgSearchTermArr
   PR_FREEIF(csname);
   return err;
 }
+
 
 #if 0
 nsresult nsMsgSearchValidityManager::InitOfflineMailTable ()
