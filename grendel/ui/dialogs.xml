@@ -1,6 +1,6 @@
 <xml>
 <head>
-  <link rel="stringprops" href="Labels.properties"/>
+  <link role="stringprops" href="Labels.properties"/>
 </head>
 <body>
 <dialog id="editHost" title="$editHostLabel">
