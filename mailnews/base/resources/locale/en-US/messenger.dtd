@@ -523,7 +523,7 @@ Rights Reserved.
 <!ENTITY junkMailCmd.label "Junk Mail Controls...">
 <!ENTITY junkMailCmd.accesskey "J">
 
-<!ENTITY runJunkControls.label "Run Junk Mail Controls on Selected Messages...">
+<!ENTITY runJunkControls.label "Analyze Selected Messages for Junk...">
 <!ENTITY runJunkControls.accesskey "u">
 
 <!-- junk bar -->
