@@ -1936,7 +1936,7 @@ nsNativeAppSupportWin::SetupSysTrayIcon() {
         }
 
         if ( exitText.IsEmpty() )
-            exitText = NS_LITERAL_STRING( "&Exit Mozilla" );
+            exitText = NS_LITERAL_STRING( "E&xit Mozilla" );
 
         if ( disableText.IsEmpty() )
             disableText = NS_LITERAL_STRING( "&Disable Quick Launch" );
