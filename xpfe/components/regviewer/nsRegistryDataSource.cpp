@@ -639,7 +639,7 @@ nsRegistryDataSource::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator 
                 return NS_ERROR_UNEXPECTED;
 
             nsXPIDLCString valueStr;
-            rv = value->GetName(getter_Copies(valueStr));
+            rv = value->GetNameUTF8(getter_Copies(valueStr));
             if (NS_FAILED(rv)) return rv;
 
             nsCAutoString propertyStr(kValuePrefix);
@@ -771,7 +771,7 @@ nsRegistryDataSource::SubkeyEnumerator::ConvertRegistryNodeToResource(nsISupport
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString path;
-    rv = node->GetName(getter_Copies(path));
+    rv = node->GetNameUTF8(getter_Copies(path));
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString newURI(rootURI);

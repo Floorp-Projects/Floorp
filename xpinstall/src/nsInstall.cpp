@@ -838,22 +838,37 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
             }
         }
 
-        if ( result != SUCCESS )
+        if ( result == SUCCESS )
+        {
+            if ( rebootNeeded )
+                *aReturn = SaveError( REBOOT_NEEDED );
+
+            // XXX for now all successful installs will trigger an Autoreg.
+            // We eventually want to do this only when flagged.
+            HREG reg;
+            if ( REGERR_OK == NR_RegOpen("", &reg) )
+            {
+                RKEY xpiRoot;
+                REGERR err;
+                err = NR_RegAddKey(reg,ROOTKEY_COMMON,XPI_ROOT_KEY,&xpiRoot);
+                if ( err == REGERR_OK )
+                    NR_RegSetEntryString(reg, xpiRoot, XPI_AUTOREG_VAL, "no");
+            }
+        }
+        else
             *aReturn = SaveError( result );
-        else if ( rebootNeeded )
-            *aReturn = SaveError( REBOOT_NEEDED );
 
         if (mNotifier)
         {
             mNotifier->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
             mStatusSent = PR_TRUE;
         }
-    } 
+    }
     else
     {
         // no actions queued: don't register the package version
         // and no need for user confirmation
-    
+
         if (mNotifier)
         {
             mNotifier->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
@@ -861,8 +876,7 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
         }
     }
 
-    if((result == nsInstall::SUCCESS) || (result == REBOOT_NEEDED))
-        CleanUp();
+    CleanUp();
 
     return NS_OK;
 }

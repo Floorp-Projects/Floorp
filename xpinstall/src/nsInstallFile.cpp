@@ -75,6 +75,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     *error = nsInstall::SUCCESS;
     
     /* Check for existence of the newer	version	*/
+#if 0 // XXX need to re-implement force mode in the opposite sense
     
     char* qualifiedRegNameString = inComponentName.ToNewCString();
 
@@ -132,6 +133,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     }
 
     Recycle(qualifiedRegNameString);
+#endif
 
     nsFileSpec* tmp = folderSpec->GetFileSpec();
     if (!tmp)
@@ -266,7 +268,10 @@ PRInt32 nsInstallFile::Complete()
     
     if ( 0 == err || nsInstall::REBOOT_NEEDED == err ) 
     {
-        RegisterInVersionRegistry();
+        // XXX Don't register individual files for now -- crucial performance
+        // speed up on the Mac, and we'll switch uninstall schemes after beta
+
+        // RegisterInVersionRegistry();
     }
     
     return err;

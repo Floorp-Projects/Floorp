@@ -22,6 +22,10 @@ class nsInstallInfo;
 #include "nsPIXPIStubHook.h"
 #include "nsTopProgressNotifier.h"
 
+#define XPI_ROOT_KEY    "software/mozilla/xpinstall"
+#define XPI_AUTOREG_VAL "Autoreg"
+#define XPCOM_KEY       "software/mozilla/XPCOM"
+
 class nsSoftwareUpdate: public nsIAppShellComponent, 
                         public nsISoftwareUpdate, 
                         public nsPIXPIStubHook
@@ -52,7 +56,7 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         NS_IMETHOD InstallJarCallBack();
         NS_IMETHOD GetMasterNotifier(nsIXPINotifier **notifier);
         NS_IMETHOD SetActiveNotifier(nsIXPINotifier *notifier);
-        NS_IMETHOD StartupTasks( PRBool* outAutoreg );
+        NS_IMETHOD StartupTasks( PRBool* needAutoreg );
 
         /** StubInitialize() is private for the Install Wizard.
          *  The mStubLockout property makes sure this is only called

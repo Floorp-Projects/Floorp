@@ -373,7 +373,7 @@ nsProfileAccess::FillProfileInfo()
         nsXPIDLCString NCHavePregInfo;
         char* directory = nsnull;
                                             
-        rv = node->GetName( getter_Copies(profile) );
+        rv = node->GetNameUTF8( getter_Copies(profile) );
 		if (NS_FAILED(rv)) return rv;
 
 		if (profile)
@@ -689,7 +689,7 @@ nsProfileAccess::UpdateRegistry()
         nsXPIDLCString isMigrated;
         nsXPIDLCString directory;
                                             
-        rv = node->GetName( getter_Copies(profile) );
+        rv = node->GetNameUTF8( getter_Copies(profile) );
 		if (NS_FAILED(rv)) return rv;
 
 		PRInt32 index = 0;
@@ -848,7 +848,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
 		if (NS_FAILED(rv)) return rv;
         
 		char *profile = nsnull;
-        rv = node->GetName(&profile);
+        rv = node->GetNameUTF8(&profile);
 		if (NS_FAILED(rv)) return rv;
 
 		PRBool exists = PR_FALSE;;

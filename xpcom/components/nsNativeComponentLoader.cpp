@@ -194,7 +194,7 @@ nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
 
         // Get library name
         nsXPIDLCString library;
-        rv = node->GetName(getter_Copies(library));
+        rv = node->GetNameUTF8(getter_Copies(library));
         if (NS_FAILED(rv)) continue;
 
         // Get key associated with library

@@ -33,6 +33,7 @@
 
 #include "nspr.h"
 #include "prlock.h"
+#include "NSReg.h"
 #include "VerReg.h"
 #include "nsSpecialSystemDirectory.h"
 
@@ -49,6 +50,7 @@
 
 #include "nsIAppShellComponent.h"
 #include "nsIRegistry.h"
+#include "nsBuildID.h"
 
 /* For Javascript Namespace Access */
 #include "nsDOMCID.h"
@@ -74,16 +76,18 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 static NS_DEFINE_IID(kIScriptNameSetRegistryIID, NS_ISCRIPTNAMESETREGISTRY_IID);
-static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
+static NS_DEFINE_CID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
 static NS_DEFINE_IID(kIScriptExternalNameSetIID, NS_ISCRIPTEXTERNALNAMESET_IID);
 
 static NS_DEFINE_IID(kISoftwareUpdate_IID, NS_ISOFTWAREUPDATE_IID);
 
 static NS_DEFINE_IID(kIInstallTrigger_IID, NS_IDOMINSTALLTRIGGERGLOBAL_IID);
-static NS_DEFINE_IID(kInstallTrigger_CID, NS_SoftwareUpdateInstallTrigger_CID);
+static NS_DEFINE_CID(kInstallTrigger_CID, NS_SoftwareUpdateInstallTrigger_CID);
 
 static NS_DEFINE_IID(kIInstallVersion_IID, NS_IDOMINSTALLVERSION_IID);
-static NS_DEFINE_IID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
+static NS_DEFINE_CID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
+
+static NS_DEFINE_CID(knsRegistryCID, NS_REGISTRY_CID);
 
 
 nsSoftwareUpdate* nsSoftwareUpdate::mInstance = nsnull;
@@ -309,18 +313,84 @@ nsSoftwareUpdate::InstallJarCallBack()
 
 
 NS_IMETHODIMP
-nsSoftwareUpdate::StartupTasks( PRBool* outAutoreg )
+nsSoftwareUpdate::StartupTasks( PRBool *needAutoreg )
 {
-    if (outAutoreg) *outAutoreg = PR_FALSE;
+    PRBool  autoReg = PR_FALSE;
+    RKEY    xpiRoot;
+    REGERR  err;
+
+    *needAutoreg = PR_TRUE;
+
+    // First do any left-over file replacements and deletes
+
+    // NOTE: we leave the registry open until later to prevent
+    // having to load and unload it many times at startup
 
     if ( REGERR_OK == NR_RegOpen("", &mReg) )
     {
         // XXX get a return val and if not all replaced autoreg again later
         PerformScheduledTasks(mReg);
+
+        // now look for an autoreg flag left behind by XPInstall
+        err = NR_RegGetKey( mReg, ROOTKEY_COMMON, XPI_ROOT_KEY, &xpiRoot);
+        if ( err == REGERR_OK )
+        {
+            char buf[8];
+            err = NR_RegGetEntryString( mReg, xpiRoot, XPI_AUTOREG_VAL,
+                                        buf, sizeof(buf) );
+
+            if ( err == REGERR_OK && !strcmp( buf, "yes" ) )
+                autoReg = PR_TRUE;
+        }
     }
 
+    // Also check for build number changes
+    nsresult rv;
+    PRInt32 buildID = 0;
+    nsRegistryKey idKey = 0;
+    nsCOMPtr<nsIRegistry> reg = do_GetService(knsRegistryCID,&rv);
+    if (NS_SUCCEEDED(rv))
+    {
+        rv = reg->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+        if (NS_SUCCEEDED(rv))
+        {
+            rv = reg->GetSubtree(nsIRegistry::Common,XPCOM_KEY,&idKey);
+            if (NS_SUCCEEDED(rv))
+            {
+                rv = reg->GetInt( idKey, XPI_AUTOREG_VAL, &buildID );
+            }
+        }
+    }
 
-    return NS_OK;
+    // Autoregister if we found the XPInstall flag, the stored BuildID
+    // is not the actual BuildID, or if we couldn't get the BuildID
+    if ( autoReg || NS_FAILED(rv) || buildID != NS_BUILD_ID )
+    {
+        rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,0);
+
+        if (NS_SUCCEEDED(rv))
+        {
+            *needAutoreg = PR_FALSE;
+
+            // Now store back into the registries so we don't do this again
+            if ( autoReg )
+                NR_RegSetEntryString( mReg, xpiRoot, XPI_AUTOREG_VAL, "no" );
+
+            if ( buildID != NS_BUILD_ID && idKey != 0 )
+                reg->SetInt( idKey, XPI_AUTOREG_VAL, NS_BUILD_ID );
+        }
+    }
+    else
+    {
+        //We don't need to autoreg, we're up to date
+        *needAutoreg = PR_FALSE;
+#ifdef DEBUG
+        // debug (developer) builds should always autoreg
+        *needAutoreg = PR_TRUE;
+#endif
+    }
+
+    return rv;
 }
 
 
@@ -395,6 +465,11 @@ nsSoftwareUpdate::StubInitialize(nsIFileSpec *aDir)
     // fix GetFolder return path
     mProgramDir = aDir;
     NS_ADDREF(mProgramDir);
+
+    // make sure registry updates go to the right place
+    nsFileSpec instDir;
+    if (NS_SUCCEEDED( aDir->GetFileSpec( &instDir ) ) )
+        VR_SetRegDirectory( instDir.GetNativePathCString() );
 
     // Create the logfile observer
     nsLoggingProgressNotifier *logger = new nsLoggingProgressNotifier();

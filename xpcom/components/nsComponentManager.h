@@ -169,9 +169,9 @@ protected:
  * alpha0.60 : xpcom 2.0 landing
  * alpha0.70 : using nsIFileSpec. PRTime -> PRUint32
  * alpha0.90 : using nsIComponentLoader, abs:/rel:/lib:, shaver-cleanup
- * alpha0.91 : restructured registry keys
+ * alpha0.92 : restructured registry keys
  */
-#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.91"
+#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.92"
 
 ////////////////////////////////////////////////////////////////////////////////
 /**

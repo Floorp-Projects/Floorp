@@ -97,9 +97,10 @@ nsresult NS_AutoregisterComponents()
 #endif
 
 extern "C" void
-NS_SetupRegistry_1()
+NS_SetupRegistry_1( PRBool needAutoreg )
 {
-  NS_AutoregisterComponents();
+  if ( needAutoreg )
+    NS_AutoregisterComponents();
 
   /*
    * Call the standard NS_SetupRegistry() implemented in 

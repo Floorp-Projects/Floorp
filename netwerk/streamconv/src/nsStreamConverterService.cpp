@@ -132,7 +132,7 @@ nsStreamConverterService::BuildGraph() {
         if (NS_FAILED(rv)) return rv;
 
         char *name = nsnull;
-        rv = node->GetName(&name);
+        rv = node->GetNameUTF8(&name);
         if (NS_FAILED(rv)) return rv;
 
         nsCString actualProgID(NS_ISTREAMCONVERTER_KEY);
