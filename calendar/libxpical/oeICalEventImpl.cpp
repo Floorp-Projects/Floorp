@@ -157,6 +157,13 @@ oeICalEventImpl::oeICalEventImpl()
 	if( NS_FAILED( rv = NS_NewDateTime((oeIDateTime**) &m_recurend ))) {
         m_recurend = nsnull;
 	}
+    if( m_stamp ) {
+        PRTime nowinms = PR_Now();
+        PRInt64 usecpermsec;
+        LL_I2L( usecpermsec, PR_USEC_PER_MSEC );
+        LL_DIV( nowinms, nowinms, usecpermsec );
+        m_stamp->m_datetime = ConvertFromPrtime( nowinms );
+    }
     m_id = nsnull;
     m_title = nsnull;
     m_description = nsnull;
