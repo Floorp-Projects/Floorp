@@ -134,7 +134,7 @@ nsresult nsTestComFactory::CreateInstance(nsISupports *aOuter,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   
-  NS_ADDREF(t)
+  NS_ADDREF(t);
   nsresult res = t->QueryInterface(aIID, aResult);
   NS_RELEASE(t);
 
