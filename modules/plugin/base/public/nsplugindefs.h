@@ -356,7 +356,7 @@ enum nsPluginReason {
 ////////////////////////////////////////////////////////////////////////////////
 
 // Classes that must be implemented by the plugin DLL:
-struct nsIPlugin;                       // plugin class (MIME-type handler)
+class nsIPlugin;                        // plugin class (MIME-type handler)
 class nsILiveConnectPlugin;             // subclass of nsIPlugin
 class nsIEventHandler;                  // event handler interface
 class nsIPluginInstance;                // plugin instance
