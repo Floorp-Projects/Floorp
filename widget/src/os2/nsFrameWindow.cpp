@@ -36,6 +36,9 @@
 
 #include "nsFrameWindow.h"
 #include "nsIRollupListener.h"
+#include "nsIDeviceContext.h"
+#include "nsIComponentManager.h"
+#include "nsGfxCIID.h"
 
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
@@ -76,7 +79,7 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
                                   nsIAppShell *aAppShell,
                                   nsWidgetInitData *aInitData, HWND hwndO)
 {
-   nsRect rect;
+   nsRect rect = aRect;
    if( aParent)  // Offset rect by position of owner
    {
       nsRect clientRect;
@@ -87,11 +90,12 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
       rect.width = aRect.width;
       rect.height = aRect.height;
       hwndP = aParent->GetMainWindow();
+      rect.y = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN) - (rect.y + rect.height);
    }
    else          // Use original rect, no owner window
    {
       rect = aRect;
-      hwndP = NULLHANDLE;
+      rect.y = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN) - (aRect.y + aRect.height);
    }
 
 #if DEBUG_sobotka
@@ -101,30 +105,49 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
    printf("   aRect = %ld, %ld, %ld, %ld\n", aRect.x, aRect.y, aRect.height, aRect.width);
 #endif
 
-   // Create the frame window.
-   FRAMECDATA fcd = { sizeof( FRAMECDATA), 0, 0, 0 };
+   ULONG fcfFlags = GetFCFlags();
 
    // Set flags only if not first hidden window created by nsAppShellService
-
-     fcd.flCreateFlags = GetFCFlags();
-
    if (!fHiddenWindowCreated) {
       if ((aRect.x == 0) && (aRect.y == 0) && (aRect.height == 100) && (aRect.width == 100)) {
-         fcd.flCreateFlags &= ~FCF_TASKLIST;
+         fcfFlags &= ~FCF_TASKLIST;
          fHiddenWindowCreated = TRUE;
       }
    }
 
-   // Assume frames are toplevel.  Breaks if anyone tries to do MDI, which
-   // is an extra bonus feature :-)
-   mFrameWnd = WinCreateWindow( HWND_DESKTOP,
-                                WC_FRAME,
-                                " ", 0,                  // text, style
-                                0, 0, 0, 0,            // position
-                                hwndP,
-                                HWND_TOP,
-                                0,                     // ID
-                                &fcd, 0);
+   ULONG style = WindowStyle();
+   if( aInitData)
+   {
+      if( aInitData->clipChildren)
+         style |= WS_CLIPCHILDREN;
+#if 0
+      //
+      // Windows has a slightly different idea of what the implications are
+      // of a window having or not having the CLIPSIBLINGS style.
+      // All 'canvas' components we create must have clipsiblings, or
+      // strange things happen & performance actually degrades.
+      //
+      else
+        style &= ~WS_CLIPCHILDREN;
+#endif
+
+      if( aInitData->clipSiblings)
+         style |= WS_CLIPSIBLINGS;
+      else
+         style &= ~WS_CLIPSIBLINGS;
+   }
+
+
+   mFrameWnd = WinCreateStdWindow( HWND_DESKTOP,
+                                   0,
+                                   &fcfFlags,
+                                   WindowClass(),
+                                   "Title",
+                                   style,
+                                   NULLHANDLE,
+                                   0,
+                                   &mWnd);
+
 
    /* Set some HWNDs and style into properties for fullscreen mode */
    HWND hwndTitleBar = WinWindowFromID(mFrameWnd, FID_TITLEBAR);
@@ -137,9 +160,6 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
 
    SetWindowListVisibility( PR_FALSE);  // Hide from Window List until shown
 
-   // This is a bit weird; without an icon, we get WM_PAINT messages
-   // when minimized.  They don't stop, giving maxed cpu.  Go figure.
-
    NS_ASSERTION( mFrameWnd, "Couldn't create frame");
 
    // Frames have a minimum height based on the pieces they are created with,
@@ -148,37 +168,76 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
    nsRect frameRect = rect;
    long minheight; 
 
-   if ( fcd.flCreateFlags & FCF_SIZEBORDER) {
+   if ( fcfFlags & FCF_SIZEBORDER) {
       minheight = 2 * WinQuerySysValue( HWND_DESKTOP, SV_CYSIZEBORDER);
    }
-   else if ( fcd.flCreateFlags & FCF_DLGBORDER) {
+   else if ( fcfFlags & FCF_DLGBORDER) {
       minheight = 2 * WinQuerySysValue( HWND_DESKTOP, SV_CYDLGFRAME);
    }
    else {
       minheight = 2 * WinQuerySysValue( HWND_DESKTOP, SV_CYBORDER);
    }
-   if ( fcd.flCreateFlags & FCF_TITLEBAR) {
+   if ( fcfFlags & FCF_TITLEBAR) {
       minheight += WinQuerySysValue( HWND_DESKTOP, SV_CYTITLEBAR);
    }
    if ( frameRect.height < minheight) {
       frameRect.height = minheight;
    }
 
-   // Now create the client as a child of us, triggers resize and sets
-   // up the client size (with any luck...)
-   nsWindow::RealDoCreate( mFrameWnd, nsnull, frameRect, aHandleEventFunction,
-                           aContext, aAppShell, aInitData, hwndO);
+   // Set up parent data - don't addref to avoid circularity
+   mParent = nsnull;
+
+   // Make sure we have a device context from somewhere
+   if( aContext)
+   {
+      mContext = aContext;
+      NS_ADDREF(mContext);
+   }
+   else
+   {
+      nsresult rc = NS_OK;
+      static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
+
+      rc = nsComponentManager::CreateInstance( kDeviceContextCID, nsnull,
+                                               NS_GET_IID(nsIDeviceContext),
+                                               (void **)&mContext);
+      if( NS_SUCCEEDED(rc))
+         mContext->Init( (nsNativeWidget) mWnd);
+#ifdef DEBUG
+      else
+         printf( "Couldn't find DC instance for nsWindow\n");
+#endif
+   }
+
+   // Record bounds.  This is XP, the rect of the entire main window in
+   // parent space.  Returned by GetBounds().
+   // NB: We haven't subclassed yet, so callbacks to change mBounds won't
+   //     have happened!
+   mBounds = frameRect;
+   mBounds.height = GetHeight( frameRect.height);
+
+   // Record passed in things
+   mAppShell = aAppShell;
+
+//   NS_IF_ADDREF( mAppShell);
+   GetAppShell();  // Let the base widget class update the refcount for us....
+   mEventCallback = aHandleEventFunction;
+
+   if( mParent)
+      mParent->AddChild( this);
+
+   // call the event callback to notify about creation
+
+   DispatchStandardEvent( NS_CREATE );
+   SubclassWindow(TRUE);
+   PostCreateWidget();
 
    // Subclass frame
    fnwpDefFrame = WinSubclassWindow( mFrameWnd, fnwpFrame);
    WinSetWindowPtr( mFrameWnd, QWL_USER, this);
 
-   // make the client the client.
-   WinSetWindowUShort( mWnd, QWS_ID, FID_CLIENT);
-   WinSendMsg( mFrameWnd, WM_UPDATEFRAME, 0, 0); // possibly superfluous
 
-   // Set up initial client size
-   UpdateClientSize();
+   WinSetWindowPos(mFrameWnd, 0, frameRect.x, frameRect.y, frameRect.width, frameRect.height, SWP_SIZE | SWP_MOVE);
 
    // Record frame hwnd somewhere that the window object can see during dtor
    mHackDestroyWnd = mFrameWnd;
@@ -397,9 +456,4 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
       mRC = (*fnwpDefFrame)( mFrameWnd, msg, mp1, mp2);
 
    return mRC;
-}
-
-ULONG nsFrameWindow::WindowStyle()
-{
-   return BASE_CONTROL_STYLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
 }

@@ -75,7 +75,6 @@ class nsFrameWindow : public nsWindow
    NS_IMETHOD GetClientBounds( nsRect &aRect);
 
    friend MRESULT EXPENTRY fnwpFrame( HWND, ULONG, MPARAM, MPARAM);
-   virtual ULONG WindowStyle();
    static BOOL fHiddenWindowCreated;
 };
 
