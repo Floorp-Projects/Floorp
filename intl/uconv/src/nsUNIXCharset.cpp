@@ -232,7 +232,7 @@ nsUNIXCharset::InitGetCharset(nsString &oString)
   nsString aCharset;
   nsresult res;
 
-#if HAVE_NL_LANGINFO
+#if HAVE_NL_LANGINFO && defined(CODESET)
   nl_langinfo_codeset = nl_langinfo(CODESET);
   NS_ASSERTION(nl_langinfo_codeset, "cannot get nl_langinfo(CODESET)");
 
