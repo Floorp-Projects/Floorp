@@ -1474,7 +1474,7 @@ nsRenderingContextXP::GetBoundingMetrics(const PRUnichar*   aString,
 {
   aBoundingMetrics.Clear();
   if (!aString || 0 > aLength) {
-     return NS_OK;
+    return NS_OK;
   }
   nsFontMetricsXP* metrics = (nsFontMetricsXP*) mFontMetrics;
   nsFontXP* prevFont = nsnull;
@@ -1484,61 +1484,60 @@ nsRenderingContextXP::GetBoundingMetrics(const PRUnichar*   aString,
   PRUint32 start = 0;
   PRUint32 i;
   for (i = 0; i < aLength; i++) {
-      PRUnichar c = aString[i];
-      nsFontXP* currFont = nsnull;
-      nsFontXP** font = metrics->mLoadedFonts;
-      nsFontXP** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
-      while (font < end) {
-        if (IS_REPRESENTABLE((*font)->mMap, c)) {
-          currFont = *font;
-          goto FoundFont; // for speed -- avoid "if" statement
-        }
-        font++;
+    PRUnichar c = aString[i];
+    nsFontXP* currFont = nsnull;
+    nsFontXP** font = metrics->mLoadedFonts;
+    nsFontXP** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
+    while (font < end) {
+      if (IS_REPRESENTABLE((*font)->mMap, c)) {
+        currFont = *font;
+        goto FoundFont; // for speed -- avoid "if" statement
       }
-      currFont = metrics->FindFont(c);
+      font++;
+    }
+    currFont = metrics->FindFont(c);
 FoundFont:
-      // XXX avoid this test by duplicating code -- erik
-      if (prevFont) {
-       if (currFont != prevFont) {
-          nsFontMetricsXP::GetBoundingMetrics(prevFont,
-                                          (const PRUnichar*) &aString[start],
-                                          i - start, rawbm);
-          if (firstTime) {
-            firstTime = PR_FALSE;
-            aBoundingMetrics = rawbm;
-          }
-          else {
-            aBoundingMetrics += rawbm;
-          }
-          prevFont = currFont;
-          start = i;
+    // XXX avoid this test by duplicating code -- erik
+    if (prevFont) {
+      if (currFont != prevFont) {
+        nsFontMetricsXP::GetBoundingMetrics(prevFont,
+                                         (const PRUnichar*) &aString[start],
+                                         i - start, rawbm);
+        if (firstTime) {
+          firstTime = PR_FALSE;
+          aBoundingMetrics = rawbm;
         }
-      }
-      else {
+        else {
+          aBoundingMetrics += rawbm;
+        }
         prevFont = currFont;
         start = i;
       }
     }
-    if (prevFont) {
-      nsFontMetricsXP::GetBoundingMetrics(prevFont,
-                                           (const PRUnichar*) &aString[start],
-                                           i - start, rawbm);
-      if (firstTime) {
-        aBoundingMetrics = rawbm;
-      }
-      else {
-        aBoundingMetrics += rawbm;
-      }
+    else {
+      prevFont = currFont;
+      start = i;
     }
-    // convert to app units
-    aBoundingMetrics.leftBearing = NSToCoordRound(aBoundingMetrics.leftBearing *
- mP2T);
-    aBoundingMetrics.rightBearing = NSToCoordRound(aBoundingMetrics.rightBearing
- * mP2T);
-    aBoundingMetrics.width = NSToCoordRound(aBoundingMetrics.width * mP2T);
-    aBoundingMetrics.ascent = NSToCoordRound(aBoundingMetrics.ascent * mP2T);
-    aBoundingMetrics.descent = NSToCoordRound(aBoundingMetrics.descent * mP2T);
   }
+  if (prevFont) {
+    nsFontMetricsXP::GetBoundingMetrics(prevFont,
+                                         (const PRUnichar*) &aString[start],
+                                         i - start, rawbm);
+    if (firstTime) {
+      aBoundingMetrics = rawbm;
+    }
+    else {
+      aBoundingMetrics += rawbm;
+    }
+  }
+
+  // convert to app units
+  aBoundingMetrics.leftBearing = NSToCoordRound(aBoundingMetrics.leftBearing * mP2T);
+  aBoundingMetrics.rightBearing = NSToCoordRound(aBoundingMetrics.rightBearing * mP2T);
+  aBoundingMetrics.width = NSToCoordRound(aBoundingMetrics.width * mP2T);
+  aBoundingMetrics.ascent = NSToCoordRound(aBoundingMetrics.ascent * mP2T);
+  aBoundingMetrics.descent = NSToCoordRound(aBoundingMetrics.descent * mP2T);
+ 
   if (nsnull != aFontID)
     *aFontID = 0;
 
