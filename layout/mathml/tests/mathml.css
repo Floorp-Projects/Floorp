@@ -28,7 +28,7 @@ math, math[mode="inline"] {
   font-family: Symbol, Times;
   font-style: normal;
 /*   font-weight: bold; */
-/*   font-size: 40pt; */
+/*   font-size: 24pt; */
 }
 
 math[mode="display"] {
@@ -40,21 +40,58 @@ math[mode="display"] {
 /*   font-size: 14pt; */
 }
 
-*[fontstyle="normal"] {
+[bgcolor="yellow"] {
+   background-color: yellow;
+}
+
+[fontstyle="normal"] {
   font-style: normal;
 }
 
-*[fontstyle="italic"] {
+[fontstyle="italic"] {
   font-style: italic;
 }
 
-*[fontweight="normal"] {
+[fontweight="normal"] {
   font-weight: normal;
 }
 
-*[fontweight="bold"] {
+[fontweight="bold"] {
   font-weight: bold;
 }
+
+[fontsize="xx-small"] {
+  font-size: xx-small;
+}
+
+[fontsize="x-small"] {
+  font-size: x-small;
+}
+
+[fontsize="small"], [fontsize="smaller"] {
+  font-size: smaller;
+}
+
+[fontsize="medium"] {
+  font-size: medium;
+}
+
+[fontsize="large"] {
+  font-size: large;
+}
+
+[fontsize="larger"] {
+  font-size: larger;
+}
+
+[fontsize="x-large"] {
+  font-size: x-large;
+}
+
+[fontsize="xx-large"] {
+  font-size: xx-large;
+}
+
 
 /*
 mmultiscripts {
@@ -62,10 +99,12 @@ mmultiscripts {
 }
 */
 
+/*
 mtext {
    color: purple;
    border: 1px solid purple;
 }
+*/
 
 /*
 mstyle {
@@ -76,6 +115,10 @@ mstyle {
 
 ms {
    color: blue;
+/*
+   background-color: yellow;
+   border: 1px solid black;
+*/
 }
 
 ms:before {
@@ -85,6 +128,14 @@ ms:before {
 ms:after {
   content: close-quote;
 }
+
+
+/*
+mpadded {
+  background-color: yellow;
+  border: 1px solid black;
+}
+*/
 
 /*
 mspace {
@@ -115,10 +166,9 @@ mfrac {
 
 msub, msup {
 /*  background-color: yellow; */
-/*  border: 1px solid black; */
+/*  border: 1px dotted black; */
 /*  font-size: small; */
 }
-
 
 mn {
 /*  border: 1px solid black; */
@@ -128,7 +178,7 @@ mn {
 mi {
   color: red;
 /*  font-style: normal; */
-/*  border: 1px solid blue; */
+/*  border: 1px dashed green;
 /*  background-color: yellow; */
 }
 
@@ -146,6 +196,27 @@ munder, mover, munderover {
   border: 1px solid black;
 }
 */
+
+/*
+maction:focus  { 
+  outline: thick solid black;
+  border: 1px solid black;
+}
+*/
+
+maction {
+  background-color: yellow;
+/*  border: 1px solid black; */
+}
+
+maction[actiontype="restyle#background"] {
+  background-color: #3C6;
+  border: 1px dotted red;
+}
+
+maction[actiontype="restyle#zoom"] {
+  font-size: 40pt;
+}
 
 merror {
   display: block;
@@ -185,7 +256,7 @@ mtd {
 
 mtr {
   display: table-row;
-  vertical-align: middle;
+  vertical-align: middle; /* baseline; */
   background-color: inherit;
 }
 
