@@ -97,6 +97,7 @@ public:
   static const MappedAttributeEntry sGraphicsMap[];
   static const MappedAttributeEntry sTextContentElementsMap[];
   static const MappedAttributeEntry sFontSpecificationMap[];
+  static const MappedAttributeEntry sGradientStopMap[];
   
   // nsIDOMNode
   NS_IMETHOD IsSupported(const nsAString& aFeature, const nsAString& aVersion, PRBool* aReturn);

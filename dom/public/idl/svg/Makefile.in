@@ -52,6 +52,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGAnimatedEnum.idl \
 		nsIDOMSVGAnimatedLength.idl \
 		nsIDOMSVGAnimatedLengthList.idl \
+		nsIDOMSVGAnimatedNumber.idl \
 		nsIDOMSVGAnimatedNumberList.idl \
 		nsIDOMSVGAnimatedPathData.idl \
 		nsIDOMSVGAnimatedPoints.idl \
@@ -68,6 +69,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGFitToViewBox.idl \
 		nsIDOMSVGForeignObjectElem.idl \
 		nsIDOMSVGGElement.idl \
+		nsIDOMSVGGradientElement.idl \
 		nsIDOMSVGImageElement.idl \
 		nsIDOMSVGLength.idl \
 		nsIDOMSVGLengthList.idl \
@@ -88,6 +90,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGRectElement.idl \
 		nsIDOMSVGScriptElement.idl \
 		nsIDOMSVGSVGElement.idl \
+		nsIDOMSVGStopElement.idl \
 		nsIDOMSVGStylable.idl \
 		nsIDOMSVGStyleElement.idl \
 		nsIDOMSVGTextContentElement.idl \

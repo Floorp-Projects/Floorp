@@ -834,23 +834,26 @@ nsChangeHint nsStyleColumn::MaxDifference()
 //
 nsStyleSVG::nsStyleSVG() 
 {
-    mFill.mType       = eStyleSVGPaintType_Color;
-    mFill.mColor      = NS_RGB(0,0,0);
-    mFillOpacity      = 1.0f;
-    mFillRule         = NS_STYLE_FILL_RULE_NONZERO;
-    mPointerEvents    = NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED;
-    mShapeRendering   = NS_STYLE_SHAPE_RENDERING_AUTO;
-    mStroke.mType     = eStyleSVGPaintType_None;
-    mStroke.mColor    = NS_RGB(0,0,0);
+    mFill.mType              = eStyleSVGPaintType_Color;
+    mFill.mPaint.mColor      = NS_RGB(0,0,0);
+    mFillOpacity             = 1.0f;
+    mFillRule                = NS_STYLE_FILL_RULE_NONZERO;
+    mPointerEvents           = NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED;
+    mShapeRendering          = NS_STYLE_SHAPE_RENDERING_AUTO;
+    mStopColor.mType         = eStyleSVGPaintType_Color;
+    mStopColor.mPaint.mColor = NS_RGB(0,0,0);
+    mStopOpacity             = 1.0f;
+    mStroke.mType            = eStyleSVGPaintType_None;
+    mStroke.mPaint.mColor    = NS_RGB(0,0,0);
     mStrokeDasharray.Truncate();
-    mStrokeDashoffset = 0.0f;
-    mStrokeLinecap    = NS_STYLE_STROKE_LINECAP_BUTT;
-    mStrokeLinejoin   = NS_STYLE_STROKE_LINEJOIN_MITER;
-    mStrokeMiterlimit = 4.0f;
-    mStrokeOpacity    = 1.0f;
-    mStrokeWidth      = 1.0f;
-    mTextAnchor       = NS_STYLE_TEXT_ANCHOR_START;
-    mTextRendering    = NS_STYLE_TEXT_RENDERING_AUTO;
+    mStrokeDashoffset        = 0.0f;
+    mStrokeLinecap           = NS_STYLE_STROKE_LINECAP_BUTT;
+    mStrokeLinejoin          = NS_STYLE_STROKE_LINEJOIN_MITER;
+    mStrokeMiterlimit        = 4.0f;
+    mStrokeOpacity           = 1.0f;
+    mStrokeWidth             = 1.0f;
+    mTextAnchor              = NS_STYLE_TEXT_ANCHOR_START;
+    mTextRendering           = NS_STYLE_TEXT_RENDERING_AUTO;
 }
 
 nsStyleSVG::~nsStyleSVG() 
@@ -861,16 +864,14 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
 {
   //memcpy((nsStyleSVG*)this, &aSource, sizeof(nsStyleSVG));
 
-  mFill.mType = aSource.mFill.mType;
-  if (mFill.mType == eStyleSVGPaintType_Color)
-    mFill.mColor = aSource.mFill.mColor;
+  mFill = aSource.mFill;
   mFillOpacity = aSource.mFillOpacity;
   mFillRule = aSource.mFillRule;
   mPointerEvents = aSource.mPointerEvents;
   mShapeRendering = aSource.mShapeRendering;
-  mStroke.mType = aSource.mStroke.mType;
-  if (mStroke.mType == eStyleSVGPaintType_Color)
-    mStroke.mColor = aSource.mStroke.mColor;
+  mStopColor = aSource.mStopColor;
+  mStopOpacity = aSource.mStopOpacity;
+  mStroke = aSource.mStroke;
   mStrokeDasharray = aSource.mStrokeDasharray;
   mStrokeDashoffset = aSource.mStrokeDashoffset;
   mStrokeLinecap = aSource.mStrokeLinecap;
@@ -884,12 +885,14 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
 
 nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
 {
-  if ( mFill.mType       != aOther.mFill.mType       ||
+  if ( mFill             != aOther.mFill             ||
        mFillOpacity      != aOther.mFillOpacity      ||
        mFillRule         != aOther.mFillRule         ||
        mPointerEvents    != aOther.mPointerEvents    ||
        mShapeRendering   != aOther.mShapeRendering   ||
-       mStroke.mType     != aOther.mStroke.mType     ||
+       mStopColor        != aOther.mStopColor        ||
+       mStopOpacity      != aOther.mStopOpacity      ||
+       mStroke           != aOther.mStroke           ||
        mStrokeDasharray  != aOther.mStrokeDasharray  ||
        mStrokeDashoffset != aOther.mStrokeDashoffset ||
        mStrokeLinecap    != aOther.mStrokeLinecap    ||
@@ -899,10 +902,6 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
        mStrokeWidth      != aOther.mStrokeWidth      ||
        mTextAnchor       != aOther.mTextAnchor       ||
        mTextRendering    != aOther.mTextRendering)
-    return NS_STYLE_HINT_VISUAL;
-
-  if ( (mStroke.mType == eStyleSVGPaintType_Color && mStroke.mColor != aOther.mStroke.mColor) ||
-       (mFill.mType   == eStyleSVGPaintType_Color && mFill.mColor   != aOther.mFill.mColor) )
     return NS_STYLE_HINT_VISUAL;
 
   return NS_STYLE_HINT_NONE;
@@ -948,6 +947,35 @@ nsChangeHint nsStyleSVGReset::MaxDifference()
   return NS_STYLE_HINT_VISUAL;
 }
 #endif
+
+// nsStyleSVGPaint implementation
+nsStyleSVGPaint::~nsStyleSVGPaint() {
+  if (mType == eStyleSVGPaintType_Server) {
+    NS_IF_RELEASE(mPaint.mPaintServer);
+  } 
+}
+
+nsStyleSVGPaint& nsStyleSVGPaint::operator=(const nsStyleSVGPaint& aOther) 
+{
+  mType = aOther.mType;
+  if (mType == eStyleSVGPaintType_Server) {
+    mPaint.mPaintServer = aOther.mPaint.mPaintServer;
+    NS_IF_ADDREF(mPaint.mPaintServer);
+  } else {
+    mPaint.mColor = aOther.mPaint.mColor;
+  }
+  return *this;
+}
+
+PRBool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const
+{
+  if (mType != aOther.mType)
+    return PR_FALSE;
+  if (mType == eStyleSVGPaintType_Server) {
+    return EqualURIs(mPaint.mPaintServer, aOther.mPaint.mPaintServer);
+  }
+  return mPaint.mColor == aOther.mPaint.mColor;
+}
 
 #endif // MOZ_SVG
 

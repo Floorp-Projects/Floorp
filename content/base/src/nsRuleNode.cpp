@@ -4366,8 +4366,15 @@ SetSVGPaint(const nsCSSValue& aValue, const nsStyleSVGPaint& parentPaint,
     aInherited = PR_TRUE;
   } else if (aValue.GetUnit() == eCSSUnit_None) {
     aResult.mType = eStyleSVGPaintType_None;
-  } else if (SetColor(aValue, parentPaint.mColor, aPresContext, aResult.mColor, aInherited)) {
+  } else if (aValue.GetUnit() == eCSSUnit_URL) {
+    aResult.mType = eStyleSVGPaintType_Server;
+    aResult.mPaint.mPaintServer = aValue.GetURLValue();
+    NS_IF_ADDREF(aResult.mPaint.mPaintServer);
+  } else if (SetColor(aValue, parentPaint.mPaint.mColor, aPresContext, aResult.mPaint.mColor, aInherited)) {
     aResult.mType = eStyleSVGPaintType_Color;
+  } else {
+    // XXX Check for "currentColor"
+    // XXX Set it to the default color
   }
 }
 
@@ -4459,7 +4466,13 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     svg->mFillRule = parentSVG->mFillRule;
   }
-  
+
+  // stop-color: 
+  SetSVGPaint(SVGData.mStopColor, parentSVG->mStopColor, mPresContext, svg->mStopColor, inherited);
+
+  // stop-opacity:
+  SetSVGOpacity(SVGData.mStopOpacity, parentSVG->mStopOpacity, svg->mStopOpacity, inherited);
+
   // pointer-events: enum, inherit
   if (eCSSUnit_Enumerated == SVGData.mPointerEvents.GetUnit()) {
     svg->mPointerEvents = SVGData.mPointerEvents.GetIntValue();

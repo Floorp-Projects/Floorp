@@ -487,6 +487,8 @@ CSS_PROP_SVG(fill-opacity, fill_opacity, FillOpacity, SVG, mFillOpacity, eCSSTyp
 CSS_PROP_SVG(fill-rule, fill_rule, FillRule, SVG, mFillRule, eCSSType_Value, PR_FALSE, kFillRuleKTable)
 CSS_PROP_SVG(pointer-events, pointer_events, PointerEvents, SVG, mPointerEvents, eCSSType_Value, PR_FALSE, kPointerEventsKTable)
 CSS_PROP_SVG(shape-rendering, shape_rendering, ShapeRendering, SVG, mShapeRendering, eCSSType_Value, PR_FALSE, kShapeRenderingKTable)
+CSS_PROP_SVG(stop-color, stop_color, StopColor, SVG, mStopColor, eCSSType_Value, PR_FALSE, nsnull)
+CSS_PROP_SVG(stop-opacity, stop_opacity, StopOpacity, SVG, mStopOpacity, eCSSType_Value, PR_FALSE, nsnull)
 CSS_PROP_SVG(stroke, stroke, Stroke, SVG, mStroke, eCSSType_Value, PR_FALSE, nsnull)
 CSS_PROP_SVG(stroke-dasharray, stroke_dasharray, StrokeDasharray, SVG, mStrokeDasharray, eCSSType_Value, PR_FALSE, nsnull)
 CSS_PROP_SVG(stroke-dashoffset, stroke_dashoffset, StrokeDashoffset, SVG, mStrokeDashoffset, eCSSType_Value, PR_FALSE, nsnull)

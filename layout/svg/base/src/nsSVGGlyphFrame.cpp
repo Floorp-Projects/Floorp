@@ -49,6 +49,7 @@
 #include "nsISVGRendererRegion.h"
 #include "nsISVGContainerFrame.h"
 #include "nsISVGTextContainerFrame.h"
+#include "nsSVGGradientFrame.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "prdtoa.h"
@@ -585,8 +586,20 @@ nsSVGGlyphFrame::GetStrokePaintType(PRUint16 *aStrokePaintType)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetStrokePaint(nscolor *aStrokePaint)
 {
-  *aStrokePaint = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStroke.mColor;
+  *aStrokePaint = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStroke.mPaint.mColor;
   return NS_OK;
+}
+
+/* [noscript] void GetStrokeGradient(nsISVGGradient **aGrad); */
+NS_IMETHODIMP
+nsSVGGlyphFrame::GetStrokeGradient(nsISVGGradient **aGrad)
+{
+  nsIURI *aServer;
+  aServer = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStroke.mPaint.mPaintServer;
+  if (aServer == nsnull)
+    return NS_ERROR_FAILURE;
+  // Now have the URI.  Get the gradient 
+  return NS_GetSVGGradient(aGrad, aServer, mContent, nsSVGGlyphFrameBase::GetPresContext()->PresShell());
 }
 
 /* readonly attribute unsigned short fillPaintType; */
@@ -601,10 +614,23 @@ nsSVGGlyphFrame::GetFillPaintType(PRUint16 *aFillPaintType)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetFillPaint(nscolor *aFillPaint)
 {
-  *aFillPaint = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFill.mColor;
+  *aFillPaint = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFill.mPaint.mColor;
   return NS_OK;
 }
 
+/* [noscript] void GetStrokeGradient(nsISVGGradient **aGrad); */
+NS_IMETHODIMP
+nsSVGGlyphFrame::GetFillGradient(nsISVGGradient **aGrad)
+{
+  nsIURI *aServer;
+  aServer = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFill.mPaint.mPaintServer;
+  if (aServer == nsnull)
+    return NS_ERROR_FAILURE;
+  // Now have the URI.  Get the gradient 
+  return NS_GetSVGGradient(aGrad, aServer, mContent, nsSVGGlyphFrameBase::GetPresContext()->PresShell());
+}
+
+/* readonly attribute unsigned short fillPaintType; */
 //----------------------------------------------------------------------
 // nsISVGGlyphMetricsSource methods:
 

@@ -63,8 +63,11 @@ REQUIRES	= xpcom \
 		  unicharutil
 
 CPPSRCS		= \
+		nsSVGAnimatedEnumeration.cpp \
 		nsSVGAnimatedLength.cpp \
 		nsSVGAnimatedLengthList.cpp \
+		nsSVGAnimatedNumber.cpp \
+		nsSVGAnimatedNumberList.cpp \
 		nsSVGAnimatedRect.cpp \
 		nsSVGAnimatedPreserveAspectRatio.cpp \
 		nsSVGAnimatedString.cpp \
@@ -75,10 +78,12 @@ CPPSRCS		= \
 		nsSVGElement.cpp \
 		nsSVGElementFactory.cpp \
 		nsSVGEllipseElement.cpp \
+		nsSVGEnum.cpp \
 		nsSVGFeatures.cpp \
 		nsSVGForeignObjectElement.cpp \
 		nsSVGGElement.cpp \
 		nsSVGGenericStringValue.cpp \
+		nsSVGGradientElement.cpp \
 		nsSVGGraphicElement.cpp \
 		nsSVGImageElement.cpp \
 		nsSVGLength.cpp \
@@ -86,6 +91,7 @@ CPPSRCS		= \
 		nsSVGLineElement.cpp \
 		nsSVGMatrix.cpp \
 		nsSVGNumber.cpp \
+		nsSVGNumberList.cpp \
 		nsSVGPathDataParser.cpp \
 		nsSVGPathElement.cpp \
 		nsSVGPathSeg.cpp \
@@ -101,6 +107,7 @@ CPPSRCS		= \
 		nsSVGRect.cpp \
 		nsSVGRectElement.cpp \
 		nsSVGSVGElement.cpp \
+		nsSVGStopElement.cpp \
 		nsSVGStyleElement.cpp \
 		nsSVGTSpanElement.cpp \
 		nsSVGTextElement.cpp \

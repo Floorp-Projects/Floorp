@@ -37,8 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGNumber.h"
+#include "nsTextFormatter.h"
 #include "prdtoa.h"
 #include "nsSVGValue.h"
+#include "nsISVGValueUtils.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGNumber class
@@ -62,7 +64,6 @@ public:
   NS_IMETHOD SetValueString(const nsAString& aValue);
   NS_IMETHOD GetValueString(nsAString& aValue);
   
-  
 protected:
   float mValue;
 };
@@ -74,8 +75,7 @@ nsresult
 NS_NewSVGNumber(nsIDOMSVGNumber** result, float val)
 {
   *result = new nsSVGNumber(val);
-  if(!*result) return NS_ERROR_OUT_OF_MEMORY;
-  
+  if (!*result) return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*result);
   return NS_OK;
 }
@@ -102,18 +102,57 @@ NS_INTERFACE_MAP_END
 // nsISVGValue methods:
 
 NS_IMETHODIMP
-nsSVGNumber::SetValueString(const nsAString& aValue)
+nsSVGNumber::GetValueString(nsAString& aValue)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  aValue.Truncate();
+
+  PRUnichar buf[24];
+  nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
+                            NS_LITERAL_STRING("%g").get(),
+                            (double)mValue);
+  aValue.Append(buf);
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSVGNumber::GetValueString(nsAString& aValue)
+nsSVGNumber::SetValueString(const nsAString& aValue)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  nsresult rv = NS_OK;
+  WillModify();
+  
+  char *str = ToNewCString(aValue);
+
+  if (*str) {
+    char *rest;
+    double value = PR_strtod(str, &rest);
+    if (rest && rest!=str) {
+      if (*rest=='%') {
+        rv = SetValue(value/100.0);
+        rest++;
+      } else {
+        rv = SetValue(value);
+      }
+      // skip trailing spaces
+      while (*rest && isspace(*rest))
+        ++rest;
+
+      // check to see if there is trailing stuff...
+      if (*rest != '\0') {
+        rv = NS_ERROR_FAILURE;
+        NS_ERROR("trailing data in number value");
+      }
+    } else {
+      rv = NS_ERROR_FAILURE;
+      // no number
+    }
+  }
+  nsMemory::Free(str);
+  DidModify();
+  return rv;
 }
+
+//----------------------------------------------------------------------
 
 //----------------------------------------------------------------------
 // nsIDOMSVGNumber methods:

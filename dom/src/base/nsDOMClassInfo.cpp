@@ -306,8 +306,11 @@
 #include "nsIDOMXPathEvaluator.h"
 
 #ifdef MOZ_SVG
+#include "nsIDOMSVGAnimatedEnum.h"
 #include "nsIDOMSVGAnimatedLength.h"
 #include "nsIDOMSVGAnimatedLengthList.h"
+#include "nsIDOMSVGAnimatedNumber.h"
+#include "nsIDOMSVGAnimatedNumberList.h"
 #include "nsIDOMSVGAnimatedPathData.h"
 #include "nsIDOMSVGAnimatedPoints.h"
 #include "nsIDOMSVGAnimPresAspRatio.h"
@@ -323,6 +326,7 @@
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsIDOMSVGForeignObjectElem.h"
 #include "nsIDOMSVGGElement.h"
+#include "nsIDOMSVGGradientElement.h"
 #include "nsIDOMSVGImageElement.h"
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGLengthList.h"
@@ -330,6 +334,7 @@
 #include "nsIDOMSVGLocatable.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGNumber.h"
+#include "nsIDOMSVGNumberList.h"
 #include "nsIDOMSVGPathElement.h"
 #include "nsIDOMSVGPathSeg.h"
 #include "nsIDOMSVGPathSegList.h"
@@ -341,6 +346,7 @@
 #include "nsIDOMSVGRect.h"
 #include "nsIDOMSVGRectElement.h"
 #include "nsIDOMSVGScriptElement.h"
+#include "nsIDOMSVGStopElement.h"
 #include "nsIDOMSVGStylable.h"
 #include "nsIDOMSVGStyleElement.h"
 #include "nsIDOMSVGSVGElement.h"
@@ -820,7 +826,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGGElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGGradientElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGImageElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGLinearGradientElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGLineElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
@@ -830,9 +840,13 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGPolylineElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGRadialGradientElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGRectElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGScriptElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGStopElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGStyleElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
@@ -844,10 +858,16 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
 
   // other SVG classes
+  NS_DEFINE_CLASSINFO_DATA(SVGAnimatedEnumeration, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedLength, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedLengthList, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGAnimatedNumber, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
+  NS_DEFINE_CLASSINFO_DATA(SVGAnimatedNumberList, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedPoints, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedPreserveAspectRatio, nsDOMGenericSH,
@@ -868,6 +888,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGNumber, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGNumberList, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
   NS_DEFINE_CLASSINFO_DATA(SVGPathSegArcAbs, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGPathSegArcRel, nsDOMGenericSH,
@@ -2308,10 +2330,21 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(SVGGradientElement, nsIDOMSVGGradientElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGGradientElement)
+    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(SVGImageElement, nsIDOMSVGImageElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGImageElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGURIReference)
     DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGLinearGradientElement, nsIDOMSVGLinearGradientElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGGradientElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGLinearGradientElement)
+    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(SVGLineElement, nsIDOMSVGLineElement)
@@ -2337,6 +2370,12 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(SVGRadialGradientElement, nsIDOMSVGRadialGradientElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGGradientElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGRadialGradientElement)
+    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(SVGRectElement, nsIDOMSVGRectElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGRectElement)
     DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
@@ -2348,6 +2387,11 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(SVGStopElement, nsIDOMSVGStopElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGStopElement)
+    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+  
   DOM_CLASSINFO_MAP_BEGIN(SVGStyleElement, nsIDOMSVGStyleElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGStyleElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMLinkStyle)
@@ -2376,12 +2420,24 @@ nsDOMClassInfo::Init()
 
   // other SVG classes
 
+  DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedEnumeration, nsIDOMSVGAnimatedEnumeration)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedEnumeration)
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedLength, nsIDOMSVGAnimatedLength)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedLength)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedLengthList, nsIDOMSVGAnimatedLengthList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedLengthList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedNumber, nsIDOMSVGAnimatedNumber)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedNumber)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedNumberList, nsIDOMSVGAnimatedNumberList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedNumberList)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedPoints, nsIDOMSVGAnimatedPoints)
@@ -2423,6 +2479,10 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(SVGNumber, nsIDOMSVGNumber)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGNumber)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGNumberList, nsIDOMSVGNumberList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGNumberList)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(SVGPathSegArcAbs, nsIDOMSVGPathSegArcAbs)

@@ -1,0 +1,130 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ----- BEGIN LICENSE BLOCK -----
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla SVG project.
+ *
+ * The Initial Developer of the Original Code is 
+ * Scooter Morris
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *    Scooter Morris <scootermorris@comcast.net>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ----- END LICENSE BLOCK ----- */
+
+#include "nsIDOMSVGElement.idl"
+
+/**
+ * The nsIDOMSVGGradientElement interface is the interface to an SVG
+ * gradient element.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/SVG11/pservers.html
+ *
+ */
+
+interface nsIDOMSVGAnimatedEnumeration;
+interface nsIDOMSVGAnimatedTransformList;
+
+[scriptable, uuid(988b2de4-137b-4bb8-a15e-fe94038e9cf3)]
+interface nsIDOMSVGGradientElement
+  : nsIDOMSVGElement
+/*
+        The SVG DOM makes use of multiple interface inheritance.
+        Since XPCOM only supports single interface inheritance,
+        the best thing that we can do is to promise that whenever
+        an object implements _this_ interface it will also
+        implement the following interfaces. (We then have to QI to
+        hop between them.)
+        
+    nsIDOMSVGURIReference,
+    nsIDOMSVGStylable
+*/
+{ 
+  const unsigned short SVG_SPREADMETHOD_UNKNOWN = 0;
+  const unsigned short SVG_SPREADMETHOD_PAD     = 1;
+  const unsigned short SVG_SPREADMETHOD_REFLECT = 2;
+  const unsigned short SVG_SPREADMETHOD_REPEAT  = 3;
+  // Extended to provide enumerations for gradientUnits
+  // These constants are taken from SVGUnitTypes
+  const unsigned short SVG_GRUNITS_UNKNOWN = 0;
+  const unsigned short SVG_GRUNITS_OBJECTBOUNDINGBOX = 1;
+  const unsigned short SVG_GRUNITS_USERSPACEONUSE = 2;
+
+
+  readonly attribute nsIDOMSVGAnimatedEnumeration gradientUnits;
+  readonly attribute nsIDOMSVGAnimatedTransformList gradientTransform;
+  readonly attribute nsIDOMSVGAnimatedEnumeration spreadMethod;
+};
+
+
+/**
+ * The nsIDOMSVGLinearGradientElement interface is the interface to an SVG
+ * linear gradient element.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/SVG11/pservers.html
+ *
+ */
+
+// Linear gradient
+interface nsIDOMSVGAnimatedLength;
+
+[scriptable, uuid(7e15fce5-b208-43e1-952a-c570ebad0619)]
+interface nsIDOMSVGLinearGradientElement
+  : nsIDOMSVGGradientElement
+{ 
+  readonly attribute nsIDOMSVGAnimatedLength x1;
+  readonly attribute nsIDOMSVGAnimatedLength y1;
+  readonly attribute nsIDOMSVGAnimatedLength x2;
+  readonly attribute nsIDOMSVGAnimatedLength y2;
+};
+
+/**
+ * The nsIDOMSVGRadialGradientElement interface is the interface to an SVG
+ * radial gradient element.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/SVG11/pservers.html
+ *
+ */
+
+// Radial gradient
+interface nsIDOMSVGAnimatedLength;
+
+[scriptable, uuid(d0262ae1-31a4-44be-b82e-85e4cfe280fd)]
+interface nsIDOMSVGRadialGradientElement
+  : nsIDOMSVGGradientElement
+{ 
+  readonly attribute nsIDOMSVGAnimatedLength cx;
+  readonly attribute nsIDOMSVGAnimatedLength cy;
+  readonly attribute nsIDOMSVGAnimatedLength r;
+  readonly attribute nsIDOMSVGAnimatedLength fx;
+  readonly attribute nsIDOMSVGAnimatedLength fy;
+};
+
+

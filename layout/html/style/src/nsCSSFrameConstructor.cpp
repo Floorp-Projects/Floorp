@@ -201,6 +201,12 @@ nsresult
 NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 PRBool 
 NS_SVG_TestFeatures (const nsAString& value);
+extern nsresult
+NS_NewSVGLinearGradientFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsIFrame** newFrame);
+extern nsresult
+NS_NewSVGRadialGradientFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsIFrame** newFrame);
+extern nsresult
+NS_NewSVGStopFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsIFrame *aParentFrame, nsIFrame** newFrame);
 #endif
 
 #include "nsIDocument.h"
@@ -7161,6 +7167,17 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
     processChildren = PR_TRUE;
     rv = NS_NewSVGTSpanFrame(aPresShell, aContent, aParentFrame, &newFrame);
   }
+  else if (aTag == nsSVGAtoms::linearGradient) {
+    processChildren = PR_TRUE;
+    rv = NS_NewSVGLinearGradientFrame(aPresShell, aContent, &newFrame);
+  }
+  else if (aTag == nsSVGAtoms::radialGradient) {
+    processChildren = PR_TRUE;
+    rv = NS_NewSVGRadialGradientFrame(aPresShell, aContent, &newFrame);
+  }
+  else if (aTag == nsSVGAtoms::stop) {
+    rv = NS_NewSVGStopFrame(aPresShell, aContent, aParentFrame, &newFrame);
+  }
   
   if (newFrame == nsnull) {
     // Either we have an unknown tag, or construction of a frame
@@ -7172,10 +7189,10 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
     // a standard xml element, and not be of the right type.
     // The best we can do here is to create a generic svg container frame.
 #ifdef DEBUG
-    //printf("Warning: Creating SVGGenericContainerFrame for tag <");
-    //nsAutoString str;
-    //aTag->ToString(str);
-    //printf("%s>\n", NS_ConvertUCS2toUTF8(str).get());
+    // printf("Warning: Creating SVGGenericContainerFrame for tag <");
+    // nsAutoString str;
+    // aTag->ToString(str);
+    // printf("%s>\n", NS_ConvertUCS2toUTF8(str).get());
 #endif
     processChildren = PR_TRUE;
     rv = NS_NewSVGGenericContainerFrame(aPresShell, aContent, &newFrame);

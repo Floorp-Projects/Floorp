@@ -50,6 +50,7 @@ using namespace Gdiplus;
 #include "nsISVGGDIPlusCanvas.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsSVGGDIPlusRegion.h"
+#include "nsISVGGDIPlusRegion.h"
 #include "nsISVGRendererRegion.h"
 #include "nsISVGGlyphGeometrySource.h"
 #include "nsPromiseFlatString.h"
@@ -57,6 +58,7 @@ using namespace Gdiplus;
 #include "nsISVGGDIPlusGlyphMetrics.h"
 #include "nsPresContext.h"
 #include "nsMemory.h"
+#include "nsSVGGDIPlusGradient.h"
 
 /**
  * \addtogroup gdiplus_renderer GDI+ Rendering Engine
@@ -226,7 +228,8 @@ public:
   NS_DECL_NSISVGRENDERERGLYPHGEOMETRY
   
 protected:
-  void DrawFill(Graphics* g, Brush& b, const WCHAR* start, INT length, float x, float y);
+  void DrawFill(Graphics* g, Brush& b, nsISVGGradient *aGrad,
+                const WCHAR* start, INT length, float x, float y);
   void GetGlobalTransform(Matrix *matrix);
   void UpdateStroke();
   void UpdateRegions(); // update covered region & hit-test region
@@ -298,6 +301,12 @@ NS_INTERFACE_MAP_END
 //----------------------------------------------------------------------
 // nsISVGRendererGlyphGeometry methods:
 
+static void gradCBPath(Graphics *gfx, Brush *brush, void *cbStruct)
+{
+  GraphicsPath *path = (GraphicsPath *)cbStruct;
+  gfx->FillPath(brush, path);
+}
+
 /** Implements void render(in nsISVGRendererCanvas canvas); */
 NS_IMETHODIMP
 nsSVGGDIPlusGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
@@ -308,21 +317,16 @@ nsSVGGDIPlusGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
     Update(nsISVGGeometrySource::UPDATEMASK_ALL, getter_AddRefs(region));
   }
 
-  PRBool hasFill = PR_FALSE;
-  {
-    PRUint16 filltype;
-    mSource->GetFillPaintType(&filltype);
-    if (filltype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR)
-      hasFill = PR_TRUE;
-  }
+  PRBool hasFill = PR_FALSE, hasStroke = PR_FALSE;
+  PRUint16 filltype, stroketype;
 
-  PRBool hasStroke = PR_FALSE;
-  {
-    PRUint16 stroketype;
-    mSource->GetStrokePaintType(&stroketype);
-    if (stroketype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR && mStroke)
-      hasStroke = PR_TRUE;
-  }
+  mSource->GetFillPaintType(&filltype);
+  if (filltype != nsISVGGeometrySource::PAINT_TYPE_NONE)
+    hasFill = PR_TRUE;
+
+  mSource->GetStrokePaintType(&stroketype);
+  if (stroketype != nsISVGGeometrySource::PAINT_TYPE_NONE && mStroke)
+    hasStroke = PR_TRUE;
 
   if (!hasFill && !hasStroke) return NS_OK; // nothing to paint
   
@@ -373,7 +377,11 @@ nsSVGGDIPlusGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
 
       SolidBrush brush(Color((BYTE)(opacity*255),NS_GET_R(color),NS_GET_G(color),NS_GET_B(color)));
 
-      DrawFill(gdiplusCanvas->GetGraphics(), brush,
+      nsCOMPtr<nsISVGGradient> aGrad;
+      if (filltype != nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR)
+        mSource->GetFillGradient(getter_AddRefs(aGrad));
+
+      DrawFill(gdiplusCanvas->GetGraphics(), brush, aGrad,
                sections.GetSectionPtr(), sections.GetLength(), sections.GetAdvance()+x, y);
     }
 
@@ -387,11 +395,27 @@ nsSVGGDIPlusGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
       float opacity;
       mSource->GetStrokeOpacity(&opacity);
 
+      nsCOMPtr<nsISVGGradient> aGrad;
+      if (filltype != nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR)
+        mSource->GetStrokeGradient(getter_AddRefs(aGrad));
+
       SolidBrush brush(Color((BYTE)(opacity*255), NS_GET_R(color), NS_GET_G(color), NS_GET_B(color)));
 
       if (sections.IsOnlySection() && !sections.IsHighlighted()) {
         // this is the 'normal' case
-        gdiplusCanvas->GetGraphics()->FillPath(&brush, mStroke);
+        if (filltype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
+          gdiplusCanvas->GetGraphics()->FillPath(&brush, mStroke);
+        } else {
+          nsCOMPtr<nsISVGRendererRegion> region;
+          GetCoveredRegion(getter_AddRefs(region));
+          nsCOMPtr<nsISVGGDIPlusRegion> aRegion = do_QueryInterface(region);
+          nsCOMPtr<nsIDOMSVGMatrix> ctm;
+          mSource->GetCanvasTM(getter_AddRefs(ctm));
+          
+          GDIPlusGradient(aRegion, aGrad, ctm,
+                          gdiplusCanvas->GetGraphics(),
+                          gradCBPath, mStroke);
+        }
       }
       else {
         // There is more than one section, so we need to clip our cached mStroke
@@ -399,7 +423,7 @@ nsSVGGDIPlusGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
         gdiplusCanvas->GetGraphics()->FillPath(&brush, mStroke);
         // ... and paint a fill on top if the section is highlighted:
         if (sections.IsHighlighted())
-          DrawFill(gdiplusCanvas->GetGraphics(), brush,
+          DrawFill(gdiplusCanvas->GetGraphics(), brush, aGrad,
                    sections.GetSectionPtr(), sections.GetLength(), sections.GetAdvance()+x, y);
       }
       
@@ -490,8 +514,23 @@ nsSVGGDIPlusGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
 //----------------------------------------------------------------------
 //
 
+struct gradCallbackStruct {
+  const WCHAR *start;
+  INT length;
+  nsISVGGDIPlusGlyphMetrics *metrics;
+  float x, y;
+  StringFormat *stringformat;
+};
+
+static void gradCBString(Graphics *gfx, Brush *brush, void *cbStruct)
+{
+  gradCallbackStruct *info = (gradCallbackStruct *)cbStruct;
+  gfx->DrawString(info->start, info->length, info->metrics->GetFont(),
+                  PointF(info->x, info->y), info->stringformat, brush);
+}
+
 void
-nsSVGGDIPlusGlyphGeometry::DrawFill(Graphics* g, Brush& b,
+nsSVGGDIPlusGlyphGeometry::DrawFill(Graphics* g, Brush& b, nsISVGGradient *aGrad,
                                     const WCHAR* start, INT length,
                                     float x, float y)
 {
@@ -516,8 +555,25 @@ nsSVGGDIPlusGlyphGeometry::DrawFill(Graphics* g, Brush& b,
                               StringFormatFlagsMeasureTrailingSpaces);
   stringFormat.SetLineAlignment(StringAlignmentNear);
   
-  g->DrawString(start, length, metrics->GetFont(), PointF(x,y),
-                &stringFormat, &b);
+  if (aGrad) {
+    nsCOMPtr<nsISVGRendererRegion> region;
+    GetCoveredRegion(getter_AddRefs(region));
+    nsCOMPtr<nsISVGGDIPlusRegion> aRegion = do_QueryInterface(region);
+    nsCOMPtr<nsIDOMSVGMatrix> ctm;
+    mSource->GetCanvasTM(getter_AddRefs(ctm));
+    
+    gradCallbackStruct cb;
+    cb.start = start;
+    cb.length = length;
+    cb.metrics = metrics;
+    cb.x = x;  cb.y = y;
+    cb.stringformat = &stringFormat;
+    
+    GDIPlusGradient(aRegion, aGrad, ctm, g, gradCBString, &cb);
+  }
+  else
+    g->DrawString(start, length, metrics->GetFont(), PointF(x,y),
+                  &stringFormat, &b);
   
   g->Restore(state);
 }
@@ -562,7 +618,7 @@ nsSVGGDIPlusGlyphGeometry::UpdateStroke()
 
   PRUint16 type;
   mSource->GetStrokePaintType(&type);
-  if (type != nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR)
+  if (type == nsISVGGeometrySource::PAINT_TYPE_NONE)
     return;
 
   float width;
