@@ -43,6 +43,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/sidebar-messenger.rdf			\
 	$(srcdir)/newFolderNameDialog.xul	\
 	$(srcdir)/newFolderNameDialog.js	\
+	$(srcdir)/msgViewNavigation.js	\
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

@@ -30,3 +30,5 @@ sidebar-messenger.xul
 sidebar-messenger.rdf
 newFolderNameDialog.xul
 newFolderNameDialog.js
+msgViewNavigation.js
+
