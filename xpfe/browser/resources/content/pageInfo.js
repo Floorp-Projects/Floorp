@@ -124,7 +124,7 @@ pageInfoTreeView.prototype = {
 
   handleCopy: function(row)
   {
-    return (row < 0 || copycol < 0) ? "" : (this.data[row][this.copycol] || "");
+    return (row < 0 || this.copycol < 0) ? "" : (this.data[row][this.copycol] || "");
   },
 
   performActionOnRow: function(action, row)
