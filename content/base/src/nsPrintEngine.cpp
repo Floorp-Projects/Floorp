@@ -2761,7 +2761,8 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
   presShell->CaptureHistoryState(getter_AddRefs(layoutState), PR_TRUE);
 
   // set it on the new pres shell
-  aPO->mPresShell->SetHistoryState(layoutState);
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aPO->mWebShell));
+  docShell->SetLayoutHistoryState(layoutState);
 
   // turn off animated GIFs
   if (aPO->mPresContext) {
@@ -2876,7 +2877,6 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
         } else {
           printf("View is null!\n");
         }
-        nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aPO->mWebShell));
         if (docShell) {
           fprintf(fd, "--------------- All Views ----------------\n");
           DumpViews(docShell, fd);

@@ -820,7 +820,11 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresContext*        aPresCon
 {
   aPresContext->GetShell(getter_AddRefs(mPresShell));
   mPresShell->GetFrameManager(getter_AddRefs(mFrameManager));
-  mPresShell->GetHistoryState(getter_AddRefs(mFrameState));
+  nsCOMPtr<nsISupports> container;
+  aPresContext->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+  if (docShell) 
+    docShell->GetLayoutHistoryState(getter_AddRefs(mFrameState));
 }
 
 // Use the first-in-flow of a positioned inline frame in galley mode as the 

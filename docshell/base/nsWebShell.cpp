@@ -106,7 +106,6 @@ typedef unsigned long HMTX;
 #include "nsIPlatformCharset.h"
 #include "nsICharsetConverterManager.h"
 #include "nsISocketTransportService.h"
-#include "nsILayoutHistoryState.h"
 #include "nsTextFormatter.h"
 #include "nsPIDOMWindow.h"
 #include "nsPICommandUpdater.h"
@@ -156,8 +155,6 @@ static PRLogModuleInfo* gLogModule = PR_NewLogModule("webshell");
 #else
 #define WEB_TRACE(_bit,_args)
 #endif
-
-static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 
 //----------------------------------------------------------------------
 

@@ -573,25 +573,16 @@ var BookmarksCommand = {
       var tabPanels = browser.mPanelContainer.childNodes;
       var tabCount  = tabPanels.length;
       var index = 0;
+      var URIs = [];
       while (containerChildren.hasMoreElements()) {
         var res = containerChildren.getNext().QueryInterface(kRDFRSCIID);
         var target = BMDS.GetTarget(res, urlArc, true);
         if (target) {
-          var uri = target.QueryInterface(kRDFLITIID).Value;
-          browser.addTab(uri);
+          URIs.push({ URI: target.QueryInterface(kRDFLITIID).Value });
           ++index;
         }
       }
-
-      // If the bookmark group was completely invalid, just bail.
-      if (index == 0)
-        return;
-
-      // Select the first tab in the group if we aren't loading in the background.
-      if (!PREF.getBoolPref("browser.tabs.loadInBackground")) {
-        var tabs = browser.mTabContainer.childNodes;
-        browser.selectedTab = tabs[tabCount];
-      }
+      browser.loadGroup(URIs);
     } else {
       dump("Open Group in new window: not implemented...\n");
     }

@@ -1509,6 +1509,16 @@ DocumentViewerImpl::Hide(void)
   }
 #endif
 
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mContainer));
+  if (docShell) {
+    PRBool saveLayoutState = PR_FALSE;
+    docShell->GetShouldSaveLayoutState(&saveLayoutState);
+    if (saveLayoutState) {
+      nsCOMPtr<nsILayoutHistoryState> layoutState;
+      mPresShell->CaptureHistoryState(getter_AddRefs(layoutState), PR_TRUE);
+    }
+  }
+
   mPresShell->Destroy();
 
   mPresShell     = nsnull;

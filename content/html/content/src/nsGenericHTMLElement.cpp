@@ -77,6 +77,7 @@
 #include "nsRange.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
+#include "nsIDocShell.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsINameSpaceManager.h"
@@ -90,6 +91,7 @@
 
 #include "nsIHTMLContentContainer.h"
 #include "nsHTMLParts.h"
+#include "nsContentUtils.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -2679,27 +2681,24 @@ nsGenericHTMLElement::GetLayoutHistoryAndKey(nsIHTMLContent* aContent,
     return rv;
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
-  doc->GetShellAt(0, getter_AddRefs(presShell));
-  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-
   //
   // Get the history (don't bother with the key if the history is not there)
   //
-  rv = presShell->GetHistoryState(aHistory);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!*aHistory) {
-    return NS_OK;
+  nsCOMPtr<nsISupports> container;
+  doc->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+  if (docShell) {
+    rv = docShell->GetLayoutHistoryState(aHistory);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!*aHistory) {
+      return NS_OK;
+    }
   }
 
   //
   // Get the state key
   //
-  nsCOMPtr<nsIFrameManager> frameManager;
-  presShell->GetFrameManager(getter_AddRefs(frameManager));
-  NS_ENSURE_TRUE(frameManager, NS_ERROR_FAILURE);
-
-  rv = frameManager->GenerateStateKey(aContent, nsIStatefulFrame::eNoID, aKey);
+  rv = nsContentUtils::GenerateStateKey(aContent, nsIStatefulFrame::eNoID, aKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If the state key is blank, this is anonymous content or for

@@ -44,6 +44,7 @@
 #include "nsIJSContextStack.h"
 #include "nsIScriptContext.h"
 #include "nsCOMArray.h"
+#include "nsIStatefulFrame.h"
 
 class nsIScriptGlobalObject;
 class nsIXPConnect;
@@ -242,6 +243,10 @@ public:
   {
       return sNameSpaceManager;
   };
+
+  static nsresult GenerateStateKey(nsIContent* aContent,
+                                   nsIStatefulFrame::SpecialStateID aID,
+                                   nsACString& aKey);
 
 private:
   static nsresult GetDocumentAndPrincipal(nsIDOMNode* aNode,

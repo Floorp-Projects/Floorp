@@ -46,6 +46,7 @@ interface nsISimpleEnumerator;
 interface nsIInputStream;
 interface nsIRequest;
 interface nsISHEntry;
+interface nsILayoutHistoryState;
 
 [scriptable, uuid(69E5DE00-7B8B-11d3-AF61-00A024FFC08C)]
 interface nsIDocShell : nsISupports
@@ -316,5 +317,9 @@ interface nsIDocShell : nsISupports
    * Returns true if the docshell is currently executing the onLoad Handler
    */
   readonly attribute boolean isExecutingOnLoadHandler;
+
+  attribute nsILayoutHistoryState layoutHistoryState;
+
+  readonly attribute boolean shouldSaveLayoutState;
 };
 
