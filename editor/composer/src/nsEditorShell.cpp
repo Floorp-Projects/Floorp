@@ -5113,7 +5113,8 @@ nsresult nsEditorShell::StartPageLoad(nsIChannel *aChannel)
   aChannel->GetContentType(getter_Copies(contentType));
   
   // save the original MIME type; we'll use it later
-  mContentMIMEType.Assign(contentType.get() ? contentType : "");
+  if (contentType.get())
+    mContentMIMEType.Assign(contentType);
   
   if (nsCRT::strcmp(contentType, "text/html") == 0)
   {
