@@ -82,8 +82,3 @@ NS_IMETHODIMP nsOuterDocAccessible::GetAccState(PRUint32 *aAccState)
   return nsAccessible::GetAccState(aAccState);
 }
 
-NS_IMETHODIMP nsOuterDocAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, 
-                                                 PRInt32 *width, PRInt32 *height)
-{
-  return mFirstChild? mFirstChild->AccGetBounds(x, y, width, height): NS_ERROR_FAILURE;
-}

@@ -48,7 +48,6 @@
 #include "nsIEditor.h"
 #include "nsISelectionController.h"
 #include "nsITextControlFrame.h"
-#include "nsTextAccessibleWrap.h"
 #include "nsTextAccessible.h"
 
 enum EGetTextType { eGetBefore=-1, eGetAt=0, eGetAfter=1 };

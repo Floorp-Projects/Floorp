@@ -40,11 +40,11 @@
 #ifndef _nsHTMLTextAccessible_H_
 #define _nsHTMLTextAccessible_H_
 
-#include "nsTextAccessibleWrap.h"
+#include "nsTextAccessible.h"
 
 class nsIWeakReference;
 
-class nsHTMLTextAccessible : public nsTextAccessibleWrap
+class nsHTMLTextAccessible : public nsTextAccessible
 {
 
 public:

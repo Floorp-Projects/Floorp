@@ -100,8 +100,6 @@ EXPORTS = \
   nsAccessibleWrap.h \
   nsDocAccessibleWrap.h \
   nsRootAccessibleWrap.h \
-  nsTextAccessibleWrap.h \
-  nsAccessibleText.h \
   $(NULL)
 
 # we want to force the creation of a static lib.
