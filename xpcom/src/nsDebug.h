@@ -50,43 +50,43 @@ public:
    * Log a pre-condition message to the debug log
    */
   static NS_COM void PreCondition(const char* aStr, const char* aExpr,
-				  const char* aFile, PRIntn aLine);
+                                  const char* aFile, PRIntn aLine);
 
   /**
    * Log a post-condition message to the debug log
    */
   static NS_COM void PostCondition(const char* aStr, const char* aExpr,
-				   const char* aFile, PRIntn aLine);
+                                   const char* aFile, PRIntn aLine);
 
   /**
    * Log an assertion message to the debug log
    */
   static NS_COM void Assertion(const char* aStr, const char* aExpr,
-			       const char* aFile, PRIntn aLine);
+                               const char* aFile, PRIntn aLine);
 
   /**
    * Log a not-yet-implemented message to the debug log
    */
   static NS_COM void NotYetImplemented(const char* aMessage,
-				       const char* aFile, PRIntn aLine);
+                                       const char* aFile, PRIntn aLine);
 
   /**
    * Log a not-reached message to the debug log
    */
   static NS_COM void NotReached(const char* aMessage,
-				const char* aFile, PRIntn aLine);
+                                const char* aFile, PRIntn aLine);
 
   /**
    * Log an error message to the debug log. This call returns.
    */
   static NS_COM void Error(const char* aMessage,
-			   const char* aFile, PRIntn aLine);
+                           const char* aFile, PRIntn aLine);
 
   /**
    * Log a warning message to the debug log.
    */
   static NS_COM void Warning(const char* aMessage,
-			     const char* aFile, PRIntn aLine);
+                             const char* aFile, PRIntn aLine);
 };
 
 #ifdef NS_DEBUG
@@ -95,7 +95,7 @@ public:
  * trigger a program failure.
  */
 #define NS_PRECONDITION(expr,str) \
-if (!(expr))			  \
+if (!(expr))                      \
   nsDebug::PreCondition(str, #expr, __FILE__, __LINE__)
 
 /**
@@ -103,7 +103,7 @@ if (!(expr))			  \
  * trigger a program failure.
  */
 #define NS_ASSERTION(expr,str) \
-if (!(expr))		       \
+if (!(expr))                   \
   nsDebug::Assertion(str, #expr, __FILE__, __LINE__)
 
 /**
@@ -112,7 +112,7 @@ if (!(expr))		       \
  * executed in release mode.
  */
 #define NS_VERIFY(expr,str) \
-if (!(expr))		       \
+if (!(expr))                \
   nsDebug::Assertion(str, #expr, __FILE__, __LINE__)
 
 /**
@@ -120,7 +120,7 @@ if (!(expr))		       \
  * trigger a program failure.
  */
 #define NS_POSTCONDITION(expr,str) \
-if (!(expr))			   \
+if (!(expr))                       \
   nsDebug::PostCondition(str, #expr, __FILE__, __LINE__)
 
 /**
