@@ -201,9 +201,19 @@
       <method name="onPopup">
         <parameter name="aPopup" />
 	<body><![CDATA[
+          // select all to remove cursor since can't type while popped-up
+          this.select();
+
 	  var timePickerGrid = aPopup.childNodes[0]; 
 	  timePickerGrid.onPopupShowing(this, aPopup);
 	]]></body>
+      </method>
+
+      <method name="select">
+        <body><![CDATA[
+          // select all in text box
+          this.kTextBox.select();
+        ]]></body>
       </method>
 
     </implementation>
@@ -980,6 +990,8 @@
 
 	  // put the picked time in the value property, and update
 	  this.mPicker.update(pickedTime, true);
+          // select changed value so no cursor appears (can't type to it).
+          this.mPicker.select();
 	]]></body>
       </method>
 

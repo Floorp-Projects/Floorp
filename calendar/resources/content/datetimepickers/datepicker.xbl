@@ -185,6 +185,8 @@
         <method name="onPopup">
             <body><![CDATA[
                 this.kMinimonth.update( this.mValue );
+                // select all to remove cursor since can't type while popped-up
+                this.select();
             ]]></body>
         </method>
 
@@ -200,8 +202,18 @@
             <parameter name="aMiniMonthGrid" />
             <body><![CDATA[
                 this.update(new Date(aMiniMonthGrid.value), true)
+                // select changed value so no cursor appears (can't type to it).
+                this.select();
+
                 aMiniMonthGrid.parentNode.hidePopup();
             ]]></body>
+        </method>
+
+        <method name="select">
+          <body><![CDATA[
+            // select all in text box
+            this.kTextBox.select();
+          ]]></body>
         </method>
 
         </implementation>
