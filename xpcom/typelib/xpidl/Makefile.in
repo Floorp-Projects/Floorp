@@ -34,7 +34,11 @@ CSRCS = \
 
 # Compile directly against the static lib, so we can use xpidl during the build
 # without the shared library path being set.
+ifdef CROSS_COMPILE
+LIBS = $(DIST)/lib/libhostxpt.a $(LIBIDL_LIBS)
+else
 LIBS = $(DIST)/lib/libxpt.a $(LIBIDL_LIBS)
+endif
 
 # We are building a build tool
 INTERNAL_TOOLS = 1
@@ -43,13 +47,18 @@ include $(topsrcdir)/config/rules.mk
 
 CFLAGS += $(LIBIDL_CFLAGS)
 
+ifdef CROSS_COMPILE
 ifdef HOST_NSPR_MDCPUCFG
 CFLAGS += -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
 endif
+endif
 
 # Tell the $(PROGRAM) target that we need to be recompiled when libxpt changes.
+ifdef CROSS_COMPILE
+EXTRA_DEPS = $(wildcard $(DIST)/lib/libhostxpt.*)
+else
 EXTRA_DEPS = $(wildcard $(DIST)/lib/libxpt.*)
-
+endif
 # Build xpidl early.
 export:: install
 

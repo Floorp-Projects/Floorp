@@ -26,11 +26,14 @@ MODULE		= xpcom
 LIBRARY_NAME	= xpt
 
 LIB_IS_C_ONLY	= 1
-INTERNAL_TOOLS	= 1
 
 CSRCS		= xpt_struct.c 	\
 		  xpt_xdr.c	\
 		  $(NULL)
+
+ifdef CROSS_COMPILE
+HOSTOBJS	:= $(CSRCS:.c=.o-h)
+endif
 
 REQUIRES	= $(MODULE)
 
@@ -46,7 +49,16 @@ export:: libs
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef HOST_NSPR_MDCPUCFG
-CFLAGS += -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
+ifdef CROSS_COMPILE
+GARBAGE += libhostxpt.$(LIB_SUFFIX) $(HOSTOBJS)
+
+libhostxpt.$(LIB_SUFFIX): $(HOSTOBJS)
+	$(AR) $(AR_FLAGS) $@ $(HOSTOBJS)
+
+%.o-h: %.c
+	$(HOST_CC) $(HOST_CFLAGS) -I$(DIST)/include $(NSPR_CFLAGS) -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG) -c -o $@ $<
+
+export:: libhostxpt.$(LIB_SUFFIX)
+	$(INSTALL) -m 444 libhostxpt.$(LIB_SUFFIX) $(DIST)/lib
 endif
 
