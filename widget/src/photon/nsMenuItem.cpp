@@ -43,15 +43,6 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
 static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
 
-/* Attach this Data structure to each PtMenuButton */
-/* because by the time we get into the menuitem callback the */
-/* nsMenuItem has already been destroyed. */
-
-struct PhMenuData {
-	PRUint32          theCommand;
-    nsIMenuListener * theMenuListener;
-};
-
 nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (NULL == aInstancePtr) {
@@ -130,7 +121,7 @@ void nsMenuItem::Create(nsIWidget      *aMBParent,
                         const nsString &aLabel, 
                         PRBool          aIsSeparator)
 {
-  PtArg_t  arg[3];
+  PtArg_t  arg[5];
   void     *me        = (void *) this;
 
 
@@ -157,15 +148,18 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuItem::nsMenuItem Create with MenuBar pare
    }
   else
   {
+    PtCallback_t callbacks[] = {{ MenuItemActivateCb, this }};
+
     mIsSeparator = PR_FALSE;
     PtSetArg ( &arg[2], Pt_ARG_TEXT_STRING, nameStr, 0);
-    mMenuItem = PtCreateWidget (PtMenuButton, aParent, 3, arg);
+    PtSetArg ( &arg[3], Pt_CB_ACTIVATE, callbacks, Pt_LINK_INSERT);
+    mMenuItem = PtCreateWidget (PtMenuButton, aParent, 4, arg);
   }
   
 
   NS_ASSERTION(mMenuItem, "Null Photon PtMenuItem");
   
-  PtAddCallback(mMenuItem, Pt_CB_ACTIVATE, MenuItemActivateCb ,this);
+//PtAddCallback(mMenuItem, Pt_CB_ACTIVATE, MenuItemActivateCb ,this);
 
   PtAddCallback(mMenuItem, Pt_CB_GOT_FOCUS,  MenuItemArmCb ,this);
   PtAddCallback(mMenuItem, Pt_CB_LOST_FOCUS, MenuItemDisarmCb ,this);
@@ -388,17 +382,6 @@ NS_METHOD nsMenuItem::AddMenuListener(nsIMenuListener * aMenuListener)
   NS_IF_RELEASE(mListener);
   mListener = aMenuListener;
   NS_ADDREF(mListener);
-
-#if 1
-  struct PhMenuData data;
-  PtArg_t           arg;
-
-  data.theCommand = mCommand;
-  data.theMenuListener = mListener;
-
-  PtSetArg ( &arg, Pt_ARG_USER_DATA, &data, sizeof(struct PhMenuData));
-  PtSetResources(mMenuItem, 1, &arg);
-#endif
   
   return NS_OK;
 }
@@ -588,19 +571,11 @@ NS_METHOD nsMenuItem::SetWebShell(nsIWebShell * aWebShell)
 
 int nsMenuItem::MenuItemActivateCb (PtWidget_t *widget, void *nsClassPtr, PtCallbackInfo_t *cbinfo)
 {
-  nsMenuEvent event;
-  nsEventStatus status;
-  struct PhMenuData **theMenuData = NULL;
-  PtArg_t arg;
+  nsMenuEvent    event;
+  nsEventStatus  status;
+  nsMenuItem    *aMenuItem = (nsMenuItem *) nsClassPtr;
   
-  /* Get the Data stored on the PtMenuButton */
-  PtSetArg(&arg, Pt_ARG_USER_DATA, &theMenuData, 0);
-  PtGetResources(widget, 1, &arg);
-  
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuItem::MenuItemActivate Callback theMenuData=<%p>\n", theMenuData));
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuItem::MenuItemActivate Callback command=<%d> Listeneer=<%p>\n", (*theMenuData)->theCommand,(*theMenuData)->theMenuListener));
-    
-  nsMenuItem *aMenuItem = (nsMenuItem *) nsClassPtr;
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenuItem::MenuItemActivate Callback aMenuItem=<%p>\n", aMenuItem));
     
   if (aMenuItem != nsnull)
   {
@@ -612,7 +587,7 @@ int nsMenuItem::MenuItemActivateCb (PtWidget_t *widget, void *nsClassPtr, PtCall
     event.widget = nsnull;
     event.nativeMsg = NULL;
 
-    aMenuItem->GetCommand(aMenuItem->mCommand);  //event.mCommand = aMenuItem->mCommand;
+    aMenuItem->GetCommand(aMenuItem->mCommand);
     event.mMenuItem = aMenuItem;
 
     nsIMenuListener *menuListener = nsnull;
