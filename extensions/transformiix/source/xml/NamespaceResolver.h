@@ -16,7 +16,7 @@
  * Peter Van der Beken, Peter.VanderBeken@pandora.be
  *   -- original author.
  *
- * $Id: NamespaceResolver.h,v 1.1 2000/08/27 05:58:56 kvisco%ziplink.net Exp $
+ * $Id: NamespaceResolver.h,v 1.2 2000/09/04 16:25:24 axel%pike.org Exp $
  */
 
 
@@ -35,7 +35,7 @@ public:
     /**
      * Returns the namespace URI for the given name
     **/ 
-    virtual void getNameSpaceURI(String& name, String& nameSpaceURI) = 0;
+    virtual void getNameSpaceURI(const String& name, String& nameSpaceURI) = 0;
 
 }; //-- NamespaceResolver
 
