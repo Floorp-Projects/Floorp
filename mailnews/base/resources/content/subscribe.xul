@@ -30,7 +30,11 @@ Rights Reserved.
 <window xmlns:NC="http://home.netscape.com/NC-rdf#"	
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         orient="vertical"
-		    class="dialog"
+		class="dialog"
+        width="500"
+        height="400"
+        id="subscribeWindow"
+        persist="width height screenX screenY"
         onload="SubscribeOnLoad()">
         
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
