@@ -238,6 +238,7 @@ private:
         nsresult            mStatus;
         void               *mParam;
     };
+    friend class nsConnEvent;
 
     nsresult PostEvent(nsConnEventHandler  handler,
                        nsresult            status = NS_OK,
