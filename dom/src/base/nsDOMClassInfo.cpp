@@ -4080,7 +4080,9 @@ nsHTMLExternalObjSH::GetPluginInstance(nsIXPConnectWrappedNative *wrapper,
 
   nsIObjectFrame* objectFrame = nsnull;
   CallQueryInterface(frame, &objectFrame);
-  NS_ENSURE_TRUE(objectFrame, NS_ERROR_UNEXPECTED);
+  if (!objectFrame) {
+    return NS_OK;
+  }
 
   return objectFrame->GetPluginInstance(*_result);
 }
