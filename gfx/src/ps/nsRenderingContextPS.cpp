@@ -50,7 +50,6 @@
 
 #include <math.h>
 
-// Macro to convert from TWIPS (1440 per inch) to POINTS (72 per inch)
 #define NS_PIXELS_TO_POINTS(x) ((x) * 10)
 
 #define FLAG_CLIP_VALID       0x0001
