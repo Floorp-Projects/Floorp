@@ -49,7 +49,7 @@ AC_ARG_ENABLE(random-options,
 	    _nargs=$[RANDOM % 5 + 1] ;
 	    _new_args=
 	    while test 1; do 
-		_choice=$[RANDOM % 28 + 1];
+		_choice=$[RANDOM % 25 + 1];
 		case "$_choice" in	
 		1) _new_args="$_new_args --with-gtk" ;;
 		2) _new_args="$_new_args --with-gtk --with-static-gtk" ;;
@@ -59,6 +59,7 @@ AC_ARG_ENABLE(random-options,
 		6) _new_args="$_new_args --with-xlib" ;;
 		7) _new_args="$_new_args --with-qt" ;;
 		8) _new_args="$_new_args --with-qt --with-static-qt" ;;
+		9) _new_args="$_new_args --enable-idlc" ;;
 		10) _new_args="$_new_args --disable-async-dns" ;;
 		11) _new_args="$_new_args --enable-oji" ;;
 		12) _new_args="$_new_args --enable-pics" ;;
@@ -70,13 +71,11 @@ AC_ARG_ENABLE(random-options,
 		18) _new_args="$_new_args --disable-cookie-management" ;;
 		19) _new_args="$_new_args --disable-single-signon" ;;
 		20) _new_args="$_new_args --enable-strip-libs" ;;
+		21) _new_args="$_new_args --disable-dtd-debug" ;;
 		22) _new_args="$_new_args --enable-cpp-rtti" ;;
 		23) _new_args="$_new_args --enable-cpp-excecpions" ;;
 		24) _new_args="$_new_args --disable-double-buffer" ;;
-		25) _new_args="$_new_args --enable-wrap-malloc" ;;
-		26) _new_args="$_new_args --enable-idlc" ;;
-		27) _new_args="$_new_args --disable-dtd-debug" ;;
-		28) _new_args="$_new_args --enable-static" ;;
+		25) _new_args="$_new_args --enable-static" ;;
 		esac
 
 		_nargs=$[_nargs - 1];
