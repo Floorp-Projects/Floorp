@@ -62,9 +62,7 @@ function con_icommand (e)
             else
             {
                 e.commandEntry = ary[0];
-                if (!console[ary[0].func](e))
-                    display (ary[0].name + " " + ary[0].usage,
-                             MT_USAGE);
+                console[ary[0].func](e)
             }
             break;
             
@@ -76,6 +74,27 @@ function con_icommand (e)
                      MT_ERROR);
     }
 
+}
+
+console.onInputCommands =
+function cli_icommands (e)
+{
+    displayCommands (e.inputData);
+    return true;
+}
+
+console.onInputCont =
+function cli_icommands (e)
+{
+    if (!console.frames)
+    {
+        display (MSG_ERR_NO_STACK, MT_ERROR);
+        return false;
+    }
+
+    console.jsds.exitNestedEventLoop();
+
+    return true;
 }
     
 console.onInputCompleteLine =
@@ -101,46 +120,15 @@ function con_icline (e)
         console.onInputCommand (e);
     }
     else /* no command character */
-    {
-        e.inputData = e.line;
-        console.onInputEval (e);
-    }
+        evalInDebuggerScope (e.line);
 
 }
 
 console.onInputEval =
 function con_ieval (e)
 {
-    try
-    {
-        display (e.inputData, "EVAL-IN");
-        var rv = String(console.doEval (e.inputData));
-        if (typeof rv != "undefined")
-            display (rv, "EVAL-OUT");
-    }
-    catch (ex)
-    {
-        var str = "";
-        
-        if (ex.fileName && ex.lineNumber && ex.message)
-        {
-            if (!ex.name)
-                ex.name = "Error";    
-            
-            /* if it looks like a normal exception, print all the bits */
-            str = getMsg (MSN_EVAL_ERROR, [ex.name, ex.fileName, ex.lineNumber]);
-            if (ex.functionName)
-                str += " (" + ex.functionName + ")";
-
-            str += ": " + ex.message;
-        }
-        else
-            /* otherwise, just convert to a string */
-            str = getMsg (MSN_EVAL_THREW, String(ex));
-
-        display (str, MT_ERROR);
-    }
-    
+    if (e.inputData)
+        evalInTargetScope (e.inputData)
     return true;
 }
 
@@ -157,11 +145,11 @@ function con_iframe (e)
     
     if (idx >= 0)
     {
-        console.currentFrame = console.frames[idx];
+        console.currentFrameIndex = idx;
         displayFrame (console.frames[idx], idx);
     }
     else
-        displayFrame (console.currentFrame);
+        displayFrame (console.frames[console.currentFrameIndex]);
     
     return true;
 }
@@ -195,10 +183,10 @@ function con_iscope (e)
         return false;
     }
     
-    if (console.currentFrame.scope.propertyCount == 0)
+    if (console.frames[console.currentFrameIndex].scope.propertyCount == 0)
         display (getMsg (MSN_NO_PROPERTIES, MSG_VAL_SCOPE + " 0"));
     else
-        displayProperties (console.currentFrame.scope);
+        displayProperties (console.frames[console.currentFrameIndex].scope);
     
     return true;
 }
@@ -257,10 +245,85 @@ function con_slkeypress (e)
             
             break;
             
+        case 9: /* tab */
+            e.preventDefault();
+            console.onTabCompleteRequest(e);
+            break;       
+
         default:
             console._incompleteLine = e.target.value;
             break;
     }
+}
+
+console.onTabCompleteRequest =
+function con_tabcomplete (e)
+{
+    var selStart = e.target.selectionStart;
+    var selEnd   = e.target.selectionEnd;            
+    var v        = e.target.value;
+    var cmdchar  = console.prefs["input.commandchar"];
+    
+    if (selStart != selEnd) 
+    {
+        /* text is highlighted, just move caret to end and exit */
+        e.target.selectionStart = e.target.selectionEnd = v.length;
+        return;
+    }
+
+    var firstSpace = v.indexOf(" ");
+    if (firstSpace == -1)
+        firstSpace = v.length;
+
+    var pfx;
+    var d;
+    
+    if ((v[0] == cmdchar) && (selStart <= firstSpace))
+    {
+        /* line starts with /, and the cursor is positioned before the
+         * first space, so we're completing a command
+         */
+        var partialCommand = v.substring(1, firstSpace).toLowerCase();
+        var cmds = console._commands.listNames(partialCommand);
+
+        if (!cmds)
+            /* partial didn't match a thing */
+            display (getMsg(MSN_NO_CMDMATCH, partialCommand), MT_ERROR);
+        else if (cmds.length == 1)
+        {
+            /* partial matched exactly one command */
+            pfx = cmdchar + cmds[0];
+            if (firstSpace == v.length)
+                v =  pfx + " ";
+            else
+                v = pfx + v.substr (firstSpace);
+            
+            e.target.value = v;
+            e.target.selectionStart = e.target.selectionEnd = pfx.length + 1;
+        }
+        else if (cmds.length > 1)
+        {
+            /* partial matched more than one command */
+            d = new Date();
+            if ((d - console._lastTabUp) <= console.prefs["input.dtab.time"])
+                display (getMsg (MSN_CMDMATCH,
+                                 [partialCommand, "[" + cmds.join(", ") + "]"]));
+            else
+                console._lastTabUp = d;
+            
+            pfx = cmdchar + getCommonPfx(cmds);
+            if (firstSpace == v.length)
+                v =  pfx;
+            else
+                v = pfx + v.substr (firstSpace);
+            
+            e.target.value = v;
+            e.target.selectionStart = e.target.selectionEnd = pfx.length;
+            
+        }
+                
+    }
+
 }
 
 console.onUnload =
