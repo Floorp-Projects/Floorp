@@ -334,6 +334,16 @@ CompositeEnumeratorImpl::HasMoreElements(PRBool* aResult)
             // If we get here, then we've really found one. It'll
             // remain cached in mResult until GetNext() sucks it out.
             *aResult = PR_TRUE;
+
+            // Remember that we returned it, so we don't return
+            // duplicates.
+
+            // XXX I wonder if we should make unique-checking be
+            // optional. This could get to be pretty expensive (this
+            // implementation turns iteration into O(n^2)).
+            mAlreadyReturned.AppendElement(mResult);
+            NS_ADDREF(mResult);
+
             return NS_OK;
         } while (1);
 
