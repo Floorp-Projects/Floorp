@@ -4,8 +4,8 @@
 # 
 
 <search 
-     name        = "Jobs"
-     description = "Jobs"
+     name        = "Jobs by Monster.com"
+     description = "Jobs by Monster.com"
      method      = "GET"
      action      = "http://jobsearch.netscape.monster.com/jobsearch.asp"
 >
@@ -17,6 +17,8 @@
 
 
 <interpret
+     bannerStart="<!--- BEGIN AD BANNER --->"
+     bannerEnd="<!--- END AD BANNER --->"
      resultListStart = "<!-- Jobs nnn of nnn -->"
      resultListEnd   = "<!-- Define a "previous" button if this isn't the first page -->"
      resultItemStart = "<TR>"
