@@ -28,15 +28,10 @@
  *-----------------------------------------------------------*/
 
 Boolean 	gDone = false;
-Boolean 	gSDDlg = false;
 WindowPtr 	gWPtr = NULL;
 short		gCurrWin = 0;
 InstWiz		*gControls = NULL;
 Boolean     gInstallStarted = false;
-
-EventProc 			gSDIEvtHandler;  /* SDI */
-SDI_NETINSTALL 		gInstFunc;
-CFragConnectionID	gConnID;
 
 
 /*-----------------------------------------------------------*
@@ -89,45 +84,12 @@ VerifyEnv(void)
 void Init(void)
 {
 	Str255		 	winTitle;
-#if CFG_IS_REMOTE == 1
-	ThreadID		tid;
-	ThreadState		state;
-#endif
 	OSErr			err = noErr;
 	
 	gDone = false;
 	InitManagers();
 	InitControlsObject();	
 	CleanTemp();
-
-#if (SDINST_IS_DLL == 1) && (MOZILLA == 0)
-	if (!InitSDLib())
-	{
-		ErrorHandler(eLoadLib);
-		return;
-	}
-#endif
-
-#if CFG_IS_REMOTE == 1
-	if (!SpawnSDThread(PullDownConfig, &tid))
-	{
-		ErrorHandler(eSpawn);
-		return;
-	}
-
-	/* block/busy wait till download finishes */
-	while (1)
-	{
-		GetThreadState(tid, &state);
-		if (state == kStoppedThreadState)
-			break;
-		else
-			sleep(1);
-	}
-
-	ERR_CHECK(DisposeThread(tid, (void*)nil, false));
-
-#endif /* CFG_IS_REMOTE == 1 */
 
 	gWPtr = GetNewCWindow(rRootWin, NULL, (WindowPtr) -1);	
     GetIndString( winTitle, rTitleStrList, sNSInstTitle);
@@ -138,7 +100,8 @@ void Init(void)
 	ParseConfig(); 
 	InitOptObject();
 	
-	ShowLicenseWin();	
+	ShowWelcomeWin();	
+	SetThemeWindowBackground(gWPtr, kThemeBrushDialogBackgroundActive, true); 
 }
 
 OSErr
@@ -405,14 +368,13 @@ void MainEventLoop(void)
 {
 	EventRecord evt;
 	Boolean		notHandled = true;
-	THz			ourHZ;
 	RgnHandle   mouseRgn;
 
 	mouseRgn = NewRgn();
 	
 	while (!gDone) 
 	{		
-		YieldToAnyThread();  /* SmartDownload dialog thread */
+		YieldToAnyThread();  /* download thread */
 		
 		if (!gDone)	 /* after cx switch back ensure not done */
 		{
@@ -421,23 +383,7 @@ void MainEventLoop(void)
 				if (mouseRgn)
 					SetRectRgn(mouseRgn, evt.where.h, evt.where.v, evt.where.h + 1, evt.where.v + 1);
 					
-				if (gSDDlg)
-				{
-					ourHZ = GetZone();
-#if MOZILLA == 0
-#if SDINST_IS_DLL==1
-					notHandled = gSDIEvtHandler(&evt);
-#else			
-					notHandled = SDI_HandleEvent(&evt);	
-#endif /* SDINST_IS_DLL */
-#endif /* MOZILLA */
-					SetZone(ourHZ);
-				}
-				else
-					notHandled = true;
-					
-				if (notHandled)
-					HandleNextEvent(&evt);
+				HandleNextEvent(&evt);
 			}
 		}
 	}
@@ -496,13 +442,12 @@ void ErrorHandler(short errCode)
 void Shutdown(void)
 {
 	WindowPtr	frontWin;
-	long 		MIWMagic = 0, i;
+	long 		MIWMagic = 0;
 
-#if (SDINST_IS_DLL == 1) && (MOZILLA == 0)
-	UnloadSDLib(&gConnID);
-#endif
 	NavUnload();
 	
+#if 0
+
 /* deallocate config object */
     if (gControls->cfg)
     {
@@ -565,13 +510,10 @@ void Shutdown(void)
 		
 /* deallocate all controls */	
 
-#if 0
-/* XXX gets disposed by DisposeWindow() ? */
 	if (gControls->nextB)
 		DisposeControl(gControls->nextB);  
 	if (gControls->backB)
 		DisposeControl(gControls->backB);
-#endif
 	
 	if (gControls->lw)
 		DisposePtr( (char*) gControls->lw);
@@ -586,6 +528,8 @@ void Shutdown(void)
 	
 	if (gControls)
 		DisposePtr( (char*) gControls);
+		
+#endif /* 0 */
 			
 	frontWin = FrontWindow();
 	MIWMagic = GetWRefCon(frontWin);

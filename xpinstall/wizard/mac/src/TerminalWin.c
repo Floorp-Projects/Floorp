@@ -36,7 +36,6 @@ ShowTerminalWin(void)
 	Handle		rectH;
 	Rect		viewRect;
 	short		reserr;
-#if MOZILLA == 0
 	MenuHandle 			popupMenu;
 	PopupPrivateData ** pvtDataHdl;
 	unsigned char *		currMenuItem;
@@ -45,7 +44,6 @@ ShowTerminalWin(void)
 	Boolean				isDir = false;
 	Str255				pModulesDir;
 	OSErr 				err = noErr;
-#endif /* MOZILLA == 0 */
 	GrafPtr		oldPort;
 	GetPort(&oldPort);
 
@@ -79,42 +77,12 @@ ShowTerminalWin(void)
 		gControls->tw->startMsgBox = viewRect;
 	
 		gControls->tw->startMsg = TENew(&viewRect, &viewRect);
-    if (gControls->tw->startMsg == NULL)
-    {
-    	ErrorHandler(eMem);
-    	return;
-    }
+        if (gControls->tw->startMsg == NULL)
+        {
+        	ErrorHandler(eMem);
+        	return;
+        }
     
-#if MOZILLA == 0	
-        // site selector
-		if (gControls->cfg->numSites > 0)
-		{
-			gControls->tw->siteSelector = GetNewControl( rSiteSelector, gWPtr );
-			if (!gControls->tw->siteSelector)
-			{
-				ErrorHandler(eMem);
-				return;
-			}
-			
-			// populate popup button menus
-			HLock((Handle)gControls->tw->siteSelector);
-			pvtDataHdl = (PopupPrivateData **) (*(gControls->tw->siteSelector))->contrlData;
-			HLock((Handle)pvtDataHdl);
-			popupMenu = (MenuHandle) (**pvtDataHdl).mHandle;
-			for (i=0; i<gControls->cfg->numSites; i++)
-			{
-				HLock(gControls->cfg->site[i].desc);
-				currMenuItem = CToPascal(*gControls->cfg->site[i].desc);		
-				HUnlock(gControls->cfg->site[i].desc);
-				InsertMenuItem( popupMenu, currMenuItem, i );
-			}
-			HUnlock((Handle)pvtDataHdl);
-			HUnlock((Handle)gControls->tw->siteSelector);
-			SetControlMaximum(gControls->tw->siteSelector, gControls->cfg->numSites);
-			SetControlValue(gControls->tw->siteSelector, gControls->opt->siteChoice);
-			ShowControl(gControls->tw->siteSelector);
-		}
-		
 		// save bits after download and install
 	
 		/* get the "Installer Modules" relative subdir */
@@ -124,7 +92,57 @@ ShowTerminalWin(void)
 		if (isDir)
 		{
 			if (!ExistArchives(vRefNum, dirID))  // going to download
-			{
+			{			    
+        		if (gControls->cfg->numSites > 0)
+        		{
+                    // download settings groupbox
+                    Str255 dlSettingsGBTitle;
+                    gControls->tw->dlSettingsGB = GetNewControl(rDLSettingsGB, gWPtr);
+                    if (gControls->tw->dlSettingsGB)
+                    {
+                        GetIndString(dlSettingsGBTitle, rStringList, sDLSettings);
+                        SetControlTitle(gControls->tw->dlSettingsGB, dlSettingsGBTitle);
+                        ShowControl(gControls->tw->dlSettingsGB);
+                    }
+                    
+                    // site selector label
+                    Str255 siteSelMsgStr;
+                    gControls->tw->siteSelMsg = GetNewControl(rSiteSelMsg, gWPtr);
+                    if (gControls->tw->siteSelMsg)
+                    {
+                        GetIndString(siteSelMsgStr, rStringList, sSiteSelMsg);
+                        SetControlData(gControls->tw->siteSelMsg, kControlNoPart, 
+                            kControlStaticTextTextTag, siteSelMsgStr[0], (Ptr)&siteSelMsgStr[1]); 
+                        ShowControl(gControls->tw->siteSelMsg);
+                    }
+                    
+    		        // site selector
+        			gControls->tw->siteSelector = GetNewControl( rSiteSelector, gWPtr );
+        			if (!gControls->tw->siteSelector)
+        			{
+        				ErrorHandler(eMem);
+        				return;
+        			}
+        			
+        			// populate popup button menus
+        			HLock((Handle)gControls->tw->siteSelector);
+        			pvtDataHdl = (PopupPrivateData **) (*(gControls->tw->siteSelector))->contrlData;
+        			HLock((Handle)pvtDataHdl);
+        			popupMenu = (MenuHandle) (**pvtDataHdl).mHandle;
+        			for (i=0; i<gControls->cfg->numSites; i++)
+        			{
+        				HLock(gControls->cfg->site[i].desc);
+        				currMenuItem = CToPascal(*gControls->cfg->site[i].desc);		
+        				HUnlock(gControls->cfg->site[i].desc);
+        				InsertMenuItem( popupMenu, currMenuItem, i );
+        			}
+        			HUnlock((Handle)pvtDataHdl);
+        			HUnlock((Handle)gControls->tw->siteSelector);
+        			SetControlMaximum(gControls->tw->siteSelector, gControls->cfg->numSites);
+        			SetControlValue(gControls->tw->siteSelector, gControls->opt->siteChoice);
+        			ShowControl(gControls->tw->siteSelector);
+        		}
+		
 				// show check box and message
 				gControls->tw->saveBitsCheckbox = GetNewControl( rSaveCheckbox, gWPtr );
 				if (!gControls->tw->saveBitsCheckbox)
@@ -132,6 +150,8 @@ ShowTerminalWin(void)
 					ErrorHandler(eMem);
 					return;
 				}
+				if (gControls->opt->saveBits)
+				    SetControlValue(gControls->tw->saveBitsCheckbox, 1);
 				ShowControl(gControls->tw->saveBitsCheckbox);
 				
 				// get rect for save bits message
@@ -160,13 +180,24 @@ ShowTerminalWin(void)
 				TESetText(*gControls->cfg->saveBitsMsg, strlen(*gControls->cfg->saveBitsMsg),
 					gControls->tw->saveBitsMsg);
 				HUnlock(gControls->cfg->saveBitsMsg);
-	
-				// show controls
+				
+				// show save bits msg
 				TEUpdate(&gControls->tw->saveBitsMsgBox, gControls->tw->saveBitsMsg);
-			}
+				
+				// proxy settings button
+				gControls->tw->proxySettingsBtn = GetNewControl(rProxySettgBtn, gWPtr);
+				if (!gControls->tw->proxySettingsBtn)
+				{
+					ErrorHandler(eMem);
+					return;
+				}
+				Str255 proxySettingsTitle;
+				GetIndString(proxySettingsTitle, rStringList, sProxySettings);
+				SetControlTitle(gControls->tw->proxySettingsBtn, proxySettingsTitle);
+				ShowControl(gControls->tw->proxySettingsBtn);
+            }
 		}
-#endif /* MOZILLA == 0 */
-		
+				
 		// populate control
 		HLock(gControls->cfg->startMsg);
 		TESetText(*gControls->cfg->startMsg, strlen(*gControls->cfg->startMsg), 
@@ -181,6 +212,32 @@ ShowTerminalWin(void)
 	SetPort(oldPort);
 }
 
+short
+GetRectFromRes(Rect *outRect, short inResID)
+{
+    Handle rectH;
+    short reserr;
+    
+    if (!outRect)
+        return eParam;
+        
+	// get rect for save bits message
+	rectH = Get1Resource('RECT', inResID);
+	reserr = ResError();
+	if (reserr == noErr && rectH != NULL)
+	{
+		 *outRect  = (Rect) **((Rect **)rectH);
+		 DisposeHandle(rectH);
+    }
+	else
+	{
+		ErrorHandler(reserr);
+		return reserr;
+	}
+	
+	return 0;
+}
+
 void
 UpdateTerminalWin(void)
 {
@@ -189,8 +246,15 @@ UpdateTerminalWin(void)
 	GetPort(&oldPort);
 	SetPort(gWPtr);
 	
-	TEUpdate(&gControls->tw->startMsgBox, gControls->tw->startMsg);
-	if (gControls->tw->allProgressMsg)
+	if (!gInstallStarted)
+    	TEUpdate(&gControls->tw->startMsgBox, gControls->tw->startMsg);
+
+    if (gControls->tw->dlProgressBar)
+    {
+        // XXX   TO DO
+        // update the dl TEs
+    }
+	else if (gControls->tw->allProgressMsg)
 	{
 		HLock((Handle)gControls->tw->allProgressMsg);
 		SetRect(&instMsgRect, (*gControls->tw->allProgressMsg)->viewRect.left,
@@ -200,6 +264,13 @@ UpdateTerminalWin(void)
 		HUnlock((Handle)gControls->tw->allProgressMsg);
 		
 		TEUpdate(&instMsgRect, gControls->tw->allProgressMsg);
+	}
+	else
+	{ 
+	    if (gControls->tw->saveBitsMsg)
+	    {
+	        TEUpdate(&gControls->tw->saveBitsMsgBox, gControls->tw->saveBitsMsg);
+	    }
 	}
 	
 	SetPort(oldPort);
@@ -211,10 +282,8 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 	Point 			localPt;
 	Rect			r;
 	ControlPartCode	part;
-#if MOZILLA == 0
 	ControlHandle	currCntl;
 	short 			checkboxVal;
-#endif /* MOZILLA == 0 */
 	ThreadID 		tid;
 	GrafPtr			oldPort;
 	GetPort(&oldPort);
@@ -223,7 +292,6 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 	localPt = evt->where;
 	GlobalToLocal( &localPt);
 	
-#if MOZILLA == 0
 	if (gControls->tw->siteSelector)
 	{
 		HLock((Handle)gControls->tw->siteSelector);
@@ -256,7 +324,20 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 			return;
 		}
 	}
-#endif /* MOZILLA == 0 */
+
+    if (gControls->tw->proxySettingsBtn)
+    {
+        HLock((Handle)gControls->tw->proxySettingsBtn);
+        r = (**(gControls->tw->proxySettingsBtn)).contrlRect;
+        HUnlock((Handle)gControls->tw->proxySettingsBtn);
+        if (PtInRect(localPt, &r))
+        {
+            part = TrackControl(gControls->tw->proxySettingsBtn, evt->where, NULL);
+            if (part != 0)
+                OpenProxySettings();
+            return;
+        }
+    }
 					
 	HLock((Handle)gControls->backB);
 	SetRect(&r, (**(gControls->backB)).contrlRect.left,
@@ -280,6 +361,7 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 				ErrorHandler(eParam);	
 				return;
 			}
+			ClearSaveBitsMsg();
 			
 			/* treat last setup type  selection as custom */
 			if (gControls->opt->instChoice == gControls->cfg->numSetupTypes)
@@ -307,13 +389,155 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 		if (part)
 		{
 		    DisableNavButtons();
-		    ClearSiteSelector();
+            ClearDownloadSettings();
 		    gInstallStarted = true;
 			SpawnSDThread(Install, &tid);
 			return;
 		}
 	}
 	SetPort(oldPort);
+}
+
+void
+my_c2pstrcpy(const char *aCStr, Str255 aPStr)
+{
+    if (!aCStr)
+        return;
+    
+    memcpy(&aPStr[1], aCStr, strlen(aCStr) > 255 ? 255 : strlen(aCStr));
+    aPStr[0] = strlen(aCStr);
+}
+
+#define rProxyHostItem 3
+#define rProxyPortItem 4
+#define rProxyUserItem 5
+#define rProxyPswdItem 6
+
+void
+OpenProxySettings(void)
+{
+    short itemHit = 999;
+    short itemType;
+    Handle item;
+    Rect itemBox;
+    Str255 itemText, pswdBuf, blindPswdText;
+    DialogPtr psDlg;
+    
+    /* show dialog */
+    psDlg = GetNewDialog(rDlgProxySettg, NULL, (WindowPtr) -1);
+
+    /* pre-populate text fields */
+    if (gControls->opt->proxyHost)
+    {
+        my_c2pstrcpy(gControls->opt->proxyHost, itemText);
+        GetDialogItem(psDlg, rProxyHostItem, &itemType, &item, &itemBox);
+        SetDialogItemText(item, itemText);
+    }
+    
+    if (gControls->opt->proxyPort)
+    {
+        my_c2pstrcpy(gControls->opt->proxyPort, itemText);
+        GetDialogItem(psDlg, rProxyPortItem, &itemType, &item, &itemBox);
+        SetDialogItemText(item, itemText);    
+    }
+    
+    if (gControls->opt->proxyUsername)
+    {
+        my_c2pstrcpy(gControls->opt->proxyUsername, itemText);
+        GetDialogItem(psDlg, rProxyUserItem, &itemType, &item, &itemBox);
+        SetDialogItemText(item, itemText);    
+    }
+    
+    if (gControls->opt->proxyPassword)
+    {
+        int pswdLen = strlen(gControls->opt->proxyPassword);
+        memset(&blindPswdText[1], '¥', pswdLen);
+        blindPswdText[0] = pswdLen;
+        GetDialogItem(psDlg, rProxyPswdItem, &itemType, &item, &itemBox);
+        SetDialogItemText(item, blindPswdText);    
+    }
+    
+    if (gControls->opt->proxyPassword)
+        my_c2pstrcpy(gControls->opt->proxyPassword, pswdBuf);
+    else
+        pswdBuf[0] = 0;
+    do
+    {
+        ModalDialog(NULL, &itemHit);
+        
+        /* special handling for "blind" password field */
+        if (itemHit == rProxyPswdItem)
+        {
+            GetDialogItem(psDlg, rProxyPswdItem, &itemType, &item, &itemBox);
+            GetDialogItemText(item, itemText);
+            
+            /* char deleted ? */
+            if (itemText[0] < pswdBuf[0])
+            {
+                /* truncate password buffer */
+                pswdBuf[0] = itemText[0];
+            }
+            else
+            {
+                /* store new char in password buffer */
+                pswdBuf[itemText[0]] = itemText[itemText[0]];
+                pswdBuf[0] = itemText[0];
+            }
+            
+            memset(&blindPswdText[1], '¥', pswdBuf[0]);
+            blindPswdText[0] = itemText[0];
+            
+            SetDialogItemText(item, blindPswdText);
+        }
+    } while(itemHit != 1 && itemHit != 2);
+    
+    /* if OK was hit then take changed settings */
+    if (itemHit == 1)
+    {
+        GetDialogItem(psDlg, rProxyHostItem, &itemType, &item, &itemBox);
+        GetDialogItemText(item, itemText);
+        if (itemText[0] > 0)
+        {
+            if (gControls->opt->proxyHost)
+                free(gControls->opt->proxyHost);
+            gControls->opt->proxyHost = (char *) malloc(itemText[0] + 1);
+            strncpy(gControls->opt->proxyHost, (const char *)&itemText[1], itemText[0]);
+            *(gControls->opt->proxyHost + itemText[0]) = 0;
+        }
+        
+        GetDialogItem(psDlg, rProxyPortItem, &itemType, &item, &itemBox);
+        GetDialogItemText(item, itemText);
+        if (itemText[0] > 0)
+        {
+            if (gControls->opt->proxyPort)
+                free(gControls->opt->proxyPort);        
+            gControls->opt->proxyPort = (char *) malloc(itemText[0] + 1);
+            strncpy(gControls->opt->proxyPort, (const char *)&itemText[1], itemText[0]);
+            *(gControls->opt->proxyPort + itemText[0]) = 0;
+        }
+            
+        GetDialogItem(psDlg, rProxyUserItem, &itemType, &item, &itemBox);
+        GetDialogItemText(item, itemText);
+        if (itemText[0] > 0)
+        {
+            if (gControls->opt->proxyUsername)
+                free(gControls->opt->proxyUsername);        
+            gControls->opt->proxyUsername = (char *) malloc(itemText[0] + 1);
+            strncpy(gControls->opt->proxyUsername, (const char *)&itemText[1], itemText[0]);
+            *(gControls->opt->proxyUsername + itemText[0]) = 0;
+        }
+            
+        if (pswdBuf[0] > 0)
+        {
+            if (gControls->opt->proxyPassword)
+                free(gControls->opt->proxyPassword);        
+            gControls->opt->proxyPassword = (char *) malloc(pswdBuf[0] + 1);
+            strncpy(gControls->opt->proxyPassword, (const char *)&pswdBuf[1], pswdBuf[0]);
+            *(gControls->opt->proxyPassword + pswdBuf[0]) = 0;
+        }
+    }
+        
+    DisposeDialog(psDlg);
 }
 
 Boolean
@@ -335,15 +559,43 @@ SpawnSDThread(ThreadEntryProcPtr threadProc, ThreadID *tid)
 }
 
 void
-ClearSiteSelector(void)
-{	
-#if MOZILLA == 0
-	if (gControls->tw->siteSelector)
-		HideControl(gControls->tw->siteSelector);
-#endif /* MOZILLA == 0*/
-			
-	// erase the rect contents to get rid of the message
-	EraseRect(&gControls->tw->startMsgBox);
+ClearDownloadSettings(void)
+{
+    GrafPtr oldPort;
+    
+    GetPort(&oldPort);
+    if (gWPtr)
+    {
+        SetPort(gWPtr);
+        
+        if (gControls->tw->dlSettingsGB)
+            DisposeControl(gControls->tw->dlSettingsGB);
+            
+    	if (gControls->tw->startMsg)
+            EraseRect(&gControls->tw->startMsgBox);
+            
+    	if (gControls->tw->siteSelector)
+    		DisposeControl(gControls->tw->siteSelector);	  
+        if (gControls->tw->siteSelMsg)
+            DisposeControl(gControls->tw->siteSelMsg);
+                    	
+        if (gControls->tw->saveBitsMsg)
+            EraseRect(&gControls->tw->saveBitsMsgBox);
+        if (gControls->tw->saveBitsCheckbox)
+            DisposeControl(gControls->tw->saveBitsCheckbox);
+            
+        if (gControls->tw->proxySettingsBtn)
+            DisposeControl(gControls->tw->proxySettingsBtn);
+    }
+    
+    SetPort(oldPort);            
+}
+
+void
+ClearSaveBitsMsg(void)
+{
+    if (gControls->tw->saveBitsMsg)
+        EraseRect(&gControls->tw->saveBitsMsgBox);
 }
 
 void
@@ -351,10 +603,12 @@ EnableTerminalWin(void)
 {
 	EnableNavButtons();
 	
-#if MOZILLA == 0
 	if (gControls->tw->siteSelector)
 		HiliteControl(gControls->tw->siteSelector, kEnableControl);
-#endif /* MOZILLA == 0 */
+	if (gControls->tw->saveBitsCheckbox)
+	    HiliteControl(gControls->tw->saveBitsCheckbox, kEnableControl);
+    if (gControls->tw->proxySettingsBtn)
+        HiliteControl(gControls->tw->proxySettingsBtn, kEnableControl);	    
 }
 
 void
@@ -362,8 +616,10 @@ DisableTerminalWin(void)
 {
 	DisableNavButtons();
 
-#if MOZILLA == 0
 	if (gControls->tw->siteSelector)
 		HiliteControl(gControls->tw->siteSelector, kDisableControl);
-#endif /* MOZILLA == 0 */
+	if (gControls->tw->saveBitsCheckbox)
+	    HiliteControl(gControls->tw->saveBitsCheckbox, kDisableControl);
+    if (gControls->tw->proxySettingsBtn)
+        HiliteControl(gControls->tw->proxySettingsBtn, kDisableControl);		    
 }

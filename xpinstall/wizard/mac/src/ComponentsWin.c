@@ -89,13 +89,13 @@ ShowComponentsWin(void)
 			(gControls->cfg->st[instChoice].comp[i] == kInSetupType))
 			totalRows++;
 	}
-		
+    
 	SetRect(&dataBounds, 0, 0, 1, totalRows);
 	SetPt( &cSize, 0, 0);
 	gControls->cw->compList = LNew((const Rect*)&gControls->cw->compListBox, (const Rect*)&dataBounds,
 									cSize, rCheckboxLDEF, gWPtr, true, false, false, true);
-	(*gControls->cw->compList)->selFlags = 68; /* NOTE: 64 (aka lExtendDrag) + 4 (aka lUseSense) = 68 */
-	
+	(*gControls->cw->compList)->selFlags = lExtendDrag + lUseSense;
+    
 	HLock((Handle)gControls->cw->compDescBox);
 	SetRect(&viewRect, (*gControls->cw->compDescBox)->contrlRect.left,
 					   (*gControls->cw->compDescBox)->contrlRect.top,
@@ -139,10 +139,17 @@ ShowComponentsWin(void)
 
 	// default highlight first row
 	InitRowHighlight(0);
-	
-	//if (selCompMsg)
-	//	DisposePtr((Ptr) selCompMsg);
-	
+
+#if 0		
+    RGBColor backColorOld;
+    Rect adjustedRect, *clRect = &gControls->cw->compListBox;
+    SetRect(&adjustedRect, clRect->left, clRect->top+1, clRect->right, clRect->bottom-1);
+    GetBackColor(&backColorOld);
+    BackColor(whiteColor);
+    EraseRect(&adjustedRect);
+    RGBBackColor(&backColorOld);
+#endif
+        
 	SetPort(oldPort);
 }
 
@@ -192,6 +199,17 @@ UpdateCompWin(void)
 	HLock(gControls->cfg->selCompMsg);
 	DrawString( CToPascal(*gControls->cfg->selCompMsg));
 	HUnlock(gControls->cfg->selCompMsg);
+	
+#if 0
+	RGBColor backColorOld;
+    Rect adjustedRect, *clRect = &gControls->cw->compListBox;
+    SetRect(&adjustedRect, clRect->left, clRect->top+1, clRect->right, clRect->bottom-1);
+    GetBackColor(&backColorOld);
+    BackColor(whiteColor);
+    EraseRect(&adjustedRect);
+    RGBBackColor(&backColorOld);
+#endif
+    
 	LUpdate( (*gControls->cw->compList)->port->visRgn, gControls->cw->compList);
 	SetRect(&r, gControls->cw->compListBox.left, gControls->cw->compListBox.top,
 	            gControls->cw->compListBox.right + 1, gControls->cw->compListBox.bottom); 
@@ -205,12 +223,11 @@ UpdateCompWin(void)
 					(*gControls->cw->compDescTxt)->viewRect.top,
 					(*gControls->cw->compDescTxt)->viewRect.right,
 					(*gControls->cw->compDescTxt)->viewRect.bottom);
-		HUnlock((Handle)gControls->cw->compDescTxt);
-		TEUpdate(&r, gControls->cw->compDescTxt);	
+		HUnlock((Handle)gControls->cw->compDescTxt);		
 	}
 	
 	DrawDiskSpaceMsgs( gControls->opt->vRefNum );
-	
+    
 	for (i = 0; i < numRows; i++)
 	{
 		if (gControls->cfg->comp[rowToComp[i]].highlighted)
@@ -219,7 +236,7 @@ UpdateCompWin(void)
 			break;
 		}
 	}
-	
+
 	SetPort(oldPort);
 }
 
@@ -258,6 +275,7 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 	if ((evt->what == mouseUp) && (PtInRect( localPt, &gControls->cw->compListBox)))
 	{
 		LClick(localPt, evt->modifiers, gControls->cw->compList);
+		UpdateRowHighlight(localPt);
 		
 		/* invert the checkbox rect */
 		for (i=0; i<numRows; i++)
@@ -359,6 +377,13 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 		part = TrackControl(gControls->nextB, evt->where, NULL);
 		if (part)
 		{	
+		    /* if no additions perform disk space check */
+            if (!gControls->cfg->bAdditionsExist)
+            {
+                if (!VerifyDiskSpace())
+                    return;
+            }
+            			    
 			gControls->cw->compListBox.top = 0;
 			EraseRect(&gControls->cw->compListBox);
 			ClearDiskSpaceMsgs();
@@ -371,28 +396,6 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 			return;
 		}
 	}
-	SetPort(oldPort);
-}
-
-void		
-MouseMovedInComponentsWin(EventRecord *evt)
-{
-	Point 			localPt;
-	GrafPtr			oldPort;
-	GetPort(&oldPort);
-	
-	if (gWPtr)
-		SetPort(gWPtr);
-	
-	localPt = evt->where;
-	GlobalToLocal( &localPt );
-	
-	/* if within list box rect */
-	if (PtInRect( localPt, &((*gControls->cw->compList)->rView) ))
-	{		
-		UpdateRowHighlight(localPt);
-	}
-	
 	SetPort(oldPort);
 }
 
@@ -600,7 +603,7 @@ UpdateLongDesc(int row)
 	HLock(gControls->cfg->comp[rowToComp[row]].longDesc);
 	TESetText( *gControls->cfg->comp[rowToComp[row]].longDesc, 
 				strlen(*gControls->cfg->comp[rowToComp[row]].longDesc), gControls->cw->compDescTxt);
-	TEUpdate( &viewRect, gControls->cw->compDescTxt);
+    TEUpdate(&viewRect, gControls->cw->compDescTxt);
 	HUnlock(gControls->cfg->comp[rowToComp[row]].longDesc);
 }
 

@@ -28,6 +28,9 @@
  *   Setup Type Window
  *-----------------------------------------------------------*/
 
+static long sDSNeededK = 0;  /* disk space needed in KB */
+static long sDSAvailK = 0;   /* disk space available in KB */
+
 void 
 ShowSetupTypeWin(void)
 {
@@ -102,12 +105,11 @@ ShowSetupTypeWin(void)
 		HLock(gControls->cfg->st[gControls->opt->instChoice - 1].longDesc);
 		txtSize = strlen(*gControls->cfg->st[gControls->opt->instChoice - 1].longDesc);
 		TEInsert( *gControls->cfg->st[gControls->opt->instChoice - 1].longDesc, txtSize, gControls->stw->instDescTxt);
-		InsertCompList(gControls->opt->instChoice - 1);
 		TESetAlignment( teFlushDefault, gControls->stw->instDescTxt);
 		HUnlock(gControls->cfg->st[gControls->opt->instChoice - 1].longDesc);
 
-/*	
-	volName = (unsigned char **)NewPtrClear(sizeof(unsigned char *));
+/*
+    volName = (unsigned char **)NewPtrClear(sizeof(unsigned char *));
 	GetAllVInfo(volName, &numVols);	
 	gControls->stw->numVols = numVols;
 	HLock((Handle)gControls->stw->destLoc);
@@ -144,12 +146,12 @@ ShowSetupTypeWin(void)
 void
 ShowSetupDescTxt(void)
 {
-	Rect r;
+	Rect teRect; /* TextEdit rect */
 	
 	if (gControls->stw->instDescTxt)
 	{
-		r = (**(gControls->stw->instDescTxt)).viewRect;
-		TEUpdate( &r, gControls->stw->instDescTxt);
+		teRect = (**(gControls->stw->instDescTxt)).viewRect;
+		TEUpdate(&teRect, gControls->stw->instDescTxt);
 	}
 	
 	DrawDiskNFolder(gControls->opt->vRefNum, gControls->opt->folder);
@@ -234,9 +236,7 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		len = strlen(*gControls->cfg->st[instChoice].longDesc);
 		TESetText( *gControls->cfg->st[instChoice].longDesc, len, gControls->stw->instDescTxt);
 		HUnlock(gControls->cfg->st[instChoice].longDesc);
-		
-		InsertCompList(instChoice);
-		
+
 		EraseRect( &r );
 		TEUpdate( &r, gControls->stw->instDescTxt);
 		
@@ -303,21 +303,6 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		
 		return;
 	}
-	
-	HLock((Handle)gControls->backB);
-	r = (**(gControls->backB)).contrlRect;
-	HUnlock((Handle)gControls->backB);
-	if (PtInRect( localPt, &r))
-	{
-		part = TrackControl(gControls->backB, evt->where, NULL);
-		if (part)
-		{
-			ClearDiskSpaceMsgs();
-			KillControls(gWPtr);
-			ShowWelcomeWin();
-			return;
-		}
-	}
 			
 	HLock((Handle)gControls->nextB);			
 	r = (**(gControls->nextB)).contrlRect;
@@ -335,6 +320,13 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 					return;
 				}
 			
+			/* if not custom setup type then perform disk space check */
+			if (gControls->opt->instChoice < gControls->cfg->numSetupTypes)
+			{
+    			if (!VerifyDiskSpace())
+    			    return;
+            }
+            			    			
 			ClearDiskSpaceMsgs();
 			KillControls(gWPtr);
 			/* treat last setup type selection as custom */
@@ -488,7 +480,8 @@ DrawDiskSpaceMsgs(short vRefNum)
 	freeSpace = UInt64ToUnsignedWide(pb.ioVFreeBytes);
 	dFree = (freeSpace.hi * 4294967296) + freeSpace.lo; // 2^32 = 4294967296
 	lFree = (long) (dFree/1024);
-
+    sDSAvailK = lFree;
+    
 	instDescRectH = NULL;
 	instDescRectH = Get1Resource('RECT', rCompListBox);
 	reserr = ResError();
@@ -634,6 +627,7 @@ DiskSpaceNeeded(void)
 	}
 	
 	cSpaceNeeded = ltoa(spaceNeeded);
+	sDSNeededK = spaceNeeded;
 	
 	return cSpaceNeeded;
 }
@@ -1022,6 +1016,29 @@ au_revoir:
 		DisposePtr(newVerCopy);
 			
 	return diffLevel;
+}
+
+Boolean
+VerifyDiskSpace(void)
+{
+    char dsNeededStr[255], dsAvailStr[255];
+    short alertRV;
+    
+    if (sDSNeededK > sDSAvailK)
+    {
+        sprintf(dsNeededStr, "%d", sDSNeededK);
+        sprintf(dsAvailStr, "%d", sDSAvailK);
+
+        ParamText(c2pstr(dsNeededStr), c2pstr(dsAvailStr), "\p", "\p");
+        alertRV = CautionAlert(rWarnLessSpace, nil);
+        if (alertRV == 2)
+        {
+            gDone = true;
+        }
+        return false;
+    }    
+    
+    return true;
 }
 
 void

@@ -9,7 +9,7 @@ License File=License
 
 [Dialog Welcome]
 ; *** LOCALIZE ME BABY ***
-Message0=                      Welcome to the Mozilla Installer
+Message0=Welcome to the Mozilla Installer
 ; *** LOCALIZE ME BABY ***
 Message1=It is strongly recommended that you quit all applications before running this installer.
 ; *** LOCALIZE ME BABY ***
@@ -21,7 +21,7 @@ Message2=Click Continue to proceed with this installation.
 ; *** LOCALIZE ME BABY ***
 Description Short=Typical Install
 ; *** LOCALIZE ME BABY ***
-Description Long=Click Continue to install the following components:
+Description Long=Installs the most common options.  Quickest to download; recommended for most users.
 C0=Component0
 C1=Component1
 C2=Component2
