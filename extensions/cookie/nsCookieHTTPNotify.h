@@ -27,21 +27,19 @@
 { 0x6bc1f522, 0x1f45, 0x11d3, { 0x8a, 0xd4, 0x0, 0x10, 0x5a, 0x1b, 0x88, 0x60 } };
 
 
-class nsCookieHTTPNotify : public nsIHTTPNotify
-{
+class nsCookieHTTPNotify : public nsIHTTPNotify {
 public:
 
-    // nsISupports
-    NS_DECL_ISUPPORTS
+  // nsISupports
+  NS_DECL_ISUPPORTS
 
-    // nsIHttpNotify methods:
-    NS_IMETHOD ModifyRequest(nsISupports *aContext);
-    NS_IMETHOD AsyncExamineResponse(nsISupports *aContext);
-
+  // nsIHttpNotify methods:
+  NS_IMETHOD ModifyRequest(nsISupports *aContext);
+  NS_IMETHOD AsyncExamineResponse(nsISupports *aContext);
    
-    // nsCookieHTTPNotify methods:
-    nsCookieHTTPNotify();
-    virtual ~nsCookieHTTPNotify();
+  // nsCookieHTTPNotify methods:
+  nsCookieHTTPNotify();
+  virtual ~nsCookieHTTPNotify();
  
 private:
    
@@ -50,24 +48,17 @@ private:
 class nsCookieHTTPNotifyFactory : public nsIFactory {
 public:
 
-    NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
-    // nsIFactory methods:
+  // nsIFactory methods:
+  NS_IMETHOD CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  NS_IMETHOD LockFactory(PRBool aLock);
 
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              REFNSIID aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
-
-    // nsCookieHTTPNotifyFactory methods:
-
-    nsCookieHTTPNotifyFactory(void);
-    virtual ~nsCookieHTTPNotifyFactory(void);
-
+  // nsCookieHTTPNotifyFactory methods:
+  nsCookieHTTPNotifyFactory(void);
+  virtual ~nsCookieHTTPNotifyFactory(void);
 };
 
 extern NS_EXPORT nsresult NS_NewCookieHTTPNotify(nsIHTTPNotify** aHTTPNotify);
-
 
 #endif /* nsCookieHTTPNotify_h___ */

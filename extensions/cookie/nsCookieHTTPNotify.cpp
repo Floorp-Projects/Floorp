@@ -23,7 +23,6 @@
 #include "nsIURL.h"
 #include "nsCRT.h"
 
-
 ///////////////////////////////////
 // nsISupports
 
@@ -32,177 +31,141 @@ NS_IMPL_ISUPPORTS(nsCookieHTTPNotify, nsIHTTPNotify::GetIID());
 ///////////////////////////////////
 // nsCookieHTTPNotify Implementation
 
-NS_COOKIE nsresult NS_NewCookieHTTPNotify(nsIHTTPNotify** aHTTPNotify)
-{
-    if (aHTTPNotify == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
-    } 
-    
-    nsCookieHTTPNotify* it = new nsCookieHTTPNotify();
-
-    if (it == 0) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    return it->QueryInterface(nsIHTTPNotify::GetIID(), (void **) aHTTPNotify);
+NS_COOKIE nsresult NS_NewCookieHTTPNotify(nsIHTTPNotify** aHTTPNotify) {
+  if (aHTTPNotify == NULL) {
+    return NS_ERROR_NULL_POINTER;
+  } 
+  nsCookieHTTPNotify* it = new nsCookieHTTPNotify();
+  if (it == 0) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return it->QueryInterface(nsIHTTPNotify::GetIID(), (void **) aHTTPNotify);
 }
 
-nsCookieHTTPNotify::nsCookieHTTPNotify()
-{
-    NS_INIT_REFCNT();
+nsCookieHTTPNotify::nsCookieHTTPNotify() {
+  NS_INIT_REFCNT();
 }
 
-nsCookieHTTPNotify::~nsCookieHTTPNotify()
-{
-  
+nsCookieHTTPNotify::~nsCookieHTTPNotify() {
 }
-
 
 ///////////////////////////////////
 // nsIHTTPNotify
 
-
 NS_IMETHODIMP
-nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext)
-{
-    nsresult rv;
-    nsIHTTPChannel* pHTTPConnection= nsnull;
-
-    if (aContext) {
-        rv = aContext->QueryInterface(nsIHTTPChannel::GetIID(), 
-                                        (void**)&pHTTPConnection);
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-
-    if (NS_FAILED(rv))
-        return rv; 
-
-    nsIURI* pURL;
-    rv = pHTTPConnection->GetURI(&pURL);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(pHTTPConnection);
-        return rv;
-    }
-    char *url;
-    if (pURL == nsnull) {
-        NS_RELEASE(pHTTPConnection);
-        return rv;
-    }
-
-    rv = pURL->GetSpec(&url);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(pURL);
-        NS_RELEASE(pHTTPConnection);
-        return rv;
-    }
-
-    if (url == nsnull) {
-        NS_RELEASE(pURL);
-        NS_RELEASE(pHTTPConnection);
-        return rv;
-    }
-
-
-    const char* cookie = ::NET_GetCookie(url);
-
-    if (cookie == nsnull) {
-        NS_RELEASE(pURL);
-        NS_RELEASE(pHTTPConnection);
-        nsCRT::free(url);
-        return rv;
-    }
-    rv = pHTTPConnection->SetRequestHeader("Cookie", cookie);
-
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(pURL);
-        NS_RELEASE(pHTTPConnection);
-        nsCRT::free(url);
-        return rv;
-    }
-
+nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext) {
+  nsresult rv;
+  nsIHTTPChannel* pHTTPConnection= nsnull;
+  if (aContext) {
+    rv = aContext->QueryInterface(nsIHTTPChannel::GetIID(), (void**)&pHTTPConnection);
+  } else {
+    rv = NS_ERROR_NULL_POINTER;
+  }
+  if (NS_FAILED(rv)) {
+    return rv; 
+  }
+  nsIURI* pURL;
+  rv = pHTTPConnection->GetURI(&pURL);
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(pHTTPConnection);
+    return rv;
+  }
+  char *url;
+  if (pURL == nsnull) {
+    NS_RELEASE(pHTTPConnection);
+    return rv;
+  }
+  rv = pURL->GetSpec(&url);
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(pURL);
+    NS_RELEASE(pHTTPConnection);
+    return rv;
+  }
+  if (url == nsnull) {
+    NS_RELEASE(pURL);
+    NS_RELEASE(pHTTPConnection);
+    return rv;
+  }
+  const char* cookie = ::COOKIE_GetCookie(url);
+  if (cookie == nsnull) {
     NS_RELEASE(pURL);
     NS_RELEASE(pHTTPConnection);
     nsCRT::free(url);
-
-    return NS_OK;
+    return rv;
+  }
+  rv = pHTTPConnection->SetRequestHeader("Cookie", cookie);
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(pURL);
+    NS_RELEASE(pHTTPConnection);
+    nsCRT::free(url);
+    return rv;
+  }
+  NS_RELEASE(pURL);
+  NS_RELEASE(pHTTPConnection);
+  nsCRT::free(url);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext)
-{
-    nsresult rv;
-    nsIHTTPChannel* pHTTPConnection= nsnull;
-
-    if (aContext) {
-        rv = aContext->QueryInterface(nsIHTTPChannel::GetIID(), 
-                                        (void**)&pHTTPConnection);
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-
-    if (NS_FAILED(rv))
-        return rv; 
-
-    
-    char* cookie;
-    rv = pHTTPConnection->GetResponseHeader("Set-Cookie", &cookie);
-
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(pHTTPConnection);
-        return rv;
-    }
-
-    if (cookie) {
-        printf("\nRecieving ... %s\n", cookie);
-        nsIURI* pURL;
-        rv = pHTTPConnection->GetURI(&pURL);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(pHTTPConnection);
-            nsCRT::free(cookie);
-            return rv;
-        }
-        char *url;
-        if (pURL == nsnull) {
-            NS_RELEASE(pHTTPConnection);
-            nsCRT::free(cookie);
-            return rv;
-        }
-
-        rv = pURL->GetSpec(&url);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(pURL);
-            NS_RELEASE(pHTTPConnection);
-            nsCRT::free(cookie);
-            return rv;
-        }
-
-        if (url == nsnull) {
-            NS_RELEASE(pURL);
-            NS_RELEASE(pHTTPConnection);
-            nsCRT::free(cookie);
-            return rv;
-        }
-
-        char *pDate = nsnull;
-        rv = pHTTPConnection->GetResponseHeader("Date", &pDate);
-            
-        if (NS_SUCCEEDED(rv)) {
-            if(pDate) {
-                NET_SetCookieStringFromHttp(url, cookie, pDate);
-                nsCRT::free(pDate);
-            }
-        }
-       
-        NS_RELEASE(pURL);
-        nsCRT::free(url);
-        nsCRT::free(cookie);
-    }
-    
+nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext) {
+  nsresult rv;
+  nsIHTTPChannel* pHTTPConnection= nsnull;
+  if (aContext) {
+    rv = aContext->QueryInterface(nsIHTTPChannel::GetIID(), (void**)&pHTTPConnection);
+  } else {
+    rv = NS_ERROR_NULL_POINTER;
+  }
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  char* cookie;
+  rv = pHTTPConnection->GetResponseHeader("Set-Cookie", &cookie);
+  if (NS_FAILED(rv)) {
     NS_RELEASE(pHTTPConnection);
-
-    return NS_OK;
+    return rv;
+  }
+  if (cookie) {
+    printf("\nRecieving ... %s\n", cookie);
+    nsIURI* pURL;
+    rv = pHTTPConnection->GetURI(&pURL);
+    if (NS_FAILED(rv)) {
+      NS_RELEASE(pHTTPConnection);
+      nsCRT::free(cookie);
+      return rv;
+    }
+    char *url;
+    if (pURL == nsnull) {
+      NS_RELEASE(pHTTPConnection);
+      nsCRT::free(cookie);
+      return rv;
+    }
+    rv = pURL->GetSpec(&url);
+    if (NS_FAILED(rv)) {
+      NS_RELEASE(pURL);
+      NS_RELEASE(pHTTPConnection);
+      nsCRT::free(cookie);
+      return rv;
+    }
+    if (url == nsnull) {
+      NS_RELEASE(pURL);
+      NS_RELEASE(pHTTPConnection);
+      nsCRT::free(cookie);
+      return rv;
+    }
+    char *pDate = nsnull;
+    rv = pHTTPConnection->GetResponseHeader("Date", &pDate);
+    if (NS_SUCCEEDED(rv)) {
+      if(pDate) {
+        COOKIE_SetCookieStringFromHttp(url, cookie, pDate);
+        nsCRT::free(pDate);
+      }
+    }
+    NS_RELEASE(pURL);
+    nsCRT::free(url);
+    nsCRT::free(cookie);
+  }
+  NS_RELEASE(pHTTPConnection);
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -211,52 +174,40 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext)
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 NS_IMPL_ISUPPORTS(nsCookieHTTPNotifyFactory, kIFactoryIID);
 
-nsCookieHTTPNotifyFactory::nsCookieHTTPNotifyFactory(void)
-{
-    NS_INIT_REFCNT();
+nsCookieHTTPNotifyFactory::nsCookieHTTPNotifyFactory(void) {
+  NS_INIT_REFCNT();
 }
 
-nsCookieHTTPNotifyFactory::~nsCookieHTTPNotifyFactory(void)
-{
-
+nsCookieHTTPNotifyFactory::~nsCookieHTTPNotifyFactory(void) {
 }
 
 nsresult
-nsCookieHTTPNotifyFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-    
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    *aResult = nsnull;
-
-    nsresult rv;
-    nsIHTTPNotify* inst = nsnull;
-
-    if (NS_FAILED(rv = NS_NewCookieHTTPNotify(&inst)))
-        return rv;
-
-    if (!inst)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = inst->QueryInterface(aIID, aResult);
-
-    if (NS_FAILED(rv)) {
-        *aResult = NULL;
-    }
+nsCookieHTTPNotifyFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
+  if (! aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aOuter) {
+    return NS_ERROR_NO_AGGREGATION;
+  }
+  *aResult = nsnull;
+  nsresult rv;
+  nsIHTTPNotify* inst = nsnull;
+  if (NS_FAILED(rv = NS_NewCookieHTTPNotify(&inst))) {
     return rv;
+  }
+  if (!inst) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  rv = inst->QueryInterface(aIID, aResult);
+  if (NS_FAILED(rv)) {
+    *aResult = NULL;
+  }
+  return rv;
 }
 
 nsresult
-nsCookieHTTPNotifyFactory::LockFactory(PRBool aLock)
-{
-    return NS_OK;
+nsCookieHTTPNotifyFactory::LockFactory(PRBool aLock) {
+  return NS_OK;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
-
-
-
