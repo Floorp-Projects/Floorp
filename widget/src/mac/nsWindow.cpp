@@ -36,6 +36,7 @@
 #include "nsCOMPtr.h"
 #include "nsToolkit.h"
 #include "nsIEnumerator.h"
+#include "prmem.h"
 
 #include <Appearance.h>
 #include <Timer.h>
@@ -51,6 +52,7 @@
 #include "nsCarbonHelpers.h"
 #include "nsGfxUtils.h"
 
+
 ////////////////////////////////////////////////////
 nsIRollupListener * gRollupListener = nsnull;
 nsIWidget         * gRollupWidget   = nsnull;
@@ -60,10 +62,19 @@ nsIWidget         * gRollupWidget   = nsnull;
 static NMRec	gNMRec;
 static Boolean	gNotificationInstalled = false;
 
+// Routines for iterating over the rects of a region. Carbon and pre-Carbon
+// do this differently so provide a way to do both.
+#if TARGET_CARBON
+static RegionToRectsUPP sUpdateRectProc = nsnull;
+static RegionToRectsUPP sCountRectProc = nsnull;
+#else
+void EachRegionRect (RgnHandle r, void (* proc)(Rect *, void *), void* data) ;
+#endif
+
 #pragma mark -
 
-// #define PAINT_DEBUGGING
-// #define BLINK_DEBUGGING
+//#define PAINT_DEBUGGING
+//#define BLINK_DEBUGGING
 
 #if TARGET_CARBON
 #undef PAINT_DEBUGGING
@@ -110,6 +121,14 @@ nsWindow::nsWindow() : nsBaseWidget() , nsDeleteObserved(this), nsIKBStateContro
   mPluginPort = nsnull;
 
   AcceptFocusOnClick(PR_TRUE);
+  
+#if TARGET_CARBON
+  if ( !sUpdateRectProc ) {
+    sUpdateRectProc = NewRegionToRectsUPP ( PaintUpdateRectProc );
+    sCountRectProc = NewRegionToRectsUPP ( CountUpdateRectProc );
+  }
+#endif
+
 }
 
 
@@ -1103,6 +1122,109 @@ static long long microseconds()
 	return micros;
 }
 
+
+#if TARGET_CARBON
+
+
+//
+// UpdateRect
+//
+// Called once for every rect in the update region. Send a paint event to Gecko to handle
+// this. |refCon| contains the |nsWindow| being updated. 
+//
+OSStatus
+nsWindow :: PaintUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *inDirtyRect, void *refCon)
+{
+  nsWindow* self = NS_REINTERPRET_CAST(nsWindow*, refCon);
+  Rect dirtyRect = *inDirtyRect;
+  
+	nsCOMPtr<nsIRenderingContext> renderingContext ( dont_AddRef(self->GetRenderingContext()) );
+	if (renderingContext)
+	{
+  	nsRect bounds = self->mBounds;
+  	self->LocalToWindowCoordinate(bounds);
+  	
+		// determine the rect to draw
+		::OffsetRect(&dirtyRect, -bounds.x, -bounds.y);
+		nsRect rect ( dirtyRect.left, dirtyRect.top, dirtyRect.right - dirtyRect.left,
+		                dirtyRect.bottom - dirtyRect.top );
+
+		// update the widget
+		self->UpdateWidget(rect, renderingContext);
+  }
+
+  return noErr;
+  
+} // PaintUpdateRectProc
+
+
+//
+// CountUpdateRectProc
+// 
+// Used to count the number of rects in a region. |refCon| is a pointer to a
+// counter. We just increment it every time we're called and by the end we'll have
+// the number of rects.
+//
+OSStatus
+nsWindow :: CountUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *inDirtyRect, void *refCon)
+{
+  NS_ASSERTION ( refCon, "You better pass a counter!" );
+  
+  (*NS_REINTERPRET_CAST(long*, refCon))++;  // increment
+}
+
+#else
+
+//
+// UpdateRect
+//
+// Called once for every rect in the update region. Send a paint event to Gecko to handle
+// this. |inData| contains the |nsWindow| being updated. 
+//
+void 
+nsWindow :: PaintUpdateRect (Rect *inDirtyRect, void* inData)
+{
+  nsWindow* self = NS_REINTERPRET_CAST(nsWindow*, inData);
+  Rect dirtyRect = *inDirtyRect;
+  
+	nsCOMPtr<nsIRenderingContext> renderingContext ( dont_AddRef(self->GetRenderingContext()) );
+	if (renderingContext)
+	{
+  	nsRect bounds = self->mBounds;
+  	self->LocalToWindowCoordinate(bounds);
+  	
+		// determine the rect to draw
+		::OffsetRect(&dirtyRect, -bounds.x, -bounds.y);
+		nsRect rect ( dirtyRect.left, dirtyRect.top, dirtyRect.right - dirtyRect.left,
+		                dirtyRect.bottom - dirtyRect.top );
+
+		// update the widget
+		self->UpdateWidget(rect, renderingContext);
+  }
+
+} // PaintUpdateRect
+
+
+//
+// CountUpdateRects
+// 
+// Used to count the number of rects in a region. |inData| is a pointer to a
+// counter. We just increment it every time we're called and by the end we'll have
+// the number of rects.
+//
+void
+nsWindow :: CountUpdateRect (Rect *inDirtyRect, void* inData)
+{
+  NS_ASSERTION ( inData, "You better pass a counter!" );
+  
+  (*NS_REINTERPRET_CAST(long*, inData))++;  // increment
+  
+} // CountUpdateRects
+
+
+#endif
+
+
 //-------------------------------------------------------------------------
 //	HandleUpdateEvent
 //
@@ -1149,36 +1271,45 @@ nsresult nsWindow::HandleUpdateEvent()
 	::SectRgn(damagedRgn, updateRgn, updateRgn);
 	if (!::EmptyRgn(updateRgn))
 	{
-		nsIRenderingContext* renderingContext = GetRenderingContext();
-		if (renderingContext)
-		{
-			// determine the rect to draw
-			nsRect rect;
-			Rect macRect;
-			::GetRegionBounds(updateRgn, &macRect);
-			::OffsetRect(&macRect, -bounds.x, -bounds.y);
-			rect.SetRect(macRect.left, macRect.top, macRect.right - macRect.left, macRect.bottom - macRect.top);
-
 #if DEBUG
-			// measure the time it takes to refresh the window, if the control key is down.
-			unsigned long long start, finish;
-			Boolean measure_duration = control_key_down();
-			if (measure_duration)
-				start = microseconds();
+		// measure the time it takes to refresh the window, if the control key is down.
+    unsigned long long start, finish;
+    Boolean measure_duration = control_key_down();
+    if (measure_duration)
+      start = microseconds();
 #endif
 
-			// update the widget
-			UpdateWidget(rect, renderingContext);
+	  // Iterate over each rect in the region, sending a paint event for each. Carbon
+	  // has a routine for this, pre-carbon doesn't so we roll our own. If the region
+	  // is very complicated (more than 10 pieces), just use a bounding box.
+	  #if TARGET_CARBON
+	    long count = 0;
+	    QDRegionToRects ( updateRgn, kQDParseRegionFromTop, sCountRectProc, this );
+	    if ( count < 10 )
+	      QDRegionToRects ( updateRgn, kQDParseRegionFromTop, sUpdateRectProc, this );
+	    else {
+	      Rect boundingBox;
+        ::GetRegionBounds(updateRgn, &boundingBox);
+        PaintUpdateRegionRects ( &boundingBox, this );
+      }
+	  #else
+	    long count = 0;
+	    EachRegionRect ( updateRgn, CountUpdateRect, &count );
+	    if ( count < 10 )
+	      EachRegionRect ( updateRgn, PaintUpdateRect, this );
+	    else {
+	      Rect boundingBox;
+        ::GetRegionBounds(updateRgn, &boundingBox);
+        PaintUpdateRect ( &boundingBox, this );
+	    }
+	  #endif
 
 #if DEBUG
-			if (measure_duration) {
-				finish = microseconds();
-				printf("update took %g microseconds.\n", double(finish - start));
-			}
+    if (measure_duration) {
+      finish = microseconds();
+      printf("update took %g microseconds.\n", double(finish - start));
+    }
 #endif
-
-			NS_RELEASE(renderingContext);
-		}
 	}
 	return NS_OK;
 }
@@ -1270,7 +1401,7 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 //
 void
 nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inTopDelta )
-{	
+{
 	// Get Frame in local coords from clip rect (there might be a border around view)
 	StRegionFromPool clipRgn;
 	if ( !clipRgn ) return;
@@ -2060,3 +2191,102 @@ NS_IMETHODIMP nsWindow::PasswordFieldInit()
   }
 	return NS_ERROR_ABORT;
 }
+
+
+#if !TARGET_CARBON
+
+void EachRegionRect (RgnHandle r, void (* proc)(Rect *, void *), void* data) ;
+
+//
+// Written by Hugh Fisher, March 1993.
+// Used w/out asking his permission.
+//
+// This can go away when we get an api on nsIRegion to create one from
+// a RgnHandle. Then we can use nsIRegion::GetRects to do the work for us.
+//
+void 
+EachRegionRect (RgnHandle r, void (* proc)(Rect *, void *), void* inData)
+{
+#define EndMark 	32767
+#define MaxY		32767
+#define StackMax	1024
+
+	typedef struct {
+		short	size;
+		Rect	bbox;
+		short	data[];
+		} ** Internal;
+	
+	Internal region;
+	short	 width, xAdjust, y, index, x1, x2, x;
+	Rect	 box;
+	short	 stackStorage[1024];
+	short *	 buffer;
+	
+	region = (Internal)r;
+	
+	/* Check for plain rectangle */
+	if ((**region).size == 10) {
+		proc(&(**region).bbox, inData);
+		return;
+	}
+	/* Got to scale x coordinates into range 0..something */
+	xAdjust = (**region).bbox.left;
+	width = (**region).bbox.right - xAdjust;
+	/* Most regions will be less than 1024 pixels wide */
+	if (width < StackMax)
+		buffer = stackStorage;
+	else {
+		buffer = (short *)PR_Malloc(width * 2);
+		if (buffer == NULL)
+			/* Truly humungous region or very low on memory.
+			   Quietly doing nothing seems to be the
+			   traditional Quickdraw response. */
+			return;
+	}
+	/* Initialise scan line list to bottom edges */
+	for (x = (**region).bbox.left; x < (**region).bbox.right; x++)
+		buffer[x - xAdjust] = MaxY;
+	index = 0;
+	/* Loop until we hit an empty scan line */
+	while ((**region).data[index] != EndMark) {
+		y = (**region).data[index];
+		index ++;
+		/* Loop through horizontal runs on this line */
+		while ((**region).data[index] != EndMark) {
+			x1 = (**region).data[index];
+			index ++;
+			x2 = (**region).data[index];
+			index ++;
+			x = x1;
+			while (x < x2) {
+				if (buffer[x - xAdjust] < y) {
+					/* We have a bottom edge - how long for? */
+					box.left = x;
+					box.top  = buffer[x - xAdjust];
+					while (x < x2 && buffer[x - xAdjust] == box.top) {
+						buffer[x - xAdjust] = MaxY;
+						x ++;
+					}
+					/* Pass to client proc */
+					box.right  = x;
+					box.bottom = y;
+					proc(&box, inData);
+				} else {
+					/* This becomes a top edge */
+					buffer[x - xAdjust] = y;
+					x ++;
+				}
+			}
+		}
+		index ++;
+	}
+	/* Clean up after ourselves */
+	if (width >= StackMax)
+		PR_Free((void *)buffer);
+#undef EndMark
+#undef MaxY
+#undef StackMax
+}
+
+#endif

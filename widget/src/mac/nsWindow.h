@@ -215,6 +215,17 @@ protected:
 	nsPluginPort*			mPluginPort;
 
 	PRBool					mAcceptFocusOnClick;
+	
+  // Routines for iterating over the rects of a region. Carbon and pre-Carbon
+  // do this differently so provide a way to do both.
+#if TARGET_CARBON
+  static OSStatus PaintUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *rect, void *refCon);
+  static OSStatus CountUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *rect, void *refCon);
+#else
+  static void PaintUpdateRect (Rect * r, void* data) ;
+  static void CountUpdateRect (Rect * r, void* data) ;
+#endif
+	
 };
 
 
