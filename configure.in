@@ -961,7 +961,7 @@ case "$target" in
     	CFLAGS="$CFLAGS -mieee"
     	CXXFLAGS="$CXXFLAGS -mieee"
     ;;
-    i?86)
+    i*86)
     	USE_ELF_DYNSTR_GC=1
         MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS=1
     ;;
@@ -1126,7 +1126,7 @@ case "$target" in
     LIBIDL_LIBS="${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6.lib ${_GLIB_PREFIX_DIR}/lib/glib-1.2.lib"
 
     case "$target" in
-    i?86-*)
+    i*86-*)
     	AC_DEFINE(_X86_)
 	;;
     alpha-*)
@@ -1189,7 +1189,7 @@ case "$target" in
 	;;
 	esac
 	case "${host_cpu}" in
-	i?86)
+	i*86)
 	USE_ELF_DYNSTR_GC=1
 	;;
 	esac
