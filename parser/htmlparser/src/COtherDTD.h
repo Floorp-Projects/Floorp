@@ -123,7 +123,7 @@ class COtherDTD : public CNavDTD {
      *  @param   aTag -- tag to test for containership
      *  @return  PR_TRUE if given tag can contain other tags
      */
-    virtual PRBool CanOmit(eHTMLTags aParent,eHTMLTags aChild)const;
+    virtual PRBool CanOmit(eHTMLTags aParent,eHTMLTags aChild,PRInt32 aParentContains)const;
 
     /**
      * Give rest of world access to our tag enums, so that CanContain(), etc,
@@ -155,7 +155,7 @@ class COtherDTD : public CNavDTD {
      * @param   aNode is a node be updated with info from given token
      * @return  TRUE if the token was handled.
      */
-    nsresult HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode);
+    nsresult HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode *aNode);
 
     /**
      * This method gets called when an end token has been consumed and needs 
@@ -200,7 +200,7 @@ class COtherDTD : public CNavDTD {
      * @param   aToken is the script token to be handled
      * @return  TRUE if the token was handled.
      */
-    nsresult HandleScriptToken(nsCParserNode& aNode);
+    nsresult HandleScriptToken(const nsIParserNode *aNode);
     
     /**
      * This method gets called when a style token has been consumed and needs 
@@ -220,146 +220,38 @@ private:
     //*************************************************
 
     /**
-     * This cover method opens the given node as a HTML item in 
-     * content sink.
-     * @update	gess5/11/98
-     * @param   HTML (node) to be opened in content sink.
-     * @return  TRUE if all went well.
-     */
-    nsresult OpenHTML(const nsIParserNode& aNode);
-
-    /**
+     * The next set of method open given HTML elements of
+	   * various types.
      * 
      * @update	gess5/11/98
-     * @param 
-     * @return
+     * @param   node to be opened in content sink.
+     * @return  error code representing error condition-- usually 0.
      */
-    nsresult CloseHTML(const nsIParserNode& aNode);
+    nsresult OpenHTML(const nsIParserNode *aNode);
+    nsresult OpenHead(const nsIParserNode *aNode);
+    nsresult OpenBody(const nsIParserNode *aNode);
+    nsresult OpenForm(const nsIParserNode *aNode);
+    nsresult OpenMap(const nsIParserNode *aNode);
+    nsresult OpenFrameset(const nsIParserNode *aNode);
+    nsresult OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aUpdateStyleStack,PRInt32 aResidualStyleLevel=-1);
 
     /**
-     * This cover method opens the given node as a head item in 
-     * content sink.
+     * The next set of methods close the given HTML element.
+     * 
      * @update	gess5/11/98
-     * @param   HEAD (node) to be opened in content sink.
-     * @return  TRUE if all went well.
+     * @param   HTML (node) to be opened in content sink.
+     * @return  error code - 0 if all went well.
      */
-    nsresult OpenHead(const nsIParserNode& aNode);
+    nsresult CloseHTML(const nsIParserNode *aNode);
+    nsresult CloseHead(const nsIParserNode *aNode);
+    nsresult CloseBody(const nsIParserNode *aNode);
+    nsresult CloseForm(const nsIParserNode *aNode);
+    nsresult CloseMap(const nsIParserNode *aNode);
+    nsresult CloseFrameset(const nsIParserNode *aNode);
 
-    /**
-     * This cover method causes the content-sink head to be closed
-     * @update	gess5/11/98
-     * @param   aNode is the node to be closed in sink (usually ignored)
-     * @return  TRUE if all went well.
-     */
-    nsresult CloseHead(const nsIParserNode& aNode);
-
-    /**
-     * This cover method opens the given node as a body item in 
-     * content sink.
-     * @update	gess5/11/98
-     * @param   BODY (node) to be opened in content sink.
-     * @return  TRUE if all went well.
-     */
-    nsresult OpenBody(const nsIParserNode& aNode);
-
-    /**
-     * This cover method causes the content-sink body to be closed
-     * @update	gess5/11/98
-     * @param   aNode is the body node to be closed in sink (usually ignored)
-     * @return  TRUE if all went well.
-     */
-    nsresult CloseBody(const nsIParserNode& aNode);
-
-    /**
-     * This cover method opens the given node as a form item in 
-     * content sink.
-     * @update	gess5/11/98
-     * @param   FORM (node) to be opened in content sink.
-     * @return  TRUE if all went well.
-     */
-    nsresult OpenForm(const nsIParserNode& aNode);
-
-    /**
-     * This cover method causes the content-sink form to be closed
-     * @update	gess5/11/98
-     * @param   aNode is the form node to be closed in sink (usually ignored)
-     * @return  TRUE if all went well.
-     */
-    nsresult CloseForm(const nsIParserNode& aNode);
-
-    /**
-     * This cover method opens the given node as a form item in 
-     * content sink.
-     * @update	gess5/11/98
-     * @param   FORM (node) to be opened in content sink.
-     * @return  TRUE if all went well.
-     */
-    nsresult OpenMap(const nsIParserNode& aNode);
-
-    /**
-     * This cover method causes the content-sink form to be closed
-     * @update	gess5/11/98
-     * @param   aNode is the form node to be closed in sink (usually ignored)
-     * @return  TRUE if all went well.
-     */
-    nsresult CloseMap(const nsIParserNode& aNode);
-
-    /**
-     * This cover method opens the given node as a frameset item in 
-     * content sink.
-     * @update	gess5/11/98
-     * @param   FRAMESET (node) to be opened in content sink.
-     * @return  TRUE if all went well.
-     */
-    nsresult OpenFrameset(const nsIParserNode& aNode);
-
-    /**
-     * This cover method causes the content-sink frameset to be closed
-     * @update	gess5/11/98
-     * @param   aNode is the frameeset node to be closed in sink (usually ignored)
-     * @return  TRUE if all went well.
-     */
-    nsresult CloseFrameset(const nsIParserNode& aNode);
-
-    /**
-     * This cover method opens the given node as a generic container in 
-     * content sink.
-     * @update	gess5/11/98
-     * @param   generic container (node) to be opened in content sink.
-     * @return  TRUE if all went well.
-     */
-    nsresult OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack);
-
-    /**
-     * This cover method causes a generic containre in the content-sink to be closed
-     * @update	gess5/11/98
-     * @param   aNode is the node to be closed in sink (usually ignored)
-     * @return  TRUE if all went well.
-     */
-    nsresult CloseContainer(const nsIParserNode& aNode,eHTMLTags anActualTag,PRBool aUpdateStyles);
-    
-    /**
-     * This cover method causes the topmost container to be closed in sink
-     * @update	gess5/11/98
-     * @return  TRUE if all went well.
-     */
-    nsresult CloseTopmostContainer();
-    
-    /**
-     * Cause all containers down to topmost given tag to be closed
-     * @update	gess5/11/98
-     * @param   aTag is the tag at which auto-closure should stop (inclusive) 
-     * @return  TRUE if all went well -- otherwise FALSE
-     */
+    nsresult CloseContainer(const nsIParserNode *aNode,eHTMLTags aTarget,PRBool aUpdateStyles);
     nsresult CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles);
-
-    /**
-     * Cause all containers down to given position to be closed
-     * @update	gess5/11/98
-     * @param   anIndex is the stack pos at which auto-closure should stop (inclusive) 
-     * @return  TRUE if all went well -- otherwise FALSE
-     */
-    nsresult CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aUpdateStyles);
+    nsresult CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget,PRBool aUpdateStyles);
 
     /**
      * Causes leaf to be added to sink at current vector pos.
@@ -367,7 +259,7 @@ private:
      * @param   aNode is leaf node to be added.
      * @return  TRUE if all went well -- FALSE otherwise.
      */
-    nsresult AddLeaf(const nsIParserNode& aNode);
+    nsresult AddLeaf(const nsIParserNode *aNode);
 
 
     /**
@@ -381,8 +273,7 @@ private:
 
     nsresult OpenTransientStyles(eHTMLTags aTag);
     nsresult CloseTransientStyles(eHTMLTags aTag);
-    nsresult UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags aActualTag);
-    nsresult UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags aActualTag);
+    nsresult PopStyle(eHTMLTags aTag);
 
     nsresult DoFragment(PRBool aFlag);
 

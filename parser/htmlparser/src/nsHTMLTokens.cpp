@@ -87,6 +87,7 @@ void CHTMLToken::SetStringValue(const char* name){
 CStartToken::CStartToken(eHTMLTags aTag) : CHTMLToken(aTag) {
   mAttributed=PR_FALSE;
   mEmpty=PR_FALSE;
+  mOrigin=-1;
 }
 
 /*
@@ -99,6 +100,7 @@ CStartToken::CStartToken(eHTMLTags aTag) : CHTMLToken(aTag) {
 CStartToken::CStartToken(nsString& aString,eHTMLTags aTag) : CHTMLToken(aString,aTag) {
   mAttributed=PR_FALSE;
   mEmpty=PR_FALSE;
+  mOrigin=-1;
 }
 
 
@@ -111,7 +113,10 @@ CStartToken::CStartToken(nsString& aString,eHTMLTags aTag) : CHTMLToken(aString,
 void CStartToken::Reinitialize(PRInt32 aTag, const nsString& aString){
   CToken::Reinitialize(aTag,aString);
   mAttributed=PR_FALSE;
+  mUseCount=0; //assume recycling is needed by default.
   mEmpty=PR_FALSE;
+  mOrigin=-1;
+  mTrailingContent.Truncate();
 }
 
 /*
@@ -217,8 +222,10 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode
    //Good. Now, let's skip whitespace after the identifier,
    //and see if the next char is ">". If so, we have a complete
    //tag without attributes.
-  if(NS_OK==result) {  
+  if(NS_OK==result) { 
+    mOrigin=aScanner.GetOffset(); // We need this position to record the trailing contents of the start token
     result=aScanner.SkipWhitespace();
+    mNewlineCount += aScanner.GetNewlinesSkipped();
     if(NS_OK==result) {
       result=aScanner.GetChar(aChar);
       if(NS_OK==result) {
@@ -259,8 +266,7 @@ void CStartToken::DebugDumpSource(nsOutputStream& out) {
 void CStartToken::GetSource(nsString& anOutputString){
   anOutputString="<";
   anOutputString+=mTextValue;
-  if(!mAttributed)
-    anOutputString+=">";
+  anOutputString+=(mTrailingContent.Length()>0)? mTrailingContent:'>';
 }
 
 /*
@@ -465,18 +471,23 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode)
                 result=aScanner.GetChar(theNextChar);
               }
               mTextValue.Append("\n");
+              mNewlineCount++;
             }
             mTextValue.Append("\n");
+            mNewlineCount++;
             break;
           case kLF:
             if((kLF==theNextChar) || (kCR==theNextChar)) {
               result=aScanner.GetChar(theNextChar);
               mTextValue.Append("\n");
+              mNewlineCount++;
             }
             mTextValue.Append("\n");
+            mNewlineCount++;
             break;
           default:
             mTextValue.Append("\n");
+            mNewlineCount++;
             break;
         } //switch
       }
@@ -744,7 +755,7 @@ nsresult ConsumeStrictComment(PRUnichar aChar, nsScanner& aScanner,nsString& aSt
               } 
               aString+=temp;
               if(NS_OK==result) {
-                result=aScanner.ReadWhile(aString,gMinus,PR_TRUE,PR_FALSE);  //get all available '---'
+               // result=aScanner.ReadWhile(aString,gMinus,PR_TRUE,PR_FALSE);  //get all available '---'
                 if(NS_OK==result) {
                   temp="->";
                   result=aScanner.ReadUntil(aString,temp,PR_FALSE,PR_FALSE);
@@ -1013,6 +1024,7 @@ nsresult CNewlineToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMo
  *  @return  
  */
 CAttributeToken::CAttributeToken() : CHTMLToken(eHTMLTag_unknown) {
+  mHasEqualWithoutValue=PR_FALSE;
 }
 
 /*
@@ -1025,6 +1037,7 @@ CAttributeToken::CAttributeToken() : CHTMLToken(eHTMLTag_unknown) {
 CAttributeToken::CAttributeToken(const nsString& aName) : CHTMLToken(aName),  
   mTextKey() {
   mLastAttribute=PR_FALSE;
+  mHasEqualWithoutValue=PR_FALSE;
 }
 
 /*
@@ -1038,6 +1051,7 @@ CAttributeToken::CAttributeToken(const nsString& aName) : CHTMLToken(aName),
 CAttributeToken::CAttributeToken(const nsString& aKey, const nsString& aName) : CHTMLToken(aName) {
   mTextKey = aKey;
   mLastAttribute=PR_FALSE;
+  mHasEqualWithoutValue=PR_FALSE;
 }
 
 /**
@@ -1050,6 +1064,7 @@ void CAttributeToken::Reinitialize(PRInt32 aTag, const nsString& aString){
   CHTMLToken::Reinitialize(aTag,aString);
   mTextKey.Truncate();
   mLastAttribute=PR_FALSE;
+  mHasEqualWithoutValue=PR_FALSE;
 }
 
 /*
@@ -1250,6 +1265,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                       result=ConsumeQuotedString(aChar,mTextValue,aScanner);
                     }
                     else if(kGreaterThan==aChar){      
+                      mHasEqualWithoutValue=PR_TRUE;
                       result=aScanner.PutBack(aChar);
                     }
 #if 0
@@ -1910,7 +1926,39 @@ CDoctypeDeclToken::CDoctypeDeclToken(eHTMLTags aTag) : CHTMLToken(aTag) {
 }
 
 nsresult CDoctypeDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
- return ConsumeComment(aChar,aScanner,mTextValue);
+  nsresult  result=NS_OK;
+  
+  mTextValue="<!";
+  
+  static const char* theTerminals="\">[";
+  PRBool done=PR_FALSE;
+     
+  result=aScanner.ReadUntil(mTextValue,theTerminals,PR_TRUE,PR_FALSE); 
+  
+  while(!done && NS_OK==result){
+    result=aScanner.Peek(aChar);
+    if(result==NS_OK) {
+      if(kQuote==aChar) {
+        result=aScanner.GetChar(aChar);
+        if(NS_OK==result) mTextValue += aChar; // append the quote that you just got
+        result=aScanner.ReadUntil(mTextValue,kQuote,PR_TRUE);
+        if(NS_OK==result && aMode!=eParseMode_noquirks)
+          result=aScanner.ReadWhile(mTextValue,"\"",PR_TRUE,PR_FALSE); // consume multiple quotes
+      }
+      else if(kLeftSquareBracket==aChar) {
+        result=aScanner.ReadUntil(mTextValue,kRightSquareBracket,PR_TRUE);
+      }
+      else if(kGreaterThan==aChar){
+        result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE);
+        done=PR_TRUE;
+      }
+      else {
+        result=aScanner.GetChar(aChar);
+        if(result==NS_OK) mTextValue += aChar;
+      }
+    }
+  }
+  return result;
 }
 
 const char*  CDoctypeDeclToken::GetClassName(void) {

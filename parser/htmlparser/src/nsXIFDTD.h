@@ -156,11 +156,12 @@ class nsXIFDTD : public nsIDTD {
      * @param 
      * @return
      */
-    NS_IMETHOD WillBuildModel(  nsString& aFilename,
-                                PRBool aNotifySink,
-                                nsString& aSourceType,
-                                eParseMode  aParseMode,
-                                nsIContentSink* aSink=0);
+    NS_IMETHOD WillBuildModel(nsString& aFilename,
+                              PRBool aNotifySink,
+                              nsString& aSourceType,
+                              eParseMode aParseMode,
+                              nsString& aCommand,
+                              nsIContentSink* aSink=0);
     /**
       * The parser uses a code sandwich to wrap the parsing process. Before
       * the process begins, WillBuildModel() is called. Afterwards the parser

@@ -54,6 +54,7 @@
 #include "nsIContentSink.h"
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLTokenizer.h"
+//#include "nsTextTokenizer.h"
 
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
@@ -204,7 +205,7 @@ public:
  *  @param   
  *  @return  
  */
-CViewSourceHTML::CViewSourceHTML() : nsIDTD(), mFilename(""), 
+CViewSourceHTML::CViewSourceHTML() : nsIDTD(), 
   mStartTag("start"), mEndTag("end"), mCommentTag("comment"), 
   mDocTypeTag("doctype"), mPITag("pi"), mEntityTag("entity"), 
   mText("txt"), mKey("key"), mValue("val") 
@@ -214,6 +215,7 @@ CViewSourceHTML::CViewSourceHTML() : nsIDTD(), mFilename(""),
   mSink=0;
   mLineNumber=0;
   mTokenizer=0;
+  mIsText=PR_FALSE;
 
 #ifdef rickgdebug
   gDumpFile = new fstream("c:/temp/viewsource.xml",ios::trunc);
@@ -289,9 +291,10 @@ eAutoDetectResult CViewSourceHTML::CanParse(nsString& aContentType, nsString& aC
  * @param 
  * @return
  */
-NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString& aSourceType,eParseMode aParseMode,nsIContentSink* aSink){
+NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotifySink,
+                                              nsString& aSourceType,eParseMode aParseMode,
+                                              nsString& aCommand,nsIContentSink* aSink){
   nsresult result=NS_OK;
-  mFilename=aFilename;
 
 #ifdef RAPTOR_PERF_METRICS
   vsTimer.Reset();
@@ -302,18 +305,15 @@ NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotify
   mSink=(nsIXMLContentSink*)aSink;
   if((aNotifySink) && (mSink)) {
 
-    mLineNumber=0;
-    result = mSink->WillBuildModel();
-
     static const char* theHeader="<?xml version=\"1.0\"?>";
     CToken ssToken(theHeader);
     nsCParserNode ssNode(&ssToken);
     result= mSink->AddCharacterData(ssNode);
 
-#ifdef rickgdebug
-      (*gDumpFile) << theHeader << endl;
-      (*gDumpFile) << "<viewsource xmlns=\"viewsource\">" << endl;
-#endif
+  #ifdef rickgdebug
+    (*gDumpFile) << theHeader << endl;
+    (*gDumpFile) << "<viewsource xmlns=\"viewsource\">" << endl;
+  #endif
 
     //now let's automatically open the root container...
     CToken theToken("viewsource");
@@ -323,6 +323,11 @@ NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotify
     theNode.AddAttribute(&theAttr);
     mSink->OpenContainer(theNode);
   }
+  mIsText=!aCommand.Equals(kViewSourceCommand);
+
+  mLineNumber=0;
+  result = mSink->WillBuildModel();
+
   START_TIMER();
   return result;
 }
@@ -338,7 +343,8 @@ NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotify
 NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
   nsresult result=NS_OK;
 
-  if(aTokenizer) {
+  if(aTokenizer && aParser) {
+
     nsITokenizer*  oldTokenizer=mTokenizer;
     mTokenizer=aTokenizer;
     gTokenRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
@@ -384,7 +390,7 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
 
     mSink=(nsIXMLContentSink*)aParser->GetContentSink();
     if((aNotifySink) && (mSink)) {
-        //now let's automatically close the pre...
+        //now let's automatically auto-opened containers...
 
 #ifdef rickgdebug
   if(gDumpFile){
@@ -394,11 +400,12 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
   }
 #endif
 
-      //now let's automatically close the root container...
-      CToken theToken("viewsource");
-      nsCParserNode theNode(&theToken,0);
-      mSink->CloseContainer(theNode);
-
+      if(!mIsText) {
+        //now let's automatically close the root container...
+        CToken theToken("viewsource");
+        nsCParserNode theNode(&theToken,0);
+        mSink->CloseContainer(theNode);
+      }
       result = mSink->DidBuildModel(1);
     }
 
@@ -451,8 +458,12 @@ nsresult  CViewSourceHTML::Terminate(void)
  * @return  ptr to tokenizer
  */
 nsITokenizer* CViewSourceHTML::GetTokenizer(void) {
-  if(!mTokenizer)
-    mTokenizer=new nsHTMLTokenizer();
+  if(!mTokenizer) {
+    /*if(mIsText)
+      mTokenizer = new nsTextTokenizer();
+    else */
+    mTokenizer = new nsHTMLTokenizer();
+  }
   return mTokenizer;
 }
 
@@ -694,7 +705,7 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
           CToken theKeyToken(theAttrToken->GetKey());
           result=WriteTag(mKey,&theKeyToken,0,PR_FALSE);
           nsString& theValue=theToken->GetStringValueXXX();
-          if(0<theValue.Length()) {
+          if((0<theValue.Length()) || (theAttrToken->mHasEqualWithoutValue)){
             result=WriteTag(mValue,theToken,0,PR_FALSE);
           }
         } 
@@ -759,7 +770,6 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,CToken* aToken,PRInt3
   theContext.mEndNode.Init(&theTagToken,mLineNumber);
   mSink->CloseContainer(theContext.mEndNode);  //emit </starttag>...
   START_TIMER();
-
 
 #ifdef rickgdebug
       cstr.Assign(theXMLTagName);
@@ -852,17 +862,13 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
     case eToken_start:
 
       result=WriteTag(mStartTag,aToken,aToken->GetAttributeCount(),PR_TRUE);
-      if(mParser && (NS_OK==result)) {
-        nsAutoString      charsetValue;
-        nsCharsetSource   charsetSource;
+      if((!mIsText) && mParser && (NS_OK==result)) {
         CObserverService& theService=mParser->GetObserverService();
         CParserContext*   pc=mParser->PeekContext(); 
         void*             theDocID=(pc)? pc->mKey:0; 
-  
-        mParser->GetDocumentCharset(charsetValue,charsetSource);
-        eHTMLTags  theTag = (eHTMLTags)aToken->GetTypeID();
-        result=theService.Notify(theTag,theContext.mTokenNode,(PRUint32)theDocID,
-                                 kViewSourceCommand,charsetValue,charsetSource);
+        eHTMLTags         theTag=(eHTMLTags)theToken->GetTypeID();  
+
+        result=theService.Notify(theTag,theContext.mTokenNode,(PRUint32)theDocID,kViewSourceCommand,mParser);
       }
       theContext.mTokenNode.Init(0,0,gTokenRecycler);  //now recycle.
       break;

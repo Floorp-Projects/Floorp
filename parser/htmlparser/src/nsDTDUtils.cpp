@@ -23,7 +23,8 @@
 
 #include "nsDTDUtils.h"
 #include "CNavDTD.h" 
-#include "nsIParserNode.h"
+#include "nsIParserNode.h" 
+#include "nsParserNode.h" 
 
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
@@ -31,11 +32,8 @@
 MOZ_DECL_CTOR_COUNTER(nsEntryStack);
 MOZ_DECL_CTOR_COUNTER(nsDTDContext);
 MOZ_DECL_CTOR_COUNTER(CTokenRecycler);
-MOZ_DECL_CTOR_COUNTER(CObserverService);
+MOZ_DECL_CTOR_COUNTER(CObserverService); 
  
-/***************************************************************
-  First, define the tagstack class
- ***************************************************************/
 
 
 /**
@@ -44,9 +42,9 @@ MOZ_DECL_CTOR_COUNTER(CObserverService);
  * @update  gess 04/22/99
  */
 nsEntryStack::nsEntryStack()  {
-  
-  MOZ_COUNT_CTOR(nsEntryStack);
 
+  MOZ_COUNT_CTOR(nsEntryStack);
+  
   mCapacity=0;
   mCount=0;
   mEntries=0;
@@ -61,11 +59,23 @@ nsEntryStack::~nsEntryStack() {
 
   MOZ_COUNT_DTOR(nsEntryStack);
 
-  if(mEntries)
+  if(mEntries) {
+    if(0<mCount) {
+      PRInt32 anIndex=0;
+      for(anIndex=0;anIndex<mCount;anIndex++){
+        if(mEntries[anIndex].mStyles)
+          delete mEntries[anIndex].mStyles;
+
+        //add code here to recycle the node if you have one...
+      
+      }
+    }
     delete [] mEntries;
+    mEntries=0;
+  }
   mCount=mCapacity=0;
-  mEntries=0;
 }
+
 
 /**
  * Resets state of stack to be empty.
@@ -75,17 +85,24 @@ void nsEntryStack::Empty(void) {
   mCount=0;
 }
 
+
 /**
  * 
  * @update  gess 04/22/99
  */
-void nsEntryStack::Push(eHTMLTags aTag) {
-  if(mCount==mCapacity){ 
-    nsTagEntry* temp=new nsTagEntry[mCapacity+=50]; 
+void nsEntryStack::EnsureCapacityFor(PRInt32 aNewMax,PRInt32 aShiftOffset) {
+  if(mCapacity<aNewMax){ 
+
+    const int kDelta=16;
+
+    PRInt32 theSize = kDelta * ((aNewMax / kDelta) + 1);
+    nsTagEntry* temp=new nsTagEntry[theSize]; 
+    mCapacity=theSize;
+
     if(temp){ 
-      PRUint32 index=0; 
+      PRInt32 index=0; 
       for(index=0;index<mCount;index++) {
-        temp[index]=mEntries[index];
+        temp[aShiftOffset+index]=mEntries[index];
       }
       delete [] mEntries;
       mEntries=temp;
@@ -93,22 +110,95 @@ void nsEntryStack::Push(eHTMLTags aTag) {
     else{
       //XXX HACK! This is very bad! We failed to get memory.
     }
-  }
-  mEntries[mCount].mTag=aTag;
-  mEntries[mCount].mBankIndex=-1;
-  mEntries[mCount++].mStyleIndex=-1;
+  } //if
 }
 
+/**
+ * 
+ * @update  gess 04/22/99
+ */
+void nsEntryStack::Push(const nsIParserNode* aNode,PRInt32 aResidualStyleLevel) {
+  if(aNode) {
+
+    EnsureCapacityFor(mCount+1);
+
+    ((nsCParserNode*)aNode)->mUseCount++;
+    ((nsCParserNode*)aNode)->mToken->mUseCount++;
+
+    mEntries[mCount].mTag=(eHTMLTags)aNode->GetNodeType();
+    mEntries[mCount].mNode=(nsIParserNode*)aNode;
+    mEntries[mCount].mLevel=aResidualStyleLevel;
+    mEntries[mCount].mParent=0;
+    mEntries[mCount++].mStyles=0;
+  }
+}
+
+
+/**
+ * This method inserts the given node onto the front of this stack
+ *
+ * @update  gess 11/10/99
+ */
+void nsEntryStack::PushFront(const nsIParserNode* aNode,PRInt32 aResidualStyleLevel) {
+  if(aNode) {
+
+    if(mCount<mCapacity) {
+      PRInt32 index=0; 
+      for(index=mCount;index>0;index--) {
+        mEntries[index]=mEntries[index-1];
+      }
+    }
+    else EnsureCapacityFor(mCount+1,1);
+
+
+    ((nsCParserNode*)aNode)->mUseCount++;
+    ((nsCParserNode*)aNode)->mToken->mUseCount++;
+
+    mEntries[0].mTag=(eHTMLTags)aNode->GetNodeType();
+    mEntries[0].mNode=(nsIParserNode*)aNode;
+    mEntries[0].mLevel=aResidualStyleLevel;
+    mEntries[0].mParent=0;
+    mEntries[0].mStyles=0;
+    mCount++;
+  }
+}
+
+/**
+ * 
+ * @update  gess 11/10/99
+ */
+void nsEntryStack::Append(nsEntryStack *aStack) {
+  if(aStack) {
+
+    PRInt32 theCount=aStack->mCount;
+
+    EnsureCapacityFor(mCount+aStack->mCount,0);
+
+    PRInt32 theIndex=0;
+    for(theIndex=0;theIndex<theCount;theIndex++){
+      mEntries[mCount]=aStack->mEntries[theIndex];
+      mEntries[mCount++].mLevel=-1;
+    }
+  }
+} 
+ 
 
 /**
  * 
  * @update  harishd 04/04/99
  * @update  gess 04/21/99
  */
-eHTMLTags nsEntryStack::Pop() {
-  eHTMLTags result=eHTMLTag_unknown;
+nsIParserNode* nsEntryStack::Pop(void) {
+
+  nsIParserNode *result=0;
+
   if(0<mCount) {
-    result=mEntries[--mCount].mTag;
+    result=mEntries[--mCount].mNode;
+
+    ((nsCParserNode*)result)->mUseCount--;
+    ((nsCParserNode*)result)->mToken->mUseCount--;
+    mEntries[mCount].mNode=0;
+    mEntries[mCount].mStyles=0;
   }
   return result;
 } 
@@ -131,9 +221,22 @@ eHTMLTags nsEntryStack::First() const {
  * @update  harishd 04/04/99
  * @update  gess 04/21/99
  */
-eHTMLTags nsEntryStack::TagAt(PRUint32 anIndex) const {
+nsIParserNode* nsEntryStack::NodeAt(PRInt32 anIndex) const {
+  nsIParserNode* result=0;
+  if((0<mCount) && (anIndex<mCount)) {
+    result=mEntries[anIndex].mNode;
+  }
+  return result;
+}
+
+/**
+ * 
+ * @update  harishd 04/04/99
+ * @update  gess 04/21/99
+ */
+eHTMLTags nsEntryStack::TagAt(PRInt32 anIndex) const {
   eHTMLTags result=eHTMLTag_unknown;
-  if(anIndex<mCount) {
+  if((0<mCount) && (anIndex<mCount)) {
     result=mEntries[anIndex].mTag;
   }
   return result;
@@ -143,12 +246,12 @@ eHTMLTags nsEntryStack::TagAt(PRUint32 anIndex) const {
  * 
  * @update  gess 04/21/99
  */
-nsTagEntry& nsEntryStack::EntryAt(PRUint32 anIndex) const {
-  static nsTagEntry gSentinel;
-  if(anIndex<mCount) {
-    return mEntries[anIndex];
+nsTagEntry* nsEntryStack::EntryAt(PRInt32 anIndex) const {
+  nsTagEntry *result=0;
+  if((0<mCount) && (anIndex<mCount)) {
+    result=&mEntries[anIndex];
   }
-  return gSentinel;
+  return result;
 }
 
 
@@ -157,9 +260,9 @@ nsTagEntry& nsEntryStack::EntryAt(PRUint32 anIndex) const {
  * @update  harishd 04/04/99
  * @update  gess 04/21/99
  */
-eHTMLTags nsEntryStack::operator[](PRUint32 anIndex) const {
+eHTMLTags nsEntryStack::operator[](PRInt32 anIndex) const {
   eHTMLTags result=eHTMLTag_unknown;
-  if(anIndex<mCount) {
+  if((0<mCount) && (anIndex<mCount)) {
     result=mEntries[anIndex].mTag;
   }
   return result;
@@ -172,9 +275,14 @@ eHTMLTags nsEntryStack::operator[](PRUint32 anIndex) const {
  * @update  gess 04/21/99
  */
 eHTMLTags nsEntryStack::Last() const {
-  return TagAt(mCount-1);
+  eHTMLTags result=eHTMLTag_unknown;
+  if(0<mCount) {
+    result=mEntries[mCount-1].mTag;
+  }
+  return result;
 }
 
+#if 0
 /**
  * 
  * @update  harishd 04/04/99
@@ -189,8 +297,7 @@ PRInt32 nsEntryStack::GetTopmostIndexOf(eHTMLTags aTag) const {
   return kNotFound;
 
 }
-
-
+#endif
 
 
 /***************************************************************
@@ -202,12 +309,12 @@ PRInt32 nsEntryStack::GetTopmostIndexOf(eHTMLTags aTag) const {
  * 
  * @update	gess9/10/98
  */
-nsDTDContext::nsDTDContext() : mStack(), mSkipped(0), mStyles(0) {
-    
+nsDTDContext::nsDTDContext() : mStack() {
+
   MOZ_COUNT_CTOR(nsDTDContext);
 
 #ifdef  NS_DEBUG
-  nsCRT::zero(mTags,sizeof(mTags));
+  memset(mXTags,0,sizeof(mXTags));
 #endif
 } 
  
@@ -217,21 +324,7 @@ nsDTDContext::nsDTDContext() : mStack(), mSkipped(0), mStyles(0) {
  * @update	gess9/10/98
  */
 nsDTDContext::~nsDTDContext() {
-
   MOZ_COUNT_DTOR(nsDTDContext);
-
-  PRInt32 theSize=mSkipped.GetSize();
-  if(theSize>0) {
-    CTokenDeallocator theDeallocator;
-    for(PRInt32 i=0;i<theSize;i++) {
-      nsDeque* theDeque=(nsDeque*)mSkipped.Pop();
-      if(theDeque) {
-        if(theDeque->GetSize()>0) theDeque->ForEach(theDeallocator);
-        delete theDeque;
-        theDeque=nsnull;
-      }
-    }
-  }
 }
 
 /**
@@ -239,48 +332,79 @@ nsDTDContext::~nsDTDContext() {
  * @update  gess7/9/98, harishd 04/04/99 
  */
 PRInt32 nsDTDContext::GetCount(void) {
-  return mStack.GetCount();
+  return mStack.mCount;
 }
+
 
 /**
  * 
- * @update  gess7/9/98, harishd 04/04/99
+ * @update  gess7/9/98
  */
-void nsDTDContext::Push(eHTMLTags aTag) {
-#ifdef  NS_DEBUG
-  if(mStack.mCount < eMaxTags)
-    mTags[mStack.mCount]=aTag;
-#endif
-
-  mStack.Push(aTag);
-}
-
-/** 
- * @update  gess7/9/98, harishd 04/04/99
- */
-eHTMLTags nsDTDContext::Pop() {
-#ifdef  NS_DEBUG
-  if ((mStack.mCount>0) && (mStack.mCount <= eMaxTags))
-    mTags[mStack.mCount-1]=eHTMLTag_unknown;
-#endif
-
-  nsEntryStack* theStyles=0;
-  nsTagEntry& theEntry=mStack.EntryAt(mStack.mCount-1);
-  PRInt32 theIndex=theEntry.mStyleIndex;  
-  if(-1<theIndex){
-    theStyles=(nsEntryStack*)mStyles.ObjectAt(theIndex);
-    delete theStyles;
-  }
-
-  eHTMLTags result=mStack.Pop();
-  return result;
+PRBool nsDTDContext::HasOpenContainer(eHTMLTags aTag) const {
+  PRInt32 theIndex=mStack.FindLast(aTag);
+  return PRBool(-1<theIndex);
 }
 
 /**
  * 
  * @update  gess7/9/98
  */
-eHTMLTags nsDTDContext::First() const {
+PRInt32 nsDTDContext::GetTopmostIndexOf(eHTMLTags aTag) const {
+  PRInt32 result=mStack.FindLast(aTag);
+  return result;
+} 
+
+/**
+ * 
+ * @update  gess7/9/98
+ */
+void nsDTDContext::Push(const nsIParserNode* aNode,PRInt32 aResidualStyleLevel) {
+  if(aNode) {
+
+#ifdef  NS_DEBUG
+    eHTMLTags theTag=(eHTMLTags)aNode->GetNodeType();
+    int size=mStack.mCount;
+    if(size< eMaxTags)
+      mXTags[size]=theTag;
+#endif
+    mStack.Push((nsIParserNode*)aNode,aResidualStyleLevel);
+  }
+}
+
+/** 
+ * @update  gess 11/11/99, 
+ *          harishd 04/04/99
+ */
+nsIParserNode* nsDTDContext::Pop(nsEntryStack *&aStack) {
+
+  PRInt32       theSize=mStack.mCount;
+  nsIParserNode *result=0;
+
+  if(0<theSize) {
+
+#ifdef  NS_DEBUG
+    if ((theSize>0) && (theSize <= eMaxTags))
+      mXTags[theSize-1]=eHTMLTag_unknown;
+#endif
+
+
+    nsTagEntry* theEntry=mStack.EntryAt(mStack.mCount-1);
+    if(theEntry) {
+      aStack=theEntry->mStyles;
+    }
+
+    result=mStack.Pop();
+  }
+
+  return result;
+}
+
+
+/**
+ * 
+ * @update  gess7/9/98
+ */
+eHTMLTags nsDTDContext::First(void) const {
   return mStack.First();
 }
 
@@ -294,147 +418,115 @@ eHTMLTags nsDTDContext::TagAt(PRInt32 anIndex) const {
 
 
 /**
- * 
- * @update  gess7/9/98
- */
-eHTMLTags nsDTDContext::operator[](PRInt32 anIndex) const {
-  return mStack[anIndex];
-}
-
-/**
- * 
+ *  
  * @update  gess7/9/98
  */
 eHTMLTags nsDTDContext::Last() const {
   return mStack.Last();
 }
 
+
 /**
  * 
  * @update  gess7/9/98
  */
-nsEntryStack* nsDTDContext::GetStylesAt(PRUint32 anIndex) const {
+nsEntryStack* nsDTDContext::GetStylesAt(PRInt32 anIndex) const {
   nsEntryStack* result=0;
+
   if(anIndex<mStack.mCount){
-    nsTagEntry& theEntry=mStack.EntryAt(anIndex);
-    PRInt32 theIndex=theEntry.mStyleIndex;  
-    if(-1<theIndex){
-      result=(nsEntryStack*)mStyles.ObjectAt(theIndex);
+    nsTagEntry* theEntry=mStack.EntryAt(anIndex);
+    if(theEntry) {
+      result=theEntry->mStyles;
     }
   }
   return result;
 }
+
 
 /**
  * 
  * @update  gess 04/28/99
  */
-void nsDTDContext::PushStyle(eHTMLTags aTag){
+void nsDTDContext::PushStyle(const nsIParserNode* aNode){
 
-  nsTagEntry& theEntry=mStack.EntryAt(mStack.mCount-1);
-  //ok, now go get the right tokenbank deque...
-  nsEntryStack* theStack=0;
-  if(-1<theEntry.mStyleIndex)
-    theStack=(nsEntryStack*)mStyles.ObjectAt(theEntry.mStyleIndex);
-  if(!theStack){
-    //time to make a databank for this element...
-    theStack=new nsEntryStack();
-    if(theStack){
-      mStyles.Push(theStack);
-      theEntry.mStyleIndex=mStyles.GetSize()-1;
+  nsTagEntry* theEntry=mStack.EntryAt(mStack.mCount-1);
+  if(theEntry ) {
+    nsEntryStack* theStack=theEntry->mStyles;
+    if(!theStack) {
+      theStack=theEntry->mStyles=new nsEntryStack();
     }
-    else{
-      //XXX Hack! This is very back, we've failed to get memory.
+    if(theStack) {
+      theStack->Push(aNode);
+      theEntry=&theStack->mEntries[theStack->mCount-1];
+      if(theEntry) {
+        theEntry->mParent=theStack;
+      }
     }
-  }
-  if(theStack){
-    theStack->Push(aTag);
-  }
+  } //if
 }
 
+
 /**
+ * Call this when you have an EntryStack full of styles
+ * that you want to push at this level.
  * 
  * @update  gess 04/28/99
  */
-eHTMLTags nsDTDContext::PopStyle(void){
-  eHTMLTags result=eHTMLTag_unknown;
-  nsTagEntry& theEntry=mStack.EntryAt(mStack.mCount-1);
-  //ok, now go get the right tokenbank deque...
-  nsEntryStack* theStack=0;
-  if(-1<theEntry.mStyleIndex)
-    theStack=(nsEntryStack*)mStyles.ObjectAt(theEntry.mStyleIndex);
-  if(theStack){
-    result=theStack->Pop();
-  }
+void nsDTDContext::PushStyles(nsEntryStack *aStyles){
+
+  if(aStyles) {
+    nsTagEntry* theEntry=mStack.EntryAt(mStack.mCount-1);
+    if(theEntry ) {
+      nsEntryStack* theStyles=theEntry->mStyles;
+      if(!theStyles) {
+        theEntry->mStyles=aStyles;
+      }
+      else theStyles->Append(aStyles);
+    } //if
+  }//if
+}
+
+
+/** 
+ * 
+ * @update  gess 04/28/99
+ */
+nsIParserNode* nsDTDContext::PopStyle(void){
+  nsIParserNode* result=0;
+
+  nsTagEntry *theEntry=mStack.EntryAt(mStack.mCount-1);
+  if(theEntry && (theEntry->mNode)) {
+    if(kNotFound<theEntry->mLevel){
+      nsEntryStack *theStack=mStack.mEntries[theEntry->mLevel].mStyles;
+      if(theStack) {
+        result=theStack->Pop();
+      }
+    }
+  } //if
   return result;
 }
 
-
-/**
+/** 
  * 
- * @update  harishd 04/04/99
- * @update  gess 04/21/99
+ * @update  gess 04/28/99
  */
-void nsDTDContext::SaveToken(CToken* aToken, PRInt32 aID)
-{ 
-  NS_PRECONDITION(aID <= mStack.GetCount() && aID > -1,"Out of bounds");
+nsIParserNode* nsDTDContext::PopStyle(eHTMLTags aTag){
 
-  if(aToken) {
-    nsTagEntry& theEntry=mStack.EntryAt(aID);
-    //ok, now go get the right tokenbank deque...
-    nsDeque* theDeque=0;
-    if(-1<theEntry.mBankIndex)
-      theDeque=(nsDeque*)mSkipped.ObjectAt(theEntry.mBankIndex);
-    if(!theDeque){
-      //time to make a databank for this element...
-      theDeque=new nsDeque(0);
-      if(theDeque){
-        mSkipped.Push(theDeque);
-        theEntry.mBankIndex=mSkipped.GetSize()-1;
+  PRInt32 theLevel=0;
+  PRInt32 sindex=0;
+
+  for(theLevel=mStack.mCount-1;theLevel>0;theLevel--) {
+    nsEntryStack *theStack=mStack.mEntries[theLevel].mStyles;
+    if(theStack) {
+      if(aTag==theStack->Last()) {
+        return theStack->Pop();
+      } else {
+        // NS_ERROR("bad residual style entry");
       }
-      else{
-        //XXX Hack! This is very back, we've failed to get memory.
-      }
-    }
-    theDeque->Push(aToken);
-  }
-}
-
-/**
- * 
- * @update  harishd 04/04/99
- * @update  gess 04/21/99
- */
-CToken*  nsDTDContext::RestoreTokenFrom(PRInt32 aID)
-{ 
-  NS_PRECONDITION(aID <= mStack.GetCount() && aID > -1,"Out of bounds");
-  CToken* result=0;
-  if(0<mStack.GetCount()) {
-    nsTagEntry theEntry=mStack.EntryAt(aID);
-    nsDeque* theDeque=(nsDeque*)mSkipped.ObjectAt(theEntry.mBankIndex);
-    if(theDeque){
-      result=(CToken*)theDeque->PopFront();
-    }
-  }
-  return result;
-}
-
-/**
- * 
- * @update  harishd 04/04/99
- * @update  gess 04/21/99
- */
-PRInt32  nsDTDContext::TokenCountAt(PRInt32 aID) 
-{ 
-  NS_PRECONDITION(aID <= mStack.GetCount(),"Out of bounds");
-
-  nsTagEntry theEntry=mStack.EntryAt(aID);
-  nsDeque* theDeque=(nsDeque*)mSkipped.ObjectAt(theEntry.mBankIndex);
-  if(theDeque){
-    return theDeque->GetSize();
+    } 
   }
 
-  return kNotFound;
+  return 0;
 }
 
 /**************************************************************
@@ -452,7 +544,7 @@ CTokenRecycler::CTokenRecycler() : nsITokenRecycler(),mEmpty("") {
 
   int i=0;
   for(i=0;i<eToken_last-1;i++) {
-    mTokenCache[i]=new nsDeque(new CTokenDeallocator());
+    mTokenCache[i]=new nsDeque(0);
 #ifdef NS_DEBUG
     mTotals[i]=0;
 #endif
@@ -470,14 +562,16 @@ CTokenRecycler::~CTokenRecycler() {
   //begin by deleting all the known (recycled) tokens...
   //We're also deleting the cache-deques themselves.
   int i;
+
+  CTokenDeallocator theDeallocator;
   for(i=0;i<eToken_last-1;i++) {
     if(0!=mTokenCache[i]) {
+      mTokenCache[i]->ForEach(theDeallocator);
       delete mTokenCache[i];
       mTokenCache[i]=0;
     }
   }
 }
-
 
 class CTokenFinder: public nsDequeFunctor{
 public:
@@ -500,14 +594,18 @@ public:
 void CTokenRecycler::RecycleToken(CToken* aToken) {
   if(aToken) {
     PRInt32 theType=aToken->GetTokenType();
-    mTokenCache[theType-1]->Push(aToken);
 
 #if 0
   //This should be disabled since it's only debug code.
     CTokenFinder finder(aToken);
     CToken* theMatch;
     theMatch=(CToken*)mTokenCache[theType-1]->FirstThat(finder);
+    if(theMatch) {
+      printf("dup token: %p\n",theMatch);
+    }
 #endif
+    aToken->mUseCount=1;
+    mTokenCache[theType-1]->Push(aToken);
   }
 }
 
@@ -793,10 +891,15 @@ void CObserverService::RegisterObservers(nsString& aTopic) {
  * @return if SUCCESS return NS_OK else return ERROR code.
  */
 nsresult CObserverService::Notify(eHTMLTags aTag,nsIParserNode& aNode,PRUint32 aUniqueID, const char* aCommand,
-                                  nsAutoString& aCharsetValue,nsCharsetSource& aCharsetSource) {
+                                  nsIParser* aParser) {
   nsresult  result=NS_OK;
   nsDeque*  theDeque=GetObserversForTag(aTag);
   if(theDeque){ 
+
+    nsAutoString      theCharsetValue;
+    nsCharsetSource   theCharsetSource;
+    aParser->GetDocumentCharset(theCharsetValue,theCharsetSource);
+
     PRInt32 theAttrCount =aNode.GetAttributeCount(); 
     PRUint32 theDequeSize=theDeque->GetSize(); 
     if(0<theDequeSize){
@@ -813,12 +916,12 @@ nsresult CObserverService::Notify(eHTMLTags aTag,nsIParserNode& aNode,PRUint32 a
       // Add pseudo attribute in the end
       if(index < 50) {
         theKeys[index]=theCharsetKey.GetUnicode(); 
-        theValues[index] = aCharsetValue.GetUnicode();
+        theValues[index] = theCharsetValue.GetUnicode();
         index++;
       }
       if(index < 50) {
         theKeys[index]=theSourceKey.GetUnicode(); 
-        PRInt32 sourceInt = aCharsetSource;
+        PRInt32 sourceInt = theCharsetSource;
         intValue.Append(sourceInt,10);
         theValues[index] = intValue.GetUnicode();
 	  	  index++;

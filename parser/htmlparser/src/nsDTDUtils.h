@@ -61,71 +61,99 @@ void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* 
 void DebugDumpContainmentRules2(nsIDTD& theDTD,const char* aFilename,const char* aTitle);
 PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size);
 
-/**************************************************************
-  This is the place to store the "bad-content" tokens, and the 
-  also the regular tags.
- **************************************************************/
+
+/***************************************************************
+  The dtdcontext class defines an ordered list of tags (a context).
+ ***************************************************************/
+
+/***************************************************************
+  First, define the tagstack class
+ ***************************************************************/
+
+class nsEntryStack;  //forware declare to make compilers happy.
 
 struct nsTagEntry {
-  eHTMLTags mTag;
-  PRInt8    mBankIndex;
-  PRInt8    mStyleIndex;
+  eHTMLTags       mTag;  //for speedier access to tag id
+  nsIParserNode*  mNode;
+  PRInt32         mLevel;
+  nsEntryStack*   mParent;
+  nsEntryStack*   mStyles;
 };
 
 class nsEntryStack {
 public:
-              nsEntryStack();
-              ~nsEntryStack();
-  void        Push(eHTMLTags aTag);
-  eHTMLTags   Pop();
-  eHTMLTags   First() const;
-  eHTMLTags   TagAt(PRUint32 anIndex) const;
-  nsTagEntry& EntryAt(PRUint32 anIndex) const;
-  PRInt32     GetTopmostIndexOf(eHTMLTags aTag) const;
-  eHTMLTags   operator[](PRUint32 anIndex) const;
-  eHTMLTags   Last() const;
-  void        Empty(void); 
-  PRInt32     GetCount(void) const {return mCount;}
+                  nsEntryStack();
+                  ~nsEntryStack();
+
+  void            EnsureCapacityFor(PRInt32 aNewMax, PRInt32 aShiftOffset=0);
+  void            Push(const nsIParserNode* aNode,PRInt32 aResidualStyleLevel=-1);
+  void            PushFront(const nsIParserNode* aNode,PRInt32 aResidualStyleLevel=-1);
+  void            Append(nsEntryStack *theStack);
+  nsIParserNode*  Pop(void);
+  nsIParserNode*  NodeAt(PRInt32 anIndex) const;
+  eHTMLTags       First() const;
+  eHTMLTags       TagAt(PRInt32 anIndex) const;
+  nsTagEntry*     EntryAt(PRInt32 anIndex) const;
+  eHTMLTags       operator[](PRInt32 anIndex) const;
+  eHTMLTags       Last() const;
+  void            Empty(void); 
+
+  inline PRInt32 FindFirst(eHTMLTags aTag) const {
+    PRInt32 index=-1;
+    
+    if(0<mCount) {
+      while(++index<mCount) {
+        if(aTag==mEntries[index].mTag) {
+          return index;
+        }
+      } //while
+    }
+    return kNotFound;
+  }
+
+  inline PRInt32 FindLast(eHTMLTags aTag) const {
+    PRInt32 index=mCount;
+    while(--index>=0) {
+        if(aTag==mEntries[index].mTag) {
+          return index; 
+        }
+    }
+    return kNotFound;
+  }
 
   nsTagEntry* mEntries;
-  PRUint32    mCount;
-  PRUint32    mCapacity;
+  PRInt32    mCount;
+  PRInt32    mCapacity;
 };
 
-
-/***************************************************************
-  The dtdcontext class defines the current tag context (both
-  structural and stylistic). This small utility class allows us
-  to push/pop contexts at will, which makes handling styles in
-  certainly (unfriendly) elements (like tables) much easier.
- ***************************************************************/
 
 class nsDTDContext {
 public:
                 nsDTDContext();
                 ~nsDTDContext();
-  void          Push(eHTMLTags aTag);
-  eHTMLTags     Pop();
-  eHTMLTags     First() const;
-  eHTMLTags     TagAt(PRInt32 anIndex) const;
-  eHTMLTags     operator[](PRInt32 anIndex) const;
-  eHTMLTags     Last() const;
-  void          Empty(void); 
-  PRInt32       GetCount(void);
-  nsEntryStack*   GetStylesAt(PRUint32 anIndex) const;
-  void          PushStyle(eHTMLTags aTag);
-  eHTMLTags     PopStyle(void);
 
-  void          SaveToken(CToken* aToken, PRInt32 aID);
-  CToken*       RestoreTokenFrom(PRInt32 aID);
-  PRInt32       TokenCountAt(PRInt32 aID);
+  void            Push(const nsIParserNode* aNode,PRInt32 aResidualStyleLevel=-1);
+  nsIParserNode*  Pop(nsEntryStack*& aStack);
+  eHTMLTags       First(void) const;
+  eHTMLTags       Last(void) const;
+  eHTMLTags       TagAt(PRInt32 anIndex) const;
+  eHTMLTags       operator[](PRInt32 anIndex) const {return TagAt(anIndex);}
+  PRBool          HasOpenContainer(eHTMLTags aTag) const;
+  PRInt32         GetTopmostIndexOf(eHTMLTags aTag) const;
 
-  nsEntryStack    mStack;
-  nsDeque       mSkipped; //each entry will hold a deque full of skipped tokens...
-  nsDeque       mStyles;  //each entry will hold a tagstack full of style tags...
+  void            Empty(void); 
+  PRInt32         GetCount(void);
+  nsEntryStack*   GetStylesAt(PRInt32 anIndex) const;
+  void            PushStyle(const nsIParserNode* aNode);
+  void            PushStyles(nsEntryStack *theStyles);
+  nsIParserNode*  PopStyle(void);
+  nsIParserNode*  PopStyle(eHTMLTags aTag);
+
+  nsEntryStack    mStack; //this will hold a list of tagentries...
+
 #ifdef  NS_DEBUG
   enum { eMaxTags = 100 };
-  eHTMLTags   mTags[eMaxTags];
+  eHTMLTags       mXTags[eMaxTags];
 #endif
 };
 
@@ -163,6 +191,7 @@ public:
 protected:
     nsDeque*  mTokenCache[eToken_last-1];
     nsString  mEmpty;
+
 #ifdef  NS_DEBUG
     int       mTotals[eToken_last-1];
 #endif
@@ -192,13 +221,18 @@ public:
  * @param   aTagSet -- set of tags to be searched
  * @return
  */
-inline PRInt32 IndexOfTagInSet(PRInt32 aTag,const eHTMLTags aTagSet[],PRInt32 aCount)  {
-  PRInt32 theIndex;
+inline PRInt32 IndexOfTagInSet(PRInt32 aTag,const eHTMLTags* aTagSet,PRInt32 aCount)  {
 
-  for(theIndex=0;theIndex<aCount;theIndex++)
-    if(aTag==aTagSet[theIndex]) {
-      return theIndex;
+  const eHTMLTags* theEnd=aTagSet+aCount;
+  const eHTMLTags* theTag=aTagSet;
+
+  while(theTag<theEnd) {
+    if(aTag==*theTag) {
+      return theTag-aTagSet;
     }
+    theTag++;
+  }
+
   return kNotFound;
 }
 
@@ -210,7 +244,7 @@ inline PRInt32 IndexOfTagInSet(PRInt32 aTag,const eHTMLTags aTagSet[],PRInt32 aC
  * @param   aTagSet -- set of tags to be searched
  * @return
  */
-inline PRBool FindTagInSet(PRInt32 aTag,const eHTMLTags aTagSet[],PRInt32 aCount)  {
+inline PRBool FindTagInSet(PRInt32 aTag,const eHTMLTags *aTagSet,PRInt32 aCount)  {
   return PRBool(-1<IndexOfTagInSet(aTag,aTagSet,aCount));
 }
 
@@ -220,11 +254,13 @@ inline PRBool FindTagInSet(PRInt32 aTag,const eHTMLTags aTagSet[],PRInt32 aCount
  * @param 
  * @return
  */
-inline PRBool BufferContainsHTML(nsString& aBuffer){
+inline PRBool BufferContainsHTML(nsString& aBuffer,PRBool& aHasXMLFragment){
   PRBool result=PR_FALSE;
   nsString temp;
   aBuffer.Left(temp,200);
   temp.ToLowerCase();
+
+  aHasXMLFragment=PRBool(-1<temp.Find("<?xml"));
   if((-1<temp.Find("<html ") || (-1<temp.Find("!doctype html public")))) {
     result=PR_TRUE;
   }
@@ -257,7 +293,7 @@ public:
   nsDeque*  GetObserversForTag(eHTMLTags aTag);
   nsresult  Notify(eHTMLTags aTag,nsIParserNode& aNode,
                    PRUint32 aUniqueID, const char* aCommand,
-                   nsAutoString& aCharsetValue,nsCharsetSource& aCharsetSource);
+                   nsIParser* aParser);
 
 protected:
   void      RegisterObservers(nsString& aTopicList);

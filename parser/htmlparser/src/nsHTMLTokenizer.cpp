@@ -188,7 +188,10 @@ CToken* nsHTMLTokenizer::PeekToken() {
  * @return  ptr to token or NULL
  */
 CToken* nsHTMLTokenizer::PopToken() {
-  return (CToken*)mTokenDeque.PopFront();
+  CToken* result=nsnull;
+  result=(CToken*)mTokenDeque.PopFront();
+  if(result) result->mUseCount=0;
+  return result;
 }
 
 
@@ -200,6 +203,7 @@ CToken* nsHTMLTokenizer::PopToken() {
  */
 CToken* nsHTMLTokenizer::PushTokenFront(CToken* theToken) {
   mTokenDeque.PushFront(theToken);
+  theToken->mUseCount=1;
 	return theToken;
 }
 
@@ -211,6 +215,7 @@ CToken* nsHTMLTokenizer::PushTokenFront(CToken* theToken) {
  */
 CToken* nsHTMLTokenizer::PushToken(CToken* theToken) {
   mTokenDeque.Push(theToken);
+  theToken->mUseCount=1;
 	return theToken;
 }
 
@@ -502,16 +507,20 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
           In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and
           consume all the content itself.
        */
-      if(NS_SUCCEEDED(result))
+      if(NS_SUCCEEDED(result)) {
+        
+        RecordTrailingContent((CStartToken*)aToken,aScanner);
+        
         if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
-        nsAutoString endTag(nsHTMLTags::GetStringValue(theTag));
-        endTag.Insert("</",0,2);
-        CToken* textToken=theRecycler->CreateTokenOfType(eToken_text,theTag);
-        result=((CTextToken*)textToken)->ConsumeUntil(0,PR_TRUE,aScanner,endTag,mParseMode);  //tell new token to finish consuming text...    
-        //endTag.Append(">");
-        CToken* endToken=theRecycler->CreateTokenOfType(eToken_end,theTag,endTag);
-        AddToken(textToken,result,mTokenDeque,theRecycler);
-        AddToken(endToken,result,mTokenDeque,theRecycler);
+          nsAutoString endTag(nsHTMLTags::GetStringValue(theTag));
+          endTag.Insert("</",0,2);
+          CToken* textToken=theRecycler->CreateTokenOfType(eToken_text,theTag);
+          result=((CTextToken*)textToken)->ConsumeUntil(0,PR_TRUE,aScanner,endTag,mParseMode);  //tell new token to finish consuming text...    
+          //endTag.Append(">");
+          CToken* endToken=theRecycler->CreateTokenOfType(eToken_end,theTag,endTag);
+          AddToken(textToken,result,mTokenDeque,theRecycler);
+          AddToken(endToken,result,mTokenDeque,theRecycler);
+        }
       }
  
       //EEEEECCCCKKKK!!! 
@@ -743,3 +752,26 @@ nsresult nsHTMLTokenizer::ConsumeProcessingInstruction(PRUnichar aChar,CToken*& 
   return result;
 }
 
+/**
+ *  This method keeps a copy of contents within the start token.
+ *  The stored content could later be used in displaying TEXTAREA, 
+ *  and also in view source.
+ *  
+ *  @update harishd 11/09/99
+ *  @param  aStartToken: The token whose trailing contents are to be recorded
+ *  @param  aScanner: see nsScanner.h
+ *  
+ */
+
+void nsHTMLTokenizer::RecordTrailingContent(CStartToken* aStartToken, nsScanner& aScanner) {
+  if(aStartToken) {
+    PRInt32   theOrigin        =aStartToken->mOrigin;
+    PRInt32   theCurrOffset    =aScanner.GetOffset();
+    PRInt32   theLength        =(theCurrOffset>theOrigin)? theCurrOffset-theOrigin:-1;
+    if(theLength>1) {
+      nsString& theRawXXX      =aStartToken->mTrailingContent;
+      const PRUnichar* theBuff =(aScanner.GetBuffer()).GetUnicode();
+      theRawXXX.Append(&theBuff[theOrigin],theLength);
+    }
+  }
+}

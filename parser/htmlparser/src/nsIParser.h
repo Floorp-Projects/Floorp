@@ -146,6 +146,7 @@ class nsIParser : public nsISupports {
      *  @return	 nada
      */
     virtual void SetDocumentCharset(nsString& aCharset, nsCharsetSource aSource)=0;
+    virtual void GetDocumentCharset(nsString& oCharset, nsCharsetSource& oSource)=0;
 
     virtual nsIParserFilter* SetParserFilter(nsIParserFilter* aFilter) = 0;
 

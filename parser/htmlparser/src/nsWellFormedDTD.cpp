@@ -206,7 +206,9 @@ eAutoDetectResult CWellFormedDTD::CanParse(nsString& aContentType, nsString& aCo
  * @param 
  * @return
  */
-NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString& aSourceType,eParseMode aParseMode,nsIContentSink* aSink){
+NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,
+                                             nsString& aSourceType,eParseMode aParseMode,
+                                             nsString& aCommand,nsIContentSink* aSink){
   nsresult result=NS_OK;
   mFilename=aFilename;
 

@@ -204,7 +204,8 @@ class CToken {
     static int GetTokenCount();
 
     eTokenOrigin  mOrigin;
-    PRBool        mRecycle;
+    PRInt32       mUseCount;
+    PRInt32       mNewlineCount;
 
 protected:
     PRInt32				mTypeID;

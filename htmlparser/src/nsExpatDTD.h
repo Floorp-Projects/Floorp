@@ -110,6 +110,7 @@ class nsExpatDTD : public nsIDTD {
                                 PRBool aNotifySink,
                                 nsString& aSourceType,
                                 eParseMode  aParseMode,
+                                nsString& aString,
                                 nsIContentSink* aSink=0);
 
     /**

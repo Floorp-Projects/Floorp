@@ -104,6 +104,7 @@ class nsDTDContext;
 class nsEntryStack;
 class nsITokenizer;
 class nsCParserNode;
+class CTokenRecycler;
 
 /***************************************************************
   Now the main event: CNavDTD.
@@ -187,6 +188,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
                                 PRBool aNotifySink,
                                 nsString& aSourceType,
                                 eParseMode  aParseMode,
+                                nsString& aCommand,
                                 nsIContentSink* aSink=0);
 
     /**
@@ -289,7 +291,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      *  @param   aChild -- int tag of child container
      *  @return  PR_TRUE if parent can contain child
      */
-    virtual PRBool CanPropagate(eHTMLTags aParent,eHTMLTags aChild) const;
+    virtual PRBool CanPropagate(eHTMLTags aParent,eHTMLTags aChild,PRBool aParentContains) const;
 
     /**
      *  This method gets called to determine whether a given 
@@ -298,9 +300,10 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      *  @update  gess 3/25/98
      *  @param   aParent -- parent tag being asked about omitting given child
      *  @param   aChild -- child tag being tested for omittability by parent
+     *  @param   aParentContains -- can be 0,1,-1 (false,true, unknown)
      *  @return  PR_TRUE if given tag can be omitted
      */
-    virtual PRBool CanOmit(eHTMLTags aParent,eHTMLTags aChild)const;
+    virtual PRBool CanOmit(eHTMLTags aParent,eHTMLTags aChild,PRBool& aParentContains) const;
 
     /**
      *  This method gets called to determine whether a given 
@@ -375,7 +378,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param   tag to be found
      * @return  index of topmost tag occurance -- may be -1 (kNotFound).
      */
-    virtual PRInt32 GetTopmostIndexOf(eHTMLTags aTag) const;
+    // virtual PRInt32 GetTopmostIndexOf(eHTMLTags aTag) const;
 
     /**
      * Finds the topmost occurance of given tag within context vector stack.
@@ -415,12 +418,12 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @return  error code representing construction state; usually 0.
      */
     nsresult    HandleStartToken(CToken* aToken);
-    nsresult    HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode);
+    nsresult    HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode *aNode);
     nsresult    HandleEndToken(CToken* aToken);
     nsresult    HandleEntityToken(CToken* aToken);
     nsresult    HandleCommentToken(CToken* aToken);
     nsresult    HandleAttributeToken(CToken* aToken);
-    nsresult    HandleScriptToken(nsCParserNode& aNode);
+    nsresult    HandleScriptToken(const nsIParserNode *aNode);
     nsresult    HandleStyleToken(CToken* aToken);
     nsresult    HandleProcessingInstructionToken(CToken* aToken);
     nsresult    HandleDocTypeDeclToken(CToken* aToken);
@@ -439,13 +442,13 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param   node to be opened in content sink.
      * @return  error code representing error condition-- usually 0.
      */
-    nsresult OpenHTML(const nsIParserNode& aNode);
-    nsresult OpenHead(const nsIParserNode& aNode);
-    nsresult OpenBody(const nsIParserNode& aNode);
-    nsresult OpenForm(const nsIParserNode& aNode);
-    nsresult OpenMap(const nsIParserNode& aNode);
-    nsresult OpenFrameset(const nsIParserNode& aNode);
-    nsresult OpenContainer(const nsIParserNode& aNode,PRBool aClosedByStartTag);
+    nsresult OpenHTML(const nsIParserNode *aNode);
+    nsresult OpenHead(const nsIParserNode *aNode);
+    nsresult OpenBody(const nsIParserNode *aNode);
+    nsresult OpenForm(const nsIParserNode *aNode);
+    nsresult OpenMap(const nsIParserNode *aNode);
+    nsresult OpenFrameset(const nsIParserNode *aNode);
+    nsresult OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aClosedByStartTag,PRInt32 aResidualStyleLevel=-1);
 
     /**
      * The next set of methods close the given HTML element.
@@ -454,13 +457,12 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param   HTML (node) to be opened in content sink.
      * @return  error code - 0 if all went well.
      */
-    nsresult CloseHTML(const nsIParserNode& aNode);
-    nsresult CloseHead(const nsIParserNode& aNode);
-    nsresult CloseBody(const nsIParserNode& aNode);
-    nsresult CloseForm(const nsIParserNode& aNode);
-    nsresult CloseMap(const nsIParserNode& aNode);
-    nsresult CloseFrameset(const nsIParserNode& aNode);
-    nsresult CloseContainer(const nsIParserNode& aNode,eHTMLTags anActualTag,PRBool aClosedByStartTag);
+    nsresult CloseHTML(const nsIParserNode *aNode);
+    nsresult CloseHead(const nsIParserNode *aNode);
+    nsresult CloseBody(const nsIParserNode *aNode);
+    nsresult CloseForm(const nsIParserNode *aNode);
+    nsresult CloseMap(const nsIParserNode *aNode);
+    nsresult CloseFrameset(const nsIParserNode *aNode);
     
     /**
      * The special purpose methods automatically close
@@ -468,7 +470,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @update	gess5/11/98
      * @return  error code - 0 if all went well.
      */
-    nsresult CloseTopmostContainer();
+    nsresult CloseContainer(const nsIParserNode *aNode,eHTMLTags aTarget,PRBool aClosedByStartTag);
     nsresult CloseContainersTo(eHTMLTags aTag,PRBool aClosedByStartTag);
     nsresult CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aClosedByStartTag);
 
@@ -478,8 +480,8 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param   aNode is leaf node to be added.
      * @return  error code - 0 if all went well.
      */
-    nsresult AddLeaf(const nsIParserNode& aNode);
-    nsresult AddHeadLeaf(nsIParserNode& aNode);
+    nsresult AddLeaf(const nsIParserNode *aNode);
+    nsresult AddHeadLeaf(nsIParserNode *aNode);
 
     /**
      * This set of methods is used to create and manage the set of
@@ -492,8 +494,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      */
     nsresult  OpenTransientStyles(eHTMLTags aChildTag);
     nsresult  CloseTransientStyles(eHTMLTags aChildTag);
-    nsresult  UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags aActualTag);
-    nsresult  UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags aActualTag);
+    nsresult  PopStyle(eHTMLTags aTag);
 
     nsresult  DoFragment(PRBool aFlag);
 
@@ -503,8 +504,8 @@ protected:
 		nsresult        CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
     nsresult        WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
     nsresult        DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag);
-    nsresult        HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags aParent,nsIParserNode& aNode);
-    nsresult        HandleSavedTokensAbove(eHTMLTags aTag);
+    nsresult        HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags aParent,nsIParserNode *aNode);
+    nsresult        HandleSavedTokens(PRInt32 anIndex);
     nsCParserNode*  CreateNode(void);
     void            RecycleNode(nsCParserNode* aNode);
 
@@ -514,6 +515,7 @@ protected:
     nsDTDContext*       mBodyContext;
     nsDTDContext*       mFormContext;
     nsDTDContext*       mMapContext;
+    nsDTDContext*       mTempContext;
     PRBool              mHasOpenForm;
     PRBool              mHasOpenMap;
     PRInt32             mHasOpenHead;
@@ -525,9 +527,11 @@ protected:
     PRInt32             mLineNumber;
     nsParser*           mParser;
     nsITokenizer*       mTokenizer;
+    CTokenRecycler*     mTokenRecycler;
     nsDeque             mMisplacedContent;
     nsDeque             mSkippedContent;
     PRBool              mHasOpenScript;
+    PRBool              mSaveBadTokens;
     eHTMLTags           mSkipTarget;
     nsDeque             mSharedNodes;
     nsresult            mDTDState;
@@ -535,6 +539,11 @@ protected:
 
     PRUint32            mComputedCRC32;
     PRUint32            mExpectedCRC32;
+    nsAutoString        mScratch;  //used for various purposes; non-persistent
+
+#ifdef NS_DEBUG
+    PRInt32 gNodeCount;
+#endif
 
 };
 

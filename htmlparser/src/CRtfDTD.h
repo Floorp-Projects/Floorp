@@ -202,6 +202,7 @@ class CRtfDTD : public nsIDTD {
                                 PRBool aNotifySink,
                                 nsString& aSourceType,
                                 eParseMode  aParseMode,
+                                nsString& aCommand,
                                 nsIContentSink* aSink=0);
 
     /**
