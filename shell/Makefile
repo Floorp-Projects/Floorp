@@ -17,7 +17,6 @@
 
 DEPTH = ..
 
-DIRS = public inc src tests
 
 include $(DEPTH)/config/config.mk
 
