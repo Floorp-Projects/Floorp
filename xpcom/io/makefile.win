@@ -38,6 +38,7 @@ EXPORTS =                          \
         nsStorageStream.h          \
         nsScriptableInputStream.h  \
         nsDirectoryService.h       \
+        nsDirectoryServiceDefs.h   \
         nsStringIO.h               \
         $(NULL)                 
 
