@@ -126,7 +126,7 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
     nsString* newPointer = new nsString[newSize];
     if (newPointer) {
       for (int i = metrics->mFontsCount - 1; i >= 0; i--) {
-        newPointer[i].SetString(metrics->mFonts[i].GetUnicode());
+        newPointer[i] = metrics->mFonts[i].GetUnicode();
       }
       delete [] metrics->mFonts;
       metrics->mFonts = newPointer;
@@ -136,7 +136,7 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
       return PR_FALSE;
     }
   }
-  metrics->mFonts[metrics->mFontsCount].SetString(aFamily.GetUnicode());
+  metrics->mFonts[metrics->mFontsCount] = aFamily.GetUnicode();
   metrics->mFonts[metrics->mFontsCount++].ToLowerCase();
 
   return PR_TRUE;
@@ -186,13 +186,15 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
       res = service->GetApplicationLocale(getter_AddRefs(locale));
       if (NS_SUCCEEDED(res) && locale) {
         PRUnichar* str = nsnull;
-        res = locale->GetCategory(nsAutoString(NSILOCALE_CTYPE).GetUnicode(),
+        res = locale->GetCategory(nsAutoString(NS_ConvertASCIItoUCS2(NSILOCALE_CTYPE)).GetUnicode(),
                                   &str);
         if (NS_SUCCEEDED(res) && str) {
           nsAutoString loc(str);
           loc.Truncate(2);
           loc.ToLowerCase();
-          if ((loc == "ja") || (loc == "ko") || (loc == "zh")) {
+          if ((loc.Equals(NS_ConvertASCIItoUCS2("ja"))) || 
+              (loc.Equals(NS_ConvertASCIItoUCS2("ko"))) || 
+              (loc.Equals(NS_ConvertASCIItoUCS2("zh")))) {
             // In CJK environments, we want the minimum request to be 16px,
             // since the smallest font for some of those langs is 16.
             minimum = 16;
@@ -886,7 +888,7 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
   NS_WITH_SERVICE(nsICharsetConverterManager, manager,
     NS_CHARSETCONVERTERMANAGER_PROGID, &result);
   if (manager && NS_SUCCEEDED(result)) {
-    nsAutoString charset(aSelf->mCharSet);
+    nsAutoString charset(NS_ConvertASCIItoUCS2(aSelf->mCharSet));
     nsIUnicodeEncoder* converter = nsnull;
     result = manager->GetUnicodeEncoder(&charset, &converter);
     if (converter && NS_SUCCEEDED(result)) {
@@ -2221,7 +2223,7 @@ GetFontNames(char* aPattern)
       continue;
     }
 
-    nsAutoString familyName2(familyName);
+    nsAutoString familyName2(NS_ConvertASCIItoUCS2(familyName));
     family =
       (nsFontFamily*) PL_HashTableLookup(gFamilies, (nsString*) &familyName2);
     if (!family) {
@@ -2229,7 +2231,7 @@ GetFontNames(char* aPattern)
       if (!family) {
         continue;
       }
-      nsString* copy = new nsString(familyName);
+      nsString* copy = new nsString(NS_ConvertASCIItoUCS2(familyName));
       if (!copy) {
         delete family;
         continue;
@@ -2415,14 +2417,14 @@ InitFontTables(void)
   }
   nsFontFamilyName* f = gFamilyNameTable;
   while (f->mName) {
-    nsString* name = new nsString(f->mName);
+    nsString* name = new nsString(NS_ConvertASCIItoUCS2(f->mName));
     if (!name) {
       FreeGlobals();
       return 0;
     }
     nsString* xName;
     if (f->mXName) {
-      xName = new nsString(f->mXName);
+      xName = new nsString(NS_ConvertASCIItoUCS2(f->mXName));
       if (!xName) {
         FreeGlobals();
         return 0;
@@ -2568,7 +2570,7 @@ PrefEnumCallback(const char* aName, void* aClosure)
     gPref->CopyCharPref(aName, &value);
     nsAutoString name;
     if (value) {
-      name = value;
+      name.AssignWithConversion(value);
       nsAllocator::Free(value);
       value = nsnull;
       FindFamily(search, &name);
@@ -2576,7 +2578,7 @@ PrefEnumCallback(const char* aName, void* aClosure)
     if (!search->mFont) {
       gPref->CopyDefaultCharPref(aName, &value);
       if (value) {
-        name = value;
+        name.AssignWithConversion(value);
         nsAllocator::Free(value);
         value = nsnull;
         FindFamily(search, &name);
@@ -2599,7 +2601,7 @@ nsFontMetricsGTK::FindGenericFont(nsFontSearch* aSearch)
   if (mTriedAllGenerics) {
     return;
   }
-  nsAutoString prefix("font.name.");
+  nsAutoString prefix(NS_ConvertASCIItoUCS2("font.name."));
   char* value = nsnull;
   if (mGeneric) {
     prefix.Append(*mGeneric);
@@ -2607,12 +2609,12 @@ nsFontMetricsGTK::FindGenericFont(nsFontSearch* aSearch)
   else {
     gPref->CopyCharPref("font.default", &value);
     if (value) {
-      prefix.Append(value);
+      prefix.AppendWithConversion(value);
       nsAllocator::Free(value);
       value = nsnull;
     }
     else {
-      prefix.Append("serif");
+      prefix.AppendWithConversion("serif");
     }
   }
   char name[128];
@@ -2626,7 +2628,7 @@ nsFontMetricsGTK::FindGenericFont(nsFontSearch* aSearch)
     gPref->CopyCharPref(name, &value);
     nsAutoString str;
     if (value) {
-      str = value;
+      str.AssignWithConversion(value);
       nsAllocator::Free(value);
       value = nsnull;
       FindFamily(aSearch, &str);
@@ -2637,7 +2639,7 @@ nsFontMetricsGTK::FindGenericFont(nsFontSearch* aSearch)
     value = nsnull;
     gPref->CopyDefaultCharPref(name, &value);
     if (value) {
-      str = value;
+      str.AssignWithConversion(value);
       nsAllocator::Free(value);
       value = nsnull;
       FindFamily(aSearch, &str);
