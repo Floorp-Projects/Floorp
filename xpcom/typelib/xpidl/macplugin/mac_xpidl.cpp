@@ -226,6 +226,11 @@ static CWResult	Compile(CWPluginContext context)
 		objectData.objectfile = &gOutputFile;
 		
 		err = CWStoreObjectData(context, fileNum, &objectData);
+	} else {
+		// an error occured, delete the output file, which might be a partial file.
+		if (gOutputFile.name[0] != 0) {
+			::FSpDelete(&gOutputFile);
+		}
 	}
 
 	delete[] gSourcePath;
