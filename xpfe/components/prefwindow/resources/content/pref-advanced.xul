@@ -103,6 +103,17 @@
 	</html:fieldset>
 	</box>
 
+	<box align="vertical" style="width: 100%;">
+	<html:fieldset width="100%">
+			<html:div>
+			<html:label for="pref:char:wallet.Server" accesskey="c" tabindex="0">
+				&server.label;
+			</html:label>
+			<html:input name="Wallet Server:" type="text"	id="pref:char:wallet.Server" size="25" /> 
+			</html:div>
+	</html:fieldset>
+	</box>
+
 
 	<box align="vertical" style="width: 100%;">
 	<html:fieldset width="100%">
