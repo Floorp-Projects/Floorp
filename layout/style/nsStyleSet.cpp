@@ -1572,19 +1572,12 @@ nsresult StyleContextCache::AddContext(scKey aKey, nsIStyleContext *aContext)
     nsVoidArray *pList = GetList(aKey);
     NS_ASSERTION(pList != nsnull, "VerifyList failed me!");
     NS_ASSERTION(pList->IndexOf(aContext) == -1, "Context already in list");
-    if(pList->IndexOf(aContext) == -1){
-      if (!(pList->AppendElement(aContext))) {
-        rv = NS_ERROR_FAILURE;
-      } else {
-        mCount++;
-      }
-      DumpStats();
-    } else {
-#ifdef DEBUG
-      printf( "Context already in list in StyleContextCache::AddContext\n");
-#endif      
+    if (!(pList->AppendElement(aContext))) {
       rv = NS_ERROR_FAILURE;
+    } else {
+      mCount++;
     }
+    DumpStats();
   }
   return rv;
 }
