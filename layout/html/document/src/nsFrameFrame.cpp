@@ -252,7 +252,7 @@ public:
   PRBool GetURL(nsIContent* aContent, nsString& aResult);
   PRBool GetName(nsIContent* aContent, nsString& aResult);
   PRInt32 GetScrolling(nsIContent* aContent);
-  nsFrameborder GetFrameBorder(PRBool aStandardMode);
+  nsFrameborder GetFrameBorder();
   PRInt32 GetMarginWidth(nsIPresContext* aPresContext, nsIContent* aContent);
   PRInt32 GetMarginHeight(nsIPresContext* aPresContext, nsIContent* aContent);
 
@@ -775,7 +775,7 @@ PRInt32 nsHTMLFrameInnerFrame::GetScrolling(nsIContent* aContent)
   return returnValue;
 }
 
-nsFrameborder nsHTMLFrameInnerFrame::GetFrameBorder(PRBool aStandardMode)
+nsFrameborder nsHTMLFrameInnerFrame::GetFrameBorder()
 {
   nsFrameborder rv = eFrameborder_Notset;
   nsresult res = NS_OK;
@@ -784,22 +784,17 @@ nsFrameborder nsHTMLFrameInnerFrame::GetFrameBorder(PRBool aStandardMode)
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::frameborder, value))) {
       if (eHTMLUnit_Enumerated == value.GetUnit()) {
-        PRInt32 intValue;
-        intValue = value.GetIntValue();
-        if (!aStandardMode) {
-          if (NS_STYLE_FRAME_YES == intValue) {
+        switch (value.GetIntValue())
+        {
+          case NS_STYLE_FRAME_1:
+          case NS_STYLE_FRAME_YES:
             rv = eFrameborder_Yes;
-          } 
-          else if (NS_STYLE_FRAME_NO == intValue) {
+            break;
+          
+          case NS_STYLE_FRAME_0:
+          case NS_STYLE_FRAME_NO:
             rv = eFrameborder_No;
-          }
-        } else {
-          if (NS_STYLE_FRAME_0 == intValue) {
-            rv = eFrameborder_No;
-          } 
-          else if (NS_STYLE_FRAME_1 == intValue) {
-            rv = eFrameborder_Yes;
-          }
+            break;
         }
       }
     }

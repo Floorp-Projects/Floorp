@@ -2898,7 +2898,7 @@ static nsGenericHTMLElement::EnumTable kDivAlignTable[] = {
   { 0 }
 };
 
-static nsGenericHTMLElement::EnumTable kFrameborderQuirksTable[] = {
+static nsGenericHTMLElement::EnumTable kFrameborderTable[] = {
   { "yes", NS_STYLE_FRAME_YES },
   { "no", NS_STYLE_FRAME_NO },
   { "1", NS_STYLE_FRAME_1 },
@@ -2906,26 +2906,13 @@ static nsGenericHTMLElement::EnumTable kFrameborderQuirksTable[] = {
   { 0 }
 };
 
-static nsGenericHTMLElement::EnumTable kFrameborderStandardTable[] = {
-  { "1", NS_STYLE_FRAME_1 },
-  { "0", NS_STYLE_FRAME_0 },
-  { 0 }
-};
-
-static nsGenericHTMLElement::EnumTable kScrollingQuirksTable[] = {
+static nsGenericHTMLElement::EnumTable kScrollingTable[] = {
   { "yes", NS_STYLE_FRAME_YES },
   { "no", NS_STYLE_FRAME_NO },
   { "on", NS_STYLE_FRAME_ON },
   { "off", NS_STYLE_FRAME_OFF },
   { "scroll", NS_STYLE_FRAME_SCROLL },
   { "noscroll", NS_STYLE_FRAME_NOSCROLL },
-  { "auto", NS_STYLE_FRAME_AUTO },
-  { 0 }
-};
-
-static nsGenericHTMLElement::EnumTable kScrollingStandardTable[] = {
-  { "yes", NS_STYLE_FRAME_YES },
-  { "no", NS_STYLE_FRAME_NO },
   { "auto", NS_STYLE_FRAME_AUTO },
   { 0 }
 };
@@ -3124,51 +3111,31 @@ nsGenericHTMLElement::ImageAttributeToString(nsIAtom* aAttribute,
 }
 
 PRBool
-nsGenericHTMLElement::ParseFrameborderValue(PRBool aStandardMode,
-                                            const nsAReadableString& aString,
+nsGenericHTMLElement::ParseFrameborderValue(const nsAReadableString& aString,
                                             nsHTMLValue& aResult)
 {
-  if (aStandardMode) {
-    return ParseEnumValue(aString, kFrameborderStandardTable, aResult);
-  } else {
-    return ParseEnumValue(aString, kFrameborderQuirksTable, aResult);
-  }
+  return ParseEnumValue(aString, kFrameborderTable, aResult);
 }
 
 PRBool
-nsGenericHTMLElement::FrameborderValueToString(PRBool aStandardMode,
-                                               const nsHTMLValue& aValue,
+nsGenericHTMLElement::FrameborderValueToString(const nsHTMLValue& aValue,
                                                nsAWritableString& aResult)
 {
-  if (aStandardMode) {
-    return EnumValueToString(aValue, kFrameborderStandardTable, aResult);
-  } else {
-    return EnumValueToString(aValue, kFrameborderQuirksTable, aResult);
-  }
+  return EnumValueToString(aValue, kFrameborderTable, aResult);
 }
 
 PRBool
-nsGenericHTMLElement::ParseScrollingValue(PRBool aStandardMode,
-                                          const nsAReadableString& aString,
+nsGenericHTMLElement::ParseScrollingValue(const nsAReadableString& aString,
                                           nsHTMLValue& aResult)
 {
-  if (aStandardMode) {
-    return ParseEnumValue(aString, kScrollingStandardTable, aResult);
-  } else {
-    return ParseEnumValue(aString, kScrollingQuirksTable, aResult);
-  }
+  return ParseEnumValue(aString, kScrollingTable, aResult);
 }
 
 PRBool
-nsGenericHTMLElement::ScrollingValueToString(PRBool aStandardMode,
-                                             const nsHTMLValue& aValue,
+nsGenericHTMLElement::ScrollingValueToString(const nsHTMLValue& aValue,
                                              nsAWritableString& aResult)
 {
-  if (aStandardMode) {
-    return EnumValueToString(aValue, kScrollingStandardTable, aResult);
-  } else {
-    return EnumValueToString(aValue, kScrollingQuirksTable, aResult);
-  }
+  return EnumValueToString(aValue, kScrollingTable, aResult);
 }
 
 nsresult

@@ -295,20 +295,16 @@ public:
                                        const nsHTMLValue& aValue,
                                        nsAWritableString& aResult);
 
-  static PRBool ParseFrameborderValue(PRBool aStandardMode,
-                                      const nsAReadableString& aString,
+  static PRBool ParseFrameborderValue(const nsAReadableString& aString,
                                       nsHTMLValue& aResult);
 
-  static PRBool FrameborderValueToString(PRBool aStandardMode,
-                                         const nsHTMLValue& aValue,
+  static PRBool FrameborderValueToString(const nsHTMLValue& aValue,
                                          nsAWritableString& aResult);
 
-  static PRBool ParseScrollingValue(PRBool aStandardMode,
-                                    const nsAReadableString& aString,
+  static PRBool ParseScrollingValue(const nsAReadableString& aString,
                                     nsHTMLValue& aResult);
 
-  static PRBool ScrollingValueToString(PRBool aStandardMode,
-                                       const nsHTMLValue& aValue,
+  static PRBool ScrollingValueToString(const nsHTMLValue& aValue,
                                        nsAWritableString& aResult);
 
   nsresult  ReparseStyleAttribute(void);

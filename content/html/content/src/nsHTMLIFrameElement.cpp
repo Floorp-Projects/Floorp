@@ -280,12 +280,12 @@ nsHTMLIFrameElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::frameborder) {
-    if (ParseFrameborderValue(!InNavQuirksMode(mDocument), aValue, aResult)) {
+    if (ParseFrameborderValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::scrolling) {
-    if (ParseScrollingValue(PR_TRUE, aValue, aResult)) {
+    if (ParseScrollingValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -304,11 +304,11 @@ nsHTMLIFrameElement::AttributeToString(nsIAtom* aAttribute,
                                        nsAWritableString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::frameborder) {
-    FrameborderValueToString(PR_TRUE, aValue, aResult);
+    FrameborderValueToString(aValue, aResult);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::scrolling) {
-    ScrollingValueToString(PR_TRUE, aValue, aResult);
+    ScrollingValueToString(aValue, aResult);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::align) {
