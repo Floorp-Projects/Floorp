@@ -150,7 +150,7 @@
         </vbox>
       </hbox>
       <hbox id="singleline-box" flex="1" collapsed="true">
-        <textbox id="input" class="input-widget" flex="1" autostretch="true"
+        <textbox id="input" class="input-widget" flex="1"
           onfocus="onInputFocus();"/>
         <toolbarbutton id="button-multiline-expand" 
           oncommand="dispatch('pref multiline true');" 
