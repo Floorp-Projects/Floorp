@@ -1,0 +1,138 @@
+======================
+I. To build OJI API test:
+======================
+
+ 1. set MOZILLA_HOME (top of Mozilla's tree) and JAVAHOME variables
+ 2. goto build directory and say
+	nmake -f Makefile.win
+
+=====================
+II. To run OJI API tests:
+=====================
+
+ 1. Copy all *.dll files from build/bin directory to Mozilla's bin
+    directory
+ 2. Add the following string into your morProfile/prefs.js file
+ 	user_pref("security.checkxpconnect", false);	
+ 5. Update Path variable to include 
+	$MOZILLA_HOME/dist/win32_d.obj/bin and
+	$MOZILLA_HOME/dist/win32_d.obj/bin/components
+ 6. In Mozilla's bin directory say 
+	regxpcom.exe ojiapitl.dll
+    If this step fails for some reason see section III(1).
+
+A. Quick mode (all test cases in one Mozilla session):
+-------------------------------------------------
+ 7. Copy OJITest.lst from build directory to Mozilla's 
+    bin directory
+ 8. in Mozilla's bin directory say
+	viewer file:/test.html
+ 9. Click "Start" button in the loaded document
+
+
+B. Slow mode (new Mozilla session for each test case):
+------------------------------------------------------
+ 7. Goto script directory and set correct parameters in the first few 
+    lines of autorun.pl file.
+ 8. Run perl script
+	perl autorun.pl
+ 9 See results of execution in the log directory.
+
+
+Note: If you plan to run JNIEnv tests add classes/test.jar (or simply classes
+directory) into your CLASSPATH. Also you may need to add this path 
+into your Java Policy file with java.security.AllPermission permission
+(otherwise it's impossible to load native libraries from these classes).
+
+
+====================
+III. Known problems:
+====================
+ 1. In the last version of Mozilla regxpcom fails to registry 
+   anything. So do the following:
+	a. Put all dll's into Mozilla's bin/components (instead of bin directory) directory
+	b. Delete component.reg file in Mozilla's bin directory
+
+ 2. Buildin OJI tests fails because linker can't find destructor of
+    nsCOMPtr_base class (~nsCOMPtr_base). I had no time to evalute 
+    this problem - so simply comment the followin line in the 
+    dist/include/nsCOMPtr.h file:
+	#define NSCAP_FEATURE_FACTOR_DESTRUCTOR
+	
+ 3. While running tests in the 'slow' mode (using autorun.pl) no logs
+    from STDOUT and STDERR are stored in log files if MOZILLA_EXCUTABLE
+    is set to viewer.exe.
+
+--------------------------------------------------------------------------
+Solaris
+--------
+
+==========================
+I. To build OJI API test:
+==========================
+
+ 1. set MOZILLA_HOME (top of Mozilla's tree) and JAVAHOME variables
+ 2. goto build directory and say
+	gmake
+
+==========================
+II. To run OJI API tests:
+==========================
+
+ 1. Copy all *.so files from build/bin directory to Mozilla's bin
+    directory
+ 2. Copy test.html,loader.html to a location on your WebServer.
+    Change test.html to reflect correct URL path.
+ 3. set environment variable TEST_URL to point to URL path where 
+    test.html is located.
+ 4. Add the following string into your mozProfile/prefs.js file
+ 	user_pref("security.checkxpconnect", false);	
+ 5. Update Path variable to include 
+	$MOZILLA_HOME/dist/win32_d.obj/bin and
+	$MOZILLA_HOME/dist/win32_d.obj/bin/components
+ 6. In Mozilla's bin directory say 
+	regxpcom libojiapitl.so
+    If this step fails for some reason see section III(1).
+
+A. Quick mode (all test cases in one Mozilla session):
+------------------------------------------------------
+ 7. Copy OJITest.lst from build directory to Mozilla's 
+    bin directory
+ 8. in Mozilla's bin directory say
+	viewer file:/test.html
+ 9. Click "Start" button in the loaded document
+
+
+B. Slow mode (new Mozilla session for each test case):
+--------------------------------------------------------------------
+ 7. Goto script directory and set correct parameters in the first few 
+    lines of autorun.pl file.
+        MOZILLA_EXECUTABLE -> Mozilla binary name
+        ADDITIONAL_PARAMETERS -> Enter Profile you want to use
+
+ 8. Run perl script
+	perl autorun.pl
+ 9 See results of execution in the log directory.
+
+
+Note: If you plan to run JNIEnv tests add classes/test.jar into your CLASSPATH
+
+
+====================
+III. Known problems:
+====================
+ 1. In the last version of Mozilla regxpcom fails to registry 
+   anything. So do the following:
+	a. Put all .so libraries into Mozilla's bin/components (instead of bin directory) directory
+	b. Delete component.reg file in Mozilla's bin directory
+
+ 2. Buildin OJI tests fails because linker can't find destructor of
+    nsCOMPtr_base class (~nsCOMPtr_base). I had no time to evalute 
+    this problem - so simply comment the followin line in the 
+    dist/include/nsCOMPtr.h file:
+	#define NSCAP_FEATURE_FACTOR_DESTRUCTOR
+	
+ 3. While running tests in the 'slow' mode (using autorun.pl) no logs
+    from STDOUT and STDERR are stored in log files if MOZILLA_EXCUTABLE
+    is set to viewer.
+
