@@ -102,6 +102,20 @@ void AddStandardPaths()
 	PyObject *newStr = PyString_FromString(pathCBuf.get());
 	PyList_Insert(obPath, 0, newStr);
 	Py_XDECREF(newStr);
+	// And now try and get Python to process this directory as a "site dir" 
+	// - ie, look for .pth files, etc
+	nsCAutoString cmdBuf(NS_LITERAL_CSTRING("import site;site.addsitedir(r'") + pathCBuf + NS_LITERAL_CSTRING("')\n"));
+	if (0 != PyRun_SimpleString(cmdBuf.get())) {
+		LogError("The directory '%s' could not be added as a site directory", pathCBuf.get());
+		PyErr_Clear();
+	}
+	// and somewhat like Python itself (site, citecustomize), we attempt 
+	// to import "sitepyxpcom" ignoring ImportError
+	if (NULL==PyImport_ImportModule("sitepyxpcom")) {
+		if (!PyErr_ExceptionMatches(PyExc_ImportError))
+			LogError("Failed to import 'sitepyxpcom'");
+		PyErr_Clear();
+	}
 }
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
@@ -168,9 +182,12 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 	}
 
 #ifdef MOZ_TIMELINE
-    // If the timeline service is installed, see if we can install our hooks.
-    if (NULL==PyImport_ImportModule("timeline_hook"))
-        PyErr_Clear(); // but don't care if we can't.
+	// If the timeline service is installed, see if we can install our hooks.
+	if (NULL==PyImport_ImportModule("timeline_hook")) {
+		if (!PyErr_ExceptionMatches(PyExc_ImportError))
+			LogError("Failed to import 'timeline_hook'");
+		PyErr_Clear(); // but don't care if we can't.
+	}
 #endif
 #ifndef PYXPCOM_USE_PYGILSTATE
 	// Abandon the thread-lock, as the first thing Python does
