@@ -571,7 +571,7 @@ intn CEditBuffer::ParseTag(pa_DocData *pData, PA_Tag* pTag, intn status){
     
     // 8/31/98: List types no longer supported
     // (they were always displayed the same as P_UNUM_LIST anyway)
-    if( pTag->type == P_MENU || P_DIRECTORY )
+    if( pTag->type == P_MENU || pTag->type == P_DIRECTORY )
         pTag->type = P_UNUM_LIST;
 
     /* P_STRIKE is a synonym for P_STRIKEOUT. Since pre-3.0 versions of
@@ -6304,8 +6304,8 @@ XP_Bool CEditBuffer::CheckCharset( EDT_MetaData *pData, int16 win_csid )
 
         PA_Tag *pTag = XP_NEW( PA_Tag );
         XP_BZERO( pTag, sizeof( PA_Tag ) );
-    	pTag->data_len = iLen;
-        //pTag->data_str = XP_STRDUP(pContent);
+        pTag->data_len = iLen;
+        pTag->data = (PA_Block)pContent;
 
         char *pCharset = edt_FetchParamString(pTag, PARAM_CHARSET, win_csid );
         PA_FREE(pTag);
@@ -6316,9 +6316,7 @@ XP_Bool CEditBuffer::CheckCharset( EDT_MetaData *pData, int16 win_csid )
             char buf[256];
             char *pMsg = NULL;
 
-            //ftang: Implement this!
-//            if(CS_UNKNOWN == INTL_NameToCharSetID(pCharset))  
-            if(FALSE)  
+            if(CS_UNKNOWN == INTL_CharSetNameToID(pCharset))  
             {
                 // Get the default charset
                 //INTL_CharSetIDToName(default_csid, &pDefaultCharset);
@@ -6361,7 +6359,7 @@ XP_Bool CEditBuffer::CheckCharset( EDT_MetaData *pData, int16 win_csid )
                     // In either case, we continue editing
 	                PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_LABEL), pCharset);
                     pMsg = PR_sprintf_append(pMsg, buf);
-	                PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CURRENT_CHARSET), pCorrectCharset);
+	                PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_EDIT_SUGGESTED), pCorrectCharset);
                     pMsg = PR_sprintf_append(pMsg, buf);
 	                PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_EDIT_REPLACE), pCorrectCharset);
                     pMsg = PR_sprintf_append(pMsg, buf);
