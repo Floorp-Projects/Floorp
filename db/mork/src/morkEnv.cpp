@@ -73,7 +73,7 @@ morkEnv::~morkEnv() /*i*/ // assert CloseEnv() executed earlier
 /*public non-poly*/
 morkEnv::morkEnv(const morkUsage& inUsage, nsIMdbHeap* ioHeap,
   morkFactory* ioFactory, nsIMdbHeap* ioSlotHeap)
-: morkObject(inUsage, ioHeap)
+: morkObject(inUsage, ioHeap, morkColor_kNone)
 , mEnv_Factory( ioFactory )
 , mEnv_Heap( ioSlotHeap )
 
@@ -113,7 +113,7 @@ morkEnv::morkEnv(const morkUsage& inUsage, nsIMdbHeap* ioHeap,
 morkEnv::morkEnv(morkEnv* ev, /*i*/
   const morkUsage& inUsage, nsIMdbHeap* ioHeap, nsIMdbEnv* inSelfAsMdbEnv,
   morkFactory* ioFactory, nsIMdbHeap* ioSlotHeap)
-: morkObject(ev, inUsage, ioHeap, (morkHandle*) 0)
+: morkObject(ev, inUsage, ioHeap, morkColor_kNone, (morkHandle*) 0)
 , mEnv_Factory( ioFactory )
 , mEnv_Heap( ioSlotHeap )
 
@@ -399,10 +399,18 @@ morkEnv::CantMakeWhenBadError()
   this->NewError("can't make an object when ev->Bad()");
 }
 
+static const char* morkEnv_kNilPointer = "nil pointer";
+
 void
 morkEnv::NilPointerError()
 {
-  this->NewError("nil pointer");
+  this->NewError(morkEnv_kNilPointer);
+}
+
+void
+morkEnv::NilPointerWarning()
+{
+  this->NewWarning(morkEnv_kNilPointer);
 }
 
 void

@@ -35,6 +35,10 @@
 #include "morkPool.h"
 #endif
 
+#ifndef _MORKZONE_
+#include "morkZone.h"
+#endif
+
 #ifndef _MORKATOM_
 #include "morkAtom.h"
 #endif
@@ -66,7 +70,8 @@ class morkPort : public morkObject { // private mork port
   // mork_uses    mNode_Uses;    // refcount for strong refs
   // mork_refs    mNode_Refs;    // refcount for strong refs + weak refs
 
-  // morkHandle*      mObject_Handle;   // weak ref to handle for this object
+  // mork_color   mBead_Color;   // ID for this bead
+  // morkHandle*  mObject_Handle;  // weak ref to handle for this object
 
 public: // state is public because the entire Mork system is private
   morkEnv*        mPort_Env;      // non-refcounted env which created port
@@ -163,6 +168,8 @@ public: // state is public because the entire Mork system is private
   
   morkRowSpaceMap  mStore_RowSpaces;  // maps mork_scope -> morkSpace
   morkAtomSpaceMap mStore_AtomSpaces; // maps mork_scope -> morkSpace
+  
+  morkZone         mStore_Zone;
   
   morkPool         mStore_Pool;
 

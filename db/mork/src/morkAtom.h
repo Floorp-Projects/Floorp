@@ -213,7 +213,7 @@ class morkBookAtom : public morkAtom { //
   // mork_u1       mAtom_Size;      // only for atoms smaller than 256 bytes
   
 public:
-  morkAtomSpace* mBookAtom_Space; // mBookAtom_Space->mSpace_Scope is atom scope 
+  morkAtomSpace* mBookAtom_Space; // mBookAtom_Space->SpaceScope() is atom scope 
   mork_aid       mBookAtom_Id;    // identity token for this shared atom
 
 public: // empty construction does nothing
@@ -249,7 +249,7 @@ class morkWeeBookAtom : public morkBookAtom { //
   // mork_change   mAtom_Change;    // how has this atom been changed?
   // mork_u1       mAtom_Size;      // only for atoms smaller than 256 bytes
 
-  // morkAtomSpace* mBookAtom_Space; // mBookAtom_Space->mSpace_Scope is scope 
+  // morkAtomSpace* mBookAtom_Space; // mBookAtom_Space->SpaceScope() is scope 
   // mork_aid       mBookAtom_Id;    // identity token for this shared atom
   
 public:
@@ -280,7 +280,7 @@ class morkBigBookAtom : public morkBookAtom { //
   // mork_change   mAtom_Change;    // how has this atom been changed?
   // mork_u1       mAtom_Size;      // NOT USED IN "BIG" format atoms
 
-  // morkAtomSpace* mBookAtom_Space; // mBookAtom_Space->mSpace_Scope is scope 
+  // morkAtomSpace* mBookAtom_Space; // mBookAtom_Space->SpaceScope() is scope 
   // mork_aid       mBookAtom_Id;    // identity token for this shared atom
   
 public:
@@ -311,7 +311,7 @@ class morkMaxBookAtom : public morkBigBookAtom { //
   // mork_change   mAtom_Change;    // how has this atom been changed?
   // mork_u1       mAtom_Size;      // NOT USED IN "BIG" format atoms
 
-  // morkAtomSpace* mBookAtom_Space; // mBookAtom_Space->mSpace_Scope is scope 
+  // morkAtomSpace* mBookAtom_Space; // mBookAtom_Space->SpaceScope() is scope 
   // mork_aid       mBookAtom_Id;    // identity token for this shared atom
 
   // mork_cscode   mBigBookAtom_Form;      // charset format encoding

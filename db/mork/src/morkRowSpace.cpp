@@ -212,11 +212,23 @@ morkRowSpace::CutAllRows(morkEnv* ev, morkPool* ioPool)
   if ( this->IsRowSpaceClean() )
     this->MaybeDirtyStoreAndSpace();
   
-  mork_num outSlots = mRowSpace_Rows.mMap_Fill;
+  morkZone* zone = &mSpace_Store->mStore_Zone;
+  mork_num outSlots = mRowSpace_Rows.MapFill();
   morkRow* r = 0; // old key row in the map
   
   mork_change* c = 0;
+
+#ifdef MORK_ENABLE_ZONE_ARENAS
+  MORK_USED_2(ev, ioPool);
+  return 0;
+#else /*MORK_ENABLE_ZONE_ARENAS*/
+
+#ifdef MORK_ENABLE_PROBE_MAPS
+  morkRowProbeMapIter i(ev, &mRowSpace_Rows);
+#else /*MORK_ENABLE_PROBE_MAPS*/
   morkRowMapIter i(ev, &mRowSpace_Rows);
+#endif /*MORK_ENABLE_PROBE_MAPS*/
+  
   for ( c = i.FirstRow(ev, &r); c && ev->Good();
         c = i.NextRow(ev, &r) )
   {
@@ -229,7 +241,7 @@ morkRowSpace::CutAllRows(morkEnv* ev, morkPool* ioPool)
           morkRowObject::SlotWeakRowObject((morkRowObject*) 0, ev,
             &r->mRow_Object);
         }
-        ioPool->ZapRow(ev, r);
+        ioPool->ZapRow(ev, r, zone);
       }
       else
         r->NonRowTypeWarning(ev);
@@ -237,18 +249,30 @@ morkRowSpace::CutAllRows(morkEnv* ev, morkPool* ioPool)
     else
       ev->NilPointerError();
     
+#ifdef MORK_ENABLE_PROBE_MAPS
+    // cut nothing from the map
+#else /*MORK_ENABLE_PROBE_MAPS*/
     i.CutHereRow(ev, /*key*/ (morkRow**) 0);
+#endif /*MORK_ENABLE_PROBE_MAPS*/
   }
+#endif /*MORK_ENABLE_ZONE_ARENAS*/
+  
   
   return outSlots;
 }
-
 
 morkTable*
 morkRowSpace::FindTableByKind(morkEnv* ev, mork_kind inTableKind)
 {
   if ( inTableKind )
   {
+#ifdef MORK_BEAD_OVER_NODE_MAPS
+
+    morkTableMapIter i(ev, &mRowSpace_Tables);
+    morkTable* table = i.FirstTable(ev);
+    for ( ; table && ev->Good(); table = i.NextTable(ev) )
+          
+#else /*MORK_BEAD_OVER_NODE_MAPS*/
     mork_tid* key = 0; // nil pointer to suppress key access
     morkTable* table = 0; // old table in the map
 
@@ -256,6 +280,7 @@ morkRowSpace::FindTableByKind(morkEnv* ev, mork_kind inTableKind)
     morkTableMapIter i(ev, &mRowSpace_Tables);
     for ( c = i.FirstTable(ev, key, &table); c && ev->Good();
           c = i.NextTable(ev, key, &table) )
+#endif /*MORK_BEAD_OVER_NODE_MAPS*/
     {
       if ( table->mTable_Kind == inTableKind )
         return table;
@@ -377,7 +402,7 @@ morkRowSpace::MakeNewRowId(morkEnv* ev)
   mork_rid id = mRowSpace_NextRowId;
   mork_num count = 9; // try up to eight times
   mdbOid oid;
-  oid.mOid_Scope = mSpace_Scope;
+  oid.mOid_Scope = this->SpaceScope();
   
   while ( !outRid && --count ) // still trying to find an unused row ID?
   {
@@ -409,7 +434,11 @@ morkRowSpace::make_index(morkEnv* ev, mork_column inCol)
     {
       if ( ev->Good() ) // no errors during construction?
       {
+#ifdef MORK_ENABLE_PROBE_MAPS
+        morkRowProbeMapIter i(ev, &mRowSpace_Rows);
+#else /*MORK_ENABLE_PROBE_MAPS*/
         morkRowMapIter i(ev, &mRowSpace_Rows);
+#endif /*MORK_ENABLE_PROBE_MAPS*/
         mork_change* c = 0;
         morkRow* row = 0;
         mork_aid aidKey = 0;
@@ -537,7 +566,7 @@ morkRowSpace::NewRowWithOid(morkEnv* ev, const mdbOid* inOid)
     if ( store )
     {
       morkPool* pool = this->GetSpaceStorePool();
-      morkRow* row = pool->NewRow(ev);
+      morkRow* row = pool->NewRow(ev, &store->mStore_Zone);
       if ( row )
       {
         row->InitRow(ev, inOid, this, /*length*/ 0, pool);
@@ -550,7 +579,7 @@ morkRowSpace::NewRowWithOid(morkEnv* ev, const mdbOid* inOid)
             mRowSpace_NextRowId = rid + 1;
         }
         else
-          pool->ZapRow(ev, row);
+          pool->ZapRow(ev, row, &store->mStore_Zone);
 
         if ( this->IsRowSpaceClean() && store->mStore_CanDirty )
           this->MaybeDirtyStoreAndSpace(); // InitRow() does already
@@ -575,10 +604,10 @@ morkRowSpace::NewRow(morkEnv* ev)
       if ( store )
       {
         mdbOid oid;
-        oid.mOid_Scope = mSpace_Scope;
+        oid.mOid_Scope = this->SpaceScope();
         oid.mOid_Id = id;
         morkPool* pool = this->GetSpaceStorePool();
-        morkRow* row = pool->NewRow(ev);
+        morkRow* row = pool->NewRow(ev, &store->mStore_Zone);
         if ( row )
         {
           row->InitRow(ev, &oid, this, /*length*/ 0, pool);
@@ -586,7 +615,7 @@ morkRowSpace::NewRow(morkEnv* ev)
           if ( ev->Good() && mRowSpace_Rows.AddRow(ev, row) )
             outRow = row;
           else
-            pool->ZapRow(ev, row);
+            pool->ZapRow(ev, row, &store->mStore_Zone);
 
           if ( this->IsRowSpaceClean() && store->mStore_CanDirty )
             this->MaybeDirtyStoreAndSpace(); // InitRow() does already

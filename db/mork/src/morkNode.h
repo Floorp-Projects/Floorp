@@ -147,6 +147,8 @@ public: // morkNode memory management operators
 protected: // construction without an anv needed for first env constructed:
   morkNode(const morkUsage& inUsage, nsIMdbHeap* ioHeap);
 
+  morkNode(mork_usage inCode); // usage == inCode, heap == nil
+
 // { ===== begin basic node interface =====
 public: // morkNode virtual methods
   // virtual FlushMorkNode(morkEnv* ev, morkStream* ioStream);

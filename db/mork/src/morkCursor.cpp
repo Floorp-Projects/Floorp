@@ -64,7 +64,7 @@ morkCursor::~morkCursor() // assert CloseCursor() executed earlier
 /*public non-poly*/
 morkCursor::morkCursor(morkEnv* ev,
   const morkUsage& inUsage, nsIMdbHeap* ioHeap)
-: morkObject(ev, inUsage, ioHeap, (morkHandle*) 0)
+: morkObject(ev, inUsage, ioHeap, morkColor_kNone, (morkHandle*) 0)
 , mCursor_Seed( 0 )
 , mCursor_Pos( -1 )
 , mCursor_DoFailOnSeedOutOfSync( morkBool_kFalse )

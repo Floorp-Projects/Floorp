@@ -368,7 +368,7 @@ orkinEnv::GetHeap(nsIMdbHeap** acqHeap)
   if ( ev )
   {
     nsIMdbHeap* heap = ev->mEnv_Heap;
-    if ( heap && heap->AddStrongRef(this) == 0 )
+    if ( heap && heap->HeapAddStrongRef(this) == 0 )
       outHeap = heap;
   }
   if ( acqHeap )

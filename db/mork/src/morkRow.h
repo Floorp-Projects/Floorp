@@ -46,7 +46,7 @@ class nsIMdbCell;
 class morkRow { // row of cells
 
 public: // state is public because the entire Mork system is private
-  morkRowSpace*   mRow_Space;  // mRow_Space->mSpace_Scope is the row scope 
+  morkRowSpace*   mRow_Space;  // mRow_Space->SpaceScope() is the row scope 
   morkRowObject*  mRow_Object; // refcount & other state for object sharing
   morkCell*       mRow_Cells;
   mdbOid          mRow_Oid;

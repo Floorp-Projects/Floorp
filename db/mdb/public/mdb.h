@@ -461,8 +461,8 @@ public:
   virtual mdb_err Free(nsIMdbEnv* ev, // free block from Alloc or Resize()
     void* ioBlock) = 0;     // block to be destroyed/deallocated
     
-  virtual mdb_err AddStrongRef(nsIMdbEnv* ev) = 0;
-  virtual mdb_err CutStrongRef(nsIMdbEnv* ev) = 0;
+  virtual mdb_err HeapAddStrongRef(nsIMdbEnv* ev) = 0;
+  virtual mdb_err HeapCutStrongRef(nsIMdbEnv* ev) = 0;
     
 // } ===== end nsIMdbHeap methods =====
 };
@@ -480,8 +480,8 @@ public:
   virtual mdb_err Free(nsIMdbEnv* ev, // free block allocated earlier by Alloc()
     void* inBlock);
     
-  virtual mdb_err AddStrongRef(nsIMdbEnv* ev);
-  virtual mdb_err CutStrongRef(nsIMdbEnv* ev);
+  virtual mdb_err HeapAddStrongRef(nsIMdbEnv* ev);
+  virtual mdb_err HeapCutStrongRef(nsIMdbEnv* ev);
 // } ===== end nsIMdbHeap methods =====
 };
 

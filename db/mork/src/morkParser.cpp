@@ -747,7 +747,6 @@ void morkParser::ReadTable(morkEnv* ev)
 
     mParser_Change = mParser_TableChange = morkChange_kNil;
 
-    int c;
     while ( (c = this->NextChar(ev)) != EOF && ev->Good() && c != '}' )
     {
       if ( morkCh_IsHex(c) )

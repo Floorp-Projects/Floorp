@@ -96,8 +96,11 @@ public: // dynamic type identification
 // } ===== end morkNode methods =====
 
 public: // morkHandle memory management operators
+  void* operator new(size_t inSize, morkPool& ioPool, morkZone& ioZone, morkEnv* ev)
+  { return ioPool.NewHandle(ev, inSize, &ioZone); }
+  
   void* operator new(size_t inSize, morkPool& ioPool, morkEnv* ev)
-  { return ioPool.NewHandle(ev, inSize); }
+  { return ioPool.NewHandle(ev, inSize, (morkZone*) 0); }
   
   void* operator new(size_t inSize, morkHandleFace* ioFace)
   { MORK_USED_1(inSize); return ioFace; }

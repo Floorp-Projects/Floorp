@@ -472,7 +472,7 @@ orkinTable::GetRowScope(nsIMdbEnv* mev, mdb_scope* outRowScope)
     morkTable* table = (morkTable*) mHandle_Object;
     morkRowSpace* space = table->mTable_RowSpace;
     if ( space )
-      rowScope = space->mSpace_Scope;
+      rowScope = space->SpaceScope();
     else
       table->NilRowSpaceError(ev);
 

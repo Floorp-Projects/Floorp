@@ -68,6 +68,9 @@ public: // state is public because the entire Mork system is private
   // These two lists contain instances of morkHandleFrame:
   morkDeque    mPool_UsedHandleFrames; // handle frames currently being used
   morkDeque    mPool_FreeHandleFrames; // handle frames currently in free list
+  
+  mork_count   mPool_UsedFramesCount; // length of mPool_UsedHandleFrames
+  mork_count   mPool_FreeFramesCount; // length of mPool_UsedHandleFrames
     
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
@@ -107,38 +110,38 @@ public: // morkNode memory management operators
 public: // other pool methods
 
   // alloc and free individual instances of handles (inside hand frames):
-  morkHandleFace*  NewHandle(morkEnv* ev, mork_size inSize);
+  morkHandleFace*  NewHandle(morkEnv* ev, mork_size inSize, morkZone* ioZone);
   void             ZapHandle(morkEnv* ev, morkHandleFace* ioHandle);
 
   // alloc and free individual instances of rows:
-  morkRow*  NewRow(morkEnv* ev); // allocate a new row instance
-  void      ZapRow(morkEnv* ev, morkRow* ioRow); // free old row instance
+  morkRow*  NewRow(morkEnv* ev, morkZone* ioZone); // alloc new row instance
+  void      ZapRow(morkEnv* ev, morkRow* ioRow, morkZone* ioZone); // free old row instance
 
   // alloc and free entire vectors of cells (not just one cell at a time)
-  morkCell* NewCells(morkEnv* ev, mork_size inSize);
-  void      ZapCells(morkEnv* ev, morkCell* ioVector, mork_size inSize);
+  morkCell* NewCells(morkEnv* ev, mork_size inSize, morkZone* ioZone);
+  void      ZapCells(morkEnv* ev, morkCell* ioVector, mork_size inSize, morkZone* ioZone);
   
   // resize (grow or trim) cell vectors inside a containing row instance
-  mork_bool AddRowCells(morkEnv* ev, morkRow* ioRow, mork_size inNewSize);
-  mork_bool CutRowCells(morkEnv* ev, morkRow* ioRow, mork_size inNewSize);
+  mork_bool AddRowCells(morkEnv* ev, morkRow* ioRow, mork_size inNewSize, morkZone* ioZone);
+  mork_bool CutRowCells(morkEnv* ev, morkRow* ioRow, mork_size inNewSize, morkZone* ioZone);
   
   // alloc & free individual instances of atoms (lots of atom subclasses):
-  void ZapAtom(morkEnv* ev, morkAtom* ioAtom); // any subclass (by kind)
+  void ZapAtom(morkEnv* ev, morkAtom* ioAtom, morkZone* ioZone); // any subclass (by kind)
   
-  morkOidAtom* NewRowOidAtom(morkEnv* ev, const mdbOid& inOid); 
-  morkOidAtom* NewTableOidAtom(morkEnv* ev, const mdbOid& inOid);
+  morkOidAtom* NewRowOidAtom(morkEnv* ev, const mdbOid& inOid, morkZone* ioZone); 
+  morkOidAtom* NewTableOidAtom(morkEnv* ev, const mdbOid& inOid, morkZone* ioZone);
   
   morkAtom* NewAnonAtom(morkEnv* ev, const morkBuf& inBuf,
-    mork_cscode inForm);
+    mork_cscode inForm, morkZone* ioZone);
     // if inForm is zero, and inBuf.mBuf_Fill is less than 256, then a 'wee'
     // anon atom will be created, and otherwise a 'big' anon atom.
     
   morkBookAtom* NewBookAtom(morkEnv* ev, const morkBuf& inBuf,
-    mork_cscode inForm, morkAtomSpace* ioSpace, mork_aid inAid);
+    mork_cscode inForm, morkAtomSpace* ioSpace, mork_aid inAid, morkZone* ioZone);
     // if inForm is zero, and inBuf.mBuf_Fill is less than 256, then a 'wee'
     // book atom will be created, and otherwise a 'big' book atom.
     
-  morkBookAtom* NewBookAtomCopy(morkEnv* ev, const morkBigBookAtom& inAtom);
+  morkBookAtom* NewBookAtomCopy(morkEnv* ev, const morkBigBookAtom& inAtom, morkZone* ioZone);
     // make the smallest kind of book atom that can hold content in inAtom.
     // The inAtom parameter is often expected to be a staged book atom in
     // the store, which was used to search an atom space for existing atoms.

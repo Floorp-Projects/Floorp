@@ -63,16 +63,18 @@ morkObject::~morkObject() // assert CloseObject() executed earlier
 }
 
 /*public non-poly*/
-morkObject::morkObject(const morkUsage& inUsage, nsIMdbHeap* ioHeap)
-: morkNode(inUsage, ioHeap)
+morkObject::morkObject(const morkUsage& inUsage, nsIMdbHeap* ioHeap,
+  mork_color inBeadColor)
+: morkBead(inUsage, ioHeap, inBeadColor)
 , mObject_Handle( 0 )
 {
 }
 
 /*public non-poly*/
 morkObject::morkObject(morkEnv* ev,
-  const morkUsage& inUsage, nsIMdbHeap* ioHeap, morkHandle* ioHandle)
-: morkNode(ev, inUsage, ioHeap)
+  const morkUsage& inUsage, nsIMdbHeap* ioHeap, 
+  mork_color inBeadColor, morkHandle* ioHandle)
+: morkBead(ev, inUsage, ioHeap, inBeadColor)
 , mObject_Handle( 0 )
 {
   if ( ev->Good() )
@@ -96,6 +98,8 @@ morkObject::CloseObject(morkEnv* ev) // called by CloseMorkNode();
       {
         if ( mObject_Handle )
           morkHandle::SlotWeakHandle((morkHandle*) 0L, ev, &mObject_Handle);
+          
+        mBead_Color = 0; // this->CloseBead(ev);
         this->MarkShut();
       }
     }

@@ -55,7 +55,7 @@
 
 #define morkDerived_kRowSpace  /*i*/ 0x7253 /* ascii 'rS' */
 
-#define morkRowSpace_kStartRowMapSlotCount 512
+#define morkRowSpace_kStartRowMapSlotCount 11
 
 #define morkRowSpace_kMaxIndexCount 8 /* no more indexes than this */
 #define morkRowSpace_kPrimeCacheSize 17 /* should be prime number */
@@ -81,7 +81,6 @@ class morkRowSpace : public morkSpace { //
   // mork_refs      mNode_Refs;     // refcount for strong refs + weak refs
   
   // morkStore*  mSpace_Store; // weak ref to containing store
-  // mork_scope  mSpace_Scope; // the scope for this space
   
   // mork_bool   mSpace_DoAutoIDs;    // whether db should assign member IDs
   // mork_bool   mSpace_HaveDoneAutoIDs; // whether actually auto assigned IDs
@@ -91,7 +90,11 @@ public: // state is public because the entire Mork system is private
 
   nsIMdbHeap*  mRowSpace_SlotHeap;
 
+#ifdef MORK_ENABLE_PROBE_MAPS
+  morkRowProbeMap   mRowSpace_Rows;   // hash table of morkRow instances
+#else /*MORK_ENABLE_PROBE_MAPS*/
   morkRowMap   mRowSpace_Rows;   // hash table of morkRow instances
+#endif /*MORK_ENABLE_PROBE_MAPS*/
   morkTableMap mRowSpace_Tables; // all the tables in this row scope
 
   mork_tid     mRowSpace_NextTableId;  // for auto-assigning table IDs
@@ -195,7 +198,7 @@ public:
 public: // other map methods
 
   mork_bool  AddRowSpace(morkEnv* ev, morkRowSpace* ioRowSpace)
-  { return this->AddNode(ev, ioRowSpace->mSpace_Scope, ioRowSpace); }
+  { return this->AddNode(ev, ioRowSpace->SpaceScope(), ioRowSpace); }
   // the AddRowSpace() boolean return equals ev->Good().
 
   mork_bool  CutRowSpace(morkEnv* ev, mork_scope inScope)

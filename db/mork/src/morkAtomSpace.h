@@ -85,7 +85,6 @@ class morkAtomSpace : public morkSpace { //
   // mork_refs      mNode_Refs;     // refcount for strong refs + weak refs
   
   // morkStore*  mSpace_Store; // weak ref to containing store
-  // mork_scope  mSpace_Scope; // the scope for this space
   
   // mork_bool   mSpace_DoAutoIDs;    // whether db should assign member IDs
   // mork_bool   mSpace_HaveDoneAutoIDs; // whether actually auto assigned IDs
@@ -184,7 +183,7 @@ public:
 public: // other map methods
 
   mork_bool  AddAtomSpace(morkEnv* ev, morkAtomSpace* ioAtomSpace)
-  { return this->AddNode(ev, ioAtomSpace->mSpace_Scope, ioAtomSpace); }
+  { return this->AddNode(ev, ioAtomSpace->SpaceScope(), ioAtomSpace); }
   // the AddAtomSpace() boolean return equals ev->Good().
 
   mork_bool  CutAtomSpace(morkEnv* ev, mork_scope inScope)

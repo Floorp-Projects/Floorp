@@ -219,7 +219,7 @@ morkAtom::GetBookAtomSpaceScope(morkEnv* ev) const // zero or book's space's sco
     const morkBookAtom* bookAtom = (const morkBookAtom*) this;
     morkAtomSpace* space = bookAtom->mBookAtom_Space;
     if ( space->IsAtomSpace() )
-      outScope = space->mSpace_Scope;
+      outScope = space->SpaceScope();
     else
       space->NonAtomSpaceTypeError(ev);
   }

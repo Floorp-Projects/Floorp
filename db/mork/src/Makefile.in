@@ -81,6 +81,9 @@ CPPSRCS		= \
 		morkThumb.cpp \
 		morkWriter.cpp \
 		morkYarn.cpp \
+		morkBead.cpp \
+		morkProbeMap.cpp \
+		morkZone.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

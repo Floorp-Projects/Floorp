@@ -73,7 +73,8 @@ class morkEnv : public morkObject {
   // mork_uses      mNode_Uses;     // refcount for strong refs
   // mork_refs      mNode_Refs;     // refcount for strong refs + weak refs
 
-  // morkHandle*    mObject_Handle;   // weak ref to handle for this object
+  // mork_color   mBead_Color;   // ID for this bead
+  // morkHandle*  mObject_Handle;  // weak ref to handle for this object
 
 public: // state is public because the entire Mork system is private
   
@@ -137,7 +138,7 @@ public: // other env methods
 
   // alloc and free individual handles in mEnv_HandlePool:
   morkHandleFace*  NewHandle(mork_size inSize)
-  { return mEnv_HandlePool->NewHandle(this, inSize); }
+  { return mEnv_HandlePool->NewHandle(this, inSize, (morkZone*) 0); }
   
   void ZapHandle(morkHandleFace* ioHandle)
   { mEnv_HandlePool->ZapHandle(this, ioHandle); }
@@ -158,6 +159,7 @@ public: // other env methods
   void StubMethodOnlyError();
   void OutOfMemoryError();
   void NilPointerError();
+  void NilPointerWarning();
   void CantMakeWhenBadError();
   void NewNonEnvError();
   void NilEnvSlotError();

@@ -27,6 +27,10 @@
 #include "morkNode.h"
 #endif
 
+#ifndef _MORKBEAD_
+#include "morkBead.h"
+#endif
+
 #ifndef _MORKMAP_
 #include "morkMap.h"
 #endif
@@ -38,7 +42,7 @@
 
 /*| morkSpace:
 |*/
-class morkSpace : public morkNode { // 
+class morkSpace : public morkBead { // 
 
 // public: // slots inherited from morkNode (meant to inform only)
   // nsIMdbHeap*       mNode_Heap;
@@ -54,12 +58,17 @@ class morkSpace : public morkNode { //
   // mork_uses      mNode_Uses;     // refcount for strong refs
   // mork_refs      mNode_Refs;     // refcount for strong refs + weak refs
 
+  // mork_color      mBead_Color;   // ID for this bead
+
+public: // bead color setter & getter replace obsolete member mTable_Id:
+
+  mork_tid     SpaceScope() const { return mBead_Color; }
+  void         SetSpaceScope(mork_scope inScope) { mBead_Color = inScope; }
+
 public: // state is public because the entire Mork system is private
 
   morkStore*  mSpace_Store; // weak ref to containing store
-  
-  mork_scope  mSpace_Scope; // the scope for this space
-  
+    
   mork_bool   mSpace_DoAutoIDs;    // whether db should assign member IDs
   mork_bool   mSpace_HaveDoneAutoIDs; // whether actually auto assigned IDs
   mork_bool   mSpace_CanDirty; // changes imply the store becomes dirty?

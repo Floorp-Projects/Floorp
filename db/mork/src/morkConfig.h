@@ -98,6 +98,22 @@
 #define MORK_FILECLOSE(file) XP_FileClose(file) 
 #endif /*MORK_OBSOLETE*/
 
+/* ===== separating switchable features ===== */
+
+//define MORK_ENABLE_ZONE_ARENAS 1 /* using morkZone for pooling */
+
+//define MORK_ENABLE_PROBE_MAPS 1 /* use smaller hash tables */
+
+//define MORK_BEAD_OVER_NODE_MAPS 1 /* use bead not node maps */
+
+/* ===== pooling ===== */
+
+#define MORK_CONFIG_PTR_SIZE_4 1 /* sizeof(void*) == 4 */
+
+//define MORK_CONFIG_ALIGN_8 1 /* must have 8 byte alignment */
+
+//define MORK_DEBUG_HEAP_STATS 1 /* analyze per-block heap usage */
+
 /* ===== ===== ===== ===== line characters ===== ===== ===== ===== */
 #define mork_kCR 0x0D
 #define mork_kLF 0x0A

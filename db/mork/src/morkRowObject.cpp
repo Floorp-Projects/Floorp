@@ -70,7 +70,7 @@ morkRowObject::~morkRowObject() // assert CloseRowObject() executed earlier
 morkRowObject::morkRowObject(morkEnv* ev,
   const morkUsage& inUsage, nsIMdbHeap* ioHeap,
      morkRow* ioRow, morkStore* ioStore)
-: morkObject(ev, inUsage, ioHeap, (morkHandle*) 0)
+: morkObject(ev, inUsage, ioHeap, morkColor_kNone, (morkHandle*) 0)
 , mRowObject_Row( 0 )
 , mRowObject_Store( 0 )
 {

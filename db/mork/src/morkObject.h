@@ -27,6 +27,10 @@
 #include "morkNode.h"
 #endif
 
+#ifndef _MORKBEAD_
+#include "morkBead.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 #define morkDerived_kObject   /*i*/ 0x6F42 /* ascii 'oB' */
@@ -35,7 +39,7 @@
 **| and containing port to those objects that are exposed as instances of
 **| nsIMdbObject in the public interface.
 |*/
-class morkObject : public morkNode { 
+class morkObject : public morkBead { 
 
 // public: // slots inherited from morkNode (meant to inform only)
   // nsIMdbHeap*    mNode_Heap;
@@ -50,6 +54,8 @@ class morkObject : public morkNode {
   
   // mork_uses      mNode_Uses;     // refcount for strong refs
   // mork_refs      mNode_Refs;     // refcount for strong refs + weak refs
+
+  // mork_color      mBead_Color;   // ID for this bead
   
 public: // state is public because the entire Mork system is private
 
@@ -61,11 +67,12 @@ public: // morkNode virtual methods
   virtual ~morkObject(); // assert that CloseObject() executed earlier
   
 protected: // special case construction of first env without preceding env
-  morkObject(const morkUsage& inUsage, nsIMdbHeap* ioHeap);
+  morkObject(const morkUsage& inUsage, nsIMdbHeap* ioHeap,
+    mork_color inBeadColor);
   
 public: // morkEnv construction & destruction
   morkObject(morkEnv* ev, const morkUsage& inUsage, nsIMdbHeap* ioHeap, 
-     morkHandle* ioHandle); // ioHandle can be nil
+     mork_color inBeadColor, morkHandle* ioHandle); // ioHandle can be nil
   void CloseObject(morkEnv* ev); // called by CloseMorkNode();
 
 private: // copying is not allowed

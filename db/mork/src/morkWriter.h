@@ -191,7 +191,12 @@ public: // state is public because the entire Mork system is private
   
   morkRowSpaceMapIter  mWriter_StoreRowSpacesIter;    // for mStore_RowSpaces
   morkTableMapIter  mWriter_RowSpaceTablesIter;    // for mRowSpace_Tables
+  
+#ifdef MORK_ENABLE_PROBE_MAPS
+  morkRowProbeMapIter  mWriter_RowSpaceRowsIter; // for mRowSpace_Rows
+#else /*MORK_ENABLE_PROBE_MAPS*/
   morkRowMapIter  mWriter_RowSpaceRowsIter;      // for mRowSpace_Rows
+#endif /*MORK_ENABLE_PROBE_MAPS*/
    
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods

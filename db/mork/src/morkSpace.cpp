@@ -67,7 +67,7 @@ morkSpace::CloseMorkNode(morkEnv* ev) // CloseSpace() only if open
 /*public virtual*/
 morkSpace::~morkSpace() // assert CloseSpace() executed earlier
 {
-  MORK_ASSERT(mSpace_Scope==0);
+  MORK_ASSERT(SpaceScope()==0);
   MORK_ASSERT(mSpace_Store==0);
   MORK_ASSERT(this->IsShutNode());
 }    
@@ -86,9 +86,8 @@ morkSpace::~morkSpace() // assert CloseSpace() executed earlier
 morkSpace::morkSpace(morkEnv* ev,
   const morkUsage& inUsage, mork_scope inScope, morkStore* ioStore,
   nsIMdbHeap* ioHeap, nsIMdbHeap* ioSlotHeap)
-: morkNode(ev, inUsage, ioHeap)
+: morkBead(ev, inUsage, ioHeap, inScope)
 , mSpace_Store( 0 )
-, mSpace_Scope( inScope )
 , mSpace_DoAutoIDs( morkBool_kFalse )
 , mSpace_HaveDoneAutoIDs( morkBool_kFalse )
 , mSpace_CanDirty( morkBool_kFalse ) // only when store can be dirtied
@@ -119,7 +118,7 @@ morkSpace::CloseSpace(morkEnv* ev) // called by CloseMorkNode();
     if ( this->IsNode() )
     {
       morkStore::SlotWeakStore((morkStore*) 0, ev, &mSpace_Store);
-      mSpace_Scope = 0;
+      mBead_Color = 0; // this->CloseBead();
       this->MarkShut();
     }
     else
@@ -135,7 +134,7 @@ morkSpace::CloseSpace(morkEnv* ev) // called by CloseMorkNode();
 /*static*/ void 
 morkSpace::NonAsciiSpaceScopeName(morkEnv* ev)
 {
-  ev->NewError("mSpace_Scope > 0x7F");
+  ev->NewError("SpaceScope() > 0x7F");
 }
 
 /*static*/ void 
