@@ -49,6 +49,8 @@
 #include "nsStyleConsts.h"
 
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
+#include "nsPrintfCString.h"
 
 #define CSS_IF_DELETE(ptr)  if (nsnull != ptr)  { delete ptr; ptr = nsnull; }
 
@@ -381,6 +383,25 @@ void nsCSSRect::List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) co
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 #endif
+
+// --- nsCSSValuePair -------------------
+#ifdef DEBUG
+void nsCSSValuePair::AppendToString(nsAString& aString,
+                                    nsCSSProperty aPropName) const
+{
+  if (mXValue.GetUnit() != eCSSUnit_Null) {
+    AppendUTF8toUTF16(nsCSSProps::GetStringValue(aPropName), aString);
+    aString.Append(NS_LITERAL_STRING(": "));
+    mXValue.AppendToString(aString);
+    NS_ASSERTION(mYValue.GetUnit() != eCSSUnit_Null,
+                 nsPrintfCString("Parsed half of a %s?",
+                                 nsCSSProps::GetStringValue(aPropName).get()).get());
+    aString.Append(PRUnichar(' '));
+    mYValue.AppendToString(aString);
+  }
+}
+#endif
+
 
 // --- nsCSSValueListRect -----------------
 
@@ -738,8 +759,7 @@ nsCSSTable::nsCSSTable(void)
 
 nsCSSTable::nsCSSTable(const nsCSSTable& aCopy)
   : mBorderCollapse(aCopy.mBorderCollapse),
-    mBorderSpacingX(aCopy.mBorderSpacingX),
-    mBorderSpacingY(aCopy.mBorderSpacingY),
+    mBorderSpacing(aCopy.mBorderSpacing),
     mCaptionSide(aCopy.mCaptionSide),
     mEmptyCells(aCopy.mEmptyCells),
     mLayout(aCopy.mLayout)
@@ -760,8 +780,7 @@ void nsCSSTable::List(FILE* out, PRInt32 aIndent) const
   nsAutoString buffer;
 
   mBorderCollapse.AppendToString(buffer, eCSSProperty_border_collapse);
-  mBorderSpacingX.AppendToString(buffer, eCSSProperty_border_x_spacing);
-  mBorderSpacingY.AppendToString(buffer, eCSSProperty_border_y_spacing);
+  mBorderSpacing.AppendToString(buffer, eCSSProperty_border_spacing);
   mCaptionSide.AppendToString(buffer, eCSSProperty_caption_side);
   mEmptyCells.AppendToString(buffer, eCSSProperty_empty_cells);
   mLayout.AppendToString(buffer, eCSSProperty_table_layout);
@@ -822,8 +841,7 @@ nsCSSPage::nsCSSPage(void)
 
 nsCSSPage::nsCSSPage(const nsCSSPage& aCopy)
   : mMarks(aCopy.mMarks),
-    mSizeWidth(aCopy.mSizeWidth),
-    mSizeHeight(aCopy.mSizeHeight)
+    mSize(aCopy.mSize)
 {
   MOZ_COUNT_CTOR(nsCSSPage);
 }
@@ -841,8 +859,7 @@ void nsCSSPage::List(FILE* out, PRInt32 aIndent) const
   nsAutoString buffer;
 
   mMarks.AppendToString(buffer, eCSSProperty_marks);
-  mSizeWidth.AppendToString(buffer, eCSSProperty_size_width);
-  mSizeHeight.AppendToString(buffer, eCSSProperty_size_height);
+  mSize.AppendToString(buffer, eCSSProperty_size);
 
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
@@ -1068,7 +1085,6 @@ nsCSSAural::nsCSSAural(const nsCSSAural& aCopy)
     mPitch(aCopy.mPitch),
     mPitchRange(aCopy.mPitchRange),
     mPlayDuring(aCopy.mPlayDuring),
-    mPlayDuringFlags(aCopy.mPlayDuringFlags),
     mRichness(aCopy.mRichness),
     mSpeak(aCopy.mSpeak),
     mSpeakHeader(aCopy.mSpeakHeader),
@@ -1102,8 +1118,7 @@ void nsCSSAural::List(FILE* out, PRInt32 aIndent) const
   mPauseBefore.AppendToString(buffer, eCSSProperty_pause_before);
   mPitch.AppendToString(buffer, eCSSProperty_pitch);
   mPitchRange.AppendToString(buffer, eCSSProperty_pitch_range);
-  mPlayDuring.AppendToString(buffer, eCSSProperty_play_during_uri);
-  mPlayDuringFlags.AppendToString(buffer, eCSSProperty_play_during_flags);
+  mPlayDuring.AppendToString(buffer, eCSSProperty_play_during);
   mRichness.AppendToString(buffer, eCSSProperty_richness);
   mSpeak.AppendToString(buffer, eCSSProperty_speak);
   mSpeakHeader.AppendToString(buffer, eCSSProperty_speak_header);

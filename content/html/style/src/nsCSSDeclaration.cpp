@@ -40,6 +40,7 @@
 #include "nsString.h"
 #include "nsIAtom.h"
 #include "nsUnicharUtils.h"
+#include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsCSSProps.h"
 #include "nsUnitConversion.h"
@@ -214,6 +215,15 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
           aResult.Append(PRUnichar(')'));
         }
       } break;
+      case eCSSType_ValuePair: {
+        const nsCSSValuePair *pair = NS_STATIC_CAST(const nsCSSValuePair*, storage);
+        AppendCSSValueToString(aProperty, pair->mXValue, aResult);
+        if (pair->mYValue != pair->mXValue) {
+          // Only output a Y value if it's different from the X value
+          aResult.Append(PRUnichar(' '));
+          AppendCSSValueToString(aProperty, pair->mYValue, aResult);
+        }
+      } break;
       case eCSSType_ValueList: {
         const nsCSSValueList* val =
             *NS_STATIC_CAST(nsCSSValueList*const*, storage);
@@ -364,18 +374,6 @@ PRBool nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty, const n
         AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_AZIMUTH_BEHIND), aResult);
       }
     }
-    else if (eCSSProperty_play_during_flags == aProperty) {
-      PRInt32 intValue = aValue.GetIntValue();
-      if ((NS_STYLE_PLAY_DURING_MIX & intValue) != 0) {
-        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_PLAY_DURING_MIX), aResult);
-      }
-      if ((NS_STYLE_PLAY_DURING_REPEAT & intValue) != 0) {
-        if (NS_STYLE_PLAY_DURING_REPEAT != intValue) {
-          aResult.Append(PRUnichar(' '));
-        }
-        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_PLAY_DURING_REPEAT), aResult);
-      }
-    }
     else if (eCSSProperty_marks == aProperty) {
       PRInt32 intValue = aValue.GetIntValue();
       if ((NS_STYLE_PAGE_MARKS_CROP & intValue) != 0) {
@@ -493,7 +491,9 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
   aValue.Truncate(0);
 
   // simple properties are easy.
-  if (!nsCSSProps::IsShorthand(aProperty)) {
+  if (!nsCSSProps::IsShorthand(aProperty) &&
+      // play-during is not a real shorthand, but is special...
+      aProperty != eCSSProperty_play_during) {
     AppendValueToString(aProperty, aValue);
     return NS_OK;
   }
@@ -584,16 +584,6 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       }
       break;
     }
-    case eCSSProperty_border_spacing:
-      if (AppendValueToString(eCSSProperty_border_x_spacing, aValue)) {
-        aValue.Append(PRUnichar(' '));
-#ifdef DEBUG
-        PRBool check =
-#endif
-          AppendValueToString(eCSSProperty_border_y_spacing, aValue);
-        NS_ASSERTION(check, "we parsed half of border-spacing");
-      }
-      break;
     case eCSSProperty_cue: {
       if (AppendValueToString(eCSSProperty_cue_after, aValue)) {
         aValue.Append(PRUnichar(' '));
@@ -646,14 +636,6 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       }
       break;
     }
-    case eCSSProperty_size: {
-      if (AppendValueToString(eCSSProperty_size_width, aValue)) {
-        aValue.Append(PRUnichar(' '));
-        if (!AppendValueToString(eCSSProperty_size_height, aValue))
-          aValue.Truncate();
-      }
-      break;
-    }
     case eCSSProperty_background_position: {
       if (AppendValueToString(eCSSProperty_background_x_position, aValue)) {
         aValue.Append(PRUnichar(' '));
@@ -666,11 +648,32 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       break;
     }
     case eCSSProperty_play_during: {
-      if (AppendValueToString(eCSSProperty_play_during_uri, aValue)) {
-        nsAutoString tmp;
-        if (AppendValueToString(eCSSProperty_play_during_flags, tmp)) {
-          aValue.Append(PRUnichar(' '));
-          aValue.Append(tmp);
+      nsCSSCompressedDataBlock *data =
+        GetValueIsImportant(eCSSProperty_play_during) ? mImportantData : mData;
+      const void *storage = data->StorageFor(eCSSProperty_play_during);
+      if (!storage) {
+        break;
+      }
+      NS_ASSERTION(nsCSSProps::kTypeTable[eCSSProperty_play_during] ==
+                   eCSSType_ValuePair,
+                   "Someone changed the storage type of play-during!");
+      const nsCSSValuePair *pair = NS_STATIC_CAST(const nsCSSValuePair*, storage);
+      AppendCSSValueToString(aProperty, pair->mXValue, aValue);
+      if (pair->mYValue != eCSSUnit_Null) {
+        aValue.Append(PRUnichar(' '));
+        PRInt32 intValue = pair->mYValue.GetIntValue();
+        if ((NS_STYLE_PLAY_DURING_MIX & intValue) != 0) {
+          AppendUTF8toUTF16(nsCSSProps::LookupPropertyValue(aProperty,
+                                                     NS_STYLE_PLAY_DURING_MIX),
+                            aValue);
+        }
+        if ((NS_STYLE_PLAY_DURING_REPEAT & intValue) != 0) {
+          if (NS_STYLE_PLAY_DURING_REPEAT != intValue) {
+            aValue.Append(PRUnichar(' '));
+          }
+          AppendUTF8toUTF16(nsCSSProps::LookupPropertyValue(aProperty,
+                                                  NS_STYLE_PLAY_DURING_REPEAT),
+                            aValue);
         }
       }
       break;

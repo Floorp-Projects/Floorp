@@ -972,7 +972,41 @@ nsresult
 nsComputedDOMStyle::GetBorderSpacing(nsIFrame *aFrame,
                                      nsIDOMCSSValue** aValue)
 {
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_FALSE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleTableBorder *border = nsnull;
+  GetStyleData(eStyleStruct_TableBorder, (const nsStyleStruct*&)border, aFrame);
+  if (border) {
+    nsROCSSPrimitiveValue* xSpacing = GetROCSSPrimitiveValue();
+    if (!xSpacing) {
+      delete valueList;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    if (!valueList->AppendCSSValue(xSpacing)) {
+      delete valueList;
+      delete xSpacing;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    
+    nsROCSSPrimitiveValue* ySpacing = GetROCSSPrimitiveValue();
+    if (!ySpacing) {
+      delete valueList;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    if (!valueList->AppendCSSValue(ySpacing)) {
+      delete valueList;
+      delete ySpacing;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // border-spacing will always be a coord
+    xSpacing->SetTwips(border->mBorderSpacingX.GetCoordValue());
+    ySpacing->SetTwips(border->mBorderSpacingY.GetCoordValue());
+        
+  }
+
+  return CallQueryInterface(valueList, aValue);
 }
 
 nsresult
@@ -3522,7 +3556,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(border_right_color,            BorderRightColor),
     COMPUTED_STYLE_MAP_ENTRY(border_right_style,            BorderRightStyle),
     COMPUTED_STYLE_MAP_ENTRY(border_right_width,            BorderRightWidth),
-    //// COMPUTED_STYLE_MAP_ENTRY(border_spacing,           BorderSpacing),
+    COMPUTED_STYLE_MAP_ENTRY(border_spacing,                BorderSpacing),
     //// COMPUTED_STYLE_MAP_ENTRY(border_style,             BorderStyle),
     //// COMPUTED_STYLE_MAP_ENTRY(border_top,               BorderTop),
     COMPUTED_STYLE_MAP_ENTRY(border_top_color,              BorderTopColor),

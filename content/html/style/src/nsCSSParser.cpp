@@ -3223,6 +3223,16 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
       new (source) nsCSSRect();
     } break;
 
+    case eCSSType_ValuePair: {
+      nsCSSValuePair *source = NS_STATIC_CAST(nsCSSValuePair*, v_source);
+      nsCSSValuePair *dest = NS_STATIC_CAST(nsCSSValuePair*, v_dest);
+      if (*source != *dest)
+        *aChanged = PR_TRUE;
+      dest->~nsCSSValuePair();
+      memcpy(dest, source, sizeof(nsCSSValuePair));
+      new (source) nsCSSValuePair();
+    } break;
+
     case eCSSType_ValueList: {
       nsCSSValueList **source = NS_STATIC_CAST(nsCSSValueList**, v_source);
       nsCSSValueList **dest = NS_STATIC_CAST(nsCSSValueList**, v_dest);
@@ -4060,12 +4070,6 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
   // by compound property parsing routines (e.g. "background-position").
   case eCSSProperty_background_x_position:
   case eCSSProperty_background_y_position:
-  case eCSSProperty_border_x_spacing:
-  case eCSSProperty_border_y_spacing:
-  case eCSSProperty_play_during_flags:
-  case eCSSProperty_play_during_uri:
-  case eCSSProperty_size_height:
-  case eCSSProperty_size_width:
   case eCSSProperty_margin_end_value:
   case eCSSProperty_margin_left_value:
   case eCSSProperty_margin_right_value:
@@ -4179,12 +4183,6 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     NS_ERROR("not a single value property");
     return PR_FALSE;
 
-  case eCSSProperty_border_x_spacing:
-  case eCSSProperty_border_y_spacing:
-  case eCSSProperty_play_during_flags:
-  case eCSSProperty_play_during_uri:
-  case eCSSProperty_size_height:
-  case eCSSProperty_size_width:
   case eCSSProperty_margin_left_ltr_source:
   case eCSSProperty_margin_left_rtl_source:
   case eCSSProperty_margin_right_ltr_source:
@@ -4874,8 +4872,9 @@ PRBool CSSParserImpl::ParseBorderSpacing(nsresult& aErrorCode)
       if (ParsePositiveVariant(aErrorCode, yValue, VARIANT_LENGTH, nsnull)) {
         // We have two numbers
         if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-          AppendValue(eCSSProperty_border_x_spacing, xValue);
-          AppendValue(eCSSProperty_border_y_spacing, yValue);
+          mTempData.mTable.mBorderSpacing.mXValue = xValue;
+          mTempData.mTable.mBorderSpacing.mYValue = yValue;
+          mTempData.SetPropertyBit(eCSSProperty_border_spacing);
           return PR_TRUE;
         }
         return PR_FALSE;
@@ -4885,8 +4884,8 @@ PRBool CSSParserImpl::ParseBorderSpacing(nsresult& aErrorCode)
     // We have one length which is the horizontal spacing. Create a value for
     // the vertical spacing which is equal
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      AppendValue(eCSSProperty_border_x_spacing, xValue);
-      AppendValue(eCSSProperty_border_y_spacing, xValue);
+      mTempData.mTable.mBorderSpacing.SetBothValuesTo(xValue);
+      mTempData.SetPropertyBit(eCSSProperty_border_spacing);
       return PR_TRUE;
     }
   }
@@ -5649,8 +5648,9 @@ PRBool CSSParserImpl::ParsePlayDuring(nsresult& aErrorCode)
       }
     }
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      AppendValue(eCSSProperty_play_during_uri, playDuring);
-      AppendValue(eCSSProperty_play_during_flags, flags);
+      mTempData.mAural.mPlayDuring.mXValue = playDuring;
+      mTempData.mAural.mPlayDuring.mYValue = flags;
+      mTempData.SetPropertyBit(eCSSProperty_play_during);
       return PR_TRUE;
     }
   }
@@ -5713,16 +5713,17 @@ PRBool CSSParserImpl::ParseSize(nsresult& aErrorCode)
       nsCSSValue  height;
       if (ParseVariant(aErrorCode, height, VARIANT_LENGTH, nsnull)) {
         if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-          AppendValue(eCSSProperty_size_width, width);
-          AppendValue(eCSSProperty_size_height, height);
+          mTempData.mPage.mSize.mXValue = width;
+          mTempData.mPage.mSize.mYValue = height;
+          mTempData.SetPropertyBit(eCSSProperty_size);
           return PR_TRUE;
         }
         return PR_FALSE;
       }
     }
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      AppendValue(eCSSProperty_size_width, width);
-      AppendValue(eCSSProperty_size_height, width);
+      mTempData.mPage.mSize.SetBothValuesTo(width);
+      mTempData.SetPropertyBit(eCSSProperty_size);
       return PR_TRUE;
     }
   }

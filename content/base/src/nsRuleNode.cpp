@@ -577,35 +577,43 @@ struct StructCheckData {
   CheckCallbackFn callback;
 };
 
-static void
-ExamineRectProperties(const nsCSSRect* aRect,
-                      PRUint32& aSpecifiedCount, PRUint32& aInheritedCount)
+
+/**
+ * @param aValue the value being examined
+ * @param aSpecifiedCount to be incremented by one if the value is specified
+ * @param aInherited to be incremented by one if the value is set to inherit
+ */
+inline void
+ExamineCSSValue(const nsCSSValue& aValue,
+                PRUint32& aSpecifiedCount, PRUint32& aInheritedCount)
 {
-  if (!aRect)
-    return;
-
-  if (eCSSUnit_Null != aRect->mLeft.GetUnit()) {
-    aSpecifiedCount++;
-    if (eCSSUnit_Inherit == aRect->mLeft.GetUnit())
-      aInheritedCount++;
+  if (aValue.GetUnit() != eCSSUnit_Null) {
+    ++aSpecifiedCount;
+    if (aValue.GetUnit() == eCSSUnit_Inherit) {
+      ++aInheritedCount;
+    }
   }
+}
 
-  if (eCSSUnit_Null != aRect->mTop.GetUnit()) {
-    aSpecifiedCount++;
-    if (eCSSUnit_Inherit == aRect->mTop.GetUnit())
-      aInheritedCount++;
-  }
+static void
+ExamineCSSValuePair(const nsCSSValuePair* aValuePair,
+                    PRUint32& aSpecifiedCount, PRUint32& aInheritedCount)
+{
+  NS_PRECONDITION(aValuePair, "Must have a value pair");
+  
+  ExamineCSSValue(aValuePair->mXValue, aSpecifiedCount, aInheritedCount);
+  ExamineCSSValue(aValuePair->mYValue, aSpecifiedCount, aInheritedCount);
+}
 
-  if (eCSSUnit_Null != aRect->mRight.GetUnit()) {
-    aSpecifiedCount++;
-    if (eCSSUnit_Inherit == aRect->mRight.GetUnit())
-      aInheritedCount++;
-  }
+static void
+ExamineCSSRect(const nsCSSRect* aRect,
+               PRUint32& aSpecifiedCount, PRUint32& aInheritedCount)
+{
+  NS_PRECONDITION(aRect, "Must have a rect");
 
-  if (eCSSUnit_Null != aRect->mBottom.GetUnit()) {
-    aSpecifiedCount++;
-    if (eCSSUnit_Inherit == aRect->mBottom.GetUnit())
-      aInheritedCount++;
+  NS_FOR_CSS_SIDES(side) {
+    ExamineCSSValue(aRect->*(nsCSSRect::sides[side]),
+                    aSpecifiedCount, aInheritedCount);
   }
 }
 
@@ -840,6 +848,13 @@ RectAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
                      NS_REINTERPRET_CAST(const char*, &aRuleDataStruct) + aOffset);
 }
 
+inline const nsCSSValuePair*
+ValuePairAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
+{
+  return NS_REINTERPRET_CAST(const nsCSSValuePair*,
+                     NS_REINTERPRET_CAST(const char*, &aRuleDataStruct) + aOffset);
+}
+
 inline const nsCSSValueList*
 ValueListAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
 {
@@ -893,24 +908,23 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
     switch (prop->type) {
 
       case eCSSType_Value:
-        {
-          ++total;
-          const nsCSSValue& value = ValueAtOffset(aRuleDataStruct, prop->offset);
-          if (eCSSUnit_Null != value.GetUnit()) {
-            ++specified;
-            if (eCSSUnit_Inherit == value.GetUnit()) {
-              ++inherited;
-            }
-          }
-        }
+        ++total;
+        ExamineCSSValue(ValueAtOffset(aRuleDataStruct, prop->offset),
+                        specified, inherited);
         break;
 
       case eCSSType_Rect:
         total += 4;
-        ExamineRectProperties(RectAtOffset(aRuleDataStruct, prop->offset),
-                              specified, inherited);
+        ExamineCSSRect(RectAtOffset(aRuleDataStruct, prop->offset),
+                       specified, inherited);
         break;
 
+      case eCSSType_ValuePair:
+        total += 2;
+        ExamineCSSValuePair(ValuePairAtOffset(aRuleDataStruct, prop->offset),
+                            specified, inherited);
+        break;
+        
       case eCSSType_ValueList:
         {
           ++total;
@@ -3827,18 +3841,18 @@ nsRuleNode::ComputeTableBorderData(nsStyleStruct* aStartStruct,
   nsStyleCoord coord;
 
   // border-spacing-x: length, inherit
-  if (SetCoord(tableData.mBorderSpacingX, coord, coord, SETCOORD_LENGTH, aContext, mPresContext, inherited)) {
+  if (SetCoord(tableData.mBorderSpacing.mXValue, coord, coord, SETCOORD_LENGTH, aContext, mPresContext, inherited)) {
     table->mBorderSpacingX = coord.GetCoordValue();
   }
-  else if (eCSSUnit_Inherit == tableData.mBorderSpacingX.GetUnit()) {
+  else if (eCSSUnit_Inherit == tableData.mBorderSpacing.mXValue.GetUnit()) {
     inherited = PR_TRUE;
     table->mBorderSpacingX = parentTable->mBorderSpacingX;
   }
   // border-spacing-y: length, inherit
-  if (SetCoord(tableData.mBorderSpacingY, coord, coord, SETCOORD_LENGTH, aContext, mPresContext, inherited)) {
+  if (SetCoord(tableData.mBorderSpacing.mYValue, coord, coord, SETCOORD_LENGTH, aContext, mPresContext, inherited)) {
     table->mBorderSpacingY = coord.GetCoordValue();
   }
-  else if (eCSSUnit_Inherit == tableData.mBorderSpacingY.GetUnit()) {
+  else if (eCSSUnit_Inherit == tableData.mBorderSpacing.mYValue.GetUnit()) {
     inherited = PR_TRUE;
     table->mBorderSpacingY = parentTable->mBorderSpacingY;
   }
