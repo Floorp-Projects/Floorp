@@ -2335,7 +2335,8 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
   nsIDocumentViewer* docViewer;
   nsresult rv = NS_ERROR_FAILURE;
 
-  if (nsnull != mScriptGlobal) {
+  if ((nsnull != mScriptGlobal) &&
+      (loader == mDocLoader)) {
     if (nsnull != mContentViewer && 
         NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
       nsIPresContext *presContext;
