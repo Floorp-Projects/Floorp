@@ -40,7 +40,7 @@ DIRS  = communicator/bookmarks/win \
 
 include $(topsrcdir)/config/rules.mk
 
-chrome::
+install::
 	@$(REGCHROME) skin classic/communicator classic.jar
 	@$(REGCHROME) skin classic/editor classic.jar
 	@$(REGCHROME) skin classic/global classic.jar

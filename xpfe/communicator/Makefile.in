@@ -30,7 +30,7 @@ DIRS		= resources
 
 include $(topsrcdir)/config/rules.mk
 
-chrome::
+install::
 	@$(REGCHROME) content communicator comm.jar
 	@$(REGCHROME) content communicator-region comm.jar
 	@$(REGCHROME) content communicator-platform comm.jar
