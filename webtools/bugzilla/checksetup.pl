@@ -123,8 +123,8 @@ sub trim {
 #
 
 print "\nChecking perl modules ...\n";
-unless (eval "require 5.004") {
-    die "Sorry, you need at least Perl 5.004\n";
+unless (eval "require 5.005") {
+    die "Sorry, you need at least Perl 5.005\n";
 }
 
 # vers_cmp is adapted from Sort::Versions 1.3 1996/07/11 13:37:00 kjahds,
@@ -192,7 +192,8 @@ unless (have_vers("DBI","1.13"))          { push @missing,"DBI" }
 unless (have_vers("Data::Dumper",0))      { push @missing,"Data::Dumper" }
 unless (have_vers("DBD::mysql","1.2209")) { push @missing,"DBD::mysql" }
 unless (have_vers("Date::Parse",0))       { push @missing,"Date::Parse" }
-unless (have_vers("Template","2.01"))       { push @missing,"Template" }
+unless (have_vers("AppConfig","1.52"))    { push @missing,"AppConfig" }
+unless (have_vers("Template","2.01"))     { push @missing,"Template" }
 
 # If CGI::Carp was loaded successfully for version checking, it changes the
 # die and warn handlers, we don't want them changed, so we need to stash the
