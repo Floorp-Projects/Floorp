@@ -27,9 +27,7 @@
 #include "nsNetUtil.h"
 #include "nsIComponentManager.h"
 #include "nsILocalFile.h"
-#ifndef XP_MACOSX
 #include "nsILocalFileMac.h"
-#endif
 #include "nsIURL.h"
 #include "nsVoidArray.h"
 #include "nsIFileURL.h"
@@ -170,7 +168,6 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   // Clean up filter buffers
   delete[] filterBuffer;
 
-#ifndef XP_MACOSX
   if (userClicksOK == returnOK || userClicksOK == returnReplace)
   {
     nsCOMPtr<nsILocalFile>    localFile(do_CreateInstance("@mozilla.org/file/local;1"));
@@ -181,7 +178,6 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
     mFile = do_QueryInterface(macFile);
   }
-#endif
   
   *retval = userClicksOK;
   return NS_OK;
@@ -624,15 +620,23 @@ nsFilePicker::PutLocalFile(const nsString & inTitle, const nsString & inDefaultN
             // reduce the name to a max of 31 characters
             // Conditionalize for non mach-o builds since XP_MACOSX target
             // doesn't currently link against nsLocalFileMac for NS_TruncNodeName
-#ifndef XP_MACOSX
             char  origName[256];
             char  truncBuf[32];
             ::CFStringGetCString(reply.saveFileName, origName, 256, theEncoding);
+#ifndef XP_MACOSX
             const char * truncName = NS_TruncNodeName(origName, truncBuf);
             PRUint32 truncNameLen = strlen(truncName);
             if (truncNameLen)
               BlockMoveData(truncName, &theFSSpec.name[1], truncNameLen);
             theFSSpec.name[0] = truncNameLen;
+#else
+            PRUint32 origNameLen = strlen(origName);
+            // Just lop it off at 63 characters for now
+            if (origNameLen > 63)
+              origNameLen = 63;
+            if (origNameLen)
+              BlockMoveData(origName, &theFSSpec.name[1], origNameLen);
+            theFSSpec.name[0] = origNameLen;
 #endif            
             *outFileSpec = theFSSpec;	// Return the FSSpec
 
