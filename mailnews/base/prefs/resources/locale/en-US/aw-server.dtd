@@ -7,15 +7,13 @@
 <!-- LOCALIZATION NOTE (incomingServerNameDesc.label) : Do not translate "&quot;pop.netscape.net&quot;" in below line -->
 <!ENTITY incomingServerNameDesc.label "Enter the name of your incoming server. (For example, &quot;pop.netscape.net&quot;)">
 <!ENTITY incomingServerLabel.label "Server Name:">
-
+<!-- LOCALIZATION NOTE (newsServerNameDesc.label) : Do not translate "NNTP" or the "&quot;" entities in below line -->
 <!ENTITY newsServerNameDesc.label "Enter the name of your news (NNTP) server. (For example, &quot;news.netscape.net&quot;.)">
-
 <!-- LOCALIZATION NOTE (smtpServerTitle.label) : Do not translate "SMTP" in below line -->
 <!ENTITY smtpServerTitle.label "Outgoing (SMTP) Server">
 <!-- LOCALIZATION NOTE (smtpServerDesc.label) : Do not translate "SMTP" and "&quot;smtp.netscape.net&quot;" in below line -->
 <!ENTITY smtpServerDesc.label "Enter the name of your outgoing (SMTP) server. (For example, &quot;smtp.netscape.net&quot;)">
 <!ENTITY smtpServerLabel.label "Server Name:">
-
 <!-- LOCALIZATION NOTE (imapType.label) : Do not translate "IMAP" in below line -->
 <!ENTITY imapType.label "IMAP Mail Server">
 <!-- LOCALIZATION NOTE (popType.label) : Do not translate "POP" in below line -->
@@ -23,9 +21,14 @@
 <!ENTITY nntpType.label "News Server">
 
 <!-- for when the user has an SMTP server pre-configured -->
+<!-- LOCALIZATION NOTE (currentSmtpBefore.label) : Do not translate "SMTP" and "&quot;" in
+     this variable. Also, translate currentSmtpBefore.label and currentSmtpAfter.label as a single sentence,
+	  inserting text after the "&quot;" entity in currentSmtpAfter.label, if required grammatically
+-->
 <!ENTITY currentSmtpBefore.label "Your outgoing (SMTP) server is currently set to &quot;">
+<!-- LOCALIZATION NOTE (currentSmtpAfter.label) : see note for currentSmtpBefore.label -->
 <!ENTITY currentSmtpAfter.label "&quot;.">
-
+<!-- LOCALIZATION NOTE (haveSmtp1.label) : Do not translate "SMTP" in below line -->
 <!ENTITY haveSmtp1.label "For multiple mail accounts, only one outgoing server needs to be specified. For most Internet Service Providers, you should use the SMTP server associated with the account you use most often to connect to the Internet.">
-
+<!-- LOCALIZATION NOTE (haveSmtp2.label) : Do not translate "SMTP" in below line -->
 <!ENTITY haveSmtp2.label "If you change the account you use to connect to the Internet or if you know that you can use your SMTP server from any Internet connection, you can go to Mail/News Account Settings | Outoing (SMTP) Server to configure another SMTP server.">

@@ -34,7 +34,12 @@
 <!-- LOCALIZATION NOTE (expungeOnExit.label) : do not translate two of "&quot;" in below line -->
 <!ENTITY expungeOnExit.label "Clean up (&quot;Expunge&quot;) Inbox on Exit.">
 <!ENTITY emptyTrashOnExit.label "Empty Trash on Exit.">
+<!-- LOCALIZATION NOTE (maxMessagesStart.label) : translate below 2 lines with grammar dependency 
+    maxMessengerStart.label will be followed by maxMessagesEnd.label with the number
+	 of messages between them
+-->
 <!ENTITY maxMessagesStart.label "Ask me before downloading more than">
+<!-- LOCALIZATION NOTE (maxMessagesEnd.label) : see note for maxMessagesStart.label -->
 <!ENTITY maxMessagesEnd.label "messages.">
 <!ENTITY newsrcFilePath.label "newsrc file:">
 <!ENTITY localPath.label "Local directory:">

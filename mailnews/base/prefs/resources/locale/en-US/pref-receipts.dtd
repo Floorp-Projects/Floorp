@@ -22,6 +22,7 @@ Rights Reserved.
 <!ENTITY pane.title                   "Return Receipts">
 <!ENTITY pane.description             "Settings for requesting or returning receipts">
 <!ENTITY requestReceipt.label         "If I request a receipt when sending a message, I want">
+<!-- LOCALIZATION NOTE dsn.label: don't translate "DSN"  -->
 <!ENTITY dsn.label                    "A delivery receipt from the receiving server (DSN)">
 <!ENTITY dsn.accesskey                "d">
 <!ENTITY mdn.label                    "A read receipt, notifying me when recipients display the message (MDN)">
