@@ -33,7 +33,6 @@
 #include "prtypes.h"
 #include "prio.h"
 
-#include "nsEscape.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 

@@ -56,7 +56,6 @@
 #include "nsMemory.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
-#include "nsEscape.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsLocalFileUnix.h"
