@@ -22,53 +22,140 @@
 
  function fillThreadPaneContextMenu()
 {
-	var tree = GetThreadTree();
-	var selectedItems = tree.selectedItems;
-	var numSelected = selectedItems.length;
+	var selectedMessages = GetSelectedMessages();
+	var numSelected = selectedMessages ? selectedMessages.length : 0;
 
-	ShowMenuItem("threadPaneContext-openNewWindow", (numSelected <= 1));
-	EnableMenuItem("threadPaneContext-openNewWindow", false);
+	var isNewsgroup = false;
+	var selectedMessage = null;
+	if(numSelected == 1)
+	{
+		selectedMessage = selectedMessages[0];
+		isNewsgroup = GetMessageType(selectedMessage) == "news";
+	}
 
-	ShowMenuItem("threadPaneContext-editAsNew", (numSelected <= 1));
-	EnableMenuItem("threadPaneContext-editAsNew", false);
-	
+
+	SetupNewMessageWindowMenuItem("threadPaneContext-openNewWindow", numSelected, false);
+	SetupEditAsNewMenuItem("threadPaneContext-editAsNew", numSelected, false);
+
 	ShowMenuItem("threadPaneContext-sep-open", (numSelected <= 1));
 
-	ShowMenuItem("threadPaneContext-replySender", (numSelected <= 1));
-	EnableMenuItem("threadPaneContext-replySender", (numSelected == 1));
-
-	ShowMenuItem("threadPaneContext-replyAll", (numSelected <= 1));
-	EnableMenuItem("threadPaneContext-replyAll", (numSelected == 1));
-
-	ShowMenuItem("threadPaneContext-forward", true);
-	EnableMenuItem("threadPaneContext-forward", (numSelected > 0));
+	SetupReplyToSenderMenuItem("threadPaneContext-replySender", numSelected, false);
+	SetupReplyToNewsgroupMenuItem("threadPaneContext-replyNewsgroup", numSelected, isNewsgroup, false);
+	SetupReplyAllMenuItem("threadPaneContext-replyAll", numSelected, false);
+	SetupForwardMenuItem("threadPaneContext-forward", numSelected, false);
 
 	ShowMenuItem("threadPaneContext-sep-reply", true);
 
-	ShowMenuItem("threadPaneContext-moveMenu", true);
-	EnableMenuItem("threadPaneContext-moveMenu", (numSelected > 0));
+	SetupMoveMenuItem("threadPaneContext-moveMenu", numSelected, isNewsgroup, false);
+	SetupCopyMenuItem("threadPaneContext-copyMenu", numSelected, false);
+	SetupSaveAsMenuItem("threadPaneContext-saveAs", numSelected, false);
+	SetupPrintMenuItem("threadPaneContext-print", numSelected, false);
+	SetupDeleteMenuItem("threadPaneContext-delete", numSelected, false);
+	SetupAddSenderToABMenuItem("threadPaneContext-addSenderToAddressBook", numSelected, false);
+	SetupAddAllToABMenuItem("threadPaneContext-addAllToAddressBook", numSelected, false);
 
-	ShowMenuItem("threadPaneContext-copyMenu", true);
-	EnableMenuItem("threadPaneContext-copyMenu", (numSelected > 0));
-
-	ShowMenuItem("threadPaneContext-saveAs", (numSelected <= 1));
-	EnableMenuItem("threadPaneContext-saveAs", (numSelected == 1));
-
-	ShowMenuItem("threadPaneContext-print", true);
-	EnableMenuItem("threadPaneContext-print", (numSelected > 0));
-
-	ShowMenuItem("threadPaneContext-delete", true);
-	EnableMenuItem("threadPaneContext-delete", (numSelected > 0));
 
 	ShowMenuItem("threadPaneContext-sep-edit", (numSelected <= 1));
 
-	ShowMenuItem("threadPaneContext-addSenderToAddressBook", (numSelected <= 1));
-	EnableMenuItem("threadPaneContext-addSenderToAddressBook", false);
-
-	ShowMenuItem("threadPaneContext-addAllToAddressBook", (numSelected <= 1));
-	EnableMenuItem("threadPaneContext-addAllToAddressBook", false);
-
 	return(true);
+}
+
+function GetMessageType(message)
+{
+	var compositeDataSource = GetCompositeDataSource("MessageProperty");
+	var messageResource = message.QueryInterface(Components.interfaces.nsIRDFResource);
+	if(messageResource && compositeDataSource)
+	{
+		var property =
+			RDF.GetResource('http://home.netscape.com/NC-rdf#MessageType');
+		if (!property) return null;
+		var result = compositeDataSource.GetTarget(messageResource, property , true);
+		if (!result) return null;
+		result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
+		if (!result) return null;
+		return result.Value;
+	}
+
+	return null;
+
+}
+
+function SetupNewMessageWindowMenuItem(menuID, numSelected, forceHide)
+{
+	ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
+	EnableMenuItem(menuID, true);
+}
+
+function SetupEditAsNewMenuItem(menuID, numSelected, forceHide)
+{
+	ShowMenuItem(menuID, (numSelected <= 1)&& !forceHide);
+	EnableMenuItem(menuID, true);
+}
+
+function SetupReplyToSenderMenuItem(menuID, numSelected, forceHide)
+{
+	ShowMenuItem(menuID, (numSelected <= 1)&& !forceHide);
+	EnableMenuItem(menuID, (numSelected == 1));
+}
+
+function SetupReplyToNewsgroupMenuItem(menuID, numSelected, isNewsgroup, forceHide)
+{
+	ShowMenuItem(menuID, (numSelected <= 1) && isNewsgroup && !forceHide);
+	EnableMenuItem(menuID,  (numSelected == 1));
+}
+
+function SetupReplyAllMenuItem(menuID, numSelected, forceHide)
+{
+	ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
+	EnableMenuItem(menuID, (numSelected == 1));
+}
+
+function SetupForwardMenuItem(menuID, numSelected, forceHide)
+{
+	ShowMenuItem(menuID, !forceHide);
+	EnableMenuItem(menuID, (numSelected > 0));
+}
+
+function SetupMoveMenuItem(menuID, numSelected, isNewsgroup, forceHide)
+{
+	ShowMenuItem(menuID, !isNewsgroup && !forceHide);
+	EnableMenuItem(menuID, (numSelected > 0));
+}
+
+function SetupCopyMenuItem(menuID, numSelected, forceHide)
+{
+	ShowMenuItem(menuID, !forceHide);
+	EnableMenuItem(menuID, (numSelected > 0));
+}
+
+function SetupSaveAsMenuItem(menuID, numSelected, forceHide)
+{
+	ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
+	EnableMenuItem(menuID, (numSelected == 1));
+}
+
+function SetupPrintMenuItem(menuID, numSelected, forceHide)
+{
+	ShowMenuItem(menuID, !forceHide);
+	EnableMenuItem(menuID, (numSelected > 0));
+}
+
+function SetupDeleteMenuItem(menuID, numSelected, forceHide)
+{
+	ShowMenuItem(menuID, !forceHide);
+	EnableMenuItem(menuID, (numSelected > 0));
+}
+
+function SetupAddSenderToABMenuItem(menuID, numSelected, forceHide)
+{
+	ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
+	EnableMenuItem(menuID, false);
+}
+
+function SetupAddAllToABMenuItem(menuID, numSelected, forceHide)
+{
+	ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
+	EnableMenuItem(menuID, false);
 }
 
 function fillFolderPaneContextMenu()
@@ -256,3 +343,114 @@ function SetMenuItemValue(id, value)
 		item.setAttribute('value', value);
 
 }
+
+
+function fillMessagePaneContextMenu(contextMenuNode)
+{
+	contextMenu = new nsContextMenu(contextMenuNode);
+
+	var message = GetLoadedMessage();
+	var numSelected = (message) ? 1 : 0;
+
+	var isNewsgroup = false;
+
+	if(numSelected == 1)
+		isNewsgroup = GetMessageType(message) == "news";
+
+
+	SetupNewMessageWindowMenuItem("messagePaneContext-openNewWindow", numSelected, (numSelected == 0));
+	SetupEditAsNewMenuItem("messagePaneContext-editAsNew", numSelected, (numSelected == 0));
+	SetupReplyToSenderMenuItem("messagePaneContext-replySender", numSelected, (numSelected == 0));
+	SetupReplyToNewsgroupMenuItem("messagePaneContext-replyNewsgroup", numSelected, isNewsgroup, (numSelected == 0));
+	SetupReplyAllMenuItem("messagePaneContext-replyAll" , numSelected, (numSelected == 0));
+	SetupForwardMenuItem("messagePaneContext-forward", numSelected, (numSelected == 0));
+	SetupMoveMenuItem("messagePaneContext-moveMenu", numSelected, isNewsgroup, (numSelected == 0));"context-copy"
+	SetupCopyMenuItem("messagePaneContext-copyMenu", numSelected, (numSelected == 0));
+	SetupSaveAsMenuItem("messagePaneContext-saveAs", numSelected, (numSelected == 0));
+	SetupPrintMenuItem("messagePaneContext-print", numSelected, (numSelected == 0));
+	SetupDeleteMenuItem("messagePaneContext-delete", numSelected, (numSelected == 0));
+	SetupAddSenderToABMenuItem("messagePaneContext-addSenderToAddressBook", numSelected, (numSelected == 0));
+	SetupAddAllToABMenuItem("messagePaneContext-addAllToAddressBook", numSelected, (numSelected == 0));
+
+	//Figure out separators
+	ShowMenuItem("messagePaneContext-sep-open", ShowMessagePaneOpenSeparator());
+	ShowMenuItem("messagePaneContext-sep-reply", ShowMessagePaneReplySeparator());
+	ShowMenuItem("messagePaneContext-sep-edit", ShowMessagePaneEditSeparator());
+	ShowMenuItem("messagePaneContext-sep-addressBook", ShowMessagePaneABSeparator());
+	ShowMenuItem("messagePaneContext-sep-link", ShowMessagePaneLinkSeparator());
+	ShowMenuItem("messagePaneContext-sep-image", ShowMessagePaneImageSeparator());
+	ShowMenuItem("messagePaneContext-sep-copy", ShowMessagePaneCopySeparator());
+}
+
+
+function ShowMessagePaneOpenSeparator()
+{
+	return(IsMenuItemShowing("messagePaneContext-openNewWindow")  ||
+		IsMenuItemShowingWithStyle("context-selectall") ||
+		IsMenuItemShowingWithStyle("context-copy"));
+}
+
+function ShowMessagePaneReplySeparator()
+{
+	return (IsMenuItemShowing("messagePaneContext-replySender") ||
+		IsMenuItemShowing("messagePaneContext-replyNewsgroup") ||
+		IsMenuItemShowing("messagePaneContext-replyAll") ||
+		IsMenuItemShowing("messagePaneContext-forward") ||
+		IsMenuItemShowing("messagePaneContext-editAsNew"));
+}
+
+function ShowMessagePaneEditSeparator()
+{
+	return (IsMenuItemShowing("messagePaneContext-moveMenu") ||
+		IsMenuItemShowing("messagePaneContext-copyMenu") ||
+		IsMenuItemShowing("messagePaneContext-saveAs") ||
+		IsMenuItemShowing("messagePaneContext-print") ||
+		IsMenuItemShowing("messagePaneContext-delete"));
+}
+
+function ShowMessagePaneABSeparator()
+{
+	return (IsMenuItemShowing("messagePaneContext-addSenderToAddressBook") ||
+		IsMenuItemShowing("messagePaneContext-addAllToAddressBook"));
+}
+
+function ShowMessagePaneLinkSeparator()
+{
+	return (IsMenuItemShowingWithStyle("context-openlink") ||
+		IsMenuItemShowingWithStyle("context-editlink"));
+}
+
+function ShowMessagePaneImageSeparator()
+{
+	return (IsMenuItemShowingWithStyle("context-viewimage"));
+}
+
+function ShowMessagePaneCopySeparator()
+{
+	return (IsMenuItemShowingWithStyle("context-copylink") ||
+		IsMenuItemShowingWithStyle("context-copyimage"));
+}
+
+function IsMenuItemShowing(menuID)
+{
+
+	var item = document.getElementById(menuID);
+	if(item)
+	{
+		return(item.getAttribute('hidden') !='true');
+	}
+	return false;
+}
+
+function IsMenuItemShowingWithStyle(menuID)
+{
+	var item = document.getElementById(menuID);
+	if(item)
+	{
+		var style = item.getAttribute( "style" );
+		return ( style.indexOf( "display:none;" ) == -1 )
+	}
+	return false;
+}
+
+

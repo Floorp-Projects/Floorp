@@ -29,8 +29,13 @@ Rights Reserved.
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/messenger.dtd">
-                     
+<!DOCTYPE window [
+<!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >
+%messengerDTD;
+<!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" >
+%navigatorDTD;
+]>   
+                  
 <window id="messengerWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -58,6 +63,8 @@ Rights Reserved.
 <script src="chrome://messenger/content/mailContextMenus.js"/>
 <script src="chrome://messenger/content/messengerdnd.js"/>
 <script src="chrome://messenger/content/accountUtils.js"/>
+<script src="chrome://navigator/content/nsContextMenu.js"/>
+<script src="chrome://navigator/content/navigator.js"/>
 
 <commands id="commands">
 	<commandset id="CommandUpdate_Mail"
@@ -80,10 +87,6 @@ Rights Reserved.
 			  value="&contextOpenNewWindow.label;"
 			  accesskey=""
 			  oncommand="MsgOpenNewWindowForMessage();"/>
-		<menuitem id="threadPaneContext-editAsNew"
-			  value="&contextEditAsNew.label;"
-			  accesskey=""
-			  oncommand="MsgEditMessageAsNew();"/>
 		<menuseparator id="threadPaneContext-sep-open"/>
 		<menuitem id="threadPaneContext-replySender"
 			  value="&contextReplySender.label;"
@@ -93,10 +96,18 @@ Rights Reserved.
 			  value="&contextReplyAll.label;"
 			  accesskey=""
 			  oncommand="MsgReplyToAllMessage(event);"/>
+		<menuitem id="threadPaneContext-replyNewsgroup"
+			  value="&contextReplyNewsgroup.label;"
+			  accesskey=""
+			  oncommand="MsgReplyMessage(event);"/>
 		<menuitem id="threadPaneContext-forward"
 			  value="&contextForward.label;"
 			  accesskey=""
 			  oncommand="MsgForwardMessage(event);"/>
+		<menuitem id="threadPaneContext-editAsNew"
+			  value="&contextEditAsNew.label;"
+			  accesskey=""
+			  oncommand="MsgEditMessageAsNew();"/>
 		<menuseparator id="threadPaneContext-sep-reply"/>
 		<menu id="threadPaneContext-moveMenu"
 			  value="&contextMoveMsgMenu.label;"
@@ -281,7 +292,8 @@ Rights Reserved.
                 oncommand="AddNodeToAddressBook(document.popupNode)"/>
       <menuitem value="&SendMailTo.label;"
                 oncommand="SendMailToNode(document.popupNode)"/>
-  </popup>
+	</popup>
+	<popup id="messagePaneContext"/>
 </popupset>
 
 
@@ -309,7 +321,7 @@ Rights Reserved.
      
 			<tree id="threadTree" flex="2" style="height:0px" context="threadPaneContext"/>
 
-			<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePnae() -->
+			<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
 			<splitter id="gray_horizontal_splitter" collapse="after" persist="state"
 			 onclick="OnClickThreadAndMessagePaneSplitter()"/>
 			
@@ -318,7 +330,7 @@ Rights Reserved.
 				<toolbox id="msgHeaderView"/>
     
 				<!-- message view -->
-				<html:iframe id="messagepane" style="height: 0px" flex="1" name="messagepane" type="content" src="about:blank"/>
+				<iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
 			</box>	
 			<box id="status-bar">
 				<box align="vertical" style="width:100px">

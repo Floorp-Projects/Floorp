@@ -278,6 +278,7 @@ Rights Reserved.
 <!ENTITY contextOpenNewWindow.label "Open in New Window">
 <!ENTITY contextEditAsNew.label "Edit As New...">
 <!ENTITY contextReplySender.label "Reply To Sender">
+<!ENTITY contextReplyNewsgroup.label "Reply To Newsgroup">
 <!ENTITY contextReplyAll.label "Reply To All">
 <!ENTITY contextForward.label "Forward">
 <!ENTITY contextMoveMsgMenu.label "Move To">

@@ -47,17 +47,19 @@ Rights Reserved.
 		windowtype="mail:3pane">
 
 
-<html:script src="chrome://global/content/strres.js"/>
-<html:script src="chrome://messenger/content/widgetglue.js"/>
-<html:script src="chrome://messenger/content/commandglue.js"/>
-<html:script src="chrome://messenger/content/shareglue.js"/>
-<html:script src="chrome://messenger/content/msgViewNavigation.js"/>
-<html:script src="chrome://messenger/content/mailWindow.js"/>
-<html:script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
-<html:script src="chrome://messenger/content/mail3PaneWindowCommands.js"/>
-<html:script src="chrome://messenger/content/mailContextMenus.js"/>
-<html:script src="chrome://messenger/content/messengerdnd.js"/>
-<html:script src="chrome://messenger/content/accountUtils.js"/>
+<script src="chrome://global/content/strres.js"/>
+<script src="chrome://messenger/content/widgetglue.js"/>
+<script src="chrome://messenger/content/commandglue.js"/>
+<script src="chrome://messenger/content/shareglue.js"/>
+<script src="chrome://messenger/content/msgViewNavigation.js"/>
+<script src="chrome://messenger/content/mailWindow.js"/>
+<script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+<script src="chrome://messenger/content/mail3PaneWindowCommands.js"/>
+<script src="chrome://messenger/content/mailContextMenus.js"/>
+<script src="chrome://messenger/content/messengerdnd.js"/>
+<script src="chrome://messenger/content/accountUtils.js"/>
+<script src="chrome://navigator/content/nsContextMenu.js"/>
+<script src="chrome://navigator/content/navigator.js"/>
 
 <commands id="commands">
 	<commandset id="CommandUpdate_Mail"
@@ -283,6 +285,7 @@ Rights Reserved.
       <menuitem value="&SendMailTo.label;"
                 oncommand="SendMailToNode(document.popupNode)"/>
   </popup>
+	<popup id="messagePaneContext"/>
 </popupset>
 
 
@@ -312,7 +315,7 @@ Rights Reserved.
 				<toolbox id="msgHeaderView"/>
     
 				<!-- message view -->
-				<html:iframe id="messagepane" style="height: 0px" flex="1" name="messagepane" type="content" src="about:blank"/>
+				<iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
 			</box>	
 			<box id="status-bar">
 				<box align="vertical" style="width:100px">
@@ -321,11 +324,11 @@ Rights Reserved.
 					<spring flex="100%"/>
 				</box>
 
-				<titledbutton id="statusText" class="status-bar" align="left" flex="100%" value="&statusText.label;"/>       
-				<titledbutton value="&unreadCountText.label;"/>
-				<titledbutton id="unreadMessageCount" style="min-width: 5px"/>
-				<titledbutton value="&totalCountText.label;"/>
-				<titledbutton id="totalMessageCount" style="min-width: 5px"/>
+				<text id="statusText" class="status-bar" align="left" flex="100%" value="&statusText.label;"/>
+				<text value="&unreadCountText.label;"/>
+				<text id="unreadMessageCount" style="min-width: 5px"/>
+				<text value="&totalCountText.label;"/>
+				<text id="totalMessageCount" style="min-width: 5px"/>
 			</box>
 		</box>
 	</box>

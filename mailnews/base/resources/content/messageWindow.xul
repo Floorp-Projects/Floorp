@@ -44,11 +44,17 @@ Rights Reserved.
 		windowtype="mail:messageWindow">
 
 
-	<html:script src="chrome://global/content/strres.js"/>
-	<html:script src="chrome://messenger/content/commandglue.js"/>
-	<html:script src="chrome://messenger/content/mailWindow.js"/>
-	<html:script src="chrome://messenger/content/messageWindow.js"/>
-	<html:script src="chrome://messenger/content/accountUtils.js"/>
+	<script src="chrome://global/content/strres.js"/>
+	<script src="chrome://messenger/content/commandglue.js"/>
+	<script src="chrome://messenger/content/mailWindow.js"/>
+	<script src="chrome://messenger/content/messageWindow.js"/>
+	<script src="chrome://messenger/content/accountUtils.js"/>
+	<script src="chrome://navigator/content/nsContextMenu.js"/>
+	<script src="chrome://navigator/content/navigator.js"/>
+	<script src="chrome://messenger/content/mailContextMenus.js"/>
+	
+
+	
 
 	<broadcasterset id="broadcasterset"/>
 	<keyset id="keyset"/>
@@ -58,6 +64,7 @@ Rights Reserved.
 			<menuitem value="&AddToAddressBook.label;" oncommand="AddNodeToAddressBook(document.popupNode)"/>
 			<menuitem value="&SendMailTo.label;" oncommand="SendMailToNode(document.popupNode)"/>
 		</popup>
+		<popup id="messagePaneContext"/>
 	</popupset>
     <menubar id="mailMenubar"/>
 
@@ -67,7 +74,7 @@ Rights Reserved.
 		<toolbox id="msgHeaderView"/>
 
 		<!-- message view -->
-		<html:iframe id="messagepane" style="height: 0px" flex="1" name="messagepane" type="content" src="about:blank"/>
+		<iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
 	</box>	
 
 

@@ -820,11 +820,14 @@ function GetLoadedMsgFolder()
 
 function GetLoadedMessage()
 {
-	var messageResource = RDF.GetResource(gCurrentDisplayedMessage);
-	if(messageResource)
+	if(gCurrentDisplayedMessage)
 	{
-		var message = messageResource.QueryInterface(Components.interfaces.nsIMessage);
-		return message;
+		var messageResource = RDF.GetResource(gCurrentDisplayedMessage);
+		if(messageResource)
+		{
+			var message = messageResource.QueryInterface(Components.interfaces.nsIMessage);
+			return message;
+		}
 	}
 	return null;
 
@@ -839,7 +842,8 @@ function GetCompositeDataSource(command)
 		return folderTree.database;
 	}
 	else if(command == "DeleteMessages" || command == "MarkMessageRead" || 
-			command == "MarkMessageFlagged" || command == "MarkThreadAsRead")
+			command == "MarkMessageFlagged" || command == "MarkThreadAsRead" ||
+			command == "MessageProperty")
 	{
 		var threadTree = GetThreadTree();
 		return threadTree.database;
