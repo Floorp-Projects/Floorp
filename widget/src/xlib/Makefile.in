@@ -66,6 +66,7 @@ CPPSRCS=\
 	nsWidget.cpp \
 	nsWidgetFactory.cpp \
 	nsWindow.cpp \
+	nsXUtils.cpp \
 	$(NULL)
 
 TARGETS = $(LIBRARY)
