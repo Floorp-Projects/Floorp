@@ -27,3 +27,4 @@ nsIStyleSheet.h
 nsIStyleSheetLinkingElement.h
 nsITextContent.h
 nsIContentList.h
+mozISanitizingSerializer.h

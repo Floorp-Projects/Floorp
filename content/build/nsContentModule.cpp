@@ -99,6 +99,7 @@
 #include "nsIXBLService.h"
 #include "nsLayoutAtoms.h"
 #include "nsPlainTextSerializer.h"
+#include "mozSanitizingSerializer.h"
 #include "nsRange.h"
 #include "nsXMLContentSerializer.h"
 #include "nsRuleNode.h"
@@ -343,6 +344,7 @@ MAKE_CTOR(CreateHTMLCopyTextEncoder,      nsIDocumentEncoder,          NS_NewHTM
 MAKE_CTOR(CreateXMLContentSerializer,     nsIContentSerializer,        NS_NewXMLContentSerializer)
 MAKE_CTOR(CreateHTMLContentSerializer,    nsIContentSerializer,        NS_NewHTMLContentSerializer)
 MAKE_CTOR(CreatePlainTextSerializer,      nsIContentSerializer,        NS_NewPlainTextSerializer)
+MAKE_CTOR(CreateSanitizingHTMLSerializer, nsIContentSerializer,        NS_NewSanitizingHTMLSerializer)
 MAKE_CTOR(CreateXBLService,               nsIXBLService,               NS_NewXBLService)
 MAKE_CTOR(CreateBindingManager,           nsIBindingManager,           NS_NewBindingManager)
 MAKE_CTOR(CreateContentPolicy,            nsIContentPolicy,            NS_NewContentPolicy)
@@ -719,6 +721,11 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_PLAINTEXTSERIALIZER_CID,
     NS_PLAINTEXTSINK_CONTRACTID,
     CreatePlainTextSerializer },
+
+  { "HTML sanitizing content serializer",
+    MOZ_SANITIZINGHTMLSERIALIZER_CID,
+    MOZ_SANITIZINGHTMLSERIALIZER_CONTRACTID,
+    CreateSanitizingHTMLSerializer },
 
   { "XBL Service",
     NS_XBLSERVICE_CID,

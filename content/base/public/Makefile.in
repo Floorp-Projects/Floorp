@@ -55,6 +55,7 @@ nsITextContent.h \
 nsIPrivateDOMImplementation.h \
 nsIContentSerializer.h \
 nsIHTMLToTextSink.h \
+mozISanitizingSerializer.h \
 nsIContentList.h \
 $(NULL)
 
