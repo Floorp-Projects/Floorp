@@ -67,6 +67,8 @@ classic.jar:
     skin/classic/messenger/icons/message-news-new.png      (icons/message-news-new.png)  
     skin/classic/messenger/icons/readcol.png               (icons/readcol.png)
     skin/classic/messenger/icons/unreadmail.png            (icons/unreadmail.png)
+    skin/classic/messenger/icons/Search-bar.png            (icons/Search-bar.png)
+    skin/classic/messenger/icons/search-arrow.gif          (icons/search-arrow.gif)
     skin/classic/communicator/icons/smileys/smiley-smile.png       (icons/smileys/smiley-smile.png)
     skin/classic/communicator/icons/smileys/smiley-frown.png       (icons/smileys/smiley-frown.png)
     skin/classic/communicator/icons/smileys/smiley-wink.png        (icons/smileys/smiley-wink.png)

@@ -400,7 +400,6 @@ function SwitchView(command)
 function SetSentFolderColumns(isSentFolder)
 {
   var tree = GetThreadTree();
-  var searchCriteria = document.getElementById("searchCriteria");
 
   var lastFolderSent = tree.getAttribute("lastfoldersent") == "true";
   if (isSentFolder != lastFolderSent)
@@ -418,15 +417,9 @@ function SetSentFolderColumns(isSentFolder)
   }
 
   if(isSentFolder)
-  {
     tree.setAttribute("lastfoldersent", "true");
-    searchCriteria.setAttribute("value", gMessengerBundle.getString("recipientSearchCriteria"));
-  }
   else
-  {
     tree.setAttribute("lastfoldersent", "false");
-    searchCriteria.setAttribute("value", gMessengerBundle.getString("senderSearchCriteria"));
-  }
 }
 
 function SetNewsFolderColumns()
@@ -802,8 +795,6 @@ function FolderPaneSelectionChange()
       UpdateMailToolbar("gAccountCentralLoaded");
     else if (gFakeAccountPageLoaded)
       UpdateMailToolbar("gFakeAccountPageLoaded");
-    else
-      document.getElementById('advancedButton').setAttribute("disabled" , !(IsCanSearchMessagesEnabled()));
 
     if (gDisplayStartupPage)
     {

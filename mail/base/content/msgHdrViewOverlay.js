@@ -429,6 +429,7 @@ var messageHeaderSink = {
 
     onEndMsgDownload: function(url)
     {
+      OnMsgParsed(url);
     },
 
     onEndMsgHeaders: function(url)

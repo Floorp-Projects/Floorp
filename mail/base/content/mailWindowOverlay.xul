@@ -1805,13 +1805,29 @@
       <menuitem id="createCustomView" value="7" label="&viewPickerCustomView.label;"/>
     </menupopup>
   </menulist>
-  <label id="searchCriteria" value="&SearchSubjectOrSender.label;" control="searchInput" 
-         accesskey="&SearchSubjectOrSender.accesskey;"/>
-  <textbox id="searchInput" flex="5" onfocus="this.select();" onclick="this.select();" oninput="onSearchInput(false);" onkeypress="onSearchKeyPress(event);"/>
+  
+  <spring flex="4"/>
+
+  <textbox id="searchInput" flex="1" onfocus="onSearchInputFocus(event);" onblur="onSearchInputBlur(event);" onclick="this.select();" oninput="onSearchInput(false);" onkeypress="onSearchKeyPress(event);">
+    <button id="search-button" type="menu">
+      <menupopup id="quick-search-menupopup" value="2" persist="value" popupalign="topleft" popupanchor="bottomleft">
+        <menuitem value="0" label="&searchSubjectMenu.label;" type="radio"  
+                  oncommand="changeQuickSearchMode(this)"/>
+        <menuitem value="1" label="&searchSenderMenu.label;" type="radio" 
+                  oncommand="changeQuickSearchMode(this)" />
+        <menuitem value="2" label="&searchSubjectOrSenderMenu.label;" type="radio" 
+                  checked="true" oncommand="changeQuickSearchMode(this)"/>
+        <menuitem value="3" label="&searchMessageBody.label;" type="radio" 
+                  oncommand="changeQuickSearchMode(this)"/>
+        <menuseparator/>
+        <menuitem value="4" label="&findInMessageMenu.label;" type="radio" 
+                  oncommand="changeQuickSearchMode(this)"/>
+      </menupopup>
+    </button>
+  </textbox>
+
   <button id="clearButton" label="&clearButton.label;" disabled="true" tooltiptext="&clearButton.tooltip;" oncommand="onClearSearch();" 
-          accesskey="&clearButton.accesskey;"/>
-  <button id="advancedButton" label="&advancedButton.label;" tooltiptext="&advancedButton.tooltip;" oncommand="onAdvancedSearch();"
-          accesskey="&advancedButton.accesskey;" hidden="true"/>
+          accesskey="&clearButton.accesskey;" hidden="true"/>
 </hbox>
 
 <hbox id="junkBar" collapsed="true" align="center">

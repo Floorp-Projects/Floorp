@@ -192,7 +192,11 @@ treechildren::-moz-tree-cell-text(folderNameCol, noSelect-true) {
   list-style-image: none;
 }
 
-#folderUnreadCol,#folderTotalCol,#folderSizeCol {  text-align: right;}
+#folderUnreadCol,
+#folderTotalCol,
+#folderSizeCol {
+  text-align: right;
+}
 
 #folderNameCol [sortDirection="ascending"],
 #folderNameCol [sortDirection="descending"] {
@@ -955,46 +959,49 @@ splitter {
   border: 1px solid transparent; 
 }
 
+
+
 #searchBox {
 	padding: 2px 0px;
         margin: 0px;
 }
 
+#searchInput[searchCriteria="true"]  {
+  color: grey;
+}
+
+#search-button {
+  min-width: 22px;
+  margin: 0px 3px 0px 5px; 
+}
+
+.search-button-image {
+  padding: 0px;
+  list-style-image: url("chrome://messenger/skin/icons/Search-bar.png");
+}
+
+.search-button-dropmarker {
+  padding: 6px 0px 5px 17px;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
+}
+
+
 #searchInput {
+  background: url("chrome://messenger/skin/icons/search-bar-background.png") no-repeat;
+  margin: 4px 3px 4px 3px;
 	-moz-appearance: none;
-	background: url("chrome://messenger/skin/icons/SearchBarLeft.png") left center no-repeat;
-	margin: 0px !important;
-        border: 0px;
-	height: 21px !important; 
-	padding-left: 22px;
+  font: icon;
+  height: 22px !important;
+  width: 182px !important;
+  border: none !important;
 }
 
 #searchInput > .textbox-input-box {
-	border: 0px;
-	background: url("chrome://messenger/skin/icons/SearchBarMiddle.png") center repeat-x;
-	height: 21px !important;
-	padding-top: 4px;
-
+	border: none;
+  padding-right: 10px; padding-top: 3px;
+  height: 21px !important;
+  margin: 0px;
 }
-#clearButton {
-	-moz-appearance: none;
-	background: url("chrome://messenger/skin/icons/SearchBarRight.png") right center no-repeat;
-	list-style-image: url("chrome://global/skin/icons/closetab.png");
-	margin: 0px 6px 0px 0px !important;
-	height: 21px !important; 
-	padding: 0px 4px 0px 0px;
-        min-width: 21px;
-}
-
-#clearButton[disabled="true"] {
-	list-style-image: none;
-}
-
-#clearButton > hbox > label {
-	display: none;
-}
-
-
 
 /* ..... message pane adjustments ..... */
 

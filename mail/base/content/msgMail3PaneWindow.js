@@ -695,6 +695,7 @@ function OnLoadMessenger()
   // update the pane config before we exit onload otherwise the user may see a flicker if we poke the document
   // in delayedOnLoadMessenger...
   UpdateMailPaneConfig(false);
+  document.loadBindingDocument('chrome://global/content/bindings/textbox.xml');
 
   // Set a sane starting width/height for all resolutions on new profiles. Do this before the window loads
   if (!document.documentElement.hasAttribute("width")) 

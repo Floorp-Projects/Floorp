@@ -2062,6 +2062,14 @@ function ClearPendingReadTimer()
   }
 }
 
+// this is called when layout is actually finished rendering a 
+// mail message. OnMsgLoaded is called when libmime is done parsing the message
+function OnMsgParsed(aUrl)
+{
+  if ("onQuickSearchNewMsgLoaded" in this)
+    onQuickSearchNewMsgLoaded();
+}
+
 function OnMsgLoaded(aUrl)
 {
     if (!aUrl)

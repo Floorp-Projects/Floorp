@@ -8,7 +8,7 @@ messenger.jar:
 +   content/messenger/mailOverlay.xul               (content/mailOverlay.xul)
 *+  content/messenger/messageWindow.xul             (content/messageWindow.xul)
 *+  content/messenger/messageWindow.js              (content/messageWindow.js)
-*+   content/messenger/mailContextMenus.js          (content/mailContextMenus.js)
+*+  content/messenger/mailContextMenus.js           (content/mailContextMenus.js)
 *+  content/messenger/messenger.xul                 (content/messenger.xul)
 *   content/messenger/hiddenWindow.xul              (content/hiddenWindow.xul)
 *   content/messenger/hiddenWindow.js               (content/hiddenWindow.js)
@@ -29,11 +29,14 @@ messenger.jar:
 *+  content/messenger/junkMail.js                   (content/junkMail.js)
 *+  content/messenger/msgSelectOffline.xul          (content/msgSelectOffline.xul)
 *+  content/messenger/msgPrintEngine.xul            (content/msgPrintEngine.xul)
+*+  content/messenger/searchBar.js                  (content/searchBar.js)
 *+  content/messenger-views/contents.rdf            (content/messenger-views.rdf)
     content/messenger/about-thunderbird.png         (content/about-thunderbird.png)
     content/messenger/about-credits.png             (content/about-credits.png)
     content/messenger/about-footer.png              (content/about-footer.png)
     content/messenger/aboutDialog.css               (content/aboutDialog.css)
++   content/messenger/messenger.css                 (content/messenger.css)
+*   content/messenger/search.xml                    (content/search.xml)
 
 comm.jar:
 *   content/help/contents.rdf                       (content/help.rdf)

@@ -37,6 +37,8 @@ classic.jar:
      skin/classic/messenger/icons/SearchBarLeft.png (icons/SearchBarLeft.png)
      skin/classic/messenger/icons/SearchBarMiddle.png   (icons/SearchBarMiddle.png)
      skin/classic/messenger/icons/SearchBarRight.png    (icons/SearchBarRight.png)
+     skin/classic/messenger/icons/search-bar-background.png (icons/search-bar-background.png)
+     skin/classic/messenger/icons/Search-bar.png (icons/Search-bar.png)
      skin/classic/messenger/icons/attach.png        (icons/attach.png)
      skin/classic/messenger/icons/attachment-col.png           (icons/attachment-col.png)
      skin/classic/messenger/icons/attachment-selected.png       (icons/attachment-selected.png)

@@ -494,14 +494,17 @@
 <!ENTITY viewPickerAll.label "All">
 <!ENTITY viewPickerUnread.label "Unread">
 <!ENTITY viewPickerCustomView.label "Customize...">
-<!ENTITY SearchSubjectOrSender.label "Subject or Sender contains:">
-<!ENTITY SearchSubjectOrSender.accesskey "S">
 <!ENTITY SearchNameOrEmail.label "Name or Email contains:">
 <!ENTITY SearchNameOrEmail.accesskey "N">
-<!ENTITY advancedButton.label "Advanced...">
-<!ENTITY advancedButton.accesskey "A">
 <!ENTITY clearButton.label "Clear">
 <!ENTITY clearButton.accesskey "C">
+
+<!-- Quick Search Menu Bar -->
+<!ENTITY searchSubjectMenu.label "Subject">
+<!ENTITY searchSenderMenu.label "Sender">
+<!ENTITY searchSubjectOrSenderMenu.label "Subject Or Sender">
+<!ENTITY searchMessageBody.label "Message Body">
+<!ENTITY findInMessageMenu.label "Find In Message">
 
 <!-- Thread Pane -->
 <!ENTITY threadColumn.label "Thread">

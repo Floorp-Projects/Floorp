@@ -949,7 +949,7 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 }
 
 #folderPaneHeader {
-  height: 27px;
+  height: 29px;
   border-bottom: none;
   border-top: none;
 }
@@ -973,12 +973,39 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 
 /* ..... tree adjustments ..... */
 
+.textbox-input-box
+{
+  padding-top: 1px;
+}
+
 #accountCentralBox { 
   border: 1px solid ThreeDShadow; 
 }
 
 #searchBox {
   border-top: 1px solid ThreeDHighlight;
+  height: 30px;
+}
+
+#searchInput[searchCriteria="true"]  {
+  color: grey;
+}
+
+#search-button {
+  margin-top: 1px;
+  margin-bottom: 1px;
+  margin-right: 2px;
+}
+
+.search-button-image {
+  margin: 0px;
+  list-style-image: url("chrome://messenger/skin/icons/Search-bar.png");
+}
+
+.search-button-dropmarker {
+  margin-left: 12px;
+  margin-top: 8px;
+  list-style-image: url("chrome://messenger/skin/icons/search-arrow.gif");
 }
 
 /* ..... message pane adjustments ..... */
