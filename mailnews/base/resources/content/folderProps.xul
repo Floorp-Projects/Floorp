@@ -49,6 +49,7 @@
   <tabs>
     <tab id="GeneralTab" label="&generalInfo.label;"/>
     <tab hidefor="pop3,none" hidable="true" id="OfflineTab" label="&folderOfflineTab.label;"/>
+    <tab hidefor="pop3,none,nntp" hidable="true" id="SharingTab" label="&folderSharingTab.label;"/>
   </tabs>
   <tabpanels id="folderPropTabPanel">
     <vbox>
@@ -87,6 +88,20 @@
       <button iscontrolcontainer="true" hidable="true" label="&offlineNewsgroup.button.label;" 
               oncommand="onOfflineFolderDownload();" 
               id="offline.offlineNewsgroupDownloadButton" hidefor="imap" orient="right"/>
+    </vbox>
+    <vbox hidable="true" hidefor="pop3,none,nntp" valign="top" align="start">
+      <hbox>
+      <label value="&folderType.label;"/>
+      <label value="" id="folderType.text"/>
+      </hbox>
+      <label value="" id="folderDescription.text"/>
+      <label value=" " />
+      <label value="&permissionsDesc.label;"/>
+      <label value="" id="folderPermissions.text"/>
+      <spacer flex="100%"/>
+      <button iscontrolcontainer="true" hidable="true" label="&privileges.button.label;" 
+              oncommand="onFolderPrivileges();" 
+              id="imap.FolderPrivileges" hidefor="pop3,none,nntp" orient="right"/>
     </vbox>
   </tabpanels>
 </tabbox>

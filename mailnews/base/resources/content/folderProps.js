@@ -9,6 +9,38 @@ var RDF;
 // corresponds to MSG_FOLDER_FLAG_OFFLINE
 const MSG_FOLDER_FLAG_OFFLINE = 0x8000000
 
+// The folderPropsSink is the class that gets notified of an imap folder's properties
+
+var gFolderPropsSink = {
+    setFolderType: function(folderTypeString)
+    {
+      var typeLabel = document.getElementById("folderType.text");
+      if (typeLabel)
+      {
+        dump("folder type = "+ folderTypeString + "\n");
+        typeLabel.setAttribute("value",folderTypeString);
+      }
+      // get the element for the folder type label and set value on it.
+    },
+
+    setFolderTypeDescription: function(folderDescription)
+    {
+      var folderTypeLabel = document.getElementById("folderDescription.text");
+      if (folderTypeLabel)
+        folderTypeLabel.setAttribute("value", folderDescription);
+      dump("folder desc = "+ folderDescription + "\n");
+    },
+
+    setFolderPermissions: function(folderPermissions)
+    {
+      var permissionsLabel = document.getElementById("folderPermissions.text");
+      if (permissionsLabel)
+        permissionsLabel.setAttribute("value",folderPermissions);
+      dump("folder permissions = "+ folderPermissions + "\n");
+    }
+};
+
+
 function folderPropsOKButtonCallback()
 {
   if (gMsgFolder)
@@ -113,6 +145,14 @@ function folderPropsOnLoad()
     document.getElementById("folderCharsetOverride").checked = gMsgFolder.charsetOverride;
   }
 
+  if (gServerTypeFolder == "imap")
+  {
+    var imapFolder = gMsgFolder.QueryInterface(Components.interfaces.nsIMsgImapMailFolder);
+    if (imapFolder)
+      imapFolder.fillInFolderProps(gFolderPropsSink);
+
+  }
+  
   // select the initial tab
   if (window.arguments[0].tabID) {
     // set index for starting panel on the <tabpanel> element
@@ -161,6 +201,18 @@ function hideShowControls(serverType)
       box.removeAttribute("hidden");
     }
   }
+  // hide the priviliges button if the imap folder doesn't have an admin url
+  // mabye should leave this hidden by default and only show it in this case instead
+  var imapFolder = gMsgFolder.QueryInterface(Components.interfaces.nsIMsgImapMailFolder);
+  if (imapFolder)
+  {
+    var privilegesButton = document.getElementById("imap.FolderPrivileges");
+    if (privilegesButton)
+    {
+      if (!imapFolder.hasAdminUrl)
+        privilegesButton.setAttribute("hidden", "true");
+    }
+  }
 }
 
 function getEnclosingContainer(startNode) 
@@ -186,4 +238,12 @@ function onOfflineFolderDownload()
   // we need to create a progress window and pass that in as the second parameter here.
   gMsgFolder.downloadAllForOffline(null, gParentMsgWindow);
 }
+
+function onFolderPrivileges()
+{
+  var imapFolder = gMsgFolder.QueryInterface(Components.interfaces.nsIMsgImapMailFolder);
+  if (imapFolder)
+    imapFolder.folderPrivileges(gParentMsgWindow);
+}
+
 
