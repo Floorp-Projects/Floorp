@@ -505,7 +505,11 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
                                         PRInt32 aModType, 
                                         PRInt32 aHint)
 {
-  if (nsHTMLAtoms::src == aAttribute) {
+  nsCOMPtr<nsIAtom> type;
+  aChild->GetTag(*getter_AddRefs(type));
+
+  if (((nsHTMLAtoms::src == aAttribute) && (nsHTMLAtoms::object != type)) ||
+     ((nsHTMLAtoms::data == aAttribute) && (nsHTMLAtoms::object == type))) {
     nsHTMLFrameInnerFrame* firstChild = NS_STATIC_CAST(nsHTMLFrameInnerFrame*,
                                         mFrames.FirstChild());
     if (firstChild) {
@@ -616,11 +620,17 @@ nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
 PRBool nsHTMLFrameInnerFrame::GetURL(nsIContent* aContent, nsString& aResult)
 {
   aResult.SetLength(0);    
-  if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, aResult))) {
-    if (aResult.Length() > 0) {
-      return PR_TRUE;
-    }
-  }
+  nsCOMPtr<nsIAtom> type;
+  aContent->GetTag(*getter_AddRefs(type));
+  
+  if (type.get() == nsHTMLAtoms::object) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, aResult)))
+      if (aResult.Length() > 0)
+        return PR_TRUE;
+  }else
+    if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, aResult)))
+      if (aResult.Length() > 0)
+        return PR_TRUE;
 
   return PR_FALSE;
 }
