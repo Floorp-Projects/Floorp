@@ -118,7 +118,8 @@ foreach $f (@files) {
         }
     }
     if (!$ok) {
-        print STDERR "You may not check into partition $fullname{$t}.\n";
+        print STDERR "You may not check into partition $fullname{$t}\n";
+	print STDERR "the file $repository/$f\n";
         print STDERR "If you think you should be allowed to, send mail to\n";
         print STDERR "one of the below people:\n";
         $s = $super{$t};
