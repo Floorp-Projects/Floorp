@@ -27,7 +27,6 @@
 #include "nsComposerCommandsUpdater.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMDocument.h"
-//#include "nsIDocument.h"
 #include "nsISelection.h"
 #include "nsIScriptGlobalObject.h"
 
@@ -73,10 +72,17 @@ nsComposerCommandsUpdater::NotifyDocumentWillBeDestroyed()
 {
   // cancel any outstanding udpate timer
   if (mUpdateTimer)
+  {
     mUpdateTimer->Cancel();
+    mUpdateTimer = nsnull;
+  }
   
+  // We can't call this right now; it is too late in some cases and the window
+  // is already partially destructed (e.g. JS objects may be gone).
+#if 0
   // Trigger an nsIObserve notification that the document will be destroyed
   UpdateOneCommand("obs_documentWillBeDestroyed");
+#endif
   return NS_OK;
 }
 
@@ -267,6 +273,8 @@ void nsComposerCommandsUpdater::TimerCallback()
     mSelectionCollapsed = isCollapsed;
   }
   
+  // isn't this redundant with the UpdateCommandGroup above?
+  // can we just nuke the above call? or create a meta command group?
   UpdateCommandGroup(NS_LITERAL_STRING("style"));
 }
 
@@ -276,6 +284,7 @@ nsComposerCommandsUpdater::UpdateDirtyState(PRBool aNowDirty)
   if (mDirtyState != aNowDirty)
   {
     UpdateCommandGroup(NS_LITERAL_STRING("save"));
+    UpdateCommandGroup(NS_LITERAL_STRING("undo"));
     mDirtyState = aNowDirty;
   }
   
