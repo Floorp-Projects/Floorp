@@ -462,6 +462,9 @@ protected:
     static nsIAtom*  kRuleAtom;
     static nsIAtom*  kTemplateAtom;
 
+    static nsIAtom*  kCoalesceAtom;
+    static nsIAtom*  kAllowNegativesAtom;
+
     static nsIAtom** kIdentityAttrs[];
 
     static nsIRDFService* gRDFService;
