@@ -22,8 +22,9 @@
 
 #include "nsTableOuterFrame.h"
 #include "nsIBox.h"
+#include "nsISelfScrollingFrame.h"
 
-class nsTreeOuterFrame : public nsTableOuterFrame, nsIBox
+class nsTreeOuterFrame : public nsTableOuterFrame, nsIBox, nsISelfScrollingFrame
 {
 public:
   friend nsresult NS_NewTreeOuterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
@@ -50,6 +51,8 @@ public:
 
   NS_IMETHOD FixBadReflowState(const nsHTMLReflowState& aParentReflowState,
                                nsHTMLReflowState& aChildReflowState);
+
+  NS_IMETHOD ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines);
 
 protected:
   nsTreeOuterFrame();
