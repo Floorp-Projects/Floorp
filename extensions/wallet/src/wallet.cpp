@@ -1977,6 +1977,8 @@ WLLT_Capture(nsIDocument* doc, nsString field, nsString value) {
 }
 
 #else
+#include "prtypes.h"
+extern "C" {
 
 PUBLIC void
 WLLT_PreEdit(nsIURL* url) {
@@ -1994,4 +1996,5 @@ PUBLIC void
 WLLT_Capture(nsIDocument* doc, nsString field, nsString value) {
 }
 
+}
 #endif
