@@ -277,7 +277,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent,
                                                         PRUint32    aOffset, 
                                                         nsIEditor::EDirection aAction)
 {
-  nsresult result;
+  nsresult result = NS_OK;
   // see what kind of node we have
   nsCOMPtr<nsIDOMCharacterData> textNode;
   textNode = do_QueryInterface(aParent);
