@@ -224,11 +224,19 @@ public:
 	CPopdownFlexTable(LStream *inStream);
 	~CPopdownFlexTable();
 
+	static HT_Pane HTPaneOriginatingDragAndDrop ( ) { return sPaneOriginatingDragAndDrop; }
+	
 private:
 
-//	void	OpenSelection();
+	void	OpenSelection();
 	void	OpenRow ( TableIndexT inRow ) ;
+	OSErr	DragSelection(const STableCell& inCell, const SMouseDownEvent &inMouseDown);
 
+	// this is a holder for the pane that originates the drag and drop so that when
+	// a drop is done on a different popdown tree, the HT_Resources still have a valid pane.
+	// This will be deleted once the d&d finishes.
+	static HT_Pane sPaneOriginatingDragAndDrop;
+	
 }; // class CPopdownFlexTable
 
 

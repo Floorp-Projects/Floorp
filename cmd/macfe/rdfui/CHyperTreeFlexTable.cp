@@ -1593,6 +1593,9 @@ CHyperTreeSelector :: SyncSelectorWithHT ( )
 
 #pragma mark -
 
+HT_Pane CPopdownFlexTable :: sPaneOriginatingDragAndDrop = NULL;
+
+
 CPopdownFlexTable :: CPopdownFlexTable ( LStream* inStream )
 	: CHyperTreeFlexTable(inStream)
 {
@@ -1618,18 +1621,13 @@ CPopdownFlexTable :: OpenRow ( TableIndexT inRow )
 	
 } // OpenRow
 
-#if 0
+
 //
 // OpenSelection
 //
 // The inherited version of this routine iterates over the selection and opens each row in 
-// turn. The problem, as you may be able to see from OpenRow() above, is that as soon as
-// we open a row, the tree goes away. Guess what then happens when it tries to fetch the
-// next selected row from a tree that has been obliterated....
-//
-// To avoid this nasty happening, only open the first selected item we encounter, even if
-// many things are selected. What would it mean to open all of them in the browser window
-// anyway?
+// turn. Obviously, we only care about the first one in this case because it is meaningless
+// to open multiple urls in one window.
 //
 void 
 CPopdownFlexTable :: OpenSelection()
@@ -1638,7 +1636,34 @@ CPopdownFlexTable :: OpenSelection()
 	if ( GetNextSelectedRow(selectedRow) && !CmdPeriod() )
 		OpenRow(selectedRow);
 }
-#endif
+
+
+//
+// DragSelection
+//
+// Wraps the inherited version to save the HT_Pane from where the drag originated so
+// that when you drag to other popdowns, it doesn't go away.
+//
+OSErr 
+CPopdownFlexTable :: DragSelection(
+	const STableCell& 		inCell, 
+	const SMouseDownEvent&	inMouseDown	)
+{
+	sPaneOriginatingDragAndDrop = HT_GetPane(mHTView);
+	
+	OSErr retVal = CHyperTreeFlexTable::DragSelection ( inCell, inMouseDown );
+	
+	// If this tree is visible, then the drop was constrained to this tree (or the
+	// drop went somewhere other than another popdown). Therefore, don't delete the
+	// pane. If it is invisible, get rid of it so we don't leak the pane.
+	if ( !IsVisible() && sPaneOriginatingDragAndDrop )
+		HT_DeletePane ( sPaneOriginatingDragAndDrop );
+	sPaneOriginatingDragAndDrop = NULL;
+	
+	return retVal;
+	
+} // DragSelection
+
 
 #pragma mark -
 
