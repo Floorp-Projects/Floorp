@@ -58,7 +58,7 @@
       The underlying C++ classes use this factory to create the
       progress window controller.
   
-  3.  The nsDownloader C++ class
+  3.  The CHDownloader C++ class
   
       This base class exists to hide the complextity of the download
       listener classes (which deal with Gecko callbacks) from the
@@ -103,7 +103,7 @@
 
 #include "nsISupports.h"
 
-class nsDownloader;
+class CHDownloader;
 
 // a formal protocol for something that implements progress display
 // Embedders can make a window controller that conforms to this
@@ -115,7 +115,7 @@ class nsDownloader;
 
 - (void)setProgressTo:(long)aCurProgress ofMax:(long)aMaxProgress;
 
-- (void)setDownloadListener:(nsDownloader*)aDownloader;
+- (void)setDownloadListener:(CHDownloader*)aDownloader;
 - (void)setSourceURL:(NSString*)aSourceURL;
 - (void)setDestinationPath:(NSString*)aDestPath;
 
@@ -137,11 +137,11 @@ class nsDownloader;
 // UI code from having to know too much about the nsIDownloadListener.
 // It is responsible for creating the download UI, via the DownloadControllerFactory
 // that it owns.
-class nsDownloader : public nsISupports
+class CHDownloader : public nsISupports
 {
 public:
-                  nsDownloader(DownloadControllerFactory* inControllerFactory);
-    virtual       ~nsDownloader();
+                  CHDownloader(DownloadControllerFactory* inControllerFactory);
+    virtual       ~CHDownloader();
 
     NS_DECL_ISUPPORTS
 

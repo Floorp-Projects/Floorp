@@ -53,7 +53,7 @@
 
 // maybe this should replace nsHeaderSniffer too?
 
-class nsDownloadListener :  public nsDownloader,
+class nsDownloadListener :  public CHDownloader,
                             public nsIDownload,
                             public nsIWebProgressListener
 {

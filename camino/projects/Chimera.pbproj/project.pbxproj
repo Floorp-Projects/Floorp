@@ -5109,6 +5109,10 @@
 				F5A3669A02CCFB7A01DC3354,
 				F50D9DE702ECC36201BB4219,
 				F50D9DE802ECC36201BB4219,
+				F5E37B0C02EE959601A967F3,
+				F5E37B0D02EE95E201A967F3,
+				F5E37B0E02EE95E201A967F3,
+				F5E37B0F02EE95E201A967F3,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -5225,6 +5229,9 @@
 				F5A3669B02CCFB7A01DC3354,
 				F5A3669C02CCFB7A01DC3354,
 				F50D9DE902ECC36201BB4219,
+				F5E37B1002EE95E201A967F3,
+				F5E37B1102EE95E201A967F3,
+				F5E37B1202EE95E201A967F3,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -7204,6 +7211,48 @@
 			isa = PBXGroup;
 			name = "Gray Images";
 			refType = 4;
+		};
+		F5E37B0C02EE959601A967F3 = {
+			fileRef = F55C4DD302D2864D0130B065;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5E37B0D02EE95E201A967F3 = {
+			fileRef = F50D9DF102EE194001BB4219;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5E37B0E02EE95E201A967F3 = {
+			fileRef = F50D9DED02EE0AB101BB4219;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5E37B0F02EE95E201A967F3 = {
+			fileRef = F50D9DF502EE2B9A01BB4219;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5E37B1002EE95E201A967F3 = {
+			fileRef = F50D9DF202EE194001BB4219;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5E37B1102EE95E201A967F3 = {
+			fileRef = F50D9DEE02EE0AB101BB4219;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5E37B1202EE95E201A967F3 = {
+			fileRef = F50D9DF602EE2B9A01BB4219;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 		F5F14E9602A5A43A01A967F3 = {
 			isa = PBXFileReference;

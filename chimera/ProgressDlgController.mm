@@ -492,7 +492,7 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
   } // if neither case was true, it's barber pole city.
 }
 
--(void) setDownloadListener: (nsDownloader*)aDownloader
+-(void) setDownloadListener: (CHDownloader*)aDownloader
 {
   if (mDownloader != aDownloader)
     NS_IF_RELEASE(mDownloader);
