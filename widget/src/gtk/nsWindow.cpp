@@ -240,35 +240,61 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
   mBounds = aRect;
   mAppShell = aAppShell;
 
+#ifdef DEBUG_shaver
+  fprintf(stderr,
+          "StandardWindowCreate: par %p, con %p, app %p, tk %p, init %p,\n"
+          "                      natpar %p\n", aParent, aContext, aAppShell,
+          aToolkit, aInitData, aNativeParent);
+#endif
+
   InitToolkit(aToolkit, aParent);
 
   // save the event callback function
   mEventCallback = aHandleEventFunction;
 
-/*
   if (aParent) {
-     parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
-  } else if (aAppShell) {
-     parentWidget = GTK_WIDGET(aAppShell->GetNativeData(NS_NATIVE_SHELL));
+    parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
+#ifdef DEBUG_shaver
+    fprintf(stderr, "StandardCreateWindow: have aParent %p/%p\n",
+            aParent, parentWidget);
+#endif
+  } else if (aNativeParent) {
+    parentWidget = GTK_WIDGET(aNativeParent);
+#ifdef DEBUG_shaver
+    fprintf(stderr, "StandardCreateWindow: have aNativeParent %p\n",
+            aNativeParent);
+#endif
+  } else if(aAppShell) {
+    nsNativeWidget shellWidget = aAppShell->GetNativeData(NS_NATIVE_SHELL);
+    if (shellWidget)
+      parentWidget = GTK_WIDGET(shellWidget);
+#ifdef DEBUG_shaver
+    fprintf(stderr, "StandardCreateWindow: have aAppShell %p/%p\n",
+            aAppShell, parentWidget);
+#endif
   }
-*/
-   // XXX: This is a kludge, need to be able to create multiple top
-   // level windows instead.
-  if (gFirstTopLevelWindow == 0) {
+
+  if (!parentWidget) {
+#ifdef DEBUG_shaver
+    fprintf(stderr, "StandardCreateWindow: creating toplevel\n");
+#endif
     mainWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gFirstTopLevelWindow = mainWindow;
+    mWidget = gtk_layout_new(FALSE, FALSE);
+    gtk_container_add(GTK_CONTAINER(mainWindow), mWidget);
   } else {
-    mainWindow = gtk_window_new(GTK_WINDOW_POPUP);
+#ifdef DEBUG_shaver
+    fprintf(stderr, "StandardCreateWindow: creating GtkLayout subarea\n");
+#endif
+    mainWindow = mWidget = gtk_layout_new(FALSE, FALSE);
+    gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
   }
 
   gtk_widget_set_usize(mainWindow, aRect.width, aRect.height);
 
-//  mWidget = ::gtk_layout_new(FALSE,FALSE);
-//  mWidget = gtk_label_new("foobar!");
-  mWidget = ::gtk_vbox_new(FALSE, FALSE);
-  gtk_container_add(GTK_CONTAINER(mainWindow), mWidget);
-
   if (aParent) {
+#ifdef DEBUG_shaver
+    fprintf(stderr, "StandardCreateWindow: adding to aParent\n");
+#endif
     aParent->AddChild(this);
   }
 
@@ -495,7 +521,9 @@ void nsWindow::RemoveChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Show(PRBool bState)
 {
+#ifdef DEBUG_pavlov
   g_print("nsWindow::Show called with %d\n", bState);
+#endif
   mShown = bState;
   if (bState) {
     //gtk_widget_show(mWidget);
@@ -505,6 +533,10 @@ NS_METHOD nsWindow::Show(PRBool bState)
       toplevel = gtk_widget_get_toplevel(mWidget);
       if (toplevel)
         gtk_widget_show_all(toplevel);
+    } else {
+#ifdef DEBUG_shaver
+      g_print("showing a NULL-be-widgeted nsWindow: %p\n", this);
+#endif
     }
   } else {
   // hide it
