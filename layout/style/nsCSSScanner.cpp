@@ -399,9 +399,8 @@ PRBool nsCSSScanner::ParseIdent(PRInt32* aErrorCode,
         if (!GatherString(aErrorCode, c, ident)) {
           return PR_FALSE;
         }
-        if (!EatWhiteSpace(aErrorCode)) {
-          return PR_FALSE;
-        }
+        // Whitespace is allowed at the end of the URL before the right paren
+        (void) EatWhiteSpace(aErrorCode);
         if (LookAhead(aErrorCode, ')')) {
           tokenType = eCSSToken_URL;
         }
