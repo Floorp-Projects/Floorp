@@ -46,7 +46,7 @@ DIRS=   libi18n htmldlgs libparse layout libstyle
 DIRS= $(DIRS) libaddr
 !endif
 
-!ifdef MOZ_MAIL_COMPOSE
+!ifdef MOZ_ENDER_MIME
 DIRS= $(DIRS) mailto
 !endif
 

@@ -34,7 +34,7 @@ DIRS= \
 	gopher \
 	http \
 	remote \
-!if defined(SMART_MAIL) || defined(MOZ_MAIL_COMPOSE)
+!if defined(SMART_MAIL) 
 	pop3 \
 !endif
 !ifndef MODULAR_NETLIB
@@ -42,7 +42,7 @@ DIRS= \
 	js \
 	marimba \
 !endif
-!if defined(MOZ_MAIL_COMPOSE) || defined(MOZ_MAIL_NEWS)
+!if defined(MOZ_MAIL_NEWS)
 	smtp \
 !endif
 !ifdef MOZ_MAIL_NEWS 
