@@ -62,6 +62,7 @@ struct FlagBits {
 };
 
 typedef LRESULT (STDAPICALLTYPE *LPFNNOTIFYWINEVENT)(DWORD event,HWND hwnd,LONG idObjectType,LONG idObject);
+typedef LRESULT (STDAPICALLTYPE *LPFNGETGUITHREADINFO)(DWORD idThread, GUITHREADINFO* pgui);
 
 class Accessible : public SimpleDOMNode, 
                    public IAccessible,
@@ -223,13 +224,14 @@ protected:
   static PRBool gIsCacheDisabled;
   static PRBool gIsEnumVariantSupportDisabled;
 
-private:
+protected:
   /// the accessible library and cached methods
   static HINSTANCE gmAccLib;
   static HINSTANCE gmUserLib;
   static LPFNACCESSIBLEOBJECTFROMWINDOW gmAccessibleObjectFromWindow;
   static LPFNLRESULTFROMOBJECT gmLresultFromObject;
   static LPFNNOTIFYWINEVENT gmNotifyWinEvent;
+  static LPFNGETGUITHREADINFO gmGetGUIThreadInfo;
 };
 
 class nsAccessibleEventMap

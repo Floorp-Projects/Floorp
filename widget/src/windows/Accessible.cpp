@@ -172,6 +172,7 @@ HINSTANCE Accessible::gmUserLib = 0;
 LPFNACCESSIBLEOBJECTFROMWINDOW Accessible::gmAccessibleObjectFromWindow = 0;
 LPFNLRESULTFROMOBJECT Accessible::gmLresultFromObject = 0;
 LPFNNOTIFYWINEVENT Accessible::gmNotifyWinEvent = 0;
+LPFNGETGUITHREADINFO Accessible::gmGetGUIThreadInfo = 0;
 
 
 
@@ -205,17 +206,8 @@ STDMETHODIMP Accessible::NotifyWinEvent(DWORD event,
                                         LONG idObjectType,
                                         LONG idObject)
 {
-  // open the dll dynamically
-  if (!gmUserLib) 
-    gmUserLib =::LoadLibrary("USER32.DLL");  
-
-  if (gmUserLib) {
-    if (!gmNotifyWinEvent)
-      gmNotifyWinEvent = (LPFNNOTIFYWINEVENT)GetProcAddress(gmUserLib,"NotifyWinEvent");
-
-    if (gmNotifyWinEvent)
-      return gmNotifyWinEvent(event, hwnd, idObjectType, idObject);
-  }
+  if (gmNotifyWinEvent)
+    return gmNotifyWinEvent(event, hwnd, idObjectType, idObject);
     
   return E_FAIL;
 }
@@ -1124,6 +1116,18 @@ RootAccessible::RootAccessible(nsIAccessible* aAcc, HWND aWnd):DocAccessible(aAc
     }
     prefsInitialized = PR_TRUE;
   }
+
+  if (!gmUserLib) {
+    gmUserLib =::LoadLibrary("USER32.DLL");
+  }
+
+  if (gmUserLib) {
+    if (!gmNotifyWinEvent)
+      gmNotifyWinEvent = (LPFNNOTIFYWINEVENT)GetProcAddress(gmUserLib,"NotifyWinEvent");
+    if (!gmGetGUIThreadInfo)
+      gmGetGUIThreadInfo = (LPFNGETGUITHREADINFO)GetProcAddress(gmUserLib,"GetGUIThreadInfo");
+  }
+
 }
 
 RootAccessible::~RootAccessible()
@@ -1227,11 +1231,12 @@ NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAcces
   }
 
   HWND hWnd = mWnd;
-  if (aEvent == EVENT_FOCUS) {
+  if (aEvent == EVENT_FOCUS && gmGetGUIThreadInfo) {
     GUITHREADINFO guiInfo;
-    if (!::GetGUIThreadInfo(NULL, &guiInfo))
-      return NS_OK;
-    hWnd = guiInfo.hwndFocus;
+    guiInfo.cbSize = sizeof(GUITHREADINFO);
+    if (gmGetGUIThreadInfo(NULL, &guiInfo)) {
+      hWnd = guiInfo.hwndFocus;
+    }
   }
 
   // notify the window system
