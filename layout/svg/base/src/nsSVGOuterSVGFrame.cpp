@@ -205,8 +205,7 @@ public:
                            nsIFrame*       aOldFrame,
                            nsIFrame*       aNewFrame);
 
-  NS_IMETHOD  AttributeChanged(nsPresContext* aPresContext,
-                               nsIContent*     aChild,
+  NS_IMETHOD  AttributeChanged(nsIContent*     aChild,
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
@@ -692,8 +691,7 @@ nsSVGOuterSVGFrame::ReplaceFrame(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::AttributeChanged(nsPresContext* aPresContext,
-                                     nsIContent*     aChild,
+nsSVGOuterSVGFrame::AttributeChanged(nsIContent*     aChild,
                                      PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aModType)

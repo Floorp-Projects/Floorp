@@ -156,20 +156,18 @@ nsAreaFrame::Destroy(nsPresContext* aPresContext)
 } 
 
 NS_IMETHODIMP
-nsAreaFrame::AttributeChanged(nsPresContext* aPresContext,
-                              nsIContent* aChild,
+nsAreaFrame::AttributeChanged(nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aModType)
 {
-  nsresult rv = nsBlockFrame::AttributeChanged(aPresContext, aChild,
-                                               aNameSpaceID, aAttribute,
-                                               aModType);
+  nsresult rv = nsBlockFrame::AttributeChanged(aChild, aNameSpaceID, 
+                                               aAttribute, aModType);
 
   // If the accesskey changed, register for the new value
   // The old value has been unregistered in nsXULElement::SetAttr
   if (aAttribute == nsXULAtoms::accesskey || aAttribute == nsXULAtoms::control)
-    RegUnregAccessKey(aPresContext, PR_TRUE);
+    RegUnregAccessKey(GetPresContext(), PR_TRUE);
 
   return rv;
 }

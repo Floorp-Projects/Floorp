@@ -307,11 +307,10 @@ nsGfxButtonControlFrame::GetDefaultLabel(nsString& aString)
 }
 
 NS_IMETHODIMP
-nsGfxButtonControlFrame::AttributeChanged(nsPresContext* aPresContext,
-                                       nsIContent*     aChild,
-                                       PRInt32         aNameSpaceID,
-                                       nsIAtom*        aAttribute,
-                                       PRInt32         aModType)
+nsGfxButtonControlFrame::AttributeChanged(nsIContent*     aChild,
+                                          PRInt32         aNameSpaceID,
+                                          nsIAtom*        aAttribute,
+                                          PRInt32         aModType)
 {
   nsresult rv = NS_OK;
 
@@ -329,7 +328,7 @@ nsGfxButtonControlFrame::AttributeChanged(nsPresContext* aPresContext,
 
   // defer to HTMLButtonControlFrame
   } else {
-    rv = nsHTMLButtonControlFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType);
+    rv = nsHTMLButtonControlFrame::AttributeChanged(aChild, aNameSpaceID, aAttribute, aModType);
   }
   return rv;
 }

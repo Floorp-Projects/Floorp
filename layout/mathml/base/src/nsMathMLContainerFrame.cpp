@@ -1017,8 +1017,7 @@ nsMathMLContainerFrame::ReplaceFrame(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::AttributeChanged(nsPresContext* aPresContext,
-                                         nsIContent*     aChild,
+nsMathMLContainerFrame::AttributeChanged(nsIContent*     aChild,
                                          PRInt32         aNameSpaceID,
                                          nsIAtom*        aAttribute,
                                          PRInt32         aModType)
@@ -1033,7 +1032,7 @@ nsMathMLContainerFrame::AttributeChanged(nsPresContext* aPresContext,
     MapAttributesIntoCSS(aPresContext, this);
   }
 
-  return ReflowDirtyChild(aPresContext->PresShell(), nsnull);
+  return ReflowDirtyChild(GetPresContext()->PresShell(), nsnull);
 }
 
 // We are an inline frame, so we handle dirty request like nsInlineFrame

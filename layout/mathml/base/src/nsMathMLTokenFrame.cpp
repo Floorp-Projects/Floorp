@@ -269,8 +269,7 @@ nsMathMLTokenFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
 }
 
 NS_IMETHODIMP
-nsMathMLTokenFrame::AttributeChanged(nsPresContext* aPresContext,
-                                     nsIContent*     aContent,
+nsMathMLTokenFrame::AttributeChanged(nsIContent*     aContent,
                                      PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aModType)
@@ -281,7 +280,7 @@ nsMathMLTokenFrame::AttributeChanged(nsPresContext* aPresContext,
   }
 
   return nsMathMLContainerFrame::
-         AttributeChanged(aPresContext, aContent, aNameSpaceID,
+         AttributeChanged(aContent, aNameSpaceID,
                           aAttribute, aModType);
 }
 

@@ -120,8 +120,7 @@ NS_NewTextBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 
 
 NS_IMETHODIMP
-nsTextBoxFrame::AttributeChanged(nsPresContext* aPresContext,
-                                 nsIContent*     aChild,
+nsTextBoxFrame::AttributeChanged(nsIContent*     aChild,
                                  PRInt32         aNameSpaceID,
                                  nsIAtom*        aAttribute,
                                  PRInt32         aModType)
@@ -129,21 +128,22 @@ nsTextBoxFrame::AttributeChanged(nsPresContext* aPresContext,
     mState |= NS_STATE_NEED_LAYOUT;
     PRBool aResize;
     PRBool aRedraw;
+    nsPresContext* presContext = GetPresContext();
 
-    UpdateAttributes(aPresContext, aAttribute, aResize, aRedraw);
+    UpdateAttributes(presContext, aAttribute, aResize, aRedraw);
 
     if (aResize) {
-        nsBoxLayoutState state(aPresContext);
+        nsBoxLayoutState state(presContext);
         MarkDirty(state);
     } else if (aRedraw) {
-        nsBoxLayoutState state(aPresContext);
+        nsBoxLayoutState state(presContext);
         Redraw(state);
     }
 
     // If the accesskey changed, register for the new value
     // The old value has been unregistered in nsXULElement::SetAttr
     if (aAttribute == nsXULAtoms::accesskey || aAttribute == nsXULAtoms::control)
-        RegUnregAccessKey(aPresContext, PR_TRUE);
+        RegUnregAccessKey(presContext, PR_TRUE);
 
     return NS_OK;
 }

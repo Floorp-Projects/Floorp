@@ -130,15 +130,13 @@ nsScrollbarFrame::IsContainingBlock() const
 }
 
 NS_IMETHODIMP
-nsScrollbarFrame::AttributeChanged(nsPresContext* aPresContext,
-                                   nsIContent* aChild,
+nsScrollbarFrame::AttributeChanged(nsIContent* aChild,
                                    PRInt32 aNameSpaceID,
                                    nsIAtom* aAttribute,
                                    PRInt32 aModType)
 {
-  nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
-                                             aNameSpaceID, aAttribute,
-                                             aModType);
+  nsresult rv = nsBoxFrame::AttributeChanged(aChild, aNameSpaceID,
+                                             aAttribute, aModType);
 
   // if the current position changes, notify any nsGfxScrollFrame
   // parent we may have

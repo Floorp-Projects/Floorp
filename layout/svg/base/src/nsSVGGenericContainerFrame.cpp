@@ -180,8 +180,7 @@ nsSVGGenericContainerFrame::ReplaceFrame(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGGenericContainerFrame::AttributeChanged(nsPresContext* aPresContext,
-                                             nsIContent*     aChild,
+nsSVGGenericContainerFrame::AttributeChanged(nsIContent*     aChild,
                                              PRInt32         aNameSpaceID,
                                              nsIAtom*        aAttribute,
                                              PRInt32         aModType)

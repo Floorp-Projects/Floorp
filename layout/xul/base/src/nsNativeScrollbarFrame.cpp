@@ -198,15 +198,13 @@ nsNativeScrollbarFrame::Reflow(nsPresContext*          aPresContext,
 // our native scrollbar with the correct values.
 //
 NS_IMETHODIMP
-nsNativeScrollbarFrame::AttributeChanged(nsPresContext* aPresContext,
-                                         nsIContent* aChild,
+nsNativeScrollbarFrame::AttributeChanged(nsIContent* aChild,
                                          PRInt32 aNameSpaceID,
                                          nsIAtom* aAttribute,
                                          PRInt32 aModType)
 {
-  nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
-                                             aNameSpaceID, aAttribute,
-                                             aModType);
+  nsresult rv = nsBoxFrame::AttributeChanged(aChild, aNameSpaceID,
+                                             aAttribute, aModType);
   
   if (  aAttribute == nsXULAtoms::curpos ||
         aAttribute == nsXULAtoms::maxpos || 

@@ -115,8 +115,7 @@ public:
                         nsEventStatus* aEventStatus);
   NS_IMETHOD GetCursor(const nsPoint& aPoint,
                        nsIFrame::Cursor& aCursor);
-  NS_IMETHOD AttributeChanged(nsPresContext* aPresContext,
-                              nsIContent* aChild,
+  NS_IMETHOD AttributeChanged(nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aModType);

@@ -548,11 +548,10 @@ nsFileControlFrame::SyncAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP
-nsFileControlFrame::AttributeChanged(nsPresContext* aPresContext,
-                                       nsIContent*     aChild,
-                                       PRInt32         aNameSpaceID,
-                                       nsIAtom*        aAttribute,
-                                       PRInt32         aModType)
+nsFileControlFrame::AttributeChanged(nsIContent*     aChild,
+                                     PRInt32         aNameSpaceID,
+                                     nsIAtom*        aAttribute,
+                                     PRInt32         aModType)
 {
   // propagate disabled to text / button inputs
   if (aNameSpaceID == kNameSpaceID_None &&
@@ -564,7 +563,7 @@ nsFileControlFrame::AttributeChanged(nsPresContext* aPresContext,
     SyncAttr(aNameSpaceID, aAttribute, SYNC_TEXT);
   }
 
-  return nsAreaFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType);
+  return nsAreaFrame::AttributeChanged(aChild, aNameSpaceID, aAttribute, aModType);
 }
 
 NS_IMETHODIMP

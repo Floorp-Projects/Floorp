@@ -325,17 +325,16 @@ NS_IMETHODIMP nsIsIndexFrame::Reflow(nsPresContext*          aPresContext,
 }
 
 NS_IMETHODIMP
-nsIsIndexFrame::AttributeChanged(nsPresContext* aPresContext,
-                                       nsIContent*     aChild,
-                                       PRInt32         aNameSpaceID,
-                                       nsIAtom*        aAttribute,
-                                       PRInt32         aModType)
+nsIsIndexFrame::AttributeChanged(nsIContent*     aChild,
+                                 PRInt32         aNameSpaceID,
+                                 nsIAtom*        aAttribute,
+                                 PRInt32         aModType)
 {
   nsresult rv = NS_OK;
   if (nsHTMLAtoms::prompt == aAttribute) {
     rv = UpdatePromptLabel();
   } else {
-    rv = nsAreaFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType);
+    rv = nsAreaFrame::AttributeChanged(aChild, aNameSpaceID, aAttribute, aModType);
   }
   return rv;
 }

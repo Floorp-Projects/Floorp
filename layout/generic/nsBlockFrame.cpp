@@ -2964,22 +2964,22 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
 }
 
 NS_IMETHODIMP 
-nsBlockFrame::AttributeChanged(nsPresContext* aPresContext,
-                               nsIContent*     aChild,
+nsBlockFrame::AttributeChanged(nsIContent*     aChild,
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType)
 {
-  nsresult rv = nsBlockFrameSuper::AttributeChanged(aPresContext, aChild,
-                                                    aNameSpaceID, aAttribute,
-                                                    aModType);
+  nsresult rv = nsBlockFrameSuper::AttributeChanged(aChild, aNameSpaceID,
+                                                    aAttribute, aModType);
 
   if (NS_FAILED(rv)) {
     return rv;
   }
   if (nsHTMLAtoms::start == aAttribute) {
+    nsPresContext* presContext = GetPresContext();
+
     // XXX Not sure if this is necessary anymore
-    RenumberLists(aPresContext);
+    RenumberLists(presContext);
 
     nsHTMLReflowCommand* reflowCmd;
     rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
@@ -2987,7 +2987,7 @@ nsBlockFrame::AttributeChanged(nsPresContext* aPresContext,
                                  nsnull,
                                  aAttribute);
     if (NS_SUCCEEDED(rv))
-      aPresContext->PresShell()->AppendReflowCommand(reflowCmd);
+      presContext->PresShell()->AppendReflowCommand(reflowCmd);
   }
   else if (nsHTMLAtoms::value == aAttribute) {
     const nsStyleDisplay* styleDisplay = GetStyleDisplay();
@@ -3010,8 +3010,9 @@ nsBlockFrame::AttributeChanged(nsPresContext* aPresContext,
       // Tell the enclosing block frame to renumber list items within
       // itself
       if (nsnull != blockParent) {
+        nsPresContext* presContext = GetPresContext();
         // XXX Not sure if this is necessary anymore
-        blockParent->RenumberLists(aPresContext);
+        blockParent->RenumberLists(presContext);
 
         nsHTMLReflowCommand* reflowCmd;
         rv = NS_NewHTMLReflowCommand(&reflowCmd, blockParent,
@@ -3019,7 +3020,7 @@ nsBlockFrame::AttributeChanged(nsPresContext* aPresContext,
                                      nsnull,
                                      aAttribute);
         if (NS_SUCCEEDED(rv))
-          aPresContext->PresShell()->AppendReflowCommand(reflowCmd);
+          presContext->PresShell()->AppendReflowCommand(reflowCmd);
       }
     }
   }

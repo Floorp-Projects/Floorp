@@ -988,8 +988,7 @@ nsMathMLmoFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
 }
 
 NS_IMETHODIMP
-nsMathMLmoFrame::AttributeChanged(nsPresContext* aPresContext,
-                                  nsIContent*     aContent,
+nsMathMLmoFrame::AttributeChanged(nsIContent*     aContent,
                                   PRInt32         aNameSpaceID,
                                   nsIAtom*        aAttribute,
                                   PRInt32         aModType)
@@ -1009,11 +1008,11 @@ nsMathMLmoFrame::AttributeChanged(nsPresContext* aPresContext,
     } while (embellishData.coreFrame == this);
 
     // we have automatic data to update in the children of the target frame
-    return ReLayoutChildren(aPresContext, target);
+    return ReLayoutChildren(GetPresContext(), target);
   }
 
   return nsMathMLTokenFrame::
-         AttributeChanged(aPresContext, aContent, aNameSpaceID,
+         AttributeChanged(aContent, aNameSpaceID,
                           aAttribute, aModType);
 }
 

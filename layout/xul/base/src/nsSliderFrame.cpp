@@ -230,18 +230,16 @@ nsSliderFrame::GetIntegerAttribute(nsIContent* content, nsIAtom* atom, PRInt32 d
 
 
 NS_IMETHODIMP
-nsSliderFrame::AttributeChanged(nsPresContext* aPresContext,
-                               nsIContent* aChild,
-                               PRInt32 aNameSpaceID,
-                               nsIAtom* aAttribute,
-                               PRInt32 aModType)
+nsSliderFrame::AttributeChanged(nsIContent* aChild,
+                                PRInt32 aNameSpaceID,
+                                nsIAtom* aAttribute,
+                                PRInt32 aModType)
 {
-  nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
-                                             aNameSpaceID, aAttribute,
-                                             aModType);
+  nsresult rv = nsBoxFrame::AttributeChanged(aChild, aNameSpaceID,
+                                             aAttribute, aModType);
   // if the current position changes
   if (aAttribute == nsXULAtoms::curpos) {
-     rv = CurrentPositionChanged(aPresContext);
+     rv = CurrentPositionChanged(GetPresContext());
      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to change position");
      if (NS_FAILED(rv))
         return rv;
@@ -280,7 +278,7 @@ nsSliderFrame::AttributeChanged(nsPresContext* aPresContext,
       aAttribute == nsXULAtoms::pageincrement ||
       aAttribute == nsXULAtoms::increment) {
 
-      nsBoxLayoutState state(aPresContext);
+      nsBoxLayoutState state(GetPresContext());
       MarkDirtyChildren(state);
   }
 

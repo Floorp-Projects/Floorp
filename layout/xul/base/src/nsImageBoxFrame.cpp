@@ -245,17 +245,17 @@ NS_NewImageBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 } // NS_NewTitledButtonFrame
 
 NS_IMETHODIMP
-nsImageBoxFrame::AttributeChanged(nsPresContext* aPresContext,
-                               nsIContent* aChild,
-                               PRInt32 aNameSpaceID,
-                               nsIAtom* aAttribute,
-                               PRInt32 aModType)
+nsImageBoxFrame::AttributeChanged(nsIContent* aChild,
+                                  PRInt32 aNameSpaceID,
+                                  nsIAtom* aAttribute,
+                                  PRInt32 aModType)
 {
-  nsresult rv = nsLeafBoxFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType);
+  nsresult rv = nsLeafBoxFrame::AttributeChanged(aChild, aNameSpaceID,
+		                                 aAttribute, aModType);
 
   if (aAttribute == nsHTMLAtoms::src) {
     UpdateImage();
-    nsBoxLayoutState state(aPresContext);
+    nsBoxLayoutState state(GetPresContext());
     MarkDirty(state);
   }
   else if (aAttribute == nsXULAtoms::validate)

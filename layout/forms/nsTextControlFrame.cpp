@@ -2764,11 +2764,10 @@ nsTextControlFrame::GetSelectionContr(nsISelectionController **aSelCon)
 
 ////NSIFRAME
 NS_IMETHODIMP
-nsTextControlFrame::AttributeChanged(nsPresContext* aPresContext,
-                                        nsIContent*     aChild,
-                                        PRInt32         aNameSpaceID,
-                                        nsIAtom*        aAttribute,
-                                        PRInt32         aModType)
+nsTextControlFrame::AttributeChanged(nsIContent*     aChild,
+                                     PRInt32         aNameSpaceID,
+                                     nsIAtom*        aAttribute,
+                                     PRInt32         aModType)
 {
   if (!mEditor || !mSelCon) {return NS_ERROR_NOT_INITIALIZED;}
   nsresult rv = NS_OK;
@@ -2799,14 +2798,14 @@ nsTextControlFrame::AttributeChanged(nsPresContext* aPresContext,
     if (NS_CONTENT_ATTR_NOT_THERE != rv) 
     { // set readonly
       flags |= nsIPlaintextEditor::eEditorReadonlyMask;
-      if (mSelCon && IsFocusedContent(aPresContext, mContent))
+      if (mSelCon && IsFocusedContent(GetPresContext(), mContent))
         mSelCon->SetCaretEnabled(PR_FALSE);
     }
     else 
     { // unset readonly
       flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
       if (mSelCon && !(flags & nsIPlaintextEditor::eEditorDisabledMask) &&
-          IsFocusedContent(aPresContext, mContent))
+          IsFocusedContent(GetPresContext(), mContent))
         mSelCon->SetCaretEnabled(PR_TRUE);
     }    
     mEditor->SetFlags(flags);
@@ -2815,7 +2814,7 @@ nsTextControlFrame::AttributeChanged(nsPresContext* aPresContext,
   {
     // XXXbryner do we need to check for a null presshell here?
     //           we don't do anything with it.
-    nsIPresShell *shell = aPresContext->GetPresShell();
+    nsIPresShell *shell = GetPresContext()->GetPresShell();
     if (!shell)
       return NS_ERROR_FAILURE;
 
@@ -2828,7 +2827,7 @@ nsTextControlFrame::AttributeChanged(nsPresContext* aPresContext,
       if (mSelCon)
       {
         mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
-        if (IsFocusedContent(aPresContext, mContent))
+        if (IsFocusedContent(GetPresContext(), mContent))
           mSelCon->SetCaretEnabled(PR_FALSE);
       }
     }
@@ -2845,7 +2844,7 @@ nsTextControlFrame::AttributeChanged(nsPresContext* aPresContext,
   // Allow the base class to handle common attributes supported
   // by all form elements... 
   else {
-    rv = nsBoxFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType);
+    rv = nsBoxFrame::AttributeChanged(aChild, aNameSpaceID, aAttribute, aModType);
   }
 
   return rv;

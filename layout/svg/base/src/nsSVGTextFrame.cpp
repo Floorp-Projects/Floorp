@@ -115,8 +115,7 @@ public:
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD  AttributeChanged(nsPresContext* aPresContext,
-                               nsIContent*     aChild,
+  NS_IMETHOD  AttributeChanged(nsIContent*     aChild,
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType,
@@ -281,7 +280,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGTextFrameBase)
 //----------------------------------------------------------------------
 // nsIFrame methods
 NS_IMETHODIMP
-nsSVGTextFrame::Init(nsPresContext*  aPresContext,
+nsSVGTextFrame::Init(nsPresContext*   aPresContext,
                      nsIContent*      aContent,
                      nsIFrame*        aParent,
                      nsStyleContext*  aContext,
@@ -297,8 +296,7 @@ nsSVGTextFrame::Init(nsPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGTextFrame::AttributeChanged(nsPresContext* aPresContext,
-                                 nsIContent*     aChild,
+nsSVGTextFrame::AttributeChanged(nsIContent*     aChild,
                                  PRInt32         aNameSpaceID,
                                  nsIAtom*        aAttribute,
                                  PRInt32         aModType,

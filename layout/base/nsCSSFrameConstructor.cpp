@@ -10323,9 +10323,8 @@ nsCSSFrameConstructor::AttributeChanged(nsPresContext* aPresContext,
   
   // let the frame deal with it now, so we don't have to deal later
   if (primaryFrame) {
-    result = primaryFrame->AttributeChanged(aPresContext, aContent,
-                                            aNameSpaceID, aAttribute,
-                                            aModType);
+    result = primaryFrame->AttributeChanged(aContent, aNameSpaceID,
+                                            aAttribute, aModType);
     // XXXwaterson should probably check for special IB siblings
     // here, and propagate the AttributeChanged notification to
     // them, as well. Currently, inline frames don't do anything on
