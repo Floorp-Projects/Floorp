@@ -972,7 +972,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     pn->pn_op = op;
     pn->pn_body = body;
-    pn->pn_flags = funtc.flags & TCF_FUN_FLAGS;
+    pn->pn_flags = funtc.flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS);
     pn->pn_tryCount = funtc.tryCount;
     TREE_CONTEXT_FINISH(&funtc);
     return pn;
@@ -1287,6 +1287,10 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif /* JS_HAS_EXPORT_IMPORT */
 
       case TOK_FUNCTION:
+#if JS_HAS_XML_SUPPORT
+        if (js_PeekToken(cx, ts) == TOK_DBLCOLON)
+            goto expression;
+#endif
         return FunctionStmt(cx, ts, tc);
 
       case TOK_IF:
@@ -2007,6 +2011,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         return NULL;
 
       default:
+#if JS_HAS_XML_SUPPORT
+      expression:
+#endif
         js_UngetToken(ts);
         pn2 = Expr(cx, ts, tc);
         if (!pn2)
@@ -4370,9 +4377,15 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 
     switch (pn->pn_arity) {
       case PN_FUNC:
+      {
+        uint16 oldflags = tc->flags;
+
+        tc->flags = (uint16) pn->pn_flags;
         if (!js_FoldConstants(cx, pn->pn_body, tc))
             return JS_FALSE;
+        tc->flags = oldflags;
         break;
+      }
 
       case PN_LIST:
 #if JS_HAS_XML_SUPPORT

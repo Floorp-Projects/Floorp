@@ -5085,7 +5085,7 @@ xml_mark(JSContext *cx, JSObject *obj, void *arg)
 
     xml = (JSXML *) JS_GetPrivate(cx, obj);
     xml_mark_private(cx, xml, arg);
-    return 0;
+    return js_Mark(cx, obj, arg);
 }
 
 static void
