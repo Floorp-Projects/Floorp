@@ -121,9 +121,7 @@ endif
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
-RESOURCES =					\
-		$(srcdir)/broken-image.gif	\
-		$(srcdir)/loading-image.gif	\
+RESOURCES_HTML =					\
 		$(srcdir)/gopher-audio.gif	\
 		$(srcdir)/gopher-binary.gif	\
 		$(srcdir)/gopher-find.gif	\
@@ -134,6 +132,12 @@ RESOURCES =					\
 		$(srcdir)/gopher-text.gif	\
 		$(srcdir)/gopher-unknown.gif	\
 		$(NULL)
+
+RESOURCES =					\
+		$(srcdir)/broken-image.gif	\
+		$(srcdir)/loading-image.gif \
+		$(NULL)
+
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
@@ -152,5 +156,6 @@ INCLUDES	+= \
 		$(NULL)
 
 install::
-	$(INSTALL) $(RESOURCES) $(DIST)/bin/res/html
+	$(INSTALL) $(RESOURCES_HTML) $(DIST)/bin/res/html
+	$(INSTALL) $(RESOURCES) $(DIST)/bin/res
 

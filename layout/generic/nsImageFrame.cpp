@@ -2036,8 +2036,8 @@ nsImageFrame::CanLoadImage(nsIURI *aURI)
 
 nsresult nsImageFrame::LoadIcons(nsIPresContext *aPresContext)
 {
-  nsAutoString loadingSrc(NS_LITERAL_STRING("resource:/res/html/loading-image.gif")); 
-  nsAutoString brokenSrc(NS_LITERAL_STRING("resource:/res/html/broken-image.gif")); 
+  NS_NAMED_LITERAL_STRING(loadingSrc,"resource:/res/loading-image.gif"); 
+  NS_NAMED_LITERAL_STRING(brokenSrc,"resource:/res/broken-image.gif");
 
   nsresult rv = NS_OK;
   PRBool doLoad = PR_FALSE;  // only load icons once...
