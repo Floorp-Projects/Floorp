@@ -172,14 +172,11 @@ JS_ArenaAllocate(JSArenaPool *pool, size_t nb)
             JS_ACQUIRE_LOCK(arena_freelist_lock);
             while ((b = *bp) != NULL) {
                 /*
-                 * Insist on exact arenasize match if nb is not greater than
-                 * arenasize.  Otherwise take any arena big enough, but not by
-                 * more than gross + arenasize.
+                 * Insist on exact arenasize match to avoid leaving alloc'able
+                 * space after an oversized allocation as it grows.
                  */
                 sz = JS_UPTRDIFF(b->limit, b);
-                if (extra
-                    ? sz >= gross && sz <= gross + pool->arenasize
-                    : sz == gross) {
+                if (sz == gross) {
                     *bp = b->next;
                     JS_RELEASE_LOCK(arena_freelist_lock);
                     b->next = NULL;
