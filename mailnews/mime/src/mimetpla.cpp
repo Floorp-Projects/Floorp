@@ -401,7 +401,8 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
 
 
     // recognize signature
-    if (lineSourceStr.First() == '-'
+    if ((lineSourceStr.Length() >= 4)
+        && lineSourceStr.First() == '-'
         && lineSourceStr.EqualsWithConversion("-- ", PR_FALSE, 3)
         && (lineSourceStr[3] == '\r' || lineSourceStr[3] == '\n') )
     {
