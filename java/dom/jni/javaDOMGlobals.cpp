@@ -228,6 +228,8 @@ void JavaDOMGlobals::Initialize(JNIEnv *env)
 
   runtimeExceptionClass = env->FindClass("java/lang/RuntimeException");
   if (!runtimeExceptionClass) return;
+  runtimeExceptionClass = (jclass) env->NewGlobalRef(runtimeExceptionClass);
+  if (!runtimeExceptionClass) return;
 
   runtimeExceptionInitMID = 
     env->GetMethodID(runtimeExceptionClass, "<init>", "(Ljava/lang/String;)V");
@@ -388,6 +390,15 @@ void JavaDOMGlobals::Destroy(JNIEnv *env)
     return;
   }
   domExceptionClass = NULL;
+
+  env->DeleteGlobalRef(runtimeExceptionClass);
+  if (env->ExceptionOccurred()) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::Destroy: failed to delete DOM Exception global ref %x\n", 
+	    runtimeExceptionClass));
+    return;
+  }
+  runtimeExceptionClass = NULL;
 
   TakeOutGarbage();
   PR_DestroyLock(garbageLock);
@@ -552,7 +563,7 @@ void JavaDOMGlobals::ThrowException(JNIEnv *env,
 
     jstring jmessage = env->NewStringUTF(msg);
 
-    jthrowable newException = 
+    newException = 
       (jthrowable)env->NewObject(runtimeExceptionClass, 
                                  runtimeExceptionInitMID,
                                  jmessage);
