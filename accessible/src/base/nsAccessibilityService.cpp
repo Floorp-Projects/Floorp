@@ -205,65 +205,17 @@ nsAccessibilityService::CreateOuterDocAccessible(nsIDOMNode* aDOMNode,
   
   *aOuterDocAccessible = nsnull;
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aDOMNode));
-  if (!content)
-    return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIWeakReference> outerWeakShell;
   GetShellFromNode(aDOMNode, getter_AddRefs(outerWeakShell));
+  NS_ENSURE_TRUE(outerWeakShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIPresShell> outerPresShell(do_QueryReferent(outerWeakShell));
-  if (!outerPresShell) {
-    NS_WARNING("No outer pres shell in CreateHTMLIFrameAccessible!");
-    return NS_ERROR_FAILURE;
-  }
+  nsOuterDocAccessible *outerDocAccessible =
+    new nsOuterDocAccessible(aDOMNode, outerWeakShell);
+  NS_ENSURE_TRUE(outerDocAccessible, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIPresContext> outerPresContext;
-  outerPresShell->GetPresContext(getter_AddRefs(outerPresContext));
-  if (!outerPresContext) {
-    NS_WARNING("No outer pres context in CreateHTMLIFrameAccessible!");
-    return NS_ERROR_FAILURE;
-  }
+  NS_ADDREF(*aOuterDocAccessible = outerDocAccessible);
 
-  nsCOMPtr<nsIDocument> doc;
-  if (NS_SUCCEEDED(content->GetDocument(*getter_AddRefs(doc))) && doc) {
-    nsCOMPtr<nsIDocument> sub_doc;
-    doc->GetSubDocumentFor(content, getter_AddRefs(sub_doc));
-    nsCOMPtr<nsIDOMNode> innerNode(do_QueryInterface(sub_doc));
-
-    if (sub_doc && innerNode) {
-      nsCOMPtr<nsIPresShell> innerPresShell;
-      sub_doc->GetShellAt(0, getter_AddRefs(innerPresShell));
-
-      if (innerPresShell) {
-        // In these variable names, "outer" relates to the nsOuterDocAccessible
-        // as opposed to the nsDocAccessibleWrap which is "inner".
-        // The outer node is a <browser> or <iframe> tag, whereas the inner node
-        // corresponds to the inner document root.
-
-        // Get innerDocAccessible from cache or create it and store it in cache
-        nsCOMPtr<nsIAccessible> innerDocAccessible;
-        GetAccessibleInShell(innerNode, innerPresShell, 
-                             getter_AddRefs(innerDocAccessible));
-
-        if (innerDocAccessible) {
-          nsOuterDocAccessible *outerDocAccessible =
-            new nsOuterDocAccessible(aDOMNode, innerDocAccessible,
-                                     outerWeakShell);
-
-          if (outerDocAccessible) {
-            // Saving of parent is now done in innerDocAccessible Init()
-            // innerDocAccessible->SetAccParent(outerDocAccessible); // Save parent
-
-            NS_ADDREF(*aOuterDocAccessible = outerDocAccessible);
-            return NS_OK;
-          }
-        }
-      }
-    }
-  }
-
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 

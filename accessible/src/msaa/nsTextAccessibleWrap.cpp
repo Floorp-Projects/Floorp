@@ -89,6 +89,9 @@ STDMETHODIMP nsTextAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP nsTextAccessibleWrap::get_domText( 
     /* [retval][out] */ BSTR __RPC_FAR *aDomText)
 {
+  if (!mDOMNode) {
+    return E_FAIL; // Node already shut down
+  }
   nsAutoString nodeValue;
 
   mDOMNode->GetNodeValue(nodeValue);
@@ -106,7 +109,10 @@ STDMETHODIMP nsTextAccessibleWrap::get_clippedSubstringBounds(
     /* [out] */ int __RPC_FAR *aHeight)
 {
   nscoord x, y, width, height, docX, docY, docWidth, docHeight;
-  get_unclippedSubstringBounds(aStartIndex, aEndIndex, &x, &y, &width, &height);
+  HRESULT rv = get_unclippedSubstringBounds(aStartIndex, aEndIndex, &x, &y, &width, &height);
+  if (FAILED(rv)) {
+    return rv;
+  }
 
   nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
   nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(docAccessible));
@@ -136,6 +142,9 @@ STDMETHODIMP nsTextAccessibleWrap::get_unclippedSubstringBounds(
     /* [out] */ int __RPC_FAR *aWidth,
     /* [out] */ int __RPC_FAR *aHeight)
 {
+  if (!mDOMNode) {
+    return E_FAIL; // Node already shut down
+  }
    if (NS_FAILED(GetCharacterExtents(aStartIndex, aEndIndex, 
                                     aX, aY, aWidth, aHeight))) {
     return NS_ERROR_FAILURE;

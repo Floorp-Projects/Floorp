@@ -50,7 +50,6 @@ class nsOuterDocAccessible : public nsBlockAccessible
 
   public:
     nsOuterDocAccessible(nsIDOMNode* aNode, 
-                         nsIAccessible* aInnerDocAccessible, 
                          nsIWeakReference* aShell);
 
     NS_IMETHOD GetAccName(nsAString& aAccName);
@@ -59,6 +58,8 @@ class nsOuterDocAccessible : public nsBlockAccessible
     NS_IMETHOD GetAccState(PRUint32 *aAccState);
     NS_IMETHOD AccGetBounds(PRInt32 *x, PRInt32 *y, 
                             PRInt32 *width, PRInt32 *height);
+
+    NS_IMETHOD Init();
 };
 
 #endif  
