@@ -315,7 +315,8 @@
 	      <titledbutton src="chrome://editor/skin/images/ED_Target.gif" align="bottom" value="Anchor" onclick="EditorInsertNamedAnchor()"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_HLine.gif" align="bottom" value="H.Line" onclick="EditorInsertHLine()"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Spell.gif" align="bottom" value="Spell" class="popup" onclick="CheckSpelling()"/>
-      </toolbar>
+		  <spring flex="100%"/>
+	  </toolbar>
       <toolbar>
 		    <titledbutton id="ParagraphPopup" value="Paragraph" class="popup" align="left" popup="ParagraphMenu"/>
 		    <titledbutton id="FontFacePopup" value="Font" class="popup" align="left" popup="FontFaceMenu"/>
@@ -333,7 +334,8 @@
 	      <titledbutton src="chrome://editor/skin/images/ED_Outdent.gif" align="bottom" onclick="EditorIndent('outdent')"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Indent.gif" align="bottom" onclick="EditorIndent('indent')"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Align.gif" align="bottom" class="popup" popup="AlignmentMenu"/>
-      </toolbar>
+		  <spring flex="100%"/>
+	  </toolbar>
     </toolbox>
 
     <html:iframe type="content" id="content-frame" src="about:blank" flex="100%"/>
