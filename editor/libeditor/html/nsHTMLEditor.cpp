@@ -3749,7 +3749,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
 
   //new call to use instead to get proper HTML element, bug# 39919
-  CreateHTMLContent(realTagName, getter_AddRefs(newContent));
+  res = CreateHTMLContent(realTagName, getter_AddRefs(newContent));
   newElement = do_QueryInterface(newContent);
   if (NS_FAILED(res) || !newElement)
     return NS_ERROR_FAILURE;

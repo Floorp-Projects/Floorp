@@ -1847,7 +1847,7 @@ nsEditor::ReplaceContainer(nsIDOMNode *inNode,
   nsCOMPtr<nsIContent> newContent;
 
   //new call to use instead to get proper HTML element, bug# 39919
-  CreateHTMLContent(aNodeType, getter_AddRefs(newContent));
+  res = CreateHTMLContent(aNodeType, getter_AddRefs(newContent));
   elem = do_QueryInterface(newContent);
   if (NS_FAILED(res)) return res;
     *outNode = do_QueryInterface(elem);
@@ -1968,7 +1968,7 @@ nsEditor::InsertContainerAbove( nsIDOMNode *inNode,
   nsCOMPtr<nsIContent> newContent;
 
   //new call to use instead to get proper HTML element, bug# 39919
-  CreateHTMLContent(aNodeType, getter_AddRefs(newContent));
+  res = CreateHTMLContent(aNodeType, getter_AddRefs(newContent));
   elem = do_QueryInterface(newContent);
   if (NS_FAILED(res)) return res;
   *outNode = do_QueryInterface(elem);

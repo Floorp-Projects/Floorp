@@ -1226,7 +1226,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
     nsString qualifiedTag;
     qualifiedTag.AssignWithConversion("br");
 
-    mEditor->CreateHTMLContent(qualifiedTag, getter_AddRefs(newContent));
+    res = mEditor->CreateHTMLContent(qualifiedTag, getter_AddRefs(newContent));
     brElement = do_QueryInterface(newContent);
     if (NS_FAILED(res)) return res;
     
