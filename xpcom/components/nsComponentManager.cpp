@@ -2030,7 +2030,7 @@ AutoRegisterComponent_enumerate(nsHashKey *key, void *aData, void *aClosure)
     PRBool didRegister;
     nsIComponentLoader *loader = (nsIComponentLoader *)aData;
     struct AutoReg_closure *closure =
-	(struct AutoReg_closure *)aData;
+	(struct AutoReg_closure *)aClosure;
 
     closure->status = loader->AutoRegisterComponent(closure->when,
 						    closure->spec,
