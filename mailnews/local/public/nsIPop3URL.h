@@ -20,7 +20,6 @@
 #define nsIPop3URL_h___
 
 #include "nscore.h"
-#include "nsIMsgMailNewsUrl.h"
 #include "nsIPop3Sink.h"
 
 #include "nsISupports.h"
@@ -33,13 +32,7 @@
 { 0x73c043d0, 0xb7e2, 0x11d2,                   \
     { 0xab, 0x5c, 0x0, 0x80, 0x5f, 0x8a, 0xc9, 0x68 } }
 
-/* EA1B0A11-E6F4-11d2-8070-006008128C4E */
-
-#define NS_POP3URL_CID                         \
-{ 0xea1b0a11, 0xe6f4, 0x11d2,                   \
-    { 0x80, 0x70, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
-
-class nsIPop3URL : public nsIMsgMailNewsUrl
+class nsIPop3URL : public nsISupports
 {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IPOP3URL_IID; return iid; }
@@ -55,10 +48,6 @@ public:
 
     NS_IMETHOD SetPop3Sink(nsIPop3Sink* aPop3Sink) = 0;
     NS_IMETHOD GetPop3Sink(nsIPop3Sink** aPop3Sink) const = 0;
-
-	NS_IMETHOD SetErrorMessage (char * errorMessage) = 0;
-	// caller must free using PR_FREE
-	NS_IMETHOD GetErrorMessage (char ** errorMessage) const = 0;
 };
 
 #endif /* nsIPop3URL_h___ */
