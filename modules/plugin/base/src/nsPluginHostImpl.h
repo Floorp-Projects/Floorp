@@ -472,6 +472,7 @@ private:
   PRBool      mPluginsLoaded;
   PRBool      mDontShowBadPluginMessage;
   PRBool      mIsDestroyed;
+  PRBool      mOverrideInternalTypes;  // set by pref plugin.override_internal_types
 
   nsActivePluginList mActivePluginList;
   nsUnusedLibrary *mUnusedLibraries;
