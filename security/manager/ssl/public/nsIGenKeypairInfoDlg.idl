@@ -52,5 +52,15 @@ interface nsIGeneratingKeypairInfoDialogs : nsISupports
 };
 
 %{C++
-#define NS_GENERATINGKEYPAIRINFODIALOGS_CONTRACTID "@mozilla.org/nsGeneratingKeypairInfoDialogs;1"
+/**
+ * This component is to be implemented by the embeddor. It is used to show
+ * feedback to the user while a private key is being generated.
+ *
+ * This component is only ever used on the UI thread.
+ *
+ * INTERFACES THAT NEED TO BE IMPLEMENTED:
+ *   nsIGeneratingKeypairInfoDialogs
+ */
+#define NS_GENERATINGKEYPAIRINFODIALOGS_CONTRACTID \
+            "@mozilla.org/nsGeneratingKeypairInfoDialogs;1"
 %}

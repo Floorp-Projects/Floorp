@@ -40,7 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsProxiedService.h"
 #include "nsKeygenThread.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIObserver.h"
 #include "nsNSSShutDown.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsKeygenThread, nsIKeygenThread)
@@ -48,7 +48,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsKeygenThread, nsIKeygenThread)
 
 nsKeygenThread::nsKeygenThread()
 :mutex(nsnull),
- statusDialogPtr(nsnull),
  iAmRunning(PR_FALSE),
  keygenReady(PR_FALSE),
  statusDialogClosed(PR_FALSE),
@@ -70,10 +69,6 @@ nsKeygenThread::~nsKeygenThread()
 {
   if (mutex) {
     PR_DestroyLock(mutex);
-  }
-  
-  if (statusDialogPtr) {
-    NS_RELEASE(statusDialogPtr);
   }
 }
 
@@ -146,24 +141,24 @@ static void PR_CALLBACK nsKeygenThreadRunner(void *arg)
   self->Run();
 }
 
-nsresult nsKeygenThread::StartKeyGeneration(nsIDOMWindowInternal *statusDialog)
+nsresult nsKeygenThread::StartKeyGeneration(nsIObserver* aObserver)
 {
   if (!mutex)
     return NS_OK;
 
-  if (!statusDialog )
+  if (!aObserver)
     return NS_OK;
 
   nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
   if (!proxyman)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMWindowInternal> wi;
+  nsCOMPtr<nsIObserver> obs;
   proxyman->GetProxyForObject( NS_UI_THREAD_EVENTQ,
-                               nsIDOMWindowInternal::GetIID(),
-                               statusDialog,
+                               NS_GET_IID(nsIObserver),
+                               aObserver,
                                PROXY_SYNC | PROXY_ALWAYS,
-                               getter_AddRefs(wi));
+                               getter_AddRefs(obs));
 
   PR_Lock(mutex);
 
@@ -172,9 +167,7 @@ nsresult nsKeygenThread::StartKeyGeneration(nsIDOMWindowInternal *statusDialog)
       return NS_OK;
     }
 
-    statusDialogPtr = wi;
-    NS_ADDREF(statusDialogPtr);
-    wi = 0;
+    observer.swap(obs);
 
     iAmRunning = PR_TRUE;
 
@@ -238,8 +231,7 @@ void nsKeygenThread::Run(void)
   // As long as key generation can't be canceled, we don't need 
   // to care for cleaning this up.
 
-  nsIDOMWindowInternal *windowToClose = 0;
-
+  nsCOMPtr<nsIObserver> obs;
   PR_Lock(mutex);
 
     keygenReady = PR_TRUE;
@@ -255,15 +247,14 @@ void nsKeygenThread::Run(void)
     wincx = 0;
 
     if (!statusDialogClosed)
-      windowToClose = statusDialogPtr;
+      obs = observer;
 
-    statusDialogPtr = 0;
-    statusDialogClosed = PR_TRUE;
+    observer = nsnull;
 
   PR_Unlock(mutex);
 
-  if (windowToClose)
-    windowToClose->Close();
+  if (obs)
+    obs->Observe(nsnull, "keygen-finished", nsnull);
 }
 
 void nsKeygenThread::Join()
