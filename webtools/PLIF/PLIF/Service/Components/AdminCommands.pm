@@ -80,11 +80,17 @@ sub cmdSetup {
     if (not $result) {
         $result = $app->getSelectingServiceList('setup.install')->setupInstall($app);
     }
-    $app->getPipingServiceList('setup.events.end')->setupEnding($app);
     # report on the result
     if ($result) {
+        # if we failed, first report that then signal that
+        # configuration has ended
+        $self->dump(9, "Failed to setup because argument '$result' was missing.");
         $app->output->setupFailed($result);
+        $app->getPipingServiceList('setup.events.end')->setupEnding($app);
     } else {
+        # if it did not fail, then signal that configuration ended and
+        # then use our swanky new setup to tell the user it worked.
+        $app->getPipingServiceList('setup.events.end')->setupEnding($app);
         $app->output->setupSucceeded();
     }
 }
@@ -121,7 +127,7 @@ sub outputSetupProgress {
 sub strings {
     return (
             'setup' => 'The message given at the end of the setup command (only required for stdout, since it is the only way to trigger setup); data.failed is a boolean, data.result is the error message if any',
-            'setup.progress' => 'Progress messages given during setup (only required for stdout); data.component is the item being set up',
+            'setup.progress' => 'Progress messages given during setup (only required for stdout); data.component is a dotted hierarchical string giving progressively more detail about what is being set up. e.g., \'database\', \'database.default.settings\', \'database.default.settings.connection.port\'. If outputters are interpreting data.component then any trailing unknown levels of detail should be ignored.',
             );
 }
 
@@ -131,7 +137,7 @@ sub getDefaultString {
     my($app, $protocol, $string) = @_;
     if ($protocol eq 'stdout') {
         if ($string eq 'setup') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses"><if lvalue="(data.failed)" condition="=" rvalue="1">Failed with:<br/><text variable="(data.result)"/></if><else>Succeeded!</else><br/></text>');
+            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses"><if lvalue="(data.failed)" condition="=" rvalue="1">Failed with:<br/><text value="(data.result)"/></if><else>Succeeded!</else><br/></text>');
         } elsif ($string eq 'setup.progress') {
             return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">Setup: configuring <text value="(data.component)"/>...<br/></text>');
         }
