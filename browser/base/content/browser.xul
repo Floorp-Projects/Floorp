@@ -1073,7 +1073,7 @@
                   onnewtab="BrowserOpenTab();"
                   autocompletepopup="PopupAutoComplete"
                   ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
-                  onclick="return contentAreaClick(event);"/>
+                  onclick="return contentAreaClick(event, false);"/>
     </vbox>
   </hbox>
   <statusbar class="chromeclass-status" id="status-bar"
