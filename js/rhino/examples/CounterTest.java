@@ -18,7 +18,7 @@
  * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
@@ -49,27 +49,31 @@ import org.mozilla.javascript.*;
  */
 public class CounterTest {
 
-  public static void main(String[] args) throws Exception
-  {
-    Context cx = Context.enter();
-    Scriptable scope = cx.initStandardObjects(null);
-    ScriptableObject.defineClass(scope, Counter.class);
+    public static void main(String[] args) throws Exception
+    {
+        Context cx = Context.enter();
+        try {
+            Scriptable scope = cx.initStandardObjects(null);
+            ScriptableObject.defineClass(scope, Counter.class);
 
-    Scriptable testCounter = cx.newObject(scope, "Counter");
-    
-    Object count = ScriptableObject.getProperty(testCounter, "count");
-    System.out.println("count = " + count);
+            Scriptable testCounter = cx.newObject(scope, "Counter");
 
-    count = ScriptableObject.getProperty(testCounter, "count");
-    System.out.println("count = " + count);
+            Object count = ScriptableObject.getProperty(testCounter, "count");
+            System.out.println("count = " + count);
 
-    ScriptableObject.callMethod(testCounter, "resetCount", new Object[0]);
-    System.out.println("resetCount");
+            count = ScriptableObject.getProperty(testCounter, "count");
+            System.out.println("count = " + count);
 
-    count = ScriptableObject.getProperty(testCounter, "count");
-    System.out.println("count = " + count);
+            ScriptableObject.callMethod(testCounter,
+                                        "resetCount",
+                                        new Object[0]);
+            System.out.println("resetCount");
 
-    Context.exit();
-  } 
+            count = ScriptableObject.getProperty(testCounter, "count");
+            System.out.println("count = " + count);
+        } finally {
+            Context.exit();
+        }
+    }
 
 }

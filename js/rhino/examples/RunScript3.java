@@ -18,7 +18,7 @@
  * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -36,45 +36,51 @@ import org.mozilla.javascript.*;
 
 /**
  * RunScript3: Example of using JavaScript objects
- * 
- * Collects its arguments from the command line, executes the 
+ *
+ * Collects its arguments from the command line, executes the
  * script, and then ...
- * 
+ *
  * @author Norris Boyd
  */
 public class RunScript3 {
-    public static void main(String args[]) 
-        throws JavaScriptException 
+    public static void main(String args[])
+        throws JavaScriptException
     {
         Context cx = Context.enter();
-        Scriptable scope = cx.initStandardObjects(null);
-        
-        // Collect the arguments into a single string.
-        String s = "";
-        for (int i=0; i < args.length; i++)
-            s += args[i];
-        
-        // Now evaluate the string we've colected. We'll ignore the result.
-        cx.evaluateString(scope, s, "<cmd>", 1, null);
+        try {
+            Scriptable scope = cx.initStandardObjects(null);
 
-        // Print the value of variable "x"
-        Object x = scope.get("x", scope);
-        if (x == Scriptable.NOT_FOUND)
-            System.out.println("x is not defined.");
-        else
-            System.out.println("x = " + Context.toString(x));
+            // Collect the arguments into a single string.
+            String s = "";
+            for (int i=0; i < args.length; i++) {
+                s += args[i];
+            }
 
-        // Call function "f('my arg')" and print its result.
-        Object f = scope.get("f", scope);
-        if (!(f instanceof Function))
-            System.out.println("f is undefined or not a function.");
-        else {
-            Object functionArgs[] = { "my arg" };
-            Object result = ((Function) f).call(cx, scope, scope, functionArgs);
-            System.out.println("f('my args') = " + Context.toString(result));
+            // Now evaluate the string we've colected. We'll ignore the result.
+            cx.evaluateString(scope, s, "<cmd>", 1, null);
+
+            // Print the value of variable "x"
+            Object x = scope.get("x", scope);
+            if (x == Scriptable.NOT_FOUND) {
+                System.out.println("x is not defined.");
+            } else {
+                System.out.println("x = " + Context.toString(x));
+            }
+
+            // Call function "f('my arg')" and print its result.
+            Object fObj = scope.get("f", scope);
+            if (!(fObj instanceof Function)) {
+                System.out.println("f is undefined or not a function.");
+            } else {
+                Object functionArgs[] = { "my arg" };
+                Function f = (Function)fObj;
+                Object result = f.call(cx, scope, scope, functionArgs);
+                String report = "f('my args') = " + Context.toString(result);
+                System.out.println(report);
+            }
+        } finally {
+            Context.exit();
         }
-        
-        Context.exit();
     }
 }
 

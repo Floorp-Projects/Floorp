@@ -18,7 +18,7 @@
  * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -37,34 +37,38 @@ import org.mozilla.javascript.*;
 /**
  * RunScript4: Execute scripts in an environment that includes the
  *             example Counter class.
- * 
+ *
  * @author Norris Boyd
  */
 public class RunScript4 {
-    public static void main(String args[]) 
-        throws Exception 
+    public static void main(String args[])
+        throws Exception
     {
         Context cx = Context.enter();
-        Scriptable scope = cx.initStandardObjects(null);
+        try {
+            Scriptable scope = cx.initStandardObjects(null);
 
-        // Use the Counter class to define a Counter constructor
-        // and prototype in JavaScript.
-        ScriptableObject.defineClass(scope, Counter.class);
+            // Use the Counter class to define a Counter constructor
+            // and prototype in JavaScript.
+            ScriptableObject.defineClass(scope, Counter.class);
 
-        // Create an instance of Counter and assign it to
-        // the top-level variable "myCounter". This is
-        // equivalent to the JavaScript code 
-        //    myCounter = new Counter(7);
-        Object[] arg = { new Integer(7) };
-        Scriptable myCounter = cx.newObject(scope, "Counter", arg);
-        scope.put("myCounter", scope, myCounter);
-        
-        String s = "";
-        for (int i=0; i < args.length; i++)
-            s += args[i];
-        Object result = cx.evaluateString(scope, s, "<cmd>", 1, null);
-        System.err.println(cx.toString(result));
-        Context.exit();
+            // Create an instance of Counter and assign it to
+            // the top-level variable "myCounter". This is
+            // equivalent to the JavaScript code
+            //    myCounter = new Counter(7);
+            Object[] arg = { new Integer(7) };
+            Scriptable myCounter = cx.newObject(scope, "Counter", arg);
+            scope.put("myCounter", scope, myCounter);
+
+            String s = "";
+            for (int i=0; i < args.length; i++) {
+                s += args[i];
+            }
+            Object result = cx.evaluateString(scope, s, "<cmd>", 1, null);
+            System.err.println(cx.toString(result));
+        } finally {
+            Context.exit();
+        }
     }
 
 }

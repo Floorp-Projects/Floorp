@@ -18,7 +18,7 @@
  * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -36,27 +36,31 @@ import org.mozilla.javascript.*;
 
 /**
  * RunScript2: Like RunScript, but reflects the System.out into JavaScript.
- * 
+ *
  * @author Norris Boyd
  */
 public class RunScript2 {
-    public static void main(String args[]) 
-        throws JavaScriptException 
+    public static void main(String args[])
+        throws JavaScriptException
     {
         Context cx = Context.enter();
-        Scriptable scope = cx.initStandardObjects(null);
+        try {
+            Scriptable scope = cx.initStandardObjects(null);
 
-        // Add a global variable "out" that is a JavaScript reflection
-        // of System.out
-        Scriptable jsArgs = Context.toObject(System.out, scope);
-        scope.put("out", scope, jsArgs);
-        
-        String s = "";
-        for (int i=0; i < args.length; i++)
-            s += args[i];
-        Object result = cx.evaluateString(scope, s, "<cmd>", 1, null);
-        System.err.println(cx.toString(result));
-        Context.exit();
+            // Add a global variable "out" that is a JavaScript reflection
+            // of System.out
+            Scriptable jsArgs = Context.toObject(System.out, scope);
+            scope.put("out", scope, jsArgs);
+
+            String s = "";
+            for (int i=0; i < args.length; i++) {
+                s += args[i];
+            }
+            Object result = cx.evaluateString(scope, s, "<cmd>", 1, null);
+            System.err.println(cx.toString(result));
+        } finally {
+            Context.exit();
+        }
     }
 
 }

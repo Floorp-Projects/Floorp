@@ -139,10 +139,14 @@ that we use in later calls.
 <p><a NAME="Collecting"></a><font size=+2>Collecting the arguments</font>
 <p>This code is standard Java and not specific to Rhino. It just collects
 all the arguments and concatenates them together.
-<blockquote><tt><font color="#006600">String s = "";</font></tt>
-<br><tt><font color="#006600">for (int i=0; i &lt; args.length; i++)</font></tt>
-<br><tt><font color="#006600">&nbsp;&nbsp;&nbsp; s += args[i];</font></tt></blockquote>
-
+<blockquote>
+<pre style="color: #006600">
+String s = "";
+for (int i=0; i &lt; args.length; i++) {
+    s += args[i];
+}
+</pre>  
+</blockquote>
 <p><br><a NAME="Evaluating"></a><font size=+2>Evaluating a script</font>
 <p>The code
 <blockquote>
@@ -166,11 +170,15 @@ method converts any JavaScript value to a string.
 <p><a NAME="Exit"></a><font size=+2>Exit the Context</font>
 <p>The code
 <blockquote>
-<pre><font color="#006600">Context.exit();</font></pre>
+<pre style="color: #006600">
+} finally {
+    Context.exit();
+}
+</pre>
 </blockquote>
 exits the Context. This removes the association between the Context and
 the current thread and is an essential cleanup action. There should be
-a call to <tt>exit</tt> for every call to <tt>enter</tt>.
+a call to <tt>exit</tt> for every call to <tt>enter</tt>. To make sure that it is called even if an exception is thrown, it is put into the finally block corresponding to the try block starting after <tt>Context.enter()</tt>.
 <br>&nbsp;
 <dir>&nbsp;</dir>
 <a NAME="Expose"></a><font size=+3>Expose Java APIs</font>
@@ -219,40 +227,45 @@ is illustrated in the <a href="http://lxr.mozilla.org/mozilla/source/js/rhino/ex
 example. This example adds the ability to print the value of variable <tt>x</tt>
 and the result of calling function <tt>f</tt>. Both <tt>x</tt> and <tt>f</tt>
 are expected to be defined by the evaluated script. For example,
-<blockquote><tt><font color="#663366">$ java RunScript3 'x = 7'</font></tt>
-<br><tt><font color="#663366">x = 7</font></tt>
-<br><tt><font color="#663366">f is undefined or not a function.</font></tt>
-<br><tt><font color="#663366">$ java RunScript3 'function f(a) { return
-a; }'</font></tt>
-<br><tt><font color="#663366">x is not defined.</font></tt>
-<br><tt><font color="#663366">f('my args') = my arg</font></tt>
-<br><tt><font color="#663366"></font></tt>&nbsp;</blockquote>
+<blockquote>
+<pre style="color: #663366">
+$ java RunScript3 'x = 7'
+x = 7
+f is undefined or not a function.
+$ java RunScript3 'function f(a) { return a; }'
+x is not defined.
+f('my args') = my arg
+</pre>
+</blockquote>
 <a NAME="UsingJSvars"></a><font size=+2>Using JavaScript variables</font>
 <p>To print out the value of <tt>x</tt>, we add the following code.
-<dir><tt><font color="#006600">Object x = scope.get("x", scope);</font></tt>
-<br><tt><font color="#006600">if (x == Scriptable.NOT_FOUND)</font></tt>
-<br><tt><font color="#006600">&nbsp;&nbsp;&nbsp; System.out.println("x
-is not defined.");</font></tt>
-<br><tt><font color="#006600">else</font></tt>
-<br><tt><font color="#006600">&nbsp;&nbsp;&nbsp; System.out.println("x
-= " + Context.toString(x));</font></tt>
-<br><tt><font color="#006600"></font></tt>&nbsp;</dir>
+<blockquote>
+<pre style="color: #006600">
+Object x = scope.get("x", scope);
+if (x == Scriptable.NOT_FOUND) {
+    System.out.println("x is not defined.");
+} else {
+    System.out.println("x = " + Context.toString(x));
+}
+</pre>
+</blockquote>
 <a NAME="CallingJSfuns"></a><font size=+2>Calling JavaScript functions</font>
 <p>To get the function <tt>f</tt>, call it, and print the result, we add
 this code:
-<dir><tt><font color="#006600">Object f = scope.get("f", scope);</font></tt>
-<br><tt><font color="#006600">if (!(f instanceof Function))</font></tt>
-<br><tt><font color="#006600">&nbsp;&nbsp;&nbsp; System.out.println("f
-is undefined or not a function.");</font></tt>
-<br><tt><font color="#006600">else {</font></tt>
-<br><tt><font color="#006600">&nbsp;&nbsp;&nbsp; Object functionArgs[]
-= { "my arg" };</font></tt>
-<br><tt><font color="#006600">&nbsp;&nbsp;&nbsp; Object result = ((Function)
-f).call(cx, scope, scope, functionArgs);</font></tt>
-<br><tt><font color="#006600">&nbsp;&nbsp;&nbsp; System.out.println("f('my
-args') = " + Context.toString(result));</font></tt>
-<br><tt><font color="#006600">}</font></tt></dir>
-
+<blockquote>
+<pre style="color: #006600">
+Object fObj = scope.get("f", scope);
+if (!(fObj instanceof Function)) {
+    System.out.println("f is undefined or not a function.");
+} else {
+    Object functionArgs[] = { "my arg" };
+    Function f = (Function)fObj;
+    Object result = f.call(cx, scope, scope, functionArgs);
+    String report = "f('my args') = " + Context.toString(result);
+    System.out.println(report);
+}
+</pre>
+</blockquote>
 <p><br><a NAME="JavaScriptHostObjects"></a><font size=+3>JavaScript host
 objects</font>
 <p><a NAME="DefiningHostObjects"></a><font size=+2>Defining Host Objects</font>
@@ -267,7 +280,8 @@ built-in <tt>defineClass</tt> function. We'll see how to add it to RunScript
 later. (Note that because the <tt>java -jar</tt> option preempts the rest
 of the classpath, we can't use that and access the <tt>Counter</tt> class.)
 <blockquote>
-<pre><font color="#663366">$ java -cp 'js.jar;examples' org.mozilla.javascript.tools.shell.Main
+<pre style="color: #663366">
+$ java -cp 'js.jar;examples' org.mozilla.javascript.tools.shell.Main
 js> defineClass("Counter")
 js> c = new Counter(7)
 [object Counter]
@@ -279,7 +293,8 @@ js> c.count
 9
 js> c.resetCount()
 js> c.count
-0</font></pre>
+0
+</pre>
 </blockquote>
 <a NAME="CounterCtors"></a><font size=+2>Counter's constructors</font>
 <p>The zero-argument constructor is used by Rhino runtime to create instances.
@@ -323,14 +338,20 @@ c.count;'</font></tt>
 It also creates a new instance of the <tt>Counter</tt> object from within
 our Java code, constructing it with the value 7, and assigning it to the
 top-level variable <tt>myCounter</tt>:
-<dir><tt><font color="#006600">Object[] arg = { new Integer(7) };</font></tt>
-<br><tt><font color="#006600">Scriptable myCounter = cx.newObject(scope,
-"Counter", arg);</font></tt>
-<br><tt><font color="#006600">scope.put("myCounter", scope, myCounter);</font></tt></dir>
+<blockquote>
+<pre style="color: #006600">
+Object[] arg = { new Integer(7) };
+Scriptable myCounter = cx.newObject(scope, "Counter", arg);
+scope.put("myCounter", scope, myCounter);
+</pre>
+</blockquote>
 Now we can reference the <tt>myCounter</tt> object from our script:
-<dir><tt><font color="#663366">$ java RunScript3 'RunScript4 'myCounter.count;
-myCounter.count'</font></tt>
-<br><tt><font color="#663366">8</font></tt></dir>
+<blockquote>
+<pre style="color: #663366">
+$ java RunScript3 'RunScript4 'myCounter.count; myCounter.count'
+8
+</pre>
+</blockquote>
 
 </body>
 </html>
