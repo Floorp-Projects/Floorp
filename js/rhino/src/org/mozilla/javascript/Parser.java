@@ -1308,12 +1308,7 @@ public class Parser
                 mustMatchToken(Token.NAME, "msg.no.name.after.dot");
                 String s = ts.getString();
                 decompiler.addName(s);
-                pn = nf.createBinary(Token.DOT, pn,
-                                     nf.createName(ts.getString()));
-                /* pn = nf.createBinary(Token.DOT, pn, memberExpr())
-                 * is the version in Brendan's IR C version.  Not in ECMA...
-                 * does it reflect the 'new' operator syntax he mentioned?
-                 */
+                pn = nf.createBinary(Token.DOT, pn, nf.createName(s));
             } else if (tt == Token.LB) {
                 decompiler.addToken(Token.LB);
                 pn = nf.createBinary(Token.LB, pn, expr(false));
