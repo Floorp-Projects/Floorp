@@ -3,6 +3,7 @@ target: clean
 PROJ_PATH         = ${PWD}
 ROOT_PATH         = $(PROJ_PATH)
 XML_PATH          = $(ROOT_PATH)/xml
+XMLUTIL_PATH      = $(XML_PATH)/util
 XSL_PATH          = $(ROOT_PATH)/xsl
 BASE_PATH         = $(ROOT_PATH)/base
 DOM_PATH          = $(XML_PATH)/dom
@@ -19,6 +20,7 @@ clean:
 	cd $(BASE_PATH);         $(CMDS) \
 	cd $(NET_PATH);          $(CMDS) \
 	cd $(XML_PATH);          $(CMDS) \
+    cd $(XMLUTIL_PATH);      $(CMDS) \
 	cd $(DOM_PATH);          $(CMDS) \
 	cd $(XMLPARSER_PATH);    $(CMDS) \
 	cd $(EXPAT_PARSER_PATH); $(CMDS) \

@@ -23,7 +23,7 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
- * $Id: PathExpr.cpp,v 1.4 2000/02/17 03:30:32 kvisco%ziplink.net Exp $
+ * $Id: PathExpr.cpp,v 1.5 2000/02/22 11:16:42 kvisco%ziplink.net Exp $
  */
 
 #include "Expr.h"
@@ -230,7 +230,7 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs) {
                 case ANCESTOR_OP:
                 {
                     Node* parent = tnode;
-                    while (parent = cs->findParent(parent))  {
+                    while (parent = cs->getParentNode(parent))  {
                         if (pxi->pExpr->matches(tnode, parent, cs))
                             tmpNodes.add(parent);
                     }
@@ -238,7 +238,7 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs) {
                 }
                 case PARENT_OP:
                 {
-                    Node* parent = cs->findParent(tnode);
+                    Node* parent = cs->getParentNode(tnode);
                     if (parent) {
                         if (pxi->pExpr->matches(tnode, parent, cs))
                             tmpNodes.add(parent);

@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.h,v 1.3 1999/11/18 04:39:58 kvisco%ziplink.net Exp $
+ * $Id: ProcessorState.h,v 1.4 2000/02/22 11:16:40 kvisco%ziplink.net Exp $
  */
 
 
@@ -30,6 +30,7 @@
 #define TRANSFRMX_PROCESSORSTATE_H
 
 #include "dom.h"
+#include "DOMHelper.h"
 #include "XMLUtils.h"
 #include "Names.h"
 #include "NodeSet.h"
@@ -48,7 +49,7 @@
 /**
  * Class used for keeping the current state of the XSL Processor
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 1999/11/18 04:39:58 $
+ * @version $Revision: 1.4 $ $Date: 2000/02/22 11:16:40 $
 **/
 class ProcessorState : public ContextState
 {
@@ -213,7 +214,7 @@ public:
      * @param node the Node to find the parent of
      * @return the parent of the given Node, or null if not found
     **/
-    virtual Node* findParent(Node* node);
+    virtual Node* getParentNode(Node* node);
 
      /**
       * Returns the value of a given variable binding within the current scope
@@ -245,9 +246,23 @@ public:
     **/
     virtual void recieveError(String& errorMessage, ErrorLevel level);
 
+    /**
+     * Sorts the given NodeSet by DocumentOrder. 
+     * @param nodes the NodeSet to sort
+     * <BR />
+     * <B>Note:</B> I will be moving this functionality elsewhere soon
+    **/
+    virtual void sortByDocumentOrder(NodeSet* nodes);
+
 private:
 
     enum XMLSpaceMode {STRIP = 0, DEFAULT, PRESERVE};
+
+
+	/**
+     * Allows us to overcome some DOM deficiencies
+	**/
+	DOMHelper domHelper;
 
     /**
      * The list of ErrorObservers registered with this ProcessorState
