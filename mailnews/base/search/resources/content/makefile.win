@@ -20,11 +20,11 @@ DEPTH=..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) SearchDialog.xul		$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) SearchDialog.js			$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) FilterListDialog.xul	$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) FilterEditor.xul		$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) FilterEditor.js			$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) .\SearchDialog.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) .\SearchDialog.js			$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) .\FilterListDialog.xul	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) .\FilterEditor.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) .\FilterEditor.js			$(DIST)\bin\chrome\messenger\content\default
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\SearchDialog.xul
