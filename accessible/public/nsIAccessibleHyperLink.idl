@@ -31,9 +31,9 @@ interface nsIURI;
 [scriptable, uuid(a492c7d6-1dd1-11b2-9bc0-80614884799a)]
 interface nsIAccessibleHyperLink : nsISupports
 {
-  readonly attribute long links;
-  readonly attribute long getStartIndex;
-  readonly attribute long getEndIndex;
+  readonly attribute long anchors;
+  readonly attribute long startIndex;
+  readonly attribute long endIndex;
 
   nsIURI getURI (in long i);
 
