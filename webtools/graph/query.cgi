@@ -79,8 +79,9 @@ sub show_graph {
   # HTTP header
   print "Content-type: text/html\n\n<HTML>\n";
   
-  my $neg_autoscale = !$AUTOSCALE;
+  print "<title>$TBOX $TESTNAME</title><br>\n";
 
+  my $neg_autoscale = !$AUTOSCALE;
   print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$neg_autoscale&days=$DAYS\">autoscale</a><br>\n";
 
 
