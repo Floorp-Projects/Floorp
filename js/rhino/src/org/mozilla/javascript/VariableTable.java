@@ -58,6 +58,10 @@ public class VariableTable {
         return (LocalVariable)(itsVariables.elementAt(index));
     }
 
+    public boolean hasVariable(String name) {
+        return itsVariableNames.has(name);
+    }
+
     public LocalVariable getVariable(String name) {
         int vIndex = itsVariableNames.get(name, -1);
         if (vIndex != -1)
@@ -71,7 +75,7 @@ public class VariableTable {
     }
 
     public String getName(int index) {
-        return ((LocalVariable)(itsVariables.elementAt(index))).getName();
+        return getVariable(index).getName();
     }
 
     public String[] getAllNames() {
@@ -94,21 +98,17 @@ public class VariableTable {
     }
 
     public void addParameter(String pName) {
+        // Check addParameter is not called after addLocal
+        if (varStart != itsVariables.size()) Context.codeBug();
         int pIndex = itsVariableNames.get(pName, -1);
-        if (pIndex != -1) {
-            LocalVariable p = (LocalVariable)(itsVariables.elementAt(pIndex));
-            if (p.isParameter()) {
-                String message = Context.getMessage1("msg.dup.parms", pName);
-                Context.reportWarning(message, null, 0, null, 0);
-            }
-            else {  // there's a local variable with this name, blow it off
-                itsVariables.removeElementAt(pIndex);
-            }
+        if (itsVariableNames.has(pName)) {
+            String message = Context.getMessage1("msg.dup.parms", pName);
+            Context.reportWarning(message, null, 0, null, 0);
         }
-        int curIndex = varStart++;
+        int index = varStart++;
         LocalVariable lVar = createLocalVariable(pName, true);
-        itsVariables.insertElementAt(lVar, curIndex);
-        itsVariableNames.put(pName, curIndex);
+        itsVariables.addElement(lVar);
+        itsVariableNames.put(pName, index);
     }
 
     public void addLocal(String vName) {
@@ -140,11 +140,11 @@ public class VariableTable {
     }
 
     // a list of the formal parameters and local variables
-    protected Vector itsVariables = new Vector();
+    private Vector itsVariables = new Vector();
 
     // mapping from name to index in list
     private ObjToIntMap itsVariableNames = new ObjToIntMap(11);
 
-    protected int varStart;               // index in list of first variable
+    private int varStart;               // index in list of first variable
 
 }

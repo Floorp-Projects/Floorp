@@ -44,9 +44,10 @@ public class OptVariableTable extends VariableTable {
 
     public void print(PrintWriter pw)
     {
-        System.out.println("Variable Table, size = " + itsVariables.size());
-        for (int i = 0; i < itsVariables.size(); i++) {
-            LocalVariable lVar = (LocalVariable)(itsVariables.elementAt(i));
+        int N = size();
+        System.out.println("Variable Table, size = " + N);
+        for (int i = 0; i != N; i++) {
+            OptLocalVariable lVar = (OptLocalVariable)(getVariable(i));
             pw.println(lVar.toString());
         }
     }
@@ -58,9 +59,9 @@ public class OptVariableTable extends VariableTable {
         // 2 is reserved for parentScope
         // 3 is reserved for script 'this'
         short jReg = 4;
-        for (int i = 0; i < varStart; i++) {
-            OptLocalVariable lVar = (OptLocalVariable)
-                itsVariables.elementAt(i);
+        int parameterCount = getParameterCount();
+        for (int i = 0; i < parameterCount; i++) {
+            OptLocalVariable lVar = (OptLocalVariable)getVariable(i);
             lVar.assignJRegister(jReg);
             jReg += 3;  // 3 is 1 for Object parm and 2 for double parm
         }
