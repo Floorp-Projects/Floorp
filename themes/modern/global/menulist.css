@@ -154,7 +154,8 @@
     
   menulist > menupopup > menuseparator 
     {
-      border-bottom       : 2px groove #CCCCCC;
+      border-top: 1px solid #172254;
+      border-bottom: 1px solid #5A518A;
     }
 
 
