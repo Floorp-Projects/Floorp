@@ -290,6 +290,12 @@ nsresult nsRange::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(nsIDOMNSRange::GetIID()))
+  {
+    *aInstancePtrResult = (void*)(nsIDOMNSRange*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;    
+  }
   if (aIID.Equals(kIScriptObjectOwnerIID)) {
     nsIScriptObjectOwner* tmp = this;
     *aInstancePtrResult = (void*) tmp;
@@ -1667,6 +1673,18 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
     loop++;
   }
   
+  return NS_OK;
+}
+
+
+// nsIDOMNSRange interface
+NS_IMETHODIMP    
+nsRange::InsertFragment(const nsString& aFragment)
+{
+#ifdef NS_DEBUG
+  printf("InsertFragment: not yet implemented!!\n");
+#endif
+
   return NS_OK;
 }
 

@@ -21,6 +21,7 @@
  */
 
 #include "nsIDOMRange.h"
+#include "nsIDOMNSRange.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIContent.h"
@@ -30,6 +31,7 @@
 class nsVoidArray;
 
 class nsRange : public nsIDOMRange,
+                public nsIDOMNSRange,
                 public nsIScriptObjectOwner
 {
 public:
@@ -80,7 +82,10 @@ public:
   NS_IMETHOD    Clone(nsIDOMRange** aReturn);
 
   NS_IMETHOD    ToString(nsString& aReturn);
-  
+
+  // nsIDOMNSRange interface
+  NS_IMETHOD    InsertFragment(const nsString& aFragment);
+
 /*BEGIN nsIScriptObjectOwner interface implementations*/
   NS_IMETHOD 		GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD 		SetScriptObject(void *aScriptObject);
