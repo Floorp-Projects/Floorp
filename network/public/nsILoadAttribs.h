@@ -40,7 +40,8 @@ typedef enum {
   nsURLReloadBypassCache,
   nsURLReloadBypassProxy,
   nsURLReloadBypassCacheAndProxy,
-  nsURLReloadMax
+  nsURLReloadMax,
+  nsURLReloadFromHistory
 } nsURLReloadType;
 
 /*
