@@ -29,40 +29,72 @@ namespace JS = JavaScript;
 //
 
 
-// Create a Reader reading characters from begin up to but not including end.
-JS::Reader::Reader(const char16 *begin, const char16 *end):
-	begin(begin), p(begin), end(end), lineStart(begin), nGetsPastEnd(0), lineNum(1), lineFileOffset(0)
+// Create a Reader reading characters from the source string.
+// sourceLocation describes the origin of the source and may be used for error messages.
+// initialLineNum is the line number of the first line of the source string.
+JS::Reader::Reader(const String &source, const String &sourceLocation, uint32 initialLineNum):
+	source(source), sourceLocation(sourceLocation), initialLineNum(initialLineNum)
 {
-	ASSERT(begin <= end);
+	const char16 *b = Reader::source.data();
+	begin = b;
+	p = b;
+	end = b + Reader::source.size();
   #ifdef DEBUG
 	recordString = 0;
   #endif
+  	beginLine();
 }
 
 
-// Unread the last n characters.  unget cannot be called to back up past the position
-// of the last call to beginLine().
-void JS::Reader::unget(uint32 n)
+// Mark the beginning of a line.  Call this after reading every line break to fill
+// out the line start table.
+void JS::Reader::beginLine()
 {
-	if (nGetsPastEnd) {
-		if (nGetsPastEnd >= n) {
-			nGetsPastEnd -= n;
-			return;
-		}
-		n -= nGetsPastEnd;
-		nGetsPastEnd = 0;
+	ASSERT(p <= end && (!linePositions.size() || p > linePositions.back()));
+	linePositions.push_back(p);
+}
+
+
+// Return the number of the line containing the given character position.
+// The line starts should have been recorded by calling beginLine.
+uint32 JS::Reader::posToLineNum(uint32 pos) const
+{
+	ASSERT(pos <= getPos());
+	std::vector<const char16 *>::const_iterator i = std::upper_bound(linePositions.begin(), linePositions.end(), begin + pos);
+	ASSERT(i != linePositions.begin());
+	return static_cast<uint32>(i-1 - linePositions.begin()) + initialLineNum;
+}
+
+
+// Return the character position as well as pointers to the beginning and end (not including
+// the line terminator) of the nth line.  If lineNum is out of range, return 0 and two nulls.
+// The line starts should have been recorded by calling beginLine().  If the nth line is the
+// last one recorded, then getLine manually finds the line ending by searching for a line
+// break; otherwise, getLine assumes that the line ends one character before the beginning
+// of the next line.
+uint32 JS::Reader::getLine(uint32 lineNum, const char16 *&lineBegin, const char16 *&lineEnd) const
+{
+	lineBegin = 0;
+	lineEnd = 0;
+	if (lineNum < initialLineNum)
+		return 0;
+	lineNum -= initialLineNum;
+	if (lineNum >= linePositions.size())
+		return 0;
+	lineBegin = linePositions[lineNum];
+
+	const char16 *e;
+	++lineNum;
+	if (lineNum < linePositions.size())
+		e = linePositions[lineNum] - 1;
+	else {
+		e = lineBegin;
+		const char16 *end = Reader::end;
+		while (e != end && !isLineBreak(*e))
+			++e;
 	}
-	ASSERT(p >= begin + n);
-	p -= n;
-}
-
-
-// Return the characters read in from position begin inclusive to position end
-// exclusive relative to the current line.  begin <= end <= charPos() is required.
-JS::String JS::Reader::extract(uint32 begin, uint32 end) const
-{
-	ASSERT(begin <= end && end + nGetsPastEnd <= charPos());
-	return String(lineStart + begin, lineStart + end);
+	lineEnd = e;
+	return static_cast<uint32>(lineBegin - begin);
 }
 
 
@@ -111,49 +143,16 @@ JS::String &JS::Reader::endRecording()
 }
 
 
-// Refill the source buffer after running off the end.  Get and return
-// the next character.
-// The default implementation just returns char16eof.
-JS::char16orEOF JS::Reader::underflow()
+// Report an error at the given character position in the source code.
+void JS::Reader::error(Exception::Kind kind, const String &message, uint32 pos)
 {
-	++nGetsPastEnd;
-	return char16eof;
-}
-
-
-// Perform a peek when begin == end.
-JS::char16orEOF JS::Reader::peekUnderflow()
-{
-	char16orEOF ch = underflow();
-	unget();
-	return ch;
-}
-
-
-// Create a StringReader reading characters from s.
-// source describes the origin of string s and may be used for error messages.
-JS::StringReader::StringReader(const String &s, const String &source):
-	str(s), source(source)
-{
-	const char16 *begin = str.data();
-	setBuffer(begin, begin, begin + str.size());
-}
-
-
-// Set the beginning of the current line.  unget cannot be subsequently called past this point.
-// This can only be called if the previous character was LF (u000A), CR (u000D), LS (u2028), or PS (u2029).
-// Moreover, in these cases this method must be called before reading any more characters.
-void JS::StringReader::beginLine()
-{
-	++lineNum;
-	lineStart = p;
-	lineFileOffset = static_cast<uint32>(p - begin);
-}
-
-
-JS::String JS::StringReader::sourceFile() const
-{
-	return source;
+	uint32 lineNum = posToLineNum(pos);
+	const char16 *lineBegin;
+	const char16 *lineEnd;
+	uint32 linePos = getLine(lineNum, lineBegin, lineEnd);
+	ASSERT(lineBegin && lineEnd && linePos <= pos);
+	
+	throw Exception(kind, message, sourceLocation, lineNum, pos - linePos, pos, lineBegin, lineEnd);
 }
 
 
@@ -164,72 +163,71 @@ JS::String JS::StringReader::sourceFile() const
 
 const char *const JS::Token::kindNames[] = {
   // Special
-	"[End]",			// Token::End
-	"[Identifier]",		// Token::Id
-	"[Numeral]",		// Token::Num
-	"[String]",			// Token::Str
-	"[Unit]",			// Token::Unit
-	"[RegExp]",			// Token::RegExp
+	"end of input",		// Token::end
+	"number",			// Token::number
+	"string",			// Token::string
+	"unit",				// Token::unit
+	"regular expression",// Token::regExp
 
   // Punctuators
-	"(",				// Token::OpenParenthesis
-	")",				// Token::CloseParenthesis
-	"[",				// Token::OpenBracket
-	"]",				// Token::CloseBracket
-	"{",				// Token::OpenBrace
-	"}",				// Token::CloseBrace
-	",",				// Token::Comma
-	";",				// Token::Semicolon
-	".",				// Token::Dot
-	"..",				// Token::DoubleDot
-	"...",				// Token::TripleDot
-	"->",				// Token::Arrow
-	":",				// Token::Colon
-	"::",				// Token::DoubleColon
-	"#",				// Token::Pound
-	"@",				// Token::At
-	"++",				// Token::Increment
-	"--",				// Token::Decrement
-	"~",				// Token::Complement
-	"!",				// Token::Not
-	"*",				// Token::Times
-	"/",				// Token::Divide
-	"%",				// Token::Modulo
-	"+",				// Token::Plus
-	"-",				// Token::Minus
-	"<<",				// Token::LeftShift
-	">>",				// Token::RightShift
-	">>>",				// Token::LogicalRightShift
-	"&&",				// Token::LogicalAnd
-	"^^",				// Token::LogicalXor
-	"||",				// Token::LogicalOr
-	"&",				// Token::And
-	"^",				// Token::Xor
-	"|",				// Token::Or
-	"=",				// Token::Assignment
-	"*=",				// Token::TimesEquals
-	"/=",				// Token::DivideEquals
-	"%=",				// Token::ModuloEquals
-	"+=",				// Token::PlusEquals
-	"-=",				// Token::MinusEquals
-	"<<=",				// Token::LeftShiftEquals
-	">>=",				// Token::RightShiftEquals
-	">>>=",				// Token::LogicalRightShiftEquals
-	"&&=",				// Token::LogicalAndEquals
-	"^^=",				// Token::LogicalXorEquals
-	"||=",				// Token::LogicalOrEquals
-	"&=",				// Token::AndEquals
-	"^=",				// Token::XorEquals
-	"|=",				// Token::OrEquals
-	"==",				// Token::Equal
-	"!=",				// Token::NotEqual
-	"<",				// Token::LessThan
-	"<=",				// Token::LessThanOrEqual
-	">",				// Token::GreaterThan
-	">=",				// Token::GreaterThanOrEqual
-	"===",				// Token::Identical
-	"!==",				// Token::NotIdentical
-	"?",				// Token::Question
+	"(",				// Token::openParenthesis
+	")",				// Token::closeParenthesis
+	"[",				// Token::openBracket
+	"]",				// Token::closeBracket
+	"{",				// Token::openBrace
+	"}",				// Token::closeBrace
+	",",				// Token::comma
+	";",				// Token::semicolon
+	".",				// Token::dot
+	"..",				// Token::doubleDot
+	"...",				// Token::tripleDot
+	"->",				// Token::arrow
+	":",				// Token::colon
+	"::",				// Token::doubleColon
+	"#",				// Token::pound
+	"@",				// Token::at
+	"++",				// Token::increment
+	"--",				// Token::decrement
+	"~",				// Token::complement
+	"!",				// Token::logicalNot
+	"*",				// Token::times
+	"/",				// Token::divide
+	"%",				// Token::modulo
+	"+",				// Token::plus
+	"-",				// Token::minus
+	"<<",				// Token::leftShift
+	">>",				// Token::rightShift
+	">>>",				// Token::logicalRightShift
+	"&&",				// Token::logicalAnd
+	"^^",				// Token::logicalXor
+	"||",				// Token::logicalOr
+	"&",				// Token::bitwiseAnd
+	"^",				// Token::bitwiseXor
+	"|",				// Token::bitwiseOr
+	"=",				// Token::assignment
+	"*=",				// Token::timesEquals
+	"/=",				// Token::divideEquals
+	"%=",				// Token::moduloEquals
+	"+=",				// Token::plusEquals
+	"-=",				// Token::minusEquals
+	"<<=",				// Token::leftShiftEquals
+	">>=",				// Token::rightShiftEquals
+	">>>=",				// Token::logicalRightShiftEquals
+	"&&=",				// Token::logicalAndEquals
+	"^^=",				// Token::logicalXorEquals
+	"||=",				// Token::logicalOrEquals
+	"&=",				// Token::bitwiseAndEquals
+	"^=",				// Token::bitwiseXorEquals
+	"|=",				// Token::bitwiseOrEquals
+	"==",				// Token::equal
+	"!=",				// Token::notEqual
+	"<",				// Token::lessThan
+	"<=",				// Token::lessThanOrEqual
+	">",				// Token::greaterThan
+	">=",				// Token::greaterThanOrEqual
+	"===",				// Token::identical
+	"!==",				// Token::notIdentical
+	"?",				// Token::question
 
   // Reserved words
 	"abstract",			// Token::Abstract
@@ -293,7 +291,9 @@ const char *const JS::Token::kindNames[] = {
 	"method",			// Token::Method
 	"override",			// Token::Override
 	"set",				// Token::Set
-	"version"			// Token::Version
+	"version",			// Token::Version
+
+	"identifier"		// Token::identifier
 };
 
 
@@ -309,47 +309,52 @@ void JS::Token::initKeywords(World &world)
 // Append a description of the token to dst.
 void JS::Token::print(String &dst, bool debug) const
 {
-	switch (kind) {
-	  case Id:
-		if (debug)
-			dst += "[Id]";
-		dst += *identifier;
+	switch (getKind()) {
+	  case end:
+		dst += "[end]";
 		break;
 
-	  case Num:
+	  case number:
 		if (debug) {
-			dst += "[Num ";
-			dst += value;
+			dst += "[number ";
+			dst += getValue();
 			dst += ']';
 		}
-		dst += chars;
+		dst += getChars();
 		break;
 
-	  case Unit:
+	  case unit:
 		if (debug)
-			dst += "[Unit]";
-	  case Str:
+			dst += "[unit]";
+	  case string:
 		dst += '"';
-		dst += chars;
+		dst += getChars();
 		dst += '"';
 		break;
 
-	  case RegExp:
+	  case regExp:
 		dst += '/';
-		dst += *identifier;
+		dst += getIdentifier();
 		dst += '/';
-		dst += chars;
+		dst += getChars();
+		break;
+
+	  case identifier:
+		if (debug)
+			dst += "[identifier]";
+		dst += getIdentifier();
 		break;
 
 	  default:
-		dst += kind;
+		dst += getKind();
 	}
 }
 
 
-// Create a new Lexer using the provided Reader and interning identifiers, keywords, and regular
+// Create a new Lexer for lexing the provided source code.  The Lexer will intern identifiers, keywords, and regular
 // expressions in the designated world.
-JS::Lexer::Lexer(Reader &reader, World &world): reader(reader), world(world)
+JS::Lexer::Lexer(World &world, const String &source, const String &sourceLocation, uint32 initialLineNum):
+	world(world), reader(source, sourceLocation, initialLineNum)
 {
 	nextToken = tokens;
 	nTokensFwd = 0;
@@ -361,20 +366,36 @@ JS::Lexer::Lexer(Reader &reader, World &world): reader(reader), world(world)
 
 
 // Get and return the next token.  The token remains valid until the next call to this Lexer.
-// If the Reader reached the end of file, return a Token whose Kind is End.
+// If the Reader reached the end of file, return a Token whose Kind is end.
 // The caller may alter the value of this Token (in particular, take control over the
 // auto_ptr's data), but if it does so, the caller is not allowed to unget this Token.
 //
 // If preferRegExp is true, a / will be preferentially interpreted as starting a regular
 // expression; otherwise, a / will be preferentially interpreted as division or /=.
-JS::Token &JS::Lexer::get(bool preferRegExp)
+const JS::Token &JS::Lexer::get(bool preferRegExp)
 {
-	Token &t = const_cast<Token &>(peek(preferRegExp));
+	const Token &t = peek(preferRegExp);
 	if (++nextToken == tokens + tokenBufferSize)
 		nextToken = tokens;
 	--nTokensFwd;
 	DEBUG_ONLY(++nTokensBack);
 	return t;
+}
+
+
+// Peek at the next token using the given preferRegExp setting.  If that token's kind matches
+// the given kind, consume that token and return it.  Otherwise, do not consume that token and
+// return nil.
+const JS::Token *JS::Lexer::eat(bool preferRegExp, Token::Kind kind)
+{
+	const Token &t = peek(preferRegExp);
+	if (t.kind != kind)
+		return 0;
+	if (++nextToken == tokens + tokenBufferSize)
+		nextToken = tokens;
+	--nTokensFwd;
+	DEBUG_ONLY(++nTokensBack);
+	return &t;
 }
 
 
@@ -394,12 +415,27 @@ const JS::Token &JS::Lexer::peek(bool preferRegExp)
 		nTokensFwd = 1;
 	  #ifdef DEBUG
 		savedPreferRegExp[nextToken - tokens] = preferRegExp;
-		if (nTokensBack == tokenBufferSize)
-			nTokensBack = tokenBufferSize-1;
+		if (nTokensBack == tokenLookahead) {
+			nTokensBack = tokenLookahead-1;
+			if (tokenGuard)
+				(nextToken >= tokens+tokenLookahead ? nextToken-tokenLookahead : nextToken+tokenBufferSize-tokenLookahead)->valid = false;
+		}
 	  #endif
 	}
 	return *nextToken;
 }
+
+
+#ifdef DEBUG
+// Change the setting of preferRegExp for an already peeked token.  The token must not be one
+// for which that setting mattered.
+void JS::Lexer::redesignate(bool preferRegExp)
+{
+	ASSERT(nTokensFwd && !(nextToken->hasKind(Token::regExp) || nextToken->hasKind(Token::divide) ||
+						   nextToken->hasKind(Token::divideEquals)));
+	savedPreferRegExp[nextToken - tokens] = preferRegExp;
+}
+#endif
 
 
 // Unread the last token.  This call may be called to unread at most tokenBufferSize tokens
@@ -422,36 +458,23 @@ void JS::Lexer::unget()
 void JS::Lexer::syntaxError(const char *message, uint backUp)
 {
 	reader.unget(backUp);
-	uint32 charPos = reader.charPos();
-	char16orEOF ch;
-	do {
-		ch = reader.get();
-	} while (ch != char16eof && !isLineBreak(char16orEOFToChar16(ch)));
-	reader.unget();
-
-	SourcePosition position;
-	position.lineFileOffset = reader.lineFileOffset;
-	position.lineNum = reader.lineNum;
-	position.charPos = charPos;
-	Exception e(Exception::SyntaxError, widenCString(message), reader.sourceFile(), position,
-				reader.extract(0, reader.charPos()));
-	throw e;
+	reader.error(Exception::SyntaxError, widenCString(message), reader.getPos());
 }
 
 
 // Get the next character from the reader, skipping any Unicode format-control (Cf) characters.
-inline JS::char16orEOF JS::Lexer::getChar()
+inline char16 JS::Lexer::getChar()
 {
-	char16orEOF ch = reader.get();
-	if (static_cast<uint32>(ch) >= firstFormatChar)
+	char16 ch = reader.get();
+	if (char16Value(ch) >= firstFormatChar)
 		ch = internalGetChar(ch);
 	return ch;
 }
 
 // Helper for getChar()
-JS::char16orEOF JS::Lexer::internalGetChar(char16orEOF ch)
+char16 JS::Lexer::internalGetChar(char16 ch)
 {
-	while (isFormat(char16orEOFToChar16(ch)))
+	while (isFormat(ch))
 		ch = reader.get();
 	return ch;
 }
@@ -459,18 +482,18 @@ JS::char16orEOF JS::Lexer::internalGetChar(char16orEOF ch)
 
 // Peek the next character from the reader, skipping any Unicode format-control (Cf) characters,
 // which are read and discarded.
-inline JS::char16orEOF JS::Lexer::peekChar()
+inline char16 JS::Lexer::peekChar()
 {
-	char16orEOF ch = reader.peek();
-	if (static_cast<uint32>(ch) >= firstFormatChar)
+	char16 ch = reader.peek();
+	if (char16Value(ch) >= firstFormatChar)
 		ch = internalPeekChar(ch);
 	return ch;
 }
 
 // Helper for peekChar()
-JS::char16orEOF JS::Lexer::internalPeekChar(char16orEOF ch)
+char16 JS::Lexer::internalPeekChar(char16 ch)
 {
-	while (isFormat(char16orEOFToChar16(ch))) {
+	while (isFormat(ch)) {
 		reader.get();
 		ch = reader.peek();
 	}
@@ -480,10 +503,11 @@ JS::char16orEOF JS::Lexer::internalPeekChar(char16orEOF ch)
 
 // Peek the next character from the reader, skipping any Unicode format-control (Cf) characters,
 // which are read and discarded.  If the peeked character matches ch, read that character and return true;
-// otherwise return false.
+// otherwise return false.  ch must not be null.
 bool JS::Lexer::testChar(char16 ch)
 {
-	char16orEOF ch2 = peekChar();
+	ASSERT(ch);	// If ch were null, it could match the eof null.
+	char16 ch2 = peekChar();
 	if (ch == ch2) {
 		reader.get();
 		return true;
@@ -497,7 +521,7 @@ bool JS::Lexer::testChar(char16 ch)
 // If unicodeOnly is true, allow only \uxxxx escapes.
 char16 JS::Lexer::lexEscape(bool unicodeOnly)
 {
-	char16orEOF ch = getChar();
+	char16 ch = getChar();
 	int nDigits;
 
 	if (!unicodeOnly || ch == 'u')
@@ -505,7 +529,7 @@ char16 JS::Lexer::lexEscape(bool unicodeOnly)
 		  case '0':
 			// Make sure that the next character isn't a digit.
 			ch = peekChar();
-			if (!isASCIIDecimalDigit(char16orEOFToChar16(ch)))
+			if (!isASCIIDecimalDigit(ch))
 				return 0x00;
 			getChar();	// Point to the next character in the error message
 		  case 'b':
@@ -531,17 +555,17 @@ char16 JS::Lexer::lexEscape(bool unicodeOnly)
 				while (nDigits--) {
 					ch = getChar();
 					uint digit;
-					if (!isASCIIHexDigit(char16orEOFToChar16(ch), digit))
+					if (!isASCIIHexDigit(ch, digit))
 						goto error;
 					n = (n << 4) | digit;
 				}
-				return char16(n);
+				return static_cast<char16>(n);
 			}
 		default:
-			if (ch != char16eof) {
-				CharInfo chi(char16orEOFToChar16(ch));
+			if (!reader.getEof(ch)) {
+				CharInfo chi(ch);
 				if (!isAlphanumeric(chi) && !isLineBreak(chi))
-					return char16orEOFToChar16(ch);
+					return ch;
 			}
 		}
   error:
@@ -560,13 +584,13 @@ bool JS::Lexer::lexIdentifier(String &s, bool allowLeadingDigit)
 	bool hasEscape = false;
 
 	while (true) {
-		char16orEOF ch = getChar();
-		char16orEOF ch2 = ch;
+		char16 ch = getChar();
+		char16 ch2 = ch;
 		if (ch == '\\') {
 			ch2 = lexEscape(true);
 			hasEscape = true;
 		}
-		CharInfo chi2(char16orEOFToChar16(ch2));
+		CharInfo chi2(ch2);
 		
 		if (!(allowLeadingDigit ? isIdContinuing(chi2) : isIdLeading(chi2))) {
 			if (ch == '\\')
@@ -575,7 +599,7 @@ bool JS::Lexer::lexIdentifier(String &s, bool allowLeadingDigit)
 				reader.unget();
 			break;
 		}
-		reader.recordChar(char16orEOFToChar16(ch2));
+		reader.recordChar(ch2);
 		allowLeadingDigit = true;
 	}
 	reader.endRecording();
@@ -592,50 +616,50 @@ bool JS::Lexer::lexNumeral()
 	uint digit;
 
 	reader.beginRecording(s);
-	char16orEOF ch = getChar();
+	char16 ch = getChar();
 	if (ch == '0') {
 		reader.recordChar('0');
 		ch = getChar();
 		if ((ch&~0x20) == 'X') {
-			uint32 pos = reader.charPos();
-			char16orEOF ch2 = getChar();
-			if (isASCIIHexDigit(char16orEOFToChar16(ch2), digit)) {
-				reader.recordChar(char16orEOFToChar16(ch));
+			uint32 pos = reader.getPos();
+			char16 ch2 = getChar();
+			if (isASCIIHexDigit(ch2, digit)) {
+				reader.recordChar(ch);
 				do {
-					reader.recordChar(char16orEOFToChar16(ch2));
+					reader.recordChar(ch2);
 					ch2 = getChar();
-				} while (isASCIIHexDigit(char16orEOFToChar16(ch2), digit));
+				} while (isASCIIHexDigit(ch2, digit));
 				ch = ch2;
 			} else
-				reader.backUpTo(pos);
+				reader.setPos(pos);
 			goto done;
-		} else if (isASCIIDecimalDigit(char16orEOFToChar16(ch))) {
+		} else if (isASCIIDecimalDigit(ch)) {
 			syntaxError("Numeric constant syntax error");
 		}
 	}
-	while (isASCIIDecimalDigit(char16orEOFToChar16(ch)) || ch == '.' && !hasDecimalPoint++) {
-		reader.recordChar(char16orEOFToChar16(ch));
+	while (isASCIIDecimalDigit(ch) || ch == '.' && !hasDecimalPoint++) {
+		reader.recordChar(ch);
 		ch = getChar();
 	}
 	if ((ch&~0x20) == 'E') {
-		uint32 pos = reader.charPos();
-		char16orEOF ch2 = getChar();
+		uint32 pos = reader.getPos();
+		char16 ch2 = getChar();
 		char16 sign = 0;
 		if (ch2 == '+' || ch2 == '-') {
-			sign = char16orEOFToChar16(ch2);
+			sign = ch2;
 			ch2 = getChar();
 		}
-		if (isASCIIDecimalDigit(char16orEOFToChar16(ch2))) {
-			reader.recordChar(char16orEOFToChar16(ch));
+		if (isASCIIDecimalDigit(ch2)) {
+			reader.recordChar(ch);
 			if (sign)
 				reader.recordChar(sign);
 			do {
-				reader.recordChar(char16orEOFToChar16(ch2));
+				reader.recordChar(ch2);
 				ch2 = getChar();
-			} while (isASCIIDecimalDigit(char16orEOFToChar16(ch2)));
+			} while (isASCIIDecimalDigit(ch2));
 			ch = ch2;
 		} else
-			reader.backUpTo(pos);
+			reader.setPos(pos);
 	}
 	
   done:
@@ -649,7 +673,7 @@ bool JS::Lexer::lexNumeral()
 	ASSERT(numEnd == sEnd);
 	reader.unget();
 	ASSERT(ch == reader.peek());
-	return isIdContinuing(char16orEOFToChar16(ch)) || ch == '\\';
+	return isIdContinuing(ch) || ch == '\\';
 }
 
 
@@ -657,78 +681,77 @@ bool JS::Lexer::lexNumeral()
 // The opening quote has already been read into separator.
 void JS::Lexer::lexString(String &s, char16 separator)
 {
-	char16orEOF ch;
+	char16 ch;
 
 	reader.beginRecording(s);
 	while ((ch = reader.get()) != separator) {
-    	CharInfo chi(char16orEOFToChar16(ch));
+    	CharInfo chi(ch);
     	if (!isFormat(chi)) {
 			if (ch == '\\')
 				ch = lexEscape(false);
-			else if (ch == char16eof || isLineBreak(chi))
+			else if (reader.getEof(ch) || isLineBreak(chi))
 				syntaxError("Unterminated string literal");
-			reader.recordChar(char16orEOFToChar16(ch));
+			reader.recordChar(ch);
 		}
 	}
 	reader.endRecording();
 }
 
 
-// Read a regular expression literal.  Store the regular expression in nextToken->identifier
+// Read a regular expression literal.  Store the regular expression in nextToken->id
 // and the flags in nextToken->chars.
 // The opening slash has already been read.
 void JS::Lexer::lexRegExp()
 {
 	String s;
-	char16orEOF prevCh = 0;
+	char16 prevCh = 0;
 
 	reader.beginRecording(s);
 	while (true) {
-		char16orEOF ch = getChar();
-    	CharInfo chi(char16orEOFToChar16(ch));
-		if (ch == char16eof || isLineBreak(chi))
+		char16 ch = getChar();
+    	CharInfo chi(ch);
+		if (reader.getEof(ch) || isLineBreak(chi))
 			syntaxError("Unterminated regular expression literal");
 		if (prevCh == '\\') {
-			reader.recordChar(char16orEOFToChar16(ch));
+			reader.recordChar(ch);
 			prevCh = 0;	// Ignore slashes and backslashes immediately after a backslash
 		} else if (ch != '/') {
-			reader.recordChar(char16orEOFToChar16(ch));
+			reader.recordChar(ch);
 			prevCh = ch;
 		} else
 			break;
 	}
 	reader.endRecording();
-	nextToken->identifier = &world.identifiers[s];
+	nextToken->id = &world.identifiers[s];
 	
 	lexIdentifier(nextToken->chars, true);
 }
 
 
 // Read a token from the Reader and store it at *nextToken.
-// If the Reader reached the end of file, store a Token whose Kind is End.
+// If the Reader reached the end of file, store a Token whose Kind is end.
 void JS::Lexer::lexToken(bool preferRegExp)
 {
 	Token &t = *nextToken;
 	t.lineBreak = false;
-	t.identifier = 0;
+	t.id = 0;
 	//clear(t.chars);	// Don't really need to waste time clearing this string here
-	t.value = 0.0;
 	Token::Kind kind;
 
 	if (lexingUnit) {
 		lexIdentifier(t.chars, false);
 		ASSERT(t.chars.size());
-		kind = Token::Unit;				// unit
+		kind = Token::unit;				// unit
 		lexingUnit = false;
 	} else {
 	  next:
-		char16orEOF ch = reader.get();
-		if (ch == char16eof) {
+		char16 ch = reader.get();
+		if (reader.getEof(ch)) {
 		  endOfInput:
-			kind = Token::End;
+			kind = Token::end;
 		} else {
-			char16orEOF ch2;
-			CharInfo chi(char16orEOFToChar16(ch));
+			char16 ch2;
+			CharInfo chi(ch);
 
 			switch (cGroup(chi)) {
 		      case CharInfo::FormatGroup:
@@ -736,119 +759,118 @@ void JS::Lexer::lexToken(bool preferRegExp)
 		    	goto next;
 
 		      case CharInfo::IdGroup:
-		    	t.pos.charPos = reader.charPos() - 1;
+		    	t.pos = reader.getPos() - 1;
 		      readIdentifier:
 		    	{
 			    	reader.unget();
 			    	String s;
 		    		bool hasEscape = lexIdentifier(s, false);
-			    	t.identifier = &world.identifiers[s];
-			    	kind = hasEscape ? Token::Id : t.identifier->tokenKind;
+			    	t.id = &world.identifiers[s];
+			    	kind = hasEscape ? Token::identifier : t.id->tokenKind;
 		    	}
 		    	break;
 
 		      case CharInfo::NonIdGroup:
 		      case CharInfo::IdContinueGroup:
-		    	t.pos.charPos = reader.charPos() - 1;
+		    	t.pos = reader.getPos() - 1;
 		    	switch (ch) {
 				  case '(':
-					kind = Token::OpenParenthesis;	// (
+					kind = Token::openParenthesis;	// (
 					break;
 				  case ')':
-					kind = Token::CloseParenthesis;	// )
+					kind = Token::closeParenthesis;	// )
 					break;
 				  case '[':
-					kind = Token::OpenBracket;		// [
+					kind = Token::openBracket;		// [
 					break;
 				  case ']':
-					kind = Token::CloseBracket;		// ]
+					kind = Token::closeBracket;		// ]
 					break;
 				  case '{':
-					kind = Token::OpenBrace;		// {
+					kind = Token::openBrace;		// {
 					break;
 				  case '}':
-					kind = Token::CloseBrace;		// }
+					kind = Token::closeBrace;		// }
 					break;
 				  case ',':
-					kind = Token::Comma;			// ,
+					kind = Token::comma;			// ,
 					break;
 				  case ';':
-					kind = Token::Semicolon;		// ;
+					kind = Token::semicolon;		// ;
 					break;
 				  case '.':
-					kind = Token::Dot;				// .
+					kind = Token::dot;				// .
 					ch2 = getChar();
-					if (isASCIIDecimalDigit(char16orEOFToChar16(ch2))) {
-						reader.backUpTo(t.pos.charPos);
+					if (isASCIIDecimalDigit(ch2)) {
+						reader.setPos(t.pos);
 						goto number;				// decimal point
 					} else if (ch2 == '.') {
-						kind = Token::DoubleDot;	// ..
+						kind = Token::doubleDot;	// ..
 						if (testChar('.'))
-							kind = Token::TripleDot; // ...
+							kind = Token::tripleDot; // ...
 					} else
 						reader.unget();
 					break;
 				  case ':':
-					kind = Token::Colon;			// :
+					kind = Token::colon;			// :
 					if (testChar(':'))
-						kind = Token::DoubleColon;	// ::
+						kind = Token::doubleColon;	// ::
 					break;
 				  case '#':
-					kind = Token::Pound;			// #
+					kind = Token::pound;			// #
 					break;
 				  case '@':
-					kind = Token::At;				// @
+					kind = Token::at;				// @
 					break;
 				  case '?':
-					kind = Token::Question;			// ?
+					kind = Token::question;			// ?
 					break;
 
 				  case '~':
-					kind = Token::Complement;		// ~
+					kind = Token::complement;		// ~
 					break;
 				  case '!':
-					kind = Token::Not;				// !
+					kind = Token::logicalNot;		// !
 					if (testChar('=')) {
-						kind = Token::NotEqual;		// !=
+						kind = Token::notEqual;		// !=
 						if (testChar('='))
-							kind = Token::NotIdentical; // !==
+							kind = Token::notIdentical; // !==
 					}
 					break;
 
 				  case '*':
-					kind = Token::Times;			// * *=
+					kind = Token::times;			// * *=
 				  tryAssignment:
 					if (testChar('='))
-						kind = Token::Kind(kind + Token::TimesEquals - Token::Times);
+						kind = Token::Kind(kind + Token::timesEquals - Token::times);
 					break;
 
 				  case '/':
-					kind = Token::Divide;			// /
+					kind = Token::divide;			// /
 					ch = getChar();
 					if (ch == '/') {				// // comment
 						do {
 							ch = reader.get();
-							if (ch == char16eof)
+							if (reader.getEof(ch))
 								goto endOfInput;
-						} while (!isLineBreak(char16orEOFToChar16(ch)));
+						} while (!isLineBreak(ch));
 						goto endOfLine;
 					} else if (ch == '*') {			// /* comment */
 						ch = 0;
 						do {
 							ch2 = ch;
 							ch = getChar();
-							if (isLineBreak(char16orEOFToChar16(ch))) {
+							if (isLineBreak(ch)) {
 								reader.beginLine();
 								t.lineBreak = true;
-							}
-							if (ch == char16eof)
+							} else if (reader.getEof(ch))
 								syntaxError("Unterminated /* comment");
 						} while (ch != '/' || ch2 != '*');
 						goto next;
 					} else {
 						reader.unget();
 						if (preferRegExp) {			// Regular expression
-							kind = Token::RegExp;
+							kind = Token::regExp;
 							lexRegExp();
 						} else
 							 goto tryAssignment;	// /=
@@ -856,24 +878,24 @@ void JS::Lexer::lexToken(bool preferRegExp)
 					break;
 
 				  case '%':
-					kind = Token::Modulo;			// %
+					kind = Token::modulo;			// %
 					goto tryAssignment;				// %=
 
 				  case '+':
-					kind = Token::Plus;				// +
+					kind = Token::plus;				// +
 					if (testChar('+'))
-						kind = Token::Increment;	// ++
+						kind = Token::increment;	// ++
 					else
 						goto tryAssignment;			// +=
 					break;
 
 				  case '-':
-					kind = Token::Minus;			// -
+					kind = Token::minus;			// -
 					ch = getChar();
 					if (ch == '-')
-						kind = Token::Decrement;	// --
+						kind = Token::decrement;	// --
 					else if (ch == '>')
-						kind = Token::Arrow;		// ->
+						kind = Token::arrow;		// ->
 					else {
 						reader.unget();
 						goto tryAssignment;			// -=
@@ -881,43 +903,43 @@ void JS::Lexer::lexToken(bool preferRegExp)
 					break;
 			
 				  case '&':
-					kind = Token::And;				// & && &= &&=
+					kind = Token::bitwiseAnd;		// & && &= &&=
 				  logical:
-					if (testChar(char16orEOFToChar16(ch)))
-						kind = Token::Kind(kind - Token::And + Token::LogicalAnd);
+					if (testChar(ch))
+						kind = Token::Kind(kind - Token::bitwiseAnd + Token::logicalAnd);
 					goto tryAssignment;
 				  case '^':
-					kind = Token::Xor;				// ^ ^^ ^= ^^=
+					kind = Token::bitwiseXor;		// ^ ^^ ^= ^^=
 					goto logical;
 				  case '|':
-					kind = Token::Or;				// | || |= ||=
+					kind = Token::bitwiseOr;		// | || |= ||=
 					goto logical;
 
 				  case '=':
-					kind = Token::Assignment;		// =
+					kind = Token::assignment;		// =
 					if (testChar('=')) {
-						kind = Token::Equal;		// ==
+						kind = Token::equal;		// ==
 						if (testChar('='))
-							kind = Token::Identical; // ===
+							kind = Token::identical; // ===
 					}
 					break;
 
 				  case '<':
-					kind = Token::LessThan;			// <
+					kind = Token::lessThan;			// <
 					if (testChar('<')) {
-						kind = Token::LeftShift;	// <<
+						kind = Token::leftShift;	// <<
 						goto tryAssignment;			// <<=
 					}
 				  comparison:
 					if (testChar('='))				// <= >=
-						kind = Token::Kind(kind + Token::LessThanOrEqual - Token::LessThan);
+						kind = Token::Kind(kind + Token::lessThanOrEqual - Token::lessThan);
 					break;
 				  case '>':
-					kind = Token::GreaterThan;		// >
+					kind = Token::greaterThan;		// >
 					if (testChar('>')) {
-						kind = Token::RightShift;	// >>
+						kind = Token::rightShift;	// >>
 						if (testChar('>'))
-							kind = Token::LogicalRightShift; // >>>
+							kind = Token::logicalRightShift; // >>>
 						goto tryAssignment;			// >>= >>>=
 					}
 					goto comparison;
@@ -927,8 +949,8 @@ void JS::Lexer::lexToken(bool preferRegExp)
 
 				  case '\'':
 				  case '"':
-					kind = Token::Str;				// 'string' "string"
-					lexString(t.chars, char16orEOFToChar16(ch));
+					kind = Token::string;			// 'string' "string"
+					lexString(t.chars, ch);
 					break;
 
 				  case '0':
@@ -943,7 +965,7 @@ void JS::Lexer::lexToken(bool preferRegExp)
 				  case '9':
 					reader.unget();					// Number
 				  number:
-					kind = Token::Num;
+					kind = Token::number;
 					lexingUnit = lexNumeral();
 					break;
 
@@ -961,6 +983,392 @@ void JS::Lexer::lexToken(bool preferRegExp)
 		}
 	}
 	t.kind = kind;
-	t.pos.lineFileOffset = reader.lineFileOffset;
-	t.pos.lineNum = reader.lineNum;
+  #ifdef DEBUG
+	t.valid = true;
+  #endif
 }
+
+
+//
+// Parser
+//
+
+// Create a new Parser for parsing the provided source code, interning identifiers, keywords, and regular
+// expressions in the designated world, and allocating the parse tree in the designated arena.
+JS::Parser::Parser(World &world, Arena &arena, const String &source, const String &sourceLocation, uint32 initialLineNum):
+	lexer(world, source, sourceLocation, initialLineNum), arena(arena)
+{
+}
+
+
+// Report a syntax error at the backUp-th last token read by the Lexer.
+// In other words, if backUp is 0, the error is at the next token to be read by the Lexer (which
+// must have been peeked already); if backUp is 1, the error is at the last token read by the Lexer,
+// and so forth.
+void JS::Parser::syntaxError(const char *message, uint backUp)
+{
+	syntaxError(widenCString(message), backUp);
+}
+
+// Same as above, but the error message is already a String.
+void JS::Parser::syntaxError(const String &message, uint backUp)
+{
+	while (backUp--)
+		lexer.unget();
+	getReader().error(Exception::SyntaxError, message, lexer.getPos());
+}
+
+
+// Get the next token using the given preferRegExp setting.  If that token's kind matches
+// the given kind, consume that token and return it.  Otherwise throw a syntax error.
+const JS::Token &JS::Parser::require(bool preferRegExp, Token::Kind kind)
+{
+	const Token &t = lexer.get(preferRegExp);
+	if (!t.hasKind(kind)) {
+		String message;
+		bool special = Token::isSpecialKind(kind);
+
+		if (special)
+			message += '\'';
+		message += kind;
+		if (special)
+			message += '\'';
+		message += " expected";
+		syntaxError(message);
+	}
+	return t;
+}
+
+
+// Copy the Token's chars into the current arena and return the resulting copy.
+inline JS::String &JS::Parser::copyTokenChars(const Token &t)
+{
+	return newArenaString(arena, t.getChars());
+}
+
+
+// Parse and return a qualifiedIdentifier.  The first token has already been parsed and is in t.
+// If the first token was peeked, it should be have been done with preferRegExp set to true.
+JS::IdentifierExprNode *JS::Parser::parseQualifiedIdentifier(const Token &t)
+{
+	bool foundQualifiers;
+
+	if (Token::isIdentifierKind(t.getKind())) {
+		IdentifierExprNode *id = new(arena) IdentifierExprNode(t.getPos(), ExprNode::identifier, t.getIdentifier());
+		return static_cast<IdentifierExprNode *>(parseIdentifierQualifiers(id, foundQualifiers));
+	}
+	if (t.hasKind(Token::openParenthesis)) {
+		ExprNode *e = parseParenthesesAndIdentifierQualifiers(t, foundQualifiers);
+		if (!foundQualifiers)
+			syntaxError(":: expected", 0);
+		return static_cast<IdentifierExprNode *>(e);
+	}
+	syntaxError("Qualified identifier expected");
+	return 0;	// Unreachable code here just to shut up compiler warnings
+}
+
+
+// An identifier or parenthesized expression has just been parsed into e.
+// If it is followed by one or more ::'s followed by identifiers, construct the appropriate
+// qualifiedIdentifier parse node and return it and set foundQualifiers to true.  If no ::
+// is found, return e and set foundQualifiers to false.
+JS::ExprNode *JS::Parser::parseIdentifierQualifiers(ExprNode *e, bool &foundQualifiers)
+{
+	foundQualifiers = false;
+
+	while (true) {
+		const Token *tDoubleColon = lexer.eat(false, Token::doubleColon);
+		if (!tDoubleColon)
+			return e;
+		const Token &tId = lexer.get(true);
+		if (!Token::isIdentifierKind(tId.getKind()))
+			syntaxError("Identifier expected");
+		e = new(arena) OpIdentifierExprNode(tDoubleColon->getPos(), ExprNode::qualifiedIdentifier, tId.getIdentifier(), e);
+		foundQualifiers = true;
+	}
+}
+
+
+// An opening parenthesis has just been parsed into tParen.  Finish parsing a ParenthesizedExpression.
+// If it is followed by one or more ::'s followed by identifiers, construct the appropriate
+// qualifiedIdentifier parse node and return it and set foundQualifiers to true.  If no ::
+// is found, return the ParenthesizedExpression and set foundQualifiers to false.
+JS::ExprNode *JS::Parser::parseParenthesesAndIdentifierQualifiers(const Token &tParen, bool &foundQualifiers)
+{
+	uint32 pos = tParen.getPos();
+	ExprNode *e = new(arena) UnaryExprNode(pos, ExprNode::parentheses, parseExpression(false));
+	require(false, Token::closeParenthesis);
+	return parseIdentifierQualifiers(e, foundQualifiers);
+}
+
+
+// Parse and return an arrayLiteral. The opening bracket has already been read into initialToken.
+JS::PairListExprNode *JS::Parser::parseArrayLiteral(const Token &initialToken)
+{
+	uint32 initialPos = initialToken.getPos();
+	NodeQueue<ExprPairList> elements;
+
+	while (true) {
+		ExprNode *element = 0;
+		const Token &t = lexer.peek(true);
+		if (t.hasKind(Token::comma) || t.hasKind(Token::closeBracket))
+			lexer.redesignate(false);
+		else {
+			lexer.get(true);
+			element = parseAssignmentExpression(false);
+		}
+		elements += new(arena) ExprPairList(0, element);
+
+		const Token &tSeparator = lexer.get(false);
+		if (tSeparator.hasKind(Token::closeBracket))
+			break;
+		if (!tSeparator.hasKind(Token::comma))
+			syntaxError("',' expected");
+	}
+	return new(arena) PairListExprNode(initialPos, ExprNode::arrayLiteral, elements.first);
+}
+
+
+// Parse and return an objectLiteral. The opening brace has already been read into initialToken.
+JS::PairListExprNode *JS::Parser::parseObjectLiteral(const Token &initialToken)
+{
+	uint32 initialPos = initialToken.getPos();
+	NodeQueue<ExprPairList> elements;
+
+	if (!lexer.eat(true, Token::closeBrace))
+		while (true) {
+			const Token &t = lexer.get(true);
+			ExprNode *field;
+			if (Token::isIdentifierKind(t.getKind()))
+				field = parseQualifiedIdentifier(t);
+			else if (t.hasKind(Token::string))
+				field = new(arena) StringExprNode(t.getPos(), ExprNode::string, copyTokenChars(t));
+			else if (t.hasKind(Token::number))
+				field = new(arena) NumberExprNode(t.getPos(), t.getValue());
+			else {
+				syntaxError("Field name expected");
+				field = 0;	// Unreachable code here just to shut up compiler warnings
+			}
+			require(false, Token::colon);
+			elements += new(arena) ExprPairList(field, parseAssignmentExpression(false));
+
+			const Token &tSeparator = lexer.get(false);
+			if (tSeparator.hasKind(Token::closeBrace))
+				break;
+			if (!tSeparator.hasKind(Token::comma))
+				syntaxError("',' expected");
+		}
+	return new(arena) PairListExprNode(initialPos, ExprNode::objectLiteral, elements.first);
+}
+
+
+// Parse and return a PrimaryExpression.
+// If the first token was peeked, it should be have been done with preferRegExp set to true.
+JS::ExprNode *JS::Parser::parsePrimaryExpression()
+{
+	ExprNode *e;
+	ExprNode::Kind eKind;
+
+	const Token &t = lexer.get(true);
+	switch (t.getKind()) {
+	  case Token::Null:
+		eKind = ExprNode::Null;
+	  makeExprNode:
+		e = new(arena) ExprNode(t.getPos(), eKind);
+		break;
+		
+	  case Token::True:
+		eKind = ExprNode::True;
+		goto makeExprNode;
+		
+	  case Token::False:
+		eKind = ExprNode::False;
+		goto makeExprNode;
+		
+	  case Token::This:
+		eKind = ExprNode::This;
+		goto makeExprNode;
+		
+	  case Token::Super:
+		eKind = ExprNode::Super;
+		goto makeExprNode;
+		
+	  case Token::number:
+		{
+			const Token &tUnit = lexer.peek(false);
+			if (!tUnit.getLineBreak() && (tUnit.hasKind(Token::unit) || tUnit.hasKind(Token::string))) {
+				lexer.get(false);
+				e = new(arena) NumUnitExprNode(t.getPos(), ExprNode::numUnit, copyTokenChars(t), t.getValue(), copyTokenChars(tUnit));
+			} else
+				e = new(arena) NumberExprNode(t.getPos(), t.getValue());
+		}
+		break;
+	
+	  case Token::string:
+		e = new(arena) StringExprNode(t.getPos(), ExprNode::string, copyTokenChars(t));
+		break;
+	
+	  case Token::regExp:
+		e = new(arena) RegExpExprNode(t.getPos(), ExprNode::regExp, t.getIdentifier(), copyTokenChars(t));
+		break;
+	
+	  case CASE_TOKEN_NONRESERVED:
+		e = parseQualifiedIdentifier(t);
+		break;
+	
+	  case Token::openParenthesis:
+		{
+			bool foundQualifiers;
+			e = parseParenthesesAndIdentifierQualifiers(t, foundQualifiers);
+			if (!foundQualifiers) {
+				const Token &tUnit = lexer.peek(false);
+				if (!tUnit.getLineBreak() && tUnit.hasKind(Token::string)) {
+					lexer.get(false);
+					e = new(arena) ExprUnitExprNode(t.getPos(), ExprNode::exprUnit, e, copyTokenChars(tUnit));
+				}
+			}
+		}
+		break;
+	
+	  case Token::openBracket:
+		e = parseArrayLiteral(t);
+		break;
+	
+	  case Token::openBrace:
+		e = parseObjectLiteral(t);
+		break;
+	
+	  case Token::Function:
+		syntaxError("***** functions not implemented yet *****");
+		e = 0;	// Unreachable code here just to shut up compiler warnings
+		break;
+
+	  default:
+		syntaxError("Expression expected");
+		e = 0;	// Unreachable code here just to shut up compiler warnings
+	}
+
+	return e;
+}
+
+
+// Parse an ArgumentsList followed by a closing parenthesis or bracket and return
+// the resulting InvokeExprNode.  The target function, indexed object, or created class
+// is supplied.  The opening parenthesis or bracket has already been read.
+// pos is the position to use for the InvokeExprNode.
+JS::InvokeExprNode *JS::Parser::parseInvoke(ExprNode *target, uint32 pos, Token::Kind closingTokenKind, ExprNode::Kind invokeKind)
+{
+	NodeQueue<ExprPairList> arguments;
+	bool hasNamedArgument = false;
+
+	if (!lexer.eat(true, closingTokenKind))
+		while (true) {
+			ExprNode *field = 0;
+			ExprNode *value = parseAssignmentExpression(false);
+			if (lexer.eat(false, Token::colon)) {
+				field = value;
+				if (!isFieldKind(field->getKind()))
+					syntaxError("Argument name must be an identifier, string, or number");
+				hasNamedArgument = true;
+				value = parseAssignmentExpression(false);
+			} else if (hasNamedArgument)
+				syntaxError("Unnamed argument cannot follow named argument", 0);
+			arguments += new(arena) ExprPairList(field, value);
+
+			const Token &tSeparator = lexer.get(false);
+			if (tSeparator.hasKind(closingTokenKind))
+				break;
+			if (!tSeparator.hasKind(Token::comma))
+				syntaxError("',' expected");
+		}
+	return new(arena) InvokeExprNode(pos, invokeKind, target, arguments.first);
+}
+
+
+// Parse and return a PostfixExpression.
+// If the first token was peeked, it should be have been done with preferRegExp set to true.
+// If newExpression is true, this expression is immediately preceded by 'new', so don't allow
+// call, postincrement, or postdecrement operators on it.
+JS::ExprNode *JS::Parser::parsePostfixExpression(bool newExpression)
+{
+	ExprNode *e;
+
+	const Token *tNew = lexer.eat(true, Token::New);
+	if (tNew) {
+		checkStackSize();
+		uint32 posNew = tNew->getPos();
+		e = parsePostfixExpression(true);
+		if (lexer.eat(false, Token::openParenthesis))
+			e = parseInvoke(e, posNew, Token::closeParenthesis, ExprNode::New);
+		else
+			e = new(arena) InvokeExprNode(posNew, ExprNode::New, e, 0);
+	} else
+		e = parsePrimaryExpression();
+	
+	while (true) {
+		ExprNode::Kind eKind;
+		const Token &t = lexer.get(false);
+		switch (t.getKind()) {
+		  case Token::openParenthesis:
+			if (newExpression)
+				goto other;
+			e = parseInvoke(e, t.getPos(), Token::closeParenthesis, ExprNode::call);
+			break;
+		
+		  case Token::openBracket:
+			e = parseInvoke(e, t.getPos(), Token::closeBracket, ExprNode::index);
+			break;
+		
+		  case Token::dot:
+			e = parseMember(e, t, ExprNode::dot, ExprNode::dotParen);
+			break;
+		
+		  case Token::at:
+			e = parseMember(e, t, ExprNode::at, ExprNode::at);
+			break;
+		
+		  case Token::increment:
+			eKind = ExprNode::postIncrement;
+		  incDec:
+			if (newExpression)
+				goto other;
+			e = new(arena) UnaryExprNode(t.getPos(), eKind, e);
+			break;
+		
+		  case Token::decrement:
+			eKind = ExprNode::postDecrement;
+			goto incDec;
+		
+		  default:
+		  other:
+			lexer.unget();
+			return e;
+		}
+	}
+}
+
+
+#if 0
+// Parse and return a NonAssignmentExpression.
+// If the first token was peeked, it should be have been done with preferRegExp set to true.
+JS::ExprNode *JS::Parser::parseNonAssignmentExpression(bool noIn)
+{
+	checkStackSize();
+}
+
+
+// Parse and return an AssignmentExpression.
+// If the first token was peeked, it should be have been done with preferRegExp set to true.
+JS::ExprNode *JS::Parser::parseAssignmentExpression(bool noIn)
+{
+	checkStackSize();
+}
+
+
+// Parse and return an Expression.
+// If the first token was peeked, it should be have been done with preferRegExp set to true.
+JS::ExprNode *JS::Parser::parseExpression(bool noIn)
+{
+	checkStackSize();
+}
+#endif

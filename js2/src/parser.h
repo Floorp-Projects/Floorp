@@ -21,6 +21,7 @@
 #define parser_h
 
 #include "utilities.h"
+#include <vector>
 
 namespace JavaScript {
 
@@ -31,115 +32,53 @@ namespace JavaScript {
 // Reader
 //
 
-	// A Reader reads Unicode characters from some source -- either a file or a string.
-	// get() returns all of the characters followed by a char16eof.
-	// If get() returns LF (u000A), CR (u000D), LS (u2028), or PS (u2029), then beginLine()
-	// must be called before getting or peeking any more characters.
+	// A Reader reads Unicode characters from a source string.
+	// Calling get() yields all of the characters in sequence.  One character may be read
+	// past the end of the source; that character appears as a null.
 	class Reader {
-	  protected:
-		const char16 *begin;			// Beginning of current buffer
-		const char16 *p;				// Position in current buffer
-		const char16 *end;				// End of current buffer
-		const char16 *lineStart;		// Pointer to start of current line
-		uint32 nGetsPastEnd;			// Number of times char16eof has been returned
+		const char16 *begin;			// Beginning of source text
+		const char16 *p;				// Position in source text
+		const char16 *end;				// End of source text; *end is a null character
 	  public:
-		uint32 lineNum;					// One-based number of current line
-		FileOffset lineFileOffset;		// Byte or character offset of start of current line relative to all of input
+		const String source;			// Source text
+		const String sourceLocation;	// Description of location from which the source text came
 	  private:
+		const uint32 initialLineNum;	// One-based number of current line
+		std::vector<const char16 *> linePositions; // Array of line starts recorded by beginLine()
 
-		String *recordString;			// String, if any, into which recordChar() records characters
+		String *recordString;			// String, if any, into which recordChar() records characters; not owned by the Reader
 		const char16 *recordBase;		// Position of last beginRecording() call
 		const char16 *recordPos;		// Position of last recordChar() call; nil if a discrepancy occurred
-		
-	  protected:
-		Reader(): nGetsPastEnd(0), lineNum(1), lineFileOffset(0) {}
 	  public:
-		Reader(const char16 *begin, const char16 *end);
+		
+		Reader(const String &source, const String &sourceLocation, uint32 initialLineNum = 1);
 	  private:
 	    Reader(const Reader&);			// No copy constructor
 	    void operator=(const Reader&);	// No assignment operator
 	  public:
 
-		char16orEOF get();
-		char16orEOF peek();
-		void unget(uint32 n = 1);
-		
-		virtual void beginLine() = 0;
-		uint32 charPos() const;
-		void backUpTo(uint32 pos);
+		char16 get() {ASSERT(p <= end); return *p++;}
+		char16 peek() {ASSERT(p <= end); return *p;}
+		void unget(uint32 n = 1) {ASSERT(p >= begin + n); p -= n;}
+		uint32 getPos() const {return static_cast<uint32>(p - begin);}
+		void setPos(uint32 pos) {ASSERT(pos <= getPos()); p = begin + pos;}
 
-		String extract(uint32 begin, uint32 end) const;
+		bool eof() const {ASSERT(p <= end); return p == end;}
+		bool peekEof(char16 ch) const {ASSERT(p <= end && *p == ch); return !ch && p == end;} // Faster version.  ch is the result of a peek
+		bool pastEof() const {return p == end+1;}
+		bool getEof(char16 ch) const {ASSERT(p[-1] == ch); return !ch && p == end+1;} // Faster version.  ch is the result of a get
+
+		void beginLine();
+		uint32 posToLineNum(uint32 pos) const;
+		uint32 getLine(uint32 lineNum, const char16 *&lineBegin, const char16 *&lineEnd) const;
+
 		void beginRecording(String &recordString);
 		void recordChar(char16 ch);
 		String &endRecording();
 		
-		virtual String sourceFile() const = 0; // A description of the source code that caused the error
-
-	  protected:
-		void setBuffer(const char16 *begin, const char16 *p, const char16 *end);
-		virtual char16orEOF underflow();
-		char16orEOF peekUnderflow();
+		void error(Exception::Kind kind, const String &message, uint32 pos);
 	};
 
-
-	// Get and return the next character or char16eof if at end of input.
-	inline char16orEOF Reader::get()
-	{
-		if (p != end)
-			return *p++;
-		return underflow();
-	}
-
-	// Return the next character without consuming it.  Return char16eof if at end of input.
-	inline char16orEOF Reader::peek()
-	{
-		if (p != end)
-			return *p;
-		return peekUnderflow();
-	}
-
-
-	// Return the number of characters between the current position and the beginning of the current line.
-	// This cannot be called if the current position is past the end of the input.
-	inline uint32 Reader::charPos() const
-	{
-		ASSERT(!nGetsPastEnd);
-		return static_cast<uint32>(p - lineStart);
-	}
-
-
-	// Back up to the given character offset relative to the current line.
-	inline void Reader::backUpTo(uint32 pos)
-	{
-		ASSERT(pos <= charPos());
-		p = lineStart + pos;
-		nGetsPastEnd = 0;
-	}
-
-
-	inline void Reader::setBuffer(const char16 *begin, const char16 *p, const char16 *end)
-	{
-		ASSERT(begin <= p && p <= end);
-		Reader::begin = begin;
-		Reader::p = p;
-		Reader::end = end;
-		lineStart = begin;
-	  #ifdef DEBUG
-		recordString = 0;
-	  #endif
-	}
-
-
-	// A Reader that reads from a String.
-	class StringReader: public Reader {
-		const String str;
-		const String source;
-
-	  public:
-		StringReader(const String &s, const String &source);
-		void beginLine();
-		String sourceFile() const;
-	};
 
 
 //
@@ -151,80 +90,79 @@ namespace JavaScript {
 	  public:
 		enum Kind {	// Keep synchronized with kindNames table
 		  // Special
-			End,						// End of token stream
+			end,						// End of token stream
 
-			Id,							// Non-keyword identifier (may be same as a keyword if it contains an escape code)
-			Num,						// Numeral
-			Str,						// String
-			Unit,						// Unit after numeral
-			RegExp,						// Regular expression
+			number,						// Number
+			string,						// String
+			unit,						// Unit after number
+			regExp,						// Regular expression
 
 		  // Punctuators
-			OpenParenthesis,			// (
-			CloseParenthesis,			// )
-			OpenBracket,				// [
-			CloseBracket,				// ]
-			OpenBrace,					// {
-			CloseBrace,					// }
+			openParenthesis,			// (
+			closeParenthesis,			// )
+			openBracket,				// [
+			closeBracket,				// ]
+			openBrace,					// {
+			closeBrace,					// }
 
-			Comma,						// ,
-			Semicolon,					// ;
-			Dot,						// .
-			DoubleDot,					// ..
-			TripleDot,					// ...
-			Arrow,						// ->
-			Colon,						// :
-			DoubleColon,				// ::
-			Pound,						// #
-			At,							// @
+			comma,						// ,
+			semicolon,					// ;
+			dot,						// .
+			doubleDot,					// ..
+			tripleDot,					// ...
+			arrow,						// ->
+			colon,						// :
+			doubleColon,				// ::
+			pound,						// #
+			at,							// @
 
-			Increment,					// ++
-			Decrement,					// --
+			increment,					// ++
+			decrement,					// --
 
-			Complement,					// ~
-			Not,						// !
+			complement,					// ~
+			logicalNot,					// !
 
-			Times,						// *
-			Divide,						// /
-			Modulo,						// %
-			Plus,						// +
-			Minus,						// -
-			LeftShift,					// <<
-			RightShift,					// >>
-			LogicalRightShift,			// >>>
-			LogicalAnd,					// &&
-			LogicalXor,					// ^^
-			LogicalOr,					// ||
-			And,						// &	// These must be at constant offsets from LogicalAnd ... LogicalOr
-			Xor,						// ^
-			Or,							// |
+			times,						// *
+			divide,						// /
+			modulo,						// %
+			plus,						// +
+			minus,						// -
+			leftShift,					// <<
+			rightShift,					// >>
+			logicalRightShift,			// >>>
+			logicalAnd,					// &&
+			logicalXor,					// ^^
+			logicalOr,					// ||
+			bitwiseAnd,					// &	// These must be at constant offsets from logicalAnd ... logicalOr
+			bitwiseXor,					// ^
+			bitwiseOr,					// |
 
-			Assignment,					// =
-			TimesEquals,				// *=	// These must be at constant offsets from Times ... Or
-			DivideEquals,				// /=
-			ModuloEquals,				// %=
-			PlusEquals,					// +=
-			MinusEquals,				// -=
-			LeftShiftEquals,			// <<=
-			RightShiftEquals,			// >>=
-			LogicalRightShiftEquals,	// >>>=
-			LogicalAndEquals,			// &&=
-			LogicalXorEquals,			// ^^=
-			LogicalOrEquals,			// ||=
-			AndEquals,					// &=
-			XorEquals,					// ^=
-			OrEquals,					// |=
+			assignment,					// =
+			timesEquals,				// *=	// These must be at constant offsets from times ... bitwiseOr
+			divideEquals,				// /=
+			moduloEquals,				// %=
+			plusEquals,					// +=
+			minusEquals,				// -=
+			leftShiftEquals,			// <<=
+			rightShiftEquals,			// >>=
+			logicalRightShiftEquals,	// >>>=
+			logicalAndEquals,			// &&=
+			logicalXorEquals,			// ^^=
+			logicalOrEquals,			// ||=
+			bitwiseAndEquals,			// &=
+			bitwiseXorEquals,			// ^=
+			bitwiseOrEquals,			// |=
 
-			Equal,						// ==
-			NotEqual,					// !=
-			LessThan,					// <
-			LessThanOrEqual,			// <=
-			GreaterThan,				// >	// >, >= must be at constant offsets from <, <=
-			GreaterThanOrEqual,			// >=
-			Identical,					// ===
-			NotIdentical,				// !==
+			equal,						// ==
+			notEqual,					// !=
+			lessThan,					// <
+			lessThanOrEqual,			// <=
+			greaterThan,				// >	// >, >= must be at constant offsets from <, <=
+			greaterThanOrEqual,			// >=
+			identical,					// ===
+			notIdentical,				// !==
 
-			Question,					// ?
+			question,					// ?
 
 		  // Reserved words
 			Abstract,					// abstract
@@ -290,32 +228,76 @@ namespace JavaScript {
 			Set,						// set
 			Version,					// version
 			
-			KeywordsEnd,				// End of range of special identifier tokens
+			identifier,					// Non-keyword identifier (may be same as a keyword if it contains an escape code)
+
+			KindsEnd,					// End of token kinds
 			KeywordsBegin = Abstract,	// Beginning of range of special identifier tokens
-			KindsEnd = KeywordsEnd		// End of token kinds
+			KeywordsEnd = identifier,	// End of range of special identifier tokens
+			NonReservedBegin = Box,		// Beginning of range of non-reserved words
+			NonReservedEnd = identifier,// End of range of non-reserved words
+			KindsWithCharsBegin = number,// Beginning of range of tokens for which the chars field (below) is valid
+			KindsWithCharsEnd = regExp+1// End of range of tokens for which the chars field (below) is valid
 		};
 
+#define CASE_TOKEN_NONRESERVED	\
+		 Token::Box:			\
+	case Token::Constructor:	\
+	case Token::Field:			\
+	case Token::Get:			\
+	case Token::Language:		\
+	case Token::Local:			\
+	case Token::Method:			\
+	case Token::Override:		\
+	case Token::Set:			\
+	case Token::Version:		\
+	case Token::identifier
+
+	  private:
+	  #ifdef DEBUG
+		bool valid;						// True if this token has been initialized
+	  #endif
 		Kind kind;						// The token's kind
 		bool lineBreak;					// True if line break precedes this token
-		SourcePosition pos;				// Position of this token
-		const StringAtom *identifier;	// The token's characters; non-null for identifiers, keywords, and regular expressions only
+		uint32 pos;						// Source position of this token
+		const StringAtom *id;			// The token's characters; non-nil for identifiers, keywords, and regular expressions only
 		String chars;					// The token's characters; valid for strings, units, numbers, and regular expression flags only
 		float64 value;					// The token's value (numbers only)
 		
-		static void initKeywords(World &world);
+	  #ifdef DEBUG
+		Token(): valid(false) {}
+	  #endif
 
-		friend String &operator+=(String &s, Kind k) {ASSERT(uint(k) < KindsEnd); return s += kindNames[k];}
+	  public:
+		static void initKeywords(World &world);
+		static bool isIdentifierKind(Kind kind) {ASSERT(NonReservedEnd == identifier && KindsEnd == identifier+1); return kind >= NonReservedBegin;}
+		static bool isSpecialKind(Kind kind) {return kind <= regExp || kind == identifier;}
+		static const char *kindName(Kind kind) {ASSERT(uint(kind) < KindsEnd); return kindNames[kind];}
+
+		Kind getKind() const {ASSERT(valid); return kind;}
+		bool hasKind(Kind k) const {ASSERT(valid); return kind == k;}
+		bool getLineBreak() const {ASSERT(valid); return lineBreak;}
+		uint32 getPos() const {ASSERT(valid); return pos;}
+		const StringAtom &getIdentifier() const {ASSERT(valid && id); return *id;}
+		const String &getChars() const {ASSERT(valid && kind >= KindsWithCharsBegin && kind < KindsWithCharsEnd); return chars;}
+		float64 getValue() const {ASSERT(valid && kind == number); return value;}
+
+		friend String &operator+=(String &s, Kind k) {return s += kindName(k);}
 		friend String &operator+=(String &s, const Token &t) {t.print(s); return s;}
 		void print(String &dst, bool debug = false) const;
+		
+		friend class Lexer;
 	};
 
 
 	class Lexer {
-		enum {tokenBufferSize = 3};		// Token lookahead buffer size
-	  public:
-		Reader &reader;
-		World &world;
-	  private:
+		enum {tokenLookahead = 2};		// Number of tokens that can be simultaneously live
+	  #ifdef DEBUG
+		enum {tokenGuard = 10};			// Number of invalid tokens added to circular token buffer to catch references to old tokens
+	  #else
+		enum {tokenGuard = 0};			// Number of invalid tokens added to circular token buffer to catch references to old tokens
+	  #endif
+		enum {tokenBufferSize = tokenLookahead + tokenGuard}; // Token lookahead buffer size
+
 		Token tokens[tokenBufferSize];	// Circular buffer of recently read or lookahead tokens
 		Token *nextToken;				// Address of next Token in the circular buffer to be returned by get()
 		int nTokensFwd;					// Net number of Tokens on which unget() has been called; these Tokens are ahead of nextToken
@@ -324,20 +306,25 @@ namespace JavaScript {
 		bool savedPreferRegExp[tokenBufferSize]; // Circular buffer of saved values of preferRegExp to get() calls
 	  #endif
 		bool lexingUnit;				// True if lexing a unit identifier immediately following a number
-
 	  public:
-		Lexer(Reader &reader, World &world);
+		World &world;
+		Reader reader;
+
+		Lexer(World &world, const String &source, const String &sourceLocation, uint32 initialLineNum = 1);
 		
-		Token &get(bool preferRegExp);
+		const Token &get(bool preferRegExp);
+		const Token *eat(bool preferRegExp, Token::Kind kind);
 		const Token &peek(bool preferRegExp);
+		void redesignate(bool preferRegExp);
 		void unget();
+		uint32 getPos() const;
 
 	  private:
 		void syntaxError(const char *message, uint backUp = 1);
-		char16orEOF getChar();
-		char16orEOF internalGetChar(char16orEOF ch);
-		char16orEOF peekChar();
-		char16orEOF internalPeekChar(char16orEOF ch);
+		char16 getChar();
+		char16 internalGetChar(char16 ch);
+		char16 peekChar();
+		char16 internalPeekChar(char16 ch);
 		bool testChar(char16 ch);
 
 		char16 lexEscape(bool unicodeOnly);
@@ -347,6 +334,17 @@ namespace JavaScript {
 		void lexRegExp();
 		void lexToken(bool preferRegExp);
 	};
+
+  #ifndef DEBUG
+	inline void Lexer::redesignate(bool) {}
+  #endif
+
+	// Return the position of the first character of the next token, which must have been peeked.
+	inline uint32 Lexer::getPos() const
+	{
+		ASSERT(nTokensFwd);
+		return nextToken->getPos();
+	}
 
 
 //
@@ -376,23 +374,43 @@ namespace JavaScript {
 	// destroyed explicitly.  Strings are allocated via newArenaString.
 
 	struct ParseNode: ArenaObject {
-		SourcePosition pos;				// Position of this statement or expression
+		uint32 pos;						// Position of this statement or expression
 		
-		explicit ParseNode(const SourcePosition &pos): pos(pos) {}
+		explicit ParseNode(uint32 pos): pos(pos) {}
 	};
+
+	// A helper template for creating linked lists of ParseNode subtypes.  N should be derived
+	// from a ParseNode and should have an instance variable called <next> of type N* and that
+	// is initialized to nil when an N instance is created.
+	template<class N>
+	class NodeQueue {
+	  public:
+		N *first;						// Head of queue
+	  private:
+		N **last;						// Next link of last element of queue
+		
+	  public:
+		NodeQueue(): first(0), last(&first) {}
+	  private:
+	    NodeQueue(const NodeQueue&);		// No copy constructor
+	    void operator=(const NodeQueue&);	// No assignment operator
+	  public:
+		void operator+=(N *elt) {ASSERT(elt && !elt->next); *last = elt; last = &elt->next;}
+	};
+
 
 	struct FunctionName {
 		enum Prefix {
-			Normal,						// No prefix
+			normal,						// No prefix
 			Get,						// get
 			Set,						// set
 			New							// new
 		};
 		
 		Prefix prefix;					// The name's prefix, if any
-		const StringAtom *identifier;	// The name; nil if omitted
+		const StringAtom *name;			// The name; nil if omitted
 		
-		FunctionName(): prefix(Normal), identifier(0) {}
+		FunctionName(): prefix(normal), name(0) {}
 	};
 	
 	struct ExprNode;
@@ -400,11 +418,11 @@ namespace JavaScript {
 	
 	struct VariableBinding: ParseNode {
 		VariableBinding *next;			// Next binding in a linked list of variable or parameter bindings
-		const StringAtom *identifier;	// The variable's name; nil if omitted, which currently can only happen for ... parameters
+		const StringAtom *name;			// The variable's name; nil if omitted, which currently can only happen for ... parameters
 		ExprNode *type;					// Type expression or nil if not provided
 		ExprNode *initializer;			// Initial value expression or nil if not provided
 		
-		VariableBinding(const SourcePosition &pos): ParseNode(pos), next(0), identifier(0), type(0), initializer(0) {}
+		VariableBinding(uint32 pos): ParseNode(pos), next(0), name(0), type(0), initializer(0) {}
 	};
 
 	struct FunctionDefinition: FunctionName {
@@ -418,126 +436,134 @@ namespace JavaScript {
 
 	struct ExprNode: ParseNode {
 		enum Kind {						// Actual class			Operands
-			Id,							// IdentifierExprNode	<identifier>
-			Num,						// NumberExprNode		<value>
-			Str,						// StringExprNode		<str>
-			RegExp,						// RegExpExprNode		/<regExp>/<flags>
+			identifier,					// IdentifierExprNode	<name>
+			number,						// NumberExprNode		<value>
+			string,						// StringExprNode		<str>
+			regExp,						// RegExpExprNode		/<regExp>/<flags>
 			Null,						// ExprNode				null
 			True,						// ExprNode				true
 			False,						// ExprNode				false
 			This,						// ExprNode				this
 			Super,						// ExprNode				super
 
-			NumUnit,					// NumUnitExprNode		<num> "<str>"   or   <num><str>
-			ExprUnit,					// ExprUnitExprNode		(<op>) "<str>"
-			QualifiedIdentifier,		// OpIdentifierExprNode	<op> :: <identifier>
+			parentheses,				// UnaryExprNode		(<op>)
+			numUnit,					// NumUnitExprNode		<num> "<str>"   or   <num><str>
+			exprUnit,					// ExprUnitExprNode		(<op>) "<str>"
+			qualifiedIdentifier,		// OpIdentifierExprNode	<op> :: <name>
 			
-			ObjectLiteral,				// PairListExprNode		{<field>:<value>, <field>:<value>, ..., <field>:<value>}
-			ArrayLiteral,				// PairListExprNode		[<value>, <value>, ..., <value>]
-			FunctionLiteral,			// FunctionExprNode		function <function>
+			objectLiteral,				// PairListExprNode		{<field>:<value>, <field>:<value>, ..., <field>:<value>}
+			arrayLiteral,				// PairListExprNode		[<value>, <value>, ..., <value>]
+			functionLiteral,			// FunctionExprNode		function <function>
 
-			Call,						// InvokeExprNode		<op>(<field>:<value>, <field>:<value>, ..., <field>:<value>)
+			call,						// InvokeExprNode		<op>(<field>:<value>, <field>:<value>, ..., <field>:<value>)
 			New,						// InvokeExprNode		new <op>(<field>:<value>, <field>:<value>, ..., <field>:<value>)
-			Index,						// InvokeExprNode		<op>[<field>:<value>, <field>:<value>, ..., <field>:<value>]
+			index,						// InvokeExprNode		<op>[<field>:<value>, <field>:<value>, ..., <field>:<value>]
 
-			Dot,						// BinaryExprNode		<op1> . <op2>  // <op2> must be Identifier or QualifiedIdentifier
-			DotParen,					// BinaryExprNode		<op1> .( <op2> )
-			At,							// BinaryExprNode		<op1> @ <op2>
+			dot,						// BinaryExprNode		<op1> . <op2>  // <op2> must be identifier or qualifiedIdentifier
+			dotParen,					// BinaryExprNode		<op1> .( <op2> )
+			at,							// BinaryExprNode		<op1> @ <op2>   or   <op1> @( <op2> )
 
 			Delete,						// UnaryExprNode		delete <op>
 			Typeof,						// UnaryExprNode		typeof <op>
 			Eval,						// UnaryExprNode		eval <op>
-			PreIncrement,				// UnaryExprNode		++ <op>
-			PreDecrement,				// UnaryExprNode		-- <op>
-			PostIncrement,				// UnaryExprNode		<op> ++
-			PostDecrement,				// UnaryExprNode		<op> --
-			Plus,						// UnaryExprNode		+ <op>
-			Minus,						// UnaryExprNode		- <op>
-			Complement,					// UnaryExprNode		~ <op>
-			Not,						// UnaryExprNode		! <op>
+			preIncrement,				// UnaryExprNode		++ <op>
+			preDecrement,				// UnaryExprNode		-- <op>
+			postIncrement,				// UnaryExprNode		<op> ++
+			postDecrement,				// UnaryExprNode		<op> --
+			plus,						// UnaryExprNode		+ <op>
+			minus,						// UnaryExprNode		- <op>
+			complement,					// UnaryExprNode		~ <op>
+			logicalNot,					// UnaryExprNode		! <op>
 
-			Add,						// BinaryExprNode		<op1> + <op2>
-			Subtract,					// BinaryExprNode		<op1> - <op2>
-			Multiply,					// BinaryExprNode		<op1> * <op2>
-			Divide,						// BinaryExprNode		<op1> / <op2>
-			Modulo,						// BinaryExprNode		<op1> % <op2>
-			LeftShift,					// BinaryExprNode		<op1> << <op2>
-			RightShift,					// BinaryExprNode		<op1> >> <op2>
-			LogicalRightShift,			// BinaryExprNode		<op1> >>> <op2>
-			And,						// BinaryExprNode		<op1> & <op2>
-			Xor,						// BinaryExprNode		<op1> ^ <op2>
-			Or,							// BinaryExprNode		<op1> | <op2>
-			LogicalAnd,					// BinaryExprNode		<op1> && <op2>
-			LogicalXor,					// BinaryExprNode		<op1> ^^ <op2>
-			LogicalOr,					// BinaryExprNode		<op1> || <op2>
+			add,						// BinaryExprNode		<op1> + <op2>
+			subtract,					// BinaryExprNode		<op1> - <op2>
+			multiply,					// BinaryExprNode		<op1> * <op2>
+			divide,						// BinaryExprNode		<op1> / <op2>
+			modulo,						// BinaryExprNode		<op1> % <op2>
+			leftShift,					// BinaryExprNode		<op1> << <op2>
+			rightShift,					// BinaryExprNode		<op1> >> <op2>
+			logicalRightShift,			// BinaryExprNode		<op1> >>> <op2>
+			bitwiseAnd,					// BinaryExprNode		<op1> & <op2>
+			bitwiseXor,					// BinaryExprNode		<op1> ^ <op2>
+			bitwiseOr,					// BinaryExprNode		<op1> | <op2>
+			logicalAnd,					// BinaryExprNode		<op1> && <op2>
+			logicalXor,					// BinaryExprNode		<op1> ^^ <op2>
+			logicalOr,					// BinaryExprNode		<op1> || <op2>
 
-			Equal,						// BinaryExprNode		<op1> == <op2>
-			NotEqual,					// BinaryExprNode		<op1> != <op2>
-			LessThan,					// BinaryExprNode		<op1> < <op2>
-			LessThanOrEqual,			// BinaryExprNode		<op1> <= <op2>
-			GreaterThan,				// BinaryExprNode		<op1> > <op2>
-			GreaterThanOrEqual,			// BinaryExprNode		<op1> >= <op2>
-			Identical,					// BinaryExprNode		<op1> === <op2>
-			NotIdentical,				// BinaryExprNode		<op1> !== <op2>
+			equal,						// BinaryExprNode		<op1> == <op2>
+			notEqual,					// BinaryExprNode		<op1> != <op2>
+			lessThan,					// BinaryExprNode		<op1> < <op2>
+			lessThanOrEqual,			// BinaryExprNode		<op1> <= <op2>
+			greaterThan,				// BinaryExprNode		<op1> > <op2>
+			greaterThanOrEqual,			// BinaryExprNode		<op1> >= <op2>
+			identical,					// BinaryExprNode		<op1> === <op2>
+			notIdentical,				// BinaryExprNode		<op1> !== <op2>
 			In,							// BinaryExprNode		<op1> in <op2>
 			Instanceof,					// BinaryExprNode		<op1> instanceof <op2>
 
-			Assignment,					// BinaryExprNode		<op1> = <op2>
-			AddEquals,					// BinaryExprNode		<op1> += <op2>
-			SubtractEquals,				// BinaryExprNode		<op1> -= <op2>
-			MultiplyEquals,				// BinaryExprNode		<op1> *= <op2>
-			DivideEquals,				// BinaryExprNode		<op1> /= <op2>
-			ModuloEquals,				// BinaryExprNode		<op1> %= <op2>
-			LeftShiftEquals,			// BinaryExprNode		<op1> <<= <op2>
-			RightShiftEquals,			// BinaryExprNode		<op1> >>= <op2>
-			LogicalRightShiftEquals,	// BinaryExprNode		<op1> >>>= <op2>
-			AndEquals,					// BinaryExprNode		<op1> &= <op2>
-			XorEquals,					// BinaryExprNode		<op1> ^= <op2>
-			OrEquals,					// BinaryExprNode		<op1> |= <op2>
-			LogicalAndEquals,			// BinaryExprNode		<op1> &&= <op2>
-			LogicalXorEquals,			// BinaryExprNode		<op1> ^^= <op2>
-			LogicalOrEquals,			// BinaryExprNode		<op1> ||= <op2>
+			assignment,					// BinaryExprNode		<op1> = <op2>
+			addEquals,					// BinaryExprNode		<op1> += <op2>
+			subtractEquals,				// BinaryExprNode		<op1> -= <op2>
+			multiplyEquals,				// BinaryExprNode		<op1> *= <op2>
+			divideEquals,				// BinaryExprNode		<op1> /= <op2>
+			moduloEquals,				// BinaryExprNode		<op1> %= <op2>
+			leftShiftEquals,			// BinaryExprNode		<op1> <<= <op2>
+			rightShiftEquals,			// BinaryExprNode		<op1> >>= <op2>
+			logicalRightShiftEquals,	// BinaryExprNode		<op1> >>>= <op2>
+			bitwiseAndEquals,			// BinaryExprNode		<op1> &= <op2>
+			bitwiseXorEquals,			// BinaryExprNode		<op1> ^= <op2>
+			bitwiseOrEquals,			// BinaryExprNode		<op1> |= <op2>
+			logicalAndEquals,			// BinaryExprNode		<op1> &&= <op2>
+			logicalXorEquals,			// BinaryExprNode		<op1> ^^= <op2>
+			logicalOrEquals,			// BinaryExprNode		<op1> ||= <op2>
 
-			Conditional,				// TernaryExprNode		<op1> ? <op2> : <op3>
-			Comma						// BinaryExprNode		<op1> , <op2>	// Comma expressions only
+			conditional,				// TernaryExprNode		<op1> ? <op2> : <op3>
+			comma						// BinaryExprNode		<op1> , <op2>	// Comma expressions only
 		};
 		
+	  private:
 		Kind kind;						// The node's kind
+	  public:
 
-		ExprNode(const SourcePosition &pos, Kind kind): ParseNode(pos), kind(kind) {}
+		ExprNode(uint32 pos, Kind kind): ParseNode(pos), kind(kind) {}
+
+		Kind getKind() const {return kind;}
+		bool hasKind(Kind k) const {return kind == k;}
+
+		static bool isFieldKind(Kind kind) {return kind == identifier || kind == number || kind == string || kind == qualifiedIdentifier;}
 	};
 
 	struct IdentifierExprNode: ExprNode {
-		const StringAtom &identifier;	// The identifier
+		const StringAtom &name;			// The identifier
 
-		IdentifierExprNode(const SourcePosition &pos, Kind kind, const StringAtom &identifier):
-				ExprNode(pos, kind), identifier(identifier) {}
+		IdentifierExprNode(uint32 pos, Kind kind, const StringAtom &name):
+				ExprNode(pos, kind), name(name) {}
 	};
 	
 	struct OpIdentifierExprNode: IdentifierExprNode {
-		ExprNode &op;					// The namespace expression or indexed expression
+		ExprNode *op;					// The namespace expression or indexed expression; non-nil only
 
-		OpIdentifierExprNode(const SourcePosition &pos, Kind kind, const StringAtom &identifier, ExprNode &op):
-				IdentifierExprNode(pos, kind, identifier), op(op) {}
+		OpIdentifierExprNode(uint32 pos, Kind kind, const StringAtom &name, ExprNode *op):
+				IdentifierExprNode(pos, kind, name), op(op) {ASSERT(op);}
 	};
 	
 	struct NumberExprNode: ExprNode {
 		float64 value;					// The number's value
 
-		NumberExprNode(const SourcePosition &pos, float64 value): ExprNode(pos, Num), value(value) {}
+		NumberExprNode(uint32 pos, float64 value): ExprNode(pos, number), value(value) {}
 	};
 	
 	struct StringExprNode: ExprNode {
 		String &str;					// The string
 
-		StringExprNode(const SourcePosition &pos, Kind kind, String &str): ExprNode(pos, kind), str(str) {}
+		StringExprNode(uint32 pos, Kind kind, String &str): ExprNode(pos, kind), str(str) {}
 	};
 	
 	struct RegExpExprNode: ExprNode {
 		const StringAtom &regExp;		// The regular expression's contents
 		String &flags;					// The regular expression's flags
 
-		RegExpExprNode(const SourcePosition &pos, Kind kind, const StringAtom &regExp, String &flags):
+		RegExpExprNode(uint32 pos, Kind kind, const StringAtom &regExp, String &flags):
 				ExprNode(pos, kind), regExp(regExp), flags(flags) {}
 	};
 	
@@ -545,28 +571,28 @@ namespace JavaScript {
 		String &numStr;					// The number's source string
 		float64 num;					// The number's value
 
-		NumUnitExprNode(const SourcePosition &pos, Kind kind, String &unitStr, String &numStr, float64 num):
+		NumUnitExprNode(uint32 pos, Kind kind, String &numStr, float64 num, String &unitStr):
 				StringExprNode(pos, kind, unitStr), numStr(numStr), num(num) {}
 	};
 	
-	struct ExprNodeUnitExprNode: StringExprNode { // str is the unit string
-		ExprNode &op;					// The expression to which the unit is applied
+	struct ExprUnitExprNode: StringExprNode { // str is the unit string
+		ExprNode *op;					// The expression to which the unit is applied; non-nil only
 
-		ExprNodeUnitExprNode(const SourcePosition &pos, Kind kind, String &unitStr, ExprNode &op):
-				StringExprNode(pos, kind, unitStr), op(op) {}
+		ExprUnitExprNode(uint32 pos, Kind kind, ExprNode *op, String &unitStr):
+				StringExprNode(pos, kind, unitStr), op(op) {ASSERT(op);}
 	};
 
 	struct FunctionExprNode: ExprNode {
 		FunctionDefinition function;	// Function definition
 
-		FunctionExprNode(const SourcePosition &pos, Kind kind): ExprNode(pos, kind) {}
+		FunctionExprNode(uint32 pos, Kind kind): ExprNode(pos, kind) {}
 	};
 	
 	struct ExprList: ArenaObject {
 		ExprList *next;					// Next expression in linked list
-		ExprNode &expr;					// Attribute expression
+		ExprNode *expr;					// Attribute expression; non-nil only
 		
-		explicit ExprList(ExprNode &expr): next(0), expr(expr) {}
+		explicit ExprList(ExprNode *expr): next(0), expr(expr) {ASSERT(expr);}
 	};
 	
 	struct ExprPairList: ArenaObject {
@@ -580,47 +606,47 @@ namespace JavaScript {
 	struct PairListExprNode: ExprNode {
 		ExprPairList *pairs;			// Linked list of pairs
 
-		PairListExprNode(const SourcePosition &pos, Kind kind, ExprPairList *pairs): ExprNode(pos, kind), pairs(pairs) {}
+		PairListExprNode(uint32 pos, Kind kind, ExprPairList *pairs): ExprNode(pos, kind), pairs(pairs) {}
 	};
 
 	struct InvokeExprNode: PairListExprNode {
-		ExprNode &op;					// The called function, called constructor, or indexed object
+		ExprNode *op;					// The called function, called constructor, or indexed object; non-nil only
 
-		InvokeExprNode(const SourcePosition &pos, Kind kind, ExprPairList *pairs, ExprNode &op):
-				PairListExprNode(pos, kind, pairs), op(op) {}
+		InvokeExprNode(uint32 pos, Kind kind, ExprNode *op, ExprPairList *pairs):
+				PairListExprNode(pos, kind, pairs), op(op) {ASSERT(op);}
 	};
 
 	struct UnaryExprNode: ExprNode {
-		ExprNode &op;					// The unary operator's operand
+		ExprNode *op;					// The unary operator's operand; non-nil only
 
-		UnaryExprNode(const SourcePosition &pos, Kind kind, ExprNode &op): ExprNode(pos, kind), op(op) {}
+		UnaryExprNode(uint32 pos, Kind kind, ExprNode *op): ExprNode(pos, kind), op(op) {ASSERT(op);}
 	};
 
 	struct BinaryExprNode: ExprNode {
-		ExprNode &op1;					// The binary operator's first operand
-		ExprNode &op2;					// The binary operator's second operand
+		ExprNode *op1;					// The binary operator's first operand; non-nil only
+		ExprNode *op2;					// The binary operator's second operand; non-nil only
 
-		BinaryExprNode(const SourcePosition &pos, Kind kind, ExprNode &op1, ExprNode &op2):
-				ExprNode(pos, kind), op1(op1), op2(op2) {}
+		BinaryExprNode(uint32 pos, Kind kind, ExprNode *op1, ExprNode *op2):
+				ExprNode(pos, kind), op1(op1), op2(op2) {ASSERT(op1 && op2);}
 	};
 
 	struct TernaryExprNode: ExprNode {
-		ExprNode &op1;					// The ternary operator's first operand
-		ExprNode &op2;					// The ternary operator's second operand
-		ExprNode &op3;					// The ternary operator's third operand
+		ExprNode *op1;					// The ternary operator's first operand; non-nil only
+		ExprNode *op2;					// The ternary operator's second operand; non-nil only
+		ExprNode *op3;					// The ternary operator's third operand; non-nil only
 
-		TernaryExprNode(const SourcePosition &pos, Kind kind, ExprNode &op1, ExprNode &op2, ExprNode &op3):
-				ExprNode(pos, kind), op1(op1), op2(op2), op3(op3) {}
+		TernaryExprNode(uint32 pos, Kind kind, ExprNode *op1, ExprNode *op2, ExprNode *op3):
+				ExprNode(pos, kind), op1(op1), op2(op2), op3(op3) {ASSERT(op1 && op2 && op3);}
 	};
 
 
 
 	struct StmtNode: ParseNode {
 		enum Kind {						// Actual class			Operands
-			Empty,						// StmtNode				;
-			Expression,					// ExprStmtNode			<expr> ;
-			Block,						// BlockStmtNode		<attributes> { <statements> }
-			Label,						// LabelStmtNode		<label> : <stmt>
+			empty,						// StmtNode				;
+			expression,					// ExprStmtNode			<expr> ;
+			block,						// BlockStmtNode		<attributes> { <statements> }
+			label,						// LabelStmtNode		<label> : <stmt>
 			If,							// UnaryStmtNode		if ( <expr> ) <stmt>
 			IfElse,						// BinaryStmtNode		if ( <expr> ) <stmt> else <stmt2>
 			Switch,						// SwitchStmtNode		switch ( <expr> ) <statements>
@@ -640,151 +666,179 @@ namespace JavaScript {
 			Const,						// VariableStmtNode		<attributes> const <bindings> ;
 			Var,						// VariableStmtNode		<attributes> var <bindings> ;
 			Function,					// FunctionStmtNode		<attributes> function <function>
-			Class,						// ClassStmtNode		<attributes> class <identifier> extends <superclasses> <body>
+			Class,						// ClassStmtNode		<attributes> class <name> extends <superclasses> <body>
 			Language					// LanguageStmtNode		language <language> ;
 		};
 		
 		Kind kind;						// The node's kind
 		StmtNode *next;					// Next statement in a linked list of statements in this block
 
-		StmtNode(const SourcePosition &pos, Kind kind): ParseNode(pos), kind(kind), next(0) {}
+		StmtNode(uint32 pos, Kind kind): ParseNode(pos), kind(kind), next(0) {}
 	};
 
 	struct ExprStmtNode: StmtNode {
-		ExprNode *expr;					// The expression statement's expression.  May be null for default: or return-with-no-expression statements.
+		ExprNode *expr;					// The expression statement's expression.  May be nil for default: or return-with-no-expression statements.
 
-		ExprStmtNode(const SourcePosition &pos, Kind kind, ExprNode *expr): StmtNode(pos, kind), expr(expr) {}
+		ExprStmtNode(uint32 pos, Kind kind, ExprNode *expr): StmtNode(pos, kind), expr(expr) {}
 	};
 
 	struct AttributeStmtNode: StmtNode {
 		ExprList *attributes;			// Linked list of block or definition's attributes
 
-		AttributeStmtNode(const SourcePosition &pos, Kind kind, ExprList *attributes): StmtNode(pos, kind), attributes(attributes) {}
+		AttributeStmtNode(uint32 pos, Kind kind, ExprList *attributes): StmtNode(pos, kind), attributes(attributes) {}
 	};
 	
 	struct BlockStmtNode: AttributeStmtNode {
 		StmtNode *statements;			// Linked list of block's statements
 
-		BlockStmtNode(const SourcePosition &pos, Kind kind, ExprList *attributes): AttributeStmtNode(pos, kind, attributes) {}
+		BlockStmtNode(uint32 pos, Kind kind, ExprList *attributes): AttributeStmtNode(pos, kind, attributes) {}
 	};
 	
 	struct LabelStmtNode: StmtNode {
 		const StringAtom &label;		// The label
-		StmtNode &stmt;					// Labeled statement
+		StmtNode *stmt;					// Labeled statement; non-nil only
 
-		LabelStmtNode(const SourcePosition &pos, Kind kind, const StringAtom &label, StmtNode &stmt):
-				StmtNode(pos, kind), label(label), stmt(stmt) {}
+		LabelStmtNode(uint32 pos, Kind kind, const StringAtom &label, StmtNode *stmt):
+				StmtNode(pos, kind), label(label), stmt(stmt) {ASSERT(stmt);}
 	};
 	
 	struct UnaryStmtNode: ExprStmtNode {
-		StmtNode &stmt;					// First substatement
+		StmtNode *stmt;					// First substatement; non-nil only
 
-		UnaryStmtNode(const SourcePosition &pos, Kind kind, ExprNode *expr, StmtNode &stmt):
-				ExprStmtNode(pos, kind, expr), stmt(stmt) {}
+		UnaryStmtNode(uint32 pos, Kind kind, ExprNode *expr, StmtNode *stmt):
+				ExprStmtNode(pos, kind, expr), stmt(stmt) {ASSERT(stmt);}
 	};
 	
 	struct BinaryStmtNode: UnaryStmtNode {
-		StmtNode &stmt2;				// Second substatement
+		StmtNode *stmt2;				// Second substatement; non-nil only
 
-		BinaryStmtNode(const SourcePosition &pos, Kind kind, ExprNode *expr, StmtNode &stmt1, StmtNode &stmt2):
-				UnaryStmtNode(pos, kind, expr, stmt1), stmt2(stmt2) {}
+		BinaryStmtNode(uint32 pos, Kind kind, ExprNode *expr, StmtNode *stmt1, StmtNode *stmt2):
+				UnaryStmtNode(pos, kind, expr, stmt1), stmt2(stmt2) {ASSERT(stmt2);}
 	};
 	
 	struct ForStmtNode: StmtNode {
-		StmtNode *initializer;			// First item in parentheses; either nil (if not provided), an Expression, or a Var, or a Const.
+		StmtNode *initializer;			// First item in parentheses; either nil (if not provided), an expression, or a Var, or a Const.
 		ExprNode *expr2;				// Second item in parentheses; nil if not provided
 		ExprNode *expr3;				// Third item in parentheses; nil if not provided
-		StmtNode &stmt;					// Substatement
+		StmtNode *stmt;					// Substatement; non-nil only
 
-		ForStmtNode(const SourcePosition &pos, Kind kind, StmtNode &stmt):
-				StmtNode(pos, kind), stmt(stmt) {}
+		ForStmtNode(uint32 pos, Kind kind, StmtNode *stmt):
+				StmtNode(pos, kind), stmt(stmt) {ASSERT(stmt);}
 	};
 	
 	struct ForInStmtNode: StmtNode {
-		ExprNode &container;			// Subexpression after 'in'
-		StmtNode &stmt;					// Substatement
+		ExprNode *container;			// Subexpression after 'in'; non-nil only
+		StmtNode *stmt;					// Substatement; non-nil only
 
-		ForInStmtNode(const SourcePosition &pos, Kind kind, ExprNode &container, StmtNode &stmt):
-				StmtNode(pos, kind), container(container), stmt(stmt) {}
+		ForInStmtNode(uint32 pos, Kind kind, ExprNode *container, StmtNode *stmt):
+				StmtNode(pos, kind), container(container), stmt(stmt) {ASSERT(container && stmt);}
 	};
 	
 	struct ForExprInStmtNode: ForInStmtNode {
-		ExprNode &varExpr;				// Subexpression before 'in'
+		ExprNode *varExpr;				// Subexpression before 'in'; non-nil only
 
-		ForExprInStmtNode(const SourcePosition &pos, Kind kind, ExprNode &container, StmtNode &stmt, ExprNode &varExpr):
-				ForInStmtNode(pos, kind, container, stmt), varExpr(varExpr) {}
+		ForExprInStmtNode(uint32 pos, Kind kind, ExprNode *container, StmtNode *stmt, ExprNode *varExpr):
+				ForInStmtNode(pos, kind, container, stmt), varExpr(varExpr) {ASSERT(varExpr);}
 	};
 	
 	struct ForVarInStmtNode: ForInStmtNode {
-		VariableBinding &binding;		// Var or const binding before 'in'
+		VariableBinding *binding;		// Var or const binding before 'in'; non-nil only
 
-		ForVarInStmtNode(const SourcePosition &pos, Kind kind, ExprNode &container, StmtNode &stmt, VariableBinding &binding):
-				ForInStmtNode(pos, kind, container, stmt), binding(binding) {}
+		ForVarInStmtNode(uint32 pos, Kind kind, ExprNode *container, StmtNode *stmt, VariableBinding *binding):
+				ForInStmtNode(pos, kind, container, stmt), binding(binding) {ASSERT(binding);}
 	};
 	
 	struct SwitchStmtNode: ExprStmtNode {
 		StmtNode *statements;			// Linked list of switch block's statements, which may include Case and Default statements
 
-		SwitchStmtNode(const SourcePosition &pos, Kind kind, ExprNode *expr):
+		SwitchStmtNode(uint32 pos, Kind kind, ExprNode *expr):
 				ExprStmtNode(pos, kind, expr) {}
 	};
 	
 	struct GoStmtNode: StmtNode {
 		const StringAtom *label;		// The label; nil if none
 
-		GoStmtNode(const SourcePosition &pos, Kind kind, const StringAtom *label): StmtNode(pos, kind), label(label) {}
+		GoStmtNode(uint32 pos, Kind kind, const StringAtom *label): StmtNode(pos, kind), label(label) {}
 	};
 	
 	struct CatchClause: ParseNode {
 		CatchClause *next;				// Next catch clause in a linked list of catch clauses
-		const StringAtom &identifier;	// The name of the variable that will hold the exception
+		const StringAtom &name;			// The name of the variable that will hold the exception
 		ExprNode *type;					// Type expression or nil if not provided
-		StmtNode &stmt;					// The catch clause's body
+		StmtNode *stmt;					// The catch clause's body; non-nil only
 
-		CatchClause(const SourcePosition &pos, const StringAtom &identifier, ExprNode *type, StmtNode &stmt):
-				ParseNode(pos), next(0), identifier(identifier), type(type), stmt(stmt) {}
+		CatchClause(uint32 pos, const StringAtom &name, ExprNode *type, StmtNode *stmt):
+				ParseNode(pos), next(0), name(name), type(type), stmt(stmt) {ASSERT(stmt);}
 	};
 	
 	struct TryStmtNode: StmtNode {
-		StmtNode &stmt;					// Substatement being tried; usually a block
+		StmtNode *stmt;					// Substatement being tried; usually a block; non-nil only
 		CatchClause *catches;			// Linked list of catch blocks; may be nil
 		StmtNode *finally;				// Finally block or nil if none
 
-		TryStmtNode(const SourcePosition &pos, Kind kind, StmtNode &stmt, CatchClause *catches, StmtNode *finally):
-				StmtNode(pos, kind), stmt(stmt), catches(catches), finally(finally) {}
+		TryStmtNode(uint32 pos, Kind kind, StmtNode *stmt, CatchClause *catches, StmtNode *finally):
+				StmtNode(pos, kind), stmt(stmt), catches(catches), finally(finally) {ASSERT(stmt);}
 	};
 
 	struct VariableStmtNode: AttributeStmtNode {
 		VariableBinding *bindings;		// Linked list of variable bindings
 
-		VariableStmtNode(const SourcePosition &pos, Kind kind, ExprList *attributes): AttributeStmtNode(pos, kind, attributes) {}
+		VariableStmtNode(uint32 pos, Kind kind, ExprList *attributes): AttributeStmtNode(pos, kind, attributes) {}
 	};
 
 	struct FunctionStmtNode: AttributeStmtNode {
 		FunctionDefinition function;	// Function definition
 
-		FunctionStmtNode(const SourcePosition &pos, Kind kind, ExprList *attributes): AttributeStmtNode(pos, kind, attributes) {}
+		FunctionStmtNode(uint32 pos, Kind kind, ExprList *attributes): AttributeStmtNode(pos, kind, attributes) {}
 	};
 
 	struct ClassStmtNode: AttributeStmtNode {
-		const StringAtom &identifier;	// The class's name
+		const StringAtom &name;			// The class's name
 		ExprList *superclasses;			// Linked list of superclass expressions
-		StmtNode &body;					// The class's body
+		StmtNode *body;					// The class's body; non-nil only
 
-		ClassStmtNode(const SourcePosition &pos, Kind kind, ExprList *attributes, const StringAtom &identifier, ExprList *superclasses,
-					  StmtNode &body):
-				AttributeStmtNode(pos, kind, attributes), identifier(identifier), superclasses(superclasses), body(body) {}
+		ClassStmtNode(uint32 pos, Kind kind, ExprList *attributes, const StringAtom &name, ExprList *superclasses,
+					  StmtNode *body):
+				AttributeStmtNode(pos, kind, attributes), name(name), superclasses(superclasses), body(body) {ASSERT(body);}
 	};
 
 	struct LanguageStmtNode: StmtNode {
 		JavaScript::Language language;	// The selected language
 
-		LanguageStmtNode(const SourcePosition &pos, Kind kind, JavaScript::Language language):
+		LanguageStmtNode(uint32 pos, Kind kind, JavaScript::Language language):
 				StmtNode(pos, kind), language(language) {}
 	};
 
 
-	//class Parser: public Lexer {
-	//};
+	class Parser {
+		Lexer lexer;
+		Arena &arena;
+
+	  public:
+		Parser(World &world, Arena &arena, const String &source, const String &sourceLocation, uint32 initialLineNum = 1);
+		
+	  private:
+		Reader &getReader() {return lexer.reader;}
+		World &getWorld() {return lexer.world;}
+
+		void syntaxError(const char *message, uint backUp = 1);
+		void syntaxError(const String &message, uint backUp = 1);
+		const Token &require(bool preferRegExp, Token::Kind kind);
+		String &copyTokenChars(const Token &t);
+
+		IdentifierExprNode *parseQualifiedIdentifier(const Token &t);
+		ExprNode *parseIdentifierQualifiers(ExprNode *e, bool &foundQualifiers);
+		ExprNode *parseParenthesesAndIdentifierQualifiers(const Token &tParen, bool &foundQualifiers);
+		PairListExprNode *parseArrayLiteral(const Token &initialToken);
+		PairListExprNode *parseObjectLiteral(const Token &initialToken);
+		ExprNode *parsePrimaryExpression();
+		ExprNode *parseMember(ExprNode *target, const Token &t, ExprNode::Kind kind, ExprNode::Kind parenKind);
+		InvokeExprNode *parseInvoke(ExprNode *target, uint32 pos, Token::Kind closingTokenKind, ExprNode::Kind invokeKind);
+		ExprNode *parsePostfixExpression(bool newExpression = false);
+	  public:
+		ExprNode *parseNonAssignmentExpression(bool noIn);
+		ExprNode *parseAssignmentExpression(bool noIn);
+		ExprNode *parseExpression(bool noIn);
+	};
 }
 #endif
