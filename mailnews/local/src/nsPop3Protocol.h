@@ -304,7 +304,7 @@ public:
 
   static nsresult MarkMsgDeletedForHost(const char *hostName, const char *userName,
                                       nsIFileSpec *mailDirectory, 
-                                      const char **UIDLArray, PRUint32 count, 
+                                      nsCStringArray &UIDLArray, 
                                       PRBool deleteMsgs);
 private:
   nsCString m_ApopTimestamp;

@@ -339,20 +339,31 @@ NS_IMETHODIMP nsPop3IncomingServer::GetRunningProtocol(nsIPop3Protocol **aProtoc
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPop3IncomingServer::MarkMessagesDeleted(const char **aUIDLArray, PRUint32 aCount, PRBool aDeleteMsgs)
+NS_IMETHODIMP nsPop3IncomingServer::AddUidlToMarkDeleted(const char *aUidl)
 {
+  return m_uidlsToMarkDeleted.AppendCString(nsDependentCString(aUidl));
+}
+
+NS_IMETHODIMP nsPop3IncomingServer::MarkMessagesDeleted(PRBool aDeleteMsgs)
+{
+  nsresult rv;
   if (m_runningProtocol)
-    return m_runningProtocol->MarkMessagesDeleted(aUIDLArray, aCount, aDeleteMsgs);
+  {
+    rv = m_runningProtocol->MarkMessagesDeleted(&m_uidlsToMarkDeleted, aDeleteMsgs);
+  }
+  else
+  {
+    nsXPIDLCString hostName;
+    nsXPIDLCString userName;
+    nsCOMPtr<nsIFileSpec> localPath;
 
-  nsXPIDLCString hostName;
-  nsXPIDLCString userName;
-  nsCOMPtr<nsIFileSpec> localPath;
-
-  GetLocalPath(getter_AddRefs(localPath));
+    GetLocalPath(getter_AddRefs(localPath));
   
-  GetHostName(getter_Copies(hostName));
-  GetUsername(getter_Copies(userName));
-  
-  // do it all in one fell swoop
-  return nsPop3Protocol::MarkMsgDeletedForHost(hostName, userName, localPath, aUIDLArray, aCount, aDeleteMsgs);
+    GetHostName(getter_Copies(hostName));
+    GetUsername(getter_Copies(userName));
+    // do it all in one fell swoop
+    rv = nsPop3Protocol::MarkMsgDeletedForHost(hostName, userName, localPath, m_uidlsToMarkDeleted, aDeleteMsgs);
+  }
+  m_uidlsToMarkDeleted.Clear();
+  return rv;
 }

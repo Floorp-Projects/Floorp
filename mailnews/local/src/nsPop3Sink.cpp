@@ -52,6 +52,8 @@
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 #include "nsReadableUtils.h"
+#include "nsMailHeaders.h"
+#include "nsIMsgAccountManager.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsPop3Sink, nsIPop3Sink)
 
@@ -148,6 +150,12 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, nsIMsgWindow *aMsgWindow, PRB
     if (!server) 
       return NS_ERROR_UNEXPECTED;
 
+    nsCOMPtr <nsIMsgAccountManager> acctMgr = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+    nsCOMPtr <nsIMsgAccount> account;
+    NS_ENSURE_SUCCESS(rv, rv);
+    acctMgr->FindAccountForServer(server, getter_AddRefs(account));
+    if (account)
+      account->GetKey(getter_Copies(m_accountKey));
     nsFileSpec fileSpec;
     // ### if we're doing a UIDL, then the fileSpec needs to be for the current folder
 
@@ -382,6 +390,15 @@ nsPop3Sink::IncorporateBegin(const char* uidlString,
     
     nsresult rv = WriteLineToMailbox(dummyEnvelope);
     if (NS_FAILED(rv)) return rv;
+    // write out account-key before UIDL so the code that looks for 
+    // UIDL will find the account first and know it can stop looking
+    // once it finds the UIDL line.
+    if (!m_accountKey.IsEmpty())
+    {
+      nsCAutoString outputString(NS_LITERAL_CSTRING(HEADER_X_MOZILLA_ACCOUNT_KEY ": ") + m_accountKey
+        + NS_LITERAL_CSTRING(CRLF));
+      WriteLineToMailbox(outputString.get());
+    }
     if (uidlString)
     {
         nsCAutoString uidlCString("X-UIDL: ");
@@ -442,6 +459,7 @@ nsPop3Sink::GetServerFolder(nsIMsgFolder **aFolder)
     return NS_ERROR_NULL_POINTER;
   if (m_popServer)
   {
+    // not sure what this is used for - might be wrong if we have a deferred account.
     nsCOMPtr <nsIMsgIncomingServer> incomingServer = do_QueryInterface(m_popServer);
     if (incomingServer)
       return incomingServer->GetRootFolder(aFolder);
@@ -502,14 +520,14 @@ nsPop3Sink::IncorporateWrite(const char* block,
   return NS_OK;
 }
 
-nsresult nsPop3Sink::WriteLineToMailbox(char *buffer)
+nsresult nsPop3Sink::WriteLineToMailbox(const char *buffer)
 {
   
   if (buffer)
   {
     PRInt32 bufferLen = PL_strlen(buffer);
-    if (m_newMailParser)
-      m_newMailParser->HandleLine(buffer, bufferLen);
+    if (m_newMailParser) // HandleLine should really take a const char *...
+      m_newMailParser->HandleLine((char *) buffer, bufferLen);
     // The following (!m_outFileStream etc) was added to make sure that we don't write somewhere 
     // where for some reason or another we can't write to and lose the messages
     // See bug 62480

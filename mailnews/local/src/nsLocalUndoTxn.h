@@ -90,7 +90,7 @@ public:
 private:
     nsWeakPtr m_srcFolder;
     nsMsgKeyArray m_srcKeyArray; // used when src is local or imap
-		nsUInt32Array m_srcStatusOffsetArray; // used when src is local
+    nsUInt32Array m_srcStatusOffsetArray; // used when src is local
     nsWeakPtr m_dstFolder;
     nsMsgKeyArray m_dstKeyArray;
     PRBool m_isMove;

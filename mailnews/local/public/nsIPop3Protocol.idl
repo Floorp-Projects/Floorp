@@ -38,12 +38,15 @@
 
 #include "nsISupports.idl"
 
-interface nsISupportsArray;
+[ptr] native nsCStringArray(nsCStringArray);
+
+%{C++
+#include "nsVoidArray.h"
+%}
 
 [scriptable, uuid(853daefb-411a-41f5-97e0-2f93e79b7302)]
 interface nsIPop3Protocol : nsISupports {
-  void markMessagesDeleted([array, size_is(count)] in string aUidlStrings, 
-                            in unsigned long count, in boolean aDeleteMsgs);
+  [noscript] void markMessagesDeleted(in nsCStringArray aUidlArray, in boolean aDeleteMsgs);
 };
 
 

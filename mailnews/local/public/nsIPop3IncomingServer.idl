@@ -50,8 +50,9 @@ interface nsIPop3IncomingServer : nsISupports {
   attribute boolean deleteByAgeFromServer;
   attribute long numDaysToLeaveOnServer;
   attribute nsIPop3Protocol runningProtocol;
-  void markMessagesDeleted([array, size_is(count)] in string aUidlStrings, in unsigned long count,
-                            in boolean aDeleteMsgs);
+  // client adds uidls to mark one by one, then calls markMessagesDeleted
+  void addUidlToMarkDeleted(in string aUidl);
+  void markMessagesDeleted(in boolean aDeleteMsgs);
   attribute boolean authenticated;
 };
 

@@ -68,6 +68,7 @@ private:
     PRUint32 m_capabilityFlags;
     PRBool m_authenticated;
     nsCOMPtr <nsIPop3Protocol> m_runningProtocol;
+    nsCStringArray m_uidlsToMarkDeleted;
 };
 
 #endif

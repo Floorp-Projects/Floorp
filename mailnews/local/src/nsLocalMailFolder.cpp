@@ -101,6 +101,10 @@
 #include "nsISpamSettings.h"
 #include "nsINoIncomingServer.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsMailHeaders.h"
+#include "nsCOMArray.h"
+#include "nsILineInputStream.h"
+#include "nsIFileStreams.h"
 
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -2936,116 +2940,144 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsISupports *message,
 NS_IMETHODIMP
 nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRBool aDeleteMsgs)
 {
-  char      *uidl;
-  char      *header = NULL;
+  char      *uidl, *accountKey;
+  char      *header = nsnull;
   PRUint32  size = 0, len = 0;
   nsCOMPtr <nsIMsgDBHdr> hdr;
-  PRBool leaveOnServer = PR_FALSE;
-  PRBool deleteMailLeftOnServer = PR_FALSE;
-  nsCOMPtr<nsIPop3IncomingServer> pop3MailServer;
-  nsCOMPtr<nsIFileSpec> localPath;
+  nsCOMPtr<nsIPop3IncomingServer> curFolderPop3MailServer;
   nsCOMPtr<nsIFileSpec> mailboxSpec;
+  nsCOMArray<nsIPop3IncomingServer> pop3Servers; // servers with msgs deleted...
 
-  nsCOMPtr<nsIMsgIncomingServer> server;
-  nsresult rv = GetServer(getter_AddRefs(server));
-  if (NS_FAILED(rv)) 
-    return rv;
-  if (!server) 
+  nsCOMPtr<nsIMsgIncomingServer> incomingServer;
+  nsresult rv = GetServer(getter_AddRefs(incomingServer));
+  if (!incomingServer) 
     return NS_MSG_INVALID_OR_MISSING_SERVER;
 
-  server->GetLocalPath(getter_AddRefs(localPath));
-  pop3MailServer = do_QueryInterface(server, &rv);
-  if (NS_FAILED(rv)) 
-    return rv;
-  if (!pop3MailServer) 
-    return NS_MSG_INVALID_OR_MISSING_SERVER;
-	
-  pop3MailServer->GetDeleteMailLeftOnServer(&deleteMailLeftOnServer);
-  if (!deleteMailLeftOnServer)
-    return NS_OK;
+  nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-  pop3MailServer->GetLeaveMessagesOnServer(&leaveOnServer);
+  // I wonder if we should run through the pop3 accounts and see if any of them have
+  // leave on server set. If not, we could short-circuit some of this.
+
+  curFolderPop3MailServer = do_QueryInterface(incomingServer, &rv);
   rv = GetPath(getter_AddRefs(mailboxSpec));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (NS_FAILED(rv)) 
-    return rv;
+  nsCOMPtr <nsILocalFile> localFile;
+  nsFileSpec realSpec;
+  mailboxSpec->GetFileSpec(&realSpec);
+  NS_FileSpecToIFile(&realSpec, getter_AddRefs(localFile));
+  nsCOMPtr<nsIFileInputStream> fileStream = do_CreateInstance(NS_LOCALFILEINPUTSTREAM_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mailboxSpec->OpenStreamForReading();
+  rv = fileStream->Init(localFile,  PR_RDONLY, 0664, PR_FALSE);  //just have to read the messages
+  nsCOMPtr <nsIInputStream> inputStream = do_QueryInterface(fileStream);
+   
+  nsCOMPtr <nsISeekableStream> seekableStream = do_QueryInterface(inputStream);
+
+  nsCOMPtr <nsILineInputStream> fileLineStream = do_QueryInterface(inputStream);
+//  rv = mailboxSpec->OpenStreamForReading();
   NS_ENSURE_SUCCESS(rv,rv);
   
   PRUint32 srcCount;
   aMessages->Count(&srcCount);
-
-  nsXPIDLCString hostName;
-  nsXPIDLCString userName;
   
-  server->GetHostName(getter_Copies(hostName));
-  server->GetUsername(getter_Copies(userName));
-  
-  char ** messageUIDLs = (char **) PR_MALLOC(sizeof(const char *) * srcCount);
-  if (!messageUIDLs)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  PRInt32 uidlIndex = 0;
-  header = (char*) PR_MALLOC(512);
   for (PRInt32 i = 0; header && (i < srcCount); i++)
   {
     /* get uidl for this message */
     uidl = nsnull;
+    PRBool gotAccountKey = PR_FALSE;
+    accountKey = nsnull;
     nsCOMPtr<nsIMsgDBHdr> msgDBHdr (do_QueryElementAt(aMessages, i, &rv));
     
     PRUint32 flags = 0;
-    
-    if (msgDBHdr && ((msgDBHdr->GetFlags(&flags), flags & MSG_FLAG_PARTIAL) || leaveOnServer))
+
+    if (msgDBHdr /* maybe check for partial flag || some server has leave on server */)
     {
+      msgDBHdr->GetFlags(&flags);
       len = 0;
       PRUint32 messageOffset;
-      
+      nsCOMPtr <nsIPop3IncomingServer> msgPop3Server = curFolderPop3MailServer;
+      PRBool leaveOnServer = PR_FALSE;
+      PRBool deleteMailLeftOnServer = PR_FALSE;
+      // set up defaults, in case there's no x-mozilla-account header
+      if (curFolderPop3MailServer)
+      {
+        curFolderPop3MailServer->GetDeleteMailLeftOnServer(&deleteMailLeftOnServer);
+        curFolderPop3MailServer->GetLeaveMessagesOnServer(&leaveOnServer);
+      }
+
       msgDBHdr->GetMessageOffset(&messageOffset);
-      rv = mailboxSpec->Seek(messageOffset);
+      rv = seekableStream->Seek(PR_SEEK_SET, messageOffset);
       NS_ENSURE_SUCCESS(rv,rv);
       msgDBHdr->GetMessageSize(&len);
       PRBool wasTruncated = PR_FALSE;
-      while ((len > 0) && !uidl)
+      while (len > 0 && !uidl)
       {
+        nsCString header;
+        PRBool more = PR_FALSE;
         size = len;
         if (size > 512)
           size = 512;
-        rv = mailboxSpec->ReadLine(&header, size, &wasTruncated);
-        if (NS_SUCCEEDED(rv) && !wasTruncated)
+        rv = fileLineStream->ReadLine(header, &more);
+        if (NS_SUCCEEDED(rv))
         {
-          size = strlen(header);
+          size = header.Length();
           if (!size)
-            len = 0;
-          else {
+            len = 0; // this breaks us out of the loop on the hdr/body sep
+          else 
+          {
             len -= size;
-            uidl = strstr(header, X_UIDL);
+            if (!accountKey)
+              accountKey = strstr(header.get(), HEADER_X_MOZILLA_ACCOUNT_KEY);
+            // account key header will always be before X_UIDL header
+            if (accountKey && !gotAccountKey)
+            {
+              gotAccountKey = PR_TRUE;
+              accountKey += strlen(HEADER_X_MOZILLA_ACCOUNT_KEY) + 2; 
+              nsCOMPtr <nsIMsgAccount> account;
+              rv = accountManager->GetAccount(accountKey, getter_AddRefs(account));
+              if (NS_SUCCEEDED(rv) && account)
+              {
+                account->GetIncomingServer(getter_AddRefs(incomingServer));
+                nsCOMPtr<nsIPop3IncomingServer> curMsgPop3MailServer = do_QueryInterface(incomingServer);
+                if (curMsgPop3MailServer)
+                {
+                  msgPop3Server = curMsgPop3MailServer;
+                  msgPop3Server->GetDeleteMailLeftOnServer(&deleteMailLeftOnServer);
+                  msgPop3Server->GetLeaveMessagesOnServer(&leaveOnServer);
+                  // stop looking at headers if leaveOnServer not set...
+                  if (! (flags & MSG_FLAG_PARTIAL) && !leaveOnServer)
+                    continue;
+                }
+              }
+            }
+            uidl = strstr(header.get(), X_UIDL);
+            if (uidl)
+            {
+              if (! (flags & MSG_FLAG_PARTIAL) && !leaveOnServer)
+                continue;
+              uidl += X_UIDL_LEN + 2; // skip UIDL: header
+              len = strlen(uidl);
+              msgPop3Server->AddUidlToMarkDeleted(uidl);
+              // remember this pop server in list of servers with msgs deleted
+              if (pop3Servers.IndexOfObject(msgPop3Server) == kNotFound)
+                pop3Servers.AppendObject(msgPop3Server);
+              break;
+            }
+
           }
-        } else
+        } 
+        else
           len = 0;
-      }
-      if (uidl)
-      {
-        uidl += X_UIDL_LEN + 2; // skip UIDL: header
-        len = strlen(uidl);
-        
-        // Remove CR or LF at end of line
-        char	*lastChar = uidl + len - 1;
-        
-        while ( (lastChar > uidl) && (*lastChar == nsCRT::LF || *lastChar == nsCRT::CR) ) {
-          *lastChar = '\0';
-          lastChar --;
-        }
-        messageUIDLs[uidlIndex++] = strdup(uidl);
       }
     }
   }
-  PR_Free(header);
 
-  pop3MailServer->MarkMessagesDeleted((const char **) messageUIDLs, uidlIndex, aDeleteMsgs); 
-  for ( PRUint32 freeIndex=0 ; freeIndex < uidlIndex ; ++freeIndex ) 
-    PR_Free(messageUIDLs[freeIndex]);
-  PR_Free(messageUIDLs);
+  // need to do this for all pop3 mail servers that had messages deleted.
+  PRInt32 serverCount = pop3Servers.Count();
+  for (PRUint32 index = 0; index < serverCount; index++)
+    pop3Servers[index]->MarkMessagesDeleted(aDeleteMsgs); 
 
   mailboxSpec->CloseStream();
   return rv;

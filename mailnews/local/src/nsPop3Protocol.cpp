@@ -451,8 +451,12 @@ void nsPop3Protocol::MarkMsgDeletedInHashTable(PLHashTable *hashTable, const cha
   Pop3UidlEntry *uidlEntry = (Pop3UidlEntry *) PL_HashTableLookup(hashTable, uidl);
   if (uidlEntry)
   {
-    uidlEntry->status = (deleteChar) ? DELETE_CHAR : KEEP;
-    *changed = PR_TRUE;
+    char newStatus = (deleteChar) ? DELETE_CHAR : KEEP;
+    if (uidlEntry->status != newStatus)
+    {
+      uidlEntry->status = newStatus;
+      *changed = PR_TRUE;
+    }
   }
 }
 
@@ -460,10 +464,10 @@ void nsPop3Protocol::MarkMsgDeletedInHashTable(PLHashTable *hashTable, const cha
 nsresult 
 nsPop3Protocol::MarkMsgDeletedForHost(const char *hostName, const char *userName,
                                       nsIFileSpec *mailDirectory, 
-                                      const char **UIDLArray, PRUint32 count,
+                                       nsCStringArray &UIDLArray, 
                                       PRBool deleteMsgs)
 {
-  if (!hostName || !userName || !mailDirectory || !UIDLArray)
+  if (!hostName || !userName || !mailDirectory)
     return NS_ERROR_NULL_POINTER;
 
   Pop3UidlHost *uidlHost = net_pop3_load_state(hostName, userName, mailDirectory);
@@ -472,8 +476,9 @@ nsPop3Protocol::MarkMsgDeletedForHost(const char *hostName, const char *userName
 
   PRBool changed = PR_FALSE;
 
+  PRUint32 count = UIDLArray.Count();
   for (PRUint32 i = 0; i < count; i++)
-    MarkMsgDeletedInHashTable(uidlHost->hash, UIDLArray[i], deleteMsgs, &changed);
+    MarkMsgDeletedInHashTable(uidlHost->hash, UIDLArray[i]->get(), deleteMsgs, &changed);
 
   if (changed)
     net_pop3_write_state(uidlHost, mailDirectory);
@@ -1776,15 +1781,14 @@ nsPop3Protocol::GurlResponse()
 {
     ClearCapFlag(POP3_GURL_UNDEFINED);
     
-    if (m_pop3ConData->command_succeeded) {
+    if (m_pop3ConData->command_succeeded) 
+    {
         SetCapFlag(POP3_HAS_GURL);
-		// mscott - trust me, this cast to a char * IS SAFE!! There is a bug in 
-		/// the xpidl file which is preventing SetMailAccountURL from taking
-		// const char *. When that is fixed, we can remove this cast.
         if (m_nsIPop3Sink)
             m_nsIPop3Sink->SetMailAccountURL(m_commandResponse.get());
     }
-    else {
+    else 
+    {
         ClearCapFlag(POP3_HAS_GURL);
     }
     m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
@@ -3696,15 +3700,18 @@ nsresult nsPop3Protocol::CloseSocket()
     return rv;
 }
 
-NS_IMETHODIMP nsPop3Protocol::MarkMessagesDeleted(const char **aUIDLArray, PRUint32 aCount, PRBool aDeleteMsgs)
+NS_IMETHODIMP nsPop3Protocol::MarkMessagesDeleted(nsCStringArray *aUIDLArray, PRBool aDeleteMsgs)
 {
-  for (PRUint32 i = 0; i < aCount; i++)
+  NS_ENSURE_ARG_POINTER(aUIDLArray);
+  PRUint32 count = aUIDLArray->Count();
+
+  for (PRUint32 i = 0; i < count; i++)
   {
     PRBool changed;
     if (m_pop3ConData->newuidl) 
-      MarkMsgDeletedInHashTable(m_pop3ConData->newuidl, aUIDLArray[i], aDeleteMsgs, &changed);
+      MarkMsgDeletedInHashTable(m_pop3ConData->newuidl, aUIDLArray->CStringAt(i)->get(), aDeleteMsgs, &changed);
     if (m_pop3ConData->uidlinfo)
-      MarkMsgDeletedInHashTable(m_pop3ConData->uidlinfo->hash, aUIDLArray[i], aDeleteMsgs, &changed);
+      MarkMsgDeletedInHashTable(m_pop3ConData->uidlinfo->hash, aUIDLArray->CStringAt(i)->get(), aDeleteMsgs, &changed);
   }
   return NS_OK;
 }

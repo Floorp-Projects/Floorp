@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Seth Spitzer <sspitzer@netscape.com>
+ * Seth Spitzer <sspitzer@netscape.com>
+ * David Bienvenu <bienvenu@nventure.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -70,18 +71,15 @@ NS_IMETHODIMP
 nsNoneService::SetDefaultLocalPath(nsIFileSpec *aPath)
 {
     NS_ENSURE_ARG(aPath);
-    nsresult rv;
     
     nsFileSpec spec;
-    rv = aPath->GetFileSpec(&spec);
+    nsresult rv = aPath->GetFileSpec(&spec);
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsILocalFile> localFile;
     NS_FileSpecToIFile(&spec, getter_AddRefs(localFile));
     if (!localFile) return NS_ERROR_FAILURE;
     
-    rv = NS_SetPersistentFile(PREF_MAIL_ROOT_NONE_REL, PREF_MAIL_ROOT_NONE, localFile);
-
-    return rv;
+    return NS_SetPersistentFile(PREF_MAIL_ROOT_NONE_REL, PREF_MAIL_ROOT_NONE, localFile);
 }     
 
 NS_IMETHODIMP
@@ -90,10 +88,9 @@ nsNoneService::GetDefaultLocalPath(nsIFileSpec ** aResult)
     NS_ENSURE_ARG_POINTER(aResult);
     *aResult = nsnull;
     
-    nsresult rv;
     PRBool havePref;
     nsCOMPtr<nsILocalFile> localFile;    
-    rv = NS_GetPersistentFile(PREF_MAIL_ROOT_NONE_REL,
+    nsresult rv = NS_GetPersistentFile(PREF_MAIL_ROOT_NONE_REL,
                               PREF_MAIL_ROOT_NONE,
                               NS_APP_MAIL_50_DIR,
                               havePref,
@@ -104,7 +101,7 @@ nsNoneService::GetDefaultLocalPath(nsIFileSpec ** aResult)
     rv = localFile->Exists(&exists);
     if (NS_SUCCEEDED(rv) && !exists)
         rv = localFile->Create(nsIFile::DIRECTORY_TYPE, 0775);
-        if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;
     
     // Make the resulting nsIFileSpec
     // TODO: Convert arg to nsILocalFile and avoid this
@@ -112,18 +109,15 @@ nsNoneService::GetDefaultLocalPath(nsIFileSpec ** aResult)
     rv = NS_NewFileSpecFromIFile(localFile, getter_AddRefs(outSpec));
     if (NS_FAILED(rv)) return rv;
     
-    if (!havePref || !exists) {
+    if (!havePref || !exists) 
+    {
         rv = NS_SetPersistentFile(PREF_MAIL_ROOT_NONE_REL, PREF_MAIL_ROOT_NONE, localFile);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to set root dir pref.");
     }
         
-    *aResult = outSpec;
-    NS_IF_ADDREF(*aResult);
+    NS_IF_ADDREF(*aResult = outSpec);
     return NS_OK;
 
-
-    NS_ENSURE_ARG_POINTER(aResult);
-    *aResult = nsnull;
 }
     
 
@@ -137,41 +131,41 @@ nsNoneService::GetServerIID(nsIID* *aServerIID)
 NS_IMETHODIMP
 nsNoneService::GetRequiresUsername(PRBool *aRequiresUsername)
 {
-        NS_ENSURE_ARG_POINTER(aRequiresUsername);
-        *aRequiresUsername = PR_TRUE;
-        return NS_OK;
+  NS_ENSURE_ARG_POINTER(aRequiresUsername);
+  *aRequiresUsername = PR_TRUE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNoneService::GetPreflightPrettyNameWithEmailAddress(PRBool *aPreflightPrettyNameWithEmailAddress)
 {
-        NS_ENSURE_ARG_POINTER(aPreflightPrettyNameWithEmailAddress);
-        *aPreflightPrettyNameWithEmailAddress = PR_TRUE;
-        return NS_OK;
+  NS_ENSURE_ARG_POINTER(aPreflightPrettyNameWithEmailAddress);
+  *aPreflightPrettyNameWithEmailAddress = PR_TRUE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNoneService::GetCanLoginAtStartUp(PRBool *aCanLoginAtStartUp)
 {
-        NS_ENSURE_ARG_POINTER(aCanLoginAtStartUp);
-        *aCanLoginAtStartUp = PR_FALSE;
-        return NS_OK;
+  NS_ENSURE_ARG_POINTER(aCanLoginAtStartUp);
+  *aCanLoginAtStartUp = PR_FALSE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNoneService::GetCanDelete(PRBool *aCanDelete)
 {
-        NS_ENSURE_ARG_POINTER(aCanDelete);
-        *aCanDelete = PR_FALSE;
-        return NS_OK;
+  NS_ENSURE_ARG_POINTER(aCanDelete);
+  *aCanDelete = PR_FALSE;
+  return NS_OK;
 }  
 
 NS_IMETHODIMP
 nsNoneService::GetCanDuplicate(PRBool *aCanDuplicate)
 {
-        NS_ENSURE_ARG_POINTER(aCanDuplicate);
-        *aCanDuplicate = PR_FALSE;
-        return NS_OK;
+  NS_ENSURE_ARG_POINTER(aCanDuplicate);
+  *aCanDuplicate = PR_FALSE;
+  return NS_OK;
 }  
 
 NS_IMETHODIMP
