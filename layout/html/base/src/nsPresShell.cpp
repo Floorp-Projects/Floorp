@@ -4274,8 +4274,11 @@ PresShell::DoCopy()
   nsCOMPtr<nsIEventStateManager> manager;
   nsCOMPtr<nsIContent> content;
   rv = mPresContext->GetEventStateManager(getter_AddRefs(manager));
-  if (NS_FAILED(rv) || !manager)
-    return rv?rv:NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) 
+    return rv;
+  if (!manager) 
+    return NS_ERROR_FAILURE;
+
   rv = manager->GetFocusedContent(getter_AddRefs(content));
   if (NS_SUCCEEDED(rv) && content)
   {
@@ -4287,20 +4290,28 @@ PresShell::DoCopy()
     {
       nsIFrame *htmlInputFrame;
       rv = GetPrimaryFrameFor(content, &htmlInputFrame);
-      if (NS_FAILED(rv) || !htmlInputFrame)
-        return rv?rv:NS_ERROR_FAILURE;
+      if (NS_FAILED(rv)) 
+        return rv;
+      if (!htmlInputFrame) 
+        return NS_ERROR_FAILURE;
+
       nsCOMPtr<nsISelectionController> selCon;
       rv = htmlInputFrame->GetSelectionController(mPresContext,getter_AddRefs(selCon));
-      if (NS_FAILED(rv) || !selCon)
-        return rv?rv:NS_ERROR_FAILURE;
+      if (NS_FAILED(rv)) 
+        return rv;
+      if (!selCon) 
+        return NS_ERROR_FAILURE;
+
       rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel));
     }
   }
   if (!sel) //get selection from this PresShell
     rv = GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel));
     
-  if (NS_FAILED(rv) || !sel)
-    return rv?rv:NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) 
+    return rv;
+  if (!sel) 
+    return NS_ERROR_FAILURE;
 
   // Now we have the selection.  Make sure it's nonzero:
   PRBool isCollapsed;

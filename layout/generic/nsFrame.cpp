@@ -4119,8 +4119,10 @@ nsFrame::CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
   if (!view)
   {
     nsresult rv = GetParentWithView(aPresContext, &parent);
-    if (!parent || NS_FAILED(rv))
-      return rv?rv:NS_ERROR_FAILURE;
+    if (NS_FAILED(rv)) 
+      return rv;
+    if (!parent) 
+      return NS_ERROR_FAILURE;
     parent->GetView(aPresContext,&view);
   }
 
@@ -4151,8 +4153,11 @@ nsFrame::IsMouseCaptured(nsIPresContext* aPresContext)
   {
     nsIFrame *parent;//might be THIS frame thats ok
     nsresult rv = GetParentWithView(aPresContext, &parent);
-    if (!parent || NS_FAILED(rv))
-      return rv?rv:NS_ERROR_FAILURE;
+    if (NS_FAILED(rv)) 
+      return rv;
+    if (!parent) 
+      return NS_ERROR_FAILURE;
+
     parent->GetView(aPresContext,&view);
   }
   nsCOMPtr<nsIViewManager> viewMan;
