@@ -129,15 +129,14 @@
     <resources>
       <stylesheet src="chrome://messenger/skin/searchBox.css"/>
     </resources>
-    <content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-                 xmlns:xbl="http://www.mozilla.org/xbl" popup="_child">
+    <content popup="_child">
       <children/>
       <xul:stack flex="1">
         <xul:hbox align="center">
           <xul:image class="quick-search-button-image" xbl:inherits="src"/>
         </xul:hbox>
         <xul:hbox align="center">
-        <xul:image class="quick-search-button-dropmarker"/>
+          <xul:image class="quick-search-button-dropmarker"/>
         </xul:hbox>
       </xul:stack>
     </content>  
