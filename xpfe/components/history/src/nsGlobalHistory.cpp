@@ -64,6 +64,13 @@
 
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h" 
+#include "nsIPref.h"
+
+#ifdef DEBUG_sspitzer
+#define DEBUG_LAST_PAGE_VISITED 1
+#endif /* DEBUG_sspitzer */
+
+#define BROWSER_HISTORY_LAST_PAGE_VISITED_PREF "browser.history.last_page_visited"
 
 //----------------------------------------------------------------------
 //
@@ -74,6 +81,7 @@ static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kGlobalHistoryCID,     NS_GLOBALHISTORY_CID);
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kPrefCID,              NS_PREF_CID);
 
 static nsresult
 PRInt64ToChars(PRInt64 aValue, char* aBuf, PRInt32 aSize)
@@ -387,6 +395,10 @@ protected:
   nsIMdbStore* mStore;     // OWNER
   nsIMdbTable* mTable;     // OWNER
 
+  nsresult SaveLastPageVisited();
+  nsresult RestoreLastPageVisited();
+  nsresult URLShouldBeInHistory(const char *url, PRBool *result);
+  nsCAutoString mLastPageVisited;
 
   nsresult NotifyAssert(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aValue);
   nsresult NotifyChange(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aOldValue, nsIRDFNode* aNewValue);
@@ -519,7 +531,7 @@ NS_NewGlobalHistory(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   nsGlobalHistory* result = new nsGlobalHistory();
   if (! result)
     return NS_ERROR_OUT_OF_MEMORY;
-
+  
   rv = result->Init();
   if (NS_SUCCEEDED(rv))
     rv = result->QueryInterface(aIID, aResult);
@@ -530,6 +542,9 @@ NS_NewGlobalHistory(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     return rv;
   }
 
+  if (NS_FAILED(rv)) return rv;
+
+  rv = result->RestoreLastPageVisited();
   return rv;
 }
 
@@ -575,6 +590,18 @@ nsGlobalHistory::AddPage(const char *aURL, const char *aReferrerURL, PRInt64 aDa
   NS_ASSERTION(len != 0, "no URL");
   if (! len)
     return NS_ERROR_INVALID_ARG;
+
+  // this is a hack for now, until mscott fixes it so we don't call AddPage()
+  // with inappropriate urls
+  PRBool urlShouldBeInHistory = PR_FALSE;
+  rv = URLShouldBeInHistory(aURL, &urlShouldBeInHistory);
+  if (NS_FAILED(rv)) return rv;
+  if (!urlShouldBeInHistory) { 
+    return NS_OK;
+  }
+
+  // save this, for later.
+  mLastPageVisited = aURL;
 
   // Okay, it's good. See if we've already got it in the database.
   mdbYarn yarn = { (void*) aURL, len, len, 0, 0, nsnull };
@@ -680,6 +707,12 @@ nsGlobalHistory::AddPage(const char *aURL, const char *aReferrerURL, PRInt64 aDa
   // commit for now.
   err = mStore->SmallCommit(mEnv);
   if (err != 0) return NS_ERROR_FAILURE;
+
+#if 0
+  // don't save here, it is too often
+  rv = SaveLastPageVisited();
+  if (NS_FAILED(rv)) return rv;
+#endif /* 0 */
 
 #ifdef LEAKING_GLOBAL_HISTORY
   {
@@ -822,10 +855,75 @@ nsGlobalHistory::GetURLCompletion(const char *aURL, char **_retval)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+nsresult
+nsGlobalHistory::SaveLastPageVisited()
+{
+  nsresult rv;
+  
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = prefs->SetCharPref(BROWSER_HISTORY_LAST_PAGE_VISITED_PREF, (const char *)mLastPageVisited);
+
+#ifdef DEBUG_LAST_PAGE_VISITED
+  printf("XXX saving last page visited as: %s\n", (const char *)mLastPageVisited);
+#endif /* DEBUG_LAST_PAGE_VISITED */
+
+  return rv;
+}
+
+nsresult
+nsGlobalHistory::RestoreLastPageVisited()
+{
+  nsresult rv;
+  
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsXPIDLCString lastPageVisited;
+  rv = prefs->CopyCharPref(BROWSER_HISTORY_LAST_PAGE_VISITED_PREF, getter_Copies(lastPageVisited));
+  if (NS_FAILED(rv)) return rv;
+
+  mLastPageVisited = (const char *)lastPageVisited;
+
+#ifdef DEBUG_LAST_PAGE_VISITED
+  printf("XXX restoring last page visited to: %s\n", (const char *)lastPageVisited);
+#endif /* DEBUG_LAST_PAGE_VISITED */
+  return NS_OK;
+}
+
+#define HTTP_COLON "http:"
+#define HTTP_COLON_LEN 5 
+#define HTTPS_COLON "https:"
+#define HTTPS_COLON_LEN 6 
+
+nsresult
+nsGlobalHistory::URLShouldBeInHistory(const char *url, PRBool *result)
+{
+  if (!url) return NS_ERROR_NULL_POINTER;
+
+  if ((nsCRT::strncmp(HTTP_COLON, url, HTTP_COLON_LEN) == 0) ||
+      (nsCRT::strncmp(HTTPS_COLON, url, HTTPS_COLON_LEN) == 0)) {
+    *result = PR_TRUE;
+  }
+  else {
+    *result = PR_FALSE;
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsGlobalHistory::GetLastPageVisted(char **_retval)
 { 
-  *_retval = PR_smprintf("http://people.netscape.com/waterson");
+  if (!_retval) return NS_ERROR_NULL_POINTER;
+
+  *_retval = nsCRT::strdup((const char *)mLastPageVisited);
+
+#ifdef DEBUG_LAST_PAGE_VISITED
+  printf("XXX getting last page visited as: %s\n", (const char *)mLastPageVisited);
+#endif /* DEBUG_LAST_PAGE_VISITED */
+
   return NS_OK;
 }
 
@@ -1466,11 +1564,11 @@ nsGlobalHistory::Refresh(PRBool aBlocking)
 	return(NS_OK);
 }
 
-
-
 NS_IMETHODIMP
 nsGlobalHistory::Flush()
 {
+    nsresult rv;
+
 	nsMdbPtr<nsIMdbThumb> thumb(mEnv);
 	mdb_err err;
 
@@ -1489,7 +1587,8 @@ nsGlobalHistory::Flush()
 
 	if ((err != 0) || !done) return NS_ERROR_FAILURE;
 
-	return(NS_OK);
+    rv = SaveLastPageVisited();
+	return(rv);
 }
 
 
@@ -1662,9 +1761,12 @@ nsGlobalHistory::OpenDB()
     } while ((err == 0) && !broken && !done);
 
     if ((err != 0) || !done) return NS_ERROR_FAILURE;
+
+
   }
 
-  return NS_OK;
+  rv = SaveLastPageVisited();
+  return rv;
 }
 
 
@@ -1702,6 +1804,8 @@ nsGlobalHistory::CreateTokens()
 nsresult
 nsGlobalHistory::CloseDB()
 {
+  nsresult rv;
+
   mdb_err err;
 
   if (mTable)
@@ -1728,7 +1832,8 @@ nsGlobalHistory::CloseDB()
   if (mEnv)
     mEnv->CloseMdbObject(mEnv /* XXX */);
 
-  return NS_OK;
+  rv = SaveLastPageVisited();
+  return rv;
 }
 
 
