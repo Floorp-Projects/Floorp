@@ -144,14 +144,19 @@ var BookmarksMenu = {
   // Clean up after closing the context menu popup
   destroyContextMenu: function (aEvent)
   {
-#   let''s focus the content (needed) when the user escape it
+#   note that this method is called after doCommand.
+#   let''s focus the content and dismiss the popup chain (needed when the user
+#   type escape or if he/she clicks outside the context menu)
     if (content)
       content.focus();
-    BookmarksMenuDNDObserver.onDragRemoveFeedBack(document.popupNode); // needed on cancel
-    aEvent.target.removeEventListener("mousemove", BookmarksMenuController.onMouseMove, false)
     // XXXpch: see bug 210910, it should be done properly in the backend
     BookmarksMenuDNDObserver.mCurrentDragOverTarget = null;
     BookmarksMenuDNDObserver.onDragCloseTarget();
+
+#   if the user types escape, we need to remove the feedback
+    BookmarksMenuDNDObserver.onDragRemoveFeedBack(document.popupNode);
+
+    aEvent.target.removeEventListener("mousemove", BookmarksMenuController.onMouseMove, false)
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -407,6 +412,11 @@ var BookmarksMenuController = {
     if (content)
       content.focus();
     BookmarksMenuDNDObserver.onDragRemoveFeedBack(document.popupNode);
+#   when a dialog opens, the popup chain is not correctly dismissed,
+#   the child of the a menu won''t be closed.
+    if (document.popupNode.firstChild)
+      document.popupNode.firstChild.hidePopup();
+
     var selection = BookmarksMenu._selection;
     var target    = BookmarksMenu._target;
     switch (aCommand) {
@@ -596,7 +606,8 @@ var BookmarksMenuDNDObserver = {
     if (!this._observers) {
       this._observers = [
         document.getElementById("bookmarks-ptf"),
-        document.getElementById("bookmarks-menu").parentNode,
+#       menubar menus haven''t an "open" attribute: we can take the child
+        document.getElementById("bookmarks-menu").firstChild,
         document.getElementById("bookmarks-chevron").parentNode
       ]
     }
