@@ -277,9 +277,12 @@ static unsigned char * utf8_nextchar(unsigned char *str)
 static
 PRInt32 generate_encodedwords(char *pUTF8, const char *charset, char method, char *output, PRInt32 outlen, PRInt32 output_carryoverlen, PRInt32 foldlen, PRBool foldingonly)
 {
+  NS_ASSERTION(output_carryoverlen > 0, "output_carryoverlen must be > 0"); 
+
   nsCOMPtr <nsISaveAsCharset> conv;
   PRUnichar *_pUCS2 = nsnull, *pUCS2 = nsnull, *pUCS2Head = nsnull, cUCS2Tmp = 0;
-  char  *ibuf, *o = output, encodedword_head[kMAX_CSNAME+4+1], _charset[kMAX_CSNAME];
+  char  *ibuf, *o = output;
+  char  encodedword_head[kMAX_CSNAME+4+1], _charset[kMAX_CSNAME];
   char  *pUTF8Head = nsnull, cUTF8Tmp = 0;
   PRInt32   olen = 0, offset, linelen = output_carryoverlen, convlen = 0;
   PRInt32   encodedword_headlen = 0, encodedword_taillen = foldingonly ? 0 : 2; // "?="
@@ -518,12 +521,8 @@ process_lastline:
       }
     }
   }
-  if (linelen)
-    goto process_lastline;
-  if (_pUCS2)
-    nsMemory::Free(_pUCS2);
 
-  return linelen;
+  goto process_lastline;
 }
 
 typedef struct _RFC822AddressList {

@@ -4283,7 +4283,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   {
     char *convBcc;
     convBcc = nsMsgI18NEncodeMimePartIIStr(bcc_header, PR_TRUE,
-                    mCompFields->GetCharacterSet(), 0,
+                    mCompFields->GetCharacterSet(), sizeof("BCC: "),
                     nsMsgMIMEGetConformToStandard());
 
     PRInt32 L = strlen(convBcc ? convBcc : bcc_header) + 20;
