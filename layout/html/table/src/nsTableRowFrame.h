@@ -94,6 +94,9 @@ public:
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
+  NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
+                       nsDidReflowStatus aStatus);
+
   /** @see nsContainerFrame::CreateContinuingFrame */
   NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
                                    nsIFrame*        aParent,

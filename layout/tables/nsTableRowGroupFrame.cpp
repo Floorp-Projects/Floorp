@@ -828,55 +828,6 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
 }
 
 /**
- * Called by ShrinkWrapChildren() to set the height of a table row. Resizes
- * the table row, each of the row's table cells, and then realigns the cell
- * content based on the new height
- */
-void nsTableRowGroupFrame::SetRowHeight(nsIPresContext* aPresContext,
-                                        nsIFrame*       aRowFrame,
-                                        PRInt32         aRowIndex,
-                                        nscoord         aRowHeight,
-                                        nscoord         aMaxCellHeight,
-                                        PRBool&         aHasRowSpanningCell)
-{
-  // initialize out parameter
-  aHasRowSpanningCell = PR_FALSE;
-
-  // set the row's height
-  nsSize  rowFrameSize;
-  aRowFrame->GetSize(rowFrameSize);
-  aRowFrame->SizeTo(rowFrameSize.width, aRowHeight);
-
-  // resize all the cells based on the max cell height
-  // XXX It would be better to just inform the row of the new size and have
-  // it resize and re-align its cells...
-  nsTableCellFrame *cellFrame;
-  aRowFrame->FirstChild((nsIFrame*&)cellFrame);
-  while (nsnull != cellFrame)
-  {
-    PRInt32 rowSpan = ((nsTableFrame*)mGeometricParent)->GetEffectiveRowSpan(aRowIndex,
-                                                                             cellFrame);
-    if (1==rowSpan)
-    {
-      // resize the cell's height
-      nsSize  cellFrameSize;
-      cellFrame->GetSize(cellFrameSize);
-      cellFrame->SizeTo(cellFrameSize.width, aMaxCellHeight);
-
-      // realign cell content based on the new height
-      cellFrame->VerticallyAlignChild(aPresContext);
-    }
-    else
-    {
-      aHasRowSpanningCell = PR_TRUE;
-    }
-
-    // Get the next cell
-    cellFrame->GetNextSibling((nsIFrame*&)cellFrame);
-  }
-}
-
-/**
   */
 void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext, 
                                               nsReflowMetrics& aDesiredSize,
@@ -909,12 +860,9 @@ void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
     rowHeights[rowIndex] = maxRowHeight;
 
     // resize the row
-    PRBool  hasRowSpanningCell;
-    SetRowHeight(aPresContext, rowFrame, rowIndex, maxRowHeight, maxCellHeight,
-                 hasRowSpanningCell);
-    if (hasRowSpanningCell) {
-      atLeastOneRowSpanningCell = PR_TRUE;
-    }
+    nsSize  rowFrameSize;
+    rowFrame->GetSize(rowFrameSize);
+    rowFrame->SizeTo(rowFrameSize.width, maxRowHeight);
     
     // Update the running row group height
     rowGroupHeight += maxRowHeight;
