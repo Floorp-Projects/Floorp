@@ -202,14 +202,6 @@ public:
     NS_ADDREF(mStyle);
     mNext = nsnull;
   }
-  UndisplayedNode(nsIStyleContext* aPseudoStyle) 
-  {
-    MOZ_COUNT_CTOR(UndisplayedNode);
-    mContent = nsnull;
-    mStyle = aPseudoStyle;
-    NS_ADDREF(mStyle);
-    mNext = nsnull;
-  }
   ~UndisplayedNode(void)
   {
     MOZ_COUNT_DTOR(UndisplayedNode);
@@ -232,7 +224,6 @@ public:
   UndisplayedNode* GetFirstNode(nsIContent* aParentContent);
 
   nsresult AddNodeFor(nsIContent* aParentContent, nsIContent* aChild, nsIStyleContext* aStyle);
-  nsresult AddNodeFor(nsIContent* aParentContent, nsIStyleContext* aPseudoStyle);
 
   nsresult RemoveNodeFor(nsIContent* aParentContent, UndisplayedNode* aNode);
   nsresult RemoveNodesFor(nsIContent* aParentContent);
@@ -301,8 +292,6 @@ public:
   // Undisplayed content functions
   NS_IMETHOD GetUndisplayedContent(nsIContent* aContent, nsIStyleContext** aStyleContext);
   NS_IMETHOD SetUndisplayedContent(nsIContent* aContent, nsIStyleContext* aStyleContext);
-  NS_IMETHOD SetUndisplayedPseudoIn(nsIStyleContext* aPseudoContext, 
-                                    nsIContent* aParentContent);
   NS_IMETHOD ClearUndisplayedContentIn(nsIContent* aContent, nsIContent* aParentContent);
   NS_IMETHOD ClearAllUndisplayedContentIn(nsIContent* aParentContent);
   NS_IMETHOD ClearUndisplayedContentMap();
@@ -876,26 +865,6 @@ FrameManager::SetUndisplayedContent(nsIContent* aContent,
   return NS_ERROR_OUT_OF_MEMORY;
 }
 
-NS_IMETHODIMP
-FrameManager::SetUndisplayedPseudoIn(nsIStyleContext* aPseudoContext, 
-                                     nsIContent* aParentContent)
-{
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
-
-#ifdef DEBUG_UNDISPLAYED_MAP
-  static int i = 0;
-  printf("SetUndisplayedPseudo(%d): sp=%p cp=%p \n", i++, (void *)aPseudoContext, (void *)aParentContent);
-#endif
-
-  if (! mUndisplayedMap) {
-    mUndisplayedMap = new UndisplayedMap;
-  }
-  if (mUndisplayedMap) {
-    return mUndisplayedMap->AddNodeFor(aParentContent, aPseudoContext);
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
-}
-                                     
 NS_IMETHODIMP
 FrameManager::ClearUndisplayedContentIn(nsIContent* aContent, nsIContent* aParentContent)
 {
@@ -1803,8 +1772,9 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
       while (undisplayed) {
         nsIStyleContext* undisplayedContext = nsnull;
         undisplayed->mStyle->GetPseudoType(pseudoTag);
-        if (undisplayed->mContent && pseudoTag == nsnull) {  // child content
-          aPresContext->ResolveStyleContextFor(undisplayed->mContent, newContext, 
+        if (pseudoTag == nsnull) {  // child content
+          aPresContext->ResolveStyleContextFor(undisplayed->mContent,
+                                               newContext, 
                                                &undisplayedContext);
         }
         else if (pseudoTag == nsHTMLAtoms::mozNonElementPseudo) {
@@ -1812,6 +1782,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
                                                          &undisplayedContext);
         }
         else {  // pseudo element
+          NS_NOTREACHED("no pseudo elements in undisplayed map");
           NS_ASSERTION(pseudoTag, "pseudo element without tag");
           aPresContext->ResolvePseudoStyleContextFor(localContent, pseudoTag,
                                                      newContext,
@@ -2480,9 +2451,14 @@ UndisplayedMap::AppendNodeFor(UndisplayedNode* aNode, nsIContent* aParentContent
   if (*entry) {
     UndisplayedNode*  node = (UndisplayedNode*)((*entry)->value);
     while (node->mNext) {
-      NS_ASSERTION((node->mContent != aNode->mContent) ||
-                   ((node->mContent == nsnull) && 
-                    (node->mStyle != aNode->mStyle)), "node in map twice");
+      if (node->mContent == aNode->mContent) {
+        // We actually need to check this in optimized builds because
+        // there are some callers that do this.  See bug 118014, bug
+        // 136704, etc.
+        NS_NOTREACHED("node in map twice");
+        delete aNode;
+        return NS_OK;
+      }
       node = node->mNext;
     }
     node->mNext = aNode;
@@ -2500,16 +2476,6 @@ UndisplayedMap::AddNodeFor(nsIContent* aParentContent, nsIContent* aChild,
                            nsIStyleContext* aStyle)
 {
   UndisplayedNode*  node = new UndisplayedNode(aChild, aStyle);
-  if (! node) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return AppendNodeFor(node, aParentContent);
-}
-
-nsresult
-UndisplayedMap::AddNodeFor(nsIContent* aParentContent, nsIStyleContext* aPseudoStyle)
-{
-  UndisplayedNode*  node = new UndisplayedNode(aPseudoStyle);
   if (! node) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

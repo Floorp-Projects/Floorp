@@ -1531,15 +1531,13 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
     // See whether the generated content should be displayed.
     display = (const nsStyleDisplay*)pseudoStyleContext->GetStyleData(eStyleStruct_Display);
 
-    if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
-      aState.mFrameManager->SetUndisplayedPseudoIn(pseudoStyleContext, aContent);
-    }
-    else {  // has valid display type
+    if (NS_STYLE_DISPLAY_NONE != display->mDisplay) {
       // See if there was any content specified
       const nsStyleContent* styleContent =
         (const nsStyleContent*)pseudoStyleContext->GetStyleData(eStyleStruct_Content);
       PRUint32  contentCount = styleContent->ContentCount();
 
+      // XXXldb What is contentCount for |content: ""|?
       if (contentCount > 0) {
         // Create a block box or an inline box depending on the value of
         // the 'display' property
