@@ -29,14 +29,34 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* this toolbox declaration should not need to be here, but for some reason this is the only
-   way to get the toolbar to look right on win XP. Including toolbar.css isn't enought. 
-*/
+/**** BEGIN HACK: thunderbird does not currently use the new toolkit's autocomplete widget...so
+      for now, force the bindings back to the old values in the xpfe toolkit ******/
 
-toolbox {
-  -moz-appearance: toolbox;
-  background-color: -moz-Dialog;
+.autocomplete-result-popup {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-result-popup");
 }
+
+.autocomplete-history-popup {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-history-popup");
+}
+
+.autocomplete-tree {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-tree");
+}
+
+.autocomplete-treebody {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-treebody");
+}
+
+.autocomplete-treerows {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-treerows");
+}
+
+.autocomplete-history-dropmarker {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#history-dropmarker");
+}
+
+/*** end horrible hack ***/
 
 /* ::::: primary toolbar buttons ::::: */
  

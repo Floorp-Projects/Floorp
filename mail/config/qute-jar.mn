@@ -56,7 +56,8 @@ skin/classic/communicator/taskbar/mail-hov.gif,       classic/skin/classic/commu
 skin/classic/communicator/taskbar/mail-16.gif,        classic/skin/classic/communicator/taskbar/mail-16.gif
 skin/classic/communicator/taskbar/mailnew.gif,        classic/skin/classic/communicator/taskbar/mailnew.gif
 skin/classic/communicator/taskbar/addressbook-hov.gif, classic/skin/classic/communicator/taskbar/addressbook-hov.gif
-
+skin/classic/communicator/pref/pref.css,              classic/skin/classic/communicator/pref/pref.css
+ 
 #################################################################################################
 # Global
 #################################################################################################
@@ -64,12 +65,20 @@ skin/classic/global,                                   classic/skin/classic/glob
 skin/classic/global/filepicker,                        classic/skin/classic/global/filepicker
 skin/classic/global/arrow,                             classic/skin/classic/global/arrow
 skin/classic/global/tree,                              classic/skin/classic/global/tree
+skin/classic/global/checkbox,                          classic/skin/classic/global/checkbox
+skin/classic/global/radio,                             classic/skin/classic/global/radio
 
 skin/classic/global/console,                           classic/skin/classic/global/console
 skin/classic/global/icons,                             classic/skin/classic/global/icons
 skin/classic/global/toolbar,                           classic/skin/classic/global/toolbar
 skin/classic/global/menu,                              classic/skin/classic/global/menu
 skin/classic/global/progressmeter,                     classic/skin/classic/global/progressmeter
+
+# mozilla/toolkit
+skin/classic/global/console,                           classic/skin/classic/global/console
+skin/classic/global/icons/Message.png                  classic/skin/classic/global/icons/Message.png
+skin/classic/global/icons/Question.png                 classic/skin/classic/global/icons/Question.png
+skin/classic/global/icons/Warning.png                  classic/skin/classic/global/cons/Warning.png
 
 #################################################################################################
 # Editor

@@ -29,15 +29,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* this toolbox declaration should not need to be here, but for some reason this is the only
-   way to get the toolbar to look right on win XP. Including toolbar.css isn't enought. 
-*/
-
-toolbox {
-  -moz-appearance: toolbox;
-  background-color: -moz-Dialog;
-}
-
 /* ::::: primary toolbar buttons ::::: */
 
 .toolbarbutton-1 {

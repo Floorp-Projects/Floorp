@@ -161,6 +161,9 @@ content/global/nsProgressDlg.xul,                     toolkit/content/global/nsP
 content/global/nsProgressDialog.xul,                  toolkit/content/global/nsProgressDialog.xul
 content/global/nsProgressDlg.js,                      toolkit/content/global/nsProgressDlg.js
 
+# from mozilla\toolkit
+content/global/widgets,                               toolkit/content/global/widgets
+
 #################################################################################################
 # Files we need from pipnss and pippki jars
 #################################################################################################

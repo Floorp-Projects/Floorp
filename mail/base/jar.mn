@@ -15,7 +15,6 @@ messenger.jar:
 classic.jar:
 +   skin/classic/global/tree/twisty-open.gif        (skin/icons/twisty-open.gif)
 +   skin/classic/global/tree/twisty-clsd.gif        (skin/icons/twisty-clsd.gif)
-+   skin/classic/global/toolbar.css                 (skin/toolbar.css)
 +   skin/classic/global/tree.css                    (skin/tree.css)
 +   skin/classic/communicator/communicator.css      (skin/communicator.css)
 +   skin/classic/messenger/primaryToolbar.css       (skin/primaryToolbar.css)
@@ -34,14 +33,9 @@ comm.jar:
 toolkit.jar:
 +   content/global/customizeToolbar.xul             (content/customizeToolbar.xul)
 +   content/global/customizeToolbar.js              (content/customizeToolbar.js)
-+   content/global/customizeToolbar.css             (content/customizeToolbar.css)
-+   content/global/bindings/toolbar.xml             (content/toolbar.xml)
-+   content/global/xul.css                          (content/xul.css) 
 +   content/communicator/nsContextMenu.js           (content/nsContextMenu.js)
 +   content/communicator/tasksOverlay.xul           (content/tasksOverlay.xul)
 +   content/communicator/utilityOverlay.xul         (content/utilityOverlay.xul)
-+   content/global/finddialog.xul                   (content/finddialog.xul) 
-
 
 en-US.jar:
 +   locale/en-US/messenger/start.html               (locale/start.html)
@@ -53,8 +47,6 @@ en-US.jar:
 +   locale/en-US/messenger/mailTasksOverlay.dtd     (locale/mailTasksOverlay.dtd)
 +   locale/en-US/messenger/msgAccountCentral.dtd    (locale/msgAccountCentral.dtd)
 +   locale/en-US/messenger/SearchDialog.dtd         (locale/SearchDialog.dtd)
-+   locale/en-US/global/customizeToolbar.dtd        (locale/customizeToolbar.dtd)
-+   locale/en-US/global/customizeToolbar.properties (locale/customizeToolbar.properties)
 +   locale/en-US/global/brand.properties            (locale/brand.properties) 
 +   locale/en-US/global/brand.dtd                   (locale/brand.dtd) 
 +   locale/en-US/communicator/utilityOverlay.dtd    (locale/utilityOverlay.dtd)
