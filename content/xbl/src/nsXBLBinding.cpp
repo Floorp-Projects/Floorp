@@ -761,7 +761,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
         if (!body.IsEmpty()) {
           void* myFunc;
           nsCAutoString cname; cname.AssignWithConversion(name.GetUnicode());
-          rv = context->CompileFunction(scriptObject,
+          rv = context->CompileFunction(classObject,
                                         cname,
                                         argCount,
                                         (const char**)args,
