@@ -1823,7 +1823,6 @@ JSBool
 js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 {
     JSBool ok, useful;
-    JSCodeGenerator cg2;
     JSStmtInfo *stmt, stmtInfo;
     ptrdiff_t top, off, tmp, beq, jmp;
     JSParseNode *pn2, *pn3, *pn4;
@@ -1845,6 +1844,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     switch (pn->pn_type) {
       case TOK_FUNCTION:
       {
+        JSCodeGenerator cg2;
         JSFunction *fun;
 
         /* Generate code for the function's body. */
@@ -1906,7 +1906,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             uintN slot;
             jsbytecode *pc;
 
-            obj = OBJ_GET_PARENT(cx, pn->pn_fun->object);
+            obj = OBJ_GET_PARENT(cx, fun->object);
             if (!js_LookupProperty(cx, obj, (jsid)fun->atom, &pobj,
                                    (JSProperty **)&sprop)) {
                 return JS_FALSE;
@@ -2024,15 +2024,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       {
         JSOp switchop;
         uint32 ncases, tablen = 0;
-        JSScript *script;
         jsint i, low, high;
         jsdouble d;
         size_t switchsize, tablesize;
         JSParseNode **table;
         jsbytecode *pc;
         JSBool hasDefault = JS_FALSE;
-        JSBool isEcmaSwitch = cx->version == JSVERSION_DEFAULT ||
-                              cx->version >= JSVERSION_1_4;
         ptrdiff_t defaultOffset = -1;
 
         /* Try for most optimal, fall back if not dense ints, and per ECMAv2. */
@@ -2063,7 +2060,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
             low  = JSVAL_INT_MAX;
             high = JSVAL_INT_MIN;
-            cg2.current = NULL;
 
             for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
                 if (pn3->pn_type == TOK_DEFAULT) {
@@ -2071,78 +2067,47 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     ncases--;   /* one of the "cases" was the default */
                     continue;
                 }
+
                 JS_ASSERT(pn3->pn_type == TOK_CASE);
+                if (switchop == JSOP_CONDSWITCH)
+                    continue;
+
                 pn4 = pn3->pn_left;
-                if (isEcmaSwitch) {
-                    if (switchop == JSOP_CONDSWITCH)
-                        continue;
-                    switch (pn4->pn_type) {
-                      case TOK_NUMBER:
-                        d = pn4->pn_dval;
-                        if (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i)) {
-                            pn3->pn_val = INT_TO_JSVAL(i);
-                        } else {
-                            atom = js_AtomizeDouble(cx, d, 0);
-                            if (!atom) {
-                                ok = JS_FALSE;
-                                goto release;
-                            }
-                            pn3->pn_val = ATOM_KEY(atom);
+                switch (pn4->pn_type) {
+                  case TOK_NUMBER:
+                    d = pn4->pn_dval;
+                    if (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i)) {
+                        pn3->pn_val = INT_TO_JSVAL(i);
+                    } else {
+                        atom = js_AtomizeDouble(cx, d, 0);
+                        if (!atom) {
+                            ok = JS_FALSE;
+                            goto release;
                         }
+                        pn3->pn_val = ATOM_KEY(atom);
+                    }
+                    break;
+                  case TOK_STRING:
+                    pn3->pn_val = ATOM_KEY(pn4->pn_atom);
+                    break;
+                  case TOK_PRIMARY:
+                    if (pn4->pn_op == JSOP_TRUE) {
+                        pn3->pn_val = JSVAL_TRUE;
                         break;
-                      case TOK_STRING:
-                        pn3->pn_val = ATOM_KEY(pn4->pn_atom);
+                    }
+                    if (pn4->pn_op == JSOP_FALSE) {
+                        pn3->pn_val = JSVAL_FALSE;
                         break;
-                      case TOK_PRIMARY:
-                        if (pn4->pn_op == JSOP_TRUE) {
-                            pn3->pn_val = JSVAL_TRUE;
-                            break;
-                        }
-                        if (pn4->pn_op == JSOP_FALSE) {
-                            pn3->pn_val = JSVAL_FALSE;
-                            break;
-                        }
-                        /* FALL THROUGH */
-                      default:
-                        switchop = JSOP_CONDSWITCH;
-                        continue;
                     }
-                } else {
-                    /* Pre-ECMAv2 switch evals case exprs at compile time. */
-                    ok = js_InitCodeGenerator(cx, &cg2, cg->filename,
-                                              pn3->pn_pos.begin.lineno,
-                                              cg->principals);
-                    if (!ok)
-                        goto release;
-                    cg2.currentLine = pn4->pn_pos.begin.lineno;
-                    ok = js_EmitTree(cx, &cg2, pn4);
-                    if (!ok)
-                        goto release;
-                    if (js_Emit1(cx, &cg2, JSOP_POPV) < 0) {
-                        ok = JS_FALSE;
-                        goto release;
-                    }
-                    script = js_NewScriptFromCG(cx, &cg2, NULL);
-                    if (!script) {
-                        ok = JS_FALSE;
-                        goto release;
-                    }
-                    ok = js_Execute(cx, cx->fp->scopeChain, script, cx->fp, 0,
-                                    &pn3->pn_val);
-                    js_DestroyScript(cx, script);
-                    if (!ok)
-                        goto release;
+                    /* FALL THROUGH */
+                  default:
+                    switchop = JSOP_CONDSWITCH;
+                    continue;
                 }
 
-                if (!JSVAL_IS_NUMBER(pn3->pn_val) &&
-                    !JSVAL_IS_STRING(pn3->pn_val) &&
-                    !JSVAL_IS_BOOLEAN(pn3->pn_val)) {
-                    cg->currentLine = pn3->pn_pos.begin.lineno;
-                    js_ReportCompileErrorNumber(cx, NULL, cg, JSREPORT_ERROR,
-                                                JSMSG_BAD_CASE);
-                    ok = JS_FALSE;
-                    goto release;
-                }
+                JS_ASSERT(JSVAL_IS_NUMBER(pn3->pn_val) ||
+                          JSVAL_IS_STRING(pn3->pn_val) ||
+                          JSVAL_IS_BOOLEAN(pn3->pn_val));
 
                 if (switchop != JSOP_TABLESWITCH)
                     continue;
@@ -2181,8 +2146,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                                       * sizeof(jsbitmap));
                         if (!intmap) {
                             JS_ReportOutOfMemory(cx);
-                            ok = JS_FALSE;
-                            goto release;
+                            return JS_FALSE;
                         }
                     }
                     memset(intmap, 0, intmap_bitlen >> JS_BITS_PER_BYTE_LOG2);
@@ -2200,11 +2164,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!ok)
                 return JS_FALSE;
 
-            if (switchop == JSOP_CONDSWITCH) {
-                JS_ASSERT(!cg2.current);
-            } else {
-                if (cg2.current)
-                    js_FinishCodeGenerator(cx, &cg2);
+            if (switchop != JSOP_CONDSWITCH) {
                 if (switchop == JSOP_TABLESWITCH) {
                     tablen = (uint32)(high - low + 1);
                     if (tablen >= JS_BIT(16) || tablen > 2 * ncases)
