@@ -74,6 +74,7 @@
 
 #include "nsIParserService.h"
 #include "nsParserCIID.h"
+#include "nsISelectElement.h"
 
 // XXX Go through a factory for this one
 #include "nsICSSParser.h"
@@ -1252,7 +1253,6 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
 
   DidAddContent(content, mSink->IsInScript());
 
-  NS_IF_RELEASE(content);
 
   // Special handling for certain tags
   switch (nodeType) {
@@ -1276,9 +1276,22 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
     mSink->mNumOpenIFRAMES--;
     break;
 
+  case eHTMLTag_select:
+    {
+      nsCOMPtr<nsISelectElement> select = do_QueryInterface(content, &result);
+
+      if (NS_SUCCEEDED(result)) {
+        result = select->DoneAddingContent();
+      }
+    }
+    break;
+
   default:
     break;
+
   }
+
+  NS_IF_RELEASE(content);
 
 #ifdef DEBUG
   if (mPreAppend && 
