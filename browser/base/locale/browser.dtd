@@ -278,3 +278,10 @@
 
 <!ENTITY findAgainCmd.commandkey2 "VK_F3">
 <!ENTITY findPrevCmd.commandkey2 "VK_F3">
+
+#ifdef XP_MACOSX
+<!ENTITY minimizeWindow.key "m">
+<!ENTITY minimizeWindow.label "Minimize Window">
+<!ENTITY bringAllToFront.label "Bring All to Front">
+<!ENTITY zoomWindow.label "Zoom Window">
+#endif
