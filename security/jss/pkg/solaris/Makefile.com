@@ -1,8 +1,8 @@
 #
-# Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
+# Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile.com,v 1.5 2004/05/13 07:13:00 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile.com,v 1.6 2004/06/14 23:24:57 christophe.ravel.bugs%sun.com Exp $"
 #
 
 MACH = $(shell mach)
@@ -16,7 +16,7 @@ endif
 
 PKGARCHIVE = $(PUBLISH_ROOT)/pkgarchive
 DATAFILES = copyright
-FILES = $(DATAFILES) pkginfo prototype
+FILES = $(DATAFILES) pkginfo
 
 PACKAGE = $(shell basename `pwd`)
 
@@ -24,6 +24,7 @@ PRODUCT_VERSION = $(shell grep JSS_VERSION $(CORE_DEPTH)/jss/org/mozilla/jss/uti
 PRODUCT_NAME = JSS_3_5_RTM
 
 LN = /usr/bin/ln
+CP = /usr/bin/cp
 
 CLOBBERFILES = $(FILES)
 

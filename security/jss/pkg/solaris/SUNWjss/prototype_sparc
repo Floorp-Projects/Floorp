@@ -1,8 +1,8 @@
 #
-# Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
+# Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: prototype_sparc,v 1.2 2003/01/13 19:42:52 glen.beasley%sun.com Exp $"
+#ident	"$Id: prototype_sparc,v 1.3 2004/06/14 23:24:58 christophe.ravel.bugs%sun.com Exp $"
 #
 # This required package information file contains a list of package contents.
 # The 'pkgmk' command uses this file to identify the contents of a package
@@ -27,3 +27,14 @@
 #
 #
 # SUNWjss
+s none usr/lib/mps/64=sparcv9
+s none usr/lib/mps/secv1/64=sparcv9
+d none usr/lib/mps/sparcv9 755 root bin
+d none usr/share/lib/mps/sparcv9 755 root bin
+d none usr/lib/mps/secv1/sparcv9 755 root bin
+d none usr/share/lib/mps/secv1/sparcv9 755 root bin
+f none usr/lib/mps/sparcv9/libjss3.so 755 root bin
+f none usr/share/lib/mps/sparcv9/jss3.jar 644 root bin
+s none usr/lib/mps/secv1/sparcv9/libjss3.so=../../sparcv9/libjss3.so
+s none usr/share/lib/mps/secv1/sparcv9/jss3.jar=../../sparcv9/jss3.jar
+

@@ -1,7 +1,7 @@
-# Copyright 2002 Microsystems, Inc.  All Rights Reserved.
+# Copyright 2004 Microsystems, Inc.  All Rights Reserved.
 # Use is subject to license terms.
 #
-#	$Id: pkgdepend,v 1.2 2003/01/13 19:42:50 glen.beasley%sun.com Exp $
+#	$Id: pkgdepend,v 1.3 2004/06/14 23:24:58 christophe.ravel.bugs%sun.com Exp $
 #
 # This package information file defines software dependencies associated
 # with the pkg.  You can define three types of pkg dependencies with this file:

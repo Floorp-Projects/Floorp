@@ -1,8 +1,8 @@
 #!/usr/bin/ksh -p
 #
-#ident	"$Id: bld_awk_pkginfo.ksh,v 1.3 2003/01/14 20:26:36 glen.beasley%sun.com Exp $"
+#ident	"$Id: bld_awk_pkginfo.ksh,v 1.4 2004/06/14 23:24:57 christophe.ravel.bugs%sun.com Exp $"
 #
-# Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
+# Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
 # Simple script which builds the awk_pkginfo awk script.  This awk script
