@@ -38,6 +38,7 @@ public:
  * in it.
  */
   static PRInt32 EntityToUnicode(const nsString& aEntity);
+  static PRInt32 EntityToUnicode(const nsCString& aEntity);
 
 /**
  * Translate an entity string into it's unicode value. This call
