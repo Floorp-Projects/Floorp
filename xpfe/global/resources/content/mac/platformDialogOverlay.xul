@@ -1,0 +1,26 @@
+<?xml version="1.0"?> 
+
+<!DOCTYPE window SYSTEM "chrome://global/locale/platformDialogOverlay.dtd">
+
+
+
+<overlay id="platformDialogOverlay"
+		 xmlns:html="http://www.w3.org/TR/REC-html40"
+		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script language="JavaScript" src="chrome://global/content/platformDialogOverlay.js"/>
+
+	<!-- OK & Cancel Buttons -->
+	 <box id="okCancelButtons" align="horizontal" style="margin-top: 0.5em">
+		<spring flex="100%"/>
+		<titledbutton id="ok" value="&okButton.label;" onclick="doOKButton()"/>	
+		<spring style="width:10px"/>
+		<titledbutton id="cancel" value="&cancelButton.label;" onclick="doCancelButton()"/>	
+		<spring style="width:10px"/>
+		<titledbutton id="Button2" value="&cancelButton.label;" style = "display:none;" onclick="doButton2()"/>	
+		<spring style="width:10px"/>
+		<titledbutton id="Button3" value="&cancelButton.label;" style = "display:none;" onclick="doButton3()"/>	
+		<spring style="width:10px"/>
+	</box>
+	
+</overlay>		
