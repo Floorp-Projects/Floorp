@@ -43,6 +43,7 @@
 #include "nsChildView.h"
 #include <Controls.h>
 #include "nsIContent.h"
+#import "mozView.h"
 
 class nsIScrollbarMediator;
 
@@ -71,6 +72,10 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSINATIVESCROLLBAR
 
+    // called from the NativeScrollbarView when someone hits a part
+    // of the scrollbar.
+  void DoScroll(NSScrollerPart inPart);
+  
 protected:
 
   // nsWindow Interface
@@ -86,13 +91,6 @@ protected:
   virtual NSView*   CreateCocoaView() ;
   virtual GrafPtr   GetQuickDrawPort() ;
 
-private:
-
-  friend class StNativeControlActionProcOwner;
-  
-  static pascal void ScrollActionProc(ControlHandle, ControlPartCode);
-  void DoScrollAction(ControlPartCode);
-
 // DATA
 private:
 
@@ -102,39 +100,27 @@ private:
   PRUint32          mValue;
   PRUint32          mMaxValue;
   PRUint32          mVisibleImageSize;
-  PRUint32          mLineIncrement;
-  PRBool            mMouseDownInScroll;
-  ControlPartCode   mClickedPartCode;
-  
+  PRUint32          mLineIncrement;  
 };
 
 
-@interface NativeScrollbarView : NSScroller
+@interface NativeScrollbarView : NSScroller<mozView>
 {
     // Our window [WEAK]
   NSWindow* mWindow;
   
-    // the nsChildView that created this view. It retains this NSView, so
-    // the link back to it must be weak.
-  nsChildView* mGeckoChild;
-  
-    // allows us to redispatch events back to a centralized location
-  //nsIEventSink* mEventSink;
-  
-    // tag for our mouse enter/exit tracking rect
-  NSTrackingRectTag mMouseEnterExitTag;
+    // the nsNativeScrollbar that created this view. It retains this NSView, so
+    // the link back to it must be weak. [WEAK]
+  nsNativeScrollbar* mGeckoChild;
 }
 
   // default initializer
-- (id)initWithFrame:(NSRect)frameRect geckoChild:(nsChildView*)inChild;
+- (id)initWithFrame:(NSRect)frameRect geckoChild:(nsNativeScrollbar*)inChild;
   // overridden parent class initializer
 - (id)initWithFrame:(NSRect)frameRect;
 
-  // access the nsIWidget associated with this view. DOES NOT ADDREF.
-- (nsIWidget*) widget;
+- (IBAction)scroll:(NSScroller*)sender;
 
-- (NSWindow*) getNativeWindow;
-- (void) setNativeWindow: (NSWindow*)aWindow;
 @end
 
 

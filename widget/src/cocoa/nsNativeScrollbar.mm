@@ -51,45 +51,6 @@
 NS_IMPL_ISUPPORTS_INHERITED1(nsNativeScrollbar, nsChildView, nsINativeScrollbar);
 
 
-#if 0
-//
-// StControlActionProcOwner
-//
-// A class that wraps a control action proc so that it is disposed of
-// correctly when the shared library shuts down
-//
-class StNativeControlActionProcOwner {
-public:
-  
-  StNativeControlActionProcOwner ( )
-  {
-    sControlActionProc = NewControlActionUPP(nsNativeScrollbar::ScrollActionProc);
-    NS_ASSERTION(sControlActionProc, "Couldn't create live scrolling action proc");
-  }
-  ~StNativeControlActionProcOwner ( )
-  {
-    if ( sControlActionProc )
-      DisposeControlActionUPP(sControlActionProc);
-  }
-
-  ControlActionUPP ActionProc() { return sControlActionProc; }
-  
-private:
-  ControlActionUPP sControlActionProc;  
-};
-
-
-static ControlActionUPP ScrollbarActionProc ( );
-
-static ControlActionUPP 
-ScrollbarActionProc ( )
-{
-  static StNativeControlActionProcOwner sActionProcOwner;
-  return sActionProcOwner.ActionProc();
-}
-#endif
-
-
 nsNativeScrollbar::nsNativeScrollbar()
   : nsChildView()
   , mContent(nsnull)
@@ -98,8 +59,6 @@ nsNativeScrollbar::nsNativeScrollbar()
   , mMaxValue(0)
   , mVisibleImageSize(0)
   , mLineIncrement(0)
-  , mMouseDownInScroll(PR_FALSE)
-  , mClickedPartCode(0)
 {
   WIDGET_SET_CLASSNAME("nsNativeScrollbar");
 }
@@ -130,52 +89,38 @@ nsNativeScrollbar::CreateCocoaView ( )
   return [[[NativeScrollbarView alloc] initWithFrame:orientation geckoChild:this] autorelease];
 }
 
+
 GrafPtr
 nsNativeScrollbar::GetQuickDrawPort ( )
 {
   // pray we're always a child of a NSQuickDrawView
-  NSQuickDrawView* parent = (NSQuickDrawView*)[mView superview];
-  return [parent qdPort];
+  if ( [mParentView isKindOfClass: [ChildView class]] ) {
+    NSQuickDrawView* parent = NS_STATIC_CAST(NSQuickDrawView*, mParentView);
+    return [parent qdPort];
+  }
+  
+  return nsnull;
 }
 
 
 //
-// ScrollActionProc
-//
-// Called from the OS toolbox while the scrollbar is being tracked.
-//
-pascal void
-nsNativeScrollbar::ScrollActionProc(ControlHandle ctrl, ControlPartCode part)
-{
-  nsNativeScrollbar* self = (nsNativeScrollbar*)(::GetControlReference(ctrl));
-  NS_ASSERTION(self, "NULL nsNativeScrollbar");
-  if ( self )
-    self->DoScrollAction(part);
-}
-
-
-//
-// DoScrollAction
+// DoScroll
 //
 // Called from the action proc of the scrollbar, adjust the control's
 // value as well as the value in the content node which communicates
 // to gecko that the document is scrolling.
 // 
 void
-nsNativeScrollbar::DoScrollAction(ControlPartCode part)
+nsNativeScrollbar::DoScroll(NSScrollerPart inPart)
 {
-return;
-
-#if 0
   PRUint32 oldPos, newPos;
   PRUint32 incr;
   PRUint32 visibleImageSize;
-  PRInt32 scrollBarMessage = 0;
   GetPosition(&oldPos);
   GetLineIncrement(&incr);
   GetViewSize(&visibleImageSize);
-  switch(part)
-  {
+  switch ( inPart ) {
+
     //
     // For the up/down buttons, scroll up or down by the line height and 
     // update the attributes on the content node (the scroll frame listens
@@ -184,8 +129,8 @@ return;
     // lines. Outliner ignores the params to ScrollbarButtonPressed() except
     // to check if one is greater than the other to indicate direction.
     //
-    
-    case kControlUpButtonPart:
+
+    case NSScrollerDecrementLine: 				// scroll up/left
       if ( mMediator )
         mMediator->ScrollbarButtonPressed(1,0);
       else {
@@ -193,8 +138,8 @@ return;
         UpdateContentPosition(newPos);
       }
       break;
-         
-    case kControlDownButtonPart:
+    
+    case NSScrollerIncrementLine:					// scroll down/right
       if ( mMediator )
         mMediator->ScrollbarButtonPressed(0,1);
       else {
@@ -202,17 +147,16 @@ return;
         UpdateContentPosition(newPos); 
       }
       break;
-    
+  
     //
-    // For page up/down and dragging the thumb, scroll by the page height
-    // (or directly report the value of the scrollbar) and update the attributes
+    // For page up/down, scroll by the page height and update the attributes
     // on the content node (as above). If we have a mediator, we're in an
     // outliner so tell it directly that the position has changed. Note that
     // outliner takes signed values, so we have to convert our unsigned to 
     // signed values first.
     //
-    
-    case kControlPageUpPart:
+
+    case NSScrollerDecrementPage:				// scroll up a page
       newPos = oldPos - visibleImageSize;
       UpdateContentPosition(newPos);
       if ( mMediator ) {
@@ -222,8 +166,8 @@ return;
         mMediator->PositionChanged(op, np);
       }
       break;
-      
-    case kControlPageDownPart:
+    
+    case NSScrollerIncrementPage:			// scroll down a page
       newPos = oldPos + visibleImageSize;
       UpdateContentPosition(newPos);
       if ( mMediator ) {
@@ -233,9 +177,15 @@ return;
         mMediator->PositionChanged(op, np);
       }
       break;
-      
-    case kControlIndicatorPart:
-      newPos = ::GetControl32BitValue(GetControl());
+    
+    //
+    // The scroller handles changing the value on the thumb for
+    // us, so read it, convert it back to the range gecko is expecting,
+    // and tell the content.
+    //
+    case NSScrollerKnob:
+    case NSScrollerKnobSlot:
+      newPos = (int) ([mView floatValue] * mMaxValue);
       UpdateContentPosition(newPos);
       if ( mMediator ) {
         PRInt32 op = oldPos, np = mValue;
@@ -244,19 +194,10 @@ return;
         mMediator->PositionChanged(op, np);
       }
       break;
-  }
-  EndDraw();
     
-	// update the area of the parent uncovered by the scrolling. Since
-	// we may be in a tight loop, we need to manually validate the area
-	// we just updated so the update rect doesn't continue to get bigger
-	// and bigger the more we scroll.
-	nsCOMPtr<nsIWidget> parent ( dont_AddRef(GetParent()) );
-	parent->Update();
-	parent->Validate();
-
-  StartDraw();
-#endif
+    default:
+      ; // do nothing
+  }
 }
 
 
@@ -328,7 +269,9 @@ nsNativeScrollbar::GetMaxRange(PRUint32* aMaxRange)
 //
 // SetPosition
 //
-// Set the current position of the slider and redraw the scrollbar
+// Set the current position of the slider and redraw the scrollbar. We have
+// to convert between the integer values gecko uses (0,mMaxValue) to the float
+// values that cocoa uses (0,1).
 //
 NS_IMETHODIMP
 nsNativeScrollbar::SetPosition(PRUint32 aPos)
@@ -501,7 +444,6 @@ nsNativeScrollbar::IsEnabled(PRBool *aState)
 
 @implementation NativeScrollbarView
 
-
 //
 // -initWithFrame:geckoChild
 // Designated Initializer
@@ -509,12 +451,18 @@ nsNativeScrollbar::IsEnabled(PRBool *aState)
 // Init our superclass and make the connection to the gecko nsIWidget we're
 // mirroring
 //
-- (id)initWithFrame:(NSRect)frameRect geckoChild:(nsChildView*)inChild
+- (id)initWithFrame:(NSRect)frameRect geckoChild:(nsNativeScrollbar*)inChild
 {
   [super initWithFrame:frameRect];
 
   NS_ASSERTION(inChild, "Need to provide a tether between this and a nsChildView class");
   mGeckoChild = inChild;
+  
+  // make ourselves the target of the scroll and set the action message
+  [self setTarget:self];
+  [self setAction:@selector(scroll:)];
+  
+  return self;
 }
 
 
@@ -526,7 +474,7 @@ nsNativeScrollbar::IsEnabled(PRBool *aState)
 - (id)initWithFrame:(NSRect)frameRect
 {
   NS_WARNING("You're calling the wrong initializer. You really want -initWithFrame:geckoChild");
-  [self initWithFrame:frameRect geckoChild:nsnull];
+  return [self initWithFrame:frameRect geckoChild:nsnull];
 }
 
 
@@ -542,20 +490,6 @@ nsNativeScrollbar::IsEnabled(PRBool *aState)
 - (void) setNativeWindow: (NSWindow*)aWindow
 {
   mWindow = aWindow;
-}
-
-- (void)trackKnob:(NSEvent *)theEvent
-{
-  printf("tracking knob\n");
-  [super trackKnob:theEvent];
-  printf("done tracking knob\n");
-}
-
-- (void)trackScrollButtons:(NSEvent *)theEvent
-{
-  printf("tracking buttons");
-  [super trackScrollButtons:theEvent];
-  printf("done tracking buttons");
 }
 
 
@@ -588,6 +522,21 @@ nsNativeScrollbar::IsEnabled(PRBool *aState)
 {
   // do nothing
 }
+
+
+//
+// -scroll
+//
+// the action message we've set up to be called when the scrollbar needs
+// to adjust its value. Feed back into the owning widget to process
+// how much to scroll and adjust the correct attributes.
+//
+- (IBAction)scroll:(NSScroller*)sender
+{
+  if ( mGeckoChild )
+    mGeckoChild->DoScroll([sender hitPart]);
+}
+
 
 @end
 

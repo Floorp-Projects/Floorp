@@ -37,6 +37,8 @@
 #ifndef Window_h__
 #define Window_h__
 
+#import "mozView.h"
+
 #include "nsISupports.h"
 #include "nsBaseWidget.h"
 #include "nsDeleteObserver.h"
@@ -66,7 +68,7 @@ class nsChildView;
 class nsIEventSink;
 
 
-@interface ChildView : NSQuickDrawView
+@interface ChildView : NSQuickDrawView<mozView>
 {
   NSWindow*       mWindow;    // shortcut to the top window, [WEAK]
   
@@ -84,9 +86,6 @@ class nsIEventSink;
   // sets up our view, attaching it to its owning gecko view
 - (id) initWithGeckoChild:(nsChildView*)child eventSink:(nsIEventSink*)sink;
 
-  // access the nsIWidget associated with this view. DOES NOT ADDREF.
-- (nsIWidget*) widget;
-
   // convert from one event system to the other for event dispatching
 - (void) convert:(NSEvent*)inEvent message:(PRInt32)inMsg toGeckoEvent:(nsInputEvent*)outGeckoEvent;
 
@@ -95,8 +94,6 @@ class nsIEventSink;
            isChar:(PRBool*)outIsChar
            toGeckoEvent:(nsKeyEvent*)outGeckoEvent;
 
-- (NSWindow*) getNativeWindow;
-- (void) setNativeWindow: (NSWindow*)aWindow;
 @end
 
 
