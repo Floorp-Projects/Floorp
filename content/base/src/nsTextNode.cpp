@@ -40,8 +40,14 @@
 #include "nsIDOMText.h"
 #include "nsLayoutAtoms.h"
 #include "nsContentUtils.h"
+#include "nsIDOMEventListener.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMMutationEvent.h"
+#include "nsIAttribute.h"
 
-
+/**
+ * Class used to implement DOM text nodes
+ */
 class nsTextNode : public nsGenericDOMDataNode,
                    public nsIDOMText
 {
@@ -71,6 +77,50 @@ public:
 
   // nsITextContent
   NS_IMETHOD CloneContent(PRBool aCloneText, nsITextContent** aClone);
+};
+
+/**
+ * class used to implement attr() generated content
+ */
+class nsAttributeTextNode : public nsTextNode {
+public:
+  class nsAttrChangeListener : public nsIDOMEventListener {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIDOMEVENTLISTENER
+  
+    nsAttrChangeListener(PRInt32 aNameSpaceID, nsIAtom* aAttrName,
+                         nsITextContent* aContent) :
+      mNameSpaceID(aNameSpaceID),
+      mAttrName(aAttrName),
+      mContent(aContent)
+    {
+      NS_ASSERTION(mNameSpaceID != kNameSpaceID_Unknown, "Must know namespace");
+      NS_ASSERTION(mAttrName, "Must have attr name");
+      NS_ASSERTION(mContent, "Must have text content");
+    }
+    
+  protected:
+    friend class nsAttributeTextNode;
+    PRInt32 mNameSpaceID;
+    nsCOMPtr<nsIAtom> mAttrName;
+    nsITextContent* mContent;  // Weak ref; it owns us
+  };
+
+  virtual ~nsAttributeTextNode() {
+    DetachListener();
+  }
+  
+  virtual void SetParent(nsIContent* aParent) {
+    if (!aParent) {
+      DetachListener();
+    }
+    nsTextNode::SetParent(aParent);
+  }
+
+  nsRefPtr<nsAttrChangeListener> mListener;  // our listener
+private:
+  void DetachListener();
 };
 
 nsresult
@@ -208,3 +258,98 @@ nsTextNode::DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const
   }
 }
 #endif
+
+NS_IMPL_ISUPPORTS1(nsAttributeTextNode::nsAttrChangeListener,
+                   nsIDOMEventListener)
+
+NS_IMETHODIMP
+nsAttributeTextNode::nsAttrChangeListener::HandleEvent(nsIDOMEvent* aEvent)
+{
+  // If mContent is null while we still get events, something is very wrong
+  NS_ENSURE_TRUE(mContent, NS_ERROR_UNEXPECTED);
+  
+  nsCOMPtr<nsIDOMMutationEvent> event(do_QueryInterface(aEvent));
+  NS_ENSURE_TRUE(event, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIDOMEventTarget> target;
+  event->GetTarget(getter_AddRefs(target));
+  // Can't compare as an nsIDOMEventTarget, since that's implemented via a
+  // tearoff...
+  nsCOMPtr<nsIContent> targetContent(do_QueryInterface(target));
+  if (targetContent != mContent->GetParent()) {
+    // not the right node
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIDOMNode> relatedNode;
+  event->GetRelatedNode(getter_AddRefs(relatedNode));
+  NS_ENSURE_TRUE(relatedNode, NS_ERROR_UNEXPECTED);
+  nsCOMPtr<nsIAttribute> attr(do_QueryInterface(relatedNode));
+  NS_ENSURE_TRUE(attr, NS_ERROR_UNEXPECTED);
+
+  if (attr->NodeInfo()->Equals(mAttrName, mNameSpaceID)) {
+    nsAutoString value;
+    targetContent->GetAttr(mNameSpaceID, mAttrName, value);
+    mContent->SetText(value, PR_TRUE);
+  }
+  
+  return NS_OK;
+}
+
+nsresult
+NS_NewAttributeContent(nsIContent* aContent, PRInt32 aNameSpaceID,
+                       nsIAtom* aAttrName, nsIContent** aResult)
+{
+  NS_PRECONDITION(aContent, "Must have parent content");
+  NS_PRECONDITION(aAttrName, "Must have an attr name");
+  NS_PRECONDITION(aNameSpaceID != kNameSpaceID_Unknown, "Must know namespace");
+  
+  *aResult = nsnull;
+  
+  nsRefPtr<nsAttributeTextNode> textNode = new nsAttributeTextNode();
+  NS_ENSURE_TRUE(textNode, NS_ERROR_OUT_OF_MEMORY);
+
+  nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(aContent));
+  NS_ENSURE_TRUE(eventTarget, NS_ERROR_UNEXPECTED);
+  
+  nsRefPtr<nsAttributeTextNode::nsAttrChangeListener> listener =
+    new nsAttributeTextNode::nsAttrChangeListener(aNameSpaceID,
+                                                  aAttrName,
+                                                  textNode);
+  NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
+
+  nsresult rv = eventTarget->AddEventListener(NS_LITERAL_STRING("DOMAttrModified"),
+                                              listener,
+                                              PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString attrValue;
+  aContent->GetAttr(aNameSpaceID, aAttrName, attrValue);
+  textNode->SetData(attrValue);
+
+  textNode->SetParent(aContent);
+  textNode->mListener = listener;  // Now textNode going away will detach the listener automatically.
+
+  NS_ADDREF(*aResult = textNode);
+  return NS_OK;
+}
+
+void
+nsAttributeTextNode::DetachListener()
+{
+  if (!mListener)
+    return;
+
+  NS_ASSERTION(GetParent(), "How did our parent go away while we still have an observer?");
+
+  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(GetParent()));
+#ifdef DEBUG
+  nsresult rv =
+#endif
+    target->RemoveEventListener(NS_LITERAL_STRING("DOMAttrModified"),
+                                mListener,
+                                PR_FALSE);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "'Leaking' listener for lifetime of this page");
+  mListener->mContent = nsnull;  // Make it forget us
+  mListener = nsnull; // Goodbye, listener
+}

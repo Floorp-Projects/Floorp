@@ -655,8 +655,7 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIPresContext* aPresContext,
       if (fm) {
         nsChangeHint maxChange = NS_STYLE_HINT_NONE, minChange = NS_STYLE_HINT_NONE;
         nsStyleChangeList changeList;
-        fm->ComputeStyleChangeFor(aFrame, kNameSpaceID_None,
-                                  nsMathMLAtoms::fontsize, changeList,
+        fm->ComputeStyleChangeFor(aFrame, changeList,
                                   minChange, maxChange);
 #ifdef DEBUG
         // Use the parent frame to make sure we catch in-flows and such

@@ -5347,8 +5347,8 @@ PresShell::ReconstructStyleData()
   
   nsStyleChangeList changeList;
   nsChangeHint frameChange = NS_STYLE_HINT_NONE;
-  frameManager->ComputeStyleChangeFor(rootFrame, kNameSpaceID_Unknown, nsnull,
-                                      changeList, NS_STYLE_HINT_NONE,
+  frameManager->ComputeStyleChangeFor(rootFrame, changeList,
+                                      NS_STYLE_HINT_NONE,
                                       frameChange);
 
   mFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);

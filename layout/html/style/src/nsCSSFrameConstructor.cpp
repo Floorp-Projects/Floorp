@@ -1396,6 +1396,10 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
           attrName = do_GetAtom(contentString);
         }
 
+        if (!attrName) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
         // Creates the content and frame and return if successful
         nsresult rv = NS_ERROR_FAILURE;
         if (attrName) {
@@ -4342,17 +4346,13 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*            aPresShel
     if (NS_SUCCEEDED(result) && legendFrame) {
       if (nsnull != previous) {
         previous->SetNextSibling(legendFrame->GetNextSibling());
-        areaFrame->SetNextSibling(legendFrame);
-        legendFrame->SetParent(newFrame);
-        legendFrame->SetNextSibling(nsnull);
-        break;
       } else {
         childItems.childList = legendFrame->GetNextSibling();
-        areaFrame->SetNextSibling(legendFrame);
-        legendFrame->SetParent(newFrame);
-        legendFrame->SetNextSibling(nsnull);
-        break;
       }
+      areaFrame->SetNextSibling(legendFrame);
+      legendFrame->SetParent(newFrame);
+      legendFrame->SetNextSibling(nsnull);
+      break;
     }
     previous = child;
     child = child->GetNextSibling();
@@ -9891,8 +9891,8 @@ nsCSSFrameConstructor::RestyleElement(nsIPresContext *aPresContext,
     nsStyleChangeList changeList;
     nsChangeHint frameChange = NS_STYLE_HINT_NONE;
     aPresContext->GetPresShell()->GetFrameManager()->
-      ComputeStyleChangeFor(aPrimaryFrame, kNameSpaceID_Unknown, nsnull,
-                            changeList, NS_STYLE_HINT_NONE, frameChange);
+      ComputeStyleChangeFor(aPrimaryFrame, changeList,
+                            NS_STYLE_HINT_NONE, frameChange);
 
     if (frameChange & nsChangeHint_ReconstructFrame) {
       RecreateFramesForContent(aPresContext, aContent);
@@ -10076,7 +10076,6 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
     // there is an effect, so compute it
     if (rshint & eReStyle_Self) {
       frameManager->ComputeStyleChangeFor(primaryFrame, 
-                                          aNameSpaceID, aAttribute,
                                           changeList, hint, hint);
     }
 

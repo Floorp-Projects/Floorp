@@ -329,9 +329,7 @@ nsMathMLTokenFrame::SetTextStyle(nsIPresContext* aPresContext)
     if (fm) {
       nsChangeHint maxChange, minChange = NS_STYLE_HINT_NONE;
       nsStyleChangeList changeList;
-      fm->ComputeStyleChangeFor(this,
-                                kNameSpaceID_None, nsMathMLAtoms::fontstyle,
-                                changeList, minChange, maxChange);
+      fm->ComputeStyleChangeFor(this, changeList, minChange, maxChange);
 #ifdef DEBUG
       // Use the parent frame to make sure we catch in-flows and such
       nsIFrame* parentFrame = GetParent();

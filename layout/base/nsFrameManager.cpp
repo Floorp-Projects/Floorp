@@ -330,8 +330,6 @@ public:
   NS_IMETHOD ReParentStyleContext(nsIFrame* aFrame, 
                                   nsStyleContext* aNewParentContext);
   NS_IMETHOD ComputeStyleChangeFor(nsIFrame* aFrame, 
-                                   PRInt32 aAttrNameSpaceID,
-                                   nsIAtom* aAttribute,
                                    nsStyleChangeList& aChangeList,
                                    nsChangeHint aMinChange,
                                    nsChangeHint& aTopLevelChange);
@@ -405,8 +403,6 @@ private:
   void ReResolveStyleContext(nsIPresContext* aPresContext,
                              nsIFrame* aFrame,
                              nsIContent* aParentContent,
-                             PRInt32 aAttrNameSpaceID,
-                             nsIAtom* aAttribute,
                              nsStyleChangeList& aChangeList, 
                              nsChangeHint aMinChange,
                              nsChangeHint& aResultChange);
@@ -1530,47 +1526,6 @@ FrameManager::ReParentStyleContext(nsIFrame* aFrame,
   return result;
 }
 
-static PRBool
-HasAttributeContent(nsStyleContext* aStyleContext, 
-                    PRInt32 aNameSpaceID,
-                    nsIAtom* aAttribute)
-{
-  PRBool  result = PR_FALSE;
-  if (aStyleContext) {
-    const nsStyleContent* content = aStyleContext->GetStyleContent();
-    PRUint32 count = content->ContentCount();
-    while ((0 < count) && (! result)) {
-      const nsStyleContentData &data = content->ContentAt(--count);
-      if (eStyleContentType_Attr == data.mType) {
-        nsIAtom* attrName = nsnull;
-        PRInt32 attrNameSpace = kNameSpaceID_None;
-        nsAutoString contentString(data.mContent.mString);
-        PRInt32 barIndex = contentString.FindChar('|'); // CSS namespace delimiter
-        if (-1 != barIndex) {
-          nsAutoString  nameSpaceVal;
-          contentString.Left(nameSpaceVal, barIndex);
-          PRInt32 error;
-          attrNameSpace = nameSpaceVal.ToInteger(&error, 10);
-          contentString.Cut(0, barIndex + 1);
-          if (!contentString.IsEmpty()) {
-            attrName = NS_NewAtom(contentString);
-          }
-        }
-        else {
-          attrName = NS_NewAtom(contentString);
-        }
-        if ((attrName == aAttribute) && 
-            ((attrNameSpace == aNameSpaceID) || 
-             (attrNameSpace == kNameSpaceID_Unknown))) {
-          result = PR_TRUE;
-        }
-        NS_IF_RELEASE(attrName);
-      }
-    }
-  }
-  return result;
-}
-
 static nsChangeHint
 CaptureChange(nsStyleContext* aOldContext, nsStyleContext* aNewContext,
               nsIFrame* aFrame, nsIContent* aContent,
@@ -1588,8 +1543,6 @@ void
 FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
                                     nsIFrame* aFrame,
                                     nsIContent* aParentContent,
-                                    PRInt32 aAttrNameSpaceID,
-                                    nsIAtom* aAttribute,
                                     nsStyleChangeList& aChangeList, 
                                     nsChangeHint aMinChange,
                                     nsChangeHint& aResultChange)
@@ -1610,12 +1563,6 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
     nsIContent* localContent = aFrame->GetContent();
     nsIContent* content = localContent ? localContent : aParentContent;
 
-    if (aParentContent && aAttribute) { // attribute came from parent, we don't care about it here when recursing
-      if (!(aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT)) { // keep it for generated content
-        aAttribute = nsnull;
-      }
-    }
-
     nsStyleContext* parentContext;
     nsIFrame* resolvedChild = nsnull;
     // Get the frame providing the parent style context.  If it is a
@@ -1633,8 +1580,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
     else {
       // resolve the provider here (before aFrame below)
       ReResolveStyleContext(aPresContext, providerFrame, content, 
-                            aAttrNameSpaceID, aAttribute, aChangeList,
-                            aMinChange, aResultChange);
+                            aChangeList, aMinChange, aResultChange);
       // The provider's new context becomes the parent context of
       // aFrame's context.
       parentContext = providerFrame->GetStyleContext();
@@ -1715,15 +1661,6 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
           aPresContext->StopImagesFor(aFrame);
         }
       }
-      else {
-        if (pseudoTag && pseudoTag != nsCSSAnonBoxes::mozNonElement &&
-            aAttribute &&
-            (!(aMinChange &
-               (nsChangeHint_ReflowFrame | nsChangeHint_ReconstructFrame))) &&
-            HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
-          aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_REFLOW);
-        }
-      }
       oldContext->Release();
     }
     else {
@@ -1753,17 +1690,6 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
             if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
               aFrame->SetAdditionalStyleContext(contextIndex, newExtraContext);
             }
-          }
-          else {
-#if 0
-            // XXXldb |oldContext| is null by this point, so this will
-            // never do anything.
-            if (pseudoTag && pseudoTag != nsCSSAnonBoxes::mozNonElement &&
-                aAttribute && (aMinChange < NS_STYLE_HINT_REFLOW) &&
-                HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
-              aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_REFLOW);
-            }
-#endif
           }
           newExtraContext->Release();
         }
@@ -1895,19 +1821,16 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
               // |nsFrame::GetParentStyleContextFrame| checks being out
               // of flow so that this works correctly.
               ReResolveStyleContext(aPresContext, outOfFlowFrame, content,
-                                    aAttrNameSpaceID, aAttribute,
                                     aChangeList, aMinChange, childChange);
 
               // reresolve placeholder's context under the same parent
               // as the out-of-flow frame
               ReResolveStyleContext(aPresContext, child, content,
-                                    kNameSpaceID_Unknown, nsnull,
                                     aChangeList, aMinChange, childChange);
             }
             else {  // regular child frame
               if (child != resolvedChild) {
                 ReResolveStyleContext(aPresContext, child, content,
-                                      aAttrNameSpaceID, aAttribute,
                                       aChangeList, aMinChange, childChange);
               } else {
                 NOISY_TRACE_FRAME("child frame already resolved as descendent, skipping",aFrame);
@@ -1928,8 +1851,6 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 FrameManager::ComputeStyleChangeFor(nsIFrame* aFrame, 
-                                    PRInt32 aAttrNameSpaceID,
-                                    nsIAtom* aAttribute,
                                     nsStyleChangeList& aChangeList,
                                     nsChangeHint aMinChange,
                                     nsChangeHint& aTopLevelChange)
@@ -1957,7 +1878,6 @@ FrameManager::ComputeStyleChangeFor(nsIFrame* aFrame,
       // Inner loop over next-in-flows of the current frame
       nsChangeHint frameChange;
       ReResolveStyleContext(GetPresContext(), frame, nsnull,
-                            aAttrNameSpaceID, aAttribute,
                             aChangeList, aTopLevelChange, frameChange);
       NS_UpdateHint(aTopLevelChange, frameChange);
 
