@@ -258,12 +258,6 @@ protected:
                      nsIFrame* aFrameList,
                      nsIFrame* aPrevSibling);
 
-  /** move the frame list rooted at aFrame into this as a child
-    * assumes prev/next sibling pointers will be or have been set elsewhere
-    * changes aFrame's parent to be this, and reparents aFrame's view and stylecontext.
-    */
-  void FixParentAndView(nsIPresContext* aPresContext, nsIFrame* aFrame);
-
   /** does all the real work for removing aDeletedFrame from this
     * finds the line containing aFrame.
     * handled continued frames

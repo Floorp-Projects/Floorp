@@ -117,6 +117,8 @@ public:
 
   PRBool  HasAbsoluteFrames() {return mAbsoluteFrames.NotEmpty();}
 
+  void CalculateChildBounds(nsIPresContext* aPresContext, nsRect& aChildBounds);
+
 protected:
   nsresult ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
                                nsIPresContext*          aPresContext,
@@ -126,8 +128,6 @@ protected:
                                nsIFrame*                aKidFrame,
                                nsReflowReason           aReason,
                                nsReflowStatus&          aStatus);
-
-  void CalculateChildBounds(nsIPresContext* aPresContext, nsRect& aChildBounds);
 
 protected:
   nsFrameList mAbsoluteFrames;  // additional named child list
