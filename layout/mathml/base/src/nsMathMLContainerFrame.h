@@ -26,8 +26,13 @@
 #include "nsCOMPtr.h"
 #include "nsIViewManager.h"
 #include "nsHTMLContainerFrame.h"
+#include "nsBlockFrame.h"
+#include "nsInlineFrame.h"
+#include "nsMathMLAtoms.h"
 #include "nsMathMLOperators.h"
+#include "nsMathMLChar.h"
 #include "nsIMathMLFrame.h"
+#include "nsMathMLParts.h"
 
 /*
  * Base class for MathML container frames. It acts like an inferred 
@@ -89,6 +94,11 @@ public:
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
+  SetInitialChildList(nsIPresContext& aPresContext,
+                      nsIAtom*        aListName,
+                      nsIFrame*       aChildList);
+
+  NS_IMETHOD
   Reflow(nsIPresContext&          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
@@ -113,7 +123,7 @@ protected:
                          // mover, munderover, mmultiscripts, mfrac, mroot, mtable.
 
   PRBool mDisplayStyle;  // displaystyle="false" is intended to slightly alter how the
-                         // rendering in done in inline mode.
+                         // rendering is done in inline mode.
 
   virtual PRIntn GetSkipSides() const { return 0; }
 };

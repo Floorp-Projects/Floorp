@@ -249,7 +249,7 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext& aPresConte
 
             aPresContext.ResolvePseudoStyleContextFor(childContent, fontAtom, lastStyleContext,
                                                       PR_FALSE, getter_AddRefs(newStyleContext));          
-            if (nsnull == newStyleContext || lastStyleContext == newStyleContext) {
+            if (newStyleContext && newStyleContext.get() != lastStyleContext) {
               break;
             }
             else {
@@ -272,10 +272,10 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext& aPresConte
           }
           if (nsnull != firstFrame) { // at least one new frame was created
             mFrames.ReplaceFrame(this, childFrame, firstFrame);
-            lastFrame->SetInitialChildList(aPresContext, nsnull, childFrame);
             childFrame->SetParent(lastFrame);
             childFrame->SetNextSibling(nsnull);
             aPresContext.ReParentStyleContext(childFrame, lastStyleContext);
+            lastFrame->SetInitialChildList(aPresContext, nsnull, childFrame);
           }
         }
       }
@@ -316,6 +316,66 @@ nsMathMLContainerFrame::Init(nsIPresContext&  aPresContext,
     aMathMLFrame->GetPresentationData(&aScriptLevel, &aDisplayStyle);
     UpdatePresentationData(aScriptLevel, aDisplayStyle);
   }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsMathMLContainerFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                            nsIAtom*        aListName,
+                                            nsIFrame*       aChildList)
+{
+  // First, let the base class do its job
+  nsresult rv;
+  rv = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+
+  // Next, since we are an inline frame, and since we are a container, we have to
+  // be very careful with the way we treat our children. Things look okay when
+  // all of our children are only MathML frames. But there are problems if one of
+  // our children happens to be an nsInlineFrame, e.g., from generated content such
+  // as :before { content: open-quote } or :after { content: close-quote }
+  // The code asserts during reflow (in nsLineLayout::BeginSpan)
+  // Also there are problems when our children are hybrid, e.g., from html markups.
+  // In short, the nsInlineFrame class expects a number of *invariants* that are not
+  // met when we mix things.
+
+  // So what we do here is to wrap children that happen to be nsInlineFrames in
+  // anonymous block frames.
+  // XXX Question: Do we have to handle Insert/Remove/Append on behalf of
+  //     these anonymous blocks?
+  //     Note: By construction, our anonymous blocks have only one child.
+
+  nsIFrame* next = mFrames.FirstChild();
+  while (next) {
+    nsIFrame* child = next;
+    rv = next->GetNextSibling(&next);
+    if (!IsOnlyWhitespace(child)) {
+      nsInlineFrame* inlineFrame = nsnull;
+      rv = child->QueryInterface(nsInlineFrame::kInlineFrameCID, (void**)&inlineFrame);  
+      if (inlineFrame) {
+        // create a new anonymous block frame to wrap this child...
+        nsIFrame* anonymous;
+        rv = NS_NewAnonymousBlockFrame(&anonymous);
+        if (NS_FAILED(rv))
+          return rv;    
+        nsCOMPtr<nsIStyleContext> newStyleContext;
+        aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::mozAnonymousBlock, 
+                                                  mStyleContext, PR_FALSE, 
+                                                  getter_AddRefs(newStyleContext));
+        rv = anonymous->Init(aPresContext, mContent, this, newStyleContext, nsnull);
+        if (NS_FAILED(rv)) {
+          anonymous->Destroy(aPresContext);
+          delete anonymous;
+          return rv;
+        }
+        mFrames.ReplaceFrame(this, child, anonymous);
+        child->SetParent(anonymous);
+        child->SetNextSibling(nsnull);
+        aPresContext.ReParentStyleContext(child, newStyleContext);
+        anonymous->SetInitialChildList(aPresContext, nsnull, child);
+      }
+    }
+  }
+
   return rv;
 }
 
@@ -377,9 +437,7 @@ nsMathMLContainerFrame::Reflow(nsIPresContext&          aPresContext,
   // Ask stretchy children to stretch themselves
   
   nsStretchDirection stretchDir = NS_STRETCH_DIRECTION_VERTICAL;
-  nsCharMetrics parentSize, childSize;
-  parentSize.descent = aDesiredSize.descent; parentSize.width  = aDesiredSize.width;
-  parentSize.ascent  = aDesiredSize.ascent;  parentSize.height = aDesiredSize.height;
+  nsCharMetrics parentSize(aDesiredSize);
   aDesiredSize.width = aDesiredSize.height = aDesiredSize.ascent = aDesiredSize.descent = 0;
     
   childFrame = mFrames.FirstChild();
@@ -387,9 +445,8 @@ nsMathMLContainerFrame::Reflow(nsIPresContext&          aPresContext,
   	
     // retrieve the metrics that was stored at the previous pass
     childFrame->GetRect(rect);
-    childSize.descent = rect.x;  childSize.width  = rect.width; 
-    childSize.ascent  = rect.y;  childSize.height = rect.height;
-    
+    nsCharMetrics childSize(rect.x, rect.y, rect.width, rect.height);
+
     //////////
     // Stretch ...
     // Only directed at frames that implement the nsIMathMLFrame interface

@@ -41,8 +41,6 @@
 #include "nsIDOMText.h"
 #include "nsITextContent.h"
 
-#include "nsMathMLAtoms.h"
-#include "nsMathMLParts.h"
 #include "nsMathMLmiFrame.h"
 
 //
@@ -96,7 +94,7 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext& aPresContext,
 {
   nsresult rv;
 
-  // First, let the base class to its work
+  // First, let the base class do its work
   rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
 
@@ -136,7 +134,7 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext& aPresContext,
   aPresContext.ResolvePseudoStyleContextFor(mContent, fontAtom, mStyleContext,
                                             PR_FALSE, getter_AddRefs(newStyleContext));          
 
-  if (nsnull != newStyleContext && mStyleContext != newStyleContext) {
+  if (newStyleContext && newStyleContext.get() != mStyleContext) {
 
     nsIFrame* newFrame = nsnull;
     NS_NewMathMLContainerFrame(&newFrame);
@@ -145,13 +143,14 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext& aPresContext,
     newFrame->Init(aPresContext, mContent, this, newStyleContext, nsnull);
 
     // our children become children of the new frame
-    nsIFrame* childFrame = mFrames.FirstChild();
-    newFrame->SetInitialChildList(aPresContext, nsnull, childFrame);
+    nsIFrame* firstFrame = mFrames.FirstChild();
+    nsIFrame* childFrame = firstFrame;
     while (nsnull != childFrame) {
       childFrame->SetParent(newFrame);
       aPresContext.ReParentStyleContext(childFrame, newStyleContext);
       childFrame->GetNextSibling(&childFrame);
     }
+    newFrame->SetInitialChildList(aPresContext, nsnull, firstFrame);
 
     // the new frame becomes our sole child
     mFrames.SetFrames(newFrame);
