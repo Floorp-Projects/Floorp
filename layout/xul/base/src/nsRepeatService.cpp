@@ -40,7 +40,6 @@ nsRepeatService::nsRepeatService()
 
 nsRepeatService::~nsRepeatService()
 {
-  mCallback = nsnull;
   Stop();
 }
 
@@ -57,6 +56,10 @@ nsRepeatService::GetInstance()
 
 void nsRepeatService::Start(nsITimerCallback* aCallback)
 {
+  NS_PRECONDITION(aCallback != nsnull, "null ptr");
+  if (! aCallback)
+    return;
+
   mCallback = aCallback;
   nsresult rv = NS_NewTimer(getter_AddRefs(mRepeatTimer));
 
@@ -85,7 +88,8 @@ void nsRepeatService::Notify(nsITimer *timer)
      mRepeatTimer->Init(this, REPEAT_DELAY);
   }
 
-  mCallback->Notify(timer);
+  if (mCallback)
+    mCallback->Notify(timer);
 }
 
 NS_IMPL_ISUPPORTS(nsRepeatService, NS_GET_IID(nsITimerCallback));
