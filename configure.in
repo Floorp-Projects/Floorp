@@ -3375,7 +3375,11 @@ dnl ========================================================
 dnl = Trademarked Branding 
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(official-branding,
-[  --enable-official-branding    Enable Official Branding],
+[  --enable-official-branding Enable Official mozilla.org Branding
+                          Do not distribute builds with
+                          --enable-official-branding unless you have
+                          permission to use trademarks per
+                          http://www.mozilla.org/foundation/trademarks/ .],
     MOZ_USE_OFFICIAL_BRANDING=1,
     MOZ_USE_OFFICIAL_BRANDING= )
 
