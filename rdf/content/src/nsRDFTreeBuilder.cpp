@@ -624,6 +624,10 @@ RDFTreeBuilderImpl::CheckRDFGraphForUpdates(nsIContent *container)
 			flatArray = nsnull;
 		}
 	}
+        for (int i = childArray->Count() - 1; i >= 0; i--)
+        {
+        	childArray->RemoveElementAt(i);
+        }
 	return(NS_OK);
 }
 
