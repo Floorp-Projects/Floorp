@@ -46,7 +46,9 @@ pref("keyword.URL", "http://www.google.com/search?hl=en&lr=&ie=UTF-8&oe=UTF-8&q=
 
 pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
 pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region.properties");
-pref("general.useragent.misc", "rv:0.1");
+pref("general.useragent.misc", "rv:1.2b");
+pref("general.useragent.vendor", "Phoenix");
+pref("general.useragent.vendorSub", "0.1");
 
 pref("backups.number_of_prefs_copies", 1);
 
