@@ -6,8 +6,15 @@ class Brenda {
 		try {
 			JSLexer lexer = new JSLexer((args != null) ? new DataInputStream(new FileInputStream(args[0])) : new DataInputStream(System.in));
 			JSParser parser = new JSParser(lexer);
-			ControlNode tree = parser.statements(0);
+			ControlNodeGroup tree = parser.statements(0);
 			System.out.println(ControlNode.printAll());
+			
+            Environment theEnv = new Environment();
+			ControlNode c = tree.getHead();
+			while (c != null) c = c.eval(theEnv);
+			
+			System.out.println("After eval :\n" + theEnv.print());
+			
 		} catch(Exception e) {
 			System.err.println("exception: "+e);
 		}

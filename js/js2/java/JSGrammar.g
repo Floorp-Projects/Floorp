@@ -371,22 +371,22 @@ type_expression[boolean initial, boolean allowIn]
 
 // ********* Statements **********
 
-statement[int scope, boolean non_empty] returns [ControlNode c]
+statement[int scope, boolean non_empty, ControlNodeGroup prev] returns [ControlNodeGroup c]
     { c = null; }
-	:	c = code_statement[non_empty]
+	:	c = code_statement[non_empty, prev]
 	|	definition[scope]
 	;
 
-code_statement[boolean non_empty] returns [ControlNode c]
+code_statement[boolean non_empty, ControlNodeGroup prev] returns [ControlNodeGroup c]
     { c = null; }
 	:	empty_statement[non_empty]
-	|	(identifier ":") => labeled_statement[non_empty]
-	|	c = expression_statement semicolon
+	|	(identifier ":") => labeled_statement[non_empty, prev]
+	|	c = expression_statement[prev] semicolon
 	|	block[BlockScope]
-	|	c = if_statement[non_empty]
+	|	c = if_statement[non_empty, prev]
 	|	switch_statement
 	|	do_statement semicolon
-	|	while_statement[non_empty]
+	|	c = while_statement[non_empty, prev]
 	|	for_statement[non_empty]
 	|	with_statement[non_empty]
 	|	continue_statement semicolon
@@ -410,37 +410,65 @@ empty_statement[boolean non_empty]returns [ControlNode c]
 	;
 
 // ********* Expression Statement **********
-expression_statement returns [ControlNode c]
-    { c = null; ExpressionNode e = null; }
-	:	e = expression[true, true] { c = new ControlNode(e); }
+expression_statement[ControlNodeGroup prev] returns [ControlNodeGroup c]
+    { c = null; ControlNode t = null; ExpressionNode e = null; }
+	:	e = expression[true, true]
+	    {
+	        t = new ControlNode(e);
+	        if (prev == null) {
+	            c = new ControlNodeGroup(t);
+	            c.addTail(t);
+	        }
+	        else {
+            	prev.fixTails(t);
+            	prev.addTail(t);
+            	c = prev;
+	        }
+	    }
+
 	;
 
 // ********* Block **********
-block[int scope] returns [ControlNode c]
+block[int scope] returns [ControlNodeGroup c]
     { c = null; }
 	:	"{" c = statements[scope] "}"
 	;
 
 // FIXME
-statements[int scope] returns [ControlNode c]
-    { c = null; ControlNode t = null; ControlNode n = null; }
-	:	 c = statement[scope, false] { t = c; }
-	        ( n = statement[scope, false] { t.setNext(n); t = n; } )*
+statements[int scope] returns [ControlNodeGroup c]
+    { c = null; ControlNodeGroup c2 = null; }
+	:	 c = statement[scope, false, null]
+	        ( c = statement[scope, false, c] )*
 	;
 
 // ********* Labeled Statements **********
-labeled_statement[boolean non_empty]
-	:	identifier ":" code_statement[non_empty]
+labeled_statement[boolean non_empty, ControlNodeGroup prev]
+	:	identifier ":" code_statement[non_empty, prev]
 	;
 
-if_statement[boolean non_empty] returns [ConditionalNode c]
-    { c = null; ControlNode t = null; ControlNode f = null; ExpressionNode e = null; }
-	:	"if"  e = parenthesized_expression t = code_statement[non_empty] { c = new ConditionalNode(e, t); }
-		(
-			// Standard if/else ambiguity
-			options { warnWhenFollowAmbig=false; }:
-			"else" t = code_statement[non_empty] { c.setFalse(t); }
-		)?
+if_statement[boolean non_empty, ControlNodeGroup prev] returns [ControlNodeGroup c]
+    { c = null; ControlNodeGroup c2 = null; ConditionalNode t = null; ExpressionNode e = null; }
+	:	"if"  e = parenthesized_expression c = code_statement[non_empty, null]
+	        {
+	            t = new ConditionalNode(e, c.getHead());
+	            if (prev != null) {
+	                prev.fixTails(t);
+	                c.setHead(prev.getHead());
+	            }
+	            else
+	                c.setHead(t);
+                c.addTail(t);
+	        }
+	    (
+    		// Standard if/else ambiguity
+	        options { warnWhenFollowAmbig=false; }:
+			"else" c2 = code_statement[non_empty, null]
+			    {
+			        t.setNext(c2.getHead());
+			        c.removeTail(t);
+			        c.addTails(c2);
+			    }
+    	)?
 	;
 
 // ********* Switch statement **********
@@ -453,7 +481,7 @@ case_groups
 	;
 
 case_group
-	:	(case_guard)+ (code_statement[true])+
+	:	(case_guard)+ (code_statement[true, null])+
 	;
 
 case_guard
@@ -463,17 +491,18 @@ case_guard
 
 // FIXME
 case_statements
-	:	(code_statement[false])+
+	:	(code_statement[false, null])+
 	;
 
 // ********* Do-While statement **********
 do_statement
-	:	"do" code_statement[true] "while" parenthesized_expression
+	:	"do" code_statement[true, null] "while" parenthesized_expression
 	;
 
 // ********* While statement **********
-while_statement[boolean non_empty]
-	:	"while" parenthesized_expression code_statement[non_empty]
+while_statement[boolean non_empty, ControlNodeGroup prev] returns [ControlNodeGroup c]
+    { c = null; }
+	:	"while" parenthesized_expression code_statement[non_empty, null]
 	;
 
 // ********* For statement **********
@@ -484,7 +513,7 @@ for_statement[boolean non_empty]
 		|	for_in_binding "in" expression[false, true]
 		)
 		")"
-		code_statement[non_empty]
+		code_statement[non_empty, null]
 	;
 
 for_initializer
@@ -503,7 +532,7 @@ for_in_binding
 
 // ********* With statement **********
 with_statement[boolean non_empty]
-	:	"with" parenthesized_expression code_statement[non_empty]
+	:	"with" parenthesized_expression code_statement[non_empty, null]
 	;
 
 // ********* Continue and Break statement **********
@@ -539,7 +568,7 @@ import_statement[boolean non_empty]
 	:	"import" import_list
 		(
 			";"
-		|	block[BlockScope] ("else" code_statement[non_empty])
+		|	block[BlockScope] ("else" code_statement[non_empty, null])
 		)
 	;
 

@@ -6,6 +6,12 @@ class BinaryNode extends ExpressionNode {
         right = aRight;
         op = aOp;
     }
+
+    void eval(Environment theEnv)
+    {
+        left.eval(theEnv);
+        right.eval(theEnv);
+    }
     
     String print(String indent)
     {
@@ -28,7 +34,7 @@ class BinaryNode extends ExpressionNode {
         else
             result.append(right.print(indent));
         return result.toString();
-    }
+    }   
     
     protected ExpressionNode left;
     protected ExpressionNode right;
