@@ -2423,7 +2423,15 @@ nsresult CNavDTD::CollectAttributes(nsIParserNode *aNode,eHTMLTags aTag,PRInt32 
           // a legitimate "SELECTED" key.
           ((CAttributeToken*)theToken)->SanitizeKey();
           
-          aNode->AddAttribute(theToken);
+          // If the key is empty, the attribute is unusable, so we should not
+          // add it to the node.
+          if (!((CAttributeToken*)theToken)->GetKey().IsEmpty()) {
+            aNode->AddAttribute(theToken);
+          } else {
+            IF_FREE(theToken, mTokenAllocator);
+          }
+        } else {
+          IF_FREE(theToken, mTokenAllocator);
         }
       }
     }
