@@ -30,7 +30,7 @@ MODULE		= layout
 LIBRARY_NAME	= gfxxprt
 IS_COMPONENT	= 1
 EXTRA_DSO_LIBS	= gkgfx
-REQUIRES	= xpcom string widget view img util dom pref locale uconv unicharutil
+REQUIRES	= xpcom string widget view img util dom pref locale uconv unicharutil gfx2
 
 CSRCS		= ../xlibrgb/xlibrgb.c \
 		$(NULL)
