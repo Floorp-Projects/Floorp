@@ -1,0 +1,107 @@
+#!nmake
+#
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+# the specific language governing rights and limitations under the License.
+#
+# The Original Code is the Python XPCOM language bindings.
+#
+# The Initial Developer of the Original Code is ActiveState Tool Corp.
+# Portions created by ActiveState are Copyright (C) 2000 ActiveState.
+# All Rights Reserved.
+#
+# Contributor(s): Mark Hammond <MarkH@ActiveState.com>
+#
+
+DIRS =             \
+        loader \
+        $(NULL)
+
+DEPTH=..\..\..\..
+include <$(DEPTH)/config/config.mak>
+
+LIBRARY_NAME=_xpcom
+DLLNAME=_xpcom
+!ifdef MOZ_DEBUG
+DLL=.\$(OBJDIR)\$(DLLNAME)_d.pyd
+!else
+DLL=.\$(OBJDIR)\$(DLLNAME).pyd
+!endif
+
+CPP_OBJS= \
+	.\$(OBJDIR)\ErrorUtils.obj \
+	.\$(OBJDIR)\PyGBase.obj \
+	.\$(OBJDIR)\PyGModule.obj \
+	.\$(OBJDIR)\PyGStub.obj \
+	.\$(OBJDIR)\PyGInputStream.obj \
+	.\$(OBJDIR)\PyGWeakReference.obj \
+	.\$(OBJDIR)\PyIComponentManager.obj \
+	.\$(OBJDIR)\PyIInputStream.obj \
+	.\$(OBJDIR)\PyIEnumerator.obj \
+	.\$(OBJDIR)\PyIID.obj \
+	.\$(OBJDIR)\PyIInterfaceInfo.obj \
+	.\$(OBJDIR)\PyIInterfaceInfoManager.obj \
+	.\$(OBJDIR)\PyIServiceManager.obj \
+	.\$(OBJDIR)\PyISimpleEnumerator.obj \
+	.\$(OBJDIR)\PyISupports.obj \
+	.\$(OBJDIR)\Pyxpt_info.obj \
+	.\$(OBJDIR)\TypeObject.obj \
+	.\$(OBJDIR)\VariantUtils.obj \
+	.\$(OBJDIR)\dllmain.obj \
+	.\$(OBJDIR)\xpcom.obj \
+	$(NULL)
+    
+
+CPPSRCS = \
+	ErrorUtils.cpp \
+	PyGBase.cpp \
+	PyGModule.cpp \
+	PyGStub.cpp \
+	PyGInputStream.cpp \
+	PyGWeakReference.cpp \
+	PyIComponentManager.cpp \
+	PyIInputStream.cpp \
+	PyIEnumerator.cpp \
+	PyIID.cpp \
+	PyIInterfaceInfo.cpp \
+	PyIInterfaceInfoManager.cpp \
+	PyIServiceManager.cpp \
+	PyISimpleEnumerator.cpp \
+	PyISupports.cpp \
+	Pyxpt_info.cpp \
+	TypeObject.cpp \
+	VariantUtils.cpp \
+	dllmain.cpp \
+	xpcom.cpp \
+	$(NULL)
+
+MODULE=_xpcom
+EXPORTS= $(NULL)
+
+LLIBS=$(LLIBS)  $(LIBNSPR)		\
+	$(DIST)\lib\xpcom.lib		\
+	$(NULL)
+
+# Hack to get /LIBPATH down to the cmdline
+OS_LIBS=$(OS_LIBS) /libpath:$(PYTHON_SRC)/pcbuild /libpath:$(PYTHON_SRC)/lib    
+
+LINCS= /I$(PYTHON_SRC)\Include /I$(PYTHON_SRC)\PC \
+    $(NULL)
+
+LCFLAGS = \
+	$(LCFLAGS) \
+	$(DEFINES) \
+	$(NULL)
+
+include <$(DEPTH)\config\rules.mak>
+
+#clobber::
+#    echo write me
+
+install:: $(DLL)
+		$(MAKE_INSTALL) $(DLL) $(DIST)\bin\Python\xpcom\.
