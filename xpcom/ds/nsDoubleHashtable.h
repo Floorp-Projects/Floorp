@@ -396,6 +396,9 @@ void CLASSNAME::Remove(const KEY_TYPE aKey) {                                 \
  *   ~MyIntStringEntry() { };
  *   nsString mMyStr;
  * };
+ *
+ * XXX It could be advisable (unless COW strings ever happens) to have a
+ * PLDHashDependentStringEntry
  */
 
 //
@@ -492,65 +495,7 @@ public:
 };
 
 
-/*
- * HASH SETS
- *
- * These hash classes describe hashtables that contain keys without values.
- * This is useful when you want to store things and then just test for their
- * existence later.  We have defined standard ones for string, int and void.
- *
- * nsStringHashSet:  nsAString&
- * nsCStringHashSet: nsACString&
- * nsInt32HashSet:   PRInt32
- * nsVoidHashSet:    void*
- *
- * USAGE:
- * Put():
- * To use, you just do: (for example)
- *
- * #include "nsDoubleHashtable.h"
- * nsInt32HashSet mySet;
- * mySet.Init(1);
- * mySet.Put(5);
- * if (mySet.Contains(5)) {
- *   printf("yay\n");
- * }
- *
- * There is a nice convenient macro for declaring empty map classes:
- * DECL_DHASH_SET(CLASSNAME, ENTRY_CLASS, KEY_TYPE)
- * - CLASSNAME: the name of the class
- * - ENTRY_CLASS: the name of the entry class with the key in it
- * - KEY_TYPE: the type of key for Put() and Contains()
- *
- * DHASH_SET(CLASSNAME, ENTRY_CLASS, KEY_TYPE) is the companion macro
- * you must put in the .cpp (implementation) code.
- */
-
-#define DECL_DHASH_SET(CLASSNAME,ENTRY_CLASS,KEY_TYPE)                        \
-DECL_DHASH_WRAPPER(CLASSNAME##Super,ENTRY_CLASS,KEY_TYPE)                     \
-class DHASH_EXPORT CLASSNAME : public CLASSNAME##Super {                      \
-public:                                                                       \
-  CLASSNAME() : CLASSNAME##Super() { }                                        \
-  ~CLASSNAME() { }                                                            \
-  nsresult Put(const KEY_TYPE aKey) {                                         \
-    return AddEntry(aKey) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;                   \
-  }                                                                           \
-  PRBool Contains(const KEY_TYPE aKey) {                                      \
-    return GetEntry(aKey) ? PR_TRUE : PR_FALSE;                               \
-  }                                                                           \
-};
-
-#define DHASH_SET(CLASSNAME,ENTRY_CLASS,KEY_TYPE)                              \
-DHASH_WRAPPER(CLASSNAME##Super,ENTRY_CLASS,KEY_TYPE)
-
-#define DHASH_EXPORT NS_COM
-
-DECL_DHASH_SET(nsStringHashSet, PLDHashStringEntry, nsAString&)
-DECL_DHASH_SET(nsCStringHashSet,PLDHashCStringEntry,nsACString&)
-DECL_DHASH_SET(nsInt32HashSet,  PLDHashInt32Entry,  PRInt32)
-DECL_DHASH_SET(nsVoidHashSet,   PLDHashVoidEntry,   void*)
-
-#undef DHASH_EXPORT
 #define DHASH_EXPORT
+
 
 #endif

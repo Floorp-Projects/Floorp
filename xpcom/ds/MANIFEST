@@ -3,6 +3,8 @@ nsCppSharedAllocator.h
 nsCRT.h
 nsDeque.h
 nsDoubleHashtable.h
+nsHashSets.h
+nsCheapSets.h
 nsEnumeratorUtils.h
 nsFixedSizeAllocator.h
 nsHashtable.h

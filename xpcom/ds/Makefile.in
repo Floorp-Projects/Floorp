@@ -43,13 +43,14 @@ CPPSRCS		= \
 		nsAtomTable.cpp \
 		nsAtomService.cpp \
 		nsByteBuffer.cpp \
+		nsCheapSets.cpp \
 		nsCRT.cpp \
 		nsConjoiningEnumerator.cpp \
 		nsDeque.cpp \
-		nsDoubleHashtable.cpp \
 		nsEmptyEnumerator.cpp \
 		nsEnumeratorUtils.cpp \
 		nsFixedSizeAllocator.cpp \
+		nsHashSets.cpp \
 		nsHashtable.cpp \
 		nsHashtableEnumerator.cpp \
 		nsObserver.cpp \
@@ -75,12 +76,14 @@ CPPSRCS		= \
 
 EXPORTS		= \
 		nsAtomService.h \
+		nsCheapSets.h \
 		nsCppSharedAllocator.h \
 		nsCRT.h \
 		nsDeque.h \
 		nsDoubleHashtable.h \
 		nsEnumeratorUtils.h \
 		nsFixedSizeAllocator.h \
+		nsHashSets.h \
 		nsHashtable.h \
 		nsHashtableEnumerator.h \
 		nsIArena.h \

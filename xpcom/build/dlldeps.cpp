@@ -83,7 +83,7 @@
 #include "nsProcess.h"
 #include "nsSlidingString.h"
 #include "nsIInputStreamTee.h"
-#include "nsDoubleHashtable.h"
+#include "nsCheapSets.h"
 #ifdef DEBUG
 #include "pure.h"
 #endif
@@ -109,6 +109,8 @@ void XXXNeverCalled()
     nsCStringHashSet();
     nsInt32HashSet();
     nsVoidHashSet();
+    nsCheapStringSet();
+    nsCheapInt32Set();
     nsValueArray(0);
     nsSupportsArray();
     NS_GetNumberOfAtoms();
