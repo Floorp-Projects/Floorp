@@ -575,7 +575,7 @@ txLREAttribute::execute(txExecutionState& aEs)
         mLocalName->ToString(nodeName);
     }
 
-    nsAutoPtr<ExprResult> exprRes = mValue->evaluate(aEs.getEvalContext());
+    nsAutoPtr<ExprResult> exprRes(mValue->evaluate(aEs.getEvalContext()));
     NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
 
     nsAString* value = exprRes->stringValuePointer();
@@ -1044,7 +1044,7 @@ txValueOf::txValueOf(nsAutoPtr<Expr> aExpr, PRBool aDOE)
 nsresult
 txValueOf::execute(txExecutionState& aEs)
 {
-    nsAutoPtr<ExprResult> exprRes = mExpr->evaluate(aEs.getEvalContext());
+    nsAutoPtr<ExprResult> exprRes(mExpr->evaluate(aEs.getEvalContext()));
     NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
 
     nsAString* value = exprRes->stringValuePointer();
