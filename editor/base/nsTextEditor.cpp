@@ -258,6 +258,9 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     }
     result = NS_NewEditorMouseListener(getter_AddRefs(mMouseListenerP), this);
     if (NS_OK != result) {
+#ifdef DEBUG_akkana
+      printf("Couldn't get mouse listener\n");
+#endif
       // drop the key listener if we couldn't get a mouse listener.
       mKeyListenerP = do_QueryInterface(0); 
       return result;
@@ -308,8 +311,8 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     }
     //cmanske: Shouldn't we check result from this?
     erP->AddEventListenerByIID(mKeyListenerP, kIDOMKeyListenerIID);
-    //erP->AddEventListener(mDragListenerP, kIDOMDragListenerIID);
-    //erP->AddEventListener(mMouseListenerP, kIDOMMouseListenerIID);
+    //erP->AddEventListenerByIID(mDragListenerP, kIDOMDragListenerIID);
+    erP->AddEventListenerByIID(mMouseListenerP, kIDOMMouseListenerIID);
 	
 	erP->AddEventListenerByIID(mTextListenerP,kIDOMTextListenerIID);
 	erP->AddEventListenerByIID(mCompositionListenerP,kIDOMCompositionListenerIID);
