@@ -76,6 +76,8 @@ class nsProxyObject : public nsISupports
 public:
                         
     NS_DECL_ISUPPORTS
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISUPPORTS_IID)
+    	// wierd, but it shouldn't break.  Need to discuss this with dougt
 
     nsProxyObject();
     nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISupports *realObject);
