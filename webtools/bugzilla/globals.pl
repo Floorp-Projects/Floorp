@@ -1725,150 +1725,7 @@ sub FormatTimeUnit {
     return $newtime;
     
 }
-###############################################################################
-# Global Templatization Code
 
-# Use the template toolkit (http://www.template-toolkit.org/) to generate
-# the user interface using templates in the "template/" subdirectory.
-use Template;
-
-# Create the global template object that processes templates and specify
-# configuration parameters that apply to all templates processed in this script.
-
-# IMPORTANT - If you make any configuration changes here, make sure to make
-# them in t/004.template.t and checksetup.pl. You may also need to change the
-# date settings were last changed - see the comments in checksetup.pl for
-# details
-$::template ||= Template->new(
-  {
-    # Colon-separated list of directories containing templates.
-    INCLUDE_PATH => "template/en/custom:template/en/default" ,
-
-    # Remove white-space before template directives (PRE_CHOMP) and at the
-    # beginning and end of templates and template blocks (TRIM) for better 
-    # looking, more compact content.  Use the plus sign at the beginning 
-    # of directives to maintain white space (i.e. [%+ DIRECTIVE %]).
-    PRE_CHOMP => 1 ,
-    TRIM => 1 , 
-
-    COMPILE_DIR => 'data/',
-
-    # Functions for processing text within templates in various ways.
-    # IMPORTANT!  When adding a filter here that does not override a
-    # built-in filter, please also add a stub filter to checksetup.pl
-    # and t/004template.t.
-    FILTERS =>
-      {
-        # Render text in strike-through style.
-        strike => sub { return "<strike>" . $_[0] . "</strike>" } ,
-
-        # Returns the text with backslashes, single/double quotes,
-        # and newlines/carriage returns escaped for use in JS strings.
-        js => sub
-        {
-            my ($var) = @_;
-            $var =~ s/([\\\'\"])/\\$1/g; 
-            $var =~ s/\n/\\n/g; 
-            $var =~ s/\r/\\r/g; 
-            return $var;
-        } , 
-
-        # HTML collapses newlines in element attributes to a single space,
-        # so form elements which may have whitespace (ie comments) need
-        # to be encoded using &#013;
-        # See bugs 4928, 22983 and 32000 for more details
-        html_linebreak => sub
-        {
-            my ($var) = @_;
-            $var =~ s/\r\n/\&#013;/g;
-            $var =~ s/\n\r/\&#013;/g;
-            $var =~ s/\r/\&#013;/g;
-            $var =~ s/\n/\&#013;/g;
-            return $var;
-        } ,
-
-        # This subroutine in CGI.pl escapes characters in a variable
-        # or value string for use in a query string.  It escapes all
-        # characters NOT in the regex set: [a-zA-Z0-9_\-.].  The 'uri'
-        # filter should be used for a full URL that may have
-        # characters that need encoding.
-        url_quote => \&Bugzilla::Util::url_quote ,
-
-        xml => \&Bugzilla::Util::xml_quote ,
-
-        quoteUrls => \&quoteUrls ,
-
-        bug_link => [ sub {
-                          my ($context, $bug) = @_;
-                          return sub {
-                              my $text = shift;
-                              return GetBugLink($text, $bug);
-                          };
-                      },
-                      1
-                    ],
-
-        # In CSV, quotes are doubled, and we enclose the whole value in quotes
-        csv => sub
-        {
-            my ($var) = @_;
-            $var =~ s/"/""/g;
-            if ($var !~ /^-?(\d+\.)?\d*$/) {
-                $var = "\"$var\"";
-            }
-            return $var;
-        } ,
-
-        # Format a time for display (more info in Bugzilla::Util)
-        time => \&Bugzilla::Util::format_time,
-      } ,
-  }
-) || die("Template creation failed: " . Template->error());
-
-# Use the Toolkit Template's Stash module to add utility pseudo-methods
-# to template variables.
-use Template::Stash;
-
-# Add "contains***" methods to list variables that search for one or more 
-# items in a list and return boolean values representing whether or not 
-# one/all/any item(s) were found.
-$Template::Stash::LIST_OPS->{ contains } =
-  sub {
-      my ($list, $item) = @_;
-      return grep($_ eq $item, @$list);
-  };
-
-$Template::Stash::LIST_OPS->{ containsany } =
-  sub {
-      my ($list, $items) = @_;
-      foreach my $item (@$items) { 
-          return 1 if grep($_ eq $item, @$list);
-      }
-      return 0;
-  };
-
-# Add a "substr" method to the Template Toolkit's "scalar" object
-# that returns a substring of a string.
-$Template::Stash::SCALAR_OPS->{ substr } = 
-  sub {
-      my ($scalar, $offset, $length) = @_;
-      return substr($scalar, $offset, $length);
-  };
-    
-# Add a "truncate" method to the Template Toolkit's "scalar" object
-# that truncates a string to a certain length.
-$Template::Stash::SCALAR_OPS->{ truncate } = 
-  sub {
-      my ($string, $length, $ellipsis) = @_;
-      $ellipsis ||= "";
-      
-      return $string if !$length || length($string) <= $length;
-      
-      my $strlen = $length - length($ellipsis);
-      my $newstr = substr($string, 0, $strlen) . $ellipsis;
-      return $newstr;
-  };
-    
 ###############################################################################
 
 # Constructs a format object from URL parameters. You most commonly call it 
@@ -1876,59 +1733,35 @@ $Template::Stash::SCALAR_OPS->{ truncate } =
 # my $format = GetFormat("foo/bar", $::FORM{'format'}, $::FORM{'ctype'});
 sub GetFormat {
     my ($template, $format, $ctype) = @_;
-    
+
     $ctype ||= "html";
     $format ||= "";
-    
+
     # Security - allow letters and a hyphen only
     $ctype =~ s/[^a-zA-Z\-]//g;
     $format =~ s/[^a-zA-Z\-]//g;
     trick_taint($ctype);
     trick_taint($format);
-    
+
     $template .= ($format ? "-$format" : "");
     $template .= ".$ctype.tmpl";
-        
-    return 
-    { 
-        'template'    => $template , 
-        'extension'   => $ctype , 
-        'ctype' => $::contenttypes->{$ctype} || "text/plain" , 
+
+    return
+    {
+        'template'    => $template ,
+        'extension'   => $ctype ,
+        'ctype' => $::contenttypes->{$ctype} || "text/plain" ,
     };
 }
 
-###############################################################################
+############# Live code below here (that is, not subroutine defs) #############
 
-# Define the global variables and functions that will be passed to the UI
-# template.  Additional values may be added to this hash before templates
-# are processed.
-$::vars =
-  {
-    # Function for retrieving global parameters.
-    'Param' => \&Param ,
+use Bugzilla;
 
-    # Function to create date strings
-    'time2str' => \&time2str ,
+$::BZ = Bugzilla->create();
 
-    # Function for processing global parameters that contain references
-    # to other global parameters.
-    'PerformSubsts' => \&PerformSubsts ,
+$::template = $::BZ->template();
 
-    # Generic linear search function
-    'lsearch' => \&Bugzilla::Util::lsearch ,
-
-    # UserInGroup - you probably want to cache this
-    'UserInGroup' => \&UserInGroup ,
-
-    # SyncAnyPendingShadowChanges - called in the footer to sync the shadowdb
-    'SyncAnyPendingShadowChanges' => \&SyncAnyPendingShadowChanges ,
-    
-    # User Agent - useful for detecting in templates
-    'user_agent' => $ENV{'HTTP_USER_AGENT'} ,
-
-    # Bugzilla version
-    'VERSION' => $Bugzilla::Config::VERSION,
-  };
+$::vars = {};
 
 1;
-

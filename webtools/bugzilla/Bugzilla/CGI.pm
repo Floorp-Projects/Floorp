@@ -111,7 +111,7 @@ __END__
 
 =head1 NAME
 
-  Bugzilla::CGI - CGI handling for Bugzilla
+Bugzilla::CGI - CGI handling for Bugzilla
 
 =head1 SYNOPSIS
 

@@ -19,8 +19,11 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
+[% USE Bugzilla %]
+[% cgi = Bugzilla.cgi %]
+
 [% IF help %]
-  [% IF user_agent.search("Mozilla/5") %]
+  [% IF cgi.user_agent("Mozilla/5") %]
     <style type="text/css">
     .help {
         border-style: solid;

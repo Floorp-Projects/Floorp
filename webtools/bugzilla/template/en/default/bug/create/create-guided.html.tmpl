@@ -23,7 +23,10 @@
 [%# INTERFACE:
   # This template has the same interface as create.html.tmpl
   #%]
-    
+
+[% USE Bugzilla %]
+[% cgi = Bugzilla.cgi %]
+
 [% PROCESS global/header.html.tmpl
    title = "Enter A Bug"
    onload = "PutDescription()"
@@ -62,7 +65,7 @@ function PutDescription() {
 
 [%# Browser sniff to try and reduce the incidence of 4.x and NS 6/7 bugs %]
 
-[% IF user_agent.search("Mozilla/4") AND NOT user_agent.search("compatible") %]
+[% IF cgi.user_agent("Mozilla/4") AND NOT cgi.user_agent("compatible") %]
    <div style="background-color: lightgrey; 
                border: 1px solid black; 
                padding: 2px">
@@ -79,7 +82,8 @@ function PutDescription() {
   </div>
 [% END %]
 
-[% IF (matches = user_agent.match('Netscape(\d)')) %]
+[% IF cgi.user_agent('Netscape(\d)') %]
+  [% matches = cgi.user_agent().match('Netscape(\d)') %]
   <div style="background-color: lightgrey; 
               border: 1px solid black; 
               padding: 2px">
@@ -123,9 +127,9 @@ function PutDescription() {
 </p>
 
 [%# Stop NS 4.x and all v.3 browsers from getting <iframe> code %]
-[% IF (user_agent.search("Mozilla/4") 
-         AND NOT user_agent.search("compatible")) 
-       OR (user_agent.search("Mozilla/[123]")) %]
+[% IF (cgi.user_agent("Mozilla/4") 
+         AND NOT cgi.user_agent("compatible")) 
+       OR (cgi.user_agent("Mozilla/[123]")) %]
   <p>
     Visit the <a href="duplicates.cgi">most-frequently-reported bugs page</a>
     and see if your bug is there. If not, go to the
@@ -245,7 +249,7 @@ function PutDescription() {
             </select>
           </td>
           <td valign="top" width="100%">
-            [% IF user_agent.search("Mozilla/5") %]
+            [% IF cgi.user_agent("Mozilla/5") %]
               <div id="description" style="color: green; margin-left: 10px;
                                            height: 5em; overflow: auto;">
                 Select a component to see its description here.
@@ -283,8 +287,8 @@ function PutDescription() {
     </td>
   </tr>
 
-  [% matches = user_agent.match('Gecko/(\d+)') %]
-  [% buildid = user_agent IF matches %]
+  [% matches = cgi.user_agent('Gecko/(\d+)') %]
+  [% buildid = cgi.user_agent() IF matches %]
 
   <tr bgcolor="[% tablecolour %]">
     <td align="right" valign="middle">

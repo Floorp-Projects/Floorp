@@ -54,7 +54,7 @@ foreach (@myproducts) {
 &calculate_dupes();
 
 # Generate a static RDF file containing the default view of the duplicates data.
-open(CGI, "REQUEST_METHOD=GET QUERY_STRING=ctype=rdf ./duplicates.cgi |")
+open(CGI, "GATEWAY_INTERFACE=cmdline REQUEST_METHOD=GET QUERY_STRING=ctype=rdf ./duplicates.cgi |")
   || die "can't fork duplicates.cgi: $!";
 open(RDF, ">data/duplicates.tmp")
   || die "can't write to data/duplicates.tmp: $!";

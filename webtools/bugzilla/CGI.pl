@@ -893,12 +893,10 @@ sub GetBugActivity {
 
 ############# Live code below here (that is, not subroutine defs) #############
 
-use Bugzilla::CGI();
+use Bugzilla;
 
-# XXX - mod_perl, this needs to move into all the scripts individually
-# Once we do that, look into setting DISABLE_UPLOADS, and overriding
-# on a per-script basis
-$::cgi = new Bugzilla::CGI();
+# XXX - mod_perl - reset this between runs
+$::cgi = Bugzilla->instance->cgi;
 
 # Set up stuff for compatibility with the old CGI.pl code
 # This code will be removed as soon as possible, in favour of
