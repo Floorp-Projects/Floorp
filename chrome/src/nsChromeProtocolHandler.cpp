@@ -343,6 +343,12 @@ nsCachedChromeChannel::SetNotificationCallbacks(nsIInterfaceRequestor * aNotific
 }
 
 
+NS_IMETHODIMP 
+nsCachedChromeChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    *aSecurityInfo = nsnull;
+    return NS_OK;
+}
 
 nsresult
 nsCachedChromeChannel::PostLoadEvent(nsCachedChromeChannel* aChannel,

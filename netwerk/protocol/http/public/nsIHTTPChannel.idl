@@ -98,6 +98,7 @@ interface nsIHTTPChannel : nsIChannel
        to allow other non-http specs to be used in proxy cases. 
    */
     attribute string ProxyRequestURI;
+    
 };
 
 

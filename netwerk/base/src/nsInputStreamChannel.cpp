@@ -338,6 +338,14 @@ nsInputStreamChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificat
   return NS_OK;
 }
 
+
+NS_IMETHODIMP 
+nsInputStreamChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    *aSecurityInfo = nsnull;
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIStreamListener methods:
 ////////////////////////////////////////////////////////////////////////////////

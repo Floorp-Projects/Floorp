@@ -735,12 +735,12 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
     // Step 1:
     //    Create a new TCP socket structure...
     //
-    if (!mSocketType)
-      {
+    if (!mSocketType) 
+    {
       mSocketFD = PR_NewTCPSocket();
-      }
-    else
-      {
+    }
+    else 
+    {
       NS_WITH_SERVICE(nsISocketProviderService,
                       pProviderService,
                       kSocketProviderService,
@@ -752,8 +752,8 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
         rv = pProviderService->GetSocketProvider(mSocketType, getter_AddRefs(pProvider));
 
       if (NS_SUCCEEDED(rv))
-        rv = pProvider->NewSocket(mHostName, &mSocketFD);
-      }
+        rv = pProvider->NewSocket(mHostName, &mSocketFD, getter_AddRefs(mSecurityInfo));
+    }
 
     if (mSocketFD) {
       PRSocketOptionData opt;
@@ -1328,6 +1328,14 @@ nsSocketTransport::SetBytesExpected (PRInt32 bytes)
     }
 #endif
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetSecurityInfo(nsISupports **info)
+{
+  *info = mSecurityInfo.get();
+  NS_IF_ADDREF(*info);
+  return NS_OK;
 }
 
 

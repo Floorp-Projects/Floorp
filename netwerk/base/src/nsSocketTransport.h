@@ -209,6 +209,7 @@ protected:
   nsCOMPtr<nsIStreamObserver>       mOpenObserver;
   nsSocketOperation                 mOperation;
   nsCOMPtr<nsISupports>             mOwner;
+  nsCOMPtr<nsISupports>             mSecurityInfo;
   PRInt32                           mPort;
   char*                             mPrintHost; // not the proxy
   nsCOMPtr<nsISupports>             mReadContext;

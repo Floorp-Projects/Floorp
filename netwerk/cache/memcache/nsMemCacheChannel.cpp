@@ -535,3 +535,10 @@ nsMemCacheChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotification
     NS_ASSERTION(0, "nsMemCacheChannel method unexpectedly called");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP 
+nsMemCacheChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    *aSecurityInfo = nsnull;
+    return NS_OK;
+}
