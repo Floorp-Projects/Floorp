@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.22 2001/01/07 00:29:25 relyea%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.23 2001/01/07 07:44:39 nelsonb%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -50,6 +50,11 @@
 
 #if defined(XP_UNIX)
 #include <unistd.h>
+#endif
+
+#if defined(_WIN32)
+#include "fcntl.h"
+#include "io.h"
 #endif
 
 #include <stdio.h>
@@ -1153,7 +1158,7 @@ main(int argc, char **argv)
     fprintf(stderr, "Got default certdb\n");
 #endif
 
-#if defined(WIN32)
+#if defined(_WIN32)
     /*if (outFile == stdout && mode != DECODE) {*/
     if (outFile == stdout) {
 	/* If we're going to write binary data to stdout, we must put stdout
