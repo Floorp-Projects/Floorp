@@ -893,7 +893,6 @@ nsIFrame::Redraw(nsBoxLayoutState& aState,
   if (aState.PaintingDisabled())
     return NS_OK;
 
-  nsPresContext* presContext = aState.PresContext();
   const nsHTMLReflowState* s = aState.GetReflowState();
   if (s) {
     if (s->reason != eReflowReason_Incremental)
