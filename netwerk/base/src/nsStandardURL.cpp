@@ -1641,7 +1641,7 @@ nsStandardURL::SetFile(nsIFile *file)
     nsresult rv;
     nsXPIDLCString url;
 
-    NS_GetURLSpecFromFile(file, getter_Copies(url));
+    rv = NS_GetURLSpecFromFile(file, getter_Copies(url));
     if (NS_FAILED(rv)) return rv;
 
     rv = SetSpec(url);
