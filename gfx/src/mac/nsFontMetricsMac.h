@@ -54,7 +54,12 @@ public:
   NS_IMETHOD  GetStrikeout(nscoord& aOffset, nscoord& aSize);
   NS_IMETHOD  GetUnderline(nscoord& aOffset, nscoord& aSize);
   NS_IMETHOD  GetHeight(nscoord &aHeight);
+  NS_IMETHOD  GetNormalLineHeight(nscoord &aHeight);
   NS_IMETHOD  GetLeading(nscoord &aLeading);
+  NS_IMETHOD  GetEmHeight(nscoord &aHeight);
+  NS_IMETHOD  GetEmAscent(nscoord &aAscent);
+  NS_IMETHOD  GetEmDescent(nscoord &aDescent);
+  NS_IMETHOD  GetMaxHeight(nscoord &aHeight);
   NS_IMETHOD  GetMaxAscent(nscoord &aAscent);
   NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
@@ -75,9 +80,10 @@ protected:
 
 	short							mFontNum;
   nsUnicodeFontMappingMac *mFontMapping;
-  nscoord           mHeight;
-  nscoord           mAscent;
-  nscoord           mDescent;
+  nscoord           mEmHeight;
+  nscoord           mEmAscent;
+  nscoord           mEmDescent;
+  nscoord           mMaxHeight;
   nscoord           mLeading;
   nscoord           mMaxAscent;
   nscoord           mMaxDescent;
