@@ -239,7 +239,12 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
   AddBordersAndPadding(aPresContext, aReflowState, aMetrics, mBorderPadding);
   if (nsnull != aMetrics.maxElementSize) {
-    aMetrics.maxElementSize->width = aMetrics.width;
+    // If we have a percentage based width, then our maximum width is 0
+    if (eStyleUnit_Percent == aReflowState.mStylePosition->mWidth.GetUnit()) {
+      aMetrics.maxElementSize->width = 0;
+    } else {
+      aMetrics.maxElementSize->width = aMetrics.width;
+    }
     aMetrics.maxElementSize->height = aMetrics.height;
   }
   aStatus = NS_FRAME_COMPLETE;
