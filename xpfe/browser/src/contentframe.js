@@ -2,6 +2,7 @@
 
 var sidebarURI = 'resource:/res/rdf/sidebar-browser.xul';
 var isSidebarOpen = false;
+var counter = 0;
 
 function Init() {
   var pref = Components.classes['component://netscape/preferences'];
@@ -14,7 +15,7 @@ function Init() {
   if (pref) {
     pref.SetDefaultIntPref('sidebar.width', 170);
     //    pref.SetIntPref(pref.GetIntPref('sidebar.width'));
-    pref.SetDefaultBoolPref('sidebar.open', false);
+    pref.SetDefaultBoolPref('sidebar.open', true);
     pref.SavePrefFile();
     if (pref.GetBoolPref('sidebar.open')) {
       toggleOpenClose();
@@ -46,7 +47,8 @@ function toggleOpenClose() {
     var sidebar = container.firstChild;
     sidebar.setAttribute('style','width:0px; visibility:hidden');
     sidebar.setAttribute('src','about:blank');
-    //container.removeChild(container.firstChild);
+	dump("*** Removing Sidebar: " + container.firstChild);
+    container.removeChild(container.firstChild);	
 
     var grippy = document.getElementById('grippy');
     grippy.setAttribute('open','');
@@ -60,12 +62,18 @@ function toggleOpenClose() {
     var sidebar = container.firstChild;
     sidebar.setAttribute('style','width:' + width + 'px; visibility:visible');
     sidebar.setAttribute('src',sidebarURI);
-
-    //var sidebar = document.createElement('html:iframe');
-    //sidebar.setAttribute('src','resource:/res/rdf/sidebar-browser.xul');
-    //sidebar.setAttribute('class','sidebarframe');
-    //container.insertBefore(sidebar,container.firstChild);
-    //container.appendChild(sidebar);
+	dump("Opening sidebar...");
+	
+	if (counter > 0) {
+      var sidebar = document.createElement('html:iframe');
+      sidebar.setAttribute('src','resource:/res/rdf/sidebar-browser.xul');
+      sidebar.setAttribute('class','sidebarframe');
+	  sidebar.setAttribute('id','sidebarframe');
+	  sidebar.setAttribute('style','width:' + width + 'px; visibility:visible');
+	  dump("*** Inserting sidebar before: " + container.firstChild);
+      container.insertBefore(sidebar,container.firstChild);	
+      //container.appendChild(sidebar);
+    }    
 
     var grippy = document.getElementById('grippy');
     grippy.setAttribute('open','true');
@@ -73,6 +81,7 @@ function toggleOpenClose() {
     isSidebarOpen = true;
   }  
 
+  counter++;
 }
 
 // To get around "window.onload" not working in viewer.
