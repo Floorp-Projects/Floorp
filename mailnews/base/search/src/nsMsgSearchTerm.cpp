@@ -56,7 +56,9 @@
 #include "nsIMimeConverter.h"
 #include "nsMsgMimeCID.h"
 #include "nsTime.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+
 
 //---------------------------------------------------------------------------
 // nsMsgSearchTerm specifies one criterion, e.g. name contains phil
@@ -106,29 +108,50 @@ nsresult NS_MsgGetAttributeFromString(const char *string, PRInt16 *attrib)
 	if (!found)
   {
     nsresult rv;
-    *attrib = nsMsgSearchAttrib::OtherHeader;
-    nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    //49 is for showing customize... in ui, headers start from 50 onwards up until 99.
+    *attrib = nsMsgSearchAttrib::OtherHeader+1;
+
+    nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    rv = prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsXPIDLCString headers;
-    if (NS_SUCCEEDED(rv) && prefs)
-      prefs->GetCharPref(MAILNEWS_CUSTOM_HEADERS, getter_Copies(headers));
-    if (headers)
+    prefBranch->GetCharPref(MAILNEWS_CUSTOM_HEADERS, getter_Copies(headers));
+
+    if (!headers.IsEmpty())
     {
       char *headersString = ToNewCString(headers);
       char *newStr=nsnull;
       char *token = nsCRT::strtok(headersString,": ", &newStr);
-      PRUint32 i=1;  //headers start from 50 onwards...
+      PRUint32 i=0;
       while (token)
       {
         if (nsCRT::strcasecmp(token, string) == 0)
         {
-          *attrib = nsMsgSearchAttrib::OtherHeader+i;
-          break;
+          *attrib += i; 
+          nsMemory::Free(headersString); //we found custom header in the pref
+          return NS_OK;
         }
         token = nsCRT::strtok(newStr,": ", &newStr);
         i++;
+
+        //we know we can have a max of 50 custom headers
+        NS_ASSERTION(nsMsgSearchAttrib::OtherHeader + i < nsMsgSearchAttrib::kNumMsgSearchAttributes, "pref has more headers than the table can hold");
       }
+
+      *attrib += i; //this is *attrib for the new custom header 
+
       nsMemory::Free(headersString);
+      headers.Append(": "); //Adding additonal header to the pref so append the separator
     }
+
+    headers.Append(string);
+    prefBranch->SetCharPref(MAILNEWS_CUSTOM_HEADERS, headers);
+
+    prefService->SavePrefFile(nsnull); //save customHeader pref - we have added a new header
   }	
 	return NS_OK;      // we always succeed now
 }
