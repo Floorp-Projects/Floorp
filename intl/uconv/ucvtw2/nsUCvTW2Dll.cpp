@@ -31,6 +31,11 @@
 #include "nsUnicodeToEUCTW.h"
 #include "nsUnicodeToCNS11643p1.h"
 #include "nsUnicodeToCNS11643p2.h"
+#include "nsUnicodeToCNS11643p3.h"
+#include "nsUnicodeToCNS11643p4.h"
+#include "nsUnicodeToCNS11643p5.h"
+#include "nsUnicodeToCNS11643p6.h"
+#include "nsUnicodeToCNS11643p7.h"
 
 // just for NS_IMPL_IDS; this is a good, central place to implement GUIDs
 #include "nsIUnicodeDecoder.h"
@@ -132,6 +137,36 @@ FactoryData g_FactoryData[] =
     nsUnicodeToCNS11643p2::CreateInstance,
     "Unicode",
     "x-cns-11643-2"
+  },
+  {
+    &kUnicodeToCNS11643p3CID,
+    nsUnicodeToCNS11643p3::CreateInstance,
+    "Unicode",
+    "x-cns-11643-3"
+  },
+  {
+    &kUnicodeToCNS11643p4CID,
+    nsUnicodeToCNS11643p4::CreateInstance,
+    "Unicode",
+    "x-cns-11643-4"
+  },
+  {
+    &kUnicodeToCNS11643p5CID,
+    nsUnicodeToCNS11643p5::CreateInstance,
+    "Unicode",
+    "x-cns-11643-5"
+  },
+  {
+    &kUnicodeToCNS11643p6CID,
+    nsUnicodeToCNS11643p6::CreateInstance,
+    "Unicode",
+    "x-cns-11643-6"
+  },
+  {
+    &kUnicodeToCNS11643p7CID,
+    nsUnicodeToCNS11643p7::CreateInstance,
+    "Unicode",
+    "x-cns-11643-7"
   }
 };
 

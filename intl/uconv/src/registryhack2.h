@@ -17,7 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-  mDecSize           = 52;
+  mDecSize           = 55;
   mDecArray          = new ConverterInfo [mDecSize];
 
   PRInt32 i =0;
@@ -31,8 +31,10 @@
   mDecArray[i++].mCID  = &kISO88597ToUnicodeCID;
   mDecArray[i++].mCID  = &kISO88598ToUnicodeCID;
   mDecArray[i++].mCID  = &kISO88599ToUnicodeCID;
+  mDecArray[i++].mCID  = &kISO885910ToUnicodeCID;
   mDecArray[i++].mCID  = &kISO885914ToUnicodeCID;
   mDecArray[i++].mCID  = &kISO885915ToUnicodeCID;
+  mDecArray[i++].mCID  = &kISOIR111ToUnicodeCID;
   mDecArray[i++].mCID  = &kCP1250ToUnicodeCID;
   mDecArray[i++].mCID  = &kCP1251ToUnicodeCID;
   mDecArray[i++].mCID  = &kCP1252ToUnicodeCID;
@@ -74,8 +76,9 @@
   mDecArray[i++].mCID  = &kUCS4BEToUnicodeCID;
   mDecArray[i++].mCID  = &kUCS4LEToUnicodeCID;
   mDecArray[i++].mCID  = &kT61ToUnicodeCID;
+  mDecArray[i++].mCID  = &kUserDefinedToUnicodeCID;
 
-  mEncSize           = 60;
+  mEncSize           = 68;
   mEncArray          = new ConverterInfo [mEncSize];
 
   i = 0;
@@ -88,8 +91,10 @@
   mEncArray[i++].mCID  = &kUnicodeToISO88597CID;
   mEncArray[i++].mCID  = &kUnicodeToISO88598CID;
   mEncArray[i++].mCID  = &kUnicodeToISO88599CID;
+  mEncArray[i++].mCID  = &kUnicodeToISO885910CID;
   mEncArray[i++].mCID  = &kUnicodeToISO885914CID;
   mEncArray[i++].mCID  = &kUnicodeToISO885915CID;
+  mEncArray[i++].mCID  = &kUnicodeToISOIR111CID;
   mEncArray[i++].mCID  = &kUnicodeToCP1250CID;
   mEncArray[i++].mCID  = &kUnicodeToCP1251CID;
   mEncArray[i++].mCID  = &kUnicodeToCP1252CID;
@@ -131,6 +136,7 @@
   mEncArray[i++].mCID  = &kUnicodeToUCS4BECID;
   mEncArray[i++].mCID  = &kUnicodeToUCS4LECID;
   mEncArray[i++].mCID  = &kUnicodeToT61CID;
+  mEncArray[i++].mCID  = &kUnicodeToUserDefinedCID;
   mEncArray[i++].mCID  = &kUnicodeToJISx0201CID;
   mEncArray[i++].mCID  = &kUnicodeToJISx0208CID;
   mEncArray[i++].mCID  = &kUnicodeToJISx0212CID;
@@ -139,4 +145,9 @@
   mEncArray[i++].mCID  = &kUnicodeToBIG5NoAsciiCID;
   mEncArray[i++].mCID  = &kUnicodeToCNS11643p1CID;
   mEncArray[i++].mCID  = &kUnicodeToCNS11643p2CID;
+  mEncArray[i++].mCID  = &kUnicodeToCNS11643p3CID;
+  mEncArray[i++].mCID  = &kUnicodeToCNS11643p4CID;
+  mEncArray[i++].mCID  = &kUnicodeToCNS11643p5CID;
+  mEncArray[i++].mCID  = &kUnicodeToCNS11643p6CID;
+  mEncArray[i++].mCID  = &kUnicodeToCNS11643p7CID;
 
