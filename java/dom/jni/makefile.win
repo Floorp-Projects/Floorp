@@ -46,7 +46,6 @@ CPPSRCS= \
 	org_mozilla_dom_TextImpl.cpp \
 	org_mozilla_dom_events_EventImpl.cpp \
 	org_mozilla_dom_events_MouseEventImpl.cpp \
-	org_mozilla_dom_events_KeyEventImpl.cpp \
 	org_mozilla_dom_events_UIEventImpl.cpp \
  $(NULL)
 
@@ -72,7 +71,6 @@ CPP_OBJS= \
 	.\$(OBJDIR)\org_mozilla_dom_events_EventImpl.obj \
 	.\$(OBJDIR)\org_mozilla_dom_events_UIEventImpl.obj \
 	.\$(OBJDIR)\org_mozilla_dom_events_MouseEventImpl.obj \
-	.\$(OBJDIR)\org_mozilla_dom_events_KeyEventImpl.obj \
 $(NULL)
 
 LINCS=
