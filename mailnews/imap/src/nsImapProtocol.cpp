@@ -4179,7 +4179,6 @@ void nsImapProtocol::DiscoverMailboxList()
 	PRUint32 count = 0;
 	m_hostSessionList->GetNumberOfNamespacesForHost(GetImapHostName(),
                                                     GetImapUserName(), count);
-#ifdef NOT_YET
 	for (PRUint32 i = 0; i < count; i++ )
 	{
 		nsIMAPNamespace * ns = nsnull;
@@ -4189,11 +4188,17 @@ void nsImapProtocol::DiscoverMailboxList()
 			const char *prefix = ns->GetPrefix();
 			if (prefix)
 			{
-				// mscott -> WARNING!!! i where are we going to get this global variable for unusued name spaces from??? *wince*
-				if (/* !gHideUnusedNamespaces && */ *prefix && PL_strcasecmp(prefix, "INBOX."))	// only do it for non-empty namespace prefixes, and for non-INBOX prefix
+				// mscott -> WARNING!!! i where are we going to get this
+                // global variable for unusued name spaces from??? *wince*
+#ifdef NOT_YET
+				if (/* !gHideUnusedNamespaces && */ *prefix &&
+                    PL_strcasecmp(prefix, "INBOX."))	// only do it for
+                    // non-empty namespace prefixes, and for non-INBOX prefix 
 				{
-					// Explicitly discover each Namespace, so that we can create subfolders of them,
-					mailbox_spec *boxSpec = (mailbox_spec *) PR_CALLOC(sizeof(mailbox_spec));
+					// Explicitly discover each Namespace, so that we can
+                    // create subfolders of them,
+					mailbox_spec *boxSpec = (mailbox_spec *)
+                        PR_CALLOC(sizeof(mailbox_spec)); 
 					if (boxSpec)
 					{
 						boxSpec->folderSelected = PR_FALSE;
@@ -4204,7 +4209,9 @@ void nsImapProtocol::DiscoverMailboxList()
 						boxSpec->onlineVerified = PR_TRUE;
 						boxSpec->box_flags = kNoselect;
 						boxSpec->hierarchySeparator = ns->GetDelimiter();
-						m_runningUrl->AllocateCanonicalPath(ns->GetPrefix(), ns->GetDelimiter(), &boxSpec->allocatedPathName);
+						m_runningUrl->AllocateCanonicalPath(
+                            ns->GetPrefix(), ns->GetDelimiter(), 
+                            &boxSpec->allocatedPathName);  
 						boxSpec->namespaceForFolder = ns;
 						boxSpec->folderIsNamespace = PR_TRUE;
 
@@ -4228,6 +4235,7 @@ void nsImapProtocol::DiscoverMailboxList()
 					else
 						HandleMemoryFailure();
 				}
+#endif 
 
 				// now do the folders within this namespace
 				nsString2 pattern("",eOneByte);
@@ -4265,7 +4273,6 @@ void nsImapProtocol::DiscoverMailboxList()
 			}
 		}
 	}
-#endif 
 
 	// explicitly LIST the INBOX if (a) we're not using subscription, or (b) we are using subscription and
 	// the user wants us to always show the INBOX.
