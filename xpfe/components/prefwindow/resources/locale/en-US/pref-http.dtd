@@ -8,13 +8,13 @@
 <!ENTITY prefEnableHTTP10.accesskey          "U">
 <!ENTITY prefEnableHTTP10Proxy.accesskey     "S">
 <!ENTITY prefEnableHTTP11.label              "Use HTTP 1.1">
-<!ENTITY prefEnableHTTP11.accesskey          "H">
+<!ENTITY prefEnableHTTP11.accesskey          "E">
 <!ENTITY prefEnableHTTP11Proxy.accesskey     "T">
 <!ENTITY prefEnableKeepAlive.label           "Enable Keep-Alive">
 <!ENTITY prefEnableKeepAlive.accesskey       "K">
-<!ENTITY prefEnableKeepAliveProxy.accesskey  "L">
+<!ENTITY prefEnableKeepAliveProxy.accesskey  "A">
 <!ENTITY prefEnablePipelining.label          "Enable Pipelining">
 <!ENTITY prefEnablePipelining.accesskey      "P">
-<!ENTITY prefEnablePipeliningProxy.accesskey "I">
+<!ENTITY prefEnablePipeliningProxy.accesskey "N">
 <!ENTITY prefPara                            "HTTP connections may be fine-tuned using these options to enhance either performance or compatibility. Some proxy servers, for example, are known to require HTTP/1.0 (see the release notes for details).">
 <!ENTITY prefPipeWarning                     "WARNING: pipelining is an experimental feature, designed to improve page-load performance, that is unfortunately not well supported by some web servers and proxies.">
