@@ -1005,7 +1005,10 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
     // a non-superuser, minus one as a fudge factor, multiplied by the size
     // of the beforementioned blocks.
 
-    LL_I2L(*aDiskSpaceAvailable, fs_buf.f_bsize * (fs_buf.f_bavail - 1));
+    PRInt64 bsize,bavail;
+    LL_I2L( bsize,  fs_buf.f_bsize );
+    LL_I2L( bavail, fs_buf.f_bavail - 1 );
+    LL_MUL( *aDiskSpaceAvailable, bsize, bavail );
     return NS_OK;
 
 #else
