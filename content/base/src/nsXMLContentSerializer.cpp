@@ -251,7 +251,7 @@ nsXMLContentSerializer::AppendDoctype(nsIDOMDocumentType *aDoctype,
   return NS_OK;
 }
 
-static const char* kXMLNS = "xmlns";
+#define kXMLNS "xmlns"
 
 nsresult
 nsXMLContentSerializer::PushNameSpaceDecl(const nsAReadableString& aPrefix,
