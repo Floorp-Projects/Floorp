@@ -35,10 +35,13 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.27 2000/10/24 21:32:53 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.28 2000/12/09 03:36:41 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
+#if defined(OSF1)
+#include <c_asm.h>
+#endif
 
 #if MP_LOGTAB
 /*
@@ -3794,6 +3797,10 @@ mp_err   s_mp_mul(mp_int *a, const mp_int *b)
   { unsigned long long product = (unsigned long long)a * b; \
     Plo = (mp_digit)product; \
     Phi = (mp_digit)(product >> MP_DIGIT_BIT); }
+#elif defined(OSF1)
+#define MP_MUL_DxD(a, b, Phi, Plo) \
+  { Plo = asm ("mulq %a0, %a1, %v0", a, b);\
+    Phi = asm ("umulh %a0, %a1, %v0", a, b); }
 #else
 #define MP_MUL_DxD(a, b, Phi, Plo) \
   { mp_digit a0b1, a1b0; \
@@ -3927,6 +3934,30 @@ void s_mpv_mul_d_add_prop(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit
 }
 #endif
 
+#if defined(SOLARIS) && (ULONG_MAX == UINT_MAX)
+/* This trick works on Sparc V8 CPUs with the Workshop compilers. */
+#define MP_SQR_D(a, Phi, Plo) \
+  { unsigned long long square = (unsigned long long)a * a; \
+    Plo = (mp_digit)square; \
+    Phi = (mp_digit)(square >> MP_DIGIT_BIT); }
+#elif defined(OSF1)
+#define MP_SQR_D(a, Phi, Plo) \
+  { Plo = asm ("mulq  %a0, %a0, %v0", a);\
+    Phi = asm ("umulh %a0, %a0, %v0", a); }
+#else
+#define MP_SQR_D(a, Phi, Plo) \
+  { mp_digit Pmid; \
+    Plo  = (a  & MP_HALF_DIGIT_MAX) * (a  & MP_HALF_DIGIT_MAX); \
+    Phi  = (a >> MP_HALF_DIGIT_BIT) * (a >> MP_HALF_DIGIT_BIT); \
+    Pmid = (a  & MP_HALF_DIGIT_MAX) * (a >> MP_HALF_DIGIT_BIT); \
+    Phi += Pmid >> (MP_HALF_DIGIT_BIT - 1);  \
+    Pmid <<= (MP_HALF_DIGIT_BIT + 1);  \
+    Plo += Pmid;  \
+    if (Plo < Pmid)  \
+      ++Phi;  \
+  }
+#endif
+
 #if !defined(MP_ASSEMBLY_SQUARE)
 /* Add the squares of the digits of a to the digits of b. */
 void s_mpv_sqr_add_prop(const mp_digit *pa, mp_size a_len, mp_digit *ps)
@@ -3972,30 +4003,22 @@ void s_mpv_sqr_add_prop(const mp_digit *pa, mp_size a_len, mp_digit *ps)
   mp_digit carry = 0;
   while (a_len--) {
     mp_digit a_i = *pa++;
-    mp_digit a0 = a_i & MP_HALF_DIGIT_MAX;
-    mp_digit a1 = a_i >> MP_HALF_DIGIT_BIT;
-    mp_digit a0a0, a0a1, a1a1;
+    mp_digit a0a0, a1a1;
 
-    a0a0 = a0 * a0;
-    a1a1 = a1 * a1;
-    a0a1 = a0 * a1;
+    MP_SQR_D(a_i, a1a1, a0a0);
 
-    a1a1 += a0a1 >> (MP_HALF_DIGIT_BIT - 1);
-    a0a1 <<= (MP_HALF_DIGIT_BIT + 1);
-    a0a0 += a0a1;
-    if (a0a0 < a0a1)
-      ++a1a1;
+    /* here a1a1 and a0a0 constitute a_i ** 2 */
     a0a0 += carry;
     if (a0a0 < carry)
       ++a1a1;
-    /* here a1a1 and a0a0 constitute a_i ** 2 */
+
     /* now add to ps */
-    a0a0 += a0a1 = *ps;
-    if (a0a0 < a0a1)
+    a0a0 += a_i = *ps;
+    if (a0a0 < a_i)
       ++a1a1;
     *ps++ = a0a0;
-    a1a1 += a0a1 = *ps;
-    carry = (a1a1 < a0a1);
+    a1a1 += a_i = *ps;
+    carry = (a1a1 < a_i);
     *ps++ = a1a1;
   }
   while (carry) {
