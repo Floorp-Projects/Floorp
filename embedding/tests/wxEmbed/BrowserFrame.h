@@ -50,6 +50,8 @@ protected:
     void OnUpdateBrowserBack(wxUpdateUIEvent &event);
     void OnUpdateBrowserForward(wxUpdateUIEvent &event);
     void OnUpdateBrowserStop(wxUpdateUIEvent &event);
+    void OnFileSave(wxCommandEvent &event);
+    void OnFilePrint(wxCommandEvent &event);
 public :
     BrowserFrame(wxWindow* aParent);
 

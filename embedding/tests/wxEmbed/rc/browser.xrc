@@ -1,40 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resource version="2.3.0.1">
   
-  
+    <!-- Browser context menus -->
+
+    <object class="wxMenu" name="context_browser_document">
+      <object class="wxMenuItem" name="browse_back">
+        <label>_Back</label>
+      </object>
+      <object class="wxMenuItem" name="browse_fwd">
+        <label>_Forward</label>
+      </object>
+      <object class="wxMenuItem" name="browse_reload">
+        <label>Reload</label>
+      </object>
+      <object class="wxMenuItem" name="browse_stop">
+        <label>Stop</label>
+      </object>
+      <object class="separator"/>
+      <object class="wxMenuItem" name="menu_save">
+        <label>Save _Page</label>
+      </object>
+      <object class="separator"/>
+      <object class="wxMenuItem" name="menu_properties">
+        <label>Page P_roperties</label>
+      </object>
+    </object>
+    <object class="wxMenu" name="context_browser_link">
+      <object class="wxMenuItem" name="dummy">
+        <label>This space for rent context_browser_link</label>
+      </object>
+    </object>
+    <object class="wxMenu" name="context_browser_image">
+      <object class="wxMenuItem" name="dummy">
+        <label>This space for rent context_browser_image</label>
+      </object>
+    </object>
+    <object class="wxMenu" name="context_browser_text">
+      <object class="wxMenuItem" name="dummy">
+        <label>This space for rent context_browser_text</label>
+      </object>
+    </object>
+    <object class="wxMenu" name="context_browser_input">
+      <object class="wxMenuItem" name="dummy">
+        <label>This space for rent context_browser_input</label>
+      </object>
+    </object>  
+
   <object class="wxFrame" name="browser_frame">
     <title>wxEmbed Browser</title>
     <size>300,300</size>
     <style>wxCAPTION|wxSYSTEM_MENU|wxRESIZE_BORDER|wxRESIZE_BOX|wxMINIMIZE_BOX|wxMAXIMIZE_BOX|wxCLIP_CHILDREN</style>
     <pos>-1,-1</pos>
-
-    <!-- Browser context menus -->
-
-    <object class="wxMenu" name="context_browser_document">
-      <object class="wxMenuItem">
-        <label>This space for rent context_browser_document</label>
-      </object>
-    </object>
-    <object class="wxMenu" name="context_browser_link">
-      <object class="wxMenuItem">
-        <label>This space for rent context_browser_link</label>
-      </object>
-    </object>
-    <object class="wxMenu" name="context_browser_image">
-      <object class="wxMenuItem">
-        <label>This space for rent context_browser_image</label>
-      </object>
-    </object>
-    <object class="wxMenu" name="context_browser_text">
-      <object class="wxMenuItem">
-        <label>This space for rent context_browser_text</label>
-      </object>
-    </object>
-    <object class="wxMenu" name="context_browser_input">
-      <object class="wxMenuItem">
-        <label>This space for rent context_browser_input</label>
-      </object>
-    </object>
 
     <!-- Browser menu -->
     <object class="wxMenuBar" name="mainmenu">
@@ -43,6 +59,13 @@
         <label>_File</label>
         <object class="wxMenuItem" name="menu_about">
           <label>_About...</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="menu_save">
+          <label>Save _Page</label>
+        </object>
+        <object class="wxMenuItem" name="menu_print">
+          <label>_Print Page</label>
         </object>
         <object class="separator"/>
         <object class="wxMenuItem" name="menu_quit">

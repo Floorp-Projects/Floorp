@@ -54,15 +54,27 @@ BrowserFrame::BrowserFrame(wxWindow* aParent)
 
     SetIcon(wxICON(appicon));
 
+    SetName("browser");
+
     SetupDefaultGeckoWindow();
 
     CreateStatusBar();
+
+    OnBrowserHome(wxCommandEvent());
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Browser specific handlers
 
+
+void BrowserFrame::OnFileSave(wxCommandEvent & WXUNUSED(event))
+{
+}
+
+void BrowserFrame::OnFilePrint(wxCommandEvent & WXUNUSED(event))
+{
+}
 
 void BrowserFrame::OnBrowserGo(wxCommandEvent & WXUNUSED(event))
 {
@@ -216,8 +228,8 @@ void BrowserFrame::ShowContextMenu(PRUint32 aContextFlags, nsIContextMenuInfo *a
     if (mouseEvent)
     {
         PRInt32 x, y;
-        mouseEvent->GetClientX(&x);
-        mouseEvent->GetClientY(&y);
+        mouseEvent->GetScreenX(&x);
+        mouseEvent->GetScreenY(&y);
 
         char *menuName = NULL;
 
@@ -267,7 +279,13 @@ void BrowserFrame::ShowContextMenu(PRUint32 aContextFlags, nsIContextMenuInfo *a
 #undef LoadMenu
         wxMenu *menu = wxXmlResource::Get()->LoadMenu(menuName);
         if (menu)
-            PopupMenu(menu, x, y);
+        {
+            int fX = 0, fY = 0;
+            // Make screen coords relative to the frame window for accurate
+            // popup menu position
+            GetPosition(&fX, &fY);
+            PopupMenu(menu, x - fX, y - fY);
+        }
     }
 }
 

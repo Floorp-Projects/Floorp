@@ -158,6 +158,26 @@ int EmbedApp::OnExit()
 
 void EmbedApp::OnQuit(wxCommandEvent & WXUNUSED(event))
 {
+    wxFrame * frame = NULL;
+    
+/*
+    do {
+        frame = (wxFrame *) wxWindow::FindWindowByName("browser", NULL);;
+        if (frame)
+            frame->Close(TRUE);
+    } while (frame);
+    frame = (wxFrame *) wxWindow::FindWindowByName("mail", NULL);;
+    if (frame)
+        frame->Close(TRUE);
+    frame = (wxFrame *) wxWindow::FindWindowByName("editor", NULL);;
+    if (frame)
+        frame->Close(TRUE);
+    frame = (wxFrame *) wxWindow::FindWindowByName("chat", NULL);;
+    if (frame)
+        frame->Close(TRUE);
+*/
+
+
     GetTopWindow()->Close(TRUE);
 }
 
