@@ -45,10 +45,6 @@ if ( !( "winHooks" in parent ) ) {
 // This function is called when the user presses Ok to close the prefs window.
 function onOK() {
     try {
-        // Get updates from dialog if we're displayed.
-        if ( "GetFields" in window ) {
-            GetFields();
-        }
         // Update prefs.
         parent.winHooks.winhooks.settings = parent.winHooks.prefs;
     }

@@ -408,14 +408,6 @@ function lazyAppendFontNames( i )
 
 function saveFontPrefs()
   {
-    // if saveState function is available, assume can call it.
-    // why is this extra qualification required?!!!!
-    if( top.hPrefWindow.wsm.contentArea.saveState )
-      {
-        saveState();
-        parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-fonts.xul"] = GetFields();
-      }
-
     // saving font prefs
     var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-fonts.xul"];
     var pref = parent.hPrefWindow.pref;
