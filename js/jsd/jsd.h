@@ -237,6 +237,8 @@ struct JSDExecHook
     void*                 callerdata;
 };
 
+#define TS_HAS_DISABLED_FRAME 0x01
+
 struct JSDThreadState
 {
     JSCList             links;        /* we are part of a JSCList */
@@ -244,6 +246,7 @@ struct JSDThreadState
     void*               thread;
     JSCList             stack;
     uintN               stackDepth;
+    uintN               flags;
 };
 
 struct JSDStackFrameInfo

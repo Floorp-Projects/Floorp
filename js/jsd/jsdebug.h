@@ -208,6 +208,28 @@ JSD_ClearAllProfileData(JSDContext* jsdc);
 * When this flag is set the internal call hook will collect profile data.
 */
 #define JSD_COLLECT_PROFILE_DATA  0x08
+/*
+* When this flag is set, stack frames that are disabled for debugging
+* will not appear in the call stack chain.
+*/
+#define JSD_HIDE_DISABLED_FRAMES  0x10
+/*
+* When this flag is set, the debugger will only check the
+* JSD_SCRIPT_DEBUG_BIT on the top (most recent) stack frame.  This
+* makes it possible to stop in an enabled frame which was called from
+* a stack that contains a disabled frame.
+*
+* When this flag is *not* set, any stack that contains a disabled frame
+* will not be debugged (the execution hook will not be invoked.)
+*
+* This only applies when the reason for calling the hook would have
+* been JSD_HOOK_INTERRUPTED or JSD_HOOK_THROW.  JSD_HOOK_BREAKPOINT,
+* JSD_HOOK_DEBUG_REQUESTED, and JSD_HOOK_DEBUGGER_KEYWORD always stop,
+* regardless of this setting, as long as the top frame is not disabled.
+*
+* If JSD_HIDE_DISABLED_FRAMES is set, this is effectively set as well.
+*/
+#define JSD_MASK_TOP_FRAME_ONLY   0x20
 
 extern JSD_PUBLIC_API(void)
 JSD_SetContextFlags (JSDContext* jsdc, uint32 flags);

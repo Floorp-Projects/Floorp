@@ -70,8 +70,14 @@ _addNewFrame(JSDContext*        jsdc,
         JSD_LOCK_SCRIPTS(jsdc);
         jsdscript = jsd_FindJSDScript(jsdc, script);
         JSD_UNLOCK_SCRIPTS(jsdc);
-        if (!jsdscript || !JSD_IS_DEBUG_ENABLED(jsdc, jsdscript))
+        if (!jsdscript || (jsdc->flags & JSD_HIDE_DISABLED_FRAMES &&
+                           !JSD_IS_DEBUG_ENABLED(jsdc, jsdscript)))
+        {
             return NULL;
+        }
+
+        if (!JSD_IS_DEBUG_ENABLED(jsdc, jsdscript))
+            jsdthreadstate->flags |= TS_HAS_DISABLED_FRAME;
     }
     
     jsdframe = (JSDStackFrameInfo*) calloc(1, sizeof(JSDStackFrameInfo));
@@ -128,26 +134,31 @@ jsd_NewThreadState(JSDContext* jsdc, JSContext *cx )
             ((jsdc->flags & JSD_INCLUDE_NATIVE_FRAMES) ||
              !JS_IsNativeFrame(cx, fp)))
         {
-            
-            if (!_addNewFrame( jsdc, jsdthreadstate, script, pc, fp ) &&
-                jsdthreadstate->stackDepth == 0) 
+            JSDStackFrameInfo *frame;
+
+            frame = _addNewFrame( jsdc, jsdthreadstate, script, pc, fp );
+
+            if (jsdthreadstate->stackDepth == 0 && !frame) ||
+                (jsdthreadstate->stackDepth == 1 && frame &&
+                 !JSD_IS_DEBUG_ENABLED(jsdc, frame->jsdscript)))
             {
                 /*
-                 * if we failed to create the first frame, fail the entire
-                 * thread state.
+                 * if we failed to create the first frame, or the top frame
+                 * is not enabled for debugging, fail the entire thread state.
                  */
-                break;
+                JS_INIT_CLIST(&jsdthreadstate->links);
+                jsd_DestroyThreadState(jsdc, jsdthreadstate);
+                return NULL;
             }
         }
     }
-    
-    /* if there is no stack, then this threadstate can not be constructed */
-    if( 0 == jsdthreadstate->stackDepth )
+
+    if (jsdthreadstate->stackDepth == 0)
     {
         free(jsdthreadstate);
         return NULL;
     }
-
+    
     JSD_LOCK_THREADSTATES(jsdc);
     JS_APPEND_LINK(&jsdthreadstate->links, &jsdc->threadsStates);
     JSD_UNLOCK_THREADSTATES(jsdc);
