@@ -73,7 +73,7 @@
         <body>
           <![CDATA[
             const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
-            const flags = nsIWebNavigation.LOAD_FLAGS_BYPASS_NONE;
+            const flags = nsIWebNavigation.LOAD_FLAGS_NONE;
             this.reloadWithFlags(flags);
           ]]>
         </body>
@@ -104,7 +104,7 @@
         <body>
           <![CDATA[
             const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
-            const flags = nsIWebNavigation.LOAD_FLAGS_BYPASS_NONE;
+            const flags = nsIWebNavigation.LOAD_FLAGS_NONE;
             this.loadURIWithFlags(aURI, flags);
           ]]>
         </body>
