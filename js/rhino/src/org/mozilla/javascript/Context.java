@@ -450,9 +450,7 @@ public class Context {
      * @param  listener  the listener
      */
     public void addPropertyChangeListener(PropertyChangeListener listener) {
-        synchronized (this) {
-            listeners = ListenerArray.add(listeners, listener);
-        }
+        listeners = ListenerArray.add(listeners, listener);
     }
 
     /**
@@ -463,9 +461,7 @@ public class Context {
      * @param listener  the listener
      */
     public void removePropertyChangeListener(PropertyChangeListener listener) {
-        synchronized (this) {
-            listeners = ListenerArray.remove(listeners, listener);
-        }
+        listeners = ListenerArray.remove(listeners, listener);
     }
 
     /**
@@ -837,14 +833,14 @@ public class Context {
      * @return whether the source is ready for compilation
      * @since 1.4 Release 2
      */
-    synchronized public boolean stringIsCompilableUnit(String source)
+    public boolean stringIsCompilableUnit(String source)
     {
         // no source name or source text manager, because we're just
         // going to throw away the result.
         TokenStream ts = new TokenStream(null, source, null, null, 1);
 
         // Temporarily set error reporter to always be the exception-throwing
-        // DefaultErrorReporter.  (This is why the method is synchronized...)
+        // DefaultErrorReporter.
         ErrorReporter currentReporter =
             setErrorReporter(new DefaultErrorReporter());
 
@@ -1984,10 +1980,11 @@ public class Context {
         // One of sourceReader or sourceString has to be null
         if (!(sourceReader == null ^ sourceString == null)) Context.codeBug();
 
-        Object dynamicDoamin = null;
         if (securityController != null) {
-            dynamicDoamin = securityController.
-                getDynamicSecurityDomain(securityDomain);
+            securityDomain = securityController.
+                                 getDynamicSecurityDomain(securityDomain);
+        } else {
+            securityDomain = null;
         }
 
         if (debugger != null) {
@@ -1998,46 +1995,9 @@ public class Context {
         }
         TokenStream ts = new TokenStream(sourceReader, sourceString,
                                          scope, sourceName, lineno);
-        return compile(scope, ts, dynamicDoamin, sourceString, returnFunction);
-    }
 
-    private static Class codegenClass;
-    static {
-        try {
-            codegenClass = Class.forName(
-                "org.mozilla.javascript.optimizer.Codegen");
-        } catch (ClassNotFoundException x) {
-            // ...must be running lite, that's ok
-            codegenClass = null;
-        }
-    }
+        Interpreter compiler = createCompiler();
 
-    private Interpreter getCompiler() {
-        if (codegenClass != null) {
-            try {
-                return (Interpreter) codegenClass.newInstance();
-            }
-            catch (SecurityException x) {
-            }
-            catch (IllegalArgumentException x) {
-            }
-            catch (InstantiationException x) {
-            }
-            catch (IllegalAccessException x) {
-            }
-            // fall through
-        }
-        return new Interpreter();
-    }
-
-    private Object compile(Scriptable scope, TokenStream ts,
-                           Object dynamicSecurityDomain, String sourceString,
-                           boolean returnFunction)
-        throws IOException
-    {
-        Interpreter compiler = optimizationLevel == -1
-                               ? new Interpreter()
-                               : getCompiler();
         errorCount = 0;
         IRFactory irf = compiler.createIRFactory(this, ts, scope);
         Parser p = new Parser(irf);
@@ -2047,8 +2007,7 @@ public class Context {
 
         tree = compiler.transform(tree, ts, scope);
 
-        if (printTrees)
-            System.out.println(tree.toStringTree());
+        if (printTrees) { System.out.println(tree.toStringTree()); }
 
         if (returnFunction) {
             Node first = tree.getFirstChild();
@@ -2065,10 +2024,38 @@ public class Context {
         }
 
         Object result = compiler.compile(this, scope, tree,
-                                         dynamicSecurityDomain,
-                                         securityController);
+                                         securityDomain, securityController);
 
         return errorCount == 0 ? result : null;
+    }
+
+    private static Class codegenClass;
+    static {
+        try {
+            codegenClass = Class.forName(
+                "org.mozilla.javascript.optimizer.Codegen");
+        } catch (ClassNotFoundException x) {
+            // ...must be running lite, that's ok
+            codegenClass = null;
+        }
+    }
+
+    private Interpreter createCompiler() {
+        if (optimizationLevel >= 0 && codegenClass != null) {
+            try {
+                return (Interpreter) codegenClass.newInstance();
+            }
+            catch (SecurityException x) {
+            }
+            catch (IllegalArgumentException x) {
+            }
+            catch (InstantiationException x) {
+            }
+            catch (IllegalAccessException x) {
+            }
+            // fall through
+        }
+        return new Interpreter();
     }
 
     static String getSourcePositionFromStack(int[] linep) {
