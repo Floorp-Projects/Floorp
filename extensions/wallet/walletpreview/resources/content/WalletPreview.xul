@@ -31,14 +31,12 @@
         ondialogaccept="return Save();"
         ondialogcancel="return Cancel();"
         ondialoghelp="return doHelpButton();"
-        orient="vertical" class="dialog" onload="Startup()">
+        onload="Startup()">
 
   <script type="application/x-javascript" src="chrome://global/content/strres.js" />
   <script type="application/x-javascript" src="chrome://communicator/content/wallet/WalletPreview.js"/>
   <script type="application/x-javascript" src="chrome://wallet/content/walletOverlay.js"/>
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
-
-  <keyset id="dialogKeys"/>
 
   <label value="&heading.label;"/>    
   
@@ -59,7 +57,9 @@
   </hbox>
 
   <hbox>
-    <button label="&viewdata.label;" oncommand="formShow();"/>
+    <button class="dialog-button"
+            label="&viewdata.label;"
+            oncommand="formShow();"/>
     <spacer flex="1"/>
     <button dlgtype="accept" class="dialog-button"/>
     <button dlgtype="cancel" class="dialog-button"/>
