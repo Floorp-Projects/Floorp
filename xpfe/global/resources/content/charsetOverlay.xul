@@ -15,16 +15,6 @@
 	<!-- Charset Menu -->
 	<menu id="charsetMenu" value="&charsetMenu.label;"  datasources="rdf:charset-menu" ref="NC:CharsetMenuRoot" open="true">
         <template>
-          <rule iscontainer="true" isempty="false">
-		    <menupopup>
-              <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-			</menupopup>
-          </rule>
-          <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-            <menupopup>
-			  <menuseparator uri="..." />
-			</menupopup>
-          </rule>
           <rule>
 		    <menupopup>
               <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
