@@ -36,6 +36,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const nsIFilePicker = Components.interfaces.nsIFilePicker;
+const nsILocalFile = Components.interfaces.nsILocalFile;
+const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
+
+function BrowseForLocalFolders()
+{
+  var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+  var currentFolder = Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
+  var currentFolderTextBox = document.getElementById("server.localPath");
+
+  currentFolder.initWithPath(currentFolderTextBox.value);
+
+  fp.init(window, document.getElementById("browseForLocalFolder").getAttribute("filepickertitle"), nsIFilePicker.modeGetFolder);
+
+  fp.displayDirectory = currentFolder;
+
+  var ret = fp.show();
+
+  if (ret == nsIFilePicker.returnOK) {
+    // convert the nsILocalFile into a nsIFileSpec 
+    currentFolderTextBox.value = fp.file.path;
+  }
+}
+
 function hostnameIsIllegal(hostname)
 {
   // XXX TODO do a complete check.

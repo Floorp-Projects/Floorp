@@ -36,6 +36,7 @@ Contributors:
   <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/am-server.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/am-prefs.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/amUtils.js"/>
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 
   <broadcaster id="broadcaster_doBiff"/>
@@ -262,9 +263,11 @@ Contributors:
   <vbox>
     <label value="&localPath.label;" control="server.localPath"
            accesskey="&localPath.accesskey;"/>
-    <textbox wsm_persist="true" id="server.localPath"
-             datatype="nsIFileSpec"
-             class="uri-element"
-             prefstring="mail.server.%serverkey%.directory"/>
+    <hbox align="center">
+      <textbox readonly="true" wsm_persist="true" flex="1" id="server.localPath" datatype="nsIFileSpec"
+               prefstring="mail.server.%serverkey%.directory" class="uri-element"/>
+      <button id="browseForLocalFolder" label="&browseFolder.label;" filepickertitle="&localFolderPicker.label;"
+              accesskey="&browseFolder.accesskey;" oncommand="BrowseForLocalFolders()"/>
+    </hbox>
   </vbox>
 </page>

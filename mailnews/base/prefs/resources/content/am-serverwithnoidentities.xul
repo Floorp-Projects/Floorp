@@ -7,7 +7,8 @@
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.onPanelLoaded('am-serverwithnoidentities.xul');">
 
-  <script src="chrome://messenger/content/am-serverwithnoidentities.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/am-serverwithnoidentities.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/amUtils.js"/>
 
   <dialogheader title="&accountTitle.label;"/>
 

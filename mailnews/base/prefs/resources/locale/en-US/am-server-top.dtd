@@ -73,3 +73,6 @@
 <!ENTITY abbreviateOff.label "Abbreviate names (For example, 'n.p.m.mail-news')">
 <!ENTITY advancedButton.label "Advanced...">
 <!ENTITY advancedButton.accesskey "v">
+<!ENTITY localFolderPicker.label "Select Local Directory">
+<!ENTITY browseFolder.label "Browse...">
+<!ENTITY browseFolder.accesskey "B">
