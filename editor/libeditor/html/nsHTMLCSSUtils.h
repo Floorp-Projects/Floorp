@@ -96,6 +96,7 @@ public:
     const char * prependValue;
     const char * appendValue;
     PRBool gettable;
+    PRBool caseSensitiveValue;
   };
 
 public:

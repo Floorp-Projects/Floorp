@@ -200,105 +200,105 @@ void ProcessMarginRightValue(const nsAString * aInputString, nsAString & aOutput
 }
 
 const nsHTMLCSSUtils::CSSEquivTable boldEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_font_weight, ProcessBValue, nsnull, nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_font_weight, ProcessBValue, nsnull, nsnull, nsnull, PR_TRUE, PR_FALSE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable italicEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_font_style, ProcessDefaultValue, "italic", nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_font_style, ProcessDefaultValue, "italic", nsnull, nsnull, PR_TRUE, PR_FALSE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable underlineEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_text_decoration, ProcessDefaultValue, "underline", nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_text_decoration, ProcessDefaultValue, "underline", nsnull, nsnull, PR_TRUE, PR_FALSE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable strikeEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_text_decoration, ProcessDefaultValue, "line-through", nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_text_decoration, ProcessDefaultValue, "line-through", nsnull, nsnull, PR_TRUE, PR_FALSE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable ttEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_font_family, ProcessDefaultValue, "monospace", nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_font_family, ProcessDefaultValue, "monospace", nsnull, nsnull, PR_TRUE, PR_FALSE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable fontColorEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_color, ProcessSameValue, nsnull, nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_color, ProcessSameValue, nsnull, nsnull, nsnull, PR_TRUE, PR_FALSE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable fontFaceEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_font_family, ProcessSameValue, nsnull, nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_font_family, ProcessSameValue, nsnull, nsnull, nsnull, PR_TRUE, PR_FALSE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable bgcolorEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_background_color, ProcessSameValue, nsnull, nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_background_color, ProcessSameValue, nsnull, nsnull, nsnull, PR_TRUE, PR_FALSE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable backgroundImageEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_background_image, ProcessExtendedValue, nsnull, "url(", ")", PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_background_image, ProcessExtendedValue, nsnull, "url(", ")", PR_TRUE, PR_TRUE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable textColorEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_color, ProcessSameValue, nsnull, nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_color, ProcessSameValue, nsnull, nsnull, nsnull, PR_TRUE, PR_FALSE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable borderEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_border, ProcessExtendedValue, nsnull, nsnull, "px solid", PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_border, ProcessExtendedValue, nsnull, nsnull, "px solid", PR_TRUE, PR_FALSE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable textAlignEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_text_align, ProcessSameValue, nsnull, nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_text_align, ProcessSameValue, nsnull, nsnull, nsnull, PR_TRUE, PR_FALSE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable captionAlignEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_caption_side, ProcessSameValue, nsnull, nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_caption_side, ProcessSameValue, nsnull, nsnull, nsnull, PR_TRUE, PR_FALSE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable verticalAlignEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_vertical_align, ProcessSameValue, nsnull, nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_vertical_align, ProcessSameValue, nsnull, nsnull, nsnull, PR_TRUE, PR_FALSE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable nowrapEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_whitespace, ProcessDefaultValue, "nowrap", nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_whitespace, ProcessDefaultValue, "nowrap", nsnull, nsnull, PR_TRUE, PR_FALSE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable widthEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_width, ProcessLengthValue, nsnull, nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_width, ProcessLengthValue, nsnull, nsnull, nsnull, PR_TRUE, PR_FALSE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable heightEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_height, ProcessLengthValue, nsnull, nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_height, ProcessLengthValue, nsnull, nsnull, nsnull, PR_TRUE, PR_FALSE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable listStyleTypeEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_list_style_type, ProcessListStyleTypeValue, nsnull, nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_list_style_type, ProcessListStyleTypeValue, nsnull, nsnull, nsnull, PR_TRUE, PR_TRUE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable tableAlignEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_text_align, ProcessDefaultValue, "left", nsnull, nsnull, PR_FALSE },
-  { nsHTMLCSSUtils::eCSSEditableProperty_margin_left, ProcessMarginLeftValue, nsnull, nsnull, nsnull, PR_TRUE },
-  { nsHTMLCSSUtils::eCSSEditableProperty_margin_right, ProcessMarginRightValue, nsnull, nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_text_align, ProcessDefaultValue, "left", nsnull, nsnull, PR_FALSE, PR_FALSE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_margin_left, ProcessMarginLeftValue, nsnull, nsnull, nsnull, PR_TRUE, PR_FALSE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_margin_right, ProcessMarginRightValue, nsnull, nsnull, nsnull, PR_TRUE, PR_FALSE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
 const nsHTMLCSSUtils::CSSEquivTable hrAlignEquivTable[] = {
-  { nsHTMLCSSUtils::eCSSEditableProperty_margin_left, ProcessMarginLeftValue, nsnull, nsnull, nsnull, PR_TRUE },
-  { nsHTMLCSSUtils::eCSSEditableProperty_margin_right, ProcessMarginRightValue, nsnull, nsnull, nsnull, PR_TRUE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_margin_left, ProcessMarginLeftValue, nsnull, nsnull, nsnull, PR_TRUE, PR_FALSE },
+  { nsHTMLCSSUtils::eCSSEditableProperty_margin_right, ProcessMarginRightValue, nsnull, nsnull, nsnull, PR_TRUE, PR_FALSE },
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
@@ -830,10 +830,11 @@ nsHTMLCSSUtils::BuildCSSDeclarations(nsVoidArray & aPropertyArray,
   aValueArray.Clear();
 
   // if we have an input value, let's use it
-  nsAutoString value;
+  nsAutoString value, lowerCasedValue;
   if (aValue) {
     value.Assign(*aValue);
-    ToLowerCase(value);
+    lowerCasedValue.Assign(*aValue);
+    ToLowerCase(lowerCasedValue);
   }
 
   PRInt8 index = 0;
@@ -844,7 +845,8 @@ nsHTMLCSSUtils::BuildCSSDeclarations(nsVoidArray & aPropertyArray,
       nsIAtom * cssPropertyAtom;
       // find the equivalent css value for the index-th property in
       // the equivalence table
-      (*aEquivTable[index].processValueFunctor) (&value, cssValue,
+      (*aEquivTable[index].processValueFunctor) (aEquivTable[index].caseSensitiveValue ? &value : &lowerCasedValue,
+                                                 cssValue,
                                                  aEquivTable[index].defaultValue,
                                                  aEquivTable[index].prependValue,
                                                  aEquivTable[index].appendValue);
