@@ -140,7 +140,7 @@ elsif ($action eq "create") {
 
     $vars->{'series'} = $series;
 
-    print "Content-Type: text/html\n\n";
+    print $cgi->header();
     $template->process("global/message.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 }
@@ -251,7 +251,7 @@ sub edit {
     $vars->{'creator'} = new Bugzilla::User($series->{'creator'});
     $vars->{'default'} = $series;
 
-    print "Content-Type: text/html\n\n";
+    print $cgi->header();
     $template->process("reports/edit-series.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 }
@@ -266,11 +266,11 @@ sub plot {
 
     # Debugging PNGs is a pain; we need to be able to see the error messages
     if ($cgi->param('debug')) {
-        print "Content-Type: text/html\n\n";
+        print $cgi->header();
         $vars->{'chart'}->dump();
     }
 
-    print "Content-Type: $format->{'ctype'}\n\n";
+    print $cgi->header($format->{'ctype'});
     $template->process($format->{'template'}, $vars)
       || ThrowTemplateError($template->error());
 }
@@ -287,7 +287,7 @@ sub wrap {
                 "action", "action-wrap", "ctype", "format", "width", "height",
                 "Bugzilla_login", "Bugzilla_password");
 
-    print "Content-Type:text/html\n\n";
+    print $cgi->header();
     $template->process("reports/chart.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 }
@@ -304,7 +304,7 @@ sub view {
     $vars->{'chart'} = $chart;
     $vars->{'category'} = Bugzilla::Chart::getVisibleSeries();
 
-    print "Content-Type: text/html\n\n";
+    print $cgi->header();
 
     # If we have having problems with bad data, we can set debug=1 to dump
     # the data structure.
