@@ -445,7 +445,7 @@ public:
 
     virtual ~GetToStringStreamListener() { }
 protected:
-    virtual nsresult OnStopRequest(nsIRequest *aRequest,
+    NS_IMETHOD OnStopRequest(nsIRequest *aRequest,
                                    nsISupports *aContext,
                                    nsresult aStatusCode);
 };
