@@ -29,6 +29,7 @@
 #endif
 
 #include "ntypes.h"
+#include "structs.h"
 
 /*
  * Hyper Tree Api
