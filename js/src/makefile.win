@@ -39,7 +39,9 @@ DEPTH=..\..
 include <$(DEPTH)\config\config.mak>
 
 !ifdef MOZ_OJI
+!if !defined(XPCONNECT_STANDALONE)
 DIRS = liveconnect
+!endif
 !endif
 
 DIRS = $(DIRS) fdlibm xpconnect

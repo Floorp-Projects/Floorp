@@ -200,6 +200,15 @@ CFLAGS=$(CFLAGS) -DSTAND_ALONE_JAVA
 NECKO=1
 CFLAGS=$(CFLAGS) -DNECKO
 
+
+!if defined(XPCOM_STANDALONE)
+CFLAGS=$(CFLAGS) -DXPCOM_STANDALONE
+!endif
+
+!if defined(XPCONNECT_STANDALONE)
+CFLAGS=$(CFLAGS) -DXPCONNECT_STANDALONE
+!endif
+
 # XXX We need to remove this before we ship.
 # This causes a static linkage between the webshell
 # and xpfe.f
