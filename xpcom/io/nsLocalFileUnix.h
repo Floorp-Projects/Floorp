@@ -38,7 +38,7 @@
 #include "nsLocalFile.h"
 #include "nsXPIDLString.h"
 
-#define NSRESULT_FOR_RETURN(ret) (!(ret) ? NS_OK : NSRESULT_FOR_ERRNO())
+#define NSRESULT_FOR_RETURN(ret) (((ret) < 0) ? NSRESULT_FOR_ERRNO() : NS_OK)
 
 inline nsresult
 nsresultForErrno(int err)
@@ -94,6 +94,8 @@ protected:
     
     nsresult CreateAllAncestors(PRUint32 permissions);
     nsresult GetLeafNameRaw(const char **_retval);
+    nsresult GetTargetPathName(nsIFile *newParent, const char *newName,
+                               char **_retval);
 
     void InvalidateCache() { mHaveCachedStat = PR_FALSE; }
 
@@ -109,4 +111,5 @@ protected:
     }
 
 };
+
 #endif /* _nsLocalFileUNIX_H_ */
