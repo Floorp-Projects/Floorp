@@ -152,7 +152,13 @@ kill_selfserv()
   if [ ${fileout} -eq 1 ]; then
       cat ${SERVEROUTFILE}
   fi
-  ${SLEEP}  #FIXME linux waits 30 seconds - find a shorter way (sockets free)
+  # On Linux selfserv needs up to 30 seconds to fully die and free
+  # the port.  Wait until the port is free. (Bug 129701)
+  if [ "${OS_ARCH}" = "Linux" ]; then
+      until selfserv -b -p ${PORT} 2>/dev/null; do
+          sleep 1
+      done
+  fi
   rm ${SERVERPID}
 }
 
