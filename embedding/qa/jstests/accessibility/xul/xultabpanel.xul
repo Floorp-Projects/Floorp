@@ -1,0 +1,107 @@
+<?xml version="1.0"?>
+<!-- Descrpt: Test nsIAccessible Interface attributes and methods
+     for XUL TABBOX Tabpanel Node
+     Author: dsirnapalli@netscape.com
+     Created:06.17.02
+     Last Updated:06.17.02.
+
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   - The Original Code is Mozilla Communicator Test Cases.
+   -
+   - The Initial Developer of the Original Code is Netscape Communications
+   - Corp.  Portions created by Netscape Communications Corp. are
+   - Copyright (C) 1999 Netscape Communications Corp.  All
+   - Rights Reserved.
+   -
+   - Contributor(s):
+  -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window
+  id="tabpanel-window"
+  title="XUL Tabbox Tabpanel"
+  orient="vertical"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <html:script src="http://www.mozilla.org/quality/embed/jstests/accessibility/jslib/accesslib.js"> </html:script>
+  <html:script src="http://www.mozilla.org/quality/embed/jstests/accessibility/jslib/bridge.js"> </html:script>
+
+  <html:script>
+  <![CDATA[
+
+  function getDomNodeTabboxTabpanel()
+  {
+    try{
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  
+      var node = document.getElementsByTagName("tabpanel").item(0);
+      return node;
+    }
+    catch(e){
+      alert("Exception: " + e);
+    }
+  }  
+  
+  function executeTestCase()
+  {
+    var domNode = getDomNodeTabboxTabpanel();
+    accNode = getAccessibleNode(domNode);
+    setTimeout("constructResults();", 2000);
+    if(accNode == "Exception")
+    {            
+      temp = "<table border cols=2 width='70%'>";
+      temp += "<tr>";
+      temp += "<td> The Node you selected is not an Accessible Node </td>";
+      temp += "<td> PASS </td>";
+      temp += "</tr>";
+      temp += "</table>";
+      res = res + temp;
+    }    
+    WriteResults(res);    
+  }
+  
+  ]]>
+  </html:script>
+  
+  <box orient="vertical" flex="1">  
+    <description>
+      <html:b> Testing XUL Tabbox's Tabpanel for Accessibility.. </html:b>
+    </description>
+    <box oreint="horizontal">
+      <tabbox>
+        <tabs>
+          <tab label="Mail"/>
+          <tab label="News"/>    
+        </tabs>
+        <tabpanels>
+          <tabpanel id="mailtab">
+            <checkbox label="Automatically check for mail"/>
+          </tabpanel>
+          <tabpanel id="newstab">
+            <button label="Clear News Buffer"/>
+          </tabpanel>  
+        </tabpanels>
+      </tabbox>  
+      <spacer flex="1"/>
+    </box>
+  </box>
+
+  <html:script>
+  <![CDATA[
+    res = "<b><u> Results for XUL Tabbox's Tabpanel Node:</u></b><br><br>";
+
+    setTimeout("executeTestCase();", 2000);
+  ]]>
+  </html:script>  
+</window>

@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<!-- Descrpt: Test nsIAccessible Interface attributes and methods
+     for XUL DECK Node
+     Author: dsirnapalli@netscape.com
+     Created:05.28.02
+     Last Updated:06.12.02.
+
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   - The Original Code is Mozilla Communicator Test Cases.
+   -
+   - The Initial Developer of the Original Code is Netscape Communications
+   - Corp.  Portions created by Netscape Communications Corp. are
+   - Copyright (C) 1999 Netscape Communications Corp.  All
+   - Rights Reserved.
+   -
+   - Contributor(s):
+  -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window
+  id="deck-window"
+  title="XUL Deck"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <html:script src="http://www.mozilla.org/quality/embed/jstests/accessibility/jslib/accesslib.js"> </html:script>
+  <html:script src="http://www.mozilla.org/quality/embed/jstests/accessibility/jslib/bridge.js"> </html:script>
+
+  <html:script>
+  <![CDATA[
+
+  function getDomNodeDeck()
+  {
+    try{
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  
+      var node = document.getElementsByTagName("deck").item(0);
+      return node;
+    }
+    catch(e){
+      alert("Exception: " + e);
+    }
+  }  
+
+  function executeTestCase()
+  {
+    var domNode = getDomNodeDeck();
+    accNode = getAccessibleNode(domNode);
+    if(accNode == "Exception")
+    {            
+      temp = "<table border cols=2 width='70%'>";
+      temp += "<tr>";
+      temp += "<td> The Node you selected is not an Accessible Node </td>";
+      temp += "<td> PASS </td>";
+      temp += "</tr>";
+      temp += "</table>";
+      res = res + temp;
+    }    
+    WriteResults(res);    
+  }
+
+  ]]>
+  </html:script>
+  
+  <description>
+    <html:b> Testing XUL Deck for Accessibility.. </html:b>
+  </description>
+  <!-- A deck element also lays out its children on top of each other much like
+  the stack element, however decks only display one of thier children at a time.
+  Like stacks, the direct children of the deck element form the pages of the deck.
+  If there are three children of the deck element, the deck will have three children.
+  The displayed page of the deck can be changed by setting an index attribute on
+  the deck element. The index is a number that identifies which page to display.
+  Pages are numbered starting from zero. So the first clild of the deck is page 0,
+  the second is page 1 and so on.   -->
+  <deck selectedIndex ="2">
+    <description value="This is the first page"/>
+    <button label="This is the second page"/>
+    <box>
+      <description value="This is the third page"/>
+      <button label="This is also the third page"/>
+    </box>
+  </deck>  
+  
+  <html:script>
+  <![CDATA[
+    res = "<b><u> Results for XUL Deck Node:</u></b><br><br>";
+ 
+    setTimeout("executeTestCase();", 2000);
+  ]]>
+  </html:script>  
+</window>  
