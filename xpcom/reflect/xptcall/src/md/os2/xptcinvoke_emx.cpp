@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -18,80 +18,64 @@
  * Rights Reserved.
  *
  * Contributor(s): John Fairhurst <john_fairhurst@iname.com>
+ *                 Henry Sobotka <sobotka@axess.com> - simplified invoke_count_words (12/99)
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/22/2000  IBM Corp.       Fixed multiple inheritance bug in XPTC_InvokeByIndex to adjust the
+ *                                     "that" (this) pointer appropriately.
  */
 
 /* Platform specific code to invoke XPCOM methods on native objects */
 
 // This is 80% copied directly from other platforms; the assembler
-// stuff is all my fault, though.
-//
-// In fact it looks pretty much like we could do away with this os2
-// directory & use the "unixish-x86" files; it's all gcc after all.
-//
-// On the other hand, if we ever do decide to support VAC++ then that'll
-// require special treatment but should share some code with this easy stuff.
-// 
-// So let's keep it.
-//
-// XXX docs to come on how VAC++ _Optlink callers/interpreters could work
-//
-
-#include "xptcprivate.h"
-
-// Remember that these 'words' are 32bit DWORDS
+// stuff is all my fault, though. (jmf)
 
 #if !defined(__EMX__)
 #error "This code is for OS/2 EMX only"
 #endif
 
-static uint32
+#include "xptcprivate.h"
+
+// Remember that these 'words' are 32-bit DWORDs
+static PRUint32
 invoke_count_words( PRUint32 paramCount, nsXPTCVariant* s)
 {
     PRUint32 result = 0;
+
     for(PRUint32 i = 0; i < paramCount; i++, s++)
     {
         if(s->IsPtrData())
-        {
             result++;
-            continue;
-        }
-        switch(s->type)
-        {
-        case nsXPTType::T_I8     :
-        case nsXPTType::T_I16    :
-        case nsXPTType::T_I32    :
-            result++;
-            break;
-        case nsXPTType::T_I64    :
-            result+=2;
-            break;
-        case nsXPTType::T_U8     :
-        case nsXPTType::T_U16    :
-        case nsXPTType::T_U32    :
-            result++;
-            break;
-        case nsXPTType::T_U64    :
-            result+=2;
-            break;
-        case nsXPTType::T_FLOAT  :
-            result++;
-            break;
-        case nsXPTType::T_DOUBLE :
-            result+=2;
-            break;
-        case nsXPTType::T_BOOL   :
-        case nsXPTType::T_CHAR   :
-        case nsXPTType::T_WCHAR  :
-            result++;
-            break;
-        default:
-            // all the others are plain pointer types
-            result++;
-            break;
+
+        else {
+
+            switch(s->type)
+            { 
+             // 64-bit types
+             case nsXPTType::T_I64    :
+             case nsXPTType::T_U64    :
+             case nsXPTType::T_DOUBLE :
+                 result+=2;
+                 break;
+
+             // all others are dwords
+             default:
+                 result++;
+                 break;
+            }
         }
     }
     return result;
 }
+
 
 static void
 invoke_copy_to_stack( PRUint32* d, uint32 paramCount, nsXPTCVariant* s)
@@ -99,32 +83,34 @@ invoke_copy_to_stack( PRUint32* d, uint32 paramCount, nsXPTCVariant* s)
     for( PRUint32 i = 0; i < paramCount; i++, d++, s++)
     {
         if(s->IsPtrData())
-        {
             *((void**)d) = s->ptr;
-            continue;
-        }
-        switch(s->type)
-        {
-        case nsXPTType::T_I8     : *((int8*)   d) = s->val.i8;          break;
-        case nsXPTType::T_I16    : *((int16*)  d) = s->val.i16;         break;
-        case nsXPTType::T_I32    : *((int32*)  d) = s->val.i32;         break;
-        case nsXPTType::T_I64    : *((int64*)  d) = s->val.i64; d++;    break;
-        case nsXPTType::T_U8     : *((uint8*)  d) = s->val.u8;          break;
-        case nsXPTType::T_U16    : *((uint16*) d) = s->val.u16;         break;
-        case nsXPTType::T_U32    : *((uint32*) d) = s->val.u32;         break;
-        case nsXPTType::T_U64    : *((uint64*) d) = s->val.u64; d++;    break;
-        case nsXPTType::T_FLOAT  : *((float*)  d) = s->val.f;           break;
-        case nsXPTType::T_DOUBLE : *((double*) d) = s->val.d;   d++;    break;
-        case nsXPTType::T_BOOL   : *((PRBool*) d) = s->val.b;           break;
-        case nsXPTType::T_CHAR   : *((char*)   d) = s->val.c;           break;
-        case nsXPTType::T_WCHAR  : *((wchar_t*)d) = s->val.wc;          break;
-        default:
-            // all the others are plain pointer types
-            *((void**)d) = s->val.p;
-            break;
+
+        else {
+
+            switch(s->type)
+            {
+             case nsXPTType::T_I8     : *((int8*)   d) = s->val.i8;          break;
+             case nsXPTType::T_I16    : *((int16*)  d) = s->val.i16;         break;
+             case nsXPTType::T_I32    : *((int32*)  d) = s->val.i32;         break;
+             case nsXPTType::T_I64    : *((int64*)  d) = s->val.i64; d++;    break;
+             case nsXPTType::T_U8     : *((uint8*)  d) = s->val.u8;          break;
+             case nsXPTType::T_U16    : *((uint16*) d) = s->val.u16;         break;
+             case nsXPTType::T_U32    : *((uint32*) d) = s->val.u32;         break;
+             case nsXPTType::T_U64    : *((uint64*) d) = s->val.u64; d++;    break;
+             case nsXPTType::T_FLOAT  : *((float*)  d) = s->val.f;           break;
+             case nsXPTType::T_DOUBLE : *((double*) d) = s->val.d;   d++;    break;
+             case nsXPTType::T_BOOL   : *((PRBool*) d) = s->val.b;           break;
+             case nsXPTType::T_CHAR   : *((char*)   d) = s->val.c;           break;
+             case nsXPTType::T_WCHAR  : *((wchar_t*)d) = s->val.wc;          break;
+             default:
+                // all the others are plain pointer types
+                *((void**)d) = s->val.p;
+                break;
+            }
         }
     }
 }
+
 
 XPTC_PUBLIC_API(nsresult)
 XPTC_InvokeByIndex( nsISupports *that, PRUint32 index,
@@ -137,7 +123,7 @@ XPTC_InvokeByIndex( nsISupports *that, PRUint32 index,
    // Find size in bytes necessary for call
    ibytes = 4 * invoke_count_words( paramcount, params);
 
-   __asm__ __volatile__ (
+   __asm__ __volatile__(
    "movl %1,    %%eax\n"                  /* load |ibytes| into eax */
    "subl %%eax, %%esp\n"                      /* make room on stack */
    "movl %%esp, %0"                       /* store base in |pStack| */
@@ -152,14 +138,20 @@ XPTC_InvokeByIndex( nsISupports *that, PRUint32 index,
    // push the hidden 'this' parameter, traverse the vtable,
    // and then call the method.
 
-   __asm__ __volatile__ (
+   __asm__ __volatile__(
    "movl  %2, %%eax\n"                         /* |that| ptr -> eax */
-   "pushl %%eax\n"                                /* enstack |that| */
    "movl  (%%eax), %%edx\n"                          /* vptr -> edx */
-   "movl  %3, %%eax\n"
-   "shl   $3, %%eax\n"                      /* 8 bytes per method.. */
-   "addl  $12, %%eax\n"              /* ..plus 12 more at the start */
-   "addl  %%eax, %%edx\n"                   /* find pointer to code */
+   "movl  %3, %%ebx\n"
+   "shl   $3, %%ebx\n"                      /* 8 bytes per method.. */
+   "addl  $8, %%ebx\n"              /* ..plus 8 to skip over 1st 8 bytes of vtbl */
+
+   "addl  %%ebx, %%edx\n"                 /* find appropriate vtbl entry */
+   "movswl (%%edx),%%ecx\n"           /* get possible |that| ptr adjustment value */
+   "addl  %%ecx, %%eax\n"                 /* adjust the |that| ptr (needed for multiple inheritance) */
+   "pushl %%eax\n"                            /* enstack the possibly-adjusted |that| */
+
+   "addl  $4, %%edx\n"              /* ..add 4 more to get to the method's entry point */
+
    "call  (%%edx)\n"                                 /* call method */
    "movl  %%eax, %0\n"                       /* save rc in |result| */
    "movl  %1, %%ebx\n"                            /* clear up stack */
