@@ -507,33 +507,36 @@ public class Node implements Cloneable {
         return null;
     }
 
-    public String toStringTree() {
-        return toStringTreeHelper(0);
+    public String toStringTree(ScriptOrFnNode treeTop) {
+        if (Context.printTrees) {
+            StringBuffer sb = new StringBuffer();
+            toStringTreeHelper(treeTop, this, 0, sb);
+            return sb.toString();
+        }
+        return null;
     }
 
-
-    private String toStringTreeHelper(int level) {
+    private static void toStringTreeHelper(ScriptOrFnNode treeTop, Node n,
+                                           int level, StringBuffer sb)
+    {
         if (Context.printTrees) {
-            StringBuffer s = new StringBuffer();
-            for (int i=0; i < level; i++) {
-                s.append("    ");
+            for (int i = 0; i != level; ++i) {
+                sb.append("    ");
             }
-            s.append(toString());
-            s.append('\n');
-            for (Node cursor = getFirstChild(); cursor != null;
+            sb.append(n.toString());
+            sb.append('\n');
+            for (Node cursor = n.getFirstChild(); cursor != null;
                  cursor = cursor.getNext())
             {
-                Node n = cursor;
                 if (cursor.getType() == TokenStream.FUNCTION) {
-                    Node p = (Node) cursor.getProp(Node.FUNCTION_PROP);
-                    if (p != null)
-                        n = p;
+                    int fnIndex = cursor.getExistingIntProp(Node.FUNCTION_PROP);
+                    FunctionNode fn = treeTop.getFunctionNode(fnIndex);
+                    toStringTreeHelper(fn, fn, level + 1, sb);
+                } else {
+                    toStringTreeHelper(treeTop, cursor, level + 1, sb);
                 }
-                s.append(n.toStringTreeHelper(level+1));
             }
-            return s.toString();
         }
-        return "";
     }
 
     int type;              // type of the node; TokenStream.NAME for example

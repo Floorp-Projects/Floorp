@@ -1899,7 +1899,7 @@ public class Context {
 
         tree = compiler.transform(this, irf, tree);
 
-        if (printTrees) { System.out.println(tree.toStringTree()); }
+        if (printTrees) { System.out.println(tree.toStringTree(tree)); }
 
         if (returnFunction) {
             int functionCount = tree.getFunctionCount();
