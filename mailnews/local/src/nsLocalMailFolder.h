@@ -41,20 +41,21 @@ struct nsLocalMailCopyState
   nsLocalMailCopyState();
   virtual ~nsLocalMailCopyState();
   
-  nsOutputFileStream* fileStream;
-  nsCOMPtr<nsISupports> srcSupport;
-  nsCOMPtr<nsISupportsArray> messages;
-  nsCOMPtr<nsMsgTxn> undoMsgTxn;
-  nsCOMPtr<nsIMessage> message; // current copy message
-  nsCOMPtr<nsIMsgParseMailMsgState> parseMsgState;
-  nsCOMPtr<nsIMsgCopyServiceListener> listener;
+  nsOutputFileStream* m_fileStream;
+  nsCOMPtr<nsISupports> m_srcSupport;
+  nsCOMPtr<nsISupportsArray> m_messages;
+  nsCOMPtr<nsMsgTxn> m_undoMsgTxn;
+  nsCOMPtr<nsIMessage> m_message; // current copy message
+  nsCOMPtr<nsIMsgParseMailMsgState> m_parseMsgState;
+  nsCOMPtr<nsIMsgCopyServiceListener> m_listener;
   
-  nsIMsgMessageService* messageService;
-  PRBool isMove;
-  PRUint32 curCopyIndex;
-  nsMsgKey curDstKey;
-  PRUint32 totalMsgCount;
-  char dataBuffer[FOUR_K];
+  nsIMsgMessageService* m_messageService;
+  PRBool m_isMove;
+  PRBool m_dummyEnvelopeNeeded;
+  nsMsgKey m_curDstKey;
+  PRUint32 m_curCopyIndex;
+  PRUint32 m_totalMsgCount;
+  char m_dataBuffer[FOUR_K];
 };
 
 class nsMsgLocalMailFolder : public nsMsgDBFolder,

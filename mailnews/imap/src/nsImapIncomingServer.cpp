@@ -248,7 +248,7 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue*
     if (aURL)
     {
         *aURL = mailnewsurl;
-        NS_IF_RELEASE(*aURL);
+        NS_IF_ADDREF(*aURL);
     }
 
     return rv;

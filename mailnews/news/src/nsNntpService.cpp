@@ -267,8 +267,13 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
 nsresult nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopyHandler, PRBool moveMessage,
 						   nsIUrlListener * aUrlListener, nsIURI **aURL)
 {
-	NS_ASSERTION(0, "unimplemented feature");
-	return NS_OK;
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    nsCOMPtr<nsISupports> streamSupport;
+    if (!aSrcMailboxURI || !aMailboxCopyHandler) return rv;
+    streamSupport = do_QueryInterface(aMailboxCopyHandler, &rv);
+    if (NS_SUCCEEDED(rv))
+        rv = DisplayMessage(aSrcMailboxURI, streamSupport, aUrlListener, aURL);
+	return rv;
 }
 
 nsresult nsNntpService::FindHostFromGroup(nsString &host, nsString &groupName)

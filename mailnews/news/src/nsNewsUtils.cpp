@@ -254,8 +254,14 @@ nsresult nsBuildNewsMessageURI(const char *baseURI, PRUint32 key, char** uri)
   nsAutoString tailURI(baseURI, eOneByte);
 
   // chop off news:/
+#if 0
   if (tailURI.Find(kNewsRootURI) == 0)
     tailURI.Cut(0, kNewsRootURILen);
+#else
+  PRInt32 strOffset = tailURI.Find(":/");
+  if (strOffset != -1)
+    tailURI.Cut(0, strOffset+2);
+#endif
   
 	*uri = PR_smprintf("%s%s#%d", kNewsMessageRootURI, tailURI.GetBuffer(), key);
   

@@ -136,7 +136,7 @@ public:
                                  PRBool isMove,
                                  nsIUrlListener* aUrlListener,
                                  nsIURI** aURL,
-                                 void* copyState);
+                                 nsISupports* copyState);
     NS_IMETHOD AppendMessageFromFile(nsIEventQueue* aClientEventQ,
                                      nsIFileSpec* aFileSpec,
                                      nsIMsgFolder* aDstFolder,
@@ -145,7 +145,7 @@ public:
                                      PRBool inSelectedState, // needs to be in
                                      nsIUrlListener* aUrlListener,
                                      nsIURI** aURL,
-                                     void* copyState);
+                                     nsISupports* copyState);
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End support of nsIImapService interface 
 	////////////////////////////////////////////////////////////////////////////////////////

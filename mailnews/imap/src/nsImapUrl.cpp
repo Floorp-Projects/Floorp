@@ -40,6 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsIImapIncomingServer.h"
 #include "nsMsgBaseCID.h"
+#include "nsImapUtils.h"
 
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kCImapHostSessionListCID, NS_IIMAPHOSTSESSIONLIST_CID);
@@ -80,7 +81,27 @@ nsImapUrl::~nsImapUrl()
 	PR_FREEIF(m_userName);
 }
   
-NS_IMPL_ISUPPORTS_INHERITED(nsImapUrl, nsMsgMailNewsUrl, nsIImapUrl) 
+NS_IMPL_ADDREF_INHERITED(nsImapUrl, nsMsgMailNewsUrl)
+NS_IMPL_RELEASE_INHERITED(nsImapUrl, nsMsgMailNewsUrl)
+
+NS_IMETHODIMP
+nsImapUrl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+    if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
+    *aInstancePtr = nsnull;
+    if (aIID.Equals(nsIImapUrl::GetIID()))
+        *aInstancePtr = NS_STATIC_CAST(nsIImapUrl*, this);
+    else if (aIID.Equals(nsIMsgUriUrl::GetIID()))
+        *aInstancePtr = NS_STATIC_CAST(nsIMsgUriUrl*, this);
+
+    if(*aInstancePtr)
+    {
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    return nsMsgMailNewsUrl::QueryInterface(aIID, aInstancePtr);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Begin nsIImapUrl specific support
@@ -1006,20 +1027,22 @@ NS_IMETHODIMP nsImapUrl::SetAllowContentChange(PRBool allowContentChange)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::SetCopyState(void* copyState)
+NS_IMETHODIMP nsImapUrl::SetCopyState(nsISupports* copyState)
 {
     if (!copyState) return NS_ERROR_NULL_POINTER;
     NS_LOCK_INSTANCE();
-    m_copyState = copyState;
+    m_copyState = null_nsCOMPtr();
+    m_copyState = do_QueryInterface(copyState);
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::GetCopyState(void** copyState)
+NS_IMETHODIMP nsImapUrl::GetCopyState(nsISupports** copyState)
 {
     if (!copyState) return NS_ERROR_NULL_POINTER;
     NS_LOCK_INSTANCE();
     *copyState = m_copyState;
+    NS_IF_ADDREF(*copyState);
     NS_UNLOCK_INSTANCE();
     if (*copyState) return NS_OK;
     return NS_ERROR_NULL_POINTER;
@@ -1059,6 +1082,18 @@ NS_IMETHODIMP nsImapUrl::GetAllowContentChange(PRBool *result)
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+nsImapUrl::GetURI(char** aURI)
+{
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    if (aURI)
+    {
+        *aURI = nsnull;
+        PRUint32 key = m_listOfMessageIds ? atoi(m_listOfMessageIds) : 0;
+        return nsBuildImapMessageURI(m_file, key, aURI);
+    }
+    return rv;
+}
 
 char *nsImapUrl::ReplaceCharsInCopiedString(const char *stringToCopy, char oldChar, char newChar)
 {	

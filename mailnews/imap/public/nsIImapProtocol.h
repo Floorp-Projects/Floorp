@@ -88,7 +88,9 @@ public:
 	NS_IMETHOD GetSupportedUserFlags(PRUint16 *flags) = 0;
 
 	// this is for the temp message display hack
-	NS_IMETHOD GetDisplayStream (nsIWebShell **webShell) = 0;
+    // ** jt - let's try it a litter more generic way
+	NS_IMETHOD GetStreamConsumer (nsISupports **aSupport) = 0;
+    NS_IMETHOD GetRunningUrl(nsIURI **aUrl) = 0;
 
     // Tell thread to die
     NS_IMETHOD TellThreadToDie(PRBool isSafeToDie) = 0;

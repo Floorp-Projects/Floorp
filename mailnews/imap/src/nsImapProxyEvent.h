@@ -182,13 +182,13 @@ public:
     NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                   nsMsgKeyArray* aKeyArray,
                                   const char* msgIdString,
-                                  void* copyState);
+                                  nsISupports* copyState);
     NS_IMETHOD SetAppendMsgUid(nsIImapProtocol* aProtocol,
                                nsMsgKey aKey,
-                               void* copyState);
+                               nsISupports* copyState);
     NS_IMETHOD GetMessageId(nsIImapProtocol* aProtocol,
                             nsString2* messageId,
-                            void* copyState);
+                            nsISupports* copyState);
     
     nsIImapExtensionSink* m_realImapExtensionSink;
 };
@@ -248,7 +248,7 @@ public:
     NS_IMETHOD LoadNextQueuedUrl(nsIImapProtocol* aProtocol,
                              nsIImapIncomingServer *aInfo);
     NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocl,
-                                     void* copyState);
+                                     nsISupports* copyState);
 
     nsIImapMiscellaneousSink* m_realImapMiscellaneousSink;
 };
@@ -591,32 +591,32 @@ struct SetCopyResponseUidProxyEvent : nsImapExtensionSinkProxyEvent
     SetCopyResponseUidProxyEvent(nsImapExtensionSinkProxy* aProxy,
                                  nsMsgKeyArray* aKeyArray, 
                                  const char* msgIdString,
-                                 void* copyState);
+                                 nsISupports* copyState);
     virtual ~SetCopyResponseUidProxyEvent();
     NS_IMETHOD HandleEvent();
     nsMsgKeyArray m_copyKeyArray;
     nsString2 m_msgIdString;
-    void* m_copyState;
+    nsCOMPtr<nsISupports> m_copyState;
 };
 
 struct SetAppendMsgUidProxyEvent : nsImapExtensionSinkProxyEvent
 {
     SetAppendMsgUidProxyEvent(nsImapExtensionSinkProxy* aProxy,
-                              nsMsgKey aKey, void* copyState);
+                              nsMsgKey aKey, nsISupports* copyState);
     virtual ~SetAppendMsgUidProxyEvent();
     NS_IMETHOD HandleEvent();
     nsMsgKey m_key;
-    void* m_copyState;
+    nsCOMPtr<nsISupports> m_copyState;
 };
 
 struct GetMessageIdProxyEvent : nsImapExtensionSinkProxyEvent
 {
     GetMessageIdProxyEvent(nsImapExtensionSinkProxy* aProxy,
-                           nsString2* messageId, void* copyState);
+                           nsString2* messageId, nsISupports* copyState);
     virtual ~GetMessageIdProxyEvent();
     NS_IMETHOD HandleEvent();
     nsString2* m_messageId;
-    void* m_copyState;
+    nsCOMPtr<nsISupports> m_copyState;
 };
 
 struct nsImapMiscellaneousSinkProxyEvent : public nsImapEvent
@@ -821,10 +821,10 @@ struct LoadNextQueuedUrlProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 struct CopyNextStreamMessageProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
     CopyNextStreamMessageProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                                    void* copyState);
+                                    nsISupports* copyState);
     virtual ~CopyNextStreamMessageProxyEvent();
     NS_IMETHOD HandleEvent();
-    void* m_copyState;
+    nsCOMPtr<nsISupports> m_copyState;
 };
 
 #endif

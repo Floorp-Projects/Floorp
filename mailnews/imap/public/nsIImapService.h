@@ -141,7 +141,7 @@ public:
                                  PRBool isMove,
                                  nsIUrlListener* aUrlListener,
                                  nsIURI** aURL,
-                                 void* copyState) = 0;
+                                 nsISupports* copyState) = 0;
     NS_IMETHOD AppendMessageFromFile(nsIEventQueue* aClientEventQ,
                                      nsIFileSpec* aFileSpec,
                                      nsIMsgFolder* aDstFolder,
@@ -150,7 +150,7 @@ public:
                                      PRBool inSelectedState, // needs to be in
                                      nsIUrlListener* aUrlListener,
                                      nsIURI** aURL,
-                                     void* copyState) = 0;
+                                     nsISupports* copyState) = 0;
                                      
 };
 

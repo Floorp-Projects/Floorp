@@ -291,6 +291,4 @@ nsresult nsBuildImapMessageURI(const char *baseURI, PRUint32 key, char** uri)
 	delete[] tail;
 
 	return NS_OK;
-
-
 }

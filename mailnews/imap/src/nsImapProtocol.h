@@ -107,7 +107,8 @@ public:
 	NS_IMETHOD GetFlagsForUID(PRUint32 uid, PRBool *foundIt, imapMessageFlagsType *flags);
 	NS_IMETHOD GetSupportedUserFlags(PRUint16 *flags);
 
-	NS_IMETHOD GetDisplayStream (nsIWebShell **webShell);
+	NS_IMETHOD GetStreamConsumer (nsISupports **aSupport);
+    NS_IMETHOD GetRunningUrl(nsIURI **aUrl);
     // Tell thread to die. This can only be called by imap service
     NS_IMETHOD TellThreadToDie(PRBool isSafeToClose);
     // Get last active time stamp
@@ -290,7 +291,9 @@ private:
 	nsCOMPtr<nsIOutputStream> m_outputStream;   // this will be obtained from the transport interface
 	nsCOMPtr<nsIStreamListener> m_outputConsumer; // this will be obtained from the transport interface
 
-	nsCOMPtr<nsIWebShell>	  m_displayConsumer; // if we are displaying an article this is the rfc-822 display sink...
+	nsCOMPtr<nsISupports>	  m_streamConsumer; // if we are displaying an
+                                                 // article this is the
+                                                 // rfc-822 display sink...
 
 	// this is a method designed to buffer data coming from the input stream and efficiently extract out 
 	// a line on each call. We read out as much of the stream as we can and store the extra that doesn't

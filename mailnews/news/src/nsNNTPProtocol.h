@@ -190,6 +190,9 @@ private:
 	nsCOMPtr<nsIOutputStream> m_tempErrorStream;
 	nsFileSpec m_tempErrorFile;
 
+    // uber copy service support
+    nsCOMPtr<nsIStreamListener> m_copyStreamListener; // per message
+
 	// News Event Sinks
     nsCOMPtr <nsINNTPNewsgroupList> m_newsgroupList;
     nsCOMPtr <nsINNTPArticleList> m_articleList;

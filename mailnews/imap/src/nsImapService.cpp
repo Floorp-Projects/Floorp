@@ -259,7 +259,14 @@ NS_IMETHODIMP
 nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopy, PRBool moveMessage,
 						   nsIUrlListener * aUrlListener, nsIURI **aURL)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    nsCOMPtr<nsISupports> streamSupport;
+    if (!aSrcMailboxURI || !aMailboxCopy) return rv;
+    streamSupport = do_QueryInterface(aMailboxCopy, &rv);
+    if (NS_SUCCEEDED(rv))
+        rv = DisplayMessage(aSrcMailboxURI, streamSupport, aUrlListener,
+                            aURL);
+    return rv;
 }
 
 NS_IMETHODIMP nsImapService::SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, 
@@ -1015,7 +1022,7 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
                                  PRBool isMove,
                                  nsIUrlListener* aUrlListener,
                                  nsIURI** aURL,
-                                 void* copyState)
+                                 nsISupports* copyState)
 {
     NS_ASSERTION(aSrcFolder && aDstFolder && messageIds && aClientEventQueue,
                  "Fatal ... missing key parameters");
@@ -1121,7 +1128,7 @@ nsImapService::AppendMessageFromFile(nsIEventQueue* aClientEventQueue,
                                      PRBool inSelectedState, // needs to be in
                                      nsIUrlListener* aListener,
                                      nsIURI** aURL,
-                                     void* aCopyState)
+                                     nsISupports* aCopyState)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
     if (!aClientEventQueue || !aFileSpec || !aDstFolder)

@@ -74,6 +74,45 @@
 
 #define DEFAULT_NEWS_CHUNK_SIZE -1
 
+// ***jt -- the following were pirated from xpcom/io/nsByteBufferInputStream
+// which is not currently in the build system
+class nsDummyBufferStream : public nsIInputStream
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    // nsIBaseStream methods:
+    NS_IMETHOD Close(void) {
+        NS_NOTREACHED("nsDummyBufferStream::Close");
+        return NS_ERROR_FAILURE;
+    }
+
+    // nsIInputStream methods:
+    NS_IMETHOD GetLength(PRUint32 *aLength) { 
+        *aLength = mLength;
+        return NS_OK;
+    }
+    NS_IMETHOD Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount) {
+        PRUint32 amt = PR_MIN(aCount, mLength);
+        if (amt > 0) {
+            nsCRT::memcpy(aBuf, mBuffer, amt);
+            mBuffer += amt;
+            mLength -= amt;
+        }
+        *aReadCount = amt;
+        return NS_OK;
+    } 
+
+    // nsDummyBufferStream methods:
+    nsDummyBufferStream(const char* buffer, PRUint32 length)
+        : mBuffer(buffer), mLength(length) {NS_INIT_REFCNT();}
+    virtual ~nsDummyBufferStream() {}
+
+protected:
+    const char* mBuffer;
+    PRUint32    mLength;
+};
+
 // move these to a string bundle
 #define UNTIL_STRING_BUNDLES_XP_HTML_NEWS_ERROR "<TITLE>Error!</TITLE>\n<H1>Error!</H1> newsgroup server responded: <b>%.256s</b><p>\n"
 #define UNTIL_STRING_BUNDLES_XP_HTML_ARTICLE_EXPIRED "<b><p>Perhaps the article has expired</b><p>\n"
@@ -377,6 +416,22 @@ char *MSG_UnEscapeSearchUrl (const char *commandSpecificData)
 // END OF TEMPORARY HARD CODED FUNCTIONS 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+NS_IMPL_ADDREF(nsDummyBufferStream)
+NS_IMPL_RELEASE(nsDummyBufferStream)
+NS_IMETHODIMP 
+nsDummyBufferStream::QueryInterface(REFNSIID aIID, void** result)
+{
+    if (!result) return NS_ERROR_NULL_POINTER;
+    *result = nsnull;
+    if (aIID.Equals(nsIInputStream::GetIID()))
+        *result = NS_STATIC_CAST(nsIInputStream*, this);
+    if (*result)
+    {
+        AddRef();
+        return NS_OK;
+    }
+    return NS_ERROR_NO_INTERFACE;
+}
 
 nsNNTPProtocol::nsNNTPProtocol() : m_tempArticleFile(ARTICLE_PATH), m_tempErrorFile(ERROR_PATH)
 {
@@ -497,7 +552,13 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   // Query the url for its nsINntpUrl interface...assert and fail to load if they passed us a non news url...
 
   if (aConsumer) // did the caller pass in a display stream?
-	  rv = aConsumer->QueryInterface(kIWebShell, getter_AddRefs(m_displayConsumer));
+  {
+	  rv = aConsumer->QueryInterface(kIWebShell,
+                                     getter_AddRefs(m_displayConsumer));
+      if (NS_FAILED(rv) && !m_displayConsumer) // is this a copy operation
+          m_copyStreamListener = do_QueryInterface(aConsumer, &rv);
+  }
+
 
   if (aURL)
   {
@@ -2061,11 +2122,23 @@ PRInt32 nsNNTPProtocol::BeginArticle()
   // the article to file. We'll then call a load file url on our "temp" file. Then mkfile does all the work
   // with talking to the RFC-822->HTML stream converter....clever huh =).....
 
-  // we are about to display an article so open up a temp file on the article...
-  m_tempArticleFile.Delete(PR_FALSE);
-  nsCOMPtr <nsISupports> supports;
-  NS_NewIOFileStream(getter_AddRefs(supports), m_tempArticleFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
-  m_tempArticleStream = do_QueryInterface(supports);
+  // we are about to display an article so open up a temp file on the
+  // article...
+  if (m_copyStreamListener)
+  {
+      m_tempArticleFile.Delete(PR_FALSE);
+      m_tempArticleStream = null_nsCOMPtr();
+      nsCOMPtr<nsIURI> aURL(do_QueryInterface(m_runningURL));
+      m_copyStreamListener->OnStartRequest(aURL, "");
+  }
+  else
+  {
+      m_tempArticleFile.Delete(PR_FALSE);
+      nsCOMPtr <nsISupports> supports;
+      NS_NewIOFileStream(getter_AddRefs(supports), m_tempArticleFile,
+                         PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
+      m_tempArticleStream = do_QueryInterface(supports);
+  }
   m_nextState = NNTP_READ_ARTICLE;
 
   return 0;
@@ -2100,6 +2173,8 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 	if(!line)
 	  return(status);  /* no line yet or error */
 	
+    nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
+
 	if (m_typeWanted == CANCEL_WANTED && m_responseCode != MK_NNTP_RESPONSE_ARTICLE_HEAD)
 	{
 		/* HEAD command failed. */
@@ -2117,6 +2192,8 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 		// and close the article file if it was open....
 		if (m_tempArticleStream)
 			m_tempArticleStream->Close();
+        else if (m_copyStreamListener)
+            m_copyStreamListener->OnStopRequest(url, 0, nsnull);
 
 		if (m_displayConsumer)
 		{
@@ -2181,6 +2258,17 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 				PRUint32 count = 0;
 				m_tempArticleStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
 			}
+            else if (m_copyStreamListener)
+            {
+                nsDummyBufferStream *dummyStream = 
+                    new nsDummyBufferStream (outputBuffer,
+                                             PL_strlen(outputBuffer));
+                nsCOMPtr<nsIInputStream> aInputStream =
+                    do_QueryInterface(dummyStream);
+                if (aInputStream)
+                    m_copyStreamListener->OnDataAvailable(url,
+                            aInputStream, PL_strlen(outputBuffer));
+            }
 		}
 	}
 

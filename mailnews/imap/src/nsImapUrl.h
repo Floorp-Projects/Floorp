@@ -24,7 +24,7 @@
 #include "nsMsgMailNewsUrl.h"
 #include "nsIMsgIncomingServer.h"
 
-class nsImapUrl : public nsIImapUrl, public nsMsgMailNewsUrl
+class nsImapUrl : public nsIImapUrl, public nsMsgMailNewsUrl, public nsIMsgUriUrl
 {
 public:
 
@@ -78,11 +78,14 @@ public:
 	NS_IMETHOD	SetAllowContentChange(PRBool allowContentChange);
 	NS_IMETHOD  GetAllowContentChange(PRBool *results);
 
-    NS_IMETHOD SetCopyState(void* copyState);
-    NS_IMETHOD GetCopyState(void** copyState);
+    NS_IMETHOD SetCopyState(nsISupports* copyState);
+    NS_IMETHOD GetCopyState(nsISupports** copyState);
     
     NS_IMETHOD SetMsgFileSpec(nsIFileSpec* fileSpec);
     NS_IMETHOD GetMsgFileSpec(nsIFileSpec** fileSpec);
+
+    // nsIMsgUriUrl
+    NS_IMETHOD GetURI(char **aURI);
 
 	// nsImapUrl
 	nsImapUrl();
@@ -133,7 +136,7 @@ protected:
 	nsCOMPtr<nsIMsgIncomingServer>  m_server;
   
     // online message copy support; i don't have a better solution yet
-    void* m_copyState;
+    nsCOMPtr<nsISupports> m_copyState;
     nsCOMPtr<nsIFileSpec> m_fileSpec;
 };
 

@@ -83,7 +83,7 @@ public:
 	NS_IMETHOD LoadNextQueuedUrl(nsIImapProtocol* aProtocol,
 													 nsIImapIncomingServer *incomingServer) = 0;
   NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocol,
-                                   void* copyState) = 0;
+                                   nsISupports* copyState) = 0;
 };
 
 

@@ -45,8 +45,23 @@ class nsImapMoveCoalescer;
 
 #define FOUR_K 4096
 
-struct nsImapMailCopyState
+/* b64534f0-3d53-11d3-ac2a-00805f8ac968 */
+
+#define NS_IMAPMAILCOPYSTATE_IID \
+{ 0xb64534f0, 0x3d53, 0x11d3, \
+    { 0xac, 0x2a, 0x00, 0x80, 0x5f, 0x8a, 0xc9, 0x68 } }
+
+class nsImapMailCopyState: public nsISupports
 {
+public:
+    static const nsIID& GetIID()
+    {
+        static nsIID iid = NS_IMAPMAILCOPYSTATE_IID;
+        return iid;
+    }
+    
+    NS_DECL_ISUPPORTS
+
     nsImapMailCopyState();
     virtual ~nsImapMailCopyState();
 
@@ -62,6 +77,7 @@ struct nsImapMailCopyState
                                         // be Nntp, Mailbox, or Imap
     PRBool m_isMove;             // is a move
     PRBool m_selectedState;      // needs to be in selected state; append msg
+    PRBool m_streamCopy;
     PRUint32 m_curIndex; // message index to the message array which we are
                          // copying 
     PRUint32 m_totalCount;// total count of messages we have to do
@@ -237,13 +253,13 @@ public:
     NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                   nsMsgKeyArray* keyArray,
                                   const char* msgIdString,
-                                  void* copyState);
+                                  nsISupports* copyState);
     NS_IMETHOD SetAppendMsgUid(nsIImapProtocol* aProtocol,
                                nsMsgKey aKey,
-                               void* copyState);
+                               nsISupports* copyState);
     NS_IMETHOD GetMessageId(nsIImapProtocol* aProtocol,
                             nsString2* messageId,
-                            void* copyState);
+                            nsISupports* copyState);
     
     // nsIImapMiscellaneousSink methods
 	NS_IMETHOD AddSearchResult(nsIImapProtocol* aProtocol, 
@@ -288,7 +304,7 @@ public:
 	NS_IMETHOD LoadNextQueuedUrl(nsIImapProtocol* aProtocol,
                                  nsIImapIncomingServer *aInfo);
     NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocol,
-                                     void* copyState);
+                                     nsISupports* copyState);
 
 #ifdef DOING_FILTERS
 	// nsIMsgFilterHitNotification method(s)
@@ -367,7 +383,7 @@ protected:
     // *** jt - undo move/copy trasaction support
     nsCOMPtr<nsITransactionManager> m_transactionManager;
     nsCOMPtr<nsMsgTxn> m_pendingUndoTxn;
-    nsImapMailCopyState* m_copyState;
+    nsCOMPtr<nsImapMailCopyState> m_copyState;
     PRMonitor *m_appendMsgMonitor;
 };
 

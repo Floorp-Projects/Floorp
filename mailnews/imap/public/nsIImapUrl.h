@@ -172,8 +172,8 @@ public:
 	NS_IMETHOD	SetAllowContentChange(PRBool allowContentChange) = 0;
 	NS_IMETHOD  GetAllowContentChange(PRBool *results) = 0;
 
-    NS_IMETHOD SetCopyState(void* copyState) = 0;
-    NS_IMETHOD GetCopyState(void** copyState) = 0;
+    NS_IMETHOD SetCopyState(nsISupports* copyState) = 0;
+    NS_IMETHOD GetCopyState(nsISupports** copyState) = 0;
 
     NS_IMETHOD SetMsgFileSpec(nsIFileSpec* aFileSpec) = 0;
     NS_IMETHOD GetMsgFileSpec(nsIFileSpec** aFileSpec) = 0;

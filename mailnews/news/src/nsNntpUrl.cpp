@@ -243,7 +243,7 @@ NS_IMETHODIMP nsNntpUrl::GetURI(char ** aURI)
 		{
 			char * uri = nsnull;
 			nsFileSpec folder = *filePath;
-			nsBuildNewsMessageURI(m_spec, 0 /* don't have keys yet */, &uri);
+			nsBuildNewsMessageURI(m_spec, m_messageKey, &uri);
 			*aURI = uri;
 		}
 		else
@@ -453,6 +453,10 @@ nsresult nsNntpUrl::ParseUrl(const nsString& aSpec)
     printf("protocol='%s' host='%s' file='%s'\n", m_protocol, m_host, m_file);
 #endif
     delete [] cSpec;
+
+    if (m_filePath)
+        delete m_filePath;
+	m_filePath = new nsFileSpec(nsFilePath(m_file));
 
     NS_UNLOCK_INSTANCE();
     return NS_OK;

@@ -451,7 +451,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 	if (aURL)
 	{
         rv = aURL->QueryInterface(nsIImapUrl::GetIID(), 
-                                           (void **)&m_runningUrl);
+                                           getter_AddRefs(m_runningUrl));
         if (NS_FAILED(rv)) return rv;
 
         if (!m_server)
@@ -552,7 +552,7 @@ void nsImapProtocol::ImapThreadMain(void *aParm)
     me->m_inputStream = null_nsCOMPtr();
     me->m_outputStream = null_nsCOMPtr();
     me->m_outputConsumer = null_nsCOMPtr();
-    me->m_displayConsumer = null_nsCOMPtr();
+    me->m_streamConsumer = null_nsCOMPtr();
     me->m_sinkEventQueue = null_nsCOMPtr();
     me->m_eventQueue = null_nsCOMPtr();
     me->m_server = null_nsCOMPtr();
@@ -858,7 +858,8 @@ void nsImapProtocol::ProcessCurrentURL()
     {
 		FindMailboxesIfNecessary();
 		nsIImapUrl::nsImapState imapState;
-		m_runningUrl->GetRequiredImapState(&imapState);
+		if (m_runningUrl)
+			m_runningUrl->GetRequiredImapState(&imapState);
 		if (imapState == nsIImapUrl::nsImapAuthenticatedState)
 			ProcessAuthenticatedStateURL();
 	    else    // must be a url that requires us to be in the selected stae 
@@ -883,15 +884,21 @@ void nsImapProtocol::ProcessCurrentURL()
         HandleCurrentUrlError(); 
 
 	nsresult rv = NS_OK;
+
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningUrl, &rv);
     if (NS_SUCCEEDED(rv) && mailnewsurl)
         mailnewsurl->SetUrlState(PR_FALSE, NS_OK);  // we are done with this url.
     m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
 	PseudoInterrupt(FALSE);	// clear this, because we must be done interrupting?
-    void *copyState = nsnull;
-    rv = m_runningUrl->GetCopyState(&copyState);
+    nsCOMPtr<nsISupports> copyState;
+
+	if (m_runningUrl)
+		rv = m_runningUrl->GetCopyState(getter_AddRefs(copyState));
     if (NS_SUCCEEDED(rv) && m_imapMiscellaneousSink && copyState)
+    {
         m_imapMiscellaneousSink->CopyNextStreamMessage(this, copyState);
+        WaitForFEEventCompletion();
+    }
 
 	// release this by hand so that we can load the next queued url without thinking
 	// this connection is busy running a url.
@@ -980,15 +987,25 @@ NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIURI* aURL, nsresult aStatus, cons
 // End of nsIStreamListenerSupport
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsImapProtocol::GetDisplayStream (nsIWebShell **webShell)
+NS_IMETHODIMP nsImapProtocol::GetStreamConsumer (nsISupports **result)
 {
-	if (webShell)
+	if (result)
 	{
-		*webShell = m_displayConsumer;
-		NS_IF_ADDREF(*webShell);
+		*result = m_streamConsumer;
+		NS_IF_ADDREF(*result);
 		return NS_OK;
 	}
 	return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP
+nsImapProtocol::GetRunningUrl(nsIURI **result)
+{
+    if (result && m_runningUrl)
+        return m_runningUrl->QueryInterface(nsIURI::GetIID(), (void**)
+                                            result);
+    else
+        return NS_ERROR_NULL_POINTER;
 }
 
 /*
@@ -1044,7 +1061,7 @@ nsresult nsImapProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 	if (aURL)
 	{
 		if (aConsumer)
-			m_displayConsumer = do_QueryInterface(aConsumer);
+			m_streamConsumer = do_QueryInterface(aConsumer, &rv);
 
 		rv = SetupWithUrl(aURL, aConsumer); 
         if (NS_FAILED(rv)) return rv;
@@ -2553,7 +2570,10 @@ void nsImapProtocol::NormalMessageEndDownload()
 			m_imapMailFolderSink->NormalEndHeaderParseStream(this);
 	}
 	else if (m_imapMessageSink)
+    {
         m_imapMessageSink->NormalEndMsgWriteStream(this);
+        WaitForFEEventCompletion();
+    }
 
 }
 
@@ -3276,9 +3296,9 @@ void nsImapProtocol::SetCopyResponseUid(nsMsgKeyArray* aKeyArray,
 {
     if (m_imapExtensionSink)
     {
-        void* copyState = nsnull;
+        nsCOMPtr<nsISupports> copyState;
         if (m_runningUrl)
-            m_runningUrl->GetCopyState(&copyState);
+            m_runningUrl->GetCopyState(getter_AddRefs(copyState));
         m_imapExtensionSink->SetCopyResponseUid(this,aKeyArray, msgIdString,
                                                 copyState);
         WaitForFEEventCompletion();
@@ -4207,9 +4227,9 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
             if (GetServerStateParser().LastCommandSuccessful() &&
                 imapAction == nsIImapUrl::nsImapAppendDraftFromFile)
             {
-                void* copyState = nsnull;
+                nsCOMPtr<nsISupports> copyState;
                 if(m_runningUrl)
-                    m_runningUrl->GetCopyState(&copyState);
+                    m_runningUrl->GetCopyState(getter_AddRefs(copyState));
 
                 if (GetServerStateParser().GetCapabilityFlag() &
                     kUidplusCapability)
