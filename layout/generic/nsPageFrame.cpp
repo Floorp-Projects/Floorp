@@ -22,6 +22,7 @@
 #include "nsIStyleContext.h"
 #include "nsIReflowCommand.h"
 #include "nsIRenderingContext.h"
+#include "nsHTMLAtoms.h"
 
 nsPageFrame::nsPageFrame(nsIContent* aContent, nsIFrame* aParent)
   : nsContainerFrame(aContent, aParent)
@@ -30,25 +31,38 @@ nsPageFrame::nsPageFrame(nsIContent* aContent, nsIFrame* aParent)
 
 void nsPageFrame::CreateFirstChild(nsIPresContext* aPresContext)
 {
-  // Create a frame for our one and only content child
-  if (mContent->ChildCount() > 0) {
-    nsIContent* child = mContent->ChildAt(0);
+  // XXX this is a copy of the root-content-frame's version
 
+  // Create a frame for the body child
+  PRInt32 i, n;
+  n = mContent->ChildCount();
+  for (i = 0; i < n; i++) {
+    nsIContent* child = mContent->ChildAt(i);
     if (nsnull != child) {
-      // Create a frame
-      nsIContentDelegate* cd = child->GetDelegate(aPresContext);
-      if (nsnull != cd) {
-        nsIStyleContext* kidStyleContext =
-          aPresContext->ResolveStyleContextFor(child, this);
-        nsresult rv = cd->CreateFrame(aPresContext, child, this,
-                                      kidStyleContext, mFirstChild);
-        NS_RELEASE(kidStyleContext);
-        if (NS_OK == mFirstChild) {
-          mChildCount = 1;
-          mLastContentOffset = mFirstContentOffset;
+      nsIAtom* tag;
+      tag = child->GetTag();
+      if (nsHTMLAtoms::body == tag) {
+        // Create a frame
+        nsIContentDelegate* cd = child->GetDelegate(aPresContext);
+        if (nsnull != cd) {
+          nsIStyleContext* kidStyleContext =
+            aPresContext->ResolveStyleContextFor(child, this);
+          nsresult rv = cd->CreateFrame(aPresContext, child, this,
+                                        kidStyleContext, mFirstChild);
+          NS_RELEASE(kidStyleContext);
+          if (NS_OK == rv) {
+            mChildCount = 1;
+            mFirstContentOffset = i;
+            mLastContentOffset = i;
+
+            // We are always a pseudo-frame; make sure our content offset is
+            // properly pushed upwards
+            PropagateContentOffsets();
+          }
+          NS_RELEASE(cd);
         }
-        NS_RELEASE(cd);
       }
+      NS_IF_RELEASE(tag);
       NS_RELEASE(child);
     }
   }
