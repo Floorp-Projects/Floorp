@@ -3722,7 +3722,7 @@ nsTreeBodyFrame::ScrollCallback(nsITimer *aTimer, void *aClosure)
   nsTreeBodyFrame* self = NS_STATIC_CAST(nsTreeBodyFrame*, aClosure);
   if (self) {
     // Don't scroll if we are already at the top or bottom of the view.
-    if (self->CanAutoScroll(self->mDropRow)) {
+    if (self->mView && self->CanAutoScroll(self->mDropRow)) {
       self->ScrollByLines(self->mScrollLines);
       PRUint32 delay = 0;
       aTimer->GetDelay(&delay);
