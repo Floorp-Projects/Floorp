@@ -1470,7 +1470,13 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
         nsCOMPtr<nsIIOService> ioService;
         rv = nsHttpHandler::get()->GetIOService(getter_AddRefs(ioService));
 
-        rv = ioService->NewURI(nsDependentCString(location), nsnull, mURI,
+        // the new uri should inherit the origin charset of the current uri
+        nsCAutoString originCharset;
+        rv = mURI->GetOriginCharset(originCharset);
+        if (NS_FAILED(rv))
+            originCharset.Truncate();
+
+        rv = ioService->NewURI(nsDependentCString(location), originCharset.get(), mURI,
                                getter_AddRefs(newURI));
         if (NS_FAILED(rv)) return rv;
 
