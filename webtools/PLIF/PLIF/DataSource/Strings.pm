@@ -199,14 +199,14 @@ sub getStringVariants {
     my $self = shift;
     # my($app, $string) = @_;
     $self->notImplemented();
-    # return { name, protocol, quality, type, encoding, charset, language, description, translator, string }*;
+    # return ( variant => data )*;
 }
 
 sub getDescribedVariants {
     my $self = shift;
     # my($app) = @_;
     $self->notImplemented();
-    # return [id, name, protocol, quality, type, encoding, charset, language, description, translator]*
+    # return { id => { name, protocol, quality, type, encoding, charset, language, description, translator } }*
 }
 
 # an undefined $id means "add me please"

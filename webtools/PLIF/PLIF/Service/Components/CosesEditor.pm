@@ -39,6 +39,7 @@ sub provides {
     return ($service eq 'component.cosesEditor' or
             $service eq 'dispatcher.commands' or
             $service eq 'dispatcher.output.generic' or
+            $service eq 'dispatcher.output' or
             $service eq 'dataSource.strings.default' or
             $class->SUPER::provides($service));
 }
@@ -111,8 +112,10 @@ sub cmdCosesStringEdit {
     my($app) = @_;
     my $id = $app->input->getArgument('cosesEditorStringID');
     my %strings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
-    my @variants = $app->getService('dataSource.strings')->getStringVariants($app, $id);
-    $app->output->cosesEditorString($id, $strings{$id}, \@variants);
+    my $dataSource = $app->getService('dataSource.strings');
+    my %expectedVariants = $dataSource->getDescribedVariants();    
+    my %stringsVariants = $dataSource->getStringVariants($app, $id);
+    $app->output->cosesEditorString($id, $strings{$id}, \%expectedVariants, \%stringVariants);
 }
 
 # dispatcher.commands
@@ -160,7 +163,7 @@ sub cmdCosesVariantExport {
         $result.= "  <string name=\"$name\">$value</string>\n";
     }
     $result .= '</variant>';
-    $app->output->cosesExport($id, $result);
+    $app->output->cosesEditorExport($id, $result);
 }
 
 # dispatcher.commands
@@ -245,18 +248,68 @@ sub walkNesting {
 }
 
 
-# XXXXXX
-
 # dispatcher.output.generic
-sub outputCosesEditor {
+sub outputCosesEditorIndex {
     my $self = shift;
-    my($app, $output, XXX) = @_;
-    $output->output('cosesEditor', {
+    my($app, $output, $variants, $variantsSortColumn, $strings, $stringsSortColumn) = @_;
+    $output->output('cosesEditor.index', {
+        'variants' => $variants,
+        'variantsSortColumn' => $variantsSortColumn,
+        'strings' => $strings,
+        'stringsSortcolumn' => $stringsSortColumn,
     });
 }
 
 # dispatcher.output.generic
-# XXX
+sub outputCosesEditorVariant {
+    my $self = shift;
+    my($app, $output, $variant, $protocol, $quality, $type, $encoding, $charset, $language, $description, $translator, $expectedStrings, $variantStrings) = @_;
+    $output->output('cosesEditor.variant', {
+        'variant' => $variant,
+        'protocol' => $protocol,        
+        'quality' => $quality,        
+        'type' => $type,        
+        'encoding' => $encoding,        
+        'charset' => $charset,        
+        'language' => $language,        
+        'description' => $description,        
+        'translator' => $translator,        
+        'expectedStrings' => $expectedStrings,
+        'variantStrings' => $variantStrings,
+    });
+}
+
+# dispatcher.output.generic
+sub outputCosesEditorString {
+    my $self = shift;
+    my($app, $output, $string, $description, $expectedVariants, $stringVariants) = @_;
+    $output->output('cosesEditor.string', {
+        'string' => $string,
+        'description' => $description,
+        'expectedVariants' => $expectedVariants,
+        'stringVariants' => $stringVariants,
+    });
+}
+
+# dispatcher.output.generic
+sub outputCosesEditorExport {
+    my $self = shift;
+    my($app, $output, $variant, $result) = @_;
+    $output->output('cosesEditor.export', {
+        'variant' => $variant,
+        'output' => $result,
+    });
+}
+
+# dispatcher.output
+sub strings {
+    return (
+            'cosesEditor.index' => 'The COSES editor index. The data.variants hash (variant ID => hash with keys name, protocol, quality, type, encoding, charset, language, description, and translator) should be sorted by the data.variantsSortColumn, and the data.strings hash (name=>description) should be sorted by the data.stringsSortColumn (these are typically set by the cosesEditorVariantsSortColumn and cosesEditorStringsSortColumn arguments). Typical commands that this should lead to: cosesVariantAdd (no arguments), cosesVariantEdit (cosesEditorVariantID), cosesStringEdit (cosesEditorStringID), cosesVariantExport (cosesEditorVariantID), cosesVariantImport (cosesEditorImportData, the contents of an XML file)',
+            'cosesEditor.variant' => 'The COSES variant editor. The data hash contains: protocol, quality, type, encoding, charset, language, description and translator (hereon "the variant data"), variant, an expectedStrings hash (name=>description), and a variantStrings hash (name=>value). The two hashes are likely to overlap. Typical commands that this should lead to: cosesVariantCommit and cosesVariantAddString (cosesEditorVariantID, cosesEditorVariantX where X is each of the variant data, cosesEditorVariantStringNName and cosesEditorVariantStringNValue where N is a number from 0 to as high as required, and cosesEditorStringNewName and cosesEditorVariantStringNewValue)',
+            'cosesEditor.string' => 'The COSES string editor. The name of the string being edited and its description are in data.string and data.description. The data.expectedVariants contains a list of all variants (variant ID => hash with keys name, protocol, quality, type, encoding, charset, language, description, and translator), and data.stringVariants hosts the currently set strings (variant=>value). The main command that this should lead to is: cosesStringCommit (cosesEditorStringID, cosesEditorStringVariantNName and cosesEditorStringVariantNValue where N is a number from 0 to as high as required)',
+            'cosesEditor.export' => 'The COSES variant export feature. data.variant holds the id of the variant, and data.output holds the XML representation of the variant.',
+            );
+}
 
 # dataSource.strings.default
 sub getDefaultString {

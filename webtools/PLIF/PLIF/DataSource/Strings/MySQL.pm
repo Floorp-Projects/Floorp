@@ -52,7 +52,21 @@ sub getVariants {
 sub getDescribedVariants {
     my $self = shift;
     my($app) = @_;
-    return $self->database($app)->execute('SELECT id, name, protocol, quality, type, encoding, charset, language, description, translator FROM stringVariants')->rows;
+    my %result = ();
+    foreach my $variant ($self->database($app)->execute('SELECT id, name, protocol, quality, type, encoding, charset, language, description, translator FROM stringVariants')->rows) {
+        $result{$variant->[0]} = {
+            'name' => $variant->[1],
+            'protocol' => $variant->[1],
+            'quality' => $variant->[2],
+            'type' => $variant->[3],
+            'encoding' => $variant->[4],
+            'charset' => $variant->[5],
+            'language' => $variant->[6],
+            'description' => $variant->[7],
+            'translator' => $variant->[8];
+        };        
+    }
+    return %result;
 }
 
 sub getVariant {
@@ -74,22 +88,11 @@ sub getVariantStrings {
 sub getStringVariants {
     my $self = shift;
     my($app, $string) = @_;
-    my @result = ();
-    foreach my $variant ($self->database($app)->execute('SELECT variant.name, variant.protocol, variant.quality, variant.type, variant.encoding, variant.charset, variant.language, variant.description, variant.translator, strings.data FROM stringVariants AS variant, strings WHERE strings.name = ? AND strings.variant = variant.name', $string)->rows) {
-        push(@result, {
-            'name' => $variant->[0],
-            'protocol' => $variant->[1],
-            'quality' => $variant->[2],
-            'type' => $variant->[3],
-            'encoding' => $variant->[4],
-            'charset' => $variant->[5],
-            'language' => $variant->[6],
-            'description' => $variant->[7],
-            'translator' => $variant->[8];
-            'string' => $variant->[9];
-        });
+    my %result = ();
+    foreach my $variant ($self->database($app)->execute('SELECT variant, data FROM strings WHERE name = ?', $string)->rows) {
+        $result{$variant->[0]} = $variant->[1];
     }
-    return @result;
+    return %result;
 }
 
 sub setVariant {
