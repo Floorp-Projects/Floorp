@@ -72,7 +72,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.55 $ $Date: 2001/06/20 06:45:53 $
+ * @version $Revision: 1.56 $ $Date: 2001/06/20 07:02:30 $
 **/
 
 /**
@@ -581,8 +581,8 @@ Document* XSLTProcessor::process
 
     NodeSet nodeSet;
     nodeSet.add(&xmlDocument);
-    ps->pushCurrentNode(&xmlDocument);
-    ps->getNodeSetStack()->push(&nodeSet);
+    ps.pushCurrentNode(&xmlDocument);
+    ps.getNodeSetStack()->push(&nodeSet);
 
       //-------------------------------------------------------/
      //- index templates and process top level xsl elements -/
