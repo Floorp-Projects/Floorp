@@ -116,6 +116,7 @@ dnl set the defaults first
 dnl ========================================================
 AS=
 AS_DASH_C_FLAG='-c'
+NS_USE_NATIVE=
 DLL_SUFFIX="so"
 MKSHLIB='$(LD) $(DSO_LDOPTS)'
 DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
