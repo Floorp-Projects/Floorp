@@ -22,7 +22,8 @@ EXPORTS	=  nsIPrincipal.h           \
  nsICodebasePrincipal.h   \
  nsICertPrincipal.h       \
  nsICapsManager.h         \
- nsICodeSourcePrincipal.h
+ nsICodeSourcePrincipal.h \
+ nsCapsPublicEnums.h      
 
 
 

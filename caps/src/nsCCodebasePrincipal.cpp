@@ -82,6 +82,11 @@ nsCCodebasePrincipal::nsCCodebasePrincipal(const char *codebaseURL,
    *result = NS_OK;
 }
 
+nsCCodebasePrincipal::nsCCodebasePrincipal(nsPrincipal *pNSPrincipal)
+{
+   m_pNSPrincipal = pNSPrincipal;
+}
+
 nsCCodebasePrincipal::~nsCCodebasePrincipal(void)
 {
    delete m_pNSPrincipal;

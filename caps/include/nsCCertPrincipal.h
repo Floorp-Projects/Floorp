@@ -105,6 +105,8 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // from nsCCertPrincipal:
     nsCCertPrincipal(const unsigned char **certChain, PRUint32 *certChainLengths, PRUint32 noOfCerts, nsresult *result);
+    nsCCertPrincipal(nsPrincipal *pNSPrincipal);
+
     virtual ~nsCCertPrincipal(void);
     nsPrincipal *GetPeer(void);
 
