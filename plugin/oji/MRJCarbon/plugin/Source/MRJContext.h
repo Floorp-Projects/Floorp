@@ -181,6 +181,7 @@ private:
 	MRJSecurityContext*         mSecurityContext;
 #ifdef TARGET_CARBON
     jobject                     mAppletFrame;
+    jobject                     mAppletObject;
     ControlRef                  mAppletControl;
     UInt32                      mScrollCounter;
 #endif
