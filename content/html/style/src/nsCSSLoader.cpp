@@ -626,10 +626,9 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
   PRBool realDocument = PR_TRUE;
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
   if (httpChannel) {
-    PRUint32 statusCode;
-    result = httpChannel->GetResponseStatus(&statusCode);
-    // Only accept 2xx responses
-    if (NS_SUCCEEDED(result) && statusCode / 100 != 2) {
+    PRBool requestSucceeded;
+    result = httpChannel->GetRequestSucceeded(&requestSucceeded);
+    if (NS_SUCCEEDED(result) && !requestSucceeded) {
       realDocument = PR_FALSE;
     }
   }

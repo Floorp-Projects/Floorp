@@ -617,15 +617,29 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     return NS_OK;
   }
 
+  // If the load returned an error page, then we need to abort
+  nsCOMPtr<nsIRequest> req;
+  rv = aLoader->GetRequest(getter_AddRefs(req));    
+  NS_ASSERTION(req, "StreamLoader's request went away prematurely");
+  if (NS_FAILED(rv)) return rv;  // XXX Should this remove the pending request?
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
+  if (httpChannel) {
+    PRBool requestSucceeded;
+    rv = httpChannel->GetRequestSucceeded(&requestSucceeded);
+    if (NS_SUCCEEDED(rv) && !requestSucceeded) {
+      mPendingRequests.RemoveElement(aContext, 0);
+      FireScriptAvailable(NS_ERROR_NOT_AVAILABLE, request, 
+                          NS_LITERAL_STRING(""));
+      ProcessPendingReqests();
+      return NS_OK;
+    }
+  }
+
   if (stringLen) {
     nsAutoString characterSet, preferred;
     nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
 
     nsCOMPtr<nsIChannel> channel;
-    nsCOMPtr<nsIRequest> req;
-    rv = aLoader->GetRequest(getter_AddRefs(req));    
-    NS_ASSERTION(req, "StreamLoader's request went away prematurely");
-    if (NS_FAILED(rv)) return rv;
 
     channel = do_QueryInterface(req);
     if (channel) {

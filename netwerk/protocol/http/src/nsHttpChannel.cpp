@@ -2664,6 +2664,17 @@ nsHttpChannel::GetResponseStatusText(nsACString &value)
 }
 
 NS_IMETHODIMP
+nsHttpChannel::GetRequestSucceeded(PRBool *value)
+{
+    NS_PRECONDITION(value, "Don't ever pass a null arg to this function");
+    if (!mResponseHead)
+        return NS_ERROR_NOT_AVAILABLE;
+    PRUint32 status = mResponseHead->Status();
+    *value = (status / 100 == 2);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHttpChannel::GetResponseHeader(const nsACString &header, nsACString &value)
 {
     if (!mResponseHead)
