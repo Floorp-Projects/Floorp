@@ -39,10 +39,11 @@
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsIView.h"
+#include "nsIScrollableView.h"
 #include "nsIViewManager.h"
 #include "nsIPresContext.h"
 #include "nsILookAndFeel.h"
-#include "nsWidgetsCID.h"			// for NS_LOOKANDFEEL_CID
+#include "nsWidgetsCID.h"     // for NS_LOOKANDFEEL_CID
 #include "nsBlockFrame.h"
 #include "nsISelectionController.h"
 
@@ -54,13 +55,13 @@ static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 //-----------------------------------------------------------------------------
 
 nsCaret::nsCaret()
-:	mPresShell(nsnull)
-,	mBlinkRate(500)
+: mPresShell(nsnull)
+, mBlinkRate(500)
 , mCaretTwipsWidth(-1)
 , mCaretPixelsWidth(1)
-,	mVisible(PR_FALSE)
-,	mReadOnly(PR_TRUE)
-,	mDrawn(PR_FALSE)
+, mVisible(PR_FALSE)
+, mReadOnly(PR_TRUE)
+, mDrawn(PR_FALSE)
 , mLastCaretFrame(nsnull)
 , mLastContentOffset(0)
 {
@@ -71,21 +72,21 @@ nsCaret::nsCaret()
 //-----------------------------------------------------------------------------
 nsCaret::~nsCaret()
 {
-	KillTimer();
+  KillTimer();
 }
 
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
 {
-	if (!inPresShell)
-		return NS_ERROR_NULL_POINTER;
-	
-	mPresShell = getter_AddRefs(NS_GetWeakReference(inPresShell));		// the presshell owns us, so no addref
+  if (!inPresShell)
+    return NS_ERROR_NULL_POINTER;
+  
+  mPresShell = getter_AddRefs(NS_GetWeakReference(inPresShell));    // the presshell owns us, so no addref
 
   nsILookAndFeel* touchyFeely;
   if (NS_SUCCEEDED(nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, NS_GET_IID(nsILookAndFeel), (void**)&touchyFeely)))
   {
-    PRInt32	tempInt;
+    PRInt32 tempInt;
     
     if (NS_SUCCEEDED(touchyFeely->GetMetric(nsILookAndFeel::eMetric_SingleLineCaretWidth, tempInt)))
       mCaretTwipsWidth = (nscoord)tempInt;
@@ -95,31 +96,31 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
     NS_RELEASE(touchyFeely);
   }
   
-	// get the selection from the pres shell, and set ourselves up as a selection
-	// listener
-	
+  // get the selection from the pres shell, and set ourselves up as a selection
+  // listener
+  
   nsCOMPtr<nsIDOMSelection> domSelection;
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShell);
   if (selCon)
   {
     if (NS_SUCCEEDED(selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection))))
     {
-		  domSelection->AddSelectionListener(this);
+      domSelection->AddSelectionListener(this);
       mDomSelectionWeak = getter_AddRefs( NS_GetWeakReference(domSelection) );
-	  }
+    }
   }
   else
     return NS_ERROR_FAILURE;
-	
-	// set up the blink timer
-	if (mVisible)
-	{
-		nsresult	err = StartBlinking();
-		if (NS_FAILED(err))
-			return err;
-	}
-	
-	return NS_OK;
+  
+  // set up the blink timer
+  if (mVisible)
+  {
+    nsresult  err = StartBlinking();
+    if (NS_FAILED(err))
+      return err;
+  }
+  
+  return NS_OK;
 }
 
 
@@ -131,32 +132,32 @@ NS_IMPL_RELEASE(nsCaret);
 NS_IMETHODIMP nsCaret::QueryInterface(const nsIID& aIID,
                                      void** aInstancePtrResult)
 {
-	NS_PRECONDITION(aInstancePtrResult, "null pointer");
-	if (!aInstancePtrResult)
-	return NS_ERROR_NULL_POINTER;
+  NS_PRECONDITION(aInstancePtrResult, "null pointer");
+  if (!aInstancePtrResult)
+  return NS_ERROR_NULL_POINTER;
 
-	nsISupports* foundInterface;  
+  nsISupports* foundInterface;  
 
-	if (aIID.Equals(NS_GET_IID(nsISupports)))
-		foundInterface = (nsISupports*)(nsICaret*)this;		// whoo boy
-	else if (aIID.Equals(NS_GET_IID(nsICaret)))
-		foundInterface = (nsICaret*)this;
-	else if (aIID.Equals(NS_GET_IID(nsIDOMSelectionListener)))
-		foundInterface = (nsIDOMSelectionListener*)this;
-	else
-		foundInterface = nsnull;
+  if (aIID.Equals(NS_GET_IID(nsISupports)))
+    foundInterface = (nsISupports*)(nsICaret*)this;   // whoo boy
+  else if (aIID.Equals(NS_GET_IID(nsICaret)))
+    foundInterface = (nsICaret*)this;
+  else if (aIID.Equals(NS_GET_IID(nsIDOMSelectionListener)))
+    foundInterface = (nsIDOMSelectionListener*)this;
+  else
+    foundInterface = nsnull;
 
-	nsresult status;
-	if (! foundInterface)
-		status = NS_NOINTERFACE;
-	else
-	{
-		NS_ADDREF(foundInterface);
-		status = NS_OK;
-	}
+  nsresult status;
+  if (! foundInterface)
+    status = NS_NOINTERFACE;
+  else
+  {
+    NS_ADDREF(foundInterface);
+    status = NS_OK;
+  }
 
-	*aInstancePtrResult = foundInterface;
-	return status;
+  *aInstancePtrResult = foundInterface;
+  return status;
 }
 
 //-----------------------------------------------------------------------------
@@ -171,14 +172,14 @@ NS_IMETHODIMP nsCaret::SetCaretDOMSelection(nsIDOMSelection *aDOMSel)
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP nsCaret::SetCaretVisible(PRBool inMakeVisible)
 {
-	mVisible = inMakeVisible;
-	nsresult	err = NS_OK;
-	if (mVisible)
-		err = StartBlinking();
-	else
-		err = StopBlinking();
-		
-	return err;
+  mVisible = inMakeVisible;
+  nsresult  err = NS_OK;
+  if (mVisible)
+    err = StartBlinking();
+  else
+    err = StopBlinking();
+    
+  return err;
 }
 
 NS_IMETHODIMP nsCaret::GetCaretVisible(PRBool *outMakeVisible)
@@ -192,60 +193,60 @@ NS_IMETHODIMP nsCaret::GetCaretVisible(PRBool *outMakeVisible)
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP nsCaret::SetCaretReadOnly(PRBool inMakeReadonly)
 {
-	mReadOnly = inMakeReadonly;
-	return NS_OK;
+  mReadOnly = inMakeReadonly;
+  return NS_OK;
 }
 
 
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed, nsIDOMSelection *aDOMSel)
 {
-	if (!mPresShell)
-		return NS_ERROR_NOT_INITIALIZED;
+  if (!mPresShell)
+    return NS_ERROR_NOT_INITIALIZED;
 
   mDomSelectionWeak = getter_AddRefs( NS_GetWeakReference(aDOMSel) );   // weak reference to pres shell
-		
-	nsCOMPtr<nsIDOMSelection> domSelection = aDOMSel;
+    
+  nsCOMPtr<nsIDOMSelection> domSelection = aDOMSel;
   nsresult err;
-	if (!domSelection)
-		return NS_ERROR_NOT_INITIALIZED;		// no selection
-	
-	// fill in defaults for failure
-	outCoordinates.x = -1;
-	outCoordinates.y = -1;
-	outCoordinates.width = -1;
-	outCoordinates.height = -1;
-	outIsCollapsed = PR_FALSE;
-	
-	err = domSelection->GetIsCollapsed(&outIsCollapsed);
-	if (NS_FAILED(err))	
-		return err;
-		
-	// code in progress
-	nsCOMPtr<nsIDOMNode>	focusNode;
-	
-	err = domSelection->GetFocusNode(getter_AddRefs(focusNode));
-	if (NS_FAILED(err))
-		return err;
-	if (!focusNode)
-		return NS_ERROR_FAILURE;
-	
-	PRInt32	focusOffset;
-	err = domSelection->GetFocusOffset(&focusOffset);
-	if (NS_FAILED(err))
-		return err;
-		
+  if (!domSelection)
+    return NS_ERROR_NOT_INITIALIZED;    // no selection
+  
+  // fill in defaults for failure
+  outCoordinates.x = -1;
+  outCoordinates.y = -1;
+  outCoordinates.width = -1;
+  outCoordinates.height = -1;
+  outIsCollapsed = PR_FALSE;
+  
+  err = domSelection->GetIsCollapsed(&outIsCollapsed);
+  if (NS_FAILED(err)) 
+    return err;
+    
+  // code in progress
+  nsCOMPtr<nsIDOMNode>  focusNode;
+  
+  err = domSelection->GetFocusNode(getter_AddRefs(focusNode));
+  if (NS_FAILED(err))
+    return err;
+  if (!focusNode)
+    return NS_ERROR_FAILURE;
+  
+  PRInt32 focusOffset;
+  err = domSelection->GetFocusOffset(&focusOffset);
+  if (NS_FAILED(err))
+    return err;
+    
 /*
-	// is this a text node?
-	nsCOMPtr<nsIDOMCharacterData>	nodeAsText = do_QueryInterface(focusNode);
-	// note that we only work with text nodes here, unlike when drawing the caret.
-	// this is because this routine is intended for IME support, which only cares about text.
-	if (!nodeAsText)
-		return NS_ERROR_UNEXPECTED;
-*/	
-	nsCOMPtr<nsIContent>contentNode = do_QueryInterface(focusNode);
-	if (!contentNode)
-		return NS_ERROR_FAILURE;
+  // is this a text node?
+  nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(focusNode);
+  // note that we only work with text nodes here, unlike when drawing the caret.
+  // this is because this routine is intended for IME support, which only cares about text.
+  if (!nodeAsText)
+    return NS_ERROR_UNEXPECTED;
+*/  
+  nsCOMPtr<nsIContent>contentNode = do_QueryInterface(focusNode);
+  if (!contentNode)
+    return NS_ERROR_FAILURE;
 
   //get frame selection and find out what frame to use...
   nsCOMPtr<nsIFrameSelection> frameSelection;
@@ -257,9 +258,9 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBo
   if (NS_FAILED(err) || !frameSelection)
     return err?err : NS_ERROR_FAILURE;  
 
-	// find the frame that contains the content node that has focus
-	nsIFrame*       theFrame = nsnull;
-	PRInt32         theFrameOffset = 0;
+  // find the frame that contains the content node that has focus
+  nsIFrame*       theFrame = nsnull;
+  PRInt32         theFrameOffset = 0;
   PRBool hintRight;
   domSelection->GetHint(&hintRight);//translate hint.
   nsIFrameSelection::HINT hint;
@@ -268,71 +269,72 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBo
   else
     hint = nsIFrameSelection::HINTLEFT;
   err = frameSelection->GetFrameForNodeOffset(contentNode, focusOffset, hint, &theFrame, &theFrameOffset);
-	if (NS_FAILED(err) || !theFrame)
-		return err;
-	
-	nsPoint		viewOffset(0, 0);
-	nsIView		*drawingView;			// views are not refcounted
-	GetViewForRendering(theFrame, eTopLevelWindowCoordinates, viewOffset, drawingView);
-	if (!drawingView)
-		return NS_ERROR_UNEXPECTED;
+  if (NS_FAILED(err) || !theFrame)
+    return err;
+  
+  nsPoint   viewOffset(0, 0);
+  nsRect    clipRect;
+  nsIView   *drawingView;     // views are not refcounted
+  GetViewForRendering(theFrame, eTopLevelWindowCoordinates, viewOffset, clipRect, drawingView);
+  if (!drawingView)
+    return NS_ERROR_UNEXPECTED;
 
-	// ramp up to make a rendering context for measuring text.
-	// First, we get the pres context ...
-	nsCOMPtr<nsIPresContext> presContext;
-	err = presShell->GetPresContext(getter_AddRefs(presContext));
-	if (NS_FAILED(err))
-		return err;
-	
-	// ... then get a device context
-	nsCOMPtr<nsIDeviceContext> 		dx;
-	err = presContext->GetDeviceContext(getter_AddRefs(dx));
-	if (NS_FAILED(err))
-		return err;
-	if (!dx)
-		return NS_ERROR_UNEXPECTED;
+  // ramp up to make a rendering context for measuring text.
+  // First, we get the pres context ...
+  nsCOMPtr<nsIPresContext> presContext;
+  err = presShell->GetPresContext(getter_AddRefs(presContext));
+  if (NS_FAILED(err))
+    return err;
+  
+  // ... then get a device context
+  nsCOMPtr<nsIDeviceContext>    dx;
+  err = presContext->GetDeviceContext(getter_AddRefs(dx));
+  if (NS_FAILED(err))
+    return err;
+  if (!dx)
+    return NS_ERROR_UNEXPECTED;
 
-	// ... then tell it to make a rendering context
-	nsCOMPtr<nsIRenderingContext> rendContext;	
-	err = dx->CreateRenderingContext(drawingView, *getter_AddRefs(rendContext));						
-	if (NS_FAILED(err))
-		return err;
-	if (!rendContext)
-		return NS_ERROR_UNEXPECTED;
+  // ... then tell it to make a rendering context
+  nsCOMPtr<nsIRenderingContext> rendContext;  
+  err = dx->CreateRenderingContext(drawingView, *getter_AddRefs(rendContext));            
+  if (NS_FAILED(err))
+    return err;
+  if (!rendContext)
+    return NS_ERROR_UNEXPECTED;
 
-	// now we can measure the offset into the frame.
-	nsPoint		framePos(0, 0);
-	theFrame->GetPointFromOffset(presContext, rendContext, theFrameOffset, &framePos);
+  // now we can measure the offset into the frame.
+  nsPoint   framePos(0, 0);
+  theFrame->GetPointFromOffset(presContext, rendContext, theFrameOffset, &framePos);
 
-	nsRect          frameRect;
-	theFrame->GetRect(frameRect);
-	
-	// now add the frame offset to the view offset, and we're done
-	viewOffset += framePos;
-	outCoordinates.x = viewOffset.x;
-	outCoordinates.y = viewOffset.y;
-	outCoordinates.height = frameRect.height;
-	outCoordinates.width  = frameRect.width;
-	
-	return NS_OK;
+  nsRect          frameRect;
+  theFrame->GetRect(frameRect);
+  
+  // now add the frame offset to the view offset, and we're done
+  viewOffset += framePos;
+  outCoordinates.x = viewOffset.x;
+  outCoordinates.y = viewOffset.y;
+  outCoordinates.height = frameRect.height;
+  outCoordinates.width  = frameRect.width;
+  
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP nsCaret::ClearFrameRefs(nsIFrame* aFrame)
 {
 
-	if (mLastCaretFrame == aFrame)
-	{
-		mLastCaretFrame = nsnull;			// frames are not refcounted.
-		mLastContentOffset = 0;
-	}
-	
-	mDrawn = PR_FALSE;		// assume that the view has been cleared, and ensure
-												// that we don't try to use the frame.
-	
-	// should we just call StopBlinking() here?
-	
-	return NS_OK;	
+  if (mLastCaretFrame == aFrame)
+  {
+    mLastCaretFrame = nsnull;     // frames are not refcounted.
+    mLastContentOffset = 0;
+  }
+  
+  mDrawn = PR_FALSE;    // assume that the view has been cleared, and ensure
+                        // that we don't try to use the frame.
+  
+  // should we just call StopBlinking() here?
+  
+  return NS_OK; 
 }
 
 NS_IMETHODIMP nsCaret::EraseCaret()
@@ -352,15 +354,15 @@ NS_IMETHODIMP nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection 
 {
   if (aReason & nsIDOMSelectionListener::MOUSEUP_REASON)//this wont do
     return NS_OK;
-	if (mVisible)
-		StopBlinking();
+  if (mVisible)
+    StopBlinking();
   nsCOMPtr<nsIDOMSelection> domSel(do_QueryReferent(mDomSelectionWeak));
   if (domSel.get() != aDomSel)
     return NS_OK; //ignore this then.
-	if (mVisible)
-		StartBlinking();
-	
-	return NS_OK;
+  if (mVisible)
+    StartBlinking();
+  
+  return NS_OK;
 }
 
 #ifdef XP_MAC
@@ -370,55 +372,55 @@ NS_IMETHODIMP nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection 
 //-----------------------------------------------------------------------------
 void nsCaret::KillTimer()
 {
-	if (mBlinkTimer)
-	{
-		mBlinkTimer->Cancel();
-	}
+  if (mBlinkTimer)
+  {
+    mBlinkTimer->Cancel();
+  }
 }
 
 
 //-----------------------------------------------------------------------------
 nsresult nsCaret::PrimeTimer()
 {
-	KillTimer();
-	
-	// set up the blink timer
-	if (!mReadOnly && mBlinkRate > 0)
-	{
-		nsresult	err;
+  KillTimer();
+  
+  // set up the blink timer
+  if (!mReadOnly && mBlinkRate > 0)
+  {
+    nsresult  err;
     mBlinkTimer = do_CreateInstance("component://netscape/timer", &err);
-		
-		if (NS_FAILED(err))
-			return err;
-		
-		mBlinkTimer->Init(CaretBlinkCallback, this, mBlinkRate, NS_PRIORITY_HIGH, NS_TYPE_REPEATING_PRECISE);
-	}
+    
+    if (NS_FAILED(err))
+      return err;
+    
+    mBlinkTimer->Init(CaretBlinkCallback, this, mBlinkRate, NS_PRIORITY_HIGH, NS_TYPE_REPEATING_PRECISE);
+  }
 
-	return NS_OK;
+  return NS_OK;
 }
 
 
 //-----------------------------------------------------------------------------
 nsresult nsCaret::StartBlinking()
 {
-	PrimeTimer();
+  PrimeTimer();
 
-	//NS_ASSERTION(!mDrawn, "Caret should not be drawn here");
-	DrawCaret();		// draw it right away
-	
-	return NS_OK;
+  //NS_ASSERTION(!mDrawn, "Caret should not be drawn here");
+  DrawCaret();    // draw it right away
+  
+  return NS_OK;
 }
 
 
 //-----------------------------------------------------------------------------
 nsresult nsCaret::StopBlinking()
 {
-	if (mDrawn)			// erase the caret if necessary
-		DrawCaret();
-		
-	KillTimer();
-	
-	return NS_OK;
+  if (mDrawn)     // erase the caret if necessary
+    DrawCaret();
+    
+  KillTimer();
+  
+  return NS_OK;
 }
 
 
@@ -430,57 +432,35 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 {
   if (!mDomSelectionWeak)
     return PR_FALSE;
-	nsCOMPtr<nsIDOMSelection> domSelection =  do_QueryReferent(mDomSelectionWeak);
-	PRBool isCollapsed;
+  nsCOMPtr<nsIDOMSelection> domSelection =  do_QueryReferent(mDomSelectionWeak);
+  PRBool isCollapsed;
 
-	if (domSelection && NS_SUCCEEDED(domSelection->GetIsCollapsed(&isCollapsed)) && isCollapsed)
-	{
-		// start and end parent should be the same since we are collapsed
-		nsCOMPtr<nsIDOMNode>	focusNode;
-		PRInt32	contentOffset;
-		
-		if (NS_SUCCEEDED(domSelection->GetFocusNode(getter_AddRefs(focusNode))) && focusNode &&
-				NS_SUCCEEDED(domSelection->GetFocusOffset(&contentOffset)))
-		{
-			nsCOMPtr<nsIContent>contentNode = do_QueryInterface(focusNode);
+  if (domSelection && NS_SUCCEEDED(domSelection->GetIsCollapsed(&isCollapsed)) && isCollapsed)
+  {
+    // start and end parent should be the same since we are collapsed
+    nsCOMPtr<nsIDOMNode>  focusNode;
+    PRInt32 contentOffset;
+    
+    if (NS_SUCCEEDED(domSelection->GetFocusNode(getter_AddRefs(focusNode))) && focusNode &&
+        NS_SUCCEEDED(domSelection->GetFocusOffset(&contentOffset)))
+    {
+      nsCOMPtr<nsIContent>contentNode = do_QueryInterface(focusNode);
       
-			if (contentNode)
-			{
-		      // see if we have an offset between child nodes, or an offset into a text
-		      // node.
-#if NOT_NEEDED
-				PRBool  canContainChildren;
-				if (NS_SUCCEEDED(contentNode->CanContainChildren(canContainChildren)) && canContainChildren)
-				{
-					// point the caret to the start of the child node
-					nsCOMPtr<nsIContent> childNode;
-					contentNode->ChildAt(contentOffset, *getter_AddRefs(childNode));
-					if (childNode)
-					{
-						contentNode = childNode;
-						contentOffset = 0;
-					}
-				}
-				else
-				{
-					// are we in a text node?
-					//nsCOMPtr<nsIDOMCharacterData>	nodeAsText = do_QueryInterface(focusNode);
-
-					// we can be in a text node, or a BR node here.
-				}
-#endif // NOT_NEEDED
-				nsIFrame*	theFrame = nsnull;
-				PRInt32         theFrameOffset = 0;
+      if (contentNode)
+      {
+        nsIFrame* theFrame = nsnull;
+        PRInt32   theFrameOffset = 0;
         nsresult err;
-				//get frame selection and find out what frame to use...
-				nsCOMPtr<nsIFrameSelection> frameSelection;
+        //get frame selection and find out what frame to use...
+        nsCOMPtr<nsIFrameSelection> frameSelection;
         nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
-        if (presShell)
-				  err = presShell->GetFrameSelection(getter_AddRefs(frameSelection));
-        else
-          return NS_ERROR_FAILURE;
-				if (NS_FAILED(err) || !frameSelection)
-					return PR_FALSE;
+        if (!presShell)
+          return PR_FALSE;
+          
+        err = presShell->GetFrameSelection(getter_AddRefs(frameSelection));
+        if (NS_FAILED(err) || !frameSelection)
+          return PR_FALSE;
+
         PRBool hintRight;
         domSelection->GetHint(&hintRight);//translate hint.
         nsIFrameSelection::HINT hint;
@@ -488,251 +468,304 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
           hint = nsIFrameSelection::HINTRIGHT;
         else
           hint = nsIFrameSelection::HINTLEFT;
-				err = frameSelection->GetFrameForNodeOffset(contentNode, contentOffset, hint, &theFrame, &theFrameOffset);
-				if (NS_FAILED(err))
-					return PR_FALSE;
-				else
-				{
 
-					// mark the frame, so we get notified on deletion.
-					// frames are never unmarked, which means that we'll touch every frame we visit.
-					// this is not ideal.
-					nsFrameState state;
-					theFrame->GetFrameState(&state);
-					state |= NS_FRAME_EXTERNAL_REFERENCE;
-					theFrame->SetFrameState(state);
-					
-					mLastCaretFrame = theFrame;
-					mLastContentOffset = theFrameOffset;
-					return PR_TRUE;
-				}
-			}
-		}
-	}
+        err = frameSelection->GetFrameForNodeOffset(contentNode, contentOffset, hint, &theFrame, &theFrameOffset);
+        if (NS_FAILED(err))
+          return PR_FALSE;
 
-	return PR_FALSE;
+        // mark the frame, so we get notified on deletion.
+        // frames are never unmarked, which means that we'll touch every frame we visit.
+        // this is not ideal.
+        nsFrameState frameState;
+        theFrame->GetFrameState(&frameState);
+        frameState |= NS_FRAME_EXTERNAL_REFERENCE;
+        theFrame->SetFrameState(frameState);
+        
+        mLastCaretFrame = theFrame;
+        mLastContentOffset = theFrameOffset;
+        return PR_TRUE;
+      }
+    }
+  }
+
+  return PR_FALSE;
 }
 
 
 //-----------------------------------------------------------------------------
-void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordType, nsPoint &viewOffset, nsIView* &outView)
+void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordType, nsPoint &viewOffset, nsRect& outClipRect, nsIView* &outView)
 {
-  if (!caretFrame) return;
-	outView = nsnull;
-	
-	NS_ASSERTION(caretFrame, "Should have a frame here");	
-	if (!caretFrame)
-		return;
-		
-	nsIView* theView = nsnull;
-	NS_ASSERTION(caretFrame, "Should have frame here");
-  nsCOMPtr<nsIPresContext>  presContext;
-  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
-  if (presShell)
-    presShell->GetPresContext(getter_AddRefs(presContext));
-  else
+  outView = nsnull;
+  
+  if (!caretFrame)
     return;
-	caretFrame->GetOffsetFromView(presContext, viewOffset, &theView);
-	if (theView == nsnull) return;
-	
-	nsIView* returnView = nsnull;
-	
-	nscoord		x, y;
-	
-	do {
-		theView->GetPosition(&x, &y);
+    
+  NS_ASSERTION(caretFrame, "Should have frame here");
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (!presShell)
+    return;
+  
+  nsCOMPtr<nsIPresContext>  presContext;
+  presShell->GetPresContext(getter_AddRefs(presContext));
 
-		if (!returnView)
-		{
-			nsCOMPtr<nsIWidget>	viewWidget;
-			theView->GetWidget(*getter_AddRefs(viewWidget));
-			
-			if (viewWidget)
-			{
-				returnView = theView;
-			
-				if (coordType == eViewCoordinates)
-					break;
-			}
-	    viewOffset.x += x;
-	    viewOffset.y += y;
-		}		
-		
-		theView->GetParent(theView);
-	} while (theView);
-		
-	outView = returnView;
+  viewOffset.x = 0;
+  viewOffset.y = 0;
+  // get the offset of this frame from its parent view (walks up frame hierarchy)
+  nsIView* theView = nsnull;
+  caretFrame->GetOffsetFromView(presContext, viewOffset, &theView);
+  if (theView == nsnull) return;
+  
+  nsIView*    returnView = nsnull;    // views are not refcounted
+  
+  nscoord   x, y;
+  
+  // coorinates relative to the view we are going to use for drawing
+  if (coordType == eViewCoordinates)
+  {
+    nsIView*            startingView = theView;
+    nsIScrollableView*  scrollableView = nsnull;
+  
+    // walk up to the first view with a widget
+    do {
+      theView->GetPosition(&x, &y);
+
+      //is this a scrollable view?
+      if (!scrollableView)
+        theView->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&scrollableView);
+
+      PRBool hasWidget;
+      theView->HasWidget(&hasWidget);
+      
+      if (hasWidget)
+      {
+        returnView = theView;
+        break;
+      }
+      viewOffset.x += x;
+      viewOffset.y += y;
+      
+      theView->GetParent(theView);
+    } while (theView);
+  
+  
+    if (scrollableView)
+    {
+      const nsIView*      clipView = nsnull;
+      scrollableView->GetClipView(&clipView);
+      if (!clipView) return;      // should always have one
+      
+      nsRect  bounds;
+      clipView->GetBounds(bounds);
+      scrollableView->GetScrollPosition(bounds.x, bounds.y);
+      
+      bounds += viewOffset;   // offset to coords of returned view
+      outClipRect = bounds;
+    }
+    else
+    {
+      returnView->GetBounds(outClipRect);
+    }
+    
+  }
+  else
+  {
+    // window-relative coordinates (walk right to the top of the view hierarchy)
+    // we don't do anything with clipping here
+    
+    do {
+      theView->GetPosition(&x, &y);
+
+      if (!returnView)
+      {
+        PRBool hasWidget;
+        theView->HasWidget(&hasWidget);
+        
+        if (hasWidget)
+          returnView = theView;
+      }
+      // is this right?
+      viewOffset.x += x;
+      viewOffset.y += y;
+      
+      theView->GetParent(theView);
+    } while (theView);
+  
+  }
+  
+  
+  outView = returnView;
 }
 
 
 /*-----------------------------------------------------------------------------
 
-	MustDrawCaret
-	
-	FInd out if we need to do any caret drawing. This returns true if
-	either a) or b)
-	a) caret has been drawn, and we need to erase it.
-	b) caret is not drawn, and selection is collapsed
-	
+  MustDrawCaret
+  
+  FInd out if we need to do any caret drawing. This returns true if
+  either a) or b)
+  a) caret has been drawn, and we need to erase it.
+  b) caret is not drawn, and selection is collapsed
+  
 ----------------------------------------------------------------------------- */
 PRBool nsCaret::MustDrawCaret()
 {
-	if (mDrawn)
-		return PR_TRUE;
-		
-	nsCOMPtr<nsIDOMSelection> domSelection = do_QueryReferent(mDomSelectionWeak);
+  if (mDrawn)
+    return PR_TRUE;
+    
+  nsCOMPtr<nsIDOMSelection> domSelection = do_QueryReferent(mDomSelectionWeak);
   if (!domSelection)
     return PR_FALSE;
-	PRBool isCollapsed;
+  PRBool isCollapsed;
 
-	if (NS_FAILED(domSelection->GetIsCollapsed(&isCollapsed)))
-		return PR_FALSE;
-		
-	return isCollapsed;
+  if (NS_FAILED(domSelection->GetIsCollapsed(&isCollapsed)))
+    return PR_FALSE;
+    
+  return isCollapsed;
 }
 
 
 /*-----------------------------------------------------------------------------
 
-	DrawCaretWithContext
-	
-	By this point, the caret rect should have been set up.
-	
+  DrawCaretWithContext
+  
+  By this point, the caret rect should have been set up.
+  
 ----------------------------------------------------------------------------- */
 
 void nsCaret::DrawCaretWithContext(nsIRenderingContext* inRendContext)
 {
-	
-	NS_ASSERTION(mLastCaretFrame != nsnull, "Should have a frame here");
-	
-	nsRect		frameRect;
-	mLastCaretFrame->GetRect(frameRect);
-	frameRect.x = 0;			// the origin is accounted for in GetViewForRendering()
-	frameRect.y = 0;
-	
-	if (frameRect.height == 0)		// we're in a BR frame which has zero height.
-	{
-		frameRect.height = 200;
-		frameRect.y -= 200;
-	}
-	
-	nsPoint		viewOffset(0, 0);
-	nsIView		*drawingView;
-	GetViewForRendering(mLastCaretFrame, eViewCoordinates, viewOffset, drawingView);
+  
+  NS_ASSERTION(mLastCaretFrame != nsnull, "Should have a frame here");
+  
+  nsRect    frameRect;
+  mLastCaretFrame->GetRect(frameRect);
+  frameRect.x = 0;      // the origin is accounted for in GetViewForRendering()
+  frameRect.y = 0;
+  
+  if (frameRect.height == 0)    // we're in a BR frame which has zero height.
+  {
+    frameRect.height = 200;
+    frameRect.y -= 200;
+  }
+  
+  nsPoint   viewOffset(0, 0);
+  nsRect    clipRect;
+  nsIView   *drawingView;
+  GetViewForRendering(mLastCaretFrame, eViewCoordinates, viewOffset, clipRect, drawingView);
 
-	if (drawingView == nsnull)
-		return;
-	
-	frameRect += viewOffset;
+  if (drawingView == nsnull)
+    return;
+  
+  frameRect += viewOffset;
 
-	nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsIPresContext> presContext;
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
   if (presShell)
   {
     if (NS_FAILED(presShell->GetPresContext(getter_AddRefs(presContext))))
-		  return;
+      return;
   }
   else
     return;
 
-	// make a rendering context, if we didn't get passed one
-	nsCOMPtr<nsIRenderingContext>	localRC = do_QueryInterface(inRendContext);		// OK if inRendContext is null
-	if (!localRC)
-	{
-		nsCOMPtr<nsIDeviceContext> 		dx;
+  // make a rendering context, if we didn't get passed one
+  nsCOMPtr<nsIRenderingContext> localRC = do_QueryInterface(inRendContext);   // OK if inRendContext is null
+  if (!localRC)
+  {
+    nsCOMPtr<nsIDeviceContext>    dx;
 
-		if (NS_FAILED(presContext->GetDeviceContext(getter_AddRefs(dx))) || !dx)
-			return;
-			
-		if (NS_FAILED(dx->CreateRenderingContext(drawingView, *getter_AddRefs(localRC))) || !localRC)
-			return;
-	}
-	
-	if (!mDrawn)
-	{
-		nsPoint		framePos(0, 0);
-		nsRect		caretRect = frameRect;
-		
-		mLastCaretFrame->GetPointFromOffset(presContext, localRC, mLastContentOffset, &framePos);
-		caretRect += framePos;
+    if (NS_FAILED(presContext->GetDeviceContext(getter_AddRefs(dx))) || !dx)
+      return;
+      
+    if (NS_FAILED(dx->CreateRenderingContext(drawingView, *getter_AddRefs(localRC))) || !localRC)
+      return;
+  }
+  
+  if (!mDrawn)
+  {
+    nsPoint   framePos(0, 0);
+    nsRect    caretRect = frameRect;
+    
+    mLastCaretFrame->GetPointFromOffset(presContext, localRC, mLastContentOffset, &framePos);
+    caretRect += framePos;
 
-		
-		//printf("Content offset %ld, frame offset %ld\n", focusOffset, framePos.x);
-		if(mCaretTwipsWidth < 0)
+    
+    //printf("Content offset %ld, frame offset %ld\n", focusOffset, framePos.x);
+    if(mCaretTwipsWidth < 0)
     {// need to re-compute the pixel width
       mCaretTwipsWidth  = 15 * mCaretPixelsWidth;//uhhhh...
     }
-		caretRect.width = mCaretTwipsWidth;
+    caretRect.width = mCaretTwipsWidth;
 
-		// Avoid view redraw problems by making sure the
-		// caret doesn't hang outside the right edge of
-		// the frame. This ensures that the caret gets
-		// erased properly if the frame's right edge gets
-		// invalidated.
+    // Avoid view redraw problems by making sure the
+    // caret doesn't hang outside the right edge of
+    // the frame. This ensures that the caret gets
+    // erased properly if the frame's right edge gets
+    // invalidated.
 
-		nscoord cX = caretRect.x + caretRect.width;
-		nscoord fX = frameRect.x + frameRect.width;
+    nscoord cX = caretRect.x + caretRect.width;
+    nscoord fX = frameRect.x + frameRect.width;
 
-		if (caretRect.x <= fX && cX > fX)
-		{
-			caretRect.x -= cX - fX;
+    if (caretRect.x <= fX && cX > fX)
+    {
+      caretRect.x -= cX - fX;
 
-			if (caretRect.x < frameRect.x)
-				caretRect.x = frameRect.x;
-		}
+      if (caretRect.x < frameRect.x)
+        caretRect.x = frameRect.x;
+    }
 
-		mCaretRect = caretRect;
-	}
-		/*
-		if (mReadOnly)
-			inRendContext.SetColor(NS_RGB(85, 85, 85));		// we are drawing it; gray
-	  */
-	  
-	localRC->SetColor(NS_RGB(255,255,255));
-	localRC->InvertRect(mCaretRect);
-	ToggleDrawnStatus();
+    mCaretRect.IntersectRect(clipRect, caretRect);
+  }
+    /*
+    if (mReadOnly)
+      inRendContext.SetColor(NS_RGB(85, 85, 85));   // we are drawing it; gray
+    */
+    
+  localRC->SetColor(NS_RGB(255,255,255));
+  localRC->InvertRect(mCaretRect);
+  ToggleDrawnStatus();
 
 }
 
 //-----------------------------------------------------------------------------
 void nsCaret::DrawCaret()
 {
-	// do we need to draw the caret at all?
-	if (!MustDrawCaret())
-		return;
-	
-	// if we are drawing, not erasing, then set up the frame etc.
-	if (!mDrawn)
-	{
-		if (! SetupDrawingFrameAndOffset())
-			return;
-	}
-			
-	DrawCaretWithContext(nsnull);
+  // do we need to draw the caret at all?
+  if (!MustDrawCaret())
+    return;
+  
+  // if we are drawing, not erasing, then set up the frame etc.
+  if (!mDrawn)
+  {
+    if (! SetupDrawingFrameAndOffset())
+      return;
+  }
+      
+  DrawCaretWithContext(nsnull);
 }
 
 
 //-----------------------------------------------------------------------------
 void nsCaret::RefreshDrawCaret(nsIView *aView, nsIRenderingContext& inRendContext, const nsRect& aDirtyRect)
 {
-/*	
-	if (! SetupDrawingFrameAndOffset())
-		return;
+/*  
+  if (! SetupDrawingFrameAndOffset())
+    return;
 
-	NS_ASSERTION(mLastCaretFrame != nsnull, "Should have a frame here");
-	
-	nsPoint		viewOffset(0, 0);
-	nsIView		*drawingView;
-	//GetViewForRendering(viewOffset, drawingView);
+  NS_ASSERTION(mLastCaretFrame != nsnull, "Should have a frame here");
+  
+  nsPoint   viewOffset(0, 0);
+  nsIView   *drawingView;
+  //GetViewForRendering(viewOffset, drawingView);
 
-	mLastCaretFrame->GetOffsetFromView(viewOffset, &drawingView);
+  mLastCaretFrame->GetOffsetFromView(viewOffset, &drawingView);
 
-	// are we in the view that is being painted?
-	if (drawingView == nsnull || drawingView != aView)
-		return;
-	
-	mDrawn = PR_FALSE;		// we're rendering to a view that is being redrawn
-	DrawCaretWithContext(inRendContext);
+  // are we in the view that is being painted?
+  if (drawingView == nsnull || drawingView != aView)
+    return;
+  
+  mDrawn = PR_FALSE;    // we're rendering to a view that is being redrawn
+  DrawCaretWithContext(inRendContext);
 */
 }
 
@@ -744,13 +777,13 @@ void nsCaret::RefreshDrawCaret(nsIView *aView, nsIRenderingContext& inRendContex
 /* static */
 void nsCaret::CaretBlinkCallback(nsITimer *aTimer, void *aClosure)
 {
-	nsCaret		*theCaret = NS_REINTERPRET_CAST(nsCaret*, aClosure);
-	if (!theCaret) return;
-	
-	theCaret->DrawCaret();
+  nsCaret   *theCaret = NS_REINTERPRET_CAST(nsCaret*, aClosure);
+  if (!theCaret) return;
+  
+  theCaret->DrawCaret();
 
 #ifndef REPEATING_TIMERS
-	theCaret->PrimeTimer();
+  theCaret->PrimeTimer();
 #endif
 }
 

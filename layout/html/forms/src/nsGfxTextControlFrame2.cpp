@@ -696,25 +696,27 @@ NS_IMETHODIMP
 nsTextInputSelectionImpl::SetCaretEnabled(PRBool enabled)
 {
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsresult result;
-  nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShellWeak, &result);
-  if (shell)
-  {
-    nsCOMPtr<nsICaret> caret;
-    if (NS_SUCCEEDED(result = shell->GetCaret(getter_AddRefs(caret))))
-    {
-      nsCOMPtr<nsIDOMSelection> domSel;
-      if (NS_SUCCEEDED(result = mFrameSelection->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel))))
-      {
-        nsCOMPtr<nsIDOMSelection> domSel;
-        if (NS_SUCCEEDED(GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel))) && domSel)
-          caret->SetCaretDOMSelection(domSel);
-        return caret->SetCaretVisible(enabled);
-      }
-    }
 
-  }
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShellWeak);
+  if (!shell) return NS_ERROR_FAILURE;
+  
+  // first, tell the caret which selection to use
+  nsCOMPtr<nsIDOMSelection> domSel;
+  GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
+  if (!domSel) return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsICaret> caret;
+  shell->GetCaret(getter_AddRefs(caret));
+  if (!caret) return NS_OK;
+  caret->SetCaretDOMSelection(domSel);
+
+  // tell the pres shell to enable the caret, rather than settings its visibility directly.
+  // this way the presShell's idea of caret visibility is maintained.
+  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(shell);
+  if (!selCon) return NS_ERROR_NO_INTERFACE;
+  selCon->SetCaretEnabled(enabled);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
