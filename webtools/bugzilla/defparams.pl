@@ -176,6 +176,17 @@ information about what Bugzilla is and what it can do, see
 
 
     
+DefParam("warnbannerhtml",
+         "HTML to prepend to warning messages.",
+         "l",
+         "<font size=+1>");
+
+DefParam("warnfooterhtml",
+         "HTML to append to warning messages.",
+         "l",
+         "</font>");
+
+
 DefParam("changedmail",
 q{The email that gets sent to people when a bug changes.  Within this
 text, %to% gets replaced by the assigned-to and reported-by people,
@@ -378,5 +389,36 @@ DefParam("browserbugmessage",
          "If strictvaluechecks is on, and the bugzilla gets unexpected data from the browser, in addition to displaying the cause of the problem, it will output this HTML as well.",
          "l",
          "this may indicate a bug in your browser.\n");
+
+#
+# Parameters to force users to comment their changes for different actions.
+DefParam("commentonaccept", 
+         "If this option is on, the user needs to enter a short comment if he accepts the bug",
+         "b", 0 );
+DefParam("commentonclearresolution", 
+         "If this option is on, the user needs to enter a short comment if the bugs resolution is cleared",
+         "b", 0 );
+DefParam("commentonresolve", 
+         "If this option is on, the user needs to enter a short comment if the bug is resolved",
+         "b", 0 );
+DefParam("commentonreassign", 
+         "If this option is on, the user needs to enter a short comment if the bug is reassigned",
+         "b", 0 );
+DefParam("commentonreassignbycomponent", 
+         "If this option is on, the user needs to enter a short comment if the bug is reassigned by component",
+         "b", 0 );
+DefParam("commentonreopen", 
+         "If this option is on, the user needs to enter a short comment if the bug is reopened",
+         "b", 0 );
+DefParam("commentonverify", 
+         "If this option is on, the user needs to enter a short comment if the bug is verified",
+         "b", 0 );
+DefParam("commentonclose", 
+         "If this option is on, the user needs to enter a short comment if the bug is closed",
+         "b", 0 );
+DefParam("commentonduplicate",
+         "If this option is on, the user needs to enter a short comment if the bug is marked as duplicate",
+         "b", 0 );
+
 1;
 

@@ -169,6 +169,35 @@ sub ChangeResolution {
     }
 }
 
+#
+# This function checks if there is a comment required for a specific
+# function and tests, if the comment was given.
+# If comments are required for functions  is defined by params.
+#
+sub CheckonComment( $ ) {
+    my ($function) = (@_);
+    
+    # Param is 1 if comment should be added !
+    my $ret = Param( "commenton" . $function );
+
+    # Allow without comment in case of undefined Params.
+    $ret = 0 unless ( defined( $ret ));
+
+    if( $ret ) {
+        if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
+            # No commet - sorry, action not allowed !
+            warnBanner("You have to specify a <b>comment</b> on this change." .
+                       "<p>" .
+                       "Please press <b>Back</b> and give some words " .
+                       "on the reason of the your change.\n" );
+            exit( 0 );
+        } else {
+            $ret = 0;
+        }
+    }
+    return( ! $ret ); # Return val has to be inverted
+}
+
 
 my $foundbit = 0;
 foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
@@ -220,20 +249,20 @@ SWITCH: for ($::FORM{'knob'}) {
     /^none$/ && do {
         last SWITCH;
     };
-    /^accept$/ && do {
+    /^accept$/ && CheckonComment( "accept" ) && do {
         ChangeStatus('ASSIGNED');
         last SWITCH;
     };
-    /^clearresolution$/ && do {
+    /^clearresolution$/ && CheckonComment( "clearresolution" ) &&do {
         ChangeResolution('');
         last SWITCH;
     };
-    /^resolve$/ && do {
+    /^resolve$/ && CheckonComment( "resolve" ) && do {
         ChangeStatus('RESOLVED');
         ChangeResolution($::FORM{'resolution'});
         last SWITCH;
     };
-    /^reassign$/ && do {
+    /^reassign$/ && CheckonComment( "reassign" ) && do {
         ChangeStatus('NEW');
         DoComma();
         if ( Param("strictvaluechecks") ) {
@@ -248,7 +277,7 @@ SWITCH: for ($::FORM{'knob'}) {
         $::query .= "assigned_to = $newid";
         last SWITCH;
     };
-    /^reassignbycomponent$/ && do {
+    /^reassignbycomponent$/  && CheckonComment( "reassignbycomponent" ) && do {
         if ($::FORM{'product'} eq $::dontchange) {
             print "You must specify a product to help determine the new\n";
             print "owner of these bugs.\n";
@@ -269,19 +298,19 @@ SWITCH: for ($::FORM{'knob'}) {
         $::query .= "assigned_to = $newid";
         last SWITCH;
     };   
-    /^reopen$/ && do {
+    /^reopen$/  && CheckonComment( "reopen" ) && do {
         ChangeStatus('REOPENED');
         last SWITCH;
     };
-    /^verify$/ && do {
+    /^verify$/ && CheckonComment( "verify" ) && do {
         ChangeStatus('VERIFIED');
         last SWITCH;
     };
-    /^close$/ && do {
+    /^close$/ && CheckonComment( "close" ) && do {
         ChangeStatus('CLOSED');
         last SWITCH;
     };
-    /^duplicate$/ && do {
+    /^duplicate$/ && CheckonComment( "duplicate" ) && do {
         ChangeStatus('RESOLVED');
         ChangeResolution('DUPLICATE');
         if ( Param('strictvaluechecks') ) {

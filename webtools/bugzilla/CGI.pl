@@ -631,8 +631,16 @@ sub DumpBugActivity {
 }
 
 
-
-
+#
+# Prints a warnbanner incl. image with given message
+# 
+sub warnBanner( $ )
+{
+  my ($msg) = (@_);
+  print Param("warnbannerhtml");
+  print $msg;
+  print Param("warnfooterhtml");
+}
 
 
 ############# Live code below here (that is, not subroutine defs) #############
