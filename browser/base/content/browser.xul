@@ -436,7 +436,7 @@
                     class="statusbarpanel-menu-iconic" 
                     tooltiptext="&pageStyleIcon.tooltip;">
       <menupopup onpopupshowing="stylesheetFillPopup(this);"
-                 oncommand="stylesheetSwitchAll(window._content, event.target.getAttribute('data')); setStyleDisabled(false);">
+                 oncommand="stylesheetSwitchAll(window.content, event.target.getAttribute('data')); setStyleDisabled(false);">
         <menuitem label="&pageStyleNoStyle.label;" accesskey="&pageStyleNoStyle.accesskey;"
                   oncommand="setStyleDisabled(true); event.preventBubble();" type="radio" hidden="true"/>
         <menuitem label="&pageStylePersistentOnly.label;" accesskey="&pageStylePersistentOnly.accesskey;" type="radio" checked="true"/>
@@ -446,7 +446,7 @@
 #endif
     <statusbarpanel id="livemark-button" type="menu" class="statusbarpanel-menu-iconic" chromedir="&locale.dir;">
       <menupopup onpopupshowing="return livemarkFillPopup(this);"
-                 oncommand="livemarkAddMark(window._content, event.target.getAttribute('data'));" />
+                 oncommand="livemarkAddMark(window.content, event.target.getAttribute('data'));" />
     </statusbarpanel>
   </statusbar>
 </window>

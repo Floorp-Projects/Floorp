@@ -103,7 +103,7 @@ var gURLBarAutoFillPrefListener = null;
 function loadEventHandlers(event)
 {
   // Filter out events that are not about the document load we are interested in
-  if (event.originalTarget == _content.document) {
+  if (event.originalTarget == content.document) {
     checkForDirectoryListing();
     charsetLoadListener(event);
 #ifdef ALTSS_ICON
@@ -141,7 +141,7 @@ function loadEventHandlers(event)
 function getContentAreaFrameCount()
 {
   var saveFrameItem = document.getElementById("menu_saveFrame");
-  if (!content || !_content.frames.length || !isDocumentFrame(document.commandDispatcher.focusedWindow))
+  if (!content || !content.frames.length || !isDocumentFrame(document.commandDispatcher.focusedWindow))
     saveFrameItem.setAttribute("hidden", "true");
   else
     saveFrameItem.removeAttribute("hidden");
@@ -745,7 +745,7 @@ function delayedStartup()
   if (gIsLoadingBlank && gURLBar && !gURLBar.hidden && !gURLBar.parentNode.parentNode.collapsed)
     element = gURLBar;
   else
-    element = _content;
+    element = content;
 
   // This is a redo of the fix for jag bug 91884
   var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
@@ -1268,7 +1268,7 @@ function BrowserHomeClick(aEvent)
       gBrowser.addTab(urls[i]);
     if ((where == "tab") ^ getBoolPref("browser.tabs.loadBookmarksInBackground", false)) {
       gBrowser.selectedTab = firstTabAdded;
-      _content.focus();
+      content.focus();
     }
     break;
   case "window":
@@ -1571,7 +1571,7 @@ function BrowserLoadURL(aTriggeringEvent, aPostData)
     if (gBrowser.localName == "tabbrowser" &&
         aTriggeringEvent && 'altKey' in aTriggeringEvent &&
         aTriggeringEvent.altKey) {
-      _content.focus();
+      content.focus();
       var t = gBrowser.addTab(url, null, null, aPostData); // open link in new tab
       gBrowser.selectedTab = t;
       gURLBar.value = url;
@@ -1582,7 +1582,7 @@ function BrowserLoadURL(aTriggeringEvent, aPostData)
     }
     else  
       loadURI(url, null, aPostData);
-    _content.focus();
+    content.focus();
   }
 }
 
@@ -1591,7 +1591,7 @@ function SearchLoadURL(aURL, aTriggeringEvent)
   if (gBrowser.localName == "tabbrowser" &&
       aTriggeringEvent && 'altKey' in aTriggeringEvent &&
       aTriggeringEvent.altKey) {
-    _content.focus();
+    content.focus();
     var t = gBrowser.addTab(aURL, null); // open link in new tab
     gBrowser.selectedTab = t;
     if (gURLBar)
@@ -1599,7 +1599,7 @@ function SearchLoadURL(aURL, aTriggeringEvent)
   }
   else  
     loadURI(aURL, null, null);
-  _content.focus();
+  content.focus();
 }
 
 function getShortcutOrURI(aURL, aPostDataRef)
@@ -1723,12 +1723,12 @@ function BrowserViewSourceOfDocument(aDocument)
       var ifRequestor;
 
       // Get the DOMWindow for the requested document.  If the DOMWindow
-      // cannot be found, then just use the _content window...
+      // cannot be found, then just use the content window...
       //
       // XXX:  This is a bit of a hack...
       win = aDocument.defaultView;
       if (win == window) {
-        win = _content;
+        win = content;
       }
       ifRequestor = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
 
@@ -1811,7 +1811,7 @@ function traceDocument()
 {
   // keep the chrome document out of the dump.
   leakDetector.markObject(document, true);
-  leakDetector.traceObject(_content, leakDetector.verbose);
+  leakDetector.traceObject(content, leakDetector.verbose);
   leakDetector.markObject(document, false);
 }
 
@@ -1824,9 +1824,9 @@ function traceVerbose(verbose)
 
 function checkForDirectoryListing()
 {
-  if ( "HTTPIndex" in _content &&
-       _content.HTTPIndex instanceof Components.interfaces.nsIHTTPIndex ) {
-    _content.defaultCharacterset = getMarkupDocumentViewer().defaultCharacterSet;
+  if ( "HTTPIndex" in content &&
+       content.HTTPIndex instanceof Components.interfaces.nsIHTTPIndex ) {
+    content.defaultCharacterset = getMarkupDocumentViewer().defaultCharacterSet;
   }
 }
 
@@ -2228,7 +2228,7 @@ var proxyIconDNDObserver = {
       //       the homepage in the event of an empty urlbar.
       if (!value) return;
 
-      var urlString = value + "\n" + window._content.document.title;
+      var urlString = value + "\n" + window.content.document.title;
       var htmlString = "<a href=\"" + value + "\">" + value + "</a>";
 
       aXferData.data = new TransferData();
@@ -2617,9 +2617,9 @@ function OpenBrowserWindow()
   // if and only if the current window is a browser window and it has a document with a character
   // set, then extract the current charset menu setting from the current document and use it to
   // initialize the new browser window...
-  if (window && (wintype == "navigator:browser") && window._content && window._content.document)
+  if (window && (wintype == "navigator:browser") && window.content && window.content.document)
   {
-    var DocCharset = window._content.document.characterSet;
+    var DocCharset = window.content.document.characterSet;
     charsetArg = "charset="+DocCharset;
 
     //we should "inherit" the charset menu setting in a new window
@@ -3207,7 +3207,7 @@ nsBrowserStatusHandler.prototype =
     var observerService = Components.classes["@mozilla.org/observer-service;1"]
                                     .getService(Components.interfaces.nsIObserverService);
     try {
-      observerService.notifyObservers(_content, "StartDocumentLoad", urlStr);
+      observerService.notifyObservers(content, "StartDocumentLoad", urlStr);
     } catch (e) {
     }
   },
@@ -3226,7 +3226,7 @@ nsBrowserStatusHandler.prototype =
 
     var notification = Components.isSuccessCode(aStatus) ? "EndDocumentLoad" : "FailDocumentLoad";
     try {
-      observerService.notifyObservers(_content, notification, urlStr);
+      observerService.notifyObservers(content, notification, urlStr);
     } catch (e) {
     }
     setTimeout(function() { if (document.getElementById("highlight").checked) toggleHighlight(true); }, 0);
@@ -3519,7 +3519,7 @@ function toggleSidebar(aCommandID, forceOpen) {
     sidebarTitle.setAttribute("value", "");
     sidebarBox.hidden = true;
     sidebarSplitter.hidden = true;
-    _content.focus();
+    content.focus();
     return;
   }
   
@@ -3862,8 +3862,8 @@ nsContextMenu.prototype = {
                                                       computedURL );
                  }
                }
-            } else if ( "HTTPIndex" in _content &&
-                        _content.HTTPIndex instanceof Components.interfaces.nsIHTTPIndex ) {
+            } else if ( "HTTPIndex" in content &&
+                        content.HTTPIndex instanceof Components.interfaces.nsIHTTPIndex ) {
                 this.inDirList = true;
                 // Bubble outward till we get to an element with URL attribute
                 // (which should be the href).
@@ -3910,7 +3910,7 @@ nsContextMenu.prototype = {
           this.onMathML = true;
 
         // See if the user clicked in a frame.
-        if ( this.target.ownerDocument != window._content.document ) {
+        if ( this.target.ownerDocument != window.content.document ) {
             this.inFrame = true;
         }
         
@@ -4052,7 +4052,7 @@ nsContextMenu.prototype = {
     viewPartialSource : function ( context ) {
         var focusedWindow = document.commandDispatcher.focusedWindow;
         if (focusedWindow == window)
-          focusedWindow = _content;
+          focusedWindow = content;
         var docCharset = null;
         if (focusedWindow)
           docCharset = "charset=" + focusedWindow.document.characterSet;
@@ -4776,7 +4776,7 @@ function SelectDetector(event, doReload)
         str.data = prefvalue;
         pref.setComplexValue("intl.charset.detector",
                              Components.interfaces.nsISupportsString, str);
-        if (doReload) window._content.location.reload();
+        if (doReload) window.content.location.reload();
     }
     catch (ex) {
         dump("Failed to set the intl.charset.detector preference.\n");
@@ -4819,7 +4819,7 @@ function UpdateCurrentCharset()
 
     // exctract the charset from DOM
     var wnd = document.commandDispatcher.focusedWindow;
-    if ((window == wnd) || (wnd == null)) wnd = window._content;
+    if ((window == wnd) || (wnd == null)) wnd = window.content;
     menuitem = document.getElementById('charset.' + wnd.document.characterSet);
 
     if (menuitem) {
@@ -4878,7 +4878,7 @@ function CreateMenu(node)
 
 function charsetLoadListener (event)
 {
-    var charset = window._content.document.characterSet;
+    var charset = window.content.document.characterSet;
 
     if (charset.length > 0 && (charset != gLastBrowserCharset)) {
         if (!gCharsetMenu)
@@ -4956,7 +4956,7 @@ function stylesheetFillPopup(menuPopup)
   while (sep.nextSibling)
     menuPopup.removeChild(sep.nextSibling);
 
-  var styleSheets = getAllStyleSheets(window._content);
+  var styleSheets = getAllStyleSheets(window.content);
   var currentStyleSheets = [];
   var styleDisabled = getMarkupDocumentViewer().authorStyleDisabled;
   var haveAltSheets = false;
@@ -4997,7 +4997,7 @@ function stylesheetFillPopup(menuPopup)
   
   noStyle.setAttribute("checked", styleDisabled);
   persistentOnly.setAttribute("checked", !altStyleSelected && !styleDisabled);
-  persistentOnly.hidden = (window._content.document.preferredStylesheetSet) ? true : false;
+  persistentOnly.hidden = (window.content.document.preferredStylesheetSet) ? true : false;
   sep.hidden = (noStyle.hidden && persistentOnly.hidden) || !haveAltSheets;
   return true;
 }
@@ -5043,7 +5043,7 @@ function setStyleDisabled(disabled) {
 #ifdef ALTSS_ICON
 function updatePageStyles(evt)
 {
-  // XXX - Accessing window._content.document can generate an
+  // XXX - Accessing window.content.document can generate an
   // onLocationChange for the current tab, this can cause the url
   // bar to be cleared. Prevent that happening by setting the clear
   // state to false for the duration of this function.
@@ -5055,8 +5055,8 @@ function updatePageStyles(evt)
     gPageStyleButton = document.getElementById("page-theme-button");
 
   var hasAltSS = false;
-  var stylesheets = window._content.document.styleSheets;
-  var preferredSheet = window._content.document.preferredStylesheetSet;
+  var stylesheets = window.content.document.styleSheets;
+  var preferredSheet = window.content.document.preferredStylesheetSet;
   for (var i = 0; i < stylesheets.length; ++i) {
     var currentStyleSheet = stylesheets[i];
     
@@ -5252,8 +5252,8 @@ function WindowIsClosing()
 var MailIntegration = {
   sendLinkForContent: function ()
   {
-    this.sendMessage(Components.lookupMethod(window._content, 'location').call(window._content).href,
-                     Components.lookupMethod(window._content.document, 'title').call(window._content.document));  
+    this.sendMessage(Components.lookupMethod(window.content, 'location').call(window.content).href,
+                     Components.lookupMethod(window.content.document, 'title').call(window.content.document));  
   },
 
   sendMessage: function (aBody, aSubject) 

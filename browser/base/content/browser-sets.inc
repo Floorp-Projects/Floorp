@@ -85,7 +85,7 @@
 
     <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab();"/>
     <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
-    <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
+    <command id="Browser:SavePage" oncommand="saveDocument(window.content.document);"/>
 
     <command id="Browser:SendLink" oncommand="MailIntegration.sendLinkForContent();"/>
     <command id="Browser:NewMessage" oncommand="MailIntegration.sendMessage('', '');"/>
@@ -136,7 +136,7 @@
              oncommand="goDoCommand('cmd_switchTextDirection');"
              disabled="true"/>
 
-    <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(_content.document);"/>
+    <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(content.document);"/>
     <command id="View:PageInfo" oncommand="BrowserPageInfo();"/>
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
     <command id="cmd_find" oncommand="onFindCmd();"/>

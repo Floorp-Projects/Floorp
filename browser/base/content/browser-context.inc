@@ -126,7 +126,7 @@
       <menuitem id="context-savepage"
                 label="&savePageCmd.label;"
                 accesskey="&savePageCmd.accesskey;"
-                oncommand="saveDocument(window._content.document);"/>
+                oncommand="saveDocument(window.content.document);"/>
       <menuitem id="context-sendpage"  
                 label="&sendPageCmd.label;" 
                 accesskey="&sendPageCmd.accesskey;" 
@@ -215,7 +215,7 @@
       <menuitem id="context-viewsource"
                 label="&viewPageSourceCmd.label;"
                 accesskey="&viewPageSourceCmd.accesskey;"
-                oncommand="BrowserViewSourceOfDocument(_content.document);"/>
+                oncommand="BrowserViewSourceOfDocument(content.document);"/>
       <menuitem id="context-viewinfo"
                 label="&viewPageInfoCmd.label;"
                 accesskey="&viewPageInfoCmd.accesskey;"

@@ -277,7 +277,7 @@ function checkForLink(elem, htmllocalname)
         break;
     case "":
     case "replace":
-        if (elem.ownerDocument != elem.ownerDocument.defaultView._content.document)
+        if (elem.ownerDocument != elem.ownerDocument.defaultView.content.document)
             setInfo("link-target", gMetadataBundle.getString("sameFrameText"));
         else
             setInfo("link-target", gMetadataBundle.getString("sameWindowText"));
@@ -387,7 +387,7 @@ function openLink(node)
   if (safeurls.test(url)) {
     var sourceURI = Components.classes["@mozilla.org/network/standard-url;1"]
                             .createInstance(Components.interfaces.nsIURI);
-    sourceURI.spec = nodeView._content.document.location;
+    sourceURI.spec = nodeView.content.document.location;
     var destURI = Components.classes["@mozilla.org/network/standard-url;1"]
                           .createInstance(Components.interfaces.nsIURI);
     destURI.spec = url;
@@ -399,7 +399,7 @@ function openLink(node)
     } catch (e) {
       return;
     }
-    nodeView._content.document.location = url;
+    nodeView.content.document.location = url;
     window.close();
   }
 }

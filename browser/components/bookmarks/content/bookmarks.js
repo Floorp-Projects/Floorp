@@ -663,7 +663,7 @@ var BookmarksCommand = {
         browser.removeTab(tabs[i]);
 
       // and focus the content
-      w._content.focus();
+      w.content.focus();
 
     } else {
       dump("Open Group in new window: not implemented...\n");
