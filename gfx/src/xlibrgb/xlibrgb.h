@@ -186,6 +186,9 @@ xlib_rgb_get_screen (void);
 extern void
 xlib_set_xt_app_context(void * app_context);
 
+extern void *
+xlib_get_xt_app_context();
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
