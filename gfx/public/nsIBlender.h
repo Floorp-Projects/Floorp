@@ -100,7 +100,7 @@ public:
    GetAlphas computes an array of alpha values for a rectangle of pixels, using
    the drawn-onto-black and the drawn-onto-white images. The pixels are
    returned in a new'ed array of aRect.width*aRect.height elements, in row-major
-   order. This array must be freed by the caller.
+   order. This array must be freed by the caller with delete[].
   */
   NS_IMETHOD GetAlphas(const nsRect& aRect, nsDrawingSurface aBlack,
                        nsDrawingSurface aWhite, PRUint8** aAlphas) = 0;

@@ -2769,6 +2769,8 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
          aWidth, aHeight);
 #endif
   
+  // ResizeTransparencyBitmap uses the old bounds, so pass it the new bounds
+  // before we change the old bounds.
   ResizeTransparencyBitmap(aWidth, aHeight);
 
   mBounds.width  = aWidth;
@@ -4421,10 +4423,10 @@ NS_IMETHODIMP nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint
 
   NS_ASSERTION(mIsTranslucent, "Window is not transparent");
 
-  if (mTransparencyBitmap == nsnull) {
+  if (!mTransparencyBitmap) {
     PRInt32 size = ((mBounds.width+7)/8)*mBounds.height;
     mTransparencyBitmap = new gchar[size];
-    if (mTransparencyBitmap == nsnull)
+    if (!mTransparencyBitmap)
       return NS_ERROR_FAILURE;
     memset(mTransparencyBitmap, 255, size);
   }
