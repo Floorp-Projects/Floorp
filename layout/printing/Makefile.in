@@ -74,9 +74,6 @@ XPIDLSRCS	= \
 		nsIPrintStatusFeedback.idl  \
 		$(NULL)
 
-EXPORTS		= \
-		$(NULL)
-
 CPPSRCS		= \
 		nsPrintEngine.cpp \
 		nsPrintData.cpp \
