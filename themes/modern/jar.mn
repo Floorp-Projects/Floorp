@@ -343,6 +343,7 @@ modern.jar:
   skin/modern/navigator/navigatorBindings.xml                      (navigator/navigatorBindings.xml)
   skin/modern/navigator/linkToolbar.css                            (navigator/linkToolbar.css)
   skin/modern/navigator/navigator.css                              (navigator/navigator.css)
+  skin/modern/navigator/pageInfo.css                               (navigator/pageInfo.css)
   skin/modern/navigator/btn1/first-dis.gif                         (navigator/btn1/first-dis.gif)
   skin/modern/navigator/btn1/first-hov.gif                         (navigator/btn1/first-hov.gif)
   skin/modern/navigator/btn1/first.gif                             (navigator/btn1/first.gif)
