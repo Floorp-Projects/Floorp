@@ -180,26 +180,6 @@ interface nsIWindowsHooks : nsISupports {
     //   Returns true if the windows integration dialog was shown
     boolean checkSettings( in nsIDOMWindowInternal aParent );
 
-    /**
-     * Returns true if command is in the "(appname) QuickLaunch" value in the
-     * HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run
-     * key.
-     */
-    boolean isOptionEnabled(in string option);
-
-    /**
-     * Adds the option to the "(appname) QuickLaunch" value to the key mentioned above,
-     * with data "(path\to\app.exe) option", if not done already.
-     */
-    void startupAddOption(in string option);
-
-    /**
-     * Removes the commnand from the "(appname) QuickLaunch" value from
-	 * the key mentioned above, if not done already. And deletes the
-	 * "(appname) QuickLaunch" value entirely if there are no options left
-     */
-    void startupRemoveOption(in string option);
-
     const PRInt32 WALLPAPER_TILE    = 0;
     const PRInt32 WALLPAPER_STRETCH = 1;
     const PRInt32 WALLPAPER_CENTER  = 2;
