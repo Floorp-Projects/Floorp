@@ -5,7 +5,7 @@
 <!ENTITY accountName.label "Account Name:">
 <!ENTITY accountName.accesskey "N">
 <!ENTITY accountNameDesc.label "The account name is used to identify each account">
-<!ENTITY identityTitle.label "Identity">
+<!ENTITY identityTitle.label "Default Identity">
 <!ENTITY identityDesc.label "Each account has an identity, which is the information that other people see when they read your messages.">
 <!ENTITY name.label "Your Name:">
 <!ENTITY name.accesskey "Y">
@@ -26,3 +26,5 @@
 <!ENTITY attachVCard.label "Attach my vCard to messages">
 <!ENTITY attachVCard.accesskey "v">
 
+<!ENTITY manageIdentities.label "Manage Identities...">
+<!ENTITY manageIdentities.accesskey "M">
