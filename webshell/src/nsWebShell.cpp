@@ -2252,7 +2252,7 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
   // Tell web-shell-container we are loading a new url
   if (nsnull != mContainer) {
     nsAutoString uniSpec (urlSpec);
-    nsresult rv = mContainer->BeginLoadURL(this, uniSpec.GetUnicode());
+    rv = mContainer->BeginLoadURL(this, uniSpec.GetUnicode());
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -3450,14 +3450,31 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
     }
   }
 
-  /*
-   *Fire the OnStartDocumentLoad of the webshell observer
-   */
-  if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver))
-  {
-     mDocLoaderObserver->OnStartDocumentLoad(mDocLoader, aURL, aCommand);
-  }
+  if (loader == mDocLoader) {
+    nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
 
+    if (!mDocLoaderObserver && mParent) {
+      /* If this is a frame (in which case it would have a parent && doesn't
+       * have a documentloaderObserver, get it from the rootWebShell
+       */
+      nsCOMPtr<nsIWebShell> root;
+      nsresult res = GetRootWebShell(*getter_AddRefs(root));
+
+      if (NS_SUCCEEDED(res) && root)
+        root->GetDocLoaderObserver(*getter_AddRefs(dlObserver));
+    }
+    else
+    {
+      dlObserver = do_QueryInterface(mDocLoaderObserver);  // we need this to addref
+    }
+    /*
+     *Fire the OnStartDocumentLoad of the webshell observer
+     */
+    if ((nsnull != mContainer) && (nsnull != dlObserver))
+	{
+       dlObserver->OnStartDocumentLoad(mDocLoader, aURL, aCommand);
+	}
+  }
 
   return rv;
 }
