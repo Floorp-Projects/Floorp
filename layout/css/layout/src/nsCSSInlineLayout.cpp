@@ -44,6 +44,7 @@ nsCSSInlineLayout::nsCSSInlineLayout(nsCSSLineLayout&     aLineLayout,
   mContainerDisplay = (const nsStyleDisplay*)
     aContainerStyle->GetStyleData(eStyleStruct_Display);
   mDirection = mContainerDisplay->mDirection;
+  mIsBullet = PR_FALSE;
 }
 
 nsCSSInlineLayout::~nsCSSInlineLayout()
@@ -84,6 +85,7 @@ nsCSSInlineLayout::Prepare(PRBool aUnconstrainedWidth,
                            PRBool aNoWrap,
                            PRBool aComputeMaxElementSize)
 {
+  mIsBullet = PR_FALSE;
   mFrameNum = 0;
   mUnconstrainedWidth = aUnconstrainedWidth;
   mNoWrap = aNoWrap;
@@ -292,36 +294,26 @@ nsCSSInlineLayout::PlaceFrame(nsIFrame* aFrame,
 
   // Special case to position outside list bullets.
   // XXX RTL bullets
-  PRBool isBullet = PR_FALSE;
-  if (mLineLayout.mListPositionOutside) {
-    PRBool isFirstChild = IsFirstChild();
-    if (isFirstChild && (0 == mLineLayout.mLineNumber)) {
-      nsIFrame* containerPrevInFlow;
-      mContainerFrame->GetPrevInFlow(containerPrevInFlow);
-      if (nsnull == containerPrevInFlow) {
-        isBullet = PR_TRUE;
-        // We are placing the first child of the container and we have
-        // list-style-position of "outside" therefore this is the
-        // bullet that is being reflowed. The bullet is placed in the
-        // padding area of this block. Don't worry about getting the Y
-        // coordinate of the bullet right (vertical alignment will
-        // take care of that).
+  if (mIsBullet) {
+    // We are placing the first child of the container and we have
+    // list-style-position of "outside" therefore this is the
+    // bullet that is being reflowed. The bullet is placed in the
+    // padding area of this block. Don't worry about getting the Y
+    // coordinate of the bullet right (vertical alignment will
+    // take care of that).
 
-        // Compute gap between bullet and inner rect left edge
-        nsIFontMetrics* fm =
-          mLineLayout.mPresContext->GetMetricsFor(mContainerFont->mFont);
-        nscoord kidAscent = fm->GetMaxAscent();
-        nscoord dx = fm->GetHeight() / 2;  // from old layout engine
-        NS_RELEASE(fm);
+    // Compute gap between bullet and inner rect left edge
+    nsIFontMetrics* fm =
+      mLineLayout.mPresContext->GetMetricsFor(mContainerFont->mFont);
+    nscoord kidAscent = fm->GetMaxAscent();
+    nscoord dx = fm->GetHeight() / 2;  // from old layout engine
+    NS_RELEASE(fm);
 
-        // XXX RTL bullets
-        aFrameRect.x = mX - aFrameRect.width - dx;
-        aFrame->SetRect(aFrameRect);
-      }
-    }
+    // XXX RTL bullets
+    aFrameRect.x = mX - aFrameRect.width - dx;
+    aFrame->SetRect(aFrameRect);
   }
-  nscoord totalWidth = 0;
-  if (!isBullet) {
+  else {
     // Place normal in-flow child
     aFrame->SetRect(aFrameRect);
 
@@ -345,8 +337,7 @@ nsCSSInlineLayout::PlaceFrame(nsIFrame* aFrame,
       horizontalMargins = aFrameMargin.left + aFrameMargin.right;
       break;
     }
-    totalWidth = aFrameMetrics.width + horizontalMargins;
-    mX += totalWidth;
+    mX += aFrameMetrics.width + horizontalMargins;
   }
 
   NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
