@@ -323,6 +323,9 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
 {
     nsresult rv = NS_OK;
 
+     // We are not shutting down
+    gXPCOMShuttingDown = PR_FALSE;
+
 #ifdef NS_BUILD_REFCNT_LOGGING
     nsTraceRefcnt::Startup();
 #endif
@@ -585,6 +588,8 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
         currentQ->ProcessPendingEvents();
         currentQ = 0;
     }
+    
+    nsProxyObjectManager::Shutdown();
 
     // Release the directory service
     NS_IF_RELEASE(gDirectoryService);

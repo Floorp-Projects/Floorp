@@ -180,6 +180,7 @@ public:
     static nsProxyObjectManager *GetInstance();
     static PRBool IsManagerShutdown();
 
+    static void Shutdown();
     
     nsHashtable* GetRealObjectToProxyObjectMap() const { return mProxyObjectMap;}   
     nsHashtable* GetIIDToProxyClassMap() const { return mProxyClassMap; }   

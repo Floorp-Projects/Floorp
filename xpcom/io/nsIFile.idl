@@ -63,6 +63,8 @@ interface nsIFile : nsISupports
      *
      *   @param node
      *       A string which is intended to be a child node of the nsIFile.
+     *       For the |appendNative| method, the node must be in the native
+     *       filesystem charset.
      */
     void append(in AString node);
     [noscript] void appendNative(in ACString node);
@@ -95,7 +97,9 @@ interface nsIFile : nsISupports
     void create(in unsigned long type, in unsigned long permissions);
 
     /**
-     *  Accessor to the leaf name of the file itself.
+     *  Accessor to the leaf name of the file itself.      
+     *  For the |nativeLeafName| method, the nativeLeafName must 
+     *  be in the native filesystem charset.
      */
     attribute AString leafName;
     [noscript] attribute ACString nativeLeafName;
@@ -118,7 +122,9 @@ interface nsIFile : nsISupports
      *       newParentDir is null, copyTo() will use the parent
      *       directory of this file. If the newParentDir is not
      *       empty and is not a directory, an error will be
-     *       returned (NS_ERROR_FILE_DESTINATION_NOT_DIR)
+     *       returned (NS_ERROR_FILE_DESTINATION_NOT_DIR). For the 
+     *       |CopyToNative| method, the newName must be in the 
+     *       native filesystem charset.
      *
      *   @param newName
      *       This param allows you to specify a new name for
@@ -133,7 +139,9 @@ interface nsIFile : nsISupports
      *
      *  This function is identical to copyTo with the exception that,
      *  as the name implies, it follows symbolic links.  The XP_UNIX
-     *  implementation always follow symbolic links when copying.
+     *  implementation always follow symbolic links when copying.  For 
+     *  the |CopyToFollowingLinks| method, the newName must be in the 
+     *  native filesystem charset.
      */
     void copyToFollowingLinks(in nsIFile newParentDir, in AString newName);
     [noscript] void copyToFollowingLinksNative(in nsIFile newParentDir, in ACString newName);
@@ -155,7 +163,9 @@ interface nsIFile : nsISupports
      *       newParentDir is empty, moveTo() will rename the file
      *       within its current directory. If the newParentDir is
      *       not empty and does not name a directory, an error will
-     *       be returned (NS_ERROR_FILE_DESTINATION_NOT_DIR)
+     *       be returned (NS_ERROR_FILE_DESTINATION_NOT_DIR).  For 
+     *       the |moveToNative| method, the newName must be in the 
+     *       native filesystem charset.
      *
      *   @param newName
      *       This param allows you to specify a new name for
@@ -217,6 +227,10 @@ interface nsIFile : nsISupports
      *
      *  path
      *      Find out what the nsIFile points at.
+     *
+     *  Note that the ACString attributes are returned in the 
+     *  native filesystem charset.
+     *
      */
     readonly attribute AString target;
     [noscript] readonly attribute ACString nativeTarget;

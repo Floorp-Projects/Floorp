@@ -6098,7 +6098,7 @@ else
 #line 6099 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 #include <stddef.h>
                      int main () {
@@ -8953,7 +8953,7 @@ else
 #line 8954 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 class X { int i; public: virtual ~X() { } };
                             class Y { int j; public: virtual ~Y() { } };
@@ -12280,7 +12280,7 @@ else
 #line 12281 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
  int main () {
                 if (sizeof(long long) != 8) { return 1; } 
@@ -13678,6 +13678,12 @@ EOF
 fi
 
 
+if test "$_WIN32_MSVC"; then
+    XPCOM_GLUE_LIBS='$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)embed_base_s.$(LIB_SUFFIX)'
+else
+    XPCOM_GLUE_LIBS='-L${DIST}/bin -L${DIST}/lib -lxpcomglue -lstring_s -lstring_obsolete_s -lembed_base_s'
+fi
+
 if test "$MOZ_DEBUG" || test "$NS_TRACE_MALLOC"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
 fi
@@ -14385,6 +14391,7 @@ s%@MOZ_JSDEBUGGER@%$MOZ_JSDEBUGGER%g
 s%@ENABLE_EAZEL_PROFILER@%$ENABLE_EAZEL_PROFILER%g
 s%@EAZEL_PROFILER_CFLAGS@%$EAZEL_PROFILER_CFLAGS%g
 s%@EAZEL_PROFILER_LIBS@%$EAZEL_PROFILER_LIBS%g
+s%@XPCOM_GLUE_LIBS@%$XPCOM_GLUE_LIBS%g
 s%@MOZ_PERF_METRICS@%$MOZ_PERF_METRICS%g
 s%@GC_LEAK_DETECTOR@%$GC_LEAK_DETECTOR%g
 s%@MOZ_LOG_REFCNT@%$MOZ_LOG_REFCNT%g

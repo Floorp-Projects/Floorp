@@ -4298,6 +4298,12 @@ dnl ========================================================
 dnl =
 dnl = Cleanup section for misc ordering snafus
 dnl =
+if test "$_WIN32_MSVC"; then
+    XPCOM_GLUE_LIBS='$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)embed_base_s.$(LIB_SUFFIX)'
+else
+    XPCOM_GLUE_LIBS='-L${DIST}/bin -L${DIST}/lib -lxpcomglue -lstring_s -lstring_obsolete_s -lembed_base_s'
+fi
+
 dnl ========================================================
 if test "$MOZ_DEBUG" || test "$NS_TRACE_MALLOC"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
@@ -4369,6 +4375,7 @@ AC_SUBST(MOZ_JSDEBUGGER)
 AC_SUBST(ENABLE_EAZEL_PROFILER)
 AC_SUBST(EAZEL_PROFILER_CFLAGS)
 AC_SUBST(EAZEL_PROFILER_LIBS)
+AC_SUBST(XPCOM_GLUE_LIBS)
 AC_SUBST(MOZ_PERF_METRICS)
 AC_SUBST(GC_LEAK_DETECTOR)
 AC_SUBST(MOZ_LOG_REFCNT)

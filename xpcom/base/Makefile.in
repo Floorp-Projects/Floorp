@@ -37,7 +37,6 @@ CPPSRCS		= \
 		nsAllocator.cpp \
 		nsMemoryImpl.cpp \
 		nsErrorService.cpp \
-		nsIInterfaceRequestor.cpp \
 		nsTraceRefcnt.cpp \
 		nsID.cpp \
 		nsCWeakReference.cpp \

@@ -60,8 +60,9 @@ interface nsILocalFile : nsIFile
      *   @param filePath       
      *       A string which specifies a full file path to a 
      *       location.  Relative paths will be treated as an
-     *       error (NS_ERROR_FILE_UNRECOGNIZED_PATH).  This
-     *       path must in native.
+     *       error (NS_ERROR_FILE_UNRECOGNIZED_PATH).  For 
+     *       initWithNativePath, the filePath must be in the native
+     *       filesystem charset.
      */
     void initWithPath(in AString filePath);
     [noscript] void initWithNativePath(in ACString filePath);
@@ -107,8 +108,9 @@ interface nsILocalFile : nsIFile
      *
      *   @param relativeFilePath
      *       relativeFilePath is a native relative path. For security reasons,
-     *       this cannot contain .. or cannot start with a directory separator
-     *       XXXbe  Why not?  Bogus!
+     *       this cannot contain .. or cannot start with a directory separator.
+     *       For the |appendRelativeNativePath| method, the relativeFilePath 
+     *       must be in the native filesystem charset.
      */
     void appendRelativePath(in AString relativeFilePath);
     [noscript] void appendRelativeNativePath(in ACString relativeFilePath);
@@ -162,7 +164,9 @@ interface nsILocalFile : nsIFile
      *
      *   @param fromFile
      *       the file to which the descriptor is relative
-     */
+     *   @param relative
+     *       the relative descriptor obtained from getRelativeDescriptor
+*/
     void setRelativeDescriptor(in nsILocalFile fromFile, in ACString relativeDesc);    
 };
 
@@ -170,8 +174,4 @@ interface nsILocalFile : nsIFile
 #define NS_LOCAL_FILE_CONTRACTID "@mozilla.org/file/local;1"
 #define NS_LOCAL_FILE_CLASSNAME "Local File Specification"
 
-extern "C" NS_EXPORT nsresult
-NS_NewLocalFile(const nsAString &path, PRBool followLinks, nsILocalFile* *result);
-extern "C" NS_EXPORT nsresult
-NS_NewNativeLocalFile(const nsACString &path, PRBool followLinks, nsILocalFile* *result);
 %}
