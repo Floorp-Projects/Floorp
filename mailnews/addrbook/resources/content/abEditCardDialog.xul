@@ -43,7 +43,6 @@
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   id="abcardWindow"
         onload="OnLoadEditCard()"
-        buttonpack="center"
   ondialogaccept="return EditCardOKButton();">
 
   <stringbundleset id="stringbundleset"/>
