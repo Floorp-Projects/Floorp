@@ -28,9 +28,9 @@ CacheVisitor.prototype = {
         return true;
     },
     
-    visitEntry : function(deviceID, clientID, entryInfo)
+    visitEntry : function(deviceID, entryInfo)
     {
-        print("[visiting entry (clientID = " + clientID + ", key = " + entryInfo.key + ")]");
+        print("[visiting entry (clientID = " + entryInfo.clientID + ", key = " + entryInfo.key + ")]");
         return true;
     }
 };
