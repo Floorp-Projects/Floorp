@@ -87,7 +87,8 @@ var gSearchNotificationListener =
         gStatusBar.setAttribute("mode","normal");
         gSearchInProgress = false;
         // ### TODO need to find out if there's quick search within a virtual folder.
-        if (gCurrentVirtualFolderUri && gCurrentVirtualFolderUri != "")
+        if (gCurrentVirtualFolderUri &&
+         (gSearchInput.value == "" || gSearchInput.showingSearchCriteria))
         {
           var vFolder = GetMsgFolderFromUri(gCurrentVirtualFolderUri, false);
           var dbFolderInfo = vFolder.getMsgDatabase(msgWindow).dBFolderInfo;
