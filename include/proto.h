@@ -264,7 +264,7 @@ extern Bool LO_ForwardInGrid(MWContext *context);
 extern Bool LO_GridCanGoForward(MWContext *context);
 extern Bool LO_GridCanGoBackward(MWContext *context);
 
-/* #if defined(SingleSignon) -- removed because it broke the mac build ??? */
+#if defined(SingleSignon)
 extern void SI_RestoreSignonData
     (char* URLName, char* name, char** value);
 extern void SI_RememberSignonData
@@ -290,7 +290,7 @@ extern char * SI_Prompt
 extern void SI_AnonymizeSignons();
 extern void SI_UnanonymizeSignons();
 extern void SI_StartOfForm();
-/* #endif */
+#endif
 
 #ifdef LAYERS
 extern Bool LO_Click( MWContext *context, int32 x, int32 y, 
