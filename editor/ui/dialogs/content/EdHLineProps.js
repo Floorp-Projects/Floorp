@@ -26,6 +26,7 @@ var width;
 var height;
 var align;
 var shading;
+const gMaxHRSize = 1000; // This is hard-coded in nsHTMLHRElement::StringToAttribute()
 
 // dialog initialization code
 function Startup()
@@ -172,7 +173,7 @@ function onSaveDefault()
 function ValidateData()
 {
   // Height is always pixels
-  height = ValidateNumber(gDialog.heightInput, null, 1, maxPixels,
+  height = ValidateNumber(gDialog.heightInput, null, 1, gMaxHRSize,
                           globalElement, "size", false);
   if (gValidationError)
     return false;
