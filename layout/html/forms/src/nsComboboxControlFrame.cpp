@@ -306,6 +306,9 @@ nsComboboxControlFrame::nsComboboxControlFrame()
 
   mGoodToGo = PR_FALSE;
 
+  mNeedToFireOnChange = PR_FALSE;
+  mRecentSelectedIndex = -1;
+
   //Shrink the area around it's contents
   //SetFlags(NS_BLOCK_SHRINK_WRAP);
 
@@ -500,12 +503,31 @@ nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
   if (aOn) {
     mFocused = this;
+
+    // Store up the selected index so when we lose focus we can see if it's
+    // really changed
+    mListControlFrame->GetSelectedIndex(&mRecentSelectedIndex);
   } else {
     mFocused = nsnull;
     if (mDroppedDown) {
       ToggleList(mPresContext);
     }
+
+    // Fire onChange if selected index has changed due to keyboard
+    // (see nsListControlFrame::UpdateSelection)
+    if (mNeedToFireOnChange) {
+      PRInt32 selectedIndex;
+      mListControlFrame->GetSelectedIndex(&selectedIndex);
+      if (selectedIndex != mRecentSelectedIndex) {
+        // mNeedToFireOnChange will be set to false from within FireOnChange
+        mListControlFrame->FireOnChange();
+      } else {
+        // Need to set it to false anyway ... just in case
+        SetNeedToFireOnChange(PR_FALSE);
+      }
+    }
   }
+
   // This is needed on a temporary basis. It causes the focus
   // rect to be drawn. This is much faster than ReResolvingStyle
   // Bug 32920
@@ -2470,6 +2492,23 @@ nsComboboxControlFrame::RollupFromList(nsIPresContext* aPresContext)
 {
   ShowList(aPresContext, PR_FALSE);
   mListControlFrame->CaptureMouseEvents(aPresContext, PR_FALSE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsComboboxControlFrame::SetNeedToFireOnChange(PRBool aNeedToFireOnChange)
+{
+  mNeedToFireOnChange = aNeedToFireOnChange;
+  //
+  // If we're setting to false, then that means onChange was fired while
+  // we still may have focus.  We must set recently selected index so that
+  // when we lose focus, we will be able to tell whether the index has changed
+  // since this time.  See SetFocus().
+  //
+  if (!aNeedToFireOnChange) {
+    mListControlFrame->GetSelectedIndex(&mRecentSelectedIndex);
+  }
 
   return NS_OK;
 }

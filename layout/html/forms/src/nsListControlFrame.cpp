@@ -2093,17 +2093,18 @@ nsListControlFrame::ToggleOptionSelectedFromFrame(PRInt32 aIndex)
 NS_IMETHODIMP
 nsListControlFrame::UpdateSelection()
 {
-  if (!mIsAllFramesHere || !mIsAllContentHere) {
-    return NS_OK;
-  }
   nsresult rv = NS_OK;
 
-  PRBool isDroppedDown = PR_FALSE;
-  if (mComboboxFrame != nsnull) {
-    mComboboxFrame->IsDroppedDown(&isDroppedDown);
-  }
-  if (!isDroppedDown) {
-    rv = FireOnChange(); // Dispatch event
+  if (mIsAllFramesHere) {
+    // if it's a combobox, display the new text
+    if (mComboboxFrame) {
+      rv = mComboboxFrame->RedisplaySelectedText();
+      rv = mComboboxFrame->SetNeedToFireOnChange(PR_TRUE);
+    }
+    // if it's a listbox, fire on change
+    else if (mIsAllContentHere) {
+      rv = FireOnChange();
+    }
   }
 
   return rv;
@@ -2123,6 +2124,7 @@ nsListControlFrame::ComboboxFinish(PRInt32 aIndex)
     }
 
     mComboboxFrame->RollupFromList(mPresContext);
+
     if (aIndex != mSelectedIndexWhenPoppedDown) {
       FireOnChange();
     }
@@ -2137,10 +2139,10 @@ nsListControlFrame::GetOptionsContainer(nsIPresContext* aPresContext,
 }
 
 // Send out an onchange notification.
-nsresult
+NS_IMETHODIMP
 nsListControlFrame::FireOnChange()
 {
-  nsresult ret = NS_ERROR_FAILURE;
+  nsresult rv = NS_OK;
 
   // Dispatch the NS_FORM_CHANGE event
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -2149,12 +2151,17 @@ nsListControlFrame::FireOnChange()
   event.message = NS_FORM_CHANGE;
 
   nsCOMPtr<nsIPresShell> presShell;
-  mPresContext->GetShell(getter_AddRefs(presShell));
+  rv = mPresContext->GetShell(getter_AddRefs(presShell));
   if (presShell) {
-    ret = presShell->HandleEventWithTarget(&event, this, nsnull, NS_EVENT_FLAG_INIT, &status);
+    rv = presShell->HandleEventWithTarget(&event, this, nsnull,
+                                           NS_EVENT_FLAG_INIT, &status);
+    // Obviously the combobox doesn't need to fire onChange anymore
+    if (NS_SUCCEEDED(rv) && mComboboxFrame) {
+      rv = mComboboxFrame->SetNeedToFireOnChange(PR_FALSE);
+    }
   }
 
-  return ret;
+  return rv;
 }
 
 //---------------------------------------------------------
@@ -2265,7 +2272,6 @@ nsListControlFrame::GetViewOffset(nsIViewManager* aManager, nsIView* aView,
   aPoint.y = 0;
  
   nsIView *parent;
-  nsRect bounds;
 
   parent = aView;
   while (nsnull != parent) {
@@ -2614,7 +2620,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
     CaptureMouseEvents(mPresContext, PR_FALSE);
     // Notify
     if (mChangesSinceDragStart) {
-      UpdateSelection();
+      FireOnChange();
     }
 #if 0 // XXX - this is a partial fix for Bug 29990
     if (mSelectedIndex != mStartExtendedIndex) {
@@ -3228,13 +3234,8 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
             if (firstChar == (PRUnichar)code) {
               PRBool wasChanged = PerformSelection(selectedIndex,
                                                    isShift, isControl);
-              // If it's a combobox, redisplay the text
-              if (mComboboxFrame && mIsAllFramesHere) {
-                mComboboxFrame->RedisplaySelectedText();
-              }
-              // Fire the event (unless it's a dropped down combobox)
               if (wasChanged) {
-                UpdateSelection(); // dispatch event
+                UpdateSelection(); // dispatch event, update combobox, etc.
               }
               break;
             }
@@ -3260,13 +3261,8 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       ScrollToIndex(newIndex);
     } else {
       PRBool wasChanged = PerformSelection(newIndex, isShift, isControl);
-      // If combobox, redisplay selected text.
-      if (mComboboxFrame && mIsAllFramesHere) {
-        mComboboxFrame->RedisplaySelectedText();
-      }
-      // Fire the event (unless it's a dropped down combobox)
       if (wasChanged) {
-        UpdateSelection();
+        UpdateSelection(); // dispatch event, update combobox, etc.
       }
     }
 

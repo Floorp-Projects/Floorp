@@ -276,6 +276,8 @@ public:
   NS_IMETHOD UpdateSelection();
   NS_IMETHOD SetOverrideReflowOptimization(PRBool aValue) { mOverrideReflowOpt = aValue; return NS_OK; }
   NS_IMETHOD GetOptionsContainer(nsIPresContext* aPresContext, nsIFrame** aFrame);
+  NS_IMETHOD FireOnChange();
+  
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index);
@@ -383,9 +385,6 @@ protected:
   void     StopUpdateTimer();
   void     ItemsHaveBeenRemoved(nsIPresContext * aPresContext);
 
-  // fire onChange
-  nsresult FireOnChange();
-  
   // Data Members
   nsFormFrame* mFormFrame;
 
