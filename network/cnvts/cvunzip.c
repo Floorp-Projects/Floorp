@@ -256,7 +256,10 @@ PRIVATE int net_UnZipWrite (NET_StreamClass *stream, CONST char* s, int32 l)
     uint32 new_data_total_out;
     uint32 input_used_up, input_left_over;
 	char * tempPtr = NULL;
-	DataObject *obj=stream->data_object;	
+	DataObject *obj;
+
+    PR_ASSERT(stream);
+    obj = stream->data_object;	
     if(obj->is_done) 
     {
 		/* multipart gzip? */
@@ -264,14 +267,14 @@ PRIVATE int net_UnZipWrite (NET_StreamClass *stream, CONST char* s, int32 l)
 		return (1);
     }
 
-    PR_ASSERT(stream && s && l);
+    PR_ASSERT(s && l);
 
     tempPtr = (char *)obj->incoming_buf;
     BlockAllocCat(tempPtr, obj->incoming_buf_size, s, l);
-    obj->incoming_buf = (unsigned char*)tempPtr;
-
-    if(!obj->incoming_buf)
+    if(!tempPtr)
         return MK_OUT_OF_MEMORY;
+
+    obj->incoming_buf = (unsigned char*)tempPtr;
     obj->incoming_buf_size += l;
 
     /* parse and skip the header */
@@ -471,8 +474,8 @@ NET_UnZipConverter (int         format_out,
 
     if(!obj->dcomp_buf)
     {
-        PR_Free(stream);
         net_UnZipFreeDataObject(&obj);
+        PR_Free(stream);
         return NULL;
     }
 
@@ -486,8 +489,8 @@ NET_UnZipConverter (int         format_out,
 
     if(err != Z_OK)
     {
-        PR_Free(stream);
         net_UnZipFreeDataObject(&obj);
+        PR_Free(stream);
         return NULL;
     }
 
@@ -516,8 +519,8 @@ NET_UnZipConverter (int         format_out,
     if(!obj->next_stream)
     {
         inflateEnd(&obj->d_stream);
-        PR_Free(stream);
         net_UnZipFreeDataObject(&obj);
+        PR_Free(stream);
         return NULL;
     }
 
