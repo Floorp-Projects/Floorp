@@ -107,3 +107,22 @@ It's a good idea to set up a daily cronjob that does
 This causes email that gets sent to anyone who has a NEW bug that
 hasn't been touched for several days.  For more info, see the
 whinedays and whinemail parameters.
+
+
+6. Modifying your running system
+
+Bugzilla optimizes database lookups by storing all relatively static
+information in the versioncache file, located in the data/
+subdirectory under your installation directory (we said before it
+needs to be writable, right?!)
+
+If you make a change to the structural data in your database (the
+versions table for example), or to the "constants" encoded in
+defparams.pl, you will need to remove the cached content from the data
+directory (by doing a "rm data/versioncache"), or your changes won't
+show up!
+
+That file gets automatically regenerated whenever it's more than an
+hour old, so Bugzilla will eventually notice your changes by itself,
+but generally you want it to notice right away, so that you can test
+things.
