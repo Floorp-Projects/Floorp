@@ -498,11 +498,14 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
   rv = SplitURL(aChromeURL, package, provider, remaining);
   if (NS_FAILED(rv)) return rv;
 
+  // Try for the profile data source first because it
+  // will load the install data source as well.
   if (!mProfileInitialized) {
-    // Just setSpec
-    rv = GetInstallRoot(mInstallRoot);
-    if (NS_FAILED(rv)) return rv;
     rv = LoadProfileDataSource();
+    if (NS_FAILED(rv)) return rv;
+  }
+  if (!mInstallInitialized) {
+    rv = LoadInstallDataSource();
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -2850,6 +2853,14 @@ nsresult nsChromeRegistry::GetFormSheetURL(nsCString& aURL)
   return NS_OK;
 }
 
+nsresult nsChromeRegistry::LoadInstallDataSource()
+{
+    nsresult rv = GetInstallRoot(mInstallRoot);
+    if (NS_FAILED(rv)) return rv;
+    mInstallInitialized = PR_TRUE;
+    return AddToCompositeDataSource(PR_FALSE);
+}
+
 nsresult nsChromeRegistry::LoadProfileDataSource()
 {
   nsresult rv = GetProfileRoot(mProfileRoot);
@@ -2963,16 +2974,8 @@ nsChromeRegistry::CheckForNewChrome()
 {
   nsresult rv;
 
-  rv = GetInstallRoot(mInstallRoot); // ensure install root is set
+  rv = LoadInstallDataSource();
   if (NS_FAILED(rv)) return rv;
-
-  if (!mInstallInitialized) {
-    // Load the installed search path for skins, content, and locales
-    // Prepend them to our list of substitutions
-    mInstallInitialized = PR_TRUE;
-    rv = AddToCompositeDataSource(PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
-  }
 
   // open the installed-chrome file
   nsCOMPtr<nsILocalFile> listFile;
@@ -3218,7 +3221,9 @@ NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const PRUnichar *
   if (!nsCRT::strcmp(NS_LITERAL_STRING("profile-before-change").get(), aTopic)) {
 
     mChromeDataSource = nsnull;
-    mProfileInitialized = PR_FALSE;
+    mScrollbarSheet = mFormSheet = nsnull;
+    mInstallInitialized = mProfileInitialized = PR_FALSE;
+    (void)FlushCaches();
 
     if (!nsCRT::strcmp(NS_LITERAL_STRING("shutdown-cleanse").get(), someData)) {
       nsCOMPtr<nsIFile> userChromeDir;

@@ -115,8 +115,6 @@ extern "C" void ShowOSAlert(char* aMessage);
 #include "jprof.h"
 #endif
 
-// header file for profile manager
-#include "nsIProfileInternal.h"
 
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponent.h"
@@ -312,17 +310,6 @@ static nsresult GetNativeAppSupport(nsINativeAppSupport** aNativeApp)
         appShellService->GetNativeAppSupport(aNativeApp);
     
     return *aNativeApp ? NS_OK : NS_ERROR_FAILURE;
-}
-
-static PRBool IsAppInServerMode()
-{
-    PRBool serverMode = PR_FALSE;
-    nsCOMPtr<nsINativeAppSupport> nativeApp;
-    GetNativeAppSupport(getter_AddRefs(nativeApp));
-    if (nativeApp)
-        nativeApp->GetIsServerMode(&serverMode);
-        
-    return serverMode;
 }
 
 
@@ -959,33 +946,14 @@ static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs)
         rv = prefs->ReadConfigFile(); 
         if (NS_FAILED(rv)) return rv; 
 
-        nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get profile manager");
+        nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID, &rv));
         if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsINativeAppSupport> nativeApp;
+        nsCOMPtr<nsINativeAppSupport> nativeAppSupport;
         PRBool serverMode = PR_FALSE;
-        GetNativeAppSupport(getter_AddRefs(nativeApp));
-        if (nativeApp)
-            nativeApp->GetIsServerMode(&serverMode);
-            
-        // If we are in server mode, profile mgr cannot show UI
-        rv = profileMgr->StartupWithArgs(cmdLineArgs, !serverMode);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "StartupWithArgs failed\n");
-        if (serverMode && rv == NS_ERROR_PROFILE_REQUIRES_INTERACTION) {
-            nativeApp->SetNeedsProfileUI(PR_TRUE);
-            rv = NS_OK;
-        } 
-        else if (NS_FAILED(rv)) return rv;
-
-        // if we get here, and we don't have a current profile, return a failure so we will exit
-        // this can happen, if the user hits Cancel or Exit in the profile manager dialogs
-        nsXPIDLString currentProfileStr;
-        rv = profileMgr->GetCurrentProfile(getter_Copies(currentProfileStr));
-        if (NS_FAILED(rv) || !((const PRUnichar *)currentProfileStr) ||
-                            (nsCRT::strlen((const PRUnichar *)currentProfileStr) == 0)) {
-  	    return NS_ERROR_FAILURE;
-        }
+        ::GetNativeAppSupport(getter_AddRefs(nativeAppSupport));
+        if (nativeAppSupport)
+            nativeAppSupport->GetIsServerMode(&serverMode);
+        rv = appShellService->DoProfileStartup(cmdLineArgs, !serverMode);
     }
     return rv;
 }

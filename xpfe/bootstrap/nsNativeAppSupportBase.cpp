@@ -111,6 +111,11 @@ nsNativeAppSupportBase::StartServerMode() {
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNativeAppSupportBase::OnLastWindowClosing(nsIXULWindow *aWindow) {
+    return NS_OK;
+}
+
 // Default implementation doesn't have a splash screen.
 NS_IMETHODIMP
 nsNativeAppSupportBase::CreateSplashScreen( nsISplashScreen **splash ) {

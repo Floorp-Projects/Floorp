@@ -41,6 +41,11 @@ interface nsIProfileInternal : nsIProfile {
      */
     [noscript] void startupWithArgs(in nsICmdLineService cmdLine, in boolean canInteract);
  
+    /**
+     * Returns TRUE if in the midst of startupWithArgs
+     */
+    [noscript] readonly attribute boolean isStartingUp;
+ 
     long get4xProfileCount();
 
    /**

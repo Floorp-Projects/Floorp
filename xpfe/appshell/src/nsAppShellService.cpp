@@ -62,6 +62,7 @@
 #include "jsapi.h"
 
 #include "nsAppShellService.h"
+#include "nsIProfileInternal.h"
 
 /* Define Class IDs */
 static NS_DEFINE_CID(kAppShellCID,          NS_APPSHELL_CID);
@@ -218,6 +219,33 @@ nsresult nsAppShellService::ClearXPConnectSafeContext()
     rv = cxstack->SetSafeJSContext(nsnull);
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsAppShellService::DoProfileStartup(nsICmdLineService *aCmdLineService, PRBool canInteract)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get profile manager");
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool saveQuitOnLastWindowClosing = mQuitOnLastWindowClosing;
+    mQuitOnLastWindowClosing = PR_FALSE;
+        
+    // If we are in server mode, profile mgr cannot show UI
+    rv = profileMgr->StartupWithArgs(aCmdLineService, canInteract);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "StartupWithArgs failed\n");
+    if (!canInteract && rv == NS_ERROR_PROFILE_REQUIRES_INTERACTION) {
+        if (mNativeAppSupport) {
+            mNativeAppSupport->SetNeedsProfileUI(PR_TRUE);
+            rv = NS_OK;
+        }
+    }
+    
+    mQuitOnLastWindowClosing = saveQuitOnLastWindowClosing;
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -825,11 +853,14 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
 		 Quit();
   #else
     // Check to see if we should quit in this case.
-    PRBool serverMode = PR_FALSE;
-    if (mNativeAppSupport)
+    if (mNativeAppSupport) {
+        PRBool serverMode = PR_FALSE;
         mNativeAppSupport->GetIsServerMode(&serverMode);
-    if (serverMode)
-        return NS_OK;
+        if (serverMode) {
+            mNativeAppSupport->OnLastWindowClosing(aWindow);
+            return NS_OK;
+        }
+    }
 
     Quit();
   #endif 

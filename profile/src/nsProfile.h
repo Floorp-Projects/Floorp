@@ -52,10 +52,11 @@ class nsProfile: public nsIProfileInternal,
 
 private:
     nsresult ProcessArgs(nsICmdLineService *service,
-                            PRBool *profileDirSet,
-                            nsCString & profileURLStr);
+                         PRBool canInteract,
+                         PRBool *profileDirSet,
+                         nsCString & profileURLStr);
     nsresult LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInterract);
-	nsresult ConfirmAutoMigration(PRBool *confirmed);
+	nsresult ConfirmAutoMigration(PRBool canInteract, PRBool *confirmed);
 	nsresult CopyDefaultFile(nsIFile *profDefaultsDir,
 	                         nsIFile *newProfDir,
 								const char *fileName);
@@ -69,6 +70,7 @@ private:
     nsresult DefineLocaleDefaultsDir();
     nsresult UndefineFileLocations();
 
+    PRBool mStartingUp;
     PRBool mAutomigrate;
     PRBool mOutofDiskSpace;
     PRBool mDiskSpaceErrorQuitCalled;

@@ -59,6 +59,7 @@ protected:
     LocalStoreImpl();
     virtual ~LocalStoreImpl();
     nsresult Init();
+    nsresult LoadData();
 
     friend NS_IMETHODIMP
     NS_NewLocalStore(nsISupports* aOuter, REFNSIID aIID, void** aResult);
@@ -343,9 +344,36 @@ LocalStoreImpl::Refresh(PRBool sync)
 nsresult
 LocalStoreImpl::Init()
 {
-static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
+    nsresult rv;
 
+    rv = LoadData();
+    if (NS_FAILED(rv)) return rv;
+
+    // register this as a named data source with the RDF service
+    nsCOMPtr<nsIRDFService> rdf = do_GetService(NS_RDF_CONTRACTID "/rdf-service;1", &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    // for later
+    if (!gRDF)
+        gRDF = getter_AddRefs(NS_GetWeakReference(rdf));
+
+    rdf->RegisterDataSource(this, PR_FALSE);
+
+    // Register as an observer of profile changes
+    nsCOMPtr<nsIObserverService> obs =
+        do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+
+    if (obs) {
+        obs->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
+        obs->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
+    }
+
+    return NS_OK;
+}
+
+nsresult
+LocalStoreImpl::LoadData()
+{
     nsresult rv;
 
     // Look for localstore.rdf in the current profile
@@ -383,42 +411,18 @@ static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
             return NS_ERROR_UNEXPECTED;
     }
 
-    mInner = do_CreateInstance(kRDFXMLDataSourceCID, &rv);
+    mInner = do_CreateInstance(NS_RDF_DATASOURCE_CONTRACTID_PREFIX "xml-datasource", &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
+    nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner, &rv);
+    if (NS_FAILED(rv)) return rv;
 
     rv = remote->Init((const char*) nsFileURL(spec));
     if (NS_FAILED(rv)) return rv;
 
     // Read the datasource synchronously.
-    rv = remote->Refresh(PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
-
-    // register this as a named data source with the RDF service
-    nsCOMPtr<nsIRDFService> rdf = do_GetService(kRDFServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    // for later
-    if (!gRDF)
-        gRDF = getter_AddRefs(NS_GetWeakReference(rdf));
-
-    rv = rdf->RegisterDataSource(this, PR_FALSE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register local store");
-    if (NS_FAILED(rv)) return rv;
-
-    // Register as an observer of profile changes
-    nsCOMPtr<nsIObserverService> obs =
-        do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-
-    if (obs) {
-        obs->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
-        obs->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
-    }
-
-    return NS_OK;
+    return remote->Refresh(PR_TRUE);
 }
-
 
 
 NS_IMETHODIMP
@@ -478,11 +482,16 @@ LocalStoreImpl::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PR
     nsresult rv = NS_OK;
 
     if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get())) {
-            
-        nsCOMPtr<nsIRDFService> rdf = do_QueryReferent(gRDF);
-        if (rdf)
-            rdf->UnregisterDataSource(this);
-        mInner = nsnull;
+        // Write out the old datasource's contents.
+        if (mInner) {
+            nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
+            if (remote)
+                remote->Flush();
+        }
+
+        // Create an in-memory datasource for use while we're
+        // profile-less.
+        mInner = do_CreateInstance(NS_RDF_DATASOURCE_CONTRACTID_PREFIX "in-memory-datasource");
 
         if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
             nsCOMPtr<nsIFile> aFile;
@@ -492,9 +501,7 @@ LocalStoreImpl::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PR
         }
     }
     else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-do-change").get())) {
-        rv = Init();
-        if (NS_SUCCEEDED(rv))
-            rv = Refresh(PR_TRUE);
+        rv = LoadData();
     }
     return rv;
 }

@@ -134,6 +134,9 @@
  *                     native code) at the appropriate time for any additional
  *                     server-mode startup to be completed.
  *
+ *  onLastWindowClosing -  Called when the last window is closed. Used as a
+ *                         "soft" shutdown, passwords are flushed.
+ *
  * This interface has these attributes:
  *  isServerMode - Boolean attribute indicating whether the application
  *                 is running in "server mode." Server mode means the
@@ -154,6 +157,7 @@
  */
 
 interface nsIDOMWindow;
+interface nsIXULWindow;
 
 [scriptable, uuid(5fdf8480-1f98-11d4-8077-00600811a9c3)]
 interface nsINativeAppSupport : nsISupports {
@@ -170,4 +174,6 @@ interface nsINativeAppSupport : nsISupports {
     attribute boolean isServerMode;
     void startServerMode();
     attribute boolean needsProfileUI;
+
+    void onLastWindowClosing(in nsIXULWindow aWindow);
 };

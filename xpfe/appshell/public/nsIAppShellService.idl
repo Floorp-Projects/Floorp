@@ -65,6 +65,13 @@ interface nsIAppShellService : nsISupports
   void Initialize(in nsICmdLineService aCmdLineService, in nsISupports nativeAppSupportOrSplashScreen );
 
   /**
+   * Starts up the profile manager with the given arguments
+   * @param aCmdLineService the arguments given to the program
+   * @param canInteract If FALSE and UI is needed, will fail
+   */
+  void doProfileStartup(in nsICmdLineService aCmdLineService, in boolean canInteract);
+
+  /**
    * Getter for "native app support."
    */
   readonly attribute nsINativeAppSupport nativeAppSupport;
