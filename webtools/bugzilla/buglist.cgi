@@ -236,9 +236,9 @@ my $params = new Bugzilla::CGI($cgi);
 # Take appropriate action based on user's request.
 if ($::FORM{'cmdtype'} eq "dorem") {  
     if ($::FORM{'remaction'} eq "run") {
-        my $query = LookupNamedQuery($::FORM{"namedcmd"});
+        $::buffer = LookupNamedQuery($::FORM{"namedcmd"});
         $vars->{'title'} = "Bug List: $::FORM{'namedcmd'}";
-        $params = new Bugzilla::CGI($query);
+        $params = new Bugzilla::CGI($::buffer);
         $order = $params->param('order') || $order;
     }
     elsif ($::FORM{'remaction'} eq "load") {
