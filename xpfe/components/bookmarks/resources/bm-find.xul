@@ -40,9 +40,11 @@
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns:web="http://home.netscape.com/WEB-rdf#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        width="630" height="400" x="20" y="20" persist="width height x y" orient="vertical"
+        orient="vertical"
+        width="630" height="400"
+        persist="width height screenX screenY" sizemode
         windowtype="bookmarks:find"
-        onload="doLoad()" onunload="doUnload()">
+        onload="doLoad();">
 
   <script type="text/javascript" src="chrome://communicator/content/bookmarks/bm-find.js"/>
   <script type="text/javascript" src="chrome://global/content/treePopups.js"/>
@@ -264,7 +266,7 @@
         <treecell id="shortcutCell2" class="treecell-header sortDirectionIndicator" observes="ShortcutURLColumn"
                   value="&shortcut.label;" resource="http://home.netscape.com/NC-rdf#ShortcutURL"
                   onclick="return doSort('ShortcutURLColumn', null);"/>
-        <treecell class="treecell-header sortDirectionIndicator"                                             observes="DescriptionColumn" value="&description.label;"                                    resource="http://home.netscape.com/NC-rdf#Description"
+        <treecell class="treecell-header sortDirectionIndicator"                                                               observes="DescriptionColumn" value="&description.label;"                                                      resource="http://home.netscape.com/NC-rdf#Description"
                  onclick="return doSort('DescriptionColumn', null);"/>
         <treecell class="treecell-header" allowevents="true" id="popupCell">
           <menu>
