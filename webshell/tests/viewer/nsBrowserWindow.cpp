@@ -322,6 +322,9 @@ nsBrowserWindow::Destroy()
     mWebShell->Destroy();
     NS_RELEASE(mWebShell);
   }
+
+  NS_IF_RELEASE(mThrobber);
+  // XXX What about releasing all the other objects...
 }
 
 void
