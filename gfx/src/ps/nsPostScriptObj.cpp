@@ -65,8 +65,7 @@
 
 #include <locale.h>
 #include <errno.h>
-
-#include <stdlib.h>
+#include <sys/wait.h>
 
 #ifdef MOZ_ENABLE_FREETYPE2
 #include "nsType8.h"
