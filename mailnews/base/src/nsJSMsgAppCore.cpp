@@ -31,6 +31,7 @@
 #include "nsIScriptNameSpaceManager.h"
 #include "nsRepository.h"
 #include "nsDOMCID.h"
+#include "nsIDOMXULTreeElement.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -277,7 +278,54 @@ MsgAppCoreOpenURL(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   return JS_TRUE;
 }
 
+//
+// Native method DeleteMessage
+//
+PR_STATIC_CALLBACK(JSBool)
+MsgAppCoreDeleteMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+	nsIDOMNodeList *nodeList;
+	nsIDOMXULTreeElement *tree;
+	const nsString typeName;
 
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+		rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&tree,
+																			nsIDOMXULTreeElement::GetIID(),
+                                  typeName,
+                                  cx,
+                                  argv[0]);
+
+		rBool = rBool && nsJSUtils::nsConvertJSValToObject((nsISupports**)&nodeList,
+																			nsIDOMNodeList::GetIID(),
+                                  typeName,
+                                  cx,
+                                  argv[1]);
+
+		
+    if (!rBool || NS_OK != nativeThis->DeleteMessage(tree, nodeList)) {
+      return JS_FALSE;
+    }
+
+		NS_RELEASE(nodeList);
+		NS_RELEASE(tree);
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function DeleteMessage requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
 /***********************************************************************/
 //
 // class for MsgAppCore
@@ -314,6 +362,7 @@ static JSFunctionSpec MsgAppCoreMethods[] =
   {"Open3PaneWindow",          MsgAppCoreOpen3PaneWindow,     0},
   {"SetWindow",          MsgAppCoreSetWindow,     1},
   {"OpenURL",          MsgAppCoreOpenURL,     1},
+  {"DeleteMessage",          MsgAppCoreDeleteMessage,     2},
   {0}
 };
 

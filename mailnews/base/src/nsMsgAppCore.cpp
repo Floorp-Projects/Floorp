@@ -42,9 +42,17 @@
 
 #include "nsNNTPProtocol.h" // mscott - hopefully this dependency should only be temporary...
 
+#include "nsIDOMXULTreeElement.h"
+#include "nsIRDFCompositeDataSource.h"
+#include "nsIRDFResource.h"
+#include "nsIRDFService.h"
+#include "nsRDFCID.h"
+
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_CID(kCMailboxServiceCID, NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
+static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
+
 
 NS_BEGIN_EXTERN_C
 
@@ -77,6 +85,7 @@ public:
   NS_IMETHOD GetNewMail();
   NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
   NS_IMETHOD OpenURL(const char * url);
+  NS_IMETHOD DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList);
 
 private:
   
@@ -91,6 +100,46 @@ private:
   nsFileSpec m_folderPath; 
   void InitializeFolderRoot();
 };
+
+static nsresult ConvertDOMListToResourceArray(nsIDOMNodeList *nodeList, nsISupportsArray **resourceArray)
+{
+	nsresult rv = NS_OK;
+	PRUint32 listLength;
+	nsIDOMNode *node;
+	nsIDOMXULTreeElement *xulElement;
+	nsIRDFResource *resource;
+
+	if(!resourceArray)
+		return NS_ERROR_NULL_POINTER;
+
+	if(NS_FAILED(rv = nodeList->GetLength(&listLength)))
+		return rv;
+
+	if(NS_FAILED(NS_NewISupportsArray(resourceArray)))
+	{
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
+
+	for(PRUint32 i = 0; i < listLength; i++)
+	{
+		if(NS_FAILED(nodeList->Item(i, &node)))
+			return rv;
+
+		if(NS_SUCCEEDED(rv = node->QueryInterface(nsIDOMXULElement::GetIID(), (void**)&xulElement)))
+		{
+			if(NS_SUCCEEDED(rv = xulElement->GetResource(&resource)))
+			{
+				(*resourceArray)->AppendElement(resource);
+				NS_RELEASE(resource);
+			}
+			NS_RELEASE(xulElement);
+		}
+		NS_RELEASE(node);
+		
+	}
+
+	return rv;
+}
 
 nsresult nsMsgAppCore::SetDocumentCharset(class nsString const & aCharset) 
 {
@@ -398,6 +447,40 @@ nsMsgAppCore::OpenURL(const char * url)
 
 	}
 	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgAppCore::DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMNodeList *nodeList)
+{
+	nsresult rv;
+	nsIRDFCompositeDataSource *database;
+	nsISupportsArray *resourceArray;
+
+
+	if(NS_FAILED(rv = tree->GetDatabase(&database)))
+		return rv;
+
+	if(NS_FAILED(rv =ConvertDOMListToResourceArray(nodeList, &resourceArray)))
+		return rv;
+
+	nsIRDFService* gRDFService = nsnull;
+	nsIRDFResource* deleteResource;
+	rv = nsServiceManager::GetService(kRDFServiceCID,
+												nsIRDFService::GetIID(),
+												(nsISupports**) &gRDFService);
+	if(NS_SUCCEEDED(rv))
+	{
+		if(NS_SUCCEEDED(rv = gRDFService->GetResource("http://home.netscape.com/NC-rdf#Delete", &deleteResource)))
+		{
+			rv = database->DoCommand(resourceArray, deleteResource, nsnull);
+			NS_RELEASE(deleteResource);
+		}
+		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+	}
+
+	NS_RELEASE(database);
+	NS_RELEASE(resourceArray);
+	return rv;
 }
 
 //  to load the webshell!
