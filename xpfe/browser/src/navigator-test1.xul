@@ -611,41 +611,7 @@
                 dump("Can't find status broadcaster!\n");
             }
         }
-
-        function onSecurity() {
-            var security = document.getElementById("Browser:Security");
-            var indicator = document.getElementById("security-box");
-            var icon = document.getElementById("security-button");
- 
-            if ( security.getAttribute("secure") == "true" ) {
-                indicator.setAttribute("class","secure");
-                icon.setAttribute("class","secure");
-            } else {
-                indicator.setAttribute("class","insecure");
-                icon.setAttribute("class","insecure");
-            }
-        }
-
-        function securityOn() {
-            var security = document.getElementById("Browser:Security");
-            if ( security.getAttribute("secure") == "false" ) {
-                security.setAttribute("secure","true");
-                // Temporary till onchange handlers work.
-                onSecurity();
-            }
-        }
-        function securityOff() {
-            var security = document.getElementById("Browser:Security");
-            if ( security.getAttribute("secure") == "true" ) {
-                security.setAttribute("secure","false");
-                // Temporary till onchange handlers work.
-                onSecurity();
-            }
-        }
-        function doTests() {
-            // Turn security on.
-            securityOn();
-        }
+        
         function onStartBinding() {
             bindCount++;
             if ( bindCount == 1 ) {
@@ -708,12 +674,11 @@
     <broadcaster id="Browser:Status"/>
     <broadcaster id="Browser:OnStartBinding"/>
     <broadcaster id="Browser:OnStopBinding"/>
-    <broadcaster id="Browser:Security" secure="false"/>
     <broadcaster id="Browser:Throbber" busy="false"/>
     
     <titledbutton value="[Notification Component]" onclick="doTests()"/>
 
-	<box id="security-box" class="insecure" align="horizontal" flex="100%">
+	<box id="status-box" align="horizontal" flex="100%">
 		<box align="vertical" style="width:100px">
 			<spring flex="100%"/>
 			<progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()">
@@ -732,7 +697,6 @@
 		<titledbutton align="right" value="Build ID: 99032911" style="font-family:sans-serif;font-size:2.5mm">
 		</titledbutton>
 
-		<titledbutton id="security-button" class="insecure" value="Secure Conn" align="right" onclick="securityOff();"/>
      </box>
   </box>
 
