@@ -149,6 +149,7 @@
 #define PKIX_KEY_USAGE 		PKIX, 3
 #define PKIX_ACCESS_DESCRIPTION PKIX, 0x30
 #define PKIX_OCSP 		PKIX_ACCESS_DESCRIPTION, 1
+#define PKIX_CA_ISSUERS		PKIX_ACCESS_DESCRIPTION, 2
 
 #define PKIX_ID_PKIP     	PKIX, 5
 #define PKIX_ID_REGCTRL  	PKIX_ID_PKIP, 1 
@@ -397,6 +398,8 @@ CONST_OID pkixOCSPResponse[]			= { PKIX_OCSP, 4 };
 CONST_OID pkixOCSPNoCheck[]			= { PKIX_OCSP, 5 };
 CONST_OID pkixOCSPArchiveCutoff[]		= { PKIX_OCSP, 6 };
 CONST_OID pkixOCSPServiceLocator[]		= { PKIX_OCSP, 7 };
+
+CONST_OID pkixCAIssuers[]			= { PKIX_CA_ISSUERS };
 
 CONST_OID pkixRegCtrlRegToken[]       		= { PKIX_ID_REGCTRL, 1};
 CONST_OID pkixRegCtrlAuthenticator[]  		= { PKIX_ID_REGCTRL, 2};
@@ -1424,6 +1427,10 @@ const static SECOidData oids[] = {
     OD( x520Pseudonym, SEC_OID_AVA_PSEUDONYM,
     	"X520 Pseudonym",     CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
 
+    /* More PKIX OIDs */
+    OD( pkixCAIssuers, SEC_OID_PKIX_CA_ISSUERS,
+        "PKIX CA issuers access method", 
+        CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION ),
 };
 
 /*
