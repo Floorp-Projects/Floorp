@@ -212,9 +212,9 @@ calDavCalendar.prototype = {
         listener.onOperationComplete = function(aStatusCode, aResource,
                                                 aOperation, aClosure) {
 
-            // 200 = HTTP "OK"
+            // 204 = HTTP "No Content"
             //
-            if (aStatusCode == 200) {
+            if (aStatusCode == 204) {
                 dump("Item modified successfully.\n");
                 var retVal = Components.results.NS_OK;
 
@@ -223,6 +223,9 @@ calDavCalendar.prototype = {
 
                 // XXX deal with non-existent item here, other
                 // real error handling
+
+                // XXX aStatusCode will be 201 Created for a PUT on an item that
+                // didn't exist before.
 
                 retVal = Components.results.NS_ERROR_FAILURE;
             }
