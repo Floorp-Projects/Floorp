@@ -26,17 +26,29 @@
 #include "nsCOMPtr.h"
  
 
-static NS_DEFINE_IID(kITransferableIID,        NS_ITRANSFERABLE_IID);
-
-
 NS_IMPL_ADDREF(nsTransferable)
 NS_IMPL_RELEASE(nsTransferable)
 
-typedef struct {
-  nsString * mFlavor;
+
+struct DataStruct {
+  DataStruct ( const nsString & aString )
+    : mFlavor(aString), mData(nsnull), mDataLen(0) { }
+  ~DataStruct ( ) { if ( mData ) delete [] mData; }
+  
+  void SetData ( char* aData, size_t aDataLen )
+  {
+    if ( mData )
+      delete [] mData;
+    mData = aData;
+    mDataLen = aDataLen;
+  }
+  
+  nsString   mFlavor;
   char *     mData;
   PRUint32   mDataLen;
-} DataStruct;
+
+};
+
 
 //-------------------------------------------------------------------------
 //
@@ -59,13 +71,8 @@ nsTransferable::~nsTransferable()
   PRInt32 i;
   for (i=0;i<mDataArray->Count();i++) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-    if (data) {
-      delete data->mFlavor;
-      if (data->mData) {
-        delete[] data->mData;
-      }
+    if (data)
       delete data;
-    }
   }
   delete mDataArray;
 }
@@ -85,7 +92,7 @@ nsresult nsTransferable::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
   nsresult rv = NS_NOINTERFACE;
 
-  if (aIID.Equals(kITransferableIID)) {
+  if (aIID.Equals(nsITransferable::GetIID())) {
     *aInstancePtr = (void*) ((nsITransferable*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -110,7 +117,7 @@ NS_IMETHODIMP nsTransferable::GetTransferDataFlavors(nsVoidArray ** aDataFlavorL
     PRInt32 i;
     for (i=0;i<mDataArray->Count();i++) {
       DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-      array->AppendElement(data->mFlavor);    
+      array->AppendElement(&data->mFlavor);    
     }
     *aDataFlavorList = array;
   } else {
@@ -132,7 +139,7 @@ NS_IMETHODIMP nsTransferable::GetTransferData(nsString * aDataFlavor, void ** aD
   PRInt32 i;
   for (i=0;i<mDataArray->Count();i++) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-    if (aDataFlavor->Equals(*data->mFlavor)) {
+    if (aDataFlavor->Equals(data->mFlavor)) {
       *aData    = data->mData;
       *aDataLen = data->mDataLen;
       if (nsnull != data->mData && data->mDataLen > 0) {
@@ -144,8 +151,8 @@ NS_IMETHODIMP nsTransferable::GetTransferData(nsString * aDataFlavor, void ** aD
   if ( mFormatConv ) {
     for (i=0;i<mDataArray->Count();i++) {
       DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-      if (NS_OK == mFormatConv->CanConvert(data->mFlavor, aDataFlavor)) {
-        mFormatConv->Convert(data->mFlavor, data->mData, data->mDataLen, aDataFlavor, aData, aDataLen);
+      if (NS_OK == mFormatConv->CanConvert(&data->mFlavor, aDataFlavor)) {
+        mFormatConv->Convert(&data->mFlavor, data->mData, data->mDataLen, aDataFlavor, aData, aDataLen);
         return NS_OK;
       }
     }
@@ -167,7 +174,7 @@ NS_IMETHODIMP nsTransferable::GetAnyTransferData(nsString * aDataFlavor, void **
   for (i=0;i<mDataArray->Count();i++) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
     if (nsnull != data->mData && data->mDataLen > 0) {
-      *aDataFlavor = *data->mFlavor;
+      *aDataFlavor = data->mFlavor;
       *aData      = data->mData;
       *aDataLen  = data->mDataLen;
       return NS_OK;
@@ -190,12 +197,8 @@ NS_IMETHODIMP nsTransferable::SetTransferData(nsString * aDataFlavor, void * aDa
   PRInt32 i;
   for (i=0;i<mDataArray->Count();i++) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-    if (aDataFlavor->Equals(*data->mFlavor)) {
-      if (nsnull != data->mData) {
-        delete[] data->mData;
-      }
-      data->mData     = (char *)aData;
-      data->mDataLen  = aDataLen;
+    if (aDataFlavor->Equals(data->mFlavor)) {
+      data->SetData ( NS_STATIC_CAST(char*,aData), aDataLen );
       return NS_OK;
     }
   }
@@ -217,21 +220,18 @@ NS_IMETHODIMP nsTransferable::AddDataFlavor(nsString * aDataFlavor)
   PRInt32 i;
   for (i=0;i<mDataArray->Count();i++) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-    if (aDataFlavor->Equals(*data->mFlavor)) {
+    if (aDataFlavor->Equals(data->mFlavor)) {
       return NS_ERROR_FAILURE;
     }
   }
 
   // Create a new "slot" for the data
-  DataStruct * data = new DataStruct;
-  data->mFlavor     = new nsString(*aDataFlavor);
-  data->mData       = nsnull;
-  data->mDataLen    = 0;
-
+  DataStruct * data = new DataStruct ( *aDataFlavor ) ;
   mDataArray->AppendElement((void *)data);
 
   return NS_OK;
 }
+
 /**
   * 
   *
@@ -246,12 +246,9 @@ NS_IMETHODIMP nsTransferable::RemoveDataFlavor(nsString * aDataFlavor)
   PRInt32 i;
   for (i=0;i<mDataArray->Count();i++) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-    if (aDataFlavor->Equals(*data->mFlavor)) {
-      delete data->mFlavor;
-      if (data->mData) {
-        delete[] data->mData;
-      }
+    if (aDataFlavor->Equals(data->mFlavor)) {
       mDataArray->RemoveElementAt(i);
+      delete data;
       return NS_OK;
     }
   }
