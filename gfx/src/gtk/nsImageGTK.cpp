@@ -303,8 +303,20 @@ void nsImageGTK::UpdateCachedImage()
             break;
           case 0:
             NS_CLEAR_BIT(mask,x);
-            if (mAlphaDepth != 8)
+            if (mAlphaDepth == 0) {
               mAlphaDepth=1;
+
+              // promoting an image from no alpha channel to 1-bit, so
+              // we need to create/clear the alpha pixmap
+              CreateOffscreenPixmap(mWidth, mHeight);
+
+              XFillRectangle(GDK_WINDOW_XDISPLAY(mAlphaPixmap),
+                             GDK_WINDOW_XWINDOW(mAlphaPixmap),
+                             GDK_GC_XGC(s1bitGC),
+                             mDecodedX1, mDecodedY1,
+                             mDecodedX2 - mDecodedX1 + 1,
+                             mDecodedY2 - mDecodedY1 + 1);
+            }
             break;
           default:
             mAlphaDepth=8;
@@ -1561,8 +1573,11 @@ void nsImageGTK::CreateOffscreenPixmap(PRInt32 aWidth, PRInt32 aHeight)
        low to high address in memory. */
     mAlphaXImage->byte_order = MSBFirst;
 
-    if (!s1bitGC)
+    if (!s1bitGC) {
+      GdkColor fg = { 1, 0, 0, 0 };
       s1bitGC = gdk_gc_new(mAlphaPixmap);
+      gdk_gc_set_foreground(s1bitGC, &fg);
+    }
   }
 
   if (!sXbitGC)
