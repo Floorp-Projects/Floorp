@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.21 2002/10/01 14:32:09 ian.mcgreer%sun.com Exp $
+ * $Id: certt.h,v 1.22 2002/10/03 03:34:36 jpierre%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -371,6 +371,7 @@ struct CERTCertListStr {
 #define CERT_LIST_HEAD(l) ((CERTCertListNode *)PR_LIST_HEAD(&l->list))
 #define CERT_LIST_NEXT(n) ((CERTCertListNode *)n->links.next)
 #define CERT_LIST_END(n,l) (((void *)n) == ((void *)&l->list))
+#define CERT_LIST_EMPTY(l) CERT_LIST_END(CERT_LIST_HEAD(l), l)
 
 struct CERTCrlEntryStr {
     SECItem serialNumber;
