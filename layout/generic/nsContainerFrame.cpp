@@ -175,9 +175,7 @@ nsContainerFrame::GetAdditionalChildListName(PRInt32   aIndex,
                                              nsIAtom** aListName) const
 {
   NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
-  if (aIndex < 0) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  NS_ENSURE_TRUE(aIndex >= 0, NS_ERROR_INVALID_ARG);
   if (aIndex == 0) {
     *aListName = nsLayoutAtoms::overflowList;
     NS_ADDREF(*aListName);
