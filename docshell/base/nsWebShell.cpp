@@ -744,10 +744,12 @@ nsWebShell::DestroyChildren()
 {
   PRInt32 i, n = mChildren.Count();
   for (i = 0; i < n; i++) {
-    nsCOMPtr<nsIDocShell> shell = (nsIDocShell*) mChildren.ElementAt(i);
+    nsIDocShell * shell = (nsIDocShell*) mChildren.ElementAt(i);
     shell->SetParent(nsnull);
     nsCOMPtr<nsIBaseWindow> shellWin(do_QueryInterface(shell));
     shellWin->Destroy();
+    NS_RELEASE(shell);
+
   }
   mChildren.Clear();
 }
