@@ -45,6 +45,7 @@
 #include "nsIDOMXULDescriptionElement.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULLabelElement.h"
+#include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsReadableUtils.h"
@@ -228,6 +229,14 @@ PRBool nsXULDropmarkerAccessible::DropmarkerOpen(PRBool aToggleOpen)
     parentButtonElement->GetOpen(&isOpen);
     if (aToggleOpen)
       parentButtonElement->SetOpen(!isOpen);
+  }
+  else {
+    nsCOMPtr<nsIDOMXULMenuListElement> parentMenuListElement(do_QueryInterface(parentButtonNode));
+    if (parentMenuListElement) {
+      parentMenuListElement->GetOpen(&isOpen);
+      if (aToggleOpen)
+        parentMenuListElement->SetOpen(!isOpen);
+    }
   }
 
   return isOpen;
@@ -530,7 +539,7 @@ nsFormControlAccessible(aNode, aShell)
   * Default Constructor
   */
 nsXULStatusBarAccessible::nsXULStatusBarAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsFormControlAccessible(aNode, aShell)
+nsAccessible(aNode, aShell)
 { 
 }
 
