@@ -5750,7 +5750,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
           nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
           NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
 
-          uploadChannel->SetUploadStream(postDataStream, nsnull, -1);
+          uploadChannel->SetUploadStream(postDataStream, NS_LITERAL_CSTRING(""), -1);
         }
 
         if (aHeadersData) 
@@ -5863,10 +5863,8 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
 
       if(mActivePluginList.getStoppedCount() >= max_num) {
         nsActivePlugin * oldest = mActivePluginList.findOldestStopped();
-        if(oldest != nsnull) {
-          PRLibrary * library = oldest->mPluginTag->mLibrary;
+        if(oldest != nsnull)
           mActivePluginList.remove(oldest);
-        }
       }
     }
   }

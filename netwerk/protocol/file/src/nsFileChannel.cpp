@@ -775,7 +775,7 @@ nsFileChannel::SetPermissions(PRInt32 aPermissions)
 
 NS_IMETHODIMP
 nsFileChannel::SetUploadStream(nsIInputStream *aStream,
-                               const char *aContentType,
+                               const nsACString &aContentType,
                                PRInt32 aContentLength)
 {
     if (mFileTransport)
@@ -804,18 +804,6 @@ nsFileChannel::SetUploadStream(nsIInputStream *aStream,
         mIOFlags = PR_RDONLY;
     }
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileChannel::SetUploadFile(nsIFile *aFile,
-                               const char *aContentType,
-                               PRInt32 aContentLength)
-{
-    nsCOMPtr<nsIInputStream> inStream;
-    nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(inStream), aFile);
-    if (NS_FAILED(rv)) return rv;
-
-    return SetUploadStream(inStream, aContentType, aContentLength);
 }
 
 NS_IMETHODIMP

@@ -467,7 +467,7 @@ nsHttpChannel::SetupTransaction()
             nsCOMPtr<nsIURI> tempURI;
             rv = mURI->Clone(getter_AddRefs(tempURI));
             if (NS_FAILED(rv)) return rv;
-            rv = tempURI->SetUserPass(nsCString());
+            rv = tempURI->SetUserPass(NS_LITERAL_CSTRING(""));
             if (NS_FAILED(rv)) return rv;
             rv = tempURI->GetAsciiSpec(path);
             if (NS_FAILED(rv)) return rv;
@@ -2665,7 +2665,7 @@ nsHttpChannel::GetUploadStream(nsIInputStream **stream)
 }
 
 NS_IMETHODIMP
-nsHttpChannel::SetUploadStream(nsIInputStream *stream, const char* contentType, PRInt32 contentLength)
+nsHttpChannel::SetUploadStream(nsIInputStream *stream, const nsACString &contentType, PRInt32 contentLength)
 {
     // NOTE: for backwards compatibility and for compatibility with old style
     // plugins, |stream| may include headers, specifically Content-Type and
@@ -2675,7 +2675,7 @@ nsHttpChannel::SetUploadStream(nsIInputStream *stream, const char* contentType, 
     // contentLength are unspecified.
     
     if (stream) {
-        if (contentType) {
+        if (!contentType.IsEmpty()) {
             if (contentLength < 0) {
                 stream->Available((PRUint32 *) &contentLength);
                 if (contentLength < 0) {
@@ -2684,7 +2684,7 @@ nsHttpChannel::SetUploadStream(nsIInputStream *stream, const char* contentType, 
                 }
             }
             mRequestHead.SetHeader(nsHttp::Content_Length, nsPrintfCString("%d", contentLength));
-            mRequestHead.SetHeader(nsHttp::Content_Type, nsDependentCString(contentType));
+            mRequestHead.SetHeader(nsHttp::Content_Type, contentType);
             mUploadStreamHasHeaders = PR_FALSE;
             mRequestHead.SetMethod(nsHttp::Put); // PUT request
         }
@@ -2699,34 +2699,6 @@ nsHttpChannel::SetUploadStream(nsIInputStream *stream, const char* contentType, 
     }
     mUploadStream = stream;    
     return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsHttpChannel::SetUploadFile(nsIFile *file, const char* contentType, PRInt32 contentLength)
-{
-    if (!file) return NS_ERROR_NULL_POINTER;
-
-    nsresult rv;
-    // Grab a file input stream
-    nsCOMPtr<nsIInputStream> stream;
-    rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), file);    
-    if (NS_FAILED(rv))
-        return rv;
-    
-    // get the content type
-    if (contentType)
-        return SetUploadStream(stream, contentType, contentLength); 
-
-    nsCOMPtr<nsIMIMEService> MIMEService;
-    rv = nsHttpHandler::get()->GetMimeService(getter_AddRefs(MIMEService));
-    if (NS_FAILED(rv)) return rv;
-    nsXPIDLCString mimeType;
-    rv = MIMEService->GetTypeFromFile(file, getter_Copies(mimeType));
-    if (NS_FAILED(rv)) return rv;
-
-    // set the stream on ourselves
-    return SetUploadStream(stream, mimeType, contentLength); 
 }
 
 NS_IMETHODIMP
