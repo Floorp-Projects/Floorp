@@ -160,7 +160,6 @@ nsStreamXferOp::Start( void ) {
                 mOutputSpec->GetFileSpec( &target );
                 rv = fts->CreateTransport( target,
                                           "load",
-                                          0,
                                           getter_AddRefs( mOutputChannel ) );
     
                 if ( NS_SUCCEEDED( rv ) ) {
@@ -322,7 +321,7 @@ nsStreamXferOp::OnStartRequest(nsIChannel* channel, nsISupports* aContext) {
 
 // As an event sink getter, we get ourself.
 NS_IMETHODIMP
-nsStreamXferOp::GetEventSink( const char *cmd, const nsIID &anIID, nsISupports **aResult ) {
+nsStreamXferOp::QueryCapability(const nsIID &anIID, void **aResult ) {
     return this->QueryInterface( anIID, (void**)aResult );
 }
 
@@ -511,8 +510,8 @@ nsStreamXferOp::QueryInterface( REFNSIID aIID, void** aInstancePtr ) {
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsCOMTypeInfo<nsIEventSinkGetter>::GetIID())) {
-        *aInstancePtr = (void*) ((nsIEventSinkGetter*)this);
+    if (aIID.Equals(nsCOMTypeInfo<nsICapabilities>::GetIID())) {
+        *aInstancePtr = (void*) ((nsICapabilities*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
