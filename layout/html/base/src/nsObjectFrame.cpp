@@ -383,6 +383,7 @@ nsObjectFrame::GetSkipSides() const
 #define IMAGE_EXT_XBM "xbm"
 #define IMAGE_EXT_BMP "bmp"
 #define IMAGE_EXT_ICO "ico"
+#define IMAGE_EXT_CUR "cur"
 #define IMAGE_EXT_MNG "mng"
 #define IMAGE_EXT_JNG "jng"
 
@@ -447,6 +448,7 @@ void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
          ext.EqualsIgnoreCase(IMAGE_EXT_XBM) ||
          ext.EqualsIgnoreCase(IMAGE_EXT_BMP) ||
          ext.EqualsIgnoreCase(IMAGE_EXT_ICO) ||
+         ext.EqualsIgnoreCase(IMAGE_EXT_CUR) ||
          ext.EqualsIgnoreCase(IMAGE_EXT_MNG) ||
          ext.EqualsIgnoreCase(IMAGE_EXT_JNG))
       {
