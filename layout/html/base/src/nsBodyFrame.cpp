@@ -28,6 +28,7 @@
 #include "nsIDeviceContext.h"
 #include "nsBlockFrame.h"
 #include "nsSpaceManager.h"
+#include "nsHTMLAtoms.h"
 
 static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
 static NS_DEFINE_IID(kIAnchoredItemsIID, NS_IANCHOREDITEMS_IID);
@@ -86,7 +87,7 @@ void nsBodyFrame::CreateColumnFrame(nsIPresContext* aPresContext)
 
     // Resolve style and set the style context
     nsIStyleContext* styleContext =
-      aPresContext->ResolveStyleContextFor(mContent, this);
+      aPresContext->ResolvePseudoStyleContextFor(nsHTMLAtoms::columnPseudo, this);
     mFirstChild->SetStyleContext(aPresContext,styleContext);
     NS_RELEASE(styleContext);
   } else {

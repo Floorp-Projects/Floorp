@@ -62,6 +62,7 @@ public:
   static nsIAtom* color;
   static nsIAtom* cols;
   static nsIAtom* colspan;
+  static nsIAtom* columnPseudo;
   static nsIAtom* compact;
   static nsIAtom* coords;
 
@@ -133,6 +134,7 @@ public:
   static nsIAtom* readonly;
   static nsIAtom* rel;
   static nsIAtom* rightpadding;
+  static nsIAtom* rootContentPseudo;
   static nsIAtom* rows;
   static nsIAtom* rowspan;
 
