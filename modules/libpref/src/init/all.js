@@ -165,20 +165,53 @@ pref("capability.policy.default.location.search.write", "allAccess");
 pref("capability.policy.default.navigator.preference.read", "UniversalPreferencesRead");
 pref("capability.policy.default.navigator.preference.write", "UniversalPreferencesWrite");
 
+pref("capability.policy.default.windowinternal.blur", "allAccess");
 pref("capability.policy.default.windowinternal.close", "allAccess");
+pref("capability.policy.default.windowinternal.focus", "allAccess");
 pref("capability.policy.default.windowinternal.location.write", "allAccess");
-
-pref("capability.policy.mailnews.sites", "mailbox: imap: news: pop: pop3:");
-
-pref("capability.policy.mailnews.domexception.tostring", "noAccess");
-pref("capability.policy.mailnews.htmldocument.domain", "noAccess");
-pref("capability.policy.mailnews.htmldocument.url", "noAccess");
-pref("capability.policy.mailnews.nsdocument.location", "noAccess");
-pref("capability.policy.mailnews.window.name.write", "noAccess");
-pref("capability.policy.mailnews.windowinternal.location", "noAccess");
 
 // window.openDialog is insecure and must be made inaccessible from web scripts - see bug 56009
 pref("capability.policy.default.windowinternal.opendialog", "noAccess");
+
+// Mailnews DOM restrictions - see bug 66938
+pref("capability.policy.mailnews.characterdata.data", "noAccess");
+pref("capability.policy.mailnews.characterdata.substringdata", "noAccess");
+pref("capability.policy.mailnews.element.getattribute", "noAccess");
+pref("capability.policy.mailnews.element.getattributenode", "noAccess");
+pref("capability.policy.mailnews.element.getattributenodens", "noAccess");
+pref("capability.policy.mailnews.element.getattributens", "noAccess");
+pref("capability.policy.mailnews.htmlanchorelement.href", "noAccess");
+pref("capability.policy.mailnews.htmlareaelement.href", "noAccess");
+pref("capability.policy.mailnews.htmlbaseelement.href", "noAccess");
+pref("capability.policy.mailnews.htmlblockquoteelement.cite", "noAccess");
+pref("capability.policy.mailnews.domexception.tostring", "noAccess");
+pref("capability.policy.mailnews.htmldocument.domain", "noAccess");
+pref("capability.policy.mailnews.htmldocument.url", "noAccess");
+pref("capability.policy.mailnews.htmlelement.innerhtml", "noAccess");
+pref("capability.policy.mailnews.htmlimageelement.src", "noAccess");
+pref("capability.policy.mailnews.image.lowsrc", "noAccess");
+pref("capability.policy.mailnews.node.attributes", "noAccess");
+pref("capability.policy.mailnews.node.nodevalue", "noAccess");
+pref("capability.policy.mailnews.nsdocument.location", "noAccess");
+pref("capability.policy.mailnews.window.name.write", "noAccess");
+pref("capability.policy.mailnews.windowinternal.location", "noAccess");
+pref("capability.policy.mailnews.nshtmlanchorelement.hash", "noAccess");
+pref("capability.policy.mailnews.nshtmlanchorelement.host", "noAccess");
+pref("capability.policy.mailnews.nshtmlanchorelement.hostname", "noAccess");
+pref("capability.policy.mailnews.nshtmlanchorelement.pathname", "noAccess");
+pref("capability.policy.mailnews.nshtmlanchorelement.port", "noAccess");
+pref("capability.policy.mailnews.nshtmlanchorelement.protocol", "noAccess");
+pref("capability.policy.mailnews.nshtmlanchorelement.search", "noAccess");
+pref("capability.policy.mailnews.nshtmlanchorelement.text", "noAccess");
+pref("capability.policy.mailnews.nshtmlareaelement.hash", "noAccess");
+pref("capability.policy.mailnews.nshtmlareaelement.host", "noAccess");
+pref("capability.policy.mailnews.nshtmlareaelement.hostname", "noAccess");
+pref("capability.policy.mailnews.nshtmlareaelement.pathname", "noAccess");
+pref("capability.policy.mailnews.nshtmlareaelement.port", "noAccess");
+pref("capability.policy.mailnews.nshtmlareaelement.protocol", "noAccess");
+pref("capability.policy.mailnews.nshtmlareaelement.search", "noAccess");
+pref("capability.policy.mailnews.range.tostring", "noAccess");
+pref("capability.policy.mailnews.sites", "mailbox: imap: news: pop: pop3:");
 
 pref("javascript.enabled",                  true);
 pref("javascript.allow.mailnews",           false);
