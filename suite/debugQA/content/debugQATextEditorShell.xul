@@ -274,7 +274,7 @@
 </popup>
 
 
-//-- Bug? If any other popups placed after this, they don't get used
+<!-- Bug? If any other popups placed after this, they don't get used -->
 <popup id="FontFaceWindow">
    <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="40" height="40">
      <titledbutton value="Default Variable Width" onclick="opener.EditorSetFontFace(''); window.close();"/>
