@@ -53,7 +53,6 @@
 #include "nsCRT.h"
 
 static const char* kWhitespace = " \r\n\t"; // Optimized for typical cases
-static const char kDTDDirectory[] = "res/dtd/";
 
 /***************************** EXPAT CALL BACKS *******************************/
 
@@ -278,9 +277,12 @@ IsLoadableDTD(const nsCatalogData* aCatalogData, nsCOMPtr<nsIURI>* aDTD)
 
   nsCOMPtr<nsILocalFile> lfile = do_QueryInterface(dtdPath);
 
-  nsCAutoString path;
-  path = NS_LITERAL_CSTRING(kDTDDirectory) + fileName;
-  lfile->AppendRelativeNativePath(path);
+  // append res/dtd/<fileName>
+  // can't do AppendRelativeNativePath("res/dtd/" + fileName)
+  // as that won't work on all platforms.
+  lfile->AppendNative(NS_LITERAL_CSTRING("res"));
+  lfile->AppendNative(NS_LITERAL_CSTRING("dtd"));
+  lfile->AppendNative(fileName);
 
   PRBool exists;
   dtdPath->Exists(&exists);
