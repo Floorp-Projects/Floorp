@@ -2382,6 +2382,11 @@ js_InitRuntimeStringState(JSContext *cx)
     empty = js_NewStringCopyN(cx, js_empty_ucstr, 0, GCF_LOCK);
     if (!empty)
         return JS_FALSE;
+
+    /* Atomize it for scripts that use '' + x to convert x to string. */
+    if (!js_AtomizeString(cx, empty, ATOM_PINNED))
+        return JS_FALSE;
+
     rt->emptyString = empty;
     return JS_TRUE;
 }
