@@ -455,7 +455,8 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   nsAutoString tag, nameSpace;
   PRInt32 nsoffset;
   PRInt32 id = gNameSpaceId_Unknown;
-  PRBool isHTML = nsnull;
+  PRBool isHTML = PR_FALSE;
+  PRBool pushContent = PR_TRUE;
   nsIContent *content;
 
   // XXX Hopefully the parser will flag this before we get
@@ -494,7 +495,13 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
     if (nsHTMLAtoms::script == tagAtom) {
       result = ProcessStartSCRIPTTag(aNode);
     }
+    // XXX Treat the form elements as a leaf element (even if it is a
+    // container). Need to do further processing with forms
+    else if (nsHTMLAtoms::form == tagAtom) {
+      pushContent = PR_FALSE;
+    }
     NS_RELEASE(tagAtom);
+
     nsIHTMLContent *htmlContent = nsnull;
     result = NS_CreateHTMLElement(&htmlContent, tag);
     content = (nsIContent *)htmlContent;
@@ -533,7 +540,9 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
 
         parent->AppendChildTo(content, PR_FALSE);
       }
-      PushContent(content);
+      if (pushContent) {
+        PushContent(content);
+      }
     }
   }
 
@@ -547,7 +556,8 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
   nsAutoString tag, nameSpace;
   PRInt32 nsoffset;
   PRInt32 id = gNameSpaceId_Unknown;
-  PRBool isHTML = nsnull;
+  PRBool isHTML = PR_FALSE;
+  PRBool popContent = PR_TRUE;
 
   // XXX Hopefully the parser will flag this before we get
   // here. If we're in the prolog or epilog, there should be
@@ -571,30 +581,36 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
     FlushText();
   }
 
-  nsIContent* content = PopContent();
-  if (nsnull != content) {
-    PRInt32 nestLevel = GetCurrentNestLevel();
-
-    if (isHTML) {
-      tag.ToUpperCase();
-      nsIAtom* tagAtom = NS_NewAtom(tag);
-      if (nsHTMLAtoms::script == tagAtom) {
-        result = ProcessEndSCRIPTTag(aNode);
-      }
-      NS_RELEASE(tagAtom);
+  if (isHTML) {
+    tag.ToUpperCase();
+    nsIAtom* tagAtom = NS_NewAtom(tag);
+    if (nsHTMLAtoms::script == tagAtom) {
+      result = ProcessEndSCRIPTTag(aNode);
     }
-
-    CloseNameSpacesAtNestLevel(nestLevel);
-
-    if (mDocElement == content) {
-      mState = eXMLContentSinkState_InEpilog;
+    // XXX Form content was never pushed on the stack
+    else if (nsHTMLAtoms::form == tagAtom) {
+      popContent = PR_FALSE;
     }
-    NS_RELEASE(content);
+    NS_RELEASE(tagAtom);
   }
-  else {
-    // XXX Again, the parser should catch unmatched tags and
-    // we should never get here.
-    PR_ASSERT(0);
+
+  if (popContent) {
+    nsIContent* content = PopContent();
+    if (nsnull != content) {
+      PRInt32 nestLevel = GetCurrentNestLevel();
+      
+      CloseNameSpacesAtNestLevel(nestLevel);
+      
+      if (mDocElement == content) {
+        mState = eXMLContentSinkState_InEpilog;
+    }
+      NS_RELEASE(content);
+    }
+    else {
+      // XXX Again, the parser should catch unmatched tags and
+      // we should never get here.
+      PR_ASSERT(0);
+    }
   }
 
   return result;
