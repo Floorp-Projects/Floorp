@@ -786,13 +786,11 @@ nsInstallFileOpItem::NativeFileOpFileCopyComplete()
 {
   PRInt32 ret;
   char* leafName;
-  nsCOMPtr<nsIFile> parent;
 
   mAction = nsInstallFileOpItem::ACTION_FAILED;
 
   mSrc->GetLeafName(&leafName);
-  mTarget->GetParent(getter_AddRefs(parent));
-  ret = mSrc->CopyTo(parent, leafName);
+  ret = mSrc->CopyTo(mTarget, leafName);
   if(nsInstall::SUCCESS == ret)
     mAction = nsInstallFileOpItem::ACTION_SUCCESS;
 
