@@ -808,6 +808,29 @@ LOOP_INPUT
 fi
 
 dnl ========================================================
+dnl Checking for 64-bit OS
+dnl ========================================================
+AC_LANG_SAVE
+AC_LANG_C
+AC_MSG_CHECKING(for 64-bit OS)
+AC_TRY_RUN([ int main () {
+    if (sizeof(long) == 8) { return 0; } return 1; } ],
+        result="yes", result="no", result="maybe" )
+AC_MSG_RESULT("$result")
+if test "$result" = "yes"; then
+    AC_DEFINE(HAVE_64BIT_OS)
+    HAVE_64BIT_OS=1
+fi
+AC_SUBST(HAVE_64BIT_OS)
+
+if test "$HAVE_64BIT_OS"; then
+       case "$target_os" in
+       solaris*) TARGET_NSPR_MDCPUCFG='\"md/_solaris64.cfg\"' ;;
+       esac
+fi
+AC_LANG_RESTORE
+
+dnl ========================================================
 dnl System overrides of the defaults for host
 dnl ========================================================
 case "$host" in
@@ -881,6 +904,19 @@ case "$target" in
 *-aix*)
     AC_DEFINE(AIX)
     if test ! "$GNU_CC"; then
+        if test ! "$HAVE_64BIT_OS"; then
+            # Compiling with Visual Age C++ object model compat is the
+            # default. To compile with object model ibm, add 
+            # AIX_OBJMODEL=ibm to .mozconfig.
+            if test "$AIX_OBJMODEL" = "ibm"; then
+                CXXFLAGS="$CXXFLAGS -qobjmodel=ibm"
+            else
+                AIX_OBJMODEL=compat
+            fi
+        else
+            AIX_OBJMODEL=compat
+        fi
+        AC_SUBST(AIX_OBJMODEL)
         DSO_LDOPTS='-qmkshrobj=1'
         DSO_CFLAGS='-qflag=w:w'
         DSO_PIC_CFLAGS=
@@ -1813,23 +1849,6 @@ else
 fi
 
 AC_LANG_C
-
-AC_MSG_CHECKING(for 64-bit OS)
-AC_TRY_RUN([ int main () {
-    if (sizeof(long) == 8) { return 0; } return 1; } ],
-        result="yes", result="no", result="maybe" )
-AC_MSG_RESULT("$result")
-if test "$result" = "yes"; then
-    AC_DEFINE(HAVE_64BIT_OS)
-    HAVE_64BIT_OS=1
-fi
-AC_SUBST(HAVE_64BIT_OS)
-
-if test "$HAVE_64BIT_OS"; then
-	case "$target_os" in
-	solaris*) TARGET_NSPR_MDCPUCFG='\"md/_solaris64.cfg\"' ;;
-	esac
-fi
 
 dnl Check for usable wchar_t (2 bytes, unsigned)
 dnl (we really don't need the unsignedness check anymore)

@@ -224,8 +224,13 @@ ifdef HAVE_64BIT_OS
 CPPSRCS		:= xptcinvoke_ppc_aix64.cpp xptcstubs_ppc_aix64.cpp
 ASFILES		:= xptcinvoke_asm_ppc_aix64.s xptcstubs_asm_ppc_aix64.s
 else
+ifeq ($(AIX_OBJMODEL),ibm)
+CPPSRCS		:= xptcinvoke_ppc_aix.cpp xptcstubs_ppc_aix.cpp
+ASFILES		:= xptcinvoke_asm_ppc_ibmobj_aix.s xptcstubs_asm_ppc_aix.s
+else
 CPPSRCS		:= xptcinvoke_ppc_aix.cpp xptcstubs_ppc_aix.cpp
 ASFILES		:= xptcinvoke_asm_ppc_aix.s xptcstubs_asm_ppc_aix.s
+endif
 endif
 
 # #24617  Building the CPP's (CXX) optimized causes a crash
