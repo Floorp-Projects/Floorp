@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -16,22 +16,383 @@
  * Reserved.
  */
 
-#include "msg.h"
-#include "newshost.h"
+#include "msgCore.h"
+#include "nsINNTPHost.h"
+#include "nsNNTPHost.h"
+#include "nsIMsgNewsgroup.h"
 
-#include "newsset.h"
-#include "msgfinfo.h"
-#include "msgfpane.h"
-#include "hosttbl.h"
-#include "grec.h"
-#include "prefapi.h"
+/* temporary hacks to test if this compiles */
+#define nsINNTPNewsgroup nsIMsgNewsgroup
+#define MSG_FolderInfo void
+#define MSG_GroupName void
 
 #ifdef XP_UNIX
 static const char LINEBREAK_START = '\012';
 #else
 static const char LINEBREAK_START = '\015';
 #endif
-MSG_NewsHost* MSG_NewsHost::M_FileOwner = NULL;
+
+
+class nsNNTPHost : public nsINNTPHost {
+public:
+#ifdef HAVE_MASTER
+	nsNNTPHost(MSG_Master* master, const char* name,
+				 PRInt32 port);
+#else
+    nsNNTPHost(const char *name, PRInt32 port);
+#endif
+               
+	virtual ~nsNNTPHost();
+
+    // nsINNTPHost
+    
+    NS_IMPL_CLASS_GETSET(SupportsExtensions, PRBool, m_supportsExtensions);
+	NS_IMETHOD AddExtension (const char *ext);
+	NS_IMETHOD QueryExtension (const char *ext, PRBool *_retval);
+    
+    NS_IMPL_CLASS_GETSET(PostingAllowed, PRBool, m_postingAllowed);
+    NS_IMPL_CLASS_GETSET(PushAuth, PRBool, m_pushAuth);
+    
+    NS_IMPL_CLASS_GETSET(LastUpdateTime, PRInt64, m_lastGroupUpdate);
+
+    NS_IMETHOD GetNewsgroupList(const char *groupname,
+                                nsINNTPNewsgroupList **_retval);
+
+    /* get this from MSG_Master::FindNewsFolder */
+    NS_IMETHOD FindNewsgroup(const char *groupname, PRBool create,
+                             nsIMsgNewsgroup **_retval);
+    
+	NS_IMETHOD AddPropertyForGet (const char *property, const char *value);
+	NS_IMETHOD QueryPropertyForGet (const char *property, char **_retval);
+
+    NS_IMETHOD AddSearchableGroup(const char *groupname);
+	PRBool QuerySearchableGroup (const char *group);
+
+    // Virtual groups
+    NS_IMETHOD AddVirtualGroup(const char *responseText);
+    NS_IMETHOD SetIsVirtualGroup(const char *groupname, PRBool isVirtual);
+    NS_IMETHOD GetIsVirtualGroup(const char *groupname, PRBool *_retval);
+
+    // custom/searchable headers
+    NS_IMETHOD AddSearchableHeader(const char *headerName);
+    NS_IMETHOD QuerySearchableHeader(const char *headerName, PRBool *_retval);
+    
+	// Go load the newsrc for this host.  Creates the subscribed hosts as
+	// children of the given MSG_FolderInfo.
+	NS_IMETHOD LoadNewsrc();
+    
+	// Write out the newsrc for this host right now.  In general, either
+	// MarkDirty() or WriteIfDirty() should be called instead.
+	NS_IMETHOD WriteNewsrc();
+
+	// Write out the newsrc for this host right now, if anything has changed
+	// in it.
+	NS_IMETHOD WriteIfDirty();
+
+	// Note that something has changed, and we need to rewrite the newsrc file
+	// for this host at some point.
+	NS_IMETHOD MarkDirty();
+
+    NS_IMPL_CLASS_GETSET(NewsRCFilename, char *, m_filename);
+
+    NS_IMETHOD FindGroup(const char* name, nsIMsgNewsgroup* *_retval);
+    NS_IMETHOD AddGroup(const char *groupname, nsIMsgNewsgroup **_retval);
+    
+    NS_IMETHOD RemoveGroup(const char *groupName);
+    /*	NS_IMETHOD RemoveGroup(nsINNTPNewsgroup*); */
+    
+    
+
+	/* Name of directory to store newsgroup
+       databases in.  This needs to have
+       "/groupname" appended to it, and the
+       whole thing can be passed to the XP_File
+       stuff with a type of xpXoverCache. */
+    NS_IMETHOD GetDbDirName(char * *aDbDirName);
+
+    /* Returns a list of newsgroups.  The result
+       must be free'd using PR_Free(); the
+       individual strings must not be free'd. */
+    NS_IMETHOD GetGroupList(char **_retval);
+    // end of nsINNTPHost
+    
+private:
+    
+    virtual PRBool IsNews () { return PR_TRUE; }
+	virtual nsINNTPHost *GetNewsHost() { return this; }
+
+    // 
+    void addNew(MSG_GroupName* group);
+	void ClearNew();
+
+	virtual void dump();
+
+	virtual PRInt32 getPort();
+
+  
+	// Return the name of this newshost.
+	const char* getStr();
+
+	// Returns the name of this newshost, possibly followed by ":<port>" if
+	// the port number for this newshost is not the default.
+	const char* getNameAndPort();
+
+    // Returns a fully descriptive name for this newshost, including the
+    // above ":<port>" and also possibly a trailing (and localized) property
+	virtual const char* getFullUIName();
+
+
+	// Get the MSG_FolderInfo which represents this host; the children
+	// of this MSG_FolderInfo are the groups in this host.
+	MSG_FolderInfo* GetHostInfo() {return m_hostinfo;}
+
+
+#ifdef HAVE_MASTER
+	MSG_Master* GetMaster() {
+		return m_master;
+	}
+#endif
+
+
+
+	// GetNumGroupsNeedingCounts() returns how many newsgroups we have
+	// that we don't have an accurate count of unread/total articles.
+	PRInt32 GetNumGroupsNeedingCounts();
+
+	// GetFirstGroupNeedingCounts() returns the name of the first newsgroup
+	// that does not have an accurate count of unread/total articles.  The
+	// string must be free'd by the caller using PR_Free().
+	char* GetFirstGroupNeedingCounts();
+	
+
+	// GetFirstGroupNeedingExtraInfo() returns the name of the first newsgroup
+	// that does not have extra info (xactive flags and prettyname).  The
+	// string must be free'd by the caller using PR_Free().
+	char* GetFirstGroupNeedingExtraInfo();
+	
+
+	void SetWantNewTotals(PRBool value); // Sets this bit on every newsgroup
+										  // in this host.
+
+	PRBool NeedsExtension (const char *ext);
+
+
+
+
+	// Returns the base part of the URL for this newshost, in the
+	// form "news://hostname:port" or "snews://hostname:port".  
+	// Note that no trailing slash is appended, and that the
+	// ":port" part will be omitted if this host uses the default
+	// port.
+	const char* GetURLBase();
+
+	PRBool GetEverExpanded() {return m_everexpanded;}
+	void SetEverExpanded(PRBool value) {m_everexpanded = value;}
+	PRBool GetCheckedForNew() {return m_checkedForNew;}
+	void SetCheckedForNew(PRBool value) {m_checkedForNew = value;}
+	void SetGroupSucceeded(PRBool value) {m_groupSucceeded = value;}
+	// Completely obliterate this news host.  Remove all traces of it from
+	// disk and memory.
+	int RemoveHost();
+	int DeleteFiles();
+
+	// Returns the pretty name for the given group.  The resulting string
+	// must be free'd using delete[].
+	char* GetPrettyName(const char* groupname);
+	int SetPrettyName(const char* groupname, const char* prettyname);
+
+
+	time_t GetAddTime(const char* groupname);
+
+	// Returns a unique integer associated with this newsgroup.  This is
+	// mostly used by Win16 to generate a 8.3 filename.
+	PRInt32 GetUniqueID(const char* groupname);
+
+	PRBool IsCategory(const char* groupname);
+	PRBool IsCategoryContainer(const char* groupname);
+	int SetIsCategoryContainer(const char* groupname, PRBool value, msg_GroupRecord *inGroupRecord = NULL);
+	
+	int SetGroupNeedsExtraInfo(const char *groupname, PRBool value);
+	// Finds the container newsgroup for this category (or NULL if this isn't
+	// a category).  The resulting string must be free'd using delete[].
+	char* GetCategoryContainer(const char* groupname, msg_GroupRecord *inGroupRecord = NULL);
+	nsINNTPNewsgroup *GetCategoryContainerFolderInfo(const char *groupname);
+
+
+	// Get/Set whether this is a real group (as opposed to a container of
+	// other groups, like "mcom".)
+	PRBool IsGroup(const char* groupname);
+	int SetIsGroup(const char* groupname, PRBool value);
+	
+
+	// Returns PR_TRUE if it's OK to post HTML in this group (either because the
+	// bit is on for this group, or one of this group's ancestor's has marked
+	// all of its descendents as being OK for HTML.)
+	PRBool IsHTMLOk(const char* groupname);
+
+	// Get/Set if it's OK to post HTML in just this group.
+	PRBool IsHTMLOKGroup(const char* groupname);
+	int SetIsHTMLOKGroup(const char* groupname, PRBool value);
+
+	// Get/Set if it's OK to post HTML in this group and all of its subgroups.
+	PRBool IsHTMLOKTree(const char* groupname);
+	int SetIsHTMLOKTree(const char* groupname, PRBool value);
+
+	// Create the given group (if not already present).  Returns 0 if the
+	// group is already present, 1 if we had to create it, negative on error.
+	// The given group will have the "isgroup" bit set on it (in other words,
+	// it is not to be just a container of other groups, like "mcom" is.)
+	int NoticeNewGroup(const char* groupname, msg_GroupRecord **outGroupRecord = NULL);
+	
+
+	// Makes sure that we have records in memory for all known descendants
+	// of the given newsgroup.
+	int AssureAllDescendentsLoaded(msg_GroupRecord* group);
+
+
+	int SaveHostInfo();
+
+	// Suck the entire hostinfo file into memory.  If force is PR_TRUE, then throw
+	// away whatever we had in memory first.
+	int Inhale(PRBool force = PR_FALSE);
+
+	// If we inhale'd, then write thing out to the file and free up the
+	// memory.
+	int Exhale();
+
+	// Inhale, but make believe the file is empty.  In other words, set the
+	// inhaled bit, but empty out the memory.
+	int EmptyInhale();
+
+	msg_GroupRecord* GetGroupTree() {return m_groupTree;}
+	time_t GetFirstNewDate() {return m_firstnewdate;}
+	
+	void	GroupNotFound(const char *groupName, PRBool opening);
+
+	int ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *groupToMoveBefore, PRInt32 *newIdx);
+
+protected:
+	void OpenGroupFile(const XP_FilePerm permissions = XP_FILE_UPDATE_BIN);
+	PRInt32 RememberLine(char* line);
+	static PRInt32 ProcessLine_s(char* line, PRUint32 line_size, void* closure);
+	PRInt32 ProcessLine(char* line, PRUint32 line_size);
+	static void WriteTimer(void* closure);
+	int CreateFileHeader();
+	int ReadInitialPart();
+	msg_GroupRecord* FindGroupInBlock(msg_GroupRecord* parent,
+									  const char* groupname,
+									  PRInt32* comp);
+	msg_GroupRecord* LoadSingleEntry(msg_GroupRecord* parent,
+									 const char* groupname,
+									 PRInt32 min, PRInt32 max);
+	static PRInt32 InhaleLine(char* line, PRUint32 length, void* closure);
+	msg_GroupRecord* FindOrCreateGroup(const char* groupname,
+									   int* statusOfMakingGroup = NULL);	
+
+	nsINNTPNewsgroup *SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo);
+	nsINNTPNewsgroup *SwitchCategoryContainerToNews(MSG_FolderInfoCategoryContainer *catContainerInfo);
+
+	char* m_hostname;
+	PRInt32 m_port;
+
+	char* m_nameAndPort;
+	char* m_fullUIName;
+
+	MSG_FolderArray* m_groups;	// List of nsINNTPNewsgroup* objects.
+#ifdef HAVE_MASTER
+	MSG_Master* m_master;
+#endif
+
+	MSG_FolderInfo* m_hostinfo;	// Object representing entire newshost in
+								// tree.
+	char* m_optionLines;
+
+
+ 	char* m_filename;			/* The name of the newsrc file associated with
+                                   this host.  This will be of the form:
+
+                                   ""		  meaning .newsrc or .snewsrc
+                                   HOST       meaning .newsrc-HOST
+                                   HOST:PORT  meaning .newsrc-HOST:PORT
+
+								   Whether it begins with .newsrc or .snewsrc
+								   depends on a special property slot
+                                   (we pass one of
+								   the types xpNewsRC or xpSNewsRC to xp_file.)
+
+                                   The reason this is not simply derived from
+                                   the host_name and port slots is that it's
+                                   not a 1:1 mapping; if the user has a file
+                                   called "newsrc", we will use that for the
+                                   default host (the "" name.)  Likewise,
+								   ".newsrc-H" and ".newsrc-H:119" are
+								   ambiguous.
+                                 */
+
+	char* m_dbfilename;
+	PRBool m_dirty;
+	PRBool m_supportsExtensions;
+	void* m_writetimer;
+	char* m_urlbase;
+	PRBool m_everexpanded;		// Whether the user ever opened up this
+								// newshost this session.
+	PRBool m_checkedForNew;	// Whether we've checked for new newgroups
+								// in this newshost this session.
+	PRBool m_groupSucceeded;	// Whether a group command has succeeded this 
+								// session, protect against server bustage
+								// where it says no group exists.
+
+	XPPtrArray m_supportedExtensions;
+	XPPtrArray m_searchableGroups;
+	XPPtrArray m_searchableHeaders;
+	// ### mwelch Added to determine what charsets can be used
+	//            for each table.
+	XP_HashTable m_searchableGroupCharsets;
+
+	XPPtrArray m_propertiesForGet;
+	XPPtrArray m_valuesForGet;
+
+	PRBool m_postingAllowed;
+	PRBool m_pushAuth; // PR_TRUE if we should volunteer authentication without a
+						// challenge
+
+	time_t m_lastGroupUpdate;
+	time_t m_firstnewdate;
+
+
+	msg_GroupRecord* m_groupTree; // Tree of groups we're remembering.
+	PRBool m_inhaled;			// Whether we inhaled the entire list of
+								// groups, or just some.
+	int m_groupTreeDirty;		// Whether the group tree is dirty.  If 0, then
+								// we don't need to write anything.  If 1, then
+								// we can write things in place.  If >1, then
+								// we need to rewrite the whole tree file.
+	char* m_hostinfofilename;	// Filename of the hostinfo file.
+
+	static nsINNTPHost* M_FileOwner; // In an effort to save file descriptors,
+									  // only one newshost ever has its
+									  // hostinfo file opened.  This is the
+									  // one.
+
+	XP_File m_groupFile;		// File handle to the hostinfo file.
+	char* m_groupFilePermissions; // Permissions used to create the above
+								  // file handle.
+
+	char* m_block;				// A block of text read from the hostinfo file.
+	PRInt32 m_blockSize;			// How many bytes allocated in m_block.
+	PRInt32 m_blockStart;			// Where in the file we read the data that is
+								// currently sitting in m_block.
+	PRInt32 m_fileStart;			// Where in the file the actual newsgroup data
+								// starts.
+	PRInt32 m_fileSize;			// Total number of bytes in the hostinfo file.
+	PRInt32 m_uniqueId;			// Unique number assigned to each newsgroup.
+	
+};
+
+
+
+
+nsNNTPHost * nsNNTPHost::M_FileOwner = NULL;
 
 extern "C" {
 	extern int MK_OUT_OF_MEMORY;
@@ -41,10 +402,15 @@ extern "C" {
 	extern int MK_MSG_CANT_MOVE_FOLDER;
 }
 
-MSG_NewsHost::MSG_NewsHost(MSG_Master* master, const char* name,
+#ifdef HAVE_MASTER
+nsNNTPHost::nsNNTPHost(MSG_Master* master, const char* name,
                            PRInt32 port)
 {
 	m_master = master;
+#else
+nsNNTPHost::nsNNTPHost(const char *name, PRInt32 port)
+{
+#endif
 	m_hostname = new char [PL_strlen(name) + 1];
 	PL_strcpy(m_hostname, name);
 
@@ -53,7 +419,7 @@ MSG_NewsHost::MSG_NewsHost(MSG_Master* master, const char* name,
 	m_port = port;
 
 	m_searchableGroupCharsets = XP_HashTableNew(20, XP_StringHash,
-												(XP_HashCompFunction) strcmp);
+												(XP_HashCompFunction) PL_strcmp);
 
 	m_nameAndPort = NULL;
 	m_fullUIName = NULL;
@@ -69,15 +435,15 @@ MSG_NewsHost::MSG_NewsHost(MSG_Master* master, const char* name,
 	m_groupSucceeded = PR_FALSE;
 }
 
-MSG_NewsHost::~MSG_NewsHost()
+nsNNTPHost::~nsNNTPHost()
 {
 	if (m_dirty) WriteNewsrc();
 	if (m_groupTreeDirty) SaveHostInfo();
-	FREEIF(m_optionLines);
+	PR_FREEIF(m_optionLines);
 	delete [] m_filename;
 	delete [] m_hostname;
-	FREEIF(m_nameAndPort);
-	FREEIF(m_fullUIName);
+	PR_FREEIF(m_nameAndPort);
+	PR_FREEIF(m_fullUIName);
 	delete m_groups;
 	delete [] m_dbfilename;
 	delete m_groupTree;
@@ -85,9 +451,9 @@ MSG_NewsHost::~MSG_NewsHost()
 		delete [] m_block;
 	if (m_groupFile)
 		XP_FileClose (m_groupFile);
-	FREEIF(m_groupFilePermissions);
+	PR_FREEIF(m_groupFilePermissions);
 	if (M_FileOwner == this) M_FileOwner = NULL;
-	FREEIF(m_hostinfofilename);
+	PR_FREEIF(m_hostinfofilename);
 	int i;
 	for (i = 0; i < m_supportedExtensions.GetSize(); i++)
 		PR_Free((char*) m_supportedExtensions.GetAt(i));
@@ -111,7 +477,7 @@ MSG_NewsHost::~MSG_NewsHost()
 
 
 void
-MSG_NewsHost::OpenGroupFile(const XP_FilePerm permissions)
+nsNNTPHost::OpenGroupFile(const XP_FilePerm permissions)
 {
 	PR_ASSERT(permissions);
 	if (!permissions) return;
@@ -128,47 +494,47 @@ MSG_NewsHost::OpenGroupFile(const XP_FilePerm permissions)
 		M_FileOwner->m_groupFile = NULL;
 	}
 	M_FileOwner = this;
-	FREEIF(m_groupFilePermissions);
+	PR_FREEIF(m_groupFilePermissions);
 	m_groupFilePermissions = PL_strdup(permissions);
 	m_groupFile = XP_FileOpen(m_hostinfofilename, xpXoverCache, permissions);
 }
 
 
 
-void MSG_NewsHost::ClearNew()
+void nsNNTPHost::ClearNew()
 {
 	m_firstnewdate = time(0) + 1;
 }
 
 
 
-void MSG_NewsHost::dump()
+void nsNNTPHost::dump()
 {
 	// ###tw  Write me...
 }
 
 
-PRInt32 MSG_NewsHost::getPort()
+PRInt32 nsNNTPHost::getPort()
 {
 	return m_port;
 }
 
-time_t MSG_NewsHost::getLastUpdate()
+NS_IMETHODIMP
+nsNNTPHost::GetLastUpdatedTime(PRInt64* aLastUpdatedTime)
 {
-	return m_lastgroupdate;
+  
+  *aLastUpdatedTime = m_lastgroupdate;
+  return NS_MSG_SUCCESS;
 }
 
-void MSG_NewsHost::setLastUpdate(time_t date)
+NS_IMETHODIMP
+nsNNTPHost::setLastUpdate(PRInt64 aLastUpdatedTime)
 {
-	m_lastgroupdate = date;
+	m_lastgroupdate = aLastUpdatedTime;
+    return NS_MSG_SUCCESS;
 }
 
-const char* MSG_NewsHost::getStr()
-{
-	return m_hostname;
-}
-
-const char* MSG_NewsHost::getNameAndPort()
+const char* nsNNTPHost::getNameAndPort()
 {
 	if (!m_nameAndPort) {
 		if (m_port != (NEWS_PORT)) {
@@ -180,7 +546,7 @@ const char* MSG_NewsHost::getNameAndPort()
 	return m_nameAndPort;
 }
 
-const char* MSG_NewsHost::getFullUIName()
+const char* nsNNTPHost::getFullUIName()
 {
 	if (!m_fullUIName) {
 		return getNameAndPort();
@@ -189,12 +555,12 @@ const char* MSG_NewsHost::getFullUIName()
 }
 
 PRInt32
-MSG_NewsHost::RememberLine(char* line)
+nsNNTPHost::RememberLine(char* line)
 {
 	char* new_data;
 	if (m_optionLines) {
 		new_data =
-			(char *) XP_REALLOC(m_optionLines,
+			(char *) PR_REALLOC(m_optionLines,
 								PL_strlen(m_optionLines)
 								+ PL_strlen(line) + 4);
 	} else {
@@ -212,14 +578,14 @@ MSG_NewsHost::RememberLine(char* line)
 
 
 PRInt32
-MSG_NewsHost::ProcessLine_s(char* line, PRUint32 line_size, void* closure)
+nsNNTPHost::ProcessLine_s(char* line, PRUint32 line_size, void* closure)
 {
-	return ((MSG_NewsHost*) closure)->ProcessLine(line, line_size);
+	return ((nsINNTPHost*) closure)->ProcessLine(line, line_size);
 }
 
 
 PRInt32
-MSG_NewsHost::ProcessLine(char* line, PRUint32 line_size)
+nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
 {
 	/* guard against blank line lossage */
 	if (line[0] == '#' || line[0] == CR || line[0] == LF) return 0;
@@ -227,7 +593,7 @@ MSG_NewsHost::ProcessLine(char* line, PRUint32 line_size)
 	line[line_size] = 0;
 
 	if ((line[0] == 'o' || line[0] == 'O') &&
-		!strncasecomp (line, "options", 7)) {
+		!PL_strncasecmp (line, "options", 7)) {
 		return RememberLine(line);
 	}
 
@@ -250,13 +616,13 @@ MSG_NewsHost::ProcessLine(char* line, PRUint32 line_size)
 	PRBool subscribed = (*s == ':');
 	*s = '\0';
 
-	if (strlen(line) == 0)
+	if (PL_strlen(line) == 0)
 	{
 		delete set;
 		return 0;
 	}
 
-	MSG_FolderInfoNews* info;
+	nsINNTPNewsgroup* info;
 
 	if (subscribed && IsCategoryContainer(line))
 	{
@@ -275,7 +641,7 @@ MSG_NewsHost::ProcessLine(char* line, PRUint32 line_size)
 			if (!child) break;
 			char* fullname = child->GetFullName();
 			if (!fullname) break;
-			MSG_FolderInfoNews* info = FindGroup(fullname);
+			nsINNTPNewsgroup* info = FindGroup(fullname);
 			if (!info) {	// autosubscribe, if we haven't seen this one.
 				char* groupLine = PR_smprintf("%s:", fullname);
 				if (groupLine) {
@@ -287,7 +653,7 @@ MSG_NewsHost::ProcessLine(char* line, PRUint32 line_size)
 		}
 	}
 	else
-		info = new MSG_FolderInfoNews(line, set, subscribed, this,
+		info = new nsINNTPNewsgroup(line, set, subscribed, this,
 							   m_hostinfo->GetDepth() + 1);
 
 	if (!info) return MK_OUT_OF_MEMORY;
@@ -309,7 +675,7 @@ MSG_NewsHost::ProcessLine(char* line, PRUint32 line_size)
 }
 
 
-int MSG_NewsHost::LoadNewsrc(MSG_FolderInfo* hostinfo)
+int nsNNTPHost::LoadNewsrc(MSG_FolderInfo* hostinfo)
 {
 	char *ibuffer = 0;
 	PRUint32 ibuffer_size = 0;
@@ -321,7 +687,7 @@ int MSG_NewsHost::LoadNewsrc(MSG_FolderInfo* hostinfo)
 
 	int status = 0;
 
-	FREEIF(m_optionLines);
+	PR_FREEIF(m_optionLines);
 
 	if (!m_groups) {
 		int size = 2048;
@@ -347,25 +713,25 @@ int MSG_NewsHost::LoadNewsrc(MSG_FolderInfo* hostinfo)
 #ifdef XP_OS2
 								   (PRInt32 (_Optlink*) (char*,PRUint32,void*))
 #endif
-								   MSG_NewsHost::ProcessLine_s, this);
+								   nsNNTPHost::ProcessLine_s, this);
 				}
 			} while (status > 0);
 			XP_FileClose(fid);
 		}
 		if (status == 0 && ibuffer_fp > 0) {
-			status = ProcessLine_s(ibuffer, ibuffer_fp, this);
+			status = ProcessLine(ibuffer, ibuffer_fp);
 			ibuffer_fp = 0;
 		}
 
 		delete [] buffer;
-		FREEIF(ibuffer);
+		PR_FREEIF(ibuffer);
 
 	}
 
 	// build up the category tree for each category container so that roll-up 
 	// of counts will work before category containers are opened.
 	for (PRInt32 i = 0; i < m_groups->GetSize(); i++) {
-		MSG_FolderInfoNews *info = (MSG_FolderInfoNews *) m_groups->GetAt(i);
+		nsINNTPNewsgroup *info = (nsINNTPNewsgroup *) m_groups->GetAt(i);
 		if (info->GetType() == FOLDER_CATEGORYCONTAINER) {
 			const char* groupname = info->GetNewsgroupName();
 			msg_GroupRecord* group = m_groupTree->FindDescendant(groupname);
@@ -386,7 +752,7 @@ int MSG_NewsHost::LoadNewsrc(MSG_FolderInfo* hostinfo)
 
 
 int
-MSG_NewsHost::WriteNewsrc()
+nsNNTPHost::WriteNewsrc()
 {
 	if (!m_groups) return -1;
 
@@ -436,7 +802,7 @@ MSG_NewsHost::WriteNewsrc()
 
 	int n = m_groups->GetSize();
 	for (int i=0 ; i<n && status >= 0 ; i++) {
-		MSG_FolderInfoNews* info = (MSG_FolderInfoNews*) ((*m_groups)[i]);
+		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
 		// GetNewsFolderInfo will get root category for cat container.
 		char* str = info->GetNewsFolderInfo()->GetSet()->Output();
 		if (!str) {
@@ -486,7 +852,7 @@ MSG_NewsHost::WriteNewsrc()
 
 
 int
-MSG_NewsHost::WriteIfDirty()
+nsNNTPHost::WriteIfDirty()
 {
 	if (m_dirty) return WriteNewsrc();
 	return 0;
@@ -494,19 +860,19 @@ MSG_NewsHost::WriteIfDirty()
 
 
 void
-MSG_NewsHost::MarkDirty()
+nsNNTPHost::MarkDirty()
 {
 	m_dirty = PR_TRUE;
 
 	if (!m_writetimer)
-		m_writetimer = FE_SetTimeout((TimeoutCallbackFunction)MSG_NewsHost::WriteTimer, this,
+		m_writetimer = FE_SetTimeout((TimeoutCallbackFunction)nsNNTPHost::WriteTimer, this,
 								 5L * 60L * 1000L); // Hard-coded -- 5 minutes.
   }
 
 void
-MSG_NewsHost::WriteTimer(void* closure)
+nsNNTPHost::WriteTimer(void* closure)
 {
-	MSG_NewsHost* host = (MSG_NewsHost*) closure;
+	nsNNTPHost* host = (nsNNTPHost*) closure;
 	host->m_writetimer = NULL;
 	if (host->WriteNewsrc() < 0) {
 		// ###tw  Pop up error message???
@@ -516,14 +882,14 @@ MSG_NewsHost::WriteTimer(void* closure)
 
 
 const char*
-MSG_NewsHost::GetNewsrcFileName()
+nsNNTPHost::GetNewsrcFileName()
 {
 	return m_filename;
 }
 
 
 int
-MSG_NewsHost::SetNewsrcFileName(const char* name)
+nsNNTPHost::SetNewsrcFileName(const char* name)
 {
 	delete [] m_filename;
 	m_filename = new char [PL_strlen(name) + 1];
@@ -617,7 +983,7 @@ MSG_NewsHost::SetNewsrcFileName(const char* name)
 
 
 int
-MSG_NewsHost::ReadInitialPart()
+nsNNTPHost::ReadInitialPart()
 {
 	OpenGroupFile();
 	if (!m_groupFile) return -1;
@@ -679,7 +1045,7 @@ MSG_NewsHost::ReadInitialPart()
 }
 
 int
-MSG_NewsHost::CreateFileHeader()
+nsNNTPHost::CreateFileHeader()
 {
 	PR_snprintf(m_block, m_blockSize,
 				"# Netscape newshost information file." LINEBREAK
@@ -706,7 +1072,7 @@ MSG_NewsHost::CreateFileHeader()
 }
 
 int
-MSG_NewsHost::SaveHostInfo()
+nsNNTPHost::SaveHostInfo()
 {                   
 	int status = 0;
 	msg_GroupRecord* grec;
@@ -786,7 +1152,7 @@ MSG_NewsHost::SaveHostInfo()
 				ptr = NULL;
 			}
 		}
-		FREEIF(ptr);
+		PR_FREEIF(ptr);
 	}
 	if (m_groupTreeDirty >= 2) {
 		// We need to rewrite the whole silly file.
@@ -927,7 +1293,7 @@ struct InhaleState {
 
 
 PRInt32
-MSG_NewsHost::InhaleLine(char* line, PRUint32 length, void* closure)
+nsNNTPHost::InhaleLine(char* line, PRUint32 length, void* closure)
 {
 	int status = 0;
 	InhaleState* state = (InhaleState*) closure;
@@ -1009,7 +1375,7 @@ DONE:
 
 
 int
-MSG_NewsHost::Inhale(PRBool force)
+nsNNTPHost::Inhale(PRBool force)
 {
 	if (m_groupTreeDirty) SaveHostInfo();
 	if (force) {
@@ -1044,12 +1410,12 @@ MSG_NewsHost::Inhale(PRBool force)
 #ifdef XP_OS2
 								(PRInt32 (_Optlink*) (char*,PRUint32,void*))
 #endif
-								MSG_NewsHost::InhaleLine, &state);
+								nsNNTPHost::InhaleLine, &state);
 	} while (status >= 0);
 	if (status >= 0 && buffer_fp > 0) {
 		status = InhaleLine(buffer, buffer_fp, &state);
 	}
-	FREEIF(buffer);
+	PR_FREEIF(buffer);
 	m_block[0] = '\0';
 	if (status >= 0) m_inhaled = PR_TRUE;
 	return status;
@@ -1057,7 +1423,7 @@ MSG_NewsHost::Inhale(PRBool force)
 
 
 int
-MSG_NewsHost::Exhale()
+nsNNTPHost::Exhale()
 {
 	PR_ASSERT(m_inhaled);
 	if (!m_inhaled) return -1;
@@ -1071,7 +1437,7 @@ MSG_NewsHost::Exhale()
 
 
 int
-MSG_NewsHost::EmptyInhale()
+nsNNTPHost::EmptyInhale()
 {
 	PR_ASSERT(!m_inhaled);
 	if (m_inhaled) return -1;
@@ -1084,13 +1450,13 @@ MSG_NewsHost::EmptyInhale()
 
 
 
-MSG_FolderInfoNews*
-MSG_NewsHost::FindGroup(const char* name)
+nsINNTPNewsgroup*
+nsNNTPHost::FindGroup(const char* name)
 {
 	if (m_groups == NULL) return NULL;
 	int n = m_groups->GetSize();
 	for (int i=0 ; i<n ; i++) {
-		MSG_FolderInfoNews* info = (MSG_FolderInfoNews*) (*m_groups)[i];
+		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) (*m_groups)[i];
 		if (PL_strcmp(info->GetNewsgroupName(), name) == 0) {
 			return info;
 		}
@@ -1098,9 +1464,9 @@ MSG_NewsHost::FindGroup(const char* name)
 	return NULL;
 }
 
-MSG_FolderInfoNews *MSG_NewsHost::AddGroup(const char *groupName, msg_GroupRecord *inGroupRecord)
+nsINNTPNewsgroup *nsNNTPHost::AddGroup(const char *groupName, msg_GroupRecord *inGroupRecord)
 {
-	MSG_FolderInfoNews *newsInfo = NULL;
+	nsINNTPNewsgroup *newsInfo = NULL;
 	MSG_FolderInfoCategoryContainer *categoryContainer = NULL;
 	char* containerName = NULL;
 	PRBool needpaneupdate = PR_FALSE;
@@ -1147,7 +1513,7 @@ MSG_FolderInfoNews *MSG_NewsHost::AddGroup(const char *groupName, msg_GroupRecor
 		// this will add and auto-subscribe - OK, a cheap hack.
 		if (ProcessLine(groupLine, PL_strlen(groupLine)) == 0) {
 			// groups are added at end so look there first...
-			newsInfo = (MSG_FolderInfoNews *)
+			newsInfo = (nsINNTPNewsgroup *)
 				m_groups->GetAt(m_groups->GetSize() - 1);
 			if (PL_strcmp(newsInfo->GetNewsgroupName(), groupName)) {
 				newsInfo = FindGroup(groupName);
@@ -1171,7 +1537,7 @@ MSG_FolderInfoNews *MSG_NewsHost::AddGroup(const char *groupName, msg_GroupRecor
 			if (!child) break;
 			char* fullname = child->GetFullName();
 			if (!fullname) break;
-			MSG_FolderInfoNews* info = FindGroup(fullname);
+			nsINNTPNewsgroup* info = FindGroup(fullname);
 			if (info) {
 				if (!info->IsSubscribed()) {
 					info->Subscribe(PR_TRUE);
@@ -1214,7 +1580,7 @@ DONE:
 	return newsInfo;
 }
 
-MSG_FolderInfoNews *MSG_NewsHost::SwitchNewsToCategoryContainer(MSG_FolderInfoNews *newsInfo)
+nsINNTPNewsgroup *nsNNTPHost::SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo)
 {
 	int groupIndex = m_groups->FindIndex(0, newsInfo);
 	if (groupIndex != -1)
@@ -1232,14 +1598,14 @@ MSG_FolderInfoNews *MSG_NewsHost::SwitchNewsToCategoryContainer(MSG_FolderInfoNe
 	return newsInfo;
 }
 
-MSG_FolderInfoNews *MSG_NewsHost::SwitchCategoryContainerToNews(MSG_FolderInfoCategoryContainer *catContainerInfo)
+nsINNTPNewsgroup *nsNNTPHost::SwitchCategoryContainerToNews(MSG_FolderInfoCategoryContainer *catContainerInfo)
 {
-	MSG_FolderInfoNews *retInfo = NULL;
+	nsINNTPNewsgroup *retInfo = NULL;
 
 	int groupIndex = m_groups->FindIndex(0, catContainerInfo);
 	if (groupIndex != -1)
 	{
-		MSG_FolderInfoNews *rootCategory = catContainerInfo->GetRootCategory();
+		nsINNTPNewsgroup *rootCategory = catContainerInfo->GetRootCategory();
 		// slip the root category container where the category container was.
 		m_groups->SetAt(groupIndex, rootCategory);
 		XPPtrArray* infoList = (XPPtrArray*) m_hostinfo->GetSubFolders();
@@ -1253,7 +1619,7 @@ MSG_FolderInfoNews *MSG_NewsHost::SwitchCategoryContainerToNews(MSG_FolderInfoCa
 	return retInfo;
 }
 
-void MSG_NewsHost::RemoveGroup (MSG_FolderInfoNews *newsInfo)
+void nsNNTPHost::RemoveGroup (nsINNTPNewsgroup *newsInfo)
 {
 	if (newsInfo && newsInfo->IsSubscribed()) 
 	{
@@ -1265,9 +1631,9 @@ void MSG_NewsHost::RemoveGroup (MSG_FolderInfoNews *newsInfo)
 }
 
 void
-MSG_NewsHost::RemoveGroup(const char* groupName)
+nsNNTPHost::RemoveGroup(const char* groupName)
 {
-	MSG_FolderInfoNews *newsInfo = NULL;
+	nsINNTPNewsgroup *newsInfo = NULL;
 
 	newsInfo = FindGroup(groupName);
 	RemoveGroup (newsInfo);
@@ -1279,7 +1645,7 @@ MSG_NewsHost::RemoveGroup(const char* groupName)
 #endif
 
 const char*
-MSG_NewsHost::GetDBDirName()
+nsNNTPHost::GetDBDirName()
 {
 	if (!m_filename) return NULL;
 	if (!m_dbfilename) {
@@ -1327,13 +1693,13 @@ MSG_NewsHost::GetDBDirName()
 #endif
 
 PRInt32
-MSG_NewsHost::GetNumGroupsNeedingCounts()
+nsNNTPHost::GetNumGroupsNeedingCounts()
 {
 	if (!m_groups) return 0;
 	int num = m_groups->GetSize();
 	PRInt32 result = 0;
 	for (int i=0 ; i<num ; i++) {
-		MSG_FolderInfoNews* info = (MSG_FolderInfoNews*) ((*m_groups)[i]);
+		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
 		if (info->GetWantNewTotals() && info->IsSubscribed()) {
 			result++;
 		}
@@ -1343,12 +1709,12 @@ MSG_NewsHost::GetNumGroupsNeedingCounts()
 
 
 char*
-MSG_NewsHost::GetFirstGroupNeedingCounts()
+nsNNTPHost::GetFirstGroupNeedingCounts()
 {
 	if (!m_groups) return NULL;
 	int num = m_groups->GetSize();
 	for (int i=0 ; i<num ; i++) {
-		MSG_FolderInfoNews* info = (MSG_FolderInfoNews*) ((*m_groups)[i]);
+		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
 		if (info->GetWantNewTotals() && info->IsSubscribed()) {
 			info->SetWantNewTotals(PR_FALSE);
 			return PL_strdup(info->GetNewsgroupName());
@@ -1359,7 +1725,7 @@ MSG_NewsHost::GetFirstGroupNeedingCounts()
 
 
 char*
-MSG_NewsHost::GetFirstGroupNeedingExtraInfo()
+nsNNTPHost::GetFirstGroupNeedingExtraInfo()
 {
 	msg_GroupRecord* grec;
 	
@@ -1377,26 +1743,26 @@ MSG_NewsHost::GetFirstGroupNeedingExtraInfo()
 
 
 void
-MSG_NewsHost::SetWantNewTotals(PRBool value)
+nsNNTPHost::SetWantNewTotals(PRBool value)
 {
 	if (!m_groups) return;
 	int n = m_groups->GetSize();
 	for (int i=0 ; i<n ; i++) {
-		MSG_FolderInfoNews* info = (MSG_FolderInfoNews*) ((*m_groups)[i]);
+		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
 		info->SetWantNewTotals(value);
 	}
 }
 
 
 
-PRBool MSG_NewsHost::NeedsExtension (const char * /*extension*/)
+PRBool nsNNTPHost::NeedsExtension (const char * /*extension*/)
 {
 	//###phil need to flesh this out
 	PRBool needed = m_supportsExtensions;
 	return needed;
 }
 
-void MSG_NewsHost::AddExtension (const char *ext)
+void nsNNTPHost::AddExtension (const char *ext)
 {
 	if (!QueryExtension(ext))
 	{
@@ -1406,7 +1772,7 @@ void MSG_NewsHost::AddExtension (const char *ext)
 	}
 }
 
-PRBool MSG_NewsHost::QueryExtension (const char *ext)
+PRBool nsNNTPHost::QueryExtension (const char *ext)
 {
 	for (int i = 0; i < m_supportedExtensions.GetSize(); i++)
 		if (!PL_strcmp(ext, (char*) m_supportedExtensions.GetAt(i)))
@@ -1414,7 +1780,7 @@ PRBool MSG_NewsHost::QueryExtension (const char *ext)
 	return PR_FALSE;
 }
 
-void MSG_NewsHost::AddSearchableGroup (const char *group)
+void nsNNTPHost::AddSearchableGroup (const char *group)
 {
 	if (!QuerySearchableGroup(group))
 	{
@@ -1435,7 +1801,7 @@ void MSG_NewsHost::AddSearchableGroup (const char *group)
 	}
 }
 
-PRBool MSG_NewsHost::QuerySearchableGroup (const char *group)
+PRBool nsNNTPHost::QuerySearchableGroup (const char *group)
 {
 	for (int i = 0; i < m_searchableGroups.GetSize(); i++)
 	{
@@ -1458,7 +1824,7 @@ PRBool MSG_NewsHost::QuerySearchableGroup (const char *group)
 // ### mwelch This should have been merged into one routine with QuerySearchableGroup,
 //            but with two interfaces.
 const char *
-MSG_NewsHost::QuerySearchableGroupCharsets(const char *group)
+nsNNTPHost::QuerySearchableGroupCharsets(const char *group)
 {
 	// Very similar to the above, but this time we look up charsets.
 	const char *result = NULL;
@@ -1490,7 +1856,7 @@ MSG_NewsHost::QuerySearchableGroupCharsets(const char *group)
 	return result;
 }
 
-void MSG_NewsHost::AddSearchableHeader (const char *header)
+void nsNNTPHost::AddSearchableHeader (const char *header)
 {
 	if (!QuerySearchableHeader(header))
 	{
@@ -1500,7 +1866,7 @@ void MSG_NewsHost::AddSearchableHeader (const char *header)
 	}
 }
 
-PRBool MSG_NewsHost::QuerySearchableHeader(const char *header)
+PRBool nsNNTPHost::QuerySearchableHeader(const char *header)
 {
 	for (int i = 0; i < m_searchableHeaders.GetSize(); i++)
 		if (!XP_STRNCASECMP(header, (char*) m_searchableHeaders.GetAt(i), PL_strlen(header)))
@@ -1508,7 +1874,7 @@ PRBool MSG_NewsHost::QuerySearchableHeader(const char *header)
 	return PR_FALSE;
 }
 
-void MSG_NewsHost::AddPropertyForGet (const char *property, const char *value)
+void nsNNTPHost::AddPropertyForGet (const char *property, const char *value)
 {
 	char *tmp = NULL;
 	
@@ -1521,7 +1887,7 @@ void MSG_NewsHost::AddPropertyForGet (const char *property, const char *value)
 		m_valuesForGet.Add (tmp);
 }
 
-const char *MSG_NewsHost::QueryPropertyForGet (const char *property)
+const char *nsNNTPHost::QueryPropertyForGet (const char *property)
 {
 	for (int i = 0; i < m_propertiesForGet.GetSize(); i++)
 		if (!PL_strcasecmp(property, (const char *) m_propertiesForGet.GetAt(i)))
@@ -1530,7 +1896,7 @@ const char *MSG_NewsHost::QueryPropertyForGet (const char *property)
 }
 
 
-void MSG_NewsHost::SetPushAuth(PRBool value)
+void nsNNTPHost::SetPushAuth(PRBool value)
 {
 	if (m_pushAuth != value) 
 	{
@@ -1542,7 +1908,7 @@ void MSG_NewsHost::SetPushAuth(PRBool value)
 
 
 const char*
-MSG_NewsHost::GetURLBase()
+nsNNTPHost::GetURLBase()
 {
 	if (!m_urlbase) {
 		m_urlbase = PR_smprintf("%s://%s", "news",
@@ -1554,7 +1920,7 @@ MSG_NewsHost::GetURLBase()
 
 
 
-int MSG_NewsHost::RemoveHost()
+int nsNNTPHost::RemoveHost()
 {
 	if (m_groupFile) {
 		XP_FileClose(m_groupFile);
@@ -1595,7 +1961,7 @@ int MSG_NewsHost::RemoveHost()
 
 
 char*
-MSG_NewsHost::GetPrettyName(const char* groupname)
+nsNNTPHost::GetPrettyName(const char* groupname)
 {
 	msg_GroupRecord* group = FindOrCreateGroup(groupname);
 	if (group) {
@@ -1613,14 +1979,14 @@ MSG_NewsHost::GetPrettyName(const char* groupname)
 
 
 int
-MSG_NewsHost::SetPrettyName(const char* groupname, const char* prettyname)
+nsNNTPHost::SetPrettyName(const char* groupname, const char* prettyname)
 {
 	msg_GroupRecord* group = FindOrCreateGroup(groupname);
 	if (!group) return MK_OUT_OF_MEMORY;
 	int status = group->SetPrettyName(prettyname);
 	if (status > 0)
 	{
-		MSG_FolderInfoNews *newsFolder = FindGroup(groupname);
+		nsINNTPNewsgroup *newsFolder = FindGroup(groupname);
 		// make news folder forget prettyname so it will query again
 		if (newsFolder)	
 			newsFolder->ClearPrettyName();
@@ -1631,7 +1997,7 @@ MSG_NewsHost::SetPrettyName(const char* groupname, const char* prettyname)
 
 
 time_t
-MSG_NewsHost::GetAddTime(const char* groupname)
+nsNNTPHost::GetAddTime(const char* groupname)
 {
 	msg_GroupRecord* group = FindOrCreateGroup(groupname);
 	if (!group) return 0;
@@ -1640,7 +2006,7 @@ MSG_NewsHost::GetAddTime(const char* groupname)
 
 
 PRInt32
-MSG_NewsHost::GetUniqueID(const char* groupname)
+nsNNTPHost::GetUniqueID(const char* groupname)
 {
 	msg_GroupRecord* group = FindOrCreateGroup(groupname);
 	if (!group) return 0;
@@ -1649,7 +2015,7 @@ MSG_NewsHost::GetUniqueID(const char* groupname)
 
 
 PRBool
-MSG_NewsHost::IsCategory(const char* groupname)
+nsNNTPHost::IsCategory(const char* groupname)
 {
 	msg_GroupRecord* group = FindOrCreateGroup(groupname);
 	if (!group) return PR_FALSE;
@@ -1658,7 +2024,7 @@ MSG_NewsHost::IsCategory(const char* groupname)
 
 
 PRBool
-MSG_NewsHost::IsCategoryContainer(const char* groupname)
+nsNNTPHost::IsCategoryContainer(const char* groupname)
 {
 	msg_GroupRecord* group = FindOrCreateGroup(groupname);
 	if (!group) return PR_FALSE;
@@ -1666,7 +2032,7 @@ MSG_NewsHost::IsCategoryContainer(const char* groupname)
 }
 
 int
-MSG_NewsHost::SetIsCategoryContainer(const char* groupname, PRBool value, msg_GroupRecord *inGroupRecord)
+nsNNTPHost::SetIsCategoryContainer(const char* groupname, PRBool value, msg_GroupRecord *inGroupRecord)
 {
 	msg_GroupRecord* group = (inGroupRecord) ? inGroupRecord : FindOrCreateGroup(groupname);
 	if (!group) return MK_OUT_OF_MEMORY;
@@ -1674,7 +2040,7 @@ MSG_NewsHost::SetIsCategoryContainer(const char* groupname, PRBool value, msg_Gr
 	m_groupTreeDirty |= status;
 	if (status > 0)
 	{
-		MSG_FolderInfoNews *newsFolder = FindGroup(groupname);
+		nsINNTPNewsgroup *newsFolder = FindGroup(groupname);
 		// make news folder have correct category container flag
 		if (newsFolder)	
 		{
@@ -1702,7 +2068,7 @@ MSG_NewsHost::SetIsCategoryContainer(const char* groupname, PRBool value, msg_Gr
 }
 
 int 
-MSG_NewsHost::SetGroupNeedsExtraInfo(const char *groupname, PRBool value)
+nsNNTPHost::SetGroupNeedsExtraInfo(const char *groupname, PRBool value)
 {
 	msg_GroupRecord* group = FindOrCreateGroup(groupname);
 	if (!group) return MK_OUT_OF_MEMORY;
@@ -1713,7 +2079,7 @@ MSG_NewsHost::SetGroupNeedsExtraInfo(const char *groupname, PRBool value)
 
 
 char*
-MSG_NewsHost::GetCategoryContainer(const char* groupname, msg_GroupRecord *inGroupRecord)
+nsNNTPHost::GetCategoryContainer(const char* groupname, msg_GroupRecord *inGroupRecord)
 {
 	msg_GroupRecord* group = (inGroupRecord) ? inGroupRecord : FindOrCreateGroup(groupname);
 	if (group) {
@@ -1723,10 +2089,10 @@ MSG_NewsHost::GetCategoryContainer(const char* groupname, msg_GroupRecord *inGro
 	return NULL;
 }
 
-MSG_FolderInfoNews *
-MSG_NewsHost::GetCategoryContainerFolderInfo(const char *groupname)
+nsINNTPNewsgroup *
+nsNNTPHost::GetCategoryContainerFolderInfo(const char *groupname)
 {
-	MSG_FolderInfoNews	*ret = NULL;
+	nsINNTPNewsgroup	*ret = NULL;
 	// because GetCategoryContainer returns NULL for a category container...
 	msg_GroupRecord *group = FindOrCreateGroup(groupname);
 	if (group->IsCategoryContainer())
@@ -1743,7 +2109,7 @@ MSG_NewsHost::GetCategoryContainerFolderInfo(const char *groupname)
 
 
 PRBool
-MSG_NewsHost::IsProfile(const char* groupname)
+nsNNTPHost::IsProfile(const char* groupname)
 {
 	msg_GroupRecord* group = FindOrCreateGroup(groupname);
 	if (!group) return PR_FALSE;
@@ -1752,7 +2118,7 @@ MSG_NewsHost::IsProfile(const char* groupname)
 
 
 int
-MSG_NewsHost::SetIsProfile(const char* groupname, PRBool value, msg_GroupRecord *inGroupRecord)
+nsNNTPHost::SetIsProfile(const char* groupname, PRBool value, msg_GroupRecord *inGroupRecord)
 {
 	msg_GroupRecord* group = (inGroupRecord) ? inGroupRecord : FindOrCreateGroup(groupname);
 	if (!group) return MK_OUT_OF_MEMORY;
@@ -1764,7 +2130,7 @@ MSG_NewsHost::SetIsProfile(const char* groupname, PRBool value, msg_GroupRecord 
 
 
 PRBool
-MSG_NewsHost::IsGroup(const char* groupname)
+nsNNTPHost::IsGroup(const char* groupname)
 {
 	msg_GroupRecord* group = FindOrCreateGroup(groupname);
 	if (!group) return PR_FALSE;
@@ -1773,7 +2139,7 @@ MSG_NewsHost::IsGroup(const char* groupname)
 
 
 int
-MSG_NewsHost::SetIsGroup(const char* groupname, PRBool value)
+nsNNTPHost::SetIsGroup(const char* groupname, PRBool value)
 {
 	msg_GroupRecord* group = FindOrCreateGroup(groupname);
 	if (!group) return MK_OUT_OF_MEMORY;
@@ -1784,7 +2150,7 @@ MSG_NewsHost::SetIsGroup(const char* groupname, PRBool value)
 
 
 PRBool
-MSG_NewsHost::IsHTMLOk(const char* groupname)
+nsNNTPHost::IsHTMLOk(const char* groupname)
 {
 	msg_GroupRecord* group = FindOrCreateGroup(groupname);
 	if (!group) return PR_FALSE;
@@ -1797,7 +2163,7 @@ MSG_NewsHost::IsHTMLOk(const char* groupname)
 
 
 PRBool
-MSG_NewsHost::IsHTMLOKGroup(const char* groupname)
+nsNNTPHost::IsHTMLOKGroup(const char* groupname)
 {
 	msg_GroupRecord* group = FindOrCreateGroup(groupname);
 	if (!group) return PR_FALSE;
@@ -1806,7 +2172,7 @@ MSG_NewsHost::IsHTMLOKGroup(const char* groupname)
 
 
 int
-MSG_NewsHost::SetIsHTMLOKGroup(const char* groupname, PRBool value)
+nsNNTPHost::SetIsHTMLOKGroup(const char* groupname, PRBool value)
 {
 	msg_GroupRecord* group = FindOrCreateGroup(groupname);
 	if (!group) return MK_OUT_OF_MEMORY;
@@ -1817,7 +2183,7 @@ MSG_NewsHost::SetIsHTMLOKGroup(const char* groupname, PRBool value)
 
 
 PRBool
-MSG_NewsHost::IsHTMLOKTree(const char* groupname)
+nsNNTPHost::IsHTMLOKTree(const char* groupname)
 {
 	msg_GroupRecord* group = FindOrCreateGroup(groupname);
 	if (!group) return PR_FALSE;
@@ -1826,7 +2192,7 @@ MSG_NewsHost::IsHTMLOKTree(const char* groupname)
 
 
 int
-MSG_NewsHost::SetIsHTMLOKTree(const char* groupname, PRBool value)
+nsNNTPHost::SetIsHTMLOKTree(const char* groupname, PRBool value)
 {
 	msg_GroupRecord* group = FindOrCreateGroup(groupname);
 	if (!group) return MK_OUT_OF_MEMORY;
@@ -1840,7 +2206,7 @@ MSG_NewsHost::SetIsHTMLOKTree(const char* groupname, PRBool value)
 
 
 msg_GroupRecord*
-MSG_NewsHost::FindGroupInBlock(msg_GroupRecord* parent,
+nsNNTPHost::FindGroupInBlock(msg_GroupRecord* parent,
 							   const char* groupname,
 							   PRInt32* comp)
 {
@@ -1930,7 +2296,7 @@ RELOAD:
 
 
 msg_GroupRecord*
-MSG_NewsHost::LoadSingleEntry(msg_GroupRecord* parent, const char* groupname,
+nsNNTPHost::LoadSingleEntry(msg_GroupRecord* parent, const char* groupname,
 							  PRInt32 min, PRInt32 max)
 {
 	OpenGroupFile();
@@ -1980,7 +2346,7 @@ MSG_NewsHost::LoadSingleEntry(msg_GroupRecord* parent, const char* groupname,
 
 
 msg_GroupRecord*
-MSG_NewsHost::FindOrCreateGroup(const char* groupname,
+nsNNTPHost::FindOrCreateGroup(const char* groupname,
 								int* statusOfMakingGroup)
 {
 	char buf[256];
@@ -2056,7 +2422,7 @@ MSG_NewsHost::FindOrCreateGroup(const char* groupname,
 
 
 int
-MSG_NewsHost::NoticeNewGroup(const char* groupname, msg_GroupRecord **outGroupRecord)
+nsNNTPHost::NoticeNewGroup(const char* groupname, msg_GroupRecord **outGroupRecord)
 {
 	int status = 0;
 	msg_GroupRecord* group = FindOrCreateGroup(groupname, &status);
@@ -2068,7 +2434,7 @@ MSG_NewsHost::NoticeNewGroup(const char* groupname, msg_GroupRecord **outGroupRe
 
 
 int
-MSG_NewsHost::AssureAllDescendentsLoaded(msg_GroupRecord* group)
+nsNNTPHost::AssureAllDescendentsLoaded(msg_GroupRecord* group)
 {
 	int status = 0;
 	PR_ASSERT(group);
@@ -2098,7 +2464,7 @@ MSG_NewsHost::AssureAllDescendentsLoaded(msg_GroupRecord* group)
 #ifdef XP_OS2
 								(PRInt32 (_Optlink*) (char*,PRUint32,void*))
 #endif
-								MSG_NewsHost::InhaleLine, &state);
+								nsNNTPHost::InhaleLine, &state);
 	} while (status >= 0);
 	if (status >= 0 && buffer_fp > 0) {
 		status = InhaleLine(buffer, buffer_fp, &state);
@@ -2107,14 +2473,14 @@ MSG_NewsHost::AssureAllDescendentsLoaded(msg_GroupRecord* group)
 								  // lines that are children of the given
 								  // group.
 	
-	FREEIF(buffer);
+	PR_FREEIF(buffer);
 	m_block[0] = '\0';
 
 	if (status >= 0) group->SetIsDescendentsLoaded(PR_TRUE);
 	return status;
 }
 
-void MSG_NewsHost::GroupNotFound(const char *groupName, PRBool opening)
+void nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
 {
 	// if no group command has succeeded, don't blow away categories.
 	// The server might be wedged...
@@ -2124,12 +2490,12 @@ void MSG_NewsHost::GroupNotFound(const char *groupName, PRBool opening)
 	msg_GroupRecord* group = FindOrCreateGroup(groupName);
 	if (group && (group->IsCategory() || opening))
 	{
-		MSG_FolderInfoNews *newsInfo = FindGroup(groupName);
+		nsINNTPNewsgroup *newsInfo = FindGroup(groupName);
 		group->SetDoesNotExistOnServer(PR_TRUE);
 		m_groupTreeDirty |= 2;	// deleting a group has to force a rewrite anyway
 		if (group->IsCategory())
 		{
-			MSG_FolderInfoNews *catCont = GetCategoryContainerFolderInfo(groupName);
+			nsINNTPNewsgroup *catCont = GetCategoryContainerFolderInfo(groupName);
 			if (catCont)
 			{
 				MSG_FolderInfo *parentCategory = catCont->FindParentOf(newsInfo);
@@ -2151,7 +2517,7 @@ void MSG_NewsHost::GroupNotFound(const char *groupName, PRBool opening)
 }
 
 
-int MSG_NewsHost::ReorderGroup (MSG_FolderInfoNews *groupToMove, MSG_FolderInfoNews *groupToMoveBefore, PRInt32 *newIdx)
+int nsNNTPHost::ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *groupToMoveBefore, PRInt32 *newIdx)
 {
 	// Do the list maintenance to reorder a newsgroup. The news host has a list, and
 	// so does the FolderInfo which represents the host in the hierarchy tree
@@ -2202,7 +2568,7 @@ int MSG_NewsHost::ReorderGroup (MSG_FolderInfoNews *groupToMove, MSG_FolderInfoN
 }
 
 
-int MSG_NewsHost::DeleteFiles ()
+int nsNNTPHost::DeleteFiles ()
 {
 	// hostinfo.dat
 	PR_ASSERT(m_hostinfofilename);

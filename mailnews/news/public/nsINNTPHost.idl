@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -30,16 +30,31 @@ interface nsINNTPHost : nsIMsgHost {
     attribute boolean postingAllowed;
     attribute boolean pushAuth;
     attribute long long lastUpdatedTime;
-    
-    attribute nsINNTPNewsgroupList newsgroupList;
+
+    /* look up the newsgroup list for the given name */
+    nsINNTPNewsgroupList GetNewsgroupList(in string groupname);
+
+    /* given a newsgroup name, find or create the given groupname */
+    nsIMsgNewsgroup FindNewsgroup(in string groupname, in boolean create);
     
     /* libnet callbacks for Dredd NNTP extensions
      * please document if you know how these work
      */
     void AddPropertyForGet(in string name, in string value);
+    string QueryPropertyForGet(in string name);
+    
     void AddSearchableGroup(in string groupname);
-    void AddProfileGroup(in string responseText);
+    string QuerySearchableGroup(in string groupname);
+    
+    void AddVirtualGroup(in string responseText);
+    void SetIsVirtualGroup(in string groupname, in boolean isVirtual);
+    boolean GetIsVirtualGroup(in string groupname
+                           /*, msg_GroupRecord *inGroupRecord */);
+
+    
     void AddSearchableHeader(in string headerName);
+    boolean QuerySearchableHeader(in string headerName);
+    
     /* going away */
     void AddSubscribedNewsgroup(in string url);
     
@@ -126,7 +141,7 @@ interface nsINNTPHost : nsIMsgHost {
        whole thing can be passed to the XP_File
        stuff with a type of xpXoverCache.
     */
-    attribute string dbDirName;
+    readonly attribute string dbDirName;
 
     /* this should actually return a list of strings..how to do in XPIDL? */
     string GetGroupList();

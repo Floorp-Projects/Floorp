@@ -52,20 +52,37 @@ class nsINNTPHost : public nsIMsgHost {
   NS_IMETHOD SetLastUpdatedTime(PRInt64 aLastUpdatedTime) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetNewsgroupList(nsINNTPNewsgroupList * *aNewsgroupList) = 0;
-  NS_IMETHOD SetNewsgroupList(nsINNTPNewsgroupList * aNewsgroupList) = 0;
+  NS_IMETHOD GetNewsgroupList(const char *groupname, nsINNTPNewsgroupList **_retval) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD FindNewsgroup(const char *groupname, PRBool create, nsIMsgNewsgroup **_retval) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD AddPropertyForGet(const char *name, const char *value) = 0;
 
   /*  <IDL>  */
+  NS_IMETHOD QueryPropertyForGet(const char *name, char **_retval) = 0;
+
+  /*  <IDL>  */
   NS_IMETHOD AddSearchableGroup(const char *groupname) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD AddProfileGroup(const char *responseText) = 0;
+  NS_IMETHOD QuerySearchableGroup(const char *groupname, char **_retval) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD AddVirtualGroup(const char *responseText) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD SetIsVirtualGroup(const char *groupname, PRBool isVirtual) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD GetIsVirtualGroup(const char *groupname, PRBool *_retval) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD AddSearchableHeader(const char *headerName) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD QuerySearchableHeader(const char *headerName, PRBool *_retval) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD AddSubscribedNewsgroup(const char *url) = 0;
@@ -124,7 +141,6 @@ class nsINNTPHost : public nsIMsgHost {
 
   /*  <IDL>  */
   NS_IMETHOD GetDbDirName(char * *aDbDirName) = 0;
-  NS_IMETHOD SetDbDirName(char * aDbDirName) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD GetGroupList(char **_retval) = 0;
