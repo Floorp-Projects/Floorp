@@ -237,3 +237,76 @@ iframe {
 #button_stop {
 	list-style-image:url("chrome://global/skin/stop.gif");
 }
+
+menu.push {
+  border: 1px outset white;
+  padding: 2px;
+  margin: 2px;
+  text-align: center;
+  background-color:inherit;
+  background-image: inherit;
+}
+
+menu.push:hover {
+        border: 1px outset white;
+        color:#003366;
+        text-decoration:underline;
+        padding: 2px;
+}
+
+menu.push:hover:-moz-outline {
+   border : 1px solid black;
+   color:#003366;
+   padding: 2px;
+}
+
+menu.push:active {
+  text-decoration:none;
+  border: 1px inset;
+  padding-left: 3px;
+  padding-right: 1px;
+  padding-top: 3px;
+  padding-bottom: 1px;
+}
+
+menu.push[toggled="1"] {
+  border: 1px white inset;
+  padding-left: 3px;
+  padding-right: 1px;
+  padding-top: 3px;
+  padding-bottom: 1px;
+}
+
+menu.push[toggled="2"] {
+   background-color: lightgray;
+   border: 1px solid gray;
+}
+
+menu.push:active:-moz-outline {
+   border : 1px solid black;
+}
+
+menu.push[disabled="true"] {
+        background-color:inherit;
+        background-image: inherit;
+        border : 1px solid #999999;
+        color: #999999;
+        text-decoration: none;
+}
+
+menu.push[disabled="true"]:hover {
+        background-color:inherit;
+        background-image: inherit;
+        border : 1px solid #999999;
+        color: #999999;
+        text-decoration: none;
+}
+
+menu.push[disabled="true"]:active {
+        background-color:inherit;
+        background-image: inherit;
+        border : 1px solid #999999;
+        color: #999999;
+        text-decoration: none;
+}
+
