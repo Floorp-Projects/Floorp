@@ -33,7 +33,7 @@ nsByteArray::~nsByteArray()
 
 nsresult nsByteArray::GrowBuffer(PRUint32 desired_size, PRUint32 quantum)
 {
-	if (m_bufferSize <= desired_size)
+	if (m_bufferSize < desired_size)
 	{
 		char *new_buf;
 		PRUint32 increment = desired_size - m_bufferSize;
@@ -148,10 +148,10 @@ PRInt32	nsMsgLineBuffer::BufferInput(const char *net_buffer, PRInt32 net_buffer_
             m_bufferPos += (end - net_buffer);
         }
         
-        /* Now *bufferP contains either a complete line, or as complete
+        /* Now m_buffer contains either a complete line, or as complete
            a line as we have read so far.
            
-           If we have a line, process it, and then remove it from `*bufferP'.
+           If we have a line, process it, and then remove it from `m_buffer'.
            Then go around the loop again, until we drain the incoming data.
            */
         if (!newline)
@@ -164,6 +164,9 @@ PRInt32	nsMsgLineBuffer::BufferInput(const char *net_buffer, PRInt32 net_buffer_
         net_buffer = newline;
         m_bufferPos = 0;
 	}
+#ifdef DEBUG_bienvenu
+	printf("returning from buffer input m_bufferPos = %ld\n", m_bufferPos);
+#endif	
     return 0;
 }
 
