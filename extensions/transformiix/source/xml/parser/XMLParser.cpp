@@ -41,7 +41,7 @@
 #ifndef TX_EXE
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsSyncLoader.h"
+#include "nsISyncLoadDOMService.h"
 #include "nsNetUtil.h"
 #else
 #include "xmlparse.h"
@@ -72,14 +72,24 @@ Document* XMLParser::getDocumentFromURI(const String& href,
 #ifndef TX_EXE
     nsCOMPtr<nsIURI> documentURI;
     nsresult rv = NS_NewURI(getter_AddRefs(documentURI), href);
-    NS_ENSURE_SUCCESS(rv, NULL);
-
-    nsCOMPtr<nsISyncLoader> loader = do_CreateInstance(TRANSFORMIIX_SYNCLOADER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, NULL);
+    NS_ENSURE_SUCCESS(rv, 0);
 
     nsCOMPtr<nsIDOMDocument> theDocument;
     nsCOMPtr<nsIDocument> loaderDocument = do_QueryInterface(aLoader->getNSObj());
-    rv = loader->LoadDocument(documentURI, loaderDocument, getter_AddRefs(theDocument));
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    nsCOMPtr<nsIURI> loaderUri;
+    loaderDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+    loaderDocument->GetDocumentURL(getter_AddRefs(loaderUri));
+    NS_ENSURE_TRUE(loaderUri, 0);
+
+    nsCOMPtr<nsIChannel> channel;
+    rv = NS_NewChannel(getter_AddRefs(channel), documentURI, nsnull, loadGroup);
+    NS_ENSURE_SUCCESS(rv, 0);
+
+    nsCOMPtr<nsISyncLoadDOMService> loader =
+      do_GetService("@mozilla.org/content/syncload-dom-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, 0);
+    rv = loader->LoadDocument(channel, loaderUri, getter_AddRefs(theDocument));
     if (NS_FAILED(rv) || !theDocument) {
         errMsg.append("Document load of ");
         errMsg.append(href);

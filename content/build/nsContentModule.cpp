@@ -109,6 +109,7 @@
 #include "nsWyciwygProtocolHandler.h"
 #include "nsContentAreaDragDrop.h"
 #include "nsContentList.h"
+#include "nsISyncLoadDOMService.h"
 
 
 class nsIDocumentLoaderFactory;
@@ -285,6 +286,7 @@ extern nsresult NS_NewBindingManager(nsIBindingManager** aResult);
 extern nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult);
 extern nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
 extern nsresult NS_NewFrameLoader(nsIFrameLoader** aResult);
+extern nsresult NS_NewSyncLoadDOMService(nsISyncLoadDOMService** aResult);
 
 #ifdef MOZ_XUL
 extern nsresult NS_NewXULElementFactory(nsIElementFactory** aResult);
@@ -379,11 +381,12 @@ MAKE_CTOR(CreateMathMLElementFactory,     nsIElementFactory,           NS_NewMat
 MAKE_CTOR(CreateSVGElementFactory,        nsIElementFactory,           NS_NewSVGElementFactory)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentHTTPStartup)
-MAKE_CTOR(CreateContentDLF,                nsIDocumentLoaderFactory,   NS_NewContentDocumentLoaderFactory)
+MAKE_CTOR(CreateContentDLF,               nsIDocumentLoaderFactory,    NS_NewContentDocumentLoaderFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCSSOMFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsInspectorCSSUtils)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentAreaDragDrop)
+MAKE_CTOR(CreateSyncLoadDOMService,       nsISyncLoadDOMService,       NS_NewSyncLoadDOMService)
 
 static NS_IMETHODIMP
 CreateHTMLImgElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -876,7 +879,12 @@ static const nsModuleComponentInfo gComponents[] = {
   { "Content Area DragDrop",
     NS_CONTENTAREADRAGDROP_CID,
     NS_CONTENTAREADRAGDROP_CONTRACTID,
-    nsContentAreaDragDropConstructor }
+    nsContentAreaDragDropConstructor },
+
+  { "SyncLoad DOM Service",
+    NS_SYNCLOADDOMSERVICE_CID,
+    NS_SYNCLOADDOMSERVICE_CONTRACTID,
+    CreateSyncLoadDOMService }
 
 };
 

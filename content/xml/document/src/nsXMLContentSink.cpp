@@ -114,6 +114,10 @@
 #include "nsXBLAtoms.h"
 #include "nsIPref.h"
 #include "nsIDOMDocumentXBL.h"
+#include "nsIBindingManager.h"
+#include "nsIObserver.h"
+#include "nsIDocumentTransformer.h"
+#include "nsISyncLoadDOMService.h"
 
 // XXX misnamed header file, but oh well
 #include "nsHTMLTokens.h"
@@ -122,6 +126,7 @@ static char kNameSpaceSeparator = ':';
 #define kXSLType "text/xsl"
 
 static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
+static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 
 nsINameSpaceManager* nsXMLContentSink::gNameSpaceManager = nsnull;
 PRUint32 nsXMLContentSink::gRefCnt = 0;
@@ -346,14 +351,14 @@ nsXMLContentSink::ScrollToRef()
   }
 }
 
-PRBool
-nsXMLContentSink::ShouldPrettyPrint()
+nsresult
+nsXMLContentSink::MaybePrettyPrint()
 {
   if (!mPrettyPrintXML || (mPrettyPrintHasFactoredElements &&
                            !mPrettyPrintHasSpecialRoot)) {
     mPrettyPrintXML = PR_FALSE;
 
-    return PR_FALSE;
+    return NS_OK;
   }
 
   // Check for correct load-command or if we're in a display:none iframe
@@ -363,7 +368,7 @@ nsXMLContentSink::ShouldPrettyPrint()
       !mDocument->GetNumberOfShells()) {
     mPrettyPrintXML = PR_FALSE;
 
-    return PR_FALSE;
+    return NS_OK;
   }
 
   // check if we're in an invisible iframe
@@ -396,7 +401,7 @@ nsXMLContentSink::ShouldPrettyPrint()
       if (!visibility.Equals(NS_LITERAL_STRING("visible"))) {
         mPrettyPrintXML = PR_FALSE;
 
-        return PR_FALSE;
+        return NS_OK;
       }
     }
   }
@@ -409,11 +414,69 @@ nsXMLContentSink::ShouldPrettyPrint()
     if (!pref) {
       mPrettyPrintXML = PR_FALSE;
 
-      return PR_FALSE;
+      return NS_OK;
     }
   }
 
-  return PR_TRUE;
+
+  // Ok, we should prettyprint. Let's do it!
+  nsresult rv = NS_OK;
+
+  // Load the XSLT
+  nsCOMPtr<nsIURI> xslUri;
+  rv = NS_NewURI(getter_AddRefs(xslUri),
+                 NS_LITERAL_CSTRING("chrome://communicator/content/xml/XMLPrettyPrint.xsl"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel), xslUri, nsnull, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMDocument> xslDocument;
+  nsCOMPtr<nsISyncLoadDOMService> loader =
+    do_GetService("@mozilla.org/content/syncload-dom-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = loader->LoadLocalDocument(channel, nsnull, getter_AddRefs(xslDocument));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Transform the document
+  nsCOMPtr<nsIDocumentTransformer> transformer =
+      do_CreateInstance("@mozilla.org/document-transformer;1?type=text/xsl", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMDocument> resultDocument;
+  nsAutoString emptyStr;
+  rv = NS_NewDOMDocument(getter_AddRefs(resultDocument), emptyStr, emptyStr,
+                         nsnull, mDocumentURL);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIDOMDocument> sourceDocument = do_QueryInterface(mDocument);
+  rv = transformer->TransformDocument(sourceDocument, xslDocument,
+                                      resultDocument, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Add the binding
+  nsCOMPtr<nsIDOMDocumentXBL> xblDoc = do_QueryInterface(mDocument);
+  NS_ASSERTION(xblDoc, "xml document doesn't implement nsIDOMDocumentXBL");
+  NS_ENSURE_TRUE(xblDoc, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMDocument> dummy;
+  xblDoc->LoadBindingDocument(NS_LITERAL_STRING("chrome://communicator/content/xml/XMLPrettyPrint.xml"), getter_AddRefs(dummy));
+
+  nsCOMPtr<nsIDOMElement> rootElem = do_QueryInterface(mDocElement);
+  NS_ASSERTION(rootElem, "No root element");
+
+  rv = xblDoc->AddBinding(rootElem, NS_LITERAL_STRING("chrome://communicator/content/xml/XMLPrettyPrint.xml#prettyprint"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Hand the result document to the binding
+  nsCOMPtr<nsIBindingManager> manager;
+  mDocument->GetBindingManager(getter_AddRefs(manager));
+  nsCOMPtr<nsIObserver> binding;
+  manager->GetBindingImplementation(mDocElement, NS_GET_IID(nsIObserver), (void**)getter_AddRefs(binding));
+  NS_ASSERTION(binding, "Prettyprint binding doesn't implement nsIObserver");
+  NS_ENSURE_TRUE(binding, NS_ERROR_UNEXPECTED);
+
+  return binding->Observe(resultDocument, "prettyprint-dom-created", NS_LITERAL_STRING("").get());
 }
 
 
@@ -446,15 +509,7 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   mDocument->SetRootContent(mDocElement);
 
   // Check if we want to prettyprint
-  if (ShouldPrettyPrint()) {
-    NS_ASSERTION(!mXSLTransformMediator, "Prettyprinting an XSLT styled document");
-
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri),
-                   NS_LITERAL_STRING("resource:///res/xml/XMLPrettyPrint.xsl"));
-    NS_ENSURE_SUCCESS(rv, rv);
-    LoadXSLStyleSheet(uri);
-  }
+  MaybePrettyPrint();
 
   if (mXSLTransformMediator) {
     rv = SetupTransformMediator();

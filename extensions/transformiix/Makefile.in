@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS            = source
 ifndef TX_EXE
-DIRS += build public
+DIRS += build
 endif
 
 include $(topsrcdir)/config/rules.mk

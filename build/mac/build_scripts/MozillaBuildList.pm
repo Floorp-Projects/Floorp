@@ -244,9 +244,6 @@ sub InstallNonChromeResources()
     my($html_dir) = "$resource_dir" . "html:";
     InstallResources(":mozilla:layout:html:base:src:MANIFEST_RES",                     "$html_dir");
 
-    my($xml_dir)  = "$resource_dir" . "xml:";
-    InstallResources(":mozilla:content:xml:document:resources:MANIFEST_RES",           "$xml_dir");
-
     my($throbber_dir) = "$resource_dir" . "throbber:";
     BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:throbber:",              "$throbber_dir");
     
@@ -628,8 +625,8 @@ sub ProcessJarManifests()
     else {
       MakeAlias(":mozilla:themes:classic:global:mac:xulscrollbars.css", ":mozilla:themes:classic:global:mac:scrollbars.css");    
     }
+    CreateJarFromManifest(":mozilla:content:xml:document:resources:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:themes:classic:global:mac:jar.mn", $chrome_dir, \%jars);
-    
     CreateJarFromManifest(":mozilla:themes:classic:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:themes:modern:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpcom:base:jar.mn", $chrome_dir, \%jars);

@@ -45,9 +45,6 @@ REQUIRES = expat \
 endif
 
 CPPSRCS = XMLParser.cpp
-ifndef TX_EXE
-CPPSRCS += nsSyncLoader.cpp
-endif
 
 include $(topsrcdir)/config/rules.mk
 

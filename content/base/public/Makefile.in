@@ -72,6 +72,7 @@ XPIDLSRCS	= \
 		nsISelectionPrivate.idl  \
 		nsIScriptLoader.idl  \
 		nsIScriptLoaderObserver.idl  \
+		nsISyncLoadDOMService.idl  \
 		nsIPrintProgress.idl  \
 		nsIPrintProgressParams.idl  \
 		nsIPrintStatusFeedback.idl  \

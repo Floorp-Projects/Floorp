@@ -29,7 +29,6 @@
 #include "nsIGenericFactory.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIServiceManager.h"
-#include "nsSyncLoader.h"
 #include "nsXPathEvaluator.h"
 #include "nsXPathException.h"
 #include "nsXPathExpression.h"
@@ -89,7 +88,6 @@ NS_DOMCI_EXTENSION_END
 // Factory Constructor
 NS_GENERIC_FACTORY_CONSTRUCTOR(XSLTProcessor)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPathEvaluator)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSyncLoader)
 
 NS_DECL_DOM_CLASSINFO(XSLTProcessor)
 NS_DECL_DOM_CLASSINFO(XPathEvaluator)
@@ -253,10 +251,6 @@ static const nsModuleComponentInfo gComponents[] = {
       TRANSFORMIIX_XPATH_EVALUATOR_CID,
       NS_XPATH_EVALUATOR_CONTRACTID,
       nsXPathEvaluatorConstructor },
-    { "Transformiix Synchronous Loader",
-      TRANSFORMIIX_SYNCLOADER_CID,
-      TRANSFORMIIX_SYNCLOADER_CONTRACTID,
-      nsSyncLoaderConstructor },
     { "Transformiix DOMCI Extender",
       TRANSFORMIIX_DOMCI_EXTENSION_CID,
       TRANSFORMIIX_DOMCI_EXTENSION_CONTRACTID,

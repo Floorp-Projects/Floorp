@@ -173,7 +173,7 @@ protected:
 
   void ScrollToRef();
   
-  PRBool ShouldPrettyPrint();
+  nsresult MaybePrettyPrint();
   
   static nsINameSpaceManager* gNameSpaceManager;
   static PRUint32 gRefCnt;

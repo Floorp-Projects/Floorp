@@ -37,7 +37,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSyncLoader.h"
+#include "nsCOMPtr.h"
+#include "nsIChannel.h"
+#include "nsIDOMLoadListener.h"
+#include "nsIHttpEventSink.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIScriptContext.h"
+#include "nsISyncLoadDOMService.h"
+#include "nsString.h"
+#include "nsWeakReference.h"
 #include "jsapi.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -52,15 +60,85 @@
 #include "nsContentCID.h"
 #include "nsNetUtil.h"
 #include "nsIHttpChannel.h"
+#include "nsIScriptLoader.h"
+#include "nsIScriptLoaderObserver.h"
+#include "nsIXMLContentSink.h"
+#include "nsIContent.h"
 
 static const char* kLoadAsData = "loadAsData";
 
 static NS_DEFINE_CID(kIDOMDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
+
+// This is ugly, but nsXBLContentSink.h isn't exported
+extern
+nsresult
+NS_NewXBLContentSink(nsIXMLContentSink** aResult,
+                     nsIDocument* aDoc,
+                     nsIURI* aURL,
+                     nsIWebShell* aWebShell);
+
+class nsSyncLoadService : public nsISyncLoadDOMService
+{
+public:
+    nsSyncLoadService();
+    virtual ~nsSyncLoadService();
+    
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISYNCLOADDOMSERVICE
+
+    static
+    nsresult PushSyncStreamToListener(nsIInputStream* aIn,
+                                      nsIStreamListener* aListener,
+                                      nsIChannel* aChannel);
+};
+
+/**
+ * This class manages loading a single XML document
+ */
+
+class nsSyncLoader : public nsIDOMLoadListener,
+                     public nsIHttpEventSink,
+                     public nsIInterfaceRequestor,
+                     public nsSupportsWeakReference
+{
+public:
+    nsSyncLoader();
+    virtual ~nsSyncLoader();
+
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD LoadDocument(nsIChannel* aChannel, nsIURI *aLoaderURI,
+                            PRBool aChannelIsSync,
+                            nsIDOMDocument** _retval);
+
+    // nsIDOMEventListener
+    NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+
+    // nsIDOMLoadListener
+    NS_IMETHOD Load(nsIDOMEvent* aEvent);
+    NS_IMETHOD Unload(nsIDOMEvent* aEvent);
+    NS_IMETHOD Abort(nsIDOMEvent* aEvent);
+    NS_IMETHOD Error(nsIDOMEvent* aEvent);
+
+    NS_DECL_NSIHTTPEVENTSINK
+
+    NS_DECL_NSIINTERFACEREQUESTOR
+
+protected:
+    PushAsyncStream(nsIStreamListener* aListener);
+    PushSyncStream(nsIStreamListener* aListener);
+
+    nsCOMPtr<nsIChannel> mChannel;
+    PRPackedBool mLoading;
+    PRPackedBool mLoadSuccess;
+};
+
 
 /*
  * This class exists to prevent a circular reference between
- * the loaded document and the nsSyncloader instance. The
+ * the loaded document and the nsSyncLoader instance. The
  * request owns the document. While the document is loading, 
  * the request is a load listener, held onto by the document.
  * The proxy class breaks the circularity by filling in as the
@@ -172,107 +250,63 @@ nsSyncLoader::~nsSyncLoader()
     }
 }
 
-NS_IMPL_ISUPPORTS5(nsSyncLoader,
-                   nsISyncLoader,
+NS_IMPL_ISUPPORTS4(nsSyncLoader,
                    nsIDOMLoadListener,
                    nsIHttpEventSink,
                    nsIInterfaceRequestor,
                    nsISupportsWeakReference)
 
 NS_IMETHODIMP
-nsSyncLoader::LoadDocument(nsIURI* aDocumentURI,
-                           nsIDocument *aLoader,
+nsSyncLoader::LoadDocument(nsIChannel* aChannel,
+                           nsIURI *aLoaderURI,
+                           PRBool aChannelIsSync,
                            nsIDOMDocument **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
     *aResult = nsnull;
-
-    nsCOMPtr<nsIURI> loaderURI;
-    aLoader->GetDocumentURL(getter_AddRefs(loaderURI));
-
     nsresult rv = NS_OK;
-    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = securityManager->CheckLoadURI(loaderURI, aDocumentURI,
-                                       nsIScriptSecurityManager::STANDARD);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mChannel = aChannel;
 
-    rv = securityManager->CheckSameOriginURI(loaderURI, aDocumentURI);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (aLoaderURI) {
+        nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
 
+        nsCOMPtr<nsIURI> docURI;
+        rv = aChannel->GetURI(getter_AddRefs(docURI));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = securityManager->CheckLoadURI(aLoaderURI, docURI,
+                                           nsIScriptSecurityManager::STANDARD);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = securityManager->CheckSameOriginURI(aLoaderURI, docURI);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // Get the loadgroup of the channel
     nsCOMPtr<nsILoadGroup> loadGroup;
-    rv = aLoader->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+    rv = aChannel->GetLoadGroup(getter_AddRefs(loadGroup));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Get and initialize a DOMImplementation
-    nsCOMPtr<nsIDOMDOMImplementation> implementation = 
-        do_CreateInstance(kIDOMDOMImplementationCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIPrivateDOMImplementation> privImplementation(do_QueryInterface(implementation, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-    privImplementation->Init(aDocumentURI);
-
-    // Create an empty document from it
-    nsString emptyStr;
-    nsCOMPtr<nsIDOMDocument> DOMDocument;
-    rv = implementation->CreateDocument(emptyStr, 
-                                        emptyStr, 
-                                        nsnull, 
-                                        getter_AddRefs(DOMDocument));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = NS_NewChannel(getter_AddRefs(mChannel), aDocumentURI, nsnull, loadGroup);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Make sure we've been opened
-    if (!mChannel) {
-        return NS_ERROR_NOT_INITIALIZED;
-    }
-
-    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
-    if (httpChannel) {
-        httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                      NS_LITERAL_CSTRING(""));
-        httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                      NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"));
-
-        // XXX need to set the HTTP referrer
-    }
-
-    // Tell the document to start loading
-    nsCOMPtr<nsIDocument> document = do_QueryInterface(DOMDocument, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIEventQueueService> service = 
-        do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIEventQueue> currentThreadQ;
-    rv = service->PushThreadEventQueue(getter_AddRefs(currentThreadQ));
+    // Create document
+    nsCOMPtr<nsIDocument> document = do_CreateInstance(kXMLDocumentCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Register as a load listener on the document
-    nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(DOMDocument);
+    nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(document);
     NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
 
     nsWeakPtr requestWeak = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIDOMLoadListener*, this)));
     txLoadListenerProxy* proxy = new txLoadListenerProxy(requestWeak);
-    if (!proxy) {
-        service->PopThreadEventQueue(currentThreadQ);
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
+    NS_ENSURE_TRUE(proxy, NS_ERROR_OUT_OF_MEMORY);
 
     // This will addref the proxy
     rv = target->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*, 
                                                       proxy), 
                                        NS_GET_IID(nsIDOMLoadListener));
-    if (NS_FAILED(rv)) {
-        service->PopThreadEventQueue(currentThreadQ);
-        return rv;
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
     
     mLoadSuccess = PR_FALSE;
 
@@ -281,55 +315,86 @@ nsSyncLoader::LoadDocument(nsIURI* aDocumentURI,
                                      loadGroup, nsnull, 
                                      getter_AddRefs(listener),
                                      PR_FALSE);
-
-    if (NS_SUCCEEDED(rv)) {
-        // Hook us up to listen to redirects and the like
-        mChannel->SetNotificationCallbacks(this);
-
-        // Start reading from the channel
-        rv = mChannel->AsyncOpen(listener, nsnull);
-
-        if (NS_SUCCEEDED(rv)) {
-            mLoading = PR_TRUE;
-
-            // process events until we're finished.
-            PLEvent *event;
-            while (mLoading && NS_SUCCEEDED(rv)) {
-                rv = currentThreadQ->WaitForEvent(&event);
-                NS_ASSERTION(NS_SUCCEEDED(rv), ": currentThreadQ->WaitForEvent failed...\n");
-                if (NS_SUCCEEDED(rv)) {
-                    rv = currentThreadQ->HandleEvent(event);
-                    NS_ASSERTION(NS_SUCCEEDED(rv), ": currentThreadQ->HandleEvent failed...\n");
-                }
-            }
-        }
-    }
-
-    mChannel = 0;
-
     if (NS_FAILED(rv)) {
-        service->PopThreadEventQueue(currentThreadQ);
-        // This will release the proxy
         target->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*, 
                                                         proxy), 
                                          NS_GET_IID(nsIDOMLoadListener));
         return rv;
     }
 
-    // This will release the proxy
-    rv = target->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*, 
-                                                         proxy), 
-                                          NS_GET_IID(nsIDOMLoadListener));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIDOMElement> documentElement;
-    DOMDocument->GetDocumentElement(getter_AddRefs(documentElement));
-    if (mLoadSuccess && documentElement) {
-        *aResult = DOMDocument;
-        NS_ADDREF(*aResult);
+    if (aChannelIsSync) {
+        rv = PushSyncStream(listener);
+    }
+    else {
+        rv = PushAsyncStream(listener);
     }
 
-    rv = service->PopThreadEventQueue(currentThreadQ);
+    mChannel = nsnull;
+
+    // This will release the proxy. Don't use the errorvalue from this since
+    // we're more interested in the errorvalue from the loading
+    target->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*, 
+                                                    proxy), 
+                                     NS_GET_IID(nsIDOMLoadListener));
+
+    // check that the load succeeded
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ENSURE_TRUE(mLoadSuccess, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIContent> rootContent;
+    document->GetRootContent(getter_AddRefs(rootContent));
+    NS_ENSURE_TRUE(rootContent, NS_ERROR_FAILURE);
+
+    return CallQueryInterface(document, aResult);
+}
+
+nsSyncLoader::PushAsyncStream(nsIStreamListener* aListener)
+{
+    nsresult rv = NS_OK;
+
+    // Set up a new eventqueue
+    nsCOMPtr<nsIEventQueueService> service = 
+        do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIEventQueue> currentThreadQ;
+    rv = service->PushThreadEventQueue(getter_AddRefs(currentThreadQ));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Hook us up to listen to redirects and the like
+    mChannel->SetNotificationCallbacks(this);
+
+    // Start reading from the channel
+    rv = mChannel->AsyncOpen(aListener, nsnull);
+
+    if (NS_SUCCEEDED(rv)) {
+        mLoading = PR_TRUE;
+
+        // process events until we're finished.
+        PLEvent *event;
+        while (mLoading && NS_SUCCEEDED(rv)) {
+            rv = currentThreadQ->WaitForEvent(&event);
+            NS_ASSERTION(NS_SUCCEEDED(rv), ": currentThreadQ->WaitForEvent failed...\n");
+            if (NS_SUCCEEDED(rv)) {
+                rv = currentThreadQ->HandleEvent(event);
+                NS_ASSERTION(NS_SUCCEEDED(rv), ": currentThreadQ->HandleEvent failed...\n");
+            }
+        }
+    }
+
+    service->PopThreadEventQueue(currentThreadQ);
+    
+    return rv;
+}
+
+nsSyncLoader::PushSyncStream(nsIStreamListener* aListener)
+{
+    nsCOMPtr<nsIInputStream> in;
+    nsresult rv = mChannel->Open(getter_AddRefs(in));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = nsSyncLoadService::PushSyncStreamToListener(in, aListener, mChannel);
 
     return rv;
 }
@@ -413,4 +478,135 @@ nsSyncLoader::GetInterface(const nsIID & aIID,
                            void **aResult)
 {
     return QueryInterface(aIID, aResult);
+}
+
+nsSyncLoadService::nsSyncLoadService()
+{
+    NS_INIT_ISUPPORTS();
+}
+
+nsSyncLoadService::~nsSyncLoadService()
+{
+}
+
+NS_IMPL_ISUPPORTS1(nsSyncLoadService,
+                   nsISyncLoadDOMService)
+
+NS_IMETHODIMP
+nsSyncLoadService::LoadDocument(nsIChannel* aChannel, nsIURI* aLoaderURI,
+                                nsIDOMDocument** _retval)
+{
+    nsSyncLoader* loader = new nsSyncLoader();
+    NS_ENSURE_TRUE(loader, NS_ERROR_OUT_OF_MEMORY);
+    NS_ADDREF(loader);
+    nsresult rv = loader->LoadDocument(aChannel, aLoaderURI, PR_FALSE,
+                                       _retval);
+    NS_RELEASE(loader);
+    return rv;
+}
+
+nsresult
+nsSyncLoadService::LoadLocalDocument(nsIChannel* aChannel, nsIURI* aLoaderURI,
+                                     nsIDOMDocument** _retval)
+{
+    nsSyncLoader* loader = new nsSyncLoader();
+    NS_ENSURE_TRUE(loader, NS_ERROR_OUT_OF_MEMORY);
+    NS_ADDREF(loader);
+    nsresult rv = loader->LoadDocument(aChannel, aLoaderURI, PR_TRUE, _retval);
+    NS_RELEASE(loader);
+    return rv;
+}
+
+nsresult
+nsSyncLoadService::LoadLocalXBLDocument(nsIChannel* aChannel,
+                                        nsIDOMDocument** _retval)
+{
+    *_retval = nsnull;
+
+    nsCOMPtr<nsIInputStream> in;
+    nsresult rv = aChannel->Open(getter_AddRefs(in));
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    // Get uri and loadgroup
+    nsCOMPtr<nsIURI> docURI;
+    rv = aChannel->GetURI(getter_AddRefs(docURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    rv = aChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Create document and contentsink and set them up.
+    nsCOMPtr<nsIDocument> doc = do_CreateInstance(kXMLDocumentCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Do this after making sure the |channel->Open| succeeded (which it
+    // won't if the file doesn't exist) so that we don't have to go
+    // through the work of breaking the circular references between
+    // content sink, script loader, and document.
+    nsCOMPtr<nsIXMLContentSink> xblSink;
+    rv = NS_NewXBLContentSink(getter_AddRefs(xblSink), doc, docURI, nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIStreamListener> listener;
+    rv = doc->StartDocumentLoad(kLoadAsData,
+                                aChannel,
+                                loadGroup,
+                                nsnull,
+                                getter_AddRefs(listener),
+                                PR_TRUE,
+                                xblSink);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = PushSyncStreamToListener(in, listener, aChannel);
+
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return CallQueryInterface(doc, _retval);
+}
+
+// static
+nsresult
+nsSyncLoadService::PushSyncStreamToListener(nsIInputStream* aIn,
+                                            nsIStreamListener* aListener,
+                                            nsIChannel* aChannel)
+{
+    // Set up buffering stream
+    nsCOMPtr<nsIInputStream> bufferedStream;
+    nsresult rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
+                                            aIn, 4096);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Load
+    aListener->OnStartRequest(aChannel, nsnull);
+    PRUint32 sourceOffset = 0;
+    while (1) {
+        PRUint32 readCount = 0;
+        rv = bufferedStream->Available(&readCount);
+        if (NS_FAILED(rv) || !readCount) {
+            break;
+        }
+
+        rv = aListener->OnDataAvailable(aChannel, nsnull, bufferedStream,
+                                        sourceOffset, readCount);
+        if (NS_FAILED(rv)) {
+            break;
+        }
+
+        sourceOffset += readCount;
+    }
+    aListener->OnStopRequest(aChannel, nsnull, rv);
+    
+    return rv;
+}
+
+nsresult
+NS_NewSyncLoadDOMService(nsISyncLoadDOMService** aResult)
+{
+    *aResult = new nsSyncLoadService();
+    NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
+    NS_ADDREF(*aResult);
+    return NS_OK;
 }
