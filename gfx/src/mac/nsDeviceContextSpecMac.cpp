@@ -23,6 +23,8 @@
 #include "nsDeviceContextSpecMac.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "nsWatchTask.h"
+
 
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecMac
@@ -79,6 +81,7 @@ GrafPtr		oldport;
 			::PrintDefault(prtRec);
 		
 			// standard print dialog, if true print
+      nsWatchTask::GetTask().Suspend();
 			if(::PrJobDialog(prtRec)){
 				// have the print record
 				theResult = NS_OK;
@@ -88,6 +91,7 @@ GrafPtr		oldport;
 				::DisposeHandle((Handle)prtRec);
 				::SetPort(oldport); 
 			}
+			nsWatchTask::GetTask().Resume();
 		}
 	}
 #endif
