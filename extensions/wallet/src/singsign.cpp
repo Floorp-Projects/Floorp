@@ -2215,6 +2215,7 @@ si_RestoreOldSignonDataFromBrowser
 PUBLIC PRBool
 SINGSIGN_StorePassword(const char *passwordRealm, const PRUnichar *user, const PRUnichar *password)
 {
+//  Wallet_GiveCaveat(nsnull, dialog); ??? what value to use for dialog?
   si_RememberSignonDataFromBrowser(passwordRealm, nsAutoString(user), nsAutoString(password));
   return PR_TRUE;
 }
@@ -2312,6 +2313,7 @@ SINGSIGN_PromptPassword
     return NS_OK;
   }
   if (checked) {
+    Wallet_GiveCaveat(nsnull, dialog);
     si_RememberSignonDataFromBrowser(passwordRealm, username, nsAutoString(*pwd));
   }
 
@@ -2357,6 +2359,7 @@ SINGSIGN_Prompt
     return NS_OK;
   }
   if (checked) {
+    Wallet_GiveCaveat(nsnull, dialog);
     si_RememberSignonDataFromBrowser(passwordRealm, emptyUsername, nsAutoString(*resultText));
   }
 
