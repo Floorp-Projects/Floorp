@@ -35,8 +35,6 @@ NS_IMPL_THREADSAFE_ADDREF(nsIconDecoder);
 NS_IMPL_THREADSAFE_RELEASE(nsIconDecoder);
 
 NS_INTERFACE_MAP_BEGIN(nsIconDecoder)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIOutputStream)
-   NS_INTERFACE_MAP_ENTRY(nsIOutputStream)
    NS_INTERFACE_MAP_ENTRY(imgIDecoder)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -66,9 +64,6 @@ NS_IMETHODIMP nsIconDecoder::Init(imgILoad *aLoad)
   return NS_OK;
 }
 
-
-/** nsIOutputStream methods **/
-
 NS_IMETHODIMP nsIconDecoder::Close()
 {
   if (mObserver) 
@@ -82,11 +77,6 @@ NS_IMETHODIMP nsIconDecoder::Close()
 }
 
 NS_IMETHODIMP nsIconDecoder::Flush()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsIconDecoder::Write(const char *buf, PRUint32 count, PRUint32 *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -165,27 +155,3 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIconDecoder::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsIconDecoder::GetNonBlocking(PRBool *aNonBlocking)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsIconDecoder::SetNonBlocking(PRBool aNonBlocking)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsIconDecoder::GetObserver(nsIOutputStreamObserver * *aObserver)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsIconDecoder::SetObserver(nsIOutputStreamObserver * aObserver)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
