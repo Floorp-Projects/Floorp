@@ -69,7 +69,6 @@ pull_julian:
 pull_trex:
 	cd $(MOZ_SRC); \
 	$(CVS)  mozilla/gconfig; \
-	$(CVS)  mozilla/shell; \
 	cd $(MOZ_SRC)/.
 
 pull_trex_ns:
@@ -95,8 +94,6 @@ build_julian::
 
 build_trex:
 	cd $(MOZ_SRC)/mozilla/gconfig; \
-	gmake; \
-	cd $(MOZ_SRC)/mozilla/shell; \
 	gmake; \
 	cd $(MOZ_SRC)/mozilla/trex; \
 	gmake; \
