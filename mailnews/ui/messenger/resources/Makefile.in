@@ -67,7 +67,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/am-server-webmail.xul	\
 	$(srcdir)/am-copies.xul		\
 	$(srcdir)/am-advanced.xul	\
-	$(srcdir)/am.css			\
 	$(srcdir)/SearchDialog.xul	\
 	$(NULL)
 
