@@ -111,7 +111,7 @@ nsTextEditRules::Init(nsHTMLEditor *aEditor, PRUint32 aFlags)
   // create a range that is the entire body contents
   if (NS_FAILED(res)) return res;
   nsCOMPtr<nsIDOMElement> bodyElement;
-  res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));
+  res = mEditor->GetRootElement(getter_AddRefs(bodyElement));
   if (NS_FAILED(res)) return res;
   if (!bodyElement) return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
@@ -120,7 +120,15 @@ nsTextEditRules::Init(nsHTMLEditor *aEditor, PRUint32 aFlags)
   res = nsComponentManager::CreateInstance(kRangeCID, nsnull, NS_GET_IID(nsIDOMRange), 
                                            getter_AddRefs(wholeDoc));
   if (NS_FAILED(res)) return res;
-  res = wholeDoc->SelectNode(bodyNode);
+  wholeDoc->SetStart(bodyNode,0);
+  nsCOMPtr<nsIDOMNodeList> list;
+  res = bodyNode->GetChildNodes(getter_AddRefs(list));
+  if (NS_FAILED(res) || !list) return res?res:NS_ERROR_FAILURE;
+  PRUint32 listCount;
+  res = list->GetLength(&listCount);
+  if (NS_FAILED(res)) return res;
+
+  res = wholeDoc->SetEnd(bodyNode,listCount);
   if (NS_FAILED(res)) return res;
 
   // replace newlines in that range with breaks
@@ -967,7 +975,7 @@ nsTextEditRules:: DidUndo(nsIDOMSelection *aSelection, nsresult aResult)
     else
     {
       nsCOMPtr<nsIDOMElement> theBody;
-      res = mEditor->GetBodyElement(getter_AddRefs(theBody));
+      res = mEditor->GetRootElement(getter_AddRefs(theBody));
       if (NS_FAILED(res)) return res;
       if (!theBody) return NS_ERROR_FAILURE;
       
@@ -1016,7 +1024,7 @@ nsTextEditRules::DidRedo(nsIDOMSelection *aSelection, nsresult aResult)
     else
     {
       nsCOMPtr<nsIDOMElement> theBody;
-      res = mEditor->GetBodyElement(getter_AddRefs(theBody));
+      res = mEditor->GetRootElement(getter_AddRefs(theBody));
       if (NS_FAILED(res)) return res;
       if (!theBody) return NS_ERROR_FAILURE;
       
@@ -1186,7 +1194,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
   
   nsCOMPtr<nsIDOMElement> bodyElement;
   
-  nsresult res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));  
+  nsresult res = mEditor->GetRootElement(getter_AddRefs(bodyElement));  
   if (NS_FAILED(res)) return res;
   if (!bodyElement) return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);

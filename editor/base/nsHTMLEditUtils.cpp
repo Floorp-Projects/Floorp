@@ -143,20 +143,25 @@ nsHTMLEditUtils::HasMozAttr(nsIDOMNode *node)
 // InBody: true if node is a descendant of the body
 //                  
 PRBool 
-nsHTMLEditUtils::InBody(nsIDOMNode *node)
+nsHTMLEditUtils::InBody(nsIDOMNode *node, nsIEditor *editor)
 {
-  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::InBody");
-  nsCOMPtr<nsIDOMNode> tmp;
-  nsCOMPtr<nsIDOMNode> p = do_QueryInterface(node);
-
-  while (p && !IsBody(p))
+  if ( node )
   {
-    if ( NS_FAILED(p->GetParentNode(getter_AddRefs(tmp))) || !tmp) // no parent, ran off top of tree
-      return PR_FALSE;
-    p = tmp;
+    nsCOMPtr<nsIDOMElement> bodyElement;
+    nsresult res = editor->GetRootElement(getter_AddRefs(bodyElement));
+    if (NS_FAILED(res) || !bodyElement)
+      return res?res:NS_ERROR_NULL_POINTER;
+    nsCOMPtr<nsIDOMNode> bodyNode = do_QueryInterface(bodyElement);
+    nsCOMPtr<nsIDOMNode> tmp;
+    nsCOMPtr<nsIDOMNode> p = node;
+    while (p && p!= bodyNode)
+    {
+      if (NS_FAILED(p->GetParentNode(getter_AddRefs(tmp))) || !tmp)
+        return PR_FALSE;
+      p = tmp;
+    }
   }
-  if (p) return PR_TRUE;
-  return PR_FALSE;
+  return PR_TRUE;
 }
 
 

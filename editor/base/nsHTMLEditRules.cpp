@@ -126,7 +126,7 @@ nsHTMLEditRules::Init(nsHTMLEditor *aEditor, PRUint32 aFlags)
   // set up mDocChangeRange to be whole doc
   nsCOMPtr<nsIDOMElement> bodyElem;
   nsCOMPtr<nsIDOMNode> bodyNode;
-  mEditor->GetBodyElement(getter_AddRefs(bodyElem));
+  mEditor->GetRootElement(getter_AddRefs(bodyElem));
   bodyNode = do_QueryInterface(bodyElem);
   if (bodyNode)
   {
@@ -857,7 +857,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
         if (NS_FAILED(res)) return res;
          
         // if there is no next node, or it's not in the body, then cancel the deletion
-        if (!nextNode || !nsHTMLEditUtils::InBody(nextNode))
+        if (!nextNode || !nsHTMLEditUtils::InBody(nextNode, mEditor))
         {
           *aCancel = PR_TRUE;
           return res;
@@ -4461,7 +4461,7 @@ nsHTMLEditRules::ConfirmSelectionInBody()
   nsCOMPtr<nsIDOMNode> bodyNode; 
   
   // get the body  
-  res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));
+  res = mEditor->GetRootElement(getter_AddRefs(bodyElement));
   if (NS_FAILED(res)) return res;
   if (!bodyElement) return NS_ERROR_UNEXPECTED;
   bodyNode = do_QueryInterface(bodyElement);

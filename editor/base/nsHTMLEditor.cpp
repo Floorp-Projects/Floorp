@@ -380,7 +380,7 @@ NS_IMETHODIMP nsHTMLEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
 NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc, 
-                                 nsIPresShell   *aPresShell, nsISelectionController *aSelCon, PRUint32 aFlags)
+                                 nsIPresShell   *aPresShell, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags)
 {
   NS_PRECONDITION(aDoc && aPresShell, "bad arg");
   if (!aDoc || !aPresShell)
@@ -388,11 +388,11 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
 
   nsresult result = NS_ERROR_NULL_POINTER;
   // Init the base editor
-  result = nsEditor::Init(aDoc, aPresShell, aSelCon, aFlags);
+  result = nsEditor::Init(aDoc, aPresShell, aRoot, aSelCon, aFlags);
   if (NS_FAILED(result)) { return result; }
 
   nsCOMPtr<nsIDOMElement> bodyElement;
-  result = nsEditor::GetBodyElement(getter_AddRefs(bodyElement));
+  result = nsEditor::GetRootElement(getter_AddRefs(bodyElement));
   if (NS_FAILED(result)) { return result; }
   if (!bodyElement) { return NS_ERROR_NULL_POINTER; }
 
@@ -585,10 +585,32 @@ printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
   }
 
   // get the DOM event receiver
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  nsEditor::GetDocument(getter_AddRefs(domdoc));
   nsCOMPtr<nsIDOMEventReceiver> erP;
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
-  if (!doc) return NS_ERROR_NOT_INITIALIZED;
-  result = doc->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP));
+  nsCOMPtr<nsIDOMElement> rootElement;
+  GetRootElement(getter_AddRefs(rootElement));
+  //now hack to make sure we are not anonymous content if we are grab the parent of root element for our observer
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement);
+  if (content)
+  {
+    nsCOMPtr<nsIContent> parent;
+    if (NS_SUCCEEDED(content->GetParent(*getter_AddRefs(parent))) && parent)
+    {
+      PRInt32 index;
+      if (NS_FAILED(parent->IndexOf(content, index)) || index<0 )
+      {
+        rootElement = do_QueryInterface(parent);
+        result = rootElement->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP));
+      }
+      else
+        rootElement = 0;
+    }
+  }
+  if (!rootElement && domdoc)
+    result = domdoc->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP));
+  //end hack
   if (NS_FAILED(result)) {
     HandleEventListenerError();
     return result;
@@ -3625,7 +3647,7 @@ nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
     // If we failed to find a cell, fall through to use originally-found element
   } else {
     // No table element -- set the background color on the body tag
-    res = nsEditor::GetBodyElement(getter_AddRefs(element));
+    res = nsEditor::GetRootElement(getter_AddRefs(element));
     if (NS_FAILED(res)) return res;
     if (!element)       return NS_ERROR_NULL_POINTER;
   }
@@ -3643,7 +3665,7 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsString& aAttribute, const n
   // Set the background color attribute on the body tag
   nsCOMPtr<nsIDOMElement> bodyElement;
 
-  res = nsEditor::GetBodyElement(getter_AddRefs(bodyElement));
+  res = nsEditor::GetRootElement(getter_AddRefs(bodyElement));
   if (!bodyElement) res = NS_ERROR_NULL_POINTER;
   if (NS_SUCCEEDED(res))
   {
@@ -3734,7 +3756,7 @@ nsHTMLEditor::GetDocumentLength(PRInt32 *aCount)
   
   // get the body node
   nsCOMPtr<nsIDOMElement> bodyElement;
-  result = nsEditor::GetBodyElement(getter_AddRefs(bodyElement));
+  result = nsEditor::GetRootElement(getter_AddRefs(bodyElement));
   if (NS_FAILED(result)) { return result; }
   if (!bodyElement) { return NS_ERROR_NULL_POINTER; }
 
@@ -3957,7 +3979,7 @@ NS_IMETHODIMP
 nsHTMLEditor::GetBodyStyleContext(nsIStyleContext** aStyleContext)
 {
   nsCOMPtr<nsIDOMElement> body;
-  nsresult res = GetBodyElement(getter_AddRefs(body));
+  nsresult res = GetRootElement(getter_AddRefs(body));
   if (NS_FAILED(res)) return res;
   nsCOMPtr<nsIContent> content = do_QueryInterface(body);
 
@@ -4044,7 +4066,7 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
   // Ought to set a style sheet here ...
   // Probably should keep around an mPlaintextStyleSheet for this purpose.
   nsCOMPtr<nsIDOMElement> bodyElement;
-  res = GetBodyElement(getter_AddRefs(bodyElement));
+  res = GetRootElement(getter_AddRefs(bodyElement));
   if (NS_FAILED(res)) return res;
   if (!bodyElement) return NS_ERROR_NULL_POINTER;
 
@@ -5115,7 +5137,7 @@ nsHTMLEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivat
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
   ps->GetCaret(getter_AddRefs(caretP));
-  caretP->GetWindowRelativeCoordinates(aReply->mCursorPosition,aReply->mCursorIsCollapsed);
+  caretP->GetWindowRelativeCoordinates(aReply->mCursorPosition,aReply->mCursorIsCollapsed,selection);
 
   // second part of 23558 fix:
   if (aCompositionString.IsEmpty()) 
@@ -5228,7 +5250,7 @@ nsHTMLEditor::SelectEntireDocument(nsIDOMSelection *aSelection)
   
   // get body node
   nsCOMPtr<nsIDOMElement>bodyElement;
-  res = GetBodyElement(getter_AddRefs(bodyElement));
+  res = GetRootElement(getter_AddRefs(bodyElement));
   if (NS_FAILED(res)) return res;
   nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
   if (!bodyNode) return NS_ERROR_FAILURE;
@@ -5383,29 +5405,7 @@ void nsHTMLEditor::IsTextStyleSet(nsIStyleContext *aSC,
 
 PRBool nsHTMLEditor::IsElementInBody(nsIDOMElement* aElement)
 {
-  if ( aElement )
-  {
-    nsIDOMElement* bodyElement = nsnull;
-    nsresult res = nsEditor::GetBodyElement(&bodyElement);
-    if (NS_FAILED(res)) return res;
-    if (!bodyElement) return NS_ERROR_NULL_POINTER;
-    nsCOMPtr<nsIDOMNode> parent;
-    nsCOMPtr<nsIDOMNode> currentElement = do_QueryInterface(aElement);
-    if (currentElement)
-    {
-      do {
-        currentElement->GetParentNode(getter_AddRefs(parent));
-        if (parent)
-        {
-          if (parent == bodyElement)
-            return PR_TRUE;
-
-          currentElement = parent;
-        }
-      } while(parent);
-    }  
-  }
-  return PR_FALSE;
+  return nsHTMLEditUtils::InBody(aElement, this);
 }
 
 PRBool
@@ -5929,7 +5929,7 @@ NS_IMETHODIMP
 nsHTMLEditor::SetSelectionAtDocumentStart(nsIDOMSelection *aSelection)
 {
   nsCOMPtr<nsIDOMElement> bodyElement;
-  nsresult res = GetBodyElement(getter_AddRefs(bodyElement));  
+  nsresult res = GetRootElement(getter_AddRefs(bodyElement));  
   if (NS_SUCCEEDED(res))
   {
   	if (!bodyElement) return NS_ERROR_NULL_POINTER;
@@ -6324,7 +6324,7 @@ nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode
   if (NS_FAILED(res)) return res;
   
   // if it's not in the body, then zero it out
-  if (*outNode && !nsHTMLEditUtils::InBody(*outNode))
+  if (*outNode && !nsHTMLEditUtils::InBody(*outNode, this))
   {
     *outNode = nsnull;
   }
@@ -6343,7 +6343,7 @@ nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<
   if (NS_FAILED(res)) return res;
   
   // if it's not in the body, then zero it out
-  if (*outNode && !nsHTMLEditUtils::InBody(*outNode))
+  if (*outNode && !nsHTMLEditUtils::InBody(*outNode, this))
   {
     *outNode = nsnull;
   }
@@ -6363,7 +6363,7 @@ nsHTMLEditor::GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode)
   if (NS_FAILED(res)) return res;
   
   // if it's not in the body, then zero it out
-  if (*outNode && !nsHTMLEditUtils::InBody(*outNode))
+  if (*outNode && !nsHTMLEditUtils::InBody(*outNode, this))
   {
     *outNode = nsnull;
   }
@@ -6382,7 +6382,7 @@ nsHTMLEditor::GetNextHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<n
   if (NS_FAILED(res)) return res;
   
   // if it's not in the body, then zero it out
-  if (*outNode && !nsHTMLEditUtils::InBody(*outNode))
+  if (*outNode && !nsHTMLEditUtils::InBody(*outNode, this))
   {
     *outNode = nsnull;
   }

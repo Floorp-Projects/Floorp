@@ -827,7 +827,7 @@ NS_IMPL_QUERY_INTERFACE3(nsEditor, nsIEditor, nsIEditorIMESupport, nsISupportsWe
 
 
 NS_IMETHODIMP
-nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsISelectionController *aSelCon, PRUint32 aFlags)
+nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags)
 {
   NS_PRECONDITION(nsnull!=aDoc && nsnull!=aPresShell, "bad arg");
   if ((nsnull==aDoc) || (nsnull==aPresShell))
@@ -840,6 +840,10 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsISelectionContr
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
   
+  //set up body element if we are passed one.  
+  if (aRoot)
+    mBodyElement = do_QueryInterface(aRoot);
+
   // disable links
   nsCOMPtr<nsIPresContext> context;
   ps->GetPresContext(getter_AddRefs(context));
@@ -2342,7 +2346,7 @@ nsEditor::ForceCompositionEnd()
 // This seems like too much work! There should be a "nsDOMDocument::GetBody()"
 // Have a look in nsHTMLDocument. Maybe add it to nsIHTMLDocument.
 NS_IMETHODIMP 
-nsEditor::GetBodyElement(nsIDOMElement **aBodyElement)
+nsEditor::GetRootElement(nsIDOMElement **aBodyElement)
 {
   nsresult result = NS_OK;
 
@@ -2645,7 +2649,7 @@ NS_IMETHODIMP nsEditor::SelectEntireDocument(nsIDOMSelection *aSelection)
   nsresult result;
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
   nsCOMPtr<nsIDOMElement>bodyElement;
-  result = GetBodyElement(getter_AddRefs(bodyElement));
+  result = GetRootElement(getter_AddRefs(bodyElement));
   if ((NS_SUCCEEDED(result)) && bodyElement)
   {
     nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
