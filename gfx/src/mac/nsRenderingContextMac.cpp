@@ -506,7 +506,7 @@ void	nsRenderingContextMac::SelectDrawingSurface(nsDrawingSurfaceMac aSurface, G
 
 	SetQuickDrawEnvironment(gs, clipToClipRegion);
 
-	if (isNewGS)
+//	if (isNewGS)
 		CommonInit();
 }
 
@@ -552,7 +552,7 @@ NS_IMETHODIMP nsRenderingContextMac::SetPortTextState()
 	::TextFont(theStyle.tsFont);
 	::TextSize(theStyle.tsSize);
 	::TextFace(theStyle.tsFace);
-	
+
 	return NS_OK;
 }
 
