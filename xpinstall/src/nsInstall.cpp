@@ -41,6 +41,7 @@
 #include "nsIPref.h"
 
 #include "prmem.h"
+#include "plstr.h"
 
 #include "VerReg.h"
 //#include "zipfile.h" // replaced by nsIJAR.h
@@ -1787,8 +1788,8 @@ nsInstall::ExtractDirEntries(const nsString& directory, nsVector *paths)
     if ( paths )
     {
         nsString pattern(directory);
-        pattern += "/?*";
-        PRInt32 prefix_length = directory.Length();
+        pattern += "/*";
+        PRInt32 prefix_length = directory.Length()+1; // account for slash
 
         nsresult rv = mJarFileData->Find( nsAutoCString(pattern), &jarEnum );
         if (NS_FAILED(rv) || !jarEnum)
@@ -1796,10 +1797,7 @@ nsInstall::ExtractDirEntries(const nsString& directory, nsVector *paths)
 
         PRBool bMore;
         rv = jarEnum->HasMoreElements(&bMore);
-        if (NS_FAILED(rv)) 
-            goto handle_err;
-
-        while (bMore)
+        while (bMore && NS_SUCCEEDED(rv))
         {
             rv = jarEnum->GetNext( (nsISupports**) &currJARItem );
             if (currJARItem)
@@ -1810,19 +1808,19 @@ nsInstall::ExtractDirEntries(const nsString& directory, nsVector *paths)
                     goto handle_err;
                 if (buf)
                 {
-                    if ( prefix_length >= sizeof(buf)-1 )
+                    PRInt32 namelen = PL_strlen(buf);
+                    NS_ASSERTION( prefix_length <= namelen, "Match must be longer than pattern!" );
+
+                    if ( buf[namelen-1] != '/' ) 
                     {
-                        PR_FREEIF( buf );
-                        goto handle_err;
+                        paths->Add( new nsString(buf+prefix_length) ); // XXX manipulation should be in caller
                     }
-                    paths->Add( new nsString(buf+prefix_length) ); // XXX manipulation should be in caller
+
                     PR_FREEIF( buf );
                 }
                 NS_IF_RELEASE(currJARItem);
             }
             rv = jarEnum->HasMoreElements(&bMore);
-            if (NS_FAILED(rv)) 
-                goto handle_err;
         }
     }
 

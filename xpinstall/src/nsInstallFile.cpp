@@ -105,7 +105,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         }
     }
 
-    delete qualifiedRegNameString;
+    delete [] qualifiedRegNameString;
 
     
      mFinalFile = new nsFileSpec(folderSpec);
