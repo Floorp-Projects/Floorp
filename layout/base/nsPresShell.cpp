@@ -2684,6 +2684,8 @@ PresShell::sPaintSuppressionCallback(nsITimer *aTimer, void* aPresShell)
 NS_IMETHODIMP
 PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
+  PRBool firstReflow = PR_FALSE;
+
     // notice that we ignore the result
   NotifyReflowObservers(NS_PRESSHELL_RESIZE_REFLOW);
   mViewManager->CacheWidgetChanges(PR_TRUE);
@@ -2726,7 +2728,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     nsIRenderingContext*  rcx = nsnull;
 
     nsresult rv=CreateRenderingContext(rootFrame, &rcx);
-	if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;
 
     nsHTMLReflowState reflowState(mPresContext, rootFrame,
                                   eReflowReason_Resize, rcx, maxSize);
@@ -2760,6 +2762,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 
     // XXX if debugging then we should assert that the cache is empty
   } else {
+    firstReflow = PR_TRUE;
 #ifdef NOISY
     printf("PresShell::ResizeReflow: null root frame\n");
 #endif
@@ -2780,8 +2783,10 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   HandlePostedAttributeChanges();
   HandlePostedReflowCallbacks();
 
-  //Set resize event timer
-  CreateResizeEventTimer();
+  if (!firstReflow) {
+    //Set resize event timer
+    CreateResizeEventTimer();
+  }
   
   return NS_OK; //XXX this needs to be real. MMP
 }
