@@ -94,6 +94,7 @@
 #include "nsMutationEvent.h"
 
 #include "nsRuleNode.h"
+#include "nsCSSAtoms.h"
 
 // input type=file
 #include "nsIMIMEService.h"
@@ -881,14 +882,10 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked)
       // You don't refcount frames.
     }
   }
-  // special attr for XBL form controls
-  else if (type == NS_FORM_INPUT_CHECKBOX) {
-    if (aChecked)
-      SetAttr(kNameSpaceID_None, nsHTMLAtoms::inputCheckedPseudo,
-              NS_LITERAL_STRING(""), PR_TRUE);
-    else
-      UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::inputCheckedPseudo, PR_TRUE);
-  }
+
+  // Notify the document that the CSS :checked pseudoclass for this element
+  // has changed state.
+  mDocument->ContentStatesChanged(this, nsnull, nsCSSAtoms::checkedPseudo);
 
   return NS_OK;
 }

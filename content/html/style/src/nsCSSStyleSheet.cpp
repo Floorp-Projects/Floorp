@@ -70,6 +70,7 @@
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLAreaElement.h"
+#include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsIDOMCSSStyleSheet.h"
@@ -3312,6 +3313,9 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
       if (mContentTag == nsHTMLAtoms::option) {
         nsCOMPtr<nsIDOMHTMLOptionElement> optEl = do_QueryInterface(mContent);
         optEl->GetSelected(&isChecked);
+      } else if (mContentTag == nsHTMLAtoms::input) {
+        nsCOMPtr<nsIDOMHTMLInputElement> inputEl = do_QueryInterface(mContent);
+        inputEl->GetChecked(&isChecked);
       }
 
       mIsChecked = isChecked;
