@@ -48,6 +48,16 @@ public:
   NS_IMETHOD SetOffsets(nscoord aStartOffset, nscoord aEndOffset);
   NS_IMETHOD SetPageNo(PRInt32 aPageNo) { return NS_OK;}
 
+  // Async Printing
+  NS_IMETHOD StartPrint(nsIPresContext*  aPresContext,
+                        nsIPrintOptions* aPrintOptions);
+  NS_IMETHOD PrintNextPage(nsIPresContext*  aPresContext,
+                           nsIPrintOptions* aPrintOptions);
+  NS_IMETHOD GetCurrentPageNum(PRInt32* aPageNum);
+  NS_IMETHOD GetNumPages(PRInt32* aNumPages);
+  NS_IMETHOD IsDoingPrintRange(PRBool* aDoing);
+  NS_IMETHOD GetPrintRange(PRInt32* aFromPage, PRInt32* aToPage);
+
 #ifdef DEBUG
   // Debugging
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
@@ -74,6 +84,17 @@ protected:
 
   nsMargin mMargin;
   PRBool   mIsPrintingSelection;
+
+  // Asynch Printing
+  PRInt32      mPageNum;
+  PRInt32      mTotalPages;
+  PRInt32      mPrintedPageNum;
+  nsIFrame *   mCurrentPageFrame;
+  PRPackedBool mDoingPageRange;
+  PRInt32      mPrintRangeType;
+  PRInt32      mFromPageNum;
+  PRInt32      mToPageNum;
+
 };
 
 #endif /* nsSimplePageSequence_h___ */
