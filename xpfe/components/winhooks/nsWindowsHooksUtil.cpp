@@ -717,7 +717,7 @@ nsresult FileTypeRegistryEntry::set() {
 
         // If we just created this file type entry, set description and default icon.
         if ( NS_SUCCEEDED( rv ) ) {
-            nsCAutoString iconFileToUse;
+            nsCAutoString iconFileToUse( "%1" );
             nsCAutoString descKey( "Software\\Classes\\" );
             descKey += protocol;
             RegistryEntry descEntry( HKEY_LOCAL_MACHINE, descKey.get(), NULL, "" );
@@ -735,6 +735,7 @@ nsresult FileTypeRegistryEntry::set() {
             iconKey += protocol;
             iconKey += "\\DefaultIcon";
 
+            if ( !iconFile.Equals(iconFileToUse) ) {
             iconFileToUse = thisApplication() + NS_LITERAL_CSTRING( ",0" );
 
             // Check to see if there's an icon file name associated with this extension.
@@ -769,7 +770,7 @@ nsresult FileTypeRegistryEntry::set() {
                             iconFileToUse.Assign( buffer );
                             iconFileToUse.Append( NS_LITERAL_CSTRING( ",0" ) );
                         }
-
+                        }
                     }
                 }
             }

@@ -101,7 +101,7 @@ static FileTypeRegistryEntry
     mng(   mngExts,  "MozillaMNG",   "MNG Image",            "",         "image-file.ico"),
     xbm(   xbmExts,  "MozillaXBM",   "XBM Image",            "xbmfile",  "image-file.ico"),
     bmp(   bmpExts,  "MozillaBMP",   "BMP Image",            "",         "image-file.ico"),
-    ico(   icoExts,  "MozillaICO",   "Icon",                 "icofile",  "image-file.ico"),
+    ico(   icoExts,  "MozillaICO",   "Icon",                 "icofile",  "%1"),
     xml(   xmlExts,  "MozillaXML",   "XML Document",         "xmlfile",  "doc-file.ico"),
     xhtml( xhtmExts, "MozillaXHTML", "XHTML Document",       "",         "doc-file.ico"),
     xul(   xulExts,  "MozillaXUL",   "Mozilla XUL Document", "",         "doc-file.ico");
