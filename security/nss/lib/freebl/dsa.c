@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: dsa.c,v 1.6 2001/01/05 22:37:49 mcgreer%netscape.com Exp $
+ * $Id: dsa.c,v 1.7 2001/01/12 14:30:44 mcgreer%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -80,7 +80,7 @@ dsa_NewKey(const PQGParams *params, DSAPrivateKey **privKey,
     PRArenaPool *arena;
     DSAPrivateKey *key;
     /* Check args. */
-    if (!params || !privKey || *privKey) {
+    if (!params || !privKey) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
