@@ -160,15 +160,16 @@ function SwitchProfileManagerMode()
   {
     prattleIndex = 1;                                       // need to switch to manager's index
     captionLine = bundle.GetStringFromName( "pm_title" );   // get manager's caption
-    manageButton = bundle.GetStringFromName( "pm_button" ); // get the manage button caption
     buttonDisplay = "display: inherit;";                    // display the manager's buttons
+    var manage = document.getElementById( "manage" );       // hide the manage profiles button...
+    var manageParent = manage.parentNode;
+    manageParent.removeChild( manage );
     profileManagerMode = "manager";                         // swap the mode
     PersistAndLoadElements( selItems );                     // save the selection and load elements
   } 
   else {
     prattleIndex = 0;
     captionLine = bundle.GetStringFromName( "ps_title" );
-    manageButton = bundle.GetStringFromName( "ps_button" ); 
     buttonDisplay = "display: none;";
     profileManagerMode = "selection";
     PersistAndLoadElements( selItems );
@@ -177,10 +178,6 @@ function SwitchProfileManagerMode()
   // swap deck  
   var deck = document.getElementById( "prattle" );
   deck.setAttribute( "index", prattleIndex )
-    
-  // update the manager button.
-  var manage = document.getElementById( "manage" );
-  manage.setAttribute( "value", manageButton );
     
   // swap caption
   ChangeCaption( captionLine );

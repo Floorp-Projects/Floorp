@@ -84,9 +84,6 @@ div.label {
 }
 
 /* manager buttons */
-titledbutton#manage {
-  min-width: 100px;
-}
 titledbutton.padded {
   padding-left: 10px ! important;
   padding-right: 10px ! important;
@@ -95,10 +92,14 @@ titledbutton.padded:hover {
   padding-left: 10px ! important;
   padding-right: 10px ! important;
 }
-
 titledbutton.padded:active {
   padding-left: 11px ! important;
   padding-right: 9px ! important;
+}
+titledbutton.padded[disabled="true"],
+titledbutton.padded:active[disabled="true"] {
+  padding-left: 10px ! important; 
+  padding-right: 10px ! important;
 }
 
 /* platform common dialog buttons */
