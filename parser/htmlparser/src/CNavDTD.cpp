@@ -1122,7 +1122,6 @@ nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
         mBodyContext->IncrementCounter(theGrandParentTag,aNode,theNumber);
 
         CTextToken theToken(theNumber);
-        PRInt32 theLineNumber=0;
         nsCParserNode theNode(&theToken, 0 /*stack token*/);
         result=mSink->AddLeaf(theNode);
       }
