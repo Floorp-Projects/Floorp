@@ -22,6 +22,7 @@
 #include "nsIMsgThread.h"
 #include "nsString.h"
 #include "MailNewsTypes.h"
+#include "mdb.h"
 
 class nsIMdbTable;
 class nsIMessage;
