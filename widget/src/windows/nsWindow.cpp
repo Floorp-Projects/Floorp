@@ -1243,10 +1243,13 @@ NS_METHOD nsWindow::Show(PRBool bState)
         ::ShowWindow(mWnd, mode);
       } else {
         DWORD flags = SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW;
-        if (mIsVisible || mWindowType == eWindowType_popup)
+        if (mIsVisible)
           flags |= SWP_NOZORDER;
 
         if (mWindowType == eWindowType_popup) {
+          // ensure popups are the topmost of the TOPMOST layer. Remember
+          // not to set the SWP_NOZORDER flag as that might allow the taskbar
+          // to overlap the popup.
           flags |= SWP_NOACTIVATE;
           ::SetWindowPos(mWnd, HWND_TOPMOST, 0, 0, 0, 0, flags);
         } else {
