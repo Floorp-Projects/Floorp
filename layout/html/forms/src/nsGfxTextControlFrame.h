@@ -52,7 +52,7 @@
 
 class nsIFrame;
 class nsIDOMSelection;
-
+class nsIDOMCharacterData;
 
 class nsGfxTextControlFrame;
 
@@ -531,6 +531,11 @@ public:
   NS_IMETHOD GetEditor(nsIEditor **aEditor);
   NS_IMETHOD GetDocShell(nsIDocShell **aDocShell);
   NS_IMETHOD SetInnerFocus();
+  NS_IMETHOD GetTextLength(PRInt32* aTextLength);
+  NS_IMETHOD SetSelectionStart(PRInt32 aSelectionStart);
+  NS_IMETHOD SetSelectionEnd(PRInt32 aSelectionEnd);
+  NS_IMETHOD SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd);
+  NS_IMETHOD GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
 
   //nsIStatefulFrame
   NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
@@ -539,6 +544,7 @@ public:
 
 
 protected:
+
   PRInt32 GetDefaultColumnWidth() const { return (PRInt32)(20); } // this was DEFAULT_PIXEL_WIDTH
 
   /** calculate the inner region of the text control (size - border and padding) in pixels */
@@ -638,7 +644,23 @@ protected:
                                         nsIAtom** aListName) const;
   NS_IMETHOD Destroy(nsIPresContext *aPresContext);
 
+  // utility method to get the DOM node that contains the character
+  // data for the contents of the field. This method asserts that
+  // there is just one such node.
+  NS_IMETHOD GetFirstTextNode(nsIDOMCharacterData* *aFirstTextNode);
+  
+  // Make the editor if it doesn't already exist
+  NS_IMETHOD EnsureEditor();
+  
+  nsresult   SelectAllContents();
+  
+  // internal method. Pass -1 in start or end to indicate "don't set"
+  nsresult   SetSelectionEndPoints(PRInt32 aSelectionStart, PRInt32 aSelectionEnd);
+
+  PRBool     IsSingleLineInput() { return mIsInput; } 
+
 public:
+
   void SetShouldSetFocus() { mDidSetFocus = PR_FALSE; };
   void SetFrameConstructor(nsCSSFrameConstructor *aConstructor)
     { mFrameConstructor = aConstructor; } // not owner - do not addref!
@@ -658,6 +680,8 @@ protected:
 
   PRPackedBool              mGotSelectionState;
   PRPackedBool              mSelectionWasCollapsed;
+  
+  PRPackedBool              mIsInput;       // is input (single line), c.f. multiline textarea
   
   nsIPresContext*           mFramePresContext; // not ref counted
   nsString*                 mCachedState; // this is used for caching changed between frame creation
