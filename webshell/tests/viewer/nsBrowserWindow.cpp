@@ -1911,6 +1911,14 @@ nsBrowserWindow::NewWebShell(PRUint32 aChromeMask,
 {
   nsresult rv = NS_OK;
 
+  if (mWebCrawler) {
+    if (mWebCrawler->Crawling() || mWebCrawler->LoadingURLList()) {
+      // Do not fly javascript popups when we are crawling
+      aNewWebShell = nsnull;
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+  }
+
   // Create new window. By default, the refcnt will be 1 because of
   // the registration of the browser window in gBrowsers.
   nsNativeBrowserWindow* browser;
