@@ -62,7 +62,7 @@
 #include "nsIRequest.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIInterfaceRequestor.h"
-
+#include "nsAutoPtr.h"
 
 // used to manage our in memory data source of helper applications
 #include "nsRDFCID.h"
@@ -1926,7 +1926,8 @@ nsresult nsExternalAppHandler::CreateProgressListener()
 nsresult nsExternalAppHandler::PromptForSaveToFile(nsILocalFile ** aNewFile, const nsAFlatString &aDefaultFile, const nsAFlatString &aFileExtension)
 {
   // invoke the dialog!!!!! use mWindowContext as the window context parameter for the dialog request
-  // XXX Convert to use file picker?
+  // Convert to use file picker? No, then embeddors could not do any sort of
+  // "AutoDownload" w/o showing a prompt
   nsresult rv = NS_OK;
   if (!mDialog)
   {
@@ -1937,7 +1938,14 @@ nsresult nsExternalAppHandler::PromptForSaveToFile(nsILocalFile ** aNewFile, con
 
   // we want to explicitly unescape aDefaultFile b4 passing into the dialog. we can't unescape
   // it because the dialog is implemented by a JS component which doesn't have a window so no unescape routine is defined...
-  
+
+  // Now, be sure to keep |this| alive, and the dialog
+  // If we don't do this, users that close the helper app dialog while the file
+  // picker is up would cause Cancel() to be called, and the dialog would be
+  // released, which would release this object too, which would crash.
+  // See Bug 249143
+  nsRefPtr<nsExternalAppHandler> kungFuDeathGrip(this);
+  nsCOMPtr<nsIHelperAppLauncherDialog> dlg(mDialog);
   rv = mDialog->PromptForSaveToFile(this, 
                                     mWindowContext,
                                     aDefaultFile.get(),
