@@ -824,6 +824,8 @@ toolkit/skin/win/Makefile
 MAKEFILES_minotaur="
 mail/Makefile
 mail/base/Makefile
+mail/components/Makefile
+mail/components/compose/Makefile
 "
 
 
