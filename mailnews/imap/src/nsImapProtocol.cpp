@@ -7418,6 +7418,8 @@ PRBool nsImapProtocol::TryToLogon()
         if (GetServerStateParser().GetCapabilityFlag() & kLoginDisabled)
         {
           AlertUserEventUsingId(IMAP_LOGIN_DISABLED);
+          // force re-issue of Capability() to make sure login still disabled.
+          m_hostSessionList->SetCapabilityForHost(GetImapServerKey(), kCapabilityUndefined);
           break;
         }
         if (password.IsEmpty() && m_imapServerSink)
