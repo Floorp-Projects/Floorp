@@ -50,8 +50,11 @@ private:
     nsresult KeywordURIFixup(const PRUnichar* aStringURI, nsIURI** aURI);
     PRBool PossiblyByteExpandedFileName(nsString& aIn);
     PRBool MakeAlternateURI(nsIURI *aURI);
+    const char * GetFileSystemCharset();
+    const char * GetCharsetForUrlBar();
 
     nsCOMPtr<nsIPref> mPrefs;
+    nsCAutoString mFsCharset;
 };
 
 #endif
