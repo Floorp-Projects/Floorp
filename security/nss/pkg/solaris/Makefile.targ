@@ -2,11 +2,11 @@
 # Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile.targ,v 1.3 2002/10/26 18:04:29 kirk.erickson%sun.com Exp $"
+#ident	"$Id: Makefile.targ,v 1.4 2002/11/11 20:44:55 kirk.erickson%sun.com Exp $"
 #
 
-pkginfo: pkginfo.tmpl ../awk_pkginfo
-	$(RM) $@; nawk -f ../awk_pkginfo $@.tmpl > $@
+pkginfo: pkginfo.tmpl ../awk_pkginfo-$(MACH)
+	$(RM) $@; nawk -f ../awk_pkginfo-$(MACH) $@.tmpl > $@
 
 pkg: $(PKGARCHIVE)
 	pkgmk -f prototype_$(MACH) -d $(PKGARCHIVE) -r $(ROOT) -o $(PACKAGE)

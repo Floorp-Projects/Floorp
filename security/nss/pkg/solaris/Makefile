@@ -2,7 +2,7 @@
 # Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile,v 1.2 2002/10/02 23:11:25 kirk.erickson%sun.com Exp $"
+#ident	"$Id: Makefile,v 1.3 2002/11/11 20:44:54 kirk.erickson%sun.com Exp $"
 #
 
 CORE_DEPTH = ../../..
@@ -33,15 +33,15 @@ endif
 
 include Makefile.com
 
-awk_pkginfo: bld_awk_pkginfo
+awk_pkginfo-$(MACH): bld_awk_pkginfo
 	./bld_awk_pkginfo -m $(MACH) -p "$(PRODUCT_VERSION)" -o $@ -v $(PRODUCT_VERSION)
 
-all:: awk_pkginfo $(PROTO)
-publish: awk_pkginfo $(PROTO)
+all:: awk_pkginfo-$(MACH) $(PROTO)
+publish: awk_pkginfo-$(MACH) $(PROTO)
 	+$(LOOP_OVER_DIRS)
 
 clean clobber::
-	$(RM) awk_pkginfo bld_awk_pkginfo
+	$(RM) awk_pkginfo-$(MACH) bld_awk_pkginfo
 	$(RM) -r $(ROOT)
 
 $(ROOT) $(ROOT)/%:
