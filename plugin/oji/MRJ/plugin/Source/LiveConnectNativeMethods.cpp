@@ -25,7 +25,6 @@
 #include "nsIPluginManager.h"
 #include "nsIJVMManager.h"
 #include "nsILiveconnect.h"
-#include "nsICapsManager.h"
 #include "nsISecurityContext.h"
 #include "nsIPluginInstancePeer2.h"
 
