@@ -759,7 +759,7 @@ EOF
 	fi
         exit 0 ;;
     *:QNX:*:*)
-	echo i386-pc-qnx`${UNAME_VERSION} | cut -c1-1`
+	echo i386-pc-qnx`echo ${UNAME_VERSION} | cut -c1-1`
 	exit 0 ;;
     BePC:BeOS:*:*)
         echo i386-pc-beos${UNAME_RELEASE}
