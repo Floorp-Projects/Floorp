@@ -423,13 +423,11 @@ NS_IMETHODIMP nsScrollingView :: Init(nsIViewManager* aManager,
     if (nsnull != mClipView)
     {
       // The clip view needs a widget to clip any of the scrolled view's
-      // child views with widgets.
+      // child views with widgets. Note that the clip view has an opacity
+      // of 0.0f (completely transparent)
       // XXX The clip widget should be created on demand only...
-      // XXX We're setting the clip view's opacity to be the same as the that of
-      // the scrolling view. Should that be the case or should it be the same
-      // as the scrolled view's opacity, or should it just be 0.0?
       rv = mClipView->Init(mViewManager, aBounds, this, &kWidgetCID, nsnull,
-                           mWindow ? nsnull : aNative, -1, nsnull, aOpacity);
+                           mWindow ? nsnull : aNative, -1, nsnull, 0.0f);
       mViewManager->InsertChild(this, mClipView, -1);
     }
 
@@ -1387,12 +1385,6 @@ void nsScrollingView :: AdjustChildWidgets(nsScrollingView *aScrolling, nsIView 
 
 NS_IMETHODIMP nsScrollingView :: SetScrolledView(nsIView *aScrolledView)
 {
-  PRBool  isTransparent;
-
-  // If the scrolled view has transparent content areas then the clip view also
-  // needs to be marked as having a transparent content area
-  aScrolledView->HasTransparency(isTransparent);
-  mViewManager->SetViewContentTransparency(mClipView, isTransparent);
   return mViewManager->InsertChild(mClipView, aScrolledView, 0);
 }
 
