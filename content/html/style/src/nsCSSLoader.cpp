@@ -368,123 +368,121 @@ static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
     return NS_ERROR_NOT_AVAILABLE;
   PRUint32 step = 1;
   PRUint32 pos = 0;
-  // Determine the encoding type
+  // Determine the encoding type.  If we have a BOM, set aCharset to the
+  // charset listed for that BOM in http://www.w3.org/TR/REC-xml#sec-guessing;
+  // that way even if we don't have a valid @charset rule we can use the BOM to
+  // get a reasonable charset.  If we do have an @charset rule, the string from
+  // that will override this fallback setting of aCharset.
   if (*aStyleSheetData == 0x40 && *(aStyleSheetData+1) == 0x63 /* '@c' */ ) {
-    // 1-byte ASCII-based encoding (ISO-8859-*, UTF-8, etc)
+    // 1-byte ASCII-based encoding (ISO-8859-*, UTF-8, etc), no BOM
     step = 1;
     pos = 0;
   }
-  else if (*aStyleSheetData == 0xEF &&
-           *(aStyleSheetData+1) == 0xBB &&
-           *(aStyleSheetData+2) == 0xBF) {
+  else if (aStyleSheetData[0] == 0xEF &&
+           aStyleSheetData[1] == 0xBB &&
+           aStyleSheetData[2] == 0xBF) {
     // UTF-8 BOM
     step = 1;
     pos = 3;
+    aCharset = "UTF-8";
   }
-  else if (*aStyleSheetData == 0xFE && *(aStyleSheetData+1) == 0xFF) {
-    // big-endian 2-byte encoding BOM
-    step = 2;
-    pos = 3;
-  }
-  else if (*aStyleSheetData == 0xFF && *(aStyleSheetData+1) == 0xFE) {
-    // little-endian 2-byte encoding BOM
-    NS_WARNING("Our unicode decoders aren't likely  to deal with this one");
-    step = 2;
-    pos = 2;
-  }
-  else if (*aStyleSheetData == 0x00 &&
-           *(aStyleSheetData+1) == 0x00 &&
-           *(aStyleSheetData+2) == 0xFE &&
-           *(aStyleSheetData+3) == 0xFF) {
+  // Check for a 4-byte encoding BOM before checking for a 2-byte one,
+  // since the latter can be a proper subset of the former.
+  else if (aStyleSheetData[0] == 0x00 &&
+           aStyleSheetData[1] == 0x00 &&
+           aStyleSheetData[2] == 0xFE &&
+           aStyleSheetData[3] == 0xFF) {
     // big-endian 4-byte encoding BOM
     step = 4;
     pos = 7;
+    aCharset = "UTF-32BE";
   }
-  else if (*aStyleSheetData == 0xFF &&
-           *(aStyleSheetData+1) == 0xFE &&
-           *(aStyleSheetData+2) == 0x00 &&
-           *(aStyleSheetData+3) == 0x00) {
+  else if (aStyleSheetData[0] == 0xFF &&
+           aStyleSheetData[1] == 0xFE &&
+           aStyleSheetData[2] == 0x00 &&
+           aStyleSheetData[3] == 0x00) {
     // little-endian 4-byte encoding BOM
-    NS_WARNING("Our unicode decoders aren't likely to deal with this one");
     step = 4;
     pos = 4;
+    aCharset = "UTF-32LE";
   }
-  else if (*aStyleSheetData == 0x00 &&
-           *(aStyleSheetData+1) == 0x00 &&
-           *(aStyleSheetData+2) == 0xFF &&
-           *(aStyleSheetData+3) == 0xFE) {
+  else if (aStyleSheetData[0] == 0x00 &&
+           aStyleSheetData[1] == 0x00 &&
+           aStyleSheetData[2] == 0xFF &&
+           aStyleSheetData[3] == 0xFE) {
     // 4-byte encoding BOM in 2143 order
-    NS_WARNING("Our unicode decoders aren't likely to deal with this one");
+    NS_WARNING("Our unicode decoders aren't likely  to deal with this one");
     step = 4;
     pos = 6;
+    aCharset = "UTF-32";
   }
-  else if (*aStyleSheetData == 0xFE &&
-           *(aStyleSheetData+1) == 0xFF &&
-           *(aStyleSheetData+2) == 0x00 &&
-           *(aStyleSheetData+3) == 0x00) {
+  else if (aStyleSheetData[0] == 0xFE &&
+           aStyleSheetData[1] == 0xFF &&
+           aStyleSheetData[2] == 0x00 &&
+           aStyleSheetData[3] == 0x00) {
     // 4-byte encoding BOM in 3412 order
-    NS_WARNING("Our unicode decoders aren't likely to deal with this one");
+    NS_WARNING("Our unicode decoders aren't likely  to deal with this one");
     step = 4;
     pos = 5;
+    aCharset = "UTF-32";
   }
-  else if (*aStyleSheetData == 0x00 &&
-           *(aStyleSheetData+1) == 0x00 &&
-           *(aStyleSheetData+2) == 0x00 &&
-           *(aStyleSheetData+3) == 0x40) {
+  else if (aStyleSheetData[0] == 0xFE && aStyleSheetData[1] == 0xFF) {
+    // big-endian 2-byte encoding BOM
+    step = 2;
+    pos = 3;
+    aCharset = "UTF-16BE";
+  }
+  else if (aStyleSheetData[0] == 0xFF && aStyleSheetData[1] == 0xFE) {
+    // little-endian 2-byte encoding BOM
+    step = 2;
+    pos = 2;
+    aCharset = "UTF-16LE";
+  }
+  else if (aStyleSheetData[0] == 0x00 &&
+           aStyleSheetData[1] == 0x00 &&
+           aStyleSheetData[2] == 0x00 &&
+           aStyleSheetData[3] == 0x40) {
     // big-endian 4-byte encoding, no BOM
     step = 4;
     pos = 3;
   }
-  else if (*aStyleSheetData == 0x40 &&
-           *(aStyleSheetData+1) == 0x00 &&
-           *(aStyleSheetData+2) == 0x00 &&
-           *(aStyleSheetData+3) == 0x00) {
-    // little-encoding 4-byte encoding, no BOM
-    NS_WARNING("Our unicode decoders aren't likely to deal with this one");
+  else if (aStyleSheetData[0] == 0x40 &&
+           aStyleSheetData[1] == 0x00 &&
+           aStyleSheetData[2] == 0x00 &&
+           aStyleSheetData[3] == 0x00) {
+    // little-endian 4-byte encoding, no BOM
     step = 4;
     pos = 0;
   }
-  else if (*aStyleSheetData == 0x00 &&
-           *(aStyleSheetData+1) == 0x00 &&
-           *(aStyleSheetData+2) == 0x40 &&
-           *(aStyleSheetData+3) == 0x00) {
+  else if (aStyleSheetData[0] == 0x00 &&
+           aStyleSheetData[1] == 0x00 &&
+           aStyleSheetData[2] == 0x40 &&
+           aStyleSheetData[3] == 0x00) {
     // 4-byte encoding in 2143 order, no BOM
-    NS_WARNING("Our unicode decoders aren't likely to deal with this one");
     step = 4;
     pos = 2;
   }
-  else if (*aStyleSheetData == 0x00 &&
-           *(aStyleSheetData+1) == 0x40 &&
-           *(aStyleSheetData+2) == 0x00 &&
-           *(aStyleSheetData+3) == 0x00) {
+  else if (aStyleSheetData[0] == 0x00 &&
+           aStyleSheetData[1] == 0x40 &&
+           aStyleSheetData[2] == 0x00 &&
+           aStyleSheetData[3] == 0x00) {
     // 4-byte encoding in 3412 order, no BOM
-    NS_WARNING("Our unicode decoders aren't likely to deal with this one");
     step = 4;
     pos = 1;
   }
-  else if (*aStyleSheetData == 0x00 &&
-           *(aStyleSheetData+1) == 0x40 &&
-           *(aStyleSheetData+2) == 0x00 &&
-           *(aStyleSheetData+3) == 0x00) {
-    // 4-byte encoding in 3412 order, no BOM
-    NS_WARNING("Our unicode decoders aren't likely to deal with this one");
-    step = 4;
-    pos = 1;
-  }
-  else if (*aStyleSheetData == 0x00 &&
-           *(aStyleSheetData+1) == 0x40 &&
-           *(aStyleSheetData+2) == 0x00 &&
-           *(aStyleSheetData+3) == 0x63) {
+  else if (aStyleSheetData[0] == 0x00 &&
+           aStyleSheetData[1] == 0x40 &&
+           aStyleSheetData[2] == 0x00 &&
+           aStyleSheetData[3] == 0x63) {
     // 2-byte big-endian encoding, no BOM
     step = 2;
     pos = 1;
   }
-  else if (*aStyleSheetData == 0x40 &&
-           *(aStyleSheetData+1) == 0x00 &&
-           *(aStyleSheetData+2) == 0x63 &&
-           *(aStyleSheetData+3) == 0x00) {
-    // 2-byte big-endian encoding, no BOM
-    NS_WARNING("Our unicode decoders aren't likely to deal with this one");
+  else if (aStyleSheetData[0] == 0x40 &&
+           aStyleSheetData[1] == 0x00 &&
+           aStyleSheetData[2] == 0x63 &&
+           aStyleSheetData[3] == 0x00) {
+    // 2-byte little-endian encoding, no BOM
     step = 2;
     pos = 0;
   }
@@ -496,7 +494,10 @@ static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
   PRUint32 index = 0;
   while (pos < aDataLength && index < sizeof(kCharsetSym) - 1) {
     if (aStyleSheetData[pos] != kCharsetSym[index]) {
-      return NS_ERROR_NOT_AVAILABLE;
+      // If we have a guess as to the charset based on the BOM, then
+      // we can just return NS_OK even if there is no valid @charset
+      // rule.
+      return aCharset.IsEmpty() ? NS_ERROR_NOT_AVAILABLE : NS_OK;
     }
     ++index;
     pos += step;
@@ -508,11 +509,12 @@ static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
 
   if (pos >= aDataLength ||
       (aStyleSheetData[pos] != '"' && aStyleSheetData[pos] != '\'')) {
-    return NS_ERROR_NOT_AVAILABLE;
+    return aCharset.IsEmpty() ? NS_ERROR_NOT_AVAILABLE : NS_OK;
   }
 
   char quote = aStyleSheetData[pos];
   pos += step;
+  nsCAutoString charset;
   while (pos < aDataLength) {
     if (aStyleSheetData[pos] == '\\') {
       pos += step;
@@ -524,7 +526,7 @@ static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
     }
     
     // casting to avoid ambiguities
-    aCharset.Append(char(aStyleSheetData[pos]));
+    charset.Append(char(aStyleSheetData[pos]));
     pos += step;
   }
 
@@ -535,10 +537,10 @@ static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
   }
 
   if (pos >= aDataLength || aStyleSheetData[pos] != ';') {
-    aCharset.Truncate();
-    return NS_ERROR_NOT_AVAILABLE;
+    return aCharset.IsEmpty() ? NS_ERROR_NOT_AVAILABLE : NS_OK;
   }
 
+  aCharset = charset;
   return NS_OK;
 }
 
@@ -581,12 +583,12 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
 
   if (aCharset.IsEmpty()) {
     //  We have no charset
-    //  Try @charset rule
+    //  Try @charset rule and BOM
     result = GetCharsetFromData((const unsigned char*)aData,
                                 aDataLength, aCharset);
 #ifdef DEBUG_bzbarsky
     if (NS_SUCCEEDED(result)) {
-      fprintf(stderr, "Setting from @charset rule: %s\n",
+      fprintf(stderr, "Setting from @charset rule or BOM: %s\n",
               PromiseFlatCString(aCharset).get());
     }
 #endif
