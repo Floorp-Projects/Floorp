@@ -31,15 +31,13 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: dsa.c,v 1.1 2000/08/18 18:32:32 mcgreer%netscape.com Exp $
+ * $Id: dsa.c,v 1.2 2000/09/11 04:17:01 wtc%netscape.com Exp $
  */
 
-#include "prerr.h"
 #include "secerr.h"
 
 #include "prtypes.h"
 #include "prinit.h"
-#include "prerror.h"
 #include "blapi.h"
 #include "prlock.h"
 #include "secitem.h"
@@ -276,14 +274,14 @@ SECStatus
 DSA_SignDigest(DSAPrivateKey *key, SECItem *signature, SECItem *digest)
 {
     SECStatus rv;
-    PRErrorCode prerr = PR_SUCCESS;
+    int prerr = 0;
     unsigned char KSEED[DSA_SUBPRIME_LEN];
     rv = DSA_GenerateGlobalRandomBytes(KSEED, DSA_SUBPRIME_LEN, 
                                        key->params.subPrime.data);
     if (rv) return rv;
     do {
 	rv = dsa_SignDigest(key, signature, digest, KSEED);
-	if (rv) prerr = PR_GetError();
+	if (rv) prerr = PORT_GetError();
     } while (prerr == SEC_ERROR_NEED_RANDOM);
     /*memset(KSEED, 0, DSA_SUBPRIME_LEN);*/
     return rv;

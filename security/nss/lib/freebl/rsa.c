@@ -30,11 +30,9 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rsa.c,v 1.9 2000/09/08 22:41:51 mcgreer%netscape.com Exp $
+ * $Id: rsa.c,v 1.10 2000/09/11 04:17:02 wtc%netscape.com Exp $
  */
 
-#include "prerr.h"
-#include "prerror.h"
 #include "secerr.h"
 
 #include "blapi.h"
@@ -126,7 +124,7 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
     mp_int p, q, e;
     mp_err   err = MP_OKAY;
     SECStatus rv = SECSuccess;
-    PRErrorCode prerr = PR_SUCCESS;
+    int prerr = 0;
     RSAPrivateKey *key = NULL;
     PRArenaPool *arena = NULL;
     if (!publicExponent) {
@@ -179,7 +177,7 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
 	rv = rsa_keygen_from_primes(&p, &q, &e, key);
 	if (rv == SECSuccess)
 	    break; /* generated two good primes */
-	prerr = PR_GetError();
+	prerr = PORT_GetError();
     } while (prerr == SEC_ERROR_NEED_RANDOM); /* loop until have primes */
 cleanup:
     mp_clear(&p);
