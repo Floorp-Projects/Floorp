@@ -31,8 +31,8 @@ class nsTransform2D;
 class nsVoidArray;
 
 class GraphicState;
+class DrawingSurface;		// a surface is a combination of a port and a graphic state
 
-typedef GrafPtr nsDrawingSurfaceMac;
 
 //------------------------------------------------------------------------
 
@@ -109,18 +109,19 @@ public:
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
 
   //locals
-  NS_IMETHOD CommonInit(void);
   NS_IMETHOD SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
-	NS_IMETHOD SetPortTextState();
+  NS_IMETHOD SetPortTextState();
 
 protected:
+	void		SelectDrawingSurface(DrawingSurface* aSurface);
+
 	GrafPtr		mOldPort;
 
 	inline void	StartDraw()
   				{
 					::GetPort(&mOldPort);
-					NS_ASSERTION((mCurrentBuffer != nsnull), "mCurrentBuffer is null");
-					::SetPort(mCurrentBuffer);
+					NS_ASSERTION((mPort != nsnull), "mPort is null");
+					::SetPort(mPort);
   				}
 
 	inline void	EndDraw()
@@ -128,25 +129,18 @@ protected:
 					::SetPort(mOldPort);
   				}
 
-	enum ClipMethod {
-		clipToMainRegion,
-		clipToClipRegion
-	};
-	void	SetQuickDrawEnvironment(GraphicState* aGraphicState, ClipMethod clipMethod);
-	void	SelectDrawingSurface(nsDrawingSurfaceMac aSurface, GraphicState* aGraphicState);
 	
 protected:
 	float             		mP2T; 				// Pixel to Twip conversion factor
 	nsIDeviceContext *		mContext;
 
-	nsDrawingSurfaceMac		mOriginalSurface;
-	nsDrawingSurfaceMac		mFrontBuffer;		// screen port
-	nsDrawingSurfaceMac		mCurrentBuffer;		// current drawing surface (= mGS->mRenderingSurface)
+	DrawingSurface*			mOriginalSurface;
+	DrawingSurface*			mFrontSurface;
 
-	// graphic state management
-	GraphicState *			mGS;				// Pointer to the current graphic state
-	nsVoidArray *			mGSArray;			// GraphicState array,  used when a surface gets selected
-	nsVoidArray *			mSurfaceArray;		// Surface array,       used when a surface gets selected
+	DrawingSurface*			mCurrentSurface;	// pointer to the current surface
+	GrafPtr					mPort;				// current grafPort - shortcut for mCurrentSurface->GetPort()
+	GraphicState *			mGS;				// current graphic state - shortcut for mCurrentSurface->GetGS()
+
 	nsVoidArray *			mGSStack;			// GraphicStates stack, used for PushState/PopState
 };
 
