@@ -188,6 +188,8 @@ nsMediaDocument::StartDocumentLoad(const char*         aCommand,
   // considered synonymous with UTF-8. 
     
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
+
+  // not being able to set the charset is not critical.
   NS_ENSURE_TRUE(docShell, NS_OK); 
 
   nsCOMPtr<nsIDocumentCharsetInfo> dcInfo;
@@ -205,16 +207,16 @@ nsMediaDocument::StartDocumentLoad(const char*         aCommand,
   if (charset.IsEmpty() || charset.Equals("UTF-8")) {
     nsCOMPtr<nsIContentViewer> cv;
     docShell->GetContentViewer(getter_AddRefs(cv));
+
+    // not being able to set the charset is not critical.
     NS_ENSURE_TRUE(cv, NS_OK); 
-    if (cv) {
-      nsCOMPtr<nsIMarkupDocumentViewer> muCV = do_QueryInterface(cv);
-      if (muCV) {
-        muCV->GetPrevDocCharacterSet(charset);   // opening in the same window/tab
-        if (charset.Equals("UTF-8") || charset.IsEmpty()) {
-          muCV->GetDefaultCharacterSet(charset); // opening in a new window
-        }
-      } // muCV
-    } // cv
+    nsCOMPtr<nsIMarkupDocumentViewer> muCV = do_QueryInterface(cv);
+    if (muCV) {
+      muCV->GetPrevDocCharacterSet(charset);   // opening in the same window/tab
+      if (charset.Equals("UTF-8") || charset.IsEmpty()) {
+        muCV->GetDefaultCharacterSet(charset); // opening in a new window
+      }
+    } 
   }
 
   if (!charset.IsEmpty() && !charset.Equals("UTF-8")) {
