@@ -33,6 +33,9 @@ nsHTTPResponse::nsHTTPResponse(nsIInputStream* i_InputStream):
 {
     NS_INIT_REFCNT();
 
+    m_Status = 0;
+    m_ServerVersion = HTTP_ONE_ZERO;
+
     m_pInputStream = i_InputStream;
     NS_IF_ADDREF(m_pInputStream);
 }

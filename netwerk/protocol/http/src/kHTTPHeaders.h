@@ -56,6 +56,7 @@ const char kHH_IF_RANGE[]                       = "If-Range";
 const char kHH_IF_UNMODIFIED_SINCE[]            = "If-Unmodified-Since";
 const char kHH_LAST_MODIFIED[]                  = "Last-Modified";
 const char kHH_LINK[]                           = "Link";
+const char kHH_LOCATION[]                       = "Location";
 const char kHH_MAX_FORWARDS[]                   = "Max-Forwards";
 const char kHH_MESSAGE_ID[]                     = "Message-Id";
 const char kHH_MIME[]                           = "Mime";

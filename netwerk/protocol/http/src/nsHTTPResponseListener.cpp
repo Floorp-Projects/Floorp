@@ -26,6 +26,7 @@
 #include "nsIHttpEventSink.h"
 #include "nsCRT.h"
 
+#include "kHTTPHeaders.h"
 #include "nsIHttpNotify.h"
 #include "nsINetModRegEntry.h"
 #include "nsProxyObjectManager.h"
@@ -33,6 +34,9 @@
 #include "nsINetModuleMgr.h"
 #include "nsIEventQueueService.h"
 #include "nsIBuffer.h"
+
+#include "nsIIOService.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gHTTPLog;
@@ -136,7 +140,16 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
                    ("\tOnDataAvailable [this=%x]. Finished parsing Headers\n", 
                     this));
 
-            FireOnHeadersAvailable();
+            ProcessStatusCode();
+            //
+            // Fire the OnStartRequest notification - now that user data is available
+            //
+            if (m_pConsumer) {
+                rv = m_pConsumer->OnStartRequest(m_pConnection, m_ResponseContext);
+                if (NS_FAILED(rv)) return rv;
+
+                FireOnHeadersAvailable();
+            } 
         }
     }
 
@@ -149,10 +162,7 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
             rv = m_pConsumer->OnDataAvailable(m_pConnection, m_ResponseContext, i_pStream, 0, 
                                               i_Length);
         }
-    } else {
-        NS_ERROR("No Stream Listener!");
-        rv = NS_ERROR_NULL_POINTER;
-    }
+    } 
 
     return rv;
 }
@@ -162,9 +172,6 @@ NS_IMETHODIMP
 nsHTTPResponseListener::OnStartRequest(nsIChannel* channel, nsISupports* i_pContext)
 {
     nsresult rv;
-
-    //TODO globally replace printf with trace calls. 
-    //printf("nsHTTPResponseListener::OnStartRequest...\n");
 
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("nsHTTPResponseListener::OnStartRequest [this=%x].\n", this));
@@ -190,16 +197,6 @@ nsHTTPResponseListener::OnStartRequest(nsIChannel* channel, nsISupports* i_pCont
         pHTTPChannel->GetResponseContext(getter_AddRefs(m_ResponseContext));
     }
 
-    if (NS_SUCCEEDED(rv)) {
-        // Pass the notification out to the consumer...
-        if (m_pConsumer) {
-            rv = m_pConsumer->OnStartRequest(m_pConnection, m_ResponseContext);
-        } else {
-            NS_ERROR("No Stream Listener...");
-            rv = NS_ERROR_NULL_POINTER;
-        }
-    }
-
     return rv;
 }
 
@@ -217,10 +214,7 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
     // Pass the notification out to the consumer...
     if (m_pConsumer) {
         rv = m_pConsumer->OnStopRequest(m_pConnection, m_ResponseContext, i_Status, i_pMsg);
-    } else {
-        NS_ERROR("No Stream Listener...");
-        rv = NS_ERROR_NULL_POINTER;
-    }
+    } 
 
     // The Consumer is no longer needed...
     NS_IF_RELEASE(m_pConsumer);
@@ -582,5 +576,152 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBuffer* aBuffer,
 
   m_HeaderBuffer.Truncate();
 
+  return rv;
+}
+
+
+nsresult nsHTTPResponseListener::ProcessStatusCode(void)
+{
+  nsresult rv = NS_OK;
+  PRUint32 statusCode, statusClass;
+
+  statusCode = 0;
+  rv = m_pResponse->GetStatus(&statusCode);
+  statusClass = statusCode / 100;
+
+
+  switch (statusClass) {
+    //
+    // Informational: 1xx
+    //
+    case 1:
+      PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+             ("ProcessStatusCode [this=%x].\tStatus - Informational: %d.\n",
+              this, statusCode));
+      break;
+
+    //
+    // Successful: 2xx
+    //
+    case 2:
+      PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+             ("ProcessStatusCode [this=%x].\tStatus - Successful: %d.\n",
+              this, statusCode));
+      break;
+
+    //
+    // Redirection: 3xx
+    //
+    case 3:
+      PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+             ("ProcessStatusCode [this=%x].\tStatus - Redirection: %d.\n",
+              this, statusCode));
+      rv = ProcessRedirection(statusCode);
+      break;
+
+    //
+    // Client Error: 4xx
+    //
+    case 4:
+      PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+             ("ProcessStatusCode [this=%x].\tStatus - Client Error: %d.\n",
+              this, statusCode));
+      break;
+
+    //
+    // Server Error: 5xx
+    //
+    case 5:
+      PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+             ("ProcessStatusCode [this=%x].\tStatus - Server Error: %d.\n",
+              this, statusCode));
+      break;
+
+    //
+    // Unknown Status Code catagory...
+    //
+    default:
+      PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+             ("ProcessStatusCode [this=%x].\tStatus - Unknown Status Code catagory: %d.\n",
+              this, statusCode));
+      break;
+  }
+
+  return rv;
+}
+
+
+
+nsresult nsHTTPResponseListener::ProcessRedirection(PRInt32 aStatusCode)
+{
+  nsresult rv = NS_OK;
+  char *location;
+
+  location = nsnull;
+  m_pResponse->GetHeader(kHH_LOCATION, &location);
+
+  if ((301 == aStatusCode) || (302 == aStatusCode)) {
+    if (location) {
+      nsCOMPtr<nsIURI> baseURL, newURL;
+
+      //
+      // Create a new URI using the Location header and the current URL 
+      // as a base ...
+      //
+#if 0
+      // Expanded inline to avoid linking with neckoutils....  (temporary)
+      rv = NS_NewURI(getter_AddRefs(newURL), location, baseURL);
+#else
+      NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+      if (NS_FAILED(rv)) return rv;
+    
+      m_pConnection->GetURI(getter_AddRefs(baseURL));
+      rv = serv->NewURI(location, baseURL, getter_AddRefs(newURL));
+#endif
+            
+      if (NS_SUCCEEDED(rv)) {
+
+#if defined(PR_LOGGING)
+        char *newURLSpec;
+
+        newURLSpec = nsnull;
+        newURL->GetSpec(&newURLSpec);
+        PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+               ("ProcessRedirect [this=%x].\tRedirecting to: %s.\n",
+                this, newURLSpec));
+#endif /* PR_LOGGING */
+#if 0
+      // Expanded inline to avoid linking with neckoutils....  (temporary)
+        rv = NS_OpenURI(m_pConsumer, m_ResponseContext, newURL, nsnull);
+#else
+        nsIChannel* channel;
+        rv = serv->NewChannelFromURI("load", newURL, nsnull, &channel);
+        if (NS_SUCCEEDED(rv)) {
+          rv = channel->AsyncRead(0, -1, m_ResponseContext, m_pConsumer);
+          NS_RELEASE(channel);
+        }
+#endif
+        if (NS_SUCCEEDED(rv)) {
+          nsCOMPtr<nsIHTTPEventSink> sink;
+          //
+          // Fire the OnRedirect(...) notification.
+          //
+          m_pConnection->GetEventSink(getter_AddRefs(sink));
+          if (sink) {
+            sink->OnRedirect(m_pConnection, newURL);
+          }
+
+          //
+          // Disconnect the consumer from this response listener...  This allows
+          // the entity that follows to be discarded without notifying the 
+          // consumer...
+          //
+          NS_RELEASE(m_pConsumer);
+          m_ResponseContext = nsnull;
+        }
+      }
+      delete[] location;
+    }
+  }
   return rv;
 }
