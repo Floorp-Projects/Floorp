@@ -42,7 +42,6 @@ static POINTL gDragLastPoint;
 /*
  * class nsNativeDragTarget
  */
-
 //-----------------------------------------------------
 // construction
 //-----------------------------------------------------
@@ -60,7 +59,11 @@ nsNativeDragTarget::nsNativeDragTarget(nsIWidget * aWnd)
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
                                              kIDragServiceIID,
                                              (nsISupports**)&mDragService);
-  mDragSession = do_QueryInterface(mDragService);
+  if (NS_OK == rv) {
+    mDragSession = do_QueryInterface(mDragService);
+  } else {
+    mDragSession = nsnull;
+  }
 }
 
 
@@ -123,7 +126,7 @@ void nsNativeDragTarget::GetGeckoDragAction(DWORD grfKeyState, LPDWORD pdwEffect
   *pdwEffect    = DROPEFFECT_MOVE;
   *aGeckoAction = nsIDragService::DRAGDROP_ACTION_MOVE;
 
-  // Given the key modifiers gifure out what state we are in for both
+  // Given the key modifiers figure out what state we are in for both
   // the native system and Gecko
   if (grfKeyState & MK_CONTROL) {
     if (canLink && (grfKeyState & MK_SHIFT)) {
@@ -203,7 +206,7 @@ STDMETHODIMP nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource,
   if (DRAG_DEBUG) printf("DragEnter\n");
 
 	if (mDragService) {
-    // We a new IDataObject, release the old if necessary and
+    // We have a new IDataObject, release the old one, if necessary and
     // keep a pointer to the new on
     NS_IF_RELEASE(mDataObj);
     mDataObj = pIDataSource;
@@ -214,13 +217,13 @@ STDMETHODIMP nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource,
     // a nsDragService
     nsDragService * winDragService = NS_STATIC_CAST(nsDragService *, mDragService);
 
-    // Set the native data object into drage service
+    // Set the native data object into drag service
     winDragService->SetIDataObject(pIDataSource);
 
     // Now process the native drag state and then dispatch the event
     ProcessDrag(NS_DRAGDROP_ENTER, grfKeyState, pt, pdwEffect);
 
-		return NOERROR;
+		return S_OK;
 	} else {
 		return ResultFromScode(E_FAIL);
 	}
@@ -236,7 +239,7 @@ STDMETHODIMP nsNativeDragTarget::DragOver(DWORD   grfKeyState,
 	if (mDragService) {
     // Now process the native drag state and then dispatch the event
     ProcessDrag(NS_DRAGDROP_OVER, grfKeyState, pt, pdwEffect);
-		return NOERROR;
+		return S_OK;
 	} else {
 		return ResultFromScode(E_FAIL);
 	}
@@ -249,7 +252,7 @@ STDMETHODIMP nsNativeDragTarget::DragLeave() {
 	if (mDragService) {
     // dispatch the event into Gecko
     DispatchDragDropEvent(NS_DRAGDROP_EXIT, gDragLastPoint);
-		return NOERROR;
+		return S_OK;
 	} else {
 		return ResultFromScode(E_FAIL);
 	}
@@ -262,15 +265,16 @@ STDMETHODIMP nsNativeDragTarget::Drop(LPDATAOBJECT pIDataSource,
 										                  POINTL       aPT, 
                                       LPDWORD      pdwEffect)
 {
-  if (DRAG_DEBUG) printf("Drop\n");
+  if (DRAG_DEBUG) printf("Drop mDataObj: %p  pIDataSource: %p\n", mDataObj, pIDataSource);
 
 	if (mDragService) {
     if (mDataObj != NULL) {
       // Make sure we have a valid IDataObject and 
       // that it matches the one we got on the drag enter
       if (pIDataSource == mDataObj) {
-        mDataObj = pIDataSource;
-        NS_ADDREF(mDataObj);
+        // We have already add ref'ed it
+        //mDataObj = pIDataSource;
+        //NS_ADDREF(mDataObj);
       } else {
         // Boy this is weird, they should be the same
         // XXX should assert here, 
@@ -280,7 +284,7 @@ STDMETHODIMP nsNativeDragTarget::Drop(LPDATAOBJECT pIDataSource,
         NS_ADDREF(mDataObj);
       }
     } else {
-      // Boy this is weird, it should be null
+      // Boy this is weird, it shouldn't be null
       // XXX should assert here
     }
 
