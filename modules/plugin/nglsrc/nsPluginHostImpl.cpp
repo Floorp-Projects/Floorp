@@ -506,12 +506,26 @@ void nsActivePluginList::stopRunning()
   if(mFirst == nsnull)
     return;
 
+  PRBool doCallSetWindowAfterDestroy = PR_FALSE;
+
   for(nsActivePlugin * p = mFirst; p != nsnull; p = p->mNext)
   {
     if(!p->mStopped && p->mInstance)
     {
-      p->mInstance->SetWindow(nsnull);
-      p->mInstance->Stop();
+      // then determine if the plugin wants Destroy to be called after
+      // Set Window.  This is for bug 50547.
+      p->mInstance->GetValue(nsPluginInstanceVariable_CallSetWindowAfterDestroyBool, 
+                             (void *) &doCallSetWindowAfterDestroy);
+      if (doCallSetWindowAfterDestroy) {
+        p->mInstance->Stop();
+        p->mInstance->Destroy();
+        p->mInstance->SetWindow(nsnull);
+      }
+      else {
+        p->mInstance->SetWindow(nsnull);
+        p->mInstance->Stop();
+      }
+      doCallSetWindowAfterDestroy = PR_FALSE;
       p->setStopped(PR_TRUE);
     }
   }
