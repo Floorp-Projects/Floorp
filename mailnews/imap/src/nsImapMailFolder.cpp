@@ -1028,7 +1028,9 @@ nsImapMailFolder::BuildIdsAndKeyArray(nsISupportsArray* messages,
 nsImapMailFolder::AllocateUidStringFromKeyArray(nsMsgKeyArray &keyArray, nsCString &msgIds)
 {
     nsresult rv = NS_OK;
-	PRInt32 startSequence = (keyArray.GetSize() > 0) ? keyArray[0] : -1;
+	PRInt32 startSequence = -1;
+    if (keyArray.GetSize() > 0)
+        startSequence = keyArray[0];
 	PRInt32 curSequenceEnd = startSequence;
 	PRUint32 total = keyArray.GetSize();
 	// sort keys and then generate ranges instead of singletons!

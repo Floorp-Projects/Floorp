@@ -1144,7 +1144,6 @@ NS_IMETHODIMP nsImapProtocol::OnStartRequest(nsIChannel * /* aChannel */, nsISup
 NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIChannel * /* aChannel */, nsISupports *ctxt, nsresult aStatus, const PRUnichar* aMsg)
 {
     PR_CEnterMonitor(this);
-	nsresult rv = NS_OK;
     m_channel = null_nsCOMPtr();
     m_outputStream = null_nsCOMPtr();
     m_inputStream = null_nsCOMPtr();

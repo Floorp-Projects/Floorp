@@ -2376,7 +2376,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                prompt the user for a password; just tell him we don't
                know whether he has new mail. */
 			nsXPIDLCString password;
-			nsresult rv = GetPassword(getter_Copies(password));
+			GetPassword(getter_Copies(password));
 			const char * pwd = (const char *) password;
             if ((m_pop3ConData->only_check_for_new_mail /* ||
                  MSG_Biff_Master_NikiCallingGetNewMail() */) && 

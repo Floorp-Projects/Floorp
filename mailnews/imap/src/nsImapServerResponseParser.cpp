@@ -1701,8 +1701,6 @@ void nsImapServerResponseParser::capability_data()
 			 !at_end_of_line() &&
 			 ContinueParse());
 
-    const char* userName = fServerConnection.GetImapUserName();
-
     if (fHostSessionList)
         fHostSessionList->SetCapabilityForHost(
             fServerConnection.GetImapServerKey(), 
@@ -2268,7 +2266,6 @@ struct mailbox_spec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const 
 			nsIMAPNamespace *ns = nsnull;
 			if (serverKey && fHostSessionList)
 			{
-                const char* userName = fServerConnection.GetImapUserName();
 				fHostSessionList->GetNamespaceForMailboxForHost(serverKey, mailboxNameToConvert, ns);	// for
                                                                 // delimiter
 			}
