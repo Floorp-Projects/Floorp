@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.111 $ ';
+$::UtilsVersion = '$Revision: 1.112 $ ';
 
 package TinderUtils;
 
@@ -913,11 +913,13 @@ sub run_all_tests {
 	#   BUILD_MAIL_SMOKETEST=1 set in environment
 	#   $Settings::CleanProfile = 0
 	#
-	# 1) Create pop account qatest03/Ne!s-pe
-	# 2) cp http://www.mozilla.org/mailnews/bloat_Inbox to profile
-	# 3) mozilla -P <profile> -mail
-	# 4) timeout
-	# 5) exit on success
+	# Manual steps for this test:
+	# 1) Createpop account qatest03/Ne!s-pe
+	# 2) Login to this mail account, type in password, and select
+	#    "remember password with password manager".
+	# 3) Add first recipient of new Inbox to AB, select "receives plaintext"
+	# 4) If mail send fails, sometimes nsmail-2 flakes, may need
+	#    an occasional machine reboot.
 	#
     if ($Settings::MailBloatTest and $test_result eq 'success') {
 
