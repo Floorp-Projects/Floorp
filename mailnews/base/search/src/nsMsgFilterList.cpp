@@ -200,9 +200,9 @@ nsMsgFilterList::GetLogFileSpec(nsIFileSpec **aFileSpec)
     rv = filterLogFile->FromFileSpec(thisFolder);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    // XXX todo
-    // do we need to call NS_MsgHashIfNecessary()
-    // I'm thinking of the mac, with a long newsgroup name
+    // NOTE:
+    // we don't we need to call NS_MsgHashIfNecessary()
+    // it's already been hashed, if necessary
     nsXPIDLCString filterLogName;
     rv = filterLogFile->GetLeafName(getter_Copies(filterLogName));
     NS_ENSURE_SUCCESS(rv,rv);
