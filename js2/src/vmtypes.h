@@ -42,6 +42,7 @@
 namespace JavaScript {
 namespace VM {
 
+    using JSTypes::JSValue;
     using JSTypes::JSValues;
     using JSTypes::JSString;
 
@@ -51,11 +52,13 @@ namespace VM {
         BITNOT, /* dest, source */
         BRANCH, /* target label */
         BRANCH_EQ, /* target label, condition */
+        BRANCH_FALSE, /* target label, condition */
         BRANCH_GE, /* target label, condition */
         BRANCH_GT, /* target label, condition */
         BRANCH_LE, /* target label, condition */
         BRANCH_LT, /* target label, condition */
         BRANCH_NE, /* target label, condition */
+        BRANCH_TRUE, /* target label, condition */
         CALL, /* result, target, args */
         COMPARE_EQ, /* dest, source */
         COMPARE_GE, /* dest, source */
@@ -65,13 +68,15 @@ namespace VM {
         COMPARE_LT, /* dest, source */
         COMPARE_NE, /* dest, source */
         DIVIDE, /* dest, source1, source2 */
-        GET_ELEMENT, /* dest, array, index */
+        ELEM_XCR, /* dest, base, index, value */
+        GET_ELEMENT, /* dest, base, index */
         GET_PROP, /* dest, object, prop name */
         INSTANCEOF, /* dest, source */
         JSR, /* target */
         LOAD_IMMEDIATE, /* dest, immediate value (double) */
         LOAD_NAME, /* dest, name */
         LOAD_STRING, /* dest, immediate value (string) */
+        LOAD_VALUE, /* dest, immediate value (JSValue) */
         MOVE, /* dest, source */
         MULTIPLY, /* dest, source1, source2 */
         NAME_XCR, /* dest, name, value */
@@ -88,13 +93,14 @@ namespace VM {
         RETURN_VOID, /* Return without a value */
         RTS, /* Return to sender */
         SAVE_NAME, /* name, source */
-        SET_ELEMENT, /* base, source1, source2 */
+        SET_ELEMENT, /* base, index, value */
         SET_PROP, /* object, name, source */
         SHIFTLEFT, /* dest, source1, source2 */
         SHIFTRIGHT, /* dest, source1, source2 */
         STRICT_EQ, /* dest, source */
         STRICT_NE, /* dest, source */
         SUBTRACT, /* dest, source1, source2 */
+        TEST, /* dest, source */
         THROW, /* exception value */
         TRYIN, /* catch target, finally target */
         TRYOUT, /* mmm, there is no try, only do */
@@ -114,11 +120,13 @@ namespace VM {
         "BITNOT        ",
         "BRANCH        ",
         "BRANCH_EQ     ",
+        "BRANCH_FALSE  ",
         "BRANCH_GE     ",
         "BRANCH_GT     ",
         "BRANCH_LE     ",
         "BRANCH_LT     ",
         "BRANCH_NE     ",
+        "BRANCH_TRUE   ",
         "CALL          ",
         "COMPARE_EQ    ",
         "COMPARE_GE    ",
@@ -128,6 +136,7 @@ namespace VM {
         "COMPARE_LT    ",
         "COMPARE_NE    ",
         "DIVIDE        ",
+        "ELEM_XCR      ",
         "GET_ELEMENT   ",
         "GET_PROP      ",
         "INSTANCEOF    ",
@@ -135,6 +144,7 @@ namespace VM {
         "LOAD_IMMEDIATE",
         "LOAD_NAME     ",
         "LOAD_STRING   ",
+        "LOAD_VALUE    ",
         "MOVE          ",
         "MULTIPLY      ",
         "NAME_XCR      ",
@@ -158,6 +168,7 @@ namespace VM {
         "STRICT_EQ     ",
         "STRICT_NE     ",
         "SUBTRACT      ",
+        "TEST          ",
         "THROW         ",
         "TRYIN         ",
         "TRYOUT        ",
@@ -188,11 +199,7 @@ namespace VM {
             return f;
         }
         
-        ICodeOp getBranchOp()
-        {
-            return ((mOpcode >= COMPARE_EQ) && (mOpcode <= COMPARE_NE)) ?
-              (ICodeOp)(BRANCH_EQ + (mOpcode - COMPARE_EQ)) : NOP;
-        }
+        ICodeOp getBranchOp();
         
         ICodeOp op() { return mOpcode; }
         
@@ -445,6 +452,15 @@ namespace VM {
         /* print() and printOperands() inherited from GenericBranch */
     };
 
+    class BranchFalse : public GenericBranch {
+    public:
+        /* target label, condition */
+        BranchFalse (Label* aOp1, Register aOp2) :
+            GenericBranch
+            (BRANCH_FALSE, aOp1, aOp2) {};
+        /* print() and printOperands() inherited from GenericBranch */
+    };
+
     class BranchGE : public GenericBranch {
     public:
         /* target label, condition */
@@ -487,6 +503,15 @@ namespace VM {
         BranchNE (Label* aOp1, Register aOp2) :
             GenericBranch
             (BRANCH_NE, aOp1, aOp2) {};
+        /* print() and printOperands() inherited from GenericBranch */
+    };
+
+    class BranchTrue : public GenericBranch {
+    public:
+        /* target label, condition */
+        BranchTrue (Label* aOp1, Register aOp2) :
+            GenericBranch
+            (BRANCH_TRUE, aOp1, aOp2) {};
         /* print() and printOperands() inherited from GenericBranch */
     };
 
@@ -576,6 +601,22 @@ namespace VM {
             Arithmetic
             (DIVIDE, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Arithmetic */
+    };
+
+    class ElemXcr : public Instruction_4<Register, Register, Register, double> {
+    public:
+        /* dest, base, index, value */
+        ElemXcr (Register aOp1, Register aOp2, Register aOp3, double aOp4) :
+            Instruction_4<Register, Register, Register, double>
+            (ELEM_XCR, aOp1, aOp2, aOp3, aOp4) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[ELEM_XCR] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << "R" << mOp3 << ", " << mOp4;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2] << ", " << "R" << mOp3 << '=' << registers[mOp3];
+            return f;
+        }
     };
 
     class GetElement : public Instruction_3<Register, Register, Register> {
@@ -674,6 +715,22 @@ namespace VM {
             (LOAD_STRING, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[LOAD_STRING] << "\t" << "R" << mOp1 << ", " << "'" << *mOp2 << "'";
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << '=' << registers[mOp1];
+            return f;
+        }
+    };
+
+    class LoadValue : public Instruction_2<Register, JSValue> {
+    public:
+        /* dest, immediate value (JSValue) */
+        LoadValue (Register aOp1, JSValue aOp2) :
+            Instruction_2<Register, JSValue>
+            (LOAD_VALUE, aOp1, aOp2) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[LOAD_VALUE] << "\t" << "R" << mOp1 << ", " << mOp2;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -989,6 +1046,22 @@ namespace VM {
             Arithmetic
             (SUBTRACT, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Arithmetic */
+    };
+
+    class Test : public Instruction_2<Register, Register> {
+    public:
+        /* dest, source */
+        Test (Register aOp1, Register aOp2) :
+            Instruction_2<Register, Register>
+            (TEST, aOp1, aOp2) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[TEST] << "\t" << "R" << mOp1 << ", " << "R" << mOp2;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
+            return f;
+        }
     };
 
     class Throw : public Instruction_1<Register> {
