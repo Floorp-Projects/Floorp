@@ -90,7 +90,7 @@ public:
   NS_IMETHOD GetDocShell(nsIDocShell **aDocShell);
   NS_IMETHOD Destroy();
 
-  PRInt32    GetDocShellChildren(nsIDocShellTreeNode *aParentNode);
+  PRInt32    GetDocShellChildCount(nsIDocShellTreeNode *aParentNode);
 
 protected:
   nsresult GetPresContext(nsIPresContext **aPresContext);
@@ -279,7 +279,7 @@ nsFrameLoader::Destroy()
  *  Count the total number of docshell children in each page.
  */
 PRInt32
-nsFrameLoader::GetDocShellChildren(nsIDocShellTreeNode* aParentNode)
+nsFrameLoader::GetDocShellChildCount(nsIDocShellTreeNode* aParentNode)
 {
   PRInt32 retval = 1;
 
@@ -291,7 +291,7 @@ nsFrameLoader::GetDocShellChildren(nsIDocShellTreeNode* aParentNode)
     nsCOMPtr<nsIDocShellTreeItem> child;
     aParentNode->GetChildAt(i,getter_AddRefs(child));
     nsCOMPtr<nsIDocShellTreeNode> childAsNode(do_QueryInterface(child));
-    retval += GetDocShellChildren(childAsNode);
+    retval += GetDocShellChildCount(childAsNode);
   }
     
   return retval;
@@ -380,7 +380,7 @@ nsFrameLoader::EnsureDocShell()
     nsCOMPtr<nsIDocShellTreeNode> rootNode(do_QueryInterface(root));
 
     PRInt32  childrenCount;
-    childrenCount = GetDocShellChildren(rootNode);
+    childrenCount = GetDocShellChildCount(rootNode);
 
     if(childrenCount >= MAX_NUMBER_DOCSHELLS) {
       NS_WARNING("Too many docshell (recursion?) so giving up");
