@@ -1516,6 +1516,17 @@ failed:
     if (f[0] == NULL) {
         goto failed;
     }
+#ifdef _PR_CONNECT_DOES_NOT_BIND
+    /*
+     * If connect does not implicitly bind the socket (e.g., on
+     * BeOS), we have to bind the socket so that we can get its
+     * port with getsockname later.
+     */
+    PR_InitializeNetAddr(PR_IpAddrLoopback, 0, &selfAddr);
+    if (PR_Bind(f[0], &selfAddr) == PR_FAILURE) {
+        goto failed;
+    }
+#endif
     PR_InitializeNetAddr(PR_IpAddrLoopback, port, &selfAddr);
 
     /*
