@@ -76,7 +76,7 @@ nsBaseWidget::nsBaseWidget() :
     mAppShell      = nsnull;
     mMouseListener = nsnull;
     mEventListener = nsnull;
-    mMenuListener  = nsnull;
+    /*mMenuListener  = nsnull;*/
     mClientData    = nsnull;
     mContext       = nsnull;
     mCursor        = eCursor_standard;
