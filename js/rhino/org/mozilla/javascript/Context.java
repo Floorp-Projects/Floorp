@@ -598,7 +598,7 @@ public final class Context {
                                  "NativeString",        "NativeBoolean", 
                                  "NativeNumber",        "NativeDate", 
                                  "NativeMath",          "NativeCall", 
-                                 "NativeClosure",       "NativeWith", 
+                                 "NativeWith", 
                                  "regexp.NativeRegExp", "NativeScript"                                 
                                };
             for (int i=0; i < classes.length; i++) {
