@@ -295,7 +295,7 @@ lo_FormatObject(MWContext* context, lo_DocState* state, PA_Tag* tag)
 		}
 #endif /* if 0 */
 
-		if (XP_STRNCASECMP(str, "builtin", 7) == 0)
+		if (XP_STRNCASECMP(str, "builtin/", 8) == 0)
 		{
 			if (type == LO_NONE)
 				type = LO_BUILTIN;
