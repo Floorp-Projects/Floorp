@@ -49,6 +49,7 @@
 #include "nsEnumeratorUtils.h"
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
+#include "mozcontainer.h"
 
 #include "prmem.h"
 #include "prlink.h"
@@ -106,6 +107,28 @@ DECL_FUNC_PTR(gtk_file_filter_new);
 DECL_FUNC_PTR(gtk_file_filter_add_pattern);
 DECL_FUNC_PTR(gtk_file_filter_set_name);
 
+static GtkWindow *
+get_gtk_window_for_nsiwidget(nsIWidget *widget)
+{
+  // Get native GdkWindow
+  GdkWindow *gdk_win = GDK_WINDOW(widget->GetNativeData(NS_NATIVE_WIDGET));
+  if (!gdk_win)
+    return NULL;
+
+  // Get the container
+  gpointer user_data = NULL;
+  gdk_window_get_user_data(gdk_win, &user_data);
+  if (!user_data)
+    return NULL;
+
+  // Make sure its really a container
+  MozContainer *parent_container = MOZ_CONTAINER(user_data);
+  if (!parent_container)
+    return NULL;
+
+  // Get its toplevel
+  return GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(parent_container)));
+}
 
 static PRLibrary *
 LoadVersionedLibrary(const char* libName, const char* libVersion)
@@ -420,21 +443,20 @@ nsFilePicker::Show(PRInt16 *aReturn)
   nsXPIDLCString title;
   title.Adopt(ToNewUTF8String(mTitle));
 
-  GtkWidget *parent = (GtkWidget*)mParentWidget->GetNativeData(NS_NATIVE_WIDGET);
+  GtkWindow *parent_widget = get_gtk_window_for_nsiwidget(mParentWidget);
+
   GtkFileChooserAction action = GetGtkFileChooserAction(mMode);
   const gchar *accept_button = (mMode == GTK_FILE_CHOOSER_ACTION_SAVE)
                                ? GTK_STOCK_SAVE : GTK_STOCK_OPEN;
-
   GtkWidget *file_chooser =
-      _gtk_file_chooser_dialog_new(title, GTK_WINDOW(parent), action,
+      _gtk_file_chooser_dialog_new(title, parent_widget, action,
                                    GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                    accept_button, GTK_RESPONSE_ACCEPT,
                                    NULL);
+
   if (mMode == nsIFilePicker::modeOpenMultiple) {
     _gtk_file_chooser_set_select_multiple (GTK_FILE_CHOOSER(file_chooser), TRUE);
-  }
-
-  if (mMode == nsIFilePicker::modeSave) {
+  } else if (mMode == nsIFilePicker::modeSave) {
     char *default_filename = ToNewUTF8String(mDefault);
     _gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(file_chooser),
                                        NS_STATIC_CAST(const gchar*, default_filename));
@@ -457,43 +479,20 @@ nsFilePicker::Show(PRInt16 *aReturn)
 
   PRInt32 count = mFilters.Count();
   for (PRInt32 i = 0; i < count; ++i) {
-    GtkFileFilter *filter = _gtk_file_filter_new ();
-
     // This is fun... the GTK file picker does not accept a list of filters
     // so we need to split out each string, and add it manually.
-    nsCAutoString pattern_list;
-    pattern_list.Assign(*mFilters[i]);
-    nsCString::const_iterator start, end, cur;
-    pattern_list.BeginReading(start);
-    pattern_list.EndReading(end);
 
-    cur = start;
-    while (cur != end) {
-      // Look for our delimiter of '; ' (semi-colon space)
-      if (*cur == ';') {
-        ++cur;
-        if (*cur != ' ') {
-          NS_ERROR("The supplied filter is invalid.  Go read nsIFilePicker.");
-          #ifdef DEBUG
-          printf("The ill eagle filter: %s\n", mFilters[i]->get());
-          #endif
-          break;
-        }
-        --cur;
-        const char* pattern = ToNewCString(Substring(start, cur));
-        _gtk_file_filter_add_pattern(filter, pattern);
-        nsMemory::Free((void*)pattern);
-        ++cur; ++cur;
-        start = cur;
-      }
-
-      ++cur;
+    char **patterns = g_strsplit(mFilters[i]->get(), ";", -1);
+    if (!patterns) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    // Finally add the last one
-    const char *pattern = ToNewCString(Substring(start, end));
-    _gtk_file_filter_add_pattern(filter, pattern);
-    nsMemory::Free((void*)pattern);
+    GtkFileFilter *filter = _gtk_file_filter_new ();
+    for (int j = 0; patterns[j] != NULL; ++j) {
+      _gtk_file_filter_add_pattern (filter, g_strstrip (patterns[j]));
+    }
+
+    g_strfreev(patterns);
 
     if (!mFilterNames[i]->IsEmpty()) {
       // If we have a name for our filter, let's use that.
@@ -505,7 +504,7 @@ nsFilePicker::Show(PRInt16 *aReturn)
       _gtk_file_filter_set_name (filter, filter_pattern);
     }
 
-    _gtk_file_chooser_add_filter ((GtkFileChooser*) (file_chooser), filter);
+    _gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (file_chooser), filter);
   }
 
   gint response = gtk_dialog_run (GTK_DIALOG (file_chooser));

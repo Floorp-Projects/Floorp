@@ -264,7 +264,11 @@ function (compMgr, fileSpec, location, type)
 
     compMgr.registerFactoryLocation(FILEPICKER_CID,
                                     "FilePicker JS Component",
+#ifndef MOZ_WIDGET_GTK2
                                     FILEPICKER_CONTRACTID,
+#else
+                                    "",
+#endif
                                     fileSpec,
                                     location,
                                     type);
