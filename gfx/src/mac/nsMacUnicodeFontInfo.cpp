@@ -41,8 +41,6 @@
 #include "prmem.h"
 #include <Fonts.h>
 
-#if TARGET_CARBON
-
 //#define DEBUG_TRUE_TYPE
 #include "nsICharRepresentable.h"
 #include "nsCompressedCharMap.h"
@@ -491,17 +489,3 @@ void nsMacUnicodeFontInfo::FreeGlobal()
   if (gCCMap)
     FreeCCMap(gCCMap);
 }
-
-#else // TARGET_CARBON
-
-PRBool nsMacUnicodeFontInfo::HasGlyphFor(PRUnichar aChar)
-{
-  return PR_FALSE;
-}
-void nsMacUnicodeFontInfo::FreeGlobal()
-{
-}
-
-#endif
-
-
