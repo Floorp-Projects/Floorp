@@ -455,8 +455,8 @@ PRInt32 main(PRInt32 argc,char **argv, char **envp)
   PR_fprintf(PR_STDOUT,"   Subject:         %s\n",ss_subject);
 
   PR_fprintf(PR_STDOUT,"   Valid:           from %s to %s\n",
-	     c==NULL?"???":DER_UTCDayToAscii(&c->validity.notBefore),
-	     c==NULL?"???":DER_UTCDayToAscii(&c->validity.notAfter));
+	     c==NULL?"???":DER_TimeChoiceDayToAscii(&c->validity.notBefore),
+	     c==NULL?"???":DER_TimeChoiceDayToAscii(&c->validity.notAfter));
 
 #ifdef SSLTELNET
 
