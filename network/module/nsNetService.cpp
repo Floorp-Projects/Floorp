@@ -860,7 +860,7 @@ nsNetlibService::SetProxyHTTP(nsString& aProxyHTTP) {
         return NS_OK;
     }
 
-    if ( (colonIdx = aProxyHTTP.Find(colon)) < 0 )
+    if ( (colonIdx = aProxyHTTP.FindChar(colon)) < 0 )
         return NS_FALSE;
 
     aProxyHTTP.Left(nsSProxy, colonIdx);
@@ -964,7 +964,7 @@ nsNetlibService::SetCustomUserAgent(nsString aCustom)
 
     nsString newAppVersion = XP_AppVersion;
 
-    inIdx = newAppVersion.Find(inChar);
+    inIdx = newAppVersion.FindChar(inChar);
     if (0 > inIdx) {
         newAppVersion.Insert(aCustom, inIdx + 1);
     }
@@ -1074,7 +1074,7 @@ nsNetlibService::CreateURL(nsIURI* *aURL,
                            nsILoadGroup* aGroup)
 {
     nsAutoString protoName;
-    PRInt32 pos = aSpec.Find(':');
+    PRInt32 pos = aSpec.FindChar(':');
     if (pos >= 0) {
         aSpec.Left(protoName, pos);
     }

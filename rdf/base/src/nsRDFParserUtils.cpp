@@ -210,14 +210,14 @@ static const char kApostrophe = '\'';
 
     offset = aSource.Find(aAttribute);
     if (-1 != offset) {
-        offset = aSource.Find('=', offset);
+        offset = aSource.FindChar('=', PR_FALSE,offset);
 
         PRUnichar next = aSource.CharAt(++offset);
         if (kQuote == next) {
-            endOffset = aSource.Find(kQuote, ++offset);
+            endOffset = aSource.FindChar(kQuote, PR_FALSE,++offset);
         }
         else if (kApostrophe == next) {
-            endOffset = aSource.Find(kApostrophe, ++offset);	  
+            endOffset = aSource.FindChar(kApostrophe, PR_FALSE,++offset);	  
         }
   
         if (-1 != endOffset) {

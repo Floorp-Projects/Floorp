@@ -753,7 +753,7 @@ static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aPa
 {
   aType.Truncate();
   aParams.Truncate();
-  PRInt32 semiIndex = aValue.Find(PRUnichar(';'));
+  PRInt32 semiIndex = aValue.FindChar(PRUnichar(';'));
   if (-1 != semiIndex) {
     aValue.Left(aType, semiIndex);
     aValue.Right(aParams, (aValue.Length() - semiIndex) - 1);

@@ -482,7 +482,7 @@ nsRDFContentUtils::MakeElementURI(nsIDocument* aDocument, const nsString& aEleme
     // Convert an element's ID to a URI that can be used to refer to
     // the element in the XUL graph.
 
-    if (aElementID.Find(':') > 0) {
+    if (aElementID.FindChar(':') > 0) {
         // Assume it's absolute already. Use as is.
         aURI = aElementID;
     }

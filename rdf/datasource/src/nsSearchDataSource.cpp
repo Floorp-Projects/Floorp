@@ -1404,13 +1404,13 @@ SearchDataSource::GetInputs(nsString data, nsString text, nsString &input)
 			PRInt32	nameOffset = line.Find("name", PR_TRUE);
 			if (nameOffset >= 0)
 			{
-				PRInt32 equal = line.Find(PRUnichar('='), nameOffset);
+				PRInt32 equal = line.FindChar(PRUnichar('='), nameOffset);
 				if (equal >= 0)
 				{
-					PRInt32	startQuote = line.Find(PRUnichar('\"'), equal + 1);
+					PRInt32	startQuote = line.FindChar(PRUnichar('\"'), equal + 1);
 					if (startQuote >= 0)
 					{
-						PRInt32	endQuote = line.Find(PRUnichar('\"'), startQuote + 1);
+						PRInt32	endQuote = line.FindChar(PRUnichar('\"'), startQuote + 1);
 						if (endQuote >= 0)
 						{
 							line.Mid(nameAttrib, startQuote+1, endQuote-startQuote-1);
@@ -1437,13 +1437,13 @@ SearchDataSource::GetInputs(nsString data, nsString text, nsString &input)
 			PRInt32	valueOffset = line.Find("value", PR_TRUE);
 			if (valueOffset >= 0)
 			{
-				PRInt32 equal = line.Find(PRUnichar('='), valueOffset);
+				PRInt32 equal = line.FindChar(PRUnichar('='), valueOffset);
 				if (equal >= 0)
 				{
-					PRInt32	startQuote = line.Find(PRUnichar('\"'), equal + 1);
+					PRInt32	startQuote = line.FindChar(PRUnichar('\"'), equal + 1);
 					if (startQuote >= 0)
 					{
-						PRInt32	endQuote = line.Find(PRUnichar('\"'), startQuote + 1);
+						PRInt32	endQuote = line.FindChar(PRUnichar('\"'), startQuote + 1);
 						if (endQuote >= 0)
 						{
 							line.Mid(valueAttrib, startQuote+1, endQuote-startQuote-1);

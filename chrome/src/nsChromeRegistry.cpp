@@ -293,7 +293,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     {
         // There is something to the right of that slash. A provider type must have
         // been specified.
-        slashIndex = restOfURL.Find('/', 1);
+        slashIndex = restOfURL.FindChar('/', PR_FALSE,1);
         if (slashIndex == -1)
 		    slashIndex = restOfURL.Length();
 
