@@ -110,13 +110,13 @@ nsFastLoadService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 # define MASSAGE_BASENAME(bn)   (bn.SetCharAt(nsCRT::ToUpper(bn.CharAt(0)), 0))
 # define PLATFORM_FASL_SUFFIX   " FastLoad File"
 
-#elif defined XP_UNIX
+#elif defined(XP_UNIX) || defined(XP_BEOS)
 
 // Unix format: "<basename>.mfasl".
 # define MASSAGE_BASENAME(bn)   /* nothing */
 # define PLATFORM_FASL_SUFFIX   ".mfasl"
 
-#elif defined XP_WIN
+#elif defined(XP_WIN) || defined(XP_OS2)
 
 // Windows format: "<basename>.mfl".
 # define MASSAGE_BASENAME(bn)   /* nothing */
