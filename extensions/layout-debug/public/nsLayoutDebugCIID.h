@@ -36,15 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsDebugCIID_h__
-#define nsDebugCIID_h__
+#ifndef nsFrameDebugCIID_h__
+#define nsFrameDebugCIID_h__
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 
-#define NS_DEGUG_OBJECT_CID \
-{ 0xb0186a40, 0x5de, 0x11d6, \
-{ 0xa8, 0x76, 0x0, 0x10, 0x5a, 0x18, 0x34, 0x19 } }
+#define NS_FRAME_DEBUG_OBJECT_CID \
+{ 0x698c54f4, 0x4ea9, 0x11d7, \
+{ 0x85, 0x9f, 0x00, 0x03, 0x93, 0x63, 0x65, 0x92 } }
 
-#endif
+#endif // nsFrameDebugCIID_h__
+

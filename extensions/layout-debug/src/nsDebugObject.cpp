@@ -42,13 +42,14 @@
 
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsIFileSpec.h"
 #include "nsIWindowWatcher.h"
 #include "nsVoidArray.h"
 #include "prmem.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIPresShell.h"
+#include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIURI.h"
 #include "nsIDOMHTMLDocument.h"
@@ -61,266 +62,614 @@
 #include "nsIFrameUtil.h"
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
-#include "nsIFile.h"
+#include "nsILocalFile.h"
+#include "nsIPrefService.h"
+#include "nsIViewManager.h"
+#include "nsIView.h"
+#include "nsIStyleSet.h"
 
-NS_IMPL_ISUPPORTS1(nsDebugObject, nsIDebugObject)
 
-static NS_DEFINE_IID(kFrameUtilCID, NS_FRAME_UTIL_CID);
-static NS_DEFINE_IID(kIFrameUtilIID, NS_IFRAME_UTIL_IID);
 
-/** ---------------------------------------------------
- *  See documentation in nsDebugObject.h
- *	@update 5/16/02 dwc
- */
-nsDebugObject::nsDebugObject() :
-  mRuntimeTestIsOn(PR_FALSE),
-  mPrintAsIs(PR_FALSE),
-  mRuntimeTestId(nsIDebugObject::PRT_RUNTIME_NONE),
-  mFileName(nsnull)
+static NS_DEFINE_CID(kFrameUtilCID, NS_FRAME_UTIL_CID);
+static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
+
+
+nsDebugObject::nsDebugObject()
 {
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsDebugObject.h
- *	@update 5/16/02 dwc
- */
 nsDebugObject::~nsDebugObject() 
 {
-  if (mFileName) {
-    nsMemory::Free(mFileName);
-  }
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsDebugObject.h
- *	@update 5/16/02 dwc
- */
-NS_IMETHODIMP
-nsDebugObject::CreateDirectory( const PRUnichar *aFilePath, PRUint32 aFlags) 
-{
-  nsresult                rv,result = NS_ERROR_FAILURE;
-  PRBool exists =         PR_TRUE;
+NS_IMPL_ISUPPORTS1(nsDebugObject, nsIFrameDebugObject)
 
-  nsCString dirStr;
-  dirStr.AssignWithConversion(aFilePath);
-  nsCOMPtr<nsIFile> localFile;
-  rv = NS_GetFileFromURLSpec(dirStr, getter_AddRefs(localFile));
-  if ( NS_SUCCEEDED(rv) ) {
-    rv = localFile->Exists(&exists);
-    if (!exists){
-      rv = localFile->Create(nsIFile::DIRECTORY_TYPE, 0600);
-      if (NS_FAILED(rv)) {
-        printf("Failed to create directory [%s]\n", NS_LossyConvertUCS2toASCII(nsAutoString(aFilePath)).get());
-      }
-    } else {
-      printf("OK - Directory Exists [%s]\n", NS_LossyConvertUCS2toASCII(nsAutoString(aFilePath)).get());
-    }
-  } else {
-    printf("Failed to init path for local file in CreateDirectory [%s]\n", NS_LossyConvertUCS2toASCII(nsAutoString(aFilePath)).get());
-  }
-    
-  return result;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsDebugObject.h
- *	@update 5/16/02 dwc
- */
 NS_IMETHODIMP
-nsDebugObject::OutputTextToFile(PRBool aNewFile, const PRUnichar *aFilePath, const PRUnichar *aFileName, const PRUnichar *aOutputString) 
+nsDebugObject::OutputTextToFile(nsILocalFile *aFile, PRBool aTruncateFile, const char *aOutputString) 
 {
-  nsresult      result = NS_ERROR_FAILURE;
-  nsCAutoString outputPath;
-  outputPath.AssignWithConversion(aFilePath);
-  outputPath.AppendWithConversion(aFileName);
-  char* filePath = ToNewCString(outputPath);
-  FILE* fp;
-  
-  if ( aNewFile ) {
-    fp = fopen(filePath, "wt");
-  } else {
-    fp = fopen(filePath, "at");
+  NS_ENSURE_ARG(aOutputString);
+
+  FILE* fp = stdout;
+  if (aFile)
+  {
+    const char* options = (aTruncateFile) ? "wt" : "at";
+    nsresult rv = aFile->OpenANSIFileDesc(options, &fp);
+    if (NS_FAILED(rv)) return rv;
   }
 
-  if ( fp ) {
-    nsCAutoString outputString;
-    outputString.AssignWithConversion(aOutputString);
-    char* theOutput = ToNewCString(outputString);
-    fprintf(fp,theOutput);
-    fprintf(fp,"\n");
+  fprintf(fp, aOutputString);
+  fprintf(fp, "\n");
+  if (fp != stdout)
     fclose(fp);
-    delete filePath;
-  }
-  return result;
+  return NS_OK;
 }
 
 
-
-/** ---------------------------------------------------
- *  See documentation in nsDebugObject.h
- *	@update 5/16/02 dwc
- */
 NS_IMETHODIMP
-nsDebugObject::DumpContent(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, PRUint32 aFlags) 
+nsDebugObject::DumpFrameModel(nsIDOMWindow *aWindowToDump, nsILocalFile *aDestFile, PRUint32 aFlagsMask, PRInt32 *aResult) 
 {
-nsresult    result = NS_ERROR_NOT_AVAILABLE;
-PRUint32    busyFlags;
-PRBool      stillLoading;
+  NS_ENSURE_ARG(aWindowToDump);
+  NS_ENSURE_ARG_POINTER(aResult);
 
-  nsCOMPtr<nsIDOMWindowInternal> theInternWindow(do_QueryInterface(aWindow));
-  if (theInternWindow) {
+  nsresult    rv = NS_ERROR_NOT_AVAILABLE;
+  PRUint32    busyFlags;
+  PRBool      stillLoading;
+
+  *aResult = DUMP_RESULT_ERROR;
+  
+  nsCOMPtr<nsIDocShell> docShell;
+  rv = GetDocShellFromWindow(aWindowToDump, getter_AddRefs(docShell));
+  if (NS_FAILED(rv)) return rv;
+
+  // find out if the document is loaded
+  docShell->GetBusyFlags(&busyFlags);
+  stillLoading = busyFlags && (nsIDocShell::BUSY_FLAGS_BUSY | nsIDocShell::BUSY_FLAGS_PAGE_LOADING);
+  if (stillLoading)
+  {
+    *aResult = DUMP_RESULT_LOADING;
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIPresShell> presShell;
+  docShell->GetPresShell(getter_AddRefs(presShell));
+
+  nsIFrame*       root;
+  presShell->GetRootFrame(&root);
+
+  nsIFrameDebug*  fdbg;
+  rv = CallQueryInterface(root, &fdbg);
+  if (NS_FAILED(rv)) return rv;
+
+  PRBool  dumpStyle = (aFlagsMask & DUMP_FLAGS_MASK_DUMP_STYLE) != 0;
+
+  FILE* fp = stdout;
+  if (aDestFile)
+  {
+    rv = aDestFile->OpenANSIFileDesc("w", &fp);
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  nsCOMPtr<nsIPresContext> presContext;
+  presShell->GetPresContext(getter_AddRefs(presContext));
+
+  fdbg->DumpRegressionData(presContext, fp, 0, dumpStyle);
+  if (fp != stdout)
+    fclose(fp);
+
+  *aResult = DUMP_RESULT_COMPLETED;
+  return NS_OK;
+}
+
+/* void dumpContent (in nsIDOMWindow aWindow, in nsILocalFile aDestFile); */
+NS_IMETHODIMP
+nsDebugObject::DumpContent(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
+{
+  NS_ENSURE_ARG(aWindow);
+
+  nsCOMPtr<nsIDocShell> docShell;
+  nsresult rv = GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
+  if (NS_FAILED(rv)) return rv;
+
+  FILE* fp = stdout;
+  if (aDestFile)
+  {
+    rv = aDestFile->OpenANSIFileDesc("w", &fp);
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  DumpContentRecurse(docShell, fp);
+  DumpMultipleWebShells(aWindow, fp);
+
+  if (fp != stdout)
+    fclose(fp);
+  return NS_OK;
+}
+
+/* void dumpFrames (in nsIDOMWindow aWindow, in nsILocalFile aDestFile); */
+NS_IMETHODIMP
+nsDebugObject::DumpFrames(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
+{
+  NS_ENSURE_ARG(aWindow);
+
+  nsCOMPtr<nsIDocShell> docShell;
+  nsresult rv = GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
+  if (NS_FAILED(rv)) return rv;
+
+  FILE* fp = stdout;
+  if (aDestFile)
+  {
+    rv = aDestFile->OpenANSIFileDesc("w", &fp);
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  DumpFramesRecurse(docShell, fp);
+  DumpMultipleWebShells(aWindow, fp);
+
+  if (fp != stdout)
+    fclose(fp);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDebugObject::DumpViews(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
+{
+  NS_ENSURE_ARG(aWindow);
+
+  nsCOMPtr<nsIDocShell> docShell;
+  nsresult rv = GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
+  if (NS_FAILED(rv)) return rv;
+
+  FILE* fp = stdout;
+  if (aDestFile)
+  {
+    rv = aDestFile->OpenANSIFileDesc("w", &fp);
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  DumpViewsRecurse(docShell, fp);
+  DumpMultipleWebShells(aWindow, fp);
+
+  if (fp != stdout)
+    fclose(fp);
+  return NS_OK;
+}
+
+/* void dumpWebShells (in nsIDOMWindow aWindow, in nsILocalFile aDestFile); */
+NS_IMETHODIMP
+nsDebugObject::DumpWebShells(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
+{
+  NS_ENSURE_ARG(aWindow);
+
+  nsCOMPtr<nsIDocShell> docShell;
+  nsresult rv = GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
+  nsCOMPtr<nsIDocShellTreeItem> shellAsItem(do_QueryInterface(docShell));
+  if (!shellAsItem) return NS_ERROR_FAILURE;
+  
+  FILE* outFile = stdout;
+  if (aDestFile)
+  {
+    rv = aDestFile->OpenANSIFileDesc("w", &outFile);
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  DumpAWebShell(shellAsItem, outFile);
+  if (outFile != stdout)
+    fclose(outFile);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDebugObject::DumpStyleSheets(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
+{
+  NS_ENSURE_ARG(aWindow);
+
+  nsCOMPtr<nsIPresShell> presShell;
+  nsresult rv = GetPresShellFromWindow(aWindow, getter_AddRefs(presShell));
+  if (NS_FAILED(rv)) return rv;
+
+  FILE* outFile = stdout;
+  if (aDestFile)
+  {
+    rv = aDestFile->OpenANSIFileDesc("w", &outFile);
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  nsCOMPtr<nsIStyleSet> styleSet;
+  presShell->GetStyleSet(getter_AddRefs(styleSet));
+  if (styleSet)
+    styleSet->List(outFile);
+  else
+    fputs("null style set\n", outFile);
+
+  if (outFile != stdout)
+    fclose(outFile);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDebugObject::DumpStyleContexts(nsIDOMWindow *aWindow, nsILocalFile *aDestFile)
+{
+  NS_ENSURE_ARG(aWindow);
+
+  nsCOMPtr<nsIPresShell> presShell;
+  nsresult rv = GetPresShellFromWindow(aWindow, getter_AddRefs(presShell));
+  if (NS_FAILED(rv)) return rv;
+
+  FILE* outFile = stdout;
+  if (aDestFile)
+  {
+    rv = aDestFile->OpenANSIFileDesc("w", &outFile);
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  nsCOMPtr<nsIStyleSet> styleSet;
+  presShell->GetStyleSet(getter_AddRefs(styleSet));
+  if (styleSet)
+  {
+    nsIFrame* root;
+    presShell->GetRootFrame(&root);
+    if (root)
+      fputs("null root frame\n", outFile);
+    else
+      styleSet->ListContexts(root, outFile);
+  }
+  else
+    fputs("null style set\n", outFile);
+
+  if (outFile != stdout)
+    fclose(outFile);
+  return NS_OK;
+}
+
+/* void dumpReflowStats (in nsIDOMWindow aWindow, in nsILocalFile aDestFile); */
+NS_IMETHODIMP
+nsDebugObject::DumpReflowStats(nsIDOMWindow *aWindow, nsILocalFile* /* aDestFile */)
+{
+  NS_ENSURE_ARG(aWindow);
+
+  nsCOMPtr<nsIPresShell> presShell;
+  nsresult rv = GetPresShellFromWindow(aWindow, getter_AddRefs(presShell));
+  if (NS_FAILED(rv)) return rv;
+
+#ifdef MOZ_REFLOW_PERF
+  presShell->DumpReflows();
+#else
+  fprintf(stdout, "***********************************\n");
+  fprintf(stdout, "Sorry, you haven't built with MOZ_REFLOW_PERF=1\n");
+  fprintf(stdout, "***********************************\n");
+#endif
+
+  return  NS_OK;
+}
+
+NS_IMETHODIMP
+nsDebugObject::CompareFrameModels(nsILocalFile *aBaseFile, nsILocalFile *aVerFile, PRUint32 aFlags, PRInt32 *aResult) 
+{
+  NS_ENSURE_ARG(aBaseFile);
+  NS_ENSURE_ARG(aVerFile);
+  NS_ENSURE_ARG_POINTER(aResult);
+  
+  *aResult = NS_OK;
+  
+  nsresult rv;
+  FILE* baseFile;
+  rv = aBaseFile->OpenANSIFileDesc("r", &baseFile);
+  if (NS_FAILED(rv)) return rv;
+
+  FILE* verFile;
+  rv = aVerFile->OpenANSIFileDesc("r", &verFile);
+  if (NS_FAILED(rv)) {
+    fclose(baseFile);
+    return rv;
+  }
+
+  nsCOMPtr<nsIFrameUtil> frameUtil = do_CreateInstance(kFrameUtilCID, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    PRInt32 outputLevel = (aFlags == COMPARE_FLAGS_VERBOSE) ? 0 : 1;
+    rv = frameUtil->CompareRegressionData(baseFile, verFile, outputLevel);
+  }
+  fclose(verFile);          
+  fclose(baseFile);
+
+  *aResult = NS_FAILED(rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDebugObject::GetShowFrameBorders(PRBool *aShowFrameBorders)
+{
+  NS_ENSURE_ARG_POINTER(aShowFrameBorders);
+  NS_ENSURE_SUCCESS(EnsureLayoutDebugger(), NS_ERROR_FAILURE);
+  return mLayoutDebugger->GetShowFrameBorders(aShowFrameBorders);
+}
+
+NS_IMETHODIMP
+nsDebugObject::SetShowFrameBorders(PRBool aShowFrameBorders)
+{
+  NS_ENSURE_SUCCESS(EnsureLayoutDebugger(), NS_ERROR_FAILURE);
+  nsresult rv = mLayoutDebugger->SetShowFrameBorders(aShowFrameBorders);
+  RefreshAllWindows();
+  return rv;
+}
+
+NS_IMETHODIMP
+nsDebugObject::GetShowEventTargetFrameBorder(PRBool *aShowEventTargetFrameBorder)
+{
+  NS_ENSURE_ARG_POINTER(aShowEventTargetFrameBorder);
+  NS_ENSURE_SUCCESS(EnsureLayoutDebugger(), NS_ERROR_FAILURE);
+  return mLayoutDebugger->GetShowEventTargetFrameBorder(aShowEventTargetFrameBorder);
+}
+
+NS_IMETHODIMP
+nsDebugObject::SetShowEventTargetFrameBorder(PRBool aShowEventTargetFrameBorder)
+{
+  NS_ENSURE_SUCCESS(EnsureLayoutDebugger(), NS_ERROR_FAILURE);
+  nsresult rv = mLayoutDebugger->SetShowEventTargetFrameBorder(aShowEventTargetFrameBorder);
+  RefreshAllWindows();
+  return rv;
+}
+
+NS_IMETHODIMP
+nsDebugObject::SetShowReflowStats(nsIDOMWindow *aWindow, PRBool inShow)
+{
+  nsCOMPtr<nsIPresShell> presShell;
+  nsresult rv = GetPresShellFromWindow(aWindow, getter_AddRefs(presShell));
+  if (NS_FAILED(rv)) return rv;
+  
+#ifdef MOZ_REFLOW_PERF
+  presShell->SetPaintFrameCount(inShow);
+#else
+  printf("***********************************************\n");
+  printf("Sorry, you haven't built with MOZ_REFLOW_PERF=1\n");
+  printf("***********************************************\n");
+#endif
+
+  return NS_OK;
+}
+
+nsresult
+nsDebugObject::EnsureLayoutDebugger()
+{
+  if (!mLayoutDebugger)
+  {
+    nsresult rv;
+    mLayoutDebugger = do_CreateInstance(kLayoutDebuggerCID, &rv);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+  
+  return NS_OK;
+}
+
+nsresult
+nsDebugObject::RefreshAllWindows()
+{
+  nsresult rv;
+  // hack. Toggle the underline links pref to get stuff to redisplay
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefBranch)
+  {
+    PRBool underlineLinksPref;
+    rv = prefBranch->GetBoolPref("browser.underline_anchors", &underlineLinksPref);
+    if (NS_SUCCEEDED(rv))
+    {
+      prefBranch->SetBoolPref("browser.underline_anchors", !underlineLinksPref);
+      prefBranch->SetBoolPref("browser.underline_anchors", underlineLinksPref);
+    }
+  }
+  return NS_OK;
+}
+
+
+nsresult
+nsDebugObject::GetDocShellFromWindow(nsIDOMWindow* inWindow, nsIDocShell** outShell)
+{
+  nsCOMPtr<nsIScriptGlobalObject> scriptObj(do_QueryInterface(inWindow));
+  if (!scriptObj) return NS_ERROR_FAILURE;
+  
+  return scriptObj->GetDocShell(outShell);
+}
+
+
+nsresult
+nsDebugObject::GetPresShellFromWindow(nsIDOMWindow* inWindow, nsIPresShell** outShell)
+{
+  nsCOMPtr<nsIDocShell> docShell;
+  GetDocShellFromWindow(inWindow, getter_AddRefs(docShell));
+  if (!docShell) return NS_ERROR_FAILURE;
+
+  nsresult rv =  docShell->GetPresShell(outShell);
+  if (NS_FAILED(rv)) return rv;
+  if (!*outShell) return NS_ERROR_FAILURE;
+  
+  return NS_OK;
+}
+
+#if 0
+#pragma mark -
+#endif
+
+void 
+nsDebugObject::DumpMultipleWebShells(nsIDOMWindow* aWindow, FILE* aOut)
+{
+  nsCOMPtr<nsIDocShell> docShell;
+  GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
+  if (!docShell) return;
+
+  PRInt32 count;
+  nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(docShell));
+  if (docShellAsNode) {
+    docShellAsNode->GetChildCount(&count);
+    if (count > 0) {
+      nsCOMPtr<nsIDocShellTreeItem> docShellAsStupidItem(do_QueryInterface(docShell));
+      fprintf(aOut, "webshells= \n");
+      DumpAWebShell(docShellAsStupidItem, aOut);
+    }
+  }
+}
+
+
+void
+nsDebugObject::DumpAWebShell(nsIDocShellTreeItem* aShellItem, FILE* aOut, PRInt32 aIndent)
+{
+  nsXPIDLString name;
+  nsAutoString str;
+  nsCOMPtr<nsIDocShellTreeItem> parent;
+  PRInt32 i;
+
+  for (i = aIndent; --i >= 0; ) fprintf(aOut, "  ");
+
+  fprintf(aOut, "%p '", aShellItem);
+  aShellItem->GetName(getter_Copies(name));
+  aShellItem->GetSameTypeParent(getter_AddRefs(parent));
+  str.Assign(name);
+  fputs(NS_LossyConvertUCS2toASCII(str).get(), aOut);
+  fprintf(aOut, "' parent=%p <\n", parent.get());
+
+  aIndent++;
+  nsCOMPtr<nsIDocShellTreeNode> shellAsNode(do_QueryInterface(aShellItem));
+  
+  PRInt32 numChildren;
+  shellAsNode->GetChildCount(&numChildren);
+  for (i = 0; i < numChildren; i++) {
+    nsCOMPtr<nsIDocShellTreeItem> child;
+    shellAsNode->GetChildAt(i, getter_AddRefs(child));
+    if (child) {
+      DumpAWebShell(child, aOut, aIndent);
+    }
+  }
+  aIndent--;
+  for (i = aIndent; --i >= 0; ) fprintf(aOut, "  ");
+  fputs(">\n", aOut);
+}
+
+
+void
+nsDebugObject::DumpContentRecurse(nsIDocShell* inDocShell, FILE* inDestFile)
+{
+  if (inDocShell)
+  {
+    fprintf(inDestFile, "docshell=%p \n", inDocShell);
     nsCOMPtr<nsIPresShell> presShell;
-    if (theInternWindow != nsnull) {
-      nsIFrameDebug*  fdbg;
-      nsIFrame*       root;
-      nsIPresContext  *thePC;
-
-      nsCOMPtr<nsIScriptGlobalObject> scriptObj(do_QueryInterface(theInternWindow));
-      nsCOMPtr<nsIDocShell> docShell;
-      scriptObj->GetDocShell(getter_AddRefs(docShell));
-
-      // find out if the document is loaded
-      docShell->GetBusyFlags(&busyFlags);
-      stillLoading = busyFlags && (nsIDocShell::BUSY_FLAGS_BUSY | nsIDocShell::BUSY_FLAGS_PAGE_LOADING);
-
-      if ( !stillLoading ) {
-        docShell->GetPresShell(getter_AddRefs(presShell));
-        presShell->GetRootFrame(&root);
-        if (NS_SUCCEEDED(CallQueryInterface(root, &fdbg))) {
-          // create the string for the output
-          nsCAutoString outputPath;
-          outputPath.AssignWithConversion(aFilePath);
-          outputPath.AppendWithConversion(aFileName);
-          char* filePath = ToNewCString(outputPath);
-          PRBool  dumpStyle=PR_FALSE;
-
-          if(aFlags){
-            dumpStyle = PR_TRUE;
-          }
-
-          FILE* fp = fopen(filePath, "wt");
-
-          if ( fp ) {
-            presShell->GetPresContext(&thePC);
-          
-            fdbg->DumpRegressionData(thePC, fp, 0, dumpStyle);
-            fclose(fp);
-            delete filePath;
-            result = NS_OK;    // the document is now loaded, and the frames are dumped.
-          } else {
-
-            result = NS_ERROR_FILE_INVALID_PATH;
-          }
-        }
+    inDocShell->GetPresShell(getter_AddRefs(presShell));
+    if (presShell)
+    {
+      nsCOMPtr<nsIDocument> doc;
+      presShell->GetDocument(getter_AddRefs(doc));
+      if (doc) 
+      {
+        nsCOMPtr<nsIContent> root;
+        doc->GetRootContent(getter_AddRefs(root));
+        if (root)
+          root->List(inDestFile);
       }
     }
-  }
-
-  return result;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsDebugObject.h
- *	@update 5/16/02 dwc
- */
-NS_IMETHODIMP
-nsDebugObject::CompareFrameModels(const PRUnichar *aBasePath, const PRUnichar *aVerifyPath,
-            const PRUnichar *aBaseLineFileName, const PRUnichar *aVerifyFileName, PRUint32 aFlags) 
-{
-nsresult        result = NS_ERROR_FAILURE;
-nsCAutoString   tempString;
-nsCAutoString   verifyFile;
-char*           baselineFilePath; 
-char*           verifyFilePath;
-FILE            *bp,*vp;
-
-
-  tempString.AssignWithConversion(aBasePath);
-  tempString.AppendWithConversion(aBaseLineFileName);
-  baselineFilePath = ToNewCString(tempString);
-
-  tempString.AssignWithConversion(aVerifyPath);
-  tempString.AppendWithConversion(aVerifyFileName);
-  verifyFilePath = ToNewCString(tempString);
-
-  bp = fopen(baselineFilePath, "rt");
-  if (bp) {
-    vp = fopen(verifyFilePath, "rt");
-    if (vp) {
-      nsIFrameUtil* fu;
-      nsresult rv = nsComponentManager::CreateInstance(kFrameUtilCID, nsnull,
-                                          kIFrameUtilIID, (void **)&fu);
-      if (NS_SUCCEEDED(rv)) {
-        result = fu->CompareRegressionData(bp,vp,1);
-      }
-      fclose(vp);          
+    else
+    {
+      fputs("null pres shell\n", inDestFile);
     }
-    fclose(bp);
+
+    // dump the frames of the sub documents
+    nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(inDocShell));
+    PRInt32 numChildren;
+    docShellAsNode->GetChildCount(&numChildren);
+    for (PRInt32 i = 0; i < numChildren; i++)
+    {
+      nsCOMPtr<nsIDocShellTreeItem> child;
+      docShellAsNode->GetChildAt(i, getter_AddRefs(child));
+      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+      if (child)
+        DumpContentRecurse(childAsShell, inDestFile);
+    }
   }
-  delete baselineFilePath;
-  delete verifyFilePath;
-
-  return result;
 }
 
-/* attribute boolean doRuntimeTests; */
-NS_IMETHODIMP 
-nsDebugObject::GetDoRuntimeTests(PRBool *aDoRuntimeTests)
-{
-  NS_ENSURE_ARG_POINTER(aDoRuntimeTests);
-  *aDoRuntimeTests = mRuntimeTestIsOn;
-  return NS_OK;
-}
-NS_IMETHODIMP 
-nsDebugObject::SetDoRuntimeTests(PRBool aDoRuntimeTests)
-{
-  mRuntimeTestIsOn = aDoRuntimeTests;
-  return NS_OK;
-}
 
-/* attribute short testId; */
-NS_IMETHODIMP 
-nsDebugObject::GetTestId(PRInt16 *aTestId)
+void
+nsDebugObject::DumpFramesRecurse(nsIDocShell* aDocShell, FILE* inDestFile)
 {
-  NS_ENSURE_ARG_POINTER(aTestId);
-  *aTestId = mRuntimeTestId;
-  return NS_OK;
-}
-NS_IMETHODIMP 
-nsDebugObject::SetTestId(PRInt16 aTestId)
-{
-  mRuntimeTestId = aTestId;
-  return NS_OK;
-}
+  if (aDocShell)
+  {
+    fprintf(inDestFile, "webshell=%p \n", aDocShell);
+    
+    nsCOMPtr<nsIPresShell> presShell;
+    aDocShell->GetPresShell(getter_AddRefs(presShell));
+    if (presShell)
+    {
+      nsIFrame* root;
+      presShell->GetRootFrame(&root);
+      if (root)
+      {
+        nsCOMPtr<nsIPresContext> presContext;
+        presShell->GetPresContext(getter_AddRefs(presContext));
 
-/* attribute boolean printAsIs; */
-NS_IMETHODIMP 
-nsDebugObject::GetPrintAsIs(PRBool *aPrintAsIs)
-{
-  NS_ENSURE_ARG_POINTER(aPrintAsIs);
-  *aPrintAsIs = mPrintAsIs;
-  return NS_OK;
-}
-NS_IMETHODIMP 
-nsDebugObject::SetPrintAsIs(PRBool aPrintAsIs)
-{
-  mPrintAsIs = aPrintAsIs;
-  return NS_OK;
-}
+        nsIFrameDebug* fdbg;
+        if (NS_SUCCEEDED(CallQueryInterface(root, &fdbg)))
+          fdbg->List(presContext, inDestFile, 0);
+      }
+    }
+    else
+    {
+      fputs("null pres shell\n", inDestFile);
+    }
 
-/* attribute wstring printFileName; */
-NS_IMETHODIMP nsDebugObject::GetPrintFileName(PRUnichar * *aPrintFileName)
-{
-  *aPrintFileName = nsCRT::strdup(mFileName);
-  return NS_OK;
-}
-NS_IMETHODIMP nsDebugObject::SetPrintFileName(const PRUnichar * aPrintFileName)
-{
-  if (mFileName) {
-    nsMemory::Free(mFileName);
+    // dump the frames of the sub documents
+    nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
+    PRInt32 numChildren;
+    docShellAsNode->GetChildCount(&numChildren);
+    for (PRInt32 i = 0; i < numChildren; i++)
+    {
+      nsCOMPtr<nsIDocShellTreeItem> child;
+      docShellAsNode->GetChildAt(i, getter_AddRefs(child));
+      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+      if (childAsShell)
+        DumpFramesRecurse(childAsShell, inDestFile);
+    }
   }
-  mFileName = nsCRT::strdup(aPrintFileName);
-  return NS_OK;
 }
 
+
+
+void
+nsDebugObject::DumpViewsRecurse(nsIDocShell* aDocShell, FILE* inDestFile)
+{
+  if (aDocShell)
+  {
+    fprintf(inDestFile, "webshell=%p \n", aDocShell);
+    
+    nsCOMPtr<nsIPresShell> presShell;
+    aDocShell->GetPresShell(getter_AddRefs(presShell));
+    if (presShell)
+    {
+      nsCOMPtr<nsIViewManager> vm;
+      presShell->GetViewManager(getter_AddRefs(vm));
+      if (vm)
+      {
+        nsIView* root;
+        vm->GetRootView(root);
+        if (root)
+          root->List(inDestFile);
+      }
+    }
+    else
+    {
+      fputs("null pres shell\n", inDestFile);
+    }
+
+    // dump the frames of the sub documents
+    nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
+    PRInt32 numChildren;
+    docShellAsNode->GetChildCount(&numChildren);
+    for (PRInt32 i = 0; i < numChildren; i++)
+    {
+      nsCOMPtr<nsIDocShellTreeItem> child;
+      docShellAsNode->GetChildAt(i, getter_AddRefs(child));
+      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+      if (childAsShell)
+        DumpViewsRecurse(childAsShell, inDestFile);
+    }
+  }
+}
 

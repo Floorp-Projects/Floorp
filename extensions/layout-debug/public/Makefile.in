@@ -26,10 +26,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= debug
+MODULE		= layout_debug
 
 EXPORTS	= \
-	nsDebugCIID.h \
+	nsLayoutDebugCIID.h \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

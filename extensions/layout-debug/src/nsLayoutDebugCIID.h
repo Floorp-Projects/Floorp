@@ -36,26 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nscore.h"
-#include "nsLayoutDebugCIID.h"
-#include "nsIFactory.h"
+#ifndef nsFrameDebugCIID_h__
+#define nsFrameDebugCIID_h__
+
 #include "nsISupports.h"
-#include "nsDebugObject.h"
-#include "nsIGenericFactory.h"
+#include "nsIFactory.h"
+#include "nsIComponentManager.h"
 
+#define NS_FRAME_DEBUG_OBJECT_CID \
+{ 0x698c54f4, 0x4ea9, 0x11d7, \
+{ 0x85, 0x9f, 0x00, 0x03, 0x93, 0x63, 0x65, 0x92 } }
 
+#endif // nsFrameDebugCIID_h__
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDebugObject)
-
-
-
-static const nsModuleComponentInfo components[] =
-{
-  { "nsDebugObject",
-    NS_FRAME_DEBUG_OBJECT_CID,
-    "@mozilla.org/layout_debug/framedebugobject;1",
-    nsDebugObjectConstructor 
-  }
-};
-
-NS_IMPL_NSGETMODULE(nsLayoutDebugModule, components)

@@ -26,11 +26,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= debug
+MODULE		= layout_debug
 DEFINES=-D_IMPL_NS_UI 
 
 XPIDLSRCS	= \
-	    nsIDebugObject.idl \
+	    nsIFrameDebugObject.idl \
 	    $(NULL)
 
 include $(topsrcdir)/config/rules.mk
