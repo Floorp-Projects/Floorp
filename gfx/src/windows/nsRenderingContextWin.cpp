@@ -667,7 +667,10 @@ void nsRenderingContextWin :: PushState(void)
 
     state->mMatrix = mStates->mMatrix;
     state->mLocalClip = mStates->mLocalClip;
-    state->mClipRegion = NULL;
+// we don't want to NULL this out since we reuse the region
+// from state to state. if we NULL it, we need to also delete it,
+// which means we'll just re-create it when we push the clip state. MMP
+//    state->mClipRegion = NULL;
     state->mBrushColor = mStates->mBrushColor;
     state->mSolidBrush = NULL;
     state->mFontMetrics = mStates->mFontMetrics;
