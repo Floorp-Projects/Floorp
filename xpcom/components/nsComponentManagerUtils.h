@@ -242,8 +242,8 @@ do_CreateInstance( const char* aProgID, nsISupports* aOuter, nsresult* error = 0
 	}
 
 /* keys for registry use */
-extern const char xpcomBaseName[];
 extern const char xpcomKeyName[];
+extern const char xpcomComponentsKeyName[];
 extern const char lastModValueName[];
 extern const char fileSizeValueName[];
 extern const char nativeComponentType[];

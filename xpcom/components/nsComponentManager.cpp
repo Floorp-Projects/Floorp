@@ -66,13 +66,12 @@ PRLogModuleInfo* nsComponentManagerLog = NULL;
 #define PRINT_CRITICAL_ERROR_TO_SCREEN
 
 // Common Key Names 
-const char xpcomBaseName[]="XPCOM";
-const char xpcomKeyName[] ="Software/Mozilla/XPCOM";
-const char mozillaKeyName[]="Software/Mozilla";
-const char classesKeyName[]="Classes";
+const char xpcomKeyName[]="software/mozilla/XPCOM";
+const char classesKeyName[]="classes";
 const char classIDKeyName[]="CLSID";
-const char classesClassIDKeyName[]="Classes/CLSID";
-const char componentLoadersKeyName[]="ComponentLoaders";
+const char componentsKeyName[]="components";
+const char componentLoadersKeyName[]="componentLoaders";
+const char xpcomComponentsKeyName[]="software/mozilla/XPCOM/components";
 
 // Common Value Names
 const char classIDValueName[]="CLSID";
@@ -407,20 +406,24 @@ nsComponentManagerImpl::PlatformInit(void)
     if (NS_FAILED(rv)) return rv;
 
     // Check the version of registry. Nuke old versions.
-    PlatformVersionCheck();
+    nsRegistryKey xpcomRoot;
+    rv = PlatformVersionCheck(&xpcomRoot);
+    if (NS_FAILED(rv)) return rv;
 
     // Open common registry keys here to speed access
     // Do this after PlatformVersionCheck as it may re-create our keys
-    rv = mRegistry->AddSubtree(nsIRegistry::Common, xpcomKeyName, &mXPCOMKey);
-    		
+    rv = mRegistry->AddSubtree(xpcomRoot, componentsKeyName, &mXPCOMKey);
     if (NS_FAILED(rv)) return rv;
 
-    rv = mRegistry->AddSubtree(nsIRegistry::Common, classesKeyName, &mClassesKey);
+    rv = mRegistry->AddSubtree(xpcomRoot, classesKeyName, &mClassesKey);
     if (NS_FAILED(rv)) return rv;
 
-    rv = mRegistry->AddSubtree(nsIRegistry::Common, classIDKeyName, &mCLSIDKey);
+    rv = mRegistry->AddSubtree(xpcomRoot, classIDKeyName, &mCLSIDKey);
     if (NS_FAILED(rv)) return rv;
     
+    rv = mRegistry->AddSubtree(xpcomRoot, componentLoadersKeyName, &mLoadersKey);
+    if (NS_FAILED(rv)) return rv;
+
     nsCOMPtr<nsIProperties> directoryService;
     rv = nsDirectoryService::Create(nsnull, 
                                     NS_GET_IID(nsIProperties), 
@@ -460,13 +463,11 @@ nsComponentManagerImpl::PlatformInit(void)
  * the software as defined by NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING
  */
 nsresult
-nsComponentManagerImpl::PlatformVersionCheck()
+nsComponentManagerImpl::PlatformVersionCheck(nsRegistryKey *aXPCOMRootKey)
 {
-
     nsRegistryKey xpcomKey;
     nsresult rv;
     rv = mRegistry->AddSubtree(nsIRegistry::Common, xpcomKeyName, &xpcomKey);
-    		
     if (NS_FAILED(rv)) return rv;
     
     nsXPIDLCString buf;
@@ -482,61 +483,40 @@ nsComponentManagerImpl::PlatformVersionCheck()
                 "Nuking xpcom registry hierarchy.", (const char *)buf,
                 NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING));
 
-        // Delete the XPCOM and CLSID hierarchy
-        nsRegistryKey mozillaKey;
-        rv = mRegistry->GetSubtree(nsIRegistry::Common, mozillaKeyName,
-                                   &mozillaKey);
+        // Delete the XPCOM hierarchy
+        rv = mRegistry->RemoveSubtree(nsIRegistry::Common, xpcomKeyName);
         if(NS_FAILED(rv))
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Failed To Get Subtree (%s)",
-                    mozillaKeyName));         
-        }
-        else
-        {
-            rv = mRegistry->RemoveSubtreeRaw(mozillaKey, xpcomBaseName);
-            if(NS_FAILED(rv))
-            {
-                PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                       ("nsComponentManager: Failed To Nuke Subtree (%s)",xpcomKeyName));
-                return rv;
-            }
+                   ("nsComponentManager: Failed To Nuke Subtree (%s)",xpcomKeyName));
+            return rv;
         }
 
-        rv = mRegistry->GetSubtree(nsIRegistry::Common,classesKeyName, &mozillaKey);
+        // The top-level Classes and CLSID trees are from an early alpha version,
+        // we can probably remove these two deletions after the second beta or so.
+        rv = mRegistry->RemoveSubtree(nsIRegistry::Common, classIDKeyName);
         if(NS_FAILED(rv))
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Failed To Get Subtree (%s)",classesKeyName));
+                   ("nsComponentManager: Failed To Nuke Subtree (%s)",classIDKeyName));
+            // don't return this error!
         }
-        else
+
+        rv = mRegistry->RemoveSubtree(nsIRegistry::Common, classesKeyName);
+        if(NS_FAILED(rv))
         {
-            rv = mRegistry->RemoveSubtreeRaw(mozillaKey, classIDKeyName);
-            if(NS_FAILED(rv))
-            {
-                PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                       ("nsComponentManager: Failed To Nuke Subtree (%s/%s)",classesKeyName,classIDKeyName));
-                return rv;
-            }
+            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+                   ("nsComponentManager: Failed To Nuke Subtree (%s)",classesKeyName));
+            // don't return this error!
         }
-        
-        // Recreate XPCOM and CLSID keys		
+
+        // Recreate XPCOM key and version
         rv = mRegistry->AddSubtree(nsIRegistry::Common,xpcomKeyName, &xpcomKey);
         if(NS_FAILED(rv))
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                    ("nsComponentManager: Failed To Add Subtree (%s)",xpcomKeyName));
             return rv;
-
-        }
-
-        rv = mRegistry->AddSubtree(nsIRegistry::Common,classesClassIDKeyName, NULL);
-        if(NS_FAILED(rv))
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Failed To Add Subtree (%s)",classesClassIDKeyName));
-            return rv;
-
         }
 
         rv = mRegistry->SetStringUTF8(xpcomKey,versionValueName, NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING);
@@ -547,16 +527,18 @@ nsComponentManagerImpl::PlatformVersionCheck()
             return rv;
         }
     }
-    else 
+    else
     {
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("nsComponentManager: platformVersionCheck() passed."));
     }
 
-    rv = mRegistry->AddSubtree(xpcomKey, componentLoadersKeyName,
-                               &mLoadersKey);
-    if (NS_FAILED(rv))
-        return rv;
+
+    // return the XPCOM key (null check deferred so cleanup allways happens)
+    if (!aXPCOMRootKey)
+        return NS_ERROR_NULL_POINTER;
+    else
+        *aXPCOMRootKey = xpcomKey;
 
     return NS_OK;
 }
@@ -574,7 +556,7 @@ nsComponentManagerImpl::PlatformSetFileInfo(nsRegistryKey key, PRUint32 lastModi
  *
  * Stores the dll name, last modified time, size and 0 for number of
  * components in dll in the registry at location
- *		ROOTKEY_COMMON/Software/Netscape/XPCOM/dllname
+ *		ROOTKEY_COMMON/Software/Mozilla/XPCOM/Components/dllname
  */
 nsresult
 nsComponentManagerImpl::PlatformMarkNoComponents(nsDll *dll)

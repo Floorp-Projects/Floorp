@@ -40,7 +40,7 @@ const char jsComponentTypeName[] = "text/javascript";
 /* XXX export properly from libxpcom, for now this will let Mac build */
 const char fileSizeValueName[] = "FileSize";
 const char lastModValueName[] = "LastModTimeStamp";
-const char xpcomKeyName[] = "Software/Mozilla/XPCOM";
+const char xpcomKeyName[] = "software/mozilla/XPCOM/components";
 
 const char kJSRuntimeServiceProgID[] = "nsJSRuntimeService";
 const char kXPConnectServiceProgID[] = "nsIXPConnect";
@@ -351,12 +351,8 @@ mozJSComponentLoader::SetRegistryInfo(const char *registryLocation,
 
     nsresult rv;
     nsRegistryKey key;
-    rv = mRegistry->GetSubtreeRaw(mXPCOMKey, registryLocation,
-                                  &key);
 
-    if (rv == NS_ERROR_REG_NOT_FOUND)
-        rv = mRegistry->AddSubtreeRaw(mXPCOMKey, registryLocation, &key);
-
+    rv = mRegistry->AddSubtreeRaw(mXPCOMKey, registryLocation, &key);
     if (NS_FAILED(rv))
         return rv;
 

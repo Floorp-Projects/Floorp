@@ -97,7 +97,7 @@ protected:
     // The following functions are the only ones that operate on the persistent
     // registry
     nsresult PlatformInit(void);
-    nsresult PlatformVersionCheck();
+    nsresult PlatformVersionCheck(nsRegistryKey *aXPCOMRootKey);
     nsresult PlatformRegister(const char *cidString, const char *className, const char *progID, nsDll *dll);
     nsresult PlatformUnregister(const char *cidString, const char *aLibrary);
     nsresult PlatformFind(const nsCID &aCID, nsFactoryEntry* *result);
@@ -169,8 +169,9 @@ protected:
  * alpha0.60 : xpcom 2.0 landing
  * alpha0.70 : using nsIFileSpec. PRTime -> PRUint32
  * alpha0.90 : using nsIComponentLoader, abs:/rel:/lib:, shaver-cleanup
+ * alpha0.91 : restructured registry keys
  */
-#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.90"
+#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.91"
 
 ////////////////////////////////////////////////////////////////////////////////
 /**

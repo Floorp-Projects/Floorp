@@ -162,7 +162,7 @@ nsCategoryManager::nsCategoryManager()
 nsresult
 nsCategoryManager::initialize()
   {
-    const char* kCategoriesRegistryPath = "Software/Mozilla/XPCOM/Categories";
+    const char* kCategoriesRegistryPath = "software/mozilla/XPCOM/categories";
       // Alas, this is kind of buried down here, but you can't put constant strings in a class declaration... oh, well
 
 

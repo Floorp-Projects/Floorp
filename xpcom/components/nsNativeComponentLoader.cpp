@@ -160,7 +160,7 @@ nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
     if (!mCompMgr || !mRegistry)
         return NS_ERROR_INVALID_ARG;
 
-    rv = mRegistry->GetSubtree(nsIRegistry::Common, xpcomKeyName,
+    rv = mRegistry->GetSubtree(nsIRegistry::Common, xpcomComponentsKeyName,
                                &mXPCOMKey);
     if (NS_FAILED(rv))
         return rv;
