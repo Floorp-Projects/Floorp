@@ -2024,10 +2024,12 @@ void nsImapProtocol::BeginMessageDownLoad(
 
 //                m_imapMessageSink->SetupMsgWriteStream(fileSpec, addDummyEnvelope);
                 nsXPIDLCString nativePath;
-                fileSpec->GetNativePath(getter_Copies(nativePath));
-                m_imapMessageSink->SetupMsgWriteStream(nativePath, addDummyEnvelope);
-
-			}
+		NS_ASSERTION(fileSpec, "no fileSpec!");
+		if (fileSpec) {
+			fileSpec->GetNativePath(getter_Copies(nativePath));
+			m_imapMessageSink->SetupMsgWriteStream(nativePath, addDummyEnvelope);
+		}
+		}
             PL_strfree(si->content_type);
         }
 		else
