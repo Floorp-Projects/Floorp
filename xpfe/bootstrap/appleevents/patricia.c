@@ -58,7 +58,7 @@
 //#include "utils.h"
 #include "patricia.h"
 
-#include "nsAEDefs.h"       // for ASSERT
+#include "nsAEDefs.h"       // for AE_ASSERT
 
 /* Uncomment to print verbose logging on tree activity */
 //#define VERBOSE
@@ -186,7 +186,7 @@ static TNode *InternalSearch(TPatriciaTree *tree, TNode *x, const unsigned char 
 {
 	TNode	*p;
 
-	ASSERT(x, "No node");
+	AE_ASSERT(x, "No node");
 
 	do {
 		p = x;
@@ -226,8 +226,8 @@ static int InternalTraverse(TPatriciaTree *tree, TNode *x, NodeTraverseFunction 
 	TNode	*p;
 	int		err = 0;
 	
-	ASSERT(x, "No node");
-	ASSERT(x->left && x->right, "Left or right child missing");
+	AE_ASSERT(x, "No node");
+	AE_ASSERT(x->left && x->right, "Left or right child missing");
 
 #ifdef VERBOSE
 	printf("Visiting node %ld with left %ld and right %ld\n", x->nodeID, x->left->nodeID, x->right->nodeID);
@@ -276,8 +276,8 @@ static int TraverseAndFree(TPatriciaTree *tree, TNode *x, NodeFreeFunction freeF
 	TNode	*p;
 	int		err = 0;
 	
-	ASSERT(x, "No node");
-	ASSERT(x->left && x->right, "Left or right child missing");
+	AE_ASSERT(x, "No node");
+	AE_ASSERT(x->left && x->right, "Left or right child missing");
 		
 	p = x->left;
 	if (p->bit < x->bit) {
@@ -393,10 +393,10 @@ int PatriciaSearch(PatriciaTreeRef treeRef, const unsigned char *key, void **dat
 	TPatriciaTree	*tree = (TPatriciaTree *)treeRef;
 	TNode		*foundNode;
 	
-	ASSERT(tree, "Where is my tree?");
+	AE_ASSERT(tree, "Where is my tree?");
 
 	foundNode = InternalSearch(tree, tree->headNode, key);
-	ASSERT(foundNode, "Should have found node");
+	AE_ASSERT(foundNode, "Should have found node");
 
 	if (memcmp(foundNode->key, key, tree->keySize) == 0) {
 		if (data != NULL)
@@ -434,7 +434,7 @@ int PatriciaInsert(PatriciaTreeRef treeRef, NodeReplaceFunction replaceFunc, con
 	x = tree->headNode;
 	t = InternalSearch(tree, x, key);
 
-	ASSERT(t, "Should have found node");
+	AE_ASSERT(t, "Should have found node");
 
 	if (memcmp(t->key, key, tree->keySize) == 0) {
 		if (replaceFunc) (*replaceFunc)(&t->data, t->key, data, refCon);
