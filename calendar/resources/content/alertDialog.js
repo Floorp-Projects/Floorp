@@ -269,7 +269,7 @@ function launchEditEvent( Event )
 
    // open the dialog modally
    window.setCursor( "wait" );
-   opener.openDialog("chrome://calendar/content/calendarEventDialog.xul", "caEditEvent", "chrome,modal", args );
+   opener.openDialog("chrome://calendar/content/eventDialog.xul", "caEditEvent", "chrome,modal", args );
 }
 
 function modifyEventDialogResponse( calendarEvent )

@@ -50,11 +50,11 @@
 
 <!-- Overlays -->
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://calendar/content/calendarMenuOverlay.xul"?>
+<?xul-overlay href="chrome://calendar/content/menuOverlay.xul"?>
 
-<?xul-overlay href="chrome://calendar/content/calendarDayView.xul"?>
-<?xul-overlay href="chrome://calendar/content/calendarWeekView.xul"?>
-<?xul-overlay href="chrome://calendar/content/calendarMonthView.xul"?>
+<?xul-overlay href="chrome://calendar/content/dayView.xul"?>
+<?xul-overlay href="chrome://calendar/content/weekView.xul"?>
+<?xul-overlay href="chrome://calendar/content/monthView.xul"?>
 
 <!-- DTDs -->
 
@@ -157,22 +157,22 @@
 <script type="application/x-javascript" src="chrome://calendar/content/jslib/jslib.js"/>
 
 <!-- NEEDED FOR DRAG AND DROP SUPPORT -->
-<script type="application/x-javascript" src="chrome://calendar/content/calendarDragDrop.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/dragDrop.js"/>
 
 <!-- NEEDED FOR MULTIPLE CALENDAR SUPPORT -->
 <script type="application/x-javascript" src="chrome://calendar/content/calendarManager.js"/>
 
 <!-- NEEDED FOR CLIPBOARD SUPPORT -->
-<script type="application/x-javascript" src="chrome://calendar/content/calendarClipboard.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/clipboard.js"/>
 
 <!-- NEEDED FOR IMPORT / EXPORT SUPPORT -->
-<script type="application/x-javascript" src="chrome://calendar/content/calendarImportExport.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/importExport.js"/>
 
 <!-- NEEDED FOR MAIL SUPPORT -->
 <script type="application/x-javascript" src="chrome://calendar/content/calendarMail.js"/>
 
 <!-- NEEDED FOR PUBLICATION SUPPORT -->
-<script type="application/x-javascript" src="chrome://calendar/content/calendarPublish.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/publish.js"/>
 
 <!-- NEEDED FOR DATE UTILS -->
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>

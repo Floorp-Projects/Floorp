@@ -56,7 +56,7 @@
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    >
 
-<script type="application/x-javascript" src="chrome://calendar/content/calendarDayView.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/dayView.js"/>
    
    <script src="chrome://global/content/nsDragAndDrop.js"/>
    <script src="chrome://global/content/nsTransferable.js"/>

@@ -510,7 +510,7 @@ function newToDoCommand()
 
    window.setCursor( "wait" );
    // open the dialog modally
-   openDialog("chrome://calendar/content/calendarToDoDialog.xul", "caEditEvent", "chrome,modal", args );
+   openDialog("chrome://calendar/content/toDoDialog.xul", "caEditEvent", "chrome,modal", args );
 }
 
 
@@ -601,7 +601,7 @@ function editNewEvent( calendarEvent, server )
 
    window.setCursor( "wait" );
    // open the dialog modally
-   openDialog("chrome://calendar/content/calendarEventDialog.xul", "caEditEvent", "chrome,modal", args );
+   openDialog("chrome://calendar/content/eventDialog.xul", "caEditEvent", "chrome,modal", args );
 }
 
 
@@ -646,7 +646,7 @@ function editEvent( calendarEvent )
    // open the dialog modally
    
    window.setCursor( "wait" );
-   openDialog("chrome://calendar/content/calendarEventDialog.xul", "caEditEvent", "chrome,modal", args );
+   openDialog("chrome://calendar/content/eventDialog.xul", "caEditEvent", "chrome,modal", args );
 }
    
 
@@ -666,7 +666,7 @@ function editToDo( calendarToDo )
    
    window.setCursor( "wait" );
    // open the dialog modally
-   openDialog("chrome://calendar/content/calendarToDoDialog.xul", "caEditToDo", "chrome,modal", args );
+   openDialog("chrome://calendar/content/toDoDialog.xul", "caEditToDo", "chrome,modal", args );
 }
    
 
@@ -862,7 +862,7 @@ function launchWizard()
 {
    var args = new Object();
 
-   openDialog("chrome://calendar/content/calendarWizard.xul", "caWizard", "chrome,modal", args );
+   openDialog("chrome://calendar/content/wizard.xul", "caWizard", "chrome,modal", args );
 }
 
 
@@ -1006,7 +1006,7 @@ function publishCalendarData()
    
    args.onOk =  self.publishCalendarDataDialogResponse;
    
-   openDialog("chrome://calendar/content/calendarPublishDialog.xul", "caPublishEvents", "chrome,modal", args );
+   openDialog("chrome://calendar/content/publishDialog.xul", "caPublishEvents", "chrome,modal", args );
 }
 
 function publishCalendarDataDialogResponse( CalendarPublishObject )

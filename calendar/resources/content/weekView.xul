@@ -56,7 +56,7 @@
    <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
    <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
    <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
-   <script type="application/x-javascript" src="chrome://calendar/content/calendarWeekView.js"/>
+   <script type="application/x-javascript" src="chrome://calendar/content/weekView.js"/>
    
    <script type="application/x-javascript">
       var ArrayOfDayNames = new Array();

@@ -95,9 +95,9 @@
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/calendarEventDialog.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/contactsSelectAddressesDialog.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/calendarEventDialogAttachFile.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/eventDialog.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/selectAddressesDialog.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/attachFile.js"/>
 <!-- needed to get the default categories -->
 <script type="application/x-javascript" src="chrome://calendar/content/pref/rootCalendarPref.js"/>
 

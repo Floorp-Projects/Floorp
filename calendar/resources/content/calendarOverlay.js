@@ -63,7 +63,7 @@ function openCalendarAlarmWindow( Event )
 
    args.calendarEvent = Event;
    
-   calendarAlarmWindow = window.openDialog("chrome://calendar/content/calendarEventAlertDialog.xul", "caAlarmDialog", "chrome,extrachrome,resizable,scrollbars,status,toolbar,alwaysRaised", args);
+   calendarAlarmWindow = window.openDialog("chrome://calendar/content/alertDialog.xul", "caAlarmDialog", "chrome,extrachrome,resizable,scrollbars,status,toolbar,alwaysRaised", args);
    
    setTimeout( "resetAlarmDialog()", 2000 );
 }

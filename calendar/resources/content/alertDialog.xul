@@ -66,7 +66,7 @@
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/calendarEventAlertDialog.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/alertDialog.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"/>
 
 <!-- Picker popups -->

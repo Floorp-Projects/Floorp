@@ -366,6 +366,23 @@ CalendarWindow.prototype.setSelectedDate = function calWin_setSelectedDate( date
       setTimeout( "refreshEventTree( getAndSetEventTable() );", 150 );
    }
    document.getElementById( "lefthandcalendar" ).value = date;
+
+   //get a list of events for this month.
+   var monthEventList = this.eventSource.getEventsForMonth( this.getSelectedDate() );
+
+   var arrayOfDates = new Array();
+
+   for( var eventIndex = 0; eventIndex < monthEventList.length; ++eventIndex )
+   {
+      var calendarEventDisplay = monthEventList[ eventIndex ];
+      var eventDate = new Date( calendarEventDisplay.displayDate );
+      
+      //add them to an array
+      arrayOfDates[ eventDate.getDate() ] = true;
+
+   }
+   document.getElementById( "lefthandcalendar" ).setBusyDates( arrayOfDates );
+   
 }
 
 /** PUBLIC

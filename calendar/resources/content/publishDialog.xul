@@ -65,7 +65,7 @@
    <!-- Javascript includes -->
    
    <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-   <script type="application/x-javascript" src="chrome://calendar/content/calendarPublishDialog.js"/>
+   <script type="application/x-javascript" src="chrome://calendar/content/publishDialog.js"/>
    
    <!-- Data used in JS from dtd -->
    

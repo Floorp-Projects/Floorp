@@ -5,14 +5,14 @@ calendar {
 /*
 .cal-menu { 
 	font-family: Arial;
-	font-size: 14px;
+	font-size: 10pt;
 	color: #ffffff;
 	border: 1px outset #ffffff;
 }
 
 .cal-menu:hover { 
 	font-family: Arial;
-	font-size: 14px;
+	font-size: 10pt;
 	color: #ffffff;
 	border: 2px outset #ffffff;
 }
@@ -38,7 +38,7 @@ calendar {
 
 .cal-month-name {
 	font-family: Arial;
-	font-size: 16px;
+	font-size: 12pt;
 	font-weight: bold;
 	color: #000000;
 	text-align: center;
@@ -74,7 +74,6 @@ calendar {
 }
 
 .cal-header {
-	height: 20px;
 	font-family: Arial;
 	color: blue;
 }
@@ -83,7 +82,6 @@ calendar {
 }
 
 .cal-day {
-	height: 20px;
 	font-family: Arial;
 	color: #000000;
 	border: 1px solid transparent;
@@ -92,6 +90,10 @@ calendar {
 
 .cal-day[othermonth="true"] {
 	color: #d2d2d2;
+}
+
+.cal-day[budy="true"] {
+	font-weight : bold;
 }
 
 .cal-day[selected="true"] {

@@ -185,7 +185,37 @@
 			]]></body>
 		</method>
 
-		<method name="advanceMonth">
+		<method name="setBusyDates">
+			<parameter name="arrayOfDates"/>
+			<body><![CDATA[
+        var aDate = new Date();
+        aDate.setDate( 1 );
+        //-------- Update the calendar
+        var calbox = document.getAnonymousNodes(this)[0].childNodes[1];
+        
+        var daytime = 86400000; // milliseconds in a day
+        var firstWeekday = aDate.getDay();
+        var date = new Date((aDate.getTime() - (firstWeekday*daytime)));
+        
+        for (var k = 1; k < calbox.childNodes.length; k++) {
+          var row = calbox.childNodes[k];
+          for (var i = 0; i < 7; i++) {
+            var day = row.childNodes[i];
+            
+            if (aDate.getMonth() == date.getMonth() && 
+                arrayOfDates[ date.getDate() ] == true  ) {
+              day.setAttribute("busy", "true");
+            } else {
+              day.removeAttribute("busy");
+            }
+            
+            date = new Date(date.getTime()+daytime);
+          }
+        }
+			]]></body>
+		</method>
+      
+      <method name="advanceMonth">
 			<parameter name="aDir"/>
 			<body><![CDATA[
 	
@@ -220,7 +250,8 @@
 
         if (this.onchange) this.onchange();
         
-        if (this.parentNode.parentNode.parentNode.parentNode.callback) this.parentNode.parentNode.parentNode.parentNode.callback();
+        if (this.parentNode.parentNode.parentNode.parentNode.callback) 
+            this.parentNode.parentNode.parentNode.parentNode.callback();
 
 			]]></body>
 		</method>

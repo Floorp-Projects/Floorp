@@ -111,8 +111,8 @@ function calendarManager( CalendarWindow )
    }
    
    /* Refresh remote calendars */
-   /*
-   var RefreshServers = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "servers.reloadonlaunch", false );
+
+   /*var RefreshServers = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "servers.reloadonlaunch", false );
    
    if( RefreshServers == true )
       this.refreshAllRemoteCalendars( );
@@ -147,7 +147,7 @@ calendarManager.prototype.launchAddCalendarDialog = function calMan_launchAddCal
    args.CalendarObject = ThisCalendarObject;
 
    // open the dialog modally
-   openDialog("chrome://calendar/content/calendarServerDialog.xul", "caAddServer", "chrome,modal", args );
+   openDialog("chrome://calendar/content/serverDialog.xul", "caAddServer", "chrome,modal", args );
 }
 
 /*
@@ -182,7 +182,7 @@ calendarManager.prototype.launchEditCalendarDialog = function calMan_launchEditC
    args.CalendarObject = ThisCalendarObject;
 
    // open the dialog modally
-   openDialog("chrome://calendar/content/calendarServerDialog.xul", "caEditServer", "chrome,modal", args );
+   openDialog("chrome://calendar/content/serverDialog.xul", "caEditServer", "chrome,modal", args );
 }
 
 
