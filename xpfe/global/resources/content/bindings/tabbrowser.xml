@@ -1162,6 +1162,7 @@
         <![CDATA[
         this.mCurrentBrowser = this.mPanelContainer.firstChild;
         this.mCurrentTab = this.mTabContainer.firstChild;
+        this.mTabBox.handleCtrlTab = !/Mac/.test(navigator.platform);
         ]]>
       </constructor>
 
