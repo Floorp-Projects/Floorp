@@ -38,7 +38,6 @@ EXPORTS =				\
 	nsIFrameDebug.h			\
 	nsIFrameImageLoader.h		\
 	nsIFrameManager.h		\
-	nsISelectionControler.h	\
 	nsILayoutDebugger.h		\
 	nsINameSpace.h			\
 	nsINameSpaceManager.h		\

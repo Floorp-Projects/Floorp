@@ -44,7 +44,7 @@
 #include "nsDOMEvent.h"
 #include "nsHTMLParts.h"
 #include "nsIDOMSelection.h"
-#include "nsISelectionControler.h"
+#include "nsISelectionController.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
@@ -118,7 +118,7 @@ static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIFocusTrackerIID, NS_IFOCUSTRACKER_IID);
-static NS_DEFINE_IID(kISelectionControlerIID, NS_ISELECTIONCONTROLER_IID);
+static NS_DEFINE_IID(kISelectionControllerIID, NS_ISELECTIONCONTROLLER_IID);
 static NS_DEFINE_IID(kICaretIID, NS_ICARET_IID);
 static NS_DEFINE_IID(kICaretID,  NS_ICARET_IID);
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
@@ -180,7 +180,7 @@ private:
 
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   private nsIDocumentObserver, public nsIFocusTracker,
-                  public nsISelectionControler,
+                  public nsISelectionController,
                   public nsSupportsWeakReference
 {
 public:
@@ -273,7 +273,7 @@ public:
   NS_IMETHOD SetDisplayNonTextSelection(PRBool aaInEnable);
   NS_IMETHOD GetDisplayNonTextSelection(PRBool *aOutEnable);
 
-  // nsISelectionControler
+  // nsISelectionController
 
   NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend);
@@ -542,8 +542,8 @@ PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kISelectionControlerIID)) {
-    nsISelectionControler* tmp = this;
+  if (aIID.Equals(kISelectionControllerIID)) {
+    nsISelectionController* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -1204,7 +1204,7 @@ NS_IMETHODIMP PresShell::GetDisplayNonTextSelection(PRBool *aOutEnable)
   return NS_OK;
 }
 
-//implementation of nsISelectionControler
+//implementation of nsISelectionController
 
 NS_IMETHODIMP 
 PresShell::CharacterMove(PRBool aForward, PRBool aExtend)
@@ -1248,7 +1248,7 @@ PresShell::SelectAll()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-//end implementations nsISelectionControler
+//end implementations nsISelectionController
 
 
 
@@ -1930,7 +1930,7 @@ PresShell::DoCopy()
     nsString buffer;
     nsresult rv;
 
-    nsIDOMSelection* sel = nsnull;
+    nsIDOMSelection* sel;
     GetSelection(SELECTION_NORMAL, &sel);
       
     if (sel != nsnull)
