@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *      Gagan Saksena <gagan@netscape.com>
+ *   Gagan Saksena <gagan@netscape.com>
  */
 #include "nsHTTPAtoms.h"
 
@@ -27,27 +27,26 @@
 #include "nsHTTPAtomList.h"
 #undef HTTP_ATOM
 
-
 static nsrefcnt gRefCnt;
 
 void nsHTTPAtoms::AddRefAtoms()
 {
-  if (0 == gRefCnt++) {
-    // create atoms
+    if (0 == gRefCnt++) {
+        // create atoms
 #define HTTP_ATOM(_name, _value) _name = NS_NewAtom(_value);
 #include "nsHTTPAtomList.h"
 #undef HTTP_ATOM
-  }
+    }
 }
 
 void nsHTTPAtoms::ReleaseAtoms()
 {
-  NS_PRECONDITION(gRefCnt != 0, "bad release atoms");
-  if (--gRefCnt == 0) {
-    // release atoms
+    NS_PRECONDITION(gRefCnt != 0, "bad release atoms");
+    if (--gRefCnt == 0) {
+        // release atoms
 #define HTTP_ATOM(_name, _value) NS_RELEASE(_name);
 #include "nsHTTPAtomList.h"
 #undef HTTP_ATOM
-  }
+    }
 }
 

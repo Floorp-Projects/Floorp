@@ -18,10 +18,11 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *      Gagan Saksena <gagan@netscape.com>
+ *   Gagan Saksena <gagan@netscape.com>
  */
-#ifndef nsHTTPAtoms_h___
-#define nsHTTPAtoms_h___
+
+#ifndef nsHTTPAtoms_h__
+#define nsHTTPAtoms_h__
 
 #include "nsIAtom.h"
 
@@ -31,22 +32,22 @@
  * are created when the first HTTP handler is created
  * are destroyed when the last HTTP handler is destroyed.
  */
-class nsHTTPAtoms {
+class nsHTTPAtoms
+{
 public:
+    static void AddRefAtoms();
+    static void ReleaseAtoms();
 
-  static void AddRefAtoms();
-  static void ReleaseAtoms();
-
-  /* Declare all atoms
-
-     The atom names and values are stored in nsHTTPAtomList.h and
-     are brought to you by the magic of C preprocessing
-
-     Add new atoms to nsHTPAtomList and all support logic will be auto-generated
-   */
+    /* Declare all atoms
+     *
+     * The atom names and values are stored in nsHTTPAtomList.h and
+     * are brought to you by the magic of C preprocessing
+     *
+     * Add new atoms to nsHTPAtomList and all support logic will be auto-generated
+     */
 #define HTTP_ATOM(_name, _value) static nsIAtom* _name;
 #include "nsHTTPAtomList.h"
 #undef HTTP_ATOM
 };
 
-#endif /* nsHTTPAtoms_h___ */
+#endif

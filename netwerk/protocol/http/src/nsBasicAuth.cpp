@@ -22,6 +22,7 @@
  * Contributor(s): 
  *   Mike Shaver <shaver@zeroknowledge.com>
  *   Christopher Blizzard <blizzard@mozilla.org>
+ *   Darin Fisher <darin@netscape.com>
  */
 
 #include "nsBasicAuth.h"
@@ -33,7 +34,7 @@
 
 nsBasicAuth::nsBasicAuth()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsBasicAuth::~nsBasicAuth()
@@ -41,44 +42,42 @@ nsBasicAuth::~nsBasicAuth()
 }
 
 nsresult
-nsBasicAuth::Authenticate(nsIURI* i_URI, const char *protocol,
-                          const char* iChallenge, const PRUnichar* iUser,
-                          const PRUnichar* iPass, nsIPrompt *prompt,
-                          char **oResult)
+nsBasicAuth::Authenticate(nsIURI *aURI, const char *aProtocol,
+                          const char *aChallenge, const PRUnichar *aUser,
+                          const PRUnichar *aPass, nsIPrompt *aPrompt,
+                          char **aResult)
 {
     // we only know how to deal with Basic auth for http.
-    PRBool isBasicAuth = !PL_strncasecmp(iChallenge, "basic ", 6);
+    PRBool isBasicAuth = !PL_strncasecmp(aChallenge, "basic ", 6);
     NS_ASSERTION(isBasicAuth, "nsBasicAuth called for non-Basic auth");
     if (!isBasicAuth)
         return NS_ERROR_INVALID_ARG;
-    PRBool isHTTPAuth = !strncmp(protocol, "http", 4);
+    PRBool isHTTPAuth = !strncmp(aProtocol, "http", 4);
     NS_ASSERTION(isHTTPAuth, "nsBasicAuth called for non-http auth");
     if (!isHTTPAuth)
         return NS_ERROR_INVALID_ARG;
 
-    if (!oResult || !iUser)
+    if (!aResult || !aUser)
         return NS_ERROR_NULL_POINTER;
 
     // we work with ASCII around here
     nsCAutoString userpass;
-    userpass.AssignWithConversion(iUser);
-    if (iPass)
-    {
+    userpass.AssignWithConversion(aUser);
+    if (aPass) {
         userpass.Append(':');
-        userpass.AppendWithConversion(iPass);
+        userpass.AppendWithConversion(aPass);
     }
 
     char *base64Buff = PL_Base64Encode(userpass.get(),
-            userpass.Length(),
-            nsnull);
+                                       userpass.Length(),
+                                       nsnull);
     
-    if (!base64Buff) {
+    if (!base64Buff)
         return NS_ERROR_FAILURE; // ??
-    }
 
-    nsCAutoString authString("Basic "); // , 6 + strlen(base64Buff));
+    nsCAutoString authString("Basic ");
     authString.Append(base64Buff);
-    *oResult = authString.ToNewCString();
+    *aResult = authString.ToNewCString();
     PR_Free(base64Buff);
     return NS_OK;
 }

@@ -17,96 +17,95 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author: Gagan Saksena <gagan@netscape.com>
- *
  * Contributor(s): 
+ *   Gagan Saksena <gagan@netscape.com> (original author)
  *   Darin Fisher <darin@netscape.com>
  */
 
-#ifndef _nsAuthEngine_h_
-#define _nsAuthEngine_h_
+#ifndef nsAuthEngine_h__
+#define nsAuthEngine_h__
 
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
 #include "nsIIOService.h"
-// Forward Decl
+
 class nsIURI;
+
 /* 
-    The nsAuthEngine class is the central class for handling
-    authentication lists, checks etc. 
+ * The nsAuthEngine class is the central class for handling
+ * authentication lists, checks etc. 
+ *
+ * There should be a class nsProxyAuthEngine that shares all this...
+ * I will move it that way... someday... 
+ *
+ *      -Gagan Saksena 11/12/99
+ */
 
-    There should be a class nsProxyAuthEngine that shares all this...
-    I will move it that way... someday... 
-
-    -Gagan Saksena 11/12/99
-*/
 class nsAuthEngine
 {
-
 public:
+    nsAuthEngine();
+   ~nsAuthEngine();
 
-    nsAuthEngine(void);
-    virtual ~nsAuthEngine();
-
-    nsresult        Init();
+    nsresult Init();
 
     // Get an auth string
-    NS_IMETHOD      GetAuthString(nsIURI* i_URI, char** o_AuthString);
+    nsresult GetAuthString(nsIURI *aURI, char **aAuthString);
 
     // Set an auth string
-    NS_IMETHOD      SetAuthString(nsIURI* i_URI, const char* i_AuthString);
+    nsresult SetAuthString(nsIURI *aURI, const char *aAuthString);
 
     // Get a proxy auth string with host/port
-    NS_IMETHOD      GetProxyAuthString(const char* host, 
-                        PRInt32 port, 
-                        char** o_AuthString);
+    nsresult GetProxyAuthString(const char *host, 
+                                PRInt32 port, 
+                                char **aAuthString);
 
     // Set a proxy auth string
-    NS_IMETHOD      SetProxyAuthString(const char* host,
-                        PRInt32 port,
-                        const char* i_AuthString);
+    nsresult SetProxyAuthString(const char *host,
+                                PRInt32 port,
+                                const char *aAuthString);
 
     // Get an auth string for a particular host/port/realm
-    NS_IMETHOD      GetAuthStringForRealm(nsIURI* i_URI,
-                        const char* i_Realm,
-                        char** o_AuthString);
+    nsresult GetAuthStringForRealm(nsIURI *aURI,
+                                   const char *aRealm,
+                                   char **aAuthString);
 
     // Set an auth string for a particular host/port/realm
-    NS_IMETHOD      SetAuthStringForRealm(nsIURI* i_URI,
-                        const char* i_Realm,
-                        const char* i_AuthString);
+    nsresult SetAuthStringForRealm(nsIURI *aURI,
+                                   const char *aRealm,
+                                   const char *aAuthString);
 
-    /*
-       Expire all existing auth list entries including proxy auths. 
-    */
-    NS_IMETHOD      Logout(void);
+    // Expire all existing auth list entries including proxy auths. 
+    nsresult Logout();
 
 protected:
 
-    NS_IMETHOD      SetAuth(nsIURI* i_URI, 
-                        const char* i_AuthString, 
-                        const char* i_Realm = nsnull,
-                        PRBool bProxyAuth = PR_FALSE);
+    nsresult SetAuth(nsIURI *aURI, 
+                     const char *aAuthString, 
+                     const char *aRealm = nsnull,
+                     PRBool bProxyAuth = PR_FALSE);
 
-    nsVoidArray                 mAuthList; 
+    nsVoidArray mAuthList; 
+
     // this needs to be a list becuz pac can produce more ...
-    nsVoidArray                 mProxyAuthList; 
+    nsVoidArray mProxyAuthList; 
 
     // optimization
-    nsCOMPtr<nsIIOService>      mIOService;
-
+    nsCOMPtr<nsIIOService> mIOService;
 };
 
 inline nsresult
-nsAuthEngine::SetAuthString(nsIURI* i_URI, const char* i_AuthString)
+nsAuthEngine::SetAuthString(nsIURI *aURI, const char *aAuthString)
 {
-    return SetAuth(i_URI, i_AuthString);
+    return SetAuth(aURI, aAuthString);
 }
 
 inline nsresult
-nsAuthEngine::SetAuthStringForRealm(nsIURI* i_URI, const char* i_Realm, const char* i_AuthString)
+nsAuthEngine::SetAuthStringForRealm(nsIURI *aURI,
+                                    const char *aRealm,
+                                    const char*aAuthString)
 {
-    return SetAuth(i_URI, i_AuthString, i_Realm);
+    return SetAuth(aURI, aAuthString, aRealm);
 }
 
-#endif /* _nsAuthEngine_h_ */
+#endif

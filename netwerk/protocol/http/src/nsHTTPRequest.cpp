@@ -189,18 +189,10 @@ nsresult nsHTTPRequest::Clone(const nsHTTPRequest* *o_Request) const
 }
 
                         
-nsresult nsHTTPRequest::SetMethod(nsIAtom * i_Method)
+nsresult nsHTTPRequest::SetMethod(nsIAtom *aMethod)
 {
-    mMethod = i_Method;
+    mMethod = aMethod;
     return NS_OK;
-}
-
-nsIAtom * nsHTTPRequest::GetMethod(void) const
-{
-    nsIAtom * ap = mMethod;
-    NS_ADDREF(ap);
-
-    return mMethod;
 }
 
                         
@@ -966,6 +958,7 @@ nsHTTPPipelinedRequest::RestartRequest(PRUint32 aType)
         nsCOMPtr<nsISSLSocketControl> sslControl(do_QueryInterface(securityInfo, &rval));
         if (NS_FAILED(rval)) return rval;
 
+        printf(">>> Doing SSL ProxyStepUp\n");
         rval = sslControl->ProxyStepUp();
         if (NS_FAILED(rval)) return rval;
 

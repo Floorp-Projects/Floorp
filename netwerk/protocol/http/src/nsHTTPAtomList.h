@@ -22,7 +22,6 @@
  */
 
 /******
-
   This file contains the list of all HTTP atoms 
   See nsHTTPAtoms.h for access to the atoms
 
@@ -114,11 +113,3 @@ HTTP_ATOM(Delete,                    "DELETE")
 HTTP_ATOM(Trace,                     "TRACE")
 HTTP_ATOM(Connect,                   "CONNECT")
 HTTP_ATOM(M_Post,                    "M-POST")
-
-
-
-
-
-
-
-
