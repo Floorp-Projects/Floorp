@@ -104,7 +104,8 @@ nsrefcnt nsHTMLButtonControlFrame::Release(void)
   return 1;
 }
 
-nsresult
+// Frames are not refcounted, no need to AddRef
+NS_IMETHODIMP
 nsHTMLButtonControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   NS_PRECONDITION(0 != aInstancePtr, "null ptr");

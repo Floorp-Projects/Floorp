@@ -155,7 +155,7 @@ public:
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
 
   //nsIStatefulFrame
-  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, StateType* aStateType);
+  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
   NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsISupports** aState);
   NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsISupports* aState);
 
@@ -240,7 +240,8 @@ nsNativeSelectControlFrame::~nsNativeSelectControlFrame()
     delete[] mOptionSelected;
 }
 
-nsresult
+// Frames are not refcounted, no need to AddRef
+NS_IMETHODIMP
 nsNativeSelectControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   NS_PRECONDITION(0 != aInstancePtr, "null ptr");
@@ -248,11 +249,9 @@ nsNativeSelectControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePt
     return NS_ERROR_NULL_POINTER;
   } else if (aIID.Equals(NS_GET_IID(nsISelectControlFrame))) {
     *aInstancePtr = (void*)(nsISelectControlFrame*) this;
-    NS_ADDREF_THIS();
     return NS_OK;
   } else if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
     *aInstancePtr = (void*)(nsIStatefulFrame*) this;
-    NS_ADDREF_THIS();
     return NS_OK;
   }
 

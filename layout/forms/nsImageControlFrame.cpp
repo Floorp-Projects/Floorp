@@ -162,7 +162,8 @@ NS_NewImageControlFrame(nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-nsresult
+// Frames are not refcounted, no need to AddRef
+NS_IMETHODIMP
 nsImageControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   NS_PRECONDITION(0 != aInstancePtr, "null ptr");

@@ -128,6 +128,7 @@ nsFileControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
   return NS_OK;
 }
 
+// Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
 nsFileControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
@@ -136,18 +137,15 @@ nsFileControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   } else if (aIID.Equals(kIAnonymousContentCreatorIID)) {
     *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;
-    NS_ADDREF_THIS();
     return NS_OK;
   } else if (aIID.Equals(kIFormControlFrameIID)) {
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
   } else  if (aIID.Equals(kIDOMMouseListenerIID)) {
     *aInstancePtr = (void*)(nsIDOMMouseListener*) this;
-    NS_ADDREF_THIS();
     return NS_OK;
   } else  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
     *aInstancePtr = (void*)(nsIStatefulFrame*) this;
-    NS_ADDREF_THIS();
     return NS_OK;
   }
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);

@@ -125,7 +125,8 @@ nsComboboxControlFrame::~nsComboboxControlFrame()
 }
 
 //--------------------------------------------------------------
-nsresult
+// Frames are not refcounted, no need to AddRef
+NS_IMETHODIMP
 nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   NS_PRECONDITION(0 != aInstancePtr, "null ptr");
@@ -141,22 +142,18 @@ nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
   } else if (aIID.Equals(kIDOMMouseListenerIID)) {                                         
     *aInstancePtr = (void*)(nsIDOMMouseListener*) this;                                        
-    NS_ADDREF_THIS();
     return NS_OK;                                                        
   } else if (aIID.Equals(kIAnonymousContentCreatorIID)) {                                         
     *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
     return NS_OK;   
   } else if (aIID.Equals(NS_GET_IID(nsISelectControlFrame))) {
     *aInstancePtr = (void *)(nsISelectControlFrame*)this;
-    NS_ADDREF_THIS();
     return NS_OK;
   } else if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
     *aInstancePtr = (void *)(nsIStatefulFrame*)this;
-    NS_ADDREF_THIS();
     return NS_OK;
   } else if (aIID.Equals(nsCOMTypeInfo<nsIRollupListener>::GetIID())) {
     *aInstancePtr = (void*)(nsIRollupListener*)this;
-    NS_ADDREF_THIS();
     return NS_OK;
   }
   return nsAreaFrame::QueryInterface(aIID, aInstancePtr);
