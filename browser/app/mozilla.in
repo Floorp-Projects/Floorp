@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla.in,v 1.7 2004/07/08 07:08:50 bryner%brianryner.com Exp $
+## $Id: mozilla.in,v 1.8 2004/08/19 00:33:56 bryner%brianryner.com Exp $
 ## 
 ## Usage:
 ##
@@ -99,6 +99,7 @@ else
     if [ -x "$run_moz" ]; then
       cd "$curdir"
       dist_bin=`pwd`
+      run_moz="$dist_bin/run-mozilla.sh"
       found=1
       break
     fi
