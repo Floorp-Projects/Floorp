@@ -65,9 +65,10 @@ pref("browser.cache.enable",                true); // see also network.http.use-
 pref("browser.cache.disk.enable",           true);
 pref("browser.cache.disk.capacity",         50000);
 pref("browser.cache.memory.enable",         true);
-pref("browser.cache.memory.capacity",       4096);
-// 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically
+//pref("browser.cache.memory.capacity",     -1);
+// -1 = determine dynamically, 0 = none, n = memory capacity in kilobytes
 pref("browser.cache.check_doc_frequency",   3);
+// 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically
 
 pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
 pref("browser.display.use_document_colors", true);
