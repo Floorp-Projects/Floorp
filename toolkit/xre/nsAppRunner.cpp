@@ -1401,14 +1401,14 @@ static nsresult DumpVersion(char *appname)
 }
 
 /* Temporary hack until quicklaunch is removed for real.
- * This prevents firebird from getting into a broken
+ * This prevents firebird and thunderbird from getting into a broken
  * state from which you can't quit.
  */
 static nsresult DumpTurbo(char *appname)
 {
   nsresult rv = NS_OK;
 
-  printf("Quick Launch is not supported in Mozilla Firebird.");
+  printf("Quick Launch is not supported.");
 
   return rv;
 }
@@ -1490,7 +1490,7 @@ static PRBool HandleDumpArguments(int argc, char* argv[])
       DumpVersion(argv[0]);
       return PR_TRUE;
     }
-#ifdef MOZ_PHOENIX
+#ifdef MOZ_XUL_APP
 	if ((PL_strcasecmp(argv[i], "/turbo") == 0)
 		|| (PL_strcasecmp(argv[i], "-turbo") == 0)
 		|| (PL_strcasecmp(argv[i], "/server") == 0)
