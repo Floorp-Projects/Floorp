@@ -33,8 +33,7 @@ public:
   virtual ~WindowCreator();
 
   NS_DECL_ISUPPORTS
-  // NS_DECL_NSIWINDOWCREATOR
-  NS_IMETHOD CreateWindow(nsIWebBrowserChrome *parent, PRUint32 chromeFlags, nsIWebBrowserChrome **_retval); 
+  NS_DECL_NSIWINDOWCREATOR
 };
 
 #endif
