@@ -65,7 +65,6 @@ XUL_ATOM(allowevents, "allowevents") // Lets events be handled on the cell conte
 XUL_ATOM(treecol, "treecol") // A column in the tree view
 XUL_ATOM(treecolgroup, "treecolgroup") // A column group in the tree view
 XUL_ATOM(treefoot, "treefoot") // The footer of the tree view
-XUL_ATOM(treepusher, "treepusher") // A column pusher (left or right) for the tree view
 XUL_ATOM(scrollbarlist, "scrollbarlist") // An atom for internal use by the tree view
 XUL_ATOM(indent, "indent") // indicates that a cell should be indented
 
@@ -141,3 +140,23 @@ XUL_ATOM(iframe, "iframe")
 XUL_ATOM(browser, "browser")
 XUL_ATOM(editor, "editor")
 
+// 
+
+XUL_ATOM(checkbox, "checkbox")
+XUL_ATOM(radio, "radio")
+XUL_ATOM(menulist, "menulist")
+XUL_ATOM(menubutton, "menubutton")
+XUL_ATOM(textfield, "textfield")
+XUL_ATOM(textarea, "textarea")
+XUL_ATOM(listbox, "listbox")
+
+XUL_ATOM(listcaption, "listcaption") // The caption of a list view
+XUL_ATOM(listhead, "listhead") // The header of the list view
+XUL_ATOM(listrow, "listrow") // A row in the list view
+XUL_ATOM(listcell, "listcell") // An item in the list view
+XUL_ATOM(listitem, "listitem") // A cell in the list view
+XUL_ATOM(listchildren, "listchildren") // The children of an item in the list view
+XUL_ATOM(listindentation, "listindentation") // Specifies that the indentation for the level should occur here.
+XUL_ATOM(listcol, "listcol") // A column in the list view
+XUL_ATOM(listcolgroup, "listcolgroup") // A column group in the list view
+XUL_ATOM(listfoot, "listfoot") // The footer of the list view

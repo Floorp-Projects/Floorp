@@ -67,7 +67,7 @@ nsXBLEventHandler::~nsXBLEventHandler()
   }
 }
 
-NS_IMPL_ISUPPORTS2(nsXBLEventHandler, nsIDOMKeyListener, nsIDOMMouseListener)
+NS_IMPL_ISUPPORTS3(nsXBLEventHandler, nsIDOMKeyListener, nsIDOMMouseListener, nsIDOMMenuListener)
 
 nsresult nsXBLEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 {
@@ -171,6 +171,60 @@ nsresult nsXBLEventHandler::MouseOut(nsIDOMEvent* aMouseEvent)
   nsCOMPtr<nsIDOMUIEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (MouseEventMatched(mouseEvent))
     ExecuteHandler(nsAutoString("mouseout"), aMouseEvent);
+  return NS_OK;
+}
+
+nsresult nsXBLEventHandler::Action(nsIDOMEvent* aEvent)
+{
+  if (mEventName != "command")
+    return NS_OK;
+
+  ExecuteHandler(nsAutoString("command"), aEvent);
+  return NS_OK;
+}
+
+nsresult nsXBLEventHandler::Create(nsIDOMEvent* aEvent)
+{
+  if (mEventName != "create")
+    return NS_OK;
+
+  ExecuteHandler(nsAutoString("create"), aEvent);
+  return NS_OK;
+}
+
+nsresult nsXBLEventHandler::Close(nsIDOMEvent* aEvent)
+{
+  if (mEventName != "close")
+    return NS_OK;
+
+  ExecuteHandler(nsAutoString("close"), aEvent);
+  return NS_OK;
+}
+
+nsresult nsXBLEventHandler::Broadcast(nsIDOMEvent* aEvent)
+{
+  if (mEventName != "broadcast")
+    return NS_OK;
+
+  ExecuteHandler(nsAutoString("broadcast"), aEvent);
+  return NS_OK;
+}
+
+nsresult nsXBLEventHandler::CommandUpdate(nsIDOMEvent* aEvent)
+{
+  if (mEventName != "commandupdate")
+    return NS_OK;
+
+  ExecuteHandler(nsAutoString("commandupdate"), aEvent);
+  return NS_OK;
+}
+
+nsresult nsXBLEventHandler::Destroy(nsIDOMEvent* aEvent)
+{
+  if (mEventName != "destroy")
+    return NS_OK;
+
+  ExecuteHandler(nsAutoString("destroy"), aEvent);
   return NS_OK;
 }
 

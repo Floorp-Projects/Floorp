@@ -33,6 +33,10 @@ IDLSRCS =  \
         XULTreeElement.idl      \
         XULEditorElement.idl      \
 		XULPopupElement.idl \
+		XULTitledButtonElement.idl \
+		XULCheckboxElement.idl \
+		XULRadioElement.idl \
+		XULMenuListElement.idl \
        $(NULL)
 
 XPCOM_DESTDIR=$(DEPTH)\rdf\content\public

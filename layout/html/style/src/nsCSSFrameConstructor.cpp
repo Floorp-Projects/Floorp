@@ -114,6 +114,7 @@
 #include "nsIDOMDocument.h"
 #include "nsDocument.h"
 #include "nsToolbarItemFrame.h"
+#include "nsXULCheckboxFrame.h"
 
 #ifdef DEBUG
 static PRBool gNoisyContentUpdates = PR_FALSE;
@@ -2047,7 +2048,7 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
 
 #ifdef INCLUDE_XUL
   if (  (nsXULAtoms::button          == tag.get())  ||
-	    (nsXULAtoms::titledbutton      == tag.get())  ||
+	      (nsXULAtoms::titledbutton      == tag.get())  ||
         (nsXULAtoms::image == tag.get()) ||
         (nsXULAtoms::grippy          == tag.get())  ||
         (nsXULAtoms::splitter        == tag.get())  ||
@@ -2069,7 +2070,6 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
         (nsXULAtoms::treecol         == tag.get())  ||
         (nsXULAtoms::treecolgroup    == tag.get())  ||
         (nsXULAtoms::treefoot        == tag.get())  ||
-        (nsXULAtoms::treepusher      == tag.get())  ||
         (nsXULAtoms::menu          == tag.get())  ||
         (nsXULAtoms::menuitem      == tag.get())  || 
         (nsXULAtoms::menubar       == tag.get())  ||
@@ -2084,8 +2084,25 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
         (nsXULAtoms::tabbox          == tag.get())  ||
         (nsXULAtoms::tabpanel        == tag.get())  ||
         (nsXULAtoms::tabpage         == tag.get())  ||
-        (nsXULAtoms::progressmeter   == tag.get())  ||
-        (nsXULAtoms::window          == tag.get())) {
+        (nsXULAtoms::progressmeter   == tag.get())  ||        
+        (nsXULAtoms::checkbox        == tag.get())  ||
+        (nsXULAtoms::radio           == tag.get())  ||
+        (nsXULAtoms::menulist        == tag.get())  ||
+        (nsXULAtoms::menubutton      == tag.get())  ||
+        (nsXULAtoms::textfield       == tag.get())  ||
+        (nsXULAtoms::textarea        == tag.get())  ||
+        (nsXULAtoms::listbox         == tag.get())  ||
+        (nsXULAtoms::listcaption     == tag.get())  ||
+        (nsXULAtoms::listhead        == tag.get())  ||
+        (nsXULAtoms::listrow         == tag.get())  ||
+        (nsXULAtoms::listcell        == tag.get())  ||
+        (nsXULAtoms::listitem        == tag.get())  ||
+        (nsXULAtoms::listchildren    == tag.get())  ||
+        (nsXULAtoms::listindentation == tag.get())  ||
+        (nsXULAtoms::listcol         == tag.get())  ||
+        (nsXULAtoms::listcolgroup    == tag.get())  ||
+        (nsXULAtoms::listfoot        == tag.get())  
+) {
     return PR_TRUE;
   }
 #endif
@@ -4130,12 +4147,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell,
     {
       rv = NS_NewTreeIndentationFrame(aPresShell, &newFrame);
     }
-    else if (aTag == nsXULAtoms::treepusher)
-    {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewTitledButtonFrame(aPresShell, &newFrame);
-    }
     // End of TREE CONSTRUCTION code here (there's more later on in the function)
 
     // TOOLBAR CONSTRUCTION
@@ -4199,13 +4210,15 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell,
 
     // Menu Construction    
     else if (aTag == nsXULAtoms::menu ||
-             aTag == nsXULAtoms::menuitem) {
+             aTag == nsXULAtoms::menuitem || 
+             aTag == nsXULAtoms::menulist ||
+             aTag == nsXULAtoms::menubutton) {
       // A derived class box frame
       // that has custom reflow to prevent menu children
       // from becoming part of the flow.
       processChildren = PR_TRUE; // Will need this to be custom.
       isReplaced = PR_TRUE;
-      rv = NS_NewMenuFrame(aPresShell, &newFrame, (aTag == nsXULAtoms::menu));
+      rv = NS_NewMenuFrame(aPresShell, &newFrame, (aTag != nsXULAtoms::menuitem));
     }
     else if (aTag == nsXULAtoms::menubar) {
 #ifdef XP_MAC // The Mac uses its native menu bar.
@@ -4311,11 +4324,20 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell,
     else if (aTag == nsXULAtoms::titledbutton ||
              aTag == nsXULAtoms::image) {
 
-        processChildren = PR_TRUE;
+      processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       rv = NS_NewTitledButtonFrame(aPresShell, &newFrame);
     }
     // End of TITLED BUTTON CONSTRUCTION logic
+
+    // XULCHECKBOX CONSTRUCTION
+    else if (aTag == nsXULAtoms::checkbox ||
+             aTag == nsXULAtoms::radio) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewXULCheckboxFrame(aPresShell, &newFrame);
+    }
+    // End of XULCHECKBOX CONSTRUCTION logic
 
     // TEXT CONSTRUCTION
     else if (aTag == nsXULAtoms::text) {
@@ -4324,7 +4346,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell,
       rv = NS_NewXULTextFrame(aPresShell, &newFrame);
     }
     // End of TEXT CONSTRUCTION logic
-
 
     // DECK CONSTRUCTION
     else if (aTag == nsXULAtoms::deck || aTag == nsXULAtoms::tabpanel) {

@@ -213,7 +213,7 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
 nsTitledButtonFrame::nsTitledButtonFrame()
 {
 	mTitle = "";
-	mAlign = NS_SIDE_TOP;
+	mAlign = GetDefaultAlignment();
 	mCropType = CropRight;
 	mNeedsLayout = PR_TRUE;
   mNeedsAccessUpdate = PR_TRUE;
@@ -340,6 +340,11 @@ nsTitledButtonFrame::GetImageSource(nsString& aResult)
   }
 }
 
+PRIntn nsTitledButtonFrame::GetDefaultAlignment()
+{
+  return NS_SIDE_TOP;
+}
+
 void
 nsTitledButtonFrame::UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttribute, PRBool& aResize, PRBool& aRedraw, PRBool& aUpdateAccessUnderline)
 {
@@ -359,7 +364,7 @@ nsTitledButtonFrame::UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aA
         else if (value.EqualsIgnoreCase(ALIGN_BOTTOM))
             align = NS_SIDE_BOTTOM;
         else 
-            align = NS_SIDE_TOP;
+            align = GetDefaultAlignment();
 
         if (align != mAlign) {
             aRedraw = PR_TRUE;
@@ -1223,8 +1228,34 @@ nsTitledButtonFrame::HandleEvent(nsIPresContext* aPresContext,
       break;
 
     case NS_MOUSE_LEFT_CLICK:
-          MouseClicked(aPresContext);
-    break;
+      MouseClicked(aPresContext);
+      break;
+    case NS_MOUSE_LEFT_BUTTON_UP:
+      // if we are not toggling then do nothing
+      CheckState oldState = GetCurrentCheckState();
+      if (oldState == eUnset)
+        break;
+
+      CheckState newState = eOn;
+      switch ( oldState ) {
+        case eOn:
+          newState = eOff;
+          break;
+      
+        case eMixed:
+          newState = eOn;
+          break;
+    
+        case eOff:
+          newState = mHasOnceBeenInMixedState ? eMixed: eOn;
+          break;
+
+        case eUnset:
+          newState = eOn;
+          break;
+      }
+      SetCurrentCheckState(newState);
+      break;
   }
 
   return nsLeafFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
@@ -1293,31 +1324,6 @@ nsTitledButtonFrame::MouseClicked (nsIPresContext* aPresContext)
   event.clickCount = 0;
   event.widget = nsnull;
   mContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-
-  // if we are not toggling then do nothing
-  CheckState oldState = GetCurrentCheckState();
-  if (oldState == eUnset)
-    return;
-
-  CheckState newState = eOn;
-  switch ( oldState ) {
-    case eOn:
-      newState = eOff;
-      break;
-      
-    case eMixed:
-      newState = eOn;
-      break;
-    
-    case eOff:
-      newState = mHasOnceBeenInMixedState ? eMixed: eOn;
-      break;
-
-    case eUnset:
-      newState = eOn;
-      break;
-  }
-  SetCurrentCheckState(newState);
 }
 
 //

@@ -93,6 +93,11 @@
 #include "nsXULEditorElement.h"
 #include "nsXULTreeElement.h"
 #include "nsXULPopupElement.h"
+#include "nsXULTitledButtonElement.h"
+#include "nsXULCheckboxElement.h"
+#include "nsXULRadioElement.h"
+#include "nsXULMenuListElement.h"
+
 #include "prlog.h"
 #include "rdf.h"
 #include "rdfutil.h"
@@ -288,6 +293,11 @@ nsIAtom*             nsXULElement::kBrowserAtom;
 nsIAtom*             nsXULElement::kEditorAtom;
 nsIAtom*             nsXULElement::kWidthAtom;
 nsIAtom*             nsXULElement::kWindowAtom;
+nsIAtom*             nsXULElement::kNullAtom;
+nsIAtom*             nsXULElement::kCheckboxAtom;
+nsIAtom*             nsXULElement::kRadioAtom;
+nsIAtom*             nsXULElement::kMenuListAtom;
+nsIAtom*             nsXULElement::kMenuButtonAtom;
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
 PRUint32             nsXULPrototypeAttribute::gNumElements;
@@ -355,6 +365,11 @@ nsXULElement::Init()
         kEditorAtom         = NS_NewAtom("editor");
         kWidthAtom          = NS_NewAtom("width");
         kWindowAtom         = NS_NewAtom("window");
+        kCheckboxAtom       = NS_NewAtom("checkbox");
+        kRadioAtom          = NS_NewAtom("radio");
+        kMenuListAtom     = NS_NewAtom("menulist");
+        kMenuButtonAtom     = NS_NewAtom("menubutton");
+        kNullAtom           = NS_NewAtom("");
 
         rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                 nsnull,
@@ -432,6 +447,11 @@ nsXULElement::~nsXULElement()
         NS_IF_RELEASE(kEditorAtom);
         NS_IF_RELEASE(kWidthAtom);
         NS_IF_RELEASE(kWindowAtom);
+        NS_IF_RELEASE(kCheckboxAtom);
+        NS_IF_RELEASE(kRadioAtom);
+        NS_IF_RELEASE(kMenuListAtom);
+        NS_IF_RELEASE(kMenuButtonAtom);
+        NS_IF_RELEASE(kNullAtom);
 
         NS_IF_RELEASE(gNameSpaceManager);
 
@@ -655,6 +675,62 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
             if (NS_FAILED(rv)) return rv;
 
             if ((mSlots->mInnerXULElement = new nsXULBrowserElement(this)) == nsnull)
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        return InnerXULElement()->QueryInterface(iid, result);
+    }
+    else if (iid.Equals(NS_GET_IID(nsIDOMXULTitledButtonElement)) &&
+             (NameSpaceID() == kNameSpaceID_XUL) &&
+             (Tag() == kTitledButtonAtom)) {
+        // We delegate XULTitledButtonElement APIs to an aggregate object
+        if (! InnerXULElement()) {
+            rv = EnsureSlots();
+            if (NS_FAILED(rv)) return rv;
+
+            if ((mSlots->mInnerXULElement = new nsXULTitledButtonElement(this)) == nsnull)
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        return InnerXULElement()->QueryInterface(iid, result);
+    }
+    else if (iid.Equals(NS_GET_IID(nsIDOMXULCheckboxElement)) &&
+             (NameSpaceID() == kNameSpaceID_XUL) &&
+             (Tag() == kCheckboxAtom)) {
+        // We delegate XULCheckboxElement APIs to an aggregate object
+        if (! InnerXULElement()) {
+            rv = EnsureSlots();
+            if (NS_FAILED(rv)) return rv;
+
+            if ((mSlots->mInnerXULElement = new nsXULCheckboxElement(this)) == nsnull)
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        return InnerXULElement()->QueryInterface(iid, result);
+    }
+    else if (iid.Equals(NS_GET_IID(nsIDOMXULRadioElement)) &&
+             (NameSpaceID() == kNameSpaceID_XUL) &&
+             (Tag() == kRadioAtom)) {
+        // We delegate XULRadioElement APIs to an aggregate object
+        if (! InnerXULElement()) {
+            rv = EnsureSlots();
+            if (NS_FAILED(rv)) return rv;
+
+            if ((mSlots->mInnerXULElement = new nsXULRadioElement(this)) == nsnull)
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        return InnerXULElement()->QueryInterface(iid, result);
+    }
+    else if (iid.Equals(NS_GET_IID(nsIDOMXULMenuListElement)) &&
+             (NameSpaceID() == kNameSpaceID_XUL) &&
+             (Tag() == kMenuListAtom)) {
+        // We delegate XULMenuListElement APIs to an aggregate object
+        if (! InnerXULElement()) {
+            rv = EnsureSlots();
+            if (NS_FAILED(rv)) return rv;
+
+            if ((mSlots->mInnerXULElement = new nsXULMenuListElement(this)) == nsnull)
                 return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -1699,6 +1775,22 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
         else if (Tag() == kBrowserAtom) {
             fn = NS_NewScriptXULBrowserElement;
             rootname = "nsXULBrowserElement::mScriptObject";
+        }
+        else if (Tag() == kTitledButtonAtom) {
+            fn = NS_NewScriptXULTitledButtonElement;
+            rootname = "nsXULTitledButtonElement::mScriptObject";
+        }
+        else if (Tag() == kCheckboxAtom) {
+            fn = NS_NewScriptXULCheckboxElement;
+            rootname = "nsXULCheckboxElement::mScriptObject";
+        }
+        else if (Tag() == kRadioAtom) {
+            fn = NS_NewScriptXULRadioElement;
+            rootname = "nsXULRadioElement::mScriptObject";
+        }
+        else if (Tag() == kMenuListAtom) {
+            fn = NS_NewScriptXULMenuListElement;
+            rootname = "nsXULMenuListElement::mScriptObject";
         }
         else if (Tag() == kEditorAtom) {
             fn = NS_NewScriptXULEditorElement;
@@ -3850,7 +3942,8 @@ nsXULElement::RemoveFocus(nsIPresContext* aPresContext)
 PRBool
 nsXULElement::IsFocusableContent()
 {
-    return (Tag() == kTitledButtonAtom) || (Tag() == kTreeAtom);
+    return (Tag() == kTitledButtonAtom) || (Tag() == kTreeAtom) || (Tag() == kCheckboxAtom) || (Tag() == kRadioAtom) ||
+           (Tag() == kMenuListAtom) || (Tag() == kMenuButtonAtom);
 }
 
 // nsIBindableContent Interface

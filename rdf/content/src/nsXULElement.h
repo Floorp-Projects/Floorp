@@ -342,6 +342,8 @@ protected:
     static nsIAtom*             kSelectedAtom;
     static nsIAtom*             kStyleAtom;
     static nsIAtom*             kTitledButtonAtom;
+    static nsIAtom*             kCheckboxAtom;
+    static nsIAtom*             kRadioAtom;
     static nsIAtom*             kTooltipAtom;
     static nsIAtom*             kTreeAtom;
     static nsIAtom*             kTreeCellAtom;
@@ -355,6 +357,9 @@ protected:
     static nsIAtom*             kEditorAtom;
     static nsIAtom*             kWidthAtom;
     static nsIAtom*             kWindowAtom;
+    static nsIAtom*             kMenuButtonAtom;
+    static nsIAtom*             kMenuListAtom;
+	  static nsIAtom*             kNullAtom;
 
 public:
     static nsresult

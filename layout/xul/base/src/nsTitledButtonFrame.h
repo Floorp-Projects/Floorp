@@ -65,6 +65,7 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
+  virtual PRIntn GetDefaultAlignment();
   virtual void UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttribute, PRBool& aResize, PRBool& aRedraw, PRBool& aUpdateAccessUnderline);
   virtual void UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize);
 

@@ -45,7 +45,11 @@ EXPORTS		= \
 		nsIXULPopupListener.h \
 		nsIXULPrototypeCache.h \
 		nsIXULPrototypeDocument.h \
-    nsIXULContent.h \
+        nsIXULContent.h \
+        nsIDOMXULTitledButtonElement.h \
+		nsIDOMXULCheckboxElement.h \
+		nsIDOMXULRadioElement.h \
+		nsIDOMXULMenuListElement.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

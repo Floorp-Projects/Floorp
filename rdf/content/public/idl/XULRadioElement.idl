@@ -1,0 +1,13 @@
+interface XULRadioElement : XULElement {
+/* IID: { 0xa5f00fa1, 0xe874, 0x11d3, \
+  { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } } */
+
+  attribute DOMString value;
+  attribute DOMString crop;
+  attribute boolean disabled;
+  attribute DOMString src;
+  attribute DOMString imgalign;
+  attribute DOMString accesskey;
+  attribute boolean checked;
+};
+

@@ -42,6 +42,10 @@ EXPORTS	= \
         nsIXULPrototypeCache.h          \
         nsIXULPrototypeDocument.h       \
         nsIXULContent.h                 \
+		nsIDOMXULTitledButtonElement.h  \
+		nsIDOMXULCheckboxElement.h      \
+		nsIDOMXULRadioElement.h         \
+		nsIDOMXULMenuListElement.h	    \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>

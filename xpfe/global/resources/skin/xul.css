@@ -8,6 +8,10 @@
 
 @namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul); /* set default namespace to XUL */
 
+* {
+  display: block;
+}
+
 /** 
  * All elements that have no visual representation
  */
@@ -168,6 +172,18 @@ menuseparator {
 
 menuseparator[hidden="true"] {
   display: none;
+}
+
+menulist {
+  behavior: url("resource:/chrome/xulBindings.xml#menulist");
+}
+
+menulist[editable="true"] {
+  behavior: url("resource:/chrome/xulBindings.xml#menulist-editable");
+}
+
+menubutton {
+  behavior: url("resource:/chrome/xulBindings.xml#menubutton");
 }
 
 /******** Titled buttons **********/

@@ -42,6 +42,10 @@ CPPSRCS		= \
 		nsJSXULIFrameElement.cpp \
 		nsJSXULBrowserElement.cpp \
 		nsJSXULEditorElement.cpp \
+		nsJSXULTitledButtonElement.cpp \
+		nsJSXULCheckboxElement.cpp \
+		nsJSXULRadioElement.cpp \
+		nsJSXULMenuListElement.cpp \
 		nsRDFDOMNodeList.cpp \
 		nsXULElement.cpp \
 		nsRDFGenericBuilder.cpp \
@@ -61,6 +65,10 @@ CPPSRCS		= \
 		nsXULEditorElement.cpp \
 		nsXULPrototypeDocument.cpp \
 		nsXULPrototypeCache.cpp \
+		nsXULTitledButtonElement.cpp \
+		nsXULCheckboxElement.cpp \
+		nsXULRadioElement.cpp \
+		nsXULMenuListElement.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

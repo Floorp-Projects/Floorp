@@ -2,6 +2,7 @@
 
 <bindings id="xulBindings"
    xmlns="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/TR/REC-html40"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <binding name="scrollbar">
@@ -23,10 +24,38 @@
     <content excludes="template,observes,menupopup">
       <xul:titledbutton class="menu-left"/>
       <xul:titledbutton class="menu-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
-      <xul:spring class="menu-spring"/>
       <xul:titledbutton class="menu-accel" inherits="acceltext:value"/>
       <xul:titledbutton class="menu-right"/>
     </content>
+  </binding>
+
+  <binding name="menulist">
+    <content excludes="template,observes,menupopup">
+      <xul:image class="menu-icon" inherits="src"/>
+      <xul:titledbutton class="menu-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
+      <xul:titledbutton class="menu-dropmarker"/>
+    </content>
+	<handlers>
+      <handler type="command" capturer="true" value="this.selectedItem = event.target"/>
+	</handlers>
+  </binding>
+
+  <binding name="menubutton">
+    <content excludes="template,observes,menupopup">
+      <xul:titledbutton class="menu-button" allowevents="true" inherits="buttonaction:oncommand,src,value,crop,accesskey"/>
+      <xul:titledbutton class="menu-dropmarker"/>
+    </content>
+  </binding>
+
+  <binding name="menulist-editable">
+    <content excludes="template,observes,menupopup">
+      <xul:image class="menu-icon" inherits="src"/>
+	  <html:input type="text" flex="1" class="menu-text" allowevents="true" inherits="value,disabled"/>
+      <xul:titledbutton class="menu-dropmarker"/>
+    </content>
+	<handlers>
+      <handler type="command" capturer="true" value="this.selectedItem = event.target"/>
+	</handlers>
   </binding>
 
   <binding name="treecell-indented-folder">
