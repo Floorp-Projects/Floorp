@@ -766,7 +766,7 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
         
         nsIMsgFolder *folder = getFolderFor(info);
         if (folder) {
-            m_hostinfo->AddSubfolder(folder);
+            m_hostinfo->AddSubFolder(folder);
             NS_RELEASE(folder);
         }
         
@@ -1877,7 +1877,7 @@ nsNNTPHost::RemoveGroup (const nsINNTPNewsgroup *newsInfo)
 #endif
         nsIMsgFolder* newsFolder = getFolderFor((nsINNTPNewsgroup*)newsInfo);
         if (newsFolder) {
-            m_hostinfo->RemoveSubfolder(newsFolder);
+            m_hostinfo->RemoveSubFolder(newsFolder);
             NS_RELEASE(newsFolder);
         }
         /*
@@ -2883,7 +2883,7 @@ nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
                     nsIMsgFolder* parentCategory;
                     rv = catFolder->FindParentOf(newsFolder,&parentCategory);
                     if (NS_SUCCEEDED(rv)) {
-                        parentCategory->RemoveSubfolder(newsFolder);
+                        parentCategory->RemoveSubFolder(newsFolder);
                         NS_RELEASE(parentCategory);
                     }
                     NS_RELEASE(catFolder);
@@ -2899,7 +2899,7 @@ nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
 
 		if (newsInfo)
 		{
-            m_hostinfo->RemoveSubfolder(newsFolder);
+            m_hostinfo->RemoveSubFolder(newsFolder);
             /*
 			XPPtrArray* infolist = (XPPtrArray*) m_hostinfo->GetSubFolders();
 			infolist->Remove(newsInfo);
