@@ -48,11 +48,15 @@
 <?xml-stylesheet href="chrome://calendar/skin/calendarEventDialog.css" ?>
 <?xml-stylesheet href="chrome://calendar/skin/dialogOverlay.css" type="text/css"?>
 
+<!-- CSS for selecting contacts to invite to event -->
+<?xml-stylesheet href="chrome://calendar/skin/contactsSelectAddressesDialog.css" ?>
+
 <!-- DTD File with all strings specific to the calendar -->
 <!DOCTYPE window 
 [
     <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
     <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
+    <!ENTITY % dtd3 SYSTEM "chrome://calendar/locale/contactsSelectAddressesDialog.dtd" > %dtd3;
 ]>
 
 
@@ -62,20 +66,31 @@
    onload="loadCalendarEventDialog()"
    persist="screenX screenY"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   >
+   xmlns:nc="http://home.netscape.com/NC-rdf#">
     
    
 <!-- Javascript DTD To Variable -->
 <script type="application/x-javascript">
    var neStartTimeErrorAlertMessage = "&newevent.starttimeerror.alertmessage;";
    var neRecurErrorAlertMessage     = "&newevent.recurendtimeerror.alertmessage;";
+   var DTD_noEmailMessage = "&ab-selectAddressesDialogNoEmailMessage.label;";
+   var DTD_toPrefix = "&ab-selectAddressesDialogPrefixTo.label;";
 </script>
+
+
+<!-- Select addresses commands -->
+<commandset id="selectAddressesCommands">
+    <command id="addToInviteList" oncommand="addSelectedAddressesIntoInviteBucket( '', '' );" disabled="true" />
+    <command id="removeFromInviteList" oncommand="removeSelectedFromInviteBucket();" disabled="true" />
+</commandset>
+
 
 <!-- Javascript includes -->
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarEventDialog.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/contactsSelectAddressesDialog.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarEventDialogAttachFile.js"/>
 
 <!-- Data used in JS from dtd -->
@@ -108,7 +123,7 @@
                <tabs>
                 <tab label="&newevent.newevent.tab.label;"/>
                 <tab label="&newevent.recurrence.tab.label;"/>
-                <tab label="$newevent.contacts.tab.label;" collapsed="true"/>
+                <tab label="&newevent.contacts.tab.label;"  collapsed="true"/>
                 <tab label="&newevent.files.tab.label;" collapsed="true"/>
                </tabs>
                <tabpanels>
@@ -256,7 +271,7 @@
                         <vbox>
                           <hbox id="repeat-box" align="center">
                             <checkbox id="repeat-checkbox" class="proper-align" label="&newevent.repeat.label;"  checked="false" oncommand="commandRepeat()"/>
-                            <textbox id="repeat-length-field" disable-controller="repeat" value="1"  oninput="repeatLengthKeyDown( this )"/>
+                            <textbox id="repeat-length-field" class="cursor-pointer" disable-controller="repeat" value="1"  oninput="repeatLengthKeyDown( this )"/>
                                     
                             <menulist crop="none" oncommand="repeatUnitCommand( this )" labelnumber="labelplural"  id="repeat-length-units" disable-controller="repeat">
                                 <menupopup>
@@ -340,16 +355,85 @@
                         </vbox>
                     <!-- /Repeat -->   
             </tabpanel>
-            <tabpanel>
+            
+            <!-- Contacts panel -->
+            <tabpanel orient="vertical" collapsed="true">
                <!-- Invite -->    
-                  <vbox>
+                  <vbox collapsed="true">
                      <hbox id="invite-box" align="center">
                          <checkbox id="invite-checkbox"  label="&newevent.invite.label;" checked="false" oncommand="commandInvite()"/>
                          <textbox id="invite-email-field" size="39" disabled="true"/>
                      </hbox>
                   </vbox>
+                  
+                  
+    <vbox flex="1">
+        <hbox id="topBox" align="center">
+            <label value="&ab-selectAddressesDialogLookIn.label;" />
+            
+            <!-- Address book chooser -->                    
+            <menulist id="addressBookList" oncommand="onChooseAddressBookEventDialog( this );">
+                <menupopup id="addressBookList-menupopup" ref="moz-abdirectory://" datasources="rdf:addressdirectory">
+                    <template> 
+                        <rule nc:IsMailList="false">
+                            <menuitem uri="..."
+                                label="rdf:http://home.netscape.com/NC-rdf#DirName"
+                                value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+                        </rule>
+                    </template> 
+                </menupopup>
+            </menulist>
+        </hbox>
+        
+        <hbox flex="1">    
+    
+            <!-- Existing addresses -->                
+            <vbox id="resultsBox" flex="4">
+                <label value=" " />
+                <tree id="abResultsTree" flex="1" persist="height" hidecolumnpicker="true" seltype="multiple" onclick="this.contactsTree.onClick( event );" ondblclick="this.contactsTree.onDblClick( event );">
+                
+                    <treecols id="recipientTreeCols">
+                        <treecol id="GeneratedName" sort-field="GeneratedName" class="sortDirectionIndicator"   list-view-sort-field="true" 
+                        persist="ordinal width" flex="1" label="&ab-selectAddressesDialogNameColumn.label;" primary="true"/>
+                        
+                        <splitter class="tree-splitter"/>
+                        
+                        <treecol id="PrimaryEmail" sort-field="PrimaryEmail" class="sortDirectionIndicator" list-view-sort-field="true"  
+                        persist="ordinal width"  flex="1" label="&ab-selectAddressesDialogEmailColumn.label;"/>
+                    </treecols>
+                    
+                    <treechildren />
+                       
+                </tree>
+            </vbox>
+            
+            <!-- Add and remove buttons -->
+            <vbox id="addToBucketButtonBox">
+                <spacer flex="1" />
+                <button id="toButton" label="&ab-selectAddressesDialogInvite.label;" command="addToInviteList" /> 
+                <spacer />
+                <button id="remove" label="&ab-selectAddressesDialogUninvite.label;" class="dialog" command="removeFromInviteList" /> 
+                <spacer flex="1" />
+            </vbox>
+            
+            <!-- Recipient list -->                           
+            <vbox id="bucketBox" flex="1">
+                <label value="&ab-selectAddressesDialogInviteList.label;"/>
+                
+                <tree id="addressBucket" flex="1" seltype="multiple" hidecolumnpicker="true" onclick="selectEventRecipient( this );">
+                    <treecols>
+                        <treecol id="addressCol" flex="1" hideheader="true"/>
+                    </treecols>
+                    
+                    <treechildren id="bucketBody" flex="1"/>
+                </tree>
+            </vbox>
+            
+        </hbox>
+    </vbox>
                    
             </tabpanel>
+            
             <tabpanel>
                <listbox id="attachmentBucket" flex="1" rows="8"
                    onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"

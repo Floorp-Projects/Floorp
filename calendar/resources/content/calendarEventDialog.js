@@ -129,6 +129,7 @@ function loadCalendarEventDialog()
    
    var titleString = titleDataItem.getAttribute( "value" );
    document.getElementById("calendar-new-eventwindow").setAttribute("title", titleString);
+   
    // fill in fields from the event
    var startDate = new Date( gEvent.start.getTime() );
    var endDate = new Date( gEvent.end.getTime() );
@@ -383,6 +384,22 @@ function onOKCommand()
 	
       gEvent.addAttachment( Attachment );
    }
+
+    // Attach any specified contacts to the event
+    if( gEventCardArray )
+    {
+        // Remove any existing contacts
+        gEvent.removeContacts();
+    
+        // Add specified contacts
+        for( var cardId in gEventCardArray )
+        {
+            if( gEventCardArray[ cardId ] )
+            {
+                gEvent.addContact( gEventCardArray[ cardId ] );
+            }
+        }
+    }
 
    //if the end time is later than the start time... alert the user using text from the dtd.
    // call caller's on OK function

@@ -105,7 +105,7 @@
  *   edit event button
  *-------------------------------------------------------------------*/
 
-#calendar-edit-event-button
+#calendar-edit-event-button 
 {
     -moz-image-region: rect(126px 32px 147px 0px);
 }
@@ -430,7 +430,7 @@
 
 /*Day boxes that aren't in this month*/
 .month-day-box-class[empty="true"]{
-   background-color: #E7EEEC;
+   background-color     : #E7EEEC;
 }
 
 /*today's day box*/

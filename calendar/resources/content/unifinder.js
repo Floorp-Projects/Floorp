@@ -368,7 +368,8 @@ function doSearch( )
    }
    else if ( searchText == " " ) 
    {
-      searchTextItem.value = '';
+      searchText = "";
+      document.getElementById( "unifinder-search-field" ).value = '';
    }
    else
    {

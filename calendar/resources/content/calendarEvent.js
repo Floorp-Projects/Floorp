@@ -466,10 +466,13 @@ CalendarEventDataSource.prototype.getEventsWithAlarms = function()
 CalendarEventDataSource.prototype.getAllFutureEvents = function()
 {
    var Today = new Date();
-   
-   var Infinity = new Date( 9999, 31, 12 );
 
-   var eventList = this.gICalLib.getFirstEventsForRange( Today, Infinity );
+   //do this to allow all day events to show up all day long
+   var Start = new Date( Today.getFullYear(), Today.getDay(), Today.getMonth(), 0, 0, 0 );
+   
+   var Infinity = new Date( Today.getFullYear()+100, 31, 11 );
+
+   var eventList = this.gICalLib.getFirstEventsForRange( Start, Infinity );
    
    var eventArray = new Array();
    
@@ -514,22 +517,6 @@ CalendarEventDataSource.prototype.makeNewEvent = function( date )
 /* TO DO STUFF */
 CalendarEventDataSource.prototype.getAllToDos = function()
 {
-   if( document.getElementById( "only-completed-checkbox" ) )
-      var Checked = document.getElementById( "only-completed-checkbox" ).checked;
-   else
-      var Checked = false;
-
-   if( Checked )
-   {
-      var now = new Date();
-
-      this.gICalLib.filter.completed.setTime( now );
-   }
-   else
-   {
-      this.gICalLib.resetFilter()
-   }
-
    var eventList = this.gICalLib.getAllTodos( );
    
    var eventArray = new Array();
@@ -710,7 +697,6 @@ CalendarAlarmObserver.prototype.fireAlarm = function( calendarEvent )
       return;
    }
       
-
    if( gCalendarWindow.calendarPreferences.getPref( "alarmsplaysound" ) )
    {
       playSound();

@@ -44,6 +44,7 @@
 #start-event-time-box,
 #start-date-box
 {
+   -moz-box-align : center;
    -moz-box-pack : start;
 }
 
@@ -102,7 +103,6 @@
 {
    min-width   : 52px;
 }
-
 
 #radio-spacer
 {
@@ -186,86 +186,31 @@
     list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_down.gif");
   }
 
-
 /*--------------------------------------------------------------------
- *   Start time button
+ *   Start and End date button
  *-------------------------------------------------------------------*/
 
-#start-time-button 
+.event-time-button-class
   {
     margin-left             : 3px;
     list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_up.gif");
   }
-#start-time-button[disabled="true"],
-#start-time-button[disabled="true"]:hover,
-#start-time-button[disabled="true"]:hover:active
+.event-time-button-class[disabled="true"],
+.event-time-button-class[disabled="true"]:hover,
+.event-time-button-class[disabled="true"]:hover:active
   {
    list-style-image         : url("chrome://calendar/skin/ca-event-dialog/clock_disabled.gif");
   }
-#start-time-button:hover
+.event-time-button-class:hover
   {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_hover.gif");
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_hover.png");
   }
-#start-time-button:hover:active
+.event-time-button-class:hover:active
   {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_down.gif");
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_down.png");
   }
-
-
-/*--------------------------------------------------------------------
- *   End time button
- *-------------------------------------------------------------------*/
-
-#end-time-button 
-  {
-    margin-left             : 3px;
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_up.gif");
-  }
-#end-time-button[disabled="true"],
-#end-time-button[disabled="true"]:hover,
-#end-time-button[disabled="true"]:hover:active
-  {
-   list-style-image         : url("chrome://calendar/skin/ca-event-dialog/clock_disabled.gif");
-  }
-#end-time-button:hover
-  {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_hover.gif");
-  }
-#end-time-button:hover:active
-  {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_down.gif");
-  }
-
-
-
-/*--------------------------------------------------------------------
- *   Repeat end date button
- *-------------------------------------------------------------------*/
-
-.date-picker-image
-  {
-    height                  : 24px;
-    margin-left             : 3px;
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_up.gif");
-  }
-.date-picker-image[disabled="true"],
-.date-picker-image[disabled="true"]:hover,
-.date-picker-image[disabled="true"]:hover:active
-  {
-   list-style-image         : url("chrome://calendar/skin/ca-event-dialog/calendar_disabled.gif");
-  }
-.date-picker-image:hover
-  {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_hover.gif");
-  }
-.date-picker-image:hover:active
-  {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_down.gif");
-  }
-
 
 .warning-text-class
 {
    color       : red;
 }
-

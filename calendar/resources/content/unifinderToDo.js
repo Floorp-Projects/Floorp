@@ -116,6 +116,19 @@ function finishCalendarToDoUnifinder( )
 
 function toDoUnifinderRefesh()
 {
+   var Checked = document.getElementById( "only-completed-checkbox" ).checked;
+   
+   if( Checked === true )
+   {
+      var now = new Date();
+
+      gICalLib.filter.completed.setTime( now );
+   }
+   else
+   {
+      gICalLib.resetFilter()
+   }
+
    var eventTable = gEventSource.getAllToDos();
    
    refreshToDoTree( eventTable );

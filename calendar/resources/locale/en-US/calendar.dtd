@@ -113,6 +113,8 @@
 
 <!ENTITY event.tip.new         "Create a new event." >
 <!ENTITY event.tip.edit        "Edit an existing event." >
+<!ENTITY todo.tip.new         "Create a new task." >
+<!ENTITY todo.tip.edit        "Edit an existing task." >
 <!ENTITY event.tip.alert       "Alarm!" >
 
 
@@ -126,6 +128,7 @@
 <!ENTITY calendar.tools.delete.tooltip         "Delete Event" >
 <!ENTITY calendar.tools.modify.tooltip         "Modify Event" >
 
+<!ENTITY calendar.newtask.button.tooltip          "Create A New Task" >
 <!ENTITY calendar.newevent.button.tooltip         "Create a new Calendar event" >
 <!ENTITY calendar.delete.button.tooltip           "Delete selected event" >
 <!ENTITY calendar.edit.button.tooltip             "Edit selected event" >
@@ -155,6 +158,7 @@
 <!ENTITY calendar.nextmonth.button.tooltip        "Next Month" >
 <!ENTITY calendar.prevmonth.button.tooltip        "Previous Month" >
 
+<!ENTITY calendar.newtask.button.label          "New Task" >
 <!ENTITY calendar.newevent.button.label         "New Event" >
 <!ENTITY calendar.delete.button.label           "Delete" >
 <!ENTITY calendar.edit.button.label             "Edit" >
