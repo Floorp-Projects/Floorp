@@ -1724,32 +1724,39 @@ PRUint32 nsWidget::nsConvertKey(unsigned long keysym, PRBool *aIsChar )
   { NS_VK_PRINTSCREEN, Pk_Print, PR_FALSE },
   { NS_VK_INSERT,     Pk_Insert, PR_FALSE },
   { NS_VK_DELETE,     Pk_Delete, PR_FALSE },
-  { NS_VK_MULTIPLY,   Pk_KP_Multiply, PR_FALSE },
-  { NS_VK_ADD,        Pk_KP_Add, PR_FALSE },
-  { NS_VK_SEPARATOR,  Pk_KP_Separator, PR_FALSE },
-  { NS_VK_SUBTRACT,   Pk_KP_Subtract, PR_FALSE },
-  { NS_VK_DECIMAL,    Pk_KP_Decimal, PR_FALSE },
-  { NS_VK_DIVIDE,     Pk_KP_Divide, PR_FALSE },
-  { NS_VK_RETURN,     Pk_KP_Enter, PR_FALSE },
   { NS_VK_COMMA,      Pk_comma, PR_TRUE },
   { NS_VK_PERIOD,     Pk_period, PR_TRUE },
   { NS_VK_SLASH,      Pk_slash, PR_TRUE },
   { NS_VK_OPEN_BRACKET,  Pk_bracketleft, PR_TRUE },
   { NS_VK_CLOSE_BRACKET, Pk_bracketright, PR_TRUE },
   { NS_VK_QUOTE,         Pk_quotedbl, PR_TRUE },
-  { NS_VK_NUMPAD0,       Pk_KP_0, PR_TRUE },
-  { NS_VK_NUMPAD1,       Pk_KP_1, PR_TRUE },
-  { NS_VK_NUMPAD2,       Pk_KP_2, PR_TRUE },
-  { NS_VK_NUMPAD3,       Pk_KP_3, PR_TRUE },
-  { NS_VK_NUMPAD4,       Pk_KP_4, PR_TRUE },
-  { NS_VK_NUMPAD5,       Pk_KP_5, PR_TRUE },
-  { NS_VK_NUMPAD6,       Pk_KP_6, PR_TRUE },
-  { NS_VK_NUMPAD7,       Pk_KP_7, PR_TRUE },
-  { NS_VK_NUMPAD8,       Pk_KP_8, PR_TRUE },
-  { NS_VK_NUMPAD9,       Pk_KP_9, PR_TRUE }
+#if 0
+  { NS_VK_MULTIPLY,      Pk_KP_Multiply, PR_TRUE },
+  { NS_VK_ADD,           Pk_KP_Add, PR_TRUE },
+  { NS_VK_COMMA,         Pk_KP_Separator, PR_FALSE },
+  { NS_VK_SUBTRACT,      Pk_KP_Subtract, PR_TRUE },
+  { NS_VK_PERIOD,        Pk_KP_Decimal, PR_TRUE },
+  { NS_VK_DIVIDE,        Pk_KP_Divide, PR_TRUE },
+  { NS_VK_RETURN,        Pk_KP_Enter, PR_FALSE },
+  { NS_VK_INSERT,        Pk_KP_0, PR_FALSE },
+  { NS_VK_END,           Pk_KP_1, PR_FALSE },
+  { NS_VK_DOWN,          Pk_KP_2, PR_FALSE },
+  { NS_VK_PAGE_DOWN,     Pk_KP_3, PR_FALSE },
+  { NS_VK_LEFT,          Pk_KP_4, PR_FALSE },
+  { NS_VK_NUMPAD5,       Pk_KP_5, PR_FALSE },
+  { NS_VK_RIGHT,         Pk_KP_6, PR_FALSE },
+  { NS_VK_HOME,          Pk_KP_7, PR_FALSE },
+  { NS_VK_UP,            Pk_KP_8, PR_FALSE },
+  { NS_VK_PAGE_UP,       Pk_KP_9, PR_FALSE }
+#else
+  { NS_VK_NUMPAD5,       Pk_KP_5, PR_FALSE }
+#endif
   };
 
   const int length = sizeof(nsKeycodes) / sizeof(struct nsKeyConverter);
+
+  //printf("nsWidget::nsConvertKey - Looking for <%x> length=<%d>\n", keysym, length);
+
   if (aIsChar)
   {
 	/* Default this to TRUE */
@@ -1759,22 +1766,19 @@ PRUint32 nsWidget::nsConvertKey(unsigned long keysym, PRBool *aIsChar )
   // First, try to handle alphanumeric input, not listed in nsKeycodes:
   if (keysym >= Pk_a && keysym <= Pk_z)
      return keysym - Pk_a + NS_VK_A;
-		
+
   if (keysym >= Pk_A && keysym <= Pk_Z)
      return keysym - Pk_A + NS_VK_A;
-			  
+
   if (keysym >= Pk_0 && keysym <= Pk_9)
      return keysym - Pk_0 + NS_VK_0;
-
-  if (keysym >= Pk_KP_0 && keysym <= Pk_KP_9)
-     return keysym - Pk_KP_0 + NS_VK_NUMPAD0;
-						  
+		  
   if (keysym >= Pk_F1 && keysym <= Pk_F24)
   {
      *aIsChar = PR_FALSE;
      return keysym - Pk_F1 + NS_VK_F1;
   }
-  
+
   for (int i = 0; i < length; i++) {
     if (nsKeycodes[i].keysym == keysym)
     {
@@ -1813,7 +1817,10 @@ void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
     PRBool IsChar;
     unsigned long keysym;
 	
-	keysym = nsConvertKey(aPhKeyEvent->key_cap, &IsChar);
+    /* kirk: Big Change from key_cap to key_sym to fix the numeric keypad */
+    /* 3/7/00 This seems to easy so there may be some other problems that were caused! */
+	//keysym = nsConvertKey(aPhKeyEvent->key_cap, &IsChar);
+	keysym = nsConvertKey(aPhKeyEvent->key_sym, &IsChar);
 
     //printf("nsWidget::InitKeyEvent EventType=<%d> key_cap=<%lu> converted=<%lu> IsChar=<%d>\n", aEventType, aPhKeyEvent->key_cap, keysym, IsChar);
 
@@ -1874,7 +1881,9 @@ PRBool  nsWidget::DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent)
   if ( ( aPhKeyEvent->key_cap == Pk_Shift_L )
        || ( aPhKeyEvent->key_cap == Pk_Shift_R )
        || ( aPhKeyEvent->key_cap == Pk_Control_L )
-       || ( aPhKeyEvent->key_cap == Pk_Control_R )
+       || ( aPhKeyEvent->key_cap ==  Pk_Control_R )
+       || ( aPhKeyEvent->key_cap ==  Pk_Num_Lock )
+       || ( aPhKeyEvent->key_cap ==  Pk_Scroll_Lock )
      )
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::DispatchKeyEvent Ignoring SHIFT or CONTROL keypress\n"));
@@ -1882,10 +1891,11 @@ PRBool  nsWidget::DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent)
   }
 
   nsWindow *w = (nsWindow *) this;
-  
-//printf("nsWidget::DispatchKeyEvent KeyEvent Info: this=<%p> key_flags=<%lu> key_mods=<%lu>  key_sym=<%lu> key_cap=<%lu> key_scan=<%d> Focused=<%d>\n",
-//	this, aPhKeyEvent->key_flags, aPhKeyEvent->key_mods, aPhKeyEvent->key_sym, aPhKeyEvent->key_cap, aPhKeyEvent->key_scan, PtIsFocused(mWidget));
-	
+
+#if 1
+printf("nsWidget::DispatchKeyEvent KeyEvent Info: this=<%p> key_flags=<%lu> key_mods=<%lu>  key_sym=<%lu> key_cap=<%lu> key_scan=<%d> Focused=<%d>\n",
+	this, aPhKeyEvent->key_flags, aPhKeyEvent->key_mods, aPhKeyEvent->key_sym, aPhKeyEvent->key_cap, aPhKeyEvent->key_scan, PtIsFocused(mWidget));
+#endif	
 
   w->AddRef();
   
