@@ -4856,44 +4856,41 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
 
   if (flag & kHasCRAMCapability)
   {
-#define DIGEST_LENGTH 16
-  nsresult rv;
+    nsresult rv;
     nsXPIDLCString digest;
       // inform the server that we want to begin a CRAM authentication procedure...
       nsCAutoString command (GetServerCommandTag());
       command.Append(" authenticate CRAM-MD5" CRLF);
-    rv = SendData(command.get());
+      rv = SendData(command.get());
       ParseIMAPandCheckForNewMail();
       if (GetServerStateParser().LastCommandSuccessful()) 
       {
-//      unsigned char * digest;
           char * decodedChallenge = PL_Base64Decode(GetServerStateParser().fCRAMDigest, 
                                                     nsCRT::strlen(GetServerStateParser().fCRAMDigest), nsnull);
 
-      if (m_imapServerSink)
-        rv = m_imapServerSink->CramMD5Hash(decodedChallenge, password, getter_Copies(digest));
+          if (m_imapServerSink)
+            rv = m_imapServerSink->CramMD5Hash(decodedChallenge, password, getter_Copies(digest));
 
-          PR_FREEIF(decodedChallenge);
+          PR_Free(decodedChallenge);
           if (NS_SUCCEEDED(rv) && digest)
           {
             nsCAutoString encodedDigest;
-        PRUint32 digestLength = 16;
+            PRUint32 digestLength = digest.Length();
             char hexVal[8];
 
             for (PRUint32 j=0; j<digestLength; j++) 
             {
-          PR_snprintf (hexVal,8, "%.2x", 0x0ff & (unsigned short)(digest.get()[j]));
+              PR_snprintf (hexVal,8, "%.2x", 0x0ff & (unsigned short)(digest.get()[j]));
               encodedDigest.Append(hexVal); 
             }
 
             PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s %s", userName, encodedDigest.get());
             char *base64Str = PL_Base64Encode(m_dataOutputBuf, nsCRT::strlen(m_dataOutputBuf), nsnull);
             PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s" CRLF, base64Str);
-            PR_FREEIF(base64Str);
-//        PR_FREEIF(digest);
+            PR_Free(base64Str);
             rv = SendData(m_dataOutputBuf);
             if (NS_SUCCEEDED(rv))
-           ParseIMAPandCheckForNewMail(command.get());
+              ParseIMAPandCheckForNewMail(command.get());
             if (GetServerStateParser().LastCommandSuccessful())
               return;
           }
