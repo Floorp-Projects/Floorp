@@ -2796,6 +2796,10 @@ NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt)
 			 	 */
 				URL_s->address[PL_strlen(URL_s->address)-1] = '\0';
 			  }
+            else 
+              {
+                URL_s->address_modified = TRUE;
+              }
 		  }
 	  }
 
