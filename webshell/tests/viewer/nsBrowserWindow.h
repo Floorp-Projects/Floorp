@@ -83,6 +83,8 @@ public:
   NS_IMETHOD GetStatus(PRUnichar** aResult);
   NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax);
   NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
+  NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
+  NS_IMETHOD ForceRefresh();
 
   // nsIStreamObserver
   NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
@@ -133,7 +135,6 @@ public:
 
   void DoFind();
   void DoSelectAll();
-  void ForceRefresh();
 
   void ShowPrintPreview(PRInt32 aID);
 

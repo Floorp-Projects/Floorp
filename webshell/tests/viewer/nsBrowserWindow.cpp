@@ -540,6 +540,46 @@ static void* GetItemsNativeData(nsISupports* aObject)
 	return result;
 }
 
+//---------------------------------------------------------------
+NS_IMETHODIMP nsBrowserWindow::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound)
+{
+	nsIPresShell* shell = GetPresShell();
+	if (nsnull != shell) {
+	  nsIDocument* doc = shell->GetDocument();
+	  if (nsnull != doc) {
+		  PRBool foundIt = PR_FALSE;
+		  doc->FindNext(aSearchStr, aMatchCase, aSearchDown, aIsFound);
+		  if (!aIsFound) {
+		    // Display Dialog here
+		  }
+		  ForceRefresh();
+		  NS_RELEASE(doc);
+	  }
+	  NS_RELEASE(shell);
+	}
+  return NS_OK;
+}
+
+//---------------------------------------------------------------
+NS_IMETHODIMP nsBrowserWindow::ForceRefresh()
+{
+  nsIPresShell* shell = GetPresShell();
+  if (nsnull != shell) {
+    nsIViewManager* vm = shell->GetViewManager();
+    if (nsnull != vm) {
+      nsIView* root;
+      vm->GetRootView(root);
+      if (nsnull != root) {
+        vm->UpdateView(root, (nsIRegion*)nsnull, NS_VMREFRESH_IMMEDIATE);
+      }
+      NS_RELEASE(vm);
+    }
+    NS_RELEASE(shell);
+  }
+  return NS_OK;
+}
+
+
 /**--------------------------------------------------------------------------------
  * Main Handler
  *--------------------------------------------------------------------------------
@@ -564,21 +604,8 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
 	    nsString searchStr;
 	    PRUint32 actualSize;
 	    mTextField->GetText(searchStr, 255,actualSize);
-
-	    nsIPresShell* shell = GetPresShell();
-	    if (nsnull != shell) {
-	      nsIDocument* doc = shell->GetDocument();
-	      if (nsnull != doc) {
-		PRBool foundIt = PR_FALSE;
-		doc->FindNext(searchStr, matchCase, findDwn, foundIt);
-		if (!foundIt) {
-		  // Display Dialog here
-		}
-		ForceRefresh();
-		NS_RELEASE(doc);
-	      }
-	      NS_RELEASE(shell);
-	    }
+      PRBool foundIt;
+	    FindNext(searchStr, matchCase, findDwn, foundIt);
 	  }
 	} break;
 
@@ -712,7 +739,7 @@ nsBrowserWindow::DoFind()
       widget->SetForegroundColor(textFGColor);
       widget->SetClientData(this);
       widget->SetFocus();
-	NS_RELEASE(widget);
+	    NS_RELEASE(widget);
     }
     xx += 200 + 5;
   
@@ -729,7 +756,7 @@ nsBrowserWindow::DoFind()
     {
       widget->SetClientData(this);
       mUpRadioBtn->SetLabel("Up");
-	NS_RELEASE(widget);
+	    NS_RELEASE(widget);
     }
     y += h + 2;
   
@@ -741,7 +768,7 @@ nsBrowserWindow::DoFind()
     {
 	    widget->SetClientData(this);
 	    mDwnRadioBtn->SetLabel("Down");
-	NS_RELEASE(widget);
+	    NS_RELEASE(widget);
     }
   
     // Create Match CheckButton
@@ -752,7 +779,7 @@ nsBrowserWindow::DoFind()
     {
 	    widget->SetClientData(this);
 	    mMatchCheckBtn->SetLabel("Match Case");
-	NS_RELEASE(widget);
+	    NS_RELEASE(widget);
     }
 
     mUpRadioBtn->SetState(PR_FALSE);
@@ -766,7 +793,7 @@ nsBrowserWindow::DoFind()
     {
 	    widget->SetClientData(this);
 	    mFindBtn->SetLabel("Find Next");
-	NS_RELEASE(widget);
+	    NS_RELEASE(widget);
     }
   
     // Create Cancel Button
@@ -777,7 +804,7 @@ nsBrowserWindow::DoFind()
     {
 	    widget->SetClientData(this);
 	    mCancelBtn->SetLabel("Cancel");
-	NS_RELEASE(widget);
+	    NS_RELEASE(widget);
     }  
   }
   mTextField->SelectAll();
@@ -795,25 +822,6 @@ nsBrowserWindow::DoSelectAll()
       doc->SelectAll();
       ForceRefresh();
       NS_RELEASE(doc);
-    }
-    NS_RELEASE(shell);
-  }
-}
-
-void
-nsBrowserWindow::ForceRefresh()
-{
-  nsIPresShell* shell = GetPresShell();
-  if (nsnull != shell) {
-    nsIViewManager* vm = shell->GetViewManager();
-    if (nsnull != vm) {
-      nsIView* root;
-      vm->GetRootView(root);
-      if (nsnull != root) {
-	vm->UpdateView(root, (nsIRegion*)nsnull, NS_VMREFRESH_IMMEDIATE |
-						 NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
-      }
-      NS_RELEASE(vm);
     }
     NS_RELEASE(shell);
   }
@@ -898,9 +906,12 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   if (NS_OK != rv) {
     return rv;
   }
+  nsWidgetInitData initData;
+  initData.mBorderStyle = eBorderStyle_dialog;
+
   nsRect r(0, 0, aBounds.width, aBounds.height);
   mWindow->Create((nsIWidget*)NULL, r, HandleBrowserEvent,
-		  nsnull, aAppShell);
+		              nsnull, aAppShell, nsnull, &initData);
   mWindow->GetBounds(r);
 
   // Create web shell
