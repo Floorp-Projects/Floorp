@@ -295,7 +295,9 @@ if(verifyDiskSpace(fProgram, srDest))
     createShortcuts();
     upgradeCleanup();
     updateWinIni();
-    updateMapi();
+
+    // Disabling this call for now because Trunk does not have mozMapi32.dll yet.
+    // updateMapi();
 
     // we don't want to fail on errors for the above
     resetError();
