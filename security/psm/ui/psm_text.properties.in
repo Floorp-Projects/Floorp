@@ -123,6 +123,9 @@ text_passwords=Passwords
 text_edit_view=View/Edit
 text_edit_dots=Edit...
 text_add_dots=Add...
+text_login=Login
+text_logout=Logout
+text_logout_all=Logout All
 
 
 ;

@@ -6140,11 +6140,11 @@ adv_modules_slotlist_part3:
 </select>
 </td></div></tr>
 <tr><td><div>
-<input type="button" value="Login"width="72"  onClick=parent.DoSomethingToSlot("LoginSlot")>
+<input type="button" value="{text_login}"width="72"  onClick=parent.DoSomethingToSlot("LoginSlot")>
 <spacer type="horizontal" size="12">
-<input type="button" value="Logout" width="72" onClick=parent.DoSomethingToSlot("LogoutSlot")>
+<input type="button" value="{text_logout}" width="72" onClick=parent.DoSomethingToSlot("LogoutSlot")>
 <spacer type="horizontal" size="12">
-<input type="button" value="Logout All" width="72" onClick=parent.DoSomethingToSlot("LogoutAllSlots")>
+<input type="button" value="{text_logout_all}" width="72" onClick=parent.DoSomethingToSlot("LogoutAllSlots")>
 </td></div></tr>
 </table>
 </div>
