@@ -585,7 +585,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   nsCOMPtr<nsIFileSpec> newIMAPLocalMailPath;
   nsCOMPtr<nsIFileSpec> oldNewsPath;
   nsCOMPtr<nsIFileSpec> newNewsPath;
-  nsCOMPtr<nsIFileSpec> newPrefsFile;
+  nsCOMPtr<nsILocalFile> newPrefsFile;
 #ifdef HAVE_MOVEMAIL
   nsCOMPtr<nsIFileSpec> oldMOVEMAILMailPath;
   nsCOMPtr<nsIFileSpec> newMOVEMAILMailPath;
@@ -694,14 +694,16 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   tempPrefsFile += PREF_FILE_NAME_IN_4x;
 
   //Create the m_prefsFile fileSpec for use in ReadUserPrefsFrom
-  rv = NS_NewFileSpecWithSpec(tempPrefsFile, getter_AddRefs(m_prefsFile));
-  if (NS_FAILED(rv)) return rv;
+//  rv = NS_NewFileSpecWithSpec(tempPrefsFile, getter_AddRefs(m_prefsFile));
+//  if (NS_FAILED(rv)) return rv;
+
+  NS_NewLocalFile((const char *)tempPrefsFile, PR_TRUE, getter_AddRefs(m_prefsFile));
 
   //Clear the prefs in case a previous set was read in.
   m_prefs->ResetPrefs();
 
   //Now read the prefs from the prefs file in the system directory
-  m_prefs->ReadUserPrefsFrom(m_prefsFile);
+  m_prefs->ReadUserPrefs(m_prefsFile);
 
   //
   // Start computing the sizes required for migration
@@ -1171,13 +1173,15 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   if (NS_FAILED(rv)) return rv;
   PR_FREEIF(popServerName);
 
-  NS_NewFileSpec(getter_AddRefs(newPrefsFile));
-  newPrefsFile->FromFileSpec(newProfilePath);
+  nsXPIDLCString path;
 
-  rv = newPrefsFile->AppendRelativeUnixPath(PREF_FILE_NAME_IN_5x);
+  newProfilePath->GetNativePath(getter_Copies(path));
+  NS_NewLocalFile(path, PR_TRUE, getter_AddRefs(newPrefsFile));
+
+  rv = newPrefsFile->Append(PREF_FILE_NAME_IN_5x);
   if (NS_FAILED(rv)) return rv;
 
-  rv=m_prefs->SavePrefFileAs(newPrefsFile);
+  rv=m_prefs->SavePrefFile(newPrefsFile);
   if (NS_FAILED(rv)) return rv;
   rv=m_prefs->ResetPrefs();
   if (NS_FAILED(rv)) return rv;

@@ -35,7 +35,11 @@ include $(topsrcdir)/config/config.mk
 
 CSRCS		= prefapi.c
 
-CPPSRCS		= nsPref.cpp
+CPPSRCS		= nsPref.cpp \
+			  nsPrefBranch.cpp	\
+			  nsPrefService.cpp	\
+			  nsPrefsFactory.cpp	\
+			 $(NULL)
 
 PREF_JS_EXPORTS	= \
 		$(srcdir)/initpref.js \
