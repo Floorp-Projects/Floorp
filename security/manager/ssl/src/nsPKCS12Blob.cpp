@@ -31,10 +31,11 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.17 2001/08/01 23:01:37 javi%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.18 2001/08/15 01:34:36 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
+#include "prprf.h"
 
 #include "nsISupportsArray.h"
 #include "nsIFileSpec.h"
@@ -246,7 +247,7 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
                            nsIX509Cert **certs, int numCerts)
 {
   nsresult rv;
-  SECStatus srv;
+  SECStatus srv = SECSuccess;
   SEC_PKCS12ExportContext *ecx = NULL;
   SEC_PKCS12SafeInfo *certSafe = NULL, *keySafe = NULL;
   SECItem unicodePw;
@@ -569,10 +570,63 @@ nsPKCS12Blob::digest_write(void *arg, unsigned char *buf, unsigned long len)
 SECItem * PR_CALLBACK
 nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
 {
-  // not handled yet (wasn't in psm 1.x either)
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("pkcs12 nickname collision"));
-  *cancel = PR_TRUE;
-  return NULL;
+  *cancel = PR_FALSE;
+  nsresult rv;
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  if (NS_FAILED(rv)) return nsnull;
+  int count = 1;
+  nsXPIDLCString nickname;
+  nsString nickFromProp;
+  nssComponent->GetPIPNSSBundleString(
+                                 NS_LITERAL_STRING("P12DefaultNickname").get(),
+                                 nickFromProp);
+  nsXPIDLCString nickFromPropC;
+  nickFromPropC.Adopt(nickFromProp.ToNewUTF8String());
+  // The user is trying to import a PKCS#12 file that doesn't have the
+  // attribute we use to set the nickname.  So in order to reduce the
+  // number of interactions we require with the user, we'll build a nickname
+  // for the user.  The nickname isn't prominently displayed in the UI, 
+  // so it's OK if we generate one on our own here.
+  //   XXX If the NSS API were smarter and actually passed a pointer to
+  //       the CERTCertificate* we're importing we could actually just
+  //       call default_nickname (which is what the issuance code path
+  //       does) and come up with a reasonable nickname.  Alas, the NSS
+  //       API limits our ability to produce a useful nickname without
+  //       bugging the user.  :(
+  while (1) {
+    // If we've gotten this far, that means there isn't a certificate
+    // in the database that has the same subject name as the cert we're
+    // trying to import.  So we need to come up with a "nickname" to 
+    // satisfy the NSS requirement or fail in trying to import.  
+    // Basically we use a default nickname from a properties file and 
+    // see if a certificate exists with that nickname.  If there isn't, then
+    // create update the count by one and append the string '#1' Or 
+    // whatever the count currently is, and look for a cert with 
+    // that nickname.  Keep updating the count until we find a nickname
+    // without a corresponding cert.
+    //  XXX If a user imports *many* certs without the 'friendly name'
+    //      attribute, then this may take a long time.  :(
+    if (count > 1) {
+      nickname.Adopt(PR_smprintf("%s #%d", nickFromPropC.get(), count));
+    } else {
+      nickname = nickFromPropC;
+    }
+    CERTCertificate *cert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(),
+                                           NS_CONST_CAST(char*,nickname.get()));
+    if (!cert) {
+      break;
+    }
+    CERT_DestroyCertificate(cert);
+    count++;
+  }
+  SECItem *newNick = new SECItem;
+  if (!newNick)
+    return nsnull;
+
+  newNick->type = siAsciiString;
+  newNick->data = (unsigned char*) nsCRT::strdup(nickname);
+  newNick->len  = nsCRT::strlen((char*)newNick->data);
+  return newNick;
 }
 
 // write_export_file
