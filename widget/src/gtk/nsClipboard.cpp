@@ -563,16 +563,18 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
     status = XmbTextPropertyToTextList(GDK_DISPLAY(), &prop, &tmpData, &foo);
 
     if (foo > 1)
-      printf("\n\n\n\n\n\nblah blah blah blah\n\n\n\n\n\n\n");
+      printf("Got multiple strings from XmbTextPropertyToTextList.. don't know how to handle this yet\n");
 
     PRInt32 numberOfBytes = 0;
 
     if (status == Success) {
       data = tmpData[0];
-      numberOfBytes = nsCRT::strlen(NS_REINTERPRET_CAST(const PRUnichar *, data)) * 2;
+      numberOfBytes = nsCRT::strlen(NS_REINTERPRET_CAST(const char *, data));
+
 #ifdef DEBUG_CLIPBOARD
-      g_print("\nXmbTextListToTextProperty succeeded\n  text is %s\n  numberOfBytes is %d\n", *tmpData,
-              numberOfBytes);
+      g_print("\n        XmbTextListToTextProperty succeeded\n");
+      g_print("          text is \"%s\"\n", data);
+      g_print("          numberOfBytes is %d\n", numberOfBytes);
 #endif
     }
 
@@ -619,7 +621,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
 
 
     mSelectionData.data = NS_REINTERPRET_CAST(guchar*,unicodeData);
-    mSelectionData.length = numberOfBytes;
+    mSelectionData.length = outUnicodeLen * 2;
   }
   else if (type.Equals("UTF8_STRING")) {
     mSelectionData = *aSD;
