@@ -683,6 +683,8 @@ protected:
                 PRUnichar* aBuffer, PRInt32 aLength,
                 nscoord* aWidthResult,
                 PRBool aGetWidth/* true=get width false = return length up to aWidthResult size*/);
+  nsresult GetContentAndOffsetsForSelection(nsIPresContext*  aPresContext,nsIContent **aContent, PRInt32 *aOffset, PRInt32 *aLength);
+
 };
 
 class nsContinuingTextFrame : public nsTextFrame {
@@ -1553,6 +1555,70 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
   }
 }
 
+
+
+nsresult
+nsTextFrame::GetContentAndOffsetsForSelection(nsIPresContext *aPresContext, nsIContent **aContent, PRInt32 *aOffset, PRInt32 *aLength)
+{
+  if (!aContent || !aOffset || !aLength)
+    return NS_ERROR_NULL_POINTER;
+  //ARE WE GENERATED??
+  *aContent = nsnull;
+  *aOffset = mContentOffset;
+  *aLength = mContentLength;
+  nsIFrame *parent;
+  nsresult rv = GetParent(&parent);
+  if (NS_SUCCEEDED(rv) && parent)
+  {
+    nsFrameState  parentFrameState;
+
+    parent->GetFrameState(&parentFrameState);
+    if ((parentFrameState & NS_FRAME_GENERATED_CONTENT) != 0)//parent is generated so so are we.
+    {
+      //we COULD check the previous sibling but I dont think that is reliable
+      rv = parent->GetContent(aContent);
+      if (NS_FAILED(rv) || !*aContent)
+        return rv?rv:NS_ERROR_FAILURE;
+
+      //ARE WE A BEFORE FRAME? if not then we assume we are an after frame. this may be bad later
+      nsIFrame *grandParent;
+      nsIFrame *firstParent;
+      rv = parent->GetParent(&grandParent);
+      if (NS_SUCCEEDED(rv) && grandParent)
+      {
+        rv = grandParent->FirstChild(aPresContext,nsnull, &firstParent);
+        if (NS_SUCCEEDED(rv) && firstParent)
+        {
+          *aLength = 0;
+          if (firstParent == parent) //then our parent is the first child of granddad. use BEFORE
+          {
+            *aOffset = 0;
+          }
+          else
+          {
+            PRInt32 numChildren;
+            if (NS_SUCCEEDED(rv = (*aContent)->ChildCount(numChildren)))
+              *aOffset = numChildren;
+            else
+              return rv;
+          }
+        }
+        else
+          return rv;
+      }
+    }
+  }
+  //END GENERATED BLOCK 
+  if (!*aContent)
+  {
+    *aContent = mContent;
+    NS_IF_ADDREF(*aContent);
+  }
+
+  return NS_OK;
+}
+
+
 void
 nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
                               nsIRenderingContext& aRenderingContext,
@@ -1609,7 +1675,10 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
         rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
         if (NS_SUCCEEDED(rv) && frameSelection){
           nsCOMPtr<nsIContent> content;
-          rv = GetContent(getter_AddRefs(content));
+          PRInt32 offset;
+          PRInt32 length;
+
+          rv = GetContentAndOffsetsForSelection(aPresContext,getter_AddRefs(content),&offset,&length);
           if (NS_SUCCEEDED(rv) && content){
             rv = frameSelection->LookUpSelection(content, mContentOffset, 
                                   mContentLength , &details, PR_FALSE);
@@ -2069,7 +2138,10 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
         rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
         if (NS_SUCCEEDED(rv) && frameSelection){
           nsCOMPtr<nsIContent> content;
-          rv = GetContent(getter_AddRefs(content));
+          PRInt32 offset;
+          PRInt32 length;
+
+          rv = GetContentAndOffsetsForSelection(aPresContext,getter_AddRefs(content),&offset,&length);
           if (NS_SUCCEEDED(rv)){
             rv = frameSelection->LookUpSelection(content, mContentOffset, 
                                   mContentLength , &details, PR_FALSE);
@@ -2217,7 +2289,10 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
         rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
         if (NS_SUCCEEDED(rv) && frameSelection){
           nsCOMPtr<nsIContent> content;
-          rv = GetContent(getter_AddRefs(content));
+          PRInt32 offset;
+          PRInt32 length;
+
+          rv = GetContentAndOffsetsForSelection(aPresContext, getter_AddRefs(content),&offset,&length);
           if (NS_SUCCEEDED(rv)){
             rv = frameSelection->LookUpSelection(content, mContentOffset, 
                                   mContentLength , &details, PR_FALSE);
@@ -2625,10 +2700,13 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
       rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
       if (NS_SUCCEEDED(rv) && frameSelection){
         nsCOMPtr<nsIContent> content;
-        rv = GetContent(getter_AddRefs(content));
+        PRInt32 offset;
+        PRInt32 length;
+
+        rv = GetContentAndOffsetsForSelection(aPresContext, getter_AddRefs(content),&offset,&length);
         if (NS_SUCCEEDED(rv) && content){
-          rv = frameSelection->LookUpSelection(content, mContentOffset, 
-                                mContentLength , &details, PR_TRUE);
+          rv = frameSelection->LookUpSelection(content, offset,
+                                length , &details, PR_TRUE);
 // PR_TRUE last param used here! we need to see if we are still selected. so no shortcut
 
         }
@@ -2671,18 +2749,6 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
       if (NS_FAILED(result))
         break;
     }
-#if 0
-    else //we need to talk to siblings as well as flow
-    {
-      result = GetNextSibling(&frame);
-      while (NS_SUCCEEDED(result) && frame){
-        frame->SetSelected(aRange,aSelected,eSpreadDown);
-        result = frame->GetNextSibling(&frame);
-        if (NS_FAILED(result))
-          break;
-      }
-    }
-#endif
   }
   return NS_OK;
 }
