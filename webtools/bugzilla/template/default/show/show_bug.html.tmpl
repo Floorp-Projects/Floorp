@@ -170,7 +170,7 @@
       [% IF Param("usetargetmilestone") && bug.target_milestone %]
         <td align="right">
           <b>
-            <a href="[% bug.milestoneurl %]">Target Milestone</a>:
+            <a href="[% bug.milestoneurl filter uri %]">Target Milestone</a>:
           </b>
         </td>
         [% PROCESS select selname = "target_milestone" %]
@@ -195,11 +195,12 @@
   <tr>
     <td align="right">
       <b>
-      [% IF bug.url %]
-        <a href="[% bug.url FILTER url %]">URL:</a>
-      [% ELSE %]
-        URL:
-      [% END %]
+        [% IF bug.url %]
+          <a href="[% bug.bug_file_loc FILTER uri %]">URL:</a>
+        [% ELSE %]
+          URL:
+        [% END %]
+      </b>
     </td>
     <td colspan="7">
       <input name="bug_file_loc" value="[% bug.bug_file_loc %]" size="60">
@@ -244,7 +245,8 @@
 [%# *** Attachments *** %]
 
   [% INCLUDE attachment/list.atml 
-     attachments = bug.attachments %]
+     attachments = bug.attachments 
+     bugid = bug.bug_id %]
 
 [%# *** Dependencies Votes *** %]
 
@@ -297,7 +299,7 @@
             accesskey="c"></textarea>
   <br>
 
-  [% IF groups %]
+  [% IF groups.size > 0 %]
     <br>
     <b>Only users in the selected groups can view this bug:</b>
     <br>
