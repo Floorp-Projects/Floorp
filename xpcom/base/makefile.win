@@ -28,6 +28,7 @@ EXPORTS =                  \
         nsIAllocator.h     \
         nsCOMPtr.h         \
         nsCom.h            \
+        nsCWeakReference.h \
         nsDebug.h          \
         nsError.h          \
         nsID.h             \
@@ -67,6 +68,7 @@ CPP_OBJS =                            \
         .\$(OBJDIR)\nsDebug.obj       \
         .\$(OBJDIR)\nsAllocator.obj   \
         .\$(OBJDIR)\nsCOMPtr.obj      \
+	.\$(OBJDIR)\nsCWeakReference.obj \
         .\$(OBJDIR)\nsID.obj          \
         .\$(OBJDIR)\nsTraceRefcnt.obj \
         .\$(OBJDIR)\nsWeakReference.obj \
