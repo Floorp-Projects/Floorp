@@ -537,8 +537,7 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 	nsCAutoString buffer;
 	nsresult rv;
 
-	// extract the email address and fullname
-	nsXPIDLCString fullName;
+	// extract the email address from the identity
 	nsXPIDLCString emailAddress;
 
 	nsCOMPtr <nsIMsgIdentity> senderIdentity;
@@ -549,7 +548,6 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 	}
 	else {
 		senderIdentity->GetEmail(getter_Copies(emailAddress));
-		senderIdentity->GetFullName(getter_Copies(fullName)); 
         }
 
 	/* don't check for a HELO response because it can be bogus and
@@ -578,9 +576,13 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
                                             getter_AddRefs(parser));
 
 		 char *fullAddress = nsnull;
-		 if (parser)
-			 parser->MakeFullAddress(nsnull, fullName, emailAddress, &fullAddress);
-
+		 if (parser) {
+			 // pass nsnull for the name, since we just want the email.
+			 //
+			 // seems a little weird that we are passing in the emailAddress
+			 // when that's the out parameter 
+			 parser->MakeFullAddress(nsnull, nsnull /* name */, emailAddress /* address */, &fullAddress);
+		}
 #ifdef UNREADY_CODE		
 		 if (CE_URL_S->msg_pane) 
 		 {
