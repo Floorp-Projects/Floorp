@@ -442,7 +442,7 @@ nsMultiMixedConv::BuildURI(nsIChannel *aChannel, nsIURI **_retval) {
 
     nsCAutoString dummyURIStr(uriSpec);
     dummyURIStr.Append("##");
-    dummyURIStr.Append(mPartCount);
+    dummyURIStr.Append((PRInt32) mPartCount, 10 /* radix */);
 
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
