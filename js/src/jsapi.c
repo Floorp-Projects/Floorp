@@ -259,6 +259,10 @@ JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap)
     *markp = NULL;
     argc = 0;
     for (cp = format; (c = *cp) != '\0'; cp++) {
+	/*
+	 * Count non-space non-star characters as individual jsval arguments.
+	 * This may over-allocate stack, but we'll fix below.
+	 */
 	if (isspace(c) || c == '*')
 	    continue;
 	argc++;
@@ -326,6 +330,14 @@ JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap)
 	}
 	sp++;
     }
+
+    /*
+     * We may have overallocated stack due to a multi-character format code
+     * handled by a JSArgumentFormatter.  Give back that stack space!
+     */
+    JS_ASSERT(sp <= argv + argc);
+    if (sp < argv + argc)
+	cx->stackPool.current->avail = (jsuword)sp;
     return argv;
 
 bad:
