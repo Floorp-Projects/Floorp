@@ -184,34 +184,34 @@ static const char * const kPkcs11ContractID = NS_PKCS11_CONTRACTID;
 //***    GlobalWindowImpl: Object Management
 //*****************************************************************************
 
-GlobalWindowImpl::GlobalWindowImpl() :
-  mJSObject(nsnull),
-  mNavigator(nsnull),
-  mScreen(nsnull),
-  mHistory(nsnull),
-  mFrames(nsnull),
-  mLocation(nsnull),
-  mMenubar(nsnull),
-  mToolbar(nsnull),
-  mLocationbar(nsnull),
-  mPersonalbar(nsnull),
-  mStatusbar(nsnull),
-  mScrollbars(nsnull),
-  mTimeouts(nsnull),
-  mTimeoutInsertionPoint(&mTimeouts),
-  mRunningTimeout(nsnull),
-  mTimeoutPublicIdCounter(1),
-  mTimeoutFiringDepth(0),
-  mFirstDocumentLoad(PR_TRUE),
-  mIsScopeClear(PR_TRUE),
-  mIsDocumentLoaded(PR_FALSE),
-  mLastMouseButtonAction(LL_ZERO),
-  mFullScreen(PR_FALSE),
-  mGlobalObjectOwner(nsnull),
-  mDocShell(nsnull),
-  mMutationBits(0),
-  mChromeEventHandler(nsnull),
-  mFrameElement(nsnull)
+GlobalWindowImpl::GlobalWindowImpl()
+  : mJSObject(nsnull),
+    mNavigator(nsnull),
+    mScreen(nsnull),
+    mHistory(nsnull),
+    mFrames(nsnull),
+    mLocation(nsnull),
+    mMenubar(nsnull),
+    mToolbar(nsnull),
+    mLocationbar(nsnull),
+    mPersonalbar(nsnull),
+    mStatusbar(nsnull),
+    mScrollbars(nsnull),
+    mTimeouts(nsnull),
+    mTimeoutInsertionPoint(&mTimeouts),
+    mRunningTimeout(nsnull),
+    mTimeoutPublicIdCounter(1),
+    mTimeoutFiringDepth(0),
+    mFirstDocumentLoad(PR_TRUE),
+    mIsScopeClear(PR_TRUE),
+    mIsDocumentLoaded(PR_FALSE),
+    mFullScreen(PR_FALSE),
+    mLastMouseButtonAction(LL_ZERO),
+    mGlobalObjectOwner(nsnull),
+    mDocShell(nsnull),
+    mMutationBits(0),
+    mChromeEventHandler(nsnull),
+    mFrameElement(nsnull)
 {
   NS_INIT_ISUPPORTS();
   // We could have failed the first time through trying
@@ -4419,66 +4419,66 @@ GlobalWindowImpl::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   // timeout struct will be held as the closure of a timer.
   timeout->AddRef();
   if (aIsInterval) {
-    timeout->interval = (PRInt32) interval;
+    timeout->mInterval = (PRInt32)interval;
   }
 
   if (expr) {
-    if (!::JS_AddNamedRoot(cx, &timeout->expr, "timeout.expr")) {
+    if (!::JS_AddNamedRoot(cx, &timeout->mExpr, "timeout.mExpr")) {
       timeout->Release(mContext);
 
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    timeout->expr = expr;
+    timeout->mExpr = expr;
   } else if (funobj) {
     /* Leave an extra slot for a secret final argument that
        indicates to the called function how "late" the timeout is. */
-    timeout->argv = (jsval *) PR_MALLOC((argc - 1) * sizeof(jsval));
+    timeout->mArgv = (jsval *) PR_MALLOC((argc - 1) * sizeof(jsval));
 
-    if (!timeout->argv) {
+    if (!timeout->mArgv) {
       timeout->Release(mContext);
 
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    if (!::JS_AddNamedRoot(cx, &timeout->funobj, "timeout.funobj")) {
+    if (!::JS_AddNamedRoot(cx, &timeout->mFunObj, "timeout.mFunObj")) {
       timeout->Release(mContext);
 
       return NS_ERROR_FAILURE;
     }
 
-    timeout->funobj = funobj;
-    timeout->argc = 0;
+    timeout->mFunObj = funobj;
+    timeout->mArgc = 0;
 
-    for (PRInt32 i = 2; (PRUint32) i < argc; ++i) {
-      timeout->argv[i - 2] = argv[i];
+    for (PRInt32 i = 2; (PRUint32)i < argc; ++i) {
+      timeout->mArgv[i - 2] = argv[i];
 
-      if (!::JS_AddNamedRoot(cx, &timeout->argv[i - 2], "timeout.argv[i]")) {
+      if (!::JS_AddNamedRoot(cx, &timeout->mArgv[i - 2], "timeout.mArgv[i]")) {
         timeout->Release(mContext);
 
         return NS_ERROR_FAILURE;
       }
 
-      timeout->argc++;
+      timeout->mArgc++;
     }
   }
 
   const char *filename;
-  if (nsJSUtils::GetCallingLocation(cx, &filename, &timeout->lineno)) {
-    timeout->filename = PL_strdup(filename);
+  if (nsJSUtils::GetCallingLocation(cx, &filename, &timeout->mLineNo)) {
+    timeout->mFileName = PL_strdup(filename);
 
-    if (!timeout->filename) {
+    if (!timeout->mFileName) {
       timeout->Release(mContext);
 
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
-  timeout->version = ::JS_VersionToString(::JS_GetVersion(cx));
+  timeout->mVersion = ::JS_VersionToString(::JS_GetVersion(cx));
 
   // Get principal of currently executing code, save for execution of timeout
 
-  rv = sSecMan->GetSubjectPrincipal(getter_AddRefs(timeout->principal));
+  rv = sSecMan->GetSubjectPrincipal(getter_AddRefs(timeout->mPrincipal));
 
   if (NS_FAILED(rv)) {
     timeout->Release(mContext);
@@ -4487,31 +4487,31 @@ GlobalWindowImpl::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   }
 
   LL_I2L(now, PR_IntervalNow());
-  LL_D2L(delta, PR_MillisecondsToInterval((PRUint32) interval));
-  LL_ADD(timeout->when, now, delta);
+  LL_D2L(delta, PR_MillisecondsToInterval((PRUint32)interval));
+  LL_ADD(timeout->mWhen, now, delta);
 
-  timeout->timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+  timeout->mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_FAILED(rv)) {
     timeout->Release(mContext);
 
     return rv;
   }
 
-  rv = timeout->timer->InitWithFuncCallback(TimerCallback, timeout,
-                                            (PRInt32)interval,
-                                            nsITimer::TYPE_ONE_SHOT);
+  rv = timeout->mTimer->InitWithFuncCallback(TimerCallback, timeout,
+                                             (PRInt32)interval,
+                                             nsITimer::TYPE_ONE_SHOT);
   if (NS_FAILED(rv)) {
     timeout->Release(mContext);
 
     return rv;
   }
 
-  timeout->window = this;
-  NS_ADDREF(timeout->window);
+  timeout->mWindow = this;
+  NS_ADDREF(timeout->mWindow);
 
   InsertTimeoutIntoList(mTimeoutInsertionPoint, timeout);
-  timeout->public_id = ++mTimeoutPublicIdCounter;
-  *aReturn = timeout->public_id;
+  timeout->mPublicId = ++mTimeoutPublicIdCounter;
+  *aReturn = timeout->mPublicId;
 
   return NS_OK;
 }
@@ -4561,14 +4561,14 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
   // servicing
   LL_I2L(now, PR_IntervalNow());
 
-  if (aTimeout && LL_CMP(aTimeout->when, >, now)) {
+  if (aTimeout && LL_CMP(aTimeout->mWhen, >, now)) {
     // The OS timer fired early (yikes!), and possibly out of order
     // too. Set |deadline| to be the time when the OS timer *should*
     // have fired so that any timers that *should* have fired before
     // aTimeout *will* be fired now. This happens most of the time on
     // Win2k.
 
-    deadline = aTimeout->when;
+    deadline = aTimeout->mWhen;
   } else {
     deadline = now;
   }
@@ -4578,23 +4578,23 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
   // timeout events fire "early", so we need to test the timer as well
   // as the deadline.
   last_expired_timeout = nsnull;
-  for (timeout = mTimeouts; timeout; timeout = timeout->next) {
-    if (((timeout == aTimeout) || !LL_CMP(timeout->when, >, deadline)) &&
-        (timeout->firingDepth == 0)) {
+  for (timeout = mTimeouts; timeout; timeout = timeout->mNext) {
+    if (((timeout == aTimeout) || !LL_CMP(timeout->mWhen, >, deadline)) &&
+        (timeout->mFiringDepth == 0)) {
       // Mark any timeouts that are on the list to be fired with the
       // firing depth so that we can reentrantly run timeouts
-      timeout->firingDepth = firingDepth;
+      timeout->mFiringDepth = firingDepth;
       last_expired_timeout = timeout;
 
       // If the timeout has a timer it means that it's a timeout
       // that's due to be fired but it's OS timer hasn't fired yet.
       // We'll go ahead and handle the timeout now so we can cancel
       // the OS timer for the timeout and relese the OS timer's
-      // reference to the timeout (and set timeout->timer to nsnull to
+      // reference to the timeout (and set timeout->mTimer to nsnull to
       // indicate that the OS timer no longer owns the timeout).
-      if (timeout->timer) {
-        timeout->timer->Cancel();
-        timeout->timer = nsnull;
+      if (timeout->mTimer) {
+        timeout->mTimer->Cancel();
+        timeout->mTimer = nsnull;
 
         timeout->Release(mContext);
       }
@@ -4613,9 +4613,9 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
   // timeouts that will be processed in a future call to
   // win_run_timeout(). This dummy timeout serves as the head of the
   // list for any timeouts inserted as a result of running a timeout.
-  dummy_timeout.firingDepth = firingDepth;
-  dummy_timeout.next = last_expired_timeout->next;
-  last_expired_timeout->next = &dummy_timeout;
+  dummy_timeout.mFiringDepth = firingDepth;
+  dummy_timeout.mNext = last_expired_timeout->mNext;
+  last_expired_timeout->mNext = &dummy_timeout;
 
   // Don't let ClearWindowTimeouts throw away our stack-allocated
   // dummy timeout.
@@ -4623,13 +4623,13 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
   dummy_timeout.AddRef();
 
   last_insertion_point = mTimeoutInsertionPoint;
-  mTimeoutInsertionPoint = &dummy_timeout.next;
+  mTimeoutInsertionPoint = &dummy_timeout.mNext;
 
   prev = nsnull;
   for (timeout = mTimeouts; timeout != &dummy_timeout; timeout = next) {
-    next = timeout->next;
+    next = timeout->mNext;
 
-    if (timeout->firingDepth != firingDepth) {
+    if (timeout->mFiringDepth != firingDepth) {
       // We skip the timeout since it's on the list to run at another
       // depth.
 
@@ -4644,22 +4644,23 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     nsTimeoutImpl *last_running_timeout = mRunningTimeout;
     mRunningTimeout = timeout;
 
-    // Hold on to the timeout in case expr or funobj releases its doc.
+    // Hold on to the timeout in case mExpr or mFunObj releases its
+    // doc.
     timeout->AddRef();
 
     ++mTimeoutFiringDepth;
 
-    if (timeout->expr) {
+    if (timeout->mExpr) {
       // Evaluate the timeout expression.
       const PRUnichar *script =
         NS_REINTERPRET_CAST(const PRUnichar *,
-                            ::JS_GetStringChars(timeout->expr));
+                            ::JS_GetStringChars(timeout->mExpr));
 
       nsAutoString retval;
       PRBool is_undefined;
       rv = mContext->EvaluateString(nsDependentString(script), mJSObject,
-                                    timeout->principal, timeout->filename,
-                                    timeout->lineno, timeout->version,
+                                    timeout->mPrincipal, timeout->mFileName,
+                                    timeout->mLineNo, timeout->mVersion,
                                     retval, &is_undefined);
     } else {
       PRInt64 lateness64;
@@ -4667,14 +4668,14 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 
       // Add a "secret" final argument that indicates timeout lateness
       // in milliseconds
-      LL_SUB(lateness64, now, timeout->when);
+      LL_SUB(lateness64, now, timeout->mWhen);
       LL_L2I(lateness, lateness64);
       lateness = PR_IntervalToMilliseconds(lateness);
-      timeout->argv[timeout->argc] = INT_TO_JSVAL((jsint) lateness);
+      timeout->mArgv[timeout->mArgc] = INT_TO_JSVAL((jsint) lateness);
 
       PRBool bool_result;
-      rv = mContext->CallEventHandler(mJSObject, timeout->funobj,
-                                      timeout->argc + 1, timeout->argv,
+      rv = mContext->CallEventHandler(mJSObject, timeout->mFunObj,
+                                      timeout->mArgc + 1, timeout->mArgv,
                                       &bool_result, PR_FALSE);
     }
 
@@ -4691,7 +4692,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 
     timeout->Release(contextKungFuDeathGrip);
 
-    if (timeout->cleared) {
+    if (timeout->mCleared) {
       // The running timeout's window was cleared, this means that
       // ClearAllTimeouts() was called from a *nested* call, possibly
       // through a timeout that fired while a modal (to this window)
@@ -4704,14 +4705,14 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 
     // If we have a regular interval timer, we re-schedule the
     // timeout, accounting for clock drift.
-    if (timeout->interval) {
+    if (timeout->mInterval) {
       // Compute time to next timeout for interval timer.
       PRInt32 delay32;
       PRInt64 interval, delay;
-      LL_I2L(interval, PR_MillisecondsToInterval(timeout->interval));
-      LL_ADD(timeout->when, timeout->when, interval);
+      LL_I2L(interval, PR_MillisecondsToInterval(timeout->mInterval));
+      LL_ADD(timeout->mWhen, timeout->mWhen, interval);
       LL_I2L(now, PR_IntervalNow());
-      LL_SUB(delay, timeout->when, now);
+      LL_SUB(delay, timeout->mWhen, now);
       LL_L2I(delay32, delay);
 
       // If the next interval timeout is already supposed to have
@@ -4730,7 +4731,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 
       // Reschedule timeout. Account for possible error return in
       // code below that checks for zero toid.
-      timeout->timer = do_CreateInstance("@mozilla.org/timer;1");
+      timeout->mTimer = do_CreateInstance("@mozilla.org/timer;1");
 
       // Since we're in a loop where we're likely to be running
       // multiple timeouts that were due to be handled when we
@@ -4743,8 +4744,8 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
       // failure any way so dropping the error on the floor here is
       // no big deal.
 
-      if (timeout->timer) {
-        rv = timeout->timer->InitWithFuncCallback(TimerCallback, timeout,
+      if (timeout->mTimer) {
+        rv = timeout->mTimer->InitWithFuncCallback(TimerCallback, timeout,
                                                   delay32,
                                                   nsITimer::TYPE_ONE_SHOT);
 
@@ -4763,30 +4764,30 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
           // the OS timer, this will release the OS timer. As we
           // continue executing the code below we'll end up deleting
           // the timeout since it's not an interval timeout any more
-          // (since timeout->timer == nsnull).
+          // (since timeout->mTimer == nsnull).
 
-          timeout->timer = nsnull;
+          timeout->mTimer = nsnull;
         }
       } else {
         NS_ERROR("Error creating timer for DOM timeout!");
 
         // If we weren't able to create a new OS timer for 'timeout'
         // we'll fall through here and the code below will delete
-        // the timeout (since timeout->timer == nsnull).
+        // the timeout (since timeout->mTimer == nsnull).
       }
     }
 
     // Running a timeout can cause another timeout to be deleted, so
     // we need to reset the pointer to the following timeout.
-    next = timeout->next;
+    next = timeout->mNext;
 
     if (!prev) {
       mTimeouts = next;
     } else {
-      prev->next = next;
+      prev->mNext = next;
     }
 
-    PRBool isInterval = (timeout->interval && timeout->timer);
+    PRBool isInterval = (timeout->mInterval && timeout->mTimer);
 
     // Drop timeout struct since it's out of the list
     timeout->Release(contextKungFuDeathGrip);
@@ -4801,9 +4802,9 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 
   // Take the dummy timeout off the head of the list
   if (!prev) {
-    mTimeouts = dummy_timeout.next;
+    mTimeouts = dummy_timeout.mNext;
   } else {
-    prev->next = dummy_timeout.next;
+    prev->mNext = dummy_timeout.mNext;
   }
 
   mTimeoutInsertionPoint = last_insertion_point;
@@ -4815,12 +4816,12 @@ nsTimeoutImpl::Release(nsIScriptContext *aContext)
   if (--mRefCnt > 0)
     return;
 
-  if (expr || funobj) {
+  if (mExpr || mFunObj) {
     nsCOMPtr<nsIScriptContext> scx(aContext);
     JSRuntime *rt = nsnull;
 
-    if (!scx && window) {
-      window->GetContext(getter_AddRefs(scx));
+    if (!scx && mWindow) {
+      mWindow->GetContext(getter_AddRefs(scx));
     }
 
     if (scx) {
@@ -4857,29 +4858,29 @@ nsTimeoutImpl::Release(nsIScriptContext *aContext)
       return;
     }
 
-    if (expr) {
-      ::JS_RemoveRootRT(rt, &expr);
+    if (mExpr) {
+      ::JS_RemoveRootRT(rt, &mExpr);
     } else {
-      ::JS_RemoveRootRT(rt, &funobj);
+      ::JS_RemoveRootRT(rt, &mFunObj);
 
-      if (argv) {
-        for (PRInt32 i = 0; i < argc; ++i) {
-          ::JS_RemoveRootRT(rt, &argv[i]);
+      if (mArgv) {
+        for (PRInt32 i = 0; i < mArgc; ++i) {
+          ::JS_RemoveRootRT(rt, &mArgv[i]);
         }
 
-        PR_FREEIF(argv);
+        PR_FREEIF(mArgv);
       }
     }
   }
 
-  if (timer) {
-    timer->Cancel();
-    timer = nsnull;
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nsnull;
   }
 
-  PR_FREEIF(filename);
+  PR_FREEIF(mFileName);
 
-  NS_IF_RELEASE(window);
+  NS_IF_RELEASE(mWindow);
 
   delete this;
 }
@@ -4936,21 +4937,21 @@ GlobalWindowImpl::ClearTimeoutOrInterval()
   PRUint32 public_id = (PRUint32)timer_id;
   nsTimeoutImpl **top, *timeout;
 
-  for (top = &mTimeouts; (timeout = *top) != NULL; top = &timeout->next) {
-    if (timeout->public_id == public_id) {
+  for (top = &mTimeouts; (timeout = *top) != NULL; top = &timeout->mNext) {
+    if (timeout->mPublicId == public_id) {
       if (mRunningTimeout == timeout) {
         /* We're running from inside the timeout. Mark this
            timeout for deferred deletion by the code in
            win_run_timeout() */
-        timeout->interval = 0;
+        timeout->mInterval = 0;
       }
       else {
         /* Delete the timeout from the pending timeout list */
-        *top = timeout->next;
+        *top = timeout->mNext;
 
-        if (timeout->timer) {
-          timeout->timer->Cancel();
-          timeout->timer = nsnull;
+        if (timeout->mTimer) {
+          timeout->mTimer->Cancel();
+          timeout->mTimer = nsnull;
           timeout->Release(mContext);
         }
         timeout->Release(mContext);
@@ -4976,20 +4977,20 @@ GlobalWindowImpl::ClearAllTimeouts()
     if (mRunningTimeout == timeout)
       mTimeoutInsertionPoint = &mTimeouts;
 
-    next = timeout->next;
+    next = timeout->mNext;
 
-    if (timeout->timer) {
-      timeout->timer->Cancel();
-      timeout->timer = nsnull;
+    if (timeout->mTimer) {
+      timeout->mTimer->Cancel();
+      timeout->mTimer = nsnull;
 
       // Drop the count since the timer isn't going to hold on
       // anymore.
       timeout->Release(mContext);
     }
 
-    // Set timeout->cleared to true to indicate that the timeout was
+    // Set timeout->mCleared to true to indicate that the timeout was
     // cleared and taken out of the list of timeouts
-    timeout->cleared = PR_TRUE;
+    timeout->mCleared = PR_TRUE;
 
     // Drop the count since we're removing it from the list.
     timeout->Release(mContext);
@@ -5007,12 +5008,12 @@ GlobalWindowImpl::InsertTimeoutIntoList(nsTimeoutImpl **aList,
   NS_ASSERTION(aList,
                "GlobalWindowImpl::InsertTimeoutIntoList null timeoutList");
   while ((to = *aList) != nsnull) {
-    if (LL_CMP(to->when, >, aTimeout->when))
+    if (LL_CMP(to->mWhen, >, aTimeout->mWhen))
       break;
-    aList = &to->next;
+    aList = &to->mNext;
   }
-  aTimeout->firingDepth = 0;
-  aTimeout->next = to;
+  aTimeout->mFiringDepth = 0;
+  aTimeout->mNext = to;
   *aList = aTimeout;
 
   // Increment the timeout's reference count since it's now held on to
@@ -5029,9 +5030,9 @@ GlobalWindowImpl::TimerCallback(nsITimer *aTimer, void *aClosure)
   // Null out the pointer to the OS timer (aTimer) in the timeout to
   // to indicate that the timer (aTimer) no longer owns the
   // timeout. From now on 'timeout' has the reference to the timeout.
-  timeout->timer = nsnull;
+  timeout->mTimer = nsnull;
 
-  timeout->window->RunTimeout(timeout);
+  timeout->mWindow->RunTimeout(timeout);
 
   // Drop timeout's reference to the timeout (i.e. drop the reference
   // that the timer held to the timeout).
@@ -5927,11 +5928,11 @@ NavigatorImpl::Preference()
     } else if (JSVAL_IS_INT(argv[1])) {
       jsint valueInt = JSVAL_TO_INT(argv[1]);
 
-      rv = prefBranch->SetIntPref(prefStr, (PRInt32) valueInt);
+      rv = prefBranch->SetIntPref(prefStr, (PRInt32)valueInt);
     } else if (JSVAL_IS_BOOLEAN(argv[1])) {
       JSBool valueBool = JSVAL_TO_BOOLEAN(argv[1]);
 
-      rv = prefBranch->SetBoolPref(prefStr, (PRBool) valueBool);
+      rv = prefBranch->SetBoolPref(prefStr, (PRBool)valueBool);
     } else if (JSVAL_IS_NULL(argv[1])) {
       rv = prefBranch->DeleteBranch(prefStr);
     }
