@@ -1959,6 +1959,11 @@ nsFontMetricsWin::LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFontItem)
       }
     }
 
+    if (!font) {
+      ::DeleteObject(hfont);
+      return nsnull;
+    }
+
     mLoadedFonts[mLoadedFontsCount++] = font;
 
     return font;
