@@ -15,3 +15,28 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+#ifndef __nsIID_h
+#define __nsIID_h
+
+/**
+ * An "interface id" which can be used to uniquely identify a given
+ * interface.
+ */
+
+typedef nsID nsIID;
+
+/**
+ * A macro shorthand for <tt>const nsIID&<tt>
+ */
+
+#define REFNSIID const nsIID&
+
+/**
+ * Define an IID (obsolete)
+ */
+ 
+#define NS_DEFINE_IID(_name, _iidspec) \
+  const nsIID _name = _iidspec
+
+#endif /* __nsIID_h */
