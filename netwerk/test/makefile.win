@@ -42,7 +42,6 @@ $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6) $(PROG7) $(PROG8) $(PROG9)
 
 LCFLAGS=-DUSE_NSREG -GX
 
-REQUIRES=libreg
 
 INCS = $(INCS)                  \
         -I$(DEPTH)\dist\include \

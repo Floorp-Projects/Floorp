@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= necko
 LIBRARY_NAME	= nkfile_s
 
-REQUIRES	= xpcom necko raptor
 
 CPPSRCS		= \
 		nsFileChannel.cpp \

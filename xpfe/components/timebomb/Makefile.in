@@ -19,8 +19,6 @@ CPPSRCS         = \
                 nsTimeBomb.cpp \
                 $(NULL)
 
-#REQUIRES        = nsappshell nspr xpcom security layer js jar pref img util rdf
-
 EXPORTS = \
                 nsTimeBomb.h \
                 $(NULL)

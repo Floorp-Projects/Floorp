@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= layout
 LIBRARY_NAME	= raptorevents_s
 
-REQUIRES	= xpcom raptor dom js netlib
 
 CPPSRCS		= \
 		nsEventListenerManager.cpp \

@@ -59,7 +59,6 @@ EXPORTS=nsJSUtils.h
 
 MODULE=raptor 
 
-REQUIRES=xpcom raptor js netlib caps oji
 
 CPP_OBJS= \
 	.\$(OBJDIR)\nsBarProps.obj		\

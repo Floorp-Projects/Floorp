@@ -30,7 +30,6 @@ MODULE		= lwbrk
 LIBRARY_NAME	= lwbrk
 IS_COMPONENT	= 1
 
-REQUIRES	= libxpcom
 
 CSRCS		= rulebrk.c
 

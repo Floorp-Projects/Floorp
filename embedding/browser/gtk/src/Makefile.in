@@ -27,7 +27,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= gtkembedmoz
 
-REQUIRES	= xpcom
 
 CPPSRCS		= \
 		GtkMozEmbedChrome.cpp \

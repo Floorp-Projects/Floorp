@@ -30,7 +30,6 @@ MODULE		= raptor
 LIBRARY_NAME	= raptorgfx
 SHORT_LIBNAME	= nggfx
 
-REQUIRES	= util img xpcom raptor netlib dom js
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 DIRS		=

@@ -26,7 +26,6 @@ MODULE		= widget
 LIBRARY_NAME	= widget_mac
 IS_COMPONENT	= 1
 
-REQUIRES	= util img xpcom raptorgfx
 
 CPPSRCS         = nsAppShell.cpp \
 		nsButton.cpp \

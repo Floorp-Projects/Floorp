@@ -26,7 +26,6 @@ include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=raptorevents_s 
 MODULE=raptor 
-REQUIRES=xpcom raptor dom js
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

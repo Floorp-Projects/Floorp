@@ -30,9 +30,7 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 #RESFILE = $(DLLNAME).res
 
 !ifdef NECKO
-REQUIRES=util img xpcom raptor necko timer
 !else
-REQUIRES=util img xpcom raptor netlib timer
 !endif
 
 DEFINES=-D_IMPL_NS_GFX -DWIN32_LEAN_AND_MEAN

@@ -31,7 +31,6 @@ MODULE		= xpcom_eventloop_photon
 LIBRARY_NAME	= eventloop
 IS_COMPONENT	= 1
 
-REQUIRES	= xpcom
 
 CPPSRCS		= \
 		nsCPhEvent.cpp \

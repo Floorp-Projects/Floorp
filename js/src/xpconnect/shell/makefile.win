@@ -41,7 +41,6 @@ PROGRAMS = $(PROG1)
 
 LCFLAGS=-DUSE_NSREG -DWIN32_LEAN_AND_MEAN
 
-REQUIRES=xpcom js xpconnect
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\js -I$(PUBLIC)\xpconnect \
       -I$(PUBLIC)\raptor

@@ -24,7 +24,6 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=raptormathmlbase_s 
 MODULE=raptor 
-REQUIRES=xpcom raptor pref
 
 DEFINES= -DWIN32_LEAN_AND_MEAN
 

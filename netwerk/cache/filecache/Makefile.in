@@ -31,7 +31,6 @@ MODULE = nkcache
 
 LIBRARY_NAME = nkfilecache_s
 
-REQUIRES	= nspr dbm 
 
 EXTRA_DSO_LDOPTS  +=  -L$(DIST)/lib  -lmozdbm_s
 

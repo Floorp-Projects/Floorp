@@ -6,7 +6,6 @@ DEPTH=..\..\..
 
 LIBRARY_NAME=jsdomcss_s 
 MODULE=raptor 
-REQUIRES=xpcom raptor js netlib
 DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS =				\

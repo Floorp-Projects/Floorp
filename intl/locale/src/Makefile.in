@@ -35,7 +35,6 @@ else
 DIRS		= unix
 endif
 
-REQUIRES	= xpcom unicharutil
 
 CPPSRCS		= \
 		nsCollation.cpp \

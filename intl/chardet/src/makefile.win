@@ -61,7 +61,6 @@ CPP_OBJS= \
 
 MODULE=chardet
 
-REQUIRES=xpcom
 
 INCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\chardet -I$(PUBLIC)\raptor \
      -I$(PUBLIC)\netlib -I$(PUBLIC)\uconv -I$(PUBLIC)\webshell

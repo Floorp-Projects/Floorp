@@ -29,8 +29,6 @@ PROGRAMS = $(PROG1)
 
 LCFLAGS=-DUSE_NSREG
 
-REQUIRES=xpcom raptor dom base
-
 LINCS=-I$(PUBLIC)\txmgr \
     -I$(PUBLIC)\xpcom \
     -I$(PUBLIC)\raptor \

@@ -25,7 +25,6 @@ include <$(DEPTH)/config/config.mak>
 DEFINES=-D_IMPL_NS_HTML 
 
 MODULE=raptor 
-REQUIRES=xpcom raptor dom js
 IS_COMPONENT = 1
 
 BUILD_DATE=gbdate.h

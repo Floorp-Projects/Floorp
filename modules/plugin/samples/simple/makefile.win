@@ -26,7 +26,6 @@ LIBRARY_NAME	= npsimple
 
 DEPTH = ..\..\..
 
-REQUIRES = java plug xpcom raptor
 
 XPIDLSRCS = \
 	.\nsISimplePluginInstance.idl \

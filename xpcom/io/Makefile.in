@@ -30,7 +30,6 @@ MODULE		= xpcom
 XPIDL_MODULE	= xpcom_io
 LIBRARY_NAME	= xpcomio_s
 
-REQUIRES	= xpcom uconv unicharutil
 
 CPPSRCS		= \
 		nsDirectoryService.cpp \

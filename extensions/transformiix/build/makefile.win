@@ -25,7 +25,6 @@ include <$(DEPTH)/config/config.mak>
 DEFINES=-DMOZILLA
 
 MODULE=transformix
-REQUIRES=xpcom raptor
 IS_COMPONENT = 1
 
 CPPSRCS=						\

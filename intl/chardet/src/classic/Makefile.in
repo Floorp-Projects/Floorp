@@ -30,7 +30,6 @@ MODULE		= chardetc
 LIBRARY_NAME	= chardetc
 IS_COMPONENT	= 1
 
-REQUIRES	= libxpcom
 
 CPPSRCS		= \
 		nsClassicCharDetDll.cpp \

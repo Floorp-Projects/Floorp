@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= nsjpg
 IS_COMPONENT	= 1
 
-REQUIRES	+= util jpeg xpcom img
 
 CPPSRCS		= \
 		jpeg.cpp \

@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= nspng
 IS_COMPONENT	= 1
 
-REQUIRES	= util png zlib xpcom img
 
 CPPSRCS		= \
 		ipng.cpp \

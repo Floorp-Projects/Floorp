@@ -33,7 +33,6 @@ SRPTS = $(SRPT1)
 
 LCFLAGS=-DUSE_NSREG $(LCFLAGS)
 
-REQUIRES=libreg
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\locale -I$(PUBLIC)\raptor \
       -I$(PUBLIC)\uconv -I$(PUBLIC)\unicharutil 

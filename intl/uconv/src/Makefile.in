@@ -32,7 +32,6 @@ IS_COMPONENT	= 1
 # To avoid conflict with OS/2 system uconv.dll
 SHORT_LIBNAME  = mozuconv
 
-REQUIRES	= libxpcom
 
 CSRCS		= \
 		ugen.c \

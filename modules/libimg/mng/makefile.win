@@ -58,7 +58,6 @@ CSRCS=\
 		mng_write.c \
 		mng_zlib.c \
 		$(NULL)
-REQUIRES=util nspr zlib jpeg
 C_OBJS=\
 		.\$(OBJDIR)\mng_callback_xs.obj \
 		.\$(OBJDIR)\mng_chunk_io.obj \

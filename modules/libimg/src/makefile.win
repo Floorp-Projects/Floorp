@@ -97,7 +97,6 @@ LIBRARY_NAME=img
 CPPSRCS=color.cpp colormap.cpp dither.cpp if.cpp ilclient.cpp il_util.cpp \
     ilNetReader.cpp scale.cpp xpcompat.cpp  
 
-REQUIRES=nspr util img xpcom
 
 CPP_OBJS=.\$(OBJDIR)\color.obj .\$(OBJDIR)\colormap.obj \
     .\$(OBJDIR)\dither.obj .\$(OBJDIR)\if.obj \

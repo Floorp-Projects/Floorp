@@ -30,7 +30,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= raptor
 LIBRARY_NAME	= gfx_os2
 
-REQUIRES	= util img xpcom raptor dom netlib java js
 
 CSRCS		= libprint.c
 

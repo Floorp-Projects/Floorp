@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= widget_photon
 IS_COMPONENT	= 1
 
-REQUIRES	= util img xpcom raptor netlib
 
 OLD_WIDGETS = \
 		nsCheckButton.cpp \

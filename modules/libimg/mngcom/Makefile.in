@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= nsmng
 IS_COMPONENT	= 1
 
-REQUIRES	= util mng zlib jpeg xpcom img
 
 CPPSRCS		= \
 		nsMNGDecoder.cpp \

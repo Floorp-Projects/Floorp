@@ -41,7 +41,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= java
 LIBRARY_NAME	= jsj
 
-REQUIRES	= java js applet img util layer
 
 CSRCS		= \
 		jsj.c \
@@ -76,7 +75,6 @@ JNI_GEN		= netscape.javascript.JSObject netscape.javascript.JSException
 endif
 
 ifdef MOZ_OJI
-REQUIRES	+= xpcom
 
 CPPSRCS		= \
 		nsCLiveconnect.cpp \

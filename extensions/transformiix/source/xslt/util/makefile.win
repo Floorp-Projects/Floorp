@@ -23,7 +23,6 @@ DEPTH=..\..\..\..\..
 
 LIBRARY_NAME=transformix_xslt_util
 MODULE=transformix
-REQUIRES=xpcom raptor
 
 CPPSRCS=			\
 	NodeStack.cpp		\

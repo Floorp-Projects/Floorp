@@ -30,8 +30,6 @@ PROGRAM		= TestPICS
 
 CPPSRCS		= TestPICS.cpp
 
-REQUIRES	= js pics pref xpcom include
-
 LIBS		= \
 		$(XPCOM_LIBS) \
 		-lpics \

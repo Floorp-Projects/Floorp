@@ -30,7 +30,6 @@ MODULE		= sample
 LIBRARY_NAME	= sample
 IS_COMPONENT	= 1
 
-REQUIRES	= sample raptor xpcom
 
 CPPSRCS		=		   \
 		nsSample.cpp	   \

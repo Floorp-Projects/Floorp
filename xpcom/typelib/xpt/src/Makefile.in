@@ -33,7 +33,6 @@ ifdef CROSS_COMPILE
 HOST_LIBRARY_NAME	= hostxpt
 endif
 
-REQUIRES	= $(MODULE)
 
 CSRCS		= xpt_arena.c xpt_struct.c xpt_xdr.c
 HOST_CSRCS	= $(CSRCS)

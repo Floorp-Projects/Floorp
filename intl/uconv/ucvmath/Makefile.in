@@ -30,7 +30,6 @@ MODULE		= ucvmath
 LIBRARY_NAME	= ucvmath
 IS_COMPONENT	= 1
 
-REQUIRES	= $(MODULE) libxpcom
 
 CPPSRCS		= \
 		nsUnicodeToTeXCMSYt1.cpp \

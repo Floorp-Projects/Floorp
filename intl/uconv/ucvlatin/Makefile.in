@@ -30,7 +30,6 @@ MODULE		= ucvlatin
 LIBRARY_NAME	= ucvlatin
 IS_COMPONENT	= 1
 
-REQUIRES	= libxpcom
 
 CPPSRCS		= \
 		nsUEscapeToUnicode.cpp \

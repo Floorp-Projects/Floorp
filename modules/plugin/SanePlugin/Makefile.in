@@ -26,7 +26,6 @@ MODULE = SanePlugin
 LIBRARY_NAME = Sane
 IS_COMPONENT = 1
 
-REQUIRES = raptor xpcom
 
 CPPSRCS = \
 	nsSanePluginFactory.cpp	\

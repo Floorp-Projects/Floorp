@@ -52,7 +52,6 @@ CPP_OBJS= \
 
 MODULE=unicharutil
 
-REQUIRES=xpcom netwerk
 
 INCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\unicharutil -I$(PUBLIC)\raptor
 

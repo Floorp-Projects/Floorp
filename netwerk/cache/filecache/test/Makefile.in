@@ -22,7 +22,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES	= libreg xpcom
 
 CPPSRCS		= \
          diskcache.cpp \

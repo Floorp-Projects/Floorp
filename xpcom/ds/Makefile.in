@@ -30,7 +30,6 @@ MODULE		= xpcom
 XPIDL_MODULE	= xpcom_ds
 LIBRARY_NAME	= xpcomds_s
 
-REQUIRES	= xpcom uconv unicharutil
 
 CSRCS = \
 		plvector.c \

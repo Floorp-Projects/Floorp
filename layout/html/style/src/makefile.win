@@ -23,7 +23,6 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=raptorhtmlstyle_s 
 MODULE=raptor 
-REQUIRES=xpcom raptor dom js
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

@@ -40,7 +40,6 @@ else
 EXTRA_DSO_LIBS	+= raptorgfx
 endif
 
-REQUIRES	= xpcom raptor dom js
 
 CPPSRCS		= \
 		nsLayoutDLF.cpp \

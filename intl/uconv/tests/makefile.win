@@ -32,7 +32,6 @@ PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4)  $(PROG5)
 
 LCFLAGS = -DUSE_NSREG
 
-REQUIRES = libreg
 
 LINCS = -I$(PUBLIC)\xpcom
 
