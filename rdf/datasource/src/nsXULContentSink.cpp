@@ -1493,19 +1493,17 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
           nsCOMPtr<nsIRDFLiteral> positionLiteral = do_QueryInterface(positionValue);
           if (positionLiteral) {
             // Retrieve the value that represents the position.
-            const PRUnichar* valueStr;
-            positionLiteral->GetValueConst(&valueStr);
-            nsCOMPtr<nsIRDFResource> posResource;
-            nsAutoString posStr(valueStr);
-            nsAutoString nextValStr = kRDFNameSpaceURI;
-            nextValStr.Append("_");
-            nextValStr.Append(posStr, 10);
-            rv = gRDFService->GetUnicodeResource(nextValStr.GetUnicode(), getter_AddRefs(posResource));
-            if (NS_FAILED(rv)) return rv;
+            const PRUnichar* positionStr;
+            positionLiteral->GetValueConst(&positionStr);
+            PRInt32 err;
+            PRInt32 pos = nsAutoString(positionStr).ToInteger(&err);
+            NS_ASSERTION(err == 0, "could not convert to integer");
 
-            rv = mDataSource->Assert(GetTopResource(), posResource, rdfResource, PR_TRUE);
+            rv = container->InsertElementAt(rdfResource, pos, PR_TRUE);
           }
-          else rv = container->AppendElement(rdfResource);
+          else {
+            rv = container->AppendElement(rdfResource);
+          }
         }
         else {
           // XXX We could be an overlay node indicating a removal.  If so, then we
