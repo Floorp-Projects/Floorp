@@ -49,19 +49,19 @@
     </outliner>
     <hbox>
       <button id="ca_viewButton" class="normal" 
-              label="&certmgr.view.label;" orient="horizontal" 
-              disabled="true" onclick="viewCerts();"/>
+              label="&certmgr.view.label;"
+              disabled="true" oncommand="viewCerts();"/>
       <button id="ca_editButton" class="normal" 
-              label="&certmgr.edit.label;" orient="horizontal" 
-              disabled="true" onclick="editCerts();"/>
+              label="&certmgr.edit.label;"
+              disabled="true" oncommand="editCerts();"/>
 <!-- future - import a DER cert?
       <button id="ca_addButton" class="normal" 
-              label="&certmgr.add.label;" orient="horizontal" 
-              onclick="addCerts();"/>
+              label="&certmgr.add.label;"
+              oncommand="addCerts();"/>
 -->
       <button id="ca_deleteButton" class="normal" 
-              label="&certmgr.delete.label;" orient="horizontal" 
-              disabled="true" onclick="deleteCerts();"/>
+              label="&certmgr.delete.label;"
+              disabled="true" oncommand="deleteCerts();"/>
     </hbox>
   </vbox>
 </overlay>

@@ -31,16 +31,15 @@
 %pippkiDTD;
 ]>
 
-
 <window id="devicemanager" 
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         title="&devmgr.title;"
         persist="screenX screenY width height"
         onload="LoadModules();">
 
-<script src="chrome://global/content/strres.js" />
-<script src="device_manager.js"/>
-<script type="application/x-javascript" src="chrome://help/content/help.js" />
+<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+<script type="application/x-javascript" src="chrome://pippki/content/device_manager.js"/>
+<script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
 <grid flex="1">
   <columns>
@@ -52,7 +51,7 @@
     <row>
       <hbox flex="1"> <!-- List of devices -->
         <tree id="device_tree" rows="12" multiple="false"
-              onselect="enableButtons();" debug="false" 
+              onselect="enableButtons();"
               flex="1" style="min-width:15em">
           <treecolgroup> 
             <treecol flex="1"/> 
@@ -68,7 +67,7 @@
         </tree>
       </hbox> <!-- / List of devices -->
       <hbox flex="1"> <!-- Device status -->
-        <tree id="info_tree" debug="false" rows="12" multiple="false" 
+        <tree id="info_tree" rows="12" multiple="false" 
               class="list" flex="1" style="min-width:10em">
           <treecolgroup> 
             <treecol flex="5"/> 
@@ -88,32 +87,32 @@
       <vbox> <!-- Buttons for manipulating devices -->
         <button id="login_button" 
                 label="&devmgr.button.login.label;"
-                onclick="doLogin();" disabled="true"/> 
+                oncommand="doLogin();" disabled="true"/> 
         <button id="logout_button" 
                 label="&devmgr.button.logout.label;"
-                onclick="doLogout();" disabled="true"/> 
+                oncommand="doLogout();" disabled="true"/> 
         <button id="change_pw_button" 
                 label="&devmgr.button.changepw.label;"
-                onclick="changePassword();" disabled="true"/> 
+                oncommand="changePassword();" disabled="true"/> 
         <button id="load_button" 
                 label="&devmgr.button.load.label;"
-                onclick="doLoad();" disabled="false"/> 
+                oncommand="doLoad();" disabled="false"/> 
         <button id="unload_button" 
                 label="&devmgr.button.unload.label;"
-                onclick="doUnload();" disabled="true"/> 
-        <button id="fipsbutton" onclick="toggleFIPS();" />
+                oncommand="doUnload();" disabled="true"/> 
+        <button id="fipsbutton" oncommand="toggleFIPS();"/>
       </vbox> <!-- / Buttons for manipulating devices -->
     </row>
     <row>
       <hbox>
         <button id="help_button" 
                 label="&help.label;" 
-                orient="horizontal" class="normal"
-                oncommand="openHelp('chrome://help/content/help.xul?sec_devices');" /> 
+                class="normal"
+                oncommand="openHelp('chrome://help/content/help.xul?sec_devices');"/> 
         <button id="ok_button" 
                 label="&ok.label;" 
-                orient="horizontal" class="normal" 
-                onclick="window.close();"/> 
+                class="normal" 
+                oncommand="window.close();"/> 
       </hbox>
     </row>
   </rows>

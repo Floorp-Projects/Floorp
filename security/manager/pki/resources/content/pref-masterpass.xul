@@ -34,9 +34,9 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         orient="vertical" title="certs.title;"
-        onload="parent.initPanel('chrome://pippki/content/pref-masterpass.xul'); onMasterPasswordLoad();" >
+        onload="parent.initPanel('chrome://pippki/content/pref-masterpass.xul'); onMasterPasswordLoad();">
 
-  <script type="application/x-javascript" src="pref-masterpass.js"/>
+  <script type="application/x-javascript" src="chrome://pippki/content/pref-masterpass.js"/>
 
   <!-- Fancy panel header -->
   <hbox class="box-smallheader" title="&lheader;"/>
@@ -44,24 +44,20 @@
   <!-- Change Password -->
   <groupbox orient="vertical">
     <label value="&changepassword.label;"/>
-    <html>
-      &changepassword.text;
-    </html>
+    <html>&changepassword.text;</html>
     <hbox halign="left" autostretch="never">
       <button class="dialog" label="&changepassword.button;" disabled="false"
-        oncommand="ChangePW();"
-        id="changePasswordButton"
-        pref="true" preftype="bool" prefattribute="disabled"
-        prefstring="security.disable_button.changePassword" />
+              oncommand="ChangePW();"
+              id="changePasswordButton"
+              pref="true" preftype="bool" prefattribute="disabled"
+              prefstring="security.disable_button.changePassword"/>
     </hbox>
   </groupbox>
 
   <!-- Password Prefs -->
   <groupbox orient="vertical">
     <label value="&managepassword.label;"/>
-    <html>
-      &managepassword.text;
-    </html>
+    <html>&managepassword.text;</html>
     <hbox halign="left" autostretch="never">
       <radiogroup id="passwordAskTimes" orient="vertical" 
                   pref="true" preftype="int" 
@@ -73,20 +69,20 @@
           <rows>
             <box>
               <radio value="0" label="" style="margin: 0px; max-width: 2em;"
-                id="askFirstTime" group="passwordAskTimes"
-                oncommand="changePasswordSettings();"/>
+                     id="askFirstTime" group="passwordAskTimes"
+                     oncommand="changePasswordSettings();"/>
               <text value="&managepassword.askfirsttime;" style="margin: 4px;"/>
             </box>
             <box>
               <radio value="1" label="" style="margin: 0px; max-width: 2em;"
-                id="askEveryTime" group="passwordAskTimes"
-                oncommand="changePasswordSettings();"/>
+                     id="askEveryTime" group="passwordAskTimes"
+                     oncommand="changePasswordSettings();"/>
               <text value="&managepassword.askeverytime;" style="margin: 4px;"/>
             </box>
             <box>
               <radio value="2" label="" style="margin: 0px; max-width: 2em;"
-                id="askTimeout" group="passwordAskTimes"
-                oncommand="changePasswordSettings();"/>
+                     id="askTimeout" group="passwordAskTimes"
+                     oncommand="changePasswordSettings();"/>
               <text value="&managepassword.asktimeout;" style="margin: 4px;"/>
               <textbox id="passwordTimeout" size="4"
                        pref="true" preftype="int"

@@ -20,18 +20,16 @@
 
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/pippki.dtd">
 
-<window
-  id="escrowWarnDialog" title="&escrowWarn.title;"
+<window id="escrowWarnDialog" title="&escrowWarn.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  debug="false"
   height="280"
   width="400"
-  onload="onLoad();"
->
-<script src="chrome://global/content/strres.js" />
-<script src="pippki.js" />
-<script src="escrowWarn.js" />
-<script type="application/x-javascript" src="chrome://help/content/help.js" />
+  onload="onLoad();">
+
+<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+<script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
+<script type="application/x-javascript" src="chrome://pippki/content/escrowWarn.js"/>
+<script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
 <keyset id="keys">
   <key id="enter-key"  keycode="VK_ENTER"  oncommand="getPassword();"/>
@@ -47,19 +45,19 @@
   <separator/>
   <html>&escrowWarn.message2;</html>
   <separator/>
-  <html id="message1" />
+  <html id="message1"/>
   <hbox>
   <button id="examineCert-button" class="dialog" label="&examineCert.label;"
-     onclick="viewCert();"/> 
+          oncommand="viewCert();"/> 
   </hbox>
   <separator/>
   <hbox>
   <button id="ok-button" class="dialog" label="&ok.label;"
-     style="width: 10ex" onclick="doOK();" disabled="false"/> 
+          oncommand="doOK();" disabled="false"/> 
   <button id="cancel-button" class="dialog" label="&cancel.label;"
-     style="width: 10ex" onclick="doCancel();" /> 
+          oncommand="doCancel();"/> 
   <button id="help-button" class="dialog" label="&help.label;"
-    style="width: 10ex" oncommand="openHelp('chrome://help/content/help.xul?priv_key_copy');" /> 
+          oncommand="openHelp('chrome://help/content/help.xul?priv_key_copy');"/> 
   </hbox>
 </vbox>
 </window>

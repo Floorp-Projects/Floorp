@@ -43,13 +43,13 @@
         orient="vertical"
         onload="onLoad();">
 
-  <script src="chrome://global/content/strres.js"/>
-  <script src="crlManager.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://pippki/content/crlManager.js"/>
 
   <text class="label" value="&validation.crlmanager.label;"/>
   <separator class="thin"/>
   <tree id="crltree" class="inset" style="height: 10em;"
-   multiple="false" onclick="EnableCrlActions()" flex="1">
+   multiple="false" oncommand="EnableCrlActions()" flex="1">
     <treecolgroup>
       <treecol flex="3" width="0"/>
       <splitter class="tree-splitter"/>
@@ -62,27 +62,21 @@
     <treehead>
       <treerow>
         <treecell class="treecell-header sortDirectionIndicator"
-                          label="&certmgr.certdetail.o;"
-                          />
+                  label="&certmgr.certdetail.o;"/>
         <treecell class="treecell-header sortDirectionIndicator"
-                          label="&certmgr.certdetail.ou;"
-                          />
-        <treecell class="treecell-header
-                          sortDirectionIndicator"
-                          label="&validation.crllastupdate.label;"
-                          />
-        <treecell class="treecell-header
-                          sortDirectionIndicator"
-                          label="&validation.crlnextupdate.label;"
-                          />
+                  label="&certmgr.certdetail.ou;"/>
+        <treecell class="treecell-header sortDirectionIndicator"
+                  label="&validation.crllastupdate.label;"/>
+        <treecell class="treecell-header sortDirectionIndicator"
+                  label="&validation.crlnextupdate.label;"/>
       </treerow>          
     </treehead>
     <treechildren id="crlList" flex="1"/>
   </tree>
   <hbox>
     <button id="deleteCrl" class="dialog push" disabled="true"
-                          label="&validation.deletecrl.label;"
-                          oncommand="DeleteCrlSelected();"/>
+            label="&validation.deletecrl.label;"
+            oncommand="DeleteCrlSelected();"/>
   </hbox>
   <separator class="thin"/>
 </window>

@@ -31,13 +31,12 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="setWindowName();"
-        persist="height width screenX screenY"
-        debug="false">
+        persist="height width screenX screenY">
 
-  <script src="chrome://global/content/strres.js" />
-  <script src="pippki.js" />
-  <script src="editcerts.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/help.js" />
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
+  <script type="application/x-javascript" src="chrome://pippki/content/editcerts.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
 
   <vbox flex="1">
@@ -46,11 +45,11 @@
     <html>&certmgr.editcert.edittrust;</html>
     <vbox>
       <checkbox label="&certmgr.editcert.trustssl;" checked="false" 
-       id="trustSSL"/>
+                id="trustSSL"/>
       <checkbox label="&certmgr.editcert.trustemail;" checked="false" 
-       id="trustEmail"/>
+                id="trustEmail"/>
       <checkbox label="&certmgr.editcert.trustobjsign;" checked="false" 
-       id="trustObjSign"/>
+                id="trustObjSign"/>
     </vbox>
 
     <keyset id="keys">
@@ -61,11 +60,11 @@
 
     <hbox align="center">
       <button id="ok-button" class="dialog" label="&certmgr.ok.label;"
-           style="width: 8ex" oncommand="doOK();"/> 
+              oncommand="doOK();"/> 
       <button id="cancel-button" class="dialog" label="&certmgr.cancel.label;"
-           style="width: 8ex" oncommand="window.close();" /> 
+              oncommand="window.close();"/> 
       <button id="help-button" class="dialog" label="&certmgr.help.label;"
-           style="width: 8ex" oncommand="openHelp('chrome://help/content/help.xul?edit_ca_certs');"/>
+              oncommand="openHelp('chrome://help/content/help.xul?edit_ca_certs');"/>
     </hbox>
   </vbox>
 

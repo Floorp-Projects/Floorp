@@ -29,19 +29,17 @@
 ]>
 
 
-<window
-  id="ssl_warning" title="&chooseToken.title;"
+<window id="ssl_warning" title="&chooseToken.title;"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  debug="false"
   height="360"
   width="400"
-  onload="onLoad();"
->
-<script src="chrome://global/content/strres.js" />
-<script src="pippki.js" />
-<script src="choosetoken.js" />
-<script type="application/x-javascript" src="chrome://help/content/help.js" />
+  onload="onLoad();">
+
+<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+<script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
+<script type="application/x-javascript" src="chrome://pippki/content/choosetoken.js"/>
+<script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
 <keyset id="keys">
   <key id="enter-key"  keycode="VK_ENTER"  oncommand="if (!document.getElementById('ok-button').disabled) doOK();"/>
@@ -59,11 +57,11 @@
   <separator />
   <hbox>
   <button id="ok-button" class="dialog" label="&ok.label;"
-     style="width: 10ex" onclick="doOK();" disabled="false"/> 
+          oncommand="doOK();" disabled="false"/> 
   <button id="cancel-button" class="dialog" label="&cancel.label;"
-     style="width: 10ex" onclick="doCancel();" /> 
+          oncommand="doCancel();"/> 
   <button id="help-button" class="dialog" label="&help.label;"
-    style="width: 10ex" oncommand="openHelp('chrome://help/content/help.xul?which_token');" /> 
+          oncommand="openHelp('chrome://help/content/help.xul?which_token');"/> 
   </hbox>
 </vbox>
 </window>

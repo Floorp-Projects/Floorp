@@ -35,7 +35,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         orient="vertical" title="Security Preferences"
-        onload="parent.initPanel('chrome://pippki/content/pref-ssl.xul');" >
+        onload="parent.initPanel('chrome://pippki/content/pref-ssl.xul');">
 
   <!-- List elements to manage for prefs -->
   <script type="application/x-javascript">
@@ -68,18 +68,18 @@
 
     <vbox halign="right">
       <button class="dialog" label="&edit.sslciphers;"
-        oncommand="window.openDialog('chrome://pippki/content/pref-ciphers.xul', '',
-                       'modal=yes,resizable,chrome');"
-        id="editSSLCiphersButton"
-        pref="true" preftype="bool" prefattribute="disabled"
-        prefstring="security.disable_button.editSSLCiphers" />
+              oncommand="window.openDialog('chrome://pippki/content/pref-ciphers.xul', '',
+                             'modal=yes,resizable,chrome');"
+              id="editSSLCiphersButton"
+              pref="true" preftype="bool" prefattribute="disabled"
+              prefstring="security.disable_button.editSSLCiphers"/>
     </vbox>
 
   </groupbox>
 
-  <groupbox orient="vertical" autostretch="never" >
+  <groupbox orient="vertical" autostretch="never">
     <label value="&SSLWarnings;"/>
-    <html> &warn.description; </html>
+    <html>&warn.description;</html>
     <!-- Prefs -->
     <checkbox id="warnEnteringSecure" label="&warn.enteringsecure;"
               pref="true" preftype="bool" prefstring="security.warn_entering_secure"

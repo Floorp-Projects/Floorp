@@ -27,8 +27,8 @@
 
 <overlay id="pipPageInfoOverlayID"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script src="chrome://global/content/strres.js" />
-  <script src="chrome://pippki/content/pippki.js" />
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
   <script type="application/x-javascript">
   <![CDATA[
     var security = {
@@ -175,22 +175,22 @@
   ]]>
   </script>
   <tabs id="tabs">
-    <tab id="securityTab" label="&pageInfo.securityTab;" />
+    <tab id="securityTab" label="&pageInfo.securityTab;"/>
   </tabs>
   <tabpanels id="tabpanels">
     <vbox id="securityPanel" flex="1">
-      <text id="security-identity" class="header label" />
-      <html id="security-identity-text" flex="1" />
+      <text id="security-identity" class="header label"/>
+      <html id="security-identity-text" flex="1"/>
       <hbox>
         <button id="security-view-cert" class="normal" label="&pageInfo.view.label;" 
-          oncommand="security.viewCert();" />
-        <html id="security-view-text" flex="1" />
+                oncommand="security.viewCert();"/>
+        <html id="security-view-text" flex="1"/>
       </hbox>
-      <separator class="groove" orient="horizontal" />
-      <text id="security-privacy" class="header label" />
-      <vbox flex="1" >
-        <html id="security-privacy-msg1" />
-        <html id="security-privacy-msg2" />
+      <separator class="groove"/>
+      <text id="security-privacy" class="header label"/>
+      <vbox flex="1">
+        <html id="security-privacy-msg1"/>
+        <html id="security-privacy-msg2"/>
       </vbox>
     </vbox>
   </tabpanels>
