@@ -17,6 +17,8 @@
   Reserved.
 
 -->
+
+<?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://sidebar/skin/customize.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://sidebar/locale/customize.dtd" >
