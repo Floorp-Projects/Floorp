@@ -219,7 +219,9 @@ calItemBase.prototype = {
     mapPropsToICS: function(icalcomp, propmap) {
         for (var i = 0; i < propmap.length; i++) {
             var prop = propmap[i];
-            icalcomp[prop.ics] = this[prop.cal];
+            var val = this[prop.cal];
+            if (prop.force || val)
+                icalcomp[prop.ics] = this[prop.cal];
         }
     },
 

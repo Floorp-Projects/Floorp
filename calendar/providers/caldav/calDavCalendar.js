@@ -145,6 +145,7 @@ calDavCalendar.prototype = {
         var eventResource = new WebDavResource(eventUri);
 
         var listener = new WebDavListener();
+        var savedthis = this;
         listener.onOperationComplete = function(aStatusCode, aResource,
                                                 aOperation, aClosure) {
 
@@ -156,7 +157,7 @@ calDavCalendar.prototype = {
 
                 // notify observers
                 // XXX should be called after listener?
-                this.observeAddItem(aItem);
+                savedthis.observeAddItem(aItem);
 
             } else {
                 dump("Error adding item: " + aStatusCode + "\n");
@@ -168,7 +169,7 @@ calDavCalendar.prototype = {
 
             // notify the listener
             if (aListener)
-                aListener.onOperationComplete (this,
+                aListener.onOperationComplete (savedthis,
                                                retVal,
                                                aListener.ADD,
                                                aItem.id,
