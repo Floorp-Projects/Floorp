@@ -44,6 +44,10 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  gfx2 \
 		  imglib2 \
+		  intl \
+		  dom \
+		  windowwatcher \
+		  necko \
 		  $(NULL)
 
 # Sun's Complex Text Layout support

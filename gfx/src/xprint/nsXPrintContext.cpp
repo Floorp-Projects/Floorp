@@ -57,6 +57,15 @@
 #include "xprintutil.h"
 #include "prenv.h" /* for PR_GetEnv */
 
+/* "Broken Xprt" warning dialog */
+#include "nsIStringBundle.h"
+#include "nsIWindowWatcher.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIPrompt.h" 
+#include "nsIServiceManagerUtils.h"
+
+#define NS_ERROR_GFX_PRINTER_BUNDLE_URL "chrome://communicator/locale/printing.properties"
+
 /* misc defines */
 #define XPRINT_MAKE_24BIT_VISUAL_AVAILABLE_FOR_TESTING 1
 
@@ -155,6 +164,66 @@ nsXPrintContext::~nsXPrintContext()
 
 NS_IMPL_ISUPPORTS1(nsXPrintContext, nsIDrawingSurfaceXlib)
 
+
+static nsresult
+AlertBrokenXprt(Display *pdpy)
+{
+  nsresult rv = NS_OK;
+
+  /* Check for broken Xprt
+   * Xfree86 Xprt is the only known broken version of Xprt (see bug 120211
+   * for a list of tested&working Xprt servers) ...
+   * FixMe: We should look at XVendorRelease(), too - but there is no feedback
+   * from XFree86.org when this issue will be fixed... ;-(
+   */
+  if (!(strstr(XServerVendor(pdpy), "XFree86") /*&& XVendorRelease(pdpy) < 45000000L*/))
+    return NS_OK;
+
+  /* Bad version found... log the issue and show the dialog and warn the user... */
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG,
+         ("nsXPrintContext::AlertBrokenXprt: vendor: '%s', release=%ld\n",
+          XServerVendor(pdpy), (long)XVendorRelease(pdpy)));
+
+  /* Dialog disabled ? */
+  if (PR_GetEnv("MOZILLA_XPRINT_DISABLE_BROKEN_XFREE86_WARNING") != nsnull)
+    return NS_OK;
+
+  nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsXPIDLString msg,
+                title;
+
+  nsCOMPtr<nsIStringBundle> myStringBundle;
+  rv = stringBundleService->CreateBundle(NS_ERROR_GFX_PRINTER_BUNDLE_URL, getter_AddRefs(myStringBundle));
+  if (NS_FAILED(rv))
+    return rv;
+
+  myStringBundle->GetStringFromName(NS_LITERAL_STRING("print_error_dialog_title").get(),     getter_Copies(title));
+  myStringBundle->GetStringFromName(NS_LITERAL_STRING("print_xprint_broken_xprt_msg").get(), getter_Copies(msg));
+
+  nsCOMPtr<nsIWindowWatcher> wwatch = do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIDOMWindow> active;
+  wwatch->GetActiveWindow(getter_AddRefs(active));
+
+  nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIPrompt> dialog;
+  rv = parent->GetPrompter(getter_AddRefs(dialog));
+  if (NS_FAILED(rv))
+    return rv;
+
+  dialog->Alert(title, msg);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
 {
@@ -180,7 +249,7 @@ nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
 
   if (NS_FAILED(XPU_TRACE(rv = SetupPrintContext(aSpec))))
     return rv;
-  
+
   mScreen = XpGetScreenOfContext(mPDisplay, mPContext);
   mScreenNumber = XScreenNumberOfScreen(mScreen);
 
@@ -306,6 +375,7 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
   float  top, bottom, left, right;
   int    landscape;
   char  *buf;
+  nsresult rv;
 
   // Get the Attributes
   aSpec->GetToPrinter(mIsAPrinter);
@@ -353,6 +423,16 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
    */
   if( XpuGetPrinter(buf, &mPDisplay, &mPContext) != 1 )
     return NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND;
+
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
+         ("nsXPrintContext::SetupPrintContext: name='%s', display='%s', vendor='%s', release=%ld\n",
+          buf,
+          XDisplayString(mPDisplay), 
+          XServerVendor(mPDisplay),
+          (long)XVendorRelease(mPDisplay)));
+          
+  if (NS_FAILED(rv = AlertBrokenXprt(mPDisplay)))
+    return rv;
     
 #ifdef XPRINT_DEBUG_SOMETIMES_USEFULL
   dumpXpAttributes(mPDisplay, mPContext);
