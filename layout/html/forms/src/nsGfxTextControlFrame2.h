@@ -34,6 +34,12 @@ class nsGfxTextControlFrame;
 class nsFormFrame;
 class nsISupportsArray;
 class nsIHTMLContent;
+class nsIEditor;
+class nsISelectionController;
+
+
+
+
 
 class nsGfxTextControlFrame2 : public nsHTMLContainerFrame,
                            public nsIAnonymousContentCreator
@@ -60,7 +66,10 @@ public:
                                     nsISupportsArray& aChildList);
   NS_DECL_ISUPPORTS_INHERITED
 protected:
-    virtual PRIntn GetSkipSides() const;
+  virtual PRIntn GetSkipSides() const;
+private:
+  nsCOMPtr<nsIEditor> mEditor;
+  nsCOMPtr<nsISelectionController> mSelCon;
 };
 
 #endif
