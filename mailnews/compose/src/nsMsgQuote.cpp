@@ -202,6 +202,8 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
   nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(aURL, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
+  // SetQuery is safe to use here, as the msgURI that we used for SetSpec()
+  // does not already have a query.
   if (! bAutoQuote) /* We don't need to quote the message body but we still need to extract the headers */
     rv = mailNewsUrl->SetQuery("header=only");
   else if (quoteHeaders)

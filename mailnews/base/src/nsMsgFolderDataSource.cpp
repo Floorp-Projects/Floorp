@@ -939,7 +939,7 @@ nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsISupports *item,
                                                  PRUint32 oldFlag,
                                                  PRUint32 newFlag)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   if (kBiffStateAtom == property) {
     // for Incoming biff (to turn it on) the item is of type nsIFolder (see nsMsgFolder::SetBiffState)
