@@ -336,6 +336,8 @@ public:
                                            const nsString& aNameSpace, 
                                            nsIDOMElement** aReturn);
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn);
+  NS_IMETHOD    GetWidth(PRInt32* aWidth);
+  NS_IMETHOD    GetHeight(PRInt32* aHeight);
                      
   // nsIDOMNode interface
   NS_IMETHOD    GetNodeName(nsString& aNodeName);
@@ -439,6 +441,10 @@ protected:
   };
 
 	virtual nsresult  OutputDocumentAs(nsIOutputStream* aStream, nsIDOMSelection* selection, EOutputFormat aOutputFormat, const nsString& aCharset);
+
+  nsresult GetPixelDimensions(nsIPresShell* aShell,
+                              PRInt32* aWidth,
+                              PRInt32* aHeight);
 
 protected:
 
