@@ -183,6 +183,8 @@ nsCharsetConverterManager::nsCharsetConverterManager()
 
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
+
+  CreateMapping();
 }
 
 nsCharsetConverterManager::~nsCharsetConverterManager() 
@@ -266,11 +268,21 @@ nsCharsetConverterManager::GetICharsetConverterInfo(ConverterInfo * aArray,
   nsICharsetConverterInfo * info;
 
   res=nsComponentManager::FindFactory(*(aArray[aIndex].mCID), &factory);
-  if (NS_FAILED(res)) goto reduceArray;
+  if (NS_FAILED(res)) {
+    #if 1
+      printf(" get charset info FindFactory failed %d %x", aIndex, res);
+    #endif
+    goto reduceArray;
+  }
 
   res=factory->QueryInterface(kICharsetConverterInfoIID, (void ** )&info);
   NS_RELEASE(factory);
-  if (NS_FAILED(res)) goto reduceArray;
+  if (NS_FAILED(res)) {
+    #if 1
+      printf(" get charset info QI failed %d %x", aIndex, res);
+    #endif
+    goto reduceArray;
+  }
 
   return info;
 
@@ -279,7 +291,7 @@ reduceArray:
   PRInt32 i;
 
   (*aSize)--;
-  for (i=aIndex; i<*aSize;) aArray[i] = aArray[i++];
+  for (i=aIndex; i<*aSize;) aArray[i] = aArray[++i];
   if (i>=0) {
     aArray[i].mCharset = NULL;
     aArray[i].mCID = NULL;
