@@ -122,8 +122,6 @@ clean clobber realclean clobber_all::
 	cd $(MOZILLA_DETECT_DIR); $(MAKE) $@
 endif
 
-clean clobber realclean clobber_all:: tweak_nspr
-
 # For the continuous build scripts.
 show_objname:
 	@echo $(OBJDIR)

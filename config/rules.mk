@@ -258,6 +258,7 @@ endif
 
 all:: export libs install
 
+ifndef USE_AUTOCONF
 #
 # Maybe this should be done in config/Makefile so it only happens once...?
 #
@@ -269,20 +270,12 @@ TARGETS			+= tweak_nspr
 # Since the NSPR folks won't help, we'll fix things the sneaky way.
 #
 tweak_nspr:
-ifdef USE_AUTOCONF
-ifdef NSPR_AUTOCONF
-	@(cp $(topsrcdir)/nsprpub/config/UNIX.mk $(DEPTH)/nsprpub/config/UNIX.mk.orig; \
-		cd $(DEPTH)/nsprpub/config; \
-		awk '/^OBJDIR_NAME[ 	]*=/ { \
-			printf("OBJDIR_NAME\t= %s%s%s%s%s%s.OBJ\n","$(OS_CONFIG)","$(OS_VERSION)","$(PROCESSOR_ARCHITECTURE)","$(COMPILER)","$(IMPL_STRATEGY)","$(OBJDIR_TAG)"); next} {print}' UNIX.mk.orig > UNIX.mk)
-endif # NSPR_AUTOCONF
-else
 	@(cd $(DEPTH)/nsprpub/config; \
 		if test -f UNIX.mk.orig; then rm -f UNIX.mk; mv UNIX.mk.orig UNIX.mk; else true; fi; \
 		mv UNIX.mk UNIX.mk.orig; \
 		awk '/^OBJDIR_NAME[ 	]*=/ { \
 			printf("OBJDIR_NAME\t= %s%s%s%s%s%s.OBJ\n","$(OS_CONFIG)","$(OS_VERSION)","$(PROCESSOR_ARCHITECTURE)","$(COMPILER)","$(IMPL_STRATEGY)","$(OBJDIR_TAG)"); next} {print}' UNIX.mk.orig > UNIX.mk)
-endif # USE_AUTOCONF
+endif # ! USE_AUTOCONF
 
 ifdef ALL_PLATFORMS
 all_platforms:: $(NFSPWD)
