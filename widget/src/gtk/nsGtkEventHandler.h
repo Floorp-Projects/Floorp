@@ -23,6 +23,7 @@
 
 class nsIWidget;
 class nsIMenuItem;
+class nsIMenu;
 
 gint handle_configure_event(GtkWidget *w, GdkEventConfigure *conf, gpointer p);
 void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p);
@@ -36,6 +37,9 @@ gint handle_focus_out_event(GtkWidget *w, GdkEventFocus * event, gpointer p);
 void handle_scrollbar_value_changed(GtkAdjustment *adjustment, gpointer p);
 
 void menu_item_activate_handler(GtkWidget *w, gpointer p);
+
+void menu_map_handler(GtkWidget *w, gpointer p);
+void menu_unmap_handler(GtkWidget *w, gpointer p);
 
 //----------------------------------------------------
 

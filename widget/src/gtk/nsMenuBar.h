@@ -23,6 +23,9 @@
 #include "nsIMenuListener.h"
 #include "nsVoidArray.h"
 
+#include "nsIWebShell.h"
+#include "nsIDOMNode.h"
+
 class nsIWidget;
 
 /**
@@ -69,6 +72,9 @@ protected:
   GtkWidget   *mMenuBar;
   nsIWidget  *mParent;
   PRBool      mIsMenuBarAdded;
+  
+  nsIWebShell * mWebShell;
+  nsIDOMNode  * mDOMNode;
 };
 
 #endif // nsMenuBar_h__

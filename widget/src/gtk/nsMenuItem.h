@@ -23,6 +23,9 @@
 #include "nsString.h"
 #include "nsIMenuListener.h"
 
+#include "nsIDOMElement.h"
+#include "nsIWebShell.h"
+
 class nsIMenu;
 class nsIPopUpMenu;
 class nsIWidget;
@@ -96,8 +99,10 @@ protected:
   nsIWidget    *mTarget;
 
   GtkWidget    *mMenuItem; // native cascade widget
-  PRBool       mIsSeparator;
+  bool         mIsSeparator;
 
+  nsIWebShell   * mWebShell;
+  nsIDOMElement * mDOMElement;
 };
 
 #endif // nsMenuItem_h__

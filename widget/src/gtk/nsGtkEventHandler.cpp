@@ -27,6 +27,7 @@
 #include "nsScrollbar.h"
 #include "nsFileWidget.h"
 #include "nsGUIEvent.h"
+#include "nsIMenu.h"
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
 
@@ -413,7 +414,7 @@ gint handle_focus_out_event(GtkWidget *w, GdkEventFocus * event, gpointer p)
 //==============================================================
 void menu_item_activate_handler(GtkWidget *w, gpointer p)
 {
-  g_print("menu selected\n");
+  g_print("menu_item_activate_handler\n");
 
   nsIMenuListener *menuListener = nsnull;
   nsIMenuItem *menuItem = (nsIMenuItem *)p;
@@ -436,7 +437,61 @@ void menu_item_activate_handler(GtkWidget *w, gpointer p)
 
     menuItem->QueryInterface(kIMenuListenerIID, (void**)&menuListener);
     if(menuListener) {
-      menuListener->MenuSelected(mevent);
+      menuListener->MenuItemSelected(mevent);
+      NS_IF_RELEASE(menuListener);
+    }
+  }
+}
+
+//==============================================================
+void menu_map_handler(GtkWidget *w, gpointer p)
+{ 
+  nsIMenuListener *menuListener = nsnull;
+  nsIMenu *menu = (nsIMenu *)p;
+  if (menu != NULL) {
+    nsMenuEvent mevent;
+    mevent.message = NS_MENU_SELECTED;
+    mevent.eventStructType = NS_MENU_EVENT;
+    mevent.point.x = 0;
+    mevent.point.y = 0;
+    mevent.widget = nsnull;
+
+    mevent.time = PR_IntervalNow();
+
+    nsEventStatus status;
+      
+    menu->QueryInterface(kIMenuListenerIID, (void**)&menuListener);
+    if(menuListener) {
+      menuListener->MenuConstruct(
+        mevent,
+      	NULL,   //parent window
+	NULL,   //menuNode
+	NULL ); // webshell
+      NS_IF_RELEASE(menuListener);
+    }
+  }
+}
+
+//==============================================================
+void menu_unmap_handler(GtkWidget *w, gpointer p)
+{
+  nsIMenuListener *menuListener = NULL;
+  nsIMenu *menu = (nsIMenu *)p;
+  if (menu != NULL) {
+    nsMenuEvent mevent;
+    mevent.message = NS_MENU_SELECTED;
+    mevent.eventStructType = NS_MENU_EVENT;
+    mevent.point.x = 0;
+    mevent.point.y = 0;
+    mevent.widget = nsnull;
+
+    mevent.time = PR_IntervalNow();
+
+    nsEventStatus status;
+
+    menu->QueryInterface(kIMenuListenerIID, (void**)&menuListener);
+    if(menuListener) {
+      menuListener->MenuDestruct(mevent);
       NS_IF_RELEASE(menuListener);
     }
   }

@@ -26,6 +26,10 @@
 class nsIMenuBar;
 class nsIMenuListener;
 
+#include "nsIDOMNode.h"
+#include "nsIDOMElement.h"
+#include "nsIWebShell.h"
+
 /**
  * Native GTK+ Menu wrapper
  */
@@ -75,16 +79,35 @@ public:
   NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
   
 protected:
+  void LoadMenuItem(
+    nsIMenu       * pParentMenu,
+    nsIDOMElement * menuitemElement,
+    nsIDOMNode    * menuitemNode,
+    unsigned short  menuitemIndex,
+    nsIWebShell   * aWebShell);
+  
+  void LoadSubMenu(
+    nsIMenu       * pParentMenu,
+    nsIDOMElement * menuElement,
+    nsIDOMNode    * menuNode);
+    
   void       Create(GtkWidget *aParent, const nsString &aLabel);
   GtkWidget  *GetNativeParent();
 
   nsString   mLabel;
   PRUint32   mNumMenuItems;
   GtkWidget  *mMenu;
+  
+  nsVoidArray mMenuItemVoidArray;
 
   nsIMenu    *mMenuParent;
   nsIMenuBar *mMenuBarParent;
   nsIMenuListener * mListener;
+  
+  bool mConstructCalled;
+  nsIDOMNode    * mDOMNode;
+  nsIWebShell   * mWebShell;
+  nsIDOMElement * mDOMElement;
 };
 
 #endif // nsMenu_h__
