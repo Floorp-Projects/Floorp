@@ -47,12 +47,11 @@ static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 static void DumpTiles(PhTile_t *t)
 {
 #ifdef DEBUG_REGION
-
   int count=1;
   
   while(t)
   {
-    //printf("Tile %d is t=<%p> t->next=<%p> (%d, %d) - (%d,%d)\n", count, t, t->next, tulx, tuly, tlrx, tlry);
+    printf("Tile %d is t=<%p> t->next=<%p> (%d, %d) - (%d,%d)\n", count, t, t->next, tulx, tuly, tlrx, tlry);
     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("Tile %d is t=<%p> t->next=<%p> (%d, %d) - (%d,%d)\n", count, t, t->next, tulx, tuly, tlrx, tlry));
     t = t->next;
 	count++;
@@ -174,8 +173,7 @@ void nsRegionPh :: Union(const nsIRegion &aRegion)
   int added;
   PhTile_t *tiles;
   aRegion.GetNativeRegion((void*&)tiles);
-
-  mRegion = PhAddMergeTiles(mRegion, tiles, &added);
+  mRegion = PhAddMergeTiles(mRegion, PhCopyTiles(tiles), &added);
 }
 
 
