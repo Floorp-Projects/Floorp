@@ -565,14 +565,13 @@ nsSafeFileOutputStream::Finish()
             if (NS_FAILED(mTargetFile->Equals(mTempFile, &equal)) || !equal)
                 NS_ERROR("mTempFile not equal to mTargetFile");
 #endif
-            return NS_OK;      
-        }
+        } else {
+          nsCAutoString targetFilename;
+          rv = mTargetFile->GetNativeLeafName(targetFilename);
 
-        nsCAutoString targetFilename;
-        rv = mTargetFile->GetNativeLeafName(targetFilename);
-    
-        if (NS_SUCCEEDED(rv))
-            rv = mTempFile->MoveToNative(nsnull, targetFilename); // This will replace target
+          if (NS_SUCCEEDED(rv))
+              rv = mTempFile->MoveToNative(nsnull, targetFilename); // This will replace target
+        }
     }
     else {
         mTempFile->Remove(PR_FALSE);
