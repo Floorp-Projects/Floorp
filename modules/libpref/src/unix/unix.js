@@ -227,6 +227,7 @@ pref("font.scale.outline.min",      6);
 
 // TrueType
 pref("font.FreeType2.enable", false);
+pref("font.freetype2.shared-library", "libfreetype.so.6");
 // if libfreetype was built without hinting compiled in
 // it is best to leave hinting off
 pref("font.FreeType2.autohinted", false);

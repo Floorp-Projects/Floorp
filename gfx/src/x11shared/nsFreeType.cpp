@@ -43,7 +43,7 @@
 #include "nspr.h"
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
-
+#include "nsICharsetConverterManager.h"
 #include "nsFontMetricsGTK.h"
 #include "nsIRenderingContext.h"
 #include "nsFreeType.h"
@@ -63,7 +63,7 @@ extern double  gAATTDarkTextGain;
 // nsFreeType stubs for development systems without a FreeType dev env
 nsresult nsFreeTypeInitGlobals() { 
   FREETYPE_FONT_PRINTF(("freetype not compiled in"));
-  NS_ASSERTION(0, "freetype not compiled in");
+  NS_WARNING("freetype not compiled in");
   return NS_OK;
 };
 
@@ -85,7 +85,7 @@ void nsFreeTypeFreeGlobals() {};
 #include "freetype/ftcache.h"
 #include "freetype/cache/ftcimage.h"
 
-static const char * FreeTypeLibraryName = "libfreetype.so";
+extern const char *gFreeType2SharedLibraryName;
 
 // macros to handle FreeType2 26.6 numbers (26 bit number with 6 bit fraction)
 #define FT_CEIL(x) (((x) + 63) & -64)
@@ -116,6 +116,7 @@ static void WeightTableInitCorrection(PRUint8*, PRUint8, double);
 
 static nsHashtable* gFreeTypeFaces = nsnull;
 PRUint8  sLinearWeightTable[256];
+static NS_DEFINE_CID(kCharSetManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 //
 // Since the Freetype2 library may not be available on the user's
@@ -221,6 +222,7 @@ public:
   int GetNumEmbeddedBitmaps() { 
                   return nsFT2FontCatalog::GetNumEmbeddedBitmaps(mFce); } ;
   PRUint16 *GetCCMap();
+  nsFontCatalogEntry* GetFce() { return mFce; };
 
 protected:
   nsFontCatalogEntry *mFce;
@@ -235,13 +237,38 @@ protected:
 ///////////////////////////////////////////////////////////////////////
 class nsFreeTypeXImage : public nsFreeTypeFont {
 public:
-  nsFreeTypeXImage();
   nsFreeTypeXImage(nsFreeTypeFace *aFaceID, PRUint16 aPixelSize,
                    const char *aName);
   gint DrawString(nsRenderingContextGTK* aContext,
                             nsDrawingSurfaceGTK* aSurface, nscoord aX,
                             nscoord aY, const PRUnichar* aString,
                             PRUint32 aLength);
+protected:
+  nsFreeTypeXImage();
+};
+
+///////////////////////////////////////////////////////////////////////
+//
+// class nsFreeTypeXImageSBC (Single Byte Converter) definition
+//
+///////////////////////////////////////////////////////////////////////
+class nsFreeTypeXImageSBC : public nsFreeTypeXImage {
+public:
+  nsFreeTypeXImageSBC(nsFreeTypeFace *aFaceID, PRUint16 aPixelSize,
+                      const char *aName);
+#ifdef MOZ_MATHML
+  virtual nsresult GetBoundingMetrics(const PRUnichar*   aString,
+                                      PRUint32           aLength,
+                                      nsBoundingMetrics& aBoundingMetrics);
+#endif
+
+  virtual gint GetWidth(const PRUnichar* aString, PRUint32 aLength);
+  virtual gint DrawString(nsRenderingContextGTK* aContext,
+                          nsDrawingSurfaceGTK* aSurface, nscoord aX,
+                          nscoord aY, const PRUnichar* aString,
+                          PRUint32 aLength);
+protected:
+  nsFreeTypeXImageSBC();
 };
 
 ///////////////////////////////////////////////////////////////////////
@@ -281,18 +308,9 @@ nsresult
 nsFreeTypeInitGlobals()
 {
   FREETYPE_FONT_PRINTF(("initialize freetype"));
-#ifdef ENABLE_FT_TIME_MACROS
-  PRTime start = PR_Now();
-#endif
 
   nsresult rv = nsFreeType::InitGlobals();
 
-#ifdef ENABLE_FT_TIME_MACROS
-  PRTime end = PR_Now();
-  printf("nsFreeTypeInitGlobals took %u.%03u milli-seconds\n", 
-                        deltaMicroSeconds(start, end)/1000,
-                        deltaMicroSeconds(start, end)%1000);
-#endif
   return rv;
 }
 
@@ -332,7 +350,7 @@ nsFreeType::ClearGlobals()
 static FT_Error
 nsFreeType__DummyFunc()
 {
-  NS_ASSERTION(0, "nsFreeType__DummyFunc should never be called");
+  NS_ERROR("nsFreeType__DummyFunc should never be called");
   return 1;
 }
 
@@ -378,6 +396,7 @@ nsFreeType::InitGlobals(void)
   if (!nsFT2FontCatalog::InitGlobals(nsFreeType::GetLibrary())) {
     return NS_ERROR_FAILURE;
   }
+
   // setup the weighting table
   WeightTableInitCorrection(sLinearWeightTable,
                             gAATTDarkTextMinValue, gAATTDarkTextGain);
@@ -436,11 +455,13 @@ nsFreeType::LoadSharedLib()
 {
   NS_ASSERTION(sSharedLib==nsnull, "library already loaded");
 
-  sSharedLib = PR_LoadLibrary(FreeTypeLibraryName);
+  if (!gFreeType2SharedLibraryName)
+    return PR_FALSE;
+  sSharedLib = PR_LoadLibrary(gFreeType2SharedLibraryName);
   // since the library may not be available on any given system
   // failing to load is not considered a fatal error
   if (!sSharedLib) {
-    NS_ASSERTION(0, "freetype library not found");
+    NS_WARNING("freetype library not found");
     return PR_FALSE;
   }
 
@@ -449,7 +470,7 @@ nsFreeType::LoadSharedLib()
   for (p=FtFuncs; p->FuncName; p++) {
     func = PR_FindFunctionSymbol(sSharedLib, p->FuncName);
     if (!func) {
-      NS_ASSERTION(0, "nsFreeType::LoadSharedLib Error");
+      NS_WARNING("nsFreeType::LoadSharedLib Error");
       ClearFunctions();
       return PR_FALSE;
     }
@@ -511,7 +532,7 @@ nsFreeTypeFace::GetCCMap()
 ///////////////////////////////////////////////////////////////////////
 nsFreeTypeFont::nsFreeTypeFont()
 {
-  NS_ASSERTION(0, "should never call nsFreeTypeFont::nsFreeTypeFont");
+  NS_ERROR("should never call nsFreeTypeFont::nsFreeTypeFont");
 }
 
 nsFreeTypeFont *
@@ -524,15 +545,22 @@ nsFreeTypeFont::NewFont(nsFreeTypeFace *aFaceID, PRUint16 aPixelSize,
   PRBool ximage = PR_TRUE;
   PRBool render = PR_FALSE;
   nsFreeTypeFont *ftfont;
+  nsFontCatalogEntry* fce = aFaceID->GetFce();
+  nsTTFontFamilyEncoderInfo *ffei = nsFT2FontCatalog::GetCustomEncoderInfo(fce);
   if (ximage) {
-    ftfont = new nsFreeTypeXImage(aFaceID, aPixelSize, aName);
+    if (ffei) {
+      ftfont = new nsFreeTypeXImageSBC(aFaceID, aPixelSize, aName);
+    }
+    else {
+      ftfont = new nsFreeTypeXImage(aFaceID, aPixelSize, aName);
+    }
     return ftfont;
   }
   else if (render) {
-    NS_ASSERTION(0, "need to construct a render type FreeType object");
+    NS_ERROR("need to construct a render type FreeType object");
     return nsnull;
   }
-  NS_ASSERTION(0, "need to construct other type FreeType objects");
+  NS_ERROR("need to construct other type FreeType objects");
   return nsnull;
 }
 
@@ -674,7 +702,7 @@ nsFreeTypeFont::doGetBoundingMetrics(const PRUnichar* aString, PRUint32 aLength,
     FT_Pos advance;
     glyph_index = (*nsFreeTypeFont::nsFT_Get_Char_Index)(face, 
                                   (FT_ULong)aString[i]);
-    NS_ASSERTION(glyph_index,"failed to get glyph");
+    //NS_ASSERTION(glyph_index,"failed to get glyph");
     if (glyph_index) {
       error = (*nsFreeTypeFont::nsFTC_Image_Cache_Lookup)(
                                    nsFreeType::GetImageCache(),
@@ -697,8 +725,6 @@ nsFreeTypeFont::doGetBoundingMetrics(const PRUnichar* aString, PRUint32 aLength,
     bbox.yMax = MAX(glyph_bbox.yMax, bbox.yMax);
     pos += advance;
   }
-  // this is different from the draw routine
-  // bbox.xMax = MAX(bbox.xMax, pos+1);
 
   // check we got at least one size
   if (bbox.xMin > bbox.xMax)
@@ -751,7 +777,6 @@ nsFreeTypeFont::GetWidth(const PRUnichar* aString, PRUint32 aLength)
                                    &mImageDesc, glyph_index, &glyph);
     NS_ASSERTION(error==0,"error loading glyph");
     if (error) {
-      //printf("failed to load char 0x%04x, error = %d\n", aString[i], error);
       origin_x += face->size->metrics.x_ppem/2 + 2;
       continue;
     }
@@ -767,7 +792,7 @@ nsFreeTypeFont::DrawString(nsRenderingContextGTK* aContext,
                             nscoord aY, const PRUnichar* aString,
                             PRUint32 aLength)
 {
-  NS_ASSERTION(0, "should never call nsFreeTypeFont::DrawString");
+  NS_ERROR("should never call nsFreeTypeFont::DrawString");
   return 0;
 }
 
@@ -775,7 +800,7 @@ PRUint32
 nsFreeTypeFont::Convert(const PRUnichar* aSrc, PRUint32 aSrcLen,
                            PRUnichar* aDest, PRUint32 aDestLen)
 {
-  NS_ASSERTION(0, "should not be calling nsFreeTypeFont::Convert");
+  NS_ERROR("should not be calling nsFreeTypeFont::Convert");
   return 0;
 }
 
@@ -873,12 +898,14 @@ nsFreeTypeFont::getXHeight(unsigned long &val)
   int height;
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
-  if (!face)
-    return 0;
+  if (!face || !val)
+    return PR_FALSE;
   height = FT_16_16_TO_REG(face->height * face->size->metrics.x_scale);
   height = FT_CEIL(height);
   height = FT_TRUNC(height);
-  return height;
+
+  val = height;
+  return PR_TRUE;
 }
 
 PRBool
@@ -945,14 +972,14 @@ private:
 
 nsFreeTypeXImage::nsFreeTypeXImage()
 {
-  NS_ASSERTION(0, "should never call nsFreeTypeXImage::nsFreeTypeXImage");
+  NS_ERROR("should never call nsFreeTypeXImage::nsFreeTypeXImage");
 }
 
 nsFreeTypeXImage::nsFreeTypeXImage(nsFreeTypeFace *aFaceID, PRUint16 aPixelSize,
                                    const char *aName)
 : nsFreeTypeFont(aFaceID, aPixelSize, aName)
 {
-  //NS_ASSERTION(0, "should never call nsFreeTypeXImage::nsFreeTypeXImage");
+  //NS_ERROR("should never call nsFreeTypeXImage::nsFreeTypeXImage");
 }
 
 gint
@@ -961,7 +988,6 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
                             nscoord aY, const PRUnichar* aString,
                             PRUint32 aLength)
 {
-  //FREETYPE_FONT_PRINTF(("nsFreeTypeXImage::DrawString"));
 
 #if DEBUG_SHOW_GLYPH_BOX
   PRUint32 x, y;
@@ -1008,7 +1034,7 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
   GC gc = GDK_GC_XGC(aContext->GetGC());
   XGCValues values;
   if (!XGetGCValues(dpy, gc, GCForeground, &values)) {
-    NS_ASSERTION(0, "failed to get foreground pixel");
+    NS_ERROR("failed to get foreground pixel");
     return 0;
   }
   nscolor color = nsX11AlphaBlend::PixelToNSColor(values.foreground);
@@ -1044,8 +1070,6 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
 #endif
     return 0;
   }
-
-  aContext->GetColor(color);
 
 #if DEBUG_SHOW_GLYPH_BOX
   DEBUG_AADRAWBOX(sub_image,0,0,image_width,image_height,0,0,0,255/4);
@@ -1103,7 +1127,7 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
                                glyph_bbox.yMax-glyph_bbox.yMin, 0);
     PRUint8 buf[IMAGE_BUFFER_SIZE]; // try to use the stack for data
     if (!aaglyph.WrapFreeType(&glyph_bbox, slot, buf, IMAGE_BUFFER_SIZE)) {
-      NS_ASSERTION(0, "failed to wrap freetype image");
+      NS_ERROR("failed to wrap freetype image");
       XDestroyImage(sub_image);
       return 0;
     }
@@ -1113,9 +1137,6 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
     //
     NS_ASSERTION(ascent>=glyph_bbox.yMax,"glyph too tall");
     NS_ASSERTION(x_pos>=-aaglyph.GetLBearing(),"glyph extends too far to left");
-    if (-aaglyph.GetLBearing() > x_pos)
-      printf("x_pos=%d, aaglyph.GetLBearing()=%d\n", 
-              x_pos, aaglyph.GetLBearing());
 
 #if DEBUG_SHOW_GLYPH_BOX
   // draw box around part of glyph that extends to the left 
@@ -1155,6 +1176,121 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
 
 ///////////////////////////////////////////////////////////////////////
 //
+// class nsFreeTypeXImage data/functions
+//
+///////////////////////////////////////////////////////////////////////
+
+nsFreeTypeXImageSBC::nsFreeTypeXImageSBC()
+{
+  NS_ERROR("should never call nsFreeTypeXImageSBC::nsFreeTypeXImageSBC");
+}
+
+nsFreeTypeXImageSBC::nsFreeTypeXImageSBC(nsFreeTypeFace *aFaceID, 
+                                         PRUint16 aPixelSize,
+                                         const char *aName)
+: nsFreeTypeXImage(aFaceID, aPixelSize, aName)
+{
+}
+
+#ifdef MOZ_MATHML
+nsresult
+nsFreeTypeXImageSBC::GetBoundingMetrics(const PRUnichar*   aString,
+                                        PRUint32           aLength,
+                                        nsBoundingMetrics& aBoundingMetrics)
+{
+  nsresult res;
+  char buf[512];
+  PRInt32 bufLen = sizeof(buf);
+  PRInt32 stringLen = aLength;
+  nsFontCatalogEntry* fce = mFaceID->GetFce();
+  nsTTFontFamilyEncoderInfo *ffei = nsFT2FontCatalog::GetCustomEncoderInfo(fce);
+  NS_ASSERTION(ffei,"failed to find font encoder info");
+  if (!ffei)
+    return NS_ERROR_FAILURE;
+  res = ffei->mEncodingInfo->mConverter->Convert(aString, &stringLen, 
+                                                 buf, &bufLen);
+  NS_ASSERTION((aLength&&bufLen)||(!aLength&&!bufLen), "converter failed");
+
+  //
+  // Widen to 16 bit
+  //
+  PRUnichar unibuf[512];
+  int i;
+  for (i=0; i<bufLen; i++) {
+    unibuf[i] = (unsigned char)buf[i];
+  }
+
+  res = nsFreeTypeXImage::GetBoundingMetrics(unibuf, bufLen, aBoundingMetrics);
+  return res;
+}
+#endif
+
+gint
+nsFreeTypeXImageSBC::GetWidth(const PRUnichar* aString, PRUint32 aLength)
+{
+  nsresult res;
+  char buf[512];
+  PRInt32 bufLen = sizeof(buf);
+  PRInt32 stringLen = aLength;
+  nsFontCatalogEntry* fce = mFaceID->GetFce();
+  nsTTFontFamilyEncoderInfo *ffei = nsFT2FontCatalog::GetCustomEncoderInfo(fce);
+  NS_ASSERTION(ffei,"failed to find font encoder info");
+  if (!ffei)
+    return NS_ERROR_FAILURE;
+  res = ffei->mEncodingInfo->mConverter->Convert(aString, &stringLen, 
+                                                 buf, &bufLen);
+  NS_ASSERTION((aLength&&bufLen)||(!aLength&&!bufLen), "converter failed");
+
+  //
+  // Widen to 16 bit
+  //
+  PRUnichar unibuf[512];
+  int i;
+  for (i=0; i<bufLen; i++) {
+    unibuf[i] = (unsigned char)buf[i];
+  }
+
+  gint width;
+  width = nsFreeTypeXImage::GetWidth(unibuf, bufLen);
+  return width;
+}
+
+gint
+nsFreeTypeXImageSBC::DrawString(nsRenderingContextGTK* aContext,
+                                nsDrawingSurfaceGTK* aSurface, nscoord aX,
+                                nscoord aY, const PRUnichar* aString,
+                                PRUint32 aLength)
+{
+  nsresult res;
+  char buf[512];
+  PRInt32 bufLen = sizeof(buf);
+  PRInt32 stringLen = aLength;
+  nsFontCatalogEntry* fce = mFaceID->GetFce();
+  nsTTFontFamilyEncoderInfo *ffei = nsFT2FontCatalog::GetCustomEncoderInfo(fce);
+  NS_ASSERTION(ffei,"failed to find font encoder info");
+  if (!ffei)
+    return NS_ERROR_FAILURE;
+  res = ffei->mEncodingInfo->mConverter->Convert(aString, &stringLen, 
+                                                 buf, &bufLen);
+  NS_ASSERTION((aLength&&bufLen)||(!aLength&&!bufLen), "converter failed");
+
+  //
+  // Widen to 16 bit
+  //
+  PRUnichar unibuf[512];
+  int i;
+  for (i=0; i<bufLen; i++) {
+    unibuf[i] = (unsigned char)buf[i];
+  }
+
+  gint width;
+  width = nsFreeTypeXImage::DrawString(aContext, aSurface, aX, aY, 
+                                       unibuf, bufLen);
+  return width;
+}
+
+///////////////////////////////////////////////////////////////////////
+//
 // miscellaneous routines in alphabetic order
 //
 ///////////////////////////////////////////////////////////////////////
@@ -1178,12 +1314,20 @@ nsFreeTypeFaceRequester(FTC_FaceID face_id, FT_Library lib,
     return fterror;
 
   FT_Face face = *aFace;
+  FT_UShort platform_id = TT_PLATFORM_MICROSOFT;
+  FT_UShort encoding_id = TT_MS_ID_UNICODE_CS;
+  nsFontCatalogEntry* fce = faceID->GetFce();
+  nsTTFontFamilyEncoderInfo *ffei = nsFT2FontCatalog::GetCustomEncoderInfo(fce);
+  if (ffei) {
+    platform_id = ffei->mEncodingInfo->mCmapPlatformID;
+    encoding_id = ffei->mEncodingInfo->mCmapEncoding;
+  }
   for (int i=0; i < face->num_charmaps; i++) {
-    if (   (face->charmaps[i]->platform_id == TT_PLATFORM_MICROSOFT)
-        && (face->charmaps[i]->encoding_id == TT_MS_ID_UNICODE_CS)) {
+    if (   (face->charmaps[i]->platform_id == platform_id)
+        && (face->charmaps[i]->encoding_id == encoding_id)) {
       fterror = (*nsFreeTypeFont::nsFT_Set_Charmap)(face, face->charmaps[i]);
       if (fterror) {
-        FREETYPE_FONT_PRINTF(("failed to set unicode charmap"));
+        FREETYPE_FONT_PRINTF(("failed to set cmap"));
         (*nsFreeTypeFont::nsFT_Done_Face)(face);
         *aFace = nsnull;
       }
@@ -1196,11 +1340,8 @@ nsFreeTypeFaceRequester(FTC_FaceID face_id, FT_Library lib,
 nsFreeTypeFace *
 nsFreeTypeGetFaceID(nsFontCatalogEntry *aFce)
 {
-  nsCAutoString faceTag(nsFT2FontCatalog::GetFileName(aFce));
-  char buf[32];
-  sprintf(buf, ".%d", nsFT2FontCatalog::GetFaceIndex(aFce));
-  faceTag.Append(buf);
-  nsCStringKey key(faceTag);
+  // in this hash each ttc face has a unique key
+  nsCStringKey key(nsFT2FontCatalog::GetFamilyName(aFce));
   nsFreeTypeFace *face = (nsFreeTypeFace *)gFreeTypeFaces->Get(&key);
   if (!face) {
     face = new nsFreeTypeFace(aFce);
