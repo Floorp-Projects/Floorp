@@ -12,6 +12,8 @@ content/forms, forms/content/forms
 content/global, toolkit/content/global
 content/global/bindings, toolkit/content/global/bindings
 content/global-platform, toolkit/content/global-platform
+content/communicator/contents.rdf, comm/content/communicator/contents.rdf
+content/communicator/plugins.html, comm/content/communicator/plugins.html
 skin/classic/forms, classic/skin/classic/forms
 skin/classic/global, classic/skin/classic/global
 skin/classic/global/arrow, classic/skin/classic/global/arrow
@@ -20,6 +22,7 @@ skin/classic/global/scrollbar, classic/skin/classic/global/scrollbar
 skin/classic/communicator/contents.rdf, classic/skin/classic/communicator/contents.rdf
 skin/classic/communicator/dialogOverlay.css, classic/skin/classic/communicator/dialogOverlay.css
 skin/classic/communicator/smallheader-bg.gif, classic/skin/classic/communicator/smallheader-bg.gif
+skin/classic/communicator/plugins.css, classic/skin/classic/communicator/plugins.css
 
 # Locale stuff
 locale/XXXX/global, XXXX/locale/XXXX/global
