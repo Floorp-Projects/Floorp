@@ -484,7 +484,12 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
   PRBool isPost = (NS_FORM_METHOD_POST == method) || !isURLEncoded; 
 
   nsIFormControlFrame* fcFrame = nsnull;
-  aFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+
+  // Since JS Submit() calls are not linked to an element, aFrame is null.
+  // fcframe will remain null, but IsSuccess will return succes in this case.
+  if (aFrame != nsnull) {
+    aFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+  }
   
   if (isURLEncoded) {
     ProcessAsURLEncoded(isPost, data, fcFrame);

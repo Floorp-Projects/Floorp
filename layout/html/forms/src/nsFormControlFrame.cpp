@@ -621,6 +621,9 @@ PRBool
 nsFormControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
 {
   nsAutoString name;
+  // Since JS Submit() calls are not linked to an element, aSubmitter is null.
+  // Return success to allow the call to go through.
+  if (aSubmitter == nsnull) return PR_TRUE;
   return (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
 }
 
