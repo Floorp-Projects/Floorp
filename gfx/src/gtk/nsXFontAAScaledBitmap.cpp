@@ -1181,7 +1181,7 @@ scale_imageAntiJag(nsAntiAliasedGlyph *aSrc, nsAntiAliasedGlyph *aDst)
     horizontally_scaled_data = (PRUint8*)nsMemory::Alloc(hsd_len);
     memset(horizontally_scaled_data, 0, hsd_len);
   }
-  for (PRUint32 i=0; i<hsd_len; i++)
+  for (i=0; i<hsd_len; i++)
     horizontally_scaled_data[i] = 0;
 
   PRUint32 len_x   = src_width * expand;
