@@ -47,8 +47,14 @@ var gAddressBookBundle;
 var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 var gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
 
-var gDragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
-gDragService = gDragService.QueryInterface(Components.interfaces.nsIDragService);
+try
+{
+  var gDragService = Components.classes["@mozilla.org/widget/dragservice;1"]
+                               .getService(Components.interfaces.nsIDragService);
+}
+catch (e)
+{
+}
 
 function handleKeyPress(element, event)
 {
