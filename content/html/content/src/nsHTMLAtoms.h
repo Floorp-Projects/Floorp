@@ -20,6 +20,9 @@
 
 #include "nsIAtom.h"
 
+#define NS_HTML_BASE_HREF   "_BASE_HREF"
+#define NS_HTML_BASE_TARGET "_BASE_TARGET"
+
 /**
  * This class wraps up the creation (and destruction) of the standard
  * set of html atoms used during normal html handling. This objects
@@ -31,6 +34,10 @@ public:
 
   static void AddrefAtoms();
   static void ReleaseAtoms();
+
+  // Special attribute atoms
+  static nsIAtom* _baseHref;
+  static nsIAtom* _baseTarget;
 
   // Alphabetical list of html attribute atoms
   static nsIAtom* a;

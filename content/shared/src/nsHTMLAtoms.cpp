@@ -17,6 +17,8 @@
  */
 #include "nsHTMLAtoms.h"
 
+nsIAtom* nsHTMLAtoms::_baseHref;
+nsIAtom* nsHTMLAtoms::_baseTarget;
 nsIAtom* nsHTMLAtoms::a;
 nsIAtom* nsHTMLAtoms::above;
 nsIAtom* nsHTMLAtoms::action;
@@ -150,6 +152,8 @@ static nsrefcnt gRefCnt;
 void nsHTMLAtoms::AddrefAtoms()
 {
   if (0 == gRefCnt) {
+    _baseHref = NS_NewAtom(NS_HTML_BASE_HREF);
+    _baseTarget = NS_NewAtom(NS_HTML_BASE_TARGET);
     a = NS_NewAtom("A");
     above = NS_NewAtom("ABOVE");
     action = NS_NewAtom("ACTION");
@@ -284,6 +288,8 @@ void nsHTMLAtoms::ReleaseAtoms()
 {
   NS_PRECONDITION(gRefCnt != 0, "bad release atoms");
   if (--gRefCnt == 0) {
+    NS_RELEASE(_baseHref);
+    NS_RELEASE(_baseTarget);
     NS_RELEASE(a);
     NS_RELEASE(above);
     NS_RELEASE(action);
