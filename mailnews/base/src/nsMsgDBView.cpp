@@ -1421,9 +1421,9 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
 	nsresult rv = NS_OK;
 	nsMsgKeyArray imapUids;
 
-  nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_folder);
+    nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_folder);
 	PRBool thisIsImapFolder = (imapFolder != nsnull);
-  if (command == nsMsgViewCommandType::deleteMsg)
+    if (command == nsMsgViewCommandType::deleteMsg)
 		rv = DeleteMessages(mMsgWindow, indices, numIndices, PR_FALSE);
 	else if (command == nsMsgViewCommandType::deleteNoTrash)
 		rv = DeleteMessages(mMsgWindow, indices, numIndices, PR_TRUE);
@@ -2746,7 +2746,9 @@ nsresult nsMsgDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, PRBool /
 	// This is the mail behaviour, but threaded views will want
 	// to insert in order...
 	nsCOMPtr <nsIMsgDBHdr> msgHdr;
-  rv = m_db->GetMsgHdrForKey(newKey, getter_AddRefs(msgHdr));
+    NS_ASSERTION(m_db, "m_db is null");
+    if (m_db)
+      rv = m_db->GetMsgHdrForKey(newKey, getter_AddRefs(msgHdr));
 	if (NS_SUCCEEDED(rv) && msgHdr != nsnull)
 	{
 		rv = AddHdr(msgHdr);

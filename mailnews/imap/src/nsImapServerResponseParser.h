@@ -115,6 +115,7 @@ public:
 	PRBool ServerIsNetscape3xServer() { return fServerIsNetscape3xServer; }
 	PRBool ServerHasServerInfo() {return ((fCapabilityFlag & kXServerInfoCapability) != 0); }
 	PRBool ServerIsAOLServer() {return ((fCapabilityFlag & kAOLImapCapability) != 0); }
+    void SetFetchingFlags(PRBool aFetchFlags) { fFetchingAllFlags = aFetchFlags;}
 	void ResetCapabilityFlag() ;
 
 	const char *GetMailAccountUrl() { return fMailAccountUrl; }
@@ -218,6 +219,7 @@ private:
   PRUint32          fHighestRecordedUID;
   PRInt32           fSizeOfMostRecentMessage;
 	PRInt32					  fTotalDownloadSize;
+    PRBool fFetchingAllFlags;
     
   int						  fNumberOfTaggedResponsesExpected;
 

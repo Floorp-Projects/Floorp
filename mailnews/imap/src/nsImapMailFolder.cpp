@@ -1852,8 +1852,9 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
             else
             {
                 mDatabase->DeleteMessages(&srcKeyArray,NULL);
-                NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+                NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);            
             }
+            
         }
     }
         return rv;
@@ -3473,7 +3474,7 @@ nsImapMailFolder::NotifyMessageFlags(PRUint32 flags, nsMsgKey msgKey)
 	    mDatabase->MarkHdrRead(dbHdr, (flags & kImapMsgSeenFlag) != 0, nsnull);
 		  mDatabase->MarkHdrReplied(dbHdr, (flags & kImapMsgAnsweredFlag) != 0, nsnull);
 			mDatabase->MarkHdrMarked(dbHdr, (flags & kImapMsgFlaggedFlag) != 0, nsnull);
-			mDatabase->MarkImapDeleted(msgKey, (flags & kImapMsgDeletedFlag) != 0, nsnull);
+            mDatabase->MarkImapDeleted(msgKey, (flags & kImapMsgDeletedFlag) != 0, nsnull);
 		}
   }
   
@@ -5205,13 +5206,13 @@ nsImapMailFolder::ClearCopyState(nsresult rv)
 {
     if (m_copyState)
     {
+        nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(m_copyState->m_srcSupport);
+        m_copyState = null_nsCOMPtr();
         nsresult result;
         NS_WITH_SERVICE(nsIMsgCopyService, copyService, 
                         kMsgCopyServiceCID, &result); 
         if (NS_SUCCEEDED(result))
-            copyService->NotifyCompletion(m_copyState->m_srcSupport, this, rv);
-      
-        m_copyState = null_nsCOMPtr();
+            copyService->NotifyCompletion(srcSupport, this, rv);    
     }
 }
 

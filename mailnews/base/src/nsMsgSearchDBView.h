@@ -56,9 +56,13 @@ protected:
   virtual nsresult CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices, PRBool isMove, nsIMsgFolder *destFolder);
   virtual nsresult DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices, PRBool deleteStorage);
   nsresult InitializeGlobalsForDeleteAndFile(nsMsgViewIndex *indices, PRInt32 numIndices);
+  nsresult GroupSearchResultsByFolder();
   
   nsCOMPtr <nsISupportsArray> m_folders; // maybe we should store ranges, or the actual headers instead.
+  nsCOMPtr <nsISupportsArray> m_hdrs;
+  nsCOMPtr <nsISupportsArray> m_hdrsForEachFolder;
   nsCOMPtr <nsISupportsArray> m_copyListenerList;
+  nsCOMPtr <nsISupportsArray> m_uniqueFolders;
   PRInt32 mCurIndex;
 
   nsMsgViewIndex* mIndicesForChainedDeleteAndFile;
@@ -67,8 +71,8 @@ protected:
   nsCOMPtr <nsISupportsArray> m_dbToUseList;
   nsMsgViewCommandTypeValue mCommand;
   nsCOMPtr <nsIMsgFolder> mDestFolder;
-  nsresult ProcessChainedRequest(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices);
-  nsresult ProcessContinuousRequest(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices);
+  nsresult ProcessRequestsInOneFolder(nsIMsgWindow *window);
+  nsresult ProcessRequestsInAllFolders(nsIMsgWindow *window);
 };
 
 #endif

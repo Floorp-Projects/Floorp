@@ -315,56 +315,18 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src folder */
     if (NS_FAILED(rv)) goto done;
 
     messages->Count(&cnt);
+    copySource = copyRequest->AddNewCopySource(srcFolder);
 
-    // duplicate the message array so we could sort the messages by it's
-    // folder easily
     for (i=0; i<cnt; i++)
     {
       aSupport = getter_AddRefs(messages->ElementAt(i));
-      msgArray->AppendElement(aSupport);
+      msg = do_QueryInterface(aSupport, &rv);
+      copySource->AddMessage(msg);
     }
-
-    rv = msgArray->Count(&rv);
-    if (NS_FAILED(rv)) goto done;
-
-    while (cnt-- > 0)
-    {
-        aSupport = getter_AddRefs(msgArray->ElementAt(cnt));
-        msg = do_QueryInterface(aSupport, &rv);
-        if (NS_FAILED(rv)) goto done;
-
-        rv = msg->GetFolder(getter_AddRefs(curFolder));
-        if (NS_FAILED(rv)) goto done;
-        if (!copySource)
-        {
-            copySource = copyRequest->AddNewCopySource(curFolder);
-            if (!copySource)
-            {
-                rv = NS_ERROR_OUT_OF_MEMORY;
-                goto done;
-            }
-        }
-
-        if (curFolder == copySource->m_msgFolder)
-        {
-            copySource->AddMessage(msg);
-            msgArray->RemoveElementAt(cnt);
-        }
-
-        if (cnt == 0)
-        {
-            rv = msgArray->Count(&cnt);
-            if (cnt > 0)
-                copySource = nsnull; // * force to create a new one and
-                                     // * continue grouping the messages
-        }
-    }
-
     // undo stuff
     if (NS_SUCCEEDED(rv) && copyRequest->m_copySourceArray.Count() > 1 &&
         copyRequest->m_txnMgr)
         copyRequest->m_txnMgr->BeginBatch();
-
 done:
     
     if (NS_FAILED(rv))

@@ -30,6 +30,8 @@
 #include "nsMsgBaseCID.h"
 #include "nsIMsgCopyService.h"
 #include "nsICopyMsgStreamListener.h"
+#include "nsIImapIncomingServer.h"
+#include "nsIMsgImapMailFolder.h"
 
 static NS_DEFINE_CID(kMsgCopyServiceCID,    NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
@@ -42,8 +44,8 @@ nsMsgSearchDBView::nsMsgSearchDBView()
 }
 
 nsMsgSearchDBView::~nsMsgSearchDBView()
-{
-  /* destructor code */
+{	
+ /* destructor code */
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMsgSearchDBView, nsMsgDBView)
@@ -60,6 +62,9 @@ NS_IMETHODIMP nsMsgSearchDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeVal
     m_folders = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    m_hdrs = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
     m_dbToUseList = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -73,20 +78,19 @@ NS_IMETHODIMP nsMsgSearchDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeVal
 
 NS_IMETHODIMP nsMsgSearchDBView::Close()
 {
-	nsresult rv;
-	PRUint32 count;
+    nsresult rv;
+  	PRUint32 count;
 
     NS_ASSERTION(m_dbToUseList, "no db used");
     //if (!m_dbToUseList) return NS_ERROR_FAILURE;
 
 	rv = m_dbToUseList->Count(&count);
-	if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;
 	
 	for(PRUint32 i = 0; i < count; i++)
 	{
 		((nsIMsgDatabase*)m_dbToUseList->ElementAt(i))->RemoveListener(this);
 	}
-
 	return NS_OK;
 }
 
@@ -150,13 +154,15 @@ nsMsgSearchDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
 {
   NS_ENSURE_ARG(aMsgHdr);
   NS_ENSURE_ARG(folder);
-  nsCOMPtr <nsISupports> supports = do_QueryInterface(folder);
-
-  m_folders->AppendElement(supports);
-
   nsresult rv = NS_OK;
+
+  PRBool found = PR_FALSE;
+
+  nsCOMPtr <nsISupports> supports = do_QueryInterface(folder);
+  m_folders->AppendElement(supports);
   nsMsgKey msgKey;
   PRUint32 msgFlags;
+  m_hdrs->AppendElement(aMsgHdr);
   aMsgHdr->GetMessageKey(&msgKey);
   aMsgHdr->GetFlags(&msgFlags);
   m_keys.Add(msgKey);
@@ -188,6 +194,8 @@ nsMsgSearchDBView::OnNewSearch()
   m_keys.RemoveAll();
   m_levels.RemoveAll();
   m_flags.RemoveAll();
+  m_hdrs->Clear();
+
 //    mSearchResults->Clear();
     return NS_OK;
 }
@@ -224,12 +232,8 @@ nsresult nsMsgSearchDBView::RemoveByIndex(nsMsgViewIndex index)
         return NS_MSG_INVALID_DBVIEW_INDEX;
 
     m_folders->RemoveElementAt(index);
-
-    for (nsMsgViewIndex i = 0; i < (nsMsgViewIndex) mTotalIndices; i++)
-    {
-        mIndicesForChainedDeleteAndFile[i]--;
-    }
-
+    m_hdrs->RemoveElementAt(index);
+    
     return nsMsgDBView::RemoveByIndex(index);
 }
 
@@ -237,12 +241,33 @@ nsresult nsMsgSearchDBView::DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex 
 {
     nsresult rv;
     InitializeGlobalsForDeleteAndFile(indices, numIndices);
+    PRBool imapDelete = PR_FALSE;
 
+    nsCOMPtr <nsISupports> curSupports = getter_AddRefs(m_folders->ElementAt(indices[0]));
+    nsCOMPtr <nsIMsgFolder> curFolder = do_QueryInterface(curSupports, &rv);
+    if (NS_SUCCEEDED(rv) && curFolder)
+    {
+      nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(curFolder, &rv);
+
+      if (NS_SUCCEEDED(rv) && imapFolder)
+      {
+        nsMsgImapDeleteModel deleteModel = nsMsgImapDeleteModels::MoveToTrash;
+                // set deleteStorage appropriately based on delete model
+        nsCOMPtr <nsIMsgIncomingServer> server;
+        curFolder->GetServer(getter_AddRefs(server));
+        nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryInterface(server, &rv);
+        if (NS_SUCCEEDED(rv) && imapServer)
+        {
+          imapServer->GetDeleteModel(&deleteModel);
+          if (deleteModel != nsMsgImapDeleteModels::MoveToTrash)
+              deleteStorage = PR_TRUE;
+        }   
+      }
+    }
     if (!deleteStorage)
-        rv = ProcessChainedRequest(window, indices, numIndices);
+        rv = ProcessRequestsInOneFolder(window);
     else
-        rv = ProcessContinuousRequest(window, indices, numIndices);
-
+        rv = ProcessRequestsInAllFolders(window);
     return rv;
 }
 
@@ -252,7 +277,7 @@ nsMsgSearchDBView::CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, P
     nsresult rv;
     InitializeGlobalsForDeleteAndFile(indices, numIndices);
 
-    rv = ProcessChainedRequest(window, indices, numIndices);
+    rv = ProcessRequestsInOneFolder(window);
 
     return rv;
 }
@@ -260,20 +285,61 @@ nsMsgSearchDBView::CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, P
 nsresult
 nsMsgSearchDBView::InitializeGlobalsForDeleteAndFile(nsMsgViewIndex *indices, PRInt32 numIndices)
 {
-    nsMsgViewIndex *outIndices, *nextIndices;
-    nextIndices = outIndices = (nsMsgViewIndex *)nsMemory::Alloc(numIndices * sizeof(nsMsgViewIndex));
-    if (!outIndices) return NS_ERROR_OUT_OF_MEMORY;
+  nsresult rv = NS_OK; 
+  mCurIndex = 0;
+                    //initialize and clear from the last usage
+  if (!m_uniqueFolders)
+  {
+    m_uniqueFolders = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv); 
+  }
+  else
+    m_uniqueFolders->Clear();
+  
+  if (!m_hdrsForEachFolder)
+  {
+    m_hdrsForEachFolder = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  else
+    m_hdrsForEachFolder->Clear();
 
-    for (nsMsgViewIndex i = 0; i < (nsMsgViewIndex) numIndices; i++) 
-    {
-        nextIndices[i] = indices[i];
-    }
+  //Build unique folder list based on headers selected by the user
+  for (nsMsgViewIndex i = 0; i < (nsMsgViewIndex) numIndices; i++)
+  {
+     nsCOMPtr <nsISupports> curSupports = getter_AddRefs(m_folders->ElementAt(indices[i]));
+     if ( m_uniqueFolders->IndexOf(curSupports) < 0)
+        m_uniqueFolders->AppendElement(curSupports); 
+  }
 
-    mIndicesForChainedDeleteAndFile = outIndices;
-    mTotalIndices = numIndices;
-    mCurIndex = 0;
+  PRUint32 numFolders =0; 
+  rv = m_uniqueFolders->Count(&numFolders);   //group the headers selected by each folder 
+  NS_ENSURE_SUCCESS(rv,rv);
+  for (PRUint32 folderIndex=0; folderIndex < numFolders; folderIndex++)
+  {
+     nsCOMPtr <nsISupports> curSupports = getter_AddRefs(m_uniqueFolders->ElementAt(folderIndex));
+     nsCOMPtr <nsIMsgFolder> curFolder = do_QueryInterface(curSupports, &rv);
+     nsCOMPtr <nsISupportsArray> msgHdrsForOneFolder;
+     NS_NewISupportsArray(getter_AddRefs(msgHdrsForOneFolder));
+     for (nsMsgViewIndex i = 0; i < (nsMsgViewIndex) numIndices; i++) 
+     {
+       nsCOMPtr <nsISupports> hdrSupports = getter_AddRefs(m_hdrs->ElementAt(indices[i]));
+       nsCOMPtr <nsIMsgDBHdr> msgHdr = do_QueryInterface(hdrSupports, &rv);
+       if (NS_SUCCEEDED(rv) && msgHdr)
+       {
+         nsCOMPtr <nsIMsgFolder> msgFolder;
+         msgHdr->GetFolder(getter_AddRefs(msgFolder));
+         if (msgFolder && msgFolder == curFolder) 
+           msgHdrsForOneFolder->AppendElement(hdrSupports);
+       }
+     }
+     nsCOMPtr <nsISupports> supports = do_QueryInterface(msgHdrsForOneFolder, &rv);
+     if (NS_SUCCEEDED(rv) && supports)
+       m_hdrsForEachFolder->AppendElement(supports);
+  }
+  return rv;
 
-    return NS_OK;
+
 }
 
 // nsIMsgCopyServiceListener methods
@@ -304,20 +370,11 @@ nsMsgSearchDBView::OnStopCopy(nsresult aStatus)
 
     if (NS_SUCCEEDED(aStatus))
     {
-        if (mCurIndex != 0) 
-        {
-            int tmpSize = mTotalIndices - mCurIndex;
-            nsMsgViewIndex* tmpIndices = (PRUint32*)PR_Malloc(tmpSize*sizeof(PRUint32)); 
-            nsCRT::memcpy(tmpIndices, &mIndicesForChainedDeleteAndFile[mCurIndex], tmpSize*sizeof(PRUint32)); 
-
-            PR_Free(mIndicesForChainedDeleteAndFile);
-
-            mIndicesForChainedDeleteAndFile = tmpIndices;
-            mTotalIndices -= mCurIndex;
-            mCurIndex = 0;
-
-            ProcessChainedRequest(mMsgWindow, mIndicesForChainedDeleteAndFile, mTotalIndices);
-        }
+        mCurIndex++;
+        PRUint32 numFolders =0;
+        nsresult rv = m_uniqueFolders->Count(&numFolders);
+        if ( mCurIndex < numFolders)
+          ProcessRequestsInOneFolder(mMsgWindow);
     }
 
     return rv;
@@ -336,185 +393,77 @@ nsMsgSearchDBView::GetMessageId(nsCString* aMessageId)
 }
 // end nsIMsgCopyServiceListener methods
 
-nsresult nsMsgSearchDBView::ProcessChainedRequest(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices)
+nsresult nsMsgSearchDBView::ProcessRequestsInOneFolder(nsIMsgWindow *window)
 {
     nsresult rv = NS_OK;
-    nsCOMPtr<nsISupportsArray> messageArray;
-    NS_NewISupportsArray(getter_AddRefs(messageArray));
-
     nsCOMPtr<nsIMsgCopyServiceListener> copyServListener;//= do_QueryInterface(this);
     rv = this->QueryInterface(NS_GET_IID(nsIMsgCopyServiceListener), getter_AddRefs(copyServListener));
 
-    // add error checking.
-    nsCOMPtr <nsISupports> curSupports = getter_AddRefs(m_folders->ElementAt(indices[0]));
-    nsCOMPtr<nsIMsgFolder> curFolder;
-    if(curSupports)
-    {
-        curFolder = do_QueryInterface(curSupports);
-    }
+    nsCOMPtr <nsISupports> curSupports = getter_AddRefs(m_uniqueFolders->ElementAt(mCurIndex));
+    NS_ASSERTION(curSupports, "curSupports is null");
+    nsCOMPtr<nsIMsgFolder> curFolder = do_QueryInterface(curSupports);
 
     nsCOMPtr <nsIMsgDatabase> dbToUse;
     if (curFolder)
     {
-        nsCOMPtr <nsIDBFolderInfo> folderInfo;
-        rv = curFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(dbToUse));
-        NS_ENSURE_SUCCESS(rv,rv);
-        dbToUse->AddListener(this);
+      nsCOMPtr <nsIDBFolderInfo> folderInfo;
+      rv = curFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(dbToUse));
+      NS_ENSURE_SUCCESS(rv,rv);
+      dbToUse->AddListener(this);
 
-        nsCOMPtr <nsISupports> tmpSupports = do_QueryInterface(dbToUse);
-        m_dbToUseList->AppendElement(tmpSupports);
+      nsCOMPtr <nsISupports> tmpSupports = do_QueryInterface(dbToUse);
+      m_dbToUseList->AppendElement(tmpSupports);
     }
 
-    // error checking again.
-    PRBool myFlag = PR_FALSE;
-
-    for (nsMsgViewIndex index = 0; index < (nsMsgViewIndex) numIndices; index++)
-    {
-        nsCOMPtr <nsISupports> supports = getter_AddRefs(m_folders->ElementAt(indices[index]));
-        if(supports)
-        {
-            nsCOMPtr<nsIMsgFolder> currentFolder = do_QueryInterface(supports);
-            if (currentFolder)
-            {
-                nsXPIDLCString curUri;
-                nsXPIDLCString currentFolderUri;
-
-                curFolder->GetURI(getter_Copies(curUri));
-                currentFolder->GetURI(getter_Copies(currentFolderUri));
-
-                if (nsCRT::strcmp(curUri, currentFolderUri) == 0)
-                {
-                    nsMsgKey key = m_keys.GetAt(indices[index]);
-                    nsCOMPtr <nsIMsgDBHdr> msgHdr;
-                    rv = dbToUse->GetMsgHdrForKey(key, getter_AddRefs(msgHdr));
-                    NS_ENSURE_SUCCESS(rv,rv);
-
-                    if (msgHdr)
-                        messageArray->AppendElement(msgHdr);
-
-                    if ((nsMsgViewIndex)index < (nsMsgViewIndex) (numIndices-1))
-                        continue;
-                }
-                else
-                {
-                    mCurIndex = index;
-                    break;
-                }
-            }
-        }
-    }
+    nsCOMPtr <nsISupports> msgSupports = getter_AddRefs(m_hdrsForEachFolder->ElementAt(mCurIndex));
+    NS_ASSERTION(msgSupports, "msgSupports is null");
+    nsCOMPtr <nsISupportsArray> messageArray = do_QueryInterface(msgSupports);
 
     // called for delete with trash, copy and move
     if (mCommand == nsMsgViewCommandType::deleteMsg)
         curFolder->DeleteMessages(messageArray, window, PR_FALSE /* delete storage */, PR_FALSE /* is move*/, copyServListener);
-    else if (mCommand == nsMsgViewCommandType::moveMessages)
-        mDestFolder->CopyMessages(curFolder, messageArray, PR_TRUE /* isMove */, window, copyServListener, PR_FALSE /* is folder */);
-    else if (mCommand == nsMsgViewCommandType::copyMessages)
-        mDestFolder->CopyMessages(curFolder, messageArray, PR_FALSE /* isMove */, window, copyServListener, PR_FALSE /* is folder */);
+    else 
+    {
+      NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID,&rv);
+      if (NS_SUCCEEDED(rv))
+      {
+         if (mCommand == nsMsgViewCommandType::moveMessages)
+           copyService->CopyMessages(curFolder, messageArray, mDestFolder, PR_TRUE /* isMove */,copyServListener, window);
+         else if (mCommand == nsMsgViewCommandType::copyMessages)
+           copyService->CopyMessages(curFolder, messageArray, mDestFolder, PR_FALSE /* isMove */,copyServListener, window);
+      }
+    }
     return rv;
 }
 
-nsresult nsMsgSearchDBView::ProcessContinuousRequest(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices)
+nsresult nsMsgSearchDBView::ProcessRequestsInAllFolders(nsIMsgWindow *window)
 {
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsISupportsArray> messageArray;
-    NS_NewISupportsArray(getter_AddRefs(messageArray));
-
-    nsCOMPtr<nsIMsgCopyServiceListener> copyServListener;//= do_QueryInterface(this);
-    rv = this->QueryInterface(NS_GET_IID(nsIMsgCopyServiceListener), getter_AddRefs(copyServListener));
-
-    // add error checking.
-    nsCOMPtr <nsISupports> curSupports = getter_AddRefs(m_folders->ElementAt(indices[0]));
-    nsCOMPtr<nsIMsgFolder> curFolder;
-    if(curSupports)
+    PRUint32 numFolders =0;
+    nsresult rv = m_uniqueFolders->Count(&numFolders);
+    NS_ENSURE_SUCCESS(rv,rv);
+    for (PRUint32 folderIndex=0; folderIndex < numFolders; folderIndex++)
     {
-        curFolder = do_QueryInterface(curSupports);
-    }
+       nsCOMPtr <nsISupports> curSupports = getter_AddRefs(m_uniqueFolders->ElementAt(folderIndex));
+       NS_ASSERTION (curSupports, "curSupports is null");
+       nsCOMPtr<nsIMsgFolder> curFolder = do_QueryInterface(curSupports);
 
-    nsCOMPtr <nsIMsgDatabase> dbToUse;
-    if (curFolder)
-    {
-        nsCOMPtr <nsIDBFolderInfo> folderInfo;
-        rv = curFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(dbToUse));
-        NS_ENSURE_SUCCESS(rv,rv);
-        dbToUse->AddListener(this);
+       nsCOMPtr <nsIMsgDatabase> dbToUse;
+       if (curFolder)
+       {
+         nsCOMPtr <nsIDBFolderInfo> folderInfo;
+         rv = curFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(dbToUse));
+         NS_ENSURE_SUCCESS(rv,rv);
+         dbToUse->AddListener(this);
 
-        nsCOMPtr <nsISupports> tmpSupports = do_QueryInterface(dbToUse);
-        m_dbToUseList->AppendElement(tmpSupports);
-    }
+         nsCOMPtr <nsISupports> tmpSupports = do_QueryInterface(dbToUse);
+         m_dbToUseList->AppendElement(tmpSupports);
+       }
 
-    // error checking again.
-    PRBool myFlag = PR_FALSE;
+       nsCOMPtr <nsISupports> msgSupports = getter_AddRefs(m_hdrsForEachFolder->ElementAt(folderIndex));
+       NS_ASSERTION(msgSupports, "msgSupports is null");
+       nsCOMPtr <nsISupportsArray> messageArray = do_QueryInterface(msgSupports);
 
-    for (nsMsgViewIndex index = 0; index < (nsMsgViewIndex) numIndices; index++)
-    {
-        nsCOMPtr <nsISupports> supports = getter_AddRefs(m_folders->ElementAt(indices[index]));
-        if(supports)
-        {
-            nsCOMPtr<nsIMsgFolder> currentFolder = do_QueryInterface(supports);
-            if (currentFolder)
-            {
-                nsXPIDLCString curUri;
-                nsXPIDLCString currentFolderUri;
-
-                curFolder->GetURI(getter_Copies(curUri));
-                currentFolder->GetURI(getter_Copies(currentFolderUri));
-
-                if (nsCRT::strcmp(curUri, currentFolderUri) == 0)
-                {
-                    nsMsgKey key = m_keys.GetAt(indices[index]);
-                    nsCOMPtr <nsIMsgDBHdr> msgHdr;
-                    rv = dbToUse->GetMsgHdrForKey(key, getter_AddRefs(msgHdr));
-                    NS_ENSURE_SUCCESS(rv,rv);
-
-                    if (msgHdr)
-                        messageArray->AppendElement(msgHdr);
-    
-                    if ((nsMsgViewIndex)index < (nsMsgViewIndex) (numIndices-1))
-                        continue;
-                }
-                else
-                    myFlag = PR_TRUE;
-
-
-                if (mCommand == nsMsgViewCommandType::deleteMsg)
-                    curFolder->DeleteMessages(messageArray, window, PR_TRUE /* delete storage */, PR_FALSE /* is move*/, copyServListener);
-                else if (mCommand == nsMsgViewCommandType::moveMessages)
-                    mDestFolder->CopyMessages(curFolder, messageArray, PR_FALSE /* isMove */, window, copyServListener, PR_FALSE /* is folder */);
-
-                // clean messages array
-                // add element
-                // define new curfolder
-                if (myFlag) 
-                {
-                    curFolder = currentFolder;
-
-                    messageArray->Clear();
-
-                    nsCOMPtr <nsIDBFolderInfo> folderInfo;
-                    rv = curFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(dbToUse));
-                    NS_ENSURE_SUCCESS(rv,rv);
-                    dbToUse->AddListener(this);
-
-                    nsCOMPtr <nsISupports> tmpSupports = do_QueryInterface(dbToUse);
-                    m_dbToUseList->AppendElement(tmpSupports);					
-
-                    nsMsgKey key = m_keys.GetAt(indices[index]);
-                    nsCOMPtr <nsIMsgDBHdr> msgHdr;
-                    rv = dbToUse->GetMsgHdrForKey(key, getter_AddRefs(msgHdr));
-                    NS_ENSURE_SUCCESS(rv,rv);
-
-                    if (msgHdr)
-                        messageArray->AppendElement(msgHdr);
-
-                    if ((nsMsgViewIndex)index == (nsMsgViewIndex) (numIndices-1)) 
-                    {
-                        // called only for shift delete
-                        curFolder->DeleteMessages(messageArray, window, PR_TRUE /* delete storage */, PR_FALSE /* is move*/, copyServListener);
-                    }
-                }
-            }
-        }
+       curFolder->DeleteMessages(messageArray, window, PR_TRUE /* delete storage */, PR_FALSE /* is move*/, nsnull/*copyServListener*/);
     }
 
     return NS_OK;

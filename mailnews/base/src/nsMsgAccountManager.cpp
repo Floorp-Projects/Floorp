@@ -599,6 +599,19 @@ nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
     
     nsCOMPtr<nsIFolder> rootFolder;
     server->GetRootFolder(getter_AddRefs(rootFolder));
+    nsCOMPtr<nsISupportsArray> allDescendents;
+    NS_NewISupportsArray(getter_AddRefs(allDescendents));
+    rootFolder->ListDescendents(allDescendents);
+    PRUint32 cnt =0;
+    rv = allDescendents->Count(&cnt);
+    NS_ENSURE_SUCCESS(rv,rv);
+    for (PRUint32 i=0; i< cnt;i++)
+    {
+      nsCOMPtr<nsISupports> supports = getter_AddRefs(allDescendents->ElementAt(i));
+      nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
+      folder->ForceDBClosed();
+    }
+   
     mFolderListeners->EnumerateForwards(removeListenerFromFolder,
                                         (void*)rootFolder);
     

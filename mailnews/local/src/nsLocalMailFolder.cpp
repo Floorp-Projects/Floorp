@@ -1649,7 +1649,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   }
 
 	nsresult rv;
-  nsCOMPtr<nsISupports> aSupport(do_QueryInterface(srcFolder, &rv));
+  nsCOMPtr<nsISupports> srcSupport(do_QueryInterface(srcFolder, &rv));
   if (NS_FAILED(rv)) return rv;
 
   // make sure we turn notifications on when the move is done!
@@ -1659,7 +1659,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   // don't update the counts in the dest folder until it is all over
   EnableNotifications(allMessageCountNotifications, PR_FALSE);
 
-  rv = InitCopyState(aSupport, messages, isMove, listener, msgWindow, isFolder);
+  rv = InitCopyState(srcSupport, messages, isMove, listener, msgWindow, isFolder);
   if (NS_FAILED(rv)) return rv;
   char *uri = nsnull;
   rv = srcFolder->GetURI(&uri);
@@ -2366,16 +2366,19 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 		  NS_WITH_SERVICE(nsIMsgCopyService, copyService, 
 						  kMsgCopyServiceCID, &result); 
 
-		  if (NS_SUCCEEDED(result))
-		    copyService->NotifyCompletion(mCopyState->m_srcSupport, this, rv);
-
 		  if (mTxnMgr && NS_SUCCEEDED(rv) && mCopyState->m_undoMsgTxn)
 		    mTxnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
-    
 
           if (srcFolder && !mCopyState->m_isFolder)
               srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);	 
+
+          nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(mCopyState->m_srcSupport);
+
 		  ClearCopyState();
+
+          if (NS_SUCCEEDED(result))
+		    copyService->NotifyCompletion(srcSupport, this, rv);
+
 	  }
 
       // enable the dest folder
@@ -2411,13 +2414,16 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove()
             // enable the dest folder
             EnableNotifications(allMessageCountNotifications, PR_TRUE);
 
-			//passing in NS_OK because we only get in here if copy portion succeeded
-			copyService->NotifyCompletion(mCopyState->m_srcSupport, this, NS_OK);
-
-			if (mTxnMgr  && mCopyState->m_undoMsgTxn)
+   			if (mTxnMgr  && mCopyState->m_undoMsgTxn)
 				mTxnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
 
-			ClearCopyState();
+            nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(mCopyState->m_srcSupport);
+
+            ClearCopyState();
+			//passing in NS_OK because we only get in here if copy portion succeeded
+
+            copyService->NotifyCompletion(srcSupport, this, NS_OK);
+			
 		}
 
 	}
@@ -2574,14 +2580,11 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsISupports *message,
   if (msgHdr)
     mCopyState->m_message = do_QueryInterface(msgHdr, &rv);
 
-	nsXPIDLCString uri;
-  nsCOMPtr <nsIMsgFolder> srcFolderForMsg;
-
-  msgHdr->GetFolder(getter_AddRefs(srcFolderForMsg));
-  if (!srcFolderForMsg)
-    return NS_ERROR_FAILURE;
-
-  srcFolderForMsg->GetUriForMsg(msgHdr, getter_Copies(uri));
+  nsCOMPtr<nsIMsgFolder> srcFolder(do_QueryInterface(mCopyState->m_srcSupport));
+  if(!srcFolder)
+	return NS_ERROR_NO_INTERFACE;
+  nsXPIDLCString uri;
+  srcFolder->GetUriForMsg(msgHdr, getter_Copies(uri));
 
 	nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener; 
 	rv = nsComponentManager::CreateInstance(kCopyMessageStreamListenerCID, NULL,
@@ -2592,10 +2595,6 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsISupports *message,
 
 	nsCOMPtr<nsICopyMessageListener> copyListener(do_QueryInterface(dstFolder));
 	if(!copyListener)
-		return NS_ERROR_NO_INTERFACE;
-
-	nsCOMPtr<nsIMsgFolder> srcFolder(do_QueryInterface(mCopyState->m_srcSupport));
-	if(!srcFolder)
 		return NS_ERROR_NO_INTERFACE;
 
 	rv = copyStreamListener->Init(srcFolder, copyListener, nsnull);
