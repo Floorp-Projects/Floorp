@@ -36,16 +36,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/********************************************************
+ *                *** Warning ****
+ *   DO _NOT_ MODIFY THIS FILE without first contacting
+ *   Robert Accettura <robert@accettura.com>
+ *   or a reporter.mozilla.org Admin!
+ *******************************************************/
+
 const RMOURI = "http://reporter-test.mozilla.org/service/";
 
 const gURL = window.arguments[0];
-const gProduct = navigator.vendor+'/'+navigator.vendorSub;
 const gPlatform = navigator.platform;
 const gUserAgent = navigator.userAgent;
 const goscpu = navigator.oscpu;
-const geckoStri = "00000000"; //XXX Not used at the moment
+const geckoStri = "00000000"; //XXX Not used at the moment, 8 0's to ignore
 const gLanguage = window.navigator.language;
-const gRMOvers = "0.2";
+const gRMOvers = "0.2"; // Do not touch without contacting reporter admin!
 
 // Globals
 var gReportID;
@@ -54,11 +60,26 @@ var gFaultCode;
 var gFaultMessage;
 var gSOAPerror = false;
 
+function product(){
+  // only works on > 1.7.5.  Sorry SeaMonkey of old
+  if ('nsIChromeRegistrySea' in Components.interfaces) {
+    return 'SeaMonkey/'+
+    Components.classes['@mozilla.org/network/io-service;1']
+              .getService(Components.interfaces.nsIIOService)
+              .getProtocolHandler('http')
+              .QueryInterface(Components.interfaces.nsIHttpProtocolHandler).misc.substring(3);
+  }
+  else {
+    return navigator.vendor+'/'+navigator.vendorSub;
+  }
+}
+
+
 function initPrivacyNotice(){
   // If they agreed, we continue on
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                           getService(Components.interfaces.nsIPrefService).
-                     	   getBranch("extensions.reporter.");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefService)
+                     	.getBranch("extensions.reporter.");
   try {
     if (prefs.getBoolPref("hidePrivacyStatement")){
       document.getElementById('reportWizard').advance();
@@ -92,9 +113,9 @@ function privacyPolicyCheckbox(){
 function setPrivacyPref(){
   var dontShowPrivacyStatement = makeIntBool(document.getElementById('dontShowPrivacyStatement').checked);
 
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                         getService(Components.interfaces.nsIPrefService).
-                   	     getBranch("extensions.reporter.");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefService)
+                   	.getBranch("extensions.reporter.");
 
   if (dontShowPrivacyStatement){
     prefs.setBoolPref("hidePrivacyStatement", true);
@@ -141,9 +162,9 @@ function register(){
 
   // saving
   submitResult.setAttribute("value",strbundle.getString("registerSavingID")); // Saving ID
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                           getService(Components.interfaces.nsIPrefService).
-                     	   getBranch("extensions.reporter.");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefService)
+                     	.getBranch("extensions.reporter.");
 
   if (gSysID != undefined){
     prefs.setCharPref("sysid", gSysID);
@@ -194,12 +215,12 @@ function sendReport(){
   var behindLoginStri = makeIntBool(document.getElementById('behind_login').checked);
   var emailStri = document.getElementById('email').value;
 
-  var buildConfig = "buildconfig";     // XXX GET DATA
+  var buildConfig = getBuildConfig();
 
   // SysID
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                           getService(Components.interfaces.nsIPrefService).
-                     	   getBranch("extensions.reporter.");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefService)
+                     	.getBranch("extensions.reporter.");
   try
   {
     if (prefs.getPrefType("sysid") == prefs.PREF_STRING)
@@ -218,7 +239,7 @@ function sendReport(){
   param[5] = new SOAPParameter(gPlatform,"platform");
   param[6] = new SOAPParameter(goscpu,"oscpu");
   param[7] = new SOAPParameter(geckoStri,"gecko");
-  param[8] = new SOAPParameter(gProduct,"product");
+  param[8] = new SOAPParameter(product(),"product");
   param[9] = new SOAPParameter(gUserAgent,"useragent");
   param[10] = new SOAPParameter(buildConfig, "buildconfig");
   param[11] = new SOAPParameter(gLanguage,"language");
@@ -255,7 +276,7 @@ function sendReport(){
     finishExtendedDoc.getElementById('descriptionStri').textContent = descriptionStri;
     finishExtendedDoc.getElementById('platformStri').textContent = gPlatform;
     finishExtendedDoc.getElementById('oscpuStri').textContent = goscpu;
-    finishExtendedDoc.getElementById('productStri').textContent = gProduct;
+    finishExtendedDoc.getElementById('productStri').textContent = product();
     finishExtendedDoc.getElementById('geckoStri').textContent = geckoStri;
     finishExtendedDoc.getElementById('buildConfigStri').textContent = buildConfig;
     finishExtendedDoc.getElementById('userAgentStri').textContent = gUserAgent;
@@ -294,6 +315,7 @@ function showdetail(){
 }
 
 function getBuildConfig() {
+  /* Commented out until it works
   var ioservice =
      Components.classes["@mozilla.org/network/io-service;1"].
        getService(Components.interfaces.nsIIOService);
@@ -306,6 +328,8 @@ function getBuildConfig() {
                                    "application/xhtml+xml");
 
   return buildconfig.documentElement.firstChild.textContent;
+  */
+  return 'buildconfig';
 }
 
 function makeIntBool(boolStr){
@@ -342,10 +366,6 @@ function handleSOAPResponse (response)
        gSOAPerror = true;
        gFaultCode = fault.faultCode;
        gFaultMessage = fault.faultString;
-/*          alert("SOAP Fault:\n\n" +
-            "Code: "  + gFaultCode +
-            "\n\nMessage: " + gFaultMessage
-        );   */
         return true;
     } else
     {
