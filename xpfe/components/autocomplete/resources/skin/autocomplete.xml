@@ -1,0 +1,129 @@
+<?xml version="1.0"?>
+
+<bindings id="autocompleteBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/TR/REC-html40"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+   <binding name="autocomplete" extends="xul:box">
+      <content>
+        <xul:box
+            onkeydown="me = this.parentNode;
+                       me.callListener('stopLookup', this); 
+                       if (me.autoCompleteTimer) {
+                            clearTimeout(me.autoCompleteTimer);
+                            dump('  Clear timer id=' + me.autoCompleteTimer + '\n');
+                            me.autoCompleteTimer = 0;
+                       }"
+            onkeyup="me = this.parentNode;
+                     if (me.autoCompleteTimer)
+                        clearTimeout(me.autoCompleteTimer);
+                     if (event.which != 13) {
+                        me.needToAutocomplete = true;
+                        me.autoCompleteTimer = setTimeout(me.callListener, me.timeout, 'startLookup', this);
+                        dump('timer id=' + me.autoCompleteTimer + ', timeout=' + me.timeout + '\n');
+                     }
+                     "
+        >
+            
+            <xul:textfield class="addressingWidget" inherits="value,timeout"/>
+            <xul:menupopup/>
+        </xul:box>
+      </content>
+
+	  <interface>
+
+        <property name="value"      onset="dump('SET VALUE ATTRIBUTE\n');return this.anonymousContent[0].firstChild.value = val;"
+                                    onget="return this.anonymousContent[0].firstChild.value;"/>
+
+        <property name="timeout"    onset="return this.setAttribute('timeout', val);"
+                                    onget="return this.getAttribute('timeout');"/>
+
+	   <property name="autoCompleteSession">
+        <![CDATA[
+            searchSession = 'component://' + unescape(this.getAttribute('searchSessionClass'));
+            try {
+                Components.classes[searchSession].getService(Components.interfaces.nsIAbAutoCompleteSession);
+            } catch (e) {}
+        ]]>
+      </property>
+
+	  <property name="autoCompleteTimer">
+        <![CDATA[
+            0;
+       ]]>
+      </property>
+ 
+      <property name="autoCompleteListener">
+        <![CDATA[
+          ({
+	          onAutoCompleteResult: function(aItem, aOriginalString, aMatch) 
+            {
+dump("onAutoCompleteResult, item=" + aItem + ", match=" + aMatch + "\n");
+dump("textfield= " + aItem.anonymousContent[0].firstChild + "\n");
+dump("input=" + aItem.anonymousContent[0].firstChild.anonymousContent[0].firstChild + "\n");
+		          if ( aItem )
+		          {
+                      aItem.value = aMatch;
+		          }
+	          }
+          })
+        ]]>
+      </property>
+
+      <method name="autoComplete">
+        <argument name="aSearchString"/>
+        <argument name="resultListener"/>
+        <body>
+          <![CDATA[
+              return this.autoCompleteSession.autoComplete(null, this, aSearchString, this.autoCompleteListener);
+          ]]>
+        </body>
+      </method>
+
+      <method name="callListener">
+        <argument name="action"/>
+        <argument name="me"/>
+        <body>
+          <![CDATA[
+              dump("callListener, action=" + action + ", me=" + me + "\n");
+              switch (action) {
+                case 'startLookup':
+                    dump('>>> startLookup...\n');
+                    break;
+                case 'stopLookup':
+                    dump('>>> stopLookup...\n');
+                    break;
+                case 'autoComplete':
+                    dump('>>> autoComplete...\n');
+                    if (this.autoCompleteTimer) {
+                        clearTimeout(this.autoCompleteTimer);
+                        this.autoCompleteTimer = 0;
+                    }
+                    autoComplete(me.value, me.autoCompleteListener);
+                    this.needToAutocomplete = false;
+                    break;
+              }
+          ]]>
+        </body>
+      </method>
+	  </interface>
+
+    <handlers>
+		  <handler type="keypress" keycode="vk_return"
+		    value="dump('value=' + this.value + '\n'); this.callListener('autoComplete', me);"
+		  />
+
+		  <handler type="focus" value="this.needToAutocomplete = false;" />
+
+		  <handler type="blur"
+		    value="if (this.needToAutocomplete)
+		                this.callListener('autoComplete', this);
+		          "
+		  />
+    </handlers>
+
+   </binding> 
+
+    
+</bindings>

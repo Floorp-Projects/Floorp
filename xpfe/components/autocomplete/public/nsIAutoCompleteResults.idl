@@ -1,0 +1,61 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Original Author: Jean-Francois Ducarroz (ducarroz@netscape.com)
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+#include "nsICollection.idl"
+
+[scriptable, uuid(88DCFA80-062F-11d4-a449-B36A1A94C0FC)]
+interface nsIAutoCompleteItem : nsISupports {
+    attribute wstring value;                        // the result value
+    attribute wstring comment;                      // an extra comment that will be displayed next to the value but that
+                                                    // will not be part of the value itself
+    attribute string className;                     // class name used to define some style through css like the colors, an
+                                                    // icon url, etc...    
+    attribute nsISupports param;                    // parameter use by the search engin
+};
+
+
+[scriptable, uuid(88DCFA81-062F-11d4-a449-B36A1A94C0FC)]
+interface nsIAutoCompleteResults : nsISupports {
+    attribute wstring searchString;                 // the original search string
+    attribute nsISupports param;                    // param use by the the search engine
+    
+    attribute nsICollection items;                  // Array of result items (nsIAutoCompleteItem)
+    attribute long defaultItemIndex;                // Index (0 base) of the defaut item that will be preselected and displayed
+    attribute wstring defaultComment;               // will be displayed in the input element only if the selected item doesn't
+                                                    // have its own comment (blurr type only)
+};
+
+%{ C++
+// {FE4FC780-063D-11d4-A449-D45A120774BC}
+#define NS_AUTOCOMPLETERESULTS_CID \
+{ 0xfe4fc780, 0x063d, 0x11d4, { 0xa4, 0x49, 0xd4, 0x5a, 0x12, 0x07, 0x74, 0xbc } }
+#define NS_AUTOCOMPLETERESULTS_PROGID  "component://netscape/autocomplete/results"
+
+// {FE4FC781-063D-11d4-A449-D45A120774BC}
+#define NS_AUTOCOMPLETEITEM_CID \
+{ 0xfe4fc781, 0x063d, 0x11d4, { 0xa4, 0x49, 0xd4, 0x5a, 0x12, 0x07, 0x74, 0xbc } }
+#define NS_AUTOCOMPLETEITEM_PROGID  "component://netscape/autocomplete/item"
+%}
+
