@@ -48,8 +48,7 @@
  
  .button-toolbar[open="true"]
    {
-     border                 : 1px solid #336699;
-     border-bottom          : 1px solid #CCCCCC;
+     border                 : 1px solid threedface;
    }
 
 /* toolbar menubuttons */   
