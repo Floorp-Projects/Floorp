@@ -106,10 +106,10 @@ trace.dll:: trace.obj pldhash.obj
     $(LD) /nologo /debug /libpath:$(DIST)/lib /dll /out:$@ $** nspr4.lib imagehlp.lib
 
 pldhash.obj:: $(DEPTH)/xpcom/ds/pldhash.c
-    $(CC) /c /nologo /Od /Z7 /I$(DEPTH)/xpcom/ds /I$(DEPTH)/dist/include $**
+    $(CC) /c /nologo /Od /Z7 /I$(DEPTH)/xpcom/ds /I$(DEPTH)/dist/include/nspr $**
  
 trace.obj:: trace.cpp
-    $(CC) /c /nologo /Od /Z7 /DMOZ_SRC=\"$(MOZ_SRC)\" /I$(DEPTH)/xpcom/ds /I$(DEPTH)/dist/include $**
+    $(CC) /c /nologo /Od /Z7 /DMOZ_SRC=\"$(MOZ_SRC)\" /I$(DEPTH)/xpcom/ds /I$(DEPTH)/dist/include/nspr $**
 !endif
 
 export:: \

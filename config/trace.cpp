@@ -40,6 +40,7 @@ public:
 };
 
 static Reporter theReporter;
+static FILE* logfile;
 
 /* 
    Hash of function names, and call counts]
@@ -162,24 +163,24 @@ DumpFiles(PLDHashTable* table, PLDHashEntryHdr* hdr,
 {
     ModulesEntry* entry = (ModulesEntry*) hdr;    
     Node*         cur = entry->byCount;
-    char          dest[256];
-    char          pdbName[256];
+    char          dest[MAX_PATH];
+    char          pdbName[MAX_PATH];
     FILE*         orderFile;
 
     strcpy(pdbName, entry->moduleName);
     strcat(pdbName, ".pdb");
 
-    if ( !::FindExecutableImage(pdbName, MOZ_SRC, dest) ) {
-        printf("+++ERROR Could not find %s\n",pdbName);
+    if (!::SearchTreeForFile(MOZ_SRC, pdbName, dest) ) {
+        fprintf(logfile,"+++ERROR Could not find %s\n",pdbName);
         return PL_DHASH_NEXT;
     }
     dest[strlen(dest)-strlen(pdbName)-strlen("WIN32_D.OBJ\\")] = 0;
     strcat(dest,"win32.order");
     orderFile = fopen(dest,"w");
-    printf("Creating order file %s\n",dest);
+    fprintf(logfile,"Creating order file %s\n",dest);
     
-    while( cur ) {
-	if(cur->function[0] == '_' && cur->function[1] == '_')
+    while (cur) {
+        if (cur->function[0] == '_')  // demangle "C" style function names
             fprintf(orderFile,"%s ; %d\n", cur->function+1, cur->count );
         else
             fprintf(orderFile,"%s ; %d\n", cur->function, cur->count );
@@ -223,6 +224,8 @@ ListCounts(PLDHashTable* table, PLDHashEntryHdr* hdr,
 
     if (ok)
     {
+        if (displacement > 0) 
+            return PL_DHASH_NEXT;
         static int modInitialized = 0;
         if (! modInitialized) {
             modInitialized = 1;
@@ -249,16 +252,16 @@ ListCounts(PLDHashTable* table, PLDHashEntryHdr* hdr,
             foo->function = strdup(symbol->Name);
             foo->count = entry->count;
 
-            if ( cur->count < entry->count ) {
+            if (cur->count < entry->count) {
                 if (!strcmp(cur->function,symbol->Name)) 
                     return PL_DHASH_NEXT;
                 foo->next = mod->byCount;
                 mod->byCount = foo;                
             } else {
-                while ( cur->next ) {
+                while (cur->next) {
                     if (!strcmp(cur->function,symbol->Name)) 
                         return PL_DHASH_NEXT;
-                    if ( cur->next->count > entry->count ) { cur = cur->next; }
+                    if (cur->next->count > entry->count) { cur = cur->next; }
                     else { break; }
                 }
                 foo->next = cur->next;  
@@ -278,13 +281,18 @@ Reporter::~Reporter()
     // We want the nasty name, as we'll have to pass it back to the
     // linker.
     options &= ~SYMOPT_UNDNAME;
-
     SymSetOptions(options);
+
+    char logName[MAX_PATH];
+    strcpy(logName,MOZ_SRC);
+    strcat(logName,"\\tracelog");
+    logfile = fopen(logName,"w");
 
     // break the function names out by module and sort them.
     PL_DHashTableEnumerate(&Calls, ListCounts, NULL);
     // dump the order files for each module.
     PL_DHashTableEnumerate(&Modules, DumpFiles, NULL);
 
+    fclose(logfile);
     SymCleanup(GetCurrentProcess());
 }
