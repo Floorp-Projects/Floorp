@@ -451,10 +451,6 @@ int main(int argc, char **argv)
 		NS_RELEASE(gTheApp);
 	}
 
-#ifdef RHAPSODY
-#undef DETECT_WEBSHELL_LEAKS
-#endif
-
 	// Shutdown XPCOM?
 	rv = NS_ShutdownXPCOM(nsnull);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");

@@ -143,11 +143,11 @@ protected:
                         const char* aCommand,
                         nsIStreamListener** aResult);
 
-#ifdef DETECT_WEBSHELL_LEAKS
+#ifdef DEBUG
 private:
   // We're counting the number of |nsWebShells| to help find leaks
   static unsigned long gNumberOfWebShells;
-#endif /* DETECT_WEBSHELL_LEAKS */
+#endif /* DEBUG */
 };
 
 #endif /* webshell____h */

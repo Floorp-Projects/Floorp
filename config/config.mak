@@ -209,12 +209,6 @@ CFLAGS=$(CFLAGS) -DXPCOM_STANDALONE
 CFLAGS=$(CFLAGS) -DXPCONNECT_STANDALONE
 !endif
 
-# XXX We need to remove this before we ship.
-# This causes a static linkage between the webshell
-# and xpfe.f
-DETECT_WEBSHELL_LEAKS=1
-CFLAGS=$(CFLAGS) -DDETECT_WEBSHELL_LEAKS
-
 # Enable output of performance metrics if MOZ_PERF is set
 !ifdef MOZ_PERF
 CFLAGS=$(CFLAGS) -DMOZ_PERF_METRICS
