@@ -87,6 +87,8 @@ namespace JSClasses {
                 mScope(new JSScope(scope)),
                 mSlotCount(superClass ? superClass->mSlotCount : 0)
         {
+            // to "inherit" superClass methods.
+            mScope->setPrototype(superClass->mScope);
         }
         
         JSClass* getSuperClass()
@@ -156,7 +158,7 @@ namespace JSClasses {
             // slot 0 is always the class.
             mSlots[0] = thisClass;
             // initialize rest of slots with undefined.
-            std::uninitialized_fill(&mSlots[1], &mSlots[1] + getSlotCount(thisClass), JSValue());
+            std::uninitialized_fill(&mSlots[1], &mSlots[1] + thisClass->getSlotCount(), JSValue());
             // for grins, use the prototype link to access methods.
             setPrototype(thisClass->getScope());
         }
@@ -188,16 +190,6 @@ namespace JSClasses {
             for (JSSlots::iterator i = slots.begin(), end = slots.end(); i != end; ++i) {
                 f << i->first << " : " <<  mSlots[i->second.mIndex]  << "\n";
             }
-        }
-        
-        uint32 getSlotCount(JSClass* thisClass)
-        {
-            uint32 slotCount = 0;
-            do {
-                slotCount += thisClass->getSlotCount();
-                thisClass = thisClass->getSuperClass();
-            } while(thisClass);
-            return slotCount;
         }
     };
     
