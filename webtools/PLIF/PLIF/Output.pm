@@ -53,12 +53,21 @@ sub init {
     # propertySet() here instead of just $self->app($app).
 }
 
-sub reportFatalError {} # stub - should this be required? probably...
-
 # disable implied property access so that calls to unimplemented
-# output methods will always be caught.
+# output methods will always be caught and can be handled by generic
+# output handlers.
 sub propertyImpliedAccessAllowed {
     my $self = shift;
     $self->dump(10, "access to property @_ of object $self attempted");
     return $self->propertyExists(@_);
+}
+
+# if we don't implement the output handler directly, let's see if some
+# output dispatcher service for this protocol does
+sub methodMissing {
+    my $self = shift;
+    my($method, @arguments) = @_;
+    if (not $self->app->dispatchMethod('dispatcher.output.'.$self->protocol, 'output', $method, $self, @arguments)) {
+        $self->SUPER::methodMissing(@_);
+    }
 }

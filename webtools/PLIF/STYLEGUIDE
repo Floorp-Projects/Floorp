@@ -125,3 +125,11 @@ only if they are well commented.
     is 'init'), then the methods you are overriding, then the new
     methods, then the destructor ('DESTROY'). This isn't cast in stone
     though. Whatever works best.
+
+
+Further notes:
+
+You'll notice PLIF doesn't use prototypes. This is because Perl
+doesn't support prototypes for method calls.
+
+- end -

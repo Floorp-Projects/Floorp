@@ -164,7 +164,7 @@ sub getString {
 sub getDefaultString {
     my $self = shift;
     my($app, $protocol, $string) = @_;
-    return $app->getSelectingServiceList('dataSource.strings.default')->get($app, $protocol, $string);
+    return $app->getSelectingServiceList('dataSource.strings.default')->getDefaultString($app, $protocol, $string);
 }
 
 sub getVariants {

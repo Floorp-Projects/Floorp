@@ -107,7 +107,7 @@ sub getObject {
     my $self = shift;
     my($name) = @_;
     foreach my $service (@{$self->objects}) {
-        if ($service->provides($name)) {
+        if ($service->objectProvides($name)) {
             return $service;
         }
     }
@@ -126,7 +126,8 @@ sub getServiceList {
             # TO THE $self ARGUMENT PASSED TO THE CONSTRUCTOR!
             # Doing so would create a circular dependency, resulting
             # in a memory leak.
-            push(@services, $service->create($self));
+            $service = $service->create($self);
+            push(@services, $service);
         }
     }
     return @services;
@@ -139,7 +140,7 @@ sub getObjectList {
     my($name) = @_;
     my @services;
     foreach my $service (@{$self->objects}) {
-        if ($service->provides($name)) {
+        if ($service->objectProvides($name)) {
             push(@services, $service);
         }
     }
@@ -164,6 +165,14 @@ sub getPipingServiceList {
 sub getPipingObjectList {
     my $self = shift;
     return PLIF::MagicPipingArray->create($self->getObjectList(@_));
+}
+
+sub dispatchMethod {
+    my $self = shift;
+    my($service, $prefix, $method, @arguments) = @_;
+    # the \u makes the first letter of the $command uppercase
+    return ($self->getSelectingServiceList($service)->dispatch($self, "$prefix\u$method", @arguments) or 
+            $self->getSelectingObjectList($service)->dispatch($self, "$prefix\u$method", @arguments));
 }
 
 sub getServiceInstance {

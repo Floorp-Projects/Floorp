@@ -68,9 +68,7 @@ require PLIF::Program; # see note below
 # command dispatching, and ask them to handle this.
 sub dispatch {
     my $self = shift;
-    my($command) = @_;
-    if (not ($self->getSelectingObjectList('commands.dispatcher')->dispatch($self, $command) or 
-             $self->getSelectingObjectList('commands.dispatcher')->dispatch($self, $command))) {
+    if (not $self->dispatchMethod('dispatcher.commands', 'cmd', @_)) {
         $self->SUPER::dispatch(@_);
     }
 }

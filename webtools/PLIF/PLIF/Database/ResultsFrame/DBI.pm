@@ -54,4 +54,4 @@ sub rows {
 # other possible APIs:
 # $ary_ref  = $sth->fetchrow_arrayref;
 # $hash_ref = $sth->fetchrow_hashref;
-
+# reexecute with new bound values

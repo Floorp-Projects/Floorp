@@ -37,8 +37,21 @@ sub databaseType {
     return qw(mysql);
 }
 
+sub tableExists {
+    my $self = shift;
+    my($app, $database, $table) = @_;
+    return defined($database->execute('SHOW TABLES LIKE ?', $table)->row);
+}
+
 
 =over time i would expect the following to be implemented:
+
+ *********************
+ **** WARNING!!!! ****
+ *********************
+
+ The following section is only licensed as MPL and not MPL/GPL.
+ It is copied from the Bugzilla 2.x codebase for our information only.
 
 ###########################################################################
 # Detect changed local settings

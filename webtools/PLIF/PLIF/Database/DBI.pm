@@ -58,9 +58,9 @@ sub init {
         my $port = $self->port;
         $self->handle(DBI->connect("DBI:$type:$name:$host:$port", 
                                    $self->username, $self->password, 
-                                   {RaiseError => 0, PrintError => 0, AutoCommit => 1}));
+                                   {RaiseError => 0, PrintError => 0, AutoCommit => 1, Taint => 1}));
         $self->errstr($DBI::errstr);
-        $self->dump(9, 'tried to connect to database without raising an exception!');
+        $self->dump(9, 'created a database object without raising an exception');
     };
     if ($@) {
         $self->handle(undef);
@@ -86,11 +86,14 @@ sub propertyGetUndefined {
 
 sub execute {
     my $self = shift;
-    my($statement, @values) = @_; # XXX does this not need $app to be passed?
+    my($statement, @values) = @_;
     $self->assert($self->handle, 1, 'No database handle: '.(defined($self->errstr) ? $self->errstr : 'unknown error'));
     my $handle = $self->handle->prepare($statement);
-    $handle->execute(@values);
-    return PLIF::Database::ResultsFrame::DBI->create($handle); # XXX no app?
+    if ($handle and $handle->execute(@values)) {
+        return PLIF::Database::ResultsFrame::DBI->create($handle);
+    } else {
+        $self->error(1, $handle->errstr);
+    }
 }
 
 sub getConfig {
@@ -117,7 +120,7 @@ sub setupConfigure {
         }
     }
     $app->getService('dataSource.configuration')->setDBIDatabaseSettings($app, $self);
-    $self->dump(9, 'done configuring DBI...');
+    $self->dump(9, 'done configuring DBI');
     return;
 }
 

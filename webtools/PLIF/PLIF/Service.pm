@@ -33,4 +33,23 @@ use PLIF;
 @ISA = qw(PLIF);
 1;
 
+# what services the module provides as a service
 sub provides { return 0; } # stub
+
+# what services the module provides as an object
+sub objectProvides { 
+    my $class = shift;
+    return $class->provides(@_);
+} 
+
+sub dispatch {
+    my $self = shift;
+    my($app, $name, @arguments) = @_;
+    my $method = $self->can($name);
+    if ($method) {
+        &$method($self, $app, @arguments);
+        return 1;
+    } else {
+        return undef;
+    }
+}

@@ -29,20 +29,34 @@
 package PLIF::Service::AdminCommands;
 use strict;
 use vars qw(@ISA);
-use PLIF::Service::Dispatcher;
-@ISA = qw(PLIF::Service::Dispatcher);
+use PLIF::Service;
+@ISA = qw(PLIF::Service);
 1;
 
 # Any application that uses PLIF::Service::AdminCommands must also
-# have an output implementation that supports "setupFailed($result)"
-# and "setupSucceeded()".
+# implement "setupFailed($result)" and "setupSucceeded()" in any
+# output services that might get called in a Setup context, as well as
+# default string data sources for any protocols that might be used in
+# a Setup context that use the Generic output module other than
+# 'stdout' which is supported by this module itself.
 
 sub provides {
     my $class = shift;
     my($service) = @_;
-    return ($service eq 'input.verify' or $class->SUPER::provides($service));
+    return ($service eq 'input.verify' or 
+            $service eq 'dispatcher.output.generic' or 
+            $service eq 'dataSource.strings.default' or
+            $class->SUPER::provides($service));
 }
 
+sub objectProvides {
+    my $class = shift;
+    my($service) = @_;
+    return ($service eq 'dispatcher.commands' or 
+            $class->SUPER::objectProvides($service));
+}
+
+# input.verify
 sub verifyInput {
     my $self = shift;
     my($app) = @_;
@@ -52,6 +66,7 @@ sub verifyInput {
     return;
 }
 
+# dispatcher.commands
 sub cmdSetup {
     my $self = shift;
     my($app) = @_;
@@ -67,8 +82,33 @@ sub cmdSetup {
     }
 }
 
+# dispatcher.output.generic
+sub outputSetupSucceeded {
+    my $self = shift;
+    my($app, $output) = @_;
+    $output->output(undef, 'setup', {
+        'failed' => 0,
+    });
+}
 
-# XXX other commands to add
-# cmdAddModule
-# cmdRemoveModule
+# dispatcher.output.generic as well
+sub outputSetupFailed {
+    my $self = shift;
+    my($app, $output, $result) = @_;
+    $output->output(undef, 'setup', {
+        'failed' => 1,
+        'result' => $result,
+    });
+}
+
+# dataSource.strings.default
+sub getDefaultString {
+    my $self = shift;
+    my($app, $protocol, $string) = @_;
+    if ($protocol eq 'stdout' and $string eq 'setup') {
+        return '<text><if lvalue="(data.failed)" condition="=" rvalue="1">Failed with:<br/><text variable="(data.result)"/></if><else>Succeeded!</else><br/></text>';
+    } else {
+        return; # nope, sorry
+    }
+}
 

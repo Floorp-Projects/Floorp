@@ -144,12 +144,15 @@ sub selectOutputProtocol {
 # Implementation Specific Methods
 # At least some of these should be overriden by real applications
 
-# if you override this one, only call $self->SUPER::dispatch(@_) if
+# If you override this one, only call $self->SUPER::dispatch(@_) if
 # you couldn't dispatch the command.
+# Note: Don't confuse this method with the identically named method in
+# the Service class hierarchy that does something similar!
 sub dispatch {
     my $self = shift;
     my($command) = @_;
-    my $method = $self->can('cmd'.$command);
+    # the \u makes the first letter of the $command uppercase
+    my $method = $self->can("cmd\u$command");
     if ($method) {
         &$method($self);
     } else {

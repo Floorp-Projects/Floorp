@@ -60,8 +60,10 @@ my $LOCKED = 0; # set to '1' while we are calling the error reporting code
 sub create {
     my $class = shift;
     if (ref($class)) {
+        $class->dump(10, "Tried to call constructor of already existing object $class, so returning same object");
         return $class; # already created, return self
     } else {
+        $class->dump(10, "Called constructor of class $class, creating object...");
         return $class->bless(@_); # call our real constructor
     }
 }
@@ -104,7 +106,7 @@ sub AUTOLOAD {
     } else {
         $self->dump(10, "not treating $name in $self as an implied property, regardless of its existence");
     }
-    $self->methodMissing($AUTOLOAD);
+    $self->methodMissing($name, @_);
 }
 
 sub propertySet {

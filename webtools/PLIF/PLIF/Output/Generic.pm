@@ -33,6 +33,62 @@ use PLIF::Output;
 @ISA = qw(PLIF::Output);
 1;
 
+# NOTES
+#
+# The codepath resulting from a call through PLIF::Output::Generic are
+# somewhat involved, although they make for a very flexible and
+# powerful potential result.
+#
+# In the logic code, you simply have to call the output method without
+# worrying about anything:
+#
+#     $app->output->HelloWorld($fullname, $date);
+#
+# ...or whatever. However this ends up following the following
+# codepath:
+#
+# First, the PLIF internal program logic (Program.pm) looks for a
+# specific output handler for the protocol (we'll assume we're using
+# HTTP here). This will typically fail.
+#
+# Then it looks for a generic output handler (probably this module).
+#
+# It calls the generic output module's 'HelloWorld' method, which in
+# this case doesn't exist and ends up going through core PLIF and then
+# back to methodMissing implemented in the ancestor Output module.
+#
+# The methodMissing method calls every output dispatcher service (for
+# the generic protocol, anyway) until one of them handles the
+# HelloWorld method.
+#
+# This ends up calling HelloWorld on one of the output dispatchers,
+# which should result in calling the 'output' method of this object
+# (defined below) with a string name and a hash.
+#
+# The output method now calls for a string expander service, passes it
+# the string and the hash, and waits for a string in return. Notice
+# that we still have not yet done anything output-protocol-specific.
+#
+# The string expander calls the string data source which calls the
+# default database which calls the configuration data source which
+# calls the configuration file database which looks up the name of the
+# database, which is used to look up the list of variants and the
+# specific string which should be used from those variants. If that
+# fails, then the string data source will instead ask each of the
+# default string data sources in turn for a suitable string, which it
+# will return to the string expander which will expand the string and
+# return it to the output method.
+#
+# The output method then looks for a protocol outputter and passes it
+# the final string.
+#
+# The stack then unwinds all the way back to the application logic.
+#
+# Phew! Bet you never thought writing "Hello World" would be that
+# hard. But at least this means we can do it in HTML and SVG without
+# changing the underlying code.
+
+
 sub protocol {
     return 'generic';
 }

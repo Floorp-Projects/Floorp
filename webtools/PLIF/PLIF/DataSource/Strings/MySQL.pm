@@ -40,49 +40,53 @@ sub databaseType {
 sub getString { 
     my $self = shift;
     my($app, $variant, $string) = @_;    
-    return $self->database($app)->execute("SELECT data FROM strings WHERE variant = ? string = ?", $variant, $string)->rows;
+    return $self->database($app)->execute("SELECT data FROM strings WHERE variant = ? AND name = ?", $variant, $string)->rows;
 }
 
 sub getVariants {
     my $self = shift;
     my($app, $protocol) = @_;
-    return $self->database($app)->execute("SELECT id, quality, type, encoding, charset, language FROM variants WHERE protocol = ?", $protocol)->rows;
+    return $self->database($app)->execute("SELECT id, quality, type, encoding, charset, language FROM stringVariants WHERE protocol = ?", $protocol)->rows;
 }
 
 sub setupInstall {
     my $self = shift;
     my($app) = @_;
     my $helper = $self->helper($app);
+    $self->dump(9, 'about to configure string data source...');
     if (not $helper->tableExists($app, $self->database($app), 'stringVariants')) {
+        $self->debug('going to create \'stringVariants\' table');
         $self->database($app)->execute('
             CREATE TABLE stringVariants (
-                                         id integer unsigned auto_increment not null primary key,
-                                         name varchar(255) not null,
-                                         protocol varchar(255) not null,
+                                         id integer unsigned auto_increment NOT NULL PRIMARY KEY,
+                                         name varchar(255) NOT NULL,
+                                         protocol varchar(255) NOT NULL,
                                          encoding varchar(255),
-                                         type varchar(255) not null,
+                                         type varchar(255) NOT NULL,
                                          charset varchar(255),
-                                         language varchar(255) not null,
-                                         quality float not null default 1.0,
+                                         language varchar(255) NOT NULL,
+                                         quality float NOT NULL default 1.0,
                                          description text,
                                          translator varchar(255),
-                                         unique index (name)
-                                         );
-        ');
+                                         UNIQUE KEY (name)
+                                         )
+        ')->row;
     } else {
         # check its schema is up to date
     }
     if (not $helper->tableExists($app, $self->database($app), 'strings')) {
+        $self->debug('going to create \'strings\' table');
         $self->database($app)->execute('
             CREATE TABLE strings (
-                                  variant integer unsigned not null,
-                                  name varchar(32) not null,
+                                  variant integer unsigned NOT NULL,
+                                  name varchar(32) NOT NULL,
                                   data text,
-                                  primary key (variant, name)
-                                  );
-        ');
+                                  PRIMARY KEY (variant, name)
+                                  )
+        ')->row;
     } else {
         # check its schema is up to date
     }
+    $self->dump(9, 'done configuring string data source');
     return;
 }
