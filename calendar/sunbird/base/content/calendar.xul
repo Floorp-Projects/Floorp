@@ -46,7 +46,7 @@
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://calendar/skin/calendar.css" type="text/css"?>
-<?xml-stylesheet href="chrome://calendar/content/datepicker/calendar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/content/datetimepickers/minimonth.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/communicator.css" type="text/css"?>
 
 <!-- Overlays -->
@@ -113,6 +113,7 @@
    <command id="next_command" oncommand="gCalendarWindow.currentView.goToNext()"/>
    <command id="previous_command" oncommand="gCalendarWindow.currentView.goToPrevious()"/>
    <command id="go_today_command" oncommand="gCalendarWindow.goToToday()"/>
+   <command id="go_date_command" oncommand="gCalendarWindow.pickAndGoToDate()"/>
    
    <command id="day_view_command"   oncommand="gCalendarWindow.switchToDayView()" disabled="true"/>
    <command id="week_view_command"  oncommand="gCalendarWindow.switchToWeekView()" disabled="true"/>
@@ -154,9 +155,10 @@
   <key id="view_multiweek_key" keycode="VK_F3" observes="multiweek_view_command"/>
   <key id="view_month_key" keycode="VK_F4" observes="month_view_command"/>
   
-  <key id="go_forward_key" keycode="VK_PAGE_UP" observes="previous_command"/>
-  <key id="go_backward_key" keycode="VK_PAGE_DOWN" observes="next_command"/>
+  <key id="go_backward_key" keycode="VK_PAGE_UP" observes="previous_command"/>
+  <key id="go_forward_key"  keycode="VK_PAGE_DOWN" observes="next_command"/>
   <key id="go_to_today_key"   keycode="VK_DOWN" modifiers="control" observes="go_today_command"/>
+  <key id="go_to_date_key" keycode="VK_UP" modifiers="control" observes="go_date_command"/>
   
   <key id="key_close" key="W" modifiers="control" observes="close_calendar_command"/>
 </keyset>
@@ -403,10 +405,6 @@
              observes="publish_calendar"/>
 </popup>
 
-<popup id="oe-date-picker-popup"  position="after_start" value="">
-   <datepicker id="oe-date-picker" valud="" ondatepick="gCalendarWindow.goToDay( date )"/>
-</popup>
-
 <commandset id="commands"/>
 
 <toolbox id="calendar-toolbox" class="toolbox-top" deferattached="true">
@@ -489,7 +487,7 @@
          <tabpanels>
          <tabpanel>
             <vbox flex="1">
-               <calendar flex="1" id="lefthandcalendar" onchange="gCalendarWindow.goToDay( this.value );"/>
+               <minimonth flex="1" id="lefthandcalendar" onchange="gCalendarWindow.goToDay( this.value );" />
                <button observes="go_today_command" label="&calendar.gototoday.button.label;"/>
             </vbox>
          </tabpanel>
