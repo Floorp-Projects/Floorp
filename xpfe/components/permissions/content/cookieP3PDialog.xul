@@ -108,7 +108,7 @@
 
   <box>
     <spacer flex="1"/>
-    <image src="chrome://cookie/content/status.jpg"/>
+    <image src="chrome://communicator/skin/cookie/status-cookie.gif"/>
     <spacer flex="1"/>
   </box>
 
