@@ -32,7 +32,7 @@
 #include "prtypes.h"  //this is here for debug reasons...
 #include "prio.h"
 #include "plstr.h"
-
+#include "nsDTDUtils.h"
 #ifdef XP_PC
 #include <direct.h> //this is here for debug reasons...
 #endif
@@ -90,119 +90,6 @@ static eHTMLTags gTableTags[]={
 static eHTMLTags gWhitespaceTags[]={
   eHTMLTag_newline, eHTMLTag_whitespace};
 
-
-/************************************************************************
-  CTagStack class implementation.
-  The reason we use this class is so that we can view the stack state 
-  in the usual way via the debugger.
- ************************************************************************/
-
-
-CTagStack::CTagStack(int aDefaultSize) {
-#ifdef _dynstack
-  mSize=aDefaultSize;
-  mTags =new eHTMLTags[mSize];
-  mBits =new PRBool[mSize];
-#else
-  mSize=eStackSize;
-#endif
-  mCount=0;
-  mPrevious=0;
-  nsCRT::zero(mTags,mSize*sizeof(eHTMLTags));
-  nsCRT::zero(mBits,mSize*sizeof(PRBool));
-}
-
-/**
- * Default constructor
- * @update  gess7/9/98
- * @param   aDefaultsize tells the stack what size to start out.
- *          however, we'll autosize as needed.
- */
-CTagStack::~CTagStack() {
-#ifdef _dynstack
-    delete mTags;
-    delete mBits;
-    mTags=0;
-    mBits=0;
-#endif
-    mSize=mCount=0;
-  }
-
-/**
- * Resets state of stack to be empty.
- * @update  gess7/9/98
- */
-void CTagStack::Empty(void) {
-  mCount=0;
-}
-
-/**
- * 
- * @update  gess7/9/98
- * @param 
- * @return
- */
-void CTagStack::Push(eHTMLTags aTag) {
-
-  if(mCount>=mSize) {
-
-#ifdef _dynstack
-    eHTMLTags* tmp=new eHTMLTags[2*mSize];
-    nsCRT::zero(tmp,2*mSize*sizeof(eHTMLTag_html));
-    nsCRT::memcpy(tmp,mTags,mSize*sizeof(eHTMLTag_html));
-    delete mTags;
-    mTags=tmp;
-
-    PRBool* tmp2=new PRBool[2*mSize];
-    nsCRT::zero(tmp2,2*mSize*sizeof(PRBool));
-    nsCRT::memcpy(tmp2,mBits,mSize*sizeof(PRBool));
-    delete mBits;
-    mBits=tmp2;
-    mSize*=2;
-#endif
-  }
-  mTags[mCount++]=aTag;
-}
-
-/**
- * 
- * @update  gess7/9/98
- * @param 
- * @return
- */
-eHTMLTags CTagStack::Pop() {
-  eHTMLTags result=eHTMLTag_unknown;
-  if(mCount>0) {
-    result=mTags[--mCount];
-    mTags[mCount]=eHTMLTag_unknown;
-    mBits[mCount]=PR_FALSE;
-  }
-  return result;
-}
-
-/**
- * 
- * @update  gess7/9/98
- * @param 
- * @return
- */
-eHTMLTags CTagStack::First() const {
-  if(mCount>0)
-    return mTags[0];
-  return eHTMLTag_unknown;
-}
-
-/**
- * 
- * @update  gess7/9/98
- * @param 
- * @return
- */
-eHTMLTags CTagStack::Last() const {
-  if(mCount>0)
-    return mTags[mCount-1];
-  return eHTMLTag_unknown;
-}
 
 /**************************************************************
   Now define the token deallocator class...
@@ -460,18 +347,21 @@ void CNavDTD::InitializeDefaultTokenHandlers() {
  *  @param   
  *  @return  
  */
-CNavDTD::CNavDTD() : nsIDTD(), mContextStack(), mTokenDeque(gTokenKiller)  {
+CNavDTD::CNavDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
   NS_INIT_REFCNT();
   mParser=0;
   mSink = nsnull;
   mDTDDebug=0;
   mLineNumber=1;
   mParseMode=eParseMode_navigator;
-  mStyleStack=new CTagStack();
   nsCRT::zero(mTokenHandlers,sizeof(mTokenHandlers));
   mHasOpenForm=PR_FALSE;
   mHasOpenMap=PR_FALSE;
   InitializeDefaultTokenHandlers();
+  mHeadContext=new nsDTDContext();
+  mBodyContext=new nsDTDContext();
+  mFormContext=0;
+  mMapContext=0;
 }
 
 /**
@@ -483,9 +373,9 @@ CNavDTD::CNavDTD() : nsIDTD(), mContextStack(), mTokenDeque(gTokenKiller)  {
  */
 CNavDTD::~CNavDTD(){
   DeleteTokenHandlers();
-  delete mStyleStack;
+  delete mHeadContext;
+  delete mBodyContext;
   NS_IF_RELEASE(mDTDDebug);
-
 }
 
 /**
@@ -530,37 +420,11 @@ PRBool CNavDTD::Verify(nsString& aURLRef){
     else mDTDDebug->SetVerificationDirectory(kVerificationDir);
   }
   if(mDTDDebug) {
-    mDTDDebug->Verify(this,mParser,mContextStack.mCount,mContextStack.mTags,aURLRef);
+    mDTDDebug->Verify(this,mParser,
+      mBodyContext->mElements.mCount,
+      mBodyContext->mElements.mTags,aURLRef);
   }
   return result;
-}
-
-
-/**
- * This method adds a new parser context to the list,
- * pushing the current one to the next position.
- * @update  gess7/22/98
- * @param   ptr to new context
- * @return  nada
- */
-void CNavDTD::PushStack(CTagStack& aStack) {
-  aStack.mPrevious=mStyleStack;  
-  mStyleStack=&aStack;
-}
-
-/**
- * This method pops the topmost context off the stack,
- * returning it to the user. The next context  (if any)
- * becomes the current context.
- * @update  gess7/22/98
- * @return  prev. context
- */
-CTagStack* CNavDTD::PopStack() {
-  CTagStack* oldStack=mStyleStack;
-  if(oldStack) {
-    mStyleStack=oldStack->mPrevious;
-  }
-  return oldStack;
 }
 
 /**
@@ -618,7 +482,7 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink){
 nsresult CNavDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
   nsresult result= NS_OK;
 
-  if((kNoError==anErrorCode) && (mContextStack.mCount>0)) {
+  if((kNoError==anErrorCode) && (mBodyContext->mElements.mCount>0)) {
     result = CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
   }
 
@@ -655,7 +519,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken){
     if(theHandler) {
       result=(*theHandler)(theToken,this);
       if (mDTDDebug)
-         mDTDDebug->Verify(this, mParser, mContextStack.mCount, mContextStack.mTags, mFilename);
+         mDTDDebug->Verify(this, mParser, mBodyContext->mElements.mCount, mBodyContext->mElements.mTags, mFilename);
     }
 
   }//if
@@ -681,7 +545,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken){
 nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
-  eHTMLTags theParentTag=mContextStack.Last();
+  eHTMLTags theParentTag=mBodyContext->mElements.Last();
   nsresult  result=NS_OK;
   PRBool    contains=CanContain(theParentTag,aChildTag);
 
@@ -694,7 +558,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
       //You must determine what container hierarchy you need to hold aToken,
       //and create that on the parsestack.
       result=ReduceContextStackFor(aChildTag);
-      if(PR_FALSE==CanContain(mContextStack.Last(),aChildTag)) {
+      if(PR_FALSE==CanContain(mBodyContext->mElements.Last(),aChildTag)) {
         //we unwound too far; now we have to recreate a valid context stack.
         result=CreateContextStackFor(aChildTag);
       }
@@ -702,13 +566,13 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
   }
 
   if(IsContainer(aChildTag)){
-    if(PR_TRUE==mContextStack.mBits[mContextStack.mCount-1]) {
+    if(PR_TRUE==mBodyContext->mElements.mBits[mBodyContext->mElements.mCount-1]) {
       CloseTransientStyles(aChildTag);
     }
     result=OpenContainer(aNode,PR_TRUE);
   }
   else {
-    if(PR_FALSE==mContextStack.mBits[mContextStack.mCount-1]) {
+    if(PR_FALSE==mBodyContext->mElements.mBits[mBodyContext->mElements.mCount-1]) {
       OpenTransientStyles(aChildTag);
     }
     result=AddLeaf(aNode);
@@ -741,7 +605,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
   if(NS_OK==result) {
       //now check to see if this token should be omitted...
-    if(PR_FALSE==CanOmit(mContextStack.Last(),tokenTagType)) {
+    if(PR_FALSE==CanOmit(mBodyContext->mElements.Last(),tokenTagType)) {
   
       switch(tokenTagType) {
 
@@ -836,7 +700,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
   //now check to see if this token should be omitted, or 
   //if it's gated from closing by the presence of another tag.
-  if(PR_TRUE==CanOmitEndTag(mContextStack.Last(),tokenTagType)) {
+  if(PR_TRUE==CanOmitEndTag(mBodyContext->mElements.Last(),tokenTagType)) {
     UpdateStyleStackForCloseTag(tokenTagType,tokenTagType);
     return result;
   }
@@ -867,7 +731,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
       // Empty the transient style stack (we just closed any extra
       // ones off so it's safe to do it now) because they don't carry
       // forward across table cell boundaries.
-      mStyleStack->mCount=0;
+      mBodyContext->mStyles->mCount=0;
       break;
 
     default:
@@ -894,7 +758,7 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
   CEntityToken* et = (CEntityToken*)(aToken);
   nsresult      result=NS_OK;
 
-  if(PR_FALSE==CanOmit(mContextStack.Last(),eHTMLTag_entity)) {
+  if(PR_FALSE==CanOmit(mBodyContext->mElements.Last(),eHTMLTag_entity)) {
     nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
     result=AddLeaf(aNode);
   }
@@ -1802,7 +1666,7 @@ PRBool CNavDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
     default:
       if(IsGatedFromClosing(aChild))
         result=PR_TRUE;
-      else if(IsCompatibleTag(aChild,mContextStack.Last()))
+      else if(IsCompatibleTag(aChild,mBodyContext->mElements.Last()))
         result=PR_FALSE;
       else result=(!HasOpenContainer(aChild));
       break;
@@ -1916,7 +1780,7 @@ eHTMLTags CNavDTD::GetDefaultParentTagFor(eHTMLTags aChildTag) const{
  * @param   aChild -- tag type of child
  * @return  TRUE if propagation closes; false otherwise
  */
-PRBool CNavDTD::ForwardPropagate(CTagStack& aStack,eHTMLTags aParentTag,eHTMLTags aChildTag)  {
+PRBool CNavDTD::ForwardPropagate(nsTagStack& aStack,eHTMLTags aParentTag,eHTMLTags aChildTag)  {
   PRBool result=PR_FALSE;
 
   switch(aParentTag) {
@@ -1959,7 +1823,7 @@ PRBool CNavDTD::ForwardPropagate(CTagStack& aStack,eHTMLTags aParentTag,eHTMLTag
  * @param   aChild -- tag type of child
  * @return  TRUE if propagation closes; false otherwise
  */
-PRBool CNavDTD::BackwardPropagate(CTagStack& aStack,eHTMLTags aParentTag,eHTMLTags aChildTag) const {
+PRBool CNavDTD::BackwardPropagate(nsTagStack& aStack,eHTMLTags aParentTag,eHTMLTags aChildTag) const {
 
   eHTMLTags theParentTag=aChildTag;
 
@@ -2055,12 +1919,12 @@ PRBool CNavDTD::IsGatedFromClosing(eHTMLTags aChildTag) const {
            ***************************************************************************/
 
         int theIndex; 
-        int theTopIndex=mContextStack.mCount-1;
+        int theTopIndex=mBodyContext->mElements.mCount-1;
 
         eHTMLTags theParent=GetDefaultParentTagFor(aChildTag);
         while(eHTMLTag_unknown!=theParent) {
           for(theIndex=theTopIndex;theIndex>tagPos;theIndex--){
-            if(mContextStack.mTags[theIndex]==theParent){
+            if(mBodyContext->mElements.mTags[theIndex]==theParent){
               theGatePos=theIndex;
               break;
             }
@@ -2088,7 +1952,7 @@ PRBool CNavDTD::IsGatedFromClosing(eHTMLTags aChildTag) const {
  *  @return  tag id of topmost node in contextstack
  */
 eHTMLTags CNavDTD::GetTopNode() const {
-  return mContextStack.Last();
+  return mBodyContext->mElements.Last();
 }
 
 /**
@@ -2101,8 +1965,8 @@ eHTMLTags CNavDTD::GetTopNode() const {
  */
 PRInt32 CNavDTD::GetTopmostIndexOf(eHTMLTags aTagSet[],PRInt32 aCount) const {
   int i=0;
-  for(i=mContextStack.mCount-1;i>=0;i--){
-    if(FindTagInSet(mContextStack.mTags[i],aTagSet,aCount)) {
+  for(i=mBodyContext->mElements.mCount-1;i>=0;i--){
+    if(FindTagInSet(mBodyContext->mElements.mTags[i],aTagSet,aCount)) {
       return i;
     }
   }
@@ -2119,8 +1983,8 @@ PRInt32 CNavDTD::GetTopmostIndexOf(eHTMLTags aTagSet[],PRInt32 aCount) const {
  */
 PRInt32 CNavDTD::GetTopmostIndexOf(eHTMLTags aTag) const {
   int i=0;
-  for(i=mContextStack.mCount-1;i>=0;i--){
-    if(mContextStack.mTags[i]==aTag)
+  for(i=mBodyContext->mElements.mCount-1;i>=0;i--){
+    if(mBodyContext->mElements.mTags[i]==aTag)
       return i;
   }
   return kNotFound;
@@ -2149,10 +2013,10 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aTag){
   if(!FindTagInSet(aTag,gWhitespaceTags,sizeof(gWhitespaceTags)/sizeof(eHTMLTag_unknown))) {
     PRInt32 pos=0;
 
-    eHTMLTags parentTag=mContextStack.Last();
+    eHTMLTags parentTag=mBodyContext->mElements.Last();
     if(CanContainStyles(parentTag)) {
-      for(pos=0;pos<mStyleStack->mCount;pos++) {
-        eHTMLTags theTag=mStyleStack->mTags[pos]; 
+      for(pos=0;pos<mBodyContext->mStyles->mCount;pos++) {
+        eHTMLTags theTag=mBodyContext->mStyles->mTags[pos]; 
         if(PR_FALSE==HasOpenContainer(theTag)) {
 
           CStartToken   token(theTag);
@@ -2166,7 +2030,7 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aTag){
             default:
               token.SetTypeID(theTag);  //open the html container...
               result=OpenContainer(theNode,PR_FALSE);
-              mContextStack.mBits[mContextStack.mCount-1]=PR_TRUE;
+              mBodyContext->mElements.mBits[mBodyContext->mElements.mCount-1]=PR_TRUE;
           } //switch
         }
         if(NS_OK!=result)
@@ -2192,10 +2056,10 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aTag){
 nsresult CNavDTD::CloseTransientStyles(eHTMLTags aTag){
   nsresult result=NS_OK;
 
-  if((mStyleStack->mCount>0) && (mContextStack.mBits[mContextStack.mCount-1])) {
+  if((mBodyContext->mStyles->mCount>0) && (mBodyContext->mElements.mBits[mBodyContext->mElements.mCount-1])) {
     if(!FindTagInSet(aTag,gWhitespaceTags,sizeof(gWhitespaceTags)/sizeof(eHTMLTag_unknown))) {
-      result=CloseContainersTo(mStyleStack->mTags[0],PR_FALSE);
-      mContextStack.mBits[mContextStack.mCount-1]=PR_FALSE;
+      result=CloseContainersTo(mBodyContext->mStyles->mTags[0],PR_FALSE);
+      mBodyContext->mElements.mBits[mBodyContext->mElements.mCount-1]=PR_FALSE;
 
     }//if
   }//if
@@ -2211,10 +2075,10 @@ nsresult CNavDTD::CloseTransientStyles(eHTMLTags aTag){
  * @param   aNode -- next node to be added to model
  */
 nsresult CNavDTD::OpenHTML(const nsIParserNode& aNode){
-  NS_PRECONDITION(mContextStack.mCount >= 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mBodyContext->mElements.mCount >= 0, kInvalidTagStackPos);
 
   nsresult result=mSink->OpenHTML(aNode); 
-  mContextStack.Push((eHTMLTags)aNode.GetNodeType());
+  mBodyContext->mElements.Push((eHTMLTags)aNode.GetNodeType());
   return result;
 }
 
@@ -2228,9 +2092,9 @@ nsresult CNavDTD::OpenHTML(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CNavDTD::CloseHTML(const nsIParserNode& aNode){
-  NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mBodyContext->mElements.mCount > 0, kInvalidTagStackPos);
   nsresult result=mSink->CloseHTML(aNode); 
-  mContextStack.Pop();
+  mBodyContext->mElements.Pop();
   return result;
 }
 
@@ -2244,7 +2108,7 @@ nsresult CNavDTD::CloseHTML(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CNavDTD::OpenHead(const nsIParserNode& aNode){
-  mContextStack.Push(eHTMLTag_head);
+  mBodyContext->mElements.Push(eHTMLTag_head);
   nsresult result=mSink->OpenHead(aNode); 
   return result;
 }
@@ -2259,7 +2123,7 @@ nsresult CNavDTD::OpenHead(const nsIParserNode& aNode){
  */
 nsresult CNavDTD::CloseHead(const nsIParserNode& aNode){
   nsresult result=mSink->CloseHead(aNode); 
-  mContextStack.Pop();
+  mBodyContext->mElements.Pop();
   return result;
 }
 
@@ -2272,10 +2136,10 @@ nsresult CNavDTD::CloseHead(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CNavDTD::OpenBody(const nsIParserNode& aNode){
-  NS_PRECONDITION(mContextStack.mCount >= 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mBodyContext->mElements.mCount >= 0, kInvalidTagStackPos);
 
   nsresult result=NS_OK;
-  eHTMLTags topTag=mContextStack.Last();
+  eHTMLTags topTag=mBodyContext->mElements.Last();
 
   if(eHTMLTag_html!=topTag) {
     
@@ -2302,7 +2166,7 @@ nsresult CNavDTD::OpenBody(const nsIParserNode& aNode){
 
   if(NS_OK==result) {
     result=mSink->OpenBody(aNode); 
-    mContextStack.Push((eHTMLTags)aNode.GetNodeType());
+    mBodyContext->mElements.Push((eHTMLTags)aNode.GetNodeType());
   }
   return result;
 }
@@ -2316,9 +2180,9 @@ nsresult CNavDTD::OpenBody(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CNavDTD::CloseBody(const nsIParserNode& aNode){
-  NS_PRECONDITION(mContextStack.mCount >= 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mBodyContext->mElements.mCount >= 0, kInvalidTagStackPos);
   nsresult result=mSink->CloseBody(aNode); 
-  mContextStack.Pop();
+  mBodyContext->mElements.Pop();
   return result;
 }
 
@@ -2399,9 +2263,9 @@ nsresult CNavDTD::CloseMap(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CNavDTD::OpenFrameset(const nsIParserNode& aNode){
-  NS_PRECONDITION(mContextStack.mCount >= 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mBodyContext->mElements.mCount >= 0, kInvalidTagStackPos);
   nsresult result=mSink->OpenFrameset(aNode); 
-  mContextStack.Push((eHTMLTags)aNode.GetNodeType());
+  mBodyContext->mElements.Push((eHTMLTags)aNode.GetNodeType());
   return result;
 }
 
@@ -2414,9 +2278,9 @@ nsresult CNavDTD::OpenFrameset(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CNavDTD::CloseFrameset(const nsIParserNode& aNode){
-  NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mBodyContext->mElements.mCount > 0, kInvalidTagStackPos);
   nsresult result=mSink->CloseFrameset(aNode); 
-  mContextStack.Pop();
+  mBodyContext->mElements.Pop();
   return result;
 }
 
@@ -2431,7 +2295,7 @@ nsresult CNavDTD::CloseFrameset(const nsIParserNode& aNode){
  */
 nsresult
 CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
-  NS_PRECONDITION(mContextStack.mCount >= 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mBodyContext->mElements.mCount >= 0, kInvalidTagStackPos);
   
   nsresult   result=NS_OK; 
   eHTMLTags nodeType=(eHTMLTags)aNode.GetNodeType();
@@ -2474,7 +2338,7 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
 
     default:
       result=mSink->OpenContainer(aNode); 
-      mContextStack.Push((eHTMLTags)aNode.GetNodeType());
+      mBodyContext->mElements.Push((eHTMLTags)aNode.GetNodeType());
       break;
   }
 
@@ -2496,7 +2360,7 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
 nsresult
 CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,
                         PRBool aUpdateStyles){
-  NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mBodyContext->mElements.mCount > 0, kInvalidTagStackPos);
   nsresult   result=NS_OK;
   eHTMLTags nodeType=(eHTMLTags)aNode.GetNodeType();
   
@@ -2528,11 +2392,11 @@ CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,
     case eHTMLTag_title:
     default:
       result=mSink->CloseContainer(aNode); 
-      mContextStack.Pop();
+      mBodyContext->mElements.Pop();
       break;
   }
 
-  mContextStack.mBits[mContextStack.mCount]=PR_FALSE;
+  mBodyContext->mElements.mBits[mBodyContext->mElements.mCount]=PR_FALSE;
   if((NS_OK==result) && (PR_TRUE==aUpdateStyles)){
     UpdateStyleStackForCloseTag(nodeType,aTag);
   }
@@ -2551,15 +2415,15 @@ CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,
 nsresult
 CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,
                            PRBool aUpdateStyles){
-  NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mBodyContext->mElements.mCount > 0, kInvalidTagStackPos);
   nsresult result=NS_OK;
 
   static CEndToken aToken(gEmpty);
   nsCParserNode theNode(&aToken,mLineNumber);
 
-  if((anIndex<mContextStack.mCount) && (anIndex>=0)) {
-    while(mContextStack.mCount>anIndex) {
-      eHTMLTags theTag=mContextStack.Last();
+  if((anIndex<mBodyContext->mElements.mCount) && (anIndex>=0)) {
+    while(mBodyContext->mElements.mCount>anIndex) {
+      eHTMLTags theTag=mBodyContext->mElements.Last();
       aToken.SetTypeID(theTag);
       result=CloseContainer(theNode,aTag,aUpdateStyles);
     }
@@ -2576,7 +2440,7 @@ CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CNavDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
-  NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mBodyContext->mElements.mCount > 0, kInvalidTagStackPos);
 
   PRInt32 pos=GetTopmostIndexOf(aTag);
 
@@ -2585,7 +2449,7 @@ nsresult CNavDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
     return CloseContainersTo(pos,aTag,aUpdateStyles);
   }
 
-  eHTMLTags theTopTag=mContextStack.Last();
+  eHTMLTags theTopTag=mBodyContext->mElements.Last();
   if(IsCompatibleTag(aTag,theTopTag)) {
     //if you're here, it's because we're trying to close one style tag,
     //but a different one is actually open. Because this is NAV4x
@@ -2617,10 +2481,10 @@ nsresult CNavDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CNavDTD::CloseTopmostContainer(){
-  NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mBodyContext->mElements.mCount > 0, kInvalidTagStackPos);
 
   CEndToken aToken(gEmpty);
-  eHTMLTags theTag=mContextStack.Last();
+  eHTMLTags theTag=mBodyContext->mElements.Last();
   aToken.SetTypeID(theTag);
   nsCParserNode theNode(&aToken,mLineNumber);
   return CloseContainer(theNode,theTag,PR_TRUE);
@@ -2639,7 +2503,7 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
   return result;
 }
 
-CTagStack kPropagationStack;
+static nsTagStack kPropagationStack;
 
 /**
  *  This method gets called to create a valid context stack
@@ -2658,7 +2522,7 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
   
   nsresult  result=(nsresult)kContextMismatch;
   PRInt32   cnt=0;
-  eHTMLTags theTop=mContextStack.Last();
+  eHTMLTags theTop=mBodyContext->mElements.Last();
   PRBool    bResult=ForwardPropagate(kPropagationStack,theTop,aChildTag);
   
   if(PR_FALSE==bResult){
@@ -2694,7 +2558,7 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
     else bResult=BackwardPropagate(kPropagationStack,eHTMLTag_html,aChildTag);
   } //elseif
 
-  if((0==mContextStack.mCount) || (mContextStack.Last()==kPropagationStack.Pop()))
+  if((0==mBodyContext->mElements.mCount) || (mBodyContext->mElements.Last()==kPropagationStack.Pop()))
     result=NS_OK;
 
   //now, build up the stack according to the tags 
@@ -2725,13 +2589,13 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
  */
 nsresult CNavDTD::ReduceContextStackFor(eHTMLTags aChildTag){
   nsresult   result=NS_OK;
-  eHTMLTags topTag=mContextStack.Last();
+  eHTMLTags topTag=mBodyContext->mElements.Last();
 
   while( (topTag!=kNotFound) && 
          (PR_FALSE==CanContain(topTag,aChildTag)) &&
          (PR_FALSE==CanContainIndirect(topTag,aChildTag))) {
     CloseTopmostContainer();
-    topTag=mContextStack.Last();
+    topTag=mBodyContext->mElements.Last();
   }
   return result;
 }
@@ -2750,7 +2614,7 @@ CNavDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag){
   nsresult   result=0;
   
   if(FindTagInSet(aTag,gStyleTags,sizeof(gStyleTags)/sizeof(eHTMLTag_unknown))) {
-    mStyleStack->Push(aTag);
+    mBodyContext->mStyles->Push(aTag);
   }
   else {
     switch (aTag) {
@@ -2779,10 +2643,10 @@ nsresult
 CNavDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTag){
   nsresult result=0;
   
-  if(mStyleStack->mCount>0) {
+  if(mBodyContext->mStyles->mCount>0) {
     if(FindTagInSet(aTag,gStyleTags,sizeof(gStyleTags)/sizeof(eHTMLTag_unknown))) {
       if(aTag==anActualTag)
-        mStyleStack->Pop();
+        mBodyContext->mStyles->Pop();
     }
     else {
       switch (aTag) {

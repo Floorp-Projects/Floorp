@@ -28,6 +28,8 @@ CPPSRCS =     \
   nsScanner.cpp   \
   nsToken.cpp   \
   nsTokenHandler.cpp \
+  nsNavDTD.cpp \
+  nsDTDUtils.cpp \
   CNavDTD.cpp \
   COtherDTD.cpp \
   CRtfDTD.cpp \

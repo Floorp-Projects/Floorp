@@ -24,6 +24,7 @@ MODULE=raptor
 REQUIRES=xpcom raptor netlib
 
 CPPSRCS=					\
+	nsDTDUtils.cpp				\
 	CNavDTD.cpp				\
 	COtherDTD.cpp				\
 	CRtfDTD.cpp				\
@@ -47,6 +48,7 @@ CPPSRCS=					\
 	$(NULL)
 
 CPP_OBJS=					\
+	.\$(OBJDIR)\nsDTDUtils.obj			\
 	.\$(OBJDIR)\CNavDTD.obj			\
 	.\$(OBJDIR)\COtherDTD.obj		\
 	.\$(OBJDIR)\CRtfDTD.obj			\
