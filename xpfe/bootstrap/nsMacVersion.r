@@ -28,14 +28,14 @@
 // Version Numbers //
 
 #define		VERSION_MAJOR			0
-#define		VERSION_MINOR			0x94	// revision & fix in BCD
+#define		VERSION_MINOR			0x95	// revision & fix in BCD
 #define		VERSION_KIND			alpha	// alpha, beta, or final
 #define		VERSION_MICRO			0		// internal stage: alpha or beta number
 
 
 // Version Strings (Finder's Get Info dialog box) //
 
-#define		VERSION_STRING			"0.9.4+"
+#define		VERSION_STRING			"0.9.5+"
 //#define 	VERSION_LANG			"en"	// e.g. en, ja, de, fr
 //#define 	VERSION_COUNTRY			"_US"	// e.g.,  _JP, _DE, _FR, _US
 //#define	VERSION_LOCALE			"[" VERSION_LANG "_" VERSION_COUNTRY "]"
