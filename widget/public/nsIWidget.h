@@ -81,6 +81,10 @@ enum nsCursor { eCursor_standard,
                 eCursor_select, 
                 eCursor_hyperlink }; 
 
+/**
+ * The base class for all the widgets. It provides the interface for all basic and
+ * necessary functionality.
+ */
 class nsIWidget : public nsISupports {
 
   public:
@@ -107,11 +111,11 @@ class nsIWidget : public nsISupports {
      *                      toolkit is used.
      *
      */
-    virtual void Create(nsIWidget *aParent,
-                        const nsRect &aRect,
-                        EVENT_CALLBACK aHandleEventFunction,
+    virtual void Create(nsIWidget        *aParent,
+                        const nsRect     &aRect,
+                        EVENT_CALLBACK   aHandleEventFunction,
                         nsIDeviceContext *aContext,
-                        nsIToolkit *aToolkit = nsnull) = 0;
+                        nsIToolkit       *aToolkit = nsnull) = 0;
 
     /**
      * Create and initialize a widget with a native window parent
@@ -231,7 +235,7 @@ class nsIWidget : public nsISupports {
     /**
      * Get the foreground color for this widget
      *
-     * @returns this widget's foreground color
+     * @return this widget's foreground color
      *
      */
     virtual nscolor GetForegroundColor(void) = 0;
@@ -248,7 +252,7 @@ class nsIWidget : public nsISupports {
     /**
      * Get the background color for this widget
      *
-     * @returns this widget's background color
+     * @return this widget's background color
      *
      */
 
@@ -266,7 +270,7 @@ class nsIWidget : public nsISupports {
     /**
      * Get the font for this widget
      *
-     * @returns the font metrics 
+     * @return the font metrics 
      */
 
     virtual nsIFontMetrics* GetFont(void) = 0;
@@ -282,7 +286,7 @@ class nsIWidget : public nsISupports {
     /**
      * Get the cursor for this widget.
      *
-     * @returns this widget's cursor.
+     * @return this widget's cursor.
      */
 
     virtual nsCursor GetCursor(void) = 0;

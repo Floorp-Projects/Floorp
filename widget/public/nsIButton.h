@@ -27,11 +27,10 @@
 { 0x18032ad0, 0xb265, 0x11d1, \
     { 0xaa, 0x2a, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
 
-/* 
+/**
  * Push button widget.
  * Automatically shows itself as depressed when clicked on.
  */
-
 class nsIButton : public nsIWidget {
 
   public:
