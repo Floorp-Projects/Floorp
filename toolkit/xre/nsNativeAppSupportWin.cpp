@@ -41,6 +41,7 @@
 #include "nsAppRunner.h"
 #include "nsXULAppAPI.h"
 #include "nsString.h"
+#include "nsIBrowserDOMWindow.h"
 #include "nsICmdLineService.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
@@ -48,6 +49,7 @@
 #include "nsIServiceManager.h"
 #include "nsICmdLineHandler.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMChromeWindow.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsISupportsArray.h"
@@ -55,6 +57,7 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIBaseWindow.h"
 #include "nsIWidget.h"
 #include "nsIAppShellService.h"
@@ -65,16 +68,15 @@
 #include "nsIPref.h"
 #include "nsIPromptService.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsXPCOM.h"
 #ifdef MOZ_PHOENIX
 #include "nsIShellService.h"
 #endif
-
-// These are needed to load a URL in a browser window.
 #include "nsIDOMLocation.h"
 #include "nsIJSContextStack.h"
+#include "nsIWebNavigation.h"
 #include "nsIWindowMediator.h"
 
 #include <windows.h>
@@ -1307,7 +1309,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
 #if MOZ_DEBUG_DDE
       printf( "Launching browser on url [%s]...\n", (const char*)arg );
 #endif
-      (void)OpenBrowserWindow( arg, newWindow );
+      OpenBrowserWindow( arg, PR_FALSE ); // newWindow = false means use prefs
       return;
     }
 
@@ -1643,11 +1645,15 @@ nsresult SafeJSContext::Push() {
 
 nsresult
 nsNativeAppSupportWin::OpenBrowserWindow( const char *args, PRBool newWindow ) {
+
     nsresult rv = NS_OK;
+
     // Open the argument URL in the most recently used Navigator window.
     // If there is no Nav window, open a new one.
 
-    // Get most recently used Nav window.
+    // If at all possible, hand the request off to the most recent
+    // browser window.
+
     nsCOMPtr<nsIDOMWindowInternal> navWin;
     GetMostRecentWindow( NS_LITERAL_STRING( "navigator:browser" ).get(), getter_AddRefs( navWin ) );
 
@@ -1662,36 +1668,39 @@ nsNativeAppSupportWin::OpenBrowserWindow( const char *args, PRBool newWindow ) {
             // Have to open a new one.
             break;
         }
-        // Get content window.
-        nsCOMPtr<nsIDOMWindow> content;
-        navWin->GetContent( getter_AddRefs( content ) );
-        if ( !content ) {
-            break;
+
+        nsCOMPtr<nsIBrowserDOMWindow> bwin;
+        { // scope a bunch of temporary cruft used to generate bwin
+          nsCOMPtr<nsIWebNavigation> navNav( do_GetInterface( navWin ) );
+          nsCOMPtr<nsIDocShellTreeItem> navItem( do_QueryInterface( navNav ) );
+          if ( navItem ) {
+            nsCOMPtr<nsIDocShellTreeItem> rootItem;
+            navItem->GetRootTreeItem( getter_AddRefs( rootItem ) );
+            nsCOMPtr<nsIDOMWindow> rootWin( do_GetInterface( rootItem ) );
+            nsCOMPtr<nsIDOMChromeWindow> chromeWin(do_QueryInterface(rootWin));
+            if ( chromeWin )
+              chromeWin->GetBrowserDOMWindow( getter_AddRefs ( bwin ) );
+          }
         }
-        // Convert that to internal interface.
-        nsCOMPtr<nsIDOMWindowInternal> internalContent( do_QueryInterface( content ) );
-        if ( !internalContent ) {
-            break;
+        if ( bwin ) {
+          nsCOMPtr<nsIURI> uri;
+          nsDependentCString urlStr( args );
+          NS_NewURI( getter_AddRefs( uri ), urlStr, 0, 0 );
+          if ( uri ) {
+            nsCOMPtr<nsIDOMWindow> container;
+            rv = bwin->OpenURI( uri, 0,
+                                nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW,
+                                nsIBrowserDOMWindow::OPEN_EXTERNAL,
+                                getter_AddRefs( container ) );
+            if ( NS_SUCCEEDED( rv ) )
+              return NS_OK;
+          }
         }
-        // Get location.
-        nsCOMPtr<nsIDOMLocation> location;
-        internalContent->GetLocation( getter_AddRefs( location ) );
-        if ( !location ) {
-            break;
-        }
-        // Set up environment.
-        SafeJSContext context;
-        if ( NS_FAILED( context.Push() ) ) {
-            break;
-        }
-        // Set href.
-        nsAutoString url; url.AssignWithConversion( args );
-        if ( NS_FAILED( location->SetHref( url ) ) ) {
-            break;
-        }
-        // Finally, if we get here, we're done.
-        return NS_OK;
+
+        NS_ERROR("failed to hand off external URL to extant window\n");
     } while ( PR_FALSE );
+
+    // open a new window if caller requested it or if anything above failed
 
     nsCOMPtr<nsICmdLineHandler> handler(do_GetService("@mozilla.org/commandlinehandler/general-startup;1?type=browser", &rv));
     if (NS_FAILED(rv)) return rv;
