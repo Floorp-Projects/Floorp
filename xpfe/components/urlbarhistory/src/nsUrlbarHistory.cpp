@@ -424,30 +424,50 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
 		 * and see if it matches
 		 */
 	   if (index < 0) {
-		   PRInt32 slashIndex = -1, searchStrLen = -1;
+		   PRInt32 resultSlashIndex = -1, searchStrLen = -1;
 		   searchStrLen = searchAutoStr.Length();
-		   slashIndex = searchAutoStr.RFind("//", PR_TRUE);
+		   resultSlashIndex = searchAutoStr.RFind("//", PR_TRUE);
 		   nsAutoString  resultStr;
+		   nsAutoString  resultPrefix;
 		   
-		   if (slashIndex > -1) {
-			   slashIndex += 2; // Increment by 2 for //		  		      
-		       searchAutoStr.Mid(resultStr, slashIndex, searchStrLen);
-			   searchAutoStr.Left(prefix, slashIndex);
+		   if (resultSlashIndex > -1) {
+			   resultSlashIndex += 2; // Increment by 2 for //		  		      
+		       searchAutoStr.Mid(resultStr, resultSlashIndex, searchStrLen);
+			   searchAutoStr.Left(prefix, resultSlashIndex);
 		   }
            if ((resultStr.Length())) {
-		        index = rdfAStr.Find(resultStr, PR_TRUE);
-				//printf("SearchCache Round II, searching for %s, prefix = %s\n", resultStr.ToNewCString(), prefix.ToNewCString());
-				if (match)
-			     Recycle(match);
-				if (index == 0) {
-				  resultStr = prefix + rdfAStr;
-			      //printf("SearchCache Round III, searching for %s\n", resultStr.ToNewCString());
-			      match = resultStr.ToNewUnicode();  
-				}
-				else		       
-		           match = rdfAStr.ToNewUnicode();			  
-			 }		  
-	   }
+                // OK, great.  we've stripped the protocol:// off resultStr.  Now we need to strip it off of rdfAStr as
+                // well.  Otherwise things like http://file://foo will match http://f
+                // So.  Compare the prefixes of the two and compare the actual data.
+                // The prefix comparison is so that http://f will not expand to htpp://foo just because we visited ftp://foo
+                PRInt32 matchSlashIndex = -1, matchStrLen = -1;
+                matchStrLen = rdfAStr.Length();
+                matchSlashIndex = rdfAStr.RFind("//", PR_TRUE);
+                nsAutoString matchStr;
+                nsAutoString matchPrefix;
+                if (matchSlashIndex > -1) {
+                    matchSlashIndex += 2; // increment by 2 for //
+                    rdfAStr.Mid(matchStr, matchSlashIndex, matchStrLen);
+                    rdfAStr.Left(matchPrefix, matchSlashIndex);
+                } else {
+                    rdfAStr.Left(matchStr, 0);
+                }
+
+                if ((matchPrefix.Length()) && (!matchPrefix.Compare(resultPrefix)) || (!matchPrefix.Length())) {
+                    index = matchStr.Find(resultStr, PR_TRUE);
+                    // printf("SearchCache Round II, searching for %s, prefix = %s\n", resultStr.ToNewCString(), resultPrefix.ToNewCString());
+                    if (match)
+                        Recycle(match);
+                    if (index == 0) {
+                        resultStr = resultPrefix + matchStr;
+                        //printf("SearchCache Round III, searching for %s\n", resultStr.ToNewCString());
+                        match = resultStr.ToNewUnicode();  
+                    }
+                    else		       
+                        match = rdfAStr.ToNewUnicode();			  
+                }
+           }
+       }
 
 	   if (index ==0) {
            // Item found. Create an AutoComplete Item 
