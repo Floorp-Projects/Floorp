@@ -29,6 +29,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsXULAtoms.h"
 #include "nsIDOMElement.h"
 #include "nsIXULPopupListener.h"
 #include "nsIDOMMouseListener.h"
@@ -385,6 +386,27 @@ XULPopupListenerImpl::LaunchPopup ( nsIDOMEvent* anEvent )
 }
 
 
+static void
+GetImmediateChild(nsIContent* aContent, nsIAtom *aTag, nsIContent** aResult) 
+{
+  *aResult = nsnull;
+  PRInt32 childCount;
+  aContent->ChildCount(childCount);
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> child;
+    aContent->ChildAt(i, *getter_AddRefs(child));
+    nsCOMPtr<nsIAtom> tag;
+    child->GetTag(*getter_AddRefs(tag));
+    if (aTag == tag.get()) {
+      *aResult = child;
+      NS_ADDREF(*aResult);
+      return;
+    }
+  }
+
+  return;
+}
+
 //
 // LaunchPopup
 //
@@ -430,12 +452,22 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
     return NS_ERROR_FAILURE;
   }
 
-  // XXX Handle the _child case for popups and context menus!
-
-  // Use getElementById to obtain the popup content and gracefully fail if 
-  // we didn't find any popup content in the document. 
+  // Handle the _child case for popups and context menus
   nsCOMPtr<nsIDOMElement> popupContent;
-  if (NS_FAILED(rv = xulDocument->GetElementById(identifier, getter_AddRefs(popupContent)))) {
+
+  if (identifier.EqualsWithConversion("_child")) {
+    nsCOMPtr<nsIContent> popupset;
+    GetImmediateChild(content, nsXULAtoms::popupset, getter_AddRefs(popupset));
+    if (popupset) {
+      nsCOMPtr<nsIContent> popup;
+      GetImmediateChild(popupset, nsXULAtoms::popup, getter_AddRefs(popup));
+      if (popup)
+        popupContent = do_QueryInterface(popup);
+    }
+  }
+  else if (NS_FAILED(rv = xulDocument->GetElementById(identifier, getter_AddRefs(popupContent)))) {
+    // Use getElementById to obtain the popup content and gracefully fail if 
+    // we didn't find any popup content in the document. 
     NS_ERROR("GetElementById had some kind of spasm.");
     return rv;
   }
