@@ -89,6 +89,10 @@ net_GetURLSpecFromFile(nsIFile *aFile, nsACString &aURL)
     // need encoding; use %2F which is a forward slash
     escPath.ReplaceSubstring(":", "%2F");
 
+    // esc_Directory does not escape the semicolons, so if a filename 
+    // contains semicolons we need to manually escape them.
+    escPath.ReplaceSubstring(";", "%3b");
+
     escPath.Insert(prefix, 0);
 
     // XXX this should be unnecessary

@@ -78,6 +78,10 @@ net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
     else
         escPath.Assign(prefix + ePath);
 
+    // esc_Directory does not escape the semicolons, so if a filename 
+    // contains semicolons we need to manually escape them.
+    escPath.ReplaceSubstring(";", "%3b");
+
     // XXX this should be unnecessary
     if (escPath[escPath.Length() - 1] != '/') {
         PRBool dir;
