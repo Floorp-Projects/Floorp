@@ -2952,24 +2952,20 @@ NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, P
 
   if (CompareZIndex(oldidx, oldTopMost, oldIsAuto,
                     aZIndex, aTopMost, aAutoZIndex) != 0) {
-    if (IsViewInserted(view)) {
-      nsView *parent = view->GetParent();
-      if (nsnull != parent) {
-        //we don't just call the view manager's RemoveChild()
-        //so that we can avoid two trips trough the UpdateView()
-        //code (one for removal, one for insertion). MMP
-        parent->RemoveChild(view);
-        UpdateTransCnt(view, nsnull);
-        rv = InsertChild(parent, view, aZIndex);
-      }
-      // XXX The following else block is a workaround and should be cleaned up (bug 43410)
-    }
-  } else {
-    nsCOMPtr<nsIWidget> widget;
-    view->GetWidget(*getter_AddRefs(widget));
-    if (widget) {
-      widget->SetZIndex(aZIndex);
-    }
+    UpdateView(view, NS_VMREFRESH_NO_SYNC);
+  }
+
+  // Native widgets ultimately just can't deal with the awesome power
+  // of CSS2 z-index. However, we set the z-index on the widget anyway
+  // because in many simple common cases the widgets do end up in the
+  // right order. Even if they don't, we'll still render correctly as
+  // long as there are no plugins around (although there may be more
+  // flickering and other perf issues than if the widgets were in a
+  // good order).
+  nsCOMPtr<nsIWidget> widget;
+  view->GetWidget(*getter_AddRefs(widget));
+  if (widget) {
+    widget->SetZIndex(aZIndex);
   }
 
   nsZPlaceholderView* zParentView = view->GetZParent();
