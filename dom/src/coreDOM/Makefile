@@ -19,16 +19,21 @@ DEPTH=../../..
 
 LIBRARY_NAME = jsdomcore_s
 
-CPPSRCS =			\
-	nsJSNode.cpp		\
-	nsJSData.cpp		\
-	nsJSDocument.cpp	\
-	nsJSDocumentFragment.cpp\
-	nsJSElement.cpp		\
-	nsJSNamedNodeMap.cpp	\
-	nsJSNodeList.cpp	\
-	nsJSText.cpp		\
-	nsJSAttribute.cpp	\
+CPPSRCS =				\
+	nsJSAttribute.cpp		\
+	nsJSCDATASection.cpp		\
+	nsJSComment.cpp			\
+	nsJSDOM.cpp			\
+	nsJSData.cpp			\
+	nsJSDocument.cpp		\
+	nsJSDocumentFragment.cpp	\
+	nsJSDocumentType.cpp		\
+	nsJSElement.cpp			\
+	nsJSNamedNodeMap.cpp		\
+	nsJSNode.cpp			\
+	nsJSNodeList.cpp		\
+	nsJSProcessingInstruction.cpp	\
+	nsJSText.cpp			\
 	$(NULL)
 
 DEFINES = -D_IMPL_NS_DOM
