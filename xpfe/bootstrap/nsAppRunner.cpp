@@ -44,7 +44,7 @@ static int TranslateReturnValue(nsresult aResult)
 }
 
 
-extern "C" void NS_SetupRegistry();
+extern "C" void NS_SetupRegistry_1();
 
 
 
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
    * - ServiceManager
    */
   // XXX: This call will be replaced by a registry initialization...
-  NS_SetupRegistry();
+  NS_SetupRegistry_1();
 #ifdef XP_PC
   PL_InitializeEventsLib("");
 #endif
