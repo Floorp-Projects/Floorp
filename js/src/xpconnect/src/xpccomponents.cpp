@@ -908,12 +908,30 @@ private:
                    nsIXPConnectWrappedNative *wrapper,
                    nsIXPCScriptable *arbitrary);
 
+    JSBool NeedToFillCache(JSObject* obj) const {return obj != mObj;}
+
 private:
-    JSBool mCacheFilled;
+    //
+    // This code used to just use a JSBool to track whether or not we had 
+    // already added the properties to the JSObject. The problem with that
+    // scheme is that we are storing the flag here in this C++ object, but the
+    // properties get added to the JSObject of the wrapper around this object.
+    // Usually this worked fine. But in the cases where the wrapper was 
+    // garbage collected and a new wrapper created in its place our flag would
+    // indicate that we'd added the properties, but those properties had been
+    // added to the JSObject of the *old* wrapper but the new wrapper's JSObject
+    // would not have the properties at all.
+    //
+    // So instead, we flag the addition of the properties by storing the 
+    // JSObject* on which we added the properties. If mObj equals the
+    // current object then we know we've added the properties. Otherwise we
+    // know we still need to add them.
+    // 
+    JSObject* mObj;
 };
 
 nsXPCComponents_Results::nsXPCComponents_Results()
-    :   mCacheFilled(JS_FALSE)
+    :   mObj(nsnull)
 {
     NS_INIT_ISUPPORTS();
 }
@@ -950,7 +968,8 @@ nsXPCComponents_Results::FillCache(JSContext *cx, JSObject *obj,
         }
     }
 
-    mCacheFilled = JS_TRUE;
+    // Indicate that we've added the properties to the current object.
+    mObj = obj;
     return;
 }
 
@@ -992,7 +1011,7 @@ nsXPCComponents_Results::LookupProperty(JSContext *cx, JSObject *obj,
                              nsIXPCScriptable* arbitrary,
                              JSBool* retval)
 {
-    if(!mCacheFilled)
+    if(NeedToFillCache(obj))
         FillCache(cx, obj, wrapper, arbitrary);
     return arbitrary->LookupProperty(cx, obj, id, objp, propp, wrapper,
                                      nsnull, retval);
@@ -1005,7 +1024,7 @@ nsXPCComponents_Results::GetProperty(JSContext *cx, JSObject *obj,
                           nsIXPCScriptable* arbitrary,
                           JSBool* retval)
 {
-    if(!mCacheFilled)
+    if(NeedToFillCache(obj))
         FillCache(cx, obj, wrapper, arbitrary);
     return arbitrary->GetProperty(cx, obj, id, vp, wrapper, nsnull, retval);
 }
@@ -1019,7 +1038,7 @@ nsXPCComponents_Results::Enumerate(JSContext *cx, JSObject *obj,
                         nsIXPCScriptable *arbitrary,
                         JSBool *retval)
 {
-    if(enum_op == JSENUMERATE_INIT && !mCacheFilled)
+    if(enum_op == JSENUMERATE_INIT && NeedToFillCache(obj))
         FillCache(cx, obj, wrapper, arbitrary);
 
     return arbitrary->Enumerate(cx, obj, enum_op, statep, idp, wrapper,
