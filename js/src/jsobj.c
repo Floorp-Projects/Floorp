@@ -134,6 +134,8 @@ static JSPropertySpec object_props[] = {
 static JSBool
 ReportStrictSlot(JSContext *cx, uint32 slot)
 {
+    if (slot == JSSLOT_PROTO)
+        return JS_TRUE;
     return JS_ReportErrorFlagsAndNumber(cx,
                                         JSREPORT_WARNING | JSREPORT_STRICT,
                                         js_GetErrorMessage, NULL,
