@@ -3361,6 +3361,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 JS_ASSERT(JSVAL_IS_INT(rval));
                 op = (JSOp) JSVAL_TO_INT(rval);
                 JS_ASSERT((uintN)op < (uintN)JSOP_LIMIT);
+                LOAD_INTERRUPT_HANDLER(rt);
                 goto do_op;
               case JSTRAP_RETURN:
                 fp->rval = rval;
