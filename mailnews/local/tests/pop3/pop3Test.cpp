@@ -47,6 +47,7 @@
 #include "nsIMsgIdentity.h"
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIncomingServer.h"
+#include "nsIPop3IncomingServer.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
@@ -340,22 +341,30 @@ nsresult nsPop3TestDriver::OnIdentityCheck()
 
 	return result;
 }
+
 nsresult nsPop3TestDriver::OnCheck()
 {
-
 	nsresult rv = NS_OK;
 
-	nsIPop3Service * pop3Service = nsnull;
-	nsServiceManager::GetService(kPop3ServiceCID, nsIPop3Service::GetIID(),
-                                 (nsISupports **)&pop3Service); // XXX probably need shutdown listener here
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    nsIMsgIncomingServer *server;
+    rv = mailSession->GetCurrentServer(&server);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIPop3IncomingServer *popServer;
+    rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
+                                (void **)&popServer);
+
+	NS_WITH_SERVICE(nsIPop3Service, pop3Service, kPop3ServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
 	if (pop3Service)
 	{
-		pop3Service->CheckForNewMail(this, nsnull);
+		pop3Service->CheckForNewMail(this, popServer, nsnull);
 		m_runningURL = PR_TRUE;
 	}
-
-	nsServiceManager::ReleaseService(kPop3ServiceCID, pop3Service);
 
 	return rv;
 }
@@ -423,21 +432,25 @@ nsresult nsPop3TestDriver::OnUidl()
 nsresult nsPop3TestDriver::OnGet()
 {
 	nsresult rv = NS_OK;
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-	m_urlString[0] = '\0';
-	PL_strcpy(m_urlString, m_urlSpec);
+	NS_WITH_SERVICE(nsIPop3Service, pop3Service, kPop3ServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    nsIMsgIncomingServer *server;
+    rv = mailSession->GetCurrentServer(&server);
+    if (NS_FAILED(rv)) return rv;
 
-	nsIPop3Service * pop3Service = nsnull;
-	nsServiceManager::GetService(kPop3ServiceCID, nsIPop3Service::GetIID(),
-                                 (nsISupports **)&pop3Service); // XXX probably need shutdown listener here
+    nsIPop3IncomingServer *popServer;
+    rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
+                                (void **)&popServer);
 
 	if (pop3Service)
 	{
-		pop3Service->GetNewMail(this, nsnull);
+		pop3Service->GetNewMail(this, popServer, nsnull);
 		m_runningURL = PR_TRUE;
 	}
-
-	nsServiceManager::ReleaseService(kPop3ServiceCID, pop3Service);
 	return rv;
 }
 
