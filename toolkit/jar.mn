@@ -39,6 +39,7 @@ toolkit.jar:
          content/global/widgets/tree.xml                    (content/widgets/tree.xml)
          content/global/widgets/wizard.xml                  (content/widgets/wizard.xml)
 *+       content/global/nsDragAndDrop.js                    (content/nsDragAndDrop.js)
+         
 en-US.jar:
 +        locale/en-US/global/charset.dtd                    (locale/charset.dtd)
 +        locale/en-US/global/finddialog.dtd                 (locale/finddialog.dtd)

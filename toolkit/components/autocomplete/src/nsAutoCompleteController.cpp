@@ -191,6 +191,12 @@ nsAutoCompleteController::HandleText()
   } else
     mBackspaced = PR_FALSE;
 
+  if (mRowCount == 0)
+    // XXX Handle the case where we have no results because of an ignored prefix. 
+    // This is just a hack. I have no idea what I'm doing. Hewitt, fix this the right
+    // way when you get a chance. -dwh
+    ClearResults();
+
   mSearchString = newValue;
 
   // Don't search if the value is empty
