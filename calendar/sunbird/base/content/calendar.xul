@@ -531,11 +531,17 @@
   <toolbarset id="customToolbars" context="toolbar-context-menu"/>
 </toolbox>
 
-<tooltip id="eventTreeListTooltip" onpopupshowing="changeToolTipTextForEvent( event );return( checkTooltip( event ) );"/>
+<!-- tooltips to show cropped text behave as a titletip: don't hide until mouse moved away -->
+<tooltip id="eventTreeListTooltip"
+         onpopupshowing="changeToolTipTextForEvent( event );return( checkTooltip( event ) );"
+         noautohide="true"/>
 
-<tooltip id="eventTooltip"/>
+<tooltip id="eventTooltip"
+         noautohide="true"/>
 
-<tooltip id="taskTooltip" onpopupshowing="changeToolTipTextForToDo( event );return( checkTooltip( event ) );"/>
+<tooltip id="taskTooltip"
+         onpopupshowing="changeToolTipTextForToDo( event );return( checkTooltip( event ) );"
+         noautohide="true"/>
 
 <!-- V I S I B L E  C O N T E N T  -->
 
