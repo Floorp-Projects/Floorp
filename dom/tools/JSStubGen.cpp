@@ -1341,18 +1341,7 @@ static const char *kConstructorStr =
 "PR_STATIC_CALLBACK(JSBool)\n"
 "%s(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)\n"
 "{\n"
-"  nsIDOM%s *a = (nsIDOM%s*)JS_GetPrivate(cx, obj);\n"
-"  PRBool result = PR_TRUE;\n"
-"  \n"
-"  if (nsnull != a) {\n"
-"    // get the js object\n"
-"    nsIJSScriptObject *object;\n"
-"    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {\n"
-"      result = object->Construct(cx, obj, argc, argv, rval);\n"
-"      NS_RELEASE(object);\n"
-"    }\n"
-"  }\n"
-"  return (result == PR_TRUE) ? JS_TRUE : JS_FALSE;\n"
+"  return JS_TRUE;\n"
 "}\n";
 
 void     

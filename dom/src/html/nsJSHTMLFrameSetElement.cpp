@@ -287,18 +287,7 @@ static JSFunctionSpec HTMLFrameSetElementMethods[] =
 PR_STATIC_CALLBACK(JSBool)
 HTMLFrameSetElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLFrameSetElement *a = (nsIDOMHTMLFrameSetElement*)JS_GetPrivate(cx, obj);
-  PRBool result = PR_TRUE;
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      result = object->Construct(cx, obj, argc, argv, rval);
-      NS_RELEASE(object);
-    }
-  }
-  return (result == PR_TRUE) ? JS_TRUE : JS_FALSE;
+  return JS_TRUE;
 }
 
 

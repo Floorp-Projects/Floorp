@@ -1332,13 +1332,6 @@ GlobalWindowImpl::Finalize(JSContext *aContext)
 {
 }
 
-PRBool
-GlobalWindowImpl::Construct(JSContext *cx, JSObject *obj,  uintN argc,
-                            jsval *argv, jsval *rval)
-{
-  return PR_FALSE;
-}
-
 nsresult 
 GlobalWindowImpl::GetListenerManager(nsIEventListenerManager **aInstancePtrResult)
 {
