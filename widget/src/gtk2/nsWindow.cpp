@@ -215,6 +215,7 @@ static void IM_preedit_changed_cb     (GtkIMContext *aContext,
                                        nsWindow *aWindow);
 static void IM_set_text_range         (const PRInt32 aLen,
                                        const gchar *aPreeditString,
+                                       const gint aCursorPos,
                                        const PangoAttrList *aFeedback,
                                        PRUint32 *aTextRangeListLengthResult,
                                        nsTextRangeArray *aTextRangeListResult);
@@ -4247,12 +4248,28 @@ nsWindow::IMEComposeStart(void)
 
     nsEventStatus status;
     DispatchEvent(&compEvent, status);
+
+    gint x1, y1, x2, y2;
+    GtkWidget *widget =
+        get_gtk_widget_for_gdk_window(this->mDrawingarea->inner_window);
+
+    gdk_window_get_origin(widget->window, &x1, &y1);
+    gdk_window_get_origin(this->mDrawingarea->inner_window, &x2, &y2);
+
+    GdkRectangle area;
+    area.x = compEvent.theReply.mCursorPosition.x + (x2 - x1);
+    area.y = compEvent.theReply.mCursorPosition.y + (y2 - y1);
+    area.width  = 0;
+    area.height = compEvent.theReply.mCursorPosition.height;
+
+    gtk_im_context_set_cursor_location(IMEGetContext(), &area);
 }
 
 void
 nsWindow::IMEComposeText (const PRUnichar *aText,
                           const PRInt32 aLen,
                           const gchar *aPreeditString,
+                          const gint aCursorPos,
                           const PangoAttrList *aFeedback)
 {
     // Send our start composition event if we need to
@@ -4266,7 +4283,7 @@ nsWindow::IMEComposeText (const PRUnichar *aText,
         textEvent.theText = (PRUnichar*)aText;
 
         if (aPreeditString && aFeedback && (aLen > 0)) {
-            IM_set_text_range(aLen, aPreeditString, aFeedback,
+            IM_set_text_range(aLen, aPreeditString, aCursorPos, aFeedback,
                               &(textEvent.rangeCount),
                               &(textEvent.rangeArray));
         }
@@ -4278,6 +4295,21 @@ nsWindow::IMEComposeText (const PRUnichar *aText,
     if (textEvent.rangeArray) {
         delete[] textEvent.rangeArray;
     }
+
+    gint x1, y1, x2, y2;
+    GtkWidget *widget =
+        get_gtk_widget_for_gdk_window(this->mDrawingarea->inner_window);
+
+    gdk_window_get_origin(widget->window, &x1, &y1);
+    gdk_window_get_origin(this->mDrawingarea->inner_window, &x2, &y2);
+
+    GdkRectangle area;
+    area.x = textEvent.theReply.mCursorPosition.x + (x2 - x1);
+    area.y = textEvent.theReply.mCursorPosition.y + (y2 - y1);
+    area.width  = 0;
+    area.height = textEvent.theReply.mCursorPosition.height;
+
+    gtk_im_context_set_cursor_location(IMEGetContext(), &area);
 }
 
 void
@@ -4368,6 +4400,7 @@ IM_preedit_changed_cb(GtkIMContext *aContext,
         return;
 
     // Should use cursor_pos ?
+    // Of course!!!
     gtk_im_context_get_preedit_string(aContext, &preedit_string,
                                       &feedback_list, &cursor_pos);
 
@@ -4376,7 +4409,7 @@ IM_preedit_changed_cb(GtkIMContext *aContext,
 
     if (!preedit_string || !*preedit_string) {
         LOGIM(("preedit ended\n"));
-        window->IMEComposeText(NULL, 0, NULL, NULL);
+        window->IMEComposeText(NULL, 0, NULL, 0, NULL);
         window->IMEComposeEnd();
         return;
     }
@@ -4400,7 +4433,7 @@ IM_preedit_changed_cb(GtkIMContext *aContext,
 
     if (uniStrLen) {
         window->IMEComposeText(NS_STATIC_CAST(const PRUnichar *, uniStr),
-                               uniStrLen, preedit_string, feedback_list);
+                               uniStrLen, preedit_string, cursor_pos, feedback_list);
     }
 
     g_free(preedit_string);
@@ -4461,7 +4494,7 @@ IM_commit_cb (GtkIMContext *aContext,
 
     if (uniStrLen) {
         window->IMEComposeText((const PRUnichar *)uniStr,
-                               (PRInt32)uniStrLen, NULL, NULL);
+                               (PRInt32)uniStrLen, NULL, 0, NULL);
         window->IMEComposeEnd();
     }
 
@@ -4480,6 +4513,7 @@ IM_commit_cb (GtkIMContext *aContext,
 void
 IM_set_text_range(const PRInt32 aLen,
                   const gchar *aPreeditString,
+                  const gint aCursorPos,
                   const PangoAttrList *aFeedback,
                   PRUint32 *aTextRangeListLengthResult,
                   nsTextRangeArray *aTextRangeListResult)
@@ -4509,8 +4543,8 @@ IM_set_text_range(const PRInt32 aLen,
 
     // Set caret's postion
     SET_FEEDBACKTYPE(0, NS_TEXTRANGE_CARETPOSITION);
-    START_OFFSET(0) = aLen;
-    END_OFFSET(0) = aLen;
+    START_OFFSET(0) = aCursorPos;
+    END_OFFSET(0) = aCursorPos;
 
     int count = 0;
     PangoAttribute * aPangoAttr;
