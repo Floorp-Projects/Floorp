@@ -30,6 +30,9 @@ nsAWritableString.h
 nsBufferHandle.h
 nsBufferHandleUtils.h
 nsCharTraits.h
+nsDependentConcatenation.h
+nsDependentString.h
+nsDependentSubstring.h
 nsFragmentedString.h
 nsLiteralString.h
 nsLocalString.h
