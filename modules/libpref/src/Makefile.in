@@ -50,6 +50,7 @@ CPPSRCS		= nsPref.cpp \
 			  nsPrefBranch.cpp	\
 			  nsPrefService.cpp	\
 			  nsPrefsFactory.cpp	\
+			  nsSafeSaveFile.cpp	\
 			  prefapi.cpp \
 			 $(NULL)
 
