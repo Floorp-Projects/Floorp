@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  * Igor Bukanov
  * Roger Lawrence
@@ -88,12 +88,12 @@ public class NativeFunction extends BaseFunction {
     public String decompile(Context cx, int indent, boolean justbody) {
         StringBuffer result = new StringBuffer();
         decompile(indent, true, justbody, result);
-        return result.toString(); 
-        
+        return result.toString();
+
     }
-    
+
     private void decompile(int indent, boolean toplevel, boolean justbody,
-                           StringBuffer result) 
+                           StringBuffer result)
     {
         if (source == null) {
             if (!justbody) {
@@ -174,7 +174,7 @@ public class NativeFunction extends BaseFunction {
                      */
                     if (nextIs(i, TokenStream.LP)
                         && this.version != Context.VERSION_1_2
-                        && this.functionName != null 
+                        && this.functionName != null
                         && this.functionName.equals("anonymous"))
                         result.append("anonymous");
                     i++;
@@ -304,11 +304,11 @@ public class NativeFunction extends BaseFunction {
                     String message;
                     if (functionName != null && functionName.length() > 0) {
                         message = Context.getMessage2
-                            ("msg.no.function.ref.found.in", 
+                            ("msg.no.function.ref.found.in",
                              new Integer((int)source.charAt(i)), functionName);
                     } else {
                         message = Context.getMessage1
-                            ("msg.no.function.ref.found", 
+                            ("msg.no.function.ref.found",
                              new Integer((int)source.charAt(i)));
                     }
                     throw Context.reportRuntimeError(message);
@@ -720,9 +720,9 @@ public class NativeFunction extends BaseFunction {
                 result.append(" % ");
                 break;
 
-            default: 
+            default:
                 // If we don't know how to decompile it, raise an exception.
-                throw new RuntimeException("Unknown token " + 
+                throw new RuntimeException("Unknown token " +
                                            source.charAt(i));
             }
             i++;

@@ -44,8 +44,8 @@ public class FileBody {
         ReplaceItem next;
         int begin;
         int end;
-        String replacement; 
-        
+        String replacement;
+
         ReplaceItem(int begin, int end, String text) {
             this.begin = begin;
             this.end = end;
@@ -58,15 +58,15 @@ public class FileBody {
     private int lineBegin;
     private int lineEnd;
     private int nextLineStart;
-    
+
     private int lineNumber;
-    
+
     ReplaceItem firstReplace;
     ReplaceItem lastReplace;
 
 
     public char[] getBuffer() { return buffer; }
-    
+
     public void readData(Reader r) throws IOException {
         int capacity = buffer.length;
         int offset = 0;
@@ -83,11 +83,11 @@ public class FileBody {
         }
         bufferEnd = offset;
     }
-    
+
     public void writeInitialData(Writer w) throws IOException {
         w.write(buffer, 0, bufferEnd);
     }
-    
+
     public void writeData(Writer w) throws IOException {
         int offset = 0;
         for (ReplaceItem x = firstReplace; x != null; x = x.next) {
@@ -103,9 +103,9 @@ public class FileBody {
             w.write(buffer, offset, tail);
         }
     }
-    
+
     public boolean wasModified() { return firstReplace != null; }
-    
+
     public boolean setReplacement(int begin, int end, String text) {
         if (equals(text, buffer, begin, end)) { return false; }
 
@@ -133,10 +133,10 @@ public class FileBody {
                 lastReplace.next = item;
             }
         }
-        
+
         return true;
     }
-    
+
     public int getLineNumber() { return lineNumber; }
 
     public int getLineBegin() { return lineBegin; }
@@ -147,10 +147,10 @@ public class FileBody {
         lineNumber = 0;
         lineBegin = lineEnd = nextLineStart = 0;
     }
-    
+
     public boolean nextLine() {
-        if (nextLineStart == bufferEnd) { 
-            lineNumber = 0; return false; 
+        if (nextLineStart == bufferEnd) {
+            lineNumber = 0; return false;
         }
         int i; int c = 0;
         for (i = nextLineStart; i != bufferEnd; ++i) {
@@ -171,7 +171,7 @@ public class FileBody {
         ++lineNumber;
         return true;
     }
-    
+
     private static boolean equals(String str, char[] array, int begin, int end)
     {
         if (str.length() == end - begin) {

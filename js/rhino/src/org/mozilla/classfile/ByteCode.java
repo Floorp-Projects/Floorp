@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Roger Lawrence
  *
  * Alternatively, the contents of this file may be used under the
@@ -37,9 +37,9 @@ package org.mozilla.classfile;
 
 /**
  * This class provides opcode values expected by the JVM in Java class files.
- * 
+ *
  * It also provides tables for internal use by the ClassFileWriter.
- * 
+ *
  * @author Roger Lawrence
  */
 public class ByteCode {
@@ -279,9 +279,9 @@ public class ByteCode {
         PUTFIELD_QUICK_W = (byte)0xE4,
         IMPDEP1 = (byte)0xFE,
         IMPDEP2 = (byte)0xFF;
-    
-    
-        /** 
+
+
+        /**
          * Types for the NEWARRAY opcode.
          */
         public static final byte
@@ -297,7 +297,7 @@ public class ByteCode {
         /**
          *  Number of bytes of operands generated after the opcode.
          */
-        static final byte[] extra = {   
+        static final byte[] extra = {
         /* NOP */ 0,
         /* ACONST_NULL */ 0,
         /* ICONST_M1 */ 0,
@@ -559,7 +559,7 @@ public class ByteCode {
         /**
          * Number of operands accompanying the opcode.
          */
-        static final byte[] opcodeCount = {   
+        static final byte[] opcodeCount = {
         /* NOP */ 0,
         /* ACONST_NULL */ 0,
         /* ICONST_M1 */ 0,
@@ -821,7 +821,7 @@ public class ByteCode {
         /**
          *  The effect on the operand stack of a given opcode.
          */
-        static final byte[] stackChange = {    
+        static final byte[] stackChange = {
         /* NOP */ 0,
         /* ACONST_NULL */ 1,
         /* ICONST_M1 */ 1,

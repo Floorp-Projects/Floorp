@@ -137,8 +137,8 @@ DocumentListener {
         setLineWrap(true);
         setFont(new Font("Monospaced", 0, 12));
     }
-    
-    
+
+
     synchronized void returnPressed() {
         Document doc = getDocument();
         int len = doc.getLength();
@@ -159,14 +159,14 @@ DocumentListener {
         inPipe.flush();
         console1.flush();
     }
-    
+
     public void eval(String str) {
         inPipe.write(str);
         inPipe.write("\n");
         inPipe.flush();
         console1.flush();
     }
-    
+
     public void keyPressed(KeyEvent e) {
         int code = e.getKeyCode();
         if(code == KeyEvent.VK_BACK_SPACE || code == KeyEvent.VK_LEFT) {
@@ -228,7 +228,7 @@ DocumentListener {
             e.consume();
         }
     }
- 
+
     public void keyTyped(KeyEvent e) {
         int keyChar = e.getKeyChar();
         if(keyChar == 0x8 /* KeyEvent.VK_BACK_SPACE */) {
@@ -239,7 +239,7 @@ DocumentListener {
             setCaretPosition(outputMark);
         }
     }
-    
+
     public synchronized void keyReleased(KeyEvent e) {
     }
 
@@ -249,7 +249,7 @@ DocumentListener {
         outputMark += len;
         select(outputMark, outputMark);
     }
-    
+
     public synchronized void insertUpdate(DocumentEvent e) {
         int len = e.getLength();
         int off = e.getOffset();
@@ -257,7 +257,7 @@ DocumentListener {
             outputMark += len;
         }
     }
-    
+
     public synchronized void removeUpdate(DocumentEvent e) {
         int len = e.getLength();
         int off = e.getOffset();
@@ -276,21 +276,21 @@ DocumentListener {
         setCaret(getCaret());
         select(outputMark, outputMark);
     }
-    
+
     public synchronized void changedUpdate(DocumentEvent e) {
     }
-    
-    
+
+
     public InputStream getIn() {
         return in;
     }
-    
+
     public PrintStream getOut() {
         return out;
     }
-    
+
     public PrintStream getErr() {
         return err;
     }
-    
+
 };

@@ -39,9 +39,9 @@ import java.io.*;
 import org.mozilla.javascript.*;
 
 /**
- * Class ScriptableInputStream is used to read in a JavaScript 
+ * Class ScriptableInputStream is used to read in a JavaScript
  * object or function previously serialized with a ScriptableOutputStream.
- * References to names in the exclusion list 
+ * References to names in the exclusion list
  * replaced with references to the top-level scope specified during
  * creation of the ScriptableInputStream.
  *
@@ -51,11 +51,11 @@ import org.mozilla.javascript.*;
 public class ScriptableInputStream extends ObjectInputStream {
 
     /**
-     * Create a ScriptableInputStream. 
+     * Create a ScriptableInputStream.
      * @param in the InputStream to read from.
      * @param scope the top-level scope to create the object in.
      */
-    public ScriptableInputStream(InputStream in, Scriptable scope) 
+    public ScriptableInputStream(InputStream in, Scriptable scope)
         throws IOException
     {
         super(in);
@@ -63,7 +63,7 @@ public class ScriptableInputStream extends ObjectInputStream {
         enableResolveObject(true);
     }
 
-    protected Object resolveObject(Object obj) 
+    protected Object resolveObject(Object obj)
         throws IOException
     {
         if (obj instanceof ScriptableOutputStream.PendingLookup) {

@@ -18,13 +18,13 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  * Frank Mitchell
  * Mike Shaver
  * Kurt Westerfeld
  * Kemal Bayram
- * 
+ *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
  * provisions of the GPL are applicable instead of those above.
@@ -63,18 +63,18 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
 
     public NativeJavaClass(Scriptable scope, Class cl) {
         super(scope, cl, JavaMembers.lookupClass(scope, cl, cl));
-        fieldAndMethods = members.getFieldAndMethodsObjects(this, javaObject, 
+        fieldAndMethods = members.getFieldAndMethodsObjects(this, javaObject,
                                                             true);
     }
 
     public String getClassName() {
         return "JavaClass";
     }
-    
+
     public boolean has(String name, Scriptable start) {
         return members.has(name, true);
     }
-        
+
     public Object get(String name, Scriptable start) {
         // When used as a constructor, ScriptRuntime.newObject() asks
         // for our prototype to create an object of the correct type.
@@ -83,15 +83,15 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
 
         if (name.equals("prototype"))
             return null;
-        
+
         Object result = Scriptable.NOT_FOUND;
-        
+
         if (fieldAndMethods != null) {
             result = fieldAndMethods.get(name);
             if (result != null)
                 return result;
         }
-        
+
         if (members.has(name, true)) {
             result = members.get(this, name, javaObject, true);
         } else {
@@ -108,7 +108,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
                 throw members.reportMemberNotFound(name);
             }
         }
-                
+
         return result;
     }
 
@@ -119,8 +119,8 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
     public Object[] getIds() {
         return members.getIds(true);
     }
-    
-    public Class getClassObject() { 
+
+    public Class getClassObject() {
         return (Class) super.unwrap();
     }
 
@@ -144,7 +144,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
         throws JavaScriptException
     {
         // If it looks like a "cast" of an object to this class type,
-        // walk the prototype chain to see if there's a wrapper of a 
+        // walk the prototype chain to see if there's a wrapper of a
         // object that's an instanceof this class.
         if (args.length == 1 && args[0] instanceof Scriptable) {
             Class c = getClassObject();
@@ -166,8 +166,8 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
     {
         Class classObject = getClassObject();
         int modifiers = classObject.getModifiers();
-        if (! (Modifier.isInterface(modifiers) || 
-               Modifier.isAbstract(modifiers))) 
+        if (! (Modifier.isInterface(modifiers) ||
+               Modifier.isAbstract(modifiers)))
         {
                 Constructor[] ctors = members.getConstructors();
                 Member member = NativeJavaMethod.findFunction(ctors, args);
@@ -179,20 +179,20 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
                 }
 
                 // Found the constructor, so try invoking it.
-                return NativeJavaClass.constructSpecific(cx, scope, 
+                return NativeJavaClass.constructSpecific(cx, scope,
                                                          this, ctor, args);
         } else {
                 Scriptable topLevel = ScriptableObject.getTopLevelScope(this);
                 String msg = "";
                 try {
-                    // trying to construct an interface; use JavaAdapter to 
-                    // construct a new class on the fly that implements this 
+                    // trying to construct an interface; use JavaAdapter to
+                    // construct a new class on the fly that implements this
                     // interface.
                     Object v = topLevel.get("JavaAdapter", topLevel);
                     if (v != NOT_FOUND) {
                         Function f = (Function) v;
                         Object[] adapterArgs = { this, args[0] };
-                        return (Scriptable) f.construct(cx, topLevel, 
+                        return (Scriptable) f.construct(cx, topLevel,
                                                         adapterArgs);
                     }
                 } catch (Exception ex) {
@@ -206,9 +206,9 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
         }
     }
 
-    public static Scriptable constructSpecific(Context cx, 
-                                               Scriptable scope, 
-                                               Scriptable thisObj, 
+    public static Scriptable constructSpecific(Context cx,
+                                               Scriptable scope,
+                                               Scriptable thisObj,
                                                Constructor ctor,
                                                Object[] args)
         throws JavaScriptException
@@ -222,15 +222,15 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
         }
         try {
             // we need to force this to be wrapped, because construct _has_
-            // to return a scriptable 
-            return 
-                (Scriptable) NativeJavaObject.wrap(topLevel, 
+            // to return a scriptable
+            return
+                (Scriptable) NativeJavaObject.wrap(topLevel,
                                                    ctor.newInstance(args),
                                                    classObject);
 
         } catch (InstantiationException instEx) {
             throw Context.reportRuntimeError2(
-                "msg.cant.instantiate", 
+                "msg.cant.instantiate",
                 instEx.getMessage(), classObject.getName());
         } catch (IllegalArgumentException argEx) {
             String signature = NativeJavaMethod.scriptSignature(args);
@@ -252,14 +252,14 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
     /**
      * Determines if prototype is a wrapped Java object and performs
      * a Java "instanceof".
-     * Exception: if value is an instance of NativeJavaClass, it isn't 
-     * considered an instance of the Java class; this forestalls any 
-     * name conflicts between java.lang.Class's methods and the 
+     * Exception: if value is an instance of NativeJavaClass, it isn't
+     * considered an instance of the Java class; this forestalls any
+     * name conflicts between java.lang.Class's methods and the
      * static methods exposed by a JavaNativeClass.
      */
     public boolean hasInstance(Scriptable value) {
 
-        if (value instanceof Wrapper && 
+        if (value instanceof Wrapper &&
             !(value instanceof NativeJavaClass)) {
             Object instance = ((Wrapper)value).unwrap();
 
@@ -274,18 +274,18 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
 
     // beard: need a scope for finding top-level prototypes.
     private Scriptable parent;
-    
-    public void writeExternal(ObjectOutput out) throws IOException {    
+
+    public void writeExternal(ObjectOutput out) throws IOException {
         super.writeExternal(out);
         out.writeObject(parent);
     }
-    
-    public void readExternal(ObjectInput in) 
-        throws IOException, ClassNotFoundException 
+
+    public void readExternal(ObjectInput in)
+        throws IOException, ClassNotFoundException
     {
         super.readExternal(in);
         parent = (Scriptable)in.readObject();
-        fieldAndMethods = members.getFieldAndMethodsObjects(this, javaObject, 
+        fieldAndMethods = members.getFieldAndMethodsObjects(this, javaObject,
                                                             true);
-    }    
+    }
 }

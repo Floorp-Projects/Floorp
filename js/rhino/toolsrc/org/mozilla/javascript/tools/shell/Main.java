@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Patrick Beard
  * Norris Boyd
  * Rob Ginda
@@ -69,7 +69,7 @@ public class Main {
         if (result != 0)
             System.exit(result);
     }
-    
+
     /**
      *  Execute the given arguments, but don't System.exit at the end.
      */
@@ -82,7 +82,7 @@ public class Main {
 
         args = processOptions(cx, args);
 
-        if (processStdin) 
+        if (processStdin)
             fileList.addElement(null);
 
         // define "arguments" array in the top-level object
@@ -90,7 +90,7 @@ public class Main {
         Scriptable argsObj = cx.newArray(global, args);
         global.defineProperty("arguments", argsObj,
                               ScriptableObject.DONTENUM);
-        
+
         for (int i=0; i < fileList.size(); i++) {
             processSource(cx, (String) fileList.elementAt(i));
         }
@@ -184,13 +184,13 @@ public class Main {
     public static void processSource(Context cx, String filename) {
         if (filename == null || filename.equals("-")) {
             if (filename == null) {
-                // print implementation version 
+                // print implementation version
                 getOut().println(cx.getImplementationVersion());
             }
 
             // Use the interpreter for interactive input
             cx.setOptimizationLevel(-1);
-            
+
             BufferedReader in = new BufferedReader
                 (new InputStreamReader(global.getIn()));
             int lineno = 1;
@@ -201,7 +201,7 @@ public class Main {
                     global.getErr().print("js> ");
                 global.getErr().flush();
                 String source = "";
-                    
+
                 // Collect lines of source to compile.
                 while (true) {
                     String newline;
@@ -222,7 +222,7 @@ public class Main {
                         break;
                 }
                 Reader reader = new StringReader(source);
-                Object result = evaluateReader(cx, global, reader, 
+                Object result = evaluateReader(cx, global, reader,
                                                "<stdin>", startline);
                 if (result != cx.getUndefinedValue()) {
                     try {
@@ -232,9 +232,9 @@ public class Main {
                             "msg.uncaughtJSException", ee.toString());
                         exitCode = EXITCODE_RUNTIME_ERROR;
                         if (ee.getSourceName() != null) {
-                            Context.reportError(msg, ee.getSourceName(), 
-                                                ee.getLineNumber(), 
-                                                ee.getLineSource(), 
+                            Context.reportError(msg, ee.getSourceName(),
+                                                ee.getLineNumber(),
+                                                ee.getLineSource(),
                                                 ee.getColumnNumber());
                         } else {
                             Context.reportError(msg);
@@ -248,7 +248,7 @@ public class Main {
         } else processFile(cx, global, filename);
         System.gc();
     }
-    
+
     public static void processFile(Context cx, Scriptable scope,
                                    String filename)
     {
@@ -302,15 +302,15 @@ public class Main {
             } catch (IOException ioe) {
                 global.getErr().println(ioe.toString());
             }
-        }            
+        }
         // Here we evalute the entire contents of the file as
         // a script. Text is printed only if the print() function
         // is called.
         evaluateReader(cx, scope, in, filename, 1);
     }
 
-    public static Object evaluateReader(Context cx, Scriptable scope, 
-                                        Reader in, String sourceName, 
+    public static Object evaluateReader(Context cx, Scriptable scope,
+                                        Reader in, String sourceName,
                                         int lineno)
     {
         Object result = cx.getUndefinedValue();
@@ -326,9 +326,9 @@ public class Main {
                 "msg.uncaughtJSException", ee.toString());
             exitCode = EXITCODE_RUNTIME_ERROR;
             if (ee.getSourceName() != null) {
-                Context.reportError(msg, ee.getSourceName(), 
-                                    ee.getLineNumber(), 
-                                    ee.getLineSource(), 
+                Context.reportError(msg, ee.getSourceName(),
+                                    ee.getLineNumber(),
+                                    ee.getLineSource(),
                                     ee.getColumnNumber());
             } else {
                 Context.reportError(msg);
@@ -365,7 +365,7 @@ public class Main {
     private static void p(String s) {
         global.getOut().println(s);
     }
-    
+
     public static ScriptableObject getScope() {
         return global;
     }
@@ -373,7 +373,7 @@ public class Main {
     public static InputStream getIn() {
         return Global.getInstance(getGlobal()).getIn();
     }
-    
+
     public static void setIn(InputStream in) {
         Global.getInstance(getGlobal()).setIn(in);
     }
@@ -381,12 +381,12 @@ public class Main {
     public static PrintStream getOut() {
         return Global.getInstance(getGlobal()).getOut();
     }
-    
+
     public static void setOut(PrintStream out) {
         Global.getInstance(getGlobal()).setOut(out);
     }
 
-    public static PrintStream getErr() { 
+    public static PrintStream getErr() {
         return Global.getInstance(getGlobal()).getErr();
     }
 

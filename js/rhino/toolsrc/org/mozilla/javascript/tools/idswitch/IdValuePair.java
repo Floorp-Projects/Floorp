@@ -34,7 +34,7 @@
  */
 package org.mozilla.javascript.tools.idswitch;
 
-public class IdValuePair 
+public class IdValuePair
 {
     public final int idLength;
     public final String id;
@@ -52,4 +52,4 @@ public class IdValuePair
 
     public void setLineNumber(int value) { lineNumber = value; }
 }
-    
+

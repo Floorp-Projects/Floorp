@@ -18,7 +18,7 @@
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Andi Vajda
  *
  * Alternatively, the contents of this file may be used under the
@@ -45,7 +45,7 @@ import java.io.*;
  * @see Context
  * @author Andi Vajda
  */
-public interface ClassOutput {  
+public interface ClassOutput {
     /**
      * @param className the name of the class for which bytecode is ready.
      * @param isTopLevel if true, represents the top-level script being compiled

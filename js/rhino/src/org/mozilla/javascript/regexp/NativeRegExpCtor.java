@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -55,7 +55,7 @@ public class NativeRegExpCtor extends NativeFunction {
     public NativeRegExpCtor() {
         functionName = "RegExp";
     }
-    
+
     public String getClassName() {
         return "Function";
     }
@@ -86,7 +86,7 @@ public class NativeRegExpCtor extends NativeFunction {
 
     protected int getIdDefaultAttributes(int id) {
         int shifted = id - idBase;
-        if (1 <= shifted && shifted <= MAX_INSTANCE_ID) { 
+        if (1 <= shifted && shifted <= MAX_INSTANCE_ID) {
             switch (shifted) {
                 case Id_multiline:
                 case Id_STAR:
@@ -98,14 +98,14 @@ public class NativeRegExpCtor extends NativeFunction {
         }
         return super.getIdDefaultAttributes(id);
     }
-    
+
     private static String stringResult(Object obj) {
         return (obj == null) ? "" : obj.toString();
     }
 
     protected Object getIdValue(int id) {
         int shifted = id - idBase;
-        if (1 <= shifted && shifted <= MAX_INSTANCE_ID) { 
+        if (1 <= shifted && shifted <= MAX_INSTANCE_ID) {
             RegExpImpl impl = getImpl();
             switch (shifted) {
                 case Id_multiline:
@@ -113,7 +113,7 @@ public class NativeRegExpCtor extends NativeFunction {
                     return wrap_boolean(impl.multiline);
 
                 case Id_input:
-                case Id_UNDERSCORE: 
+                case Id_UNDERSCORE:
                     return stringResult(impl.input);
 
                 case Id_lastMatch:
@@ -138,7 +138,7 @@ public class NativeRegExpCtor extends NativeFunction {
         }
         return super.getIdValue(id);
     }
-    
+
     protected void setIdValue(int id, Object value) {
         switch (id - idBase) {
             case Id_multiline:
@@ -147,8 +147,8 @@ public class NativeRegExpCtor extends NativeFunction {
                 return;
 
             case Id_input:
-            case Id_UNDERSCORE: 
-                getImpl().input = ScriptRuntime.toString(value); 
+            case Id_UNDERSCORE:
+                getImpl().input = ScriptRuntime.toString(value);
                 return;
         }
         super.setIdValue(id, value);
@@ -156,7 +156,7 @@ public class NativeRegExpCtor extends NativeFunction {
 
     protected String getIdName(int id) {
         int shifted = id - idBase;
-        if (1 <= shifted && shifted <= MAX_INSTANCE_ID) { 
+        if (1 <= shifted && shifted <= MAX_INSTANCE_ID) {
             switch (shifted) {
                 case Id_multiline:    return "multiline";
                 case Id_STAR:         return "$*";
@@ -185,11 +185,11 @@ public class NativeRegExpCtor extends NativeFunction {
     }
 
     protected int maxInstanceId() {
-        // Note: check for idBase == 0 can not be done in constructor, 
+        // Note: check for idBase == 0 can not be done in constructor,
         // because IdScriptable calls maxInstanceId in its constructor
         // before NativeRegExpCtor constructor gets chance to run any code
         if (idBase == 0) { idBase = super.maxInstanceId(); }
-        return idBase + MAX_INSTANCE_ID; 
+        return idBase + MAX_INSTANCE_ID;
     }
 
 // #string_id_map#
@@ -212,9 +212,9 @@ public class NativeRegExpCtor extends NativeFunction {
 
         Id_rightContext  = 11,
         Id_QUOTE         = 12, // #string=$'#
-        
+
         DOLLAR_ID_BASE   = 12;
-        
+
     private static final int
         Id_DOLLAR_1 = DOLLAR_ID_BASE + 1, // #string=$1#
         Id_DOLLAR_2 = DOLLAR_ID_BASE + 2, // #string=$2#
@@ -264,8 +264,8 @@ public class NativeRegExpCtor extends NativeFunction {
 // #/generated#
 // #/string_id_map#
 
-        return (id != 0) ? idBase + id : super.mapNameToId(s); 
+        return (id != 0) ? idBase + id : super.mapNameToId(s);
     }
-    
+
     private static int idBase;
 }

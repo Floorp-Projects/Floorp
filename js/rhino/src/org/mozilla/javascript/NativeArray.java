@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  * Mike McCabe
  * Igor Bukanov
@@ -110,14 +110,14 @@ public class NativeArray extends IdScriptable {
         }
         return super.getIdValue(id);
     }
-    
+
     protected void setIdValue(int id, Object value) {
         if (id == Id_length) {
             jsSet_length(value); return;
         }
         super.setIdValue(id, value);
     }
-    
+
     public int methodArity(int methodId) {
         if (prototypeFlag) {
             switch (methodId) {
@@ -200,15 +200,15 @@ public class NativeArray extends IdScriptable {
             return dense[index] != NOT_FOUND;
         return super.has(index, start);
     }
-    
-    // if id is an array index (ECMA 15.4.0), return the number, 
+
+    // if id is an array index (ECMA 15.4.0), return the number,
     // otherwise return -1L
     private static long toArrayIndex(String id) {
         double d = ScriptRuntime.toNumber(id);
         if (d == d) {
             long index = ScriptRuntime.toUint32(d);
             if (index == d && index != 4294967295L) {
-                // Assume that ScriptRuntime.toString(index) is the same 
+                // Assume that ScriptRuntime.toString(index) is the same
                 // as java.lang.Long.toString(index) for long
                 if (Long.toString(index).equals(id)) {
                     return index;
@@ -265,7 +265,7 @@ public class NativeArray extends IdScriptable {
         if (N == 0) { return superIds; }
         int shift = superIds.length;
         Object[] ids = new Object[shift + N];
-        // Make a copy of dense to be immune to removing 
+        // Make a copy of dense to be immune to removing
         // of array elems from other thread when calculating presentCount
         System.arraycopy(dense, 0, ids, shift, N);
         int presentCount = 0;
@@ -285,7 +285,7 @@ public class NativeArray extends IdScriptable {
         System.arraycopy(superIds, 0, ids, 0, shift);
         return ids;
     }
-    
+
     public Object getDefaultValue(Class hint) {
         if (hint == ScriptRuntime.NumberClass) {
             Context cx = Context.getContext();
@@ -298,7 +298,7 @@ public class NativeArray extends IdScriptable {
     /**
      * See ECMA 15.4.1,2
      */
-    private static Object jsConstructor(Context cx, Scriptable scope, 
+    private static Object jsConstructor(Context cx, Scriptable scope,
                                         Object[] args, IdFunction ctorObj,
                                         boolean inNewExpr)
         throws JavaScriptException
@@ -351,7 +351,7 @@ public class NativeArray extends IdScriptable {
                 // assume that the representation is sparse
                 Object[] e = getIds(); // will only find in object itself
                 for (int i=0; i < e.length; i++) {
-                    Object id = e[i]; 
+                    Object id = e[i];
                     if (id instanceof String) {
                         // > MAXINT will appear as string
                         String strId = (String)id;
@@ -438,19 +438,19 @@ public class NativeArray extends IdScriptable {
                                               Object[] args)
         throws JavaScriptException
     {
-        return toStringHelper(cx, thisObj, 
+        return toStringHelper(cx, thisObj,
                               cx.getLanguageVersion() == cx.VERSION_1_2,
                               false);
     }
-    
-    private static String jsFunction_toLocaleString(Context cx, 
+
+    private static String jsFunction_toLocaleString(Context cx,
                                                     Scriptable thisObj,
                                                     Object[] args)
         throws JavaScriptException
     {
         return toStringHelper(cx, thisObj, false, true);
     }
-    
+
     private static String toStringHelper(Context cx, Scriptable thisObj,
                                          boolean toSource, boolean toLocale)
         throws JavaScriptException
@@ -507,14 +507,14 @@ public class NativeArray extends IdScriptable {
                     try {
                         // stop recursion.
                         cx.iterating.put(thisObj, Boolean.TRUE);
-                        if (toLocale && elem != Undefined.instance && 
-                            elem != null) 
+                        if (toLocale && elem != Undefined.instance &&
+                            elem != null)
                         {
                             Scriptable obj = ScriptRuntime.
                                     toObject(cx, thisObj, elem);
                             Object tls = ScriptRuntime.
                                     getProp(obj, "toLocaleString", thisObj);
-                            elem = ScriptRuntime.call(cx, tls, elem, 
+                            elem = ScriptRuntime.call(cx, tls, elem,
                                                       ScriptRuntime.emptyArgs);
                         }
                         result.append(ScriptRuntime.toString(elem));
@@ -539,7 +539,7 @@ public class NativeArray extends IdScriptable {
      * See ECMA 15.4.4.3
      */
     private static String jsFunction_join(Context cx, Scriptable thisObj,
-                                          Object[] args) 
+                                          Object[] args)
     {
         StringBuffer result = new StringBuffer();
         String separator;
@@ -566,9 +566,9 @@ public class NativeArray extends IdScriptable {
     /**
      * See ECMA 15.4.4.4
      */
-    private static Scriptable jsFunction_reverse(Context cx, 
-                                                 Scriptable thisObj, 
-                                                 Object[] args) 
+    private static Scriptable jsFunction_reverse(Context cx,
+                                                 Scriptable thisObj,
+                                                 Object[] args)
     {
         long len = (long)getLengthProperty(thisObj);
 
@@ -587,7 +587,7 @@ public class NativeArray extends IdScriptable {
      * See ECMA 15.4.4.5
      */
     private static Scriptable jsFunction_sort(Context cx, Scriptable scope,
-                                              Scriptable thisObj, 
+                                              Scriptable thisObj,
                                               Object[] args)
         throws JavaScriptException
     {
@@ -597,7 +597,7 @@ public class NativeArray extends IdScriptable {
 
         Object compare;
         Object[] cmpBuf;
-        
+
         if (args.length > 0 && Undefined.instance != args[0]) {
             // sort with given compare function
             compare = args[0];
@@ -634,7 +634,7 @@ public class NativeArray extends IdScriptable {
     // Return true only if x > y
     private static boolean isBigger(Context cx, Scriptable scope,
                                     Object x, Object y,
-                                    Object cmp, Object[] cmpBuf) 
+                                    Object cmp, Object[] cmpBuf)
         throws JavaScriptException
     {
         if (check) {
@@ -653,7 +653,7 @@ public class NativeArray extends IdScriptable {
         } else if (undef == x) {
             return true; // y != undef here, so x > y
         }
-        
+
         if (cmp == null) {
             // if no cmp function supplied, sort lexicographically
             String a = ScriptRuntime.toString(x);
@@ -677,8 +677,8 @@ public class NativeArray extends IdScriptable {
             return d > 0;
         }
     }
-    
-/** Heapsort implementation. 
+
+/** Heapsort implementation.
  * See "Introduction to Algorithms" by Cormen, Leiserson, Rivest for details.
  * Adjusted for zero based indexes.
  */
@@ -688,14 +688,14 @@ public class NativeArray extends IdScriptable {
         throws JavaScriptException
     {
         if (check && length <= 1) Context.codeBug();
-        
+
         // Build heap
         for (int i = length / 2; i != 0;) {
             --i;
             Object pivot = array[i];
             heapify(cx, scope, pivot, array, i, length, cmp, cmpBuf);
         }
-        
+
         // Sort heap
         for (int i = length; i != 1;) {
             --i;
@@ -704,7 +704,7 @@ public class NativeArray extends IdScriptable {
             heapify(cx, scope, pivot, array, 0, i, cmp, cmpBuf);
         }
     }
-    
+
 /** pivot and child heaps of i should be made into heap starting at i,
  * original array[i] is never used to have less array access during sorting.
  */
@@ -721,7 +721,7 @@ public class NativeArray extends IdScriptable {
             Object childVal = array[child];
             if (child + 1 < end) {
                 Object nextVal = array[child + 1];
-                if (isBigger(cx, scope, nextVal, childVal, cmp, cmpBuf)) { 
+                if (isBigger(cx, scope, nextVal, childVal, cmp, cmpBuf)) {
                     ++child; childVal = nextVal;
                 }
             }
@@ -733,7 +733,7 @@ public class NativeArray extends IdScriptable {
         }
         array[i] = pivot;
     }
-        
+
 /** Version of heapsort that call getElem/setElem on target to query/assign
  * array elements instead of Java array access
  */
@@ -743,14 +743,14 @@ public class NativeArray extends IdScriptable {
         throws JavaScriptException
     {
         if (check && length <= 1) Context.codeBug();
-        
+
         // Build heap
         for (long i = length / 2; i != 0;) {
             --i;
             Object pivot = getElem(target, i);
             heapify_extended(cx, scope, pivot, target, i, length, cmp, cmpBuf);
         }
-        
+
         // Sort heap
         for (long i = length; i != 1;) {
             --i;
@@ -759,7 +759,7 @@ public class NativeArray extends IdScriptable {
             heapify_extended(cx, scope, pivot, target, 0, i, cmp, cmpBuf);
         }
     }
-    
+
     private static void heapify_extended(Context cx, Scriptable scope,
                                          Object pivot, Scriptable target,
                                          long i, long end,
@@ -774,7 +774,7 @@ public class NativeArray extends IdScriptable {
             Object childVal = getElem(target, child);
             if (child + 1 < end) {
                 Object nextVal = getElem(target, child + 1);
-                if (isBigger(cx, scope, nextVal, childVal, cmp, cmpBuf)) { 
+                if (isBigger(cx, scope, nextVal, childVal, cmp, cmpBuf)) {
                     ++child; childVal = nextVal;
                 }
             }
@@ -786,7 +786,7 @@ public class NativeArray extends IdScriptable {
         }
         setElem(target, i, pivot);
     }
-        
+
     /**
      * Non-ECMA methods.
      */
@@ -1005,7 +1005,7 @@ public class NativeArray extends IdScriptable {
     /*
      * Python-esque sequence operations.
      */
-    private static Scriptable jsFunction_concat(Context cx, Scriptable scope, 
+    private static Scriptable jsFunction_concat(Context cx, Scriptable scope,
                                                 Scriptable thisObj,
                                                 Object[] args)
     {
@@ -1132,8 +1132,8 @@ public class NativeArray extends IdScriptable {
 
     protected int mapNameToId(String s) {
         if (s.equals("length")) { return Id_length; }
-        else if (prototypeFlag) { 
-            return toPrototypeId(s); 
+        else if (prototypeFlag) {
+            return toPrototypeId(s);
         }
         return 0;
     }
@@ -1196,8 +1196,8 @@ public class NativeArray extends IdScriptable {
     private long length;
     private Object[] dense;
     private static final int maximumDenseLength = 10000;
-    
+
     private boolean prototypeFlag;
-    
+
     private static final boolean check = true && Context.check;
 }

@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
@@ -92,9 +92,9 @@ public class JavaScriptException extends Exception {
      * wrapping the original Java exception object.
      *
      * We would prefer to go through a getter to encapsulate the value,
-     * however that causes the bizarre error "nanosecond timeout value 
-     * out of range" on the MS JVM. 
-     * @serial 
+     * however that causes the bizarre error "nanosecond timeout value
+     * out of range" on the MS JVM.
+     * @serial
      */
     Object value;
 }

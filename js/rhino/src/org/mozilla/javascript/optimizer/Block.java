@@ -1,14 +1,14 @@
-/* 
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Rhino code, released
  * May 6, 1999.
  *
@@ -16,11 +16,11 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
+ *
  * Contributor(s):
  * Norris Boyd
  * Roger Lawrence
- * 
+ *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
  * provisions of the GPL are applicable instead of those above.
@@ -241,13 +241,13 @@ public class Block {
                 break;
         }
     }
-    
+
     void markAnyTypeVariables(VariableTable theVariables)
     {
         for (int i = 0; i < theVariables.size(); i++)
             if (itsLiveOnEntrySet.test(i))
                 ((OptLocalVariable)theVariables.getVariable(i)).assignType(TypeEvent.AnyType);
-        
+
     }
 
     void markVolatileVariables(VariableTable theVariables)
@@ -458,7 +458,7 @@ public class Block {
                     }
                 }
                 break;
-            
+
             case TokenStream.SETPROP : {
                     Node baseChild = n.getFirstChild();
                     Node nameChild = baseChild.getNextSibling();
@@ -491,11 +491,11 @@ public class Block {
         }
         return result;
     }
-    
+
     // a total misnomer for now. To start with we're only trying to find
     // duplicate getProp calls on 'this' that can be merged
     void localCSE(Node parent, Node n, Hashtable theCSETable, OptFunctionNode theFunction)
-    {   
+    {
         switch (n.getType()) {
             default : {
                     Node child = n.getFirstChild();
@@ -529,11 +529,11 @@ public class Block {
                     if (rhs != null) localCSE(n, rhs, theCSETable, theFunction);
                     if (nameChild.getType() == TokenStream.STRING) {
                         theCSETable.remove(nameChild.getString());
-//                        System.out.println("clear at SETPROP " + ((StringNode)nameChild).getString());                    
+//                        System.out.println("clear at SETPROP " + ((StringNode)nameChild).getString());
                     }
                     else {
                         theCSETable.clear();
-//                        System.out.println("clear all at SETPROP");                    
+//                        System.out.println("clear all at SETPROP");
                     }
                 }
                 break;
@@ -567,13 +567,13 @@ public class Block {
                                         theCSETable.put(theName, theCSE);
                                     }
                                     else
-                                        theCSE = (Node)cse;                                
+                                        theCSE = (Node)cse;
                                     Node nextChild = n.getNextSibling();
                                     parent.removeChild(n);
                                     Node cseUse = itsIRFactory.createUseLocal(theCSE);
                                     if (nextChild == null)
                                         parent.addChildToBack(cseUse);
-                                    else 
+                                    else
                                         parent.addChildBefore(cseUse, nextChild);
                                 }
                             }
@@ -589,8 +589,8 @@ public class Block {
                     if (lhsIndex != null) localCSE(n, lhsIndex, theCSETable, theFunction);
                     if (rhs != null) localCSE(n, rhs, theCSETable, theFunction);
                     theCSETable.clear();
-//System.out.println("clear all at SETELEM");                    
-                }   
+//System.out.println("clear all at SETELEM");
+                }
                 break;
             case TokenStream.CALL : {
                     Node child = n.getFirstChild();
@@ -598,15 +598,15 @@ public class Block {
                         localCSE(n, child, theCSETable, theFunction);
                         child = child.getNextSibling();
                     }
-                    theCSETable.clear();                
-//System.out.println("clear all at CALL");                    
+                    theCSETable.clear();
+//System.out.println("clear all at CALL");
                 }
                 break;
         }
     }
-    
+
     private IRFactory itsIRFactory;
-    
+
     Hashtable localCSE(Hashtable theCSETable, OptFunctionNode theFunction)
     {
         itsIRFactory = new IRFactory(null, null);
@@ -637,7 +637,7 @@ public class Block {
             if (n != null)
                 changed |= findDefPoints(n);
         }
-        
+
         return changed;
     }
 
@@ -692,5 +692,5 @@ class CSEHolder {
 
    Node getPropParent;
    Node getPropChild;
-   
+
 }

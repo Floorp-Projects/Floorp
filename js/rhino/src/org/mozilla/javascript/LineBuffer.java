@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Mike McCabe
  *
  * Alternatively, the contents of this file may be used under the
@@ -67,12 +67,12 @@ final class LineBuffer {
         this.in = in;
         this.lineno = lineno;
     }
-    
+
     int read() throws IOException {
         for(;;) {
             if (end == offset && !fill())
                 return -1;
-            
+
             int c = buffer[offset];
             ++offset;
 
@@ -113,9 +113,9 @@ final class LineBuffer {
         // in the process of a fill(), and leave it there.  But
         // the scanner never calls peek() or a failed match()
         // followed by unread()... this would violate 1-character
-        // lookahead.  
+        // lookahead.
         if (Context.check && offset == 0 && !hitEOF) Context.codeBug();
-        
+
         if (offset == 0) // Same as if (hitEOF)
             return;
         offset--;
@@ -134,9 +134,9 @@ final class LineBuffer {
         }
         else {
             // swap prev character with format one so possible call to
-            // startString can assume that previous non-format char is at 
+            // startString can assume that previous non-format char is at
             // offset - 1. Note it causes getLine to return not exactly the
-            // source LineBuffer read, but it is used only in error reporting 
+            // source LineBuffer read, but it is used only in error reporting
             // and should not be a problem.
             if (offset != 0) {
                 char tmp = buffer[offset];
@@ -152,7 +152,7 @@ final class LineBuffer {
 
         ++offset;
     }
-    
+
     int peek() throws IOException {
         for (;;) {
             if (end == offset && !fill()) {
@@ -166,7 +166,7 @@ final class LineBuffer {
             if (c < 128 || !formatChar(c)) {
                 return c;
             }
-            
+
             skipFormatChar();
         }
     }
@@ -269,7 +269,7 @@ final class LineBuffer {
             // (which we want to include) is at the end of the last one, so
             // we just go to StringBuffer mode.
             stringSoFar = new StringBuffer();
-            
+
             stringStart = -1; // Set sentinel value.
             c = otherBuffer[otherEnd - 1];
             stringSoFar.append(c);
@@ -304,17 +304,17 @@ final class LineBuffer {
         if (stringStart >= 0) {
             // String mark is valid, and in this buffer.
 
-            result = new String(buffer, stringStart, 
+            result = new String(buffer, stringStart,
                                 offset - stringStart - loseCR);
         } else {
             // Exclude cr as well as nl of newline.  If offset is 0, then
             // hopefully fill() did the right thing.
             result = (stringSoFar.append(buffer, 0, offset - loseCR)).toString();
         }
-        
+
         stringStart = -1;
         stringSoFar = null;
-        
+
         if (hadCFSinceStringStart) {
             char c[] = result.toCharArray();
             StringBuffer x = null;
@@ -328,11 +328,11 @@ final class LineBuffer {
                 else
                     if (x != null) x.append(c[i]);
             }
-            if (x != null) result = x.toString();    
+            if (x != null) result = x.toString();
         }
-        
+
         return result;
-    }            
+    }
 
     private boolean fill() throws IOException {
         // fill should be caled only for emty buffer
@@ -380,7 +380,7 @@ final class LineBuffer {
         // set lineStart to a sentinel value, unless this is the first
         // time around.
         prevStart = lineStart = (otherBuffer == null) ? 0 : buffer.length + 1;
-        
+
         offset = 0;
         end = in.read(buffer, 0, buffer.length);
         if (end < 0) {
@@ -417,7 +417,7 @@ final class LineBuffer {
 
     int getLineno() { return lineno; }
     boolean eof() { return hitEOF; }
-    
+
     private static boolean formatChar(int c) {
         return Character.getType((char)c) == Character.FORMAT;
     }
@@ -443,7 +443,7 @@ final class LineBuffer {
     private int lineStart = 0;
     private int otherStart = 0;
     private int prevStart = 0;
-    
+
     private boolean lastWasCR = false;
     private boolean hitEOF = false;
 

@@ -1,8 +1,8 @@
 Notes on StringIdMap (main class org.mozilla.javascript.tools.idswitch.StringIdMap) utility
 
-The main purpose of this utility is to generate Java code to map strings to some ids that can be used, for example, in a switch statement. 
+The main purpose of this utility is to generate Java code to map strings to some ids that can be used, for example, in a switch statement.
 
-The utility scans the file for lines with the following structure: 
+The utility scans the file for lines with the following structure:
 
 // #string_id_map#
 ... <DEFINITION AREA>
@@ -17,7 +17,7 @@ Then every line in <DEFINITION AREA> is scanned for the pattern:
 
 Each such patterns adds a mapping form string $1 to Id_\$ or if the line also contains the pattern //\s*#string=\s*([^#]+)\s*#, then it adds map of $1 in this pattern to Id_\$
 
-After that lines in <GENERATED AREA> are replaced by a code block that sets variable "id" to Id_<name> if variable "s" equals <name> (or value defined by //#string=...# construction in the line with Id_<name>) or 0 otherwise. 
+After that lines in <GENERATED AREA> are replaced by a code block that sets variable "id" to Id_<name> if variable "s" equals <name> (or value defined by //#string=...# construction in the line with Id_<name>) or 0 otherwise.
 If the new code for <GENERATED AREA> is identical to old one, the file is not touched otherwise <GENERATED AREA> is overwritten by the new code and a time stamp is appended after #generated#.
 
 For example, if file x.java contains:
@@ -30,7 +30,7 @@ For example, if file x.java contains:
 // #/generated#
         return id;
     }
-    
+
     private static final int
         Id_x       = 1,
         Id_y       = 2,
@@ -39,7 +39,7 @@ For example, if file x.java contains:
         Id_nice    = 5,
         Id_for     = 6,
         Id_bar     = 7;
-    
+
 // #/string_id_map#
 
 ....
@@ -47,7 +47,7 @@ For example, if file x.java contains:
     private double getFieldValue(String s) {
 
 // #string_id_map#
-    final int 
+    final int
         Id_field1 = 1,
         Id_field2 = 2,
         Id_field3 = 3,
@@ -65,7 +65,7 @@ For example, if file x.java contains:
         }
         throw new RuntimeException("No such field");
     }
-    
+
 
 then invocation
 java org.mozilla.javascript.tools.string_switch.StringIdMap x.java
@@ -97,7 +97,7 @@ would replace that by a code fragment similar to:
 // #/generated#
         return id;
     }
-    
+
     private static final int
         Id_x       = 1,
         Id_y       = 2,
@@ -106,7 +106,7 @@ would replace that by a code fragment similar to:
         Id_nice    = 5,
         Id_for     = 6,
         Id_bar     = 7;
-    
+
 // #/string_id_map#
 
 ....
@@ -114,7 +114,7 @@ would replace that by a code fragment similar to:
     private double getFieldValue(String s) {
 
 // #string_id_map#
-    final int 
+    final int
         Id_field1 = 1,
         Id_field2 = 2,
         Id_field3 = 3,

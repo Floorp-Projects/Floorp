@@ -18,7 +18,7 @@
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
@@ -42,18 +42,18 @@ import org.mozilla.javascript.*;
 import java.util.Enumeration;
 
 /**
- * This interface exposes debugging information from executable 
+ * This interface exposes debugging information from executable
  * code (either functions or top-level scripts).
  */
 public interface DebuggableScript {
-  
+
     /**
      * Returns true if this is a function, false if it is a script.
      */
     public boolean isFunction();
-    
+
     /**
-     * Get the Scriptable object (Function or Script) that is 
+     * Get the Scriptable object (Function or Script) that is
      * described by this DebuggableScript object.
      */
     public Scriptable getScriptable();
@@ -63,19 +63,19 @@ public interface DebuggableScript {
      * of the script.
      */
     public String getSourceName();
-    
+
     /**
-     * Get array containing the line numbers that 
+     * Get array containing the line numbers that
      * can have breakpoints placed on them.
      */
     public int[] getLineNumbers();
-    
+
     /**
      * Place a breakpoint at the given line.
      * @return true if the breakpoint was successfully set.
      */
     public boolean placeBreakpoint(int line);
-    
+
     /**
      * Remove a breakpoint from the given line.
      * @return true if there was a breakpoint at the given line.

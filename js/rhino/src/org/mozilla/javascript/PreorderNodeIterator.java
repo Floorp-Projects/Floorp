@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  * Roger Lawrence
  * Igor Bukanov
@@ -53,7 +53,7 @@ public class PreorderNodeIterator {
     }
 
     public Node getCurrentParent() {
-        // Should not be used when stackTop == 0, 
+        // Should not be used when stackTop == 0,
         // i.e. with start or its siblings
         return stack[stackTop - 1];
     }
@@ -86,7 +86,7 @@ public class PreorderNodeIterator {
     }
 
     public void replaceCurrent(Node newNode) {
-        // Should not be used when stackTop == 0, 
+        // Should not be used when stackTop == 0,
         // i.e. with start or its siblings
         Node parent = stack[stackTop - 1];
         if (cachedPrev != null && cachedPrev.next == current) {
@@ -99,7 +99,7 @@ public class PreorderNodeIterator {
         }
         current = newNode;
     }
-    
+
     private void stackPush(Node n) {
         int N = stackTop;
         if (N == 0) {
@@ -122,5 +122,5 @@ public class PreorderNodeIterator {
 
 //cache previous sibling of current not to search for it when
 //replacing current
-    private Node cachedPrev; 
+    private Node cachedPrev;
 }

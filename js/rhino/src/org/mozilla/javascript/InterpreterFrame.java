@@ -18,7 +18,7 @@
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
@@ -40,7 +40,7 @@ import java.util.Vector;
 import org.mozilla.javascript.debug.*;
 
 class InterpreterFrame implements DebugFrame {
-    
+
     InterpreterFrame(Scriptable scope, InterpreterData data, Scriptable obj) {
         this.scope = scope;
         this.data = data;
@@ -51,25 +51,25 @@ class InterpreterFrame implements DebugFrame {
     public Scriptable getVariableObject() {
         return scope;
     }
-    
+
     public String getSourceName() {
         return data.itsSourceFile;
     }
-    
+
     public void setLineNumber(int lineNumber) {
         this.lineNumber = lineNumber;
     }
-    
+
     public int getLineNumber() {
         return lineNumber;
     }
-    
+
     public DebuggableScript getScript() {
         if (obj instanceof DebuggableScript)
             return (DebuggableScript) obj;
         return null;
     }
-    
+
     private Scriptable scope;
     private InterpreterData data;
     private Scriptable obj;

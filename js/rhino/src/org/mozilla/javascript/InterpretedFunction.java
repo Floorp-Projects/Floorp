@@ -18,7 +18,7 @@
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Roger Lawrence
  *
  * Alternatively, the contents of this file may be used under the
@@ -38,14 +38,14 @@ package org.mozilla.javascript;
 import java.io.Serializable;
 import org.mozilla.javascript.debug.DebuggableScript;
 
-class InterpretedFunction extends NativeFunction 
-                          implements DebuggableScript, Serializable 
+class InterpretedFunction extends NativeFunction
+                          implements DebuggableScript, Serializable
 {
 
     static final long serialVersionUID = -6235150451107527319L;
-    
+
     InterpretedFunction(Context cx,
-                        InterpreterData theData, 
+                        InterpreterData theData,
                         String[] argNames, short argCount)
     {
         itsData = theData;
@@ -53,7 +53,7 @@ class InterpretedFunction extends NativeFunction
         this.argCount = argCount;
         init(cx);
     }
-    
+
     void init(Context cx)
     {
         functionName = itsData.itsName;
@@ -62,7 +62,7 @@ class InterpretedFunction extends NativeFunction
         if (cx != null)
             version = (short)cx.getLanguageVersion();
     }
-    
+
     InterpretedFunction(InterpretedFunction theOther,
                         Scriptable theScope, Context cx)
     {
@@ -72,19 +72,19 @@ class InterpretedFunction extends NativeFunction
         itsClosure = theScope;
         init(cx);
     }
-    
+
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
         throws JavaScriptException
-    {            
+    {
         if (itsClosure != null)
             scope = itsClosure;
         else if (!itsData.itsUseDynamicScope)
             scope = getParentScope();
 
-        if (itsData.itsCheckThis) 
+        if (itsData.itsCheckThis)
             thisObj = ScriptRuntime.getThis(thisObj);
-        
+
         if (itsData.itsNeedsActivation) {
             scope = ScriptRuntime.initVarObj(cx, scope, this, thisObj, args);
         }
@@ -98,32 +98,32 @@ class InterpretedFunction extends NativeFunction
             }
         }
     }
-    
+
     public boolean isFunction() {
         return true;
     }
-    
+
     public Scriptable getScriptable() {
         return this;
     }
-    
+
     public String getSourceName() {
         return itsData.itsSourceFile;
     }
-    
-    public int[] getLineNumbers() { 
+
+    public int[] getLineNumbers() {
         return itsData.itsLineNumberTable.getKeys();
     }
-    
+
     public boolean placeBreakpoint(int line) { // XXX throw exn?
         return itsData.placeBreakpoint(line);
     }
-    
+
     public boolean removeBreakpoint(int line) {
         return itsData.removeBreakpoint(line);
     }
-    
+
     InterpreterData itsData;
     Scriptable itsClosure;
 }
- 
+

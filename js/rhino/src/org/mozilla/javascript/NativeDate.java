@@ -53,13 +53,13 @@ final class NativeDate extends IdScriptable {
     static void init(Context cx, Scriptable scope, boolean sealed) {
         NativeDate obj = new NativeDate();
         obj.prototypeFlag = true;
-        
+
         // Set the value of the prototype Date to NaN ('invalid date');
         obj.date = ScriptRuntime.NaN;
 
         obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
-    
+
     private NativeDate() {
         if (thisTimeZone == null) {
             // j.u.TimeZone is synchronized, so setting class statics from it
@@ -92,7 +92,7 @@ final class NativeDate extends IdScriptable {
             switch (methodId) {
                 case ConstructorId_UTC:     return 1;
                 case ConstructorId_parse:   return 1;
-                case Id_constructor:        return 1; 
+                case Id_constructor:        return 1;
                 case Id_toString:           return 0;
                 case Id_toTimeString:       return 0;
                 case Id_toDateString:       return 0;
@@ -148,10 +148,10 @@ final class NativeDate extends IdScriptable {
     {
         if (prototypeFlag) {
             switch (methodId) {
-                case ConstructorId_UTC: 
+                case ConstructorId_UTC:
                     return wrap_double(jsStaticFunction_UTC(args));
 
-                case ConstructorId_parse: 
+                case ConstructorId_parse:
                     return wrap_double(jsStaticFunction_parse
                         (ScriptRuntime.toString(args, 0)));
 
@@ -194,10 +194,10 @@ final class NativeDate extends IdScriptable {
                     return jsFunction_NaN_date_str;
                 }
 
-                case Id_valueOf: 
+                case Id_valueOf:
                     return wrap_double(realThis(thisObj, f, true).date);
 
-                case Id_getTime: 
+                case Id_getTime:
                     return wrap_double(realThis(thisObj, f, true).date);
 
                 case Id_getYear: {
@@ -223,7 +223,7 @@ final class NativeDate extends IdScriptable {
                     if (t == t) { t = MonthFromTime(LocalTime(t)); }
                     return wrap_double(t);
                 }
-                
+
                 case Id_getUTCMonth: {
                     double t = realThis(thisObj, f, true).date;
                     if (t == t) { t = MonthFromTime(t); }
@@ -240,7 +240,7 @@ final class NativeDate extends IdScriptable {
                     double t = realThis(thisObj, f, true).date;
                     if (t == t) { t = DateFromTime(t); }
                     return wrap_double(t);
-                } 
+                }
 
                 case Id_getDay: {
                     double t = realThis(thisObj, f, true).date;
@@ -252,13 +252,13 @@ final class NativeDate extends IdScriptable {
                     double t = realThis(thisObj, f, true).date;
                     if (t == t) { t = WeekDay(t); }
                     return wrap_double(t);
-                } 
+                }
 
                 case Id_getHours: {
                     double t = realThis(thisObj, f, true).date;
                     if (t == t) { t = HourFromTime(LocalTime(t)); }
                     return wrap_double(t);
-                } 
+                }
 
                 case Id_getUTCHours: {
                     double t = realThis(thisObj, f, true).date;
@@ -270,13 +270,13 @@ final class NativeDate extends IdScriptable {
                     double t = realThis(thisObj, f, true).date;
                     if (t == t) { t = MinFromTime(LocalTime(t)); }
                     return wrap_double(t);
-                } 
+                }
 
                 case Id_getUTCMinutes: {
                     double t = realThis(thisObj, f, true).date;
                     if (t == t) { t = MinFromTime(t); }
                     return wrap_double(t);
-                } 
+                }
 
                 case Id_getSeconds: {
                     double t = realThis(thisObj, f, true).date;
@@ -289,7 +289,7 @@ final class NativeDate extends IdScriptable {
                     if (t == t) { t = SecFromTime(t); }
                     return wrap_double(t);
                 }
-                
+
                 case Id_getMilliseconds: {
                     double t = realThis(thisObj, f, true).date;
                     if (t == t) { t = msFromTime(LocalTime(t)); }
@@ -301,74 +301,74 @@ final class NativeDate extends IdScriptable {
                     if (t == t) { t = msFromTime(t); }
                     return wrap_double(t);
                 }
-                
+
                 case Id_getTimezoneOffset: {
                     double t = realThis(thisObj, f, true).date;
                     if (t == t) { t = jsFunction_getTimezoneOffset(t); }
                     return wrap_double(t);
                 }
 
-                case Id_setTime: 
+                case Id_setTime:
                     return wrap_double(realThis(thisObj, f, true).
                         jsFunction_setTime(ScriptRuntime.toNumber(args, 0)));
 
-                case Id_setMilliseconds: 
+                case Id_setMilliseconds:
                     return wrap_double(realThis(thisObj, f, false).
                         makeTime(args, 1, true));
 
-                case Id_setUTCMilliseconds: 
+                case Id_setUTCMilliseconds:
                     return wrap_double(realThis(thisObj, f, false).
                         makeTime(args, 1, false));
 
-                case Id_setSeconds: 
+                case Id_setSeconds:
                     return wrap_double(realThis(thisObj, f, false).
                         makeTime(args, 2, true));
 
-                case Id_setUTCSeconds: 
+                case Id_setUTCSeconds:
                     return wrap_double(realThis(thisObj, f, false).
                         makeTime(args, 2, false));
 
-                case Id_setMinutes: 
+                case Id_setMinutes:
                     return wrap_double(realThis(thisObj, f, false).
                         makeTime(args, 3, true));
 
-                case Id_setUTCMinutes: 
+                case Id_setUTCMinutes:
                     return wrap_double(realThis(thisObj, f, false).
                         makeTime(args, 3, false));
 
-                case Id_setHours: 
+                case Id_setHours:
                     return wrap_double(realThis(thisObj, f, false).
                         makeTime(args, 4, true));
 
-                case Id_setUTCHours: 
+                case Id_setUTCHours:
                     return wrap_double(realThis(thisObj, f, false).
                         makeTime(args, 4, false));
 
-                case Id_setDate: 
+                case Id_setDate:
                     return wrap_double(realThis(thisObj, f, false).
                         makeDate(args, 1, true));
 
-                case Id_setUTCDate: 
+                case Id_setUTCDate:
                     return wrap_double(realThis(thisObj, f, false).
                         makeDate(args, 1, false));
 
-                case Id_setMonth: 
+                case Id_setMonth:
                     return wrap_double(realThis(thisObj, f, false).
                         makeDate(args, 2, true));
 
-                case Id_setUTCMonth: 
+                case Id_setUTCMonth:
                     return wrap_double(realThis(thisObj, f, false).
                         makeDate(args, 2, false));
 
-                case Id_setFullYear: 
+                case Id_setFullYear:
                     return wrap_double(realThis(thisObj, f, false).
                         makeDate(args, 3, true));
 
-                case Id_setUTCFullYear: 
+                case Id_setUTCFullYear:
                     return wrap_double(realThis(thisObj, f, false).
                         makeDate(args, 3, false));
 
-                case Id_setYear: 
+                case Id_setYear:
                     return wrap_double(realThis(thisObj, f, false).
                         jsFunction_setYear(ScriptRuntime.toNumber(args, 0)));
             }
@@ -377,7 +377,7 @@ final class NativeDate extends IdScriptable {
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
-    private NativeDate realThis(Scriptable thisObj, IdFunction f, 
+    private NativeDate realThis(Scriptable thisObj, IdFunction f,
                                 boolean readOnly)
     {
         while (!(thisObj instanceof NativeDate)) {
@@ -1268,7 +1268,7 @@ final class NativeDate extends IdScriptable {
             if (result >= 1900 && result < 2000) {
                 result -= 1900;
             }
-        } 
+        }
         else {
             result -= 1900;
         }
@@ -1466,7 +1466,7 @@ final class NativeDate extends IdScriptable {
             switch (id) {
                 case ConstructorId_UTC:     return "UTC";
                 case ConstructorId_parse:   return "parse";
-                case Id_constructor:        return "constructor"; 
+                case Id_constructor:        return "constructor";
                 case Id_toString:           return "toString";
                 case Id_toTimeString:       return "toTimeString";
                 case Id_toDateString:       return "toDateString";
@@ -1512,7 +1512,7 @@ final class NativeDate extends IdScriptable {
                 case Id_setYear:            return "setYear";
             }
         }
-        return null;        
+        return null;
     }
 
 // #string_id_map#

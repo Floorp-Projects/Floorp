@@ -21,7 +21,7 @@
  * Contributor(s):
  * Patrick Beard
  * Norris Boyd
- * Igor Bukanov 
+ * Igor Bukanov
  * Roger Lawrence
  * Frank Mitchell
  * Andrew Wason
@@ -123,7 +123,7 @@ public class ScriptRuntime {
      * See ECMA 9.3.
      */
     public static double toNumber(Object val) {
-        if (val == null) 
+        if (val == null)
             return +0.0;
         if (val instanceof Scriptable) {
             val = ((Scriptable) val).getDefaultValue(NumberClass);
@@ -143,7 +143,7 @@ public class ScriptRuntime {
     public static double toNumber(Object[] args, int index) {
         return (index < args.length) ? toNumber(args[index]) : NaN;
     }
-    
+
     // This definition of NaN is identical to that in java.lang.Double
     // except that it is not final. This is a workaround for a bug in
     // the Microsoft VM, versions 2.01 and 3.0P1, that causes some uses
@@ -438,7 +438,7 @@ public class ScriptRuntime {
     public static String toString(double val) {
         return numberToString(val, 10);
     }
-    
+
     public static String numberToString(double d, int base) {
         if (d != d)
             return "NaN";
@@ -461,7 +461,7 @@ public class ScriptRuntime {
             DToA.JS_dtostr(result, DToA.DTOSTR_STANDARD, 0, d);
             return result.toString();
         }
-    
+
     }
 
     // ALERT: should it be deprecated ?
@@ -475,13 +475,13 @@ public class ScriptRuntime {
     {
         return toObject(Context.getContext(), scope, val, staticClass);
     }
-    
+
     /**
      * Convert the value to an object.
      *
      * See ECMA 9.9.
      */
-    public static Scriptable toObject(Context cx, Scriptable scope, Object val) 
+    public static Scriptable toObject(Context cx, Scriptable scope, Object val)
     {
         return toObject(cx, scope, val, null);
     }
@@ -851,15 +851,15 @@ public class ScriptRuntime {
         return value;
     }
 
-    // Return -1L if str is not an index or the index value as lower 32 
+    // Return -1L if str is not an index or the index value as lower 32
     // bits of the result
     private static long indexFromString(String str) {
         // It must be a string.
 
-        // The length of the decimal string representation of 
+        // The length of the decimal string representation of
         //  Integer.MAX_VALUE, 2147483647
         final int MAX_VALUE_LENGTH = 10;
-        
+
         int len = str.length();
         if (len > 0) {
             int i = 0;
@@ -867,13 +867,13 @@ public class ScriptRuntime {
             int c = str.charAt(0);
             if (c == '-') {
                 if (len > 1) {
-                    c = str.charAt(1); 
-                    i = 1; 
+                    c = str.charAt(1);
+                    i = 1;
                     negate = true;
                 }
             }
             c -= '0';
-            if (0 <= c && c <= 9 
+            if (0 <= c && c <= 9
                 && len <= (negate ? MAX_VALUE_LENGTH + 1 : MAX_VALUE_LENGTH))
             {
                 // Use negative numbers to accumulate index to handle
@@ -896,7 +896,7 @@ public class ScriptRuntime {
                 if (i == len &&
                     (oldIndex > (Integer.MIN_VALUE / 10) ||
                      (oldIndex == (Integer.MIN_VALUE / 10) &&
-                      c <= (negate ? -(Integer.MIN_VALUE % 10) 
+                      c <= (negate ? -(Integer.MIN_VALUE % 10)
                                    : (Integer.MAX_VALUE % 10)))))
                 {
                     return 0xFFFFFFFFL & (negate ? index : -index);
@@ -951,9 +951,9 @@ public class ScriptRuntime {
                 s = null;
             } else {
                 index = 0;
-            }                
+            }
         }
-    
+
         Scriptable start = obj instanceof Scriptable
                            ? (Scriptable) obj
                            : toObject(scope, obj);
@@ -1210,11 +1210,11 @@ public class ScriptRuntime {
         throws JavaScriptException
     {
         Scriptable scope = null;
-        if (fun instanceof Scriptable) 
+        if (fun instanceof Scriptable)
             scope = ((Scriptable) fun).getParentScope();
         return call(cx, fun, thisArg, args, scope);
     }
-    
+
     public static Object call(Context cx, Object fun, Object thisArg,
                               Object[] args, Scriptable scope)
         throws JavaScriptException
@@ -1238,7 +1238,7 @@ public class ScriptRuntime {
     }
 
     private static Object callOrNewSpecial(Context cx, Scriptable scope,
-                                           Object fun, Object jsThis, 
+                                           Object fun, Object jsThis,
                                            Object thisArg,
                                            Object[] args, boolean isCall,
                                            String filename, int lineNumber)
@@ -1250,7 +1250,7 @@ public class ScriptRuntime {
             if (name.length() == 4) {
                 if (name.equals("eval")) {
                     if (f.master.getClass() == NativeGlobal.class) {
-                        return NativeGlobal.evalSpecial(cx, scope, 
+                        return NativeGlobal.evalSpecial(cx, scope,
                                                         thisArg, args,
                                                         filename, lineNumber);
                     }
@@ -1734,7 +1734,7 @@ public class ScriptRuntime {
      *
      * This is a new JS 1.3 language feature.  The in operator mirrors
      * the operation of the for .. in construct, and tests whether the
-     * rhs has the property given by the lhs.  It is different from the 
+     * rhs has the property given by the lhs.  It is different from the
      * for .. in construct in that:
      * <BR> - it doesn't perform ToObject on the right hand side
      * <BR> - it returns true for DontEnum properties.
@@ -1821,7 +1821,7 @@ public class ScriptRuntime {
     // Statements
     // ------------------
 
-    private static final String GLOBAL_CLASS = 
+    private static final String GLOBAL_CLASS =
         "org.mozilla.javascript.tools.shell.Global";
 
     private static ScriptableObject getGlobal(Context cx) {
@@ -1851,12 +1851,12 @@ public class ScriptRuntime {
         Context cx = Context.enter();
         ScriptableObject global = getGlobal(cx);
 
-        // get the command line arguments and define "arguments" 
+        // get the command line arguments and define "arguments"
         // array in the top-level object
         Scriptable argsObj = cx.newArray(global, args);
         global.defineProperty("arguments", argsObj,
                               ScriptableObject.DONTENUM);
-        
+
         try {
             Class cl = loadClassName(scriptClassName);
             Script script = (Script) cl.newInstance();
@@ -1912,7 +1912,7 @@ public class ScriptRuntime {
                     if (so != null && !fromEvalCode)
                         so.defineProperty(name, Undefined.instance,
                                           ScriptableObject.PERMANENT);
-                    else 
+                    else
                         varScope.put(name, varScope, Undefined.instance);
                 }
             }
@@ -2011,7 +2011,7 @@ public class ScriptRuntime {
         result.setParentScope(scope);
 
         String fnName = result.getFunctionName();
-        if (setName && fnName != null && fnName.length() != 0 && 
+        if (setName && fnName != null && fnName.length() != 0 &&
             !fnName.equals("anonymous"))
         {
             setProp(scope, fnName, result, scope);
@@ -2040,7 +2040,7 @@ public class ScriptRuntime {
     }
 
     public static String getMessage2
-        (String messageId, Object arg1, Object arg2) 
+        (String messageId, Object arg1, Object arg2)
     {
         return Context.getMessage2(messageId, arg1, arg2);
     }
@@ -2063,7 +2063,7 @@ public class ScriptRuntime {
         cx.currentActivation = activation;
     }
 
-    public static Class loadClassName(String className) 
+    public static Class loadClassName(String className)
         throws ClassNotFoundException
     {
         try {
@@ -2079,7 +2079,7 @@ public class ScriptRuntime {
             // thread than the current thread.
             // So fall through...
         }
-        return Class.forName(className);                
+        return Class.forName(className);
     }
 
     static boolean hasProp(Scriptable start, String name) {

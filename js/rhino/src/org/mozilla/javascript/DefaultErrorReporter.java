@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
@@ -55,7 +55,7 @@ class DefaultErrorReporter implements ErrorReporter {
     }
 
     public EvaluatorException runtimeError(String message, String sourceName,
-                                           int line, String lineSource, 
+                                           int line, String lineSource,
                                            int lineOffset)
     {
         return new EvaluatorException(message);

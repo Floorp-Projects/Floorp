@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  * Roger Lawrence
  *
@@ -40,29 +40,29 @@ package org.mozilla.javascript;
 /**
  * A proxy for the regexp package, so that the regexp package can be
  * loaded optionally.
- * 
+ *
  * @author Norris Boyd
  */
 public interface RegExpProxy {
-    
+
     public boolean isRegExp(Object obj);
-    
-    public Object newRegExp(Context cx, Scriptable scope, String source, 
+
+    public Object newRegExp(Context cx, Scriptable scope, String source,
                             String global, boolean flat);
-    
+
     public Object match(Context cx, Scriptable scope,
                         Scriptable thisObj, Object[] args)
         throws JavaScriptException;
 
-    public Object search(Context cx, Scriptable scope, 
+    public Object search(Context cx, Scriptable scope,
                          Scriptable thisObj, Object[] args)
         throws JavaScriptException;
 
-    public Object replace(Context cx, Scriptable scope, 
+    public Object replace(Context cx, Scriptable scope,
                           Scriptable thisObj, Object[] args)
         throws JavaScriptException;
- 
-    public int find_split(Scriptable scope, String target, String separator, 
-                          Object re, int[] ip, int[] matchlen, 
+
+    public int find_split(Scriptable scope, String target, String separator,
+                          Object re, int[] ip, int[] matchlen,
                           boolean[] matched, String[][] parensp);
 }

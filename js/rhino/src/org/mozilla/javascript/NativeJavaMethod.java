@@ -18,11 +18,11 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  * Frank Mitchell
  * Mike Shaver
- * 
+ *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
  * provisions of the GPL are applicable instead of those above.
@@ -74,7 +74,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             functionName = method.getName();
         } else if (!functionName.equals(method.getName())) {
             throw new RuntimeException("internal method name mismatch");
-        }                
+        }
         // XXX a more intelligent growth algorithm would be nice
         int len = methods == null ? 0 : methods.length;
         Method[] newMeths = new Method[len + 1];
@@ -152,7 +152,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             return "(" + javaSignature(paramTypes) + ")";
         }
     }
-    
+
     public String decompile(Context cx, int indent, boolean justbody) {
         StringBuffer sb = new StringBuffer();
         if (!justbody) {
@@ -165,7 +165,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         sb.append(justbody ? "*/\n" : "*/}\n");
         return sb.toString();
     }
-    
+
     public String toString() {
         StringBuffer sb = new StringBuffer();
         toString(sb);
@@ -218,7 +218,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                         "msg.nonjava.method", functionName);
                 }
             }
-            javaObject = ((Wrapper) o).unwrap();        
+            javaObject = ((Wrapper) o).unwrap();
         }
         try {
             if (debug) {
@@ -234,9 +234,9 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             Class staticType = meth.getReturnType();
 
             if (debug) {
-                Class actualType = (retval == null) ? null 
+                Class actualType = (retval == null) ? null
                                                     : retval.getClass();
-                System.err.println(" ----- Returned " + retval + 
+                System.err.println(" ----- Returned " + retval +
                                    " actual = " + actualType +
                                    " expect = " + staticType);
             }
@@ -244,9 +244,9 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             Object wrapped = NativeJavaObject.wrap(scope, retval, staticType);
 
             if (debug) {
-                Class actualType = (wrapped == null) ? null 
+                Class actualType = (wrapped == null) ? null
                                                      : wrapped.getClass();
-                System.err.println(" ----- Wrapped as " + wrapped + 
+                System.err.println(" ----- Wrapped as " + wrapped +
                                    " class = " + actualType);
             }
 
@@ -257,7 +257,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             return wrapped;
         } catch (IllegalAccessException accessEx) {
             throw Context.reportRuntimeError(
-                "While attempting to call \"" + meth.getName() + 
+                "While attempting to call \"" + meth.getName() +
                 "\" in class \"" + meth.getDeclaringClass().getName() +
                 "\" receieved " + accessEx.toString());
         } catch (InvocationTargetException e) {
@@ -265,8 +265,8 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         }
     }
 
-    static Object retryIllegalAccessInvoke(Method method, Object obj, 
-                                           Object[] args, 
+    static Object retryIllegalAccessInvoke(Method method, Object obj,
+                                           Object[] args,
                                            IllegalAccessException illegalAccess)
         throws IllegalAccessException, InvocationTargetException
     {
@@ -290,11 +290,11 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         /**
          * Due to a bug in Sun's VM, public methods in private
          * classes are not accessible by default (Sun Bug #4071593).
-         * We have to explicitly set the method accessible 
-         * via method.setAccessible(true) but we have to use 
-         * reflection because the setAccessible() in Method is 
-         * not available under jdk 1.1. We wait until a failure 
-         * to retry to avoid the overhead of this call on cases 
+         * We have to explicitly set the method accessible
+         * via method.setAccessible(true) but we have to use
+         * reflection because the setAccessible() in Method is
+         * not available under jdk 1.1. We wait until a failure
+         * to retry to avoid the overhead of this call on cases
          * that don't require it.
          */
         if (method_setAccessible != null) {
@@ -310,7 +310,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         throw illegalAccess;
     }
 
-    /** 
+    /**
      * Find the correct function to call given the set of methods
      * or constructors and the arguments.
      * If no function can be found to call, return null.
@@ -319,8 +319,8 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         if (methodsOrCtors.length == 0)
             return null;
         boolean hasMethods = methodsOrCtors[0] instanceof Method;
-        if (Context.useJSObject && 
-            NativeJavaObject.jsObjectClass != null) 
+        if (Context.useJSObject &&
+            NativeJavaObject.jsObjectClass != null)
         {
             try {
                 for (int i = 0; i < args.length; i++) {
@@ -354,7 +354,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                 int j;
                 for (j = 0; j < paramTypes.length; j++) {
                     if (!NativeJavaObject.canConvert(args[j], paramTypes[j])) {
-                        if (debug) printDebug("Rejecting (args can't convert) ", 
+                        if (debug) printDebug("Rejecting (args can't convert) ",
                                               member, args);
                         break;
                     }
@@ -366,9 +366,9 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                 }
             }
             else {
-                int preference = 
-                    NativeJavaMethod.preferSignature(args, 
-                                                     paramTypes, 
+                int preference =
+                    NativeJavaMethod.preferSignature(args,
+                                                     paramTypes,
                                                      bestFitTypes);
                 if (preference == PREFERENCE_AMBIGUOUS) {
                     if (debug) printDebug("Deferring ", member, args);
@@ -386,7 +386,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                     if (preference == PREFERENCE_EQUAL &&
                         Modifier.isStatic(bestFit.getModifiers()) &&
                         bestFit.getDeclaringClass().isAssignableFrom(
-                            member.getDeclaringClass()))                                          
+                            member.getDeclaringClass()))
                     {
                         // On some JVMs, Class.getMethods will return all
                         // static methods of the class heirarchy, even if
@@ -402,20 +402,20 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                 }
             }
         }
-        
+
         if (ambiguousMethods == null)
             return bestFit;
 
-        // Compare ambiguous methods with best fit, in case 
+        // Compare ambiguous methods with best fit, in case
         // the current best fit removes the ambiguities.
         for (int i = ambiguousMethods.size() - 1; i >= 0 ; i--) {
             Member member = (Member)ambiguousMethods.elementAt(i);
             Class paramTypes[] = hasMethods
                                  ? ((Method) member).getParameterTypes()
                                  : ((Constructor) member).getParameterTypes();
-            int preference = 
-                NativeJavaMethod.preferSignature(args, 
-                                                 paramTypes, 
+            int preference =
+                NativeJavaMethod.preferSignature(args,
+                                                 paramTypes,
                                                  bestFitTypes);
 
             if (preference == PREFERENCE_FIRST_ARG) {
@@ -455,31 +455,31 @@ public class NativeJavaMethod extends NativeFunction implements Function {
 
             String errMsg;
             if (isCtor) {
-                Object errArgs[] = { 
-                    bestFit.getName(), 
+                Object errArgs[] = {
+                    bestFit.getName(),
                     NativeJavaMethod.scriptSignature(args),
                     buf.toString()
                 };
-                errMsg = 
+                errMsg =
                     Context.getMessage("msg.constructor.ambiguous", errArgs);
             }
             else {
-                Object errArgs[] = { 
-                    bestFit.getDeclaringClass().getName(), 
-                    bestFit.getName(), 
+                Object errArgs[] = {
+                    bestFit.getDeclaringClass().getName(),
+                    bestFit.getName(),
                     NativeJavaMethod.scriptSignature(args),
                     buf.toString()
                 };
                 errMsg = Context.getMessage("msg.method.ambiguous", errArgs);
             }
 
-            throw 
+            throw
                 Context.reportRuntimeError(errMsg);
         }
 
         return bestFit;
     }
-    
+
     /** Types are equal */
     static final int PREFERENCE_EQUAL      = 0;
     static final int PREFERENCE_FIRST_ARG  = 1;
@@ -489,11 +489,11 @@ public class NativeJavaMethod extends NativeFunction implements Function {
 
     /**
      * Determine which of two signatures is the closer fit.
-     * Returns one of PREFERENCE_EQUAL, PREFERENCE_FIRST_ARG, 
+     * Returns one of PREFERENCE_EQUAL, PREFERENCE_FIRST_ARG,
      * PREFERENCE_SECOND_ARG, or PREFERENCE_AMBIGUOUS.
      */
-    public static int preferSignature(Object[] args, 
-                                      Class[] sig1, Class[] sig2) 
+    public static int preferSignature(Object[] args,
+                                      Class[] sig1, Class[] sig2)
     {
         int preference = 0;
 
@@ -506,7 +506,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             }
 
             preference |=
-                NativeJavaMethod.preferConversion(args[j], 
+                NativeJavaMethod.preferConversion(args[j],
                                                   type1,
                                                   type2);
 
@@ -520,18 +520,18 @@ public class NativeJavaMethod extends NativeFunction implements Function {
 
     /**
      * Determine which of two types is the easier conversion.
-     * Returns one of PREFERENCE_EQUAL, PREFERENCE_FIRST_ARG, 
+     * Returns one of PREFERENCE_EQUAL, PREFERENCE_FIRST_ARG,
      * PREFERENCE_SECOND_ARG, or PREFERENCE_AMBIGUOUS.
      */
-    public static int preferConversion(Object fromObj, 
+    public static int preferConversion(Object fromObj,
                                        Class toClass1, Class toClass2) {
 
-        int rank1  = 
+        int rank1  =
             NativeJavaObject.getConversionWeight(fromObj, toClass1);
-        int rank2 = 
+        int rank2 =
             NativeJavaObject.getConversionWeight(fromObj, toClass2);
 
-        if (rank1 == NativeJavaObject.CONVERSION_NONTRIVIAL && 
+        if (rank1 == NativeJavaObject.CONVERSION_NONTRIVIAL &&
             rank2 == NativeJavaObject.CONVERSION_NONTRIVIAL) {
 
             if (toClass1.isAssignableFrom(toClass2)) {
@@ -553,7 +553,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
     }
 
     Method[] getMethods() {
-        return methods; 
+        return methods;
     }
 
     // Utility to call Class.getMethod and get null instead of thrown exceptions
@@ -571,7 +571,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
 
     private static void printDebug(String msg, Member member, Object[] args) {
         if (debug) {
-            System.err.println(" ----- " + msg + 
+            System.err.println(" ----- " + msg +
                                member.getDeclaringClass().getName() +
                                "." + signature(member) +
                                " for arguments (" + scriptSignature(args) + ")");
@@ -579,7 +579,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
     }
 
     Method methods[];
-    
+
     private static final Method method_setAccessible
         = getMethod(Method.class,
                     "setAccessible", new Class[] { Boolean.TYPE });

@@ -41,14 +41,14 @@ import org.mozilla.javascript.*;
 /**
  * Class ScriptableOutputStream is an ObjectOutputStream used
  * to serialize JavaScript objects and functions. Note that
- * compiled functions currently cannot be serialized, only 
- * interpreted functions. The top-level scope containing the 
- * object is not written out, but is instead replaced with 
- * another top-level object when the ScriptableInputStream 
- * reads in this object. Also, object corresponding to names 
- * added to the exclude list are not written out but instead 
+ * compiled functions currently cannot be serialized, only
+ * interpreted functions. The top-level scope containing the
+ * object is not written out, but is instead replaced with
+ * another top-level object when the ScriptableInputStream
+ * reads in this object. Also, object corresponding to names
+ * added to the exclude list are not written out but instead
  * are looked up during deserialization. This approach avoids
- * the creation of duplicate copies of standard objects 
+ * the creation of duplicate copies of standard objects
  * during deserialization.
  *
  * @author Norris Boyd
@@ -60,9 +60,9 @@ public class ScriptableOutputStream extends ObjectOutputStream {
 
     /**
      * ScriptableOutputStream constructor.
-     * Creates a ScriptableOutputStream for use in serializing 
+     * Creates a ScriptableOutputStream for use in serializing
      * JavaScript objects. Calls excludeStandardObjectNames.
-     * 
+     *
      * @param out the OutputStream to write to.
      * @param scope the scope containing the object.
      */
@@ -108,7 +108,7 @@ public class ScriptableOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * Adds the names of the standard objects and their 
+     * Adds the names of the standard objects and their
      * prototypes to the list of excluded names.
      */
     public void excludeStandardObjectNames() {
@@ -129,7 +129,7 @@ public class ScriptableOutputStream extends ObjectOutputStream {
     }
 
     static Object lookupQualifiedName(Scriptable scope,
-                                      String qualifiedName) 
+                                      String qualifiedName)
     {
         StringTokenizer st = new StringTokenizer(qualifiedName, ".");
         Object result = scope;
@@ -142,13 +142,13 @@ public class ScriptableOutputStream extends ObjectOutputStream {
         return result;
     }
 
-    static class PendingLookup implements Serializable { 
+    static class PendingLookup implements Serializable {
         PendingLookup(String name) { this.name = name; }
         String getName() { return name; }
         private String name;
     };
 
-    protected Object replaceObject(Object obj) 
+    protected Object replaceObject(Object obj)
         throws IOException
     {
         String name = (String) table.get(obj);

@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  * Brendan Eich
  * Matthias Radestock
@@ -69,7 +69,7 @@ public class NativeRegExp extends IdScriptable implements Function {
     private static final boolean debug = false;
 
     public static void init(Context cx, Scriptable scope, boolean sealed) {
-        
+
         NativeRegExp proto = new NativeRegExp();
         proto.prototypeFlag = true;
         proto.activateIdMap(MAX_PROTOTYPE_ID);
@@ -85,7 +85,7 @@ public class NativeRegExp extends IdScriptable implements Function {
         ctor.setParentScope(scope);
 
         ctor.setImmunePrototypeProperty(proto);
-        
+
         if (sealed) {
             proto.sealObject();
             ctor.sealObject();
@@ -94,12 +94,12 @@ public class NativeRegExp extends IdScriptable implements Function {
         defineProperty(scope, "RegExp", ctor, ScriptableObject.DONTENUM);
     }
 
-    public NativeRegExp(Context cx, Scriptable scope, String source, 
+    public NativeRegExp(Context cx, Scriptable scope, String source,
                         String global, boolean flat) {
         init(cx, scope, source, global, flat);
     }
 
-    public void init(Context cx, Scriptable scope, String source, 
+    public void init(Context cx, Scriptable scope, String source,
                      String global, boolean flat) {
         this.source = source;
         flags = 0;
@@ -133,13 +133,13 @@ public class NativeRegExp extends IdScriptable implements Function {
                     len = REOP_FLATLEN_MAX;
                 }
                 RENode ren2 = new RENode(state, len == 1 ? REOP_FLAT1 : REOP_FLAT,
-                                         new Integer(index));                                 
+                                         new Integer(index));
                 ren2.flags = RENode.NONEMPTY;
                 if (len > 1) {
                     ren2.kid2 = index + len;
                 } else {
                     ren2.flags |= RENode.SINGLE;
-                    ren2.chr = state.source[index];                    
+                    ren2.chr = state.source[index];
                 }
                 index += len;
                 sourceLen -= len;
@@ -188,7 +188,7 @@ public class NativeRegExp extends IdScriptable implements Function {
                                                   scope);
             }
             NativeRegExp thatObj = (NativeRegExp) args[0];
-            source = thatObj.source; 
+            source = thatObj.source;
             lastIndex = thatObj.lastIndex;
             parenCount = thatObj.parenCount;
             flags = thatObj.flags;
@@ -220,7 +220,7 @@ public class NativeRegExp extends IdScriptable implements Function {
 
     public NativeRegExp() {
     }
-    
+
     private static RegExpImpl getImpl(Context cx) {
         return (RegExpImpl) ScriptRuntime.getRegExpProxy(cx);
     }
@@ -245,10 +245,10 @@ public class NativeRegExp extends IdScriptable implements Function {
         }
         int i = ((flags & GLOB) != 0) ? lastIndex : 0;
         int indexp[] = { i };
-        Object rval = executeRegExp(cx, scopeObj, 
+        Object rval = executeRegExp(cx, scopeObj,
                                     reImpl, str, indexp, matchType);
         if ((flags & GLOB) != 0) {
-            lastIndex = (rval == null || rval == Undefined.instance) 
+            lastIndex = (rval == null || rval == Undefined.instance)
                         ? 0 : indexp[0];
         }
         return rval;
@@ -497,14 +497,14 @@ public class NativeRegExp extends IdScriptable implements Function {
                     int index = ((Integer) ren.kid).intValue();
                     int len = ren.kid2 - index;
                     for (int i = 0; i < len; i++)
-                        System.out.print("\\u" + 
+                        System.out.print("\\u" +
                                          Integer.toHexString(source[index+i]));
                     System.out.println();
                     break;
                     }
 
                 case REOP_UCFLAT1:
-                    System.out.print("\\u" + 
+                    System.out.print("\\u" +
                                      Integer.toHexString(ren.chr));
                     System.out.println();
                     break;
@@ -514,7 +514,7 @@ public class NativeRegExp extends IdScriptable implements Function {
                     int len = ren.kid2 - index;
                     System.out.print(" [");
                     for (int i = 0; i < len; i++)
-                        System.out.print("\\u" + 
+                        System.out.print("\\u" +
                                          Integer.toHexString(source[index+i]));
                     System.out.println("]");
                     break;
@@ -1075,7 +1075,7 @@ public class NativeRegExp extends IdScriptable implements Function {
                 */
                 if ((state.cx.getLanguageVersion() != Context.VERSION_DEFAULT)
                     && (state.cx.getLanguageVersion() <= Context.VERSION_1_4)) {
-                    switch (c) {                    
+                    switch (c) {
                     case '0':
                         state.index = index;
                         num = doOctal(state);
@@ -1106,7 +1106,7 @@ public class NativeRegExp extends IdScriptable implements Function {
                             ocp = --index;  /* skip beyond the '\' */
                             doFlat = true;
                             skipCommon = true;
-                            break;                        
+                            break;
                         }
                         /* more than 1 digit, or a number greater than
                            the count of parentheses => it's an octal */
@@ -1122,7 +1122,7 @@ public class NativeRegExp extends IdScriptable implements Function {
                         ren = new RENode(state, REOP_BACKREF, null);
                         ren.num = num - 1;       /* \1 is numbered 0, etc. */
 
-                        /* Avoid common chr- and flags-setting 
+                        /* Avoid common chr- and flags-setting
                            code after switch. */
                         ren.flags = RENode.NONEMPTY;
                         skipCommon = true;
@@ -1145,14 +1145,14 @@ public class NativeRegExp extends IdScriptable implements Function {
                         index--;
                         ren = new RENode(state, REOP_BACKREF, null);
                         ren.num = num - 1;       /* \1 is numbered 0, etc. */
-                        /* Avoid common chr- and flags-setting 
+                        /* Avoid common chr- and flags-setting
                            code after switch. */
                         ren.flags = RENode.NONEMPTY;
                         skipCommon = true;
                     }
                 }
                 break;
-                
+
             case 'x':
                 ocp = index;
                 if (++index < source.length && isHex(c = source[index])) {
@@ -1163,8 +1163,8 @@ public class NativeRegExp extends IdScriptable implements Function {
                     } else {
                         if ((state.cx.getLanguageVersion()
                              != Context.VERSION_DEFAULT)
-                            && (state.cx.getLanguageVersion() 
-                                <= Context.VERSION_1_4)) 
+                            && (state.cx.getLanguageVersion()
+                                <= Context.VERSION_1_4))
                             index--; /* back up so index points to last hex char */
                         else { /* ecma 2 requires pairs of hex digits. */
                             index = ocp;
@@ -1345,15 +1345,15 @@ public class NativeRegExp extends IdScriptable implements Function {
             else
                 return false;
     }
-    
-    
+
+
     int greedyRecurse(GreedyState grState, int index, int previousKid) {
         int kidMatch;
         int match;
         int num;
 
         /*
-         *    when the kid match fails, we reset the parencount and run any 
+         *    when the kid match fails, we reset the parencount and run any
          *    previously succesful kid in order to restablish it's paren
          *    contents.
          */
@@ -1364,7 +1364,7 @@ public class NativeRegExp extends IdScriptable implements Function {
         kidMatch = matchRENodes(grState.state, grState.kid, grState.next, index);
         grState.state.complete = -1;
         grState.state.goForBroke = oldBroke;
-        
+
         if (kidMatch == -1) {
             grState.state.parenCount = num;
             if (previousKid != -1)
@@ -1393,7 +1393,7 @@ public class NativeRegExp extends IdScriptable implements Function {
             }
             grState.state.parenCount = num;
             matchRENodes(grState.state, grState.kid, grState.next, index);
-            
+
             match = matchRENodes(grState.state, grState.next, grState.stop, kidMatch);
             if (match != -1) {
                 if (grState.stop == null) {
@@ -1441,7 +1441,7 @@ public class NativeRegExp extends IdScriptable implements Function {
             state.complete = match;
             return index;
         }
-        if (match != -1) 
+        if (match != -1)
             return index;
 
         kidMatch = matchRENodes(state, (RENode)ren.kid, ren.next, index);
@@ -1451,11 +1451,11 @@ public class NativeRegExp extends IdScriptable implements Function {
         if (kidMatch == index) return kidMatch;    /* no point pursuing an empty match forever */
         return matchNonGreedyKid(state, ren, kidCount, maxKid, kidMatch);
     }
-    
+
     boolean isLineTerminator(char c) {
         return TokenStream.isJSLineTerminator(c);
     }
-    
+
     int matchRENodes(MatchState state, RENode ren, RENode stop, int index) {
         int num;
         char[] input = state.input;
@@ -1494,7 +1494,7 @@ public class NativeRegExp extends IdScriptable implements Function {
                         index = kidMatch;
                     }
                     if (num == ren.max)
-                        // Have matched the exact count required, 
+                        // Have matched the exact count required,
                         // need to match the rest of the regexp.
                         break;
                     if ((ren.flags & RENode.MINIMAL) == 0) {
@@ -1502,7 +1502,7 @@ public class NativeRegExp extends IdScriptable implements Function {
                                                       index, lastKid);
                         if (kidMatch == -1) {
                             if (lastKid != -1) {
-                                index = matchRENodes(state, (RENode)ren.kid, 
+                                index = matchRENodes(state, (RENode)ren.kid,
                                                      ren.next, lastKid);
                                 if (state.goForBroke && (state.complete != -1))
                                     return state.complete;
@@ -1513,7 +1513,7 @@ public class NativeRegExp extends IdScriptable implements Function {
                                 return state.complete;
                             index = kidMatch;
                         }
-                    }        
+                    }
                     else {
                         index = matchNonGreedyKid(state, ren, num,
                                                   ren.max, index);
@@ -1521,16 +1521,16 @@ public class NativeRegExp extends IdScriptable implements Function {
                             return -1;
                         if (state.goForBroke && (state.complete != -1))
                             return state.complete;
-                    }                           
+                    }
                 }
                     break;
                 case REOP_PLUS: {
-                    int kidMatch = matchRENodes(state, (RENode)ren.kid, 
+                    int kidMatch = matchRENodes(state, (RENode)ren.kid,
                                                 ren.next, index);
                     if (kidMatch == -1)
                         return -1;
                     if ((ren.flags & RENode.MINIMAL) == 0) {
-                        kidMatch = matchGreedyKid(state, ren, stop, 1, 
+                        kidMatch = matchGreedyKid(state, ren, stop, 1,
                                                   kidMatch, index);
                         if (kidMatch == -1) {
                             index = matchRENodes(state,(RENode)ren.kid,
@@ -1552,7 +1552,7 @@ public class NativeRegExp extends IdScriptable implements Function {
                     if (index == -1) return -1;
                 }
                     break;
-                case REOP_STAR:                                 
+                case REOP_STAR:
                     if ((ren.flags & RENode.MINIMAL) == 0) {
                         int kidMatch = matchGreedyKid(state, ren, stop, 0, index, -1);
                         if (kidMatch != -1) {
@@ -1673,8 +1673,8 @@ public class NativeRegExp extends IdScriptable implements Function {
                         return state.noMoreInput();
                     }
                     if (ren.bitmap == null) {
-                        char[] source = (ren.s != null) 
-                            ? ren.s 
+                        char[] source = (ren.s != null)
+                            ? ren.s
                             : this.source.toCharArray();
                         ren.buildBitmap(state, source, ((state.flags & FOLD) != 0));
                     }
@@ -1873,7 +1873,7 @@ public class NativeRegExp extends IdScriptable implements Function {
     int matchRegExp(MatchState state, RENode ren, int index) {
         // have to include the position beyond the last character
         // in order to detect end-of-input/line condition
-        for (int i = index; i <= state.input.length; i++) {            
+        for (int i = index; i <= state.input.length; i++) {
             state.skipped = i - index;
             state.parenCount = 0;
             int result = matchRENodes(state, ren, null, i);
@@ -1887,7 +1887,7 @@ public class NativeRegExp extends IdScriptable implements Function {
      * indexp is assumed to be an array of length 1
      */
     Object executeRegExp(Context cx, Scriptable scopeObj, RegExpImpl res,
-                         String str, int indexp[], int matchType) 
+                         String str, int indexp[], int matchType)
     {
         NativeRegExp re = this;
         /*
@@ -1930,7 +1930,7 @@ public class NativeRegExp extends IdScriptable implements Function {
         int i = index - state.cpbegin;
         indexp[0] = i;
         int matchlen = i - (start + state.skipped);
-        int ep = index; 
+        int ep = index;
         index -= matchlen;
         Object result;
         Scriptable obj;
@@ -2045,15 +2045,15 @@ public class NativeRegExp extends IdScriptable implements Function {
         switch (id) {
             case Id_lastIndex:
                 return ScriptableObject.PERMANENT;
-            case Id_source:     
-            case Id_global:     
-            case Id_ignoreCase: 
-            case Id_multiline:  
+            case Id_source:
+            case Id_global:
+            case Id_ignoreCase:
+            case Id_multiline:
                 return ScriptableObject.PERMANENT | ScriptableObject.READONLY;
         }
         return super.getIdDefaultAttributes(id);
     }
-    
+
     protected Object getIdValue(int id) {
         switch (id) {
             case Id_lastIndex:  return wrap_long(0xffffffffL & lastIndex);
@@ -2064,7 +2064,7 @@ public class NativeRegExp extends IdScriptable implements Function {
         }
         return super.getIdValue(id);
     }
-    
+
     protected void setIdValue(int id, Object value) {
         if (id == Id_lastIndex) {
             setLastIndex(ScriptRuntime.toInt32(value));
@@ -2076,7 +2076,7 @@ public class NativeRegExp extends IdScriptable implements Function {
     void setLastIndex(int value) {
         lastIndex = value;
     }
-    
+
     public int methodArity(int methodId) {
         if (prototypeFlag) {
             switch (methodId) {
@@ -2091,7 +2091,7 @@ public class NativeRegExp extends IdScriptable implements Function {
     }
 
     public Object execMethod(int methodId, IdFunction f, Context cx,
-                             Scriptable scope, Scriptable thisObj, 
+                             Scriptable scope, Scriptable thisObj,
                              Object[] args)
         throws JavaScriptException
     {
@@ -2099,16 +2099,16 @@ public class NativeRegExp extends IdScriptable implements Function {
             switch (methodId) {
                 case Id_compile:
                     return realThis(thisObj, f, false).compile(cx, scope, args);
-                
+
                 case Id_toString:
                     return realThis(thisObj, f, true).toString();
-                
+
                 case Id_exec:
                     return realThis(thisObj, f, false).exec(cx, scope, args);
-                
+
                 case Id_test:
                     return realThis(thisObj, f, false).test(cx, scope, args);
-                
+
                 case Id_prefix:
                     return realThis(thisObj, f, false).prefix(cx, scope, args);
             }
@@ -2116,7 +2116,7 @@ public class NativeRegExp extends IdScriptable implements Function {
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
-    private NativeRegExp realThis(Scriptable thisObj, IdFunction f, 
+    private NativeRegExp realThis(Scriptable thisObj, IdFunction f,
                                   boolean readOnly)
     {
         while (!(thisObj instanceof NativeRegExp)) {
@@ -2133,7 +2133,7 @@ public class NativeRegExp extends IdScriptable implements Function {
             case Id_ignoreCase: return "ignoreCase";
             case Id_multiline:  return "multiline";
         }
-        
+
         if (prototypeFlag) {
             switch (id) {
                 case Id_compile:  return "compile";
@@ -2156,7 +2156,7 @@ public class NativeRegExp extends IdScriptable implements Function {
         Id_global       = 3,
         Id_ignoreCase   = 4,
         Id_multiline    = 5,
-        
+
         MAX_INSTANCE_ID = 5;
 
     protected int mapNameToId(String s) {
@@ -2206,7 +2206,7 @@ public class NativeRegExp extends IdScriptable implements Function {
         Id_exec          = MAX_INSTANCE_ID + 3,
         Id_test          = MAX_INSTANCE_ID + 4,
         Id_prefix        = MAX_INSTANCE_ID + 5,
-        
+
         MAX_PROTOTYPE_ID = MAX_INSTANCE_ID + 5;
 
 // #/string_id_map#
@@ -2257,16 +2257,16 @@ class RENode implements Serializable {
         this.op = op;
         this.kid = kid;
     }
-    
+
     private void calcBMSize(char[] s, int index, int cp2, boolean fold) {
         int maxc = 0;
         while (index < cp2) {
             char c = s[index++];
             if (c == '\\') {
                 if (index + 5 <= cp2 && s[index] == 'u'
-                    && NativeRegExp.isHex(s[index+1]) 
+                    && NativeRegExp.isHex(s[index+1])
                     && NativeRegExp.isHex(s[index+2])
-                    && NativeRegExp.isHex(s[index+3]) 
+                    && NativeRegExp.isHex(s[index+3])
                     && NativeRegExp.isHex(s[index+4]))
                     {
                         int x = (((((NativeRegExp.unHex(s[index+0]) << 4) +
@@ -2276,11 +2276,11 @@ class RENode implements Serializable {
                         c = (char) x;
                         index += 5;
                     } else {
-                        /* 
+                        /*
                          * For the not whitespace, not word or not digit cases
                          * we widen the range to the complete unicode range.
                          */
-                        if ((s[index] == 'S') 
+                        if ((s[index] == 'S')
                                 || (s[index] == 'W') || (s[index] == 'D')) {
                             maxc = 65535;
                             break;  /* leave now, it can't get worse */
@@ -2311,10 +2311,10 @@ class RENode implements Serializable {
             if (c > maxc)
                 maxc = c;
         }
-        bmsize = (short)((maxc + NativeRegExp.JS_BITS_PER_BYTE) 
+        bmsize = (short)((maxc + NativeRegExp.JS_BITS_PER_BYTE)
                          / NativeRegExp.JS_BITS_PER_BYTE);
     }
-    
+
     private void matchBit(int c, int fill) {
         int i = (c) >> 3;
         byte b = (byte) (c & 7);
@@ -2335,7 +2335,7 @@ class RENode implements Serializable {
         int end = kid2;
         byte fill = 0;
         int i,n,ocp;
-        
+
         boolean not = false;
         kid2 = 0;
         if (s[index] == '^') {
@@ -2343,7 +2343,7 @@ class RENode implements Serializable {
             kid2 = -1;
             index++;
         }
-        
+
         calcBMSize(s, index, end, fold);
         bitmap = new byte[bmsize];
         if (not) {
@@ -2355,7 +2355,7 @@ class RENode implements Serializable {
         int nchars = bmsize * NativeRegExp.JS_BITS_PER_BYTE;
         int lastc = nchars;
         boolean inrange = false;
-        
+
         while (index < end) {
             int c = s[index++];
             if (c == '\\') {
@@ -2474,7 +2474,7 @@ class RENode implements Serializable {
                 case 'u':
                     if (s.length > index+3
                         && NativeRegExp.isHex(s[index+0])
-                        && NativeRegExp.isHex(s[index+1]) 
+                        && NativeRegExp.isHex(s[index+1])
                         && NativeRegExp.isHex(s[index+2])
                         && NativeRegExp.isHex(s[index+3])) {
                         n = (((((NativeRegExp.unHex(s[index+0]) << 4) +

@@ -18,7 +18,7 @@
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Patrick Beard
  * Norris Boyd
  * Igor Bukanov
@@ -45,31 +45,31 @@ import java.util.Enumeration;
 import org.mozilla.javascript.debug.*;
 
 public class Interpreter extends LabelTable {
-    
+
     public static final boolean printICode = false;
-    
-    public IRFactory createIRFactory(TokenStream ts, 
-                                     ClassNameHelper nameHelper, Scriptable scope) 
+
+    public IRFactory createIRFactory(TokenStream ts,
+                                     ClassNameHelper nameHelper, Scriptable scope)
     {
         return new IRFactory(ts, scope);
     }
-    
+
     public Node transform(Node tree, TokenStream ts, Scriptable scope) {
         return (new NodeTransformer()).transform(tree, null, ts, scope);
     }
-    
-    public Object compile(Context cx, Scriptable scope, Node tree, 
+
+    public Object compile(Context cx, Scriptable scope, Node tree,
                           Object securityDomain,
                           SecuritySupport securitySupport,
                           ClassNameHelper nameHelper)
         throws IOException
     {
         version = cx.getLanguageVersion();
-        itsData = new InterpreterData(0, 0, securityDomain, 
+        itsData = new InterpreterData(0, 0, securityDomain,
                     cx.hasCompileFunctionsWithDynamicScope(), false);
         if (tree instanceof FunctionNode) {
             FunctionNode f = (FunctionNode) tree;
-            InterpretedFunction result = 
+            InterpretedFunction result =
                 generateFunctionICode(cx, scope, f, securityDomain);
             result.itsData.itsFunctionType = f.getFunctionType();
             createFunctionObject(result, scope);
@@ -77,9 +77,9 @@ public class Interpreter extends LabelTable {
         }
         return generateScriptICode(cx, scope, tree, securityDomain);
     }
-       
-    private void generateICodeFromTree(Node tree, 
-                                       VariableTable varTable, 
+
+    private void generateICodeFromTree(Node tree,
+                                       VariableTable varTable,
                                        boolean needsActivation,
                                        Object securityDomain)
     {
@@ -91,7 +91,7 @@ public class Interpreter extends LabelTable {
         if (itsEpilogLabel != -1)
             markLabel(itsEpilogLabel, theICodeTop);
         for (int i = 0; i < itsLabelTableTop; i++)
-            itsLabelTable[i].fixGotos(itsData.itsICode);            
+            itsLabelTable[i].fixGotos(itsData.itsICode);
     }
 
     private Object[] generateRegExpLiterals(Context cx,
@@ -104,38 +104,38 @@ public class Interpreter extends LabelTable {
             Node regexp = (Node) regexps.elementAt(i);
             Node left = regexp.getFirstChild();
             Node right = regexp.getLastChild();
-            result[i] = rep.newRegExp(cx, scope, left.getString(), 
+            result[i] = rep.newRegExp(cx, scope, left.getString(),
                                 (left != right) ? right.getString() : null, false);
             regexp.putIntProp(Node.REGEXP_PROP, i);
         }
         return result;
     }
-        
-    private InterpretedScript generateScriptICode(Context cx, 
-                                                  Scriptable scope, 
+
+    private InterpretedScript generateScriptICode(Context cx,
+                                                  Scriptable scope,
                                                   Node tree,
                                                   Object securityDomain)
-    {        
+    {
         itsSourceFile = (String) tree.getProp(Node.SOURCENAME_PROP);
         itsData.itsSourceFile = itsSourceFile;
-        itsFunctionList = (Vector) tree.getProp(Node.FUNCTION_PROP);        
+        itsFunctionList = (Vector) tree.getProp(Node.FUNCTION_PROP);
         debugSource = (StringBuffer) tree.getProp(Node.DEBUGSOURCE_PROP);
         if (itsFunctionList != null)
             generateNestedFunctions(scope, cx, securityDomain);
         Object[] regExpLiterals = null;
         Vector regexps = (Vector)tree.getProp(Node.REGEXP_PROP);
-        if (regexps != null) 
+        if (regexps != null)
             regExpLiterals = generateRegExpLiterals(cx, scope, regexps);
-        
+
         VariableTable varTable = (VariableTable)tree.getProp(Node.VARS_PROP);
         // The default is not to generate debug information
-        boolean activationNeeded = cx.isGeneratingDebugChanged() && 
+        boolean activationNeeded = cx.isGeneratingDebugChanged() &&
                                    cx.isGeneratingDebug();
         generateICodeFromTree(tree, varTable, activationNeeded, securityDomain);
         itsData.itsNestedFunctions = itsNestedFunctions;
         itsData.itsRegExpLiterals = regExpLiterals;
         if (printICode) dumpICode(itsData);
-                                                               
+
         String[] argNames = itsVariableTable.getAllNames();
         short argCount = (short)itsVariableTable.getParameterCount();
         InterpretedScript
@@ -145,9 +145,9 @@ public class Interpreter extends LabelTable {
         }
         return result;
     }
-    
+
     private void generateNestedFunctions(Scriptable scope,
-                                         Context cx, 
+                                         Context cx,
                                          Object securityDomain)
     {
         itsNestedFunctions = new InterpretedFunction[itsFunctionList.size()];
@@ -161,53 +161,53 @@ public class Interpreter extends LabelTable {
             jsi.itsData.itsFunctionType = def.getFunctionType();
             jsi.itsInFunctionFlag = true;
             jsi.debugSource = debugSource;
-            itsNestedFunctions[i] = jsi.generateFunctionICode(cx, scope, def, 
+            itsNestedFunctions[i] = jsi.generateFunctionICode(cx, scope, def,
                                                               securityDomain);
             def.putIntProp(Node.FUNCTION_PROP, i);
         }
-    }        
-    
-    private InterpretedFunction 
-    generateFunctionICode(Context cx, Scriptable scope, 
+    }
+
+    private InterpretedFunction
+    generateFunctionICode(Context cx, Scriptable scope,
                           FunctionNode theFunction, Object securityDomain)
     {
         itsFunctionList = (Vector) theFunction.getProp(Node.FUNCTION_PROP);
-        if (itsFunctionList != null) 
+        if (itsFunctionList != null)
             generateNestedFunctions(scope, cx, securityDomain);
         Object[] regExpLiterals = null;
         Vector regexps = (Vector)theFunction.getProp(Node.REGEXP_PROP);
-        if (regexps != null) 
+        if (regexps != null)
             regExpLiterals = generateRegExpLiterals(cx, scope, regexps);
 
         VariableTable varTable = theFunction.getVariableTable();
         boolean needsActivation = theFunction.requiresActivation() ||
-                                  (cx.isGeneratingDebugChanged() && 
+                                  (cx.isGeneratingDebugChanged() &&
                                    cx.isGeneratingDebug());
-        generateICodeFromTree(theFunction.getLastChild(), 
+        generateICodeFromTree(theFunction.getLastChild(),
                               varTable, needsActivation,
                               securityDomain);
-            
+
         itsData.itsName = theFunction.getFunctionName();
         itsData.itsSourceFile = (String) theFunction.getProp(
                                     Node.SOURCENAME_PROP);
         itsData.itsSource = (String)theFunction.getProp(Node.SOURCE_PROP);
         itsData.itsNestedFunctions = itsNestedFunctions;
         itsData.itsRegExpLiterals = regExpLiterals;
-        if (printICode) dumpICode(itsData);            
-            
+        if (printICode) dumpICode(itsData);
+
         String[] argNames = itsVariableTable.getAllNames();
         short argCount = (short)itsVariableTable.getParameterCount();
-        InterpretedFunction 
-            result = new InterpretedFunction(cx, itsData, argNames, argCount); 
+        InterpretedFunction
+            result = new InterpretedFunction(cx, itsData, argNames, argCount);
         if (cx.debugger != null) {
             cx.debugger.handleCompilationDone(cx, result, debugSource);
         }
         return result;
     }
-    
+
     boolean itsInFunctionFlag;
     Vector itsFunctionList;
-    
+
     InterpreterData itsData;
     VariableTable itsVariableTable;
     int itsTryDepth = 0;
@@ -216,16 +216,16 @@ public class Interpreter extends LabelTable {
     String itsSourceFile;
     int itsLineNumber = 0;
     InterpretedFunction[] itsNestedFunctions = null;
-    
+
     private int updateLineNumber(Node node, int iCodeTop)
     {
         Object datum = node.getDatum();
         if (datum == null || !(datum instanceof Number))
             return iCodeTop;
-        short lineNumber = ((Number) datum).shortValue(); 
+        short lineNumber = ((Number) datum).shortValue();
         if (lineNumber != itsLineNumber) {
             itsLineNumber = lineNumber;
-            if (itsData.itsLineNumberTable == null && 
+            if (itsData.itsLineNumberTable == null &&
                 Context.getCurrentContext().isGeneratingDebug())
             {
                 itsData.itsLineNumberTable = new UintMap();
@@ -236,10 +236,10 @@ public class Interpreter extends LabelTable {
             iCodeTop = addByte(TokenStream.LINE, iCodeTop);
             iCodeTop = addShort(lineNumber, iCodeTop);
         }
-        
+
         return iCodeTop;
     }
-    
+
     private void badTree(Node node)
     {
         try {
@@ -251,19 +251,19 @@ public class Interpreter extends LabelTable {
         throw new RuntimeException("Un-handled node : "
                                         + node.toString());
     }
-    
+
     private int generateICode(Node node, int iCodeTop) {
         int type = node.getType();
         Node child = node.getFirstChild();
         Node firstChild = child;
         switch (type) {
-            
-            case TokenStream.FUNCTION : {                                        
+
+            case TokenStream.FUNCTION : {
                     iCodeTop = addByte(TokenStream.CLOSURE, iCodeTop);
                     Node fn = (Node) node.getProp(Node.FUNCTION_PROP);
                     int index = fn.getExistingIntProp(Node.FUNCTION_PROP);
                     iCodeTop = addByte(index >> 8, iCodeTop);
-                    iCodeTop = addByte(index & 0xff, iCodeTop);                    
+                    iCodeTop = addByte(index & 0xff, iCodeTop);
                     itsStackDepth++;
                     if (itsStackDepth > itsData.itsMaxStack)
                         itsData.itsMaxStack = itsStackDepth;
@@ -273,7 +273,7 @@ public class Interpreter extends LabelTable {
             case TokenStream.SCRIPT :
                 iCodeTop = updateLineNumber(node, iCodeTop);
                 while (child != null) {
-                    if (child.getType() != TokenStream.FUNCTION) 
+                    if (child.getType() != TokenStream.FUNCTION)
                         iCodeTop = generateICode(child, iCodeTop);
                     child = child.getNextSibling();
                 }
@@ -287,7 +287,7 @@ public class Interpreter extends LabelTable {
                     child = child.getNextSibling();
                 }
                 break;
-                
+
             case TokenStream.LABEL :
             case TokenStream.WITH :
             case TokenStream.LOOP :
@@ -309,7 +309,7 @@ public class Interpreter extends LabelTable {
                 child = child.getNextSibling();
                 iCodeTop = generateICode(child, iCodeTop);
                 break;
-               
+
             case TokenStream.SWITCH : {
                     iCodeTop = updateLineNumber(node, iCodeTop);
                     iCodeTop = generateICode(child, iCodeTop);
@@ -322,7 +322,7 @@ public class Interpreter extends LabelTable {
             reminder - below we construct new GOTO nodes that aren't
             linked into the tree just for the purpose of having a node
             to pass to the addGoto routine. (Parallels codegen here).
-            Seems unnecessary.        
+            Seems unnecessary.
          */
                     Vector cases = (Vector) node.getProp(Node.CASES_PROP);
                     for (int i = 0; i < cases.size(); i++) {
@@ -332,7 +332,7 @@ public class Interpreter extends LabelTable {
                         // the rest will be generated when the case
                         // statements are encountered as siblings of
                         // the switch statement.
-                        iCodeTop = generateICode(first, iCodeTop);                   
+                        iCodeTop = generateICode(first, iCodeTop);
                         iCodeTop = addByte(TokenStream.USETEMP, iCodeTop);
                         itsStackDepth++;
                         if (itsStackDepth > itsData.itsMaxStack)
@@ -343,7 +343,7 @@ public class Interpreter extends LabelTable {
                         thisCase.addChildAfter(target, first);
                         Node branch = new Node(TokenStream.IFEQ);
                         branch.putProp(Node.TARGET_PROP, target);
-                        iCodeTop = addGoto(branch, TokenStream.IFEQ, 
+                        iCodeTop = addGoto(branch, TokenStream.IFEQ,
                                            iCodeTop);
                         itsStackDepth--;
                     }
@@ -355,18 +355,18 @@ public class Interpreter extends LabelTable {
                         Node branch = new Node(TokenStream.GOTO);
                         branch.putProp(Node.TARGET_PROP, defaultTarget);
                         iCodeTop = addGoto(branch, TokenStream.GOTO,
-                                                            iCodeTop);                    
+                                                            iCodeTop);
                     }
 
                     Node breakTarget = (Node) node.getProp(Node.BREAK_PROP);
                     Node branch = new Node(TokenStream.GOTO);
                     branch.putProp(Node.TARGET_PROP, breakTarget);
-                    iCodeTop = addGoto(branch, TokenStream.GOTO, 
-                                       iCodeTop);                    
+                    iCodeTop = addGoto(branch, TokenStream.GOTO,
+                                       iCodeTop);
                 }
                 break;
-                                
-            case TokenStream.TARGET : { 
+
+            case TokenStream.TARGET : {
                     int label = node.getIntProp(Node.LABEL_PROP, -1);
                     if (label == -1) {
                         label = acquireLabel();
@@ -382,7 +382,7 @@ public class Interpreter extends LabelTable {
                     }
                 }
                 break;
-                
+
             case TokenStream.EQOP :
             case TokenStream.RELOP : {
                     iCodeTop = generateICode(child, iCodeTop);
@@ -399,13 +399,13 @@ public class Interpreter extends LabelTable {
                     itsStackDepth--;
                 }
                 break;
-                
+
             case TokenStream.NEW :
             case TokenStream.CALL : {
-                    if (itsSourceFile != null && (itsData.itsSourceFile == null || ! itsSourceFile.equals(itsData.itsSourceFile))) 
+                    if (itsSourceFile != null && (itsData.itsSourceFile == null || ! itsSourceFile.equals(itsData.itsSourceFile)))
                         itsData.itsSourceFile = itsSourceFile;
                     iCodeTop = addByte(TokenStream.SOURCEFILE, iCodeTop);
-                    
+
                     int childCount = 0;
                     short nameIndex = -1;
                     while (child != null) {
@@ -428,7 +428,7 @@ public class Interpreter extends LabelTable {
                         iCodeTop = addByte(type, iCodeTop);
                         iCodeTop = addShort(nameIndex, iCodeTop);
                     }
-                    
+
                     itsStackDepth -= (childCount - 1);  // always a result value
                     // subtract from child count to account for [thisObj &] fun
                     if (type == TokenStream.NEW)
@@ -438,21 +438,21 @@ public class Interpreter extends LabelTable {
                     iCodeTop = addShort(childCount, iCodeTop);
                     if (childCount > itsData.itsMaxArgs)
                         itsData.itsMaxArgs = childCount;
-                    
+
                     iCodeTop = addByte(TokenStream.SOURCEFILE, iCodeTop);
                 }
                 break;
-                
+
             case TokenStream.NEWLOCAL :
             case TokenStream.NEWTEMP : {
                     iCodeTop = generateICode(child, iCodeTop);
                     iCodeTop = addByte(TokenStream.NEWTEMP, iCodeTop);
                     iCodeTop = addLocalRef(node, iCodeTop);
                 }
-                break;                
-                   
+                break;
+
             case TokenStream.USELOCAL : {
-                    if (node.getProp(Node.TARGET_PROP) != null) 
+                    if (node.getProp(Node.TARGET_PROP) != null)
                         iCodeTop = addByte(TokenStream.RETSUB, iCodeTop);
                     else {
                         iCodeTop = addByte(TokenStream.USETEMP, iCodeTop);
@@ -463,7 +463,7 @@ public class Interpreter extends LabelTable {
                     Node temp = (Node) node.getProp(Node.LOCAL_PROP);
                     iCodeTop = addLocalRef(temp, iCodeTop);
                 }
-                break;                
+                break;
 
             case TokenStream.USETEMP : {
                     iCodeTop = addByte(TokenStream.USETEMP, iCodeTop);
@@ -473,8 +473,8 @@ public class Interpreter extends LabelTable {
                     if (itsStackDepth > itsData.itsMaxStack)
                         itsData.itsMaxStack = itsStackDepth;
                 }
-                break;                
-                
+                break;
+
             case TokenStream.IFEQ :
             case TokenStream.IFNE :
                 iCodeTop = generateICode(child, iCodeTop);
@@ -489,7 +489,7 @@ public class Interpreter extends LabelTable {
                     mark the target with a FINALLY_PROP to indicate
                     that it will have an incoming PC value on the top
                     of the stack.
-                    !!! 
+                    !!!
                     This only works if the target follows the JSR
                     in the tree.
                     !!!
@@ -499,21 +499,21 @@ public class Interpreter extends LabelTable {
                     // Bug 115717 is due to adding a GOSUB here before
                     // we insert an ENDTRY. I'm not sure of the best way
                     // to fix this; perhaps we need to maintain a stack
-                    // of pending trys and have some knowledge of how 
-                    // many trys we need to close when we perform a 
+                    // of pending trys and have some knowledge of how
+                    // many trys we need to close when we perform a
                     // GOTO or GOSUB.
                     iCodeTop = addGoto(node, TokenStream.GOSUB, iCodeTop);
                 }
                 break;
-            
-            case TokenStream.AND : {            
+
+            case TokenStream.AND : {
                     iCodeTop = generateICode(child, iCodeTop);
-                    iCodeTop = addByte(TokenStream.DUP, iCodeTop);                
+                    iCodeTop = addByte(TokenStream.DUP, iCodeTop);
                     itsStackDepth++;
                     if (itsStackDepth > itsData.itsMaxStack)
                         itsData.itsMaxStack = itsStackDepth;
                     int falseTarget = acquireLabel();
-                    iCodeTop = addGoto(falseTarget, TokenStream.IFNE, 
+                    iCodeTop = addGoto(falseTarget, TokenStream.IFNE,
                                                     iCodeTop);
                     iCodeTop = addByte(TokenStream.POP, iCodeTop);
                     itsStackDepth--;
@@ -525,14 +525,14 @@ public class Interpreter extends LabelTable {
 
             case TokenStream.OR : {
                     iCodeTop = generateICode(child, iCodeTop);
-                    iCodeTop = addByte(TokenStream.DUP, iCodeTop);                
+                    iCodeTop = addByte(TokenStream.DUP, iCodeTop);
                     itsStackDepth++;
                     if (itsStackDepth > itsData.itsMaxStack)
                         itsData.itsMaxStack = itsStackDepth;
                     int trueTarget = acquireLabel();
                     iCodeTop = addGoto(trueTarget, TokenStream.IFEQ,
                                        iCodeTop);
-                    iCodeTop = addByte(TokenStream.POP, iCodeTop);                
+                    iCodeTop = addByte(TokenStream.POP, iCodeTop);
                     itsStackDepth--;
                     child = child.getNextSibling();
                     iCodeTop = generateICode(child, iCodeTop);
@@ -561,8 +561,8 @@ public class Interpreter extends LabelTable {
                 }
                 break;
 
-            case TokenStream.DELPROP :                
-            case TokenStream.BITAND :                
+            case TokenStream.DELPROP :
+            case TokenStream.BITAND :
             case TokenStream.BITOR :
             case TokenStream.BITXOR :
             case TokenStream.LSH :
@@ -604,7 +604,7 @@ public class Interpreter extends LabelTable {
                             iCodeTop = addGoto(trueTarget, TokenStream.IFEQ,
                                                         iCodeTop);
                             iCodeTop = addByte(TokenStream.TRUE, iCodeTop);
-                            iCodeTop = addGoto(beyond, TokenStream.GOTO, 
+                            iCodeTop = addGoto(beyond, TokenStream.GOTO,
                                                         iCodeTop);
                             markLabel(trueTarget, iCodeTop);
                             iCodeTop = addByte(TokenStream.FALSE, iCodeTop);
@@ -650,7 +650,7 @@ public class Interpreter extends LabelTable {
                         itsStackDepth -= 2;
                     }
                 }
-                break;            
+                break;
 
             case TokenStream.SETELEM :
                 iCodeTop = generateICode(child, iCodeTop);
@@ -666,11 +666,11 @@ public class Interpreter extends LabelTable {
                 iCodeTop = generateICode(child, iCodeTop);
                 child = child.getNextSibling();
                 iCodeTop = generateICode(child, iCodeTop);
-                iCodeTop = addByte(TokenStream.SETNAME, iCodeTop);                
+                iCodeTop = addByte(TokenStream.SETNAME, iCodeTop);
                 iCodeTop = addString(firstChild.getString(), iCodeTop);
                 itsStackDepth--;
                 break;
-                
+
             case TokenStream.TYPEOF : {
                     String name = node.getString();
                     int index = -1;
@@ -678,7 +678,7 @@ public class Interpreter extends LabelTable {
                     // since the vars all exist there instead of in jregs
                     if (itsInFunctionFlag && !itsData.itsNeedsActivation)
                         index = itsVariableTable.getOrdinal(name);
-                    if (index == -1) {                    
+                    if (index == -1) {
                         iCodeTop = addByte(TokenStream.TYPEOFNAME, iCodeTop);
                         iCodeTop = addString(name, iCodeTop);
                     }
@@ -723,10 +723,10 @@ public class Interpreter extends LabelTable {
                                     if (itsStackDepth > itsData.itsMaxStack)
                                         itsData.itsMaxStack = itsStackDepth;
                                     iCodeTop = addByte(type == TokenStream.INC
-                                                       ? TokenStream.PROPINC 
+                                                       ? TokenStream.PROPINC
                                                        : TokenStream.PROPDEC,
                                                        iCodeTop);
-                                    itsStackDepth--;                                        
+                                    itsStackDepth--;
                                 }
                                 else {
                                     iCodeTop = addByte(type == TokenStream.INC
@@ -754,20 +754,20 @@ public class Interpreter extends LabelTable {
                                                        ? TokenStream.PROPINC
                                                        : TokenStream.PROPDEC,
                                                        iCodeTop);
-                                else                                                        
+                                else
                                     iCodeTop = addByte(type == TokenStream.INC
-                                                       ? TokenStream.ELEMINC 
+                                                       ? TokenStream.ELEMINC
                                                        : TokenStream.ELEMDEC,
                                                        iCodeTop);
-                                itsStackDepth--;                                        
+                                itsStackDepth--;
                             }
                             break;
                         default : {
-                                iCodeTop = addByte(type == TokenStream.INC 
-                                                   ? TokenStream.NAMEINC 
+                                iCodeTop = addByte(type == TokenStream.INC
+                                                   ? TokenStream.NAMEINC
                                                    : TokenStream.NAMEDEC,
                                                    iCodeTop);
-                                iCodeTop = addString(child.getString(), 
+                                iCodeTop = addString(child.getString(),
                                                             iCodeTop);
                                 itsStackDepth++;
                                 if (itsStackDepth > itsData.itsMaxStack)
@@ -781,7 +781,7 @@ public class Interpreter extends LabelTable {
             case TokenStream.NUMBER : {
                 double num = node.getDouble();
                 int inum = (int)num;
-                if (inum == num) { 
+                if (inum == num) {
                     if (inum == 0) {
                         iCodeTop = addByte(TokenStream.ZERO, iCodeTop);
                     }
@@ -820,7 +820,7 @@ public class Interpreter extends LabelTable {
                 iCodeTop = generateICode(child, iCodeTop);
                 iCodeTop = addByte(type, iCodeTop);
                 break;
-                
+
             case TokenStream.NEWSCOPE :
                 iCodeTop = addByte(type, iCodeTop);
                 itsStackDepth++;
@@ -843,7 +843,7 @@ public class Interpreter extends LabelTable {
                         iCodeTop = addShort(0, iCodeTop);
                     }
                     else
-                        iCodeTop = 
+                        iCodeTop =
                             addGoto(node, TokenStream.TRY, iCodeTop);
                     int finallyHandler = 0;
                     if (finallyTarget != null) {
@@ -852,7 +852,7 @@ public class Interpreter extends LabelTable {
                         itsLabelTable[theLabel].addFixup(iCodeTop);
                     }
                     iCodeTop = addShort(0, iCodeTop);
-                    
+
                     Node lastChild = null;
                     /*
                         when we encounter the child of the catchTarget, we
@@ -890,7 +890,7 @@ public class Interpreter extends LabelTable {
                     if (finallyTarget != null) {
                         // normal flow goes around the finally handler stublet
                         int skippy = acquireLabel();
-                        iCodeTop = 
+                        iCodeTop =
                             addGoto(skippy, TokenStream.GOTO, iCodeTop);
                         // on entry the stack will have the exception object
                         markLabel(finallyHandler, iCodeTop);
@@ -901,9 +901,9 @@ public class Interpreter extends LabelTable {
                         iCodeTop = addByte(TokenStream.NEWTEMP, iCodeTop);
                         iCodeTop = addByte(theLocalSlot, iCodeTop);
                         iCodeTop = addByte(TokenStream.POP, iCodeTop);
-                        int finallyLabel 
+                        int finallyLabel
                            = finallyTarget.getExistingIntProp(Node.LABEL_PROP);
-                        iCodeTop = addGoto(finallyLabel, 
+                        iCodeTop = addGoto(finallyLabel,
                                          TokenStream.GOSUB, iCodeTop);
                         iCodeTop = addByte(TokenStream.USETEMP, iCodeTop);
                         iCodeTop = addByte(theLocalSlot, iCodeTop);
@@ -914,17 +914,17 @@ public class Interpreter extends LabelTable {
                     itsTryDepth--;
                 }
                 break;
-                
+
             case TokenStream.THROW :
                 iCodeTop = updateLineNumber(node, iCodeTop);
                 iCodeTop = generateICode(child, iCodeTop);
                 iCodeTop = addByte(TokenStream.THROW, iCodeTop);
                 itsStackDepth--;
                 break;
-                
+
             case TokenStream.RETURN :
                 iCodeTop = updateLineNumber(node, iCodeTop);
-                if (child != null) 
+                if (child != null)
                     iCodeTop = generateICode(child, iCodeTop);
                 else {
                     iCodeTop = addByte(TokenStream.UNDEFINED, iCodeTop);
@@ -935,7 +935,7 @@ public class Interpreter extends LabelTable {
                 iCodeTop = addGoto(node, TokenStream.RETURN, iCodeTop);
                 itsStackDepth--;
                 break;
-                
+
             case TokenStream.GETVAR : {
                     String name = node.getString();
                     if (itsData.itsNeedsActivation) {
@@ -962,7 +962,7 @@ public class Interpreter extends LabelTable {
                     }
                 }
                 break;
-                
+
             case TokenStream.SETVAR : {
                     if (itsData.itsNeedsActivation) {
                         child.setType(TokenStream.BINDNAME);
@@ -979,7 +979,7 @@ public class Interpreter extends LabelTable {
                     }
                 }
                 break;
-                
+
             case TokenStream.PRIMARY:
                 iCodeTop = addByte(node.getInt(), iCodeTop);
                 itsStackDepth++;
@@ -993,7 +993,7 @@ public class Interpreter extends LabelTable {
                 iCodeTop = addLocalRef(node, iCodeTop);
                 itsStackDepth--;
                 break;
-                
+
             case TokenStream.ENUMNEXT : {
                     iCodeTop = addByte(TokenStream.ENUMNEXT, iCodeTop);
                     Node init = (Node)node.getProp(Node.ENUM_PROP);
@@ -1001,13 +1001,13 @@ public class Interpreter extends LabelTable {
                     itsStackDepth++;
                     if (itsStackDepth > itsData.itsMaxStack)
                         itsData.itsMaxStack = itsStackDepth;
-                }                        
+                }
                 break;
-                
+
             case TokenStream.ENUMDONE :
                 // could release the local here??
                 break;
-                
+
             case TokenStream.OBJECT : {
                     Node regexp = (Node) node.getProp(Node.REGEXP_PROP);
                     int index = regexp.getExistingIntProp(Node.REGEXP_PROP);
@@ -1018,14 +1018,14 @@ public class Interpreter extends LabelTable {
                         itsData.itsMaxStack = itsStackDepth;
                 }
                 break;
-                
-            default : 
+
+            default :
                 badTree(node);
                 break;
         }
         return iCodeTop;
     }
-    
+
     private int addLocalRef(Node node, int iCodeTop)
     {
         int theLocalSlot = node.getIntProp(Node.LOCAL_PROP, -1);
@@ -1036,9 +1036,9 @@ public class Interpreter extends LabelTable {
         iCodeTop = addByte(theLocalSlot, iCodeTop);
         if (theLocalSlot >= itsData.itsMaxLocals)
             itsData.itsMaxLocals = theLocalSlot + 1;
-        return iCodeTop;            
+        return iCodeTop;
     }
-    
+
     private int addGoto(Node node, int gotoOp, int iCodeTop)
     {
         int targetLabel;
@@ -1058,7 +1058,7 @@ public class Interpreter extends LabelTable {
         iCodeTop = addGoto(targetLabel, (byte) gotoOp, iCodeTop);
         return iCodeTop;
     }
-    
+
     private int addGoto(int targetLabel, int gotoOp, int iCodeTop)
     {
         int gotoPC = iCodeTop;
@@ -1075,7 +1075,7 @@ public class Interpreter extends LabelTable {
         }
         return iCodeTop;
     }
-    
+
     private int addByte(int b, int iCodeTop) {
         byte[] array = itsData.itsICode;
         if (array.length == iCodeTop) {
@@ -1086,7 +1086,7 @@ public class Interpreter extends LabelTable {
         array[iCodeTop++] = (byte)b;
         return iCodeTop;
     }
-    
+
     private int addShort(int s, int iCodeTop) {
         byte[] array = itsData.itsICode;
         if (iCodeTop + 2 > array.length) {
@@ -1098,7 +1098,7 @@ public class Interpreter extends LabelTable {
         array[iCodeTop + 1] = (byte)s;
         return iCodeTop + 2;
     }
-    
+
     private int addInt(int i, int iCodeTop) {
         byte[] array = itsData.itsICode;
         if (iCodeTop + 4 > array.length) {
@@ -1112,12 +1112,12 @@ public class Interpreter extends LabelTable {
         array[iCodeTop + 3] = (byte)i;
         return iCodeTop + 4;
     }
-    
+
     private int addDouble(double num, int iCodeTop) {
         int index = itsData.itsDoubleTableIndex;
         if (index == 0) {
             itsData.itsDoubleTable = new double[64];
-        }    
+        }
         else if (itsData.itsDoubleTable.length == index) {
             double[] na = new double[index * 2];
             System.arraycopy(itsData.itsDoubleTable, 0, na, 0, index);
@@ -1129,7 +1129,7 @@ public class Interpreter extends LabelTable {
         iCodeTop = addShort(index, iCodeTop);
         return iCodeTop;
     }
-    
+
     private int addString(String str, int iCodeTop) {
         int index = itsData.itsStringTableIndex;
         if (itsData.itsStringTable.length == index) {
@@ -1143,21 +1143,21 @@ public class Interpreter extends LabelTable {
         iCodeTop = addShort(index, iCodeTop);
         return iCodeTop;
     }
-    
+
     private static int getShort(byte[] iCode, int pc) {
         return (iCode[pc] << 8) | (iCode[pc + 1] & 0xFF);
     }
-    
+
     private static int getInt(byte[] iCode, int pc) {
         return (iCode[pc] << 24) | ((iCode[pc + 1] & 0xFF) << 16)
                | ((iCode[pc + 2] & 0xFF) << 8) | (iCode[pc + 3] & 0xFF);
     }
-    
+
     private static int getTarget(byte[] iCode, int pc) {
         int displacement = getShort(iCode, pc);
         return pc - 1 + displacement;
     }
-    
+
     static PrintWriter out;
     static {
         if (printICode) {
@@ -1168,20 +1168,20 @@ public class Interpreter extends LabelTable {
             catch (IOException x) {
             }
         }
-    }   
-    
+    }
+
     private static void dumpICode(InterpreterData theData) {
         if (printICode) {
             try {
                 int iCodeLength = theData.itsICodeTop;
                 byte iCode[] = theData.itsICode;
                 String[] strings = theData.itsStringTable;
-                
+
                 out = new PrintWriter(new FileOutputStream("icode.txt", true));
-                out.println("ICode dump, for " + theData.itsName 
+                out.println("ICode dump, for " + theData.itsName
                             + ", length = " + iCodeLength);
                 out.println("MaxStack = " + theData.itsMaxStack);
-                
+
                 for (int pc = 0; pc < iCodeLength; ) {
                     out.print("[" + pc + "] ");
                     int token = iCode[pc] & 0xff;
@@ -1211,8 +1211,8 @@ public class Interpreter extends LabelTable {
                         case TokenStream.PROPDEC :
                         case TokenStream.ELEMINC :
                         case TokenStream.ELEMDEC :
-                        case TokenStream.BITNOT :                
-                        case TokenStream.BITAND :                
+                        case TokenStream.BITNOT :
+                        case TokenStream.BITAND :
                         case TokenStream.BITOR :
                         case TokenStream.BITXOR :
                         case TokenStream.LSH :
@@ -1246,7 +1246,7 @@ public class Interpreter extends LabelTable {
                         case TokenStream.FALSE :
                         case TokenStream.TRUE :
                         case TokenStream.UNDEFINED :
-                        case TokenStream.SOURCEFILE : 
+                        case TokenStream.SOURCEFILE :
                             out.println(tname);
                             break;
                         case TokenStream.GOSUB :
@@ -1267,7 +1267,7 @@ public class Interpreter extends LabelTable {
                                 pc += 4;
                             }
                             break;
-                        case TokenStream.RETSUB :                        
+                        case TokenStream.RETSUB :
                         case TokenStream.ENUMINIT :
                         case TokenStream.ENUMNEXT :
                         case TokenStream.VARINC :
@@ -1285,7 +1285,7 @@ public class Interpreter extends LabelTable {
                                 int line = getShort(iCode, pc);
                                 String name = strings[getShort(iCode, pc + 2)];
                                 int count = getShort(iCode, pc + 4);
-                                out.println(tname + " " + count 
+                                out.println(tname + " " + count
                                             + " " + line + " " + name);
                                 pc += 6;
                             }
@@ -1349,8 +1349,8 @@ public class Interpreter extends LabelTable {
             catch (IOException x) {}
         }
     }
-    
-    private static void createFunctionObject(InterpretedFunction fn, 
+
+    private static void createFunctionObject(InterpretedFunction fn,
                                              Scriptable scope)
     {
         fn.setPrototype(ScriptableObject.getClassPrototype(scope, "Function"));
@@ -1366,9 +1366,9 @@ public class Interpreter extends LabelTable {
             ScriptRuntime.setProp(scope, fn.itsData.itsName, fn, scope);
         }
     }
-    
-    public static Object interpret(Context cx, Scriptable scope, 
-                                   Scriptable thisObj, Object[] args, 
+
+    public static Object interpret(Context cx, Scriptable scope,
+                                   Scriptable thisObj, Object[] args,
                                    NativeFunction fnOrScript,
                                    InterpreterData theData)
         throws JavaScriptException
@@ -1377,50 +1377,50 @@ public class Interpreter extends LabelTable {
         Object lhs;
 
         final int maxStack = theData.itsMaxStack;
-        final int maxVars = (fnOrScript.argNames == null) 
+        final int maxVars = (fnOrScript.argNames == null)
                             ? 0 : fnOrScript.argNames.length;
         final int maxLocals = theData.itsMaxLocals;
         final int maxTryDepth = theData.itsMaxTryDepth;
-        
-        final int VAR_SHFT = maxStack; 
-        final int LOCAL_SHFT = VAR_SHFT + maxVars; 
+
+        final int VAR_SHFT = maxStack;
+        final int LOCAL_SHFT = VAR_SHFT + maxVars;
         final int TRY_SCOPE_SHFT = LOCAL_SHFT + maxLocals;
 
 // stack[0 <= i < VAR_SHFT]: stack data
 // stack[VAR_SHFT <= i < LOCAL_SHFT]: variables
 // stack[LOCAL_SHFT <= i < TRY_SCOPE_SHFT]: used for newtemp/usetemp
 // stack[TRY_SCOPE_SHFT <= i]: try scopes
-// when 0 <= i < LOCAL_SHFT and stack[x] == DBL_MRK, 
+// when 0 <= i < LOCAL_SHFT and stack[x] == DBL_MRK,
 // sDbl[i]  gives the number value
 
         final Object DBL_MRK = Interpreter.DBL_MRK;
-        
+
         Object[] stack = new Object[TRY_SCOPE_SHFT + maxTryDepth];
         double[] sDbl = new double[TRY_SCOPE_SHFT];
         int stackTop = -1;
-        byte[] iCode = theData.itsICode;        
+        byte[] iCode = theData.itsICode;
         String[] strings = theData.itsStringTable;
         int pc = 0;
         int iCodeLength = theData.itsICodeTop;
-        
+
         final Scriptable undefined = Undefined.instance;
         if (maxVars != 0) {
             int definedArgs = fnOrScript.argCount;
             if (definedArgs != 0) {
                 if (definedArgs > args.length) { definedArgs = args.length;    }
                 for (i = 0; i != definedArgs; ++i) {
-                    stack[VAR_SHFT + i] = args[i];    
+                    stack[VAR_SHFT + i] = args[i];
                 }
             }
             for (i = definedArgs; i != maxVars; ++i) {
                 stack[VAR_SHFT + i] = undefined;
             }
         }
-        
+
         if (theData.itsNestedFunctions != null) {
             for (i = 0; i < theData.itsNestedFunctions.length; i++)
                 createFunctionObject(theData.itsNestedFunctions[i], scope);
-        }        
+        }
 
         Object id;
         Object rhs, val;
@@ -1429,32 +1429,32 @@ public class Interpreter extends LabelTable {
 
         int count;
         int slot;
-                
+
         String name = null;
-               
+
         Object[] outArgs;
 
         int lIntValue;
         double lDbl;
         int rIntValue;
         double rDbl;
-                
+
         int[] catchStack = null;
         int tryStackTop = 0;
         InterpreterFrame frame = null;
-        
+
         if (cx.debugger != null) {
             frame = new InterpreterFrame(scope, theData, fnOrScript);
             cx.pushFrame(frame);
         }
-            
+
         if (maxTryDepth != 0) {
             // catchStack[2 * i]: starting pc of catch block
             // catchStack[2 * i + 1]: starting pc of finally block
             catchStack = new int[maxTryDepth * 2];
         }
-        
-        /* Save the security domain. Must restore upon normal exit. 
+
+        /* Save the security domain. Must restore upon normal exit.
          * If we exit the interpreter loop by throwing an exception,
          * set cx.interpreterSecurityDomain to null, and require the
          * catching function to restore it.
@@ -1462,16 +1462,16 @@ public class Interpreter extends LabelTable {
         Object savedSecurityDomain = cx.interpreterSecurityDomain;
         cx.interpreterSecurityDomain = theData.securityDomain;
         Object result = undefined;
-        
+
         int pcPrevBranch = pc;
         final int instructionThreshold = cx.instructionThreshold;
         // During function call this will be set to -1 so catch can properly
         // adjust it
         int instructionCount = cx.instructionCount;
-        // arbitrary number to add to instructionCount when calling 
+        // arbitrary number to add to instructionCount when calling
         // other functions
         final int INVOCATION_COST = 100;
-        
+
         while (pc < iCodeLength) {
             try {
                 switch (iCode[pc] & 0xff) {
@@ -1491,12 +1491,12 @@ public class Interpreter extends LabelTable {
                         break;
                     case TokenStream.GE :
                         --stackTop;
-                        rhs = stack[stackTop + 1];    
+                        rhs = stack[stackTop + 1];
                         lhs = stack[stackTop];
                         if (rhs == DBL_MRK || lhs == DBL_MRK) {
                             rDbl = stack_double(stack, sDbl, stackTop + 1);
                             lDbl = stack_double(stack, sDbl, stackTop);
-                            valBln = (rDbl == rDbl && lDbl == lDbl 
+                            valBln = (rDbl == rDbl && lDbl == lDbl
                                       && rDbl <= lDbl);
                         }
                         else {
@@ -1506,12 +1506,12 @@ public class Interpreter extends LabelTable {
                         break;
                     case TokenStream.LE :
                         --stackTop;
-                        rhs = stack[stackTop + 1];    
+                        rhs = stack[stackTop + 1];
                         lhs = stack[stackTop];
                         if (rhs == DBL_MRK || lhs == DBL_MRK) {
                             rDbl = stack_double(stack, sDbl, stackTop + 1);
                             lDbl = stack_double(stack, sDbl, stackTop);
-                            valBln = (rDbl == rDbl && lDbl == lDbl 
+                            valBln = (rDbl == rDbl && lDbl == lDbl
                                       && lDbl <= rDbl);
                         }
                         else {
@@ -1521,12 +1521,12 @@ public class Interpreter extends LabelTable {
                         break;
                     case TokenStream.GT :
                         --stackTop;
-                        rhs = stack[stackTop + 1];    
+                        rhs = stack[stackTop + 1];
                         lhs = stack[stackTop];
                         if (rhs == DBL_MRK || lhs == DBL_MRK) {
                             rDbl = stack_double(stack, sDbl, stackTop + 1);
                             lDbl = stack_double(stack, sDbl, stackTop);
-                            valBln = (rDbl == rDbl && lDbl == lDbl 
+                            valBln = (rDbl == rDbl && lDbl == lDbl
                                       && rDbl < lDbl);
                         }
                         else {
@@ -1536,12 +1536,12 @@ public class Interpreter extends LabelTable {
                         break;
                     case TokenStream.LT :
                         --stackTop;
-                        rhs = stack[stackTop + 1];    
+                        rhs = stack[stackTop + 1];
                         lhs = stack[stackTop];
                         if (rhs == DBL_MRK || lhs == DBL_MRK) {
                             rDbl = stack_double(stack, sDbl, stackTop + 1);
                             lDbl = stack_double(stack, sDbl, stackTop);
-                            valBln = (rDbl == rDbl && lDbl == lDbl 
+                            valBln = (rDbl == rDbl && lDbl == lDbl
                                       && lDbl < rDbl);
                         }
                         else {
@@ -1550,19 +1550,19 @@ public class Interpreter extends LabelTable {
                         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
                         break;
                     case TokenStream.IN :
-                        rhs = stack[stackTop];    
+                        rhs = stack[stackTop];
                         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
                         --stackTop;
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
                         valBln = ScriptRuntime.in(lhs, rhs, scope);
                         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
                         break;
                     case TokenStream.INSTANCEOF :
-                        rhs = stack[stackTop];    
+                        rhs = stack[stackTop];
                         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
                         --stackTop;
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
                         valBln = ScriptRuntime.instanceOf(scope, lhs, rhs);
                         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
@@ -1675,14 +1675,14 @@ public class Interpreter extends LabelTable {
                         stackTop++;
                         break;
                     case TokenStream.POPV :
-                        result = stack[stackTop];    
-                        if (result == DBL_MRK) 
+                        result = stack[stackTop];
+                        if (result == DBL_MRK)
                             result = doubleWrap(sDbl[stackTop]);
                         --stackTop;
                         break;
                     case TokenStream.RETURN :
-                        result = stack[stackTop];    
-                        if (result == DBL_MRK) 
+                        result = stack[stackTop];
+                        if (result == DBL_MRK)
                             result = doubleWrap(sDbl[stackTop]);
                         --stackTop;
                         pc = getTarget(iCode, pc + 1);
@@ -1692,7 +1692,7 @@ public class Interpreter extends LabelTable {
                         stack[stackTop] = DBL_MRK;
                         sDbl[stackTop] = ~rIntValue;
                         break;
-                    case TokenStream.BITAND :                
+                    case TokenStream.BITAND :
                         rIntValue = stack_int32(stack, sDbl, stackTop);
                         --stackTop;
                         lIntValue = stack_int32(stack, sDbl, stackTop);
@@ -1789,10 +1789,10 @@ public class Interpreter extends LabelTable {
                         pc += 2;
                         break;
                     case TokenStream.SETNAME :
-                        rhs = stack[stackTop];    
+                        rhs = stack[stackTop];
                         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
                         --stackTop;
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         // what about class cast exception here for lhs?
                         stack[stackTop] = ScriptRuntime.setName
                             ((Scriptable)lhs, rhs, scope,
@@ -1800,30 +1800,30 @@ public class Interpreter extends LabelTable {
                         pc += 2;
                         break;
                     case TokenStream.DELPROP :
-                        rhs = stack[stackTop];    
+                        rhs = stack[stackTop];
                         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
                         --stackTop;
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
                         stack[stackTop] = ScriptRuntime.delete(lhs, rhs);
                         break;
                     case TokenStream.GETPROP :
                         name = (String)stack[stackTop];
                         --stackTop;
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop] 
+                        stack[stackTop]
                                 = ScriptRuntime.getProp(lhs, name, scope);
                         break;
                     case TokenStream.SETPROP :
-                        rhs = stack[stackTop];    
+                        rhs = stack[stackTop];
                         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
                         --stackTop;
                         name = (String)stack[stackTop];
                         --stackTop;
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop] 
+                        stack[stackTop]
                                 = ScriptRuntime.setProp(lhs, name, rhs, scope);
                         break;
                     case TokenStream.GETELEM :
@@ -1837,41 +1837,41 @@ public class Interpreter extends LabelTable {
                     case TokenStream.PROPINC :
                         name = (String)stack[stackTop];
                         --stackTop;
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop] 
+                        stack[stackTop]
                                 = ScriptRuntime.postIncrement(lhs, name, scope);
                         break;
                     case TokenStream.PROPDEC :
                         name = (String)stack[stackTop];
                         --stackTop;
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop] 
+                        stack[stackTop]
                                 = ScriptRuntime.postDecrement(lhs, name, scope);
                         break;
                     case TokenStream.ELEMINC :
-                        rhs = stack[stackTop];    
+                        rhs = stack[stackTop];
                         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
                         --stackTop;
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop] 
+                        stack[stackTop]
                            = ScriptRuntime.postIncrementElem(lhs, rhs, scope);
                         break;
                     case TokenStream.ELEMDEC :
-                        rhs = stack[stackTop];    
+                        rhs = stack[stackTop];
                         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
                         --stackTop;
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop] 
+                        stack[stackTop]
                            = ScriptRuntime.postDecrementElem(lhs, rhs, scope);
                         break;
                     case TokenStream.GETTHIS :
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop] 
+                        stack[stackTop]
                             = ScriptRuntime.getThis((Scriptable)lhs);
                         break;
                     case TokenStream.NEWTEMP :
@@ -1891,18 +1891,18 @@ public class Interpreter extends LabelTable {
                             cx.instructionCount = instructionCount;
                             instructionCount = -1;
                         }
-                        int lineNum = getShort(iCode, pc + 1);   
+                        int lineNum = getShort(iCode, pc + 1);
                         name = strings[getShort(iCode, pc + 3)];
                         count = getShort(iCode, pc + 5);
                         outArgs = getArgsArray(stack, sDbl, stackTop, count);
                         stackTop -= count;
-                        rhs = stack[stackTop];    
+                        rhs = stack[stackTop];
                         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
                         --stackTop;
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
                         stack[stackTop] = ScriptRuntime.callSpecial(
-                                            cx, lhs, rhs, outArgs, 
+                                            cx, lhs, rhs, outArgs,
                                             thisObj, scope, name, lineNum);
                         pc += 6;
                         instructionCount = cx.instructionCount;
@@ -1917,10 +1917,10 @@ public class Interpreter extends LabelTable {
                         count = getShort(iCode, pc + 3);
                         outArgs = getArgsArray(stack, sDbl, stackTop, count);
                         stackTop -= count;
-                        rhs = stack[stackTop];    
+                        rhs = stack[stackTop];
                         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
                         --stackTop;
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
                         if (lhs == undefined) {
                             i = getShort(iCode, pc + 1);
@@ -1932,8 +1932,8 @@ public class Interpreter extends LabelTable {
                             calleeScope = ScriptableObject.
                                 getTopLevelScope(scope);
                         }
-                        stack[stackTop] = ScriptRuntime.call(cx, lhs, rhs, 
-                                                             outArgs, 
+                        stack[stackTop] = ScriptRuntime.call(cx, lhs, rhs,
+                                                             outArgs,
                                                              calleeScope);
                         pc += 4;
                         instructionCount = cx.instructionCount;
@@ -1947,27 +1947,27 @@ public class Interpreter extends LabelTable {
                         count = getShort(iCode, pc + 3);
                         outArgs = getArgsArray(stack, sDbl, stackTop, count);
                         stackTop -= count;
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        if (lhs == undefined && getShort(iCode, pc + 1) != -1) 
+                        if (lhs == undefined && getShort(iCode, pc + 1) != -1)
                         {
-                            // special code for better error message for call 
+                            // special code for better error message for call
                             //  to undefined
                             lhs = strings[getShort(iCode, pc + 1)];
                         }
-                        stack[stackTop] = ScriptRuntime.newObject(cx, lhs, 
-                                                                  outArgs, 
+                        stack[stackTop] = ScriptRuntime.newObject(cx, lhs,
+                                                                  outArgs,
                                                                   scope);
                         pc += 4;                                                                         instructionCount = cx.instructionCount;
                         break;
                     case TokenStream.TYPEOF :
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
                         stack[stackTop] = ScriptRuntime.typeof(lhs);
                         break;
                     case TokenStream.TYPEOFNAME :
                         name = strings[getShort(iCode, pc + 1)];
-                        stack[++stackTop] 
+                        stack[++stackTop]
                                     = ScriptRuntime.typeofName(scope, name);
                         pc += 2;
                         break;
@@ -2026,7 +2026,7 @@ public class Interpreter extends LabelTable {
                         stack[stackTop] = stack[VAR_SHFT + slot];
                         sDbl[stackTop] = sDbl[VAR_SHFT + slot];
                         stack[VAR_SHFT + slot] = DBL_MRK;
-                        sDbl[VAR_SHFT + slot] 
+                        sDbl[VAR_SHFT + slot]
                             = stack_double(stack, sDbl, stackTop) + 1.0;
                         break;
                     case TokenStream.VARDEC :
@@ -2035,7 +2035,7 @@ public class Interpreter extends LabelTable {
                         stack[stackTop] = stack[VAR_SHFT + slot];
                         sDbl[stackTop] = sDbl[VAR_SHFT + slot];
                         stack[VAR_SHFT + slot] = DBL_MRK;
-                        sDbl[VAR_SHFT + slot] 
+                        sDbl[VAR_SHFT + slot]
                             = stack_double(stack, sDbl, stackTop) - 1.0;
                         break;
                     case TokenStream.ZERO :
@@ -2068,7 +2068,7 @@ public class Interpreter extends LabelTable {
                         break;
                     case TokenStream.THROW :
                         result = stack[stackTop];
-                        if (result == DBL_MRK) 
+                        if (result == DBL_MRK)
                             result = doubleWrap(sDbl[stackTop]);
                         --stackTop;
                         throw new JavaScriptException(result);
@@ -2081,7 +2081,7 @@ public class Interpreter extends LabelTable {
                         else
                             throw (RuntimeException)result;
                     case TokenStream.ENTERWITH :
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
                         --stackTop;
                         scope = ScriptRuntime.enterWith(lhs, scope);
@@ -2094,48 +2094,48 @@ public class Interpreter extends LabelTable {
                         break;
                     case TokenStream.ENUMINIT :
                         slot = (iCode[++pc] & 0xFF);
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
                         --stackTop;
-                        stack[LOCAL_SHFT + slot] 
+                        stack[LOCAL_SHFT + slot]
                             = ScriptRuntime.initEnum(lhs, scope);
                         break;
                     case TokenStream.ENUMNEXT :
                         slot = (iCode[++pc] & 0xFF);
-                        val = stack[LOCAL_SHFT + slot];    
+                        val = stack[LOCAL_SHFT + slot];
                         ++stackTop;
                         stack[stackTop] = ScriptRuntime.
                             nextEnum((Enumeration)val);
                         break;
                     case TokenStream.GETPROTO :
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
                         stack[stackTop] = ScriptRuntime.getProto(lhs, scope);
                         break;
                     case TokenStream.GETPARENT :
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
                         stack[stackTop] = ScriptRuntime.getParent(lhs);
                         break;
                     case TokenStream.GETSCOPEPARENT :
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
                         stack[stackTop] = ScriptRuntime.getParent(lhs, scope);
                         break;
                     case TokenStream.SETPROTO :
-                        rhs = stack[stackTop];    
+                        rhs = stack[stackTop];
                         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
                         --stackTop;
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
                         stack[stackTop]
                                 = ScriptRuntime.setProto(lhs, rhs, scope);
                         break;
                     case TokenStream.SETPARENT :
-                        rhs = stack[stackTop];    
+                        rhs = stack[stackTop];
                         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
                         --stackTop;
-                        lhs = stack[stackTop];    
+                        lhs = stack[stackTop];
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
                         stack[stackTop]
                                 = ScriptRuntime.setParent(lhs, rhs, scope);
@@ -2145,7 +2145,7 @@ public class Interpreter extends LabelTable {
                         break;
                     case TokenStream.CLOSURE :
                         i = getShort(iCode, pc + 1);
-                        stack[++stackTop] 
+                        stack[++stackTop]
                             = new InterpretedFunction(
                                     theData.itsNestedFunctions[i],
                                     scope, cx);
@@ -2154,21 +2154,21 @@ public class Interpreter extends LabelTable {
                         pc += 2;
                         break;
                     case TokenStream.OBJECT :
-                        i = getShort(iCode, pc + 1);                    
+                        i = getShort(iCode, pc + 1);
                         stack[++stackTop] = theData.itsRegExpLiterals[i];
                         pc += 2;
                         break;
-                    case TokenStream.SOURCEFILE :    
+                    case TokenStream.SOURCEFILE :
                         cx.interpreterSourceFile = theData.itsSourceFile;
                         break;
-                    case TokenStream.LINE :    
+                    case TokenStream.LINE :
                     case TokenStream.BREAKPOINT :
-                        i = getShort(iCode, pc + 1);                    
+                        i = getShort(iCode, pc + 1);
                         cx.interpreterLine = i;
                         if (frame != null)
                             frame.setLineNumber(i);
                         if ((iCode[pc] & 0xff) == TokenStream.BREAKPOINT ||
-                            cx.inLineStepMode) 
+                            cx.inLineStepMode)
                         {
                             cx.getDebuggableEngine().
                                 getDebugger().handleBreakpointHit(cx);
@@ -2184,7 +2184,7 @@ public class Interpreter extends LabelTable {
             }
             catch (Throwable ex) {
                 cx.interpreterSecurityDomain = null;
-            
+
                 if (instructionThreshold != 0) {
                     if (instructionCount < 0) {
                         // throw during function call
@@ -2228,7 +2228,7 @@ public class Interpreter extends LabelTable {
                 if (exType != OTHER && tryStackTop > 0) {
                     --tryStackTop;
                     if (exType == SCRIPT_THROW || exType == ECMA) {
-                        // Check for catch only for 
+                        // Check for catch only for
                         // JavaScriptException and EcmaError
                         pc = catchStack[tryStackTop * 2];
                         if (pc != 0) {
@@ -2249,21 +2249,21 @@ public class Interpreter extends LabelTable {
                 if (rethrow) {
                     if (frame != null)
                         cx.popFrame();
-                    
+
                     if (exType == SCRIPT_THROW)
                         throw (JavaScriptException)ex;
-                    if (exType == ECMA || exType == RUNTIME) 
+                    if (exType == ECMA || exType == RUNTIME)
                         throw (RuntimeException)ex;
                     throw (Error)ex;
                 }
-            
+
                 // We caught an exception,
 
                 // Notify instruction observer if necessary
                 // and point pcPrevBranch to start of catch/finally block
                 if (instructionThreshold != 0) {
                     if (instructionCount > instructionThreshold) {
-                        // Note: this can throw Error 
+                        // Note: this can throw Error
                         cx.observeInstructionCount(instructionCount);
                         instructionCount = 0;
                     }
@@ -2289,9 +2289,9 @@ public class Interpreter extends LabelTable {
             cx.instructionCount = instructionCount;
         }
 
-        return result;    
+        return result;
     }
-    
+
     private static Object doubleWrap(double x) {
         return new Double(x);
     }
@@ -2302,17 +2302,17 @@ public class Interpreter extends LabelTable {
             ? ScriptRuntime.toInt32(x)
             : ScriptRuntime.toInt32(stackDbl[i]);
     }
-    
-    private static double stack_double(Object[] stack, double[] stackDbl, 
-                                       int i) 
+
+    private static double stack_double(Object[] stack, double[] stackDbl,
+                                       int i)
     {
         Object x = stack[i];
         return (x != DBL_MRK) ? ScriptRuntime.toNumber(x) : stackDbl[i];
     }
-    
+
     private static void do_add(Object[] stack, double[] stackDbl, int stackTop)
     {
-        Object rhs = stack[stackTop + 1];    
+        Object rhs = stack[stackTop + 1];
         Object lhs = stack[stackTop];
         if (rhs == DBL_MRK) {
             double rDbl = stackDbl[stackTop + 1];
@@ -2345,16 +2345,16 @@ public class Interpreter extends LabelTable {
             }
         }
     }
-    
-    // x + y when x is Number, see 
+
+    // x + y when x is Number, see
     private static void do_add
-        (Object lhs, double rDbl, 
-         Object[] stack, double[] stackDbl, int stackTop, 
-         boolean left_right_order) 
+        (Object lhs, double rDbl,
+         Object[] stack, double[] stackDbl, int stackTop,
+         boolean left_right_order)
     {
         if (lhs instanceof Scriptable) {
-            if (lhs == Undefined.instance) { 
-                lhs = ScriptRuntime.NaNobj; 
+            if (lhs == Undefined.instance) {
+                lhs = ScriptRuntime.NaNobj;
             } else {
                 lhs = ((Scriptable)lhs).getDefaultValue(null);
             }
@@ -2368,7 +2368,7 @@ public class Interpreter extends LabelTable {
             }
         }
         else {
-            double lDbl = (lhs instanceof Number) 
+            double lDbl = (lhs instanceof Number)
                 ? ((Number)lhs).doubleValue() : ScriptRuntime.toNumber(lhs);
             stack[stackTop] = DBL_MRK;
             stackDbl[stackTop] = lDbl + rDbl;
@@ -2379,7 +2379,7 @@ public class Interpreter extends LabelTable {
                                  int stackTop)
     {
         boolean result;
-        Object rhs = stack[stackTop + 1];    
+        Object rhs = stack[stackTop + 1];
         Object lhs = stack[stackTop];
         if (rhs == DBL_MRK) {
             if (lhs == DBL_MRK) {
@@ -2399,8 +2399,8 @@ public class Interpreter extends LabelTable {
         }
         return result;
     }
-    
-// Optimized version of ScriptRuntime.eq if x is a Number    
+
+// Optimized version of ScriptRuntime.eq if x is a Number
     private static boolean do_eq(double x, Object y) {
         for (;;) {
             if (y instanceof Number) {
@@ -2425,7 +2425,7 @@ public class Interpreter extends LabelTable {
                                    int stackTop)
     {
         boolean result;
-        Object rhs = stack[stackTop + 1];    
+        Object rhs = stack[stackTop + 1];
         Object lhs = stack[stackTop];
         if (rhs == DBL_MRK) {
             double rDbl = stackDbl[stackTop + 1];
@@ -2456,8 +2456,8 @@ public class Interpreter extends LabelTable {
         }
         return result;
     }
-    
-    private static void do_getElem(Context cx, 
+
+    private static void do_getElem(Context cx,
                                    Object[] stack, double[] stackDbl,
                                    int stackTop, Scriptable scope)
     {
@@ -2470,7 +2470,7 @@ public class Interpreter extends LabelTable {
             result = ScriptRuntime.getElem(lhs, id, scope);
         }
         else {
-            Scriptable obj = (lhs instanceof Scriptable) 
+            Scriptable obj = (lhs instanceof Scriptable)
                              ? (Scriptable)lhs
                              : ScriptRuntime.toObject(cx, scope, lhs);
             double val = stackDbl[stackTop];
@@ -2483,14 +2483,14 @@ public class Interpreter extends LabelTable {
                 result = ScriptRuntime.getStrIdElem(obj, s);
             }
         }
-        stack[stackTop - 1] = result; 
+        stack[stackTop - 1] = result;
     }
 
-    private static void do_setElem(Context cx, 
+    private static void do_setElem(Context cx,
                                    Object[] stack, double[] stackDbl,
                                    int stackTop, Scriptable scope)
     {
-        Object rhs = stack[stackTop];    
+        Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = doubleWrap(stackDbl[stackTop]);
         Object lhs = stack[stackTop - 2];
         if (lhs == DBL_MRK) lhs = doubleWrap(stackDbl[stackTop - 2]);
@@ -2501,7 +2501,7 @@ public class Interpreter extends LabelTable {
             result = ScriptRuntime.setElem(lhs, id, rhs, scope);
         }
         else {
-            Scriptable obj = (lhs instanceof Scriptable) 
+            Scriptable obj = (lhs instanceof Scriptable)
                              ? (Scriptable)lhs
                              : ScriptRuntime.toObject(cx, scope, lhs);
             double val = stackDbl[stackTop - 1];
@@ -2514,26 +2514,26 @@ public class Interpreter extends LabelTable {
                 result = ScriptRuntime.setStrIdElem(obj, s, rhs, scope);
             }
         }
-        stack[stackTop - 2] = result; 
+        stack[stackTop - 2] = result;
     }
 
     private static Object[] getArgsArray(Object[] stack, double[] sDbl,
                                          int stackTop, int count)
     {
-        if (count == 0) { 
-            return ScriptRuntime.emptyArgs; 
+        if (count == 0) {
+            return ScriptRuntime.emptyArgs;
         }
         Object[] args = new Object[count];
         do {
-            Object val = stack[stackTop];    
-            if (val == DBL_MRK) 
+            Object val = stack[stackTop];
+            if (val == DBL_MRK)
                 val = doubleWrap(sDbl[stackTop]);
             args[--count] = val;
             --stackTop;
-        } while (count != 0); 
+        } while (count != 0);
         return args;
     }
-    
+
     private int version;
     private boolean inLineStepMode;
     private StringBuffer debugSource;

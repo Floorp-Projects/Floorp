@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Roger Lawrence
  * Mike McCabe
  *
@@ -247,13 +247,13 @@ public class TokenStream {
         NEWLOCAL    = 144,
         USELOCAL    = 145,
         SCRIPT      = 146,   // top-level node for entire script
-        
+
         /**
          * For the interpreted mode indicating a line number change in icodes.
          */
         LINE        = 147,
         SOURCEFILE  = 148,
-        
+
         // For debugger
         BREAKPOINT  = 149,
 
@@ -468,7 +468,7 @@ public class TokenStream {
     private int stringToKeyword(String name) {
 // #string_id_map#
 // The following assumes that EOF == 0
-        final int    
+        final int
             Id_break         = BREAK,
             Id_case          = CASE,
             Id_continue      = CONTINUE,
@@ -530,7 +530,7 @@ public class TokenStream {
             Id_transient     = RESERVED,
             Id_try           = TRY,
             Id_volatile      = RESERVED;
-        
+
         int id;
         String s = name;
 // #generated# Last update: 2001-06-01 17:45:01 CEST
@@ -644,8 +644,8 @@ public class TokenStream {
         this.sourceName = sourceName;
         flags = 0;
     }
-    
-    public Scriptable getScope() { 
+
+    public Scriptable getScope() {
         return scope;
     }
 
@@ -712,7 +712,7 @@ public class TokenStream {
                             && 0 <= xDigitToInt(s.charAt(i + 3))
                             && 0 <= xDigitToInt(s.charAt(i + 4))
                             && 0 <= xDigitToInt(s.charAt(i + 5)))
-                    
+
                 return false;
         }
 
@@ -742,7 +742,7 @@ public class TokenStream {
     public static boolean isJSSpace(int c) {
         return (c == '\u0020' || c == '\u0009'
                 || c == '\u000C' || c == '\u000B'
-                || c == '\u00A0' 
+                || c == '\u00A0'
                 || Character.getType((char)c) == Character.SPACE_SEPARATOR);
     }
 
@@ -750,7 +750,7 @@ public class TokenStream {
         return (c == '\n' || c == '\r'
                 || c == 0x2028 || c == 0x2029);
     }
-    
+
     public int getToken() throws IOException {
         int c;
         tokenno++;
@@ -782,7 +782,7 @@ public class TokenStream {
                 isUnicodeEscapeStart = true;
             else
                 c = '\\';
-            // always unread the 'u' or whatever, we need 
+            // always unread the 'u' or whatever, we need
             // to start the string below at the <backslash>.
             in.unread();
         }
@@ -790,13 +790,13 @@ public class TokenStream {
                     Character.isJavaIdentifierStart((char)c)) {
             in.startString();
 
-            boolean containsEscape = isUnicodeEscapeStart;            
+            boolean containsEscape = isUnicodeEscapeStart;
             do {
                 c = in.read();
                 if (c == '\\') {
                     c = in.read();
                     containsEscape = (c == 'u');
-                }                    
+                }
             } while (Character.isJavaIdentifierPart((char)c));
             in.unread();
 
@@ -805,11 +805,11 @@ public class TokenStream {
             String str = in.getString();
             // OPT we shouldn't have to make a string (object!) to
             // check if it's a keyword.
-            
+
             // strictly speaking we should probably push-back
-            // all the bad characters if the <backslash>uXXXX  
-            // sequence is malformed. But since there isn't a  
-            // correct context(is there?) for a bad Unicode  
+            // all the bad characters if the <backslash>uXXXX
+            // sequence is malformed. But since there isn't a
+            // correct context(is there?) for a bad Unicode
             // escape sequence after an identifier, we can report
             // an error here.
             if (containsEscape) {
@@ -1084,7 +1084,7 @@ public class TokenStream {
                         }
                     }
                 }
-                
+
                 if (stringBuf != null)
                     stringBuf.append((char) c);
                 c = in.read();
@@ -1245,7 +1245,7 @@ public class TokenStream {
                 return getToken();
             }
             if (in.match('*')) {
-                while ((c = in.read()) != -1 && 
+                while ((c = in.read()) != -1 &&
                        !(c == '*' && in.match('/'))) {
                     ; // empty loop body
                 }

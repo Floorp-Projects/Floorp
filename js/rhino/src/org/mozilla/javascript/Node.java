@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  * Roger Lawrence
  * Mike McCabe
@@ -317,7 +317,7 @@ public class Node implements Cloneable {
         RIGHT = 2;
 
     private static String propNames[];
-    
+
     private static final String propToString(int propType) {
         if (Context.printTrees && propNames == null) {
             // If Context.printTrees is false, the compiler
@@ -392,7 +392,7 @@ public class Node implements Cloneable {
             props = new UintMap(2);
         props.put(propType, prop);
     }
-    
+
     public void removeProp(int propType) {
         if (props != null) {
             props.remove(propType);
@@ -493,7 +493,7 @@ public class Node implements Cloneable {
     public String toStringTree() {
         return toStringTreeHelper(0);
     }
-    
+
 
     private String toStringTreeHelper(int level) {
         if (Context.printTrees) {
@@ -504,7 +504,7 @@ public class Node implements Cloneable {
             s.append(toString());
             s.append('\n');
             for (Node cursor = getFirstChild(); cursor != null;
-                 cursor = cursor.getNextSibling()) 
+                 cursor = cursor.getNextSibling())
             {
                 Node n = cursor;
                 if (cursor.getType() == TokenStream.FUNCTION) {

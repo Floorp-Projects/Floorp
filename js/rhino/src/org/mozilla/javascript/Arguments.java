@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
@@ -99,7 +99,7 @@ class Arguments extends ScriptableObject {
 
     public void put(String name, Scriptable start, Object value) {
         if (name.equals("caller")) {
-            // Set "hasCaller" to false so that we won't look up a  
+            // Set "hasCaller" to false so that we won't look up a
             // computed value.
             hasCaller = false;
         }

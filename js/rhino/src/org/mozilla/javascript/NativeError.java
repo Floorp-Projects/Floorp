@@ -18,10 +18,10 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Igor Bukanov
  * Roger Lawrence
- * 
+ *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
  * provisions of the GPL are applicable instead of those above.
@@ -52,7 +52,7 @@ final class NativeError extends IdScriptable {
         obj.nameValue = "Error";
         obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
-    
+
     protected int getIdDefaultAttributes(int id) {
         if (id == Id_message || id == Id_name) { return EMPTY; }
         return super.getIdDefaultAttributes(id);
@@ -113,18 +113,18 @@ final class NativeError extends IdScriptable {
         return (NativeError)thisObj;
     }
 
-    private static Object jsConstructor(Context cx, Object[] args, 
+    private static Object jsConstructor(Context cx, Object[] args,
                                         Function funObj, boolean inNewExpr)
     {
         NativeError result = new NativeError();
-        if (args.length >= 1) 
+        if (args.length >= 1)
             result.messageValue = ScriptRuntime.toString(args[0]);
         result.setPrototype(getClassPrototype(funObj, "Error"));
         return result;
     }
-    
-    public String getClassName() { 
-        return "Error"; 
+
+    public String getClassName() {
+        return "Error";
     }
 
     public String toString() {
@@ -135,18 +135,18 @@ final class NativeError extends IdScriptable {
             name = Undefined.instance;
         return name + ": " + getMessage();
     }
-    
+
     public String getName() {
         Object val = nameValue;
-        return ScriptRuntime.toString(val != NOT_FOUND ? val 
+        return ScriptRuntime.toString(val != NOT_FOUND ? val
                                                        : Undefined.instance);
     }
-    
+
     public String getMessage() {
         Object val = messageValue;
-        return ScriptRuntime.toString(val != NOT_FOUND ? val 
+        return ScriptRuntime.toString(val != NOT_FOUND ? val
                                                        : Undefined.instance);
-    }    
+    }
 
     protected int maxInstanceId() { return MAX_INSTANCE_ID; }
 
@@ -157,15 +157,15 @@ final class NativeError extends IdScriptable {
             if (id == Id_constructor) return "constructor";
             if (id == Id_toString) return "toString";
         }
-        return null;        
+        return null;
     }
-    
+
 // #string_id_map#
 
     private static final int
         Id_message               = 1,
         Id_name                  = 2,
-        
+
         MAX_INSTANCE_ID          = 2;
 
     protected int mapNameToId(String s) {
@@ -197,11 +197,11 @@ final class NativeError extends IdScriptable {
     private static final int
         Id_constructor    = MAX_INSTANCE_ID + 1,
         Id_toString       = MAX_INSTANCE_ID + 2,
-        
+
         MAX_PROTOTYPE_ID  = MAX_INSTANCE_ID + 2;
 
 // #/string_id_map#
-    
+
     private Object messageValue = NOT_FOUND;
     private Object nameValue = NOT_FOUND;
 

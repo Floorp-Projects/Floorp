@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
@@ -43,8 +43,8 @@ import java.lang.reflect.Method;
  * It simply delegates every action to its prototype except
  * for operations on its parent.
  */
-public final class NativeWith implements Scriptable, IdFunctionMaster { 
-    
+public final class NativeWith implements Scriptable, IdFunctionMaster {
+
     static void init(Context cx, Scriptable scope, boolean sealed) {
         NativeWith obj = new NativeWith();
         obj.prototypeFlag = true;
@@ -52,10 +52,10 @@ public final class NativeWith implements Scriptable, IdFunctionMaster {
         IdFunction ctor = new IdFunction(obj, "constructor", Id_constructor);
         ctor.initAsConstructor(scope, obj);
         if (sealed) { ctor.sealObject(); }
-        
+
         obj.setParentScope(ctor);
         obj.setPrototype(ScriptableObject.getObjectPrototype(scope));
-        
+
         ScriptableObject.defineProperty(scope, "With", ctor,
                                         ScriptableObject.DONTENUM);
     }
@@ -145,7 +145,7 @@ public final class NativeWith implements Scriptable, IdFunctionMaster {
     }
 
     public Object execMethod(int methodId, IdFunction function, Context cx,
-                             Scriptable scope, Scriptable thisObj, 
+                             Scriptable scope, Scriptable thisObj,
                              Object[] args)
         throws JavaScriptException
     {
@@ -157,7 +157,7 @@ public final class NativeWith implements Scriptable, IdFunctionMaster {
         }
         throw IdFunction.onBadMethodId(this, methodId);
     }
-    
+
     public int methodArity(int methodId) {
         if (prototypeFlag) {
             if (methodId == Id_constructor) { return 0; }
@@ -165,15 +165,15 @@ public final class NativeWith implements Scriptable, IdFunctionMaster {
         return -1;
     }
 
-    public static Object newWithSpecial(Context cx, Object[] args, 
+    public static Object newWithSpecial(Context cx, Object[] args,
                                         Function ctorObj, boolean inNewExpr)
     {
         if (!inNewExpr) {
             throw Context.reportRuntimeError1("msg.only.from.new", "With");
         }
-        
+
         ScriptRuntime.checkDeprecated(cx, "With");
-        
+
         Scriptable scope = ScriptableObject.getTopLevelScope(ctorObj);
         NativeWith thisObj = new NativeWith();
         thisObj.setPrototype(args.length == 0
@@ -183,8 +183,8 @@ public final class NativeWith implements Scriptable, IdFunctionMaster {
         thisObj.setParentScope(scope);
         return thisObj;
     }
-    
-    private static final int    
+
+    private static final int
         Id_constructor = 1;
 
     private Scriptable prototype;

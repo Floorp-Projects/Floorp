@@ -1,14 +1,14 @@
-/* 
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Rhino code, released
  * May 6, 1999.
  *
@@ -16,11 +16,11 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
+ *
  * Contributor(s):
  * Norris Boyd
  * Roger Lawrence
- * 
+ *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
  * provisions of the GPL are applicable instead of those above.
@@ -50,30 +50,30 @@ import java.util.Vector;
 
 class OptTransformer extends NodeTransformer {
     private Hashtable theFnClassNameList;
-    
-    OptTransformer(Hashtable theFnClassNameList) { 
+
+    OptTransformer(Hashtable theFnClassNameList) {
         this.theFnClassNameList = theFnClassNameList;
     }
-    
+
     public NodeTransformer newInstance() {
         return new OptTransformer((Hashtable) theFnClassNameList.clone());
-    }    
-        
+    }
+
     public IRFactory createIRFactory(TokenStream ts, Scriptable scope) {
         return new IRFactory(ts, scope);
     }
 
     public Node transform(Node tree, Node enclosing, TokenStream ts,
                                                      Scriptable scope) {
-    
+
         // Collect all of the contained functions into a hashtable
         // so that the call optimizer can access the class name & parameter
         // count for any call it encounters
         collectContainedFunctions(tree.getFirstChild());
-        
+
         return super.transform(tree, enclosing, ts, scope);
     }
-  
+
     protected VariableTable createVariableTable() {
         return new OptVariableTable();
     }
@@ -83,7 +83,7 @@ class OptTransformer extends NodeTransformer {
         Context cx = Context.getCurrentContext();
         int optLevel = cx.getOptimizationLevel();
         Node left = node.getFirstChild();
-        
+
         // count the arguments
         int argCount = 0;
         Node arg = left.getNextSibling();
@@ -102,7 +102,7 @@ class OptTransformer extends NodeTransformer {
                 }
             }
         }
-        
+
         return argCount;
     }
 
@@ -118,7 +118,7 @@ class OptTransformer extends NodeTransformer {
 
         super.visitCall(node, tree);
     }
-    
+
     /*
      * Optimize a call site by converting call("a", b, c) into :
      *
@@ -141,9 +141,9 @@ class OptTransformer extends NodeTransformer {
             // Refuse to directCall any function with more
             // than 32 parameters - prevent code explosion
             // for wacky test cases
-            if (varTable.getParameterCount() > 32) 
+            if (varTable.getParameterCount() > 32)
                 return;
-            
+
             if (argCount == varTable.getParameterCount()) {
                 callNode.putProp(Node.DIRECTCALL_PROP, theFunction);
                 ((OptFunctionNode)containingTree)
@@ -186,5 +186,5 @@ class OptTransformer extends NodeTransformer {
             }
         }
     }
-    
+
 }

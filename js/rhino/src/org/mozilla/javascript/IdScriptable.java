@@ -66,7 +66,7 @@ public abstract class IdScriptable extends ScriptableObject
     public IdScriptable() {
         activateIdMap(maxInstanceId());
     }
-    
+
     public boolean has(String name, Scriptable start) {
         if (maxId != 0) {
             int id = mapNameToId(name);
@@ -82,7 +82,7 @@ public abstract class IdScriptable extends ScriptableObject
             int maxId = this.maxId;
             L:if (maxId != 0) {
                 Object[] data = idMapData;
-                if (data == null) { 
+                if (data == null) {
                     int id = mapNameToId(name);
                     if (id != 0) {
                         return getIdValue(id);
@@ -112,7 +112,7 @@ public abstract class IdScriptable extends ScriptableObject
                 int id = mapNameToId(name);
                 if (id != 0) {
                     Object[] data = idMapData;
-                    if (data == null) { 
+                    if (data == null) {
                         return getIdValue(id);
                     }
                     else {
@@ -208,7 +208,7 @@ public abstract class IdScriptable extends ScriptableObject
 
     /**
      * Redefine ScriptableObject.defineProperty to allow changing
-     * values/attributes of id-based properties unless 
+     * values/attributes of id-based properties unless
      * getIdDefaultAttributes contains the READONLY attribute.
      * @see #getIdDefaultAttributes
      * @see org.mozilla.javascript.ScriptableObject#defineProperty
@@ -235,11 +235,11 @@ public abstract class IdScriptable extends ScriptableObject
 
     Object[] getIds(boolean getAll) {
         Object[] result = super.getIds(getAll);
-        
+
         if (maxId != 0) {
             Object[] ids = null;
             int count = 0;
-            
+
             for (int id = maxId; id != 0; --id) {
                 if (hasValue(id)) {
                     if (getAll || (getAttributes(id) & DONTENUM) == 0) {
@@ -279,8 +279,8 @@ public abstract class IdScriptable extends ScriptableObject
      */
     protected abstract String getIdName(int id);
 
-    /** Get default attributes for id. 
-     ** Default implementation return DONTENUM that is the standard attribute 
+    /** Get default attributes for id.
+     ** Default implementation return DONTENUM that is the standard attribute
      ** for core EcmaScript function. Typically descendants need to overwrite
      ** this for non-function attributes like length to return
      ** DONTENUM | READONLY | PERMANENT or DONTENUM | PERMANENT
@@ -295,7 +295,7 @@ public abstract class IdScriptable extends ScriptableObject
         return true;
     }
 
-    /** Get id value. 
+    /** Get id value.
      ** If id value is constant, descendant can call cacheIdValue to store
      ** value in the permanent cache.
      ** Default implementation creates IdFunction instance for given id
@@ -308,7 +308,7 @@ public abstract class IdScriptable extends ScriptableObject
     }
 
     /**
-     * Set id value. 
+     * Set id value.
      * IdScriptable never calls this method if result of
      * <code>getIdDefaultAttributes(id)</code> contains READONLY attribute.
      * Descendants can overwrite this method to provide custom handler for
@@ -319,10 +319,10 @@ public abstract class IdScriptable extends ScriptableObject
             ensureIdData()[id - 1] = (value != null) ? value : NULL_TAG;
         }
     }
-    
+
     /**
      * Store value in permanent cache unless value was already assigned to id.
-     * After this call IdScriptable never calls hasIdValue and getIdValue 
+     * After this call IdScriptable never calls hasIdValue and getIdValue
      * for the given id.
      */
     protected Object cacheIdValue(int id, Object value) {
@@ -338,9 +338,9 @@ public abstract class IdScriptable extends ScriptableObject
         }
         return value;
     }
-    
+
     /**
-     * Delete value represented by id so hasIdValue return false. 
+     * Delete value represented by id so hasIdValue return false.
      * IdScriptable never calls this method if result of
      * <code>getIdDefaultAttributes(id)</code> contains PERMANENT attribute.
      * Descendants can overwrite this method to provide custom handler for
@@ -351,7 +351,7 @@ public abstract class IdScriptable extends ScriptableObject
             ensureIdData()[id - 1] = NOT_FOUND;
         }
     }
-    
+
     /** 'thisObj' will be null if invoked as constructor, in which case
      ** instance of Scriptable should be returned. */
     public Object execMethod(int methodId, IdFunction function,
@@ -362,60 +362,60 @@ public abstract class IdScriptable extends ScriptableObject
         throw IdFunction.onBadMethodId(this, methodId);
     }
 
-    /** Get arity or defined argument count for method with given id. 
+    /** Get arity or defined argument count for method with given id.
      ** Should return -1 if methodId is not known or can not be used
      ** with execMethod call. */
     public int methodArity(int methodId) {
         return -1;
     }
-    
+
     /** Activate id support with the given maximum id */
     protected void activateIdMap(int maxId) {
         this.maxId = maxId;
     }
-    
+
     /** Sets whether newly constructed function objects should be sealed */
     protected void setSealFunctionsFlag(boolean sealed) {
         setSetupFlag(SEAL_FUNCTIONS_FLAG, sealed);
     }
-    
-    /** 
-     * Set parameters of function properties. 
+
+    /**
+     * Set parameters of function properties.
      * Currently only determines whether functions should use dynamic scope.
      * @param cx context to read function parameters.
-     * 
+     *
      * @see org.mozilla.javascript.Context#hasCompileFunctionsWithDynamicScope
      */
     protected void setFunctionParametrs(Context cx) {
         setSetupFlag(USE_DYNAMIC_SCOPE_FLAG,
                      cx.hasCompileFunctionsWithDynamicScope());
     }
-    
+
     private void setSetupFlag(int flag, boolean value) {
         setupFlags = (byte)(value ? setupFlags | flag : setupFlags & ~flag);
     }
 
-    /** 
-     * Prepare this object to serve as the prototype property of constructor 
+    /**
+     * Prepare this object to serve as the prototype property of constructor
      * object with name <code>getClassName()<code> defined in
      * <code>scope</code>.
      * @param maxId maximum id available in prototype object
      * @param cx current context
      * @param scope object to define constructor in.
-     * @param sealed indicates whether object and all its properties should 
-     *        be sealed 
-     */ 
-    public void addAsPrototype(int maxId, Context cx, Scriptable scope, 
-                               boolean sealed) 
+     * @param sealed indicates whether object and all its properties should
+     *        be sealed
+     */
+    public void addAsPrototype(int maxId, Context cx, Scriptable scope,
+                               boolean sealed)
     {
         activateIdMap(maxId);
 
         setSealFunctionsFlag(sealed);
         setFunctionParametrs(cx);
-        
+
         int constructorId = mapNameToId("constructor");
         if (constructorId == 0) {
-            // It is a bug to call this function without id for constructor 
+            // It is a bug to call this function without id for constructor
             throw new RuntimeException("No id for constructor property");
         }
 
@@ -451,7 +451,7 @@ public abstract class IdScriptable extends ScriptableObject
         defineProperty(obj, getIdName(id), f, DONTENUM);
     }
 
-    /** 
+    /**
      * Utility method for converting target object into native this.
      * Possible usage would be to have a private function like realThis:
      * <pre>
@@ -479,7 +479,7 @@ public abstract class IdScriptable extends ScriptableObject
             thisObj = thisObj.getPrototype();
             if (thisObj != null) { return thisObj; }
         }
-        throw NativeGlobal.typeError1("msg.incompat.call", 
+        throw NativeGlobal.typeError1("msg.incompat.call",
                                       f.getFunctionName(), f);
     }
 
@@ -512,7 +512,7 @@ public abstract class IdScriptable extends ScriptableObject
     protected final Object wrap_boolean(boolean x) {
         return x ? Boolean.TRUE : Boolean.FALSE;
     }
-    
+
     private boolean hasValue(int id) {
         Object value;
         Object[] data = idMapData;
@@ -527,12 +527,12 @@ public abstract class IdScriptable extends ScriptableObject
     // Must be called only from synchronized (this)
     private Object[] ensureIdData() {
         Object[] data = idMapData;
-        if (data == null) { 
+        if (data == null) {
             idMapData = data = new Object[CACHE_NAMES ? maxId * 2 : maxId];
         }
         return data;
     }
-    
+
     private int getAttributes(int id) {
         int attributes = getIdDefaultAttributes(id) | extraIdAttributes;
         byte[] array = attributesArray;
@@ -545,7 +545,7 @@ public abstract class IdScriptable extends ScriptableObject
     private void setAttributes(int id, int attributes) {
         int defaultAttrs = getIdDefaultAttributes(id);
         if ((attributes & defaultAttrs) != defaultAttrs) {
-            // It is a bug to set attributes to less restrictive values 
+            // It is a bug to set attributes to less restrictive values
             // then given by defaultAttrs
             throw new RuntimeException("Attempt to unset default attributes");
         }
@@ -574,7 +574,7 @@ public abstract class IdScriptable extends ScriptableObject
 
     private static final int USE_DYNAMIC_SCOPE_FLAG = 1 << 0;
     private static final int SEAL_FUNCTIONS_FLAG    = 1 << 1;
-    
+
     private byte setupFlags;
     private byte extraIdAttributes;
 }

@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Patrick Beard
  * Norris Boyd
  * Rob Ginda
@@ -53,7 +53,7 @@ import org.mozilla.javascript.serialize.*;
  */
 public class Global extends ImporterTopLevel {
 
-    public Global(Context cx) 
+    public Global(Context cx)
     {
         // Define some global functions particular to the shell. Note
         // that these functions are not part of ECMA.
@@ -68,25 +68,25 @@ public class Global extends ImporterTopLevel {
             throw new Error();  // shouldn't occur.
         }
         defineProperty(privateName, this, ScriptableObject.DONTENUM);
-        
+
         // Set up "environment" in the global scope to provide access to the
         // System environment variables.
         Environment.defineClass(this);
         Environment environment = new Environment(this);
         defineProperty("environment", environment,
                        ScriptableObject.DONTENUM);
-        
+
         history = (NativeArray) cx.newArray(this, 0);
         defineProperty("history", history, ScriptableObject.DONTENUM);
     }
-    
+
     /**
      * Print a help message.
      *
      * This method is defined as a JavaScript function.
      */
     public static void help(Context cx, Scriptable thisObj,
-                            Object[] args, Function funObj) 
+                            Object[] args, Function funObj)
     {
         PrintStream out = getInstance(thisObj).getOut();
         out.println(ToolErrorReporter.getMessage("msg.help"));
@@ -117,7 +117,7 @@ public class Global extends ImporterTopLevel {
         out.println();
         return Context.getUndefinedValue();
     }
-    
+
     /**
      * Quit the shell.
      *
@@ -268,7 +268,7 @@ public class Global extends ImporterTopLevel {
             throw Context.reportRuntimeError(
                 "Expected a filename to read the serialization from");
         }
-        String filename = cx.toString(args[0]); 
+        String filename = cx.toString(args[0]);
         FileInputStream fis = new FileInputStream(filename);
         Scriptable scope = ScriptableObject.getTopLevelScope(thisObj);
         ObjectInputStream in = new ScriptableInputStream(fis, scope);
@@ -278,9 +278,9 @@ public class Global extends ImporterTopLevel {
     }
 
     /**
-     * The spawn function runs a given function or script in a different 
+     * The spawn function runs a given function or script in a different
      * thread.
-     * 
+     *
      * js> function g() { a = 7; }
      * js> a = 3;
      * 3
@@ -310,7 +310,7 @@ public class Global extends ImporterTopLevel {
         thread.start();
         return thread;
     }
-    
+
     /**
      * The sync function creates a synchronized function (in the sense
      * of a Java synchronized method) from an existing function. The
@@ -342,11 +342,11 @@ public class Global extends ImporterTopLevel {
                 "msg.spawn.args"));
         }
     }
-    
+
     public InputStream getIn() {
         return inStream == null ? System.in : inStream;
     }
-    
+
     public void setIn(InputStream in) {
         inStream = in;
     }
@@ -354,21 +354,21 @@ public class Global extends ImporterTopLevel {
     public PrintStream getOut() {
         return outStream == null ? System.out : outStream;
     }
-    
+
     public void setOut(PrintStream out) {
         outStream = out;
     }
 
-    public PrintStream getErr() { 
+    public PrintStream getErr() {
         return errStream == null ? System.err : errStream;
     }
 
     public void setErr(PrintStream err) {
         errStream = err;
     }
-        
+
     static final String privateName = "org.mozilla.javascript.tools.shell.Global private";
-    
+
     public static Global getInstance(Scriptable scope) {
         Object v = ScriptableObject.getProperty(scope,privateName);
         if (v instanceof Global)
@@ -408,8 +408,8 @@ class Runner implements Runnable {
             Context.reportError(ToolErrorReporter.getMessage(
                 "msg.uncaughtJSException",
                 e.getMessage()));
-        } 
-        
+        }
+
         cx.exit();
     }
 

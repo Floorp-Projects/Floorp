@@ -1,14 +1,14 @@
-/* 
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Rhino code, released
  * May 6, 1999.
  *
@@ -16,13 +16,13 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
+ *
  * Contributor(s):
  * Norris Boyd
  * Roger Lawrence
  * Andi Vajda
  * Kemal Bayram
- * 
+ *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
  * provisions of the GPL are applicable instead of those above.
@@ -52,8 +52,8 @@ public class OptClassNameHelper implements ClassNameHelper {
         classNames = null;
     }
 
-    public synchronized String getJavaScriptClassName(String functionName, 
-                                                      boolean primary) 
+    public synchronized String getJavaScriptClassName(String functionName,
+                                                      boolean primary)
     {
         StringBuffer s = new StringBuffer();
         if (packageName != null && packageName.length() > 0) {
@@ -77,7 +77,7 @@ public class OptClassNameHelper implements ClassNameHelper {
                 s.append(globalSerial++);
             }
         }
-        
+
         // We wish to produce unique class names between calls to reset()
         // we disregard case since we may write the class names to file
         // systems that are case insensitive
@@ -106,15 +106,15 @@ public class OptClassNameHelper implements ClassNameHelper {
     public Class getTargetExtends() {
         return targetExtends;
     }
-    
+
     public void setTargetExtends(Class extendsClass) {
         targetExtends = extendsClass;
     }
-    
+
     public Class[] getTargetImplements() {
         return targetImplements;
     }
-    
+
     public void setTargetImplements(Class[] implementsClasses) {
         targetImplements = implementsClasses;
     }
@@ -123,7 +123,7 @@ public class OptClassNameHelper implements ClassNameHelper {
         return initialName;
     }
 
-    public void setClassName(String initialName) {    
+    public void setClassName(String initialName) {
         if (initialName != null) {
             this.initialName = initialName;
             appendFunctionName = true;
@@ -153,12 +153,12 @@ public class OptClassNameHelper implements ClassNameHelper {
     private Class[] targetImplements;
     private ClassRepository classRepository;
     private Hashtable classNames;
-   
+
     static class DefaultRepository implements ClassRepository {
         public boolean storeClass(String name, byte[] bytes, boolean tl) {
             return true;
         }
     }
-    
+
     private static ClassRepository defaultRepository = new DefaultRepository();
 }

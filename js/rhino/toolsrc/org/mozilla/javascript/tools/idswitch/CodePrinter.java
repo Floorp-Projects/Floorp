@@ -37,29 +37,29 @@ package org.mozilla.javascript.tools.idswitch;
 class CodePrinter {
 
 // length of u-type escape like \u12AB
-    private static final int LITERAL_CHAR_MAX_SIZE = 6; 
-    
+    private static final int LITERAL_CHAR_MAX_SIZE = 6;
+
     private String lineTerminator = "\n";
 
     private int indentStep = 4;
     private int indentTabSize = 8;
-    
+
     private char[] buffer = new char[1 << 12]; // 4K
     private int offset;
-    
+
     public String getLineTerminator() { return lineTerminator; }
     public void setLineTerminator(String value) { lineTerminator = value; }
-    
+
     public int getIndentStep() { return indentStep; }
     public void setIndentStep(int char_count) { indentStep = char_count; }
-    
+
     public int getIndentTabSize() {    return indentTabSize; }
     public void setIndentTabSize(int tab_size) { indentTabSize = tab_size; }
-    
+
     public void clear() {
         offset = 0;
     }
-    
+
     private int ensure_area(int area_size) {
         int begin = offset;
         int end = begin + area_size;
@@ -77,16 +77,16 @@ class CodePrinter {
         int pos = ensure_area(area_size);
         offset = pos + area_size;
         return pos;
-    } 
+    }
 
     public int getOffset() {
         return offset;
     }
-    
+
     public int getLastChar() {
         return offset == 0 ? -1 : buffer[offset - 1];
     }
-    
+
     public void p(char c) {
         int pos = add_area(1);
         buffer[pos] = c;
@@ -119,7 +119,7 @@ class CodePrinter {
         buffer[pos] = '\'';
         offset = pos + 1;
     }
-    
+
     public void qstring(String s) {
         int l = s.length();
         int pos = ensure_area(2 + LITERAL_CHAR_MAX_SIZE * l);
@@ -131,7 +131,7 @@ class CodePrinter {
         buffer[pos] = '"';
         offset = pos + 1;
     }
-    
+
     private int put_string_literal_char(int pos, int c, boolean in_string) {
         boolean backslash_symbol = true;
         switch (c) {
@@ -144,7 +144,7 @@ class CodePrinter {
             case '"': backslash_symbol = in_string; break;
             default: backslash_symbol = false;
         }
-        
+
         if (backslash_symbol) {
             buffer[pos] = '\\';
             buffer[pos + 1] = (char)c;
@@ -186,11 +186,11 @@ class CodePrinter {
         for (; pos != tab_end; ++pos) {    buffer[pos] = '\t'; }
         for (; pos != indent_end; ++pos) {    buffer[pos] = ' '; }
     }
-    
+
     public void nl() {
         p('\n');
     }
-    
+
     public void line(int indent_level, String s) {
         indent(indent_level); p(s); nl();
     }
@@ -199,11 +199,11 @@ class CodePrinter {
         System.arraycopy(buffer, end, buffer, begin, offset - end);
         offset -= end - begin;
     }
-    
+
     public String toString() {
         return new String(buffer, 0, offset);
     }
-    
-    
-    
+
+
+
 }

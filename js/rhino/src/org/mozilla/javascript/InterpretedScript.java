@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Roger Lawrence
  *
  * Alternatively, the contents of this file may be used under the
@@ -42,7 +42,7 @@ import java.util.*;
 public class InterpretedScript extends NativeScript implements DebuggableScript {
 
     InterpretedScript(Context cx,
-                      InterpreterData theData, 
+                      InterpreterData theData,
                       String[] argNames, short argCount)
     {
         itsData = theData;
@@ -50,48 +50,48 @@ public class InterpretedScript extends NativeScript implements DebuggableScript 
         this.argCount = argCount;
         functionName = "";
         nestedFunctions = itsData.itsNestedFunctions;
-        version = (short)cx.getLanguageVersion();   
+        version = (short)cx.getLanguageVersion();
     }
-    
+
     public Object exec(Context cx, Scriptable scope)
         throws JavaScriptException
     {
-        return call(cx, scope, scope, null);    
+        return call(cx, scope, scope, null);
     }
 
-    public Object call(Context cx, Scriptable scope, 
+    public Object call(Context cx, Scriptable scope,
                        Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
-        scope = ScriptRuntime.initScript(cx, scope, this, thisObj, 
+        scope = ScriptRuntime.initScript(cx, scope, this, thisObj,
                                          itsData.itsFromEvalCode);
-        return Interpreter.interpret(cx, scope, thisObj, args, this, itsData);    
+        return Interpreter.interpret(cx, scope, thisObj, args, this, itsData);
     }
-    
+
     public boolean isFunction() {
         return false;
     }
-    
+
     public Scriptable getScriptable() {
         return this;
     }
-    
+
     public String getSourceName() {
         return itsData.itsSourceFile;
     }
-    
+
     public int[] getLineNumbers() {
         return itsData.itsLineNumberTable.getKeys();
     }
-    
+
     public boolean placeBreakpoint(int line) { // XXX throw exn?
         return itsData.placeBreakpoint(line);
     }
-    
+
     public boolean removeBreakpoint(int line) {
         return itsData.removeBreakpoint(line);
     }
-    
+
     InterpreterData itsData;
 }
 

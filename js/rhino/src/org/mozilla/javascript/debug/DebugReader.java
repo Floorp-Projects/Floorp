@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -39,10 +39,10 @@ import java.io.*;
 public class DebugReader extends Reader {
 
     public DebugReader(Reader reader) {
-        this.reader = new BufferedReader(reader);  
+        this.reader = new BufferedReader(reader);
         this.saved = new StringBuffer();
     }
-    
+
     public StringBuffer getSaved() {
         return saved;
     }
@@ -56,14 +56,14 @@ public class DebugReader extends Reader {
 
     public int read(char cbuf[]) throws IOException {
         int i = reader.read(cbuf);
-        if (i != -1) 
+        if (i != -1)
             saved.append(cbuf, 0, i);
         return i;
     }
 
     public int read(char cbuf[], int off, int len) throws IOException {
         int i = reader.read(cbuf, off, len);
-        if (i > 0) 
+        if (i > 0)
             saved.append(cbuf, off, i);
         return i;
     }
@@ -93,9 +93,9 @@ public class DebugReader extends Reader {
     }
 
     protected void finalize() throws Throwable {
-        reader = null;    
+        reader = null;
     }
-    
+
     private BufferedReader reader;
     private StringBuffer saved;
 }

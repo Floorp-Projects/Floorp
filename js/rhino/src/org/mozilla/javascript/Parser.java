@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Mike Ang
  * Mike McCabe
  *
@@ -65,15 +65,15 @@ class Parser {
             ts.ungetToken(tt); // In case the parser decides to continue
         }
     }
-    
-    private void reportError(TokenStream ts, String messageId) 
+
+    private void reportError(TokenStream ts, String messageId)
         throws JavaScriptException
     {
         this.ok = false;
         ts.reportSyntaxError(messageId, null);
-        
-        /* Throw an exception to unwind the recursive descent parse. 
-         * We use JavaScriptException here even though it is really 
+
+        /* Throw an exception to unwind the recursive descent parse.
+         * We use JavaScriptException here even though it is really
          * a different use of the exception than it is usually used
          * for.
          */
@@ -81,7 +81,7 @@ class Parser {
     }
 
     /*
-     * Build a parse tree from the given TokenStream.  
+     * Build a parse tree from the given TokenStream.
      *
      * @param ts the TokenStream to parse
      *
@@ -173,7 +173,7 @@ class Parser {
 
         return pn;
     }
-    
+
     private Object function(TokenStream ts, boolean isExpr)
         throws IOException, JavaScriptException
     {
@@ -206,27 +206,27 @@ class Parser {
             if (Context.getContext().hasFeature
                 (Context.FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME))
             {
-                // Note that memberExpr can not start with '(' like 
+                // Note that memberExpr can not start with '(' like
                 // in (1+2).toString, because 'function (' already
                 // processed as anonymous function
                 memberExprNode = memberExpr(ts, false);
             }
             mustMatchToken(ts, ts.LP, "msg.no.paren.parms");
         }
-        
+
         if (memberExprNode != null) {
             // transform 'function' <memberExpr> to  <memberExpr> = function
             // even in the decompilated source
             sourceAdd((char)ts.ASSIGN);
             sourceAdd((char)ts.NOP);
         }
-        
+
         // save a reference to the function in the enclosing source.
         sourceAdd((char) ts.FUNCTION);
         sourceAdd((char)functionNumber);
         ++functionNumber;
 
-        // Save current source top to restore it on exit not to include 
+        // Save current source top to restore it on exit not to include
         // function to parent source
         int savedSourceTop = sourceTop;
         int savedFunctionNumber = functionNumber;
@@ -275,17 +275,17 @@ class Parser {
             sourceTop = savedSourceTop;
             functionNumber = savedFunctionNumber;
         }
-        
+
         Object pn = nf.createFunction(name, args, body,
                                       ts.getSourceName(),
                                       baseLineno, ts.getLineno(),
-                                      source, 
+                                      source,
                                       isExpr || memberExprNode != null);
         if (memberExprNode != null) {
             pn = nf.createBinary(ts.ASSIGN, ts.NOP, memberExprNode, pn);
         }
-        
-        // Add EOL but only if function is not part of expression, in which 
+
+        // Add EOL but only if function is not part of expression, in which
         // case it gets SEMI + EOL from Statement.
         if (!isExpr) {
             if (memberExprNode != null) {
@@ -296,7 +296,7 @@ class Parser {
             sourceAdd((char)ts.EOL);
             wellTerminated(ts, ts.FUNCTION);
         }
-        
+
         return pn;
     }
 
@@ -375,7 +375,7 @@ class Parser {
         return label;
     }
 
-    private Object statement(TokenStream ts) 
+    private Object statement(TokenStream ts)
         throws IOException
     {
         try {
@@ -386,17 +386,17 @@ class Parser {
             int t;
             do {
                 t = ts.getToken();
-            } while (t != TokenStream.SEMI && t != TokenStream.EOL && 
+            } while (t != TokenStream.SEMI && t != TokenStream.EOL &&
                      t != TokenStream.EOF && t != TokenStream.ERROR);
             return nf.createExprStatement(nf.createName("error"), lineno);
         }
     }
-    
+
     /**
      * Whether the "catch (e: e instanceof Exception) { ... }" syntax
      * is implemented.
      */
-   
+
     private Object statementHelper(TokenStream ts)
         throws IOException, JavaScriptException
     {
@@ -480,7 +480,7 @@ class Parser {
                 case_statements = nf.createLeaf(TokenStream.BLOCK);
 
                 while ((tt = ts.peekToken()) != ts.RC && tt != ts.CASE &&
-                        tt != ts.DEFAULT && tt != ts.EOF) 
+                        tt != ts.DEFAULT && tt != ts.EOF)
                 {
                     nf.addChildToBack(case_statements, statement(ts));
                 }
@@ -629,7 +629,7 @@ class Parser {
                     mustMatchToken(ts, ts.NAME, "msg.bad.catchcond");
                     String varName = ts.getString();
                     sourceAddString(ts.NAME, varName);
-                    
+
                     Object catchCond = null;
                     if (ts.matchToken(ts.IF)) {
                         sourceAdd((char)ts.IF);
@@ -643,10 +643,10 @@ class Parser {
                     mustMatchToken(ts, ts.LC, "msg.no.brace.catchblock");
                     sourceAdd((char)ts.LC);
                     sourceAdd((char)ts.EOL);
-                    
-                    nf.addChildToBack(catchblocks, 
-                        nf.createCatch(varName, catchCond, 
-                                       statements(ts), 
+
+                    nf.addChildToBack(catchblocks,
+                        nf.createCatch(varName, catchCond,
+                                       statements(ts),
                                        ts.getLineno()));
 
                     mustMatchToken(ts, ts.RC, "msg.no.brace.after.body");
@@ -817,7 +817,7 @@ class Parser {
                 }
 
                 pn = nf.createExprStatement(pn, lineno);
-                
+
                 /*
                  * Check explicitly against (multi-line) function
                  * statement.
@@ -1129,7 +1129,7 @@ class Parser {
             return pn;
         }
         return nf.createName("err"); // Only reached on error.  Try to continue.
-        
+
     }
 
     private Object argumentList(TokenStream ts, Object listNode)
@@ -1147,7 +1147,7 @@ class Parser {
                 first = false;
                 nf.addChildToBack(listNode, assignExpr(ts, false));
             } while (ts.matchToken(ts.COMMA));
-            
+
             mustMatchToken(ts, ts.RP, "msg.no.paren.arg");
         }
         sourceAdd((char)ts.RP);
@@ -1160,7 +1160,7 @@ class Parser {
         int tt;
 
         Object pn;
-        
+
         /* Check for new expressions. */
         ts.flags |= ts.TSF_REGEXP;
         tt = ts.peekToken();
@@ -1184,7 +1184,7 @@ class Parser {
              * "too many constructor arguments" - how many
              * do we claim to support?
              */
-            
+
             /* Experimental syntax:  allow an object literal to follow a new expression,
              * which will mean a kind of anonymous class built with the JavaAdapter.
              * the object literal will be passed as an additional argument to the constructor.
@@ -1196,7 +1196,7 @@ class Parser {
         } else {
             pn = primaryExpr(ts);
         }
-        
+
         return memberExprTail(ts, allowCallSyntax, pn);
     }
 
@@ -1231,7 +1231,7 @@ class Parser {
 
                 pn = nf.createUnary(ts.CALL, pn);
                 sourceAdd((char)ts.LP);
-                
+
                 /* Add the arguments to pn, if any are supplied. */
                 pn = argumentList(ts, pn);
                 lastExprEndLine = ts.getLineno();
@@ -1410,7 +1410,7 @@ class Parser {
         }
         return null;    // should never reach here
     }
-    
+
 /**
  * The following methods save decompilation information about the source.
  * Source information is returned from the parser as a String
@@ -1493,7 +1493,7 @@ class Parser {
          * constant pool UTF-8 encoding, so a Double could take
          * up to 12 bytes.
          */
-        
+
         long lbits = (long)n;
         if (lbits != n) {
             // if it's floating point, save as a Double bit pattern.
@@ -1509,7 +1509,7 @@ class Parser {
             // we can ignore negative values, bc they're already prefixed
             // by UNARYOP SUB
                if (Context.check && lbits < 0) Context.codeBug();
-            
+
             // will it fit in a char?
             // this gives a short encoding for integer values up to 2^16.
             if (lbits <= Character.MAX_VALUE) {
@@ -1538,13 +1538,13 @@ class Parser {
         System.arraycopy(sourceBuffer, 0, tmp, 0, sourceTop);
         sourceBuffer = tmp;
     }
-    
+
     private String sourceToString(int offset) {
         if (Context.check && (offset < 0 || sourceTop < offset))
             Context.codeBug();
         return new String(sourceBuffer, offset, sourceTop - offset);
     }
-    
+
     private int lastExprEndLine; // Hack to handle function expr termination.
     private IRFactory nf;
     private ErrorReporter er;

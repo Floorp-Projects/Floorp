@@ -86,14 +86,14 @@ final class NativeNumber extends IdScriptable {
 
         super.fillConstructorProperties(cx, ctor, sealed);
     }
-    
+
     public int methodArity(int methodId) {
         if (prototypeFlag) {
             switch (methodId) {
-                case Id_constructor:     return 1; 
-                case Id_toString:        return 1; 
-                case Id_valueOf:         return 0; 
-                case Id_toLocaleString:  return 1; 
+                case Id_constructor:     return 1;
+                case Id_toString:        return 1;
+                case Id_valueOf:         return 0;
+                case Id_toLocaleString:  return 1;
                 case Id_toFixed:         return 1;
                 case Id_toExponential:   return 1;
                 case Id_toPrecision:     return 1;
@@ -223,16 +223,16 @@ final class NativeNumber extends IdScriptable {
     protected String getIdName(int id) {
         if (prototypeFlag) {
             switch (id) {
-                case Id_constructor:     return "constructor"; 
-                case Id_toString:        return "toString"; 
-                case Id_valueOf:         return "valueOf"; 
-                case Id_toLocaleString:  return "toLocaleString"; 
+                case Id_constructor:     return "constructor";
+                case Id_toString:        return "toString";
+                case Id_valueOf:         return "valueOf";
+                case Id_toLocaleString:  return "toLocaleString";
                 case Id_toFixed:         return "toFixed";
                 case Id_toExponential:   return "toExponential";
                 case Id_toPrecision:     return "toPrecision";
             }
         }
-        return null;        
+        return null;
     }
 
 // #string_id_map#

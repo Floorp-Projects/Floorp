@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  * Roger Lawrence
  * Mike McCabe
@@ -49,7 +49,7 @@ import java.util.Vector;
  */
 
 public class NodeTransformer {
-    
+
     /**
      * Return new instance of this class. So that derived classes
      * can override methods of the transformer.
@@ -57,13 +57,13 @@ public class NodeTransformer {
     public NodeTransformer newInstance() {
         return new NodeTransformer();
     }
-    
+
     public IRFactory createIRFactory(TokenStream ts, Scriptable scope) {
         return new IRFactory(ts, scope);
     }
 
     public Node transform(Node tree, Node enclosing, TokenStream ts,
-                          Scriptable scope) 
+                          Scriptable scope)
     {
         loops = new Stack();
         loopEnds = new Stack();
@@ -104,8 +104,8 @@ public class NodeTransformer {
                     FunctionNode fnNode = (FunctionNode)
                                           node.getProp(Node.FUNCTION_PROP);
                     if (inFunction) {
-                        // Functions containing other functions require 
-                        //  activation objects 
+                        // Functions containing other functions require
+                        //  activation objects
                         ((FunctionNode) tree).setRequiresActivation(true);
 
                         // Nested functions must check their 'this' value to
@@ -115,7 +115,7 @@ public class NodeTransformer {
                     }
                     addParameters(fnNode);
                     NodeTransformer inner = newInstance();
-                    fnNode = (FunctionNode) 
+                    fnNode = (FunctionNode)
                             inner.transform(fnNode, tree, ts, scope);
                     node.putProp(Node.FUNCTION_PROP, fnNode);
                     Vector fns = (Vector) tree.getProp(Node.FUNCTION_PROP);
@@ -141,7 +141,7 @@ public class NodeTransformer {
                         if (id.equals(otherId)) {
                             String message = Context.getMessage1(
                                 "msg.dup.label", id);
-                            reportMessage(Context.getContext(), message, node, 
+                            reportMessage(Context.getContext(), message, node,
                                           tree, true, scope);
                             break typeswitch;
                         }
@@ -165,11 +165,11 @@ public class NodeTransformer {
                     break;
                 parent.addChildAfter(breakTarget, next);
                 node.putProp(Node.BREAK_PROP, breakTarget);
-                
+
                 if (next.getType() == TokenStream.LOOP) {
-                    node.putProp(Node.CONTINUE_PROP, 
+                    node.putProp(Node.CONTINUE_PROP,
                                  next.getProp(Node.CONTINUE_PROP));
-                }   
+                }
 
                 loops.push(node);
                 loopEnds.push(breakTarget);
@@ -337,7 +337,7 @@ public class NodeTransformer {
                 int propType = type == TokenStream.BREAK
                                ? Node.BREAK_PROP
                                : Node.CONTINUE_PROP;
-                Node target = loop == null 
+                Node target = loop == null
                               ? null
                               : (Node) loop.getProp(propType);
                 if (loop == null || target == null) {
@@ -358,7 +358,7 @@ public class NodeTransformer {
                         message = Context.getMessage
                             ("msg.undef.label", errArgs);
                     }
-                    reportMessage(Context.getContext(), message, node, 
+                    reportMessage(Context.getContext(), message, node,
                                   tree, true, scope);
                     node.setType(TokenStream.NOP);
                     break;
@@ -455,18 +455,18 @@ public class NodeTransformer {
                 }
                 break;
               }
-              
+
               case TokenStream.GETPROP:
                 if (inFunction) {
                     Node n = node.getFirstChild().getNextSibling();
                     String name = n == null ? "" : n.getString();
                     Context cx = Context.getCurrentContext();
                     if ((cx != null && cx.isActivationNeeded(name)) ||
-                        (name.equals("length") && 
-                         Context.getContext().getLanguageVersion() == 
+                        (name.equals("length") &&
+                         Context.getContext().getLanguageVersion() ==
                          Context.VERSION_1_2))
                     {
-                        // Use of "arguments" or "length" in 1.2 requires 
+                        // Use of "arguments" or "length" in 1.2 requires
                         // an activation object.
                         ((FunctionNode) tree).setRequiresActivation(true);
                     }
@@ -505,9 +505,9 @@ public class NodeTransformer {
         while ((node = iterator.nextNode()) != null) {
             int nodeType = node.getType();
             if (inFunction && nodeType == TokenStream.FUNCTION &&
-                node != tree && 
-                ((FunctionNode) node.getProp(Node.FUNCTION_PROP)).getFunctionType() == 
-                    FunctionNode.FUNCTION_EXPRESSION_STATEMENT) 
+                node != tree &&
+                ((FunctionNode) node.getProp(Node.FUNCTION_PROP)).getFunctionType() ==
+                    FunctionNode.FUNCTION_EXPRESSION_STATEMENT)
             {
                 // In a function with both "var x" and "function x",
                 // disregard the var statement, independent of order.
@@ -522,7 +522,7 @@ public class NodeTransformer {
             if (nodeType != TokenStream.VAR)
                 continue;
             for (Node cursor = node.getFirstChild(); cursor != null;
-                 cursor = cursor.getNextSibling()) 
+                 cursor = cursor.getNextSibling())
             {
                 if (ht == null || ht.get(cursor.getString()) == null)
                     vars.addLocal(cursor.getString());
@@ -535,7 +535,7 @@ public class NodeTransformer {
             vars.getVariable(name) == null)
         {
             // A function expression needs to have its name as a variable
-            // (if it isn't already allocated as a variable). See 
+            // (if it isn't already allocated as a variable). See
             // ECMA Ch. 13.  We add code to the beginning of the function
             // to initialize a local variable of the function's name
             // to the function value.
@@ -557,14 +557,14 @@ public class NodeTransformer {
         {
             // Add parameters
             for (Node cursor = args.getFirstChild(); cursor != null;
-                 cursor = cursor.getNextSibling()) 
+                 cursor = cursor.getNextSibling())
             {
                 String arg = cursor.getString();
                 vars.addParameter(arg);
             }
         }
     }
-    
+
     protected void visitNew(Node node, Node tree) {
     }
 
@@ -597,8 +597,8 @@ public class NodeTransformer {
         if (left.getType() == TokenStream.NAME) {
             VariableTable vars = getVariableTable(tree);
             String name = left.getString();
-            if (inFunction && vars.getVariable(name) != null && 
-                !inWithStatement()) 
+            if (inFunction && vars.getVariable(name) != null &&
+                !inWithStatement())
             {
                 // call to a var. Transform to Call(GetVar("a"), b, c)
                 left.setType(TokenStream.GETVAR);
@@ -660,7 +660,7 @@ public class NodeTransformer {
     }
 
     /**
-     * Return true if the node is a call to a function that requires 
+     * Return true if the node is a call to a function that requires
      * access to the enclosing activation object.
      */
     private boolean isSpecialCallName(Node tree, Node node) {
@@ -699,8 +699,8 @@ public class NodeTransformer {
         }
         return result;
     }
-    
-    protected void reportMessage(Context cx, String msg, Node stmt, 
+
+    protected void reportMessage(Context cx, String msg, Node stmt,
                                  Node tree, boolean isError,
                                  Scriptable scope)
     {
@@ -708,19 +708,19 @@ public class NodeTransformer {
         int lineno = 0;
         if (obj != null && obj instanceof Integer)
             lineno = ((Integer) obj).intValue();
-        Object prop = tree == null 
+        Object prop = tree == null
                       ? null
                       : tree.getProp(Node.SOURCENAME_PROP);
         if (isError) {
             if (scope != null)
             throw NativeGlobal.constructError(
-                        cx, "SyntaxError", msg, scope, 
+                        cx, "SyntaxError", msg, scope,
                         (String) prop, lineno, 0, null);
             else
                 cx.reportError(msg, (String) prop, lineno, null, 0);
         }
         else
-            cx.reportWarning(msg, (String) prop, lineno, null, 0);        
+            cx.reportWarning(msg, (String) prop, lineno, null, 0);
     }
 
     protected Stack loops;

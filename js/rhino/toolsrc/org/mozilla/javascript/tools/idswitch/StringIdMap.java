@@ -44,12 +44,12 @@ import org.mozilla.javascript.tools.ToolErrorReporter;
 public class StringIdMap {
 
     private static final String PROGRAM_NAME = "StringIdMap";
-    
+
     private static final String SWITCH_TAG_STR = "string_id_map";
     private static final String GENERATED_TAG_STR = "generated";
     private static final String STRING_TAG_STR = "string";
-    
-    private static final int 
+
+    private static final int
         NORMAL_LINE        = 0,
         SWITCH_TAG         = 1,
         GENERATED_TAG      = 2,
@@ -61,17 +61,17 @@ public class StringIdMap {
     private CodePrinter P;
     private FileBody body;
     private String source_file;
-    
+
     private int tag_definition_end;
 
     private int tag_value_start;
     private int tag_value_end;
-    
+
     private static boolean is_value_type(int id) {
         if (id == STRING_TAG) { return true; }
         return false;
     }
-    
+
     private static String tag_name(int id) {
         switch (id) {
             case SWITCH_TAG: return SWITCH_TAG_STR;
@@ -84,9 +84,9 @@ public class StringIdMap {
 
     void process_file(String file_path) throws IOException {
         source_file = file_path;
-        
+
         body = new FileBody();
-        
+
         InputStream is;
         if (file_path.equals("-")) {
             is = System.in;
@@ -101,7 +101,7 @@ public class StringIdMap {
         finally { is.close(); }
 
         process_file();
-        
+
         if (body.wasModified()) {
             OutputStream os;
             if (file_path.equals("-")) {
@@ -123,19 +123,19 @@ public class StringIdMap {
     private void process_file() throws IOException {
         int cur_state = 0;
         char[] buffer = body.getBuffer();
-        
+
         int generated_begin = -1, generated_end = -1;
         int time_stamp_begin = -1, time_stamp_end = -1;
-        
+
         body.startLineLoop();
         L:while (body.nextLine()) {
             int begin = body.getLineBegin();
             int end = body.getLineEnd();
-            
+
             int tag_id = extract_line_tag_id(buffer, begin, end);
             boolean bad_tag = false;
             switch (cur_state) {
-                case 0: 
+                case 0:
                     if (tag_id == SWITCH_TAG) {
                         cur_state = SWITCH_TAG;
                         all_pairs.removeAllElements();
@@ -195,15 +195,15 @@ public class StringIdMap {
                     break;
             }
             if (bad_tag) {
-                String text = R.getMessage("msg.idswitch.bad_tag_order", 
+                String text = R.getMessage("msg.idswitch.bad_tag_order",
                                            tag_name(tag_id));
                 throw R.runtimeError
                     (text, source_file, body.getLineNumber(), null, 0);
             }
         }
-        
+
         if (cur_state != 0) {
-            String text = R.getMessage("msg.idswitch.file_end_in_switch", 
+            String text = R.getMessage("msg.idswitch.file_end_in_switch",
                                        tag_name(cur_state));
             throw R.runtimeError
                 (text, source_file, body.getLineNumber(), null, 0);
@@ -218,17 +218,17 @@ public class StringIdMap {
     }
 
     private void generate_java_code() {
-        
+
         P.clear();
 
         IdValuePair[] pairs = new IdValuePair[all_pairs.size()];
         all_pairs.copyInto(pairs);
-        
-        SwitchGenerator g = new SwitchGenerator(); 
+
+        SwitchGenerator g = new SwitchGenerator();
         g.char_tail_test_threshold = 2;
         g.setReporter(R);
         g.setCodePrinter(P);
-        
+
         g.generateSwitch(pairs, "0");
     }
 
@@ -266,8 +266,8 @@ public class StringIdMap {
                             if (id != 0) {
                                 String bad = null;
                                 if (c == '#') {
-                                    if (end_tag) { 
-                                        id = -id; 
+                                    if (end_tag) {
+                                        id = -id;
                                         if (is_value_type(id)) {
                                             bad = "msg.idswitch.no_end_usage";
                                         }
@@ -299,7 +299,7 @@ public class StringIdMap {
         return id;
     }
 
-// Return position after first of // or end if not found    
+// Return position after first of // or end if not found
     private int look_for_slash_slash(char[] array, int cursor, int end) {
         while (cursor + 2 <= end) {
             int c = array[cursor++];
@@ -314,7 +314,7 @@ public class StringIdMap {
     }
 
     private int extract_tag_value(char[] array, int cursor, int end, int id) {
-        // cursor points after #[^#=]+= 
+        // cursor points after #[^#=]+=
         // ALERT: implement support for quoted strings
         boolean found = false;
         cursor = skip_white_space(array, cursor, end);
@@ -332,9 +332,9 @@ public class StringIdMap {
                     }
                     cursor = after_space + 1;
                 }
-                else if (c == '#') { 
+                else if (c == '#') {
                     value_end = cursor;
-                    break; 
+                    break;
                 }
                 else {
                     ++cursor;
@@ -350,7 +350,7 @@ public class StringIdMap {
         }
         return (found) ? id : 0;
     }
-    
+
     private int get_tag_id
         (char[] array, int begin, int end, boolean at_line_start)
     {
@@ -369,7 +369,7 @@ public class StringIdMap {
     }
 
     private void look_for_id_definitions
-        (char[] array, int begin, int end, boolean use_tag_value_as_string) 
+        (char[] array, int begin, int end, boolean use_tag_value_as_string)
     {
     // Look for the pattern
     // '^[ \t]+Id_([a-zA-Z0-9_]+)[ \t]*=.*$'
@@ -406,18 +406,18 @@ public class StringIdMap {
     {
         String name = new String(array, name_start, name_end - name_start);
         String value = new String(array, id_start, id_end - id_start);
-        
+
         IdValuePair pair = new IdValuePair(name, value);
 
         pair.setLineNumber(body.getLineNumber());
-        
+
         all_pairs.addElement(pair);
     }
 
     private static boolean is_white_space(int c) {
         return c == ' ' || c == '\t';
     }
-    
+
     private static int skip_white_space(char[] array, int begin, int end) {
         int cursor = begin;
         for (; cursor != end; ++cursor) {
@@ -490,11 +490,11 @@ public class StringIdMap {
                 ("msg.idswitch.too_many_arguments"));
             return -1;
         }
-        
+
         P = new CodePrinter();
         P.setIndentStep(4);
         P.setIndentTabSize(0);
-        
+
         try {
             process_file(args[0]);
         }
@@ -510,9 +510,9 @@ public class StringIdMap {
     }
 
     private int process_options(String[] args) {
-        
+
         int status = 1;
-        
+
         boolean show_usage = false;
         boolean show_version = false;
 
@@ -550,7 +550,7 @@ public class StringIdMap {
                                     status = -1;
                                     break L;
                             }
-                            
+
                         }
                     }
                     args[i] = null;
@@ -562,7 +562,7 @@ public class StringIdMap {
             if (show_usage) { show_usage(); status = 0; }
             if (show_version) { show_version(); status = 0; }
         }
-        
+
         if (status != 1) { System.exit(status); }
 
         return remove_nulls(args);
@@ -580,7 +580,7 @@ public class StringIdMap {
     private void option_error(String str) {
         print_error(R.getMessage("msg.idswitch.bad_invocation", str));
     }
-    
+
     private void print_error(String text) {
         System.err.println(text);
     }

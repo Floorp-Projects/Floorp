@@ -1,14 +1,14 @@
-/* 
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Rhino code, released
  * May 6, 1999.
  *
@@ -16,11 +16,11 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
+ *
  * Contributor(s):
  * Norris Boyd
  * Roger Lawrence
- * 
+ *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
  * provisions of the GPL are applicable instead of those above.
@@ -81,7 +81,7 @@ public class Optimizer {
                 pw.println(Block.toString(theBlocks, theStatementNodes));
             }
 
-            OptVariableTable vars = (OptVariableTable) 
+            OptVariableTable vars = (OptVariableTable)
                 theFunction.getVariableTable();
             if (vars != null) {
 
@@ -99,10 +99,10 @@ public class Optimizer {
                 localCSE(theBlocks, theFunction);
                 if (!theFunction.requiresActivation()) {
                     /*
-                     * Now that we know which local vars are in fact always 
-                     * Numbers, we re-write the tree to take advantage of 
-                     * that. Any arithmetic or assignment op involving just 
-                     * Number typed vars is marked so that the codegen will 
+                     * Now that we know which local vars are in fact always
+                     * Numbers, we re-write the tree to take advantage of
+                     * that. Any arithmetic or assignment op involving just
+                     * Number typed vars is marked so that the codegen will
                      * generate non-object code.
                      */
                     parameterUsedInNumberContext = false;
@@ -302,7 +302,7 @@ public class Optimizer {
         for (int i = 0; i < theBlocks.length; i++) {
             theBlocks[i].markVolatileVariables(theVariables);
         }
-        
+
         theBlocks[0].markAnyTypeVariables(theVariables);
     }
 
@@ -776,7 +776,7 @@ public class Optimizer {
         /* at this point n has two children or more */
         int lt = lChild.getType();
         int rt = rChild.getType();
-        
+
         Node replace = null;
 
         /* two or more children */
@@ -800,12 +800,12 @@ public class Optimizer {
                         ScriptRuntime.numberToString(rChild.getDouble(), 10));
                 }
                 else if (lt == TokenStream.NUMBER && rt == TokenStream.STRING) {
-                    // num + string 
+                    // num + string
                     replace = new Node(TokenStream.STRING,
                         ScriptRuntime.numberToString(lChild.getDouble(), 10) +
                         rChild.getString());
                 }
-                // can't do anything if we don't know  both types - since 
+                // can't do anything if we don't know  both types - since
                 // 0 + object is supposed to call toString on the object and do
                 // string concantenation rather than addition
                 break;
@@ -825,7 +825,7 @@ public class Optimizer {
                 else if (rt == TokenStream.NUMBER && rChild.getDouble() == 0) {
                     //second 0: x - 0 -> +x
                     // can not make simply x because x - 0 must be number
-                    replace = new Node(TokenStream.UNARYOP, 
+                    replace = new Node(TokenStream.UNARYOP,
                         lChild, TokenStream.ADD);
                 }
                 break;
@@ -957,13 +957,13 @@ public class Optimizer {
                 }
                 break;
         }//switch
-        
+
         if (replace != null) {
             parent.replaceChild(n, replace);
         }
 
     }
-    
+
     private static final int ALWAYS_TRUE_BOOLEAN = 1;
     private static final int ALWAYS_FALSE_BOOLEAN = -1;
 
@@ -973,7 +973,7 @@ public class Optimizer {
         int type = node.getType();
         if (type == TokenStream.PRIMARY) {
             int id = node.getInt();
-            if (id == TokenStream.FALSE || id == TokenStream.NULL 
+            if (id == TokenStream.FALSE || id == TokenStream.NULL
                 || id == TokenStream.UNDEFINED)
             {
                 result = ALWAYS_FALSE_BOOLEAN;
@@ -1007,7 +1007,7 @@ public class Optimizer {
         switch (n.getType()) {
             case TokenStream.SETVAR : {
                     String name = n.getFirstChild().getString();
-                    OptLocalVariable theVar = (OptLocalVariable) 
+                    OptLocalVariable theVar = (OptLocalVariable)
                         theVariables.getVariable(name);
                     if (theVar != null)
                         n.putProp(Node.VARIABLE_PROP, theVar);
@@ -1015,7 +1015,7 @@ public class Optimizer {
                 break;
             case TokenStream.GETVAR : {
                     String name = n.getString();
-                    OptLocalVariable theVar = (OptLocalVariable) 
+                    OptLocalVariable theVar = (OptLocalVariable)
                         theVariables.getVariable(name);
                     if (theVar != null)
                         n.putProp(Node.VARIABLE_PROP, theVar);

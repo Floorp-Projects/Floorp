@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  * Kurt Westerfeld
  *
@@ -51,7 +51,7 @@ public class ToolErrorReporter implements ErrorReporter {
     public ToolErrorReporter(boolean reportWarnings) {
         this(reportWarnings, System.err);
     }
-    
+
     public ToolErrorReporter(boolean reportWarnings, PrintStream err) {
         this.reportWarnings = reportWarnings;
         this.err = err;
@@ -71,7 +71,7 @@ public class ToolErrorReporter implements ErrorReporter {
         return getMessage(messageId, args);
     }
 
-    public static String getMessage(String messageId, Object arg1, Object arg2) 
+    public static String getMessage(String messageId, Object arg1, Object arg2)
     {
         Object[] args = { arg1, arg2 };
         return getMessage(messageId, args);
@@ -172,6 +172,6 @@ public class ToolErrorReporter implements ErrorReporter {
 
     private final String messagePrefix = "js: ";
     private boolean hasReportedErrorFlag;
-    private boolean reportWarnings; 
+    private boolean reportWarnings;
     private PrintStream err;
 }

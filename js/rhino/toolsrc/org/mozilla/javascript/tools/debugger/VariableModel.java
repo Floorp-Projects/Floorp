@@ -40,7 +40,7 @@ import javax.swing.event.TableModelEvent;
 import java.util.Hashtable;
 import java.util.Enumeration;
 
-public class VariableModel extends AbstractTreeTableModel 
+public class VariableModel extends AbstractTreeTableModel
                              implements TreeTableModel {
 
     // Names of the columns.
@@ -52,40 +52,40 @@ public class VariableModel extends AbstractTreeTableModel
     static protected Class[]  cTypes = {TreeTableModel.class, String.class};
 
 
-    public VariableModel(Scriptable scope) { 
-        super(scope == null ? null : new VariableNode(scope, "this")); 
+    public VariableModel(Scriptable scope) {
+        super(scope == null ? null : new VariableNode(scope, "this"));
     }
 
     //
-    // Some convenience methods. 
+    // Some convenience methods.
     //
 
     protected Object getObject(Object node) {
-        VariableNode varNode = ((VariableNode)node); 
+        VariableNode varNode = ((VariableNode)node);
         if(varNode == null) return null;
-        return varNode.getObject();       
+        return varNode.getObject();
     }
 
     protected Object[] getChildren(Object node) {
-        VariableNode varNode = ((VariableNode)node); 
-        return varNode.getChildren(); 
+        VariableNode varNode = ((VariableNode)node);
+        return varNode.getChildren();
     }
 
     //
     // The TreeModel interface
     //
 
-    public int getChildCount(Object node) { 
-        Object[] children = getChildren(node); 
+    public int getChildCount(Object node) {
+        Object[] children = getChildren(node);
         return (children == null) ? 0 : children.length;
     }
 
-    public Object getChild(Object node, int i) { 
-        return getChildren(node)[i]; 
+    public Object getChild(Object node, int i) {
+        return getChildren(node)[i];
     }
 
-    // The superclass's implementation would work, but this is more efficient. 
-    public boolean isLeaf(Object node) { 
+    // The superclass's implementation would work, but this is more efficient.
+    public boolean isLeaf(Object node) {
         if(node == null) return true;
         VariableNode varNode = (VariableNode)node;
         Object[] children = varNode.getChildren();
@@ -96,11 +96,11 @@ public class VariableModel extends AbstractTreeTableModel
     }
 
     public boolean isCellEditable(Object node, int column) {
-        return column == 0; 
+        return column == 0;
     }
 
     //
-    //  The TreeTableNode interface. 
+    //  The TreeTableNode interface.
     //
 
     public int getColumnCount() {
@@ -114,9 +114,9 @@ public class VariableModel extends AbstractTreeTableModel
     public Class getColumnClass(int column) {
         return cTypes[column];
     }
- 
+
     public Object getValueAt(Object node, int column) {
-        Object value = getObject(node); 
+        Object value = getObject(node);
         Context cx = Context.enter();
         try {
             switch(column) {
@@ -128,7 +128,7 @@ public class VariableModel extends AbstractTreeTableModel
                 }
                 return name + "[" + varNode.index + "]";
             case 1: // value
-                if(value == Undefined.instance || 
+                if(value == Undefined.instance ||
                    value == ScriptableObject.NOT_FOUND) {
                     return "undefined";
                 }
@@ -150,17 +150,17 @@ public class VariableModel extends AbstractTreeTableModel
                     char ch = result.charAt(i);
                     if(Character.isISOControl(ch)) {
                         ch = ' ';
-                    } 
+                    }
                     buf.append(ch);
                 }
                 return buf.toString();
             }
-        } catch(Exception exc) { 
+        } catch(Exception exc) {
             //exc.printStackTrace();
         } finally {
             cx.exit();
         }
-        return null; 
+        return null;
     }
 
     public void setScope(Scriptable scope) {
@@ -174,17 +174,17 @@ public class VariableModel extends AbstractTreeTableModel
 }
 
 
-class VariableNode { 
+class VariableNode {
     Scriptable scope;
     String name;
     int index;
 
-    public VariableNode(Scriptable scope, String name) { 
+    public VariableNode(Scriptable scope, String name) {
         this.scope = scope;
         this.name = name;
     }
 
-    public VariableNode(Scriptable scope, int index) { 
+    public VariableNode(Scriptable scope, int index) {
         this.scope = scope;
         this.name = null;
         this.index = index;
@@ -193,7 +193,7 @@ class VariableNode {
     /**
      * Returns the the string to be used to display this leaf in the JTree.
      */
-    public String toString() { 
+    public String toString() {
         return (name != null ? name : "[" + index + "]");
     }
 
@@ -263,21 +263,21 @@ class VariableNode {
                 if(proto != null) {
                     if(builtin == null) {
                         builtin = new Scriptable[6];
-                        builtin[0] =  
+                        builtin[0] =
                             ScriptableObject.getObjectPrototype(scrip);
-                        builtin[1] = 
+                        builtin[1] =
                             ScriptableObject.getFunctionPrototype(scrip);
-                        builtin[2] = 
-                            ScriptableObject.getClassPrototype(scrip, 
+                        builtin[2] =
+                            ScriptableObject.getClassPrototype(scrip,
                                                                "String");
-                        builtin[3] = 
-                            ScriptableObject.getClassPrototype(scrip, 
+                        builtin[3] =
+                            ScriptableObject.getClassPrototype(scrip,
                                                                "Boolean");
-                        builtin[4] = 
-                            ScriptableObject.getClassPrototype(scrip, 
+                        builtin[4] =
+                            ScriptableObject.getClassPrototype(scrip,
                                                                "Array");
                         builtin[5] =
-                            ScriptableObject.getClassPrototype(scrip, 
+                            ScriptableObject.getClassPrototype(scrip,
                                                                "Number");
                     }
                     for(int i = 0; i < builtin.length; i++) {
@@ -347,15 +347,15 @@ class VariableNode {
                         java.util.Arrays.sort(ids, new java.util.Comparator() {
                                 public int compare(Object l, Object r) {
                                     return l.toString().compareToIgnoreCase(r.toString());
-                                
+
                                 }
                             });
                         len = ids.length;
                     }
-                    children = new VariableNode[len]; 
+                    children = new VariableNode[len];
                     for(int i = 0; i < len; i++) {
                         Object id = ids[i];
-                        children[i] = 
+                        children[i] =
                             new VariableNode(scrip, id.toString());
                     }
                 }
@@ -365,7 +365,7 @@ class VariableNode {
         } finally {
             cx.exit();
         }
-        return children; 
+        return children;
     }
 }
 

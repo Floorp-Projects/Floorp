@@ -18,9 +18,9 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Roger Lawrence
- * 
+ *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
  * provisions of the GPL are applicable instead of those above.
@@ -38,7 +38,7 @@
 package org.mozilla.javascript;
 
 /**
- * The class of exceptions raised by the engine as described in 
+ * The class of exceptions raised by the engine as described in
  * ECMA edition 3. See section 15.11.6 in particular.
  */
 public class EcmaError extends RuntimeException {
@@ -54,11 +54,11 @@ public class EcmaError extends RuntimeException {
      * @param lineNumber the line number of the source
      * @param columnNumber the columnNumber of the source (may be zero if
      *                     unknown)
-     * @param lineSource the source of the line containing the error (may be 
+     * @param lineSource the source of the line containing the error (may be
      *                   null if unknown)
      */
-    public EcmaError(NativeError nativeError, String sourceName, 
-                     int lineNumber, int columnNumber, String lineSource) 
+    public EcmaError(NativeError nativeError, String sourceName,
+                     int lineNumber, int columnNumber, String lineSource)
     {
         super("EcmaError");
         errorObject = nativeError;
@@ -67,9 +67,9 @@ public class EcmaError extends RuntimeException {
         this.columnNumber = columnNumber;
         this.lineSource = lineSource;
     }
-    
+
     /**
-     * Return a string representation of the error, which currently consists 
+     * Return a string representation of the error, which currently consists
      * of the name of the error together with the message.
      */
     public String toString() {
@@ -89,34 +89,34 @@ public class EcmaError extends RuntimeException {
         buf.append(')');
         return buf.toString();
     }
-    
+
     /**
      * Gets the name of the error.
-     * 
+     *
      * ECMA edition 3 defines the following
-     * errors: EvalError, RangeError, ReferenceError, 
+     * errors: EvalError, RangeError, ReferenceError,
      * SyntaxError, TypeError, and URIError. Additional error names
      * may be added in the future.
-     * 
+     *
      * See ECMA edition 3, 15.11.7.9.
-     * 
-     * @return the name of the error. 
+     *
+     * @return the name of the error.
      */
     public String getName() {
         return errorObject.getName();
     }
-    
+
     /**
      * Gets the message corresponding to the error.
-     * 
+     *
      * See ECMA edition 3, 15.11.7.10.
-     * 
+     *
      * @return an implemenation-defined string describing the error.
      */
     public String getMessage() {
         return errorObject.getMessage();
     }
-    
+
     /**
      * Get the name of the source containing the error, or null
      * if that information is not available.
@@ -124,7 +124,7 @@ public class EcmaError extends RuntimeException {
     public String getSourceName() {
         return sourceName;
     }
-    
+
     /**
      * Returns the line number of the statement causing the error,
      * or zero if not available.
@@ -132,28 +132,28 @@ public class EcmaError extends RuntimeException {
     public int getLineNumber() {
         return lineNumber;
     }
-    
+
     /**
      * Get the error object corresponding to this exception.
      */
     public Scriptable getErrorObject() {
         return errorObject;
     }
-    
+
     /**
      * The column number of the location of the error, or zero if unknown.
      */
     public int getColumnNumber() {
         return columnNumber;
     }
-    
+
     /**
      * The source of the line causing the error, or zero if unknown.
      */
     public String getLineSource() {
         return lineSource;
     }
-    
+
     private NativeError errorObject;
     private String sourceName;
     private int lineNumber;

@@ -18,7 +18,7 @@
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  * Igor Bukanov
  * David C. Navas
@@ -60,9 +60,9 @@ public class FunctionObject extends NativeFunction {
      * The first form is a member with zero or more parameters
      * of the following types: Object, String, boolean, Scriptable,
      * byte, short, int, float, or double. The Long type is not supported
-     * because the double representation of a long (which is the 
+     * because the double representation of a long (which is the
      * EMCA-mandated storage type for Numbers) may lose precision.
-     * If the member is a Method, the return value must be void or one 
+     * If the member is a Method, the return value must be void or one
      * of the types allowed for parameters.<p>
      *
      * The runtime will perform appropriate conversions based
@@ -172,11 +172,11 @@ public class FunctionObject extends NativeFunction {
                     type != Byte.TYPE &&
                     type != Short.TYPE &&
                     type != Integer.TYPE &&
-                    type != Float.TYPE && 
+                    type != Float.TYPE &&
                     type != Double.TYPE)
                 {
                     // Note that long is not supported.
-                    throw Context.reportRuntimeError1("msg.bad.parms", 
+                    throw Context.reportRuntimeError1("msg.bad.parms",
                                                       methodName);
                 }
             }
@@ -192,7 +192,7 @@ public class FunctionObject extends NativeFunction {
         setParentScope(scope);
         setPrototype(getFunctionPrototype(scope));
         Context cx = Context.getCurrentContext();
-        useDynamicScope = cx != null && 
+        useDynamicScope = cx != null &&
                           cx.hasCompileFunctionsWithDynamicScope();
     }
 
@@ -244,7 +244,7 @@ public class FunctionObject extends NativeFunction {
     public static Method[] findMethods(Class clazz, String name) {
         return findMethods(getMethodList(clazz), name);
     }
-    
+
     static Method[] findMethods(Method[] methods, String name) {
         // Usually we're just looking for a single method, so optimize
         // for that case.
@@ -284,7 +284,7 @@ public class FunctionObject extends NativeFunction {
         try {
             // getDeclaredMethods may be rejected by the security manager
             // but getMethods is more expensive
-            if (!sawSecurityException) 
+            if (!sawSecurityException)
                 methods = clazz.getDeclaredMethods();
         } catch (SecurityException e) {
             // If we get an exception once, give up on getDeclaredMethods
@@ -295,7 +295,7 @@ public class FunctionObject extends NativeFunction {
         }
         int count = 0;
         for (int i=0; i < methods.length; i++) {
-            if (sawSecurityException 
+            if (sawSecurityException
                 ? methods[i].getDeclaringClass() != clazz
                 : !Modifier.isPublic(methods[i].getModifiers()))
             {
@@ -337,7 +337,7 @@ public class FunctionObject extends NativeFunction {
         setImmunePrototypeProperty(prototype);
 
         prototype.setParentScope(this);
-        
+
         final int attr = ScriptableObject.DONTENUM  |
                          ScriptableObject.PERMANENT |
                          ScriptableObject.READONLY;
@@ -352,20 +352,20 @@ public class FunctionObject extends NativeFunction {
     static public Object convertArg(Context cx, Scriptable scope,
                                     Object arg, Class desired)
     {
-        if (desired == ScriptRuntime.StringClass) 
+        if (desired == ScriptRuntime.StringClass)
             return ScriptRuntime.toString(arg);
-        if (desired == ScriptRuntime.IntegerClass || 
+        if (desired == ScriptRuntime.IntegerClass ||
             desired == Integer.TYPE)
         {
             return new Integer(ScriptRuntime.toInt32(arg));
         }
-        if (desired == ScriptRuntime.BooleanClass || 
+        if (desired == ScriptRuntime.BooleanClass ||
             desired == Boolean.TYPE)
         {
-            return ScriptRuntime.toBoolean(arg) ? Boolean.TRUE 
+            return ScriptRuntime.toBoolean(arg) ? Boolean.TRUE
                                                 : Boolean.FALSE;
         }
-        if (desired == ScriptRuntime.DoubleClass || 
+        if (desired == ScriptRuntime.DoubleClass ||
             desired == Double.TYPE)
         {
             return new Double(ScriptRuntime.toNumber(arg));
@@ -374,7 +374,7 @@ public class FunctionObject extends NativeFunction {
             return ScriptRuntime.toObject(cx, scope, arg);
         if (desired == ScriptRuntime.ObjectClass)
             return arg;
-        
+
         // Note that the long type is not supported; see the javadoc for
         // the constructor for this class
         throw Context.reportRuntimeError1
@@ -388,7 +388,7 @@ public class FunctionObject extends NativeFunction {
      * Implements Function.call.
      *
      * @see org.mozilla.javascript.Function#call
-     * @exception JavaScriptException if the underlying Java method or 
+     * @exception JavaScriptException if the underlying Java method or
      *            constructor threw an exception
      */
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
@@ -506,8 +506,8 @@ public class FunctionObject extends NativeFunction {
 
         return super.construct(cx, scope, args);
     }
-        
-    private final Object doInvoke(Object thisObj, Object[] args) 
+
+    private final Object doInvoke(Object thisObj, Object[] args)
         throws IllegalAccessException, InvocationTargetException
     {
         Invoker master = invokerMaster;
@@ -520,7 +520,7 @@ public class FunctionObject extends NativeFunction {
             } catch (Exception e) {
                 throw new InvocationTargetException(e);
             }
-        } 
+        }
         return method.invoke(thisObj, args);
     }
 
@@ -557,15 +557,15 @@ public class FunctionObject extends NativeFunction {
             throw WrappedException.wrapException(e);
         }
     }
-    
-    boolean isVarArgsMethod() { 
+
+    boolean isVarArgsMethod() {
         return parmsLength == VARARGS_METHOD;
     }
 
-    boolean isVarArgsConstructor() { 
+    boolean isVarArgsConstructor() {
         return parmsLength == VARARGS_CTOR;
     }
-    
+
     static void setCachingEnabled(boolean enabled) {
         if (!enabled) {
             methodsCache = null;
@@ -588,14 +588,14 @@ public class FunctionObject extends NativeFunction {
         return null;
     }
 
-    private static final String 
+    private static final String
         INVOKER_MASTER_CLASS = "org.mozilla.javascript.optimizer.InvokerImpl";
 
     static Invoker invokerMaster = newInvokerMaster();
-    
+
     private static final short VARARGS_METHOD = -1;
     private static final short VARARGS_CTOR =   -2;
-    
+
     private static boolean sawSecurityException;
 
     static Method[] methodsCache;

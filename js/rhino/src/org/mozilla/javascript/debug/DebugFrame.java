@@ -18,7 +18,7 @@
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
@@ -42,10 +42,10 @@ import org.mozilla.javascript.*;
 public interface DebugFrame {
 
     public Scriptable getVariableObject();
-    
+
     public String getSourceName();
-    
+
     public int getLineNumber();
-    
+
     public DebuggableScript getScript();
 }

@@ -18,7 +18,7 @@
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Marshall Cline
  *
  * Alternatively, the contents of this file may be used under the
@@ -47,7 +47,7 @@ public interface WrapHandler {
     /**
      * Wrap the object.
      * <p>
-     * The value returned must be one of 
+     * The value returned must be one of
      * <UL>
      * <LI>java.lang.Boolean</LI>
      * <LI>java.lang.String</LI>
@@ -56,7 +56,7 @@ public interface WrapHandler {
      * <LI>The value returned by Context.getUndefinedValue()</LI>
      * <LI>null</LI>
      * <p>
-     * If null is returned, the value obj will be wrapped as if 
+     * If null is returned, the value obj will be wrapped as if
      * no WrapHandler had been called.
      * </UL>
      * @param scope the scope of the executing script

@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  * Igor Bukanov
  * Mike McCabe
@@ -128,7 +128,7 @@ final class NativeBoolean extends IdScriptable {
             if (id == Id_toString) return "toString";
             if (id == Id_valueOf) return "valueOf";
         }
-        return null;        
+        return null;
     }
 
 // #string_id_map#

@@ -18,7 +18,7 @@
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Kemal Bayram
  *
  * Alternatively, the contents of this file may be used under the
@@ -43,13 +43,13 @@ import java.io.*;
  * @see Context
  * @author Kemal Bayram
  */
-public interface ClassRepository {  
+public interface ClassRepository {
     /**
      * @param className the name of the class.
      * @param classBytes a byte array of the generated class.
      * @param isTopLevel if true, represents the top-level script being compiled.
-     * @return true if the class should be loaded, false otherwise. 
+     * @return true if the class should be loaded, false otherwise.
      */
-    public boolean storeClass(String className, byte[] classBytes, 
+    public boolean storeClass(String className, byte[] classBytes,
                            boolean isTopLevel) throws IOException;
 }

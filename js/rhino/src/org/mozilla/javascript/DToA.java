@@ -50,14 +50,14 @@ class DToA {
     static char BASEDIGIT(int digit) {
         return (char)((digit >= 10) ? 'a' - 10 + digit : '0' + digit);
     }
-    
+
     static final int
         DTOSTR_STANDARD = 0,              /* Either fixed or exponential format; round-trip */
         DTOSTR_STANDARD_EXPONENTIAL = 1,  /* Always exponential format; round-trip */
         DTOSTR_FIXED = 2,                 /* Round to <precision> digits after the decimal point; exponential if number is large */
         DTOSTR_EXPONENTIAL = 3,           /* Always exponential format; <precision> significant digits */
         DTOSTR_PRECISION = 4;             /* Either fixed or exponential format; <precision> significant digits */
-    
+
 
     static final int Frac_mask = 0xfffff;
     static final int Exp_shift = 20;
@@ -79,13 +79,13 @@ class DToA {
     static final int Int_max = 14;
     static final int n_bigtens = 5;
 
-    
+
     static final double tens[] = {
         1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9,
         1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19,
         1e20, 1e21, 1e22
     };
-    
+
     static final double bigtens[] = { 1e16, 1e32, 1e64, 1e128, 1e256 };
 
     static int lo0bits(int y)
@@ -261,7 +261,7 @@ class DToA {
 
             int[] e = new int[1];
             int[] bbits = new int[1];
-                     
+
             b = d2b(df, e, bbits);
 //            JS_ASSERT(e < 0);
             /* At this point df = b * 2^e.  e must be less than zero because 0 < df < 1. */
@@ -378,27 +378,27 @@ class DToA {
         long dBits = Double.doubleToLongBits(d);
         return (int)(dBits >> 32);
     }
-    
+
     static double setWord0(double d, int i)
     {
         long dBits = Double.doubleToLongBits(d);
         dBits = ((long)i << 32) | (dBits & 0x0FFFFFFFFL);
         return Double.longBitsToDouble(dBits);
     }
-    
+
     static int word1(double d)
     {
         long dBits = Double.doubleToLongBits(d);
         return (int)(dBits);
     }
-    
+
     /* Return b * 5^k.  k must be nonnegative. */
     // XXXX the C version built a cache of these
     static BigInteger pow5mult(BigInteger b, int k)
     {
         return b.multiply(BigInteger.valueOf(5).pow(k));
     }
-    
+
     static boolean roundOff(StringBuffer buf)
     {
         char lastCh;
@@ -411,10 +411,10 @@ class DToA {
         buf.append((char)(lastCh + 1));
         return false;
     }
-    
+
     /* Always emits at least one digit. */
     /* If biasUp is set, then rounding in modes 2 and 3 will round away from zero
-     * when the number is exactly halfway between two representable values.  For example, 
+     * when the number is exactly halfway between two representable values.  For example,
      * rounding 2.5 to zero digits after the decimal point will return 3 and not 2.
      * 2.49 will still round to 2, and 2.51 will still round to 3. */
     /* bufsize should be at least 20 for modes 0 and 1.  For the other modes,
@@ -488,7 +488,7 @@ class DToA {
             buf.append('0');        /* copy "0" to buffer */
             return 1;
         }
-        
+
         b = d2b(d, be, bbits);
         if ((i = (int)(word0(d) >>> Exp_shift1 & (Exp_mask>>Exp_shift1))) != 0) {
             d2 = setWord0(d, (word0(d) & Frac_mask1) | Exp_11);
@@ -691,7 +691,7 @@ class DToA {
                                         lastCh = '0';
                                         break;
                                     }
-                                }                                
+                                }
                                 buf.append((char)(lastCh + 1));
                                 return k + 1;
                         }
@@ -721,7 +721,7 @@ class DToA {
                                         lastCh = '0';
                                         break;
                                     }
-                                }                                
+                                }
                                 buf.append((char)(lastCh + 1));
                                 return k + 1;
                             }
@@ -787,7 +787,7 @@ class DToA {
                                 lastCh = '0';
                                 break;
                             }
-                        }                                
+                        }
                         buf.append((char)(lastCh + 1));
                     }
                     break;
@@ -888,7 +888,7 @@ class DToA {
             S_hiWord = (S_hiWord << 8);
             if (idx < S_bytes.length)
                 S_hiWord |= (S_bytes[idx] & 0xFF);
-        }    
+        }
         if ((i = (((s5 != 0) ? 32 - hi0bits(S_hiWord) : 1) + s2) & 0x1f) != 0)
             i = 32 - i;
         /* i is the number of leading zero bits in the most significant word of S*2^s2. */
@@ -959,9 +959,9 @@ class DToA {
             /* mlo/S = maximum acceptable error, divided by 10^k, if the output is less than d. */
             /* mhi/S = maximum acceptable error, divided by 10^k, if the output is greater than d. */
 
-            for(i = 1;;i++) {                
+            for(i = 1;;i++) {
                 BigInteger[] divResult = b.divideAndRemainder(S);
-                b = divResult[1];                
+                b = divResult[1];
                 dig = (char)(divResult[0].intValue() + '0');
                 /* Do we yet have the shortest decimal string
                  * that will round to d?
@@ -986,8 +986,8 @@ class DToA {
                     buf.append(dig);
                     return k + 1;
                 }
-                if ((j < 0) 
-                        || ((j == 0) 
+                if ((j < 0)
+                        || ((j == 0)
                             && (mode == 0)
                             && ((word1(d) & 1) == 0)
                     )) {
@@ -1019,7 +1019,7 @@ class DToA {
                         if (roundOff(buf)) {
                             k++;
                             buf.append('1');
-                        }            
+                        }
                         return k + 1;
                     }
                     buf.append((char)(dig + 1));
@@ -1041,7 +1041,7 @@ class DToA {
             for(i = 1;; i++) {
 //                (char)(dig = quorem(b,S) + '0');
                 BigInteger[] divResult = b.divideAndRemainder(S);
-                b = divResult[1];                
+                b = divResult[1];
                 dig = (char)(divResult[0].intValue() + '0');
                 buf.append(dig);
                 if (i >= ilim)
@@ -1066,7 +1066,7 @@ class DToA {
                 k++;
                 buf.append('1');
                 return k + 1;
-            }            
+            }
         }
         else {
             /* Strip trailing zeros */
@@ -1158,7 +1158,7 @@ class DToA {
                     buffer.append('0');
                 } while (buffer.length() != p);
             }
-            
+
             if (exponentialNotation) {
                 /* Insert a decimal point if more than one significand digit */
                 if (nDigits != 1) {

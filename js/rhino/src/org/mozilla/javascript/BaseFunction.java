@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  * Igor Bukanov
  * Roger Lawrence
@@ -52,11 +52,11 @@ public class BaseFunction extends IdScriptable implements Function {
         obj.prototypePropertyAttrs = DONTENUM | READONLY | PERMANENT;
         obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
-    
+
     protected void fillConstructorProperties
         (Context cx, IdFunction ctor, boolean sealed)
     {
-        // Fix up bootstrapping problem: getPrototype of the IdFunction 
+        // Fix up bootstrapping problem: getPrototype of the IdFunction
         // can not return Function.prototype because Function object is not
         // yet defined.
         ctor.setPrototype(this);
@@ -103,23 +103,23 @@ public class BaseFunction extends IdScriptable implements Function {
         }
         return super.getIdDefaultAttributes(id);
     }
-    
+
     protected boolean hasIdValue(int id) {
         if (id == Id_prototype) {
             return prototypeProperty != NOT_FOUND;
         }
         else if (id == Id_arguments) {
             // Should after delete Function.arguments its activation still
-            // be available during Function call? 
+            // be available during Function call?
             // This code assumes it should not: after default set/deleteIdValue
             // hasIdValue/getIdValue would not be called again
-            // To handle the opposite case, set/deleteIdValue should be 
+            // To handle the opposite case, set/deleteIdValue should be
             // overwritten as well
             return null != getActivation(Context.getContext());
         }
         return super.hasIdValue(id);
     }
-    
+
     protected Object getIdValue(int id) {
         switch (id) {
             case Id_length:    return wrap_int(getLength());
@@ -130,7 +130,7 @@ public class BaseFunction extends IdScriptable implements Function {
         }
         return super.getIdValue(id);
     }
-    
+
     protected void setIdValue(int id, Object value) {
         if (id == Id_prototype) {
             prototypeProperty = (value != null) ? value : NULL_TAG;
@@ -161,7 +161,7 @@ public class BaseFunction extends IdScriptable implements Function {
     }
 
     public Object execMethod(int methodId, IdFunction f, Context cx,
-                             Scriptable scope, Scriptable thisObj, 
+                             Scriptable scope, Scriptable thisObj,
                              Object[] args)
         throws JavaScriptException
     {
@@ -185,7 +185,7 @@ public class BaseFunction extends IdScriptable implements Function {
 
     /**
      * Make value as DontEnum, DontDelete, ReadOnly
-     * prototype property of this Function object 
+     * prototype property of this Function object
      */
     public void setImmunePrototypeProperty(Object value) {
         prototypeProperty = (value != null) ? value : NULL_TAG;
@@ -194,7 +194,7 @@ public class BaseFunction extends IdScriptable implements Function {
 
     protected Scriptable getClassPrototype() {
         Object protoVal = getPrototypeProperty();
-        if (protoVal == null 
+        if (protoVal == null
                     || !(protoVal instanceof Scriptable)
                     || (protoVal == Undefined.instance))
             protoVal = getClassPrototype(this, "Object");
@@ -271,7 +271,7 @@ public class BaseFunction extends IdScriptable implements Function {
 
     private Object getPrototypeProperty() {
         Object result = prototypeProperty;
-        if (result == null) { 
+        if (result == null) {
             synchronized (this) {
                 result = prototypeProperty;
                 if (result == null) {
@@ -294,7 +294,7 @@ public class BaseFunction extends IdScriptable implements Function {
         // wacky case of a user defining a function Object(), we don't
         // get an infinite loop trying to find the prototype.
         prototypeProperty = obj;
-        Scriptable proto = getObjectPrototype(this);            
+        Scriptable proto = getObjectPrototype(this);
         if (proto != obj) {
             // not the one we just made, it must remain grounded
             obj.setPrototype(proto);
@@ -306,22 +306,22 @@ public class BaseFunction extends IdScriptable implements Function {
         // way of getting it that doesn't add to the invocation cost.
         // TODO: add warning, error based on version
         NativeCall activation = getActivation(Context.getContext());
-        return activation == null 
-               ? null 
+        return activation == null
+               ? null
                : activation.get("arguments", activation);
     }
-    
+
     NativeCall getActivation(Context cx) {
         NativeCall activation = cx.currentActivation;
         while (activation != null) {
-            if (activation.getFunctionObject() == this) 
+            if (activation.getFunctionObject() == this)
                 return activation;
             activation = activation.caller;
         }
         return null;
     }
-        
-    private static Object jsConstructor(Context cx, Scriptable scope, 
+
+    private static Object jsConstructor(Context cx, Scriptable scope,
                                         Object[] args)
     {
         int arglen = args.length;
@@ -347,7 +347,7 @@ public class BaseFunction extends IdScriptable implements Function {
         }
         Object securityDomain = cx.getSecurityDomainForStackDepth(4);
         Scriptable global = ScriptableObject.getTopLevelScope(scope);
-        
+
         // Compile the function with opt level of -1 to force interpreter
         // mode.
         int oldOptLevel = cx.getOptimizationLevel();
@@ -355,7 +355,7 @@ public class BaseFunction extends IdScriptable implements Function {
         NativeFunction fn;
         try {
             fn = (NativeFunction) cx.compileFunction(global, source,
-                                                     filename, linep[0], 
+                                                     filename, linep[0],
                                                      securityDomain);
         }
         finally { cx.setOptimizationLevel(oldOptLevel); }
@@ -395,11 +395,11 @@ public class BaseFunction extends IdScriptable implements Function {
                              : ScriptRuntime.toObject(cx, scope, args[0]);
         Object[] newArgs;
         if (args.length > 1) {
-            if ((args[1] instanceof NativeArray) 
+            if ((args[1] instanceof NativeArray)
                     || (args[1] instanceof Arguments))
                 newArgs = cx.getElements((Scriptable) args[1]);
             else
-                throw NativeGlobal.typeError0("msg.arg.isnt.array", thisObj);            
+                throw NativeGlobal.typeError0("msg.arg.isnt.array", thisObj);
         }
         else
             newArgs = ScriptRuntime.emptyArgs;
@@ -419,8 +419,8 @@ public class BaseFunction extends IdScriptable implements Function {
         if (args.length == 0) {
             Scriptable s = ScriptRuntime.toObject(cx, scope, val);
             Scriptable topScope = s.getParentScope();
-            return ScriptRuntime.call(cx, val, 
-                                      topScope, ScriptRuntime.emptyArgs, 
+            return ScriptRuntime.call(cx, val,
+                                      topScope, ScriptRuntime.emptyArgs,
                                       topScope);
         } else {
             Scriptable newThis = args[0] == null
@@ -443,7 +443,7 @@ public class BaseFunction extends IdScriptable implements Function {
             case Id_prototype:    return "prototype";
             case Id_arguments:    return "arguments";
         }
-        
+
         if (prototypeFlag) {
             switch (id) {
                 case Id_constructor:  return "constructor";
@@ -463,7 +463,7 @@ public class BaseFunction extends IdScriptable implements Function {
         Id_name         = 3,
         Id_prototype    = 4,
         Id_arguments    = 5,
-        
+
         MAX_INSTANCE_ID = 5;
 
     protected int mapNameToId(String s) {
@@ -506,14 +506,14 @@ public class BaseFunction extends IdScriptable implements Function {
         Id_toString       = MAX_INSTANCE_ID + 2,
         Id_apply          = MAX_INSTANCE_ID + 3,
         Id_call           = MAX_INSTANCE_ID + 4,
-        
+
         MAX_PROTOTYPE_ID  = MAX_INSTANCE_ID + 4;
 
 // #/string_id_map#
-        
+
     protected String functionName;
 
-    private Object prototypeProperty; 
+    private Object prototypeProperty;
     private int prototypePropertyAttrs = DONTENUM;
 
     private boolean prototypeFlag;

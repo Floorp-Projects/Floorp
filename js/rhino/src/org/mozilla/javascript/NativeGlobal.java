@@ -431,7 +431,7 @@ public class NativeGlobal implements IdFunctionMaster {
                 buf[destination] = c;
                 ++destination;
             }
-            s = new String(buf, 0, destination); 
+            s = new String(buf, 0, destination);
         }
         return s;
     }
@@ -488,8 +488,8 @@ public class NativeGlobal implements IdFunctionMaster {
             if (filename == null) {
                 filename = "";
                 linep[0] = 1;
-            } 
-        } 
+            }
+        }
         filename += "(eval)";
 
         try {

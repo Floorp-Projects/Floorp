@@ -138,7 +138,7 @@ final class NativeString extends IdScriptable {
     {
         if (prototypeFlag) {
             switch (methodId) {
-                case ConstructorId_fromCharCode: 
+                case ConstructorId_fromCharCode:
                     return jsStaticFunction_fromCharCode(args);
 
                 case Id_constructor:
@@ -150,11 +150,11 @@ final class NativeString extends IdScriptable {
                 case Id_valueOf:
                     return realThis(thisObj, f).jsFunction_valueOf();
 
-                case Id_charAt: 
+                case Id_charAt:
                     return jsFunction_charAt
                         (ScriptRuntime.toString(thisObj), args);
 
-                case Id_charCodeAt: 
+                case Id_charCodeAt:
                     return wrap_double(jsFunction_charCodeAt
                         (ScriptRuntime.toString(thisObj), args));
 
@@ -162,11 +162,11 @@ final class NativeString extends IdScriptable {
                     return wrap_int(jsFunction_indexOf
                         (ScriptRuntime.toString(thisObj), args));
 
-                case Id_lastIndexOf: 
+                case Id_lastIndexOf:
                     return wrap_int(jsFunction_lastIndexOf
                         (ScriptRuntime.toString(thisObj), args));
 
-                case Id_split: 
+                case Id_split:
                     return jsFunction_split
                         (cx, scope, ScriptRuntime.toString(thisObj), args);
 
@@ -182,7 +182,7 @@ final class NativeString extends IdScriptable {
                     return jsFunction_toUpperCase
                         (ScriptRuntime.toString(thisObj));
 
-                case Id_substr: 
+                case Id_substr:
                     return jsFunction_substr
                         (ScriptRuntime.toString(thisObj), args);
 
@@ -223,7 +223,7 @@ final class NativeString extends IdScriptable {
 
                 case Id_fontsize:
                     return realThis(thisObj, f).
-                        tagify("font size", "font", 
+                        tagify("font size", "font",
                                ScriptRuntime.toString(args, 0));
 
                 case Id_fontcolor:
@@ -775,7 +775,7 @@ final class NativeString extends IdScriptable {
 
     protected String getIdName(int id) {
         if (id == Id_length) { return "length"; }
-        
+
         if (prototypeFlag) {
             switch (id) {
                 case ConstructorId_fromCharCode: return "fromCharCode";
@@ -821,12 +821,12 @@ final class NativeString extends IdScriptable {
         ConstructorId_fromCharCode   = -1,
         Id_length                    =  1,
         MAX_INSTANCE_ID              =  1;
-        
+
 
     protected int mapNameToId(String s) {
         if (s.equals("length")) { return Id_length; }
-        else if (prototypeFlag) { 
-            return toPrototypeId(s); 
+        else if (prototypeFlag) {
+            return toPrototypeId(s);
         }
         return 0;
     }
@@ -937,7 +937,7 @@ final class NativeString extends IdScriptable {
     private static final String defaultValue = "";
 
     private String string;
-    
+
     private boolean prototypeFlag;
 }
 

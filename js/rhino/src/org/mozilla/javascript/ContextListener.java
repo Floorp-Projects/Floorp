@@ -18,7 +18,7 @@
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
@@ -38,16 +38,16 @@
 package org.mozilla.javascript;
 
 /**
- * Embeddings that wish to 
+ * Embeddings that wish to
  * @see org.mozilla.javascript.Context#addContextListener
  */
 public interface ContextListener {
 
     public void contextCreated(Context cx);
-    
+
     public void contextEntered(Context cx);
-    
+
     public void contextExited(Context cx);
-    
+
     public void contextReleased(Context cx);
 }

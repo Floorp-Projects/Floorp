@@ -46,28 +46,28 @@ public class SwitchGenerator {
     String v_guess = "X";
     String v_id = "id";
     String v_length_suffix = "_length";
-    
+
     int use_if_threshold = 3;
     int char_tail_test_threshold = 2;
-    
+
     private IdValuePair[] pairs;
     private String default_value;
     private int[] columns;
     private boolean c_was_defined;
-    
+
     private CodePrinter P;
     private ToolErrorReporter R;
     private String source_file;
-    
+
     public CodePrinter getCodePrinter() { return P; }
     public void setCodePrinter(CodePrinter value) { P = value; }
 
     public ToolErrorReporter getReporter() { return R; }
     public void setReporter(ToolErrorReporter value) { R = value; }
-    
+
     public String getSourceFileName() { return source_file; }
     public void setSourceFileName(String value) { source_file = value; }
-    
+
     public void generateSwitch(String[] pairs, String default_value) {
         int N = pairs.length / 2;
         IdValuePair[] id_pairs = new IdValuePair[N];
@@ -75,21 +75,21 @@ public class SwitchGenerator {
             id_pairs[i] = new IdValuePair(pairs[2 * i], pairs[2 * i + 1]);
         }
         generateSwitch(id_pairs, default_value);
-        
+
     }
 
     public void generateSwitch(IdValuePair[] pairs, String default_value) {
         int begin = 0;
         int end = pairs.length;
-        if (begin == end) { return; }        
+        if (begin == end) { return; }
         this.pairs = pairs;
         this.default_value = default_value;
-        
+
         generate_body(begin, end, 2);
     }
 
     private void generate_body(int begin, int end, int indent_level) {
-        P.indent(indent_level); 
+        P.indent(indent_level);
         P.p(v_switch_label); P.p(": { ");
         P.p(v_id); P.p(" = "); P.p(default_value);
         P.p("; String "); P.p(v_guess); P.p(" = null;");
@@ -99,49 +99,49 @@ public class SwitchGenerator {
         P.p(" int "); P.p(v_c); P.p(';');
         int c_def_end = P.getOffset();
         P.nl();
-        
+
         generate_length_switch(begin, end, indent_level + 1);
 
         if (!c_was_defined) {
             P.erase(c_def_begin, c_def_end);
         }
 
-        P.indent(indent_level + 1); 
-        P.p("if ("); P.p(v_guess); P.p("!=null && "); 
-        P.p(v_guess); P.p("!="); P.p(v_s); 
+        P.indent(indent_level + 1);
+        P.p("if ("); P.p(v_guess); P.p("!=null && ");
+        P.p(v_guess); P.p("!="); P.p(v_s);
         P.p(" && !"); P.p(v_guess); P.p(".equals("); P.p(v_s); P.p(")) ");
         P.p(v_id); P.p(" = "); P.p(default_value); P.p(";"); P.nl();
         P.line(indent_level, "}");
     }
 
     private void generate_length_switch(int begin, int end, int indent_level) {
-        
+
         sort_pairs(begin, end, -1);
-        
+
         check_all_is_different(begin, end);
-        
+
         int lengths_count = count_different_lengths(begin, end);
-        
+
         columns = new int[pairs[end  - 1].idLength];
 
         boolean use_if;
         if (lengths_count <= use_if_threshold) {
             use_if = true;
             if (lengths_count != 1) {
-                P.indent(indent_level); 
-                P.p("int "); P.p(v_s); P.p(v_length_suffix); 
-                P.p(" = "); P.p(v_s); P.p(".length();"); 
+                P.indent(indent_level);
+                P.p("int "); P.p(v_s); P.p(v_length_suffix);
+                P.p(" = "); P.p(v_s); P.p(".length();");
                 P.nl();
             }
         }
         else {
             use_if = false;
-            P.indent(indent_level); 
-            P.p(v_label); P.p(": switch ("); 
-            P.p(v_s); P.p(".length()) {"); 
+            P.indent(indent_level);
+            P.p(v_label); P.p(": switch (");
+            P.p(v_s); P.p(".length()) {");
             P.nl();
         }
-        
+
         int same_length_begin = begin;
         int cur_l = pairs[begin].idLength, l = 0;
         for (int i = begin;;) {
@@ -151,24 +151,24 @@ public class SwitchGenerator {
                 if (use_if) {
                     P.indent(indent_level);
                     if (same_length_begin != begin) { P.p("else "); }
-                    P.p("if ("); 
+                    P.p("if (");
                     if (lengths_count == 1) {
                         P.p(v_s); P.p(".length()==");
                     }
                     else {
                         P.p(v_s); P.p(v_length_suffix); P.p("==");
                     }
-                    P.p(cur_l); 
-                    P.p(") {"); 
+                    P.p(cur_l);
+                    P.p(") {");
                     next_indent = indent_level + 1;
                 }
                 else {
-                    P.indent(indent_level); 
+                    P.indent(indent_level);
                     P.p("case "); P.p(cur_l); P.p(":");
                     next_indent = indent_level + 1;
                 }
                 generate_letter_switch
-                    (same_length_begin, i, next_indent, !use_if, use_if); 
+                    (same_length_begin, i, next_indent, !use_if, use_if);
                 if (use_if) {
                     P.p("}"); P.nl();
                 }
@@ -181,28 +181,28 @@ public class SwitchGenerator {
                 cur_l = l;
             }
         }
-        
+
         if (!use_if) {
             P.indent(indent_level); P.p("}"); P.nl();
         }
-        
+
     }
-    
+
     private void generate_letter_switch
-        (int begin, int end, 
+        (int begin, int end,
          int indent_level, boolean label_was_defined, boolean inside_if)
     {
         int L = pairs[begin].idLength;
-        
+
         for (int i = 0; i != L; ++i) {
             columns[i] = i;
         }
-        
+
         generate_letter_switch_r
             (begin, end, L, indent_level, label_was_defined, inside_if);
     }
-        
-        
+
+
     private boolean generate_letter_switch_r
         (int begin, int end, int L,
          int indent_level, boolean label_was_defined, boolean inside_if)
@@ -212,28 +212,28 @@ public class SwitchGenerator {
             P.p(' ');
             IdValuePair pair = pairs[begin];
             if (L > char_tail_test_threshold) {
-                P.p(v_guess); P.p("="); P.qstring(pair.id); P.p(";"); 
+                P.p(v_guess); P.p("="); P.qstring(pair.id); P.p(";");
                 P.p(v_id); P.p("="); P.p(pair.value); P.p(";");
             }
             else {
-                if (L == 0) { 
-                    next_is_unreachable = true; 
-                    P.p(v_id); P.p("="); P.p(pair.value); 
+                if (L == 0) {
+                    next_is_unreachable = true;
+                    P.p(v_id); P.p("="); P.p(pair.value);
                     P.p("; break "); P.p(v_switch_label); P.p(";");
                 }
                 else {
-                    P.p("if ("); 
+                    P.p("if (");
                     int column = columns[0];
                     P.p(v_s); P.p(".charAt("); P.p(column); P.p(")==");
                     P.qchar(pair.id.charAt(column));
                     for (int i = 1; i != L; ++i) {
-                        P.p(" && "); 
+                        P.p(" && ");
                         column = columns[i];
                         P.p(v_s); P.p(".charAt("); P.p(column); P.p(")==");
                         P.qchar(pair.id.charAt(column));
                     }
                     P.p(") {");
-                    P.p(v_id); P.p("="); P.p(pair.value); 
+                    P.p(v_id); P.p("="); P.p(pair.value);
                     P.p("; break "); P.p(v_switch_label); P.p(";}");
                 }
             }
@@ -244,9 +244,9 @@ public class SwitchGenerator {
         int max_column_index = find_max_different_column(begin, end, L);
         int max_column = columns[max_column_index];
         int count = count_different_chars(begin, end, max_column);
-        
+
         columns[max_column_index] = columns[L - 1];
-        
+
         if (inside_if) { P.nl(); P.indent(indent_level); }
         else { P.p(' '); }
 
@@ -254,8 +254,8 @@ public class SwitchGenerator {
         if (count <= use_if_threshold) {
             use_if = true;
             c_was_defined = true;
-            P.p(v_c); P.p("="); P.p(v_s); 
-            P.p(".charAt("); P.p(max_column); P.p(");"); 
+            P.p(v_c); P.p("="); P.p(v_s);
+            P.p(".charAt("); P.p(max_column); P.p(");");
         }
         else {
             use_if = false;
@@ -263,10 +263,10 @@ public class SwitchGenerator {
                 label_was_defined = true;
                 P.p(v_label); P.p(": ");
             }
-            P.p("switch ("); P.p(v_s); 
-            P.p(".charAt("); P.p(max_column); P.p(")) {"); 
+            P.p("switch ("); P.p(v_s);
+            P.p(".charAt("); P.p(max_column); P.p(")) {");
         }
-        
+
         int same_char_begin = begin;
         int cur_ch = pairs[begin].id.charAt(max_column), ch = 0;
         for (int i = begin;;) {
@@ -276,7 +276,7 @@ public class SwitchGenerator {
                 if (use_if) {
                     P.nl(); P.indent(indent_level);
                     if (same_char_begin != begin) { P.p("else "); }
-                    P.p("if ("); P.p(v_c); P.p("=="); 
+                    P.p("if ("); P.p(v_c); P.p("==");
                     P.qchar(cur_ch); P.p(") {");
                     next_indent = indent_level + 1;
                 }
@@ -303,7 +303,7 @@ public class SwitchGenerator {
         }
 
         if (use_if) {
-            P.nl(); 
+            P.nl();
             if (inside_if) { P.indent(indent_level - 1); }
             else { P.indent(indent_level); }
         }
@@ -312,9 +312,9 @@ public class SwitchGenerator {
             if (inside_if) { P.nl(); P.indent(indent_level - 1);}
             else { P.p(' '); }
         }
-        
+
         columns[max_column_index] = max_column;
-        
+
         return next_is_unreachable;
     }
 
@@ -329,12 +329,12 @@ public class SwitchGenerator {
             }
         }
         return lengths_count;
-    } 
-    
+    }
+
     private int find_max_different_column(int begin, int end, int L) {
         int max_count = 0;
         int max_index = 0;
-        
+
         for (int i = 0; i != L; ++i) {
             int column = columns[i];
             sort_pairs(begin, end, column);
@@ -345,14 +345,14 @@ public class SwitchGenerator {
                 max_index = i;
             }
         }
-        
+
         if (max_index != L - 1) {
             sort_pairs(begin, end, columns[max_index]);
         }
-        
+
         return max_index;
     }
-    
+
     private int count_different_chars(int begin, int end, int column) {
         int chars_count = 0;
         int cur_ch = -1;
@@ -364,25 +364,25 @@ public class SwitchGenerator {
         }
         return chars_count;
     }
-    
+
     private void check_all_is_different(int begin, int end) {
         if (begin != end) {
             IdValuePair prev = pairs[begin];
             while (++begin != end) {
                 IdValuePair current = pairs[begin];
-                if (prev.id.equals(current.id)) { 
-                    throw on_same_pair_fail(prev, current); 
+                if (prev.id.equals(current.id)) {
+                    throw on_same_pair_fail(prev, current);
                 }
                 prev = current;
             }
         }
     }
-    
+
     private EvaluatorException on_same_pair_fail(IdValuePair a, IdValuePair b) {
         StringBuffer sb = new StringBuffer();
         int line1 = a.getLineNumber(), line2 = b.getLineNumber();
         if (line2 > line1) { int tmp = line1; line1 = line2; line2 = tmp; }
-        String error_text = R.getMessage("msg.idswitch.same_string", 
+        String error_text = R.getMessage("msg.idswitch.same_string",
                                          a.id, new Integer(line2));
         return R.runtimeError(error_text, source_file, line1, null, 0);
     }
@@ -390,12 +390,12 @@ public class SwitchGenerator {
     private void sort_pairs(int begin, int end, int comparator) {
         heap4Sort(pairs, begin, end - begin, comparator);
     }
-    
+
     private static boolean bigger
-        (IdValuePair a, IdValuePair b, int comparator) 
+        (IdValuePair a, IdValuePair b, int comparator)
     {
         if (comparator < 0) {
-        // For length selection switch it is enough to compare just length, 
+        // For length selection switch it is enough to compare just length,
         // but to detect same strings full comparison is essential
             //return a.idLength > b.idLength;
             int diff = a.idLength - b.idLength;
@@ -406,9 +406,9 @@ public class SwitchGenerator {
             return a.id.charAt(comparator) > b.id.charAt(comparator);
         }
     }
-    
+
     private static void heap4Sort
-        (IdValuePair[] array, int offset, int size, int comparator) 
+        (IdValuePair[] array, int offset, int size, int comparator)
     {
         if (size <= 1) { return; }
         makeHeap4(array, offset, size, comparator);
@@ -421,18 +421,18 @@ public class SwitchGenerator {
             heapify4(array, offset, size, 0, comparator);
         }
     }
-    
+
     private static void makeHeap4
-        (IdValuePair[] array, int offset, int size, int comparator) 
+        (IdValuePair[] array, int offset, int size, int comparator)
     {
         for (int i = ((size + 2) >> 2); i != 0;) {
             --i;
             heapify4(array, offset, size, i, comparator);
         }
     }
-    
+
     private static void heapify4
-        (IdValuePair[] array, int offset, int size, int i, int comparator) 
+        (IdValuePair[] array, int offset, int size, int i, int comparator)
     {
         int new_i1, new_i2, new_i3;
         IdValuePair i_val = array[offset + i];
@@ -447,14 +447,14 @@ public class SwitchGenerator {
             IdValuePair val2 = array[offset + new_i2];
             IdValuePair val3 = array[offset + new_i3];
             IdValuePair val4 = array[offset + new_i4];
-            if (bigger(val2, val1, comparator)) { 
-                val1 = val2; new_i1 = new_i2; 
+            if (bigger(val2, val1, comparator)) {
+                val1 = val2; new_i1 = new_i2;
             }
             if (bigger(val4, val3, comparator)) {
-                val3 = val4; new_i3 = new_i4; 
+                val3 = val4; new_i3 = new_i4;
             }
             if (bigger(val3, val1, comparator)) {
-                val1 = val3; new_i1 = new_i3; 
+                val1 = val3; new_i1 = new_i3;
             }
             if (bigger(i_val, val1, comparator)) { return; }
             array[offset + i] = val1;

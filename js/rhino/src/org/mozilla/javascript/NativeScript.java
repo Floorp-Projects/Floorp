@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  * Roger Lawrence
  * Mike McCabe
@@ -70,15 +70,15 @@ public class NativeScript extends NativeFunction implements Script {
     private void scopeInit(Context cx, Scriptable scope, boolean sealed) {
         // prototypeIdShift != 0 serves as indicator of prototype instance
         // and as id offset to take into account ids present in each instance
-        // of the base class NativeFunction. 
+        // of the base class NativeFunction.
         // Not to depend on the assumption NativeFunction.maxInstanceId() != 0,
-        // 1 is added super.maxInstanceId() to make sure that 
+        // 1 is added super.maxInstanceId() to make sure that
         // prototypeIdShift != 0 in the NativeScript prototype.
-        // In a similar way the following methods use 
+        // In a similar way the following methods use
         // methodId - prototypeIdShift + 1, not methodId - prototypeIdShift
         // to unshift prototype id to [1 .. MAX_PROTOTYPE_ID] interval
         prototypeIdShift = super.maxInstanceId() + 1;
-        addAsPrototype(MAX_PROTOTYPE_ID + prototypeIdShift - 1, 
+        addAsPrototype(MAX_PROTOTYPE_ID + prototypeIdShift - 1,
                        cx, scope, sealed);
     }
 
@@ -111,7 +111,7 @@ public class NativeScript extends NativeFunction implements Script {
     }
 
     public Object execMethod(int methodId, IdFunction f, Context cx,
-                             Scriptable scope, Scriptable thisObj, 
+                             Scriptable scope, Scriptable thisObj,
                              Object[] args)
         throws JavaScriptException
     {
@@ -136,7 +136,7 @@ public class NativeScript extends NativeFunction implements Script {
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
-    private NativeScript realThis(Scriptable thisObj, IdFunction f, 
+    private NativeScript realThis(Scriptable thisObj, IdFunction f,
                                   boolean readOnly)
     {
         while (!(thisObj instanceof NativeScript)) {
@@ -149,7 +149,7 @@ public class NativeScript extends NativeFunction implements Script {
      * The Java method defining the JavaScript Script constructor.
      *
      */
-    private static Object jsConstructor(Context cx, Scriptable scope, 
+    private static Object jsConstructor(Context cx, Scriptable scope,
                                         Object[] args)
     {
         String source = args.length == 0
@@ -168,9 +168,9 @@ public class NativeScript extends NativeFunction implements Script {
                 filename = "<Script object>";
                 linep[0] = 1;
             }
-            Object securityDomain = 
+            Object securityDomain =
                 cx.getSecurityDomainForStackDepth(5);
-            return cx.compileReader(scope, reader, filename, linep[0], 
+            return cx.compileReader(scope, reader, filename, linep[0],
                                     securityDomain);
         }
         catch (IOException e) {
@@ -195,7 +195,7 @@ public class NativeScript extends NativeFunction implements Script {
         Scriptable scope = getTopLevelScope(this);
         return cx.decompileScript(thisScript, scope, 0);
     }
-    
+
     /*
      * Override method in NativeFunction to avoid ever returning "anonymous"
      */
@@ -242,11 +242,11 @@ public class NativeScript extends NativeFunction implements Script {
     protected int mapNameToId(String s) {
         if (prototypeIdShift != 0) {
             int id = toPrototypeId(s);
-            if (id != 0) { 
+            if (id != 0) {
                 // Shift [1, MAX_PROTOTYPE_ID] to
                 // [super.maxInstanceId() + 1,
                 //    super.maxInstanceId() + MAX_PROTOTYPE_ID]
-                return id + prototypeIdShift - 1; 
+                return id + prototypeIdShift - 1;
             }
         }
         return super.mapNameToId(s);

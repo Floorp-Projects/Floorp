@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Roger Lawrence
  *
  * Alternatively, the contents of this file may be used under the
@@ -47,8 +47,8 @@ public class VariableTable {
     public int getParameterCount(){
         return varStart;
     }
-    
-    public LocalVariable createLocalVariable(String name, boolean isParameter) 
+
+    public LocalVariable createLocalVariable(String name, boolean isParameter)
     {
         return new LocalVariable(name, isParameter);
     }
@@ -77,7 +77,7 @@ public class VariableTable {
         return ((LocalVariable)(itsVariables.elementAt(index))).getName();
     }
 
-    public String[] getAllNames() {    
+    public String[] getAllNames() {
         int N = size();
         String[] result = null;
         if (N != 0) {
@@ -126,7 +126,7 @@ public class VariableTable {
         itsVariables.addElement(lVar);
         itsVariableNames.put(vName, new Integer(index));
     }
-    
+
     // This should only be called very early in compilation
     public void removeLocal(String name) {
         Integer i = (Integer) itsVariableNames.get(name);
@@ -146,12 +146,12 @@ public class VariableTable {
             itsVariableNames = ht;
         }
     }
-    
+
     // a list of the formal parameters and local variables
-    protected Vector itsVariables = new Vector();    
+    protected Vector itsVariables = new Vector();
 
     // mapping from name to index in list
-    protected Hashtable itsVariableNames = new Hashtable(11);   
+    protected Hashtable itsVariableNames = new Hashtable(11);
 
     protected int varStart;               // index in list of first variable
 

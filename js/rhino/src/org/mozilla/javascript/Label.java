@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Roger Lawrence
  *
  * Alternatively, the contents of this file may be used under the
@@ -36,7 +36,7 @@
 package org.mozilla.javascript;
 
 public class Label {
-    
+
     private static final int FIXUPTABLE_SIZE = 8;
 
     private static final boolean DEBUG = true;
@@ -50,7 +50,7 @@ public class Label {
     {
         return itsPC;
     }
-    
+
     public void fixGotos(byte theCodeBuffer[])
     {
         if (DEBUG) {
@@ -83,7 +83,7 @@ public class Label {
         if (itsFixupTable == null) {
             itsFixupTableTop = 1;
             itsFixupTable = new int[FIXUPTABLE_SIZE];
-            itsFixupTable[0] = fixupSite;            
+            itsFixupTable[0] = fixupSite;
         }
         else {
             if (itsFixupTableTop == itsFixupTable.length) {
@@ -92,7 +92,7 @@ public class Label {
                 System.arraycopy(itsFixupTable, 0, newTable, 0, oldLength);
                 itsFixupTable = newTable;
             }
-            itsFixupTable[itsFixupTableTop++] = fixupSite;            
+            itsFixupTable[itsFixupTableTop++] = fixupSite;
         }
     }
 

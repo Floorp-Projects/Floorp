@@ -18,7 +18,7 @@
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  * Roger Lawrence
  *
@@ -41,16 +41,16 @@ import java.io.Serializable;
 class InterpreterData implements Serializable {
 
     static final long serialVersionUID = 4815333329084415557L;
-    
+
     static final int INITIAL_MAX_ICODE_LENGTH = 1024;
     static final int INITIAL_STRINGTABLE_SIZE = 64;
     static final int INITIAL_NUMBERTABLE_SIZE = 64;
-    
-    InterpreterData(int lastICodeTop, int lastStringTableIndex, 
+
+    InterpreterData(int lastICodeTop, int lastStringTableIndex,
                     Object securityDomain,
                     boolean useDynamicScope, boolean checkThis)
     {
-        itsICodeTop = lastICodeTop == 0 
+        itsICodeTop = lastICodeTop == 0
                       ? INITIAL_MAX_ICODE_LENGTH
                       : lastICodeTop * 2;
         itsICode = new byte[itsICodeTop];
@@ -65,7 +65,7 @@ class InterpreterData implements Serializable {
             Context.checkSecurityDomainRequired();
         this.securityDomain = securityDomain;
     }
-    
+
     public boolean placeBreakpoint(int line) { // XXX throw exn?
         int offset = getOffset(line);
         if (offset != -1 && (itsICode[offset] == (byte)TokenStream.LINE ||
@@ -76,7 +76,7 @@ class InterpreterData implements Serializable {
         }
         return false;
     }
-    
+
     public boolean removeBreakpoint(int line) {
         int offset = getOffset(line);
         if (offset != -1 && itsICode[offset] == (byte) TokenStream.BREAKPOINT)
@@ -86,15 +86,15 @@ class InterpreterData implements Serializable {
         }
         return false;
     }
-    
+
     private int getOffset(int line) {
         int offset = itsLineNumberTable.getInt(line, -1);
         if (0 <= offset && offset <= itsICode.length) {
             return offset;
         }
         return -1;
-    }    
-    
+    }
+
     String itsName;
     String itsSource;
     String itsSourceFile;
@@ -109,19 +109,19 @@ class InterpreterData implements Serializable {
 
     double[] itsDoubleTable;
     int itsDoubleTableIndex;
-    
+
     InterpretedFunction[] itsNestedFunctions;
-    
+
     Object[] itsRegExpLiterals;
 
     byte[] itsICode;
     int itsICodeTop;
-    
+
     int itsMaxLocals;
     int itsMaxArgs;
     int itsMaxStack;
     int itsMaxTryDepth;
-    
+
     UintMap itsLineNumberTable;
 
     Object securityDomain;

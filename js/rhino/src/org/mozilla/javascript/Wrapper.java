@@ -18,7 +18,7 @@
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
@@ -39,8 +39,8 @@ package org.mozilla.javascript;
 
 /**
  * Objects that can wrap other values for reflection in the JS environment
- * will implement Wrapper. 
- * 
+ * will implement Wrapper.
+ *
  * Wrapper defines a single method that can be called to unwrap the object.
  */
 
@@ -48,7 +48,7 @@ public interface Wrapper {
 
     /**
      * Unwrap the object by returning the wrapped value.
-     * 
+     *
      * @return a wrapped value
      */
     public Object unwrap();

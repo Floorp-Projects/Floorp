@@ -1,14 +1,14 @@
-/* 
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Rhino code, released
  * May 6, 1999.
  *
@@ -16,13 +16,13 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
+ *
  * Contributor(s):
  * Norris Boyd
  * Roger Lawrence
  * Patrick Beard
  * Igor Bukanov
- * 
+ *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
  * provisions of the GPL are applicable instead of those above.
@@ -51,7 +51,7 @@ public class DefiningClassLoader extends ClassLoader {
         try {
             if (getContextClassLoaderMethod != null) {
                 return (ClassLoader) getContextClassLoaderMethod.invoke(
-                                    Thread.currentThread(), 
+                                    Thread.currentThread(),
                                     new Object[0]);
             }
         } catch (IllegalAccessException e) {
@@ -61,7 +61,7 @@ public class DefiningClassLoader extends ClassLoader {
         }
         return DefiningClassLoader.class.getClassLoader();
     }
-        
+
     public Class defineClass(String name, byte data[]) {
         return super.defineClass(name, data, 0, data.length);
     }
@@ -90,10 +90,10 @@ public class DefiningClassLoader extends ClassLoader {
             // in the class initializer, which doesn't allow us to
             // catch possible security exceptions.
             Class threadClass = Class.forName("java.lang.Thread");
-            // We'd like to use "getContextClassLoader", but 
-            // that's only available on Java2. 
-            getContextClassLoaderMethod = 
-                threadClass.getDeclaredMethod("getContextClassLoader", 
+            // We'd like to use "getContextClassLoader", but
+            // that's only available on Java2.
+            getContextClassLoaderMethod =
+                threadClass.getDeclaredMethod("getContextClassLoader",
                                                new Class[0]);
         } catch (ClassNotFoundException e) {
             // ignore exceptions; we'll use Class.forName instead.

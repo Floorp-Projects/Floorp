@@ -18,7 +18,7 @@
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
@@ -40,12 +40,12 @@ package org.mozilla.javascript.debug;
 import org.mozilla.javascript.Context;
 
 public interface Debugger {
-    
-    void handleCompilationDone(Context cx, DebuggableScript fnOrScript, 
+
+    void handleCompilationDone(Context cx, DebuggableScript fnOrScript,
                                StringBuffer source);
 
     void handleBreakpointHit(Context cx);
-    
+
     void handleExceptionThrown(Context cx, Object exception);
-    
+
 }

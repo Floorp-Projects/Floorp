@@ -18,7 +18,7 @@
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  * Igor Bukanov
  * Frank Mitchell
@@ -60,16 +60,16 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
     public NativeJavaObject() {
     }
 
-    public NativeJavaObject(Scriptable scope, Object javaObject, 
-                            JavaMembers members) 
+    public NativeJavaObject(Scriptable scope, Object javaObject,
+                            JavaMembers members)
     {
         this.parent = scope;
         this.javaObject = javaObject;
         this.members = members;
     }
-    
-    public NativeJavaObject(Scriptable scope, Object javaObject, 
-                            Class staticType) 
+
+    public NativeJavaObject(Scriptable scope, Object javaObject,
+                            Class staticType)
     {
         this.parent = scope;
         this.javaObject = javaObject;
@@ -79,15 +79,15 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
         members = JavaMembers.lookupClass(scope, dynamicType, staticType);
         fieldAndMethods = members.getFieldAndMethodsObjects(this, javaObject, false);
     }
-    
+
     public boolean has(String name, Scriptable start) {
         return members.has(name, false);
     }
-        
+
     public boolean has(int index, Scriptable start) {
         return false;
     }
-        
+
     public Object get(String name, Scriptable start) {
         if (fieldAndMethods != null) {
             Object result = fieldAndMethods.get(name);
@@ -95,7 +95,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 return result;
             }
         }
-        // TODO: passing 'this' as the scope is bogus since it has 
+        // TODO: passing 'this' as the scope is bogus since it has
         //  no parent scope
         return members.get(this, name, javaObject, false);
     }
@@ -103,9 +103,9 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
     public Object get(int index, Scriptable start) {
         throw members.reportMemberNotFound(Integer.toString(index));
     }
-    
+
     public void put(String name, Scriptable start, Object value) {
-        // We could be asked to modify the value of a property in the 
+        // We could be asked to modify the value of a property in the
         // prototype. Since we can't add a property to a Java object,
         // we modify it in the prototype rather than copy it down.
         if (prototype == null || members.has(name, false))
@@ -122,13 +122,13 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
         // This is an instance of a Java class, so always return false
         return false;
     }
-    
+
     public void delete(String name) {
     }
-    
+
     public void delete(int index) {
     }
-    
+
     public Scriptable getPrototype() {
         if (prototype == null && javaObject.getClass() == ScriptRuntime.StringClass) {
             return ScriptableObject.getClassPrototype(parent, "String");
@@ -160,8 +160,8 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
     public Object[] getIds() {
         return members.getIds(false);
     }
-    
-    public static Object wrap(Scriptable scope, Object obj, Class staticType) 
+
+    public static Object wrap(Scriptable scope, Object obj, Class staticType)
     {
         if (obj == null)
             return obj;
@@ -183,8 +183,8 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
             return NativeJavaArray.wrap(scope, obj);
         if (obj instanceof Scriptable)
             return obj;
-        if (Context.useJSObject && jsObjectClass != null && 
-            staticType != jsObjectClass && jsObjectClass.isInstance(obj)) 
+        if (Context.useJSObject && jsObjectClass != null &&
+            staticType != jsObjectClass && jsObjectClass.isInstance(obj))
         {
             try {
                 return jsObjectGetScriptable.invoke(obj, ScriptRuntime.emptyArgs);
@@ -277,10 +277,10 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
 
     /**
      * Derive a ranking based on how "natural" the conversion is.
-     * The special value CONVERSION_NONE means no conversion is possible, 
-     * and CONVERSION_NONTRIVIAL signals that more type conformance testing 
+     * The special value CONVERSION_NONE means no conversion is possible,
+     * and CONVERSION_NONTRIVIAL signals that more type conformance testing
      * is required.
-     * Based on 
+     * Based on
      * <a href="http://www.mozilla.org/js/liveconnect/lc3_method_overloading.html">
      * "preferred method conversions" from Live Connect 3</a>
      */
@@ -292,7 +292,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
         switch (fromCode) {
 
         case JSTYPE_UNDEFINED:
-            if (to == ScriptRuntime.StringClass || 
+            if (to == ScriptRuntime.StringClass ||
                 to == ScriptRuntime.ObjectClass) {
                 result = 1;
             }
@@ -365,7 +365,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
             if (to == ScriptRuntime.ClassClass) {
                 result = 1;
             }
-            else if (Context.useJSObject && jsObjectClass != null && 
+            else if (Context.useJSObject && jsObjectClass != null &&
                 jsObjectClass.isAssignableFrom(to)) {
                 result = 2;
             }
@@ -383,7 +383,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 result = 2;
             }
             else if (to.isPrimitive() && to != Boolean.TYPE) {
-                result = 
+                result =
                     (fromCode == JSTYPE_JAVA_ARRAY) ?
                     CONVERSION_NONTRIVIAL :
                     2 + NativeJavaObject.getSizeRank(to);
@@ -401,13 +401,13 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
 
         case JSTYPE_OBJECT:
             // Other objects takes #1-#3 spots
-            if (Context.useJSObject && jsObjectClass != null && 
+            if (Context.useJSObject && jsObjectClass != null &&
                 jsObjectClass.isAssignableFrom(to)) {
                 result = 1;
             }
             else if (fromObj instanceof NativeArray && to.isArray()) {
                 // This is a native array conversion to a java array
-                // Array conversions are all equal, and preferable to object 
+                // Array conversions are all equal, and preferable to object
                 // and string conversion, per LC3.
                 result = 1;
             }
@@ -424,7 +424,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
         }
 
         return result;
-    
+
     }
 
     static int getSizeRank(Class aType) {
@@ -510,7 +510,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
         if (value != null && value.getClass() == type) {
             return value;
         }
-        
+
         switch (NativeJavaObject.getJSTypeCode(value)) {
 
         case JSTYPE_NULL:
@@ -521,7 +521,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
             return null;
 
         case JSTYPE_UNDEFINED:
-            if (type == ScriptRuntime.StringClass || 
+            if (type == ScriptRuntime.StringClass ||
                 type == ScriptRuntime.ObjectClass) {
                 return "undefined";
             }
@@ -532,8 +532,8 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
 
         case JSTYPE_BOOLEAN:
             // Under LC3, only JS Booleans can be coerced into a Boolean value
-            if (type == Boolean.TYPE || 
-                type == ScriptRuntime.BooleanClass || 
+            if (type == Boolean.TYPE ||
+                type == ScriptRuntime.BooleanClass ||
                 type == ScriptRuntime.ObjectClass) {
                 return value;
             }
@@ -552,7 +552,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
             else if (type == ScriptRuntime.ObjectClass) {
                 return coerceToNumber(Double.TYPE, value);
             }
-            else if ((type.isPrimitive() && type != Boolean.TYPE) || 
+            else if ((type.isPrimitive() && type != Boolean.TYPE) ||
                      ScriptRuntime.NumberClass.isAssignableFrom(type)) {
                 return coerceToNumber(type, value);
             }
@@ -566,11 +566,11 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 type == ScriptRuntime.ObjectClass) {
                 return value;
             }
-            else if (type == Character.TYPE || 
+            else if (type == Character.TYPE ||
                      type == ScriptRuntime.CharacterClass) {
-                // Special case for converting a single char string to a 
+                // Special case for converting a single char string to a
                 // character
-                // Placed here because it applies *only* to JS strings, 
+                // Placed here because it applies *only* to JS strings,
                 // not other JS objects converted to strings
                 if (((String)value).length() == 1) {
                     return new Character(((String)value).charAt(0));
@@ -579,7 +579,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                     return coerceToNumber(type, value);
                 }
             }
-            else if ((type.isPrimitive() && type != Boolean.TYPE) || 
+            else if ((type.isPrimitive() && type != Boolean.TYPE) ||
                      ScriptRuntime.NumberClass.isAssignableFrom(type)) {
                 return coerceToNumber(type, value);
             }
@@ -589,8 +589,8 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
             break;
 
         case JSTYPE_JAVA_CLASS:
-            if (Context.useJSObject && jsObjectClass != null && 
-                (type == ScriptRuntime.ObjectClass || 
+            if (Context.useJSObject && jsObjectClass != null &&
+                (type == ScriptRuntime.ObjectClass ||
                  jsObjectClass.isAssignableFrom(type))) {
                 return coerceToJSObject(type, (Scriptable)value);
             }
@@ -639,8 +639,8 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
             break;
 
         case JSTYPE_OBJECT:
-            if (Context.useJSObject && jsObjectClass != null && 
-                (type == ScriptRuntime.ObjectClass || 
+            if (Context.useJSObject && jsObjectClass != null &&
+                (type == ScriptRuntime.ObjectClass ||
                  jsObjectClass.isAssignableFrom(type))) {
                 return coerceToJSObject(type, (Scriptable)value);
             }
@@ -657,7 +657,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 return value;
             }
             else if (type.isArray() && value instanceof NativeArray) {
-                // Make a new java array, and coerce the JS array components 
+                // Make a new java array, and coerce the JS array components
                 // to the target (component) type.
                 NativeArray array = (NativeArray) value;
                 long length = array.jsGet_length();
@@ -665,7 +665,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 Object Result = Array.newInstance(arrayType, (int)length);
                 for (int i = 0 ; i < length ; ++i) {
                     try  {
-                        Array.set(Result, i, coerceType(arrayType, 
+                        Array.set(Result, i, coerceType(arrayType,
                                                         array.get(i, array)));
                     }
                     catch (EvaluatorException ee) {
@@ -720,14 +720,14 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
             if (valueClass == ScriptRuntime.CharacterClass) {
                 return value;
             }
-            return new Character((char)toInteger(value, 
+            return new Character((char)toInteger(value,
                                                  ScriptRuntime.CharacterClass,
                                                  (double)Character.MIN_VALUE,
                                                  (double)Character.MAX_VALUE));
         }
 
         // Double, Float
-        if (type == ScriptRuntime.ObjectClass || 
+        if (type == ScriptRuntime.ObjectClass ||
             type == ScriptRuntime.DoubleClass || type == Double.TYPE) {
             return valueClass == ScriptRuntime.DoubleClass
                 ? value
@@ -751,7 +751,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                     }
                     else if (absNumber > (double)Float.MAX_VALUE) {
                         return new Float((number > 0.0) ?
-                                         Float.POSITIVE_INFINITY : 
+                                         Float.POSITIVE_INFINITY :
                                          Float.NEGATIVE_INFINITY);
                     }
                     else {
@@ -767,7 +767,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 return value;
             }
             else {
-                return new Integer((int)toInteger(value, 
+                return new Integer((int)toInteger(value,
                                                   ScriptRuntime.IntegerClass,
                                                   (double)Integer.MIN_VALUE,
                                                   (double)Integer.MAX_VALUE));
@@ -780,15 +780,15 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
             }
             else {
                 /* Long values cannot be expressed exactly in doubles.
-                 * We thus use the largest and smallest double value that 
-                 * has a value expressible as a long value. We build these 
+                 * We thus use the largest and smallest double value that
+                 * has a value expressible as a long value. We build these
                  * numerical values from their hexidecimal representations
                  * to avoid any problems caused by attempting to parse a
                  * decimal representation.
                  */
                 final double max = Double.longBitsToDouble(0x43dfffffffffffffL);
                 final double min = Double.longBitsToDouble(0xc3e0000000000000L);
-                return new Long(toInteger(value, 
+                return new Long(toInteger(value,
                                           ScriptRuntime.LongClass,
                                           min,
                                           max));
@@ -800,7 +800,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 return value;
             }
             else {
-                return new Short((short)toInteger(value, 
+                return new Short((short)toInteger(value,
                                                   ScriptRuntime.ShortClass,
                                                   (double)Short.MIN_VALUE,
                                                   (double)Short.MAX_VALUE));
@@ -812,7 +812,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 return value;
             }
             else {
-                return new Byte((byte)toInteger(value, 
+                return new Byte((byte)toInteger(value,
                                                 ScriptRuntime.ByteClass,
                                                 (double)Byte.MIN_VALUE,
                                                 (double)Byte.MAX_VALUE));
@@ -891,7 +891,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
 
     static void reportConversionError(Object value, Class type) {
         throw Context.reportRuntimeError2
-            ("msg.conversion.not.allowed", 
+            ("msg.conversion.not.allowed",
              value.toString(), NativeJavaMethod.javaSignature(type));
     }
 
@@ -903,7 +903,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
             jsObjectClass = Class.forName("netscape.javascript.JSObject");
             Class ctorParms[] = { ScriptRuntime.ScriptableClass };
             jsObjectCtor = jsObjectClass.getConstructor(ctorParms);
-            jsObjectGetScriptable = jsObjectClass.getMethod("getScriptable", 
+            jsObjectGetScriptable = jsObjectClass.getMethod("getScriptable",
                                                             new Class[0]);
         } catch (ClassNotFoundException classEx) {
             // jsObjectClass already null
@@ -911,7 +911,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
             // jsObjectClass already null
         }
     }
-        
+
     /**
      * The prototype of this object.
      */
@@ -929,13 +929,13 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
     static Class jsObjectClass;
     static Constructor jsObjectCtor;
     static Method jsObjectGetScriptable;
-    
-    public void writeExternal(ObjectOutput out) 
+
+    public void writeExternal(ObjectOutput out)
         throws IOException
     {
         out.writeObject(prototype);
         out.writeObject(parent);
-        out.writeObject(staticType != null ? staticType.getClass().getName() 
+        out.writeObject(staticType != null ? staticType.getClass().getName()
                                            : null);
 
         if (javaObject != null) {
@@ -950,7 +950,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
 
                 for (int i=0; i < interfaces.length; i++)
                     interfaceNames[i] = interfaces[i].getName();
-                  
+
                 out.writeObject(interfaceNames);
 
                 try {
@@ -969,8 +969,8 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
             out.writeObject(null);
         }
     }
-    
-    public void readExternal(ObjectInput in) 
+
+    public void readExternal(ObjectInput in)
         throws IOException, ClassNotFoundException
     {
         prototype = (Scriptable)in.readObject();
@@ -984,22 +984,22 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
 
             String[] interfaceNames = (String[])in.readObject();
             Class[] interfaces = new Class[interfaceNames.length];
-                    
+
             for (int i=0; i < interfaceNames.length; i++)
                 interfaces[i] = Class.forName(interfaceNames[i]);
-                
-            javaObject = JavaAdapter.createAdapterClass(superclass, interfaces, 
+
+            javaObject = JavaAdapter.createAdapterClass(superclass, interfaces,
                 (Scriptable)in.readObject(), (Scriptable)in.readObject());
         } else {
             javaObject = in.readObject();
         }
 
-        Class dynamicType = javaObject != null ? javaObject.getClass() 
+        Class dynamicType = javaObject != null ? javaObject.getClass()
                                                : staticType;
         members = JavaMembers.lookupClass(parent, dynamicType, staticType);
-        fieldAndMethods = members.getFieldAndMethodsObjects(this, javaObject, 
+        fieldAndMethods = members.getFieldAndMethodsObjects(this, javaObject,
                                                             false);
     }
-   
+
 }
 

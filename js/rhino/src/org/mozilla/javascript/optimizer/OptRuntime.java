@@ -1,14 +1,14 @@
-/* 
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Rhino code, released
  * May 6, 1999.
  *
@@ -16,12 +16,12 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
+ *
  * Contributor(s):
  * Norris Boyd
  * Roger Lawrence
  * Hannes Wallnoefer
- * 
+ *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
  * provisions of the GPL are applicable instead of those above.
@@ -40,13 +40,13 @@ package org.mozilla.javascript.optimizer;
 import org.mozilla.javascript.*;
 
 public final class OptRuntime extends ScriptRuntime {
-    
+
     /**
      * No instances should be created.
      */
-    private OptRuntime() { 
+    private OptRuntime() {
     }
-    
+
     public static Object getElem(Object obj, double dblIndex, Scriptable scope)
     {
         int index = (int) dblIndex;
@@ -242,7 +242,7 @@ public final class OptRuntime extends ScriptRuntime {
             do {
                 prop = m.get(id, obj);
                 if (prop != Scriptable.NOT_FOUND) {
-                    thisArg = obj;                    
+                    thisArg = obj;
                     break search;
                 }
                 m = m.getPrototype();
@@ -256,12 +256,12 @@ public final class OptRuntime extends ScriptRuntime {
                         ScriptRuntime.getMessage("msg.is.not.defined", errorArgs),
                         scope);
         }
-        
+
         while (thisArg instanceof NativeWith)
             thisArg = thisArg.getPrototype();
         if (thisArg instanceof NativeCall)
             thisArg = ScriptableObject.getTopLevelScope(thisArg);
-        
+
         Function function;
         try {
             function = (Function) prop;
@@ -274,7 +274,7 @@ public final class OptRuntime extends ScriptRuntime {
 
         return function.call(cx, scope, thisArg, args);
     }
-    
+
     public static Object thisGet(Scriptable thisObj, String id,
                                  Scriptable scope)
     {
@@ -297,12 +297,12 @@ public final class OptRuntime extends ScriptRuntime {
         }
         return Undefined.instance;
     }
-    
+
     public static Object[] padStart(Object[] currentArgs, int count) {
         Object[] result = new Object[currentArgs.length + count];
         System.arraycopy(currentArgs, 0, result, count, currentArgs.length);
         return result;
     }
-    
+
 
 }

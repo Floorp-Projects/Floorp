@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
@@ -43,7 +43,7 @@ package org.mozilla.javascript;
  * @author Norris Boyd
  */
 public class IRFactory {
-    
+
     public IRFactory(TokenStream ts, Scriptable scope) {
         this.ts = ts;
         this.scope = scope;
@@ -52,7 +52,7 @@ public class IRFactory {
     /**
      * Script (for associating file/url names with toplevel scripts.)
      */
-    public Object createScript(Object body, String sourceName, 
+    public Object createScript(Object body, String sourceName,
                                int baseLineno, int endLineno, Object source)
     {
         Node result = new Node(TokenStream.SCRIPT, sourceName);
@@ -137,12 +137,12 @@ public class IRFactory {
     {
         if (catchCond == null)
             catchCond = new Node(TokenStream.PRIMARY, TokenStream.TRUE);
-        Node result = new Node(TokenStream.CATCH, (Node)createName(varName), 
+        Node result = new Node(TokenStream.CATCH, (Node)createName(varName),
                                (Node)catchCond, (Node)stmts);
         result.setDatum(new Integer(lineno));
         return result;
     }
-    
+
     /**
      * Throw
      */
@@ -205,9 +205,9 @@ public class IRFactory {
     public Object createBlock(int lineno) {
         return new Node(TokenStream.BLOCK, lineno);
     }
-    
-    public Object createFunctionNode(String name, Object args, 
-                                     Object statements) 
+
+    public Object createFunctionNode(String name, Object args,
+                                     Object statements)
     {
         if (name == null)
             name = "";
@@ -215,11 +215,11 @@ public class IRFactory {
     }
 
     public Object createFunction(String name, Object args, Object statements,
-                                 String sourceName, int baseLineno, 
+                                 String sourceName, int baseLineno,
                                  int endLineno, Object source,
                                  boolean isExpr)
     {
-        FunctionNode f = (FunctionNode) createFunctionNode(name, args, 
+        FunctionNode f = (FunctionNode) createFunctionNode(name, args,
                                                            statements);
         f.setFunctionType(isExpr ? FunctionNode.FUNCTION_EXPRESSION
                                  : FunctionNode.FUNCTION_STATEMENT);
@@ -232,7 +232,7 @@ public class IRFactory {
         result.putProp(Node.FUNCTION_PROP, f);
         return result;
     }
-    
+
     public void setFunctionExpressionStatement(Object o) {
         Node n = (Node) o;
         FunctionNode f = (FunctionNode) n.getProp(Node.FUNCTION_PROP);
@@ -431,12 +431,12 @@ public class IRFactory {
         Node GOTOToEnd = new Node(TokenStream.GOTO);
         GOTOToEnd.putProp(Node.TARGET_PROP, endTarget);
         pn.addChildToBack(GOTOToEnd);
-       
+
         if (hasCatch) {
             /*
              *
                Given
-               
+
                 try {
                         throw 3;
                 } catch (e: e instanceof Object) {
@@ -471,11 +471,11 @@ public class IRFactory {
             pn.putProp(Node.TARGET_PROP, catchTarget);
             // mark it
             pn.addChildToBack(catchTarget);
-            
+
             // get the exception object and store it in a temp
             Node exn = createNewLocal(new Node(TokenStream.VOID));
             pn.addChildToBack(new Node(TokenStream.POP, exn));
-            
+
             Node endCatch = new Node(TokenStream.TARGET);
 
             // add [jsr finally?] goto end to each catch block
@@ -484,42 +484,42 @@ public class IRFactory {
             while (cb != null) {
                 Node catchStmt = new Node(TokenStream.BLOCK);
                 int catchLineNo = cb.getInt();
-                
+
                 Node name = cb.getFirstChild();
                 Node cond = name.getNextSibling();
                 Node catchBlock = cond.getNextSibling();
                 cb.removeChild(name);
                 cb.removeChild(cond);
                 cb.removeChild(catchBlock);
-                
+
                 Node newScope = createNewLocal(new Node(TokenStream.NEWSCOPE));
-                Node initScope = new Node(TokenStream.SETPROP, newScope, 
-                                          new Node(TokenStream.STRING, 
-                                                   name.getString()), 
+                Node initScope = new Node(TokenStream.SETPROP, newScope,
+                                          new Node(TokenStream.STRING,
+                                                   name.getString()),
                                           createUseLocal(exn));
                 catchStmt.addChildToBack(new Node(TokenStream.POP, initScope));
-                
+
                 catchBlock.addChildToBack(new Node(TokenStream.LEAVEWITH));
                 Node GOTOToEndCatch = new Node(TokenStream.GOTO);
                 GOTOToEndCatch.putProp(Node.TARGET_PROP, endCatch);
                 catchBlock.addChildToBack(GOTOToEndCatch);
-                
+
                 Node ifStmt = (Node) createIf(cond, catchBlock, null, catchLineNo);
-                // Try..catch produces "with" code in order to limit 
+                // Try..catch produces "with" code in order to limit
                 // the scope of the exception object.
                 // OPT: We should be able to figure out the correct
                 //      scoping at compile-time and avoid the
                 //      runtime overhead.
-                Node withStmt = (Node) createWith(createUseLocal(newScope), 
+                Node withStmt = (Node) createWith(createUseLocal(newScope),
                                                   ifStmt, catchLineNo);
                 catchStmt.addChildToBack(withStmt);
-                
+
                 pn.addChildToBack(catchStmt);
-                
-                // move to next cb 
+
+                // move to next cb
                 cb = cb.getNextSibling();
             }
-            
+
             // Generate code to rethrow if no catch clause was executed
             Node rethrow = new Node(TokenStream.THROW, createUseLocal(exn));
             pn.addChildToBack(rethrow);
@@ -585,7 +585,7 @@ public class IRFactory {
         Node elem = null;
         int i = 0;
         for (Node cursor = ((Node) obj).getFirstChild(); cursor != null;) {
-            // Move cursor to cursor.next before elem.next can be 
+            // Move cursor to cursor.next before elem.next can be
             // altered in new Node constructor
             elem = cursor;
             cursor = cursor.getNextSibling();
@@ -751,7 +751,7 @@ public class IRFactory {
 
             if (!hasSideEffects(childNode)
                 && (nodeOp == TokenStream.POST)
-                && (childType == TokenStream.NAME 
+                && (childType == TokenStream.NAME
                     || childType == TokenStream.GETPROP
                     || childType == TokenStream.GETELEM))
             {
@@ -842,7 +842,7 @@ public class IRFactory {
             return createSetProp(nodeType, nodeOp, left.getFirstChild(),
                                  id, right, convert, postfix);
           default:
-            // TODO: This should be a ReferenceError--but that's a runtime 
+            // TODO: This should be a ReferenceError--but that's a runtime
             //  exception. Should we compile an exception into the code?
             reportError("msg.bad.lhs.assign");
             return left;
@@ -1015,7 +1015,7 @@ public class IRFactory {
 
         return result;
     }
-    
+
     private void reportError(String msgResource) {
 
         if (scope != null)
@@ -1025,16 +1025,16 @@ public class IRFactory {
                         scope);
         else {
             String message = Context.getMessage0(msgResource);
-            Context.reportError(message, ts.getSourceName(), ts.getLineno(), 
+            Context.reportError(message, ts.getSourceName(), ts.getLineno(),
                                 ts.getLine(), ts.getOffset());
         }
     }
-    
+
     // Only needed to get file/line information. Could create an interface
     // that TokenStream implements if we want to make the connection less
     // direct.
     private TokenStream ts;
-    
+
     // Only needed to pass to the Erorr exception constructors
     private Scriptable scope;
 }

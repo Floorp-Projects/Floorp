@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Igor Bukanov
  *
  * Alternatively, the contents of this file may be used under the
@@ -50,19 +50,19 @@ public class IdFunction extends BaseFunction
         this.master = master;
         this.methodId = id;
     }
-    
+
     public final int functionType() {
         return functionType;
     }
-    
+
     public void setFunctionType(int type) {
         functionType = type;
     }
-    
+
     public Scriptable getPrototype() {
         // Lazy initialization of prototype: for native functions this
         // may not be called at all
-        Scriptable proto = super.getPrototype(); 
+        Scriptable proto = super.getPrototype();
         if (proto == null) {
             proto = getFunctionPrototype(getParentScope());
             setPrototype(proto);
@@ -70,7 +70,7 @@ public class IdFunction extends BaseFunction
         return proto;
     }
 
-    public Object call(Context cx, Scriptable scope, Scriptable thisObj, 
+    public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
         throws JavaScriptException
     {
@@ -88,7 +88,7 @@ public class IdFunction extends BaseFunction
         if (functionType != FUNCTION_ONLY) {
             // It is program error not to return Scriptable from constructor
             Scriptable result = (Scriptable)master.execMethod(methodId, this,
-                                                              cx, scope, 
+                                                              cx, scope,
                                                               null, args);
             postConstruction(result);
             return result;
@@ -117,29 +117,29 @@ public class IdFunction extends BaseFunction
         sb.append(justbody ? "]\n" : "] }\n");
         return sb.toString();
     }
-    
+
     public int getArity() {
         int arity = master.methodArity(methodId);
-        if (arity < 0) { 
+        if (arity < 0) {
             throw onBadMethodId(master, methodId);
         }
         return arity;
     }
-    
+
     public int getLength() { return getArity(); }
 
     /** Prepare to be used as constructor .
      ** @param scope constructor scope
-     ** @param prototype DontEnum, DontDelete, ReadOnly prototype property 
+     ** @param prototype DontEnum, DontDelete, ReadOnly prototype property
      ** of the constructor */
     public void initAsConstructor(Scriptable scope, Scriptable prototype) {
         setFunctionType(FUNCTION_AND_CONSTRUCTOR);
         setParentScope(scope);
         setImmunePrototypeProperty(prototype);
     }
-    
+
     static RuntimeException onBadMethodId(IdFunctionMaster master, int id) {
-        // It is program error to call id-like methods for unknown or 
+        // It is program error to call id-like methods for unknown or
         // non-function id
         return new RuntimeException("BAD FUNCTION ID="+id+" MASTER="+master);
     }

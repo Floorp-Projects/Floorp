@@ -45,7 +45,7 @@ import javax.swing.text.Segment;
 
 
 public class JSConsole extends JFrame implements ActionListener {
-    
+
     private File CWD;
     private JFileChooser dlg;
     private ConsoleTextArea consoleTextArea;
@@ -76,7 +76,7 @@ public class JSConsole extends JFrame implements ActionListener {
 
     public void createFileChooser() {
         dlg = new JFileChooser();
-        javax.swing.filechooser.FileFilter filter = 
+        javax.swing.filechooser.FileFilter filter =
             new javax.swing.filechooser.FileFilter() {
                     public boolean accept(File f) {
                         if(f.isDirectory()) {
@@ -92,13 +92,13 @@ public class JSConsole extends JFrame implements ActionListener {
                         }
                         return false;
                     }
-                    
+
                     public String getDescription() {
                         return "JavaScript Files (*.js)";
                     }
                 };
         dlg.addChoosableFileFilter(filter);
-        
+
     }
 
     public JSConsole(String[] args) {
@@ -188,7 +188,7 @@ public class JSConsole extends JFrame implements ActionListener {
                 plaf_name = "com.sun.java.swing.plaf.windows.WindowsLookAndFeel";
             } else if(cmd.equals("Motif")) {
                 plaf_name = "com.sun.java.swing.plaf.motif.MotifLookAndFeel";
-            } 
+            }
             if(plaf_name != null) {
                 try {
                     UIManager.setLookAndFeel(plaf_name);

@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Roger Lawrence
  *
  * Alternatively, the contents of this file may be used under the
@@ -38,7 +38,7 @@ package org.mozilla.javascript;
 public class LabelTable {
 
     private static final boolean DEBUGLABELS = false;
-    
+
     private static final int LabelTableSize = 32;
     protected Label itsLabelTable[];
     protected int itsLabelTableTop;

@@ -18,7 +18,7 @@
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
@@ -47,37 +47,37 @@ public interface DebuggableEngine {
      * The engine will call the attached debugger's handleBreakpointHit
      * method on the next line it executes if isLineStep is true.
      * May be used from another thread to interrupt execution.
-     * 
+     *
      * @param isLineStep if true, break next line
      */
     public void setBreakNextLine(boolean isLineStep);
-    
+
     /**
      * Return the value of the breakNextLine flag.
-     * @return true if the engine will break on execution of the 
+     * @return true if the engine will break on execution of the
      * next line.
      */
     public boolean getBreakNextLine();
-    
+
     /**
      * Set the associated debugger.
      * @param debugger the debugger to be used on callbacks from
      * the engine.
      */
     public void setDebugger(Debugger debugger);
-    
+
     /**
      * Return the current debugger.
      * @return the debugger, or null if none is attached.
      */
     public Debugger getDebugger();
-    
+
     /**
      * Return the number of frames in current execution.
      * @return the count of current frames
      */
     public int getFrameCount();
-    
+
     /**
      * Return a frame from the current execution.
      * Frames are numbered starting from 0 for the innermost
@@ -85,7 +85,7 @@ public interface DebuggableEngine {
      * @param frameNumber the number of the frame in the range
      *        [0,frameCount-1]
      * @return the relevant Frame, or null if frameNumber is out
-     *         of range or the engine isn't currently saving 
+     *         of range or the engine isn't currently saving
      *         frames
      */
     public DebugFrame getFrame(int frameNumber);

@@ -19,7 +19,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Waldemar Horwat
  *
  * Alternatively, the contents of this file may be used under the
@@ -61,7 +61,7 @@ final class BinaryDigitReader {
         if (digitPos == 0) {
             if (start == end)
                 return -1;
-    
+
             char c = digits.charAt(start++);
             if ('0' <= c && c <= '9')
                 digit = c - '0';

@@ -18,7 +18,7 @@
  * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the
@@ -40,7 +40,7 @@ package org.mozilla.javascript;
 import org.mozilla.javascript.debug.*;
 
 public class DebuggableEngineImpl implements DebuggableEngine {
-  
+
     public DebuggableEngineImpl(Context cx) {
         this.cx = cx;
     }
@@ -52,16 +52,16 @@ public class DebuggableEngineImpl implements DebuggableEngine {
      * The engine will call the attached debugger's handleBreakpointHit
      * method on the next line it executes if isLineStep is true.
      * May be used from another thread to interrupt execution.
-     * 
+     *
      * @param isLineStep if true, break next line
      */
     public void setBreakNextLine(boolean isLineStep) {
         cx.inLineStepMode = isLineStep;
     }
-    
+
     /**
      * Return the value of the breakNextLine flag.
-     * @return true if the engine will break on execution of the 
+     * @return true if the engine will break on execution of the
      * next line.
      */
     public boolean getBreakNextLine() {
@@ -76,7 +76,7 @@ public class DebuggableEngineImpl implements DebuggableEngine {
     public void setDebugger(Debugger debugger) {
         cx.debugger = debugger;
     }
-    
+
     /**
      * Return the current debugger.
      * @return the debugger, or null if none is attached.
@@ -84,7 +84,7 @@ public class DebuggableEngineImpl implements DebuggableEngine {
     public Debugger getDebugger() {
         return cx.debugger;
     }
-    
+
     /**
      * Return the number of frames in current execution.
      * @return the count of current frames
@@ -92,7 +92,7 @@ public class DebuggableEngineImpl implements DebuggableEngine {
     public int getFrameCount() {
         return cx.frameStack == null ? 0 : cx.frameStack.size();
     }
-    
+
     /**
      * Return a frame from the current execution.
      * Frames are numbered starting from 0 for the innermost
@@ -100,12 +100,12 @@ public class DebuggableEngineImpl implements DebuggableEngine {
      * @param frameNumber the number of the frame in the range
      *        [0,frameCount-1]
      * @return the relevant DebugFrame, or null if frameNumber is out
-     *         of range or the engine isn't currently saving 
+     *         of range or the engine isn't currently saving
      *         frames
      */
     public DebugFrame getFrame(int frameNumber) {
         return (DebugFrame) cx.frameStack.elementAt(cx.frameStack.size() - frameNumber - 1);
     }
-    
+
     private Context cx;
 }

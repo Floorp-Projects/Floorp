@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
  * Frank Mitchell
  * Mike Shaver
@@ -40,11 +40,11 @@ package org.mozilla.javascript;
 import java.lang.reflect.*;
 
 /**
- * This class reflects a single Java constructor into the JavaScript 
+ * This class reflects a single Java constructor into the JavaScript
  * environment.  It satisfies a request for an overloaded constructor,
  * as introduced in LiveConnect 3.
  * All NativeJavaConstructors behave as JSRef `bound' methods, in that they
- * always construct the same NativeJavaClass regardless of any reparenting 
+ * always construct the same NativeJavaClass regardless of any reparenting
  * that may occur.
  *
  * @author Frank Mitchell
@@ -69,7 +69,7 @@ public class NativeJavaConstructor extends NativeFunction implements Function {
             throw new RuntimeException("No constructor defined for call");
         }
 
-        return NativeJavaClass.constructSpecific(cx, scope, 
+        return NativeJavaClass.constructSpecific(cx, scope,
                                                  this, constructor, args);
     }
 
@@ -78,7 +78,7 @@ public class NativeJavaConstructor extends NativeFunction implements Function {
     }
 
     Constructor getConstructor() {
-        return constructor; 
+        return constructor;
     }
 
     Constructor constructor;

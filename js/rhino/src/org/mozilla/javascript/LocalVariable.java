@@ -18,7 +18,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Roger Lawrence
  *
  * Alternatively, the contents of this file may be used under the
@@ -36,20 +36,20 @@
 package org.mozilla.javascript;
 
 public class LocalVariable {
-    
+
     public LocalVariable(String name, boolean isParameter) {
         itsName = name;
-        itsIsParameter = isParameter; 
+        itsIsParameter = isParameter;
     }
-    
+
     public void setIndex(int index){ itsIndex = index; }
     public int getIndex()          { return itsIndex; }
-        
+
     public void setIsParameter()   { itsIsParameter = true; }
     public boolean isParameter()   { return itsIsParameter; }
-            
+
     public String getName()        { return itsName; }
-        
+
     /**
      * Return the starting PC where this variable is live, or -1
      * if it is not a Java register.
@@ -74,6 +74,6 @@ public class LocalVariable {
 
     private String itsName;
     private int itsIndex = -1;
-    
+
     private boolean itsIsParameter;
 }

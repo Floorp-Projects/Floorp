@@ -45,16 +45,16 @@ public interface ClassNameHelper {
     public void setTargetPackage(String targetPackage);
 
     public void setTargetExtends(Class extendsClass);
-    
+
     public void setTargetImplements(Class[] implementsClasses);
 
     public ClassRepository getClassRepository();
 
     public void setClassRepository(ClassRepository repository);
-    
+
     public String getClassName();
 
     public void setClassName(String initialName);
-    
+
     public void reset();
 }
