@@ -1389,7 +1389,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
                                     const nsHTMLReflowState& aOuterRS,
                                     nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsTableOuterFrame", aReflowState.reason);
+  DO_GLOBAL_REFLOW_COUNT("nsTableOuterFrame", aOuterRS.reason);
   if (nsDebugTable::gRflTableOuter) nsTableFrame::DebugReflow("TO::Rfl en", this, &aOuterRS, nsnull);
 
   nsresult rv = NS_OK;
