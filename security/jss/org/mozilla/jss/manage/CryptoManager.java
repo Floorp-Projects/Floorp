@@ -51,7 +51,7 @@ import org.mozilla.jss.CRLImportException;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.8 $ $Date: 2001/08/03 07:07:38 $ 
+ * @version $Revision: 1.9 $ $Date: 2001/09/12 18:55:03 $ 
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -1269,7 +1269,8 @@ public final class CryptoManager implements TokenSupplier
                 Debug.trace(Debug.VERBOSE, "jss library loaded");
             } catch( UnsatisfiedLinkError e) {
                 Debug.trace(Debug.ERROR, "ERROR: Unable to load jss library");
-                throw e;
+                throw new UnsatisfiedLinkError(
+                    "Unable to load jss library or one of its dependencies");
             }
             mNativeLibrariesLoaded = true;
         }
