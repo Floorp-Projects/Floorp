@@ -1023,6 +1023,7 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
             if (c == '&') {
                 if (!GetXMLEntity(cx, ts))
                     goto error;
+                tt = TOK_XMLTEXT;
                 continue;
             }
 
