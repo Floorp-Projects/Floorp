@@ -73,8 +73,9 @@ public:
 	NS_IMETHOD ReadFromFolderCacheElem(nsIMsgFolderCacheElement *element);
 	NS_IMETHOD ManyHeadersToDownload(PRBool *_retval);
 
+  NS_IMETHOD AddMessageDispositionState(nsIMessage *aMessage, nsMsgDispositionState aDispositionFlag);
 	NS_IMETHOD MarkAllMessagesRead(void);
-    NS_IMETHOD MarkThreadRead(nsIMsgThread *thread);
+  NS_IMETHOD MarkThreadRead(nsIMsgThread *thread);
   NS_IMETHOD SetFlag(PRUint32 flag);
 
 

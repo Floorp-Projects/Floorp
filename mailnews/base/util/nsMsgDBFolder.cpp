@@ -967,6 +967,24 @@ nsMsgDBFolder::SetFlag(PRUint32 flag)
 }
 
 NS_IMETHODIMP
+nsMsgDBFolder::AddMessageDispositionState(nsIMessage *aMessage, nsMsgDispositionState aDispositionFlag)
+{
+  NS_ENSURE_ARG_POINTER(aMessage);
+
+  nsresult rv = GetDatabase(nsnull);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+  
+  nsMsgKey msgKey;
+  aMessage->GetMsgKey(&msgKey);
+  
+  if (aDispositionFlag == nsIMsgFolder::nsMsgDispositionState_Replied)
+    mDatabase->MarkReplied(msgKey, PR_TRUE, nsnull);
+  else if (aDispositionFlag == nsIMsgFolder::nsMsgDispositionState_Forwarded)
+    mDatabase->MarkForwarded(msgKey, PR_TRUE, nsnull);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMsgDBFolder::MarkAllMessagesRead(void)
 {
 	// ### fix me need nsIMsgWindow

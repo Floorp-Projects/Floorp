@@ -2108,6 +2108,13 @@ nsMsgFolder::MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged)
 }
 
 NS_IMETHODIMP
+nsMsgFolder::AddMessageDispositionState(nsIMessage *aMessage, nsMsgDispositionState aDispositionFlag)
+{
+  // most folders don't do anything for this...
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMsgFolder::MarkAllMessagesRead(void)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
