@@ -199,6 +199,11 @@ static void Shutdown();
 #include "nsMathMLOperators.h"
 #endif
 
+#ifdef MOZ_XTF
+#include "nsIXTFService.h"
+#include "nsIXMLContentBuilder.h"
+#endif
+
 #ifdef MOZ_SVG
 #include "nsSVGAtoms.h"
 #include "nsSVGTypeCIDs.h"
@@ -594,6 +599,10 @@ MAKE_CTOR(CreateXULPopupListener,         nsIXULPopupListener,         NS_NewXUL
 // NS_NewXULControllers
 // NS_NewXULPrototypeCache
 #endif
+#ifdef MOZ_XTF
+MAKE_CTOR(CreateXTFService,               nsIXTFService,               NS_NewXTFService)
+MAKE_CTOR(CreateXMLContentBuilder,        nsIXMLContentBuilder,        NS_NewXMLContentBuilder)
+#endif
 #ifdef MOZ_SVG
 MAKE_CTOR(CreateSVGRect,                  nsIDOMSVGRect,               NS_NewSVGRect)
 #endif
@@ -957,13 +966,13 @@ static const nsModuleComponentInfo gComponents[] = {
 
   { "XML document",
     NS_XMLDOCUMENT_CID,
-    nsnull,
+    "@mozilla.org/xml/xml-document;1",
     CreateXMLDocument },
 
 #ifdef MOZ_SVG
   { "SVG document",
     NS_SVGDOCUMENT_CID,
-    nsnull,
+    "@mozilla.org/svg/svg-document;1",
     CreateSVGDocument },
 #endif
 
@@ -1221,6 +1230,18 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_XULPROTOTYPEDOCUMENT_CID,
     nsnull,
     NS_NewXULPrototypeDocument },
+#endif
+
+#ifdef MOZ_XTF
+  { "XTF Service",
+    NS_XTFSERVICE_CID,
+    NS_XTFSERVICE_CONTRACTID,
+    CreateXTFService },
+
+  { "XML Content Builder",
+    NS_XMLCONTENTBUILDER_CID,
+    NS_XMLCONTENTBUILDER_CONTRACTID,
+    CreateXMLContentBuilder },
 #endif
 
 #ifdef MOZ_SVG

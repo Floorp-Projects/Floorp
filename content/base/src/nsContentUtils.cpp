@@ -104,6 +104,10 @@
 #include "nsGenericElement.h"
 #include "nsNodeInfoManager.h"
 #include "nsCRT.h"
+#ifdef MOZ_XTF
+#include "nsIXTFService.h"
+static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
+#endif
 
 // for ReportToConsole
 #include "nsIStringBundle.h"
@@ -120,6 +124,9 @@ nsIThreadJSContextStack *nsContentUtils::sThreadJSContextStack = nsnull;
 nsIParserService *nsContentUtils::sParserService = nsnull;
 nsINameSpaceManager *nsContentUtils::sNameSpaceManager = nsnull;
 nsIIOService *nsContentUtils::sIOService = nsnull;
+#ifdef MOZ_XTF
+nsIXTFService *nsContentUtils::sXTFService = nsnull;
+#endif
 nsIPrefBranch *nsContentUtils::sPrefBranch = nsnull;
 nsIPref *nsContentUtils::sPref = nsnull;
 imgILoader *nsContentUtils::sImgLoader = nsnull;
@@ -205,6 +212,19 @@ nsContentUtils::GetParserServiceWeakRef()
   }
 
   return sParserService;
+}
+
+nsIXTFService*
+nsContentUtils::GetXTFServiceWeakRef()
+{
+  if (!sXTFService) {
+    nsresult rv = CallGetService(kXTFServiceCID, &sXTFService);
+    if (NS_FAILED(rv)) {
+      sXTFService = nsnull;
+    }
+  }
+
+  return sXTFService;
 }
 
 template <class OutputIterator>
@@ -392,6 +412,9 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sNameSpaceManager);
   NS_IF_RELEASE(sParserService);
   NS_IF_RELEASE(sIOService);
+#ifdef MOZ_XTF
+  NS_IF_RELEASE(sXTFService);
+#endif
   NS_IF_RELEASE(sImgLoader);
   NS_IF_RELEASE(sPrefBranch);
   NS_IF_RELEASE(sPref);

@@ -1,0 +1,75 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ----- BEGIN LICENSE BLOCK -----
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla XTF project.
+ *
+ * The Initial Developer of the Original Code is 
+ * Alex Fritze.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *    Alex Fritze <alex@croczilla.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ----- END LICENSE BLOCK ----- */
+
+#include "nsIXTFElement.idl"
+
+interface nsIDOMElement;
+
+[scriptable, uuid(705e7fc8-6fbb-456e-8d18-fd2dae55d477)]
+interface nsIXTFVisual : nsIXTFElement
+{
+  // The content tree rooted in 'visualContent' will be rendered where
+  // the xtf visual is placed into an appropriate context. A visual
+  // will be asked for its visual content once at most. The tree
+  // cannot be dynamically replaced during the lifetime of the
+  // element, it may however be dynamically manipulated (i.e. you can
+  // insert/remove content, set attributes, etc., but *not* exchange
+  // the root element for something else).
+  readonly attribute nsIDOMElement visualContent;
+
+  // Children of the xtf visual which are themselves 'visuals'
+  // (i.e. built-ins elements, other xtf visuals or xbl elements with
+  // visual <content>) will be rendered as if they were children of
+  // 'insertionPoint'. 'insertionPoint' should either be null (in
+  // which case the children will not be automatically rendered) or
+  // point into the 'visualContent' tree.
+  readonly attribute nsIDOMElement insertionPoint;
+
+  // If 'true', document style sheets will apply to the visual
+  // content. If 'false', only UA and user style sheets will be
+  // applied.
+  readonly attribute boolean applyDocumentStyleSheets;
+  
+  // Notification mask constants:
+  // To receive a given event set the corresponding bit in
+  // nsIXTFElementWrapper::notificationMask.
+  const unsigned long NOTIFY_DID_LAYOUT  = 0x00010000;
+
+  // Event notifications:
+  void didLayout();
+};

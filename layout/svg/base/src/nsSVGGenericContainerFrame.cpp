@@ -36,86 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsContainerFrame.h"
-#include "nsIDOMSVGGElement.h"
-#include "nsPresContext.h"
-#include "nsISVGChildFrame.h"
-#include "nsISVGContainerFrame.h"
-#include "nsISVGRendererCanvas.h"
-#include "nsISVGOuterSVGFrame.h"
-
-typedef nsContainerFrame nsSVGGenericContainerFrameBase;
-
-class nsSVGGenericContainerFrame : public nsSVGGenericContainerFrameBase,
-                                   public nsISVGChildFrame,
-                                   public nsISVGContainerFrame
-{
-  friend nsresult
-  NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
-protected:
-  nsSVGGenericContainerFrame();
-  virtual ~nsSVGGenericContainerFrame();
-  nsresult Init();
-  
-   // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
-public:
-  // nsIFrame:
-  
-  NS_IMETHOD  AppendFrames(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
-                           nsIFrame*       aFrameList);
-  NS_IMETHOD  InsertFrames(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
-                           nsIFrame*       aPrevFrame,
-                           nsIFrame*       aFrameList);
-  NS_IMETHOD  RemoveFrame(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
-                          nsIFrame*       aOldFrame);
-  NS_IMETHOD  ReplaceFrame(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
-                           nsIFrame*       aOldFrame,
-                           nsIFrame*       aNewFrame);
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
-                  nsIFrame*        aPrevInFlow);
-
-  NS_IMETHOD  AttributeChanged(nsPresContext* aPresContext,
-                               nsIContent*     aChild,
-                               PRInt32         aNameSpaceID,
-                               nsIAtom*        aAttribute,
-                               PRInt32         aModType);
-
-
-  // nsISVGChildFrame interface:
-  NS_IMETHOD Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
-  NS_IMETHOD GetFrameForPoint(float x, float y, nsIFrame** hit);  
-  NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
-  NS_IMETHOD InitialUpdate();
-  NS_IMETHOD NotifyCanvasTMChanged();
-  NS_IMETHOD NotifyRedrawSuspended();
-  NS_IMETHOD NotifyRedrawUnsuspended();
-  NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
-  
-  // nsISVGContainerFrame interface:
-  nsISVGOuterSVGFrame*GetOuterSVGFrame();
-  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
-  already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
-  
-protected:
-};
+#include "nsSVGGenericContainerFrame.h"
 
 //----------------------------------------------------------------------
-// Implementation
+// nsSVGGenericContainerFrame Implementation
 
 nsresult
 NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame)

@@ -1,0 +1,142 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ----- BEGIN LICENSE BLOCK -----
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla XTF project.
+ *
+ * The Initial Developer of the Original Code is 
+ * Alex Fritze.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *    Alex Fritze <alex@croczilla.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ----- END LICENSE BLOCK ----- */
+
+#include "nsISupports.idl"
+interface nsIAtom;
+interface nsIDOMDocument;
+interface nsIDOMElement;
+interface nsIDOMNode;
+
+[scriptable, uuid(f0617ed1-db6a-4704-ac4b-67bf15a77788)]
+interface nsIXTFElement : nsISupports
+{
+  // called when the wrapper object is being destroyed.
+  void onDestroyed();
+
+  // Constants for attribute elementType:
+
+  // Elements of type GENERIC_ELEMENT are required to implement the
+  // nsIXTFGenericElement interface in addition to nsIXTFElement:
+  const unsigned long ELEMENT_TYPE_GENERIC_ELEMENT = 0;
+
+  // Elements of type SVG_VISUAL are required to implement the
+  // nsIXTFSVGVisual interface in addition to nsIXTFElement:
+  const unsigned long ELEMENT_TYPE_SVG_VISUAL      = 1;
+
+  // Elements of type XML_VISUAL are required to implement the
+  // nsIXTFXMLVisual interface in addition to nsIXTFElement:
+  const unsigned long ELEMENT_TYPE_XML_VISUAL      = 2;
+
+  // Elements of type XUL_VISUAL are required to implement the
+  // nsIXTFXULVisual interface in addition to nsIXTFElement:
+  const unsigned long ELEMENT_TYPE_XUL_VISUAL      = 3;
+
+  // elementType identifies the type of wrapper that will be built for
+  // a given xtf element. It must remain constant for the entire
+  // lifetime of the xtf element (i.e. before any onCreated()-calls
+  // until after onDestroyed()-calls).
+  readonly attribute unsigned long elementType;
+
+  // If isAttributeHandler is set to 'true', the xtf element indicates
+  // that it wants to manage its own attributes. In this case it needs
+  // to implement the nsIXTFAttributeHandler interface in addition to
+  // its other interfaces. 'isAttributeHandler' must remain constant
+  // for the entire lifetime of the xtf element (i.e. before any
+  // onCreated()-calls until after onDestroyed()-calls).
+  readonly attribute boolean isAttributeHandler;
+  
+  // getScriptingInterfaces: This array serves 2 purposes: a) All
+  // interfaces in this array will automatically be accessible when
+  // our wrapper element is used from JS (other interfaces need to be
+  // explicitly QI'ed for), and b) All these interfaces are callable
+  // from unpriviliged script.
+  void getScriptingInterfaces(out unsigned long count,
+                              [array, size_is(count), retval] out nsIIDPtr array);
+
+  // Notification mask constants:
+  // To receive a given event set the corresponding bit in
+  // nsIXTFElementWrapper::notificationMask.
+  const unsigned long NOTIFY_WILL_CHANGE_DOCUMENT  = 0x00000001;
+  const unsigned long NOTIFY_DOCUMENT_CHANGED      = 0x00000002;
+  
+  const unsigned long NOTIFY_WILL_CHANGE_PARENT    = 0x00000004;
+  const unsigned long NOTIFY_PARENT_CHANGED        = 0x00000008;
+  
+  const unsigned long NOTIFY_WILL_INSERT_CHILD     = 0x00000010;
+  const unsigned long NOTIFY_CHILD_INSERTED        = 0x00000020;
+  
+  const unsigned long NOTIFY_WILL_APPEND_CHILD     = 0x00000040;
+  const unsigned long NOTIFY_CHILD_APPENDED        = 0x00000080;
+  
+  const unsigned long NOTIFY_WILL_REMOVE_CHILD     = 0x00000100;
+  const unsigned long NOTIFY_CHILD_REMOVED         = 0x00000200;
+  
+  const unsigned long NOTIFY_WILL_SET_ATTRIBUTE    = 0x00000400;
+  const unsigned long NOTIFY_ATTRIBUTE_SET         = 0x00000800;
+  
+  const unsigned long NOTIFY_WILL_REMOVE_ATTRIBUTE = 0x00001000;
+  const unsigned long NOTIFY_ATTRIBUTE_REMOVED     = 0x00002000;
+  
+  const unsigned long NOTIFY_DONE_ADDING_CHILDREN  = 0x00004000;
+  
+  // Event notifications:
+
+  void willChangeDocument(in nsIDOMDocument newDoc);
+  void documentChanged(in nsIDOMDocument newDoc);
+  
+  void willChangeParent(in nsIDOMElement newParent);
+  void parentChanged(in nsIDOMElement newParent);
+
+  void willInsertChild(in nsIDOMNode child, in unsigned long index);
+  void childInserted(in nsIDOMNode child, in unsigned long index);
+
+  void willAppendChild(in nsIDOMNode child);
+  void childAppended(in nsIDOMNode child);
+
+  void willRemoveChild(in unsigned long index);
+  void childRemoved(in unsigned long index);
+
+  void willSetAttribute(in nsIAtom name, in AString newValue);
+  void attributeSet(in nsIAtom name, in AString newValue);
+
+  void willRemoveAttribute(in nsIAtom name);
+  void attributeRemoved(in nsIAtom name);
+
+  void doneAddingChildren();
+};
+

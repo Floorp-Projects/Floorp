@@ -526,6 +526,11 @@ nsXMLContentSink::CloseElement(nsIContent* aContent, PRBool* aAppendContent)
 
   nsINodeInfo* nodeInfo = aContent->GetNodeInfo();
 
+#ifdef MOZ_XTF
+  if (nodeInfo->NamespaceID() > kNameSpaceID_LastBuiltin)
+    aContent->DoneAddingChildren();
+#endif
+  
   if (!nodeInfo->NamespaceEquals(kNameSpaceID_XHTML) &&
       !nodeInfo->NamespaceEquals(kNameSpaceID_SVG)) {
     return NS_OK;
