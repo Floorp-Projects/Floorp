@@ -60,13 +60,13 @@ nsresult nsSmtpService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 {
     if (NULL == aInstancePtr)
         return NS_ERROR_NULL_POINTER;
-    if (aIID.Equals(nsCOMTypeInfo<nsISmtpService>::GetIID()) || aIID.Equals(kISupportsIID))
+    if (aIID.Equals(NS_GET_IID(nsISmtpService)) || aIID.Equals(NS_GET_IID(nsISupports)))
 	{
         *aInstancePtr = (void*) ((nsISmtpService*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-	if (aIID.Equals(nsCOMTypeInfo<nsIProtocolHandler>::GetIID()))
+	if (aIID.Equals(NS_GET_IID(nsIProtocolHandler)))
 	{
 		*aInstancePtr = (void *) ((nsIProtocolHandler*) this);
 		NS_ADDREF_THIS();
@@ -218,15 +218,13 @@ NS_IMETHODIMP nsSmtpService::GetDefaultPort(PRInt32 *aDefaultPort)
 NS_IMETHODIMP nsSmtpService::MakeAbsolute(const char *aRelativeSpec, nsIURI *aBaseURI, char **_retval)
 {
 	// no such thing as relative urls for smtp.....
-	NS_ASSERTION(0, "unimplemented");
-	return NS_OK;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsSmtpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
 	// i just haven't implemented this yet...I will be though....
-	NS_ASSERTION(0, "unimplemented");
-	return NS_OK;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsSmtpService::NewChannel(const char *verb, nsIURI *aURI, nsIEventSinkGetter *eventSinkGetter, nsIChannel **_retval)
@@ -234,8 +232,7 @@ NS_IMETHODIMP nsSmtpService::NewChannel(const char *verb, nsIURI *aURI, nsIEvent
 	// mscott - right now, I don't like the idea of returning channels to the caller. They just want us
 	// to run the url, they don't want a channel back...I'm going to be addressing this issue with
 	// the necko team in more detail later on.
-	NS_ASSERTION(0, "unimplemented");
-	return NS_OK;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
