@@ -36,7 +36,7 @@
 ***********************************************************************/
 
 
-#if defined(XP_UNIX)
+#if defined(_PR_DCETHREADS)
 
 #include "prlog.h"
 #include "prinit.h"
@@ -93,12 +93,12 @@ static PRIntn prmain(PRIntn argc, char **argv)
 
 }  /* prmain */
 
-#endif /* #if defined(XP_UNIX) */
+#endif /* #if defined(_PR_DCETHREADS) */
 
 int main(int argc, char **argv)
 {
 
-#if defined(XP_UNIX)
+#if defined(_PR_DCETHREADS)
     PR_Initialize(prmain, argc, argv, 0);
     if(failed_already)    
         return 1;

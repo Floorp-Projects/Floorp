@@ -373,7 +373,7 @@ UDP_Server(void *arg)
     PRFileDesc *sockfd;
     buffer *in_buf;
     PRNetAddr netaddr;
-    PRInt32 bytes, i, rv;
+    PRInt32 bytes, i, rv = 0;
 
 
     bytes = sp->datalen;
@@ -1046,7 +1046,6 @@ TransmitFile_Client(void *arg)
         fprintf(stderr,
             "prsocket_test: TransmitFile_Client ERROR - large file data corruption\n");
         failed_already=1;
-        return;
     }
 #endif
     PR_DELETE(small_buf);
@@ -1518,8 +1517,8 @@ done:
         PR_DELETE(buf);
     }
 #ifdef XP_UNIX
-    munmap(small_file_addr, SMALL_FILE_SIZE);
-    munmap(large_file_addr, LARGE_FILE_SIZE);
+    munmap((char*)small_file_addr, SMALL_FILE_SIZE);
+    munmap((char*)large_file_addr, LARGE_FILE_SIZE);
 #endif
     PR_Close(small_file_fd);
     PR_Close(large_file_fd);

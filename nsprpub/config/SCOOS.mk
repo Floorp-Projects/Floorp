@@ -33,12 +33,7 @@ DEFINES			+= -D_PR_LOCAL_THREADS_ONLY
 # -DSCO - Changes to Netscape source (consistent with AIX, LINUX, etc..)
 # -Dsco - Needed for /usr/include/X11/*
 #
-ifdef USE_AUTOCONF
-OS_CFLAGS
-else
 OS_CFLAGS		= -DSYSV -D_SVID3 -DHAVE_STRERROR -D_PR_NEED_H_ERRNO -DSCO -Dsco
-endif
-
 #OS_LIBS			= -lpmapi -lsocket -lc
 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)

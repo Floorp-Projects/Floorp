@@ -733,7 +733,10 @@ void ScanScanQ(GCScanQ *iscan)
     next = &nextQ;
     while (scan->queued) {
 	_GCTRACE(GC_MARK, ("continue scanQ @ 0x%x (%d)", scan, scan->queued));
-    /* Set pointer to current scanQ so that pr_liveObject can find it */
+    /*
+     * Set pointer to current scanQ so that _pr_gcData.livePointer
+     * can find it.
+     */
     pScanQ = next;
     next->queued = 0;
 
@@ -1890,7 +1893,7 @@ pr_ConservativeWalkPointer(void* ptr, PRWalkFun walkRootPointer, void* data)
     return walkRootPointer(p, data);
 }
 
-static int32 PR_CALLBACK
+static PRInt32 PR_CALLBACK
 pr_ConservativeWalkBlock(void **base, PRInt32 count,
 			 PRWalkFun walkRootPointer, void* data)
 {
@@ -2083,7 +2086,7 @@ PR_DumpMemory(PRBool detailed)
 
 /******************************************************************************/
 
-static int32 PR_CALLBACK
+static PRInt32 PR_CALLBACK
 pr_DumpRootPointer(PRWord* p, void* data)
 {
 #ifdef XP_MAC
@@ -2247,7 +2250,7 @@ PRWord* pr_traceObj;	/* set this in the debugger, then execute PR_TraceRoot() */
 static PRInt32 PR_CALLBACK
 pr_TraceRootObject(void* obj, void* data);
 
-static int32 PR_CALLBACK
+static PRInt32 PR_CALLBACK
 pr_TraceRootPointer(PRWord *p, void* data)
 {
     PRInt32 printTrace = 0;
@@ -3094,6 +3097,12 @@ PR_AllocSimpleMemory(PRWord requestedBytes, PRInt32 tix)
     PR_ASSERT( bytes < MAX_ALLOC_SIZE );
 #endif
     /* Java can ask for objects bigger than 4M, but it won't get them */
+    /*
+     * This check was added because there is a fundamental limit of
+     * the size field maintained by the gc code.  Going over the 4M
+     * limit caused some bits to roll over into another bit field,
+     * violating the max segment size and causing a bug.
+     */
     if (bytes >= MAX_ALLOC_SIZE) {
         return NULL;
     }
@@ -3183,7 +3192,7 @@ PR_AllocSimpleMemory(PRWord requestedBytes, PRInt32 tix)
     {
 	PRInt64 now = PR_Now();
 	double delta;
-	int32 bin;
+	PRInt32 bin;
 	GCBlockEnd* end = (GCBlockEnd*)((char*)p + OBJ_BYTES(p[0]) - sizeof(GCBlockEnd));
 
 	end->allocTime = allocTime;

@@ -116,6 +116,26 @@ static pthread_mutex_t _PR_MD_malloc_crustylock;
 #else /* _PR_PTHREADS */
 static _MDLock _PR_MD_malloc_crustylock;
 
+#ifdef IRIX
+#define _PR_Lock_Malloc() {						\
+			   PRIntn _is;					\
+    				if(PR_TRUE == _PR_malloc_initialised) { \
+				if (_PR_MD_GET_ATTACHED_THREAD() && 		\
+					!_PR_IS_NATIVE_THREAD( 		\
+					_PR_MD_GET_ATTACHED_THREAD()))	\
+						_PR_INTSOFF(_is); 	\
+					_PR_MD_LOCK(&_PR_MD_malloc_crustylock); \
+				}
+
+#define _PR_Unlock_Malloc() 	if(PR_TRUE == _PR_malloc_initialised) { \
+					_PR_MD_UNLOCK(&_PR_MD_malloc_crustylock); \
+				if (_PR_MD_GET_ATTACHED_THREAD() && 		\
+					!_PR_IS_NATIVE_THREAD( 		\
+					_PR_MD_GET_ATTACHED_THREAD()))	\
+						_PR_INTSON(_is);	\
+				}					\
+			  }
+#else	/* IRIX */
 #define _PR_Lock_Malloc() {						\
 			   PRIntn _is;					\
     				if(PR_TRUE == _PR_malloc_initialised) { \
@@ -134,6 +154,7 @@ static _MDLock _PR_MD_malloc_crustylock;
 						_PR_INTSON(_is);	\
 				}					\
 			  }
+#endif	/* IRIX	*/
 #endif /* _PR_PTHREADS */
 
 PR_IMPLEMENT(PRStatus) _PR_MallocInit(void)

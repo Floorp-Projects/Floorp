@@ -19,6 +19,13 @@
 #ifndef nspr_irix_defs_h___
 #define nspr_irix_defs_h___
 
+#define _PR_HAVE_ATOMIC_CAS
+
+/*
+ * MipsPro assembler defines _LANGUAGE_ASSEMBLY
+ */
+#ifndef _LANGUAGE_ASSEMBLY
+
 #include "prclist.h"
 #include "prthread.h"
 #include <sys/ucontext.h>
@@ -46,6 +53,11 @@
 #define HAVE_DLL
 #define USE_DLFCN
 #define _PR_HAVE_ATOMIC_OPS
+#define _PR_POLL_AVAILABLE
+#define _PR_USE_POLL
+#define _PR_STAT_HAS_ST_ATIM
+#define _PR_HAVE_OFF64_T
+#define HAVE_POINTER_LOCALTIME_R
 
 /* Initialization entry points */
 PR_EXTERN(void) _MD_EarlyInit(void);
@@ -57,11 +69,11 @@ PR_EXTERN(void) _MD_IrixInit(void);
 #define _MD_INIT_IO()
 
 /* Timer operations */
-PR_EXTERN(PRIntervalTime) _MD_GetInterval(void);
-#define _MD_GET_INTERVAL _MD_GetInterval
+PR_EXTERN(PRIntervalTime) _MD_IrixGetInterval(void);
+#define _MD_GET_INTERVAL _MD_IrixGetInterval
 
-PR_EXTERN(PRIntervalTime) _MD_IntervalPerSec(void);
-#define _MD_INTERVAL_PER_SEC _MD_IntervalPerSec
+PR_EXTERN(PRIntervalTime) _MD_IrixIntervalPerSec(void);
+#define _MD_INTERVAL_PER_SEC _MD_IrixIntervalPerSec
 
 /* GC operations */
 PR_EXTERN(void *) _MD_GetSP(PRThread *thread);
@@ -71,6 +83,7 @@ PR_EXTERN(void *) _MD_GetSP(PRThread *thread);
 #include <mutex.h>
 #define _MD_INIT_ATOMIC()
 #define _MD_ATOMIC_INCREMENT(val) add_then_test((unsigned long*)val, 1)
+#define _MD_ATOMIC_ADD(ptr, val) add_then_test((unsigned long*)ptr, (unsigned long)val)
 #define _MD_ATOMIC_DECREMENT(val) add_then_test((unsigned long*)val, 0xffffffff)
 #define _MD_ATOMIC_SET(val, newval) test_and_set((unsigned long*)val, newval)
 
@@ -107,8 +120,8 @@ struct sproc_private_data {
 extern char *_nspr_sproc_private;
 
 #define _PR_PRDA() ((struct sproc_private_data *) _nspr_sproc_private)
-#define _MD_CURRENT_THREAD() (_PR_PRDA()->me)
 #define _MD_SET_CURRENT_THREAD(_thread) _PR_PRDA()->me = (_thread)
+#define _MD_THIS_THREAD() (_PR_PRDA()->me)
 #define _MD_LAST_THREAD() (_PR_PRDA()->last)
 #define _MD_SET_LAST_THREAD(_thread) _PR_PRDA()->last = (_thread)
 #define _MD_CURRENT_CPU() (_PR_PRDA()->cpu)
@@ -120,13 +133,16 @@ extern char *_nspr_sproc_private;
 #define _MD_GET_SPROC_PID() (_PR_PRDA()->sproc_pid)
 
 PR_EXTERN(struct PRThread*) _MD_get_attached_thread(void);
+PR_EXTERN(struct PRThread*) _MD_get_current_thread(void);
 #define _MD_GET_ATTACHED_THREAD()	_MD_get_attached_thread()
+#define _MD_CURRENT_THREAD()	_MD_get_current_thread()
 
 #define _MD_CHECK_FOR_EXIT() {					\
-		if (_pr_irix_exit_now) {			\
+		if (_pr_irix_exit_now) {				\
 			_PR_POST_SEM(_pr_irix_exit_sem);	\
-			exit(0);				\
-		}						\
+			_MD_Wakeup_CPUs();					\
+			_exit(0);							\
+		}										\
 	}
 		
 #define _MD_ATTACH_THREAD(threadp)
@@ -137,23 +153,26 @@ PR_EXTERN(struct PRThread*) _MD_get_attached_thread(void);
 extern struct _PRCPU  *_pr_primordialCPU;
 extern usema_t *_pr_irix_exit_sem;
 extern PRInt32 _pr_irix_exit_now;
+extern int _pr_irix_primoridal_cpu_fd[];
+extern PRInt32 _pr_irix_process_exit;
+extern PRInt32 _pr_irix_process_exit_code;
 
 /* Thread operations */
 #define _PR_LOCK_HEAP()	{						\
 			PRIntn _is;					\
 				if (_pr_primordialCPU) {		\
-				if (_PR_MD_CURRENT_THREAD() && 		\
+				if (_MD_GET_ATTACHED_THREAD() && 		\
 					!_PR_IS_NATIVE_THREAD( 		\
-					_PR_MD_CURRENT_THREAD()))	\
+					_MD_GET_ATTACHED_THREAD()))	\
 						_PR_INTSOFF(_is); 	\
 					_PR_LOCK(_pr_heapLock);		\
 				}
 
 #define _PR_UNLOCK_HEAP() 	if (_pr_primordialCPU)	{		\
 					_PR_UNLOCK(_pr_heapLock);	\
-				if (_PR_MD_CURRENT_THREAD() && 		\
+				if (_MD_GET_ATTACHED_THREAD() && 		\
 					!_PR_IS_NATIVE_THREAD( 		\
-					_PR_MD_CURRENT_THREAD()))	\
+					_MD_GET_ATTACHED_THREAD()))	\
 						_PR_INTSON(_is);	\
 				}					\
 			  }
@@ -179,7 +198,7 @@ struct _MDLock {
 
 #define _PR_LOCK(lock) {						\
 		PRIntn _is;						\
-		PRThread *me = _PR_MD_CURRENT_THREAD();			\
+		PRThread *me = _MD_GET_ATTACHED_THREAD();			\
 		if (me && !_PR_IS_NATIVE_THREAD(me))			\
 			_PR_INTSOFF(_is); 				\
 		ussetlock(lock);					\
@@ -189,7 +208,7 @@ struct _MDLock {
 
 #define _PR_UNLOCK(lock) {						\
 		PRIntn _is;						\
-		PRThread *me = _PR_MD_CURRENT_THREAD();			\
+		PRThread *me = _MD_GET_ATTACHED_THREAD();			\
 		if (me && !_PR_IS_NATIVE_THREAD(me))			\
 			_PR_INTSOFF(_is); 				\
 		usunsetlock(lock);					\
@@ -216,9 +235,6 @@ struct _MDThread {
     PRInt32	id;
     PRInt32	suspending_id;
     int errcode;
-    PRStatus	*creation_status;	/* points to the variable in which
-					 * a newly created child thread is
-					 * to store its creation status */
 };
 
 struct _MDThreadStack {
@@ -236,6 +252,43 @@ struct _MDCVar {
 struct _MDSegment {
     PRInt8 notused;
 };
+
+/*
+ * md-specific cpu structure field
+ */
+#define _PR_MD_MAX_OSFD FD_SETSIZE
+
+struct _MDCPU_Unix {
+    PRCList ioQ;
+    PRUint32 ioq_timeout;
+    PRInt32 ioq_max_osfd;
+    PRInt32 ioq_osfd_cnt;
+#ifndef _PR_USE_POLL
+    fd_set fd_read_set, fd_write_set, fd_exception_set;
+    PRInt16 fd_read_cnt[_PR_MD_MAX_OSFD],fd_write_cnt[_PR_MD_MAX_OSFD],
+				fd_exception_cnt[_PR_MD_MAX_OSFD];
+#else
+	struct pollfd *ioq_pollfds;
+	int ioq_pollfds_size;
+#endif	/* _PR_USE_POLL */
+};
+
+#define _PR_IOQ(_cpu)			((_cpu)->md.md_unix.ioQ)
+#define _PR_ADD_TO_IOQ(_pq, _cpu) PR_APPEND_LINK(&_pq.links, &_PR_IOQ(_cpu))
+#define _PR_FD_READ_SET(_cpu)		((_cpu)->md.md_unix.fd_read_set)
+#define _PR_FD_READ_CNT(_cpu)		((_cpu)->md.md_unix.fd_read_cnt)
+#define _PR_FD_WRITE_SET(_cpu)		((_cpu)->md.md_unix.fd_write_set)
+#define _PR_FD_WRITE_CNT(_cpu)		((_cpu)->md.md_unix.fd_write_cnt)
+#define _PR_FD_EXCEPTION_SET(_cpu)	((_cpu)->md.md_unix.fd_exception_set)
+#define _PR_FD_EXCEPTION_CNT(_cpu)	((_cpu)->md.md_unix.fd_exception_cnt)
+#define _PR_IOQ_TIMEOUT(_cpu)		((_cpu)->md.md_unix.ioq_timeout)
+#define _PR_IOQ_MAX_OSFD(_cpu)		((_cpu)->md.md_unix.ioq_max_osfd)
+#define _PR_IOQ_OSFD_CNT(_cpu)		((_cpu)->md.md_unix.ioq_osfd_cnt)
+#define _PR_IOQ_POLLFDS(_cpu)		((_cpu)->md.md_unix.ioq_pollfds)
+#define _PR_IOQ_POLLFDS_SIZE(_cpu)	((_cpu)->md.md_unix.ioq_pollfds_size)
+
+#define _PR_IOQ_MIN_POLLFDS_SIZE(_cpu)	32
+
 
 struct _MDCPU {
     PRInt32 id;
@@ -290,9 +343,13 @@ struct _MDCPU {
     longjmp(jb, 1); \
     PR_END_MACRO
 
-PR_EXTERN(PRStatus) _MD_InitThread(struct PRThread *thread, PRBool wakeup_parent);
+PR_EXTERN(PRStatus) _MD_InitThread(struct PRThread *thread,
+								PRBool wakeup_parent);
+PR_EXTERN(PRStatus) _MD_InitAttachedThread(struct PRThread *thread,
+									PRBool wakeup_parent);
 #define _MD_INIT_THREAD(thread) 			_MD_InitThread(thread, PR_TRUE)
-#define _MD_INIT_ATTACHED_THREAD(thread)	_MD_InitThread(thread, PR_FALSE)
+#define _MD_INIT_ATTACHED_THREAD(thread)		\
+						_MD_InitAttachedThread(thread, PR_FALSE)
 
 PR_EXTERN(void) _MD_ExitThread(struct PRThread *thread);
 #define _MD_EXIT_THREAD _MD_ExitThread
@@ -329,6 +386,9 @@ PR_EXTERN(void) _MD_CleanThread(struct PRThread *thread);
 PR_EXTERN(PRStatus) _MD_wait(struct PRThread *, PRIntervalTime timeout);
 #define _MD_WAIT _MD_wait
 
+PR_EXTERN(void) _PR_MD_primordial_cpu();
+PR_EXTERN(void) _PR_MD_WAKEUP_PRIMORDIAL_CPU();
+
 PR_EXTERN(PRStatus) _MD_WakeupWaiter(struct PRThread *);
 #define _MD_WAKEUP_WAITER _MD_WakeupWaiter
 
@@ -353,6 +413,8 @@ PR_EXTERN(PRStatus) _MD_CreateThread(
 extern void _MD_CleanupBeforeExit(void);
 #define _MD_CLEANUP_BEFORE_EXIT _MD_CleanupBeforeExit
 
+PR_EXTERN(void) _PR_MD_PRE_CLEANUP(PRThread *me);
+
 
 /* The following defines the unwrapped versions of select() and poll(). */
 extern int _select(int nfds, fd_set *readfds, fd_set *writefds,
@@ -374,5 +436,7 @@ PR_EXTERN(void) _MD_InitRunningCPU(struct _PRCPU *cpu);
 #define    _MD_INIT_RUNNING_CPU _MD_InitRunningCPU
 
 #endif  /* defined(_PR_PTHREADS) */
+
+#endif /* _LANGUAGE_ASSEMBLY */
 
 #endif /* nspr_irix_defs_h___ */

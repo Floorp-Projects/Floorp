@@ -41,7 +41,7 @@
 /* Linux (except glibc) and FreeBSD don't have poll */
 #if !(defined(LINUX) && !(defined(__GLIBC__) && __GLIBC__ >= 2)) \
     && !defined(FREEBSD)
-#include <poll.h>
+#include <sys/poll.h>
 #endif
 #ifdef AIX
 /* To pick up sysconf() */
@@ -75,7 +75,7 @@
 #elif defined(IRIX) || (defined(AIX) && !defined(AIX4_1)) \
     || defined(OSF1) || defined(SOLARIS) \
     || defined(HPUX10_30) || defined(HPUX11) || defined(LINUX) \
-    || defined(FREEBSD) || defined(NETBSD)
+    || defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD)
 #define _PRSelectFdSetArg_t fd_set *
 #else
 #error "Cannot determine architecture"
@@ -86,9 +86,6 @@ static PRFileDesc *pt_SetMethods(PRIntn osfd, PRDescType type);
 static pthread_condattr_t _pt_cvar_attr;
 static PRLock *_pr_flock_lock;  /* For PR_LockFile() etc. */
 static PRLock *_pr_rename_lock;  /* For PR_Rename() */
-
-extern struct _PT_Bookeeping pt_book;  /* defined in ptthread.c */
-extern PRIntn pt_schedpriv;  /* defined in ptthread.c */
 
 /**************************************************************************/
 
@@ -124,89 +121,6 @@ static PRBool IsValidNetAddrLen(const PRNetAddr *addr, PRInt32 addr_len)
 
 #endif /* DEBUG */
 
-/*****************************************************************************/
-/*****************************************************************************/
-/************************** File descriptor caching **************************/
-/*****************************************************************************/
-/*****************************************************************************/
-
-typedef struct _PT_Fd_Cache
-{
-    PRLock *ml;
-    PRIntn count;
-    PRIntn limit;
-    PRFileDesc *fd;
-} _PT_Fd_Cache;
-static _PT_Fd_Cache pt_fd_cache;
-
-/*
-** Get a FileDescriptor from the cache if one exists. If not allocate
-** a new one from the heap.
-*/
-static PRFileDesc *pt_Getfd(void)
-{
-    PRFileDesc *fd;
-    do
-    {
-        fd = pt_fd_cache.fd;  /* quick, unsafe check */
-        if (NULL == fd)
-        {
-            fd = PR_NEWZAP(PRFileDesc);
-            if (NULL == fd) goto finished;
-            fd->secret = PR_NEWZAP(PRFilePrivate);
-            if (NULL == fd->secret)
-            {
-                PR_DELETE(fd);
-                goto finished;
-            }
-        }
-        else
-        {
-            PRFilePrivate *secret;
-            PR_Lock(pt_fd_cache.ml);
-            fd = pt_fd_cache.fd;  /* safer extraction */
-            if (NULL != fd)
-            {
-                pt_fd_cache.count -= 1;
-                pt_fd_cache.fd = fd->higher;
-                fd->higher = NULL;
-            }
-            PR_Unlock(pt_fd_cache.ml);
-            secret = fd->secret;
-            memset(fd, 0, sizeof(PRFileDesc));
-            memset(secret, 0, sizeof(PRFilePrivate));
-            fd->secret = secret;
-        }
-    } while (NULL == fd);
-finished:
-    return fd;
-}  /* pt_Getfd */
-
-/*
-** Return a file descriptor to the cache unless there are too many in
-** there already. If put in cache, clear the fields first.
-*/
-static void pt_Putfd(PRFileDesc *fd)
-{
-    PR_ASSERT(_PR_FILEDESC_CLOSED == fd->secret->state);
-    PR_ASSERT(pt_fd_cache.count < pt_fd_cache.limit);
-
-    fd->secret->state = _PR_FILEDESC_FREED;
-    if (pt_fd_cache.count > pt_fd_cache.limit)
-    {
-        PR_DELETE(fd->secret);
-        PR_DELETE(fd);
-    }
-    else
-    {
-        PR_Lock(pt_fd_cache.ml);
-        pt_fd_cache.count += 1;
-        fd->higher = pt_fd_cache.fd;
-        pt_fd_cache.fd = fd;
-        PR_Unlock(pt_fd_cache.ml);
-    }
-}  /* pt_Putfd */
-    
 /*****************************************************************************/
 /************************* I/O Continuation machinery ************************/
 /*****************************************************************************/
@@ -302,14 +216,15 @@ static struct pt_TimedQueue
 
 PTDebug pt_debug;  /* this is shared between several modules */
 
-PR_IMPLEMENT(PTDebug) PT_GetStats() { return pt_debug; }
+PR_IMPLEMENT(void) PT_GetStats(PTDebug* here) { *here = pt_debug; }
 
 PR_IMPLEMENT(void) PT_FPrintStats(PRFileDesc *debug_out, const char *msg)
 {
+    PTDebug stats;
     char buffer[100];
     PRExplodedTime tod;
     PRInt64 elapsed, aMil;
-    PTDebug stats = PT_GetStats();  /* a copy */
+    PT_GetStats(&stats);  /* a copy */
     PR_ExplodeTime(stats.timeStarted, PR_LocalTimeParameters, &tod);
     (void)PR_FormatTime(buffer, sizeof(buffer), "%T", &tod);
 
@@ -574,6 +489,7 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
     PRIntn pollingListNeeded;               /* # entries needed this time */
     static struct pollfd *pollingList = 0;  /* list built for polling */
     static PRIntn pollingSlotsAllocated = 0;/* # entries available in list */
+    static pt_Continuation **pollingOps = 0;/* list paralleling polling list */
     
     PR_Unlock(pt_tq.ml);  /* don't need that silly lock for a bit */
 
@@ -599,15 +515,24 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
      * We are not holding the pt_tq.ml lock now, so more items may
      * get added to pt_tq during this window of time.  We hope
      * that 10 more spaces in the polling list should be enough.
+     *
+     * The space allocated is for both a vector that parallels the
+     * polling list, providing pointers directly into the operation's
+     * table and the polling list itself. There is a guard element
+     * between the two structures.
      */
         pollingListNeeded += 10;
         if (pollingListNeeded > pollingSlotsAllocated)
         {
-            if (NULL != pollingList) PR_DELETE(pollingList);
-            pollingList = (struct pollfd*)PR_MALLOC(
-                pollingListNeeded * sizeof(struct pollfd));
-            PR_ASSERT(NULL != pollingList);
+            if (NULL != pollingOps) PR_Free(pollingOps);
+            pollingOps = (pt_Continuation**)PR_Malloc(
+                sizeof(pt_Continuation**) + pollingListNeeded * 
+                    (sizeof(struct pollfd) + sizeof(pt_Continuation*)));
+            PR_ASSERT(NULL != pollingOps);
             pollingSlotsAllocated = pollingListNeeded;
+            pollingOps[pollingSlotsAllocated] = (pt_Continuation*)-1;
+            pollingList = (struct pollfd*)(&pollingOps[pollingSlotsAllocated + 1]);
+            
         }
 
 #if defined(DEBUG)
@@ -662,6 +587,8 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
 #endif
                     break;
                 }
+                PR_ASSERT((pt_Continuation*)-1 == pollingOps[pollingSlotsAllocated]);
+                pollingOps[pollingListUsed] = op;
                 pollingList[pollingListUsed].revents = 0;
                 pollingList[pollingListUsed].fd = op->arg1.osfd;
                 pollingList[pollingListUsed].events = op->event;
@@ -694,16 +621,18 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
          * the end of the list. That means that more items got added
          * to the list than we anticipated. So, forget this iteration,
          * go around the horn again.
+         *
          * One would hope this doesn't happen all that often.
          */
         if (NULL != op) continue;  /* make it rethink things */
+
+        PR_ASSERT((pt_Continuation*)-1 == pollingOps[pollingSlotsAllocated]);
 
         rv = poll(pollingList, pollingListUsed, msecs);
         
         if ((-1 == rv) && ((errno == EINTR) || (errno == EAGAIN)))
             continue; /* go around the loop again */
 
-        PR_Lock(pt_tq.ml);
         if (rv > 0)
         {
             /*
@@ -718,42 +647,45 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
              * the polling list.
              */
 
-            op = pt_tq.head;
             for (pollIndex = 0; pollIndex < pollingListUsed; ++pollIndex)
             {
-                PR_ASSERT(NULL != op);
-                if (0 != pollingList[pollIndex].revents)
-                {
-                    /*
-                     * This one wants attention. Redo the operation.
-                     * We know that there can only be more elements
-                     * in the op list than we knew about when we created
-                     * the poll list. Therefore, we might have to skip
-                     * a few ops to find the right one to operate on.
-                     */
-                    while ((pollingList[pollIndex].fd != op->arg1.osfd)
-                    || (pollingList[pollIndex].events != op->event))
-                    {
-                        PR_ASSERT(NULL != op->next);  /* it has to be in there */
-                        op = op->next;  /* keep advancing down the list */
-                    }
+                PRIntn fd = pollingList[pollIndex].fd;
+                PRInt16 events = pollingList[pollIndex].events;
+                PRInt16 revents = pollingList[pollIndex].revents;
 
-                    /*
-                     * Skip over all those not in progress. They'll be
-                     * pruned next time we build a polling list. Call
-                     * the continuation function. If it reports completion,
-                     * finish off the operation.
-                     */
-                    if ((pt_continuation_pending == op->status)
-                    && (op->function(op, pollingList[pollIndex].revents)))
-                    {
-                        next_op = pt_FinishTimedInternal(op);
-                        if (op == my_op) goto recycle;
-                        else op = next_op;
-                    }
-                    continue;
+                op = pollingOps[pollIndex];  /* this is the operation */
+
+                /* (ref: Bug #153459)
+                ** In case of POLLERR we let the operation retry in hope
+                ** of getting a more definitive OS error.
+                */
+                if ((revents & POLLNVAL)  /* busted in all cases */
+                || ((events & POLLOUT) && (revents & POLLHUP)))  /* write op & hup */
+                {
+                    PR_Lock(pt_tq.ml);
+                    op->result.code = -1;
+                    if (POLLNVAL & revents) op->syserrno = EBADF;
+                    else if (POLLHUP & revents) op->syserrno = EPIPE;
+                    (void)pt_FinishTimedInternal(op);
+                    if (op == my_op) goto recycle;
+                    PR_Unlock(pt_tq.ml);
                 }
-                op = op->next;  /* progress to next operation */
+                else if ((0 != revents)
+                && (pt_continuation_pending == op->status)
+                && (op->function(op, revents)))
+                {
+                /*
+                 * Only good?(?) revents left. Operations not pending
+                 * will be pruned next time we build a list. This operation
+                 * will be pruned if the continueation indicates it is
+                 * finished.
+                 */
+
+                    PR_Lock(pt_tq.ml);
+                    (void)pt_FinishTimedInternal(op);
+                    if (op == my_op) goto recycle;
+                    PR_Unlock(pt_tq.ml);
+                }
             }
         }
 
@@ -763,6 +695,7 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
          * wire are lucky, but none the less, valid.
          */
         now = PR_IntervalNow();
+        PR_Lock(pt_tq.ml);
         while ((NULL != pt_tq.head)
         && (PR_INTERVAL_NO_TIMEOUT != pt_tq.head->timeout))
         {
@@ -783,8 +716,10 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
              */
             if (op == my_op) goto recycle;  /* exit w/o unlocking */
         }
-        PR_Unlock(pt_tq.ml);  /* unlock and go back around again */
+        PR_Unlock(pt_tq.ml);
     }
+
+    PR_NOT_REACHED("This is a while(true) loop /w no breaks");
 
 recycle:
     /*
@@ -805,6 +740,7 @@ recycle:
     ** the lock held as well. Seems odd, doesn't it?
     */
 
+    /* $$$ should this be called with the lock held? $$$ */
     PR_SetThreadPriority(pt_tq.thread, priority);  /* reset back to caller's */
 
     PR_ASSERT((NULL == pt_tq.head) == (0 == pt_tq.op_count));
@@ -827,7 +763,6 @@ recycle:
 
 static PRIntn pt_Continue(pt_Continuation *op)
 {
-    PRIntn rc;
     PRStatus rv;
     PRThread *self = PR_GetCurrentThread();
     /* lazy allocation of the thread's cv */
@@ -944,8 +879,13 @@ static PRBool pt_recv_cont(pt_Continuation *op, PRInt16 revents)
      * not (and probably will not) satisfy the request. The only
      * error we continue is EWOULDBLOCK|EAGAIN.
      */
+#if defined(SOLARIS)
+    op->result.code = read(
+        op->arg1.osfd, op->arg2.buffer, op->arg3.amount);
+#else
     op->result.code = recv(
         op->arg1.osfd, op->arg2.buffer, op->arg3.amount, op->arg4.flags);
+#endif
     op->syserrno = errno;
     return ((-1 == op->result.code) && 
             (EWOULDBLOCK == op->syserrno || EAGAIN == op->syserrno)) ?
@@ -954,6 +894,7 @@ static PRBool pt_recv_cont(pt_Continuation *op, PRInt16 revents)
 
 static PRBool pt_send_cont(pt_Continuation *op, PRInt16 revents)
 {
+    PRIntn bytes;
     /*
      * We want to write the entire amount out, no matter how many
      * tries it takes. Keep advancing the buffer and the decrementing
@@ -961,8 +902,12 @@ static PRBool pt_send_cont(pt_Continuation *op, PRInt16 revents)
      * (which should be the original amount) when finished (or an
      * error).
      */
-    PRIntn bytes = send(
+#if defined(SOLARIS)
+    bytes = write(op->arg1.osfd, op->arg2.buffer, op->arg3.amount);
+#else
+    bytes = send(
         op->arg1.osfd, op->arg2.buffer, op->arg3.amount, op->arg4.flags);
+#endif
     op->syserrno = errno;
     if (bytes > 0)  /* this is progress */
     {
@@ -980,6 +925,7 @@ static PRBool pt_send_cont(pt_Continuation *op, PRInt16 revents)
 
 static PRBool pt_write_cont(pt_Continuation *op, PRInt16 revents)
 {
+    PRIntn bytes;
     /*
      * We want to write the entire amount out, no matter how many
      * tries it takes. Keep advancing the buffer and the decrementing
@@ -987,8 +933,7 @@ static PRBool pt_write_cont(pt_Continuation *op, PRInt16 revents)
      * (which should be the original amount) when finished (or an
      * error).
      */
-    PRIntn bytes = write(
-        op->arg1.osfd, op->arg2.buffer, op->arg3.amount);
+    bytes = write(op->arg1.osfd, op->arg2.buffer, op->arg3.amount);
     op->syserrno = errno;
     if (bytes > 0)  /* this is progress */
     {
@@ -1006,6 +951,8 @@ static PRBool pt_write_cont(pt_Continuation *op, PRInt16 revents)
 
 static PRBool pt_writev_cont(pt_Continuation *op, PRInt16 revents)
 {
+    PRIntn bytes;
+    struct iovec *iov = (struct iovec*)op->arg2.buffer;
     /*
      * Same rules as write, but continuing seems to be a bit more
      * complicated. As the number of bytes sent grows, we have to
@@ -1013,8 +960,7 @@ static PRBool pt_writev_cont(pt_Continuation *op, PRInt16 revents)
      * modify an individual vector parms or we might have to eliminate
      * a pair altogether.
      */
-    struct iovec *iov = (struct iovec*)op->arg2.buffer;
-    PRIntn bytes = writev(op->arg1.osfd, iov, op->arg3.amount);
+    bytes = writev(op->arg1.osfd, iov, op->arg3.amount);
     op->syserrno = errno;
     if (bytes > 0)  /* this is progress */
     {
@@ -1116,11 +1062,6 @@ static PRBool pt_hpux_transmitfile_cont(pt_Continuation *op, PRInt16 revents)
 void _PR_InitIO()
 {
     PRIntn rv;
-    _pr_stdin = pt_SetMethods(0, PR_DESC_FILE);
-    _pr_stdout = pt_SetMethods(1, PR_DESC_FILE);
-    _pr_stderr = pt_SetMethods(2, PR_DESC_FILE);
-
-    PR_ASSERT(_pr_stdin && _pr_stdout && _pr_stderr);
 
     pt_tq.ml = PR_NewLock();
     PR_ASSERT(NULL != pt_tq.ml);
@@ -1138,11 +1079,14 @@ void _PR_InitIO()
     _pr_flock_lock = PR_NewLock();
     PR_ASSERT(NULL != _pr_flock_lock);
     _pr_rename_lock = PR_NewLock();
-    PR_ASSERT(NULL != _pr_rename_lock);
+    PR_ASSERT(NULL != _pr_rename_lock); 
 
-    pt_fd_cache.ml = PR_NewLock();
-    PR_ASSERT(NULL != pt_fd_cache.ml);
-    pt_fd_cache.limit = FD_SETSIZE;
+    _PR_InitFdCache();  /* do that */   
+
+    _pr_stdin = pt_SetMethods(0, PR_DESC_FILE);
+    _pr_stdout = pt_SetMethods(1, PR_DESC_FILE);
+    _pr_stderr = pt_SetMethods(2, PR_DESC_FILE);
+    PR_ASSERT(_pr_stdin && _pr_stdout && _pr_stderr);
 }  /* _PR_InitIO */
 
 PR_IMPLEMENT(PRFileDesc*) PR_GetSpecialFD(PRSpecialFD osfd)
@@ -1194,9 +1138,9 @@ static void pt_MapError(void (*mapper)(PRIntn), PRIntn syserrno)
 
 static PRStatus pt_Close(PRFileDesc *fd)
 {
-    PRIntn syserrno, rv = 0;
-    if ((NULL == fd) || (NULL == fd->secret) ||
-				(_PR_FILEDESC_OPEN != fd->secret->state))
+    if ((NULL == fd) || (NULL == fd->secret)
+        || ((_PR_FILEDESC_OPEN != fd->secret->state)
+        && (_PR_FILEDESC_CLOSED != fd->secret->state)))
     {
         PR_SetError(PR_BAD_DESCRIPTOR_ERROR, 0);
         return PR_FAILURE;
@@ -1205,17 +1149,14 @@ static PRStatus pt_Close(PRFileDesc *fd)
 
     if (_PR_FILEDESC_OPEN == fd->secret->state)
     {
+        if (-1 == close(fd->secret->md.osfd))
+        {
+            pt_MapError(_PR_MD_MAP_CLOSE_ERROR, errno);
+            return PR_FAILURE;
+        }
         fd->secret->state = _PR_FILEDESC_CLOSED;
-        rv = close(fd->secret->md.osfd);
-        syserrno = errno;
     }
-
-    pt_Putfd(fd);
-    if (-1 == rv)
-    {
-        pt_MapError(_PR_MD_MAP_CLOSE_ERROR, syserrno);
-        return PR_FAILURE;
-    }
+    _PR_Putfd(fd);
     return PR_SUCCESS;
 }  /* pt_Close */
 
@@ -1223,7 +1164,7 @@ static PRInt32 pt_Read(PRFileDesc *fd, void *buf, PRInt32 amount)
 {
     PRInt32 syserrno, bytes = -1;
 
-    if (pt_TestAbort()) return PR_FAILURE;
+    if (pt_TestAbort()) return bytes;
 
     bytes = read(fd->secret->md.osfd, buf, amount);
     syserrno = errno;
@@ -1251,7 +1192,7 @@ static PRInt32 pt_Write(PRFileDesc *fd, const void *buf, PRInt32 amount)
     PRInt32 syserrno, bytes = -1;
     PRBool fNeedContinue = PR_FALSE;
 
-    if (pt_TestAbort()) return PR_FAILURE;
+    if (pt_TestAbort()) return bytes;
 
     bytes = write(fd->secret->md.osfd, buf, amount);
     syserrno = errno;
@@ -1381,38 +1322,53 @@ static PRInt32 pt_Writev(
 
 static PRInt32 pt_Seek(PRFileDesc *fd, PRInt32 offset, PRSeekWhence whence)
 {
-    PRIntn how;
-    off_t pos = -1;
-    
-    if (pt_TestAbort()) return pos;
-
-    switch (whence)
-    {
-        case PR_SEEK_SET: how = SEEK_SET; break;
-        case PR_SEEK_CUR: how = SEEK_CUR; break;
-        case PR_SEEK_END: how = SEEK_END; break;
-        default:
-            PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-            return pos;
-    }
-    pos = lseek(fd->secret->md.osfd, offset, how);
-    if (pos == -1)
-        pt_MapError(_PR_MD_MAP_LSEEK_ERROR, errno);
-    return pos;
+    return _PR_MD_LSEEK(fd, offset, whence);
 }  /* pt_Seek */
 
 static PRInt64 pt_Seek64(PRFileDesc *fd, PRInt64 offset, PRSeekWhence whence)
 {
-    PRInt64 on;
-    PRInt32 off, position = -1;
-    LL_L2I(off, offset);  /* possible loss of bits */
-    LL_I2L(on, off);  /* get back original or notice we didn't */
-    if (LL_EQ(on, offset)) position = pt_Seek(fd, off, whence);
-    LL_I2L(on, position);  /* might not have worked */
-    return on;
+    return _PR_MD_LSEEK64(fd, offset, whence);
 }  /* pt_Seek64 */
 
-static PRInt32 pt_Available(PRFileDesc *fd)
+static PRInt32 pt_Available_f(PRFileDesc *fd)
+{
+    PRInt32 result, cur, end;
+
+    cur = _PR_MD_LSEEK(fd, 0, PR_SEEK_CUR);
+
+    if (cur >= 0)
+        end = _PR_MD_LSEEK(fd, 0, PR_SEEK_END);
+
+    if ((cur < 0) || (end < 0)) {
+        return -1;
+    }
+
+    result = end - cur;
+    _PR_MD_LSEEK(fd, cur, PR_SEEK_SET);
+
+    return result;
+}  /* pt_Available_f */
+
+static PRInt64 pt_Available64_f(PRFileDesc *fd)
+{
+    PRInt64 result, cur, end;
+    PRInt64 minus_one;
+
+    LL_I2L(minus_one, -1);
+    cur = _PR_MD_LSEEK64(fd, LL_ZERO, PR_SEEK_CUR);
+
+    if (LL_GE_ZERO(cur))
+        end = _PR_MD_LSEEK64(fd, LL_ZERO, PR_SEEK_END);
+
+    if (!LL_GE_ZERO(cur) || !LL_GE_ZERO(end)) return minus_one;
+
+    LL_SUB(result, end, cur);
+    (void)_PR_MD_LSEEK64(fd, cur, PR_SEEK_SET);
+
+    return result;
+}  /* pt_Available64_f */
+
+static PRInt32 pt_Available_s(PRFileDesc *fd)
 {
     PRInt32 rv, bytes = -1;
     if (pt_TestAbort()) return bytes;
@@ -1422,70 +1378,31 @@ static PRInt32 pt_Available(PRFileDesc *fd)
     if (rv == -1)
         pt_MapError(_PR_MD_MAP_SOCKETAVAILABLE_ERROR, errno);
     return bytes;
-}  /* pt_Available */
+}  /* pt_Available_s */
 
-static PRInt64 pt_Available64(PRFileDesc *fd)
+static PRInt64 pt_Available64_s(PRFileDesc *fd)
 {
     PRInt64 rv;
-    PRInt32 avail = pt_Available(fd);
-    LL_I2L(rv, avail);
+    LL_I2L(rv, pt_Available_s(fd));
     return rv;
-}  /* pt_Available64 */
+}  /* pt_Available64_s */
+
+static PRStatus pt_FileInfo(PRFileDesc *fd, PRFileInfo *info)
+{
+    PRInt32 rv = _PR_MD_GETOPENFILEINFO(fd, info);
+    return (-1 == rv) ? PR_FAILURE : PR_SUCCESS;
+}  /* pt_FileInfo */
+
+static PRStatus pt_FileInfo64(PRFileDesc *fd, PRFileInfo64 *info)
+{
+    PRInt32 rv = _PR_MD_GETOPENFILEINFO64(fd, info);
+    return (-1 == rv) ? PR_FAILURE : PR_SUCCESS;
+}  /* pt_FileInfo64 */
 
 static PRStatus pt_Synch(PRFileDesc *fd)
 {
     return (NULL == fd) ? PR_FAILURE : PR_SUCCESS;
 } /* pt_Synch */
-
-static PRStatus pt_FileInfo(PRFileDesc *fd, PRFileInfo *info)
-{
-    PRInt32 rv;
-    struct stat sb;
-    PRInt64 s, s2us;
- 
-    if ((rv = fstat(fd->secret->md.osfd, &sb)) == 0 )
-    {
-        if (info)
-        {
-            if (S_IFREG & sb.st_mode)
-                info->type = PR_FILE_FILE ;
-            else if (S_IFDIR & sb.st_mode)
-                info->type = PR_FILE_DIRECTORY;
-            else
-                info->type = PR_FILE_OTHER;
-            info->size = sb.st_size;
-#if defined(IRIX) && defined(HAVE_LONG_LONG)
-            info->modifyTime = (PR_USEC_PER_SEC * (PRInt64)sb.st_mtim.tv_sec);
-            info->creationTime = (PR_USEC_PER_SEC * (PRInt64)sb.st_ctim.tv_sec);
-            info->modifyTime = (PR_USEC_PER_SEC * (PRInt64)sb.st_mtime);
-            info->creationTime = (PR_USEC_PER_SEC * (PRInt64)sb.st_ctime);
-#else
-            LL_I2L(s, sb.st_mtime);
-            LL_I2L(s2us, PR_USEC_PER_SEC);
-            LL_MUL(s, s, s2us);
-            info->modifyTime = s;
-            LL_I2L(s, sb.st_ctime);
-            LL_MUL(s, s, s2us);
-            info->creationTime = s;
-#endif
-        }
-    }
-    return (0 == rv) ? PR_SUCCESS : PR_FAILURE;
-}  /* pt_FileInfo */
-
-static PRStatus pt_FileInfo64(PRFileDesc *fd, PRFileInfo64 *info)
-{
-    PRFileInfo info32;
-    PRStatus rv = pt_FileInfo(fd, &info32);
-    if (PR_SUCCESS == rv)
-    {
-        info->type = info32.type;
-        info->creationTime = info32.creationTime;
-        info->modifyTime = info32.modifyTime;
-        LL_I2L(info->size, info32.size);
-    }
-    return rv;
-}  /* pt_FileInfo64 */
 
 static PRStatus pt_Fsync(PRFileDesc *fd)
 {
@@ -1598,11 +1515,16 @@ static PRFileDesc* pt_Accept(
             if (osfd < 0) goto failed;
         }
     }
-#ifdef AIX
+#ifdef _PR_HAVE_SOCKADDR_LEN
     /* mask off the first byte of struct sockaddr (the length field) */
     if (addr)
-    addr->inet.family &= 0x00ff;
+    {
+        *((unsigned char *) addr) = 0;
+#ifdef IS_LITTLE_ENDIAN
+        addr->raw.family = ntohs(addr->raw.family);
 #endif
+    }
+#endif /* _PR_HAVE_SOCKADDR_LEN */
     newfd = pt_SetMethods(osfd, PR_DESC_SOCKET_TCP);
     if (newfd == NULL) close(osfd);  /* $$$ whoops! this doesn't work $$$ */
     else
@@ -1696,9 +1618,15 @@ static PRInt32 pt_Recv(
 {
     PRInt32 syserrno, bytes = -1;
 
-    if (pt_TestAbort()) return PR_FAILURE;
+    if (pt_TestAbort()) return bytes;
 
+    /* recv() is a much slower call on pre-2.6 Solaris than read(). */
+#if defined(SOLARIS)
+    PR_ASSERT(0 == flags);
+    bytes = read(fd->secret->md.osfd, buf, amount);
+#else
     bytes = recv(fd->secret->md.osfd, buf, amount, flags);
+#endif
     syserrno = errno;
 
     if ((bytes == -1) && (syserrno == EWOULDBLOCK || syserrno == EAGAIN)
@@ -1744,9 +1672,19 @@ static PRInt32 pt_Send(
 #define PT_SENDBUF_CAST
 #endif
 
-    if (pt_TestAbort()) return PR_FAILURE;
+    if (pt_TestAbort()) return bytes;
 
+    /*
+     * On pre-2.6 Solaris, send() is much slower than write().
+     * On 2.6 and beyond, with in-kernel sockets, send() and
+     * write() are fairly equivalent in performance.
+     */
+#if defined(SOLARIS)
+    PR_ASSERT(0 == flags);
+    bytes = write(fd->secret->md.osfd, PT_SENDBUF_CAST buf, amount);
+#else
     bytes = send(fd->secret->md.osfd, PT_SENDBUF_CAST buf, amount, flags);
+#endif
     syserrno = errno;
 
     if ( (bytes >= 0) && (bytes < amount) && (!fd->secret->nonblocking) )
@@ -1801,7 +1739,7 @@ static PRInt32 pt_SendTo(
     PRInt32 syserrno, bytes = -1;
     PRBool fNeedContinue = PR_FALSE;
 
-    if (pt_TestAbort()) return PR_FAILURE;
+    if (pt_TestAbort()) return bytes;
 
     PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
     bytes = sendto(
@@ -1841,7 +1779,7 @@ static PRInt32 pt_RecvFrom(PRFileDesc *fd, void *buf, PRInt32 amount,
     PRInt32 syserrno, bytes = -1;
     pt_SockLen addr_len = sizeof(PRNetAddr);
 
-    if (pt_TestAbort()) return PR_FAILURE;
+    if (pt_TestAbort()) return bytes;
 
     bytes = recvfrom(
         fd->secret->md.osfd, buf, amount, flags,
@@ -1869,10 +1807,19 @@ static PRInt32 pt_RecvFrom(PRFileDesc *fd, void *buf, PRInt32 amount,
         bytes = pt_Continue(&op);
         syserrno = op.syserrno;
     }
-#ifdef AIX
-    /* mask off the first byte of struct sockaddr (the length field) */
-    if (addr) addr->inet.family &= 0x00ff;
+#ifdef _PR_HAVE_SOCKADDR_LEN
+    if (bytes >= 0)
+    {
+        /* mask off the first byte of struct sockaddr (the length field) */
+        if (addr)
+        {
+            *((unsigned char *) addr) = 0;
+#ifdef IS_LITTLE_ENDIAN
+            addr->raw.family = ntohs(addr->raw.family);
 #endif
+        }
+    }
+#endif /* _PR_HAVE_SOCKADDR_LEN */
     if (bytes < 0)
         pt_MapError(_PR_MD_MAP_RECVFROM_ERROR, syserrno);
     return bytes;
@@ -1974,6 +1921,12 @@ static PRInt32 pt_TransmitFile(
     PRInt32 hlen, PRTransmitFileFlags flags, PRIntervalTime timeout)
 {
     if (pt_TestAbort()) return -1;
+    /* The socket must be in blocking mode. */
+    if (sd->secret->nonblocking)
+    {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return -1;
+    }
 
 #ifdef HPUX11
     return pt_HPUXTransmitFile(sd, fd, headers, hlen, flags, timeout);
@@ -1993,31 +1946,30 @@ static PRInt32 pt_AcceptRead(
     PRInt32 rv = -1;
     PRNetAddr remote;
     PRFileDesc *accepted = NULL;
-    PRIntervalTime start, elapsed;
 
     if (pt_TestAbort()) return rv;
-
-    if (PR_INTERVAL_NO_TIMEOUT != timeout) start = PR_IntervalNow();
-    if ((accepted = PR_Accept(sd, &remote, timeout)) == NULL) return rv;
-
-    if (PR_INTERVAL_NO_TIMEOUT != timeout)
+    /* The socket must be in blocking mode. */
+    if (sd->secret->nonblocking)
     {
-        elapsed = (PRIntervalTime) (PR_IntervalNow() - start);
-        if (elapsed > timeout)
-        {
-            PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-            goto failed;
-        }
-        else timeout = timeout - elapsed;
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return rv;
     }
+
+    /*
+    ** The timeout does not apply to the accept portion of the
+    ** operation - it waits indefinitely.
+    */
+    accepted = PR_Accept(sd, &remote, PR_INTERVAL_NO_TIMEOUT);
+    if (NULL == accepted) return rv;
 
     rv = PR_Recv(accepted, buf, amount, 0, timeout);
     if (rv >= 0)
     {
         /* copy the new info out where caller can see it */
-        *nd = accepted;
-        *raddr = (PRNetAddr *)((char*)buf + amount);
+        PRPtrdiff aligned = (PRPtrdiff)buf + amount + sizeof(void*) - 1;
+        *raddr = (PRNetAddr*)(aligned & ~(sizeof(void*) - 1));
         memcpy(*raddr, &remote, PR_NETADDR_SIZE(&remote));
+        *nd = accepted;
         return rv;
     }
 
@@ -2035,14 +1987,20 @@ static PRStatus pt_GetSockName(PRFileDesc *fd, PRNetAddr *addr)
 
     rv = getsockname(
         fd->secret->md.osfd, (struct sockaddr*)addr, &addr_len);
-#ifdef AIX
-    /* mask off the first byte of struct sockaddr (the length field) */
-    if (addr) addr->inet.family &= 0x00ff;
-#endif
     if (rv == -1) {
         pt_MapError(_PR_MD_MAP_GETSOCKNAME_ERROR, errno);
         return PR_FAILURE;
     } else {
+#ifdef _PR_HAVE_SOCKADDR_LEN
+        /* mask off the first byte of struct sockaddr (the length field) */
+        if (addr)
+        {
+            *((unsigned char *) addr) = 0;
+#ifdef IS_LITTLE_ENDIAN
+            addr->raw.family = ntohs(addr->raw.family);
+#endif
+        }
+#endif /* _PR_HAVE_SOCKADDR_LEN */
         PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
         PR_ASSERT(IsValidNetAddrLen(addr, addr_len) == PR_TRUE);
         return PR_SUCCESS;
@@ -2059,14 +2017,20 @@ static PRStatus pt_GetPeerName(PRFileDesc *fd, PRNetAddr *addr)
     rv = getpeername(
         fd->secret->md.osfd, (struct sockaddr*)addr, &addr_len);
 
-#ifdef AIX
-    /* mask off the first byte of struct sockaddr (the length field) */
-    if (addr) addr->inet.family &= 0x00ff;
-#endif
     if (rv == -1) {
         pt_MapError(_PR_MD_MAP_GETPEERNAME_ERROR, errno);
         return PR_FAILURE;
     } else {
+#ifdef _PR_HAVE_SOCKADDR_LEN
+        /* mask off the first byte of struct sockaddr (the length field) */
+        if (addr)
+        {
+            *((unsigned char *) addr) = 0;
+#ifdef IS_LITTLE_ENDIAN
+            addr->raw.family = ntohs(addr->raw.family);
+#endif
+        }
+#endif /* _PR_HAVE_SOCKADDR_LEN */
         PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
         PR_ASSERT(IsValidNetAddrLen(addr, addr_len) == PR_TRUE);
         return PR_SUCCESS;
@@ -2409,8 +2373,8 @@ static PRIOMethods _pr_file_methods = {
     pt_Close,
     pt_Read,
     pt_Write,
-    pt_Available,
-    pt_Available64,
+    pt_Available_f,
+    pt_Available64_f,
     pt_Fsync,
     pt_Seek,
     pt_Seek64,
@@ -2440,8 +2404,8 @@ static PRIOMethods _pr_tcp_methods = {
     pt_Close,
     pt_Read,
     pt_Write,
-    pt_Available,
-    pt_Available64,
+    pt_Available_s,
+    pt_Available64_s,
     pt_Synch,
     (PRSeekFN)_PR_InvalidInt,
     (PRSeek64FN)_PR_InvalidInt64,
@@ -2473,8 +2437,8 @@ static PRIOMethods _pr_udp_methods = {
     pt_Close,
     pt_Read,
     pt_Write,
-    pt_Available,
-    pt_Available64,
+    pt_Available_s,
+    pt_Available64_s,
     pt_Synch,
     (PRSeekFN)_PR_InvalidInt,
     (PRSeek64FN)_PR_InvalidInt64,
@@ -2506,7 +2470,8 @@ static PRIOMethods _pr_udp_methods = {
 #endif
 
 #if defined(HPUX) || defined(OSF1) || defined(SOLARIS) || defined (IRIX) \
-    || defined(AIX) || defined(LINUX) || defined(FREEBSD) || defined(NETBSD)
+    || defined(AIX) || defined(LINUX) || defined(FREEBSD) || defined(NETBSD) \
+    || defined(OPENBSD)
 #define _PR_FCNTL_FLAGS O_NONBLOCK
 #else
 #error "Can't determine architecture"
@@ -2515,7 +2480,7 @@ static PRIOMethods _pr_udp_methods = {
 static PRFileDesc *pt_SetMethods(PRIntn osfd, PRDescType type)
 {
     PRInt32 flags, one = 1;
-    PRFileDesc *fd = pt_Getfd();
+    PRFileDesc *fd = _PR_Getfd();
     
     if (fd == NULL) PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
     else
@@ -2566,7 +2531,7 @@ PR_IMPLEMENT(const PRIOMethods*) PR_GetUDPMethods()
 PR_IMPLEMENT(PRFileDesc*) PR_AllocFileDesc(
     PRInt32 osfd, const PRIOMethods *methods)
 {
-    PRFileDesc *fd = pt_Getfd();
+    PRFileDesc *fd = _PR_Getfd();
 
     /*
      * Assert that the file descriptor is small enough to fit in the
@@ -2661,7 +2626,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode)
             PR_Lock(_pr_rename_lock);
     }
 
-    osfd = open(name, osflags, mode);
+    osfd = _md_iovector._open64(name, osflags, mode);
     syserrno = errno;
 
     if ((flags & PR_CREATE_FILE) && (NULL !=_pr_rename_lock))
@@ -2720,39 +2685,18 @@ PR_IMPLEMENT(PRStatus) PR_Access(const char *name, PRAccessHow how)
 
 PR_IMPLEMENT(PRStatus) PR_GetFileInfo(const char *fn, PRFileInfo *info)
 {
-    PRInt32 rv;
-    struct stat sb;
-    PRInt64 s, s2us;
-
-    if (pt_TestAbort()) return PR_FAILURE;
-
-    if ((rv = stat(fn, &sb)) == 0 )
-    {
-        if (info)
-        {
-            if (S_IFREG & sb.st_mode)
-                info->type = PR_FILE_FILE ;
-            else if (S_IFDIR & sb.st_mode)
-                info->type = PR_FILE_DIRECTORY;
-            else
-                info->type = PR_FILE_OTHER;
-            info->size = sb.st_size;
-#if defined(IRIX) && defined(HAVE_LONG_LONG)
-            info->modifyTime = (PR_USEC_PER_SEC * (PRInt64)sb.st_mtim.tv_sec);
-            info->creationTime = (PR_USEC_PER_SEC * (PRInt64)sb.st_ctim.tv_sec);
-#else
-            LL_I2L(s, sb.st_mtime);
-            LL_I2L(s2us, PR_USEC_PER_SEC);
-            LL_MUL(s, s, s2us);
-            info->modifyTime = s;
-            LL_I2L(s, sb.st_ctime);
-            LL_MUL(s, s, s2us);
-            info->creationTime = s;
-#endif
-        }
-    }
+    PRInt32 rv = _PR_MD_GETFILEINFO(fn, info);
     return (0 == rv) ? PR_SUCCESS : PR_FAILURE;
 }  /* PR_GetFileInfo */
+
+PR_IMPLEMENT(PRStatus) PR_GetFileInfo64(const char *fn, PRFileInfo64 *info)
+{
+    PRInt32 rv;
+
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+    rv = _PR_MD_GETFILEINFO64(fn, info);
+    return (0 == rv) ? PR_SUCCESS : PR_FAILURE;
+}  /* PR_GetFileInfo64 */
 
 PR_IMPLEMENT(PRStatus) PR_Rename(const char *from, const char *to)
 {
@@ -2791,8 +2735,13 @@ PR_IMPLEMENT(PRStatus) PR_CloseDir(PRDir *dir)
 
     if (NULL != dir->md.d)
     {
-        closedir(dir->md.d);
+        if (closedir(dir->md.d) == -1)
+        {
+            _PR_MD_MAP_CLOSEDIR_ERROR(errno);
+            return PR_FAILURE;
+        }
         dir->md.d = NULL;
+        PR_DELETE(dir);
     }
     return PR_SUCCESS;
 }  /* PR_CloseDir */
@@ -2863,6 +2812,8 @@ PR_IMPLEMENT(PRInt32) PR_Poll(
      */
     PRIntervalTime start, elapsed, remaining;
 
+    if (pt_TestAbort()) return -1;
+
     if (0 == npds) PR_Sleep(timeout);
     else
     {
@@ -2876,39 +2827,100 @@ PR_IMPLEMENT(PRInt32) PR_Poll(
         }
         for (index = 0; index < npds; ++index)
         {
-            PRFileDesc *bottom = pds[index].fd;
-            PRInt16 polling_flags = pds[index].in_flags;
+            PRInt16 in_flags_read = 0, in_flags_write = 0;
+            PRInt16 out_flags_read = 0, out_flags_write = 0;
 
-            /* 'bottom' is really 'top' until we make it the bottom */
-            if (NULL != bottom)
+            if ((NULL != pds[index].fd) && (0 != pds[index].in_flags))
             {
-                polling_flags = (bottom->methods->poll)(
-                    bottom, polling_flags, &pds[index].out_flags);
-
-                if (0 != (polling_flags & pds[index].out_flags))
-                    ready += 1;  /* this one is ready right now */
+                if (pds[index].in_flags & PR_POLL_READ)
+                {
+                    in_flags_read = (pds[index].fd->methods->poll)(
+                        pds[index].fd,
+                        pds[index].in_flags & ~PR_POLL_WRITE,
+                        &out_flags_read);
+                }
+                if (pds[index].in_flags & PR_POLL_WRITE)
+                {
+                    in_flags_write = (pds[index].fd->methods->poll)(
+                        pds[index].fd,
+                        pds[index].in_flags & ~PR_POLL_READ,
+                        &out_flags_write);
+                }
+                if ((0 != (in_flags_read & out_flags_read))
+                || (0 != (in_flags_write & out_flags_write)))
+                {
+                    /* this one is ready right now */
+                    if (0 == ready)
+                    {
+                        /*
+                         * We will return without calling the system
+                         * poll function.  So zero the out_flags
+                         * fields of all the poll descriptors before
+                         * this one.
+                         */
+                        int i;
+                        for (i = 0; i < index; i++)
+                        {
+                            pds[i].out_flags = 0;
+                        }
+                    }
+                    ready += 1;
+                    pds[index].out_flags = out_flags_read | out_flags_write;
+                }
                 else
                 {
                     /* now locate the NSPR layer at the bottom of the stack */
-                    bottom = PR_GetIdentitiesLayer(bottom, PR_NSPR_IO_LAYER);
+                    PRFileDesc *bottom = PR_GetIdentitiesLayer(
+                        pds[index].fd, PR_NSPR_IO_LAYER);
                     PR_ASSERT(NULL != bottom);  /* what to do about that? */
+                    pds[index].out_flags = 0;  /* pre-condition */
                     if ((NULL != bottom)
                     && (_PR_FILEDESC_OPEN == bottom->secret->state))
                     {
-                        syspoll[index].fd = bottom->secret->md.osfd;
-                        pds[index].out_flags = 0;  /* init the result */
-                        syspoll[index].events = 0;
-                        if (polling_flags & PR_POLL_READ)
-                            syspoll[index].events |= POLLIN;
-                        if (polling_flags & PR_POLL_WRITE)
-                            syspoll[index].events |= POLLOUT;
-                        if (polling_flags & PR_POLL_EXCEPT)
-                            syspoll[index].events |= POLLPRI;
+                        if (0 == ready)
+                        {
+                            syspoll[index].fd = bottom->secret->md.osfd;
+                            syspoll[index].events = 0;
+                            if (in_flags_read & PR_POLL_READ)
+                            {
+                                pds[index].out_flags |=
+                                    _PR_POLL_READ_SYS_READ;
+                                syspoll[index].events |= POLLIN;
+                            }
+                            if (in_flags_read & PR_POLL_WRITE)
+                            {
+                                pds[index].out_flags |=
+                                    _PR_POLL_READ_SYS_WRITE;
+                                syspoll[index].events |= POLLOUT;
+                            }
+                            if (in_flags_write & PR_POLL_READ)
+                            {
+                                pds[index].out_flags |=
+                                    _PR_POLL_WRITE_SYS_READ;
+                                syspoll[index].events |= POLLIN;
+                            }
+                            if (in_flags_write & PR_POLL_WRITE)
+                            {
+                                pds[index].out_flags |=
+                                    _PR_POLL_WRITE_SYS_WRITE;
+                                syspoll[index].events |= POLLOUT;
+                            }
+                            if (pds[index].in_flags & PR_POLL_EXCEPT)
+                                syspoll[index].events |= POLLPRI;
+                        }
                     }
                     else
                     {
+                        if (0 == ready)
+                        {
+                            int i;
+                            for (i = 0; i < index; i++)
+                            {
+                                pds[i].out_flags = 0;
+                            }
+                        }
                         ready += 1;  /* this will cause an abrupt return */
-                        pds[index].out_flags = POLLNVAL;  /* bogii */
+                        pds[index].out_flags = PR_POLL_NVAL;  /* bogii */
                     }
                 }
             }
@@ -2941,6 +2953,7 @@ retry:
                         goto retry;
                     else if (timeout == PR_INTERVAL_NO_WAIT)
                         ready = 0;  /* don't retry, just time out */
+                    else
                     {
                         elapsed = (PRIntervalTime) (PR_IntervalNow()
                                 - start);
@@ -2963,21 +2976,48 @@ retry:
             {
                 for (index = 0; index < npds; ++index)
                 {
-                    if (pds[index].fd == NULL) continue;
-                    PR_ASSERT(0 == pds[index].out_flags);
-                    if (0 != syspoll[index].revents)
+                    PRInt16 out_flags = 0;
+                    if ((NULL != pds[index].fd) && (0 != pds[index].in_flags))
                     {
-                        if (syspoll[index].revents & POLLIN)
-                            pds[index].out_flags |= PR_POLL_READ;
-                        if (syspoll[index].revents & POLLOUT)
-                            pds[index].out_flags |= PR_POLL_WRITE;
-                        if (syspoll[index].revents & POLLPRI)
-                            pds[index].out_flags |= PR_POLL_EXCEPT;
-                        if (syspoll[index].revents & POLLERR)
-                            pds[index].out_flags |= PR_POLL_ERR;
-                        if (syspoll[index].revents & POLLNVAL)
-                            pds[index].out_flags |= PR_POLL_NVAL;
+                        if (0 != syspoll[index].revents)
+                        {
+                            if (syspoll[index].revents & POLLIN)
+                            {
+                                if (pds[index].out_flags
+                                & _PR_POLL_READ_SYS_READ)
+                                {
+                                    out_flags |= PR_POLL_READ;
+                                }
+                                if (pds[index].out_flags
+                                & _PR_POLL_WRITE_SYS_READ)
+                                {
+                                    out_flags |= PR_POLL_WRITE;
+                                }
+                            }
+                            if (syspoll[index].revents & POLLOUT)
+                            {
+                                if (pds[index].out_flags
+                                & _PR_POLL_READ_SYS_WRITE)
+                                {
+                                    out_flags |= PR_POLL_READ;
+                                }
+                                if (pds[index].out_flags
+                                & _PR_POLL_WRITE_SYS_WRITE)
+                                {
+                                    out_flags |= PR_POLL_WRITE;
+                                }
+                            }
+                            if (syspoll[index].revents & POLLPRI)
+                                out_flags |= PR_POLL_EXCEPT;
+                            if (syspoll[index].revents & POLLERR)
+                                out_flags |= PR_POLL_ERR;
+                            if (syspoll[index].revents & POLLNVAL)
+                                out_flags |= PR_POLL_NVAL;
+                            if (syspoll[index].revents & POLLHUP)
+                                out_flags |= PR_POLL_HUP;
+                        }
                     }
+                    pds[index].out_flags = out_flags;
                 }
             }
         }
@@ -3281,13 +3321,13 @@ PR_IMPLEMENT(PRInt32) PR_Stat(const char *name, struct stat *buf)
     static PRBool unwarned = PR_TRUE;
     if (unwarned) unwarned = _PR_Obsolete("PR_Stat", "PR_GetFileInfo");
 
-    if (pt_TestAbort()) return PR_FAILURE;
+    if (pt_TestAbort()) return -1;
 
     if (-1 == stat(name, buf)) {
         pt_MapError(_PR_MD_MAP_STAT_ERROR, errno);
-        return PR_FAILURE;
+        return -1;
     } else {
-        return PR_SUCCESS;
+        return 0;
     }
 }
 #endif /* ! NO_NSPR_10_SUPPORT */

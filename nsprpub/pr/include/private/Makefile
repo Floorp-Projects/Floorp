@@ -24,7 +24,7 @@ include $(MOD_DEPTH)/config/config.mk
 RELEASE_HEADERS = pprio.h pprthred.h prpriv.h
 RELEASE_HEADERS_DEST = $(RELEASE_INCLUDE_DIR)/private
 
-HEADERS = $(RELEASE_HEADERS) primpl.h
+HEADERS = $(RELEASE_HEADERS) pprmwait.h primpl.h
 
 include $(MOD_DEPTH)/config/rules.mk
 

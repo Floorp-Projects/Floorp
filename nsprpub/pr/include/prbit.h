@@ -20,6 +20,7 @@
 #define prbit_h___
 
 #include "prtypes.h"
+PR_BEGIN_EXTERN_C
 
 /*
 ** A prbitmap_t is a long integer that can be used for bitmaps
@@ -87,4 +88,5 @@ PR_EXTERN(PRIntn) PR_FloorLog2(PRUint32 i);
 	(_log2) += 1;               \
   PR_END_MACRO
 
+PR_END_EXTERN_C
 #endif /* prbit_h___ */

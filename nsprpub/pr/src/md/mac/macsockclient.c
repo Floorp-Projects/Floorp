@@ -457,90 +457,75 @@ ErrorExit:
 
 PRInt32 _MD_poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
 {
-    PRPollDesc *pd, *epd;
-    PRInt32 n;
-
+    PRInt32 osfd;
 	fd_set rd, wt, ex;
+    PRFileDesc *bottom;
+    PRPollDesc *pd, *epd;
+    PRInt32 ready, maxfd = -1;
+    PRInt16 in_flags, out_flags;
 	struct timeval tv, *tvp = NULL;
-	int maxfd = -1;
 
 	FD_ZERO(&rd);
 	FD_ZERO(&wt);
 	FD_ZERO(&ex);
 
-    for (pd = pds, epd = pd + npds; pd < epd; pd++) {
-        PRInt32 osfd;
-        PRInt16 in_flags = pd->in_flags;
-        PRFileDesc *bottom = pd->fd;
+    for (pd = pds, epd = pd + npds; pd < epd; pd++)
+    {
+        if (NULL == pd->fd) continue;
 
-        if (NULL == bottom) {
-            continue;
-        }
-        while (bottom->lower != NULL) {
-            bottom = bottom->lower;
-        }
-        osfd = bottom->secret->md.osfd;
+        in_flags = (bottom->methods->poll)(pd->fd, pd->in_flags, &pd->out_flags);
+        if (0 != (in_flags & pd->out_flags)) ready += 1;
+        else
+        {
+            bottom = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
+            PR_ASSERT(NULL != bottom);
+            osfd = bottom->secret->md.osfd;
 
-		if (osfd > maxfd) {
-			maxfd = osfd;
-		}
-		if (in_flags & PR_POLL_READ)  {
-			FD_SET(osfd, &rd);
-		}
-		if (in_flags & PR_POLL_WRITE) {
-			FD_SET(osfd, &wt);
-		}
-		if (in_flags & PR_POLL_EXCEPT) {
-			FD_SET(osfd, &ex);
+		    if (osfd > maxfd) maxfd = osfd;
+		    if (in_flags & PR_POLL_READ) FD_SET(osfd, &rd);
+		    if (in_flags & PR_POLL_WRITE) FD_SET(osfd, &wt);
+		    if (in_flags & PR_POLL_EXCEPT) FD_SET(osfd, &ex);
 		}
     }
-	if (timeout != PR_INTERVAL_NO_TIMEOUT) {
-		tv.tv_sec = PR_IntervalToSeconds(timeout);
-		tv.tv_usec = PR_IntervalToMicroseconds(timeout) % PR_USEC_PER_SEC;
-		tvp = &tv;
-	}
-	
-	n = select(maxfd + 1, &rd, &wt, &ex, tvp);
-	
-	if (n > 0) {
-		n = 0;
-		for (pd = pds, epd = pd + npds; pd < epd; pd++) {
-			PRInt32 osfd;
-			PRInt16 in_flags = pd->in_flags;
-			PRInt16 out_flags = 0;
-			PRFileDesc *bottom = pd->fd;
 
-			if (NULL == bottom) {
-				continue;
-			}
-			while (bottom->lower != NULL) {
-				bottom = bottom->lower;
-			}
+	if (timeout != PR_INTERVAL_NO_TIMEOUT)
+	{
+        PRInt32 ticksPerSecond = PR_TicksPerSecond();
+        tv.tv_sec = timeout / ticksPerSecond;
+        tv.tv_usec = timeout - (ticksPerSecond * tv.tv_sec);
+        tv.tv_usec = (PR_USEC_PER_SEC * tv.tv_usec) / ticksPerSecond;
+        tvp = &tv;
+ 	}
+	
+	ready = select(maxfd + 1, &rd, &wt, &ex, tvp);
+	
+	if (ready > 0)
+	{
+		ready = 0;
+		for (pd = pds, epd = pd + npds; pd < epd; pd++)
+		{
+			out_flags = 0;
+			in_flags = pd->in_flags;
+
+			if ((NULL == pd->fd) || (0 == in_flags)) continue;
+			bottom = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
 			osfd = bottom->secret->md.osfd;
 
-			if ((in_flags & PR_POLL_READ) && FD_ISSET(osfd, &rd))  {
-				out_flags |= PR_POLL_READ;
-			}
-			if ((in_flags & PR_POLL_WRITE) && FD_ISSET(osfd, &wt)) {
-				out_flags |= PR_POLL_WRITE;
-			}
-			if ((in_flags & PR_POLL_EXCEPT) && FD_ISSET(osfd, &ex)) {
-				out_flags |= PR_POLL_EXCEPT;
-			}
-			pd->out_flags = out_flags;
-			if (out_flags) {
-				n++;
-			}
+            if (FD_ISSET(osfd, &ex)) out_flags |= PR_POLL_EXCEPT;
+            else if (FD_ISSET(osfd, &rd) || FD_ISSET(osfd, &wt))
+                out_flags = pd->in_flags & (PR_POLL_READ | PR_POLL_WRITE);
+            pd->out_flags = out_flags;
+            if (out_flags) ready++;
 		}
 		/* 
 		Can't do this assert because MacSock returns write fds even if we did not
 		set it in the original write fd set.
 		*/
-		/*PR_ASSERT(n > 0);*/
-	} else 
-		PR_ASSERT(n == 0);
+		/*PR_ASSERT(ready > 0);*/
+	}
+	else PR_ASSERT(ready == 0);
 
-	return n;
+	return ready;
 }
 
 int _MD_mac_get_nonblocking_connect_error(int osfd)

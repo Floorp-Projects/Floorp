@@ -43,31 +43,38 @@
 #else
 #endif
 
+/*
+ * A file name that cannot exist
+ */
+#define NO_SUCH_FILE "/no/such/file.tmp"
+
 static PRFileDesc *t1;
-PRIntn error_code;
 
 int main(int argc, char **argv)
 {
-
 
 #ifdef XP_MAC
 	SetupMacPrintfLog("pr_open_re.log");
 #endif
 	
-
-	
     PR_STDIO_INIT();
-	t1 = PR_Open("/usr/tmp/err02.tmp",  PR_RDWR, 0666);
-	if (t1 == NULL) 
+	t1 = PR_Open(NO_SUCH_FILE,  PR_RDONLY, 0666);
+	if (t1 == NULL) {
 		if (PR_GetError() == PR_FILE_NOT_FOUND_ERROR) {
-
-				printf ("error code is %d \n", PR_GetError());
-				printf ("PASS\n");
-				return 0;
+			printf ("error code is PR_FILE_NOT_FOUND_ERROR, as expected\n");
+			printf ("PASS\n");
+			return 0;
+		} else {
+			printf ("error code is %d \n", PR_GetError());
+			printf ("FAIL\n");
+			return 1;
 		}
-		else {
-					printf ("error code is %d \n", PR_GetError());
-					printf ("FAIL\n");
-					return 1;
-		}
+	}
+	printf ("File %s exists on this machine!?\n", NO_SUCH_FILE);
+	if (PR_Close(t1) == PR_FAILURE) {
+		printf ("cannot close file\n");
+		printf ("error code is %d \n", PR_GetError());
+	}
+	printf ("FAIL\n");
+	return 1;
 }			

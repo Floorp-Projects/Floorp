@@ -26,7 +26,9 @@ include $(MOD_DEPTH)/config/UNIX.mk
 # Temporary define for the Client; to be removed when binary release is used
 #
 ifdef MOZILLA_CLIENT
+ifneq ($(USE_PTHREADS),1)
 CLASSIC_NSPR = 1
+endif
 endif
 
 #
@@ -36,7 +38,7 @@ endif
 ifeq ($(CLASSIC_NSPR),1)
 	PTHREADS_USER =
 	USE_PTHREADS =
-	IMPL_STRATEGY = _CLASSIC
+	IMPL_STRATEGY = _EMU
 	DEFINES += -D_PR_LOCAL_THREADS_ONLY
 else
 ifeq ($(PTHREADS_USER),1)
@@ -44,15 +46,8 @@ ifeq ($(PTHREADS_USER),1)
 	IMPL_STRATEGY = _PTH_USER
 else
 	USE_PTHREADS = 1
+	IMPL_STRATEGY = _PTH
 endif
-endif
-
-#
-# XXX
-# Temporary define for the Client; to be removed when binary release is used
-#
-ifdef MOZILLA_CLIENT
-IMPL_STRATEGY =
 endif
 
 ifeq ($(CLASSIC_NSPR),1)
@@ -67,17 +62,13 @@ CPU_ARCH	= rs6000
 
 RANLIB		= ranlib
 
-ifdef USE_AUTOCONF
-OS_CFLAGS	=
-else
-
 OS_CFLAGS 	= -qro -qroconst -DAIX -DSYSV
 ifeq ($(CC),xlC_r)
 OS_CFLAGS 	+= -qarch=com
 endif
 
 ifeq ($(OS_RELEASE),4.1)
-OS_CFLAGS	+= -DAIX4_1
+OS_CFLAGS	+= -DAIX4_1 -D_PR_NO_LARGE_FILES
 else
 DSO_LDOPTS	= -brtl -bM:SRE -bnoentry -bexpall
 MKSHLIB		= $(LD) $(DSO_LDOPTS)
@@ -86,7 +77,14 @@ OS_CFLAGS	+= -DAIX4_3
 endif
 endif
 
-endif # USE_AUTOCONF
+ifeq (,$(filter-out 4.2 4.3,$(OS_RELEASE)))
+# On these OS revisions, localtime_r() is declared if _THREAD_SAFE
+# is defined.
+ifneq ($(CLASSIC_NSPR),1)
+OS_CFLAGS	+= -DHAVE_POINTER_LOCALTIME_R
+endif
+OS_CFLAGS	+= -D_PR_HAVE_OFF64_T
+endif
 
 #
 # Special link info for constructing AIX programs. On AIX we have to

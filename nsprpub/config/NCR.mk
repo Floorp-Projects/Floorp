@@ -31,9 +31,7 @@ export PATH:=$(PATH):/opt/ncc/bin
 RANLIB          = true
 GCC_FLAGS_EXTRA = -pipe
 
-ifndef USE_AUTOCONF
 DEFINES		+= -DSVR4 -DSYSV -DHAVE_STRERROR -DNCR -D_PR_LOCAL_THREADS_ONLY
-endif
 
 ifdef NS_USE_NATIVE
 CC              = cc

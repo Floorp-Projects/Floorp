@@ -48,12 +48,6 @@
 #include "plgetopt.h"
 #include "plerror.h"
 
-#ifdef XP_MAC
-#include "prlog.h"
-#define printf PR_LogPrint
-extern void SetupMacPrintfLog(char *logFile);
-#endif
-
 #define BASE_PORT 8001
 
 #define CLIENT_DATA        128
@@ -76,6 +70,7 @@ extern void SetupMacPrintfLog(char *logFile);
 PRIntervalTime timeoutTime;
 
 static PRInt32 count = 1;
+static PRFileDesc *output;
 static PRNetAddr serverAddr;
 static PRThreadScope thread_scope = PR_LOCAL_THREAD;
 
@@ -86,13 +81,8 @@ void Test_Assert(const char *msg, const char *file, PRIntn line)
 {
     failed_already=1;
     if (debug_mode) {
-#if defined(WIN16)
-        printf( "@%s:%d ", file, line);
-        printf(msg);
-#else
-        PR_fprintf(PR_STDERR, "@%s:%d ", file, line);
-        PL_FPrintError(PR_STDERR, msg);
-#endif
+        PR_fprintf(output,  "@%s:%d ", file, line);
+        PR_fprintf(output, msg);
     }
 }  /* Test_Assert */
 
@@ -106,7 +96,7 @@ void timeout_callback(void *magic)
 {
     TEST_ASSERT(magic == (void *)CALLBACK_MAGIC);
     if (debug_mode)
-        printf("timeout callback called okay\n");
+        PR_fprintf(output, "timeout callback called okay\n");
 }
 #endif
 
@@ -131,7 +121,7 @@ ClientThread(void *_action)
             if (!debug_mode)
                 failed_already=1;
             else    
-                printf("client: unable to create socket\n");
+                PR_fprintf(output, "client: unable to create socket\n");
             return;
         }
 
@@ -142,10 +132,9 @@ ClientThread(void *_action)
                 if (!debug_mode)
                     failed_already=1;
                 else    
-                    printf(
+                    PR_fprintf(output, 
                         "client: unable to connect to server (%ld, %ld, %ld, %ld)\n",
-                        iterations, rv, PR_GetError(),
-                        PR_GetOSError());
+                        iterations, rv, PR_GetError(), PR_GetOSError());
                 goto ErrorExit;
             }
 
@@ -155,25 +144,24 @@ ClientThread(void *_action)
                     if (!debug_mode)
                         failed_already=1;
                     else    
-                        printf("client: unable to send to server (%d, %ld, %ld)\n",
-                            CLIENT_DATA, rv,
-                            PR_GetError());
+                        PR_fprintf(output, 
+                            "client: unable to send to server (%d, %ld, %ld)\n",
+                            CLIENT_DATA, rv, PR_GetError());
                 	goto ErrorExit;
                 }
             } else {
-                PR_Sleep(PR_SecondsToInterval(TIMEOUTSECS+
-                    1));
+                PR_Sleep(PR_SecondsToInterval(TIMEOUTSECS + 1));
             }
         } else {
-            PR_Sleep(PR_SecondsToInterval(TIMEOUTSECS+
-                1));
+            PR_Sleep(PR_SecondsToInterval(TIMEOUTSECS + 1));
         }
         if (debug_mode)
-            printf(".");
+            PR_fprintf(output, ".");
         PR_Close(sock);
+		sock = NULL;
     }
     if (debug_mode)
-        printf("\n");
+        PR_fprintf(output, "\n");
 
 ErrorExit:
 	if (sock != NULL)
@@ -203,7 +191,7 @@ RunTest(PRInt32 acceptType, PRInt32 clientAction)
     if (!listenSock) {
         failed_already=1;
         if (debug_mode)
-            printf("unable to create listen socket\n");
+            PR_fprintf(output, "unable to create listen socket\n");
         return;
     }
     listenAddr.inet.family = PR_AF_INET;
@@ -213,7 +201,7 @@ RunTest(PRInt32 acceptType, PRInt32 clientAction)
     if (rv == PR_FAILURE) {
         failed_already=1;
         if (debug_mode)
-            printf("unable to bind\n");
+            PR_fprintf(output, "unable to bind\n");
         return;
     }
 
@@ -221,7 +209,7 @@ RunTest(PRInt32 acceptType, PRInt32 clientAction)
     if (rv == PR_FAILURE) {
         failed_already=1;
         if (debug_mode)
-            printf("unable to listen\n");
+            PR_fprintf(output, "unable to listen\n");
         return;
     }
 
@@ -232,7 +220,7 @@ RunTest(PRInt32 acceptType, PRInt32 clientAction)
     if (!clientThread) {
         failed_already=1;
         if (debug_mode)
-            printf("error creating client thread\n");
+            PR_fprintf(output, "error creating client thread\n");
         return;
     }
 
@@ -288,8 +276,7 @@ RunTest(PRInt32 acceptType, PRInt32 clientAction)
             case CLIENT_TIMEOUT_ACCEPT:
                 TEST_ASSERT(clientSock == 0);
                 if (debug_mode)
-                    printf("PR_GetError is %ld\n",
-                        PR_GetError());
+                    PR_fprintf(output, "PR_GetError is %ld\n", PR_GetError());
                 TEST_ASSERT(PR_GetError() == PR_IO_TIMEOUT_ERROR);
                 break;
             case CLIENT_NORMAL:
@@ -342,8 +329,7 @@ RunTest(PRInt32 acceptType, PRInt32 clientAction)
                 break;
             case CLIENT_TIMEOUT_SEND:
                 if (debug_mode)
-                    printf("clientSock = 0x%8.8lx\n",
-                        clientSock);
+                    PR_fprintf(output, "clientSock = 0x%8.8lx\n", clientSock);
                 TEST_ASSERT(clientSock);
                 TEST_ASSERT(status == -1);
                 TEST_ASSERT(PR_GetError() == PR_IO_TIMEOUT_ERROR);
@@ -431,7 +417,7 @@ static void Measure(void (*func)(void), const char *msg)
 
     d = (double)PR_IntervalToMicroseconds(stop - start);
     if (debug_mode)
-        printf("%40s: %6.2f usec\n", msg, d / count);
+        PR_fprintf(output, "%40s: %6.2f usec\n", msg, d / count);
 
 }
 
@@ -467,6 +453,7 @@ int main(int argc, char **argv)
     PL_DestroyOptState(opt);
 
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
+    output = PR_STDERR;
     PR_STDIO_INIT();
 
 #ifdef XP_MAC
@@ -476,7 +463,7 @@ int main(int argc, char **argv)
 
     timeoutTime = PR_SecondsToInterval(TIMEOUTSECS);
     if (debug_mode)
-        printf("\nRun accept() sucessful connection tests\n");
+        PR_fprintf(output, "\nRun accept() sucessful connection tests\n");
 
     Measure(AcceptUpdatedTest, "PR_Accept()");
     Measure(AcceptReadTest, "PR_AcceptRead()");
@@ -486,28 +473,19 @@ int main(int argc, char **argv)
     Measure(AcceptReadCallbackTest, "PR_NTFast_AcceptRead_WithTimeoutCallback()");
 #endif
     if (debug_mode)
-        printf("\nRun accept() timeout in the accept tests\n");
+        PR_fprintf(output, "\nRun accept() timeout in the accept tests\n");
 #ifdef WINNT
     Measure(TimeoutReadReadCallbackTest, "PR_NTFast_AcceptRead_WithTimeoutCallback()");
 #endif
     Measure(TimeoutReadUpdatedTest, "PR_Accept()");
     if (debug_mode)
-        printf("\nRun accept() timeout in the read tests\n");
+        PR_fprintf(output, "\nRun accept() timeout in the read tests\n");
     Measure(TimeoutReadReadTest, "PR_AcceptRead()");
 #ifdef WINNT
     Measure(TimeoutReadNotUpdatedTest, "PR_NTFast_Accept()");
     Measure(TimeoutReadReadNotUpdatedTest, "PR_NTFast_AcceptRead()");
     Measure(TimeoutReadReadCallbackTest, "PR_NTFast_AcceptRead_WithTimeoutCallback()");
 #endif
-    if(failed_already)
-    {
-        printf("FAIL\n");
-        return 1;
-    }
-    else
-    {
-        printf("PASS\n");
-        return 0;
-
-    }
+    PR_fprintf(output, "%s\n", (failed_already) ? "FAIL" : "PASS");
+    return failed_already;
 }

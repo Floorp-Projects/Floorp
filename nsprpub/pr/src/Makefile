@@ -21,10 +21,10 @@ MOD_DEPTH = ../..
 
 include $(MOD_DEPTH)/config/config.mk
 
-ifdef USE_PTHREADS
-    DIRS = io linking malloc md memory misc pthreads threads
-else
-    DIRS = io linking malloc md memory misc threads
+DIRS = io linking malloc md memory misc threads
+
+ifeq ($(USE_PTHREADS), 1)
+	DIRS += pthreads
 endif
 
 #
@@ -52,22 +52,22 @@ endif	# SunOS
 
 ifeq ($(OS_ARCH), IRIX)
 ifeq ($(USE_PTHREADS), 1)
-OS_LIBS += -lpthread
+OS_LIBS = -lpthread
 endif
 endif
 
 ifeq ($(OS_ARCH),AIX)
 ifeq ($(CLASSIC_NSPR),1)
 ifeq ($(OS_RELEASE),4.1)
-OS_LIBS		+= -lsvld -lc
+OS_LIBS		= -lsvld -lc
 else
-OS_LIBS		+= -ldl -lc
+OS_LIBS		= -ldl -lc
 endif
 else
 ifeq ($(OS_RELEASE),4.1)
-OS_LIBS		+= -lsvld -lC_r -lC -lpthreads -lc_r -lm /usr/lib/libc.a
+OS_LIBS		= -lpthreads -lsvld -lC_r -lC -lc_r -lm /usr/lib/libc.a
 else
-OS_LIBS		+= -ldl -lC_r -lC -lpthreads -lc_r -lm /usr/lib/libc.a
+OS_LIBS		= -lpthreads -ldl -lC_r -lC -lc_r -lm /usr/lib/libc.a
 endif
 endif
 endif
@@ -84,11 +84,11 @@ endif
 endif
 
 ifeq ($(OS_ARCH),OSF1)
-ifneq ($(OS_RELEASE),V2.0)
-OS_LIBS		= -lc_r
-endif
 ifeq ($(USE_PTHREADS), 1)
-OS_LIBS 	+= -lpthread -lrt
+OS_LIBS 	= -lpthread -lrt
+endif
+ifneq ($(OS_RELEASE),V2.0)
+OS_LIBS		+= -lc_r
 endif
 ifeq ($(USE_IPV6), 1)
 OS_LIBS		+= -lip6
@@ -104,16 +104,20 @@ endif
 endif
 
 ifeq ($(OS_ARCH),HP-UX)
-ifeq ($(basename $(OS_RELEASE)),A.09)
-OS_LIBS		= -ldld -L/lib/pa1.1 -lm
-else
-OS_LIBS		= -ldld -lm -lc
-endif
 ifeq ($(USE_PTHREADS), 1)
-OS_LIBS 	+= -lpthread
+ifeq (,$(filter-out B.10.10 B.10.20,$(OS_RELEASE)))
+OS_LIBS 	= -ldce
+else
+OS_LIBS 	= -lpthread
+endif
 endif
 ifeq ($(PTHREADS_USER), 1)
-OS_LIBS 	+= -lpthread
+OS_LIBS 	= -lpthread
+endif
+ifeq ($(basename $(OS_RELEASE)),A.09)
+OS_LIBS		+= -ldld -L/lib/pa1.1 -lm
+else
+OS_LIBS		+= -ldld -lm -lc
 endif
 endif
 
@@ -140,16 +144,20 @@ endif
 #
 
 OBJS = \
+    $(OBJDIR)/prvrsion.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prfdcach.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prmwait.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prmapopt.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/priometh.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prlayer.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prlog.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prmmap.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prpolevt.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prprf.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prscanf.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prstdio.$(OBJ_SUFFIX) \
     threads/$(OBJDIR)/prcmon.$(OBJ_SUFFIX) \
+	threads/$(OBJDIR)/prtpd.$(OBJ_SUFFIX) \
     linking/$(OBJDIR)/prlink.$(OBJ_SUFFIX) \
     malloc/$(OBJDIR)/prmalloc.$(OBJ_SUFFIX) \
     malloc/$(OBJDIR)/prmem.$(OBJ_SUFFIX) \
@@ -157,6 +165,7 @@ OBJS = \
     memory/$(OBJDIR)/prseg.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/pralarm.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/pratom.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prcountr.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prdtoa.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prenv.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prerror.$(OBJ_SUFFIX) \
@@ -165,8 +174,10 @@ OBJS = \
     misc/$(OBJDIR)/prlog2.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prlong.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prnetdb.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prolock.$(OBJ_SUFFIX)	 \
     misc/$(OBJDIR)/prsystem.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prthinfo.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prtrace.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prtime.$(OBJ_SUFFIX)
 
 ifdef USE_PTHREADS
@@ -185,13 +196,13 @@ OBJS += \
 	threads/$(OBJDIR)/prdump.$(OBJ_SUFFIX) \
 	threads/$(OBJDIR)/prmon.$(OBJ_SUFFIX) \
 	threads/$(OBJDIR)/prsem.$(OBJ_SUFFIX) \
-	threads/$(OBJDIR)/prtpd.$(OBJ_SUFFIX) \
 	threads/combined/$(OBJDIR)/prucpu.$(OBJ_SUFFIX) \
 	threads/combined/$(OBJDIR)/prucv.$(OBJ_SUFFIX) \
 	threads/combined/$(OBJDIR)/prulock.$(OBJ_SUFFIX) \
 	threads/combined/$(OBJDIR)/prustack.$(OBJ_SUFFIX) \
 	threads/combined/$(OBJDIR)/pruthr.$(OBJ_SUFFIX)
 endif
+
 
 ifeq ($(USE_IPV6), 1)
 OBJS += io/$(OBJDIR)/pripv6.$(OBJ_SUFFIX)
@@ -202,6 +213,11 @@ ifneq (,$(filter-out WIN16 OS2,$(OS_TARGET)))
 DLLBASE=/BASE:0x30000000
 RES=$(OBJDIR)/nspr.res
 RESNAME=nspr.rc
+ifdef MOZ_DEBUG
+ifdef GLOWCODE
+EXTRA_LIBS += $(GLOWDIR)/glowcode.lib
+endif
+endif
 endif
 
 ifeq ($(OS_TARGET), WIN16)
@@ -238,14 +254,8 @@ OBJS +=	md/windows/$(OBJDIR)/w95io.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/ntinrval.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/ntsem.$(OBJ_SUFFIX)	\
 	md/windows/$(OBJDIR)/win32_errors.$(OBJ_SUFFIX) \
-	md/windows/$(OBJDIR)/w32poll.$(OBJ_SUFFIX)
-ifeq ($(MOZ_BITS),32)
-ifdef MOZ_DEBUG
-ifdef GLOWCODE
-	EXTRA_LIBS += $(GLOWDIR)/glowcode.lib
-endif
-endif
-endif
+	md/windows/$(OBJDIR)/w32poll.$(OBJ_SUFFIX)	\
+	md/windows/$(OBJDIR)/w95dllmain.$(OBJ_SUFFIX)
 else
 ifeq ($(OS_TARGET), OS2)
 OBJS +=	md/os2/$(OBJDIR)/os2io.$(OBJ_SUFFIX) \
@@ -259,7 +269,8 @@ OBJS +=	md/os2/$(OBJDIR)/os2io.$(OBJ_SUFFIX) \
 	md/os2/$(OBJDIR)/os2_errors.$(OBJ_SUFFIX) \
 	md/os2/$(OBJDIR)/os2poll.$(OBJ_SUFFIX)
 else
-OBJS +=	md/windows/$(OBJDIR)/ntio.$(OBJ_SUFFIX) \
+OBJS +=	md/windows/$(OBJDIR)/ntdllmn.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/ntio.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/ntgc.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/ntthread.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/ntmisc.$(OBJ_SUFFIX) \
@@ -297,13 +308,53 @@ TARGETS		+= $(AIX_RTL_LIBC)
 endif
 
 #
+# Version information generation (begin)
+#
+RM = rm
+ECHO = echo
+INCLUDES = -I$(DIST)/include
+TINC = $(OBJDIR)/_pr_bld.h
+PROD = libnspr$(MOD_VERSION).$(DLL_SUFFIX)
+NOW = $(MOD_DEPTH)/config/$(OBJDIR)/now
+SH_DATE = $(shell date)
+SH_NOW = $(shell $(NOW))
+
+ifeq ($(OS_ARCH), WINNT)
+	SUF = i64
+	SH_QUOTE =
+else
+	SUF = LL
+	SH_QUOTE = "
+endif
+
+$(TINC):
+	@$(MAKE_OBJDIR)
+	@$(ECHO) $(SH_QUOTE)#define _BUILD_STRING \"$(SH_DATE)\"$(SH_QUOTE) > $(TINC)
+	@$(ECHO) $(SH_QUOTE)#define _BUILD_TIME $(SH_NOW)$(SUF)$(SH_QUOTE) >> $(TINC)
+	@$(ECHO) $(SH_QUOTE)#define _PRODUCTION \"$(PROD)\"$(SH_QUOTE) >> $(TINC)
+
+
+$(OBJDIR)/prvrsion.$(OBJ_SUFFIX): $(TINC)
+ifeq ($(OS_ARCH), WINNT)
+	$(CC) -Fo$@ -c $(CFLAGS) -I$(OBJDIR) prvrsion.c
+else
+	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) prvrsion.c
+endif
+#
+# Version information generation (end)
+#
+
+
+#
 # The Client build wants the shared libraries in $(DIST)/bin,
 # so we also install them there.
 #
 
 export:: $(TARGETS)
 	$(INSTALL) -m 444 $(TARGETS) $(DIST)/lib
+ifdef SHARED_LIBRARY
 	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(DIST)/bin
+endif
 ifeq ($(MOZ_BITS),16)
 	$(INSTALL) -m 444 $(TARGETS) $(MOZ_DIST)/lib
 	$(INSTALL) -m 444 $(TARGETS) $(MOZ_DIST)/bin

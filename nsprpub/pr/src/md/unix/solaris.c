@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#undef _FILE_OFFSET_BITS
+
 #include "primpl.h"
 
 
@@ -100,6 +102,21 @@ _MD_AtomicIncrement(PRInt32 *val)
 }
 
 PRInt32
+_MD_AtomicAdd(PRInt32 *ptr, PRInt32 val)
+{
+    PRInt32 rv;
+    if (mutex_lock(&_solaris_atomic) != 0)
+        PR_ASSERT(0);
+
+    rv = ((*ptr) += val);
+
+    if (mutex_unlock(&_solaris_atomic) != 0)\
+        PR_ASSERT(0);
+
+	return rv;
+}
+
+PRInt32
 _MD_AtomicDecrement(PRInt32 *val)
 {
     PRInt32 rv;
@@ -171,8 +188,18 @@ PRStatus _MD_CreateThread(PRThread *thread,
     /* mask out SIGALRM for native thread creation */
     thr_sigsetmask(SIG_BLOCK, &set, &oldset); 
 
-    flags = (state == PR_JOINABLE_THREAD) ?
-        THR_SUSPENDED : THR_SUSPENDED|THR_DETACHED;
+    /*
+     * Note that we create joinable threads with the THR_DETACHED
+     * flag.  The reasons why we don't use thr_join to implement
+     * PR_JoinThread are:
+     * - We use a termination condition variable in the PRThread
+     *   structure to implement PR_JoinThread across all classic
+     *   nspr implementation strategies.
+     * - The native threads may be recycled by NSPR to run other
+     *   new NSPR threads, so the native threads may not terminate
+     *   when the corresponding NSPR threads terminate.  
+     */
+    flags = THR_SUSPENDED|THR_DETACHED;
     if (thread->flags & (_PR_GCABLE_THREAD|_PR_BOUND_THREAD))
 		flags |= THR_BOUND;
 

@@ -32,11 +32,7 @@ else
 CPU_ARCH		= $(OS_TEST)
 endif
 
-ifdef USE_AUTOCONF
-OS_CFLAGS		= $(DSO_CFLAGS)
-else
 OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe -DNETBSD -DHAVE_STRERROR -DHAVE_BSD_FLOCK
-endif
 
 ifeq ($(USE_PTHREADS),1)
 OS_LIBS			= -lc_r

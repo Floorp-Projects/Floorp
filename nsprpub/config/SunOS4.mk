@@ -26,6 +26,7 @@ include $(MOD_DEPTH)/config/UNIX.mk
 DLL_SUFFIX	= so.1.0
 
 CC			= gcc
+CCC			= g++
 COMPILER_TAG		= _gcc
 
 RANLIB			= ranlib
@@ -35,11 +36,7 @@ CPU_ARCH		= sparc
 DEFINES			+= -D_PR_LOCAL_THREADS_ONLY
 # Purify doesn't like -MDupdate
 NOMD_OS_CFLAGS		= -Wall -Wno-format -DSUNOS4
-ifdef USE_AUTOCONF
-OS_CFLAGS		= $(DSO_CFLAGS)
-else
 OS_CFLAGS		= $(DSO_CFLAGS) $(NOMD_OS_CFLAGS) -MDupdate $(DEPENDENCIES)
-endif
 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
 

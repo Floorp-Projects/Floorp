@@ -36,11 +36,7 @@ MKSHLIB			= $(LD) $(DSO_LDOPTS)
 RANLIB			= /bin/true
 
 DEFINES			+= -D_PR_LOCAL_THREADS_ONLY
-ifdef USE_AUTOCONF
-OS_CFLAGS		=
-else
 OS_CFLAGS		= $(ODD_CFLAGS) -DSVR4 -D__SVR4 -DNEC -Dnec_ews -DHAVE_STRERROR
-endif
 OS_LIBS			= -lsocket -lnsl -ldl $(LDOPTIONS)
 LDOPTIONS		= -lc -L/usr/ucblib -lucb
 

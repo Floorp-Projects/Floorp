@@ -22,6 +22,15 @@
 
 #include "primpl.h"
 
+#define READ_FD     1
+#define WRITE_FD    2
+#define CONNECT_FD  3
+
+static PRInt32 socket_io_wait(
+    PRInt32 osfd, 
+    PRInt32 fd_type,
+    PRIntervalTime timeout);
+
 
 /* --- SOCKET IO --------------------------------------------------------- */
 
@@ -30,27 +39,23 @@ PRInt32
 _PR_MD_SOCKET(int af, int type, int flags)
 {
     SOCKET sock;
-    PRUint32  one = 1;
-    PRInt32   rv;
-    PRInt32   err;
+    u_long one = 1;
 
     sock = socket(af, type, flags);
 
     if (sock == INVALID_SOCKET ) 
     {
-        int rv = WSAGetLastError();
-        closesocket(sock);
-		_PR_MD_MAP_SOCKET_ERROR(rv);
-        return (PRInt32)INVALID_SOCKET;
+        _PR_MD_MAP_SOCKET_ERROR(WSAGetLastError());
+        return (PRInt32)sock;
     }
 
     /*
     ** Make the socket Non-Blocking
     */
-    rv = ioctlsocket( sock, FIONBIO, &one);
-    if ( rv != 0 )
+    if (ioctlsocket( sock, FIONBIO, &one) != 0)
     {
-        err = WSAGetLastError();
+        PR_SetError(PR_UNKNOWN_ERROR, WSAGetLastError());
+        closesocket(sock);
         return -1;
     }
 
@@ -64,11 +69,11 @@ _PR_MD_SOCKET(int af, int type, int flags)
 PRInt32
 _MD_CloseSocket(PRInt32 osfd)
 {
-    PRInt32 rv = SOCKET_ERROR;
+    PRInt32 rv;
 
     rv = closesocket((SOCKET) osfd );
-	if (rv < 0)
-		_PR_MD_MAP_SOCKET_ERROR(WSAGetLastError());
+    if (rv < 0)
+        _PR_MD_MAP_CLOSE_ERROR(WSAGetLastError());
 
     return rv;
 }
@@ -79,90 +84,39 @@ _MD_SocketAvailable(PRFileDesc *fd)
     PRInt32 result;
 
     if (ioctlsocket(fd->secret->md.osfd, FIONREAD, &result) < 0) {
-		PR_SetError(PR_BAD_DESCRIPTOR_ERROR, WSAGetLastError());
+        PR_SetError(PR_BAD_DESCRIPTOR_ERROR, WSAGetLastError());
         return -1;
     }
     return result;
 }
 
-PRInt32
-_MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
-              PRIntervalTime timeout )
+PRInt32 _MD_Accept(
+    PRFileDesc *fd, 
+    PRNetAddr *raddr, 
+    PRUint32 *rlen,
+    PRIntervalTime timeout )
 {
     PRInt32 osfd = fd->secret->md.osfd;
     PRInt32 rv, err;
-    fd_set rd;
-    struct timeval tv, *tvp;
 
-    FD_ZERO(&rd);
-    FD_SET((SOCKET)osfd, &rd);
-    if (timeout == PR_INTERVAL_NO_TIMEOUT) 
+    while ((rv = accept(osfd, (struct sockaddr *) raddr, rlen)) == -1) 
     {
-        while ((rv = accept(osfd, (struct sockaddr *) raddr, rlen)) == -1) 
+        err = WSAGetLastError();
+        if ((err == WSAEWOULDBLOCK) && (!fd->secret->nonblocking))
         {
-            if (((err = WSAGetLastError()) == WSAEWOULDBLOCK) 
-                && (!fd->secret->nonblocking))
+            if ((rv = socket_io_wait(osfd, READ_FD, timeout)) < 0)
             {
-                if ((rv = select(osfd + 1, &rd, NULL, NULL,NULL)) == -1) {
-					_PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
-                    break;
-            } 
-            } 
-            else {
-				_PR_MD_MAP_ACCEPT_ERROR(err);
-                break;
-        }
-        }
-        return(rv);
-    } 
-    else if (timeout == PR_INTERVAL_NO_WAIT) 
-    {
-        if ((rv = accept(osfd, (struct sockaddr *) raddr, rlen)) == -1)
-        {
-            if (((err = WSAGetLastError()) == WSAEWOULDBLOCK) 
-                && (!fd->secret->nonblocking))
-            {
-				PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-            }
-            else
-            {
-                _PR_MD_MAP_ACCEPT_ERROR(err);
+                return(-1);
             }
         }
-            return(rv);
-    } 
-    else 
-    {
-retry:
-        if ((rv = accept(osfd, (struct sockaddr *) raddr, rlen)) == -1) 
+        else
         {
-            if (((err = WSAGetLastError()) == WSAEWOULDBLOCK) 
-                && (!fd->secret->nonblocking))
-            {
-                tv.tv_sec = PR_IntervalToSeconds(timeout);
-                tv.tv_usec = PR_IntervalToMicroseconds(
-                    timeout - PR_SecondsToInterval(tv.tv_sec));
-                tvp = &tv;
-
-                rv = select(osfd + 1, &rd, NULL, NULL, tvp);
-                if (rv > 0) {
-                    goto retry;
-                } 
-                else if (rv == 0) 
-                {
-					PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-                    rv = -1;
-                } else {
-					_PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
-                }
-            } else {
-				_PR_MD_MAP_ACCEPT_ERROR(err);
-            }
+            _PR_MD_MAP_ACCEPT_ERROR(err);
+            break;
         }
     }
     return(rv);
-} /* end _MD_Accept() */
-
+} /* end _MD_accept() */
 
 PRInt32
 _PR_MD_CONNECT(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen, 
@@ -170,64 +124,25 @@ _PR_MD_CONNECT(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen,
 {
     PRInt32 osfd = fd->secret->md.osfd;
     PRInt32 rv;
-    int err, len;
-    fd_set wd, ex;
-    struct timeval tv, *tvp;
+    int     err;
 
     if ((rv = connect(osfd, (struct sockaddr *) addr, addrlen)) == -1) 
     {
         err = WSAGetLastError();
         if ((!fd->secret->nonblocking) && (err == WSAEWOULDBLOCK))
         {
-            if (timeout == PR_INTERVAL_NO_TIMEOUT)
-                tvp = NULL;
-            else 
+            rv = socket_io_wait(osfd, CONNECT_FD, timeout);
+            if ( rv < 0 )
             {
-                tv.tv_sec = PR_IntervalToSeconds(timeout);
-                tv.tv_usec = PR_IntervalToMicroseconds(
-                timeout - PR_SecondsToInterval(tv.tv_sec));
-                tvp = &tv;
+                return(-1);
             }
-
-            FD_ZERO(&wd);
-            FD_SET((SOCKET)osfd, &wd);
-            FD_ZERO(&ex);
-            FD_SET((SOCKET)osfd, &ex);
-            rv = select(osfd + 1, NULL, &wd, &ex, tvp);
-            if (rv > 0) 
+            else
             {
-                if (FD_ISSET((SOCKET)osfd, &ex))
-                {
-                    Sleep(0);
-                    len = sizeof(err);
-                    if (getsockopt(osfd, SOL_SOCKET, SO_ERROR,
-                            (char *) &err, &len) == SOCKET_ERROR)
-                    {  
-                        _PR_MD_MAP_GETSOCKOPT_ERROR(WSAGetLastError());
-                        return -1;
-                    }
-                    if (err != 0)
-                        _PR_MD_MAP_CONNECT_ERROR(err);
-                    else
-                        PR_SetError(PR_UNKNOWN_ERROR, 0);
-                    return -1;
-                }
-                if (FD_ISSET((SOCKET)osfd, &wd))
-                {
-                    /* it's connected */
-                    return 0;
-                }
+                PR_ASSERT(rv > 0);
+                /* it's connected */
+                return(0);
             } 
-            else if (rv == 0) 
-            {
-				PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-                return(-1);
-            } else if (rv < 0) 
-            {
-				_PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
-                return(-1);
-            }
-        } 
+        }
         _PR_MD_MAP_CONNECT_ERROR(err);
     }
     return rv;
@@ -242,9 +157,9 @@ _PR_MD_BIND(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen)
     rv = bind(fd->secret->md.osfd, (const struct sockaddr *)&(addr->inet), addrlen);
 
     if (rv == SOCKET_ERROR)  {
-		_PR_MD_MAP_BIND_ERROR(WSAGetLastError());
+        _PR_MD_MAP_BIND_ERROR(WSAGetLastError());
         return -1;
-	}
+    }
 
     return 0;
 }
@@ -256,42 +171,21 @@ _PR_MD_RECV(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
 {
     PRInt32 osfd = fd->secret->md.osfd;
     PRInt32 rv, err;
-    struct timeval tv, *tvp;
-    fd_set rd;
 
     while ((rv = recv( osfd, buf, amount, 0)) == -1) 
     {
         if (((err = WSAGetLastError()) == WSAEWOULDBLOCK) 
             && (!fd->secret->nonblocking))
         {
-            FD_ZERO(&rd);
-            FD_SET((SOCKET)osfd, &rd);
-            if (timeout == PR_INTERVAL_NO_TIMEOUT) 
+            rv = socket_io_wait(osfd, READ_FD, timeout);
+            if ( rv < 0 )
             {
-                tvp = NULL;
-            } 
-            else 
-            {
-                tv.tv_sec = PR_IntervalToSeconds(timeout);
-                tv.tv_usec = PR_IntervalToMicroseconds(
-                timeout - PR_SecondsToInterval(tv.tv_sec));
-                tvp = &tv;
-            }
-            if ((rv = select(osfd + 1, &rd, NULL, NULL, tvp)) == -1) 
-            {
-				_PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
                 return -1;
             } 
-            else if (rv == 0) 
-            {
-				PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-                rv = -1;
-                break;
-            }
         } 
         else 
         {
-			_PR_MD_MAP_RECV_ERROR(err);
+            _PR_MD_MAP_RECV_ERROR(err);
             break;
         }
     } /* end while() */
@@ -304,8 +198,6 @@ _PR_MD_SEND(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
 {
     PRInt32 osfd = fd->secret->md.osfd;
     PRInt32 rv, err;
-    struct timeval tv, *tvp;
-    fd_set wd;
     PRInt32 bytesSent = 0;
 
     while(bytesSent < amount ) 
@@ -315,62 +207,29 @@ _PR_MD_SEND(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
             if (((err = WSAGetLastError()) == WSAEWOULDBLOCK) 
                 && (!fd->secret->nonblocking))
             {
-                if ( timeout == PR_INTERVAL_NO_TIMEOUT ) 
+                rv = socket_io_wait(osfd, WRITE_FD, timeout);
+                if ( rv < 0 )
                 {
-                    tvp = NULL;
-                } 
-                else 
-                {
-                    tv.tv_sec = PR_IntervalToSeconds(timeout);
-                    tv.tv_usec = PR_IntervalToMicroseconds(
-                        timeout - PR_SecondsToInterval(tv.tv_sec));
-                    tvp = &tv;
-                }
-                FD_ZERO(&wd);
-                FD_SET((SOCKET)osfd, &wd);
-                if ((rv = select( osfd + 1, NULL, &wd, NULL,tvp)) == -1) {
-					_PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
-                    break;
-				}
-                if (rv == 0) 
-                {
-					PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-                        return -1;
+                    return -1;
                 }
             } 
-            else {
-				_PR_MD_MAP_SEND_ERROR(err);
+            else 
+            {
+                _PR_MD_MAP_SEND_ERROR(err);
                 return -1;
-        }
+            }
         }
         bytesSent += rv;
         if (fd->secret->nonblocking)
         {
             break;
         }
-        if ((rv >= 0) && (bytesSent < amount )) 
+        if (bytesSent < amount) 
         {
-            if ( timeout == PR_INTERVAL_NO_TIMEOUT ) 
+            rv = socket_io_wait(osfd, WRITE_FD, timeout);
+            if ( rv < 0 )
             {
-                tvp = NULL;
-            } 
-            else 
-            {
-                tv.tv_sec = PR_IntervalToSeconds(timeout);
-                tv.tv_usec = PR_IntervalToMicroseconds(
-                    timeout - PR_SecondsToInterval(tv.tv_sec));
-                tvp = &tv;
-            }
-            FD_ZERO(&wd);
-            FD_SET((SOCKET)osfd, &wd);
-            if ((rv = select(osfd + 1, NULL, &wd, NULL,tvp)) == -1) {
-				_PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
-                break;
-			}
-            if (rv == 0) 
-            {
-				PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-                    return -1;
+                return -1;
             }
         }
     }
@@ -383,8 +242,6 @@ _PR_MD_SENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
 {
     PRInt32 osfd = fd->secret->md.osfd;
     PRInt32 rv, err;
-    struct timeval tv, *tvp;
-    fd_set wd;
     PRInt32 bytesSent = 0;
 
     while(bytesSent < amount) 
@@ -395,62 +252,29 @@ _PR_MD_SENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
             if (((err = WSAGetLastError()) == WSAEWOULDBLOCK) 
                 && (!fd->secret->nonblocking))
             {
-                if ( timeout == PR_INTERVAL_NO_TIMEOUT ) 
+                rv = socket_io_wait(osfd, WRITE_FD, timeout);
+                if ( rv < 0 )
                 {
-                    tvp = NULL;
-                } 
-                else 
-                {
-                    tv.tv_sec = PR_IntervalToSeconds(timeout);
-                    tv.tv_usec = PR_IntervalToMicroseconds(
-                        timeout - PR_SecondsToInterval(tv.tv_sec));
-                    tvp = &tv;
-                }
-                FD_ZERO(&wd);
-                FD_SET((SOCKET)osfd, &wd);
-                if ((rv = select(osfd + 1, NULL, &wd, NULL, tvp)) == -1) {
-					_PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
-                    break;
-				}
-                if (rv == 0) 
-                {
-					PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-                        return -1;
+                    return -1;
                 }
             } 
-            else {
-				_PR_MD_MAP_SENDTO_ERROR(err);
+            else 
+            {
+                _PR_MD_MAP_SENDTO_ERROR(err);
                 return -1;
-        }
+            }
         }
         bytesSent += rv;
         if (fd->secret->nonblocking)
         {
             break;
         }
-        if ((rv >= 0) && (bytesSent < amount )) 
+        if (bytesSent < amount) 
         {
-            if ( timeout == PR_INTERVAL_NO_TIMEOUT ) 
+            rv = socket_io_wait(osfd, WRITE_FD, timeout);
+            if (rv < 0) 
             {
-                tvp = NULL;
-            } 
-            else 
-            {
-                tv.tv_sec = PR_IntervalToSeconds(timeout);
-                tv.tv_usec = PR_IntervalToMicroseconds(
-                    timeout - PR_SecondsToInterval(tv.tv_sec));
-                tvp = &tv;
-            }
-            FD_ZERO(&wd);
-            FD_SET((SOCKET)osfd, &wd);
-            if ((rv = select( osfd + 1, NULL, &wd, NULL, tvp)) == -1) {
-				_PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
-                break;
-			}
-            if (rv == 0) 
-            {
-				PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-                    return -1;
+                return -1;
             }
         }
     }
@@ -463,8 +287,6 @@ _PR_MD_RECVFROM(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
 {
     PRInt32 osfd = fd->secret->md.osfd;
     PRInt32 rv, err;
-    struct timeval tv, *tvp;
-    fd_set rd;
 
     while ((rv = recvfrom( osfd, buf, amount, 0, (struct sockaddr *) addr,
             addrlen)) == -1) 
@@ -472,33 +294,15 @@ _PR_MD_RECVFROM(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
         if (((err = WSAGetLastError()) == WSAEWOULDBLOCK) 
             && (!fd->secret->nonblocking))
         {
-            if (timeout == PR_INTERVAL_NO_TIMEOUT) 
+            rv = socket_io_wait(osfd, READ_FD, timeout);
+            if ( rv < 0)
             {
-                tvp = NULL;
-            } 
-            else 
-            {
-                tv.tv_sec = PR_IntervalToSeconds(timeout);
-                tv.tv_usec = PR_IntervalToMicroseconds(
-                timeout - PR_SecondsToInterval(tv.tv_sec));
-                tvp = &tv;
-            }
-            FD_ZERO(&rd);
-            FD_SET((SOCKET)osfd, &rd);
-            if ((rv = select(osfd + 1, &rd, NULL, NULL, tvp)) == -1) 
-            {
-				_PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
                 return -1;
-            } else if (rv == 0) 
-            {
-				PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-                rv = -1;
-                break;
-            }
+            } 
         } 
         else 
         {
-			_PR_MD_MAP_RECVFROM_ERROR(err);
+            _PR_MD_MAP_RECVFROM_ERROR(err);
             break;
         }
     }
@@ -546,9 +350,9 @@ _PR_MD_SHUTDOWN(PRFileDesc *fd, PRIntn how)
 PRInt32 rv;
 
     rv = shutdown(fd->secret->md.osfd, how);
-	if (rv < 0)
-		_PR_MD_MAP_SHUTDOWN_ERROR(WSAGetLastError());
-	return rv;
+    if (rv < 0)
+        _PR_MD_MAP_SHUTDOWN_ERROR(WSAGetLastError());
+    return rv;
 }
 
 PRStatus
@@ -557,12 +361,12 @@ _PR_MD_GETSOCKNAME(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *len)
     PRInt32 rv;
 
     rv = getsockname((SOCKET)fd->secret->md.osfd, (struct sockaddr *)addr, len);
-    if (rv==0)
-		return PR_SUCCESS;
-	else {
-		_PR_MD_MAP_GETSOCKNAME_ERROR(WSAGetLastError());
-		return PR_FAILURE;
-	}
+    if (rv==0) {
+        return PR_SUCCESS;
+    } else {
+        _PR_MD_MAP_GETSOCKNAME_ERROR(WSAGetLastError());
+        return PR_FAILURE;
+    }
 }
 
 PRStatus
@@ -571,12 +375,12 @@ _PR_MD_GETPEERNAME(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *len)
     PRInt32 rv;
 
     rv = getpeername((SOCKET)fd->secret->md.osfd, (struct sockaddr *)addr, len);
-    if (rv==0)
-		return PR_SUCCESS;
-	else {
-		_PR_MD_MAP_GETPEERNAME_ERROR(WSAGetLastError());
-		return PR_FAILURE;
-	}
+    if (rv==0) {
+        return PR_SUCCESS;
+    } else {
+        _PR_MD_MAP_GETPEERNAME_ERROR(WSAGetLastError());
+        return PR_FAILURE;
+    }
 }
 
 PRStatus
@@ -585,12 +389,12 @@ _PR_MD_GETSOCKOPT(PRFileDesc *fd, PRInt32 level, PRInt32 optname, char* optval, 
     PRInt32 rv;
 
     rv = getsockopt((SOCKET)fd->secret->md.osfd, level, optname, optval, optlen);
-    if (rv==0)
-		return PR_SUCCESS;
-	else {
-		_PR_MD_MAP_GETSOCKOPT_ERROR(WSAGetLastError());
-		return PR_FAILURE;
-	}
+    if (rv==0) {
+        return PR_SUCCESS;
+    } else {
+        _PR_MD_MAP_GETSOCKOPT_ERROR(WSAGetLastError());
+        return PR_FAILURE;
+    }
 }
 
 PRStatus
@@ -599,16 +403,210 @@ _PR_MD_SETSOCKOPT(PRFileDesc *fd, PRInt32 level, PRInt32 optname, const char* op
     PRInt32 rv;
 
     rv = setsockopt((SOCKET)fd->secret->md.osfd, level, optname, optval, optlen);
-    if (rv==0)
-		return PR_SUCCESS;
-	else {
-		_PR_MD_MAP_SETSOCKOPT_ERROR(WSAGetLastError());
-		return PR_FAILURE;
-	}
+    if (rv==0) {
+        return PR_SUCCESS;
+    } else {
+        _PR_MD_MAP_SETSOCKOPT_ERROR(WSAGetLastError());
+        return PR_FAILURE;
+    }
 }
 
 void
 _MD_MakeNonblock(PRFileDesc *f)
 {
-    return; // do nothing!
+    return; /* do nothing */
 }
+
+
+
+/*
+ * socket_io_wait --
+ *
+ * Wait for socket i/o, periodically checking for interrupt.
+ *
+ * This function returns 1 on success.  On failure, it returns
+ * -1 and sets the error codes.  It never returns 0.
+ */
+#define _PR_INTERRUPT_CHECK_INTERVAL_SECS 5
+
+static PRInt32 socket_io_wait(
+    PRInt32 osfd, 
+    PRInt32 fd_type,
+    PRIntervalTime timeout)
+{
+    PRInt32 rv = -1;
+    struct timeval tv;
+    PRThread *me = _PR_MD_CURRENT_THREAD();
+    PRIntervalTime elapsed, remaining;
+    fd_set rd_wr, ex;
+    int err, len;
+
+    switch (timeout) {
+        case PR_INTERVAL_NO_WAIT:
+            PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+            break;
+        case PR_INTERVAL_NO_TIMEOUT:
+            /*
+             * This is a special case of the 'default' case below.
+             * Please see the comments there.
+             */
+            tv.tv_sec = _PR_INTERRUPT_CHECK_INTERVAL_SECS;
+            tv.tv_usec = 0;
+            FD_ZERO(&rd_wr);
+            FD_ZERO(&ex);
+            do {
+                FD_SET(osfd, &rd_wr);
+                FD_SET(osfd, &ex);
+                switch( fd_type )
+                {
+                    case READ_FD:
+                        rv = _MD_SELECT(osfd + 1, &rd_wr, NULL, NULL, &tv);
+                        break;
+                    case WRITE_FD:
+                        rv = _MD_SELECT(osfd + 1, NULL, &rd_wr, NULL, &tv);
+                        break;
+                    case CONNECT_FD:
+                        rv = _MD_SELECT(osfd + 1, NULL, &rd_wr, &ex, &tv);
+                        break;
+                    default:
+                        PR_ASSERT(0);
+                        break;
+                } /* end switch() */
+                if (rv == -1 )
+                {
+                    _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
+                    break;
+                }
+                if ( rv > 0 && fd_type == CONNECT_FD )
+                {
+                    /*
+                     * Call Sleep(0) to work around a Winsock timing bug.
+                     */
+                    Sleep(0);
+                    if (FD_ISSET((SOCKET)osfd, &ex))
+                    {
+                        len = sizeof(err);
+                        if (getsockopt(osfd, SOL_SOCKET, SO_ERROR,
+                                (char *) &err, &len) == SOCKET_ERROR)
+                        {  
+                            _PR_MD_MAP_GETSOCKOPT_ERROR(WSAGetLastError());
+                            return -1;
+                        }
+                        if (err != 0)
+                            _PR_MD_MAP_CONNECT_ERROR(err);
+                        else
+                            PR_SetError(PR_UNKNOWN_ERROR, 0);
+                        return -1;
+                    }
+                    if (FD_ISSET((SOCKET)osfd, &rd_wr))
+                    {
+                        /* it's connected */
+                        return 1;
+                    }
+                    PR_ASSERT(0);
+                }
+                if (_PR_PENDING_INTERRUPT(me)) {
+                    me->flags &= ~_PR_INTERRUPT;
+                    PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+                    rv = -1;
+                    break;
+                }
+            } while (rv == 0);
+            break;
+        default:
+            remaining = timeout;
+            FD_ZERO(&rd_wr);
+            FD_ZERO(&ex);
+            do {
+                /*
+                 * We block in _MD_SELECT for at most
+                 * _PR_INTERRUPT_CHECK_INTERVAL_SECS seconds,
+                 * so that there is an upper limit on the delay
+                 * before the interrupt bit is checked.
+                 */
+                tv.tv_sec = PR_IntervalToSeconds(remaining);
+                if (tv.tv_sec > _PR_INTERRUPT_CHECK_INTERVAL_SECS) {
+                    tv.tv_sec = _PR_INTERRUPT_CHECK_INTERVAL_SECS;
+                    tv.tv_usec = 0;
+                } else {
+                    tv.tv_usec = PR_IntervalToMicroseconds(
+                        remaining -
+                        PR_SecondsToInterval(tv.tv_sec));
+                }
+                FD_SET(osfd, &rd_wr);
+                FD_SET(osfd, &ex);
+                switch( fd_type )
+                {
+                    case READ_FD:
+                        rv = _MD_SELECT(osfd + 1, &rd_wr, NULL, NULL, &tv);
+                        break;
+                    case WRITE_FD:
+                        rv = _MD_SELECT(osfd + 1, NULL, &rd_wr, NULL, &tv);
+                        break;
+                    case CONNECT_FD:
+                        rv = _MD_SELECT(osfd + 1, NULL, &rd_wr, &ex, &tv);
+                        break;
+                    default:
+                        PR_ASSERT(0);
+                        break;
+                } /* end switch() */
+                if (rv == -1)
+                {
+                    _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
+                    break;
+                }
+                if ( rv > 0 && fd_type == CONNECT_FD )
+                {
+                    /*
+                     * Call Sleep(0) to work around a Winsock timing bug.
+                     */
+                    Sleep(0);
+                    if (FD_ISSET((SOCKET)osfd, &ex))
+                    {
+                        len = sizeof(err);
+                        if (getsockopt(osfd, SOL_SOCKET, SO_ERROR,
+                                (char *) &err, &len) == SOCKET_ERROR)
+                        {  
+                            _PR_MD_MAP_GETSOCKOPT_ERROR(WSAGetLastError());
+                            return -1;
+                        }
+                        if (err != 0)
+                            _PR_MD_MAP_CONNECT_ERROR(err);
+                        else
+                            PR_SetError(PR_UNKNOWN_ERROR, 0);
+                        return -1;
+                    }
+                    if (FD_ISSET((SOCKET)osfd, &rd_wr))
+                    {
+                        /* it's connected */
+                        return 1;
+                    }
+                    PR_ASSERT(0);
+                }
+                if (_PR_PENDING_INTERRUPT(me)) {
+                    me->flags &= ~_PR_INTERRUPT;
+                    PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+                    rv = -1;
+                    break;
+                }
+                /*
+                 * We loop again if _MD_SELECT timed out and the
+                 * timeout deadline has not passed yet.
+                 */
+                if (rv == 0 )
+                {
+                    elapsed = PR_SecondsToInterval(tv.tv_sec) 
+                                + PR_MicrosecondsToInterval(tv.tv_usec);
+                    if (elapsed >= remaining) {
+                        PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                        rv = -1;
+                        break;
+                    } else {
+                        remaining = remaining - elapsed;
+                    }
+                }
+            } while (rv == 0 );
+            break;
+    }
+    return(rv);
+} /* end socket_io_wait() */

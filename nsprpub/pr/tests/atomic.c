@@ -22,7 +22,7 @@
 
 PRIntn main(PRIntn argc, char **argv)
 {
-    PRInt32 rv, test, result = 0;
+    PRInt32 rv, oldval, test, result = 0;
     PRFileDesc *output = PR_GetSpecialFD(PR_StandardOutput);
 
     test = -2;
@@ -41,6 +41,25 @@ PRIntn main(PRIntn argc, char **argv)
     PR_fprintf(
         output, "PR_AtomicIncrement(%d) == %d: %s\n",
         test, rv, (rv > 0) ? "PASSED" : "FAILED");
+
+    oldval = test = -2;
+    rv = PR_AtomicAdd(&test,1);
+    result = result | ((rv == -1) ? 0 : 1);
+    PR_fprintf(
+        output, "PR_AtomicAdd(%d,%d) == %d: %s\n",
+        oldval, 1, rv, (rv == -1) ? "PASSED" : "FAILED");
+	oldval = test;
+    rv = PR_AtomicAdd(&test, 4);
+    result = result | ((rv == 3) ? 0 : 1);
+    PR_fprintf(
+        output, "PR_AtomicAdd(%d,%d) == %d: %s\n",
+        oldval, 4, rv, (rv == 3) ? "PASSED" : "FAILED");
+	oldval = test;
+    rv = PR_AtomicAdd(&test, -6);
+    result = result | ((rv == -3) ? 0 : 1);
+    PR_fprintf(
+        output, "PR_AtomicAdd(%d,%d) == %d: %s\n",
+        oldval, -6, rv, (rv == -3) ? "PASSED" : "FAILED");
 
     test = 2;
     rv = PR_AtomicDecrement(&test);

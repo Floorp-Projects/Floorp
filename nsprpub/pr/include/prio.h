@@ -1408,8 +1408,7 @@ PR_EXTERN(PRInt32) PR_TransmitFile(
 **    void *buf
 **        A pointer to a buffer to receive data sent by the client.  This 
 **        buffer must be large enough to receive <amount> bytes of data
-**        and two PRNetAddr structures (thus allowing the runtime to align
-**        the addresses as needed).
+**        and two PRNetAddr structures, plus an extra 32 bytes.
 **    PRInt32 amount
 **        The number of bytes of client data to receive.  Does not include
 **        the size of the PRNetAddr structures.  If 0, no data will be read
@@ -1425,7 +1424,8 @@ PR_EXTERN(PRInt32) PR_TransmitFile(
 **        will only be valid if the function return does not indicate failure.
 **    PRNetAddr  **peerAddr,
 **        The address of the remote socket.  This parameter will only be
-**        valid if the function return does not indicate failure.
+**        valid if the function return does not indicate failure.  The
+**        returned address is not guaranteed to be properly aligned.
 ** 
 ** RETURNS:
 **     The number of bytes read from the client or -1 on failure.  The reason 
@@ -1570,12 +1570,9 @@ struct PRPollDesc {
 /*
 ** Bit values for PRPollDesc.in_flags or PRPollDesc.out_flags. Binary-or
 ** these together to produce the desired poll request.
-**
-** On Unix platforms where the poll() system call is available,
-** the various PR_POLL_XXX flags are mapped to the native poll flags.
 */
 
-#if defined(XP_UNIX) && defined(_PR_POLL_AVAILABLE)
+#if defined(_PR_POLL_BACKCOMPAT)
 
 #include <poll.h>
 #define PR_POLL_READ    POLLIN
@@ -1583,16 +1580,18 @@ struct PRPollDesc {
 #define PR_POLL_EXCEPT  POLLPRI
 #define PR_POLL_ERR     POLLERR     /* only in out_flags */
 #define PR_POLL_NVAL    POLLNVAL    /* only in out_flags when fd is bad */
+#define PR_POLL_HUP     POLLHUP     /* only in out_flags */
 
-#else  /* XP_UNIX, _PR_POLL_AVAILABLE */
+#else  /* _PR_POLL_BACKCOMPAT */
 
 #define PR_POLL_READ    0x1
 #define PR_POLL_WRITE   0x2
 #define PR_POLL_EXCEPT  0x4
 #define PR_POLL_ERR     0x8         /* only in out_flags */
 #define PR_POLL_NVAL    0x10        /* only in out_flags when fd is bad */
+#define PR_POLL_HUP     0x20        /* only in out_flags */
 
-#endif  /* XP_UNIX, _PR_POLL_AVAILABLE */
+#endif  /* _PR_POLL_BACKCOMPAT */
 
 /*
 *************************************************************************
@@ -1631,6 +1630,55 @@ struct PRPollDesc {
 */
 PR_EXTERN(PRInt32) PR_Poll(
     PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout);
+
+/*
+**************************************************************************
+**
+** Pollable events
+**
+** A pollable event is a special kind of file descriptor.
+** The only I/O operation you can perform on a pollable event
+** is to poll it with the PR_POLL_READ flag.  You can't
+** read from or write to a pollable event.
+**
+** The purpose of a pollable event is to combine event waiting
+** with I/O waiting in a single PR_Poll call.  Pollable events
+** are implemented using a pipe or a pair of TCP sockets
+** connected via the loopback address, therefore setting and
+** waiting for pollable events are expensive operating system
+** calls.  Do not use pollable events for general thread
+** synchronization. Use condition variables instead.
+**
+** A pollable event has two states: set and unset.  Events
+** are not queued, so there is no notion of an event count.
+** A pollable event is either set or unset.
+**
+** A new pollable event is created by a PR_NewPollableEvent
+** call and is initially in the unset state.
+**
+** PR_WaitForPollableEvent blocks the calling thread until
+** the pollable event is set, and then it atomically unsets
+** the pollable event before it returns.
+**
+** To set a pollable event, call PR_SetPollableEvent.
+**
+** One can call PR_Poll with the PR_POLL_READ flag on a pollable
+** event.  When the pollable event is set, PR_Poll returns with
+** the PR_POLL_READ flag set in the out_flags.
+**
+** To close a pollable event, call PR_DestroyPollableEvent
+** (not PR_Close).
+**
+**************************************************************************
+*/
+
+PR_EXTERN(PRFileDesc *) PR_NewPollableEvent(void);
+
+PR_EXTERN(PRStatus) PR_DestroyPollableEvent(PRFileDesc *event);
+
+PR_EXTERN(PRStatus) PR_SetPollableEvent(PRFileDesc *event);
+
+PR_EXTERN(PRStatus) PR_WaitForPollableEvent(PRFileDesc *event);
 
 PR_END_EXTERN_C
 

@@ -43,6 +43,9 @@
 #ifndef HAVE_STRERROR
 #define HAVE_STRERROR
 #endif
+#define _PR_POLL_AVAILABLE
+#define _PR_USE_POLL
+#define _PR_STAT_HAS_ONLY_ST_ATIME
 
 #undef _PR_HAVE_ATOMIC_OPS
 
@@ -117,6 +120,42 @@ struct _MDSegment {
     PRInt8 notused;
 };
 
+/*
+ * md-specific cpu structure field
+ */
+#define _PR_MD_MAX_OSFD FD_SETSIZE
+
+struct _MDCPU_Unix {
+    PRCList ioQ;
+    PRUint32 ioq_timeout;
+    PRInt32 ioq_max_osfd;
+    PRInt32 ioq_osfd_cnt;
+#ifndef _PR_USE_POLL
+    fd_set fd_read_set, fd_write_set, fd_exception_set;
+    PRInt16 fd_read_cnt[_PR_MD_MAX_OSFD],fd_write_cnt[_PR_MD_MAX_OSFD],
+				fd_exception_cnt[_PR_MD_MAX_OSFD];
+#else
+	struct pollfd *ioq_pollfds;
+	int ioq_pollfds_size;
+#endif	/* _PR_USE_POLL */
+};
+
+#define _PR_IOQ(_cpu)			((_cpu)->md.md_unix.ioQ)
+#define _PR_ADD_TO_IOQ(_pq, _cpu) PR_APPEND_LINK(&_pq.links, &_PR_IOQ(_cpu))
+#define _PR_FD_READ_SET(_cpu)		((_cpu)->md.md_unix.fd_read_set)
+#define _PR_FD_READ_CNT(_cpu)		((_cpu)->md.md_unix.fd_read_cnt)
+#define _PR_FD_WRITE_SET(_cpu)		((_cpu)->md.md_unix.fd_write_set)
+#define _PR_FD_WRITE_CNT(_cpu)		((_cpu)->md.md_unix.fd_write_cnt)
+#define _PR_FD_EXCEPTION_SET(_cpu)	((_cpu)->md.md_unix.fd_exception_set)
+#define _PR_FD_EXCEPTION_CNT(_cpu)	((_cpu)->md.md_unix.fd_exception_cnt)
+#define _PR_IOQ_TIMEOUT(_cpu)		((_cpu)->md.md_unix.ioq_timeout)
+#define _PR_IOQ_MAX_OSFD(_cpu)		((_cpu)->md.md_unix.ioq_max_osfd)
+#define _PR_IOQ_OSFD_CNT(_cpu)		((_cpu)->md.md_unix.ioq_osfd_cnt)
+#define _PR_IOQ_POLLFDS(_cpu)		((_cpu)->md.md_unix.ioq_pollfds)
+#define _PR_IOQ_POLLFDS_SIZE(_cpu)	((_cpu)->md.md_unix.ioq_pollfds_size)
+
+#define _PR_IOQ_MIN_POLLFDS_SIZE(_cpu)	32
+
 struct _MDCPU {
     struct _MDCPU_Unix md_unix;
 };
@@ -150,8 +189,16 @@ struct _MDCPU {
 #define _MD_FINAL_INIT					_PR_UnixInit
 #endif 
 
+#if defined(HPUX_LW_TIMER)
+extern void _PR_HPUX_LW_IntervalInit(void);
+extern PRIntervalTime _PR_HPUX_LW_GetInterval(void);
+#define _MD_INTERVAL_INIT                 _PR_HPUX_LW_IntervalInit
+#define _MD_GET_INTERVAL                  _PR_HPUX_LW_GetInterval
+#define _MD_INTERVAL_PER_SEC()            1000
+#else
 #define _MD_GET_INTERVAL                  _PR_UNIX_GetInterval
 #define _MD_INTERVAL_PER_SEC              _PR_UNIX_TicksPerSecond
+#endif
 
 /*
  * We wrapped the select() call.  _MD_SELECT refers to the built-in,
@@ -159,8 +206,6 @@ struct _MDCPU {
  */
 #define _MD_SELECT(nfds,r,w,e,tv) syscall(SYS_select,nfds,r,w,e,tv)
 #define _MD_POLL(fds,nfds,timeout) syscall(SYS_poll,fds,nfds,timeout)
-
-extern void _MD_hpux_install_sigfpe_handler(void);
 
 #ifdef HPUX11
 extern void _MD_hpux_map_sendfile_error(int err);

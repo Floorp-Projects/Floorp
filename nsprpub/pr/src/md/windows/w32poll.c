@@ -45,55 +45,153 @@ _PR_MD_select_thread(void *cdata)
 
 #endif /* !defined(_PR_GLOBAL_THREADS_ONLY) */
 
-PRInt32
-_PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
+PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
 {
+    int ready, err;
+    fd_set rd, wt, ex;
+    PRFileDesc *bottom;
     PRPollDesc *pd, *epd;
-    int n, err;
     PRThread *me = _PR_MD_CURRENT_THREAD();
 
-    fd_set rd, wt, ex;
     struct timeval tv, *tvp = NULL;
+
+    if (_PR_PENDING_INTERRUPT(me))
+    {
+        me->flags &= ~_PR_INTERRUPT;
+        PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+        return -1;
+    }
+
+    /*
+    ** Is it an empty set? If so, just sleep for the timeout and return
+    */
+    if (0 == npds)
+    {
+        PR_Sleep(timeout);
+        return 0;
+    }
 
     FD_ZERO(&rd);
     FD_ZERO(&wt);
     FD_ZERO(&ex);
 
-    for (pd = pds, epd = pd + npds; pd < epd; pd++) {
+    ready = 0;
+    for (pd = pds, epd = pd + npds; pd < epd; pd++)
+    {
         SOCKET osfd;
-        PRInt16 in_flags = pd->in_flags;
-        PRFileDesc *bottom = pd->fd;
+        PRInt16 in_flags_read = 0, in_flags_write = 0;
+        PRInt16 out_flags_read = 0, out_flags_write = 0;
 
-        if ((NULL == bottom) || (in_flags == 0)) {
-            continue;
-        }
-        while (bottom->lower != NULL) {
-            bottom = bottom->lower;
-        }
-        osfd = (SOCKET) bottom->secret->md.osfd;
-
-        if (in_flags & PR_POLL_READ)  {
-            FD_SET(osfd, &rd);
-        }
-        if (in_flags & PR_POLL_WRITE) {
-            FD_SET(osfd, &wt);
-        }
-        if (in_flags & PR_POLL_EXCEPT) {
-            FD_SET(osfd, &ex);
+        if ((NULL != pd->fd) && (0 != pd->in_flags))
+        {
+            if (pd->in_flags & PR_POLL_READ)
+            {
+                in_flags_read = (pd->fd->methods->poll)(
+                    pd->fd, (PRInt16)(pd->in_flags & ~PR_POLL_WRITE),
+                    &out_flags_read);
+            }
+            if (pd->in_flags & PR_POLL_WRITE)
+            {
+                in_flags_write = (pd->fd->methods->poll)(
+                    pd->fd, (PRInt16)(pd->in_flags & ~PR_POLL_READ),
+                    &out_flags_write);
+            }
+            if ((0 != (in_flags_read & out_flags_read))
+            || (0 != (in_flags_write & out_flags_write)))
+            {
+                /* this one's ready right now (buffered input) */
+                if (0 == ready)
+                {
+                    /*
+                     * We will have to return without calling the
+                     * system poll/select function.  So zero the
+                     * out_flags fields of all the poll descriptors
+                     * before this one.
+                     */
+                    PRPollDesc *prev;
+                    for (prev = pds; prev < pd; prev++)
+                    {
+                        prev->out_flags = 0;
+                    }
+                }
+                ready += 1;
+                pd->out_flags = out_flags_read | out_flags_write;
+            }
+            else
+            {
+                pd->out_flags = 0;  /* pre-condition */
+                /* make sure this is an NSPR supported stack */
+                bottom = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
+                PR_ASSERT(NULL != bottom);  /* what to do about that? */
+                if ((NULL != bottom)
+                && (_PR_FILEDESC_OPEN == bottom->secret->state))
+                {
+                    if (0 == ready)
+                    {
+                        osfd = (SOCKET) bottom->secret->md.osfd;
+                        if (in_flags_read & PR_POLL_READ)
+                        {
+                            pd->out_flags |= _PR_POLL_READ_SYS_READ;
+                            FD_SET(osfd, &rd);
+                        }
+                        if (in_flags_read & PR_POLL_WRITE)
+                        {
+                            pd->out_flags |= _PR_POLL_READ_SYS_WRITE;
+                            FD_SET(osfd, &wt);
+                        }
+                        if (in_flags_write & PR_POLL_READ)
+                        {
+                            pd->out_flags |= _PR_POLL_WRITE_SYS_READ;
+                            FD_SET(osfd, &rd);
+                        }
+                        if (in_flags_write & PR_POLL_WRITE)
+                        {
+                            pd->out_flags |= _PR_POLL_WRITE_SYS_WRITE;
+                            FD_SET(osfd, &wt);
+                        }
+                        if (pd->in_flags & PR_POLL_EXCEPT) FD_SET(osfd, &ex);
+                    }
+                }
+                else
+                {
+                    if (0 == ready)
+                    {
+                        PRPollDesc *prev;
+                        for (prev = pds; prev < pd; prev++)
+                        {
+                            prev->out_flags = 0;
+                        }
+                    }
+                    ready += 1;  /* this will cause an abrupt return */
+                    pd->out_flags = PR_POLL_NVAL;  /* bogii */
+                }
+            }
         }
     }
-    if (timeout != PR_INTERVAL_NO_TIMEOUT) {
-        tv.tv_sec = PR_IntervalToSeconds(timeout);
-        tv.tv_usec = PR_IntervalToMicroseconds(timeout) % PR_USEC_PER_SEC;
+
+    if (0 != ready) return ready;  /* no need to block */
+
+    if (timeout != PR_INTERVAL_NO_TIMEOUT)
+    {
+        PRInt32 ticksPerSecond = PR_TicksPerSecond();
+        tv.tv_sec = timeout / ticksPerSecond;
+        tv.tv_usec = timeout - (ticksPerSecond * tv.tv_sec);
+        tv.tv_usec = (PR_USEC_PER_SEC * tv.tv_usec) / ticksPerSecond;
         tvp = &tv;
     }
 
 #if defined(_PR_GLOBAL_THREADS_ONLY)
-    n = _MD_SELECT(0, &rd, &wt, &ex, tvp);
+    ready = _MD_SELECT(0, &rd, &wt, &ex, tvp);
 #else
     if (_PR_IS_NATIVE_THREAD(me)) {
-        n = _MD_SELECT(0, &rd, &wt, &ex, tvp);
-    } else {
+        ready = _MD_SELECT(0, &rd, &wt, &ex, tvp);
+    }
+    else
+    {
+        /*
+        ** Creating a new thread on each call to Poll()!!
+        ** I guess web server doesn't use non-block I/O.
+        */
         PRThread *selectThread;
         struct select_data_s data;
         data.status = 0;
@@ -103,87 +201,88 @@ _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
         data.ex = &ex;
         data.tv = tvp;
 
-        selectThread = PR_CreateThread(PR_USER_THREAD,
-                       _PR_MD_select_thread,
-                       &data,
-                       PR_PRIORITY_NORMAL,
-                       PR_GLOBAL_THREAD,
-                       PR_JOINABLE_THREAD,
-                       0);
-        if (selectThread == NULL) {
-            return -1;
-        }
+        selectThread = PR_CreateThread(
+            PR_USER_THREAD, _PR_MD_select_thread, &data,
+            PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+        if (selectThread == NULL) return -1;
+
         PR_JoinThread(selectThread);
-        n = data.status;
-        if (n == SOCKET_ERROR) {
-            WSASetLastError(data.error);
-        }
+        ready = data.status;
+        if (ready == SOCKET_ERROR) WSASetLastError(data.error);
     }
 #endif
 
-    if (n > 0) {
-        n = 0;
-        for (pd = pds, epd = pd + npds; pd < epd; pd++) {
-            SOCKET osfd;
-            PRInt16 in_flags = pd->in_flags;
+    /*
+    ** Now to unravel the select sets back into the client's poll
+    ** descriptor list. Is this possibly an area for pissing away
+    ** a few cycles or what?
+    */
+    if (ready > 0)
+    {
+        ready = 0;
+        for (pd = pds, epd = pd + npds; pd < epd; pd++)
+        {
             PRInt16 out_flags = 0;
-            PRFileDesc *bottom = pd->fd;
+            if ((NULL != pd->fd) && (0 != pd->in_flags))
+            {
+                SOCKET osfd;
+                bottom = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
+                PR_ASSERT(NULL != bottom);
 
-            if ((NULL == bottom) || (in_flags == 0)) {
-                pd->out_flags = 0;
-                continue;
-            }
-            while (bottom->lower != NULL) {
-                bottom = bottom->lower;
-            }
-            osfd = (SOCKET) bottom->secret->md.osfd;
+                osfd = (SOCKET) bottom->secret->md.osfd;
 
-            if ((in_flags & PR_POLL_READ) && FD_ISSET(osfd, &rd))  {
-                out_flags |= PR_POLL_READ;
-            }
-            if ((in_flags & PR_POLL_WRITE) && FD_ISSET(osfd, &wt)) {
-                out_flags |= PR_POLL_WRITE;
-            }
-            if ((in_flags & PR_POLL_EXCEPT) && FD_ISSET(osfd, &ex)) {
-                out_flags |= PR_POLL_EXCEPT;
+                if (FD_ISSET(osfd, &rd))
+                {
+                    if (pd->out_flags & _PR_POLL_READ_SYS_READ)
+                        out_flags |= PR_POLL_READ;
+                    if (pd->out_flags & _PR_POLL_WRITE_SYS_READ)
+                        out_flags |= PR_POLL_WRITE;
+                } 
+                if (FD_ISSET(osfd, &wt))
+                {
+                    if (pd->out_flags & _PR_POLL_READ_SYS_WRITE)
+                        out_flags |= PR_POLL_READ;
+                    if (pd->out_flags & _PR_POLL_WRITE_SYS_WRITE)
+                        out_flags |= PR_POLL_WRITE;
+                } 
+                if (FD_ISSET(osfd, &ex)) out_flags |= PR_POLL_EXCEPT;
             }
             pd->out_flags = out_flags;
-            if (out_flags) {
-                n++;
-            }
+            if (out_flags) ready++;
         }
-        PR_ASSERT(n > 0);
-    } else if (n == SOCKET_ERROR) {
+        PR_ASSERT(ready > 0);
+    }
+    else if (ready == SOCKET_ERROR)
+    {
         err = WSAGetLastError();
-        if (err == WSAENOTSOCK) {
+        if (err == WSAENOTSOCK)
+        {
             /* Find the bad fds */
-            n = 0;
-            for (pd = pds, epd = pd + npds; pd < epd; pd++) {
-                int optval;
-                int optlen = sizeof(optval);
-                PRFileDesc *bottom = pd->fd;
-
+            int optval;
+            int optlen = sizeof(optval);
+            ready = 0;
+            for (pd = pds, epd = pd + npds; pd < epd; pd++)
+            {
                 pd->out_flags = 0;
-                if ((NULL == bottom) || (pd->in_flags == 0)) {
-                    continue;
-                }
-                while (bottom->lower != NULL) {
-                    bottom = bottom->lower;
-                }
-                if (getsockopt(bottom->secret->md.osfd, SOL_SOCKET,
-                        SO_TYPE, (char *) &optval, &optlen) == -1) {
-                    PR_ASSERT(WSAGetLastError() == WSAENOTSOCK);
-                    if (WSAGetLastError() == WSAENOTSOCK) {
-                        pd->out_flags = PR_POLL_NVAL;
-                        n++;
+                if ((NULL != pd->fd) && (0 != pd->in_flags))
+                {
+                    bottom = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
+                    if (getsockopt(bottom->secret->md.osfd, SOL_SOCKET,
+                        SO_TYPE, (char *) &optval, &optlen) == -1)
+                    {
+                        PR_ASSERT(WSAGetLastError() == WSAENOTSOCK);
+                        if (WSAGetLastError() == WSAENOTSOCK)
+                        {
+                            pd->out_flags = PR_POLL_NVAL;
+                            ready++;
+                        }
                     }
                 }
             }
-            PR_ASSERT(n > 0);
-        } else {
-            _PR_MD_MAP_SELECT_ERROR(err);
+            PR_ASSERT(ready > 0);
         }
+        else _PR_MD_MAP_SELECT_ERROR(err);
     }
 
-    return n;
+    return ready;
 }

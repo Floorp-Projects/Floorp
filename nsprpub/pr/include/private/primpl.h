@@ -46,6 +46,8 @@
 #include "nspr.h"
 #include "prpriv.h"
 
+typedef struct PRSegment PRSegment;
+
 #ifdef XP_MAC
 #include "prosdep.h"
 #include "probslet.h"
@@ -128,18 +130,6 @@ typedef struct _MDFileMap _MDFileMap;
 ** stuff, this is a pretty small set.
 */
 
-struct _PT_Bookeeping
-{
-    PRLock *ml;                 /* a lock to protect ourselves */
-    PRCondVar *cv;              /* used to signal global things */
-    PRUint16 system, user;      /* a count of the two different types */
-    PRUintn this_many;          /* number of threads allowed for exit */
-    pthread_key_t key;          /* private private data key */
-    pthread_key_t highwater;    /* ordinal value of next key to be allocated */
-    PRThread *first, *last;     /* list of threads we know about */
-    PRInt32 minPrio, maxPrio;   /* range of scheduling priorities */
-};
-
 #define PT_CV_NOTIFIED_LENGTH 6
 typedef struct _PT_Notified _PT_Notified;
 struct _PT_Notified
@@ -162,7 +152,8 @@ struct _PT_Notified
 #define PT_THREAD_PRIMORD   0x08    /* this is the primordial thread */
 #define PT_THREAD_ABORTED   0x10    /* thread has been interrupted */
 #define PT_THREAD_GCABLE    0x20    /* thread is garbage collectible */
-#define PT_THREAD_SUSPENDED 0x40        /* thread has been suspended */
+#define PT_THREAD_SUSPENDED 0x40    /* thread has been suspended */
+#define PT_THREAD_FOREIGN   0x80    /* thread is not one of ours */
 
 /* 
 ** Possible values for thread's suspend field
@@ -189,12 +180,22 @@ typedef struct PTDebug
     PRUintn cvars_notified, delayed_cv_deletes;
 } PTDebug;
 
-PR_EXTERN(PTDebug) PT_GetStats(void);
+PR_EXTERN(void) PT_GetStats(PTDebug* here);
 PR_EXTERN(void) PT_FPrintStats(PRFileDesc *fd, const char *msg);
+
+#else
+
+typedef PRUintn PTDebug;
+#define PT_GetStats(_p)
+#define PT_FPrintStats(_fd, _msg)
 
 #endif /* defined(DEBUG) */
 
 #else /* defined(_PR_PTHREADS) */
+
+typedef PRUintn PTDebug;
+#define PT_GetStats(_p)
+#define PT_FPrintStats(_fd, _msg)
 
 /*
 ** This section is contains those parts needed to implement NSPR on
@@ -273,7 +274,7 @@ typedef struct _PRInterruptTable {
 #define _PR_CPU_PTR(_qp) \
     ((_PRCPU*) ((char*) (_qp) - offsetof(_PRCPU,links)))
 
-#if !defined(IRIX)
+#if !defined(IRIX) && !defined(WIN32)
 #define _MD_GET_ATTACHED_THREAD()        (_PR_MD_CURRENT_THREAD())
 #endif
 
@@ -305,8 +306,6 @@ PR_EXTERN(PRInt32)                      _pr_intsOff;
 
 #define _MD_GET_INTSOFF() 0
 #define _MD_SET_INTSOFF(_val)
-#define _PR_SET_INTSOFF(_is)
-#define _PR_GET_INTSOFF(_is)
 #define _PR_INTSOFF(_is)
 #define _PR_FAST_INTSON(_is)
 #define _PR_INTSON(_is)
@@ -336,11 +335,6 @@ PR_EXTERN(PRInt32)                      _pr_intsOff;
 #define _PR_IS_NATIVE_THREAD_SUPPORTED() 1
 
 #else
-
-#define _PR_SET_INTSOFF(_val) \
-    PR_BEGIN_MACRO \
-        _PR_MD_SET_INTSOFF(_val); \
-    PR_END_MACRO
 
 #define _PR_INTSOFF(_is) \
     PR_BEGIN_MACRO \
@@ -556,14 +550,6 @@ typedef struct _PRPerThreadExit {
     void *arg;
 } _PRPerThreadExit;
 
-/*
- * Thread private data destructor array
- * There is a destructor (or NULL) associated with each key and
- *    applied to all threads known to the system.
- *  Storage allocated in prtpd.c.
- */
-extern PRThreadPrivateDTOR *_pr_tpd_destructors;
-
 /* PRThread.flags */
 #define _PR_SYSTEM          0x01
 #define _PR_INTERRUPT       0x02
@@ -575,7 +561,7 @@ extern PRThreadPrivateDTOR *_pr_tpd_destructors;
 #define _PR_GLOBAL_SCOPE    0x80        /* thread is global scope */
 #define _PR_IDLE_THREAD     0x200       /* this is an idle thread        */
 #define _PR_GCABLE_THREAD   0x400       /* this is a collectable thread */
-#define _PR_BOUND_THREAD    0x800       /* a bound thread (only on solaris) */
+#define _PR_BOUND_THREAD    0x800       /* a bound thread */
 
 /* PRThread.state */
 #define _PR_UNBORN       0
@@ -667,9 +653,9 @@ extern PRUint32 _pr_utid;
 extern struct _PRCPU  *_pr_primordialCPU;
 
 extern PRLock *_pr_activeLock;          /* lock for userActive and systemActive */
-extern PRUintn _pr_userActive;          /* number of active user threads */
-extern PRUintn _pr_systemActive;        /* number of active system threads */
-extern PRUintn _pr_primordialExitCount; /* number of user threads left
+extern PRInt32 _pr_userActive;          /* number of active user threads */
+extern PRInt32 _pr_systemActive;        /* number of active system threads */
+extern PRInt32 _pr_primordialExitCount; /* number of user threads left
                                          * before the primordial thread
                                          * can exit.  */
 extern PRCondVar *_pr_primordialExitCVar; /* the condition variable for
@@ -718,9 +704,12 @@ PR_EXTERN(PRThread*) _PR_CreateThread(PRThreadType type,
 extern void _PR_NativeDestroyThread(PRThread *thread);
 extern void _PR_UserDestroyThread(PRThread *thread);
 
-PR_EXTERN(PRThread*) _PRI_AttachThread(
+extern PRThread* _PRI_AttachThread(
     PRThreadType type, PRThreadPriority priority,
     PRThreadStack *stack, PRUint32 flags);
+
+extern void _PRI_DetachThread(void);
+
 
 #define _PR_IO_PENDING(_thread) ((_thread)->io_pending)
 
@@ -734,6 +723,9 @@ PR_EXTERN(void) _PR_MD_WAKEUP_CPUS();
 
 PR_EXTERN(void) _PR_MD_STOP_INTERRUPTS(void);
 #define    _PR_MD_STOP_INTERRUPTS _MD_STOP_INTERRUPTS
+
+PR_EXTERN(void) _PR_MD_ENABLE_CLOCK_INTERRUPTS(void);
+#define    _PR_MD_ENABLE_CLOCK_INTERRUPTS _MD_ENABLE_CLOCK_INTERRUPTS
 
 PR_EXTERN(void) _PR_MD_DISABLE_CLOCK_INTERRUPTS(void);
 #define    _PR_MD_DISABLE_CLOCK_INTERRUPTS _MD_DISABLE_CLOCK_INTERRUPTS
@@ -995,34 +987,16 @@ extern PRInt32 _PR_MD_WRITEV(
     PRInt32 iov_size, PRIntervalTime timeout);
 #define    _PR_MD_WRITEV _MD_WRITEV
 
-extern PRInt32 _PR_MD_LSEEK(PRFileDesc *fd, PRInt32 offset, int whence);
-#define    _PR_MD_LSEEK _MD_LSEEK
-
-extern PRInt64 _PR_MD_LSEEK64(PRFileDesc *fd, PRInt64 offset, int whence);
-#define    _PR_MD_LSEEK64 _MD_LSEEK64
-
 extern PRInt32 _PR_MD_FSYNC(PRFileDesc *fd);
 #define    _PR_MD_FSYNC _MD_FSYNC
 
 extern PRInt32 _PR_MD_DELETE(const char *name);
 #define        _PR_MD_DELETE _MD_DELETE
 
-extern PRInt32 _PR_MD_GETFILEINFO(const char *fn, PRFileInfo *info);
-#define _PR_MD_GETFILEINFO _MD_GETFILEINFO
-
-extern PRInt32 _PR_MD_GETFILEINFO64(const char *fn, PRFileInfo64 *info);
-#define _PR_MD_GETFILEINFO64 _MD_GETFILEINFO64
-
-extern PRInt32 _PR_MD_GETOPENFILEINFO(const PRFileDesc *fd, PRFileInfo *info);
-#define _PR_MD_GETOPENFILEINFO _MD_GETOPENFILEINFO
-
-extern PRInt32 _PR_MD_GETOPENFILEINFO64(const PRFileDesc *fd, PRFileInfo64 *info);
-#define _PR_MD_GETOPENFILEINFO64 _MD_GETOPENFILEINFO64
-
 extern PRInt32 _PR_MD_RENAME(const char *from, const char *to);
 #define _PR_MD_RENAME _MD_RENAME
 
-extern PRInt32 _PR_MD_ACCESS(const char *name, PRIntn how);
+extern PRInt32 _PR_MD_ACCESS(const char *name, PRAccessHow how);
 #define _PR_MD_ACCESS _MD_ACCESS
 
 extern PRInt32 _PR_MD_STAT(const char *name, struct stat *buf);
@@ -1174,15 +1148,62 @@ PR_EXTERN(void *) _PR_MD_GET_SP(PRThread *thread);
 *************************************************************************/
 /************************************************************************/
 
+extern PRInt32 _PR_MD_LSEEK(PRFileDesc *fd, PRInt32 offset, PRSeekWhence whence);
+#define    _PR_MD_LSEEK _MD_LSEEK
+
+extern PRInt64 _PR_MD_LSEEK64(PRFileDesc *fd, PRInt64 offset, PRSeekWhence whence);
+#define    _PR_MD_LSEEK64 _MD_LSEEK64
+
+extern PRInt32 _PR_MD_GETFILEINFO(const char *fn, PRFileInfo *info);
+#define _PR_MD_GETFILEINFO _MD_GETFILEINFO
+
+extern PRInt32 _PR_MD_GETFILEINFO64(const char *fn, PRFileInfo64 *info);
+#define _PR_MD_GETFILEINFO64 _MD_GETFILEINFO64
+
+extern PRInt32 _PR_MD_GETOPENFILEINFO(const PRFileDesc *fd, PRFileInfo *info);
+#define _PR_MD_GETOPENFILEINFO _MD_GETOPENFILEINFO
+
+extern PRInt32 _PR_MD_GETOPENFILEINFO64(const PRFileDesc *fd, PRFileInfo64 *info);
+#define _PR_MD_GETOPENFILEINFO64 _MD_GETOPENFILEINFO64
+
+
+/*****************************************************************************/
+/************************** File descriptor caching **************************/
+/*****************************************************************************/
+extern void _PR_InitFdCache(void);
+extern void _PR_CleanupFdCache(void);
+extern PRFileDesc *_PR_Getfd(void);
+extern void _PR_Putfd(PRFileDesc *fd);
+
+/*
+ * These flags are used by NSPR temporarily in the poll
+ * descriptor's out_flags field to record the mapping of
+ * NSPR's poll flags to the system poll flags.
+ *
+ * If _PR_POLL_READ_SYS_WRITE bit is set, it means the
+ * PR_POLL_READ flag specified by the topmost layer is
+ * mapped to the WRITE flag at the system layer.  Similarly
+ * for the other three _PR_POLL_XXX_SYS_YYY flags.  It is
+ * assumed that the PR_POLL_EXCEPT flag doesn't get mapped
+ * to other flags.
+ */
+#define _PR_POLL_READ_SYS_READ     0x1
+#define _PR_POLL_READ_SYS_WRITE    0x2
+#define _PR_POLL_WRITE_SYS_READ    0x4
+#define _PR_POLL_WRITE_SYS_WRITE   0x8
+
 /*
 ** These methods are coerced into file descriptor methods table
 ** when the intended service is inappropriate for the particular
 ** type of file descriptor.
 */
 extern PRIntn _PR_InvalidInt(void);
+extern PRInt16 _PR_InvalidInt16(void);
 extern PRInt64 _PR_InvalidInt64(void);
 extern PRStatus _PR_InvalidStatus(void);
 extern PRFileDesc *_PR_InvalidDesc(void);
+
+extern PRIOMethods _pr_faulty_methods;
 
 extern PRStatus _PR_MapOptionName(
     PRSockOption optname, PRInt32 *level, PRInt32 *name);
@@ -1229,9 +1250,9 @@ struct PRCondVar {
 struct PRMonitor {
     const char* name;           /* monitor name for debugging */
 #if defined(_PR_PTHREADS)
-        PRLock lock;                /* the lock struture structure */
+    PRLock lock;                /* the lock struture structure */
     pthread_t owner;            /* the owner of the lock or zero */
-    PRCondVar cvar;             /* condition variable queue */
+    PRCondVar *cvar;            /* condition variable queue */
 #else  /* defined(_PR_PTHREADS) */
     PRCondVar *cvar;            /* associated lock and condition variable queue */
 #endif /* defined(_PR_PTHREADS) */
@@ -1274,25 +1295,39 @@ struct PRThreadStack {
 #endif /* defined(_PR_PTHREADS) */
 };
 
+/*
+ * Thread private data destructor array
+ * There is a destructor (or NULL) associated with each key and
+ *    applied to all threads known to the system.
+ *  Storage allocated in prtpd.c.
+ */
+extern PRThreadPrivateDTOR *_pr_tpd_destructors;
+extern void _PR_DestroyThreadPrivate(PRThread*);
 
+typedef void (PR_CALLBACK *_PRStartFn)(void *);
 
 struct PRThread {
     PRUint32 state;                 /* thread's creation state */
     PRThreadPriority priority;      /* apparent priority, loosly defined */
-    PRInt32 errorStringSize;        /* byte length of current error string | zero */
-    PRErrorCode errorCode;          /* current NSPR error code | zero */
-    PRInt32 osErrorCode;            /* mapping of errorCode | zero */
-    
-    char *errorString;              /* current error string | NULL */
 
     void *arg;                      /* argument to the client's entry point */
-    void (PR_CALLBACK *startFunc)(void *arg); /* the root of the client's thread */
+    _PRStartFn startFunc;           /* the root of the client's thread */
 
     PRThreadStack *stack;           /* info about thread's stack (for GC) */
     void *environment;              /* pointer to execution environment */
 
     PRThreadDumpProc dump;          /* dump thread info out */
     void *dumpArg;                  /* argument for the dump function */
+
+    /*
+    ** Per thread private data
+    */
+    PRUint32 tpdLength;             /* thread's current vector length */
+    void **privateData;             /* private data vector or NULL */
+    PRInt32 errorStringSize;        /* byte length of current error string | zero */
+    PRErrorCode errorCode;          /* current NSPR error code | zero */
+    PRInt32 osErrorCode;            /* mapping of errorCode | zero */
+    char *errorString;              /* current error string | NULL */
 
 #if defined(_PR_PTHREADS)
     pthread_t id;                   /* pthread identifier for the thread */
@@ -1308,13 +1343,13 @@ struct PRThread {
 #endif
 #else /* defined(_PR_PTHREADS) */
     _MDLock threadLock;             /* Lock to protect thread state variables.
-                                    * Protects the following fields:
-                                    *     state
-                                    *     priority
-                                    *     links
-                                    *     wait
-                                    *     cpu
-                                    */
+                                     * Protects the following fields:
+                                     *     state
+                                     *     priority
+                                     *     links
+                                     *     wait
+                                     *     cpu
+                                     */
     PRUint32 queueCount;
     PRUint32 waitCount;
 
@@ -1330,16 +1365,23 @@ struct PRThread {
 
     PRUint32 id;
     PRUint32 flags;
-    PRUint32 no_sched;
+    PRUint32 no_sched;              /* Don't schedule the thread to run.
+                                     * This flag has relevance only when
+                                     * multiple NSPR CPUs are created.
+                                     * When a thread is de-scheduled, there
+                                     * is a narrow window of time in which
+                                     * the thread is put on the run queue
+                                     * but the scheduler is actually using
+                                     * the stack of this thread.  It is safe
+                                     * to run this thread on a different CPU
+                                     * only when its stack is not in use on
+                                     * any other CPU.  The no_sched flag is
+                                     * set during this interval to prevent
+                                     * the thread from being scheduled on a
+                                     * different CPU.
+                                     */
     PRUint32 numExits;
     _PRPerThreadExit *ptes;
-
-
-    /*
-    ** Per thread private data
-    */
-    PRUint32 tpdLength;             /* thread's current vector length */
-    void **privateData;             /* private data vector or NULL */
 
     /* thread termination condition variable for join */
     PRCondVar *term;
@@ -1413,6 +1455,7 @@ extern void _PR_InitLinker(void);
 extern void _PR_InitAtomic(void);
 extern void _PR_InitCPUs(void);
 extern void _PR_InitDtoa(void);
+extern void _PR_InitMW(void);
 extern void _PR_NotifyCondVar(PRCondVar *cvar, PRThread *me);
 extern void _PR_CleanupThread(PRThread *thread);
 extern void _PR_CleanupTPD(void);
@@ -1427,7 +1470,6 @@ extern PRBool _PR_Obsolete(const char *obsolete, const char *preferred);
 /************************************************************************/
 
 struct PRSegment {
-    PRSegmentAccess access;
     void *vaddr;
     PRUint32 size;
     PRUintn flags;
@@ -1439,6 +1481,32 @@ struct PRSegment {
 
 /* PRSegment.flags */
 #define _PR_SEG_VM    0x1
+
+/***********************************************************************
+** FUNCTION:	_PR_NewSegment()
+** DESCRIPTION:
+**   Allocate a memory segment. The "size" value is rounded up to the
+**   native system page size and a page aligned portion of memory is
+**   returned.  This memory is not part of the malloc heap. If "vaddr" is
+**   not NULL then PR tries to allocate the segment at the desired virtual
+**   address.
+** INPUTS:	size:  size of the desired memory segment
+**          vaddr:  address at which the newly aquired segment is to be
+**                  mapped into memory.
+** OUTPUTS:	a memory segment is allocated, a PRSegment is allocated
+** RETURN:	pointer to PRSegment
+***********************************************************************/
+extern PRSegment* _PR_NewSegment(PRUint32 size, void *vaddr);
+
+/***********************************************************************
+** FUNCTION:	_PR_DestroySegment()
+** DESCRIPTION:
+**   The memory segment and the PRSegment are freed
+** INPUTS:	seg:  pointer to PRSegment to be freed
+** OUTPUTS:	the the PRSegment and its associated memory segment are freed
+** RETURN:	void
+***********************************************************************/
+extern void _PR_DestroySegment(PRSegment *seg);
 
 /************************************************************************/
 
@@ -1465,14 +1533,9 @@ extern PRBool _pr_ipv6_enabled;  /* defined in prnetdb.c */
 
 /* Overriding malloc, free, etc. */
 #if !defined(_PR_NO_PREEMPT) && defined(XP_UNIX) \
-        && (!defined(SOLARIS) || !defined(_PR_GLOBAL_THREADS_ONLY)) \
-        && (!defined(AIX) || !defined(_PR_PTHREADS)) \
-        && (!defined(OSF1) || !defined(_PR_PTHREADS)) \
-        && (!defined(HPUX) || !defined(_PR_PTHREADS)) \
-        && (!defined(IRIX) || !defined(_PR_PTHREADS)) \
-        && (!defined(LINUX) || !defined(_PR_PTHREADS)) \
-	&& (!defined(RHAPSODY)) \
+        && !defined(_PR_PTHREADS) && !defined(_PR_GLOBAL_THREADS_ONLY) \
         && !defined(PURIFY) \
+        && !defined(RHAPSODY) \
         && !(defined (UNIXWARE) && defined (USE_SVR4_THREADS))
 #define _PR_OVERRIDE_MALLOC
 #endif
@@ -1530,6 +1593,9 @@ extern void _PR_MD_INIT_ATOMIC(void);
 
 extern PRInt32 _PR_MD_ATOMIC_INCREMENT(PRInt32 *);
 #define    _PR_MD_ATOMIC_INCREMENT _MD_ATOMIC_INCREMENT
+
+extern PRInt32 _PR_MD_ATOMIC_ADD(PRInt32 *, PRInt32);
+#define    _PR_MD_ATOMIC_ADD _MD_ATOMIC_ADD
 
 extern PRInt32 _PR_MD_ATOMIC_DECREMENT(PRInt32 *);
 #define    _PR_MD_ATOMIC_DECREMENT _MD_ATOMIC_DECREMENT

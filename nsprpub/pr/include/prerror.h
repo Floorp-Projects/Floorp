@@ -25,7 +25,7 @@ PR_BEGIN_EXTERN_C
 
 typedef PRInt32 PRErrorCode;
 
-#define PR_NSPR_ERROR_BASE -2600
+#define PR_NSPR_ERROR_BASE -6000
 
 #define PR_OUT_OF_MEMORY_ERROR              PR_NSPR_ERROR_BASE + 0
                                     /* Insufficient memory to perform request   */
@@ -147,7 +147,11 @@ typedef PRInt32 PRErrorCode;
 #define PR_ALREADY_INITIATED_ERROR          PR_NSPR_ERROR_BASE + 67
 #define PR_GROUP_EMPTY_ERROR                PR_NSPR_ERROR_BASE + 68
 #define PR_INVALID_STATE_ERROR              PR_NSPR_ERROR_BASE + 69
-#define PR_MAX_ERROR                        PR_NSPR_ERROR_BASE + 70
+#define PR_NETWORK_DOWN_ERROR               PR_NSPR_ERROR_BASE + 70
+#define PR_SOCKET_SHUTDOWN_ERROR            PR_NSPR_ERROR_BASE + 71
+#define PR_CONNECT_ABORTED_ERROR            PR_NSPR_ERROR_BASE + 72
+#define PR_HOST_UNREACHABLE_ERROR           PR_NSPR_ERROR_BASE + 73
+#define PR_MAX_ERROR                        PR_NSPR_ERROR_BASE + 74
                                     /* Place holder for the end of the list     */
 
 /*

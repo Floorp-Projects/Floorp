@@ -50,6 +50,7 @@ static PRStatus PR_CALLBACK pl_TopClose (PRFileDesc *fd)
     PR_ASSERT(fd->methods->file_type == PR_DESC_LAYERED);
 
     status = (fd->lower->methods->close)(fd->lower);
+    fd->lower = fd->higher = NULL;
 
     fd->dtor(fd);
     return status;

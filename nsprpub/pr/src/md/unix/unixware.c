@@ -91,6 +91,14 @@ _MD_ATOMIC_INCREMENT(PRInt32 *val)
 }
 
 void
+_MD_ATOMIC_ADD(PRInt32 *ptr, PRInt32 val)
+{
+    flockfile(_uw_semf);
+    (*ptr) += val;
+    unflockfile(_uw_semf);
+}
+
+void
 _MD_ATOMIC_DECREMENT(PRInt32 *val)
 {
     flockfile(_uw_semf);
@@ -191,6 +199,12 @@ void
 _MD_ATOMIC_INCREMENT(PRInt32 *val)
 {
     TEST_THEN_ADD(val, 1);
+}
+
+void
+_MD_ATOMIC_ADD(PRInt32 *ptr, PRInt32 val)
+{
+    TEST_THEN_ADD(ptr, val);
 }
 
 void

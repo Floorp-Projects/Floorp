@@ -42,31 +42,42 @@
 #else
 #endif
 
-static PRFileDesc *t1;
+/*
+ * The name of a file that is guaranteed to exist
+ * on every machine of a particular OS.
+ */
+#ifdef XP_UNIX
+#define EXISTING_FILENAME "/bin/sh"
+#elif defined(WIN32)
+#define EXISTING_FILENAME "c:/boot.ini"
+#else
+#error "Unknown OS"
+#endif
 
-PRIntn error_code;
+static PRFileDesc *t1;
 
 int main(int argc, char **argv)
 {
-
 
 #ifdef XP_MAC
 	SetupMacPrintfLog("pr_open_re.log");
 #endif
 	
-
-	
     PR_STDIO_INIT();
-	t1 = PR_Open("/usr/tmp/ttools/nspr20/err03.tmp", PR_TRUNCATE | PR_RDWR, 0666);
+	t1 = PR_Open(EXISTING_FILENAME, PR_RDONLY, 0666);
 	if (t1 == NULL) {
-		if (PR_GetError() == PR_FILE_NOT_FOUND_ERROR) {
-				printf ("error code is %d \n", PR_GetError());
-				printf ("File should be found\n");
+		printf ("error code is %d \n", PR_GetError());
+		printf ("File %s should be found\n",
+				EXISTING_FILENAME);
+		return 1;
+	} else {
+		if (PR_Close(t1) == PR_SUCCESS) {
+			printf ("Test passed \n");
+			return 0;
+		} else {
+			printf ("cannot close file\n");
+			printf ("error code is %d\n", PR_GetError());
 			return 1;
 		}
-	}
-	else {
-		printf ("Test passed \n");
-		return 0;
 	}
 }			

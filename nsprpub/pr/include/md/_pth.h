@@ -25,6 +25,7 @@
 #define _PR_MD_BLOCK_CLOCK_INTERRUPTS()
 #define _PR_MD_UNBLOCK_CLOCK_INTERRUPTS()
 #define _PR_MD_DISABLE_CLOCK_INTERRUPTS()
+#define _PR_MD_ENABLE_CLOCK_INTERRUPTS()
 
 /* In good standards fashion, the DCE threads (based on posix-4) are not
  * quite the same as newer posix implementations.  These are mostly name
@@ -70,7 +71,7 @@
 #define PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
 #elif defined(IRIX) || defined(OSF1) || defined(AIX) || defined(SOLARIS) \
 	|| defined(HPUX) || defined(LINUX) || defined(FREEBSD) \
-	|| defined(NETBSD)
+	|| defined(NETBSD) || defined(OPENBSD)
 #define PTHREAD_ZERO_THR_HANDLE(t)        (t) = 0
 #define PTHREAD_THR_HANDLE_IS_ZERO(t)     (t) == 0
 #define PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
@@ -100,21 +101,6 @@
 #error "Cannot determine pthread strategy"
 #endif
 
-/*
- * See if we have the privilege to set the scheduling policy and
- * priority of threads.  Returns 0 if privilege is available.
- * Returns EPERM otherwise.
- */
-
-#ifdef AIX
-#define PT_PRIVCHECK()    privcheck(SET_PROC_RAC)
-#elif defined(HPUX) && !defined(_PR_DCETHREADS)
-PR_EXTERN(PRIntn) pt_hpux_privcheck(void);
-#define PT_PRIVCHECK()    pt_hpux_privcheck()
-#else
-#define PT_PRIVCHECK()    0
-#endif  /* AIX */
-
 #if defined(_PR_DCETHREADS)
 #define PTHREAD_EXPLICIT_SCHED      PTHREAD_DEFAULT_SCHED
 #endif
@@ -136,7 +122,7 @@ PR_EXTERN(PRIntn) pt_hpux_privcheck(void);
  */
 #if defined(_PR_DCETHREADS) || defined(FREEBSD) \
 	|| (defined(LINUX) && defined(__alpha)) \
-	|| defined(NETBSD)
+	|| defined(NETBSD) || defined(OPENBSD)
 #define PT_NO_ATFORK
 #endif
 
@@ -144,7 +130,7 @@ PR_EXTERN(PRIntn) pt_hpux_privcheck(void);
  * These platforms don't have sigtimedwait()
  */
 #if (defined(AIX) && !defined(AIX4_3)) || defined(LINUX) \
-	|| defined(FREEBSD) || defined(NETBSD)
+	|| defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD)
 #define PT_NO_SIGTIMEDWAIT
 #endif
 
@@ -186,20 +172,26 @@ PR_EXTERN(PRIntn) pt_hpux_privcheck(void);
  */
 #define PT_PRIO_MIN            1
 #define PT_PRIO_MAX            127
-#elif defined(FREEBSD) || defined(NETBSD) /* XXX */
+#elif defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) /* XXX */
 #define PT_PRIO_MIN            0
 #define PT_PRIO_MAX            126
 #else
 #error "pthreads is not supported for this architecture"
 #endif
 
-/* Needed for garbage collection -- Look at PR_Suspend/PR_Resume implementation */
-#if defined(OSF1)
-#define PTHREAD_YIELD()            	pthread_yield_np()
-#elif defined(HPUX10_30) || defined(HPUX11)
-#define PTHREAD_YIELD()            	sched_yield()
-#elif defined(HPUX)
+/*
+ * The PTHREAD_YIELD function is called from a signal handler.
+ * Needed for garbage collection -- Look at PR_Suspend/PR_Resume
+ * implementation.
+ */
+#if defined(_PR_DCETHREADS)
 #define PTHREAD_YIELD()            	pthread_yield()
+#elif defined(OSF1)
+/*
+ * sched_yield can't be called from a signal handler.  Must use
+ * the _np version.
+ */
+#define PTHREAD_YIELD()            	pthread_yield_np()
 #elif defined(AIX)
 extern int (*_PT_aix_yield_fcn)();
 #define PTHREAD_YIELD()			(*_PT_aix_yield_fcn)()
@@ -211,12 +203,9 @@ extern int (*_PT_aix_yield_fcn)();
 		onemillisec.tv_nsec = 1000000L;			\
         nanosleep(&onemillisec,NULL);			\
     PR_END_MACRO
-#elif defined(SOLARIS)
-#define PTHREAD_YIELD()             sched_yield()
-#elif defined(LINUX)
+#elif defined(HPUX) || defined(LINUX) || defined(SOLARIS) \
+	|| defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD)
 #define PTHREAD_YIELD()            	sched_yield()
-#elif defined(FREEBSD) || defined(NETBSD)
-#define PTHREAD_YIELD()                 pthread_yield()
 #else
 #error "Need to define PTHREAD_YIELD for this platform"
 #endif

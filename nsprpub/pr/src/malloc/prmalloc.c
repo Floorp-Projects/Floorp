@@ -366,7 +366,7 @@ map_pages(int pages, int update)
 static int
 extend_page_directory(u_long index)
 {
-    struct  pginfo **new,**old;
+    struct  pginfo **young, **old;
     int i;
 
     TRACE(("%6d E %lu\n",malloc_event++,index));
@@ -377,13 +377,13 @@ extend_page_directory(u_long index)
     i += 2;
 
     /* Get new pages, if you used this much mem you don't care :-) */
-    new = (struct pginfo**) map_pages(i,0);
-    if (!new)
+    young = (struct pginfo**) map_pages(i,0);
+    if (!young)
 	return 0;
 
     /* Copy the old stuff */
-    memset(new, 0, i * malloc_pagesize);
-    memcpy(new, page_dir,
+    memset(young, 0, i * malloc_pagesize);
+    memcpy(young, page_dir,
 	    malloc_ninfo * sizeof *page_dir);
 
     /* register the new size */
@@ -391,10 +391,10 @@ extend_page_directory(u_long index)
 
     /* swap the pointers */
     old = page_dir;
-    page_dir = new;
+    page_dir = young;
 
     /* Mark the pages */
-    index = ((u_long)new >> malloc_pageshift) - malloc_origo;
+    index = ((u_long)young >> malloc_pageshift) - malloc_origo;
     page_dir[index] = MALLOC_FIRST;
     while (--i) {
 	page_dir[++index] = MALLOC_FOLLOW;
@@ -590,7 +590,7 @@ static void *malloc_pages(size_t size)
     }
     if (delay_free) {
 	if (!px) 
-	    px = delay_free;
+	    px = (struct pgfree*)delay_free;
 	else
 	    _PR_UnlockedFree(delay_free);
     }
@@ -626,7 +626,7 @@ malloc_make_chunks(int bits)
     bp->shift = bits;
     bp->total = bp->free = malloc_pagesize >> bits;
     bp->next = page_dir[bits];
-    bp->page = pp;
+    bp->page = (char*)pp;
     i = set_pgdir(pp,bp);
     if (!i)
 	return 0;
@@ -944,7 +944,7 @@ free_pages(char *ptr, u_long page, int index, struct pginfo *info)
 
     /* add to free-list */
     if (!px)
-	px = _PR_UnlockedMalloc(sizeof *pt);
+	px = (struct pgfree*)_PR_UnlockedMalloc(sizeof *pt);
     /* XXX check success */
     px->page = ptr;
     px->end =  tail;
@@ -1148,7 +1148,7 @@ void _PR_UnlockedFree(void *ptr)
     /* handle as page-allocation or chunk allocation */
     info = page_dir[index];
     if (info < MALLOC_MAGIC)
-        free_pages(ptr,page,index,info);
+        free_pages((char*)ptr, page, index, info);
     else 
 	free_bytes(ptr,page,index,info);
     return;

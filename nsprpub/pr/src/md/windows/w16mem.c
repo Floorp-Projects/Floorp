@@ -46,7 +46,6 @@ PRStatus _MD_AllocSegment(PRSegment *seg, PRUint32 size, void *vaddr)
 		return PR_FAILURE;
 	}
 
-	seg->access = PR_SEGMENT_RDWR;	
 	seg->size = size;	
 
 	return PR_SUCCESS;

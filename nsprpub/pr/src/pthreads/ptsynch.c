@@ -31,6 +31,7 @@
 #include <pthread.h>
 #include <sys/time.h>
 
+static pthread_mutexattr_t _pt_mattr;
 static pthread_condattr_t _pt_cvar_attr;
 
 #if defined(DEBUG)
@@ -50,7 +51,16 @@ static pthread_t pt_zero_tid;  /* a null pthread_t (pthread_t is a struct
 
 void _PR_InitLocks(void)
 {
-    int rv = PTHREAD_CONDATTR_INIT(&_pt_cvar_attr); 
+    int rv;
+    rv = PTHREAD_MUTEXATTR_INIT(&_pt_mattr); 
+    PR_ASSERT(0 == rv);
+
+#if defined(AIX)
+    rv = pthread_mutexattr_setkind_np(&_pt_mattr, MUTEX_FAST_NP);
+    PR_ASSERT(0 == rv);
+#endif
+
+    rv = PTHREAD_CONDATTR_INIT(&_pt_cvar_attr);
     PR_ASSERT(0 == rv);
     _PR_MD_INIT_LOCKS();
 }
@@ -131,12 +141,7 @@ PR_IMPLEMENT(PRLock*) PR_NewLock(void)
     lock = PR_NEWZAP(PRLock);
     if (lock != NULL)
     {
-        pthread_mutexattr_t mattr;
-        rv = PTHREAD_MUTEXATTR_INIT(&mattr); 
-        PR_ASSERT(0 == rv);
-        rv = PTHREAD_MUTEX_INIT(lock->mutex, mattr); 
-        PR_ASSERT(0 == rv);
-        rv = PTHREAD_MUTEXATTR_DESTROY(&mattr); 
+        rv = PTHREAD_MUTEX_INIT(lock->mutex, _pt_mattr); 
         PR_ASSERT(0 == rv);
     }
 #if defined(DEBUG)
@@ -399,33 +404,37 @@ PR_IMPLEMENT(PRStatus) PR_NotifyAllCondVar(PRCondVar *cvar)
 
 PR_IMPLEMENT(PRMonitor*) PR_NewMonitor(void)
 {
-    PRMonitor *ml;
+    PRMonitor *mon;
+    PRCondVar *cvar;
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
-    ml = PR_NEWZAP(PRMonitor);
-    if (ml != NULL)
+    cvar = PR_NEWZAP(PRCondVar);
+    if (NULL == cvar)
+    {
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+        return NULL;
+    }
+    mon = PR_NEWZAP(PRMonitor);
+    if (mon != NULL)
     {
         int rv;
-        pthread_mutexattr_t mattr;
-        rv = PTHREAD_MUTEXATTR_INIT(&mattr); 
-        PR_ASSERT(0 == rv);
-        rv += PTHREAD_MUTEX_INIT(ml->lock.mutex, mattr); 
-        PR_ASSERT(0 == rv);
-        rv += PTHREAD_MUTEXATTR_DESTROY(&mattr); 
+        rv = PTHREAD_MUTEX_INIT(mon->lock.mutex, _pt_mattr); 
         PR_ASSERT(0 == rv);
 
-        rv += PTHREAD_COND_INIT(ml->cvar.cv, _pt_cvar_attr); 
+        mon->cvar = cvar;
+        rv = PTHREAD_COND_INIT(mon->cvar->cv, _pt_cvar_attr); 
         PR_ASSERT(0 == rv);
-        ml->entryCount = 0;
-        ml->cvar.lock = &ml->lock;
+        mon->entryCount = 0;
+        mon->cvar->lock = &mon->lock;
         if (0 != rv)
         {
-            PR_DELETE(ml);
-            ml = NULL;
+            PR_DELETE(mon);
+            PR_DELETE(cvar);
+            mon = NULL;
         }
     }
-    return ml;
+    return mon;
 }  /* PR_NewMonitor */
 
 PR_IMPLEMENT(PRMonitor*) PR_NewNamedMonitor(const char* name)
@@ -439,7 +448,7 @@ PR_IMPLEMENT(void) PR_DestroyMonitor(PRMonitor *mon)
 {
     int rv;
     PR_ASSERT(mon != NULL);
-    rv = pthread_cond_destroy(&mon->cvar.cv); PR_ASSERT(0 == rv);
+    PR_DestroyCondVar(mon->cvar);
     rv = pthread_mutex_destroy(&mon->lock.mutex); PR_ASSERT(0 == rv);
 #if defined(DEBUG)
         memset(mon, 0xaf, sizeof(PRMonitor));
@@ -539,7 +548,7 @@ PR_IMPLEMENT(PRStatus) PR_Wait(PRMonitor *mon, PRIntervalTime timeout)
     PTHREAD_COPY_THR_HANDLE(mon->owner, saved_owner);
     PTHREAD_ZERO_THR_HANDLE(mon->owner);
     
-    rv = PR_WaitCondVar(&mon->cvar, timeout);
+    rv = PR_WaitCondVar(mon->cvar, timeout);
 
     /* reinstate the intresting information */
     mon->entryCount = saved_entries;
@@ -558,7 +567,7 @@ PR_IMPLEMENT(PRStatus) PR_Notify(PRMonitor *mon)
     /* and it better be by us */
     PR_ASSERT(pthread_equal(mon->owner, pthread_self()));
 
-    pt_PostNotifyToCvar(&mon->cvar, PR_FALSE);
+    pt_PostNotifyToCvar(mon->cvar, PR_FALSE);
 
     return PR_SUCCESS;
 }  /* PR_Notify */
@@ -573,7 +582,7 @@ PR_IMPLEMENT(PRStatus) PR_NotifyAll(PRMonitor *mon)
     /* and it better be by us */
     PR_ASSERT(pthread_equal(mon->owner, pthread_self()));
 
-    pt_PostNotifyToCvar(&mon->cvar, PR_TRUE);
+    pt_PostNotifyToCvar(mon->cvar, PR_TRUE);
 
     return PR_SUCCESS;
 }  /* PR_NotifyAll */

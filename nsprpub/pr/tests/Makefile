@@ -37,6 +37,7 @@ OS_CFLAGS = $(OS_EXE_CFLAGS)
 endif
 
 CSRCS =             \
+	acceptread.c    \
 	accept.c		\
 	alarm.c			\
 	atomic.c		\
@@ -52,11 +53,14 @@ CSRCS =             \
 	dtoa.c			\
 	exit.c  		\
 	fileio.c		\
+	foreign.c	    \
 	forktest.c	    \
 	fsync.c	        \
 	getproto.c		\
 	i2l.c		    \
+	initclk.c		\
 	inrval.c		\
+	instrumt.c      \
 	intrupt.c       \
 	io_timeout.c    \
 	ipv6.c          \
@@ -86,9 +90,11 @@ CSRCS =             \
 	poll_er.c		\
 	poll_nm.c		\
 	poll_to.c		\
+	pollable.c		\
 	prftest1.c		\
 	prftest2.c		\
 	priotest.c		\
+	provider.c		\
 	ranfile.c       \
 	sel_spd.c  		\
 	selct_er.c	    \
@@ -106,6 +112,7 @@ CSRCS =             \
 	sprintf.c		\
 	sproc_ch.c	    \
 	sproc_p.c	    \
+	stack.c		    \
 	stdio.c		    \
 	strod.c			\
 	suspend.c		\
@@ -120,6 +127,7 @@ CSRCS =             \
 	tmoacc.c        \
 	tmocon.c        \
 	tpd.c			\
+	version.c	    \
 	udpsrv.c	    \
 	writev.c        \
 	xnotify.c       \
@@ -133,7 +141,7 @@ endif
 
 PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=$(PROG_SUFFIX)))
 
-TARGETS = $(PROGS) $(OBJS)
+TARGETS = $(PROGS)
 
 INCLUDES = -I$(DIST)/include/obsolete -I$(DIST)/include/private -I$(DIST)/include 
 
@@ -165,96 +173,112 @@ PWD = $(shell pwd)
 endif
 
 ifeq ($(OS_ARCH), IRIX)
-LDOPTS += -rpath $(PWD)/$(DIST)/lib -rdata_shared
-
+    ifeq ($(USE_CPLUS), 1)
+        CC = CC
+    endif
+    LDOPTS += -rpath $(PWD)/$(DIST)/lib -rdata_shared
 # For 6.x machines, include this flag
-ifeq ($(basename $(OS_RELEASE)),6)
-ifeq ($(USE_N32),1)
-LDOPTS += -n32
-else
-LDOPTS += -32
-endif
-endif
+    ifeq ($(basename $(OS_RELEASE)),6)
+        ifeq ($(USE_N32),1)
+            LDOPTS += -n32
+        else
+            LDOPTS += -32
+        endif
 
+        ifeq ($(USE_PTHREADS), 1)
+            ifeq ($(OS_RELEASE), 6.2)
+                LDOPTS += -Wl,-woff,85
+            endif
+        endif
+    endif
 endif
 
 ifeq ($(OS_ARCH), OSF1)
+    ifeq ($(USE_CPLUS), 1)
+        CC = cxx
+    endif
 # I haven't figured out how to pass -rpath to cc on OSF1 V3.2, so
 # we do static linking.
-ifeq ($(OS_RELEASE), V3.2)
-  LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).a
-  LIBPLC = $(DIST)/lib/libplc$(MOD_VERSION).a
-  EXTRA_LIBS = -lc_r
-else
-  LDOPTS += -rpath $(PWD)/$(DIST)/lib
-endif
+    ifeq ($(OS_RELEASE), V3.2)
+        LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).a
+        LIBPLC = $(DIST)/lib/libplc$(MOD_VERSION).a
+        EXTRA_LIBS = -lc_r
+    else
+        LDOPTS += -rpath $(PWD)/$(DIST)/lib
+    endif
 endif
 
 ifeq ($(OS_ARCH), HP-UX)
-LDOPTS += -Wl,+s,+b,$(PWD)/$(DIST)/lib
+    LDOPTS += -z -Wl,+s,+b,$(PWD)/$(DIST)/lib
+    ifeq ($(USE_64),1)
+        LDOPTS += -L/usr/lib/pa20_64 -lpthread +DD64
+    endif
 endif
 
 # AIX
 ifeq ($(OS_ARCH),AIX)
-ifeq ($(CLASSIC_NSPR),1)
-LDOPTS += -blibpath:.:$(PWD)/$(DIST)/lib:/usr/lpp/xlC/lib:/usr/lib:/lib
-else
-LDOPTS += -blibpath:.:$(PWD)/$(DIST)/lib:/usr/lib/threads:/usr/lpp/xlC/lib:/usr/lib:/lib
-endif
-ifeq ($(OS_ARCH)$(OS_RELEASE),AIX4.1)
-LIBPR = -lnspr$(MOD_VERSION)_shr
-LIBPLC = -lplc$(MOD_VERSION)_shr
-else
-LDOPTS += -brtl
-EXTRA_LIBS = -ldl
-endif
+    ifeq ($(CLASSIC_NSPR),1)
+        LDOPTS += -blibpath:.:$(PWD)/$(DIST)/lib:/usr/lpp/xlC/lib:/usr/lib:/lib
+    else
+        LDOPTS += -blibpath:.:$(PWD)/$(DIST)/lib:/usr/lib/threads:/usr/lpp/xlC/lib:/usr/lib:/lib
+    endif
+    ifeq ($(OS_ARCH)$(OS_RELEASE),AIX4.1)
+        LIBPR = -lnspr$(MOD_VERSION)_shr
+        LIBPLC = -lplc$(MOD_VERSION)_shr
+    else
+        LDOPTS += -brtl
+        EXTRA_LIBS = -ldl
+    endif
 endif
 
 # Solaris
 ifeq ($(OS_ARCH), SunOS)
-ifneq ($(OS_RELEASE), 4.1.3_U1)
-ifdef NS_USE_GCC
-LDOPTS += -Xlinker -R -Xlinker $(PWD)/$(DIST)/lib
-else
-LDOPTS += -R $(PWD)/$(DIST)/lib
-endif
-endif
+    ifneq ($(OS_RELEASE), 4.1.3_U1)
+        ifdef NS_USE_GCC
+            LDOPTS += -Xlinker -R -Xlinker $(PWD)/$(DIST)/lib
+        else
+            ifeq ($(USE_CPLUS), 1)
+                CC = CC
+            endif
+            LDOPTS += -R $(PWD)/$(DIST)/lib
+        endif
+    endif
 
-ifneq ($(LOCAL_THREADS_ONLY),1)
+    ifneq ($(LOCAL_THREADS_ONLY),1)
 # SunOS 5.4 and 5.5 need to link with -lthread or -lpthread,
 # even though we already linked with these system libraries
 # when we built libnspr.so.
-ifeq ($(OS_RELEASE), 5.4)
-EXTRA_LIBS = -lthread
-endif
+        ifeq ($(OS_RELEASE), 5.4)
+            EXTRA_LIBS = -lthread
+        endif
 
-ifeq ($(OS_RELEASE), 5.5)
-ifdef USE_PTHREADS
-EXTRA_LIBS = -lpthread
-else
-EXTRA_LIBS = -lthread
-endif
-endif
-endif # LOCAL_THREADS_ONLY
+        ifeq ($(OS_RELEASE), 5.5)
+            ifdef USE_PTHREADS
+                EXTRA_LIBS = -lpthread
+            else
+                EXTRA_LIBS = -lthread
+            endif
+        endif
+    endif # LOCAL_THREADS_ONLY
 endif # SunOS
 
 ifeq ($(OS_ARCH), NEC)
-EXTRA_LIBS = $(OS_LIBS)
+    EXTRA_LIBS = $(OS_LIBS)
 # This hardcodes in the executable programs the directory to find
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath
 # option for ld on other platforms.
-export LD_RUN_PATH = $(PWD)/$(DIST)/lib
+    export LD_RUN_PATH = $(PWD)/$(DIST)/lib
 endif
 
 ifeq ($(OS_ARCH), NCR)
 # NCR needs to link against -lsocket -lnsl -ldl (and -lc, which is
 # linked implicitly by $(CC)).  Note that we did not link with these
 # system libraries when we built libnspr.so.
-EXTRA_LIBS = -lsocket -lnsl -ldl
+    EXTRA_LIBS = -lsocket -lnsl -ldl
 # This hardcodes in the executable programs the directory to find
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath 
 # option for ld on other platforms.
-export LD_RUN_PATH = $(PWD)/$(DIST)/lib
+    export LD_RUN_PATH = $(PWD)/$(DIST)/lib
 endif
 
 ifeq ($(OS_ARCH), NEWS-OS)
@@ -262,20 +286,20 @@ ifeq ($(OS_ARCH), NEWS-OS)
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath 
 # option for ld on other platforms.
 #export LD_RUN_PATH = $(PWD)/$(DIST)/lib
-  LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).a
-  LIBPLC = $(DIST)/lib/libplc$(MOD_VERSION).a
-  EXTRA_LIBS = -lsocket -lnsl -lgen -lresolv
+    LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).a
+    LIBPLC = $(DIST)/lib/libplc$(MOD_VERSION).a
+    EXTRA_LIBS = -lsocket -lnsl -lgen -lresolv
 endif
 
 ifeq ($(OS_ARCH), Linux)
-ifeq ($(OS_RELEASE), 1.2)
-EXTRA_LIBS = -ldl
-else
-LDOPTS += -Xlinker -rpath $(PWD)/$(DIST)/lib
-ifeq ($(USE_PTHREADS),1)
-EXTRA_LIBS = -lpthread
-endif
-endif
+    ifeq ($(OS_RELEASE), 1.2)
+        EXTRA_LIBS = -ldl
+    else
+        LDOPTS += -Xlinker -rpath $(PWD)/$(DIST)/lib
+        ifeq ($(USE_PTHREADS),1)
+            EXTRA_LIBS = -lpthread
+        endif
+    endif
 endif
 
 ifeq ($(OS_ARCH), SCOOS)
@@ -304,10 +328,27 @@ ifeq ($(OS_ARCH),FreeBSD)
 ifeq ($(USE_PTHREADS),1)
 EXTRA_LIBS = -lc_r
 endif
+LDOPTS += -Xlinker -R $(PWD)/$(DIST)/lib
 endif
 
 ifeq ($(OS_ARCH),BSD_OS)
 EXTRA_LIBS = -ldl
+endif
+
+ifeq ($(USE_PTHREADS),1)
+ifeq ($(OS_ARCH),AIX)
+LIBPTHREAD = -lpthreads
+else
+  ifeq ($(OS_ARCH),FreeBSD)
+  LIBPTHREAD = -lc_r
+  else
+    ifeq ($(OS_ARCH)$(basename $(OS_RELEASE)),HP-UXB.10)
+    LIBPTHREAD = -ldce
+    else
+    LIBPTHREAD = -lpthread
+    endif
+  endif
+endif
 endif
 
 #####################################################
@@ -352,15 +393,7 @@ else
 ifeq ($(USE_PTHREADS), 1)
 $(OBJDIR)/attach: $(OBJDIR)/attach.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH), AIX)
-	$(CC) $< $(LDOPTS) $(LIBPLC) $(LIBPR) -lpthreads -o $@
-else
-ifeq ($(OS_ARCH),FreeBSD)
-	$(CC) $< $(LDOPTS) $(LIBPLC) $(LIBPR) -lc_r -o $@
-else
-	$(CC) $< $(LDOPTS) $(LIBPLC) $(LIBPR) -lpthread -o $@
-endif
-endif
+	$(CC) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) -o $@
 endif
 
 
@@ -399,6 +432,13 @@ export:: $(TARGETS)
 install:: export
 clean::
 	rm -f $(TARGETS)
+
+ifeq ($(USE_PTHREADS), 1)
+$(OBJDIR)/foreign: $(OBJDIR)/foreign.o
+	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(EXTRA_LIBS) $(LIBPTHREAD) -o $@
+$(OBJDIR)/provider: $(OBJDIR)/provider.o
+	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(EXTRA_LIBS) $(LIBPTHREAD) -o $@
+endif
 
 #
 # Run the test programs with no arguments

@@ -44,40 +44,24 @@
 
 #define _PR_TPD_MODULO 8                /* vectors are extended by this much */
 #define _PR_TPD_LIMIT 128               /* arbitary limit on the TPD slots */
-static PRUintn _pr_tpd_highwater = 0;   /* next TPD key to be assigned */
-static PRUintn _pr_tpd_length = 0;      /* current length of destructor vector */
+static PRInt32 _pr_tpd_length = 0;      /* current length of destructor vector */
+static PRInt32 _pr_tpd_highwater = 0;   /* next TPD key to be assigned */
 PRThreadPrivateDTOR *_pr_tpd_destructors = NULL;
                                         /* the destructors are associated with
                                             the keys, therefore asserting that
                                             the TPD key depicts the data's 'type' */
 
 /* Lock protecting the index assignment of per-thread-private data table */
-#ifdef _PR_NO_PREEMPT
-#define _PR_NEW_LOCK_TPINDEX()
-#define _PR_FREE_LOCK_TPINDEX()
-#define _PR_LOCK_TPINDEX()
-#define _PR_UNLOCK_TPINDEX()
-#else
-#ifdef _PR_LOCAL_THREADS_ONLY
-#define _PR_NEW_LOCK_TPINDEX()
-#define _PR_FREE_LOCK_TPINDEX()
-#define _PR_LOCK_TPINDEX() _PR_INTSOFF(_is)
-#define _PR_UNLOCK_TPINDEX() _PR_INTSON(_is)
-#else
-static PRLock *_pr_threadPrivateIndexLock;
-#define _PR_NEW_LOCK_TPINDEX() (_pr_threadPrivateIndexLock = PR_NewLock())
-#define _PR_FREE_LOCK_TPINDEX() (PR_DestroyLock(_pr_threadPrivateIndexLock))
-#define _PR_LOCK_TPINDEX() PR_Lock(_pr_threadPrivateIndexLock)
-#define _PR_UNLOCK_TPINDEX() PR_Unlock(_pr_threadPrivateIndexLock)
-#endif
-#endif
 
 /*
 ** Initialize the thread private data manipulation
 */
 void _PR_InitTPD()
 {
-	_PR_NEW_LOCK_TPINDEX();
+    _pr_tpd_destructors = (PRThreadPrivateDTOR*)
+        PR_CALLOC(_PR_TPD_LIMIT * sizeof(PRThreadPrivateDTOR*));
+    PR_ASSERT(NULL != _pr_tpd_destructors);
+    _pr_tpd_length = _PR_TPD_LIMIT;
 }
 
 /*
@@ -85,8 +69,7 @@ void _PR_InitTPD()
 */
 void _PR_CleanupTPD(void)
 {
-	_PR_FREE_LOCK_TPINDEX();
-}
+}  /* _PR_CleanupTPD */
 
 /*
 ** This routine returns a new index for per-thread-private data table. 
@@ -101,8 +84,8 @@ void _PR_CleanupTPD(void)
 ** is NULL, and upon thread creation the value associated with all indices for 
 ** that thread is NULL. 
 **
-** 	"dtor" is the destructor function to invoke when the private
-**	   data is destroyed
+**     "dtor" is the destructor function to invoke when the private
+**       data is destroyed
 **
 ** Returns PR_FAILURE if the total number of indices will exceed the maximun 
 ** allowed.
@@ -112,49 +95,24 @@ PR_IMPLEMENT(PRStatus) PR_NewThreadPrivateIndex(
     PRUintn *newIndex, PRThreadPrivateDTOR dtor)
 {
     PRStatus rv;
+    PRInt32 index;
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
+    PR_ASSERT(NULL != newIndex);
+    PR_ASSERT(NULL != _pr_tpd_destructors);
 
-    if (_pr_tpd_highwater >= _PR_TPD_LIMIT)
+    index = PR_AtomicIncrement(&_pr_tpd_highwater);  /* allocate index */
+    if (_PR_TPD_LIMIT < index)
     {
         PR_SetError(PR_TPD_RANGE_ERROR, 0);
-	    rv = PR_FAILURE;  /* that's just wrong */
+        rv = PR_FAILURE;  /* that's just wrong */
     }
     else
     {
-        PRThreadPrivateDTOR *old = NULL;
-		PRIntn _is;
-
-        _PR_LOCK_TPINDEX();
-        if (_pr_tpd_highwater >= _pr_tpd_length)
-        {
-            old = _pr_tpd_destructors;
-            _pr_tpd_destructors = PR_CALLOC(
-                (_pr_tpd_length + _PR_TPD_MODULO) * sizeof(PRThreadPrivateDTOR*));
-            if (NULL == _pr_tpd_destructors)
-            {
-                _pr_tpd_destructors = old; old = NULL;
-                PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
-	            rv = PR_FAILURE;  /* that's just wrong */
-	            goto failed;  /* then extract one's self */
-	        }
-	        else
-	        {
-                memcpy(
-                    _pr_tpd_destructors, old,
-                    _pr_tpd_length * sizeof(PRThreadPrivateDTOR*));
-                _pr_tpd_length += _PR_TPD_MODULO;
-	        }
-        }
-        
-        *newIndex = _pr_tpd_highwater++;  /* this is really all we wanted */
-        _pr_tpd_destructors[*newIndex] = dtor;  /* record destructor @index */
-
-failed:
-        _PR_UNLOCK_TPINDEX();
-        if (NULL != old) PR_DELETE(old);
-        rv = PR_SUCCESS;
+        _pr_tpd_destructors[index] = dtor;  /* record destructor @index */
+        *newIndex = (PRIntn)index;  /* copy into client's location */
+        rv = PR_SUCCESS;  /* that's okay */
     }
 
     return rv;
@@ -162,8 +120,8 @@ failed:
 
 /*
 ** Define some per-thread-private data.
-** 	"index" is an index into the per-thread private data table
-** 	"priv" is the per-thread-private data 
+**     "index" is an index into the per-thread private data table
+**     "priv" is the per-thread-private data 
 **
 ** If the per-thread private data table has a previously registered
 ** destructor function and a non-NULL per-thread-private data value,
@@ -173,9 +131,10 @@ failed:
 ** high water mark) or memory is insufficient to allocate an exanded vector.
 */
 
-PR_IMPLEMENT(PRStatus) PR_SetThreadPrivate(PRUintn index, void *priv)
+PR_IMPLEMENT(PRStatus) PR_SetThreadPrivate(PRUintn his, void *priv)
 {
     PRStatus rv = PR_SUCCESS;
+    PRInt32 index = (PRInt32)his;
     PRThread *self = PR_GetCurrentThread();
 
     /*
@@ -183,17 +142,13 @@ PR_IMPLEMENT(PRStatus) PR_SetThreadPrivate(PRUintn index, void *priv)
     ** thread. But if the index has been allocated, it's okay to go
     ** ahead and extend this one now.
     */
-    if (index >= _pr_tpd_highwater)
+    if (index > _pr_tpd_highwater)
     {
-        PR_ASSERT(index < _pr_tpd_highwater);
         PR_SetError(PR_TPD_RANGE_ERROR, 0);
-	    rv = PR_FAILURE;
+        rv = PR_FAILURE;
     }
     else
     {
-		PRIntn _is;
-
-        _PR_LOCK_TPINDEX();
         if ((NULL == self->privateData) || (self->tpdLength <= index))
         {
             void *extension = PR_CALLOC(_pr_tpd_length * sizeof(void*));
@@ -206,7 +161,7 @@ PR_IMPLEMENT(PRStatus) PR_SetThreadPrivate(PRUintn index, void *priv)
                     extension, self->privateData,
                     self->tpdLength * sizeof(void*));
                 self->tpdLength = _pr_tpd_length;
-                self->privateData = extension;
+                self->privateData = (void**)extension;
             }
         }
         /*
@@ -217,9 +172,7 @@ PR_IMPLEMENT(PRStatus) PR_SetThreadPrivate(PRUintn index, void *priv)
         {
             void *data = self->privateData[index];
             self->privateData[index] = NULL;
-	        _PR_UNLOCK_TPINDEX();
-	        (*_pr_tpd_destructors[index])(data);
-            _PR_LOCK_TPINDEX();
+            (*_pr_tpd_destructors[index])(data);
         }
 
         /*
@@ -232,10 +185,9 @@ PR_IMPLEMENT(PRStatus) PR_SetThreadPrivate(PRUintn index, void *priv)
             rv = PR_FAILURE;
         }
         else self->privateData[index] = priv;
-	    _PR_UNLOCK_TPINDEX();
-	}
+    }
 
-	return rv;
+    return rv;
 }
 
 /*
@@ -247,8 +199,9 @@ PR_IMPLEMENT(PRStatus) PR_SetThreadPrivate(PRUintn index, void *priv)
 **
 */
 
-PR_IMPLEMENT(void*) PR_GetThreadPrivate(uintn index)
+PR_IMPLEMENT(void*) PR_GetThreadPrivate(PRUintn his)
 {
+    PRInt32 index = (PRInt32)his;
     PRThread *self = PR_GetCurrentThread();
     void *tpd = ((NULL == self->privateData) || (index >= self->tpdLength)) ?
         NULL : self->privateData[index];
@@ -256,24 +209,57 @@ PR_IMPLEMENT(void*) PR_GetThreadPrivate(uintn index)
     return tpd;
 }
 
+/*
+** Destroy the thread's private data, if any exists. This is called at
+** thread termination time only. There should be no threading issues
+** since this is being called by the thread itself.
+*/
+void _PR_DestroyThreadPrivate(PRThread* self)
+{
+    if (NULL != self->privateData)  /* we have some */
+    {
+        PRBool clean = PR_TRUE;
+        PRInt32 index, passes = 4;
+        PR_ASSERT(0 != self->tpdLength);
+        do
+        {
+            for (index = 0; index < self->tpdLength; ++index)
+            {
+                void *priv = self->privateData[index];  /* extract */
+                if (NULL != priv)  /* we have data at this index */
+                {
+                    if (NULL != _pr_tpd_destructors[index])
+                    {
+                        self->privateData[index] = NULL;  /* precondition */
+                        (*_pr_tpd_destructors[index])(priv);  /* destroy */
+                        clean = PR_FALSE;  /* unknown side effects */
+                    }
+                }
+            }
+        } while ((passes-- > 0) && !clean);  /* limit # of passes */
+        PR_DELETE(self->privateData);  /* that's just this thread's vector */
+    }
+}  /* _PR_DestroyThreadPrivate */
+
+#if 0
 PR_IMPLEMENT(PRStatus) PR_SetThreadExit(PRUintn index, PRThreadExit func, void *arg)
 {
     _PRPerThreadExit *pte;
     PRThread *thread = _PR_MD_CURRENT_THREAD();
 
     if (index >= thread->numExits) {
-	if (thread->ptes) {
-	    thread->ptes = (_PRPerThreadExit*)
-		PR_REALLOC(thread->ptes, (index+1) * sizeof(_PRPerThreadExit));
-	} else {
-	    thread->ptes = (_PRPerThreadExit*)
-	        PR_CALLOC(index+1 * sizeof(_PRPerThreadExit));
-	}
-	if (!thread->ptes) {
-	    PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
-	    return PR_FAILURE;
-	}
-	thread->numExits = index + 1;
+    if (thread->ptes) {
+        thread->ptes = (_PRPerThreadExit*)
+        PR_REALLOC(thread->ptes, (index+1) * sizeof(_PRPerThreadExit));
+    } else {
+        thread->ptes = (_PRPerThreadExit*)
+            PR_CALLOC(index+1 * sizeof(_PRPerThreadExit));
+    }
+    if (!thread->ptes) {
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+        return PR_FAILURE;
+    }
+    thread->numExits = index + 1;
     }
     pte = &thread->ptes[index];
     pte->func = func;
@@ -287,10 +273,12 @@ PR_IMPLEMENT(PRThreadExit) PR_GetThreadExit(PRUintn index, void **argp)
     PRThread *thread = _PR_MD_CURRENT_THREAD();
 
     if (index >= thread->numExits) {
-	if (argp) *argp = 0;
-	return 0;
+    if (argp) *argp = 0;
+    return 0;
     }
     pte = &thread->ptes[index];
     if (argp) *argp = pte->arg;
     return pte->func;
 }
+
+#endif

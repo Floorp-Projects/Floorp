@@ -65,8 +65,8 @@ typedef PRInt32 (*PRWalkFun)(void GCPTR* obj, void* data);
 */
 typedef struct GCType {
     /*
-    ** Scan an object that is in the GC heap and call PR_LiveObject on
-    ** all of the pointers in it. If this slot is null then the object
+    ** Scan an object that is in the GC heap and call GCInfo.livePointer
+    ** on all of the pointers in it. If this slot is null then the object
     ** won't be scanned (i.e. it has no embedded pointers).
     */
     void (PR_CALLBACK *scan)(void GCPTR *obj);
@@ -353,7 +353,7 @@ PR_EXTERN(PRBool) PR_GC_In_Heap(void GCPTR *object);
 
 /*
 ** Simple bounds check to see if a pointer is anywhere near the GC heap.
-** Used to avoid calls to PR_ProcessRoot and PR_LiveObject by object
+** Used to avoid calls to PR_ProcessRoot and GCInfo.livePointer by object
 ** scanning code.
 */
 #if !defined(XP_PC) || defined(_WIN32)

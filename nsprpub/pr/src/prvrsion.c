@@ -1,0 +1,65 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ * 
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ * 
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "prinit.h"
+#include "prvrsion.h"
+
+/************************************************************************/
+/**************************IDENTITY AND VERSIONING***********************/
+/************************************************************************/
+#include "_pr_bld.h"
+#if !defined(_BUILD_TIME)
+#define _BUILD_TIME 0
+#endif
+#if !defined(_BUILD_STRING)
+#define _BUILD_STRING ""
+#endif
+#if !defined(_PRODUCTION)
+#define _PRODUCTION ""
+#endif
+
+static PRVersionDescription prVersionDescription_libnsrp21 =
+{
+    /* version          */  2,                  /* this is the only one supported */
+    /* buildTime        */  _BUILD_TIME,        /* usecs since midnight 1/1/1970 GMT */
+    /* buildTimeString  */  _BUILD_STRING,       /*    ditto, but human readable */
+    /* vMajor           */  PR_VMAJOR,          /* NSPR's version number */
+    /* vMinor           */  PR_VMINOR,          /*  and minor version */
+    /* vPatch           */  PR_VPATCH,          /*  and patch */
+    /* beta             */  PR_BETA,            /* beta build boolean */
+#if defined(DEBUG)
+    /* debug            */  PR_TRUE,            /* a debug build */
+#else
+    /* debug            */  PR_FALSE,           /* an optomized build */
+#endif
+    /* special          */  PR_FALSE,           /* they're all special, but ... */
+    /* filename         */  _PRODUCTION,        /* the produced library name */
+    /* description      */ "Portable runtime",  /* what we are */
+    /* security         */ "N/A",               /* not applicable here */
+    /* copywrite        */  "Copyright (c) 1998 Netscape Communications Corporation. All Rights Reserved",
+    /* comment          */  "License information: http://www.mozilla.org/NPL/",
+    /* specialString    */ ""
+};
+
+PR_IMPLEMENT(const PRVersionDescription*) libVersionPoint(void)
+{
+    return &prVersionDescription_libnsrp21;
+}  /* versionEntryPointType */
+
+/* prvrsion.c */
+

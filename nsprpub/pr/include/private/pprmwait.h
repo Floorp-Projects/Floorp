@@ -31,8 +31,8 @@
 #define MAX_POLLING_INTERVAL 100
 #define _PR_DEFAULT_HASH_LENGTH 59
 
-#define _MW_REHASH(a, i, m) _MW_HASH((PRUword)(a) + (i) + _PR_HASH_OFFSET, m)
-#define _MW_HASH(a, m) ((((PRUword)(a) >> 4) ^ ((PRUword)(a) >> 10)) % (m))
+#define _MW_REHASH(a, i, m) _MW_HASH((PRUptrdiff)(a) + (i) + _PR_HASH_OFFSET, m)
+#define _MW_HASH(a, m) ((((PRUptrdiff)(a) >> 4) ^ ((PRUptrdiff)(a) >> 10)) % (m))
 #define _MW_ABORTED(_rv) \
     ((PR_FAILURE == (_rv)) && (PR_PENDING_INTERRUPT_ERROR == PR_GetError()))
 
@@ -61,16 +61,51 @@ struct PRWaitGroup
     PRThread* poller;           /* thread that's actually doing the poll() */
     PRUint16 waiting_threads;   /* number of threads waiting for recv */
     PRUint16 polling_count;     /* number of elements in the polling list */
+    PRUint32 p_timestamp;       /* pseudo-time group had element removed */
     PRPollDesc *polling_list;   /* list poller builds for polling */
     PRIntervalTime last_poll;   /* last time we polled */
     _PRWaiterHash *waiter;      /* pointer to hash table of wait receive objects */
+
+#ifdef WINNT
+    /*
+     * On NT, idle threads are responsible for getting completed i/o.
+     * They need to add completed i/o to the io_ready list.  Since
+     * idle threads cannot use nspr locks, we have to use an md lock
+     * to protect the io_ready list.
+     */
+    _MDLock mdlock;             /* protect io_ready, waiter, and wait_list */
+    PRCList wait_list;          /* used in place of io_complete.  reuse
+                                 * waitQLinks in the PRThread structure. */
+#endif /* WINNT */
 };
 
+/**********************************************************************
+***********************************************************************
+******************** Wait group enumerations **************************
+***********************************************************************
+**********************************************************************/
 typedef struct _PRGlobalState
 {
     PRCList group_list;         /* master of the group list */
     PRWaitGroup *group;         /* the default (NULL) group */
 } _PRGlobalState;
+
+#ifdef WINNT
+extern PRStatus NT_HashRemoveInternal(PRWaitGroup *group, PRFileDesc *fd);
+#endif
+
+typedef enum {_PR_ENUM_UNSEALED=0, _PR_ENUM_SEALED=0x0eadface} _PREnumSeal;
+
+struct PRMWaitEnumerator
+{
+    PRWaitGroup *group;       /* group this enumerator is bound to */
+    PRThread *thread;               /* thread in midst of an enumeration */
+    _PREnumSeal seal;               /* trying to detect deleted objects */
+    PRUint32 p_timestamp;           /* when enumeration was (re)started */
+    PRRecvWait **waiter;            /* pointer into hash table */
+    PRUintn index;                  /* position in hash table */
+    void *pad[4];                   /* some room to grow */
+};
 
 #endif /* defined(_PPRMWAIT_H) */
 

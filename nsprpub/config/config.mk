@@ -16,18 +16,14 @@
 # Reserved.
 #
 
-ifndef topsrcdir
-topsrcdir = $(MOD_DEPTH)
-endif
-
 # Configuration information for building in the NSPR source module
 
 # Define an include-at-most-once-flag
 NSPR_CONFIG_MK	= 1
 
-include $(topsrcdir)/config/module.df
+include $(MOD_DEPTH)/config/module.df
 
-include $(topsrcdir)/config/arch.mk
+include $(MOD_DEPTH)/config/arch.mk
 
 ifndef NSDEPTH
 NSDEPTH = $(MOD_DEPTH)/..
@@ -46,29 +42,15 @@ NFSPWD		= $(MOD_DEPTH)/config/nfspwd
 LIBNSPR		= $(DIST)/lib/libnspr.$(LIB_SUFFIX)
 PURELIBNSPR	= $(DIST)/lib/libpurenspr.$(LIB_SUFFIX)
 
-CFLAGS		= $(OPTIMIZER) $(OS_CFLAGS) $(XP_DEFINE) $(DEFINES) $(INCLUDES) \
-				$(XCFLAGS)
+CFLAGS		= $(CC_ONLY_FLAGS) $(OPTIMIZER) $(OS_CFLAGS)\
+		  $(XP_DEFINE) $(DEFINES) $(INCLUDES) $(XCFLAGS)
+CCCFLAGS	= $(CCC_ONLY_FLAGS) $(OPTIMIZER) $(OS_CFLAGS)\
+		  $(XP_DEFINE) $(DEFINES) $(INCLUDES) $(XCFLAGS)
 # For purify
-NOMD_CFLAGS	= $(OPTIMIZER) $(NOMD_OS_CFLAGS) $(XP_DEFINE) $(DEFINES) $(INCLUDES) \
-				$(XCFLAGS)
+NOMD_CFLAGS	= $(CC_ONLY_FLAGS) $(OPTIMIZER) $(NOMD_OS_CFLAGS)\
+		  $(XP_DEFINE) $(DEFINES) $(INCLUDES) $(XCFLAGS)
 
-ifdef USE_AUTOCONF
-OPTIMIZER	= $(ACCFLAGS)
-DEFINES		+=  -UDEBUG -DNDEBUG -DTRIMMED
-endif
-
-ifdef MOZ_DEBUG
-ifdef USE_AUTOCONF
-OPTIMIZER	= $(ACCFLAGS)
-else
-OPTIMIZER	= -g
-endif
-JAVA_OPTIMIZER	= -g
-DEFINES		= -DDEBUG -UNDEBUG -DDEBUG_$(shell $(WHOAMI)) -DTRACING
-XBCFLAGS	= -FR$*
-endif
-
-include $(topsrcdir)/config/$(OS_TARGET).mk
+include $(MOD_DEPTH)/config/$(OS_TARGET).mk
 
 # Figure out where the binary code lives.
 BUILD		= $(OBJDIR_NAME)
@@ -79,18 +61,8 @@ MOZ_INCL	= $(NSDEPTH)/dist/public/win16
 MOZ_DIST	= $(NSDEPTH)/dist/WIN16D_D.OBJ
 endif
 
-ifdef USE_AUTOCONF
-EMACS			= $(ACEMACS)
-PERL			= $(ACPERL)
-RANLIB			= $(ACRANLIB)
-UNZIP_PROG		= $(ACUNZIP)
-WHOAMI			= $(ACWHOAMI)
-ZIP_PROG		= $(ACZIP)
-DEPENDENCIES	= .md
-else
 VPATH		= $(OBJDIR)
 DEPENDENCIES	= $(OBJDIR)/.md
-endif
 
 ifdef BUILD_DEBUG_GC
 DEFINES		+= -DDEBUG_GC

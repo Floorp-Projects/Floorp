@@ -24,7 +24,11 @@ HEADERS = $(wildcard *.h)
 include $(MOD_DEPTH)/config/rules.mk
 
 ifeq ($(OS_ARCH),IRIX)
-MDCPUCFG_H = _irix.cfg
+ifeq ($(USE_64), 1)
+MDCPUCFG_H = _irix64.cfg
+else
+MDCPUCFG_H = _irix32.cfg
+endif
 endif
 
 ifeq ($(OS_ARCH),WINNT)
@@ -55,12 +59,20 @@ ifeq ($(OS_ARCH),FreeBSD)
 MDCPUCFG_H = _freebsd.cfg
 endif
 
+ifeq ($(OS_ARCH),OpenBSD)
+MDCPUCFG_H = _openbsd.cfg
+endif
+
 ifeq ($(OS_ARCH),NetBSD)
 MDCPUCFG_H = _netbsd.cfg
 endif
 
 ifeq ($(OS_ARCH),HP-UX)
-MDCPUCFG_H = _hpux.cfg
+ifeq ($(USE_64), 1)
+MDCPUCFG_H = _hpux64.cfg
+else
+MDCPUCFG_H = _hpux32.cfg
+endif
 endif
 
 ifeq ($(OS_ARCH),Linux)

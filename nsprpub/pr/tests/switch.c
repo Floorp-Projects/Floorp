@@ -63,14 +63,14 @@ static void Help(void)
     debug_out = PR_STDOUT;
 
     PR_fprintf(
-		debug_out, "Usage: >./switch [-d] [-c n] [-t n] [-T n] [-G]\n");
+		debug_out, "Usage: >./switch [-c n] [-t n] [-d] [-v] [-G] [-C n]\n");
     PR_fprintf(
 		debug_out, "-c n\tloops at thread level (default: %d)\n", DEFAULT_LOOPS);
     PR_fprintf(
 		debug_out, "-t n\tnumber of threads (default: %d)\n", DEFAULT_THREADS);
     PR_fprintf(debug_out, "-d\tturn on debugging output (default: FALSE)\n");
     PR_fprintf(debug_out, "-v\tturn on verbose output (default: FALSE)\n");
-    PR_fprintf(debug_out, "-G n\tglobal threads only (default: FALSE)\n");
+    PR_fprintf(debug_out, "-G\tglobal threads only (default: FALSE)\n");
     PR_fprintf(debug_out, "-C n\tconcurrency setting (default: 1)\n");
 }  /* Help */
 

@@ -120,10 +120,6 @@
 
 #endif
 
-#if !defined(NO_NSPR_10_SUPPORT)
-#define PR_PUBLIC_API		PR_IMPLEMENT
-#endif
-
 /***********************************************************************
 ** MACROS:      PR_BEGIN_MACRO
 **              PR_END_MACRO
@@ -179,7 +175,21 @@ PR_BEGIN_EXTERN_C
 ************************************************************************/
 #if PR_BYTES_PER_BYTE == 1
 typedef unsigned char PRUint8;
+/*
+** Some cfront-based C++ compilers do not like 'signed char' and
+** issue the warning message:
+**     warning: "signed" not implemented (ignored)
+** For these compilers, we have to define PRInt8 as plain 'char'.
+** Make sure that plain 'char' is indeed signed under these compilers.
+*/
+#if (defined(HPUX) && defined(__cplusplus) \
+        && !defined(__GNUC__) && __cplusplus < 199707L) \
+    || (defined(SCO) && defined(__cplusplus) \
+        && !defined(__GNUC__) && __cplusplus == 1L)
+typedef char PRInt8;
+#else
 typedef signed char PRInt8;
+#endif
 #else
 #error No suitable type for PRInt8/PRUint8
 #endif
@@ -332,6 +342,8 @@ typedef enum { PR_FAILURE = -1, PR_SUCCESS = 0 } PRStatus;
 /*
 ** Fundamental NSPR macros, used nearly everywhere.
 */
+
+#define PR_PUBLIC_API		PR_IMPLEMENT
 
 /*
 ** Macro body brackets so that macros with compound statement definitions

@@ -245,6 +245,7 @@ extern PRInt32 _MD_CloseSocket(PRInt32 osfd);
 
 #define _MD_INIT_ATOMIC               _PR_MD_INIT_ATOMIC
 #define _MD_ATOMIC_INCREMENT(x)       _PR_MD_ATOMIC_INCREMENT(x)
+#define _MD_ATOMIC_ADD(x,y)			  _PR_MD_ATOMIC_ADD(x,y)
 #define _MD_ATOMIC_DECREMENT(x)       _PR_MD_ATOMIC_DECREMENT(x)
 #define _MD_ATOMIC_SET(x,y)           _PR_MD_ATOMIC_SET(x, y)
 
@@ -340,6 +341,7 @@ extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 #define _MD_START_INTERRUPTS()
 #define _MD_STOP_INTERRUPTS()
 #define _MD_DISABLE_CLOCK_INTERRUPTS()
+#define _MD_ENABLE_CLOCK_INTERRUPTS()
 #define _MD_BLOCK_CLOCK_INTERRUPTS()
 #define _MD_UNBLOCK_CLOCK_INTERRUPTS()
 #define _MD_EARLY_INIT                _PR_MD_EARLY_INIT

@@ -221,14 +221,16 @@ PR_IMPLEMENT(PRStatus) PR_GetConnectStatus(const PRPollDesc *pd)
 
 #elif defined(WIN32) || defined(WIN16)
 
+#if defined(WIN32)
+    /*
+     * The sleep circumvents a bug in Win32 WinSock.
+     * See Microsoft Knowledge Base article ID: Q165989.
+     */
+    Sleep(0);
+#endif /* WIN32 */
+
     if (pd->out_flags & PR_POLL_EXCEPT) {
         int len = sizeof(err);
-#if defined(WIN32)
-/* Note: There is a bug in Win32 WinSock. The sleep circumvents the
-** bug. See wtc. /s lth.
-*/
-        Sleep(0);
-#endif /* WIN32 */
         if (getsockopt(osfd, (int)SOL_SOCKET, SO_ERROR, (char *) &err, &len)
                 == SOCKET_ERROR) {
             _PR_MD_MAP_GETSOCKOPT_ERROR(WSAGetLastError());
@@ -517,20 +519,21 @@ static PRInt32 PR_CALLBACK SocketWrite(PRFileDesc *fd, const void *buf, PRInt32 
 
 static PRStatus PR_CALLBACK SocketClose(PRFileDesc *fd)
 {
-	PRInt32 rv;
-
-	if (!fd || fd->secret->state != _PR_FILEDESC_OPEN) {
+	if (!fd || !fd->secret
+			|| (fd->secret->state != _PR_FILEDESC_OPEN
+			&& fd->secret->state != _PR_FILEDESC_CLOSED)) {
 		PR_SetError(PR_BAD_DESCRIPTOR_ERROR, 0);
 		return PR_FAILURE;
 	}
 
-	fd->secret->state = _PR_FILEDESC_CLOSED;
-
-	rv =  _PR_MD_CLOSE_SOCKET(fd->secret->md.osfd);
-	PR_FreeFileDesc(fd);
-	if (rv < 0) {
-		return PR_FAILURE;
+	if (fd->secret->state == _PR_FILEDESC_OPEN) {
+		if (_PR_MD_CLOSE_SOCKET(fd->secret->md.osfd) < 0) {
+			return PR_FAILURE;
+		}
+		fd->secret->state = _PR_FILEDESC_CLOSED;
 	}
+
+	PR_FreeFileDesc(fd);
 	return PR_SUCCESS;
 }
 
@@ -630,6 +633,11 @@ PRIntervalTime timeout)
 	}
 	if (_PR_IO_PENDING(me)) {
 		PR_SetError(PR_IO_PENDING_ERROR, 0);
+		return -1;
+	}
+	/* The socket must be in blocking mode. */
+	if (sd->secret->nonblocking) {
+		PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
 		return -1;
 	}
 	*nd = NULL;
@@ -784,6 +792,11 @@ PRIntervalTime timeout)
 		PR_SetError(PR_IO_PENDING_ERROR, 0);
 		return -1;
 	}
+	/* The socket must be in blocking mode. */
+	if (sd->secret->nonblocking) {
+		PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+		return -1;
+	}
 #if defined(WINNT)
 	rv = _PR_MD_TRANSMITFILE(
 		sd, fd,
@@ -797,7 +810,6 @@ PRIntervalTime timeout)
 		 * that _PR_MD_CLOSE_SOCKET(sd->secret->md.osfd) should
 		 * not be called because the socket will be recycled.
 		 */
-		sd->secret->state = _PR_FILEDESC_CLOSED;
 		PR_FreeFileDesc(sd);
 	}
 #else
@@ -885,7 +897,7 @@ static PRStatus PR_CALLBACK SocketGetSockOpt(
         else
         {
             rv = _PR_MD_GETSOCKOPT(
-                fd, level, name, optval, optlen);
+                fd, level, name, (char*)optval, optlen);
         }
     }
     return rv;
@@ -940,7 +952,7 @@ static PRStatus PR_CALLBACK SocketSetSockOpt(
         else
         {
             rv = _PR_MD_SETSOCKOPT(
-                fd, level, name, optval, optlen);
+                fd, level, name, (const char*)optval, optlen);
         }
     }
     return rv;
@@ -1126,20 +1138,62 @@ PR_IMPLEMENT(PRStatus) PR_NewTCPSocketPair(PRFileDesc *f[])
 	_PR_MD_MAKE_NONBLOCK(f[0]);
 	_PR_MD_MAKE_NONBLOCK(f[1]);
 	return PR_SUCCESS;
-#endif
+#else /* XP_UNIX */
+    PRFileDesc *listenSock;
+    PRNetAddr selfAddr;
+    PRUint16 port;
 
-	/* XXX: this needs to be implemented for MAC and NT */
-#ifdef XP_MAC
-#pragma unused (f)
+    f[0] = f[1] = NULL;
+    listenSock = PR_NewTCPSocket();
+    if (listenSock == NULL) {
+        goto failed;
+    }
+    PR_InitializeNetAddr(PR_IpAddrAny, 0, &selfAddr);
+    if (PR_Bind(listenSock, &selfAddr) == PR_FAILURE) {
+        goto failed;
+    }
+    if (PR_GetSockName(listenSock, &selfAddr) == PR_FAILURE) {
+        goto failed;
+    }
+    port = ntohs(selfAddr.inet.port);
+    if (PR_Listen(listenSock, 5) == PR_FAILURE) {
+        goto failed;
+    }
+    f[0] = PR_NewTCPSocket();
+    if (f[0] == NULL) {
+        goto failed;
+    }
+    PR_InitializeNetAddr(PR_IpAddrLoopback, port, &selfAddr);
 
-	PR_SetError(PR_NOT_IMPLEMENTED_ERROR, unimpErr);
-	return PR_FAILURE;
-#endif
+    /*
+     * Only a thread is used to do the connect and accept.
+     * I am relying on the fact that PR_Connect returns
+     * successfully as soon as the connect request is put
+     * into the listen queue (but before PR_Accept is called).
+     * This is the behavior of the BSD socket code.  If
+     * connect does not return until accept is called, we
+     * will need to create another thread to call connect.
+     */
+    if (PR_Connect(f[0], &selfAddr, PR_INTERVAL_NO_TIMEOUT)
+            == PR_FAILURE) {
+        goto failed;
+    }
+    f[1] = PR_Accept(listenSock, NULL, PR_INTERVAL_NO_TIMEOUT);
+    if (f[1] == NULL) {
+        goto failed;
+    }
+    PR_Close(listenSock);
+    return PR_SUCCESS;
 
-#ifdef XP_PC
-	PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-	return PR_FAILURE;
-#endif
+failed:
+    if (listenSock) {
+        PR_Close(listenSock);
+    }
+    if (f[0]) {
+        PR_Close(f[0]);
+    }
+    return PR_FAILURE;
+#endif /* XP_UNIX */
 }
 
 PR_IMPLEMENT(PRInt32)
@@ -1196,7 +1250,7 @@ PRIntervalTime timeout)
 		return -1;
 	}
 
-	buf = PR_MALLOC(_TRANSMITFILE_BUFSIZE);
+	buf = (char*)PR_MALLOC(_TRANSMITFILE_BUFSIZE);
 	if (buf == NULL) {
 		PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
 		return -1;
@@ -1262,47 +1316,49 @@ done:
  *	newly accepted socket, read 'amount' bytes from the accepted
  *	socket.
  *
- *	buf is a buffer of length = (amount + sizeof(PRNetAddr))
+ *	buf is a buffer of length = (amount + 2 * sizeof(PRNetAddr))
  *	*raddr points to the PRNetAddr of the accepted connection upon
  *	return
  *
  *	return number of bytes read or -1 on error
  *
  */
-PRInt32 _PR_EmulateAcceptRead(PRFileDesc *sd, PRFileDesc **nd, 
-PRNetAddr **raddr, void *buf, PRInt32 amount, PRIntervalTime timeout)
+PRInt32 _PR_EmulateAcceptRead(
+    PRFileDesc *sd, PRFileDesc **nd, PRNetAddr **raddr,
+    void *buf, PRInt32 amount, PRIntervalTime timeout)
 {
-	PRInt32 rv;
-	PRFileDesc *newsockfd;
-	PRIntervalTime start, elapsed;
+    PRInt32 rv = -1;
+    PRNetAddr remote;
+    PRFileDesc *accepted = NULL;
 
-	if (PR_INTERVAL_NO_TIMEOUT != timeout) {
-		start = PR_IntervalNow();
-	}
-	*raddr = (PRNetAddr *) ((char *) buf + amount);
-	if ((newsockfd = PR_Accept(sd, *raddr, timeout)) == NULL) {
-		return -1;
-	}
+    /* The socket must be in blocking mode. */
+    if (sd->secret->nonblocking)
+    {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return rv;
+    }
 
-	if (PR_INTERVAL_NO_TIMEOUT != timeout) {
-		elapsed = (PRIntervalTime) (PR_IntervalNow() - start);
-		if (elapsed > timeout) {
-			PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-			goto failed;
-		} else {
-			timeout = timeout - elapsed;
-		}
-	}
+    /*
+    ** The timeout does not apply to the accept portion of the
+    ** operation - it waits indefinitely.
+    */
+    accepted = PR_Accept(sd, &remote, PR_INTERVAL_NO_TIMEOUT);
+    if (NULL == accepted) return rv;
 
-	rv = PR_Recv(newsockfd, buf, amount, 0, timeout);
-	if (rv >= 0) {
-		*nd = newsockfd;
-		return rv;
-	}
+    rv = PR_Recv(accepted, buf, amount, 0, timeout);
+    if (rv >= 0)
+    {
+        /* copy the new info out where caller can see it */
+        PRPtrdiff aligned = (PRPtrdiff)buf + amount + sizeof(void*) - 1;
+        *raddr = (PRNetAddr*)(aligned & ~(sizeof(void*) - 1));
+        memcpy(*raddr, &remote, PR_NETADDR_SIZE(&remote));
+        *nd = accepted;
+        return rv;
+    }
 
 failed:
-	PR_Close(newsockfd);
-	return -1;
+    PR_Close(accepted);
+    return rv;
 }
 
 /*
@@ -1403,7 +1459,7 @@ static PRPollDesc *_pr_setfd(
             if ((PRFileDesc*)-1 == poll[pdidx].fd)
             {
                 /* our vector is full - extend and condition it */
-                poll = PR_Realloc(
+                poll = (PRPollDesc*)PR_Realloc(
                     poll, (pdidx + 1 + PD_INCR) * sizeof(PRPollDesc));
                 if (NULL == poll) goto out_of_memory;
                 memset(
@@ -1495,7 +1551,7 @@ PR_IMPLEMENT(PRInt32) PR_Select(
         return 0;
     }
 
-    copy = poll = PR_Calloc(npds + PD_INCR, sizeof(PRPollDesc));
+    copy = poll = (PRPollDesc*)PR_Calloc(npds + PD_INCR, sizeof(PRPollDesc));
     if (NULL == poll) goto out_of_memory;
     poll[npds + PD_INCR - 1].fd = (PRFileDesc*)-1;
 

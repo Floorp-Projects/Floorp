@@ -23,6 +23,7 @@ CSRCS =          \
 	unix_errors.c \
 	uxproces.c \
 	uxwrap.c \
+	uxpoll.c \
 	$(NULL)
 
 PTH_USER_CSRCS =          \
@@ -51,6 +52,10 @@ FREEBSD_CSRCS = \
 
 NETBSD_CSRCS = \
 	netbsd.c \
+	$(NULL)
+
+OPENBSD_CSRCS = \
+	openbsd.c \
 	$(NULL)
 
 BSDI_CSRCS = \
@@ -127,6 +132,9 @@ endif
 ifeq ($(OS_ARCH),NetBSD)
 CSRCS += $(NETBSD_CSRCS)
 endif
+ifeq ($(OS_ARCH),OpenBSD)
+CSRCS += $(OPENBSD_CSRCS)
+endif
 ifeq ($(OS_ARCH),BSD_OS)
 CSRCS += $(BSDI_CSRCS)
 endif
@@ -179,13 +187,19 @@ ifeq ($(OS_ARCH),SunOS)
 	ASFILES = os_$(OS_ARCH)_x86.s
     else
 	ifneq ($(OS_RELEASE),4.1.3_U1)
+	ifneq ($(LOCAL_THREADS_ONLY),1)
             ASFILES = os_$(OS_ARCH).s
+	endif
 	endif
     endif
 endif
 
 ifeq ($(OS_ARCH), SINIX)
     ASFILES   = os_ReliantUNIX.s
+endif
+
+ifeq ($(OS_ARCH), IRIX)
+    ASFILES   = os_Irix.s
 endif
 
 ifeq ($(OS_ARCH)$(OS_RELEASE),BSD_OS2.1)

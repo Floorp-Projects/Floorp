@@ -354,6 +354,7 @@ PRProcess * _PR_CreateWindowsProcess(
     char *cmdLine = NULL;
     char *envBlock = NULL;
     char **newEnvp;
+    char *cwd = NULL; /* current working directory */
     PRProcess *proc = NULL;
 
     proc = PR_NEW(PRProcess);
@@ -415,6 +416,7 @@ PRProcess * _PR_CreateWindowsProcess(
         if (redirected) {
             startupInfo.dwFlags |= STARTF_USESTDHANDLES;
         }
+        cwd = attr->currentDirectory;
     }
 
     retVal = CreateProcess(NULL,
@@ -431,7 +433,7 @@ PRProcess * _PR_CreateWindowsProcess(
                                        * string is in the form:
                                        *     name=value
                                        * XXX: usually NULL */
-                           attr->currentDirectory,  /* current drive and directory */
+                           cwd,  /* current drive and directory */
                            &startupInfo,
                            &procInfo
                           );
@@ -647,5 +649,71 @@ PRInt32 _PR_MD_ATOMIC_DECREMENT(PRInt32 *val)
     }
 }
 #pragma warning(default: 4035)
+
+#pragma warning(disable: 4035)
+PRInt32 _PR_MD_ATOMIC_ADD(PRInt32 *intp, PRInt32 val)
+{
+    __asm
+    {
+        mov ecx, intp
+        mov eax, val
+        mov ebx, val
+        lock xadd dword ptr [ecx], eax
+        add eax, ebx
+    }
+}
+#pragma warning(default: 4035)
+
+#ifdef _PR_HAVE_ATOMIC_CAS
+
+#pragma warning(disable: 4035)
+void 
+PR_StackPush(PRStack *stack, PRStackElem *stack_elem)
+{
+    __asm
+    {
+	mov ebx, stack
+	mov ecx, stack_elem
+retry:	mov eax,[ebx]
+	cmp eax,-1
+	je retry
+	mov eax,-1
+	xchg dword ptr [ebx], eax
+	cmp eax,-1
+	je  retry
+	mov [ecx],eax
+	mov [ebx],ecx
+    }
+}
+#pragma warning(default: 4035)
+
+#pragma warning(disable: 4035)
+PRStackElem * 
+PR_StackPop(PRStack *stack)
+{
+    __asm
+    {
+	mov ebx, stack
+retry:	mov eax,[ebx]
+	cmp eax,-1
+	je retry
+	mov eax,-1
+	xchg dword ptr [ebx], eax
+	cmp eax,-1
+	je  retry
+	cmp eax,0
+	je  empty
+	mov ecx,[eax]
+	mov [ebx],ecx
+	mov [eax],0
+	jmp done
+empty:
+	mov [ebx],eax
+done:	
+	}
+}
+#pragma warning(default: 4035)
+
+#endif /* _PR_HAVE_ATOMIC_CAS */
 
 #endif /* x86 processors */

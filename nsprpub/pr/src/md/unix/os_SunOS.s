@@ -49,3 +49,86 @@ _MD_FlushRegisterWindows:
 	ret
 	restore
 
+!  ======================================================================
+!
+!  Atomically add a new element to the top of the stack
+!
+!  usage : PR_StackPush(listp, elementp);
+!
+!  -----------------------
+!  Note on REGISTER USAGE:
+!  as this is a LEAF procedure, a new stack frame is not created.
+!
+!  So, the registers used are:
+!     %o0  [input]   - the address of the stack
+!     %o1  [input]   - the address of the element to be added to the stack
+!  -----------------------
+
+		.section	".text"
+		.global		PR_StackPush
+
+PR_StackPush:
+
+pulock:	ld		[%o0],%o3				! 
+		cmp		%o3,-1					! check if stack is locked
+		be		pulock					! loop, if locked
+		mov		-1,%o3					! use delay-slot
+		swap	[%o0],%o3				! atomically lock the stack and get
+										! the pointer to stack head
+		cmp		%o3,-1					! check, if the stack is locked
+		be		pulock					! loop, if so
+		nop
+		st		%o3,[%o1]
+		retl                           	! return back to the caller
+		st		%o1,[%o0]				! 
+
+		.size	PR_StackPush,(.-PR_StackPush)
+
+
+!  end
+!  ======================================================================
+
+!  ======================================================================
+!
+!  Atomically remove the element at the top of the stack
+!
+!  usage : elemep = PR_StackPop(listp);
+!
+!  -----------------------
+!  Note on REGISTER USAGE:
+!  as this is a LEAF procedure, a new stack frame is not created.
+!
+!  So, the registers used are:
+!     %o0  [input]   - the address of the stack
+!     %o1  [input]   - work register (top element)
+!  -----------------------
+
+		.section	".text"
+		.global		PR_StackPop
+
+PR_StackPop:
+
+polock:	ld		[%o0],%o1				! 
+		cmp		%o1,-1					! check if stack is locked
+		be		polock					! loop, if locked
+		mov		-1,%o1					! use delay-slot
+		swap	[%o0],%o1				! atomically lock the stack and get
+										! the pointer to stack head
+		cmp		%o1,-1					! check, if the stack is locked
+		be		polock					! loop, if so
+		nop
+		tst		%o1						! test for empty stack
+		be,a	empty					! is empty
+		st		%g0,[%o0]
+		ld		[%o1], %o2				! load the second element
+		st		%o2,[%o0]				! set stack head to second
+		st		%g0,[%o1]				! reset the next pointer; for
+										! debugging
+empty:
+        retl                            ! return back to the caller
+		mov		%o1, %o0				! return the first element
+
+		.size	PR_StackPop,(.-PR_StackPop)
+
+!  end
+!  ======================================================================

@@ -17,124 +17,51 @@
  */
 
 #include "primpl.h"
-#if defined(HPUX10_30) || defined(HPUX11)
-/* for fesettrapenable */
-#include <fenv.h>
-#else
-/* for fpsetmask */
-#include <math.h>
-#endif
 #include <setjmp.h>
-#include <signal.h>
-#include <values.h>
 
-/*
-** On HP-UX we need to define a SIGFPE handler because coercion of a
-** NaN to an int causes SIGFPE to be raised. Thanks to Marianne
-** Mueller and Doug Priest at SunSoft for this fix.
-**
-** Under DCE threads, sigaction() installs a per-thread signal handler,
-** so we use the sigvector() interface to install a process-wide
-** handler.
-**
-** On HP-UX 9, struct sigaction doesn't have the sa_sigaction field,
-** so we also need to use the sigvector() interface.
-*/
+#if defined(HPUX_LW_TIMER)
 
-#if defined(_PR_DCETHREADS) || defined(HPUX9)
-static void
-CatchFPE(int sig, int code, struct sigcontext *scp)
+#include <machine/inline.h>
+#include <machine/clock.h>
+#include <unistd.h>
+#include <sys/time.h>
+#include <sys/pstat.h>
+
+int __lw_get_thread_times(int which, int64_t *sample, int64_t *time);
+
+static double msecond_per_itick;
+
+void _PR_HPUX_LW_IntervalInit(void)
 {
-    unsigned i, e;
-    int r, t;
-    int *source, *destination;
+    struct pst_processor psp;
+    int iticksperclktick, clk_tck;
+    int rv;
 
-    /* check excepting instructions */
-    for ( i = 0; i < 7; i++ ) {
-	e = *(i+&(scp->sc_sl.sl_ss.ss_frexcp1));
-	if ( e & 0xfc000000 != 0 ) {
-	    if ((e & 0xf4017720) == 0x24010200) {
-                r = ((e >> 20) & 0x3e);
-                t = (e & 0x1f) << 1;
-                if (e & 0x08000000) {
-                    r |= (e >> 7) & 1;
-                    t |= (e >> 6) & 1;
-                }
-                source = (int *)(&scp->sc_sl.sl_ss.ss_frstat + r);
-                destination = (int *)(&scp->sc_sl.sl_ss.ss_frstat + t);
-                *destination = *source < 0 ? -MAXINT-1 : MAXINT;
-            }
-	}
-	*(i+&(scp->sc_sl.sl_ss.ss_frexcp1)) = 0;
-    }
+    rv = pstat_getprocessor(&psp, sizeof(psp), 1, 0);
+    PR_ASSERT(rv != -1);
 
-    /* clear T-bit */
-    scp->sc_sl.sl_ss.ss_frstat &= ~0x40;
+    iticksperclktick = psp.psp_iticksperclktick;
+    clk_tck = sysconf(_SC_CLK_TCK);
+    msecond_per_itick = (1000.0)/(double)(iticksperclktick * clk_tck);
 }
-#else /* _PR_DCETHREADS || HPUX9 */
-static void
-CatchFPE(int sig, siginfo_t *info, void *context)
+
+PRIntervalTime _PR_HPUX_LW_GetInterval(void)
 {
-    ucontext_t *ucp = (ucontext_t *) context;
-    unsigned i, e;
-    int r, t;
-    int *source, *destination;
+    int64_t time, sample;
 
-    /* check excepting instructions */
-    for ( i = 0; i < 7; i++ ) {
-	e = *(i+&(ucp->uc_mcontext.ss_frexcp1));
-	if ( e & 0xfc000000 != 0 ) {
-	    if ((e & 0xf4017720) == 0x24010200) {
-                r = ((e >> 20) & 0x3e);
-                t = (e & 0x1f) << 1;
-                if (e & 0x08000000) {
-                    r |= (e >> 7) & 1;
-                    t |= (e >> 6) & 1;
-                }
-                source = (int *)(&ucp->uc_mcontext.ss_frstat + r);
-                destination = (int *)(&ucp->uc_mcontext.ss_frstat + t);
-                *destination = *source < 0 ? -MAXINT-1 : MAXINT;
-            }
-	}
-	*(i+&(ucp->uc_mcontext.ss_frexcp1)) = 0;
-    }
-
-    /* clear T-bit */
-    ucp->uc_mcontext.ss_frstat &= ~0x40;
+    __lw_get_thread_times(1, &sample, &time);
+    /*
+     * Division is slower than float multiplication.
+     * return (time / iticks_per_msecond);
+     */
+    return (time * msecond_per_itick);
 }
-#endif /* _PR_DCETHREADS || HPUX9 */
-
-void _MD_hpux_install_sigfpe_handler(void)
-{
-#if defined(_PR_DCETHREADS) || defined(HPUX9)
-    struct sigvec v;
-
-    v.sv_handler = CatchFPE;
-    v.sv_mask = 0;
-    v.sv_flags = 0;
-    sigvector(SIGFPE, &v, NULL);
-#else
-    struct sigaction act;
-
-    sigaction(SIGFPE, NULL, &act);
-    act.sa_flags |= SA_SIGINFO;
-    act.sa_sigaction = CatchFPE;
-    sigaction(SIGFPE, &act, NULL);
-#endif /* _PR_DCETHREADS || HPUX9 */
-
-#if defined(HPUX10_30) || defined(HPUX11)
-    fesettrapenable(FE_INVALID);
-#else
-    fpsetmask(FP_X_INV);
-#endif
-}
+#endif  /* HPUX_LW_TIMER */
 
 #if !defined(PTHREADS_USER)
 
 void _MD_EarlyInit(void)
 {
-    _MD_hpux_install_sigfpe_handler();
-
 #ifndef _PR_PTHREADS
     /*
      * The following piece of code is taken from ns/nspr/src/md_HP-UX.c.
@@ -258,28 +185,6 @@ _MD_resume_thread(PRThread *thread)
 #endif
 }
 #endif /* PTHREADS_USER */
-
-/*
- * See if we have the privilege to set the scheduling policy and
- * priority of threads.  Returns 0 if privilege is available.
- * Returns EPERM otherwise.
- */
-
-#if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
-PRIntn pt_hpux_privcheck()
-{
-    PRIntn policy;
-    struct sched_param schedule;
-    PRIntn rv;
-    pthread_t me = pthread_self();
-
-    rv = pthread_getschedparam(me, &policy, &schedule);
-    PR_ASSERT(0 == rv);
-    rv = pthread_setschedparam(me, policy, &schedule);
-    PR_ASSERT(0 == rv || EPERM == rv);
-    return rv;
-}
-#endif
 
 /*
  * The HP version of strchr is buggy. It looks past the end of the

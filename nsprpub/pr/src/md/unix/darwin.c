@@ -18,25 +18,13 @@
 
 #include "primpl.h"
 
-#include <signal.h>
-
 void _MD_EarlyInit(void)
 {
-    /*
-     * Ignore FPE because coercion of a NaN to an int causes SIGFPE
-     * to be raised.
-     */
-    struct sigaction act;
-
-    act.sa_handler = SIG_IGN;
-    sigemptyset(&act.sa_mask);
-    act.sa_flags = SA_RESTART;
-    sigaction(SIGFPE, &act, 0);
 }
 
 PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
 {
-#ifndef _PR_PTHREADS
+#if !defined(_PR_PTHREADS)
     if (isCurrent) {
 	(void) setjmp(CONTEXT(t));
     }
@@ -48,7 +36,7 @@ PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
 #endif
 }
 
-#ifndef _PR_PTHREADS
+#if !defined(_PR_PTHREADS)
 void
 _MD_SET_PRIORITY(_MDThread *thread, PRUintn newPri)
 {
@@ -98,3 +86,14 @@ _MD_CREATE_THREAD(
 	return PR_FAILURE;
 }
 #endif /* ! _PR_PTHREADS */
+
+/*
+** Whoops, we don't have a syscall stub for this
+*/
+int mprotect (caddr_t addr, size_t size, int prot)
+{
+   return -1;
+} 
+
+/* rhapsody.c */
+

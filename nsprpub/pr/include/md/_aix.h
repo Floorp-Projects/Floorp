@@ -54,15 +54,31 @@
 #define	HAVE_DLL
 #define	USE_DLFCN
 #define _PR_HAVE_SOCKADDR_LEN
+#define _PR_POLL_AVAILABLE
+#define _PR_USE_POLL
+#define _PR_STAT_HAS_ONLY_ST_ATIME
 
+/* Timer operations */
+#define AIX_TIMERS
+#if defined(AIX_TIMERS)
+extern PRIntervalTime _MD_AixGetInterval(void);
+#define _MD_GET_INTERVAL _MD_AixGetInterval
+
+extern PRIntervalTime _MD_AixIntervalPerSec(void);
+#define _MD_INTERVAL_PER_SEC _MD_AixIntervalPerSec
+
+#else  /* defined(AIX_TIMERS) */
 #define _MD_GET_INTERVAL        _PR_UNIX_GetInterval
 #define _MD_INTERVAL_PER_SEC    _PR_UNIX_TicksPerSecond
+#endif  /* defined(AIX_TIMERS) */
 
 /* The atomic operations */
 #include <sys/atomic_op.h>
 #define _PR_HAVE_ATOMIC_OPS
+#define _PR_HAVE_ATOMIC_CAS
 #define _MD_INIT_ATOMIC()
 #define _MD_ATOMIC_INCREMENT(val)   ((PRInt32)fetch_and_add((atomic_p)val, 1) + 1)
+#define _MD_ATOMIC_ADD(ptr, val)   ((PRInt32)fetch_and_add((atomic_p)ptr, val) + val)
 #define _MD_ATOMIC_DECREMENT(val)   ((PRInt32)fetch_and_add((atomic_p)val, -1) - 1)
 #define _MD_ATOMIC_SET(val, newval) _AIX_AtomicSet(val, newval)
 
@@ -137,6 +153,42 @@ struct _MDCVar {
 struct _MDSegment {
     PRInt8 notused;
 };
+
+/*
+ * md-specific cpu structure field
+ */
+#define _PR_MD_MAX_OSFD FD_SETSIZE
+
+struct _MDCPU_Unix {
+    PRCList ioQ;
+    PRUint32 ioq_timeout;
+    PRInt32 ioq_max_osfd;
+    PRInt32 ioq_osfd_cnt;
+#ifndef _PR_USE_POLL
+    fd_set fd_read_set, fd_write_set, fd_exception_set;
+    PRInt16 fd_read_cnt[_PR_MD_MAX_OSFD],fd_write_cnt[_PR_MD_MAX_OSFD],
+				fd_exception_cnt[_PR_MD_MAX_OSFD];
+#else
+	struct pollfd *ioq_pollfds;
+	int ioq_pollfds_size;
+#endif	/* _PR_USE_POLL */
+};
+
+#define _PR_IOQ(_cpu)			((_cpu)->md.md_unix.ioQ)
+#define _PR_ADD_TO_IOQ(_pq, _cpu) PR_APPEND_LINK(&_pq.links, &_PR_IOQ(_cpu))
+#define _PR_FD_READ_SET(_cpu)		((_cpu)->md.md_unix.fd_read_set)
+#define _PR_FD_READ_CNT(_cpu)		((_cpu)->md.md_unix.fd_read_cnt)
+#define _PR_FD_WRITE_SET(_cpu)		((_cpu)->md.md_unix.fd_write_set)
+#define _PR_FD_WRITE_CNT(_cpu)		((_cpu)->md.md_unix.fd_write_cnt)
+#define _PR_FD_EXCEPTION_SET(_cpu)	((_cpu)->md.md_unix.fd_exception_set)
+#define _PR_FD_EXCEPTION_CNT(_cpu)	((_cpu)->md.md_unix.fd_exception_cnt)
+#define _PR_IOQ_TIMEOUT(_cpu)		((_cpu)->md.md_unix.ioq_timeout)
+#define _PR_IOQ_MAX_OSFD(_cpu)		((_cpu)->md.md_unix.ioq_max_osfd)
+#define _PR_IOQ_OSFD_CNT(_cpu)		((_cpu)->md.md_unix.ioq_osfd_cnt)
+#define _PR_IOQ_POLLFDS(_cpu)		((_cpu)->md.md_unix.ioq_pollfds)
+#define _PR_IOQ_POLLFDS_SIZE(_cpu)	((_cpu)->md.md_unix.ioq_pollfds_size)
+
+#define _PR_IOQ_MIN_POLLFDS_SIZE(_cpu)	32
 
 struct _MDCPU {
     struct _MDCPU_Unix md_unix;

@@ -22,22 +22,22 @@
 
 /* _pr_activeLock protects the following global variables */
 PRLock *_pr_activeLock;
-PRUintn _pr_primordialExitCount;   /* In PR_Cleanup(), the primordial thread
-				    * waits until all other user (non-system)
-				    * threads have terminated before it exits.
-				    * So whenever we decrement _pr_userActive,
-				    * it is compared with
-				    * _pr_primordialExitCount.
-				    * If the primordial thread is a system
-				    * thread, then _pr_primordialExitCount
-				    * is 0.  If the primordial thread is
-				    * itself a user thread, then 
-				    * _pr_primordialThread is 1.
-				    */
+PRInt32 _pr_primordialExitCount;   /* In PR_Cleanup(), the primordial thread
+                    * waits until all other user (non-system)
+                    * threads have terminated before it exits.
+                    * So whenever we decrement _pr_userActive,
+                    * it is compared with
+                    * _pr_primordialExitCount.
+                    * If the primordial thread is a system
+                    * thread, then _pr_primordialExitCount
+                    * is 0.  If the primordial thread is
+                    * itself a user thread, then 
+                    * _pr_primordialThread is 1.
+                    */
 PRCondVar *_pr_primordialExitCVar; /* When _pr_userActive is decremented to
-				    * _pr_primordialExitCount, this condition
-				    * variable is notified.
-				    */
+                    * _pr_primordialExitCount, this condition
+                    * variable is notified.
+                    */
 
 PRLock *_pr_deadQLock;
 PRUint32 _pr_numNativeDead;
@@ -80,13 +80,13 @@ void _PR_InitThreads(PRThreadType type, PRThreadPriority priority,
     stack = PR_NEWZAP(PRThreadStack);
 #ifdef HAVE_STACK_GROWING_UP
     stack->stackTop = (char*) ((((long)&type) >> _pr_pageShift)
-				  << _pr_pageShift);
+                  << _pr_pageShift);
 #else
 #if defined(SOLARIS) || defined (UNIXWARE) && defined (USR_SVR4_THREADS)
     stack->stackTop = (char*) &thread;
 #else
     stack->stackTop = (char*) ((((long)&type + _pr_pageSize - 1)
-				>> _pr_pageShift) << _pr_pageShift);
+                >> _pr_pageShift) << _pr_pageShift);
 #endif
 #endif
 #else
@@ -105,13 +105,13 @@ void _PR_InitThreads(PRThreadType type, PRThreadPriority priority,
         if (type == PR_SYSTEM_THREAD) {
             thread->flags = _PR_SYSTEM;
             _pr_systemActive++;
-	    	_pr_primordialExitCount = 0;
+            _pr_primordialExitCount = 0;
         } else {
             _pr_userActive++;
-	    	_pr_primordialExitCount = 1;
+            _pr_primordialExitCount = 1;
         }
-	thread->no_sched = 1;
-	_pr_primordialExitCVar = PR_NewCondVar(_pr_activeLock);
+    thread->no_sched = 1;
+    _pr_primordialExitCVar = PR_NewCondVar(_pr_activeLock);
     }
 
     if (!thread) PR_Abort();
@@ -126,18 +126,18 @@ void _PR_InitThreads(PRThreadType type, PRThreadPriority priority,
      * _PR_MD_INIT_THREAD()
      */
     if (_PR_MD_INIT_THREAD(thread) == PR_FAILURE) {
-		/*
-		 * XXX do what?
-		 */
-	}
+        /*
+         * XXX do what?
+         */
+    }
 
     if (_PR_IS_NATIVE_THREAD(thread)) {
-    	PR_APPEND_LINK(&thread->active, &_PR_ACTIVE_GLOBAL_THREADQ());
-		_pr_global_threads++;
+        PR_APPEND_LINK(&thread->active, &_PR_ACTIVE_GLOBAL_THREADQ());
+        _pr_global_threads++;
     } else {
-    	PR_APPEND_LINK(&thread->active, &_PR_ACTIVE_LOCAL_THREADQ());
-		_pr_local_threads++;
-	}
+        PR_APPEND_LINK(&thread->active, &_PR_ACTIVE_LOCAL_THREADQ());
+        _pr_local_threads++;
+    }
 
     _pr_recycleThreads = 0;
     _pr_deadQLock = PR_NewLock();
@@ -159,13 +159,13 @@ static void _PR_InitializeNativeStack(PRThreadStack *ts)
         ** Setup stackTop and stackBottom values.
         */
 #ifdef HAVE_STACK_GROWING_UP
-	ts->allocBase = (char*) ((((long)&ts) >> _pr_pageShift)
-				  << _pr_pageShift);
+    ts->allocBase = (char*) ((((long)&ts) >> _pr_pageShift)
+                  << _pr_pageShift);
         ts->stackBottom = ts->allocBase + ts->stackSize;
         ts->stackTop = ts->allocBase;
 #else
-    	ts->allocBase = (char*) ((((long)&ts + _pr_pageSize - 1)
-				>> _pr_pageShift) << _pr_pageShift);
+        ts->allocBase = (char*) ((((long)&ts + _pr_pageSize - 1)
+                >> _pr_pageShift) << _pr_pageShift);
         ts->stackTop    = ts->allocBase;
         ts->stackBottom = ts->allocBase - ts->stackSize;
 #endif
@@ -180,7 +180,7 @@ void _PR_NotifyJoinWaiters(PRThread *thread)
     ** Notify on our "termination" condition variable so that joining
     ** thread will know about our termination.  Switch our context and
     ** come back later on to continue the cleanup.
-    */	
+    */    
     PR_ASSERT(thread == _PR_MD_CURRENT_THREAD());
     if (thread->term != NULL) {
         PR_Lock(_pr_terminationCVLock);
@@ -195,7 +195,7 @@ void _PR_NotifyJoinWaiters(PRThread *thread)
         PR_NotifyCondVar(thread->term);
         PR_Unlock(_pr_terminationCVLock);
         _PR_MD_WAIT(thread, PR_INTERVAL_NO_TIMEOUT);
-    	PR_ASSERT(thread->state != _PR_JOIN_WAIT);
+        PR_ASSERT(thread->state != _PR_JOIN_WAIT);
     }
 
 }
@@ -235,19 +235,19 @@ static void _PR_InitializeRecycledThread(PRThread *thread)
 PRStatus _PR_RecycleThread(PRThread *thread)
 {
     if ( _PR_IS_NATIVE_THREAD(thread) &&
-			_PR_NUM_DEADNATIVE < _pr_recycleThreads) {
+            _PR_NUM_DEADNATIVE < _pr_recycleThreads) {
         _PR_DEADQ_LOCK;
         PR_APPEND_LINK(&thread->links, &_PR_DEADNATIVEQ);
         _PR_INC_DEADNATIVE;
         _PR_DEADQ_UNLOCK;
-	return (PR_SUCCESS);
+    return (PR_SUCCESS);
     } else if ( !_PR_IS_NATIVE_THREAD(thread) &&
-				_PR_NUM_DEADUSER < _pr_recycleThreads) {
+                _PR_NUM_DEADUSER < _pr_recycleThreads) {
         _PR_DEADQ_LOCK;
         PR_APPEND_LINK(&thread->links, &_PR_DEADUSERQ);
         _PR_INC_DEADUSER;
         _PR_DEADQ_UNLOCK;
-	return (PR_SUCCESS);
+    return (PR_SUCCESS);
     }
     return (PR_FAILURE);
 }
@@ -283,7 +283,7 @@ _PR_DecrActiveThreadCount(PRThread *thread)
 ** Detach thread structure
 */
 static void
-_PR_DetachThread(PRThread *thread)
+_PR_DestroyThread(PRThread *thread)
 {
     _MD_FREE_LOCK(&thread->threadLock);
     PR_DELETE(thread);
@@ -293,40 +293,40 @@ void
 _PR_NativeDestroyThread(PRThread *thread)
 {
     if(thread->term) {
-    	PR_DestroyCondVar(thread->term);
+        PR_DestroyCondVar(thread->term);
         thread->term = 0;
     }
 
     PR_DELETE(thread->stack);
-    _PR_DetachThread(thread);
+    _PR_DestroyThread(thread);
 }
 
 void
 _PR_UserDestroyThread(PRThread *thread)
 {
     if(thread->term) {
-    	PR_DestroyCondVar(thread->term);
-		thread->term = 0;
+        PR_DestroyCondVar(thread->term);
+        thread->term = 0;
     }
-	if (NULL != thread->privateData)
-	{
-		PR_ASSERT(0 != thread->tpdLength);
-		PR_DELETE(thread->privateData);
-		thread->privateData = NULL;
-		thread->tpdLength = 0;
-	}
+    if (NULL != thread->privateData)
+    {
+        PR_ASSERT(0 != thread->tpdLength);
+        PR_DELETE(thread->privateData);
+        thread->privateData = NULL;
+        thread->tpdLength = 0;
+    }
     _MD_FREE_LOCK(&thread->threadLock);
     if (thread->threadAllocatedOnStack == 1) {
-    	_PR_MD_CLEAN_THREAD(thread);
-    	/*
-     	 *  Because the no_sched field is set, this thread/stack will
-     	 *  will not be re-used until the flag is cleared by the thread
-     	 *  we will context switch to.
-     	 */
-	_PR_FreeStack(thread->stack);
+        _PR_MD_CLEAN_THREAD(thread);
+        /*
+          *  Because the no_sched field is set, this thread/stack will
+          *  will not be re-used until the flag is cleared by the thread
+          *  we will context switch to.
+          */
+    _PR_FreeStack(thread->stack);
     } else {
 #ifdef WINNT
-	_PR_MD_CLEAN_THREAD(thread);
+    _PR_MD_CLEAN_THREAD(thread);
 #else
         /*
          * This assertion does not apply to NT.  On NT, every fiber,
@@ -347,38 +347,38 @@ _PR_UserDestroyThread(PRThread *thread)
 */
 void _PR_NativeRunThread(void *arg)
 {
-	PRThread *thread = (PRThread *)arg;
+    PRThread *thread = (PRThread *)arg;
 
     _PR_MD_SET_CURRENT_THREAD(thread);
 
     _PR_MD_SET_CURRENT_CPU(NULL);
 
-	/* Set up the thread stack information */
-	_PR_InitializeNativeStack(thread->stack);
+    /* Set up the thread stack information */
+    _PR_InitializeNativeStack(thread->stack);
 
-	/* Set up the thread md information */
-	if (_PR_MD_INIT_THREAD(thread) == PR_FAILURE) {
-		/*
-		 * thread failed to initialize itself, possibly due to
-		 * failure to allocate per-thread resources
-		 */
-		return;
-	}
+    /* Set up the thread md information */
+    if (_PR_MD_INIT_THREAD(thread) == PR_FAILURE) {
+        /*
+         * thread failed to initialize itself, possibly due to
+         * failure to allocate per-thread resources
+         */
+        return;
+    }
 
     while(1) {
         thread->state = _PR_RUNNING;
 
-        if ( !_PR_IS_NATIVE_THREAD(thread)) _PR_SET_INTSOFF(0);
+        if ( !_PR_IS_NATIVE_THREAD(thread)) _PR_MD_SET_INTSOFF(0);
 
-		/*
-		 * Add to list of active threads
-		 */
-		PR_Lock(_pr_activeLock);
-		PR_APPEND_LINK(&thread->active, &_PR_ACTIVE_GLOBAL_THREADQ());
-		_pr_global_threads++;
-		PR_Unlock(_pr_activeLock);
+        /*
+         * Add to list of active threads
+         */
+        PR_Lock(_pr_activeLock);
+        PR_APPEND_LINK(&thread->active, &_PR_ACTIVE_GLOBAL_THREADQ());
+        _pr_global_threads++;
+        PR_Unlock(_pr_activeLock);
 
-    	(*thread->startFunc)(thread->arg);
+        (*thread->startFunc)(thread->arg);
 
         /*
          * The following two assertions are meant for NT asynch io.
@@ -397,15 +397,15 @@ void _PR_NativeRunThread(void *arg)
          */
         PR_ASSERT(thread->io_suspended == PR_FALSE);
 
-		/*
-		 * remove thread from list of active threads
-		 */
+        /*
+         * remove thread from list of active threads
+         */
         PR_Lock(_pr_activeLock);
         PR_REMOVE_LINK(&thread->active);
-		_pr_global_threads--;
+        _pr_global_threads--;
         PR_Unlock(_pr_activeLock);
 
-    	PR_LOG(_pr_thread_lm, PR_LOG_MIN, ("thread exiting"));
+        PR_LOG(_pr_thread_lm, PR_LOG_MIN, ("thread exiting"));
 
         /* All done, time to go away */
         _PR_CleanupThread(thread);
@@ -417,21 +417,21 @@ void _PR_NativeRunThread(void *arg)
         thread->state = _PR_DEAD_STATE;
 
         if (!_pr_recycleThreads || (_PR_RecycleThread(thread) ==
-						PR_FAILURE)) {
-			/*
-			 * thread not recycled
-			 * platform-specific thread exit processing
-			 *		- for stuff like releasing native-thread resources, etc.
-			 */
-			_PR_MD_EXIT_THREAD(thread);
-			/*
-			 * Free memory allocated for the thread
-			 */
-			_PR_NativeDestroyThread(thread);
-			/*
-			 * thread gone, cannot de-reference thread now
-			 */
-			return;
+                        PR_FAILURE)) {
+            /*
+             * thread not recycled
+             * platform-specific thread exit processing
+             *        - for stuff like releasing native-thread resources, etc.
+             */
+            _PR_MD_EXIT_THREAD(thread);
+            /*
+             * Free memory allocated for the thread
+             */
+            _PR_NativeDestroyThread(thread);
+            /*
+             * thread gone, cannot de-reference thread now
+             */
+            return;
         }
 
         /* Now wait for someone to activate us again... */
@@ -445,7 +445,7 @@ static void _PR_UserRunThread(void)
     PRIntn is;
 
     if (_MD_LAST_THREAD())
-	_MD_LAST_THREAD()->no_sched = 0;
+    _MD_LAST_THREAD()->no_sched = 0;
 
 #ifdef HAVE_CUSTOM_USER_THREADS
     if (thread->stack == NULL) {
@@ -456,17 +456,17 @@ static void _PR_UserRunThread(void)
 
     while(1) {
         /* Run thread main */
-        if ( !_PR_IS_NATIVE_THREAD(thread)) _PR_SET_INTSOFF(0);
+        if ( !_PR_IS_NATIVE_THREAD(thread)) _PR_MD_SET_INTSOFF(0);
 
-	/*
-	 * Add to list of active threads
-	 */
-	if (!(thread->flags & _PR_IDLE_THREAD)) {
-		PR_Lock(_pr_activeLock);
-		PR_APPEND_LINK(&thread->active, &_PR_ACTIVE_LOCAL_THREADQ());
-		_pr_local_threads++;
-		PR_Unlock(_pr_activeLock);
-	}
+    /*
+     * Add to list of active threads
+     */
+    if (!(thread->flags & _PR_IDLE_THREAD)) {
+        PR_Lock(_pr_activeLock);
+        PR_APPEND_LINK(&thread->active, &_PR_ACTIVE_LOCAL_THREADQ());
+        _pr_local_threads++;
+        PR_Unlock(_pr_activeLock);
+    }
 
         (*thread->startFunc)(thread->arg);
 
@@ -488,33 +488,33 @@ static void _PR_UserRunThread(void)
         PR_ASSERT(thread->io_suspended == PR_FALSE);
 
         PR_Lock(_pr_activeLock);
-	/*
-	 * remove thread from list of active threads
-	 */
-	if (!(thread->flags & _PR_IDLE_THREAD)) {
-       	PR_REMOVE_LINK(&thread->active);
-		_pr_local_threads--;
-	}
-	PR_Unlock(_pr_activeLock);
+    /*
+     * remove thread from list of active threads
+     */
+    if (!(thread->flags & _PR_IDLE_THREAD)) {
+           PR_REMOVE_LINK(&thread->active);
+        _pr_local_threads--;
+    }
+    PR_Unlock(_pr_activeLock);
         PR_LOG(_pr_thread_lm, PR_LOG_MIN, ("thread exiting"));
 
         /* All done, time to go away */
         _PR_CleanupThread(thread);
 
-        _PR_INTSOFF(is);	
+        _PR_INTSOFF(is);    
 
         _PR_NotifyJoinWaiters(thread);
 
-	_PR_DecrActiveThreadCount(thread);
+    _PR_DecrActiveThreadCount(thread);
 
         thread->state = _PR_DEAD_STATE;
 
         if (!_pr_recycleThreads || (_PR_RecycleThread(thread) ==
-						PR_FAILURE)) {
+                        PR_FAILURE)) {
             /*
             ** Destroy the thread resources
             */
-	    _PR_UserDestroyThread(thread);
+        _PR_UserDestroyThread(thread);
         }
 
         /*
@@ -542,55 +542,53 @@ void _PR_SetThreadPriority(PRThread *thread, PRThreadPriority newPri)
     }
 
     if (!_PR_IS_NATIVE_THREAD(me))
-	_PR_INTSOFF(is);
+    _PR_INTSOFF(is);
     _PR_THREAD_LOCK(thread);
     if (newPri != thread->priority) {
-	PRUintn oldPri;
-        _PRCPU *cpu = thread->cpu;
+    _PRCPU *cpu = thread->cpu;
 
-	oldPri = thread->priority;
-	switch (thread->state) {
-	  case _PR_RUNNING:
-	    /* Change my priority */
+    switch (thread->state) {
+      case _PR_RUNNING:
+        /* Change my priority */
 
             _PR_RUNQ_LOCK(cpu);
-	    thread->priority = newPri;
-	    if (_PR_RUNQREADYMASK(cpu) >> (newPri + 1)) {
-    		if (!_PR_IS_NATIVE_THREAD(me))
+        thread->priority = newPri;
+        if (_PR_RUNQREADYMASK(cpu) >> (newPri + 1)) {
+            if (!_PR_IS_NATIVE_THREAD(me))
                     _PR_SET_RESCHED_FLAG();
-	    }
+        }
             _PR_RUNQ_UNLOCK(cpu);
-	    break;
+        break;
 
-	  case _PR_RUNNABLE:
+      case _PR_RUNNABLE:
 
-	    _PR_RUNQ_LOCK(cpu);
+        _PR_RUNQ_LOCK(cpu);
             /* Move to different runQ */
             _PR_DEL_RUNQ(thread);
             thread->priority = newPri;
             PR_ASSERT(!(thread->flags & _PR_IDLE_THREAD));
             _PR_ADD_RUNQ(thread, cpu, newPri);
-	    _PR_RUNQ_UNLOCK(cpu);
+        _PR_RUNQ_UNLOCK(cpu);
 
             if (newPri > me->priority) {
-    		if (!_PR_IS_NATIVE_THREAD(me))
-                	_PR_SET_RESCHED_FLAG();
+            if (!_PR_IS_NATIVE_THREAD(me))
+                    _PR_SET_RESCHED_FLAG();
             }
 
-	    break;
+        break;
 
-	  case _PR_LOCK_WAIT:
-	  case _PR_COND_WAIT:
-	  case _PR_IO_WAIT:
-	  case _PR_SUSPENDED:
+      case _PR_LOCK_WAIT:
+      case _PR_COND_WAIT:
+      case _PR_IO_WAIT:
+      case _PR_SUSPENDED:
 
-	    thread->priority = newPri;
-	    break;
-	}
+        thread->priority = newPri;
+        break;
+    }
     }
     _PR_THREAD_UNLOCK(thread);
     if (!_PR_IS_NATIVE_THREAD(me))
-	_PR_INTSON(is);
+    _PR_INTSON(is);
 }
 
 /*
@@ -605,7 +603,7 @@ static void _PR_Suspend(PRThread *thread)
     PR_ASSERT(!_PR_IS_NATIVE_THREAD(thread) || (!thread->cpu));
 
     if (!_PR_IS_NATIVE_THREAD(me))
-    	_PR_INTSOFF(is);
+        _PR_INTSOFF(is);
     _PR_THREAD_LOCK(thread);
     switch (thread->state) {
       case _PR_RUNNABLE:
@@ -617,21 +615,21 @@ static void _PR_Suspend(PRThread *thread)
             _PR_MISCQ_LOCK(thread->cpu);
             _PR_ADD_SUSPENDQ(thread, thread->cpu);
             _PR_MISCQ_UNLOCK(thread->cpu);
-		} else {
-			/*
-			 * Only LOCAL threads are suspended by _PR_Suspend
-			 */
-			 PR_ASSERT(0);
-		}
+        } else {
+            /*
+             * Only LOCAL threads are suspended by _PR_Suspend
+             */
+             PR_ASSERT(0);
+        }
         thread->state = _PR_SUSPENDED;
         break;
 
       case _PR_RUNNING:
-		/*
-		 * The thread being suspended should be a LOCAL thread with
-		 * _pr_numCPUs == 1. Hence, the thread cannot be in RUNNING state
-		 */
-		PR_ASSERT(0);
+        /*
+         * The thread being suspended should be a LOCAL thread with
+         * _pr_numCPUs == 1. Hence, the thread cannot be in RUNNING state
+         */
+        PR_ASSERT(0);
         break;
 
       case _PR_LOCK_WAIT:
@@ -639,7 +637,7 @@ static void _PR_Suspend(PRThread *thread)
       case _PR_COND_WAIT:
         if (_PR_IS_NATIVE_THREAD(thread)) {
             _PR_MD_SUSPEND_THREAD(thread);
-	}
+    }
         thread->flags |= _PR_SUSPENDING;
         break;
 
@@ -676,12 +674,12 @@ static void _PR_Resume(PRThread *thread)
             _PR_RUNQ_UNLOCK(thread->cpu);
 
             if (pri > _PR_MD_CURRENT_THREAD()->priority) {
-            	if (!_PR_IS_NATIVE_THREAD(me))
-                	_PR_SET_RESCHED_FLAG();
+                if (!_PR_IS_NATIVE_THREAD(me))
+                    _PR_SET_RESCHED_FLAG();
             }
-		} else {
-			PR_ASSERT(0);
-		}
+        } else {
+            PR_ASSERT(0);
+        }
         break;
 
       case _PR_IO_WAIT:
@@ -692,7 +690,7 @@ static void _PR_Resume(PRThread *thread)
 
       case _PR_LOCK_WAIT: 
       {
-		PRLock *wLock = thread->wait.lock;
+        PRLock *wLock = thread->wait.lock;
 
         thread->flags &= ~_PR_SUSPENDING;
  
@@ -704,25 +702,25 @@ static void _PR_Resume(PRThread *thread)
         break;
       }
       case _PR_RUNNABLE:
-		break;
+        break;
       case _PR_RUNNING:
-		/*
-		 * The thread being suspended should be a LOCAL thread with
-		 * _pr_numCPUs == 1. Hence, the thread cannot be in RUNNING state
-		 */
-		PR_ASSERT(0);
-		break;
+        /*
+         * The thread being suspended should be a LOCAL thread with
+         * _pr_numCPUs == 1. Hence, the thread cannot be in RUNNING state
+         */
+        PR_ASSERT(0);
+        break;
 
       default:
-	/*
-	 * thread should have been in one of the above-listed blocked states
-	 * (_PR_JOIN_WAIT, _PR_IO_WAIT, _PR_UNBORN, _PR_DEAD_STATE)
-	 */
+    /*
+     * thread should have been in one of the above-listed blocked states
+     * (_PR_JOIN_WAIT, _PR_IO_WAIT, _PR_UNBORN, _PR_DEAD_STATE)
+     */
         PR_Abort();
     }
     _PR_THREAD_UNLOCK(thread);
     if (!_PR_IS_NATIVE_THREAD(me))
-    	_PR_INTSON(is);
+        _PR_INTSON(is);
 
 }
 
@@ -747,7 +745,7 @@ static PRThread *get_thread(_PRCPU *cpu, PRBool *wakeup_cpus)
     }
     thread = NULL;
     for (pri = priMax; pri >= priMin ; pri-- ) {
-	if (r & (1 << pri)) {
+    if (r & (1 << pri)) {
             for (qp = _PR_RUNQ(cpu)[pri].next; 
                  qp != &_PR_RUNQ(cpu)[pri];
                  qp = qp->next) {
@@ -756,30 +754,40 @@ static PRThread *get_thread(_PRCPU *cpu, PRBool *wakeup_cpus)
                 * skip non-schedulable threads
                 */
                 PR_ASSERT(!(thread->flags & _PR_IDLE_THREAD));
-                if (thread->no_sched){
+                if (thread->no_sched) {
                     thread = NULL;
-					/*
-					 * Need to wakeup cpus to avoid missing a
-					 * runnable thread
-					 * Waking up all CPU's need happen only once.
-					 */
+                    /*
+                     * Need to wakeup cpus to avoid missing a
+                     * runnable thread
+                     * Waking up all CPU's need happen only once.
+                     */
 
-					*wakeup_cpus = PR_TRUE;
+                    *wakeup_cpus = PR_TRUE;
+                    continue;
+                } else if (thread->flags & _PR_BOUND_THREAD) {
+                    /*
+                     * Thread bound to cpu 0
+                     */
+
+                    thread = NULL;
+#ifdef IRIX
+					_PR_MD_WAKEUP_PRIMORDIAL_CPU();
+#endif
                     continue;
                 } else if (thread->io_pending == PR_TRUE) {
-					/*
-					 * A thread that is blocked for I/O needs to run
-					 * on the same cpu on which it was blocked. This is because
-					 * the cpu's ioq is accessed without lock protection and scheduling
-					 * the thread on a different cpu would preclude this optimization.
-					 */
+                    /*
+                     * A thread that is blocked for I/O needs to run
+                     * on the same cpu on which it was blocked. This is because
+                     * the cpu's ioq is accessed without lock protection and scheduling
+                     * the thread on a different cpu would preclude this optimization.
+                     */
                     thread = NULL;
-					continue;
+                    continue;
                 } else {
                     /* Pull thread off of its run queue */
                     _PR_DEL_RUNQ(thread);
                     _PR_RUNQ_UNLOCK(cpu);
-    		    	return(thread);
+                    return(thread);
                 }
             }
         }
@@ -802,7 +810,7 @@ static PRThread *get_thread(_PRCPU *cpu, PRBool *wakeup_cpus)
 void _PR_Schedule(void)
 {
     PRThread *thread, *me = _PR_MD_CURRENT_THREAD();
-    _PRCPU *cpu = me->cpu;
+    _PRCPU *cpu = _PR_MD_CURRENT_CPU();
     PRIntn pri;
     PRUint32 r;
     PRCList *qp;
@@ -824,22 +832,22 @@ void _PR_Schedule(void)
     _PR_RUNQ_LOCK(cpu);
     /*
      *  if we are in SuspendAll mode, can schedule only the thread
-     *	that called PR_SuspendAll
+     *    that called PR_SuspendAll
      *
      *  The thread may be ready to run now, after completing an I/O
      *  operation, for example
      */
     if ((thread = suspendAllThread) != 0) {
-	if ((!(thread->no_sched)) && (thread->state == _PR_RUNNABLE)) {
+    if ((!(thread->no_sched)) && (thread->state == _PR_RUNNABLE)) {
             /* Pull thread off of its run queue */
             _PR_DEL_RUNQ(thread);
             _PR_RUNQ_UNLOCK(cpu);
             goto found_thread;
-	} else {
+    } else {
             thread = NULL;
             _PR_RUNQ_UNLOCK(cpu);
             goto idle_thread;
-	}
+    }
     }
     r = _PR_RUNQREADYMASK(cpu);
     if (r==0) {
@@ -852,7 +860,7 @@ void _PR_Schedule(void)
     }
     thread = NULL;
     for (pri = priMax; pri >= priMin ; pri-- ) {
-	if (r & (1 << pri)) {
+    if (r & (1 << pri)) {
             for (qp = _PR_RUNQ(cpu)[pri].next; 
                  qp != &_PR_RUNQ(cpu)[pri];
                  qp = qp->next) {
@@ -880,25 +888,25 @@ void _PR_Schedule(void)
 
 #if !defined(_PR_LOCAL_THREADS_ONLY) && defined(XP_UNIX)
 
-	wakeup_cpus = PR_FALSE;
+    wakeup_cpus = PR_FALSE;
     _PR_CPU_LIST_LOCK();
     for (qp = _PR_CPUQ().next; qp != &_PR_CPUQ(); qp = qp->next) {
-	    if (cpu != _PR_CPU_PTR(qp)) {
-			if ((thread = get_thread(_PR_CPU_PTR(qp), &wakeup_cpus))
-										!= NULL) {
-				thread->cpu = cpu;
-				_PR_CPU_LIST_UNLOCK();
-				if (wakeup_cpus == PR_TRUE)
-					_PR_MD_WAKEUP_CPUS();
-				goto found_thread;
-			}
-	    }
+        if (cpu != _PR_CPU_PTR(qp)) {
+            if ((thread = get_thread(_PR_CPU_PTR(qp), &wakeup_cpus))
+                                        != NULL) {
+                thread->cpu = cpu;
+                _PR_CPU_LIST_UNLOCK();
+                if (wakeup_cpus == PR_TRUE)
+                    _PR_MD_WAKEUP_CPUS();
+                goto found_thread;
+            }
+        }
     }
     _PR_CPU_LIST_UNLOCK();
-	if (wakeup_cpus == PR_TRUE)
-		_PR_MD_WAKEUP_CPUS();
+    if (wakeup_cpus == PR_TRUE)
+        _PR_MD_WAKEUP_CPUS();
 
-#endif		/* _PR_LOCAL_THREADS_ONLY */
+#endif        /* _PR_LOCAL_THREADS_ONLY */
 
 idle_thread:
    /*
@@ -909,11 +917,11 @@ idle_thread:
 
 found_thread:
     PR_ASSERT((me == thread) || ((thread->state == _PR_RUNNABLE) &&
-					(!(thread->no_sched))));
+                    (!(thread->no_sched))));
 
     /* Resume the thread */
     PR_LOG(_pr_sched_lm, PR_LOG_MAX,
-	   ("switching to %d[%p]", thread->id, thread));
+       ("switching to %d[%p]", thread->id, thread));
     PR_ASSERT(thread->state != _PR_RUNNING);
     thread->state = _PR_RUNNING;
  
@@ -921,6 +929,7 @@ found_thread:
      * resource, and by the time we got here another real native thread had
      * already given us the resource and put us back on the runqueue 
      */
+	PR_ASSERT(thread->cpu == _PR_MD_CURRENT_CPU());
     if (thread != me) 
         _PR_MD_RESTORE_CONTEXT(thread);
 #if 0
@@ -962,9 +971,9 @@ _PR_AttachThread(PRThreadType type, PRThreadPriority priority,
         thread->state = _PR_RUNNING;
         PR_INIT_CLIST(&thread->lockList);
         if (_MD_NEW_LOCK(&thread->threadLock) == PR_FAILURE) {
-		PR_DELETE(thread);
-		return 0;
-	}
+        PR_DELETE(thread);
+        return 0;
+    }
 
         return thread;
     }
@@ -975,12 +984,12 @@ _PR_AttachThread(PRThreadType type, PRThreadPriority priority,
 
 PR_IMPLEMENT(PRThread*) 
 _PR_NativeCreateThread(PRThreadType type,
-				     void (*start)(void *arg),
-				     void *arg,
-				     PRThreadPriority priority,
-				     PRThreadScope scope,
-				     PRThreadState state,
-				     PRUint32 stackSize,
+                     void (*start)(void *arg),
+                     void *arg,
+                     PRThreadPriority priority,
+                     PRThreadScope scope,
+                     PRThreadState state,
+                     PRUint32 stackSize,
                      PRUint32 flags)
 {
 #if defined(XP_MAC)
@@ -993,7 +1002,7 @@ _PR_NativeCreateThread(PRThreadType type,
 
     if (thread) {
         PR_Lock(_pr_activeLock);
-		thread->flags = (flags | _PR_GLOBAL_SCOPE);
+        thread->flags = (flags | _PR_GLOBAL_SCOPE);
         thread->id = ++_pr_utid;
         if (type == PR_SYSTEM_THREAD) {
             thread->flags |= _PR_SYSTEM;
@@ -1019,28 +1028,28 @@ _PR_NativeCreateThread(PRThreadType type,
          */
         if (state == PR_JOINABLE_THREAD) {
             thread->term = PR_NewCondVar(_pr_terminationCVLock);
-	    if (thread->term == NULL) {
-		PR_DELETE(thread->stack);
-		goto done;
-	    }
+        if (thread->term == NULL) {
+        PR_DELETE(thread->stack);
+        goto done;
+        }
         }
 
-	thread->state = _PR_RUNNING;
+    thread->state = _PR_RUNNING;
         if (_PR_MD_CREATE_THREAD(thread, _PR_NativeRunThread, priority,
             scope,state,stackSize) == PR_SUCCESS) {
             return thread;
         }
         if (thread->term) {
             PR_DestroyCondVar(thread->term);
-			thread->term = NULL;
-		}
-	PR_DELETE(thread->stack);
+            thread->term = NULL;
+        }
+    PR_DELETE(thread->stack);
     }
 
 done:
     if (thread) {
-	_PR_DecrActiveThreadCount(thread);
-        _PR_DetachThread(thread);
+    _PR_DecrActiveThreadCount(thread);
+        _PR_DestroyThread(thread);
     }
     return NULL;
 }
@@ -1048,12 +1057,12 @@ done:
 /************************************************************************/
 
 PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
-				     void (*start)(void *arg),
-				     void *arg,
-				     PRThreadPriority priority,
-				     PRThreadScope scope,
-				     PRThreadState state,
-				     PRUint32 stackSize,
+                     void (*start)(void *arg),
+                     void *arg,
+                     PRThreadPriority priority,
+                     PRThreadScope scope,
+                     PRThreadState state,
+                     PRUint32 stackSize,
                      PRUint32 flags)
 {
     PRThread *me;
@@ -1065,35 +1074,35 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
     PRIntn useRecycled = 0;
     PRBool status;
 
-	/* 
-	First, pin down the priority.  Not all compilers catch passing out of
-	range enum here.  If we let bad values thru, priority queues won't work.
-	*/
+    /* 
+    First, pin down the priority.  Not all compilers catch passing out of
+    range enum here.  If we let bad values thru, priority queues won't work.
+    */
     if (priority > PR_PRIORITY_LAST) {
         priority = PR_PRIORITY_LAST;
     } else if (priority < PR_PRIORITY_FIRST) {
         priority = PR_PRIORITY_FIRST;
     }
-		
+        
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
     if (! (flags & _PR_IDLE_THREAD))
-    	me = _PR_MD_CURRENT_THREAD();
+        me = _PR_MD_CURRENT_THREAD();
 
-#if	defined(_PR_GLOBAL_THREADS_ONLY)
+#if    defined(_PR_GLOBAL_THREADS_ONLY)
     scope = PR_GLOBAL_THREAD;
 #endif
 
     native = ((scope == PR_GLOBAL_THREAD) && _PR_IS_NATIVE_THREAD_SUPPORTED());
 
-	_PR_ADJUST_STACKSIZE(stackSize);
+    _PR_ADJUST_STACKSIZE(stackSize);
 
     if (native) {
-	/*
-	 * clear the IDLE_THREAD flag which applies to LOCAL
-	 * threads only
-	 */
-	flags &= ~_PR_IDLE_THREAD;
+    /*
+     * clear the IDLE_THREAD flag which applies to LOCAL
+     * threads only
+     */
+    flags &= ~_PR_IDLE_THREAD;
         flags |= _PR_GLOBAL_SCOPE;
         if (_PR_NUM_DEADNATIVE > 0) {
             _PR_DEADQ_LOCK;
@@ -1109,33 +1118,31 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
                 _PR_InitializeRecycledThread(thread);
                 thread->startFunc = start;
                 thread->arg = arg;
-        	PR_Lock(_pr_activeLock);
-		    thread->flags = (flags | _PR_GLOBAL_SCOPE);
-        	if (type == PR_SYSTEM_THREAD) {
-            		thread->flags |= _PR_SYSTEM;
-            		_pr_systemActive++;
-        	} else {
-            		_pr_userActive++;
-        	}
-        	PR_Unlock(_pr_activeLock);
+            thread->flags = (flags | _PR_GLOBAL_SCOPE);
+            if (type == PR_SYSTEM_THREAD)
+            {
+                thread->flags |= _PR_SYSTEM;
+                PR_AtomicIncrement(&_pr_systemActive);
+            }
+            else PR_AtomicIncrement(&_pr_userActive);
 
-        	if (state == PR_JOINABLE_THREAD) {
-        		if (!thread->term) 
-            		   thread->term = PR_NewCondVar(_pr_terminationCVLock);
-        	}
-		else {
-    			if(thread->term) {
-    				PR_DestroyCondVar(thread->term);
-                		thread->term = 0;
-			}
-        	}
+            if (state == PR_JOINABLE_THREAD) {
+                if (!thread->term) 
+                       thread->term = PR_NewCondVar(_pr_terminationCVLock);
+            }
+        else {
+                if(thread->term) {
+                    PR_DestroyCondVar(thread->term);
+                        thread->term = 0;
+            }
+            }
 
                 thread->priority = priority;
-		_PR_MD_SET_PRIORITY(&(thread->md), priority);
-		/* XXX what about stackSize? */
-		thread->state = _PR_RUNNING;
+        _PR_MD_SET_PRIORITY(&(thread->md), priority);
+        /* XXX what about stackSize? */
+        thread->state = _PR_RUNNING;
                 _PR_MD_WAKEUP_WAITER(thread);
-		return thread;
+        return thread;
             }
         }
         thread = _PR_NativeCreateThread(type, start, arg, priority, 
@@ -1156,7 +1163,7 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
                 while( ptr != &_PR_DEADUSERQ ) {
                     thread = _PR_THREAD_PTR(ptr);
                     if ((thread->stack->stackSize >= stackSize) &&
-				(!thread->no_sched)) {
+                (!thread->no_sched)) {
                         PR_REMOVE_LINK(&thread->links);
                         _PR_DEC_DEADUSER;
                         break;
@@ -1173,15 +1180,15 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
                     thread->startFunc = start;
                     thread->arg = arg;
                     thread->priority = priority;
-		    if (state == PR_JOINABLE_THREAD) {
-			if (!thread->term) 
-			   thread->term = PR_NewCondVar(_pr_terminationCVLock);
-		    } else {
-			if(thread->term) {
-			   PR_DestroyCondVar(thread->term);
-				thread->term = 0;
-			}
-		    }
+            if (state == PR_JOINABLE_THREAD) {
+            if (!thread->term) 
+               thread->term = PR_NewCondVar(_pr_terminationCVLock);
+            } else {
+            if(thread->term) {
+               PR_DestroyCondVar(thread->term);
+                thread->term = 0;
+            }
+            }
                     useRecycled++;
                 }
             }
@@ -1191,31 +1198,31 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
             stack = _PR_NewStack(stackSize);
             if (!stack) {
                 PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
-	        return 0;
+            return 0;
             }
-            stack->thr = thread;
 
             /* Allocate thread object and per-thread data off the top of the stack*/
             top = stack->stackTop;
 #ifdef HAVE_STACK_GROWING_UP
             thread = (PRThread*) top;
             top = top + sizeof(PRThread);
-	    /*
-	     * Make stack 64-byte aligned
-	     */
+        /*
+         * Make stack 64-byte aligned
+         */
             if ((PRUptrdiff)top & 0x3f) {
                 top = (char*)(((PRUptrdiff)top + 0x40) & ~0x3f);
             }
 #else
             top = top - sizeof(PRThread);
             thread = (PRThread*) top;
-	    /*
-	     * Make stack 64-byte aligned
-	     */
+        /*
+         * Make stack 64-byte aligned
+         */
             if ((PRUptrdiff)top & 0x3f) {
                 top = (char*)((PRUptrdiff)top & ~0x3f);
             }
 #endif
+            stack->thr = thread;
             memset(thread, 0, sizeof(PRThread));
             thread->threadAllocatedOnStack = 1;
 #else
@@ -1229,8 +1236,6 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
 #endif
 
             /* Initialize thread */
-            if (stack)
-                stack->thr = thread;
             thread->tpdLength = 0;
             thread->privateData = NULL;
             thread->stack = stack;
@@ -1240,36 +1245,36 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
             PR_INIT_CLIST(&thread->lockList);
 
             if (_PR_MD_INIT_THREAD(thread) == PR_FAILURE) {
-				if (thread->threadAllocatedOnStack == 1)
-					_PR_FreeStack(thread->stack);
-				else {
-					PR_DELETE(thread);
-				}
-				PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
-				return NULL;
-			}
+                if (thread->threadAllocatedOnStack == 1)
+                    _PR_FreeStack(thread->stack);
+                else {
+                    PR_DELETE(thread);
+                }
+                PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
+                return NULL;
+            }
 
-			if (_MD_NEW_LOCK(&thread->threadLock) == PR_FAILURE) {
-				if (thread->threadAllocatedOnStack == 1)
-					_PR_FreeStack(thread->stack);
-				else {
-				    PR_DELETE(thread->privateData);
-					PR_DELETE(thread);
-				}
-				PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
-				return NULL;
-			}
+            if (_MD_NEW_LOCK(&thread->threadLock) == PR_FAILURE) {
+                if (thread->threadAllocatedOnStack == 1)
+                    _PR_FreeStack(thread->stack);
+                else {
+                    PR_DELETE(thread->privateData);
+                    PR_DELETE(thread);
+                }
+                PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
+                return NULL;
+            }
 
             _PR_MD_INIT_CONTEXT(thread, top, _PR_UserRunThread, &status);
 
             if (status == PR_FALSE) {
-		_MD_FREE_LOCK(&thread->threadLock);
-            	if (thread->threadAllocatedOnStack == 1)
-			_PR_FreeStack(thread->stack);
-		else {
-		    PR_DELETE(thread->privateData);
+        _MD_FREE_LOCK(&thread->threadLock);
+                if (thread->threadAllocatedOnStack == 1)
+            _PR_FreeStack(thread->stack);
+        else {
+            PR_DELETE(thread->privateData);
             PR_DELETE(thread);
-		}
+        }
                 return NULL;
             }
 
@@ -1279,16 +1284,16 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
             */
             if (state == PR_JOINABLE_THREAD) {
                 thread->term = PR_NewCondVar(_pr_terminationCVLock);
-		if (thread->term == NULL) {
-			_MD_FREE_LOCK(&thread->threadLock);
-			if (thread->threadAllocatedOnStack == 1)
-				_PR_FreeStack(thread->stack);
-			else {
-			    PR_DELETE(thread->privateData);
-				PR_DELETE(thread);
-			}
-			return NULL;
-		}
+        if (thread->term == NULL) {
+            _MD_FREE_LOCK(&thread->threadLock);
+            if (thread->threadAllocatedOnStack == 1)
+                _PR_FreeStack(thread->stack);
+            else {
+                PR_DELETE(thread->privateData);
+                PR_DELETE(thread);
+            }
+            return NULL;
+        }
             }
   
         }
@@ -1306,9 +1311,9 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
 
         /* Make thread runnable */
         thread->state = _PR_RUNNABLE;
-	/*
-	 * Add to list of active threads
-	 */
+    /*
+     * Add to list of active threads
+     */
         PR_Unlock(_pr_activeLock);
 
         if ( (thread->flags & _PR_IDLE_THREAD) || _PR_IS_NATIVE_THREAD(me) )
@@ -1317,7 +1322,7 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
             thread->cpu = _PR_MD_CURRENT_CPU();
 
         if ((! (thread->flags & _PR_IDLE_THREAD)) && !_PR_IS_NATIVE_THREAD(me))
-        	_PR_INTSOFF(is);
+            _PR_INTSOFF(is);
         if ((! (thread->flags & _PR_IDLE_THREAD)) && !_PR_IS_NATIVE_THREAD(thread)) {
             _PR_RUNQ_LOCK(thread->cpu);
             _PR_ADD_RUNQ(thread, thread->cpu, priority);
@@ -1334,19 +1339,19 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
             _PR_MD_WAKEUP_WAITER(NULL);
         }
         if ((! (thread->flags & _PR_IDLE_THREAD)) && !_PR_IS_NATIVE_THREAD(me) )
-        	_PR_INTSON(is);
+            _PR_INTSON(is);
     }
 
     return thread;
 }
 
 PR_IMPLEMENT(PRThread*) PR_CreateThread(PRThreadType type,
-				     void (*start)(void *arg),
-				     void *arg,
-				     PRThreadPriority priority,
-				     PRThreadScope scope,
-				     PRThreadState state,
-				     PRUint32 stackSize)
+                     void (*start)(void *arg),
+                     void *arg,
+                     PRThreadPriority priority,
+                     PRThreadScope scope,
+                     PRThreadState state,
+                     PRUint32 stackSize)
 {
     return _PR_CreateThread(type, start, arg, priority, scope, state, 
                             stackSize, 0);
@@ -1354,9 +1359,9 @@ PR_IMPLEMENT(PRThread*) PR_CreateThread(PRThreadType type,
 
 /*
 ** Associate a thread object with an existing native thread.
-** 	"type" is the type of thread object to attach
-** 	"priority" is the priority to assign to the thread
-** 	"stack" defines the shape of the threads stack
+**     "type" is the type of thread object to attach
+**     "priority" is the priority to assign to the thread
+**     "stack" defines the shape of the threads stack
 **
 ** This can return NULL if some kind of error occurs, or if memory is
 ** tight.
@@ -1364,7 +1369,7 @@ PR_IMPLEMENT(PRThread*) PR_CreateThread(PRThreadType type,
 ** This call is not normally needed unless you create your own native
 ** thread. PR_Init does this automatically for the primordial thread.
 */
-PR_IMPLEMENT(PRThread*) _PRI_AttachThread(PRThreadType type,
+PRThread* _PRI_AttachThread(PRThreadType type,
     PRThreadPriority priority, PRThreadStack *stack, PRUint32 flags)
 {
     PRThread *thread;
@@ -1372,6 +1377,7 @@ PR_IMPLEMENT(PRThread*) _PRI_AttachThread(PRThreadType type,
     if ((thread = _PR_MD_GET_ATTACHED_THREAD()) != NULL) {
         return thread;
     }
+    _PR_MD_SET_CURRENT_THREAD(NULL);
 
     /* Clear out any state if this thread was attached before */
     _PR_MD_SET_CURRENT_CPU(NULL);
@@ -1387,7 +1393,7 @@ PR_IMPLEMENT(PRThread*) _PRI_AttachThread(PRThreadType type,
         if (!stack) {
             thread->stack = PR_NEWZAP(PRThreadStack);
             if (!thread->stack) {
-        		_PR_DetachThread(thread);
+                _PR_DestroyThread(thread);
                 return NULL;
             }
             thread->stack->stackSize = _MD_DEFAULT_STACK_SIZE;
@@ -1396,9 +1402,9 @@ PR_IMPLEMENT(PRThread*) _PRI_AttachThread(PRThreadType type,
 
         if (_PR_MD_INIT_ATTACHED_THREAD(thread) == PR_FAILURE) {
                 PR_DELETE(thread->stack);
-        		_PR_DetachThread(thread);
+                _PR_DestroyThread(thread);
                 return NULL;
-		}
+        }
 
         _PR_MD_SET_CURRENT_CPU(NULL);
 
@@ -1423,34 +1429,31 @@ PR_IMPLEMENT(PRThread*) _PRI_AttachThread(PRThreadType type,
 PR_IMPLEMENT(PRThread*) PR_AttachThread(PRThreadType type,
     PRThreadPriority priority, PRThreadStack *stack)
 {
-    return _PRI_AttachThread(type, priority, stack, 0);
+    return PR_GetCurrentThread();
 }
 
-/*
-** Detach the nspr thread from the currently executing native thread.
-** The thread object will be destroyed and all related data attached
-** to it. The exit procs will be invoked.
-**
-** This call is not normally needed unless you create your own native
-** thread. PR_Exit will automatially detach the nspr thread object
-** created by PR_Init for the primordial thread.
-**
-** This call returns after the nspr thread object is destroyed.
-*/
 PR_IMPLEMENT(void) PR_DetachThread(void)
 {
-    PRIntn is;
+}
+
+void _PRI_DetachThread(void)
+{
     PRThread *me = _PR_MD_CURRENT_THREAD();
 
+	if (me->flags & _PR_PRIMORDIAL) {
+		/*
+		 * ignore, if primordial thread
+		 */
+		return;
+	}
     PR_ASSERT(me->flags & _PR_ATTACHED);
+    PR_ASSERT(_PR_IS_NATIVE_THREAD(me));
     _PR_CleanupThread(me);
-	PR_DELETE(me->privateData);
-    _PR_MD_CLEAN_THREAD(me);
+    PR_DELETE(me->privateData);
 
-    /*XXX we need DetachCPU */
-     if ( !_PR_IS_NATIVE_THREAD(me)) _PR_INTSOFF(is);
     _PR_DecrActiveThreadCount(me);
-    if ( !_PR_IS_NATIVE_THREAD(me)) _PR_FAST_INTSON(is);
+
+    _PR_MD_CLEAN_THREAD(me);
     _PR_MD_SET_CURRENT_THREAD(NULL);
     if (!me->threadAllocatedOnStack) 
         PR_DELETE(me->stack);
@@ -1460,7 +1463,7 @@ PR_IMPLEMENT(void) PR_DetachThread(void)
 
 /*
 ** Wait for thread termination:
-** 	"thread" is the target thread 
+**     "thread" is the target thread 
 **
 ** This can return PR_FAILURE if no joinable thread could be found 
 ** corresponding to the specified target thread.
@@ -1478,10 +1481,11 @@ PR_IMPLEMENT(PRStatus) PR_JoinThread(PRThread *thread)
     PRThread *me = _PR_MD_CURRENT_THREAD();
 
     if (!_PR_IS_NATIVE_THREAD(me))
-    	_PR_INTSOFF(is);
+        _PR_INTSOFF(is);
     term = thread->term;
     /* can't join a non-joinable thread */
     if (term == NULL) {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         goto ErrorExit;
     }
 
@@ -1490,7 +1494,7 @@ PR_IMPLEMENT(PRStatus) PR_JoinThread(PRThread *thread)
         goto ErrorExit;
     }
     if (!_PR_IS_NATIVE_THREAD(me))
-    	_PR_INTSON(is);
+        _PR_INTSON(is);
 
     /* wait for the target thread's termination cv invariant */
     PR_Lock (_pr_terminationCVLock);
@@ -1498,14 +1502,14 @@ PR_IMPLEMENT(PRStatus) PR_JoinThread(PRThread *thread)
         (void) PR_WaitCondVar(term, PR_INTERVAL_NO_TIMEOUT);
     }
     (void) PR_Unlock (_pr_terminationCVLock);
-	
+    
     /* 
      Remove target thread from global waiting to join Q; make it runnable
      again and put it back on its run Q.  When it gets scheduled later in
      _PR_RunThread code, it will clean up its stack.
-    */	
+    */    
     if (!_PR_IS_NATIVE_THREAD(me))
-    	_PR_INTSOFF(is);
+        _PR_INTSOFF(is);
     thread->state = _PR_RUNNABLE;
     if ( !_PR_IS_NATIVE_THREAD(thread) ) {
         _PR_THREAD_LOCK(thread);
@@ -1518,7 +1522,7 @@ PR_IMPLEMENT(PRStatus) PR_JoinThread(PRThread *thread)
         _PR_THREAD_UNLOCK(thread);
     }
     if (!_PR_IS_NATIVE_THREAD(me))
-    	_PR_INTSON(is);
+        _PR_INTSON(is);
 
     _PR_MD_WAKEUP_WAITER(thread);
 
@@ -1533,16 +1537,16 @@ PR_IMPLEMENT(void) PR_SetThreadPriority(PRThread *thread,
     PRThreadPriority newPri)
 {
 
-	/* 
-	First, pin down the priority.  Not all compilers catch passing out of
-	range enum here.  If we let bad values thru, priority queues won't work.
-	*/
+    /* 
+    First, pin down the priority.  Not all compilers catch passing out of
+    range enum here.  If we let bad values thru, priority queues won't work.
+    */
     if (newPri > PR_PRIORITY_LAST) {
         newPri = PR_PRIORITY_LAST;
     } else if (newPri < PR_PRIORITY_FIRST) {
         newPri = PR_PRIORITY_FIRST;
     }
-		
+        
     if ( _PR_IS_NATIVE_THREAD(thread) ) {
         thread->priority = newPri;
         _PR_MD_SET_PRIORITY(&(thread->md), newPri);
@@ -1567,18 +1571,18 @@ PR_IMPLEMENT(void) PR_SuspendAll(void)
     suspendAllThread = _PR_MD_CURRENT_THREAD();
     _PR_MD_BEGIN_SUSPEND_ALL();
     for (qp = _PR_ACTIVE_LOCAL_THREADQ().next;
-		qp != &_PR_ACTIVE_LOCAL_THREADQ(); qp = qp->next) {
-	    if ((me != _PR_ACTIVE_THREAD_PTR(qp)) && 
-	    	(_PR_ACTIVE_THREAD_PTR(qp)->flags & _PR_GCABLE_THREAD)) {
-	    	_PR_Suspend(_PR_ACTIVE_THREAD_PTR(qp));
+        qp != &_PR_ACTIVE_LOCAL_THREADQ(); qp = qp->next) {
+        if ((me != _PR_ACTIVE_THREAD_PTR(qp)) && 
+            (_PR_ACTIVE_THREAD_PTR(qp)->flags & _PR_GCABLE_THREAD)) {
+            _PR_Suspend(_PR_ACTIVE_THREAD_PTR(qp));
                 PR_ASSERT((_PR_ACTIVE_THREAD_PTR(qp))->state != _PR_RUNNING);
             }
     }
     for (qp = _PR_ACTIVE_GLOBAL_THREADQ().next;
-		qp != &_PR_ACTIVE_GLOBAL_THREADQ(); qp = qp->next) {
-	    if ((me != _PR_ACTIVE_THREAD_PTR(qp)) &&
-	    	(_PR_ACTIVE_THREAD_PTR(qp)->flags & _PR_GCABLE_THREAD))
-	    	/* PR_Suspend(_PR_ACTIVE_THREAD_PTR(qp)); */
+        qp != &_PR_ACTIVE_GLOBAL_THREADQ(); qp = qp->next) {
+        if ((me != _PR_ACTIVE_THREAD_PTR(qp)) &&
+            (_PR_ACTIVE_THREAD_PTR(qp)->flags & _PR_GCABLE_THREAD))
+            /* PR_Suspend(_PR_ACTIVE_THREAD_PTR(qp)); */
                 _PR_MD_SUSPEND_THREAD(_PR_ACTIVE_THREAD_PTR(qp)); 
     }
     _PR_MD_END_SUSPEND_ALL();
@@ -1598,15 +1602,15 @@ PR_IMPLEMENT(void) PR_ResumeAll(void)
      */
     _PR_MD_BEGIN_RESUME_ALL();
     for (qp = _PR_ACTIVE_LOCAL_THREADQ().next;
-		qp != &_PR_ACTIVE_LOCAL_THREADQ(); qp = qp->next) {
-	    if ((me != _PR_ACTIVE_THREAD_PTR(qp)) && 
-	    	(_PR_ACTIVE_THREAD_PTR(qp)->flags & _PR_GCABLE_THREAD))
-	    	_PR_Resume(_PR_ACTIVE_THREAD_PTR(qp));
+        qp != &_PR_ACTIVE_LOCAL_THREADQ(); qp = qp->next) {
+        if ((me != _PR_ACTIVE_THREAD_PTR(qp)) && 
+            (_PR_ACTIVE_THREAD_PTR(qp)->flags & _PR_GCABLE_THREAD))
+            _PR_Resume(_PR_ACTIVE_THREAD_PTR(qp));
     }
     for (qp = _PR_ACTIVE_GLOBAL_THREADQ().next;
-		qp != &_PR_ACTIVE_GLOBAL_THREADQ(); qp = qp->next) {
-	    if ((me != _PR_ACTIVE_THREAD_PTR(qp)) &&
-	    	(_PR_ACTIVE_THREAD_PTR(qp)->flags & _PR_GCABLE_THREAD))
+        qp != &_PR_ACTIVE_GLOBAL_THREADQ(); qp = qp->next) {
+        if ((me != _PR_ACTIVE_THREAD_PTR(qp)) &&
+            (_PR_ACTIVE_THREAD_PTR(qp)->flags & _PR_GCABLE_THREAD))
                 _PR_MD_RESUME_THREAD(_PR_ACTIVE_THREAD_PTR(qp));
     }
     _PR_MD_END_RESUME_ALL();

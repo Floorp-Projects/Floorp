@@ -26,13 +26,25 @@
 include $(MOD_DEPTH)/config/UNIX.mk
 
 #
-# The default implementation strategy for Linux is classic nspr.
+# XXX
+# Temporary define for the Client; to be removed when binary release is used
 #
-ifeq ($(USE_PTHREADS),1)
-IMPL_STRATEGY = _PTH
-DEFINES			+= -D_REENTRANT
-else
+ifdef MOZILLA_CLIENT
+ifneq ($(USE_PTHREADS),1)
+CLASSIC_NSPR = 1
+endif
+endif
+
+#
+# The default implementation strategy for Linux is pthreads.
+#
+ifeq ($(CLASSIC_NSPR),1)
+IMPL_STRATEGY		= _EMU
 DEFINES			+= -D_PR_LOCAL_THREADS_ONLY
+else
+USE_PTHREADS		= 1
+IMPL_STRATEGY		= _PTH
+DEFINES			+= -D_REENTRANT
 endif
 
 ifeq (86,$(findstring 86,$(OS_TEST)))
@@ -43,8 +55,8 @@ CPU_ARCH		:= arm
 else
 CPU_ARCH		:= $(OS_TEST)
 endif
-CPU_ARCH_TAG		= _$(CPU_ARCH)
 endif
+CPU_ARCH_TAG		= _$(CPU_ARCH)
 
 CC			= gcc
 CCC			= g++
@@ -56,11 +68,7 @@ G++INCLUDES		= -I/usr/include/g++
 PLATFORM_FLAGS		= -ansi -Wall -pipe -DLINUX -Dlinux
 PORT_FLAGS		= -D_POSIX_SOURCE -D_BSD_SOURCE -DHAVE_STRERROR
 
-ifdef USE_AUTOCONF
-OS_CFLAGS		= $(DSO_CFLAGS) #-include $(MOD_DEPTH)/include/config.h
-else
 OS_CFLAGS		= $(DSO_CFLAGS) $(PLATFORM_FLAGS) $(PORT_FLAGS)
-endif
 
 ######################################################################
 # Version-specific stuff

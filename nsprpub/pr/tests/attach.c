@@ -66,7 +66,7 @@
 #include <os2.h>
 #endif
 
-#define DEFAULT_COUNT 10000
+#define DEFAULT_COUNT 1000
 PRIntn failed_already=0;
 PRIntn debug_mode;
 
@@ -81,21 +81,17 @@ AttachDetach(void)
     PRInt32 index;
 
     for (index=0;index<count; index++) {
-
         me = PR_AttachThread(PR_USER_THREAD, 
                              PR_PRIORITY_NORMAL,
                              NULL);
  
         if (!me) {
-            fprintf(stderr, "Error attaching thread %d: "
-		    "nspr20 error code %d, os error code %d\n",
-		    count, PR_GetError(), PR_GetOSError());
-	    failed_already = 1;
-	    return;
+            fprintf(stderr, "Error attaching thread %d: PR_AttachThread failed\n",
+		    count);
+	    	failed_already = 1;
+	    	return;
         }
-
         PR_DetachThread();
-
     }
 }
 
@@ -277,7 +273,7 @@ int main(int argc, char **argv)
     }
     rv = WaitForSingleObject(hThread, INFINITE);
     if (debug_mode)PR_ASSERT(rv != WAIT_FAILED);
-	else if (rv != WAIT_FAILED) {
+	else if (rv == WAIT_FAILED) {
 		failed_already=1;
 		goto exit_now;
 	}
@@ -296,6 +292,7 @@ int main(int argc, char **argv)
 	else {
 		if (debug_mode) 
 			printf ("thread creation succeeded \n");
+		sleep(3);
 		goto exit_now;
 	}
     rv = waitpid(threadID, NULL, 0);

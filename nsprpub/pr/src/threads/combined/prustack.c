@@ -77,7 +77,7 @@ PRThreadStack *_PR_NewStack(PRUint32 stackSize)
 	_PR_MD_CLEAR_STACK(ts);
 
 	_pr_numFreeStacks--;
-	PR_DestroySegment(ts->seg);
+	_PR_DestroySegment(ts->seg);
 	PR_DELETE(ts);
     }
 
@@ -125,7 +125,7 @@ PRThreadStack *_PR_NewStack(PRUint32 stackSize)
 	** up).
 	*/
 	ts->allocSize = stackSize + 2*REDZONE;
-	ts->seg = PR_NewSegment(ts->allocSize, 0);
+	ts->seg = _PR_NewSegment(ts->allocSize, 0);
 	if (!ts->seg) {
 	    PR_DELETE(ts);
 	    return NULL;
@@ -133,7 +133,7 @@ PRThreadStack *_PR_NewStack(PRUint32 stackSize)
 	}
 
   done:
-    ts->allocBase = ts->seg->vaddr;
+    ts->allocBase = (char*)ts->seg->vaddr;
     ts->flags = _PR_STACK_MAPPED;
     ts->stackSize = stackSize;
 

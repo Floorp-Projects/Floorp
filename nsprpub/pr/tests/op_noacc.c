@@ -54,6 +54,10 @@ int main(int argc, char **argv)
 	SetupMacPrintfLog("pr_open_re.log");
 #endif
 	
+#ifdef XP_PC
+    printf("op_noacc: Test not valid on MS-Windows.\n\tNo concept of 'mode' on Open() call\n");
+    return(0);
+#endif
 
 	
     PR_STDIO_INIT();

@@ -39,11 +39,7 @@ G++INCLUDES		=
 PLATFORM_FLAGS		= -Xa -fullwarn -DSONY
 PORT_FLAGS		= -DSYSV -DSVR4 -D__svr4 -D__svr4__ -D_PR_LOCAL_THREADS_ONLY -DHAVE_SVID_GETTOD
 
-ifdef USE_AUTOCONF
-OS_CFLAGS		=
-else
 OS_CFLAGS		= $(PLATFORM_FLAGS) $(PORT_FLAGS)
-endif
 
 ######################################################################
 # Version-specific stuff

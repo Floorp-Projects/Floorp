@@ -70,11 +70,7 @@ RANLIB			= /bin/true
 NOMD_OS_CFLAGS		= $(ODD_CFLAGS)
 
 # we do not have -MDupdate ...
-ifdef USE_AUTOCONF
-OS_CFLAGS		= 
-else
 OS_CFLAGS		= $(NOMD_OS_CFLAGS)
-endif
 OS_LIBS			= -lsocket -lnsl -lresolv -ldl -lc
 NOSUCHFILE		= /no-such-file
 

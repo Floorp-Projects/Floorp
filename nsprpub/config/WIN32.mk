@@ -29,22 +29,6 @@ ifdef PR_CLIENT_BUILD_WINDOWS
 SHELL = $(MOZ_TOOLS_FLIPPED)/bin/shmsdos.exe
 endif
 
-#
-# On NT, we use static thread local storage by default because it
-# gives us better performance.  However, we can't use static TLS
-# on Alpha NT because the Alpha version of MSVC does not seem to
-# support the -GT flag, which is necessary to make static TLS safe
-# for fibers.
-#
-# On Win95, we use the TlsXXX() functions by default because that
-# allows us to load the NSPR DLL at run time using LoadLibrary().
-#
-ifeq ($(OS_TARGET),WINNT)
-ifneq ($(CPU_ARCH),ALPHA)
-USE_STATIC_TLS = 1
-endif
-endif
-
 CC = cl
 CCC = cl
 LINK = link
@@ -96,12 +80,8 @@ OPTIMIZER = -Od -Z7
 DEFINES = -DDEBUG -D_DEBUG -UNDEBUG
 
 DLLFLAGS = -DEBUG -DEBUGTYPE:CV -OUT:"$@"
-ifeq ($(MOZ_BITS),32)
 ifdef GLOWCODE
-ifdef MOZ_DEBUG
 DLLFLAGS = -DEBUG -DEBUGTYPE:both -INCLUDE:_GlowCode -OUT:"$@"
-endif
-endif
 endif
 
 OBJDIR_TAG = _DBG
@@ -109,22 +89,27 @@ LDFLAGS = -DEBUG -DEBUGTYPE:CV
 endif
 
 DEFINES += -DWIN32
+
+#
+# On Win95, we use the TlsXXX() interface by default because that
+# allows us to load the NSPR DLL dynamically at run time.
+# If you want to use static thread-local storage (TLS) for better
+# performance, build the NSPR library with USE_STATIC_TLS=1.
+#
 ifeq ($(USE_STATIC_TLS),1)
 DEFINES += -D_PR_USE_STATIC_TLS
 endif
 
 #
-# NSPR uses fibers on NT.  Therefore, if we use static local
-# storage (i.e., __declspec(thread) variables), we need the -GT
+# NSPR uses both fibers and static thread-local storage
+# (i.e., __declspec(thread) variables) on NT.  We need the -GT
 # flag to turn off certain compiler optimizations so that fibers
 # can use static TLS safely.
 #
 # Also, we optimize for Pentium (-G5) on NT.
 #
 ifeq ($(OS_TARGET),WINNT)
-ifeq ($(USE_STATIC_TLS),1)
 OS_CFLAGS += -GT
-endif
 ifeq ($(CPU_ARCH),x86)
 OS_CFLAGS += -G5
 endif

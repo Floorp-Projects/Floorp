@@ -43,7 +43,6 @@ typedef struct Shared
 
 typedef enum Verbosity {silent, quiet, chatty, noisy} Verbosity;
 
-static PRUint32 identity = 0;
 static PRFileDesc *debug = NULL;
 static PRInt32 desc_allocated = 0;
 static PRUint16 default_port = 12273;
@@ -113,7 +112,7 @@ static PRRecvWait *CreateRecvWait(PRFileDesc *fd, PRIntervalTime timeout)
     return desc_out;
 }  /* CreateRecvWait */
 
-static void DestroyRecvWait(Shared *shared, PRRecvWait *desc_out)
+static void DestroyRecvWait(PRRecvWait *desc_out)
 {
     if (verbosity > chatty)
         PrintRecvDesc(desc_out, "Destroying");
@@ -134,7 +133,7 @@ static void CancelGroup(Shared *shared)
     do
     {
         desc_out = PR_CancelWaitGroup(shared->group);
-        if (NULL != desc_out) DestroyRecvWait(shared, desc_out);
+        if (NULL != desc_out) DestroyRecvWait(desc_out);
     } while (NULL != desc_out);
 
     MW_ASSERT(0 == desc_allocated);
@@ -298,7 +297,7 @@ static void PR_CALLBACK SomeOpsThread(void *arg)
         if (NULL == desc_out)
         {
             MW_ASSERT(PR_PENDING_INTERRUPT_ERROR == PR_GetError());
-            if (verbosity > quiet) PrintRecvDesc(desc_out, "Aborted");
+            if (verbosity > quiet) PR_fprintf(debug, "Aborted\n");
             break;
         }
         MW_ASSERT(PR_MW_TIMEOUT == desc_out->outcome);
@@ -422,9 +421,6 @@ static void PR_CALLBACK ServiceThread(void *arg)
             case PR_MW_SUCCESS:
             {
                 PR_AtomicIncrement(&ops_done);
-                if (verbosity > quiet)
-                    PR_fprintf(
-                        debug, "%s: Servicing %u\n", shared->title, ops_done);
                 if (verbosity > chatty)
                     PrintRecvDesc(desc_out, "Service ready");
                 rv = ServiceRequest(shared, desc_out);
@@ -445,10 +441,40 @@ static void PR_CALLBACK ServiceThread(void *arg)
         }
     } while (PR_SUCCESS == rv);
 
-    if (NULL != desc_out) DestroyRecvWait(shared, desc_out);
+    if (NULL != desc_out) DestroyRecvWait(desc_out);
 
 }  /* ServiceThread */
 
+static void PR_CALLBACK EnumerationThread(void *arg)
+{
+    PRStatus rv;
+    PRIntn count;
+    PRRecvWait *desc;
+    Shared *shared = (Shared*)arg;
+    PRIntervalTime five_seconds = PR_SecondsToInterval(5);
+    PRMWaitEnumerator *enumerator = PR_CreateMWaitEnumerator(shared->group);
+    MW_ASSERT(NULL != enumerator);
+
+    while (PR_SUCCESS == PR_Sleep(five_seconds))
+    {
+        count = 0;
+        desc = NULL;
+        while (NULL != (desc = PR_EnumerateWaitGroup(enumerator, desc)))
+        {
+            if (verbosity > chatty) PrintRecvDesc(desc, shared->title);
+            count += 1;
+        }
+        if (verbosity > silent)
+            PR_fprintf(debug,
+                "%s Enumerated %d objects\n", shared->title, count);
+    }
+
+    MW_ASSERT(PR_PENDING_INTERRUPT_ERROR == PR_GetError());
+
+
+    rv = PR_DestroyMWaitEnumerator(enumerator);
+    MW_ASSERT(PR_SUCCESS == rv);
+}  /* EnumerationThread */
 
 static void PR_CALLBACK ServerThread(void *arg)
 {
@@ -534,13 +560,21 @@ static void RealOneGroupIO(Shared *shared)
     */
     PRStatus rv;
     PRIntn index;
-    PRThread *server_thread, **client_thread;
+    PRThread *server_thread, *enumeration_thread, **client_thread;
 
     if (verbosity > quiet)
         PR_fprintf(debug, "%s: creating server_thread\n", shared->title);
 
     server_thread = PR_CreateThread(
         PR_USER_THREAD, ServerThread, shared,
+        PR_PRIORITY_HIGH, thread_scope,
+        PR_JOINABLE_THREAD, 16 * 1024);
+
+    if (verbosity > quiet)
+        PR_fprintf(debug, "%s: creating enumeration_thread\n", shared->title);
+
+    enumeration_thread = PR_CreateThread(
+        PR_USER_THREAD, EnumerationThread, shared,
         PR_PRIORITY_HIGH, thread_scope,
         PR_JOINABLE_THREAD, 16 * 1024);
 
@@ -572,6 +606,13 @@ static void RealOneGroupIO(Shared *shared)
     }
 
     if (verbosity > quiet)
+        PR_fprintf(debug, "%s: interrupting/joining enumeration_thread\n", shared->title);
+    rv = PR_Interrupt(enumeration_thread);
+    MW_ASSERT(PR_SUCCESS == rv);
+    rv = PR_JoinThread(enumeration_thread);
+    MW_ASSERT(PR_SUCCESS == rv);
+
+    if (verbosity > quiet)
         PR_fprintf(debug, "%s: interrupting/joining server_thread\n", shared->title);
     rv = PR_Interrupt(server_thread);
     MW_ASSERT(PR_SUCCESS == rv);
@@ -598,7 +639,7 @@ static void RunThisOne(
 static Verbosity ChangeVerbosity(Verbosity verbosity, PRIntn delta)
 {
     PRIntn verbage = (PRIntn)verbosity;
-    return (Verbosity)(verbage += 1);
+    return (Verbosity)(verbage += delta);
 }  /* ChangeVerbosity */
 
 PRIntn main(PRIntn argc, char **argv)

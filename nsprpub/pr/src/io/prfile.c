@@ -182,22 +182,21 @@ static PRStatus PR_CALLBACK FileSync(PRFileDesc *fd)
 
 static PRStatus PR_CALLBACK FileClose(PRFileDesc *fd)
 {
-    PRInt32 rv;
-
-    if (!fd || fd->secret->state != _PR_FILEDESC_OPEN) {
+    if (!fd || !fd->secret
+            || (fd->secret->state != _PR_FILEDESC_OPEN
+            && fd->secret->state != _PR_FILEDESC_CLOSED)) {
         PR_SetError(PR_BAD_DESCRIPTOR_ERROR, 0);
         return PR_FAILURE;
     }
 
-    fd->secret->state = _PR_FILEDESC_CLOSED;
-
-    rv =  _PR_MD_CLOSE_FILE(fd->secret->md.osfd);
-    PR_FreeFileDesc(fd);
-    if (rv < 0) {
-        return PR_FAILURE;
-    } else {
-        return PR_SUCCESS;
+    if (fd->secret->state == _PR_FILEDESC_OPEN) {
+        if (_PR_MD_CLOSE_FILE(fd->secret->md.osfd) < 0) {
+            return PR_FAILURE;
+        }
+        fd->secret->state = _PR_FILEDESC_CLOSED;
     }
+    PR_FreeFileDesc(fd);
+    return PR_SUCCESS;
 }
 
 static PRInt16 PR_CALLBACK FilePoll(
@@ -207,7 +206,7 @@ static PRInt16 PR_CALLBACK FilePoll(
     return in_flags;
 }  /* FilePoll */
 
-PRIOMethods _pr_fileMethods = {
+static PRIOMethods _pr_fileMethods = {
     PR_DESC_FILE,
     FileClose,
     FileRead,
@@ -357,6 +356,7 @@ PR_IMPLEMENT(PRStatus) PR_GetFileInfo64(const char *fn, PRFileInfo64 *info)
 {
     PRInt32 rv;
 
+    if (!_pr_initialized) _PR_ImplicitInitialization();
     rv = _PR_MD_GETFILEINFO64(fn, info);
     if (rv < 0) {
         return PR_FAILURE;

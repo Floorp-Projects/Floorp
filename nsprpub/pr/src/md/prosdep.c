@@ -19,15 +19,15 @@
 #include "prbit.h"
 #include "prsystem.h"
 
-#if defined(XP_MAC)
-#include "prosdep.h"
-#else
-#include "md/prosdep.h"
-#endif
-
 #ifdef XP_UNIX
 #include <unistd.h>
 #endif
+#ifdef SUNOS4
+#include "md/sunos4.h"
+#endif
+#ifdef _WIN32
+#include <windows.h>
+#endif 
 
 PRInt32 _pr_pageShift;
 PRInt32 _pr_pageSize;
@@ -42,7 +42,7 @@ static void GetPageSize(void)
     /* Get page size */
 #ifdef XP_UNIX
 #if defined SUNOS4 || defined LINUX || defined BSDI || defined AIX \
-	|| defined FREEBSD || defined NETBSD || defined RHAPSODY
+	|| defined FREEBSD || defined NETBSD || defined OPENBSD || defined RHAPSODY
     _pr_pageSize = getpagesize();
 #elif defined(HPUX)
     /* I have no idea. Don't get me started. --Rob */

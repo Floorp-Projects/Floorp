@@ -25,46 +25,34 @@ extern void _PR_Win32InitTimeZone(void);  /* defined in ntmisc.c */
 PRLock                       *_pr_schedLock = NULL;
 _PRInterruptTable             _pr_interruptTable[] = { { 0 } };
 
-#ifdef _PR_USE_STATIC_TLS
+BOOL _pr_use_static_tls = TRUE;
 __declspec(thread) PRThread  *_pr_current_fiber;
 __declspec(thread) PRThread  *_pr_fiber_last_run;
 __declspec(thread) _PRCPU    *_pr_current_cpu;
 __declspec(thread) PRUintn    _pr_ints_off;
-#else /* _PR_USE_STATIC_TLS */
 DWORD _pr_currentFiberIndex;
 DWORD _pr_lastFiberIndex;
 DWORD _pr_currentCPUIndex;
 DWORD _pr_intsOffIndex;
-#endif /* _PR_USE_STATIC_TLS */
 
 _MDLock                       _nt_idleLock;
 PRCList                       _nt_idleList;
 PRUint32                        _nt_idleCount;
 
-#ifdef _PR_USE_STATIC_TLS
-
 extern __declspec(thread) PRThread *_pr_io_restarted_io;
-
-/* Must check the restarted_io *before* decrementing no_sched to 0 */
-#define POST_SWITCH_WORK() \
-    if (_pr_io_restarted_io) \
-        _nt_handle_restarted_io(_pr_io_restarted_io); \
-    _PR_MD_LAST_THREAD()->no_sched = 0;
-
-#else /* _PR_USE_STATIC_TLS */
-
 extern DWORD _pr_io_restartedIOIndex;
 
 /* Must check the restarted_io *before* decrementing no_sched to 0 */
 #define POST_SWITCH_WORK() \
-PR_BEGIN_MACRO \
-    PRThread *restarted_io = (PRThread *) TlsGetValue(_pr_io_restartedIOIndex); \
-    if (restarted_io) \
-        _nt_handle_restarted_io(restarted_io); \
-    _PR_MD_LAST_THREAD()->no_sched = 0; \
-PR_END_MACRO
-
-#endif /* _PR_USE_STATIC_TLS */
+    PR_BEGIN_MACRO \
+        PRThread *restarted_io = \
+            (_pr_use_static_tls ? _pr_io_restarted_io \
+            : (PRThread *) TlsGetValue(_pr_io_restartedIOIndex)); \
+        if (restarted_io) { \
+            _nt_handle_restarted_io(restarted_io); \
+        } \
+        _PR_MD_LAST_THREAD()->no_sched = 0; \
+    PR_END_MACRO
 
 void
 _nt_handle_restarted_io(PRThread *restarted_io)
@@ -94,11 +82,11 @@ _nt_handle_restarted_io(PRThread *restarted_io)
 
     _PR_THREAD_UNLOCK(restarted_io);
 
-#ifdef _PR_USE_STATIC_TLS
-    _pr_io_restarted_io = NULL;
-#else
-    TlsSetValue(_pr_io_restartedIOIndex, NULL);
-#endif
+    if (_pr_use_static_tls) {
+        _pr_io_restarted_io = NULL;
+    } else {
+        TlsSetValue(_pr_io_restartedIOIndex, NULL);
+    }
 }
 
 void
@@ -117,26 +105,26 @@ _PR_MD_EARLY_INIT()
     }
 #endif
 
-#ifndef _PR_USE_STATIC_TLS
-    _pr_currentFiberIndex = TlsAlloc();
-    _pr_lastFiberIndex = TlsAlloc();
-    _pr_currentCPUIndex = TlsAlloc();
-    _pr_intsOffIndex = TlsAlloc();
-    _pr_io_restartedIOIndex = TlsAlloc();
-#endif
+    if (!_pr_use_static_tls) {
+        _pr_currentFiberIndex = TlsAlloc();
+        _pr_lastFiberIndex = TlsAlloc();
+        _pr_currentCPUIndex = TlsAlloc();
+        _pr_intsOffIndex = TlsAlloc();
+        _pr_io_restartedIOIndex = TlsAlloc();
+    }
 }
 
 void _PR_MD_CLEANUP_BEFORE_EXIT(void)
 {
     WSACleanup();
 
-#ifndef _PR_USE_STATIC_TLS
-    TlsFree(_pr_currentFiberIndex);
-    TlsFree(_pr_lastFiberIndex);
-    TlsFree(_pr_currentCPUIndex);
-    TlsFree(_pr_intsOffIndex);
-    TlsFree(_pr_io_restartedIOIndex);
-#endif
+    if (!_pr_use_static_tls) {
+        TlsFree(_pr_currentFiberIndex);
+        TlsFree(_pr_lastFiberIndex);
+        TlsFree(_pr_currentCPUIndex);
+        TlsFree(_pr_intsOffIndex);
+        TlsFree(_pr_io_restartedIOIndex);
+    }
 }
 
 void
@@ -162,6 +150,8 @@ _PR_MD_INIT_PRIMORDIAL_THREAD(PRThread *thread)
 PRStatus
 _PR_MD_INIT_THREAD(PRThread *thread)
 {
+    thread->md.overlapped.ioModel = _MD_BlockingIO;
+    thread->md.overlapped.data.mdThread = &thread->md;
     /* Create the blocking IO semaphore */
     thread->md.blocked_sema = CreateSemaphore(NULL, 0, 1, NULL);
     if (thread->md.blocked_sema == NULL)
@@ -477,5 +467,20 @@ _PR_MD_RESUME_THREAD(PRThread *thread)
     if (_PR_IS_NATIVE_THREAD(thread)) {
         ResumeThread(thread->md.handle);
     }
+}
+
+PRThread*
+_MD_CURRENT_THREAD(void)
+{
+PRThread *thread;
+
+	thread = _MD_GET_ATTACHED_THREAD();
+
+   	if (NULL == thread) {
+		thread = _PRI_AttachThread(
+            PR_USER_THREAD, PR_PRIORITY_NORMAL, NULL, 0);
+	}
+	PR_ASSERT(thread != NULL);
+	return thread;
 }
 

@@ -155,3 +155,30 @@ retryAS:
 !
 !  ======================================================================
 !
+
+!  ======================================================================
+!
+!  Perform the sequence a = a + b atomically with respect to other
+!  fetch-and-adds to location a in a wait-free fashion.
+!
+!  usage : newval = PR_AtomicAdd(address, val)
+!  return: the value after addition
+!
+        ENTRY(PR_AtomicAdd)       ! standard assembler/ELF prologue
+
+retryAA:
+        ld      [%o0], %o2              ! set o2 to the current value
+        add     %o2, %o1, %o3           ! calc the new value
+        mov     %o3, %o4                ! save the return value
+        cas     [%o0], %o2, %o3         ! atomically set if o0 hasn't changed
+        cmp     %o2, %o3                ! see if we set the value
+        bne     retryAA                 ! if not, try again
+        nop                             ! empty out the branch pipeline
+        retl                            ! return back to the caller
+        mov     %o4, %o0                ! set the return code to the new value
+
+        SET_SIZE(PR_AtomicAdd)    		! standard assembler/ELF epilogue
+
+!
+!  end
+!

@@ -86,7 +86,10 @@ PR_IMPLEMENT(PRStatus) PR_Yield()
 */
 PR_IMPLEMENT(PRStatus) PR_Sleep(PRIntervalTime timeout)
 {
-     PRStatus rv = PR_SUCCESS;
+    PRStatus rv = PR_SUCCESS;
+
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+
     if (PR_INTERVAL_NO_WAIT == timeout)
     {
         /*
@@ -129,16 +132,19 @@ PR_IMPLEMENT(PRStatus) PR_Sleep(PRIntervalTime timeout)
         ** but the lock and cvar used are local to the implementation
         ** and not visible to the caller, therefore not notifiable.
         */
-        PRIntervalTime timein = PR_IntervalNow();
-        PRCondVar *cv = PR_NewCondVar(_pr_sleeplock);
+        PRCondVar *cv;
+        PRIntervalTime timein;
 
+        timein = PR_IntervalNow();
+        cv = PR_NewCondVar(_pr_sleeplock);
+        PR_ASSERT(cv != NULL);
         PR_Lock(_pr_sleeplock);
-        while (rv == PR_SUCCESS)
+        do
         {
             PRIntervalTime delta = PR_IntervalNow() - timein;
             if (delta > timeout) break;
             rv = PR_WaitCondVar(cv, timeout - delta);
-        }
+        } while (rv == PR_SUCCESS);
         PR_Unlock(_pr_sleeplock);
         PR_DestroyCondVar(cv);
     }
@@ -366,8 +372,9 @@ PR_IMPLEMENT(PRThread*) PR_CreateThreadBound(PRThreadType type,
 PR_IMPLEMENT(PRThread*) PR_AttachThreadGCAble(
     PRThreadType type, PRThreadPriority priority, PRThreadStack *stack)
 {
-    if (!_pr_initialized) _PR_ImplicitInitialization();
-    return _PRI_AttachThread(type, priority, stack, _PR_GCABLE_THREAD);
+    /* $$$$ not sure how to finese this one */
+    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+    return NULL;
 }
 
 PR_IMPLEMENT(void) PR_SetThreadGCAble()

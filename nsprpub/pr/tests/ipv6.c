@@ -17,10 +17,13 @@
  */
 
 #include "prio.h"
+#include "prenv.h"
 #include "prmem.h"
+#include "prlink.h"
 #include "prsystem.h"
 #include "prnetdb.h"
 #include "prprf.h"
+#include "prvrsion.h"
 
 #include "plerror.h"
 #include "plgetopt.h"
@@ -37,8 +40,9 @@ static PRFileDesc *err = NULL;
 
 static void Help(void)
 {
-    PR_fprintf(err, "Usage: [-t s] [-s] [-h]\n");
+    PR_fprintf(err, "Usage: [-V] [-6] [-h]\n");
     PR_fprintf(err, "\t<nul>    Name of host to lookup          (default: self)\n");
+    PR_fprintf(err, "\t-V       Display runtime version info    (default: FALSE)\n");
     PR_fprintf(err, "\t-6       First turn on IPv6 capability   (default: FALSE)\n");
     PR_fprintf(err, "\t-h       This message and nothing else\n");
 }  /* Help */
@@ -91,8 +95,8 @@ PRIntn main(PRIntn argc, char **argv)
     PRProtoEnt proto;
     PRBool ipv6 = PR_FALSE;
     const char *name = NULL;
-    PRBool failed = PR_FALSE;
-    PLOptState *opt = PL_CreateOptState(argc, argv, "h6");
+    PRBool failed = PR_FALSE, version = PR_FALSE;
+    PLOptState *opt = PL_CreateOptState(argc, argv, "Vh6");
 
     err = PR_GetSpecialFD(PR_StandardError);
 
@@ -107,6 +111,9 @@ PRIntn main(PRIntn argc, char **argv)
         case '6':  /* Turn on IPv6 mode */
             ipv6 = PR_TRUE;
             break;
+         case 'V':  /* Do version discovery */
+            version = PR_TRUE;
+            break;
         case 'h':  /* user wants some guidance */
          default:
             Help();  /* so give him an earful */
@@ -114,6 +121,58 @@ PRIntn main(PRIntn argc, char **argv)
         }
     }
     PL_DestroyOptState(opt);
+
+    if (version)
+    {
+#if defined(XP_UNIX)
+#define NSPR_LIB "nspr21"
+#elif defined(WIN32)
+#define NSPR_LIB "libnspr21"
+#else
+#error "Architecture not supported"
+#endif
+        const PRVersionDescription *version_info;
+        char *nspr_path = PR_GetEnv("LD_LIBRARY_PATH");
+        char *nspr_name = PR_GetLibraryName(nspr_path, NSPR_LIB);
+        PRLibrary *runtime = PR_LoadLibrary(nspr_name);
+        if (NULL == runtime)
+            PL_FPrintError(err, "PR_LoadLibrary");
+        else
+        {
+            versionEntryPointType versionPoint = (versionEntryPointType)
+                PR_FindSymbol(runtime, "libVersionPoint");
+            if (NULL == versionPoint)
+                PL_FPrintError(err, "PR_FindSymbol");
+            else
+            {
+                char buffer[100];
+                PRExplodedTime exploded;
+                version_info = versionPoint();
+                (void)PR_fprintf(err, "Runtime library version information\n");
+                PR_ExplodeTime(
+                    version_info->buildTime, PR_GMTParameters, &exploded);
+                (void)PR_FormatTime(
+                    buffer, sizeof(buffer), "%d %b %Y %H:%M:%S", &exploded);
+                (void)PR_fprintf(err, "  Build time: %s GMT\n", buffer);
+                (void)PR_fprintf(
+                    err, "  Build time: %s\n", version_info->buildTimeString);
+                (void)PR_fprintf(
+                    err, "  %s V%u.%u.%u (%s%s%s)\n",
+                    version_info->description,
+                    version_info->vMajor,
+                    version_info->vMinor,
+                    version_info->vPatch,
+                    (version_info->beta ? " beta " : ""),
+                    (version_info->debug ? " debug " : ""),
+                    (version_info->special ? " special" : ""));
+                (void)PR_fprintf(err, "  filename: %s\n", version_info->filename);
+                (void)PR_fprintf(err, "  security: %s\n", version_info->security);
+                (void)PR_fprintf(err, "  copyright: %s\n", version_info->copyright);
+                (void)PR_fprintf(err, "  comment: %s\n", version_info->comment);
+            }
+        }
+        if (NULL != nspr_name) PR_FreeLibraryName(nspr_name);
+    }
 
     if (ipv6)
     {

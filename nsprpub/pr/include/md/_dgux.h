@@ -44,6 +44,8 @@
 #define NEED_STRFTIME_LOCK
 #define NEED_TIME_R
 #define _PR_NEED_STRCASECMP
+#define _PR_POLL_AVAILABLE
+#define _PR_USE_POLL
 
 #define USE_SETJMP
 

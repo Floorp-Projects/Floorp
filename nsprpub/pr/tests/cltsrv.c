@@ -79,6 +79,8 @@
 
 #define RECV_FLAGS 0
 #define SEND_FLAGS 0
+#define DEFAULT_LOW 0
+#define DEFAULT_HIGH 0
 #define BUFFER_SIZE 1024
 #define DEFAULT_BACKLOG 5
 #define DEFAULT_PORT 12848
@@ -204,22 +206,6 @@ static PRBool Aborted(PRStatus rv)
         PR_TRUE : PR_FALSE;
 }
 
-static void Assert(const char *s, const char *file, PRIntn ln)
-{
-    PRIntn error = PR_GetError(), syserrno = PR_GetOSError();
-    TEST_LOG(
-        cltsrv_log_file, TEST_LOG_ALWAYS, 
-        ("Assertion failed(0x%lx): '%s' in %s[%d]\n",
-        PR_CurrentThread(), s, file, ln));
-    TEST_LOG(
-        cltsrv_log_file, TEST_LOG_ALWAYS, 
-        ("**Error information: Error = %d, OSError = %d\n",
-    error, syserrno));
-    PR_LogFlush();
-
-    PR_Abort();
-}  /* Assert */
-
 static void TimeOfDayMessage(const char *msg, PRThread* me)
 {
     char buffer[100];
@@ -229,7 +215,7 @@ static void TimeOfDayMessage(const char *msg, PRThread* me)
 
     TEST_LOG(
         cltsrv_log_file, TEST_LOG_ALWAYS,
-        ("%s(0x%lx): %s\n", msg, me, buffer));
+        ("%s(0x%p): %s\n", msg, me, buffer));
 }  /* TimeOfDayMessage */
 
 
@@ -264,7 +250,7 @@ static void PR_CALLBACK Client(void *arg)
 
         (void)PR_NetAddrToString(&client->serverAddress, buffer, sizeof(buffer));
         TEST_LOG(cltsrv_log_file, TEST_LOG_INFO, 
-            ("\tClient(0x%lx): connecting to server at %s\n", me, buffer));
+            ("\tClient(0x%p): connecting to server at %s\n", me, buffer));
 
         fd = PR_Socket(domain, SOCK_STREAM, protocol);
         TEST_ASSERT(NULL != fd);
@@ -273,7 +259,7 @@ static void PR_CALLBACK Client(void *arg)
         {
             TEST_LOG(
                 cltsrv_log_file, TEST_LOG_ERROR,
-                ("\tClient(0x%lx): conection failed\n", me));
+                ("\tClient(0x%p): conection failed\n", me));
             goto aborted;
         }
 
@@ -281,10 +267,10 @@ static void PR_CALLBACK Client(void *arg)
         descriptor->size = PR_htonl(descbytes = rand() % clipping);
         PR_snprintf(
             descriptor->filename, sizeof(descriptor->filename),
-            "CS%lx%lx-%lx.dat", client->started, me, client->operations);
+            "CS%p%p-%p.dat", client->started, me, client->operations);
         TEST_LOG(
             cltsrv_log_file, TEST_LOG_VERBOSE,
-            ("\tClient(0x%lx): sending descriptor for %ld bytes\n", me, descbytes));
+            ("\tClient(0x%p): sending descriptor for %u bytes\n", me, descbytes));
         bytes = PR_Send(
             fd, descriptor, sizeof(*descriptor), SEND_FLAGS, timeout);
         if (sizeof(CSDescriptor_t) != bytes)
@@ -294,7 +280,7 @@ static void PR_CALLBACK Client(void *arg)
             {
                 TEST_LOG(
                     cltsrv_log_file, TEST_LOG_ERROR,
-                    ("\tClient(0x%lx): send descriptor timeout\n", me));
+                    ("\tClient(0x%p): send descriptor timeout\n", me));
                 goto retry;
             }
         }
@@ -308,7 +294,7 @@ static void PR_CALLBACK Client(void *arg)
                 filebytes = descbytes - netbytes;
             TEST_LOG(
                 cltsrv_log_file, TEST_LOG_VERBOSE,
-                ("\tClient(0x%lx): sending %d bytes\n", me, filebytes));
+                ("\tClient(0x%p): sending %d bytes\n", me, filebytes));
             bytes = PR_Send(fd, buffer, filebytes, SEND_FLAGS, timeout);
             if (filebytes != bytes)
             {
@@ -317,7 +303,7 @@ static void PR_CALLBACK Client(void *arg)
                 {
                     TEST_LOG(
                         cltsrv_log_file, TEST_LOG_ERROR,
-                        ("\tClient(0x%lx): send data timeout\n", me));
+                        ("\tClient(0x%p): send data timeout\n", me));
                     goto retry;
                 }
             }
@@ -332,7 +318,7 @@ static void PR_CALLBACK Client(void *arg)
                 netbytes = descbytes - filebytes;
             TEST_LOG(
                 cltsrv_log_file, TEST_LOG_VERBOSE,
-                ("\tClient(0x%lx): receiving %d bytes\n", me, netbytes));
+                ("\tClient(0x%p): receiving %d bytes\n", me, netbytes));
             bytes = PR_Recv(fd, buffer, netbytes, RECV_FLAGS, timeout);
             if (-1 == bytes)
             {
@@ -340,17 +326,17 @@ static void PR_CALLBACK Client(void *arg)
                 {
                     TEST_LOG(
                         cltsrv_log_file, TEST_LOG_ERROR,
-                        ("\tClient(0x%lx): receive data aborted\n", me));
+                        ("\tClient(0x%p): receive data aborted\n", me));
                     goto aborted;
                 }
                 else if (PR_IO_TIMEOUT_ERROR == PR_GetError())
                     TEST_LOG(
                         cltsrv_log_file, TEST_LOG_ERROR,
-                        ("\tClient(0x%lx): receive data timeout\n", me));
+                        ("\tClient(0x%p): receive data timeout\n", me));
 				else
                     TEST_LOG(
                         cltsrv_log_file, TEST_LOG_ERROR,
-                        ("\tClient(0x%lx): receive error (%ld, %ld)\n",
+                        ("\tClient(0x%p): receive error (%d, %d)\n",
 						me, PR_GetError(), PR_GetOSError()));
                 goto retry;
            }
@@ -358,7 +344,7 @@ static void PR_CALLBACK Client(void *arg)
             {
                 TEST_LOG(
                     cltsrv_log_file, TEST_LOG_ERROR,
-                    ("\t\tClient(0x%lx): unexpected end of stream\n",
+                    ("\t\tClient(0x%p): unexpected end of stream\n",
                     PR_CurrentThread()));
                 break;
             }
@@ -372,7 +358,7 @@ retry:
         (void)PR_Close(fd); fd = NULL;
         TEST_LOG(
             cltsrv_log_file, TEST_LOG_INFO,
-            ("\tClient(0x%lx): disconnected from server\n", me));
+            ("\tClient(0x%p): disconnected from server\n", me));
 
         PR_Lock(client->ml);
         client->operations += 1;
@@ -395,7 +381,7 @@ aborted:
     PR_DELETE(descriptor);
     TEST_LOG(
         cltsrv_log_file, TEST_LOG_ALWAYS,
-        ("\tClient(0x%lx): stopped after %lu operations and %lu bytes\n",
+        ("\tClient(0x%p): stopped after %u operations and %u bytes\n",
         PR_CurrentThread(), client->operations, client->bytesTransferred));
 
 }  /* Client */
@@ -412,7 +398,7 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
 
     TEST_LOG(
         cltsrv_log_file, TEST_LOG_VERBOSE,
-        ("\tProcessRequest(0x%lx): receiving desciptor\n", me));
+        ("\tProcessRequest(0x%p): receiving desciptor\n", me));
     bytes = PR_Recv(
         fd, descriptor, sizeof(*descriptor), RECV_FLAGS, timeout);
     if (-1 == bytes)
@@ -423,7 +409,7 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
         {
             TEST_LOG(
                 cltsrv_log_file, TEST_LOG_ERROR,
-                ("\tProcessRequest(0x%lx): receive timeout\n", me));
+                ("\tProcessRequest(0x%p): receive timeout\n", me));
         }
         goto exit;
     }
@@ -432,7 +418,7 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
         rv = PR_FAILURE;
         TEST_LOG(
             cltsrv_log_file, TEST_LOG_ERROR,
-            ("\tProcessRequest(0x%lx): unexpected end of file\n", me));
+            ("\tProcessRequest(0x%p): unexpected end of file\n", me));
         goto exit;
     }
     descbytes = PR_ntohl(descriptor->size);
@@ -440,7 +426,7 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
 
     TEST_LOG(
         cltsrv_log_file, TEST_LOG_VERBOSE, 
-        ("\t\tProcessRequest(0x%lx): read descriptor {%ld, %s}\n",
+        ("\t\tProcessRequest(0x%p): read descriptor {%d, %s}\n",
         me, descbytes, descriptor->filename));
 
     file = PR_Open(
@@ -453,7 +439,7 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
         {
             TEST_LOG(
                 cltsrv_log_file, TEST_LOG_ERROR,
-                ("\tProcessRequest(0x%lx): open file timeout\n", me));
+                ("\tProcessRequest(0x%p): open file timeout\n", me));
             goto aborted;
         }
     }
@@ -467,7 +453,7 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
             netbytes = descbytes - filebytes;
         TEST_LOG(
             cltsrv_log_file, TEST_LOG_VERBOSE,
-            ("\tProcessRequest(0x%lx): receive %d bytes\n", me, netbytes));
+            ("\tProcessRequest(0x%p): receive %d bytes\n", me, netbytes));
         bytes = PR_Recv(fd, buffer, netbytes, RECV_FLAGS, timeout);
         if (-1 == bytes)
         {
@@ -477,7 +463,7 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
             {
                 TEST_LOG(
                     cltsrv_log_file, TEST_LOG_ERROR,
-                    ("\t\tProcessRequest(0x%lx): receive data timeout\n", me));
+                    ("\t\tProcessRequest(0x%p): receive data timeout\n", me));
                 goto aborted;
             }
             /*
@@ -487,7 +473,7 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
              */
             TEST_LOG(
                 cltsrv_log_file, TEST_LOG_WARNING,
-                ("\t\tProcessRequest(0x%lx): unexpected error (%d, %d)\n",
+                ("\t\tProcessRequest(0x%p): unexpected error (%d, %d)\n",
                 me, PR_GetError(), PR_GetOSError()));
             goto aborted;
         }
@@ -495,7 +481,7 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
         {
             TEST_LOG(
                 cltsrv_log_file, TEST_LOG_WARNING,
-                ("\t\tProcessRequest(0x%lx): unexpected end of stream\n", me));
+                ("\t\tProcessRequest(0x%p): unexpected end of stream\n", me));
             rv = PR_FAILURE;
             goto aborted;
         }
@@ -505,7 +491,7 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
         MY_ASSERT(netbytes > 0);
         TEST_LOG(
             cltsrv_log_file, TEST_LOG_VERBOSE,
-            ("\tProcessRequest(0x%lx): write %d bytes to file\n", me, netbytes));
+            ("\tProcessRequest(0x%p): write %d bytes to file\n", me, netbytes));
         bytes = PR_Write(file, buffer, netbytes);
         if (netbytes != bytes)
         {
@@ -515,7 +501,7 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
             {
                 TEST_LOG(
                     cltsrv_log_file, TEST_LOG_ERROR,
-                    ("\t\tProcessRequest(0x%lx): write file timeout\n", me));
+                    ("\t\tProcessRequest(0x%p): write file timeout\n", me));
                 goto aborted;
             }
         }
@@ -533,7 +519,7 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
 
     TEST_LOG(
         cltsrv_log_file, TEST_LOG_VERBOSE,
-        ("\t\tProcessRequest(0x%lx): opening %s\n", me, descriptor->filename));
+        ("\t\tProcessRequest(0x%p): opening %s\n", me, descriptor->filename));
     file = PR_Open(descriptor->filename, PR_RDONLY, 0);
     if (NULL == file)
     {
@@ -543,13 +529,13 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
         {
             TEST_LOG(
                 cltsrv_log_file, TEST_LOG_ERROR,
-                ("\t\tProcessRequest(0x%lx): open file timeout\n",
+                ("\t\tProcessRequest(0x%p): open file timeout\n",
                 PR_CurrentThread()));
             goto aborted;
         }
         TEST_LOG(
             cltsrv_log_file, TEST_LOG_ERROR,
-            ("\t\tProcessRequest(0x%lx): other file open error (%u, %u)\n",
+            ("\t\tProcessRequest(0x%p): other file open error (%u, %u)\n",
             me, PR_GetError(), PR_GetOSError()));
         goto aborted;
     }
@@ -563,7 +549,7 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
             filebytes = descbytes - netbytes;
         TEST_LOG(
             cltsrv_log_file, TEST_LOG_VERBOSE,
-            ("\tProcessRequest(0x%lx): read %d bytes from file\n", me, filebytes));
+            ("\tProcessRequest(0x%p): read %d bytes from file\n", me, filebytes));
         bytes = PR_Read(file, buffer, filebytes);
         if (filebytes != bytes)
         {
@@ -572,11 +558,11 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
             if (PR_IO_TIMEOUT_ERROR == PR_GetError())
                 TEST_LOG(
                     cltsrv_log_file, TEST_LOG_ERROR,
-                    ("\t\tProcessRequest(0x%lx): read file timeout\n", me));
+                    ("\t\tProcessRequest(0x%p): read file timeout\n", me));
             else
                 TEST_LOG(
                     cltsrv_log_file, TEST_LOG_ERROR,
-                    ("\t\tProcessRequest(0x%lx): other file error (%d, %d)\n",
+                    ("\t\tProcessRequest(0x%p): other file error (%d, %d)\n",
                     me, PR_GetError(), PR_GetOSError()));
             goto aborted;
         }
@@ -585,7 +571,7 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
         filebytes = bytes;
         TEST_LOG(
             cltsrv_log_file, TEST_LOG_VERBOSE,
-            ("\t\tProcessRequest(0x%lx): sending %d bytes\n", me, filebytes));
+            ("\t\tProcessRequest(0x%p): sending %d bytes\n", me, filebytes));
         bytes = PR_Send(fd, buffer, filebytes, SEND_FLAGS, timeout);
         if (filebytes != bytes)
         {
@@ -595,7 +581,7 @@ static PRStatus ProcessRequest(PRFileDesc *fd, CSServer_t *server)
             {
                 TEST_LOG(
                     cltsrv_log_file, TEST_LOG_ERROR,
-                    ("\t\tProcessRequest(0x%lx): send data timeout\n", me));
+                    ("\t\tProcessRequest(0x%p): send data timeout\n", me));
                 goto aborted;
             }
             break;
@@ -622,7 +608,7 @@ aborted:
 exit:
     TEST_LOG(
         cltsrv_log_file, TEST_LOG_VERBOSE,
-        ("\t\tProcessRequest(0x%lx): Finished\n", me));
+        ("\t\tProcessRequest(0x%p): Finished\n", me));
 
     PR_DELETE(descriptor);
 
@@ -648,7 +634,7 @@ static PRStatus CreateWorker(CSServer_t *server, CSPool_t *pool)
     }
 
     TEST_LOG(cltsrv_log_file, TEST_LOG_STATUS, 
-        ("\tCreateWorker(0x%lx): create new worker (0x%lx)\n",
+        ("\tCreateWorker(0x%p): create new worker (0x%p)\n",
         PR_CurrentThread(), worker->thread));
 
     return PR_SUCCESS;
@@ -666,7 +652,7 @@ static void PR_CALLBACK Worker(void *arg)
 
     TEST_LOG(
         cltsrv_log_file, TEST_LOG_NOTICE,
-        ("\t\tWorker(0x%lx): started [%lu]\n", me, pool->workers + 1));
+        ("\t\tWorker(0x%p): started [%u]\n", me, pool->workers + 1));
 
     PR_Lock(server->ml);
     PR_APPEND_LINK(&worker->element, &server->list);
@@ -678,14 +664,14 @@ static void PR_CALLBACK Worker(void *arg)
         {
             TEST_LOG(
                 cltsrv_log_file, TEST_LOG_VERBOSE,
-                ("\t\tWorker(0x%lx): waiting for accept slot[%d]\n",
+                ("\t\tWorker(0x%p): waiting for accept slot[%d]\n",
                 me, pool->accepting));
             rv = PR_WaitCondVar(pool->acceptComplete, PR_INTERVAL_NO_TIMEOUT);
             if (Aborted(rv) || (cs_run != server->state))
             {
                 TEST_LOG(
                     cltsrv_log_file, TEST_LOG_NOTICE,
-                    ("\tWorker(0x%lx): has been %s\n",
+                    ("\tWorker(0x%p): has been %s\n",
                     me, (Aborted(rv) ? "interrupted" : "stopped")));
                 goto exit;
             }
@@ -695,7 +681,7 @@ static void PR_CALLBACK Worker(void *arg)
 
         TEST_LOG(
             cltsrv_log_file, TEST_LOG_VERBOSE,
-            ("\t\tWorker(0x%lx): calling accept\n", me));
+            ("\t\tWorker(0x%p): calling accept\n", me));
         fd = PR_Accept(server->listener, &from, PR_INTERVAL_NO_TIMEOUT);
 
         PR_Lock(server->ml);        
@@ -736,7 +722,7 @@ static void PR_CALLBACK Worker(void *arg)
             if (PR_SUCCESS != rv)
                 TEST_LOG(
                     cltsrv_log_file, TEST_LOG_ERROR,
-                    ("\t\tWorker(0x%lx): server process ended abnormally\n", me));
+                    ("\t\tWorker(0x%p): server process ended abnormally\n", me));
             (void)PR_Close(fd); fd = NULL;
 
             PR_Lock(server->ml);
@@ -756,7 +742,7 @@ exit:
 
     TEST_LOG(
         cltsrv_log_file, TEST_LOG_NOTICE,
-        ("\t\tWorker(0x%lx): exiting [%lu]\n", PR_CurrentThread(), pool->workers));
+        ("\t\tWorker(0x%p): exiting [%u]\n", PR_CurrentThread(), pool->workers));
 
     PR_Lock(server->ml);
     pool->workers -= 1;  /* undefine our existance */
@@ -809,7 +795,7 @@ static void PR_CALLBACK Server(void *arg)
     */
     TEST_LOG(
         cltsrv_log_file, TEST_LOG_VERBOSE,
-        ("\tServer(0x%lx): waiting for state change\n", me));
+        ("\tServer(0x%p): waiting for state change\n", me));
 
     PR_Lock(server->ml);
     while ((cs_run == server->state) && !Aborted(rv))
@@ -821,7 +807,7 @@ static void PR_CALLBACK Server(void *arg)
 
     TEST_LOG(
         cltsrv_log_file, TEST_LOG_INFO,
-        ("\tServer(0x%lx): shutting down workers\n", me));
+        ("\tServer(0x%p): shutting down workers\n", me));
 
     /*
     ** Get all the worker threads to exit. They know how to
@@ -838,7 +824,7 @@ static void PR_CALLBACK Server(void *arg)
         CSWorker_t *worker = (CSWorker_t*)head;
         TEST_LOG(
             cltsrv_log_file, TEST_LOG_VERBOSE,
-            ("\tServer(0x%lx): interrupting worker(0x%lx)\n", me, worker));
+            ("\tServer(0x%p): interrupting worker(0x%p)\n", me, worker));
         rv = PR_Interrupt(worker->thread);
         TEST_ASSERT(PR_SUCCESS == rv);
         PR_REMOVE_AND_INIT_LINK(head);
@@ -848,7 +834,7 @@ static void PR_CALLBACK Server(void *arg)
     {
         TEST_LOG(
             cltsrv_log_file, TEST_LOG_NOTICE,
-            ("\tServer(0x%lx): waiting for %lu workers to exit\n",
+            ("\tServer(0x%p): waiting for %u workers to exit\n",
             me, server->pool.workers));
         (void)PR_WaitCondVar(server->pool.exiting, PR_INTERVAL_NO_TIMEOUT);
     }
@@ -859,7 +845,7 @@ static void PR_CALLBACK Server(void *arg)
 
     TEST_LOG(
         cltsrv_log_file, TEST_LOG_ALWAYS,
-        ("\tServer(0x%lx): stopped after %lu operations and %lu bytes\n",
+        ("\tServer(0x%p): stopped after %u operations and %u bytes\n",
         me, server->operations, server->bytesTransferred));
 
     if (NULL != server->listener) PR_Close(server->listener);
@@ -867,26 +853,15 @@ static void PR_CALLBACK Server(void *arg)
 
 }  /* Server */
 
-#if defined(DEBUG) && defined(_PR_PTHREADS)
-static void PrintPthreadStats(void)
-{
-    PT_FPrintStats(debug_out, "\nPThread Statistics\n");
-}  /* PrintPthreadStats */
-#endif /* defined(DEBUG) && defined(_PR_PTHREADS) */
-
 static void WaitForCompletion(PRIntn execution)
 {
-#if defined(DEBUG) && defined(_PR_PTHREADS)
     while (execution > 0)
     { 
         PRIntn dally = (execution > 30) ? 30 : execution;
         PR_Sleep(PR_SecondsToInterval(dally));
-        if (pthread_stats) PrintPthreadStats();
+        if (pthread_stats) PT_FPrintStats(debug_out, "\nPThread Statistics\n");
         execution -= dally;
     }
-#else
-    PR_Sleep(PR_SecondsToInterval(execution));
-#endif /* defined(DEBUG) && defined(_PR_PTHREADS) */
 }  /* WaitForCompletion */
 
 static void Help(void)
@@ -895,6 +870,8 @@ static void Help(void)
     PR_fprintf(debug_out, "\t-a <n>       threads allowed in accept        (5)\n");
     PR_fprintf(debug_out, "\t-b <n>       backlock for listen              (5)\n");
     PR_fprintf(debug_out, "\t-c <threads> number of clients to create      (1)\n");
+    PR_fprintf(debug_out, "\t-f <low>     low water mark for fd caching    (0)\n");
+    PR_fprintf(debug_out, "\t-F <high>    high water mark for fd caching   (0)\n");
     PR_fprintf(debug_out, "\t-w <threads> minimal number of server threads (1)\n");
     PR_fprintf(debug_out, "\t-W <threads> maximum number of server threads (1)\n");
     PR_fprintf(debug_out, "\t-e <seconds> duration of the test in seconds  (10)\n");
@@ -932,12 +909,15 @@ PRIntn main(PRIntn argc, char** argv)
     PRUintn workersMin = DEFAULT_WORKERS_MIN;
     PRUintn workersMax = DEFAULT_WORKERS_MAX;
     PRIntn execution = DEFAULT_EXECUTION_TIME;
+    PRIntn low = DEFAULT_LOW, high = DEFAULT_HIGH;
 
     /*
      * -G           use global threads
      * -a <n>       threads allowed in accept
      * -b <n>       backlock for listen
      * -c <threads> number of clients to create
+     * -f <low>     low water mark for caching FDs
+     * -F <high>    high water mark for caching FDs
      * -w <threads> minimal number of server threads
      * -W <threads> maximum number of server threads
      * -e <seconds> duration of the test in seconds
@@ -946,7 +926,7 @@ PRIntn main(PRIntn argc, char** argv)
      */
 
     PLOptStatus os;
-    PLOptState *opt = PL_CreateOptState(argc, argv, "GX6b:a:c:w:W:e:s:vdhp");
+    PLOptState *opt = PL_CreateOptState(argc, argv, "GX6b:a:c:f:F:w:W:e:s:vdhp");
 
     debug_out = PR_GetSpecialFD(PR_StandardError);
 
@@ -975,6 +955,12 @@ PRIntn main(PRIntn argc, char** argv)
             break;
         case 'c':  /* number of client threads */
             clients = atoi(opt->value);
+            break;
+        case 'f':  /* low water fd cache */
+            low = atoi(opt->value);
+            break;
+        case 'F':  /* low water fd cache */
+            high = atoi(opt->value);
             break;
         case 'w':  /* minimum server worker threads */
             workersMin = atoi(opt->value);
@@ -1026,12 +1012,15 @@ PRIntn main(PRIntn argc, char** argv)
     debug_mode = PR_TRUE;
 #endif
 
+    rv = PR_SetFDCacheSize(low, high);
+    PR_ASSERT(PR_SUCCESS == rv);
+
     if (serverIsLocal)
     {
         /* Establish the server */
         TEST_LOG(
             cltsrv_log_file, TEST_LOG_INFO,
-            ("main(0x%lx): starting server\n", PR_CurrentThread()));
+            ("main(0x%p): starting server\n", PR_CurrentThread()));
 
         server = PR_NEWZAP(CSServer_t);
         PR_INIT_CLIST(&server->list);
@@ -1048,7 +1037,7 @@ PRIntn main(PRIntn argc, char** argv)
 
         TEST_LOG(
             cltsrv_log_file, TEST_LOG_NOTICE,
-            ("main(0x%lx): creating server thread\n", PR_CurrentThread()));
+            ("main(0x%p): creating server thread\n", PR_CurrentThread()));
 
         server->thread = PR_CreateThread(
             PR_USER_THREAD, Server, server, PR_PRIORITY_HIGH,
@@ -1057,7 +1046,7 @@ PRIntn main(PRIntn argc, char** argv)
 
         TEST_LOG(
             cltsrv_log_file, TEST_LOG_VERBOSE,
-            ("main(0x%lx): waiting for server init\n", PR_CurrentThread()));
+            ("main(0x%p): waiting for server init\n", PR_CurrentThread()));
 
         PR_Lock(server->ml);
         while (server->state == cs_init)
@@ -1066,7 +1055,7 @@ PRIntn main(PRIntn argc, char** argv)
 
         TEST_LOG(
             cltsrv_log_file, TEST_LOG_VERBOSE,
-            ("main(0x%lx): server init complete (port #%d)\n",
+            ("main(0x%p): server init complete (port #%d)\n",
             PR_CurrentThread(), server->port));
     }
 
@@ -1079,7 +1068,7 @@ PRIntn main(PRIntn argc, char** argv)
 
         TEST_LOG(
             cltsrv_log_file, TEST_LOG_VERBOSE,
-            ("main(0x%lx): creating %d client threads\n",
+            ("main(0x%p): creating %d client threads\n",
             PR_CurrentThread(), clients));
         
         if (!serverIsLocal)
@@ -1110,7 +1099,7 @@ PRIntn main(PRIntn argc, char** argv)
             client[index].stateChange = PR_NewCondVar(client[index].ml);
             TEST_LOG(
                 cltsrv_log_file, TEST_LOG_INFO,
-                ("main(0x%lx): creating client threads\n", PR_CurrentThread()));
+                ("main(0x%p): creating client threads\n", PR_CurrentThread()));
             client[index].thread = PR_CreateThread(
                 PR_USER_THREAD, Client, &client[index], PR_PRIORITY_NORMAL,
                 thread_scope, PR_JOINABLE_THREAD, 0);
@@ -1125,7 +1114,7 @@ PRIntn main(PRIntn argc, char** argv)
     /* Then just let them go at it for a bit */
     TEST_LOG(
         cltsrv_log_file, TEST_LOG_ALWAYS,
-        ("main(0x%lx): waiting for execution interval (%d seconds)\n",
+        ("main(0x%p): waiting for execution interval (%d seconds)\n",
         PR_CurrentThread(), execution));
 
     WaitForCompletion(execution);
@@ -1137,7 +1126,7 @@ PRIntn main(PRIntn argc, char** argv)
         for (index = 0; index < clients; ++index)
         {
             TEST_LOG(cltsrv_log_file, TEST_LOG_STATUS, 
-                ("main(0x%lx): notifying client(0x%lx) to stop\n",
+                ("main(0x%p): notifying client(0x%p) to stop\n",
                 PR_CurrentThread(), client[index].thread));
 
             PR_Lock(client[index].ml);
@@ -1152,7 +1141,7 @@ PRIntn main(PRIntn argc, char** argv)
             PR_Unlock(client[index].ml);
 
             TEST_LOG(cltsrv_log_file, TEST_LOG_VERBOSE, 
-                ("main(0x%lx): joining client(0x%lx)\n",
+                ("main(0x%p): joining client(0x%p)\n",
                 PR_CurrentThread(), client[index].thread));
 
 		    joinStatus = PR_JoinThread(client[index].thread);
@@ -1168,7 +1157,7 @@ PRIntn main(PRIntn argc, char** argv)
         /* All clients joined - retrieve the server */
         TEST_LOG(
             cltsrv_log_file, TEST_LOG_NOTICE, 
-            ("main(0x%lx): notifying server(0x%lx) to stop\n",
+            ("main(0x%p): notifying server(0x%p) to stop\n",
             PR_CurrentThread(), server->thread));
 
         PR_Lock(server->ml);
@@ -1180,7 +1169,7 @@ PRIntn main(PRIntn argc, char** argv)
 
         TEST_LOG(
             cltsrv_log_file, TEST_LOG_NOTICE, 
-            ("main(0x%lx): joining server(0x%lx)\n",
+            ("main(0x%p): joining server(0x%p)\n",
             PR_CurrentThread(), server->thread));
         joinStatus = PR_JoinThread(server->thread);
         TEST_ASSERT(PR_SUCCESS == joinStatus);
@@ -1194,13 +1183,12 @@ PRIntn main(PRIntn argc, char** argv)
 
     TEST_LOG(
         cltsrv_log_file, TEST_LOG_ALWAYS, 
-        ("main(0x%lx): test complete\n", PR_CurrentThread()));
+        ("main(0x%p): test complete\n", PR_CurrentThread()));
 
-#if defined(DEBUG) && defined(_PR_PTHREADS)
-    PrintPthreadStats();
-#endif  /* defined(DEBUG) && defined(_PR_PTHREADS) */
+    PT_FPrintStats(debug_out, "\nPThread Statistics\n");
 
     TimeOfDayMessage("Test exiting at", PR_CurrentThread());
+    PR_Cleanup();
     return 0;
 }  /* main */
 

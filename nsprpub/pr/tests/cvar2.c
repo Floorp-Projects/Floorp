@@ -35,6 +35,7 @@
 ***********************************************************************/
 
 #include "nspr.h"
+#include "plerror.h"
 #include "plgetopt.h"
 
 #include <stdio.h>
@@ -167,8 +168,8 @@ CreateTestThread(threadinfo *info,
                            scope,
                            PR_JOINABLE_THREAD,
                            0);
-    if (!info->thread) 
-        printf("error creating thread\n");
+    if (!info->thread)
+        PL_PrintError("error creating thread\n");
 }
 
 

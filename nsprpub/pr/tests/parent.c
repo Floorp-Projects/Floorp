@@ -26,6 +26,7 @@
 #include "prprf.h"
 #include "prinit.h"
 #include "prproces.h"
+#include "prinrval.h"
 
 typedef struct Child
 {
@@ -44,6 +45,7 @@ PRIntn main (PRIntn argc, char **argv)
 {
     PRStatus rv;
     PRInt32 test_status = 1;
+    PRIntervalTime t_start, t_elapsed;
     PRFileDesc *debug = NULL;
     Child *child = PR_NEWZAP(Child);
 
@@ -83,14 +85,22 @@ PRIntn main (PRIntn argc, char **argv)
         child->attr, PR_StandardError,
         PR_GetSpecialFD(PR_StandardError));
 
+    t_start = PR_IntervalNow();
     child->process = PR_CreateProcess(
         child->name, argv, NULL, child->attr);
+    t_elapsed = (PRIntervalTime) (PR_IntervalNow() - t_start);
 
     test_status = (NULL == child->process) ? 1 : 0;
     if (NULL != debug)
+    {
         PR_fprintf(
             debug, "Child was %sforked\n",
             (0 == test_status) ? "" : "NOT ");
+        if (0 == test_status)
+            PR_fprintf(
+                debug, "PR_CreateProcess took %lu microseconds\n",
+                PR_IntervalToMicroseconds(t_elapsed));
+    }
 
     if (0 == test_status)
     {

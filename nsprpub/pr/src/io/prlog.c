@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -66,6 +66,14 @@ static PRLock *_pr_logLock;
  */
 #if defined(WIN32) || defined(XP_OS2)
 #define _PR_USE_STDIO_FOR_LOGGING
+#endif
+
+/*
+** Coerce Win32 log output to use OutputDebugString() when
+** NSPR_LOG_FILE is set to "WinDebug".
+*/
+#if defined(XP_PC)
+#define WIN32_DEBUG_FILE (FILE*)-2
 #endif
 
 /* Macros used to reduce #ifdef pollution */
@@ -279,7 +287,7 @@ static void _PR_SetLogModuleLevel( PRLogModuleInfo *lm )
                     lm->level = (PRLogModuleLevel)level;
                 else if (strcasecmp(module, lm->name) == 0) 
                 {
-                    lm->level = level;
+                    lm->level = (PRLogModuleLevel)level;
                     break;
                 }
                 lm = lm->next;
@@ -310,33 +318,19 @@ PR_IMPLEMENT(PRLogModuleInfo*) PR_NewLogModule(const char *name)
     return lm;
 }
 
-PR_IMPLEMENT(void) PR_DestroyLogModule(PRLogModuleInfo* lm)
-{
-    PR_LogFlush();
-
-    /* unlink this log module from the list */
-    if (lm == logModules) {
-        logModules = logModules->next;
-    }
-    else {
-        PRLogModuleInfo* chain = logModules;
-        while (chain && chain->next != lm)
-            chain = chain->next;
-        PR_ASSERT(chain && chain->next);
-        chain->next = chain->next->next;
-    }
-
-    /* and free it */
-    free((void*)lm->name);
-    PR_Free(lm);
-}
-
 PR_IMPLEMENT(PRBool) PR_SetLogFile(const char *file)
 {
 #ifdef PR_LOGGING
 #ifdef _PR_USE_STDIO_FOR_LOGGING
     FILE *newLogFile;
 
+#ifdef XP_PC
+    if ( strcmp( file, "WinDebug") == 0)
+    {
+        logFile = WIN32_DEBUG_FILE;
+        return(PR_TRUE);
+    }
+#endif
     newLogFile = fopen(file, "w");
     if (newLogFile) {
         /* We do buffering ourselves. */
@@ -427,7 +421,14 @@ PR_IMPLEMENT(void) PR_LogPrint(const char *fmt, ...)
 
     _PR_LOCK_LOG();
     if (logBuf == 0) {
+#ifdef XP_PC
+        if ( logFile == WIN32_DEBUG_FILE)
+            OutputDebugString( line );
+        else
+            _PUT_LOG(logFile, line, nb);
+#else
         _PUT_LOG(logFile, line, nb);
+#endif
     } else {
         if (logp + nb > logEndp) {
             _PUT_LOG(logFile, logBuf, logp - logBuf);

@@ -15,13 +15,13 @@
 # Reserved.
 #
 
+PR_UNIXOS	= 1
 XP_DEFINE	= -DXP_UNIX
 OBJ_SUFFIX	= o
 LIB_SUFFIX	= a
 DLL_SUFFIX	= so
 AR		= ar cr $@
 
-ifndef USE_AUTOCONF
 ifdef BUILD_OPT
 OPTIMIZER	= -O
 DEFINES		= -UDEBUG -DNDEBUG
@@ -33,8 +33,11 @@ OBJDIR_TAG	= _DBG
 endif
 
 # Name of the binary code directories
+ifdef MOZILLA_CLIENT
+OBJDIR_NAME	= $(OS_CONFIG)$(CPU_ARCH_TAG)$(OBJDIR_TAG).OBJ
+else
 OBJDIR_NAME	= $(OS_CONFIG)$(CPU_ARCH_TAG)$(COMPILER_TAG)$(IMPL_STRATEGY)$(OBJDIR_TAG).OBJ
-endif # !USE_AUTOCONF
+endif
 
 MKDEPEND_DIR    = $(DEPTH)/config/mkdepend
 MKDEPEND 	= $(MKDEPEND_DIR)/$(OBJDIR_NAME)/mkdepend

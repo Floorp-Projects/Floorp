@@ -1842,7 +1842,7 @@ quorem(Bigint *b, Bigint *S)
  */
 
 PR_IMPLEMENT(PRStatus)
-PR_dtoa(double d, int mode, int ndigits,
+PR_dtoa(PRFloat64 d, int mode, int ndigits,
 	int *decpt, int *sign, char **rve, char *buf, PRSize bufsize)
 {
 	/*	Arguments ndigits, decpt, sign are similar to those

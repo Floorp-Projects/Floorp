@@ -75,7 +75,7 @@ extern RootFinder *_pr_rootFinders;
 
 typedef struct CollectorTypeStr {
     GCType gctype;
-    uint32 flags;
+    PRUint32 flags;
 } CollectorType;
 
 #define GC_MAX_TYPES	256

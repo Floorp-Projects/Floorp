@@ -35,10 +35,12 @@ endif
 endif
 
 ifdef USE_PTHREADS
-CSRCS = prcmon.c \
+CSRCS = \
+	prcmon.c \
+	prtpd.c \
 	$(NULL)
 else
-CSRCS =          \
+CSRCS =	\
 	prcmon.c  \
 	prdump.c  \
 	prmon.c   \

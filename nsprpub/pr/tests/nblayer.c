@@ -103,20 +103,24 @@ static void PR_CALLBACK Client(void *arg)
     rv = PR_Connect(stack, &server_address, PR_INTERVAL_NO_TIMEOUT);
     if ((PR_FAILURE == rv) && (PR_IN_PROGRESS_ERROR == PR_GetError()))
     {
+        if (verbosity > quiet)
+            PR_fprintf(logFile, "Client connect 'in progress'\n");
         do
         {
-            {
-                polldesc.fd = stack;
-                polldesc.out_flags = 0;
-                polldesc.in_flags = PR_POLL_WRITE | PR_POLL_EXCEPT;
-                ready = PR_Poll(&polldesc, 1, PR_INTERVAL_NO_TIMEOUT);
-                if (1 != ready) break;  /* if not 1, then we're dead */
-                rv = PR_GetConnectStatus(&polldesc);
-                if (PR_FAILURE == rv)
-                {
-                    if (PR_IN_PROGRESS_ERROR != PR_GetError()) break;
-                }
-            }
+            polldesc.fd = stack;
+            polldesc.out_flags = 0;
+            polldesc.in_flags = PR_POLL_WRITE | PR_POLL_EXCEPT;
+            ready = PR_Poll(&polldesc, 1, PR_INTERVAL_NO_TIMEOUT);
+            if ((1 != ready)  /* if not 1, then we're dead */
+            || (0 == (polldesc.in_flags & polldesc.out_flags)))
+                { PR_ASSERT(!"Whoa!"); break; }
+            if (verbosity > quiet)
+                PR_fprintf(
+                    logFile, "Client connect 'in progress' [0x%x]\n",
+                    polldesc.out_flags);
+            rv = PR_GetConnectStatus(&polldesc);
+            if ((PR_FAILURE == rv)
+            && (PR_IN_PROGRESS_ERROR != PR_GetError())) break;
         } while (PR_FAILURE == rv);
     }
     PR_ASSERT(PR_SUCCESS == rv);
@@ -126,24 +130,29 @@ static void PR_CALLBACK Client(void *arg)
     for (mits = 0; mits < minor_iterations; ++mits)
     {
         bytes_sent = 0;
-        if (verbosity > chatty)
+        if (verbosity > quiet)
             PR_fprintf(logFile, "Client sending %d bytes\n", sizeof(buffer));
         do
         {
+            if (verbosity > chatty)
+                PR_fprintf(
+                    logFile, "Client sending %d bytes\n",
+                    sizeof(buffer) - bytes_sent);
             ready = PR_Send(
                 stack, buffer + bytes_sent, sizeof(buffer) - bytes_sent,
                 empty_flags, PR_INTERVAL_NO_TIMEOUT);
-            if (0 < ready)
-            {
-                bytes_sent += ready;
-            }
+            if (verbosity > chatty)
+                PR_fprintf(logFile, "Client send status [%d]\n", ready);
+            if (0 < ready) bytes_sent += ready;
             else if ((-1 == ready) && (PR_WOULD_BLOCK_ERROR == PR_GetError()))
             {
                 polldesc.fd = stack;
                 polldesc.out_flags = 0;
                 polldesc.in_flags = PR_POLL_WRITE;
                 ready = PR_Poll(&polldesc, 1, PR_INTERVAL_NO_TIMEOUT);
-                if (1 != ready) break;  /* if not 1, then we're dead */
+                if ((1 != ready)  /* if not 1, then we're dead */
+                || (0 == (polldesc.in_flags & polldesc.out_flags)))
+                    { PR_ASSERT(!"Whoa!"); break; }
             }
             else break;
         } while (bytes_sent < sizeof(buffer));
@@ -152,20 +161,26 @@ static void PR_CALLBACK Client(void *arg)
         bytes_read = 0;
         do
         {
+            if (verbosity > chatty)
+                PR_fprintf(
+                    logFile, "Client receiving %d bytes\n",
+                    bytes_sent - bytes_read);
             ready = PR_Recv(
                 stack, buffer + bytes_read, bytes_sent - bytes_read,
                 empty_flags, PR_INTERVAL_NO_TIMEOUT);
-            if (0 < ready)
-            {
-                bytes_read += ready;
-            }
+            if (verbosity > chatty)
+                PR_fprintf(
+                    logFile, "Client receive status [%d]\n", ready);
+            if (0 < ready) bytes_read += ready;
             else if ((-1 == ready) && (PR_WOULD_BLOCK_ERROR == PR_GetError()))
             {
                 polldesc.fd = stack;
                 polldesc.out_flags = 0;
                 polldesc.in_flags = PR_POLL_READ;
                 ready = PR_Poll(&polldesc, 1, PR_INTERVAL_NO_TIMEOUT);
-                if (1 != ready) break;  /* if not 1, then we're dead */
+                if ((1 != ready)  /* if not 1, then we're dead */
+                || (0 == (polldesc.in_flags & polldesc.out_flags)))
+                    { PR_ASSERT(!"Whoa!"); break; }
             }
             else break;
         } while (bytes_read < bytes_sent);
@@ -200,14 +215,20 @@ static void PR_CALLBACK Server(void *arg)
 
     do
     {
+        if (verbosity > chatty)
+            PR_fprintf(logFile, "Server accepting connection\n");
         service = PR_Accept(stack, &client_address, PR_INTERVAL_NO_TIMEOUT);
+        if (verbosity > chatty)
+            PR_fprintf(logFile, "Server accept status [0x%p]\n", service);
         if ((NULL == service) && (PR_WOULD_BLOCK_ERROR == PR_GetError()))
         {
             polldesc.fd = stack;
             polldesc.out_flags = 0;
-            polldesc.in_flags = PR_POLL_READ;
+            polldesc.in_flags = PR_POLL_READ | PR_POLL_EXCEPT;
             ready = PR_Poll(&polldesc, 1, PR_INTERVAL_NO_TIMEOUT);
-            if (1 != ready) break;  /* if not 1, then we're dead */
+            if ((1 != ready)  /* if not 1, then we're dead */
+            || (0 == (polldesc.in_flags & polldesc.out_flags)))
+                { PR_ASSERT(!"Whoa!"); break; }
         }
     } while (NULL == service);
     PR_ASSERT(NULL != service);
@@ -220,20 +241,25 @@ static void PR_CALLBACK Server(void *arg)
         bytes_read = 0;
         do
         {
+            if (verbosity > chatty)
+                PR_fprintf(
+                    logFile, "Server receiving %d bytes\n",
+                    sizeof(buffer) - bytes_read);
             ready = PR_Recv(
                 service, buffer + bytes_read, sizeof(buffer) - bytes_read,
                 empty_flags, PR_INTERVAL_NO_TIMEOUT);
-            if (0 < ready)
-            {
-                bytes_read += ready;
-            }
+            if (verbosity > chatty)
+                PR_fprintf(logFile, "Server receive status [%d]\n", ready);
+            if (0 < ready) bytes_read += ready;
             else if ((-1 == ready) && (PR_WOULD_BLOCK_ERROR == PR_GetError()))
             {
                 polldesc.fd = service;
                 polldesc.out_flags = 0;
                 polldesc.in_flags = PR_POLL_READ;
                 ready = PR_Poll(&polldesc, 1, PR_INTERVAL_NO_TIMEOUT);
-                if (1 != ready) break;  /* if not 1, then we're dead */
+                if ((1 != ready)  /* if not 1, then we're dead */
+                || (0 == (polldesc.in_flags & polldesc.out_flags)))
+                    { PR_ASSERT(!"Whoa!"); break; }
             }
             else break;
         } while (bytes_read < sizeof(buffer));
@@ -260,7 +286,9 @@ static void PR_CALLBACK Server(void *arg)
                     polldesc.out_flags = 0;
                     polldesc.in_flags = PR_POLL_WRITE;
                     ready = PR_Poll(&polldesc, 1, PR_INTERVAL_NO_TIMEOUT);
-                    if (1 != ready) break;  /* if not 1, then we're dead */
+                    if ((1 != ready)  /* if not 1, then we're dead */
+                    || (0 == (polldesc.in_flags & polldesc.out_flags)))
+                        { PR_ASSERT(!"Whoa!"); break; }
                 }
                 else break;
             } while (bytes_sent < bytes_read);
@@ -331,7 +359,6 @@ static PRInt32 PR_CALLBACK MyRecv(
 {
     char *b;
     PRInt32 rv;
-    PRPollDesc polldesc;
     PRFileDesc *lo = fd->lower;
     PRFilePrivate *mine = (PRFilePrivate*)fd->secret;
 

@@ -17,8 +17,23 @@
  */
 
 #include "prerror.h"
+#include "prlog.h"
 #include <errno.h>
 #include <windows.h>
+
+/*
+ * On Win32, we map three kinds of error codes:
+ * - GetLastError(): for Win32 functions
+ * - WSAGetLastError(): for Winsock functions
+ * - errno: for standard C library functions
+ *
+ * We do not check for WSAEINPROGRESS and WSAEINTR because we do not
+ * use blocking Winsock 1.1 calls.
+ *
+ * Except for the 'socket' call, we do not check for WSAEINITIALISED.
+ * It is assumed that if Winsock is not initialized, that fact will
+ * be detected at the time we create new sockets.
+ */
 
 void _MD_win32_map_opendir_error(PRInt32 err)
 {
@@ -121,8 +136,10 @@ void _MD_win32_map_delete_error(PRInt32 err)
 			break;
 		case ERROR_DRIVE_LOCKED:
 		case ERROR_LOCKED:
-		case ERROR_SHARING_VIOLATION:
 			PR_SetError(PR_FILE_IS_LOCKED_ERROR, err);
+			break;
+		case ERROR_SHARING_VIOLATION:
+			PR_SetError(PR_FILE_IS_BUSY_ERROR, err);
 			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -350,6 +367,7 @@ void _MD_win32_map_read_error(PRInt32 err)
 		case ERROR_INVALID_HANDLE:
 			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
 			break;
+                case ERROR_NOACCESS:
 		case ERROR_INVALID_ADDRESS:
 			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
 			break;
@@ -370,20 +388,13 @@ void _MD_win32_map_read_error(PRInt32 err)
 			break;
 		case ERROR_DRIVE_LOCKED:
 		case ERROR_LOCKED:
-		case ERROR_SHARING_VIOLATION:
 			PR_SetError(PR_FILE_IS_LOCKED_ERROR, err);
+			break;
+		case ERROR_SHARING_VIOLATION:
+			PR_SetError(PR_FILE_IS_BUSY_ERROR, err);
 			break;
 		case ERROR_NETNAME_DELETED:
 			PR_SetError(PR_CONNECT_RESET_ERROR, err);
-			break;
-		case WSAEBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case WSAENOTSOCK:
-			PR_SetError(PR_NOT_SOCKET_ERROR, err);
-			break;
-		case WSAEFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
 			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -421,8 +432,10 @@ void _MD_win32_map_transmitfile_error(PRInt32 err)
 			break;
 		case ERROR_DRIVE_LOCKED:
 		case ERROR_LOCKED:
-		case ERROR_SHARING_VIOLATION:
 			PR_SetError(PR_FILE_IS_LOCKED_ERROR, err);
+			break;
+		case ERROR_SHARING_VIOLATION:
+			PR_SetError(PR_FILE_IS_BUSY_ERROR, err);
 			break;
 		case ERROR_FILENAME_EXCED_RANGE:
 			PR_SetError(PR_NAME_TOO_LONG_ERROR, err);
@@ -463,6 +476,9 @@ void _MD_win32_map_write_error(PRInt32 err)
 		case ERROR_STACK_OVERFLOW:
 			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
 			break;
+		case ERROR_INVALID_PARAMETER:
+			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
+			break;
 		case ERROR_DISK_CORRUPT:
 		case ERROR_DISK_OPERATION_FAILED:
 		case ERROR_FILE_CORRUPT:
@@ -472,8 +488,10 @@ void _MD_win32_map_write_error(PRInt32 err)
 			break;
 		case ERROR_DRIVE_LOCKED:
 		case ERROR_LOCKED:
-		case ERROR_SHARING_VIOLATION:
 			PR_SetError(PR_FILE_IS_LOCKED_ERROR, err);
+			break;
+		case ERROR_SHARING_VIOLATION:
+			PR_SetError(PR_FILE_IS_BUSY_ERROR, err);
 			break;
 		case ERROR_NOT_ENOUGH_MEMORY:
 		case ERROR_OUTOFMEMORY:
@@ -489,28 +507,6 @@ void _MD_win32_map_write_error(PRInt32 err)
 			break;
 		case ERROR_NETNAME_DELETED:
 			PR_SetError(PR_CONNECT_RESET_ERROR, err);
-			break;
-		case WSAEBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case WSAENOTSOCK:
-			PR_SetError(PR_NOT_SOCKET_ERROR, err);
-			break;
-		case WSAEMSGSIZE:
-		case WSAEINVAL:
-			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
-			break;
-		case WSAENOBUFS:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-		case WSAECONNREFUSED:
-			PR_SetError(PR_CONNECT_REFUSED_ERROR, err);
-			break;
-		case WSAEISCONN:
-			PR_SetError(PR_IS_CONNECTED_ERROR, err);
-			break;
-		case WSAEFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
 			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -559,6 +555,9 @@ void _MD_win32_map_fsync_error(PRInt32 err)
 	}
 }
 
+/*
+ * For both CloseHandle() and closesocket().
+ */
 void _MD_win32_map_close_error(PRInt32 err)
 {
 	switch (err) {
@@ -572,6 +571,15 @@ void _MD_win32_map_close_error(PRInt32 err)
 		case ERROR_PATH_BUSY:
 			PR_SetError(PR_IO_ERROR, err);
 			break;
+		case WSAENOTSOCK:
+			PR_SetError(PR_NOT_SOCKET_ERROR, err);
+			break;
+		case WSAENETDOWN:
+			PR_SetError(PR_NETWORK_DOWN_ERROR, err);
+			break;
+		case WSAEWOULDBLOCK:
+			PR_SetError(PR_WOULD_BLOCK_ERROR, err);
+			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
 			break;
@@ -580,17 +588,31 @@ void _MD_win32_map_close_error(PRInt32 err)
 
 void _MD_win32_map_socket_error(PRInt32 err)
 {
+	PR_ASSERT(err != WSANOTINITIALISED);
 	switch (err) {
+		case WSAENETDOWN:
+			PR_SetError(PR_NETWORK_DOWN_ERROR, err);
+			break;
 		case WSAEPROTONOSUPPORT:
 			PR_SetError(PR_PROTOCOL_NOT_SUPPORTED_ERROR, err);
 			break;
 		case WSAEACCES:
 			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
 			break;
+		case WSAEMFILE:
+			PR_SetError(PR_PROC_DESC_TABLE_FULL_ERROR, err);
+			break;
 		case ERROR_NOT_ENOUGH_MEMORY:
 		case ERROR_OUTOFMEMORY:
 		case WSAENOBUFS:
 			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
+			break;
+		case WSAEAFNOSUPPORT:
+			PR_SetError(PR_ADDRESS_NOT_SUPPORTED_ERROR, err);
+			break;
+		case WSAEPROTOTYPE:
+		case WSAESOCKTNOSUPPORT:
+			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
 			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -604,8 +626,8 @@ void _MD_win32_map_recv_error(PRInt32 err)
 		case WSAEWOULDBLOCK:
 			PR_SetError(PR_WOULD_BLOCK_ERROR, err);
 			break;
-		case WSAEBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
+		case WSAENETDOWN:
+			PR_SetError(PR_NETWORK_DOWN_ERROR, err);
 			break;
 		case WSAENOTSOCK:
 			PR_SetError(PR_NOT_SOCKET_ERROR, err);
@@ -613,8 +635,29 @@ void _MD_win32_map_recv_error(PRInt32 err)
 		case WSAEFAULT:
 			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
 			break;
+		case WSAENOTCONN:
+			PR_SetError(PR_NOT_CONNECTED_ERROR, err);
+			break;
+		case WSAESHUTDOWN:
+			PR_SetError(PR_SOCKET_SHUTDOWN_ERROR, err);
+			break;
+		case WSAEMSGSIZE:
+			PR_SetError(PR_BUFFER_OVERFLOW_ERROR, err);
+			break;
+		case WSAECONNRESET:
 		case ERROR_NETNAME_DELETED:
 			PR_SetError(PR_CONNECT_RESET_ERROR, err);
+			break;
+		case WSAEINVAL:
+			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
+			break;
+		case WSAECONNABORTED:
+		case WSAETIMEDOUT:
+		case WSAENETRESET:
+			PR_SetError(PR_CONNECT_ABORTED_ERROR, err);
+			break;
+		case WSAEOPNOTSUPP:
+			PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, err);
 			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -628,17 +671,38 @@ void _MD_win32_map_recvfrom_error(PRInt32 err)
 		case WSAEWOULDBLOCK:
 			PR_SetError(PR_WOULD_BLOCK_ERROR, err);
 			break;
-		case WSAEBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
 		case WSAENOTSOCK:
 			PR_SetError(PR_NOT_SOCKET_ERROR, err);
 			break;
 		case WSAEFAULT:
 			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
 			break;
+		case WSAECONNRESET:
 		case ERROR_NETNAME_DELETED:
 			PR_SetError(PR_CONNECT_RESET_ERROR, err);
+			break;
+		case WSAEINVAL:
+			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
+			break;
+		case WSAENETDOWN:
+			PR_SetError(PR_NETWORK_DOWN_ERROR, err);
+			break;
+		case WSAEISCONN:
+			PR_SetError(PR_IS_CONNECTED_ERROR, err);
+			break;
+		case WSAENETRESET:
+		case WSAECONNABORTED:
+		case WSAETIMEDOUT:
+			PR_SetError(PR_CONNECT_ABORTED_ERROR, err);
+			break;
+		case WSAESHUTDOWN:
+			PR_SetError(PR_SOCKET_SHUTDOWN_ERROR, err);
+			break;
+		case WSAEMSGSIZE:
+			PR_SetError(PR_BUFFER_OVERFLOW_ERROR, err);
+			break;
+		case WSAEOPNOTSUPP:
+			PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, err);
 			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -652,9 +716,6 @@ void _MD_win32_map_send_error(PRInt32 err)
 		case WSAEWOULDBLOCK:
 			PR_SetError(PR_WOULD_BLOCK_ERROR, err);
 			break;
-		case WSAEBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
 		case WSAENOTSOCK:
 			PR_SetError(PR_NOT_SOCKET_ERROR, err);
 			break;
@@ -665,17 +726,35 @@ void _MD_win32_map_send_error(PRInt32 err)
 		case WSAENOBUFS:
 			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
 			break;
-		case WSAECONNREFUSED:
-			PR_SetError(PR_CONNECT_REFUSED_ERROR, err);
-			break;
-		case WSAEISCONN:
-			PR_SetError(PR_IS_CONNECTED_ERROR, err);
+		case WSAENOTCONN:
+			PR_SetError(PR_NOT_CONNECTED_ERROR, err);
 			break;
 		case WSAEFAULT:
 			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
 			break;
+		case WSAECONNRESET:
 		case ERROR_NETNAME_DELETED:
 			PR_SetError(PR_CONNECT_RESET_ERROR, err);
+			break;
+		case WSAENETDOWN:
+			PR_SetError(PR_NETWORK_DOWN_ERROR, err);
+			break;
+		case WSAENETRESET:
+		case WSAECONNABORTED:
+		case WSAETIMEDOUT:
+			PR_SetError(PR_CONNECT_ABORTED_ERROR, err);
+			break;
+		case WSAESHUTDOWN:
+			PR_SetError(PR_SOCKET_SHUTDOWN_ERROR, err);
+			break;
+		case WSAEHOSTUNREACH:
+			PR_SetError(PR_HOST_UNREACHABLE_ERROR, err);
+			break;
+		case WSAEOPNOTSUPP:
+			PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, err);
+			break;
+		case WSAEACCES:
+			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
 			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -689,30 +768,55 @@ void _MD_win32_map_sendto_error(PRInt32 err)
 		case WSAEWOULDBLOCK:
 			PR_SetError(PR_WOULD_BLOCK_ERROR, err);
 			break;
-		case WSAEBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
 		case WSAENOTSOCK:
 			PR_SetError(PR_NOT_SOCKET_ERROR, err);
 			break;
 		case WSAEMSGSIZE:
+		case WSAEDESTADDRREQ:
 		case WSAEINVAL:
 			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
 			break;
 		case WSAENOBUFS:
 			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
 			break;
-		case WSAECONNREFUSED:
-			PR_SetError(PR_CONNECT_REFUSED_ERROR, err);
-			break;
-		case WSAEISCONN:
-			PR_SetError(PR_IS_CONNECTED_ERROR, err);
+		case WSAENOTCONN:
+			PR_SetError(PR_NOT_CONNECTED_ERROR, err);
 			break;
 		case WSAEFAULT:
 			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
 			break;
+		case WSAECONNRESET:
 		case ERROR_NETNAME_DELETED:
 			PR_SetError(PR_CONNECT_RESET_ERROR, err);
+			break;
+		case WSAENETDOWN:
+			PR_SetError(PR_NETWORK_DOWN_ERROR, err);
+			break;
+		case WSAENETRESET:
+		case WSAECONNABORTED:
+		case WSAETIMEDOUT:
+			PR_SetError(PR_CONNECT_ABORTED_ERROR, err);
+			break;
+		case WSAESHUTDOWN:
+			PR_SetError(PR_SOCKET_SHUTDOWN_ERROR, err);
+			break;
+		case WSAEHOSTUNREACH:
+			PR_SetError(PR_HOST_UNREACHABLE_ERROR, err);
+			break;
+		case WSAENETUNREACH:
+			PR_SetError(PR_NETWORK_UNREACHABLE_ERROR, err);
+			break;
+		case WSAEAFNOSUPPORT:
+			PR_SetError(PR_ADDRESS_NOT_SUPPORTED_ERROR, err);
+			break;
+		case WSAEOPNOTSUPP:
+			PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, err);
+			break;
+		case WSAEACCES:
+			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
+			break;
+		case WSAEADDRNOTAVAIL:
+			PR_SetError(PR_ADDRESS_NOT_AVAILABLE_ERROR, err);
 			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -725,9 +829,6 @@ void _MD_win32_map_accept_error(PRInt32 err)
 	switch (err) {
 		case WSAEWOULDBLOCK:
 			PR_SetError(PR_WOULD_BLOCK_ERROR, err);
-			break;
-		case WSAEBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
 			break;
 		case WSAENOTSOCK:
 			PR_SetError(PR_NOT_SOCKET_ERROR, err);
@@ -742,7 +843,13 @@ void _MD_win32_map_accept_error(PRInt32 err)
 			PR_SetError(PR_PROC_DESC_TABLE_FULL_ERROR, err);
 			break;
 		case WSAENOBUFS:
-			PR_SetError(PR_OUT_OF_MEMORY_ERROR, err);
+			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
+			break;
+		case WSAENETDOWN:
+			PR_SetError(PR_NETWORK_DOWN_ERROR, err);
+			break;
+		case WSAEINVAL:
+			PR_SetError(PR_INVALID_STATE_ERROR, err);
 			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -781,9 +888,6 @@ void _MD_win32_map_connect_error(PRInt32 err)
 		case WSAEINVAL:
 			PR_SetError(PR_ALREADY_INITIATED_ERROR, err);
 			break;
-		case WSAEBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
 		case WSAEADDRNOTAVAIL:
 			PR_SetError(PR_ADDRESS_NOT_AVAILABLE_ERROR, err);
 			break;
@@ -811,6 +915,15 @@ void _MD_win32_map_connect_error(PRInt32 err)
 		case WSAEFAULT:
 			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
 			break;
+		case WSAENETDOWN:
+			PR_SetError(PR_NETWORK_DOWN_ERROR, err);
+			break;
+		case WSAENOBUFS:
+			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
+			break;
+		case WSAEACCES:
+			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
+			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
 			break;
@@ -820,9 +933,6 @@ void _MD_win32_map_connect_error(PRInt32 err)
 void _MD_win32_map_bind_error(PRInt32 err)
 {
 	switch (err) {
-		case WSAEBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
 		case WSAENOTSOCK:
 			PR_SetError(PR_NOT_SOCKET_ERROR, err);
 			break;
@@ -835,11 +945,14 @@ void _MD_win32_map_bind_error(PRInt32 err)
 		case WSAEADDRINUSE:
 			PR_SetError(PR_ADDRESS_IN_USE_ERROR, err);
 			break;
-		case WSAEACCES:
-			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
-			break;
 		case WSAEINVAL:
 			PR_SetError(PR_SOCKET_ADDRESS_IS_BOUND_ERROR, err);
+			break;
+		case WSAENETDOWN:
+			PR_SetError(PR_NETWORK_DOWN_ERROR, err);
+			break;
+		case WSAENOBUFS:
+			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
 			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -850,14 +963,29 @@ void _MD_win32_map_bind_error(PRInt32 err)
 void _MD_win32_map_listen_error(PRInt32 err)
 {
 	switch (err) {
-		case WSAEBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
 		case WSAENOTSOCK:
 			PR_SetError(PR_NOT_SOCKET_ERROR, err);
 			break;
 		case WSAEOPNOTSUPP:
 			PR_SetError(PR_NOT_TCP_SOCKET_ERROR, err);
+			break;
+		case WSAENETDOWN:
+			PR_SetError(PR_NETWORK_DOWN_ERROR, err);
+			break;
+		case WSAEINVAL:
+			PR_SetError(PR_INVALID_STATE_ERROR, err);
+			break;
+		case WSAEISCONN:
+			PR_SetError(PR_IS_CONNECTED_ERROR, err);
+			break;
+		case WSAENOBUFS:
+			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
+			break;
+		case WSAEADDRINUSE:
+			PR_SetError(PR_ADDRESS_IN_USE_ERROR, err);
+			break;
+		case WSAEMFILE:
+			PR_SetError(PR_PROC_DESC_TABLE_FULL_ERROR, err);
 			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -868,14 +996,17 @@ void _MD_win32_map_listen_error(PRInt32 err)
 void _MD_win32_map_shutdown_error(PRInt32 err)
 {
 	switch (err) {
-		case WSAEBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
 		case WSAENOTSOCK:
 			PR_SetError(PR_NOT_SOCKET_ERROR, err);
 			break;
 		case WSAENOTCONN:
 			PR_SetError(PR_NOT_CONNECTED_ERROR, err);
+			break;
+		case WSAENETDOWN:
+			PR_SetError(PR_NETWORK_DOWN_ERROR, err);
+			break;
+		case WSAEINVAL:
+			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
 			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -886,17 +1017,17 @@ void _MD_win32_map_shutdown_error(PRInt32 err)
 void _MD_win32_map_getsockname_error(PRInt32 err)
 {
 	switch (err) {
-		case WSAEBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
 		case WSAENOTSOCK:
 			PR_SetError(PR_NOT_SOCKET_ERROR, err);
 			break;
 		case WSAEFAULT:
 			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
 			break;
-		case WSAENOBUFS:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
+		case WSAENETDOWN:
+			PR_SetError(PR_NETWORK_DOWN_ERROR, err);
+			break;
+		case WSAEINVAL:
+			PR_SetError(PR_INVALID_STATE_ERROR, err);
 			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -908,9 +1039,6 @@ void _MD_win32_map_getpeername_error(PRInt32 err)
 {
 
 	switch (err) {
-		case WSAEBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
 		case WSAENOTSOCK:
 			PR_SetError(PR_NOT_SOCKET_ERROR, err);
 			break;
@@ -920,8 +1048,8 @@ void _MD_win32_map_getpeername_error(PRInt32 err)
 		case WSAEFAULT:
 			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
 			break;
-		case WSAENOBUFS:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
+		case WSAENETDOWN:
+			PR_SetError(PR_NETWORK_DOWN_ERROR, err);
 			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -932,20 +1060,18 @@ void _MD_win32_map_getpeername_error(PRInt32 err)
 void _MD_win32_map_getsockopt_error(PRInt32 err)
 {
 	switch (err) {
-		case WSAEBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
 		case WSAENOTSOCK:
 			PR_SetError(PR_NOT_SOCKET_ERROR, err);
 			break;
+		case WSAEINVAL:
 		case WSAENOPROTOOPT:
 			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
 			break;
 		case WSAEFAULT:
 			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
 			break;
-		case WSAEINVAL:
-			PR_SetError(PR_BUFFER_OVERFLOW_ERROR, err);
+		case WSAENETDOWN:
+			PR_SetError(PR_NETWORK_DOWN_ERROR, err);
 			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -956,20 +1082,24 @@ void _MD_win32_map_getsockopt_error(PRInt32 err)
 void _MD_win32_map_setsockopt_error(PRInt32 err)
 {
 	switch (err) {
-		case WSAEBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
 		case WSAENOTSOCK:
 			PR_SetError(PR_NOT_SOCKET_ERROR, err);
 			break;
+		case WSAEINVAL:
 		case WSAENOPROTOOPT:
 			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
 			break;
 		case WSAEFAULT:
 			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
 			break;
-		case WSAEINVAL:
-			PR_SetError(PR_BUFFER_OVERFLOW_ERROR, err);
+		case WSAENETDOWN:
+			PR_SetError(PR_NETWORK_DOWN_ERROR, err);
+			break;
+		case WSAENETRESET:
+			PR_SetError(PR_CONNECT_ABORTED_ERROR, err);
+			break;
+		case WSAENOTCONN:
+			PR_SetError(PR_NOT_CONNECTED_ERROR, err);
 			break;
 		default:
 			PR_SetError(PR_UNKNOWN_ERROR, err);
@@ -1066,6 +1196,9 @@ void _MD_win32_map_select_error(PRInt32 err)
         case WSAEFAULT:
             prerror = PR_ACCESS_FAULT_ERROR;
             break;
+		case WSAENETDOWN:
+			prerror = PR_NETWORK_DOWN_ERROR;
+			break;
         default:
             prerror = PR_UNKNOWN_ERROR;
     }
@@ -1088,8 +1221,10 @@ void _MD_win32_map_lockf_error(PRInt32 err)
 			break;
 		case ERROR_DRIVE_LOCKED:
 		case ERROR_LOCKED:
-		case ERROR_SHARING_VIOLATION:
 			PR_SetError(PR_FILE_IS_LOCKED_ERROR, err);
+			break;
+		case ERROR_SHARING_VIOLATION:
+			PR_SetError(PR_FILE_IS_BUSY_ERROR, err);
 			break;
 		case ERROR_NOT_ENOUGH_MEMORY:
 		case ERROR_OUTOFMEMORY:

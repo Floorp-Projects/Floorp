@@ -53,7 +53,7 @@ typedef struct PRWaitGroup PRWaitGroup;
 ** ENUMERATION: PRMWStatus
 ** DESCRIPTION:
 **      This enumeration is used to indicate the completion status of
-**      a recieve wait object. Generally stated, a positive value indicates
+**      a receive wait object. Generally stated, a positive value indicates
 **      that the operation is not yet complete. A zero value indicates
 **      success (similar to PR_SUCCESS) and any negative value is an
 **      indication of failure. The reason for the failure can be retrieved
@@ -94,6 +94,15 @@ typedef struct PRMemoryDescriptor
 } PRMemoryDescriptor;
 
 /*
+** STRUCTURE:   PRMWaitClientData
+** DESCRIPTION:
+**      An opague stucture for which a client MAY give provide a concrete
+**      definition and associate with a receive descriptor. The NSPR runtime
+**      does not manage this field. It is completely up to the client.
+*/
+typedef struct PRMWaitClientData PRMWaitClientData;
+
+/*
 ** STRUCTURE:   PRRecvWait
 ** DESCRIPTION:
 **      A receive wait object contains the file descriptor that is subject
@@ -117,9 +126,21 @@ typedef struct PRRecvWait
     PRMWStatus outcome;         /* outcome of the current/last operation */
     PRIntervalTime timeout;     /* time allowed for entire operation */
 
-    PRInt32 bytesRecv;         /* number of bytes transferred into buffer */
+    PRInt32 bytesRecv;          /* number of bytes transferred into buffer */
     PRMemoryDescriptor buffer;  /* where to store first segment of input data */
+    PRMWaitClientData *client;  /* pointer to arbitrary client defined data */
 } PRRecvWait;
+
+/*
+** STRUCTURE:   PRMWaitEnumerator
+** DESCRIPTION:
+**      An enumeration object is used to store the state of an existing
+**      enumeration over a wait group. The opaque object must be allocated
+**      by the client and the reference presented on each call to the
+**      pseudo-stateless enumerator. The enumeration objects are sharable
+**      only in serial fashion.
+*/
+typedef struct PRMWaitEnumerator PRMWaitEnumerator;
 
 
 /*
@@ -139,7 +160,7 @@ typedef struct PRRecvWait
 **                  to semantically group various file descriptors by the
 **                  client's application.
 **      desc        A reference to a valid PRRecvWait. The object of the
-**                  reference must be preserved and treated as read-only
+**                  reference must be preserved and not be modified
 **                  until its ownership is returned to the client.
 **  RETURN
 **      PRStatus    An indication of success. If equal to PR_FAILUE details
@@ -295,12 +316,76 @@ PR_EXTERN(PRWaitGroup*) PR_CreateWaitGroup(PRInt32 size);
 **
 **  ERRORS
 **      PR_INVALID_ARGUMENT_ERROR
-                    The 'group' argument does not reference a known object.
+**                  The 'group' argument does not reference a known object.
 **      PR_INVALID_STATE_ERROR
 **                  The group still contains receive wait objects.
 */
 PR_EXTERN(PRStatus) PR_DestroyWaitGroup(PRWaitGroup *group);
 
+/*
+** FUNCTION:    PR_CreateMWaitEnumerator
+** DESCRIPTION:
+**      The PR_CreateMWaitEnumerator() function returns a reference to an
+**      opaque PRMWaitEnumerator object. The enumerator object is required
+**      as an argument for each successive call in the stateless enumeration
+**      of the indicated wait group.
+**
+**      group       The wait group that the enumeration is intended to
+**                  process. It may be be the default wait group (NULL).
+** RETURN
+**      PRMWaitEnumerator* group
+**                  A reference to an object that will be used to store
+**                  intermediate state of enumerations.
+** ERRORS
+**      Errors are indicated by the function returning a NULL.
+**      PR_INVALID_ARGUMENT_ERROR
+**                  The 'group' argument does not reference a known object.
+**      PR_OUT_OF_MEMORY_ERROR
+*/
+PR_EXTERN(PRMWaitEnumerator*) PR_CreateMWaitEnumerator(PRWaitGroup *group);
+
+/*
+** FUNCTION:    PR_DestroyMWaitEnumerator
+** DESCRIPTION:
+**      Destroys the object created by PR_CreateMWaitEnumerator(). The reference
+**      used as an argument becomes invalid.
+**
+** INPUT
+**      PRMWaitEnumerator* enumerator
+**          The PRMWaitEnumerator object to destroy.
+** RETURN
+**      PRStatus
+**          PR_SUCCESS if successful, PR_FAILURE otherwise.
+** ERRORS
+**      PR_INVALID_ARGUMENT_ERROR
+**                  The enumerator is invalid.
+*/
+PR_EXTERN(PRStatus) PR_DestroyMWaitEnumerator(PRMWaitEnumerator* enumerator);
+
+/*
+** FUNCTION:    PR_EnumerateWaitGroup
+** DESCRIPTION:
+**      PR_EnumerateWaitGroup is a thread safe enumerator over a wait group.
+**      Each call to the enumerator must present a valid PRMWaitEnumerator
+**      rererence and a pointer to the "previous" element returned from the
+**      enumeration process or a NULL.
+**
+**      An enumeration is started by passing a NULL as the "previous" value.
+**      Subsequent calls to the enumerator must pass in the result of the
+**      previous call. The enumeration end is signaled by the runtime returning
+**      a NULL as the result.
+**
+**      Modifications to the content of the wait group are allowed during
+**      an enumeration. The effect is that the enumeration may have to be
+**      "reset" and that may result in duplicates being returned from the
+**      enumeration.
+**
+**      An enumeration may be abandoned at any time. The runtime is not
+**      keeping any state, so there are no issues in that regard.
+*/
+PR_EXTERN(PRRecvWait*) PR_EnumerateWaitGroup(
+    PRMWaitEnumerator *enumerator, const PRRecvWait *previous);
+   
 PR_END_EXTERN_C
 
 #endif /* defined(_PRMWAIT_H) */

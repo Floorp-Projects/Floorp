@@ -64,6 +64,7 @@ static PRFileDesc *PushLayer(PRFileDesc *stack)
     return stack;
 }  /* PushLayer */
 
+#if 0
 static PRFileDesc *PopLayer(PRFileDesc *stack)
 {
     PRFileDesc *popped = PR_PopIOLayer(stack, identity);
@@ -73,6 +74,7 @@ static PRFileDesc *PopLayer(PRFileDesc *stack)
     
     return stack;
 }  /* PopLayer */
+#endif
 
 static void PR_CALLBACK Client(void *arg)
 {
@@ -355,8 +357,8 @@ PRIntn main(PRIntn argc, char **argv)
         rv = PR_JoinThread(server_thread);
         PR_ASSERT(PR_SUCCESS == rv);
 
-        rv = PR_Close(PopLayer(client)); PR_ASSERT(PR_SUCCESS == rv);
-        rv = PR_Close(PopLayer(service)); PR_ASSERT(PR_SUCCESS == rv);
+        rv = PR_Close(client); PR_ASSERT(PR_SUCCESS == rv);
+        rv = PR_Close(service); PR_ASSERT(PR_SUCCESS == rv);
         if (verbosity > silent)
             PR_fprintf(logFile, "Ending layered test\n");
     }

@@ -46,20 +46,13 @@ endif
 # Classic nspr is also available.
 #
 ifneq ($(OS_RELEASE),V3.2)
-USE_PTHREADS = 1
 ifeq ($(CLASSIC_NSPR), 1)
-	USE_PTHREADS =
-	IMPL_STRATEGY := _CLASSIC
+	IMPL_STRATEGY = _EMU
 	DEFINES += -D_PR_LOCAL_THREADS_ONLY
+else
+	USE_PTHREADS = 1
+	IMPL_STRATEGY = _PTH
 endif
-endif
-
-#
-# XXX
-# Temporary define for the Client; to be removed when binary release is used
-#
-ifdef MOZILLA_CLIENT
-IMPL_STRATEGY =
 endif
 
 CC			= cc $(NON_LD_FLAGS) -std1 -readonly_strings
@@ -76,19 +69,15 @@ endif
 
 NON_LD_FLAGS		= -ieee_with_inexact
 
-ifdef USE_AUTOCONF
-OS_CFLAGS		=
-else
-OS_CFLAGS		= -DOSF1 -D_REENTRANT -taso
+OS_CFLAGS		= -DOSF1 -D_REENTRANT
 
 ifeq ($(OS_RELEASE),V3.2)
-OS_CFLAGS		+= -DOSF1V3
+OS_CFLAGS		+= -DHAVE_INT_LOCALTIME_R
 endif
 
 ifeq (V4,$(findstring V4,$(OS_RELEASE)))
-OS_CFLAGS		+= -DOSF1V4
+OS_CFLAGS		+= -DHAVE_POINTER_LOCALTIME_R
 endif
-endif # USE_AUTOCONF
 
 ifeq ($(USE_PTHREADS),1)
 OS_CFLAGS		+= -pthread

@@ -21,6 +21,7 @@
 ** Description: Exercising the thread private data bailywick.
 */
 
+#include "prmem.h"
 #include "prinit.h"
 #include "prlog.h"
 #include "prprf.h"
@@ -42,18 +43,20 @@ static PRBool should = PR_TRUE;
 static PRBool did = PR_TRUE;
 static PRFileDesc *fout = NULL;
 
-static void PrintProgress(void)
+static void PrintProgress(PRIntn line)
 {
+    failed = failed || (should && !did);
+    failed = failed || (!should && did);
     if (debug > 0)
     {
 #if defined(WIN16)
         printf(
-            "Destructor should %s have been called and was%s\n",
-            ((should) ? "" : " NOT"), ((did) ? "" : " NOT"));
+            "@ line %d destructor should%s have been called and was%s\n",
+            line, ((should) ? "" : " NOT"), ((did) ? "" : " NOT"));
 #else    
         PR_fprintf(
-            fout, "Destructor should %s have been called and was%s\n",
-            ((should) ? "" : " NOT"), ((did) ? "" : " NOT"));
+            fout, "@ line %d destructor should%s have been called and was%s\n",
+            line, ((should) ? "" : " NOT"), ((did) ? "" : " NOT"));
 #endif
     }
 }  /* PrintProgress */
@@ -70,10 +73,15 @@ static void MyAssert(const char *expr, const char *file, PRIntn line)
 
 static void PR_CALLBACK Destructor(void *data)
 {
+    MY_ASSERT(NULL != data);
     if (should) did = PR_TRUE;
     else failed = PR_TRUE;
-    MY_ASSERT(NULL != data);
-    if (debug > 0) MyAssert((const char*)data, __FILE__, __LINE__);
+    /*
+     * We don't actually free the storage since it's actually allocated
+     * on the stack. Normally, this would not be the case and this is
+     * the opportunity to free whatever.
+    PR_Free(data);
+     */
 }  /* Destructor */
 
 static void PR_CALLBACK Thread(void *null)
@@ -91,24 +99,24 @@ static void PR_CALLBACK Thread(void *null)
         pd = PR_GetThreadPrivate(key[keys]);
         MY_ASSERT(NULL == pd);
     }
-    PrintProgress();
+    PrintProgress(__LINE__);
 
     did = should = PR_FALSE;
     for (keys = 0; keys < 4; ++keys)
     {
-        rv = PR_SetThreadPrivate(keys, key_string[keys]);
+        rv = PR_SetThreadPrivate(key[keys], key_string[keys]);
         MY_ASSERT(PR_SUCCESS == rv);
     }
-    PrintProgress();
+    PrintProgress(__LINE__);
 
 #if !defined(DEBUG)
     did = should = PR_FALSE;
     for (keys = 4; keys < 8; ++keys)
     {
-        rv = PR_SetThreadPrivate(keys, key_string[keys]);
+        rv = PR_SetThreadPrivate(key[keys], key_string[keys]);
         MY_ASSERT(PR_FAILURE == rv);
     }
-    PrintProgress();
+    PrintProgress(__LINE__);
 #endif
     
     did = PR_FALSE; should = PR_TRUE;
@@ -117,7 +125,7 @@ static void PR_CALLBACK Thread(void *null)
         rv = PR_SetThreadPrivate(key[keys], key_string[keys]);
         MY_ASSERT(PR_SUCCESS == rv);
     }
-    PrintProgress();
+    PrintProgress(__LINE__);
 
     did = PR_FALSE; should = PR_TRUE;
     for (keys = 0; keys < 4; ++keys)
@@ -125,7 +133,7 @@ static void PR_CALLBACK Thread(void *null)
         rv = PR_SetThreadPrivate(key[keys], NULL);
         MY_ASSERT(PR_SUCCESS == rv);
     }
-    PrintProgress();
+    PrintProgress(__LINE__);
 
     did = should = PR_FALSE;
     for (keys = 0; keys < 4; ++keys)
@@ -133,7 +141,7 @@ static void PR_CALLBACK Thread(void *null)
         rv = PR_SetThreadPrivate(key[keys], NULL);
         MY_ASSERT(PR_SUCCESS == rv);
     }
-    PrintProgress();
+    PrintProgress(__LINE__);
 
     did = should = PR_FALSE;
     for (keys = 8; keys < 127; ++keys)
@@ -141,7 +149,7 @@ static void PR_CALLBACK Thread(void *null)
         rv = PR_SetThreadPrivate(key[keys], "EXTENSION");
         MY_ASSERT(PR_SUCCESS == rv);
     }
-    PrintProgress();
+    PrintProgress(__LINE__);
 
     did = PR_FALSE; should = PR_TRUE;
     for (keys = 8; keys < 127; ++keys)
@@ -149,7 +157,7 @@ static void PR_CALLBACK Thread(void *null)
         rv = PR_SetThreadPrivate(key[keys], NULL);
         MY_ASSERT(PR_SUCCESS == rv);
     }
-    PrintProgress();
+    PrintProgress(__LINE__);
 
     did = should = PR_FALSE;
     for (keys = 8; keys < 127; ++keys)
@@ -157,6 +165,17 @@ static void PR_CALLBACK Thread(void *null)
         rv = PR_SetThreadPrivate(key[keys], NULL);
         MY_ASSERT(PR_SUCCESS == rv);
     }
+
+    /* put in keys and leave them there for thread exit */
+    did = should = PR_FALSE;
+    for (keys = 0; keys < 4; ++keys)
+    {
+        rv = PR_SetThreadPrivate(key[keys], key_string[keys]);
+        MY_ASSERT(PR_SUCCESS == rv);
+    }
+    PrintProgress(__LINE__);
+    did = PR_FALSE; should = PR_TRUE;
+
 }  /* Thread */
 
 static PRIntn PR_CALLBACK Tpd(PRIntn argc, char **argv)
@@ -177,7 +196,7 @@ static PRIntn PR_CALLBACK Tpd(PRIntn argc, char **argv)
         rv = PR_NewThreadPrivateIndex(&key[keys], Destructor);
         MY_ASSERT(PR_SUCCESS == rv);
     }
-    PrintProgress();
+    PrintProgress(__LINE__);
 
     did = should = PR_FALSE;
     for (keys = 0; keys < 8; ++keys)
@@ -185,24 +204,24 @@ static PRIntn PR_CALLBACK Tpd(PRIntn argc, char **argv)
         pd = PR_GetThreadPrivate(key[keys]);
         MY_ASSERT(NULL == pd);
     }
-    PrintProgress();
+    PrintProgress(__LINE__);
 
     did = should = PR_FALSE;
     for (keys = 0; keys < 4; ++keys)
     {
-        rv = PR_SetThreadPrivate(keys, key_string[keys]);
+        rv = PR_SetThreadPrivate(key[keys], key_string[keys]);
         MY_ASSERT(PR_SUCCESS == rv);
     }
-    PrintProgress();
+    PrintProgress(__LINE__);
 
 #if !defined(DEBUG)
     did = should = PR_FALSE;
     for (keys = 4; keys < 8; ++keys)
     {
-        rv = PR_SetThreadPrivate(keys, key_string[keys]);
+        rv = PR_SetThreadPrivate(key[keys], key_string[keys]);
         MY_ASSERT(PR_FAILURE == rv);
     }
-    PrintProgress();
+    PrintProgress(__LINE__);
 #endif
     
     did = PR_FALSE; should = PR_TRUE;
@@ -211,7 +230,7 @@ static PRIntn PR_CALLBACK Tpd(PRIntn argc, char **argv)
         rv = PR_SetThreadPrivate(key[keys], key_string[keys]);
         MY_ASSERT(PR_SUCCESS == rv);
     }
-    PrintProgress();
+    PrintProgress(__LINE__);
 
     did = PR_FALSE; should = PR_TRUE;
     for (keys = 0; keys < 4; ++keys)
@@ -219,7 +238,7 @@ static PRIntn PR_CALLBACK Tpd(PRIntn argc, char **argv)
         rv = PR_SetThreadPrivate(key[keys], NULL);
         MY_ASSERT(PR_SUCCESS == rv);
     }
-    PrintProgress();
+    PrintProgress(__LINE__);
 
     did = should = PR_FALSE;
     for (keys = 0; keys < 4; ++keys)
@@ -227,7 +246,7 @@ static PRIntn PR_CALLBACK Tpd(PRIntn argc, char **argv)
         rv = PR_SetThreadPrivate(key[keys], NULL);
         MY_ASSERT(PR_SUCCESS == rv);
     }
-    PrintProgress();
+    PrintProgress(__LINE__);
 
     did = should = PR_FALSE;
     for (keys = 8; keys < 127; ++keys)
@@ -237,7 +256,7 @@ static PRIntn PR_CALLBACK Tpd(PRIntn argc, char **argv)
         rv = PR_SetThreadPrivate(key[keys], "EXTENSION");
         MY_ASSERT(PR_SUCCESS == rv);
     }
-    PrintProgress();
+    PrintProgress(__LINE__);
 
     did = PR_FALSE; should = PR_TRUE;
     for (keys = 8; keys < 127; ++keys)
@@ -245,7 +264,7 @@ static PRIntn PR_CALLBACK Tpd(PRIntn argc, char **argv)
         rv = PR_SetThreadPrivate(key[keys], NULL);
         MY_ASSERT(PR_SUCCESS == rv);
     }
-    PrintProgress();
+    PrintProgress(__LINE__);
 
     did = should = PR_FALSE;
     for (keys = 8; keys < 127; ++keys)
@@ -259,6 +278,8 @@ static PRIntn PR_CALLBACK Tpd(PRIntn argc, char **argv)
         PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
 
     (void)PR_JoinThread(thread);
+
+    PrintProgress(__LINE__);
 
 #if defined(WIN16)
     printf(

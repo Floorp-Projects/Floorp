@@ -233,7 +233,7 @@ int  PR_MD_fprintf(FILE *fPtr, const char *fmt, ...)
     } 
     else 
     {
-        fwrite(buffer, 0, strlen(buffer), fPtr); /* XXX Is this a sec. hole? */
+        fwrite(buffer, 1, strlen(buffer), fPtr); /* XXX Is this a sec. hole? */
     }
 
     va_end(args);

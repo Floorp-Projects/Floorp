@@ -29,6 +29,7 @@
 #include "prpdce.h"
 
 #include <pthread.h>
+#include <unistd.h>
 #include <string.h>
 #include <signal.h>
 
@@ -38,18 +39,33 @@
  * EPERM means that privilege is not available.
  */
 
-PRIntn pt_schedpriv;
+static PRIntn pt_schedpriv = 0;
 extern PRLock *_pr_sleeplock;
 
-struct _PT_Bookeeping pt_book = {0};
+static struct _PT_Bookeeping
+{
+    PRLock *ml;                 /* a lock to protect ourselves */
+    PRCondVar *cv;              /* used to signal global things */
+    PRInt32 system, user;       /* a count of the two different types */
+    PRUintn this_many;          /* number of threads allowed for exit */
+    pthread_key_t key;          /* private private data key */
+    pthread_key_t highwater;    /* ordinal value of next key to be allocated */
+    PRThread *first, *last;     /* list of threads we know about */
+#if defined(_PR_DCETHREADS) || defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
+    PRInt32 minPrio, maxPrio;   /* range of scheduling priorities */
+#endif
+} pt_book = {0};
 
+static void _pt_thread_death(void *arg);
 static void init_pthread_gc_support(void);
 
+#if defined(_PR_DCETHREADS) || defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
 static PRIntn pt_PriorityMap(PRThreadPriority pri)
 {
     return pt_book.minPrio +
 	    pri * (pt_book.maxPrio - pt_book.minPrio) / PR_PRIORITY_LAST;
 }
+#endif
 
 /*
 ** Initialize a stack for a native pthread thread
@@ -156,22 +172,72 @@ static void *_pt_root(void *arg)
     }
     PR_Unlock(pt_book.ml);
 
-    /* last chance to delete this puppy if the thread is detached */
-    if (detached)
+    /*
+    * Here we set the pthread's backpointer to the PRThread to NULL.
+    * Otherwise the desctructor would get called eagerly as the thread
+    * returns to the pthread runtime. The joining thread would them be
+    * the proud possessor of a dangling reference. However, this is the
+    * last chance to delete the object if the thread is detached, so
+    * just let the destuctor do the work.
+    */
+    if (PR_FALSE == detached)
     {
-        if (NULL != thred->io_cv)
-            PR_DestroyCondVar(thred->io_cv);
-    	PR_DELETE(thred->stack);
-#if defined(DEBUG)
-        memset(thred, 0xaf, sizeof(PRThread));
-#endif
-        PR_DELETE(thred);
+        rv = pthread_setspecific(pt_book.key, NULL);
+        PR_ASSERT(0 == rv);
     }
 
-    rv = pthread_setspecific(pt_book.key, NULL);
-    PR_ASSERT(0 == rv);
     return NULL;
 }  /* _pt_root */
+
+static PRThread* pt_AttachThread(void)
+{
+    PRThread *thred = NULL;
+    void *privateData = NULL;
+
+    /*
+     * NSPR must have been initialized when PR_AttachThread is called.
+     * We cannot have PR_AttachThread call implicit initialization
+     * because if multiple threads call PR_AttachThread simultaneously,
+     * NSPR may be initialized more than once.
+     * We can't call PR_SetError() either.
+     */
+    if (!_pr_initialized) return NULL;
+
+    /*
+     * If the thread is already known, it will have a non-NULL value
+     * in its private data. If that's the case, simply suppress the
+     * attach and note an error.
+     */
+    PTHREAD_GETSPECIFIC(pt_book.key, privateData);
+    if (NULL != privateData)
+    {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return NULL;
+    }
+    thred = PR_NEWZAP(PRThread);
+    if (NULL == thred) PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+    else
+    {
+        int rv;
+
+        thred->priority = PR_PRIORITY_NORMAL;
+        thred->id = pthread_self();
+        rv = pthread_setspecific(pt_book.key, thred);
+        PR_ASSERT(0 == rv);
+
+        thred->state = PT_THREAD_GLOBAL | PT_THREAD_FOREIGN;
+        PR_Lock(pt_book.ml);
+
+        /* then put it into the list */
+        thred->prev = pt_book.last;
+	    pt_book.last->next = thred;
+        thred->next = NULL;
+        pt_book.last = thred;
+        PR_Unlock(pt_book.ml);
+
+    }
+    return thred;  /* may be NULL */
+}  /* pt_AttachThread */
 
 static PRThread* _PR_CreateThread(
     PRThreadType type, void (*start)(void *arg),
@@ -194,11 +260,11 @@ static PRThread* _PR_CreateThread(
 
     if (EPERM != pt_schedpriv)
     {
-#if !defined(_PR_DCETHREADS) && !defined(FREEBSD) && !defined(NETBSD)
+#if !defined(_PR_DCETHREADS) && defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
         struct sched_param schedule;
 #endif
 
-#if !defined(FREEBSD) && !defined(NETBSD)
+#if defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
         rv = pthread_attr_setinheritsched(&tattr, PTHREAD_EXPLICIT_SCHED);
         PR_ASSERT(0 == rv);
 #endif
@@ -208,7 +274,7 @@ static PRThread* _PR_CreateThread(
 #if defined(_PR_DCETHREADS)
         rv = pthread_attr_setprio(&tattr, pt_PriorityMap(priority));
         PR_ASSERT(0 == rv);
-#elif !defined(FREEBSD) && !defined(NETBSD)
+#elif defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
         rv = pthread_attr_getschedparam(&tattr, &schedule);
         PR_ASSERT(0 == rv);
         schedule.sched_priority = pt_PriorityMap(priority);
@@ -228,21 +294,8 @@ static PRThread* _PR_CreateThread(
     PR_ASSERT(0 == rv);
 #endif /* !defined(_PR_DCETHREADS) */
 
-    /*
-     * HPUX only supports PTHREAD_SCOPE_SYSTEM.
-     * IRIX only supports PTHREAD_SCOPE_PROCESS.
-     * OSF1 only supports PTHREAD_SCOPE_PROCESS.
-     * AIX only supports PTHREAD_SCOPE_SYSTEM.
-     */
-#if defined(SOLARIS)
-    rv = pthread_attr_setscope(&tattr,
-	((PR_GLOBAL_THREAD == scope) ?
-            PTHREAD_SCOPE_SYSTEM : PTHREAD_SCOPE_PROCESS));
-    PR_ASSERT(0 == rv);
-#endif
-
 #if defined(IRIX)
-    if ((16 * 1024) > stackSize) stackSize = (16 * 1024);  /* IRIX minimum */
+    if ((32 * 1024) > stackSize) stackSize = (32 * 1024);  /* IRIX minimum */
     else
 #endif
     if (0 == stackSize) stackSize = (64 * 1024);  /* default == 64K */
@@ -255,7 +308,12 @@ static PRThread* _PR_CreateThread(
 #endif
 
     thred = PR_NEWZAP(PRThread);
-    if (thred != NULL)
+    if (NULL == thred)
+    {
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, errno);
+        goto done;
+    }
+    else
     {
         pthread_t id;
 
@@ -273,7 +331,9 @@ static PRThread* _PR_CreateThread(
 
         thred->stack = PR_NEWZAP(PRThreadStack);
         if (thred->stack == NULL) {
-            PR_DELETE(thred);  /* all that work ... poof! */
+            PRIntn oserr = errno;
+            PR_Free(thred);  /* all that work ... poof! */
+            PR_SetError(PR_OUT_OF_MEMORY_ERROR, oserr);
             thred = NULL;  /* and for what? */
             goto done;
         }
@@ -281,24 +341,45 @@ static PRThread* _PR_CreateThread(
         thred->stack->thr = thred;
 
 #ifdef PT_NO_SIGTIMEDWAIT
-      pthread_mutex_init(&thred->suspendResumeMutex,NULL);
-      pthread_cond_init(&thred->suspendResumeCV,NULL);
+        pthread_mutex_init(&thred->suspendResumeMutex,NULL);
+        pthread_cond_init(&thred->suspendResumeCV,NULL);
 #endif
 
-	    /* make the thread counted to the rest of the runtime */
-	    PR_Lock(pt_book.ml);
-	    if (thred->state & PT_THREAD_SYSTEM)
-	        pt_book.system += 1;
-	    else pt_book.user += 1;
-	    PR_Unlock(pt_book.ml);
+        /* make the thread counted to the rest of the runtime */
+        PR_Lock(pt_book.ml);
+        if (PR_SYSTEM_THREAD == type)
+            pt_book.system += 1;
+        else pt_book.user += 1;
+        PR_Unlock(pt_book.ml);
 
         /*
          * We pass a pointer to a local copy (instead of thred->id)
          * to pthread_create() because who knows what wacky things
          * pthread_create() may be doing to its argument.
          */
-        if (PTHREAD_CREATE(&id, tattr, _pt_root, thred) != 0)
+        rv = PTHREAD_CREATE(&id, tattr, _pt_root, thred);
+
+#if !defined(_PR_DCETHREADS)
+        if (EPERM == rv)
         {
+            /* Remember that we don't have thread scheduling privilege. */
+            pt_schedpriv = EPERM;
+            PR_LOG(_pr_thread_lm, PR_LOG_MIN,
+                ("_PR_CreateThread: no thread scheduling privilege"));
+            /* Try creating the thread again without setting priority. */
+            rv = pthread_attr_setinheritsched(&tattr, PTHREAD_INHERIT_SCHED);
+            PR_ASSERT(0 == rv);
+            rv = PTHREAD_CREATE(&id, tattr, _pt_root, thred);
+        }
+#endif
+
+        if (0 != rv)
+        {
+#if defined(_PR_DCETHREADS)
+            PRIntn oserr = errno;
+#else
+            PRIntn oserr = rv;
+#endif
             PR_Lock(pt_book.ml);
             if (thred->state & PT_THREAD_SYSTEM)
                 pt_book.system -= 1;
@@ -306,8 +387,9 @@ static PRThread* _PR_CreateThread(
                 PR_NotifyAllCondVar(pt_book.cv);
             PR_Unlock(pt_book.ml);
 
-            PR_DELETE(thred->stack);
-            PR_DELETE(thred);  /* all that work ... poof! */
+            PR_Free(thred->stack);
+            PR_Free(thred);  /* all that work ... poof! */
+            PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, oserr);
             thred = NULL;  /* and for what? */
             goto done;
         }
@@ -370,60 +452,9 @@ PR_IMPLEMENT(void) SetExecutionEnvironment(PRThread *thred, void *env)
 PR_IMPLEMENT(PRThread*) PR_AttachThread(
     PRThreadType type, PRThreadPriority priority, PRThreadStack *stack)
 {
-    PRThread *thred = NULL;
-    void *privateData = NULL;
-
-    /*
-     * NSPR must have been initialized when PR_AttachThread is called.
-     * We cannot have PR_AttachThread call implicit initialization
-     * because if multiple threads call PR_AttachThread simultaneously,
-     * NSPR may be initialized more than once.
-     */
-    if (!_pr_initialized) {
-        /* Since NSPR is not initialized, we cannot call PR_SetError. */
-        return NULL;
-    }
-
-    PTHREAD_GETSPECIFIC(pt_book.key, privateData);
-    if (NULL != privateData)
-    {
-        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-        return NULL;
-    }
-    thred = PR_NEWZAP(PRThread);
-    if (NULL == thred) PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
-    else
-    {
-        int rv;
-
-        if ((PRIntn)PR_PRIORITY_FIRST > (PRIntn)priority)
-            priority = PR_PRIORITY_FIRST;
-        else if ((PRIntn)PR_PRIORITY_LAST < (PRIntn)priority)
-            priority = PR_PRIORITY_LAST;
-
-        thred->priority = priority;
-        thred->id = pthread_self();
-        rv = pthread_setspecific(pt_book.key, thred);
-        PR_ASSERT(0 == rv);
-
-        PR_Lock(pt_book.ml);
-        if (PR_SYSTEM_THREAD == type)
-        {
-            pt_book.system += 1;
-            thred->state |= PT_THREAD_SYSTEM;
-        }
-        else pt_book.user += 1;
-
-        /* then put it into the list */
-        thred->prev = pt_book.last;
-	    pt_book.last->next = thred;
-        thred->next = NULL;
-        pt_book.last = thred;
-        PR_Unlock(pt_book.ml);
-
-    }
-    return thred;  /* may be NULL */
+    return PR_GetCurrentThread();
 }  /* PR_AttachThread */
+
 
 PR_IMPLEMENT(PRStatus) PR_JoinThread(PRThread *thred)
 {
@@ -432,7 +463,8 @@ PR_IMPLEMENT(PRStatus) PR_JoinThread(PRThread *thred)
     PR_ASSERT(thred != NULL);
 
     if ((0xafafafaf == thred->state)
-    || (PT_THREAD_DETACHED & thred->state))
+    || (PT_THREAD_DETACHED == (PT_THREAD_DETACHED & thred->state))
+    || (PT_THREAD_FOREIGN == (PT_THREAD_FOREIGN & thred->state)))
     {
         /*
          * This might be a bad address, but if it isn't, the state should
@@ -440,65 +472,44 @@ PR_IMPLEMENT(PRStatus) PR_JoinThread(PRThread *thred)
          * deleted. However, the client that called join on a detached
          * thread deserves all the rath I can muster....
          */
-        PR_SetError(PR_ILLEGAL_ACCESS_ERROR, 0);
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         PR_LogPrint(
             "PR_JoinThread: 0x%X not joinable | already smashed\n", thred);
 
-        PR_ASSERT((0xafafafaf == thred->state)
-        || (PT_THREAD_DETACHED & thred->state));
+        PR_ASSERT(!"Illegal thread join attempt");
     }
     else
     {
         pthread_t id = thred->id;
         rv = pthread_join(id, &result);
         PR_ASSERT(rv == 0 && result == NULL);
-        if (0 != rv)
-            PR_SetError(PR_UNKNOWN_ERROR, errno);
-        if (NULL != thred->io_cv)
-            PR_DestroyCondVar(thred->io_cv);
-    	PR_DELETE(thred->stack);
-#if defined(DEBUG)
-        memset(thred, 0xaf, sizeof(PRThread));
-#endif
-        PR_DELETE(thred);
+        if (0 == rv)
+        {
+            _pt_thread_death(thred);
+        }
+        else
+        {
+            PRErrorCode prerror;
+            switch (rv)
+            {
+                case EINVAL:  /* not a joinable thread */
+                case ESRCH:   /* no thread with given ID */
+                    prerror = PR_INVALID_ARGUMENT_ERROR;
+                    break;
+                case EDEADLK: /* a thread joining with itself */
+                    prerror = PR_DEADLOCK_ERROR;
+                    break;
+                default:
+                    prerror = PR_UNKNOWN_ERROR;
+                    break;
+            }
+            PR_SetError(prerror, rv);
+        }
     }
     return (0 == rv) ? PR_SUCCESS : PR_FAILURE;
 }  /* PR_JoinThread */
 
-PR_IMPLEMENT(void) PR_DetachThread()
-{
-    void *tmp;
-    PTHREAD_GETSPECIFIC(pt_book.key, tmp);
-    PR_ASSERT(NULL != tmp);
-
-    if (NULL != tmp)
-    {
-        int rv;
-        PRThread *thred = (PRThread*)tmp;
-
-        PR_Lock(pt_book.ml);
-        if (thred->state & PT_THREAD_SYSTEM)
-            pt_book.system -= 1;
-        else if (--pt_book.user == pt_book.this_many)
-            PR_NotifyAllCondVar(pt_book.cv);
-        thred->prev->next = thred->next;
-        if (NULL == thred->next)
-            pt_book.last = thred->prev;
-        else
-            thred->next->prev = thred->prev;
-        PR_Unlock(pt_book.ml);
-
-        if (NULL != thred->io_cv)
-            PR_DestroyCondVar(thred->io_cv);
-        rv = pthread_setspecific(pt_book.key, NULL);
-        PR_ASSERT(0 == rv);
-    	PR_DELETE(thred->stack);
-#if defined(DEBUG)
-        memset(thred, 0xaf, sizeof(PRThread));
-#endif
-        PR_DELETE(thred);
-    }    
-}  /* PR_DetachThread */
+PR_IMPLEMENT(void) PR_DetachThread() { }  /* PR_DetachThread */
 
 PR_IMPLEMENT(PRThread*) PR_GetCurrentThread()
 {
@@ -507,14 +518,14 @@ PR_IMPLEMENT(PRThread*) PR_GetCurrentThread()
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
     PTHREAD_GETSPECIFIC(pt_book.key, thred);
+    if (NULL == thred) thred = pt_AttachThread();
     PR_ASSERT(NULL != thred);
     return (PRThread*)thred;
 }  /* PR_GetCurrentThread */
 
 PR_IMPLEMENT(PRThreadScope) PR_GetThreadScope(const PRThread *thred)
 {
-    return (thred->state & PT_THREAD_GLOBAL) ?
-        PR_GLOBAL_THREAD : PR_LOCAL_THREAD;
+    return PR_GLOBAL_THREAD;
 }  /* PR_GetThreadScope() */
 
 PR_IMPLEMENT(PRThreadType) PR_GetThreadType(const PRThread *thred)
@@ -550,7 +561,7 @@ PR_IMPLEMENT(void) PR_SetThreadPriority(PRThread *thred, PRThreadPriority newPri
     rv = pthread_setprio(thred->id, pt_PriorityMap(newPri));
     /* pthread_setprio returns the old priority */
     PR_ASSERT(-1 != rv);
-#elif !defined(FREEBSD) && !defined(NETBSD)
+#elif defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
     if (EPERM != pt_schedpriv)
     {
         int policy;
@@ -560,13 +571,20 @@ PR_IMPLEMENT(void) PR_SetThreadPriority(PRThread *thred, PRThreadPriority newPri
         PR_ASSERT(0 == rv);
         schedule.sched_priority = pt_PriorityMap(newPri);
         rv = pthread_setschedparam(thred->id, policy, &schedule);
-        PR_ASSERT(0 == rv);
+        PR_ASSERT(0 == rv || EPERM == rv);
+        if (EPERM == rv)
+        {
+            pt_schedpriv = EPERM;
+            PR_LOG(_pr_thread_lm, PR_LOG_MIN,
+                ("PR_SetThreadPriority: no thread scheduling privilege"));
+        }
     }
 #endif
 
     thred->priority = newPri;
 }  /* PR_SetThreadPriority */
 
+#if 0
 PR_IMPLEMENT(PRStatus) PR_NewThreadPrivateIndex(
     PRUintn *newIndex, PRThreadPrivateDTOR destructor)
 {
@@ -611,6 +629,7 @@ PR_IMPLEMENT(void*) PR_GetThreadPrivate(PRUintn index)
         PTHREAD_GETSPECIFIC((pthread_key_t)index, result);
     return result;
 }  /* PR_GetThreadPrivate */
+#endif
 
 PR_IMPLEMENT(PRStatus) PR_Interrupt(PRThread *thred)
 {
@@ -675,15 +694,40 @@ PR_IMPLEMENT(PRStatus) PR_Sleep(PRIntervalTime ticks)
     }
     else
     {
-        PRCondVar *cv = PR_NewCondVar(_pr_sleeplock);
+        PRCondVar *cv;
+        PRIntervalTime timein;
+
+        timein = PR_IntervalNow();
+        cv = PR_NewCondVar(_pr_sleeplock);
         PR_ASSERT(cv != NULL);
         PR_Lock(_pr_sleeplock);
-        rv = PR_WaitCondVar(cv, ticks);
+        do
+        {
+            PRIntervalTime now = PR_IntervalNow();
+            PRIntervalTime delta = now - timein;
+            if (delta > ticks) break;
+            rv = PR_WaitCondVar(cv, ticks - delta);
+        } while (PR_SUCCESS == rv);
         PR_Unlock(_pr_sleeplock);
         PR_DestroyCondVar(cv);
     }
     return rv;
 }  /* PR_Sleep */
+
+static void _pt_thread_death(void *arg)
+{
+    PRThread *thred = (PRThread*)arg;
+    _PR_DestroyThreadPrivate(thred);
+    if (NULL != thred->errorString)
+        PR_Free(thred->errorString);
+    if (NULL != thred->io_cv)
+        PR_DestroyCondVar(thred->io_cv);
+    PR_Free(thred->stack);
+#if defined(DEBUG)
+    memset(thred, 0xaf, sizeof(PRThread));
+#endif /* defined(DEBUG) */
+    PR_Free(thred);
+}  /* _pt_thread_death */
 
 void _PR_InitThreads(
     PRThreadType type, PRThreadPriority priority, PRUintn maxPTDs)
@@ -691,11 +735,13 @@ void _PR_InitThreads(
     int rv;
     PRThread *thred;
 
+#if defined(_PR_DCETHREADS) || defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
     /*
     ** These might be function evaluations
     */
     pt_book.minPrio = PT_PRIO_MIN;
     pt_book.maxPrio = PT_PRIO_MAX;
+#endif
     
     PR_ASSERT(NULL == pt_book.ml);
     pt_book.ml = PR_NewLock();
@@ -709,7 +755,7 @@ void _PR_InitThreads(
     thred->priority = priority;
     thred->id = pthread_self();
 
-    thred->state |= (PT_THREAD_DETACHED | PT_THREAD_PRIMORD);
+    thred->state = (PT_THREAD_DETACHED | PT_THREAD_PRIMORD);
     if (PR_SYSTEM_THREAD == type)
     {
         thred->state |= PT_THREAD_SYSTEM;
@@ -737,13 +783,17 @@ void _PR_InitThreads(
      * threads delete the objects in Join.
      *
      * NB: The destructor logic seems to have a bug so it isn't used.
+     * NBB: Oh really? I'm going to give it a spin - AOF 19 June 1998.
+     * More info - the problem is that pthreads calls the destructor
+     * eagerly as the thread returns from its root, rather than lazily
+     * after the thread is joined. Therefore, threads that are joining
+     * and holding PRThread references are actually holding pointers to
+     * nothing.
      */
-    rv = PTHREAD_KEY_CREATE(&pt_book.key, NULL);
+    rv = PTHREAD_KEY_CREATE(&pt_book.key, _pt_thread_death);
     PR_ASSERT(0 == rv);
     rv = pthread_setspecific(pt_book.key, thred);
-    PR_ASSERT(0 == rv);
-    
-    pt_schedpriv = PT_PRIVCHECK();
+    PR_ASSERT(0 == rv);    
     PR_SetThreadPriority(thred, priority);
 
     /*
@@ -751,7 +801,7 @@ void _PR_InitThreads(
      * conflict with the use of these two signals in our GC support.
      * So we don't know how to support GC on Linux pthreads.
      */
-#if !defined(LINUX) && !defined(FREEBSD) && !defined(NETBSD)
+#if !defined(LINUX) && !defined(FREEBSD) && !defined(NETBSD) && !defined(OPENBSD)
 	init_pthread_gc_support();
 #endif
 
@@ -769,6 +819,10 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
             PR_WaitCondVar(pt_book.cv, PR_INTERVAL_NO_TIMEOUT);
         PR_Unlock(pt_book.ml);
 
+        _PR_LogCleanup();
+        /* Close all the fd's before calling _PR_CleanupFdCache */
+        _PR_CleanupFdCache();
+
         /*
          * I am not sure if it's safe to delete the cv and lock here,
          * since there may still be "system" threads around. If this
@@ -780,8 +834,7 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
             PR_DestroyCondVar(pt_book.cv); pt_book.cv = NULL;
             PR_DestroyLock(pt_book.ml); pt_book.ml = NULL;
         }
-        PR_DELETE(me->stack);
-        PR_DELETE(me);
+        _pt_thread_death(me);
         return PR_SUCCESS;
     }
     return PR_FAILURE;
@@ -790,6 +843,15 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
 PR_IMPLEMENT(void) PR_ProcessExit(PRIntn status)
 {
     _exit(status);
+}
+
+PR_IMPLEMENT(PRUint32) PR_GetThreadID(PRThread *thred)
+{
+#if defined(_PR_DCETHREADS)
+    return (PRUint32)&thred->id;  /* this is really a sham! */
+#else
+    return (PRUint32)thred->id;  /* and I don't know what they will do with it */
+#endif
 }
 
 /*
@@ -1036,7 +1098,7 @@ static void suspend_signal_handler(PRIntn sig)
 	pthread_cond_signal(&me->suspendResumeCV);
 	while (me->suspend & PT_THREAD_SUSPENDED)
 	{
-#if !defined(FREEBSD) && !defined(NETBSD)  /*XXX*/
+#if !defined(FREEBSD) && !defined(NETBSD) && !defined(OPENBSD)  /*XXX*/
         PRIntn rv;
 	    sigwait(&sigwait_set, &rv);
 #endif

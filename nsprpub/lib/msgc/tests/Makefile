@@ -105,7 +105,7 @@ endif
 endif
 
 ifeq ($(OS_ARCH), HP-UX)
-LDOPTS += -Wl,+s,+b,$(PWD)/$(DIST)/lib
+LDOPTS += -z -Wl,+s,+b,$(PWD)/$(DIST)/lib
 endif
 
 # AIX

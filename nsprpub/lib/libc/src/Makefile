@@ -31,6 +31,7 @@ endif
 INCLUDES = -I$(DIST)/include
 
 CSRCS =\
+	plvrsion.c  \
 	strlen.c  \
 	strcpy.c  \
 	strdup.c  \
@@ -96,13 +97,52 @@ endif
 include $(MOD_DEPTH)/config/rules.mk
 
 #
+# Version information generation (begin)
+#
+RM = rm
+ECHO = echo
+INCLUDES = -I$(DIST)/include
+TINC = $(OBJDIR)/_pl_bld.h
+PROD = libplc$(MOD_VERSION).$(DLL_SUFFIX)
+NOW = $(MOD_DEPTH)/config/$(OBJDIR)/now
+SH_DATE = $(shell date)
+SH_NOW = $(shell $(NOW))
+
+ifeq ($(OS_ARCH), WINNT)
+	SUF = i64
+	SH_QUOTE =
+else
+	SUF = LL
+	SH_QUOTE = "
+endif
+
+$(TINC):
+	@$(MAKE_OBJDIR)
+	@$(ECHO) $(SH_QUOTE)#define _BUILD_STRING \"$(SH_DATE)\"$(SH_QUOTE) > $(TINC)
+	@$(ECHO) $(SH_QUOTE)#define _BUILD_TIME $(SH_NOW)$(SUF)$(SH_QUOTE) >> $(TINC)
+	@$(ECHO) $(SH_QUOTE)#define _PRODUCTION \"$(PROD)\"$(SH_QUOTE) >> $(TINC)
+
+
+$(OBJDIR)/plvrsion.$(OBJ_SUFFIX): $(TINC)
+ifeq ($(OS_ARCH), WINNT)
+	$(CC) -Fo$@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c
+else
+	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c
+endif
+#
+# Version information generation (end)
+#
+
+#
 # The Client build wants the shared libraries in $(DIST)/bin,
 # so we also install them there.
 #
 
 export:: $(TARGETS)
 	$(INSTALL) -m 444 $(TARGETS) $(DIST)/lib
+ifdef SHARED_LIBRARY
 	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(DIST)/bin
+endif
 ifeq ($(MOZ_BITS),16)
 	$(INSTALL) -m 444 $(TARGETS) $(MOZ_DIST)/lib
 	$(INSTALL) -m 444 $(TARGETS) $(MOZ_DIST)/bin

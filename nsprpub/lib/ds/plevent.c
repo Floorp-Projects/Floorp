@@ -192,7 +192,7 @@ PL_PostSynchronousEvent(PLEventQueue* self, PLEvent* event)
 	int i, entryCount = self->monitor->entryCount;
 
 	event->synchronousResult = (void*)PR_TRUE;
-	PR_PostEvent(self, event);
+	PL_PostEvent(self, event);
 	/* We need to temporarily give up our event queue monitor if
 	   we're holding it, otherwise, the thread we're going to wait
 	   for notification from won't be able to enter it to process
@@ -330,7 +330,7 @@ PL_RevokeEvents(PLEventQueue* self, void* owner)
     {
 	PRCList* qp = self->queue.next;
 	while (qp != &self->queue) {
-	    PREvent* event = PR_EVENT_PTR(qp);
+	    PLEvent* event = PR_EVENT_PTR(qp);
 	    qp = qp->next;
 	    PR_ASSERT(event->owner != owner);
 	}
