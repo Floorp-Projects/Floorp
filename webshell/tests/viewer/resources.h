@@ -42,7 +42,6 @@
 #define VIEWER_DUMP_FRAMES      40023
 #define VIEWER_DUMP_VIEWS       40024
 #define VIEWER_DUMP_STYLE       40025
-#define VIEWER_APPEND_CONTENT   40026
 
 // Note: must be in ascending sequential order
 #define VIEWER_ONE_COLUMN       40031

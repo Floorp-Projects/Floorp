@@ -70,8 +70,6 @@ public:
 
   virtual nsIDocument* GetDocument() = 0;
 
-  virtual void HackAppendContent() = 0;
-
   virtual void DumpContent(FILE* out = nsnull) = 0;
 
   virtual void DumpFrames(FILE* out = nsnull) = 0;

@@ -364,11 +364,6 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
       }
       break;
 
-    case VIEWER_APPEND_CONTENT:
-      if ((nsnull != wd) && (nsnull != wd->ww)) {
-        wd->ww->HackAppendContent();
-      }
-      break;
     case VIEWER_ONE_COLUMN:
     case VIEWER_TWO_COLUMN:
     case VIEWER_THREE_COLUMN:
