@@ -682,25 +682,29 @@ nsImageOS2::BuildTile (HPS hpsTile, PRUint8* pImageBits, PBITMAPINFO2 pBitmapInf
    PRInt32 DestHeight = mInfo->cy * scale;
 
    // Copy bitmap horizontally, doubling each time
-   while (DestWidth < aTileWidth)
-   {
-      POINTL aptlCopy [3] = { {DestWidth, 0},                     // TLL - in
-                              {2 * DestWidth, DestHeight},        // TUR - ex
-                              {0, 0} };                           // SLL - in
+   if (DestWidth > 0) {
+      while (DestWidth < aTileWidth)
+      {
+         POINTL aptlCopy [3] = { {DestWidth, 0},                     // TLL - in
+                                 {2 * DestWidth, DestHeight},        // TUR - ex
+                                 {0, 0} };                           // SLL - in
 
-      GFX (::GpiBitBlt (hpsTile, hpsTile, 3, aptlCopy, ROP_SRCCOPY, 0L), GPI_ERROR);
-      DestWidth *= 2;
+         GFX (::GpiBitBlt (hpsTile, hpsTile, 3, aptlCopy, ROP_SRCCOPY, 0L), GPI_ERROR);
+         DestWidth *= 2;
+      }
    }
 
    // Copy bitmap vertically, doubling each time
-   while (DestHeight < aTileHeight)
-   {
-      POINTL aptlCopy [4] = { {0, DestHeight},                    // TLL - in
-                              {DestWidth, 2 * DestHeight},        // TUR - ex
-                              {0, 0} };                           // SLL - in
+   if (DestHeight > 0) {
+      while (DestHeight < aTileHeight)
+      {
+         POINTL aptlCopy [4] = { {0, DestHeight},                    // TLL - in
+                                 {DestWidth, 2 * DestHeight},        // TUR - ex
+                                 {0, 0} };                           // SLL - in
 
-      GFX (::GpiBitBlt (hpsTile, hpsTile, 3, aptlCopy, ROP_SRCCOPY, 0L), GPI_ERROR);
-      DestHeight *= 2;
+         GFX (::GpiBitBlt (hpsTile, hpsTile, 3, aptlCopy, ROP_SRCCOPY, 0L), GPI_ERROR);
+         DestHeight *= 2;
+      }
    }
 }
 
