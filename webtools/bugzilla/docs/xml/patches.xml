@@ -296,7 +296,8 @@ to reformat the entire file :).
 
     if ($var) {
         print "The variable is true";
-    } else {
+    }
+    else {
         print "Try again";
     }
 
