@@ -155,7 +155,7 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
   cPlatformCharset.AssignWithConversion(platformCharset);
 
   nsCOMPtr<nsISaveAsCharset> converter = do_CreateInstance("@mozilla.org/intl/saveascharset;1");
-  converter->Init(cPlatformCharset,
+  converter->Init(cPlatformCharset.get(),
                   nsISaveAsCharset::attr_EntityAfterCharsetConv +
                   nsISaveAsCharset::attr_FallbackQuestionMark,
                   nsIEntityConverter::transliterate);

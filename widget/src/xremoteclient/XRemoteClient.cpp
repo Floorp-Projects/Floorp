@@ -359,7 +359,7 @@ XRemoteClient::GetLock(Window aWindow, PRBool *aDestroyed)
       XChangeProperty (mDisplay, aWindow, mMozLockAtom, XA_STRING, 8,
 		       PropModeReplace,
 		       (unsigned char *) mLockData.get(),
-		       strlen (mLockData));
+		       mLockData.Length());
       locked = True;
     }
 
@@ -462,7 +462,7 @@ XRemoteClient::FreeLock(Window aWindow)
 	    (unsigned int) aWindow));
     return NS_ERROR_FAILURE;
   }
-  else if (strcmp((char *)data, mLockData)) {
+  else if (strcmp((char *)data, mLockData.get())) {
   PR_LOG(sRemoteLm, PR_LOG_DEBUG,
 	 (MOZILLA_LOCK_PROP
 	  " was stolen!  Expected \"%s\", saw \"%s\"!\n",

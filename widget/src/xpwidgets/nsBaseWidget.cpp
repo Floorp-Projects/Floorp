@@ -1071,9 +1071,9 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
   fprintf(aFileOut,
           "%4d %-26s widget=%-8p name=%-12s id=%-8p pos=%d,%d\n",
           _GetPrintCount(),
-          (const char *) tempString,
+          tempString.get(),
           (void *) aWidget,
-          (const char *) aWidgetName,
+          aWidgetName.get(),
           (void *) (aWindowID ? aWindowID : 0x0),
           aGuiEvent->point.x,
           aGuiEvent->point.y);
@@ -1097,7 +1097,7 @@ nsBaseWidget::debug_DumpPaintEvent(FILE *                aFileOut,
           "%4d PAINT      widget=%p name=%-12s id=%-8p rect=", 
           _GetPrintCount(),
           (void *) aWidget,
-          (const char *) aWidgetName,
+          aWidgetName.get(),
           (void *) aWindowID);
   
   if (aPaintEvent->rect) 
@@ -1135,7 +1135,7 @@ nsBaseWidget::debug_DumpInvalidate(FILE *                aFileOut,
           "%4d Invalidate widget=%p name=%-12s id=%-8p",
           _GetPrintCount(),
           (void *) aWidget,
-          (const char *) aWidgetName,
+          aWidgetName.get(),
           (void *) aWindowID);
 
   if (aRect) 

@@ -469,9 +469,9 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
 
   if ( foundData ) {
     nsCOMPtr<nsISupports> genericDataWrapper;
-    nsPrimitiveHelpers::CreatePrimitiveForData(foundFlavor, mSelectionData.data,
+    nsPrimitiveHelpers::CreatePrimitiveForData(foundFlavor.get(), mSelectionData.data,
                                                mSelectionData.length, getter_AddRefs(genericDataWrapper));
-    aTransferable->SetTransferData(foundFlavor,
+    aTransferable->SetTransferData(foundFlavor.get(),
                                    genericDataWrapper,
                                    mSelectionData.length);
   }
