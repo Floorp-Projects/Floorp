@@ -252,7 +252,6 @@ void oeDateTimeImpl::SetTzID(const char *aNewVal)
         m_tzid= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
     else
         m_tzid = nsnull;
-    return NS_OK;
 }
 
 int oeDateTimeImpl::CompareDate( oeDateTimeImpl *anotherdt ) {
