@@ -245,13 +245,36 @@ PRInt32 ReadWriteProc(PRFileDesc *fd, void *buf, PRUint32 bytes, IOOperation op)
 		** with this thread.
 		** Don't compute error code from async call. Bug in OS returns a garbage value.
 		*/
-	    me->io_pending = PR_TRUE;
 	    me->io_fd = refNum;
 		me->md.osErrCode = noErr;
 		if (op == READ_ASYNC)
-			(void) PBReadAsync(&pbAsync);
+		{
+			/*
+			**  Skanky optimization so that reads < 2K are actually done synchronously
+			**  to optimize performance on small reads (e.g. registry reads on startup)
+			*/
+			if (bytes > 2048L)
+			{
+	   			me->io_pending = PR_TRUE; /* Only mark thread io pending in async call */
+				(void) PBReadAsync(&pbAsync);
+			}
+			else
+			{
+				(void) PBReadSync(&pbAsync);
+				/*
+				** This is probbaly redundant but want to make sure we indicate the read
+				** is complete so we don't wander off into the Sargasso Sea of Mac
+				** threading
+				*/
+				pbAsync.pb.ioParam.ioResult = 0;
+			}
+		}
 		else
+		{
+			/* writes are currently always async so mark thread io pending */
+	   		me->io_pending = PR_TRUE;
 			(void) PBWriteAsync(&pbAsync);
+		}
 		
 		/* See if the i/o call is still pending before we actually yield */
 		if (pbAsync.pb.ioParam.ioResult == 1)
