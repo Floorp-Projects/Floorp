@@ -46,12 +46,12 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= profile
 
-PREF_JS_EXPORTS = $(srcdir)/profile/firebird.js
+PREF_JS_EXPORTS = $(srcdir)/profile/firefox.js
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
-PROGRAM = MozillaFirebird$(BIN_SUFFIX)
+PROGRAM = firefox$(BIN_SUFFIX)
 else
-PROGRAM = MozillaFirebird-bin$(BIN_SUFFIX)
+PROGRAM = firefox-bin$(BIN_SUFFIX)
 endif
 
 REQUIRES = \
@@ -190,20 +190,20 @@ endif
 endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-MozillaFirebird:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
+firefox:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
 		-e "s|%MREDIR%|$(mredir)|" \
 		-e "s|mozilla-bin|$(PROGRAM)|g" > $@
 	chmod +x $@
 
-libs:: MozillaFirebird
+libs:: firefox
 	$(INSTALL) $< $(DIST)/bin
 
-install:: MozillaFirebird
+install:: firefox
 	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
 
-GARBAGE += MozillaFirebird
-GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, firebird.js)
+GARBAGE += firefox
+GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, firefox.js)
 
 endif
 
@@ -236,7 +236,7 @@ libs::
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
-APP_NAME = Mozilla\ Firebird
+APP_NAME = Firefox
 
 libs:: $(PROGRAM)
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS

@@ -49,38 +49,27 @@
 <dialog xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="aboutDialog"
-        buttons="accept"
-        onload="onLoad();"
-        title="&aboutDialog.title;"
-        style="width: 299px"> 
+        buttons="accept,extra2" 
+        onload="init(event);" onunload="uninit(event);"
+        title="&aboutDialog.title;" creditslabel="&copyright;" aboutlabel="&aboutLink;" 
+        style="width: 299px">
     
-    <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-    <script type="application/x-javascript">
-      <![CDATA[
-        function onLoad() {
-          var userAgentField = document.getElementById("userAgent");
-          userAgentField.value = navigator.userAgent;
-        }
-      ]]>
-    </script>
+  <script type="application/x-javascript" src="chrome://browser/content/aboutDialog.js"/>
 
+  <deck id="modes" flex="1">
     <vbox flex="1" id="clientBox">
-      <image src="chrome://browser/content/about.png"/>
+      <label id="version" value="&aboutVersion;"/>
+      <label id="copyright" value="&copyrightText;"/>
       <vbox id="detailsBox" align="center" flex="1">
-        <separator class="thin"/>
-        <hbox align="center">
-          <label value="&brandFullName;" id="brandName"/>
-          <label value="&version;"/>
-        </hbox>
         <spacer flex="1"/>
-        <textbox id="userAgent" multiline="true" readonly="true" cols="60" style="height: 5.1em"/>
-        <spacer flex="1"/>
-        <html:a onclick="visitLink(event);"
-                href="" id="copyright" link="&copyrightLink;"
-                style="display: block;">&copyright;</html:a>
-        <spacer flex="1"/>
+        <textbox id="userAgent" multiline="true" readonly="true" cols="60"/>
       </vbox>
     </vbox>
-    
-    <separator class="groove" id="groove"/>
+    <vbox flex="1" id="creditsBox">
+      <html:iframe style="border: 0px;" id="creditsIframe" src="chrome://browser/locale/credits.html" flex="1"/>
+    </vbox>    
+  </deck>
+  <separator class="groove" id="groove"/>
+
 </dialog>
+

@@ -10,11 +10,11 @@
 
   <!-- classic Information -->
   <RDF:Description about="urn:mozilla:skin:classic/1.0"
-        chrome:displayName="Mozilla Firebird"
+        chrome:displayName="Firefox (default)"
         chrome:accessKey="P"
         chrome:author="mozilla.org"
-        chrome:authorURL="http://www.mozilla.org/projects/firebird/"
-        chrome:description="This is the default Mozilla Firebird theme. Select this theme to return to the original appearance."
+        chrome:authorURL="http://www.mozilla.org/products/firefox/"
+        chrome:description="This is the default Firefox theme. Select this theme to return to the original appearance."
         chrome:name="classic/1.0"
         chrome:image="Preview.png">
     <chrome:packages>

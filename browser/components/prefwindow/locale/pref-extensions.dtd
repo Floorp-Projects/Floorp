@@ -8,5 +8,5 @@
 
 <!ENTITY  author.tooltip          "Close Options and visit the author's web page">
 
-<!ENTITY  getnew.tooltip          "Close Options and visit Mozilla Firebird Help's Extensions page">
-<!ENTITY  getnew.url              "http://texturizer.net/firebird/extensions/">
+<!ENTITY  getnew.tooltip          "Close Options and visit Firefox Help's Extensions page">
+<!ENTITY  getnew.url              "http://texturizer.net/firefox/extensions/">

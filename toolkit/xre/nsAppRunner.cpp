@@ -1401,7 +1401,7 @@ static nsresult DumpVersion(char *appname)
 }
 
 /* Temporary hack until quicklaunch is removed for real.
- * This prevents firebird and thunderbird from getting into a broken
+ * This prevents firefox and thunderbird from getting into a broken
  * state from which you can't quit.
  */
 static nsresult DumpTurbo(char *appname)

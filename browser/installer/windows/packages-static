@@ -1,4 +1,4 @@
-; Package file for Win32 static Firebird build. 
+; Package file for Win32 static Firefox build. 
 ;
 ; File format:
 ;
@@ -42,7 +42,7 @@ bin\xpcom_compat.dll
 
 [browser]
 ; [Base Browser Files]
-bin\MozillaFirebird.exe
+bin\firefox.exe
 bin\plugins\npnul32.dll
 bin\res\cmessage.txt
 bin\xpicleanup.exe

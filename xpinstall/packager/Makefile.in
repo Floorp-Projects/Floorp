@@ -228,7 +228,7 @@ endif # DMG
 			$(PLATFORM_EXCLUDE_LIST) \
 			-exec $(STRIP) $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
 	$(SIGN_NSS)
-ifeq (,$(filter mozilla MozillaFirebird,$(MOZ_PKG_APPNAME)))
+ifeq (,$(filter mozilla firefox,$(MOZ_PKG_APPNAME)))
 	@echo "Creating start script $(MOZ_PKG_APPNAME)..."
 	cd $(DIST)/$(MOZ_PKG_APPNAME); if [ -f mozilla ]; then cp mozilla $(MOZ_PKG_APPNAME); fi
 endif

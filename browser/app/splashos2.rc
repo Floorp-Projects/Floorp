@@ -46,5 +46,5 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_DDE_APPLICATION_NAME,            "Mozilla Firebird"
+    ID_DDE_APPLICATION_NAME,            "Firefox"
 END

@@ -68,9 +68,9 @@
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
-	<string>MozillaFirebird-bin</string>
+	<string>firefox-bin</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Mozilla Firebird APP_VERSION, © 1998-2003 The Mozilla Organization</string>
+	<string>Firefox APP_VERSION, © 1998-2004 Contributors</string>
 	<key>CFBundleIconFile</key>
 	<string>mach</string>
 	<key>CFBundleIdentifier</key>
@@ -78,7 +78,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>MozillaFirebird</string>
+	<string>Firefox</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

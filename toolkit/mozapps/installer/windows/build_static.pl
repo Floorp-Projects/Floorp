@@ -354,6 +354,9 @@ sub ParseInstallerCfg
     elsif ($prop eq "ComponentList") {
       $ENV{WIZ_componentList} = $value; 
     }
+    elsif ($prop eq "LicenseFile") {
+      $ENV{WIZ_licenseFile} = $value;
+    }
   }
   
   close(fpInstallCfg);  
