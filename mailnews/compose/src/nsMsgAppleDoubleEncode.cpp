@@ -97,7 +97,7 @@ MacGetFileType(nsFileSpec   *fs,
 	*encoding = NULL;
 
 	FInfo		fndrInfo;
-  OSErr err = FSpGetFInfo( &fs, &fndrInfo );
+  OSErr err = FSpGetFInfo( fs->GetFSSpecPtr(), &fndrInfo );
   if ( (err != noErr) || (fndrInfo.fdType == 'TEXT') )
     *fileType = nsCRT::strdup(APPLICATION_OCTET_STREAM);
   else
@@ -106,9 +106,9 @@ MacGetFileType(nsFileSpec   *fs,
     // see what we can find out?
     nsresult      rv;
     nsIURI        *tURI = nsnull;
-    nsFileURL     tFileURL(fs);
+    nsFileURL     tFileURL(*fs);
 
-    if (NS_SUCCEEDED(nsMsgNewURL(&tURI, tFileURL.GetURLString())) && aURI)
+    if (NS_SUCCEEDED(nsMsgNewURL(&tURI, tFileURL.GetURLString())) && tURI)
     {
       NS_WITH_SERVICE(nsIMIMEService, mimeFinder, kMimeServiceCID, &rv); 
       if (NS_SUCCEEDED(rv) && mimeFinder) 
