@@ -301,14 +301,14 @@ nsAutoSpaceManager::~nsAutoSpaceManager()
   // Restore the old space manager in the reflow state if necessary.
   if (mNew) {
 #ifdef NOISY_SPACEMANAGER
-    printf("restoring old space manager %p\n", oldSpaceManager);
+    printf("restoring old space manager %p\n", mOld);
 #endif
 
     mReflowState.mSpaceManager = mOld;
 
 #ifdef NOISY_SPACEMANAGER
     if (mOld) {
-      ListTag(stdout);
+      NS_STATIC_CAST(nsFrame *, mReflowState.frame)->ListTag(stdout);
       printf(": space-manager %p after reflow\n", mOld);
       mOld->List(stdout);
     }
@@ -335,7 +335,7 @@ nsAutoSpaceManager::CreateSpaceManagerFor(nsIPresContext *aPresContext, nsIFrame
 
 #ifdef NOISY_SPACEMANAGER
   printf("constructed new space manager %p (replacing %p)\n",
-         spaceManager, reflowState.mSpaceManager);
+         mNew, mReflowState.mSpaceManager);
 #endif
 
   // Set the space manager in the existing reflow state
