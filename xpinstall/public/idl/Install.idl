@@ -110,7 +110,7 @@ interface Install
 
 	long Uninstall( in wstring packageName);
 
-	void ExtractFileFromJar(in wstring jarfile, in wstring finalFile, out wstring tempFile, out wstring errorMsg);
+	long ExtractFileFromJar(in wstring jarfile, in wstring finalFile, out wstring tempFile);
 
 
 };

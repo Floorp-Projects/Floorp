@@ -114,7 +114,7 @@ public:
 
   NS_IMETHOD    Uninstall(const nsString& aPackageName, PRInt32* aReturn)=0;
 
-  NS_IMETHOD    ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString& aTempFile, nsString& aErrorMsg)=0;
+  NS_IMETHOD    ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString& aTempFile, PRInt32* aReturn)=0;
 };
 
 
@@ -140,7 +140,7 @@ public:
   NS_IMETHOD    SetPackageFolder(nsIDOMInstallFolder* aFolder);  \
   NS_IMETHOD    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, const nsString& aVersion, PRInt32 aFlags, PRInt32* aReturn);  \
   NS_IMETHOD    Uninstall(const nsString& aPackageName, PRInt32* aReturn);  \
-  NS_IMETHOD    ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString& aTempFile, nsString& aErrorMsg);  \
+  NS_IMETHOD    ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString& aTempFile, PRInt32* aReturn);  \
 
 
 
@@ -166,7 +166,7 @@ public:
   NS_IMETHOD    SetPackageFolder(nsIDOMInstallFolder* aFolder) { return _to##SetPackageFolder(aFolder); }  \
   NS_IMETHOD    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, const nsString& aVersion, PRInt32 aFlags, PRInt32* aReturn) { return _to##StartInstall(aUserPackageName, aPackageName, aVersion, aFlags, aReturn); }  \
   NS_IMETHOD    Uninstall(const nsString& aPackageName, PRInt32* aReturn) { return _to##Uninstall(aPackageName, aReturn); }  \
-  NS_IMETHOD    ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString& aTempFile, nsString& aErrorMsg) { return _to##ExtractFileFromJar(aJarfile, aFinalFile, aTempFile, aErrorMsg); }  \
+  NS_IMETHOD    ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString& aTempFile, PRInt32* aReturn) { return _to##ExtractFileFromJar(aJarfile, aFinalFile, aTempFile, aReturn); }  \
 
 
 extern nsresult NS_InitInstallClass(nsIScriptContext *aContext, void **aPrototype);
