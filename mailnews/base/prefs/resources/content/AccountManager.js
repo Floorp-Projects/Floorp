@@ -992,7 +992,7 @@ function getFormElementValue(formElement) {
         formElement.getAttribute("datatype") == "nsIFileSpec") {
       if (formElement.value) {
         var filespec = Components.classes["@mozilla.org/filespec;1"].createInstance(Components.interfaces.nsIFileSpec);
-        filespec.setUnicodePath(formElement.value);
+        filespec.unicodePath = formElement.value;
         return filespec;
       }
       return null;
@@ -1065,7 +1065,7 @@ function setFormElementValue(formElement, value) {
     if (value) {
       var filespec = value.QueryInterface(Components.interfaces.nsIFileSpec);
       try {
-        formElement.value = filespec.getUnicodePath();
+        formElement.value = filespec.unicodePath;
       } catch (ex) {
         dump("Still need to fix uninitialized filespec problem!\n");
       }

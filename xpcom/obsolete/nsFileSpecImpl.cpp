@@ -213,29 +213,22 @@ NS_IMETHODIMP nsFileSpecImpl::SetNativePath(const char * aNativePath)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::GetUnicodePath(PRUnichar * *aUnicodePath)
+NS_IMETHODIMP nsFileSpecImpl::GetUnicodePath(nsAString & aUnicodePath)
 //----------------------------------------------------------------------------------------
 {
-	TEST_OUT_PTR(aUnicodePath)
-	nsAutoString unicode;
 	nsCAutoString native;
 	native = mFileSpec.GetNativePathCString();
-	NS_CopyNativeToUnicode(native, unicode);
-	*aUnicodePath = nsCRT::strdup(unicode.get());
-	if (!*aUnicodePath)
-		return NS_ERROR_OUT_OF_MEMORY;
+	NS_CopyNativeToUnicode(native, aUnicodePath);
 	return NS_OK;
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::SetUnicodePath(const PRUnichar * aUnicodePath)
+NS_IMETHODIMP nsFileSpecImpl::SetUnicodePath(const nsAString & aUnicodePath)
 //----------------------------------------------------------------------------------------
 {
-	nsAutoString unicode;
 	nsCAutoString native;
 
-	unicode = aUnicodePath;
-	NS_CopyUnicodeToNative(unicode, native);
+	NS_CopyUnicodeToNative(aUnicodePath, native);
 	mFileSpec = native.get();
 	return NS_OK;
 }
