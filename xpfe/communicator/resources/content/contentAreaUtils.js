@@ -369,7 +369,9 @@ nsHeaderSniffer.prototype = {
           var url = this.uri.QueryInterface(Components.interfaces.nsIURL);
           var ext = url.fileExtension;
           if (ext) {
-            this.contentType = getMIMEInfoForExtension(ext).MIMEType;
+            var mimeInfo = getMIMEInfoForExtension(ext);
+            if (mimeInfo)
+              this.contentType = mimeInfo.MIMEType;
           }
         }
         catch (e) {
@@ -609,7 +611,7 @@ function getDefaultExtension(aFilename, aURI, aContentType)
 
   var ext = url.fileExtension;
 
-  if (ext && mimeInfo.ExtensionExists(ext)) {
+  if (ext && mimeInfo && mimeInfo.ExtensionExists(ext)) {
     return ext;
   }
   
@@ -621,7 +623,7 @@ function getDefaultExtension(aFilename, aURI, aContentType)
   } catch (e) {
   }
 
-  if (urlext && mimeInfo.ExtensionExists(urlext)) {
+  if (urlext && mimeInfo && mimeInfo.ExtensionExists(urlext)) {
     return urlext;
   }
   else {
