@@ -2628,6 +2628,8 @@ PRUint32 GlobalWindowImpl::CalculateChromeFlags(char* aFeatures, PRBool aDialog)
 
    chromeFlags |= WinHasOption(aFeatures, "chrome", nsnull) ? 
       nsIWebBrowserChrome::openAsChrome : 0;
+   chromeFlags |= WinHasOption(aFeatures, "centerscreen", nsnull) ? 
+      nsIWebBrowserChrome::centerScreen : 0;
    chromeFlags |= WinHasOption(aFeatures, "dependent", nsnull) ? 
       nsIWebBrowserChrome::dependent : 0;
    chromeFlags |= WinHasOption(aFeatures, "modal", nsnull) ? 
