@@ -212,6 +212,7 @@ protected:
   // Object Management
   virtual ~GlobalWindowImpl();
   void CleanUp();
+  void ClearControllers();
 
   // Get the parent, returns null if this is a toplevel window
   void GetParentInternal(nsIDOMWindowInternal **parent);
@@ -491,19 +492,37 @@ class nsIContentViewerEdit;
 
 class nsISelectionController;
 
+
+#define NS_PIDOMCONTROLLER_IID \
+  {0xb6cf0aa0, 0xd263, 0x4b2a, \
+    { 0xaa, 0x1e, 0x20, 0x17, 0xdb, 0xdf, 0xa5, 0x16 }}
+
+class NS_NO_VTABLE nsPIDOMController : public nsISupports
+{
+public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_PIDOMCONTROLLER_IID)
+
+  NS_IMETHOD_(void) WindowDestroyed() = 0;
+};
+
 class nsDOMWindowController : public nsIController,
-                              public nsIObserver
+                              public nsIObserver,
+                              public nsPIDOMController
 {
 public:
   nsDOMWindowController(nsIDOMWindowInternal* aWindow);
   virtual ~nsDOMWindowController();
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTROLLER
   NS_DECL_NSIOBSERVER
 
+  NS_IMETHOD_(void) WindowDestroyed();
+
 private:
   nsresult GetEventStateManager(nsIEventStateManager **esm);
-  static int PR_CALLBACK BrowseWithCaretPrefCallback(const char* aPrefName, void* instance_data);
+  static int PR_CALLBACK BrowseWithCaretPrefCallback(const char* aPrefName,
+                                                     void* instance_data);
   nsresult GetPresShell(nsIPresShell **aPresShell);
   nsresult GetEditInterface(nsIContentViewerEdit** aEditInterface);
   nsresult GetSelectionController(nsISelectionController ** aSelCon);
