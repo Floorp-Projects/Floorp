@@ -415,7 +415,7 @@ void nsImapOfflineSync::ProcessMoveOperation(nsIMsgOfflineImapOperation *current
     if (NS_SUCCEEDED(rv) && destFolder)
     {
       nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_currentFolder);
-      if (imapFolder)
+      if (imapFolder && DestFolderOnSameServer(destFolder))
       {
         rv = imapFolder->ReplayOfflineMoveCopy(matchingFlagKeys.GetArray(), matchingFlagKeys.GetSize(), PR_TRUE, destFolder,
           this, m_window);
@@ -444,6 +444,20 @@ void nsImapOfflineSync::ProcessMoveOperation(nsIMsgOfflineImapOperation *current
   }
 }
 
+// I'm tempted to make this a method on nsIMsgFolder, but that interface
+// is already so huge, and there are only a few places in the code that do this.
+// If there end up to be more places that need this, then we can reconsider.
+PRBool nsImapOfflineSync::DestFolderOnSameServer(nsIMsgFolder *destFolder)
+{
+  nsCOMPtr <nsIMsgIncomingServer> srcServer;
+  nsCOMPtr <nsIMsgIncomingServer> dstServer;
+
+  PRBool sameServer = PR_FALSE;
+  if (NS_SUCCEEDED(m_currentFolder->GetServer(getter_AddRefs(srcServer))) 
+    && NS_SUCCEEDED(destFolder->GetServer(getter_AddRefs(dstServer))))
+    dstServer->Equals(srcServer, &sameServer);
+  return sameServer;
+}
 
 void nsImapOfflineSync::ProcessCopyOperation(nsIMsgOfflineImapOperation *currentOp)
 {
@@ -496,7 +510,7 @@ void nsImapOfflineSync::ProcessCopyOperation(nsIMsgOfflineImapOperation *current
     if (NS_SUCCEEDED(rv) && destFolder)
     {
       nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_currentFolder);
-      if (imapFolder)
+      if (imapFolder && DestFolderOnSameServer(destFolder))
       {
         rv = imapFolder->ReplayOfflineMoveCopy(matchingFlagKeys.GetArray(), matchingFlagKeys.GetSize(), PR_FALSE, destFolder,
                        this, m_window);
