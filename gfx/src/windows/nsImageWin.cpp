@@ -745,7 +745,6 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   PRInt32         x,y,width,height,canRaster;
   nsCOMPtr<nsIDeviceContext> theDeviceContext;
   HDC             theHDC;
-  nsRect          destRect,srcRect;
   nscoord         ScaledTileWidth,ScaledTileHeight;
 
   ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
@@ -1772,8 +1771,6 @@ NS_IMETHODIMP nsImageWin::DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord 
       {
         PRUint8 *dstAlpha;
         PRUint8 *alpha;
-        PRUint8 *dstGatherStart = nsnull;  // assign null to kill compiler warning
-        PRUint8 *srcGatherStart = nsnull;
         PRUint8 offset = aDX & 0x7; // x starts at 0
 
 
