@@ -396,7 +396,7 @@ nsresult
   if (i < 0)
     aLocalName = aQName;
   else
-    aLocalName = Substring(aLocalName, i+1, aQName.Length() - (i+1));
+    aLocalName = Substring(aQName, i+1, aQName.Length() - (i+1));
   return NS_OK;
 }
 

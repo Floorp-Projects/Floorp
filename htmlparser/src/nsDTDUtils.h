@@ -247,7 +247,7 @@ public:
     theLast=aValue.Last();
     theLen=aValue.Length();
     if((2<theLen) && (theFirst==theLast) && (kQuote==theFirst)) {
-      mName = Substring(aValue, 1, theLen - 2);
+      mValue = Substring(aValue, 1, theLen - 2);
     }
     else mValue=aValue;
 
