@@ -39,6 +39,9 @@ class nsFrameWindow : public nsCanvas
    nsFrameWindow();
    virtual ~nsFrameWindow();
 
+   // So Destroy, Show, SetWindowPos, SetTitle, etc. work
+   HWND GetMainWindow() const { return hwndFrame; }
+
  protected:
    HWND   hwndFrame;
    PFNWP  fnwpDefFrame;
@@ -55,9 +58,6 @@ class nsFrameWindow : public nsCanvas
 
    // hook so dialog can be created looking like a dialog
    virtual ULONG GetFCFlags();
-
-   // So Destroy, Show, SetWindowPos, SetTitle, etc. work
-   HWND GetMainWindow() const { return hwndFrame; }
 
    // So correct sizing behaviour happens
    PRBool OnReposition( PSWP pSwp);

@@ -1046,7 +1046,23 @@ NS_METHOD nsWindow::Show(PRBool bState)
 {
    // doesn't seem to require a message queue.
    if( mWnd)
-      WinShowWindow( GetMainWindow(), !!bState);
+   {
+      HWND hwnd = GetMainWindow();
+      if( bState == PR_TRUE)
+      {
+         if( WinQueryWindow( hwnd, QW_PARENT) ==
+             WinQueryObjectWindow(HWND_DESKTOP) )
+            WinSetParent( hwnd, HWND_DESKTOP, FALSE);
+         WinShowWindow( hwnd, TRUE);
+      }
+      else
+      {
+         WinShowWindow( hwnd, FALSE);
+         if( WinQueryWindow( hwnd, QW_PARENT) ==
+             WinQueryDesktopWindow(HWND_DESKTOP, NULLHANDLE) )
+            WinSetParent( hwnd, HWND_OBJECT, FALSE);
+      }
+   }
 
    return NS_OK;
 }
