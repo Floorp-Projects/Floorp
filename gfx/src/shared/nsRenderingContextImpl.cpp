@@ -151,6 +151,14 @@ nsTransform2D       *theTransform;
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsRenderingContextImpl::DrawTile(nsIImage *aImage, nscoord aSrcXOffset,
+                                 nscoord aSrcYOffset,
+                                 const nsRect &aDirtyRect)
+{
+  return NS_OK;
+}
+
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
  *	@update 3/29/00 dwc
