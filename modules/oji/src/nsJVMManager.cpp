@@ -289,14 +289,14 @@ nsJVMManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 nsJVMManager::nsJVMManager(nsISupports* outer)
     : fJVM(NULL), fStatus(nsJVMStatus_Enabled),
       fRegisteredJavaPrefChanged(PR_FALSE), fDebugManager(NULL), fJSJavaVM(NULL),
-      fClassPathAdditions(new nsVector()), fClassPathAdditionsString(NULL)
+      fClassPathAdditions(new nsVoidArray()), fClassPathAdditionsString(NULL)
 {
     NS_INIT_AGGREGATED(outer);
 }
 
 nsJVMManager::~nsJVMManager()
 {
-    int count = fClassPathAdditions->GetSize();
+    int count = fClassPathAdditions->Count();
     for (int i = 0; i < count; i++) {
         PR_Free((*fClassPathAdditions)[i]);
     }
@@ -377,7 +377,7 @@ nsJVMManager::GetClasspathAdditions(const char* *result)
 {
     if (fClassPathAdditionsString != NULL)
         PR_Free(fClassPathAdditionsString);
-    int count = fClassPathAdditions->GetSize();
+    int count = fClassPathAdditions->Count();
     char* classpathAdditions = NULL;
     for (int i = 0; i < count; i++) {
         const char* path = (const char*)(*fClassPathAdditions)[i];
@@ -776,7 +776,7 @@ nsJVMManager::AddToClassPath(const char* dirPath)
 	                if ((len > 4) && 
 	                    ((PL_strcasecmp(path+len-4, ".zip") == 0) || 
 	                     (PL_strcasecmp(path+len-4, ".jar") == 0))) {
-	                    fClassPathAdditions->Add((void*)path);
+	                    fClassPathAdditions->AppendElement((void*)path);
 	                    if (jvm) {
 	                        /* Add this path to the classpath: */
 	                        jvm->AddToClassPath(path);
@@ -794,7 +794,7 @@ nsJVMManager::AddToClassPath(const char* dirPath)
     }
 
     /* Also add the directory to the classpath: */
-    fClassPathAdditions->Add((void*)dirPath);
+    fClassPathAdditions->AppendElement((void*)dirPath);
     if (jvm) {
         jvm->AddToClassPath(dirPath);
         // jvm->Release(); // GetJVMPlugin no longer calls AddRef

@@ -27,7 +27,7 @@
 #include "jni.h"
 #include "nsISecureJNI2.h"
 #include "nsHashtable.h"
-#include "nsVector.h"
+#include "nsVoidArray.h"
 #include "plstr.h"
 
 // Method Signature Processing.
@@ -64,7 +64,7 @@ static PRBool get_method_type(const char* sig, PRUint32& arg_count, jni_type*& a
 {
 	arg_count = 0;
 	if (sig[0] == '(') {
-		nsVector vec(10);
+		nsVoidArray vec;
 		++sig;
 		while (*sig != ')' && *sig) {
 			char arg_sig = *sig++;
@@ -80,12 +80,12 @@ static PRBool get_method_type(const char* sig, PRUint32& arg_count, jni_type*& a
 				// skip over scalar or ';'.
 				++sig;
 			}
-			vec.Add((void*)arg_type);
+			vec.AppendElement((void*)arg_type);
 		}
-		arg_count = vec.GetSize();
+		arg_count = vec.Count();
 		arg_types = new jni_type[arg_count];
 		for (int index = arg_count - 1; index >= 0; --index)
-			arg_types[index] = jni_type(vec.Get(index));
+			arg_types[index] = jni_type(vec.ElementAt(index));
 		if (*sig == ')') {
 			char return_sig = *++sig;
 			return_type = get_jni_type(return_sig);
