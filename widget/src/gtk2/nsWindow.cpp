@@ -4003,6 +4003,7 @@ key_event_to_context_menu_event(const nsKeyEvent* aKeyEvent,
                                 nsMouseEvent* aCMEvent)
 {
     memcpy(aCMEvent, aKeyEvent, sizeof(nsInputEvent));
+    aCMEvent->eventStructType = NS_MOUSE_EVENT;
     aCMEvent->message = NS_CONTEXTMENU_KEY;
     aCMEvent->isShift = aCMEvent->isControl = PR_FALSE;
     aCMEvent->isAlt = aCMEvent->isMeta = PR_FALSE;
