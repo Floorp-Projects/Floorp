@@ -1,5 +1,8 @@
 #file:///s|/mozilla/layout/html/tests/table/bugs/bug26178.html
 #file:///s|/mozilla/layout/html/tests/table/bugs/bug26193.html
+delay:=8
+file:///s|/mozilla/layout/html/tests/table/bugs/bug26553.html
+delay:=1
 file:///s|/mozilla/layout/html/tests/table/bugs/bug2684.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug27038-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug27038-2.html
