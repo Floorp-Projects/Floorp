@@ -548,6 +548,11 @@ nsHTMLButtonControlFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildLis
     result = view->Init(viewMan, boundBox, parView, nsnull);
     viewMan->InsertChild(parView, view, 0);
     SetView(view);
+
+    const nsStyleColor* color = (const nsStyleColor*) mStyleContext->GetStyleData(eStyleStruct_Color);
+    // set the opacity
+    viewMan->SetViewOpacity(view, color->mOpacity);
+
     NS_RELEASE(viewMan);
   }
 
