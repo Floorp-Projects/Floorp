@@ -50,6 +50,7 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  mozldap \
 		  webbrowserpersist \
+		  appshell \
 		  $(NULL)
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN
@@ -75,6 +76,7 @@ SUB_LIBRARIES=                           \
         $(DIST)\lib\timebomb_s.lib       \
         $(DIST)\lib\urlbarhistory_s.lib  \
         $(DIST)\lib\urlwidgt_s.lib       \
+        $(DIST)\lib\windowds_s.lib       \
         $(DIST)\lib\winhooks_s.lib       \
 	$(NULL)
 
@@ -101,6 +103,7 @@ INCS = $(INCS)                                       \
         -I$(DEPTH)\xpfe\components\timebomb          \
         -I$(DEPTH)\xpfe\components\urlbarhistory\src \
         -I$(DEPTH)\xpfe\components\urlwidget         \
+        -I$(DEPTH)\xpfe\components\windowds          \
         -I$(DEPTH)\xpfe\components\winhooks          \
         -I$(DEPTH)\xpfe\components\alerts\src        \
         $(NULL)
