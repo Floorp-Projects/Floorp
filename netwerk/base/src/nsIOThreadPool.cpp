@@ -275,7 +275,7 @@ nsIOThreadPool::ThreadFunc(void *arg)
 
 //-----------------------------------------------------------------------------
 
-nsresult
+NS_METHOD
 net_NewIOThreadPool(nsISupports *outer, REFNSIID iid, void **result)
 {
     nsIOThreadPool *pool = new nsIOThreadPool();
