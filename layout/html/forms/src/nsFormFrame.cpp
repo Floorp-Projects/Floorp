@@ -498,64 +498,6 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
     NS_IF_RELEASE(docURL);
 
-#ifndef HTMLDialogs 
-#ifdef ClientWallet
-    if (href == "internal-walletPrefill-handler") {
-      nsresult res;
-      nsIWalletService *walletservice;
-      res = nsServiceManager::GetService(kWalletServiceCID,
-                                         kIWalletServiceIID,
-                                         (nsISupports **)&walletservice);
-      if ((NS_OK == res) && (nsnull != walletservice)) {
-        nsString urlString = nsString("");
-        res = walletservice->WALLET_Prefill(nsnull, urlString, PR_FALSE);
-        NS_RELEASE(walletservice);
-        return NS_OK;
-      }
-    }
-    if (href == "internal-walletEditor-handler") {
-      nsresult res;
-      nsIWalletService *walletservice;
-      res = nsServiceManager::GetService(kWalletServiceCID,
-                                         kIWalletServiceIID,
-                                         (nsISupports **)&walletservice);
-      if ((NS_OK == res) && (nsnull != walletservice)) {
-        res = walletservice->WALLET_PreEdit(nsnull);
-        NS_RELEASE(walletservice);
-        return NS_OK;
-      }
-    }
-#endif
-#ifdef SingleSignon
-    if (href == "internal-signonViewer-handler") {
-      nsresult res;
-      nsIWalletService *walletservice;
-      res = nsServiceManager::GetService(kWalletServiceCID,
-                                         kIWalletServiceIID,
-                                         (nsISupports **)&walletservice);
-      if ((NS_OK == res) && (nsnull != walletservice)) {
-        res = walletservice->SI_SignonViewerReturn();
-        NS_RELEASE(walletservice);
-        return NS_OK;
-      }
-    }
-#endif
-#ifdef CookieManagement
-    if (href == "internal-cookieViewer-handler") {
-      nsresult res;
-      nsINetService *netservice;
-      res = nsServiceManager::GetService(kNetServiceCID,
-                                         kINetServiceIID,
-                                         (nsISupports **)&netservice);
-      if ((NS_OK == res) && (nsnull != netservice)) {
-        res = netservice->NET_CookieViewerReturn();
-        NS_RELEASE(netservice);
-        return NS_OK;
-      }
-    }
-#endif
-#endif
-
     // Now pass on absolute url to the click handler
     nsIPostData* postData = nsnull;
     if (isPost) {
