@@ -76,6 +76,10 @@ ifndef MOZ_NATIVE_JPEG
 DIRS		+= jpeg
 endif
 
+ifdef MOZ_ENABLE_XLIB
+DIRS           += gfx/src/xlibrgb widget/src/xlibxtbin
+endif
+
 ifdef MOZ_ENABLE_GTK
 DIRS           += widget/src/gtksuperwin widget/src/gtkxtbin
 endif
