@@ -33,7 +33,7 @@
 
 <xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload = "ChangePanelURL(pref-appearance.html);"> 
+        onload = "ChangePanelURL(pref-appearance.xul);"> 
 
 <html:script>
 	
@@ -51,8 +51,10 @@
 		dump("Looking up prefwindow object...\n");
 		if (prefwindow == null)
 		{
-			dump("Creating prefwindow object...");
-	    	prefwindow = Components.classes['component://netscape/prefwindow'].createInstance(Components.interfaces.nsIPrefWindow);
+		    dump("Creating prefwindow object...");
+	        prefwindow = Components.classes['component://netscape/prefwindow'].createInstance(Components.interfaces.nsIPrefWindow);
+            prefwindow.Init("preftree.xul");
+	        prefwindow.ShowWindow(window);
 			dump("...created\n");
 		}
 		else
@@ -74,14 +76,14 @@
   
     <treeitem>
        
-      <treecell name="chrome://pref/content/pref-appearance.html"><treeindentation/>&appear.label;</treecell>
+      <treecell name="chrome://pref/content/pref-appearance.xul"><treeindentation/>&appear.label;</treecell>
        
 	  <treechildren>
         <treeitem>
-          <treecell name="chrome://pref/content/pref-fonts.html"><treeindentation/>&fonts.label;</treecell>
+          <treecell name="chrome://pref/content/pref-fonts.xul"><treeindentation/>&fonts.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="chrome://pref/content/pref-colors.html"><treeindentation/>&colors.label;</treecell>
+          <treecell name="chrome://pref/content/pref-colors.xul"><treeindentation/>&colors.label;</treecell>
 	    </treeitem>
       </treechildren>
     
@@ -89,17 +91,17 @@
  
     <treeitem>
 
-      <treecell name="chrome://pref/content/pref-navigator.html"><treeindentation/>&navigator.label;</treecell>
+      <treecell name="chrome://pref/content/pref-navigator.xul"><treeindentation/>&navigator.label;</treecell>
        
 	  <treechildren>
         <treeitem>
           <treecell><treeindentation/>&languages.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="chrome://pref/content/pref-applications.html"><treeindentation/>&applications.label;</treecell>
+          <treecell name="chrome://pref/content/pref-applications.xul"><treeindentation/>&applications.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="chrome://pref/content/pref-smart_browsing.html"><treeindentation/>&smartBrowse.label;</treecell>
+          <treecell name="chrome://pref/content/pref-smart_browsing.xul"><treeindentation/>&smartBrowse.label;</treecell>
 	    </treeitem>
       </treechildren>
     
@@ -146,11 +148,11 @@
     
      <treeitem>
        
-      <treecell name="chrome://pref/content/pref-composer.html"><treeindentation/>&compose.label;</treecell>
+      <treecell name="chrome://pref/content/pref-composer.xul"><treeindentation/>&compose.label;</treecell>
        
 	  <treechildren>
         <treeitem>
-          <treecell name="chrome://pref/content/pref-publish.html"><treeindentation/>&publish.label;</treecell>
+          <treecell name="chrome://pref/content/pref-publish.xul"><treeindentation/>&publish.label;</treecell>
 	    </treeitem>
       </treechildren>
     
@@ -159,11 +161,11 @@
     
      <treeitem>
        
-      <treecell name="chrome://pref/content/pref-offline.html"><treeindentation/>&offline.label;</treecell>
+      <treecell name="chrome://pref/content/pref-offline.xul"><treeindentation/>&offline.label;</treecell>
        
 	  <treechildren>
         <treeitem>
-          <treecell name="chrome://pref/content/pref-download.html"><treeindentation/>&down.label;</treecell>
+          <treecell name="chrome://pref/content/pref-download.xul"><treeindentation/>&down.label;</treecell>
 	    </treeitem>
       </treechildren>
     
@@ -171,14 +173,14 @@
     
      <treeitem>
        
-      <treecell name="chrome://pref/content/pref-advanced.html"><treeindentation/>&advance.label;</treecell>
+      <treecell name="chrome://pref/content/pref-advanced.xul"><treeindentation/>&advance.label;</treecell>
        
 	  <treechildren>
         <treeitem>
-          <treecell name="chrome://pref/content/pref-cache.html"><treeindentation/>&cache.label;</treecell>
+          <treecell name="chrome://pref/content/pref-cache.xul"><treeindentation/>&cache.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="chrome://pref/content/pref-proxies.html"><treeindentation/>&proxies.label;</treecell>
+          <treecell name="chrome://pref/content/pref-proxies.xul"><treeindentation/>&proxies.label;</treecell>
 	    </treeitem>
         <treeitem>
           <treecell name="chrome://pref/content/pref-smartupdate.html"><treeindentation/>&smart.label;</treecell>
