@@ -332,12 +332,12 @@ NS_NewServiceManager(nsIServiceManager* *result);
 // before any call can be made to XPCOM. Currently we are coping with this
 // not being called and internally initializing XPCOM if not already.
 //
-// registryFileName is the absolute path to the registry file.  This
-// file will be checked for existence.  If it does not exist, it
-// will use the current process directory name, and tack on "component.reg"
+
+// binDirectory is the absolute path to the mozilla bin directory.
+// directory must contain a "components" directory and a component.reg file.
 
 extern NS_COM nsresult
-NS_InitXPCOM(nsIServiceManager* *result, nsFileSpec* registryFile, nsFileSpec* componentDir);
+NS_InitXPCOM(nsIServiceManager* *result, nsFileSpec* binDirectory);
 
 extern NS_COM nsresult
 NS_ShutdownXPCOM(nsIServiceManager* servMgr);

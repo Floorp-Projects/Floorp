@@ -294,6 +294,12 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
 //----------------------------------------------------------------------------------------
 {
     SystemDirectoriesKey dirKey(aSystemSystemDirectory);
+    SystemDirectoriesKey mozBinDirKey(Moz_BinDirectory);
+
+    // This flag is used to tell whether or not we need to append something
+    // onto the *this.  Search for needToAppend to how it's used.
+    // IT's VERY IMPORTANT that needToAppend is initialized to PR_TRUE.
+    PRBool needToAppend = PR_TRUE;
 
     *this = (const char*)nsnull;
     switch (aSystemSystemDirectory)
@@ -353,10 +359,22 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
         case XPCOM_CurrentProcessComponentRegistry:
             {
                 nsFileSpec *dirSpec = NULL;
-                if (systemDirectoriesLocations)
-                {
-                    dirSpec = (nsFileSpec *) systemDirectoriesLocations->Get(&dirKey);
+
+                // if someone has called nsSpecialSystemDirectory::Set()
+                if (systemDirectoriesLocations) {
+                    // look for the value for the argument key
+                    if (!(dirSpec = (nsFileSpec *)systemDirectoriesLocations->Get(&dirKey))) {
+                        // if not found, try Moz_BinDirectory
+                        dirSpec = (nsFileSpec *)
+                            systemDirectoriesLocations->Get(&mozBinDirKey);
+                    }
+                    else {
+                        // if the value is found for the argument key,
+                        // we don't need to append.
+                        needToAppend = PR_FALSE;
+                    }
                 }
+                
                 if (dirSpec)
                 {
                     *this = *dirSpec;
@@ -364,6 +382,9 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
                 else
                 {
                     GetCurrentProcessDirectory(*this);
+                }
+
+                if (needToAppend) {
                     // XXX We need to unify these names across all platforms
 #ifdef XP_MAC
                     *this += "Component Registry";
@@ -377,9 +398,19 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
         case XPCOM_CurrentProcessComponentDirectory:
             {
                 nsFileSpec *dirSpec = NULL;
-                if (systemDirectoriesLocations)
-                {
-                    dirSpec = (nsFileSpec *) systemDirectoriesLocations->Get(&dirKey);
+                // if someone has called nsSpecialSystemDirectory::Set()
+                if (systemDirectoriesLocations) {
+                    // look for the value for the argument key
+                    if (!(dirSpec = (nsFileSpec *)systemDirectoriesLocations->Get(&dirKey))) {
+                        // if not found, try Moz_BinDirectory
+                        dirSpec = (nsFileSpec *)
+                            systemDirectoriesLocations->Get(&mozBinDirKey);
+                    }
+                    else {
+                        // if the value is found for the argument key,
+                        // we don't need to append.
+                        needToAppend = PR_FALSE;
+                    }
                 }
                 if (dirSpec)
                 {
@@ -389,12 +420,33 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
                 {
                     // <exedir>/Components
                     GetCurrentProcessDirectory(*this);
+                }
+
+                if (needToAppend) {
                     // XXX We need to unify these names across all platforms
 #ifdef XP_MAC
                     *this += "Components";
 #else
                     *this += "components";
 #endif /* XP_MAC */
+                }
+            }
+            break;
+
+        case Moz_BinDirectory:
+            {
+                nsFileSpec *dirSpec = NULL;
+                // if someone has called nsSpecialSystemDirectory::Set()
+                if (systemDirectoriesLocations) {
+                    // look for the value for the argument key
+                    dirSpec = (nsFileSpec *)
+                        systemDirectoriesLocations->Get(&dirKey);
+                }
+                if (dirSpec) {
+                    *this = *dirSpec;
+                }
+                else {
+                    GetCurrentProcessDirectory(*this);
                 }
             }
             break;
@@ -672,27 +724,24 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
     }
 }
 
-// XXX what does this return value mean?! It isn't checked anywhere,
-// and a NULL return from the hashtable->Put() isn't an error.
-PRBool
+void
 nsSpecialSystemDirectory::Set(SystemDirectories dirToSet, nsFileSpec *dirSpec)
 {
-    PRBool rc = PR_FALSE;
     SystemDirectoriesKey dirKey(dirToSet);
     
     PR_ASSERT(NULL != dirSpec);
-
+    
     if (NULL == systemDirectoriesLocations) {
         systemDirectoriesLocations = new nsHashtable(NS_SYSTEMDIR_HASH_NUM);
     }
     PR_ASSERT(NULL != systemDirectoriesLocations);
     
     nsFileSpec *newSpec = new nsFileSpec(*dirSpec);
-    if (newSpec && NULL != systemDirectoriesLocations->Put(&dirKey, newSpec)) {
-        rc = PR_TRUE;
+    if (NULL != newSpec) {
+        systemDirectoriesLocations->Put(&dirKey, newSpec);
     }
     
-    return rc;
+    return;
 }
 
 #ifdef XP_MAC

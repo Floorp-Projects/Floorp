@@ -172,7 +172,7 @@ extern nsIServiceManager* gServiceManager;
 extern PRBool gShuttingDown;
 
 nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
-                             nsFileSpec *registryFile, nsFileSpec *componentDir)
+                             nsFileSpec *binDirectory)
 {
     nsresult rv = NS_OK;
 
@@ -205,15 +205,10 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
         NS_ADDREF(compMgr);
 
         // Set the registry file
-        if (registryFile && registryFile->IsFile())
+        if (binDirectory && binDirectory->IsDirectory())
         {
-            nsSpecialSystemDirectory::Set(nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentRegistry,
-                                          registryFile);
-        }
-        if (componentDir && componentDir->IsDirectory())
-        {
-            nsSpecialSystemDirectory::Set(nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentDirectory,
-                                          componentDir);
+            nsSpecialSystemDirectory::Set(nsSpecialSystemDirectory::Moz_BinDirectory,
+                                          binDirectory);
         }
         rv = compMgr->Init();
         if (NS_FAILED(rv))

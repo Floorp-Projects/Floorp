@@ -215,7 +215,7 @@ static void GetDefaultUserProfileRoot(nsFileSpec& outSpec)
 static void GetDefaultsFolder(nsFileSpec& outSpec)
 //----------------------------------------------------------------------------------------
 {
-    nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::Moz_BinDirectory);
 
 #if defined(XP_MAC)
     cwd += "Defaults";

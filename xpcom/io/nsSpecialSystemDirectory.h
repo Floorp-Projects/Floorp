@@ -48,6 +48,8 @@ class NS_COM nsSpecialSystemDirectory : public nsFileSpec
 
         ,   XPCOM_CurrentProcessComponentDirectory=   5
         ,   XPCOM_CurrentProcessComponentRegistry=   6            
+          
+        ,   Moz_BinDirectory          = 10
 
         ,   Mac_SystemDirectory       =   101
         ,   Mac_DesktopDirectory      =   102
@@ -119,7 +121,7 @@ class NS_COM nsSpecialSystemDirectory : public nsFileSpec
 
      */
 
-    static PRBool Set(SystemDirectories dirToSet, nsFileSpec *dirSpec);
+    static void Set(SystemDirectories dirToSet, nsFileSpec *dirSpec);
 
 
 private:

@@ -58,11 +58,11 @@ nsResProtocolHandler::Init()
         return NS_ERROR_OUT_OF_MEMORY;
 
     // set up initial mappings
-    rv = SetSpecialDir("ProgramDir", nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    rv = SetSpecialDir("ProgramDir", nsSpecialSystemDirectory::Moz_BinDirectory);
     if (NS_FAILED(rv)) return rv;
 
     // make "res:///" == "resource:/"
-    rv = SetSpecialDir("", nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    rv = SetSpecialDir("", nsSpecialSystemDirectory::Moz_BinDirectory);
     if (NS_FAILED(rv)) return rv;
 
     rv = SetSpecialDir("CurrentDir", nsSpecialSystemDirectory::OS_CurrentWorkingDirectory);

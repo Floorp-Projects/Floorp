@@ -54,8 +54,7 @@ static const tstring c_szHelpKey = _T("Software\\Microsoft\\Windows\\CurrentVers
 
 #define MOZ_CONTROL_REG_KEY                  _T("Software\\Mozilla\\")
 #define MOZ_CONTROL_REG_VALUE_DIR            _T("Dir")
-#define MOZ_CONTROL_REG_VALUE_COMPONENT_PATH _T("ComponentPath")
-#define MOZ_CONTROL_REG_VALUE_COMPONENT_FILE _T("ComponentFile")
+#define MOZ_CONTROL_REG_VALUE_BIN_DIRECTORY_PATH _T("BinDirectoryPath")
 
 BOOL CMozillaBrowser::m_bRegistryInitialized = FALSE;
 
@@ -107,8 +106,7 @@ CMozillaBrowser::CMozillaBrowser()
 	m_UserKey.Create(HKEY_CURRENT_USER, MOZ_CONTROL_REG_KEY);
 
 	// Component path and file
-	m_pComponentPath = NULL;
-	m_pComponentFile = NULL;
+	m_pBinDirPath = NULL;
 
 	// Initialise the web shell
 	InitWebShell();
@@ -566,26 +564,21 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 HRESULT CMozillaBrowser::InitWebShell()
 {
 	// Initialise XPCOM
-	TCHAR szComponentPath[MAX_PATH];
-	TCHAR szComponentFile[MAX_PATH];
-	DWORD dwComponentPath = sizeof(szComponentPath) / sizeof(szComponentPath[0]);
-	DWORD dwComponentFile = sizeof(szComponentFile) / sizeof(szComponentFile[0]);
+	TCHAR szBinDirPath[MAX_PATH];
+	DWORD dwBinDirPath = sizeof(szBinDirPath) / sizeof(szBinDirPath[0]);
 
-	memset(szComponentPath, 0, sizeof(szComponentPath));
-	memset(szComponentFile, 0, sizeof(szComponentFile));
-	if (m_SystemKey.QueryValue(szComponentPath, MOZ_CONTROL_REG_VALUE_COMPONENT_PATH, &dwComponentPath) == ERROR_SUCCESS &&
-		m_SystemKey.QueryValue(szComponentFile, MOZ_CONTROL_REG_VALUE_COMPONENT_FILE, &dwComponentFile) == ERROR_SUCCESS)
+	memset(szBinDirPath, 0, sizeof(szBinDirPath));
+	if (m_SystemKey.QueryValue(szBinDirPath, MOZ_CONTROL_REG_VALUE_BIN_DIRECTORY_PATH, &dwBinDirPath) == ERROR_SUCCESS)
 	{
 		USES_CONVERSION;
 		
-		m_pComponentPath = new nsFileSpec(T2A(szComponentPath));
-		m_pComponentFile = new nsFileSpec(T2A(szComponentFile));
+		m_pBinDirPath = new nsFileSpec(T2A(szBinDirPath));
 
-		NS_InitXPCOM(&m_pIServiceManager, m_pComponentFile, m_pComponentPath);
+		NS_InitXPCOM(&m_pIServiceManager, m_pBinDirPath);
 	}
 	else
 	{
-		NS_InitXPCOM(&m_pIServiceManager, nsnull, nsnull);
+		NS_InitXPCOM(&m_pIServiceManager, nsnull);
 	}
 
 	// Register components
@@ -622,15 +615,10 @@ HRESULT CMozillaBrowser::TermWebShell()
 	NS_ShutdownXPCOM(m_pIServiceManager);
 	m_pIServiceManager = nsnull;
 
-	if (m_pComponentPath)
+	if (m_pBinDirPath)
 	{
-		delete m_pComponentPath;
-		m_pComponentPath = NULL;
-	}
-	if (m_pComponentFile)
-	{
-		delete m_pComponentFile;
-		m_pComponentFile = NULL;
+		delete m_pBinDirPath;
+		m_pBinDirPath = NULL;
 	}
 
 	return S_OK;
