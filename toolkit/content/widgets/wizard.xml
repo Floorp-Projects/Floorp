@@ -346,7 +346,7 @@
 #ifdef XP_MACOSX
             label = this._bundle.GetStringFromName("default-last-title-mac");
 #else
-            label = this._bundle.formatStringFromName("default-last-title)", [this.title], 1);
+            label = this._bundle.formatStringFromName("default-last-title", [this.title], 1);
 #endif
           this._wizardHeader.setAttribute("label", label);
           this._wizardHeader.setAttribute("description", this.currentPage.getAttribute("description"));
