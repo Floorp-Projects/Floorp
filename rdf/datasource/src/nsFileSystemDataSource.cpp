@@ -1134,21 +1134,26 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
 			if (hiddenFlag == PR_TRUE)	continue;
 		}
 
-		PRUnichar		*leafUni = nsnull;
-		if (NS_FAILED(rv = aFile->GetUnicodeLeafName(&leafUni)))
-			break;
-		if (!leafUni)	break;
-
-		nsAutoString		fullURI;
-		fullURI.AssignWithConversion(parentURI);
-		if (fullURI.Last() != PRUnichar('/'))
-		{
-			fullURI.Append(PRUnichar('/'));
-		}
-
-		nsAutoString		leaf(leafUni);
-		Recycle(leafUni);
-		leafUni = nsnull;
+		// XXX We should use nsIFile::GetUnicodeLeafName().
+		// But currently mozilla's xpcom/io is not unicode normalization.
+		// And URI cannot use UTF-8 (On RFC2396, URI should use UTF-8)
+		// So, we uses nsIFile::GetLeafName() for performance...
+ 
+		char            *leafStr = nsnull;
+		if (NS_FAILED(rv = aFile->GetLeafName(&leafStr)))
+		    break;
+		if (!leafStr)   break;
+  
+		nsCAutoString           fullURI;
+		fullURI.Assign(parentURI);
+		if (fullURI.Last() != '/')
+                {
+		    fullURI.Append('/');
+                }
+  
+		nsCAutoString           leaf(leafStr);
+		Recycle(leafStr);
+		leafStr = nsnull;
 
 		// we need to escape this leaf name;
 		// for now, let's just hack it and encode spaces and slashes
@@ -1156,12 +1161,12 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
 		while ((aOffset = leaf.FindChar(' ')) >= 0)
 		{
 			leaf.Cut((PRUint32)aOffset, 1);
-			leaf.InsertWithConversion("%20", (PRUint32)aOffset);
+			leaf.Insert("%20", (PRUint32)aOffset);
 		}
 		while ((aOffset = leaf.FindChar('/')) >= 0)
 		{
 			leaf.Cut((PRUint32)aOffset, 1);
-			leaf.InsertWithConversion("%2F", (PRUint32)aOffset);
+			leaf.Insert("%2F", (PRUint32)aOffset);
 		}
 
 		// append the encoded name
@@ -1178,7 +1183,7 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
 		}
 
 		nsCOMPtr<nsIRDFResource>	fileRes;
-		gRDFService->GetUnicodeResource(fullURI.GetUnicode(), getter_AddRefs(fileRes));
+		gRDFService->GetResource(fullURI.GetBuffer(), getter_AddRefs(fileRes));
 
 		nameArray->AppendElement(fileRes);
 
