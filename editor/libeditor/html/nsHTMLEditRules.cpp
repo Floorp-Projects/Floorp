@@ -121,7 +121,7 @@ class nsTableCellAndListItemFunctor : public nsBoolDomIterFunctor
 class nsBRNodeFunctor : public nsBoolDomIterFunctor
 {
   public:
-    virtual PRBool operator()(nsIDOMNode* aNode)  // used to build list of all td's & th's iterator covers
+    virtual PRBool operator()(nsIDOMNode* aNode)  
     {
       if (nsTextEditUtils::IsBreak(aNode)) return PR_TRUE;
       return PR_FALSE;
@@ -132,7 +132,7 @@ class nsEmptyFunctor : public nsBoolDomIterFunctor
 {
   public:
     nsEmptyFunctor(nsHTMLEditor* editor) : mHTMLEditor(editor) {}
-    virtual PRBool operator()(nsIDOMNode* aNode)  // used to build list of empty li's and td's
+    virtual PRBool operator()(nsIDOMNode* aNode)  
     {
       if (nsHTMLEditUtils::IsListItem(aNode) || nsHTMLEditUtils::IsTableCellOrCaption(aNode))
       {
@@ -152,7 +152,7 @@ class nsEditableTextFunctor : public nsBoolDomIterFunctor
 {
   public:
     nsEditableTextFunctor(nsHTMLEditor* editor) : mHTMLEditor(editor) {}
-    virtual PRBool operator()(nsIDOMNode* aNode)  // used to build list of empty li's and td's
+    virtual PRBool operator()(nsIDOMNode* aNode)  
     {
       if (nsEditor::IsTextNode(aNode) && mHTMLEditor->IsEditable(aNode)) 
       {
