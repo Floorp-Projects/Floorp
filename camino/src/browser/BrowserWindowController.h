@@ -134,7 +134,7 @@ class nsIDOMNode;
                                        // be returned to its original position when the drawer closes.
   NSRect mCachedFrameAfterDrawerOpen;
 
-  int mChromeMask; // Indicates which parts of the window to show (e.g., don't show toolbars)
+  unsigned int mChromeMask; // Indicates which parts of the window to show (e.g., don't show toolbars)
 
   // Context menu members.
   int mContextMenuFlags;
@@ -215,7 +215,8 @@ class nsIDOMNode;
 -(void)autosaveWindowFrame;
 -(void)disableAutosave;
 
--(void)setChromeMask:(int)aMask;
+-(void)setChromeMask:(unsigned int)aMask;
+-(unsigned int)chromeMask;
 
 -(id)getAddBookmarkSheetWindow;
 -(id)getAddBookmarkTitle;

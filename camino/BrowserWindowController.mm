@@ -1031,9 +1031,14 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
     [mSidebarTabView selectFirstTabViewItem:self];
 }
 
--(void)setChromeMask:(int)aMask
+-(void)setChromeMask:(unsigned int)aMask
 {
   mChromeMask = aMask;
+}
+
+-(unsigned int)chromeMask
+{
+  return mChromeMask;
 }
 
 -(void) biggerTextSize
@@ -1351,7 +1356,9 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
   [toolbarItem setImage: [mImages objectAtIndex: mFrame]];
 }
 
+#define QUICKTIME_THROBBER 0
 
+#if QUICKTIME_THROBBER
 static Boolean movieControllerFilter(MovieController mc, short action, void *params, long refCon)
 {
     if (action == mcActionMovieClick || action == mcActionMouseDown) {
@@ -1361,8 +1368,7 @@ static Boolean movieControllerFilter(MovieController mc, short action, void *par
     }
     return false;
 }
-
-#define QUICKTIME_THROBBER 0
+#endif
 
 - (void)startThrobber
 {
