@@ -87,7 +87,7 @@ include $(topsrcdir)/config/rules.mk
 CFLAGS		+= $(MOZ_GTK2_CFLAGS)
 CXXFLAGS	+= $(MOZ_GTK2_CFLAGS)
 
-DEFINES         += -DUSE_XIM
+#DEFINES         += -DUSE_XIM
 
 INCLUDES	+= \
 		-I$(srcdir)/../xpwidgets \
