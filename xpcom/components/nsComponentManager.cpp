@@ -77,7 +77,7 @@ const char nativeComponentType[]="application/x-mozilla-native";
 // We define a CID that is used to indicate the non-existence of a
 // progid in the hash table.
 #define NS_NO_CID { 0x0, 0x0, 0x0, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
-    static NS_DEFINE_CID(kNoCID, NS_NO_CID);
+static NS_DEFINE_CID(kNoCID, NS_NO_CID);
 
 // Build is using USE_NSREG to turn off xpcom using registry
 // but internally we use USE_REGISTRY. Map them propertly.
@@ -1309,6 +1309,26 @@ nsComponentManagerImpl::RegisterComponent(const nsCID &aClass,
                                    aReplace, aPersist, nativeComponentType);
 }
 
+nsresult
+nsComponentManagerImpl::RegisterComponentWithType(const nsCID &aClass,
+                                                  const char *aClassName,
+                                                  const char *aProgID,
+                                                  nsIFileSpec *aSpec,
+                                                  PRBool aReplace,
+                                                  PRBool aPersist,
+                                                  const char *aType)
+{
+    nsresult rv = NS_OK;
+    char *registryName;
+
+    rv = mNativeComponentLoader->RegistryNameForSpec(aSpec, &registryName);
+    if (NS_FAILED(rv))
+        return rv;
+
+    return RegisterComponentCommon(aClass, aClassName, aProgID, registryName,
+                                   aReplace, aPersist,
+                                   aType);
+}
 
 /*
  * Register a component, using whatever they stuck in the FileSpec.
@@ -1321,17 +1341,9 @@ nsComponentManagerImpl::RegisterComponentSpec(const nsCID &aClass,
                                               PRBool aReplace,
                                               PRBool aPersist)
 {
-    nsresult rv = NS_OK;
-    char *registryName;
-
-    rv = mNativeComponentLoader->RegistryNameForSpec(aLibrarySpec,
-                                                     &registryName);
-    if (NS_FAILED(rv))
-        return rv;
-
-    return RegisterComponentCommon(aClass, aClassName, aProgID, registryName,
-                                   aReplace, aPersist,
-                                   nativeComponentType);
+    return RegisterComponentWithType(aClass, aClassName, aProgID, aLibrarySpec,
+                                     aReplace, aPersist,
+                                     nativeComponentType);
 }
 
 /*
