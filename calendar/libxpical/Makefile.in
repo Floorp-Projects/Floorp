@@ -59,7 +59,8 @@ CPPSRCS		= \
 		oeICalEventImpl.cpp \
 		oeICalFactory.cpp \
 		oeICalImpl.cpp \
-		oeICalStartupHandler.cpp \
+		oeDateTimeImpl.cpp \
+      oeICalStartupHandler.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) -lical -licalss
