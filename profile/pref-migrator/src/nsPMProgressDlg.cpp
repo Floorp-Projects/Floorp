@@ -169,12 +169,11 @@ nsPrefMigrationProgressDialog::CreateProfileProgressDialog()
         if ( NS_SUCCEEDED(rv) ) 
         {
         
-            nsIWebShellWindow *newWindow;
-
+            nsCOMPtr<nsIWebShellWindow> newWindow;
             rv = appShell->CreateTopLevelWindow( nsnull,
                                                  url,
                                                  PR_TRUE,
-                                                 newWindow,
+                                                 *getter_AddRefs(newWindow),
                                                  nsnull,
                                                  this,  // callbacks??
                                                  0,
@@ -182,9 +181,7 @@ nsPrefMigrationProgressDialog::CreateProfileProgressDialog()
 
             if ( NS_SUCCEEDED( rv ) ) 
             {
-                mWindow = newWindow;
-                NS_RELEASE( newWindow );
-
+                mWindow = newWindow;			// ownership????
                  if (mWindow != nsnull)
                     mWindow->Show(PR_TRUE);
             }

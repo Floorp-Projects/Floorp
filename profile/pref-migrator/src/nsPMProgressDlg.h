@@ -61,7 +61,7 @@ class nsPrefMigrationProgressDialog : public nsIPrefMigrationProgress, public ns
 
     private:
 
-        nsCOMPtr<nsIDOMXULDocument>  mDocument;
-        nsCOMPtr<nsIWebShellWindow>  mWindow;
+        nsCOMPtr<nsIDOMXULDocument>  mDocument;		// is this really owned?
+        nsCOMPtr<nsIWebShellWindow>  mWindow;			// is this really owned?
 };
 #endif
