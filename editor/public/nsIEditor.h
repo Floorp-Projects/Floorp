@@ -28,6 +28,7 @@ class nsITransaction;
 class nsIEditActionListener;
 class nsIFileSpec;
 class nsIDOMTextRangeList;
+class nsICSSStyleSheet;
 
 /*
 Editor interface to outside world
@@ -379,10 +380,23 @@ public:
   NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText)=0;
 
   /** load and apply the style sheet, specified by aURL, to
-    * the editor's document.
+    * the editor's document. This can involve asynchronous
+    * network I/O
     * @param aURL  The style sheet to be loaded and applied.
     */
   NS_IMETHOD ApplyStyleSheet(const nsString& aURL)=0;
+
+  /** Add the given Style Sheet to the editor's document
+    * This is always synchronous
+    * @param aSheet  The style sheet to be  applied.
+    */
+  NS_IMETHOD AddStyleSheet(nsICSSStyleSheet* aSheet)=0;
+
+  /** Remove the given Style Sheet from the editor's document
+    * This is always synchronous
+    * @param aSheet  The style sheet to be  applied.
+    */
+  NS_IMETHOD RemoveStyleSheet(nsICSSStyleSheet* aSheet)=0;
 
   /** add an EditActionListener to the editors list of listeners. */
   NS_IMETHOD AddEditActionListener(nsIEditActionListener *aListener)=0;
