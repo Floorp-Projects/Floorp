@@ -210,16 +210,13 @@ nsNodeInfoManager::GetNodeInfo(const nsAReadableString& aName, const nsAReadable
     NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  PRInt32 nsid = kNameSpaceID_None;
-
-  if (aNamespaceURI.Length()) {
-    if (!mNameSpaceManager) {
-      return NS_ERROR_NOT_INITIALIZED;
-    }
-
-    nsresult rv = mNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsid);
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (!mNameSpaceManager) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
+
+  PRInt32 nsid;
+  nsresult rv = mNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsid);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return GetNodeInfo(name, prefix, nsid, aNodeInfo);
 }
