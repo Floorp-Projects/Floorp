@@ -1,4 +1,28 @@
 <?xml version="1.0"?> 
+
+<!--
+   - The contents of this file are subject to the Netscape Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/NPL/
+   -  
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -  
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corporation. Portions created by Netscape are
+   - Copyright (C) 1999 Netscape Communications Corporation. All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+   -    Ben Goodger
+  -->
+
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/" type="text/css"?> 
@@ -14,8 +38,6 @@
 
   <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js">
   </html:script>
-  <!-- html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
-  </html:script -->
 
   <broadcaster id="args" value="chrome://editor/content/EditorInitPage.html"/>
   <broadcaster id="canPrint"/>
@@ -644,8 +666,6 @@
         <titledbutton src="&openEditorIcon.url;" value="&openToolbarCmd.label;" class="popup" onclick="EditorOpen()"/>
 
         <titledbutton id="SaveButton" src="&saveIcon.url;" class="popup" observes="Editor:Save"/>
-          <!-- observes element="Editor:Document:Dirty" attribute="dirty" onchange="onDirtyChange()"/ -->
-        <!-- /titledbutton -->
 <!-- Not supporting publishing (yet?) -->
 <!--      <titledbutton src="&publishIcon.url;" value="&publishToolbarCmd.label;" class="popup"/> -->
         <titledbutton src="&printIcon.url;" value="&printToolbarCmd.label;" class="popup"/>
@@ -700,7 +720,7 @@
     </toolbar>
     </toolbox>
 
-    <html:iframe type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
+    <html:iframe id="content-frame" src="contentframe.xul" flex="100%" />
 
     <!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
     <box align="horizontal" id="EditorStatusBar">
@@ -822,7 +842,7 @@
              oncommand="EditorSetFontColor('magenta')"/>
   </menupopup>
 
-<!-- 
+<!--  -->
  <menupopup id="FontFaceWindow">
    <window class="popup" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="40" height="40">
      <titledbutton value="&defaultVariableWidthCmd.label;" onclick="opener.EditorSetFontFace(''); window.close();"/><html:br/>
@@ -856,7 +876,7 @@
      </html:div>
    </window>
 </menupopup>
--->
+<!--  -->
 </menupopupset>
 
 </window>
