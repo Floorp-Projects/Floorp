@@ -31,17 +31,19 @@
 #include "nsHTMLContentSinkStream.h"
 #include "nsHTMLTokens.h"
 #include <iostream.h>
+#include <ctype.h>
 #include "nsString.h"
 #include "nsIParser.h"
+#include "nsHTMLEntities.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIContentSinkIID, NS_ICONTENT_SINK_IID);
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 
-static char*    gHeaderComment = "<!-- This page was created by the NGLayout output system. -->";
-static char*    gDocTypeHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">";
-const  int      gTabSize=2;
-static char     gBuffer[1024];
+static char*          gHeaderComment = "<!-- This page was created by the Gecko output system. -->";
+static char*          gDocTypeHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">";
+const  int            gTabSize=2;
+static char           gBuffer[1024];
 
 
  /** PRETTY PRINTING PROTOTYPES **/
@@ -267,6 +269,8 @@ nsHTMLContentSinkStream::nsHTMLContentSinkStream(PRBool aDoFormat,PRBool aDoHead
   mIndent = 0;
   mDoFormat = aDoFormat;
   mDoHeader = aDoHeader;
+  mBuffer = nsnull;
+  mBufferSize = 0;
 }
 
 /**
@@ -285,6 +289,78 @@ nsHTMLContentSinkStream::nsHTMLContentSinkStream(ostream& aStream,PRBool aDoForm
   mIndent = 0;
   mDoFormat = aDoFormat;
   mDoHeader = aDoHeader;
+  mBuffer = nsnull;
+  mBufferSize = 0;
+}
+
+
+/**
+ * This method tells the sink whether or not it is 
+ * encoding an HTML fragment or the whole document.
+ * By default, the entire document is encoded.
+ *
+ * @update 03/14/99 gpk
+ * @param  aFlag set to true if only encoding a fragment
+ */     
+NS_IMETHODIMP
+nsHTMLContentSinkStream::DoFragment(PRBool aFlag) 
+{
+  return NS_OK; 
+}
+
+
+void nsHTMLContentSinkStream::EnsureBufferSize(PRInt32 aNewSize)
+{
+  if (mBufferSize < aNewSize)
+  {
+    delete [] mBuffer;
+    mBufferSize = 2*aNewSize+1; // make the twice as large
+    mBuffer = new char[mBufferSize];
+    mBuffer[0] = 0;
+  }
+}
+
+void nsHTMLContentSinkStream::UnicodeToHTMLString(const nsString& aSrc)
+{
+  PRInt32       length = aSrc.Length();
+  PRUnichar     ch; 
+  const char*   entity = nsnull;
+  PRUint32      offset = 0;
+  PRUint32      addedLength = 0;
+
+  if (length > 0)
+  {
+    EnsureBufferSize(length);
+    for (PRInt32 i = 0; i < length; i++)
+    {
+      ch = aSrc[i];
+      
+      entity = NS_UnicodeToEntity(ch);
+      if (entity)
+      {
+        PRUint32 size = strlen(entity); 
+        addedLength += size;
+        EnsureBufferSize(length+addedLength+1);
+        mBuffer[offset++] = '&';
+        mBuffer[offset] = 0;
+        strcat(mBuffer,entity);
+        
+        PRUint32 temp = offset + size;
+        while (offset < temp)
+        {
+          mBuffer[offset] = tolower(mBuffer[offset]);
+          offset++;
+        }
+        mBuffer[offset++] = ';';
+        mBuffer[offset] = 0;
+      }
+      else if (ch < 128)
+      {
+        mBuffer[offset++] = (unsigned char)ch;
+        mBuffer[offset] = 0;
+      }
+    }
+  }
 }
 
 
@@ -335,15 +411,16 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode,ostream
 
 
 
-        key.ToCString(gBuffer,sizeof(gBuffer)-1);
+        key.ToCString(mBuffer,sizeof(gBuffer)-1);
       
         aStream << " " << gBuffer << char(kEqual);
         mColPos += 1 + strlen(gBuffer) + 1;
       
         const nsString& value=aNode.GetValueAt(i);
-        value.ToCString(gBuffer,sizeof(gBuffer)-1);
-        aStream << "\"" << gBuffer << "\"";
-        mColPos += 1 + strlen(gBuffer) + 1;
+        UnicodeToHTMLString(value);
+
+        aStream << "\"" << mBuffer << "\"";
+        mColPos += 1 + strlen(mBuffer) + 1;
       }
     }
   }
@@ -410,7 +487,7 @@ void CloseTag(const char* theTag,int tab,ostream& aStream) {
 static
 void WritePair(eHTMLTags aTag,const nsString& theContent,int tab,ostream& aStream) {
   const char* titleStr = GetTagName(aTag);
-  OpenTag(titleStr,tab,aStream,PR_FALSE);
+  OpenTag(titleStr,tab,aStream,PR_FALSE);  
   theContent.ToCString(gBuffer,sizeof(gBuffer)-1);
   aStream << gBuffer;
   CloseTag(titleStr,0,aStream);
@@ -805,8 +882,8 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
     const nsString& text = aNode.GetText();
     if ((mDoFormat == PR_FALSE) || preformatted == PR_TRUE)
     {
-      text.ToCString(gBuffer,sizeof(gBuffer)-1);
-      aStream << gBuffer;
+      UnicodeToHTMLString(text);
+      aStream << mBuffer;
       mColPos += text.Length();
     }
     else
@@ -820,8 +897,8 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
       // than the max then just add it 
       if (mColPos + length < mMaxColumn)
       {
-        text.ToCString(gBuffer,sizeof(gBuffer)-1);
-        aStream << gBuffer;
+        UnicodeToHTMLString(text);
+        aStream << mBuffer;
         mColPos += text.Length();
       }
       else
@@ -843,8 +920,8 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
           // if there is no break than just add it
           if (index == kNotFound)
           {
-            str.ToCString(gBuffer,sizeof(gBuffer)-1);
-            aStream << gBuffer;
+            UnicodeToHTMLString(str);
+            aStream << mBuffer;
             mColPos += str.Length();
             done = PR_TRUE;
           }
@@ -856,8 +933,8 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
 
             first.Truncate(index);
   
-            first.ToCString(gBuffer,sizeof(gBuffer)-1);
-            aStream << gBuffer << endl;
+            UnicodeToHTMLString(first);
+            aStream << mBuffer << endl;
             mColPos = 0;
   
             // cut the string from the beginning to the index
@@ -873,8 +950,8 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
     if ((mDoFormat == PR_FALSE) || preformatted || IgnoreWS(tag) == PR_FALSE)
     {
       const nsString& text = aNode.GetText();
-      text.ToCString(gBuffer,sizeof(gBuffer)-1);
-      aStream << gBuffer;
+      UnicodeToHTMLString(text);
+      aStream << mBuffer;
       mColPos += text.Length();
     }
   }
@@ -883,8 +960,8 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream){
     if ((mDoFormat == PR_FALSE) || preformatted)
     {
       const nsString& text = aNode.GetText();
-      text.ToCString(gBuffer,sizeof(gBuffer)-1);
-      aStream << gBuffer;
+      UnicodeToHTMLString(text);
+      aStream << mBuffer;
       mColPos = 0;
     }
   }

@@ -499,6 +499,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     nsresult  UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags aActualTag);
     PRBool    CanContainStyles(eHTMLTags aTag) const;
 
+    nsresult  DoFragment(PRBool aFlag);
 
 protected:
 

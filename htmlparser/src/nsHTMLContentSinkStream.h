@@ -114,6 +114,7 @@ class nsHTMLContentSinkStream : public nsIHTMLContentSink {
   NS_IMETHOD CloseMap(const nsIParserNode& aNode);
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
+  NS_IMETHOD DoFragment(PRBool aFlag);
 
 
 public:
@@ -127,6 +128,9 @@ protected:
     void AddStartTag(const nsIParserNode& aNode, ostream& aStream);
     void AddEndTag(const nsIParserNode& aNode, ostream& aStream);
     void AddIndent(ostream& aStream);
+
+    void EnsureBufferSize(PRInt32 aNewSize);
+    void UnicodeToHTMLString(const nsString& aSrc);
 
 
 
@@ -144,6 +148,9 @@ protected:
 
     PRBool    mDoFormat;
     PRBool    mDoHeader;
+
+    char*     mBuffer;
+    PRInt32   mBufferSize;
 };
 
 extern NS_HTMLPARS nsresult

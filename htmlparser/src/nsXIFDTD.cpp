@@ -73,6 +73,8 @@ nsXIFTagEntry gXIFTagTable[] =
   {"css_stylerule",         eXIFTag_css_stylerule},
   {"css_stylesheet",        eXIFTag_css_stylesheet},
 
+  {"encode",                eXIFTag_encode},
+
   {"import",                eXIFTag_import},
 
   {"leaf",                  eXIFTag_leaf},
@@ -84,6 +86,8 @@ nsXIFTagEntry gXIFTagTable[] =
   {"stylelist",             eXIFTag_stylelist},
 
   {"url",                   eXIFTag_url},
+
+
 };
 
 struct nsXIFAttrEntry
@@ -640,6 +644,11 @@ nsresult nsXIFDTD::HandleStartToken(CToken* aToken) {
         StartTopOfStack();
         mInContent = PR_TRUE;
       break;
+
+      case eXIFTag_encode:
+        ProcessEncodeTag(node);
+      break;
+
 
       case eXIFTag_attr:
         AddAttribute(node);
@@ -1592,6 +1601,23 @@ PRBool nsXIFDTD::Verify(nsString& aURLRef,nsIParser* aParser) {
 
 void nsXIFDTD::SetURLRef(char * aURLRef)
 {
+}
+
+void nsXIFDTD::ProcessEncodeTag(const nsIParserNode& aNode)
+{
+  nsString value;
+  PRInt32  error;
+
+  if (GetAttribute(aNode,nsString("selection"),value))
+  {
+    PRInt32 temp = value.ToInteger(&error);
+    if (temp == 1)
+    {
+      mSink->DoFragment(PR_TRUE);
+      return;
+    }
+  }
+  mSink->DoFragment(PR_FALSE);
 }
 
 

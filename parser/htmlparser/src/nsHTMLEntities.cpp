@@ -106,6 +106,21 @@ PRInt32 NS_EntityToUnicode(const char* aEntity) {
   return -1;
 }
 
+
+// XXX - WARNING, slow, we should have
+// a much faster routine instead of scanning
+// the entire list
+const char* NS_UnicodeToEntity(PRInt32 aCode)
+{
+  for (PRInt32 i = 0; i < NS_HTML_ENTITY_MAX; i++)
+  {
+    if (entityTable[i].mValue == aCode)
+      return entityTable[i].mEntity;
+  }
+  return nsnull;
+}
+
+
 #ifdef NS_DEBUG
 #include <stdio.h>
 

@@ -2723,3 +2723,14 @@ nsresult CNavDTD::WillInterruptParse(void){
 }
 
 
+/**
+ * 
+ * @update	gpk03/14/99
+ * @param 
+ * @return
+ */
+nsresult CNavDTD::DoFragment(PRBool aFlag) 
+{
+  return NS_OK;
+}
+

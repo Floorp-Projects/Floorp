@@ -175,6 +175,19 @@ public:
    * @param  nsIParserNode reference to parser node interface
    */     
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode)=0;
+
+
+  /**
+   * This method tells the sink whether or not it is 
+   * encoding an HTML fragment or the whole document.
+   * By default, the entire document is encoded.
+   *
+   * @update 03/14/99 gpk
+   * @param  aFlag set to true if only encoding a fragment
+   */     
+
+  NS_IMETHOD DoFragment(PRBool aFlag)=0;
+
 };
 
 extern nsresult NS_NewHTMLNullSink(nsIContentSink** aInstancePtrResult);
