@@ -788,8 +788,8 @@ NS_IMETHODIMP nsImapUrl::AllocateServerPath(const char * canonicalPath, char onl
   PRInt32 extra = 0;
   PRInt32 len = nsCRT::strlen(sourcePath);
   const char *src = sourcePath;
-
-  for (PRInt32 i = 0; i < len; i++)
+  PRInt32 i;
+  for ( i = 0; i < len; i++)
   {
     if (*src == '^')
       extra += 1; /* ^ -> ^^ */
