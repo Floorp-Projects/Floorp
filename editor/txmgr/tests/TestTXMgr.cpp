@@ -426,7 +426,7 @@ static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 #else
 #ifdef XP_MAC
 #define TRANSACTION_MANAGER_DLL "TRANSACTION_MANAGER_DLL"
-#else // XP_UNIX
+#else // XP_UNIX || XP_BEOS
 #define TRANSACTION_MANAGER_DLL "libtxmgr"MOZ_DLL_SUFFIX
 #endif
 #endif
