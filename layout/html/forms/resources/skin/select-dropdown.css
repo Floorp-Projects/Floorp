@@ -98,6 +98,10 @@ select:focus > xul|*.select-label-box {
   color: HighlightText;
 }
 
+xul|*.select-menupopup {
+  -moz-binding: url("chrome://global/content/bindings/popup.xml#popup-scrollbars");
+}
+
 /* ..... disabled state ..... */
  
 select[disabled="true"] {
