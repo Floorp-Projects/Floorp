@@ -43,12 +43,10 @@
 
 <dialog id="privacySettings"
         buttons="accept,cancel,help"
-        class="dialog"
         title="&windowtitle.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        orient="vertical"
         onload="init();"
-        ondialogaccept="return onOK(event);"
+        ondialogaccept="return onOK();"
         ondialoghelp="return doHelpButton();"
         style="width: 45em;">
 
@@ -145,8 +143,6 @@
   ]]>
   </script>
 
-  <keyset id="dialogKeys"/>
-           
   <groupbox orient="vertical">
     <caption label="&privacyLevel.label;"/>
 
