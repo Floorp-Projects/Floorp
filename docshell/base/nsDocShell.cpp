@@ -4076,7 +4076,8 @@ nsDocShell::CreateFixupURI(const PRUnichar * aStringURI, nsIURI ** aURI)
     }
 
     // Call the fixup object
-    return mURIFixup->CreateFixupURI(aStringURI, aURI);
+    return mURIFixup->CreateFixupURI(aStringURI,
+        nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP, aURI);
 }
 
 NS_IMETHODIMP
