@@ -793,24 +793,11 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
                           nsIContent* aChild,
                           PRInt32     aIndexInContainer)
 {
-#ifdef FRAME_CONSTRUCTION
+  EnterReflowLock();
   nsresult  rv = mPresContext->ContentRemoved(aDocument, aContainer,
                                               aChild, aIndexInContainer);
-  ProcessReflowCommands();
+  ExitReflowLock();
   return rv;
-#else
-  NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
-
-  nsIFrame* frame = FindFrameWithContent(aContainer);
-  NS_PRECONDITION(nsnull != frame, "null frame");
-  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-     ("PresShell::ContentDeleted: container=%p child=%p[%d] frame=%p",
-      aContainer, aChild, aIndexInContainer, frame));
-  frame->ContentDeleted(this, mPresContext, aContainer, aChild,
-                        aIndexInContainer);
-  ProcessReflowCommands();
-  return NS_OK;
-#endif
 }
 
 NS_IMETHODIMP

@@ -252,6 +252,12 @@ public:
                              nsIContent*     aChild,
                              PRInt32         aIndexInContainer);
 
+  NS_IMETHOD ContentRemoved(nsIPresContext* aPresContext,
+                            nsIDocument*    aDocument,
+                            nsIContent*     aContainer,
+                            nsIContent*     aChild,
+                            PRInt32         aIndexInContainer);
+
   // XXX style rule enumerations
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -1558,6 +1564,42 @@ HTMLStyleSheetImpl::ContentInserted(nsIPresContext* aPresContext,
         shell->AppendReflowCommand(reflowCmd);
         NS_RELEASE(reflowCmd);
       }
+    }
+  }
+
+  NS_RELEASE(shell);
+  return rv;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::ContentRemoved(nsIPresContext* aPresContext,
+                                   nsIDocument*    aDocument,
+                                   nsIContent*     aContainer,
+                                   nsIContent*     aChild,
+                                   PRInt32         aIndexInContainer)
+{
+  nsIPresShell* shell = aPresContext->GetShell();
+  nsresult      rv = NS_OK;
+
+  // Find the child frame
+  nsIFrame* childFrame = shell->FindFrameWithContent(aChild);
+
+  if (nsnull != childFrame) {
+    // Get the parent frame.
+    // Note that we use the content parent, and not the geometric parent,
+    // in case the frame has been moved out of the flow...
+    nsIFrame* parentFrame;
+    childFrame->GetContentParent(parentFrame);
+    NS_ASSERTION(nsnull != parentFrame, "null content parent frame");
+
+    // Notify the parent frame with a reflow command.
+    nsIReflowCommand* reflowCmd;
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame,
+                                 nsIReflowCommand::FrameDeleted, childFrame);
+
+    if (NS_SUCCEEDED(rv)) {
+      shell->AppendReflowCommand(reflowCmd);
+      NS_RELEASE(reflowCmd);
     }
   }
 

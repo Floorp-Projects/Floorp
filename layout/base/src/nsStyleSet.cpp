@@ -788,12 +788,8 @@ NS_IMETHODIMP StyleSetImpl::ContentRemoved(nsIPresContext* aPresContext,
                                            nsIContent*     aChild,
                                            PRInt32         aIndexInContainer)
 {
-#if 0
   return mFrameConstructor->ContentRemoved(aPresContext, aDocument, aContainer,
                                            aChild, aIndexInContainer);
-#else
-  return NS_OK;
-#endif
 }
 
 // xxx style rules enumeration

@@ -157,23 +157,6 @@ NS_IMETHODIMP nsPlaceholderFrame::ContentReplaced(nsIPresShell*   aShell,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPlaceholderFrame::ContentDeleted(nsIPresShell*   aShell,
-                                                 nsIPresContext* aPresContext,
-                                                 nsIContent*     aContainer,
-                                                 nsIContent*     aChild,
-                                                 PRInt32         aIndexInParent)
-{
-  NS_ASSERTION(mContent == aContainer, "bad content-deleted target");
-
-  // Forward the notification to the floater
-  if (nsnull != mAnchoredItem) {
-    return mAnchoredItem->ContentDeleted(aShell, aPresContext, aContainer,
-                                         aChild, aIndexInParent);
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsPlaceholderFrame::ContentChanged(nsIPresShell*   aShell,
                                                  nsIPresContext* aPresContext,
                                                  nsIContent*     aChild,
