@@ -1,0 +1,161 @@
+#!perl
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is Mozilla Communicator client code, 
+# released March 31, 1998. 
+#
+# The Initial Developer of the Original Code is Netscape Communications 
+# Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+#     Samir Gehani <sgehani@netscape.com>
+#
+
+#==============================================================================
+# usage: perl deliver.pl version URLPath stubName blobName buildWizard
+# e.g.   perl deliver.pl 5.0.0.1 ftp://foo/ mozilla-installer mozilla-installer
+#
+# Delivers the stub and blob installers to mozilla/installer/stub 
+# and mozilla/installer/sea, respectively.  Also, delivers the .xpis
+# to mozilla/installer/raw/xpi.
+#
+# NOTE:
+# -----
+#   * all args are optional 
+#   * version is used by xpinstall and needs to bumped every build
+#   * URLPath must have a trailing slash
+#   * if you are not building a release version no need to pass any args
+#   * pass in "buildwizard" as the last arg to build the wizard too
+#==============================================================================
+
+use Cwd;
+
+#// constants
+$_DEPTH  = "../../..";
+$_orig = cwd();
+chdir($_DEPTH); # resolve absolute path
+$TREETOP = cwd();
+chdir($_orig);
+
+$WIZARD = $TREETOP."/xpinstall/wizard/unix/src2";
+$ROOT   = $TREETOP."/installer";
+$STAGE  = $ROOT."/stage";
+$RAW    = $ROOT."/raw";
+$XPI    = $RAW."/xpi";
+$BLOB   = $ROOT."/sea";
+$STUB   = $ROOT."/stub";
+
+#// default args
+$aVersion = "5.0.0.0";
+$aURLPath = "ftp://ftp.mozilla.org/";
+$aStubName = "mozilla-installer";
+$aBlobName = "mozilla-installer";
+$aBuildWizard = "NO";
+
+#// parse args
+# all optional args: version, URLPath, stubName, blobName
+if ($#ARGV >= 4) { $aBuildWizard = $ARGV[4]; }
+if ($#ARGV >= 3) { $aBlobName    = $ARGV[3]; }
+if ($#ARGV >= 2) { $aStubName    = $ARGV[2]; }
+if ($#ARGV >= 1) { $aURLPath     = $ARGV[1]; }
+if ($#ARGV >= 0) { $aVersion     = $ARGV[0]; }
+
+#// create dist structure (mozilla/installer/{stage,raw,stub,sea})
+if (-e $ROOT)
+{
+    if (-w $ROOT) 
+        { system("rm -rf $ROOT"); }
+    else 
+        { die "--- deliver.pl: check perms on mozilla/installer: $!"; }
+}
+
+mkdir($ROOT, 0777)  || die "--- deliver.pl: couldn't mkdir root: $!";
+mkdir($STAGE, 0777) || die "--- deliver.pl: couldn't mkdir stage: $!";
+mkdir($RAW, 0777)   || die "--- deliver.pl: couldn't mkdir raw: $!";
+mkdir($XPI, 0777)   || die "--- deliver.pl: couldn't mkdir xpi: $!";
+mkdir($BLOB, 0777)  || die "--- deliver.pl: couldn't mkdir sea: $!";
+mkdir($STUB, 0777)  || die "--- deliver.pl: couldn't mkdir stub: $!";
+
+
+#-------------------------------------------------------------------------
+#   Deliver wizard
+#-------------------------------------------------------------------------
+#// build the wizard 
+if ($aBuildWizard eq "buildwizard")
+{
+    chdir($WIZARD);
+    system($TREETOP."/../build/autoconf/update-makefile.sh");
+
+    #// make unix wizard
+    system("make");
+    chdir($_orig);
+}
+
+#// deliver wizard to staging area (mozilla/installer/stage)
+copy("$WIZARD/mozilla-installer", $RAW);
+copy("$WIZARD/README", $RAW);
+copy("$WIZARD/MPL-1.1.txt", $RAW);
+
+spew("Completed delivering wizard");
+
+
+#-------------------------------------------------------------------------
+#   Make .xpis
+#-------------------------------------------------------------------------
+#// call pkgcp.pl
+chdir("$TREETOP/xpinstall/packager");
+system("perl pkgcp.pl -o unix -s $TREETOP/dist -d $STAGE -f $TREETOP/xpinstall/packager/packages-unix -v");
+spew("Completed copying build files");
+
+#// call makeall.pl tunneling args (delivers .xpis to mozilla/installer/stage)
+chdir("$TREETOP/xpinstall/packager/unix");
+system("perl makeall.pl $aVersion $aURLPath $STAGE $XPI");
+system("mv $TREETOP/xpinstall/packager/unix/config.ini $RAW");
+spew("Completed making .xpis");
+
+
+#-------------------------------------------------------------------------
+#   Package stub and sea
+#-------------------------------------------------------------------------
+#// tar and gzip mozilla-installer, README, license, config.ini into stub
+chdir($RAW);
+system("tar cvf $STUB/$aStubName.tar mozilla-installer README config.ini MPL-1.1.txt"); 
+system("gzip $STUB/$aStubName.tar");
+
+#// tar and gzip mozilla-installer, README, license, config.ini, and .xpis 
+#// into sea
+system("tar cvf $BLOB/$aBlobName.tar ."); 
+system("gzip $BLOB/$aBlobName.tar");
+chdir($_orig);
+
+spew("Completed packaging stub and sea");
+spew("Installers built (see mozilla/installer/{stub,sea})");
+
+
+#-------------------------------------------------------------------------
+#   Utilities
+#-------------------------------------------------------------------------
+sub spew 
+{
+    print "+++ deliver.pl: ".$_[0]."\n";
+}
+
+sub copy
+{
+    if (! -e $_[0])
+    {
+        die "--- deliver.pl: couldn't cp cause ".$_[0]." doesn't exist: $!";
+    }
+    system ("cp ".$_[0]." ".$_[1]);
+}

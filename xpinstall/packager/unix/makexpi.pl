@@ -38,7 +38,6 @@
 #            d:\build\mozilla\dist\win32_o.obj\install\working
 #
 
-use File::Copy;
 use Cwd;
 
 # Make sure there are at least three arguments
@@ -97,10 +96,11 @@ $saveCwdir = cwd();
 # change directory to where the files are, else zip will store
 # unwanted path information.
 chdir("$inStagePath/$inComponentName");
+
 system("zip -r $inDestPath/$inComponentName.xpi *");
 chdir("$saveCwdir");
 
-copy("$inComponentName.js", "install.js");
+system("cp $inComponentName.js install.js");
 system("zip -g $inDestPath/$inComponentName.xpi install.js");
 
 # delete install.js
