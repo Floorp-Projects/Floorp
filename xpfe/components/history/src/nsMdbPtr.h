@@ -90,6 +90,8 @@ public:
             if (mRawPtr)
                 mRawPtr->AddStrongRef(mEnv);
         }
+
+        return *this;
     }
 
     ~nsMdbPtr()
