@@ -33,6 +33,11 @@
 //
 #define MAX_IO_BUFFER_SIZE   8192
 
+//
+// This is the maximum amount of data that will be read into a stream before
+// another transport is processed...
+//
+#define MAX_IO_TRANSFER_SIZE  32768
 
 enum nsSocketState {
   eSocketState_Created        = 0,
