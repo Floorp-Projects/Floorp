@@ -165,30 +165,15 @@ nsCookieHTTPNotify::OnModifyRequest(nsIHttpChannel *aHttpChannel)
     if (NS_FAILED(rv)) return rv;
 
     // Get the original url that the user either typed in or clicked on
-    nsCOMPtr<nsILoadGroup> pLoadGroup;
-    rv = aHttpChannel->GetLoadGroup(getter_AddRefs(pLoadGroup));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIChannel> pChannel;
-    if (pLoadGroup) {
-      nsCOMPtr<nsIRequest> pRequest;
-      rv = pLoadGroup->GetDefaultLoadRequest(getter_AddRefs(pRequest));
-      if (pRequest)
-        pChannel = do_QueryInterface(pRequest);
-    }
-
     nsCOMPtr<nsIURI> pFirstURL;
-    if (pChannel) {
-      rv = pChannel->GetURI(getter_AddRefs(pFirstURL));
-    } else {
-      rv = aHttpChannel->GetURI(getter_AddRefs(pFirstURL));
-    }
+    rv = aHttpChannel->GetDocumentURI(getter_AddRefs(pFirstURL));
     if (NS_FAILED(rv)) return rv;
 
     // Ensure that the cookie service exists
     rv = SetupCookieService();
     if (NS_FAILED(rv)) return rv;
 
+    // Get the cookies
     char * cookie;
     rv = mCookieService->GetCookieStringFromHttp(pURL, pFirstURL, &cookie);
     if (NS_FAILED(rv)) return rv;
@@ -224,6 +209,11 @@ nsCookieHTTPNotify::OnExamineResponse(nsIHttpChannel *aHttpChannel)
     if (NS_FAILED(rv)) return rv;
 
     // Get the original url that the user either typed in or clicked on
+    nsCOMPtr<nsIURI> pFirstURL;
+    rv = aHttpChannel->GetDocumentURI(getter_AddRefs(pFirstURL));
+    if (NS_FAILED(rv)) return rv;
+
+    // Get the prompter
     nsCOMPtr<nsILoadGroup> pLoadGroup;
     rv = aHttpChannel->GetLoadGroup(getter_AddRefs(pLoadGroup));
     if (NS_FAILED(rv)) return rv;
@@ -234,15 +224,6 @@ nsCookieHTTPNotify::OnExamineResponse(nsIHttpChannel *aHttpChannel)
       if (NS_FAILED(rv)) return rv;
       pChannel = do_QueryInterface(pRequest);
     }
-    nsCOMPtr<nsIURI> pFirstURL;
-    if (pChannel) {
-      rv = pChannel->GetURI(getter_AddRefs(pFirstURL));
-    } else {
-      rv = aHttpChannel->GetURI(getter_AddRefs(pFirstURL));
-    }
-    if (NS_FAILED(rv)) return rv;
-
-    // Get the prompter
     nsCOMPtr<nsIInterfaceRequestor> pInterfaces;
     nsCOMPtr<nsIPrompt> pPrompter;
     if (pChannel) {
