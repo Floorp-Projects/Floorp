@@ -61,21 +61,30 @@ REGERR DeleteFileLater(nsFileSpec& filename)
 
     return result;
 }
+/* tmp file is the bad one that we want to replace with target. */
 
-REGERR ReplaceFileLater(nsFileSpec& tmpfile, nsFileSpec& target )
+REGERR ReplaceFileLater(nsFileSpec& replacementFile, nsFileSpec& doomedFile )
 {
     REGERR result = 0;
     
-    if (! target.Exists() )
+    if(replacementFile == doomedFile)
+    {
+        /* do not have to do anything */
+        return result;
+    }
+
+    doomedFile.Delete(false);
+
+    if (! doomedFile.Exists() )
     {
         // Now that we have move the existing file, we can move the mExtracedFile into place.
         nsFileSpec parentofFinalFile;
 
-        target.GetParent(parentofFinalFile);
-        result = tmpfile.Move(parentofFinalFile);
+        doomedFile.GetParent(parentofFinalFile);
+        result = replacementFile.Move(parentofFinalFile);
     
-        char* leafName = target.GetLeafName();
-        tmpfile.Rename(leafName);
+        char* leafName = doomedFile.GetLeafName();
+        replacementFile.Rename(leafName);
         nsCRT::free(leafName);
     }
     else
@@ -88,8 +97,8 @@ REGERR ReplaceFileLater(nsFileSpec& tmpfile, nsFileSpec& target )
             result = NR_RegAddKey( reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY, &newkey);
             if ( result == REGERR_OK ) 
             {
-                nsPersistentFileDescriptor tempDesc(tmpfile);
-                nsPersistentFileDescriptor targDesc(target);
+                nsPersistentFileDescriptor tempDesc(replacementFile);
+                nsPersistentFileDescriptor targDesc(doomedFile);
             
                 char* tempBuffer = nsnull;
                 char* targBuffer = nsnull;

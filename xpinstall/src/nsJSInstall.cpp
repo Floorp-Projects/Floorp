@@ -26,6 +26,8 @@
 
 #include "nsIDOMInstallVersion.h"
 
+#include "stdio.h"
+
 #ifdef XP_WIN
 #include "nsWinReg.h"
 #include "nsJSWinReg.h"
@@ -1397,6 +1399,26 @@ InstallUninstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 }
 
 
+/*START HACK FOR DEBUGGING UNTIL ALERTS WORK*/
+
+PR_STATIC_CALLBACK(JSBool)
+InstallTRACE(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsAutoString b0;
+  
+  nsCvrtJSValToStr(b0, cx, argv[0]);
+  
+  char *tempStr;
+  tempStr = b0.ToNewCString();
+  printf("Install:\t%s\n", tempStr);
+
+  delete [] tempStr;
+
+  return JS_TRUE;
+}
+
+/*END HACK FOR DEBUGGING UNTIL ALERTS WORK*/
+
 /***********************************************************************/
 //
 // class for Install
@@ -1488,6 +1510,9 @@ static JSFunctionSpec InstallMethods[] =
   {"SetPackageFolder",          InstallSetPackageFolder,        1},
   {"StartInstall",              InstallStartInstall,            4},
   {"Uninstall",                 InstallUninstall,               1},
+/*START HACK FOR DEBUGGING UNTIL ALERTS WORK*/
+  {"TRACE",                     InstallTRACE,                   1},
+/*END HACK FOR DEBUGGING UNTIL ALERTS WORK*/
   {0}
 };
 
