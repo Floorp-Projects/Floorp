@@ -2326,6 +2326,11 @@ static nsModuleComponentInfo components[] = {
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
+    NS_CONTENT_HANDLER_PROGID_PREFIX"text/xml", 
+    nsBrowserContentHandlerConstructor 
+  },
+  { "Browser Content Handler",
+    NS_BROWSERCONTENTHANDLER_CID,
     NS_CONTENT_HANDLER_PROGID_PREFIX"text/css", 
     nsBrowserContentHandlerConstructor 
   },
