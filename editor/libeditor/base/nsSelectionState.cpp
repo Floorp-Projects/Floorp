@@ -42,10 +42,7 @@
 #include "nsIDOMRange.h"
 #include "nsISelection.h"
 #include "nsEditor.h"
-#include "nsLayoutCID.h"
 #include "nsEditorUtils.h"
-
-static NS_DEFINE_CID(kCRangeCID, NS_RANGE_CID);
 
 
 /***************************************************************************
@@ -705,10 +702,8 @@ nsresult nsRangeStore::StoreRange(nsIDOMRange *aRange)
 nsresult nsRangeStore::GetRange(nsCOMPtr<nsIDOMRange> *outRange)
 {
   if (!outRange) return NS_ERROR_NULL_POINTER;
-  nsresult res = nsComponentManager::CreateInstance(kCRangeCID,
-                             nsnull,
-                             NS_GET_IID(nsIDOMRange),
-                             getter_AddRefs(*outRange));
+  nsresult res;
+  *outRange = do_CreateInstance("@mozilla.org/content/range;1", &res);
   if(NS_FAILED(res)) return res;
 
   res = (*outRange)->SetStart(startNode, startOffset);
