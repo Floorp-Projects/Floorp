@@ -7681,6 +7681,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
           }
           else {
             // We're going to be offscreen.
+            treeRowGroup->ClearRowGroupInfo();
             treeRowGroup->ReflowScrollbar(aPresContext);
           }
 
@@ -8018,6 +8019,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
           }
           else {
             // We're going to be offscreen.
+            treeRowGroup->ClearRowGroupInfo();
             treeRowGroup->ReflowScrollbar(aPresContext);
           }
 
