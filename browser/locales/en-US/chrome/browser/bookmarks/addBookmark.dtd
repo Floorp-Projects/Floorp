@@ -11,6 +11,8 @@
 <!ENTITY button.createin2.label     "Create In &lt;&lt;">
 <!ENTITY createin.label             "Create in:">
 <!ENTITY createin.accesskey         "C">
+<!ENTITY moveto.label               "Move to:">
+<!ENTITY moveto.accesskey           "M">
 <!ENTITY button.newfolder.label     "New Folder...">
 <!ENTITY button.newfolder.accesskey "w">
 <!ENTITY alwayscreateinfolder.label "Don't show this dialog again">
