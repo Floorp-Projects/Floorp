@@ -61,16 +61,16 @@
 
   <toolbox> 
     <toolbar>
+      <!-- insert the next line should the bug where buttons don't show up
+           without an image specified ever return -->
+      <!-- src="resource:/res/toolbar/TB_Back.gif" align="bottom" -->
       <titledbutton
-         src="resource:/res/toolbar/TB_Back.gif" align="bottom"
          value="Make Dialog" onclick="MakeDialog()"
          style="background-color:rgb(192,192,192);"/>
       <titledbutton
-         src="resource:/res/toolbar/TB_Back.gif" align="bottom"
          value="Start Animation" onclick="startAnimation()"
          style="background-color:rgb(192,192,192);"/>
       <titledbutton
-         src="resource:/res/toolbar/TB_Back.gif" align="bottom"
          value="Stop Animation" onclick = "stopAnimation()"
          style="background-color:rgb(192,192,192);"/>
     </toolbar>
