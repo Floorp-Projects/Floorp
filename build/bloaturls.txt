@@ -1,5 +1,5 @@
 http://www.mozilla.org
-ftp://ftp.netscape.com/Welcome
+ftp://ftp.mozilla.org/welcome.msg
 http://www.mozilla.org
 resource:///res/samples/test2.html
 resource:///res/samples/test8.html
