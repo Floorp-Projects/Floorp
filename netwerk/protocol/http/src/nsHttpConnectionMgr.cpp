@@ -313,6 +313,7 @@ nsHttpConnectionMgr::PruneDeadConnectionsCB(nsHashKey *key, void *data, void *cl
         ent->mActiveConns.Count() == 0 &&
         ent->mPendingQ.Count()    == 0) {
         LOG(("    removing empty connection entry\n"));
+        delete ent;
         return kHashEnumerateRemove;
     }
 
