@@ -48,6 +48,8 @@ class nsAppShell : public nsIAppShell
  private:
   nsDispatchListener*     mDispatchListener;
   void DispatchEvent(XEvent *event);
+  static void HandleButtonEvent(XEvent *event, nsWidget *aWidget);
+  static void HandleMotionNotifyEvent(XEvent *event, nsWidget *aWidget);
   static void HandleExposeEvent(XEvent *event, nsWidget *aWidget);
   static void HandleConfigureNotifyEvent(XEvent *event, nsWidget *aWidget);
 

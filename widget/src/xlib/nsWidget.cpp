@@ -386,7 +386,7 @@ void nsWidget::CreateNative(Window aParent, nsRect aRect)
   // be discarded...
   attr.bit_gravity = NorthWestGravity;
   // make sure that we listen for events
-  attr.event_mask = StructureNotifyMask | ExposureMask;
+  attr.event_mask = StructureNotifyMask | ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask;
   // set the default background color and border to that awful gray
   attr.background_pixel = bg_pixel;
   attr.border_pixel = border_pixel;
@@ -487,6 +487,38 @@ nsWidget::OnPaint(nsPaintEvent &event)
     }
     else {
       result = PR_FALSE;
+    }
+  }
+  return result;
+}
+
+PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent) 
+{
+  PRBool result = PR_FALSE;
+  if (nsnull == mEventCallback && nsnull == mMouseListener) {
+    return result;
+  }
+
+  if (nsnull != mEventCallback) {
+    result = DispatchWindowEvent(&aEvent);
+    return result;
+  }
+  if (nsnull != mMouseListener) {
+    switch (aEvent.message) {
+    case NS_MOUSE_MOVE:
+      // XXX this isn't handled in gtk for some reason.
+      break;
+    case NS_MOUSE_LEFT_BUTTON_DOWN:
+    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+    case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      result = ConvertStatus(mMouseListener->MousePressed(aEvent));
+      break;
+    case NS_MOUSE_LEFT_BUTTON_UP:
+    case NS_MOUSE_MIDDLE_BUTTON_UP:
+    case NS_MOUSE_RIGHT_BUTTON_UP:
+      result = ConvertStatus(mMouseListener->MouseReleased(aEvent));
+      result = ConvertStatus(mMouseListener->MouseClicked(aEvent));
+      break;
     }
   }
   return result;
