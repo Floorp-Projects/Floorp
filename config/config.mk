@@ -573,6 +573,11 @@ MOZ_OJI		= 1	# on by default now
 endif
 endif
 
+ifdef MOZ_LIBTEST
+DEFINES		+= -DLAYPROBE_API
+MOZ_LIBTEST	= 1
+endif
+
 ifdef MOZ_JAVA
 DEFINES		+= -DJAVA
 ifdef MOZ_OJI

@@ -55,6 +55,11 @@ LCFLAGS=$(LCFLAGS) -DSTAND_ALONE_JAVA
 MOZ_OJI = 1             # on by default now
 !endif
 
+!ifdef MOZ_LIBTEST
+MOZ_LIBTEST = 1
+LCFLAGS=$(LCFLAGS) -DLAYPROBE_API
+!endif
+
 !ifdef MOZ_JAVA
 MOZ_JAVA_FLAG=-DJAVA
 !ifdef MOZ_OJI
