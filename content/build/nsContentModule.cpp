@@ -280,6 +280,7 @@ extern nsresult NS_NewDocumentViewer(nsIDocumentViewer** aResult);
 extern nsresult NS_NewRange(nsIDOMRange** aResult);
 extern nsresult NS_NewRangeUtils(nsIRangeUtils** aResult);
 extern nsresult NS_NewContentIterator(nsIContentIterator** aResult);
+extern nsresult NS_NewPreContentIterator(nsIContentIterator** aResult);
 extern nsresult NS_NewGenRegularIterator(nsIContentIterator** aResult);
 extern nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aResult);
 extern nsresult NS_NewGenSubtreeIterator(nsIContentIterator** aInstancePtrResult);
@@ -354,6 +355,7 @@ MAKE_CTOR(CreateSelection,                nsIFrameSelection,           NS_NewSel
 MAKE_CTOR(CreateRange,                    nsIDOMRange,                 NS_NewRange)
 MAKE_CTOR(CreateRangeUtils,               nsIRangeUtils,               NS_NewRangeUtils)
 MAKE_CTOR(CreateContentIterator,          nsIContentIterator,          NS_NewContentIterator)
+MAKE_CTOR(CreatePreContentIterator,       nsIContentIterator,          NS_NewPreContentIterator)
 MAKE_CTOR(CreateGeneratedContentIterator, nsIContentIterator,          NS_NewGenRegularIterator)
 MAKE_CTOR(CreateGeneratedSubtreeIterator, nsIContentIterator,          NS_NewGenSubtreeIterator)
 MAKE_CTOR(CreateSubtreeIterator,          nsIContentIterator,          NS_NewContentSubtreeIterator)
@@ -640,6 +642,11 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_CONTENTITERATOR_CID,
     nsnull,
     CreateContentIterator },
+
+  { "Pre Content iterator",
+    NS_PRECONTENTITERATOR_CID,
+    nsnull,
+    CreatePreContentIterator },
 
   { "Generated Content iterator",
     NS_GENERATEDCONTENTITERATOR_CID,
