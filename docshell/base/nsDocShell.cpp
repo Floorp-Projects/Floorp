@@ -82,6 +82,8 @@
 
 #include "nsIFocusController.h"
 
+#include "nsITextToSubURI.h"
+
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
@@ -3564,11 +3566,61 @@ NS_IMETHODIMP nsDocShell::ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor)
             // nsUnescape modifies the string that is passed into it.
             nsUnescape(str);
 
-            sNewRef.AssignWithConversion(str);
+            // We assume that the bytes are in UTF-8, as it says in the spec:
+            // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
+            nsAutoString savedNewRef(sNewRef);
+            sNewRef = NS_ConvertUTF8toUCS2(str);
 
             nsMemory::Free(str);
 
+            // We try the UTF-8 string first, and then try the document's charset (see below).
             rv = shell->GoToAnchor(sNewRef);
+
+            // Above will fail if the anchor name is not UTF-8.
+            // Need to convert from document charset to unicode.
+            if (NS_FAILED(rv))
+            {
+              // Get a document charset
+              NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
+              nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(mContentViewer));
+              NS_ENSURE_TRUE(docv, NS_ERROR_FAILURE);
+              nsCOMPtr<nsIDocument> doc;
+              rv = docv->GetDocument(*getter_AddRefs(doc));
+              NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+              nsAutoString aCharset;
+              rv = doc->GetDocumentCharacterSet(aCharset);
+              NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+              char *charsetStr = aCharset.ToNewCString();
+              NS_ENSURE_TRUE(charsetStr, NS_ERROR_OUT_OF_MEMORY);
+
+              // Use the saved string
+              char *uriStr = savedNewRef.ToNewCString();
+              if (!uriStr)
+              {
+                nsMemory::Free(charsetStr);
+                return NS_ERROR_OUT_OF_MEMORY;
+              }
+
+              nsCOMPtr<nsITextToSubURI> textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+              if (NS_FAILED(rv))
+              {
+                nsMemory::Free(uriStr);
+                nsMemory::Free(charsetStr);
+                return NS_ERROR_FAILURE;
+              }
+
+              // Unescape and convert to unicode
+              PRUnichar *uStr;
+              rv = textToSubURI->UnEscapeAndConvert(charsetStr, uriStr, &uStr);
+              nsMemory::Free(uriStr);
+              nsMemory::Free(charsetStr);
+              NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+              sNewRef.Assign(uStr);
+              nsMemory::Free(uStr);
+
+              rv = shell->GoToAnchor(sNewRef);
+            }
         }
     }
     else
