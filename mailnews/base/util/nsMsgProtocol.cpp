@@ -623,6 +623,11 @@ NS_IMETHODIMP nsMsgProtocol::GetStatus(nsresult *status)
 
 NS_IMETHODIMP nsMsgProtocol::Cancel(nsresult status)
 {
+	NS_ASSERTION(m_channel,"no channel");
+	if (!m_channel) {
+		return NS_ERROR_FAILURE;
+	}
+
 	return m_channel->Cancel(status);
 }
 

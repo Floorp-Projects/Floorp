@@ -53,6 +53,7 @@
 #include "nsICmdLineHandler.h"
 #include "nsICategoryManager.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellLoadInfo.h"
 #include "nsIMessengerWindowService.h"
 #include "nsIMsgSearchSession.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -77,6 +78,7 @@ nsNntpService::nsNntpService()
 {
     NS_INIT_REFCNT();
     mPrintingOperation = PR_FALSE;
+	mOpenAttachmentOperation = PR_FALSE;
 }
 
 nsNntpService::~nsNntpService()
@@ -201,10 +203,20 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
     // run the url in the webshell in order to display it. If it isn't a docshell then just
     // run the news url like we would any other news url. 
 	  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
-    if (NS_SUCCEEDED(rv) && docShell)
-	    rv = docShell->LoadURI(myuri, nsnull, nsIWebNavigation::LOAD_FLAGS_NONE);
-    else
-      rv = RunNewsUrl(myuri, aMsgWindow, aDisplayConsumer);
+	  if (NS_SUCCEEDED(rv) && docShell) {
+		nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+		// DIRTY LITTLE HACK --> if we are opening an attachment we want the docshell to
+        // treat this load as if it were a user click event. Then the dispatching stuff will be much
+        // happier.
+        if (mOpenAttachmentOperation) {
+			docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+			loadInfo->SetLoadType(nsIDocShellLoadInfo::loadLink);
+		}
+	    rv = docShell->LoadURI(myuri, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+	  }
+	  else {
+		rv = RunNewsUrl(myuri, aMsgWindow, aDisplayConsumer);
+	  }
   }
 
   if (aURL) {
@@ -224,8 +236,19 @@ NS_IMETHODIMP nsNntpService::OpenAttachment(const char *aContentType,
                                             nsIMsgWindow *aMsgWindow, 
                                             nsIUrlListener *aUrlListener)
 {
-  // news doesn't know anything about opening attachments....
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCAutoString partMsgUrl(aMessageUri);
+  
+  // try to extract the specific part number out from the url string
+  partMsgUrl += "?";
+  const char *part = PL_strstr(aUrl, "part=");
+  partMsgUrl += part;
+  partMsgUrl += "&type=";
+  partMsgUrl += aContentType;
+  mOpenAttachmentOperation = PR_TRUE;
+  nsresult rv = DisplayMessage(partMsgUrl, aDisplayConsumer,
+                      aMsgWindow, aUrlListener, nsnull, nsnull);
+  mOpenAttachmentOperation = PR_FALSE;
+  return rv;
 }
 
 NS_IMETHODIMP nsNntpService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL, nsIMsgWindow *aMsgWindow) 
