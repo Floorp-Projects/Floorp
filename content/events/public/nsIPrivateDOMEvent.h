@@ -69,8 +69,6 @@ public:
   NS_IMETHOD HasOriginalTarget(PRBool* aResult)=0;
   NS_IMETHOD IsTrustedEvent(PRBool* aResult)=0;
   NS_IMETHOD SetTrusted(PRBool aTrusted)=0;
-  
-  NS_IMETHOD GetOriginalTargetTrusted(nsIDOMEventTarget** aTarget) = 0;
 };
 
 extern nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext, nsEvent *aEvent);
