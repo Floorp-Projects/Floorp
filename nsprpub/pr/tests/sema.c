@@ -52,7 +52,7 @@ void ThreadFunc(void *arg)
         }
         counter++;
         if (PR_PostSemaphore(sem1) == PR_FAILURE) {
-            fprintf(stderr, "PR_WaitSemaphore failed\n");
+            fprintf(stderr, "PR_PostSemaphore failed\n");
             exit(1);
         }
     }
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
         }
         counter++;
         if (PR_PostSemaphore(sem2) == PR_FAILURE) {
-            fprintf(stderr, "PR_WaitSemaphore failed\n");
+            fprintf(stderr, "PR_PostSemaphore failed\n");
             exit(1);
         }
     }
