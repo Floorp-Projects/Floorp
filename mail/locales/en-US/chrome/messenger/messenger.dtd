@@ -63,7 +63,7 @@
 <!ENTITY undeleteMsgCmd.label "Undelete Message">
 <!ENTITY undeleteMsgCmd.accesskey "d">
 <!ENTITY cancelNewsMsgCmd.label "Cancel Message">
-<!ENTITY cancelNewsMsgCmd.accesskey "n">
+<!ENTITY cancelNewsMsgCmd.accesskey "M">
 <!ENTITY deleteMsgsCmd.label "Delete Selected Messages">
 <!ENTITY deleteMsgsCmd.accesskey "D">
 <!ENTITY undeleteMsgsCmd.label "Undelete Selected Messages">
