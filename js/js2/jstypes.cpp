@@ -125,7 +125,7 @@ static JSValue function_constructor(Context *cx, const JSValues& argv)
         source.append(JSValue::valueToString(argv[argv.size() - 1]).string);
         source.append("}");
         
-        JSFunction *f = new JSFunction(cx->compileFunction(source));
+        JSFunction *f = new JSFunction(cx->compileFunction(source), NULL);
         f->setProperty(widenCString("length"), JSValue(parameterCount));
         JSObject *obj = new JSObject();
         f->setProperty(widenCString("prototype"), JSValue(obj)); 
@@ -496,11 +496,20 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
         printFormat(f, "Object @ 0x%08X\n", value.object);
         f << *value.object;
         break;
-    case JSValue::array_tag:
-        printFormat(f, "Array @ 0x%08X", value.object);
+    case JSValue::array_tag: {
+            JSArray *a = value.array;
+            f << "[";
+            for (uint32 i = 0; i < a->length(); i++) {
+                f << (*a)[i];
+                if (i < (a->length() - 1))
+                    f << ", ";
+            }
+            f << "]";
+//          printFormat(f, "Array @ 0x%08X", value.array);
+        }
         break;
     case JSValue::function_tag:
-        printFormat(f, "Function @ 0x%08X", value.object);
+        printFormat(f, "Function @ 0x%08X", value.function);
         break;
     case JSValue::string_tag:
         f << "\"" << *value.string << "\"";

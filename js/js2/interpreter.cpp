@@ -96,16 +96,16 @@ struct Activation : public gc_base {
     }
 
     Activation(ICodeModule* iCode, Activation* caller, const JSValue thisArg,
-                 const RegisterList& list)
+                 const ArgumentList& list)
         : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
     {
         // copy caller's parameter list to initial registers.
         JSValues::iterator dest = mRegisters.begin();
         *dest++ = thisArg;
         const JSValues& params = caller->mRegisters;
-        for (RegisterList::const_iterator src = list.begin(), 
+        for (ArgumentList::const_iterator src = list.begin(), 
                  end = list.end(); src != end; ++src, ++dest) {
-            *dest = params[(*src).first];
+            *dest = params[(*src).first.first];
         }
     }
 
@@ -593,6 +593,16 @@ const JSValue Context::findBinaryOverride(JSValue &operand1, JSValue &operand2, 
     return JSValue((*candidate)->function);
 }
 
+
+bool Context::hasNamedArguments(ArgumentList &args)
+{
+    Argument* e = args.end();
+    for (ArgumentList::iterator r = args.begin(); r != e; r++) {
+        if ((*r).second) return true;
+    }
+    return false;
+}
+
 JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
 {
     assert(mActivation == 0); /* recursion == bad */
@@ -666,13 +676,13 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     if (!target)
                         throw new JSException("Call to non callable object");
                     if (target->isNative()) {
-                        RegisterList &params = op4(call);
+                        ArgumentList &params = op4(call);
                         JSValues argv(params.size() + 1);
                         argv[0] = (*registers)[op3(call).first];
                         JSValues::size_type i = 1;
-                        for (RegisterList::const_iterator src = params.begin(), end = params.end();
+                        for (ArgumentList::const_iterator src = params.begin(), end = params.end();
                                         src != end; ++src, ++i) {
-                            argv[i] = (*registers)[src->first];
+                            argv[i] = (*registers)[src->first.first];
                         }
                         JSValue result = static_cast<JSNativeFunction*>(target)->mCode(this, argv);
                         if (op1(call).first != NotARegister)
@@ -680,11 +690,56 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         break;
                     }
                     else {
-                        mLinkage = new Linkage(mLinkage, ++mPC,
-                                               mActivation, mGlobal, op1(call));
-                        mActivation = new Activation(target->getICode(), mActivation, (*registers)[op3(call).first], op4(call));
+                        ICodeModule *icm = target->getICode();
+                        ArgumentList &args = op4(call);
+                        ArgumentList newArgs(args.size());
+                        uint32 argCount = args.size() + 1;      // the 'this' arg is travelling separately
+
+                        if (hasNamedArguments(args)) {
+                            // find argument names that match parameter names
+                            for (uint32 a = 0; a < args.size(); a++) {
+                                if (args[a].second) {
+                                    VariableList::iterator i = icm->itsVariables->find(*(args[a].second));
+                                    if (i != icm->itsVariables->end()) {
+                                        TypedRegister r = (*i).second;
+                                        if (r.first < icm->mParameterCount) { // make sure we didn't match a local var                                            
+                                            // the named argument is arriving in slot a, but needs to be r instead
+                                            newArgs[r.first - 1] = Argument(args[a].first, NULL);
+                                        }
+
+                                    }
+                                }
+                            }
+                            args = newArgs;
+                        }
+                        uint32 pOffset = icm->mEntryPoint;
+                        if (argCount < icm->mNonOptionalParameterCount)
+                            throw new JSException("Too few arguments in call");
+                        if (argCount >= icm->mParameterCount) {
+                            if (icm->mHasRestParameter) {
+                                if (icm->mHasNamedRestParameter) {
+                                    uint32 restArgsCount = argCount - icm->mParameterCount + 1;
+                                    uint32 restArgsStart = icm->mParameterCount - 2;    // 1 for 'this', 1 for 0-based
+                                    JSArray *r = new JSArray(restArgsCount);
+                                    for (uint32 i = 0; i < restArgsCount; i++)
+                                        (*r)[i] = (*registers)[args[i + restArgsStart].first.first];
+                                    (*registers)[args[restArgsStart].first.first] = r;
+                                }
+                                // else, we just ignore the other arguments
+                            }
+                            else {
+                                if (argCount > icm->mParameterCount)
+                                    throw new JSException("Too many arguments in call");
+                            }
+                        }
+                        else {
+                            if (argCount < icm->mParameterCount)
+                                pOffset = icm->mParameterInit[argCount - icm->mNonOptionalParameterCount];
+                        }
+                        mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, op1(call));
+                        mActivation = new Activation(icm, mActivation, (*registers)[op3(call).first], args);
                         registers = &mActivation->mRegisters;
-                        mPC = mActivation->mICode->its_iCode->begin();
+                        mPC = mActivation->mICode->its_iCode->begin() + pOffset;
                         endPC = mActivation->mICode->its_iCode->end();
                         continue;
                     }
@@ -695,12 +750,12 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     DirectCall* call = static_cast<DirectCall*>(instruction);
                     JSFunction *target = op2(call);
                     if (target->isNative()) {
-                        RegisterList &params = op3(call);
+                        ArgumentList &params = op3(call);
                         JSValues argv(params.size() + 1);
                         JSValues::size_type i = 1;
-                        for (RegisterList::const_iterator src = params.begin(), end = params.end();
+                        for (ArgumentList::const_iterator src = params.begin(), end = params.end();
                                         src != end; ++src, ++i) {
-                            argv[i] = (*registers)[src->first];
+                            argv[i] = (*registers)[src->first.first];
                         }
                         JSValue result = static_cast<JSNativeFunction*>(target)->mCode(this, argv);
                         if (op1(call).first != NotARegister)
@@ -799,7 +854,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case NEW_FUNCTION:
                 {
                     NewFunction* nf = static_cast<NewFunction*>(instruction);
-                    (*registers)[dst(nf).first] = new JSFunction(src1(nf));
+                    (*registers)[dst(nf).first] = new JSFunction(src1(nf), src2(nf));
                 }
                 break;
             case NEW_ARRAY:
@@ -1380,7 +1435,7 @@ using JSString throughout.
         }
 
     }
-
+    mActivation = 0;
     return rv;
 } /* interpret */
 

@@ -36,6 +36,7 @@
 
 #include "utilities.h"
 #include "gc_allocator.h"
+#include "parser.h"
 #include <vector>
 #include <map>
 #include <stack>
@@ -205,18 +206,18 @@ namespace JSTypes {
     extern const JSValue kPositiveInfinity;
 
     // JS2 predefined types:
-    extern JSType Any_Type;
-    extern JSType Integer_Type;
-    extern JSType Number_Type;
-    extern JSType Character_Type;
-    extern JSType String_Type;
-    extern JSType Function_Type;
-    extern JSType Array_Type;
-    extern JSType Type_Type;
-    extern JSType Boolean_Type;
-    extern JSType Null_Type;
-    extern JSType Void_Type;
-    extern JSType None_Type;
+    extern JSType           Any_Type;
+    extern JSType           Integer_Type;
+    extern JSType           Number_Type;
+    extern JSType           Character_Type;
+    extern JSType           String_Type;
+    extern JSType           Function_Type;
+    extern JSType           Array_Type;
+    extern JSType           Type_Type;
+    extern JSType           Boolean_Type;
+    extern JSType           Null_Type;
+    extern JSType           Void_Type;
+    extern JSType           None_Type;
 
     // JS1X heritage classes as types:
     extern JSType Object_Type;
@@ -423,8 +424,12 @@ namespace JSTypes {
         static JSString* FunctionString;
         static JSObject* FunctionPrototypeObject;
         ICodeModule* mICode;
+        
+        uint32 mParameterCount;
+        bool mParameterInfo;
+
     protected:
-        JSFunction() : mICode(0) {}
+        JSFunction() : mICode(0), mParameterCount(0) {}
 
    	    typedef JavaScript::gc_traits_finalizable<JSFunction> traits;
 	    typedef gc_allocator<JSFunction, traits> allocator;
@@ -432,12 +437,20 @@ namespace JSTypes {
     public:
         static void initFunctionObject(JSScope *g);
 
-        JSFunction(ICodeModule* iCode)
+        JSFunction(ICodeModule* iCode, FunctionDefinition *def)
             : JSObject(FunctionPrototypeObject),
-              mICode(iCode)
+              mICode(iCode), mParameterCount(0), mParameterInfo(false)
         {
             setClass(FunctionString);
+            if (def) {
+                mParameterInfo = true;
+                VariableBinding *p = def->parameters;
+                while (p) { mParameterCount++; p = p->next; }
+            }
         }
+
+        uint32 getParameterCount()  { return mParameterCount; }
+        bool hasParameterInfo()     { return mParameterInfo; }
 
         ~JSFunction();
     
@@ -547,9 +560,9 @@ namespace JSTypes {
             return result;
         }
         
-        JSValue& defineFunction(const String& name, ICodeModule* iCode)
+        JSValue& defineFunction(const String& name, ICodeModule* iCode, FunctionDefinition *def)
         {
-            JSValue value(new JSFunction(iCode));
+            JSValue value(new JSFunction(iCode, def));
             return defineVariable(name, &Function_Type, value);
         }
 

@@ -58,15 +58,25 @@ namespace ICG {
     public:
         ICodeModule(InstructionStream *iCode, VariableList *variables,
                     uint32 maxRegister, uint32 maxParameter,
-                    InstructionMap *instructionMap) :
+                    InstructionMap *instructionMap, 
+                    bool hasRestParameter, bool hasNamedRestParameter) :
             its_iCode(iCode), itsVariables(variables),
-            itsParameterCount(maxParameter), itsMaxRegister(maxRegister),
-            mID(++sMaxID), mInstructionMap(instructionMap) { }
+            mParameterCount(maxParameter), itsMaxRegister(maxRegister),
+            mID(++sMaxID), mInstructionMap(instructionMap), 
+            mParameterInit(NULL), 
+            mNonOptionalParameterCount(maxParameter),
+            mEntryPoint(0),
+            mHasRestParameter(hasRestParameter),
+            mHasNamedRestParameter(hasNamedRestParameter)
+        {
+        }
+
         ~ICodeModule()
         {
             delete its_iCode;
             delete itsVariables;
             delete mInstructionMap;
+            if (mParameterInit) delete mParameterInit;
         }
 
         Formatter& print(Formatter& f);
@@ -75,11 +85,16 @@ namespace ICG {
         
         InstructionStream *its_iCode;
         VariableList *itsVariables;
-        uint32 itsParameterCount;
+        uint32 mParameterCount;
         uint32 itsMaxRegister;
         uint32 mID;
         InstructionMap *mInstructionMap;
         String mFileName;
+        uint32 *mParameterInit;
+        uint32 mNonOptionalParameterCount;
+        uint32 mEntryPoint;
+        bool mHasRestParameter;
+        bool mHasNamedRestParameter;
 
         static uint32 sMaxID;
         
@@ -132,6 +147,9 @@ namespace ICG {
 
         JSClass *mClass;                    // enclosing class when generating code for methods
         ICodeGeneratorFlags mFlags;         // assorted flags
+        LabelList *pLabels;                 // label for each parameter initialization entry point
+        bool mHasRestParameter;             // true if this function has a ... parameter
+        bool mHasNamedRestParameter;        // true if this function has a named ... parameter
 
         std::vector<bool> mPermanentRegister;
 
@@ -155,13 +173,14 @@ namespace ICG {
         void setRegisterForVariable(const StringAtom& name, TypedRegister r) { (*variableList)[name] = r; }
 
         JSType *findType(const StringAtom& typeName);
+        JSType *extractType(ExprNode *t);
 
 
 
+        void addParameterLabel(Label *label)    { if (pLabels == NULL) pLabels = new LabelList(); pLabels->push_back(label); }
 
 
-
-        void setLabel(Label *label);
+        Label *setLabel(Label *label);
         
         void jsr(Label *label)                  { iCode->push_back(new Jsr(label)); }
         void rts()                              { iCode->push_back(new Rts()); }
@@ -193,8 +212,8 @@ namespace ICG {
         typedef enum {Var, Property, Slot, Static, Constructor, Name, Method} LValueKind;
 
         LValueKind resolveIdentifier(const StringAtom &name, TypedRegister &v, uint32 &slotIndex);
-        TypedRegister handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, RegisterList *args);
-        TypedRegister handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, RegisterList *args);
+        TypedRegister handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args);
+        TypedRegister handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args);
         ICodeModule *genFunction(FunctionStmtNode *f, bool isConstructor, JSClass *superClass);
     
     public:
@@ -206,6 +225,7 @@ namespace ICG {
             if (iCodeOwner) {
                 delete iCode;
                 delete mInstructionMap;
+                if (pLabels) delete pLabels;
             }
         }
                 
@@ -242,8 +262,8 @@ namespace ICG {
         TypedRegister op(ICodeOp op, TypedRegister source);
         TypedRegister op(ICodeOp op, TypedRegister source1, TypedRegister source2);
         TypedRegister binaryOp(ICodeOp op, TypedRegister source1, TypedRegister source2);
-        TypedRegister call(TypedRegister base, TypedRegister target, RegisterList *args);
-        TypedRegister directCall(JSFunction *target, RegisterList *args);
+        TypedRegister call(TypedRegister base, TypedRegister target, ArgumentList *args);
+        TypedRegister directCall(JSFunction *target, ArgumentList *args);
         TypedRegister getMethod(TypedRegister thisArg, uint32 slotIndex);
 
         void move(TypedRegister destination, TypedRegister source);
@@ -257,7 +277,7 @@ namespace ICG {
                 
         TypedRegister newObject(TypedRegister constructor);
         TypedRegister newArray();
-        TypedRegister newFunction(ICodeModule *icm);
+        TypedRegister newFunction(ICodeModule *icm, FunctionDefinition *def);
         TypedRegister newClass(JSClass *clazz);
 
         TypedRegister cast(TypedRegister arg, JSType *toType);

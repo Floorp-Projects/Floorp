@@ -41,7 +41,7 @@
         NEGATE, /* dest, source */
         NEW_ARRAY, /* dest */
         NEW_CLASS, /* dest, class */
-        NEW_FUNCTION, /* dest, ICodeModule */
+        NEW_FUNCTION, /* dest, ICodeModule, Function Definition */
         NEW_OBJECT, /* dest, constructor */
         NOP, /* do nothing and like it */
         NOT, /* dest, source */
@@ -143,11 +143,11 @@
         /* print() and printOperands() inherited from GenericBranch */
     };
 
-    class Call : public Instruction_4<TypedRegister, TypedRegister, TypedRegister, RegisterList> {
+    class Call : public Instruction_4<TypedRegister, TypedRegister, TypedRegister, ArgumentList> {
     public:
         /* result, target, this, args */
-        Call (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3, RegisterList aOp4) :
-            Instruction_4<TypedRegister, TypedRegister, TypedRegister, RegisterList>
+        Call (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3, ArgumentList aOp4) :
+            Instruction_4<TypedRegister, TypedRegister, TypedRegister, ArgumentList>
             (CALL, aOp1, aOp2, aOp3, aOp4) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[CALL] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3 << ", " << mOp4;
@@ -269,11 +269,11 @@
         }
     };
 
-    class DirectCall : public Instruction_3<TypedRegister, JSFunction *, RegisterList> {
+    class DirectCall : public Instruction_3<TypedRegister, JSFunction *, ArgumentList> {
     public:
         /* result, target, args */
-        DirectCall (TypedRegister aOp1, JSFunction * aOp2, RegisterList aOp3) :
-            Instruction_3<TypedRegister, JSFunction *, RegisterList>
+        DirectCall (TypedRegister aOp1, JSFunction * aOp2, ArgumentList aOp3) :
+            Instruction_3<TypedRegister, JSFunction *, ArgumentList>
             (DIRECT_CALL, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[DIRECT_CALL] << "\t" << mOp1 << ", " << "JSFunction" << ", " << mOp3;
@@ -583,14 +583,14 @@
         }
     };
 
-    class NewFunction : public Instruction_2<TypedRegister, ICodeModule*> {
+    class NewFunction : public Instruction_3<TypedRegister, ICodeModule*, FunctionDefinition*> {
     public:
-        /* dest, ICodeModule */
-        NewFunction (TypedRegister aOp1, ICodeModule* aOp2) :
-            Instruction_2<TypedRegister, ICodeModule*>
-            (NEW_FUNCTION, aOp1, aOp2) {};
+        /* dest, ICodeModule, Function Definition */
+        NewFunction (TypedRegister aOp1, ICodeModule* aOp2, FunctionDefinition* aOp3) :
+            Instruction_3<TypedRegister, ICodeModule*, FunctionDefinition*>
+            (NEW_FUNCTION, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[NEW_FUNCTION] << "\t" << mOp1 << ", " << "ICodeModule";
+            f << opcodeNames[NEW_FUNCTION] << "\t" << mOp1 << ", " << "ICodeModule" << ", " << "FunctionDefinition";
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
