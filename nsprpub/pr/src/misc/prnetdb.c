@@ -246,7 +246,7 @@ _pr_QueryNetIfs(void)
     lastlen = 0;
     len = 100 * sizeof(struct ifreq);  /* initial buffer size guess */
     for (;;) {
-        buf = PR_Malloc(len);
+        buf = (char *)PR_Malloc(len);
         if (NULL == buf) {
             close(sock);
             return;
@@ -604,7 +604,7 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByName(
     tmpbuf = localbuf;
     if (bufsize > sizeof(localbuf))
     {
-        tmpbuf = PR_Malloc(bufsize);
+        tmpbuf = (char *)PR_Malloc(bufsize);
         if (NULL == tmpbuf)
         {
             PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
@@ -736,7 +736,7 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
     tmpbuf = localbuf;
     if (bufsize > sizeof(localbuf))
     {
-        tmpbuf = PR_Malloc(bufsize);
+        tmpbuf = (char *)PR_Malloc(bufsize);
         if (NULL == tmpbuf)
         {
             PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
@@ -923,7 +923,7 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
     tmpbuf = localbuf;
     if (bufsize > sizeof(localbuf))
     {
-        tmpbuf = PR_Malloc(bufsize);
+        tmpbuf = (char *)PR_Malloc(bufsize);
         if (NULL == tmpbuf)
         {
             PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);

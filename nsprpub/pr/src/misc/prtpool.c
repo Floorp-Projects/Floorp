@@ -603,7 +603,7 @@ alloc_threadpool(void)
 {
 PRThreadPool *tp;
 
-	tp = PR_CALLOC(sizeof(*tp));
+	tp = (PRThreadPool *) PR_CALLOC(sizeof(*tp));
 	if (NULL == tp)
 		goto failed;
 	tp->jobq.lock = PR_NewLock();

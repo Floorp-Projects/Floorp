@@ -165,7 +165,7 @@ PR_IMPLEMENT(void *) PL_ArenaAllocate(PLArenaPool *pool, PRUint32 nb)
         do {
             if ( a->avail +nb <= a->limit )  {
                 pool->current = a;
-                rp = (void *)a->avail;
+                rp = (char *)a->avail;
                 a->avail += nb;
                 return rp;
             }
@@ -188,7 +188,7 @@ PR_IMPLEMENT(void *) PL_ArenaAllocate(PLArenaPool *pool, PRUint32 nb)
                     p->next = a->next;
                 UnlockArena();
                 a->avail = a->base;
-                rp = (void *)a->avail;
+                rp = (char *)a->avail;
                 a->avail += nb;
                 /* the newly allocated arena is linked after pool->current 
                 *  and becomes pool->current */
@@ -211,7 +211,7 @@ PR_IMPLEMENT(void *) PL_ArenaAllocate(PLArenaPool *pool, PRUint32 nb)
         if ( NULL != a )  {
             a->limit = (PRUword)a + sz;
             a->base = a->avail = (PRUword)PL_ARENA_ALIGN(pool, a + 1);
-            rp = (void *)a->avail;
+            rp = (char *)a->avail;
             a->avail += nb;
             /* the newly allocated arena is linked after pool->current 
             *  and becomes pool->current */
