@@ -102,14 +102,14 @@ function executeUrlBarHistoryCommand( aTarget )
     var label = aTarget.getAttribute("label");
     if (index != "nothing_available" && label)
       {
-        var uri = getShortcutOrURI(label);
         if (gURLBar) {
-          gURLBar.value = uri;
+          gURLBar.value = label;
           addToUrlbarHistory();
           BrowserLoadURL();
-        }
-        else
+        } else {
+          var uri = getShortcutOrURI(label);
           loadURI(uri);
+        }
       }
   }
 
@@ -160,14 +160,18 @@ function createUBHistoryMenu( aParent )
 function addToUrlbarHistory()
 {
   var urlToAdd = gURLBar.value;
+
+  // Remove leading and trailing spaces first
+  urlToAdd = urlToAdd.replace(/^\s+/, '').replace(/\s+$/, '');
+
   if (!urlToAdd)
-     return;
+    return;
   if (urlToAdd.search(/[\x00-\x1F]/) != -1) // don't store bad URLs
-     return;
+    return;
 
   if (!gRDF)
-     gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                      .getService(Components.interfaces.nsIRDFService);
+    gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                     .getService(Components.interfaces.nsIRDFService);
  
   if (!gGlobalHistory)
     gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
@@ -177,109 +181,63 @@ function addToUrlbarHistory()
     gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
                           .getService(Components.interfaces.nsIURIFixup);
   if (!gLocalStore)
-     gLocalStore = gRDF.GetDataSource("rdf:local-store");
+    gLocalStore = gRDF.GetDataSource("rdf:local-store");
 
-  if (gLocalStore) {
-     if (!gRDFC)
-        gRDFC = Components.classes["@mozilla.org/rdf/container-utils;1"]
-                          .getService(Components.interfaces.nsIRDFContainerUtils);
+  if (!gRDFC)
+    gRDFC = Components.classes["@mozilla.org/rdf/container-utils;1"]
+                      .getService(Components.interfaces.nsIRDFContainerUtils);
 
-       var entries = gRDFC.MakeSeq(gLocalStore, gRDF.GetResource("nc:urlbar-history"));
-       if (!entries)
-          return;
-       var elements = entries.GetElements();
-       if (!elements)
-          return;
-       var index = 0;
-       // create the nsIURI objects for comparing the 2 urls
-       var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                     .getService(Components.interfaces.nsIIOService);
-       
-       var entryToAdd = gRDF.GetLiteral(urlToAdd);
+  var entries = gRDFC.MakeSeq(gLocalStore, gRDF.GetResource("nc:urlbar-history"));
+  if (!entries)
+    return;
+  var elements = entries.GetElements();
+  if (!elements)
+    return;
+  var index = 0;
 
-       try {
-         ioService.extractScheme(urlToAdd, {}, {});
-       } catch(e) {
-         urlToAdd = "http://" + urlToAdd;
-       }
-       
-       try {
-         var uriToAdd  = ioService.newURI(urlToAdd, null, null);
-       }
-       catch(e) {
-         // it isn't a valid url
-         // we'll leave uriToAdd as "undefined" and handle that later
-       }
+  var urlToCompare = urlToAdd.toUpperCase();
+  while(elements.hasMoreElements()) {
+    var entry = elements.getNext();
+    if (!entry) continue;
 
-       while(elements.hasMoreElements()) {
-          var entry = elements.getNext();
-          if (!entry) continue;
+    index ++;
+    try {
+      entry = entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
+    } catch(ex) {
+      // XXXbar not an nsIRDFLiteral for some reason. see 90337.
+      continue;
+    }
 
-          index ++;
-          try {
-            entry = entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
-          } catch(ex) {
-            // XXXbar not an nsIRDFLiteral for some reason. see 90337.
-            continue;
-          }
-          var rdfValue = entry.Value;
+    if (urlToCompare == entry.Value.toUpperCase()) {
+      // URL already present in the database
+      // Remove it from its current position.
+      // It is inserted to the top after the while loop.
+      entries.RemoveElementAt(index, true);
+      break;
+    }
+  }   // while
 
-          try {
-            ioService.extractScheme(rdfValue, {}, {});
-          } catch(e) {
-            rdfValue = "http://" + rdfValue;
-          }
+  // Otherwise, we've got a new URL in town. Add it!
 
-          if (uriToAdd) {
-            try {
-              var rdfUri = ioService.newURI(rdfValue, null, null);
-                 
-              if (rdfUri.equals(uriToAdd)) {
-                // URI already present in the database
-                // Remove it from its current position.
-                // It is inserted to the top after the while loop.
-                entries.RemoveElementAt(index, true);
-                break;
-              }
-            }
-               
-            // the uri is still not recognized by the ioservice
-            catch(ex) {
-              // no problem, we'll handle this below
-            }
-          }
+  try {
+    var url = getShortcutOrURI(urlToAdd);
+    var fixedUpURI = gURIFixup.createFixupURI(url, 0);
+    if (!fixedUpURI.schemeIs("data"))
+      gGlobalHistory.markPageAsTyped(fixedUpURI.spec);
+  }
+  catch(ex) {
+  }
 
-          // if we got this far, then something is funky with the URIs,
-          // so we need to do a straight string compare of the raw strings
-          if (urlToAdd == rdfValue) {
-            entries.RemoveElementAt(index, true);
-            break;
-          }
-       }   // while
+  // Put the value as it was typed by the user in to RDF
+  // Insert it to the beginning of the list.
+  var entryToAdd = gRDF.GetLiteral(urlToAdd);
+  entries.InsertElementAt(entryToAdd, 1, true);
 
-       // Otherwise, we've got a new URL in town. Add it!
-
-       try {
-         var url = entryToAdd.Value;
-         if (url.indexOf(" ") == -1) {
-           var fixedUpURI = gURIFixup.createFixupURI(url, 0);
-           if (!fixedUpURI.schemeIs("data"))
-             gGlobalHistory.markPageAsTyped(fixedUpURI.spec);
-         }
-       }
-       catch(ex) {
-       }
-
-       // Put the value as it was typed by the user in to RDF
-       // Insert it to the beginning of the list.
-       entries.InsertElementAt(entryToAdd, 1, true);
-
-       // Remove any expired history items so that we don't let
-       // this grow without bound.
-       for (index = entries.GetCount(); index > MAX_URLBAR_HISTORY_ITEMS; --index) {
-           entries.RemoveElementAt(index, true);
-       }  // for
-   }  // localstore
+  // Remove any expired history items so that we don't let
+  // this grow without bound.
+  for (index = entries.GetCount(); index > MAX_URLBAR_HISTORY_ITEMS; --index) {
+      entries.RemoveElementAt(index, true);
+  }  // for
 }
 
 function createMenuItem( aParent, aIndex, aLabel)
@@ -316,4 +274,3 @@ function updateGoMenu(event)
   {
     FillHistoryMenu(event.target, "go");
   }
-
