@@ -31,26 +31,33 @@
   # wrap is set if a column's contents should be allowed to be word-wrapped
   # by the browser.
   #%]
+
+[% PROCESS "global/field-descs.html.tmpl" %]
+[% field_descs.short_short_desc     = field_descs.short_desc  %]
+[% field_descs.assigned_to_realname = field_descs.assigned_to %]
+[% field_descs.reporter_realname    = field_descs.reporter    %]
+[% field_descs.qa_contact_realname  = field_descs.qa_contact  %]
+
 [% abbrev = 
   {
-    "severity"          => { maxlength => 3 , title => "Sev" } , 
-    "priority"          => { maxlength => 3 , title => "Pri" } , 
-    "platform"          => { maxlength => 3 , title => "Plt" } , 
-    "status"            => { maxlength => 4 } , 
-    "reporter"          => { maxlength => 30 , ellipsis => "..." } , 
-    "reporter_realname" => { maxlength => 20 , ellipsis => "..." } , 
-    "owner"             => { maxlength => 30 , ellipsis => "..." } , 
-    "owner_realname"    => { maxlength => 20 , ellipsis => "..." } , 
-    "qa_contact"        => { maxlength => 30 , ellipsis => "..." , title => "QAContact" } , 
-    "qa_contact_realname" => { maxlength => 20 , ellipsis => "..." , title => "QAContact" } , 
+    "bug_severity"         => { maxlength => 3 , title => "Sev" } , 
+    "priority"             => { maxlength => 3 , title => "Pri" } , 
+    "rep_platform"         => { maxlength => 3 , title => "Plt" } , 
+    "bug_status"           => { maxlength => 4 } , 
+    "assigned_to"          => { maxlength => 30 , ellipsis => "..." } , 
+    "assigned_to_realname" => { maxlength => 20 , ellipsis => "..." } , 
+    "reporter"             => { maxlength => 30 , ellipsis => "..." } , 
+    "reporter_realname"    => { maxlength => 20 , ellipsis => "..." } , 
+    "qa_contact"           => { maxlength => 30 , ellipsis => "..." , title => "QAContact" } , 
+    "qa_contact_realname"  => { maxlength => 20 , ellipsis => "..." , title => "QAContact" } , 
     "resolution"        => { maxlength => 4 } , 
-    "summary"           => { maxlength => 60 , ellipsis => "..." , wrap => 1 } ,
-    "summaryfull"       => { wrap => 1 } ,
+    "short_desc"        => { wrap => 1 } ,
+    "short_short_desc"  => { maxlength => 60 , ellipsis => "..." , wrap => 1 } ,
     "status_whiteboard" => { title => "StatusSummary" , wrap => 1 } , 
     "component"         => { maxlength => 8 , title => "Comp" } , 
     "product"           => { maxlength => 8 } , 
     "version"           => { maxlength => 5 , title => "Vers" } , 
-    "os"                => { maxlength => 4 } , 
+    "op_sys"            => { maxlength => 4 } , 
     "target_milestone"  => { title => "TargetM" } , 
     "percentage_complete" => { format_value => "%d %%" } , 
   }
@@ -111,7 +118,7 @@
     <a href="buglist.cgi?[% urlquerypart %]&amp;order=
       [% column.name FILTER url_quote FILTER html %]
       [% ",$qorder" FILTER html IF order %]">
-        [%- abbrev.$id.title || column.title -%]</a>
+        [%- abbrev.$id.title || field_descs.$id || column.title -%]</a>
   </th>
 [% END %]
 
@@ -128,11 +135,11 @@
     [% tableheader %]
   [% END %]
 
-  <tr class="bz_[% bug.severity %] bz_[% bug.priority %] [%+ "bz_secure" IF bug.isingroups %]">
+  <tr class="bz_[% bug.bug_severity %] bz_[% bug.priority %] [%+ "bz_secure" IF bug.isingroups %]">
 
     <td>
-      [% IF dotweak %]<input type="checkbox" name="id_[% bug.id %]">[% END %]
-      <a href="show_bug.cgi?id=[% bug.id %]">[% bug.id %]</a>
+      [% IF dotweak %]<input type="checkbox" name="id_[% bug.bug_id %]">[% END %]
+      <a href="show_bug.cgi?id=[% bug.bug_id %]">[% bug.bug_id %]</a>
     </td>
 
     [% FOREACH column = displaycolumns %]

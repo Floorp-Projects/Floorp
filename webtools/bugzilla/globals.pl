@@ -334,8 +334,9 @@ sub FetchOneColumn {
 
     
 
-@::default_column_list = ("severity", "priority", "platform", "owner",
-                          "status", "resolution", "summary");
+@::default_column_list = ("bug_severity", "priority", "rep_platform", 
+                          "assigned_to", "bug_status", "resolution",
+                          "short_short_desc");
 
 sub AppendComment {
     my ($bugid, $who, $comment, $isprivate, $timestamp, $work_time) = @_;

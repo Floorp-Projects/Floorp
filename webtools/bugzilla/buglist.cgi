@@ -216,7 +216,7 @@ sub GetGroupsByUserId {
 
     while (MoreSQLData()) {
         my $group = {};
-        ($group->{'id'}, $group->{'name'},
+        ($group->{'bug_id'}, $group->{'name'},
          $group->{'description'}, $group->{'isactive'}) = FetchSQLData();
         push(@groups, $group);
     }
@@ -363,7 +363,7 @@ elsif ($::FORM{'cmdtype'} eq "doit" && $::FORM{'remember'}) {
 # Note: There are a few hacks in the code that deviate from these definitions.
 #       In particular, when the list is sorted by the "votes" field the word 
 #       "DESC" is added to the end of the field to sort in descending order, 
-#       and the redundant summaryfull column is removed when the client
+#       and the redundant short_desc column is removed when the client
 #       requests "all" columns.
 
 my $columns = {};
@@ -373,33 +373,33 @@ sub DefineColumn {
 }
 
 # Column:     ID                    Name                           Title
-DefineColumn("id"                , "bugs.bug_id"                , "ID"               );
+DefineColumn("bug_id"            , "bugs.bug_id"                , "ID"               );
 DefineColumn("opendate"          , "bugs.creation_ts"           , "Opened"           );
 DefineColumn("changeddate"       , "bugs.delta_ts"              , "Changed"          );
-DefineColumn("severity"          , "bugs.bug_severity"          , "Severity"         );
+DefineColumn("bug_severity"      , "bugs.bug_severity"          , "Severity"         );
 DefineColumn("priority"          , "bugs.priority"              , "Priority"         );
-DefineColumn("platform"          , "bugs.rep_platform"          , "Platform"         );
-DefineColumn("owner"             , "map_assigned_to.login_name" , "Owner"            );
-DefineColumn("owner_realname"    , "map_assigned_to.realname"   , "Owner"            );
+DefineColumn("rep_platform"      , "bugs.rep_platform"          , "Hardware"         );
+DefineColumn("assigned_to"       , "map_assigned_to.login_name" , "Assignee"         );
+DefineColumn("assigned_to_realname", "map_assigned_to.realname" , "Assignee"         );
 DefineColumn("reporter"          , "map_reporter.login_name"    , "Reporter"         );
 DefineColumn("reporter_realname" , "map_reporter.realname"      , "Reporter"         );
 DefineColumn("qa_contact"        , "map_qa_contact.login_name"  , "QA Contact"       );
 DefineColumn("qa_contact_realname", "map_qa_contact.realname"   , "QA Contact"       );
-DefineColumn("status"            , "bugs.bug_status"            , "State"            );
+DefineColumn("bug_status"        , "bugs.bug_status"            , "Status"           );
 DefineColumn("resolution"        , "bugs.resolution"            , "Result"           );
-DefineColumn("summary"           , "bugs.short_desc"            , "Summary"          );
-DefineColumn("summaryfull"       , "bugs.short_desc"            , "Summary"          );
+DefineColumn("short_short_desc"  , "bugs.short_desc"            , "Summary"          );
+DefineColumn("short_desc"        , "bugs.short_desc"            , "Summary"          );
 DefineColumn("status_whiteboard" , "bugs.status_whiteboard"     , "Status Summary"   );
 DefineColumn("component"         , "map_components.name"        , "Component"        );
 DefineColumn("product"           , "map_products.name"          , "Product"          );
 DefineColumn("version"           , "bugs.version"               , "Version"          );
-DefineColumn("os"                , "bugs.op_sys"                , "OS"               );
+DefineColumn("op_sys"            , "bugs.op_sys"                , "OS"               );
 DefineColumn("target_milestone"  , "bugs.target_milestone"      , "Target Milestone" );
 DefineColumn("votes"             , "bugs.votes"                 , "Votes"            );
 DefineColumn("keywords"          , "bugs.keywords"              , "Keywords"         );
-DefineColumn("estimated_time"   , "bugs.estimated_time"       , "Estimated Hours"  );
-DefineColumn("remaining_time"   , "bugs.remaining_time"       , "Remaining Hours"  );
-DefineColumn("actual_time"      , "(SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id)) AS actual_time", "Actual Hours");
+DefineColumn("estimated_time"    , "bugs.estimated_time"        , "Estimated Hours"  );
+DefineColumn("remaining_time"    , "bugs.remaining_time"        , "Remaining Hours"  );
+DefineColumn("actual_time"       , "(SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id)) AS actual_time", "Actual Hours");
 DefineColumn("percentage_complete","(100*((SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id))/((SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id))+bugs.remaining_time))) AS percentage_complete", "% Complete"); 
 ################################################################################
 # Display Column Determination
@@ -411,16 +411,26 @@ my @displaycolumns = ();
 if (defined $params->param('columnlist')) {
     if ($params->param('columnlist') eq "all") {
         # If the value of the CGI parameter is "all", display all columns,
-        # but remove the redundant "summaryfull" column.
-        @displaycolumns = grep($_ ne 'summaryfull', keys(%$columns));
+        # but remove the redundant "short_desc" column.
+        @displaycolumns = grep($_ ne 'short_desc', keys(%$columns));
     }
     else {
         @displaycolumns = split(/[ ,]+/, $params->param('columnlist'));
     }
 }
 elsif (defined $::COOKIE{'COLUMNLIST'}) {
+    # 2002-10-31 Rename column names (see bug 176461)
+    my $columnlist = $::COOKIE{'COLUMNLIST'};
+    $columnlist =~ s/owner/assigned_to/;
+    $columnlist =~ s/owner_realname/assigned_to_realname/;
+    $columnlist =~ s/[^_]platform/rep_platform/;
+    $columnlist =~ s/[^_]severity/bug_severity/;
+    $columnlist =~ s/[^_]status/bug_status/;
+    $columnlist =~ s/summaryfull/short_desc/;
+    $columnlist =~ s/summary/short_short_desc/;
+
     # Use the columns listed in the user's preferences.
-    @displaycolumns = split(/ /, $::COOKIE{'COLUMNLIST'});
+    @displaycolumns = split(/ /, $columnlist);
 }
 else {
     # Use the default list of columns.
@@ -434,7 +444,7 @@ else {
 
 # Remove the "ID" column from the list because bug IDs are always displayed
 # and are hard-coded into the display templates.
-@displaycolumns = grep($_ ne 'id', @displaycolumns);
+@displaycolumns = grep($_ ne 'bug_id', @displaycolumns);
 
 # Add the votes column to the list of columns to be displayed
 # in the bug list if the user is searching for bugs with a certain
@@ -464,7 +474,7 @@ if (!UserInGroup(Param("timetrackinggroup"))) {
 # Generate the list of columns that will be selected in the SQL query.
 
 # The bug ID is always selected because bug IDs are always displayed 
-my @selectcolumns = ("id");
+my @selectcolumns = ("bug_id");
 
 # remaining and actual_time are required for precentage_complete calculation:
 if (lsearch(\@displaycolumns, "percentage_complete") >= 0) {
@@ -480,7 +490,7 @@ push (@selectcolumns, @displaycolumns);
 # has for modifying the bugs.
 if ($dotweak) {
     push(@selectcolumns, "product") if !grep($_ eq 'product', @selectcolumns);
-    push(@selectcolumns, "status") if !grep($_ eq 'status', @selectcolumns);
+    push(@selectcolumns, "bug_status") if !grep($_ eq 'bug_status', @selectcolumns);
 }
 
 
@@ -662,9 +672,9 @@ while (my @row = FetchSQLData()) {
     ($bug->{'opendate'} = DiffDate($bug->{'opendate'})) if $bug->{'opendate'};
 
     # Record the owner, product, and status in the big hashes of those things.
-    $bugowners->{$bug->{'owner'}} = 1 if $bug->{'owner'};
+    $bugowners->{$bug->{'assigned_to'}} = 1 if $bug->{'assigned_to'};
     $bugproducts->{$bug->{'product'}} = 1 if $bug->{'product'};
-    $bugstatuses->{$bug->{'status'}} = 1 if $bug->{'status'};
+    $bugstatuses->{$bug->{'bug_status'}} = 1 if $bug->{'bug_status'};
 
     $bug->{isingroups} = 0;
 
@@ -672,7 +682,7 @@ while (my @row = FetchSQLData()) {
     push(@bugs, $bug);
 
     # Add id to list for checking for bug privacy later
-    push(@bugidlist, $bug->{id});
+    push(@bugidlist, $bug->{'bug_id'});
 }
 
 # Switch back from the shadow database to the regular database so PutFooter()
@@ -688,11 +698,11 @@ if (@bugidlist) {
             "WHERE bugs.bug_id = bug_group_map.bug_id " .
             "AND bugs.bug_id IN (" . join(',',@bugidlist) . ")");
     while (MoreSQLData()) {
-        my ($id) = FetchSQLData();
-        $privatebugs{$id} = 1;
+        my ($bug_id) = FetchSQLData();
+        $privatebugs{$bug_id} = 1;
     }
     foreach my $bug (@bugs) {
-        if ($privatebugs{$bug->{id}}) {
+        if ($privatebugs{$bug->{'bug_id'}}) {
             $bug->{isingroups} = 1;
         }
     }

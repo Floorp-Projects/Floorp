@@ -28,36 +28,19 @@
   this feature requires cookies to work.
 </p>
 
-[% desc = { "opendate" => "Open Date", 
-            "changeddate" => "Last Changed Date", 
-            "severity" => "Severity",
-            "priority" => "Priority",
-            "platform" => "Hardware",
-            "owner" => "Owner",
-            "owner_realname" => "Owner Realname",
-            "reporter" => "Reporter",
-            "reporter_realname" => "Reporter Realname",
-            "status" => "Status",
-            "resolution" => "Resolution",
-            "product" => "Product",
-            "component" => "Component",
-            "version" => "Version",
-            "os" => "OS",
-            "votes" => "Votes",
-            "keywords" => "Keywords",
-            "target_milestone" => "Target",
-            "qa_contact" => "QA Contact",
-            "qa_contact_realname" => "QA Contact Realname",
-            "status_whiteboard" => "Whiteboard",
-            "summary" => "Summary (first 60 characters)",
-            "summaryfull" => "Full Summary" } %]
+[% PROCESS "global/field-descs.html.tmpl" %]
+[% field_descs.short_short_desc     = "Summary (first 60 characters)" %]
+[% field_descs.short_desc           = "Full Summary" %]
+[% field_descs.assigned_to_realname = "Assignee Realname" %]
+[% field_descs.reporter_realname    = "Reporter Realname" %]
+[% field_descs.qa_contact_realname  = "QA Contact Realname" %]
 
 <form action="colchange.cgi">
   <input type="hidden" name="rememberedquery" value="[% buffer %]">
   [% FOREACH column = masterlist %]
     <input type="checkbox" id="[% column %]" name="column_[% column %]" 
       [% "checked='checked'" IF lsearch(collist, column) != -1 %]>
-    <label for="[% column %]">[% desc.${column} || column %]</label>
+    <label for="[% column %]">[% field_descs.${column} || column %]</label>
     <br>
   [% END %]
   
