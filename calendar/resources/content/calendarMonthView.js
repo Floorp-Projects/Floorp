@@ -324,8 +324,6 @@ MonthView.prototype.refreshEvents = function( )
          eventBox = gCalendarWindow.currentView.getVisibleEvent( calendarEventDisplay.event );
    
          gCalendarWindow.currentView.clickEventBox( eventBox ); 
-
-         selectEventInUnifinder( calendarEventDisplay.event );
       } 
    }
 }
@@ -722,8 +720,6 @@ MonthView.prototype.clickEventBox = function( eventBox, event )
    
       selectEventInUnifinder( eventBox.calendarEventDisplay.event );
    }
-   
-
 }
 
 MonthView.prototype.selectEvent = function( calendarEvent )
