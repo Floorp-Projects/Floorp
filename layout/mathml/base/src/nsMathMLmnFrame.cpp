@@ -37,11 +37,7 @@
 #include "nsIFontMetrics.h"
 #include "nsStyleUtil.h"
 
-#include "nsIDOMText.h"
-#include "nsITextContent.h"
-
 #include "nsMathMLmnFrame.h"
-#include "nsMathMLTextFrame.h"
 
 //
 // <mn> -- number - implementation

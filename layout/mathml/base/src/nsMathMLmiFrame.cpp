@@ -42,7 +42,6 @@
 #include "nsITextContent.h"
 
 #include "nsMathMLmiFrame.h"
-#include "nsMathMLTextFrame.h"
 
 //
 // <mi> -- identifier - implementation
