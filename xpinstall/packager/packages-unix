@@ -158,6 +158,7 @@ bin/components/urlbarhistory.xpt
 bin/components/wallet.xpt
 bin/components/walleteditor.xpt
 bin/components/walletpreview.xpt
+bin/components/webshell_idls.xpt
 bin/components/widget.xpt
 bin/components/xpcom_base.xpt
 bin/components/xpcom_ds.xpt
