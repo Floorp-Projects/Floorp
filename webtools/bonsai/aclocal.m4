@@ -64,7 +64,7 @@ dnl check if Date::Parse is installed
 dnl
 AC_DEFUN(AC_PERL_DATEPARSE,
 [
-  AC_MSG_CHECKING(for perl Date::parse module)
+  AC_MSG_CHECKING(for perl Date::Parse module)
   $PERL -w -c -e 'use Date::Parse' 2>/dev/null; has_dateparse=$?
   if test "x$has_dateparse" = "x0" ; then
      AC_MSG_RESULT(yes)

@@ -20,6 +20,7 @@ set cvscommand _CVS_
 set rlogcommand _RLOG_
 set rcsdiffcommand _RCSDIFF_
 set cocommand _CO_
+set sendmailcommand _SENDMAIL_
 
 # URL to your copy of LXR
 set lxr_base http://localhost/webtools/lxr/source

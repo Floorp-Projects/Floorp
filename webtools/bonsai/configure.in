@@ -12,6 +12,7 @@ AC_PATH_PROG(CO,co)
 AC_PATH_PROG(CVS,cvs)
 AC_PATH_PROG(RLOG,rlog)
 AC_PATH_PROG(RCSDIFF,rcsdiff)
+AC_PATH_PROG(SENDMAIL,sendmail)
 
 
 dnl Checks for libraries.

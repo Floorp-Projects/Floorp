@@ -217,7 +217,8 @@ foreach key [array names group] {
                 foreach k {name dir files log profile nextclose} {
                     regsub -all -- "%$k%" $text [set $k] text
                 }
-                exec /usr/lib/sendmail -t << $text
+		global sendmailcommand
+                exec $sendmailcommand -t << $text
                 Log "Mailed file $filename to $name"
             }
         }

@@ -30,7 +30,7 @@ echo "Will use user=\"$USER\" and password=\"$PASSWORD\" for bonsai database."
 echo "If you have a previous bonsai install, this script will drop all"
 echo "bonsai tables. Press ctrl-c to bail out now or return to continue."
 
-read
+read dummy
 
 echo Dropping old tables
 

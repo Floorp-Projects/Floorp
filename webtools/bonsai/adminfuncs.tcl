@@ -85,5 +85,6 @@ proc SendMail {filename} {
         regsub -all -- "%$k%" $text [set $k] text
     }
 
-    exec /usr/lib/sendmail -t << $text
+    global sendmailcommand
+    exec $sendmailcommand -t << $text
 }

@@ -25,6 +25,7 @@ set cvscommand /tools/ns/bin/cvs
 set rlogcommand /tools/ns/bin/rlog
 set rcsdiffcommand /tools/ns/bin/rcsdiff
 set cocommand /tools/ns/bin/co
+set sendmailcommand /usr/lib/sendmail
 set lxr_base http://cvs-mirror.mozilla.org/webtools/lxr/source
 set mozilla_lxr_kludge TRUE
 
@@ -607,7 +608,8 @@ Content-Type: text/plain
 $difftext
 "
 
-        exec /usr/lib/sendmail -t << $text
+	global sendmailcommand
+        exec $sendmailcommand -t << $text
     }
     unlink $old
     unlink $new

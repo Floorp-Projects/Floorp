@@ -37,6 +37,7 @@ CVS=@CVS@
 RLOG=@RLOG@
 CO=@CO@
 RCSDIFF=@RCSDIFF@
+SENDMAIL=@SENDMAIL@
 
 FILES = CGI.tcl			\
 	SourceChecker.cgi	\
@@ -115,6 +116,7 @@ configdata: configdata.in
 	    -e s#_RLOG_#$(RLOG)#g \
 	    -e s#_CO_#$(CO)#g \
 	    -e s#_RCSDIFF_#$(RCSDIFF)#g \
+	    -e s#_SENDMAIL_#$(SENDMAIL)#g \
 	    $< >$@
 
 install: trapdoor configdata
@@ -123,6 +125,7 @@ install: trapdoor configdata
 	  echo Installing $$I && \
           sed -e s#/usr/bonsaitools/bin/perl#$(PERL)#g \
               -e s#/usr/bonsaitools/bin/mysqltcl#$(MYSQLTCL)#g \
+              -e s#/usr/lib/sendmail#$(SENDMAIL)#g \
               -e s#/tools/ns/bin/perl5#$(PERL)#g \
               $$I > $(PREFIX)/$$I && \
 	chmod 755 $(PREFIX)/$$I; done
