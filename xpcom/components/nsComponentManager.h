@@ -73,6 +73,10 @@ class nsIServiceManager;
 // to service mapping and has no cid mapping.
 #define NS_COMPONENT_TYPE_SERVICE_ONLY -2
 
+
+#ifdef DEBUG
+#define XPCOM_CHECK_PENDING_CIDS
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 
 // Array of Loaders and their type strings
@@ -231,6 +235,14 @@ protected:
     nsCOMPtr<nsICategoryManager>  mCategoryManager;
 
     PLArenaPool   mArena;
+
+#ifdef XPCOM_CHECK_PENDING_CIDS
+    nsresult AddPendingCID(const nsCID &aClass);
+    void RemovePendingCID(const nsCID &aClass);
+
+    nsVoidArray         mPendingCIDs;
+#endif
+
 };
 
 
@@ -329,6 +341,8 @@ struct nsContractIDTableEntry : public PLDHashEntryHdr {
     char           *mContractID;
     nsFactoryEntry *mFactoryEntry;    
 };
+
+
 class AutoRegEntry
 {
 public:
