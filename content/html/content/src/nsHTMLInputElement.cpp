@@ -362,14 +362,16 @@ nsHTMLInputElement::GetChecked(PRBool* aValue)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
   if (NS_OK == GetPrimaryFrame(formControlFrame)) {
-    nsString value("0");
-    formControlFrame->GetProperty(nsHTMLAtoms::checked, value);
-    if (value == "1")
-      *aValue = PR_TRUE;
-    else
-      *aValue = PR_FALSE;
+      if (nsnull != formControlFrame) {
+      nsString value("0");
+      formControlFrame->GetProperty(nsHTMLAtoms::checked, value);
+      if (value == "1")
+        *aValue = PR_TRUE;
+      else
+        *aValue = PR_FALSE;
 
-    NS_RELEASE(formControlFrame);
+      NS_RELEASE(formControlFrame);
+    }
   }
   return NS_OK;      
 }
