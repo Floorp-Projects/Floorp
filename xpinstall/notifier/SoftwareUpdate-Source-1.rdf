@@ -3,7 +3,7 @@
 
   <RDF:Bag about="NC:SoftwareUpdateRoot">
     <RDF:li>
-       <RDF:Bag about="NC:SoftwarePackages" NC:title="Netscape Updates" NC:url="http://home.netscape.com">
+       <RDF:Bag about="NC:SoftwarePackages" NC:title="NSCP Updates" NC:url="http://home.netscape.com">
 
             <RDF:li>
                 <RDF:Description ID="AimUpdate344">
