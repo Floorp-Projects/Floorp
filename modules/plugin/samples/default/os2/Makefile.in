@@ -27,9 +27,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= plugin
 LIBRARY_NAME	= npnulos2
-EXPORT_LIBRARY = 1
+RESFILE		= npnulos2.res
 REQUIRES	= java \
+		  plugin \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -42,20 +44,25 @@ CPPSRCS		= \
 		utils.cpp\
 		$(NULL)
 
-RES_FILE	= $(srcdir)/npnulos2.res
+# plugins should always be shared, even in the "static" build
+FORCE_SHARED_LIB = 1
+
+NO_DIST_INSTALL	= 1
+NO_INSTALL = 1
 
 include $(topsrcdir)/config/rules.mk
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-MOZ_POST_DSO_LIB_COMMAND = rc -n -x2 $(RES_FILE)
-
-$(SHARED_LIBRARY): $(OBJS) $(RES_FILE)
-
-$(RES_FILE): $(srcdir)/npnulos2.rc
-ifneq ($(DEPTH),$(topsrcdir))
-	cp $(srcdir)/plugicon.ico ./plugicon.ico
-	cp $(srcdir)/resource.h ./resource.h
+install-plugin: $(SHARED_LIBRARY)
+ifdef SHARED_LIBRARY
+	$(INSTALL) $(SHARED_LIBRARY) $(DIST)/bin/plugins
 endif
-	rc -n -x2 -r $(srcdir)/npnulos2.rc
+
+libs:: install-plugin
+
+install:: $(SHARED_LIBRARY)
+ifdef SHARED_LIBRARY
+	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(mozappdir)/plugins
+endif

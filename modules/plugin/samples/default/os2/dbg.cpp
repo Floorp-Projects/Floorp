@@ -39,21 +39,22 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 extern char szAppName[];
 
 #ifdef _DEBUG
 
-void __cdecl dbgOut(LPSTR format, ...) { 
+void dbgOut(PSZ format, ...) { 
   static char buf[1024];
-  lstrcpy(buf, szAppName);
-  lstrcat(buf, ": ");
+  strcpy(buf, szAppName);
+  strcat(buf, ": ");
   va_list  va;
   va_start(va, format);
-  wvsprintf(&buf[lstrlen(buf)], format, va);
+  vsprintf(&buf[strlen(buf)], format, va);
   va_end(va);
-  lstrcat(buf, "\n");
-  OutputDebugString(buf); 
+  strcat(buf, "\n");
+  printf("%s\n", buf); 
 }
 
 #endif
