@@ -1,5 +1,8 @@
 -moz-bg-inset
 -moz-bg-outset
+-moz-pre-wrap
+-moz-center
+-moz-right
 above
 absolute
 always
