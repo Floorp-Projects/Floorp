@@ -17,7 +17,9 @@
  * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
- * Contributor(s): hyatt and pav :)
+ * Original Author: David W. Hyatt (hyatt@netscape.com)
+ * 
+ * Contributor(s): pav
  */
 
 #include "nsISupports.idl"
@@ -57,24 +59,24 @@ interface nsIChromeRegistry : nsISupports
 
 	nsISimpleEnumerator getOverlays(in nsIURI aChromeURL);
 		
+  /* Should be called when locales change to reload all chrome (including XUL). */
 	void reloadChrome();
+
+  /* Should be called when skins change. Reloads only stylesheets. */
 	void refreshSkins();
-
-	void applyTheme(in wstring themeName);
 	
-	void setSkin(in wstring skinName, in wstring packageName);
-	void setLocale(in wstring localeName, in wstring packageName);
+  /* Applies a skin or locale to all possible packages */
+  void selectSkin(in wstring skinName, in boolean useProfile);
+  void selectLocale(in wstring localeName, in boolean useProfile);
+  void deselectSkin(in wstring skinName, in boolean useProfile);
+  void deselectLocale(in wstring localeName, in boolean useProfile);
 
-	void setDefaultSkin(in wstring skinName, in wstring packageName);
-	void setDefaultLocale(in wstring localeName, in wstring packageName);
+  /* Apply skin/locale to a specific package */
+	void selectSkinForPackage(in wstring skinName, in wstring packageName, in boolean useProfile);
+	void selectLocaleForPackage(in wstring localeName, in wstring packageName, in boolean useProfile); 
+  void deselectSkinForPackage(in wstring skinName, in wstring packageName, in boolean useProfile);
+	void deselectLocaleForPackage(in wstring localeName, in wstring packageName, in boolean useProfile); 
 
-	nsISimpleEnumerator getInstalledSkins();
-	nsISimpleEnumerator getInstalledPackages();
-	nsISimpleEnumerator getInstalledLocales();
-
-  nsISimpleEnumerator getSelectedSkins();
-  nsISimpleEnumerator getSelectedPackages();
-  nsISimpleEnumerator getSelectedLocales();
 };
 
 

@@ -16,6 +16,9 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
+ * 
+ *
+ * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
  */
@@ -30,76 +33,86 @@ class nsIRDFContainer;
 class nsIDOMWindow;
 class nsIDocument;
 
+#include "nsIRDFCompositeDataSource.h"
+
 class nsChromeRegistry : public nsIChromeRegistry
 {
 public:
-    NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
-    // nsIChromeRegistry methods:
-    NS_DECL_NSICHROMEREGISTRY
+  // nsIChromeRegistry methods:
+  NS_DECL_NSICHROMEREGISTRY
 
-    // nsChromeRegistry methods:
-    nsChromeRegistry();
-    virtual ~nsChromeRegistry();
-
-    static PRUint32 gRefCnt;
-    static nsIRDFService* gRDFService;
-    static nsIRDFResource* kCHROME_chrome;
-    static nsIRDFResource* kCHROME_skin;
-    static nsIRDFResource* kCHROME_content;
-    static nsIRDFResource* kCHROME_locale;
-    static nsIRDFResource* kCHROME_base;
-    static nsIRDFResource* kCHROME_main;
-    
-    static nsIRDFResource* kCHROME_name;
-    static nsIRDFResource* kCHROME_path;
-    static nsIRDFResource* kCHROME_version;
-    static nsIRDFResource* kCHROME_author;
-    static nsIRDFResource* kCHROME_siteURL;
-    static nsIRDFResource* kCHROME_previewImageURL;
-    
-    static nsSupportsHashtable *mDataSourceTable;
+  // nsChromeRegistry methods:
+  nsChromeRegistry();
+  virtual ~nsChromeRegistry();
 
 public:
-    static nsresult GetChromeResource(nsIRDFDataSource *aDataSource,
-                               nsString& aResult, nsIRDFResource* aChromeResource,
-                               nsIRDFResource* aProperty);
+  static nsresult FollowArc(nsIRDFDataSource *aDataSource,
+                            nsCString& aResult, nsIRDFResource* aChromeResource,
+                            nsIRDFResource* aProperty);
 
 protected:
-    NS_IMETHOD SelectProviderForPackage(const PRUnichar *aThemeFileName,
-                                        const PRUnichar *aPackageName, 
-                                        const PRUnichar *aProviderName);
+  NS_IMETHOD SelectProviderForPackage(const PRUnichar *aThemeFileName,
+                                      const PRUnichar *aPackageName, 
+                                      const PRUnichar *aProviderName);
 
-    NS_IMETHOD GetOverlayDataSource(nsIURI *aChromeURL, nsIRDFDataSource **aResult);
-    NS_IMETHOD InitializeDataSource(const nsString &aPackage,
-                                    const nsString &aProvider,
-                                    nsIRDFDataSource **aResult,
-                                    PRBool aUseProfileDirOnly = PR_FALSE);
-
-    nsresult GetPackageTypeResource(const nsString& aChromeType, nsIRDFResource** aResult);
-    
-    NS_IMETHOD RemoveOverlay(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource);
-    NS_IMETHOD RemoveOverlays(nsAutoString aPackage,
-                              nsAutoString aProvider,
-                              nsIRDFContainer *aContainer,
-                              nsIRDFDataSource *aDataSource);
-
-    NS_IMETHOD GetEnumeratorForType(const nsCAutoString& type, nsISimpleEnumerator** aResult);
+  NS_IMETHOD GetOverlayDataSource(nsIURI *aChromeURL, nsIRDFDataSource **aResult);
+   
+  nsresult GetResource(const nsCAutoString& aChromeType, nsIRDFResource** aResult);
+  
+  NS_IMETHOD RemoveOverlay(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource);
+  NS_IMETHOD RemoveOverlays(nsAutoString aPackage,
+                            nsAutoString aProvider,
+                            nsIRDFContainer *aContainer,
+                            nsIRDFDataSource *aDataSource);
 
 private:
-    NS_IMETHOD ReallyRemoveOverlayFromDataSource(const PRUnichar *aDocURI, char *aOverlayURI);
-    NS_IMETHOD LoadDataSource(const nsCAutoString &aFileName, nsIRDFDataSource **aResult,
-                              PRBool aUseProfileDirOnly = PR_FALSE);
+  NS_IMETHOD ReallyRemoveOverlayFromDataSource(const PRUnichar *aDocURI, char *aOverlayURI);
+  NS_IMETHOD LoadDataSource(const nsCAutoString &aFileName, nsIRDFDataSource **aResult,
+                            PRBool aUseProfileDirOnly = PR_FALSE);
 
-    NS_IMETHOD CheckForProfileFile(const nsCAutoString& aFileName, nsCAutoString& aFileURL);
-    NS_IMETHOD GetProfileRoot(nsCAutoString& aFileURL);
+  NS_IMETHOD GetProfileRoot(nsCAutoString& aFileURL);
+  NS_IMETHOD GetInstallRoot(nsCAutoString& aFileURL);
 
-    NS_IMETHOD RefreshWindow(nsIDOMWindow* aWindow);
+  NS_IMETHOD RefreshWindow(nsIDOMWindow* aWindow);
 
-		NS_IMETHOD ProcessStyleSheet(nsIURL* aURL, nsICSSLoader* aLoader, nsIDocument* aDocument);
+	NS_IMETHOD ProcessStyleSheet(nsIURL* aURL, nsICSSLoader* aLoader, nsIDocument* aDocument);
 
-    NS_IMETHOD GetArcs(nsIRDFDataSource* aDataSource,
-                          const nsCAutoString& aType,
-                          nsISimpleEnumerator** aResult);
+  NS_IMETHOD GetArcs(nsIRDFDataSource* aDataSource,
+                        const nsCAutoString& aType,
+                        nsISimpleEnumerator** aResult);
 
+  NS_IMETHOD AddToCompositeDataSource(PRBool aUseProfile);
+  
+  NS_IMETHOD GetBaseURL(const nsCAutoString& aPackage, const nsCAutoString& aProvider, 
+                             nsCAutoString& aBaseURL);
+
+  NS_IMETHOD SetProvider(const nsCAutoString& aProvider,
+                         nsIRDFResource* aSelectionArc,
+                         const PRUnichar* aProviderName,
+                         PRBool aAllUsers, PRBool aIsAdding);
+
+  NS_IMETHOD SetProviderForPackage(const nsCAutoString& aProvider,
+                                   nsIRDFResource* aPackageResource, 
+                                   nsIRDFResource* aProviderPackageResource, 
+                                   nsIRDFResource* aSelectionArc, 
+                                   PRBool aAllUsers, PRBool aIsAdding);
+
+protected:
+  PRBool mInstallInitialized;
+  PRBool mProfileInitialized;
+  nsCAutoString mProfileRoot;
+  nsCAutoString mInstallRoot;
+
+  nsCOMPtr<nsIRDFCompositeDataSource> mChromeDataSource;
+  nsSupportsHashtable* mDataSourceTable;
+  nsIRDFService* mRDFService;
+
+  // Resources
+  nsCOMPtr<nsIRDFResource> mSelectedSkin;
+  nsCOMPtr<nsIRDFResource> mSelectedLocale;
+  nsCOMPtr<nsIRDFResource> mBaseURL;
+  nsCOMPtr<nsIRDFResource> mPackages;
+  nsCOMPtr<nsIRDFResource> mPackage;
 };
