@@ -528,6 +528,7 @@ void CTests::OnTestsAddUriContentListenerByOpenUri()
 	}
 	nsCOMPtr<nsIChannel> theChannel;
 	nsCOMPtr<nsIURI> theURI;
+
 	if (myDialog.DoModal() == IDOK)
 	{
 		NS_NewURI(getter_AddRefs(theURI), myDialog.m_urlfield);
@@ -537,6 +538,7 @@ void CTests::OnTestsAddUriContentListenerByOpenUri()
 		QAOutput("Didn't get a url. test failed", 2);
 		return;
 	}
+
 	nsCOMPtr<nsISupports> mySupports = do_QueryInterface(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl));
 	rv = myLoader->OpenURI(theChannel, PR_TRUE, mySupports);
 	RvTestResult(rv, "nsIUriLoader->OpenURI() test", 2);
