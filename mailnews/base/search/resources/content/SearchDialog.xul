@@ -72,7 +72,13 @@ Rights Reserved.
 
   <keyset id="mailKeys">
     <key id="key_delete" oncommand="goDoCommand('cmd_delete');"/>
+<!--
+    commenting out until we figure this out.
+    so shift delete will not work.  see bug #185867
+    this is causing a bunch of key codes to map to shift delete
+    see bug #185416.
     <key id="cmd_shiftdelete" oncommand="goDoCommand('cmd_shiftdelete');"/>
+-->
   </keyset>
 
   <broadcasterset id="mailBroadcasters">
