@@ -48,7 +48,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIWebNavigation.h"
-#include "nsHTMLAttributes.h"
+#include "nsMappedAttributes.h"
 #include "nsIChromeEventHandler.h"
 #include "nsDOMError.h"
 #include "nsRuleNode.h"
@@ -433,7 +433,7 @@ nsHTMLIFrameElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
   if (aData->mSID == eStyleStruct_Border) {

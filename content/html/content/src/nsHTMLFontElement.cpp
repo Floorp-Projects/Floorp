@@ -44,7 +44,7 @@
 #include "nsIDeviceContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-#include "nsHTMLAttributes.h"
+#include "nsMappedAttributes.h"
 #include "nsCSSStruct.h"
 #include "nsRuleNode.h"
 #include "nsIDocument.h"
@@ -224,7 +224,7 @@ nsHTMLFontElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
   if (aData->mSID == eStyleStruct_Font) {

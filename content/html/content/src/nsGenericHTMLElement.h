@@ -54,8 +54,7 @@ class nsIDOMAttr;
 class nsIDOMEventListener;
 class nsIDOMNodeList;
 class nsIFrame;
-class nsHTMLAttributes;
-class nsIHTMLMappedAttributes;
+class nsMappedAttributes;
 class nsIHTMLContent;
 class nsIStyleRule;
 class nsISupportsArray;
@@ -77,9 +76,6 @@ struct nsSize;
 class nsGenericHTMLElement : public nsGenericElement
 {
 public:
-  nsGenericHTMLElement();
-  virtual ~nsGenericHTMLElement();
-
 #ifdef GATHER_ELEMENT_USEAGE_STATISTICS
   nsresult Init(nsINodeInfo *aNodeInfo);
 #endif
@@ -230,9 +226,37 @@ public:
   NS_IMETHOD GetBaseTarget(nsAString& aBaseTarget) const;
 
   //----------------------------------------
+  /**
+   * Turn an attribute value into string based on the type of attribute
+   * (does not need to do standard types such as string, integer, pixel,
+   * color ...).  Called by GetAttr().
+   *
+   * @param aAttribute the attribute to convert
+   * @param aValue the value to convert
+   * @param aResult the string [OUT]
+   * @return NS_CONTENT_ATTR_HAS_VALUE if the value was successfully converted
+   *         NS_CONTENT_ATTR_NOT_THERE if the value could not be converted
+   * @see nsGenericHTMLElement::GetAttr
+   */
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
+
+  /**
+   * Convert an attribute string value to attribute type based on the type of
+   * attribute.  Called by SetAttr().
+   *
+   * @param aAttribute to attribute to convert
+   * @param aValue the string value to convert
+   * @param aResult the HTMLValue [OUT]
+   * @return NS_CONTENT_ATTR_HAS_VALUE if the string was successfully converted
+   *         NS_CONTENT_ATTR_NOT_THERE if the string could not be converted
+   * @see nsGenericHTMLElement::SetAttr
+   */
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAString& aValue,
+                               nsHTMLValue& aResult);
+
   NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 
@@ -490,7 +514,7 @@ public:
    * @param aData the returned rule data [INOUT]
    * @see GetAttributeMappingFunction
    */
-  static void MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAttributes, 
+  static void MapCommonAttributesInto(const nsMappedAttributes* aAttributes, 
                                       nsRuleData* aRuleData);
   struct AttributeDependenceEntry {
     nsIAtom** attribute;
@@ -521,7 +545,7 @@ public:
    * @param aData the returned rule data [INOUT]
    * @see GetAttributeMappingFunction
    */
-  static void MapImageAlignAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
+  static void MapImageAlignAttributeInto(const nsMappedAttributes* aAttributes,
                                          nsRuleData* aData);
 
   /**
@@ -532,7 +556,7 @@ public:
    * @param aData the returned rule data [INOUT]
    * @see GetAttributeMappingFunction
    */
-  static void MapDivAlignAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
+  static void MapDivAlignAttributeInto(const nsMappedAttributes* aAttributes,
                                        nsRuleData* aData);
 
   /**
@@ -542,7 +566,7 @@ public:
    * @param aData the returned rule data [INOUT]
    * @see GetAttributeMappingFunction
    */
-  static void MapImageBorderAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
+  static void MapImageBorderAttributeInto(const nsMappedAttributes* aAttributes,
                                           nsRuleData* aData);
   /**
    * Helper to map the image margin attribute into a style struct.
@@ -551,7 +575,7 @@ public:
    * @param aData the returned rule data [INOUT]
    * @see GetAttributeMappingFunction
    */
-  static void MapImageMarginAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
+  static void MapImageMarginAttributeInto(const nsMappedAttributes* aAttributes,
                                           nsRuleData* aData);
   /**
    * Helper to map the image position attribute into a style struct.
@@ -560,7 +584,7 @@ public:
    * @param aData the returned rule data [INOUT]
    * @see GetAttributeMappingFunction
    */
-  static void MapImageSizeAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
+  static void MapImageSizeAttributesInto(const nsMappedAttributes* aAttributes,
                                          nsRuleData* aData);
   /**
    * Helper to map the background attributes (currently background and bgcolor)
@@ -570,7 +594,7 @@ public:
    * @param aData the returned rule data [INOUT]
    * @see GetAttributeMappingFunction
    */
-  static void MapBackgroundAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
+  static void MapBackgroundAttributesInto(const nsMappedAttributes* aAttributes,
                                           nsRuleData* aData);
   /**
    * Helper to map the scrolling attribute on FRAME and IFRAME
@@ -580,7 +604,7 @@ public:
    * @param aData the returned rule data [INOUT]
    * @see GetAttributeMappingFunction
    */
-  static void MapScrollingAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
+  static void MapScrollingAttributeInto(const nsMappedAttributes* aAttributes,
                                         nsRuleData* aData);
   /**
    * Get the primary frame for a piece of content.
@@ -648,18 +672,6 @@ public:
   static nsresult GetPresContext(nsIHTMLContent* aContent,
                                  nsIPresContext** aPresContext);
 
-  /**
-   * Resolve the base URL from a _baseHref attribute (could be empty) and
-   * from the document.
-   *
-   * @param aBaseHref the _baseHref attribute
-   * @param aDocument the document
-   * @param aResult the base URL
-   */
-  static nsresult GetBaseURI(const nsHTMLValue& aBaseHref,
-                             nsIDocument* aDocument,
-                             nsIURI** aResult);
-
   // Form Helper Routines
   /**
    * Find an ancestor of this content node which is a form (could be null)
@@ -696,8 +708,34 @@ public:
                                    const nsAString& aValue,
                                    PRBool aNotify);
 
-  /** The list of attributes */
-  nsHTMLAttributes* mAttributes;
+  /**
+   * Set attribute and (if needed) notify documentobservers and fire off
+   * mutation events.
+   *
+   * @param aNamespaceID  namespace of attribute
+   * @param aAttribute    local-name of attribute
+   * @param aPrefix       aPrefix of attribute
+   * @param aOldValue     previous value of attribute. Only needed if
+   *                      aFireMutation is true.
+   * @param aParsedValue  parsed new value of attribute
+   * @param aModification is this a attribute-modification or addition. Only
+   *                      needed if aFireMutation or aNotify is true.
+   * @param aFireMutation should mutation-events be fired?
+   * @param aNotify       should we notify document-observers?
+   */
+  nsresult SetAttrAndNotify(PRInt32 aNamespaceID,
+                            nsIAtom* aAttribute,
+                            nsIAtom* aPrefix,
+                            const nsAString& aOldValue,
+                            nsAttrValue& aParsedValue,
+                            PRBool aModification,
+                            PRBool aFireMutation,
+                            PRBool aNotify);
+ 
+  /**
+   * Array containing all attributes and children for this element
+   */
+  nsAttrAndChildArray mAttrsAndChildren;
 
   // Helper functions for <a> and <area>
   static nsresult SetProtocolInHrefString(const nsAString &aHref,
@@ -782,9 +820,6 @@ protected:
  */
 class nsGenericHTMLLeafElement : public nsGenericHTMLElement {
 public:
-  nsGenericHTMLLeafElement();
-  virtual ~nsGenericHTMLLeafElement();
-
   nsresult CopyInnerTo(nsIContent* aSrcContent,
                        nsGenericHTMLLeafElement* aDest, PRBool aDeep);
 
@@ -858,9 +893,6 @@ public:
 class nsGenericHTMLContainerElement : public nsGenericHTMLElement
 {
 public:
-  nsGenericHTMLContainerElement();
-  virtual ~nsGenericHTMLContainerElement();
-
   nsresult CopyInnerTo(nsIContent* aSrcContent,
                        nsGenericHTMLContainerElement* aDest, PRBool aDeep);
 
@@ -911,11 +943,6 @@ public:
     mAttrsAndChildren.RemoveChildAt(aIndex);
     return PR_TRUE;
   }
-
-  /**
-   * Array containing all attributes and children for this element
-   */
-  nsAttrAndChildArray mAttrsAndChildren;
 
 protected:
   /**

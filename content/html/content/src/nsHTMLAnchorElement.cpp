@@ -66,7 +66,6 @@
 #include "nsIFrameManager.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
-#include "nsHTMLAttributes.h"
 
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 

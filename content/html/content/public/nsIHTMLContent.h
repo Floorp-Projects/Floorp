@@ -43,7 +43,7 @@ class nsString;
 class nsIFrame;
 class nsIStyleRule;
 class nsIPresContext;
-class nsIHTMLMappedAttributes;
+class nsMappedAttributes;
 class nsIURI;
 struct nsRuleData;
 
@@ -52,7 +52,7 @@ struct nsRuleData;
 { 0xb9e110b0, 0x94d6, 0x11d1, \
   {0x89, 0x5c, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }
 
-typedef void (*nsMapRuleToAttributesFunc)(const nsIHTMLMappedAttributes* aAttributes, 
+typedef void (*nsMapRuleToAttributesFunc)(const nsMappedAttributes* aAttributes, 
                                           nsRuleData* aData);
 
 /**
@@ -96,42 +96,11 @@ public:
    * Get a function that maps attributes into style rules (meant to be
    * overridden).  The function must have args / return values like this:
    *
-   * void MyFunc(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aData);
+   * void MyFunc(const nsMappedAttributes* aAttributes, nsRuleData* aData);
    *
    * @param aMapRuleFunc the mapping function [OUT]
    */
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const = 0;
-
-  /**
-   * Turn an attribute value into string based on the type of attribute
-   * (does not need to do standard types such as string, integer, pixel,
-   * color ...).  Called by GetAttr().
-   *
-   * @param aAttribute the attribute to convert
-   * @param aValue the value to convert
-   * @param aResult the string [OUT]
-   * @throws NS_CONTENT_ATTR_HAS_VALUE if the value was successfully converted
-   * @throws NS_CONTENT_ATTR_NOT_THERE if the value could not be converted
-   * @see nsGenericHTMLElement::GetAttr
-   */
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               const nsHTMLValue& aValue,
-                               nsAString& aResult) const = 0;
-
-  /**
-   * Convert an attribute string value to attribute type based on the type of
-   * attribute.  Called by SetAttr().
-   *
-   * @param aAttribute to attribute to convert
-   * @param aValue the string value to convert
-   * @param aResult the HTMLValue [OUT]
-   * @throws NS_CONTENT_ATTR_HAS_VALUE if the string was successfully converted
-   * @throws NS_CONTENT_ATTR_NOT_THERE if the string could not be converted
-   * @see nsGenericHTMLElement::SetAttr
-   */
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult) = 0;
 
   /**
    * Get the base target for any links within this piece

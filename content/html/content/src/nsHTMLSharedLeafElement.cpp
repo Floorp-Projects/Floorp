@@ -47,7 +47,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsRuleNode.h"
-#include "nsHTMLAttributes.h"
+#include "nsMappedAttributes.h"
 #include "nsStyleContext.h"
 
 
@@ -284,7 +284,7 @@ nsHTMLSharedLeafElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-SpacerMapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+SpacerMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                             nsRuleData* aData)
 {
   nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
@@ -368,7 +368,7 @@ SpacerMapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 }
 
 static void
-EmbedMapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+EmbedMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                            nsRuleData* aData)
 {
   if (!aData)
@@ -383,7 +383,7 @@ EmbedMapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 
 
 static void
-PlainMapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+PlainMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                            nsRuleData* aData)
 {
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);

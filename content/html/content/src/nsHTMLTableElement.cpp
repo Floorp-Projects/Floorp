@@ -43,7 +43,7 @@
 #include "nsDOMError.h"
 #include "GenericElementCollection.h"
 #include "nsIHTMLContent.h"
-#include "nsHTMLAttributes.h"
+#include "nsMappedAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
@@ -1073,9 +1073,8 @@ nsHTMLTableElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void 
-MapTableFrameInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsRuleData*                    aData,
-                  PRUint8                        aBorderStyle)
+MapTableFrameInto(const nsMappedAttributes* aAttributes,
+                  nsRuleData* aData, PRUint8 aBorderStyle)
 {
   if (!aData->mMarginData)
     return;
@@ -1139,9 +1138,8 @@ MapTableFrameInto(const nsIHTMLMappedAttributes* aAttributes,
 }
 
 static void 
-MapTableBorderInto(const nsIHTMLMappedAttributes* aAttributes,
-                   nsRuleData*                    aData,
-                   PRUint8                        aBorderStyle)
+MapTableBorderInto(const nsMappedAttributes* aAttributes,
+                   nsRuleData* aData, PRUint8 aBorderStyle)
 {
   nsHTMLValue borderValue;
 
@@ -1204,7 +1202,7 @@ MapTableBorderInto(const nsIHTMLMappedAttributes* aAttributes,
 }
 
 static void
-MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
   // XXX Bug 211636:  This function is used by a single style rule

@@ -283,7 +283,7 @@ nsHTMLFrameElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
   nsGenericHTMLElement::MapScrollingAttributeInto(aAttributes, aData);

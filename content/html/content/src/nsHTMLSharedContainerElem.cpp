@@ -46,7 +46,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-#include "nsHTMLAttributes.h"
+#include "nsMappedAttributes.h"
 #include "nsRuleNode.h"
 
 
@@ -345,7 +345,7 @@ nsHTMLSharedContainerElement::HasAttributeDependentStyle(const nsIAtom* aAttr) c
 }
 
 static void
-MapDirAndMenuAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+MapDirAndMenuAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                 nsRuleData* aData)
 {
   if (!aData || !aAttributes)
@@ -370,7 +370,7 @@ MapDirAndMenuAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 }
 
 static void
-MapOlAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+MapOlAttributesIntoRule(const nsMappedAttributes* aAttributes,
                         nsRuleData* aData)
 {
   if (!aData || !aAttributes)
@@ -395,7 +395,7 @@ MapOlAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 }
 
 static 
-void MapCaptionAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+void MapCaptionAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                   nsRuleData* aData)
 {
   if (!aAttributes || !aData)

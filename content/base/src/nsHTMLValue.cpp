@@ -97,6 +97,12 @@ nsHTMLValue::nsHTMLValue(nscolor aValue)
   mValue.mColor = aValue;
 }
 
+nsHTMLValue::nsHTMLValue(nsCOMArray<nsIAtom>* aArray)
+  : mUnit(eHTMLUnit_AtomArray)
+{
+  mValue.mAtomArray = aArray;
+}
+
 nsHTMLValue::nsHTMLValue(const nsHTMLValue& aCopy)
 {
   InitializeFrom(aCopy);
@@ -146,6 +152,36 @@ PRBool nsHTMLValue::operator==(const nsHTMLValue& aOther) const
     case HTMLUNIT_PERCENT:
       return mValue.mFloat == aOther.mValue.mFloat;
 
+    case HTMLUNIT_ATOMARRAY:
+    {
+      // Currently this isn't called (since atomarrays are never the value of
+      // a mapped attribute) so it doesn't matter that it's slow.
+      // It would be a lot simpler/faster if it was case sensitive though
+
+      PRInt32 count = mValue.mAtomArray->Count();
+      if (count != aOther.mValue.mAtomArray->Count()) {
+        return PR_FALSE;
+      }
+
+      PRInt32 i;
+      for (i = 0; i < count; ++i) {
+        const char *class1;
+        mValue.mAtomArray->ObjectAt(i)->GetUTF8String(&class1);
+        PRInt32 j;
+        for (j = 0; j < count; ++j) {
+          const char* class2;
+          aOther.mValue.mAtomArray->ObjectAt(j)->GetUTF8String(&class2);
+          if (nsCRT::strcasecmp(class1, class2) == 0) {
+            break;
+          }
+        }
+        if (j == count) {
+          return PR_FALSE;
+        }
+      }
+      return PR_TRUE;
+    }
+
     default:
       NS_WARNING("Unknown unit");
       return PR_TRUE;
@@ -158,6 +194,12 @@ PRUint32 nsHTMLValue::HashValue(void) const
   if (GetUnitClass() == HTMLUNIT_STRING) {
     retval = mValue.mString ? nsCheapStringBufferUtils::HashCode(mValue.mString)
                             : 0;
+  } else if (mUnit == eHTMLUnit_AtomArray) {
+    retval = 0;
+    PRInt32 i, count = mValue.mAtomArray->Count();
+    for (i = 0; i < count; ++i) {
+      retval ^= NS_PTR_TO_INT32(mValue.mAtomArray->ObjectAt(i));
+    }
   } else {
     retval = mValue.mInt;
   }
@@ -174,6 +216,9 @@ void nsHTMLValue::Reset(void)
   }
   else if (mUnit == eHTMLUnit_ISupports) {
     NS_IF_RELEASE(mValue.mISupports);
+  }
+  else if (mUnit == eHTMLUnit_AtomArray) {
+    delete mValue.mAtomArray;
   }
   mUnit = eHTMLUnit_Null;
   mValue.mString = nsnull;
@@ -252,97 +297,6 @@ void nsHTMLValue::SetEmptyValue(void)
   mUnit = eHTMLUnit_Empty;
 }
 
-#ifdef DEBUG
-void nsHTMLValue::AppendToString(nsAString& aBuffer) const
-{
-  switch (GetUnitClass()) {
-    case HTMLUNIT_NOSTORE:
-      break;
-    case HTMLUNIT_STRING:
-      aBuffer.Append(PRUnichar('"'));
-      aBuffer.Append(GetDependentString());
-      aBuffer.Append(PRUnichar('"'));
-      break;
-    case HTMLUNIT_INTEGER:
-    case HTMLUNIT_PIXEL:
-      {
-        nsAutoString intStr;
-        intStr.AppendInt(mValue.mInt, 10);
-        intStr.Append(NS_LITERAL_STRING("[0x"));
-        intStr.AppendInt(mValue.mInt, 16);
-        intStr.Append(PRUnichar(']'));
-
-        aBuffer.Append(intStr);
-      }
-      break;
-    case HTMLUNIT_COLOR:
-      {
-        nsAutoString intStr;
-        intStr.Append(NS_LITERAL_STRING("(0x"));
-        intStr.AppendInt(NS_GET_R(mValue.mColor), 16);
-        intStr.Append(NS_LITERAL_STRING(" 0x"));
-        intStr.AppendInt(NS_GET_G(mValue.mColor), 16);
-        intStr.Append(NS_LITERAL_STRING(" 0x"));
-        intStr.AppendInt(NS_GET_B(mValue.mColor), 16);
-        intStr.Append(NS_LITERAL_STRING(" 0x"));
-        intStr.AppendInt(NS_GET_A(mValue.mColor), 16);
-        intStr.Append(PRUnichar(')'));
-
-        aBuffer.Append(intStr);
-      }
-    break;
-    case HTMLUNIT_ISUPPORTS:
-      {
-        aBuffer.Append(NS_LITERAL_STRING("0x"));
-        nsAutoString intStr;
-        intStr.AppendInt(NS_PTR_TO_INT32(mValue.mISupports), 16);
-        aBuffer.Append(intStr);
-      }
-      break;
-    case HTMLUNIT_PERCENT:
-      {
-        nsAutoString floatStr;
-        floatStr.AppendFloat(mValue.mFloat * 100.0f);
-        aBuffer.Append(floatStr);
-      }
-      break;
-    default:
-      NS_ERROR("Unknown HTMLValue type!");
-  }
-
-  //
-  // Append the type name for types that are ambiguous
-  //
-  switch (mUnit) {
-    case eHTMLUnit_Null:
-      aBuffer.Append(NS_LITERAL_STRING("null"));
-      break;
-    case eHTMLUnit_Empty:
-      aBuffer.Append(NS_LITERAL_STRING("empty"));
-      break;
-    case eHTMLUnit_ISupports:
-      aBuffer.Append(NS_LITERAL_STRING("ptr"));
-      break;
-    case eHTMLUnit_Enumerated:
-      aBuffer.Append(NS_LITERAL_STRING("enum"));
-      break;
-    case eHTMLUnit_Proportional:
-      aBuffer.Append(NS_LITERAL_STRING("*"));
-      break;
-    case eHTMLUnit_Color:
-      aBuffer.Append(NS_LITERAL_STRING("rbga"));
-      break;
-    case eHTMLUnit_Percent:
-      aBuffer.Append(NS_LITERAL_STRING("%"));
-      break;
-    case eHTMLUnit_Pixel:
-      aBuffer.Append(NS_LITERAL_STRING("px"));
-      break;
-  }
-  aBuffer.Append(PRUnichar(' '));
-}
-#endif // DEBUG
-
 void
 nsHTMLValue::InitializeFrom(const nsHTMLValue& aCopy)
 {
@@ -376,6 +330,13 @@ nsHTMLValue::InitializeFrom(const nsHTMLValue& aCopy)
 
     case HTMLUNIT_PERCENT:
       mValue.mFloat = aCopy.mValue.mFloat;
+      break;
+
+    case HTMLUNIT_ATOMARRAY:
+      mValue.mAtomArray = new nsCOMArray<nsIAtom>(*aCopy.mValue.mAtomArray);
+      if (!mValue.mAtomArray) {
+        mUnit = eHTMLUnit_Null;
+      }
       break;
 
     default:
@@ -522,6 +483,20 @@ nsHTMLValue::ToString(nsAString& aResult) const
     case eHTMLUnit_String:
       GetStringValue(aResult);
       return PR_TRUE;
+    case eHTMLUnit_AtomArray:
+    {
+      PRInt32 count = mValue.mAtomArray->Count();
+      if (count) {
+        mValue.mAtomArray->ObjectAt(0)->ToString(aResult);
+        nsAutoString tmp;
+        PRInt32 i;
+        for (i = 1; i < count; ++i) {
+          mValue.mAtomArray->ObjectAt(i)->ToString(tmp);
+          aResult.Append(NS_LITERAL_STRING(" ") + tmp);
+        }
+      }
+      return PR_TRUE;
+    }
     default:
       return PR_FALSE;
   }

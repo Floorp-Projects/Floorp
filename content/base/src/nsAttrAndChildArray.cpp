@@ -41,6 +41,11 @@
 #include "prmem.h"
 #include "prbit.h"
 #include "nsString.h"
+#include "nsIHTMLStylesheet.h"
+#include "nsRuleWalker.h"
+#include "nsMappedAttributes.h"
+#include "nsUnicharUtils.h"
+#include "nsAutoPtr.h"
 
 /**
  * Due to a compiler bug in VisualAge C++ for AIX, we need to return the 
@@ -112,7 +117,7 @@ nsAttrAndChildArray::InsertChildAt(nsIContent* aChild, PRUint32 aPos)
   if (offset && !mImpl->mBuffer[offset - ATTRSIZE]) {
     // Compress away all empty slots while we're at it. This might not be the
     // optimal thing to do.
-    PRUint32 attrCount = AttrCount();
+    PRUint32 attrCount = NonMappedAttrCount();
     void** newStart = mImpl->mBuffer + attrCount * ATTRSIZE;
     void** oldStart = mImpl->mBuffer + offset;
     memmove(newStart, oldStart, aPos * sizeof(nsIContent*));
@@ -187,27 +192,48 @@ nsAttrAndChildArray::IndexOfChild(nsIContent* aPossibleChild) const
 PRUint32
 nsAttrAndChildArray::AttrCount() const
 {
-  if (!mImpl) {
-    return 0;
-  }
-
-  PRUint32 count = AttrSlotCount();
-  while (count > 0 && !mImpl->mBuffer[(count - 1) * ATTRSIZE]) {
-    --count;
-  }
-
-  return count;
+  return NonMappedAttrCount() + MappedAttrCount();
 }
 
 const nsAttrValue*
 nsAttrAndChildArray::GetAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID) const
 {
-  PRInt32 i = IndexOfAttr(aLocalName, aNamespaceID);
-  if (i < 0) {
-    return nsnull;
+  PRUint32 i, slotCount = AttrSlotCount();
+  if (aNamespaceID == kNameSpaceID_None) {
+    // This should be the common case so lets make an optimized loop
+    for (i = 0; i < slotCount && mImpl->mBuffer[i * ATTRSIZE]; ++i) {
+      if (ATTRS(mImpl)[i].mName.Equals(aLocalName)) {
+        return &ATTRS(mImpl)[i].mValue;
+      }
+    }
+
+    if (mImpl && mImpl->mMappedAttrs) {
+      return mImpl->mMappedAttrs->GetAttr(aLocalName);
+    }
+  }
+  else {
+    for (i = 0; i < slotCount && mImpl->mBuffer[i * ATTRSIZE]; ++i) {
+      if (ATTRS(mImpl)[i].mName.Equals(aLocalName, aNamespaceID)) {
+        return &ATTRS(mImpl)[i].mValue;
+      }
+    }
   }
 
-  return &ATTRS(mImpl)[i].mValue;
+  return nsnull;
+}
+
+const nsAttrValue*
+nsAttrAndChildArray::AttrAt(PRUint32 aPos) const
+{
+  NS_ASSERTION(aPos < AttrCount(),
+               "out-of-bounds access in nsAttrAndChildArray");
+
+  PRUint32 mapped = MappedAttrCount();
+  if (aPos < mapped) {
+    return mImpl->mMappedAttrs->AttrAt(aPos);
+  }
+
+  return &ATTRS(mImpl)[aPos - mapped].mValue;
 }
 
 nsresult
@@ -236,18 +262,19 @@ nsAttrAndChildArray::SetAttr(nsIAtom* aLocalName, const nsAString& aValue)
 }
 
 nsresult
-nsAttrAndChildArray::SetAttr(nsIAtom* aLocalName, nsHTMLValue* aValue)
+nsAttrAndChildArray::SetAndTakeAttr(nsIAtom* aLocalName, nsAttrValue& aValue)
 {
   PRUint32 i, slotCount = AttrSlotCount();
   for (i = 0; i < slotCount && mImpl->mBuffer[i * ATTRSIZE]; ++i) {
     if (ATTRS(mImpl)[i].mName.Equals(aLocalName)) {
-      ATTRS(mImpl)[i].mValue.SetTo(aValue);
+      ATTRS(mImpl)[i].mValue.Reset();
+      ATTRS(mImpl)[i].mValue.SwapValueWith(aValue);
 
       return NS_OK;
     }
   }
 
-  NS_ENSURE_TRUE(slotCount < ATTRCHILD_ARRAY_MAX_ATTR_COUNT,
+  NS_ENSURE_TRUE(i < ATTRCHILD_ARRAY_MAX_ATTR_COUNT,
                  NS_ERROR_FAILURE);
 
   if (i == slotCount && !AddAttrSlot()) {
@@ -255,31 +282,33 @@ nsAttrAndChildArray::SetAttr(nsIAtom* aLocalName, nsHTMLValue* aValue)
   }
 
   new (&ATTRS(mImpl)[i].mName) nsAttrName(aLocalName);
-  new (&ATTRS(mImpl)[i].mValue) nsAttrValue(aValue);
+  new (&ATTRS(mImpl)[i].mValue) nsAttrValue();
+  ATTRS(mImpl)[i].mValue.SwapValueWith(aValue);
 
   return NS_OK;
 }
 
 nsresult
-nsAttrAndChildArray::SetAttr(nsINodeInfo* aName, const nsAString& aValue)
+nsAttrAndChildArray::SetAndTakeAttr(nsINodeInfo* aName, nsAttrValue& aValue)
 {
   PRInt32 namespaceID = aName->NamespaceID();
   nsIAtom* localName = aName->NameAtom();
   if (namespaceID == kNameSpaceID_None) {
-    return SetAttr(localName, aValue);
+    return SetAndTakeAttr(localName, aValue);
   }
 
   PRUint32 i, slotCount = AttrSlotCount();
   for (i = 0; i < slotCount && mImpl->mBuffer[i * ATTRSIZE]; ++i) {
     if (ATTRS(mImpl)[i].mName.Equals(localName, namespaceID)) {
       ATTRS(mImpl)[i].mName.SetTo(aName);
-      ATTRS(mImpl)[i].mValue.SetTo(aValue);
+      ATTRS(mImpl)[i].mValue.Reset();
+      ATTRS(mImpl)[i].mValue.SwapValueWith(aValue);
 
       return NS_OK;
     }
   }
 
-  NS_ENSURE_TRUE(slotCount < ATTRCHILD_ARRAY_MAX_ATTR_COUNT,
+  NS_ENSURE_TRUE(i < ATTRCHILD_ARRAY_MAX_ATTR_COUNT,
                  NS_ERROR_FAILURE);
 
   if (i == slotCount && !AddAttrSlot()) {
@@ -287,17 +316,38 @@ nsAttrAndChildArray::SetAttr(nsINodeInfo* aName, const nsAString& aValue)
   }
 
   new (&ATTRS(mImpl)[i].mName) nsAttrName(aName);
-  new (&ATTRS(mImpl)[i].mValue) nsAttrValue(aValue);
+  new (&ATTRS(mImpl)[i].mValue) nsAttrValue();
+  ATTRS(mImpl)[i].mValue.SwapValueWith(aValue);
 
   return NS_OK;
 }
 
 
-void
+nsresult
 nsAttrAndChildArray::RemoveAttrAt(PRUint32 aPos)
 {
   NS_ASSERTION(aPos < AttrCount(), "out-of-bounds");
 
+  PRUint32 mapped = MappedAttrCount();
+  if (aPos < mapped) {
+    if (mapped == 1) {
+      // We're removing the last mapped attribute.
+      mImpl->mMappedAttrs->ReleaseUse();
+      NS_RELEASE(mImpl->mMappedAttrs);
+
+      return NS_OK;
+    }
+
+    nsRefPtr<nsMappedAttributes> mapped;
+    nsresult rv = GetModifiableMapped(nsnull, nsnull, getter_AddRefs(mapped));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mapped->RemoveAttrAt(aPos);
+
+    return MakeMappedUnique(mapped);
+  }
+
+  aPos -= mapped;
   ATTRS(mImpl)[aPos].~InternalAttr();
 
   PRUint32 slotCount = AttrSlotCount();
@@ -305,12 +355,20 @@ nsAttrAndChildArray::RemoveAttrAt(PRUint32 aPos)
           &ATTRS(mImpl)[aPos + 1],
           (slotCount - aPos - 1) * sizeof(InternalAttr));
   memset(&ATTRS(mImpl)[slotCount - 1], nsnull, sizeof(InternalAttr));
+
+  return NS_OK;
 }
 
 const nsAttrName*
 nsAttrAndChildArray::GetSafeAttrNameAt(PRUint32 aPos) const
 {
+  PRUint32 mapped = MappedAttrCount();
+  if (aPos < mapped) {
+    return mImpl->mMappedAttrs->NameAt(aPos);
+  }
+
   // Warn here since we should make this non-bounds safe
+  aPos -= mapped;
   PRUint32 slotCount = AttrSlotCount();
   NS_ENSURE_TRUE(aPos < slotCount, nsnull);
 
@@ -331,30 +389,85 @@ nsAttrAndChildArray::GetExistingAttrNameFromQName(const nsAString& aName) const
     }
   }
 
+  if (mImpl && mImpl->mMappedAttrs) {
+    return mImpl->mMappedAttrs->GetExistingAttrNameFromQName(name);
+  }
+
   return nsnull;
 }
 
 PRInt32
 nsAttrAndChildArray::IndexOfAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID) const
 {
-  PRUint32 i, slotCount = AttrSlotCount();
+  PRInt32 i;
+  if (mImpl && mImpl->mMappedAttrs) {
+    i = mImpl->mMappedAttrs->IndexOfAttr(aLocalName, aNamespaceID);
+    if (i >= 0) {
+      return i;
+    }
+  }
+
+  PRInt32 mapped = MappedAttrCount();
+
+  PRUint32 slotCount = AttrSlotCount();
   if (aNamespaceID == kNameSpaceID_None) {
     // This should be the common case so lets make an optimized loop
     for (i = 0; i < slotCount && mImpl->mBuffer[i * ATTRSIZE]; ++i) {
       if (ATTRS(mImpl)[i].mName.Equals(aLocalName)) {
-        return NS_STATIC_CAST(PRInt32, i);
+        return i + mapped;
       }
     }
   }
   else {
     for (i = 0; i < slotCount && mImpl->mBuffer[i * ATTRSIZE]; ++i) {
       if (ATTRS(mImpl)[i].mName.Equals(aLocalName, aNamespaceID)) {
-        return NS_STATIC_CAST(PRInt32, i);
+        return i + mapped;
       }
     }
   }
 
   return -1;
+}
+
+nsresult
+nsAttrAndChildArray::SetAndTakeMappedAttr(nsIAtom* aLocalName,
+                                          nsAttrValue& aValue,
+                                          nsIHTMLContent* aContent,
+                                          nsIHTMLStyleSheet* aSheet)
+{
+  nsRefPtr<nsMappedAttributes> mapped;
+  nsresult rv = GetModifiableMapped(aContent, aSheet, getter_AddRefs(mapped));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mapped->SetAndTakeAttr(aLocalName, aValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return MakeMappedUnique(mapped);
+}
+
+nsresult
+nsAttrAndChildArray::SetMappedAttrStyleSheet(nsIHTMLStyleSheet* aSheet)
+{
+  if (!mImpl || !mImpl->mMappedAttrs ||
+      aSheet == mImpl->mMappedAttrs->GetStyleSheet()) {
+    return NS_OK;
+  }
+
+  nsRefPtr<nsMappedAttributes> mapped;
+  nsresult rv = GetModifiableMapped(nsnull, nsnull, getter_AddRefs(mapped));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mapped->SetStyleSheet(aSheet);
+
+  return MakeMappedUnique(mapped);
+}
+
+void
+nsAttrAndChildArray::WalkMappedAttributeStyleRules(nsRuleWalker* aRuleWalker)
+{
+  if (mImpl && mImpl->mMappedAttrs && aRuleWalker) {
+    aRuleWalker->Forward(mImpl->mMappedAttrs);
+  }
 }
 
 void
@@ -366,7 +479,7 @@ nsAttrAndChildArray::Compact()
 
   // First compress away empty attrslots
   PRUint32 slotCount = AttrSlotCount();
-  PRUint32 attrCount = AttrCount();
+  PRUint32 attrCount = NonMappedAttrCount();
   PRUint32 childCount = ChildCount();
 
   if (attrCount < slotCount) {
@@ -378,7 +491,7 @@ nsAttrAndChildArray::Compact()
 
   // Then resize or free buffer
   PRUint32 newSize = attrCount * ATTRSIZE + childCount;
-  if (!newSize) {
+  if (!newSize && !mImpl->mMappedAttrs) {
     PR_Free(mImpl);
     mImpl = nsnull;
   }
@@ -397,6 +510,11 @@ nsAttrAndChildArray::Clear()
     return;
   }
 
+  if (mImpl->mMappedAttrs) {
+    mImpl->mMappedAttrs->ReleaseUse();
+    NS_RELEASE(mImpl->mMappedAttrs);
+  }
+
   PRUint32 i, slotCount = AttrSlotCount();
   for (i = 0; i < slotCount && mImpl->mBuffer[i * ATTRSIZE]; ++i) {
     ATTRS(mImpl)[i].~InternalAttr();
@@ -411,6 +529,92 @@ nsAttrAndChildArray::Clear()
 
   SetAttrSlotAndChildCount(0, 0);
 }
+
+PRUint32
+nsAttrAndChildArray::NonMappedAttrCount() const
+{
+  if (!mImpl) {
+    return 0;
+  }
+
+  PRUint32 count = AttrSlotCount();
+  while (count > 0 && !mImpl->mBuffer[(count - 1) * ATTRSIZE]) {
+    --count;
+  }
+
+  return count;
+}
+
+PRUint32
+nsAttrAndChildArray::MappedAttrCount() const
+{
+  return mImpl && mImpl->mMappedAttrs ? (PRUint32)mImpl->mMappedAttrs->Count() : 0;
+}
+
+nsresult
+nsAttrAndChildArray::GetModifiableMapped(nsIHTMLContent* aContent,
+                                         nsIHTMLStyleSheet* aSheet,
+                                         nsMappedAttributes** aModifiable)
+{
+  *aModifiable = nsnull;
+
+  if (mImpl && mImpl->mMappedAttrs) {
+    *aModifiable = new nsMappedAttributes(*mImpl->mMappedAttrs);
+    NS_ENSURE_TRUE(*aModifiable, NS_ERROR_OUT_OF_MEMORY);
+
+    NS_ADDREF(*aModifiable);
+    
+    return NS_OK;
+  }
+
+  NS_ASSERTION(aContent, "Trying to create modifiable without content");
+
+  nsMapRuleToAttributesFunc mapRuleFunc;
+  aContent->GetAttributeMappingFunction(mapRuleFunc);
+  *aModifiable = new nsMappedAttributes(aSheet, mapRuleFunc);
+  NS_ENSURE_TRUE(*aModifiable, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ADDREF(*aModifiable);
+
+  return NS_OK;
+}
+
+nsresult
+nsAttrAndChildArray::MakeMappedUnique(nsMappedAttributes* aAttributes)
+{
+  NS_ASSERTION(aAttributes, "missing attributes");
+
+  if (!mImpl && !GrowBy(1)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (!aAttributes->GetStyleSheet()) {
+    // This doesn't currently happen, but it could if we do loading right
+
+    nsRefPtr<nsMappedAttributes> mapped(aAttributes);
+    if (mImpl->mMappedAttrs) {
+      mImpl->mMappedAttrs->ReleaseUse();
+    }
+    mapped.swap(mImpl->mMappedAttrs);
+    mImpl->mMappedAttrs->AddUse();
+
+    return NS_OK;
+  }
+
+  nsRefPtr<nsMappedAttributes> mapped;
+  nsresult rv = aAttributes->GetStyleSheet()->
+    UniqueMappedAttributes(aAttributes, *getter_AddRefs(mapped));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mImpl->mMappedAttrs) {
+    mImpl->mMappedAttrs->ReleaseUse();
+  }
+  mapped.swap(mImpl->mMappedAttrs);
+  mImpl->mMappedAttrs->AddUse();
+
+  return NS_OK;
+}
+
 
 PRBool
 nsAttrAndChildArray::GrowBy(PRUint32 aGrowSize)
@@ -437,6 +641,7 @@ nsAttrAndChildArray::GrowBy(PRUint32 aGrowSize)
 
   // Set initial counts if we didn't have a buffer before
   if (!oldImpl) {
+    mImpl->mMappedAttrs = nsnull;
     SetAttrSlotAndChildCount(0, 0);
   }
 

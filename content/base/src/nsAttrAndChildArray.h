@@ -44,6 +44,10 @@
 #include "nsAttrValue.h"
 
 class nsIContent;
+class nsMappedAttributes;
+class nsIHTMLStyleSheet;
+class nsRuleWalker;
+class nsIHTMLContent;
 
 #define ATTRCHILD_ARRAY_GROWSIZE 8
 #define ATTRCHILD_ARRAY_LINEAR_THRESHOLD 32
@@ -89,24 +93,19 @@ public:
 
   PRUint32 AttrCount() const;
   const nsAttrValue* GetAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID = kNameSpaceID_None) const;
-  const nsAttrValue* AttrAt(PRUint32 aPos) const
-  {
-    NS_ASSERTION(aPos < AttrCount(), "out-of-bounds access in nsAttrAndChildArray");
-    /**
-     * Due to a compiler bug in VisualAge C++ for AIX, we need to return
-     * the address of the first index into mBuffer here. A similar fix
-     * was also made to the ATTRS macro in nsAttrAndChildArray.cpp. See
-     * Bug 231104.
-     */
-    return &NS_REINTERPRET_CAST(InternalAttr*, &(mImpl->mBuffer[0]))[aPos].mValue;
-  }
+  const nsAttrValue* AttrAt(PRUint32 aPos) const;
   nsresult SetAttr(nsIAtom* aLocalName, const nsAString& aValue);
-  nsresult SetAttr(nsIAtom* aLocalName, nsHTMLValue* aValue);
-  nsresult SetAttr(nsINodeInfo* aName, const nsAString& aValue);
-  void RemoveAttrAt(PRUint32 aPos);
+  nsresult SetAndTakeAttr(nsIAtom* aLocalName, nsAttrValue& aValue);
+  nsresult SetAndTakeAttr(nsINodeInfo* aName, nsAttrValue& aValue);
+  nsresult RemoveAttrAt(PRUint32 aPos);
   const nsAttrName* GetSafeAttrNameAt(PRUint32 aPos) const;
   const nsAttrName* GetExistingAttrNameFromQName(const nsAString& aName) const;
   PRInt32 IndexOfAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID = kNameSpaceID_None) const;
+
+  nsresult SetAndTakeMappedAttr(nsIAtom* aLocalName, nsAttrValue& aValue,
+                                nsIHTMLContent* aContent, nsIHTMLStyleSheet* aSheet);
+  nsresult SetMappedAttrStyleSheet(nsIHTMLStyleSheet* aSheet);
+  void WalkMappedAttributeStyleRules(nsRuleWalker* aRuleWalker);
 
   void Compact();
 
@@ -115,6 +114,14 @@ private:
   nsAttrAndChildArray& operator=(const nsAttrAndChildArray& aOther); // Not to be implemented
 
   void Clear();
+
+  PRUint32 NonMappedAttrCount() const;
+  PRUint32 MappedAttrCount() const;
+
+  nsresult GetModifiableMapped(nsIHTMLContent* aContent,
+                               nsIHTMLStyleSheet* aSheet,
+                               nsMappedAttributes** aModifiable);
+  nsresult MakeMappedUnique(nsMappedAttributes* aAttributes);
 
   PRUint32 AttrSlotsSize() const
   {
@@ -158,6 +165,7 @@ private:
   struct Impl {
     PRUint32 mAttrAndChildCount;
     PRUint32 mBufferSize;
+    nsMappedAttributes* mMappedAttrs;
     void* mBuffer[1];
   };
 

@@ -35,7 +35,7 @@
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "pldhash.h"
-#include "nsHTMLAttributes.h"
+#include "nsMappedAttributes.h"
 #include "nsILink.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsIStyleRule.h"
@@ -450,18 +450,16 @@ TableColRule::MapRuleInfoInto(nsRuleData* aRuleData)
 // -----------------------------------------------------------
 
 struct MappedAttrTableEntry : public PLDHashEntryHdr {
-  nsIHTMLMappedAttributes *mAttributes;
+  nsMappedAttributes *mAttributes;
 };
 
 PR_STATIC_CALLBACK(PLDHashNumber)
 MappedAttrTable_HashKey(PLDHashTable *table, const void *key)
 {
-  nsIHTMLMappedAttributes *attributes =
-    NS_STATIC_CAST(nsIHTMLMappedAttributes*, NS_CONST_CAST(void*, key));
+  nsMappedAttributes *attributes =
+    NS_STATIC_CAST(nsMappedAttributes*, NS_CONST_CAST(void*, key));
 
-  PRUint32 hash;
-  attributes->HashValue(hash);
-  return hash;
+  return attributes->HashValue();
 }
 
 PR_STATIC_CALLBACK(void)
@@ -477,14 +475,12 @@ PR_STATIC_CALLBACK(PRBool)
 MappedAttrTable_MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                            const void *key)
 {
-  nsIHTMLMappedAttributes *attributes =
-    NS_STATIC_CAST(nsIHTMLMappedAttributes*, NS_CONST_CAST(void*, key));
+  nsMappedAttributes *attributes =
+    NS_STATIC_CAST(nsMappedAttributes*, NS_CONST_CAST(void*, key));
   const MappedAttrTableEntry *entry =
     NS_STATIC_CAST(const MappedAttrTableEntry*, hdr);
 
-  PRBool equal;
-  attributes->Equals(entry->mAttributes, equal);
-  return equal;
+  return attributes->Equals(entry->mAttributes);
 }
 
 static PLDHashTableOps MappedAttrTable_Ops = {
@@ -560,9 +556,9 @@ public:
   NS_IMETHOD SetVisitedLinkColor(nscolor aColor);
 
   // Mapped Attribute management methods
-  NS_IMETHOD UniqueMappedAttributes(nsIHTMLMappedAttributes* aMapped,
-                                    nsIHTMLMappedAttributes*& aUniqueMapped);
-  NS_IMETHOD DropMappedAttributes(nsIHTMLMappedAttributes* aMapped);
+  NS_IMETHOD UniqueMappedAttributes(nsMappedAttributes* aMapped,
+                                    nsMappedAttributes*& aUniqueMapped);
+  NS_IMETHOD DropMappedAttributes(nsMappedAttributes* aMapped);
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -1097,8 +1093,8 @@ HTMLStyleSheetImpl::SetVisitedLinkColor(nscolor aColor)
 }
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::UniqueMappedAttributes(nsIHTMLMappedAttributes* aMapped,
-                                           nsIHTMLMappedAttributes*& aUniqueMapped)
+HTMLStyleSheetImpl::UniqueMappedAttributes(nsMappedAttributes* aMapped,
+                                           nsMappedAttributes*& aUniqueMapped)
 {
   aUniqueMapped = nsnull;
   if (!mMappedAttrTable.ops) {
@@ -1116,7 +1112,6 @@ HTMLStyleSheetImpl::UniqueMappedAttributes(nsIHTMLMappedAttributes* aMapped,
   if (!entry->mAttributes) {
     // We added a new entry to the hashtable, so we have a new unique set.
     entry->mAttributes = aMapped;
-    aMapped->SetUniqued(PR_TRUE);
   }
   aUniqueMapped = entry->mAttributes;
   NS_ADDREF(aUniqueMapped);
@@ -1125,14 +1120,9 @@ HTMLStyleSheetImpl::UniqueMappedAttributes(nsIHTMLMappedAttributes* aMapped,
 }
 
 NS_IMETHODIMP
-HTMLStyleSheetImpl::DropMappedAttributes(nsIHTMLMappedAttributes* aMapped)
+HTMLStyleSheetImpl::DropMappedAttributes(nsMappedAttributes* aMapped)
 {
   NS_ENSURE_TRUE(aMapped, NS_OK);
-
-  PRBool inTable = PR_FALSE;
-  aMapped->GetUniqued(inTable);
-  if (!inTable)
-    return NS_OK;
 
   NS_ASSERTION(mMappedAttrTable.ops, "table uninitialized");
 #ifdef DEBUG
