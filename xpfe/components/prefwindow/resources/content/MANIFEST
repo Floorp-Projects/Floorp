@@ -12,6 +12,7 @@ pref-cookies.xul
 pref-debug.xul
 pref-download.xul
 pref-fonts.xul
+pref-fonts.js
 pref-languages.xul
 pref-navigator.js
 pref-navigator.xul
