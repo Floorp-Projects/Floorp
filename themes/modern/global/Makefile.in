@@ -20,12 +20,13 @@
 #
 
 DEPTH		= ../../..
+THEME_ROOT_DEPTH = ..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-THEME       = modern
 
 include $(DEPTH)/config/autoconf.mk
+include $(THEME_ROOT_DEPTH)/theme.mk
 
 SAMPLES_DIR	= $(DIST)/bin/chrome/$(THEME)/global/skin
 
