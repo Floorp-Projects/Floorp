@@ -26,68 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifndef MOZ_JAVA
 DIRS		= stubs
-else
-DIRS		= \
-		md-include \
-		include \
-		javah \
-		$(AWT11DIRS) \
-		classsrc \
-		$(JTOOLS) \
-		md \
-		runtime \
-		awt \
-		mmedia \
-		jpegwrap \
-		zipwrap \
-		bn \
-		jdbc \
-		$(NETSCAPEDIR) \
-		$(NULL)
-
-ifeq ($(STAND_ALONE_JAVA),1)
-NETSCAPEDIR	= netscape/console
-else
-JTOOLS		= jtools
-NETSCAPEDIR	= netscape
-endif
-
-ifeq ($(AWT_11),1)
-AWT11DIRS	= classsrc11
-endif
-
-endif
-
-OTHER_DIRS	= javac javadoc doc javap
-
-LOOP_OVER_OTHER_DIRS = \
-	@for d in $(OTHER_DIRS); do \
-		if test -d $$d; then \
-			set -e; \
-			echo "cd $$d; $(MAKE) $@"; \
-			cd $$d; $(MAKE) $@; cd ..; \
-			set +e; \
-		else \
-			echo "Skipping non-directory $$d..."; \
-		fi; \
-	done
 
 include $(topsrcdir)/config/rules.mk
-
-.PHONY: $(OTHER_DIRS)
-
-$(OTHER_DIRS)::
-	@if test -d $@; then \
-		set -e; \
-		echo "cd $@; $(MAKE)"; \
-		cd $@; $(MAKE); \
-		set +e; \
-	else \
-		echo "Skipping non-directory $@..."; \
-	fi
-
-other_dirs::
-	+$(LOOP_OVER_OTHER_DIRS)
 

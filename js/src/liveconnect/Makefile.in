@@ -45,6 +45,8 @@ ifeq ($(OS_ARCH),WINNT)
 LIBRARY_NAME	= jsj$(MOZ_BITS)$(VERSION_NUMBER)
 MAPFILE		= $(LIBRARY_NAME).map
 endif
+JNI_GEN_DIR	= _jni
+
 REQUIRES	= js \
 		  xpcom \
 		  xpconnect \
@@ -71,55 +73,26 @@ CSRCS		= \
 		jsj_utils.c \
 		$(NULL)
 
-EXPORTS		= \
-		$(srcdir)/jsjava.h \
-		$(srcdir)/$(JNI_GEN_DIR)/netscape_javascript_JSObject.h \
-		$(srcdir)/$(JNI_GEN_DIR)/netscape_javascript_JSException.h \
-		$(NULL)
-
-
-include $(topsrcdir)/config/config.mk
-
-ifdef NSJVM
-DIRS		= classes
-JNI_GEN		= netscape.javascript.JSObject netscape.javascript.JSException
-endif
-
-ifdef MOZ_OJI
-
 CPPSRCS		= \
 		nsCLiveconnect.cpp \
 		nsCLiveconnectFactory.cpp \
 		$(NULL)
 
-EXPORTS		+= \
+EXPORTS		= \
+		$(srcdir)/jsjava.h \
+		$(srcdir)/$(JNI_GEN_DIR)/netscape_javascript_JSObject.h \
+		$(srcdir)/$(JNI_GEN_DIR)/netscape_javascript_JSException.h \
 		$(srcdir)/nsILiveconnect.h \
 		$(srcdir)/nsISecureLiveconnect.h \
 		$(srcdir)/nsISecurityContext.h \
 		$(NULL)
-endif
 
 EXTRA_DSO_LDOPTS += \
-		$(MOZ_COMPONENT_LIBS) \
+		$(LIBS_DIR) \
 		$(MOZ_JS_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-#
-# Generate jsj_nodl.c (so that you can check it in)
-# These make rules only works on IRIX...sigh
-#
-ifeq ($(OS_ARCH),IRIX)
-jsj_nodl.c: stubs.o Makefile $(DEPTH)/config/nodl.pl
-	rm -f $@
-	$(PERL) $(DEPTH)/config/nodl.pl "jsj_nodl_tab" \
-	    `nm -Bn stubs.o | egrep Java_.*_stub | awk '{print $$3;}'` > $@
-endif
-
-ifdef JAVA_OR_OJI
-stubs.o: $(JNI_GEN_DIR)/netscape_javascript_JSObject.c $(JNI_GEN_DIR)/netscape_javascript_JSException.c
-else
-stubs.o:
-endif
 

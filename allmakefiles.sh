@@ -935,13 +935,6 @@ if [ ! "$SYSTEM_MNG" ]; then
 fi
 
 #
-#  java/
-#
-if [ "$MOZ_JAVA_SUPPLEMENT" ]; then
-    MAKEFILES_java_supplement=`cat ${srcdir}/java/makefiles`
-fi
-
-#
 # l10n/
 #
 if [ -f ${srcdir}/l10n/makefiles.all ]; then
