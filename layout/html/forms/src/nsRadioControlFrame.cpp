@@ -105,7 +105,10 @@ nsRadioControlFrame::GetDesiredSize(nsIPresContext*        aPresContext,
 
   nsWidgetRendering mode;
   aPresContext->GetWidgetRenderingMode(&mode);
-  if (eWidgetRendering_Native == mode) {
+  if (eWidgetRendering_Gfx == mode) {
+    nsFormControlFrame::GetDesiredSize(aPresContext,aReflowState,aDesiredLayoutSize,
+                                    aDesiredWidgetSize);
+  } else {
     float p2t;
     aPresContext->GetScaledPixelsToTwips(&p2t);
     aDesiredWidgetSize.width  = GetRadioboxSize(p2t);
@@ -119,9 +122,6 @@ nsRadioControlFrame::GetDesiredSize(nsIPresContext*        aPresContext,
       aDesiredLayoutSize.maxElementSize->width  = aDesiredLayoutSize.width;
       aDesiredLayoutSize.maxElementSize->height = aDesiredLayoutSize.height;
     }
-  } else {
-    nsFormControlFrame::GetDesiredSize(aPresContext,aReflowState,aDesiredLayoutSize,
-                                    aDesiredWidgetSize);
   }
 }
 
