@@ -28,6 +28,7 @@ void nsXtWidget_ButtonMotionMask_EventHandler(Widget w, XtPointer p, XEvent * ev
 void nsXtWidget_MotionMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
 void nsXtWidget_EnterMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
 void nsXtWidget_LeaveMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
+void nsXtWidget_ResizeRedirectMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
 
 //----------------------------------------------------
 // Callbacks
@@ -38,6 +39,8 @@ void nsXtWidget_Toggle_ArmCallback(Widget w, XtPointer p, XtPointer call_data);
 void nsXtWidget_Toggle_DisArmCallback(Widget w, XtPointer p, XtPointer call_data);
 
 void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data);
+void nsXtWidget_Resize_Callback(Widget w, XtPointer p, XtPointer call_data);
+
 
 #endif  // __nsXtEventHandler.h
 

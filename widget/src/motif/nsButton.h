@@ -54,7 +54,7 @@ public:
   virtual void   SetLabel(const nsString& aText);
   virtual void   GetLabel(nsString& aBuffer);
   virtual PRBool OnPaint(nsPaintEvent & aEvent);
-  virtual PRBool OnResize(nsRect &aWindowRect);
+  virtual PRBool OnResize(nsSizeEvent &aEvent);
 
 private:
 

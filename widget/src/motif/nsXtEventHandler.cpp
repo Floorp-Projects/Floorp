@@ -25,6 +25,7 @@
 
 #include "stdio.h"
 
+#define DBG 0
 
 void nsXtWidget_InitNSEvent(XEvent   * anXEv,
                             XtPointer  p,
@@ -62,6 +63,7 @@ void nsXtWidget_InitNSMouseEvent(XEvent   * anXEv,
 
 void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
+  if (DBG) fprintf(stderr, "In nsXtWidget_ExposureMask_EventHandler\n");
   nsPaintEvent pevent ;
   nsWindow * widgetWindow = (nsWindow *) p ;
 
@@ -72,6 +74,7 @@ void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event,
 
   widgetWindow->OnPaint(pevent);
 
+  if (DBG) fprintf(stderr, "Out nsXtWidget_ExposureMask_EventHandler\n");
 }
 
 //==============================================================
@@ -95,19 +98,24 @@ void nsXtWidget_ButtonReleaseMask_EventHandler(Widget w, XtPointer p, XEvent * e
 //==============================================================
 void nsXtWidget_ButtonMotionMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
+  //if (DBG) fprintf(stderr, "nsXtWidget_ButtonMotionMask_EventHandler\n");
+  nsPaintEvent pevent ;
   nsWindow * widgetWindow = (nsWindow *) p ;
   nsMouseEvent mevent;
   nsXtWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_MOVE);
   widgetWindow->DispatchMouseEvent(mevent);
+
 }
 
 //==============================================================
 void nsXtWidget_MotionMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
+  //if (DBG) fprintf(stderr, "nsXtWidget_ButtonMotionMask_EventHandler\n");
   nsWindow * widgetWindow = (nsWindow *) p ;
   nsMouseEvent mevent;
   nsXtWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_MOVE);
   widgetWindow->DispatchMouseEvent(mevent);
+
 }
 
 //==============================================================
@@ -122,24 +130,34 @@ void nsXtWidget_EnterMask_EventHandler(Widget w, XtPointer p, XEvent * event, Bo
 //==============================================================
 void nsXtWidget_LeaveMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
+  if (DBG) fprintf(stderr, "***************** nsXtWidget_LeaveMask_EventHandler\n");
   nsWindow * widgetWindow = (nsWindow *) p ;
-  //fprintf(stderr, "***************** nsXtWidget_LeaveMask_EventHandler\n");
   nsMouseEvent mevent;
   nsXtWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_EXIT);
   widgetWindow->DispatchMouseEvent(mevent);
 }
 
 //==============================================================
+void nsXtWidget_ResizeRedirectMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
+{
+  if (DBG) fprintf(stderr, "***************** nsXtWidget_ResizeRedirectMask_EventHandler\n");
+  //nsWindow * widgetWindow = (nsWindow *) p ;
+  //nsMouseEvent mevent;
+  //nsXtWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_EXIT);
+  //widgetWindow->DispatchMouseEvent(mevent);
+}
+
+//==============================================================
 void nsXtWidget_Toggle_Callback(Widget w, XtPointer p, XtPointer call_data)
 {
   nsWindow * widgetWindow = (nsWindow *) p ;
-  //fprintf(stderr, "***************** nsXtWidget_Scrollbar_Callback\n");
+  if (DBG) fprintf(stderr, "***************** nsXtWidget_Scrollbar_Callback\n");
 
   nsScrollbarEvent sevent;
 
   XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
   
-  //fprintf(stderr, "Callback struct 0x%x\n", cbs);fflush(stderr);
+  if (DBG) fprintf(stderr, "Callback struct 0x%x\n", cbs);fflush(stderr);
 
   /*nsGUIEvent event;
   nsXtWidget_InitNSEvent(event, p, event, NS_MOUSE_MOVE);
@@ -154,7 +172,7 @@ void nsXtWidget_Toggle_ArmCallback(Widget w, XtPointer p, XtPointer call_data)
 
   XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
   
-  //fprintf(stderr, "Callback struct 0x%x\n", cbs);fflush(stderr);
+  if (DBG) fprintf(stderr, "Callback struct 0x%x\n", cbs);fflush(stderr);
   checkBtn->Armed();
 
 }
@@ -162,16 +180,17 @@ void nsXtWidget_Toggle_ArmCallback(Widget w, XtPointer p, XtPointer call_data)
 //==============================================================
 void nsXtWidget_Toggle_DisArmCallback(Widget w, XtPointer p, XtPointer call_data)
 {
+  if (DBG) fprintf(stderr, "In ***************** nsXtWidget_Scrollbar_Callback\n");
   nsCheckButton * checkBtn = (nsCheckButton *) p ;
-  //fprintf(stderr, "***************** nsXtWidget_Scrollbar_Callback\n");
 
   nsScrollbarEvent sevent;
 
   XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
   
-  //fprintf(stderr, "Callback struct 0x%x\n", cbs);fflush(stderr);
+  if (DBG) fprintf(stderr, "Callback struct 0x%x\n", cbs);fflush(stderr);
 
   checkBtn->DisArmed();
+  if (DBG) fprintf(stderr, "Out ***************** nsXtWidget_Scrollbar_Callback\n");
   
 }
 
@@ -179,12 +198,12 @@ void nsXtWidget_Toggle_DisArmCallback(Widget w, XtPointer p, XtPointer call_data
 void nsXtWidget_Scrollbar_Callback(Widget w, XtPointer p, XtPointer call_data)
 {
   nsWindow * widgetWindow = (nsWindow *) p ;
-  //fprintf(stderr, "***************** nsXtWidget_Scrollbar_Callback\n");
+  if (DBG) fprintf(stderr, "***************** nsXtWidget_Scrollbar_Callback\n");
 
   nsScrollbarEvent sevent;
 
   XmScrollBarCallbackStruct * cbs = (XmScrollBarCallbackStruct*) call_data;
-  //fprintf(stderr, "Callback struct 0x%x\n", cbs);fflush(stderr);
+  if (DBG) fprintf(stderr, "Callback struct 0x%x\n", cbs);fflush(stderr);
 
   sevent.widget  = (nsWindow *) p;
   if (cbs->event != nsnull) {
@@ -223,7 +242,7 @@ void nsXtWidget_Scrollbar_Callback(Widget w, XtPointer p, XtPointer call_data)
       break;
 
     default:
-      fprintf(stderr, "In Default processing for scrollbar reason is [%d]\n", cbs->reason);
+      if (DBG) fprintf(stderr, "In Default processing for scrollbar reason is [%d]\n", cbs->reason);
       break;
   }
   widgetWindow->OnScroll(sevent, cbs->value);
@@ -232,8 +251,32 @@ void nsXtWidget_Scrollbar_Callback(Widget w, XtPointer p, XtPointer call_data)
 
 
 //==============================================================
+void nsXtWidget_Resize_Callback(Widget w, XtPointer p, XtPointer call_data)
+{
+  if (DBG) fprintf(stderr, "In nsXtWidget_Resize_Callback\n");
+
+  nsWindow * widgetWindow = (nsWindow *) p ;
+  XmDrawingAreaCallbackStruct * cbs = (XmDrawingAreaCallbackStruct *)call_data;
+  if (cbs->reason == XmCR_RESIZE) {
+    nsSizeEvent event;
+    nsRect rect;
+    event.message = NS_SIZE;
+    event.widget  = (nsWindow *) p;
+    if (cbs->event != NULL) {
+      event.point.x = cbs->event->xbutton.x;
+      event.point.y = cbs->event->xbutton.y;
+    }
+    event.time    = 0; //TBD
+    event.windowSize = (nsRect *)&rect;
+    widgetWindow->GetBounds(rect);
+    widgetWindow->OnResize(event);
+  }
+}
+
+//==============================================================
 void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data)
 {
+  if (DBG) fprintf(stderr, "In nsXtWidget_Text_Callback\n");
   nsWindow * widgetWindow = (nsWindow *) p ;
   static char * passwd;
   char * newStr;
@@ -262,12 +305,13 @@ void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data)
       strcpy (newStr, passwd);
       XtFree (passwd);
   } else
-      newStr[0] = NULL;
+      newStr[0] = 0;
   passwd = newStr;
   strncat (passwd, cbs->text->ptr, cbs->text->length);
   passwd[cbs->endPos + cbs->text->length] = 0;
 
   for (len = 0; len < cbs->text->length; len++)
       cbs->text->ptr[len] = '*';
+  if (DBG) fprintf(stderr, "Out nsXtWidget_Text_Callback\n");
 }
 

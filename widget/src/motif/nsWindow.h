@@ -109,14 +109,14 @@ public:
 
     virtual void            OnDestroy();
     virtual PRBool          OnPaint(nsPaintEvent &event);
-    virtual PRBool          OnResize(nsRect &aWindowRect);
+    virtual PRBool          OnResize(nsSizeEvent &aEvent);
     virtual PRBool          OnKey(PRUint32 aEventType, PRUint32 aKeyCode);
 
     virtual PRBool          DispatchFocus(PRUint32 aEventType);
     virtual PRBool          OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
 
 protected:
-  void InitCallbacks();
+  void InitCallbacks(char * aName = nsnull);
   void CreateWindow(nsNativeWindow aNativeParent, nsIWidget *aWidgetParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
@@ -218,7 +218,7 @@ public: \
     virtual PRBool          DispatchMouseEvent(nsMouseEvent aEvent); \
     virtual void            OnDestroy(); \
     virtual PRBool          OnPaint(nsPaintEvent & event); \
-    virtual PRBool          OnResize(nsRect &aWindowRect); \
+    virtual PRBool          OnResize(nsSizeEvent &aEvent); \
     virtual PRBool          OnKey(PRUint32 aEventType, PRUint32 aKeyCode); \
     virtual PRBool          DispatchFocus(PRUint32 aEventType); \
     virtual PRBool          OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos); 
@@ -433,9 +433,9 @@ public: \
     { \
       GET_OUTER()->OnDestroy(); \
     } \
-    PRBool _classname::_aggname::OnResize(nsRect &aWindowRect) \
+    PRBool _classname::_aggname::OnResize(nsSizeEvent &aEvent) \
     { \
-      GET_OUTER()->OnResize(aWindowRect); \
+      GET_OUTER()->OnResize(aEvent); \
     } \
     PRBool _classname::_aggname::OnKey(PRUint32 aEventType, PRUint32 aKeyCode) \
     { \
