@@ -56,6 +56,10 @@
 #include "jsregexp.h"
 #include "jsstr.h"
 
+#ifdef XP_MAC
+#include <MacMemory.h>
+#endif
+
 #if JS_HAS_REGEXPS
 
 typedef struct RENode RENode;
@@ -1327,6 +1331,15 @@ static const jschar *greedyRecurse(GreedyState *grState, const jschar *cp, const
 *    previously succesful kid in order to restablish it's paren
 *    contents.
 */
+
+#ifdef XP_MAC
+    if (StackSpace() < 16384) {
+        JS_ReportOutOfMemory (grState->state->context);
+        grState->state->ok = JS_FALSE;
+        return NULL;
+    }
+#endif
+
     num = grState->state->parenCount;
     kidMatch = matchRENodes(grState->state, grState->kid, grState->next, cp);
     if (kidMatch == NULL) {
@@ -1339,6 +1352,7 @@ static const jschar *greedyRecurse(GreedyState *grState, const jschar *cp, const
         if (kidMatch == cp) return kidMatch;    /* no point pursuing an empty match forever */
         if ((grState->maxKid == 0) || (++grState->kidCount < grState->maxKid)) {
             match = greedyRecurse(grState, kidMatch, cp);
+            if (!grState->state->ok) return NULL;
             if (match != NULL) return match;
             --grState->kidCount;
             grState->state->parenCount = num;
@@ -2522,7 +2536,12 @@ regexp_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     opt = NULL;
     JS_LOCK_OBJ(cx, obj);
     if (argc == 0) {
-	str = cx->runtime->emptyString;
+	str = js_NewStringCopyN(cx, cx->runtime->emptyString->chars, 
+                                    cx->runtime->emptyString->length, 0);
+        if (!str) {
+            ok = JS_FALSE;
+            goto out;
+        }
     } else {
 	str = js_ValueToString(cx, argv[0]);
 	if (!str) {
