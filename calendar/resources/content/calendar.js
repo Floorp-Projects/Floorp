@@ -715,17 +715,19 @@ function createDateTime()
 
 function createCalendar()
 {
-    return calendar = Components.classes["@mozilla.org/calendar/calendar;1?type=memory"].getService(Components.interfaces.calICalendar);
-    /*
-    calendar = Components.classes["@mozilla.org/calendar/calendar;1?type=storage"].getService(Components.interfaces.calICalendar);
-    if (!calendar.uri) {
-        ioservice = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-        var dbFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-        dbFile.initWithPath("c:\\builds\\calstore.db");
-        calendar.uri = ioservice.newFileURI(dbFile);
+    var prefobj = prefService.getBranch("calendar.");
+    var caltype = getCharPref(prefobj, "default-calendar.type", "memory");
+    var calendar = Components.classes["@mozilla.org/calendar/calendar;1?type=" + caltype].getService(Components.interfaces.calICalendar);
+    if (calendar.uri || caltype == "memory")
+        return calendar;
+    var uri = getCharPref(prefobj, "default-calendar.uri", null);
+    if (!uri) {
+        throw "Calendar type " + caltype + 
+            " requires that default-calendar.uri pref be set!";
     }
+    ioservice = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+    calendar.uri = ioservice.newURI(uri, null, null);
     return calendar;
-    */
 }
 
 function isEvent ( aObject )
