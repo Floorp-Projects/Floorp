@@ -30,7 +30,7 @@
 #include "nsMimeMapper.h"
 #include "nsITransferable.h"
 #include "nsString.h"
-
+#include <Drag.h>
 
 nsMimeMapperMac :: nsMimeMapperMac ( const char* inMappings )
   : mCounter(0)
@@ -137,7 +137,7 @@ nsMimeMapperMac :: MapMacOSTypeToMimeType ( ResType inMacType, nsCAutoString & o
       // we have no idea what it is. The way this was encoded means that we can use the
       // lower two byts of the flavor as an index into our mapping list.
       if ( inMacType & ('..MZ' << 16) ) {
-        short index = inMacType & 0x0000FFFF;    // extract the index into our internal list
+        unsigned short index = inMacType & 0x0000FFFF;    // extract the index into our internal list
         if ( index < mMappings.size() )
           outMimeStr = mMappings[index].second;
         else
