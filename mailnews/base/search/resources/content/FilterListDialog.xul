@@ -32,6 +32,7 @@ Rights Reserved.
 
 <script language="JavaScript" src="chrome://messenger/content/FilterListDialog.js"/>
 <!-- <script src="resource:/res/samples/DumpDOM.js"/> -->
+<keyset id="keyset"/>
 
   <box orient="horizontal">
     <text value="Filters for:"/>
