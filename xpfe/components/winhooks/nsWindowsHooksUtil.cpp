@@ -412,7 +412,7 @@ static void setWindowsXP() {
             RegistryEntry tmp_entry5( HKEY_LOCAL_MACHINE,
                            nsCAutoString( subkey + NS_LITERAL_CSTRING( "\\shell\\properties\\command" ) ).get(),
                            "", 
-                           nsCAutoString( thisApplication() + NS_LITERAL_CSTRING( "-chrome \"chrome://communicator/content/pref/pref.xul\"" ) ).get() );
+                           nsCAutoString( thisApplication() + NS_LITERAL_CSTRING( " -chrome \"chrome://communicator/content/pref/pref.xul\"" ) ).get() );
             tmp_entry5.set();
 
             // Now we need to select our application as the default start menu internet application.
