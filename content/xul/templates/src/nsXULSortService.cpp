@@ -127,15 +127,15 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkSeparator);
 
 
 typedef	struct	_sortStruct	{
-    nsIRDFService		*rdfService;
-    nsIRDFCompositeDataSource	*db;
-    nsIRDFResource		*sortProperty;
-    PRInt32			colIndex;
-    nsIAtom			*kNaturalOrderPosAtom;
-    nsIAtom			*kTreeCellAtom;
-    PRInt32			kNameSpaceID_XUL;
-    PRBool			descendingSort;
-    PRBool			naturalOrderSort;
+	nsIRDFService			*rdfService;
+	nsIRDFCompositeDataSource	*db;
+	nsIRDFResource			*sortProperty;
+	PRInt32				colIndex;
+	nsIAtom				*kNaturalOrderPosAtom;
+	nsIAtom				*kTreeCellAtom;
+	PRInt32				kNameSpaceID_XUL;
+	PRBool				descendingSort;
+	PRBool				naturalOrderSort;
 } sortStruct, *sortPtr;
 
 
@@ -153,28 +153,29 @@ int		inplaceSortCallback(const void *data1, const void *data2, void *privateData
 class XULSortServiceImpl : public nsIXULSortService
 {
 protected:
-    XULSortServiceImpl(void);
-    virtual ~XULSortServiceImpl(void);
+				XULSortServiceImpl(void);
+	virtual			~XULSortServiceImpl(void);
 
-    static nsIXULSortService	*gXULSortService;
-    static nsICollation		*collationService;
+	static nsICollation	*collationService;
+
+	friend NS_IMETHODIMP	NS_NewXULSortService(nsIXULSortService** mgr);
 
 private:
-    static nsrefcnt	gRefCnt;
-    static nsIAtom	*kTreeAtom;
-    static nsIAtom	*kTreeBodyAtom;
-    static nsIAtom	*kTreeCellAtom;
-    static nsIAtom	*kTreeChildrenAtom;
-    static nsIAtom	*kTreeColAtom;
-    static nsIAtom	*kTreeItemAtom;
-    static nsIAtom	*kResourceAtom;
-    static nsIAtom	*kNameAtom;
-    static nsIAtom	*kSortAtom;
-    static nsIAtom	*kSortDirectionAtom;
-    static nsIAtom	*kIdAtom;
-    static nsIAtom	*kNaturalOrderPosAtom;
-    static nsIAtom	*kRDF_type;
-    static nsIAtom	*kURIAtom;
+	static nsrefcnt		gRefCnt;
+	static nsIAtom		*kTreeAtom;
+	static nsIAtom		*kTreeBodyAtom;
+	static nsIAtom		*kTreeCellAtom;
+	static nsIAtom		*kTreeChildrenAtom;
+	static nsIAtom		*kTreeColAtom;
+	static nsIAtom		*kTreeItemAtom;
+	static nsIAtom		*kResourceAtom;
+	static nsIAtom		*kNameAtom;
+	static nsIAtom		*kSortAtom;
+	static nsIAtom		*kSortDirectionAtom;
+	static nsIAtom		*kIdAtom;
+	static nsIAtom		*kNaturalOrderPosAtom;
+	static nsIAtom		*kRDF_type;
+	static nsIAtom		*kURIAtom;
 
     static nsIRDFResource	*kNC_Name;
     static nsIRDFResource	*kRDF_instanceOf;
@@ -193,6 +194,7 @@ nsresult	GetTreeCell(nsIContent *node, PRInt32 colIndex, nsIContent **cell);
 nsresult	GetTreeCellValue(nsIContent *node, nsString & value);
 nsresult	RemoveAllChildren(nsIContent *node);
 nsresult	SortTreeChildren(nsIContent *container, PRInt32 colIndex, sortPtr sortInfo, PRInt32 indentLevel);
+nsresult	DoSort(nsIDOMNode* node, const nsString& sortResource, const nsString& sortDirection);
 
 static nsresult	GetResourceValue(nsIRDFResource *res1, nsIRDFResource *sortProperty, sortPtr sortInfo, nsIRDFNode **, PRBool &isCollationKey);
 static nsresult	GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, nsIRDFNode **, PRBool &isCollationKey);
@@ -200,9 +202,6 @@ static nsresult	GetTreeCell(sortPtr sortInfo, nsIContent *node, PRInt32 cellInde
 static nsresult	GetTreeCellValue(sortPtr sortInfo, nsIContent *node, nsString & val);
 
 public:
-
-    static nsresult GetSortService(nsIXULSortService** result);
-
     static nsresult	ImplaceSort(nsIContent *node1, nsIContent *node2, sortPtr sortInfo, PRInt32 & sortOrder);
     static nsresult	OpenSort(nsIRDFNode *node1, nsIRDFNode *node2, sortPtr sortInfo, PRInt32 & sortOrder);
     static nsresult	CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
@@ -213,18 +212,14 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsISortService
-    NS_IMETHOD Sort(nsIDOMNode* node, const char *sortResource, const char *sortDirection);
-    NS_IMETHOD DoSort(nsIDOMNode* node, const nsString& sortResource, const nsString& sortDirection);
-    NS_IMETHOD OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *container, nsIRDFResource **flatArray,
-				PRInt32 numElements, PRInt32 elementSize);
-    NS_IMETHOD InsertContainerNode(nsIContent *container, nsIContent *node, PRBool aNotify);
+    NS_DECL_NSIXULSORTSERVICE
 };
 
-nsIXULSortService	*XULSortServiceImpl::gXULSortService = nsnull;
-nsICollation		*XULSortServiceImpl::collationService = nsnull;
-nsrefcnt XULSortServiceImpl::gRefCnt = 0;
 
-nsIRDFService *XULSortServiceImpl::gRDFService = nsnull;
+
+nsICollation		*XULSortServiceImpl::collationService = nsnull;
+nsIRDFService		*XULSortServiceImpl::gRDFService = nsnull;
+nsrefcnt XULSortServiceImpl::gRefCnt = 0;
 
 nsIAtom* XULSortServiceImpl::kTreeAtom;
 nsIAtom* XULSortServiceImpl::kTreeBodyAtom;
@@ -354,82 +349,35 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 	--gRefCnt;
 	if (gRefCnt == 0)
 	{
-		NS_RELEASE(kTreeAtom);
-		NS_RELEASE(kTreeBodyAtom);
-		NS_RELEASE(kTreeCellAtom);
-	        NS_RELEASE(kTreeChildrenAtom);
-	        NS_RELEASE(kTreeColAtom);
-	        NS_RELEASE(kTreeItemAtom);
-	        NS_RELEASE(kResourceAtom);
-	        NS_RELEASE(kNameAtom);
-	        NS_RELEASE(kSortAtom);
-	        NS_RELEASE(kSortDirectionAtom);
-	        NS_RELEASE(kIdAtom);
-	        NS_RELEASE(kNaturalOrderPosAtom);
-		NS_RELEASE(kRDF_type);
-		NS_RELEASE(kURIAtom);
+		NS_IF_RELEASE(kTreeAtom);
+		NS_IF_RELEASE(kTreeBodyAtom);
+		NS_IF_RELEASE(kTreeCellAtom);
+	        NS_IF_RELEASE(kTreeChildrenAtom);
+	        NS_IF_RELEASE(kTreeColAtom);
+	        NS_IF_RELEASE(kTreeItemAtom);
+	        NS_IF_RELEASE(kResourceAtom);
+	        NS_IF_RELEASE(kNameAtom);
+	        NS_IF_RELEASE(kSortAtom);
+	        NS_IF_RELEASE(kSortDirectionAtom);
+	        NS_IF_RELEASE(kIdAtom);
+	        NS_IF_RELEASE(kNaturalOrderPosAtom);
+		NS_IF_RELEASE(kRDF_type);
+		NS_IF_RELEASE(kURIAtom);
+	        NS_IF_RELEASE(kNC_Name);
+	        NS_IF_RELEASE(kRDF_instanceOf);
+	        NS_IF_RELEASE(kRDF_Seq);
 
-	        NS_RELEASE(kNC_Name);
-	        NS_RELEASE(kRDF_instanceOf);
-	        NS_RELEASE(kRDF_Seq);
-
-		if (collationService)
-		{
-			NS_RELEASE(collationService);
-			collationService = nsnull;
-		}
-		if (gRDFService)
-		{
-			nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-			gRDFService = nsnull;
-		}
-		if (gXULSortService)
-		{
-			nsServiceManager::ReleaseService(kXULSortServiceCID, gXULSortService);
-			gXULSortService = nsnull;
-		}
+		NS_IF_RELEASE(collationService);
+		collationService = nsnull;
+		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+		gRDFService = nsnull;
 	}
-}
-
-
-
-nsresult
-XULSortServiceImpl::GetSortService(nsIXULSortService** mgr)
-{
-	if (! gXULSortService)
-	{
-		gXULSortService = new XULSortServiceImpl();
-		if (! gXULSortService)
-			return NS_ERROR_OUT_OF_MEMORY;
-	}
-	NS_ADDREF(gXULSortService);
-	*mgr = gXULSortService;
-	return NS_OK;
 }
 
 
 
 NS_IMPL_ISUPPORTS(XULSortServiceImpl, nsIXULSortService::GetIID());
 
-/*
-NS_IMETHODIMP_(nsrefcnt)
-XULSortServiceImpl::AddRef(void)
-{
-    return 2;
-}
-
-
-
-NS_IMETHODIMP_(nsrefcnt)
-XULSortServiceImpl::Release(void)
-{
-    return 1;
-}
-
-
-
-NS_IMPL_QUERY_INTERFACE(XULSortServiceImpl, kIXULSortServiceIID);
-*/
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -519,7 +467,8 @@ XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, const nsString& sortRes
 			{
 				nsString	colResource;
 
-				if (NS_OK == child->GetAttribute(kNameSpaceID_RDF, kResourceAtom, colResource))
+				if (NS_SUCCEEDED(rv= child->GetAttribute(kNameSpaceID_RDF, kResourceAtom, colResource))
+					&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
 				{
 					PRBool		setFlag = PR_FALSE;
 					if (colResource == sortResource)
@@ -577,13 +526,16 @@ XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree, nsString &sortResource, 
 			if (tag.get() == kTreeColAtom)
 			{
 				nsString	value;
-				if (NS_OK == child->GetAttribute(kNameSpaceID_None, kSortAtom, value))
+				if (NS_SUCCEEDED(rv = child->GetAttribute(kNameSpaceID_None, kSortAtom, value))
+					&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
 				{
 					if (value.EqualsIgnoreCase("true"))
 					{
-						if (NS_OK == child->GetAttribute(kNameSpaceID_RDF, kResourceAtom, sortResource))
+						if (NS_SUCCEEDED(rv = child->GetAttribute(kNameSpaceID_RDF, kResourceAtom,
+							sortResource)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
 						{
-							if (NS_OK == child->GetAttribute(kNameSpaceID_None, kSortDirectionAtom, sortDirection))
+							if (NS_SUCCEEDED(rv = child->GetAttribute(kNameSpaceID_None, kSortDirectionAtom,
+								sortDirection)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
 							{
 								found = PR_TRUE;
 							}
@@ -1096,7 +1048,8 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 				
 				// if no pos is specified, set one
 				nsAutoString	pos;
-				if (NS_OK != child->GetAttribute(kNameSpaceID_None, kNaturalOrderPosAtom, pos))
+				if (NS_FAILED(rv = child->GetAttribute(kNameSpaceID_None, kNaturalOrderPosAtom, pos))
+					|| (rv != NS_CONTENT_ATTR_HAS_VALUE))
 				{
 					nsAutoString	zero("0000");
 					pos = "";
@@ -1133,7 +1086,8 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 				for (loop=0; loop<numElements; loop++)
 				{
 					nsAutoString	type;
-					if (NS_OK == flatArray[loop]->GetAttribute(kNameSpaceID_None, kRDF_type, type))
+					if (NS_SUCCEEDED(rv = flatArray[loop]->GetAttribute(kNameSpaceID_None, kRDF_type, type))
+						&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
 					{
 						if (type.EqualsIgnoreCase(kURINC_BookmarkSeparator))
 						{
@@ -1482,7 +1436,7 @@ XULSortServiceImpl::Sort(nsIDOMNode* node, const char *sortResource, const char 
 
 
 
-NS_IMETHODIMP
+nsresult
 XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
                            const nsString& sortDirection)
 {
@@ -1557,5 +1511,11 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 nsresult
 NS_NewXULSortService(nsIXULSortService** mgr)
 {
-	return XULSortServiceImpl::GetSortService(mgr);
+	XULSortServiceImpl	*sortService = new XULSortServiceImpl();
+	if (!sortService)
+	        return(NS_ERROR_OUT_OF_MEMORY);
+	
+	*mgr = sortService;
+	NS_ADDREF(*mgr);
+	return(NS_OK);
 }
