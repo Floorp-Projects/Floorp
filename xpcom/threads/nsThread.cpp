@@ -356,7 +356,7 @@ nsThreadPool::GetRequest()
     if (NS_SUCCEEDED(rv)) {
         NS_ASSERTION((NS_SUCCEEDED(mRequests->Count(&cnt)) && cnt > 0),
                      "request queue out of sync");
-        request = (nsIRunnable*)(*mRequests)[0];
+        request = (nsIRunnable*)mRequests->ElementAt(0);
         NS_ASSERTION(request != nsnull, "null runnable");
 
         PRBool removed = mRequests->RemoveElementAt(0);
@@ -403,7 +403,7 @@ nsThreadPool::Shutdown()
     rv = mThreads->Count(&count);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
     for (i = 0; i < count; i++) {
-        nsIThread* thread = (nsIThread*)((*mThreads)[0]);
+        nsIThread* thread = (nsIThread*)(mThreads->ElementAt(0));
 
         // we don't care about the error from Interrupt, because the
         // thread may have already terminated its event loop
