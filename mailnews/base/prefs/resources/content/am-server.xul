@@ -109,9 +109,9 @@ Contributors:
               label="&deleteOnServer.label;"/>
   </box>
   <box iscontrolcontainer="true" autostretch="never">
-    <checkbox hidable="true" hidefor="imap,nntp" wsm_persist="true" label="&maxMessageSizePrefix.label;" id="pop3.limitMessageSize"/>
-    <textbox wsm_persist="true" id="pop3.maxMessageSize" size="3"/>
-    <text value="&maxMessageSizePostfix.label;" for="pop3.limitMessageSize" class="label"/>
+    <checkbox hidable="true" hidefor="imap,nntp" wsm_persist="true" label="&maxMessageSizePrefix.label;" id="server.limitMessageSize"/>
+    <textbox wsm_persist="true" id="server.maxMessageSize" size="3"/>
+    <text value="&maxMessageSizePostfix.label;" for="server.limitMessageSize" class="label"/>
   </box>
   <separator class="thin"/>
   <!-- IMAP -->
