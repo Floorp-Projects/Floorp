@@ -368,7 +368,8 @@ protected:
   static PRBool CRT_CALL MatchEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aEntry, const void* aKey);
   static void CRT_CALL MoveEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aFrom, PLDHashEntryHdr* aTo);
   static void CRT_CALL ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
-
+  static PLDHashOperator CRT_CALL HeaderEnumerator (PLDHashTable *table, PLDHashEntryHdr *hdr,
+                               PRUint32 number, void *arg);
   static PLDHashTableOps gMsgDBHashTableOps;
   struct MsgHdrHashElement {
     PLDHashEntryHdr mHeader;

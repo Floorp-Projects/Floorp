@@ -154,11 +154,23 @@ nsresult nsMsgDatabase::AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key) // do we w
 	return NS_ERROR_FAILURE;
 }
 
+
+/* static */PLDHashOperator CRT_CALL nsMsgDatabase::HeaderEnumerator (PLDHashTable *table, PLDHashEntryHdr *hdr,
+                               PRUint32 number, void *arg)
+{
+
+  MsgHdrHashElement* element = NS_REINTERPRET_CAST(MsgHdrHashElement*, hdr);
+  NS_IF_RELEASE(element->mHdr); 
+  return PL_DHASH_NEXT;
+}
+
 nsresult nsMsgDatabase::ClearHdrCache()
 {
 	if (m_cachedHeaders)
 	{
 #ifdef USE_PLD_HASHTABLE
+  PL_DHashTableEnumerate(m_cachedHeaders, HeaderEnumerator, nsnull);
+
   PL_DHashTableFinish(m_cachedHeaders);
   PL_DHashTableInit(m_cachedHeaders, &gMsgDBHashTableOps, nsnull, sizeof(struct MsgHdrHashElement), kMaxHdrsInCache);
 #else
@@ -565,7 +577,14 @@ nsMsgDatabase::CleanupCache()
         // look for db in cache before deleting, 
         // in case ForceClosed caused the db to go away
         if (FindInCache(pMessageDB) != -1)
-				  delete pMessageDB;	// try this...shake out people holding onto db.
+        {
+          PRInt32 saveRefCnt = pMessageDB->mRefCnt;
+          while (saveRefCnt-- >= 1)
+          {
+            nsMsgDatabase *saveDB = pMessageDB;
+            NS_RELEASE(saveDB);
+          }
+        }
 				i--;	// back up array index, since closing removes db from cache.
 			}
 		}
@@ -587,8 +606,11 @@ nsMsgDatabase* nsMsgDatabase::FindInCache(nsFileSpec &dbName)
 		nsMsgDatabase* pMessageDB = NS_STATIC_CAST(nsMsgDatabase*, GetDBCache()->ElementAt(i));
 		if (pMessageDB->MatchDbName(dbName))
 		{
-			NS_ADDREF(pMessageDB);
-			return pMessageDB;
+      if (pMessageDB->m_mdbStore)  // don't return db without store
+      {
+			  NS_ADDREF(pMessageDB);
+			  return pMessageDB;
+      }
 		}
 	}
 	return nsnull;
@@ -673,13 +695,11 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_bCacheHeaders(PR_FALSE)
 {
 	NS_INIT_REFCNT();
-	MOZ_COUNT_CTOR(nsMsgDatabase);
 	m_bCacheHeaders = PR_TRUE;
 }
 
 nsMsgDatabase::~nsMsgDatabase()
 {
-	MOZ_COUNT_DTOR(nsMsgDatabase);
 //	Close(FALSE);	// better have already been closed.
 	ClearHdrCache();
 #ifdef DEBUG_bienvenu1
@@ -993,7 +1013,7 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 	AddRef();	
 	NotifyAnnouncerGoingAway();
 	// OK, remove from cache first and close the store.
-	RemoveFromCache(this);
+//	RemoveFromCache(this);
 
 	NS_IF_RELEASE(m_dbFolderInfo);
 	m_dbFolderInfo = nsnull;
