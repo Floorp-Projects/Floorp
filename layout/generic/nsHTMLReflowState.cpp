@@ -858,11 +858,36 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
       aHypotheticalBox.mTop = lineBox->mBounds.y;
     } else {
       // The element would have been block-level which means it would be below
-      // the line containing the placeholder frame
+      // the line containing the placeholder frame, unless all the frames
+      // before it are empty.  In that case, it would have been just before
+      // this line.      
+      // XXXbz why the special-casing if we are the last line box?
       if (lineBox != blockFrame->end_lines()) {
-        // The top of the hypothetical box is just below the line containing
-        // the placeholder
-        aHypotheticalBox.mTop = lineBox->mBounds.YMost();
+        nsIFrame * firstFrame = lineBox->mFirstChild;
+        nsCompatibility mode;
+        aPresContext->GetCompatibilityMode(&mode);
+        while (firstFrame != aPlaceholderFrame) {
+          NS_ASSERTION(firstFrame, "Must reach our placeholder before end of list!");
+          PRBool isEmpty;
+          firstFrame->IsEmpty(mode,
+                              firstFrame->GetStyleText()->WhiteSpaceIsSignificant(),
+                              &isEmpty);
+          if (!isEmpty) {
+            break;
+          }
+            
+          firstFrame = firstFrame->GetNextSibling();
+        }
+        if (firstFrame == aPlaceholderFrame) {
+          // The top of the hypothetical box is the top of the line containing
+          // the placeholder, since there is nothing in the line before our
+          // placeholder except empty frames.
+          aHypotheticalBox.mTop = lineBox->mBounds.y;
+        } else {
+          // The top of the hypothetical box is just below the line containing
+          // the placeholder.
+          aHypotheticalBox.mTop = lineBox->mBounds.YMost();
+        }
       } else {
         // Just use the placeholder's y-offset
         aHypotheticalBox.mTop = placeholderOffset.y;
