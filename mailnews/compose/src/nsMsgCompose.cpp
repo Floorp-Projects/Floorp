@@ -555,28 +555,9 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
     {
       if (!aBuf.IsEmpty())
       {
-        PRInt32 start;
-        PRInt32 end;
-        nsAutoString bodyAttributes;
-
-        /* If we have attribute for the body tag, we need to save them in order
-           to add them back later as InsertSource will ignore them. */
-        start = aBuf.Find("<body", PR_TRUE);
-        if (start != kNotFound && aBuf[start + 5] == ' ')
-        {
-          start += 6;
-          end = aBuf.FindChar('>', start);
-          if (end != kNotFound)
-          {
-            const PRUnichar* data = aBuf.get();
-            bodyAttributes.Adopt(nsCRT::strndup(&data[start], end - start));
-          }
-        }
-
-        htmlEditor->InsertHTML(aBuf);
+        htmlEditor->RebuildDocumentFromSource(aBuf);
 
         m_editor->EndOfDocument();
-        SetBodyAttributes(bodyAttributes);
       }
       if (!aSignature.IsEmpty())
         htmlEditor->InsertHTML(aSignature);
@@ -4468,131 +4449,6 @@ nsresult nsMsgCompose::BodyConvertible(PRInt32 *_retval)
       return NS_ERROR_FAILURE;
       
     return _BodyConvertible(node, _retval);
-}
-
-nsresult nsMsgCompose::SetBodyAttribute(nsIEditor* editor, nsIDOMElement* element, nsString& name, nsString& value)
-{
-  /* cleanup the attribute name and check if we care about it */
-  name.Trim(" \t\n\r\"");
-  if (name.CompareWithConversion("text", PR_TRUE) == 0 ||
-      name.CompareWithConversion("bgcolor", PR_TRUE) == 0 ||
-      name.CompareWithConversion("link", PR_TRUE) == 0 ||
-      name.CompareWithConversion("vlink", PR_TRUE) == 0 ||
-      name.CompareWithConversion("alink", PR_TRUE) == 0 ||
-      name.CompareWithConversion("background", PR_TRUE) == 0 ||
-      name.CompareWithConversion("style", PR_TRUE) == 0 ||
-      name.CompareWithConversion("dir", PR_TRUE) == 0)
-  {
-    /* cleanup the attribute value */
-    value.Trim(" \t\n\r");
-    value.Trim("\"");
-
-    /* remove the attribute from the node first */
-    (void)editor->RemoveAttribute(element, name);
-
-    /* then add the new one */
-    return editor->SetAttribute(element, name, value);
-  }
-
-  return NS_OK;
-}
-
-nsresult nsMsgCompose::SetBodyAttributes(nsString& attributes)
-{
-  nsresult rv = NS_OK;
-
-  if (attributes.IsEmpty()) //Nothing to do...
-    return NS_OK;
-
-  if (!m_editor)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMElement> rootElement;
-  rv = m_editor->GetRootElement(getter_AddRefs(rootElement));
-  if (NS_FAILED(rv) || nsnull == rootElement)
-    return rv;
-  
-  /* The following code will parse a string and extract pairs of
-     <attribute name>=<attribute value>. A pair consists of an
-     attribute name and an attribute value. An attribute value can
-     be between double-quote and could potentially contains an
-     '=' character which should not be interpreted as a delimiter.
-
-     Once we get a pair, we can call SetBodyAttribute to set the
-     attribute in the DOM.
-  */
-  PRUnichar * data = (PRUnichar *)attributes.get();
-  PRUnichar * start = data;
-  PRUnichar * end = data + attributes.Length();
-
-  /* Let's initialized the delimiter to a '=', it's the delimiter between
-     attribute name and attribute value */
-  PRUnichar delimiter = '=';
-
-  nsAutoString attributeName;
-  nsAutoString attributeValue;
-  
-  while (data < end)
-  {
-    if (*data == '\n' || *data == '\r' || *data == '\t')
-    {
-      /* skip over line feed, carriage return and tab.
-         That will work as long we are between attributes */
-      start = data + 1;
-    }
-    else if (*data == delimiter)
-    {
-      if (attributeName.IsEmpty())
-      {
-        /* we found the end of an attribute name */
-        attributeName.Assign(start, data - start);
-
-		// strip any leading or trailing white space from the attribute name.
-		attributeName.CompressWhitespace();
-        start = data + 1;
-        if (start < end && *start == '\"')
-        {
-          /* if the attribute value start with a double-quote, we need to find the other one... */
-          delimiter = '\"';
-          data ++;
-        }
-        else
-        {
-          /* ... else the separator with the next attribute is a space */
-          delimiter = ' ';
-        }
-      }
-      else
-      {
-        if (delimiter =='\"')
-          data ++;
- 
-          /* we found the end of an attribute value */
-          attributeValue.Assign(start, data - start);
-          rv = SetBodyAttribute(m_editor, rootElement, attributeName, attributeValue);
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          /* restart the search for the next pair of attribute */
-          start = data + 1;
-          attributeName.Truncate();
-          attributeValue.Truncate();
-          delimiter = '=';
-      }
-    }
-
-    data ++;
-  }
-
-  /* In the case the buffer we are parsing doesn't finish with a space character,
-     we will exit the loop above before we get a chance to get the value of the attribute.
-     Be sure we already got the name of the attribute before accepting the value */
-  if (!attributeName.IsEmpty() && attributeValue.IsEmpty() && delimiter == ' ')
-  {
-    attributeValue.Assign(start, data - start);
-    rv = SetBodyAttribute(m_editor, rootElement, attributeName, attributeValue);
-  }
-
-  return rv;
 }
 
 nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)

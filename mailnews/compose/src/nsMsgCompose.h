@@ -123,8 +123,6 @@ private:
   nsresult GetMailListAddresses(nsString& name, nsISupportsArray* mailListArray, nsISupportsArray** addresses);
   nsresult TagConvertible(nsIDOMNode *node,  PRInt32 *_retval);
   nsresult _BodyConvertible(nsIDOMNode *node, PRInt32 *_retval);
-  nsresult SetBodyAttribute(nsIEditor* editor, nsIDOMElement* element, nsString& name, nsString& value);
-  nsresult SetBodyAttributes(nsString& attributes);
 
 
 #if !defined(XP_MAC)
