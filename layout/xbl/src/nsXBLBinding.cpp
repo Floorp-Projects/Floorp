@@ -222,6 +222,8 @@ nsXBLBinding::nsXBLBinding(void)
 
 nsXBLBinding::~nsXBLBinding(void)
 {
+  delete mAttributeTable;
+
   gRefCnt--;
   if (gRefCnt == 0) {
     NS_RELEASE(kContentAtom);
