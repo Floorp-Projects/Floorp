@@ -2,6 +2,30 @@ TransforMiiX (TM)
 (C) Copyright 1999, 2000, The MITRE Corporation, Keith Visco, et al. All rights reserved.
 
 
+Build 20000420
+
+-- Fixed document base issue with transfromiix.cpp (Nathan)
+   - When an XSLT stylesheet is specified on the command line
+     the document base was still defaulting to the XML document,
+     instead of the stylesheet
+  
+-- Fixed bug in namespace-uri() function [NodeSetFunctionCall.cpp] - Marina
+   - If an expression was passed as an argument to the function,
+     which evaluated to an empty NodeSet, the context node was being
+     used, which is incorrect. We now just return an empty string.
+
+-- Fixed bug in PathExpr::matches (Marina)
+   - expressions such as "foo//bar" would not always match
+     properly if more than one node existed in the final
+     set of "matching context nodes" (so basically if foo 
+     was not the root element).
+     
+
+Build 20000419
+
+-- Added the generate-id function
+-- Added XPath Extension Function support 
+
 Build 20000413
 
 -- Added some bug fixes from Marina
