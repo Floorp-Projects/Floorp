@@ -777,6 +777,7 @@ nsFontMetricsOS2::InitializeGlobalFonts()
   lRemFonts = GFX (::GpiQueryFonts(ps, QF_PUBLIC, NULL, &lNumFonts,
                                    sizeof (FONTMETRICS), pFontMetrics),
                    GPI_ALTERROR);
+  ::WinReleasePS(ps);
 
   for (int i = 0; i < lNumFonts; i++) {
     FONTMETRICS* font = &(pFontMetrics[i]);
@@ -871,8 +872,6 @@ nsFontMetricsOS2::InitializeGlobalFonts()
     globalEntry->mMetrics = metrics;
     globalEntry->mCodePage = font->usCodePage;
   }
-
-  ::WinReleasePS(ps);
 
 #ifdef DEBUG_pedemonte
   gGlobalFonts->EnumerateEntries(DebugOutputEnumFunc, nsnull);
