@@ -45,6 +45,12 @@ static NS_DEFINE_IID(kIDomElementIID,         NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDomEventListenerIID,   NS_IDOMEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIDomUIEventIID,         NS_IDOMUIEVENT_IID);
 
+enum eEventType {
+  eKeyPress,
+  eKeyDown,
+  eKeyUp
+};
+
 ////////////////////////////////////////////////////////////////////////
 // KeyListenerImpl
 //
@@ -96,6 +102,8 @@ public:
 protected:
 
 private:
+    nsresult DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventType);
+
     nsIDOMElement* element; // Weak reference. The element will go away first.
     nsIDOMDocument* mDOMDocument; // Weak reference.
 }; 
@@ -161,10 +169,10 @@ nsXULKeyListenerImpl::Init(
  */
 nsresult nsXULKeyListenerImpl::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-  nsresult result = NS_OK;
-  return result;
+  return DoKey(aKeyEvent, eKeyDown);
 }
 
+////////////////////////////////////////////////////////////////
 /**
  * Processes a key release event
  * @param aKeyEvent @see nsIDOMEvent.h 
@@ -172,10 +180,10 @@ nsresult nsXULKeyListenerImpl::KeyDown(nsIDOMEvent* aKeyEvent)
  */
 nsresult nsXULKeyListenerImpl::KeyUp(nsIDOMEvent* aKeyEvent)
 {
-  nsresult result = NS_OK;
-  return result;
+  return DoKey(aKeyEvent, eKeyUp);
 }
 
+////////////////////////////////////////////////////////////////
 /**
  * Processes a key typed event
  * @param aKeyEvent @see nsIDOMEvent.h 
@@ -186,6 +194,11 @@ nsresult nsXULKeyListenerImpl::KeyUp(nsIDOMEvent* aKeyEvent)
  //  // find the keyset
  // iterate over key(s) looking for appropriate handler
 nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
+{
+  return DoKey(aKeyEvent, eKeyPress);
+}
+
+nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventType)
 {
   nsresult res = NS_OK;
   
@@ -271,7 +284,19 @@ nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
 			      keyElement->GetAttribute(nsAutoString("control"), modControl);
 			      keyElement->GetAttribute(nsAutoString("shift"),   modShift);
 			      keyElement->GetAttribute(nsAutoString("alt"),     modAlt);
-			      keyElement->GetAttribute(nsAutoString("onkeypress"),      cmdToExecute);
+			      switch(aEventType) {
+			        case eKeyPress:
+			          keyElement->GetAttribute(nsAutoString("onkeypress"), cmdToExecute);
+			        break;
+			        case eKeyDown:
+			          keyElement->GetAttribute(nsAutoString("onkeydown"), cmdToExecute);
+			        break;
+			        case eKeyUp:
+			          keyElement->GetAttribute(nsAutoString("onkeyup"), cmdToExecute);
+			        break;
+			      }
+			      
+			      
 			      //printf("onkeypress [%s] \n", cmdToExecute.ToNewCString()); // this leaks
 		          do {
 		            // Test Command attribute
@@ -354,6 +379,7 @@ nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
 	} // end while(keysetNode)
   } // end if(aKeyEvent && mDOMDocument) 
   return NS_ERROR_BASE;
+  
 }
 
 ////////////////////////////////////////////////////////////////
