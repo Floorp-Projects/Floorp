@@ -558,7 +558,7 @@ FindDataSource::getFindResults(nsIRDFResource *source, nsISimpleEnumerator** aRe
 
 	nsISimpleEnumerator* result = new nsArrayEnumerator(nameArray);
 	if (! result)
-		NS_ERROR_OUT_OF_MEMORY;
+		return(NS_ERROR_OUT_OF_MEMORY);
 
 	NS_ADDREF(result);
 	*aResult = result;
@@ -737,7 +737,6 @@ FindDataSource::HasAssertion(nsIRDFResource *source,
 	if (! hasAssertion)
 		return NS_ERROR_NULL_POINTER;
 
-	PRBool			retVal = PR_FALSE;
 	nsresult		rv = NS_OK;
 
 	*hasAssertion = PR_FALSE;

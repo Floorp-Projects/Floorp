@@ -946,7 +946,6 @@ FTPDataSource::HasAssertion(nsIRDFResource *source,
                              PRBool tv,
                              PRBool *hasAssertion /* out */)
 {
-	PRBool			retVal = PR_FALSE;
 	nsresult		rv = NS_OK;
 
 	*hasAssertion = PR_FALSE;
