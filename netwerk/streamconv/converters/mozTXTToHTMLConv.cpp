@@ -96,27 +96,6 @@ mozTXTToHTMLConv::UnescapeStr(const nsAutoString& aString)
   return result;
 }
 
-// Workaround for bug #21071
-static PRBool
-Equals(const nsAutoString& text, const nsAutoString& rep, PRBool ignoreCase,
-	PRInt32 count=-1)
-{
-  if (count < 0)
-    count = MaxInt(text.Length(),rep.Length());
-  if (count > text.Length() || count > rep.Length())
-    return PR_FALSE;
-  for (PRUint32 i = 0; i < PRUint32(count); i++)
-    if
-      (
-	ignoreCase
-	? nsCRT::ToLower(text[i]) != nsCRT::ToLower(rep[i])
-	: text[i] != rep[i]
-      )
-      return PR_FALSE;
-
-  return PR_TRUE;
-}
-
 nsAutoString
 mozTXTToHTMLConv::CompleteAbbreviatedURL(const nsAutoString& text,
                                          const PRUint32 pos)
@@ -129,14 +108,12 @@ mozTXTToHTMLConv::CompleteAbbreviatedURL(const nsAutoString& text,
   }
   else if (text[pos] == '.')
   {
-    //if (text.Equals("www.", PR_FALSE, 4)) // XXX bug #21071
-    if (Equals(text, "www.", PR_FALSE, 4))
+    if (ItMatchesDelimited(text, "www.", LT_IGNORE, LT_IGNORE))
     {
       result = "http://";
       result += text;
     }
-    //else if (text.Equals("ftp.", PR_FALSE, 4)) // XXX bug #21071
-    else if (Equals(text, "ftp.", PR_FALSE, 4))
+    else if (ItMatchesDelimited(text, "ftp.", LT_IGNORE, LT_IGNORE))
     { 
       result = "ftp://";
       result += text;
@@ -446,27 +423,33 @@ mozTXTToHTMLConv::FindURL(const nsAutoString& text, const PRUint32 pos,
 nsAutoString
 mozTXTToHTMLConv::Right(const nsAutoString& text, PRUint32 start)
 {
+  MOZ_TIMER_START(mRightTimer);
+
   nsAutoString result;
   text.Right(result, text.Length() - start);
+
+  MOZ_TIMER_STOP(mRightTimer);
   return result;
 }
 
 PRBool
 mozTXTToHTMLConv::ItMatchesDelimited(const nsAutoString& text,
-    const nsAutoString& rep, LIMTYPE before, LIMTYPE after)
+    const char* rep, LIMTYPE before, LIMTYPE after)
 {
+  PRInt32 repLen = rep ? nsCRT::strlen(rep) : 0;
+  
   if
     (
       (before == LT_IGNORE && (after == LT_IGNORE || after == LT_DELIMITER))
-        && text.Length() < rep.Length() ||
+        && text.Length() < repLen ||
       (before != LT_IGNORE || after != LT_IGNORE && after != LT_DELIMITER)
-        && text.Length() < rep.Length() + 1 ||
+        && text.Length() < repLen + 1 ||
       before != LT_IGNORE && after != LT_IGNORE && after != LT_DELIMITER
-        && text.Length() < rep.Length() + 2
+        && text.Length() < repLen + 2
     )
     return PR_FALSE;
 
-    PRUint32 afterPos = rep.Length() + (before == LT_IGNORE ? 0 : 1);
+    PRUint32 afterPos = repLen + (before == LT_IGNORE ? 0 : 1);
 
   if
     (
@@ -479,7 +462,7 @@ mozTXTToHTMLConv::ItMatchesDelimited(const nsAutoString& text,
         (
           nsString::IsAlpha(text.First()) ||
           nsString::IsDigit(text.First()) ||
-          text.First() == rep.First()
+          text.First() == *rep
         ) ||
       after == LT_ALPHA
         && !nsString::IsAlpha(text[afterPos]) ||
@@ -490,12 +473,12 @@ mozTXTToHTMLConv::ItMatchesDelimited(const nsAutoString& text,
         (
           nsString::IsAlpha(text[afterPos]) ||
           nsString::IsDigit(text[afterPos]) ||
-          text[afterPos] == rep.First()
+          text[afterPos] == *rep
         ) ||
-/*    !(before == LT_IGNORE ? text : Right(text, 1)).Equals(rep,
-           PR_TRUE, rep.Length())   XXX bug #21071 */
-      !Equals((before == LT_IGNORE ? text : Right(text, 1)), rep,
-           PR_TRUE, rep.Length())
+      !(before == LT_IGNORE ? text : Right(text, 1)).Equals(rep,
+           PR_TRUE, repLen) //  XXX bug #21071 
+/*      !Equals((before == LT_IGNORE ? text : Right(text, 1)), rep,
+           PR_TRUE, rep.Length())*/
     )
     return PR_FALSE;
 
@@ -504,7 +487,7 @@ mozTXTToHTMLConv::ItMatchesDelimited(const nsAutoString& text,
 
 PRUint32
 mozTXTToHTMLConv::NumberOfMatches(const nsAutoString& text,
-     const nsAutoString& rep, LIMTYPE before, LIMTYPE after)
+     const char* rep, LIMTYPE before, LIMTYPE after)
 {
   PRInt32 result = 0;
   for (PRInt32 i = 0; i < text.Length(); i++)
@@ -515,8 +498,8 @@ mozTXTToHTMLConv::NumberOfMatches(const nsAutoString& text,
 
 PRBool
 mozTXTToHTMLConv::StructPhraseHit(const nsAutoString& text, PRBool col0,
-     const nsAutoString tagTXT,
-     const nsAutoString tagHTML, const nsAutoString attributeHTML,
+     const char* tagTXT,
+     const char* tagHTML, const char* attributeHTML,
      nsAutoString& outputHTML, PRUint32& openTags)
 {
   /* We're searching for the following pattern:
@@ -561,18 +544,21 @@ mozTXTToHTMLConv::StructPhraseHit(const nsAutoString& text, PRBool col0,
 
 PRBool
 mozTXTToHTMLConv::SmilyHit(const nsAutoString& text, PRBool col0,
-         const nsAutoString tagTXT, const nsAutoString tagHTML,
+         const char* tagTXT, const char* tagHTML,
          nsAutoString& outputHTML, PRInt32& glyphTextLen)
 {
-  PRUint32 delim = (col0 ? 0 : 1) + tagTXT.Length();
+  PRInt32  tagLen = nsCRT::strlen(tagTXT);
+  PRInt32  txtLen = text.Length();
+
+  PRUint32 delim = (col0 ? 0 : 1) + tagLen;
   if
     (
       (col0 || nsString::IsSpace(text.First()))
         &&
         (
-          text.Length() <= PRInt32(delim) ||
+          txtLen <= PRInt32(delim) ||
           nsString::IsSpace(text[delim]) ||
-          text.Length() > PRInt32(delim + 1)
+          txtLen > PRInt32(delim + 1)
             &&
             (
               text[delim] == '.' ||
@@ -598,7 +584,7 @@ mozTXTToHTMLConv::SmilyHit(const nsAutoString& text, PRBool col0,
       outputHTML += ' ';
       outputHTML += tagHTML;
     }
-    glyphTextLen = (col0 ? 0 : 1) + tagTXT.Length();
+    glyphTextLen = (col0 ? 0 : 1) + tagLen;
     return PR_TRUE;
   }
   else
@@ -611,28 +597,46 @@ PRBool
 mozTXTToHTMLConv::GlyphHit(const nsAutoString& text, PRBool col0,
          nsAutoString& outputHTML, PRInt32& glyphTextLen)
 {
+  MOZ_TIMER_START(mGlyphHitTimer);
+
   if
     (
-      SmilyHit(text, col0, ":-)", "<img SRC=\"chrome://messenger/skin/smile.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-      SmilyHit(text, col0, ":)", "<img SRC=\"chrome://messenger/skin/smile.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-      SmilyHit(text, col0, ":-(", "<img SRC=\"chrome://messenger/skin/frown.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-      SmilyHit(text, col0, ":(", "<img SRC=\"chrome://messenger/skin/frown.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-      SmilyHit(text, col0, ";-)", "<img SRC=\"chrome://messenger/skin/wink.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-      SmilyHit(text, col0, ";-P", "<img SRC=\"chrome://messenger/skin/sick.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
+      ((col0 ? text.First() : text[1]) == ':' ||  // Performance increase
+       (col0 ? text.First() : text[1]) == ';' )
+	&&
+        (
+          SmilyHit(text, col0, ":-)", "<img SRC=\"chrome://messenger/skin/smile.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, col0, ":)", "<img SRC=\"chrome://messenger/skin/smile.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, col0, ":-(", "<img SRC=\"chrome://messenger/skin/frown.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, col0, ":(", "<img SRC=\"chrome://messenger/skin/frown.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, col0, ";-)", "<img SRC=\"chrome://messenger/skin/wink.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, col0, ";-P", "<img SRC=\"chrome://messenger/skin/sick.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
+        )
     )
   {
+    MOZ_TIMER_STOP(mGlyphHitTimer);
     return PR_TRUE;
   }
   else if   // XXX Hotfix
-    (
-      SmilyHit(text, PR_FALSE, ":-)", "<img SRC=\"chrome://messenger/skin/smile.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-      SmilyHit(text, PR_FALSE, ":)", "<img SRC=\"chrome://messenger/skin/smile.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-      SmilyHit(text, PR_FALSE, ":-(", "<img SRC=\"chrome://messenger/skin/frown.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-      SmilyHit(text, PR_FALSE, ":(", "<img SRC=\"chrome://messenger/skin/frown.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-      SmilyHit(text, PR_FALSE, ";-)", "<img SRC=\"chrome://messenger/skin/wink.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-      SmilyHit(text, PR_FALSE, ";-P", "<img SRC=\"chrome://messenger/skin/sick.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
+        (
+          !col0    // Performance increase
+            &&
+            (
+	            text[1] == ':' ||
+	            text[1] == ';'
+            )
+	    &&
+    	(
+          SmilyHit(text, PR_FALSE, ":-)", "<img SRC=\"chrome://messenger/skin/smile.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, PR_FALSE, ":)", "<img SRC=\"chrome://messenger/skin/smile.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, PR_FALSE, ":-(", "<img SRC=\"chrome://messenger/skin/frown.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, PR_FALSE, ":(", "<img SRC=\"chrome://messenger/skin/frown.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, PR_FALSE, ";-)", "<img SRC=\"chrome://messenger/skin/wink.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(text, PR_FALSE, ";-P", "<img SRC=\"chrome://messenger/skin/sick.gif\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
+	    )
     )
   {
+    MOZ_TIMER_STOP(mGlyphHitTimer);
     return PR_TRUE;
   }
   else if (ItMatchesDelimited(text, "(c)", LT_IGNORE, LT_DELIMITER))
@@ -640,6 +644,7 @@ mozTXTToHTMLConv::GlyphHit(const nsAutoString& text, PRBool col0,
   {
     outputHTML = "&copy;";
     glyphTextLen = 3;
+    MOZ_TIMER_STOP(mGlyphHitTimer);
     return PR_TRUE;
   }
   else if (ItMatchesDelimited(text, "(r)", LT_IGNORE, LT_DELIMITER))
@@ -647,18 +652,21 @@ mozTXTToHTMLConv::GlyphHit(const nsAutoString& text, PRBool col0,
   {
     outputHTML = "&reg;";
     glyphTextLen = 3;
+    MOZ_TIMER_STOP(mGlyphHitTimer);
     return PR_TRUE;
   }
   else if (ItMatchesDelimited(text, " +/-", LT_IGNORE, LT_IGNORE))
   {
     outputHTML = " &plusmn;";
     glyphTextLen = 4;
+    MOZ_TIMER_STOP(mGlyphHitTimer);
     return PR_TRUE;
   }
   else if (col0 && ItMatchesDelimited(text, "+/-", LT_IGNORE, LT_IGNORE))
   {
     outputHTML = "&plusmn;";
     glyphTextLen = 3;
+    MOZ_TIMER_STOP(mGlyphHitTimer);
     return PR_TRUE;
   }
   else if    // x^2 -> sup
@@ -681,17 +689,24 @@ mozTXTToHTMLConv::GlyphHit(const nsAutoString& text, PRBool col0,
     // Note: (delimPos == text.Length()) could be true
 
     if (nsString::IsAlpha(text[PRUint32(delimPos)]))
+    {
+      MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_FALSE;
+    }
 
     outputHTML.Truncate();
     outputHTML += text.First();
     outputHTML += "<sup>";
     nsAutoString temp;
     if (text.Mid(temp, 2, delimPos - 2) != PRUint32(delimPos - 2))
+    {
+      MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_FALSE;
+    }
     outputHTML += temp;
     outputHTML += "</sup>";
     glyphTextLen = delimPos /* - 1 + 1 */ ;
+    MOZ_TIMER_STOP(mGlyphHitTimer);
     return PR_TRUE;
   }
   /*
@@ -707,6 +722,7 @@ mozTXTToHTMLConv::GlyphHit(const nsAutoString& text, PRBool col0,
     3/4    &frac34;  dito
     1/2    &frac12;  similar
   */
+  MOZ_TIMER_STOP(mGlyphHitTimer);
   return PR_FALSE;
 }
 
@@ -717,9 +733,29 @@ mozTXTToHTMLConv::GlyphHit(const nsAutoString& text, PRBool col0,
 mozTXTToHTMLConv::mozTXTToHTMLConv()
 {
   NS_INIT_ISUPPORTS();
+  MOZ_TIMER_RESET(mScanTXTTimer);
+  MOZ_TIMER_RESET(mGlyphHitTimer);
+  MOZ_TIMER_RESET(mRightTimer);
+  MOZ_TIMER_RESET(mTotalMimeTime);
+  MOZ_TIMER_START(mTotalMimeTime);
 }
 
-mozTXTToHTMLConv::~mozTXTToHTMLConv() {}
+mozTXTToHTMLConv::~mozTXTToHTMLConv() 
+{
+  MOZ_TIMER_START(mTotalMimeTime);
+  MOZ_TIMER_DEBUGLOG(("MIME Total Processing Time: "));
+  MOZ_TIMER_PRINT(mTotalMimeTime);
+  
+  MOZ_TIMER_DEBUGLOG(("mozTXTToHTMLConv::ScanTXT(): "));
+  MOZ_TIMER_PRINT(mScanTXTTimer);
+
+  MOZ_TIMER_DEBUGLOG(("mozTXTToHTMLConv::GlyphHit(): "));
+  MOZ_TIMER_PRINT(mGlyphHitTimer);
+
+  MOZ_TIMER_DEBUGLOG(("mozTXTToHTMLConv::Right(): "));
+  MOZ_TIMER_PRINT(mRightTimer);
+}
+
 NS_IMPL_ISUPPORTS(mozTXTToHTMLConv, NS_GET_IID(mozTXTToHTMLConv));
 
 PRInt32
@@ -779,6 +815,8 @@ printf("ScanTXT orginal: ");
 printf(text.ToNewCString());
 #endif
 
+  MOZ_TIMER_START(mScanTXTTimer);
+
   nsAutoString result;
 
   PRUint32 structPhrase_strong = 0;  // Number of currently open tags
@@ -811,17 +849,17 @@ printf(text.ToNewCString());
       case '|':
         if
 	  (
-            StructPhraseHit(Right(text, MaxInt(0, i - 1)), i == 0,
-                 '*', "strong", "class=txt_star",
+            StructPhraseHit(i == 0 ? text : Right(text, i - 1), i == 0,
+                 "*", "strong", "class=txt_star",
                  HTMLnsStr, structPhrase_strong) ||
-            StructPhraseHit(Right(text, MaxInt(0, i - 1)), i == 0,
-                 '_', "em" /* <u> is deprecated */, "class=txt_underscore",
+            StructPhraseHit(i == 0 ? text : Right(text, i - 1), i == 0,
+                 "_", "em" /* <u> is deprecated */, "class=txt_underscore",
                  HTMLnsStr, structPhrase_underline) ||
-            StructPhraseHit(Right(text, MaxInt(0, i - 1)), i == 0,
-                 '/', "em", "class=txt_slash",
+            StructPhraseHit(i == 0 ? text : Right(text, i - 1), i == 0,
+                 "/", "em", "class=txt_slash",
                  HTMLnsStr, structPhrase_italic) ||
-            StructPhraseHit(Right(text, MaxInt(0, i - 1)), i == 0,
-                 '|', "code", "class=txt_verticalline",
+            StructPhraseHit(i == 0 ? text : Right(text, i - 1), i == 0,
+                 "|", "code", "class=txt_verticalline",
                  HTMLnsStr, structPhrase_code)
 	  )
         {
@@ -883,6 +921,8 @@ printf("ScanTXT result:  ");
 printf(result.ToNewCString());
 printf("\n");
 #endif
+
+  MOZ_TIMER_STOP(mScanTXTTimer);
 
   return result;
 }
