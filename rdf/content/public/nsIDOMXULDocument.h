@@ -26,6 +26,7 @@
 #include "nsIDOMDocument.h"
 
 class nsIDOMElement;
+class nsIDOMNode;
 class nsIDOMXULCommandDispatcher;
 class nsIDOMNodeList;
 
@@ -37,11 +38,11 @@ class nsIDOMXULDocument : public nsIDOMDocument {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMXULDOCUMENT_IID; return iid; }
 
-  NS_IMETHOD    GetPopupElement(nsIDOMElement** aPopupElement)=0;
-  NS_IMETHOD    SetPopupElement(nsIDOMElement* aPopupElement)=0;
+  NS_IMETHOD    GetPopupNode(nsIDOMNode** aPopupNode)=0;
+  NS_IMETHOD    SetPopupNode(nsIDOMNode* aPopupNode)=0;
 
-  NS_IMETHOD    GetTooltipElement(nsIDOMElement** aTooltipElement)=0;
-  NS_IMETHOD    SetTooltipElement(nsIDOMElement* aTooltipElement)=0;
+  NS_IMETHOD    GetTooltipNode(nsIDOMNode** aTooltipNode)=0;
+  NS_IMETHOD    SetTooltipNode(nsIDOMNode* aTooltipNode)=0;
 
   NS_IMETHOD    GetCommandDispatcher(nsIDOMXULCommandDispatcher** aCommandDispatcher)=0;
 
@@ -54,10 +55,10 @@ public:
 
 
 #define NS_DECL_IDOMXULDOCUMENT   \
-  NS_IMETHOD    GetPopupElement(nsIDOMElement** aPopupElement);  \
-  NS_IMETHOD    SetPopupElement(nsIDOMElement* aPopupElement);  \
-  NS_IMETHOD    GetTooltipElement(nsIDOMElement** aTooltipElement);  \
-  NS_IMETHOD    SetTooltipElement(nsIDOMElement* aTooltipElement);  \
+  NS_IMETHOD    GetPopupNode(nsIDOMNode** aPopupNode);  \
+  NS_IMETHOD    SetPopupNode(nsIDOMNode* aPopupNode);  \
+  NS_IMETHOD    GetTooltipNode(nsIDOMNode** aTooltipNode);  \
+  NS_IMETHOD    SetTooltipNode(nsIDOMNode* aTooltipNode);  \
   NS_IMETHOD    GetCommandDispatcher(nsIDOMXULCommandDispatcher** aCommandDispatcher);  \
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn);  \
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn);  \
@@ -66,10 +67,10 @@ public:
 
 
 #define NS_FORWARD_IDOMXULDOCUMENT(_to)  \
-  NS_IMETHOD    GetPopupElement(nsIDOMElement** aPopupElement) { return _to GetPopupElement(aPopupElement); } \
-  NS_IMETHOD    SetPopupElement(nsIDOMElement* aPopupElement) { return _to SetPopupElement(aPopupElement); } \
-  NS_IMETHOD    GetTooltipElement(nsIDOMElement** aTooltipElement) { return _to GetTooltipElement(aTooltipElement); } \
-  NS_IMETHOD    SetTooltipElement(nsIDOMElement* aTooltipElement) { return _to SetTooltipElement(aTooltipElement); } \
+  NS_IMETHOD    GetPopupNode(nsIDOMNode** aPopupNode) { return _to GetPopupNode(aPopupNode); } \
+  NS_IMETHOD    SetPopupNode(nsIDOMNode* aPopupNode) { return _to SetPopupNode(aPopupNode); } \
+  NS_IMETHOD    GetTooltipNode(nsIDOMNode** aTooltipNode) { return _to GetTooltipNode(aTooltipNode); } \
+  NS_IMETHOD    SetTooltipNode(nsIDOMNode* aTooltipNode) { return _to SetTooltipNode(aTooltipNode); } \
   NS_IMETHOD    GetCommandDispatcher(nsIDOMXULCommandDispatcher** aCommandDispatcher) { return _to GetCommandDispatcher(aCommandDispatcher); } \
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn) { return _to GetElementById(aId, aReturn); }  \
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn) { return _to GetElementsByAttribute(aName, aValue, aReturn); }  \

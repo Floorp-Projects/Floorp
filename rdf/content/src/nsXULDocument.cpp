@@ -934,8 +934,8 @@ protected:
       // does not introduce cycles into the ownership model because this is still
       // parent/child ownership. Just wanted the reader to know hyatt and I had thought about
       // this (pinkerton).
-    nsCOMPtr<nsIDOMElement>    mPopupElement;            // [OWNER] element triggering the popup
-    nsCOMPtr<nsIDOMElement>    mTooltipElement;          // [OWNER] element triggering the tooltip
+    nsCOMPtr<nsIDOMNode>    mPopupNode;            // [OWNER] element triggering the popup
+    nsCOMPtr<nsIDOMNode>    mTooltipNode;          // [OWNER] element triggering the tooltip
 };
 
 PRInt32 XULDocumentImpl::gRefCnt = 0;
@@ -3277,32 +3277,32 @@ XULDocumentImpl::CreateRange(nsIDOMRange** aRange)
 // nsIDOMXULDocument interface
 
 NS_IMETHODIMP
-XULDocumentImpl::GetPopupElement(nsIDOMElement** anElement)
+XULDocumentImpl::GetPopupNode(nsIDOMNode** aNode)
 {
-	*anElement = mPopupElement;
-	NS_IF_ADDREF(*anElement);
+	*aNode = mPopupNode;
+	NS_IF_ADDREF(*aNode);
 	return NS_OK;
 }
 
 NS_IMETHODIMP
-XULDocumentImpl::SetPopupElement(nsIDOMElement* anElement)
+XULDocumentImpl::SetPopupNode(nsIDOMNode* aNode)
 {
-	mPopupElement = dont_QueryInterface(anElement);
+	mPopupNode = dont_QueryInterface(aNode);
 	return NS_OK;
 }
 
 NS_IMETHODIMP
-XULDocumentImpl::GetTooltipElement(nsIDOMElement** anElement)
+XULDocumentImpl::GetTooltipNode(nsIDOMNode** aNode)
 {
-	*anElement = mTooltipElement;
-	NS_IF_ADDREF(*anElement);
+	*aNode = mTooltipNode;
+	NS_IF_ADDREF(*aNode);
 	return NS_OK;
 }
 
 NS_IMETHODIMP
-XULDocumentImpl::SetTooltipElement(nsIDOMElement* anElement)
+XULDocumentImpl::SetTooltipNode(nsIDOMNode* aNode)
 {
-	mTooltipElement = dont_QueryInterface(anElement);
+	mTooltipNode = dont_QueryInterface(aNode);
 	return NS_OK;
 }
 
@@ -3634,7 +3634,7 @@ XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aR
     popupDoc->mNameSpaceManager = mNameSpaceManager;
 
     // We share the mPopup
-    popupDoc->mPopupElement = mPopupElement;
+    popupDoc->mPopupNode = mPopupNode;
 
     // Suck all of the root's content into our document.
     // We need to make the XUL builder instantiate this node.
