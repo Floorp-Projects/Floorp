@@ -278,15 +278,8 @@ my $emailinput2 = GenerateEmailInput(2);
 # javascript
     
 my $jscript = << 'ENDSCRIPT';
-<script language="Javascript1.2" type="text/javascript">
+<script language="Javascript1.1" type="text/javascript">
 <!--
-function array_push(str)
-{
-   this[this.length] = str;
-   return this;
-}
-Array.prototype.push = array_push;
-
 var cpts = new Array();
 var vers = new Array();
 ENDSCRIPT
@@ -310,13 +303,13 @@ foreach $v (@::legal_versions) {
 for $p (@::legal_product) {
     if ($::components{$p}) {
         foreach $c (@{$::components{$p}}) {
-            $jscript .= "cpts['$c'].push('$p');\n";
+            $jscript .= "cpts['$c'][cpts['$c'].length] = '$p';\n";
         }
     }
 
     if ($::versions{$p}) {
         foreach $v (@{$::versions{$p}}) {
-            $jscript .= "vers['$v'].push('$p');\n";
+            $jscript .= "vers['$v'][vers['$v'].length] = '$p';\n";
         }
     }
 }
@@ -332,8 +325,6 @@ function selectProduct(f) {
     // whatever, we'll remove this hack.  in the mean time, we'll
     // assume that v4.00-4.03 also die, so we'll disable the neat
     // javascript stuff for Netscape 4.05 and earlier.
-    var agtver = parseFloat(navigator.appVersion);
-    if (agtver <= 4.05 ) return;
 
     var cnt = 0;
     var i;
@@ -355,11 +346,13 @@ function selectProduct(f) {
     f.component.options.length = 0;
 
     for (c in cpts) {
+        if (typeof(cpts[c]) == 'function') continue;
         var doit = doall;
         for (i=0 ; !doit && i<f.product.length ; i++) {
             if (f.product[i].selected) {
                 var p = f.product[i].value;
                 for (j in cpts[c]) {
+                    if (typeof(cpts[c][j]) == 'function') continue;
                     var p2 = cpts[c][j];
                     if (p2 == p) {
                         doit = true;
@@ -387,11 +380,13 @@ function selectProduct(f) {
     f.version.options.length = 0;
 
     for (v in vers) {
+        if (typeof(vers[v]) == 'function') continue;
         var doit = doall;
         for (i=0 ; !doit && i<f.product.length ; i++) {
             if (f.product[i].selected) {
                 var p = f.product[i].value;
                 for (j in vers[v]) {
+                    if (typeof(vers[v][j]) == 'function') continue;
                     var p2 = vers[v][j];
                     if (p2 == p) {
                         doit = true;
@@ -430,13 +425,13 @@ function selectProduct(f) {
 #    set legal_product [concat $default{"product"} [lreplace $legal_product $w $w]]
 # }
 
-PutHeader("Bugzilla Query Page", "Query", "This page lets you search the database for recorded bugs.",
-          q{onLoad="selectProduct(document.forms[0]);"});
+PutHeader("Bugzilla Query Page", "Query", 
+          "This page lets you search the database for recorded bugs.",
+          q{onLoad="selectProduct(document.forms[0]);"},
+          0, $jscript);
 
 push @::legal_resolution, "---"; # Oy, what a hack.
 push @::legal_target_milestone, "---"; # Oy, what a hack.
-
-print $jscript;
 
 my @logfields = ("[Bug creation]", @::log_columns);
 
