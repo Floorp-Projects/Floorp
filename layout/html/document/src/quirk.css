@@ -81,6 +81,7 @@ table, caption {
 
 table {
   text-align: -moz-initial;
+  white-space: normal; /* compatible with IE & spec */
 }
 
 /* Quirk: make sure backgrounds are inherited in tables */
