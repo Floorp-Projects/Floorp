@@ -36,7 +36,8 @@ MOZ_WINCONSOLE=0
 endif
 endif
 
-ifneq (,$(filter mac,$(MOZ_WIDGET_TOOLKIT)))
+
+ifeq (,$(filter mac,$(MOZ_WIDGET_TOOLKIT)))
 ifndef BUILD_STATIC_LIBS
 GRE_BUILD       = 1;
 endif
