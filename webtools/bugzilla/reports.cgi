@@ -152,7 +152,6 @@ if (! defined $FORM{'product'}) {
 }
 
 
-
 ##################################
 # user came in with no form data #
 ##################################
@@ -236,14 +235,6 @@ print <<FIN;
 <td align=left>
 <input type=checkbox name=links checked value=1>&nbsp;Links to Bugs<br>
 <input type=checkbox name=banner checked value=1>&nbsp;Banner<br>
-FIN
-  
-    if (Param('usequip')) {
-        print "<input type=checkbox name=quip value=1>&nbsp;Quip<br>";
-    } else {
-        print "<input type=hidden name=quip value=0>";
-    }
-    print <<FIN;
 </td>
 </tr>
 <tr>
@@ -299,7 +290,6 @@ FIN
     
     my $c = 0;
 
-    my $quip = "Summary";
     my $bugs_count = 0;
     my $bugs_new_this_week = 0;
     my $bugs_reopened = 0;
@@ -328,19 +318,6 @@ FIN
         $bugs_totals{$who}{$st} ++;
     }
 
-    if ($FORM{'quip'}) {
-        if (open (COMMENTS, "<data/comments")) {
-            my @cdata;
-            while (<COMMENTS>) {
-                push @cdata, $_;
-            }
-            close COMMENTS;
-            if(@cdata) {
-                $quip = "<i>" . $cdata[int(rand(scalar(@cdata)))] . "</i>";
-            }
-        }
-    } 
-
     #########################
     # start painting report #
     #########################
@@ -349,7 +326,7 @@ FIN
     $bugs_status{'ASSIGNED'} ||= '0';
     $bugs_status{'REOPENED'} ||= '0';
     print <<FIN;
-<h1>$quip</h1>
+<h1>Summary</h1>
 <table border=1 cellpadding=5>
 <tr>
 <td align=right><b>New Bugs This Week</b></td>
@@ -664,7 +641,6 @@ sub bybugs {
 sub most_doomed_for_milestone {
     my $when = localtime (time);
     my $ms = "M" . Param("curmilestone");
-    my $quip = "Summary";
 
     print "<center>\n<h1>";
     if( $FORM{'product'} ne "-All-" ) {
@@ -681,17 +657,6 @@ sub most_doomed_for_milestone {
     # start painting report #
     #########################
 
-    if ($FORM{'quip'}) {
-        if (open (COMMENTS, "<data/comments")) {
-            my @cdata;
-            while (<COMMENTS>) {
-                push @cdata, $_;
-            }
-            close COMMENTS;
-            $quip = "<i>" . $cdata[int(rand($#cdata + 1))] . "</i>";
-        }
-    }
-    
     # Build up $query string
     my $query;
     $query = "select distinct assigned_to from bugs where target_milestone=\"$ms\"";
@@ -786,8 +751,7 @@ FIN
 sub most_recently_doomed {
     my $when = localtime (time);
     my $ms = "M" . Param("curmilestone");
-    my $quip = "Summary";
-                                                     
+
     print "<center>\n<h1>";
     if( $FORM{'product'} ne "-All-" ) {
         SendSQL("SELECT defaultmilestone FROM products WHERE product = " .
@@ -802,18 +766,6 @@ sub most_recently_doomed {
     #########################
     # start painting report #
     #########################
-
-    if ($FORM{'quip'}) {
-        if (open (COMMENTS, "<data/comments")) {
-            my @cdata;
-            while (<COMMENTS>) {
-                push @cdata, $_;
-            }
-            close COMMENTS;
-            $quip = "<i>" . $cdata[int(rand($#cdata + 1))] . "</i>";
-        }
-    }
-
 
     # Build up $query string
     my $query = "select distinct assigned_to from bugs where bugs.bug_status='NEW' and target_milestone='' and bug_severity!='enhancement' and status_whiteboard='' and (product='Browser' or product='MailNews')";

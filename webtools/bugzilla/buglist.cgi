@@ -270,18 +270,14 @@ sub LookupNamedQuery {
 }
 
 sub GetQuip {
-    return if !Param('usequip');
 
     my $quip;
 
-    # This is stupid.  We really really need to move the quip list into the DB!
-    if (open(COMMENTS, "<data/comments")) {
-        my @cdata;
-        push(@cdata, $_) while <COMMENTS>;
-        close COMMENTS;
-        $quip = $cdata[int(rand($#cdata + 1))];
+    SendSQL("SELECT quip FROM quips ORDER BY RAND() LIMIT 1");
+
+    if (MoreSQLData()) {
+        ($quip) = FetchSQLData();
     }
-    $quip ||= "Bugzilla would like to put a random quip here, but nobody has entered any.";
 
     return $quip;
 }
@@ -1542,7 +1538,7 @@ if ($::FORM{'debug'}) {
 # the list more compact.
 $vars->{'splitheader'} = $::COOKIE{'SPLITHEADER'} ? 1 : 0;
 
-$vars->{'quip'} = GetQuip() if Param('usequip');
+$vars->{'quip'} = GetQuip();
 $vars->{'currenttime'} = time2str("%a %b %e %T %Z %Y", time());
 
 # The following variables are used when the user is making changes to multiple bugs.

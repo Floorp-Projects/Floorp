@@ -20,6 +20,7 @@
 #
 # Contributor(s): Owen Taylor <otaylor@redhat.com>
 #                 Gervase Markham <gerv@gerv.net>
+#                 David Fallon <davef@tetsubo.com>
 
 use diagnostics;
 use strict;
@@ -34,8 +35,6 @@ use lib qw(.);
 
 require "CGI.pl";
 
-# Even though quips aren't (yet) in the database, we need to check
-# logins for the footer
 ConnectToDatabase();
 quietly_check_login();
 
@@ -43,14 +42,16 @@ my $action = $::FORM{'action'} || "";
 
 if ($action eq "show") {
     # Read in the entire quip list
-    if (open (COMMENTS, "<data/comments")) {
-        my @quips;
-        push (@quips, $_) while (<COMMENTS>);        
-        close COMMENTS;
-        
-        $vars->{'quips'} = \@quips;
-        $vars->{'show_quips'} = 1;
+    SendSQL("SELECT quip FROM quips");
+
+    my @quips;
+    while (MoreSQLData()) {
+        my ($quip) = FetchSQLData();
+        push(@quips, $quip);
     }
+
+    $vars->{'quips'} = \@quips;
+    $vars->{'show_quips'} = 1;
 }
 
 if ($action eq "add") {
@@ -67,9 +68,7 @@ if ($action eq "add") {
         exit();
     }
 
-    open(COMMENTS, ">>data/comments");
-    print COMMENTS $comment . "\n";
-    close(COMMENTS);
+    SendSQL("INSERT INTO quips (userid, quip) VALUES (". $::userid . ", " . SqlQuote($comment) . ")");
 
     $vars->{'added_quip'} = $comment;
 }

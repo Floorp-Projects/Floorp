@@ -44,7 +44,8 @@
     <p>[% query FILTER html %]</p>
   [% END %]
 
-  [% IF quip %]
+  [% IF Param('usequip') %]
+    [% DEFAULT quip = "Bugzilla would like to put a random quip here, but no one has entered any." %]
     <a href="quips.cgi"><i>[% quip FILTER html %]</i></a>
   [% END %]
 

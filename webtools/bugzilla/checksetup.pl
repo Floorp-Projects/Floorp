@@ -1589,6 +1589,12 @@ $table{tokens} =
 
      index(userid)';
 
+# 2002-07-19, davef@tetsubo.com, bug 67950:
+# Store quips in the db.
+$table{quips} =
+    'quipid mediumint not null auto_increment primary key,
+     userid mediumint not null default 0, 
+     quip text not null';
 
 
 ###########################################################################
@@ -3015,6 +3021,34 @@ if (!GetFieldDef("bugs", "alias")) {
     $dbh->do("ALTER TABLE bugs ADD UNIQUE (alias)");
 }
 
+# 2002-07-15 davef@tetsubo.com - bug 67950
+# Move quips to the db.
+my $renamed_comments_file = 0;
+if (GetFieldDef("quips", "quipid")) {
+    if (-s 'data/comments' && open (COMMENTS, "<data/comments")) {
+        print "Populating quips table from data/comments...\n";
+        while (<COMMENTS>) {
+            chomp;
+            $dbh->do("INSERT INTO quips (quip) VALUES ("
+                      . $dbh->quote($_) . ")");
+        }
+        print "The data/comments file (used to store quips) has been
+copied into the database, and the data/comments file
+moved to data/comments.bak - you can delete this file
+once you're satisfied the migration worked correctly.\n";
+        close COMMENTS;
+        rename("data/comments", "data/comments.bak") or next;        
+        $renamed_comments_file = 1;
+    }
+}
+
+# Warn if data/comments.bak exists, as it should be deleted.
+if (-s 'data/comments.bak' && !$renamed_comments_file) {
+    print "Please note the data/comments.bak file can be removed as it's
+no longer used.\n";
+}
+
+        
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #
