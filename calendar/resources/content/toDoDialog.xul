@@ -585,6 +585,7 @@
                                  <hbox align="center">
                                     <datepicker id="exceptions-date-picker"
                                                 disable-controller="repeat"
+                                                ondatepick="updateAddExceptionButton();"
                                                 value=""/>
                                  </hbox>
                                  <button id="exception-add-button"
