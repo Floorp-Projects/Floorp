@@ -13,13 +13,11 @@
 		<key>28</key>
 		<string>478 279 195 457 0 0 1152 746 </string>
 		<key>297</key>
-		<string>70 110 187 210 0 0 1152 746 </string>
+		<string>70 110 198 210 0 0 1152 746 </string>
 		<key>314</key>
-		<string>271 139 168 180 0 0 1152 746 </string>
+		<string>271 139 198 180 0 0 1152 746 </string>
 		<key>336</key>
 		<string>458 90 200 162 0 0 1152 746 </string>
-		<key>343</key>
-		<string>499 330 200 252 0 0 1152 746 </string>
 		<key>365</key>
 		<string>22 500 93 162 0 0 1152 746 </string>
 		<key>463</key>
@@ -48,6 +46,7 @@
 	<key>IBOpenObjects</key>
 	<array>
 		<integer>475</integer>
+		<integer>297</integer>
 		<integer>160</integer>
 		<integer>56</integer>
 	</array>

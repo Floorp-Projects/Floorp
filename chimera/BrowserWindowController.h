@@ -123,6 +123,8 @@ class nsIDOMNode;
 - (IBAction)endAddBookmarkSheet:(id)sender;
 - (void)cacheBookmarkDS: (id)aDS;
 
+- (IBAction)viewSource:(id)aSender;
+
 - (void)saveDocument: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList;
 - (void)saveURL: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
             url: (NSURL*)aURL suggestedFilename: (NSString*)aFilename;

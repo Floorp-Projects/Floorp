@@ -96,6 +96,7 @@ class BookmarksService;
 -(IBAction) biggerTextSize:(id)aSender;
 -(IBAction) smallerTextSize:(id)aSender;
 -(IBAction) toggleSmoothText:(id)aSender;
+-(IBAction) viewSource:(id)aSender;
 
 // Bookmarks menu actions.
 -(IBAction) importBookmarks:(id)aSender;
