@@ -74,7 +74,8 @@
 #include "nsCURILoader.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIScriptGlobalObject.h"
-
+#include "nsIDOMXULSelectCntrlEl.h"
+#include "nsIDOMXULSelectCntrlItemEl.h"
 
 NS_INTERFACE_MAP_BEGIN(nsRootAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleDocument)
@@ -264,6 +265,9 @@ NS_IMETHODIMP nsRootAccessible::AddAccessibleEventListener(nsIAccessibleEventLis
     rv = target->AddEventListener(NS_LITERAL_STRING("RadiobuttonStateChange"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
 
+    rv = target->AddEventListener(NS_LITERAL_STRING("RadioStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+
     rv = target->AddEventListener(NS_LITERAL_STRING("popupshowing"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
 
@@ -357,14 +361,28 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     if (selectElement)     // ----- Target Node is an HTML <select> element ------
       nsHTMLSelectOptionAccessible::GetFocusedOptionNode(mPresShell, targetNode, optionTargetNode);
 
+    // for focus events on Radio Groups we give the focus to the selected button
+    nsCOMPtr<nsIDOMXULSelectControlElement> selectControl(do_QueryInterface(targetNode));
+    if (selectControl) {
+      nsCOMPtr<nsIDOMXULSelectControlItemElement> selectItem;
+      selectControl->GetSelectedItem(getter_AddRefs(selectItem));
+      optionTargetNode = do_QueryInterface(selectItem);
+    }
+
     nsAutoString eventType;
     aEvent->GetType(eventType);
 
     nsCOMPtr<nsIAccessible> accessible;
 
     if (NS_SUCCEEDED(mAccService->GetAccessibleFor(targetNode, getter_AddRefs(accessible)))) {
-      if (eventType.EqualsIgnoreCase("focus") || eventType.EqualsIgnoreCase("DOMMenuItemActive")) 
-        FireAccessibleFocusEvent(accessible, targetNode);
+      if (eventType.EqualsIgnoreCase("focus") || eventType.EqualsIgnoreCase("DOMMenuItemActive")) { 
+        if (selectControl && optionTargetNode &&
+            NS_SUCCEEDED(mAccService->GetAccessibleFor(optionTargetNode, getter_AddRefs(accessible)))) {
+          FireAccessibleFocusEvent(accessible, optionTargetNode);
+        }
+        else
+          FireAccessibleFocusEvent(accessible, targetNode);
+      }
       else if (eventType.EqualsIgnoreCase("change")) {
         if (optionTargetNode) {   // Set to current option only for HTML selects
           mListener->HandleEvent(nsIAccessibleEventListener::EVENT_SELECTION, accessible);
@@ -375,15 +393,21 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
           mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible);
       }
       else if (eventType.EqualsIgnoreCase("CheckboxStateChange") || 
-               eventType.EqualsIgnoreCase("RadiobuttonStateChange")) 
+               eventType.EqualsIgnoreCase("RadiobuttonStateChange"))
         mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible);
+      else if (eventType.EqualsIgnoreCase("RadioStateChange") ) {
+        if (targetNode &&
+            NS_SUCCEEDED(mAccService->GetAccessibleFor(targetNode, getter_AddRefs(accessible)))) {
+          mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible);
+          mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, accessible);
+        }
+      }
       else if (eventType.EqualsIgnoreCase("popupshowing")) 
         mListener->HandleEvent(nsIAccessibleEventListener::EVENT_MENUPOPUPSTART, accessible);
       else if (eventType.EqualsIgnoreCase("popuphiding")) 
         mListener->HandleEvent(nsIAccessibleEventListener::EVENT_MENUPOPUPEND, accessible);
     }
   }
-
   return NS_OK;
 }
 

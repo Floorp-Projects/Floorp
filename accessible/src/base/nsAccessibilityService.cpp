@@ -424,6 +424,33 @@ NS_IMETHODIMP nsAccessibilityService::CreateXULTextAccessible(nsIDOMNode *aNode,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsAccessibilityService::CreateXULRadioButtonAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULRadioButtonAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibilityService::CreateXULRadioGroupAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULRadioGroupAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+
 /* nsIAccessible createHTMLTableAccessible (in nsISupports aPresShell, in nsISupports aFrame); */
 NS_IMETHODIMP nsAccessibilityService::CreateHTMLTableAccessible(nsISupports *aFrame, nsIAccessible **_retval)
 {
