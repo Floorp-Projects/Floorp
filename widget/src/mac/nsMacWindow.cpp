@@ -307,7 +307,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 	                      nsNativeWidget aNativeParent)
 {
 	short	bottomPinDelta = 0;			// # of pixels to subtract to pin window bottom
-	nsIToolkit *theToolkit = aToolkit;
+	nsCOMPtr<nsIToolkit> theToolkit = aToolkit;
 	
 	// build the main native window
 	if (aNativeParent == nsnull)
@@ -340,7 +340,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 			    // ...fall through...
 			    mOffsetParent = aParent;
 			    if(aParent != nsnull){
-			    	theToolkit =  (nsIToolkit*)(aParent->GetToolkit());
+			    	theToolkit =  getter_AddRefs(aParent->GetToolkit());
 			    }
 
           mAcceptsActivation = PR_FALSE;
@@ -691,8 +691,7 @@ NS_IMETHODIMP nsMacWindow::GetScreenBounds(nsRect &aRect) {
 //-------------------------------------------------------------------------
 PRBool nsMacWindow::OnPaint(nsPaintEvent &event)
 {
-
-		return PR_TRUE;	// don't dispatch the update event
+	return PR_TRUE;	// don't dispatch the update event
 }
 
 //-------------------------------------------------------------------------
