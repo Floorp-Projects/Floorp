@@ -40,7 +40,7 @@ class nsPSMSocketInfo : public nsIPSMSocketInfo
 {
 public:
     nsPSMSocketInfo();
-    ~nsPSMSocketInfo();
+    virtual ~nsPSMSocketInfo();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPSMSOCKETINFO

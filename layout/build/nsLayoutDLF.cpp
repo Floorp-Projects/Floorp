@@ -122,7 +122,7 @@ class nsLayoutDLF : public nsIDocumentLoaderFactory,
 {
 public:
   nsLayoutDLF();
-  ~nsLayoutDLF();
+  virtual ~nsLayoutDLF();
 
   NS_DECL_ISUPPORTS
 
