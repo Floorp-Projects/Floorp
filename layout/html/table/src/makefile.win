@@ -31,8 +31,7 @@ CPPSRCS= nsCellMap.cpp			\
     nsTableOuterFrame.cpp		\
 	nsTableRowFrame.cpp			\
 	nsTableRowGroupFrame.cpp	\
-	BasicTableLayoutStrategy.cpp \
-	FixedTableLayoutStrategy.cpp
+	BasicTableLayoutStrategy.cpp
 
 CPP_OBJS= .\$(OBJDIR)\nsCellMap.obj \
     .\$(OBJDIR)\nsTableCellFrame.obj .\$(OBJDIR)\nsTableColFrame.obj \
@@ -41,8 +40,7 @@ CPP_OBJS= .\$(OBJDIR)\nsCellMap.obj \
     .\$(OBJDIR)\nsTableOuterFrame.obj  \
     .\$(OBJDIR)\nsTableRowFrame.obj \
     .\$(OBJDIR)\nsTableRowGroupFrame.obj \
-	.\$(OBJDIR)\BasicTableLayoutStrategy.obj \
-	.\$(OBJDIR)\FixedTableLayoutStrategy.obj
+	.\$(OBJDIR)\BasicTableLayoutStrategy.obj
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
   -I..\..\base\src -I..\..\style\src -I..\..\content\src \
