@@ -41,6 +41,7 @@
 #include <string.h> 
 #include <stdio.h>
 #include <stdlib.h>
+#include "nsStrPrivate.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsDebug.h"
@@ -66,11 +67,11 @@ nsCString::GetFlatBufferHandle() const
  * Default constructor. 
  */
 nsCString::nsCString()  {
-  Initialize(*this,eOneByte);
+  nsStrPrivate::Initialize(*this,eOneByte);
 }
 
 nsCString::nsCString(const char* aCString) {  
-  Initialize(*this,eOneByte);
+  nsStrPrivate::Initialize(*this,eOneByte);
   Assign(aCString);
 }
 
@@ -81,7 +82,7 @@ nsCString::nsCString(const char* aCString) {
  * @param   aLength tells us how many chars to copy from given CString
  */
 nsCString::nsCString(const char* aCString,PRInt32 aLength) {  
-  Initialize(*this,eOneByte);
+  nsStrPrivate::Initialize(*this,eOneByte);
   Assign(aCString,aLength);
 }
 
@@ -91,15 +92,15 @@ nsCString::nsCString(const char* aCString,PRInt32 aLength) {
  * @param   reference to another nsCString
  */
 nsCString::nsCString(const nsCString& aString)  {
-  Initialize(*this,aString.GetCharSize());
-  StrAssign(*this,aString,0,aString.mLength);
+  nsStrPrivate::Initialize(*this,aString.GetCharSize());
+  nsStrPrivate::StrAssign(*this,aString,0,aString.mLength);
 }
 
 /**
  * Destructor
  */
 nsCString::~nsCString() {
-  Destroy(*this);
+  nsStrPrivate::Destroy(*this);
 }
 
 const char* nsCString::GetReadableFragment( nsReadableFragment<char>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const {
@@ -133,7 +134,7 @@ char* nsCString::GetWritableFragment( nsWritableFragment<char>& aFragment, nsFra
 }
 
 nsCString::nsCString( const nsACString& aReadable ) {
-  Initialize(*this,eOneByte);
+  nsStrPrivate::Initialize(*this,eOneByte);
   Assign(aReadable);
 }
 
@@ -158,7 +159,7 @@ void nsCString::SetLength(PRUint32 anIndex) {
     // |SetCapacity| normally doesn't guarantee the use we are putting it to here (see its interface comment in nsAWritableString.h),
     //  we can only use it since our local implementation, |nsCString::SetCapacity|, is known to do what we want
 
-  nsStr::StrTruncate(*this,anIndex);
+  nsStrPrivate::StrTruncate(*this,anIndex);
 }
 
 
@@ -174,13 +175,13 @@ nsCString::SetCapacity( PRUint32 aNewCapacity )
     if ( aNewCapacity )
       {
         if( aNewCapacity > GetCapacity() )
-          GrowCapacity(*this,aNewCapacity);
+          nsStrPrivate::GrowCapacity(*this,aNewCapacity);
         AddNullTerminator(*this);
       }
     else
       {
-        nsStr::Destroy(*this);
-        nsStr::Initialize(*this, eOneByte);
+        nsStrPrivate::Destroy(*this);
+        nsStrPrivate::Initialize(*this, eOneByte);
       }
   }
 
@@ -248,7 +249,7 @@ nsCString::StripChar(PRUnichar aChar,PRInt32 anOffset){
  */
 void
 nsCString::StripChars(const char* aSet){
-  nsStr::StripChars1(*this,aSet);
+  nsStrPrivate::StripChars1(*this,aSet);
 }
 
 
@@ -353,19 +354,19 @@ nsCString::ReplaceSubstring(const nsCString& aTarget,const nsCString& aNewValue)
     }
     else {
       PRInt32 theIndex=0;
-      while(kNotFound!=(theIndex=nsStr::FindSubstr1in1(*this,aTarget,PR_FALSE,theIndex,mLength))) {
+      while(kNotFound!=(theIndex=nsStrPrivate::FindSubstr1in1(*this,aTarget,PR_FALSE,theIndex,mLength))) {
         if(aNewValue.mLength<aTarget.mLength) {
           //Since target is longer than newValue, we should delete a few chars first, then overwrite.
           PRInt32 theDelLen=aTarget.mLength-aNewValue.mLength;
-          nsStr::Delete1(*this,theIndex,theDelLen);
-          nsStr::Overwrite(*this,aNewValue,theIndex);
+          nsStrPrivate::Delete1(*this,theIndex,theDelLen);
+          nsStrPrivate::Overwrite(*this,aNewValue,theIndex);
         }
         else {
           //this is the worst case: the newvalue is larger than the substr it's replacing
           //so we have to insert some characters...
           PRInt32 theInsLen=aNewValue.mLength-aTarget.mLength;
-          StrInsert1into1(*this,theIndex,aNewValue,0,theInsLen);
-          nsStr::Overwrite(*this,aNewValue,theIndex);
+          nsStrPrivate::StrInsert1into1(*this,theIndex,aNewValue,0,theInsLen);
+          nsStrPrivate::Overwrite(*this,aNewValue,theIndex);
           theIndex += aNewValue.mLength;
         }
       }
@@ -404,7 +405,7 @@ nsCString::Trim(const char* aTrimSet, PRBool aEliminateLeading,PRBool aEliminate
       }
     }
     
-    nsStr::Trim(*this,aTrimSet,aEliminateLeading,aEliminateTrailing);
+    nsStrPrivate::Trim(*this,aTrimSet,aEliminateLeading,aEliminateTrailing);
 
     if(aIgnoreQuotes && theQuotesAreNeeded) {
       InsertWithConversion(theFirstChar,0);
@@ -428,7 +429,7 @@ void
 nsCString::CompressSet(const char* aSet, PRUnichar aChar,PRBool aEliminateLeading,PRBool aEliminateTrailing){
   if(aSet){
     ReplaceChar(aSet,aChar);
-    nsStr::CompressSet1(*this,aSet,aEliminateLeading,aEliminateTrailing);
+    nsStrPrivate::CompressSet1(*this,aSet,aEliminateLeading,aEliminateTrailing);
   }
 }
 
@@ -599,11 +600,11 @@ PRInt32 nsCString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
  * @return  this
  */
 void nsCString::AssignWithConversion(const PRUnichar* aString,PRInt32 aCount) {
-  nsStr::StrTruncate(*this,0);
+  nsStrPrivate::StrTruncate(*this,0);
 
   if(aString && aCount){
     nsStr temp;
-    nsStr::Initialize(temp,eTwoByte);
+    nsStrPrivate::Initialize(temp,eTwoByte);
     temp.mUStr=(PRUnichar*)aString;
 
     if(0<aCount) {
@@ -612,7 +613,7 @@ void nsCString::AssignWithConversion(const PRUnichar* aString,PRInt32 aCount) {
       // If this assertion fires, the caller is probably lying about the length of
       //   the passed-in string.  File a bug on the caller.
 #ifdef NS_DEBUG
-      PRInt32 len=nsStr::FindChar2(temp,0,PR_FALSE,temp.mLength);
+      PRInt32 len=nsStrPrivate::FindChar2(temp,0,PR_FALSE,temp.mLength);
       if(kNotFound<len) {
         NS_WARNING(kPossibleNull);
       }
@@ -622,7 +623,7 @@ void nsCString::AssignWithConversion(const PRUnichar* aString,PRInt32 aCount) {
     else aCount=temp.mLength=nsCRT::strlen(aString);
 
     if(0<aCount)
-      StrAppend(*this,temp,0,aCount);
+      nsStrPrivate::StrAppend(*this,temp,0,aCount);
   }
 }
 
@@ -631,7 +632,7 @@ void nsCString::AssignWithConversion( const nsString& aString ) {
 }
 
 void nsCString::AssignWithConversion( const nsAString& aString ) {
-  nsStr::StrTruncate(*this,0);
+  nsStrPrivate::StrTruncate(*this,0);
   PRInt32 count = aString.Length();
 
   if(count){   
@@ -642,12 +643,12 @@ void nsCString::AssignWithConversion( const nsAString& aString ) {
       PRUint32 fraglen = start.size_forward();
 
       nsStr temp;
-      nsStr::Initialize(temp,eTwoByte);
+      nsStrPrivate::Initialize(temp,eTwoByte);
       temp.mUStr=(PRUnichar*)start.get();
 
       temp.mLength=fraglen;
 
-      StrAppend(*this,temp,0,fraglen);
+      nsStrPrivate::StrAppend(*this,temp,0,fraglen);
 
       start.advance(fraglen);
     }
@@ -665,12 +666,12 @@ void nsCString::AppendWithConversion( const nsAString& aString ) {
       PRUint32 fraglen = start.size_forward();
 
       nsStr temp;
-      nsStr::Initialize(temp,eTwoByte);
+      nsStrPrivate::Initialize(temp,eTwoByte);
       temp.mUStr=(PRUnichar*)start.get();
 
       temp.mLength=fraglen;
 
-      StrAppend(*this,temp,0,fraglen);
+      nsStrPrivate::StrAppend(*this,temp,0,fraglen);
       
       start.advance(fraglen);
     }
@@ -684,7 +685,7 @@ void nsCString::AppendWithConversion( const nsAString& aString ) {
  * @return  this
  */
 void nsCString::AssignWithConversion(PRUnichar aChar) {
-  nsStr::StrTruncate(*this,0);
+  nsStrPrivate::StrTruncate(*this,0);
   AppendWithConversion(aChar);
 }
 
@@ -700,16 +701,16 @@ void nsCString::AppendWithConversion(PRUnichar aChar) {
   buf[0]=aChar;
 
   nsStr temp;
-  nsStr::Initialize(temp,eTwoByte);
+  nsStrPrivate::Initialize(temp,eTwoByte);
   temp.mUStr=buf;
   temp.mLength=1;
-  StrAppend(*this,temp,0,1);
+  nsStrPrivate::StrAppend(*this,temp,0,1);
 }
 
 void nsCString::AppendWithConversion( const PRUnichar* aBuffer, PRInt32 aLength )
   {
     nsStr temp;
-    nsStr::Initialize(temp, eTwoByte);
+    nsStrPrivate::Initialize(temp, eTwoByte);
     temp.mUStr = NS_CONST_CAST(PRUnichar*, aBuffer);
 
     if ( aLength < 0 )
@@ -718,7 +719,7 @@ void nsCString::AppendWithConversion( const PRUnichar* aBuffer, PRInt32 aLength 
     if ( aLength > 0 )
       {
         temp.mLength = aLength;
-        StrAppend(*this, temp, 0, aLength);
+        nsStrPrivate::StrAppend(*this, temp, 0, aLength);
       }
   }
 
@@ -788,7 +789,7 @@ void nsCString::AppendWithConversion(const nsString& aString,PRInt32 aCount) {
   else aCount=MinInt(aCount,aString.mLength);
 
   if(0<aCount)
-    StrAppend(*this,aString,0,aCount);
+    nsStrPrivate::StrAppend(*this,aString,0,aCount);
 }
 
 
@@ -804,21 +805,21 @@ void nsCString::InsertWithConversion(PRUnichar aChar,PRUint32 anOffset){
   PRUnichar theBuffer[2]={0,0};
   theBuffer[0]=aChar;
   nsStr temp;
-  nsStr::Initialize(temp,eTwoByte);
+  nsStrPrivate::Initialize(temp,eTwoByte);
   temp.mUStr=theBuffer;
   temp.mLength=1;
-  StrInsert2into1(*this,anOffset,temp,0,1);
+  nsStrPrivate::StrInsert2into1(*this,anOffset,temp,0,1);
 }
 
 
 void nsCString::Adopt(char* aPtr, PRInt32 aLength) {
   NS_ASSERTION(aPtr, "Can't adopt |0|");
-  nsStr::Destroy(*this);
+  nsStrPrivate::Destroy(*this);
   if (aLength == -1)
     aLength = nsCharTraits<char>::length(aPtr);
   // We don't know the capacity, so we'll just have to assume
   // capacity = length.
-  nsStr::Initialize(*this, aPtr, aLength, aLength, eOneByte, PR_TRUE);
+  nsStrPrivate::Initialize(*this, aPtr, aLength, aLength, eOneByte, PR_TRUE);
 }
 
 /**********************************************************************
@@ -840,10 +841,10 @@ PRInt32 nsCString::Find(const char* aCString,PRBool aIgnoreCase,PRInt32 anOffset
   PRInt32 result=kNotFound;
   if(aCString) {
     nsStr temp;
-    nsStr::Initialize(temp,eOneByte);
+    nsStrPrivate::Initialize(temp,eOneByte);
     temp.mLength = nsCRT::strlen(aCString);
     temp.mStr=(char*)aCString;
-    result=nsStr::FindSubstr1in1(*this,temp,aIgnoreCase,anOffset,aCount);
+    result=nsStrPrivate::FindSubstr1in1(*this,temp,aIgnoreCase,anOffset,aCount);
   }
   return result;
 }
@@ -864,10 +865,10 @@ PRInt32 nsCString::Find(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 anOf
   PRInt32 result=kNotFound;
   if(aString) {
     nsStr temp;
-    nsStr::Initialize(temp,eTwoByte);
+    nsStrPrivate::Initialize(temp,eTwoByte);
     temp.mLength = nsCRT::strlen(aString);
     temp.mUStr=(PRUnichar*)aString;
-    result=nsStr::FindSubstr2in1(*this,temp,aIgnoreCase,anOffset,aCount);
+    result=nsStrPrivate::FindSubstr2in1(*this,temp,aIgnoreCase,anOffset,aCount);
   }
   return result;
 }
@@ -883,12 +884,12 @@ PRInt32 nsCString::Find(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 anOf
  *  @return  offset in string, or -1 (kNotFound)
  */
 PRInt32 nsCString::Find(const nsCString& aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStr::FindSubstr1in1(*this,aString,aIgnoreCase,anOffset,aCount);
+  PRInt32 result=nsStrPrivate::FindSubstr1in1(*this,aString,aIgnoreCase,anOffset,aCount);
   return result;
 }
 
 PRInt32 nsCString::Find(const nsString& aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStr::FindSubstr1in2(*this,aString,aIgnoreCase,anOffset,aCount);
+  PRInt32 result=nsStrPrivate::FindSubstr1in2(*this,aString,aIgnoreCase,anOffset,aCount);
   return result;
 }
 
@@ -904,7 +905,7 @@ PRInt32 nsCString::Find(const nsString& aString,PRBool aIgnoreCase,PRInt32 anOff
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
 PRInt32 nsCString::FindChar(PRUnichar aChar,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStr::FindChar1(*this,aChar,anOffset,aCount);
+  PRInt32 result=nsStrPrivate::FindChar1(*this,aChar,anOffset,aCount);
   return result;
 }
 
@@ -923,10 +924,10 @@ PRInt32 nsCString::FindCharInSet(const char* aCStringSet,PRInt32 anOffset) const
   PRInt32 result=kNotFound;
   if(aCStringSet) {
     nsStr temp;
-    nsStr::Initialize(temp,eOneByte);
+    nsStrPrivate::Initialize(temp,eOneByte);
     temp.mLength=nsCRT::strlen(aCStringSet);
     temp.mStr=(char*)aCStringSet;
-    result=nsStr::FindCharInSet1(*this,temp,PR_FALSE,anOffset);
+    result=nsStrPrivate::FindCharInSet1(*this,temp,PR_FALSE,anOffset);
   }
   return result;
 }
@@ -946,10 +947,10 @@ PRInt32 nsCString::FindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) c
   PRInt32 result=kNotFound;
   if(aStringSet) {
     nsStr temp;
-    nsStr::Initialize(temp,eTwoByte);
+    nsStrPrivate::Initialize(temp,eTwoByte);
     temp.mLength=nsCRT::strlen(aStringSet);
     temp.mStr=(char*)aStringSet;
-    result=nsStr::FindCharInSet2(*this,temp,anOffset);
+    result=nsStrPrivate::FindCharInSet2(*this,temp,anOffset);
   }
   return result;
 }
@@ -964,12 +965,12 @@ PRInt32 nsCString::FindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) c
  *  @return  
  */
 PRInt32 nsCString::FindCharInSet(const nsCString& aSet,PRInt32 anOffset) const{
-  PRInt32 result=nsStr::FindCharInSet1(*this,aSet,PR_FALSE,anOffset);
+  PRInt32 result=nsStrPrivate::FindCharInSet1(*this,aSet,PR_FALSE,anOffset);
   return result;
 }
 
 PRInt32 nsCString::FindCharInSet(const nsString& aSet,PRInt32 anOffset) const{
-  PRInt32 result=nsStr::FindCharInSet2(*this,aSet,anOffset);
+  PRInt32 result=nsStrPrivate::FindCharInSet2(*this,aSet,anOffset);
   return result;
 }
 
@@ -984,12 +985,12 @@ PRInt32 nsCString::FindCharInSet(const nsString& aSet,PRInt32 anOffset) const{
  *  @return  offset in string, or -1 (kNotFound)
  */
 PRInt32 nsCString::RFind(const nsCString& aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStr::RFindSubstr1in1(*this,aString,aIgnoreCase,anOffset,aCount);
+  PRInt32 result=nsStrPrivate::RFindSubstr1in1(*this,aString,aIgnoreCase,anOffset,aCount);
   return result;
 }
 
 PRInt32 nsCString::RFind(const nsString& aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStr::RFindSubstr2in1(*this,aString,aIgnoreCase,anOffset,aCount);
+  PRInt32 result=nsStrPrivate::RFindSubstr2in1(*this,aString,aIgnoreCase,anOffset,aCount);
   return result;
 }
 
@@ -1010,10 +1011,10 @@ PRInt32 nsCString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset
   PRInt32 result=kNotFound;
   if(aString) {
     nsStr temp;
-    nsStr::Initialize(temp,eOneByte);
+    nsStrPrivate::Initialize(temp,eOneByte);
     temp.mLength=nsCRT::strlen(aString);
     temp.mStr=(char*)aString;
-    result=nsStr::RFindSubstr1in1(*this,temp,aIgnoreCase,anOffset,aCount);
+    result=nsStrPrivate::RFindSubstr1in1(*this,temp,aIgnoreCase,anOffset,aCount);
   }
   return result;
 }
@@ -1029,7 +1030,7 @@ PRInt32 nsCString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
 PRInt32 nsCString::RFindChar(PRUnichar aChar,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStr::RFindChar1(*this,aChar,anOffset,aCount);
+  PRInt32 result=nsStrPrivate::RFindChar1(*this,aChar,anOffset,aCount);
   return result;
 }
 
@@ -1047,10 +1048,10 @@ PRInt32 nsCString::RFindCharInSet(const char* aCStringSet,PRInt32 anOffset) cons
   PRInt32 result=kNotFound;
   if(aCStringSet) {
     nsStr temp;
-    nsStr::Initialize(temp,eOneByte);
+    nsStrPrivate::Initialize(temp,eOneByte);
     temp.mLength=nsCRT::strlen(aCStringSet);
     temp.mStr=(char*)aCStringSet;
-    result=nsStr::RFindCharInSet1(*this,temp,PR_FALSE,anOffset);
+    result=nsStrPrivate::RFindCharInSet1(*this,temp,PR_FALSE,anOffset);
   }
   return result;
 }
@@ -1069,10 +1070,10 @@ PRInt32 nsCString::RFindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) 
   PRInt32 result=kNotFound;
   if(aStringSet) {
     nsStr temp;
-    nsStr::Initialize(temp,eTwoByte);
+    nsStrPrivate::Initialize(temp,eTwoByte);
     temp.mLength=nsCRT::strlen(aStringSet);
     temp.mUStr=(PRUnichar*)aStringSet;
-    result=nsStr::RFindCharInSet2(*this,temp,anOffset);
+    result=nsStrPrivate::RFindCharInSet2(*this,temp,anOffset);
   }
   return result;
 }
@@ -1087,12 +1088,12 @@ PRInt32 nsCString::RFindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) 
  *  @return  offset of found char, or -1 (kNotFound)
  */
 PRInt32 nsCString::RFindCharInSet(const nsCString& aSet,PRInt32 anOffset) const{
-  PRInt32 result=nsStr::RFindCharInSet1(*this,aSet,PR_FALSE,anOffset);
+  PRInt32 result=nsStrPrivate::RFindCharInSet1(*this,aSet,PR_FALSE,anOffset);
   return result;
 }
 
 PRInt32 nsCString::RFindCharInSet(const nsString& aSet,PRInt32 anOffset) const{
-  PRInt32 result=nsStr::RFindCharInSet2(*this,aSet,anOffset);
+  PRInt32 result=nsStrPrivate::RFindCharInSet2(*this,aSet,anOffset);
   return result;
 }
 
@@ -1115,10 +1116,10 @@ PRInt32 nsCString::CompareWithConversion(const PRUnichar* aString,PRBool aIgnore
 
   if(aString) {
     nsStr temp;
-    nsStr::Initialize(temp,eTwoByte);
+    nsStrPrivate::Initialize(temp,eTwoByte);
     temp.mLength=nsCRT::strlen(aString);
     temp.mUStr=(PRUnichar*)aString;
-    return nsStr::StrCompare1To2(*this,temp,aCount,aIgnoreCase);
+    return nsStrPrivate::StrCompare1To2(*this,temp,aCount,aIgnoreCase);
   }
   return 0;
 }
@@ -1136,10 +1137,10 @@ PRInt32 nsCString::CompareWithConversion(const char *aCString,PRBool aIgnoreCase
 
   if(aCString) {
     nsStr temp;
-    nsStr::Initialize(temp,eOneByte);
+    nsStrPrivate::Initialize(temp,eOneByte);
     temp.mLength=nsCRT::strlen(aCString);
     temp.mStr=(char*)aCString;
-    return nsStr::StrCompare1To1(*this,temp,aCount,aIgnoreCase);
+    return nsStrPrivate::StrCompare1To1(*this,temp,aCount,aIgnoreCase);
   }
   return 0;
 }
@@ -1315,25 +1316,25 @@ NS_LossyConvertUCS2toASCII::NS_LossyConvertUCS2toASCII( const nsAString& aString
  *
  */
 nsCAutoString::nsCAutoString() : nsCString(){
-  Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
+  nsStrPrivate::Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
   AddNullTerminator(*this);
 
 }
 
 nsCAutoString::nsCAutoString( const nsCString& aString ) : nsCString(){
-  Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
+  nsStrPrivate::Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aString);
 }
 
 nsCAutoString::nsCAutoString( const nsACString& aString ) : nsCString(){
-  Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
+  nsStrPrivate::Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aString);
 }
 
 nsCAutoString::nsCAutoString(const char* aCString) : nsCString() {
-  Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
+  nsStrPrivate::Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aCString);
 }
@@ -1343,7 +1344,7 @@ nsCAutoString::nsCAutoString(const char* aCString) : nsCString() {
  * @param   aCString is a ptr to a 1-byte cstr
  */
 nsCAutoString::nsCAutoString(const char* aCString,PRInt32 aLength) : nsCString() {
-  Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
+  nsStrPrivate::Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aCString,aLength);
 }
@@ -1354,10 +1355,10 @@ nsCAutoString::nsCAutoString(const char* aCString,PRInt32 aLength) : nsCString()
  */
 nsCAutoString::nsCAutoString(const CBufDescriptor& aBuffer) : nsCString() {
   if(!aBuffer.mBuffer) {
-    Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
+    nsStrPrivate::Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
   }
   else {
-    Initialize(*this,aBuffer.mBuffer,aBuffer.mCapacity,aBuffer.mLength,aBuffer.mCharSize,!aBuffer.mStackBased);
+    nsStrPrivate::Initialize(*this,aBuffer.mBuffer,aBuffer.mCapacity,aBuffer.mLength,aBuffer.mCharSize,!aBuffer.mStackBased);
   }
   if(!aBuffer.mIsConst)
     AddNullTerminator(*this); //this isn't really needed, but it guarantees that folks don't pass string constants.
