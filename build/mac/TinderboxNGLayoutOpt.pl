@@ -56,9 +56,10 @@ $build{common} 			= 0;
 $build{intl} 			= 0;
 $build{nglayout} 		= 0;
 $build{editor} 			= 0;
-$build{mailnews} 		= 0;
 $build{viewer} 			= 0;
 $build{xpapp} 			= 0;
+$build{mailnews} 		= 0;
+$build{apprunner} 		= 0;
 
 # script
 
