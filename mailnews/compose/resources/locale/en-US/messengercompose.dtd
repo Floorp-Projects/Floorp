@@ -12,8 +12,9 @@
 	<!ENTITY newMessage.accesskey			"M">  
 <!ENTITY saveCmd.label "Save">
 	<!ENTITY saveCmd.key "S">
+  <!ENTITY saveCmd.accesskey "s">
 <!ENTITY saveAsCmd.label "Save As">
-	<!ENTITY saveAsCmd.accesskey "s">
+	<!ENTITY saveAsCmd.accesskey "a">
 <!ENTITY saveAsFileCmd.label "File...">
 	<!ENTITY saveAsFileCmd.accesskey "F">
 <!ENTITY saveAsDraftCmd.label "Draft">
@@ -99,6 +100,7 @@
 <!ENTITY quoteOrigCmd.label ".Quote Original Message">
 	<!ENTITY quoteOrigCmd.accesskey "Q">
 <!ENTITY editRewrapCmd.label "Rewrap">
+<!ENTITY editRewrapCmd.accesskey  "r">
 <!ENTITY selectAddressCmd.label "Select Addresses...">
 	<!ENTITY selectAddressCmd.key "">
 	<!ENTITY selectAddressCmd.accesskey "c">
@@ -108,22 +110,34 @@
 	<!ENTITY checkSpellingCmd.accesskey "S">
 
 <!ENTITY priorityMenu.label "Priority">
+<!ENTITY priorityMenu.accesskey "p">
 <!ENTITY lowestPriorityCmd.label "Lowest">
+<!ENTITY lowestPriorityCmd.accesskey "l">
 <!ENTITY lowPriorityCmd.label "Low">
+<!ENTITY lowPriorityCmd.accesskey "o">
 <!ENTITY normalPriorityCmd.label "Normal">
+<!ENTITY normalPriorityCmd.accesskey "n">
 <!ENTITY highPriorityCmd.label "High">
+<!ENTITY highPriorityCmd.accesskey "i">
 <!ENTITY highestPriorityCmd.label "Highest">
+<!ENTITY highestPriorityCmd.accesskey "h">
 
 <!ENTITY outputFormatMenu.label "Format">
+<!ENTITY outputFormatMenu.accesskey  "f">
 <!ENTITY autoFormatCmd.label "Auto-Detect">
+<!ENTITY autoFormatCmd.accesskey "a">
 <!ENTITY plainTextFormatCmd.label "Plain Text Only">
+<!ENTITY plainTextFormatCmd.accesskey "p">
 <!ENTITY htmlFormatCmd.label "Rich Text (HTML) Only">
+<!ENTITY htmlFormatCmd.accesskey "r">
 <!ENTITY bothFormatCmd.label "Plain and Rich (HTML) Text">
+<!ENTITY bothFormatCmd.accesskey "l">
 
 <!ENTITY UuencodeAttachmentCmd.label "Uuencode instead of MIME for Attachments">
 
 
 <!ENTITY fileCarbonCopyCmd.label "File Sent Message">
+<!ENTITY fileCarbonCopyCmd.accesskey "i">
 <!ENTITY fileHereMenu.label "File Here">
 
 <!--LOCALIZATION NOTE Debug Menu Don't translate anything in the Debug menu section -->

@@ -236,7 +236,7 @@
     <menubar id="compose-menubar">
       <menu id="menu_File">
         <menupopup id="menu_FilePopup">
-          <menuitem value="&newMessage.label;" accessKey="&newMessage.accesskey;" key="key_newMessage" observes="cmd_new"/>
+          <menuitem value="&newMessage.label;" accesskey="&newMessage.accesskey;" key="key_newMessage" observes="cmd_new"/>
           <menu id="menu_New">
             <menupopup id="menu_NewPopup">
               <menuitem id="menu_newNavigator"/>
@@ -247,18 +247,18 @@
           <menuitem value="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" observes="cmd_attachPage"/>
           <menuseparator/>
           <menuitem id="menu_close"/>
-          <menuitem value="&saveCmd.label;" key="key_save" observes="cmd_saveDefault"/>
-          <menu value="&saveAsCmd.label;" accessKey="&saveAsCmd.accesskey;">
+          <menuitem value="&saveCmd.label;" accesskey="&saveCmd.accesskey;" key="key_save" observes="cmd_saveDefault"/>
+          <menu value="&saveAsCmd.label;" accesskey="&saveAsCmd.accesskey;">
             <menupopup>
-              <menuitem value="&saveAsFileCmd.label;" accessKey="&saveAsFileCmd.accesskey;" observes="cmd_saveAsFile"/>
+              <menuitem value="&saveAsFileCmd.label;" accesskey="&saveAsFileCmd.accesskey;" observes="cmd_saveAsFile"/>
               <menuseparator/>
-              <menuitem value="&saveAsDraftCmd.label;" accessKey="&saveAsDraftCmd.accesskey;" observes="cmd_saveAsDraft"/>
-              <menuitem value="&saveAsTemplateCmd.label;" accessKey="&saveAsTemplateCmd.accesskey;" observes="cmd_saveAsTemplate"/>
+              <menuitem value="&saveAsDraftCmd.label;" accesskey="&saveAsDraftCmd.accesskey;" observes="cmd_saveAsDraft"/>
+              <menuitem value="&saveAsTemplateCmd.label;" accesskey="&saveAsTemplateCmd.accesskey;" observes="cmd_saveAsTemplate"/>
             </menupopup>
           </menu>
           <menuseparator/>
-          <menuitem value="&sendNowCmd.label;" accessKey="&sendNowCmd.accesskey;" observes="cmd_sendNow"/>
-          <menuitem value="&sendLaterCmd.label;" accessKey="&sendLaterCmd.accesskey;" observes="cmd_sendLater"/>
+          <menuitem value="&sendNowCmd.label;" accesskey="&sendNowCmd.accesskey;" observes="cmd_sendNow"/>
+          <menuitem value="&sendLaterCmd.label;" accesskey="&sendLaterCmd.accesskey;" observes="cmd_sendLater"/>
           <menuseparator/>
         </menupopup>
       </menu>
@@ -320,26 +320,26 @@
           <menuitem value="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" observes="cmd_selectAddress"/>
           <menuitem value="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" observes="cmd_spelling"/>
           <!--menuitem value="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" observes="cmd_quoteMessage"/-->	
-          <menuitem value="&editRewrapCmd.label;" observes="cmd_rewrap" oncommand="editorShell.Rewrap(false)"/>
+          <menuitem value="&editRewrapCmd.label;" accesskey="&editRewrapCmd.accesskey;" observes="cmd_rewrap" oncommand="editorShell.Rewrap(false)"/>
           <menuseparator/>
-          <menu value="&outputFormatMenu.label;" observes="cmd_outputFormat">
+          <menu value="&outputFormatMenu.label;" accesskey="&outputFormatMenu.accesskey;" observes="cmd_outputFormat">
             <menupopup>
-              <menuitem type="radio" name="output_format" value="&autoFormatCmd.label;" id="1" checked="true"/>
-              <menuitem type="radio" name="output_format" value="&plainTextFormatCmd.label;" id="2"/>
-              <menuitem type="radio" name="output_format" value="&htmlFormatCmd.label;" id="3"/>
-              <menuitem type="radio" name="output_format" value="&bothFormatCmd.label;" id="4"/>
+              <menuitem type="radio" name="output_format" value="&autoFormatCmd.label;" accesskey="&autoFormatCmd.accesskey;" id="1" checked="true"/>
+              <menuitem type="radio" name="output_format" value="&plainTextFormatCmd.label;" accesskey="&plainTextFormatCmd.accesskey;" id="2"/>
+              <menuitem type="radio" name="output_format" value="&htmlFormatCmd.label;" accesskey="&htmlFormatCmd.accesskey;" id="3"/>
+              <menuitem type="radio" name="output_format" value="&bothFormatCmd.label;" accesskey="&bothFormatCmd.accesskey;" id="4"/>
             </menupopup>
           </menu>
-          <menu value="&priorityMenu.label;" oncommand="PriorityMenuSelect(event.target);">
+          <menu value="&priorityMenu.label;" accesskey="&priorityMenu.accesskey;" oncommand="PriorityMenuSelect(event.target);">
             <menupopup>
-              <menuitem type="radio" name="priority" value="&lowestPriorityCmd.label;" id="lowest"/>
-              <menuitem type="radio" name="priority" value="&lowPriorityCmd.label;" id="low"/>
-              <menuitem type="radio" name="priority" value="&normalPriorityCmd.label;" id="normal" checked="true"/>
-              <menuitem type="radio" name="priority" value="&highPriorityCmd.label;" id="high"/>
-              <menuitem type="radio" name="priority" value="&highestPriorityCmd.label;" id="highest"/>
+              <menuitem type="radio" name="priority" value="&lowestPriorityCmd.label;" accesskey="&lowestPriorityCmd.accesskey;" id="lowest"/>
+              <menuitem type="radio" name="priority" value="&lowPriorityCmd.label;" accesskey="&lowPriorityCmd.accesskey;" id="low"/>
+              <menuitem type="radio" name="priority" value="&normalPriorityCmd.label;" accesskey="&normalPriorityCmd.accesskey;" id="normal" checked="true"/>
+              <menuitem type="radio" name="priority" value="&highPriorityCmd.label;" accesskey="&highPriorityCmd.accesskey;" id="high"/>
+              <menuitem type="radio" name="priority" value="&highestPriorityCmd.label;" accesskey="&highestPriorityCmd.accesskey;" id="highest"/>
             </menupopup>
           </menu>
-          <menu value="&fileCarbonCopyCmd.label;" id="fccMenu" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" ignore="http://home.netscape.com/NC-rdf#MessageChild">
+          <menu value="&fileCarbonCopyCmd.label;" accesskey="&fileCarbonCopyCmd.accesskey;" id="fccMenu" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" ignore="http://home.netscape.com/NC-rdf#MessageChild">
             <menupopup/>
             <template> 
               <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
@@ -398,32 +398,34 @@
     </menubar>
 
     <toolbar class="toolbar-primary" id="composeToolbar" persist="collapsed">
-      <button class="button-toolbar-2 top" 
-              id="button-send" value="&sendButton.label;" 
-              tooltip="aTooltip" tooltiptext="&sendButton.tooltip;" 
-              observes="cmd_sendNow"/>
-      <toolbarseparator/>
-      <button class="button-toolbar-2 top" 
-              id="button-address" value="&addressButton.label;" 
-              tooltip="aTooltip" tooltiptext="&addressButton.tooltip;" 
-              observes="cmd_selectAddress"/>
-      <button class="button-toolbar-2 top" 
-              id="button-attach" value="&attachButton.label;" 
-              tooltip="aTooltip" tooltiptext="&attachButton.tooltip;" 
-              observes="cmd_attachFile"/>
-      <button class="button-toolbar-2 top" 
-              id="spellingButton" value="&spellingButton.label;" 
-              observes="cmd_spelling"/>
-      <toolbarseparator/>
-      <button class="button-toolbar-2 top" 
-              id="button-save" value="&saveButton.label;" 
-              tooltip="aTooltip" tooltiptext="&saveButton.tooltip;" 
-              observes="cmd_saveDefault"/>
-      <spring flex="1"/>
-      <button id="navigator-throbber" 
-              oncommand="goClickThrobber('compose.throbber.url')">
-        <observes element="broadcaster_throbber" attribute="busy"/>
-      </button>
+      <box id="toolbar_button_box">
+       <button class="button-toolbar-2 top" 
+               id="button-send" value="&sendButton.label;" 
+               tooltip="aTooltip" tooltiptext="&sendButton.tooltip;" 
+               observes="cmd_sendNow"/>
+       <toolbarseparator class="toolbarseparator-primary"/>
+       <button class="button-toolbar-2 top" 
+               id="button-address" value="&addressButton.label;" 
+               tooltip="aTooltip" tooltiptext="&addressButton.tooltip;" 
+               observes="cmd_selectAddress"/>
+       <button class="button-toolbar-2 top" 
+               id="button-attach" value="&attachButton.label;" 
+               tooltip="aTooltip" tooltiptext="&attachButton.tooltip;" 
+               observes="cmd_attachFile"/>
+       <button class="button-toolbar-2 top" 
+               id="spellingButton" value="&spellingButton.label;" 
+               observes="cmd_spelling"/>
+       <toolbarseparator class="toolbarseparator-primary"/>
+       <button class="button-toolbar-2 top" 
+               id="button-save" value="&saveButton.label;" 
+               tooltip="aTooltip" tooltiptext="&saveButton.tooltip;" 
+               observes="cmd_saveDefault"/>
+       <spring flex="1"/>
+       <button id="navigator-throbber" 
+               oncommand="goClickThrobber('compose.throbber.url')">
+         <observes element="broadcaster_throbber" attribute="busy"/>
+       </button>
+      </box>
     </toolbar>
   
     <toolbar id="MsgHeadersToolbar" persist="collapsed" tborient="vertical" tbautostretch="always" flex="1">
