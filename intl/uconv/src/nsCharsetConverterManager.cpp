@@ -212,7 +212,7 @@ nsresult nsCharsetConverterManager::CreateMapping()
   nsresult res = NS_OK;
   nsIRegistry * registry = NULL;
   nsIEnumerator * components = NULL;
-  nsIRegistry::Key key;
+  nsIRegistry::Key uconvKey, key;
   char buff[1024];
 
   // XXX hack; make these dynamic
@@ -234,11 +234,11 @@ nsresult nsCharsetConverterManager::CreateMapping()
   // get subtree
   res = registry -> GetSubtree(nsIRegistry::Common, 
                                "software/netscape/intl/uconv", 
-                               &key);
+                               &uconvKey);
   if (NS_FAILED(res)) goto done;
 
   // enumerate subtrees
-  res = registry -> EnumerateSubtrees(key, &components);
+  res = registry -> EnumerateSubtrees(uconvKey, &components);
   if (NS_FAILED(res)) goto done;
   res = components -> First();
   if (NS_FAILED(res)) goto done;
@@ -246,7 +246,6 @@ nsresult nsCharsetConverterManager::CreateMapping()
   // XXX take these KONSTANTS out of here
   // XXX check return values, free stuff
   // XXX bit hacky, clean me up
-
   while (!components -> IsDone()) {
     nsISupports * base;
     res = components -> CurrentItem(&base);
@@ -265,8 +264,8 @@ nsresult nsCharsetConverterManager::CreateMapping()
       char * dest;
       if (!cid->Parse(name)) continue;
 
-      sprintf(buff, "%s/%s", "software/netscape/intl/uconv", name);
-      res = registry -> GetSubtree(nsIRegistry::Common, buff, &key);
+      res = node->GetKey(&key);
+      if (NS_FAILED(res)) continue;
 
       res = registry->GetString(key, "source", &src);
       if (NS_FAILED(res)) continue;
