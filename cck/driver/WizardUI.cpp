@@ -438,6 +438,7 @@ void CWizardUI::UpdateScreenWidget(WIDGET *curWidget)
 
 	if(curWidget->type == "CheckListBox")
 	{
+		// This is needed because we don't save this value anywhere
 		int selected = ((CCheckListBox*)curWidget->control)->GetCurSel();
 		if (selected == CB_ERR)
 			selected = 0;
@@ -498,10 +499,6 @@ void CWizardUI::UpdateScreenWidget(WIDGET *curWidget)
 	}
 	else if(curWidget->type == "ComboBox")
 	{
-		int selected = ((CComboBox*)curWidget->control)->GetCurSel();
-		if (selected == CB_ERR)
-			selected = 0;
-
 		((CComboBox*)curWidget->control)->ResetContent();
 
 		for (int i = 0; i < curWidget->numOfOptions; i++) 
@@ -512,9 +509,7 @@ void CWizardUI::UpdateScreenWidget(WIDGET *curWidget)
 			selRv = ((CComboBox*)curWidget->control)->SelectString(-1, curWidget->value);
 
 		if (selRv == CB_ERR)
-			selRv = ((CComboBox*)curWidget->control)->SetCurSel(selected);
-		if (selRv == CB_ERR)
-			((CComboBox*)curWidget->control)->SetCurSel(0);
+			selRv = ((CComboBox*)curWidget->control)->SetCurSel(0);
 	}
 }
 
