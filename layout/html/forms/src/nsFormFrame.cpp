@@ -753,8 +753,9 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
         href.AppendWithConversion(relPath);
 
         // If re-using the same URL, chop off old query string (bug 25330)
+        // Only do this for GET not POST (bug 41585)
         PRInt32 queryStart = href.FindChar('?');
-        if (kNotFound != queryStart) {
+        if ((kNotFound != queryStart) && !isPost) {
           href.Truncate(queryStart);
         }
       } else {
