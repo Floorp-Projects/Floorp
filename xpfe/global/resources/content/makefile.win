@@ -38,6 +38,8 @@ install::
 	$(MAKE_INSTALL) about.html $(DISTBROWSER)
 	$(MAKE_INSTALL) charsetOverlay.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) charsetOverlay.js $(DISTBROWSER)
+	$(MAKE_INSTALL) charsetDetectorsOverlay.js $(DISTBROWSER)
+	$(MAKE_INSTALL) charsetDetectorsOverlay.xul $(DISTBROWSER)
 
 clobber::
   rm -f $(DIST)\bin\chrome\global\content\default\*.*

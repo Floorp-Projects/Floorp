@@ -12,3 +12,5 @@ strres.js
 about.html
 charsetOverlay.xul
 charsetOverlay.js
+charsetDetectorsOverlay.js
+charsetDetectorsOverlay.xul
