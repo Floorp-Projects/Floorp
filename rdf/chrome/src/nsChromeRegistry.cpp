@@ -3199,8 +3199,13 @@ NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const char *aTopi
     }
   }
   else if (!nsCRT::strcmp("profile-after-change", aTopic)) {
-    if (!mProfileInitialized)
+    if (!mProfileInitialized) {
+      nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID));
+      if (prefService)
+        prefService->GetBoolPref(kUseXBLFormsPref, &mUseXBLForms);
+
       rv = LoadProfileDataSource();
+    }
   }
 
   return rv;
