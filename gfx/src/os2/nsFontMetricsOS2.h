@@ -31,6 +31,7 @@
 #define _nsFontMetricsOS2_h
 
 #include "nsIFontMetrics.h"
+#include "nsIFontEnumerator.h"
 #include "nsFont.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"
@@ -50,6 +51,33 @@ struct nsFontHandleOS2
    nsFontHandleOS2();
    void SelectIntoPS( HPS hps, long lcid);
 };
+
+#ifndef FM_DEFN_LATIN1
+#define FM_DEFN_LATIN1          0x0010   /* Base latin character set     */
+#define FM_DEFN_PC              0x0020   /* PC characters                */
+#define FM_DEFN_LATIN2          0x0040   /* Extended latin character set */
+#define FM_DEFN_CYRILLIC        0x0080   /* Cyrillic character set       */
+#define FM_DEFN_HEBREW          0x0100   /* Base Hebrew characters       */
+#define FM_DEFN_GREEK           0x0200   /* Base Greek characters        */
+#define FM_DEFN_ARABIC          0x0400   /* Base Arabic characters       */
+#define FM_DEFN_UGLEXT          0x0800   /* Additional UGL chars         */
+#define FM_DEFN_KANA            0x1000   /* Katakana and hiragana chars  */
+#define FM_DEFN_THAI            0x2000   /* Thai characters              */
+
+#define FM_DEFN_UGL383          0x0070   /* Chars in OS/2 2.1            */
+#define FM_DEFN_UGL504          0x00F0   /* Chars in OS/2 Warp 4         */
+#define FM_DEFN_UGL767          0x0FF0   /* Chars in ATM fonts           */
+#define FM_DEFN_UGL1105         0x3FF0   /* Chars in bitmap fonts        */
+#endif
+
+typedef struct nsGlobalFont
+{
+  nsString*     name;
+  FONTMETRICS   fontMetrics;
+  PRUint32*     map;
+  PRUint8       skip;
+  USHORT        signature;
+} nsGlobalFont;
 
 class nsFontMetricsOS2 : public nsIFontMetrics
 {
@@ -88,6 +116,12 @@ class nsFontMetricsOS2 : public nsIFontMetrics
    // for drawing text
    PRUint32 GetDevMaxAscender() const { return mDevMaxAscent; }
    nscoord  GetSpaceWidth( nsIRenderingContext *aRContext);
+
+  static PLHashTable* gFontMaps;
+  static nsGlobalFont* gGlobalFonts;
+  static int gGlobalFontsCount;
+
+  static nsGlobalFont* InitializeGlobalFonts(HPS aPS);
  
  protected:
    nsresult RealizeFont();
@@ -118,6 +152,14 @@ class nsFontMetricsOS2 : public nsIFontMetrics
 
    nsCOMPtr<nsIAtom>   mLangGroup;
 
+};
+
+class nsFontEnumeratorOS2 : public nsIFontEnumerator
+{
+public:
+  nsFontEnumeratorOS2();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFONTENUMERATOR
 };
 
 #endif
