@@ -67,20 +67,7 @@ static CFBundleRef getBundle(CFStringRef frameworkPath)
 	return bundle;
 }
 
-static void* getJavaVMFunction(CFStringRef functionName)
-{
-  static CFBundleRef javaBundle = getBundle(CFSTR("/System/Library/Frameworks/JavaVM.framework"));
-  if (javaBundle) return CFBundleGetFunctionPointerForName(javaBundle, functionName);
-  return NULL;
-}
-
-static void* getJavaEmbeddingLibFunction(CFStringRef functionName)
-{
-  static CFBundleRef javaBundle = getBundle(CFSTR("/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Libraries/libJavaEmbedding.dylib"));
-  if (javaBundle) return CFBundleGetFunctionPointerForName(javaBundle, functionName);
-  return NULL;
-}
-
+#if DEBUG
 static void* getSystemFunction(CFStringRef functionName)
 {
   static CFBundleRef systemBundle = getBundle(CFSTR("/System/Library/Frameworks/System.framework"));
@@ -88,18 +75,21 @@ static void* getSystemFunction(CFStringRef functionName)
   return NULL;
 }
 
-typedef void (*sync_proc_ptr) (void);
-static sync_proc_ptr sync_ptr = (sync_proc_ptr) getSystemFunction(CFSTR("sync"));
-
-static void sync()
-{
-	if (sync_ptr) sync_ptr();
-}
-
 // Useful Carbon-CFM debugging tool, printf that goes to the system console.
 
 typedef int (*printf_proc_ptr) (const char* format, ...);
 static printf_proc_ptr kprintf = (printf_proc_ptr) getSystemFunction(CFSTR("printf"));
+
+#endif
+
+// CFM glue functions for JNI_GetDefaultJavaVMInitArgs & JNI_CreateJavaVM.
+
+static void* getJavaVMFunction(CFStringRef functionName)
+{
+  static CFBundleRef javaBundle = getBundle(CFSTR("/System/Library/Frameworks/JavaVM.framework"));
+  if (javaBundle) return CFBundleGetFunctionPointerForName(javaBundle, functionName);
+  return NULL;
+}
 
 typedef jint JNICALL (*JNI_GetDefaultJavaVMInitArgs_proc_ptr) (void *args);
 static JNI_GetDefaultJavaVMInitArgs_proc_ptr _JNI_GetDefaultJavaVMInitArgs = (JNI_GetDefaultJavaVMInitArgs_proc_ptr) getJavaVMFunction(CFSTR("JNI_GetDefaultJavaVMInitArgs"));
@@ -107,7 +97,9 @@ static JNI_GetDefaultJavaVMInitArgs_proc_ptr _JNI_GetDefaultJavaVMInitArgs = (JN
 _JNI_IMPORT_OR_EXPORT_ jint JNICALL
 JNI_GetDefaultJavaVMInitArgs(void *args)
 {
+#if DEBUG
     kprintf("_JNI_GetDefaultJavaVMInitArgs = 0x%08X\n", _JNI_GetDefaultJavaVMInitArgs);
+#endif
     if (_JNI_GetDefaultJavaVMInitArgs) return _JNI_GetDefaultJavaVMInitArgs(args);
     return -1;
 }
@@ -118,7 +110,9 @@ static JNI_CreateJavaVM_proc_ptr _JNI_CreateJavaVM = (JNI_CreateJavaVM_proc_ptr)
 _JNI_IMPORT_OR_EXPORT_ jint JNICALL
 JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *args)
 {
+#if DEBUG
     kprintf("_JNI_CreateJavaVM = 0x%08X\n", _JNI_CreateJavaVM);
+#endif
     if (_JNI_CreateJavaVM) return _JNI_CreateJavaVM(pvm, penv, args);
     return -1;
 }
