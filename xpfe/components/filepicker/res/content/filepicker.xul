@@ -78,11 +78,11 @@
     </template>
             
     <treecolgroup>
-      <treecol flex="1" id="FilenameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending"/>
+      <treecol flex="1" id="FilenameColumn" resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending"/>
             <splitter class="tree-splitter"/>
-      <treecol flex="1" id="ContentLengthColumn" rdf:resource="http://home.netscape.com/NC-rdf#ContentLength"/>
+      <treecol flex="1" id="ContentLengthColumn" resource="http://home.netscape.com/NC-rdf#Content-Length"/>
             <splitter class="tree-splitter"/>
-      <treecol flex="1" id="LastModifiedDateColumn" rdf:resource="http//home.netscape.com/WEB-rdf#LastModifiedDate"/>
+      <treecol flex="1" id="LastModifiedDateColumn" resource="http//home.netscape.com/WEB-rdf#LastModifiedDate"/>
     </treecolgroup>
     <treehead>
       <treerow>
