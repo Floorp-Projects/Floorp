@@ -2693,7 +2693,7 @@ PRBool
 is_mouse_in_window (GdkWindow* aWindow, gdouble aMouseX, gdouble aMouseY)
 {
     gint x = 0;
-    gint y = y;
+    gint y = 0;
     gint w, h;
 
     gint offsetX = 0;
