@@ -2573,8 +2573,7 @@ nsBrowserWindow::DumpContent(FILE* out)
   DumpMultipleWebShells(*this, mWebShell, out);
 }
 
-static
-void
+static void
 DumpFramesRecurse(nsIWebShell* aWebShell, FILE* out, nsString *aFilterName)
 {
   if (nsnull != aWebShell) {
@@ -2591,6 +2590,7 @@ DumpFramesRecurse(nsIWebShell* aWebShell, FILE* out, nsString *aFilterName)
     else {
       fputs("null pres shell\n", out);
     }
+
     // dump the frames of the sub documents
     PRInt32 i, n;
     aWebShell->GetChildCount(n);
@@ -2610,6 +2610,110 @@ nsBrowserWindow::DumpFrames(FILE* out, nsString *aFilterName)
   DumpFramesRecurse(mWebShell, out, aFilterName);
   DumpMultipleWebShells(*this, mWebShell, out);
 }
+
+//----------------------------------------------------------------------
+
+#include "nsISizeOfHandler.h"
+
+static void
+GatherFrameDataSizes(nsISizeOfHandler* aHandler, nsIFrame* aFrame)
+{
+  if (aFrame) {
+    // Add in the frame
+    nsCOMPtr<nsIAtom> frameType;
+    aFrame->GetFrameType(getter_AddRefs(frameType));
+    PRUint32 frameDataSize;
+    aFrame->SizeOf(aHandler, &frameDataSize);
+    aHandler->AddSize(frameType, frameDataSize);
+
+    // And all of its children
+    PRInt32 listIndex = 0;
+    nsIAtom* listName = nsnull;
+    do {
+      nsIFrame* kid;
+      aFrame->FirstChild(listName, &kid);
+      while (kid) {
+        GatherFrameDataSizes(aHandler, kid);
+        kid->GetNextSibling(&kid);
+      }
+      NS_IF_RELEASE(listName);
+      aFrame->GetAdditionalChildListName(listIndex, &listName);
+      listIndex++;
+    } while (nsnull != listName);
+  }
+}
+
+static void
+GatherFrameDataSizes(nsISizeOfHandler* aHandler, nsIWebShell* aWebShell)
+{
+  if (nsnull != aWebShell) {
+    nsIPresShell* shell = GetPresShellFor(aWebShell);
+    if (nsnull != shell) {
+      nsIFrame* root;
+      shell->GetRootFrame(&root);
+      if (nsnull != root) {
+        GatherFrameDataSizes(aHandler, root);
+      }
+      NS_RELEASE(shell);
+    }
+
+    // dump the frames of the sub documents
+    PRInt32 i, n;
+    aWebShell->GetChildCount(n);
+    for (i = 0; i < n; i++) {
+      nsIWebShell* child;
+      aWebShell->ChildAt(i, child);
+      if (nsnull != child) {
+	      GatherFrameDataSizes(aHandler, child);
+      }
+    }
+  }
+}
+
+static void
+DumpSizeData(nsISizeOfHandler* aHandler,
+             nsIAtom* aKey,
+             PRUint32 aCount,
+             PRUint32 aTotalSize,
+             PRUint32 aMinSize,
+             PRUint32 aMaxSize,
+             void* arg)
+{
+  if (aKey) {
+    FILE* out = (FILE*) arg;
+    nsAutoString type;
+    aKey->ToString(type);
+    char cbuf[20];
+    type.ToCString(cbuf, sizeof(cbuf));
+
+    fprintf(out, "%-20s %5d %9d %7d %7d %7d\n",
+            cbuf, aCount, aTotalSize, aMinSize, aMaxSize,
+            aCount ? aTotalSize / aCount : 0);
+  }
+}
+
+void
+nsBrowserWindow::ShowFrameSize(FILE* out)
+{
+  nsCOMPtr<nsISizeOfHandler> handler;
+  nsresult rv = NS_NewSizeOfHandler(getter_AddRefs(handler));
+  if (NS_SUCCEEDED(rv) && handler) {
+    GatherFrameDataSizes(handler, mWebShell);
+    fprintf(out, "%-20s %-5s %-9s %-7s %-7s %-7s\n",
+            "Frame Type", "Count", "TotalSize",
+            "MinSize", "MaxSize", "AvgSize");
+    fprintf(out, "%-20s %-5s %-9s %-7s %-7s %-7s\n",
+            "----------", "-----", "---------",
+            "-------", "-------", "-------");
+    handler->Report(DumpSizeData, (void*) out);
+    PRUint32 totalCount, totalSize;
+    handler->GetTotals(&totalCount, &totalSize);
+    fprintf(out, "%-20s %5d %9d\n",
+            "*** Total ***", totalCount, totalSize);
+  }
+}
+
+//----------------------------------------------------------------------
 
 static
 void
@@ -2725,12 +2829,6 @@ nsBrowserWindow::ToggleFrameBorders()
 
 void
 nsBrowserWindow::ShowContentSize()
-{
-  // XXX not yet implemented
-}
-
-void
-nsBrowserWindow::ShowFrameSize()
 {
   // XXX not yet implemented
 }
