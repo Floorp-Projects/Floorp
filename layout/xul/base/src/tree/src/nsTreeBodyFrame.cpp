@@ -3687,7 +3687,7 @@ nsTreeBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
       if (mDropOrient == nsITreeView::inDropOn)
         mView->CanDropOn(mDropRow, &canDropAtNewLocation);
       else
-        mView->CanDropBeforeAfter (mDropRow, mDropOrient == nsITreeView::inDropBefore ? PR_TRUE : PR_FALSE, &canDropAtNewLocation);
+        mView->CanDropBeforeAfter(mDropRow, mDropOrient == nsITreeView::inDropBefore, &canDropAtNewLocation);
       
       if (canDropAtNewLocation) {
         // Invalidate row at the new location.

@@ -2095,7 +2095,7 @@ nsXULTreeBuilder::Drop(PRInt32 row, PRInt32 orient)
                 if (orient == nsITreeView::inDropOn)
                     observer->CanDropOn(row, &canDrop);
                 else
-                    observer->CanDropBeforeAfter(row, orient, &canDrop);
+                    observer->CanDropBeforeAfter(row, orient == nsITreeView::inDropBefore, &canDrop);
                 if (canDrop)
                     observer->OnDrop(row, orient);
             }
