@@ -301,7 +301,7 @@ RDFXULBuilderImpl::RDFXULBuilderImpl(void)
 
         kContainerAtom            = NS_NewAtom("container");
         kXULContentsGeneratedAtom = NS_NewAtom("xulcontentsgenerated");
-        kXULIncludeSrcAtom        = NS_NewAtom("foopy");
+        kXULIncludeSrcAtom        = NS_NewAtom("include");
         kIdAtom                   = NS_NewAtom("id");
         kDataSourcesAtom          = NS_NewAtom("datasources");
         kTreeAtom                 = NS_NewAtom("tree");
