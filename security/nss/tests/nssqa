@@ -262,7 +262,11 @@ while [ $TEST_LEVEL -lt 3 ] ; do
     else
         nssqa_main
     fi
-    TEST_LEVEL=`expr $TEST_LEVEL + 1 `
+    if [  "$O_TBX" = "ON" ] ; then      # do not do backward compatibility 
+         TEST_LEVEL=3                   # testing on tinderbox
+    else
+         TEST_LEVEL=`expr $TEST_LEVEL + 1 `
+    fi
 done
 
 if [  "$O_TBX" = "ON" ] ; then
