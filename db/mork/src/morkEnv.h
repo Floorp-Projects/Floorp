@@ -53,7 +53,7 @@
 #define morkEnv_kNonHandleTypeError  11
 #define morkEnv_kNonOpenNodeError    12
 
-#define morkEnv_kWeakRefCountEnvBonus 16 /* try to leak all env instances */
+#define morkEnv_kWeakRefCountEnvBonus 0 /* try NOT to leak all env instances */
 
 /*| morkEnv:
 |*/
