@@ -45,6 +45,7 @@
 
 #include "nsIDOMSelectionListener.h"
 #include "nsIContentIterator.h"
+#include "nsIDocumentEncoder.h"
 
 #include "nsIDOMText.h"
 
@@ -80,9 +81,10 @@ static NS_DEFINE_IID(kCGenSubtreeIteratorCID, NS_GENERATEDSUBTREEITERATOR_CID);
 static NS_DEFINE_IID(kCSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 
 //PROTOTYPES
+#if OLD_SELECTION
 static nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode);
 static nsresult ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *aChildOffset);
-
+#endif
 
 #ifdef PRINT_RANGE
 static void printRange(nsIDOMRange *aDomRange);
@@ -907,7 +909,7 @@ nsSelection::GetRootForContentSubtree(nsIContent *aContent, nsIContent **aParent
   // as a child of it's parent. In this case, the anonymous content would
   // be considered the root of the subtree.
 
-  nsresult result;
+  nsresult result = NS_OK;
 
   if (!aContent || !aParent)
     return NS_ERROR_NULL_POINTER;
@@ -1269,7 +1271,7 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
   PRInt32 offsetused = 0;
 
   PRBool isCollapsed;
-  nscoord desiredX; //we must keep this around and revalidate it when its just UP/DOWN
+  nscoord desiredX = 0; //we must keep this around and revalidate it when its just UP/DOWN
 
   PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   result = mDomSelections[index]->GetIsCollapsed(&isCollapsed);
@@ -1456,48 +1458,35 @@ nsSelection::HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent)
 NS_IMETHODIMP
 nsDOMSelection::ToString(nsString& aReturn)
 {
-  PRInt32 cnt;
-  GetRangeCount(&cnt);
-  aReturn.AssignWithConversion("nsSelection: ");
-  aReturn.AppendInt(cnt);
-  aReturn.AppendWithConversion(" items\n");
+  nsresult rv = NS_OK;
 
-  // Get an iterator
-  nsSelectionIterator iter(this);
-  nsresult res = iter.First();
-  if (!NS_SUCCEEDED(res))
-  {
-    aReturn.AppendWithConversion(" Can't get an iterator\n");
+  nsCOMPtr<nsIDocumentEncoder> encoder;
+  rv = nsComponentManager::CreateInstance(NS_DOC_ENCODER_PROGID_BASE "text/plain",
+                                          nsnull,
+                                          NS_GET_IID(nsIDocumentEncoder),
+                                          getter_AddRefs(encoder));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPresShell> shell;
+  rv = GetPresShell(getter_AddRefs(shell));
+  if (NS_FAILED(rv) || !shell) {
     return NS_ERROR_FAILURE;
   }
 
-  while (iter.IsDone())
-  {
-    nsCOMPtr<nsIDOMRange> range;
-    res = iter.CurrentItem(NS_STATIC_CAST(nsIDOMRange**, getter_AddRefs(range)));
-    if (!NS_SUCCEEDED(res))
-    {
-      aReturn.AppendWithConversion(" OOPS\n");
-      return NS_ERROR_FAILURE;
-    }
-    nsString rangeStr;
-    if (NS_SUCCEEDED(range->ToString(rangeStr)))
-      aReturn += rangeStr;
-    iter.Next();
-  }
+  nsCOMPtr<nsIDocument> doc;
+  rv = shell->GetDocument(getter_AddRefs(doc));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  aReturn.AppendWithConversion("Anchor is ");
-  PRInt32 theInt = (PRInt32)(nsIDOMNode*)FetchAnchorNode();
-  aReturn.AppendInt(theInt);
-  aReturn.AppendWithConversion(", ");
-  aReturn.AppendInt(FetchAnchorOffset());
-  aReturn.AppendWithConversion("Focus is");
-  aReturn.AppendInt((long)(nsIDOMNode*)FetchFocusNode(), 16);
-  aReturn.AppendWithConversion(", ");
-  aReturn.AppendInt(FetchFocusOffset());
-  aReturn.AppendWithConversion("\n ... end of selection\n");
+  rv = encoder->Init(doc, NS_ConvertASCIItoUCS2("text/plain"),
+                     nsIDocumentEncoder::OutputFormatted ||
+                     nsIDocumentEncoder::OutputSelectionOnly);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_OK;
+  encoder->SetSelection(this);
+
+  rv = encoder->EncodeToString(aReturn);
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -3690,7 +3679,7 @@ nsDOMSelection::RemoveRange(nsIDOMRange* aRange)
 {
   if (!aRange)
     return NS_ERROR_INVALID_ARG;
-  nsresult      result = RemoveItem(aRange);
+  RemoveItem(aRange);
   
   nsCOMPtr<nsIPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
