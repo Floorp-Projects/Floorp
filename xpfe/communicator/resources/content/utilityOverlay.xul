@@ -155,6 +155,19 @@
 			<spring flex="100%"/>
 		</box>
 	</splitter>
+	
+	<!-- XXX NEEDS XBLIFICIATION!! Gray vertical splitter -->
+	<splitter id="gray_vertical_splitter" class="gray-vertical-splitter" align="vertical">
+		<box id="begincap" align="vertical">
+			<spring flex="100%"/>
+		</box>
+		<spring flex="100%"/>
+		<grippy/>
+		<spring flex="100%"/>
+		<box id="endcap" align="vertical">
+			<spring flex="100%"/>
+		</box>
+	</splitter>
 
 	<!-- Toolbar boxes -->
 	<box id="toolbar_button_box" align="horizontal" flex="100%"/>
