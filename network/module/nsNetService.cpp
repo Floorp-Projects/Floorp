@@ -589,12 +589,13 @@ nsresult PerformNastyWindowsAsyncDNSHack(URL_Struct *URL_s, nsIURL* aURL)
             c = (int) *(++pc);
             d = (int) *(++pc);
             URL_s->IPAddressString = PR_smprintf("%d.%d.%d.%d", a,b,c,d);
+        } else {
+            /* 
+             * If we fail to resolve a host on a HTTP connection, then 
+             * abort the connection to prevent a deadlock...
+             */
+            rv = NS_ERROR_FAILURE;
         }
-        /* 
-         * If we fail to resolve a host on a HTTP connection, then abort the 
-         * connection to prevent a deadlock...
-         */
-        rv = NS_ERROR_FAILURE;
     }
     return rv;
 }
