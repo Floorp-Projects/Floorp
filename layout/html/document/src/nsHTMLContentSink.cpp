@@ -25,12 +25,7 @@
 #include "nsIHTMLContentContainer.h"
 #include "nsIURL.h"
 #include "nsIUnicharStreamLoader.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
-#else
-#include "nsIURLGroup.h"
-#include "nsIHttpURL.h"
-#endif // NECKO
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIViewManager.h"
@@ -65,9 +60,7 @@
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLMapElement.h"
-#ifdef NECKO
 #include "nsIRefreshURI.h"
-#endif //NECKO
 #include "nsVoidArray.h"
 #include "nsIScriptContextOwner.h"
 #include "nsHTMLIIDs.h"
@@ -92,9 +85,6 @@ static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
-#ifndef NECKO
-static NS_DEFINE_IID(kIHTTPURLIID, NS_IHTTPURL_IID);
-#endif
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
@@ -1703,18 +1693,12 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mCurrentContext->Begin(eHTMLTag_html, mRoot);
   mContextStack.AppendElement(mCurrentContext);
 
-#ifdef NECKO
   char* spec;
-#else
-  const char* spec;
-#endif
   (void)aURL->GetSpec(&spec);
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::Init: this=%p url='%s'",
               this, spec));
-#ifdef NECKO
   nsCRT::free(spec);
-#endif
 
   NS_STOP_STOPWATCH(mWatch)
   return NS_OK;
@@ -2375,7 +2359,6 @@ HTMLContentSink::StartLayout()
 
   // If the document we are loading has a reference or it is a 
   // frameset document, disable the scroll bars on the views.
-#ifdef NECKO
   char* ref = nsnull;           // init in case mDocumentURI is not a url
   nsIURL* url;
   nsresult rv = mDocumentURI->QueryInterface(nsIURL::GetIID(), (void**)&url);
@@ -2383,15 +2366,9 @@ HTMLContentSink::StartLayout()
     rv = url->GetRef(&ref);
     NS_RELEASE(url);
   }
-#else
-  const char* ref;
-  nsresult rv = mDocumentURI->GetRef(&ref);
-#endif
   if (rv == NS_OK) {
     mRef = new nsString(ref);
-#ifdef NECKO
     nsCRT::free(ref);
-#endif
   }
 
   if ((nsnull != ref) || mFrameset) {
@@ -2828,21 +2805,8 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
 
     if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) {
       nsIURI* url = nsnull;
-#ifndef NECKO
-      nsILoadGroup* LoadGroup = nsnull;
-      mDocumentBaseURL->GetLoadGroup(&LoadGroup);
-      if (LoadGroup) {
-        result = LoadGroup->CreateURL(&url, mDocumentBaseURL, aHref, nsnull);
-        NS_RELEASE(LoadGroup);
-      }
-      else
-#endif
       {
-#ifndef NECKO
-        result = NS_NewURL(&url, aHref, mDocumentBaseURL);
-#else
         result = NS_NewURI(&url, aHref, mDocumentBaseURL);
-#endif // NECKO
       }
       if (NS_OK != result) {
         return NS_OK; // The URL is bad, move along, don't propogate the error (for now)
@@ -3008,12 +2972,6 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
       }
       mHead->AppendChildTo(it, PR_FALSE);
 
-#ifndef NECKO
-      // If we are processing an HTTP url, handle meta http-equiv cases
-      nsIHttpURL* httpUrl = nsnull;
-      rv = mDocumentURI->QueryInterface(kIHTTPURLIID, (void **)&httpUrl);
-#endif
-
       // set any HTTP-EQUIV data into document's header data as well as url
       nsAutoString header;
       it->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::httpEquiv, header);
@@ -3021,7 +2979,6 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
         nsAutoString result;
         it->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
         if (result.Length() > 0) {
-#ifdef NECKO
           // XXX necko isn't going to process headers coming in from the parser
           //NS_WARNING("need to fix how necko adds mime headers (in HTMLContentSink::ProcessMETATag)");
           
@@ -3088,24 +3045,6 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
               NS_RELEASE(reefer);
               if (NS_FAILED(rv)) return rv;
           }
-#else
-          if (nsnull != httpUrl) {
-            char* value = result.ToNewCString(), *csHeader;
-            if (!value) {
-              NS_RELEASE(it);
-              return NS_ERROR_OUT_OF_MEMORY;
-            }
-            csHeader = header.ToNewCString();
-            if (!csHeader) {
-                delete[] value;
-                NS_RELEASE(it);
-                return NS_ERROR_OUT_OF_MEMORY;
-            }
-            httpUrl->AddMimeHeader(csHeader, value);
-            delete[] csHeader;
-            delete[] value;
-          }
-#endif
 
           header.ToLowerCase();
           nsIAtom* fieldAtom = NS_NewAtom(header);
@@ -3127,9 +3066,6 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
           NS_IF_RELEASE(fieldAtom);
         }
       }
-#ifndef NECKO
-      NS_IF_RELEASE(httpUrl);
-#endif
 
       NS_RELEASE(it);
     }
@@ -3249,11 +3185,8 @@ HTMLContentSink::EvaluateScript(nsString& aScript,
       
       nsAutoString ret;
       nsIURI* docURL = mDocument->GetDocumentURL();
-#ifdef NECKO
-      char* url;
-#else
-      const char* url;
-#endif
+      char* url = nsnull;
+
       if (docURL) {
         (void)docURL->GetSpec(&url);
       }
@@ -3262,7 +3195,10 @@ HTMLContentSink::EvaluateScript(nsString& aScript,
       context->EvaluateString(aScript, url, aLineNo, 
                               ret, &isUndefined);
       
-      NS_IF_RELEASE(docURL);
+      if (docURL) {
+        NS_RELEASE(docURL);
+        nsCRT::free(url);
+      }
       
       NS_RELEASE(context);
       NS_RELEASE(owner);
@@ -3391,21 +3327,8 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     if (src.Length() > 0) {
       // Use the SRC attribute value to load the URL
       nsIURI* url = nsnull;
-#ifndef NECKO
-      nsILoadGroup* LoadGroup = nsnull;
-      mDocumentBaseURL->GetLoadGroup(&LoadGroup);
-      if (LoadGroup) {
-        rv = LoadGroup->CreateURL(&url, mDocumentBaseURL, src, nsnull);
-        NS_RELEASE(LoadGroup);
-      }
-      else
-#endif
       {
-#ifndef NECKO
-        rv = NS_NewURL(&url, src, mDocumentBaseURL);
-#else
         rv = NS_NewURI(&url, src, mDocumentBaseURL);
-#endif // NECKO
       }
       if (NS_OK != rv) {
         return rv;
@@ -3418,9 +3341,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       nsIUnicharStreamLoader* loader;
       rv = NS_NewUnicharStreamLoader(&loader,
                                      url, 
-#ifdef NECKO
                                      nsCOMPtr<nsILoadGroup>(mDocument->GetDocumentLoadGroup()),
-#endif
                                      (nsStreamCompleteFunc)nsDoneLoadingScript, 
                                      (void *)this);
       NS_RELEASE(url);
@@ -3566,21 +3487,8 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       // XXX what does nav do?
       // Use the SRC attribute value to load the URL
       nsIURI* url = nsnull;
-#ifndef NECKO
-      nsILoadGroup* LoadGroup = nsnull;
-      mDocumentBaseURL->GetLoadGroup(&LoadGroup);
-      if (LoadGroup) {
-        rv = LoadGroup->CreateURL(&url, mDocumentBaseURL, src, nsnull);
-        NS_RELEASE(LoadGroup);
-      }
-      else
-#endif
       {
-#ifndef NECKO
-        rv = NS_NewURL(&url, src, mDocumentBaseURL);
-#else
         rv = NS_NewURI(&url, src, mDocumentBaseURL);
-#endif // NECKO
       }
       if (NS_OK != rv) {
         return rv;
