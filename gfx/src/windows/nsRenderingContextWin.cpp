@@ -111,6 +111,9 @@ nsRenderingContextWin :: nsRenderingContextWin()
   mDefFont = NULL;
   mOrigSolidPen = NULL;
   mBlackPen = NULL;
+  mCurrBrushColor = NULL;
+  mCurrFontMetrics = nsnull;
+  mCurrPenColor = NULL;
 #ifdef NS_DEBUG
   mInitialized = PR_FALSE;
 #endif
@@ -146,12 +149,6 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
       mOrigSolidBrush = NULL;
     }
 
-    if (NULL != mBlackBrush)
-    {
-      ::DeleteObject(mBlackBrush);
-      mBlackBrush = NULL;
-    }
-
     if (NULL != mOrigFont)
     {
       ::SelectObject(mDC, mOrigFont);
@@ -170,11 +167,28 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
       mOrigSolidPen = NULL;
     }
 
-    if (NULL != mBlackPen)
+    if (NULL != mCurrBrush)
     {
-      ::DeleteObject(mBlackPen);
-      mBlackPen = NULL;
+      ::DeleteObject(mCurrBrush);
+      mCurrBrush = NULL;
     }
+    else if (NULL != mBlackBrush)
+      ::DeleteObject(mBlackBrush);
+
+    mBlackBrush = NULL;
+
+    //don't kill the font because the font cache/metrics owns it
+    mCurrFont = NULL;
+
+    if (NULL != mCurrPen)
+    {
+      ::DeleteObject(mCurrPen);
+      mCurrPen = NULL;
+    }
+    else if (NULL != mBlackPen)
+      ::DeleteObject(mBlackPen);
+
+    mBlackPen = NULL;
   }
 
   if (nsnull != mStateCache)
@@ -369,87 +383,9 @@ void nsRenderingContextWin :: PopState()
         oldstate->mClipRegion = NULL;
       }
 
-      if (NULL != oldstate->mSolidBrush)
-      {
-        pstate = mStates;
-
-        //if the solid brushes are different between the states,
-        //select the previous solid brush
-
-        while ((nsnull != pstate) && (NULL == pstate->mSolidBrush))
-          pstate = pstate->mNext;
-
-        if (nsnull != pstate)
-        {
-          if (oldstate->mSolidBrush != pstate->mSolidBrush)
-            ::SelectObject(mDC, pstate->mSolidBrush);
-        }
-        else
-          ::SelectObject(mDC, mBlackBrush);
-
-        //kill the solid brush we are popping off the stack
-
-        if (oldstate->mSolidBrush != mBlackBrush)
-        {
-          if (((nsnull != pstate) && (oldstate->mSolidBrush != pstate->mSolidBrush)) ||
-              (nsnull == pstate))
-            ::DeleteObject(oldstate->mSolidBrush);
-        }
-
-        oldstate->mSolidBrush = NULL;
-      }
-
-      if (NULL != oldstate->mFont)
-      {
-        pstate = mStates;
-
-        //if the fonts are different between the states,
-        //select the previous font
-
-        while ((nsnull != pstate) && (NULL == pstate->mFont))
-          pstate = pstate->mNext;
-
-        if (nsnull != pstate)
-        {
-          if (oldstate->mFont != pstate->mFont)
-            ::SelectObject(mDC, pstate->mFont);
-        }
-        else
-          ::SelectObject(mDC, mDefFont);
-
-        //don't delete the font because it lives in the font metrics
-        oldstate->mFont = NULL;
-      }
-
-      if (NULL != oldstate->mSolidPen)
-      {
-        pstate = mStates;
-
-        //if the solid pens are different between the states,
-        //select the previous solid pen
-
-        while ((nsnull != pstate) && (NULL == pstate->mSolidPen))
-          pstate = pstate->mNext;
-
-        if (nsnull != pstate)
-        {
-          if (oldstate->mSolidPen != pstate->mSolidPen)
-            ::SelectObject(mDC, pstate->mSolidPen);
-        }
-        else
-          ::SelectObject(mDC, mBlackPen);
-
-        //kill the solid brush we are popping off the stack
-
-        if (oldstate->mSolidPen != mBlackPen)
-        {
-          if (((nsnull != pstate) && (oldstate->mSolidPen != pstate->mSolidPen)) ||
-              (nsnull == pstate))
-            ::DeleteObject(oldstate->mSolidPen);
-        }
-
-        oldstate->mSolidPen = NULL;
-      }
+      oldstate->mSolidBrush = NULL;
+      oldstate->mFont = NULL;
+      oldstate->mSolidPen = NULL;
     }
     else
       mTMatrix = nsnull;
@@ -947,74 +883,58 @@ nsresult nsRenderingContextWin :: CopyOffScreenBits(nsRect &aBounds)
   return NS_OK;
 }
 
+static numpen = 0;
+static numbrush = 0;
+static numfont = 0;
+
 HBRUSH nsRenderingContextWin :: SetupSolidBrush(void)
 {
-  if (mCurrentColor != mStates->mBrushColor)
+  if ((mCurrentColor != mCurrBrushColor) || (NULL == mCurrBrush))
   {
     HBRUSH  tbrush = ::CreateSolidBrush(mColor);
-    HBRUSH  obrush = ::SelectObject(mDC, tbrush);
 
-    if ((NULL != obrush) && (NULL != mStates->mSolidBrush))
-      ::DeleteObject(obrush);
+    ::SelectObject(mDC, tbrush);
 
-    mStates->mSolidBrush = tbrush;
-    mStates->mBrushColor = mCurrentColor;
+    if (NULL != mCurrBrush)
+      ::DeleteObject(mCurrBrush);
+
+    mStates->mSolidBrush = mCurrBrush = tbrush;
+    mStates->mBrushColor = mCurrBrushColor = mCurrentColor;
+//printf("brushes: %d\n", ++numbrush);
   }
 
-  if (NULL == mStates->mSolidBrush)
-  {
-    GraphicsState *tstate = mStates->mNext;
-
-    while ((nsnull != tstate) && (NULL == tstate->mSolidBrush))
-      tstate = tstate->mNext;
-
-    if (nsnull == tstate)
-      return mBlackBrush;
-    else
-      return tstate->mSolidBrush;
-  }
-  else
-    return mStates->mSolidBrush;
+  return mCurrBrush;
 }
 
 void nsRenderingContextWin :: SetupFont(void)
 {
-  if (mFontMetrics != mStates->mFontMetrics)
+  if ((mFontMetrics != mCurrFontMetrics) || (NULL == mCurrFontMetrics))
   {
     HFONT   tfont = (HFONT)mFontMetrics->GetFontHandle();
     
     ::SelectObject(mDC, tfont);
-    mStates->mFont = tfont;
-    mStates->mFontMetrics = mFontMetrics;
+
+    mStates->mFont = mCurrFont = tfont;
+    mStates->mFontMetrics = mCurrFontMetrics = mFontMetrics;
+//printf("fonts: %d\n", ++numfont);
   }
 }
 
 HPEN nsRenderingContextWin :: SetupSolidPen(void)
 {
-  if (mCurrentColor != mStates->mPenColor)
+  if ((mCurrentColor != mCurrPenColor) || (NULL == mCurrPen))
   {
     HPEN  tpen = ::CreatePen(PS_SOLID, 0, mColor);
-    HPEN  open = ::SelectObject(mDC, tpen);
 
-    if ((NULL != open) && (NULL != mStates->mSolidPen))
-      ::DeleteObject(open);
+    ::SelectObject(mDC, tpen);
 
-    mStates->mSolidPen = tpen;
-    mStates->mPenColor = mCurrentColor;
+    if (NULL != mCurrPen)
+      ::DeleteObject(mCurrPen);
+
+    mStates->mSolidPen = mCurrPen = tpen;
+    mStates->mPenColor = mCurrPenColor = mCurrentColor;
+//printf("pens: %d\n", ++numpen);
   }
 
-  if (NULL == mStates->mSolidPen)
-  {
-    GraphicsState *tstate = mStates->mNext;
-
-    while ((nsnull != tstate) && (NULL == tstate->mSolidPen))
-      tstate = tstate->mNext;
-
-    if (nsnull == tstate)
-      return mBlackPen;
-    else
-      return tstate->mSolidPen;
-  }
-  else
-    return mStates->mSolidPen;
+  return mCurrPen;
 }

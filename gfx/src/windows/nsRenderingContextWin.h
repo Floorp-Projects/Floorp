@@ -150,6 +150,12 @@ protected:
   HFONT             mDefFont;
   HPEN              mOrigSolidPen;
   HPEN              mBlackPen;
+  nscolor           mCurrBrushColor;
+  HBRUSH            mCurrBrush;
+  nsIFontMetrics    *mCurrFontMetrics;
+  HFONT             mCurrFont;
+  nscolor           mCurrPenColor;
+  HPEN              mCurrPen;
 
 #ifdef NS_DEBUG
   PRBool          mInitialized;
