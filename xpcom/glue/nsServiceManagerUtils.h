@@ -49,7 +49,7 @@ class NS_COM nsGetServiceByCID : public nsCOMPtr_helper
  public:
     nsGetServiceByCID( const nsCID& aCID, nsISupports* aServiceManager, nsresult* aErrorPtr )
         : mCID(aCID),
-        mServiceManager( do_QueryInterface(aServiceManager) ),
+        mServiceManager(aServiceManager),
         mErrorPtr(aErrorPtr)
         {
             // nothing else to do
@@ -59,7 +59,7 @@ class NS_COM nsGetServiceByCID : public nsCOMPtr_helper
     
  private:
     const nsCID&                mCID;
-    nsCOMPtr<nsIServiceManager> mServiceManager;
+    nsISupports*                mServiceManager;
     nsresult*                   mErrorPtr;
 };
 
@@ -82,7 +82,7 @@ class NS_COM nsGetServiceByContractID : public nsCOMPtr_helper
  public:
     nsGetServiceByContractID( const char* aContractID, nsISupports* aServiceManager, nsresult* aErrorPtr )
         : mContractID(aContractID),
-        mServiceManager( do_QueryInterface(aServiceManager) ),
+        mServiceManager(aServiceManager),
         mErrorPtr(aErrorPtr)
         {
             // nothing else to do
@@ -92,7 +92,7 @@ class NS_COM nsGetServiceByContractID : public nsCOMPtr_helper
     
  private:
     const char*                 mContractID;
-    nsCOMPtr<nsIServiceManager> mServiceManager;
+    nsISupports*                mServiceManager;
     nsresult*                   mErrorPtr;
 };
 
@@ -118,7 +118,7 @@ class nsGetServiceFromCategory : public nsCOMPtr_helper
                              nsresult* aErrorPtr)
         : mCategory(aCategory),
         mEntry(aEntry),
-        mServiceManager( do_QueryInterface(aServiceManager) ),
+        mServiceManager(aServiceManager),
         mErrorPtr(aErrorPtr)
         {
             // nothing else to do
@@ -128,7 +128,7 @@ class nsGetServiceFromCategory : public nsCOMPtr_helper
  protected:
     const char*                 mCategory;
     const char*                 mEntry;
-    nsCOMPtr<nsIServiceManager> mServiceManager;
+    nsISupports*                mServiceManager;
     nsresult*                   mErrorPtr;
 };
 
