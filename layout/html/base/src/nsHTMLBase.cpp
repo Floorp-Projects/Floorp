@@ -28,6 +28,7 @@
 #include "nsIStyleContext.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
+#include "nsHTMLAtoms.h"
 
 nsresult
 nsHTMLBase::CreateViewForFrame(nsIPresContext*  aPresContext,
@@ -135,8 +136,15 @@ nsHTMLBase::CreateFrame(nsIPresContext* aPresContext,
                         nsIFrame*       aKidPrevInFlow,
                         nsIFrame*&      aResult)
 {
-  nsIStyleContext* kidSC =
-    aPresContext->ResolveStyleContextFor(aKid, aParentFrame);
+  nsIStyleContext* kidSC;
+  // XXX Cheesy hack for text
+  nsIAtom* tag = aKid->GetTag();
+  if (nsnull == tag) {
+    kidSC = aPresContext->ResolvePseudoStyleContextFor(nsHTMLAtoms::text, aParentFrame);
+  } else {
+    NS_RELEASE(tag);
+    kidSC = aPresContext->ResolveStyleContextFor(aKid, aParentFrame);
+  }
   if (nsnull == kidSC) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
