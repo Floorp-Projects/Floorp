@@ -118,6 +118,7 @@ nsCertTree::nsCertTree() : mTreeArray(NULL)
 {
   NS_INIT_ISUPPORTS();
   mCompareCache.ops = nsnull;
+  mNSSComponent = do_GetService(kNSSComponentCID);
 }
 
 void nsCertTree::ClearCompareHash()
@@ -714,47 +715,58 @@ nsCertTree::GetCellText(PRInt32 row, const PRUnichar *colID,
     rv = cert->GetTokenName(&wstr);
   } else if (strcmp(col, "emailcol") == 0) {
     rv = cert->GetEmailAddress(&wstr);
-  } else if (strcmp(col, "verifiedcol") == 0) {
+  } else if (strcmp(col, "purposecol") == 0 && mNSSComponent) {
     PRUint32 verified;
-    nsCOMPtr<nsINSSComponent> nssComponent(
-                                      do_GetService(kNSSComponentCID, &rv));
-    if (NS_FAILED(rv)) return rv;
     PRBool ocspEnabled;
     cert->GetUsesOCSP(&ocspEnabled);
     if (ocspEnabled) {
-      nssComponent->DisableOCSP();
+      mNSSComponent->DisableOCSP();
     }
+
     rv = cert->GetPurposes(&verified, NULL);
-    if (verified == nsIX509Cert::VERIFIED_OK) {
-      nsAutoString vfy;
-      rv = nssComponent->GetPIPNSSBundleString(
-                                NS_LITERAL_STRING("VerifiedTrue").get(), vfy);
-      if (NS_SUCCEEDED(rv))
-        wstr = ToNewUnicode(vfy);
-    } else {
-      nsAutoString vfy;
-      rv = nssComponent->GetPIPNSSBundleString(
-                                NS_LITERAL_STRING("VerifiedFalse").get(), vfy);
-      if (NS_SUCCEEDED(rv))
-        wstr = ToNewUnicode(vfy);
+    if (NS_FAILED(rv)) {
+      verified = nsIX509Cert::NOT_VERIFIED_UNKNOWN;
     }
-    if (ocspEnabled) {
-      nssComponent->EnableOCSP();
+
+    switch (verified) {
+      case nsIX509Cert::VERIFIED_OK:
+        rv = cert->GetPurposes(&verified, &wstr);
+        break;
+
+      case nsIX509Cert::CERT_REVOKED:
+        rv = mNSSComponent->GetPIPNSSBundleString(
+                                  NS_LITERAL_STRING("VerifyRevoked").get(), &wstr);
+        break;
+      case nsIX509Cert::CERT_EXPIRED:
+        rv = mNSSComponent->GetPIPNSSBundleString(
+                                  NS_LITERAL_STRING("VerifyExpired").get(), &wstr);
+        break;
+      case nsIX509Cert::CERT_NOT_TRUSTED:
+        rv = mNSSComponent->GetPIPNSSBundleString(
+                                  NS_LITERAL_STRING("VerifyNotTrusted").get(), &wstr);
+        break;
+      case nsIX509Cert::ISSUER_NOT_TRUSTED:
+        rv = mNSSComponent->GetPIPNSSBundleString(
+                                  NS_LITERAL_STRING("VerifyIssuerNotTrusted").get(), &wstr);
+        break;
+      case nsIX509Cert::ISSUER_UNKNOWN:
+        rv = mNSSComponent->GetPIPNSSBundleString(
+                                  NS_LITERAL_STRING("VerifyIssuerUnknown").get(), &wstr);
+        break;
+      case nsIX509Cert::INVALID_CA:
+        rv = mNSSComponent->GetPIPNSSBundleString(
+                                  NS_LITERAL_STRING("VerifyInvalidCA").get(), &wstr);
+        break;
+      case nsIX509Cert::NOT_VERIFIED_UNKNOWN:
+      case nsIX509Cert::USAGE_NOT_ALLOWED:
+      default:
+        rv = mNSSComponent->GetPIPNSSBundleString(
+                                  NS_LITERAL_STRING("VerifyUnknown").get(), &wstr);
+        break;
     }
-  } else if (strcmp(col, "purposecol") == 0) {
-    PRUint32 verified;
-    PRBool ocspEnabled;
-    nsCOMPtr<nsINSSComponent> nssComponent(
-                                      do_GetService(kNSSComponentCID, &rv));
-    if (NS_FAILED(rv)) return rv;
-  
-    cert->GetUsesOCSP(&ocspEnabled);
+
     if (ocspEnabled) {
-      nssComponent->DisableOCSP();
-    }
-    rv = cert->GetPurposes(&verified, &wstr);
-    if (ocspEnabled) {
-      nssComponent->EnableOCSP();
+      mNSSComponent->EnableOCSP();
     }
   } else if (strcmp(col, "issuedcol") == 0) {
     rv = cert->GetIssuedDate(&wstr);

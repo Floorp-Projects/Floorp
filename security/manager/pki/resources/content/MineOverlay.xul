@@ -43,9 +43,6 @@
         <treecol id="tokencol" label="&certmgr.tokenname;"
                      persist="hidden width ordinal" flex="1"/>
         <splitter class="tree-splitter"/>
-        <treecol id="verifiedcol" 
-                     persist="hidden width ordinal" flex="1"/>
-        <splitter class="tree-splitter"/>
         <treecol id="purposecol" label="&certmgr.purpose;"
                      persist="hidden width ordinal" flex="1"/>
         <splitter class="tree-splitter"/>

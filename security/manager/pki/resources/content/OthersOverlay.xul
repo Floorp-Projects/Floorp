@@ -56,7 +56,7 @@
         <treecol id="emailcol" label="&certmgr.email;"
                      flex="1"/>
         <splitter class="tree-splitter"/>
-        <treecol id="tokencol" label="&certmgr.tokenname;"
+        <treecol id="purposecol" label="&certmgr.purpose;"
                      flex="1"/>
 <!--        <treecol id="certdbkeycol" collapsed="true" flex="1"/> -->
       </treecols>

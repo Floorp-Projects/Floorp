@@ -89,6 +89,7 @@ private:
   PRInt32                         mNumOrgs;
   PRInt32                         mNumRows;
   PLDHashTable mCompareCache;
+  nsCOMPtr<nsINSSComponent> mNSSComponent;
 
   treeArrayEl *GetThreadDescAtIndex(PRInt32 _index);
   nsIX509Cert *GetCertAtIndex(PRInt32 _index);

@@ -75,11 +75,12 @@
 
 <!ENTITY certmgr.certname "Certificate Name">
 <!ENTITY certmgr.tokenname "Security Device">
-<!ENTITY certmgr.purpose "Purpose">
+<!ENTITY certmgr.purpose "Purposes">
 <!ENTITY certmgr.issued "Issued On">
 <!ENTITY certmgr.expires "Expires On">
 <!ENTITY certmgr.email "E-Mail Address">
 <!ENTITY certmgr.serial "Serial Number">
+<!ENTITY certmgr.ocsp_info "Certificates have not been validated with OCSP. Click View to do so.">
 
 <!ENTITY certmgr.help.label "Help">
 <!ENTITY certmgr.ok.label "OK">
