@@ -476,29 +476,30 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 }
 
 #page-proxy-deck {
-  cursor: grab;
+  cursor: -moz-grab;
   margin: 2px 3px;
-}
-
-#page-proxy-button {
-  list-style-image: url("chrome://browser/skin/bookmark-icon-n.png");
 }
 
 #page-proxy-favicon {
   list-style-image: none;
 }
 
+#page-proxy-button {
+  list-style-image: url("chrome://browser/skin/bookmarks.png") !important;
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
 #page-proxy-button[pageproxystate="valid"]:hover  {
-  list-style-image: url("chrome://browser/skin/bookmark-icon-h.png");
+  -moz-image-region: rect(0px 32px 16px 16px);
 }
 
 #page-proxy-button[pageproxystate="valid"]:hover:active {
-  list-style-image: url("chrome://browser/skin/bookmark-icon-a.png");
+  -moz-image-region: rect(0px 48px 16px 32px);
 }
 
 #page-proxy-button[pageproxystate="invalid"] {
   cursor: default;
-  list-style-image: url("chrome://browser/skin/bookmark-icon-d.png");
+  -moz-image-region: rect(0px 64px 16px 48px);
 }
 
 /* ::::: autocomplete ::::: */
