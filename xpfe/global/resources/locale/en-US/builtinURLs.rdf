@@ -36,7 +36,7 @@
 
   <RDF:Description about='urn:clienturl:toolbar:relnotes'>
     <NC:title>Release Notes</NC:title>
-    <NC:content>http://www.mozilla.org/projects/seamonkey/release-notes/</NC:content>
+    <NC:content>http://www.mozilla.org/releases/</NC:content>
   </RDF:Description>
 
   <!-- View Menu -->
