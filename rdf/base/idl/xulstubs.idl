@@ -33,6 +33,6 @@ interface nsIDOMXULElement : nsIDOMElement {};
 [scriptable, uuid(a6cf90ec-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMXULTreeElement : nsIDOMXULElement {};
 
-%{
+%{C++
 #endif
 %}
