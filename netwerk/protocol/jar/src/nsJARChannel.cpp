@@ -138,7 +138,7 @@ protected:
     void*                       mClosure;
 };
 
-NS_IMPL_ISUPPORTS1(nsJARDownloadObserver, nsIStreamObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsJARDownloadObserver, nsIStreamObserver)
 
 ////////////////////////////////////////////////////////////////////////////////
 
