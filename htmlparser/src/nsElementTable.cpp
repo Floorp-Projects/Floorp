@@ -227,7 +227,7 @@ void InitializeElementTable(void) {
 	      /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,		
         /*autoclose starttags and endtags*/ 0,0,0,0,
         /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-        /*special props, prop-range*/       kOmitWS|kNonContainer, 10,
+        /*special props, prop-range*/       kNonContainer, 10,
         /*special parents,kids,skip*/       0,&gUnknownKids,eHTMLTag_unknown);       
 
     /*************************************************
@@ -431,7 +431,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gColParents,&gColParents,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-      /*special props, prop-range*/       kNoPropagate|kOmitWS|kNonContainer,kDefaultPropRange,
+      /*special props, prop-range*/       kNoPropagate|kNonContainer,kDefaultPropRange,
       /*special parents,kids,skip*/       &gColParents,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -440,7 +440,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gInTable,&gInTable,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-      /*special props, prop-range*/       kOmitWS|kNoPropagate,kDefaultPropRange,
+      /*special props, prop-range*/       kNoPropagate,kDefaultPropRange,
       /*special parents,kids,skip*/       &gInTable,&gColgroupKids,eHTMLTag_unknown);
 
     Initialize( 
@@ -584,7 +584,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gFramesetParents,&gInHTML,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kHTMLContent, kSelf, kAllTags,	
-      /*special props, prop-range*/       kOmitWS|kNoPropagate|kNoStyleLeaksIn, kNoPropRange,
+      /*special props, prop-range*/       kNoPropagate|kNoStyleLeaksIn, kNoPropRange,
       /*special parents,kids,skip*/       &gInHTML,&gFramesetKids,eHTMLTag_unknown);
 
 
@@ -803,7 +803,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kSpecial, kInlineEntity|kBlockEntity, kNone,	
-      /*special props, prop-range*/       kOmitWS, kDefaultPropRange,
+      /*special props, prop-range*/       0, kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gMapKids,eHTMLTag_unknown);
    
     Initialize( 
@@ -902,7 +902,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gOptgroupParents,&gOptgroupParents,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-      /*special props, prop-range*/       kOmitWS,kDefaultPropRange,
+      /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       &gOptgroupParents,&gContainsOpts,eHTMLTag_unknown);
 
     Initialize( 
@@ -1001,7 +1001,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gInForm,&gInForm,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kFormControl, kNone, kFlowEntity|kDLChild,	
-      /*special props, prop-range*/       kNoPropagate|kOmitWS|kNoStyleLeaksIn, kDefaultPropRange,
+      /*special props, prop-range*/       kNoPropagate|kNoStyleLeaksIn, kDefaultPropRange,
       /*special parents,kids,skip*/       &gInForm,&gContainsOpts,eHTMLTag_unknown);
 
     Initialize( 
@@ -1182,7 +1182,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gInHead,&gInHead,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kHeadMisc,kPCDATA, kNone,	
-      /*special props, prop-range*/       kOmitWS|kNoStyleLeaksIn, kNoPropRange,
+      /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
       /*special parents,kids,skip*/       &gInHead,&gContainsText,eHTMLTag_title);
 
     Initialize( 
@@ -1262,8 +1262,8 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
-      /*special props, prop-range*/       kNonContainer,kNoPropRange,
+      /*parent,incl,exclgroups*/          kFlowEntity|kHeadMisc, kNone, kNone,	
+      /*special props, prop-range*/       kNonContainer|kLegalOpen,kNoPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -1271,8 +1271,8 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
-      /*special props, prop-range*/       kNonContainer, kNoPropRange,
+      /*parent,incl,exclgroups*/          kFlowEntity|kHeadMisc, kNone, kNone,	
+      /*special props, prop-range*/       kNonContainer|kLegalOpen, kNoPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -1731,7 +1731,7 @@ PRBool nsHTMLElement::IsSectionTag(eHTMLTags aTag){
  */
 PRBool nsHTMLElement::CanContain(eHTMLTags aParent,eHTMLTags aChild,nsDTDMode aMode){
   PRBool result=PR_FALSE;
-  if((aParent>=eHTMLTag_unknown) & (aParent<=eHTMLTag_userdefined)){
+  if((aParent>=eHTMLTag_unknown) && (aParent<=eHTMLTag_userdefined)){
     result=gHTMLElements[aParent].CanContain(aChild,aMode);
   } 
   return result;
@@ -1746,14 +1746,19 @@ PRBool nsHTMLElement::CanContain(eHTMLTags aParent,eHTMLTags aChild,nsDTDMode aM
 PRBool nsHTMLElement::CanExclude(eHTMLTags aChild) const{
   PRBool result=PR_FALSE;
 
-    //Note that special kids takes precedence over exclusions...
+  if(gHTMLElements[aChild].HasSpecialProperty(kLegalOpen)) {
+    // Some tags could be opened anywhere, in the document, as they please.
+    return PR_FALSE;
+  }
+
+  //Note that special kids takes precedence over exclusions...
   if(mSpecialKids) {
     if(FindTagInSet(aChild,mSpecialKids->mTags,mSpecialKids->mCount)) {
       return PR_FALSE;
     }
   }
 
-  if(eHTMLTag_unknown!=mExclusionBits){
+  if(mExclusionBits){
     if(gHTMLElements[aChild].IsMemberOf(mExclusionBits)) {
       result=PR_TRUE;
     }
