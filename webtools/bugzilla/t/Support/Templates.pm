@@ -50,7 +50,7 @@ foreach my $file(@testitems) {
     my @lines = <FILE>;
     close (FILE);
     foreach my $line (@lines) {
-        if ($line =~ m/\[% INCLUDE (.+?) /) {
+        if ($line =~ m/\[% (?:INCLUDE|PROCESS) (.+?) /) {
             my $template = $1;
             push (@testitems, $template) unless $t{$template};
             $t{$template} = 1;
