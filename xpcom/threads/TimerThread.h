@@ -83,7 +83,7 @@ private:
   PRLock *mLock;
   PRCondVar *mCondVar;
 
-  PRPackedBool mProcessing;
+  PRPackedBool mShutdown;
   PRPackedBool mWaiting;
 
   nsVoidArray mTimers;
