@@ -829,12 +829,7 @@ DOMCSSDeclarationImpl::RemoveProperty(const nsString& aPropertyName,
     nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
     nsCSSValue val;
 
-#if 0 // This is not done yet, once it is this ifdef should be removed
     rv = decl->RemoveProperty(prop, val);
-#else
-    rv = NS_ERROR_NOT_IMPLEMENTED;
-#endif
-
     if (NS_FAILED(rv))
       return rv;
 

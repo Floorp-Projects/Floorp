@@ -394,6 +394,7 @@ public:
   NS_IMETHOD AppendStructValue(nsCSSProperty aProperty, void* aStruct) = 0;
   NS_IMETHOD SetValueImportant(nsCSSProperty aProperty) = 0;
   NS_IMETHOD AppendComment(const nsString& aComment) = 0;
+  NS_IMETHOD RemoveProperty(nsCSSProperty aProperty, nsCSSValue& aValue) = 0;
 
 // XXX make nscolor a struct to avoid type conflicts
   NS_IMETHOD GetValue(nsCSSProperty aProperty, nsCSSValue& aValue) = 0;
