@@ -699,10 +699,10 @@
     <observes element="cmd_fontColor"       attribute="state" onbroadcast="onFontColorChange()"/>
     <observes element="cmd_backgroundColor" attribute="state" onbroadcast="onBackgroundColorChange()"/>
     <text class="color-button" id="BackgroundColorButton"
-          oncommand="EditorSelectColor('');"
+          onclick="EditorSelectColor('');"
           tooltip="aTooltip"   tooltiptext="&BackgroundColorButton.tooltip;"/>
     <text class="color-button" id="TextColorButton"
-          oncommand="EditorSelectColor('Text');"
+          onclick="EditorSelectColor('Text');"
           tooltip="aTooltip"   tooltiptext="&TextColorButton.tooltip;"/>
   </stack>
 

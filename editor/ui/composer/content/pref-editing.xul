@@ -35,7 +35,7 @@
 
   <script lanugage="JavaScript">
   <![CDATA[
-    _elementIDs = ["editorAuthor", "useCustomColors", "textData", "linkData", "aLinkData", "fLinkData", "backgroundColorData", "backgroundImageData"];
+   var _elementIDs = ["editorAuthor", "useCustomColors", "textData", "linkData", "aLinkData", "fLinkData", "backgroundColorData", "backgroundImageData"];
   ]]>
   </script>
 
@@ -79,7 +79,7 @@
               <row valign="middle" autostretch="never">
                 <text class="label" id="Text" value="&normalText.label;&colon.character;" />
                 <stack>
-                  <button id="TextButton" class="dialog color-button" oncommand="GetColorAndUpdate('textCW');"/>
+                  <button id="TextButton" class="dialog color-button" onclick="GetColorAndUpdate('textCW');"/>
     	            <box autostretch="never" valign="middle" mousethrough="always">
                     <spring class="smallspacer"/>
                     <spring id="textCW" class="color-well"/>
@@ -90,7 +90,7 @@
               <row valign="middle" autostretch="never">
                 <text class="label" id="Link" value="&linkText.label;&colon.character;" />
                 <stack>
-                  <button id="LinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('linkCW');"/>
+                  <button id="LinkButton" class="dialog color-button" onclick="GetColorAndUpdate('linkCW');"/>
     	            <box autostretch="never" valign="middle" mousethrough="always">
                     <spring class="smallspacer"/>
                     <spring id="linkCW" class="color-well"/>
@@ -101,7 +101,7 @@
               <row valign="middle" autostretch="never">
                 <text class="label" id="Active" value="&activeLinkText.label;&colon.character;" />
                 <stack>
-                  <button id="ActiveLinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('activeCW');"/>
+                  <button id="ActiveLinkButton" class="dialog color-button" onclick="GetColorAndUpdate('activeCW');"/>
     	            <box autostretch="never" valign="middle" mousethrough="always">
                     <spring class="smallspacer"/>
                     <spring id="activeCW" class="color-well"/>
@@ -112,7 +112,7 @@
               <row valign="middle" autostretch="never">
                 <text class="label" id="Visited" value ="&visitedLinkText.label;&colon.character;" />
                 <stack>
-                  <button id="VisitedLinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('visitedCW');"/>
+                  <button id="VisitedLinkButton" class="dialog color-button" onclick="GetColorAndUpdate('visitedCW');"/>
     	            <box autostretch="never" valign="middle" mousethrough="always">
                     <spring class="smallspacer"/>
                     <spring id="visitedCW" class="color-well"/>
@@ -123,7 +123,7 @@
               <row valign="middle" autostretch="never">
                 <text class="label" id="Background" value="&background.label;" />
                 <stack>
-                  <button id="BackgroundButton" class="dialog color-button" oncommand="GetColorAndUpdate('backgroundCW');"/>
+                  <button id="BackgroundButton" class="dialog color-button" onclick="GetColorAndUpdate('backgroundCW');"/>
     	            <box autostretch="never" valign="middle" mousethrough="always">
                     <spring class="smallspacer"/>
                     <spring id="backgroundCW" class="color-well"/>
