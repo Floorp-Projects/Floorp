@@ -487,6 +487,11 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
 #endif
 #endif
 
+#if defined(FREEBSD)
+// pick up fpsetmask prototype.
+#include <floatingpoint.h>
+#endif
+
 static nsresult main1(int argc, char* argv[])
 {
   nsresult rv;
@@ -498,6 +503,13 @@ static nsresult main1(int argc, char* argv[])
 #ifndef XP_MAC
   // Unbuffer debug output (necessary for automated QA performance scripts).
   setbuf( stdout, 0 );
+#endif
+
+#if defined(FREEBSD)
+  // Disable all SIGFPE's on FreeBSD, as it has non-IEEE-conformant fp
+  // trap behavior that trips up on floating-point tests performed by
+  // the JS engine.  See bugzilla bug 9967 details.
+  fpsetmask(0);
 #endif
    
   InitFullCircle();
