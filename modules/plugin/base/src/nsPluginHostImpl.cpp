@@ -2102,18 +2102,22 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
 
   nsCAutoString aContentType;
   rv = channel->GetContentType(aContentType);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) 
+    return rv;
+
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  nsCAutoString urlSpec;
+  aURL->GetSpec(urlSpec);
+  mPluginStreamInfo->SetURL(urlSpec.get());
 
   if (!aContentType.IsEmpty())
     mPluginStreamInfo->SetContentType(aContentType.get());
 
 #ifdef PLUGIN_LOGGING
-  nsCAutoString urlSpec;
-  if(aURL != nsnull) (void)aURL->GetSpec(urlSpec);
-
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NOISY,
   ("nsPluginStreamListenerPeer::OnStartRequest this=%p request=%p mime=%s, url=%s\n",
   this, request, aContentType.get(), urlSpec.get()));
@@ -2253,24 +2257,16 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
   }
 
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIURI> aURL;
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  if (!channel) 
-    return NS_ERROR_FAILURE;
-  
-  rv = channel->GetURI(getter_AddRefs(aURL));
-  if (NS_FAILED(rv)) 
-    return rv;
 
   if(!mPStreamListener || !mPluginStreamInfo)
     return NS_ERROR_FAILURE;
 
-  nsCAutoString urlString;
-  aURL->GetSpec(urlString);
-  mPluginStreamInfo->SetURL(urlString.get());
+  const char * url = nsnull;
+  mPluginStreamInfo->GetURL(&url);
+
   PLUGIN_LOG(PLUGIN_LOG_NOISY,
   ("nsPluginStreamListenerPeer::OnDataAvailable this=%p request=%p, offset=%d, length=%d, url=%s\n",
-  this, request, sourceOffset, aLength, urlString.get()));
+  this, request, sourceOffset, aLength, url ? url : "no url set"));
 
   // if the plugin has requested an AsFileOnly stream, then don't 
   // call OnDataAvailable
@@ -2392,20 +2388,9 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   if(!mPStreamListener)
       return NS_ERROR_FAILURE;
   
-  nsCOMPtr<nsIURI> aURL;
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   if (!channel) 
     return NS_ERROR_FAILURE;
-
-  rv = channel->GetURI(getter_AddRefs(aURL));
-  if (NS_FAILED(rv)) 
-    return rv;
-  
-  nsCAutoString urlString;
-  rv = aURL->GetAsciiSpec(urlString);
-  if (NS_SUCCEEDED(rv)) 
-    mPluginStreamInfo->SetURL(urlString.get());
-  
   // Set the content type to ensure we don't pass null to the plugin
   nsCAutoString aContentType;
   rv = channel->GetContentType(aContentType);
@@ -2540,10 +2525,6 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
       mPluginStreamInfo->SetLastModified((PRUint32)(fpTime * 1e-6 + 0.5));
     }
   } 
-
-  nsCAutoString urlString;
-  aURL->GetAsciiSpec(urlString);
-  mPluginStreamInfo->SetURL(urlString.get());
 
   rv = mPStreamListener->OnStartBinding((nsIPluginStreamInfo*)mPluginStreamInfo);
 
