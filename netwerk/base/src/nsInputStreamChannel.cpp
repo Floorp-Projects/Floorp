@@ -616,8 +616,10 @@ nsStreamIOChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* cont
 {
     nsresult rv;
 
-    rv = mUserObserver->OnStopRequest(this, context, aStatus, aStatusArg);
-    if (NS_FAILED(rv)) return rv;
+    if (mUserObserver) {
+        rv = mUserObserver->OnStopRequest(this, context, aStatus, aStatusArg);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     if (mLoadGroup) {
         if (NS_SUCCEEDED(rv)) {
