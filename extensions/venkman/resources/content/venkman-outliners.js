@@ -43,6 +43,11 @@ function initOutliners()
 
     console._sourceOutlinerView.atomCurrent = atomsvc.getAtom("current-line");
     console._sourceOutlinerView.atomBreakpoint = atomsvc.getAtom("breakpoint");
+    console._sourceOutlinerView.atomFunctionStart =
+        atomsvc.getAtom("func-start");
+    console._sourceOutlinerView.atomFunctionLine = atomsvc.getAtom("func-line");
+    console._sourceOutlinerView.atomFunctionEnd = atomsvc.getAtom("func-end");
+    console._sourceOutlinerView.atomFunctionAfter = atomsvc.getAtom("func-after");
     console._sourceOutliner = document.getElementById("source-outliner");
     console._sourceOutliner.outlinerBoxObject.view = console._sourceOutlinerView;
 
@@ -75,6 +80,9 @@ function bov_setcl (line)
     else
         if (line)
             this.currentLine = line;
+
+    if (!line)
+        return;
     
     var first = this.outliner.getFirstVisibleRow();
     var last = this.outliner.getLastVisibleRow();
@@ -114,8 +122,23 @@ function sov_rowprops (row, properties)
 console._sourceOutlinerView.getCellProperties =
 function sov_cellprops (row, colID, properties)
 {
+    if (!this.sourceArray[row])
+        return;
+    
     if (colID == "breakpoint-col" && this.sourceArray[row].isBreakpoint)
         properties.AppendElement(this.atomBreakpoint);
+    else if (colID == "source-line-number" && row == this.currentLine - 1)
+        properties.AppendElement(this.atomCurrent);
+    
+    if (this.sourceArray[row].functionLine)
+    {
+        properties.AppendElement(this.atomFunctionLine);
+        if (this.sourceArray[row].functionStart)
+            properties.AppendElement(this.atomFunctionStart);
+        if (this.sourceArray[row].functionEnd)
+            properties.AppendElement(this.atomFunctionEnd);
+    } else if (row > 0 && this.sourceArray[row - 1].functionEnd)
+        properties.AppendElement(this.atomFunctionAfter);
 }
 
 console._sourceOutlinerView.getCellText =
@@ -152,6 +175,8 @@ function sov_setsrcary (sourceArray, url)
     }
 }
 
+/* stack outliner */
+
 console._stackOutlinerView = new BasicOView();
 
 console._stackOutlinerView.rowCount = 1;
@@ -176,6 +201,9 @@ function sov_getcelltext (row, colID)
 {    
     if (!this.frames)
         return (row == 0 && colID == "function-name") ? MSG_VAL_NA : "";
+
+    if (!this.frames[row])
+        return "??row out of bounds??";
     
     switch (colID)
     {
