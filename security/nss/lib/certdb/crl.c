@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.17 2002/09/05 06:12:33 jpierre%netscape.com Exp $
+ * $Id: crl.c,v 1.18 2002/09/05 16:34:27 wtc%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -1341,7 +1341,7 @@ SECStatus DPCache_Update(CRLDPCache* cache, CERTCertificate* issuer, int64 t,
             for (i = 0; i < cache->ncrls ; i++) {
                 CERTSignedCrl* acrl = cache->crls[i];
                 if (PR_FALSE == GetOpaqueCRLFields(acrl)->bad) {
-                    DPCache_Refresh(cache, acrl, t, wincx);
+                    DP_RefreshCache(cache, acrl, t, wincx);
                 }
             }
         }
