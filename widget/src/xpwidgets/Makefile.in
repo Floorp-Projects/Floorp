@@ -38,10 +38,6 @@ CPPSRCS= \
 	nsBaseDragService.cpp    \
 	$(NULL)
 
-ifdef NEW_CLIPBOARD_SUPPORT
-	CPPSRCS += nsBaseClipboard.cpp
-endif
-
 LOCAL_INCLUDES := \
 	-I$(srcdir)/../$(MOZ_TOOLKIT) \
 	-I$(srcdir) \
