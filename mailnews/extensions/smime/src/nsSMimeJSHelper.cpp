@@ -290,8 +290,12 @@ NS_IMETHODIMP nsSMimeJSHelper::GetNoCertAddresses(
     {
       haveCert[i] = PR_FALSE;
 
+      nsDependentCString email(walk);
+      nsCString email_lowercase;
+      ToLowerCase(email, email_lowercase);
+
       nsCOMPtr<nsIX509Cert> cert;
-      if (NS_SUCCEEDED(certdb->GetCertByEmailAddress(nsnull, walk, getter_AddRefs(cert))) 
+      if (NS_SUCCEEDED(certdb->GetCertByEmailAddress(nsnull, email_lowercase.get(), getter_AddRefs(cert))) 
           && cert)
       {
         PRUint32 verification_result;
