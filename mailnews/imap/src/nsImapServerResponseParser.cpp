@@ -2569,12 +2569,19 @@ void nsImapServerResponseParser::bodystructure_data()
 
 void nsImapServerResponseParser::quota_data()
 {
+  nsCString quotaroot;
   if (!PL_strcasecmp(fNextToken, "QUOTAROOT"))
-    skip_to_CRLF();
+  {
+    do
+    {
+      AdvanceToNextToken();
+      quotaroot.Adopt(CreateAstring());
+    }
+    while (ContinueParse() && !at_end_of_line());
+  }
   else if(!PL_strcasecmp(fNextToken, "QUOTA"))
   {
     PRUint32 used, max;
-    nsCString quotaroot;
     char *parengroup;
 
     AdvanceToNextToken();
@@ -2582,7 +2589,7 @@ void nsImapServerResponseParser::quota_data()
       SetSyntaxError(PR_TRUE);
     else
     {
-      quotaroot = CreateAstring();
+      quotaroot.Adopt(CreateAstring());
 
       if(ContinueParse() && !at_end_of_line())
       {
@@ -2600,8 +2607,7 @@ void nsImapServerResponseParser::quota_data()
             else
               SetSyntaxError(PR_TRUE);
 
-            if(parengroup)
-              PR_Free(parengroup);
+            PR_Free(parengroup);
           }
           else
             // Ignore other limits, we just check STORAGE for now
