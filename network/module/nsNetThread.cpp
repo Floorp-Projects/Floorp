@@ -806,7 +806,7 @@ nsStreamListenerProxy::~nsStreamListenerProxy()
     NS_RELEASE(mRealListener);
 }
 
-static nsIStreamListener* ns_NewStreamListenerProxy(nsIStreamListener* aListener,
+nsIStreamListener* ns_NewStreamListenerProxy(nsIStreamListener* aListener,
                                              PLEventQueue* aEventQ)
 {
     return new nsStreamListenerProxy(aListener, aEventQ);
