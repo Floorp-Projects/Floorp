@@ -55,7 +55,6 @@ typedef gboolean (*nodeHandler)(TreeState *);
 typedef nodeHandler *(*nodeHandlerFactory)();
 
 extern nodeHandler *xpidl_header_dispatch(void);
-extern nodeHandler *xpidl_stub_dispatch(void);
 extern nodeHandler *xpidl_typelib_dispatch(void);
 extern nodeHandler *xpidl_doc_dispatch(void);
 
@@ -78,6 +77,7 @@ typedef struct IncludePathEntry {
 
 struct TreeState {
     FILE             *file;
+    /* Maybe supplied by -o. Not related to (g_)basename from string.h or glib */
     char             *basename;
     IDL_ns           ns;
     IDL_tree         tree;
