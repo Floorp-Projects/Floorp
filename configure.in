@@ -2982,7 +2982,7 @@ dnl ========================================================
 dnl = Xft
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(xft,
-[  --enable-xft                Enable Xft support ],
+[  --enable-xft            Enable Xft support ],
     MOZ_ENABLE_XFT=1
     MOZ_XFT_CFLAGS="$X_CFLAGS -I${x_includes}/X11/extensions"
 dnl    MOZ_XFT_CFLAGS="$X_CFLAGS"
@@ -2998,7 +2998,7 @@ dnl ========================================================
 dnl = PostScript print module
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(postscript,
-[  --disable-postscript        Disable PostScript printing support ],
+[  --disable-postscript    Disable PostScript printing support ],
     MOZ_ENABLE_POSTSCRIPT=,
     MOZ_ENABLE_POSTSCRIPT=1 )
 
@@ -3189,7 +3189,7 @@ dnl MathML on by default
 dnl ========================================================
 MOZ_MATHML=1
 MOZ_ARG_DISABLE_BOOL(mathml,
-[  --disable-mathml      Disable MathML],
+[  --disable-mathml        Disable MathML],
     MOZ_MATHML= )
 if test "$MOZ_MATHML"; then
   AC_DEFINE(MOZ_MATHML)
