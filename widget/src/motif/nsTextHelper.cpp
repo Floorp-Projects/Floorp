@@ -34,9 +34,8 @@
 //
 //-------------------------------------------------------------------------
 
-nsTextHelper::nsTextHelper(Widget aWidget)
+nsTextHelper::nsTextHelper() : nsWindow(), nsITextAreaWidget(), nsITextWidget()
 {
-  mWidget     = aWidget;
   mIsReadOnly = PR_FALSE;
   mIsPassword = PR_FALSE;
 }
@@ -51,13 +50,14 @@ nsTextHelper::~nsTextHelper()
 }
 
 //-------------------------------------------------------------------------
-void nsTextHelper::SetMaxTextLength(PRUint32 aChars)
+NS_METHOD nsTextHelper::SetMaxTextLength(PRUint32 aChars)
 {
   XmTextSetMaxLength(mWidget, (int)aChars);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-PRUint32  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) 
+NS_METHOD  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PRUint32& aActualSize) 
 {
   if (!mIsPassword) {
     char * str = XmTextGetString(mWidget);
@@ -65,19 +65,19 @@ PRUint32  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize)
     aTextBuffer.Append(str);
     PRUint32 len = (PRUint32)strlen(str);
     XtFree(str);
-    return len;
+    aActualSize = len;
   } else {
     PasswordData * data;
     XtVaGetValues(mWidget, XmNuserData, &data, NULL);
     aTextBuffer = data->mPassword;
-    return aTextBuffer.Length();
+    aActualSize = aTextBuffer.Length();
   }
+  return(NS_OK);
 }
 
 //-------------------------------------------------------------------------
-PRUint32  nsTextHelper::SetText(const nsString& aText)
+NS_METHOD  nsTextHelper::SetText(const nsString& aText, PRUint32& aActualSize)
 { 
-  //printf("SetText Password %d\n", mIsPassword);
   if (!mIsPassword) {
     NS_ALLOC_STR_BUF(buf, aText, 512);
     XmTextSetString(mWidget, buf);
@@ -94,11 +94,12 @@ PRUint32  nsTextHelper::SetText(const nsString& aText)
     XmTextSetString(mWidget, buf);
     data->mIgnore = False;
   }
-  return(aText.Length());
+  aActualSize = aText.Length();
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-PRUint32  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos)
+NS_METHOD  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos, PRUint32& aActualSize)
 { 
 
   if (!mIsPassword) {
@@ -118,91 +119,93 @@ PRUint32  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PR
     XmTextInsert(mWidget, aStartPos, buf);
     data->mIgnore = False;
   }
-  return(aText.Length());
-
+  aActualSize = aText.Length();
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-void  nsTextHelper::RemoveText()
+NS_METHOD  nsTextHelper::RemoveText()
 {
   char blank[2];
   blank[0] = 0;
 
   XmTextSetString(mWidget, blank);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-void  nsTextHelper::SetPassword(PRBool aIsPassword)
+NS_METHOD  nsTextHelper::SetPassword(PRBool aIsPassword)
 {
   mIsPassword = aIsPassword;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-PRBool  nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag)
+NS_METHOD  nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldReadOnlyFlag)
 {
   NS_ASSERTION(mWidget != nsnull, 
                "SetReadOnly - Widget is NULL, Create may not have been called!");
-  PRBool oldSetting = mIsReadOnly;
+  aOldReadOnlyFlag = mIsReadOnly;
   mIsReadOnly = aReadOnlyFlag;
   XmTextSetEditable(mWidget, aReadOnlyFlag?False:True);
 
-  return(oldSetting);
+  return NS_OK;
 }
 
   
 //-------------------------------------------------------------------------
-void nsTextHelper::SelectAll()
+NS_METHOD nsTextHelper::SelectAll()
 {
   nsString text;
-  PRUint32 numChars = GetText(text, 0);
+  PRUint32 actualSize = 0;
+  PRUint32 numChars = GetText(text, 0, actualSize);
   SetSelection(0, numChars);
+  return NS_OK;
 }
 
 
 //-------------------------------------------------------------------------
-void  nsTextHelper::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
+NS_METHOD nsTextHelper::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
 {
   XmTextPosition left  = (XmTextPosition)aStartSel;
   XmTextPosition right = (XmTextPosition)aEndSel;
 
   Time time;
-printf("SetSel %d %d\n", left, right);
   XmTextSetSelection(mWidget, left, right, 0);
+  return NS_OK;
 }
 
 
 //-------------------------------------------------------------------------
-void  nsTextHelper::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
+NS_METHOD nsTextHelper::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
 {
   XmTextPosition left;
   XmTextPosition right;
 
   if (XmTextGetSelectionPosition(mWidget, &left, &right)) {
-    printf("left %d right %d\n", left, right);
     *aStartSel = (PRUint32)left;
     *aEndSel   = (PRUint32)right;
   } else {
     printf("nsTextHelper::GetSelection Error getting positions\n");
+    return NS_ERROR_FAILURE;
   }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-void  nsTextHelper::SetCaretPosition(PRUint32 aPosition)
+NS_METHOD  nsTextHelper::SetCaretPosition(PRUint32 aPosition)
 {
   XmTextSetInsertionPosition(mWidget, (XmTextPosition)aPosition);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-PRUint32  nsTextHelper::GetCaretPosition()
+NS_METHOD  nsTextHelper::GetCaretPosition(PRUint32& aPosition)
 {
-  return (PRUint32)XmTextGetInsertionPosition(mWidget);
+  aPosition = (PRUint32)XmTextGetInsertionPosition(mWidget);
+  return NS_OK;
 }
 
 
-//-------------------------------------------------------------------------
-PRBool nsTextHelper::AutoErase()
-{
-  return(PR_TRUE);
-}
 
 

@@ -25,17 +25,20 @@
 #include "nsITextAreaWidget.h"
 
 /**
- * Native Motif single line edit control wrapper. 
+ * Native Motif multi-line edit control wrapper. 
  */
 
-class nsTextAreaWidget : public nsWindow
+class nsTextAreaWidget : public nsTextHelper
 {
 
 public:
-  nsTextAreaWidget(nsISupports *aOuter);
+  nsTextAreaWidget();
   virtual ~nsTextAreaWidget();
 
-  NS_IMETHOD QueryObject(REFNSIID aIID, void** aInstancePtr);
+   // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   void Create(nsIWidget *aParent,
               const nsRect &aRect,
@@ -57,60 +60,8 @@ public:
   virtual PRBool  OnPaint(nsPaintEvent & aEvent);
   virtual PRBool  OnResize(nsSizeEvent &aEvent);
 
-  // nsTextHelper Interface
-  virtual void      SelectAll();
-  virtual void      SetMaxTextLength(PRUint32 aChars);
-  virtual PRUint32  GetText(nsString& aTextBuffer, PRUint32 aBufferSize);
-  virtual PRUint32  SetText(const nsString& aText);
-  virtual PRUint32  InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos);
-  virtual void      RemoveText();
-  virtual void      SetPassword(PRBool aIsPassword);
-  virtual PRBool    SetReadOnly(PRBool aReadOnlyFlag);
-  virtual void      SetSelection(PRUint32 aStartSel, PRUint32 aEndSel);
-  virtual void      GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel);
-  virtual void      SetCaretPosition(PRUint32 aPosition);
-  virtual PRUint32  GetCaretPosition();
-  virtual PRBool    AutoErase();
-
-protected:
-    nsTextHelper *mHelper;
-
 private:
   PRBool mMakeReadOnly;
-
-  // this should not be public
-  static PRInt32 GetOuterOffset() {
-    return offsetof(nsTextAreaWidget,mAggWidget);
-  }
-
-
-  // Aggregator class and instance variable used to aggregate in the
-  // nsIText interface to nsText w/o using multiple
-  // inheritance.
-  class AggTextAreaWidget : public nsITextAreaWidget {
-  public:
-    AggTextAreaWidget();
-    virtual ~AggTextAreaWidget();
-
-    AGGREGATE_METHOD_DEF
-
-    virtual void      SelectAll();
-    virtual void      SetMaxTextLength(PRUint32 aChars);
-    virtual PRUint32  GetText(nsString& aTextBuffer, PRUint32 aBufferSize);
-    virtual PRUint32  SetText(const nsString& aText);
-    virtual PRUint32  InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos);
-    virtual void      RemoveText();
-    virtual void      SetPassword(PRBool aIsPassword);
-    virtual PRBool    SetReadOnly(PRBool aReadOnlyFlag);
-    virtual void      SetSelection(PRUint32 aStartSel, PRUint32 aEndSel);
-    virtual void      GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel);
-    virtual void      SetCaretPosition(PRUint32 aPosition);
-    virtual PRUint32  GetCaretPosition();
-    virtual PRBool    AutoErase();
-
-  };
-  AggTextAreaWidget mAggWidget;
-  friend class AggTextAreaWidget;
 
 };
 

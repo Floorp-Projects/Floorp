@@ -33,14 +33,16 @@ typedef struct _PasswordData {
  * Native Motif single line edit control wrapper. 
  */
 
-class nsTextWidget : public nsWindow
+class nsTextWidget : public nsTextHelper
 {
 
 public:
-  nsTextWidget(nsISupports *aOuter);
+  nsTextWidget();
   virtual ~nsTextWidget();
 
-  NS_IMETHOD QueryObject(REFNSIID aIID, void** aInstancePtr);
+   // nsISupports. Forware to the nsObject base class
+  NS_DECL_ISUPPORTS
+
 
   void Create(nsIWidget *aParent,
               const nsRect &aRect,
@@ -61,63 +63,14 @@ public:
 
   virtual PRBool  OnPaint(nsPaintEvent & aEvent);
   virtual PRBool  OnResize(nsSizeEvent &aEvent);
-
-  // nsTextHelper Interface
-  virtual void      SelectAll();
-  virtual void      SetMaxTextLength(PRUint32 aChars);
-  virtual PRUint32  GetText(nsString& aTextBuffer, PRUint32 aBufferSize);
-  virtual PRUint32  SetText(const nsString& aText);
-  virtual PRUint32  InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos);
-  virtual void      RemoveText();
-  virtual void      SetPassword(PRBool aIsPassword);
-  virtual PRBool    SetReadOnly(PRBool aReadOnlyFlag);
-  virtual void      SetSelection(PRUint32 aStartSel, PRUint32 aEndSel);
-  virtual void      GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel);
-  virtual void      SetCaretPosition(PRUint32 aPosition);
-  virtual PRUint32  GetCaretPosition();
-  virtual PRBool    AutoErase();
+  NS_IMETHOD SetPassword(PRBool aIsPassword);
 
 protected:
     PRBool        mIsPasswordCallBacksInstalled;
-    nsTextHelper *mHelper;
 
 private:
   PRBool mMakeReadOnly;
   PRBool mMakePassword;
-
-  // this should not be public
-  static PRInt32 GetOuterOffset() {
-    return offsetof(nsTextWidget,mAggWidget);
-  }
-
-
-  // Aggregator class and instance variable used to aggregate in the
-  // nsIText interface to nsText w/o using multiple
-  // inheritance.
-  class AggTextWidget : public nsITextWidget {
-  public:
-    AggTextWidget();
-    virtual ~AggTextWidget();
-
-    AGGREGATE_METHOD_DEF
-
-    virtual void      SelectAll();
-    virtual void      SetMaxTextLength(PRUint32 aChars);
-    virtual PRUint32  GetText(nsString& aTextBuffer, PRUint32 aBufferSize);
-    virtual PRUint32  SetText(const nsString& aText);
-    virtual PRUint32  InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos);
-    virtual void      RemoveText();
-    virtual void      SetPassword(PRBool aIsPassword);
-    virtual PRBool    SetReadOnly(PRBool aReadOnlyFlag);
-    virtual void      SetSelection(PRUint32 aStartSel, PRUint32 aEndSel);
-    virtual void      GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel);
-    virtual void      SetCaretPosition(PRUint32 aPosition);
-    virtual PRUint32  GetCaretPosition();
-    virtual PRBool    AutoErase();
-
-  };
-  AggTextWidget mAggWidget;
-  friend class AggTextWidget;
 
 };
 

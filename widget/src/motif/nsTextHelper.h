@@ -19,6 +19,7 @@
 #define nsTextHelper_h__
 
 #include "nsITextWidget.h"
+#include "nsITextAreaWidget.h"
 #include "nsWindow.h"
 #include <Xm/Xm.h>
 
@@ -26,32 +27,32 @@
  * Base class for nsTextAreaWidget and nsTextWidget
  */
 
-class nsTextHelper 
+class nsTextHelper : public nsWindow,
+                     public nsITextAreaWidget,
+                     public nsITextWidget 
 {
 
 public:
-    nsTextHelper(Widget aWidget);
+    nsTextHelper();
     virtual ~nsTextHelper();
-
-    virtual void      SelectAll();
-    virtual void      SetMaxTextLength(PRUint32 aChars);
-    virtual PRUint32  GetText(nsString& aTextBuffer, PRUint32 aBufferSize);
-    virtual PRUint32  SetText(const nsString& aText);
-    virtual PRUint32  InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos);
-    virtual void      RemoveText();
-    virtual void      SetPassword(PRBool aIsPassword);
-    virtual PRBool    SetReadOnly(PRBool aReadOnlyFlag);
-    virtual void      SetSelection(PRUint32 aStartSel, PRUint32 aEndSel);
-    virtual void      GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel);
-    virtual void      SetCaretPosition(PRUint32 aPosition);
-    virtual PRUint32  GetCaretPosition();
-    //virtual void      PreCreateWidget(nsWidgetInitData *aInitData);
-    virtual PRBool    AutoErase();
+    NS_IMETHOD        SelectAll();
+    NS_IMETHOD        SetMaxTextLength(PRUint32 aChars);
+    NS_IMETHOD        GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PRUint32& aActualSize);
+    NS_IMETHOD        SetText(const nsString &aText, PRUint32& aActualSize);
+    NS_IMETHOD        InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos, PRUint32& aActualSize);
+    NS_IMETHOD        RemoveText();
+    NS_IMETHOD        SetPassword(PRBool aIsPassword);
+    NS_IMETHOD        SetReadOnly(PRBool aNewReadOnlyFlag, PRBool& aOldReadOnlyFlag);
+    NS_IMETHOD        SetSelection(PRUint32 aStartSel, PRUint32 aEndSel);
+    NS_IMETHOD        GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel);
+    NS_IMETHOD        SetCaretPosition(PRUint32 aPosition);
+    NS_IMETHOD        GetCaretPosition(PRUint32& aPosition);
 
 protected:
-    Widget  mWidget;
     PRBool  mIsPassword;
     PRBool  mIsReadOnly;
+//    Widget  mWidget;
+
 
 };
 

@@ -32,10 +32,10 @@
 // nsTextAreaWidget constructor
 //
 //-------------------------------------------------------------------------
-nsTextAreaWidget::nsTextAreaWidget(nsISupports *aOuter) : nsWindow(aOuter),
-  mMakeReadOnly(PR_FALSE)
+nsTextAreaWidget::nsTextAreaWidget()
 {
-  //mBackground = NS_RGB(124, 124, 124);
+  mMakeReadOnly = PR_FALSE;
+  mBackground = NS_RGB(124, 124, 124);
 }
 
 //-------------------------------------------------------------------------
@@ -84,7 +84,6 @@ void nsTextAreaWidget::Create(nsIWidget *aParent,
 		                    XmNx, aRect.x,
 		                    XmNy, aRect.y, 
                                     nsnull);
-  mHelper = new nsTextHelper(mWidget);
   if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
 
   // save the event callback function
@@ -93,7 +92,8 @@ void nsTextAreaWidget::Create(nsIWidget *aParent,
   InitCallbacks("nsTextAreaWidget");
 
   if (mMakeReadOnly) {
-    SetReadOnly(PR_TRUE);
+    PRBool oldReadOnly;
+    SetReadOnly(PR_TRUE, oldReadOnly);
   }
 
 }
@@ -110,29 +110,29 @@ void nsTextAreaWidget::Create(nsNativeWidget aParent,
 }
 
 
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsTextAreaWidget::QueryObject(REFNSIID aIID, void** aInstancePtr)
+nsresult nsTextAreaWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
+
   static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
+  static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
-  if (aIID.Equals(kITextWidgetIID)) {
-    AddRef();
-    *aInstancePtr = (void**) &mAggWidget;
-    return NS_OK;
-  }
+
   if (aIID.Equals(kITextAreaWidgetIID)) {
-    AddRef();
-    *aInstancePtr = (void**) &mAggWidget;
-    return NS_OK;
+      nsITextAreaWidget* textArea = this;
+      *aInstancePtr = (void*) (textArea);
+      AddRef();
+      return NS_OK;
   }
-  return nsWindow::QueryObject(aIID, aInstancePtr);
-}
+  else if (aIID.Equals(kIWidgetIID))
+  {
+      nsIWidget* widget = this;
+      *aInstancePtr = (void*) (widget);
+      AddRef();
+      return NS_OK;
+  }
 
+  return nsWindow::QueryInterface(aIID, aInstancePtr);
+}
 
 //-------------------------------------------------------------------------
 //
@@ -150,175 +150,3 @@ PRBool nsTextAreaWidget::OnResize(nsSizeEvent &aEvent)
 {
   return PR_FALSE;
 }
-
-//--------------------------------------------------------------
-void nsTextAreaWidget::SetPassword(PRBool aIsPassword)
-{
-}
-
-//--------------------------------------------------------------
-PRBool  nsTextAreaWidget::SetReadOnly(PRBool aReadOnlyFlag)
-{
-  if (mWidget == nsnull && aReadOnlyFlag) {
-    mMakeReadOnly = PR_TRUE;
-    return PR_TRUE;
-  }
-  return mHelper->SetReadOnly(aReadOnlyFlag);
-}
-
-//--------------------------------------------------------------
-void nsTextAreaWidget::SetMaxTextLength(PRUint32 aChars)
-{
-  mHelper->SetMaxTextLength(aChars);
-}
-
-//--------------------------------------------------------------
-PRUint32  nsTextAreaWidget::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) {
-  return mHelper->GetText(aTextBuffer, aBufferSize);
-}
-
-//--------------------------------------------------------------
-PRUint32  nsTextAreaWidget::SetText(const nsString& aText)
-{ 
-  return mHelper->SetText(aText);
-}
-
-//--------------------------------------------------------------
-PRUint32  nsTextAreaWidget::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos)
-{ 
-  return mHelper->InsertText(aText, aStartPos, aEndPos);
-}
-
-//--------------------------------------------------------------
-void  nsTextAreaWidget::RemoveText()
-{
-  mHelper->RemoveText();
-}
-
-//--------------------------------------------------------------
-void nsTextAreaWidget::SelectAll()
-{
-  mHelper->SelectAll();
-}
-
-
-//--------------------------------------------------------------
-void  nsTextAreaWidget::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
-{
-  mHelper->SetSelection(aStartSel, aEndSel);
-}
-
-
-//--------------------------------------------------------------
-void  nsTextAreaWidget::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
-{
-  mHelper->GetSelection(aStartSel, aEndSel);
-}
-
-//--------------------------------------------------------------
-void  nsTextAreaWidget::SetCaretPosition(PRUint32 aPosition)
-{
-  mHelper->SetCaretPosition(aPosition);
-}
-
-//--------------------------------------------------------------
-PRUint32  nsTextAreaWidget::GetCaretPosition()
-{
-  return mHelper->GetCaretPosition();
-}
-
-//--------------------------------------------------------------
-PRBool nsTextAreaWidget::AutoErase()
-{
-  return mHelper->AutoErase();
-}
-
-
-
-//--------------------------------------------------------------
-#define GET_OUTER() ((nsTextAreaWidget*) ((char*)this - nsTextAreaWidget::GetOuterOffset()))
-
-
-//--------------------------------------------------------------
-void nsTextAreaWidget::AggTextAreaWidget::SetMaxTextLength(PRUint32 aChars)
-{
-  GET_OUTER()->SetMaxTextLength(aChars);
-}
-
-//--------------------------------------------------------------
-PRUint32  nsTextAreaWidget::AggTextAreaWidget::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) {
-  return GET_OUTER()->GetText(aTextBuffer, aBufferSize);
-}
-
-//--------------------------------------------------------------
-PRUint32  nsTextAreaWidget::AggTextAreaWidget::SetText(const nsString& aText)
-{ 
-  return GET_OUTER()->SetText(aText);
-}
-
-//--------------------------------------------------------------
-PRUint32  nsTextAreaWidget::AggTextAreaWidget::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos)
-{ 
-  return GET_OUTER()->InsertText(aText, aStartPos, aEndPos);
-}
-
-//--------------------------------------------------------------
-void  nsTextAreaWidget::AggTextAreaWidget::RemoveText()
-{
-  GET_OUTER()->RemoveText();
-}
-
-//--------------------------------------------------------------
-void  nsTextAreaWidget::AggTextAreaWidget::SetPassword(PRBool aIsPassword)
-{
-  GET_OUTER()->SetPassword(aIsPassword);
-}
-
-//--------------------------------------------------------------
-PRBool  nsTextAreaWidget::AggTextAreaWidget::SetReadOnly(PRBool aReadOnlyFlag)
-{
-  return GET_OUTER()->SetReadOnly(aReadOnlyFlag);
-}
-
-//--------------------------------------------------------------
-void nsTextAreaWidget::AggTextAreaWidget::SelectAll()
-{
-  GET_OUTER()->SelectAll();
-}
-
-
-//--------------------------------------------------------------
-void  nsTextAreaWidget::AggTextAreaWidget::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
-{
-  GET_OUTER()->SetSelection(aStartSel, aEndSel);
-}
-
-
-//--------------------------------------------------------------
-void  nsTextAreaWidget::AggTextAreaWidget::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
-{
-  GET_OUTER()->GetSelection(aStartSel, aEndSel);
-}
-
-//--------------------------------------------------------------
-void  nsTextAreaWidget::AggTextAreaWidget::SetCaretPosition(PRUint32 aPosition)
-{
-  GET_OUTER()->SetCaretPosition(aPosition);
-}
-
-//--------------------------------------------------------------
-PRUint32  nsTextAreaWidget::AggTextAreaWidget::GetCaretPosition()
-{
-  return GET_OUTER()->GetCaretPosition();
-}
-
-PRBool nsTextAreaWidget::AggTextAreaWidget::AutoErase()
-{
-  return GET_OUTER()->AutoErase();
-}
-
-
-//----------------------------------------------------------------------
-
-BASE_IWIDGET_IMPL(nsTextAreaWidget, AggTextAreaWidget);
-
