@@ -43,7 +43,11 @@
 #define PLUGINSPAGE_URL     "http://cgi.netscape.com/cgi-bin/plug-in_finder.cgi" /* XXX Branding: make configurable via .properties or prefs */
 #define OK_BUTTON           "OK"
 #define CANCEL_BUTTON       "CANCEL"
+#ifdef HPUX
+#define JVM_SMARTUPDATE_URL "http://www.hp.com/go/java"
+#else 
 #define JVM_SMARTUPDATE_URL "http://home.netscape.com/plugins/jvm.html" /* XXX Branding: see above */
+#endif /* HPUX */
 #define JVM_MINETYPE        "application/x-java-vm"
 #define MESSAGE "\
 This page contains information of a type (%s) that can\n\
