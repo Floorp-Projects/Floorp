@@ -2659,7 +2659,7 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir, PRBool check
 				nsAutoString	iconURL;
 				PRInt32		extensionOffset;
 				extensionOffset = uri.RFind(".src", PR_TRUE);
-				if ((extensionOffset >= 0) && (extensionOffset == uri.Length()-4))
+				if ((extensionOffset >= 0) && (extensionOffset == len-4))
 				{
 					nsAutoString	temp;
 
