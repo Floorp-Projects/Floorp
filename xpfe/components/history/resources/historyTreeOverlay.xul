@@ -51,21 +51,21 @@
       sortSeparators="true" persist="hidden width sortActive sortDirection" 
       resource="http://home.netscape.com/NC-rdf#Name"/>
 
-    <splitter class="tree-splitter"/>
+    <splitter class="tree-splitter" id="pre-URL-splitter"/>
 
     <treecol flex="4" id="URL"
       sortSeparators="true" persist="hidden width sortActive sortDirection"
       resource="http://home.netscape.com/NC-rdf#URL"
       resource2="http://home.netscape.com/NC-rdf#Name"/>
 
-    <splitter class="tree-splitter"/>
+    <splitter class="tree-splitter" id="pre-Date-splitter"/>
 
     <treecol flex="1" id="Date" sortActive="true" sortDirection="descending"
       sortSeparators="true" persist="hidden width sortActive sortDirection"
       resource="http://home.netscape.com/NC-rdf#Date"
       resource2="http://home.netscape.com/NC-rdf#Name"/>
 
-    <splitter class="tree-splitter"/>
+    <splitter class="tree-splitter" id="pre-FirstVisitDate-splitter"/>
 
     <treecol flex="1" id="FirstVisitDate"
       hidden="true"
@@ -73,21 +73,21 @@
       resource="http://home.netscape.com/NC-rdf#FirstVisitDate"
       resource2="http://home.netscape.com/NC-rdf#Name"/>
 
-    <splitter class="tree-splitter"/>
+    <splitter class="tree-splitter" id="pre-Hostname-splitter"/>
 
-    <treecol flex="1" id="Hostname"
+    <treecol flex="1" id="Hostname" hidden="true"
       sortSeparators="true" persist="hidden width sortActive sortDirection"
       resource="http://home.netscape.com/NC-rdf#Hostname"
       resource2="http://home.netscape.com/NC-rdf#Name"/>
 
-    <splitter class="tree-splitter"/>
+    <splitter class="tree-splitter" id="pre-Referrer-splitter"/>
 
-    <treecol flex="1" id="Referrer"
+    <treecol flex="1" id="Referrer" hidden="true"
       sortSeparators="true" persist="hidden width sortActive sortDirection"
       resource="http://home.netscape.com/NC-rdf#Referrer"
       resource2="http://home.netscape.com/NC-rdf#Name"/>
 
-    <splitter class="tree-splitter"/>
+    <splitter class="tree-splitter" id="pre-VisitCount-splitter"/>
 
     <treecol flex="1" id="VisitCount"
       hidden="true"
@@ -95,40 +95,33 @@
       resource="http://home.netscape.com/NC-rdf#VisitCount"
       resource2="http://home.netscape.com/NC-rdf#Name"/>
 
-    <splitter class="tree-splitter"/>
+    <splitter class="tree-splitter" id="pre-Popup-splitter"/>
 
     <treecol persist="width" fixed="true" width="14" id="PopupColumn"/>
   </treecolgroup>
 
   <treehead>
-    <treerow id="headRow">
+    <treerow id="headRow" onclick="return TriStateColumnSort(event.target.id)">
       <treecell class="treecell-header sortDirectionIndicator"
         label="&tree.header.name.label;"
-        onclick="return TriStateColumnSort('Name');"
         observes="Name" />
       <treecell class="treecell-header sortDirectionIndicator" 
         label="&tree.header.url.label;"
-        onclick="return TriStateColumnSort('URL');"
         observes="URL" />
       <treecell class="treecell-header sortDirectionIndicator"
         label="&tree.header.date.label;"
-        onclick="return TriStateColumnSort('Date');"
         observes="Date"/>
       <treecell class="treecell-header sortDirectionIndicator"
         label="&tree.header.firstvisitdate.label;"
-        onclick="return TriStateColumnSort('FirstVisitDate');"
         observes="FirstVisitDate"/>
       <treecell class="treecell-header sortDirectionIndicator"
         label="&tree.header.hostname.label;"
-        onclick="return TriStateColumnSort('Hostname');"
         observes="Hostname"/>
       <treecell class="treecell-header sortDirectionIndicator"
         label="&tree.header.referrer.label;"
-        onclick="return TriStateColumnSort('Referrer');"
         observes="Referrer"/>
       <treecell class="treecell-header sortDirectionIndicator"
         label="&tree.header.visitcount.label;"
-        onclick="return TriStateColumnSort('VisitCount');"
         observes="VisitCount"/>
       <treecell class="treecell-header" allowevents="true" id="popupCell">
         <menu>
