@@ -2855,6 +2855,7 @@ nsBoxFrame::RegUnregAccessKey(nsIPresContext* aPresContext,
   if (atom != nsXULAtoms::button &&
       atom != nsXULAtoms::checkbox &&
       atom != nsXULAtoms::textbox &&
+      atom != nsXULAtoms::tab &&
       atom != nsXULAtoms::radio) {
 
     return NS_OK;
