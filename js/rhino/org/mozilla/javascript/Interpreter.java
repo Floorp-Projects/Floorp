@@ -417,8 +417,7 @@ public class Interpreter extends LabelTable {
                         iCodeTop = addByte((byte)(itsLineNumber >> 8), iCodeTop);
                         iCodeTop = addByte((byte)(itsLineNumber & 0xff), iCodeTop);
                         iCodeTop = addString(itsSourceFile, iCodeTop);
-                    }                        
-                    else {
+                    } else {
                         iCodeTop = addByte((byte) type, iCodeTop);
                         iCodeTop = addByte((byte)(nameIndex >> 8), iCodeTop);
                         iCodeTop = addByte((byte)(nameIndex & 0xFF), iCodeTop);
@@ -1727,7 +1726,11 @@ public class Interpreter extends LabelTable {
                         for (i = count - 1; i >= 0; i--)
                             outArgs[i] = stack[stackTop--];
                         lhs = stack[stackTop];
-                        if (lhs == undefined) {
+                        if (lhs == undefined && 
+                            (iCode[pc+1] << 8) + (iCode[pc+2] & 0xFF) != -1) 
+                        {
+                            // special code for better error message for call 
+                            //  to undefined
                             lhs = getString(theData.itsStringTable, iCode, 
                                             pc + 1);
                         }
