@@ -200,6 +200,8 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
         IL_RGBBits colorRGBBits;
         IL_ColorSpace *colorSpace;
         
+        // XXX We shouldn't be creating a new color space for pixmap. Change it
+        // to ask the device context for its color space
         colorRGBBits.red_shift = 16;  
         colorRGBBits.red_bits = 8;
         colorRGBBits.green_shift = 8;
@@ -207,7 +209,6 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
         colorRGBBits.blue_shift = 0; 
         colorRGBBits.blue_bits = 8;  
         colorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
-        IL_AddRefToColorSpace(colorSpace);
         IL_ReleaseColorSpace(aImage->header.color_space);
         aImage->header.color_space = colorSpace;
     }
