@@ -17,10 +17,12 @@
  */
 
 #include "unistring.h"
+#include "nsCRT.h"
 
 
 UnicodeString::UnicodeString()
 {
+  mLength = mString.Length();
 }
 
 UnicodeString::~UnicodeString()
@@ -29,200 +31,273 @@ UnicodeString::~UnicodeString()
 
 UnicodeString::UnicodeString(const UnicodeString& aUnicodeString)
 {
+  mString = aUnicodeString.mString;
+  mLength = mString.Length();
 }
 
 UnicodeString::UnicodeString(const char * aString)
 {
+  mString = aString;
+  mLength = mString.Length();
 }
 
 PRInt32  UnicodeString::hashCode() const
 {
+  nsCRT::HashValue(mString.GetUnicode());
   return 0;
 }
 
 TextOffset UnicodeString::indexOf(const UnicodeString& aUnicodeString, TextOffset aFromOffset, PRUint32 aForLength) const
 {
-  return 0;
+  return (mString.FindCharInSet((nsString&)(aUnicodeString.mString), aFromOffset));
 }
 
 TextOffset UnicodeString::indexOf(PRUnichar aUnichar, TextOffset aFromOffset, PRUint32 aForLength) const
 {
-  return 0;
+  return (mString.Find(aUnichar, aFromOffset));
 }
 
 
 UnicodeString& UnicodeString::extractBetween(TextOffset aStart, TextOffset aLimit, UnicodeString& aExtractInto) const
 {
-  UnicodeString u;
-  return (u);
+  nsString a = mString;
+  nsString b;
+  a.Mid(b,aStart,aLimit);
+  aExtractInto.mString = b;
+  return (aExtractInto);
 }
 
 
 PRInt32 UnicodeString::compareIgnoreCase(const UnicodeString& aUnicodeString) const
 {
-  return 0;
+  return (mString.Compare(aUnicodeString.mString,PR_TRUE));
 }
 
 PRInt32 UnicodeString::compareIgnoreCase(const PRUnichar* aUnichar, PRInt32 aLength) const
 {
-  return 0;
+  return (mString.Compare(aUnichar,PR_TRUE),aLength);
 }
 
 PRInt32 UnicodeString::compareIgnoreCase(const PRUnichar* aUnichar) const
 {
-  return 0;
+  return (mString.Compare(aUnichar,PR_TRUE));
 }
 
 PRInt32 UnicodeString::compareIgnoreCase(const char*	aChar, const char* aEncoding) const
 {
-  return 0;
+  return (mString.Compare(aChar,PR_TRUE));
 }
 
 PRInt32 UnicodeString::compareIgnoreCase(const char*	aChar) const
 {
-  return 0;
+  return (mString.Compare(aChar,PR_TRUE));
 }
 
 UnicodeString& UnicodeString::toUpper()
 {
-  UnicodeString u;
-  return (u);
+  
+  mString.ToUpperCase();
+  return (*this);
 }
 
 UnicodeString& UnicodeString::toUpper(const Locale& aLocale)
 {
-  UnicodeString u;
-  return (u);
+  mString.ToUpperCase();
+  return (*this);
 }
 
 char* UnicodeString::toCString(const char* aEncoding) const
 {
-  return ((char *)nsnull);
+  return (mString.ToNewCString());
 }
 
 UnicodeString& UnicodeString::trim(UnicodeString& aUnicodeString) const
 {
-  UnicodeString u;
-  return (u);
+  aUnicodeString.mString.CompressWhitespace();
+  return (aUnicodeString);
 }
 
 void UnicodeString::trim()
 {
+  mString.CompressWhitespace();
+  mLength = mString.Length();
   return;
 }
 
 UnicodeString& UnicodeString::remove()
 {
-  UnicodeString u;
-  return (u);
+  mString.Truncate();
+  mLength = mString.Length();
+  return (*this);
 }
 
 UnicodeString& UnicodeString::remove(TextOffset aOffset,PRInt32 aLength)
 {
-  UnicodeString u;
-  return (u);
+  mString.Cut(aOffset,aLength);  
+  mLength = mString.Length();
+  return (*this);
 }
 
 UnicodeString& UnicodeString::insert(TextOffset aThisOffset, const UnicodeString& aUnicodeString)
 {
-  UnicodeString u;
-  return (u);
+  mString.Insert(*(aUnicodeString.mString),aThisOffset);
+  mLength = mString.Length();
+  return (*this);
 }
 
 PRBool UnicodeString::startsWith(const UnicodeString& aUnicodeString) const
 {
-  return (PR_TRUE);  
+  if (nsCRT::strncmp(aUnicodeString.mString.GetUnicode(),mString.GetUnicode(),aUnicodeString.mString.Length()) == 0)
+    return PR_TRUE;
+
+  return PR_FALSE;
 }
 
 PRBool UnicodeString::endsWith(const UnicodeString& aUnicodeString) const
 {
-  return (PR_TRUE);  
+  PRUint32 offset = mString.Length() - aUnicodeString.mString.Length();
+  PRBool b = PR_FALSE;
+
+  if (offset < 0)
+    return PR_FALSE;
+
+  char * str1 = mString.ToNewCString();
+  char * str2 = aUnicodeString.mString.ToNewCString();
+
+  if (nsCRT::strncasecmp((char *)(str1+offset),str2,aUnicodeString.mString.Length()) == 0)
+    b = PR_TRUE;
+  
+  delete str1;
+  delete str2;
+
+  return (b);  
 }
 
 UnicodeString& UnicodeString::removeBetween(TextOffset aStart, TextOffset aLimit)
 {
-  UnicodeString u;
-  return (u);
+  mString.Cut(aStart, aLimit);
+  mLength = mString.Length();
+  return (*this);
 }
 
 PRInt8 UnicodeString::compare(const UnicodeString& aUnicodeString) const
 {
-  return 0;
+  return (mString.Equals(aUnicodeString.mString));
 }
 
-PRInt8 UnicodeString::compare(TextOffset aOffset, PRInt32 aThisLength, const UnicodeString& aUnicodeString, TextOffset aStringOffset, PRInt32 aLength) const
+PRInt8 UnicodeString::compare(TextOffset aOffset, 
+                              PRInt32 aThisLength, 
+                              const UnicodeString& aUnicodeString, 
+                              TextOffset aStringOffset, 
+                              PRInt32 aLength) const
 {
-  return 0;
+
+  nsString s1 = mString,s2 = aUnicodeString.mString;
+
+  s1.Mid(s1,aOffset,aThisLength);
+  s2.Mid(s2,aStringOffset,aLength);
+
+  return (s1.Equals(s2));
 }
 
 PRInt8 UnicodeString::compare(const PRUnichar* aUnichar) const
 {
-  return 0;
+  return (mString.Compare(aUnichar));
 }
 
 PRInt8 UnicodeString::compare(const PRUnichar* aUnichar, PRInt32 aLength) const
 {
-  return 0;
+  return (mString.Compare(aUnichar,PR_FALSE,aLength));
 }
 
 PRInt8 UnicodeString::compare(const char* aChar) const
 {
-  return 0;
+  return (mString.Compare(aChar));
 }
 
 UnicodeString& UnicodeString::extract(TextOffset aOffset,PRInt32 aLength, UnicodeString& aExtractInto) const
 {
-  UnicodeString u;
-  return (u);
+  nsString str = mString;
+  str.Mid(aExtractInto.mString,aOffset,aLength);
+  aExtractInto.mLength = aExtractInto.mString.Length();
+  return (aExtractInto);
 }
 
 void UnicodeString::extract(TextOffset aOffset, PRInt32 aLength, PRUnichar*aExtractInto) const
 {
-  return;
+  PRUint32 aExtractLength = 0;
+  nsString str = mString;
+
+  if(((PRInt32)aOffset)<((PRInt32)mLength)) 
+  {
+    aLength=(PRInt32)(((PRInt32)(aOffset+aLength)<=((PRInt32)mLength)) ? aLength : mLength-aOffset);
+
+    PRUnichar* from = (PRUnichar*)(str.GetUnicode() + aOffset);
+    PRUnichar* end =  (PRUnichar*)(str.GetUnicode() + aOffset + aLength);
+
+    while (from < end) 
+    {
+      PRUnichar ch = *from;
+
+      aExtractInto[aExtractLength++]=ch;
+      aExtractInto[aExtractLength]=0;
+
+      from++;
+    }
+  }
+  else 
+    aLength=0;
+
+  return ;
 }
 
 void UnicodeString::extract(TextOffset aOffset, PRInt32 aLength, char* aExtractInto) const
 {
+  nsString str = mString;
+  char * p = str.ToNewCString();
+
+  nsCRT::memcpy(aExtractInto,p+aOffset,aLength);
+  delete p;
+
   return;
 }
 
 PRUnichar UnicodeString::operator[](TextOffset	aOffset) const
 {
-  PRUnichar p;
-  return (p);
+  return(mString[aOffset]);
 }
 
 PRUnichar& UnicodeString::operator[](TextOffset	aOffset)
 {
-  PRUnichar p;
-  return (p);
+  return(mString[aOffset]);
 }
 
 UnicodeString&  UnicodeString::operator+=(const UnicodeString& aUnicodeString)
 {
-  UnicodeString u;
-  return (u);
+  mString.Append(aUnicodeString.mString);
+  return (*this);
 }
 
 UnicodeString&  UnicodeString::operator+=(PRUnichar aUnichar)
 {
-  UnicodeString u;
-  return (u);
+  mString.Append(aUnichar);
+  return (*this);
 }
 
 PRBool          UnicodeString::operator==(const UnicodeString& aUnicodeString) const
 {
-  return (PR_TRUE);
+  return (mString == (aUnicodeString.mString));
 }
 
 PRBool          UnicodeString::operator!=(const UnicodeString& aUnicodeString) const
 {
-  return (PR_TRUE);
+  return (mString != (aUnicodeString.mString));
 }
 
 UnicodeString&  UnicodeString::operator=(const UnicodeString& aUnicodeString)
 {
-  UnicodeString u;
-  return (u);
+  mString = aUnicodeString.mString;
+  mLength = mString.Length();
+  return (*this);
 }
 

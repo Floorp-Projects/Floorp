@@ -32,8 +32,7 @@ Calendar::~Calendar()
 
 Date Calendar::getNow()
 {
-  return ((Date) nsnull);
-    
+  return ((Date) nsnull);    
 }
 
 void Calendar::setTimeZone(const TimeZone& aZone)
