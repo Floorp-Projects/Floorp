@@ -5434,7 +5434,7 @@ void nsImapProtocol::DiscoverAllAndSubscribedBoxes()
                                                      ns);
 		if (ns &&
 			gHideOtherUsersFromList ? (ns->GetType() != kOtherUsersNamespace)
-            : TRUE)
+            : PR_TRUE)
 		{
 			const char *prefix = ns->GetPrefix();
 			if (prefix)
