@@ -542,10 +542,8 @@ nsWebScriptsAccess::CheckAccess(AccessInfoEntry* aEntry,
       NS_REINTERPRET_CAST(AccessInfo*, aEntry->mInfoArray.ElementAt(index));
     NS_ASSERTION(access_info, "Entry is missing attribute information");
     
-    const nsAString& type = 
-      access_info->mType ? 
-        nsDependentString(access_info->mType) : nsDependentString(kAny.get());
-    if (type.Equals(kAny) || type.Equals(aRequestType)) {
+    if (!access_info->mType || kAny.Equals(access_info->mType) || 
+        aRequestType.Equals(access_info->mType)) {
       if (!access_info->mFrom) {
         // If "from" is not specified, then all scripts will be  allowed 
         *aAccessGranted = PR_TRUE;
