@@ -222,6 +222,9 @@ NS_IMETHODIMP nsMsgHdr::SetRecipientsArray(const char *names, const char *addres
 
 	for (int i = 0; i < numAddresses; i++)
 	{
+		if (i > 0)
+			allRecipients += ", ";
+
 		if (strlen(curName))
 		{
 			allRecipients = curName;
@@ -261,6 +264,9 @@ NS_IMETHODIMP nsMsgHdr::SetCCListArray(const char *names, const char *addresses,
 
 	for (int i = 0; i < numAddresses; i++)
 	{
+		if (i > 0)
+			allRecipients += ", ";
+
 		if (strlen(curName))
 		{
 			allRecipients += curName;
@@ -371,7 +377,7 @@ nsresult nsMsgHdr::SetStringColumn(const char *str, mdb_token token)
 	struct mdbYarn yarn;
 	yarn.mYarn_Buf = (void *) (str ? str : "");
 	yarn.mYarn_Size = PL_strlen((const char *) yarn.mYarn_Buf) + 1;
-	yarn.mYarn_Fill = yarn.mYarn_Size;
+	yarn.mYarn_Fill = yarn.mYarn_Size - 1;
 	yarn.mYarn_Form = 0;
 	yarn.mYarn_Grow = NULL;
 	return m_mdbRow->AddColumn(m_mdb->GetEnv(), token, &yarn);
