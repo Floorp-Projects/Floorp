@@ -40,9 +40,9 @@
 #include "domstubs.idl"
 
 interface nsIDOMXULCommandDispatcher;
+interface nsIObserver;
 
-
-[scriptable, uuid(17ddd8c0-c5f8-11d2-a6ae-00104bde6048)]
+[scriptable, uuid(e64bb081-13ba-430e-ab70-73a9f1d3de58)]
 interface nsIDOMXULDocument : nsISupports
 {
            attribute nsIDOMNode                 popupNode;
@@ -65,4 +65,6 @@ interface nsIDOMXULDocument : nsISupports
                                                        in DOMString attr);
 
   void                      persist(in DOMString id, in DOMString attr);
+
+  void                      loadOverlay(in DOMString url, in nsIObserver aObserver);
 };
