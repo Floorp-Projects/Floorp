@@ -45,7 +45,9 @@ interface nsIDOMXULMenuListElement : nsIDOMXULSelectControlElement {
   attribute boolean editable;
   attribute boolean open;
   
-  attribute DOMString label;
+  // label of selected option or value of textfield for editable menu lists
+  readonly attribute DOMString label;
+
   attribute DOMString crop;
   attribute DOMString image;
   

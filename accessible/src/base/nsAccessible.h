@@ -97,6 +97,10 @@ protected:
   NS_IMETHOD GetXULName(nsAString& _retval);
   NS_IMETHOD AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString);
   NS_IMETHOD AppendFlatStringFromContentNode(nsIContent *aContent, nsAString *aFlatString);
+  // For accessibles that are not lists of choices, the name of the subtree should be the 
+  // sum of names in the subtree
+  NS_IMETHOD GetNameFromSubtree(nsIContent *aContent, nsAString *aFlatString)
+    { return AppendFlatStringFromSubtree(aContent, aFlatString); }
   NS_IMETHOD AppendStringWithSpaces(nsAString *aFlatString, const nsAString& textEquivalent);
 
   // helper method to verify frames

@@ -168,6 +168,10 @@ nsresult nsRootAccessible::AddEventListeners()
     rv = target->AddEventListener(NS_LITERAL_STRING("select"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
 
+    // capture ValueChange events (fired whenever value changes, immediately after, whether focus moves or not)
+    rv = target->AddEventListener(NS_LITERAL_STRING("ValueChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+
     // add ourself as a CheckboxStateChange listener (custom event fired in nsHTMLInputElement.cpp)
     rv = target->AddEventListener(NS_LITERAL_STRING("CheckboxStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
@@ -213,6 +217,7 @@ nsresult nsRootAccessible::RemoveEventListeners()
   if (target) { 
     target->RemoveEventListener(NS_LITERAL_STRING("focus"), NS_STATIC_CAST(nsIDOMFocusListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("select"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("ValueChange"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("CheckboxStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("RadioStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("popupshowing"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
@@ -297,6 +302,15 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   if (!targetNode)
     return NS_ERROR_FAILURE;
 
+  nsAutoString eventType;
+  aEvent->GetType(eventType);
+#ifdef DEBUG_aleventhal
+  // Very useful for debugging, please leave this here.
+  if (eventType.EqualsIgnoreCase("DOMMenuItemActive")) {
+    printf("debugging events");
+  }
+#endif
+
   // Check to see if it's a select element. If so, need the currently focused option
   nsCOMPtr<nsIDOMHTMLSelectElement> selectElement(do_QueryInterface(targetNode));
   if (selectElement)     // ----- Target Node is an HTML <select> element ------
@@ -358,8 +372,6 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   }
 #endif
 
-  nsAutoString eventType;
-  aEvent->GetType(eventType);
   nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(accessible));
 
 #ifndef MOZ_ACCESSIBILITY_ATK
@@ -398,6 +410,10 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     }
     else
       FireAccessibleFocusEvent(accessible, targetNode);
+  }
+  else if (eventType.EqualsIgnoreCase("ValueChange")) { 
+    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, 
+                              accessible, nsnull);
   }
   else if (eventType.EqualsIgnoreCase("CheckboxStateChange")) { 
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, 
@@ -480,6 +496,15 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
                                 treeItemAccessible, nsnull);
       }
   }
+#if 0
+  // XXX todo: value change events for ATK are done with 
+  // AtkPropertyChange, PROP_VALUE. Need the old and new value.
+  // Not sure how we'll get the old value.
+  else if (eventType.EqualsIgnoreCase("ValueChange")) { 
+    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, 
+                              accessible, nsnull);
+  }
+#endif
   else if (eventType.EqualsIgnoreCase("CheckboxStateChange") || // it's a XUL <checkbox>
            eventType.EqualsIgnoreCase("RadioStateChange")) { // it's a XUL <radio>
     accessible->GetState(&stateData.state);
@@ -509,6 +534,17 @@ void nsRootAccessible::GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNo
   if (nsevent) {
     nsCOMPtr<nsIDOMEventTarget> domEventTarget;
     nsevent->GetOriginalTarget(getter_AddRefs(domEventTarget));
+    nsCOMPtr<nsIContent> content(do_QueryInterface(domEventTarget));
+    if (!content || content->IsContentOfType(nsIContent::eHTML)) {
+      // Kind of a hack. If we're on an HTML element we want to make sure that it wasn't
+      // inserted via XBL. In that case we want the "original explicit event target".
+      // The difference is not 100% clear from the API docs, 
+      // but this combination gets the following important cases correct:
+      // 1. Inserted <dialog> buttons like OK, Cancel, Help.
+      // 2. XUL menulists and comboboxes.
+      // 3. The focused radio button in a group.
+      nsevent->GetExplicitOriginalTarget(getter_AddRefs(domEventTarget));
+    }
     if (domEventTarget) {
       CallQueryInterface(domEventTarget, aTargetNode);
     }
