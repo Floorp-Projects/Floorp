@@ -51,11 +51,11 @@
 #include "nsIStreamListener.h"
 #endif /* XP_MAC */
 #include "nsIServiceManager.h"
-#include "nsIFileLocator.h"
 #include "nsCOMPtr.h"
-#include "nsFileLocations.h"
 #include "nsFileStream.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsIDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsIProfile.h"
 #include "nsQuickSort.h"
 
@@ -89,7 +89,6 @@
 #define DEBUG_prefs
 #endif
 
-static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kSecurityManagerCID,   NS_SCRIPTSECURITYMANAGER_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
@@ -180,6 +179,31 @@ static nsresult _convertRes(int res)
 }
 
 //----------------------------------------------------------------------------------------
+// So discouraged is the use of nsIFileSpec, nobody wanted to have this routine be
+// public - It might lead to continued use of nsIFileSpec. Right now, this code has
+// such a need for it, here it is. Let's stop having to use it though.
+static nsresult _nsIFileToFileSpec(nsIFile* inFile, nsIFileSpec **aFileSpec)
+//----------------------------------------------------------------------------------------
+{
+   nsresult rv;
+   nsCOMPtr<nsIFileSpec> newFileSpec;
+   nsXPIDLCString pathBuf;
+   
+   rv = inFile->GetPath(getter_Copies(pathBuf));
+   if (NS_FAILED(rv)) return rv;
+   rv = NS_NewFileSpec(getter_AddRefs(newFileSpec));
+   if (NS_FAILED(rv)) return rv;
+   rv = newFileSpec->SetNativePath((const char *)pathBuf);
+   if (NS_FAILED(rv)) return rv;
+   
+   *aFileSpec = newFileSpec;
+   NS_ADDREF(*aFileSpec);
+   
+   return NS_OK;
+}
+
+
+//----------------------------------------------------------------------------------------
 nsPref::nsPref()
 //----------------------------------------------------------------------------------------
 	:	mFileSpec(nsnull)
@@ -204,31 +228,37 @@ nsPref::~nsPref()
 nsresult nsPref::useDefaultPrefFile()
 //----------------------------------------------------------------------------------------
 {
-    nsIFileSpec* prefsFile = NS_LocateFileOrDirectory(nsSpecialFileSpec::App_PreferencesFile50);
-    nsresult rv = NS_OK;
-    if (!prefsFile)
-    {
-	    // There is no locator component. Or perhaps there is a locator, but the
-	    // locator couldn't find where to put it. So put it in the cwd (NB, viewer comes here.)
-        // #include nsIComponentManager.h
-        rv = nsComponentManager::CreateInstance(
-        	(const char*)NS_FILESPEC_PROGID,
-        	(nsISupports*)nsnull,
-        	(const nsID&)NS_GET_IID(nsIFileSpec),
-        	(void**)&prefsFile);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a file spec.");
-	    if (!prefsFile)
-	    	return NS_ERROR_FAILURE;
-	    prefsFile->SetUnixStyleFilePath("default_prefs.js"); // in default working directory.
-    }
-    rv = ReadUserPrefsFrom(prefsFile);
+   nsresult rv;
+   nsCOMPtr<nsIFile> aFile;
+      
+   // Anything which calls NS_InitXPCOM will have this
+   rv = NS_GetSpecialDirectory(NS_APP_PREFS_50_FILE, getter_AddRefs(aFile));
+
+   if (!aFile)
+   {
+      // We know we have XPCOM directory services, but we might not have a provider which
+      // knows about NS_APP_PREFS_50_FILE. Put the file in NS_XPCOM_CURRENT_PROCESS_DIR.
+      rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, getter_AddRefs(aFile));
+      if (NS_FAILED(rv)) return rv;
+      rv = aFile->Append("default_prefs.js");
+      if (NS_FAILED(rv)) return rv;
+   } 
+   
+   nsCOMPtr<nsIFileSpec> prefsFileSpec;
+   
+   // TODO: modify the rest of this code to take
+   // nsIFile and not do this conversion into nsIFileSpec
+    rv = _nsIFileToFileSpec(aFile, getter_AddRefs(prefsFileSpec));
+    if (NS_FAILED(rv)) return rv;
+      
+    rv = ReadUserPrefsFrom(prefsFileSpec);
     if (NS_SUCCEEDED(rv)) {
-        NS_RELEASE(prefsFile);
         return rv;
     }
 
     // need to save the prefs now
-    mFileSpec = prefsFile; // Already addreffed when retrieved.
+    mFileSpec = prefsFileSpec;
+    NS_ADDREF(mFileSpec);
     rv = SavePrefFile(); 
 
     return rv;
@@ -239,16 +269,23 @@ nsresult nsPref::useUserPrefFile()
 //----------------------------------------------------------------------------------------
 {
     nsresult rv = NS_OK;
-    nsCOMPtr<nsIFileSpec> userPrefFile;
+    nsCOMPtr<nsIFile> aFile;
+ 
     static const char* userFiles[] = {"user.js"};
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-    if (NS_SUCCEEDED(rv) && locator)
+    
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(aFile));
+    if (NS_SUCCEEDED(rv) && aFile)
     {
-        rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50,
-                        getter_AddRefs(userPrefFile));
-        if (NS_SUCCEEDED(rv) && userPrefFile) 
+        rv = aFile->Append(userFiles[0]);
+        if (NS_SUCCEEDED(rv))
         {
-            if (NS_SUCCEEDED(userPrefFile->AppendRelativeUnixPath((char*)userFiles[0])))
+    nsCOMPtr<nsIFileSpec> userPrefFile;
+            
+            // TODO: modify the rest of this code to take
+            // nsIFile and not do this conversion into nsIFileSpec
+            rv = _nsIFileToFileSpec(aFile, getter_AddRefs(userPrefFile));
+            
+            if (NS_SUCCEEDED(rv))
             {
                 if (NS_FAILED(StartUp()))
     	            return NS_ERROR_FAILURE;
@@ -409,16 +446,18 @@ nsresult nsPref::useLockPrefFile()
         }
     }
 
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-    if (NS_SUCCEEDED(rv) && locator)
+    
     {
-#ifndef XP_MAC
-        nsSpecialSystemDirectory dirSpec(nsSpecialSystemDirectory::Moz_BinDirectory);
-#else
-        nsSpecialSystemDirectory dirSpec(nsSpecialSystemDirectory::Moz_BinDirectory);
-        dirSpec += "Essential Files";
+        nsCOMPtr<nsIFile> aFile; 
+        rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, getter_AddRefs(aFile));
+        
+#ifdef XP_MAC
+        aFile->Append("Essential Files");
 #endif
-        rv = NS_NewFileSpecWithSpec(dirSpec, getter_AddRefs(lockPrefFile));
+        // TODO: Make the rest of this code use nsIFile and
+        // avoid this conversion
+        rv = _nsIFileToFileSpec(aFile, getter_AddRefs(lockPrefFile));
+        
         if (NS_SUCCEEDED(rv) && lockPrefFile) 
         {
             if (NS_SUCCEEDED(lockPrefFile->AppendRelativeUnixPath(configFile)))
@@ -1513,14 +1552,16 @@ extern "C" JSBool pref_InitInitialObjects()
     JSBool funcResult;
     nsresult rv;
     PRBool exists;
-    
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-    if (NS_FAILED(rv))
-    	return JS_TRUE;
+    nsCOMPtr<nsIFile> aFile;
     nsCOMPtr <nsIFileSpec> defaultPrefDir;
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_PrefDefaultsFolder50, getter_AddRefs(defaultPrefDir));
+        
+    rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(aFile));
     if (NS_FAILED(rv))
-    	return JS_TRUE;
+    	return JS_FALSE;
+    rv = _nsIFileToFileSpec(aFile, getter_AddRefs(defaultPrefDir));
+    if (NS_FAILED(rv))
+    	return JS_FALSE;
+    
 	static const char* specialFiles[] = {
 		"initpref.js"
 #ifdef XP_MAC
@@ -1553,10 +1594,19 @@ extern "C" JSBool pref_InitInitialObjects()
 
 	// Get any old child of the components directory. Warning: aliases get resolved, so
 	// SetLeafName will not work here.
-    nsCOMPtr<nsIFileSpec> specialChild;
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_PrefDefaultsFolder50, getter_AddRefs(specialChild));
+    nsCOMPtr<nsIFile> aFile2;
+    nsCOMPtr <nsIFileSpec> specialChild;
+        
+    rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(aFile2));
     if (NS_FAILED(rv))
     	return JS_TRUE;
+
+    // TODO: Convert the rest of this code to nsIFile
+    // and avoid this conversion to nsIFileSpec
+    rv = _nsIFileToFileSpec(aFile2, getter_AddRefs(specialChild));   
+    if (NS_FAILED(rv))
+    	return JS_TRUE;
+    	
 	if NS_FAILED(specialChild->AppendRelativeUnixPath((char*)specialFiles[0]))
 	{
 		funcResult = JS_FALSE;
@@ -1668,12 +1718,18 @@ extern "C" JSBool pref_InitInitialObjects()
 	// Finally, parse any other special files (platform-specific ones).
 	for (k = 1; k < (int) (sizeof(specialFiles) / sizeof(char*)); k++)
 	{
+	     nsCOMPtr<nsIFile> aFile3;
         nsCOMPtr<nsIFileSpec> anotherSpecialChild2;
-        if (NS_FAILED(locator->GetFileLocation(nsSpecialFileSpec::App_PrefDefaultsFolder50, getter_AddRefs(anotherSpecialChild2))))
-	    	continue;
-		if (NS_FAILED(anotherSpecialChild2->AppendRelativeUnixPath((char*)specialFiles[k])))
-	    	continue;
-
+                 
+        rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(aFile3));
+        if (NS_FAILED(rv)) continue;
+        rv = aFile3->Append((char*)specialFiles[k]);
+        if (NS_FAILED(rv)) continue;
+    
+        // TODO: Convert the rest of this code to nsIFile
+        // and avoid this conversion to nsIFileSpec
+        rv = _nsIFileToFileSpec(aFile3, getter_AddRefs(anotherSpecialChild2));
+        if (NS_FAILED(rv)) continue;        
 
 #ifdef DEBUG_prefs
             printf("Parsing %s\n", specialFiles[k]);
