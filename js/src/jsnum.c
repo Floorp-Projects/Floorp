@@ -566,7 +566,6 @@ js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
     JSObject *obj;
     JSString *str;
     const jschar *ep;
-    jsdouble d;
 
     if (JSVAL_IS_OBJECT(v)) {
 	obj = JSVAL_TO_OBJECT(v);
@@ -584,14 +583,18 @@ js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
     } else if (JSVAL_IS_STRING(v)) {
 	str = JSVAL_TO_STRING(v);
 	errno = 0;
-	/* Note that ECMAScript doesn't treat numbers beginning with a zero as octal numbers here.
-	 * This works because all such numbers will be interpreted as decimal by js_strtod and
-	 * will never get passed to js_strtointeger, which would interpret them as octal. */
-	if ((!js_strtod(cx, str->chars, &ep, &d) || js_SkipWhiteSpace(ep) != str->chars + str->length) &&
-	    (!js_strtointeger(cx, str->chars, &ep, 0, &d) || js_SkipWhiteSpace(ep) != str->chars + str->length)) {
+	/*
+         * Note that ECMA doesn't treat a string beginning with a '0' as an
+         * octal number here.  This works because all such numbers will be
+         * interpreted as decimal by js_strtod and will never get passed to
+         * js_strtointeger (which would interpret them as octal).
+         */
+         if ((!js_strtod(cx, str->chars, &ep, dp) ||
+              js_SkipWhiteSpace(ep) != str->chars + str->length) &&
+	     (!js_strtointeger(cx, str->chars, &ep, 0, dp) ||
+              js_SkipWhiteSpace(ep) != str->chars + str->length)) {
 	    goto badstr;
 	}
-	*dp = d;
     } else if (JSVAL_IS_BOOLEAN(v)) {
 	*dp = JSVAL_TO_BOOLEAN(v) ? 1 : 0;
     } else {
