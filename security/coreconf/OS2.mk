@@ -84,14 +84,6 @@ SHLIB_LDSTARTFILE	=
 SHLIB_LDENDFILE		= 
 endif
 
-# HCT Include from Mozilla client build. 
-INCLUDES           = -I$(CORE_DEPTH)/../dist/include  -I$(CORE_DEPTH)/../include
-
-# This is where Mozilla Client build DIST & INCLUDE.
-# while DIST is where Security build put it LIB & INCLUDE
-MOZ_DIST           =  $(CORE_DEPTH)/../dist
-MOZ_LIB            =  $(CORE_DEPTH)/../dist/lib
-
 OS_CFLAGS          = -Wall -W -Wno-unused -Wpointer-arith -Wcast-align -Zmtd -Zomf -Zmt  -DDEBUG -DDEBUG_wintrinh -DTRACING -g
 
 # Where the libraries are
