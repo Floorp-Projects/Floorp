@@ -101,7 +101,8 @@ nsSocketTransportService::PostEvent(nsISocketEventHandler *handler,
     NS_ASSERTION(handler, "null handler");
 
     nsAutoLock lock(mEventQLock);
-    NS_ENSURE_TRUE(mInitialized, NS_ERROR_OFFLINE);
+    if (!mInitialized)
+        return NS_ERROR_OFFLINE;
 
     SocketEvent *event = new SocketEvent(handler, type, uparam, vparam);
     if (!event)
