@@ -20,7 +20,7 @@ DEPTH		= ../..
 MODULE		= lay
 LIBRARY_NAME	= lay
 
-EXPORTS		= layout.h lo_funcs.h
+EXPORTS		= laylayer.h layout.h lo_funcs.h
 
 CSRCS		= bullet.c \
 		  clipline.c \
@@ -55,10 +55,6 @@ CSRCS		= bullet.c \
 REQUIRES	= parse style js layer applet nspr security dbm img util jtools edtplug java hook pref libfont lay rdf network htmldlgs privacy
 
 include $(DEPTH)/config/config.mk
-
-ifdef TRANSACTION_RECEIPTS
-EXPORTS		+= laylayer.h
-endif
 
 ifdef EDITOR
 CSRCS		+= layedit.c \
