@@ -18,6 +18,9 @@
 
 #include "nsScrollbar.h"
 #include "nsIDeviceContext.h"
+#if TARGET_CARBON
+#include <ControlDefinitions.h>
+#endif
 
 NS_IMPL_ADDREF(nsScrollbar);
 NS_IMPL_RELEASE(nsScrollbar);
@@ -109,6 +112,9 @@ nsresult nsScrollbar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
  * @param ctrl - The Control being tracked
  * @param part - Part of the control (arrow, thumb, gutter) being hit
  */
+#if TARGET_CARBON
+pascal 
+#endif
 void nsScrollbar::ScrollActionProc(ControlHandle ctrl, ControlPartCode part)
 {
 	nsScrollbar* me = (nsScrollbar*)(::GetControlReference(ctrl));
