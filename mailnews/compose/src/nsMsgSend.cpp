@@ -1268,14 +1268,14 @@ nsMsgComposeAndSend::GetBodyFromEditor()
 	
   // Convert body to mail charset
 	char      *outCString;
-  nsString  aCharset = mCompFields->GetCharacterSet();
+  const char  *aCharset = mCompFields->GetCharacterSet();
 
-  if (!aCharset.IsEmpty())
+  if (aCharset && *aCharset)
   {
     // Convert to entities.
     // If later Editor generates entities then we can remove this.
-    char charset[65];
-    rv = nsMsgI18NSaveAsCharset(attachment1_type, aCharset.ToCString(charset, 65), bodyText, &outCString);
+    rv = nsMsgI18NSaveAsCharset(mCompFields->GetForcePlainText() ? TEXT_PLAIN : attachment1_type, 
+                                aCharset, bodyText, &outCString);
     if (NS_SUCCEEDED(rv)) 
     {
       PR_FREEIF(attachment1_body);
@@ -1289,7 +1289,8 @@ nsMsgComposeAndSend::GetBodyFromEditor()
     if (origHTMLBody)
     {
       char      *newBody = nsnull;
-      rv = nsMsgI18NSaveAsCharset(attachment1_type, aCharset.ToCString(charset, 65), origHTMLBody, &newBody);
+      rv = nsMsgI18NSaveAsCharset(mCompFields->GetUseMultipartAlternative() ? TEXT_PLAIN : attachment1_type, 
+                                  aCharset, origHTMLBody, &newBody);
       if (NS_SUCCEEDED(rv)) 
       {
         PR_FREEIF(origHTMLBody);
