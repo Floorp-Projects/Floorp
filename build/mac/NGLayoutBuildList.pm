@@ -108,51 +108,47 @@ sub Checkout()
 	my($cvsfile) = _pickWithMemoryFile("::nglayout.cvsloc");
 	my($session) = MacCVS->new( $cvsfile );
 	unless (defined($session)) { die "Checkout aborted. Cannot create session file: $session" }
-	
+
+	my($LIBPREF_BRANCH) = "XPCOM_BRANCH";
+	my($IMGLIB_BRANCH) = "MODULAR_IMGLIB_BRANCH"; #// compile the "(standalone)" targets when pulling the tips
+	my($PLUGIN_BRANCH) = "OJI_19980618_BRANCH";
+
 	if ($main::pull{lizard})
 	{
-		my($XTCOM_BRANCH) = "XPCOM_BRANCH";
-				
-		$session->checkout("mozilla/modules/libpref",$XTCOM_BRANCH) || die "checkout failure";
 		$session->checkout("mozilla/LICENSE") || die "checkout failure";
 		$session->checkout("mozilla/LEGAL") || die "checkout failure";
 		$session->checkout("mozilla/config") || die "checkout failure";
+		$session->checkout("mozilla/dbm") || die "checkout failure";
 		$session->checkout("mozilla/lib/liblayer") || die "checkout failure";
 		$session->checkout("mozilla/modules/zlib") || die "checkout failure";
 		$session->checkout("mozilla/modules/libutil") || die "checkout failure";
-		$session->checkout("mozilla/modules/plugin") || die "checkout failure";
 		$session->checkout("mozilla/nsprpub") || die "checkout failure";
 		$session->checkout("mozilla/sun-java") || die "checkout failure";
 		$session->checkout("mozilla/nav-java") || die "checkout failure";
 		$session->checkout("mozilla/js") || die "checkout failure";
 		$session->checkout("mozilla/modules/security/freenav") || die "checkout failure";
-		$session->checkout("mozilla/lib/libparse") || die "checkout failure";
-		$session->checkout("mozilla/lib/layout") || die "checkout failure";
-		$session->checkout("mozilla/lib/libstyle") || die "checkout failure";
-		$session->checkout("mozilla/lib/libpwcac") || die "checkout failure";
+		#//$session->checkout("mozilla/lib/libparse") || die "checkout failure";
+		#//$session->checkout("mozilla/lib/layout") || die "checkout failure";
+		#//$session->checkout("mozilla/lib/libstyle") || die "checkout failure";
+		#//$session->checkout("mozilla/lib/libpwcac") || die "checkout failure";
+		$session->checkout("mozilla/modules/libpref",$LIBPREF_BRANCH) || die "checkout failure";
+		$session->checkout("mozilla/modules/plugin",$PLUGIN_BRANCH) || die "checkout failure";
 	}
 	if ($main::pull{xpcom})
 	{
 		$session->checkout("mozilla/modules/libreg") || die "checkout failure";
 		$session->checkout("mozilla/xpcom") || die "checkout failure";
 	}
-#	if ($main::pull{imglib})
-#	{
-#		my($IMGLIB_BRANCH) = "MODULAR_IMGLIB_BRANCH";
-#
-#		$session->checkout("mozilla/jpeg", $IMGLIB_BRANCH) || die "checkout failure";
-#		$session->checkout("mozilla/modules/libutil", $IMGLIB_BRANCH) || die "checkout failure";
-#		$session->checkout("mozilla/modules/libimg", $IMGLIB_BRANCH) || die "checkout failure";
-#	}
 	if ($main::pull{imglib})
 	{
-		$session->checkout("mozilla/jpeg") || die "checkout failure";
-		$session->checkout("mozilla/modules/libutil") || die "checkout failure";
-		$session->checkout("mozilla/modules/libimg") || die "checkout failure";
+		$session->checkout("mozilla/jpeg", $IMGLIB_BRANCH) || die "checkout failure";
+		$session->checkout("mozilla/modules/libutil", $IMGLIB_BRANCH) || die "checkout failure";
+		$session->checkout("mozilla/modules/libimg", $IMGLIB_BRANCH) || die "checkout failure";
 	}
 	if ($main::pull{netlib})
 	{
 		$session->checkout("mozilla/lib/xp") || die "checkout failure";
+		$session->checkout("mozilla/lib/libpwcac") || die "checkout failure";
 		$session->checkout("mozilla/network") || die "checkout failure";
 		$session->checkout("mozilla/include") || die "checkout failure";
 	}
@@ -199,10 +195,10 @@ sub BuildDist()
 	[":mozilla:lib:mac:Misc:MANIFEST", "$distdirectory:mac:common:"],
 	[":mozilla:lib:mac:MoreFiles:MANIFEST", "$distdirectory:mac:common:morefiles:"],
 #INCLUDE
-		[":mozilla:config:mac:MANIFEST", "$distdirectory:config:"],
-		[":mozilla:config:mac:MANIFEST_config", "$distdirectory:config:"],
-		[":mozilla:include:MANIFEST", "$distdirectory:include:"],		
-		[":mozilla:cmd:macfe:pch:MANIFEST", "$distdirectory:include:"],
+	[":mozilla:config:mac:MANIFEST", "$distdirectory:config:"],
+	[":mozilla:config:mac:MANIFEST_config", "$distdirectory:config:"],
+	[":mozilla:include:MANIFEST", "$distdirectory:include:"],		
+	[":mozilla:cmd:macfe:pch:MANIFEST", "$distdirectory:include:"],
 #NSPR	
     [":mozilla:nsprpub:pr:include:MANIFEST", "$distdirectory:nspr:"],		
     [":mozilla:nsprpub:pr:src:md:mac:MANIFEST", "$distdirectory:nspr:mac:"],		
@@ -239,14 +235,14 @@ sub BuildDist()
     [":mozilla:modules:plugin:nglsrc:MANIFEST", "$distdirectory:plugin:"],
     [":mozilla:modules:plugin:public:MANIFEST", "$distdirectory:plugin:"],
     [":mozilla:modules:plugin:src:MANIFEST", "$distdirectory:plugin:"],
-#PARSE
-		[":mozilla:lib:libparse:MANIFEST",			"$distdirectory:libparse:"],
-#OLD LAYOUT
-		[":mozilla:lib:layout:MANIFEST",	"$distdirectory:layout:"],
-#STYLE
-		[":mozilla:lib:libstyle:MANIFEST",	 "$distdirectory:libstyle:"],
+#//PARSE
+#//	[":mozilla:lib:libparse:MANIFEST",			"$distdirectory:libparse:"],
+#//OLD LAYOUT
+#//	[":mozilla:lib:layout:MANIFEST",	"$distdirectory:layout:"],
+#//STYLE
+#//	[":mozilla:lib:libstyle:MANIFEST",	 "$distdirectory:libstyle:"],
 #LAYERS
-		[":mozilla:lib:liblayer:include:MANIFEST",	"$distdirectory:layers:"],
+	[":mozilla:lib:liblayer:include:MANIFEST",	"$distdirectory:layers:"],
 #NETWORK
     [":mozilla:network:cache:MANIFEST", "$distdirectory:network:"],
     [":mozilla:network:client:MANIFEST", "$distdirectory:network:"],
@@ -366,11 +362,12 @@ sub BuildCommonProjects()
 	
 # static
 
-  BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",	 "Security.o");
+	BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",	 "Security.o");
 
 	BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",						"png$D.o");
 
-	BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",					"libimg$D.o (standalone)");
+	BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",					"libimg$D.o");
+	#//BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",					"libimg$D.o (standalone)");
 
 	BuildProject(":mozilla:network:macbuild:network.mcp",		"NetworkModular$D.o");
 
