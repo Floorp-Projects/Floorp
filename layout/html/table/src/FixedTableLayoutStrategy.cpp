@@ -149,7 +149,8 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
           nsMargin borderPadding = nsTableFrame::GetBorderPadding(nsSize(aReflowState.mComputedWidth, 0),
                                                                   aPixelToTwips, cellFrame);
           cellWidth = cellPosition->mWidth.GetCoordValue() + borderPadding.left + borderPadding.right;
-          colWidths[colX] = nsTableFrame::RoundToPixel(cellWidth / (float) colSpan, aPixelToTwips);
+          colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(((float) cellWidth) / ((float) colSpan)),
+                                                                      aPixelToTwips);
           colFrame->SetWidth(MIN_CON, colWidths[colX]);
         }
         else if ((eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) &&
@@ -159,7 +160,8 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
           nsMargin borderPadding = nsTableFrame::GetBorderPadding(nsSize(aReflowState.mComputedWidth, 0),
                                                                   aPixelToTwips, cellFrame);
           cellWidth = percent * (float)availWidth + borderPadding.left + borderPadding.right;
-          colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(cellWidth / (float)colSpan), aPixelToTwips); 
+          colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(((float) cellWidth) / ((float) colSpan)),
+                                                                      aPixelToTwips); 
           colFrame->SetWidth(PCT, colWidths[colX]);
           percTotal += colWidths[colX];
         }
