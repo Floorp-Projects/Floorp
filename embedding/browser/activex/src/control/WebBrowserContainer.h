@@ -35,41 +35,41 @@
 // interfaces into the web shell and so forth.
 
 class CWebBrowserContainer :
-		public nsIEmbeddingSiteWindow,
-		public nsIWebBrowserChrome,
-		public nsIWebProgressListener,
-		public nsIRequestObserver,
-		public nsIURIContentListener,
-		public nsIInterfaceRequestor,
+        public nsIEmbeddingSiteWindow,
+        public nsIWebBrowserChrome,
+        public nsIWebProgressListener,
+        public nsIRequestObserver,
+        public nsIURIContentListener,
+        public nsIInterfaceRequestor,
         public nsIContextMenuListener,
         public nsICommandHandler,
         public nsSupportsWeakReference
 {
 public:
-	CWebBrowserContainer(CMozillaBrowser *pOwner);
+    CWebBrowserContainer(CMozillaBrowser *pOwner);
 
-	friend CMozillaBrowser;
+    friend CMozillaBrowser;
 
 protected:
-	virtual ~CWebBrowserContainer();
+    virtual ~CWebBrowserContainer();
 
 // Protected members
 protected:
-	CMozillaBrowser *m_pOwner;
-	nsString m_sTitle;
-	nsIURI *m_pCurrentURI;
-	CDWebBrowserEvents1 *m_pEvents1;
-	CDWebBrowserEvents2 *m_pEvents2;
+    CMozillaBrowser *m_pOwner;
+    nsString m_sTitle;
+    nsIURI *m_pCurrentURI;
+    CDWebBrowserEvents1 *m_pEvents1;
+    CDWebBrowserEvents2 *m_pEvents2;
 
 
 public:
-	NS_DECL_ISUPPORTS
-	NS_DECL_NSIEMBEDDINGSITEWINDOW
-	NS_DECL_NSIWEBBROWSERCHROME
-	NS_DECL_NSIURICONTENTLISTENER
-	NS_DECL_NSIREQUESTOBSERVER
-	NS_DECL_NSIINTERFACEREQUESTOR
-	NS_DECL_NSIWEBPROGRESSLISTENER
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIEMBEDDINGSITEWINDOW
+    NS_DECL_NSIWEBBROWSERCHROME
+    NS_DECL_NSIURICONTENTLISTENER
+    NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSIINTERFACEREQUESTOR
+    NS_DECL_NSIWEBPROGRESSLISTENER
     NS_DECL_NSICONTEXTMENULISTENER
     NS_DECL_NSICOMMANDHANDLER
 };

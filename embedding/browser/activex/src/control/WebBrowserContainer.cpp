@@ -34,11 +34,11 @@
 
 CWebBrowserContainer::CWebBrowserContainer(CMozillaBrowser *pOwner)
 {
-	NS_INIT_REFCNT();
-	m_pOwner = pOwner;
-	m_pEvents1 = m_pOwner;
-	m_pEvents2 = m_pOwner;
-	m_pCurrentURI = nsnull;
+    NS_INIT_REFCNT();
+    m_pOwner = pOwner;
+    m_pEvents1 = m_pOwner;
+    m_pEvents2 = m_pOwner;
+    m_pCurrentURI = nsnull;
 }
 
 
@@ -55,12 +55,12 @@ NS_IMPL_RELEASE(CWebBrowserContainer)
 
 NS_INTERFACE_MAP_BEGIN(CWebBrowserContainer)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
-	NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-	NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
-	NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
+    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
+    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
     NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
     NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
-	NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
     NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
 //    NS_INTERFACE_MAP_ENTRY(nsICommandHandler)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -92,25 +92,25 @@ NS_IMETHODIMP CWebBrowserContainer::OnShowContextMenu(PRUint32 aContextFlags, ns
 /* void onProgressChange (in nsIWebProgress aProgress, in nsIRequest aRequest, in long curSelfProgress, in long maxSelfProgress, in long curTotalProgress, in long maxTotalProgress); */
 NS_IMETHODIMP CWebBrowserContainer::OnProgressChange(nsIWebProgress *aProgress, nsIRequest *aRequest, PRInt32 curSelfProgress, PRInt32 maxSelfProgress, PRInt32 curTotalProgress, PRInt32 maxTotalProgress)
 {
-	NG_TRACE(_T("CWebBrowserContainer::OnProgressChange(...)\n"));
-	
-	long nProgress = curTotalProgress;
-	long nProgressMax = maxTotalProgress;
+    NG_TRACE(_T("CWebBrowserContainer::OnProgressChange(...)\n"));
+    
+    long nProgress = curTotalProgress;
+    long nProgressMax = maxTotalProgress;
 
-	if (nProgress == 0)
-	{
-	}
-	if (nProgressMax == 0)
-	{
-		nProgressMax = LONG_MAX;
-	}
-	if (nProgress > nProgressMax)
-	{
-		nProgress = nProgressMax; // Progress complete
-	}
+    if (nProgress == 0)
+    {
+    }
+    if (nProgressMax == 0)
+    {
+        nProgressMax = LONG_MAX;
+    }
+    if (nProgress > nProgressMax)
+    {
+        nProgress = nProgressMax; // Progress complete
+    }
 
-	m_pEvents1->Fire_ProgressChange(nProgress, nProgressMax);
-	m_pEvents2->Fire_ProgressChange(nProgress, nProgressMax);
+    m_pEvents1->Fire_ProgressChange(nProgress, nProgressMax);
+    m_pEvents2->Fire_ProgressChange(nProgress, nProgressMax);
 
     return NS_OK;
 }
@@ -121,7 +121,7 @@ NS_IMETHODIMP CWebBrowserContainer::OnProgressChange(nsIWebProgress *aProgress, 
 /* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest request, in long progressStateFlags, in unsinged long aStatus); */
 NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, nsIRequest *aRequest, PRInt32 progressStateFlags, nsresult aStatus)
 {
-	nsresult rv = NS_OK;
+    nsresult rv = NS_OK;
 
     NG_TRACE(_T("CWebBrowserContainer::OnStateChange(...)\n"));
 
@@ -139,19 +139,19 @@ NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, 
                 rv = channel->GetURI(getter_AddRefs(uri));
                 if (NS_SUCCEEDED(rv))
                 {
-	                nsXPIDLCString aURI;
-	                uri->GetSpec(getter_Copies(aURI));
-	                NG_TRACE(_T("CWebBrowserContainer::OnStateChange->Doc Start(..., %s, \"\")\n"), A2CT(aURI));
+                    nsXPIDLCString aURI;
+                    uri->GetSpec(getter_Copies(aURI));
+                    NG_TRACE(_T("CWebBrowserContainer::OnStateChange->Doc Start(..., %s, \"\")\n"), A2CT(aURI));
                 }
             }
 
-	        //Fire a DownloadBegin
-	        m_pEvents1->Fire_DownloadBegin();
-	        m_pEvents2->Fire_DownloadBegin();
+            //Fire a DownloadBegin
+            m_pEvents1->Fire_DownloadBegin();
+            m_pEvents2->Fire_DownloadBegin();
         }
         else if (progressStateFlags & STATE_STOP)
         {
-	        NG_TRACE(_T("CWebBrowserContainer::OnStateChange->Doc Stop(...,  \"\")\n"));
+            NG_TRACE(_T("CWebBrowserContainer::OnStateChange->Doc Stop(...,  \"\")\n"));
 
             if (m_pOwner->mIERootDocument)
             {
@@ -160,34 +160,34 @@ NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, 
                 m_pOwner->mIERootDocument = NULL;
             }
 
-	        //Fire a DownloadComplete
-	        m_pEvents1->Fire_DownloadComplete();
-	        m_pEvents2->Fire_DownloadComplete();
+            //Fire a DownloadComplete
+            m_pEvents1->Fire_DownloadComplete();
+            m_pEvents2->Fire_DownloadComplete();
 
-	        nsCOMPtr<nsIURI> pURI;
+            nsCOMPtr<nsIURI> pURI;
 
             nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(aRequest);
             if (!aChannel) return NS_ERROR_NULL_POINTER;
 
             rv = aChannel->GetURI(getter_AddRefs(pURI));
-	        if (NS_FAILED(rv)) return rv;
-
-	        nsXPIDLCString aURI;
-	        rv = pURI->GetSpec(getter_Copies(aURI));
             if (NS_FAILED(rv)) return rv;
 
-	        USES_CONVERSION;
-	        BSTR bstrURI = SysAllocString(A2OLE((const char *) aURI)); 
-		        
-	        // Fire a DocumentComplete event
-	        CComVariant vURI(bstrURI);
-	        m_pEvents2->Fire_DocumentComplete(m_pOwner, &vURI);
-	        SysFreeString(bstrURI);
+            nsXPIDLCString aURI;
+            rv = pURI->GetSpec(getter_Copies(aURI));
+            if (NS_FAILED(rv)) return rv;
 
-	        //Fire a StatusTextChange event
-	        BSTR bstrStatus = SysAllocString(A2OLE((CHAR *) "Done"));
-	        m_pEvents1->Fire_StatusTextChange(bstrStatus);
-	        m_pEvents2->Fire_StatusTextChange(bstrStatus);
+            USES_CONVERSION;
+            BSTR bstrURI = SysAllocString(A2OLE((const char *) aURI)); 
+                
+            // Fire a DocumentComplete event
+            CComVariant vURI(bstrURI);
+            m_pEvents2->Fire_DocumentComplete(m_pOwner, &vURI);
+            SysFreeString(bstrURI);
+
+            //Fire a StatusTextChange event
+            BSTR bstrStatus = SysAllocString(A2OLE((CHAR *) "Done"));
+            m_pEvents1->Fire_StatusTextChange(bstrStatus);
+            m_pEvents2->Fire_StatusTextChange(bstrStatus);
             SysFreeString(bstrStatus);
         }
 
@@ -196,60 +196,60 @@ NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, 
     if (progressStateFlags & STATE_IS_NETWORK)
     {
 
-    	if (progressStateFlags & STATE_START)
-	    {
-    		// TODO 
-    	}
+        if (progressStateFlags & STATE_START)
+        {
+            // TODO 
+        }
 
-    	if (progressStateFlags & STATE_STOP)
-    	{
-	    	nsXPIDLCString aURI;
-		    if (m_pCurrentURI)
-    		{
-    			m_pCurrentURI->GetSpec(getter_Copies(aURI));
-    		}
+        if (progressStateFlags & STATE_STOP)
+        {
+            nsXPIDLCString aURI;
+            if (m_pCurrentURI)
+            {
+                m_pCurrentURI->GetSpec(getter_Copies(aURI));
+            }
 
-    		// Fire a NavigateComplete event
-    		USES_CONVERSION;
-    		BSTR bstrURI = SysAllocString(A2OLE((const char *) aURI));
-    		m_pEvents1->Fire_NavigateComplete(bstrURI);
+            // Fire a NavigateComplete event
+            USES_CONVERSION;
+            BSTR bstrURI = SysAllocString(A2OLE((const char *) aURI));
+            m_pEvents1->Fire_NavigateComplete(bstrURI);
 
-    		// Fire a NavigateComplete2 event
-    		CComVariant vURI(bstrURI);
-    		m_pEvents2->Fire_NavigateComplete2(m_pOwner, &vURI);
+            // Fire a NavigateComplete2 event
+            CComVariant vURI(bstrURI);
+            m_pEvents2->Fire_NavigateComplete2(m_pOwner, &vURI);
 
-    		// Cleanup
-    		SysFreeString(bstrURI);
+            // Cleanup
+            SysFreeString(bstrURI);
 
-    		nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(m_pOwner->mWebBrowser));
+            nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(m_pOwner->mWebBrowser));
 
-    		// Fire the new NavigateForward state
-    		VARIANT_BOOL bEnableForward = VARIANT_FALSE;
-    		PRBool aCanGoForward = PR_FALSE;
-    		webNav->GetCanGoForward(&aCanGoForward);
-    		if (aCanGoForward == PR_TRUE)
-    		{
-    			bEnableForward = VARIANT_TRUE;
-    		}
-    		m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEFORWARD, bEnableForward);
+            // Fire the new NavigateForward state
+            VARIANT_BOOL bEnableForward = VARIANT_FALSE;
+            PRBool aCanGoForward = PR_FALSE;
+            webNav->GetCanGoForward(&aCanGoForward);
+            if (aCanGoForward == PR_TRUE)
+            {
+                bEnableForward = VARIANT_TRUE;
+            }
+            m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEFORWARD, bEnableForward);
 
-    		// Fire the new NavigateBack state
-    		VARIANT_BOOL bEnableBack = VARIANT_FALSE;
-    		PRBool aCanGoBack = PR_FALSE;
-    		webNav->GetCanGoBack(&aCanGoBack);
-    		if (aCanGoBack == PR_TRUE)
-    		{
-    			bEnableBack = VARIANT_TRUE;
-    		}
-    		m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEBACK, bEnableBack);
+            // Fire the new NavigateBack state
+            VARIANT_BOOL bEnableBack = VARIANT_FALSE;
+            PRBool aCanGoBack = PR_FALSE;
+            webNav->GetCanGoBack(&aCanGoBack);
+            if (aCanGoBack == PR_TRUE)
+            {
+                bEnableBack = VARIANT_TRUE;
+            }
+            m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEBACK, bEnableBack);
 
-    		m_pOwner->mBusyFlag = FALSE;
+            m_pOwner->mBusyFlag = FALSE;
 
-    		if (m_pCurrentURI)
-    		{
-    			NS_RELEASE(m_pCurrentURI);
-    		}
-    	}
+            if (m_pCurrentURI)
+            {
+                NS_RELEASE(m_pCurrentURI);
+            }
+        }
     }
 
     return NS_OK;
@@ -261,8 +261,8 @@ NS_IMETHODIMP CWebBrowserContainer::OnLocationChange(nsIWebProgress* aWebProgres
                                                      nsIRequest* aRequest,
                                                      nsIURI *location)
 {
-//	nsXPIDLCString aPath;
-//	location->GetPath(getter_Copies(aPath));
+//    nsXPIDLCString aPath;
+//    location->GetPath(getter_Copies(aPath));
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -272,11 +272,11 @@ CWebBrowserContainer::OnStatusChange(nsIWebProgress* aWebProgress,
                                      nsresult aStatus,
                                      const PRUnichar* aMessage)
 {
-	NG_TRACE(_T("CWebBrowserContainer::OnStatusChange(...,  \"\")\n"));
+    NG_TRACE(_T("CWebBrowserContainer::OnStatusChange(...,  \"\")\n"));
 
-	BSTR bstrStatus = SysAllocString(W2OLE((PRUnichar *) aMessage));
-	m_pEvents1->Fire_StatusTextChange(bstrStatus);
-	m_pEvents2->Fire_StatusTextChange(bstrStatus);
+    BSTR bstrStatus = SysAllocString(W2OLE((PRUnichar *) aMessage));
+    m_pEvents1->Fire_StatusTextChange(bstrStatus);
+    m_pEvents2->Fire_StatusTextChange(bstrStatus);
     SysFreeString(bstrStatus);
 
     return NS_OK;
@@ -297,78 +297,78 @@ CWebBrowserContainer::OnSecurityChange(nsIWebProgress *aWebProgress,
 /* void onStartURIOpen (in nsIURI aURI, out boolean aAbortOpen); */
 NS_IMETHODIMP CWebBrowserContainer::OnStartURIOpen(nsIURI *pURI, PRBool *aAbortOpen)
 {
-	USES_CONVERSION;
-	NG_TRACE(_T("CWebBrowserContainer::OnStartURIOpen(...)\n"));
+    USES_CONVERSION;
+    NG_TRACE(_T("CWebBrowserContainer::OnStartURIOpen(...)\n"));
 
-	if (m_pCurrentURI)
-	{
-		NS_RELEASE(m_pCurrentURI);
-	}
-	m_pCurrentURI = pURI;
-	NG_ASSERT(m_pCurrentURI);
-	m_pCurrentURI->AddRef();
+    if (m_pCurrentURI)
+    {
+        NS_RELEASE(m_pCurrentURI);
+    }
+    m_pCurrentURI = pURI;
+    NG_ASSERT(m_pCurrentURI);
+    m_pCurrentURI->AddRef();
 
-	nsXPIDLCString aURI;
-	m_pCurrentURI->GetSpec(getter_Copies(aURI));
+    nsXPIDLCString aURI;
+    m_pCurrentURI->GetSpec(getter_Copies(aURI));
 
-	// Setup the post data
-	CComVariant vPostDataRef;
-	CComVariant vPostData;
-	vPostDataRef.vt = VT_BYREF | VT_VARIANT;
-	vPostDataRef.pvarVal = &vPostData;
-	// TODO get the post data passed in via the original call to Navigate()
+    // Setup the post data
+    CComVariant vPostDataRef;
+    CComVariant vPostData;
+    vPostDataRef.vt = VT_BYREF | VT_VARIANT;
+    vPostDataRef.pvarVal = &vPostData;
+    // TODO get the post data passed in via the original call to Navigate()
 
 
-	// Fire a BeforeNavigate event
-	BSTR bstrURI = SysAllocString(A2OLE((const char *)aURI));
-	BSTR bstrTargetFrameName = NULL;
-	BSTR bstrHeaders = NULL;
-	VARIANT_BOOL bCancel = VARIANT_FALSE;
-	long lFlags = 0;
+    // Fire a BeforeNavigate event
+    BSTR bstrURI = SysAllocString(A2OLE((const char *)aURI));
+    BSTR bstrTargetFrameName = NULL;
+    BSTR bstrHeaders = NULL;
+    VARIANT_BOOL bCancel = VARIANT_FALSE;
+    long lFlags = 0;
 
-	m_pEvents1->Fire_BeforeNavigate(bstrURI, lFlags, bstrTargetFrameName, &vPostDataRef, bstrHeaders, &bCancel);
+    m_pEvents1->Fire_BeforeNavigate(bstrURI, lFlags, bstrTargetFrameName, &vPostDataRef, bstrHeaders, &bCancel);
 
-	// Fire a BeforeNavigate2 event
-	CComVariant vURI(bstrURI);
-	CComVariant vFlags(lFlags);
-	CComVariant vTargetFrameName(bstrTargetFrameName);
-	CComVariant vHeaders(bstrHeaders);
+    // Fire a BeforeNavigate2 event
+    CComVariant vURI(bstrURI);
+    CComVariant vFlags(lFlags);
+    CComVariant vTargetFrameName(bstrTargetFrameName);
+    CComVariant vHeaders(bstrHeaders);
 
-	m_pEvents2->Fire_BeforeNavigate2(m_pOwner, &vURI, &vFlags, &vTargetFrameName, &vPostDataRef, &vHeaders, &bCancel);
+    m_pEvents2->Fire_BeforeNavigate2(m_pOwner, &vURI, &vFlags, &vTargetFrameName, &vPostDataRef, &vHeaders, &bCancel);
 
-	// Cleanup
-	SysFreeString(bstrURI);
-	SysFreeString(bstrTargetFrameName);
-	SysFreeString(bstrHeaders);
+    // Cleanup
+    SysFreeString(bstrURI);
+    SysFreeString(bstrTargetFrameName);
+    SysFreeString(bstrHeaders);
 
-	if (bCancel == VARIANT_TRUE)
-	{
-		*aAbortOpen = PR_TRUE;
-		return NS_ERROR_ABORT;
-	}
-	else
-	{
-		m_pOwner->mBusyFlag = TRUE;
-	}
+    if (bCancel == VARIANT_TRUE)
+    {
+        *aAbortOpen = PR_TRUE;
+        return NS_ERROR_ABORT;
+    }
+    else
+    {
+        m_pOwner->mBusyFlag = TRUE;
+    }
 
-	//NOTE:	The IE control fires a DownloadBegin after the first BeforeNavigate.
+    //NOTE:    The IE control fires a DownloadBegin after the first BeforeNavigate.
     //      It then fires a DownloadComplete after the engine has made it's
     //      initial connection to the server.  It then fires a second
     //      DownloadBegin/DownloadComplete pair around the loading of
     //      everything on the page.  These events get fired out of
     //      CWebBrowserContainer::StartDocumentLoad() and
     //      CWebBrowserContainer::EndDocumentLoad().
-	//		We don't appear to distinguish between the initial connection to
+    //        We don't appear to distinguish between the initial connection to
     //      the server and the actual transfer of data.  Firing these events
     //      here simulates, appeasing applications that are expecting that
     //      initial pair.
 
-	m_pEvents1->Fire_DownloadBegin();
-	m_pEvents2->Fire_DownloadBegin();
-	m_pEvents1->Fire_DownloadComplete();
-	m_pEvents2->Fire_DownloadComplete();
+    m_pEvents1->Fire_DownloadBegin();
+    m_pEvents2->Fire_DownloadBegin();
+    m_pEvents1->Fire_DownloadComplete();
+    m_pEvents2->Fire_DownloadComplete();
 
-	return NS_OK;
+    return NS_OK;
 }
 
 /* void getProtocolHandler (in nsIURI aURI, out nsIProtocolHandler aProtocolHandler); */
@@ -451,28 +451,28 @@ NS_IMETHODIMP CWebBrowserContainer::SetParentContentListener(nsIURIContentListen
 NS_IMETHODIMP 
 CWebBrowserContainer::GetDimensions(PRUint32 aFlags, PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy)
 {
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
 
 
 NS_IMETHODIMP 
 CWebBrowserContainer::SetDimensions(PRUint32 aFlags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)
 {
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
 
 
 NS_IMETHODIMP 
 CWebBrowserContainer::GetSiteWindow(void **aParentNativeWindow)
 {
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
 
 
 NS_IMETHODIMP 
 CWebBrowserContainer::SetFocus(void)
 {
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
 
 
@@ -510,14 +510,14 @@ CWebBrowserContainer::SetTitle(const PRUnichar * aTitle)
 NS_IMETHODIMP 
 CWebBrowserContainer::GetVisibility(PRBool *aVisibility)
 {
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
 
 
 NS_IMETHODIMP 
 CWebBrowserContainer::SetVisibility(PRBool aVisibility)
 {
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -526,56 +526,56 @@ CWebBrowserContainer::SetVisibility(PRBool aVisibility)
 NS_IMETHODIMP
 CWebBrowserContainer::SetStatus(PRUint32 statusType, const PRUnichar *status)
 {
-	//Fire a StatusTextChange event
-	BSTR bstrStatus = SysAllocString(status);
-	m_pEvents1->Fire_StatusTextChange(bstrStatus);
-	m_pEvents2->Fire_StatusTextChange(bstrStatus);
+    //Fire a StatusTextChange event
+    BSTR bstrStatus = SysAllocString(status);
+    m_pEvents1->Fire_StatusTextChange(bstrStatus);
+    m_pEvents2->Fire_StatusTextChange(bstrStatus);
     SysFreeString(bstrStatus);
-	return NS_OK;
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 CWebBrowserContainer::GetWebBrowser(nsIWebBrowser * *aWebBrowser)
 {
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
 
 
 NS_IMETHODIMP
 CWebBrowserContainer::SetWebBrowser(nsIWebBrowser * aWebBrowser)
 {
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
 
 
 NS_IMETHODIMP
 CWebBrowserContainer::GetChromeFlags(PRUint32 *aChromeFlags)
 {
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
 
 
 NS_IMETHODIMP
 CWebBrowserContainer::SetChromeFlags(PRUint32 aChromeFlags)
 {
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
 
 
 NS_IMETHODIMP
 CWebBrowserContainer::CreateBrowserWindow(PRUint32 chromeFlags,  PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **_retval)
 {
-  	IDispatch *pDispNew = NULL;
-  	VARIANT_BOOL bCancel = VARIANT_FALSE;
+      IDispatch *pDispNew = NULL;
+      VARIANT_BOOL bCancel = VARIANT_FALSE;
 
     *_retval = nsnull;
 
-  	// Test if the event sink can give us a new window to navigate into
-  	m_pEvents2->Fire_NewWindow2(&pDispNew, &bCancel);
+      // Test if the event sink can give us a new window to navigate into
+      m_pEvents2->Fire_NewWindow2(&pDispNew, &bCancel);
 
-	if ((bCancel == VARIANT_FALSE) && pDispNew)
-  	{
+    if ((bCancel == VARIANT_FALSE) && pDispNew)
+      {
         CComQIPtr<IMozControlBridge, &IID_IMozControlBridge> cpBridge = pDispNew;
         if (cpBridge)
         {
@@ -587,10 +587,10 @@ CWebBrowserContainer::CreateBrowserWindow(PRUint32 chromeFlags,  PRInt32 aX, PRI
                 return NS_OK;
             }
         }
-		pDispNew->Release();
-	}
+        pDispNew->Release();
+    }
 
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
 
 
@@ -604,29 +604,29 @@ CWebBrowserContainer::DestroyBrowserWindow(void)
 NS_IMETHODIMP
 CWebBrowserContainer::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
 
 
 NS_IMETHODIMP
 CWebBrowserContainer::ShowAsModal(void)
 {
-	return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 CWebBrowserContainer::IsWindowModal(PRBool *_retval)
 {
-	// we're not
-	*_retval = PR_FALSE;
-	return NS_OK;
+    // we're not
+    *_retval = PR_FALSE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 CWebBrowserContainer::ExitModalEventLoop(nsresult aStatus)
 {
-	// Ignore request to exit modal loop
-	return NS_OK;
+    // Ignore request to exit modal loop
+    return NS_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -636,24 +636,24 @@ CWebBrowserContainer::ExitModalEventLoop(nsresult aStatus)
 NS_IMETHODIMP
 CWebBrowserContainer::OnStartRequest(nsIRequest *request, nsISupports* aContext)
 {
-	USES_CONVERSION;
-	NG_TRACE(_T("CWebBrowserContainer::OnStartRequest(...)\n"));
+    USES_CONVERSION;
+    NG_TRACE(_T("CWebBrowserContainer::OnStartRequest(...)\n"));
 
-	return NS_OK;
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 CWebBrowserContainer::OnStopRequest(nsIRequest *request, nsISupports* aContext, nsresult aStatus)
 {
-	USES_CONVERSION;
-	NG_TRACE(_T("CWebBrowserContainer::OnStopRequest(..., %d)\n"), (int) aStatus);
+    USES_CONVERSION;
+    NG_TRACE(_T("CWebBrowserContainer::OnStopRequest(..., %d)\n"), (int) aStatus);
 
-	// Fire a DownloadComplete event
-	m_pEvents1->Fire_DownloadComplete();
-	m_pEvents2->Fire_DownloadComplete();
+    // Fire a DownloadComplete event
+    m_pEvents1->Fire_DownloadComplete();
+    m_pEvents2->Fire_DownloadComplete();
 
-	return NS_OK;
+    return NS_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

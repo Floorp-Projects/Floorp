@@ -43,59 +43,59 @@ CPropertyBag::~CPropertyBag()
 
 HRESULT STDMETHODCALLTYPE CPropertyBag::Read(/* [in] */ LPCOLESTR pszPropName, /* [out][in] */ VARIANT __RPC_FAR *pVar, /* [in] */ IErrorLog __RPC_FAR *pErrorLog)
 {
-	if (pszPropName == NULL)
-	{
-		return E_INVALIDARG;
-	}
-	if (pVar == NULL)
-	{
-		return E_INVALIDARG;
-	}
+    if (pszPropName == NULL)
+    {
+        return E_INVALIDARG;
+    }
+    if (pVar == NULL)
+    {
+        return E_INVALIDARG;
+    }
 
-	VariantInit(pVar);
-	PropertyList::iterator i;
-	for (i = m_PropertyList.begin(); i != m_PropertyList.end(); i++)
-	{
-		// Is the property already in the list?
-		if (wcsicmp((*i).szName, pszPropName) == 0)
-		{
-			// Copy the new value
-			VariantCopy(pVar, &(*i).vValue);
-			return S_OK;
-		}
-	}
-	return S_OK;
+    VariantInit(pVar);
+    PropertyList::iterator i;
+    for (i = m_PropertyList.begin(); i != m_PropertyList.end(); i++)
+    {
+        // Is the property already in the list?
+        if (wcsicmp((*i).szName, pszPropName) == 0)
+        {
+            // Copy the new value
+            VariantCopy(pVar, &(*i).vValue);
+            return S_OK;
+        }
+    }
+    return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CPropertyBag::Write(/* [in] */ LPCOLESTR pszPropName, /* [in] */ VARIANT __RPC_FAR *pVar)
 {
-	if (pszPropName == NULL)
-	{
-		return E_INVALIDARG;
-	}
-	if (pVar == NULL)
-	{
-		return E_INVALIDARG;
-	}
+    if (pszPropName == NULL)
+    {
+        return E_INVALIDARG;
+    }
+    if (pVar == NULL)
+    {
+        return E_INVALIDARG;
+    }
 
-	PropertyList::iterator i;
-	for (i = m_PropertyList.begin(); i != m_PropertyList.end(); i++)
-	{
-		// Is the property already in the list?
-		if (wcsicmp((*i).szName, pszPropName) == 0)
-		{
-			// Copy the new value
-			(*i).vValue = CComVariant(*pVar);
-			return S_OK;
-		}
-	}
+    PropertyList::iterator i;
+    for (i = m_PropertyList.begin(); i != m_PropertyList.end(); i++)
+    {
+        // Is the property already in the list?
+        if (wcsicmp((*i).szName, pszPropName) == 0)
+        {
+            // Copy the new value
+            (*i).vValue = CComVariant(*pVar);
+            return S_OK;
+        }
+    }
 
-	Property p;
-	p.szName = CComBSTR(pszPropName);
-	p.vValue = *pVar;
+    Property p;
+    p.szName = CComBSTR(pszPropName);
+    p.vValue = *pVar;
 
-	m_PropertyList.push_back(p);
-	return S_OK;
+    m_PropertyList.push_back(p);
+    return S_OK;
 }
 

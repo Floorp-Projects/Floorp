@@ -46,20 +46,20 @@ PRIntn PR_CALLBACK HashComparator(const void *v1, const void *v2)
 
 CIEHtmlNode::CIEHtmlNode()
 {
-	m_pIDOMNode = nsnull;
-	m_pIDispParent = NULL;
+    m_pIDOMNode = nsnull;
+    m_pIDispParent = NULL;
 }
 
 CIEHtmlNode::~CIEHtmlNode()
 {
-	SetDOMNode(nsnull);
+    SetDOMNode(nsnull);
 }
 
 
 HRESULT CIEHtmlNode::SetParentNode(IDispatch *pIDispParent)
 {
-	m_pIDispParent = pIDispParent;
-	return S_OK;
+    m_pIDispParent = pIDispParent;
+    return S_OK;
 }
 
 
@@ -89,10 +89,10 @@ HRESULT CIEHtmlNode::FindFromDOMNode(nsIDOMNode *pIDOMNode, CIEHtmlNode **pHtmlN
 
 HRESULT CIEHtmlNode::SetDOMNode(nsIDOMNode *pIDOMNode)
 {
-	if (pIDOMNode)
-	{
+    if (pIDOMNode)
+    {
         NS_IF_RELEASE(m_pIDOMNode);
-		m_pIDOMNode = pIDOMNode;
+        m_pIDOMNode = pIDOMNode;
         NS_ADDREF(m_pIDOMNode);
 
         if (g_NodeLookupTable == NULL)
@@ -104,7 +104,7 @@ HRESULT CIEHtmlNode::SetDOMNode(nsIDOMNode *pIDOMNode)
         m_pIDOMNode->QueryInterface(NS_GET_IID(nsISupports), (void **) &pISupports);
         PL_HashTableAdd(g_NodeLookupTable, m_pIDOMNode, this);
         NS_RELEASE(pISupports);
-	}
+    }
     else if (m_pIDOMNode)
     {
         // Remove the entry from the hashtable
@@ -121,50 +121,50 @@ HRESULT CIEHtmlNode::SetDOMNode(nsIDOMNode *pIDOMNode)
 
         NS_RELEASE(m_pIDOMNode);
     }
-	return S_OK;
+    return S_OK;
 }
 
 HRESULT CIEHtmlNode::GetDOMNode(nsIDOMNode **pIDOMNode)
 {
-	if (pIDOMNode == NULL)
-	{
-		return E_INVALIDARG;
-	}
+    if (pIDOMNode == NULL)
+    {
+        return E_INVALIDARG;
+    }
 
-	*pIDOMNode = nsnull;
-	if (m_pIDOMNode)
-	{
+    *pIDOMNode = nsnull;
+    if (m_pIDOMNode)
+    {
         NS_ADDREF(m_pIDOMNode);
-		*pIDOMNode = m_pIDOMNode;
-	}
+        *pIDOMNode = m_pIDOMNode;
+    }
 
-	return S_OK;
+    return S_OK;
 }
 
 HRESULT CIEHtmlNode::GetDOMElement(nsIDOMElement **pIDOMElement)
 {
-	if (pIDOMElement == NULL)
-	{
-		return E_INVALIDARG;
-	}
+    if (pIDOMElement == NULL)
+    {
+        return E_INVALIDARG;
+    }
 
-	if (m_pIDOMNode == nsnull)
-	{
-		return E_NOINTERFACE;
-	}
+    if (m_pIDOMNode == nsnull)
+    {
+        return E_NOINTERFACE;
+    }
 
-	*pIDOMElement = nsnull;
-	m_pIDOMNode->QueryInterface(NS_GET_IID(nsIDOMElement), (void **) pIDOMElement);
-	return (*pIDOMElement) ? S_OK : E_NOINTERFACE;
+    *pIDOMElement = nsnull;
+    m_pIDOMNode->QueryInterface(NS_GET_IID(nsIDOMElement), (void **) pIDOMElement);
+    return (*pIDOMElement) ? S_OK : E_NOINTERFACE;
 }
 
 HRESULT CIEHtmlNode::GetIDispatch(IDispatch **pDispatch)
 {
-	if (pDispatch == NULL)
-	{
-		return E_INVALIDARG;
-	}
-	
-	*pDispatch = NULL;
-	return E_NOINTERFACE;
+    if (pDispatch == NULL)
+    {
+        return E_INVALIDARG;
+    }
+    
+    *pDispatch = NULL;
+    return E_NOINTERFACE;
 }

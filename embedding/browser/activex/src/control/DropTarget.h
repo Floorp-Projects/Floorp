@@ -33,29 +33,29 @@ class CDropTarget : public CComObjectRootEx<CComSingleThreadModel>,
                     public IDropTarget
 {
 public:
-	CDropTarget();
-	virtual ~CDropTarget();
+    CDropTarget();
+    virtual ~CDropTarget();
 
 BEGIN_COM_MAP(CDropTarget)
-	COM_INTERFACE_ENTRY(IDropTarget)
+    COM_INTERFACE_ENTRY(IDropTarget)
 END_COM_MAP()
 
-	// Data object currently being dragged
-	CIPtr(IDataObject) m_spDataObject;
+    // Data object currently being dragged
+    CIPtr(IDataObject) m_spDataObject;
 
-	// Owner of this object
-	CMozillaBrowser *m_pOwner;
+    // Owner of this object
+    CMozillaBrowser *m_pOwner;
 
-	// Sets the owner of this object
-	void SetOwner(CMozillaBrowser *pOwner);
-	// Helper method to extract a URL from an internet shortcut file
-	HRESULT CDropTarget::GetURLFromFile(const TCHAR *pszFile, tstring &szURL);
+    // Sets the owner of this object
+    void SetOwner(CMozillaBrowser *pOwner);
+    // Helper method to extract a URL from an internet shortcut file
+    HRESULT CDropTarget::GetURLFromFile(const TCHAR *pszFile, tstring &szURL);
 
 // IDropTarget
-	virtual HRESULT STDMETHODCALLTYPE DragEnter(/* [unique][in] */ IDataObject __RPC_FAR *pDataObj, /* [in] */ DWORD grfKeyState, /* [in] */ POINTL pt, /* [out][in] */ DWORD __RPC_FAR *pdwEffect);
-	virtual HRESULT STDMETHODCALLTYPE DragOver(/* [in] */ DWORD grfKeyState, /* [in] */ POINTL pt, /* [out][in] */ DWORD __RPC_FAR *pdwEffect);
-	virtual HRESULT STDMETHODCALLTYPE DragLeave(void);
-	virtual HRESULT STDMETHODCALLTYPE Drop(/* [unique][in] */ IDataObject __RPC_FAR *pDataObj, /* [in] */ DWORD grfKeyState, /* [in] */ POINTL pt, /* [out][in] */ DWORD __RPC_FAR *pdwEffect);
+    virtual HRESULT STDMETHODCALLTYPE DragEnter(/* [unique][in] */ IDataObject __RPC_FAR *pDataObj, /* [in] */ DWORD grfKeyState, /* [in] */ POINTL pt, /* [out][in] */ DWORD __RPC_FAR *pdwEffect);
+    virtual HRESULT STDMETHODCALLTYPE DragOver(/* [in] */ DWORD grfKeyState, /* [in] */ POINTL pt, /* [out][in] */ DWORD __RPC_FAR *pdwEffect);
+    virtual HRESULT STDMETHODCALLTYPE DragLeave(void);
+    virtual HRESULT STDMETHODCALLTYPE Drop(/* [unique][in] */ IDataObject __RPC_FAR *pDataObj, /* [in] */ DWORD grfKeyState, /* [in] */ POINTL pt, /* [out][in] */ DWORD __RPC_FAR *pdwEffect);
 };
 
 typedef CComObject<CDropTarget> CDropTargetInstance;
