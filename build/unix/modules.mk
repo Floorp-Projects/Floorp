@@ -642,6 +642,11 @@ BM_DIRS_zlib	= modules/zlib
 BM_CVS_zlib	= modules/zlib  
 
 
+# There's always an exception to the rule...
+# XSLT has a special standalone mode that uses ifdefs to maintain a reduced dependency list.
+BM_DIRS_transformiix = expat extensions/transformiix
+BM_CVS_transformiix = expat extensions/transformiix
+
 #
 # Tally
 #
