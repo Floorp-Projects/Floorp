@@ -3082,11 +3082,11 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAReadableString& aValue, nsHTM
   if (mDocument) {
     PRBool isCSS = PR_TRUE; // asume CSS until proven otherwise
 
-    nsAutoString  styleType;
+    nsAutoString styleType;
     mDocument->GetHeaderData(nsHTMLAtoms::headerContentStyleType, styleType);
     if (!styleType.IsEmpty()) {
-      isCSS = (Compare(styleType, NS_LITERAL_STRING("text/css"),
-                       nsCaseInsensitiveStringComparator()) == 0);
+      static const char textCssStr[] = "text/css";
+      isCSS = (styleType.EqualsIgnoreCase(textCssStr, sizeof(textCssStr) - 1));
     }
 
     if (isCSS) {
@@ -3106,7 +3106,7 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAReadableString& aValue, nsHTM
         PRInt32 charsetOffset = styleType.Find(charsetStr, PR_TRUE);
         if (charsetOffset > 0) {
           nsString charset;
-          styleType.Mid(charset, charsetOffset + sizeof(charsetStr), -1);
+          styleType.Mid(charset, charsetOffset + sizeof(charsetStr) - 1, -1);
           (void)cssLoader->SetCharset(charset);
         }
       }
