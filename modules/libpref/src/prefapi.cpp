@@ -914,10 +914,16 @@ pref_ClearUserPref(PLDHashTable *table, PLDHashEntryHdr *he, PRUint32,
 
     if (PREF_HAS_USER_VALUE(pref))
     {
+        // Note that we're not unhashing the pref. A pref which has both
+        // a user value and a default value needs to remain. Currently,
+        // there isn't a way to determine that a pref has a default value,
+        // other than comparing its value to BOGUS_DEFAULT_XXX_PREF_VALUE.
+        // This needs to be fixed. If we could positively identify a pref
+        // as not having a set default value here, we could unhash it.
+
         pref->flags &= ~PREF_USERSET;
         if (gCallbacksEnabled)
             pref_DoCallback(pref->key);
-        return PL_DHASH_REMOVE;
     }
     return PL_DHASH_NEXT;
 }
