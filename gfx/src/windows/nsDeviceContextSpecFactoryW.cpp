@@ -54,6 +54,10 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: Init(void)
 }
 
 //--------------------------------------------------------
+//--------------------------------------------------------
+static UINT gFrameSelectedRadioBtn = NULL;
+
+//--------------------------------------------------------
 static void SetRadio(HWND         aParent, 
                      UINT         aId, 
                      PRBool       aIsSet,
@@ -72,32 +76,44 @@ static void SetRadio(HWND         aParent,
 }
 
 //--------------------------------------------------------
-static UINT gFrameSelectedRadioBtn = NULL;
-
-//--------------------------------------------------------
 UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam) 
 {
   if (uiMsg == WM_COMMAND) {
-    gFrameSelectedRadioBtn = LOWORD(wParam);
+    UINT id = LOWORD(wParam);
+    if (id == rad4 || id == rad5 || id == rad6) {
+      gFrameSelectedRadioBtn = id;
+    }
 
   } else if (uiMsg == WM_INITDIALOG) {
-    PRINTDLG *   printDlg    = (PRINTDLG *)lParam;
-    PRBool       doingFrames = (PRBool)printDlg->lCustData;
-    HWND         collateChk  = GetDlgItem (hdlg, chx2);
+    PRINTDLG *   printDlg           = (PRINTDLG *)lParam;
+    PRInt16      howToEnableFrameUI = (PRBool)printDlg->lCustData;
+    HWND         collateChk         = GetDlgItem (hdlg, chx2);
     if (collateChk) {
       ::ShowWindow(collateChk, SW_SHOW);
     }
-    if (!doingFrames) {
+
+    if (howToEnableFrameUI == nsIPrintOptions::kFrameEnableAll) {
+      SetRadio(hdlg, rad4, PR_FALSE, PR_FALSE);  // XXX this is just temporary (should be enabled)
+      SetRadio(hdlg, rad5, PR_TRUE); 
+      SetRadio(hdlg, rad6, PR_FALSE);
+      // set default so user doesn't have to actually press on it
+      gFrameSelectedRadioBtn = rad5;
+
+    } else if (howToEnableFrameUI == nsIPrintOptions::kFrameEnableAsIsAndEach) {
+      SetRadio(hdlg, rad4, PR_FALSE, PR_FALSE);  // XXX this is just temporary (should be enabled)
+      SetRadio(hdlg, rad5, PR_FALSE, PR_FALSE); 
+      SetRadio(hdlg, rad6, PR_TRUE);
+      // set default so user doesn't have to actually press on it
+      gFrameSelectedRadioBtn = rad6;
+
+
+    } else {  // nsIPrintOptions::kFrameEnableNone
       // we are using this function to disabe the group box
       SetRadio(hdlg, grp3, PR_FALSE, PR_FALSE); 
       // now disable radiobuttons
       SetRadio(hdlg, rad4, PR_FALSE, PR_FALSE); 
       SetRadio(hdlg, rad5, PR_FALSE, PR_FALSE); 
       SetRadio(hdlg, rad6, PR_FALSE, PR_FALSE); 
-    } else {
-      SetRadio(hdlg, rad4, PR_FALSE, PR_FALSE);  // XXX this is just temporary
-      SetRadio(hdlg, rad5, PR_TRUE); 
-      SetRadio(hdlg, rad6, PR_FALSE); 
     }
   }
   return 0L;
@@ -115,6 +131,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
   NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
 
   PRINTDLG  prntdlg;
+  memset(&prntdlg, 0, sizeof(PRINTDLG));
 
   HWND      hWnd      = (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW);
   HINSTANCE hInstance = (HINSTANCE)::GetWindowLong(hWnd, GWL_HINSTANCE);
@@ -128,14 +145,14 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
                   PD_ENABLEPRINTTEMPLATE | PD_ENABLEPRINTHOOK | PD_USEDEVMODECOPIESANDCOLLATE;
 
   // if there is a current selection then enable the "Selection" radio button
-  PRBool isPrintFrames = PR_FALSE;
+  PRInt16 howToEnableFrameUI = nsIPrintOptions::kFrameEnableNone;
   if (printService) {
     PRBool isOn;
     printService->GetPrintOptions(nsIPrintOptions::kPrintOptionsEnableSelectionRB, &isOn);
     if (!isOn) {
       prntdlg.Flags |= PD_NOSELECTION;
     }
-    printService->GetIsPrintFrame(&isPrintFrames);
+    printService->GetHowToEnableFrameUI(&howToEnableFrameUI);
   }
 
   prntdlg.nFromPage           = 1;
@@ -144,7 +161,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
   prntdlg.nMaxPage            = 1000;
   prntdlg.nCopies             = 1;
   prntdlg.hInstance           = hInstance;
-  prntdlg.lCustData           = (DWORD)isPrintFrames;
+  prntdlg.lCustData           = (DWORD)howToEnableFrameUI;
   prntdlg.lpfnPrintHook       = PrintHookProc;
   prntdlg.lpfnSetupHook       = NULL;
   prntdlg.lpPrintTemplateName = (LPCTSTR)"PRINTDLGNEW";
@@ -175,7 +192,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
 #endif
 
     // fill the print options with the info from the dialog
-    if(printService) {
+    if (printService) {
 
       if (prntdlg.Flags & PD_SELECTION) {
         printService->SetPrintRange(nsIPrintOptions::kRangeSelection);
@@ -200,8 +217,6 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
         case rad6: 
           printService->SetPrintFrameType(nsIPrintOptions::kEachFrameSep);
           break;
-        default:
-          printService->SetIsPrintFrame(PR_FALSE);
       } // switch 
     }
 

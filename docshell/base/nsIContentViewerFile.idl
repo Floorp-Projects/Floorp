@@ -26,10 +26,12 @@
 %{ C++
 #include "nsIDeviceContext.h"
 #include "nsIWebShell.h"
+#include "nsIDOMWindow.h"
 %}
 
 [ptr] native nsIDeviceContext(nsIDeviceContext);
 [ptr] native nsIWebShell(nsIWebShell);
+[ptr] native nsIDOMWindow(nsIDOMWindow);
 
 /**
  * The nsIDocShellFile    
@@ -44,6 +46,9 @@ interface nsIContentViewerFile : nsISupports
 	void Print();
 	readonly attribute boolean printable;
 
-  [noscript] void PrintContent(in nsIWebShell parent, in nsIDeviceContext DContext);
+  [noscript] void PrintContent(in nsIWebShell parent, 
+                               in nsIDeviceContext DContext, 
+                               in nsIDOMWindow aDOMWin, 
+                               in PRBool aIsSubDoc);
 };
 

@@ -31,6 +31,10 @@
 #include "nsIScreen.h"
 #include "nsGfxCIID.h"
 
+// Print Options
+#include "nsIPrintOptions.h"
+#include "nsString.h"
+static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 // Size of the color cube
 #define COLOR_CUBE_SIZE       216
@@ -821,36 +825,43 @@ NS_IMETHODIMP nsDeviceContextWin :: GetDeviceContextFor(nsIDeviceContextSpec *aD
 
 NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(void)
 {
+  nsresult rv = NS_OK;
+
   if (NULL != mDC)
   {
     DOCINFO docinfo;
 
+    char * title = nsnull;
+    NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+    if (NS_SUCCEEDED(rv) && printService) {
+      PRUnichar * uTitle = nsnull;
+      printService->GetTitle(&uTitle);
+      if (uTitle != nsnull) {
+        nsAutoString str;
+        str = uTitle;
+        if (str.Length() > 0) {
+          title = str.ToNewCString();
+          nsMemory::Free(uTitle);
+        }
+      }
+    }
     docinfo.cbSize = sizeof(docinfo);
-    docinfo.lpszDocName = "New Layout Document";
+    docinfo.lpszDocName = title != nsnull?title:"New Layout Document";
     docinfo.lpszOutput = NULL;
     docinfo.lpszDatatype = NULL;
     docinfo.fwType = 0;
 
-    HGLOBAL hdevmode;
-    DEVMODE *devmode;
-
-    //XXX need to QI rather than cast... MMP
-
-    ((nsDeviceContextSpecWin *)mSpec)->GetDEVMODE(hdevmode);
-
-    devmode = (DEVMODE *)::GlobalLock(hdevmode);
-
-//  ::ResetDC(mDC, devmode);
-
-    ::GlobalUnlock(hdevmode);
-
     if (::StartDoc(mDC, &docinfo) > 0)
-      return NS_OK;
+      rv = NS_OK;
     else
-      return NS_ERROR_FAILURE;
+      rv = NS_ERROR_FAILURE;
+
+    if (title != nsnull) {
+      nsMemory::Free(title);
+    }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP nsDeviceContextWin :: EndDocument(void)

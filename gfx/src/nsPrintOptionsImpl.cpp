@@ -103,7 +103,7 @@ nsPrintOptions::nsPrintOptions() :
   mPaperSize(kLetterPaperSize),
   mPrintToFile(PR_FALSE),
   mPrintFrameType(kSelectedFrame),
-  mIsPrintFrame(PR_FALSE),
+  mHowToEnableFrameUI(kFrameEnableNone),
   mPageNumJust(kJustLeft)
 {
   NS_INIT_ISUPPORTS();
@@ -535,15 +535,15 @@ NS_IMETHODIMP nsPrintOptions::SetDocURL(const PRUnichar * aDocURL)
 }
 
 /* attribute boolean isPrintFrame; */
-NS_IMETHODIMP nsPrintOptions::GetIsPrintFrame(PRBool *aIsPrintFrame)
+NS_IMETHODIMP nsPrintOptions::GetHowToEnableFrameUI(PRInt16 *aHowToEnableFrameUI)
 {
-  NS_ENSURE_ARG_POINTER(aIsPrintFrame);
-  *aIsPrintFrame = (PRInt32)mIsPrintFrame;
+  NS_ENSURE_ARG_POINTER(aHowToEnableFrameUI);
+  *aHowToEnableFrameUI = (PRInt32)mHowToEnableFrameUI;
   return NS_OK;
 }
-NS_IMETHODIMP nsPrintOptions::SetIsPrintFrame(PRBool aIsPrintFrame)
+NS_IMETHODIMP nsPrintOptions::SetHowToEnableFrameUI(PRInt16 aHowToEnableFrameUI)
 {
-  mIsPrintFrame = aIsPrintFrame;
+  mHowToEnableFrameUI = aHowToEnableFrameUI;
   return NS_OK;
 }
 
