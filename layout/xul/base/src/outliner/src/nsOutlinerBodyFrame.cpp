@@ -767,7 +767,7 @@ nsOutlinerBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect,
     // We will treat a click as hitting the twisty if it happens on the margins, borders, padding,
     // or content of the twisty object.  By allowing a "slop" into the margin, we make it a little
     // bit easier for a user to hit the twisty.  (We don't want to be too picky here.)
-    nsRect imageSize = GetImageSize(twistyContext);
+    nsRect imageSize = GetImageSize(aRowIndex, aColumn->GetID(), twistyContext);
     const nsStyleMargin* twistyMarginData = (const nsStyleMargin*)twistyContext->GetStyleData(eStyleStruct_Margin);
     nsMargin twistyMargin;
     twistyMarginData->GetMargin(twistyMargin);
@@ -800,7 +800,7 @@ nsOutlinerBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect,
   nsCOMPtr<nsIStyleContext> imageContext;
   GetPseudoStyleContext(nsXULAtoms::mozoutlinerimage, getter_AddRefs(imageContext));
 
-  nsRect iconSize = GetImageSize(imageContext);
+  nsRect iconSize = GetImageSize(aRowIndex, aColumn->GetID(), imageContext);
   const nsStyleMargin* imageMarginData = (const nsStyleMargin*)imageContext->GetStyleData(eStyleStruct_Margin);
   nsMargin imageMargin;
   imageMarginData->GetMargin(imageMargin);
@@ -996,7 +996,8 @@ nsOutlinerBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID,
 }
 #endif
 
-nsRect nsOutlinerBodyFrame::GetImageSize(nsIStyleContext* aStyleContext)
+nsRect nsOutlinerBodyFrame::GetImageSize(PRInt32 aRowIndex, const PRUnichar* aColID, 
+                                         nsIStyleContext* aStyleContext)
 {
   // XXX We should respond to visibility rules for collapsed vs. hidden.
 
@@ -1034,35 +1035,24 @@ nsRect nsOutlinerBodyFrame::GetImageSize(nsIStyleContext* aStyleContext)
 
   if (needWidth || needHeight) {
 #ifdef USE_IMG2
+    nsCOMPtr<imgIContainer> image;
+    GetImage(aRowIndex, aColID, aStyleContext, getter_AddRefs(image));
     // Get the natural image size.
-    if (mImageCache) {
-      nsISupportsKey key(aStyleContext);
-      nsCOMPtr<imgIRequest> imgReq = getter_AddRefs(NS_STATIC_CAST(imgIRequest*, mImageCache->Get(&key)));
-      if (imgReq) {
-        PRUint32 status;
-        imgReq->GetImageStatus(&status);
-        if (status & imgIRequest::STATUS_SIZE_AVAILABLE) {
-          // Use the size we find here.
-          nsCOMPtr<imgIContainer> image;
-          imgReq->GetImage(getter_AddRefs(image));
-          if (image) {
-            float p2t;
-            mPresContext->GetPixelsToTwips(&p2t);
+    if (image) {
+      float p2t;
+      mPresContext->GetPixelsToTwips(&p2t);
 
-            if (needWidth) {
-              // Get the size from the image.
-              nscoord width;
-              image->GetWidth(&width);
-              r.width += NSIntPixelsToTwips(width, p2t); 
-            }
-            
-            if (needHeight) {
-              nscoord height;
-              image->GetHeight(&height);
-              r.height += NSIntPixelsToTwips(height, p2t); 
-            }
-          }
-        }
+      if (needWidth) {
+        // Get the size from the image.
+        nscoord width;
+        image->GetWidth(&width);
+        r.width += NSIntPixelsToTwips(width, p2t); 
+      }
+    
+      if (needHeight) {
+        nscoord height;
+        image->GetHeight(&height);
+        r.height += NSIntPixelsToTwips(height, p2t); 
       }
     }
 #endif
@@ -1478,7 +1468,7 @@ nsOutlinerBodyFrame::PaintTwisty(int                  aRowIndex,
   // determine the twisty rect's true width.  This is done by examining the style context for
   // a width first.  If it has one, we use that.  If it doesn't, we use the image's natural width.
   // If the image hasn't loaded and if no width is specified, then we just bail.
-  nsRect imageSize = GetImageSize(twistyContext);
+  nsRect imageSize = GetImageSize(aRowIndex, aColumn->GetID(), twistyContext);
   twistyRect.width = imageSize.width;
 
   // Subtract out the remaining width.  This is done even when we don't actually paint a twisty in 
@@ -1551,7 +1541,7 @@ nsOutlinerBodyFrame::PaintImage(int                  aRowIndex,
   // examining the style context for a width first.  If it has one, we use that.  If it doesn't, 
   // we use the image's natural width.
   // If the image hasn't loaded and if no width is specified, then we just bail.
-  nsRect imageSize = GetImageSize(imageContext);
+  nsRect imageSize = GetImageSize(aRowIndex, aColumn->GetID(), imageContext);
   if (!aColumn->IsCycler())
    imageRect.width = imageSize.width;
 
