@@ -225,7 +225,7 @@ function openUILinkIn( url, where )
   switch (where) {
   case "current":
     browser.loadURI(url);
-    w._content.focus();
+    w.content.focus();
     break;
   case "tabshifted":
   case "tab":
@@ -235,7 +235,7 @@ function openUILinkIn( url, where )
     // context menu item could call openUILinkwhere directly.
     if ((where == "tab") ^ getBoolPref("browser.tabs.loadBookmarksInBackground", false)) {
       browser.selectedTab = tab;
-      w._content.focus();
+      w.content.focus();
     }
 
     break;
