@@ -76,59 +76,22 @@ nsOutlinerBodyFrame::Release(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBodyFrame::GetStore(nsIOutlinerStore * *aStore)
+NS_IMETHODIMP nsOutlinerBodyFrame::GetView(nsIOutlinerView * *aView)
 {
-  *aStore = mStore;
-  NS_IF_ADDREF(*aStore);
+  *aView = mView;
+  NS_IF_ADDREF(*aView);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBodyFrame::SetStore(nsIOutlinerStore * aStore)
+NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
 {
-  mStore = aStore;
+  mView = aView;
   
   // Changing the store causes us to refetch our data.  This will
   // necessarily entail a full invalidation of the outliner.
   mTopRowIndex = 0;
   Invalidate();
   
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsOutlinerBodyFrame::Select(PRInt32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsOutlinerBodyFrame::ToggleSelect(PRInt32 aIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsOutlinerBodyFrame::RangedSelect(PRInt32 aStartIndex, PRInt32 aEndIndex)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsOutlinerBodyFrame::GetSelectedRows(nsIOutlinerRangeList** aResult)
-{
-  *aResult = mSelectedRows;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsOutlinerBodyFrame::ClearSelection()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsOutlinerBodyFrame::InvertSelection()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsOutlinerBodyFrame::SelectAll()
-{
   return NS_OK;
 }
 
@@ -174,7 +137,12 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetCellAt(PRInt32 x, PRInt32 y, PRInt32 *row,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBodyFrame::RowsAdded(PRInt32 index, PRInt32 count)
+NS_IMETHODIMP nsOutlinerBodyFrame::RowsAppended(PRInt32 count)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerBodyFrame::RowsInserted(PRInt32 index, PRInt32 count)
 {
   return NS_OK;
 }

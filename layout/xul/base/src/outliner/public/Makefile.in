@@ -31,7 +31,8 @@ XPIDL_MODULE	= layout_xul_outliner
 
 XPIDLSRCS=      nsIOutlinerRangeList.idl                  \
                 nsIOutlinerRange.idl              \
-                nsIOutlinerStore.idl               \
+                nsIOutlinerView.idl               \
+				nsIOutlinerSelection.idl    \
                 nsIOutlinerBoxObject.idl \
                 $(NULL)
 

@@ -112,75 +112,19 @@ nsOutlinerBoxObject::GetOutlinerBody()
 }
 
 
-NS_IMETHODIMP nsOutlinerBoxObject::GetStore(nsIOutlinerStore * *aStore)
+NS_IMETHODIMP nsOutlinerBoxObject::GetView(nsIOutlinerView * *aView)
 {
   nsIOutlinerBoxObject* body = GetOutlinerBody();
   if (body)
-    return body->GetStore(aStore);
+    return body->GetView(aView);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::SetStore(nsIOutlinerStore * aStore)
+NS_IMETHODIMP nsOutlinerBoxObject::SetView(nsIOutlinerView * aView)
 {
   nsIOutlinerBoxObject* body = GetOutlinerBody();
   if (body)
-    return body->SetStore(aStore);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsOutlinerBoxObject::Select(PRInt32 aIndex)
-{
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
-  if (body)
-    return body->Select(aIndex);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsOutlinerBoxObject::ToggleSelect(PRInt32 aIndex)
-{
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
-  if (body)
-    return body->ToggleSelect(aIndex);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsOutlinerBoxObject::RangedSelect(PRInt32 aStartIndex, PRInt32 aEndIndex)
-{
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
-  if (body)
-    return body->RangedSelect(aStartIndex, aEndIndex);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsOutlinerBoxObject::GetSelectedRows(nsIOutlinerRangeList * *aSelectedRows)
-{
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
-  if (body)
-    return body->GetSelectedRows(aSelectedRows);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsOutlinerBoxObject::ClearSelection()
-{
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
-  if (body)
-    return body->ClearSelection();
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsOutlinerBoxObject::InvertSelection()
-{
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
-  if (body)
-    return body->InvertSelection();
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsOutlinerBoxObject::SelectAll()
-{
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
-  if (body)
-    return body->SelectAll();
+    return body->SetView(aView);
   return NS_OK;
 }
 
@@ -248,11 +192,19 @@ NS_IMETHODIMP nsOutlinerBoxObject::GetCellAt(PRInt32 x, PRInt32 y, PRInt32 *row,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::RowsAdded(PRInt32 index, PRInt32 count)
+NS_IMETHODIMP nsOutlinerBoxObject::RowsAppended(PRInt32 count)
 {
   nsIOutlinerBoxObject* body = GetOutlinerBody();
   if (body)
-    return body->RowsAdded(index, count);
+    return body->RowsAppended(count);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerBoxObject::RowsInserted(PRInt32 index, PRInt32 count)
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body)
+    return body->RowsInserted(index, count);
   return NS_OK;
 }
 

@@ -25,11 +25,16 @@
 #include "nsIOutlinerBoxObject.idl"
 #include "nsISupportsArray.idl"
 
+interface nsIOutlinerSelection;
+
 [scriptable, uuid(7660811D-3CB8-441f-8E58-466DE4F3FA9A)]
-interface nsIOutlinerStore : nsISupports
+interface nsIOutlinerView : nsISupports
 {
   // The total number of rows in the outliner (including the offscreen rows).
   readonly attribute long rowCount;
+
+  // The selection for this view.
+  attribute nsIOutlinerSelection selection;
 
   // An atomized list of properties for a given row.  Each property, x, that
   // the store gives back will cause the pseudoclass :moz-outliner-row-x
@@ -49,15 +54,8 @@ interface nsIOutlinerStore : nsISupports
   // The text for a given cell.  If a column consists only of an image, then
   // the empty string is returned.  The level is an integer value that represents
   // the level of indentation.  It is multiplied by the width specified in the 
-  // :moz-outliner-indentation element to compute the exact indendation.
-  //
-  // The alignment variable has values of 0 for left
-  // alignment (the default) and 1 for right alignment.  
-  // 
-  // The crop style has values 0 (for right cropping, the default), 1 for middle 
-  // cropping, and 2 for left cropping.
-  wstring getCellText(in long row, in wstring colID, out long level, 
-                      out long alignment, out long cropstyle);
+  // :moz-outliner-indentation pseudoclass to compute the exact indendation.
+  wstring getCellText(in long row, in wstring colID, out long level);
   
   // Ensures that a row at a given index is visible.
   void scrollToRow(in long index);
@@ -68,16 +66,15 @@ interface nsIOutlinerStore : nsISupports
   // Called on the store when an item is opened or closed.
   void toggleOpenState(in long index);
 
-  // Called on the store when the user hits delete on a nonempty selection.
-  void deleteRows();
-
   // Called on the store when a header is clicked.
   void cycleHeader(in wstring colID);
 
   // Called on the store when a cell in a non-selectable cycling column (e.g., unread/flag/etc.) is clicked.
   void cycleCell(in long row, in wstring colID);
   
-  // A command API that can be used to invoke commands on the selection.
+  // A command API that can be used to invoke commands on the selection.  The outliner
+  // will automatically invoke this method when certain keys are pressed.  For example,
+  // when the DEL key is pressed, performAction will be called with the "delete" string.
   void performAction(in wstring action);
 
   // A command API that can be used to invoke commands on a specific row.

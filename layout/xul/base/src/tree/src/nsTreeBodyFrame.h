@@ -24,7 +24,7 @@
 
 #include "nsLeafBoxFrame.h"
 #include "nsIOutlinerBoxObject.h"
-#include "nsIOutlinerStore.h"
+#include "nsIOutlinerView.h"
 #include "nsIOutlinerRangeList.h"
 
 class nsSupportsHashtable;
@@ -66,9 +66,9 @@ protected:
   virtual ~nsOutlinerBodyFrame();
 
 protected: // Data Members
-  // The current store for this outliner widget.  We get all of our row and cell data
-  // from the store.
-  nsCOMPtr<nsIOutlinerStore> mStore;    
+  // The current view for this outliner widget.  We get all of our row and cell data
+  // from the view.
+  nsCOMPtr<nsIOutlinerView> mView;    
   
   // A cache of all the style contexts we have seen for rows of the tree.  This is a mapping from
   // a list of atoms to a corresponding style context.  This cache stores every combination that
@@ -87,8 +87,4 @@ protected: // Data Members
   // this index and going up to index+pageCount.
   PRInt32 mTopRowIndex;
   PRInt32 mPageCount;
-
-  // Our current selection.
-  nsCOMPtr<nsIOutlinerRangeList> mSelectedRows;
-
 }; // class nsOutlinerBodyFrame

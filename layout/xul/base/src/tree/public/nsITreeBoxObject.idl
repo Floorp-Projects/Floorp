@@ -24,36 +24,15 @@
 
 #include "nsIOutlinerRangeList.idl"
 
-interface nsIOutlinerStore;
+interface nsIOutlinerView;
 
 [scriptable, uuid(8398C757-6387-480c-82B2-C914E15CE00D)]
 interface nsIOutlinerBoxObject : nsISupports
 {
-  // The store that backs the outliner and that supplies it with its data.
-  // It is dynamically settable, either using a store attribute on the
+  // The view that backs the outliner and that supplies it with its data.
+  // It is dynamically settable, either using a view attribute on the
   // outliner tag or by setting this attribute to a new value.
-  attribute nsIOutlinerStore store;
-
-  // Deselect all rows and select the row at the specified index. 
-  void select(in long index);
-
-  // Toggle the selection state of the row at the specified index.
-  void toggleSelect(in long index);
-
-  // Select the range specified by the indices.
-  void rangedSelect(in long startIndex, in long endIndex);
-
-  // The selected row indices in a sorted list of ranges.
-  readonly attribute nsIOutlinerRangeList selectedRows;
-
-  // Clears the selection.
-  void clearSelection();
-
-  // Inverts the selection.
-  void invertSelection();
-
-  // Selects all rows.
-  void selectAll();
+  attribute nsIOutlinerView view;
 
   // Get the index of the first visible row.
   long getIndexOfVisibleRow();
@@ -71,11 +50,12 @@ interface nsIOutlinerBoxObject : nsISupports
   // A hit test that can tell you what cell the mouse is over.
   void getCellAt(in long x, in long y, out long row, out wstring colID);
 
-  // The store is responsible for calling these notification methods when
+  // The view is responsible for calling these notification methods when
   // nodes are added or removed.  Index is the position at which the new
-  // rows start.  count is the number of new contiguous rows added.  For
+  // rows start.  Count is the number of new contiguous rows added.  For
   // non-contiguous additions, these methods should be called multiple times.
-  void rowsAdded(in long index, in long count);
+  void rowsAppended(in long count);
+  void rowsInserted(in long index, in long count);
   void rowsRemoved(in long index, in long count);
 };
 
