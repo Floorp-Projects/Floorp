@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.17 $ $Date: 2002/09/10 05:10:53 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.18 $ $Date: 2002/09/10 20:30:53 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -1047,6 +1047,23 @@ get_token_crls_for_cache
     return status;
 }
 
+static CK_ATTRIBUTE_PTR
+find_attribute_in_object
+(
+  nssCryptokiObjectAndAttributes *obj,
+  CK_ATTRIBUTE_TYPE attrType
+)
+{
+    PRUint32 j;
+    for (j=0; j<obj->numAttributes; j++) {
+	if (attrType == obj->attributes[j].type) {
+	    return &obj->attributes[j];
+	}
+    }
+    return (CK_ATTRIBUTE_PTR)NULL;
+}
+
+/* Find all objects in the array that match the supplied template */
 static nssCryptokiObject **
 find_objects_in_array
 (
@@ -1057,13 +1074,14 @@ find_objects_in_array
 )
 {
     PRIntn oi = 0;
-    PRUint32 i, j;
-    PRBool match;
+    PRUint32 i;
     NSSArena *arena;
     PRUint32 size = 8;
     PRUint32 numMatches = 0;
     nssCryptokiObject **objects = NULL;
     nssCryptokiObjectAndAttributes **matches = NULL;
+    CK_ATTRIBUTE_PTR attr;
+
     if (!objArray) {
 	return (nssCryptokiObject **)NULL;
     }
@@ -1076,29 +1094,31 @@ find_objects_in_array
 	goto loser;
     }
     if (maximumOpt == 0) maximumOpt = ~0;
+    /* loop over the cached objects */
     for (; *objArray && numMatches < maximumOpt; objArray++) {
 	nssCryptokiObjectAndAttributes *obj = *objArray;
-	match = PR_FALSE;
+	/* loop over the test template */
 	for (i=0; i<otlen; i++) {
-	    for (j=0; j<obj->numAttributes; j++) {
-		if (ot[i].type == obj->attributes[j].type) {
-		    if (ot[i].ulValueLen == obj->attributes[j].ulValueLen &&
-		        nsslibc_memequal(ot[i].pValue, 
-			                 obj->attributes[j].pValue,
-			                 ot[i].ulValueLen, NULL))
-		    {
-			match = PR_TRUE;
-		    } else {
-			match = PR_FALSE;
-		    }
-		    break;
-		}
+	    /* see if the object has the attribute */
+	    attr = find_attribute_in_object(obj, ot[i].type);
+	    if (!attr) {
+		/* nope, match failed */
+		break;
 	    }
-	    if (j == obj->numAttributes || !match) {
+	    /* compare the attribute against the test value */
+	    if (ot[i].ulValueLen != attr->ulValueLen ||
+	        !nsslibc_memequal(ot[i].pValue, 
+	                          attr->pValue,
+	                          attr->ulValueLen, NULL))
+	    {
+		/* nope, match failed */
 		break;
 	    }
 	}
-	if (match) {
+	if (i == otlen) {
+	    /* all of the attributes in the test template were found
+	     * in the object's template, and they all matched
+	     */
 	    matches[numMatches++] = obj;
 	    if (numMatches == size) {
 		size *= 2;
