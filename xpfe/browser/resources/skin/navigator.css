@@ -135,7 +135,6 @@ titledbutton.bookmarkbutton {
    margin: 0px;
    max-width: 8em;
    font: inherit;
-   font-size: smaller;
    color: #99CCCC;
    border: none;
    padding: 1px;
@@ -154,10 +153,11 @@ titledbutton.bookmarkbutton:active {
    padding-bottom: 0px;
 }
 
-titledbutton.bookmarkFolder {
+titledbutton.bmenu {
    margin: 0px;
    padding: 0px;
    border: none;
+   color: #99cccc;
    list-style-image: url("chrome://global/skin/toolbar-dropdown.gif");
 }
 
@@ -168,38 +168,6 @@ toolbar#PersonalToolbar #personaltoolbar-endcap {
 	background-image: url("chrome://navigator/skin/n-box-persbar.gif");
 	background-repeat: no-repeat;
 	background-position: 100% 0%;
-}
-
-toolbar#PersonalToolbar menu {
-  font-size: smaller;
-  color: #99CCCC;
-}
-
-toolbar#PersonalToolbar menuitem {
-  color: #99CCCC;
-}
-
-toolbar#PersonalToolbar menuseparator {
-  border-top: none;
-  margin-left: 6px; 
-  margin-right: 6px;
-  border-bottom: 1px #99CCCC solid; 
-}
-
-toolbar#PersonalToolbar menupopup {
-  color: #99CCCC;
-  background-color: #003366;
-  border: 1px #003366 outset;
-}
-
-toolbar#PersonalToolbar menupopup > menu[menuactive="true"] {
-  color: #003366;
-  background-color: #99CCCC;
-}
-
-toolbar#PersonalToolbar menupopup > menuitem[menuactive="true"] {
-  color: #003366;
-  background-color: #99CCCC;
 }
 
 spring.personaltoolbarspacer {
