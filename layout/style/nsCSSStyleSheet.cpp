@@ -2657,7 +2657,7 @@ CSSStyleSheetImpl::SetDisabled(PRBool aDisabled)
   PRBool oldState = mDisabled;
   mDisabled = aDisabled;
 
-  if (mDocument && (mDisabled != oldState)) {
+  if ((nsnull != mDocument) && (mDisabled != oldState)) {
     mDocument->SetStyleSheetDisabledState(this, mDisabled);
   }
 

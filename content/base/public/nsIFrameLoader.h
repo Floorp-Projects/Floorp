@@ -43,7 +43,7 @@
 #include "nsAString.h"
 
 // Forward declarations
-class nsIContent;
+class nsIDOMElement;
 class nsIDocShell;
 class nsIURI;
 
@@ -57,42 +57,18 @@ class nsIURI;
 { 0x0080d493, 0x96b4, 0x4606, \
   {0xa7, 0x43, 0x0f, 0x47, 0xee, 0x87, 0x14, 0xd1} }
 
-// CID for the nsIFrameLoader implementation
-#define NS_FRAMELOADER_CID   \
-{ 0x712603da, 0xf245, 0x4503, \
-  {0xa5, 0x41, 0xb0, 0x49, 0xcb, 0x06, 0x81, 0xae} }
-
-#define NS_FRAMELOADER_CONTRACTID "@mozilla.org/content/frameloader"
 
 class nsIFrameLoader : public nsISupports
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAMELOADER_IID)
 
-  /**
-   * Initialize the frame loader, hand it the owner content. Note that
-   * the owner content reference is a weak reference, if the owner
-   * content is destroyed before the frame loader goes away the owner
-   * content must call the Destroy() method to clear the owner content
-   * reference.
-   */
-  NS_IMETHOD Init(nsIContent *aOwner) = 0;
+  NS_IMETHOD Init(nsIDOMElement *aOwner) = 0;
 
-  /**
-   * Start loading the frame. This method figures out what to load
-   * from the owner content in the frame loader.
-   */
-  NS_IMETHOD LoadFrame() = 0;
+  NS_IMETHOD LoadURI(nsIURI *aURI) = 0;
 
-  /**
-   * Get the docshell from the frame loader.
-   */
   NS_IMETHOD GetDocShell(nsIDocShell **aDocShell) = 0;
 
-  /**
-   * Destroy the frame loader and everything inside it. This will
-   * clear the weak owner content reference.
-   */
   NS_IMETHOD Destroy() = 0;
 };
 
@@ -102,9 +78,6 @@ class nsIFrameLoaderOwner : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAMELOADEROWNER_IID)
 
-  /**
-   * Get the frame loader from the frame loader owner.
-   */
   NS_IMETHOD GetFrameLoader(nsIFrameLoader **aFrameLoader) = 0;
 };
 

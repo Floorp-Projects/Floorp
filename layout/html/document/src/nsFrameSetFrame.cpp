@@ -63,6 +63,7 @@
 #define ALL_VIS    0x000F
 #define NONE_VIS   0x0000
 
+static NS_DEFINE_IID(kIFramesetFrameIID, NS_IFRAMESETFRAME_IID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 /*******************************************************************************
@@ -251,7 +252,7 @@ nsresult nsHTMLFramesetFrame::QueryInterface(const nsIID& aIID,
 {
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
-  } else if (aIID.Equals(NS_GET_IID(nsHTMLFramesetFrame))) {
+  } else if (aIID.Equals(kIFramesetFrameIID)) {
     *aInstancePtr = (void*)this;
     return NS_OK;
   } else if (aIID.Equals(NS_GET_IID(nsIObserver))) {
@@ -326,8 +327,7 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
   mTopLevelFrameset = (nsHTMLFramesetFrame*)this;
   while (parentFrame) {
     nsHTMLFramesetFrame* frameset;
-    rv = parentFrame->QueryInterface(NS_GET_IID(nsHTMLFramesetFrame),
-				     (void**)&frameset);
+    rv = parentFrame->QueryInterface(kIFramesetFrameIID, (void**)&frameset);
     if (NS_SUCCEEDED(rv)) {
       mTopLevelFrameset = frameset;
       parentFrame->GetParent((nsIFrame**)&parentFrame);
@@ -1404,7 +1404,7 @@ PRBool
 nsHTMLFramesetFrame::ChildIsFrameset(nsIFrame* aChild) 
 {
   nsIFrame* childFrame = nsnull;
-  aChild->QueryInterface(NS_GET_IID(nsHTMLFramesetFrame), (void**)&childFrame);
+  aChild->QueryInterface(kIFramesetFrameIID, (void**)&childFrame);
   if (childFrame) {
     return PR_TRUE;
   }

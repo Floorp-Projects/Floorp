@@ -1477,7 +1477,7 @@ nsHTMLDocument::FlushPendingNotifications(PRBool aFlushReflows,
     }
   }
 
-  if (isSafeToFlush && mParser) {
+  if ((isSafeToFlush) && (mParser)) {
     nsCOMPtr<nsIContentSink> sink;
     
     // XXX Ack! Parser doesn't addref sink before passing it back
@@ -3750,33 +3750,34 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
 PRBool
 nsHTMLDocument::GetBodyContent()
 {
-  nsCOMPtr<nsIContent> root;
+  nsCOMPtr<nsIDOMElement> root;
 
-  GetRootContent(getter_AddRefs(root));
+  GetDocumentElement(getter_AddRefs(root));
 
   if (!root) {  
     return PR_FALSE;
   }
 
-  PRInt32 i, child_count;
-  root->ChildCount(child_count);
+  NS_NAMED_LITERAL_STRING(bodyStr, "BODY");
+  nsCOMPtr<nsIDOMNode> child;
+  root->GetFirstChild(getter_AddRefs(child));
 
-  for (i = 0; i < child_count; i++) {
-    nsCOMPtr<nsIContent> child;
+  while (child) {
+    nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(child));
 
-    root->ChildAt(i, *getter_AddRefs(child));
-    NS_ENSURE_TRUE(child, NS_ERROR_UNEXPECTED);
+    if (domElement) {
+      nsAutoString tagName;
+      domElement->GetTagName(tagName);
 
-    nsCOMPtr<nsINodeInfo> ni;
-    child->GetNodeInfo(*getter_AddRefs(ni));
+      ToUpperCase(tagName);
+      if (bodyStr.Equals(tagName)) {
+        mBodyContent = child;
 
-    if (ni && ni->Equals(nsHTMLAtoms::body) &&
-        (ni->NamespaceEquals(kNameSpaceID_None) ||
-         ni->NamespaceEquals(kNameSpaceID_HTML))) {
-      mBodyContent = do_QueryInterface(child);
-
-      return PR_TRUE;
+        return PR_TRUE;
+      }
     }
+    nsIDOMNode *tmpNode = child;
+    tmpNode->GetNextSibling(getter_AddRefs(child));
   }
 
   return PR_FALSE;

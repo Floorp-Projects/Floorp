@@ -166,6 +166,9 @@
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
 
+// SubShell map
+#include "pldhash.h"
+
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
 #endif // IBMBIDI
@@ -806,6 +809,14 @@ DummyLayoutRequest::Cancel(nsresult status)
 
 // ----------------------------------------------------------------------------
 
+class SubShellMapEntry : public PLDHashEntryHdr {
+  public:
+    nsIContent *key; // must be first, to look like PLDHashEntryStub
+    nsISupports *subShell;
+};
+
+// ----------------------------------------------------------------------------
+
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   private nsIDocumentObserver, public nsIFocusTracker,
                   public nsISelectionController,
@@ -866,6 +877,12 @@ public:
                                 nsIStyleContext** aStyleContext) const;
   NS_IMETHOD GetLayoutObjectFor(nsIContent*   aContent,
                                 nsISupports** aResult) const;
+  NS_IMETHOD GetSubShellFor(nsIContent*   aContent,
+                            nsISupports** aResult) const;
+  NS_IMETHOD SetSubShellFor(nsIContent*  aContent,
+                            nsISupports* aSubShell);
+  NS_IMETHOD FindContentForShell(nsISupports* aSubShell,
+                                 nsIContent** aContent) const;
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                     nsIFrame** aPlaceholderFrame) const;
   NS_IMETHOD AppendReflowCommand(nsHTMLReflowCommand* aReflowCommand);
@@ -1217,6 +1234,9 @@ protected:
                                    // value if we fail to get the pref for any reason.
 
   static void sPaintSuppressionCallback(nsITimer* aTimer, void* aPresShell); // A callback for the timer.
+
+  // subshell map
+  PLDHashTable*     mSubShellMap;  // map of content/subshell pairs
 
   MOZ_TIMER_DECLARE(mReflowWatch)  // Used for measuring time spent in reflow
   MOZ_TIMER_DECLARE(mFrameCreationWatch)  // Used for measuring time spent in frame creation 
@@ -1654,6 +1674,13 @@ PresShell::Destroy()
 
   // Clobber weak leaks in case of re-entrancy during tear down
   mHistoryState = nsnull;
+
+  // kill subshell map, if any.  It holds only weak references
+  if (mSubShellMap)
+  {
+    PL_DHashTableDestroy(mSubShellMap);
+    mSubShellMap = nsnull;
+  }
 
   // release current event content and any content on event stack
   NS_IF_RELEASE(mCurrentEventContent);
@@ -5500,6 +5527,94 @@ PresShell::GetLayoutObjectFor(nsIContent*   aContent,
     }
   }
   return result;
+}
+
+  
+NS_IMETHODIMP
+PresShell::GetSubShellFor(nsIContent*   aContent,
+                          nsISupports** aResult) const
+{
+  NS_ENSURE_ARG_POINTER(aContent);
+
+  if (mSubShellMap) {
+    SubShellMapEntry *entry = NS_STATIC_CAST(SubShellMapEntry*,
+                PL_DHashTableOperate(mSubShellMap, aContent, PL_DHASH_LOOKUP));
+    if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+      NS_ADDREF(*aResult = entry->subShell);
+      return NS_OK;
+    }
+  }
+
+  *aResult = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::SetSubShellFor(nsIContent*  aContent,
+                          nsISupports* aSubShell)
+{
+  NS_ENSURE_ARG_POINTER(aContent);
+
+  // If aSubShell is NULL, then remove the mapping
+  if (!aSubShell) {
+    if (mSubShellMap)
+      PL_DHashTableOperate(mSubShellMap, aContent, PL_DHASH_REMOVE);
+  } else {
+    // Create a new hashtable if necessary
+    if (!mSubShellMap) {
+      mSubShellMap = PL_NewDHashTable(PL_DHashGetStubOps(), nsnull,
+                                      sizeof(SubShellMapEntry), 16);
+      if (!mSubShellMap)
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Add a mapping to the hash table
+    SubShellMapEntry *entry = NS_STATIC_CAST(SubShellMapEntry*,
+                   PL_DHashTableOperate(mSubShellMap, aContent, PL_DHASH_ADD));
+    entry->key = aContent;
+    entry->subShell = aSubShell;
+  }
+  return NS_OK;
+}
+
+struct FindContentData {
+  FindContentData(nsISupports *aSubShell)
+    : subShell(aSubShell), result(nsnull) {}
+
+  nsISupports *subShell;
+  nsIContent *result;
+};
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+FindContentEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                      PRUint32 number, void *arg)
+{
+  SubShellMapEntry *entry = NS_STATIC_CAST(SubShellMapEntry*, hdr);
+  FindContentData *data = NS_STATIC_CAST(FindContentData*, arg);
+
+  if (entry->subShell == data->subShell) {
+    data->result = entry->key;
+    return PL_DHASH_STOP;
+  }
+  return PL_DHASH_NEXT;
+}
+  
+NS_IMETHODIMP
+PresShell::FindContentForShell(nsISupports* aSubShell,
+                               nsIContent** aContent) const
+{
+  NS_ENSURE_ARG_POINTER(aSubShell);
+  
+  if (!mSubShellMap) {
+    *aContent = nsnull;
+    return NS_OK;
+  }
+  
+  FindContentData data(aSubShell);
+  PL_DHashTableEnumerate(mSubShellMap, FindContentEnumerator, &data);
+  NS_IF_ADDREF(*aContent = data.result);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
