@@ -400,6 +400,14 @@ function registerMainKeys(winreg)
   winreg.createKey(subkey,"");
 
   err     = winreg.setValueString(subkey, "Install Directory", fProgram);
+
+  // now set Mozilla\Mozilla Thunderbird\bin\PathToExe so 3rd party vendors can find our app
+  subkey  = "SOFTWARE\\Mozilla\\$ProductName$ $UserAgentShort$\\bin";
+  winreg.createKey(subkey,"");
+  err     = winreg.setValueString(subkey, "PathToExe", fProgram + "$MainExeFile$");
+
+  subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
+  err     = winreg.setValueString(subkey, "PathToExe", fProgram + "$MainExeFile$");
 }
 
 function updateWinReg()
