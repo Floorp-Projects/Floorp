@@ -152,6 +152,9 @@ clobber:      clean
 clobber_all:  realclean
 pull_and_build_all: checkout build
 
+# Do everything from scratch
+everything: clobber_all all
+
 ####################################
 # CVS checkout
 
@@ -291,4 +294,4 @@ cleansrcdir:
 # (! IS_FIRST_CHECKOUT)
 endif
 
-.PHONY: checkout depend build clean realclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all
+.PHONY: checkout depend build clean realclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything
