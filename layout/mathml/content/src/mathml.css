@@ -35,7 +35,7 @@ math {
   display: inline;
   font-size: inherit;
   font-style: normal;
-  font-family: CMSY10, CMEX10, Symbol, Times, Lucida Sans Unicode, MT Extra, Math1, Math2, Math3, Math4, Math5, serif;
+  font-family: CMSY10, Symbol, Times, Lucida Sans Unicode, MT Extra, Math1, Math2, Math3, Math4, Math5, serif;
 }
 
 math[mode="inline"], math[display="inline"] {
@@ -137,34 +137,30 @@ merror {
 /* mtable and its related tags                         */
 /*******************************************************/
 
-:-moz-math-table, mtable {
+mtable {
   display: table;
-  text-align: -moz-center;
-  border-spacing: 0.8em 1.0ex; /* horizontal vertical */
-  border-collapse: separate; /* 'collapse' is blocked by bug 49490 */
-  margin-left: -0.4em;
-  margin-right: -0.8em;
-  margin-top: -1.0ex;
-  margin-bottom: -1.0ex;
-  /* margin: 0.5ex 0.4em 0.5ex 0.4em;  top right bottom left */
-  -moz-box-sizing: border-box;
-  /* -moz-box-sizing: content-box; */
+}
+mtable[frame="none"] {
+  border: none;
+}
+mtable[frame="solid"] {
+  border: solid thin;
+}
+mtable[frame="dashed"] {
+  border: dashed thin;
 }
 
 mtr {
   display: table-row;
-  text-align: inherit;
-  vertical-align: baseline;
 }
-
-/* must never set padding in td, th */
 
 mtd {
   display: table-cell;
-  text-align: inherit; 
-  vertical-align: inherit;
+  vertical-align: baseline;
+  text-align: -moz-center;
   white-space: nowrap;
 }
+
 
 /***********************/
 /* -- mtd: columnalign */
@@ -172,11 +168,9 @@ mtd {
 mtd[columnalign="left"] {
   text-align: left;
 }
-
 mtd[columnalign="right"] {
   text-align: right;
 }
-
 mtd[columnalign="center"] {
   text-align: -moz-center;
 }
@@ -187,24 +181,88 @@ mtd[columnalign="center"] {
 mtd[rowalign="top"] {
   vertical-align: top;
 }
-
 mtd[rowalign="bottom"] {
   vertical-align: bottom;
 }
-
 mtd[rowalign="center"] {
   vertical-align: middle;
 }
-
 mtd[rowalign="baseline"] {
   vertical-align: baseline;
 }
-
 /* -- not yet supported --
 mtd[rowalign="axis"] {
   vertical-align: mathline;
 }
 */
+
+/**********************************************************************/
+/* rules to achieve the default spacing between cells. The back-end code
+   will set the internal attributes depending on the cell's position.
+   These rules are hard-coded, the comments indicate what would be
+   desirable if the style data could be changed on the fly to pick
+   the values that users may set with the attributes of <mtable> */ 
+mtd {
+  padding-right: 0.4em;  /* half of columnspacing[colindex] */
+  padding-left: 0.4em;   /* half of columnspacing[colindex-1] */
+  padding-bottom: 0.5ex; /* half of rowspacing[rowindex] */
+  padding-top: 0.5ex;    /* half of rowspacing[rowindex-1] */
+}
+/* turn off the spacing at the periphery of boundary cells */
+mtd[-moz-math-firstrow="true"] {
+  padding-top: 0ex;
+}
+mtd[-moz-math-lastrow="true"] {
+  padding-bottom: 0em;
+}
+mtd[-moz-math-firstcolumn="true"] {
+  padding-left: 0ex;
+}
+mtd[-moz-math-lastcolumn="true"] {
+  padding-right: 0em;
+}
+/* re-instate the spacing if the table has a surrounding frame */
+mtable[frame="solid"] > mtr > mtd[-moz-math-firstrow="true"],
+mtable[frame="dashed"] > mtr > mtd[-moz-math-firstrow="true"] {
+  padding-top: 0.5ex; /* framespacing.top */
+}
+mtable[frame="solid"] > mtr > mtd[-moz-math-lastrow="true"],
+mtable[frame="dashed"] > mtr > mtd[-moz-math-lastrow="true"] {
+  padding-bottom: 0.5ex; /* framespacing.bottom */
+}
+mtable[frame="solid"] > mtr > mtd[-moz-math-firstcolumn="true"],
+mtable[frame="dashed"] > mtr > mtd[-moz-math-firstcolumn="true"] {
+  padding-left: 0.4em; /* framespacing.left */
+}
+mtable[frame="solid"] > mtr > mtd[-moz-math-lastcolumn="true"],
+mtable[frame="dashed"] > mtr > mtd[-moz-math-lastcolumn="true"] {
+  padding-right: 0.4em; /* framespacing.right */
+}
+
+/**********************************************************************/
+/* internal settings to support 'rowlines' and 'columnlines'. To
+   achieve the recommended behavior, the back-end code will avoid setting
+   unsuitable rules on the cells on the first row and the the first column.
+   In general, however, authors can use the 'border' property of CSS to
+   achieve varying effects down to the level of the table cell. */
+mtd[-moz-math-rowline="none"] {
+  border-top: none;
+}
+mtd[-moz-math-rowline="solid"] {
+  border-top: solid thin;
+}
+mtd[-moz-math-rowline="dashed"] {
+  border-top: dashed thin;
+}
+mtd[-moz-math-columnline="none"] {
+  border-left: none;
+}
+mtd[-moz-math-columnline="solid"] {
+  border-left: solid thin;
+}
+mtd[-moz-math-columnline="dashed"] {
+  border-left: dashed thin;
+}
 
 /*******************************************************/
 /* style switching during frame construction           */
