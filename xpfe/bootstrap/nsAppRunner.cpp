@@ -415,7 +415,11 @@ int main1(int argc, char* argv[])
 			if (num4xProfiles == 0 && numProfiles == 0) {
 				profstr = "resource:/res/profile/cpw.xul"; 
 			}
-			else if (num4xProfiles >= 1) {
+			else if (num4xProfiles == 1) {
+				profileService->MigrateAllProfiles();
+				profileService->GetProfileCount(&numProfiles);
+			}
+			else if (num4xProfiles > 1) {
 				profstr = "resource:/res/profile/pm.xul";
 			}
 #endif
