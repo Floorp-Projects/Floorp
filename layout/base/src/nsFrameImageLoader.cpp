@@ -21,14 +21,15 @@
 #include "nsIView.h"
 #include "nsIFrame.h"
 #include "nsIURL.h"
-#include "nsIDocument.h"
-#include "nsIContent.h"
 #include "nsIImageGroup.h"
 #include "nsIImageRequest.h"
-#include "nsString.h"
-//#include "prlog.h"
 #include "nsIStyleContext.h"
-//#include "nsIDeviceContext.h"
+
+#ifdef DEBUG
+#undef NOISY_IMAGE_LOADING
+#else
+#undef NOISY_IMAGE_LOADING
+#endif
 
 static NS_DEFINE_IID(kIFrameImageLoaderIID, NS_IFRAME_IMAGE_LOADER_IID);
 static NS_DEFINE_IID(kIImageRequestObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
@@ -181,6 +182,7 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
   pfd->mCallBack = aCallBack;
   pfd->mClosure = aClosure;
   pfd->mNext = mFrames;
+  pfd->mNeedSizeUpdate = PR_TRUE;
   mFrames = pfd;
 
   // Start image load request
@@ -215,14 +217,20 @@ nsFrameImageLoader::AddFrame(nsIFrame* aFrame,
   pfd->mCallBack = aCallBack;
   pfd->mClosure = aClosure;
   pfd->mNext = mFrames;
+  pfd->mNeedSizeUpdate = PR_TRUE;
   mFrames = pfd;
-  if (aCallBack &&
+  if (aCallBack && mPresContext &&
       ((NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE |
         NS_IMAGE_LOAD_STATUS_ERROR) & mImageLoadStatus)) {
     // Fire notification callback right away so that caller doesn't
     // miss it...
+#ifdef NOISY_IMAGE_LOADING
+    printf("%p: AddFrame: notify frame=%p status=%x\n",
+           this, pfd->mFrame, mImageLoadStatus);
+#endif
     (*aCallBack)(mPresContext, this, pfd->mFrame, pfd->mClosure,
                  mImageLoadStatus);
+    pfd->mNeedSizeUpdate = PR_FALSE;
   }
   return NS_OK;
 }
@@ -246,10 +254,16 @@ nsFrameImageLoader::RemoveFrame(nsIFrame* aFrame)
 NS_IMETHODIMP
 nsFrameImageLoader::StopImageLoad()
 {
+#ifdef NOISY_IMAGE_LOADING
+  printf("    %p: stopping ", this);
+  fputs(mURL, stdout);
+  printf("\n");
+#endif
   if (nsnull != mImageRequest) {
     mImageRequest->RemoveObserver(this);
     NS_RELEASE(mImageRequest);
   }
+  NS_IF_RELEASE(mPresContext);
   return NS_OK;
 }
 
@@ -382,15 +396,25 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
   const nsRect* changeRect;
   PerFrameData* pfd;
 
+  if (!mPresContext) {
+    return;
+  }
+
   mNotifyLockCount++;
 
+#ifdef NOISY_IMAGE_LOADING
+  printf("%p: loading ", this);
+  fputs(mURL, stdout);
+  printf(" notification=%d params=%d,%d,%p\n", aNotificationType,
+         aParam1, aParam2, aParam3);
+#endif
   switch (aNotificationType) {
   case nsImageNotification_kDimensions:
     mPresContext->GetScaledPixelsToTwips(&p2t);
     mDesiredSize.width = NSIntPixelsToTwips(aParam1, p2t);
     mDesiredSize.height = NSIntPixelsToTwips(aParam2, p2t);
     mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE;
-    NotifyFrames();
+    NotifyFrames(PR_TRUE);
     break;
 
   case nsImageNotification_kPixmapUpdate:
@@ -432,7 +456,7 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
 
   case nsImageNotification_kIsTransparent:
     // Mark the frame's view as having transparent areas
-    // XXX this is pretty vile
+    // XXX this is pretty vile; change this so that we set another frame status bit and then pass on a notification *or* lets just start passing on the notifications directly to the frames and eliminate all of this code.
     pfd = mFrames;
     while (pfd) {
       pfd->mFrame->GetView(&view);
@@ -447,7 +471,7 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
     // Treat this like an error
     mImageLoadError = nsImageError_kNoData;
     mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_ERROR;
-    NotifyFrames();
+    NotifyFrames(PR_FALSE);
     break;
 
   default:
@@ -465,13 +489,13 @@ nsFrameImageLoader::NotifyError(nsIImageRequest *aImageRequest,
 
   mImageLoadError = aErrorType;
   mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_ERROR;
-  NotifyFrames();
+  NotifyFrames(PR_FALSE);
 
   mNotifyLockCount--;
 }
 
 void
-nsFrameImageLoader::NotifyFrames()
+nsFrameImageLoader::NotifyFrames(PRBool aIsSizeUpdate)
 {
   nsIPresShell* shell;
   mPresContext->GetShell(&shell);
@@ -481,9 +505,17 @@ nsFrameImageLoader::NotifyFrames()
 
   PerFrameData* pfd = mFrames;
   while (nsnull != pfd) {
-    if (pfd->mCallBack) {
-      (*pfd->mCallBack)(mPresContext, this, pfd->mFrame, pfd->mClosure,
-                        mImageLoadStatus);
+    if ((aIsSizeUpdate && pfd->mNeedSizeUpdate) || !aIsSizeUpdate) {
+      if (pfd->mCallBack) {
+#ifdef NOISY_IMAGE_LOADING
+        printf("  notify frame=%p status=%x\n", pfd->mFrame, mImageLoadStatus);
+#endif
+        (*pfd->mCallBack)(mPresContext, this, pfd->mFrame, pfd->mClosure,
+                          mImageLoadStatus);
+      }
+      if (aIsSizeUpdate) {
+        pfd->mNeedSizeUpdate = PR_FALSE;
+      }
     }
     pfd = pfd->mNext;
   }

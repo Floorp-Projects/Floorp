@@ -70,16 +70,16 @@ public:
   // then the image will be scaled to fit the reflow
   // constraints. Otherwise, the image will be left at its intrinsic
   // size.
-  void GetDesiredSize(nsIPresContext* aPresContext,
-                      const nsHTMLReflowState* aReflowState,
-                      nsHTMLReflowMetrics& aDesiredSize);
+  PRBool GetDesiredSize(nsIPresContext* aPresContext,
+                        const nsHTMLReflowState* aReflowState,
+                        nsHTMLReflowMetrics& aDesiredSize);
 
   PRUint32 GetLoadStatus() const;
 
   PRBool GetLoadImageFailed() const;
 
   PRBool IsImageSizeKnown() const {
-    return mHaveComputedSize;
+    return mFlags.mHaveComputedSize;
   }
 
 protected:
@@ -107,10 +107,18 @@ protected:
 
   nsIFrameImageLoader* mImageLoader;
 
-  PRPackedBool mLoadImageFailed;
-  PRPackedBool mHaveIntrinsicImageSize;
-  PRPackedBool mNeedIntrinsicImageSize;
-  PRPackedBool mHaveComputedSize;
+  union {
+    PRUint32 mAllFlags;
+    struct {
+      PRUint32 mLoadImageFailed : 1;
+      PRUint32 mHaveIntrinsicImageSize : 1;
+      PRUint32 mNeedIntrinsicImageSize : 1;
+      PRUint32 mAutoImageSize : 1;
+      PRUint32 mHaveComputedSize : 1;
+      PRUint32 mSquelchCallback : 1;
+      PRUint32 mNeedSizeNotification : 1;
+    } mFlags;
+  };
 
   nsSize mIntrinsicImageSize;
   nsSize mComputedImageSize;
