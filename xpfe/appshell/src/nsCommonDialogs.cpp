@@ -70,15 +70,9 @@ NS_IMETHODIMP nsCommonDialogs::Alert(nsIDOMWindow *inParent,  const PRUnichar *i
 	// Stuff in Parameters
 	block->SetInt( eNumberButtons, 1 );
 	block->SetString( eMsg, inMsg );
-
-	if (inWindowTitle) {
-		block->SetString( eDialogTitle,inWindowTitle );
-        }
-	else {
-		// todo, put that in a string bundle
-		nsString defaultTitle("Alert");
-		block->SetString( eDialogTitle, defaultTitle.GetUnicode());
-        }
+	
+	block->SetString( eDialogTitle,inWindowTitle );
+   
 	nsString url( kAlertIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	
@@ -102,14 +96,9 @@ NS_IMETHODIMP nsCommonDialogs::Confirm(nsIDOMWindow *inParent, const PRUnichar *
 	// Stuff in Parameters
 	block->SetInt( eNumberButtons,2 );
 	block->SetString( eMsg, inMsg );
-	if (inWindowTitle) {
-		block->SetString( eDialogTitle, inWindowTitle );
-        }
-	else {
-		// todo, put that in a string bundle
-		nsString defaultTitle("Confirm");
-		block->SetString( eDialogTitle, defaultTitle.GetUnicode());
-	}
+	
+	block->SetString( eDialogTitle, inWindowTitle );
+   
 	nsString url( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	
@@ -136,14 +125,9 @@ NS_IMETHODIMP nsCommonDialogs::ConfirmCheck(nsIDOMWindow *inParent,  const PRUni
 	// Stuff in Parameters
 	block->SetInt( eNumberButtons,2 );
 	block->SetString( eMsg, inMsg );
-	if (inWindowTitle) {
-		block->SetString( eDialogTitle, inWindowTitle );
-	}
-	else {
-                // todo, put that in a string bundle
-                nsString defaultTitle("Confirm");
-                block->SetString( eDialogTitle, defaultTitle.GetUnicode());
-	}
+
+	block->SetString( eDialogTitle, inWindowTitle );
+
 	nsString url( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	block->SetString( eCheckboxMsg, inCheckMsg );
@@ -284,14 +268,9 @@ NS_IMETHODIMP nsCommonDialogs::Prompt(nsIDOMWindow *inParent, const PRUnichar *i
 	// Stuff in Parameters
 	block->SetInt( eNumberButtons,2 );
 	block->SetString( eMsg, inMsg );
-	if (inWindowTitle) {
-		block->SetString( eDialogTitle, inWindowTitle );
-	}
-	else {
-                // todo, put that in a string bundle
-                nsString defaultTitle("Prompt");
-                block->SetString( eDialogTitle, defaultTitle.GetUnicode());
-	}
+	
+	block->SetString( eDialogTitle, inWindowTitle );
+	
 	nsString url( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	block->SetInt( eNumberEditfields, 1 );
@@ -323,14 +302,9 @@ NS_IMETHODIMP nsCommonDialogs::PromptUsernameAndPassword(nsIDOMWindow *inParent,
 	// Stuff in Parameters
 	block->SetInt( eNumberButtons,2 );
 	block->SetString( eMsg, inMsg );
-	if (inWindowTitle) {
-		block->SetString( eDialogTitle, inWindowTitle );
-	}
-	else {
-                // todo, put that in a string bundle
-                nsString defaultTitle("Prompt Username and Password");
-                block->SetString( eDialogTitle, defaultTitle.GetUnicode());
-	}
+	
+	block->SetString( eDialogTitle, inWindowTitle );
+
 	nsString url( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	block->SetInt( eNumberEditfields, 2 );
@@ -363,14 +337,9 @@ NS_IMETHODIMP nsCommonDialogs::PromptPassword(nsIDOMWindow *inParent,  const PRU
 	// Stuff in Parameters
 	block->SetInt( eNumberButtons,2 );
 	block->SetString( eMsg, inMsg );
-	if (inWindowTitle) {
-		block->SetString( eDialogTitle, inWindowTitle );
-	}
-	else {
-                // todo, put that in a string bundle
-                nsString defaultTitle("Prompt Password");
-                block->SetString( eDialogTitle, defaultTitle.GetUnicode());
-	}
+	
+	block->SetString( eDialogTitle, inWindowTitle );
+	
 	nsString url( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	block->SetInt( eNumberEditfields, 1 );
@@ -403,11 +372,7 @@ nsresult nsCommonDialogs::Select(nsIDOMWindow *inParent, const PRUnichar *inDial
 	if (inDialogTitle) {
 		block->SetString( 0, inDialogTitle );
 	}
-	else {
-                // todo, put that in a string bundle
-                nsString defaultTitle("Select");
-                block->SetString( eDialogTitle, defaultTitle.GetUnicode());
-	}
+	
 	block->SetString(1, inMsg );
 	block->SetInt( eSelection, inCount );
 	for ( PRUint32 i = 2; i<= inCount+1; i++ )

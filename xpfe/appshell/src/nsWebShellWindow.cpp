@@ -3053,8 +3053,10 @@ NS_IMETHODIMP nsWebShellWindow::Alert(const PRUnichar *text)
   }
  
  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
+ // todo, put that in a string bundle
+ nsString defaultTitle("Alert");
  if ( NS_SUCCEEDED( rv ) )
- 	rv = dialog->Alert( domWindow, NULL,text );
+ 	rv = dialog->Alert( domWindow, defaultTitle.GetUnicode(),text );
   return rv; 
 }
 
@@ -3071,15 +3073,16 @@ NS_IMETHODIMP nsWebShellWindow::Confirm(const PRUnichar *text, PRBool *_retval)
     return rv;
   }
  
+ nsString defaultTitle("Confirm");
  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
  if ( NS_SUCCEEDED( rv ) )
- 	rv = dialog->Confirm( domWindow, NULL, text, _retval );
+ 	rv = dialog->Confirm( domWindow, defaultTitle.GetUnicode(), text, _retval );
   return rv; 
 }
 
 NS_IMETHODIMP nsWebShellWindow::ConfirmCheck(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
 {
-	 nsresult rv; 
+	nsresult rv; 
   nsCOMPtr<nsIDOMWindow> domWindow;
   nsIWebShell* tempWebShell;
   GetWebShell(tempWebShell  );
@@ -3090,9 +3093,11 @@ NS_IMETHODIMP nsWebShellWindow::ConfirmCheck(const PRUnichar *text, const PRUnic
     return rv;
   }
  
+ // todo, put that in a string bundle
+ nsString defaultTitle("Confirm");
  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
  if ( NS_SUCCEEDED( rv ) )
- 	rv =dialog->ConfirmCheck( domWindow,NULL, text, checkMsg, checkValue, _retval );
+ 	rv =dialog->ConfirmCheck( domWindow,defaultTitle.GetUnicode(), text, checkMsg, checkValue, _retval );
   return rv; 
 }
 
@@ -3156,10 +3161,12 @@ NS_IMETHODIMP nsWebShellWindow::Prompt(const PRUnichar *text, const PRUnichar *d
     NS_ERROR("Unable to retrieve the DOM window from the new web shell.");
     return rv;
   }
+ // todo, put that in a string bundle
+ nsString defaultTitle("Prompt");
  
  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
  if ( NS_SUCCEEDED( rv ) )
- 	rv = dialog->Prompt( domWindow, NULL, text, defaultText, result, _retval );
+ 	rv = dialog->Prompt( domWindow, defaultTitle.GetUnicode(), text, defaultText, result, _retval );
   return rv; 
 }
 
@@ -3176,9 +3183,12 @@ NS_IMETHODIMP nsWebShellWindow::PromptUsernameAndPassword(const PRUnichar *text,
     return rv;
   }
  
+// todo, put that in a string bundle
+nsString defaultTitle("Prompt Username and Password");
+                
  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
  if ( NS_SUCCEEDED( rv ) )
- 	rv = dialog->PromptUsernameAndPassword( domWindow, NULL, text, user, pwd, _retval );
+ 	rv = dialog->PromptUsernameAndPassword( domWindow, defaultTitle.GetUnicode(), text, user, pwd, _retval );
   return rv;
 }
 
