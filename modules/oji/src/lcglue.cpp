@@ -491,7 +491,7 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
 }
 
 JS_STATIC_DLL_CALLBACK(void)
-exit_js_impl(JNIEnv *jEnv)
+exit_js_impl(JNIEnv *jEnv, JSContext *cx)
 {
     //TODO:  
     //LM_UnlockJS();
@@ -518,7 +518,18 @@ exit_js_impl(JNIEnv *jEnv)
         delete top;
       }
     }
+    // The main idea is to execute terminate function if have any;
+    if (cx)
+    {
+        nsISupports* supports = NS_REINTERPRET_CAST(nsIScriptContext*, 
+                                                    JS_GetContextPrivate(cx));
+        nsCOMPtr<nsIScriptContext> scriptContext = do_QueryInterface(supports);
 
+        if (scriptContext)
+        {
+            scriptContext->ScriptEvaluated(PR_TRUE);
+        }
+    }
     return;
 }
 
