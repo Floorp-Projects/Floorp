@@ -171,7 +171,7 @@ function CloseEditNode(saveChangeFlag)
         theParent.appendChild(saveNode);
         dump("  child node appended.\n");
 
-        if (saveChangeFlag)
+        if (saveNode && saveChangeFlag)
         {
             var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
             RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
@@ -185,7 +185,7 @@ function CloseEditNode(saveChangeFlag)
             dump("  replacing value of property '" + propertyName + "'\n");
             
             // get the URI
-            theNode = saveNode;
+            var theNode = saveNode;
             var bookmarkURL = "";
             while(true)
             {
@@ -421,81 +421,88 @@ function fillContextMenu(name)
 
 function doContextCmd(cmdName)
 {
-    dump("doContextCmd start: cmd='" + cmdName + "'\n");
+	dump("doContextCmd start: cmd='" + cmdName + "'\n");
 
-    var treeNode = document.getElementById("bookmarksTree");
-    if (!treeNode)    return(false);
-    var db = treeNode.database;
-    if (!db)    return(false);
-    
-    var compositeDB = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
-    if (!compositeDB)    return(false);
+	var treeNode = document.getElementById("bookmarksTree");
+	if (!treeNode)    return(false);
+	var db = treeNode.database;
+	if (!db)    return(false);
 
-    var isupports = Components.classes["component://netscape/rdf/rdf-service"].getService();
-    if (!isupports)    return(false);
-    var rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
-    if (!rdf)    return(false);
+	var compositeDB = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
+	if (!compositeDB)    return(false);
 
-    // need a resource for the command
-    var cmdResource = rdf.GetResource(cmdName);
-    if (!cmdResource)        return(false);
-    cmdResource = cmdResource.QueryInterface(Components.interfaces.nsIRDFResource);
-    if (!cmdResource)        return(false);
+	var isupports = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	if (!isupports)    return(false);
+	var rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
+	if (!rdf)    return(false);
 
-    var select_list = treeNode.getElementsByAttribute("selected", "true");
-    if (select_list.length < 1)    return(false);
-    
-    dump("# of Nodes selected: " + select_list.length + "\n\n");
+	// need a resource for the command
+	var cmdResource = rdf.GetResource(cmdName);
+	if (!cmdResource)        return(false);
+	cmdResource = cmdResource.QueryInterface(Components.interfaces.nsIRDFResource);
+	if (!cmdResource)        return(false);
 
-    // build up selection nsISupportsArray
-    var selectionInstance = Components.classes["component://netscape/supports-array"].createInstance();
-    if (!selectionInstance)
-    {
-        dump("unable to create selectionInstance.\n");
-        return(false);
-    }
-    var selectionArray = selectionInstance.QueryInterface(Components.interfaces.nsISupportsArray);
-    if (!selectionArray)
-    {
-        dump("unable to QI to selectionArray.\n");
-        return(false);
-    }
+	var select_list = treeNode.getElementsByAttribute("selected", "true");
+	if (select_list.length < 1)    return(false);
 
-    for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
-    {
-        var node = select_list[nodeIndex];
-        if (!node)    break;
-        var id = node.getAttribute("id");
-        if (!id)    break;
+	dump("# of Nodes selected: " + select_list.length + "\n\n");
 
-        dump("id: " + id + "\n");
+	// set up selection nsISupportsArray
+	var selectionInstance = Components.classes["component://netscape/supports-array"].createInstance();
+	var selectionArray = selectionInstance.QueryInterface(Components.interfaces.nsISupportsArray);
 
-        var rdfNode = rdf.GetResource(id);
-        if (!rdfNode)    break;
+	// set up arguments nsISupportsArray
+	var argumentsInstance = Components.classes["component://netscape/supports-array"].createInstance();
+	var argumentsArray = argumentsInstance.QueryInterface(Components.interfaces.nsISupportsArray);
 
-        selectionArray.AppendElement(rdfNode);
-    }
+	// get argument (parent)
+	var parentArc = rdf.GetResource("http://home.netscape.com/NC-rdf#parent");
+	if (!parentArc)        return(false);
 
-    // build up arguments nsISupportsArray
-    var argumentsInstance = Components.classes["component://netscape/supports-array"].createInstance();
-    if (!argumentsInstance)
-    {
-        dump("unable to create argumentsInstance.\n");
-        return(false);
-    }
+	for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
+	{
+		var node = select_list[nodeIndex];
+		if (!node)    break;
+		var	uri = node.getAttribute("ref");
+		if ((uri) || (uri == ""))
+		{
+			uri = node.getAttribute("id");
+		}
+		if (!uri)    return(false);
 
-    var argumentsArray = argumentsInstance.QueryInterface(Components.interfaces.nsISupportsArray);
-    if (!argumentsArray)
-    {
-        dump("unable to QI to argumentsArray.\n");
-        return(false);
-    }
+		var rdfNode = rdf.GetResource(uri);
+		if (!rdfNode)    break;
 
+		// add node into selection array
+		selectionArray.AppendElement(rdfNode);
 
-    compositeDB.DoCommand( selectionArray, cmdResource, argumentsArray );
+		// get the parent's URI
+		var parentURI="";
+		var	theParent = node;
+		while (theParent)
+		{
+			theParent = theParent.parentNode;
 
+			parentURI = theParent.getAttribute("ref");
+			if ((!parentURI) || (parentURI == ""))
+			{
+				parentURI = theParent.getAttribute("id");
+			}
+			if (parentURI != "")	break;
+		}
+		if (parentURI == "")    return(false);
 
-    dump("doContextCmd ends: cmd='" + cmdName + "'\n");
+		var parentNode = rdf.GetResource(parentURI, true);
+		if (!parentNode)	return(false);
 
-    return(true);
+		// add parent arc and node into arguments array
+		argumentsArray.AppendElement(parentArc);
+		argumentsArray.AppendElement(parentNode);
+	}
+
+	// do the command
+	compositeDB.DoCommand( selectionArray, cmdResource, argumentsArray );
+
+	dump("doContextCmd ends.\n\n");
+	return(true);
 }

@@ -97,6 +97,8 @@ nsIRDFResource		*kRDF_type;
 nsIRDFResource		*kWEB_LastModifiedDate;
 nsIRDFResource		*kWEB_LastVisitDate;
 
+nsIRDFResource		*kNC_Parent;
+
 nsIRDFResource		*kNC_BookmarkCommand_NewFolder;
 nsIRDFResource		*kNC_BookmarkCommand_NewSeparator;
 nsIRDFResource		*kNC_BookmarkCommand_DeleteBookmark;
@@ -141,6 +143,8 @@ bm_AddRefGlobals()
 		gRDF->GetResource(WEB_NAMESPACE_URI "LastModifiedDate", &kWEB_LastModifiedDate);
 		gRDF->GetResource(WEB_NAMESPACE_URI "LastVisitDate",    &kWEB_LastVisitDate);
 
+		gRDF->GetResource(NC_NAMESPACE_URI "parent",            &kNC_Parent);
+
 		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?newfolder",    &kNC_BookmarkCommand_NewFolder);
 		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?newseparator", &kNC_BookmarkCommand_NewSeparator);
 		gRDF->GetResource(NC_NAMESPACE_URI "bookmarkcommand?deletebookmark", &kNC_BookmarkCommand_DeleteBookmark);
@@ -178,6 +182,8 @@ bm_ReleaseGlobals()
 		NS_IF_RELEASE(kRDF_type);
 		NS_IF_RELEASE(kWEB_LastModifiedDate);
 		NS_IF_RELEASE(kWEB_LastVisitDate);
+
+		NS_IF_RELEASE(kNC_Parent);
 
 		NS_IF_RELEASE(kNC_BookmarkCommand_NewFolder);
 		NS_IF_RELEASE(kNC_BookmarkCommand_NewSeparator);
@@ -387,6 +393,11 @@ BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 				description.Cut(offset, 4);
 				description.Insert(PRUnichar('>'), offset);
 			}
+			while ((offset = description.Find("&amp;", PR_TRUE)) > 0)
+			{
+				description.Cut(offset, 5);
+				description.Insert(PRUnichar('&'), offset);
+			}
 
 			if (bookmarkNode)
 			{
@@ -401,34 +412,34 @@ BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 			description.Truncate();
 		}
 
-		if ((offset = line.Find(kHREFEquals)) >= 0)
+		if ((offset = line.Find(kHREFEquals, PR_TRUE)) >= 0)
 		{
 			rv = ParseBookmark(line, container, nodeType, getter_AddRefs(bookmarkNode));
 		}
-		else if ((offset = line.Find(kOpenHeading)) >= 0 &&
+		else if ((offset = line.Find(kOpenHeading, PR_TRUE)) >= 0 &&
 			 nsString::IsDigit(line.CharAt(offset + 2)))
 		{
 			// XXX Ignore <H1> so that bookmarks root _is_ <H1>
 			if (line.CharAt(offset + 2) != PRUnichar('1'))
 				rv = ParseBookmarkHeader(line, container, nodeType);
 		}
-		else if ((offset = line.Find(kSeparator)) >= 0)
+		else if ((offset = line.Find(kSeparator, PR_TRUE)) >= 0)
 		{
 			rv = ParseBookmarkSeparator(line, container);
 		}
-		else if ((offset = line.Find(kCloseUL)) >= 0 ||
-			 (offset = line.Find(kCloseMenu)) >= 0 ||
-			 (offset = line.Find(kCloseDL)) >= 0)
+		else if ((offset = line.Find(kCloseUL, PR_TRUE)) >= 0 ||
+			 (offset = line.Find(kCloseMenu, PR_TRUE)) >= 0 ||
+			 (offset = line.Find(kCloseDL, PR_TRUE)) >= 0)
 		{
 			return ParseHeaderEnd(line);
 		}
-		else if ((offset = line.Find(kOpenUL)) >= 0 ||
-			 (offset = line.Find(kOpenMenu)) >= 0 ||
-			 (offset = line.Find(kOpenDL)) >= 0)
+		else if ((offset = line.Find(kOpenUL, PR_TRUE)) >= 0 ||
+			 (offset = line.Find(kOpenMenu, PR_TRUE)) >= 0 ||
+			 (offset = line.Find(kOpenDL, PR_TRUE)) >= 0)
 		{
 			rv = ParseHeaderBegin(line, container);
 		}
-		else if ((offset = line.Find(kOpenDD)) >= 0)
+		else if ((offset = line.Find(kOpenDD, PR_TRUE)) >= 0)
 		{
 			inDescription = PR_TRUE;
 			line.Cut(0, offset+sizeof(kOpenDD)-1);
@@ -468,7 +479,7 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& 
 	if (! aContainer)
 		return NS_ERROR_NULL_POINTER;
 
-	PRInt32 start = aLine.Find(kHREFEquals);
+	PRInt32 start = aLine.Find(kHREFEquals, PR_TRUE);
 	NS_ASSERTION(start >= 0, "no 'HREF=\"' string: how'd we get here?");
 	if (start < 0)
 		return NS_ERROR_UNEXPECTED;
@@ -512,7 +523,7 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& 
 	nsAutoString name;
 	aLine.Right(name, aLine.Length() - (start + 1));
 
-	end = name.Find(kCloseAnchor);
+	end = name.Find(kCloseAnchor, PR_TRUE);
 	NS_ASSERTION(end >= 0, "anchor tag not terminated");
 	if (end < 0)
 		return NS_ERROR_UNEXPECTED;
@@ -522,7 +533,7 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& 
 	// 3. Parse the target
 	nsAutoString target;
 
-	start = aLine.Find(kTargetEquals);
+	start = aLine.Find(kTargetEquals, PR_TRUE);
 	if (start >= 0) {
 		start += (sizeof(kTargetEquals) - 1);
 		end = aLine.Find(PRUnichar('"'), start);
@@ -710,7 +721,7 @@ BookmarkParser::ParseBookmarkHeader(const nsString& aLine,
 				    nsIRDFResource *nodeType)
 {
 	// Snip out the header
-	PRInt32 start = aLine.Find(kOpenHeading);
+	PRInt32 start = aLine.Find(kOpenHeading, PR_TRUE);
 	NS_ASSERTION(start >= 0, "couldn't find '<H'; why am I here?");
 	if (start < 0)
 		return NS_ERROR_UNEXPECTED;
@@ -726,7 +737,7 @@ BookmarkParser::ParseBookmarkHeader(const nsString& aLine,
 	nsAutoString name;
 	aLine.Right(name, aLine.Length() - (start + 1));
 
-	PRInt32 end = name.Find(kCloseHeading);
+	PRInt32 end = name.Find(kCloseHeading, PR_TRUE);
 	if (end < 0)
 		NS_WARNING("No '</H' found to close the heading");
 
@@ -871,7 +882,7 @@ BookmarkParser::ParseAttribute(const nsString& aLine,
 {
 	aResult.Truncate();
 
-	PRInt32 start = aLine.Find(aAttributeName);
+	PRInt32 start = aLine.Find(aAttributeName, PR_TRUE);
 	if (start < 0)
 		return NS_OK;
 
@@ -936,6 +947,8 @@ protected:
 	nsresult WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileStream strm, nsIRDFResource *node,
 					 nsIRDFResource *property, const char *htmlAttrib, PRBool isFirst);
 	PRBool CanAccept(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aTarget);
+
+	nsresult getArgumentN(nsISupportsArray *arguments, nsIRDFResource *res, PRInt32 offset, nsIRDFResource **argValue);
 
 	nsBookmarksService();
 	virtual ~nsBookmarksService();
@@ -1079,18 +1092,16 @@ nsBookmarksService::Init()
 	rv = bm_AddRefGlobals();
 	if (NS_FAILED(rv)) return rv;
 
-    rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-                                            nsnull,
-                                            nsIRDFDataSource::GetIID(),
-                                            (void**) &mInner);
-    if (NS_FAILED(rv)) return rv;
+	rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
+		nsnull, nsIRDFDataSource::GetIID(), (void**) &mInner);
+	if (NS_FAILED(rv)) return rv;
 
-    rv = ReadBookmarks();
-    if (NS_FAILED(rv)) return rv;
+	rv = ReadBookmarks();
+	if (NS_FAILED(rv)) return rv;
 
-    // register this as a named data source with the RDF service
-    rv = gRDF->RegisterDataSource(this, PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
+	// register this as a named data source with the RDF service
+	rv = gRDF->RegisterDataSource(this, PR_FALSE);
+	if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;
 }
@@ -1194,10 +1205,10 @@ nsBookmarksService::AddBookmark(const char *aURI, const PRUnichar *aOptionalTitl
 	rv = container->Init(mInner, kNC_BookmarksRoot);
 	if (NS_FAILED(rv)) return rv;
 
-	// current the current date/time
+	// convert the current date/time from microseconds (PRTime) to seconds
 	PRTime		now64 = PR_Now(), million;
 	LL_I2L(million, PR_USEC_PER_SEC);
-	LL_DIV(now64, now64, million);			// convert from microseconds (PRTime) to seconds
+	LL_DIV(now64, now64, million);
 	PRInt32		now32;
 	LL_L2I(now32, now64);
 
@@ -1384,7 +1395,7 @@ nsBookmarksService::GetTarget(nsIRDFResource* aSource,
 			}
 
 			nsAutoString	ncURI(uri);
-			if (ncURI.Find("NC:") == 0)
+			if (ncURI.Find("NC:", PR_TRUE) == 0)
 			{
 				return(NS_RDF_NO_VALUE);
 			}
@@ -1585,12 +1596,153 @@ nsBookmarksService::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSour
 
 
 
-NS_IMETHODIMP
-nsBookmarksService::DoCommand(nsISupportsArray* aSources,
-                                  nsIRDFResource*   aCommand,
-                                  nsISupportsArray* aArguments)
+nsresult
+nsBookmarksService::getArgumentN(nsISupportsArray *arguments, nsIRDFResource *res,
+				PRInt32 offset, nsIRDFResource **argValue)
 {
-	return(NS_ERROR_NOT_IMPLEMENTED);
+	nsresult		rv;
+	PRInt32			loop;
+	PRUint32		numArguments;
+
+	*argValue = nsnull;
+
+	if (NS_FAILED(rv = arguments->Count(&numArguments)))	return(rv);
+
+	// format is argument, value, argument, value, ... [you get the idea]
+	// multiple arguments can be the same, by the way, thus the "offset"
+	for (loop = 0; loop < numArguments; loop += 2)
+	{
+		nsCOMPtr<nsISupports>	aSource = arguments->ElementAt(loop);
+		if (!aSource)	return(NS_ERROR_NULL_POINTER);
+		nsCOMPtr<nsIRDFResource>	src = do_QueryInterface(aSource);
+		if (!src)	return(NS_ERROR_NO_INTERFACE);
+		
+		if (src == res)
+		{
+			if (offset > 0)
+			{
+				--offset;
+				continue;
+			}
+
+			nsCOMPtr<nsISupports>	aValue = arguments->ElementAt(loop + 1);
+			if (!aSource)	return(NS_ERROR_NULL_POINTER);
+			nsCOMPtr<nsIRDFResource>	val = do_QueryInterface(aValue);
+			if (!val)	return(NS_ERROR_NO_INTERFACE);
+
+			*argValue = val;
+			NS_ADDREF(*argValue);
+			return(NS_OK);
+		}
+	}
+	return(NS_ERROR_INVALID_ARG);
+}
+
+
+
+NS_IMETHODIMP
+nsBookmarksService::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aCommand,
+				nsISupportsArray *aArguments)
+{
+	nsresult		rv = NS_OK;
+	PRInt32			loop;
+	PRUint32		numSources;
+	if (NS_FAILED(rv = aSources->Count(&numSources)))	return(rv);
+	if (numSources < 1)
+	{
+		return(NS_ERROR_ILLEGAL_VALUE);
+	}
+
+	for (loop=((PRInt32)numSources)-1; loop>=0; loop--)
+	{
+		nsCOMPtr<nsISupports>	aSource = aSources->ElementAt(loop);
+		if (!aSource)	return(NS_ERROR_NULL_POINTER);
+		nsCOMPtr<nsIRDFResource>	src = do_QueryInterface(aSource);
+		if (!src)	return(NS_ERROR_NO_INTERFACE);
+
+		if (aCommand == kNC_BookmarkCommand_NewFolder)
+		{
+		}
+		else if (aCommand == kNC_BookmarkCommand_NewSeparator)
+		{
+		}
+		else if (aCommand == kNC_BookmarkCommand_DeleteBookmark)
+		{
+			nsCOMPtr<nsIRDFResource>	argParent;
+			if (NS_FAILED(rv = getArgumentN(aArguments, kNC_Parent,
+					loop, getter_AddRefs(argParent))))
+				return(rv);
+
+			// make sure its a bookmark
+			PRBool	isBookmark = PR_FALSE;
+			if (NS_FAILED(rv = mInner->HasAssertion(src, kRDF_type,
+					kNC_Bookmark, PR_TRUE, &isBookmark)))
+				return(rv);
+			if (!isBookmark)	return(NS_ERROR_UNEXPECTED);
+
+			nsCOMPtr<nsIRDFContainer>	container;
+			if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFContainerCID, nsnull,
+					nsIRDFContainer::GetIID(), getter_AddRefs(container))))
+				return(rv);
+			if (NS_FAILED(rv = container->Init(mInner, argParent)))
+				return(rv);
+
+			if (NS_FAILED(rv = container->RemoveElement(src, PR_TRUE)))
+				return(rv);
+		}
+		else if (aCommand == kNC_BookmarkCommand_DeleteBookmarkFolder)
+		{
+			nsCOMPtr<nsIRDFResource>	argParent;
+			if (NS_FAILED(rv = getArgumentN(aArguments, kNC_Parent,
+					loop, getter_AddRefs(argParent))))
+				return(rv);
+
+			// make sure its a folder
+			PRBool	isFolder = PR_FALSE;
+			if (NS_FAILED(rv = mInner->HasAssertion(src, kRDF_type,
+					kNC_Folder, PR_TRUE, &isFolder)))
+				return(rv);
+			if (!isFolder)	return(NS_ERROR_UNEXPECTED);
+
+			nsCOMPtr<nsIRDFContainer>	container;
+			if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFContainerCID, nsnull,
+					nsIRDFContainer::GetIID(), getter_AddRefs(container))))
+				return(rv);
+			if (NS_FAILED(rv = container->Init(mInner, argParent)))
+				return(rv);
+
+			if (NS_FAILED(rv = container->RemoveElement(src, PR_TRUE)))
+				return(rv);
+		}
+		else if (aCommand == kNC_BookmarkCommand_DeleteBookmarkSeparator)
+		{
+			nsCOMPtr<nsIRDFResource>	argParent;
+			if (NS_FAILED(rv = getArgumentN(aArguments, kNC_Parent,
+					loop, getter_AddRefs(argParent))))
+				return(rv);
+
+			// make sure its a separator
+			PRBool	isSeparator = PR_FALSE;
+			if (NS_FAILED(rv = mInner->HasAssertion(src, kRDF_type,
+					kNC_BookmarkSeparator, PR_TRUE, &isSeparator)))
+				return(rv);
+			if (!isSeparator)	return(NS_ERROR_UNEXPECTED);
+
+			nsCOMPtr<nsIRDFContainer>	container;
+			if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFContainerCID, nsnull,
+					nsIRDFContainer::GetIID(), getter_AddRefs(container))))
+				return(rv);
+			if (NS_FAILED(rv = container->Init(mInner, argParent)))
+				return(rv);
+
+			if (NS_FAILED(rv = container->RemoveElement(src, PR_TRUE)))
+				return(rv);
+		}
+	}
+
+	Flush();
+
+	return(NS_OK);
 }
 
 ////////////////////////////////////////////////////////////////////////
