@@ -1,0 +1,21 @@
+#
+# This file defines the tests for client auth.
+#
+# expected
+#  return  server     client                         Test Case name
+#   value  params     params
+#  ------  ------     ------                         ---------------
+     0       -r       -w_nss                 TLS Request don't require client auth (client does not provide auth)
+     0       -r  -n_TestUser_-w_bogus     TLS Request don't require client auth (bad password)
+     0       -r   -n_TestUser_-w_nss      TLS Request don't require client auth (client auth)
+     0     -r_-r       -w_nss                TLS Require client auth (client does not provide auth)
+# this one should fail
+    254    -r_-r -n_TestUser_-w_bogus     TLS Require client auth (bad password)
+     0     -r_-r  -n_TestUser_-w_nss      TLS Require client auth (client auth)
+     0       -r       -T_-w_nss             SSL3 Request don't require client auth (client does not provide auth)
+     0       -r  -T_-n_TestUser_-w_bogus SSL3 Request don't require client auth (bad password)
+     0       -r   -T_-n_TestUser_-w_nss  SSL3 Request don't require client auth (client auth)
+     0     -r_-r       -T_-w_nss            SSL3 Require client auth (client does not provide auth)
+# this one should fail
+    254    -r_-r -T_-n_TestUser_-w_bogus SSL3 Require client auth (bad password)
+     0     -r_-r  -T_-n_TestUser_-w_nss  SSL3 Require client auth (client auth)
