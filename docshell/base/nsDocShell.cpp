@@ -5500,7 +5500,10 @@ nsDocShell::GetCurrentDocumentOwner(nsISupports ** aOwner)
     }
 
     //-- Get the document's principal
-    *aOwner = document->GetPrincipal();
+    if (document) {
+        *aOwner = document->GetPrincipal();
+    }
+
     NS_IF_ADDREF(*aOwner);
 }
 
