@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:ts=2:et:sw=2:
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -56,8 +57,6 @@
 static NS_DEFINE_CID(kCharSetManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
-
-static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
 static PRLogModuleInfo * FontMetricsXlibLM = PR_NewLogModule("FontMetricsXlib");
 
@@ -797,7 +796,7 @@ nsFontMetricsXlib::~nsFontMetricsXlib()
   }
 }
 
-NS_IMPL_ISUPPORTS(nsFontMetricsXlib, kIFontMetricsIID)
+NS_IMPL_ISUPPORTS1(nsFontMetricsXlib, nsIFontMetrics)
 
 static PRBool
 IsASCIIFontName(const nsString& aName)
@@ -1639,6 +1638,8 @@ nsFontXlib::~nsFontXlib()
 void
 nsFontXlib::LoadFont(void)
 {
+  NS_ASSERTION(!mFont, "Font already loaded.");
+
   Display *aDisplay = xlib_rgb_get_display();
   XFontStruct *xlibFont = XLoadQueryFont(aDisplay, mName);
   
@@ -2147,7 +2148,8 @@ nsFontMetricsXlib::PickASizeAndLoad(nsFontStretch* aStretch,
       font->mMap = aCharSet->mMap;
       if(FONT_HAS_GLYPH(font->mMap, aChar))
       {
-        font->LoadFont();
+        if (!font->mFont)
+          font->LoadFont();
         if(!font->mFont)
           return nsnull;
       }
@@ -2156,7 +2158,8 @@ nsFontMetricsXlib::PickASizeAndLoad(nsFontStretch* aStretch,
     {
       if (aCharSet == &ISO106461)
       {
-        font->LoadFont();
+        if (!font->mFont)
+          font->LoadFont();
         if(!font->mFont)
           return nsnull;
       }
