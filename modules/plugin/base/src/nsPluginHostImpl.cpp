@@ -1484,7 +1484,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetURL(nsISupports* pluginInst,
           else if (0 == PL_strcmp(target, "_current"))
             target = "_self";
 
-          rv = owner->GetURL(url, target, nsnull);
+          rv = owner->GetURL(url, target, nsnull, 0);
         }
 
         NS_RELEASE(peer);
@@ -1516,19 +1516,17 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
   nsAutoString      string; string.AssignWithConversion(url);
   nsIPluginInstance *instance;
   nsresult          rv;
-
+  
   // we can only send a stream back to the plugin (as specified 
   // by a null target) if we also have a nsIPluginStreamListener 
   // to talk to also
   if(target == nsnull && streamListener == nsnull)
 	  return NS_ERROR_ILLEGAL_VALUE;
-
+  
   rv = pluginInst->QueryInterface(kIPluginInstanceIID, (void **)&instance);
-
+  
   if (NS_SUCCEEDED(rv))
   {
-    if (nsnull != target)
-    {
       nsPluginInstancePeerImpl *peer;
 
       rv = instance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));
@@ -1540,20 +1538,23 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
         rv = peer->GetOwner(*getter_AddRefs(owner));
 
         if (NS_SUCCEEDED(rv))
-        {
-          if ((0 == PL_strcmp(target, "newwindow")) || 
-              (0 == PL_strcmp(target, "_new")))
-            target = "_blank";
-          else if (0 == PL_strcmp(target, "_current"))
-            target = "_self";
-
-          rv = owner->GetURL(url, target, (void*)postData);
-        }
-
+          {
+            if (!target) {
+              target = "_self";
+            }
+            else {
+              if ((0 == PL_strcmp(target, "newwindow")) || 
+                  (0 == PL_strcmp(target, "_new")))
+                target = "_blank";
+              else if (0 == PL_strcmp(target, "_current"))
+                target = "_self";
+            }
+            rv = owner->GetURL(url, target, (void*)postData, postDataLen);
+          }
+        
         NS_RELEASE(peer);
       }
-    }
-
+    
     if (streamListener != nsnull)
       rv = NewPluginURLStream(string, instance, streamListener);
 
