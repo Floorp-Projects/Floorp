@@ -416,7 +416,7 @@ void	 __dbpanic (DB *dbp);
 
 __END_DECLS
 
-#if defined(linux) && !defined(MACLINUX)
+#if defined(linux) && !defined(MKLINUX) && !defined(__mc68000__)
 /*
  *    Why you would want to override the system defines?
  */
