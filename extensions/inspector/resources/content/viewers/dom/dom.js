@@ -391,6 +391,7 @@ DOMViewer.prototype =
   {
     if (this.mSelecting) {
       this.stopSelectByClick();
+      this.removeClickListeners();
     } else {
       // wait until after user releases the mouse after selecting this command from a UI element
       window.setTimeout("viewer.startSelectByClick()", 10);
@@ -402,9 +403,15 @@ DOMViewer.prototype =
     this.mSelecting = true;
     this.mSelectDocs = this.getAllDocuments();
 
-    for (var i = 0; i < this.mSelectDocs.length; ++i)
+    for (var i = 0; i < this.mSelectDocs.length; ++i) {
       this.mSelectDocs[i].addEventListener("mousedown", MouseDownListener, true);
-
+      this.mSelectDocs[i].addEventListener("mouseup", EventCanceller, true);
+      this.mSelectDocs[i].addEventListener("click", ListenerRemover, true);
+      // If use moves the mouse out of the original target area, there
+      // will be no onclick event fired.... so we have to deal with
+      // that.
+      this.mSelectDocs[i].addEventListener("mouseout", ListenerRemover, true);
+    }
     this.mPanel.panelset.setCommandAttribute("cmd:selectByClick", "checked", "true");
   },
 
@@ -432,12 +439,19 @@ DOMViewer.prototype =
   {
     this.mSelecting = false;
 
-    for (var i = 0; i < this.mSelectDocs.length; ++i)
-      this.mSelectDocs[i].removeEventListener("mousedown", MouseDownListener, true);
-
     this.mPanel.panelset.setCommandAttribute("cmd:selectByClick", "checked", null);
   },
 
+  removeClickListeners: function()
+  {
+    for (var i = 0; i < this.mSelectDocs.length; ++i) {
+      this.mSelectDocs[i].removeEventListener("mousedown", MouseDownListener, true);
+      this.mSelectDocs[i].removeEventListener("mouseup", EventCanceller, true);
+      this.mSelectDocs[i].removeEventListener("click", ListenerRemover, true);
+      this.mSelectDocs[i].removeEventListener("mouseout", ListenerRemover, true);
+    }
+  },
+  
   ////////////////////////////////////////////////////////////////////////////
   //// Find Methods
 
@@ -878,12 +892,36 @@ var MouseDownListener = {
   handleEvent: function(aEvent)
   {
     var target = viewer.mDOMView.showAnonymousContent ? aEvent.originalTarget : aEvent.target;
-    if (aEvent.type == "mousedown")
+    if (aEvent.type == "mousedown") {
+      aEvent.stopPropagation();
+      aEvent.preventDefault();
       viewer.doSelectByClick(target);
+    }
     else if (aEvent.type == "mouseover")
       viewer.selectByClickOver(target);
   }
-}
+};
+
+var EventCanceller = {
+  handleEvent: function(aEvent)
+  {
+    aEvent.stopPropagation();
+    aEvent.preventDefault();
+  }
+};
+
+var ListenerRemover = {
+  handleEvent: function(aEvent)
+  {
+    if (!viewer.mSelecting) {
+      if (aEvent.type == "click") {
+        aEvent.stopPropagation();
+        aEvent.preventDefault();
+      }
+      viewer.removeClickListeners();
+    }
+  }
+};
 
 var PrefChangeObserver = {
   observe: function(aSubject, aTopic, aData)
