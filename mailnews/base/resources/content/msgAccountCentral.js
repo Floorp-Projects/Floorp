@@ -208,7 +208,7 @@ function ReadMessages()
 // Trigger composer for a new message
 function ComposeAMessage(event)
 {
-    window.parent.MsgNewMessage();
+    window.parent.MsgNewMessage(null);
 } 
 
 // Open AccountManager to view settings for a given account

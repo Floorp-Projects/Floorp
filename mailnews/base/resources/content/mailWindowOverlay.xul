@@ -896,7 +896,7 @@ Rights Reserved.
           <menuitem label="&newNewMsgCmd.label;"
                     accesskey="&newNewMsgCmd.accesskey;"
                     key="key_newMessage"
-                    oncommand="MsgNewMessage(event);"/>
+                    oncommand="MsgNewMessage(null);"/>
           <menuitem label="&newFolderCmd.label;"
                      oncommand="MsgNewFolder(NewFolder);"
                      accesskey="&newFolderCmd.accesskey;"/>
@@ -1165,7 +1165,7 @@ Rights Reserved.
     <menuitem label="&newMsgCmd.label;"
     accesskey="&newMsgCmd.accesskey;"
     key="key_newMessage"
-    oncommand="MsgNewMessage(event);"/>
+    oncommand="MsgNewMessage(null);"/>
     <menuitem id="replyMainMenu" label="&replyMsgCmd.label;" 
       accesskey="&replyMsgCmd.accesskey;"
       key="key_reply"

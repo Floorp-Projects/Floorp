@@ -28,7 +28,7 @@
           var server = folder.server;
           //if the account is a news account use default identity
           if (server.type != "nntp"){
-            mailWindow.MsgNewMessage();
+            mailWindow.MsgNewMessage(null);
             return;
           }
         }
