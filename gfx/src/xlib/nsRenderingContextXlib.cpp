@@ -318,15 +318,19 @@ nsRenderingContextXlib::PushState(void)
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::PushState()\n"));
   GraphicsState *state = new GraphicsState();
 
+  if (state == 0) {
+    return NS_MEMORY_ALLOCATION_ERROR;
+  }
+
   state->mMatrix = mTMatrix;
-
+  
   mStateCache->AppendElement(state);
-
+  
   if (nsnull == mTMatrix)
     mTMatrix = new nsTransform2D();
   else
     mTMatrix = new nsTransform2D(mTMatrix);
-
+  
   if (mClipRegion) {
     NS_IF_ADDREF(mClipRegion);
     state->mClipRegion = mClipRegion;
@@ -334,12 +338,12 @@ nsRenderingContextXlib::PushState(void)
     mClipRegion->Init();
     mClipRegion->SetTo((const nsIRegion &)*(state->mClipRegion));
   }
-
+  
   NS_IF_ADDREF(mFontMetrics);
   state->mFontMetrics = mFontMetrics;
   state->mColor = mCurrentColor;
   state->mLineStyle = mCurrentLineStyle;
-
+  
   return NS_OK;
 }
 
