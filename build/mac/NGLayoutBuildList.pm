@@ -582,11 +582,30 @@ sub BuildCommonProjects()
 		BuildProject(":mozilla:cmd:macfe:projects:interfaceLib:Interface.mcp",			"MacOS Interfaces");
 	}
 	
-	BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",					"NSRuntime$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
-
+	#// for NSRuntime under Carbon, don't use BuildOneProject to alias the shlb or the xsym since the 
+	#// target names differ from the output names. Make them by hand instead.
+	if ( $main::CARBON ) {
+		BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",					"NSRuntimeCarbon$D.shlb", "", 0, 0, 0);
+		MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb", ":mozilla:dist:viewer_debug:Essential Files:");
+		if ( $main::ALIAS_SYM_FILES ) {
+			MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb.xSYM", ":mozilla:dist:viewer_debug:Essential Files:");		
+		}
+	}
+	else {
+		BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",					"NSRuntime$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+	}
+	
 	BuildProject(":mozilla:lib:mac:MoreFiles:build:MoreFilesPPC.mcp",			"MoreFiles.o");
-
-	BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",		"MemAllocator$D.o");
+	
+	#// for MemAllocator under Carbon, right now we have to use the MSL allocators because sfraser's heap zones
+	#// don't exist in Carbon. Just use different targets. Since this is a static library, we don't have to fuss
+	#// with the aliases and target name mismatches like we did above.
+	if ( $main::CARBON ) {
+		BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",		"MemAllocatorCarbon$D.o");	
+	}
+	else {
+		BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",		"MemAllocator$D.o");
+	}
 
 	BuildOneProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",					"NSStdLib$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
 
