@@ -4,7 +4,7 @@
 
 <!DOCTYPE window> 
 
-<window style="width: 100%; height: 100%" xmlns:html="http://www.w3.org/TR/REC-html40"
+<window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="Startup()" title="Mozilla"> 
 
@@ -514,9 +514,9 @@
 
   </menubar>
   
-  <box align="vertical" style="width: 100%; height:100%">
+  <box id="outer-box" align="vertical">
    <toolbox>
-    <toolbar type="toolbar">
+    <toolbar class="main-bar">
 		  <titledbutton id="back-button" align="bottom" value="Back" onclick="BrowserBack()">	
 				  <observes element="canGoBack" attribute="disabled"/>			
 	      </titledbutton>
@@ -552,7 +552,7 @@
           </titledbutton>
 	</toolbar>
 
-    <toolbar type="toolbar">
+    <toolbar class="main-bar">
     	<titledbutton id="home-button" align="right" value="Home" 
 			onclick="BrowserHome()"/>
 		<titledbutton id="netscape-button" align="right" value="Netscape" 
@@ -562,7 +562,7 @@
   </toolbox>
 
   
-  <html:iframe html:name="content" html:src="BrowserInitPage.html" flex="100%" style="width: 100px; height: 100px" />
+  <html:iframe id="content-frame" html:name="content" html:src="BrowserInitPage.html" flex="100%" />
 
  
   <html:script>

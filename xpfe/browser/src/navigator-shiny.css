@@ -153,9 +153,11 @@ window#main-window {
 box#outer-box {
    width: 100%; 
    height:100%;
+   background-image: url(bg.jpg);
 }
 
 iframe#content-frame {
  width: 100px;
  height: 100px;
+ margin: 10px;
 }
