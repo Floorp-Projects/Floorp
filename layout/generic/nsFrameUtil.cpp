@@ -17,403 +17,14 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIFrameUtil.h"
-#include "nsWellFormedDTD.h"
-#include "nsParserCIID.h"
-#include "nsIContent.h"
-#include "nsIParser.h"
-#include "nsIXMLContentSink.h"
-#include "nsIURL.h"
-#include "nsIInputStream.h"
+#include "nsFrame.h"
 #include "nsHTMLEntities.h" 
-#include "nsINameSpaceManager.h" 
+#include "nsString.h"
+#include "nsRect.h"
 #include "stdlib.h"
+#include "plstr.h"
 
 static NS_DEFINE_IID(kIFrameUtilIID, NS_IFRAME_UTIL_IID);
-static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
-static NS_DEFINE_IID(kIXMLContentSinkIID, NS_IXMLCONTENT_SINK_IID);
-static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-
-// XXX Code copied from nsHTMLContentSink. It should be shared.
-static void
-GetAttributeValueAt(const nsIParserNode& aNode,
-                    PRInt32 aIndex,
-                    nsString& aResult)
-{
-  // Copy value
-  const nsString& value = aNode.GetValueAt(aIndex);
-  aResult.Truncate();
-  aResult.Append(value);
-
-  // Strip quotes if present
-  PRUnichar first = aResult.First();
-  if ((first == '\"') || (first == '\'')) {
-    if (aResult.Last() == first) {
-      aResult.Cut(0, 1);
-      PRInt32 pos = aResult.Length() - 1;
-      if (pos >= 0) {
-        aResult.Cut(pos, 1);
-      }
-    } else {
-      // Mismatched quotes - leave them in
-    }
-  }
-
-  // Reduce any entities
-  // XXX Note: as coded today, this will only convert well formed
-  // entities.  This may not be compatible enough.
-  // XXX there is a table in navigator that translates some numeric entities
-  // should we be doing that? If so then it needs to live in two places (bad)
-  // so we should add a translate numeric entity method from the parser...
-  char cbuf[100];
-  PRInt32 index = 0;
-  while (index < aResult.Length()) {
-    // If we have the start of an entity (and it's not at the end of
-    // our string) then translate the entity into it's unicode value.
-    if ((aResult.CharAt(index++) == '&') && (index < aResult.Length())) {
-      PRInt32 start = index - 1;
-      PRUnichar e = aResult.CharAt(index);
-      if (e == '#') {
-        // Convert a numeric character reference
-        index++;
-        char* cp = cbuf;
-        char* limit = cp + sizeof(cbuf) - 1;
-        PRBool ok = PR_FALSE;
-        PRInt32 slen = aResult.Length();
-        while ((index < slen) && (cp < limit)) {
-          PRUnichar e = aResult.CharAt(index);
-          if (e == ';') {
-            index++;
-            ok = PR_TRUE;
-            break;
-          }
-          if ((e >= '0') && (e <= '9')) {
-            *cp++ = char(e);
-            index++;
-            continue;
-          }
-          break;
-        }
-        if (!ok || (cp == cbuf)) {
-          continue;
-        }
-        *cp = '\0';
-        if (cp - cbuf > 5) {
-          continue;
-        }
-        PRInt32 ch = PRInt32( ::atoi(cbuf) );
-        if (ch > 65535) {
-          continue;
-        }
-
-        // Remove entity from string and replace it with the integer
-        // value.
-        aResult.Cut(start, index - start);
-        aResult.Insert(PRUnichar(ch), start);
-        index = start + 1;
-      }
-      else if (((e >= 'A') && (e <= 'Z')) ||
-               ((e >= 'a') && (e <= 'z'))) {
-        // Convert a named entity
-        index++;
-        char* cp = cbuf;
-        char* limit = cp + sizeof(cbuf) - 1;
-        *cp++ = char(e);
-        PRBool ok = PR_FALSE;
-        PRInt32 slen = aResult.Length();
-        while ((index < slen) && (cp < limit)) {
-          PRUnichar e = aResult.CharAt(index);
-          if (e == ';') {
-            index++;
-            ok = PR_TRUE;
-            break;
-          }
-          if (((e >= '0') && (e <= '9')) ||
-              ((e >= 'A') && (e <= 'Z')) ||
-              ((e >= 'a') && (e <= 'z'))) {
-            *cp++ = char(e);
-            index++;
-            continue;
-          }
-          break;
-        }
-        if (!ok || (cp == cbuf)) {
-          continue;
-        }
-        *cp = '\0';
-        PRInt32 ch = NS_EntityToUnicode(cbuf);
-        if (ch < 0) {
-          continue;
-        }
-
-        // Remove entity from string and replace it with the integer
-        // value.
-        aResult.Cut(start, index - start);
-        aResult.Insert(PRUnichar(ch), start);
-        index = start + 1;
-      }
-      else if (e == '{') {
-        // Convert a script entity
-        // XXX write me!
-      }
-    }
-  }
-}
-
-// XXX Code copied from nsHTMLContentSink. It should be shared.
-static nsresult
-AddAttributes(const nsIParserNode& aNode, nsIContent* aContent)
-{
-  // Add tag attributes to the content attributes
-  nsAutoString name, value;
-  PRInt32 ac = aNode.GetAttributeCount();
-  for (PRInt32 i = 0; i < ac; i++) {
-    // Get upper-cased key
-    const nsString& key = aNode.GetKeyAt(i);
-    // XXX need to parse namespace from name
-    // XXX need to uppercase name if HTML namespace
-    key.ToUpperCase(name);
-
-    nsIAtom* nameAtom = NS_NewAtom(name);    
-    if (NS_CONTENT_ATTR_NOT_THERE == aContent->GetAttribute(kNameSpaceID_None, nameAtom, value)) {
-      // Get value and remove mandatory quotes
-      GetAttributeValueAt(aNode, i, value);
-
-      // Add attribute to content
-      aContent->SetAttribute(kNameSpaceID_None, nameAtom, value, PR_FALSE);
-    }
-    NS_RELEASE(nameAtom);
-  }
-  return NS_OK;
-}
-
-static nsresult
-NewElement(const nsIParserNode& aNode, nsIXMLContent** aResult)
-{
-  NS_PRECONDITION(nsnull != aResult, "null pointer");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = nsnull;
-
-  nsAutoString tag = aNode.GetText();
-  nsIAtom* tagAtom = NS_NewAtom(tag);
-  if (nsnull == tagAtom) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsIXMLContent* xmlContent;
-  nsresult rv = NS_NewXMLElement(&xmlContent, tagAtom);
-  NS_RELEASE(tagAtom);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = AddAttributes(aNode, xmlContent);
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(xmlContent);
-    return rv;
-  }
-
-  *aResult = xmlContent;
-  return rv;
-}
-
-//----------------------------------------------------------------------
-
-/**
- * This class provides a sink for the xml parser and in particular knows
- * how to process frame regression data.
- */
-class nsFrameRegressionDataSink : public nsIXMLContentSink {
-public:
-  nsFrameRegressionDataSink();
-  virtual ~nsFrameRegressionDataSink();
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD WillBuildModel(void);
-  NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel);
-  NS_IMETHOD WillInterrupt(void);
-  NS_IMETHOD WillResume(void);
-  NS_IMETHOD SetParser(nsIParser* aParser);  
-  NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
-  NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
-  NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
-  NS_IMETHOD AddComment(const nsIParserNode& aNode);
-  NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
-  NS_IMETHOD NotifyError(nsresult aErrorResult);
-  NS_IMETHOD AddXMLDecl(const nsIParserNode& aNode);
-  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
-  NS_IMETHOD AddCharacterData(const nsIParserNode& aNode);
-  NS_IMETHOD AddUnparsedEntity(const nsIParserNode& aNode);
-  NS_IMETHOD AddNotation(const nsIParserNode& aNode);
-  NS_IMETHOD AddEntityReference(const nsIParserNode& aNode);
-
-  nsIXMLContent* GetRoot() const { return mRoot; }
-
-protected:
-  nsIXMLContent* mRoot;
-  nsIXMLContent* mCurrentContainer;
-};
-
-nsFrameRegressionDataSink::nsFrameRegressionDataSink()
-{
-  mRoot = nsnull;
-  mCurrentContainer = nsnull;
-  NS_INIT_REFCNT();
-}
-
-nsFrameRegressionDataSink::~nsFrameRegressionDataSink()
-{
-  NS_IF_RELEASE(mRoot);
-  NS_IF_RELEASE(mCurrentContainer);
-}
-
-NS_IMPL_ISUPPORTS(nsFrameRegressionDataSink, kIXMLContentSinkIID)
-
-NS_IMETHODIMP
-nsFrameRegressionDataSink::WillBuildModel()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameRegressionDataSink::DidBuildModel(PRInt32 aQualityLevel)
-{
-  mRoot->List();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameRegressionDataSink::WillInterrupt()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameRegressionDataSink::WillResume()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsFrameRegressionDataSink::SetParser(nsIParser* aParser)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameRegressionDataSink::OpenContainer(const nsIParserNode& aNode)
-{
-  nsIXMLContent* element;
-  nsresult rv = NewElement(aNode, &element);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (nsnull == mRoot) {
-    mRoot = element;
-    mCurrentContainer = element;
-    NS_ADDREF(element);
-  }
-  else {
-    NS_ASSERTION(nsnull != mCurrentContainer, "whoops");
-    mCurrentContainer->AppendChildTo(element, PR_FALSE);
-    mCurrentContainer = element;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameRegressionDataSink::CloseContainer(const nsIParserNode& aNode)
-{
-  NS_PRECONDITION(nsnull != mRoot, "whoops");
-  NS_PRECONDITION(nsnull != mCurrentContainer, "whoops");
-
-  nsresult rv = NS_OK;
-  if (mCurrentContainer == mRoot) {
-    NS_RELEASE(mCurrentContainer);
-  }
-  else {
-    nsIContent* parent;
-    rv = mCurrentContainer->GetParent(parent);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    NS_ASSERTION(nsnull != parent, "whoops");
-    nsIXMLContent* xmlContent;
-    rv = parent->QueryInterface(kIXMLContentIID, (void**) &xmlContent);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "whoops");
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    NS_RELEASE(parent);
-    NS_RELEASE(mCurrentContainer);
-    mCurrentContainer = xmlContent;
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
-nsFrameRegressionDataSink::AddLeaf(const nsIParserNode& aNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameRegressionDataSink::AddComment(const nsIParserNode& aNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameRegressionDataSink::AddProcessingInstruction(const nsIParserNode& aNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameRegressionDataSink::NotifyError(nsresult aErrorResult)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameRegressionDataSink::AddXMLDecl(const nsIParserNode& aNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameRegressionDataSink::AddDocTypeDecl(const nsIParserNode& aNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameRegressionDataSink::AddCharacterData(const nsIParserNode& aNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameRegressionDataSink::AddUnparsedEntity(const nsIParserNode& aNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameRegressionDataSink::AddNotation(const nsIParserNode& aNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameRegressionDataSink::AddEntityReference(const nsIParserNode& aNode)
-{
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
 
 class nsFrameUtil : public nsIFrameUtil {
 public:
@@ -421,9 +32,430 @@ public:
   virtual ~nsFrameUtil();
 
   NS_DECL_ISUPPORTS
-  NS_IMETHOD LoadFrameRegressionData(nsIURL* aURL, nsIXMLContent** aResult);
-  NS_IMETHOD ReadFrameRegressionData(FILE* aInput, nsIXMLContent** aResult);
+
+  NS_IMETHOD CompareRegressionData(FILE* aFile1, FILE* aFile2);
+  NS_IMETHOD DumpRegressionData(FILE* aInputFile, FILE* aOutputFile);
+
+  struct Node;
+  struct Tag;
+
+  struct NodeList {
+    NodeList();
+    ~NodeList();
+
+    static void Destroy(NodeList* aLists);
+
+    NodeList* next;            // for lists of lists
+    Node* node;
+    char* name;
+  };
+
+  struct Node {
+    Node();
+    ~Node();
+
+    static void Destroy(Node* aNode);
+
+    static Node* Read(FILE* aFile, Tag* aTag);
+
+    static Node* ReadTree(FILE* aFile);
+
+    Node* next;
+    char* type;
+    PRUint32 state;
+    nsRect bbox;
+    NodeList* lists;
+  };
+
+  struct Tag {
+    Tag();
+    ~Tag();
+
+    static Tag* Parse(FILE* aFile);
+
+    void AddAttr(char* aAttr, char* aValue);
+
+    char* GetAttr(char* aAttr);
+
+    void ReadAttrs(FILE* aFile);
+
+    void ToString(nsString& aResult);
+
+    enum Type {
+      open,
+      close,
+      openClose
+    };
+
+    char* name;
+    Type type;
+    char** attributes;
+    PRInt32 num;
+    PRInt32 size;
+    char** values;
+  };
+
+  static char* Copy(char* aString);
+
+  static void DumpNode(Node* aNode, FILE* aOutputFile, PRInt32 aIndent);
+  static void DumpTree(Node* aNode, FILE* aOutputFile, PRInt32 aIndent);
+  static PRBool CompareTrees(Node* aNode1, Node* aNode2);
 };
+
+char*
+nsFrameUtil::Copy(char* aString)
+{
+  if (aString) {
+    int l = ::strlen(aString);
+    char* c = new char[l+1];
+    memcpy(c, aString, l+1);
+    return c;
+  }
+  return aString;
+}
+
+//----------------------------------------------------------------------
+
+nsFrameUtil::NodeList::NodeList()
+  : next(nsnull), node(nsnull), name(nsnull)
+{
+}
+
+nsFrameUtil::NodeList::~NodeList()
+{
+  if (nsnull != name) {
+    delete name;
+  }
+  if (nsnull != node) {
+    Node::Destroy(node);
+  }
+}
+
+void
+nsFrameUtil::NodeList::Destroy(NodeList* aLists)
+{
+  while (nsnull != aLists) {
+    NodeList* next = aLists->next;
+    delete aLists;
+    aLists = next;
+  }
+}
+
+//----------------------------------------------------------------------
+
+nsFrameUtil::Node::Node()
+  : next(nsnull), type(nsnull), state(0), lists(nsnull)
+{
+}
+
+nsFrameUtil::Node::~Node()
+{
+  if (nsnull != type) {
+    delete type;
+  }
+  if (nsnull != lists) {
+    NodeList::Destroy(lists);
+  }
+}
+
+void
+nsFrameUtil::Node::Destroy(Node* aList)
+{
+  while (nsnull != aList) {
+    Node* next = aList->next;
+    delete aList;
+    aList = next;
+  }
+}
+
+static PRInt32 GetInt(nsFrameUtil::Tag* aTag, char* aAttr)
+{
+  char* value = aTag->GetAttr(aAttr);
+  if (nsnull != value) {
+    return PRInt32( atoi(value) );
+  }
+  return 0;
+}
+
+nsFrameUtil::Node*
+nsFrameUtil::Node::ReadTree(FILE* aFile)
+{
+  Tag* tag = Tag::Parse(aFile);
+  if (nsnull == tag) {
+    return nsnull;
+  }
+  if (PL_strcmp(tag->name, "frame") != 0) {
+    delete tag;
+    return nsnull;
+  }
+  Node* result = Read(aFile, tag);
+  fclose(aFile);
+  return result;
+}
+
+nsFrameUtil::Node*
+nsFrameUtil::Node::Read(FILE* aFile, Tag* tag)
+{
+  Node* node = new Node;
+  node->type = Copy(tag->GetAttr("type"));
+  node->state = GetInt(tag, "state");
+  delete tag;
+
+  for (;;) {
+    tag = Tag::Parse(aFile);
+    if (nsnull == tag) break;
+    if (PL_strcmp(tag->name, "frame") == 0) {
+      delete tag;
+      break;
+    }
+    if (PL_strcmp(tag->name, "bbox") == 0) {
+      nscoord x = nscoord( GetInt(tag, "x") );
+      nscoord y = nscoord( GetInt(tag, "y") );
+      nscoord w = nscoord( GetInt(tag, "w") );
+      nscoord h = nscoord( GetInt(tag, "h") );
+      node->bbox.SetRect(x, y, w, h);
+    }
+    else if (PL_strcmp(tag->name, "child-list") == 0) {
+      NodeList* list = new NodeList();
+      list->name = Copy(tag->GetAttr("name"));
+      list->next = node->lists;
+      node->lists = list;
+      delete tag;
+
+      Node** tailp = &list->node;
+      for (;;) {
+        tag = Tag::Parse(aFile);
+        if (nsnull == tag) {
+          break;
+        }
+        if (PL_strcmp(tag->name, "child-list") == 0) {
+          break;
+        }
+        if (PL_strcmp(tag->name, "frame") != 0) {
+          break;
+        }
+        Node* child = Node::Read(aFile, tag);
+        if (nsnull == child) {
+          break;
+        }
+        *tailp = child;
+        tailp = &child->next;
+      }
+    }
+    delete tag;
+  }
+  return node;
+}
+
+//----------------------------------------------------------------------
+
+nsFrameUtil::Tag::Tag()
+  : name(nsnull), type(open), attributes(nsnull), num(0), size(0),
+    values(nsnull)
+{
+}
+
+nsFrameUtil::Tag::~Tag()
+{
+  PRInt32 i, n = num;
+  if (0 != n) {
+    for (i = 0; i < n; i++) {
+      delete attributes[i];
+      delete values[i];
+    }
+    delete attributes;
+    delete values;
+  }
+}
+
+void
+nsFrameUtil::Tag::AddAttr(char* aAttr, char* aValue)
+{
+  if (num == size) {
+    PRInt32 newSize = size * 2 + 4;
+    char** a = new char*[newSize];
+    char** v = new char*[newSize];
+    if (0 != num) {
+      memcpy(a, attributes, num * sizeof(char*));
+      memcpy(v, values, num * sizeof(char*));
+      delete attributes;
+      delete values;
+    }
+    attributes = a;
+    values = v;
+    size = newSize;
+  }
+  attributes[num] = aAttr;
+  values[num] = aValue;
+  num = num + 1;
+}
+
+char*
+nsFrameUtil::Tag::GetAttr(char* aAttr)
+{
+  PRInt32 i, n = num;
+  for (i = 0; i < n; i++) {
+    if (PL_strcmp(attributes[i], aAttr) == 0) {
+      return values[i];
+    }
+  }
+  return nsnull;
+}
+
+static inline int IsWhiteSpace(int c) {
+  return (c == ' ') || (c == '\t') || (c == '\n') || (c == '\r');
+}
+
+static PRBool EatWS(FILE* aFile)
+{
+  for (;;) {
+    int c = getc(aFile);
+    if (c < 0) {
+      return PR_FALSE;
+    }
+    if (!IsWhiteSpace(c)) {
+      ungetc(c, aFile);
+      break;
+    }
+  }
+  return PR_TRUE;
+}
+
+static PRBool Expect(FILE* aFile, char aChar)
+{
+  int c = getc(aFile);
+  if (c < 0) return PR_FALSE;
+  if (c != aChar) {
+    ungetc(c, aFile);
+    return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
+static char* ReadIdent(FILE* aFile)
+{
+  char id[1000];
+  char* ip = id;
+  char* end = ip + sizeof(id) - 1;
+  while (ip < end) {
+    int c = fgetc(aFile);
+    if (c < 0) return nsnull;
+    if ((c == '=') || (c == '>') || (c == '/') || IsWhiteSpace(c)) {
+      ungetc(c, aFile);
+      break;
+    }
+    *ip++ = char(c);
+  }
+  *ip = '\0';
+  return nsFrameUtil::Copy(id);
+}
+
+static char* ReadString(FILE* aFile)
+{
+  if (!Expect(aFile, '\"')) {
+    return nsnull;
+  }
+  char id[1000];
+  char* ip = id;
+  char* end = ip + sizeof(id) - 1;
+  while (ip < end) {
+    int c = fgetc(aFile);
+    if (c < 0) return nsnull;
+    if (c == '\"') {
+      break;
+    }
+    *ip++ = char(c);
+  }
+  *ip = '\0';
+  return nsFrameUtil::Copy(id);
+}
+
+void
+nsFrameUtil::Tag::ReadAttrs(FILE* aFile)
+{
+  for (;;) {
+    if (!EatWS(aFile)) {
+      break;
+    }
+    int c = getc(aFile);
+    if (c < 0) break;
+    if (c == '/') {
+      if (!EatWS(aFile)) {
+        return;
+      }
+      if (Expect(aFile, '>')) {
+        type = openClose;
+        break;
+      }
+    }
+    else if (c == '>') {
+      break;
+    }
+    ungetc(c, aFile);
+    char* attr = ReadIdent(aFile);
+    if ((nsnull == attr) || !EatWS(aFile)) {
+      break;
+    }
+    char* value = nsnull;
+    if (Expect(aFile, '=')) {
+      value = ReadString(aFile);
+      if (nsnull == value) {
+        break;
+      }
+    }
+    AddAttr(attr, value);
+  }
+}
+
+nsFrameUtil::Tag*
+nsFrameUtil::Tag::Parse(FILE* aFile)
+{
+  if (!EatWS(aFile)) {
+    return nsnull;
+  }
+  if (Expect(aFile, '<')) {
+    Tag* tag = new Tag;
+    if (Expect(aFile, '/')) {
+      tag->type = close;
+    }
+    else {
+      tag->type = open;
+    }
+    tag->name = ReadIdent(aFile);
+    tag->ReadAttrs(aFile);
+    return tag;
+  }
+  return nsnull;
+}
+
+void
+nsFrameUtil::Tag::ToString(nsString& aResult)
+{
+  aResult.Truncate();
+  aResult.Append(PRUnichar('<'));
+  if (type == close) {
+    aResult.Append(PRUnichar('/'));
+  }
+  aResult.Append(name);
+  if (0 != num) {
+    PRInt32 i, n = num;
+    for (i = 0; i < n; i++) {
+      aResult.Append(PRUnichar(' '));
+      aResult.Append(attributes[i]);
+      if (values[i]) {
+        aResult.Append("=\"");
+        aResult.Append(values[i]);
+        aResult.Append('\"');
+      }
+    }
+  }
+  if (type == openClose) {
+    aResult.Append(PRUnichar('/'));
+  }
+  aResult.Append(PRUnichar('>'));
+}
+
+//----------------------------------------------------------------------
 
 nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 nsresult
@@ -453,105 +485,148 @@ nsFrameUtil::~nsFrameUtil()
 
 NS_IMPL_ISUPPORTS(nsFrameUtil, kIFrameUtilIID);
 
-NS_IMETHODIMP
-nsFrameUtil::LoadFrameRegressionData(nsIURL* aURL, nsIXMLContent** aResult)
+void
+nsFrameUtil::DumpNode(Node* aNode, FILE* aOutputFile, PRInt32 aIndent)
 {
-  NS_PRECONDITION(nsnull != aResult, "null pointer");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  nsFrame::IndentBy(aOutputFile, aIndent);
+  fprintf(aOutputFile, "%s 0x%x %d,%d,%d,%d\n", aNode->type, aNode->state,
+          aNode->bbox.x, aNode->bbox.y,
+          aNode->bbox.width, aNode->bbox.height);
+}
 
-  nsFrameRegressionDataSink* sink = new nsFrameRegressionDataSink();
-  if (nsnull == sink) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(sink);
-
-  nsIParser* parser;
-  nsresult rv = nsRepository::CreateInstance(kCParserCID, nsnull, kCParserIID,
-                                             (void **)&parser);
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(sink);
-    return rv;
-  }
-
-  nsIDTD* theDTD = 0;
-  NS_NewWellFormed_DTD(&theDTD);
-  parser->RegisterDTD(theDTD);
-  parser->SetContentSink(sink);
-
-  nsIInputStream* iin;
-  rv = NS_OpenURL(aURL, &iin);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  nsAutoString tmp;
-  for (;;) {
-    char buf[4000];
-    PRUint32 rc;
-    rv = iin->Read(buf, 0, sizeof(buf), &rc);
-    if (NS_FAILED(rv) || (rc <= 0)) {
-      break;
+void
+nsFrameUtil::DumpTree(Node* aNode, FILE* aOutputFile, PRInt32 aIndent)
+{
+  while (nsnull != aNode) {
+    DumpNode(aNode, aOutputFile, aIndent);
+    nsFrameUtil::NodeList* lists = aNode->lists;
+    if (nsnull != lists) {
+      while (nsnull != lists) {
+        nsFrame::IndentBy(aOutputFile, aIndent);
+        fprintf(aOutputFile, " list: %s\n",
+                lists->name ? lists->name : "primary");
+        DumpTree(lists->node, aOutputFile, aIndent + 1);
+        lists = lists->next;
+      }
     }
-    tmp.Truncate();
-    tmp.Append(buf, rc);
-    parser->Parse(tmp, this, PR_FALSE, PR_FALSE, PR_FALSE);
+    aNode = aNode->next;
   }
-  NS_RELEASE(iin);
-  tmp.Truncate();
-  parser->Parse(tmp, this, PR_FALSE, PR_FALSE, PR_TRUE);
+}
 
-  *aResult = sink->GetRoot();
-  NS_RELEASE(sink); 
-  NS_RELEASE(parser);
+PRBool
+nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
+{
+  for (;;) {
+    // Make sure both nodes are non-null, or at least agree with each other
+    if (nsnull == tree1) {
+      if (nsnull == tree2) {
+        break;
+      }
+      printf("first tree prematurely ends\n");
+      return PR_FALSE;
+    }
+    else if (nsnull == tree2) {
+      printf("second tree prematurely ends\n");
+      return PR_FALSE;
+    }
+
+    // Check the attributes that we care about
+    if (0 != PL_strcmp(tree1->type, tree2->type)) {
+      printf("frame type mismatch: %s vs. %s\n", tree1->type, tree2->type);
+      printf("Node 1:\n");
+      DumpNode(tree1, stdout, 1);
+      printf("Node 2:\n");
+      DumpNode(tree2, stdout, 1);
+      return PR_FALSE;
+    }
+    if (tree1->state != tree2->state) {
+      printf("frame state mismatch: 0x%x vs. 0x%x\n",
+             tree1->state, tree2->state);
+    }
+    if (tree1->bbox != tree2->bbox) {
+      printf("frame bbox mismatch: %d,%d,%d,%d vs. %d,%d,%d,%d\n",
+             tree1->bbox.x, tree1->bbox.y,
+             tree1->bbox.width, tree1->bbox.height,
+             tree2->bbox.x, tree2->bbox.y,
+             tree2->bbox.width, tree2->bbox.height);
+    }
+
+    // Check child lists too
+    NodeList* list1 = tree1->lists;
+    NodeList* list2 = tree2->lists;
+    for (;;) {
+      if (nsnull == list1) {
+        if (nsnull != list2) {
+          printf("first tree prematurely ends (no child lists)\n");
+          printf("Node 1:\n");
+          DumpNode(tree1, stdout, 1);
+          printf("Node 2:\n");
+          DumpNode(tree2, stdout, 1);
+          return PR_FALSE;
+        }
+        else {
+          break;
+        }
+      }
+      if (nsnull == list2) {
+        printf("second tree prematurely ends (no child lists)\n");
+        printf("Node 1:\n");
+        DumpNode(tree1, stdout, 1);
+        printf("Node 2:\n");
+        DumpNode(tree2, stdout, 1);
+        return PR_FALSE;
+      }
+      if (0 != PL_strcmp(list1->name, list2->name)) {
+        printf("child-list name mismatch: %s vs. %s\n",
+               list1->name ? list1->name : "(null)",
+               list2->name ? list2->name : "(null)");
+      }
+      else {
+        PRBool equiv = CompareTrees(list1->node, list2->node);
+        if (!equiv) {
+          return equiv;
+        }
+      }
+      list1 = list1->next;
+      list2 = list2->next;
+    }
+
+    // Check siblings next
+    tree1 = tree1->next;
+    tree2 = tree2->next;
+  }
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsFrameUtil::CompareRegressionData(FILE* aFile1, FILE* aFile2)
+{
+  Node* tree1 = Node::ReadTree(aFile1);
+  Node* tree2 = Node::ReadTree(aFile2);
+
+  nsresult rv = NS_OK;
+  if (!CompareTrees(tree1, tree2)) {
+    printf("Regression data 1:\n");
+    DumpTree(tree1, stdout, 0);
+    printf("Regression data 2:\n");
+    DumpTree(tree2, stdout, 0);
+    rv = NS_ERROR_FAILURE;
+  }
+
+  Node::Destroy(tree1);
+  Node::Destroy(tree2);
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsFrameUtil::ReadFrameRegressionData(FILE* aInput, nsIXMLContent** aResult)
+nsFrameUtil::DumpRegressionData(FILE* aInputFile, FILE* aOutputFile)
 {
-  NS_PRECONDITION(nsnull != aResult, "null pointer");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
+  Node* tree1 = Node::ReadTree(aInputFile);
+  if (nsnull != tree1) {
+    DumpTree(tree1, aOutputFile, 0);
+    Node::Destroy(tree1);
+    return NS_OK;
   }
-
-  nsFrameRegressionDataSink* sink = new nsFrameRegressionDataSink();
-  if (nsnull == sink) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(sink);
-
-  nsIParser* parser;
-  nsresult rv = nsRepository::CreateInstance(kCParserCID, nsnull, kCParserIID,
-                                             (void **)&parser);
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(sink);
-    return rv;
-  }
-
-  nsIDTD* theDTD = 0;
-  NS_NewWellFormed_DTD(&theDTD);
-  parser->RegisterDTD(theDTD);
-  parser->SetContentSink(sink);
-
-  nsAutoString tmp;
-  for (;;) {
-    char buf[4000];
-    size_t count = fread(buf, sizeof(buf[0]), sizeof(buf), aInput);
-    if ((0 == count) || ferror(aInput)) {
-      break;
-    }
-    tmp.Truncate();
-    tmp.Append(buf, count);
-    parser->Parse(tmp, this, PR_FALSE, PR_FALSE, PR_FALSE);
-  }
-  tmp.Truncate();
-  parser->Parse(tmp, this, PR_FALSE, PR_FALSE, PR_TRUE);
-
-  *aResult = sink->GetRoot();
-  NS_RELEASE(sink); 
-  NS_RELEASE(parser);
-
-  return rv;
+  return NS_ERROR_FAILURE;
 }
