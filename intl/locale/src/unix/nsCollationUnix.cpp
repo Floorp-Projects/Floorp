@@ -63,7 +63,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
     PRUnichar *aLocaleUnichar;
     nsString aLocale;
     nsString aCategory("NSILOCALE_COLLATE");
-    nsresult res = locale->GetCategory(aCategory.ToNewUnicode(), &aLocaleUnichar);
+    nsresult res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
     if (NS_FAILED(res)) {
       return res;
     }
