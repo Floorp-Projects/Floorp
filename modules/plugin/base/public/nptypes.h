@@ -44,7 +44,7 @@
 #if defined(WIN32) || defined(OS2)
 typedef int int32_t;
 typedef unsigned int uint32_t;
-#elif defined(AIX)
+#elif defined(_AIX) || defined(__sun)
 #include <inttypes.h>
 #ifndef __cplusplus
 typedef int bool;
