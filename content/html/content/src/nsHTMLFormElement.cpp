@@ -1119,10 +1119,16 @@ static PRInt32 CompareFormControlPosition(nsIFormControl *control1, nsIFormContr
 {
   nsCOMPtr<nsIContent> content1 = do_QueryInterface(control1);
   nsCOMPtr<nsIContent> content2 = do_QueryInterface(control2);
-  if (content1 && content2)
-    return nsLayoutUtils::CompareTreePosition(content1, content2);
 
-  // This should not occur - we should be able to QI to nsIContent
+  NS_ASSERTION(content1 && content2, "We should be able to QI to nsIContent here!");
+
+  // We check that the parent of both content nodes is non-null here, because
+  // newly created form control elements may not be in the parent form
+  // element's DOM tree yet. This prevents an assertion in CompareTreePosition.
+  // See Bug 267511 for more information.
+  if (content1 && content2 && content1->GetParent() && content2->GetParent())
+    return nsLayoutUtils::CompareTreePosition(content1, content2);
+  
   return 0;
 }
 
