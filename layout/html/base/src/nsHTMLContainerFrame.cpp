@@ -79,12 +79,24 @@ nsHTMLContainerFrame::Paint(nsIPresContext* aPresContext,
                                   aDirtyRect, rect, *spacing, mStyleContext, skipSides);
       nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *spacing, mStyleContext, 0);
+      
+      // The sole purpose of this is to trigger display
+      //  of the selection window for Named Anchors,
+      //  which don't have any children and normally don't
+      //  have any size, but in Editor we use CSS to display
+      //  an image to represent this "hidden" element.
+      if (!mFrames.FirstChild())
+      {
+        nsFrame::Paint(aPresContext,
+                       aRenderingContext, aDirtyRect, aWhichLayer);
+      }
     }
   }
 
   // Now paint the kids. Note that child elements have the opportunity to
   // override the visibility property and display even if their parent is
   // hidden
+
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   return NS_OK;
 }
