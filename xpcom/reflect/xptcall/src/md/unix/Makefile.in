@@ -45,9 +45,19 @@ include $(topsrcdir)/config/config.mk
 #
 # Lots of Unixish x86 flavors
 #
-ifneq (,$(filter Linux FreeBSD NetBSD OpenBSD BSD_OS,$(OS_ARCH)))
+ifneq (,$(filter FreeBSD NetBSD OpenBSD BSD_OS,$(OS_ARCH)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
+endif
+endif
+#
+# New code for Linux, et. al., with gcc
+# Migrate other platforms here after testing
+#
+ifneq (,$(filter Linux,$(OS_ARCH)))
+ifeq (86,$(findstring 86,$(OS_TEST)))
+CPPSRCS		:= xptcinvoke_gcc_x86_unix.cpp xptcstubs_gcc_x86_unix.cpp
+CXXFLAGS	+= -DMOZ_USE_STDCALL
 endif
 endif
 #
