@@ -55,7 +55,6 @@
 #include "nsXPIDLString.h"
 #include "rdf.h"
 #include "nsIInterfaceRequestor.h"
-#include "iostream.h"
 #include "nsITextToSubURI.h"
 
 //----------------------------------------------------------------------
