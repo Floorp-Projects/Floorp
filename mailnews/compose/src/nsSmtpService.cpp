@@ -22,7 +22,6 @@
 
 #include "nsSmtpService.h"
 #include "nsIMsgMailSession.h"
-#include "nsIMsgIdentity.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgCompCID.h"
 
@@ -83,7 +82,7 @@ nsresult nsSmtpService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
     return NS_NOINTERFACE;
 }
 
-static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
+static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID); 
 
 nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
                                         const char * aRecipients, 
@@ -95,37 +94,33 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 	nsresult rv = NS_OK;
 
 	NS_LOCK_INSTANCE();
-	// get the current identity from the mail session....
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv); 
-	if (NS_SUCCEEDED(rv) && mailSession)
+	NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv); 
+	if (NS_SUCCEEDED(rv) && smtpService)
 	{
-		nsCOMPtr<nsIMsgIdentity> identity;
-		rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
+        nsCOMPtr<nsISmtpServer> smtpServer;
+        rv = smtpService->GetDefaultServer(getter_AddRefs(smtpServer));
 
-		if (NS_SUCCEEDED(rv) && identity)
+		if (NS_SUCCEEDED(rv) && smtpServer)
 		{
             nsXPIDLCString hostName;
             nsXPIDLCString senderName;
 
-			identity->GetSmtpHostname(getter_Copies(hostName));
-			identity->GetSmtpUsername(getter_Copies(senderName));
+			smtpServer->GetHostname(getter_Copies(hostName));
+			smtpServer->GetUsername(getter_Copies(senderName));
 
-            // todo:  are we leaking hostName and senderName
+            if ((const char*)hostName) {
+                rv = NS_MsgBuildMailtoUrl(aFilePath, hostName, senderName, aRecipients, aUrlListener, &urlToRun); // this ref counts urlToRun
+                if (NS_SUCCEEDED(rv) && urlToRun)
+                    {	
+                        rv = NS_MsgLoadMailtoUrl(urlToRun, nsnull);
+                    }
 
-			rv = NS_MsgBuildMailtoUrl(aFilePath, hostName, senderName, aRecipients, aUrlListener, &urlToRun); // this ref counts urlToRun
-			if (NS_SUCCEEDED(rv) && urlToRun)
-			{	
-				rv = NS_MsgLoadMailtoUrl(urlToRun, nsnull);
-			}
-
-			if (aURL) // does the caller want a handle on the url?
-				*aURL = urlToRun; // transfer our ref count to the caller....
-			else
-				NS_IF_RELEASE(urlToRun);
-
-		} // if we have an identity
-		else
-			NS_ASSERTION(0, "no current identity found for this user....");
+                if (aURL) // does the caller want a handle on the url?
+                    *aURL = urlToRun; // transfer our ref count to the caller....
+                else
+                    NS_IF_RELEASE(urlToRun);
+            }
+		}
 	} // if we had a mail session
 
 	NS_UNLOCK_INSTANCE();
@@ -269,6 +264,8 @@ nsSmtpService::loadSmtpServers()
     rv = prefs->CopyCharPref("mail.smtpservers", getter_Copies(serverList));
     if (NS_FAILED(rv)) return rv;
 
+    // this is such a hack
+    prefs->ClearUserPref("mail.smtpservers");
     char *newStr;
     char *pref = nsCRT::strtok((char*)(const char*)serverList, ", ", &newStr);
     while (pref) {
@@ -330,8 +327,11 @@ nsSmtpService::GetDefaultServer(nsISmtpServer **aServer)
   *aServer = nsnull;
   // always returns NS_OK, just leaving *aServer at nsnull
   if (!mDefaultSmtpServer) {
-      PRUint32 count;
-      rv = mSmtpServers->Count(&count);
+      PRUint32 count=0;
+      nsCOMPtr<nsISupportsArray> smtpServers;
+      rv = GetSmtpServers(getter_AddRefs(smtpServers));
+      rv = smtpServers->Count(&count);
+      printf("There are %d smtp servers\n", count);
       if (count == 0) {
           rv = CreateSmtpServer(getter_AddRefs(mDefaultSmtpServer));
           if (NS_FAILED(rv)) return rv;
