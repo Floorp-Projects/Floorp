@@ -484,8 +484,9 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
         return rv;
 
 // rjc - sort
-	nsVoidArray	*tempArray;
-        if ((tempArray = new nsVoidArray()) == nsnull)	return (NS_ERROR_OUT_OF_MEMORY);
+	nsISupportsArray	*tempArray;
+	if (NS_FAILED(rv = NS_NewISupportsArray(&tempArray)))
+		return(rv);
 
     while (1) {
         rv = properties->Advance();
@@ -573,10 +574,19 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
 					NS_ERROR("unable to create widget item");
 				}
         		}
+
+        		for (int i = numElements - 1; i >=0; i--)
+        		{
+				NS_IF_RELEASE(flatArray[i]);
+        		}
 			delete [] flatArray;
         	}
         }
-        delete tempArray;
+        for (int i = numElements - 1; i >= 0; i--)
+        {
+        	tempArray->RemoveElementAt(i);
+        }
+        NS_IF_RELEASE(tempArray);
 
     return NS_OK;
 }
