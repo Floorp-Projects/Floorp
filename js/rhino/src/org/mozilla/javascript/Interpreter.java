@@ -1517,7 +1517,16 @@ public class Interpreter {
         fn.setPrototype(ScriptableObject.getFunctionPrototype(scope));
         fn.setParentScope(scope);
         if (cx.hasCompileFunctionsWithDynamicScope()) {
-            fn.itsUseDynamicScope = true;
+             // Nested functions are not affected by the dynamic scope flag
+             // as dynamic scope is already a parent of their scope
+             // Functions defined under the with statement also immune to
+             // this setup, in which case dynamic scope is ignored in favor
+             // of with object.
+             if (!(scope instanceof NativeCall
+                   || scope instanceof NativeWith))
+             {
+                 fn.itsUseDynamicScope = true;
+             }
         }
         String fnName = idata.itsName;
         if (fnName.length() != 0) {
@@ -2438,10 +2447,8 @@ public class Interpreter {
     case TokenStream.CLOSURE : {
         int i = getIndex(iCode, pc + 1);
         InterpreterData closureData = idata.itsNestedFunctions[i];
-        InterpretedFunction closure = createFunction(cx, scope, closureData,
-                                                     idata.itsFromEvalCode);
-        closure.itsUseDynamicScope = false;
-        stack[++stackTop] = closure;
+        stack[++stackTop] = createFunction(cx, scope, closureData,
+                                           idata.itsFromEvalCode);
         pc += 2;
         break;
     }
