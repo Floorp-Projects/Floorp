@@ -1388,8 +1388,7 @@ nsEditorShell::FinishHTMLSource(void)
   if (mHTMLSourceMode)
   {
     // Call the JS command to convert and switch to previous edit mode
-    nsAutoString command(NS_LITERAL_STRING("cmd_FinishHTMLSource"));
-    return DoControllerCommand(command);
+    return DoControllerCommand(NS_ConvertASCIItoUCS2("cmd_FinishHTMLSource"));
   }
   return NS_OK;
 }
@@ -1651,8 +1650,7 @@ nsEditorShell::CheckAndSaveDocument(const PRUnichar *reasonToSave, PRBool *_retv
         else if (mHTMLSourceMode) // result == eNo
         {
           // User doesn't want to save document, so we just cancel source mode
-          nsAutoString command(NS_LITERAL_STRING("cmd_CancelHTMLSource"));
-          rv = DoControllerCommand(command);
+          rv = DoControllerCommand(NS_ConvertASCIItoUCS2("cmd_CancelHTMLSource"));
         }
       }
     }
