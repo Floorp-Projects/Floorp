@@ -336,7 +336,7 @@ function UpdateBookmarksLastVisitedDate(event)
     // See if Startup has been run.
     if ( appCore ) {
         // See if load in progress (loading default page).
-        if ( document.getElementById("broadcaster_throbber").getAttribute("busy") == "true" ) {
+        if ( document.getElementById("Browser:Throbber").getAttribute("busy") == "true" ) {
             dump( "Stopping load of default initial page\n" );
             appCore.stop();
         }
@@ -352,7 +352,7 @@ function UpdateBookmarksLastVisitedDate(event)
 
   function onLoadViaOpenDialog() {
     // See if load in progress (loading default page).
-    if ( document.getElementById("broadcaster_throbber").getAttribute("busy") == "true" ) {
+    if ( document.getElementById("Browser:Throbber").getAttribute("busy") == "true" ) {
         dump( "Stopping load of default initial page\n" );
         appCore.stop();
     }
@@ -1004,7 +1004,7 @@ function OpenSearch(tabName, searchStr)
 
 		var startTime = 0;
         function onProgress() {
-            var throbber = document.getElementById("broadcaster_throbber");
+            var throbber = document.getElementById("Browser:Throbber");
             var meter    = document.getElementById("Browser:LoadingProgress");
             if ( throbber && meter ) {
                 var busy = throbber.getAttribute("busy");
