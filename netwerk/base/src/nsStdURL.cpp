@@ -210,7 +210,7 @@ if (!nextbrk) // http://host:port
 	ExtractString(mSpec, &mHost, 
 		(lastbrk-mSpec), (brk-lastbrk));
 	mPort = ExtractPortFrom(mSpec, 
-		(lastbrk-mSpec), len - (lastbrk-mSpec));
+		(brk-mSpec +1), len - (brk-mSpec +1));
 	return NS_OK;
 }
 switch (*nextbrk)
