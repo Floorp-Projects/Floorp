@@ -94,33 +94,47 @@ public:
     nsIDocument *oldDoc = mDocument;
 
     nsAutoString rel;
+    nsAutoString rev;
     GetAttr(kNameSpaceID_None, nsHTMLAtoms::rel, rel);
+    GetAttr(kNameSpaceID_None, nsHTMLAtoms::rev, rev);
     
-    CreateAndDispatchEvent(oldDoc, rel, NS_LITERAL_STRING("DOMLinkRemoved"));
+    CreateAndDispatchEvent(oldDoc, rel, rev, NS_LITERAL_STRING("DOMLinkRemoved"));
 
     // Do the removal and addition into the new doc.
     nsresult rv = nsGenericHTMLLeafElement::SetDocument(aDocument, aDeep,
                                                         aCompileEventHandlers);
     UpdateStyleSheet(PR_TRUE, oldDoc);
 		
-    CreateAndDispatchEvent(mDocument, rel, NS_LITERAL_STRING("DOMLinkAdded"));
+    CreateAndDispatchEvent(mDocument, rel, rev, NS_LITERAL_STRING("DOMLinkAdded"));
 
     return rv;
   }
  
-  void CreateAndDispatchEvent(nsIDocument* aDoc, const nsString& aRel, 
+  void CreateAndDispatchEvent(nsIDocument* aDoc, const nsString& aRel,
+                              const nsString& aRev, 
                               const nsAString& aEventName) {
-    if (aDoc && !aRel.IsEmpty() && !aRel.EqualsIgnoreCase("stylesheet")) {
-      nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(aDoc));
-      nsCOMPtr<nsIDOMEvent> event;
-      docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-      if (event) {
-        event->InitEvent(aEventName, PR_TRUE, PR_TRUE);
-        PRBool noDefault;
-        nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIDOMNode*, this)));
-        if (target)
-          target->DispatchEvent(event, &noDefault);
-      }
+    if (!aDoc)
+      return;
+
+    // In the unlikely case that both rev is specified *and* rel=stylesheet,
+    // this code will cause the event to fire, on the principle that maybe the
+    // page really does want to specify that it's author is a stylesheet. Since
+    // this should never actually happen and the performance hit is minimal,
+    // doing the "right" thing costs virtually nothing here, even if it doesn't
+    // make much sense.
+    if (aRev.IsEmpty() &&
+        (aRel.IsEmpty() || aRel.EqualsIgnoreCase("stylesheet")))
+      return;
+
+    nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(aDoc));
+    nsCOMPtr<nsIDOMEvent> event;
+    docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+    if (event) {
+      event->InitEvent(aEventName, PR_TRUE, PR_TRUE);
+      PRBool noDefault;
+      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIDOMNode*, this)));
+      if (target)
+        target->DispatchEvent(event, &noDefault);
     }
   }
 
