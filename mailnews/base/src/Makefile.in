@@ -37,6 +37,8 @@ EXPORTS = \
 	nsMsgLineBuffer.h	\
 	nsMsgFolder.h	\
 	nsUrlListenerManager.h \
+	nsMsgMailSession.h \
+	nsMsgIdentity.h	\
 	$(NULL)
 
 CPPSRCS = \
@@ -51,6 +53,8 @@ CPPSRCS = \
 	nsMsgMD5.cpp \
 	nsUrlListenerManager.cpp \
 	nsUInt32Array.cpp	\
+	nsMsgMailSession.cpp	\
+	nsMsgIdentity.cpp	\
 	$(NULL)
 
 CPPSRCS += \
