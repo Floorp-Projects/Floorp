@@ -49,6 +49,10 @@
 #include "nsINewsDatabase.h"
 #include "nsMsgBaseCID.h"
 
+#ifdef DEBUG_seth
+#define DEBUG_NEWS 1
+#endif
+
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
@@ -453,13 +457,11 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *newsgroupname)
 	printf("echo %s: to the newsrc file\n", newsgroupname);
 #endif
 
-	nsOutputFileStream outputStream(path);
-
 	rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
 	if (NS_SUCCEEDED(rv) && newsDBFactory) {
 		nsCOMPtr <nsIFileSpec> dbFileSpec;
 		NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
-		rv = newsDBFactory->Open(dbFileSpec, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) &newsDB);
+		rv = newsDBFactory->Open(dbFileSpec, PR_TRUE, PR_FALSE, (nsIMsgDatabase **) &newsDB);
 		if (NS_SUCCEEDED(rv) && newsDB) {
 			//Now let's create the actual new folder
 			char *setStr = PR_smprintf("");
