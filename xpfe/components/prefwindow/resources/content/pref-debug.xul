@@ -44,7 +44,7 @@
   <hbox class="box-smallheader" title="&lHeader;"/>
   
   <groupbox orient="vertical" align="start">
-    <label value="&widgetRendering.label;"/>
+    <caption label="&widgetRendering.label;"/>
     <checkbox id="nglayoutDebugWindow" label="&debugWindow.label;"
               pref="true" preftype="bool" prefstring="nglayout.widget.debugWindow"
               prefattribute="checked"/>
@@ -56,7 +56,7 @@
   <!-- nothing on this page has accesskeys because this is a temporary debug
        panel and you can damn well click the widgets! -->
   <groupbox orient="vertical" align="start">
-    <label value="&debugMiscellaneous.label;"/>
+    <caption label="&debugMiscellaneous.label;"/>
     <checkbox id="browserDOMWindowDumpEnabled" label="&debugEnableDump.label;"
               pref="true" preftype="bool" prefstring="browser.dom.window.dump.enabled"
               prefattribute="checked"/>
@@ -76,8 +76,8 @@
 
 
   <groupbox orient="vertical">
-    <label value="&accelerators.label;"/>
-    <label value="&acceleratorsBlurb.label;"/>
+    <caption label="&accelerators.label;"/>
+    <caption label="&acceleratorsBlurb.label;"/>
 
       <grid flex="1">
         <columns>

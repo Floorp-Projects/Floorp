@@ -36,7 +36,7 @@
 
   <vbox id="bxGeneralPrefs">
     <groupbox id="tbxBlink" flex="1">
-      <label value="Element Blinking"/>
+      <caption label="Element Blinking"/>
       <vbox>
         <grid>
           <columns>
@@ -85,7 +85,7 @@
     </groupbox>
     
     <groupbox id="tbxSidebar" flex="1">
-      <label value="Sidebar"/>
+      <caption label="Sidebar"/>
       <vbox flex="1">
         <vbox id="bxSidebarInstall" flex="1">
           <hbox>

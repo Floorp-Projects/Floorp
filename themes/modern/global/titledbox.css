@@ -28,9 +28,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /* ::::: groupbox ::::: */
-/* (titledbox included for backwards compatibility for now) */
 
-titledbox,
 groupbox {
   border: 2px groove #C7D0D9;
   padding: 5px;

@@ -46,7 +46,7 @@
   <broadcaster id="args" value=""/>
 
   <groupbox orient="vertical" flex="1">
-    <label id="titleInput" value="&link.label;"/>
+    <caption id="titleInput" label="&link.label;"/>
 
     <grid>
       <columns><column/><column/><column/></columns>
@@ -69,7 +69,7 @@
   </groupbox>
 
   <groupbox orient="vertical" flex="1">
-    <label id="targetLabel" value="&targetFieldset.label;"/>
+    <caption id="targetLabel" label="&targetFieldset.label;"/>
     <grid>
       <columns><column/><column/><column/></columns>
       <rows>

@@ -32,7 +32,7 @@
   <hbox class="box-smallheader" title="&pane.title;"/>
 
   <groupbox orient="vertical" class="small-margin">
-    <label value="&emailCollectiontitle.label;"/>
+    <caption label="&emailCollectiontitle.label;"/>
   <html class="small-margin">&emailCollectiontext.label;</html>
     <vbox autostretch="never" class="indent">
     <checkbox class="small-margin" id="emailCollectionIncoming" label="&emailCollectionIncomingEnable.label;"
@@ -56,7 +56,7 @@
   </groupbox>
 	
     <groupbox class="small-margin" orient="vertical"  id="addressAutocompletion">
-      <label value="&addressingTitle.label;"/>
+      <caption label="&addressingTitle.label;"/>
       <html class="small-margin">&autocompleteText.label;</html>
       <hbox autostretch="never">
         <checkbox class="small-margin" id="addressingAutocomplete" label="&addressingEnable.label;"

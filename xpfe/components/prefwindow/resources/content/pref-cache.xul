@@ -43,7 +43,7 @@
   <hbox class="box-smallheader" title="&lHeader;"/>
 
   <groupbox orient="vertical">
-    <label value="&cacheTitle.label;"/>
+    <caption label="&cacheTitle.label;"/>
     
     <html>&cachePara;</html>
 

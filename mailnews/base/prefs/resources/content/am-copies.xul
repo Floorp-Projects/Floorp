@@ -39,7 +39,7 @@
   <hbox class="box-smallheader" title="&copyAndFolderTitle.label;"/>
   
   <groupbox orient="vertical" class="small-margin">
-    <label value="&sendingPrefix.label;"/>
+    <caption label="&sendingPrefix.label;"/>
 
     <hbox autostretch="never">
       <checkbox wsm_persist="true" id="identity.doFcc" label="&fccMailFolder.label;" 
@@ -96,7 +96,7 @@
   </groupbox>
   
   <groupbox orient="vertical" class="small-margin">
-    <label value="&specialFoldersTitle.label;"/>
+    <caption label="&specialFoldersTitle.label;"/>
 
     <hbox autostretch="never">
       <text class="label" value="&keepDrafts.label;"/>

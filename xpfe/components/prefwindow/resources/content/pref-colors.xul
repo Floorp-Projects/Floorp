@@ -46,7 +46,7 @@
 
   <hbox>
     <groupbox orient="vertical" flex="1" id="pageColours">
-      <label value="&color;"/>
+      <caption label="&color;"/>
       <hbox>
         <text class="label" value="&textColor.label;" accesskey="&textColor.accesskey;" for="foregroundtextmenu"/>
         <spring flex="1"/>
@@ -67,7 +67,7 @@
     </groupbox>
       
     <groupbox orient="vertical" flex="1">
-      <label value="&links;"/>
+      <caption label="&links;"/>
       <hbox>
         <text class="label" value="&linkColor.label;" accesskey="&linkColor.accesskey;" for="unvisitedlinkmenu"/>
         <spring flex="1"/>
@@ -101,7 +101,7 @@
   </groupbox>
 
   <groupbox orient="vertical">
-      <label value="&viewsource;"/>
+      <caption label="&viewsource;"/>
       <hbox align="center">
         <checkbox id="syntaxHighlight" label="&syntaxHighlight.label;" accesskey="&syntaxHighlight.accesskey;"
                   pref="true" preftype="bool" prefstring="view_source.syntax_highlight" prefattribute="checked"/>

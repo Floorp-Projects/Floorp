@@ -55,7 +55,7 @@
   <popupset id="aTooltipSet" />
 
   <groupbox orient="vertical">
-    <label value="&locationBox.label;"/>
+    <caption label="&locationBox.label;"/>
     <!--/////// Src URL and ALT Text //////-->
     <grid>
       <columns><column/><column/><column flex="1"/></columns>
@@ -130,7 +130,7 @@
       <vbox>
         <!-- //////// Image Dimensions //////// -->
         <groupbox orient="vertical" flex="1">
-          <label id="dimensionsLabel" value="&dimensionsBox.label;"/>
+          <caption id="dimensionsLabel" label="&dimensionsBox.label;"/>
           <hbox>
             <radiogroup id="imgSizeGroup" orient="vertical">
               <radio
@@ -194,7 +194,7 @@
         </groupbox>
         <!--////// IMAGE MAP BUTTONS //////-->
         <groupbox orient="vertical" flex="1">
-           <label id="imagemapLabel" value="&imagemapBox.label;"/>
+           <caption id="imagemapLabel" label="&imagemapBox.label;"/>
            <hbox flex="1" equalsize="always">
 
 <!-- Hide Image Map Editor. Not ready for prime time yet
@@ -222,7 +222,7 @@
       <vbox flex="1">
         <!--//////// Alignment ////////-->
         <groupbox flex="1" orient="vertical">
-          <label id="alignLabel" value="&alignment.label;"/>
+          <caption id="alignLabel" label="&alignment.label;"/>
           <spring class="spacer"/>
           <menulist id="alignTypeSelect" class="align-menu">
             <menupopup>
@@ -238,7 +238,7 @@
 
         <!--//////// Borders and Spacing ////////-->
         <groupbox flex="1">
-          <label id="spacingLabel" value="&spacingBox.label;"/>
+          <caption id="spacingLabel" label="&spacingBox.label;"/>
           <grid>
             <columns><column/><column/><column/></columns>
             <rows>

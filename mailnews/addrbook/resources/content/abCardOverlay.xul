@@ -47,7 +47,7 @@ Rights Reserved.
 			<vbox index="name" flex="1">
 				
 				<groupbox orient="vertical" flex="1">
-          <label value="&Name.box;"/>
+					<caption label="&Name.box;"/>
 		
 					<vbox style="width:100%">
 						<hbox>
@@ -82,7 +82,7 @@ Rights Reserved.
 				</groupbox>
 
 				<groupbox orient="vertical" flex="1">
-          <label value="&Internet.box;"/>
+					<caption label="&Internet.box;"/>
 		
 					<vbox style="width:100%">
 						<hbox>
@@ -115,7 +115,7 @@ Rights Reserved.
 				</groupbox>
 
 				<groupbox orient="vertical" flex="1">
-          <label value="&Phones.box;"/>
+					<caption label="&Phones.box;"/>
 		
 					<vbox style="width:100%">
 						<hbox>
@@ -161,7 +161,7 @@ Rights Reserved.
 			<vbox index="address" flex="1">
 				
 				<groupbox orient="vertical" flex="1">
-          <label value="&Home.box;"/>
+					<caption label="&Home.box;"/>
 		
 					<vbox style="width:100%">
 		
@@ -214,7 +214,7 @@ Rights Reserved.
 				</groupbox>
 
 				<groupbox orient="vertical" style="width:100%">
-          <label value="&Work.box;"/>
+					<caption label="&Work.box;"/>
 		
 					<vbox style="width:100%">
 		
@@ -312,7 +312,7 @@ Rights Reserved.
 				</vbox>
 
 				<groupbox orient="vertical" style="width:100%">
-          <label value="&Notes.box;"/>
+					<caption label="&Notes.box;"/>
 		
 					<vbox style="width:100%">
 						<textbox id="Notes" multiline="true" rows="15" wrap="virtual"/>

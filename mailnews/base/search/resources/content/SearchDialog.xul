@@ -73,7 +73,7 @@ Rights Reserved.
   <vbox flex="1">
     
     <groupbox orient="vertical" flex="1">
-      <label value="&conditions.label;"/>
+      <caption label="&conditions.label;"/>
       <hbox autostretch="never">
         <text class="label" value="&searchHeading.label;"/>
         <menulist id="searchableFolders" flex="2"/>
@@ -97,7 +97,7 @@ Rights Reserved.
     <splitter id="gray_horizontal_splitter" collapse="after" persist="state"/>
     
     <groupbox orient="horizontal" flex="1">
-       <label value="&results.label;"/>
+       <caption label="&results.label;"/>
        <vbox id="searchTermListBox" flex="1">
             <outliner id="threadOutliner" flex="1" context="threadPaneContext"/>
             <statusbar id="status-bar" class="chromeclass-status"/>

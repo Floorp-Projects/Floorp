@@ -62,7 +62,7 @@
   <hbox class="box-smallheader" id="cookieHeader" title="&lHeader;"/>
 
   <groupbox orient="vertical">
-    <label value="&cookiePolicy.label;"/>
+    <caption label="&cookiePolicy.label;"/>
 
     <html>&cookieDetails;</html>
 

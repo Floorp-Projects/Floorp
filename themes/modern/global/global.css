@@ -196,7 +196,7 @@ description[disabled="true"], label[disabled="true"] {
 
 /* has to be in here since scoped stylesheets can't apply
    to explicit children yet */
-groupbox > label {
+caption {
   margin: 0px 6px 2px 6px;
   padding: 0px 3px 0px 3px;
   background-color: #C7D0D9; 

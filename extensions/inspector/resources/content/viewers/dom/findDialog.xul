@@ -49,7 +49,7 @@
     
     <hbox valign="top">
       <groupbox id="tbxType">
-        <label value="Search By"/>
+        <caption label="Search By"/>
         <radiogroup id="rgType" orient="vertical">
           <radio group="rgType" id="rdType_id" label="ID" value="id" oncommand="dialog.toggleType('id')"/>
           <radio group="rgType" id="rdType_tag" label="Tag" value="tag" oncommand="dialog.toggleType('tag')"/>
@@ -57,7 +57,7 @@
         </radiogroup>
       </groupbox>
       <groupbox id="tbxDirection" hide="true">
-        <label value="Direction"/>
+        <caption label="Direction"/>
         <radiogroup id="rgDirection" orient="vertical">
           <radio id="rdDir_up" group="rgDirection" value="up" label="Up"/>
           <radio id="rdDir_down" group="rgDirection" value="down" label="Down"/>

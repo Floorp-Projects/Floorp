@@ -89,7 +89,7 @@ Contributors:
   <spring class="spacer"/>
 
   <groupbox>
-  <label value="&serverSettings.label;"/>
+  <caption label="&serverSettings.label;"/>
   <vbox flex="1">
   <checkbox iscontrolcontainer="true" wsm_persist="true" id="server.isSecure"
             label="&isSecure.label;" oncommand="secureSelect();"
@@ -200,7 +200,7 @@ Contributors:
 <!-- take out for now - bug 45079
     <hbox iscontrolcontainer="true" flex="100%">
       <groupbox orient="vertical">
-         <label class="header label" value="&abbreviate.label;"/>
+         <caption class="header label" label="&abbreviate.label;"/>
 
          <radiogroup hidable="true" hidefor="pop3,imap" orient="vertical" wsm_persist="true"
                      id="nntp.abbreviate">

@@ -53,7 +53,7 @@
   <html>&override.label;</html>
 
   <groupbox orient="vertical" flex="1">
-    <label value="&domain.title;"/>
+    <caption label="&domain.title;"/>
 
     <html>&domaindesc.label;</html>
 

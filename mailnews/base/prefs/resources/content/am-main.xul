@@ -28,7 +28,7 @@
     <separator class="thin"/>
     
     <groupbox orient="vertical" flex="1" style="width: 20em !important;">
-      <label value="&identityTitle.label;"/>
+      <caption label="&identityTitle.label;"/>
       <html>&identityDesc.label;</html>
       <separator class="thin"/>
       <grid flex="1">

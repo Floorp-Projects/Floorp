@@ -50,7 +50,7 @@
     -->
 
   <groupbox orient="vertical" flex="1">
-    <label value="&langtitle.label;"/>
+    <caption label="&langtitle.label;"/>
 
     <html>&languages.customize.prefLangDescript;</html>
 
@@ -90,7 +90,7 @@
     </hbox>
   </groupbox>
   <groupbox orient="vertical" align="start">
-    <label value="&languages.customize.Charset.grouplabel;"/>
+    <caption label="&languages.customize.Charset.grouplabel;"/>
     <text class="label" value="&languages.customize.DefaultCharset.label;" for="DefaultCharsetList"/>
     <menulist id="DefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
         pref="true" preftype="localizedstring" prefstring="intl.charset.default"

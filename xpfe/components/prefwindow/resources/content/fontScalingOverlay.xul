@@ -30,7 +30,7 @@ Contributor(s): ______________________________________. -->
 
   <window id="fontPanel">
     <groupbox orient="vertical">
-      <label value="&fontScaling;"/>
+      <caption label="&fontScaling;"/>
       <html:div>&fontScalingIntro;</html:div>
       <spring style="height: 10px;"/>
       <html:div>

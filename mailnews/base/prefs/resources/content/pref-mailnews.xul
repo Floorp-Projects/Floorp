@@ -45,7 +45,7 @@ Contributor(s):
   <hbox class="box-smallheader" title="&pane.title;"/>
 
   <groupbox orient="vertical">
-    <label value="&windowSettings.label;"/>
+    <caption label="&windowSettings.label;"/>
     
     <hbox autostretch="never">
       <text class="label" value="&selectWindowLayout.label;"/>
@@ -69,7 +69,7 @@ Contributor(s):
   </groupbox>
 
   <groupbox orient="vertical">
-    <label value="&messengerStartPage.label;"/>
+    <caption label="&messengerStartPage.label;"/>
       <hbox autostretch="never">
         <checkbox allowevents="true" id="mailnewsStartPageEnabled" label="&enableStartPage.label;"
                   pref="true" preftype="bool" prefstring="mailnews.start_page.enabled"
@@ -97,7 +97,7 @@ Contributor(s):
   
   <!-- Sound notification for new mail -->    
         <groupbox orient="vertical">
-    <label value="&newMessage.label;"/>
+    <caption label="&newMessage.label;"/>
     <hbox autostretch="never">
             <checkbox allowevents="true" id="newMailNotification" label="&playSound.label;"
                 pref="true" preftype="bool" prefstring="mail.biff.play_sound"

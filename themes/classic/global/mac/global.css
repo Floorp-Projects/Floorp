@@ -234,3 +234,16 @@
       border              : none;
     }
 
+/**
+ * groupbox's caption, has to be in here since scoped 
+ * stylesheets can't apply to explicit children yet
+ */
+  caption
+    {
+      margin-left           : 6px;
+      padding-left          : 3px;
+      padding-right         : 3px;
+      background-color      : #DEDEDE;
+    }
+
+

@@ -42,7 +42,7 @@ Rights Reserved.
   <vbox class="box-wizardcontent" flex="1">
 
     <groupbox orient="vertical">
-      <label value="&incomingServerTitle.label;"/>
+      <caption label="&incomingServerTitle.label;"/>
       <html>&incomingServerTypeDesc.label;</html>
       <separator class="thin"/>
       <hbox autostretch="never">
@@ -62,7 +62,7 @@ Rights Reserved.
     </groupbox>
 
     <groupbox orient="vertical" id="noSmtp">
-      <label value="&smtpServerTitle.label;"/>
+      <caption label="&smtpServerTitle.label;"/>
       <html>&smtpServerDesc.label;</html>
       <separator class="thin"/>
       <hbox autostretch="never">

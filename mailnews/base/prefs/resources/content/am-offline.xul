@@ -50,7 +50,7 @@ Contributors:
     <hbox id="headertitle" class="box-smallheader"/>
 
     <groupbox orient="vertical" id="offline.titlebox"  hidable="true" hidefor="pop3">
-      <label value="&offlineGroupTitle.label;"/>
+      <caption label="&offlineGroupTitle.label;"/>
 
     <html iscontrolcontainer="true" hidable="true" hidefor="pop3,nntp">&offlineImapDesc.label;</html>
     <html iscontrolcontainer="true" hidable="true" hidefor="pop3,imap">&offlineNntpDesc.label;</html>
@@ -76,7 +76,7 @@ Contributors:
     
     <separator class="thin"/>
     <groupbox orient="vertical" id="diskspace.titlebox">
-      <label value="&diskspaceGroupTitle.label;"/>
+      <caption label="&diskspaceGroupTitle.label;"/>
 
     <html iscontrolcontainer="true" hidable="true" hidefor="pop3">&offlineMsg.label;</html>
     <html iscontrolcontainer="true" hidable="true" hidefor="imap,nntp">&offlinePopDesc.label;</html>

@@ -64,7 +64,7 @@
   
 
   <groupbox class="tabpanel" autostretch="never" hidden="true">
-    <label value="&concatPrimary.title;"/>
+    <caption label="&concatPrimary.title;"/>
     <grid class="indent" flex="1">
       <columns>
         <column/>
@@ -197,7 +197,7 @@
   </groupbox>
 
   <groupbox class="tabpanel" autostretch="never" hidden="true">
-    <label value="&concatShipping.title;"/>
+    <caption label="&concatShipping.title;"/>
     <grid class="indent">
       <columns>
         <column/>
@@ -330,7 +330,7 @@
   </groupbox>
 
   <groupbox class="tabpanel" autostretch="never" hidden="true">
-    <label value="&concatBilling.title;"/>
+    <caption label="&concatBilling.title;"/>
     <grid class="indent">
       <columns>
         <column/>
@@ -463,7 +463,7 @@
   </groupbox>
 
   <groupbox class="tabpanel" autostretch="never" hidden="true">
-    <label value="&concatOther.title;"/>label
+    <caption label="&concatOther.title;"/>label
     <grid class="indent">
       <columns>
         <column/>

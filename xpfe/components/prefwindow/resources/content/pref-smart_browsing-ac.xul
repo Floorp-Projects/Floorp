@@ -96,7 +96,7 @@
   ]]></script>
   
   <groupbox>
-    <label value="&autoCompleteAdvanced.title;"/>
+    <caption label="&autoCompleteAdvanced.title;"/>
     <vbox>
       <checkbox id="cbxAutoFill" label="&autoCompleteAutoFill.label;" 
                 oncommand="updateImage('AutoFill')"/>

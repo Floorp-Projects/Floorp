@@ -48,7 +48,7 @@
   <broadcaster id="args" value=""/>
   <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
-  <groupbox orient="vertical"><label value="&size.label;"/>
+  <groupbox orient="vertical"><caption label="&size.label;"/>
     <grid>
       <columns><column/><column/><column/></columns>
       <rows>

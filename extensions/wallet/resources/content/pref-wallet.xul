@@ -57,7 +57,7 @@
   <hbox class="box-smallheader" title="&lHeader;"/>
 
   <groupbox orient="vertical">
-    <label value="&walletHeader.label;"/>
+    <caption label="&walletHeader.label;"/>
     <html>&walletDescription.label;</html>
 <!--
     <hbox autostretch="never">

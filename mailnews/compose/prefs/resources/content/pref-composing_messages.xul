@@ -58,7 +58,7 @@
   <hbox class="box-smallheader" title="&pane.title;"/>
 
   <groupbox orient="vertical">
-    <label value="&forwardReply.label;"/>
+    <caption label="&forwardReply.label;"/>
     
     <hbox autostretch="never">
       <text class="label" value="&forwardMsg.label;" accesskey="&forwardMsg.accesskey;"/>
@@ -91,7 +91,7 @@
 
   <!-- Composing Mail -->
   <groupbox orient="vertical" autostretch="never">
-    <label value="&sendingMessagesHeader.label;"/>
+    <caption label="&sendingMessagesHeader.label;"/>
         
     <checkbox id="spellCheckBeforeSend" label="&spellCheck.label;"
               pref="true" preftype="bool" prefstring="mail.SpellCheckBeforeSend"
@@ -124,7 +124,7 @@
   
 <!--
   <groupbox orient="vertical" autostretch="never">
-  <label value="&languages.label;"/>
+  <caption label="&languages.label;"/>
 
    <hbox autostretch="never">
     <text class="label" value="&sendDefaultCharset.label;" for="sendDefaultCharsetList"/>

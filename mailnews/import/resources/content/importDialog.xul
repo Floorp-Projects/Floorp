@@ -72,7 +72,7 @@ Rights Reserved.
     <vbox class="wizard-box">
       <spring flex="1"/>
       <groupbox orient="vertical">
-        <label id="progressTitle" value="&title.label;"/>
+        <caption id="progressTitle" label="&title.label;"/>
         <text class="label indent" id="progressStatus" value="&processing.label;"/>
         <vbox class="box-padded">
           <progressmeter id="progressMeter" mode="normal" value="5"/>

@@ -47,12 +47,12 @@
   <keyset id="dialogKeys"/>
 
   <vbox style="min-width: 20em">
-    <groupbox orient="vertical"><label id="linkTextCaption"/>
+    <groupbox orient="vertical"><caption id="linkTextCaption"/>
       <text class="label" id="linkTextMessage"/> 
 	    <textbox id="linkTextInput" flex="1" oninput="ChangeText()"/>
     </groupbox>
 
-    <groupbox orient="vertical"><label value="&LinkURLBox.label;"/>
+    <groupbox orient="vertical"><caption label="&LinkURLBox.label;"/>
       <text class="label" value="&LinkURLEditField.label;"/>
       <hbox autostretch="never" valign="middle">
         <textbox id="hrefInput" flex="1" style="min-width: 18em" oninput="ChangeLocation()"/>

@@ -29,7 +29,7 @@
   </commandset>
   
   <groupbox>
-    <label>
+    <caption>
       <menulist id="mlStats" value="position" oncommand="viewer.showStatGroup(this.value)">
         <menupopup>
           <menuitem value="position" label="Position"/>
@@ -39,7 +39,7 @@
           <menuitem value="padding" label="Padding"/>
         </menupopup>
       </menulist>
-    </label>
+    </caption>
     <grid flex="1">
       <columns>
         <column/>
@@ -72,7 +72,7 @@
   
   <vbox id="bxCaptureStuff" flex="1">
     <groupbox id="tbxImage">
-      <label value="Image"/>
+      <caption label="Image"/>
       <hbox autostretch="never" flex="1">
         <button label="Capture" command="cmdCapture"/>
         <button label="Pick Color..." command="cmdOpenColorPicker"/>

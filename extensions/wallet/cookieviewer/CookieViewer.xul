@@ -77,7 +77,7 @@
             <treechildren id="cookieList" flex="1"/>
           </tree>
           <groupbox>
-            <label value="&treehead.infoselected.label;"/>
+            <caption label="&treehead.infoselected.label;"/>
             <!-- labels -->
             <grid flex="1">
               <columns>

@@ -46,7 +46,7 @@
           src="chrome://communicator/content/wallet/WalletViewer.js"/>
   
   <groupbox class="tabpanel" autostretch="never">
-    <label value="&employ.title;"/>
+    <caption label="&employ.title;"/>
     <grid class="indent" flex="1">
 
       <columns>

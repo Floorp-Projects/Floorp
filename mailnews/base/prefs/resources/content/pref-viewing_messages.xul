@@ -44,7 +44,7 @@
   <hbox class="box-smallheader" title="&pane.title;"/>
 
   <groupbox orient="vertical" class="small-margin">
-    <label value="&displayWidth.label;"/>
+    <caption label="&displayWidth.label;"/>
 
       <html class="small-margin">&plainText.label;</html>
     
@@ -105,7 +105,7 @@
   </groupbox>
 
   <groupbox orient="vertical" autostretch="never" class="small-margin">
-    <label value="&languagesTitle.label;"/>
+    <caption label="&languagesTitle.label;"/>
     <html class="small-margin">&coding.label;</html>
     <hbox autostretch="never">
       <text class="label"  for="sendDefaultCharsetList"

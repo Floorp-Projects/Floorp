@@ -190,7 +190,7 @@
 
   <!-- P3P Enable/Disable Box -->
   <groupbox orient="vertical">
-    <label><text value="&service.label;"/></label>
+    <caption><text value="&service.label;"/></caption>
     <checkbox id="P3PServiceEnabled"
               value="&enable.label;"
               oncommand="DoEnableService( )"
@@ -223,7 +223,7 @@
   </groupbox>
 
   <groupbox orient="vertical">
-    <label><text value="&selection.label;"/></label>
+    <caption><text value="&selection.label;"/></caption>
     <html>&selection.desc;</html>
     <radiogroup id="P3PLevel"
                 orient="vertical"
@@ -463,7 +463,7 @@
               <html>&physical.tip;</html>
               <spring flex="1"/>
               <groupbox orient="horizontal">
-                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
+                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -472,7 +472,7 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
+                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
                         <checkbox id="P3PPhysicalAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.physical.admin" prefattribute="checked"
                                   />
@@ -483,7 +483,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
+                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
                         <checkbox id="P3PPhysicalDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.physical.develop" prefattribute="checked"
                                   />
@@ -499,7 +499,7 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
+                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
                         <checkbox id="P3PPhysicalCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.physical.customization" prefattribute="checked"
                                   />
@@ -516,7 +516,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
+                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
                         <checkbox id="P3PPhysicalCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.physical.current" prefattribute="checked"
                                   />
@@ -542,7 +542,7 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
+                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
                 <checkbox id="P3PPhysicalSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.physical.sharing" prefattribute="checked"
                           />
@@ -555,7 +555,7 @@
               <html>&location.tip;</html>
               <spring flex="1"/>
               <groupbox orient="horizontal">
-                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
+                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -564,7 +564,7 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
+                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
                         <checkbox id="P3PLocationAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.location.admin" prefattribute="checked"
                                   />
@@ -575,7 +575,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
+                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
                         <checkbox id="P3PLocationDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.location.develop" prefattribute="checked"
                                   />
@@ -591,7 +591,7 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
+                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
                         <checkbox id="P3PLocationCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.location.customization" prefattribute="checked"
                                   />
@@ -608,7 +608,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
+                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
                         <checkbox id="P3PLocationCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.location.current" prefattribute="checked"
                                   />
@@ -634,7 +634,7 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
+                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
                 <checkbox id="P3PLocationSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.location.sharing" prefattribute="checked"
                           />
@@ -653,7 +653,7 @@
               <html>&online.tip;</html>
               <spring flex="1"/>
               <groupbox orient="horizontal">
-                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
+                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -662,7 +662,7 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
+                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
                         <checkbox id="P3POnlineAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.online.admin" prefattribute="checked"
                                   />
@@ -673,7 +673,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
+                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
                         <checkbox id="P3POnlineDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.online.develop" prefattribute="checked"
                                   />
@@ -689,7 +689,7 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
+                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
                         <checkbox id="P3POnlineCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.online.customization" prefattribute="checked"
                                   />
@@ -706,7 +706,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
+                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
                         <checkbox id="P3POnlineCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.online.current" prefattribute="checked"
                                   />
@@ -732,7 +732,7 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
+                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
                 <checkbox id="P3POnlineSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.online.sharing" prefattribute="checked"
                           />
@@ -751,7 +751,7 @@
               <html>&computer.tip;</html>
               <spring flex="1"/>
               <groupbox orient="horizontal">
-                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
+                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -760,7 +760,7 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
+                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
                         <checkbox id="P3PComputerAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.computer.admin" prefattribute="checked"
                                   />
@@ -771,7 +771,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
+                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
                         <checkbox id="P3PComputerDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.computer.develop" prefattribute="checked"
                                   />
@@ -787,7 +787,7 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
+                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
                         <checkbox id="P3PComputerCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.computer.customization" prefattribute="checked"
                                   />
@@ -804,7 +804,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
+                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
                         <checkbox id="P3PComputerCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.computer.current" prefattribute="checked"
                                   />
@@ -830,7 +830,7 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
+                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
                 <checkbox id="P3PComputerSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.computer.sharing" prefattribute="checked"
                           />
@@ -843,7 +843,7 @@
               <html>&state.tip;</html>
               <spring flex="1"/>
               <groupbox orient="horizontal">
-                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
+                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -852,7 +852,7 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
+                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
                         <checkbox id="P3PStateAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.state.admin" prefattribute="checked"
                                   />
@@ -863,7 +863,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
+                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
                         <checkbox id="P3PStateDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.state.develop" prefattribute="checked"
                                   />
@@ -879,7 +879,7 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
+                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
                         <checkbox id="P3PStateCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.state.customization" prefattribute="checked"
                                   />
@@ -896,7 +896,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
+                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
                         <checkbox id="P3PStateCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.state.current" prefattribute="checked"
                                   />
@@ -922,7 +922,7 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
+                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
                 <checkbox id="P3PStateSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.state.sharing" prefattribute="checked"
                           />
@@ -935,7 +935,7 @@
               <html>&uniqueid.tip;</html>
               <spring flex="1"/>
               <groupbox orient="horizontal">
-                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
+                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -944,7 +944,7 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
+                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
                         <checkbox id="P3PUniqueIDAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.uniqueid.admin" prefattribute="checked"
                                   />
@@ -955,7 +955,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
+                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
                         <checkbox id="P3PUniqueIDDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.uniqueid.develop" prefattribute="checked"
                                   />
@@ -971,7 +971,7 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
+                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
                         <checkbox id="P3PUniqueIDCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.uniqueid.customization" prefattribute="checked"
                                   />
@@ -988,7 +988,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
+                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
                         <checkbox id="P3PUniqueIDCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.uniqueid.current" prefattribute="checked"
                                   />
@@ -1014,7 +1014,7 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
+                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
                 <checkbox id="P3PUniqueIDSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.uniqueid.sharing" prefattribute="checked"
                           />
@@ -1027,7 +1027,7 @@
               <html>&government.tip;</html>
               <spring flex="1"/>
               <groupbox orient="horizontal">
-                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
+                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1036,7 +1036,7 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
+                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
                         <checkbox id="P3PGovernmentAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.government.admin" prefattribute="checked"
                                   />
@@ -1047,7 +1047,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
+                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
                         <checkbox id="P3PGovernmentDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.government.develop" prefattribute="checked"
                                   />
@@ -1063,7 +1063,7 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
+                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
                         <checkbox id="P3PGovernmentCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.government.customization" prefattribute="checked"
                                   />
@@ -1080,7 +1080,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
+                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
                         <checkbox id="P3PGovernmentCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.government.current" prefattribute="checked"
                                   />
@@ -1106,7 +1106,7 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
+                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
                 <checkbox id="P3PGovernmentSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.government.sharing" prefattribute="checked"
                           />
@@ -1125,7 +1125,7 @@
               <html>&purchase.tip;</html>
               <spring flex="1"/>
               <groupbox orient="horizontal">
-                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
+                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1134,7 +1134,7 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
+                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
                         <checkbox id="P3PPurchaseAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.purchase.admin" prefattribute="checked"
                                   />
@@ -1145,7 +1145,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
+                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
                         <checkbox id="P3PPurchaseDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.purchase.develop" prefattribute="checked"
                                   />
@@ -1161,7 +1161,7 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
+                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
                         <checkbox id="P3PPurchaseCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.purchase.customization" prefattribute="checked"
                                   />
@@ -1178,7 +1178,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
+                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
                         <checkbox id="P3PPurchaseCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.purchase.current" prefattribute="checked"
                                   />
@@ -1204,7 +1204,7 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
+                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
                 <checkbox id="P3PPurchaseSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.purchase.sharing" prefattribute="checked"
                           />
@@ -1223,7 +1223,7 @@
               <html>&financial.tip;</html>
               <spring flex="1"/>
               <groupbox orient="horizontal">
-                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
+                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1232,7 +1232,7 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
+                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
                         <checkbox id="P3PFinancialAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.financial.admin" prefattribute="checked"
                                   />
@@ -1243,7 +1243,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
+                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
                         <checkbox id="P3PFinancialDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.financial.develop" prefattribute="checked"
                                   />
@@ -1259,7 +1259,7 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
+                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
                         <checkbox id="P3PFinancialCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.financial.customization" prefattribute="checked"
                                   />
@@ -1276,7 +1276,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
+                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
                         <checkbox id="P3PFinancialCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.financial.current" prefattribute="checked"
                                   />
@@ -1302,7 +1302,7 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
+                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
                 <checkbox id="P3PFinancialSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.financial.sharing" prefattribute="checked"
                           />
@@ -1315,7 +1315,7 @@
               <html>&health.tip;</html>
               <spring flex="1"/>
               <groupbox orient="horizontal">
-                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
+                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1324,7 +1324,7 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
+                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
                         <checkbox id="P3PHealthAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.health.admin" prefattribute="checked"
                                   />
@@ -1335,7 +1335,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
+                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
                         <checkbox id="P3PHealthDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.health.develop" prefattribute="checked"
                                   />
@@ -1351,7 +1351,7 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
+                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
                         <checkbox id="P3PHealthCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.health.customization" prefattribute="checked"
                                   />
@@ -1368,7 +1368,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
+                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
                         <checkbox id="P3PHealthCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.health.current" prefattribute="checked"
                                   />
@@ -1394,7 +1394,7 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
+                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
                 <checkbox id="P3PHealthSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.health.sharing" prefattribute="checked"
                           />
@@ -1407,7 +1407,7 @@
               <html>&political.tip;</html>
               <spring flex="1"/>
               <groupbox orient="horizontal">
-                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
+                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1416,7 +1416,7 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
+                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
                         <checkbox id="P3PPoliticalAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.political.admin" prefattribute="checked"
                                   />
@@ -1427,7 +1427,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
+                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
                         <checkbox id="P3PPoliticalDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.political.develop" prefattribute="checked"
                                   />
@@ -1443,7 +1443,7 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
+                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
                         <checkbox id="P3PPoliticalCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.political.customization" prefattribute="checked"
                                   />
@@ -1460,7 +1460,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
+                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
                         <checkbox id="P3PPoliticalCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.political.current" prefattribute="checked"
                                   />
@@ -1486,7 +1486,7 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
+                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
                 <checkbox id="P3PPoliticalSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.political.sharing" prefattribute="checked"
                           />
@@ -1505,7 +1505,7 @@
               <html>&navigation.tip;</html>
               <spring flex="1"/>
               <groupbox orient="horizontal">
-                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
+                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1514,7 +1514,7 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
+                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
                         <checkbox id="P3PNavigationAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.navigation.admin" prefattribute="checked"
                                   />
@@ -1525,7 +1525,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
+                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
                         <checkbox id="P3PNavigationDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.navigation.develop" prefattribute="checked"
                                   />
@@ -1541,7 +1541,7 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
+                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
                         <checkbox id="P3PNavigationCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.navigation.customization" prefattribute="checked"
                                   />
@@ -1558,7 +1558,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
+                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
                         <checkbox id="P3PNavigationCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.navigation.current" prefattribute="checked"
                                   />
@@ -1584,7 +1584,7 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
+                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
                 <checkbox id="P3PNavigationSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.navigation.sharing" prefattribute="checked"
                           />
@@ -1597,7 +1597,7 @@
               <html>&interactive.tip;</html>
               <spring flex="1"/>
               <groupbox orient="horizontal">
-                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
+                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1606,7 +1606,7 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
+                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
                         <checkbox id="P3PInteractiveAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.interactive.admin" prefattribute="checked"
                                   />
@@ -1617,7 +1617,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
+                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
                         <checkbox id="P3PInteractiveDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.interactive.develop" prefattribute="checked"
                                   />
@@ -1633,7 +1633,7 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
+                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
                         <checkbox id="P3PInteractiveCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.interactive.customization" prefattribute="checked"
                                   />
@@ -1650,7 +1650,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
+                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
                         <checkbox id="P3PInteractiveCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.interactive.current" prefattribute="checked"
                                   />
@@ -1676,7 +1676,7 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
+                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
                 <checkbox id="P3PInteractiveSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.interactive.sharing" prefattribute="checked"
                           />
@@ -1695,7 +1695,7 @@
               <html>&demographic.tip;</html>
               <spring flex="1"/>
               <groupbox orient="horizontal">
-                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
+                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1704,7 +1704,7 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
+                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
                         <checkbox id="P3PDemographicAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.demographic.admin" prefattribute="checked"
                                   />
@@ -1715,7 +1715,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
+                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
                         <checkbox id="P3PDemographicDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.demographic.develop" prefattribute="checked"
                                   />
@@ -1731,7 +1731,7 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
+                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
                         <checkbox id="P3PDemographicCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.demographic.customization" prefattribute="checked"
                                   />
@@ -1748,7 +1748,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
+                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
                         <checkbox id="P3PDemographicCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.demographic.current" prefattribute="checked"
                                   />
@@ -1774,7 +1774,7 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
+                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
                 <checkbox id="P3PDemographicSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.demographic.sharing" prefattribute="checked"
                           />
@@ -1787,7 +1787,7 @@
               <html>&preference.tip;</html>
               <spring flex="1"/>
               <groupbox orient="horizontal">
-                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
+                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1796,7 +1796,7 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
+                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
                         <checkbox id="P3PPreferenceAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.preference.admin" prefattribute="checked"
                                   />
@@ -1807,7 +1807,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
+                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
                         <checkbox id="P3PPreferenceDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.preference.develop" prefattribute="checked"
                                   />
@@ -1823,7 +1823,7 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
+                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
                         <checkbox id="P3PPreferenceCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.preference.customization" prefattribute="checked"
                                   />
@@ -1840,7 +1840,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
+                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
                         <checkbox id="P3PPreferenceCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.preference.current" prefattribute="checked"
                                   />
@@ -1866,7 +1866,7 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
+                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
                 <checkbox id="P3PPreferenceSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.preference.sharing" prefattribute="checked"
                           />
@@ -1885,7 +1885,7 @@
               <html>&content.tip;</html>
               <spring flex="1"/>
               <groupbox orient="horizontal">
-                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
+                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1894,7 +1894,7 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
+                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
                         <checkbox id="P3PContentAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.content.admin" prefattribute="checked"
                                   />
@@ -1905,7 +1905,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
+                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
                         <checkbox id="P3PContentDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.content.develop" prefattribute="checked"
                                   />
@@ -1921,7 +1921,7 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
+                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
                         <checkbox id="P3PContentCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.content.customization" prefattribute="checked"
                                   />
@@ -1938,7 +1938,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
+                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
                         <checkbox id="P3PContentCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.content.current" prefattribute="checked"
                                   />
@@ -1964,7 +1964,7 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
+                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
                 <checkbox id="P3PContentSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.content.sharing" prefattribute="checked"
                           />
@@ -1983,7 +1983,7 @@
               <html>&other.tip;</html>
               <spring flex="1"/>
               <groupbox orient="horizontal">
-                <label><text value="&purpose.label;" tooltip="purposetip"/></label>
+                <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
                   <columns>
                     <column flex="1"/>
@@ -1992,7 +1992,7 @@
                   <rows>
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&superadmin.label;" tooltip="superadmintip"/></label>
+                        <caption><text value="&superadmin.label;" tooltip="superadmintip"/></caption>
                         <checkbox id="P3POtherAdmin" value="admin" tooltip="admintip"
                                   pref="true" preftype="bool" prefstring="P3P.other.admin" prefattribute="checked"
                                   />
@@ -2003,7 +2003,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></label>
+                        <caption><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></caption>
                         <checkbox id="P3POtherDevelop" value="develop" tooltip="developtip"
                                   pref="true" preftype="bool" prefstring="P3P.other.develop" prefattribute="checked"
                                   />
@@ -2019,7 +2019,7 @@
 
                     <row flex="1">
                       <groupbox orient="vertical">
-                        <label><text value="&supercustomize.label;" tooltip="supercustomizetip"/></label>
+                        <caption><text value="&supercustomize.label;" tooltip="supercustomizetip"/></caption>
                         <checkbox id="P3POtherCustomization" value="customization" tooltip="customizationtip"
                                   pref="true" preftype="bool" prefstring="P3P.other.customization" prefattribute="checked"
                                   />
@@ -2036,7 +2036,7 @@
                       </groupbox>
 
                       <groupbox orient="vertical">
-                        <label><text value="&supercontact.label;" tooltip="supercontacttip"/></label>
+                        <caption><text value="&supercontact.label;" tooltip="supercontacttip"/></caption>
                         <checkbox id="P3POtherCurrent" value="current" tooltip="currenttip"
                                   pref="true" preftype="bool" prefstring="P3P.other.current" prefattribute="checked"
                                   />
@@ -2062,7 +2062,7 @@
               </groupbox>
 
               <groupbox orient="vertical">
-                <label><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></label>
+                <caption><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></caption>
                 <checkbox id="P3POtherSharing" value="&sharing.label;" tooltip="sharingtip"
                           pref="true" preftype="bool" prefstring="P3P.other.sharing" prefattribute="checked"
                           />

@@ -78,7 +78,7 @@
   <hbox class="box-smallheader" id="imagesHeader" title="&lHeader;"/>
 
   <groupbox orient="vertical" id="imagesArea">
-    <label value="&imageBlocking.label;"/>
+    <caption label="&imageBlocking.label;"/>
 
     <html>&imageDetails;</html>
 
@@ -118,7 +118,7 @@
 
   </groupbox>
   <groupbox orient="vertical">
-    <label value="&animLoopingTitle.label;"/>
+    <caption label="&animLoopingTitle.label;"/>
     <radiogroup id="imageLooping" orient="vertical" autostretch="never"
                 pref="true" preftype="string" prefstring="image.animation_mode"
                 prefattribute="value">
