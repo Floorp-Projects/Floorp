@@ -1217,8 +1217,15 @@ nsMenuFrame::Escape(PRBool& aHandledFlag)
 NS_IMETHODIMP
 nsMenuFrame::Enter()
 {
-  if ( IsDisabled() )
+  if (IsDisabled()) {
+#ifdef XP_WIN
+    // behavior on Windows - close the popup chain
+    if (mMenuParent)
+      mMenuParent->DismissChain();
+#endif   // #ifdef XP_WIN
+    // this menu item was disabled - exit
     return NS_OK;
+  }
     
   if (!mMenuOpen) {
     // The enter key press applies to us.
