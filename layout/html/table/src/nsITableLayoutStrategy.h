@@ -23,6 +23,7 @@
 #include "nsSize.h"
 
 class nsIPresContext;
+class nsIStyleContext;
 
 class nsITableLayoutStrategy
 {
@@ -36,6 +37,7 @@ public:
     * @param aMaxElementSize  the min size of the largest indivisible object
     */
   virtual PRBool BalanceColumnWidths(nsIPresContext* aPresContext,
+                                     nsIStyleContext *aTableStyle,
                                      PRInt32 maxWidth, 
                                      PRInt32 aNumCols,
                                      PRInt32 &aTotalFixedWidth,
@@ -66,26 +68,7 @@ public:
                                          PRInt32 & aMinTableWidth, 
                                          PRInt32 & aMaxTableWidth)=0;
 
-  /** assign widths for each column that has proportional width inside a table that 
-    * has a fixed width.
-    * Sets mColumnWidths as a side effect.
-    *
-    * @param aPresContext     the presentation context
-    * @param aTableStyle      the resolved style for the table
-    * @param aAvailWidth      the remaining amount of horizontal space available
-    * @param aMaxWidth        the total amount of horizontal space available
-    * @param aMinTableWidth   the min possible table width
-    * @param aMaxTableWidth   the max table width
-    *
-    * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
-    *
-    * TODO: rename this method to reflect that it is a Nav4 compatibility method
-    */
-  virtual PRBool BalanceProportionalColumnsForSpecifiedWidthTable(nsIPresContext*  aPresContext,
-                                                                  PRInt32 aAvailWidth,
-                                                                  PRInt32 aMaxWidth,
-                                                                  PRInt32 aMinTableWidth, 
-                                                                  PRInt32 aMaxTableWidth)=0;
+
 
   /** assign widths for each column that has proportional width inside a table that 
     * has auto width (width set by the content and available space.)
@@ -99,14 +82,13 @@ public:
     * @param aMaxTableWidth   the max table width
     *
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
-    *
-    * TODO: rename this method to reflect that it is a Nav4 compatibility method
     */
-  virtual PRBool BalanceProportionalColumnsForAutoWidthTable(nsIPresContext*  aPresContext,
-                                                             PRInt32 aAvailWidth,
-                                                             PRInt32 aMaxWidth,
-                                                             PRInt32 aMinTableWidth, 
-                                                             PRInt32 aMaxTableWidth)=0;
+  virtual PRBool BalanceProportionalColumns(nsIPresContext*  aPresContext,
+                                            PRInt32 aAvailWidth,
+                                            PRInt32 aMaxWidth,
+                                            PRInt32 aMinTableWidth, 
+                                            PRInt32 aMaxTableWidth,
+                                            nscoord aTableFixedWidth)=0;
 
   /** assign the minimum allowed width for each column that has proportional width.
     * Typically called when the min table width doesn't fit in the available space.
@@ -129,7 +111,8 @@ public:
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     */
   virtual PRBool BalanceColumnsTableFits(nsIPresContext*  aPresContext, 
-                                         PRInt32          aAvailWidth)=0;
+                                         PRInt32          aAvailWidth,
+                                         nscoord          aTableFixedWidth)=0;
 
   /** assign widths for each column that has proportional width inside a table that 
     * has auto width (width set by the content and available space) according to the

@@ -1571,7 +1571,8 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   { // TODO:  build a different strategy based on the compatibility mode
     mTableLayoutStrategy = new BasicTableLayoutStrategy(this);
   }
-  mTableLayoutStrategy->BalanceColumnWidths(aPresContext, maxWidth, numCols,
+  mTableLayoutStrategy->BalanceColumnWidths(aPresContext, mStyleContext,
+                                            maxWidth, numCols,
                                             totalFixedWidth, minTableWidth, maxTableWidth,
                                             aMaxElementSize);
 
@@ -1862,34 +1863,6 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
 #ifdef NS_DEBUG
   gsDebug = gsDebugWas;
 #endif
-}
-
-// XXX Kipp wonders: what does this really mean? Are you really asking
-// "Is it fixed width"? If so, then VALUE_PCT may be wrong and the
-// name of the method should be changed.
-
-PRBool nsTableFrame::IsProportionalWidth(nsStylePosition* aStylePosition)
-{
-  PRBool result = PR_FALSE;
-  if (nsnull == aStylePosition) {
-    // Assume NS_STYLE_POSITION_VALUE_AUTO when no style is available
-    result = PR_TRUE;
-  }
-  else {
-    switch (aStylePosition->mWidth.GetUnit()) {
-    case eStyleUnit_Coord:
-    case eStyleUnit_Percent:
-      break;
-
-    default:
-    case eStyleUnit_Auto:
-    case eStyleUnit_Inherit:
-    case eStyleUnit_Proportional:
-      result = PR_TRUE;
-      break;
-    }
-  }
-  return result;
 }
 
 void nsTableFrame::VerticallyAlignChildren(nsIPresContext* aPresContext,
