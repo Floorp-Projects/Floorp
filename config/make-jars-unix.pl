@@ -225,7 +225,7 @@ while (<STDIN>) {
         my $overrides = "";
 	my $cwd = cwd();
 	print "+++ making chrome $cwd  => $destPath/$jarfile\n";
-        while (<>) {
+        while (<STDIN>) {
             if (/^\s+([\w\d.\-\\\/]+)\s*(\([\w\d.\-\\\/]+\))?$\s*/) {
                 my $dest = $1;
                 my $srcPath = $2;
